@@ -353,17 +353,19 @@ To load the new configuration, run [`ddev restart`](../usage/commands.md#restart
 
 For MySQL replication setups, you can override the default `server_id=0` by setting the `MYSQL_SERVER_ID` environment variable. This is useful when you need to enable MySQL replication or use applications that depend on MySQL binary log events.
 
-Add to your `.ddev/config.yaml`:
-
-```yaml
-environment:
-  - MYSQL_SERVER_ID=1
-```
-
-Or create a `.ddev/.env.db` file:
+Create a `.ddev/.env.db` file:
 
 ```bash
 MYSQL_SERVER_ID=1
+```
+
+Or add a docker-compose override file `.ddev/docker-compose.db.yaml`:
+
+```yaml
+services:
+  db:
+    environment:
+      - MYSQL_SERVER_ID=1
 ```
 
 **Note:** Command-line arguments take precedence over configuration files, so you cannot override the server ID through custom `.cnf` files in `.ddev/mysql/`. The environment variable approach is required.
