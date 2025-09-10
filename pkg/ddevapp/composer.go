@@ -2,10 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/mattn/go-isatty"
 	"os"
-	"runtime"
+
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/mattn/go-isatty"
 )
 
 // Composer runs Composer commands in the web container, managing pre- and post- hooks
@@ -32,7 +33,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	if err != nil {
 		return stdout, stderr, err
 	}
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		fileutil.ReplaceSimulatedLinks(app.AppRoot)
 	}
 	err = app.ProcessHooks("post-composer")

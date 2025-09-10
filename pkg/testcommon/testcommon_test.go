@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 	"time"
 
@@ -105,7 +104,7 @@ func TestValidTestSite(t *testing.T) {
 
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
 func TestGetLocalHTTPResponse(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		t.Skip("Skipping on Windows as it always seems to fail starting 2023-04")
 	}
 	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
@@ -247,7 +246,7 @@ func TestPretestAndEnv(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	if runtime.GOOS == "windows" && app.IsMutagenEnabled() {
+	if nodeps.IsWindows() && app.IsMutagenEnabled() {
 		// We can't replace mutagen.exe on windows if anything has been using it
 		ddevapp.PowerOff()
 		err = ddevapp.MutagenReset(app)

@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -380,7 +379,7 @@ func TestAutocompletionConfigGlobalCmd(t *testing.T) {
 
 // TestAutocompletionForCustomCmds checks custom autocompletion for custom host and container commands
 func TestAutocompletionForCustomCmds(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		t.Skip("Skipping because untested on Windows")
 	}
 	if dockerutil.IsColima() {

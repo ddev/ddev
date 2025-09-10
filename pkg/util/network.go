@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"golang.org/x/term"
+	"hash"
 	"io"
 	"net/http"
 	"os"
@@ -15,39 +15,53 @@ import (
 
 	"github.com/cheggaaa/pb"
 	"github.com/ddev/ddev/pkg/output"
-	retryablehttp "github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/go-retryablehttp"
+	"golang.org/x/term"
 )
 
 // DownloadFile retrieves a file with retry logic, optional progress bar, and SHA256 verification.
 func DownloadFile(destPath string, fileURL string, progressBar bool, shaSumURL string) (err error) {
+	return DownloadFileExtended(destPath, fileURL, progressBar, shaSumURL, 2, 20*time.Minute)
+}
+
+// DownloadFileExtended retrieves a file with retry logic, optional progress bar, and SHA256 verification.
+// It allows specifying the number of retries and timeout duration.
+func DownloadFileExtended(destPath string, fileURL string, progressBar bool, shaSumURL string, retries int, timeout time.Duration) (err error) {
+	const timeoutMax = 1 * time.Hour
+
 	if output.JSONOutput || !term.IsTerminal(int(os.Stdin.Fd())) {
 		progressBar = false
 	}
 
 	// Configure retryablehttp client with backoff, retry policy, and global timeout.
-	client := retryablehttp.NewClient()
-	client.RetryMax = 4
-	client.RetryWaitMin = 500 * time.Millisecond
-	client.RetryWaitMax = 5 * time.Second
-	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
-		// Default retry policy only retries on
-		// - connection reset
-		// - connection refused
-		// - No Response
-		// - net.Error with Temporary() == true
-		if err != nil && strings.Contains(err.Error(), "context deadline exceeded") {
-			return true, nil
+	createClient := func(clientTimeout time.Duration, attempt int) (*retryablehttp.Client, time.Duration) {
+		client := retryablehttp.NewClient()
+		client.RetryMax = retries
+		client.RetryWaitMin = 500 * time.Millisecond
+		client.RetryWaitMax = 5 * time.Second
+		// "context deadline exceeded" error during file copying cannot be retried with retryablehttp
+		// See https://github.com/hashicorp/go-retryablehttp/issues/167
+		// We use manual retry logic (for loop) around the entire Get+Copy operation instead
+		client.CheckRetry = retryablehttp.DefaultRetryPolicy
+		client.Backoff = retryablehttp.DefaultBackoff
+		client.Logger = nil
+		// Double the timeout for each retry attempt, up to timeoutMax
+		// 1st attempt = clientTimeout * 2^0
+		// 2nd attempt = clientTimeout * 2^1
+		// 3rd attempt = clientTimeout * 2^2
+		clientTimeout = clientTimeout * time.Duration(1<<attempt)
+		if clientTimeout > timeoutMax {
+			clientTimeout = timeoutMax
 		}
-		return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
-	}
-	client.Backoff = retryablehttp.DefaultBackoff
-	client.Logger = nil
-	client.HTTPClient.Timeout = 5 * time.Minute
-	client.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
-		if attempt > 0 {
-			// attempt==1 is the first retry, 2 the second, etc
-			Debug("Retrying download of %s try #%d", req.URL.String(), attempt)
+		// Timeout for the entire request
+		client.HTTPClient.Timeout = clientTimeout
+		client.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
+			if attempt > 0 {
+				// attempt==1 is the first retry, 2 the second, etc
+				Debug("Retrying download of %s try #%d", req.URL.String(), attempt)
+			}
 		}
+		return client, clientTimeout
 	}
 
 	// Ensure partial files are removed on any error.
@@ -57,68 +71,97 @@ func DownloadFile(destPath string, fileURL string, progressBar bool, shaSumURL s
 		}
 	}()
 
-	// Download expected SHA sum if provided.
+	// Download expected SHA sum if provided with retry logic.
 	var expectedSHA string
 	if shaSumURL != "" {
-		Debug("Attempting to download SHASUM URL=%s", shaSumURL)
-		resp, getErr := client.Get(shaSumURL)
+		// SHA is a smaller file, use a shorter timeout
+		shaSumTimeout := 20 * time.Second
+		for attempt := 0; attempt <= retries; attempt++ {
+			client, currentTimeout := createClient(shaSumTimeout, attempt)
+			Debug("Attempting to download SHASUM URL=%s (attempt %d/%d) with timeout %v", shaSumURL, attempt+1, retries+1, currentTimeout)
+			resp, getErr := client.Get(shaSumURL)
+			if getErr != nil {
+				err = fmt.Errorf("downloading shaSum URL %s: %w", shaSumURL, getErr)
+				return
+			}
+			if resp.StatusCode != http.StatusOK {
+				CheckClose(resp.Body)
+				err = fmt.Errorf("unexpected HTTP status downloading %s: %s", shaSumURL, resp.Status)
+				return
+			}
+			body, readErr := io.ReadAll(resp.Body)
+			CheckClose(resp.Body)
+			if readErr != nil {
+				if errors.Is(readErr, context.DeadlineExceeded) && attempt < retries {
+					Debug("SHASUM read attempt %d failed with timeout, retrying...", attempt+1)
+					continue
+				}
+				err = fmt.Errorf("reading shaSum: %w", readErr)
+				return
+			}
+			expectedSHA = strings.TrimSpace(string(body))
+			break
+		}
+	}
+
+	var hasher hash.Hash
+
+	for attempt := 0; attempt <= retries; attempt++ {
+		// Create/recreate the destination file for each attempt
+		outFile, createErr := os.Create(destPath)
+		if createErr != nil {
+			err = createErr
+			return
+		}
+		client, currentTimeout := createClient(timeout, attempt)
+		// Download the main fileURL.
+		Debug("Downloading %s to '%s' (attempt %d/%d) with timeout %v", fileURL, destPath, attempt+1, retries+1, currentTimeout)
+		resp, getErr := client.Get(fileURL)
 		if getErr != nil {
-			err = fmt.Errorf("downloading shaSum URL %s: %w", shaSumURL, getErr)
+			_ = outFile.Close()
+			err = fmt.Errorf("downloading file %s: %w", fileURL, getErr)
 			return
 		}
-		defer CheckClose(resp.Body)
 		if resp.StatusCode != http.StatusOK {
-			err = fmt.Errorf("unexpected HTTP status downloading %s: %s", shaSumURL, resp.Status)
+			CheckClose(resp.Body)
+			_ = outFile.Close()
+			err = fmt.Errorf("download link %s returned wrong status code: got %d want %d", fileURL, resp.StatusCode, http.StatusOK)
 			return
 		}
-		body, readErr := io.ReadAll(resp.Body)
-		if readErr != nil {
-			err = fmt.Errorf("reading shaSum: %w", readErr)
+
+		// Wrap reader in progress bar if requested.
+		reader := io.Reader(resp.Body)
+		var bar *pb.ProgressBar
+		if progressBar {
+			bar = pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(filepath.Base(destPath))
+			bar.Start()
+			reader = bar.NewProxyReader(resp.Body)
+		}
+
+		// Write file and compute SHA concurrently.
+		hasher = sha256.New()
+		writer := io.MultiWriter(outFile, hasher)
+
+		_, copyErr := io.Copy(writer, reader)
+
+		CheckClose(resp.Body)
+		_ = outFile.Close()
+
+		// Finish progress bar if it was used
+		if bar != nil {
+			bar.Finish()
+		}
+
+		if copyErr != nil {
+			if errors.Is(copyErr, context.DeadlineExceeded) && attempt < retries {
+				Debug("File copy attempt %d failed with timeout, retrying...", attempt+1)
+				continue
+			}
+			err = copyErr
 			return
 		}
-		expectedSHA = strings.TrimSpace(string(body))
-	}
-
-	// Create the destination file.
-	outFile, createErr := os.Create(destPath)
-	if createErr != nil {
-		err = createErr
-		return
-	}
-	defer func() {
-		if closeErr := outFile.Close(); closeErr != nil && err == nil {
-			err = closeErr
-		}
-	}()
-
-	// Download the main fileURL.
-	Debug("Downloading %s to %s", fileURL, destPath)
-	resp, getErr := client.Get(fileURL)
-	if getErr != nil {
-		err = fmt.Errorf("downloading file %s: %w", fileURL, getErr)
-		return
-	}
-	defer CheckClose(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("download link %s returned wrong status code: got %d want %d", fileURL, resp.StatusCode, http.StatusOK)
-		return
-	}
-
-	// Wrap reader in progress bar if requested.
-	reader := io.Reader(resp.Body)
-	if progressBar {
-		bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(filepath.Base(destPath))
-		bar.Start()
-		reader = bar.NewProxyReader(resp.Body)
-		defer bar.Finish()
-	}
-
-	// Write file and compute SHA concurrently.
-	hasher := sha256.New()
-	writer := io.MultiWriter(outFile, hasher)
-	if _, copyErr := io.Copy(writer, reader); copyErr != nil {
-		err = copyErr
-		return
+		// Success - break out of retry loop
+		break
 	}
 
 	// Verify SHA if provided.

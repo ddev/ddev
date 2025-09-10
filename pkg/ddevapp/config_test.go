@@ -735,7 +735,7 @@ func TestConfigValidate(t *testing.T) {
 
 	app.AdditionalFQDNs = []string{}
 	// Timezone validation isn't possible on Windows.
-	if runtime.GOOS != "windows" {
+	if !nodeps.IsWindows() {
 		app.Timezone = "xxx"
 		err = app.ValidateConfig()
 		require.Error(t, err)
@@ -754,7 +754,7 @@ func TestConfigValidate(t *testing.T) {
 	// Traditional Windows is not a very high priority
 	// This apparently started failing with Docker Desktop 4.19.0
 	// rfay 2023-05-02
-	if runtime.GOOS != "windows" {
+	if !nodeps.IsWindows() {
 		err = app.Start()
 		require.NoError(t, err)
 		err = app.MutagenSyncFlush()
@@ -818,7 +818,7 @@ func TestWriteConfig(t *testing.T) {
 
 // TestConfigOverrideDetection tests to make sure we tell them about config overrides.
 func TestConfigOverrideDetection(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		t.Skip("Skipping because unreliable on Windows")
 	}
 	testDataDdevDir := filepath.Join("testdata", t.Name(), ".ddev")
@@ -1196,7 +1196,7 @@ func TestTimezoneConfig(t *testing.T) {
 	hostTimezoneAbbr := "UTC"
 	hostTimezone := "UTC"
 	// Without timezone set, we should automatically detect local timezone on Linux, WSL2 and macOS
-	if runtime.GOOS != "windows" {
+	if !nodeps.IsWindows() {
 		hostTimezoneAbbr, _ = time.Now().In(time.Local).Zone()
 		hostTimezone, _ = util.GetLocalTimezone()
 	}

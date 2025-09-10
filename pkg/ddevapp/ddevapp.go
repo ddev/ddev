@@ -1275,7 +1275,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	if runtime.GOOS == "darwin" {
+	if nodeps.IsMacOS() {
 		failOnRosetta()
 	}
 	err = app.ProcessHooks("pre-start")
@@ -2293,7 +2293,7 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 			return fmt.Errorf("unable to GetAppRoot: %v", err)
 		}
 		bashPath := "bash"
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			bashPath = util.FindBashPath()
 			if bashPath == "" {
 				return fmt.Errorf("unable to find bash.exe on Windows")

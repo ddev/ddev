@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	exec2 "os/exec"
-	"runtime"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevhosts"
@@ -37,7 +36,7 @@ func ElevateToRemoveHostEntry(hostname string, ip string) (string, error) {
 // It must exist in the PATH
 func GetDdevHostnameBinary() string {
 	binary := ddevHostnameBinary
-	if runtime.GOOS == "windows" || (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) {
+	if nodeps.IsWindows() || (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) {
 		binary = ddevHostnameWindowsBinary
 	}
 	path, err := exec2.LookPath(binary)

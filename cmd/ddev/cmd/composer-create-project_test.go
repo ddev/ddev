@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -18,7 +17,7 @@ import (
 )
 
 func TestComposerCreateProjectCmd(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		t.Skip("Skipping on windows where it hangs")
 	}
 	composerVersionForThisTest := nodeps.ComposerDefault

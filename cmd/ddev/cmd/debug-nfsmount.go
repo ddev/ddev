@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/config/types"
@@ -12,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -50,7 +50,7 @@ var DebugNFSMountCmd = &cobra.Command{
 		}
 		shareDir := app.AppRoot
 		// Workaround for Catalina sharing nfs as /System/Volumes/Data
-		if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
+		if nodeps.IsMacOS() && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
 			shareDir = filepath.Join("/System/Volumes/Data", app.AppRoot)
 		}
 		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr), "device": ":" + dockerutil.MassageWindowsNFSMount(shareDir)}, nil)

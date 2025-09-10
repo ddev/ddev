@@ -189,7 +189,7 @@ fi
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
 
-${TIMEOUT} 120s bash "$(dirname "$0")/testbot_maintenance.sh"
+${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh"
 
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"

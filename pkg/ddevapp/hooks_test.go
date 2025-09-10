@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -16,7 +16,7 @@ import (
 
 // TestProcessHooks tests execution of commands defined in config.yaml
 func TestProcessHooks(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		t.Skip("Skipping on Windows, as it always hangs")
 	}
 	assert := asrt.New(t)

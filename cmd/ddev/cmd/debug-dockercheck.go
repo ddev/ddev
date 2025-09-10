@@ -42,14 +42,19 @@ var DebugDockercheckCmd = &cobra.Command{
 			dockerutil.IsDockerDesktop()
 		}
 
-		util.Success("Using Docker context: %s", dockerutil.DockerContext)
-		dockerContext := os.Getenv("DOCKER_CONTEXT")
-		if dockerContext != "" {
-			util.Success("From DOCKER_CONTEXT=%s", dockerContext)
+		dockerContextName, dockerHost, err := dockerutil.GetDockerContextNameAndHost()
+		if err != nil {
+			util.Failed("Could not get Docker context and host: %v", err)
 		}
 
-		util.Success("Using Docker host: %s", dockerutil.DockerHost)
-		dockerHost := os.Getenv("DOCKER_HOST")
+		util.Success("Using Docker context: %s", dockerContextName)
+		dockerContextName = os.Getenv("DOCKER_CONTEXT")
+		if dockerContextName != "" {
+			util.Success("From DOCKER_CONTEXT=%s", dockerContextName)
+		}
+
+		util.Success("Using Docker host: %s", dockerHost)
+		dockerHost = os.Getenv("DOCKER_HOST")
 		if dockerHost != "" {
 			util.Success("From DOCKER_HOST=%s", dockerHost)
 		}
@@ -68,10 +73,6 @@ var DebugDockercheckCmd = &cobra.Command{
 			} else {
 				util.Warning("Problem with your Docker provider: %v.", err)
 			}
-		}
-		err = dockerutil.CheckDockerProvider()
-		if err != nil {
-			util.Warning("Possible problem with your Docker provider: %v.", err)
 		}
 		dockerAPIVersion, err := dockerutil.GetDockerAPIVersion()
 		if err != nil {

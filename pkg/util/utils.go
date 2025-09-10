@@ -11,7 +11,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 	"time"
 	"unicode"
@@ -264,7 +263,7 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	//// Windows userids are non-numeric,
 	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
 	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		uidStr = "1000"
 		gidStr = "1000"
 	}
@@ -293,7 +292,7 @@ func GetFirstWord(s string) string {
 // On Windows we'll need the path to Bash to execute anything.
 // Returns empty string if not found, path if found
 func FindBashPath() string {
-	if runtime.GOOS != "windows" {
+	if !nodeps.IsWindows() {
 		return "bash"
 	}
 	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
@@ -371,7 +370,7 @@ func ColorizeText(s string, c string) (out string) {
 // Killall a process name on Linux/macOS/Windows.
 // Avoid this as it may have unintended consequences.
 func Killall(processName string) {
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		// Windows has a completely different process model, no SIGCHLD,
 		// no killing of subprocesses. I wasn't successful in finding a way
 		// to properly kill a process set using golang; rfay 20190622

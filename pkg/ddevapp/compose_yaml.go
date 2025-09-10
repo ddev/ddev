@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"slices"
 
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -173,6 +174,8 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 		bindIP = "0.0.0.0"
 	}
 
+	hostDockerInternal := dockerutil.GetHostDockerInternal()
+
 	// Ensure all services have required networks and environment variables
 	for name, service := range project.Services {
 		if _, ok := service.Networks[dockerutil.NetName]; !ok {
@@ -181,6 +184,20 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 		if _, ok := service.Networks["default"]; !ok {
 			service.Networks["default"] = nil
 		}
+
+		// Set up host.docker.internal based on DDEV's standard approach
+		if hostDockerInternal.ExtraHost != "" {
+			if service.ExtraHosts == nil {
+				service.ExtraHosts = composeTypes.HostsList{}
+			}
+			if service.ExtraHosts["host.docker.internal"] == nil {
+				service.ExtraHosts["host.docker.internal"] = []string{}
+			}
+			if !slices.Contains(service.ExtraHosts["host.docker.internal"], hostDockerInternal.ExtraHost) {
+				service.ExtraHosts["host.docker.internal"] = append(service.ExtraHosts["host.docker.internal"], hostDockerInternal.ExtraHost)
+			}
+		}
+		service.Environment["HOST_DOCKER_INTERNAL_IP"] = &hostDockerInternal.IPAddress
 
 		// Add environment variables from .env files to services
 		for _, envFile := range envFiles {

@@ -66,10 +66,6 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 			}
 		}
 
-		err = dockerutil.CheckDockerProvider()
-		if err != nil {
-			util.Warning("Possible problem with your Docker provider: %v.", err)
-		}
 		updateFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".update")
 
 		// Do periodic detection of whether an update is available for DDEV users.

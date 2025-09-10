@@ -145,7 +145,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	if app.DefaultContainerTimeout == "" {
 		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
 		// On Windows the default timeout may be too short for mutagen to succeed.
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			app.DefaultContainerTimeout = "240"
 		}
 	}
@@ -568,7 +568,7 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// Golang on Windows is not able to time.LoadLocation unless
 	// Go is installed... so skip validation on Windows
-	if runtime.GOOS != "windows" {
+	if !nodeps.IsWindows() {
 		_, err := time.LoadLocation(app.Timezone)
 		if err != nil {
 			// Golang on Windows is often not able to time.LoadLocation.
@@ -896,74 +896,72 @@ func (app *DdevApp) FixObsolete() {
 }
 
 type composeYAMLVars struct {
-	Name                            string
-	Plugin                          string
-	AppType                         string
-	WebserverType                   string
-	MailpitPort                     string
-	HostMailpitPort                 string
-	DBType                          string
-	DBVersion                       string
-	DBMountDir                      string
-	DBAPort                         string
-	DBPort                          string
-	DdevGenerated                   string
-	HostDockerInternalIP            string
-	NFSServerAddr                   string
-	DisableSettingsManagement       bool
-	MountType                       string
-	WebMount                        string
-	WebBuildContext                 string
-	DBBuildContext                  string
-	WebBuildDockerfile              string
-	DBBuildDockerfile               string
-	SSHAgentBuildContext            string
-	OmitDB                          bool
-	OmitDBA                         bool
-	OmitRouter                      bool
-	OmitSSHAgent                    bool
-	BindAllInterfaces               bool
-	MariaDBVolumeName               string
-	PostgresVolumeName              string
-	MutagenEnabled                  bool
-	MutagenVolumeName               string
-	NFSMountEnabled                 bool
-	NFSSource                       string
-	NFSMountVolumeName              string
-	DockerIP                        string
-	IsWindowsFS                     bool
-	NoProjectMount                  bool
-	Hostnames                       []string
-	Timezone                        string
-	ComposerVersion                 string
-	Username                        string
-	UID                             string
-	GID                             string
-	FailOnHookFail                  bool
-	WebWorkingDir                   string
-	DBWorkingDir                    string
-	DBAWorkingDir                   string
-	WebEnvironment                  []string
-	NoBindMounts                    bool
-	Docroot                         string
-	UploadDirsMap                   []string
-	GitDirMount                     bool
-	IsGitpod                        bool
-	IsCodespaces                    bool
-	DefaultContainerTimeout         string
-	UseHostDockerInternalExtraHosts bool
-	WebExtraContainerPorts          []int
-	WebExtraHTTPPorts               string
-	WebExtraHTTPSPorts              string
-	WebExtraExposedPorts            string
-	BitnamiVolumeDir                string
-	UseHardenedImages               bool
-	XHGuiHTTPPort                   string
-	XHGuiHTTPSPort                  string
-	XHGuiPort                       string
-	HostXHGuiPort                   string
-	XhguiImage                      string
-	XHProfMode                      types.XHProfMode
+	Name                      string
+	Plugin                    string
+	AppType                   string
+	WebserverType             string
+	MailpitPort               string
+	HostMailpitPort           string
+	DBType                    string
+	DBVersion                 string
+	DBMountDir                string
+	DBAPort                   string
+	DBPort                    string
+	DdevGenerated             string
+	NFSServerAddr             string
+	DisableSettingsManagement bool
+	MountType                 string
+	WebMount                  string
+	WebBuildContext           string
+	DBBuildContext            string
+	WebBuildDockerfile        string
+	DBBuildDockerfile         string
+	SSHAgentBuildContext      string
+	OmitDB                    bool
+	OmitDBA                   bool
+	OmitRouter                bool
+	OmitSSHAgent              bool
+	BindAllInterfaces         bool
+	MariaDBVolumeName         string
+	PostgresVolumeName        string
+	MutagenEnabled            bool
+	MutagenVolumeName         string
+	NFSMountEnabled           bool
+	NFSSource                 string
+	NFSMountVolumeName        string
+	DockerIP                  string
+	IsWindowsFS               bool
+	NoProjectMount            bool
+	Hostnames                 []string
+	Timezone                  string
+	ComposerVersion           string
+	Username                  string
+	UID                       string
+	GID                       string
+	FailOnHookFail            bool
+	WebWorkingDir             string
+	DBWorkingDir              string
+	DBAWorkingDir             string
+	WebEnvironment            []string
+	NoBindMounts              bool
+	Docroot                   string
+	UploadDirsMap             []string
+	GitDirMount               bool
+	IsGitpod                  bool
+	IsCodespaces              bool
+	DefaultContainerTimeout   string
+	WebExtraContainerPorts    []int
+	WebExtraHTTPPorts         string
+	WebExtraHTTPSPorts        string
+	WebExtraExposedPorts      string
+	BitnamiVolumeDir          string
+	UseHardenedImages         bool
+	XHGuiHTTPPort             string
+	XHGuiHTTPSPort            string
+	XHGuiPort                 string
+	HostXHGuiPort             string
+	XhguiImage                string
+	XHProfMode                types.XHProfMode
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -971,10 +969,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
 
-	hostDockerInternalIP, err := dockerutil.GetHostDockerInternalIP()
-	if err != nil {
-		util.Warning("Could not determine host.docker.internal IP address: %v", err)
-	}
+	hostDockerInternal := dockerutil.GetHostDockerInternal()
+	util.Debug(hostDockerInternal.Message)
+
 	nfsServerAddr, err := dockerutil.GetNFSServerAddr()
 	if err != nil {
 		util.Warning("Could not determine NFS server IP address: %v", err)
@@ -1020,7 +1017,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBMountDir:                "/var/lib/mysql",
 		DBPort:                    GetInternalPort(app, "db"),
 		DdevGenerated:             nodeps.DdevFileSignature,
-		HostDockerInternalIP:      hostDockerInternalIP,
 		NFSServerAddr:             nfsServerAddr,
 		DisableSettingsManagement: app.DisableSettingsManagement,
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
@@ -1031,7 +1027,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 		NFSMountEnabled:    app.IsNFSMountEnabled(),
 		NFSSource:          "",
-		IsWindowsFS:        runtime.GOOS == "windows",
+		IsWindowsFS:        nodeps.IsWindows(),
 		NoProjectMount:     app.NoProjectMount,
 		MountType:          "bind",
 		WebMount:           "../",
@@ -1064,12 +1060,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		HostXHGuiPort:           app.HostXHGuiPort,
 		XhguiImage:              docker.GetXhguiImage(),
 		XHProfMode:              app.GetXHProfMode(),
-
-		// Only use the extra_hosts technique for Linux and only if not WSL2 and not Colima
-		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
-		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2() && !dockerutil.IsColima()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
-		BitnamiVolumeDir:                "",
-		UseHardenedImages:               globalconfig.DdevGlobalConfig.UseHardenedImages,
+		BitnamiVolumeDir:        "",
+		UseHardenedImages:       globalconfig.DdevGlobalConfig.UseHardenedImages,
 	}
 	// We don't want to bind-mount Git directory if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {
@@ -1107,10 +1099,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		templateVars.WebMount = "nfsmount"
 		templateVars.NFSSource = app.AppRoot
 		// Workaround for Catalina sharing nfs as /System/Volumes/Data
-		if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
+		if nodeps.IsMacOS() && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
 			templateVars.NFSSource = filepath.Join("/System/Volumes/Data", app.AppRoot)
 		}
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			// WinNFSD can only handle a mountpoint like /C/Users/rfay/workspace/d8git
 			// and completely chokes in C:\Users\rfay...
 			templateVars.NFSSource = dockerutil.MassageWindowsNFSMount(app.AppRoot)

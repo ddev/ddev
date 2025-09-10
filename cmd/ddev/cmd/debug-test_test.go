@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"os"
-	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,7 +25,7 @@ func TestCmdDebugTest(t *testing.T) {
 	require.NoError(t, err, "out=%s", out)
 	require.Contains(t, out, "OS Information")
 	require.Contains(t, out, "webserver_type:")
-	if runtime.GOOS != "windows" {
+	if !nodeps.IsWindows() {
 		require.Contains(t, out, "PING dkdkd.ddev.site")
 	}
 }

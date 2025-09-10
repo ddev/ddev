@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"os"
 	"regexp"
-	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/config/types"
@@ -20,7 +19,7 @@ import (
 // sites found is missing a directory
 func TestListWithoutDir(t *testing.T) {
 	// Can't run with Mutagen because we actually delete the alpha
-	if runtime.GOOS == "windows" || nodeps.PerformanceModeDefault == types.PerformanceModeMutagen {
+	if nodeps.IsWindows() || nodeps.PerformanceModeDefault == types.PerformanceModeMutagen {
 		t.Skip("Skipping because unreliable on Windows and can't be used with Mutagen")
 	}
 	// Set up tests and give ourselves a working directory.

@@ -233,8 +233,9 @@ nav:
     - developers/writing-style-guide.md
     - developers/remote-config.md
     - developers/maintainers.md
-    - developers/network-test-environments.md
-    - developers/http-proxy-test-environments.md
     - developers/secret-management.md
+    - developers/http-proxy-test-environments.md
+    - developers/network-test-environments.md
+    - developers/network-bandwidth-testing.md
   - 'Blog': https://ddev.com/blog
   - 'Add-on Registry': https://addons.ddev.com

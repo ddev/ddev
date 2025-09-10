@@ -5,11 +5,11 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -42,7 +42,7 @@ var DebugTestCmdCmd = &cobra.Command{
 			util.Failed("Failed to copy test_ddev.sh to %s: %v", tmpDir, err)
 		}
 		p := tmpDir
-		if runtime.GOOS == "windows" {
+		if nodeps.IsWindows() {
 			if !fileutil.FileExists(bashPath) {
 				util.Failed("%s does not exist, please install git-bash to use 'ddev debug test'", bashPath)
 			}

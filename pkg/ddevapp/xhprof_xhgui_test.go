@@ -2,6 +2,12 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -12,17 +18,11 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	assert2 "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"runtime"
-	"sort"
-	"strings"
-	"testing"
 )
 
 // TestDdevXhprofPrependEnabled tests running with xhprof_enabled = true and xhprof_mode=prepend
 func TestDdevXhprofPrependEnabled(t *testing.T) {
-	if runtime.GOOS == "darwin" && os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" {
+	if nodeps.IsMacOS() && os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" {
 		// TODO: Return to this when working on xhprof xhgui etc.
 		t.Skip("Skipping on darwin to ignore problems with 'connection reset by peer'")
 	}
@@ -136,7 +136,7 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 
 // TestDdevXhprofXhguiEnabled tests running with xhprof_enabled = true and xhprof_mode=xhgui
 func TestDdevXhprofXhguiEnabled(t *testing.T) {
-	if runtime.GOOS == "darwin" && os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" {
+	if nodeps.IsMacOS() && os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" {
 		// TODO: Return to this when working on xhprof xhgui etc.
 		t.Skip("Skipping on darwin to ignore problems with 'connection reset by peer'")
 	}

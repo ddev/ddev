@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/exec"
@@ -84,7 +83,7 @@ func (c ExecHostTask) Execute() error {
 	}
 
 	bashPath := "bash"
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		bashPath = util.FindBashPath()
 	}
 

@@ -5,7 +5,6 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -314,7 +313,7 @@ func TestGetGlobalDdevDirLocation(t *testing.T) {
 	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
 	// If test runs on Linux machine, where ~/.config/ddev is used
 	// if ~/.ddev does not exist:
-	if runtime.GOOS == "linux" && !fileutil.IsDirectory(originalGlobalDdevDir) {
+	if nodeps.IsLinux() && !fileutil.IsDirectory(originalGlobalDdevDir) {
 		linuxDdevDir := filepath.Join(homedir.Get(), ".config", "ddev")
 		if fileutil.IsDirectory(linuxDdevDir) {
 			originalGlobalDdevDir = linuxDdevDir

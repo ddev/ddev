@@ -3,12 +3,12 @@ package cmd
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -49,7 +49,7 @@ func TestDebugNFSMount(t *testing.T) {
 	assert.NoError(err)
 
 	source := pwd
-	if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", source)) {
+	if nodeps.IsMacOS() && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", source)) {
 		source = filepath.Join("/System/Volumes/Data", source)
 	}
 	assert.Contains(out, ":"+dockerutil.MassageWindowsNFSMount(source))

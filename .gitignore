@@ -45,10 +45,6 @@ node_modules/
 .DS_Store
 /.env
 
-# Task files
-# tasks.json
-# tasks/ 
-
 # ignore everything in .claude…
 .claude/*
 
@@ -64,3 +60,9 @@ node_modules/
 .claude/tmp/
 .claude/logs/
 .claude/*.db
+
+# Task files
+# tasks.json
+# tasks/ 
+/.mcp.json
+/.env.example
