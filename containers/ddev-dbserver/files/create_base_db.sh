@@ -26,7 +26,7 @@ mysqld_version=${mysqld_version%.*}
 echo version=$mysqld_version
 # Oracle mysql 5.7+ deprecates mysql_install_db
 if [ "${mysqld_version}" = "5.7" ] || [[  "${mysqld_version%%%.*}" =~ ^8.[04]$ ]]; then
-    mysqld --defaults-file=/var/tmp/my.cnf --initialize-insecure --datadir=${DATADIR:-/var/lib/mysql} --server-id=${MYSQL_SERVER_ID:-0}
+    mysqld --defaults-file=/var/tmp/my.cnf --initialize-insecure --datadir=${DATADIR:-/var/lib/mysql} --server-id=0
 else
     # mysql 5.5 requires running mysql_install_db in /usr/local/mysql
     if command -v mysqld | grep usr.local; then
@@ -35,7 +35,7 @@ else
     mysql_install_db --defaults-file=/var/tmp/my.cnf --force --datadir=${DATADIR:-/var/lib/mysql}
 fi
 echo "Starting mysqld --skip-networking --socket=${MYSQL_UNIX_PORT}"
-mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --innodb_log_file_size=48M --skip-networking --datadir=${DATADIR:-/var/lib/mysql} --server-id=${MYSQL_SERVER_ID:-0} --skip-log-bin &
+mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --innodb_log_file_size=48M --skip-networking --datadir=${DATADIR:-/var/lib/mysql} --server-id=0 --skip-log-bin &
 pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
