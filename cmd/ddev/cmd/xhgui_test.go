@@ -37,7 +37,7 @@ func TestCmdXHGui(t *testing.T) {
 
 	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--xhprof-mode=xhgui")
 	require.NoError(t, err)
-	_, err = exec.RunHostCommand(DdevBin, "start")
+	_, err = exec.RunHostCommand(DdevBin, "restart")
 	require.NoError(t, err)
 
 	out, err := exec.RunHostCommand(DdevBin, "xhgui", "status")
