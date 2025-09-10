@@ -1,7 +1,16 @@
 package versionconstants
 
-// DdevVersion is the current version of DDEV, by default the Git committish (should be current Git tag)
-var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
+import (
+	"os"
+	"os/exec"
+	"runtime/debug"
+	"strings"
+)
+
+// DdevVersion is the current version of DDEV. Normally set via -ldflags from the Makefile
+// using `git describe --tags --always --dirty`. If not provided, we derive a best-effort
+// value. Prefer VERSION env var, otherwise use Go build-info hash.
+var DdevVersion = "" // Note that this is overridden by make
 
 // AmplitudeAPIKey is the ddev-specific key for Amplitude service
 // Compiled with link-time variables
@@ -53,3 +62,110 @@ const RequiredMutagenVersion = "0.18.1"
 // Keep this in sync with github.com/compose-spec/compose-go/v2 in go.mod,
 // matching the version used in https://github.com/docker/compose/blob/main/go.mod for the same tag
 const RequiredDockerComposeVersionDefault = "v2.39.2"
+
+// ---
+// Fallback version derivation for developer builds not using the Makefile
+// ---
+
+func init() {
+	if DdevVersion == "" {
+		// 1) Explicit env override: VERSION=vX.Y.Z ddev ...
+		if v := deriveVersionFromEnv(); v != "" {
+			DdevVersion = v
+			return
+		}
+		// 2) Fall back to build info short hash
+		if v := deriveVersionFromBuildInfo(); v != "" {
+			DdevVersion = v
+			return
+		}
+		// 3) Try direct git command as final fallback
+		if v := deriveVersionFromGit(); v != "" {
+			DdevVersion = v
+			return
+		}
+		// 4) Last resort - use build info without VCS or unknown version
+		DdevVersion = "v0.0.0-overridden-by-make"
+	}
+}
+
+// deriveVersionFromEnv reads VERSION environment variable (if set) and returns it.
+func deriveVersionFromEnv() string {
+	v := strings.TrimSpace(os.Getenv("VERSION"))
+	return v
+}
+
+// deriveVersionFromBuildInfo uses Go's embedded VCS info (enabled by default since Go 1.18+)
+// to produce a short commit-based version like "gabcd123[-dirty]".
+func deriveVersionFromBuildInfo() string {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		return ""
+	}
+	var rev string
+	var dirty bool
+	var hasModifiedInfo bool
+	for _, s := range bi.Settings {
+		switch s.Key {
+		case "vcs.revision":
+			rev = s.Value
+		case "vcs.modified":
+			hasModifiedInfo = true
+			dirty = s.Value == "true"
+		}
+	}
+	if rev == "" {
+		return ""
+	}
+	short := rev
+	if len(short) > 7 {
+		short = short[:7]
+	}
+	v := "g" + short
+	// If we don't have modified info from build, assume it might be dirty
+	// since we're in a development context
+	if dirty || !hasModifiedInfo {
+		v += "-dirty"
+	}
+	return v
+}
+
+var gitVersionCache string
+var gitVersionCacheInitialized bool
+
+// deriveVersionFromGit attempts to run git describe directly to get version info.
+// This is used as a fallback when build info doesn't contain VCS information.
+// The result is cached to avoid repeated git command execution.
+func deriveVersionFromGit() string {
+	if gitVersionCacheInitialized {
+		return gitVersionCache
+	}
+
+	gitVersionCacheInitialized = true
+
+	// Try git describe --tags --always --dirty (same as Makefile)
+	cmd := exec.Command("git", "describe", "--tags", "--always", "--dirty")
+	if output, err := cmd.Output(); err == nil {
+		gitVersionCache = strings.TrimSpace(string(output))
+		return gitVersionCache
+	}
+
+	// Fallback to just getting the commit hash
+	cmd = exec.Command("git", "rev-parse", "--short=7", "HEAD")
+	if output, err := cmd.Output(); err == nil {
+		hash := strings.TrimSpace(string(output))
+		if hash != "" {
+			// Check if working directory is dirty
+			cmd = exec.Command("git", "diff-index", "--quiet", "HEAD", "--")
+			if err := cmd.Run(); err != nil {
+				gitVersionCache = "g" + hash + "-dirty"
+			} else {
+				gitVersionCache = "g" + hash
+			}
+			return gitVersionCache
+		}
+	}
+
+	gitVersionCache = ""
+	return gitVersionCache
+}

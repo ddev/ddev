@@ -1,0 +1,2 @@
+# Configuration for post-install runtime deps addon test
+post_install_runtime_deps_test: true

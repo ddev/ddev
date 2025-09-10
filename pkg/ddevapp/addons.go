@@ -11,7 +11,9 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
+	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -26,6 +28,7 @@ import (
 	dockerMount "github.com/docker/docker/api/types/mount"
 	dockerStrslice "github.com/docker/docker/api/types/strslice"
 	"github.com/google/go-github/v72/github"
+	"github.com/otiai10/copy"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -747,6 +750,32 @@ func RemoveAddon(app *DdevApp, addonName string, verbose bool, skipRemovalAction
 		util.Failed("The add-on '%s' does not seem to have a manifest file; please upgrade it.\nUse `ddev add-on list --installed` to see installed add-ons.\n", addonName)
 	}
 
+	// Check if any other addons depend on the one being removed
+	var dependentAddons []string
+	seenDependents := make(map[string]bool) // Track seen addon names to avoid duplicates
+	for name, manifest := range manifests {
+		if name != addonName { // Skip the addon being removed
+			for _, dep := range manifest.Dependencies {
+				// Check dependency by both normalized name and repository match
+				if dep == addonName ||
+					(manifestData.Repository != "" && dep == manifestData.Repository) ||
+					NormalizeAddonIdentifier(dep) == addonName {
+					// Use the manifest's actual name to avoid duplicates
+					actualAddonName := manifest.Name
+					if !seenDependents[actualAddonName] {
+						dependentAddons = append(dependentAddons, actualAddonName)
+						seenDependents[actualAddonName] = true
+					}
+					break
+				}
+			}
+		}
+	}
+
+	if len(dependentAddons) > 0 {
+		return fmt.Errorf("cannot remove add-on '%s' because the following add-ons depend on it: %s", addonName, strings.Join(dependentAddons, ", "))
+	}
+
 	// Execute any removal actions
 	if !skipRemovalActions {
 		for i, action := range manifestData.RemovalActions {
@@ -799,6 +828,524 @@ func RemoveAddon(app *DdevApp, addonName string, verbose bool, skipRemovalAction
 		return fmt.Errorf("error removing addon metadata directory %s: %v", manifestData.Name, err)
 	}
 	util.Success("Removed add-on %s", addonName)
+	return nil
+}
+
+// Global variables to track installation stack for circular dependency detection
+var installStack []string
+var installStackMap map[string]bool
+
+func init() {
+	installStackMap = make(map[string]bool)
+}
+
+// ResetInstallStack clears the installation stack (for testing)
+func ResetInstallStack() {
+	installStack = []string{}
+	installStackMap = make(map[string]bool)
+}
+
+// ParseRuntimeDependencies reads and parses a .runtime-deps file
+func ParseRuntimeDependencies(runtimeDepsFile string) ([]string, error) {
+	if !fileutil.FileExists(runtimeDepsFile) {
+		return nil, nil // No runtime dependencies file
+	}
+
+	content, err := fileutil.ReadFileIntoString(runtimeDepsFile)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read runtime dependencies file %s: %v", runtimeDepsFile, err)
+	}
+
+	var dependencies []string
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		dependencies = append(dependencies, line)
+	}
+
+	return dependencies, nil
+}
+
+// NormalizeAddonIdentifier converts various addon identifier formats to a canonical form
+// This helps detect circular dependencies when the same addon is referenced in different ways
+func NormalizeAddonIdentifier(addonIdentifier string) string {
+	// For GitHub URLs like https://github.com/owner/repo/archive/refs/tags/v1.0.0.tar.gz
+	if strings.HasPrefix(addonIdentifier, "https://github.com/") {
+		parts := strings.Split(addonIdentifier, "/")
+		if len(parts) >= 5 {
+			return parts[3] + "/" + parts[4] // Extract owner/repo
+		}
+	}
+
+	// For owner/repo format, use as-is
+	parts := strings.Split(addonIdentifier, "/")
+	if len(parts) == 2 && !strings.Contains(addonIdentifier, ".") && !strings.HasPrefix(addonIdentifier, ".") {
+		return addonIdentifier
+	}
+
+	// For local paths or other formats, use the basename without extension
+	base := filepath.Base(addonIdentifier)
+	// Remove common archive extensions
+	for _, ext := range []string{".tar.gz", ".tgz", ".tar", ".zip"} {
+		if strings.HasSuffix(base, ext) {
+			base = strings.TrimSuffix(base, ext)
+			break
+		}
+	}
+
+	return base
+}
+
+// AddToInstallStack adds an addon to the installation stack and checks for circular dependencies
+func AddToInstallStack(addonName string) error {
+	// Normalize the addon identifier for consistent circular dependency detection
+	normalizedName := NormalizeAddonIdentifier(addonName)
+
+	// Check for circular dependencies using normalized name
+	if installStackMap[normalizedName] {
+		return fmt.Errorf("circular dependency detected: %s",
+			strings.Join(append(installStack, addonName), " -> "))
+	}
+	installStack = append(installStack, addonName)
+	installStackMap[normalizedName] = true
+	return nil
+}
+
+// InstallDependencies installs a list of dependencies, checking if they're already installed
+func InstallDependencies(app *DdevApp, dependencies []string, verbose bool) error {
+	m, err := GatherAllManifests(app)
+	if err != nil {
+		return fmt.Errorf("unable to gather manifests: %w", err)
+	}
+
+	for _, dep := range dependencies {
+		if !isDependencyInstalled(m, dep) {
+			util.Success("Installing missing dependency: %s", dep)
+			err = installAddonRecursive(app, dep, verbose)
+			if err != nil {
+				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
+			}
+			// Refresh manifest cache after installation
+			m, _ = GatherAllManifests(app)
+		} else if verbose {
+			util.Success("Dependency '%s' is already installed", dep)
+		}
+	}
+	return nil
+}
+
+// isDependencyInstalled checks if a dependency is already installed using multiple key formats
+func isDependencyInstalled(manifests map[string]AddonManifest, dependency string) bool {
+	// Try direct lookup first
+	if _, exists := manifests[dependency]; exists {
+		return true
+	}
+
+	// Try normalized identifier
+	normalized := NormalizeAddonIdentifier(dependency)
+	if _, exists := manifests[normalized]; exists {
+		return true
+	}
+
+	// For local paths, check against repository values
+	if fileutil.IsDirectory(dependency) || strings.Contains(dependency, "/") {
+		absPath, err := filepath.Abs(dependency)
+		if err == nil {
+			if _, exists := manifests[absPath]; exists {
+				return true
+			}
+		}
+	}
+
+	// Check if any manifest's repository matches this dependency
+	for _, manifest := range manifests {
+		if manifest.Repository == dependency {
+			return true
+		}
+		// Also check normalized forms
+		if NormalizeAddonIdentifier(manifest.Repository) == normalized {
+			return true
+		}
+	}
+
+	return false
+}
+
+// installAddonRecursive installs an addon and its dependencies recursively
+func installAddonRecursive(app *DdevApp, addonName string, verbose bool) error {
+	// Normalize the addon identifier for consistent circular dependency detection
+	normalizedName := NormalizeAddonIdentifier(addonName)
+
+	// Check for circular dependencies using normalized name
+	if installStackMap[normalizedName] {
+		return fmt.Errorf("circular dependency detected: %s",
+			strings.Join(append(installStack, addonName), " -> "))
+	}
+
+	installStack = append(installStack, addonName)
+	installStackMap[normalizedName] = true
+	defer func() {
+		// Clean up both slice and map using normalized name
+		installStack = installStack[:len(installStack)-1]
+		delete(installStackMap, normalizedName)
+	}()
+
+	// Handle different dependency formats (same as ddev add-on get)
+	parts := strings.Split(addonName, "/")
+	extractedDir := ""
+	tarballURL := ""
+	var cleanup func()
+
+	switch {
+	// Local directory path (check this first before GitHub parsing)
+	case fileutil.IsDirectory(addonName):
+		extractedDir = addonName
+		if verbose {
+			util.Success("Installing from local directory: %s", addonName)
+		}
+
+	// Local tarball file
+	case fileutil.FileExists(addonName) && (strings.HasSuffix(filepath.Base(addonName), "tar.gz") || strings.HasSuffix(filepath.Base(addonName), "tar") || strings.HasSuffix(filepath.Base(addonName), "tgz")):
+		var err error
+		extractedDir, cleanup, err = archive.ExtractTarballWithCleanup(addonName, true)
+		if err != nil {
+			return fmt.Errorf("unable to extract %s: %v", addonName, err)
+		}
+		defer cleanup()
+
+	// URL to tarball (including GitHub tarball URLs)
+	case strings.HasPrefix(addonName, "http://") || strings.HasPrefix(addonName, "https://"):
+		tarballURL = addonName
+		var err error
+		extractedDir, cleanup, err = archive.DownloadAndExtractTarball(tarballURL, true)
+		if err != nil {
+			return fmt.Errorf("unable to download %v: %v", addonName, err)
+		}
+		defer cleanup()
+
+	// GitHub owner/repo format (check this last, and exclude paths)
+	case len(parts) == 2 && !strings.Contains(addonName, ".") && !strings.HasPrefix(addonName, "."):
+		return InstallAddonFromGitHub(app, addonName, "", verbose)
+
+	default:
+		return fmt.Errorf("unsupported dependency format: %s (must be owner/repo, /path/to/addon, or https://...)", addonName)
+	}
+
+	// If we have a local extraction, handle it directly
+	if extractedDir != "" {
+		return InstallAddonFromDirectory(app, extractedDir, addonName, "unknown", verbose)
+	}
+
+	return fmt.Errorf("no extraction directory available for addon: %s", addonName)
+}
+
+// InstallAddonFromGitHub handles GitHub-based addon installation
+func InstallAddonFromGitHub(app *DdevApp, addonName, requestedVersion string, verbose bool) error {
+	// Parse owner/repo from addonName
+	parts := strings.Split(addonName, "/")
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid addon name format, expected 'owner/repo': %s", addonName)
+	}
+
+	owner := parts[0]
+	repo := parts[1]
+
+	// Get GitHub release
+	tarballURL, downloadedRelease, err := github2.GetGitHubRelease(owner, repo, requestedVersion)
+	if err != nil {
+		return err
+	}
+
+	// Download and install
+	return InstallAddonFromTarball(app, tarballURL, downloadedRelease, addonName, verbose)
+}
+
+// InstallAddonFromDirectory handles installation from a local directory
+func InstallAddonFromDirectory(app *DdevApp, extractedDir, repository, version string, verbose bool) error {
+	// Parse install.yaml
+	yamlFile := filepath.Join(extractedDir, "install.yaml")
+	yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
+	if err != nil {
+		return fmt.Errorf("unable to read %v: %v", yamlFile, err)
+	}
+	var s InstallDesc
+	err = yaml.Unmarshal([]byte(yamlContent), &s)
+	if err != nil {
+		return fmt.Errorf("unable to parse %v: %v", yamlFile, err)
+	}
+
+	// Check version constraint
+	if s.DdevVersionConstraint != "" {
+		err := CheckDdevVersionConstraint(s.DdevVersionConstraint, fmt.Sprintf("Unable to install the '%s' add-on", s.Name), "")
+		if err != nil {
+			return err
+		}
+	}
+
+	// Install dependencies recursively, resolving relative paths
+	if len(s.Dependencies) > 0 {
+		resolvedDeps := make([]string, len(s.Dependencies))
+		for i, dep := range s.Dependencies {
+			if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
+				// Resolve relative path relative to extractedDir
+				resolvedPath := filepath.Join(extractedDir, dep)
+				// Clean the path to resolve .. and . components
+				resolvedDeps[i] = filepath.Clean(resolvedPath)
+				if verbose {
+					util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
+				}
+			} else {
+				resolvedDeps[i] = dep
+			}
+		}
+		err = InstallDependencies(app, resolvedDeps, verbose)
+		if err != nil {
+			return fmt.Errorf("unable to install dependencies for '%s': %v", s.Name, err)
+		}
+	}
+
+	// Run pre-install actions
+	if len(s.PreInstallActions) > 0 {
+		util.Success("\nExecuting pre-install actions:")
+	}
+	for i, action := range s.PreInstallActions {
+		err = ProcessAddonAction(action, s, app, verbose)
+		if err != nil {
+			desc := GetAddonDdevDescription(action)
+			if !verbose {
+				return fmt.Errorf("could not process pre-install action (%d) '%s'", i, desc)
+			} else {
+				return fmt.Errorf("could not process pre-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
+			}
+		}
+	}
+
+	// Install project files
+	if len(s.ProjectFiles) > 0 {
+		util.Success("\nInstalling project-level components:")
+	}
+
+	projectFiles, err := fileutil.ExpandFilesAndDirectories(extractedDir, s.ProjectFiles)
+	if err != nil {
+		return fmt.Errorf("unable to expand files and directories: %v", err)
+	}
+	for _, file := range projectFiles {
+		src := filepath.Join(extractedDir, file)
+		dest := app.GetConfigPath(file)
+		if err = fileutil.CheckSignatureOrNoFile(dest, nodeps.DdevFileSignature); err == nil {
+			err = copy.Copy(src, dest)
+			if err != nil {
+				return fmt.Errorf("unable to copy %v to %v: %v", src, dest, err)
+			}
+			util.Success("%c %s", '\U0001F44D', file)
+		} else {
+			util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can remove the file and use ddev add-on get again if you want it to be replaced: %v", dest, err)
+		}
+	}
+
+	// Install global files
+	globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
+	if len(s.GlobalFiles) > 0 {
+		util.Success("\nInstalling global components:")
+	}
+
+	globalFiles, err := fileutil.ExpandFilesAndDirectories(extractedDir, s.GlobalFiles)
+	if err != nil {
+		return fmt.Errorf("unable to expand global files and directories: %v", err)
+	}
+	for _, file := range globalFiles {
+		src := filepath.Join(extractedDir, file)
+		dest := filepath.Join(globalDotDdev, file)
+
+		// If the file existed and had #ddev-generated OR if it did not exist, copy it in.
+		if err = fileutil.CheckSignatureOrNoFile(dest, nodeps.DdevFileSignature); err == nil {
+			err = copy.Copy(src, dest)
+			if err != nil {
+				return fmt.Errorf("unable to copy %v to %v: %v", src, dest, err)
+			}
+			util.Success("%c %s", '\U0001F44D', file)
+		} else {
+			util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can remove the file and use ddev add-on get again if you want it to be replaced: %v", dest, err)
+		}
+	}
+
+	// Change to project directory for post-install actions
+	origDir, _ := os.Getwd()
+	defer func() {
+		err = os.Chdir(origDir)
+		if err != nil {
+			util.Warning("Unable to chdir back to %v: %v", origDir, err)
+		}
+	}()
+
+	err = os.Chdir(app.GetConfigPath(""))
+	if err != nil {
+		return fmt.Errorf("unable to chdir to %v: %v", app.GetConfigPath(""), err)
+	}
+
+	// Run post-install actions
+	if len(s.PostInstallActions) > 0 {
+		util.Success("\nExecuting post-install actions:")
+	}
+	for i, action := range s.PostInstallActions {
+		err = ProcessAddonAction(action, s, app, verbose)
+		if err != nil {
+			desc := GetAddonDdevDescription(action)
+			if !verbose {
+				return fmt.Errorf("could not process post-install action (%d) '%s'", i, desc)
+			} else {
+				return fmt.Errorf("could not process post-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
+			}
+		}
+	}
+
+	// Clean up temporary configuration files created for PHP actions
+	err = app.CleanupConfigurationFiles()
+	if err != nil {
+		util.Warning("Unable to clean up temporary configuration files: %v", err)
+	}
+
+	// Create manifest file for tracking this installation
+	err = createAddonManifest(app, s.Name, repository, version, s)
+	if err != nil {
+		return fmt.Errorf("failed to create addon manifest: %v", err)
+	}
+
+	util.Success("Successfully installed %s from directory", s.Name)
+	return nil
+}
+
+// createAddonManifest creates a manifest file for tracking addon installation
+func createAddonManifest(app *DdevApp, addonName, repository, version string, desc InstallDesc) error {
+	manifest := AddonManifest{
+		Name:           addonName,
+		Repository:     repository,
+		Version:        version,
+		Dependencies:   desc.Dependencies,
+		InstallDate:    time.Now().Format(time.RFC3339),
+		ProjectFiles:   desc.ProjectFiles,
+		GlobalFiles:    desc.GlobalFiles,
+		RemovalActions: desc.RemovalActions,
+	}
+
+	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", AddonMetadataDir, addonName))
+	manifestData, err := yaml.Marshal(manifest)
+	if err != nil {
+		return fmt.Errorf("error marshaling manifest data: %v", err)
+	}
+
+	err = os.MkdirAll(filepath.Dir(manifestFile), 0755)
+	if err != nil {
+		return fmt.Errorf("error creating manifest directory: %v", err)
+	}
+
+	err = os.WriteFile(manifestFile, manifestData, 0644)
+	if err != nil {
+		return fmt.Errorf("error writing manifest file: %v", err)
+	}
+
+	return nil
+}
+
+// InstallAddonFromTarball handles complete installation process for tarball-based addons
+func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease, repository string, verbose bool) error {
+	// Extract tarball
+	extractedDir, cleanup, err := archive.DownloadAndExtractTarball(tarballURL, true)
+	if err != nil {
+		return fmt.Errorf("unable to download %v: %v", tarballURL, err)
+	}
+	defer cleanup()
+
+	// Use the directory installation method for complete processing
+	return InstallAddonFromDirectory(app, extractedDir, repository, downloadedRelease, verbose)
+}
+
+// ValidateDependencies checks that all declared dependencies exist without installing them.
+// Useful for callers that want to verify dependencies are present but not install them.
+func ValidateDependencies(app *DdevApp, dependencies []string, extractedDir, addonName string) error {
+	m, err := GatherAllManifests(app)
+	if err != nil {
+		return fmt.Errorf("unable to gather manifests: %w", err)
+	}
+	for _, dep := range dependencies {
+		checkName := dep
+		// For relative paths, we need to check the actual addon name, not the path
+		if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
+			// Resolve relative path and get the addon name from install.yaml
+			resolvedPath := filepath.Clean(filepath.Join(extractedDir, dep))
+			if fileutil.IsDirectory(resolvedPath) {
+				yamlFile := filepath.Join(resolvedPath, "install.yaml")
+				if yamlContent, err := fileutil.ReadFileIntoString(yamlFile); err == nil {
+					var depDesc InstallDesc
+					if err := yaml.Unmarshal([]byte(yamlContent), &depDesc); err == nil {
+						checkName = depDesc.Name
+					}
+				}
+			}
+		}
+		if _, ok := m[checkName]; !ok {
+			return fmt.Errorf("the add-on '%s' declares a dependency on '%s'; please ddev add-on get %s first", addonName, dep, dep)
+		}
+	}
+	return nil
+}
+
+// ResolveDependencyPaths resolves relative paths in dependencies relative to extractedDir
+func ResolveDependencyPaths(dependencies []string, extractedDir string, verbose bool) []string {
+	resolvedDeps := make([]string, len(dependencies))
+	for i, dep := range dependencies {
+		if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
+			// Resolve relative path relative to extractedDir
+			resolvedPath := filepath.Join(extractedDir, dep)
+			// Clean the path to resolve .. and . components
+			resolvedDeps[i] = filepath.Clean(resolvedPath)
+			if verbose {
+				util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
+			}
+		} else {
+			resolvedDeps[i] = dep
+		}
+	}
+	return resolvedDeps
+}
+
+// ProcessRuntimeDependencies handles runtime dependencies generated during addon installation
+func ProcessRuntimeDependencies(app *DdevApp, addonName, extractedDir string, verbose bool) error {
+	runtimeDepsFile := app.GetConfigPath(".runtime-deps-" + addonName)
+	if verbose {
+		util.Success("Checking for runtime dependencies file: %s", runtimeDepsFile)
+		if fileutil.FileExists(runtimeDepsFile) {
+			content, _ := fileutil.ReadFileIntoString(runtimeDepsFile)
+			util.Success("Runtime dependencies file contents: %q", content)
+		} else {
+			util.Success("Runtime dependencies file does not exist")
+		}
+	}
+
+	runtimeDeps, err := ParseRuntimeDependencies(runtimeDepsFile)
+	if err != nil {
+		return fmt.Errorf("failed to parse runtime dependencies: %w", err)
+	}
+
+	if verbose {
+		util.Success("Found %d runtime dependencies: %v", len(runtimeDeps), runtimeDeps)
+	}
+
+	if len(runtimeDeps) > 0 {
+		util.Success("Installing runtime dependencies:")
+		// Resolve relative paths for runtime dependencies
+		resolvedRuntimeDeps := ResolveDependencyPaths(runtimeDeps, extractedDir, verbose)
+		err := InstallDependencies(app, resolvedRuntimeDeps, verbose)
+		if err != nil {
+			return fmt.Errorf("failed to install runtime dependencies for '%s': %w", addonName, err)
+		}
+		// Clean up the runtime dependencies file
+		_ = os.Remove(runtimeDepsFile)
+	}
 	return nil
 }
 

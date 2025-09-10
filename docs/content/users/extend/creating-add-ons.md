@@ -294,15 +294,186 @@ ddev_version_constraint: '>= v1.23.4'
 
 ### Dependencies
 
-Declare add-on dependencies:
+Declare add-on dependencies that will be automatically installed:
 
 ```yaml
 dependencies:
-  - redis
-  - elasticsearch
+  - ddev/ddev-redis        # GitHub repository
+  - https://example.com/addon.tar.gz  # Direct tarball URL
 ```
 
-### Template Replacements
+Dependencies are automatically installed when the add-on is installed. If a dependency is missing, DDEV will:
+
+1. **Automatically install it** using the same formats supported by `ddev add-on get`
+2. **Detect circular dependencies** and prevent infinite loops
+3. **Install recursively** - dependencies of dependencies are also installed
+
+To skip automatic dependency installation, use the `--skip-deps` flag:
+
+```bash
+ddev add-on get --skip-deps my-addon
+```
+
+This does not install dependencies. Ensure required dependencies are present if your add-on relies on them.
+
+### Runtime Dependencies (Advanced)
+
+!!! warning "Advanced Feature"
+    Runtime dependencies are an advanced, rarely-used feature for sophisticated add-ons that need to dynamically discover dependencies during installation. Most add-ons should use static `dependencies` declared in `install.yaml` instead.
+
+Runtime dependencies allow add-ons to **dynamically discover and install dependencies** during the installation process, rather than declaring them statically. This enables complex scenarios like:
+
+- **Service detection** - Analyzing project configuration to determine needed services
+- **Conditional dependencies** - Installing different add-ons based on project analysis
+- **Dynamic configuration processing** - Dependencies determined by parsing external files
+
+#### How Runtime Dependencies Work
+
+1. **Detection Phase**: During pre-install or post-install actions, your add-on analyzes the project
+2. **Creation Phase**: Your add-on creates a `.runtime-deps-<addon-name>` file listing discovered dependencies
+3. **Processing Phase**: After installation completes, DDEV automatically processes runtime dependencies
+4. **Installation Phase**: DDEV installs any missing dependencies and cleans up the runtime dependencies file
+
+#### Creating Runtime Dependencies
+
+Create a `.runtime-deps-<addon-name>` file in the project's `.ddev` directory with one dependency per line:
+
+##### Example: Dynamic service detection in post-install action
+
+```yaml
+name: my-dynamic-addon
+
+post_install_actions:
+  - |
+    <?php
+    #ddev-description: Detect required services dynamically
+    
+    $services = [];
+    
+    // Analyze project configuration
+    if (file_exists('/var/www/html/.platform.yaml')) {
+        $config = yaml_parse_file('/var/www/html/.platform.yaml');
+        
+        // Check for Redis usage
+        if (isset($config['services']['cache']['type']) && 
+            strpos($config['services']['cache']['type'], 'redis') !== false) {
+            $services[] = 'ddev/ddev-redis';
+        }
+        
+        // Check for Elasticsearch usage
+        if (isset($config['services']['search']['type']) && 
+            strpos($config['services']['search']['type'], 'elasticsearch') !== false) {
+            $services[] = 'ddev/ddev-elasticsearch';
+        }
+    }
+    
+    // Create runtime dependencies file if services were found
+    if (!empty($services)) {
+        $runtimeDepsFile = '.runtime-deps-my-dynamic-addon';
+        file_put_contents($runtimeDepsFile, implode("\n", $services) . "\n");
+        echo "Created runtime dependencies for " . count($services) . " service(s)\n";
+    }
+    ?>
+```
+
+#### Runtime Dependencies File Format
+
+The `.runtime-deps-<addon-name>` file uses the same dependency formats as static dependencies:
+
+```
+# One dependency per line
+ddev/ddev-redis
+ddev/ddev-elasticsearch
+https://example.com/addon.tar.gz
+
+# Comments and empty lines are ignored
+```
+
+#### Processing Timing
+
+Runtime dependencies are processed **after all installation phases complete**:
+
+1. Pre-install actions execute
+2. Project files are copied
+3. Global files are copied  
+4. Post-install actions execute
+5. **Runtime dependencies are processed** ← This happens last
+6. Cleanup occurs
+
+This timing ensures that:
+
+- Add-ons can analyze the fully installed project state
+- Post-install actions can create runtime dependencies based on project configuration
+- Dependencies have access to all project files when they install
+
+#### Real-world Example: Upsun Integration
+
+The [ddev-upsun](https://github.com/rfay/ddev-upsun) add-on demonstrates runtime dependencies by:
+
+1. **Analyzing** `.upsun/config.yaml` during post-install
+2. **Detecting** services like Redis, Elasticsearch, Memcached
+3. **Creating** runtime dependencies for corresponding DDEV add-ons
+4. **Automatically installing** the required service add-ons
+
+```php
+<?php
+// Simplified example from ddev-upsun
+$detectedServices = analyzeUpsunConfig('/var/www/html/.upsun/config.yaml');
+$dependencies = [];
+
+foreach ($detectedServices as $service) {
+    switch ($service['type']) {
+        case 'redis':
+            $dependencies[] = 'ddev/ddev-redis';
+            break;
+        case 'opensearch':
+            $dependencies[] = 'ddev/ddev-opensearch';
+            break;
+    }
+}
+
+if (!empty($dependencies)) {
+    file_put_contents('.runtime-deps-upsun', implode("\n", $dependencies));
+}
+?>
+```
+
+#### When NOT to Use Runtime Dependencies
+
+**Use static `dependencies` instead if:**
+
+- Dependencies are always required
+- Dependencies don't change based on project analysis
+- You want simpler, more predictable behavior
+
+**Use runtime dependencies only if:**
+
+- Dependencies must be determined by analyzing project files
+- Different projects need different dependencies
+- You're integrating with external platform configurations
+
+#### Debugging Runtime Dependencies
+
+Add verbose logging to debug runtime dependency processing:
+
+```bash
+ddev add-on get --verbose your-addon
+```
+
+This will show:
+
+- When runtime dependencies files are created
+- What dependencies are discovered
+- Installation progress for each dependency
+
+#### Limitations
+
+- Runtime dependencies cannot create circular dependency loops
+- The `.runtime-deps-*` file is automatically deleted after processing
+- Runtime dependencies are not processed when using `--skip-deps`
+- Cannot be used to conditionally install the add-on itself
+
+### Template Replacements (Advanced, Very Unusual)
 
 Use environment variables in filenames and content:
 

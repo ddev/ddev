@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,12 +10,11 @@ import (
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
-	ddevgh "github.com/ddev/ddev/pkg/github"
+	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/google/go-github/v72/github"
 	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 	"go.yaml.in/yaml/v3"
@@ -39,6 +37,7 @@ ddev add-on get /path/to/tarball.tar.gz
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose := false
 		requestedVersion := ""
+		skipDeps := false
 
 		if cmd.Flags().Changed("version") {
 			requestedVersion = cmd.Flag("version").Value.String()
@@ -46,6 +45,10 @@ ddev add-on get /path/to/tarball.tar.gz
 
 		if cmd.Flags().Changed("verbose") {
 			verbose = true
+		}
+
+		if cmd.Flags().Changed("skip-deps") {
+			skipDeps = true
 		}
 
 		app, err := ddevapp.GetActiveApp(cmd.Flag("project").Value.String())
@@ -89,36 +92,10 @@ ddev add-on get /path/to/tarball.tar.gz
 			argType = "github"
 			owner = parts[0]
 			repo = parts[1]
-			ctx := context.Background()
-
-			client := ddevgh.GetGithubClient(ctx)
-			releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{PerPage: 100})
+			tarballURL, downloadedRelease, err = github.GetGitHubRelease(owner, repo, requestedVersion)
 			if err != nil {
-				var rate github.Rate
-				if resp != nil {
-					rate = resp.Rate
-				}
-				util.Failed("Unable to get releases for %v: %v\nresp.Rate=%v", repo, err, rate)
+				util.Failed("%v", err)
 			}
-			if len(releases) == 0 {
-				util.Failed("No releases found for %v", repo)
-			}
-			releaseItem := 0
-			releaseFound := false
-			if requestedVersion != "" {
-				for i, release := range releases {
-					if release.GetTagName() == requestedVersion {
-						releaseItem = i
-						releaseFound = true
-						break
-					}
-				}
-				if !releaseFound {
-					util.Failed("No release found for %v with tag %v", repo, requestedVersion)
-				}
-			}
-			tarballURL = releases[releaseItem].GetTarballURL()
-			downloadedRelease = releases[releaseItem].GetTagName()
 			util.Success("Installing %s/%s:%s", owner, repo, downloadedRelease)
 			fallthrough
 
@@ -156,16 +133,14 @@ ddev add-on get /path/to/tarball.tar.gz
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
 		}
 
-		// Check to see if any dependencies are missing
+		// Handle dependencies
 		if len(s.Dependencies) > 0 {
-			// Read in full existing registered config
-			m, err := ddevapp.GatherAllManifests(app)
-			if err != nil {
-				util.Failed("Unable to gather manifests: %v", err)
-			}
-			for _, dep := range s.Dependencies {
-				if _, ok := m[dep]; !ok {
-					util.Failed("The add-on '%s' declares a dependency on '%s'; Please ddev add-on get %s first.", s.Name, dep, dep)
+			if !skipDeps {
+				// Install dependencies recursively, resolving relative paths
+				resolvedDeps := ddevapp.ResolveDependencyPaths(s.Dependencies, extractedDir, verbose)
+				err := ddevapp.InstallDependencies(app, resolvedDeps, verbose)
+				if err != nil {
+					util.Failed("Failed to install dependencies for '%s': %v", s.Name, err)
 				}
 			}
 		}
@@ -268,6 +243,14 @@ ddev add-on get /path/to/tarball.tar.gz
 			}
 		}
 
+		// Check for runtime dependencies generated during installation
+		if !skipDeps {
+			err := ddevapp.ProcessRuntimeDependencies(app, s.Name, extractedDir, verbose)
+			if err != nil {
+				util.Failed("%v", err)
+			}
+		}
+
 		repository := ""
 		switch argType {
 		case "github":
@@ -354,6 +337,7 @@ func getInjectedEnv(envFile string, verbose bool) string {
 func init() {
 	AddonGetCmd.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	AddonGetCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")
+	AddonGetCmd.Flags().Bool("skip-deps", false, "Skip installing add-on dependencies")
 	AddonGetCmd.Flags().String("project", "", "Name of the project to install the add-on in")
 	_ = AddonGetCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
 

@@ -1,13 +1,18 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/github"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v3"
 )
@@ -26,6 +31,14 @@ func processTestAddon(app *ddevapp.DdevApp, testName, addonName string, verbose 
 	err = yaml.Unmarshal(yamlContent, &installDesc)
 	if err != nil {
 		return err
+	}
+
+	// Test dependency installation (matches addon-get.go logic)
+	if len(installDesc.Dependencies) > 0 {
+		err := ddevapp.InstallDependencies(app, installDesc.Dependencies, verbose)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Copy project files to the app directory
@@ -162,4 +175,664 @@ func TestValidatePHPIncludesAndRequires(t *testing.T) {
 		require.Error(t, err, "Should catch syntax errors in included files (would be silently missed with old regex)")
 		require.Contains(t, err.Error(), "Parse error", "Should contain PHP parse error")
 	})
+}
+
+func TestCircularDependencyDetection(t *testing.T) {
+	// Test the circular dependency detection logic directly
+	t.Run("DetectsCircularDependency", func(t *testing.T) {
+		// Reset the global install stack
+		ddevapp.ResetInstallStack()
+
+		// Simulate a circular dependency scenario
+		err1 := ddevapp.AddToInstallStack("addon-a")
+		require.NoError(t, err1)
+
+		err2 := ddevapp.AddToInstallStack("addon-b")
+		require.NoError(t, err2)
+
+		// This should detect the circular dependency
+		err3 := ddevapp.AddToInstallStack("addon-a")
+		require.Error(t, err3, "Should detect circular dependency")
+		require.Contains(t, err3.Error(), "circular dependency detected", "Error should mention circular dependency")
+		require.Contains(t, err3.Error(), "addon-a -> addon-b -> addon-a", "Error should show dependency chain")
+	})
+
+	t.Run("AllowsValidDependencyChain", func(t *testing.T) {
+		// Reset the global install stack
+		ddevapp.ResetInstallStack()
+
+		// Simulate a valid dependency chain
+		err1 := ddevapp.AddToInstallStack("addon-c")
+		require.NoError(t, err1)
+
+		err2 := ddevapp.AddToInstallStack("addon-d")
+		require.NoError(t, err2)
+
+		// Should not detect circular dependency
+		err3 := ddevapp.AddToInstallStack("addon-e")
+		require.NoError(t, err3)
+	})
+
+	// Test normalized identifier circular dependency detection
+	t.Run("DetectsCircularDependencyWithNormalizedIdentifiers", func(t *testing.T) {
+		// Reset the global install stack
+		ddevapp.ResetInstallStack()
+
+		// Add addon using GitHub format
+		err1 := ddevapp.AddToInstallStack("ddev/ddev-redis")
+		require.NoError(t, err1)
+
+		// Try to add the same addon using GitHub URL format - should detect circular dependency
+		err2 := ddevapp.AddToInstallStack("https://github.com/ddev/ddev-redis/archive/refs/tags/v1.0.0.tar.gz")
+		require.Error(t, err2, "Should detect circular dependency with different identifier formats")
+		require.Contains(t, err2.Error(), "circular dependency detected", "Error should mention circular dependency")
+	})
+
+	// Test the NormalizeAddonIdentifier function directly
+	t.Run("NormalizeAddonIdentifierFunction", func(t *testing.T) {
+		testCases := []struct {
+			input    string
+			expected string
+		}{
+			{"ddev/ddev-redis", "ddev/ddev-redis"},
+			{"https://github.com/ddev/ddev-redis/archive/refs/tags/v1.0.0.tar.gz", "ddev/ddev-redis"},
+			{"/path/to/ddev-redis.tar.gz", "ddev-redis"},
+			{"ddev-redis.tar.gz", "ddev-redis"},
+			{"local-addon", "local-addon"},
+			{"./relative/path/addon.tgz", "addon"},
+		}
+
+		for _, tc := range testCases {
+			result := ddevapp.NormalizeAddonIdentifier(tc.input)
+			require.Equal(t, tc.expected, result, "Normalization of %q should return %q but got %q", tc.input, tc.expected, result)
+		}
+	})
+
+	t.Run("DetectsCircularDependencyWithLocalPath", func(t *testing.T) {
+		// Reset the global install stack
+		ddevapp.ResetInstallStack()
+
+		// Add addon using tarball format first
+		err1 := ddevapp.AddToInstallStack("/path/to/ddev-redis.tar.gz")
+		require.NoError(t, err1)
+
+		// Try to add the same addon using GitHub format - should detect circular dependency
+		// Both should normalize to "ddev-redis" and trigger detection
+		err2 := ddevapp.AddToInstallStack("ddev-redis.tar.gz")
+		require.Error(t, err2, "Should detect circular dependency with different path formats")
+		require.Contains(t, err2.Error(), "circular dependency detected", "Error should mention circular dependency")
+	})
+}
+
+func TestGetGitHubRelease(t *testing.T) {
+	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
+		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
+
+	// Test getting latest release
+	t.Run("GetLatestRelease", func(t *testing.T) {
+		tarballURL, version, err := github.GetGitHubRelease("ddev", "ddev-redis", "")
+		require.NoError(t, err, "Should successfully get latest release")
+		require.NotEmpty(t, tarballURL, "Tarball URL should not be empty")
+		require.NotEmpty(t, version, "Version should not be empty")
+		require.Contains(t, tarballURL, "github.com", "Tarball URL should be from GitHub")
+	})
+
+	// Test getting specific version
+	t.Run("GetSpecificVersion", func(t *testing.T) {
+		tarballURL, version, err := github.GetGitHubRelease("ddev", "ddev-redis", "v1.0.4")
+		require.NoError(t, err, "Should successfully get specific version")
+		require.Equal(t, "v1.0.4", version, "Should return requested version")
+		require.NotEmpty(t, tarballURL, "Tarball URL should not be empty")
+	})
+
+	// Test non-existent repository
+	t.Run("NonExistentRepo", func(t *testing.T) {
+		_, _, err := github.GetGitHubRelease("ddev", "non-existent-repo", "")
+		require.Error(t, err, "Should fail for non-existent repository")
+		require.Contains(t, err.Error(), "unable to get releases", "Error should mention inability to get releases")
+	})
+
+	// Test non-existent version
+	t.Run("NonExistentVersion", func(t *testing.T) {
+		_, _, err := github.GetGitHubRelease("ddev", "ddev-redis", "v999.999.999")
+		require.Error(t, err, "Should fail for non-existent version")
+		require.Contains(t, err.Error(), "no release found", "Error should mention no release found")
+	})
+
+	// Test real addon with dependencies
+	t.Run("RealAddonWithDependencies", func(t *testing.T) {
+		// Test ddev-redis-commander which depends on ddev-redis
+		tarballURL, version, err := github.GetGitHubRelease("ddev", "ddev-redis-commander", "")
+		require.NoError(t, err, "Should successfully get ddev-redis-commander release")
+		require.NotEmpty(t, tarballURL, "Tarball URL should not be empty")
+		require.NotEmpty(t, version, "Version should not be empty")
+		require.Contains(t, tarballURL, "github.com", "Tarball URL should be from GitHub")
+	})
+}
+
+// TestParseRuntimeDependencies tests runtime dependency file parsing
+func TestParseRuntimeDependencies(t *testing.T) {
+	assert := assert.New(t)
+
+	// Create a temporary .runtime-deps file
+	tmpDir, err := os.MkdirTemp("", "test-runtime-deps")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	runtimeDepsFile := filepath.Join(tmpDir, ".runtime-deps")
+	content := `# Runtime dependencies
+ddev/ddev-redis
+
+# Another comment
+../local/addon
+https://example.com/addon.tar.gz
+
+# Empty line above should be ignored
+`
+	err = os.WriteFile(runtimeDepsFile, []byte(content), 0644)
+	require.NoError(t, err)
+
+	// Test parsing
+	deps, err := ddevapp.ParseRuntimeDependencies(runtimeDepsFile)
+	assert.NoError(err)
+	assert.Equal([]string{"ddev/ddev-redis", "../local/addon", "https://example.com/addon.tar.gz"}, deps)
+
+	// Test non-existent file
+	deps, err = ddevapp.ParseRuntimeDependencies(filepath.Join(tmpDir, "nonexistent"))
+	assert.NoError(err)
+	assert.Nil(deps)
+}
+
+// TestMixedDependencyScenarios tests comprehensive mixed dependency scenarios
+func TestMixedDependencyScenarios(t *testing.T) {
+	t.Run("NormalizeAddonIdentifierEdgeCases", func(t *testing.T) {
+		testCases := []struct {
+			name     string
+			input    string
+			expected string
+		}{
+			{"GitHub owner/repo", "ddev/ddev-redis", "ddev/ddev-redis"},
+			{"GitHub URL", "https://github.com/ddev/ddev-redis/archive/refs/tags/v1.0.0.tar.gz", "ddev/ddev-redis"},
+			{"Local absolute path", "/path/to/ddev-redis.tar.gz", "ddev-redis"},
+			{"Local relative path", "./ddev-redis.tar.gz", "ddev-redis"},
+			{"Tarball with .tgz extension", "addon.tgz", "addon"},
+			{"Zip file", "addon.zip", "addon"},
+			{"Plain directory", "my-addon", "my-addon"},
+			{"Nested directory", "../parent/addon-name", "addon-name"},
+			{"URL with subdirectory", "https://github.com/user/repo/subfolder", "user/repo"},
+			{"Complex GitHub URL", "https://github.com/ddev/ddev-solr/releases/download/v1.2.3/ddev-solr-v1.2.3.tar.gz", "ddev/ddev-solr"},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				result := ddevapp.NormalizeAddonIdentifier(tc.input)
+				require.Equal(t, tc.expected, result, "Normalization of %q should return %q but got %q", tc.input, tc.expected, result)
+			})
+		}
+	})
+
+	t.Run("CircularDependencyWithMixedFormats", func(t *testing.T) {
+		scenarios := []struct {
+			name      string
+			first     string
+			second    string
+			shouldErr bool
+		}{
+			{
+				name:      "GitHub vs URL same repo",
+				first:     "ddev/ddev-redis",
+				second:    "https://github.com/ddev/ddev-redis/archive/v1.0.0.tar.gz",
+				shouldErr: true,
+			},
+			{
+				name:      "URL vs local tarball same name",
+				first:     "https://example.com/ddev-solr.tar.gz",
+				second:    "/local/path/ddev-solr.tar.gz",
+				shouldErr: true,
+			},
+			{
+				name:      "Different addons should not conflict",
+				first:     "ddev/ddev-redis",
+				second:    "ddev/ddev-solr",
+				shouldErr: false,
+			},
+			{
+				name:      "Different extensions same base name",
+				first:     "/path/addon.tar.gz",
+				second:    "/other/path/addon.tgz",
+				shouldErr: true,
+			},
+		}
+
+		for _, scenario := range scenarios {
+			t.Run(scenario.name, func(t *testing.T) {
+				ddevapp.ResetInstallStack()
+
+				// Add first addon
+				err1 := ddevapp.AddToInstallStack(scenario.first)
+				require.NoError(t, err1)
+
+				// Try to add second addon
+				err2 := ddevapp.AddToInstallStack(scenario.second)
+
+				if scenario.shouldErr {
+					require.Error(t, err2, "Should detect circular dependency")
+					require.Contains(t, err2.Error(), "circular dependency detected")
+				} else {
+					require.NoError(t, err2, "Should not detect circular dependency for different addons")
+				}
+			})
+		}
+	})
+
+	t.Run("DependencyPathResolution", func(t *testing.T) {
+		// Test ResolveDependencyPaths function with various path formats
+		extractedDir := "/tmp/addon-base"
+		dependencies := []string{
+			"ddev/ddev-redis",
+			"../relative-addon",
+			"./local-addon",
+			"https://example.com/addon.tar.gz",
+			"/absolute/path/addon",
+		}
+
+		resolved := ddevapp.ResolveDependencyPaths(dependencies, extractedDir, false)
+
+		expected := []string{
+			"ddev/ddev-redis",
+			"/tmp/relative-addon", // filepath.Clean(filepath.Join("/tmp/addon-base", "../relative-addon"))
+			"/tmp/addon-base/local-addon",
+			"https://example.com/addon.tar.gz",
+			"/absolute/path/addon",
+		}
+
+		require.Equal(t, expected, resolved)
+	})
+
+	t.Run("InstallStackCleanupOnDefer", func(t *testing.T) {
+		// Test that the install stack is properly cleaned up on function exit
+		ddevapp.ResetInstallStack()
+
+		// This test simulates the defer cleanup pattern used in installAddonRecursive
+		func() {
+			// Simulate adding to stack
+			err := ddevapp.AddToInstallStack("test-addon")
+			require.NoError(t, err)
+
+			defer func() {
+				// This simulates the cleanup code
+				ddevapp.ResetInstallStack() // For test simplicity, just reset
+			}()
+
+			// Stack should contain the addon now
+			err = ddevapp.AddToInstallStack("test-addon")
+			require.Error(t, err, "Should detect circular dependency within same function")
+		}()
+
+		// After function exit, stack should be clean
+		err := ddevapp.AddToInstallStack("test-addon")
+		require.NoError(t, err, "Stack should be clean after function exit")
+	})
+
+	t.Run("ManifestKeyMatching", func(t *testing.T) {
+		// Test that GatherAllManifests creates appropriate keys for different addon formats
+		// This is tested implicitly through the existing system, but we can verify
+		// the logic by testing key creation patterns
+
+		testCases := []struct {
+			name         string
+			repository   string
+			expectedKeys []string
+		}{
+			{
+				name:         "redis",
+				repository:   "ddev/ddev-redis",
+				expectedKeys: []string{"redis", "ddev/ddev-redis", "ddev-redis"},
+			},
+			{
+				name:         "solr",
+				repository:   "https://github.com/ddev/ddev-solr/archive/v1.0.0.tar.gz",
+				expectedKeys: []string{"solr", "https://github.com/ddev/ddev-solr/archive/v1.0.0.tar.gz"},
+			},
+			{
+				name:         "local-addon",
+				repository:   "/path/to/local-addon",
+				expectedKeys: []string{"local-addon", "/path/to/local-addon"},
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				// Create a mock manifest
+				manifest := ddevapp.AddonManifest{
+					Name:       tc.name,
+					Repository: tc.repository,
+					Version:    "v1.0.0",
+				}
+
+				// Simulate the key creation logic from GatherAllManifests
+				allManifests := make(map[string]ddevapp.AddonManifest)
+				allManifests[manifest.Name] = manifest
+				allManifests[manifest.Repository] = manifest
+
+				pathParts := strings.Split(manifest.Repository, "/")
+				if len(pathParts) > 1 {
+					shortRepo := pathParts[len(pathParts)-1]
+					allManifests[shortRepo] = manifest
+				}
+
+				// Verify all expected keys exist
+				for _, expectedKey := range tc.expectedKeys {
+					_, exists := allManifests[expectedKey]
+					require.True(t, exists, "Expected key %q should exist in manifest map", expectedKey)
+				}
+			})
+		}
+	})
+}
+
+// TestAddonDirectoryCreation tests that addon installation creates necessary directories
+// for file copying, particularly during dependency installation scenarios.
+// This test validates that copy.Copy properly handles nested directory creation.
+func TestAddonDirectoryCreation(t *testing.T) {
+	// Create a test addon structure that requires nested directories
+	testAddonDir := testcommon.CreateTmpDir(t.Name())
+	defer func() {
+		err := os.RemoveAll(testAddonDir)
+		assert.NoError(t, err)
+	}()
+
+	// Create install.yaml with nested project files
+	installYaml := `name: test-directory-addon
+repository: test-repo
+description: Test addon for directory creation
+project_files:
+  - nested/deep/config.yaml
+  - scripts/setup.sh
+  - data/settings.conf
+global_files:
+  - global/nested/global.conf`
+
+	err := os.WriteFile(filepath.Join(testAddonDir, "install.yaml"), []byte(installYaml), 0644)
+	require.NoError(t, err)
+
+	// Create the source files in nested directory structure
+	sourceDirs := []string{
+		"nested/deep",
+		"scripts",
+		"data",
+		"global/nested",
+	}
+
+	sourceFiles := map[string]string{
+		"nested/deep/config.yaml":   "#ddev-generated\ntest: config\n",
+		"scripts/setup.sh":          "#ddev-generated\n#!/bin/bash\necho 'setup'\n",
+		"data/settings.conf":        "#ddev-generated\nsetting=value\n",
+		"global/nested/global.conf": "#ddev-generated\nglobal=setting\n",
+	}
+
+	for _, dir := range sourceDirs {
+		err = os.MkdirAll(filepath.Join(testAddonDir, dir), 0755)
+		require.NoError(t, err)
+	}
+
+	for filePath, content := range sourceFiles {
+		err = os.WriteFile(filepath.Join(testAddonDir, filePath), []byte(content), 0644)
+		require.NoError(t, err)
+	}
+
+	// Create test app with clean .ddev directory
+	site := testcommon.CreateTmpDir(t.Name() + "_site")
+	defer func() {
+		err := os.RemoveAll(site)
+		assert.NoError(t, err)
+	}()
+
+	app, err := ddevapp.NewApp(site, false)
+	require.NoError(t, err)
+
+	// Ensure no existing directories that might mask the bug
+	ddevDir := app.GetConfigPath("")
+	err = os.RemoveAll(ddevDir)
+	require.NoError(t, err)
+
+	err = os.MkdirAll(ddevDir, 0755)
+	require.NoError(t, err)
+
+	// Test InstallAddonFromDirectory directly
+	err = ddevapp.InstallAddonFromDirectory(app, testAddonDir, "test-repo", "v1.0.0", false)
+	require.NoError(t, err, "InstallAddonFromDirectory should handle directory creation")
+
+	// Verify all files were copied to correct locations
+	expectedFiles := []string{
+		app.GetConfigPath("nested/deep/config.yaml"),
+		app.GetConfigPath("scripts/setup.sh"),
+		app.GetConfigPath("data/settings.conf"),
+	}
+
+	for _, expectedFile := range expectedFiles {
+		require.True(t, fileutil.FileExists(expectedFile), "File should exist: %s", expectedFile)
+
+		// Verify content was copied correctly
+		content, err := fileutil.ReadFileIntoString(expectedFile)
+		require.NoError(t, err)
+		require.Contains(t, content, "#ddev-generated", "File should contain ddev-generated signature")
+	}
+
+	// Verify global file was created
+	globalFile := filepath.Join(globalconfig.GetGlobalDdevDir(), "global/nested/global.conf")
+	require.True(t, fileutil.FileExists(globalFile), "Global file should exist: %s", globalFile)
+
+	// Clean up global file
+	err = os.Remove(globalFile)
+	assert.NoError(t, err)
+	// Remove empty directories
+	err = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "global"))
+	assert.NoError(t, err)
+}
+
+// TestDependencyManifestCreation tests that addon dependencies create manifests
+// and appear in the installed addon list
+func TestDependencyManifestCreation(t *testing.T) {
+	// Create a main addon that depends on another addon
+	mainAddonDir := testcommon.CreateTmpDir(t.Name() + "_main")
+	defer func() {
+		err := os.RemoveAll(mainAddonDir)
+		assert.NoError(t, err)
+	}()
+
+	dependencyAddonDir := testcommon.CreateTmpDir(t.Name() + "_dependency")
+	defer func() {
+		err := os.RemoveAll(dependencyAddonDir)
+		assert.NoError(t, err)
+	}()
+
+	// Create dependency addon with install.yaml
+	dependencyYaml := `name: test-dependency
+repository: owner/dependency-repo
+description: Test dependency addon
+project_files:
+  - dependency-config.yaml`
+
+	err := os.WriteFile(filepath.Join(dependencyAddonDir, "install.yaml"), []byte(dependencyYaml), 0644)
+	require.NoError(t, err)
+
+	err = os.WriteFile(filepath.Join(dependencyAddonDir, "dependency-config.yaml"), []byte("#ddev-generated\ndependency: config\n"), 0644)
+	require.NoError(t, err)
+
+	// Create main addon with dependency
+	mainYaml := fmt.Sprintf(`name: test-main
+repository: owner/main-repo
+description: Test main addon
+dependencies:
+  - %s
+project_files:
+  - main-config.yaml`, dependencyAddonDir)
+
+	err = os.WriteFile(filepath.Join(mainAddonDir, "install.yaml"), []byte(mainYaml), 0644)
+	require.NoError(t, err)
+
+	err = os.WriteFile(filepath.Join(mainAddonDir, "main-config.yaml"), []byte("#ddev-generated\nmain: config\n"), 0644)
+	require.NoError(t, err)
+
+	// Create test app with clean .ddev directory
+	site := testcommon.CreateTmpDir(t.Name() + "_site")
+	defer func() {
+		err := os.RemoveAll(site)
+		assert.NoError(t, err)
+	}()
+
+	app, err := ddevapp.NewApp(site, false)
+	require.NoError(t, err)
+
+	// Ensure clean addon-metadata directory
+	addonMetadataDir := app.GetConfigPath("addon-metadata")
+	err = os.RemoveAll(addonMetadataDir)
+	require.NoError(t, err)
+
+	ddevDir := app.GetConfigPath("")
+	err = os.RemoveAll(ddevDir)
+	require.NoError(t, err)
+	err = os.MkdirAll(ddevDir, 0755)
+	require.NoError(t, err)
+
+	// Install main addon (which should install dependency)
+	err = ddevapp.InstallAddonFromDirectory(app, mainAddonDir, "owner/main-repo", "v1.0.0", false)
+	require.NoError(t, err, "Main addon installation should succeed")
+
+	// Verify both addons have manifests created
+	mainManifestFile := filepath.Join(addonMetadataDir, "test-main", "manifest.yaml")
+	require.True(t, fileutil.FileExists(mainManifestFile), "Main addon manifest should exist")
+
+	dependencyManifestFile := filepath.Join(addonMetadataDir, "test-dependency", "manifest.yaml")
+	require.True(t, fileutil.FileExists(dependencyManifestFile), "Dependency addon manifest should exist")
+
+	// Verify manifests can be read and have correct data
+	manifests := ddevapp.GetInstalledAddons(app)
+	require.Len(t, manifests, 2, "Should have exactly 2 installed addons")
+
+	// Create maps for easier verification
+	manifestsByName := make(map[string]ddevapp.AddonManifest)
+	for _, manifest := range manifests {
+		manifestsByName[manifest.Name] = manifest
+	}
+
+	// Verify main addon manifest
+	mainManifest, exists := manifestsByName["test-main"]
+	require.True(t, exists, "Main addon should be in manifest list")
+	require.Equal(t, "owner/main-repo", mainManifest.Repository)
+	require.Equal(t, "v1.0.0", mainManifest.Version)
+	require.Contains(t, mainManifest.ProjectFiles, "main-config.yaml")
+
+	// Verify dependency addon manifest
+	depManifest, exists := manifestsByName["test-dependency"]
+	require.True(t, exists, "Dependency addon should be in manifest list")
+	require.Equal(t, dependencyAddonDir, depManifest.Repository) // Local path for dependency
+	require.Equal(t, "unknown", depManifest.Version)             // Unknown version for local dependency
+	require.Contains(t, depManifest.ProjectFiles, "dependency-config.yaml")
+
+	// Verify both files were actually installed
+	require.True(t, fileutil.FileExists(app.GetConfigPath("main-config.yaml")), "Main config file should be installed")
+	require.True(t, fileutil.FileExists(app.GetConfigPath("dependency-config.yaml")), "Dependency config file should be installed")
+}
+
+// TestDependencyValidationDuringRemoval tests that addon removal is blocked when other addons depend on it
+func TestDependencyValidationDuringRemoval(t *testing.T) {
+	// Create test app with clean .ddev directory
+	site := testcommon.CreateTmpDir(t.Name() + "_site")
+	defer func() {
+		err := os.RemoveAll(site)
+		assert.NoError(t, err)
+	}()
+
+	app, err := ddevapp.NewApp(site, false)
+	require.NoError(t, err)
+
+	// Create dependency addon
+	dependencyAddonDir := testcommon.CreateTmpDir("dependency-addon")
+	defer func() {
+		err := os.RemoveAll(dependencyAddonDir)
+		assert.NoError(t, err)
+	}()
+
+	installYamlContent := `name: dependency-addon
+project_files:
+  - dependency-config.yaml
+`
+	err = fileutil.TemplateStringToFile(installYamlContent, nil, filepath.Join(dependencyAddonDir, "install.yaml"))
+	require.NoError(t, err)
+
+	dependencyConfigContent := "#ddev-generated\nThis is a dependency config file"
+	err = fileutil.TemplateStringToFile(dependencyConfigContent, nil, filepath.Join(dependencyAddonDir, "dependency-config.yaml"))
+	require.NoError(t, err)
+
+	// Create main addon that depends on the dependency addon
+	mainAddonDir := testcommon.CreateTmpDir("main-addon")
+	defer func() {
+		err := os.RemoveAll(mainAddonDir)
+		assert.NoError(t, err)
+	}()
+
+	mainInstallYamlContent := fmt.Sprintf(`name: main-addon
+dependencies:
+  - %s
+project_files:
+  - main-config.yaml
+`, dependencyAddonDir)
+	err = fileutil.TemplateStringToFile(mainInstallYamlContent, nil, filepath.Join(mainAddonDir, "install.yaml"))
+	require.NoError(t, err)
+
+	mainConfigContent := "#ddev-generated\nThis is the main config file"
+	err = fileutil.TemplateStringToFile(mainConfigContent, nil, filepath.Join(mainAddonDir, "main-config.yaml"))
+	require.NoError(t, err)
+
+	// Clean slate - remove any existing addon metadata
+	addonMetadataDir := app.GetConfigPath("addon-metadata")
+	err = os.RemoveAll(addonMetadataDir)
+	require.NoError(t, err)
+
+	ddevDir := app.GetConfigPath("")
+	err = os.RemoveAll(ddevDir)
+	require.NoError(t, err)
+	err = os.MkdirAll(ddevDir, 0755)
+	require.NoError(t, err)
+
+	// Install main addon (which should install dependency)
+	err = ddevapp.InstallAddonFromDirectory(app, mainAddonDir, "owner/main-repo", "v1.0.0", false)
+	require.NoError(t, err, "Main addon installation should succeed")
+
+	// Verify both addons are installed
+	manifests := ddevapp.GetInstalledAddons(app)
+	require.Len(t, manifests, 2, "Should have exactly 2 installed addons")
+
+	// Test 1: Attempt to remove dependency addon - should fail
+	err = ddevapp.RemoveAddon(app, "dependency-addon", false, false)
+	require.Error(t, err, "Should not be able to remove dependency addon when main addon depends on it")
+	require.Contains(t, err.Error(), "cannot remove add-on 'dependency-addon' because the following add-ons depend on it")
+	require.Contains(t, err.Error(), "main-addon")
+
+	// Verify dependency addon is still installed
+	require.True(t, fileutil.FileExists(app.GetConfigPath("dependency-config.yaml")), "Dependency config file should still exist")
+	manifests = ddevapp.GetInstalledAddons(app)
+	require.Len(t, manifests, 2, "Should still have both addons installed")
+
+	// Test 2: Remove main addon first - should succeed
+	err = ddevapp.RemoveAddon(app, "main-addon", false, false)
+	require.NoError(t, err, "Should be able to remove main addon")
+
+	// Verify main addon is removed but dependency remains
+	require.False(t, fileutil.FileExists(app.GetConfigPath("main-config.yaml")), "Main config file should be removed")
+	require.True(t, fileutil.FileExists(app.GetConfigPath("dependency-config.yaml")), "Dependency config file should still exist")
+	manifests = ddevapp.GetInstalledAddons(app)
+	require.Len(t, manifests, 1, "Should have only dependency addon remaining")
+
+	// Test 3: Now remove dependency addon - should succeed
+	err = ddevapp.RemoveAddon(app, "dependency-addon", false, false)
+	require.NoError(t, err, "Should be able to remove dependency addon after main addon is removed")
+
+	// Verify both addons are completely removed
+	require.False(t, fileutil.FileExists(app.GetConfigPath("dependency-config.yaml")), "Dependency config file should be removed")
+	manifests = ddevapp.GetInstalledAddons(app)
+	require.Len(t, manifests, 0, "Should have no addons remaining")
 }
