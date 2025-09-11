@@ -349,9 +349,9 @@ innodb_large_prefix=false
 
 To load the new configuration, run [`ddev restart`](../usage/commands.md#restart).
 
-### MySQL Server ID Override
+### MySQL/MariaDB Server ID Override
 
-For MySQL replication setups, you can override the default `server_id=0` by setting the `MYSQL_SERVER_ID` environment variable. This is useful when you need to enable MySQL replication or use applications that depend on MySQL binary log events.
+For MySQL and MariaDB replication setups, you can override the default `server_id=0` by setting the `MYSQL_SERVER_ID` environment variable. This is useful when you need to enable MySQL/MariaDB replication or use applications that depend on MySQL/MariaDB binary log events.
 
 Create a `.ddev/.env.db` file:
 
