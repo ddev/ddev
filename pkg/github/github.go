@@ -11,13 +11,15 @@ import (
 	"github.com/google/go-github/v72/github"
 )
 
+// Aliases to avoid direct imports
+
 type Client = github.Client
 type ListOptions = github.ListOptions
 type Repository = github.Repository
 type SearchOptions = github.SearchOptions
 
 var (
-	// goContext is the singleton instance of context.Context
+	// githubContext is the Go context used for GitHub API requests
 	githubContext context.Context
 	// githubClient is the singleton instance of Client
 	githubClient *Client
