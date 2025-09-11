@@ -441,10 +441,10 @@ func TestMixedDependencyScenarios(t *testing.T) {
 
 		expected := []string{
 			"ddev/ddev-redis",
-			"/tmp/relative-addon", // filepath.Clean(filepath.Join("/tmp/addon-base", "../relative-addon"))
-			"/tmp/addon-base/local-addon",
+			filepath.Clean("../relative-addon"),
+			filepath.Clean("./local-addon"),
 			"https://example.com/addon.tar.gz",
-			"/absolute/path/addon",
+			filepath.Clean("/absolute/path/addon"),
 		}
 
 		require.Equal(t, expected, resolved)

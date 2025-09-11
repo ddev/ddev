@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	goexec "os/exec"
 	"path/filepath"
@@ -1091,10 +1092,7 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir, repository, version s
 		resolvedDeps := make([]string, len(s.Dependencies))
 		for i, dep := range s.Dependencies {
 			if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-				// Resolve relative path relative to extractedDir
-				resolvedPath := filepath.Join(extractedDir, dep)
-				// Clean the path to resolve .. and . components
-				resolvedDeps[i] = filepath.Clean(resolvedPath)
+				resolvedDeps[i] = filepath.Clean(filepath.Join(extractedDir, dep))
 				if verbose {
 					util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
 				}
@@ -1264,89 +1262,116 @@ func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease, reposi
 	return InstallAddonFromDirectory(app, extractedDir, repository, downloadedRelease, verbose)
 }
 
-// ValidateDependencies checks that all declared dependencies exist without installing them.
-// Useful for callers that want to verify dependencies are present but not install them.
-func ValidateDependencies(app *DdevApp, dependencies []string, extractedDir, addonName string) error {
-	m, err := GatherAllManifests(app)
-	if err != nil {
-		return fmt.Errorf("unable to gather manifests: %w", err)
-	}
-	for _, dep := range dependencies {
-		checkName := dep
-		// For relative paths, we need to check the actual addon name, not the path
-		if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-			// Resolve relative path and get the addon name from install.yaml
-			resolvedPath := filepath.Clean(filepath.Join(extractedDir, dep))
-			if fileutil.IsDirectory(resolvedPath) {
-				yamlFile := filepath.Join(resolvedPath, "install.yaml")
-				if yamlContent, err := fileutil.ReadFileIntoString(yamlFile); err == nil {
-					var depDesc InstallDesc
-					if err := yaml.Unmarshal([]byte(yamlContent), &depDesc); err == nil {
-						checkName = depDesc.Name
-					}
-				}
-			}
-		}
-		if _, ok := m[checkName]; !ok {
-			return fmt.Errorf("the add-on '%s' declares a dependency on '%s'; please ddev add-on get %s first", addonName, dep, dep)
-		}
-	}
-	return nil
-}
-
-// ResolveDependencyPaths resolves relative paths in dependencies relative to extractedDir
-func ResolveDependencyPaths(dependencies []string, extractedDir string, verbose bool) []string {
-	resolvedDeps := make([]string, len(dependencies))
-	for i, dep := range dependencies {
-		if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-			// Resolve relative path relative to extractedDir
-			resolvedPath := filepath.Join(extractedDir, dep)
-			// Clean the path to resolve .. and . components
-			resolvedDeps[i] = filepath.Clean(resolvedPath)
-			if verbose {
-				util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
-			}
-		} else {
-			resolvedDeps[i] = dep
-		}
-	}
-	return resolvedDeps
-}
-
-// ProcessRuntimeDependencies handles runtime dependencies generated during addon installation
+// ProcessRuntimeDependencies looks for a runtime dependency file generated during
+// pre/post install actions and installs any dependencies listed. The file is
+// expected at .ddev/.runtime-deps-<addonName>. It is removed after processing.
 func ProcessRuntimeDependencies(app *DdevApp, addonName, extractedDir string, verbose bool) error {
 	runtimeDepsFile := app.GetConfigPath(".runtime-deps-" + addonName)
-	if verbose {
-		util.Success("Checking for runtime dependencies file: %s", runtimeDepsFile)
-		if fileutil.FileExists(runtimeDepsFile) {
-			content, _ := fileutil.ReadFileIntoString(runtimeDepsFile)
-			util.Success("Runtime dependencies file contents: %q", content)
-		} else {
-			util.Success("Runtime dependencies file does not exist")
-		}
-	}
 
-	runtimeDeps, err := ParseRuntimeDependencies(runtimeDepsFile)
+	deps, err := ParseRuntimeDependencies(runtimeDepsFile)
 	if err != nil {
-		return fmt.Errorf("failed to parse runtime dependencies: %w", err)
+		return fmt.Errorf("unable to parse runtime dependencies file %s: %v", runtimeDepsFile, err)
+	}
+	if len(deps) == 0 {
+		return nil
 	}
 
-	if verbose {
-		util.Success("Found %d runtime dependencies: %v", len(runtimeDeps), runtimeDeps)
-	}
+	util.Success("Installing runtime dependencies")
 
-	if len(runtimeDeps) > 0 {
-		util.Success("Installing runtime dependencies:")
-		// Resolve relative paths for runtime dependencies
-		resolvedRuntimeDeps := ResolveDependencyPaths(runtimeDeps, extractedDir, verbose)
-		err := InstallDependencies(app, resolvedRuntimeDeps, verbose)
-		if err != nil {
-			return fmt.Errorf("failed to install runtime dependencies for '%s': %w", addonName, err)
+	// Resolve relative entries against extractedDir; leave URLs and owner/repo as-is
+	isHTTPURL := func(s string) bool {
+		u, err := url.Parse(strings.TrimSpace(s))
+		return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
+	}
+	resolved := make([]string, len(deps))
+	for i, d := range deps {
+		d = strings.TrimSpace(d)
+		if d == "" {
+			resolved[i] = d
+			continue
 		}
-		// Clean up the runtime dependencies file
-		_ = os.Remove(runtimeDepsFile)
+		if isHTTPURL(d) || IsGithubRef(d) {
+			resolved[i] = d
+			continue
+		}
+		if filepath.IsAbs(d) || (len(d) >= 2 && d[1] == ':' && ((d[0] >= 'A' && d[0] <= 'Z') || (d[0] >= 'a' && d[0] <= 'z'))) {
+			resolved[i] = filepath.Clean(d)
+			continue
+		}
+		resolved[i] = filepath.Clean(filepath.Join(extractedDir, d))
 	}
+
+	if err := InstallDependencies(app, resolved, verbose); err != nil {
+		return err
+	}
+
+	_ = os.Remove(runtimeDepsFile)
 	return nil
+}
+
+// IsGithubRef reports whether the string looks like a GitHub owner/repo reference.
+// Heuristics:
+// - exactly one forward slash
+// - does not start with '.'
+// - contains no dots anywhere (to avoid paths/files like foo/bar.txt)
+// - does not contain OS-specific path separators (like '\\' on Windows)
+// - excludes anything that looks like a URL (contains "://") or git@ scp-like refs
+func IsGithubRef(s string) bool {
+	ss := strings.TrimSpace(s)
+	if ss == "" {
+		return false
+	}
+	if strings.Contains(ss, "://") || strings.HasPrefix(ss, "git@") {
+		return false
+	}
+	if os.PathSeparator != '/' && strings.ContainsRune(ss, os.PathSeparator) {
+		return false
+	}
+	parts := strings.Split(ss, "/")
+	if len(parts) != 2 {
+		return false
+	}
+	if strings.HasPrefix(ss, ".") {
+		return false
+	}
+	if strings.Contains(ss, ".") {
+		return false
+	}
+	return true
+}
+
+// ResolveDependencyPaths normalizes dependency entries for downstream installers.
+//
+// Behavior:
+// - URLs (http/https): returned unchanged
+// - GitHub refs (owner/repo): returned unchanged
+// - Absolute filesystem paths: filepath.Clean(path)
+// - Relative paths: filepath.Clean(dep) (do not join; callers decide base)
+func ResolveDependencyPaths(dependencies []string, extractedDir string, verbose bool) []string {
+	isHTTPURL := func(s string) bool {
+		u, err := url.Parse(strings.TrimSpace(s))
+		return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
+	}
+
+	resolved := make([]string, len(dependencies))
+	for i, raw := range dependencies {
+		dep := strings.TrimSpace(raw)
+		if dep == "" {
+			resolved[i] = dep
+			continue
+		}
+		if isHTTPURL(dep) || IsGithubRef(dep) {
+			resolved[i] = dep
+			continue
+		}
+		if filepath.IsAbs(dep) || (len(dep) >= 2 && dep[1] == ':' && ((dep[0] >= 'A' && dep[0] <= 'Z') || (dep[0] >= 'a' && dep[0] <= 'z'))) {
+			resolved[i] = filepath.Clean(dep)
+			continue
+		}
+		// Relative path: clean only; callers resolve base (extractedDir or CWD)
+		resolved[i] = filepath.Clean(dep)
+	}
+	return resolved
 }
 
 // GatherAllManifests searches for all addon manifests and presents the result
