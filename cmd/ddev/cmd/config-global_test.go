@@ -18,6 +18,9 @@ import (
 // Validate that what it spits out is what's there
 
 func TestCmdGlobalConfig(t *testing.T) {
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		t.Skip("Skipping TestCmdGlobalConfig because NoBindMounts is true")
+	}
 	assert := asrt.New(t)
 	backupConfig := globalconfig.DdevGlobalConfig
 	// Start with no config file
