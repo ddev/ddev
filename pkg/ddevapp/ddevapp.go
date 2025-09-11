@@ -3123,7 +3123,7 @@ func (app *DdevApp) GetPrimaryURL() string {
 	httpURLs, httpsURLs, _ := app.GetAllURLs()
 	urlList := httpsURLs
 	// If no mkcert trusted https, use the httpURLs instead
-	if app.CanUseHTTPOnly() {
+	if app.CanUseHTTPOnly() || len(httpsURLs) == 0 {
 		urlList = httpURLs
 	}
 	if len(urlList) > 0 {
@@ -3180,13 +3180,23 @@ func (app *DdevApp) GetWebContainerDirectHTTPPort() (int, error) {
 		return port, nil
 	}
 
-	// If standard method fails and it's a generic webserver with extra exposed ports
-	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
+	// If standard method fails, and it's a generic webserver
+	if app.WebserverType == nodeps.WebserverGeneric {
+		// With extra exposed ports
 		for _, extraPort := range app.WebExtraExposedPorts {
 			// Check only ports mapped to HTTP (port 80)
 			if extraPort.HTTPPort == 80 {
 				containerPort := uint16(extraPort.WebContainerPort)
 				publishedPort, err := app.GetPublishedPortForPrivatePort("web", containerPort)
+				if err == nil && publishedPort != 0 {
+					return publishedPort, nil
+				}
+			}
+		}
+		// If any service has port 80 exposed
+		if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+			for service := range app.ComposeYaml.Services {
+				publishedPort, err := app.GetPublishedPortForPrivatePort(service, 80)
 				if err == nil && publishedPort != 0 {
 					return publishedPort, nil
 				}
@@ -3210,14 +3220,24 @@ func (app *DdevApp) GetWebContainerDirectHTTPSPort() (int, error) {
 		return port, nil
 	}
 
-	// If standard method fails and it's a generic webserver with extra exposed ports
-	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
+	// If standard method fails, and it's a generic webserver
+	if app.WebserverType == nodeps.WebserverGeneric {
+		// With extra exposed ports
 		for _, extraPort := range app.WebExtraExposedPorts {
 			// Check only ports mapped to HTTPS (port 443)
 			if extraPort.HTTPSPort == 443 {
 				containerPort := uint16(extraPort.WebContainerPort)
 				publishedPort, err := app.GetPublishedPortForPrivatePort("web", containerPort)
 				if err == nil && containerPort != 0 {
+					return publishedPort, nil
+				}
+			}
+		}
+		// If any service has port 443 exposed
+		if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+			for service := range app.ComposeYaml.Services {
+				publishedPort, err := app.GetPublishedPortForPrivatePort(service, 443)
+				if err == nil && publishedPort != 0 {
 					return publishedPort, nil
 				}
 			}
