@@ -49,7 +49,7 @@ ddev add-on list --all
 Install any public add-on using the repository format:
 
 ```bash
-ddev add-on get <repo/name>
+ddev add-on get <owner>/<repo>
 ```
 
 Examples:
@@ -101,7 +101,15 @@ Private GitHub repositories:
 
 ```bash
 export DDEV_GITHUB_TOKEN=<your-github-token>
-ddev add-on get <repo/name>
+
+# Get the private add-on from a release
+ddev add-on get <owner>/<repo>
+
+# Or get a tarball for a specific branch, tag, or commit SHA
+ddev add-on get https://api.github.com/repos/<owner>/<repo>/tarball/<ref>
+
+# Note: the format below may not work with fine-grained tokens
+ddev add-on get https://github.com/<owner>/<repo>/tarball/<ref>
 ```
 
 Private repositories on other platforms:
@@ -122,7 +130,7 @@ ddev add-on list --installed
 ### Update an Add-on
 
 ```bash
-ddev add-on get <repo/name>
+ddev add-on get <owner>/<repo>
 ```
 
 This updates to the latest version while preserving your customizations.
