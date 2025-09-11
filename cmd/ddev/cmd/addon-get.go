@@ -245,7 +245,7 @@ ddev add-on get /path/to/tarball.tar.gz
 
 		// Check for runtime dependencies generated during installation
 		if !skipDeps {
-			err := ddevapp.ProcessRuntimeDependencies(app, s.Name, extractedDir, verbose)
+			err := ddevapp.ProcessRuntimeDependencies(app, s.Name, verbose)
 			if err != nil {
 				util.Failed("%v", err)
 			}

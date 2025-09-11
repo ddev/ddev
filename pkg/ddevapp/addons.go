@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	goexec "os/exec"
 	"path/filepath"
@@ -1055,6 +1054,24 @@ func InstallAddonFromGitHub(app *DdevApp, addonName, requestedVersion string, ve
 	owner := parts[0]
 	repo := parts[1]
 
+	// Check for test addon magic in test context
+	if owner == "test" {
+		testDir := os.Getenv("DDEV_ADDON_TEST_DIR")
+		if testDir != "" {
+			testAddonPath := filepath.Join(testDir, repo)
+			if fileutil.IsDirectory(testAddonPath) {
+				if verbose {
+					util.Success("Using test addon from: %s", testAddonPath)
+				}
+				return InstallAddonFromDirectory(app, testAddonPath, addonName, "test", verbose)
+			}
+			// If not found in test fixtures, fall through to GitHub
+			if verbose {
+				util.Warning("Test addon %s not found in %s, falling back to GitHub", repo, testAddonPath)
+			}
+		}
+	}
+
 	// Get GitHub release
 	tarballURL, downloadedRelease, err := github2.GetGitHubRelease(owner, repo, requestedVersion)
 	if err != nil {
@@ -1087,20 +1104,26 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir, repository, version s
 		}
 	}
 
-	// Install dependencies recursively, resolving relative paths
+	// Install dependencies - dependencies must be GitHub owner/repo format or URLs
 	if len(s.Dependencies) > 0 {
-		resolvedDeps := make([]string, len(s.Dependencies))
-		for i, dep := range s.Dependencies {
-			if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-				resolvedDeps[i] = filepath.Clean(filepath.Join(extractedDir, dep))
-				if verbose {
-					util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
-				}
-			} else {
-				resolvedDeps[i] = dep
+		// Validate dependencies are in supported formats
+		for _, dep := range s.Dependencies {
+			dep = strings.TrimSpace(dep)
+			if dep == "" {
+				continue
 			}
+			// Check if it's a URL
+			if strings.HasPrefix(dep, "http://") || strings.HasPrefix(dep, "https://") {
+				continue // URLs are supported
+			}
+			// Check if it's GitHub owner/repo format
+			if IsGithubRef(dep) {
+				continue // GitHub owner/repo format is supported
+			}
+			// Everything else is not supported
+			return fmt.Errorf("unsupported dependency format in install.yaml: '%s' - only GitHub owner/repo format (e.g., 'ddev/ddev-redis') and URLs are supported", dep)
 		}
-		err = InstallDependencies(app, resolvedDeps, verbose)
+		err = InstallDependencies(app, s.Dependencies, verbose)
 		if err != nil {
 			return fmt.Errorf("unable to install dependencies for '%s': %v", s.Name, err)
 		}
@@ -1265,7 +1288,7 @@ func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease, reposi
 // ProcessRuntimeDependencies looks for a runtime dependency file generated during
 // pre/post install actions and installs any dependencies listed. The file is
 // expected at .ddev/.runtime-deps-<addonName>. It is removed after processing.
-func ProcessRuntimeDependencies(app *DdevApp, addonName, extractedDir string, verbose bool) error {
+func ProcessRuntimeDependencies(app *DdevApp, addonName string, verbose bool) error {
 	runtimeDepsFile := app.GetConfigPath(".runtime-deps-" + addonName)
 
 	deps, err := ParseRuntimeDependencies(runtimeDepsFile)
@@ -1278,28 +1301,24 @@ func ProcessRuntimeDependencies(app *DdevApp, addonName, extractedDir string, ve
 
 	util.Success("Installing runtime dependencies")
 
-	// Resolve relative entries against extractedDir; leave URLs and owner/repo as-is
-	isHTTPURL := func(s string) bool {
-		u, err := url.Parse(strings.TrimSpace(s))
-		return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
-	}
-	resolved := make([]string, len(deps))
-	for i, d := range deps {
+	// Validate that runtime dependencies are in supported formats
+	for _, d := range deps {
 		d = strings.TrimSpace(d)
 		if d == "" {
-			resolved[i] = d
 			continue
 		}
-		if isHTTPURL(d) || IsGithubRef(d) {
-			resolved[i] = d
-			continue
+		// Check if it's a URL
+		if strings.HasPrefix(d, "http://") || strings.HasPrefix(d, "https://") {
+			continue // URLs are supported
 		}
-		if filepath.IsAbs(d) || (len(d) >= 2 && d[1] == ':' && ((d[0] >= 'A' && d[0] <= 'Z') || (d[0] >= 'a' && d[0] <= 'z'))) {
-			resolved[i] = filepath.Clean(d)
-			continue
+		// Check if it's GitHub owner/repo format
+		if IsGithubRef(d) {
+			continue // GitHub owner/repo format is supported
 		}
-		resolved[i] = filepath.Clean(filepath.Join(extractedDir, d))
+		// Everything else is not supported
+		return fmt.Errorf("unsupported dependency format in runtime-deps file: '%s' - only GitHub owner/repo format (e.g., 'ddev/ddev-redis') and URLs are supported", d)
 	}
+	resolved := deps
 
 	if err := InstallDependencies(app, resolved, verbose); err != nil {
 		return err
@@ -1340,38 +1359,12 @@ func IsGithubRef(s string) bool {
 	return true
 }
 
-// ResolveDependencyPaths normalizes dependency entries for downstream installers.
-//
-// Behavior:
-// - URLs (http/https): returned unchanged
-// - GitHub refs (owner/repo): returned unchanged
-// - Absolute filesystem paths: filepath.Clean(path)
-// - Relative paths: filepath.Clean(dep) (do not join; callers decide base)
+// ResolveDependencyPaths validates and returns dependency entries unchanged.
+// Dependencies must be GitHub owner/repo format or URLs.
+// This function is deprecated and will be removed as validation now happens upstream.
 func ResolveDependencyPaths(dependencies []string, extractedDir string, verbose bool) []string {
-	isHTTPURL := func(s string) bool {
-		u, err := url.Parse(strings.TrimSpace(s))
-		return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
-	}
-
-	resolved := make([]string, len(dependencies))
-	for i, raw := range dependencies {
-		dep := strings.TrimSpace(raw)
-		if dep == "" {
-			resolved[i] = dep
-			continue
-		}
-		if isHTTPURL(dep) || IsGithubRef(dep) {
-			resolved[i] = dep
-			continue
-		}
-		if filepath.IsAbs(dep) || (len(dep) >= 2 && dep[1] == ':' && ((dep[0] >= 'A' && dep[0] <= 'Z') || (dep[0] >= 'a' && dep[0] <= 'z'))) {
-			resolved[i] = filepath.Clean(dep)
-			continue
-		}
-		// Relative path: clean only; callers resolve base (extractedDir or CWD)
-		resolved[i] = filepath.Clean(dep)
-	}
-	return resolved
+	// Simply return dependencies unchanged - validation happens upstream now
+	return dependencies
 }
 
 // GatherAllManifests searches for all addon manifests and presents the result

@@ -13,8 +13,8 @@ post_install_actions:
   - |
     #ddev-description:Create runtime dependencies file during post-install
     echo "# Runtime dependencies discovered during post-install" > .runtime-deps-post-install-runtime-deps-addon
-    echo "../../mock_redis" >> .runtime-deps-post-install-runtime-deps-addon
+    echo "mock/mock-redis" >> .runtime-deps-post-install-runtime-deps-addon
     echo "" >> .runtime-deps-post-install-runtime-deps-addon
     echo "# This is a comment" >> .runtime-deps-post-install-runtime-deps-addon
-    echo "../../mock_redis_commander" >> .runtime-deps-post-install-runtime-deps-addon
+    echo "mock/mock-redis-commander" >> .runtime-deps-post-install-runtime-deps-addon
     echo "Post-install runtime dependencies file created"

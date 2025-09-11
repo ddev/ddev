@@ -1,4 +1,0 @@
-name: addon-b
-dependencies:
-  - addon-a
-description: Test addon B that depends on addon A (creates circular dependency)

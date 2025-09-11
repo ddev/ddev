@@ -325,7 +325,7 @@ func TestParseRuntimeDependencies(t *testing.T) {
 ddev/ddev-redis
 
 # Another comment
-../local/addon
+ddev/ddev-local-addon
 https://example.com/addon.tar.gz
 
 # Empty line above should be ignored
@@ -336,7 +336,7 @@ https://example.com/addon.tar.gz
 	// Test parsing
 	deps, err := ddevapp.ParseRuntimeDependencies(runtimeDepsFile)
 	assert.NoError(err)
-	assert.Equal([]string{"ddev/ddev-redis", "../local/addon", "https://example.com/addon.tar.gz"}, deps)
+	assert.Equal([]string{"ddev/ddev-redis", "ddev/ddev-local-addon", "https://example.com/addon.tar.gz"}, deps)
 
 	// Test non-existent file
 	deps, err = ddevapp.ParseRuntimeDependencies(filepath.Join(tmpDir, "nonexistent"))
@@ -427,24 +427,25 @@ func TestMixedDependencyScenarios(t *testing.T) {
 	})
 
 	t.Run("DependencyPathResolution", func(t *testing.T) {
-		// Test ResolveDependencyPaths function with various path formats
+		// Test ResolveDependencyPaths function with supported dependency formats
 		extractedDir := "/tmp/addon-base"
 		dependencies := []string{
 			"ddev/ddev-redis",
-			"../relative-addon",
-			"./local-addon",
+			"user/another-addon",
+			"owner/third-addon",
 			"https://example.com/addon.tar.gz",
-			"/absolute/path/addon",
+			"https://github.com/user/repo/archive/v1.0.0.tar.gz",
 		}
 
 		resolved := ddevapp.ResolveDependencyPaths(dependencies, extractedDir, false)
 
+		// ResolveDependencyPaths now just returns input unchanged since validation happens upstream
 		expected := []string{
 			"ddev/ddev-redis",
-			filepath.Clean("../relative-addon"),
-			filepath.Clean("./local-addon"),
+			"user/another-addon",
+			"owner/third-addon",
 			"https://example.com/addon.tar.gz",
-			filepath.Clean("/absolute/path/addon"),
+			"https://github.com/user/repo/archive/v1.0.0.tar.gz",
 		}
 
 		require.Equal(t, expected, resolved)
