@@ -136,22 +136,18 @@ func TestCmdGlobalConfig(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, args)
 	require.NoError(t, err)
 
-	// These are all irrelevant with NoBindMounts: NFS doesn't work
-	// and mutagen is forced on.
-	if !globalconfig.DdevGlobalConfig.NoBindMounts {
-		// Test that NFS can be enabled
-		args = []string{"config", "global", "--performance-mode=nfs"}
-		out, err = exec.RunCommand(DdevBin, args)
-		assert.NoError(err)
+	// Test that NFS can be enabled
+	args = []string{"config", "global", "--performance-mode=nfs"}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err)
 
-		assert.Contains(out, "performance-mode=nfs")
+	assert.Contains(out, "performance-mode=nfs")
 
-		err = globalconfig.ReadGlobalConfig()
-		assert.NoError(err)
+	err = globalconfig.ReadGlobalConfig()
+	assert.NoError(err)
 
-		assert.False(globalconfig.DdevGlobalConfig.IsMutagenEnabled())
-		assert.True(globalconfig.DdevGlobalConfig.IsNFSMountEnabled())
-	}
+	assert.False(globalconfig.DdevGlobalConfig.IsMutagenEnabled())
+	assert.True(globalconfig.DdevGlobalConfig.IsNFSMountEnabled())
 
 	// Test that we can remove array elements with `--item=""`
 	args = []string{"config", "global", `--web-environment=""`, `--omit-containers=""`}
