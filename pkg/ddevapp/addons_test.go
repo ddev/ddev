@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -277,7 +276,7 @@ func TestParseRuntimeDependencies(t *testing.T) {
 ddev/ddev-redis
 
 # Another comment
-../local/addon
+ddev/ddev-local-addon
 https://example.com/addon.tar.gz
 
 # Empty line above should be ignored
@@ -288,7 +287,7 @@ https://example.com/addon.tar.gz
 	// Test parsing
 	deps, err := ddevapp.ParseRuntimeDependencies(runtimeDepsFile)
 	assert.NoError(err)
-	assert.Equal([]string{"ddev/ddev-redis", "../local/addon", "https://example.com/addon.tar.gz"}, deps)
+	assert.Equal([]string{"ddev/ddev-redis", "ddev/ddev-local-addon", "https://example.com/addon.tar.gz"}, deps)
 
 	// Test non-existent file
 	deps, err = ddevapp.ParseRuntimeDependencies(filepath.Join(tmpDir, "nonexistent"))
@@ -376,30 +375,6 @@ func TestMixedDependencyScenarios(t *testing.T) {
 				}
 			})
 		}
-	})
-
-	t.Run("DependencyPathResolution", func(t *testing.T) {
-		// Test ResolveDependencyPaths function with various path formats
-		extractedDir := "/tmp/addon-base"
-		dependencies := []string{
-			"ddev/ddev-redis",
-			"../relative-addon",
-			"./local-addon",
-			"https://example.com/addon.tar.gz",
-			"/absolute/path/addon",
-		}
-
-		resolved := ddevapp.ResolveDependencyPaths(dependencies, extractedDir, false)
-
-		expected := []string{
-			"ddev/ddev-redis",
-			"/tmp/relative-addon", // filepath.Clean(filepath.Join("/tmp/addon-base", "../relative-addon"))
-			"/tmp/addon-base/local-addon",
-			"https://example.com/addon.tar.gz",
-			"/absolute/path/addon",
-		}
-
-		require.Equal(t, expected, resolved)
 	})
 
 	t.Run("InstallStackCleanupOnDefer", func(t *testing.T) {
@@ -587,18 +562,25 @@ global_files:
 // TestDependencyManifestCreation tests that addon dependencies create manifests
 // and appear in the installed addon list
 func TestDependencyManifestCreation(t *testing.T) {
-	// Create a main addon that depends on another addon
+	// Set up test magic directory
+	testAddonsDir := testcommon.CreateTmpDir(t.Name() + "_test_addons")
+	t.Setenv("DDEV_ADDON_TEST_DIR", testAddonsDir)
+	defer func() {
+		err := os.RemoveAll(testAddonsDir)
+		assert.NoError(t, err)
+	}()
+
+	// Create main addon directory
 	mainAddonDir := testcommon.CreateTmpDir(t.Name() + "_main")
 	defer func() {
 		err := os.RemoveAll(mainAddonDir)
 		assert.NoError(t, err)
 	}()
 
-	dependencyAddonDir := testcommon.CreateTmpDir(t.Name() + "_dependency")
-	defer func() {
-		err := os.RemoveAll(dependencyAddonDir)
-		assert.NoError(t, err)
-	}()
+	// Create test dependency fixture
+	dependencyFixtureDir := filepath.Join(testAddonsDir, "test-dependency")
+	err := os.MkdirAll(dependencyFixtureDir, 0755)
+	require.NoError(t, err)
 
 	// Create dependency addon with install.yaml
 	dependencyYaml := `name: test-dependency
@@ -607,20 +589,20 @@ description: Test dependency addon
 project_files:
   - dependency-config.yaml`
 
-	err := os.WriteFile(filepath.Join(dependencyAddonDir, "install.yaml"), []byte(dependencyYaml), 0644)
+	err = os.WriteFile(filepath.Join(dependencyFixtureDir, "install.yaml"), []byte(dependencyYaml), 0644)
 	require.NoError(t, err)
 
-	err = os.WriteFile(filepath.Join(dependencyAddonDir, "dependency-config.yaml"), []byte("#ddev-generated\ndependency: config\n"), 0644)
+	err = os.WriteFile(filepath.Join(dependencyFixtureDir, "dependency-config.yaml"), []byte("#ddev-generated\ndependency: config\n"), 0644)
 	require.NoError(t, err)
 
-	// Create main addon with dependency
-	mainYaml := fmt.Sprintf(`name: test-main
+	// Create main addon with test magic dependency
+	mainYaml := `name: test-main
 repository: owner/main-repo
 description: Test main addon
 dependencies:
-  - %s
+  - test/test-dependency
 project_files:
-  - main-config.yaml`, dependencyAddonDir)
+  - main-config.yaml`
 
 	err = os.WriteFile(filepath.Join(mainAddonDir, "install.yaml"), []byte(mainYaml), 0644)
 	require.NoError(t, err)
@@ -680,8 +662,8 @@ project_files:
 	// Verify dependency addon manifest
 	depManifest, exists := manifestsByName["test-dependency"]
 	require.True(t, exists, "Dependency addon should be in manifest list")
-	require.Equal(t, dependencyAddonDir, depManifest.Repository) // Local path for dependency
-	require.Equal(t, "unknown", depManifest.Version)             // Unknown version for local dependency
+	require.Equal(t, "test/test-dependency", depManifest.Repository) // Test magic repository value
+	require.Equal(t, "test", depManifest.Version)                    // Test magic version value
 	require.Contains(t, depManifest.ProjectFiles, "dependency-config.yaml")
 
 	// Verify both files were actually installed
@@ -691,6 +673,14 @@ project_files:
 
 // TestDependencyValidationDuringRemoval tests that addon removal is blocked when other addons depend on it
 func TestDependencyValidationDuringRemoval(t *testing.T) {
+	// Set up test magic directory
+	testAddonsDir := testcommon.CreateTmpDir(t.Name() + "_test_addons")
+	t.Setenv("DDEV_ADDON_TEST_DIR", testAddonsDir)
+	defer func() {
+		err := os.RemoveAll(testAddonsDir)
+		assert.NoError(t, err)
+	}()
+
 	// Create test app with clean .ddev directory
 	site := testcommon.CreateTmpDir(t.Name() + "_site")
 	defer func() {
@@ -701,37 +691,35 @@ func TestDependencyValidationDuringRemoval(t *testing.T) {
 	app, err := ddevapp.NewApp(site, false)
 	require.NoError(t, err)
 
-	// Create dependency addon
-	dependencyAddonDir := testcommon.CreateTmpDir("dependency-addon")
-	defer func() {
-		err := os.RemoveAll(dependencyAddonDir)
-		assert.NoError(t, err)
-	}()
+	// Create test dependency fixture
+	dependencyFixtureDir := filepath.Join(testAddonsDir, "dependency-addon")
+	err = os.MkdirAll(dependencyFixtureDir, 0755)
+	require.NoError(t, err)
 
 	installYamlContent := `name: dependency-addon
 project_files:
   - dependency-config.yaml
 `
-	err = fileutil.TemplateStringToFile(installYamlContent, nil, filepath.Join(dependencyAddonDir, "install.yaml"))
+	err = fileutil.TemplateStringToFile(installYamlContent, nil, filepath.Join(dependencyFixtureDir, "install.yaml"))
 	require.NoError(t, err)
 
 	dependencyConfigContent := "#ddev-generated\nThis is a dependency config file"
-	err = fileutil.TemplateStringToFile(dependencyConfigContent, nil, filepath.Join(dependencyAddonDir, "dependency-config.yaml"))
+	err = fileutil.TemplateStringToFile(dependencyConfigContent, nil, filepath.Join(dependencyFixtureDir, "dependency-config.yaml"))
 	require.NoError(t, err)
 
-	// Create main addon that depends on the dependency addon
+	// Create main addon that depends on the test dependency
 	mainAddonDir := testcommon.CreateTmpDir("main-addon")
 	defer func() {
 		err := os.RemoveAll(mainAddonDir)
 		assert.NoError(t, err)
 	}()
 
-	mainInstallYamlContent := fmt.Sprintf(`name: main-addon
+	mainInstallYamlContent := `name: main-addon
 dependencies:
-  - %s
+  - test/dependency-addon
 project_files:
   - main-config.yaml
-`, dependencyAddonDir)
+`
 	err = fileutil.TemplateStringToFile(mainInstallYamlContent, nil, filepath.Join(mainAddonDir, "install.yaml"))
 	require.NoError(t, err)
 

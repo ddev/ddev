@@ -1,6 +1,6 @@
 name: mock-redis-commander
 dependencies:
-  - ../mock_redis
+  - test/mock-redis
 description: Mock Redis Commander addon (simulates ddev/ddev-redis-commander)
 
 project_files:

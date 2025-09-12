@@ -1,4 +1,0 @@
-name: addon-c
-dependencies:
-  - addon-d
-description: Test addon C that depends on addon D

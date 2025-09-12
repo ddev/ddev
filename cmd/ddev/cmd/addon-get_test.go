@@ -154,6 +154,7 @@ func TestCmdAddonActionsOutput(t *testing.T) {
 // TestCmdAddonDependencies tests the dependency behavior is correct
 func TestCmdAddonDependencies(t *testing.T) {
 	origDir, _ := os.Getwd()
+	t.Setenv("DDEV_ADDON_TEST_DIR", filepath.Join(origDir, "testdata", "test-addons"))
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
@@ -173,17 +174,11 @@ func TestCmdAddonDependencies(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	// First try of depender_recipe should fail without dependency
+	// Install depender_recipe - should succeed and auto-install test/dependency_recipe
 	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "depender_recipe"))
-	require.Error(t, err, "out=%s", out)
-
-	// Now add the dependency and try again
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "dependency_recipe"))
 	require.NoError(t, err, "out=%s", out)
-
-	// Now depender_recipe should succeed
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "depender_recipe"))
-	require.NoError(t, err, "out=%s", out)
+	require.Contains(t, out, "Installing missing dependency: test/dependency_recipe", "Should auto-install test dependency")
+	require.Contains(t, out, "Successfully installed dependency_recipe from directory", "Should successfully install from test fixture")
 }
 
 // TestCmdAddonDdevVersionConstraint tests the ddev_version_constraint behavior is correct
@@ -392,6 +387,7 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 // TestAddonGetWithDependencies tests static dependency installation
 func TestAddonGetWithDependencies(t *testing.T) {
 	origDir, _ := os.Getwd()
+	t.Setenv("DDEV_ADDON_TEST_DIR", filepath.Join(origDir, "testdata", "test-addons"))
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
@@ -400,8 +396,8 @@ func TestAddonGetWithDependencies(t *testing.T) {
 
 	t.Cleanup(func() {
 		assert := asrt.New(t)
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis")
 		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis-commander")
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "mock-redis")
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
@@ -429,15 +425,13 @@ func TestAddonGetCircularDependencies(t *testing.T) {
 
 	t.Cleanup(func() {
 		assert := asrt.New(t)
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "addon-x")
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "addon-y")
-		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "addon-z")
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "test-dummy-self-referencing-addon")
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
 
-	// Test that circular dependencies are detected and rejected
-	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", "TestAddonCircular", "addon_x"))
+	// Test that circular dependencies are detected and rejected using real self-referencing add-on
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/test-dummy-self-referencing-addon")
 	require.Error(t, err, "Should fail due to circular dependency, out=%s", out)
 	require.Contains(t, out, "circular dependency detected", "Should mention circular dependency")
 }
@@ -475,6 +469,7 @@ func TestAddonGetSkipDepsFlag(t *testing.T) {
 // TestAddonGetRuntimeDependencies tests runtime dependency file parsing
 func TestAddonGetRuntimeDependencies(t *testing.T) {
 	origDir, _ := os.Getwd()
+	t.Setenv("DDEV_ADDON_TEST_DIR", filepath.Join(origDir, "testdata", "test-addons"))
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
@@ -518,6 +513,7 @@ func TestAddonGetRuntimeDependencies(t *testing.T) {
 // TestAddonGetPostInstallRuntimeDependencies tests runtime dependency file parsing when created during post-install actions
 func TestAddonGetPostInstallRuntimeDependencies(t *testing.T) {
 	origDir, _ := os.Getwd()
+	t.Setenv("DDEV_ADDON_TEST_DIR", filepath.Join(origDir, "testdata", "test-addons"))
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)

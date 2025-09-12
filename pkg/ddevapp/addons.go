@@ -1052,6 +1052,24 @@ func InstallAddonFromGitHub(app *DdevApp, addonName, requestedVersion string, ve
 	owner := parts[0]
 	repo := parts[1]
 
+	// Check for test addon magic in test context
+	if owner == "test" {
+		testDir := os.Getenv("DDEV_ADDON_TEST_DIR")
+		if testDir != "" {
+			testAddonPath := filepath.Join(testDir, repo)
+			if fileutil.IsDirectory(testAddonPath) {
+				if verbose {
+					util.Success("Using test addon from: %s", testAddonPath)
+				}
+				return InstallAddonFromDirectory(app, testAddonPath, addonName, "test", verbose)
+			}
+			// If not found in test fixtures, fall through to GitHub
+			if verbose {
+				util.Warning("Test addon %s not found in %s, falling back to GitHub", repo, testAddonPath)
+			}
+		}
+	}
+
 	// Get GitHub release
 	tarballURL, downloadedRelease, err := github.GetGitHubRelease(owner, repo, requestedVersion)
 	if err != nil {
@@ -1084,23 +1102,26 @@ func InstallAddonFromDirectory(app *DdevApp, extractedDir, repository, version s
 		}
 	}
 
-	// Install dependencies recursively, resolving relative paths
+	// Install dependencies - dependencies must be GitHub owner/repo format or URLs
 	if len(s.Dependencies) > 0 {
-		resolvedDeps := make([]string, len(s.Dependencies))
-		for i, dep := range s.Dependencies {
-			if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-				// Resolve relative path relative to extractedDir
-				resolvedPath := filepath.Join(extractedDir, dep)
-				// Clean the path to resolve .. and . components
-				resolvedDeps[i] = filepath.Clean(resolvedPath)
-				if verbose {
-					util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
-				}
-			} else {
-				resolvedDeps[i] = dep
+		// Validate dependencies are in supported formats
+		for _, dep := range s.Dependencies {
+			dep = strings.TrimSpace(dep)
+			if dep == "" {
+				continue
 			}
+			// Check if it's a URL
+			if strings.HasPrefix(dep, "http://") || strings.HasPrefix(dep, "https://") {
+				continue // URLs are supported
+			}
+			// Check if it's GitHub owner/repo format
+			if IsGithubRef(dep) {
+				continue // GitHub owner/repo format is supported
+			}
+			// Everything else is not supported
+			return fmt.Errorf("unsupported dependency format in install.yaml: '%s' - only GitHub owner/repo format (e.g., 'ddev/ddev-redis') and URLs are supported", dep)
 		}
-		err = InstallDependencies(app, resolvedDeps, verbose)
+		err = InstallDependencies(app, s.Dependencies, verbose)
 		if err != nil {
 			return fmt.Errorf("unable to install dependencies for '%s': %v", s.Name, err)
 		}
@@ -1262,89 +1283,78 @@ func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease, reposi
 	return InstallAddonFromDirectory(app, extractedDir, repository, downloadedRelease, verbose)
 }
 
-// ValidateDependencies checks that all declared dependencies exist without installing them.
-// Useful for callers that want to verify dependencies are present but not install them.
-func ValidateDependencies(app *DdevApp, dependencies []string, extractedDir, addonName string) error {
-	m, err := GatherAllManifests(app)
-	if err != nil {
-		return fmt.Errorf("unable to gather manifests: %w", err)
-	}
-	for _, dep := range dependencies {
-		checkName := dep
-		// For relative paths, we need to check the actual addon name, not the path
-		if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-			// Resolve relative path and get the addon name from install.yaml
-			resolvedPath := filepath.Clean(filepath.Join(extractedDir, dep))
-			if fileutil.IsDirectory(resolvedPath) {
-				yamlFile := filepath.Join(resolvedPath, "install.yaml")
-				if yamlContent, err := fileutil.ReadFileIntoString(yamlFile); err == nil {
-					var depDesc InstallDesc
-					if err := yaml.Unmarshal([]byte(yamlContent), &depDesc); err == nil {
-						checkName = depDesc.Name
-					}
-				}
-			}
-		}
-		if _, ok := m[checkName]; !ok {
-			return fmt.Errorf("the add-on '%s' declares a dependency on '%s'; please ddev add-on get %s first", addonName, dep, dep)
-		}
-	}
-	return nil
-}
-
-// ResolveDependencyPaths resolves relative paths in dependencies relative to extractedDir
-func ResolveDependencyPaths(dependencies []string, extractedDir string, verbose bool) []string {
-	resolvedDeps := make([]string, len(dependencies))
-	for i, dep := range dependencies {
-		if strings.HasPrefix(dep, "../") || strings.HasPrefix(dep, "./") {
-			// Resolve relative path relative to extractedDir
-			resolvedPath := filepath.Join(extractedDir, dep)
-			// Clean the path to resolve .. and . components
-			resolvedDeps[i] = filepath.Clean(resolvedPath)
-			if verbose {
-				util.Success("Resolved relative dependency '%s' to '%s'", dep, resolvedDeps[i])
-			}
-		} else {
-			resolvedDeps[i] = dep
-		}
-	}
-	return resolvedDeps
-}
-
-// ProcessRuntimeDependencies handles runtime dependencies generated during addon installation
-func ProcessRuntimeDependencies(app *DdevApp, addonName, extractedDir string, verbose bool) error {
+// ProcessRuntimeDependencies looks for a runtime dependency file generated during
+// pre/post install actions and installs any dependencies listed. The file is
+// expected at .ddev/.runtime-deps-<addonName>. It is removed after processing.
+func ProcessRuntimeDependencies(app *DdevApp, addonName string, verbose bool) error {
 	runtimeDepsFile := app.GetConfigPath(".runtime-deps-" + addonName)
-	if verbose {
-		util.Success("Checking for runtime dependencies file: %s", runtimeDepsFile)
-		if fileutil.FileExists(runtimeDepsFile) {
-			content, _ := fileutil.ReadFileIntoString(runtimeDepsFile)
-			util.Success("Runtime dependencies file contents: %q", content)
-		} else {
-			util.Success("Runtime dependencies file does not exist")
-		}
-	}
 
-	runtimeDeps, err := ParseRuntimeDependencies(runtimeDepsFile)
+	deps, err := ParseRuntimeDependencies(runtimeDepsFile)
 	if err != nil {
-		return fmt.Errorf("failed to parse runtime dependencies: %w", err)
+		return fmt.Errorf("unable to parse runtime dependencies file %s: %v", runtimeDepsFile, err)
+	}
+	if len(deps) == 0 {
+		return nil
 	}
 
-	if verbose {
-		util.Success("Found %d runtime dependencies: %v", len(runtimeDeps), runtimeDeps)
-	}
+	util.Success("Installing runtime dependencies")
 
-	if len(runtimeDeps) > 0 {
-		util.Success("Installing runtime dependencies:")
-		// Resolve relative paths for runtime dependencies
-		resolvedRuntimeDeps := ResolveDependencyPaths(runtimeDeps, extractedDir, verbose)
-		err := InstallDependencies(app, resolvedRuntimeDeps, verbose)
-		if err != nil {
-			return fmt.Errorf("failed to install runtime dependencies for '%s': %w", addonName, err)
+	// Validate that runtime dependencies are in supported formats
+	for _, d := range deps {
+		d = strings.TrimSpace(d)
+		if d == "" {
+			continue
 		}
-		// Clean up the runtime dependencies file
-		_ = os.Remove(runtimeDepsFile)
+		// Check if it's a URL
+		if strings.HasPrefix(d, "http://") || strings.HasPrefix(d, "https://") {
+			continue // URLs are supported
+		}
+		// Check if it's GitHub owner/repo format
+		if IsGithubRef(d) {
+			continue // GitHub owner/repo format is supported
+		}
+		// Everything else is not supported
+		return fmt.Errorf("unsupported dependency format in runtime-deps file: '%s' - only GitHub owner/repo format (e.g., 'ddev/ddev-redis') and URLs are supported", d)
 	}
+	resolved := deps
+
+	if err := InstallDependencies(app, resolved, verbose); err != nil {
+		return err
+	}
+
+	_ = os.Remove(runtimeDepsFile)
 	return nil
+}
+
+// IsGithubRef reports whether the string looks like a GitHub owner/repo reference.
+// Heuristics:
+// - exactly one forward slash
+// - does not start with '.'
+// - contains no dots anywhere (to avoid paths/files like foo/bar.txt)
+// - does not contain OS-specific path separators (like '\\' on Windows)
+// - excludes anything that looks like a URL (contains "://") or git@ scp-like refs
+func IsGithubRef(s string) bool {
+	ss := strings.TrimSpace(s)
+	if ss == "" {
+		return false
+	}
+	if strings.Contains(ss, "://") || strings.HasPrefix(ss, "git@") {
+		return false
+	}
+	if os.PathSeparator != '/' && strings.ContainsRune(ss, os.PathSeparator) {
+		return false
+	}
+	parts := strings.Split(ss, "/")
+	if len(parts) != 2 {
+		return false
+	}
+	if strings.HasPrefix(ss, ".") {
+		return false
+	}
+	if strings.Contains(ss, ".") {
+		return false
+	}
+	return true
 }
 
 // GatherAllManifests searches for all addon manifests and presents the result
