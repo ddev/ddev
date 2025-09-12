@@ -136,9 +136,8 @@ ddev add-on get /path/to/tarball.tar.gz
 		// Handle dependencies
 		if len(s.Dependencies) > 0 {
 			if !skipDeps {
-				// Install dependencies recursively, resolving relative paths
-				resolvedDeps := ddevapp.ResolveDependencyPaths(s.Dependencies, extractedDir, verbose)
-				err := ddevapp.InstallDependencies(app, resolvedDeps, verbose)
+				// Install dependencies - they must be GitHub owner/repo format or URLs
+				err := ddevapp.InstallDependencies(app, s.Dependencies, verbose)
 				if err != nil {
 					util.Failed("Failed to install dependencies for '%s': %v", s.Name, err)
 				}

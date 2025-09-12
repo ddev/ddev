@@ -1285,14 +1285,6 @@ func InstallAddonFromTarball(app *DdevApp, tarballURL, downloadedRelease, reposi
 	return InstallAddonFromDirectory(app, extractedDir, repository, downloadedRelease, verbose)
 }
 
-// ResolveDependencyPaths validates and returns dependency entries unchanged.
-// Dependencies must be GitHub owner/repo format or URLs.
-// This function is deprecated and will be removed as validation now happens upstream.
-func ResolveDependencyPaths(dependencies []string, extractedDir string, verbose bool) []string {
-	// Simply return dependencies unchanged - validation happens upstream now
-	return dependencies
-}
-
 // ProcessRuntimeDependencies looks for a runtime dependency file generated during
 // pre/post install actions and installs any dependencies listed. The file is
 // expected at .ddev/.runtime-deps-<addonName>. It is removed after processing.

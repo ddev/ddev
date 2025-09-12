@@ -425,31 +425,6 @@ func TestMixedDependencyScenarios(t *testing.T) {
 		}
 	})
 
-	t.Run("DependencyPathResolution", func(t *testing.T) {
-		// Test ResolveDependencyPaths function with supported dependency formats
-		extractedDir := "/tmp/addon-base"
-		dependencies := []string{
-			"ddev/ddev-redis",
-			"user/another-addon",
-			"owner/third-addon",
-			"https://example.com/addon.tar.gz",
-			"https://github.com/user/repo/archive/v1.0.0.tar.gz",
-		}
-
-		resolved := ddevapp.ResolveDependencyPaths(dependencies, extractedDir, false)
-
-		// ResolveDependencyPaths now just returns input unchanged since validation happens upstream
-		expected := []string{
-			"ddev/ddev-redis",
-			"user/another-addon",
-			"owner/third-addon",
-			"https://example.com/addon.tar.gz",
-			"https://github.com/user/repo/archive/v1.0.0.tar.gz",
-		}
-
-		require.Equal(t, expected, resolved)
-	})
-
 	t.Run("InstallStackCleanupOnDefer", func(t *testing.T) {
 		// Test that the install stack is properly cleaned up on function exit
 		ddevapp.ResetInstallStack()
