@@ -444,9 +444,9 @@ func TestPsqlCommand(t *testing.T) {
 	assert.Contains(out, `db        | db    | UTF8`)
 }
 
-// TestNpmYarnCommands tests that the `ddev npm` and yarn commands behaves and install run in
-// expected relative directory.
-func TestNpmYarnCommands(t *testing.T) {
+// TestNpmNpxYarnCommands tests that the `ddev npm`, npx, and yarn commands behaves and install
+// run in expected relative directory.
+func TestNpmNpxYarnCommands(t *testing.T) {
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -499,6 +499,9 @@ func TestNpmYarnCommands(t *testing.T) {
 		out, err := exec.RunHostCommand(DdevBin, "npm", "install", "--no-audit")
 		assert.NoError(err)
 		assert.Contains(out, "up to date in", "d='%s', npm install has wrong output; output='%s'", d, out)
+		out, err = exec.RunHostCommand(DdevBin, "npx", "-c", "echo hello")
+		assert.NoError(err)
+		assert.Contains(out, "hello", "d='%s', npx -c 'echo hello' has wrong output; output='%s'", d, out)
 		out, err = exec.RunHostCommand(DdevBin, "yarn", "install")
 		assert.NoError(err)
 		assert.Contains(out, "success Saved lockfile")

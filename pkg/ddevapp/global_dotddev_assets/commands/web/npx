@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#ddev-generated
+## Description: Run npx inside the web container
+## Usage: npx [pkg] [args]
+## Example: "ddev npx @biomejs/biome init"
+## ExecRaw: true
+## HostWorkingDir: true
+## MutagenSync: true
+
+npx "$@"
