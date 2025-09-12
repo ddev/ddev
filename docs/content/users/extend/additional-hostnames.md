@@ -25,7 +25,7 @@ ddev config --additional-hostnames extraname,fr.mysite,es.mysite,it.mysite,*.lot
 
 In addition, the wildcard `*.lotsofnames` will result in anything `*.lotsofnames.ddev.site` being recognized by the project. This works only if you’re connected to the internet, using `ddev.site` for your top-level-domain, and using DNS for name lookups. (These are all the defaults.)
 
-**Although we recommend extreme care with this feature**, you can also provide `additional_fqdn` entries, which don't use the `.ddev.site` top-level domain. **This feature populates your hosts file with entries which may hide the real DNS entries on the internet, causing way too much head-scratching.**
+**Although we recommend extreme care with this feature**, you can also provide `additional_fqdns` entries, which don't use the `.ddev.site` top-level domain. **This feature populates your hosts file with entries which may hide the real DNS entries on the internet, causing way too much head-scratching.**
 
 **If you use a FQDN which is resolvable on the internet, you must use `use_dns_when_possible: false` or configure that with `ddev config --use-dns-when-possible=false`.**
 
@@ -46,8 +46,8 @@ This configuration would result in working FQDNs of `somename.ddev.site`, `examp
 
 !!!warning "May not work predictably everywhere."
 
-    This may not work predictably on all systems. There are operating systems and machines where `/etc/hosts` may not be the first or only resolution technique, especially if the `additional_fqdn` you use is also in DNS.
+    This may not work predictably on all systems. There are operating systems and machines where `/etc/hosts` may not be the first or only resolution technique, especially if the `additional_fqdns` you use is also in DNS.
 
 !!!warning "Don’t override a real domain name!"
 
-    If you use an `additional_fqdn` that exists on the internet (like `www.google.com`), your hosts file will override access to the original (internet) site, and you’ll be sad and confused that you can’t get to it.
+    If you use an `additional_fqdns` that exists on the internet (like `www.google.com`), your hosts file will override access to the original (internet) site, and you’ll be sad and confused that you can’t get to it.
