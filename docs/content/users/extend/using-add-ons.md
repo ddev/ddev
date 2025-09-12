@@ -87,7 +87,7 @@ Add-ons are installed into your project's `.ddev` directory and automatically in
 
 ### Private Add-ons
 
-Private GitHub repositories:
+Add-ons from private GitHub repositories are supported, but you have to provide a GitHub token with the correct privileges to allow access to them:
 
 - [Fine-grained personal access tokens](https://github.com/settings/personal-access-tokens/new?contents=read) with the `contents:read` scope are recommended for better security.
 - [Classic tokens](https://github.com/settings/tokens/new) with the `repo` scope also work.
@@ -102,7 +102,7 @@ Private GitHub repositories:
 ```bash
 export DDEV_GITHUB_TOKEN=<your-github-token>
 
-# Get the private add-on from a release
+# Get the private add-on from the latest stable release
 ddev add-on get <owner>/<repo>
 
 # Or get a tarball for a specific branch, tag, or commit SHA
