@@ -153,9 +153,6 @@ func TestCmdAddonActionsOutput(t *testing.T) {
 
 // TestCmdAddonDependencies tests the dependency behavior is correct
 func TestCmdAddonDependencies(t *testing.T) {
-	if os.Getenv("DDEV_TEST_ADDON_DEPENDENCIES") != "true" {
-		t.Skip("Skipping addon dependency test, set DDEV_TEST_ADDON_DEPENDENCIES=true to enable")
-	}
 	origDir, _ := os.Getwd()
 	t.Setenv("DDEV_ADDON_TEST_DIR", filepath.Join(origDir, "testdata", "test-addons"))
 	site := TestSites[0]
@@ -389,10 +386,8 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 
 // TestAddonGetWithDependencies tests static dependency installation
 func TestAddonGetWithDependencies(t *testing.T) {
-	if os.Getenv("DDEV_TEST_ADDON_DEPENDENCIES") != "true" {
-		t.Skip("Skipping addon dependency test, set DDEV_TEST_ADDON_DEPENDENCIES=true to enable")
-	}
 	origDir, _ := os.Getwd()
+	t.Setenv("DDEV_ADDON_TEST_DIR", filepath.Join(origDir, "testdata", "test-addons"))
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
@@ -473,10 +468,8 @@ func TestAddonGetSkipDepsFlag(t *testing.T) {
 
 // TestAddonGetRuntimeDependencies tests runtime dependency file parsing
 func TestAddonGetRuntimeDependencies(t *testing.T) {
-	if os.Getenv("DDEV_TEST_ADDON_DEPENDENCIES") != "true" {
-		t.Skip("Skipping addon runtime dependency test, set DDEV_TEST_ADDON_DEPENDENCIES=true to enable")
-	}
 	origDir, _ := os.Getwd()
+	t.Setenv("DDEV_ADDON_TEST_DIR", filepath.Join(origDir, "testdata", "test-addons"))
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
@@ -519,10 +512,8 @@ func TestAddonGetRuntimeDependencies(t *testing.T) {
 
 // TestAddonGetPostInstallRuntimeDependencies tests runtime dependency file parsing when created during post-install actions
 func TestAddonGetPostInstallRuntimeDependencies(t *testing.T) {
-	if os.Getenv("DDEV_TEST_ADDON_DEPENDENCIES") != "true" {
-		t.Skip("Skipping addon post-install runtime dependency test, set DDEV_TEST_ADDON_DEPENDENCIES=true to enable")
-	}
 	origDir, _ := os.Getwd()
+	t.Setenv("DDEV_ADDON_TEST_DIR", filepath.Join(origDir, "testdata", "test-addons"))
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
