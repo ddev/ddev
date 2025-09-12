@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -43,33 +44,41 @@ func laravelPostStartAction(app *DdevApp) error {
 			return err
 		}
 	}
-	port := "3306"
-	dbConnection := "mariadb"
-	if app.Database.Type == nodeps.MariaDB {
-		hasMariaDBDriver, _ := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "config/database.php"), "mariadb")
-		if !hasMariaDBDriver {
-			// Older versions of Laravel (before 11) use "mysql" driver for MariaDB
-			// This change is required to prevent this error on "php artisan migrate":
-			// InvalidArgumentException Database connection [mariadb] not configured
-			dbConnection = "mysql"
-		}
-	} else if app.Database.Type == nodeps.MySQL {
-		dbConnection = "mysql"
-	} else if app.Database.Type == nodeps.Postgres {
-		dbConnection = "pgsql"
-		port = "5432"
-	}
 	envMap := map[string]string{
-		"APP_URL":       app.GetPrimaryURL(),
-		"DB_HOST":       "db",
-		"DB_PORT":       port,
-		"DB_DATABASE":   "db",
-		"DB_USERNAME":   "db",
-		"DB_PASSWORD":   "db",
-		"DB_CONNECTION": dbConnection,
-		"MAIL_MAILER":   "smtp",
-		"MAIL_HOST":     "127.0.0.1",
-		"MAIL_PORT":     "1025",
+		"APP_URL":     app.GetPrimaryURL(),
+		"MAIL_MAILER": "smtp",
+		"MAIL_HOST":   "127.0.0.1",
+		"MAIL_PORT":   "1025",
+	}
+
+	// Only set database configuration if db container is not omitted
+	shouldManageDB := !slices.Contains(app.OmitContainers, "db")
+
+	if shouldManageDB {
+		port := "3306"
+		dbConnection := "mariadb"
+
+		if app.Database.Type == nodeps.MariaDB {
+			hasMariaDBDriver, _ := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "config/database.php"), "mariadb")
+			if !hasMariaDBDriver {
+				// Older versions of Laravel (before 11) use "mysql" driver for MariaDB
+				// This change is required to prevent this error on "php artisan migrate":
+				// InvalidArgumentException Database connection [mariadb] not configured
+				dbConnection = "mysql"
+			}
+		} else if app.Database.Type == nodeps.MySQL {
+			dbConnection = "mysql"
+		} else if app.Database.Type == nodeps.Postgres {
+			dbConnection = "pgsql"
+			port = "5432"
+		}
+
+		envMap["DB_HOST"] = "db"
+		envMap["DB_PORT"] = port
+		envMap["DB_DATABASE"] = "db"
+		envMap["DB_USERNAME"] = "db"
+		envMap["DB_PASSWORD"] = "db"
+		envMap["DB_CONNECTION"] = dbConnection
 	}
 	err = WriteProjectEnvFile(envFilePath, envMap, envText)
 	if err != nil {
