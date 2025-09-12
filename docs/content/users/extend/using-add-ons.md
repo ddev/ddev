@@ -44,29 +44,80 @@ ddev add-on list --all
 
 ## Installing Add-ons
 
-Install any add-on using the repository format:
+### Public Add-ons
+
+Install any public add-on using the repository format:
 
 ```bash
-ddev add-on get <repo/name>
+ddev add-on get <owner>/<repo>
 ```
 
-Popular examples:
+Examples:
 
 ```bash
+# Download the official Redis add-on
 ddev add-on get ddev/ddev-redis
-ddev add-on get ddev/ddev-elasticsearch
-ddev add-on get ddev/ddev-solr
-ddev add-on get ddev/ddev-memcached
-ddev add-on get ddev/ddev-adminer
-```
 
-You can also specify a particular version:
+# Get debug info about `ddev add-on get` failure
+ddev add-on get ddev/ddev-redis --verbose
 
-```bash
+# Download the official Redis add-on, version v1.0.4
 ddev add-on get ddev/ddev-redis --version v1.0.4
+
+# Download the Drupal Solr add-on from its v1.2.3 release tarball
+ddev add-on get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
+
+# Download the Drupal Contrib add-on from its main branch tarball
+ddev add-on get https://github.com/ddev/ddev-drupal-contrib/tarball/main
+
+# Download the OpenSearch add-on from a pull request #15 tarball
+ddev add-on get https://github.com/ddev/ddev-opensearch/tarball/refs/pull/15/head
+
+# Copy an add-on available in another directory
+ddev add-on get /path/to/package
+
+# Copy an add-on from a tarball in another directory
+ddev add-on get /path/to/tarball.tar.gz
+
+# Download the official Redis add-on and install it into a project named "my-project"
+ddev add-on get ddev/ddev-redis --project my-project
 ```
 
 Add-ons are installed into your project's `.ddev` directory and automatically integrated with your project configuration.
+
+### Private Add-ons
+
+Add-ons from private GitHub repositories are supported, but you have to provide a GitHub token with the correct privileges to allow access to them:
+
+- [Fine-grained personal access tokens](https://github.com/settings/personal-access-tokens/new?contents=read) with the `contents:read` scope are recommended for better security.
+- [Classic tokens](https://github.com/settings/tokens/new) with the `repo` scope also work.
+
+!!!tip "Can I reuse my token from a different environment variable?"
+    Yes, supported [environment variables](../usage/commands.md#add-on) include:
+
+    - `DDEV_GITHUB_TOKEN` (highest priority)
+    - `GH_TOKEN` (lower priority than `DDEV_GITHUB_TOKEN`)
+    - `GITHUB_TOKEN` (lowest priority)
+
+```bash
+export DDEV_GITHUB_TOKEN=<your-github-token>
+
+# Get the private add-on from the latest stable release
+ddev add-on get <owner>/<repo>
+
+# Or get a tarball for a specific branch, tag, or commit SHA
+ddev add-on get https://api.github.com/repos/<owner>/<repo>/tarball/<ref>
+
+# Note: the format below may not work with fine-grained tokens
+ddev add-on get https://github.com/<owner>/<repo>/tarball/<ref>
+```
+
+Private repositories on other platforms:
+
+```bash
+git clone <private-repo-url> /tmp/private-addon
+ddev add-on get /tmp/private-addon
+```
 
 ## Managing Add-ons
 
@@ -79,7 +130,7 @@ ddev add-on list --installed
 ### Update an Add-on
 
 ```bash
-ddev add-on get <repo/name>
+ddev add-on get <owner>/<repo>
 ```
 
 This updates to the latest version while preserving your customizations.

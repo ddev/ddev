@@ -31,6 +31,8 @@ var AddonGetCmd = &cobra.Command{
 ddev add-on get ddev/ddev-redis --version v1.0.4
 ddev add-on get ddev/ddev-redis --project my-project
 ddev add-on get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
+ddev add-on get https://github.com/ddev/ddev-drupal-contrib/tarball/main
+ddev add-on get https://github.com/ddev/ddev-opensearch/tarball/refs/pull/15/head
 ddev add-on get /path/to/package
 ddev add-on get /path/to/tarball.tar.gz
 `,

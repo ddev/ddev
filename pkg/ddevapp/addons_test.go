@@ -9,7 +9,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/assert"
@@ -261,53 +260,6 @@ func TestCircularDependencyDetection(t *testing.T) {
 		err2 := ddevapp.AddToInstallStack("ddev-redis.tar.gz")
 		require.Error(t, err2, "Should detect circular dependency with different path formats")
 		require.Contains(t, err2.Error(), "circular dependency detected", "Error should mention circular dependency")
-	})
-}
-
-func TestGetGitHubRelease(t *testing.T) {
-	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
-		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
-	}
-
-	// Test getting latest release
-	t.Run("GetLatestRelease", func(t *testing.T) {
-		tarballURL, version, err := github.GetGitHubRelease("ddev", "ddev-redis", "")
-		require.NoError(t, err, "Should successfully get latest release")
-		require.NotEmpty(t, tarballURL, "Tarball URL should not be empty")
-		require.NotEmpty(t, version, "Version should not be empty")
-		require.Contains(t, tarballURL, "github.com", "Tarball URL should be from GitHub")
-	})
-
-	// Test getting specific version
-	t.Run("GetSpecificVersion", func(t *testing.T) {
-		tarballURL, version, err := github.GetGitHubRelease("ddev", "ddev-redis", "v1.0.4")
-		require.NoError(t, err, "Should successfully get specific version")
-		require.Equal(t, "v1.0.4", version, "Should return requested version")
-		require.NotEmpty(t, tarballURL, "Tarball URL should not be empty")
-	})
-
-	// Test non-existent repository
-	t.Run("NonExistentRepo", func(t *testing.T) {
-		_, _, err := github.GetGitHubRelease("ddev", "non-existent-repo", "")
-		require.Error(t, err, "Should fail for non-existent repository")
-		require.Contains(t, err.Error(), "unable to get releases", "Error should mention inability to get releases")
-	})
-
-	// Test non-existent version
-	t.Run("NonExistentVersion", func(t *testing.T) {
-		_, _, err := github.GetGitHubRelease("ddev", "ddev-redis", "v999.999.999")
-		require.Error(t, err, "Should fail for non-existent version")
-		require.Contains(t, err.Error(), "no release found", "Error should mention no release found")
-	})
-
-	// Test real addon with dependencies
-	t.Run("RealAddonWithDependencies", func(t *testing.T) {
-		// Test ddev-redis-commander which depends on ddev-redis
-		tarballURL, version, err := github.GetGitHubRelease("ddev", "ddev-redis-commander", "")
-		require.NoError(t, err, "Should successfully get ddev-redis-commander release")
-		require.NotEmpty(t, tarballURL, "Tarball URL should not be empty")
-		require.NotEmpty(t, version, "Version should not be empty")
-		require.Contains(t, tarballURL, "github.com", "Tarball URL should be from GitHub")
 	})
 }
 

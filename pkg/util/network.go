@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/cheggaaa/pb"
+	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/hashicorp/go-retryablehttp"
 	"golang.org/x/term"
@@ -79,7 +80,16 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 		for attempt := 0; attempt <= retries; attempt++ {
 			client, currentTimeout := createClient(shaSumTimeout, attempt)
 			Debug("Attempting to download SHASUM URL=%s (attempt %d/%d) with timeout %v", shaSumURL, attempt+1, retries+1, currentTimeout)
-			resp, getErr := client.Get(shaSumURL)
+			req, reqErr := retryablehttp.NewRequest("GET", shaSumURL, nil)
+			if reqErr != nil {
+				err = fmt.Errorf("creating request for shaSum URL %s: %w", shaSumURL, reqErr)
+				return
+			}
+			gitHubHeaders := github.GetGitHubHeaders(shaSumURL)
+			for key, value := range gitHubHeaders {
+				req.Header.Set(key, value)
+			}
+			resp, getErr := client.Do(req)
 			if getErr != nil {
 				err = fmt.Errorf("downloading shaSum URL %s: %w", shaSumURL, getErr)
 				return
@@ -116,7 +126,17 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 		client, currentTimeout := createClient(timeout, attempt)
 		// Download the main fileURL.
 		Debug("Downloading %s to '%s' (attempt %d/%d) with timeout %v", fileURL, destPath, attempt+1, retries+1, currentTimeout)
-		resp, getErr := client.Get(fileURL)
+		req, reqErr := retryablehttp.NewRequest("GET", fileURL, nil)
+		if reqErr != nil {
+			_ = outFile.Close()
+			err = fmt.Errorf("creating request for file URL %s: %w", fileURL, reqErr)
+			return
+		}
+		gitHubHeaders := github.GetGitHubHeaders(fileURL)
+		for key, value := range gitHubHeaders {
+			req.Header.Set(key, value)
+		}
+		resp, getErr := client.Do(req)
 		if getErr != nil {
 			_ = outFile.Close()
 			err = fmt.Errorf("downloading file %s: %w", fileURL, getErr)
