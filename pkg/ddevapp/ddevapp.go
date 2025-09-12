@@ -1349,7 +1349,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		volumesNeeded = append(volumesNeeded, app.Name+"-ddev-config")
+	}
 	for _, v := range volumesNeeded {
+		util.Debug("creating docker volume %s", v)
 		_, err = dockerutil.CreateVolume(v, "local", nil, nil)
 		if err != nil {
 			return fmt.Errorf("unable to create Docker volume %s: %v", v, err)
@@ -1433,13 +1437,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		err = dockerutil.CopyIntoVolume(app.GetConfigPath(""), app.Name+"-ddev-config", "", uid, "db_snapshots", true)
 		if err != nil {
 			return fmt.Errorf("failed to copy project .ddev directory to volume: %v", err)
-		}
-
-		stdout, stderr, err := app.Exec(&ExecOpts{
-			Cmd: `ln -sf /var/www/html/.ddev /mnt/ddev_config`,
-		})
-		if err != nil {
-			util.Warning("Unable to symlink /mnt/ddev_config, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 		}
 	}
 
@@ -1675,6 +1672,17 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		err = fileutil.TemplateStringToFile(`#ddev-generated`, nil, app.GetConfigPath("mutagen/.start-synced"))
 		if err != nil {
 			util.Warning("Could not create file %s: %v", app.GetConfigPath("mutagen/.start-synced"), err)
+		}
+	}
+
+	// If NoBindMounts we'll use symlink in container for /mnt/ddev_config
+	// since it's not mounted.
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		stdout, stderr, err := app.Exec(&ExecOpts{
+			Cmd: `ln -sf /var/www/html/.ddev /mnt/ddev_config`,
+		})
+		if err != nil {
+			util.Warning("Unable to symlink /mnt/ddev_config, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 		}
 	}
 
@@ -2974,9 +2982,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		app.RemoveGlobalProjectInfo()
 
 		vols := []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName(), GetMutagenVolumeName(app)}
-		if globalconfig.DdevGlobalConfig.NoBindMounts {
-			vols = append(vols, app.Name+"-ddev-config")
-		}
+		// app.Name-ddev-config has already been deleted by Cleanup()
 		for _, volName := range vols {
 			if dockerutil.VolumeExists(volName) {
 				err = dockerutil.RemoveVolume(volName)

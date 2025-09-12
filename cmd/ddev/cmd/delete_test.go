@@ -2,16 +2,16 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/ddevapp"
-	ddevImages "github.com/ddev/ddev/pkg/docker"
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/stretchr/testify/require"
 )
 
 // TestDeleteCmd ensures that `ddev delete` removes expected data
@@ -22,6 +22,7 @@ func TestDeleteCmd(t *testing.T) {
 	require.NoError(t, err)
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
+	t.Setenv("NO_COLOR", "true")
 
 	t.Cleanup(func() {
 		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "busybox")
@@ -50,9 +51,7 @@ func TestDeleteCmd(t *testing.T) {
 	if app.IsMutagenEnabled() {
 		vols = append(vols, ddevapp.GetMutagenVolumeName(app))
 	}
-	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		vols = append(vols, app.Name+"-ddev-config")
-	}
+
 	for _, volName := range vols {
 		require.Contains(t, out, fmt.Sprintf("Volume %s for project %s was deleted", volName, app.Name))
 		require.False(t, dockerutil.VolumeExists(volName))
