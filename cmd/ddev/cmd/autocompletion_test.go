@@ -423,11 +423,7 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 	assert.NoError(err)
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	require.NoError(t, err)
-	_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
-
-	// Must sync our added commands before using them.
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
+	_, _ = exec.RunHostCommand(DdevBin, "restart")
 
 	// Check completion results are as expected for each command
 	for _, cmd := range []string{"global-host-cmd", "global-web-cmd", "project-host-cmd", "project-web-cmd"} {

@@ -2,7 +2,6 @@ package netutil
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"net"
 	"net/url"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/ddev/ddev/pkg/nodeps"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
@@ -28,7 +29,7 @@ func IsPortActive(port string) bool {
 		return false
 	}
 
-	util.Debug("Checking if port %s is active", port)
+	util.Verbose("Checking if port %s is active", port)
 	conn, err := net.DialTimeout("tcp", dockerIP+":"+port, dialTimeout)
 
 	// If we were able to connect, something is listening on the port.
@@ -58,7 +59,7 @@ func IsPortActive(port string) bool {
 		var WSAECONNREFUSED syscall.Errno = 10061
 
 		if ok && (syscallErr.Err == syscall.ECONNREFUSED || syscallErr.Err == WSAECONNREFUSED) {
-			util.Debug("port %s shows connection refused so not active", port)
+			util.Verbose("port %s shows connection refused so not active", port)
 			return false
 		}
 	}
