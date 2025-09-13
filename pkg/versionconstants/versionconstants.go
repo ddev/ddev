@@ -26,7 +26,7 @@ var WebTag = "20250820_rfay_debug_test" // Note that this can be overridden by m
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20250827_stasadev_bitnamilegacy"
+var BaseDBTag = "20250909_cyppe_mysql_server_id"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
