@@ -188,4 +188,4 @@ echo
 
 echo "Starting mysqld."
 tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err &
-exec mysqld --server-id=${MYSQL_SERVER_ID:-0}
+exec mysqld
