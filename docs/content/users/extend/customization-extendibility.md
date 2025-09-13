@@ -342,6 +342,7 @@ An example file in `.ddev/mysql/no_utf8mb4.cnf` might be:
 
 ```
 [mysqld]
+server_id = 2
 collation-server = utf8_general_ci
 character-set-server = utf8
 innodb_large_prefix=false
@@ -349,26 +350,6 @@ innodb_large_prefix=false
 
 To load the new configuration, run [`ddev restart`](../usage/commands.md#restart).
 
-### MySQL/MariaDB Server ID Override
-
-For MySQL and MariaDB replication setups, you can override the default `server_id=0` by setting the `MYSQL_SERVER_ID` environment variable. This is useful when you need to enable MySQL/MariaDB replication or use applications that depend on MySQL/MariaDB binary log events.
-
-Create a `.ddev/.env.db` file:
-
-```bash
-MYSQL_SERVER_ID=1
-```
-
-Or add a docker-compose override file `.ddev/docker-compose.db.yaml`:
-
-```yaml
-services:
-  db:
-    environment:
-      - MYSQL_SERVER_ID=1
-```
-
-**Note:** Command-line arguments take precedence over configuration files, so you cannot override the server ID through custom `.cnf` files in `.ddev/mysql/`. The environment variable approach is required.
 
 ## Custom PostgreSQL Configuration
 
