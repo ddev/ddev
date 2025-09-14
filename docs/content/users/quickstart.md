@@ -228,7 +228,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
-    # or automatically log in with
+    # or automatically log in with:
     ddev launch $(ddev drush uli)
     ```
 
@@ -256,7 +256,7 @@ Read more about customizing the environment and persisting configuration in [Pro
     ddev composer require drush/drush
     ddev drush site:install --account-name=admin --account-pass=admin -y
     ddev launch
-    # or automatically log in with
+    # or automatically log in with:
     ddev launch $(ddev drush uli)
     ```
 
