@@ -16,26 +16,33 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [command
 
 ## Lots of Other Commands
 
-* [`ddev mysql`](../usage/commands.md#mysql) gives direct access to the MySQL client and `ddev psql` to the PostgreSQL `psql` client.
-* `ddev sequelace`, [`ddev tableplus`](../usage/commands.md#tableplus), and `ddev querious` (macOS only, if the app is installed) give access to the Sequel Ace, TablePlus or Querious database browser GUIs.
-* `ddev heidisql` (Windows/WSL2 only, if installed) gives access to the HeidiSQL database browser GUI.
+* [`ddev mysql`](../usage/commands.md#mysql) gives direct access to the MySQL client and [`ddev psql`](../usage/commands.md#psql) to the PostgreSQL `psql` client.
+* [`ddev sequelace`](../usage/commands.md#sequelace), [`ddev tableplus`](../usage/commands.md#tableplus), and [`ddev querious`](../usage/commands.md#querious) (macOS only, if the app is installed) give access to the Sequel Ace, TablePlus or Querious database browser GUIs.
+* [`ddev dbeaver`](../usage/commands.md#dbeaver) (if installed) gives access to the DBeaver database browser GUI.
+* [`ddev heidisql`](../usage/commands.md#heidisql) (Windows/WSL2/Linux, if installed) gives access to the HeidiSQL database browser GUI.
 * [`ddev import-db`](../usage/commands.md#import-db) and [`ddev export-db`](../usage/commands.md#export-db) import or export SQL or compressed SQL files.
 * [`ddev composer`](../usage/commands.md#composer) runs Composer inside the container. For example, `ddev composer install` will do a full composer install for you without even needing Composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
 * [`ddev snapshot`](../usage/commands.md#snapshot) makes a very fast snapshot of your database that can be easily and quickly restored with [`ddev snapshot restore`](../usage/commands.md#snapshot-restore).
 * [`ddev share`](../usage/commands.md#share) requires ngrok and at least a free account on [ngrok.com](https://ngrok.com) so you can let someone in the next office or on the other side of the planet see your project and what you’re working on. `ddev share -h` gives more info about how to set up ngrok.
 * [`ddev xdebug`](../usage/commands.md#xdebug) enables Xdebug, `ddev xdebug off` disables it, and `ddev xdebug status` shows status. You can toggle Xdebug on and off easily using `ddev xdebug toggle`.
 * [`ddev xhprof`](../usage/commands.md#xhprof) enables xhprof, `ddev xhprof off` disables it, and `ddev xhprof status` shows status.
-* `ddev drush` (Drupal and Backdrop only) gives direct access to the `drush` CLI.
-* `ddev artisan` (Laravel only) gives direct access to the Laravel `artisan` CLI.
-* `ddev magento` (Magento2 only) gives access to the `magento` CLI.
-* `ddev console` (Symfony only) gives access to the `symfony console` CLI.
+* [`ddev xhgui`](../usage/commands.md#xhgui) enables XHGui, `ddev xhgui off` disables it, and `ddev xhgui status` shows status.
+* [`ddev drush`](../usage/commands.md#drush) (Drupal and Backdrop only) gives direct access to the `drush` CLI.
+* [`ddev artisan`](../usage/commands.md#artisan) (Laravel only) gives direct access to the Laravel `artisan` CLI.
+* [`ddev magento`](../usage/commands.md#magento) (Magento2 only) gives access to the `magento` CLI.
+* [`ddev console`](../usage/commands.md#console) (Symfony only) gives access to the `symfony console` CLI.
 * [`ddev craft`](../usage/commands.md#craft) (Craft CMS only) gives access to the `craft` CLI.
-* [`ddev yarn`](../usage/commands.md#yarn) and [`ddev npm`](../usage/commands.md#npm) give direct access to the `yarn` and `npm` CLIs.
-* `ddev cake` (CakePHP only) gives direct access to the CakePHP `cake` CLI.
+* [`ddev npm`](../usage/commands.md#npm) gives direct access to the `npm` CLI.
+* [`ddev npx`](../usage/commands.md#npx) gives direct access to the `npx` CLI.
+* [`ddev yarn`](../usage/commands.md#yarn) gives direct access to the `yarn` CLI.
+* [`ddev cake`](../usage/commands.md#cake) (CakePHP only) gives direct access to the `cake` CLI.
+* [`ddev sake`](../usage/commands.md#sake) (Silverstripe CMS only) gives direct access to the `sake` CLI.
+* [`ddev typo3`](../usage/commands.md#typo3) (TYPO3 only) gives direct access to the `typo3` CLI.
+* [`ddev wp`](../usage/commands.md#wp) (WordPress only) gives direct access to the `wp` CLI.
 
-## Node.js, npm, nvm, and Yarn
+## Node.js Tools
 
-`node`, `nodejs`, `npm`, `nvm` and `yarn` are preinstalled in the web container. You can configure the default value of the installed Node.js version with the [`nodejs_version`](../configuration/config.md#nodejs_version) option in `.ddev/config.yaml` or with `ddev config --nodejs_version`. You can also override that with any value using the built-in `nvm` in the web container or with [`ddev nvm`](../usage/commands.md#nvm), for example `ddev nvm install 6`. There is also a [`ddev yarn`](../usage/commands.md#yarn) command. (Note that since `nodejs_version` configuration can now specify any `node` version, including patch versions, it's preferred to using the less robust `ddev nvm` way of specifying the `node` version.)
+`node`, `nodejs`, `npm`, `npx`, `nvm` and `yarn` are preinstalled in the web container. You can configure the default value of the installed Node.js version with the [`nodejs_version`](../configuration/config.md#nodejs_version) option in `.ddev/config.yaml` or with `ddev config --nodejs-version`. You can also override that with any value using the built-in `nvm` in the web container or with [`ddev nvm`](../usage/commands.md#nvm), for example `ddev nvm install 6`. There is also a [`ddev yarn`](../usage/commands.md#yarn) command. (Note that since `nodejs_version` configuration can now specify any `node` version, including patch versions, it's preferred to using the less robust `ddev nvm` way of specifying the `node` version.)
 
 ## More Bundled Tools
 

@@ -1257,7 +1257,7 @@ echo 'SHOW TABLES;' | ddev mysql
 
 ## `npm`
 
-Run [`npm`](https://docs.npmjs.com/cli/v9/commands/npm) inside the web container (global shell web container command).
+Run [`npm`](https://docs.npmjs.com/cli/commands/npm) inside the web container (global shell web container command).
 
 Example:
 
@@ -1267,6 +1267,20 @@ ddev npm install
 
 # Update JavaScript packages using `npm`
 ddev npm update
+```
+
+## `npx`
+
+Run [`npx`](https://docs.npmjs.com/cli/commands/npx) inside the web container (global shell web container command).
+
+Example:
+
+```shell
+# Initialize Biome in the project
+ddev npx @biomejs/biome init
+
+# Create a new Next.js app
+ddev npx create-next-app@latest
 ```
 
 ## `nvm`
