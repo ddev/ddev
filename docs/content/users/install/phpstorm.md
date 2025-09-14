@@ -4,19 +4,11 @@ If you work with the [PhpStorm](https://www.jetbrains.com/phpstorm/) IDE, you ca
 
 ## Before Starting
 
-Make sure to get at least one project going with `ddev start` before trying to set up the plugin, because the plugin assumes it has a project to work with.
-
-## Prerequisite
-
-Regardless of your setup, make PhpStorm use DDEV’s private `docker-compose` executable.
-
-In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker*, and set the `docker-compose` executable to the absolute path of DDEV's private `docker-compose` binary, which is `$HOME/.ddev/bin/docker-compose`.
-
-If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’t use `docker-compose` from WSL2, so configure Docker Desktop in *Settings* → *General* to “Use Docker Compose V2” and use a recent version of `docker-compose` either from Docker Desktop or installed another way.
+Make sure to get at least one project going with `ddev start` before trying to set up the plugin, because the plugin assumes it has a project to work with. For Drupal, see [Configuring PhpStorm](https://www.drupal.org/docs/develop/development-tools/editors-and-ides/configuring-phpstorm).
 
 ## DDEV Integration Plugin
 
-It’s easiest to use the DDEV Integration Plugin, which you can install from [its landing page](https://plugins.jetbrains.com/plugin/18813-ddev-integration) or by searching the in-app marketplace (*Preferences* → *Plugins* → *Marketplace*) for “DDEV”. The integration plugin handles nearly everything on this page automatically, and works on all platforms.
+It’s easiest to use the DDEV Integration Plugin, which you can install from [its landing page](https://plugins.jetbrains.com/plugin/18813-ddev-integration) or by searching the in-app marketplace (*Settings* → *Plugins* → *Marketplace*) for “DDEV”. The integration plugin handles nearly everything on this page automatically, and works on all platforms.
 
 Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since it doesn’t yet handle that for you.
 
