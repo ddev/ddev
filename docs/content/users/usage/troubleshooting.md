@@ -353,3 +353,15 @@ ddev poweroff
 docker rm -f $(docker ps -aq) # Stop any other random containers that may be running
 docker rmi -f $(docker images -q) # You might have to repeat this to get rid of all images
 ```
+
+<a name="out-of-disk-space"></a>
+
+## "Your docker install has only ... available disk space"
+
+Weird and bad things happen when Docker or your host system run out of disk space. Here are some ways to solve the problem if you get the warning "Your docker install has only ... available disk space":
+
+* **Everybody**: Often a `ddev delete images` and `docker builder prune` (or `docker buildx prune`) will free up plenty of space. Consider deleting all images with `docker rmi -f $(docker images -q)`; this does no damage, but the images will have to be re-downloaded.
+* **macOS and traditional Windows**: `ddev mutagen reset` in each project will free up space.
+* **Docker Desktop for Mac** allocates a specific amount of docker-related space, and you can increase it. Settings -> Resources -> Disk usage limit.
+* **Colima, Lima, Rancher Desktop**: Before changing anything, save away your databases with `ddev snapshot -a`. Then follow instructions in each of those projects to increase allocated disk space. If you have your databases saved, you can delete your current instance and recreate with new disk constraints, see [Docker Installation](../install/docker-installation.md).
+* **OrbStack and Linux including WSL2 with Docker CE**: You are probably out of disk space on the disk where Docker stores images and volumes.
