@@ -134,6 +134,6 @@ func CheckAvailableSpace() {
 	spaceAbsolute, _ := strconv.Atoi(parts[0]) // Note that this is in KB
 
 	if spaceAbsolute < nodeps.MinimumDockerSpaceWarning {
-		util.Error("Your Docker install has only %d available disk space, less than %d warning level (%d%% used). Please increase disk image size.", spaceAbsolute, nodeps.MinimumDockerSpaceWarning, spacePercent)
+		util.Error("Your Docker install has only %d available disk space, less than %d warning level (%d%% used). Please increase disk image size. More info at %s", spaceAbsolute, nodeps.MinimumDockerSpaceWarning, spacePercent, "https://docs.ddev.com/en/stable/users/usage/troubleshooting/#out-of-disk-space")
 	}
 }
