@@ -499,9 +499,9 @@ export default defineConfig({
 
 ## Related Documentation
 
-- [Node.js Quickstart](../../quickstart.md#nodejs)
-- [Laravel Quickstart](../../quickstart.md#laravel)
-- [Custom Docker Services](../../extend/custom-docker-services.md)
+- [Node.js Quickstart](../quickstart.md#nodejs)
+- [Laravel Quickstart](../quickstart.md#laravel)
+- [Custom Docker Services](../extend/custom-docker-services.md)
 - [Networking](networking.md)
 - [Hooks](../configuration/hooks.md)
 - [Troubleshooting](troubleshooting.md)
