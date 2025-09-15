@@ -356,9 +356,9 @@ docker rmi -f $(docker images -q) # You might have to repeat this to get rid of 
 
 <a name="out-of-disk-space"></a>
 
-## "Your docker install has only ... available disk space"
+## "Your Docker install has only ... available disk space"
 
-Weird and bad things happen when Docker or your host system run out of disk space. Here are some ways to solve the problem if you get the warning "Your docker install has only ... available disk space":
+Weird and bad things happen when Docker or your host system run out of disk space. Here are some ways to solve the problem if you get the warning "Your Docker install has only ... available disk space":
 
 * **Everybody**: Often a `ddev delete images` and `docker builder prune` (or `docker buildx prune`) will free up plenty of space. Consider deleting all images with `docker rmi -f $(docker images -q)`; this does no damage, but the images will have to be re-downloaded.
 * **macOS and traditional Windows**: `ddev mutagen reset` in each project will free up space.
