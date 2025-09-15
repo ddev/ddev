@@ -666,6 +666,8 @@ Additional named sets of ports to [expose via `ddev-router`](../extend/customiza
 | -- | -- | --
 | :octicons-file-directory-16: project | `[]` | &zwnj;
 
+For common frontend development tools like Vite, see the [Vite Integration](../usage/vite.md) documentation for complete configuration examples.
+
 ## `webimage`
 
 !!!warning "Proceed with caution"
