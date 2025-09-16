@@ -176,5 +176,6 @@ Always build, test, and exercise your changes manually. Simply verifying compila
 - **Container health checks** may fail in restricted Docker environments
 - **Always use absolute paths** when working with files in the repository
 - **PATH management** is critical - include both `ddev` and `ddev-hostname` in PATH for testing
+- **Commit messages** should include `[skip ci]` during development unless running CI is needed
 
 This codebase is mature and well-tested. Focus on surgical, minimal changes that maintain compatibility with existing functionality.
