@@ -19,11 +19,12 @@ DDEV is a Go-based tool that uses Docker containers for local web development en
 - Build creates both `ddev` and `ddev-hostname` binaries
 
 **Testing:**
-- `make test` - Run all tests (combines testpkg and testcmd). Takes 5-15 minutes. NEVER CANCEL. Set timeout to 30+ minutes.
-- `make testpkg` - Run package tests only. Takes 2-5 minutes. NEVER CANCEL. Set timeout to 15+ minutes.
-- `make testcmd` - Run command tests. Takes 10-20 minutes. NEVER CANCEL. Set timeout to 30+ minutes.
+- `make testpkg TESTARGS="-run <regex>"` - Run subset of package tests matching regex (fast, 30-120 seconds)
 - `go test -v ./pkg/[package]` - Test specific package (fast, <30 seconds)
+- `go test -v ./pkg/[package] -run TestSpecificTest` - Test specific test function (very fast, <10 seconds)
 - `go test -v ./cmd/ddev/cmd/ -run TestSpecificTest` - Test specific command test
+- `make testpkg` - Run all package tests only if needed (2-5 minutes). Set timeout to 15+ minutes.
+- `make test` - Run all tests (avoid - takes 5-15+ minutes). Only use when absolutely necessary.
 
 **Linting and Code Quality (MANDATORY before commits):**
 - `make staticrequired` - Run all required static analysis (golangci-lint, markdownlint, mkdocs, pyspelling)
@@ -58,6 +59,8 @@ PATH="/home/runner/work/ddev/ddev/.gotmp/bin/linux_amd64:$PATH" ddev start
 2. **Unit Test Validation:**
    ```bash
    go test -v ./pkg/[changed-package]  # Test your specific changes
+   # Or run subset of tests matching a pattern:
+   make testpkg TESTARGS="-run TestSpecificPattern"
    ```
 
 3. **CLI Validation:**
@@ -85,11 +88,11 @@ PATH="/home/runner/work/ddev/ddev/.gotmp/bin/linux_amd64:$PATH" ddev start
 **CRITICAL: NEVER CANCEL these operations. Wait for completion.**
 
 - **Build (`make`):** 30-60 seconds - Set timeout to 90+ seconds
-- **Full Test Suite (`make test`):** 5-15 minutes - Set timeout to 30+ minutes  
-- **Package Tests (`make testpkg`):** 2-5 minutes - Set timeout to 15+ minutes
-- **Command Tests (`make testcmd`):** 10-20 minutes - Set timeout to 30+ minutes
+- **Subset Package Tests (`make testpkg TESTARGS="-run <regex>"`):** 30-120 seconds - Set timeout to 3+ minutes
+- **Single Package Test (`go test -v ./pkg/[package]`):** 5-30 seconds - Set timeout to 60+ seconds
+- **Full Package Tests (`make testpkg`):** 2-5 minutes - Set timeout to 15+ minutes (avoid unless necessary)
+- **Full Test Suite (`make test`):** 5-15+ minutes - Set timeout to 30+ minutes (avoid - use subset testing instead)
 - **Static Analysis (`make staticrequired`):** 1-5 minutes - Set timeout to 10+ minutes
-- **Single Package Test:** 5-30 seconds - Set timeout to 60+ seconds
 
 ## Common Development Tasks
 
@@ -156,7 +159,7 @@ Container images are built from `containers/` directory and managed via docker-c
 ## Development Workflow
 
 1. **Make your changes** to Go files, documentation, or container configurations
-2. **Build and test immediately:** `make && go test -v ./pkg/[changed-package]`
+2. **Build and test immediately:** `make && go test -v ./pkg/[changed-package]` or use subset testing: `make testpkg TESTARGS="-run TestPattern"`
 3. **Validate CLI functionality:** Test relevant ddev commands manually
 4. **Run static analysis:** `make staticrequired` (MANDATORY)
 5. **Create test project** if needed to validate end-to-end functionality
