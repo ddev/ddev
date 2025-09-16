@@ -47,8 +47,8 @@ github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMn
 github.com/chzyer/test v1.0.0 h1:p3BQDXSxOhOG0P9z6/hGnII4LGiEPOYBhs8asl/fC04=
 github.com/chzyer/test v1.0.0/go.mod h1:2JlltgoNkt4TW/z9V/IzDdFaMTM2JPIi26O1pF38GC8=
 github.com/cloudflare/cfssl v0.0.0-20180223231731-4e2dcbde5004/go.mod h1:yMWuSON2oQp+43nFtAV/uvKQIFpSPerB57DCt9t8sSA=
-github.com/compose-spec/compose-go/v2 v2.8.1 h1:27O4dzyhiS/UEUKp1zHOHCBWD1WbxGsYGMNNaSejTk4=
-github.com/compose-spec/compose-go/v2 v2.8.1/go.mod h1:veko/VB7URrg/tKz3vmIAQDaz+CGiXH8vZsW79NmAww=
+github.com/compose-spec/compose-go/v2 v2.8.2 h1:A1iVoZJUex7buGv1CpnC5uwNuyTMBYpDAmBnAQmia9Q=
+github.com/compose-spec/compose-go/v2 v2.8.2/go.mod h1:Oky9AZGTRB4E+0VbTPZTUu4Kp+oEMMuwZXZtPPVT1iE=
 github.com/containerd/errdefs v1.0.0 h1:tg5yIfIlQIrxYtu9ajqY42W3lpS19XqdxRQeEwYG8PI=
 github.com/containerd/errdefs v1.0.0/go.mod h1:+YBYIdtsnF4Iw6nWZhJcqGSg/dwvV7tyJ/kCkyJ2k+M=
 github.com/containerd/errdefs/pkg v0.3.0 h1:9IKJ06FvyNlexW690DXuQNx2KA2cUJXx151Xdx3ZPPE=

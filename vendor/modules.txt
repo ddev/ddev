@@ -47,7 +47,7 @@ github.com/cheggaaa/pb
 # github.com/chzyer/readline v1.5.1
 ## explicit; go 1.15
 github.com/chzyer/readline
-# github.com/compose-spec/compose-go/v2 v2.8.1
+# github.com/compose-spec/compose-go/v2 v2.8.2
 ## explicit; go 1.23
 github.com/compose-spec/compose-go/v2/consts
 github.com/compose-spec/compose-go/v2/dotenv
