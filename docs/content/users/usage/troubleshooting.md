@@ -46,10 +46,10 @@ You can set either one in your current session by running `export DDEV_DEBUG=tru
 
 If you're experiencing issues with Vite development servers (like "Bad Gateway" errors, CORS problems, or HMR not working), see the comprehensive [Vite Integration troubleshooting section](vite.md#troubleshooting) which covers:
 
-- Configuration of `web_extra_exposed_ports`
-- CORS and origin settings
-- Port conflicts and HMR issues
-- Asset loading problems
+* Configuration of `web_extra_exposed_ports`
+* CORS and origin settings
+* Port conflicts and HMR issues
+* Asset loading problems
 
 <a name="unable-listen"></a>
 

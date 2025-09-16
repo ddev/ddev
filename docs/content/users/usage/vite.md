@@ -60,7 +60,7 @@ To use Vite with DDEV, you need to:
 Your Vite development server will be available at `https://yourproject.ddev.site:5173`.
 
 !!! note "HTTPS Configuration"
-    This guide assumes your project runs on `https://`. If you cannot access the HTTPS version of your project, see the [DDEV installation documentation](../../install/ddev-installation.md).
+    This guide assumes your project runs on `https://`. If you cannot access the HTTPS version of your project, see the [DDEV installation documentation](../install/ddev-installation.md).
 
 !!! tip "Custom TLD"
     If you use a custom `project_tld` other than `ddev.site`, adjust the CORS configuration accordingly in your `vite.config.js`.
