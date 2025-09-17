@@ -282,7 +282,7 @@ func getSuggestedCommandForContainerLog(container *container.Summary, timeout in
 	suggestedCommands = append(suggestedCommands, fmt.Sprintf("docker logs %s", name), fmt.Sprintf("docker inspect --format \"{{ json .State.Health }}\" %s | docker run -i --rm ddev/ddev-utilities jq -r", name))
 	troubleshootingCommand, _ := util.ArrayToReadableOutput(suggestedCommands)
 	suggestedCommand := "\nTroubleshoot this with these commands:\n" + troubleshootingCommand
-	if timeout > 0 {
+	if timeout > 0 && service != "ddev-router" && service != "ddev-ssh-agent" {
 		timeoutNote := "\nIf your internet connection is slow, consider increasing the timeout by running this:\n"
 		timeoutCommand, _ := util.ArrayToReadableOutput([]string{fmt.Sprintf("ddev config --default-container-timeout=%d && ddev restart", timeout*2)})
 		suggestedCommand = suggestedCommand + timeoutNote + timeoutCommand
