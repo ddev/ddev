@@ -445,6 +445,7 @@ aurs:
   git_url: '{{ .Env.AUR_STABLE_GIT_URL }}'
   depends:
   - docker
+  - docker-buildx
   - mkcert
   optdepends:
   - 'bash-completion: subcommand completion support'
@@ -486,6 +487,7 @@ aurs:
   git_url: '{{ .Env.AUR_EDGE_GIT_URL }}'
   depends:
   - docker
+  - docker-buildx
   - mkcert
   optdepends:
   - 'bash-completion: subcommand completion support'
