@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestDdevXhprofPrependEnabled tests running with xhprof_enabled = true and xhprof_mode=prepend
+// TestDdevXhprofPrependEnabled tests running with xhprof_mode=prepend
 func TestDdevXhprofPrependEnabled(t *testing.T) {
 	origDir, _ := os.Getwd()
 
@@ -135,7 +135,7 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 	runTime()
 }
 
-// TestDdevXhprofXhguiEnabled tests running with xhprof_enabled = true and xhprof_mode=xhgui
+// TestDdevXhprofXhguiEnabled tests running with xhprof_mode=xhgui
 func TestDdevXhprofXhguiEnabled(t *testing.T) {
 	assert := assert2.New(t)
 	origDir, _ := os.Getwd()

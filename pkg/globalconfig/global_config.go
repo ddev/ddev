@@ -374,6 +374,15 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # data is sent.
 # instrumentation_reporting_interval: 24
 
+# last_started_version: ""
+# The last DDEV version that was started (informational only)
+
+# mkcert_caroot: ""
+# Absolute path to the directory containing mkcert certificates (from 'mkcert -CAROOT')
+
+# no_bind_mounts: false
+# Whether to disable Docker bind mounts
+
 # performance_mode: "<default for the OS>"
 # DDEV offers performance optimization strategies to improve the filesystem
 # performance depending on your host system. Can be overridden with the project
@@ -401,8 +410,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # table_style: bold
 # table_style: bright
 
-# Require simpler formatting where possible
-# simpler_formatting: false
+# Whether to disable most 'ddev list' and 'ddev describe' table formatting and implicitly set NO_COLOR=1.
+# simple_formatting: false
 
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that DDEV will declare internet
@@ -413,8 +422,17 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
 
-# router_http_port: <port>  # Port to be used for http (defaults to 80)
-# router_https_port: <port> # Port for https (defaults to 443)
+# router_http_port: "80"
+# Router port used for HTTP, can be overridden in project config
+
+# router_https_port: "443"
+# Router port used for HTTPS, can be overridden in project config
+
+# mailpit_http_port: "8025"
+# Router port used for Mailpit HTTP, can be overridden in project config
+
+# mailpit_https_port: "8026"
+# Router port used for Mailpit HTTPS, can be overridden in project config
 
 # xhprof_mode: [prepend|xhgui]
 # Set to "xhgui" to enable XHGui features
@@ -435,14 +453,16 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # is run only as the owning user, only project files might be changed
 # if a CMS or PHP bug allowed creating or altering files, and
 # permissions should not allow escalation.
-#
-# xdebug_ide_location:
+
+# xdebug_ide_location: ""
+# It's unusual to change this option, and we don’t recommend it.
+# Ask for help in one of our support channels before changing it unless you understand its use completely.
 # In some cases, especially WSL2, the IDE may be set up different ways
 # For example, if in WSL2 PhpStorm is running the Linux version inside WSL2
 # or if using JetBrains Gateway
-# then set xdebug_ide_location: WSL2
+# then set xdebug_ide_location: "wsl2"
 # If using vscode language server, which listens inside the container
-# then set xdebug_ide_location: container
+# then set xdebug_ide_location: "container"
 
 # Lets Encrypt:
 # This integration is entirely experimental; your mileage may vary.
@@ -465,25 +485,32 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
 
-# traefik_monitor_port: 10999
+# traefik_monitor_port: "10999"
 # Change this only if you're having conflicts with some
 # service that needs port 10999
 
-# xhgui_http_port: 8143
-# Router port used for xhgui HTTP, can be changed in case of conflicts
+# xhgui_http_port: "8143"
+# Router port used for XHGui HTTP, can be overridden in project config
 
-# xhgui_https_port: 8142
-# Router port used for xhgui HTTPS, can be changed in case of conflicts
+# xhgui_https_port: "8142"
+# Router port used for XHGui HTTPS, can be overridden in project config
 
 # wsl2_no_windows_hosts_mgt: false
+# It’s unusual to change this option, and we don’t recommend it.
+# On Windows, it may prevent site access when using a custom project_tld or working offline.
 # On WSL2 by default the Windows-side hosts file (normally C:\Windows\system32\drivers\etc\hosts)
 # is used for hosts file management, but doing that requires running sudo and ddev.exe on
 # Windows side; you may not want this if you're running your browser in WSL2 or for
 # various other reasons.
 
 # required_docker_compose_version: ""
+# This should only be used in specific cases like troubleshooting.
 # This can be used to override the default required docker-compose version
 # It should normally be left alone, but can be set to, for example, "v2.1.1"
+
+# use_docker_compose_from_path: false
+# This should only be used in specific cases like troubleshooting.
+# Whether to use the system-installed docker-compose instead of downloading a specific version
 
 # messages:
 #   ticker_interval: 20 // Interval in hours to show ticker messages, -1 disables the ticker

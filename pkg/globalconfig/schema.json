@@ -43,11 +43,11 @@
       "type": "string"
     },
     "mailpit_http_port": {
-      "description": "Port for project's Mailpit HTTP URL.",
+      "description": "Router port used for Mailpit HTTP, can be overridden in project config.",
       "type": "string"
     },
     "mailpit_https_port": {
-      "description": "Port for project's Mailpit HTTPS URL.",
+      "description": "Router port used for Mailpit HTTPS, can be overridden in project config.",
       "type": "string"
     },
     "messages": {
@@ -105,11 +105,11 @@
       "type": "boolean"
     },
     "router_http_port": {
-      "description": "The router HTTP port for this project.",
+      "description": "Router HTTP port for all projects, can be overridden in project config.",
       "type": "string"
     },
     "router_https_port": {
-      "description": "The router HTTPS port for this project.",
+      "description": "Router HTTPS port for all projects, can be overridden in project config.",
       "type": "string"
     },
     "simple_formatting": {
@@ -154,6 +154,14 @@
     },
     "xdebug_ide_location": {
       "description": "Adjust Xdebug listen location for WSL2 or in-container.",
+      "type": "string"
+    },
+    "xhgui_http_port": {
+      "description": "Router port used for XHGui HTTP, can be overridden in project config.",
+      "type": "string"
+    },
+    "xhgui_https_port": {
+      "description": "Router port used for XHGui HTTPS, can be overridden in project config.",
       "type": "string"
     },
     "xhprof_mode": {

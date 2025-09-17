@@ -284,8 +284,12 @@
       "description": "The web container's localhost-bound https port.",
       "type": "string"
     },
+    "host_xhgui_port": {
+      "description": "XHGui localhost-bound port.",
+      "type": "string"
+    },
     "host_mailpit_port": {
-      "description": "The Mailpit localhost-bound port.",
+      "description": "Mailpit localhost-bound port.",
       "type": "string"
     },
     "host_webserver_port": {
@@ -364,11 +368,11 @@
       "type": "string"
     },
     "router_http_port": {
-      "description": "The router HTTP port for this project.",
+      "description": "Router HTTP port for this project.",
       "type": "string"
     },
     "router_https_port": {
-      "description": "The router HTTPS port for this project.",
+      "description": "Router HTTPS port for this project.",
       "type": "string"
     },
     "timezone": {
@@ -497,6 +501,14 @@
     "xdebug_enabled": {
       "description": "Whether Xdebug is enabled in the web container.",
       "type": "boolean"
+    },
+    "xhgui_http_port": {
+      "description": "Router port to be used for XHGui HTTP access.",
+      "type": "string"
+    },
+    "xhgui_https_port": {
+      "description": "Router port to be used for XHGui HTTPS access.",
+      "type": "string"
     },
     "xhprof_mode": {
       "description": "Define the XHProf usage mode used by the project.",
