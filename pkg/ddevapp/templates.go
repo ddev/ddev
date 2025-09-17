@@ -21,7 +21,9 @@ const ConfigInstructions = `
 # is not recommended, as the images are often closely tied to DDEV's' behavior,
 # so this can break upgrades.
 
-# webimage: <docker_image>  # nginx/php docker image.
+# webimage: <docker_image>
+# It’s unusual to change this option, and we don’t recommend it without Docker experience and a good reason.
+# Typically, this means additions to the existing web image using a .ddev/web-build/Dockerfile.*
 
 # database:
 #   type: <dbtype> # mysql, mariadb, postgres
@@ -38,23 +40,15 @@ const ConfigInstructions = `
 # "ddev xdebug" to enable Xdebug and "ddev xdebug off" to disable it work better,
 # as leaving Xdebug enabled all the time is a big performance hit.
 
-# xhgui_https_port: 8142
-# Can be used to change the router https port for xhgui application
+# xhgui_http_port: "8143"
+# xhgui_https_port: "8142"
+# The XHGui ports can be changed from the default 8143 and 8142
 # Very rarely used
 
-# xhgui_http_port: 8143
-# Can be used to change the router http port for xhgui application
-# Very rarely used
-
-# host_xhgui_port: 8142
-# Can be used to change the host binding port of the xhgui
+# host_xhgui_port: "8142"
+# Can be used to change the host binding port of the XHGui
 # application. Rarely used; only when port conflict and
 # bind_all_ports is used (normally with router disabled)
-
-# xhprof_enabled: false  # Set to true to enable Xhprof and "ddev start" or "ddev restart"
-# Note that for most people the commands
-# "ddev xhprof" to enable Xhprof and "ddev xhprof off" to disable it work better,
-# as leaving Xhprof enabled all the time is a big performance hit.
 
 # xhprof_mode: [prepend|xhgui|global]
 # Set to "xhgui" to enable XHGui features
@@ -124,7 +118,7 @@ const ConfigInstructions = `
 
 # ddev_version_constraint: ""
 # Example:
-# ddev_version_constraint: ">= 1.22.4"
+# ddev_version_constraint: ">= 1.24.8"
 # This will enforce that the running ddev version is within this constraint.
 # See https://github.com/Masterminds/semver#checking-version-constraints for
 # supported constraint formats

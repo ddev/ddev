@@ -289,7 +289,7 @@ pre_install_actions:
 Specify minimum DDEV version requirements:
 
 ```yaml
-ddev_version_constraint: '>= v1.23.4'
+ddev_version_constraint: '>= v1.24.8'
 ```
 
 ### Dependencies

@@ -135,7 +135,7 @@ ddev_version_constraint: '>= v1.24.0-alpha1'
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | | `>= 1.23.4`
+| :octicons-file-directory-16: project | | `>= 1.24.8`
 
 ## `default_container_timeout`
 
