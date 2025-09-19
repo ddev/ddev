@@ -109,8 +109,14 @@ services:
         DDEV_DATABASE: ${DDEV_DATABASE}
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     command: /pre-start.sh
-
-    networks: ["default", "ddev_default"]
+    networks:
+      default:
+      ddev_default:
+        {{ if not .OmitRouter -}}
+        aliases:
+          {{ range $hostname := .Hostnames }}- "{{ $hostname }}"
+          {{ end }}
+        {{- end }}
     cap_add:
       - SYS_PTRACE
     working_dir: "{{ .WebWorkingDir }}"
@@ -265,11 +271,6 @@ services:
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
 
-      {{ if not .OmitRouter }}
-    external_links:
-      {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}"
-      {{ end }}
-      {{ end }}
     healthcheck:
       interval: "1s"
       retries: 70
