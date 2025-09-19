@@ -296,11 +296,10 @@ Delete it and migrate it to a new project with your preferred name:
 
 1. Export the project’s database: `ddev export-db --file=/path/to/db.sql.gz`.
 2. Delete the project: `ddev delete <project>`. (This takes a snapshot by default for safety.)
-3. Rename the project: `ddev config --project-name=<new_name>`.
-4. Start the new project with `ddev start`.
-5. Import the database dump from step one: `ddev import-db --file=/path/to/db.sql.gz`.
-
-In rare cases, projects might fail to start after renaming if legacy add-ons depended on your previous project's name. From the project directory, run `mv .ddev/traefik .ddev/traefik.bak` to clear and backup the Traefik configuration (does not lose any data).
+3. Remove the `.ddev/traefik/config` directory, `rm -r .ddev/traefik/config`, since it may have name-based configuration.
+4. Rename the project: `ddev config --project-name=<new_name>`.
+5. Start the new project with `ddev start`.
+6. Import the database dump from step one: `ddev import-db --file=/path/to/db.sql.gz`.
 
 ### How can I move a project to another directory?
 
