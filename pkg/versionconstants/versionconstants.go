@@ -26,7 +26,7 @@ var WebTag = "v1.24.8" // Note that this can be overridden by make
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.24.8"
+var BaseDBTag = "20250909_cyppe_mysql_server_id"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
