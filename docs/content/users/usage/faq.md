@@ -300,6 +300,8 @@ Delete it and migrate it to a new project with your preferred name:
 4. Start the new project with `ddev start`.
 5. Import the database dump from step one: `ddev import-db --file=/path/to/db.sql.gz`.
 
+In rare cases, projects might fail to start after renaming if legacy add-ons depended on your previous project's name. From the project directory, run `mv .ddev/traefik .ddev/traefik.bak` to clear and backup the Traefik configuration (does not lose any data).
+
 ### How can I move a project to another directory?
 
 Run [`ddev stop --unlist`](../usage/commands.md#stop), then move the directory, then run [`ddev start`](../usage/commands.md#start) in the new directory.
