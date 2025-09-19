@@ -161,6 +161,9 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 			network.External = false
 		}
 		if !network.External {
+			if network.Labels == nil {
+				network.Labels = composeTypes.Labels{}
+			}
 			network.Labels["com.ddev.platform"] = "ddev"
 		}
 		project.Networks[name] = network

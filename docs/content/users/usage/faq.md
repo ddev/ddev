@@ -109,9 +109,30 @@ In project A, use `mysql -h ddev-projectb-db` to access the database server of p
 
 #### Communicate via HTTP/S
 
-Let’s say we have two projects, for example: project A, and project B.
+Let’s say we have two projects, for example: project A (`https://projecta.ddev.site`), and project B (`https://projectb.ddev.site`).
 
-To enable server-side HTTP/S communication (i.e. server-side API calls) between projects you can:
+DDEV v1.24.9+ has built-in support for inter-project HTTP/S communication:
+
+```bash
+# call from project A web container to project B's web container
+curl https://projectb.ddev.site
+
+# or using the internal Docker network hostname
+curl https://ddev-projectb-web
+```
+
+!!!tip "How to use HTTPS from a non-web container"
+    You can use HTTP without extra setup, but to use HTTPS, the container you are calling from must trust the `ddev-webserver` certificate authority (CA).
+
+    ```
+    $ ddev exec -s some-service curl https://projectb.ddev.site
+    curl: (60) SSL certificate problem: unable to get local issuer certificate
+    More details here: https://curl.se/docs/sslcerts.html
+    ```
+
+    See [Third Party Services May Need To Trust `ddev-webserver`](../extend/custom-compose-files.md#third-party-services-may-need-to-trust-ddev-webserver).
+
+For DDEV v1.24.8 and earlier, to enable server-side HTTP/S communication (i.e. server-side API calls) between projects you can:
 
 1. Either access the web container of project B directly with the hostname `ddev-<projectb>-web` and port 80 or 443 from project A:
 
@@ -123,14 +144,15 @@ To enable server-side HTTP/S communication (i.e. server-side API calls) between 
 2. Or add a `.ddev/docker-compose.communicate.yaml` to project A:
 
     ```yaml
-    # add this to project A, allows connection to project B
+    # add this to project B, allows connection to project B
     services:
       web:
-        external_links:
-          - "ddev-router:projectb.ddev.site"
+        ddev_default:
+          aliases:
+            - "projectb.ddev.site"
     ```
 
-    This lets the `ddev-router` know that project A can access the web container on project B's official FQDN.
+    This lets the `ddev-router` know that any project can access the web container on project B's official FQDN.
 
     You can now make calls to project B via the regular FQDN `https://projectb.ddev.site` from project A:
 

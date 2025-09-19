@@ -155,10 +155,6 @@ services:
       - HTTP_EXPOSE=3001:3000
       - HTTPS_EXPOSE=3000:3000
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-    # Adding external_links allows connections to `https://example.ddev.site`,
-    # which then can go through `ddev-router`
-    external_links:
-      - ddev-router:${DDEV_SITENAME}.${DDEV_TLD}
     labels:
       com.ddev.approot: ${DDEV_APPROOT}
       com.ddev.site-name: ${DDEV_SITENAME}
@@ -169,6 +165,14 @@ services:
       # This is required so that the CA is available for `mkcert` to install
       # and for custom commands to work
       - ddev-global-cache:/mnt/ddev-global-cache
+  # The config below is added automatically in DDEV v1.24.9+
+  # Adding aliases allows connections to `https://example.ddev.site`
+  # from another containers going through `ddev_default` network
+  web:
+    networks:
+      ddev_default:
+        aliases:
+          - ${DDEV_SITENAME}.${DDEV_TLD}
 ```
 
 ```Dockerfile
