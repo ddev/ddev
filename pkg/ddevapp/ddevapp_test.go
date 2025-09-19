@@ -3626,7 +3626,8 @@ func TestFixupComposeYaml(t *testing.T) {
 	}
 
 	webService := app.ComposeYaml.Services["web"]
-	require.Nil(t, webService.Networks["ddev_default"])
+	require.NotNil(t, webService.Networks["ddev_default"])
+	require.NotEmpty(t, webService.Networks["ddev_default"].Aliases)
 	require.NotNil(t, webService.Networks["default"])
 	assert.Equal(1, webService.Networks["default"].Priority)
 	require.NotNil(t, webService.Networks["dummy"])
