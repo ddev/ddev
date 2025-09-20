@@ -49,6 +49,11 @@ type ValidatorContext struct {
 	vd *validator
 }
 
+// ValueLocation returns location of value as jsonpath token array.
+func (ctx *ValidatorContext) ValueLocation() []string {
+	return ctx.vd.vloc
+}
+
 // Validate validates v with sch. vpath gives path of v from current context value.
 func (ctx *ValidatorContext) Validate(sch *Schema, v any, vpath []string) error {
 	switch len(vpath) {
