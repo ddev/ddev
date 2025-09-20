@@ -36,10 +36,16 @@ For comprehensive developer documentation, see:
 
 ### Testing
 
-- `make test` - Run all tests (combines testpkg and testcmd)
-- `make testpkg` or `make testpkg TESTARGS="-run TestName"` - Run package tests or named test
-- `make testcmd` - Run command tests
+- `go test -v ./pkg/[package]` - Test specific package (5-30 seconds)
+- `make testpkg TESTARGS="-run TestName"` - Run subset of package tests matching regex (30-120 seconds)
+- `make testcmd TESTARGS="-run TestName"` - Run command tests
 - `make quickstart-test` - Build then run Bats docs tests in `docs/tests`
+
+**Testing Strategy:**
+
+- Use subset testing with regex patterns for faster iteration
+- Test specific packages when making targeted changes
+- Avoid full test suite unless absolutely necessary
 
 ### Testing Environment Variables
 
@@ -163,6 +169,25 @@ DDEV uses YAML configuration files:
 - **Command execution**: For bash commands that don't start with a script or executable, wrap with `bash -c "..."`
 - **Working directories**: Additional common directories include `~/workspace/d11`, `~/workspace/pantheon-*`, `~/workspace/ddev.com`
 
+### Troubleshooting & Environment Notes
+
+**Prerequisites:**
+
+- Go 1.25+ is required
+- Docker must be installed and running
+- PATH management is critical - include both `ddev` and `ddev-hostname` in PATH for testing
+
+**Common Issues:**
+
+- Some tests require network access and may fail in restricted environments
+- Use `DDEV_NO_INSTRUMENTATION=true` to disable analytics during testing
+
+**Important Notes:**
+
+- Vendored dependencies are checked into the repository
+- Always use absolute paths when working with repository files
+- Focus on surgical, minimal changes that maintain compatibility
+
 ### Release Process
 
 - Cross-platform builds for macOS, Linux, Windows (x64 and ARM64)
@@ -260,6 +285,42 @@ Examples:
 5. Stage changes with `git add`
 6. Commit with proper message format
 7. Push branch and create PR
+
+### Validation Workflow
+
+**Complete validation steps after making changes:**
+
+1. **Build Validation:**
+
+   ```bash
+   make  # Wait for completion
+   .gotmp/bin/<platform>/ddev --version  # Verify binary works
+   ```
+
+2. **Unit Test Validation:**
+
+   ```bash
+   go test -v ./pkg/[changed-package]  # Test your specific changes
+   # Or run subset of tests matching a pattern:
+   make testpkg TESTARGS="-run TestSpecificPattern"
+   ```
+
+3. **CLI Validation:**
+
+   ```bash
+   .gotmp/bin/<platform>/ddev --help  # Test CLI functionality
+   .gotmp/bin/<platform>/ddev config --help  # Test command help
+   ```
+
+4. **Project Creation Validation:**
+
+   ```bash
+   # Create and configure a test project
+   mkdir ~/tmp/validation-project && cd ~/tmp/validation-project
+   PATH=".gotmp/bin/<platform>:$PATH" ddev config --project-type=php --docroot=web
+   # Verify .ddev/config.yaml was created
+   cat .ddev/config.yaml
+   ```
 
 ### Claude Code Configuration
 
