@@ -25,13 +25,20 @@ For comprehensive developer documentation, see:
 
 ### Building
 
-- `make` - Build for current platform
+- `make` - Build for host OS/arch. Output: `.gotmp/bin/<os>_<arch>/ddev`
+- `make clean` - Remove build artifacts
 
 ### Testing
 
 - `make test` - Run all tests (combines testpkg and testcmd)
 - `make testpkg` or `make testpkg TESTARGS="-run TestName"` - Run package tests or named test
-- `make testcmd` - Run command tests  
+- `make testcmd` - Run command tests
+- `make quickstart-test` - Build then run Bats docs tests in `docs/tests`
+
+### Testing Environment Variables
+
+- Set `DDEV_DEBUG=true` to see executed commands
+- Set `GOTEST_SHORT=true` to limit test matrix
 
 ### Linting and Code Quality
 
@@ -78,11 +85,12 @@ For comprehensive developer documentation, see:
 
 The codebase follows standard Go project structure:
 
-- `cmd/` - Executable commands
-- `pkg/` - Reusable packages
-- `containers/` - Docker container definitions with Dockerfiles and configs
-- `docs/` - MkDocs documentation source
-- `scripts/` - Shell scripts for installation and setup
+- `cmd/` - CLI entrypoints (`ddev`, `ddev-hostname`)
+- `pkg/` - Go packages (core app logic, Docker integration, config, utilities)
+- `containers/` - Container images and Dockerfiles used by DDEV
+- `docs/` - MkDocs documentation source; `docs/tests` holds Bats tests
+- `scripts/` - Helper scripts (installers, tooling)
+- `testing/` - Performance/auxiliary test scripts
 - `vendor/` - Vendored Go dependencies
 
 ### Configuration System
@@ -97,10 +105,17 @@ DDEV uses YAML configuration files:
 
 ### Go Environment
 
+- Language: Go (modules + vendored deps). Use Go 1.23+
 - Uses Go modules (go.mod)
 - Requires Go 1.23.0+
 - Uses vendored, checked-in dependencies
 - CGO is disabled by default
+
+### Coding Style & Naming Conventions
+
+- Formatting: `gofmt` (enforced via golangci-lint). No trailing whitespace
+- Linters: configured in `.golangci.yml` (errcheck, govet, revive, staticcheck, whitespace)
+- Naming: packages lower-case short names; exported identifiers `CamelCase`; tests `*_test.go` with `TestXxx`
 
 ### Testing Philosophy
 
@@ -123,6 +138,12 @@ DDEV uses YAML configuration files:
 - Markdown linting for documentation
 - Spell checking on documentation
 - **Always run `make staticrequired` before committing changes** to ensure code quality standards
+
+### Security & Configuration Tips
+
+- Do not commit secrets. Amplitude API keys are injected at build; never hardcode them
+- Docker must be installed and able to access your home directory for tests
+- Before committing, run `make staticrequired` to catch style and docs issues
 
 ### Code Formatting Rules for Claude Code
 
@@ -181,6 +202,15 @@ When creating pull requests for DDEV, follow the PR template structure from `.gi
 - **Manual Testing Instructions:** Step-by-step guide for testing changes
 - **Automated Testing Overview:** Description of tests or explanation why none needed
 - **Release/Deployment Notes:** Impact assessment and deployment considerations
+
+**Commit Message Format:**
+
+Follow Conventional Commits: `<type>[optional scope][optional !]: <description>[, fixes #<issue>]`
+
+Examples:
+- `fix: handle container networking timeout, fixes #1234`
+- `docs: clarify mkdocs setup`
+- `feat: add new container type support`
 
 **For commits that will become PRs:** Include the complete PR template content in commit messages. This ensures GitHub PRs are pre-populated and don't require additional editing.
 
