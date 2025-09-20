@@ -6,7 +6,7 @@ import (
 	"math/big"
 )
 
-// Schema is the regpresentation of a compiled
+// Schema is the representation of a compiled
 // jsonschema.
 type Schema struct {
 	up                urlPtr
@@ -177,11 +177,11 @@ func newTypes(v any) *Types {
 	var types Types
 	switch v := v.(type) {
 	case string:
-		types.add(typeFromString(v))
+		types.Add(v)
 	case []any:
 		for _, item := range v {
 			if s, ok := item.(string); ok {
-				types.add(typeFromString(s))
+				types.Add(s)
 			}
 		}
 	}
@@ -193,6 +193,12 @@ func newTypes(v any) *Types {
 
 func (tt Types) IsEmpty() bool {
 	return tt == 0
+}
+
+// Add specified json type. If typ is
+// not valid json type it is ignored.
+func (tt *Types) Add(typ string) {
+	tt.add(typeFromString(typ))
 }
 
 func (tt *Types) add(t jsonType) {
