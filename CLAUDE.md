@@ -12,6 +12,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Avoid concluding with summary statements unless specifically requested
 - When presenting options or analysis, lead with the core information, not commentary about it
 
+### AI Language Guidelines
+
+- Avoid words that reveal AI writing: "Comprehensive", "works perfectly", "You're absolutely right"
+- Don't say "perfect" in response to actions
+- Don't claim results are "ready for production use" without verification
+
 ## Project Overview
 
 DDEV is an open-source tool for running local web development environments for PHP and Node.js. It uses Docker containers to provide consistent, isolated development environments with minimal configuration.
@@ -151,6 +157,12 @@ DDEV uses YAML configuration files:
 - **After editing Go files**: Run `gofmt -w $FILE` to format Go code according to standard conventions
 - **Before committing**: Run `make staticrequired` when user mentions "commit" to ensure all quality checks pass
 
+### Development Environment Setup
+
+- **Temporary files**: Use `~/tmp` for temporary directories and files
+- **Command execution**: For bash commands that don't start with a script or executable, wrap with `bash -c "..."`
+- **Working directories**: Additional common directories include `~/workspace/d11`, `~/workspace/pantheon-*`, `~/workspace/ddev.com`
+
 ### Release Process
 
 - Cross-platform builds for macOS, Linux, Windows (x64 and ARM64)
@@ -208,6 +220,7 @@ When creating pull requests for DDEV, follow the PR template structure from `.gi
 Follow Conventional Commits: `<type>[optional scope][optional !]: <description>[, fixes #<issue>]`
 
 Examples:
+
 - `fix: handle container networking timeout, fixes #1234`
 - `docs: clarify mkdocs setup`
 - `feat: add new container type support`
@@ -247,6 +260,59 @@ Examples:
 5. Stage changes with `git add`
 6. Commit with proper message format
 7. Push branch and create PR
+
+### Claude Code Configuration
+
+For optimal performance with DDEV development, consider these configuration patterns:
+
+**File Exclusions** (in `.claude/settings.json`):
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(./vendor/**)",
+      "Read(./certfiles/**)", 
+      "Read(./testing/**/artifacts/**)",
+      "Read(./.git/**)",
+      "Read(**/*.png)",
+      "Read(**/*.jpg)",
+      "Read(**/*.zip)",
+      "Read(**/*.tgz)"
+    ]
+  }
+}
+```
+
+**Common DDEV Command Allowlist**:
+
+- `Bash(make:*)`
+- `Bash(go test:*)`
+- `Bash(ddev:*)`
+- `Bash(gofmt:*)`
+- `mcp__task-master-ai__*`
+
+**MCP Server Configuration** (in `.mcp.json`):
+
+- Enable `task-master-ai` for project management
+- Enable `ddev` for local development operations
+- Enable `github` for GitHub integration and workflow automation
+
+**Recommended GitHub MCP Setup**:
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
 
 ## Task Master AI Instructions
 
