@@ -255,7 +255,7 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 			if slices.Contains(imageIDinUse, image.ID) {
 				needsPoweroffToDeleteImages = true
 			}
-			output.UserOut.Printf(shortImageID + "   " + imageName)
+			output.UserOut.Printf("%s", shortImageID+"   "+imageName)
 			continue
 		}
 		if err := dockerutil.RemoveImage(image.ID); err != nil {

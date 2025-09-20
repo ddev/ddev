@@ -970,7 +970,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var err error
 
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
-	util.Debug(hostDockerInternal.Message)
+	util.Debug("%s", hostDockerInternal.Message)
 
 	nfsServerAddr, err := dockerutil.GetNFSServerAddr()
 	if err != nil {
@@ -1599,7 +1599,7 @@ func (app *DdevApp) projectNamePrompt() error {
 	for {
 		name := util.Prompt("Project name", app.Name)
 		if err := ValidateProjectName(name); err != nil {
-			output.UserOut.Printf(util.ColorizeText(err.Error(), "yellow"))
+			output.UserOut.Print(util.ColorizeText(err.Error(), "yellow"))
 		} else {
 			app.Name = name
 			break
@@ -1686,7 +1686,7 @@ func (app *DdevApp) docrootPrompt() error {
 
 		// Ensure that the docroot exists
 		if err := app.CreateDocroot(); err != nil {
-			output.UserOut.Printf(util.ColorizeText(err.Error(), "yellow"))
+			output.UserOut.Print(util.ColorizeText(err.Error(), "yellow"))
 		} else {
 			output.UserOut.Println()
 			break
@@ -1728,7 +1728,7 @@ func (app *DdevApp) AppTypePrompt() error {
 		if IsValidAppType(appType) {
 			break
 		}
-		output.UserOut.Printf(util.ColorizeText(fmt.Sprintf("'%s' is not a valid project type", appType), "yellow"))
+		output.UserOut.Print(util.ColorizeText(fmt.Sprintf("'%s' is not a valid project type", appType), "yellow"))
 	}
 
 	app.Type = appType
