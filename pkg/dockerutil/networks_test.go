@@ -228,165 +228,127 @@ func TestNetworkAliases(t *testing.T) {
 		app1, app2 = apps[0], apps[1]
 	}
 
-	t.Run("project_name", func(t *testing.T) {
-		t.Run("app1_to_app2_http", func(t *testing.T) {
-			out, _, err := app1.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "curl -sS --fail http://" + app2.Name + ".ddev.site",
-			})
-			assert.NoError(err, "app1 should be able to reach app2 by project name")
-			assert.Contains(out, "Hello from "+app2.Name, "Response should contain app2 project name")
-		})
+	// Define test case structure
+	type testCase struct {
+		category    string
+		name        string
+		fromApp     *ddevapp.DdevApp
+		toApp       *ddevapp.DdevApp
+		httpURL     string
+		httpsURL    string
+		description string
+	}
 
-		if globalconfig.GetCAROOT() != "" {
-			t.Run("app1_to_app2_https", func(t *testing.T) {
-				out, _, err := app1.Exec(&ddevapp.ExecOpts{
-					Service: "web",
-					Cmd:     "curl -sS --fail https://" + app2.Name + ".ddev.site",
-				})
-				assert.NoError(err, "app1 should be able to reach app2 by project name")
-				assert.Contains(out, "Hello from "+app2.Name, "Response should contain app2 project name")
-			})
+	// Create test case generator function
+	createTestCases := func() []testCase {
+		return []testCase{
+			// Project name tests
+			{
+				category:    "project_name",
+				name:        "app1_to_app2",
+				fromApp:     app1,
+				toApp:       app2,
+				httpURL:     "http://" + app2.GetHostname(),
+				httpsURL:    "https://" + app2.GetHostname(),
+				description: "app1 should be able to reach app2 by project name",
+			},
+			{
+				category:    "project_name",
+				name:        "app2_to_app1",
+				fromApp:     app2,
+				toApp:       app1,
+				httpURL:     "http://" + app1.GetHostname() + ":8080",
+				httpsURL:    "https://" + app1.GetHostname() + ":8443",
+				description: "app2 should be able to reach app1 by project name",
+			},
+			// Additional hostnames tests
+			{
+				category:    "additional_hostnames",
+				name:        "app1_to_app2_backend",
+				fromApp:     app1,
+				toApp:       app2,
+				httpURL:     "http://backend.ddev.site",
+				httpsURL:    "https://backend.ddev.site",
+				description: "app1 should be able to reach app2 backend hostname",
+			},
+			{
+				category:    "additional_hostnames",
+				name:        "app1_to_app2_service",
+				fromApp:     app1,
+				toApp:       app2,
+				httpURL:     "http://service.ddev.site",
+				httpsURL:    "https://service.ddev.site",
+				description: "app1 should be able to reach app2 service hostname",
+			},
+			{
+				category:    "additional_hostnames",
+				name:        "app2_to_app1_api",
+				fromApp:     app2,
+				toApp:       app1,
+				httpURL:     "http://api.ddev.site:8080",
+				httpsURL:    "https://api.ddev.site:8443",
+				description: "app2 should be able to reach app1 api hostname",
+			},
+			{
+				category:    "additional_hostnames",
+				name:        "app2_to_app1_admin",
+				fromApp:     app2,
+				toApp:       app1,
+				httpURL:     "http://admin.ddev.site:8080",
+				httpsURL:    "https://admin.ddev.site:8443",
+				description: "app2 should be able to reach app1 admin hostname",
+			},
+			// Additional FQDNs tests
+			{
+				category:    "additional_fqdns",
+				name:        "app1_to_app2",
+				fromApp:     app1,
+				toApp:       app2,
+				httpURL:     "http://test2.example.com",
+				httpsURL:    "https://test2.example.com",
+				description: "app1 should be able to reach app2 additional FQDNs",
+			},
+			{
+				category:    "additional_fqdns",
+				name:        "app2_to_app1",
+				fromApp:     app2,
+				toApp:       app1,
+				httpURL:     "http://test1.example.com:8080",
+				httpsURL:    "https://test1.example.com:8443",
+				description: "app2 should be able to reach app1 additional FQDNs",
+			},
 		}
+	}
 
-		t.Run("app2_to_app1_http", func(t *testing.T) {
-			out, _, err := app2.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "curl -sS --fail http://" + app1.Name + ".ddev.site:8080",
-			})
-			assert.NoError(err, "app2 should be able to reach app1 by project name")
-			assert.Contains(out, "Hello from "+app1.Name, "Response should contain app1 project name")
+	// Group tests by category and run them
+	allTestCases := createTestCases()
+	categories := []string{"project_name", "additional_hostnames", "additional_fqdns"}
+	for _, category := range categories {
+		t.Run(category, func(t *testing.T) {
+			for _, tc := range allTestCases {
+				if tc.category != category {
+					continue
+				}
+				// Test both HTTP and HTTPS URLs
+				urls := map[string]string{
+					"http": tc.httpURL,
+				}
+				if globalconfig.GetCAROOT() != "" {
+					urls["https"] = tc.httpsURL
+				}
+
+				for protocol, url := range urls {
+					t.Run(tc.name+"_"+protocol, func(t *testing.T) {
+						curlCmd := "curl -sS --fail " + url
+						out, _, err := tc.fromApp.Exec(&ddevapp.ExecOpts{
+							Service: "web",
+							Cmd:     curlCmd,
+						})
+						assert.NoError(err)
+						assert.Contains(out, "Hello from "+tc.toApp.Name, "Response should contain %s project name (from %s, '%s')", tc.toApp.Name, tc.fromApp.Name, curlCmd)
+					})
+				}
+			}
 		})
-
-		if globalconfig.GetCAROOT() != "" {
-			t.Run("app2_to_app1_https", func(t *testing.T) {
-				out, _, err := app2.Exec(&ddevapp.ExecOpts{
-					Service: "web",
-					Cmd:     "curl -sS --fail https://" + app1.Name + ".ddev.site:8443",
-				})
-				assert.NoError(err, "app2 should be able to reach app1 by project name")
-				assert.Contains(out, "Hello from "+app1.Name, "Response should contain app1 project name")
-			})
-		}
-	})
-
-	t.Run("additional_hostnames", func(t *testing.T) {
-		t.Run("app1_to_app2_backend_http", func(t *testing.T) {
-			out, _, err := app1.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "curl -sS --fail http://backend.ddev.site",
-			})
-			assert.NoError(err, "app1 should be able to reach app2 backend hostname")
-			assert.Contains(out, "Hello from "+app2.Name, "Response should contain app2 project name")
-		})
-
-		t.Run("app1_to_app2_service_http", func(t *testing.T) {
-			out, _, err := app1.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "curl -sS --fail http://service.ddev.site",
-			})
-			assert.NoError(err, "app1 should be able to reach app2 service hostname")
-			assert.Contains(out, "Hello from "+app2.Name, "Response should contain app2 project name")
-		})
-
-		if globalconfig.GetCAROOT() != "" {
-			t.Run("app1_to_app2_backend_https", func(t *testing.T) {
-				out, _, err := app1.Exec(&ddevapp.ExecOpts{
-					Service: "web",
-					Cmd:     "curl -sS --fail https://backend.ddev.site",
-				})
-				assert.NoError(err, "app1 should be able to reach app2 backend hostname")
-				assert.Contains(out, "Hello from "+app2.Name, "Response should contain app2 project name")
-			})
-
-			t.Run("app1_to_app2_service_https", func(t *testing.T) {
-				out, _, err := app1.Exec(&ddevapp.ExecOpts{
-					Service: "web",
-					Cmd:     "curl -sS --fail https://service.ddev.site",
-				})
-				assert.NoError(err, "app1 should be able to reach app2 service hostname")
-				assert.Contains(out, "Hello from "+app2.Name, "Response should contain app2 project name")
-			})
-		}
-
-		t.Run("app2_to_app1_api_http", func(t *testing.T) {
-			out, _, err := app2.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "curl -sS --fail http://api.ddev.site:8080",
-			})
-			assert.NoError(err, "app2 should be able to reach app1 api hostname")
-			assert.Contains(out, "Hello from "+app1.Name, "Response should contain app1 project name")
-		})
-
-		t.Run("app2_to_app1_admin_http", func(t *testing.T) {
-			out, _, err := app2.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "curl -sS --fail http://admin.ddev.site:8080",
-			})
-			assert.NoError(err, "app2 should be able to reach app1 admin hostname")
-			assert.Contains(out, "Hello from "+app1.Name, "Response should contain app1 project name")
-		})
-
-		if globalconfig.GetCAROOT() != "" {
-			t.Run("app2_to_app1_api_https", func(t *testing.T) {
-				out, _, err := app2.Exec(&ddevapp.ExecOpts{
-					Service: "web",
-					Cmd:     "curl -sS --fail https://api.ddev.site:8443",
-				})
-				assert.NoError(err, "app2 should be able to reach app1 api hostname")
-				assert.Contains(out, "Hello from "+app1.Name, "Response should contain app1 project name")
-			})
-
-			t.Run("app2_to_app1_admin_https", func(t *testing.T) {
-				out, _, err := app2.Exec(&ddevapp.ExecOpts{
-					Service: "web",
-					Cmd:     "curl -sS --fail https://admin.ddev.site:8443",
-				})
-				assert.NoError(err, "app2 should be able to reach app1 admin hostname")
-				assert.Contains(out, "Hello from "+app1.Name, "Response should contain app1 project name")
-			})
-		}
-	})
-
-	t.Run("additional_fqdns", func(t *testing.T) {
-		t.Run("app1_to_app2_http", func(t *testing.T) {
-			out, _, err := app1.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "curl -sS --fail http://test2.example.com",
-			})
-			assert.NoError(err, "app1 should be able to reach app2 additional FQDN")
-			assert.Contains(out, "Hello from "+app2.Name, "Response should contain app2 project name")
-		})
-
-		if globalconfig.GetCAROOT() != "" {
-			t.Run("app1_to_app2_https", func(t *testing.T) {
-				out, _, err := app1.Exec(&ddevapp.ExecOpts{
-					Service: "web",
-					Cmd:     "curl -sS --fail https://test2.example.com",
-				})
-				assert.NoError(err, "app1 should be able to reach app2 additional FQDN")
-				assert.Contains(out, "Hello from "+app2.Name, "Response should contain app2 project name")
-			})
-		}
-
-		t.Run("app2_to_app1_http", func(t *testing.T) {
-			out, _, err := app2.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "curl -sS --fail http://test1.example.com:8080",
-			})
-			assert.NoError(err, "app2 should be able to reach app1 additional FQDNs")
-			assert.Contains(out, "Hello from "+app1.Name, "Response should contain app1 project name")
-		})
-
-		if globalconfig.GetCAROOT() != "" {
-			t.Run("app2_to_app1_https", func(t *testing.T) {
-				out, _, err := app2.Exec(&ddevapp.ExecOpts{
-					Service: "web",
-					Cmd:     "curl -sS --fail https://test1.example.com:8443",
-				})
-				assert.NoError(err, "app2 should be able to reach app1 additional FQDNs")
-				assert.Contains(out, "Hello from "+app1.Name, "Response should contain app1 project name")
-			})
-		}
-	})
+	}
 }
