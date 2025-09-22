@@ -43,11 +43,17 @@ import (
 // [2024-11-05 version]: https://modelcontextprotocol.io/specification/2024-11-05/basic/transports
 type SSEHandler struct {
 	getServer    func(request *http.Request) *Server
+	opts         SSEOptions
 	onConnection func(*ServerSession) // for testing; must not block
 
 	mu       sync.Mutex
 	sessions map[string]*SSEServerTransport
 }
+
+// SSEOptions specifies options for an [SSEHandler].
+// for now, it is empty, but may be extended in future.
+// https://github.com/modelcontextprotocol/go-sdk/issues/507
+type SSEOptions struct{}
 
 // NewSSEHandler returns a new [SSEHandler] that creates and manages MCP
 // sessions created via incoming HTTP requests.
@@ -62,13 +68,17 @@ type SSEHandler struct {
 // The getServer function may return a distinct [Server] for each new
 // request, or reuse an existing server. If it returns nil, the handler
 // will return a 400 Bad Request.
-//
-// TODO(rfindley): add options.
-func NewSSEHandler(getServer func(request *http.Request) *Server) *SSEHandler {
-	return &SSEHandler{
+func NewSSEHandler(getServer func(request *http.Request) *Server, opts *SSEOptions) *SSEHandler {
+	s := &SSEHandler{
 		getServer: getServer,
 		sessions:  make(map[string]*SSEServerTransport),
 	}
+
+	if opts != nil {
+		s.opts = *opts
+	}
+
+	return s
 }
 
 // A SSEServerTransport is a logical SSE session created through a hanging GET
@@ -112,19 +122,6 @@ type SSEServerTransport struct {
 	mu     sync.Mutex    // also guards writes to Response
 	closed bool          // set when the stream is closed
 	done   chan struct{} // closed when the connection is closed
-}
-
-// NewSSEServerTransport creates a new SSE transport for the given messages
-// endpoint, and hanging GET response.
-//
-// Deprecated: use an SSEServerTransport literal.
-//
-//go:fix inline
-func NewSSEServerTransport(endpoint string, w http.ResponseWriter) *SSEServerTransport {
-	return &SSEServerTransport{
-		Endpoint: endpoint,
-		Response: w,
-	}
 }
 
 // ServeHTTP handles POST requests to the transport endpoint.
@@ -332,30 +329,6 @@ type SSEClientTransport struct {
 	// HTTPClient is the client to use for making HTTP requests. If nil,
 	// http.DefaultClient is used.
 	HTTPClient *http.Client
-}
-
-// SSEClientTransportOptions provides options for the [NewSSEClientTransport]
-// constructor.
-//
-// Deprecated: use an SSEClientTransport literal.
-type SSEClientTransportOptions struct {
-	// HTTPClient is the client to use for making HTTP requests. If nil,
-	// http.DefaultClient is used.
-	HTTPClient *http.Client
-}
-
-// NewSSEClientTransport returns a new client transport that connects to the
-// SSE server at the provided URL.
-//
-// Deprecated: use an SSEClientTransport literal.
-//
-//go:fix inline
-func NewSSEClientTransport(endpoint string, opts *SSEClientTransportOptions) *SSEClientTransport {
-	t := &SSEClientTransport{Endpoint: endpoint}
-	if opts != nil {
-		t.HTTPClient = opts.HTTPClient
-	}
-	return t
 }
 
 // Connect connects through the client endpoint.

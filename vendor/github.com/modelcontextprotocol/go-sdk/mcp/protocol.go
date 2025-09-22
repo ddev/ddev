@@ -42,11 +42,14 @@ type Annotations struct {
 
 // CallToolParams is used by clients to call a tool.
 type CallToolParams struct {
-	// This property is reserved by the protocol to allow clients and servers to
+	// Meta is reserved by the protocol to allow clients and servers to
 	// attach additional metadata to their responses.
-	Meta      `json:"_meta,omitempty"`
-	Name      string `json:"name"`
-	Arguments any    `json:"arguments,omitempty"`
+	Meta `json:"_meta,omitempty"`
+	// Name is the name of the tool to call.
+	Name string `json:"name"`
+	// Arguments holds the tool arguments. It can hold any value that can be
+	// marshaled to JSON.
+	Arguments any `json:"arguments,omitempty"`
 }
 
 // CallToolParamsRaw is passed to tool handlers on the server. Its arguments
@@ -55,8 +58,12 @@ type CallToolParams struct {
 type CallToolParamsRaw struct {
 	// This property is reserved by the protocol to allow clients and servers to
 	// attach additional metadata to their responses.
-	Meta      `json:"_meta,omitempty"`
-	Name      string          `json:"name"`
+	Meta `json:"_meta,omitempty"`
+	// Name is the name of the tool being called.
+	Name string `json:"name"`
+	// Arguments is the raw arguments received over the wire from the client. It
+	// is the responsibility of the tool handler to unmarshal and validate the
+	// Arguments (see [AddTool]).
 	Arguments json.RawMessage `json:"arguments,omitempty"`
 }
 
@@ -103,6 +110,26 @@ type CallToolResult struct {
 	// tool handler returns an error, and the error string is included as text in
 	// the Content field.
 	IsError bool `json:"isError,omitempty"`
+
+	// The error passed to setError, if any.
+	// It is not marshaled, and therefore it is only visible on the server.
+	// Its only use is in server sending middleware, where it can be accessed
+	// with getError.
+	err error
+}
+
+// TODO(#64): consider exposing setError (and getError), by adding an error
+// field on CallToolResult.
+func (r *CallToolResult) setError(err error) {
+	r.Content = []Content{&TextContent{Text: err.Error()}}
+	r.IsError = true
+	r.err = err
+}
+
+// getError returns the error set with setError, or nil if none.
+// This function always returns nil on clients.
+func (r *CallToolResult) getError() error {
+	return r.err
 }
 
 func (*CallToolResult) isResult() {}
@@ -618,15 +645,16 @@ type ProgressNotificationParams struct {
 	// This property is reserved by the protocol to allow clients and servers to
 	// attach additional metadata to their responses.
 	Meta `json:"_meta,omitempty"`
+	// The progress token which was given in the initial request, used to associate
+	// this notification with the request that is proceeding.
+	ProgressToken any `json:"progressToken"`
 	// An optional message describing the current progress.
 	Message string `json:"message,omitempty"`
 	// The progress thus far. This should increase every time progress is made, even
 	// if the total is unknown.
 	Progress float64 `json:"progress"`
-	// The progress token which was given in the initial request, used to associate
-	// this notification with the request that is proceeding.
-	ProgressToken any `json:"progressToken"`
 	// Total number of items to process (or total progress required), if known.
+	// Zero means unknown.
 	Total float64 `json:"total,omitempty"`
 }
 

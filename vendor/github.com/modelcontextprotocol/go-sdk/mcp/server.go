@@ -83,6 +83,16 @@ type ServerOptions struct {
 	// If true, advertises the tools capability during initialization,
 	// even if no tools have been registered.
 	HasTools bool
+
+	// GetSessionID provides the next session ID to use for an incoming request.
+	// If nil, a default randomly generated ID will be used.
+	//
+	// Session IDs should be globally unique across the scope of the server,
+	// which may span multiple processes in the case of distributed servers.
+	//
+	// As a special case, if GetSessionID returns the empty string, the
+	// Mcp-Session-Id header will not be set.
+	GetSessionID func() string
 }
 
 // NewServer creates a new MCP server. The resulting server has no features:
@@ -114,6 +124,11 @@ func NewServer(impl *Implementation, options *ServerOptions) *Server {
 	if opts.UnsubscribeHandler != nil && opts.SubscribeHandler == nil {
 		panic("UnsubscribeHandler requires SubscribeHandler")
 	}
+
+	if opts.GetSessionID == nil {
+		opts.GetSessionID = randText
+	}
+
 	return &Server{
 		impl:                    impl,
 		opts:                    opts,
@@ -189,7 +204,6 @@ func (s *Server) AddTool(t *Tool, h ToolHandler) {
 		func() bool { s.tools.add(st); return true })
 }
 
-// TODO(v0.3.0): test
 func toolForErr[In, Out any](t *Tool, h ToolHandlerFor[In, Out]) (*Tool, ToolHandler, error) {
 	tt := *t
 
@@ -221,11 +235,23 @@ func toolForErr[In, Out any](t *Tool, h ToolHandlerFor[In, Out]) (*Tool, ToolHan
 	}
 
 	th := func(ctx context.Context, req *CallToolRequest) (*CallToolResult, error) {
+		var input json.RawMessage
+		if req.Params.Arguments != nil {
+			input = req.Params.Arguments
+		}
+		// Validate input and apply defaults.
+		var err error
+		input, err = applySchema(input, inputResolved)
+		if err != nil {
+			// TODO(#450): should this be considered a tool error? (and similar below)
+			return nil, fmt.Errorf("%w: validating \"arguments\": %v", jsonrpc2.ErrInvalidParams, err)
+		}
+
 		// Unmarshal and validate args.
 		var in In
-		if req.Params.Arguments != nil {
-			if err := unmarshalSchema(req.Params.Arguments, inputResolved, &in); err != nil {
-				return nil, err
+		if input != nil {
+			if err := json.Unmarshal(input, &in); err != nil {
+				return nil, fmt.Errorf("%w: %v", jsonrpc2.ErrInvalidParams, err)
 			}
 		}
 
@@ -241,22 +267,15 @@ func toolForErr[In, Out any](t *Tool, h ToolHandlerFor[In, Out]) (*Tool, ToolHan
 				return nil, wireErr
 			}
 			// For regular errors, embed them in the tool result as per MCP spec
-			return &CallToolResult{
-				Content: []Content{&TextContent{Text: err.Error()}},
-				IsError: true,
-			}, nil
-		}
-
-		// Validate output schema, if any.
-		// Skip if out is nil: we've removed "null" from the output schema, so nil won't validate.
-		if v := reflect.ValueOf(out); v.Kind() == reflect.Pointer && v.IsNil() {
-		} else if err := validateSchema(outputResolved, &out); err != nil {
-			return nil, fmt.Errorf("tool output: %w", err)
+			var errRes CallToolResult
+			errRes.setError(err)
+			return &errRes, nil
 		}
 
 		if res == nil {
 			res = &CallToolResult{}
 		}
+
 		// Marshal the output and put the RawMessage in the StructuredContent field.
 		var outval any = out
 		if elemZero != nil {
@@ -272,14 +291,23 @@ func toolForErr[In, Out any](t *Tool, h ToolHandlerFor[In, Out]) (*Tool, ToolHan
 			if err != nil {
 				return nil, fmt.Errorf("marshaling output: %w", err)
 			}
-			res.StructuredContent = json.RawMessage(outbytes) // avoid a second marshal over the wire
+			outJSON := json.RawMessage(outbytes)
+			// Validate the output JSON, and apply defaults.
+			//
+			// We validate against the JSON, rather than the output value, as
+			// some types may have custom JSON marshalling (issue #447).
+			outJSON, err = applySchema(outJSON, outputResolved)
+			if err != nil {
+				return nil, fmt.Errorf("validating tool output: %w", err)
+			}
+			res.StructuredContent = outJSON // avoid a second marshal over the wire
 
 			// If the Content field isn't being used, return the serialized JSON in a
 			// TextContent block, as the spec suggests:
 			// https://modelcontextprotocol.io/specification/2025-06-18/server/tools#structured-content.
 			if res.Content == nil {
 				res.Content = []Content{&TextContent{
-					Text: string(outbytes),
+					Text: string(outJSON),
 				}}
 			}
 		}
