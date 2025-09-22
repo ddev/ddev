@@ -224,7 +224,10 @@ if [ "${os:-}" = "windows" ]; then
   echo "Windows installer tests completed successfully"
 fi
 
-make test TESTARGS="-failfast"
+# Run tests and close Buildkite sections after each test result to prevent nesting issues.
+# The awk command adds "^^^ +++" after each "--- PASS/FAIL/SKIP:" line to close that test's section
+# immediately, ensuring subsequent test output doesn't get nested under the wrong test.
+make test TESTARGS="-failfast" | awk '/^--- PASS:/ || /^--- FAIL:/ || /^--- SKIP:/ { print; print "^^^ +++"; next } { print }'
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
