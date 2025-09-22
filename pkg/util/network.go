@@ -153,10 +153,7 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 		reader := io.Reader(resp.Body)
 		var bar *pb.ProgressBar
 		if progressBar {
-			bar = pb.New64(resp.ContentLength)
-			bar.Set(pb.Bytes, true)
-			bar.Set("prefix", filepath.Base(destPath))
-			bar.Start()
+			bar = pb.Full.Start64(resp.ContentLength)
 			reader = bar.NewProxyReader(resp.Body)
 		}
 
