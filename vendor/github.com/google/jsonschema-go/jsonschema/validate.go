@@ -6,6 +6,7 @@ package jsonschema
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"hash/maphash"
 	"iter"
@@ -399,11 +400,13 @@ func (st *state) validate(instance reflect.Value, schema *Schema, callerAnns *an
 
 	// objects
 	// https://json-schema.org/draft/2020-12/json-schema-core#section-10.3.2
-	if instance.Kind() == reflect.Map || instance.Kind() == reflect.Struct {
-		if instance.Kind() == reflect.Map {
-			if kt := instance.Type().Key(); kt.Kind() != reflect.String {
-				return fmt.Errorf("map key type %s is not a string", kt)
-			}
+	// Validating structs is problematic. See https://github.com/google/jsonschema-go/issues/23.
+	if instance.Kind() == reflect.Struct {
+		return errors.New("cannot validate against a struct; see https://github.com/google/jsonschema-go/issues/23 for details")
+	}
+	if instance.Kind() == reflect.Map {
+		if kt := instance.Type().Key(); kt.Kind() != reflect.String {
+			return fmt.Errorf("map key type %s is not a string", kt)
 		}
 		// Track the evaluated properties for just this schema, to support additionalProperties.
 		// If we used anns here, then we'd be including properties evaluated in subschemas
@@ -440,13 +443,35 @@ func (st *state) validate(instance reflect.Value, schema *Schema, callerAnns *an
 			}
 		}
 		if schema.AdditionalProperties != nil {
-			// Apply to all properties not handled above.
-			for prop, val := range properties(instance) {
-				if !evalProps[prop] {
-					if err := st.validate(val, schema.AdditionalProperties, nil); err != nil {
-						return err
+			// Special case for a better error message when additional properties is
+			// 'falsy'
+			//
+			// If additionalProperties is {"not":{}} (which is how we
+			// unmarshal "false"), we can produce a better error message that
+			// summarizes all the extra properties. Otherwise, we fall back to the
+			// default validation.
+			//
+			// Note: this is much faster than comparing with falseSchema using Equal.
+			isFalsy := schema.AdditionalProperties.Not != nil && reflect.ValueOf(*schema.AdditionalProperties.Not).IsZero()
+			if isFalsy {
+				var disallowed []string
+				for prop := range properties(instance) {
+					if !evalProps[prop] {
+						disallowed = append(disallowed, prop)
 					}
-					evalProps[prop] = true
+				}
+				if len(disallowed) > 0 {
+					return fmt.Errorf("unexpected additional properties %q", disallowed)
+				}
+			} else {
+				// Apply to all properties not handled above.
+				for prop, val := range properties(instance) {
+					if !evalProps[prop] {
+						if err := st.validate(val, schema.AdditionalProperties, nil); err != nil {
+							return err
+						}
+						evalProps[prop] = true
+					}
 				}
 			}
 		}
@@ -614,6 +639,10 @@ func (st *state) applyDefaults(instancep reflect.Value, schema *Schema) (err err
 
 	schemaInfo := st.rs.resolvedInfos[schema]
 	instance := instancep.Elem()
+	if instance.Kind() == reflect.Interface && instance.IsValid() {
+		// If we unmarshalled into 'any', the default object unmarshalling will be map[string]any.
+		instance = instance.Elem()
+	}
 	if instance.Kind() == reflect.Map || instance.Kind() == reflect.Struct {
 		if instance.Kind() == reflect.Map {
 			if kt := instance.Type().Key(); kt.Kind() != reflect.String {
@@ -747,6 +776,9 @@ func structPropertiesOf(t reflect.Type) propertyMap {
 	}
 	props := map[string]reflect.StructField{}
 	for _, sf := range reflect.VisibleFields(t) {
+		if sf.Anonymous {
+			continue
+		}
 		info := fieldJSONInfo(sf)
 		if !info.omit {
 			props[info.name] = sf
