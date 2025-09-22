@@ -183,9 +183,9 @@ github.com/go-viper/mapstructure/v2/internal/errors
 github.com/goodhosts/hostsfile
 github.com/goodhosts/hostsfile/mage/install
 github.com/goodhosts/hostsfile/mage/test
-# github.com/google/go-github/v72 v72.0.0
+# github.com/google/go-github/v74 v74.0.0
 ## explicit; go 1.23.0
-github.com/google/go-github/v72/github
+github.com/google/go-github/v74/github
 # github.com/google/go-querystring v1.1.0
 ## explicit; go 1.10
 github.com/google/go-querystring/query
