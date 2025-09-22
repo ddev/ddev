@@ -151,15 +151,15 @@ services:
       context: example
       args:
         YOUR_DOCKER_IMAGE: ${YOUR_DOCKER_IMAGE:-example/example:latest}
+    environment:
+      - HTTP_EXPOSE=3001:3000
+      - HTTPS_EXPOSE=3000:3000
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
     # Adding external_links allows connections to `https://example.ddev.site`,
     # which then can go through `ddev-router`
     # Tip: external_links are not needed anymore in DDEV v1.24.9+
     external_links:
       - ddev-router:${DDEV_SITENAME}.${DDEV_TLD}
-    environment:
-      - HTTP_EXPOSE=3001:3000
-      - HTTPS_EXPOSE=3000:3000
-      - VIRTUAL_HOST=$DDEV_HOSTNAME
     labels:
       com.ddev.approot: ${DDEV_APPROOT}
       com.ddev.site-name: ${DDEV_SITENAME}

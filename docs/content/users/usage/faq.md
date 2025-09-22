@@ -124,7 +124,7 @@ ddev exec curl https://ddev-projectb-web
 !!!tip "How to use HTTPS from a non-web container"
     You can use HTTP without extra setup, but to use HTTPS, the container you are calling from must trust the `ddev-webserver` certificate authority (CA).
 
-    ```
+    ```bash
     $ ddev exec -s some-service curl https://projectb.ddev.site
     curl: (60) SSL certificate problem: unable to get local issuer certificate
     More details here: https://curl.se/docs/sslcerts.html
