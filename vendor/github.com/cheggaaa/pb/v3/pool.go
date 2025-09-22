@@ -1,4 +1,4 @@
-// +build linux darwin freebsd netbsd openbsd solaris dragonfly windows plan9
+// +build linux darwin freebsd netbsd openbsd solaris dragonfly windows plan9 aix
 
 package pb
 
@@ -6,6 +6,8 @@ import (
 	"io"
 	"sync"
 	"time"
+
+	"github.com/cheggaaa/pb/v3/termutil"
 )
 
 // Create and start new pool with given bars
@@ -43,16 +45,15 @@ func (p *Pool) Add(pbs ...*ProgressBar) {
 	p.m.Lock()
 	defer p.m.Unlock()
 	for _, bar := range pbs {
-		bar.ManualUpdate = true
-		bar.NotPrint = true
+		bar.Set(Static, true)
 		bar.Start()
 		p.bars = append(p.bars, bar)
 	}
 }
 
 func (p *Pool) Start() (err error) {
-	p.RefreshRate = DefaultRefreshRate
-	p.shutdownCh, err = lockEcho()
+	p.RefreshRate = defaultRefreshRate
+	p.shutdownCh, err = termutil.RawModeOn()
 	if err != nil {
 		return
 	}
@@ -100,5 +101,5 @@ func (p *Pool) Stop() error {
 	case <-p.workerCh:
 	}
 
-	return unlockEcho()
+	return termutil.RawModeOff()
 }

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cheggaaa/pb"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/hashicorp/go-retryablehttp"
@@ -153,7 +153,9 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 		reader := io.Reader(resp.Body)
 		var bar *pb.ProgressBar
 		if progressBar {
-			bar = pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(filepath.Base(destPath))
+			bar = pb.New64(resp.ContentLength)
+			bar.Set(pb.Bytes, true)
+			bar.Set("prefix", filepath.Base(destPath))
 			bar.Start()
 			reader = bar.NewProxyReader(resp.Body)
 		}

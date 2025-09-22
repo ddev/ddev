@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package pb
@@ -5,6 +6,9 @@ package pb
 import (
 	"fmt"
 	"log"
+	"strings"
+
+	"github.com/cheggaaa/pb/v3/termutil"
 )
 
 func (p *Pool) print(first bool) bool {
@@ -12,7 +16,7 @@ func (p *Pool) print(first bool) bool {
 	defer p.m.Unlock()
 	var out string
 	if !first {
-		coords, err := getCursorPos()
+		coords, err := termutil.GetCursorPos()
 		if err != nil {
 			log.Panic(err)
 		}
@@ -22,18 +26,25 @@ func (p *Pool) print(first bool) bool {
 		}
 		coords.X = 0
 
-		err = setCursorPos(coords)
+		err = termutil.SetCursorPos(coords)
 		if err != nil {
 			log.Panic(err)
 		}
+	}
+	cols, err := termutil.TerminalWidth()
+	if err != nil {
+		cols = defaultBarWidth
 	}
 	isFinished := true
 	for _, bar := range p.bars {
 		if !bar.IsFinished() {
 			isFinished = false
 		}
-		bar.Update()
-		out += fmt.Sprintf("\r%s\n", bar.String())
+		result := bar.String()
+		if r := cols - CellCount(result); r > 0 {
+			result += strings.Repeat(" ", r)
+		}
+		out += fmt.Sprintf("\r%s\n", result)
 	}
 	if p.Output != nil {
 		fmt.Fprint(p.Output, out)
