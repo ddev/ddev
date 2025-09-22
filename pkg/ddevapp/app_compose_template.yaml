@@ -109,14 +109,8 @@ services:
         DDEV_DATABASE: ${DDEV_DATABASE}
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     command: /pre-start.sh
-    networks:
-      default:
-      ddev_default:
-        {{ if not .OmitRouter -}}
-        aliases:
-          {{ range $hostname := .Hostnames }}- "{{ $hostname }}"
-          {{ end }}
-        {{- end }}
+
+    networks: ["default", "ddev_default"]
     cap_add:
       - SYS_PTRACE
     working_dir: "{{ .WebWorkingDir }}"

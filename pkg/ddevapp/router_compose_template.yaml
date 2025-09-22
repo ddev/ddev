@@ -7,7 +7,13 @@ services:
     user: {{ .UID }}:{{ .GID }}
 
     networks:
-      - ddev_default
+      ddev_default:
+        {{ if .Hostnames }}
+        aliases:
+          {{ range $hostname := .Hostnames }}- "{{ $hostname }}"
+          {{ end }}
+        {{ end }}
+
     container_name: ddev-router
     ports: {{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
       - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}

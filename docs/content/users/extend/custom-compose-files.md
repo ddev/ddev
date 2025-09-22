@@ -151,6 +151,11 @@ services:
       context: example
       args:
         YOUR_DOCKER_IMAGE: ${YOUR_DOCKER_IMAGE:-example/example:latest}
+    # Adding external_links allows connections to `https://example.ddev.site`,
+    # which then can go through `ddev-router`
+    # Tip: external_links are not needed anymore in DDEV v1.24.9+
+    external_links:
+      - ddev-router:${DDEV_SITENAME}.${DDEV_TLD}
     environment:
       - HTTP_EXPOSE=3001:3000
       - HTTPS_EXPOSE=3000:3000
@@ -165,14 +170,6 @@ services:
       # This is required so that the CA is available for `mkcert` to install
       # and for custom commands to work
       - ddev-global-cache:/mnt/ddev-global-cache
-  # The config below is added automatically in DDEV v1.24.9+
-  # Adding aliases allows connections to `https://example.ddev.site`
-  # from another containers going through `ddev_default` network
-  web:
-    networks:
-      ddev_default:
-        aliases:
-          - ${DDEV_SITENAME}.${DDEV_TLD}
 ```
 
 ```Dockerfile

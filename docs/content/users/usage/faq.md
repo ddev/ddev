@@ -109,16 +109,16 @@ In project A, use `mysql -h ddev-projectb-db` to access the database server of p
 
 #### Communicate via HTTP/S
 
-Let’s say we have two projects, for example: project A (`https://projecta.ddev.site`), and project B (`https://projectb.ddev.site`).
+Let’s say we have two projects, for example: project A, and project B.
 
 DDEV v1.24.9+ has built-in support for inter-project HTTP/S communication:
 
 ```bash
 # call from project A web container to project B's web container
-curl https://projectb.ddev.site
+ddev exec curl https://projectb.ddev.site
 
 # or using the internal Docker network hostname
-curl https://ddev-projectb-web
+ddev exec curl https://ddev-projectb-web
 ```
 
 !!!tip "How to use HTTPS from a non-web container"
@@ -138,27 +138,26 @@ For DDEV v1.24.8 and earlier, to enable server-side HTTP/S communication (i.e. s
 
     ```bash
     # call from project A web container to project B's web container
-    curl https://ddev-projectb-web
+    ddev exec curl https://ddev-projectb-web
     ```
 
 2. Or add a `.ddev/docker-compose.communicate.yaml` to project A:
 
     ```yaml
-    # add this to project B, allows connection to project B
+    # add this to project A, allows connection to project B
     services:
       web:
-        ddev_default:
-          aliases:
-            - "projectb.ddev.site"
+        external_links:
+          - "ddev-router:projectb.ddev.site"
     ```
 
-    This lets the `ddev-router` know that any project can access the web container on project B's official FQDN.
+    This lets the `ddev-router` know that project A can access the web container on project B's official FQDN.
 
     You can now make calls to project B via the regular FQDN `https://projectb.ddev.site` from project A:
 
     ```bash
     # call from project A web container to project B's web container
-    curl https://projectb.ddev.site
+    ddev exec curl https://projectb.ddev.site
     ```
 
     If you are using other hostnames or `project_tld`, you will need to adjust the `projectb.ddev.site` value.

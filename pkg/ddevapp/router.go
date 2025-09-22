@@ -224,6 +224,7 @@ func generateRouterCompose() (string, error) {
 		"Router":                     globalconfig.DdevGlobalConfig.Router,
 		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 		"Timezone":                   timezone,
+		"Hostnames":                  determineRouterHostnames(),
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
@@ -343,6 +344,27 @@ func GetRouterStatus() (string, string) {
 	return status, logOutput
 }
 
+// determineRouterHostnames returns a list of all hostnames for all active projects
+func determineRouterHostnames() []string {
+	var routerHostnames []string
+
+	for _, app := range GetActiveProjects() {
+		err := app.ReadDockerComposeYAML()
+		if err != nil {
+			util.Verbose("determineRouterHostnames(): unable to read '%s' project config at %s: %v", app.Name, app.DockerComposeFullRenderedYAMLPath(), err)
+			continue
+		}
+		_, hostnames, err := detectAppRouting(app)
+		if err != nil {
+			util.Verbose("Unable to determine hostnames for '%s' project: %v", app.Name, err)
+			continue
+		}
+		routerHostnames = append(routerHostnames, hostnames...)
+	}
+	routerHostnames = util.SliceToUniqueSlice(&routerHostnames)
+	return routerHostnames
+}
+
 // determineRouterPorts returns a list of port mappings retrieved from ports from
 // configuration files of all active projects, plus running site
 // containers defining HTTP_EXPOSE and HTTPS_EXPOSE env var.
@@ -381,7 +403,7 @@ func getConfigBasedRouterPorts() []string {
 	for _, app := range GetActiveProjects() {
 		err := app.ReadDockerComposeYAML()
 		if err != nil {
-			util.Verbose("Unable to read '%s' project config at %s: %v", app.Name, app.DockerComposeFullRenderedYAMLPath(), err)
+			util.Verbose("getConfigBasedRouterPorts(): unable to read '%s' project config at %s: %v", app.Name, app.DockerComposeFullRenderedYAMLPath(), err)
 			continue
 		}
 		if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {

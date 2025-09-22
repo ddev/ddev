@@ -30,10 +30,10 @@ type TraefikRouting struct {
 // detectAppRouting reviews the configured services and uses their
 // VIRTUAL_HOST and HTTP(S)_EXPOSE environment variables to set up routing
 // for the project
-func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
+func detectAppRouting(app *DdevApp) ([]TraefikRouting, []string, error) {
 	var table []TraefikRouting
 	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
-		return table, nil
+		return table, nil, nil
 	}
 	for serviceName, service := range app.ComposeYaml.Services {
 		var virtualHost string
@@ -50,7 +50,7 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 			util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
 			routeEntries, err := processHTTPExpose(serviceName, httpExpose, false, hostnames)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			table = append(table, routeEntries...)
 		}
@@ -60,12 +60,22 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 			util.Debug("HTTPS_EXPOSE=%v for %s", httpsExpose, serviceName)
 			routeEntries, err := processHTTPExpose(serviceName, httpsExpose, true, hostnames)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			table = append(table, routeEntries...)
 		}
 	}
-	return table, nil
+
+	hostnames := app.GetHostnames()
+	// There can possibly be VIRTUAL_HOST entries which are not configured hostnames.
+	for _, r := range table {
+		if r.ExternalHostnames != nil {
+			hostnames = append(hostnames, r.ExternalHostnames...)
+		}
+	}
+	hostnames = util.SliceToUniqueSlice(&hostnames)
+
+	return table, hostnames, nil
 }
 
 // processHTTPExpose creates routing table entry from VIRTUAL_HOST and HTTP(S)_EXPOSE
@@ -273,20 +283,10 @@ func PushGlobalTraefikConfig() error {
 // configureTraefikForApp configures the dynamic configuration and creates cert+key
 // in .ddev/traefik
 func configureTraefikForApp(app *DdevApp) error {
-	routingTable, err := detectAppRouting(app)
+	routingTable, hostnames, err := detectAppRouting(app)
 	if err != nil {
 		return err
 	}
-
-	// hostnames here should be used only for creating the cert.
-	hostnames := app.GetHostnames()
-	// There can possibly be VIRTUAL_HOST entries which are not configured hostnames.
-	for _, r := range routingTable {
-		if r.ExternalHostnames != nil {
-			hostnames = append(hostnames, r.ExternalHostnames...)
-		}
-	}
-	hostnames = util.SliceToUniqueSlice(&hostnames)
 	projectTraefikDir := app.GetConfigPath("traefik")
 	err = os.MkdirAll(projectTraefikDir, 0755)
 	if err != nil {
