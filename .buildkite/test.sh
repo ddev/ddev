@@ -195,6 +195,9 @@ ${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh"
 echo "--- running sanetestbot.sh"
 ${TIMEOUT} 60s bash "$(dirname "$0")/sanetestbot.sh"
 
+# Close the setup sections before starting tests
+echo "^^^ +++"
+
 # Make sure we start with mutagen daemon off.
 unset MUTAGEN_DATA_DIRECTORY
 if [ -f ~/.ddev/bin/mutagen -o -f ~/.ddev/bin/mutagen.exe ]; then
