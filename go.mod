@@ -16,7 +16,7 @@ require (
 	github.com/docker/go-connections v0.6.0
 	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/goodhosts/hostsfile v0.1.6
-	github.com/google/go-github/v72 v72.0.0
+	github.com/google/go-github/v74 v74.0.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/jedib0t/go-pretty/v6 v6.6.8
