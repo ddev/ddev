@@ -196,7 +196,7 @@ echo "--- running sanetestbot.sh"
 ${TIMEOUT} 60s bash "$(dirname "$0")/sanetestbot.sh"
 
 # Close the setup sections before starting tests
-echo "^^^ +++"
+echo "~~~ Setup complete, starting tests"
 
 # Make sure we start with mutagen daemon off.
 unset MUTAGEN_DATA_DIRECTORY
