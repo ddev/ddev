@@ -5,7 +5,7 @@ This file provides guidance to AI agents when working with code in this reposito
 ## Communication Style
 
 - Use direct, concise language without unnecessary adjectives or adverbs
-- Avoid flowery or marketing-style language ("tremendous", "dramatically", "revolutionary", etc.)
+- Avoid flowery or marketing-style language ("tremendous", "dramatically", "revolutionary", "working perfectly", etc.)
 - Don't include flattery or excessive praise ("excellent!", "perfect!", "great job!")
 - State facts and findings directly without embellishment
 - Skip introductory phrases like "I'm excited to", "I'd be happy to", "Let me dive into"
