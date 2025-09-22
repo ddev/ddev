@@ -26,12 +26,12 @@ type ForOptions struct {
 	IgnoreInvalidTypes bool
 
 	// TypeSchemas maps types to their schemas.
-	// If [For] encounters a type equal to a type of a key in this map, the
+	// If [For] encounters a type that is a key in this map, the
 	// corresponding value is used as the resulting schema (after cloning to
 	// ensure uniqueness).
 	// Types in this map override the default translations, as described
 	// in [For]'s documentation.
-	TypeSchemas map[any]*Schema
+	TypeSchemas map[reflect.Type]*Schema
 }
 
 // For constructs a JSON schema object for the given type argument.
@@ -78,9 +78,7 @@ func For[T any](opts *ForOptions) (*Schema, error) {
 	}
 	schemas := maps.Clone(initialSchemaMap)
 	// Add types from the options. They override the default ones.
-	for v, s := range opts.TypeSchemas {
-		schemas[reflect.TypeOf(v)] = s
-	}
+	maps.Copy(schemas, opts.TypeSchemas)
 	s, err := forType(reflect.TypeFor[T](), map[reflect.Type]bool{}, opts.IgnoreInvalidTypes, schemas)
 	if err != nil {
 		var z T
@@ -93,9 +91,7 @@ func For[T any](opts *ForOptions) (*Schema, error) {
 func ForType(t reflect.Type, opts *ForOptions) (*Schema, error) {
 	schemas := maps.Clone(initialSchemaMap)
 	// Add types from the options. They override the default ones.
-	for v, s := range opts.TypeSchemas {
-		schemas[reflect.TypeOf(v)] = s
-	}
+	maps.Copy(schemas, opts.TypeSchemas)
 	s, err := forType(t, map[reflect.Type]bool{}, opts.IgnoreInvalidTypes, schemas)
 	if err != nil {
 		return nil, fmt.Errorf("ForType(%s): %w", t, err)
@@ -187,9 +183,11 @@ func forType(t reflect.Type, seen map[reflect.Type]bool, ignore bool, schemas ma
 		s.Type = "object"
 		// no additional properties are allowed
 		s.AdditionalProperties = falseSchema()
+		for _, field := range reflect.VisibleFields(t) {
+			if field.Anonymous {
+				continue
+			}
 
-		for i := range t.NumField() {
-			field := t.Field(i)
 			info := fieldJSONInfo(field)
 			if info.omit {
 				continue
