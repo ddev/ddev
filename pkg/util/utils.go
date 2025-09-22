@@ -124,7 +124,7 @@ func Debug(format string, a ...interface{}) {
 		if !output.JSONOutput {
 			output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
 		} else {
-			output.UserOut.Debugf(s)
+			output.UserOut.Debugf("%s", s)
 		}
 	}
 }
@@ -137,7 +137,7 @@ func Verbose(format string, a ...interface{}) {
 		if !output.JSONOutput {
 			output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
 		} else {
-			output.UserOut.Debugf(s)
+			output.UserOut.Debug(s)
 		}
 	}
 }
