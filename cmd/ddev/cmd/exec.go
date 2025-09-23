@@ -43,7 +43,7 @@ ddev exec --raw -- ls -lR`,
 			util.Failed("Project is not currently running. Try 'ddev start'.")
 		}
 
-		app.DockerEnv()
+		_ = app.DockerEnv()
 
 		opts := &ddevapp.ExecOpts{
 			Service: serviceType,

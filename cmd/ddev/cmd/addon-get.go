@@ -61,7 +61,7 @@ ddev add-on get /path/to/tarball.tar.gz
 		if err != nil {
 			util.Failed("Unable to change directory to project root %s: %v", app.AppRoot, err)
 		}
-		app.DockerEnv()
+		_ = app.DockerEnv()
 
 		sourceRepoArg := args[0]
 		extractedDir := ""

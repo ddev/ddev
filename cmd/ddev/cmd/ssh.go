@@ -32,7 +32,7 @@ ddev ssh -d /var/www/html`,
 		app := projects[0]
 		instrumentationApp = app
 
-		app.DockerEnv()
+		_ = app.DockerEnv()
 
 		// Use Bash for our containers, sh for 3rd-party containers
 		// that may not have Bash.

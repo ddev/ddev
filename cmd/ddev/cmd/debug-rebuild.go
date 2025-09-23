@@ -53,7 +53,7 @@ var DebugRebuildCmd = &cobra.Command{
 			util.Failed("Failed to get project: %v", err)
 		}
 
-		app.DockerEnv()
+		_ = app.DockerEnv()
 
 		if err = app.WriteDockerComposeYAML(); err != nil {
 			util.Failed("Failed to get compose-config: %v", err)

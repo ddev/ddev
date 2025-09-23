@@ -36,7 +36,7 @@ var DdevXHGuiCmd = &cobra.Command{
 			return fmt.Errorf("unable to get project: %v", err)
 		}
 
-		app.DockerEnv()
+		_ = app.DockerEnv()
 
 		if globalconfig.DdevGlobalConfig.UseHardenedImages {
 			util.Failed("XHGui is not available with use-hardened-images.")

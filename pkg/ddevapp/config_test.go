@@ -241,7 +241,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	assert.NoError(err)
 
 	// After the config has been written and directories exist, the write should work.
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	err = app.WriteDockerComposeYAML()
 	assert.NoError(err)
 
@@ -1770,7 +1770,7 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 	for _, tc := range simpleWaitTimeMatrix {
 		t.Run(tc.description, func(t *testing.T) {
 			app.DefaultContainerTimeout = strconv.Itoa(tc.maxWaitTime)
-			app.DockerEnv()
+			_ = app.DockerEnv()
 			dockerComposeSource := filepath.Join(origDir, "testdata", tName, fmt.Sprintf("docker-compose.%s.yaml", tc.description))
 			dockerComposeTarget := app.GetConfigPath("docker-compose." + tName + ".yaml")
 			err = copy2.Copy(dockerComposeSource, dockerComposeTarget, copy2.Options{})
@@ -1788,7 +1788,7 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 	_ = os.RemoveAll(app.GetConfigPath("docker-compose." + tName + ".yaml"))
 	for _, maxWaitTime := range []string{nodeps.DefaultDefaultContainerTimeout, "850"} {
 		app.DefaultContainerTimeout = maxWaitTime
-		app.DockerEnv()
+		_ = app.DockerEnv()
 		err = app.WriteConfig()
 		require.NoError(t, err)
 		err = app.Restart()
