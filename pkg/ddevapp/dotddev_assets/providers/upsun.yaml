@@ -53,8 +53,8 @@ auth_command:
     if [ -z "${UPSUN_CLI_TOKEN:-}" ]; then echo "Please make sure you have set UPSUN_CLI_TOKEN." && exit 1; fi
     if [ -z "${PLATFORM_PROJECT:-}" ]; then echo "Please make sure you have set PLATFORM_PROJECT." && exit 1; fi
     if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then echo "Please make sure you have set PLATFORM_ENVIRONMENT." && exit 1; fi
-    if [ "$(upsun environment:info status)" != "active" ]; then
-      upsun environment:resume -y
+    if [ "$(upsun environment:info status -e ${PLATFORM_ENVIRONMENT})" != "active" ]; then
+      upsun environment:resume -e ${PLATFORM_ENVIRONMENT} -y
     fi
 
 db_pull_command:
