@@ -169,3 +169,84 @@ ddev import-db <mydb.sql
 - Use `ddev import-db --no-drop` to import without first emptying the database.
 - If a database already exists and the import does not specify dropping tables, the contents of the imported dumpfile will be _added_ to the database. Most full database dumps do a table drop and create before loading, but if yours does not, you can drop all tables with `ddev stop --remove-data` before importing.
 - If imports are stalling or failing, make sure you have plenty of unused space (see [#3360](https://github.com/ddev/ddev/issues/3360)). DDEV has no problems importing large (2G+) databases, but importing requires lots of space. DDEV will show a warning on startup if unused space is getting low.
+
+## Inter-Project Communication
+
+### Access another project's database
+
+To connect the `web` container to the `db` container of a different project, use `ddev-<projectname>-db` as the hostname.
+
+Example: two projects, `backend` and `frontend`.
+
+In the `frontend` project:
+
+```bash
+ddev exec mysql -h ddev-backend-db
+```
+
+!!!note "Database host reset after restart"
+    DDEV manages certain [CMS settings](./cms-settings.md). If you change the database host in `.env`, it may reset to `db` after `ddev restart`.
+
+    Disable this behavior by setting [`disable_settings_management`](../configuration/config.md#disable_settings_management) to `true` or running [`ddev config --disable-settings-management`](../usage/commands.md#config).
+
+### Access another project via HTTP/S
+
+Example: two projects, `backend` and `frontend`.
+
+From v1.24.9+, DDEV supports direct HTTP/S calls between projects:
+
+```bash
+# From frontend web container to backend web container
+ddev exec curl https://backend.ddev.site
+
+# Or using internal Docker hostname
+ddev exec curl https://ddev-backend-web
+```
+
+!!!note "Using HTTPS from a non-web container"
+    HTTP works without extra setup. For HTTPS, the calling container must trust the `ddev-webserver` certificate authority (CA).
+
+    ```bash
+    $ ddev exec -s some-service curl https://backend.ddev.site
+    curl: (60) SSL certificate problem: unable to get local issuer certificate
+    More details: https://curl.se/docs/sslcerts.html
+    ```
+
+    See [Third-party services may need to trust `ddev-webserver`](../extend/custom-compose-files.md#third-party-services-may-need-to-trust-ddev-webserver).
+
+### Access another service in the same or different project
+
+- **Same project**: containers reach each other by service name. No project name prefix is required.
+- **Different project**: containers reach each other with `ddev-<projectname>-<service>`.
+
+Example in a single project with `web` and `opensearch` services:
+
+```bash
+# From web container to opensearch
+ddev exec curl http://opensearch:9200
+
+# From opensearch container to web
+ddev exec -s opensearch curl http://web
+```
+
+Example with two projects, `frontend` and `backend` (`backend` has `opensearch` service):
+
+```bash
+# From frontend web container to backend opensearch
+ddev exec curl http://ddev-backend-opensearch:9200
+```
+
+### Access services on the host machine
+
+To connect from a container to a service on the host, use `host.docker.internal` as the hostname.
+
+```bash
+# Test connection to host service on port 8000
+ddev exec telnet host.docker.internal 8000
+
+# Call API on host
+ddev exec curl http://host.docker.internal:8000/some/api/endpoint
+```
+
+!!!note "Host service binding"
+    Services on the host must listen on all interfaces (`0.0.0.0`), not only `127.0.0.1` (`localhost`).
