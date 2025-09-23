@@ -82,7 +82,7 @@
 
   # EXPERIMENTAL: Conditional extension list based on Debian Trixie Sury repository availability
   # Base extensions that should always be available
-  extensions="apcu bcmath bz2 curl gd imagick intl ldap mbstring mysqli pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
+  extensions="apcu bcmath bz2 curl gd imagick intl ldap mbstring memcached mysqli pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
   
   # Conditionally add extensions based on PHP version and known Sury repository issues
   case ${PHP_VERSION} in

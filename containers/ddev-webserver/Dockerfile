@@ -32,7 +32,7 @@ RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | b
 # Install mariadb_repo_setup to get mariadb-client from them directly
 RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
 # Search for CHANGE_MARIADB_CLIENT to update related code.
-# Workaround for Debian Trixie (13) not being supported yet - use bookworm compatibility
+# Workaround for Debian Trixie (13) not being supported yet - use bookworm compatibility. It's not expected that they will maintain any mariadb-10.11 compat without this.
 RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools --os-type=debian --os-version=bookworm
 
 # Set up Postgresql apt repository
