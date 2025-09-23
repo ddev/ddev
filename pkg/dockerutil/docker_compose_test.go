@@ -19,14 +19,22 @@ import (
 
 var DdevBin = "ddev"
 
+func init() {
+	// Make sets DDEV_BINARY_FULLPATH when building the executable
+	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
+		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	}
+	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
+		globalconfig.DdevGlobalConfig.NoBindMounts = true
+	}
+
+	globalconfig.EnsureGlobalConfig()
+}
+
 // TestDockerComposeDownload verifies that we can download a particular docker-compose version
 func TestDockerComposeDownload(t *testing.T) {
 	assert := asrt.New(t)
 	var err error
-
-	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
-		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
-	}
 
 	_, err = dockerutil.DownloadDockerComposeIfNeeded()
 	require.NoError(t, err)

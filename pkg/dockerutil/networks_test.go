@@ -8,10 +8,12 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/api/types/network"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -152,6 +154,8 @@ func TestNetworkAliases(t *testing.T) {
 	}
 
 	assert := asrt.New(t)
+
+	runTime := util.TimeTrackC(t.Name())
 
 	origDir, _ := os.Getwd()
 
@@ -351,4 +355,13 @@ func TestNetworkAliases(t *testing.T) {
 			}
 		})
 	}
+
+	out, err := exec.RunHostCommand(DdevBin, "list")
+	assert.NoError(err)
+	t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
+	out, err = exec.RunHostCommand("docker", "logs", "ddev-router")
+	assert.NoError(err)
+	t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
+
+	runTime()
 }
