@@ -111,7 +111,7 @@ func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, exte
 }
 
 // PushGlobalTraefikConfig pushes the config into ddev-global-cache
-func PushGlobalTraefikConfig() error {
+func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	uid, _, _ := util.GetContainerUIDGid()
 	err := os.MkdirAll(globalTraefikDir, 0755)
@@ -200,7 +200,7 @@ func PushGlobalTraefikConfig() error {
 	}
 	templateData := traefikData{
 		TargetCertsPath:    targetCertsPath,
-		RouterPorts:        determineRouterPorts(),
+		RouterPorts:        determineRouterPorts(activeApps),
 		UseLetsEncrypt:     globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		LetsEncryptEmail:   globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		TraefikMonitorPort: globalconfig.DdevGlobalConfig.TraefikMonitorPort,

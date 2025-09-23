@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/testcommon"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
@@ -170,6 +170,8 @@ func TestTraefikStaticConfig(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
+	activeApps := ddevapp.GetActiveProjects()
+
 	t.Cleanup(func() {
 		_ = app.Stop(true, false)
 		ddevapp.PowerOff()
@@ -200,7 +202,7 @@ func TestTraefikStaticConfig(t *testing.T) {
 				}
 				err = os.Remove(filepath.Join(traefikGlobalConfigDir, "expectation.yaml"))
 				require.NoError(t, err)
-				err = ddevapp.PushGlobalTraefikConfig()
+				err = ddevapp.PushGlobalTraefikConfig(activeApps)
 				require.NoError(t, err)
 			})
 
@@ -214,7 +216,7 @@ func TestTraefikStaticConfig(t *testing.T) {
 			require.NoError(t, err)
 
 			// Generate and push config
-			err = ddevapp.PushGlobalTraefikConfig()
+			err = ddevapp.PushGlobalTraefikConfig(activeApps)
 			require.NoError(t, err)
 			// Now read result config and compare
 			renderedStaticConfig, err := fileutil.ReadFileIntoString(staticConfigFinalPath)
