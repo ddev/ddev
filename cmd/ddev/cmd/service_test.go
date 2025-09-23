@@ -13,11 +13,6 @@ import (
 
 // TestCmdService tests ddev service enable/disable .
 func TestCmdService(t *testing.T) {
-	// EXPERIMENTAL: Skip memcached-related tests if running on Debian Trixie
-	// where memcached packages are missing from Sury repository
-	if os.Getenv("SKIP_MEMCACHED_TESTS") == "true" {
-		t.Skip("Skipping memcached service tests (SKIP_MEMCACHED_TESTS=true)")
-	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
