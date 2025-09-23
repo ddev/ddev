@@ -439,6 +439,8 @@ func buildPHPActionEnvironment(app *DdevApp, installDesc InstallDesc, verbose bo
 			return nil, fmt.Errorf("unable to merge addon environment variables: %v", err)
 		}
 	}
+	// Use the in-container version of approot
+	envMap["DDEV_APPROOT"] = "/var/www/html"
 
 	// Convert map to slice
 	var env []string
