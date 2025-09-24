@@ -141,10 +141,6 @@ func TestNetworkAmbiguity(t *testing.T) {
 // where projects can communicate with each other via hostnames without external_links
 // Related test: TestInternalAndExternalAccessToURL
 func TestNetworkAliases(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
-		t.Skip("Skipping on mac Apple Silicon/Lima/Colima/Rancher to ignore problems with 'connection reset by peer'")
-	}
-
 	origDir, _ := os.Getwd()
 
 	// Create two temporary projects
