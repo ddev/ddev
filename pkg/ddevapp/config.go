@@ -932,7 +932,6 @@ type composeYAMLVars struct {
 	DockerIP                  string
 	IsWindowsFS               bool
 	NoProjectMount            bool
-	Hostnames                 []string
 	Timezone                  string
 	ComposerVersion           string
 	Username                  string
@@ -1031,7 +1030,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		NoProjectMount:     app.NoProjectMount,
 		MountType:          "bind",
 		WebMount:           "../",
-		Hostnames:          app.GetHostnames(),
 		Timezone:           timezone,
 		ComposerVersion:    app.ComposerVersion,
 		Username:           username,

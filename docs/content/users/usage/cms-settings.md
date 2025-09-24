@@ -21,7 +21,7 @@ DDEV will automatically update any it’s added containing a `#ddev-generated` c
         If you change your mind and want DDEV to take over the file again, delete it and run [`ddev start`](../usage/commands.md#start). DDEV will recreate its own version, which you may want to remove from your Git project.
 
 2. **Disable settings management.**
-You can tell DDEV to use a specific project type without creating settings files by either setting [`disable_settings_management`](../configuration/config.md#disable_settings_management) to `true` or running [`ddev config --disable-settings-management`](../configuration/config.md#type).
+You can tell DDEV to use a specific project type without creating settings files by either setting [`disable_settings_management`](../configuration/config.md#disable_settings_management) to `true` or running [`ddev config --disable-settings-management`](../usage/commands.md#config).
 
 3. **Switch to the generic PHP project type.**
 If you don’t want DDEV’s CMS-specific settings, you can switch your project to the generic `php` type by editing [`type: php`](../configuration/config.md#type) in the project’s settings or running [`ddev config --project-type=php`](../usage/commands.md#config). DDEV will no longer create or tweak any settings files. You’ll lose any perks from the nginx configuration for the CMS, but you can always customize [nginx settings](../extend/customization-extendibility.md#custom-nginx-configuration) or [Apache settings](../extend/customization-extendibility.md#custom-apache-configuration) separately.

@@ -147,16 +147,17 @@ func StartDdevRouter() error {
 		}
 	}
 
-	routerComposeFullPath, err := generateRouterCompose()
+	activeApps := GetActiveProjects()
+	routerComposeFullPath, err := generateRouterCompose(activeApps)
 	if err != nil {
 		return err
 	}
-	err = PushGlobalTraefikConfig()
+	err = PushGlobalTraefikConfig(activeApps)
 	if err != nil {
 		return fmt.Errorf("failed to push global Traefik config: %v", err)
 	}
 
-	err = CheckRouterPorts()
+	err = CheckRouterPorts(activeApps)
 	if err != nil {
 		return fmt.Errorf("unable to listen on required ports, %v,\nTroubleshooting suggestions at https://docs.ddev.com/en/stable/users/usage/troubleshooting/#unable-listen", err)
 	}
@@ -193,8 +194,8 @@ func StartDdevRouter() error {
 }
 
 // generateRouterCompose() generates the ~/.ddev/.router-compose.yaml and ~/.ddev/.router-compose-full.yaml
-func generateRouterCompose() (string, error) {
-	exposedPorts := determineRouterPorts()
+func generateRouterCompose(activeApps []*DdevApp) (string, error) {
+	exposedPorts := determineRouterPorts(activeApps)
 
 	routerComposeBasePath := RouterComposeYAMLPath()
 	routerComposeFullPath := FullRenderedRouterComposeYAMLPath()
@@ -224,6 +225,7 @@ func generateRouterCompose() (string, error) {
 		"Router":                     globalconfig.DdevGlobalConfig.Router,
 		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 		"Timezone":                   timezone,
+		"Hostnames":                  determineRouterHostnames(activeApps),
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
@@ -343,16 +345,32 @@ func GetRouterStatus() (string, string) {
 	return status, logOutput
 }
 
+// determineRouterHostnames returns a list of all hostnames for all active projects
+func determineRouterHostnames(activeApps []*DdevApp) []string {
+	var routerHostnames []string
+
+	for _, app := range activeApps {
+		_, hostnames, err := detectAppRouting(app)
+		if err != nil {
+			util.Verbose("Unable to determine hostnames for '%s' project: %v", app.Name, err)
+			continue
+		}
+		routerHostnames = append(routerHostnames, hostnames...)
+	}
+	routerHostnames = util.SliceToUniqueSlice(&routerHostnames)
+	return routerHostnames
+}
+
 // determineRouterPorts returns a list of port mappings retrieved from ports from
 // configuration files of all active projects, plus running site
 // containers defining HTTP_EXPOSE and HTTPS_EXPOSE env var.
 // It is only useful to call this when containers are actually running, before
 // starting ddev-router (so that we can bind the port mappings needed
-func determineRouterPorts() []string {
+func determineRouterPorts(activeApps []*DdevApp) []string {
 	var routerPorts []string
 
 	// Add ports from configuration files of all active projects
-	routerPorts = append(routerPorts, getConfigBasedRouterPorts()...)
+	routerPorts = append(routerPorts, getConfigBasedRouterPorts(activeApps)...)
 
 	// Add ports from running containers
 	routerPorts = append(routerPorts, getContainerBasedRouterPorts()...)
@@ -375,15 +393,10 @@ func determineRouterPorts() []string {
 }
 
 // getConfigBasedRouterPorts collects port mappings from configuration files of all active projects
-func getConfigBasedRouterPorts() []string {
+func getConfigBasedRouterPorts(activeApps []*DdevApp) []string {
 	var routerPorts []string
 
-	for _, app := range GetActiveProjects() {
-		err := app.ReadDockerComposeYAML()
-		if err != nil {
-			util.Verbose("Unable to read '%s' project config at %s: %v", app.Name, app.DockerComposeFullRenderedYAMLPath(), err)
-			continue
-		}
+	for _, app := range activeApps {
 		if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
 			continue
 		}
@@ -498,7 +511,7 @@ func ProcessExposePorts(exposePorts []string, routerPorts []string) []string {
 // CheckRouterPorts tries to connect to the ports the router will use as a heuristic to find out
 // if they're available for docker to bind to. Returns an error if either one results
 // in a successful connection.
-func CheckRouterPorts() error {
+func CheckRouterPorts(activeApps []*DdevApp) error {
 	routerContainer, _ := FindDdevRouter()
 	var existingExposedPorts []string
 	var err error
@@ -508,7 +521,7 @@ func CheckRouterPorts() error {
 			return err
 		}
 	}
-	newRouterPorts := determineRouterPorts()
+	newRouterPorts := determineRouterPorts(activeApps)
 
 	for _, port := range newRouterPorts {
 		if nodeps.ArrayContainsString(existingExposedPorts, port) {

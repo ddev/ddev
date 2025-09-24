@@ -265,11 +265,6 @@ services:
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
 
-      {{ if not .OmitRouter }}
-    external_links:
-      {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}"
-      {{ end }}
-      {{ end }}
     healthcheck:
       interval: "1s"
       retries: 70
