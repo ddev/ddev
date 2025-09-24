@@ -209,11 +209,11 @@ if command -v killall >/dev/null ; then
   killall mutagen || true
 fi
 
-echo "Running tests..."
+echo "--- Running tests..."
 
 # Run installer tests first on Windows
 if [ "${os:-}" = "windows" ]; then
-  echo "Running Windows installer tests first..."
+  echo "--- Running Windows installer tests first..."
   export DDEV_TEST_USE_REAL_INSTALLER=true
   make testwininstaller TESTARGS="-failfast"
   INSTALLER_RV=$?
