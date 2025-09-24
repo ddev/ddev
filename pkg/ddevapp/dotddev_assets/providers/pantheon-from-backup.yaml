@@ -1,6 +1,5 @@
-# Example Pantheon.io provider configuration.
-# This example is Drupal/drush oriented,
-# but can be adapted for other CMSs supported by Pantheon
+#ddev-generated
+# Pantheon.io provider configuration.
 
 # To use this configuration:
 #
@@ -36,16 +35,13 @@
 #
 # 7. Verify that drush is installed in your project, `ddev composer require drush/drush`
 #
-# 8. In your project's .ddev/providers directory, copy pantheon-from-backup.yaml.example to pantheon-from-backup.yaml.
+# 8. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to restart Colima.
 #
-# 9. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to restart Colima.
+# 9. `ddev restart`
 #
-# 10. `ddev restart`
+# 10. Run `ddev pull pantheon-from-backup`. The ddev environment will download the Pantheon database and files using terminus and will import the database and files into the ddev environment. You should now be able to access the project locally.
 #
-# 11. Run `ddev pull pantheon-from-backup`. The ddev environment will download the Pantheon database and files using terminus and will import the database and files into the ddev environment. You should now be able to access the project locally.
-#
-# 12. Optionally use `ddev push pantheon-from-backup` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
-
+# 11. Optionally use `ddev push pantheon-from-backup` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 
 # Instead of setting the environment variables in configuration files, you can use
 # `ddev pull pantheon --environment=PANTHEON_SITE=yourproject,PANTHEON_ENVIRONMENT=dev` for example
