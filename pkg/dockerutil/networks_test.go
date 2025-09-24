@@ -13,7 +13,6 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/api/types/network"
 	"github.com/stretchr/testify/require"
 )
@@ -146,8 +145,6 @@ func TestNetworkAliases(t *testing.T) {
 		t.Skip("Skipping on mac Apple Silicon/Lima/Colima/Rancher to ignore problems with 'connection reset by peer'")
 	}
 
-	runTime := util.TimeTrackC(t.Name())
-
 	origDir, _ := os.Getwd()
 
 	// Create two temporary projects
@@ -158,6 +155,14 @@ func TestNetworkAliases(t *testing.T) {
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
+
+		out, _ := exec.RunHostCommand(DdevBin, "list")
+		t.Logf("\n=========== output of `ddev list` ==========\n%s\n============\n", out)
+		out, _ = exec.RunHostCommand("docker", "logs", "ddev-router")
+		t.Logf("\n=========== output of `docker logs ddev-router` ==========\n%s\n============\n", out)
+		out, _ = exec.RunHostCommand("docker", "inspect", "ddev-router", "--format", "{{json .NetworkSettings.Networks}}")
+		t.Logf("\n=========== output of `docker inspect ddev-router --format '{{json .NetworkSettings.Networks}}'` ==========\n%s\n============\n", out)
+
 		for projName, projDir := range projects {
 			app, err := ddevapp.GetActiveApp(projName)
 			if err == nil {
@@ -207,7 +212,7 @@ func TestNetworkAliases(t *testing.T) {
 			err = fileutil.CopyFile(filepath.Join(origDir, "testdata", "TestNetworkAliases", "index.php"), filepath.Join(projDir, "index.php"))
 			require.NoError(t, err)
 
-			err = app.StartAndWait(5)
+			err = app.Start()
 			require.NoError(t, err)
 
 			apps = append(apps, app)
@@ -216,8 +221,12 @@ func TestNetworkAliases(t *testing.T) {
 
 	// Get app references after setup
 	var app1, app2 *ddevapp.DdevApp
-	if len(apps) >= 2 {
-		app1, app2 = apps[0], apps[1]
+	for _, app := range apps {
+		if strings.Contains(app.Name, "app1") {
+			app1 = app
+		} else {
+			app2 = app
+		}
 	}
 
 	// Define test case structure
@@ -323,12 +332,10 @@ func TestNetworkAliases(t *testing.T) {
 				}
 				// Test both HTTP and HTTPS URLs
 				urls := map[string]string{
-					"http_web":       "http://ddev-" + tc.toApp.Name + "-web",
-					"http_web_alias": tc.httpURL,
+					"http": tc.httpURL,
 				}
 				if globalconfig.GetCAROOT() != "" {
-					urls["https_web"] = "https://ddev-" + tc.toApp.Name + "-web"
-					urls["https_web_alias"] = tc.httpsURL
+					urls["https"] = tc.httpsURL
 				}
 
 				for protocol, url := range urls {
@@ -345,13 +352,4 @@ func TestNetworkAliases(t *testing.T) {
 			}
 		})
 	}
-
-	out, err := exec.RunHostCommand(DdevBin, "list")
-	require.NoError(t, err)
-	t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
-	out, err = exec.RunHostCommand("docker", "logs", "ddev-router")
-	require.NoError(t, err)
-	t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
-
-	runTime()
 }
