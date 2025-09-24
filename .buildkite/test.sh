@@ -215,7 +215,7 @@ echo "--- Running tests..."
 if [ "${os:-}" = "windows" ]; then
   echo "--- Running Windows installer tests first..."
   export DDEV_TEST_USE_REAL_INSTALLER=true
-  make testwininstaller TESTARGS="-failfast" | sed -u '/\//!s/^=== /DDEV_TEMP_MARKER /' | sed -u '/\//!s/^--- /=== /' | sed -u '/\//!s/^DDEV_TEMP_MARKER /--- /' | sed -u '/\//!s/^--- /=== /' | sed -u '/\//!s/^=== RUN /--- RUN /'
+  make testwininstaller TESTARGS="-failfast" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
   INSTALLER_RV=$?
   if [ $INSTALLER_RV -ne 0 ]; then
     echo "Windows installer tests failed with status=$INSTALLER_RV"
@@ -224,7 +224,7 @@ if [ "${os:-}" = "windows" ]; then
   echo "Windows installer tests completed successfully"
 fi
 
-make test TESTARGS="-failfast" | sed -u '/\//!s/^=== /DDEV_TEMP_MARKER /' | sed -u '/\//!s/^--- /=== /' | sed -u '/\//!s/^DDEV_TEMP_MARKER /--- /' | sed -u '/\//!s/^--- /=== /' | sed -u '/\//!s/^=== RUN /--- RUN /'
+make test TESTARGS="-failfast" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
