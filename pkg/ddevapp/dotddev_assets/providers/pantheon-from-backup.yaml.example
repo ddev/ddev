@@ -1,0 +1,108 @@
+# Example Pantheon.io provider configuration.
+# This example is Drupal/drush oriented,
+# but can be adapted for other CMSs supported by Pantheon
+
+# To use this configuration:
+#
+# 1. Get your Pantheon.io machine token:
+#    a. Login to your Pantheon Dashboard, and [Generate a Machine Token](https://pantheon.io/docs/machine-tokens/) for ddev to use.
+#    b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml
+#    ```yaml
+#    web_environment:
+#        - TERMINUS_MACHINE_TOKEN=abcdeyourtoken
+#    ```
+#    You can also do this with `ddev config global --web-environment-add="TERMINUS_MACHINE_TOKEN=abcdeyourtoken"`.
+#
+#    To use multiple API tokens for different projects, add them to your per-project configuration
+#    using the .ddev/config.local.yaml file instead. This file is gitignored by default.
+#    ```yaml
+#    web_environment:
+#        - TERMINUS_MACHINE_TOKEN=abcdeyourtoken
+#    ```
+#
+# 2. Add PANTHEON_SITE and PANTHEON_ENVIRONMENT variables to your project `.ddev/config.yaml`:
+#    ```yaml
+#    web_environment:
+#        - PANTHEON_SITE=yourproject
+#        - PANTHEON_ENVIRONMENT=dev
+#
+# 3. On the pantheon dashboard, make sure that at least one backup has been created. (When you need to refresh what you pull, do a new backup.)
+#
+# 4. For `ddev push pantheon` sure your public ssh key is configured in Pantheon (Account->SSH Keys)
+#
+# 5. Check out project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
+#
+# 6. Configure the local checkout for ddev using `ddev config`
+#
+# 7. Verify that drush is installed in your project, `ddev composer require drush/drush`
+#
+# 8. In your project's .ddev/providers directory, copy pantheon-from-backup.yaml.example to pantheon-from-backup.yaml.
+#
+# 9. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to restart Colima.
+#
+# 10. `ddev restart`
+#
+# 11. Run `ddev pull pantheon-from-backup`. The ddev environment will download the Pantheon database and files using terminus and will import the database and files into the ddev environment. You should now be able to access the project locally.
+#
+# 12. Optionally use `ddev push pantheon-from-backup` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+
+
+# Instead of setting the environment variables in configuration files, you can use
+# `ddev pull pantheon --environment=PANTHEON_SITE=yourproject,PANTHEON_ENVIRONMENT=dev` for example
+
+# Debugging: Use `ddev exec terminus auth:whoami` to see what terminus knows about
+# `ddev exec terminus site:list` will show available sites
+
+auth_command:
+  command: |
+    set -eu -o pipefail
+    if ! command -v drush >/dev/null ; then echo "Please make sure your project contains drush, ddev composer require drush/drush" && exit 1; fi
+    if [ -z "${TERMINUS_MACHINE_TOKEN:-}" ]; then echo "Please make sure you have set TERMINUS_MACHINE_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
+    terminus auth:login --machine-token="${TERMINUS_MACHINE_TOKEN}" || ( echo "terminus auth login failed, check your TERMINUS_MACHINE_TOKEN" && exit 1 )
+    terminus aliases 2>/dev/null
+
+db_pull_command:
+  command: |
+    set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    echo "Using PANTHEON_SITE=${PANTHEON_SITE} PANTHEON_ENVIRONMENT=${PANTHEON_ENVIRONMENT}"
+    pushd /var/www/html/.ddev/.downloads >/dev/null
+    terminus backup:get ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT} --element=db --to=db.sql.gz
+
+files_pull_command:
+  command: |
+    set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    pushd /var/www/html/.ddev/.downloads >/dev/null;
+    terminus backup:get ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT} --element=files --to=files.tgz
+    mkdir -p files && tar --strip-components=1 -C files -zxf files.tgz
+
+# push is very useful for non-production environments, but can be
+# very dangerous to production environments. If it is dangerous to your
+# workflow you can remove the lines below and remove the `#ddev-generated` in this file
+db_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
+    set -eu -o pipefail
+    pushd /var/www/html/.ddev/.downloads >/dev/null;
+    echo "Waking up Pantheon environment..."
+    terminus env:wake -- ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}
+    echo "Dropping existing database on Pantheon..."
+    MYSQL_CMD=$(terminus connection:info "${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}" --field=mysql_command)
+    eval "$MYSQL_CMD -e 'DROP DATABASE pantheon; CREATE DATABASE pantheon;'"
+    echo "Uploading database to Pantheon..."
+    gzip -dc db.sql.gz | eval "$MYSQL_CMD"
+    echo "Database push complete"
+
+# push is very useful for non-production environments, but can be
+# very dangerous to production environments. If it is dangerous to your
+# workflow you can remove the lines below and remove the `#ddev-generated` in this file
+files_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
+    set -eu -o pipefail
+    ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
+    terminus self:plugin:install terminus-rsync-plugin
+    terminus rsync -y ${DDEV_FILES_DIR}/ ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}:files
