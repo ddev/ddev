@@ -207,7 +207,7 @@ func TestNetworkAliases(t *testing.T) {
 			err = fileutil.CopyFile(filepath.Join(origDir, "testdata", "TestNetworkAliases", "index.php"), filepath.Join(projDir, "index.php"))
 			require.NoError(t, err)
 
-			err = app.Start()
+			err = app.StartAndWait(5)
 			require.NoError(t, err)
 
 			apps = append(apps, app)
