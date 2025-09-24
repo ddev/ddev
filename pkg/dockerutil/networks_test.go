@@ -15,7 +15,6 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/api/types/network"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,14 +34,14 @@ func TestNetworkDuplicates(t *testing.T) {
 
 	t.Cleanup(func() {
 		err := dockerutil.RemoveNetwork(networkName)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		nets, err := client.NetworkList(ctx, network.ListOptions{})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Ensure the network is not in the list
 		for _, net := range nets {
-			assert.NotEqual(t, networkName, net.Name)
+			require.NotEqual(t, networkName, net.Name)
 		}
 	})
 
@@ -82,16 +81,14 @@ func TestNetworkAmbiguity(t *testing.T) {
 		t.Name() + "-app1": testcommon.CreateTmpDir(t.Name() + "-app1"),
 		t.Name() + "-app2": testcommon.CreateTmpDir(t.Name() + "-app2"),
 	}
-	var err error
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(t, err)
+		_ = os.Chdir(origDir)
 		for projName, projDir := range projects {
 			app, err := ddevapp.GetActiveApp(projName)
-			assert.NoError(t, err)
-			err = app.Stop(true, false)
-			assert.NoError(t, err)
+			if err == nil {
+				_ = app.Stop(true, false)
+			}
 			_ = os.RemoveAll(projDir)
 		}
 	})
@@ -158,16 +155,13 @@ func TestNetworkAliases(t *testing.T) {
 		t.Name() + "-app1": testcommon.CreateTmpDir(t.Name() + "-app1"),
 		t.Name() + "-app2": testcommon.CreateTmpDir(t.Name() + "-app2"),
 	}
-	var err error
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(t, err)
+		_ = os.Chdir(origDir)
 		for projName, projDir := range projects {
 			app, err := ddevapp.GetActiveApp(projName)
 			if err == nil {
-				err = app.Stop(true, false)
-				assert.NoError(t, err)
+				_ = app.Stop(true, false)
 			}
 			_ = os.RemoveAll(projDir)
 		}
@@ -351,10 +345,10 @@ func TestNetworkAliases(t *testing.T) {
 	}
 
 	out, err := exec.RunHostCommand(DdevBin, "list")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
 	out, err = exec.RunHostCommand("docker", "logs", "ddev-router")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
 
 	runTime()
