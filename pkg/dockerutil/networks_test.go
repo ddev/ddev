@@ -323,18 +323,16 @@ func TestNetworkAliases(t *testing.T) {
 				}
 				// Test both HTTP and HTTPS URLs
 				urls := map[string]string{
-					"http": tc.httpURL,
+					"http_web":       "http://ddev-" + tc.toApp.Name + "-web",
+					"http_web_alias": tc.httpURL,
 				}
 				if globalconfig.GetCAROOT() != "" {
-					urls["https"] = tc.httpsURL
+					urls["https_web"] = "https://ddev-" + tc.toApp.Name + "-web"
+					urls["https_web_alias"] = tc.httpsURL
 				}
 
 				for protocol, url := range urls {
 					t.Run(tc.name+"_"+protocol, func(t *testing.T) {
-						// Dummy attempt to get webserver "warmed up" before real try.
-						_, _, _ = testcommon.GetLocalHTTPResponse(t, url, 60)
-						_, _ = testcommon.EnsureLocalHTTPContent(t, url, "Hello from "+tc.toApp.Name, 60)
-
 						curlCmd := "curl -sS --fail " + url
 						out, _, err := tc.fromApp.Exec(&ddevapp.ExecOpts{
 							Service: "web",
