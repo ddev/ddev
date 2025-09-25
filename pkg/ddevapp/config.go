@@ -719,6 +719,22 @@ func (app *DdevApp) CheckCustomConfig() {
 			util.Warning("Using custom Traefik configuration (use `docker logs ddev-router` for troubleshooting): %v", printableFiles)
 			customConfig = true
 		}
+		// Warn if there are unexpected files in .ddev/traefik/config
+		if len(traefikFiles) > 0 {
+			var unexpected []string
+			for _, f := range traefikFiles {
+				base := filepath.Base(f)
+				expected := app.Name + ".yaml"
+				if base != expected {
+					unexpected = append(unexpected, f)
+				}
+			}
+			if len(unexpected) > 0 {
+				printable, _ := util.ArrayToReadableOutput(unexpected)
+				util.Warning("Unexpected files found in .ddev/traefik/config (expected only %s): %v", app.Name+".yaml", printable)
+				customConfig = true
+			}
+		}
 	}
 
 	nginxFullConfigPath := app.GetConfigPath("nginx_full/nginx-site.conf")
