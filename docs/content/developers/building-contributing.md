@@ -158,7 +158,7 @@ To manually push using GitHub Actions,
 
 * Visit [Actions → Push tagged image](https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml)
 * Click “Run workflow” in the blue band near the top.
-* Choose the branch, usually `main` and then the image to be pushed, `ddev-webserver`, `ddev-dbserver`, etc. Also you can use `all` to build and push all of them. Include a tag for the pushed image and GitHub will do all the work.
+* Choose the branch, usually `main` and then the image to be pushed, `ddev-webserver`, `ddev-dbserver`, etc.
 
 #### For `ddev-dbserver`
 
