@@ -1581,7 +1581,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
+		dbVersions = []string{"postgres:18", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -2130,7 +2130,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 func TestWebserverPostgresDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
-	serverVersions := []string{"postgres:17", "postgres:16", "postgres:14", "postgres:9"}
+	serverVersions := []string{"postgres:18", "postgres:17", "postgres:16"}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
