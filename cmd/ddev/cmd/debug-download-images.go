@@ -58,7 +58,7 @@ ddev debug download-images --all
 			var projectNames []string
 			for _, app := range projects {
 				projectNames = append(projectNames, app.Name)
-				app.DockerEnv()
+				_ = app.DockerEnv()
 				err = app.WriteDockerComposeYAML()
 				if err != nil {
 					util.Failed("Failed to run `docker-compose config` for '%s': %v", app.Name, err)

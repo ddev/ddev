@@ -51,7 +51,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 		return err
 	}
 
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	// run docker-compose up -d
 	// This will force-recreate, discarding existing auth if there is a stopped container.
@@ -109,7 +109,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 
 	uid, gid, username := util.GetContainerUIDGid()
 
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	templateVars := map[string]interface{}{
 		"ssh_auth_image": versionconstants.SSHAuthImage,

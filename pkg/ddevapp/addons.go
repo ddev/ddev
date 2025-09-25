@@ -12,6 +12,7 @@ import (
 	"text/template"
 	"time"
 
+	"dario.cat/mergo"
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -22,7 +23,6 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	dockerContainer "github.com/docker/docker/api/types/container"
 	dockerMount "github.com/docker/docker/api/types/mount"
 	dockerStrslice "github.com/docker/docker/api/types/strslice"
@@ -419,39 +419,31 @@ func (app *DdevApp) CleanupConfigurationFiles() error {
 
 // buildPHPActionEnvironment creates the environment variables for PHP actions
 func buildPHPActionEnvironment(app *DdevApp, installDesc InstallDesc, verbose bool) ([]string, error) {
-	// Database family for connection URLs
-	dbFamily := "mysql"
-	if app.Database.Type == "postgres" {
-		dbFamily = "postgres"
-	}
-
-	env := []string{
-		"DDEV_APPROOT=/var/www/html",
-		"DDEV_DOCROOT=" + app.GetDocroot(),
-		"DDEV_PROJECT_TYPE=" + app.Type,
-		"DDEV_SITENAME=" + app.Name,
-		"DDEV_PROJECT=" + app.Name,
-		"DDEV_PHP_VERSION=" + app.PHPVersion,
-		"DDEV_WEBSERVER_TYPE=" + app.WebserverType,
-		"DDEV_DATABASE=" + app.Database.Type + ":" + app.Database.Version,
-		"DDEV_DATABASE_FAMILY=" + dbFamily,
-		"DDEV_FILES_DIRS=" + strings.Join(app.GetUploadDirs(), ","),
-		"DDEV_MUTAGEN_ENABLED=" + strconv.FormatBool(app.IsMutagenEnabled()),
-		"DDEV_VERSION=" + versionconstants.DdevVersion,
-		"DDEV_TLD=" + app.ProjectTLD,
-		"IS_DDEV_PROJECT=true",
-	}
-
+	// Start with Docker environment variables
+	envMap := app.DockerEnv()
 	if verbose {
-		env = append(env, "DDEV_VERBOSE=true")
+		envMap["DDEV_VERBOSE"] = "true"
 	}
 
 	// Add all environment variables from the .ddev/.env.<addon-name>
 	envFile := app.GetConfigPath(".env." + installDesc.Name)
-	envMap, _, err := ReadProjectEnvFile(envFile)
+	addonEnvMap, _, err := ReadProjectEnvFile(envFile)
 	if err != nil && !os.IsNotExist(err) {
-		return env, fmt.Errorf("unable to read %s file: %v", envFile, err)
+		return nil, fmt.Errorf("unable to read %s file: %v", envFile, err)
 	}
+
+	// Merge addon-specific environment variables using mergo
+	if len(addonEnvMap) > 0 {
+		err = mergo.Merge(&envMap, addonEnvMap, mergo.WithOverride)
+		if err != nil {
+			return nil, fmt.Errorf("unable to merge addon environment variables: %v", err)
+		}
+	}
+	// Use the in-container version of approot
+	envMap["DDEV_APPROOT"] = "/var/www/html"
+
+	// Convert map to slice
+	var env []string
 	for k, v := range envMap {
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
 	}

@@ -209,7 +209,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerContainer.
 // Describe returns a map which provides detailed information on services associated with the running site.
 // if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
 		return nil, fmt.Errorf("failed to process pre-describe hooks: %v", err)
@@ -697,7 +697,7 @@ func (app *DdevApp) GetMailpitHTTPSPort() string {
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool, noDrop bool, targetDB string) error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	dockerutil.CheckAvailableSpace()
 
 	if targetDB == "" {
@@ -922,7 +922,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 // ExportDB exports the db, with optional output to a file, default gzip
 // targetDB is the db name if not default "db"
 func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB string) error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	if targetDB == "" {
 		targetDB = "db"
 	}
@@ -1078,7 +1078,7 @@ func (app *DdevApp) getCommonStatus(statuses map[string]string) (bool, string) {
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
 func (app *DdevApp) ImportFiles(uploadDir, importPath, extractPath string) error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	if err := app.ProcessHooks("pre-import-files"); err != nil {
 		return err
@@ -1256,7 +1256,7 @@ func (app *DdevApp) Start() error {
 
 	SyncGenericWebserverPortsWithRouterPorts(app)
 
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
 	// The project network may have duplicates, we can remove them here.
 	// See https://github.com/ddev/ddev/pull/5508
@@ -2164,7 +2164,7 @@ type ExecOpts struct {
 // Returns ComposeCmd results of stdout, stderr, err
 // If Nocapture arg is true, stdout/stderr will be empty and output directly to stdout/stderr
 func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	defer util.TimeTrackC(fmt.Sprintf("app.Exec %v", opts))()
 
@@ -2268,7 +2268,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 // ExecWithTty executes a given command in the container of given type.
 // It allocates a pty for interactive work.
 func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	if opts.Service == "" {
 		opts.Service = "web"
@@ -2339,7 +2339,7 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 			cmd,
 		}
 
-		app.DockerEnv()
+		_ = app.DockerEnv()
 		err = exec.RunInteractiveCommand(bashPath, args)
 		_ = os.Chdir(cwd)
 	} else { // handle case in container
@@ -2458,7 +2458,7 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 }
 
 // DockerEnv sets environment variables for a docker-compose run.
-func (app *DdevApp) DockerEnv() {
+func (app *DdevApp) DockerEnv() map[string]string {
 	uidStr, gidStr, username := util.GetContainerUIDGid()
 
 	// Warn about running as root if we're not on Windows.
@@ -2633,11 +2633,12 @@ func (app *DdevApp) DockerEnv() {
 			util.Error("Failed to set the environment variable %s=%s: %v", k, v, err)
 		}
 	}
+	return envVars
 }
 
 // Pause initiates docker-compose stop
 func (app *DdevApp) Pause() error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	status, _ := app.SiteStatus()
 	if status == SiteStopped {
@@ -2891,7 +2892,7 @@ func fullDBFromVersion(v string) string {
 
 // Stop stops and Removes the Docker containers for the project in current directory.
 func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	var err error
 
 	clear(EphemeralRouterPortsAssigned)

@@ -3526,7 +3526,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	// Make sure that valid yaml files get properly loaded in the proper order
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	//nolint: errcheck
 	defer app.Stop(true, false)
@@ -3597,7 +3597,7 @@ func TestFixupComposeYaml(t *testing.T) {
 
 	app, err := ddevapp.NewApp(testDir, true)
 	require.NoError(t, err)
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	t.Cleanup(func() {
 		err := app.Stop(true, false)
@@ -4710,7 +4710,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		"IS_DDEV_PROJECT":               "true",
 	}
 
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	for k, v := range webContainerExpectations {
 		envVal, _, err := app.Exec(&ddevapp.ExecOpts{
 			Cmd: fmt.Sprintf("echo ${%s}", k),
