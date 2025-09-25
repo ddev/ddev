@@ -195,6 +195,9 @@ ${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh"
 echo "--- running sanetestbot.sh"
 ${TIMEOUT} 60s bash "$(dirname "$0")/sanetestbot.sh"
 
+# Close the setup sections before starting tests
+echo "~~~ Setup complete, starting tests"
+
 # Make sure we start with mutagen daemon off.
 unset MUTAGEN_DATA_DIRECTORY
 if [ -f ~/.ddev/bin/mutagen -o -f ~/.ddev/bin/mutagen.exe ]; then
@@ -212,7 +215,7 @@ echo "--- Running tests..."
 if [ "${os:-}" = "windows" ]; then
   echo "--- Running Windows installer tests first..."
   export DDEV_TEST_USE_REAL_INSTALLER=true
-  make testwininstaller TESTARGS="-failfast"
+  make testwininstaller TESTARGS="-failfast" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
   INSTALLER_RV=$?
   if [ $INSTALLER_RV -ne 0 ]; then
     echo "Windows installer tests failed with status=$INSTALLER_RV"
@@ -221,7 +224,7 @@ if [ "${os:-}" = "windows" ]; then
   echo "Windows installer tests completed successfully"
 fi
 
-make test TESTARGS="-failfast"
+make test TESTARGS="-failfast" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
