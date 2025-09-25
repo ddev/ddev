@@ -593,6 +593,25 @@ func ValidateDocroot(docroot string) error {
 	return nil
 }
 
+// isCustomConfigFile returns true if the file exists and is not marked with
+// either the standard DDEV signature or the silent-no-warn marker.
+func isCustomConfigFile(filePath string) bool {
+	sigFound, _ := fileutil.FgrepStringInFile(filePath, nodeps.DdevFileSignature)
+	silentNoWarnFound, _ := fileutil.FgrepStringInFile(filePath, nodeps.DdevSilentNoWarn)
+	return !sigFound && !silentNoWarnFound
+}
+
+// filterCustomConfigFiles returns only files that qualify as custom config files.
+func filterCustomConfigFiles(files []string) []string {
+	out := []string{}
+	for _, f := range files {
+		if isCustomConfigFile(f) {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
 // DockerComposeYAMLPath returns the absolute path to where the
 // base generated yaml file should exist for this project.
 func (app *DdevApp) DockerComposeYAMLPath() string {
@@ -650,8 +669,7 @@ func (app *DdevApp) CheckCustomConfig() {
 	customConfig := false
 
 	mutagenConfigPath := app.GetConfigPath("mutagen/mutagen.yml")
-	sigFound, _ := fileutil.FgrepStringInFile(mutagenConfigPath, nodeps.DdevFileSignature)
-	if !sigFound && app.IsMutagenEnabled() {
+	if isCustomConfigFile(mutagenConfigPath) && app.IsMutagenEnabled() {
 		util.Warning("Using custom mutagen configuration in %s", mutagenConfigPath)
 		customConfig = true
 	}
@@ -659,17 +677,23 @@ func (app *DdevApp) CheckCustomConfig() {
 	routerComposeFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "router-compose.*.yaml"))
 	util.CheckErr(err)
 	if len(routerComposeFiles) > 0 {
-		printableFiles, _ := util.ArrayToReadableOutput(routerComposeFiles)
-		util.Warning("Using custom global router-compose configuration (use `docker logs ddev-router` for troubleshooting): %v", printableFiles)
-		customConfig = true
+		customRouterComposeFiles := filterCustomConfigFiles(routerComposeFiles)
+		if len(customRouterComposeFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(customRouterComposeFiles)
+			util.Warning("Using custom global router-compose configuration (use `docker logs ddev-router` for troubleshooting): %v", printableFiles)
+			customConfig = true
+		}
 	}
 
 	sshAuthComposeFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "ssh-auth-compose.*.yaml"))
 	util.CheckErr(err)
 	if len(sshAuthComposeFiles) > 0 {
-		printableFiles, _ := util.ArrayToReadableOutput(sshAuthComposeFiles)
-		util.Warning("Using custom global ssh-auth-compose configuration (use `docker logs ddev-ssh-agent` for troubleshooting): %v", printableFiles)
-		customConfig = true
+		customSSHAuthComposeFiles := filterCustomConfigFiles(sshAuthComposeFiles)
+		if len(customSSHAuthComposeFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(customSSHAuthComposeFiles)
+			util.Warning("Using custom global ssh-auth-compose configuration (use `docker logs ddev-ssh-agent` for troubleshooting): %v", printableFiles)
+			customConfig = true
+		}
 	}
 
 	traefikGlobalConfigPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
@@ -677,22 +701,19 @@ func (app *DdevApp) CheckCustomConfig() {
 		traefikGlobalFiles, err := filepath.Glob(filepath.Join(traefikGlobalConfigPath, "static_config.*.yaml"))
 		util.CheckErr(err)
 		if len(traefikGlobalFiles) > 0 {
-			printableFiles, _ := util.ArrayToReadableOutput(traefikGlobalFiles)
-			util.Warning("Using custom global Traefik configuration (use `docker logs ddev-router` for troubleshooting): %v", printableFiles)
-			customConfig = true
+			customTraefikGlobalFiles := filterCustomConfigFiles(traefikGlobalFiles)
+			if len(customTraefikGlobalFiles) > 0 {
+				printableFiles, _ := util.ArrayToReadableOutput(customTraefikGlobalFiles)
+				util.Warning("Using custom global Traefik configuration (use `docker logs ddev-router` for troubleshooting): %v", printableFiles)
+				customConfig = true
+			}
 		}
 	}
 	traefikConfigPath := filepath.Join(ddevDir, "traefik/config")
 	if _, err := os.Stat(traefikConfigPath); err == nil {
 		traefikFiles, err := filepath.Glob(filepath.Join(traefikConfigPath, "*.yaml"))
 		util.CheckErr(err)
-		var customTraefikFiles []string
-		for _, traefikFile := range traefikFiles {
-			sigFound, _ = fileutil.FgrepStringInFile(traefikFile, nodeps.DdevFileSignature)
-			if !sigFound {
-				customTraefikFiles = append(customTraefikFiles, traefikFile)
-			}
-		}
+		customTraefikFiles := filterCustomConfigFiles(traefikFiles)
 		if len(customTraefikFiles) > 0 {
 			printableFiles, _ := util.ArrayToReadableOutput(customTraefikFiles)
 			util.Warning("Using custom Traefik configuration (use `docker logs ddev-router` for troubleshooting): %v", printableFiles)
@@ -701,15 +722,13 @@ func (app *DdevApp) CheckCustomConfig() {
 	}
 
 	nginxFullConfigPath := app.GetConfigPath("nginx_full/nginx-site.conf")
-	sigFound, _ = fileutil.FgrepStringInFile(nginxFullConfigPath, nodeps.DdevFileSignature)
-	if !sigFound && app.WebserverType == nodeps.WebserverNginxFPM {
+	if isCustomConfigFile(nginxFullConfigPath) && app.WebserverType == nodeps.WebserverNginxFPM {
 		util.Warning("Using custom nginx configuration in %s", nginxFullConfigPath)
 		customConfig = true
 	}
 
 	apacheFullConfigPath := app.GetConfigPath("apache/apache-site.conf")
-	sigFound, _ = fileutil.FgrepStringInFile(apacheFullConfigPath, nodeps.DdevFileSignature)
-	if !sigFound && app.WebserverType == nodeps.WebserverApacheFPM {
+	if isCustomConfigFile(apacheFullConfigPath) && app.WebserverType == nodeps.WebserverApacheFPM {
 		util.Warning("Using custom apache configuration in %s", apacheFullConfigPath)
 		customConfig = true
 	}
@@ -719,8 +738,9 @@ func (app *DdevApp) CheckCustomConfig() {
 		if _, err := os.Stat(nginxPath); err == nil {
 			nginxFiles, err := filepath.Glob(filepath.Join(nginxPath, "*.conf"))
 			util.CheckErr(err)
-			if len(nginxFiles) > 0 {
-				printableFiles, _ := util.ArrayToReadableOutput(nginxFiles)
+			customNginxFiles := filterCustomConfigFiles(nginxFiles)
+			if len(customNginxFiles) > 0 {
+				printableFiles, _ := util.ArrayToReadableOutput(customNginxFiles)
 				util.Warning("Using nginx snippets: %v", printableFiles)
 				customConfig = true
 			}
@@ -731,8 +751,9 @@ func (app *DdevApp) CheckCustomConfig() {
 	if _, err := os.Stat(mysqlPath); err == nil {
 		mysqlFiles, err := filepath.Glob(filepath.Join(mysqlPath, "*.cnf"))
 		util.CheckErr(err)
-		if len(mysqlFiles) > 0 {
-			printableFiles, _ := util.ArrayToReadableOutput(mysqlFiles)
+		customMySQLFiles := filterCustomConfigFiles(mysqlFiles)
+		if len(customMySQLFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(customMySQLFiles)
 			util.Warning("Using custom MySQL configuration: %v", printableFiles)
 			customConfig = true
 		}
@@ -742,8 +763,9 @@ func (app *DdevApp) CheckCustomConfig() {
 	if _, err := os.Stat(phpPath); err == nil {
 		phpFiles, err := filepath.Glob(filepath.Join(phpPath, "*.ini"))
 		util.CheckErr(err)
-		if len(phpFiles) > 0 {
-			printableFiles, _ := util.ArrayToReadableOutput(phpFiles)
+		customPHPFiles := filterCustomConfigFiles(phpFiles)
+		if len(customPHPFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(customPHPFiles)
 			util.Warning("Using custom PHP configuration: %v", printableFiles)
 			customConfig = true
 		}
@@ -777,8 +799,9 @@ func (app *DdevApp) CheckCustomConfig() {
 	if _, err := os.Stat(webEntrypointPath); err == nil {
 		entrypointFiles, err := filepath.Glob(filepath.Join(webEntrypointPath, "*.sh"))
 		util.CheckErr(err)
-		if len(entrypointFiles) > 0 {
-			printableFiles, _ := util.ArrayToReadableOutput(entrypointFiles)
+		customEntrypointFiles := filterCustomConfigFiles(entrypointFiles)
+		if len(customEntrypointFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(customEntrypointFiles)
 			util.Warning("Using custom web-entrypoint.d configuration: %v", printableFiles)
 			customConfig = true
 		}
@@ -788,8 +811,9 @@ func (app *DdevApp) CheckCustomConfig() {
 	if _, err := os.Stat(configPath); err == nil {
 		configFiles, err := filepath.Glob(filepath.Join(configPath, "config.*.y*ml"))
 		util.CheckErr(err)
-		if len(configFiles) > 0 {
-			printableFiles, _ := util.ArrayToReadableOutput(configFiles)
+		customConfigFiles := filterCustomConfigFiles(configFiles)
+		if len(customConfigFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(customConfigFiles)
 			util.Warning("Using custom config.*.yaml configuration: %v", printableFiles)
 			customConfig = true
 		}
