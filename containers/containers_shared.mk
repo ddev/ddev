@@ -25,6 +25,7 @@ push:
 		fi; \
 		docker buildx build --push --platform $(BUILD_ARCHS) \
 			--target=$${item} \
+			--build-arg "DOCKER_ORG=$(DOCKER_ORG)" \
 			$${tags} \
 			--label "build-info=$(DOCKER_ORG)/$${item}:$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" \
 			--label "maintainer=DDEV <support@ddev.com>" \
