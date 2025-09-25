@@ -105,10 +105,8 @@ SHELL ["/bin/bash", "-eu", "-o", "pipefail", "-c"]
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.3"
 
-# Workaround for Blackfire SHA1 GPG signature issue on Debian Trixie
-# Skip signature verification for Blackfire repository due to SHA1 deprecation
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
-RUN echo "deb [arch=$(dpkg --print-architecture) trusted=yes] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get -qq update
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
