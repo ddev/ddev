@@ -1457,10 +1457,11 @@ set -eu -o pipefail
 EXISTING_PSQL_VERSION=$(psql --version | awk -F '[\. ]*' '{ print $3 }' || true)
 if [ "${EXISTING_PSQL_VERSION}" != "%s" ]; then
   log-stderr.sh apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/pgdg.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
-  log-stderr.sh apt-get install -y postgresql-client-%s && apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION} || true
+  # TEMP HACK: Remove postgresql-client-18 since it shouldn't have been installed'
+  log-stderr.sh apt-get install -y postgresql-client-%s && apt-get install -y postgresql-client-%s && apt-get remove -y postgresql-client-${EXISTING_PSQL_VERSION} postgresql-client-18  || true
 fi
 EOF
-`, app.Database.Version, psqlVersion) + "\n\n"
+`, app.Database.Version, psqlVersion, psqlVersion) + "\n\n"
 		}
 	}
 
