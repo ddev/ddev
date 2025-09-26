@@ -1085,7 +1085,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	if app.Database.Type == nodeps.Postgres {
-		templateVars.DBMountDir = "/var/lib/postgresql/data"
+		if slices.Contains([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11, nodeps.Postgres12, nodeps.Postgres13, nodeps.Postgres14, nodeps.Postgres15, nodeps.Postgres16, nodeps.Postgres17}, app.Database.Version) {
+			templateVars.DBMountDir = "/var/lib/postgresql/data"
+		} else {
+			// Postgres 18+ changed the default mount point
+			// See https://github.com/docker-library/postgres/pull/1259
+			templateVars.DBMountDir = "/var/lib/postgresql"
+		}
 	}
 	// TODO: Determine if mount to /bitnami is for all mysql/bitnami or just newest
 	// If we expand to using bitnami for mariadb this will change.
