@@ -150,3 +150,19 @@ func (app *DdevApp) GetPostgresDataDir() string {
 	// See https://github.com/docker-library/postgres/pull/1259
 	return "/var/lib/postgresql"
 }
+
+// GetPostgresDataPath returns the path where PostgreSQL actually stores data files
+// This differs from GetPostgresDataDir for PostgreSQL 18+ where files are in a version-specific subdirectory
+func (app *DdevApp) GetPostgresDataPath() string {
+	if app.Database.Type != nodeps.Postgres {
+		return ""
+	}
+
+	if slices.Contains([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11, nodeps.Postgres12, nodeps.Postgres13, nodeps.Postgres14, nodeps.Postgres15, nodeps.Postgres16, nodeps.Postgres17}, app.Database.Version) {
+		return "/var/lib/postgresql/data"
+	}
+
+	// Postgres 18+ stores actual data files in version-specific subdirectory
+	// See https://github.com/docker-library/postgres/pull/1259
+	return "/var/lib/postgresql/" + app.Database.Version + "/docker"
+}

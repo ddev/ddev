@@ -905,6 +905,7 @@ type composeYAMLVars struct {
 	DBType                    string
 	DBVersion                 string
 	DBMountDir                string
+	DBDataPath                string
 	DBAPort                   string
 	DBPort                    string
 	DdevGenerated             string
@@ -1086,6 +1087,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	if app.Database.Type == nodeps.Postgres {
 		templateVars.DBMountDir = app.GetPostgresDataDir()
+		templateVars.DBDataPath = app.GetPostgresDataPath()
 	}
 	// TODO: Determine if mount to /bitnami is for all mysql/bitnami or just newest
 	// If we expand to using bitnami for mariadb this will change.
@@ -1238,7 +1240,7 @@ chown postgres:postgres ~postgres/.pgpass
 chmod 600 ~postgres/.pgpass
 chmod 777 /var/tmp
 ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql
-echo "restore_command = 'true'" >>{{ .DBMountDir }}/recovery.conf
+echo "restore_command = 'true'" >>{{ .DBDataPath }}/recovery.conf
 
 echo "# TYPE DATABASE USER CIDR-ADDRESS  METHOD
 host  all         all 0.0.0.0/0 md5

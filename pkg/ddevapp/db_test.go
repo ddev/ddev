@@ -256,3 +256,58 @@ func TestGetPostgresDataDir(t *testing.T) {
 		})
 	}
 }
+
+// TestGetPostgresDataPath tests the GetPostgresDataPath function for correct data file paths
+func TestGetPostgresDataPath(t *testing.T) {
+	tests := []struct {
+		name         string
+		dbType       string
+		dbVersion    string
+		expectedPath string
+	}{
+		{
+			name:         "PostgreSQL 9",
+			dbType:       nodeps.Postgres,
+			dbVersion:    nodeps.Postgres9,
+			expectedPath: "/var/lib/postgresql/data",
+		},
+		{
+			name:         "PostgreSQL 17",
+			dbType:       nodeps.Postgres,
+			dbVersion:    nodeps.Postgres17,
+			expectedPath: "/var/lib/postgresql/data",
+		},
+		{
+			name:         "PostgreSQL 18",
+			dbType:       nodeps.Postgres,
+			dbVersion:    nodeps.Postgres18,
+			expectedPath: "/var/lib/postgresql/18/docker",
+		},
+		{
+			name:         "MySQL (should return empty)",
+			dbType:       nodeps.MySQL,
+			dbVersion:    nodeps.MySQL80,
+			expectedPath: "",
+		},
+		{
+			name:         "MariaDB (should return empty)",
+			dbType:       nodeps.MariaDB,
+			dbVersion:    nodeps.MariaDB1011,
+			expectedPath: "",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			app := &DdevApp{
+				Database: DatabaseDesc{
+					Type:    test.dbType,
+					Version: test.dbVersion,
+				},
+			}
+
+			result := app.GetPostgresDataPath()
+			require.Equal(t, test.expectedPath, result, "Test case: %s", test.name)
+		})
+	}
+}
