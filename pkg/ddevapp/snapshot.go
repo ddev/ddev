@@ -245,7 +245,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		if v < 12 {
 			targetConfName = path.Join(nodeps.PostgresConfigDir, "recovery.conf")
 		}
-		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s -zxf /mnt/snapshots/%s && touch %s/recovery.signal && cat /var/lib/postgresql/recovery.conf >>%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, snapshotFile, postgresDataDir, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
+		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s -zxf /mnt/snapshots/%s && touch %s/recovery.signal && cat %s/recovery.conf >>%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, snapshotFile, postgresDataDir, postgresDataDir, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
 	}
 	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
 	// nolint: errcheck

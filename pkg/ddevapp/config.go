@@ -1238,7 +1238,7 @@ chown postgres:postgres ~postgres/.pgpass
 chmod 600 ~postgres/.pgpass
 chmod 777 /var/tmp
 ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql
-echo "restore_command = 'true'" >>/var/lib/postgresql/recovery.conf
+echo "restore_command = 'true'" >>{{ .DBMountDir }}/recovery.conf
 
 echo "# TYPE DATABASE USER CIDR-ADDRESS  METHOD
 host  all         all 0.0.0.0/0 md5
