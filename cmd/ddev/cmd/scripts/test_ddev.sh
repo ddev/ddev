@@ -77,7 +77,7 @@ docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r
 header "project configuration via ddev debug configyaml"
 ddev debug configyaml --full-yaml --omit-keys=web_environment 2>/dev/null || { ddev debug configyaml | (grep -v "^web_environment" || true); }
 
-header "OS Information (uname -a)"
+header "OS Information"
 echo "Default shell: $(get_default_shell)"
 echo "uname -a: $(uname -a)"
 if [ "${OSTYPE%-*}" = "linux" ]; then
