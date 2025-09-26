@@ -12,19 +12,73 @@ import (
 // GetExistingDBType returns type/version like mariadb:10.11 or postgres:13 or "" if no existing volume
 // This has to make a Docker container run so is fairly costly.
 func (app *DdevApp) GetExistingDBType() (string, error) {
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "GetExistingDBType-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "( test -f /var/tmp/mysql/db_mariadb_version.txt && cat /var/tmp/mysql/db_mariadb_version.txt ) || ( test -f /var/tmp/postgres/PG_VERSION && cat /var/tmp/postgres/PG_VERSION) || true"}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/tmp/mysql", app.GetPostgresVolumeName() + ":/var/tmp/postgres"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+	dbVersionInfo, err := app.getDBVersionFromVolume()
+	if err != nil {
+		return "", err
+	}
+
+	if dbVersionInfo == "" {
+		return "", nil
+	}
+
+	return dbTypeVersionFromString(dbVersionInfo), nil
+}
+
+// getDBVersionFromVolume inspects the database volume to determine version info
+// Returns the raw version string found in the volume, or empty string if none found
+func (app *DdevApp) getDBVersionFromVolume() (string, error) {
+	// Command to check for database version files:
+	// 1. MySQL/MariaDB: /var/tmp/mysql/db_mariadb_version.txt
+	// 2. PostgreSQL <=17: /var/tmp/postgres/PG_VERSION
+	// 3. PostgreSQL 18+: /var/tmp/postgres/[version]/docker/PG_VERSION (check common versions)
+	cmd := []string{"sh", "-c", `
+		# Check MySQL/MariaDB version file
+		if [ -f /var/tmp/mysql/db_mariadb_version.txt ]; then
+			cat /var/tmp/mysql/db_mariadb_version.txt
+			exit 0
+		fi
+
+		# Check PostgreSQL version file (pre-18 location)
+		if [ -f /var/tmp/postgres/PG_VERSION ]; then
+			cat /var/tmp/postgres/PG_VERSION
+			exit 0
+		fi
+
+		# Check PostgreSQL 18+ version files in version-specific directories
+		for version in 18 19 20 21 22; do
+			if [ -f "/var/tmp/postgres/$version/docker/PG_VERSION" ]; then
+				cat "/var/tmp/postgres/$version/docker/PG_VERSION"
+				exit 0
+			fi
+		done
+
+		# No version file found
+		exit 0
+	`}
+
+	_, out, err := dockerutil.RunSimpleContainer(
+		versionconstants.UtilitiesImage,
+		"GetExistingDBType-"+app.Name+"-"+util.RandString(6),
+		cmd,
+		[]string{}, // envVars
+		[]string{}, // uid
+		[]string{ // volumes
+			app.GetMariaDBVolumeName() + ":/var/tmp/mysql",
+			app.GetPostgresVolumeName() + ":/var/tmp/postgres",
+		},
+		"",    // workingDir
+		true,  // rm
+		false, // detach
+		map[string]string{`com.ddev.site-name`: ""}, // labels
+		nil, // networks
+		nil, // healthcheck
+	)
 
 	if err != nil {
 		util.Failed("Failed to RunSimpleContainer to inspect database version/type: %v, output=%s", err, out)
 	}
 
-	out = strings.Trim(out, " \n\r\t")
-	// If it was empty, OK to return nothing found, even though the volume was there
-	if out == "" {
-		return "", nil
-	}
-
-	return dbTypeVersionFromString(out), nil
+	return strings.Trim(out, " \n\r\t"), nil
 }
 
 // dbTypeVersionFromString takes an input string and derives the info from the uses
