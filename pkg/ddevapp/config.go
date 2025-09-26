@@ -1240,7 +1240,7 @@ chown postgres:postgres ~postgres/.pgpass
 chmod 600 ~postgres/.pgpass
 chmod 777 /var/tmp
 ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql
-echo "restore_command = 'true'" >>{{ .DBDataPath }}/recovery.conf
+{{ if ge .DBVersion "18" }}echo "restore_command = 'true'" >>{{ .DBDataPath }}/recovery.conf{{ else }}echo "restore_command = 'true'" >>/var/lib/postgresql/recovery.conf{{ end }}
 
 echo "# TYPE DATABASE USER CIDR-ADDRESS  METHOD
 host  all         all 0.0.0.0/0 md5
