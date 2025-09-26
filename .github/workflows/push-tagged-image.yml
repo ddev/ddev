@@ -138,7 +138,7 @@ jobs:
           name: image-info-${{ matrix.image }}-${{ matrix.arch }}
           path: image-info.txt
           retention-days: 1
-  create-manifest:
+  create-manifests:
     name: create multi-arch manifest
     needs: build-and-push
     runs-on: ubuntu-24.04
@@ -156,7 +156,7 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
-      - name: Create and push manifest (non-db)
+      - name: Create and push manifests
         run: |
           set -eu
           # Get Docker Hub token for cleanup
@@ -170,12 +170,16 @@ jobs:
             MULTI_ARCH_IMAGES="${MULTI_ARCH_IMAGES} ${DOCKER_ORG}/ddev-webserver-prod"
           fi
 
+          # Create and push multi-arch manifests
           for ORG_IMAGE in ${MULTI_ARCH_IMAGES}; do
             docker buildx imagetools create -t ${ORG_IMAGE}:${TAG} ${ORG_IMAGE}:${TAG}-amd64 ${ORG_IMAGE}:${TAG}-arm64
             if [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               docker buildx imagetools create -t ${ORG_IMAGE}:latest ${ORG_IMAGE}:${TAG}
             fi
-            # Clean up intermediary single-arch tags from remote registry
+          done
+
+          # Clean up intermediary single-arch tags from remote registry
+          for ORG_IMAGE in ${MULTI_ARCH_IMAGES}; do
             echo "Removing ${ORG_IMAGE}:${TAG}-amd64 and ${TAG}-arm64"
             curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-amd64/" >/dev/null || true
             curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-arm64/" >/dev/null || true

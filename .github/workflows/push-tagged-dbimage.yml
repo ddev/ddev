@@ -136,18 +136,24 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
-      - name: Create and push manifests (db)
+      - name: Create and push manifests
         run: |
           set -eu
           # Get Docker Hub token for cleanup
           TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username":"${{ vars.DOCKERHUB_USERNAME }}","password":"${{ env.DOCKERHUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+          
+          # Create and push multi-arch manifests
           for variant in ${MULTI_ARCH_IMAGES}; do
             ORG_IMAGE=${DOCKER_ORG}/ddev-dbserver-$(echo "${variant}" | tr '_' '-')
             docker buildx imagetools create -t ${ORG_IMAGE}:${TAG} ${ORG_IMAGE}:${TAG}-amd64 ${ORG_IMAGE}:${TAG}-arm64
             if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               docker buildx imagetools create -t ${ORG_IMAGE}:latest ${ORG_IMAGE}:${TAG}
             fi
-            # Clean up intermediary single-arch tags from remote registry
+          done
+
+          # Clean up intermediary single-arch tags from remote registry
+          for variant in ${MULTI_ARCH_IMAGES}; do
+            ORG_IMAGE=${DOCKER_ORG}/ddev-dbserver-$(echo "${variant}" | tr '_' '-')
             echo "Removing ${ORG_IMAGE}:${TAG}-amd64 and ${TAG}-arm64"
             curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-amd64/" >/dev/null || true
             curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-arm64/" >/dev/null || true
