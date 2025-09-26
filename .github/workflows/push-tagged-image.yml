@@ -20,7 +20,7 @@ on:
           - ddev-xhgui
           - test-ssh-server
       tag:
-        description: Tag for pushed image (v1.24.5 for example)
+        description: Tag for pushed image (v1.24.9 for example)
         required: true
         default: ""
       debug_enabled:
@@ -30,64 +30,157 @@ on:
         default: false
 env:
   REGISTRY: docker.io
-  DOCKER_ORG: ${{ vars.DOCKER_ORG }}
+  DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
   TAG: "${{ github.event.inputs.tag }}"
-  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 permissions:
   contents: read
 
 jobs:
-  push-tagged-image:
-    name: "push tagged image"
-    runs-on: ubuntu-24.04
-
+  build-and-push:
+    name: build ${{ matrix.arch }} ${{ github.event.inputs.image }}
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+        image: ['${{ github.event.inputs.image }}']
+        # update 'meta' step below if you change this:
+        exclude:
+          - arch: arm64
+            image: ddev-gitpod-base
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    outputs:
+      multi_arch: ${{ steps.meta.outputs.multi_arch }}
     steps:
-    - name: Load 1password secret(s)
-      uses: 1password/load-secrets-action@v3
-      if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
-      with:
-        export-env: true
-      env:
-        OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
-        DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+      - name: Determine if multi-arch build
+        id: meta
+        run: |
+          case "${{ matrix.image }}" in
+            ddev-gitpod-base) echo "multi_arch=false" >> $GITHUB_OUTPUT ;;
+            *) echo "multi_arch=true" >> $GITHUB_OUTPUT ;;
+          esac
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v3
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+      - uses: actions/checkout@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+      - name: Clean up stale arch tag before push
+        run: |
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username":"${{ vars.DOCKERHUB_USERNAME }}","password":"${{ env.DOCKERHUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
+          ORG_IMAGE=${DOCKER_ORG}/${{ matrix.image }}
+          echo "Cleaning up stale tag for ${ORG_IMAGE}:${TAG}-${{ matrix.arch }}"
+          curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-${{ matrix.arch }}/" >/dev/null || true
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      - name: Build and push ${{ env.DOCKER_ORG }}/${{ matrix.image }}:${{ env.TAG }} ${{ matrix.arch }} image
+        run: |
+          set -eu
+          cd containers/${{ matrix.image }}
+          export BUILD_ARCHS=linux/${{ matrix.arch }}
+          version="${TAG}"
+          if [ "${{ steps.meta.outputs.multi_arch }}" = "true" ]; then
+            version="${version}-${{ matrix.arch }}"
+          fi
+          make push VERSION="${version}"
+      - name: Record image information
+        id: image-info
+        run: |
+          set -eu
 
-    - uses: actions/checkout@v5
+          # Determine images to inspect
+          IMAGES_TO_INSPECT="${DOCKER_ORG}/${{ matrix.image }}:${TAG}"
+          if [ "${{ steps.meta.outputs.multi_arch }}" = "true" ]; then
+            IMAGES_TO_INSPECT=${IMAGES_TO_INSPECT}-${{ matrix.arch }}
+          fi
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-      with:
-        # special qemu version used due to many
-        # failures with "Cannot allocate memory" in
-        # apt-get install of arm64
-        image: tonistiigi/binfmt:qemu-v7.0.0-28
+          if [ "${{ matrix.image }}" = "ddev-php-base" ]; then
+            IMAGES_TO_INSPECT="${IMAGES_TO_INSPECT} ${DOCKER_ORG}/ddev-php-prod:${TAG}-${{ matrix.arch }}"
+          elif [ "${{ matrix.image }}" = "ddev-webserver" ]; then
+            IMAGES_TO_INSPECT="${IMAGES_TO_INSPECT} ${DOCKER_ORG}/ddev-webserver-prod:${TAG}-${{ matrix.arch }}"
+          fi
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    - name: Login to DockerHub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ vars.DOCKERHUB_USERNAME }}
-        password: ${{ env.DOCKERHUB_TOKEN }}
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      with:
-        limit-access-to-actor: true
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-    - name: Push ${{  github.event.inputs.image }} image
-      if: github.event.inputs.image != 'ddev-dbserver' && github.event.inputs.image != 'all'
-      run: |
-        cd "containers/${{ github.event.inputs.image }}"
-        make push VERSION="${{ github.event.inputs.tag }}"
-    - name: Push all images (not in use)
-      if: github.event.inputs.image == 'all'
-      run: |
-        cd "containers"
-        VERSION="${{ github.event.inputs.tag }}" ./push-all.sh
-    - name: Push ${{  github.event.inputs.image }} ddev-dbserver image
-      if: github.event.inputs.image == 'ddev-dbserver'
-      run: |
-        cd "containers/${{ github.event.inputs.image }}"
-        make PUSH=true VERSION="${{ github.event.inputs.tag }}" DOCKER_ORG=${DOCKER_ORG}
+          # Inspect each image with retry logic
+          ALL_OUTPUT=""
+          for INSPECT_IMAGE in $IMAGES_TO_INSPECT; do
+            echo "Inspecting image: ${INSPECT_IMAGE}"
+            INSPECT_OUTPUT=""
+            MAX_RETRIES=10
+            for i in $(seq 1 $MAX_RETRIES); do
+              if INSPECT_OUTPUT=$(docker buildx imagetools inspect "${INSPECT_IMAGE}" 2>/dev/null); then
+                break
+              fi
+              echo "Image ${INSPECT_IMAGE} not yet available, waiting... (attempt ${i}/${MAX_RETRIES})"
+              sleep 3
+            done
+            if [ -z "$INSPECT_OUTPUT" ]; then
+              echo "Failed to retrieve image information with 'docker buildx imagetools inspect ${INSPECT_IMAGE}'"
+              exit 1
+            fi
+            echo "$INSPECT_OUTPUT" >> image-info.txt
+          done
+      - name: Upload image info artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-info-${{ matrix.image }}-${{ matrix.arch }}
+          path: image-info.txt
+          retention-days: 1
+  create-manifests:
+    name: create multi-arch manifest
+    needs: build-and-push
+    runs-on: ubuntu-24.04
+    if: ${{ needs.build-and-push.outputs.multi_arch == 'true' }}
+    steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+      - name: Create and push manifests
+        run: |
+          set -eu
+          # Get Docker Hub token for cleanup
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username":"${{ vars.DOCKERHUB_USERNAME }}","password":"${{ env.DOCKERHUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
 
+          MULTI_ARCH_IMAGES="${DOCKER_ORG}/${{ github.event.inputs.image }}"
+
+          if [ "${{ github.event.inputs.image }}" = "ddev-php-base" ]; then
+            MULTI_ARCH_IMAGES="${MULTI_ARCH_IMAGES} ${DOCKER_ORG}/ddev-php-prod"
+          elif [ "${{ github.event.inputs.image }}" = "ddev-webserver" ]; then
+            MULTI_ARCH_IMAGES="${MULTI_ARCH_IMAGES} ${DOCKER_ORG}/ddev-webserver-prod"
+          fi
+
+          # Create and push multi-arch manifests
+          for ORG_IMAGE in ${MULTI_ARCH_IMAGES}; do
+            docker buildx imagetools create -t ${ORG_IMAGE}:${TAG} ${ORG_IMAGE}:${TAG}-amd64 ${ORG_IMAGE}:${TAG}-arm64
+            if [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              docker buildx imagetools create -t ${ORG_IMAGE}:latest ${ORG_IMAGE}:${TAG}
+            fi
+          done
+
+          # Clean up intermediary single-arch tags from remote registry
+          for ORG_IMAGE in ${MULTI_ARCH_IMAGES}; do
+            echo "Removing ${ORG_IMAGE}:${TAG}-amd64 and ${TAG}-arm64"
+            curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-amd64/" >/dev/null || true
+            curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-arm64/" >/dev/null || true
+          done
