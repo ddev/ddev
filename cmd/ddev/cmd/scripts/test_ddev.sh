@@ -102,9 +102,39 @@ set +eu
 
 trap cleanup SIGINT SIGTERM SIGQUIT EXIT
 
-header "OS Information (uname -a)"
-uname -a
-command -v sw_vers >/dev/null && sw_vers
+# Function to summarize Linux distro
+get_distro_info() {
+  if [ -r /etc/os-release ]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    if [ -n "${PRETTY_NAME:-}" ]; then
+      echo "$PRETTY_NAME"
+    else
+      echo "${ID:-unknown} ${VERSION_ID:-}"
+    fi
+  elif command -v lsb_release >/dev/null 2>&1; then
+    lsb_release -ds
+  else
+    uname -sr
+  fi
+}
+
+# Function to get default login shell
+get_default_shell() {
+  if command -v getent >/dev/null 2>&1; then
+    getent passwd "$USER" | cut -d: -f7
+  else
+    echo "${SHELL:-unknown}"
+  fi
+}
+
+# Show kernel, distro, and default shell info
+echo "Default shell: $(get_default_shell)"
+echo "uname -a: $(uname -a)"
+if [ "${OSTYPE%-*}" = "linux" ]; then
+  echo "Distro: $(get_distro_info)"
+fi
+
 
 header "User information (id -a)"
 id -a
