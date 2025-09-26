@@ -1,12 +1,14 @@
 package ddevapp
 
 import (
+	"regexp"
+	"slices"
+	"strings"
+
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"regexp"
-	"strings"
 )
 
 // GetExistingDBType returns type/version like mariadb:10.11 or postgres:13 or "" if no existing volume
@@ -131,4 +133,20 @@ func dbTypeVersionFromString(in string) string {
 		dbVersion = "10.3"
 	}
 	return dbType + ":" + dbVersion
+}
+
+// GetPostgresDataDir returns the correct PostgreSQL data directory path for the given app version
+// PostgreSQL 18+ changed the mount point from /var/lib/postgresql/data to /var/lib/postgresql
+func (app *DdevApp) GetPostgresDataDir() string {
+	if app.Database.Type != nodeps.Postgres {
+		return ""
+	}
+
+	if slices.Contains([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11, nodeps.Postgres12, nodeps.Postgres13, nodeps.Postgres14, nodeps.Postgres15, nodeps.Postgres16, nodeps.Postgres17}, app.Database.Version) {
+		return "/var/lib/postgresql/data"
+	}
+
+	// Postgres 18+ changed the default mount point
+	// See https://github.com/docker-library/postgres/pull/1259
+	return "/var/lib/postgresql"
 }

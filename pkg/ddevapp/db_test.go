@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
@@ -191,6 +192,67 @@ func TestGetDBVersionFromVolumeScript(t *testing.T) {
 			require.NoError(t, err)
 			result := strings.Trim(out, " \n\r\t")
 			require.Equal(t, test.expectedOutput, result, "Test case: %s", test.name)
+		})
+	}
+}
+
+// TestGetPostgresDataDir tests the GetPostgresDataDir function for correct directory paths
+func TestGetPostgresDataDir(t *testing.T) {
+	tests := []struct {
+		name         string
+		dbType       string
+		dbVersion    string
+		expectedPath string
+	}{
+		{
+			name:         "PostgreSQL 9",
+			dbType:       nodeps.Postgres,
+			dbVersion:    nodeps.Postgres9,
+			expectedPath: "/var/lib/postgresql/data",
+		},
+		{
+			name:         "PostgreSQL 17",
+			dbType:       nodeps.Postgres,
+			dbVersion:    nodeps.Postgres17,
+			expectedPath: "/var/lib/postgresql/data",
+		},
+		{
+			name:         "PostgreSQL 18",
+			dbType:       nodeps.Postgres,
+			dbVersion:    "18",
+			expectedPath: "/var/lib/postgresql",
+		},
+		{
+			name:         "PostgreSQL 19",
+			dbType:       nodeps.Postgres,
+			dbVersion:    "19",
+			expectedPath: "/var/lib/postgresql",
+		},
+		{
+			name:         "MySQL (should return empty)",
+			dbType:       nodeps.MySQL,
+			dbVersion:    nodeps.MySQL80,
+			expectedPath: "",
+		},
+		{
+			name:         "MariaDB (should return empty)",
+			dbType:       nodeps.MariaDB,
+			dbVersion:    nodeps.MariaDB1011,
+			expectedPath: "",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			app := &DdevApp{
+				Database: DatabaseDesc{
+					Type:    test.dbType,
+					Version: test.dbVersion,
+				},
+			}
+
+			result := app.GetPostgresDataDir()
+			require.Equal(t, test.expectedPath, result, "Test case: %s", test.name)
 		})
 	}
 }

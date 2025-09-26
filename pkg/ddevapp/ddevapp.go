@@ -1451,12 +1451,13 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Chown the PostgreSQL volume; this shouldn't have to be a separate stanza, but the
 	// uid is 999 instead of current user
 	if app.Database.Type == nodeps.Postgres {
-		util.Debug("chowning chowning /var/lib/postgresql/data to 999")
-		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
+		postgresDataDir := app.GetPostgresDataDir()
+		util.Debug("chowning chowning %s to 999", postgresDataDir)
+		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s %s", "999:999", postgresDataDir)}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":" + postgresDataDir}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown PostgreSQL volume: %v, output=%s", err, out)
 		}
-		util.Debug("done chowning /var/lib/postgresql/data")
+		util.Debug("done chowning %s", postgresDataDir)
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
