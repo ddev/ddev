@@ -25,6 +25,9 @@ func TestCmdDebugTest(t *testing.T) {
 	require.NoError(t, err, "out=%s", out)
 	require.Contains(t, out, "OS Information")
 	require.Contains(t, out, "webserver_type:")
+	if nodeps.IsLinux() {
+		require.Contains(t, out, "Distro:")
+	}
 	if !nodeps.IsWindows() {
 		require.Contains(t, out, "PING dkdkd.ddev.site")
 	}
