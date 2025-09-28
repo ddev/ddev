@@ -607,8 +607,8 @@ func TestCmdAddonSearch(t *testing.T) {
 	assert.NoError(err, "failed ddev add-on search nonexistentservice: %v (%s)", err, out)
 	assert.Contains(out, "No add-ons found matching 'nonexistentservice'")
 
-	// Test search with --all flag
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "redis", "--all")
-	assert.NoError(err, "failed ddev add-on search redis --all: %v (%s)", err, out)
+	// Test search
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "redis")
+	assert.NoError(err, "failed ddev add-on search redis: %v (%s)", err, out)
 	assert.Contains(out, "repositories found matching 'redis'")
 }

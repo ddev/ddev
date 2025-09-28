@@ -72,7 +72,7 @@ Environment variables:
 
     ```bash
     export DDEV_GITHUB_TOKEN=<your-github-token>
-    ddev add-on list --all
+    ddev add-on list
     ```
 
 * `GH_TOKEN`: Alternative GitHub token variable (lower priority than `DDEV_GITHUB_TOKEN`).
@@ -163,18 +163,14 @@ List available or installed DDEV add-ons.
 
 Flags:
 
-* `--all`: List unofficial *and* official add-ons. (default `true`)
 * `--installed`: List installed add-ons
 * `--project <projectName>`: Specify the project for which to list add-ons. Can only be used with the `--installed` flag. Defaults to checking for a project in the current directory.
 
 Example:
 
 ```shell
-# List official add-ons
+# List all available add-ons
 ddev add-on list
-
-# List official and third-party add-ons
-ddev add-on list --all
 
 # List installed add-ons
 ddev add-on list --installed

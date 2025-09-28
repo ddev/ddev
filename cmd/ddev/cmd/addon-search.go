@@ -22,16 +22,16 @@ var AddonSearchCmd = &cobra.Command{
 	Use:   "search <search-term> [additional-terms...]",
 	Args:  cobra.MinimumNArgs(1),
 	Short: "Search available DDEV add-ons",
-	Long:  `Search available DDEV add-ons by name or description. Without '--all' it searches only official DDEV add-ons.`,
+	Long:  `Search available DDEV add-ons by name or description.`,
 	Example: `ddev add-on search redis
-ddev add-on search database --all
+ddev add-on search database
 ddev add-on search redis commander
 ddev add-on search "redis commander"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		searchTerms := strings.Join(args, " ")
 
 		// Get available add-ons using the same source as list command
-		repos, err := ddevapp.ListAvailableAddons(!cmd.Flags().Changed("all"))
+		repos, err := ddevapp.ListAvailableAddons()
 		if err != nil {
 			util.Failed("Failed to search available add-ons: %v", err)
 		}
@@ -110,7 +110,5 @@ func renderSearchResults(repos []*github.Repository, searchTerm string) string {
 }
 
 func init() {
-	AddonSearchCmd.Flags().Bool("all", false, `Search unofficial DDEV add-ons in addition to the official ones`)
-
 	AddonCmd.AddCommand(AddonSearchCmd)
 }
