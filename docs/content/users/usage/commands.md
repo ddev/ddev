@@ -1372,20 +1372,20 @@ Example:
 # Pull a backup from the configured Pantheon project to use locally
 ddev pull pantheon
 
-# Pull a backup from the configured Platform.sh project to use locally
-ddev pull platform
+# Pull a backup from the configured Upsun project to use locally
+ddev pull upsun
 
 # Pull a backup from the configured Pantheon project without confirming
 ddev pull pantheon -y
 
-# Pull the Platform.sh database archive *only* without confirming
-ddev pull platform --skip-files -y
+# Pull the Upsun database *only* without confirming
+ddev pull upsun --skip-files -y
 
 # Pull the localfile integration’s files *only* without confirming
 ddev pull localfile --skip-db -y
 
-# Pull from Platform.sh specifying the environment variables PLATFORM_ENVIRONMENT and PLATFORM_CLI_TOKEN on the command line
-ddev pull platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=abcdef
+# Pull from Upsun specifying the environment variables UPSUN_ENVIRONMENT and UPSUN_CLI_TOKEN on the command line
+ddev pull upsun --environment=UPSUN_ENVIRONMENT=main,UPSUN_CLI_TOKEN=abcdef
 ```
 
 ## `push`
@@ -1398,14 +1398,14 @@ Example:
 # Push local files and database to the configured Pantheon project
 ddev push pantheon
 
-# Push local files and database to the configured Platform.sh project
-ddev push platform
+# Push local files and database to the configured Upsun project
+ddev push upsun
 
 # Push files and database to Pantheon without confirming
 ddev push pantheon -y
 
-# Push database only to Platform.sh without confirming
-ddev push platform --skip-files -y
+# Push database only to Upsun without confirming
+ddev push upsun --skip-files -y
 
 # Push files only to Acquia without confirming
 ddev push acquia --skip-db -y

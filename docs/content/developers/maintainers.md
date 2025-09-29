@@ -38,7 +38,7 @@ Not all maintainers can do all these things at any given time, but these are the
 
 Most privileges should be granted per-developer as separate accounts. In general, we don't want to share a common login. So for example, instead of sharing a login to [developer.apple.com](https://developer.apple.com) or [buildkite.com](https://buildkite.com/ddev) each maintainer should have their own login.
 
-There are cases like access to hosting provider integrations that have essentially no value upstream where a shared login is acceptable. And of course, tokens listed in 1Password are a type of shared login. Our hosting integrations like Acquia, Platform.sh, etc. should never have any valuable things to attack anyway, so these should be very low risk. However, the bad guys are always trying new things...
+There are cases like access to hosting provider integrations that have essentially no value upstream where a shared login is acceptable. And of course, tokens listed in 1Password are a type of shared login. Our hosting integrations like Acquia, Upsun, etc. should never have any valuable things to attack anyway, so these should be very low risk. However, the bad guys are always trying new things...
 
 * **GitHub**: Maintainers should usually be added to the [DDEV organization](https://github.com/orgs/ddev/people), usually was "owner", but lesser privileges are possible, and some maintainers may want only access to the DDEV project, etc.
 * **Buildkite**: Maintainers should be added to the [DDEV Buildkite organization](https://buildkite.com/organizations/ddev/users) with "maintainer" privileges. This gives access to the Buildkite pipelines and the ability to add new pipelines. Do not require "SSO" or people won't be able to get in.
@@ -61,7 +61,7 @@ There are cases like access to hosting provider integrations that have essential
 * **Zoho CRM** is how we track contacts and send monthly emails or announcements. People involved in marketing will want to have access to this, but it will cost for additional users.
 * **[1Password](https://1password.com/)**. Maintainers should be added to the DDEV team in 1Password. This gives access to the DDEV team vault, which has tokens and passwords that are needed for various things. Please try to maintain things like tokens in there.
 * Acquia Cloud test account
-* Platform.sh test account
+* Upsun test accounts
 * Pantheon test account
 * Lagoon test account
 * [Newmonitor.thefays.us](https://newmonitor.thefays.us/icingaweb2/dashboard) (Test runner monitoring).

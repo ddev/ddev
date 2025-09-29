@@ -37,7 +37,7 @@ const platformSiteExpectation = "Super easy vegetarian pasta"
 // This is a security feature, but means that PRs intended to test this
 // must be done in the DDEV repo.
 
-// TestPlatformPull ensures we can pull backups from platform.sh for a configured environment.
+// TestPlatformPull ensures we can pull database/files from Upsun Fixed for a configured environment.
 func TestPlatformPull(t *testing.T) {
 	var token string
 	if token = os.Getenv("DDEV_PLATFORM_API_TOKEN"); token == "" {
@@ -101,7 +101,7 @@ func TestPlatformPull(t *testing.T) {
 	assert.True(strings.HasPrefix(out, "1\n"))
 }
 
-// TestPlatformPush ensures we can push to platform.sh for a configured environment.
+// TestPlatformPush ensures we can push to Upsun Fixed for a configured environment.
 func TestPlatformPush(t *testing.T) {
 	var token string
 	if token = os.Getenv("DDEV_PLATFORM_API_TOKEN"); token == "" {
