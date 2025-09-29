@@ -47,9 +47,9 @@ func (app *DdevApp) getDBVersionFromVolume() (string, error) {
 		fi
 
 		# Check PostgreSQL 18+ version files in version-specific directories
-		for version in 18 19 20 21 22; do
-			if [ -f "/var/tmp/postgres/$version/docker/PG_VERSION" ]; then
-				cat "/var/tmp/postgres/$version/docker/PG_VERSION"
+		for version_file in /var/tmp/postgres/*/docker/PG_VERSION; do
+			if [ -f "$version_file" ]; then
+				cat "$version_file"
 				exit 0
 			fi
 		done
@@ -80,7 +80,7 @@ func (app *DdevApp) getDBVersionFromVolume() (string, error) {
 		util.Failed("Failed to RunSimpleContainer to inspect database version/type: %v, output=%s", err, out)
 	}
 
-	return strings.Trim(out, " \n\r\t"), nil
+	return strings.TrimSpace(out), nil
 }
 
 // GetDBTypeVersionFromString takes an input string and derives the info from the uses

@@ -1452,7 +1452,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// uid is 999 instead of current user
 	if app.Database.Type == nodeps.Postgres {
 		postgresDataDir := app.GetPostgresDataDir()
-		util.Debug("chowning chowning %s to 999", postgresDataDir)
+		util.Debug("chowning %s to 999", postgresDataDir)
 		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s %s", "999:999", postgresDataDir)}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":" + postgresDataDir}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown PostgreSQL volume: %v, output=%s", err, out)

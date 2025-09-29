@@ -164,9 +164,9 @@ func TestGetDBVersionFromVolumeScript(t *testing.T) {
 				fi
 
 				# Check PostgreSQL 18+ version files in version-specific directories
-				for version in 18 19 20 21 22; do
-					if [ -f "/var/tmp/postgres/$version/docker/PG_VERSION" ]; then
-						cat "/var/tmp/postgres/$version/docker/PG_VERSION"
+				for version_file in /var/tmp/postgres/*/docker/PG_VERSION; do
+					if [ -f "$version_file" ]; then
+						cat "$version_file"
 						exit 0
 					fi
 				done
@@ -197,7 +197,7 @@ func TestGetDBVersionFromVolumeScript(t *testing.T) {
 			)
 
 			require.NoError(t, err)
-			result := strings.Trim(out, " \n\r\t")
+			result := strings.TrimSpace(out)
 			require.Equal(t, test.expectedOutput, result, "Test case: %s", test.name)
 		})
 	}
