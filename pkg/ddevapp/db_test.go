@@ -1,19 +1,22 @@
-package ddevapp
+package ddevapp_test
 
 import (
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 )
 
-func TestDBTypeVersionFromString(t *testing.T) {
+func GetDBTypeVersionFromString(t *testing.T) {
 	expectations := map[string]string{
 		"9":    "postgres:9",
 		"9.6":  "postgres:9",
@@ -54,17 +57,19 @@ func TestDBTypeVersionFromString(t *testing.T) {
 	}
 
 	for input, expectation := range expectations {
-		require.Equal(t, expectation, dbTypeVersionFromString(input))
+		require.Equal(t, expectation, ddevapp.GetDBTypeVersionFromString(input))
 	}
 }
 
-// TestGetDBVersionFromVolumeScript tests the shell script logic used in getDBVersionFromVolume
+// TestGetDBVersionFromVolumeScript tests the shell script logic used in GetDBVersionFromVolume
 // to ensure it properly detects PostgreSQL 18+ directory structures
 func TestGetDBVersionFromVolumeScript(t *testing.T) {
 	// Create temporary directory structure to simulate different DB volume layouts
-	tempDir, err := os.MkdirTemp("", "ddev-db-test-"+t.Name())
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := testcommon.CreateTmpDir("ddev-db-test-" + t.Name())
+
+	t.Cleanup(func() {
+		_ = os.RemoveAll(tempDir)
+	})
 
 	tests := []struct {
 		name           string
@@ -136,7 +141,7 @@ func TestGetDBVersionFromVolumeScript(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// Clean up temp directory for each test
-			os.RemoveAll(tempDir)
+			_ = os.RemoveAll(tempDir)
 			err := os.MkdirAll(tempDir, 0755)
 			require.NoError(t, err)
 
@@ -144,7 +149,8 @@ func TestGetDBVersionFromVolumeScript(t *testing.T) {
 			test.setupFunc()
 
 			// Test the shell script logic directly
-			cmd := []string{"sh", "-c", `
+			cmd := []string{"bash", "-c", `
+                set -euo pipefail
 				# Check MySQL/MariaDB version file
 				if [ -f /var/tmp/mysql/db_mariadb_version.txt ]; then
 					cat /var/tmp/mysql/db_mariadb_version.txt
@@ -173,7 +179,8 @@ func TestGetDBVersionFromVolumeScript(t *testing.T) {
 				filepath.Join(tempDir, "mysql") + ":/var/tmp/mysql",
 				filepath.Join(tempDir, "postgres") + ":/var/tmp/postgres",
 			}
-
+			// Lima and Colima may not be able to keep up with the mounts here
+			time.Sleep(1 * time.Second)
 			_, out, err := dockerutil.RunSimpleContainer(
 				versionconstants.UtilitiesImage,
 				"test-db-version-detection-"+util.RandString(6),
@@ -244,8 +251,8 @@ func TestGetPostgresDataDir(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			app := &DdevApp{
-				Database: DatabaseDesc{
+			app := &ddevapp.DdevApp{
+				Database: ddevapp.DatabaseDesc{
 					Type:    test.dbType,
 					Version: test.dbVersion,
 				},
@@ -299,8 +306,8 @@ func TestGetPostgresDataPath(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			app := &DdevApp{
-				Database: DatabaseDesc{
+			app := &ddevapp.DdevApp{
+				Database: ddevapp.DatabaseDesc{
 					Type:    test.dbType,
 					Version: test.dbVersion,
 				},

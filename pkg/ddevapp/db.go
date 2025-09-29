@@ -23,7 +23,7 @@ func (app *DdevApp) GetExistingDBType() (string, error) {
 		return "", nil
 	}
 
-	return dbTypeVersionFromString(dbVersionInfo), nil
+	return GetDBTypeVersionFromString(dbVersionInfo), nil
 }
 
 // getDBVersionFromVolume inspects the database volume to determine version info
@@ -83,12 +83,12 @@ func (app *DdevApp) getDBVersionFromVolume() (string, error) {
 	return strings.Trim(out, " \n\r\t"), nil
 }
 
-// dbTypeVersionFromString takes an input string and derives the info from the uses
+// GetDBTypeVersionFromString takes an input string and derives the info from the uses
 // There are 3 possible cases here:
 // 1. It has an _, meaning it's a current MySQL or MariaDB version. Easy to parse.
 // 2. It has N+.N, meaning it's a pre-v1.19 MariaDB or MySQL version
 // 3. It has N+, meaning it's PostgreSQL
-func dbTypeVersionFromString(in string) string {
+func GetDBTypeVersionFromString(in string) string {
 	idType := ""
 
 	postgresStyle := regexp.MustCompile(`^[0-9]+$`)
