@@ -729,9 +729,9 @@ func (app *DdevApp) CheckCustomConfig() {
 					unexpected = append(unexpected, f)
 				}
 			}
-			if len(unexpected) > 0 {
-				printable, _ := util.ArrayToReadableOutput(unexpected)
-				util.Warning("Unexpected files found in .ddev/traefik/config (expected only %s): %v", app.Name+".yaml", printable)
+			unexpectedTraefikConfigFiles := filterCustomConfigFiles(unexpected)
+			if len(unexpectedTraefikConfigFiles) > 0 {
+				util.Warning("Unexpected files found in .ddev/traefik/config (expected only %s): %v", app.Name+".yaml", unexpectedTraefikConfigFiles)
 				customConfig = true
 			}
 		}
