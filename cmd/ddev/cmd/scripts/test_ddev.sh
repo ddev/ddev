@@ -70,7 +70,8 @@ fi
 header "Output file will be in $1"
 if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory, preferably the problem project.\nIt doesn't work in other directories.\n"; exit 2; fi
 
-docker pull ddev/ddev-utilities
+header "docker pull ddev/ddev-utilities"
+docker pull ddev/ddev-utilities >/dev/null
 
 header "DDEV version"
 DDEV_DEBUG=true ddev version
