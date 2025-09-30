@@ -78,7 +78,7 @@ rm -f /tmp/raw_mysql_version.txt
 
 # If we have extra cnf files from user, copy them to where they go.
 if [ -d /mnt/ddev_config/mysql ] && [ "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
-  # Ensure re-copying of custom files works on restart. 
+  # Ensure re-copying of custom files works on restart.
   # Has to ignore errors that arise if no custom files have been copied yet.
   chmod -f -R u+w /etc/mysql/conf.d/* || true
   cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
@@ -188,4 +188,4 @@ echo
 
 echo "Starting mysqld."
 tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err &
-exec mysqld --server-id=0
+exec mysqld

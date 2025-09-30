@@ -342,6 +342,7 @@ An example file in `.ddev/mysql/no_utf8mb4.cnf` might be:
 
 ```
 [mysqld]
+server-id = 2
 collation-server = utf8_general_ci
 character-set-server = utf8
 innodb_large_prefix=false
