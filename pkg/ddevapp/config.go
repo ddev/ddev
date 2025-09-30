@@ -945,6 +945,7 @@ type composeYAMLVars struct {
 	DBType                    string
 	DBVersion                 string
 	DBMountDir                string
+	DBDataPath                string
 	DBAPort                   string
 	DBPort                    string
 	DdevGenerated             string
@@ -1125,7 +1126,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	if app.Database.Type == nodeps.Postgres {
-		templateVars.DBMountDir = "/var/lib/postgresql/data"
+		templateVars.DBMountDir = app.GetPostgresDataDir()
+		templateVars.DBDataPath = app.GetPostgresDataPath()
 	}
 	// TODO: Determine if mount to /bitnami is for all mysql/bitnami or just newest
 	// If we expand to using bitnami for mariadb this will change.
@@ -1249,6 +1251,13 @@ stopasgroup=true
 	// Configures postgres environment: healthcheck, .pgpass, config mounts, pg_hba.conf
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
+		restoreConfPath := "/var/lib/postgresql/recovery.conf"
+		if v, err := strconv.Atoi(app.Database.Version); err == nil && v >= 18 {
+			restoreConfPath = app.GetPostgresDataPath() + "/recovery.conf"
+		}
+		restoreConfDir := filepath.Dir(restoreConfPath)
+		waitTime := app.GetMaxContainerWaitTime()
+
 		extraDBContent = extraDBContent + fmt.Sprintf(`
 ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
@@ -1260,7 +1269,7 @@ if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buste
     rm -f /etc/apt/sources.list.d/pgdg.list
     echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
     echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
-    timeout %d apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
+    timeout %[3]d apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
         -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true \
         debian-archive-keyring apt-transport-https ca-certificates
@@ -1278,7 +1287,8 @@ chown postgres:postgres ~postgres/.pgpass
 chmod 600 ~postgres/.pgpass
 chmod 777 /var/tmp
 ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql
-echo "restore_command = 'true'" >>/var/lib/postgresql/recovery.conf
+mkdir -p %[2]s
+echo "restore_command = 'true'" >>%[1]s
 
 echo "# TYPE DATABASE USER CIDR-ADDRESS  METHOD
 host  all         all 0.0.0.0/0 md5
@@ -1288,13 +1298,13 @@ host  replication all 0.0.0.0/0 trust
 local replication all trust
 local replication all peer" >/etc/postgresql/pg_hba.conf
 
-timeout %d apt-get update || true
+timeout %[3]d apt-get update || true
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
     -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests \
     apt-transport-https bzip2 ca-certificates less procps pv vim-tiny
 update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 EOF
-`, app.GetMaxContainerWaitTime(), app.GetMaxContainerWaitTime())
+`, restoreConfPath, restoreConfDir, waitTime)
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)

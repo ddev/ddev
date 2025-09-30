@@ -1451,12 +1451,13 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Chown the PostgreSQL volume; this shouldn't have to be a separate stanza, but the
 	// uid is 999 instead of current user
 	if app.Database.Type == nodeps.Postgres {
-		util.Debug("chowning chowning /var/lib/postgresql/data to 999")
-		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
+		postgresDataDir := app.GetPostgresDataDir()
+		util.Debug("chowning %s to 999", postgresDataDir)
+		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s %s", "999:999", postgresDataDir)}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":" + postgresDataDir}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown PostgreSQL volume: %v, output=%s", err, out)
 		}
-		util.Debug("done chowning /var/lib/postgresql/data")
+		util.Debug("done chowning %s", postgresDataDir)
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
@@ -2865,7 +2866,19 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 	case app.Database.Type == nodeps.MySQL:
 		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
 	case app.Database.Type == nodeps.Postgres:
-		c = fmt.Sprintf("rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", path.Base(targetFile), targetFile)
+		postgresDataPath := app.GetPostgresDataPath()
+		postgresDataDir := app.GetPostgresDataDir()
+
+		// For PostgreSQL 18+, we need to preserve the version-specific directory structure
+		if postgresDataPath != postgresDataDir {
+			// PostgreSQL 18+: backup from actual data path and create tar preserving directory structure
+			// Create the full directory structure (e.g., 18/docker/) that matches the container layout
+			versionDir := filepath.Base(filepath.Dir(postgresDataPath)) // Extract "18" from "/var/lib/postgresql/18/docker"
+			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -czf %s -C /var/tmp/pgstructure/ .", postgresDataPath, path.Base(targetFile), versionDir, versionDir, targetFile)
+		} else {
+			// PostgreSQL ≤17: original behavior
+			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", postgresDataPath, path.Base(targetFile), targetFile)
+		}
 	}
 	return c
 }
