@@ -251,7 +251,7 @@ You have several options:
 
 * Use the [`disable_settings_management: true`](../configuration/config.md#disable_settings_management) option in the project’s `.ddev/config.yaml` file. This disables DDEV from updating CMS-related settings files.
 * Use the more generic “php” project type rather than a CMS-specific one; it basically means “don’t try to create settings files for me”. The “php” type works great for experienced developers.
-* Take over the settings file or `.gitignore` by deleting the line `#ddev-generated` in it, then check in the file. If that line is removed, DDEV will not try to replace or change the file.
+* Take over the settings file or `.gitignore` by deleting the line `#ddev-generated` in it, then check in the file. If that line is removed, DDEV will not try to replace or change the file. (If you don't want DDEV to warn you about customized files, add `#ddev-silent-no-warn` to the file.)
 
 ### How can I change a project’s name?
 

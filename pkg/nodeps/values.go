@@ -53,6 +53,9 @@ var ValidOmitContainers = map[string]bool{
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"
 
+// DdevSilentNoWarn suppresses warnings about custom configuration
+const DdevSilentNoWarn = "#ddev-silent-no-warn"
+
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
 var WebserverDefault = WebserverNginxFPM
 
