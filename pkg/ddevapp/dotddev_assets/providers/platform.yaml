@@ -1,16 +1,16 @@
 #ddev-generated
-# Platform.sh provider configuration. This works out of the box, but can be edited to add
+# Upsun Fixed/Platform.sh provider configuration. This works out of the box, but can be edited or copied to add
 # your own preferences. If you edit it, remove the `ddev-generated` line from the top so
 # that it won't be overwritten.
 
-# Consider using `ddev add-on get ddev/ddev-platformsh` (https://github.com/ddev/ddev-platformsh) for more
-# complete platform integration.
+# Consider using `ddev add-on get ddev/ddev-upsun` (https://github.com/ddev/ddev-upsun) for more
+# complete Upsun integration.
 
 # To use this configuration,
 
-# 1. Check out the site from platform.sh and then configure it with `ddev config`. You'll want to use `ddev start` and make sure the basic functionality is working.
+# 1. Check out the site and then configure it with `ddev config`. You'll want to use `ddev start` and make sure the basic functionality is working.
 # 2. Obtain and configure an API token.
-#    a. Login to the Platform.sh Dashboard and go to Account->API Tokens to create an API token for ddev to use.
+#    a. Login to the Upsun (Fixed) Dashboard and go to Account->API Tokens to create an API token for ddev to use.
 #    b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml:
 #    ```yaml
 #    web_environment:
@@ -36,9 +36,9 @@
 #
 # 4. `ddev restart`
 # 5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
-# 6. Optionally use `ddev push platform` to push local files and database to platform.sh. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+# 6. Optionally use `ddev push platform` to push local files and database to Upsun. Note that `ddev push` is a command that can potentially damage your production site, so use it against an environment you want to use it against.
 
-# If you have more than one database on your Platform.sh project,
+# If you have more than one database on your Upsun Fixed project,
 # you will likely to choose which one you want to use
 # as the primary database ('db').
 # Do this by setting PLATFORM_PRIMARY_RELATIONSHIP, for example, `ddev config --web-environment-add=PLATFORM_PRIMARY_RELATIONSHIP=main`
@@ -46,7 +46,7 @@
 # `ddev pull platform -y --environment=PLATFORM_PRIMARY_RELATIONSHIP=main`
 # If you need to change this `platform.yaml` recipe, you can change it to suit your needs, but remember to remove the "ddev-generated" line from the top.
 
-# Debugging: Use `ddev exec platform` to see what platform.sh knows about
+# Debugging: Use `ddev exec platform` to use the `platform` CLI inside the web container to see what Upsun knows about
 # your configuration and whether it's working correctly.
 
 auth_command:

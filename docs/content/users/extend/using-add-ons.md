@@ -212,7 +212,7 @@ This approach:
 
 ### Platform and Cloud Integration
 
-- **[`ddev/ddev-platformsh`](https://github.com/ddev/ddev-platformsh)** - Platform.sh integration for project syncing and workflows
+- **[`ddev/ddev-upsun`](https://github.com/ddev/ddev-upsun)** - Upsun Fixed (formerly Platform.sh) and Flex integration for project syncing and workflows
 - **[`ddev/ddev-ibexa-cloud`](https://github.com/ddev/ddev-ibexa-cloud)** - Pull projects and data from Ibexa Cloud
 - **[`ddev/ddev-minio`](https://github.com/ddev/ddev-minio)** - MinIO S3-compatible object storage solution
 
