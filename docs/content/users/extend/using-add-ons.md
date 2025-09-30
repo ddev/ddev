@@ -30,16 +30,23 @@ Use [DDEV Add-on Registry](https://addons.ddev.com/) to discover, explore, and l
 
 ### Command Line Discovery
 
-List official add-ons:
+List all available add-ons:
 
 ```bash
 ddev add-on list
 ```
 
-See all possible add-ons (including community add-ons):
+Search for specific add-ons by name or description:
 
 ```bash
-ddev add-on list --all
+# Search for Redis-related add-ons
+ddev add-on search redis
+
+# Search with multiple terms (all must be present)
+ddev add-on search redis web
+
+# Search with multiple terms using quotes (currently same behavior)
+ddev add-on search "redis commander"
 ```
 
 ## Installing Add-ons

@@ -22,9 +22,8 @@ var AddonListCmd = &cobra.Command{
 	Use:   "list",
 	Args:  cobra.NoArgs,
 	Short: "List available or installed DDEV add-ons",
-	Long:  `List available or installed DDEV add-ons. Without '--all' it shows only official DDEV add-ons. To list installed add-ons, use '--installed'`,
+	Long:  `List available or installed DDEV add-ons. To list installed add-ons, use '--installed'`,
 	Example: `ddev add-on list
-ddev add-on list --all
 ddev add-on list --installed
 ddev add-on list --installed --project my-project
 `,
@@ -46,7 +45,7 @@ ddev add-on list --installed --project my-project
 
 		// List available add-ons
 		// these do not require an app context
-		repos, err := ddevapp.ListAvailableAddons(!cmd.Flags().Changed("all"))
+		repos, err := ddevapp.ListAvailableAddons()
 		if err != nil {
 			util.Failed("Failed to list available add-ons: %v", err)
 		}
@@ -134,11 +133,10 @@ func renderRepositoryList(repos []*github.Repository) string {
 
 func init() {
 	AddonListCmd.Flags().Bool("all", false, `List unofficial DDEV add-ons for in addition to the official ones`)
+	_ = AddonListCmd.Flags().MarkDeprecated("all", "this flag no longer has any effect. All add-ons are shown by default.")
 	AddonListCmd.Flags().Bool("installed", false, `Show installed DDEV add-ons`)
 	AddonListCmd.Flags().String("project", "", "Name of the project to list the add-ons for. Can only be used with `--installed`")
 	_ = AddonListCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
-	// Can't do 'ddev add-on list --all --installed', because the "installed" flag already shows *all* installed add-ons
-	AddonListCmd.MarkFlagsMutuallyExclusive("all", "installed")
 
 	AddonCmd.AddCommand(AddonListCmd)
 }
