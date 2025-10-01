@@ -4,7 +4,7 @@ DEFAULT_IMAGES = ddev-xhgui
 
 VERSION := $(shell git describe --tags --always --dirty)
 
-BUILD_ARCHS=linux/amd64,linux/arm64
+BUILD_ARCHS?=linux/amd64,linux/arm64
 
 include ../containers_shared.mk
 
