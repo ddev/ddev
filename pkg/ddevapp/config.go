@@ -1255,7 +1255,7 @@ stopasgroup=true
 		if v, err := strconv.Atoi(app.Database.Version); err == nil && v >= 18 {
 			restoreConfPath = app.GetPostgresDataPath() + "/recovery.conf"
 		}
-		restoreConfDir := filepath.Dir(restoreConfPath)
+		restoreConfDir := filepath.ToSlash(filepath.Dir(restoreConfPath))
 		waitTime := app.GetMaxContainerWaitTime()
 
 		extraDBContent = extraDBContent + fmt.Sprintf(`
