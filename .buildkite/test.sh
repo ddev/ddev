@@ -3,6 +3,13 @@
 
 set -eu -o pipefail
 
+# We can skip builds with commit message of [skip buildkite] or [skip ci]
+DDEV_COMMIT_MESSAGE=$(GIT_PAGER="" git log -1 --pretty=%s 2>/dev/null || echo "")
+if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAGE:-} == *"[skip ci]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip buildkite]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip ci]"* ]]; then
+  echo "Skipping build because message has '[skip buildkite]' or '[skip ci]'"
+  exit 0
+fi
+
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 os=$(go env GOOS)
 
@@ -167,13 +174,6 @@ echo
 
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
-
-# We can skip builds with commit message of [skip buildkite]
-DDEV_COMMIT_MESSAGE=$(GIT_PAGER="" git log -1 --pretty=%s)
-if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAGE:-} == *"[skip ci]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip buildkite]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip ci]"* ]]; then
-  echo "Skipping build because message has '[skip buildkite]' or '[skip ci]'"
-  exit 0
-fi
 
 # If this is a PR and the diff doesn't have code, skip it
 set -x
