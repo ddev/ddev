@@ -6,7 +6,9 @@ set -eu -o pipefail
 # We can skip builds with commit message of [skip buildkite] or [skip ci]
 DDEV_COMMIT_MESSAGE=$(GIT_PAGER="" git log -1 --pretty=%s 2>/dev/null || echo "")
 if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAGE:-} == *"[skip ci]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip buildkite]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip ci]"* ]]; then
-  echo "Skipping build because message has '[skip buildkite]' or '[skip ci]'"
+  echo "Skipping build because message has '[skip buildkite]' or '[skip ci]':"
+  echo "BUILDKITE_MESSAGE=${BUILDKITE_MESSAGE:-}"
+  echo "DDEV_COMMIT_MESSAGE=${DDEV_COMMIT_MESSAGE}"
   exit 0
 fi
 
