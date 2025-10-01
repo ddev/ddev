@@ -14,4 +14,7 @@
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
       DOCKER_TYPE: "wsl2dockerinside"
+      # /etc/buildkite-agent/hooks/environment
+      # DOCKERHUB_PULL_USERNAME
+      # DOCKERHUB_PULL_PASSWORD
     parallelism: 1

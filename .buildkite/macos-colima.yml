@@ -17,4 +17,7 @@
       DDEV_RUN_GET_TESTS: "false"
       DOCKER_TYPE: "colima"
       LIMA_SSH_PORT_FORWARDER: "true"
+      # /opt/homebrew/etc/buildkite-agent/hooks/environment
+      # DOCKERHUB_PULL_USERNAME
+      # DOCKERHUB_PULL_PASSWORD
     parallelism: 1
