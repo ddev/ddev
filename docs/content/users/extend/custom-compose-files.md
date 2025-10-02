@@ -76,7 +76,7 @@ services:
 
 ## Confirming docker-compose Configurations
 
-To better understand how DDEV parses your custom docker-compose files, run `ddev debug compose-config` or review the `.ddev/.ddev-docker-compose-full.yaml` file. This prints the final, DDEV-generated docker-compose configuration when starting your project.
+To better understand how DDEV parses your custom docker-compose files, run `ddev utility compose-config` or review the `.ddev/.ddev-docker-compose-full.yaml` file. This prints the final, DDEV-generated docker-compose configuration when starting your project.
 
 ## Conventions for Defining Additional Services
 

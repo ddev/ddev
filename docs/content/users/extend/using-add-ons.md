@@ -271,7 +271,7 @@ This restarts all services and applies any configuration changes.
 ### Review Add-on Configuration
 
 ```bash
-ddev debug compose-config
+ddev utility compose-config
 ```
 
 This shows the final Docker Compose configuration including add-on services.
