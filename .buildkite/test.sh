@@ -24,6 +24,11 @@ export DDEV_SKIP_NODEJS_TEST=true
 export DOCKER_SCAN_SUGGEST=false
 export DOCKER_SCOUT_SUGGEST=false
 
+# If DDEV_GITHUB_TOKEN is not set, disable GET tests to avoid rate limiting
+if [ -z "${DDEV_GITHUB_TOKEN:-}" ]; then
+  export DDEV_RUN_GET_TESTS=false
+fi
+
 # On macOS, we can have several different docker providers, allow testing all
 # In cleanup, stop everything we know of but leave either Orbstack or Docker Desktop running
 if [ "${os:-}" = "darwin" ]; then
