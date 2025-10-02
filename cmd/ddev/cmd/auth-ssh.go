@@ -20,7 +20,6 @@ import (
 	dockerMount "github.com/docker/docker/api/types/mount"
 	dockerStrslice "github.com/docker/docker/api/types/strslice"
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 )
 
 var sshKeyFiles, sshKeyDirs []string
@@ -70,7 +69,6 @@ var AuthSSHCommand = &cobra.Command{
 		if len(keys) == 0 {
 			util.Failed("No SSH private keys found in %s", strings.Join(append(sshKeyDirs, sshKeyFiles...), ", "))
 		}
-		util.Debug("Processing %d SSH private keys", len(keys))
 
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil || app == nil {
@@ -87,6 +85,8 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}
 		util.Debug("SSH agent container is running")
+
+		output.UserOut.Printf("Adding %d SSH private key(s)...", len(keys))
 
 		exitCode, err := runSSHAuthContainer(keys)
 
@@ -231,22 +231,6 @@ func runSSHAuthContainer(keys []string) (int, error) {
 	hostConfig := &dockerContainer.HostConfig{
 		Mounts:      mounts,
 		VolumesFrom: []string{ddevapp.SSHAuthName},
-	}
-
-	// Hide passphrase input for ssh-add in terminal
-	isTerminal := term.IsTerminal(int(os.Stdin.Fd()))
-	util.Debug("TTY detected: %t", isTerminal)
-	if isTerminal {
-		oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-		if err != nil {
-			exitCode := 1
-			return exitCode, fmt.Errorf("failed to set terminal to raw mode: %v", err)
-		}
-		defer func() {
-			if oldState != nil {
-				_ = term.Restore(int(os.Stdin.Fd()), oldState)
-			}
-		}()
 	}
 
 	containerName := "ddev-ssh-auth-" + util.RandString(6)
