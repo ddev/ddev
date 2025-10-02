@@ -57,6 +57,10 @@ get_default_shell() {
   fi
 }
 
+get_global_ddev_dir() {
+  ddev version -j | docker run -i ddev/ddev-utilities jq -r '.raw["global-ddev-dir"]'
+}
+
 function cleanup {
   printf "\n\nCleanup: deleting test project %s\n" "${PROJECT_NAME}"
   ddev delete -Oy ${PROJECT_NAME}
@@ -79,6 +83,14 @@ docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r
 
 header "project configuration via ddev debug configyaml"
 ddev debug configyaml --full-yaml --omit-keys=web_environment 2>/dev/null || { ddev debug configyaml | (grep -v "^web_environment" || true); }
+
+header "DDEV Global Information"
+if [ "$XDG_CONFIG_HOME" != "" ]; then
+  echo "XDG_CONFIG_HOME is set to non-default value: '${XDG_CONFIG_HOME}'"
+fi
+echo "Global DDEV dir is $(get_global_ddev_dir)"
+echo ""
+ddev config global | (grep -v "^web-environment" || true)
 
 header "OS Information"
 echo "Default shell: $(get_default_shell)"
@@ -141,9 +153,6 @@ trap cleanup SIGINT SIGTERM SIGQUIT EXIT
 
 header "User information (id -a)"
 id -a
-
-header "DDEV global info"
-ddev config global | (grep -v "^web-environment" || true)
 
 header "DOCKER provider info"
 docker_client="$(which docker)"
@@ -265,7 +274,8 @@ if ! DDEV_DEBUG=true ddev start -y; then
   printf "============= ddev-router healthcheck =========\n"
   docker inspect --format "{{json .State.Health }}" ddev-router || true
   printf "============= Global ddev homeadditions =========\n"
-  ls -lR ~/.ddev/homeadditions/
+  globalDir=$(get_global_ddev_dir)
+  ls -lR ${globalDir}/homeadditions/
   printf "============= ddev logs =========\n"
   ddev logs | tail -20l
   printf "============= contents of /mnt/ddev_config  =========\n"
