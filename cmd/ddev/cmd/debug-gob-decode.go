@@ -38,7 +38,7 @@ type eventCache struct {
 	Events          []*StorageEvent `json:"events"`
 }
 
-// DebugGobDecodeCmd implements the ddev debug gob-decode command
+// DebugGobDecodeCmd implements the ddev utility gob-decode command
 var DebugGobDecodeCmd = &cobra.Command{
 	Use:    "gob-decode [file]",
 	Short:  "Decode and display contents of a gob-encoded file",
@@ -55,9 +55,9 @@ The output is displayed as formatted JSON for readability.
 
 Note: Generic gob files with unknown concrete types may not be decodable due to
 Go's gob encoding limitations.`,
-	Example: `ddev debug gob-decode ~/.ddev/.remote-config
-ddev debug gob-decode ~/.ddev/.amplitude.cache
-ddev debug gob-decode /path/to/some/file.gob`,
+	Example: `ddev utility gob-decode ~/.ddev/.remote-config
+ddev utility gob-decode ~/.ddev/.amplitude.cache
+ddev utility gob-decode /path/to/some/file.gob`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(_ *cobra.Command, args []string) error {
 		filename := args[0]

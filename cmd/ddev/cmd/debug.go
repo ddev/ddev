@@ -7,7 +7,7 @@ import (
 
 var showHidden bool
 
-// DebugCmd is the top-level "ddev debug" command
+// DebugCmd is the top-level "ddev utility" command
 var DebugCmd = &cobra.Command{
 	Use:     "utility [command]",
 	Short:   "A collection of utility and debugging commands",

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestDebugDownloadImages tests ddev debug download-images
+// TestDebugDownloadImages tests ddev utility download-images
 func TestDebugDownloadImages(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -36,7 +36,7 @@ func TestDebugDownloadImages(t *testing.T) {
 
 	t.Setenv("DDEV_DEBUG", "true")
 	out, err = exec.RunHostCommand(DdevBin, "debug", "download-images")
-	require.NoError(t, err, "Failed to run ddev debug download-images: %s", out)
+	require.NoError(t, err, "Failed to run ddev utility download-images: %s", out)
 	assert.Contains(out, docker.GetWebImage())
 	assert.Contains(out, docker.GetRouterImage())
 	assert.Contains(out, "Successfully downloaded DDEV images")

@@ -11,7 +11,7 @@ var DebugMatchConstraintCmd = &cobra.Command{
 	Use:     "match-constraint",
 	Short:   "Check if the currently installed ddev matches the specified version constraint.",
 	Args:    cobra.ExactArgs(1),
-	Example: `ddev debug match-constraint ">= 1.24.0"`,
+	Example: `ddev utility match-constraint ">= 1.24.0"`,
 	Run: func(_ *cobra.Command, args []string) {
 		versionConstraint := args[0]
 

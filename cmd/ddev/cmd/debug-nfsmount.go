@@ -17,11 +17,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugNFSMountCmd implements the ddev debug nfsmount command
+// DebugNFSMountCmd implements the ddev utility nfsmount command
 var DebugNFSMountCmd = &cobra.Command{
 	Use:     "nfsmount",
 	Short:   "Checks to see if nfs mounting works for current project",
-	Example: "ddev debug nfsmount",
+	Example: "ddev utility nfsmount",
 	Run: func(_ *cobra.Command, args []string) {
 		testVolume := "testnfsmount"
 		containerName := "testnfscontainer"

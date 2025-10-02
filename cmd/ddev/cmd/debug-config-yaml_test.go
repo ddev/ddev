@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestDebugConfigYamlCmd tests that ddev debug configyaml works
+// TestDebugConfigYamlCmd tests that ddev utility configyaml works
 func TestDebugConfigYamlCmd(t *testing.T) {
 	assert := assert.New(t)
 

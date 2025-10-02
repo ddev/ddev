@@ -8,11 +8,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugTestCleanupCmd implements the ddev debug testcleanup command
+// DebugTestCleanupCmd implements the ddev utility testcleanup command
 var DebugTestCleanupCmd = &cobra.Command{
 	Use:     "testcleanup",
 	Short:   "Removes diagnostic projects prefixed with 'tryddevproject-'",
-	Example: "ddev debug testcleanup",
+	Example: "ddev utility testcleanup",
 	Run: func(_ *cobra.Command, args []string) {
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")

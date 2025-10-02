@@ -7,11 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugCapabilitiesCmd implements the ddev debug capabilities command
+// DebugCapabilitiesCmd implements the ddev utility capabilities command
 var DebugCapabilitiesCmd = &cobra.Command{
 	Use:        "capabilities",
 	Short:      "Show capabilities of this version of DDEV",
-	Deprecated: "\nddev debug capabilities is no longer maintained \nand may be removed in a future release.\nUse ddev_version_constraint to specify versions of DDEV instead. \nhttps://docs.ddev.com/en/stable/users/configuration/config/#ddev_version_constraint\n\n",
+	Deprecated: "\nddev utility capabilities is no longer maintained \nand may be removed in a future release.\nUse ddev_version_constraint to specify versions of DDEV instead. \nhttps://docs.ddev.com/en/stable/users/configuration/config/#ddev_version_constraint\n\n",
 	Hidden:     true,
 	Run: func(_ *cobra.Command, _ []string) {
 		capabilities := []string{

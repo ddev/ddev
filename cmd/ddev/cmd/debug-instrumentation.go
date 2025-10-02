@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugInstrumentationCmd implements the ddev debug instrumentation command
+// DebugInstrumentationCmd implements the ddev utility instrumentation command
 var DebugInstrumentationCmd = &cobra.Command{
 	Use:   "instrumentation [command]",
 	Short: "A collection of debugging commands for instrumentation",

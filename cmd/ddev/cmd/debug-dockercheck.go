@@ -14,11 +14,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugDockercheckCmd implements the ddev debug dockercheck command
+// DebugDockercheckCmd implements the ddev utility dockercheck command
 var DebugDockercheckCmd = &cobra.Command{
 	Use:     "dockercheck",
 	Short:   "Diagnose DDEV Docker/Colima setup",
-	Example: "ddev debug dockercheck",
+	Example: "ddev utility dockercheck",
 	Run: func(_ *cobra.Command, args []string) {
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")

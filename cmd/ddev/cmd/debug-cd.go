@@ -19,7 +19,7 @@ var (
 	fishFile = filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.fish")
 )
 
-// DebugCdCmd implements the ddev debug cd command
+// DebugCdCmd implements the ddev utility cd command
 var DebugCdCmd = &cobra.Command{
 	Use:   "cd",
 	Short: "Use the 'ddevcd' function to quickly change to your project directory",
@@ -42,7 +42,7 @@ var DebugCdCmd = &cobra.Command{
 		`, bashFile, bashFile, zshFile, zshFile, fishFile, fishFile)),
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Example: heredoc.DocI2S(`
-		ddev debug cd
+		ddev utility cd
 		ddevcd project-name
 	`),
 	Run: func(cmd *cobra.Command, args []string) {

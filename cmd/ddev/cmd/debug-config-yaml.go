@@ -13,12 +13,12 @@ import (
 var fullYAMLOutput bool
 var omitKeys string
 
-// DebugConfigYamlCmd implements the ddev debug configyaml command
+// DebugConfigYamlCmd implements the ddev utility configyaml command
 var DebugConfigYamlCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "configyaml [project]",
 	Short:             "Prints the project config.*.yaml usage",
-	Example:           "ddev debug configyaml, ddev debug configyaml <projectname>, ddev debug configyaml --full-yaml, ddev debug configyaml --omit-keys=web_environment",
+	Example:           "ddev utility configyaml, ddev utility configyaml <projectname>, ddev utility configyaml --full-yaml, ddev utility configyaml --omit-keys=web_environment",
 	Run: func(_ *cobra.Command, args []string) {
 		projectName := ""
 

@@ -18,7 +18,7 @@ import (
 var updateStorage bool
 var dataType string
 
-// DebugRemoteDataCmd implements the ddev debug remote-data command
+// DebugRemoteDataCmd implements the ddev utility remote-data command
 var DebugRemoteDataCmd = &cobra.Command{
 	Use:    "remote-data",
 	Short:  "Download and display remote configuration and sponsorship data",
@@ -33,8 +33,8 @@ The downloaded content is displayed as formatted JSON to stdout.
 Optionally updates the local cached storage file (enabled by default).
 
 This is a developer/debugging tool and is hidden from normal help output.`,
-	Example: `ddev debug remote-data --type=remote-config
-ddev debug remote-data --type=sponsorship-data --update-storage=false`,
+	Example: `ddev utility remote-data --type=remote-config
+ddev utility remote-data --type=sponsorship-data --update-storage=false`,
 	Args: cobra.NoArgs,
 	RunE: func(_ *cobra.Command, args []string) error {
 		// Ensure global config is loaded

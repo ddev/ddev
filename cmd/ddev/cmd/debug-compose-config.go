@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugComposeConfigCmd implements the ddev debug compose-config command
+// DebugComposeConfigCmd implements the ddev utility compose-config command
 var DebugComposeConfigCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "compose-config [project]",

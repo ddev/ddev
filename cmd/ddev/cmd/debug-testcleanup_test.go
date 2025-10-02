@@ -34,7 +34,7 @@ func TestDebugTestCleanupCmd(t *testing.T) {
 	require.NoError(t, err, "Failed to run ddev config: %s", out)
 
 	out, err = exec.RunHostCommand(DdevBin, "debug", "testcleanup")
-	require.NoError(t, err, "Failed to run ddev debug testcleanup: %s", out)
+	require.NoError(t, err, "Failed to run ddev utility testcleanup: %s", out)
 
 	assert.NotContains(out, fmt.Sprintf("Project %s was deleted", nonDebugAppName))
 	assert.Contains(out, fmt.Sprintf("Project %s was deleted", debugAppName))
