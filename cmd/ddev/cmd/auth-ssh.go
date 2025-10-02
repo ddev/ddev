@@ -190,7 +190,7 @@ func runSSHAuthContainer(keys []string) (int, error) {
 	uidStr, _, _ := util.GetContainerUIDGid()
 	config := &dockerContainer.Config{
 		Image:       docker.GetSSHAuthImage() + "-built",
-		Cmd:         dockerStrslice.StrSlice{"bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && ((${#keys[@]})) || { echo "No SSH private keys found" >&2; exit 1; } && for key in "${keys[@]}"; do echo "Running: ssh-add $key" && ssh-add "$key" || exit $?; done`},
+		Cmd:         dockerStrslice.StrSlice{"bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && ((${#keys[@]})) || { echo "No SSH private keys found" >&2; exit 1; } && for key in "${keys[@]}"; do printf "\nRunning command: ssh-add %s\n" "$key"; ssh-add "$key" || exit $?; done`},
 		Entrypoint:  dockerStrslice.StrSlice{},
 		AttachStdin: true,
 		User:        uidStr,
