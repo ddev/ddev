@@ -86,7 +86,7 @@ var AuthSSHCommand = &cobra.Command{
 		}
 		util.Debug("SSH agent container is running")
 
-		output.UserOut.Printf("Adding %d SSH private key(s)...", len(keys))
+		util.Success("Adding %d SSH private key(s)...", len(keys))
 
 		exitCode, err := runSSHAuthContainer(keys)
 
