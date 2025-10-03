@@ -15,7 +15,6 @@
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
       DDEV_TEST_SHARE_CMD: "false"
-      DDEV_RUN_GET_TESTS: "false"
       DOCKER_TYPE: "colima_vz"
       LIMA_SSH_PORT_FORWARDER: "true"
       # /opt/homebrew/etc/buildkite-agent/hooks/environment
