@@ -82,11 +82,11 @@ var AuthSSHCommand = &cobra.Command{
 
 		err = app.EnsureSSHAgentContainer()
 		if err != nil {
-			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
+			util.Failed("Failed to start %s container: %v", nodeps.DdevSSHAgentContainer, err)
 		}
-		util.Debug("SSH agent container is running")
+		util.Debug("%s is running", nodeps.DdevSSHAgentContainer)
 
-		util.Success("Adding %d SSH private key(s)...", len(keys))
+		output.UserOut.Printf("Adding %d SSH private key(s)...", len(keys))
 
 		exitCode, err := runSSHAuthContainer(keys)
 
@@ -100,6 +100,7 @@ var AuthSSHCommand = &cobra.Command{
 			util.Error("Failed to execute command `%s`: %v %s", cmd.CommandPath(), err, helpMessage)
 			output.UserErr.Exit(exitCode)
 		}
+		util.Success("Successfully added %d SSH private key(s).", len(keys))
 	},
 }
 
@@ -188,9 +189,13 @@ func getCertificateForPrivateKey(path string, name string) (string, string) {
 func runSSHAuthContainer(keys []string) (int, error) {
 	// Container configuration
 	uidStr, _, _ := util.GetContainerUIDGid()
+	infoMessage := `\033[0;33mAdding key %s\033[0m\n`
+	if output.JSONOutput {
+		infoMessage = `Adding key %s\n`
+	}
 	config := &dockerContainer.Config{
 		Image:       docker.GetSSHAuthImage() + "-built",
-		Cmd:         dockerStrslice.StrSlice{"bash", "-c", `cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && ((${#keys[@]})) || { echo "No SSH private keys found" >&2; exit 1; } && for key in "${keys[@]}"; do printf "\nRunning command: ssh-add %s\n" "$key"; ssh-add "$key" || exit $?; done`},
+		Cmd:         dockerStrslice.StrSlice{"bash", "-c", fmt.Sprintf(`cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && ((${#keys[@]})) || { echo "No SSH private keys found." >&2; exit 1; } && for key in "${keys[@]}"; do printf "%s" "$key" >&2; ssh-add "$key" || exit $?; done`, infoMessage)},
 		Entrypoint:  dockerStrslice.StrSlice{},
 		AttachStdin: true,
 		User:        uidStr,

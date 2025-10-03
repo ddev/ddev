@@ -418,7 +418,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 
 // RunSimpleContainerExtended runs a container (non-daemonized) and captures the stdout/stderr.
 // Accepts any config and hostConfig. If stdin is provided, enables interactive mode with stdin forwarding.
-func RunSimpleContainerExtended(name string, config *container.Config, hostConfig *container.HostConfig, removeContainerAfterRun bool, detach bool) (containerID string, output string, returnErr error) {
+func RunSimpleContainerExtended(name string, config *container.Config, hostConfig *container.HostConfig, removeContainerAfterRun bool, detach bool) (containerID string, out string, returnErr error) {
 	ctx, client, err := GetDockerClient()
 	if err != nil {
 		return "", "", err
@@ -516,7 +516,21 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 
 		// Forward output from container to stdout
 		go func() {
-			_, _ = io.Copy(os.Stdout, hijackedResp.Reader)
+			if output.JSONOutput {
+				util.Warning("Ignoring all output from container in JSON mode with stdin attached")
+				buf := new(bytes.Buffer)
+				_, _ = buf.ReadFrom(hijackedResp.Reader)
+				text := strings.ReplaceAll(buf.String(), "\r\n", "\n")
+				text = strings.ReplaceAll(text, "\r", "\n")
+				lines := strings.Split(text, "\n")
+				for _, line := range lines {
+					if line != "" {
+						output.UserOut.Println(line)
+					}
+				}
+			} else {
+				_, _ = io.Copy(os.Stdout, hijackedResp.Reader)
+			}
 			if outputDone != nil {
 				close(outputDone)
 			}
@@ -887,7 +901,7 @@ func TruncateID(id string) string {
 // setupRawTerminal sets the terminal to raw mode for TTY containers.
 // Returns a restore function that should be called to restore terminal state.
 func setupRawTerminal() (restore func(), err error) {
-	if !term.IsTerminal(os.Stdin.Fd()) {
+	if !term.IsTerminal(os.Stdin.Fd()) || output.JSONOutput {
 		return func() {}, nil
 	}
 
