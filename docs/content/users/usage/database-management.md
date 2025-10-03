@@ -29,7 +29,7 @@ You can also:
 
 ## Database Backends and Defaults
 
-You can use a [variety of different database types](../extend/database-types.md#database-server-types), including MariaDB (5.5–10.8, 11.4, 11.8), MySQL (5.5–8.0, 8.4), and PostgreSQL (9–17). If you want to _change_ database type, you need to export your database, run [`ddev delete`](../usage/commands.md#delete) to remove the project (and its existing database), change to a new database type, run [`ddev start`](../usage/commands.md#start) again, and [import your data](../usage/commands.md#import-db).
+You can use a [variety of different database types](../extend/database-types.md#database-server-types), including MariaDB (5.5–10.8, 11.4, 11.8), MySQL (5.5–8.0, 8.4), and PostgreSQL (9–18). If you want to _change_ database type, you need to export your database, run [`ddev delete`](../usage/commands.md#delete) to remove the project (and its existing database), change to a new database type, run [`ddev start`](../usage/commands.md#start) again, and [import your data](../usage/commands.md#import-db).
 
 (For very old database types see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/).)
 

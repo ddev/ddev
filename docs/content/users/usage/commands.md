@@ -72,7 +72,7 @@ Environment variables:
 
     ```bash
     export DDEV_GITHUB_TOKEN=<your-github-token>
-    ddev add-on list --all
+    ddev add-on list
     ```
 
 * `GH_TOKEN`: Alternative GitHub token variable (lower priority than `DDEV_GITHUB_TOKEN`).
@@ -159,28 +159,44 @@ ddev add-on remove ddev/ddev-redis --project my-project
 
 ### `add-on list`
 
-Download an add-on (service, provider, etc.).
+List available or installed DDEV add-ons.
 
 Flags:
 
-* `--all`: List unofficial *and* official add-ons. (default `true`)
 * `--installed`: List installed add-ons
 * `--project <projectName>`: Specify the project for which to list add-ons. Can only be used with the `--installed` flag. Defaults to checking for a project in the current directory.
 
 Example:
 
 ```shell
-# List official add-ons
+# List all available add-ons
 ddev add-on list
-
-# List official and third-party add-ons
-ddev add-on list --all
 
 # List installed add-ons
 ddev add-on list --installed
 
 # List installed add-ons for a specific project
 ddev add-on list --installed --project my-project
+```
+
+### `add-on search`
+
+Search available DDEV add-ons by name or description.
+
+Example:
+
+```shell
+# Search for Redis-related add-ons
+ddev add-on search redis
+
+# Search for database-related add-ons
+ddev add-on search database
+
+# Search with multiple terms (all must be present)
+ddev add-on search redis web
+
+# Search with multiple terms using quotes (currently same behavior)
+ddev add-on search "redis commander"
 ```
 
 ## `aliases`
@@ -1372,20 +1388,20 @@ Example:
 # Pull a backup from the configured Pantheon project to use locally
 ddev pull pantheon
 
-# Pull a backup from the configured Platform.sh project to use locally
-ddev pull platform
+# Pull a backup from the configured Upsun project to use locally
+ddev pull upsun
 
 # Pull a backup from the configured Pantheon project without confirming
 ddev pull pantheon -y
 
-# Pull the Platform.sh database archive *only* without confirming
-ddev pull platform --skip-files -y
+# Pull the Upsun database *only* without confirming
+ddev pull upsun --skip-files -y
 
 # Pull the localfile integration’s files *only* without confirming
 ddev pull localfile --skip-db -y
 
-# Pull from Platform.sh specifying the environment variables PLATFORM_ENVIRONMENT and PLATFORM_CLI_TOKEN on the command line
-ddev pull platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=abcdef
+# Pull from Upsun specifying the environment variables UPSUN_ENVIRONMENT and UPSUN_CLI_TOKEN on the command line
+ddev pull upsun --environment=UPSUN_ENVIRONMENT=main,UPSUN_CLI_TOKEN=abcdef
 ```
 
 ## `push`
@@ -1398,14 +1414,14 @@ Example:
 # Push local files and database to the configured Pantheon project
 ddev push pantheon
 
-# Push local files and database to the configured Platform.sh project
-ddev push platform
+# Push local files and database to the configured Upsun project
+ddev push upsun
 
 # Push files and database to Pantheon without confirming
 ddev push pantheon -y
 
-# Push database only to Platform.sh without confirming
-ddev push platform --skip-files -y
+# Push database only to Upsun without confirming
+ddev push upsun --skip-files -y
 
 # Push files only to Acquia without confirming
 ddev push acquia --skip-db -y

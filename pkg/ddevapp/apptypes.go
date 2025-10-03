@@ -513,7 +513,7 @@ func (app *DdevApp) DefaultWorkingDirMap() map[string]string {
 	}
 
 	if app.Database.Type == nodeps.Postgres {
-		defaults["db"] = "/var/lib/postgresql"
+		defaults["db"] = app.GetPostgresDataDir()
 	}
 	return defaults
 }

@@ -1,6 +1,6 @@
 # traditional Windows, Rancher Desktop with Mutagen, used by ddev-windows-rancher
 # See https://buildkite.com/ddev/ddev-windows-rancher/settings/repository
-# Runs on main
+# Not currently used.
 # This testing approach appears to be a failure due to Rancher Desktop unpredictability on Windows
 
   - command: ".buildkite/test.cmd"
@@ -14,5 +14,8 @@
       BUILDKITE_CLEAN_CHECKOUT: true
       DDEV_TEST_USE_NFSMOUNT: false
       DOCKER_TYPE: rancher-desktop
+      # C:\buildkite-agent\hooks\environment
+      # DOCKERHUB_PULL_USERNAME
+      # DOCKERHUB_PULL_PASSWORD
     parallelism: 1
 

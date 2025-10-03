@@ -684,12 +684,9 @@ func GetAddonDdevWarningExitCode(action string) int {
 }
 
 // ListAvailableAddons lists the add-ons that are listed on github
-func ListAvailableAddons(officialOnly bool) ([]*github.Repository, error) {
+func ListAvailableAddons() ([]*github.Repository, error) {
 	ctx, client := github.GetGitHubClient()
 	q := "topic:ddev-get fork:true"
-	if officialOnly {
-		q = q + " org:" + globalconfig.DdevGithubOrg
-	}
 
 	opts := &github.SearchOptions{Sort: "updated", Order: "desc", ListOptions: github.ListOptions{PerPage: 200}}
 	var allRepos []*github.Repository

@@ -26,25 +26,25 @@ var WebTag = "20250728_rfay_debian_trixie" // Note that this can be overridden b
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.24.8"
+var BaseDBTag = "20250824_akibaat_buildx_arm_builder"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "v1.24.8"
+var TraefikRouterTag = "20250824_akibaat_buildx_arm_builder"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.24.8"
+var SSHAuthTag = "20250824_akibaat_buildx_arm_builder"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "v1.24.8"
+var XhguiTag = "20250824_akibaat_buildx_arm_builder"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"

@@ -16,5 +16,8 @@
       DDEV_TEST_SHARE_CMD: "true"
       DDEV_RUN_GET_TESTS: "true"
       DOCKER_TYPE: "docker-desktop"
-
+      # /opt/homebrew/etc/buildkite-agent/hooks/environment
+      # DOCKERHUB_PULL_USERNAME
+      # DOCKERHUB_PULL_PASSWORD
+      # DDEV_GITHUB_TOKEN
     parallelism: 1

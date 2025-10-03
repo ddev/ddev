@@ -5,15 +5,15 @@ Providers README
 
 ## Introduction to Hosting Provider Integration
 
-DDEV offers hosting provider integration and sample integrations for Pantheon, Platform.sh and Acquia hosting, along with other examples.
+DDEV offers hosting provider integrations for Pantheon, Upsun and Acquia hosting, along with a number of examples.
 
 Hosting provider integration allows connecting with your upstream hosting. `ddev pull <provider>` downloads and `ddev push <provider>` uploads the **database** and the **user-generated files** to an upstream provider. It does *not* push (deploy) or pull your code. Your code should be under version control in for example Git.
 
-DDEV provides ready-to-go integrations for Platform.sh, Acquia, and Lagoon in every project, see the .ddev/providers directory. These can be used as is, or they can be modified as you see fit (but remove the `#ddev-generated` line so DDEV doesn't replace them with the defaults).
+DDEV provides ready-to-go integrations for Upsun, Acquia, and Lagoon in every project, see the .ddev/providers directory. These can be used as is, or they can be modified as you see fit (but remove the `#ddev-generated` line so DDEV doesn't replace them with the defaults).
 
-In addition, each project includes example recipes https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/providers for Pantheon, Git, local files, and `rsync` in its `.ddev/providers` directory, which you can use and adapt however you’d like.
+In addition, each project includes example recipes https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/providers for Git, local files, and `rsync` in its `.ddev/providers` directory, which you can use and adapt however you’d like.
 
-DDEV provides the `pull` command with whatever recipes you have configured. For example, `ddev pull platform` is available by default, and `ddev pull pantheon` is available if you have created `.ddev/providers/pantheon.yaml`.
+DDEV provides the `pull` command with whatever recipes you have configured. For example, `ddev pull upsun` and and `ddev pull pantheon` are available by default.
 
 DDEV also provides the `push` command to push database and files to upstream. This is very useful for non-production environments, but could be quite dangerous to your upstream production site and should only be used when appropriate. If you consider it to be dangerous, you can remove the `push` section of the provider YAML file.
 
@@ -25,11 +25,11 @@ Recipes are provided for:
 - Lagoon .ddev/providers/lagoon.yaml
 - Local files .ddev/providers/localfile.yaml.example (like Dropbox, for example)
 - Pantheon .ddev/providers/pantheon.yaml
-- Platform.sh .ddev/providers/platform.yaml
+- Upsun Fixed/Platform.sh .ddev/providers/platform.yaml
 - rsync .ddev/providers/rsync.yaml.example
-- Upsun .ddev/providers/upsun.yaml
+- Upsun Flex .ddev/providers/upsun.yaml
 
-Recipes are provided for Acquia (see .ddev/providers/acquia.yaml), Local files (see .ddev/providers/localfile.yaml.example) (like Dropbox, for example), Pantheon (see .ddev/providers/pantheon.yaml), Platform.sh (see .ddev/providers/platform.yaml, and rsync (see .ddev/providers/rsync.yaml.example).
+Recipes are provided for Acquia (see .ddev/providers/acquia.yaml), Local files (see .ddev/providers/localfile.yaml.example) (like Dropbox, for example), Pantheon (see .ddev/providers/pantheon.yaml), Upsun Fixed (see .ddev/providers/platform.yaml, and rsync (see .ddev/providers/rsync.yaml.example).
 
 Each provider recipe is a file named `<provider>.yaml` and consists of several mostly-optional stanzas:
 

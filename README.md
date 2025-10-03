@@ -50,7 +50,7 @@ Additionally, [https://ddev.com/get-started/](https://ddev.com/get-started/) pro
 * Quickly create local web development environments based on code repositories, with minimal configuration.
 * Import a database to any of your local environments.
 * Import upload files to match the project (e.g. Drupal sites/default/files or WordPress `wp-content/uploads`).
-* Customizable integration with hosting platforms like [Platform.sh](https://platform.sh), [Pantheon](https://pantheon.io), [Acquia](https://www.acquia.com) and others.
+* Customizable integration with hosting platforms like [Upsun (formerly Platform.sh)](https://upsun.com), [Pantheon](https://pantheon.io), [Acquia](https://www.acquia.com) and others.
 * Run commands within the Docker environment using `ddev exec`.
 * View logs from the web and database containers.
 * Use `ddev ssh` to explore the Linux environment inside the container.

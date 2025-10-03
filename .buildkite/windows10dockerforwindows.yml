@@ -13,4 +13,7 @@
       BUILDKITE_CLEAN_CHECKOUT: true
       DDEV_TEST_USE_NFSMOUNT: false
       DOCKER_TYPE: dockerforwindows
+      # C:\buildkite-agent\hooks\environment
+      # DOCKERHUB_PULL_USERNAME
+      # DOCKERHUB_PULL_PASSWORD
     parallelism: 1
