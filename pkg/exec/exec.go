@@ -34,7 +34,7 @@ func WithEnv(env []string) CmdOption {
 		if globalconfig.DdevVerbose {
 			output.UserOut.Printf("WithEnv: setting env vars %v", env)
 		}
-		cmd.Env = env
+		cmd.Env = append(os.Environ(), env...)
 	}
 }
 
