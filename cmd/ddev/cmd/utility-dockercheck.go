@@ -144,7 +144,7 @@ var DebugDockercheckCmd = &cobra.Command{
 		// Check docker auth configuration
 		err = dockerutil.CheckDockerAuth()
 		if err != nil {
-			util.Warning("Docker authentication may have issues: %v", err)
+			util.Failed("Docker authentication may have issues: %v", err)
 		} else {
 			util.Success("Docker authentication is configured correctly")
 		}
