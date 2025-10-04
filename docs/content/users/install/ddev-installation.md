@@ -14,7 +14,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Install DDEV
     brew install ddev/ddev/ddev
 
-    # One-time initialization of mkcert
+    # One-time initialization of mkcert, a dependency of DDEV
     mkcert -install
     ```
 
@@ -65,7 +65,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     sudo sh -c 'echo ""'
     sudo apt-get update && sudo apt-get install -y ddev
 
-    # One-time initialization of mkcert
+    # One-time initialization of mkcert, a dependency of DDEV
     mkcert -install
     ```
 
@@ -98,7 +98,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     sudo sh -c 'echo ""'
     sudo dnf install --refresh ddev
 
-    # One-time initialization of mkcert
+    # One-time initialization of mkcert, a dependency of DDEV
     mkcert -install
     ```
 
@@ -114,7 +114,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Install DDEV
     yay -S ddev-bin
 
-    # One-time initialization of mkcert
+    # One-time initialization of mkcert, a dependency of DDEV
     mkcert -install
     ```
 
@@ -126,7 +126,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Install DDEV using Homebrew
     brew install ddev/ddev/ddev
 
-    # One-time initialization of mkcert
+    # One-time initialization of mkcert, a dependency of DDEV
     mkcert -install
     ```
 
