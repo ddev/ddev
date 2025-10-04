@@ -658,10 +658,10 @@ ddev magento setup:upgrade
 
     ```bash
     mkdir my-moodle-site && cd my-moodle-site
-    ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
+    ddev config --docroot=public --webserver-type=apache-fpm
     ddev start
     ddev composer create-project moodle/moodle
-    ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
+    ddev exec 'php admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
     ddev launch /login
     ```
 
