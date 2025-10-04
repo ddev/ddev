@@ -15,8 +15,7 @@ teardown() {
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  # ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
-  run ddev config --composer-root=public --docroot=public --webserver-type=apache-fpm
+  run ddev config --docroot=public --webserver-type=apache-fpm
   assert_success
   # ddev start -y
   run ddev start -y
@@ -24,8 +23,7 @@ teardown() {
   # ddev composer create-project moodle/moodle
   run ddev composer create-project moodle/moodle
   assert_success
-  # ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
-  run ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
+  run ddev exec 'php admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
   assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch /login"
