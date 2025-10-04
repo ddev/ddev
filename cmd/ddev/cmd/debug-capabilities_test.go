@@ -10,7 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 )
 
-// TestDebugCapabilitiesCmd tests that ddev debug capabilities works
+// TestDebugCapabilitiesCmd tests that ddev utility capabilities works
 func TestDebugCapabilitiesCmd(t *testing.T) {
 	assert := asrt.New(t)
 

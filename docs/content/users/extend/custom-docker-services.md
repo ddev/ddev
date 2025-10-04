@@ -266,7 +266,7 @@ ddev logs myservice
 ### Verify Configuration
 
 ```bash
-ddev debug compose-config
+ddev utility compose-config
 ```
 
 This shows the complete merged docker-compose configuration.
@@ -338,7 +338,7 @@ services:
 
 ### Debugging Steps
 
-1. Verify syntax: `ddev debug compose-config`
+1. Verify syntax: `ddev utility compose-config`
 2. Check logs: `ddev logs servicename`
 3. Test connectivity: `ddev exec "ping servicename"`
 4. Inspect container: `ddev exec --service=servicename bash`

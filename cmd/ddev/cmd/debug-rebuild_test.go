@@ -12,7 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 )
 
-// TestDebugRebuildCmd tests that ddev debug rebuild actually clears Docker cache
+// TestDebugRebuildCmd tests that ddev utility rebuild actually clears Docker cache
 func TestDebugRebuildCmd(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -84,7 +84,7 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	require.NoError(t, err)
 	assert.Equal(origRandomDB, newRandomDB)
 
-	// Now run ddev debug rebuild to blow away the Docker cache
+	// Now run ddev utility rebuild to blow away the Docker cache
 	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild")
 	require.NoError(t, err)
 
@@ -105,7 +105,7 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	require.NoError(t, err)
 	assert.Equal(origRandomDB, freshRandomDB)
 
-	// Now run ddev debug rebuild to blow away the Docker cache for db
+	// Now run ddev utility rebuild to blow away the Docker cache for db
 	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild", "--service", "db")
 	require.NoError(t, err)
 

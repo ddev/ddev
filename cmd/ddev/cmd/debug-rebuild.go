@@ -18,7 +18,7 @@ var (
 	service  string
 )
 
-// DebugRebuildCmd implements the ddev debug rebuild command
+// DebugRebuildCmd implements the ddev utility rebuild command
 var DebugRebuildCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "rebuild",

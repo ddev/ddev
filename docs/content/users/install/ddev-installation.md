@@ -388,7 +388,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     wait_for_docker
 
     # download images beforehand, optional
-    ddev debug download-images
+    ddev utility download-images
 
     # avoid errors on rebuilds
     ddev poweroff

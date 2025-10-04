@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugInstrumentationCleanCmd implements the ddev debug instrumentation clean command
+// DebugInstrumentationCleanCmd implements the ddev utility instrumentation clean command
 var DebugInstrumentationCleanCmd = &cobra.Command{
 	Use:   "clean",
 	Short: "Removes usage statistics from the local cache",

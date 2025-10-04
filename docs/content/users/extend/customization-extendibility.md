@@ -402,7 +402,7 @@ can have their intended affect.
 
 [`override_config`](../configuration/config.md#override_config) affects only behavior of the `config.*.yaml` file it exists in.
 
-To experiment with the behavior of a set of `config.*.yaml` files, use the [`ddev debug configyaml`](../usage/commands.md#debug-configyaml) file; it’s especially valuable with the `yq` command, for example `ddev debug configyaml | yq`.
+To experiment with the behavior of a set of `config.*.yaml` files, use the [`ddev utility configyaml`](../usage/commands.md#utility-configyaml) file; it's especially valuable with the `yq` command, for example `ddev utility configyaml | yq`.
 
 ## Explicit `supervisord` Configuration for Additional Daemons
 

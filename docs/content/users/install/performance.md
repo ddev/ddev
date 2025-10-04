@@ -152,11 +152,11 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     * Avoid having Mutagen sync large binaries, which can cause `ddev start` to take a long time. The `.tarballs` directory is automatically excluded, so Mutagen will ignore anything you move there. To see what Mutagen is trying to sync, run `ddev mutagen status -l` in another window.
     * `DDEV_DEBUG=true ddev start` will provide more information about what’s going on with Mutagen.
     * DDEV’s Mutagen daemon keeps its data in a DDEV-only `MUTAGEN_DATA_DIRECTORY` in `~/.ddev_mutagen_data_directory`.
-    * DDEV’s private Mutagen binary is installed in `~/.ddev/bin/mutagen` (or `$XDG_CONFIG_BASE/ddev/bin/mutagen`. You can use all the features of Mutagen with `ddev debug mutagen`. For example:
+    * DDEV’s private Mutagen binary is installed in `~/.ddev/bin/mutagen` (or `$XDG_CONFIG_BASE/ddev/bin/mutagen`. You can use all the features of Mutagen with `ddev utility mutagen`. For example:
 
         ```bash
-        ddev debug mutagen sync list --template "{{ json (index . 0) }}" | docker run -i --rm ddev/ddev-utilities jq -r
-        ddev debug mutagen sync monitor <projectname> -l
+        ddev utility mutagen sync list --template "{{ json (index . 0) }}" | docker run -i --rm ddev/ddev-utilities jq -r
+        ddev utility mutagen sync monitor <projectname> -l
         ```
     * You can run the [diagnose_mutagen.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/diagnose_mutagen.sh) script to gather information about Mutagen’s setup. Please share output from it when creating an issue or seeking support.
     * Try `ddev poweroff` or `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the Mutagen daemon if you suspect it’s hanging.
@@ -248,7 +248,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     1. Make sure DDEV is already working and you can use it.
     2. Use the script below for your OS to configure the NFS server and exports files.
-    3. Test that NFS is working correctly by using [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) in a project directory. The first line should report something like “Successfully accessed NFS mount of /path/to/project”.
+    3. Test that NFS is working correctly by using [`ddev utility nfsmount`](../usage/commands.md#utility-nfsmount) in a project directory. The first line should report something like "Successfully accessed NFS mount of /path/to/project".
     4. Enable NFS mounting globally with `ddev config global --performance-mode=nfs`.
     You can also configure NFS mounting on a per-project basis with `ddev config --performance-mode=nfs` in the project directory, but this is unusual. The project-specific value will override global config.
     5. [`ddev start`](../usage/commands.md#start) your project and make sure it works normally. Use [`ddev describe`](../usage/commands.md#describe) to verify that NFS mounting is being used. The NFS status is near the top of the output of `ddev describe`.
@@ -288,7 +288,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
             ![Enabling full disk access for nfsd](../../images/nfsd-full-disk-access.png)
 
         * Run `sudo nfsd restart`.
-        * From a project directory, run [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) to confirm successful output.
+        * From a project directory, run [`ddev utility nfsmount`](../usage/commands.md#utility-nfsmount) to confirm successful output.
 
         #### macOS NFS Debugging
 
@@ -302,9 +302,9 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
             nfs.server.mount.require_resv_port = 0
             nfs.server.verbose = 3
             ```
-        * Run Console.app and search for “nfsd” at the top. Run `sudo nfsd restart` and read the messages carefully. Try running [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) in the problematic project directory:
+        * Run Console.app and search for "nfsd" at the top. Run `sudo nfsd restart` and read the messages carefully. Try running [`ddev utility nfsmount`](../usage/commands.md#utility-nfsmount) in the problematic project directory:
             ```bash
-            $ ddev debug nfsmount
+            $ ddev utility nfsmount
             Successfully accessed NFS mount of /Users/rfay/workspace/d8composer
             TARGET    SOURCE                                                FSTYPE OPTIONS
             /nfsmount :/System/Volumes/Data/Users/rfay/workspace/d8composer nfs    rw,relatime,vers=3,rsize=65536,wsize=65536,namlen=255,hard,    nolock,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.65.2,mountvers=3,mountproto=tcp,local_lock=all,addr=192.168.65.2
@@ -323,7 +323,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
         To debug and solve permission problems:
 
-        * Try [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) in a project directory to see if basic NFS mounting is working. If that works, everything else probably will too.
+        * Try [`ddev utility nfsmount`](../usage/commands.md#utility-nfsmount) in a project directory to see if basic NFS mounting is working. If that works, everything else probably will too.
         * When debugging, run [`ddev restart`](../usage/commands.md#restart) in between each change. Otherwise, you can have stale mounts inside the container and you’ll miss any benefit you may find in the debugging process.
         * Inspect `~/.ddev/nfs_exports.txt`.
         * Restart the server with `sudo nssm restart nfsd`.

@@ -60,30 +60,30 @@ DDEV provides several debugging commands for working with remote configuration:
 
 ```bash
 # Decode and view cached remote config
-ddev debug gob-decode ~/.ddev/.remote-config
+ddev utility gob-decode ~/.ddev/.remote-config
 
 # Decode sponsorship data
-ddev debug gob-decode ~/.ddev/.sponsorship-data
+ddev utility gob-decode ~/.ddev/.sponsorship-data
 
 # Decode analytics cache  
-ddev debug gob-decode ~/.ddev/.amplitude.cache
+ddev utility gob-decode ~/.ddev/.amplitude.cache
 ```
 
 ### Download Fresh Data
 
 ```bash
 # Download latest remote config (updates cache by default)
-ddev debug remote-data --type=remote-config
+ddev utility remote-data --type=remote-config
 
 # Download sponsorship data without updating cache
-ddev debug remote-data --type=sponsorship-data --update-storage=false
+ddev utility remote-data --type=sponsorship-data --update-storage=false
 ```
 
 ### View Available Conditions
 
 ```bash
 # List all available message conditions
-ddev debug message-conditions
+ddev utility message-conditions
 ```
 
 ## Messages
@@ -131,7 +131,7 @@ Every message can optionally include a condition and version constraint to limit
 the message to matching conditions and DDEV versions.
 
 Each element in the `conditions` array may contain a condition listed by
-`ddev debug message-conditions`. It may be prefixed by a `!` to negate the
+`ddev utility message-conditions`. It may be prefixed by a `!` to negate the
 condition. All conditions must be met in order for a message to be displayed.
 Unknown conditions are always met.
 
@@ -219,11 +219,11 @@ Use the debug commands to validate your configuration:
 
 ```bash
 # Download and validate remote config (tests your configured URL from global config)
-ddev debug remote-data --type=remote-config --update-storage=false
+ddev utility remote-data --type=remote-config --update-storage=false
 
 # View the current cached config
-ddev debug gob-decode ~/.ddev/.remote-config
+ddev utility gob-decode ~/.ddev/.remote-config
 
 # Verify message conditions work
-ddev debug message-conditions
+ddev utility message-conditions
 ```

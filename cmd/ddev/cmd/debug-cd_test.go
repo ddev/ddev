@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// TestDebugCdCmd runs `ddev debug cd` to see if it works.
+// TestDebugCdCmd runs `ddev utility cd` to see if it works.
 func TestDebugCdCmd(t *testing.T) {
 	assert := asrt.New(t)
 	bashScript := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/host/shells/ddev.sh")

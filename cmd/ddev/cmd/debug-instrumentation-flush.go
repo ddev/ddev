@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugInstrumentationFlushCmd implements the ddev debug instrumentation flush command
+// DebugInstrumentationFlushCmd implements the ddev utility instrumentation flush command
 var DebugInstrumentationFlushCmd = &cobra.Command{
 	Use:   "flush",
 	Short: "Transmits usage statistics from the local cache",

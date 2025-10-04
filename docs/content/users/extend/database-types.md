@@ -43,12 +43,12 @@ database:
 
 Since the existing binary database may not be compatible with changes to your configuration, you need to check and/or migrate your database.
 
-- [`ddev debug get-volume-db-version`](../usage/commands.md#debug-get-volume-db-version) will show the current binary database type.
-- [`ddev debug check-db-match`](../usage/commands.md#debug-check-db-match) will show if your configured project matches the binary database type.
-- [`ddev debug migrate-database`](../usage/commands.md#debug-migrate-database) allows an automated attempt at migrating your database to a different type/version.
+- [`ddev utility get-volume-db-version`](../usage/commands.md#utility-get-volume-db-version) will show the current binary database type.
+- [`ddev utility check-db-match`](../usage/commands.md#utility-check-db-match) will show if your configured project matches the binary database type.
+- [`ddev utility migrate-database`](../usage/commands.md#utility-migrate-database) allows an automated attempt at migrating your database to a different type/version.
     - This only works with databases of type `mysql` or `mariadb`.
     - MySQL 8.0 has diverged in syntax from most of its predecessors, including earlier MySQL and all MariaDB versions. As a result, you may not be able to migrate *from* databases of type `mysql:8.0` because dumps from MySQL 8.0 often have keywords or other features not supported elsewhere.
-    - Examples: `ddev debug migrate-database mariadb:10.7`, `ddev debug migrate-database mysql:8.0`.
+    - Examples: `ddev utility migrate-database mariadb:10.7`, `ddev utility migrate-database mysql:8.0`.
 
 ## Caveats
 

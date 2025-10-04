@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestCmdDebugTest ensures that `ddev debug test` has basic functionality
+// TestCmdDebugTest ensures that `ddev utility test` has basic functionality
 func TestCmdDebugTest(t *testing.T) {
 	origDir, _ := os.Getwd()
 	site := TestSites[0]

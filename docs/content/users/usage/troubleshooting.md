@@ -12,12 +12,12 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 * On macOS, if you have a particular heavyweight project or are encountering `kill` statements in `ddev logs`, increase your memory allocation in your Docker provider. (Most projects are fine with 5-6GB allocated.)
 * On macOS your Docker provider limits the amount of disk space available to Docker. Make sure that you increase it if you're seeing disk space problems.
 * Please make sure that your project is in a subdirectory of your home directory and has normal ownership and privileges. For example, `ls -ld .` in your project directory should show you as owner of the directory and with write privileges.
-* Use [`ddev debug dockercheck`](commands.md#debug-dockercheck) and [`ddev debug test`](commands.md#debug-test) to help sort out Docker problems.
+* Use [`ddev utility dockercheck`](commands.md#utility-dockercheck) and [`ddev utility test`](commands.md#utility-test) to help sort out Docker problems.
 * Make sure you do not have disk space problems on your computer. This can be especially tricky on WSL2, where you need to check both the main Windows disk space and WSL2 disk space as well.
 * On macOS, check to make sure your Docker provider is not out of disk space. In *Settings* (or *Preferences*) → *Resources* → *Disk image size* there should be ample space left; try not to let usage exceed 80% because the reported number can be unreliable. If it says zero used, something is wrong.
 * If you have customizations like PHP overrides, nginx or Apache overrides, MySQL/PostgreSQL overrides, custom services, or `config.yaml` changes, please back them out while troubleshooting. It’s important to have the simplest possible environment while troubleshooting.
 * Restart Docker. Consider a Docker factory reset in serious cases, which will destroy any databases you’ve loaded. See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting-docker) for more.
-* Try the simplest possible DDEV project (like [`ddev debug test`](commands.md#debug-test) does):
+* Try the simplest possible DDEV project (like [`ddev utility test`](commands.md#utility-test) does):
 
     ```bash
     ddev poweroff
@@ -271,7 +271,7 @@ The error messages you get will be more informative than messages that come when
 You can also see the output from the full Docker build using either
 
 ```
-ddev debug rebuild
+ddev utility rebuild
 ```
 
 or
@@ -286,7 +286,7 @@ The Docker build environment (where all projects have a little bit happening) is
 
 * **WSL2**: On WSL2 it's a known issue that the WSL2 environment time can get out of sync with the real time. This is an [ongoing problem](https://github.com/microsoft/WSL/issues/10006) with WSL2, and can be fixed with various workarounds. One good workaround is to install `ntpdate` and `sudo ntpdate pool.ntp.org` to sync the time. The time in WSL2 can get out of sync due to laptop sleeping or other causes. A reboot also fixes it.
 * **VPN**: If you are on a packet-inspection VPN, it often causes problems with validation of certificates on internet sites. In that situation you'll need to get the CA updates required and install them with a custom Dockerfile, as described on [Stack Overflow](https://stackoverflow.com/questions/71595327/corporate-network-ddev-composer-create-results-in-ssl-certificate-error/71595428#71595428).
-* **Other Docker Build**: The Dockerfile build environment is different from the host-side build and different from what you get with `ddev ssh`. If you're having trouble with it it may be caused by name resolution or IP connectivity problems, most often caused by a firewall or VPN. Turn off your firewall temporarily and VPN. A good debugging technique would be to do a simple `.ddev/web-build/Dockerfile` that does `RUN curl -I https://www.google.com` and then use `ddev debug rebuild` to see the result. If it gets a 200 result, then your name resolution and internet connectivity are working in the Docker build environment.
+* **Other Docker Build**: The Dockerfile build environment is different from the host-side build and different from what you get with `ddev ssh`. If you're having trouble with it it may be caused by name resolution or IP connectivity problems, most often caused by a firewall or VPN. Turn off your firewall temporarily and VPN. A good debugging technique would be to do a simple `.ddev/web-build/Dockerfile` that does `RUN curl -I https://www.google.com` and then use `ddev utility rebuild` to see the result. If it gets a 200 result, then your name resolution and internet connectivity are working in the Docker build environment.
 
 ## DDEV Starts but Browser Can’t Access URL
 
