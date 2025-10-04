@@ -66,7 +66,7 @@ ddev exec --raw -- ls -lR`,
 			}
 			// opts.RawCmd is used instead of opts.Cmd
 			opts.RawCmd = args
-			opts.Env = append(os.Environ(), env...)
+			opts.Env = env
 		}
 
 		_, _, err = app.Exec(opts)

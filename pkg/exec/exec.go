@@ -18,7 +18,7 @@ import (
 // CmdOption is a function type for configuring exec.Cmd
 type CmdOption func(*exec.Cmd)
 
-// WithStdin sets the stdin for the command
+// WithStdin sets the stdin for the host command
 func WithStdin(stdin io.Reader) CmdOption {
 	return func(cmd *exec.Cmd) {
 		if globalconfig.DdevVerbose {
@@ -28,13 +28,16 @@ func WithStdin(stdin io.Reader) CmdOption {
 	}
 }
 
-// WithEnv sets the environment variables for the command
+// WithEnv sets the environment variables for the host command
 func WithEnv(env []string) CmdOption {
 	return func(cmd *exec.Cmd) {
 		if globalconfig.DdevVerbose {
 			output.UserOut.Printf("WithEnv: setting env vars %v", env)
 		}
-		cmd.Env = append(os.Environ(), env...)
+		if cmd.Env == nil {
+			cmd.Env = os.Environ()
+		}
+		cmd.Env = append(cmd.Env, env...)
 	}
 }
 
