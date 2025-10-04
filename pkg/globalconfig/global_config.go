@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	configTypes "github.com/ddev/ddev/pkg/config/types"
@@ -145,15 +146,32 @@ func GetMutagenPath() string {
 	return filepath.Join(GetDDEVBinDir(), mutagenBinary)
 }
 
-var checkedMutagenSocketPathLength = false
+var (
+	checkedMutagenSocketPathLength = false
+	mutagenSocketPathMutex         sync.RWMutex
+)
 
 // checkMutagenSocketPathLength tells people if the Mutagen socket path is too long.
 // Mutagen may fail with this error: "unable to connect to daemon: connection timed out (is the daemon running?)"
 // See https://github.com/garden-io/garden/issues/4527#issuecomment-1584286590
 func checkMutagenSocketPathLength() {
+	// First check with read lock to avoid expensive work if already checked
+	mutagenSocketPathMutex.RLock()
+	if checkedMutagenSocketPathLength {
+		mutagenSocketPathMutex.RUnlock()
+		return
+	}
+	mutagenSocketPathMutex.RUnlock()
+
+	// Need to do the check, acquire write lock
+	mutagenSocketPathMutex.Lock()
+	defer mutagenSocketPathMutex.Unlock()
+
+	// Double-check in case another goroutine completed the check
 	if checkedMutagenSocketPathLength {
 		return
 	}
+
 	// Skip if not Linux or macOS.
 	if !nodeps.IsLinux() && !nodeps.IsMacOS() {
 		checkedMutagenSocketPathLength = true
@@ -213,7 +231,10 @@ func ValidateGlobalConfig() error {
 		return fmt.Errorf("invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
-	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
+	// Empty router field is treated as implicit default (traefik)
+	if DdevGlobalConfig.Router == "" {
+		DdevGlobalConfig.Router = types.RouterTypeTraefik
+	} else if !types.IsValidRouterType(DdevGlobalConfig.Router) {
 		output.UserOut.Warnf("\nThe only valid router type is %s, but you have router: %s in your global configuration, using %s instead.\n", types.RouterTypeTraefik, DdevGlobalConfig.Router, types.RouterTypeTraefik)
 		DdevGlobalConfig.Router = types.RouterTypeTraefik
 	}
