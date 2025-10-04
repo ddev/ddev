@@ -2,6 +2,7 @@ package remoteconfig
 
 import (
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 
@@ -220,6 +221,7 @@ func (c *remoteConfig) getTickerInterval() time.Duration {
 // interval has been elapsed.
 func (c *remoteConfig) showTickerMessage() bool {
 	return !output.JSONOutput &&
+		os.Getenv("CI") != "true" &&
 		!c.isTickerDisabled() &&
 		c.state.LastTickerAt.Add(c.getTickerInterval()).Before(time.Now())
 }
@@ -230,6 +232,8 @@ func (c *remoteConfig) showSponsorshipMessage() bool {
 	// Use the same interval as ticker for consistency (once per day)
 	sponsorshipInterval := c.getTickerInterval()
 	return !output.JSONOutput &&
+		os.Getenv("CI") != "true" &&
+		!c.isTickerDisabled() &&
 		c.state.LastSponsorshipAt.Add(sponsorshipInterval).Before(time.Now())
 }
 
@@ -362,8 +366,8 @@ func applyTableStyle(preset preset, writer table.Writer) {
 		}
 	case ticker:
 		style.Color = table.ColorOptions{
-			Header: text.Colors{text.BgHiWhite, text.FgBlack},
-			Row:    text.Colors{text.BgHiWhite, text.FgBlack},
+			Header: text.Colors{text.BgHiCyan, text.FgBlack},
+			Row:    text.Colors{text.BgHiCyan, text.FgBlack},
 		}
 	case sponsorship:
 		style.Color = table.ColorOptions{
