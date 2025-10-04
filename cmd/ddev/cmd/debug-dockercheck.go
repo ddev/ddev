@@ -25,21 +25,56 @@ var DebugDockercheckCmd = &cobra.Command{
 		}
 
 		versionInfo := version.GetVersionInfo()
+		bashPath := util.FindBashPath()
 		util.Success("Docker platform: %v", versionInfo["docker-platform"])
 		switch versionInfo["docker-platform"] {
 		case "colima":
 			p, err := exec.LookPath("colima")
 			if err == nil {
-				bashPath := util.FindBashPath()
-				out, err := exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s version | awk '/colima version/ {print $3}'", p))
+				out, err := exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s --version | awk '{print $3}'", p))
 				out = strings.Trim(out, "\r\n ")
 				if err == nil {
 					util.Success("Colima version: %v", out)
 				}
 			}
+		case "lima":
+			p, err := exec.LookPath("limactl")
+			if err == nil {
+				out, err := exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s --version | awk '{print $3}'", p))
+				out = strings.Trim(out, "\r\n ")
+				if err == nil {
+					util.Success("Lima version: %v", out)
+				}
+			}
+		case "orbstack":
+			p, err := exec.LookPath("orb")
+			if err == nil {
+				out, err := exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s version | awk '/Version/ {print $2}'", p))
+				out = strings.Trim(out, "\r\n ")
+				if err == nil {
+					util.Success("OrbStack version: %v", out)
+				}
+			}
+		case "rancher-desktop":
+			p, err := exec.LookPath("rdctl")
+			if err == nil {
+				out, err := exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s version | awk '/version/ {print $4}'", p))
+				out = strings.Trim(out, "\r\n, ")
+				if err == nil {
+					util.Success("Rancher Desktop version: %v", out)
+				}
+			}
 
 		case "docker desktop":
 			dockerutil.IsDockerDesktop()
+		}
+
+		buildxVersion, err := exec2.RunHostCommand(bashPath, "-c", "docker buildx version | awk '{print $2}'")
+		if err != nil {
+			util.Failed("buildx is required and does not seem to be installed. Please install with 'brew install docker-buildx or see %s", buildxVersion, "https://github.com/docker/buildx#installing")
+		} else {
+			buildxVersion = strings.Trim(buildxVersion, "\r\n ")
+			util.Success("docker buildx version %s", buildxVersion)
 		}
 
 		dockerContextName, dockerHost, err := dockerutil.GetDockerContextNameAndHost()
