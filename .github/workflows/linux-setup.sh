@@ -33,8 +33,6 @@ for item in bats-core ddev docker-compose ghr golangci-lint bats-assert bats-fil
     brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
 
-mkcert -install
-
 # Show info to simplify debugging
 docker info
 docker version

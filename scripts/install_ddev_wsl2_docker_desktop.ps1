@@ -46,8 +46,6 @@ wsl -u root -e bash -c 'echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://
 wsl -u root -e bash -c "apt-get update && apt-get install -y wslu"
 wsl -u root -e bash -c "apt-get install -y --no-install-recommends ddev ddev-wsl2"
 
-wsl mkcert.exe -install
-$env:CAROOT = & wsl mkcert.exe -CAROOT
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
 $defaultDistro = (wsl --list --quiet | Select-Object -First 1) -replace '[\r\n\x00-\x1F\x7F-\x9F]', '' -replace '^\s+|\s+$', ''
@@ -55,7 +53,6 @@ Write-Host "Terminating default WSL2 distro: $defaultDistro"
 wsl --terminate $defaultDistro
 
 wsl bash -c 'echo CAROOT=$CAROOT'
-wsl mkcert -install
 if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet. Check Resources->WSL Integration in Docker Desktop"
 }

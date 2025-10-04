@@ -34,7 +34,7 @@ darwin)
     brew link mysql-client@8.0
     ;;
 windows)
-    (yes | choco upgrade -y ddev golang nodejs markdownlint-cli mkcert mkdocs postgresql) || true
+    (yes | choco upgrade -y ddev golang nodejs markdownlint-cli mkdocs postgresql) || true
     ;;
 esac
 
