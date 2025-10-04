@@ -310,31 +310,6 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 	return manifest, nil
 }
 
-// getInjectedEnv returns bash export string for env variables
-// that will be used in PreInstallActions and PostInstallActions
-func getInjectedEnv(envFile string, verbose bool) string {
-	injectedEnv := "true"
-	envMap, _, err := ddevapp.ReadProjectEnvFile(envFile)
-	if err != nil && !os.IsNotExist(err) {
-		util.Failed("Unable to read %s file: %v", envFile, err)
-	}
-	if len(envMap) > 0 {
-		if verbose {
-			util.Warning("Using env file %s", envFile)
-		}
-		injectedEnv = "export"
-		for k, v := range envMap {
-			// Escape all spaces and dollar signs
-			v = strings.ReplaceAll(strings.ReplaceAll(v, `$`, `\$`), ` `, `\ `)
-			injectedEnv = injectedEnv + fmt.Sprintf(" %s=%s ", k, v)
-			if verbose {
-				util.Warning(`%s=%s`, k, v)
-			}
-		}
-	}
-	return injectedEnv
-}
-
 func init() {
 	AddonGetCmd.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	AddonGetCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")
