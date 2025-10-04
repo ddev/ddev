@@ -11,6 +11,7 @@ import (
 	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 )
 
@@ -131,6 +132,22 @@ var DebugDockercheckCmd = &cobra.Command{
 		}
 
 		dockerutil.CheckAvailableSpace()
+
+		// Test buildx with a trivial build on the host
+		out, err = exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("echo 'FROM %s' | docker buildx build --quiet -f- -t ddev-buildx-test:latest . && docker rmi -f ddev-buildx-test:latest", versionconstants.UtilitiesImage))
+		if err != nil {
+			util.Warning("Unable to perform trivial build with buildx: %v; output=%s", err, out)
+		} else {
+			util.Success("docker buildx is working correctly (trivial build succeeded)")
+		}
+
+		// Check docker auth configuration
+		err = dockerutil.CheckDockerAuth()
+		if err != nil {
+			util.Warning("Docker authentication may have issues: %v", err)
+		} else {
+			util.Success("Docker authentication is configured correctly")
+		}
 	},
 }
 
