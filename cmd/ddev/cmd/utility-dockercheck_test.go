@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestUtilityDockcheckCmd tests basic functionality of ddev utility dockercheck
-func TestUtilityDockcheckCmd(t *testing.T) {
+// TestUtilityDockercheckCmd tests basic functionality of ddev utility dockercheck
+func TestUtilityDockercheckCmd(t *testing.T) {
 	// Basic execution test
 	out, err := exec.RunHostCommand(DdevBin, "utility", "dockercheck")
 	require.NoError(t, err)
