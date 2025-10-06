@@ -105,16 +105,7 @@
 @test "verify that both nginx logs and fpm logs are being tailed (${WEBSERVER_TYPE})" {
   curl -sSL http://127.0.0.1:$HOST_HTTP_PORT/test/fatal.php >/dev/null 2>&1
   # php-fpm message direct
-  docker logs ${CONTAINER_NAME} 2>&1 | grep "^NOTICE: PHP message: PHP Fatal error:"
-  # Apache and nginx variants
-  case "${WEBSERVER_TYPE}" in
-    "nginx-fpm")
-      docker logs $CONTAINER_NAME 2>&1 | grep "FastCGI sent in stderr:" >/dev/null
-      ;;
-    "apache-fpm")
-      docker logs $CONTAINER_NAME 2>&1 | fgrep "[proxy_fcgi:error]" >/dev/null
-      ;;
-  esac
+  docker logs ${CONTAINER_NAME} 2>&1 | grep "PHP Fatal error:  Fatal error in"
 }
 
 @test "verify htaccess doesn't break ${WEBSERVER_TYPE} php${PHP_VERSION}" {
