@@ -13,6 +13,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
 
@@ -26,7 +27,7 @@ func GetVersionInfo() map[string]string {
 	versionInfo["DDEV version"] = versionconstants.DdevVersion
 	versionInfo["ddev-environment"] = environment.GetDDEVEnvironment()
 	versionInfo["cgo_enabled"] = strconv.FormatInt(versionconstants.CGOEnabled, 10)
-	versionInfo["global-ddev-dir"] = globalconfig.GetGlobalDdevDir()
+	versionInfo["global-ddev-dir"] = util.WindowsPathToCygwinPath(globalconfig.GetGlobalDdevDir())
 	versionInfo["go-version"] = runtime.Version()
 	versionInfo["web"] = docker.GetWebImage()
 	versionInfo["db"] = docker.GetDBImage(nodeps.MariaDB, "")

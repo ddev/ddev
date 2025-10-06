@@ -15,4 +15,4 @@ global_files:
 - file-with-no-ddev-generated.txt
 
 post_install_actions:
-- touch ~/.ddev/commands/web/global-touched
+- touch "$DDEV_GLOBAL_DIR/commands/web/global-touched"
