@@ -10,7 +10,7 @@ set -o nounset
 
 if [ ! -d /usr/local/bin ]; then echo 'using sudo to mkdir missing /usr/local/bin' && sudo mkdir -p /usr/local/bin; fi
 
-GITHUB_OWNER=${GITHUB_OWNER:-ddev}
+DDEV_GITHUB_OWNER=${DDEV_GITHUB_OWNER:-ddev}
 ARTIFACTS="ddev ddev-hostname mkcert"
 
 TMPDIR=/tmp
@@ -94,7 +94,7 @@ case ${unamearch} in
   ;;
 esac
 
-LATEST_RELEASE=$(curl -fsSL -H 'Accept: application/json' https://github.com/${GITHUB_OWNER}/ddev/releases/latest || (printf "${RED}Failed to get find latest release${RESET}\n" >/dev/stderr && exit 107))
+LATEST_RELEASE=$(curl -fsSL -H 'Accept: application/json' https://github.com/${DDEV_GITHUB_OWNER}/ddev/releases/latest || (printf "${RED}Failed to get find latest release${RESET}\n" >/dev/stderr && exit 107))
 # The releases are returned in the format {"id":3622206,"tag_name":"hello-1.0.0.11",...}, we have to extract the tag_name.
 LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
 
@@ -102,7 +102,7 @@ VERSION=$LATEST_VERSION
 if [ $# -ge 1 ]; then
   VERSION=$1
 fi
-RELEASE_BASE_URL="https://github.com/${GITHUB_OWNER}/ddev/releases/download/$VERSION"
+RELEASE_BASE_URL="https://github.com/${DDEV_GITHUB_OWNER}/ddev/releases/download/$VERSION"
 
 if [[ "$OS" == "Darwin" ]]; then
     SHACMD="shasum -a 256 --ignore-missing"
