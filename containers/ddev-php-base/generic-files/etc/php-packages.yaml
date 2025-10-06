@@ -41,3 +41,13 @@ php83:
 php84:
   amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
   arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+
+# These are the standard packages carried forward from php8.4
+php85-todo:
+  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+
+# temp workaround until php8.5 packages are available
+php85:
+  amd64: ["bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "pgsql", "readline", "soap", "sqlite3",   "xml", "zip"]
+  arm64: [ "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql",  "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
