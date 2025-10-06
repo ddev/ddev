@@ -66,13 +66,13 @@ darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-host
 darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/darwin_arm64/ddev-hostname
 windows_amd64: windows_amd64_install
 windows_arm64: windows_arm64_install
-wsl_amd64: $(GOTMP)/bin/wsl_amd64/ddev-hostname.exe $(GOTMP)/bin/wsl_amd64/mkcert.exe
-wsl_arm64: $(GOTMP)/bin/wsl_arm64/ddev-hostname.exe $(GOTMP)/bin/wsl_arm64/mkcert.exe
+wsl_amd64: $(GOTMP)/bin/wsl_amd64/ddev-hostname.exe
+wsl_arm64: $(GOTMP)/bin/wsl_arm64/ddev-hostname.exe
 
 completions: $(GOTMP)/bin/completions.tar.gz
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/linux_amd64/ddev-hostname $(GOTMP)/bin/linux_arm64/ddev-hostname $(GOTMP)/bin/darwin_amd64/ddev-hostname $(GOTMP)/bin/darwin_arm64/ddev-hostname $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe
-$(TARGETS): mkcert $(GOFILES)
+$(TARGETS): $(GOFILES)
 	@rm -f $@
 	@export TARGET=$(word 3, $(subst /, ,$@)); \
 	if [[ "$@" == *ddev-hostname.exe ]]; then \
@@ -102,25 +102,8 @@ $(GOTMP)/bin/wsl_arm64/ddev-hostname.exe: $(GOTMP)/bin/windows_arm64/ddev-hostna
 	mkdir -p $(GOTMP)/bin/wsl_arm64
 	cp $< $@
 
-$(GOTMP)/bin/wsl_amd64/mkcert.exe: $(GOTMP)/bin/windows_amd64/mkcert.exe
-	mkdir -p $(GOTMP)/bin/wsl_amd64
-	cp $< $@
-
-$(GOTMP)/bin/wsl_arm64/mkcert.exe: $(GOTMP)/bin/windows_arm64/mkcert.exe
-	mkdir -p $(GOTMP)/bin/wsl_arm64
-	cp $< $@
-
-mkcert: $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert
-
 # Set CURL to the Homebrew-installed curl, fallback to default
 CURL := $(shell command -v /opt/homebrew/opt/curl/bin/curl || command -v /usr/local/opt/curl/bin/curl || echo curl)
-
-# Download mkcert to it can be added to tarball installations
-$(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert:
-	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" MKCERT_VERSION=v1.4.4 && \
-	mkdir -p $(GOTMP)/bin/$${GOOS}_$${GOARCH} && \
-	$(CURL) --fail -JL -s -S --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://github.com/FiloSottile/mkcert/releases/download/$${MKCERT_VERSION}/mkcert-$${MKCERT_VERSION}-$${GOOS}-$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
 
 TEST_TIMEOUT=4h
 BUILD_ARCH = $(shell go env GOARCH)
@@ -271,20 +254,20 @@ windows_amd64_install: $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.e
 windows_arm64_install: $(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe
 windows_install: windows_amd64_install windows_arm64_install
 
-windows_amd64_sign_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows amd64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/ddev-hostname.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"; fi
+windows_amd64_sign_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe
+	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows amd64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/ddev-hostname.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"; fi
 
-windows_arm64_sign_binaries: $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/mkcert.exe
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows arm64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_arm64/ddev.exe" ".gotmp/bin/windows_arm64/ddev-hostname.exe" ".gotmp/bin/windows_arm64/mkcert.exe" ".gotmp/bin/windows_arm64/ddev_gen_autocomplete.exe"; fi
+windows_arm64_sign_binaries: $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe
+	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows arm64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_arm64/ddev.exe" ".gotmp/bin/windows_arm64/ddev-hostname.exe" ".gotmp/bin/windows_arm64/ddev_gen_autocomplete.exe"; fi
 
 windows_sign_binaries: windows_amd64_sign_binaries windows_arm64_sign_binaries
 
-$(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_amd64_sign_binaries linux_amd64 $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev_windows_installer.nsi
+$(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_amd64_sign_binaries linux_amd64 winpkg/ddev_windows_installer.nsi
 	@makensis -DTARGET_ARCH=amd64 -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 $@, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows installer amd64 binary..." && signtool sign -fd SHA256 "$@"; fi
 	$(SHASUM) $@ >$@.sha256.txt
 
-$(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe: windows_arm64_sign_binaries linux_arm64  $(GOTMP)/bin/windows_arm64/mkcert_license.txt winpkg/ddev_windows_installer.nsi
+$(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe: windows_arm64_sign_binaries linux_arm64 winpkg/ddev_windows_installer.nsi
 	@makensis -DTARGET_ARCH=arm64 -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 $@, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows installer arm64 binary..." && signtool sign -fd SHA256 "$@"; fi
 	$(SHASUM) $@ >$@.sha256.txt
@@ -304,14 +287,6 @@ chocolatey: $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe
 		docker run --rm -v "/$(PWD)/$(GOTMP)/bin/windows_amd64/chocolatey:/tmp/chocolatey" -w "//tmp/chocolatey" linuturk/mono-choco pack ddev.nuspec; \
 		echo "chocolatey package is in $(GOTMP)/bin/windows_amd64/chocolatey"; \
 	fi
-
-$(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt:
-	$(CURL) --fail -S --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -JL -s -o $(GOTMP)/bin/windows_amd64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/amd64"
-	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
-
-$(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.txt:
-	$(CURL) --fail -JL -S --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -s -o $(GOTMP)/bin/windows_arm64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/arm64"
-	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o $(GOTMP)/bin/windows_arm64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
 
 # Best to install golangci-lint locally with "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.31.0"
 golangci-lint:
