@@ -987,11 +987,13 @@ func TestPHPConfig(t *testing.T) {
 	// so we can subtract those if GOTEST_SHORT==""
 	phpKeys := nodeps.GetValidPHPVersions()
 	exclusions := []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}
-	//TODO: php8.5: Remove this exclusion when php85 has redis
-	exclusions = append(exclusions, nodeps.PHP85)
 	if os.Getenv("GOTEST_SHORT") != "" {
 		phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	}
+
+	//TODO: php8.5: Remove this exclusion when php85 has redis
+	phpKeys = util.SubtractSlices(phpKeys, []string{nodeps.PHP85})
+
 	sort.Strings(phpKeys)
 
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/.env"), filepath.Join(site.Dir, ".ddev/.env"))
