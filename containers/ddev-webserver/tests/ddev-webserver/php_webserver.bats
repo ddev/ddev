@@ -14,6 +14,8 @@
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    # TODO: Enable for php8.5 when extensions are available
+    if [ "${PHP_VERSION}" = "8.5" ]; then skip "xdebug not yet available on PHP8.5"; fi
     CURRENT_ARCH=$(../get_arch.sh)
     docker exec -t $CONTAINER_NAME enable_xdebug
     if [[ ${PHP_VERSION} != 8.? ]] ; then
@@ -28,6 +30,8 @@
 }
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    # TODO: Enable for php8.5 when extensions are available
+    if [ "${PHP_VERSION}" = "8.5" ]; then skip "xhprof not yet available on PHP8.5"; fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xhprof
