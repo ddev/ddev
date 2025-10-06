@@ -40,6 +40,12 @@ func TestCmdXdebug(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, phpVersion := range phpVersions {
+		//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
+		if phpVersion == nodeps.PHP85 {
+			t.Log("Skipping xdebug tests for PHP8.5 untl xdebug lands in PHP8.5")
+			continue
+		}
+
 		t.Logf("Testing Xdebug command in php%s", phpVersion)
 		_, err := exec.RunHostCommand(DdevBin, "config", "--php-version", phpVersion)
 		require.NoError(t, err)
