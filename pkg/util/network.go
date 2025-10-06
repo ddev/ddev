@@ -85,18 +85,24 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 				err = fmt.Errorf("creating request for shaSum URL %s: %w", shaSumURL, reqErr)
 				return
 			}
-			gitHubHeaders := github.GetGitHubHeaders(shaSumURL)
+			gitHubHeaders, tokenMessage := github.GetGitHubHeaders(shaSumURL)
 			for key, value := range gitHubHeaders {
 				req.Header.Set(key, value)
 			}
 			resp, getErr := client.Do(req)
 			if getErr != nil {
-				err = fmt.Errorf("downloading shaSum URL %s: %w", shaSumURL, getErr)
+				err = fmt.Errorf("downloading shaSum URL %s: %w\n%s", shaSumURL, getErr, tokenMessage)
+				if tokenMessage != "" {
+					err = fmt.Errorf("%w\n%s", err, tokenMessage)
+				}
 				return
 			}
 			if resp.StatusCode != http.StatusOK {
 				CheckClose(resp.Body)
 				err = fmt.Errorf("unexpected HTTP status downloading %s: %s", shaSumURL, resp.Status)
+				if tokenMessage != "" {
+					err = fmt.Errorf("%w\n%s", err, tokenMessage)
+				}
 				return
 			}
 			body, readErr := io.ReadAll(resp.Body)
@@ -107,6 +113,9 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 					continue
 				}
 				err = fmt.Errorf("reading shaSum: %w", readErr)
+				if tokenMessage != "" {
+					err = fmt.Errorf("%w\n%s", err, tokenMessage)
+				}
 				return
 			}
 			expectedSHA = strings.TrimSpace(string(body))
@@ -132,7 +141,7 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 			err = fmt.Errorf("creating request for file URL %s: %w", fileURL, reqErr)
 			return
 		}
-		gitHubHeaders := github.GetGitHubHeaders(fileURL)
+		gitHubHeaders, tokenMessage := github.GetGitHubHeaders(fileURL)
 		for key, value := range gitHubHeaders {
 			req.Header.Set(key, value)
 		}
@@ -140,12 +149,18 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 		if getErr != nil {
 			_ = outFile.Close()
 			err = fmt.Errorf("downloading file %s: %w", fileURL, getErr)
+			if tokenMessage != "" {
+				err = fmt.Errorf("%w\n%s", err, tokenMessage)
+			}
 			return
 		}
 		if resp.StatusCode != http.StatusOK {
 			CheckClose(resp.Body)
 			_ = outFile.Close()
 			err = fmt.Errorf("download link %s returned wrong status code: got %d want %d", fileURL, resp.StatusCode, http.StatusOK)
+			if tokenMessage != "" {
+				err = fmt.Errorf("%w\n%s", err, tokenMessage)
+			}
 			return
 		}
 
@@ -177,6 +192,9 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 				continue
 			}
 			err = copyErr
+			if tokenMessage != "" {
+				err = fmt.Errorf("%w\n%s", err, tokenMessage)
+			}
 			return
 		}
 		// Success - break out of retry loop

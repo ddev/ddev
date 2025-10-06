@@ -1,7 +1,6 @@
 package github_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/github"
@@ -10,8 +9,8 @@ import (
 
 // TestGetGitHubRelease tests the GetGitHubRelease function with various scenarios.
 func TestGetGitHubRelease(t *testing.T) {
-	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
-		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
 	}
 
 	// Test getting latest release
@@ -66,22 +65,22 @@ func TestGetGitHubToken(t *testing.T) {
 		t.Setenv("GITHUB_TOKEN", "")
 
 		// Test no tokens returns empty
-		token := github.GetGitHubToken()
+		token, _ := github.GetGitHubToken()
 		require.Empty(t, token, "Should return empty when no tokens set")
 
 		// Test GITHUB_TOKEN only
 		t.Setenv("GITHUB_TOKEN", "github_token_value")
-		token = github.GetGitHubToken()
+		token, _ = github.GetGitHubToken()
 		require.Equal(t, "github_token_value", token, "Should return GITHUB_TOKEN when it's the only one set")
 
 		// Test GH_TOKEN overrides GITHUB_TOKEN
 		t.Setenv("GH_TOKEN", "gh_token_value")
-		token = github.GetGitHubToken()
+		token, _ = github.GetGitHubToken()
 		require.Equal(t, "gh_token_value", token, "Should return GH_TOKEN when both GH_TOKEN and GITHUB_TOKEN are set")
 
 		// Test DDEV_GITHUB_TOKEN has the highest precedence
 		t.Setenv("DDEV_GITHUB_TOKEN", "ddev_token_value")
-		token = github.GetGitHubToken()
+		token, _ = github.GetGitHubToken()
 		require.Equal(t, "ddev_token_value", token, "Should return DDEV_GITHUB_TOKEN when all tokens are set")
 	})
 }
@@ -92,12 +91,12 @@ func TestGetGitHubHeaders(t *testing.T) {
 		t.Setenv("DDEV_GITHUB_TOKEN", "test_token")
 
 		// Test https://github.com URLs
-		headers := github.GetGitHubHeaders("https://github.com/owner/repo")
+		headers, _ := github.GetGitHubHeaders("https://github.com/owner/repo")
 		require.Equal(t, "Bearer test_token", headers["Authorization"], "Should include auth header for https://github.com")
 		require.Equal(t, "2022-11-28", headers["X-Github-Api-Version"], "Should include API version header")
 
 		// Test https://api.github.com URLs
-		headers = github.GetGitHubHeaders("https://api.github.com/repos/owner/repo")
+		headers, _ = github.GetGitHubHeaders("https://api.github.com/repos/owner/repo")
 		require.Equal(t, "Bearer test_token", headers["Authorization"], "Should include auth header for https://api.github.com")
 		require.Equal(t, "2022-11-28", headers["X-Github-Api-Version"], "Should include API version header")
 	})
@@ -114,7 +113,7 @@ func TestGetGitHubHeaders(t *testing.T) {
 		}
 
 		for _, testURL := range testURLs {
-			headers := github.GetGitHubHeaders(testURL)
+			headers, _ := github.GetGitHubHeaders(testURL)
 			require.Empty(t, headers, "Should return empty headers for non-GitHub URL: %s", testURL)
 		}
 	})
@@ -124,7 +123,7 @@ func TestGetGitHubHeaders(t *testing.T) {
 		t.Setenv("GH_TOKEN", "")
 		t.Setenv("GITHUB_TOKEN", "")
 
-		headers := github.GetGitHubHeaders("https://github.com/owner/repo")
+		headers, _ := github.GetGitHubHeaders("https://github.com/owner/repo")
 		require.Empty(t, headers, "Should return empty headers when no token is set")
 	})
 }
