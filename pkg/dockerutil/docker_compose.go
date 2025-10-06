@@ -32,6 +32,7 @@ type ComposeCmdOpts struct {
 	Progress     bool // Add dots every second while the compose command is running
 	Timeout      time.Duration
 	ProjectName  string // Optional project name to set via -p flag
+	Env          []string
 }
 
 // ComposeWithStreams executes a docker-compose command but allows the caller to specify
@@ -78,6 +79,7 @@ func ComposeWithStreams(cmd *ComposeCmdOpts, stdin io.Reader, stdout io.Writer, 
 	} else {
 		proc.Stdin = stdin
 	}
+	proc.Env = append(os.Environ(), cmd.Env...)
 
 	err = proc.Run()
 	return err
@@ -137,6 +139,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	} else {
 		proc.Stdin = os.Stdin
 	}
+	proc.Env = append(os.Environ(), cmd.Env...)
 
 	stderrPipe, err := proc.StderrPipe()
 	if err != nil {
@@ -381,15 +384,22 @@ func PullImages(images []string, pullAlways bool) error {
 		util.Debug(`Pulling image for %s ("%s" service)`, image, service)
 	}
 
+	if len(composeYamlPull.Services) == 0 {
+		util.Debug("All images already exist locally, no pull needed")
+		return nil
+	}
+
 	if !output.JSONOutput && isatty.IsTerminal(os.Stdin.Fd()) {
 		err = ComposeWithStreams(&ComposeCmdOpts{
 			ComposeYaml: composeYamlPull,
 			Action:      []string{"pull"},
+			Env:         []string{"COMPOSE_DISABLE_ENV_FILE=1"},
 		}, nil, os.Stdout, os.Stderr)
 	} else {
 		_, _, err = ComposeCmd(&ComposeCmdOpts{
 			ComposeYaml: composeYamlPull,
 			Action:      []string{"pull"},
+			Env:         []string{"COMPOSE_DISABLE_ENV_FILE=1"},
 		})
 	}
 
