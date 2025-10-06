@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	dockerContainer "github.com/docker/docker/api/types/container"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	dockerContainer "github.com/docker/docker/api/types/container"
 
 	copy2 "github.com/otiai10/copy"
 
@@ -1030,6 +1031,10 @@ func TestPHPConfig(t *testing.T) {
 
 		// This list does not contain all expected, as php5.6 is missing some, etc.
 		expectedExtensions := []string{"apcu", "bcmath", "bz2", "curl", "gd", "imagick", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
+		//TODO: Remove this stanza when PHP8.5 extensions are completely available
+		if app.PHPVersion == nodeps.PHP85 {
+			expectedExtensions = []string{"bcmath", "bz2", "curl", "gd", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"}
+		}
 		for _, e := range expectedExtensions {
 			assert.Contains(out, fmt.Sprintf(`,%s,`, e))
 		}
