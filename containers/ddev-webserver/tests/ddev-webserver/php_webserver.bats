@@ -73,10 +73,12 @@
 
 @test "verify key php extensions are loaded on PHP${PHP_VERSION}" {
   if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then skip "Skipping on apache-fpm because we don't have to do this twice"; fi
+  # TODO: Enable for php8.5 when extensions are available
+  if [ "${PHP_VERSION}" = "8.5" ]; then skip "Extensions not yet available on PHP8.5"; fi
 
   extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
   case ${PHP_VERSION} in
-  8.[1234])
+  8.[2345])
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
     ;;
 
