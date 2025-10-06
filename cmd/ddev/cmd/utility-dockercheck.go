@@ -17,9 +17,10 @@ import (
 
 // DebugDockercheckCmd implements the ddev utility dockercheck command
 var DebugDockercheckCmd = &cobra.Command{
-	Use:     "dockercheck",
-	Short:   "Diagnose DDEV Docker/Colima setup",
-	Example: "ddev utility dockercheck",
+	Use:   "dockercheck",
+	Short: "Diagnose DDEV Docker provider setup",
+	Example: `ddev utility dockercheck
+ddev ut dockercheck`,
 	Run: func(_ *cobra.Command, args []string) {
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")
@@ -66,8 +67,15 @@ var DebugDockercheckCmd = &cobra.Command{
 				}
 			}
 
-		case "docker desktop":
-			dockerutil.IsDockerDesktop()
+		case "docker-desktop":
+			p, err := exec.LookPath("docker")
+			if err == nil {
+				out, err := exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s version | awk '/^Server/ {print $4}'", p))
+				out = strings.Trim(out, "\r\n, ")
+				if err == nil {
+					util.Success("Docker Desktop version: %v", out)
+				}
+			}
 		}
 
 		buildxVersion, err := exec2.RunHostCommand(bashPath, "-c", "docker buildx version | awk '{print $2}'")
