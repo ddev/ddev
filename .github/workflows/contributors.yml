@@ -36,7 +36,7 @@ jobs:
           SPONSOR_INFO: "true"
 
       - name: Create issue
-        uses: peter-evans/create-issue-from-file@v5
+        uses: peter-evans/create-issue-from-file@v6
         with:
           title: Monthly contributor report
           token: ${{ secrets.GITHUB_TOKEN }}
