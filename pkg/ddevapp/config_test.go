@@ -987,6 +987,8 @@ func TestPHPConfig(t *testing.T) {
 	// so we can subtract those if GOTEST_SHORT==""
 	phpKeys := nodeps.GetValidPHPVersions()
 	exclusions := []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}
+	//TODO: php8.5: Remove this exclusion when php85 has redis
+	exclusions = append(exclusions, nodeps.PHP85)
 	if os.Getenv("GOTEST_SHORT") != "" {
 		phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	}
@@ -1033,7 +1035,7 @@ func TestPHPConfig(t *testing.T) {
 
 		// This list does not contain all expected, as php5.6 is missing some, etc.
 		expectedExtensions := []string{"apcu", "bcmath", "bz2", "curl", "gd", "imagick", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
-		//TODO: Remove this stanza when PHP8.5 extensions are completely available
+		//TODO: PHP8.5: Remove this stanza when PHP8.5 extensions are completely available
 		if app.PHPVersion == nodeps.PHP85 {
 			expectedExtensions = []string{"bcmath", "bz2", "curl", "gd", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"}
 		}
