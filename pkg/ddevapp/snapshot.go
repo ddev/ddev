@@ -216,7 +216,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// If we have no bind mounts, we need to copy our snapshot into the snapshots volme
 	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		uid, _, _ := util.GetContainerUIDGid()
+		uid, _, _ := dockerutil.GetContainerUser()
 		// For PostgreSQL, must be written with PostgreSQL user
 		if app.Database.Type == nodeps.Postgres {
 			uid = "999"

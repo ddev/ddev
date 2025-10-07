@@ -113,7 +113,7 @@ func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, exte
 // PushGlobalTraefikConfig pushes the config into ddev-global-cache
 func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, _, _ := dockerutil.GetContainerUser()
 	err := os.MkdirAll(globalTraefikDir, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create global .ddev/traefik directory: %v", err)
@@ -408,7 +408,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		}
 	}
 
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, _, _ := dockerutil.GetContainerUser()
 
 	err = dockerutil.CopyIntoVolume(projectTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
 	if err != nil {

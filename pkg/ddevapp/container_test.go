@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -38,7 +39,7 @@ func TestUserProvisioningInContainer(t *testing.T) {
 
 	// make sure files get created in the user?
 
-	uid, gid, username := util.GetContainerUIDGid()
+	uid, gid, username := dockerutil.GetContainerUser()
 
 	for _, service := range []string{"web", "db"} {
 		out, _, err := app.Exec(&ddevapp.ExecOpts{

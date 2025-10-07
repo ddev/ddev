@@ -209,7 +209,7 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 
 	dockerIP, _ := dockerutil.GetDockerIP()
 
-	uid, gid, username := util.GetContainerUIDGid()
+	uid, gid, username := dockerutil.GetContainerUser()
 	timezone, _ := util.GetLocalTimezone()
 
 	templateVars := map[string]interface{}{

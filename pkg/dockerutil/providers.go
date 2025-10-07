@@ -74,3 +74,17 @@ func IsOrbStack() bool {
 	}
 	return false
 }
+
+// IsRootless detects if Docker is running in rootless mode
+func IsRootless() bool {
+	info, err := GetDockerClientInfo()
+	if err != nil {
+		return false
+	}
+	for _, opt := range info.SecurityOptions {
+		if opt == "name=rootless" {
+			return true
+		}
+	}
+	return false
+}

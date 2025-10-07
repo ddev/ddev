@@ -438,7 +438,7 @@ func TestCopyIntoContainer(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cid)
 
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, _, _ := dockerutil.GetContainerUser()
 	targetDir, _, err := dockerutil.Exec(cid.ID, "mktemp -d", uid)
 	require.NoError(t, err)
 	targetDir = strings.Trim(targetDir, "\n")

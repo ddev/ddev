@@ -324,7 +324,7 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 		return fmt.Errorf("failed to build PHP action environment: %v", err)
 	}
 
-	uidStr, _, _ := util.GetContainerUIDGid()
+	uidStr, _, _ := dockerutil.GetContainerUser()
 
 	config := &dockerContainer.Config{
 		Image:      image,
