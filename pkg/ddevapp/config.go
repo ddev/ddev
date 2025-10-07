@@ -1530,6 +1530,14 @@ EOF
 RUN chmod 777 /run/php /var/log
 RUN mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof
 `
+		// Files from containers/ddev-webserver/ddev-webserver-base-files/var/www/html
+		// are added to host on `ddev start` when using Podman with Mutagen enabled
+		if dockerutil.IsPodman() && app.IsMutagenEnabled() {
+			contents = contents + `
+### DDEV-injected cleanup of /var/www/html for Podman with Mutagen
+RUN rm -rf /var/www/html && mkdir -p /var/www/html
+`
+		}
 	}
 
 	return WriteImageDockerfile(fullpath, []byte(contents))

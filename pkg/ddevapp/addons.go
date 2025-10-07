@@ -325,6 +325,10 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 
 	uidStr, _, _ := dockerutil.GetContainerUser()
 
+	if dockerutil.IsDockerRootless() {
+		uidStr = "0"
+	}
+
 	config := &container.Config{
 		Image:      image,
 		Cmd:        cmd,

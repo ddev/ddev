@@ -10,6 +10,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
@@ -285,6 +286,17 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// and skip the MySQL snapshot. rfay 2022-02-25
 	if nodeps.IsWindows() {
 		delete(dirSnapshots, "mysql:5.7")
+	}
+
+	// Works locally but fails in CI.
+	// mysql:
+	// [ERROR] Could not create unix socket lock file /var/run/mysqld/mysqld.sock.lock.
+	// mariadb:
+	// [ERROR] Can't start server : Bind on unix socket: Permission denied
+	// [ERROR] Do you already have another mysqld server running on socket: /var/run/mysqld/mysqld.sock ?
+	if dockerutil.IsPodman() || dockerutil.IsDockerRootless() {
+		delete(dirSnapshots, "mysql:5.7")
+		delete(dirSnapshots, "mariadb:10.3")
 	}
 
 	for dbDesc, dirSnapshot := range dirSnapshots {

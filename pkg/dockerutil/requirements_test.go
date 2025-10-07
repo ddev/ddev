@@ -31,10 +31,13 @@ func TestCheckCompose(t *testing.T) {
 // TestCheckDockerAuth tests the CheckDockerAuth function
 func TestCheckDockerAuth(t *testing.T) {
 	tmpHome := t.TempDir()
-
+	_, dockerHost, _ := dockerutil.GetDockerContextNameAndHost()
 	// Change the homedir temporarily
 	t.Setenv("HOME", tmpHome)
 	t.Setenv("USERPROFILE", tmpHome)
+	// Set DOCKER_HOST to the same value as before, otherwise wrong Docker context may be used
+	// It's not needed for this exact test, but helps ensure consistency when $HOME is changed
+	t.Setenv("DOCKER_HOST", dockerHost)
 
 	dockerConfigDir := filepath.Join(tmpHome, ".docker")
 	err := os.MkdirAll(dockerConfigDir, 0755)

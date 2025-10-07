@@ -74,3 +74,41 @@ func IsOrbStack() bool {
 	}
 	return false
 }
+
+// IsPodman detects if running on Podman (either rootless or root)
+func IsPodman() bool {
+	serverVersion, err := GetServerVersion()
+	if err != nil {
+		return false
+	}
+	for _, v := range serverVersion.Components {
+		if strings.HasPrefix(v.Name, "Podman Engine") {
+			return true
+		}
+	}
+	return false
+}
+
+// IsRootless detects if Docker is running in rootless mode
+func IsRootless() bool {
+	info, err := GetDockerClientInfo()
+	if err != nil {
+		return false
+	}
+	for _, opt := range info.SecurityOptions {
+		if opt == "name=rootless" {
+			return true
+		}
+	}
+	return false
+}
+
+// IsPodmanRootless detects if Podman is running in rootless mode
+func IsPodmanRootless() bool {
+	return IsRootless() && IsPodman()
+}
+
+// IsDockerRootless detects if Docker is running in rootless mode
+func IsDockerRootless() bool {
+	return IsRootless() && !IsPodman()
+}
