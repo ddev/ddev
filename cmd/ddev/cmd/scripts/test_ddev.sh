@@ -201,10 +201,8 @@ rancher-desktop)
   ;;
 esac
 
-if ddev debug dockercheck -h | grep dockercheck >/dev/null; then
-  header "ddev debug dockercheck"
-  ddev debug dockercheck 2>/dev/null
-fi
+header "ddev utility dockercheck"
+ddev utility dockercheck 2>/dev/null || true
 
 printf "\nDocker disk space:\n" && docker run --rm ddev/ddev-utilities df -h //
 
