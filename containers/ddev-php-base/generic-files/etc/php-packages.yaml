@@ -2,8 +2,7 @@
 # Based on testing results from test_web_packages.sh on 2025-07-28
 # Missing packages: 
 #   - redis (php7.0-7.3 all archs) 
-#   - apcu-bc (php5.6-8.3 all archs)
-#   - json (php8.0+ all archs) - NOTE: JSON is built into PHP 8.0+ core, so this is expected
+#   - apcu-bc (php8.0-8.3 all archs)
 # Issue: https://github.com/oerdnj/deb.sury.org/issues/TBD
 
 php56:
@@ -11,24 +10,24 @@ php56:
   arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
 
 php70:
-  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
-  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
 
 php71:
-  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
-  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
 
 php72:
-  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
-  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
 
 php73:
-  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache",  "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
-  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache",  "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache",  "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache",  "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
 
 php74:
-  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache",  "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
-  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache",  "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  amd64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache",  "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  arm64: ["apcu", "apcu-bc", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "memcached", "mysql", "opcache",  "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
 
 php80:
   amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache",  "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
