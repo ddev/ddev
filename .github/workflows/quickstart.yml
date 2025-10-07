@@ -6,16 +6,16 @@ defaults:
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    paths:
-      - "docs/content/users/quickstart.md"
-      - "docs/tests/**"
-      - "go.*"
-      - "pkg/**"
-      - "cmd/**"
-      - "Makefile"
-      - "vendor/**"
-      - ".github/workflows/quickstart.yml"
+#  pull_request:
+#    paths:
+#      - "docs/content/users/quickstart.md"
+#      - "docs/tests/**"
+#      - "go.*"
+#      - "pkg/**"
+#      - "cmd/**"
+#      - "Makefile"
+#      - "vendor/**"
+#      - ".github/workflows/quickstart.yml"
   workflow_dispatch:
     inputs:
       debug_enabled:

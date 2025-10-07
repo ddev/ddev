@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -91,7 +91,18 @@ func TestSSHAuth(t *testing.T) {
 	uidStr, _, username := dockerutil.GetContainerUser()
 	sshKeyPath := app.GetConfigPath(".ssh")
 
-	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag + "-built", "//test.expect.passphrase"})
+	containerCmd := "docker"
+	if dockerutil.IsPodman() {
+		containerCmd = "podman"
+	}
+	args := []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr}
+	// Add --userns=keep-id for rootless Podman to maintain user namespace mapping
+	if dockerutil.IsPodman() && dockerutil.IsRootless() {
+		args = append(args, "--userns=keep-id")
+	}
+	args = append(args, ddevImages.GetSSHAuthImage()+"-built", "//test.expect.passphrase")
+
+	err = exec.RunInteractiveCommand(containerCmd, args)
 	require.NoError(t, err)
 
 	// Try SSH, should succeed
