@@ -54,17 +54,24 @@ if [ "$type" = "postgres" ]; then
   
   # When using this database type, we also need to specify the library
   if [ -z "${library}" ]; then
-    # For Windows and WSL2, find best matching library in the installation directory (<= version)
+    # For Windows and WSL2, find best matching library in the installation directory
     if [ "${binary##*.}" = "exe" ]; then
+      # Get all libraries in installation directory
       shopt -s nullglob
       libfiles=("${binary%/*}"/libpq-*.dll)
       shopt -u nullglob
       for libfile in "${libfiles[@]}"; do
         libversion="$(echo "${libfile##*/}" | sed -n 's/^libpq-\([0-9]\+\)\.dll$/\1/p')"
-        if [ -n "${libversion}" ] && [ "${libversion}" -le "${version}" ]; then
+        # Select library if version is >= db version
+        if [ -n "${libversion}" ] && [ "${libversion}" -ge "${version}" ]; then
           library="libpq-${libversion}.dll"
+          break
         fi
       done
+      # Select latest one if no matching version was found and there are any libraries
+      if [ -z "${library}" ] && [ ${#libfiles[@]} -gt 0 ]; then
+        library="${libfiles[-1]}"
+      fi
     else
       # For Linux, check if libpq is installed
       library=$(ldconfig -p | grep -o '/.*libpq\.so\.5' | head -n1)
