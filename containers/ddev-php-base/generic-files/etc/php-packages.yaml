@@ -3,7 +3,7 @@
 # Missing packages: 
 #   - redis (php7.0-7.3 all archs) 
 #   - apcu-bc (php8.0-8.3 all archs)
-# Issue: https://github.com/oerdnj/deb.sury.org/issues/TBD
+# Issue: https://codeberg.org/oerdnj/deb.sury.org/issues/14
 
 php56:
   amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "json", "ldap", "mbstring", "mcrypt", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
