@@ -226,9 +226,13 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	err := os.Chdir(TestSites[0].Dir)
 	require.NoError(t, err)
 
+	_, dockerHost, _ := dockerutil.GetDockerContextNameAndHost()
+
 	// Change the homedir temporarily
 	t.Setenv("HOME", tmpHomeDir)
 	t.Setenv("USERPROFILE", tmpHomeDir)
+	// Set DOCKER_HOST to the same value as before, otherwise wrong Docker context may be used
+	t.Setenv("DOCKER_HOST", dockerHost)
 	// Set $XDG_CONFIG_HOME to empty string, otherwise it will take precedence over $HOME
 	t.Setenv("XDG_CONFIG_HOME", "")
 
