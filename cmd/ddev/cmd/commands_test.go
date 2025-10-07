@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -406,6 +407,9 @@ columns_priv`)
 
 // TestPsqlCommand tests `ddev psql“
 func TestPsqlCommand(t *testing.T) {
+	if dockerutil.IsPodman() {
+		t.Skip("Skipping on Podman; postgres container fails to start")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()

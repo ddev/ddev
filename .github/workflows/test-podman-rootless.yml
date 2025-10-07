@@ -1,14 +1,14 @@
-name: Test Pull/Push Providers
+name: Test Podman Rootless
 on:
-#  pull_request:
-#    paths:
-#      - "go.*"
-#      - "pkg/**"
-#      - "cmd/**"
-#      - "Makefile"
-#      - "vendor/**"
-#      - ".github/workflows/**"
-#      - "!.github/workflows/docs**"
+  pull_request:
+    paths:
+      - "go.*"
+      - "pkg/**"
+      - "cmd/**"
+      - "Makefile"
+      - "vendor/**"
+      - ".github/workflows/**"
+      - "!.github/workflows/docs**"
   push:
     branches: [ main, master ]
   workflow_dispatch:
@@ -27,11 +27,9 @@ permissions:
   contents: read
 
 jobs:
-  pull-push-providers:
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
+  podman-rootless:
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
-      pull_push_providers: "true"
-      testargs: "-failfast -run 'Test.*(Push|Pull)'"
+      ddev_test_podman_rootless: "true"
       debug_enabled: ${{ inputs.debug_enabled || false }}

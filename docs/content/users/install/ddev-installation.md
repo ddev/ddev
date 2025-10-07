@@ -92,7 +92,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     name=ddev
     baseurl=https://pkg.ddev.com/yum/
     gpgcheck=0
-    enabled=1' | perl -p -e 's/^ +//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
+    enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
 
     # Install DDEV
     sudo sh -c 'echo ""'

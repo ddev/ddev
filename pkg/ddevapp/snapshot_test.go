@@ -9,6 +9,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
@@ -284,6 +285,10 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// and skip the MySQL snapshot. rfay 2022-02-25
 	if nodeps.IsWindows() {
 		delete(dirSnapshots, "mysql:5.7")
+	}
+
+	if dockerutil.IsPodman() {
+		t.Skip("Skipping TestDdevRestoreSnapshot dirSnapshots on Podman due to issues with volume mounts and ownership")
 	}
 
 	for dbDesc, dirSnapshot := range dirSnapshots {

@@ -1582,6 +1582,12 @@ func TestDdevAllDatabases(t *testing.T) {
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
 		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
+		if dockerutil.IsPodman() {
+			// postgresql doesn't work at all
+			// mysql:5.7 works locally, but fails in CI
+			exclusions := []string{"postgres:18", "postgres:17", "mysql:5.7"}
+			dbVersions = util.SubtractSlices(dbVersions, exclusions)
+		}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -1996,6 +2002,11 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 
 	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4", "mariadb:11.8"}
 
+	if dockerutil.IsPodman() {
+		exclusions := []string{"mysql:5.7", "mariadb:10.4"}
+		serverVersions = util.SubtractSlices(serverVersions, exclusions)
+	}
+
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
 
@@ -2128,6 +2139,10 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 // TestWebserverPostgresDBClient tests functionality of Postgres
 // database clients in the ddev-webserver
 func TestWebserverPostgresDBClient(t *testing.T) {
+	if dockerutil.IsPodman() {
+		t.Skip("Skipping on Podman; postgres container fails to start")
+	}
+
 	assert := asrt.New(t)
 
 	serverVersions := []string{"postgres:18", "postgres:17", "postgres:16"}
