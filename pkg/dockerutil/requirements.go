@@ -21,6 +21,7 @@ import (
 type DockerVersionMatrix struct {
 	APIVersion               string
 	Version                  string
+	PodmanVersion            string
 	ComposeVersionConstraint string
 }
 
@@ -31,12 +32,16 @@ type DockerVersionMatrix struct {
 // https://docs.docker.com/reference/api/engine/#api-version-matrix
 // List of supported Docker versions: https://endoflife.date/docker-engine
 //
+// PodmanVersion is the minimum Podman version supported. If it's empty, Podman is not supported.
+// Podman 4.x doesn't run properly on GitHub runners, so we require Podman 5.0+
+//
 // ComposeVersionConstraint is in sync with https://docs.docker.com/desktop/release-notes/
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
 // See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
 var DockerRequirements = DockerVersionMatrix{
 	APIVersion:               "1.44",
 	Version:                  "25.0",
+	PodmanVersion:            "5.0",
 	ComposeVersionConstraint: ">= 2.24.3",
 }
 
@@ -52,6 +57,16 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 	currentAPIVersion, err := GetDockerAPIVersion()
 	if err != nil {
 		return fmt.Errorf("no docker")
+	}
+
+	if IsPodman() {
+		if dockerVersionMatrix.PodmanVersion == "" {
+			return fmt.Errorf("the check is done against Docker, but Podman is detected. Podman is not supported at this time")
+		}
+		if !versions.GreaterThanOrEqualTo(currentVersion, dockerVersionMatrix.PodmanVersion) {
+			return fmt.Errorf("installed Podman version %s is not supported, please update to version %s or newer", currentVersion, dockerVersionMatrix.PodmanVersion)
+		}
+		return nil
 	}
 
 	// Check against recommended API version, if it fails, suggest the minimum Docker version that relates to supported API

@@ -84,7 +84,9 @@ services:
     command: ${DDEV_DB_CONTAINER_COMMAND}
     healthcheck:
       {{- if eq .DBType "postgres" }}
-      test: ["CMD-SHELL", "/postgres_healthcheck.sh"]
+      test: "/postgres_healthcheck.sh"
+      {{- else }}
+      test: "/healthcheck.sh"
       {{- end }}
       interval: "1s"
       retries: 70
@@ -265,6 +267,7 @@ services:
       com.ddev.approot: $DDEV_APPROOT
 
     healthcheck:
+      test: "/healthcheck.sh"
       interval: "1s"
       retries: 70
       start_period: "{{ .DefaultContainerTimeout }}s"
@@ -298,6 +301,15 @@ services:
       - TZ={{ .Timezone }}
     depends_on:
       - db
+    healthcheck:
+      test: "/healthcheck.sh"
+      interval: "1s"
+      retries: 70
+      start_period: "{{ .DefaultContainerTimeout }}s"
+      {{ if templateCanUse "healthcheck.start_interval" -}}
+      start_interval: "1s"
+      {{- end }}
+      timeout: "70s"
     x-ddev:
       describe-url-port: "Launch: ddev xhgui"
   {{- end }}
