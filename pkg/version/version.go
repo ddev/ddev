@@ -73,10 +73,16 @@ func GetDockerPlatform() (string, error) {
 		platform = "lima"
 	case dockerutil.IsOrbStack():
 		platform = "orbstack"
+	case dockerutil.IsPodman():
+		platform = "podman"
 	case nodeps.IsWSL2() && info.OSType == "linux":
 		platform = "wsl2-docker-ce"
 	case !nodeps.IsWSL2() && info.OSType == "linux":
 		platform = "linux-docker"
+	}
+
+	if dockerutil.IsRootless() {
+		platform += "-rootless"
 	}
 
 	return platform, nil

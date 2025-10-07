@@ -195,6 +195,10 @@ func GetAuthSSHCmd(command string) string {
 	uid, gid, username := dockerutil.GetContainerUser()
 
 	commandToRun := command
+	if dockerutil.IsDockerRootless() {
+		// Run command as container user, not root
+		commandToRun = fmt.Sprintf("setpriv --reuid=%s --regid=%s --init-groups -- %s", uid, gid, command)
+	}
 
 	if command == "ssh-add" {
 		commandToRun = fmt.Sprintf(`
@@ -222,6 +226,10 @@ mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && \
 // runSSHAuthContainer runs the SSH auth container using Docker client API
 func runSSHAuthContainer(keys []string) (int, error) {
 	uid, _, _ := dockerutil.GetContainerUser()
+	// Run container as root to be able to change ownership of files
+	if dockerutil.IsDockerRootless() {
+		uid = "0"
+	}
 
 	config := &container.Config{
 		Image:       docker.GetSSHAuthImage() + "-built",

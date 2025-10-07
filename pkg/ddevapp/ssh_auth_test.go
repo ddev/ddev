@@ -90,10 +90,18 @@ func TestSSHAuth(t *testing.T) {
 	// Add password/key to auth. This is an unfortunate perversion of using docker run directly, copied from
 	// ddev auth ssh command, and with an expect script to provide the passphrase.
 	uid, _, _ := dockerutil.GetContainerUser()
+	if dockerutil.IsDockerRootless() {
+		uid = "0"
+	}
 	sshKeyPath := app.GetConfigPath(".ssh")
 
 	args := []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/tmp/sshtmp", "-u", uid}
 	containerCmd := "docker"
+	// Add --userns=keep-id for Podman rootless to maintain user namespace mapping
+	if dockerutil.IsPodmanRootless() {
+		containerCmd = "podman"
+		args = append(args, "--userns=keep-id")
+	}
 	args = append(args, "--entrypoint", "bash", ddevImages.GetSSHAuthImage()+"-built", "-c", cmd.GetAuthSSHCmd("//test.expect.passphrase"))
 
 	err = exec.RunInteractiveCommand(containerCmd, args)
