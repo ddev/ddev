@@ -528,7 +528,7 @@ export default defineConfig({
     node_modules/
     ```
 
-4. **Document your setup**: Include Vite configuration instructions in your project's README.
+4. **Document your setup**: Include Vite configuration instructions in your project's readme.
 
 5. **Use environment variables**: Leverage `process.env.DDEV_PRIMARY_URL` for dynamic configuration.
 
