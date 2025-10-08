@@ -82,7 +82,6 @@ web_extra_exposed_ports:
     http_port: 5172
     https_port: 5173
 
-nodejs_version: "18"
 ```
 
 #### Laravel Vite Configuration
@@ -139,7 +138,6 @@ web_extra_exposed_ports:
     http_port: 5172
     https_port: 5173
 
-nodejs_version: "18"
 ```
 
 #### Drupal Vite Configuration
@@ -184,7 +182,6 @@ web_extra_exposed_ports:
     http_port: 5172
     https_port: 5173
 
-nodejs_version: "18"
 ```
 
 #### TYPO3 Vite Configuration
@@ -228,7 +225,6 @@ web_extra_exposed_ports:
     http_port: 5172
     https_port: 5173
 
-nodejs_version: "18"
 ```
 
 #### WordPress Vite Configuration
@@ -272,7 +268,6 @@ web_extra_exposed_ports:
     http_port: 5172
     https_port: 5173
 
-nodejs_version: "18"
 ```
 
 #### CraftCMS Vite Configuration
@@ -402,7 +397,6 @@ web_extra_daemons:
     command: "npm run dev"
     directory: /var/www/html
 
-nodejs_version: "18"
 ```
 
 #### Node.js Vite Configuration
