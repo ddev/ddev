@@ -28,12 +28,8 @@ To use Vite with DDEV, you need to:
         port: 5173,
         strictPort: true,
         // Defines the origin of the generated asset URLs during development, this must be set to the
-        // Vite dev server URL and selected port. In general, `process.env.DDEV_PRIMARY_URL` will give
-        // us the primary URL of the DDEV project, e.g. "https://test-vite.ddev.site". But since DDEV
-        // can be configured to use another port (via `router_https_port`), the output can also be
-        // "https://test-vite.ddev.site:1234". Therefore we need to strip a port number like ":1234"
-        // before adding Vites port to achieve the desired output of "https://test-vite.ddev.site:5173".
-        origin: `${process.env.DDEV_PRIMARY_URL.replace(/:\d+$/, "")}:5173`,
+        // Vite dev server URL and selected port.
+        origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
         // Configure CORS securely for the Vite dev server to allow requests from *.ddev.site domains,
         // supports additional hostnames (via regex). If you use another `project_tld`, adjust this.
         cors: {
@@ -59,10 +55,10 @@ To use Vite with DDEV, you need to:
 
 Your Vite development server will be available at `https://yourproject.ddev.site:5173`.
 
-!!! note "HTTPS Configuration"
+!!!note "HTTPS Configuration"
     This guide assumes your project runs on `https://`. If you cannot access the HTTPS version of your project, see the [DDEV installation documentation](../install/ddev-installation.md).
 
-!!! tip "Custom TLD"
+!!!tip "Custom TLD"
     If you use a custom `project_tld` other than `ddev.site`, adjust the CORS configuration accordingly in your `vite.config.js`.
 
 ## Framework-Specific Configuration
@@ -81,7 +77,6 @@ web_extra_exposed_ports:
     container_port: 5173
     http_port: 5172
     https_port: 5173
-
 ```
 
 #### Laravel Vite Configuration
@@ -106,7 +101,7 @@ export default defineConfig({
         host: "0.0.0.0",
         port: 5173,
         strictPort: true,
-        origin: `${process.env.DDEV_PRIMARY_URL.replace(/:\d+$/, "")}:5173`,
+        origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
         cors: {
           origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
         },
@@ -137,7 +132,6 @@ web_extra_exposed_ports:
     container_port: 5173
     http_port: 5172
     https_port: 5173
-
 ```
 
 #### Drupal Vite Configuration
@@ -161,7 +155,7 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
     strictPort: true,
-    origin: `${process.env.DDEV_PRIMARY_URL.replace(/:\d+$/, "")}:5173`,
+    origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
     cors: {
       origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
     },
@@ -204,7 +198,7 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
     strictPort: true,
-    origin: `${process.env.DDEV_PRIMARY_URL.replace(/:\d+$/, "")}:5173`,
+    origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
     cors: {
       origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
     },
@@ -224,7 +218,6 @@ web_extra_exposed_ports:
     container_port: 5173
     http_port: 5172
     https_port: 5173
-
 ```
 
 #### WordPress Vite Configuration
@@ -247,7 +240,7 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
     strictPort: true,
-    origin: `${process.env.DDEV_PRIMARY_URL.replace(/:\d+$/, "")}:5173`,
+    origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
     cors: {
       origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
     },
@@ -290,7 +283,7 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
     strictPort: true,
-    origin: `${process.env.DDEV_PRIMARY_URL.replace(/:\d+$/, "")}:5173`,
+    origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
     cors: {
       origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
     },
@@ -367,7 +360,6 @@ When using DDEV with GitHub Codespaces, DDEV's router is not used, so some adjus
 2. **Create `.ddev/docker-compose.vite-workaround.yaml`**:
 
 ```yaml
-version: '3.6'
 services:
   web:
     ports:
@@ -396,7 +388,6 @@ web_extra_daemons:
   - name: "vite-dev"
     command: "npm run dev"
     directory: /var/www/html
-
 ```
 
 #### Node.js Vite Configuration
@@ -456,7 +447,7 @@ export default defineConfig({
 
    ```javascript
    server: {
-     origin: `${process.env.DDEV_PRIMARY_URL.replace(/:\d+$/, "")}:5173`,
+     origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
    }
    ```
 
