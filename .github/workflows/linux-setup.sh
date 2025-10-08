@@ -22,6 +22,15 @@ curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
   && sudo apt-get update -qq >/dev/null \
   && sudo apt-get install -y -qq ngrok
 
+if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
+  echo "Setting up podman rootless"
+  sudo apt-get install -y -qq podman >/dev/null
+  systemctl --user enable --now podman.socket
+  docker context create podman --docker host=unix://"$(podman info --format '{{.Host.RemoteSocket.Path}}')"
+  docker context use podman
+  sudo sysctl net.ipv4.ip_unprivileged_port_start=80
+fi
+
 # Without this .curlrc CircleCI linux image doesn't respect mkcert certs
 echo "capath=/etc/ssl/certs/" >>~/.curlrc
 

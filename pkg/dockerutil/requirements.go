@@ -55,7 +55,7 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 	}
 
 	// Check against recommended API version, if it fails, suggest the minimum Docker version that relates to supported API
-	if !versions.GreaterThanOrEqualTo(currentAPIVersion, dockerVersionMatrix.APIVersion) {
+	if !IsPodman() && !versions.GreaterThanOrEqualTo(currentAPIVersion, dockerVersionMatrix.APIVersion) {
 		return fmt.Errorf("installed Docker version %s is not supported, please update to version %s or newer", currentVersion, dockerVersionMatrix.Version)
 	}
 	return nil

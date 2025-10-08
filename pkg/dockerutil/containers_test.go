@@ -118,7 +118,13 @@ func startTestContainer() (string, error) {
 		"com.docker.compose.service": "web",
 		"com.ddev.site-name":         testContainerName,
 		"com.docker.compose.oneoff":  "False",
-	}, portBinding, nil)
+	}, portBinding, &container.HealthConfig{
+		Test:        []string{"CMD-SHELL", "/healthcheck.sh"},
+		Interval:    1 * time.Second,
+		Timeout:     120 * time.Second,
+		StartPeriod: 120 * time.Second,
+		Retries:     120,
+	})
 	if err != nil {
 		return "", err
 	}

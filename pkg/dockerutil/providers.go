@@ -75,6 +75,20 @@ func IsOrbStack() bool {
 	return false
 }
 
+// IsPodman detects if running on Podman
+func IsPodman() bool {
+	serverVersion, err := GetServerVersion()
+	if err != nil {
+		return false
+	}
+	for _, v := range serverVersion.Components {
+		if strings.HasPrefix(v.Name, "Podman Engine") {
+			return true
+		}
+	}
+	return false
+}
+
 // IsRootless detects if Docker is running in rootless mode
 func IsRootless() bool {
 	info, err := GetDockerClientInfo()
