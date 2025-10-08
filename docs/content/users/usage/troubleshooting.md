@@ -40,7 +40,7 @@ Two environment variables meant for DDEV development may also be useful for broa
 
 You can set either one in your current session by running `export DDEV_DEBUG=true` and `export DDEV_VERBOSE=true`.
 
-## Frontend Development Tools
+## Front-End Development Tools
 
 ### Vite Issues
 

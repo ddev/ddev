@@ -18,7 +18,7 @@ Hundreds of useful developer tools are included inside the containers and can be
 * [n98-magerun](https://github.com/netz98/n98-magerun) - Command-line tool for Magento 1 / OpenMage installations, available as `magerun`.
 * [n98-magerun2](https://github.com/netz98/n98-magerun2) - Command-line tool for Magento Open Source / Mage-OS / Adobe Commerce installations, available as `magerun2`.
 * `npm`, `nvm`, and `yarn` (these also have `ddev` shortcuts like [`ddev npm`](../usage/commands.md#npm), [`ddev nvm`](../usage/commands.md#nvm), [`ddev yarn`](../usage/commands.md#yarn)).
-* `node` (for frontend build tools like [Vite](vite.md), see the [Vite Integration](vite.md) documentation)
+* `node` (for front-end build tools like [Vite](vite.md), see the [Vite Integration](vite.md) documentation)
 * `sqlite3`
 
 These tools can be accessed for single commands using [`ddev exec <command>`](cli.md#executing-commands-in-containers) or [`ddev ssh`](cli.md#ssh-into-containers) for an interactive `bash` or `sh` session.

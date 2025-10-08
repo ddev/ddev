@@ -77,6 +77,7 @@ GlobalProtect
 Gotenberg
 Grav
 Gzipped
+HMR
 HOWTO
 HeidiSQL
 Homebrew
@@ -93,6 +94,7 @@ Kalabox
 Kubernetes
 Lando
 Laravel
+Laravel's
 Let's
 Lima
 Livewire
@@ -116,6 +118,7 @@ Nameserver
 NFS
 Netbeans
 Nginx
+Nuxt
 OSs
 OpenMage
 OpenSearch
@@ -172,6 +175,7 @@ Uses
 Uz
 VCS
 Ventura
+Vitest
 VM
 VNC
 VPN
@@ -182,6 +186,7 @@ WSL
 WSL2
 WantedBy
 Webhosting
+WebSocket
 XDebug
 XDG
 Xhprof
