@@ -178,6 +178,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 	}
 
 	isPodman := dockerutil.IsPodman()
+	isRootless := dockerutil.IsRootless()
 
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
 
@@ -255,6 +256,13 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 				if service.HealthCheck.Test == nil {
 					util.WarningOnce("Service %s in project %s defines a healthcheck without a 'test' command. Podman may not execute it correctly.", name, app.Name)
 				}
+			}
+		}
+
+		if isRootless {
+			// "ping" command needs extra capability in rootless mode
+			if !slices.Contains(service.CapAdd, "NET_RAW") {
+				service.CapAdd = append(service.CapAdd, "NET_RAW")
 			}
 		}
 
