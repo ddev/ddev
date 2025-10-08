@@ -919,6 +919,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
 	}
+	if dockerutil.IsPodman() {
+		t.Skip("Skipping on Podman because this test doesn't work although manual testing works")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
