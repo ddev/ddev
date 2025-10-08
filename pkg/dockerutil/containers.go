@@ -15,6 +15,7 @@ import (
 	"unicode"
 
 	"github.com/ddev/ddev/pkg/archive"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -460,6 +461,24 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		pullErr := Pull(image)
 		if pullErr != nil {
 			return "", "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
+		}
+	}
+
+	if IsPodman() {
+		if config.Healthcheck == nil {
+			// Podman doesn't recognize HEALTHCHECK from Dockerfile
+			// https://github.com/containers/podman/issues/18904
+			// We can set it explicitly
+			if strings.HasPrefix(config.Image, ddevImages.GetWebImage()) {
+				// HEALTHCHECK from containers/ddev-webserver/Dockerfile
+				config.Healthcheck = &container.HealthConfig{
+					Test:        []string{"CMD-SHELL", "/healthcheck.sh"},
+					Interval:    1 * time.Second,
+					Timeout:     120 * time.Second,
+					StartPeriod: 120 * time.Second,
+					Retries:     120,
+				}
+			}
 		}
 	}
 

@@ -118,13 +118,7 @@ func startTestContainer() (string, error) {
 		"com.docker.compose.service": "web",
 		"com.ddev.site-name":         testContainerName,
 		"com.docker.compose.oneoff":  "False",
-	}, portBinding, &container.HealthConfig{
-		Test:        []string{"CMD-SHELL", "/healthcheck.sh"},
-		Interval:    1 * time.Second,
-		Timeout:     120 * time.Second,
-		StartPeriod: 120 * time.Second,
-		Retries:     120,
-	})
+	}, portBinding, nil)
 	if err != nil {
 		return "", err
 	}
@@ -163,9 +157,7 @@ func TestGetContainerHealth(t *testing.T) {
 		assert.NotNil(c)
 
 		status, healthDetail := dockerutil.GetContainerHealth(c)
-		// Podman healthcheck can be flaky and return an empty string here.
-		// Works locally, but may fail on CI.
-		if !dockerutil.IsPodman() {
+		if !dockerutil.IsPodmanBeforeVersion5() {
 			assert.Contains(healthDetail, "/var/www/html:OK mailpit:OK phpstatus:OK")
 		}
 		assert.Equal("healthy", status)
@@ -209,7 +201,9 @@ func TestContainerWait(t *testing.T) {
 	healthDetail, err := dockerutil.ContainerWait(30, labels)
 	require.NoError(t, err)
 
-	require.Contains(t, healthDetail, "phpstatus:OK")
+	if !dockerutil.IsPodmanBeforeVersion5() {
+		require.Contains(t, healthDetail, "phpstatus:OK")
+	}
 
 	// Try a nonexistent container, should get error
 	labels = map[string]string{"com.ddev.site-name": "nothing-there"}
