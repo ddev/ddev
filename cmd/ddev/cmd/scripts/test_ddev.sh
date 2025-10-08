@@ -58,7 +58,7 @@ get_default_shell() {
 }
 
 get_global_ddev_dir() {
-  ddev version -j | docker run -i ddev/ddev-utilities jq -r '.raw["global-ddev-dir"]'
+  ddev version -j | docker run --rm -i ddev/ddev-utilities jq -r '.raw["global-ddev-dir"]'
 }
 
 function cleanup {
