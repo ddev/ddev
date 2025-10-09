@@ -36,6 +36,10 @@ if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
 [network]
 default_rootless_network_cmd = "slirp4netns"
 EOF
+  cat << 'EOF' > ~/.config/containers/containers.conf.d/dns.conf
+[containers]
+dns_servers = ["1.1.1.1", "1.0.0.1"]
+EOF
   sudo sysctl net.ipv4.ip_unprivileged_port_start=80
   echo "Verifying podman setup"
   podman run --rm ddev/ddev-utilities cat /etc/resolv.conf
