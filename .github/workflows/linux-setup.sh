@@ -31,7 +31,8 @@ if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
   docker context create podman --docker host="unix://$(podman info --format '{{.Host.RemoteSocket.Path}}')"
   docker context use podman
   # Use slirp4netns for rootless networking
-  sudo tee /etc/containers/containers.conf.d/podman-network.conf > /dev/null <<EOF
+  mkdir -p ~/.config/containers/containers.conf.d
+  cat << 'EOF' > ~/.config/containers/containers.conf.d/network.conf
 [network]
 default_rootless_network_cmd = "slirp4netns"
 EOF
