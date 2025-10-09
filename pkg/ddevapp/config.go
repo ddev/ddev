@@ -1412,13 +1412,18 @@ RUN getent group tty || groupadd tty
 		// Make a symlink for compatibility with things that expect /home/$username
 		// And copy /etc/skel contents to /root
 		contents = contents + `
+### DDEV-injected rootless mode user handling
 RUN ln -sf /root /home/root && cp -r /etc/skel/. /root
 `
-		// For this error on `ddev start`:
+		// For this error during `ddev start`:
 		// mysqld: Please consult the Knowledge Base to find out how to run mysqld as root!
+		// I tried setting the user like this:
+		// `RUN mkdir -p /etc/mysql/conf.d && echo -e "[mysqld]\nuser=root" > /etc/mysql/conf.d/rootless.cnf`
+		// But it failed intermittently, so we patch the entrypoint directly.
 		if strings.Contains(fullpath, "dbimageBuild") && (app.Database.Type == nodeps.MySQL || app.Database.Type == nodeps.MariaDB) {
 			contents = contents + `
-RUN mkdir -p /etc/mysql/conf.d && echo -e "[mysqld]\nuser=root" > /etc/mysql/conf.d/rootless.cnf
+### DDEV-injected rootless mode mysqld handling
+RUN sed -i 's/exec mysqld/exec mysqld --user=root/g' /docker-entrypoint.sh
 `
 		}
 	} else {
