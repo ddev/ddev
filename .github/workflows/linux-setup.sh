@@ -35,6 +35,23 @@ elif [[ "${DDEV_TEST_DOCKER_ROOTLESS:-}" == "true" ]]; then
   echo "Setting up docker-rootless"
   sudo systemctl disable --now docker.service docker.socket
   sudo rm -f /var/run/docker.sock
+  # Configure AppArmor for rootlesskit
+  # Source: https://github.com/ScribeMD/rootless-docker/pull/402
+  abi4_version="$(find /etc/apparmor.d/abi -maxdepth 1 -name '4.*' -printf '%f\n' | sort -nr | head -1)"
+  filename=$(echo $HOME/bin/rootlesskit | sed -e s@^/@@ -e s@/@.@g)
+  sudo tee /etc/apparmor.d/${filename} > /dev/null <<EOF
+abi <abi/${abi4_version}>,
+
+include <tunables/global>
+
+"$HOME/bin/rootlesskit" flags=(unconfined) {
+userns,
+
+include if exists <local/${filename}>
+}
+EOF
+  sudo systemctl restart apparmor.service
+  # Install rootless docker
   curl -fsSL https://get.docker.com/rootless | sh
   sudo sysctl net.ipv4.ip_unprivileged_port_start=80
 fi
