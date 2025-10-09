@@ -1180,7 +1180,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 
-	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && touch /home/$username/.pgpass && chmod 600 /home/$username/.pgpass"
+	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
 	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + fmt.Sprintf(`
@@ -1410,8 +1410,9 @@ RUN getent group tty || groupadd tty
 	if dockerutil.IsRootless() {
 		// In rootless mode, we don't try to create a user
 		// Make a symlink for compatibility with things that expect /home/$username
+		// And copy /etc/skel contents to /root
 		contents = contents + `
-RUN ln -sf /root /home/root
+RUN ln -sf /root /home/root && cp -r /etc/skel/. /root
 `
 		// For this error on `ddev start`:
 		// mysqld: Please consult the Knowledge Base to find out how to run mysqld as root!
