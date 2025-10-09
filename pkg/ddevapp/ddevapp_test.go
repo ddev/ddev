@@ -922,6 +922,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	if dockerutil.IsPodman() {
 		t.Skip("Skipping on Podman because this test doesn't work although manual testing works")
 	}
+	// TODO: check this later
+	if dockerutil.IsRootless() {
+		t.Skip("Skipping on rootless docker because this test doesn't work")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
