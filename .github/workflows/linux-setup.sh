@@ -26,12 +26,17 @@ if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
   echo "Setting up podman-rootless"
   sudo systemctl disable --now docker.service docker.socket
   sudo rm -f /var/run/docker.sock
+  # set Cloudflare DNS for Podman
+  sudo mkdir -p /etc/containers/containers.conf.d && echo -e "[containers]\ndns_servers = [\"1.1.1.1\", \"1.0.0.1\"]" | sudo tee /etc/containers/containers.conf.d/99-dns.conf
   sudo apt-get install -y -qq podman >/dev/null
   systemctl --user enable --now podman.socket
   docker context create podman --docker host="unix://$(podman info --format '{{.Host.RemoteSocket.Path}}')"
   docker context use podman
-  podman info
   sudo sysctl net.ipv4.ip_unprivileged_port_start=80
+  echo "Verifying podman setup"
+  podman run --rm ddev/ddev-utilities cat /etc/resolv.conf
+  podman info
+  podman version
 elif [[ "${DDEV_TEST_DOCKER_ROOTLESS:-}" == "true" ]]; then
   echo "Setting up docker-rootless"
   sudo systemctl disable --now docker.service docker.socket
