@@ -61,9 +61,11 @@ jobs:
 #            race-detection: true
           - name: "podman-rootless"
             podman-rootless: true
-          - name: "mutagen-podman-rootless"
-            mutagen: true
-            podman-rootless: true
+#          - name: "mutagen-podman-rootless"
+#            mutagen: true
+#            podman-rootless: true
+          - name: "docker-rootless"
+            docker-rootless: true
 
       fail-fast: false
 
@@ -78,6 +80,7 @@ jobs:
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
       DDEV_TEST_PODMAN_ROOTLESS: ${{ matrix.podman-rootless }}
+      DDEV_TEST_DOCKER_ROOTLESS: ${{ matrix.docker-rootless }}
       MAKE_TARGET: "test"
       TESTARGS: "-failfast"
 
