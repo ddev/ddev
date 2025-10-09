@@ -30,6 +30,7 @@ if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
   systemctl --user enable --now podman.socket
   docker context create podman --docker host="unix://$(podman info --format '{{.Host.RemoteSocket.Path}}')"
   docker context use podman
+  podman info
   sudo sysctl net.ipv4.ip_unprivileged_port_start=80
 elif [[ "${DDEV_TEST_DOCKER_ROOTLESS:-}" == "true" ]]; then
   echo "Setting up docker-rootless"
