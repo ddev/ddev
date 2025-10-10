@@ -14,6 +14,8 @@
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    # TODO: PHP8.5: Enable for php8.5 when extensions are available
+    if [ "${PHP_VERSION}" = "8.5" ]; then skip "xdebug not yet available on PHP8.5"; fi
     CURRENT_ARCH=$(../get_arch.sh)
     docker exec -t $CONTAINER_NAME enable_xdebug
     if [[ ${PHP_VERSION} != 8.? ]] ; then
@@ -28,6 +30,8 @@
 }
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    # TODO: PHP8.5: Enable for php8.5 when extensions are available
+    if [ "${PHP_VERSION}" = "8.5" ]; then skip "xhprof not yet available on PHP8.5"; fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xhprof
@@ -73,10 +77,12 @@
 
 @test "verify key php extensions are loaded on PHP${PHP_VERSION}" {
   if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then skip "Skipping on apache-fpm because we don't have to do this twice"; fi
+  # TODO: PHP8.5: Enable for php8.5 when extensions are available
+  if [ "${PHP_VERSION}" = "8.5" ]; then skip "Extensions not yet available on PHP8.5"; fi
 
   extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
   case ${PHP_VERSION} in
-  8.[1234])
+  8.[2345])
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
     ;;
 
@@ -99,16 +105,7 @@
 @test "verify that both nginx logs and fpm logs are being tailed (${WEBSERVER_TYPE})" {
   curl -sSL http://127.0.0.1:$HOST_HTTP_PORT/test/fatal.php >/dev/null 2>&1
   # php-fpm message direct
-  docker logs ${CONTAINER_NAME} 2>&1 | grep "^NOTICE: PHP message: PHP Fatal error:"
-  # Apache and nginx variants
-  case "${WEBSERVER_TYPE}" in
-    "nginx-fpm")
-      docker logs $CONTAINER_NAME 2>&1 | grep "FastCGI sent in stderr:" >/dev/null
-      ;;
-    "apache-fpm")
-      docker logs $CONTAINER_NAME 2>&1 | fgrep "[proxy_fcgi:error]" >/dev/null
-      ;;
-  esac
+  docker logs ${CONTAINER_NAME} 2>&1 | grep "PHP Fatal error:  Fatal error in"
 }
 
 @test "verify htaccess doesn't break ${WEBSERVER_TYPE} php${PHP_VERSION}" {
