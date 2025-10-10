@@ -1590,6 +1590,11 @@ func TestDdevAllDatabases(t *testing.T) {
 	if os.Getenv("GOTEST_SHORT") != "" {
 		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
+
+		if dockerutil.IsRootless() && !dockerutil.IsPodman() {
+			dbVersions = []string{"postgres:18", "postgres:17", "mariadb:10.11", "mariadb:10.6"}
+			t.Logf("Using limited set of database servers for docker-rootless (%v)", dbVersions)
+		}
 	}
 
 	app := &ddevapp.DdevApp{}
@@ -2002,6 +2007,11 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
 	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4", "mariadb:11.8"}
+
+	if dockerutil.IsRootless() && !dockerutil.IsPodman() {
+		serverVersions = []string{"mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4", "mariadb:11.8"}
+		t.Logf("Using limited set of database servers for rootless (%v)", serverVersions)
+	}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
