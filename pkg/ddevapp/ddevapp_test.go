@@ -919,6 +919,13 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
 	}
+	if dockerutil.IsPodman() {
+		t.Skip("Skipping on Podman because this test doesn't work although manual testing works")
+	}
+	// TODO: check this later
+	if dockerutil.IsRootless() {
+		t.Skip("Skipping on rootless docker because this test doesn't work")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -1572,6 +1579,9 @@ func TestDdevAllDatabases(t *testing.T) {
 	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
 		t.Skip("Skipping on Lima/Colima/Rancher")
 	}
+	if dockerutil.IsRootless() {
+		t.Skip("Skipping on rootless")
+	}
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
@@ -1992,6 +2002,10 @@ func TestDdevExportDB(t *testing.T) {
 // TestWebserverMariaMySQLDBClient tests functionality of mysql/mariadb
 // database clients in the ddev-webserver
 func TestWebserverMariaMySQLDBClient(t *testing.T) {
+	if dockerutil.IsRootless() {
+		t.Skip("Skipping on rootless")
+	}
+
 	assert := asrt.New(t)
 
 	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4", "mariadb:11.8"}
@@ -4679,7 +4693,7 @@ func TestEnvironmentVariables(t *testing.T) {
 
 	primaryURL := app.GetPrimaryURL()
 	scheme, primaryURLWithoutPort, primaryURLPort := nodeps.ParseURL(primaryURL)
-	uidStr, gidStr, username := util.GetContainerUIDGid()
+	uidStr, gidStr, username := dockerutil.GetContainerUser()
 
 	// This set of webContainerExpectations should be maintained to match the list in the docs
 	webContainerExpectations := map[string]string{

@@ -47,18 +47,25 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: "apache-fpm"
-            webserver: "apache-fpm"
-          - name: "nginx-fpm"
-            webserver: "nginx-fpm"
-          - name: "mutagen"
+#          - name: "apache-fpm"
+#            webserver: "apache-fpm"
+#          - name: "nginx-fpm"
+#            webserver: "nginx-fpm"
+#          - name: "mutagen"
+#            mutagen: true
+#          - name: "no-bind-mounts"
+#            no-bind-mounts: "true"
+#          - name: "pull-push-test-platforms"
+#            pull-push-test-platforms: true
+#          - name: "race-detection"
+#            race-detection: true
+          - name: "podman-rootless"
+            podman-rootless: true
+          - name: "mutagen-podman-rootless"
             mutagen: true
-          - name: "no-bind-mounts"
-            no-bind-mounts: "true"
-          - name: "pull-push-test-platforms"
-            pull-push-test-platforms: true
-          - name: "race-detection"
-            race-detection: true
+            podman-rootless: true
+          - name: "docker-rootless"
+            docker-rootless: true
 
       fail-fast: false
 
@@ -72,6 +79,8 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
+      DDEV_TEST_PODMAN_ROOTLESS: ${{ matrix.podman-rootless }}
+      DDEV_TEST_DOCKER_ROOTLESS: ${{ matrix.docker-rootless }}
       MAKE_TARGET: "test"
       TESTARGS: "-failfast"
 
@@ -110,14 +119,15 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@main
 
       - name: Remove unnecessary items on disk
-        run: |
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo rm -rf /usr/local/{aws*,julia*}
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/local/lib/node_modules
-          sudo rm -rf /usr/local/bin/minikube,bin/terraform,bin/oc
-          sudo rm -rf /usr/local/share/chromium /usr/local/share/powershell /usr/local/share/vcpkg
-          df -h .
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: true
 
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh

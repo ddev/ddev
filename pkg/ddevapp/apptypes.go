@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/maruel/natural"
@@ -500,7 +501,7 @@ func (app *DdevApp) dispatchImportFilesAction(uploadDir, importPath, extractPath
 
 // DefaultWorkingDirMap returns the app type's default working directory map.
 func (app *DdevApp) DefaultWorkingDirMap() map[string]string {
-	_, _, username := util.GetContainerUIDGid()
+	_, _, username := dockerutil.GetContainerUser()
 	// Default working directory values are defined here.
 	// Services working directories can be overridden by app types if needed.
 	defaults := map[string]string{

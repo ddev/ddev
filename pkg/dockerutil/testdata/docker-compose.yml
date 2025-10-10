@@ -34,6 +34,7 @@ services:
       com.ddev.platform: local
       com.ddev.app-type: wordpress
     healthcheck:
+      test: "/healthcheck.sh"
       interval: 1s
       retries: 25
       start_period: 20s

@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"path/filepath"
 	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/ddev/ddev/pkg/archive"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/api/types"
@@ -22,6 +26,9 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 	"github.com/moby/term"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 // NoHealthCheck is a HealthConfig that disables any existing healthcheck when
@@ -332,6 +339,10 @@ func GetContainerHealth(container *container.Summary) (string, string) {
 		if numLogs > 0 {
 			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log[numLogs-1].Output)
 		}
+		// Podman doesn't update health status to unhealthy when container exits
+		if IsPodman() && status == "healthy" && inspect.State.Status == "exited" {
+			status = "unhealthy"
+		}
 	} else {
 		// Some containers may not have a healthcheck. In that case
 		// we use State to determine health
@@ -450,6 +461,24 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		pullErr := Pull(image)
 		if pullErr != nil {
 			return "", "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
+		}
+	}
+
+	if IsPodman() {
+		if config.Healthcheck == nil {
+			// Podman doesn't recognize HEALTHCHECK from Dockerfile
+			// https://github.com/containers/podman/issues/18904
+			// We can set it explicitly
+			if strings.HasPrefix(config.Image, ddevImages.GetWebImage()) {
+				// HEALTHCHECK from containers/ddev-webserver/Dockerfile
+				config.Healthcheck = &container.HealthConfig{
+					Test:        []string{"CMD-SHELL", "/healthcheck.sh"},
+					Interval:    1 * time.Second,
+					Timeout:     120 * time.Second,
+					StartPeriod: 120 * time.Second,
+					Retries:     120,
+				}
+			}
 		}
 	}
 
@@ -748,7 +777,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return fmt.Errorf("copyIntoContainer unable to find a container named %s", containerName)
 	}
 
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, _, _ := GetContainerUser()
 	_, stderr, err := Exec(cid.ID, "mkdir -p "+dstPath, uid)
 	if err != nil {
 		return fmt.Errorf("unable to mkdir -p %s inside %s: %v (stderr=%s)", dstPath, containerName, err, stderr)
@@ -896,6 +925,58 @@ func TruncateID(id string) string {
 		id = id[:shortLen]
 	}
 	return id
+}
+
+// GetContainerUser returns the uid, gid, and username to use for running commands in a container.
+func GetContainerUser() (uidStr string, gidStr string, username string) {
+	// Rootless Docker runs as root
+	if IsRootless() {
+		return "0", "0", "root"
+	}
+
+	curUser, err := user.Current()
+	if err != nil {
+		util.Failed("Unable to determine username and related UID, etc. Please at least set $USER environment variable: %v", err)
+	}
+	uidStr = curUser.Uid
+	gidStr = curUser.Gid
+	username = curUser.Username
+	// Remove at least spaces that aren't allowed in Linux usernames and can appear in Windows
+	// Example problem usernames from https://stackoverflow.com/questions/64933879/docker-ddev-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xe9-in-positio/64934264#64934264
+	// "André Kraus", "Mück"
+	// With docker-compose 1.29.2 you can't have a proper fully-qualified user pathname either
+	// so end up with trouble based on that (not quoted correctly)
+	// But for the context path it's possible to change the User home directory with
+	// https://superuser.com/questions/890812/how-to-rename-the-user-folder-in-windows-10/1346983#1346983
+
+	// Normalize username per https://stackoverflow.com/a/65981868/215713
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	username, _, _ = transform.String(t, username)
+
+	username = strings.ReplaceAll(username, " ", "")
+	username = strings.ToLower(username)
+	username = strings.ReplaceAll(username, "(", "")
+	username = strings.ReplaceAll(username, ")", "")
+
+	// If we have a numeric username it's going to create havoc, so
+	// change it into "a" + number
+	// Example in https://github.com/ddev/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
+	if !nodeps.IsLetter(string(username[0])) {
+		username = "a" + username
+	}
+
+	// Windows usernames may have a \ to separate domain\user - get the user
+	parts := strings.Split(username, `\`)
+	username = parts[len(parts)-1]
+
+	//// Windows userids are non-numeric,
+	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
+	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.
+	if nodeps.IsWindows() {
+		uidStr = "1000"
+		gidStr = "1000"
+	}
+	return uidStr, gidStr, username
 }
 
 // setupRawTerminal sets the terminal to raw mode for TTY containers.

@@ -124,7 +124,7 @@ ddev ut dockercheck`,
 		}
 		util.Success("Docker API version: %s", dockerAPIVersion)
 
-		uid, _, _ := util.GetContainerUIDGid()
+		uid, _, _ := dockerutil.GetContainerUser()
 		_, out, err := dockerutil.RunSimpleContainer(docker.GetWebImage(), "dockercheck-runcontainer--"+util.RandString(6), []string{"ls", "/mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to run simple container: %v; output=%s", err, out)

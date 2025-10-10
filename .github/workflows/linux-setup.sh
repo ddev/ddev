@@ -22,6 +22,54 @@ curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
   && sudo apt-get update -qq >/dev/null \
   && sudo apt-get install -y -qq ngrok
 
+if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
+  echo "Setting up podman-rootless"
+  sudo systemctl disable --now docker.service docker.socket
+  sudo rm -f /var/run/docker.sock
+  sudo apt-get install -y -qq podman >/dev/null
+  systemctl --user enable --now podman.socket
+  docker context create podman --docker host="unix://$(podman info --format '{{.Host.RemoteSocket.Path}}')"
+  docker context use podman
+  # Use slirp4netns for rootless networking
+  mkdir -p ~/.config/containers/containers.conf.d
+  cat << 'EOF' > ~/.config/containers/containers.conf.d/network.conf
+[network]
+default_rootless_network_cmd = "slirp4netns"
+EOF
+  cat << 'EOF' > ~/.config/containers/containers.conf.d/dns.conf
+[containers]
+dns_servers = ["1.1.1.1", "1.0.0.1"]
+EOF
+  sudo sysctl net.ipv4.ip_unprivileged_port_start=80
+  echo "Verifying podman setup"
+  podman run --rm ddev/ddev-utilities cat /etc/resolv.conf
+  podman info
+  podman version
+elif [[ "${DDEV_TEST_DOCKER_ROOTLESS:-}" == "true" ]]; then
+  echo "Setting up docker-rootless"
+  sudo systemctl disable --now docker.service docker.socket
+  sudo rm -f /var/run/docker.sock
+  # Configure AppArmor for rootlesskit
+  # Source: https://github.com/ScribeMD/rootless-docker/pull/402
+  abi4_version="$(find /etc/apparmor.d/abi -maxdepth 1 -name '4.*' -printf '%f\n' | sort -nr | head -1)"
+  filename=$(echo $HOME/bin/rootlesskit | sed -e s@^/@@ -e s@/@.@g)
+  sudo tee /etc/apparmor.d/${filename} > /dev/null <<EOF
+abi <abi/${abi4_version}>,
+
+include <tunables/global>
+
+"$HOME/bin/rootlesskit" flags=(unconfined) {
+userns,
+
+include if exists <local/${filename}>
+}
+EOF
+  sudo systemctl restart apparmor.service
+  # Install rootless docker
+  curl -fsSL https://get.docker.com/rootless | sh
+  sudo sysctl net.ipv4.ip_unprivileged_port_start=80
+fi
+
 # Without this .curlrc CircleCI linux image doesn't respect mkcert certs
 echo "capath=/etc/ssl/certs/" >>~/.curlrc
 

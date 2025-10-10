@@ -55,10 +55,25 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 	}
 
 	// Check against recommended API version, if it fails, suggest the minimum Docker version that relates to supported API
-	if !versions.GreaterThanOrEqualTo(currentAPIVersion, dockerVersionMatrix.APIVersion) {
+	if !IsPodman() && !versions.GreaterThanOrEqualTo(currentAPIVersion, dockerVersionMatrix.APIVersion) {
 		return fmt.Errorf("installed Docker version %s is not supported, please update to version %s or newer", currentVersion, dockerVersionMatrix.Version)
 	}
 	return nil
+}
+
+// IsPodmanBeforeVersion5 returns true if the Docker provider is Podman and its version is before 5.
+// Used to skip some healthcheck tests for Podman
+// It doesn't fail for me using Podman 5.x locally, but GitHub runners use Podman 4.x
+// We can come back here later when Ubuntu 26.04 is out and Podman 5 is more common.
+func IsPodmanBeforeVersion5() bool {
+	if !IsPodman() {
+		return false
+	}
+	podmanVersion, err := GetDockerVersion()
+	if err != nil {
+		return false
+	}
+	return versions.LessThan(podmanVersion, "5")
 }
 
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This

@@ -177,6 +177,9 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 		bindIP = "0.0.0.0"
 	}
 
+	isPodman := dockerutil.IsPodman()
+	isRootless := dockerutil.IsRootless()
+
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
 
 	// Ensure all services have required networks and environment variables
@@ -237,6 +240,32 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 			}
 			service.Ports[i] = port
 		}
+
+		if isPodman {
+			if service.Links != nil || service.ExternalLinks != nil {
+				util.WarningOnce("Podman does not support 'links' or 'external_links'. These options will be ignored for service '%s' in project '%s'.", name, app.Name)
+			}
+			service.Links = nil
+			service.ExternalLinks = nil
+
+			if service.HealthCheck != nil {
+				// can't set healthcheck.start_interval as feature require Docker Engine v25 or later
+				if service.HealthCheck.StartInterval != nil {
+					service.HealthCheck.StartInterval = nil
+				}
+				if service.HealthCheck.Test == nil {
+					util.WarningOnce("Service %s in project %s defines a healthcheck without a 'test' command. Podman may not execute it correctly.", name, app.Name)
+				}
+			}
+		}
+
+		if isRootless {
+			// "ping" command needs extra capability in rootless mode
+			if !slices.Contains(service.CapAdd, "NET_RAW") {
+				service.CapAdd = append(service.CapAdd, "NET_RAW")
+			}
+		}
+
 		project.Services[name] = service
 	}
 

@@ -1029,7 +1029,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	}
 
-	uid, gid, username := util.GetContainerUIDGid()
+	uid, gid, username := dockerutil.GetContainerUser()
 	_, err = app.GetProvider("")
 	if err != nil {
 		return "", err
@@ -1405,8 +1405,32 @@ ARG gid
 ARG DDEV_PHP_VERSION
 ARG DDEV_DATABASE
 RUN getent group tty || groupadd tty
+`
+
+	if dockerutil.IsRootless() {
+		// In rootless mode, we don't try to create a user
+		// Make a symlink for compatibility with things that expect /home/$username
+		// And copy /etc/skel contents to /root
+		contents = contents + `
+### DDEV-injected rootless mode user handling
+RUN ln -sf /root /home/root && cp -r /etc/skel/. /root
+`
+		// For this error during `ddev start`:
+		// mysqld: Please consult the Knowledge Base to find out how to run mysqld as root!
+		// I tried setting the user like this:
+		// `RUN mkdir -p /etc/mysql/conf.d && echo -e "[mysqld]\nuser=root" > /etc/mysql/conf.d/rootless.cnf`
+		// But it failed intermittently, so we patch the entrypoint directly.
+		if strings.Contains(fullpath, "dbimageBuild") && (app.Database.Type == nodeps.MySQL || app.Database.Type == nodeps.MariaDB) {
+			contents = contents + `
+### DDEV-injected rootless mode mysqld handling
+RUN sed -i 's/exec mysqld/exec mysqld --user=root/g' /docker-entrypoint.sh
+`
+		}
+	} else {
+		contents = contents + `
 RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd -G tty -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd -G tty -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -G tty -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -G tty -l -m -s "/bin/bash" --comment '' $username )
 `
+	}
 
 	// If there are user pre.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {

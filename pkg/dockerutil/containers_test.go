@@ -157,7 +157,9 @@ func TestGetContainerHealth(t *testing.T) {
 		assert.NotNil(c)
 
 		status, healthDetail := dockerutil.GetContainerHealth(c)
-		assert.Contains(healthDetail, "/var/www/html:OK mailpit:OK phpstatus:OK")
+		if !dockerutil.IsPodmanBeforeVersion5() {
+			assert.Contains(healthDetail, "/var/www/html:OK mailpit:OK phpstatus:OK")
+		}
 		assert.Equal("healthy", status)
 	})
 
@@ -199,7 +201,9 @@ func TestContainerWait(t *testing.T) {
 	healthDetail, err := dockerutil.ContainerWait(30, labels)
 	require.NoError(t, err)
 
-	require.Contains(t, healthDetail, "phpstatus:OK")
+	if !dockerutil.IsPodmanBeforeVersion5() {
+		require.Contains(t, healthDetail, "phpstatus:OK")
+	}
 
 	// Try a nonexistent container, should get error
 	labels = map[string]string{"com.ddev.site-name": "nothing-there"}
@@ -438,7 +442,7 @@ func TestCopyIntoContainer(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cid)
 
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, _, _ := dockerutil.GetContainerUser()
 	targetDir, _, err := dockerutil.Exec(cid.ID, "mktemp -d", uid)
 	require.NoError(t, err)
 	targetDir = strings.Trim(targetDir, "\n")
