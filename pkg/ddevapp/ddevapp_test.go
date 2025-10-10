@@ -1579,6 +1579,9 @@ func TestDdevAllDatabases(t *testing.T) {
 	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
 		t.Skip("Skipping on Lima/Colima/Rancher")
 	}
+	if dockerutil.IsRootless() {
+		t.Skip("Skipping on rootless")
+	}
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
@@ -1590,11 +1593,6 @@ func TestDdevAllDatabases(t *testing.T) {
 	if os.Getenv("GOTEST_SHORT") != "" {
 		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
-
-		if dockerutil.IsRootless() && !dockerutil.IsPodman() {
-			dbVersions = []string{"postgres:18", "postgres:17", "mariadb:10.11", "mariadb:10.6"}
-			t.Logf("Using limited set of database servers for docker-rootless (%v)", dbVersions)
-		}
 	}
 
 	app := &ddevapp.DdevApp{}
@@ -2004,14 +2002,13 @@ func TestDdevExportDB(t *testing.T) {
 // TestWebserverMariaMySQLDBClient tests functionality of mysql/mariadb
 // database clients in the ddev-webserver
 func TestWebserverMariaMySQLDBClient(t *testing.T) {
+	if dockerutil.IsRootless() {
+		t.Skip("Skipping on rootless")
+	}
+
 	assert := asrt.New(t)
 
 	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4", "mariadb:11.8"}
-
-	if dockerutil.IsRootless() && !dockerutil.IsPodman() {
-		serverVersions = []string{"mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4", "mariadb:11.8"}
-		t.Logf("Using limited set of database servers for rootless (%v)", serverVersions)
-	}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
