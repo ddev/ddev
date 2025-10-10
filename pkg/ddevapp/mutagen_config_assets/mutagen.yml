@@ -34,3 +34,6 @@ sync:
         # vcs: true
     symlink:
       mode: "{{ .SymlinkMode }}"
+    permissions:
+      defaultFileMode: "0644"
+      defaultDirectoryMode: "0755"
