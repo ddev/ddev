@@ -25,7 +25,6 @@ require (
 	github.com/moby/moby/api v1.52.0
 	github.com/moby/moby/client v0.1.0
 	github.com/moby/term v0.5.2
-	github.com/modelcontextprotocol/go-sdk v0.4.0
 	github.com/modelcontextprotocol/go-sdk v0.6.0
 	github.com/otiai10/copy v1.14.1
 	github.com/sirupsen/logrus v1.9.3
