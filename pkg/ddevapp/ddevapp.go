@@ -209,7 +209,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*dockerContainer.
 // Describe returns a map which provides detailed information on services associated with the running site.
 // if short==true, then only the basic information is returned.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
 		return nil, fmt.Errorf("failed to process pre-describe hooks: %v", err)
@@ -697,7 +697,7 @@ func (app *DdevApp) GetMailpitHTTPSPort() string {
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool, noDrop bool, targetDB string) error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	dockerutil.CheckAvailableSpace()
 
 	if targetDB == "" {
@@ -922,7 +922,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 // ExportDB exports the db, with optional output to a file, default gzip
 // targetDB is the db name if not default "db"
 func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB string) error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	if targetDB == "" {
 		targetDB = "db"
 	}
@@ -1078,7 +1078,7 @@ func (app *DdevApp) getCommonStatus(statuses map[string]string) (bool, string) {
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
 func (app *DdevApp) ImportFiles(uploadDir, importPath, extractPath string) error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	if err := app.ProcessHooks("pre-import-files"); err != nil {
 		return err
@@ -1256,7 +1256,7 @@ func (app *DdevApp) Start() error {
 
 	SyncGenericWebserverPortsWithRouterPorts(app)
 
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
 	// The project network may have duplicates, we can remove them here.
 	// See https://github.com/ddev/ddev/pull/5508
@@ -1451,12 +1451,13 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Chown the PostgreSQL volume; this shouldn't have to be a separate stanza, but the
 	// uid is 999 instead of current user
 	if app.Database.Type == nodeps.Postgres {
-		util.Debug("chowning chowning /var/lib/postgresql/data to 999")
-		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
+		postgresDataDir := app.GetPostgresDataDir()
+		util.Debug("chowning %s to 999", postgresDataDir)
+		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s %s", "999:999", postgresDataDir)}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":" + postgresDataDir}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown PostgreSQL volume: %v, output=%s", err, out)
 		}
-		util.Debug("done chowning /var/lib/postgresql/data")
+		util.Debug("done chowning %s", postgresDataDir)
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
@@ -2164,7 +2165,7 @@ type ExecOpts struct {
 // Returns ComposeCmd results of stdout, stderr, err
 // If Nocapture arg is true, stdout/stderr will be empty and output directly to stdout/stderr
 func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	defer util.TimeTrackC(fmt.Sprintf("app.Exec %v", opts))()
 
@@ -2268,7 +2269,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 // ExecWithTty executes a given command in the container of given type.
 // It allocates a pty for interactive work.
 func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	if opts.Service == "" {
 		opts.Service = "web"
@@ -2339,7 +2340,7 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 			cmd,
 		}
 
-		app.DockerEnv()
+		_ = app.DockerEnv()
 		err = exec.RunInteractiveCommand(bashPath, args)
 		_ = os.Chdir(cwd)
 	} else { // handle case in container
@@ -2458,7 +2459,7 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 }
 
 // DockerEnv sets environment variables for a docker-compose run.
-func (app *DdevApp) DockerEnv() {
+func (app *DdevApp) DockerEnv() map[string]string {
 	uidStr, gidStr, username := util.GetContainerUIDGid()
 
 	// Warn about running as root if we're not on Windows.
@@ -2566,45 +2567,45 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_DATABASE":                  app.Database.Type + ":" + app.Database.Version,
 		"DDEV_FILES_DIR":                 app.GetContainerUploadDir(),
 		"DDEV_FILES_DIRS":                strings.Join(app.GetContainerUploadDirs(), ","),
-
-		"DDEV_HOST_DB_PORT":             dbPortStr,
-		"DDEV_HOST_MAILHOG_PORT":        app.HostMailpitPort,
-		"DDEV_HOST_MAILPIT_PORT":        app.HostMailpitPort,
-		"DDEV_HOST_HTTP_PORT":           hostHTTPPortStr,
-		"DDEV_HOST_HTTPS_PORT":          hostHTTPSPortStr,
-		"DDEV_HOST_WEBSERVER_PORT":      hostHTTPPortStr,
-		"DDEV_MAILHOG_HTTPS_PORT":       app.GetMailpitHTTPSPort(),
-		"DDEV_MAILHOG_PORT":             app.GetMailpitHTTPPort(),
-		"DDEV_MAILPIT_HTTP_PORT":        app.GetMailpitHTTPPort(),
-		"DDEV_MAILPIT_HTTPS_PORT":       app.GetMailpitHTTPSPort(),
-		"DDEV_MAILPIT_PORT":             app.GetMailpitHTTPPort(),
-		"DDEV_XHGUI_HTTP_PORT":          app.GetXHGuiHTTPPort(),
-		"DDEV_XHGUI_HTTPS_PORT":         app.GetXHGuiHTTPSPort(),
-		"DDEV_DOCROOT":                  app.GetDocroot(),
-		"DDEV_HOSTNAME":                 app.HostName(),
-		"DDEV_UID":                      uidStr,
-		"DDEV_GID":                      gidStr,
-		"DDEV_USER":                     username,
-		"DDEV_MUTAGEN_ENABLED":          strconv.FormatBool(app.IsMutagenEnabled()),
-		"DDEV_PHP_VERSION":              app.PHPVersion,
-		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
-		"DDEV_PROJECT_TYPE":             app.Type,
-		"DDEV_ROUTER_HTTP_PORT":         app.GetPrimaryRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT":        app.GetPrimaryRouterHTTPSPort(),
-		"DDEV_XDEBUG_ENABLED":           strconv.FormatBool(app.XdebugEnabled),
-		"DDEV_XHPROF_MODE":              app.GetXHProfMode(),
-		"DDEV_PRIMARY_URL":              primaryURL,
-		"DDEV_PRIMARY_URL_PORT":         primaryURLPort,
-		"DDEV_PRIMARY_URL_WITHOUT_PORT": primaryURLWithoutPort,
-		"DDEV_SCHEME":                   scheme,
-		"DDEV_VERSION":                  versionconstants.DdevVersion,
-		"DOCKER_SCAN_SUGGEST":           "false",
-		"DDEV_GOOS":                     runtime.GOOS,
-		"DDEV_GOARCH":                   runtime.GOARCH,
-		"IS_DDEV_PROJECT":               "true",
-		"IS_GITPOD":                     strconv.FormatBool(nodeps.IsGitpod()),
-		"IS_CODESPACES":                 strconv.FormatBool(nodeps.IsCodespaces()),
-		"IS_WSL2":                       isWSL2,
+		"DDEV_GLOBAL_DIR":                util.WindowsPathToCygwinPath(globalconfig.GetGlobalDdevDir()),
+		"DDEV_HOST_DB_PORT":              dbPortStr,
+		"DDEV_HOST_MAILHOG_PORT":         app.HostMailpitPort,
+		"DDEV_HOST_MAILPIT_PORT":         app.HostMailpitPort,
+		"DDEV_HOST_HTTP_PORT":            hostHTTPPortStr,
+		"DDEV_HOST_HTTPS_PORT":           hostHTTPSPortStr,
+		"DDEV_HOST_WEBSERVER_PORT":       hostHTTPPortStr,
+		"DDEV_MAILHOG_HTTPS_PORT":        app.GetMailpitHTTPSPort(),
+		"DDEV_MAILHOG_PORT":              app.GetMailpitHTTPPort(),
+		"DDEV_MAILPIT_HTTP_PORT":         app.GetMailpitHTTPPort(),
+		"DDEV_MAILPIT_HTTPS_PORT":        app.GetMailpitHTTPSPort(),
+		"DDEV_MAILPIT_PORT":              app.GetMailpitHTTPPort(),
+		"DDEV_XHGUI_HTTP_PORT":           app.GetXHGuiHTTPPort(),
+		"DDEV_XHGUI_HTTPS_PORT":          app.GetXHGuiHTTPSPort(),
+		"DDEV_DOCROOT":                   app.GetDocroot(),
+		"DDEV_HOSTNAME":                  app.HostName(),
+		"DDEV_UID":                       uidStr,
+		"DDEV_GID":                       gidStr,
+		"DDEV_USER":                      username,
+		"DDEV_MUTAGEN_ENABLED":           strconv.FormatBool(app.IsMutagenEnabled()),
+		"DDEV_PHP_VERSION":               app.PHPVersion,
+		"DDEV_WEBSERVER_TYPE":            app.WebserverType,
+		"DDEV_PROJECT_TYPE":              app.Type,
+		"DDEV_ROUTER_HTTP_PORT":          app.GetPrimaryRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":         app.GetPrimaryRouterHTTPSPort(),
+		"DDEV_XDEBUG_ENABLED":            strconv.FormatBool(app.XdebugEnabled),
+		"DDEV_XHPROF_MODE":               app.GetXHProfMode(),
+		"DDEV_PRIMARY_URL":               primaryURL,
+		"DDEV_PRIMARY_URL_PORT":          primaryURLPort,
+		"DDEV_PRIMARY_URL_WITHOUT_PORT":  primaryURLWithoutPort,
+		"DDEV_SCHEME":                    scheme,
+		"DDEV_VERSION":                   versionconstants.DdevVersion,
+		"DOCKER_SCAN_SUGGEST":            "false",
+		"DDEV_GOOS":                      runtime.GOOS,
+		"DDEV_GOARCH":                    runtime.GOARCH,
+		"IS_DDEV_PROJECT":                "true",
+		"IS_GITPOD":                      strconv.FormatBool(nodeps.IsGitpod()),
+		"IS_CODESPACES":                  strconv.FormatBool(nodeps.IsCodespaces()),
+		"IS_WSL2":                        isWSL2,
 	}
 
 	// Set the DDEV_DB_CONTAINER_COMMAND command to empty to prevent docker-compose from complaining normally.
@@ -2633,11 +2634,12 @@ func (app *DdevApp) DockerEnv() {
 			util.Error("Failed to set the environment variable %s=%s: %v", k, v, err)
 		}
 	}
+	return envVars
 }
 
 // Pause initiates docker-compose stop
 func (app *DdevApp) Pause() error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	status, _ := app.SiteStatus()
 	if status == SiteStopped {
@@ -2864,7 +2866,19 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 	case app.Database.Type == nodeps.MySQL:
 		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
 	case app.Database.Type == nodeps.Postgres:
-		c = fmt.Sprintf("rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", path.Base(targetFile), targetFile)
+		postgresDataPath := app.GetPostgresDataPath()
+		postgresDataDir := app.GetPostgresDataDir()
+
+		// For PostgreSQL 18+, we need to preserve the version-specific directory structure
+		if postgresDataPath != postgresDataDir {
+			// PostgreSQL 18+: backup from actual data path and create tar preserving directory structure
+			// Create the full directory structure (e.g., 18/docker/) that matches the container layout
+			versionDir := filepath.Base(filepath.Dir(postgresDataPath)) // Extract "18" from "/var/lib/postgresql/18/docker"
+			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -czf %s -C /var/tmp/pgstructure/ .", postgresDataPath, path.Base(targetFile), versionDir, versionDir, targetFile)
+		} else {
+			// PostgreSQL ≤17: original behavior
+			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", postgresDataPath, path.Base(targetFile), targetFile)
+		}
 	}
 	return c
 }
@@ -2891,7 +2905,7 @@ func fullDBFromVersion(v string) string {
 
 // Stop stops and Removes the Docker containers for the project in current directory.
 func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	var err error
 
 	clear(EphemeralRouterPortsAssigned)

@@ -15,11 +15,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugTestCmdCmd implements the ddev debug test command
+// DebugTestCmdCmd implements the ddev utility test command
 var DebugTestCmdCmd = &cobra.Command{
 	Use:     "test",
 	Short:   "Run diagnostics on DDEV using the embedded test_ddev.sh script",
-	Example: "ddev debug test",
+	Example: "ddev utility test",
 	Run: func(_ *cobra.Command, args []string) {
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")
@@ -44,7 +44,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		p := tmpDir
 		if nodeps.IsWindows() {
 			if !fileutil.FileExists(bashPath) {
-				util.Failed("%s does not exist, please install git-bash to use 'ddev debug test'", bashPath)
+				util.Failed("%s does not exist, please install git-bash to use 'ddev utility test'", bashPath)
 			}
 			p = util.WindowsPathToCygwinPath(tmpDir)
 		}

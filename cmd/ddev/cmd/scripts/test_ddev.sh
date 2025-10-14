@@ -6,8 +6,6 @@
 # Or use curl or wget to download the *raw* version.
 # If you're on Windows (not WSL2) please run it in a git-bash window
 # When you are reporting an issue, please include the full output of this script.
-# If you have NFS enabled globally, please temporarily disable it with
-# `ddev config global --performance-mode-reset`
 
 # Disable instrumentation inside `ddev debug test`
 export DDEV_NO_INSTRUMENTATION=true
@@ -33,6 +31,41 @@ function docker_desktop_version {
   fi
 }
 
+# Function to summarize Linux distro
+get_distro_info() {
+  if [ -r /etc/os-release ]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    if [ -n "${PRETTY_NAME:-}" ]; then
+      echo "$PRETTY_NAME"
+    else
+      echo "${ID:-unknown} ${VERSION_ID:-}"
+    fi
+  elif command -v lsb_release >/dev/null 2>&1; then
+    lsb_release -ds
+  else
+    uname -sr
+  fi
+}
+
+# Function to get default login shell
+get_default_shell() {
+  if command -v getent >/dev/null 2>&1; then
+    getent passwd "$USER" | cut -d: -f7
+  else
+    echo "${SHELL:-unknown}"
+  fi
+}
+
+get_global_ddev_dir() {
+  ddev version -j | docker run --rm -i ddev/ddev-utilities jq -r '.raw["global-ddev-dir"]'
+}
+
+function cleanup {
+  printf "\n\nCleanup: deleting test project %s\n" "${PROJECT_NAME}"
+  ddev delete -Oy ${PROJECT_NAME}
+  printf "\nPlease remove the files from this test with 'rm -r %s'\n" "${PROJECT_DIR}"
+}
 
 if [[ ${PWD} != ${HOME}* ]]; then
   printf "\n\nWARNING: Project should usually be in a subdirectory of the user's home directory.\nInstead it's in %s\n\n" "${PWD}"
@@ -41,12 +74,30 @@ fi
 header "Output file will be in $1"
 if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory, preferably the problem project.\nIt doesn't work in other directories.\n"; exit 2; fi
 
-header "ddev installation alternate locations:"
-which -a ddev
-echo
+header "docker pull ddev/ddev-utilities"
+docker pull ddev/ddev-utilities >/dev/null
+
+header "DDEV version"
+DDEV_DEBUG=true ddev version
+docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw."docker-platform"' 2>/dev/null)
 
 header "project configuration via ddev debug configyaml"
 ddev debug configyaml --full-yaml --omit-keys=web_environment 2>/dev/null || { ddev debug configyaml | (grep -v "^web_environment" || true); }
+
+header "DDEV Global Information"
+if [ "$XDG_CONFIG_HOME" != "" ]; then
+  echo "XDG_CONFIG_HOME is set to non-default value: '${XDG_CONFIG_HOME}'"
+fi
+echo "Global DDEV dir is $(get_global_ddev_dir)"
+echo ""
+ddev config global | (grep -v "^web-environment" || true)
+
+header "OS Information"
+echo "Default shell: $(get_default_shell)"
+echo "uname -a: $(uname -a)"
+if [ "${OSTYPE%-*}" = "linux" ]; then
+  echo "Distro: $(get_distro_info)"
+fi
 
 header "existing project customizations"
 grep -r -L "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/mutagen .ddev/apache .ddev/nginx* .ddev/*-build .ddev/mysql .ddev/postgres .ddev/traefik/config .ddev/.env .ddev/.env.* 2>/dev/null | grep -v '\.example$' 2>/dev/null
@@ -80,18 +131,16 @@ if [ -f .ddev/mutagen/mutagen.yml ]; then
   fi
 fi
 
+header "ddev installation alternate locations:"
+which -a ddev
+echo
+
 PROJECT_DIR=../${PROJECT_NAME}
 header "Creating dummy project named ${PROJECT_NAME} in ${PROJECT_DIR}"
 
 set -eu
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
 cd "${PROJECT_DIR}" || exit 3
-
-function cleanup {
-  printf "\n\nCleanup: deleting test project %s\n" "${PROJECT_NAME}"
-  ddev delete -Oy ${PROJECT_NAME}
-  printf "\nPlease remove the files from this test with 'rm -r %s'\n" "${PROJECT_DIR}"
-}
 
 ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
 
@@ -102,29 +151,8 @@ set +eu
 
 trap cleanup SIGINT SIGTERM SIGQUIT EXIT
 
-header "OS Information (uname -a)"
-uname -a
-command -v sw_vers >/dev/null && sw_vers
-
 header "User information (id -a)"
 id -a
-
-header "DDEV version"
-DDEV_DEBUG=true ddev version
-docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw."docker-platform"' 2>/dev/null)
-
-header "proxy settings"
-echo "
-  HTTP_PROXY='${HTTP_PROXY:-}'
-  http_proxy='${http_proxy:-}'
-  HTTPS_PROXY='${HTTPS_PROXY:-}'
-  https_proxy='${https_proxy:-}'
-  NO_PROXY='${NO_PROXY:-}'
-  no_proxy='${no_proxy:-}'
-"
-
-header "DDEV global info"
-ddev config global | (grep -v "^web-environment" || true)
 
 header "DOCKER provider info"
 docker_client="$(which docker)"
@@ -135,6 +163,16 @@ which -a docker
 echo
 
 printf "Docker provider: %s\n" "${docker_platform}"
+
+header "proxy settings"
+echo "
+  HTTP_PROXY='${HTTP_PROXY:-}'
+  http_proxy='${http_proxy:-}'
+  HTTPS_PROXY='${HTTPS_PROXY:-}'
+  https_proxy='${https_proxy:-}'
+  NO_PROXY='${NO_PROXY:-}'
+  no_proxy='${no_proxy:-}'
+"
 
 if [ "${OSTYPE%-*}" != "linux" ] && [ "$docker_platform" = "docker-desktop" ]; then
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
@@ -163,10 +201,8 @@ rancher-desktop)
   ;;
 esac
 
-if ddev debug dockercheck -h | grep dockercheck >/dev/null; then
-  header "ddev debug dockercheck"
-  ddev debug dockercheck 2>/dev/null
-fi
+header "ddev utility dockercheck"
+ddev utility dockercheck 2>/dev/null || true
 
 printf "\nDocker disk space:\n" && docker run --rm ddev/ddev-utilities df -h //
 
@@ -236,7 +272,8 @@ if ! DDEV_DEBUG=true ddev start -y; then
   printf "============= ddev-router healthcheck =========\n"
   docker inspect --format "{{json .State.Health }}" ddev-router || true
   printf "============= Global ddev homeadditions =========\n"
-  ls -lR ~/.ddev/homeadditions/
+  globalDir=$(get_global_ddev_dir)
+  ls -lR ${globalDir}/homeadditions/
   printf "============= ddev logs =========\n"
   ddev logs | tail -20l
   printf "============= contents of /mnt/ddev_config  =========\n"

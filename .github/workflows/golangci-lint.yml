@@ -49,9 +49,6 @@ jobs:
 
       - name: Lint Go Files
         uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.2.1
-          args: --config=.golangci.yml
 
   check_modules:
     name: Check Go Modules

@@ -13,7 +13,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 )
 
-// TestDebugGobDecodeCmd tests the ddev debug gob-decode command
+// TestDebugGobDecodeCmd tests the ddev utility gob-decode command
 func TestDebugGobDecodeCmd(t *testing.T) {
 	require := require.New(t)
 
@@ -117,7 +117,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		out, err := exec.RunHostCommand(DdevBin, "debug", "gob-decode", "--help")
 		require.NoError(err)
 		require.Contains(out, "Decode and display the contents of Go gob-encoded binary files")
-		require.Contains(out, "ddev debug gob-decode ~/.ddev/.remote-config")
+		require.Contains(out, "ddev utility gob-decode ~/.ddev/.remote-config")
 		require.Contains(out, ".remote-config files (remote configuration cache)")
 	})
 

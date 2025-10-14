@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugMutagenCmd implements the ddev debug mutagen command
+// DebugMutagenCmd implements the ddev utility mutagen command
 var DebugMutagenCmd = &cobra.Command{
 	Use:   "mutagen",
 	Short: "Allows access to any Mutagen command",
@@ -19,9 +19,9 @@ var DebugMutagenCmd = &cobra.Command{
 	},
 
 	Long: "This passes through any Mutagen command to the embedded Mutagen itself. See Mutagen docs at https://mutagen.io/documentation/introduction",
-	Example: `ddev debug mutagen sync list
-ddev debug mutagen daemon stop
-ddev debug mutagen
+	Example: `ddev utility mutagen sync list
+ddev utility mutagen daemon stop
+ddev utility mutagen
 ddev d mutagen sync list
 `,
 	Run: func(_ *cobra.Command, args []string) {

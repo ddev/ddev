@@ -13,9 +13,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/api/types/network"
-	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,8 +23,6 @@ import (
 // Note: duplicate networks cannot be created with Docker >= 25.x.x
 // See https://github.com/moby/moby/pull/46251
 func TestNetworkDuplicates(t *testing.T) {
-	assert := asrt.New(t)
-
 	ctx, client, err := dockerutil.GetDockerClient()
 	if err != nil {
 		t.Fatalf("Could not get docker client: %v", err)
@@ -37,14 +33,14 @@ func TestNetworkDuplicates(t *testing.T) {
 
 	t.Cleanup(func() {
 		err := dockerutil.RemoveNetwork(networkName)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		nets, err := client.NetworkList(ctx, network.ListOptions{})
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		// Ensure the network is not in the list
 		for _, net := range nets {
-			assert.NotEqual(networkName, net.Name)
+			require.NotEqual(t, networkName, net.Name)
 		}
 	})
 
@@ -57,45 +53,41 @@ func TestNetworkDuplicates(t *testing.T) {
 
 	// Create the first network
 	_, err = client.NetworkCreate(ctx, networkName, netOptions)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Create a second network with the same name
 	_, errDuplicate := client.NetworkCreate(ctx, networkName, netOptions)
 
 	// Go library docker/docker/client v25+ throws an error,
 	// no matter what version of Docker is installed
-	assert.Error(errDuplicate)
+	require.Error(t, errDuplicate)
 
 	// Check if the network is created
 	err = dockerutil.EnsureNetwork(networkName, netOptions)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// This check would fail if there is a network duplicate
 	_, err = client.NetworkInspect(ctx, networkName, network.InspectOptions{})
-	assert.NoError(err)
+	require.NoError(t, err)
 }
 
 // TestNetworkAmbiguity tests the behavior and setup of Docker networking.
 // There should be no crosstalk between different projects
 func TestNetworkAmbiguity(t *testing.T) {
-	assert := asrt.New(t)
-
 	origDir, _ := os.Getwd()
 
 	projects := map[string]string{
 		t.Name() + "-app1": testcommon.CreateTmpDir(t.Name() + "-app1"),
 		t.Name() + "-app2": testcommon.CreateTmpDir(t.Name() + "-app2"),
 	}
-	var err error
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
+		_ = os.Chdir(origDir)
 		for projName, projDir := range projects {
 			app, err := ddevapp.GetActiveApp(projName)
-			assert.NoError(err)
-			err = app.Stop(true, false)
-			assert.NoError(err)
+			if err == nil {
+				_ = app.Stop(true, false)
+			}
 			_ = os.RemoveAll(projDir)
 		}
 	})
@@ -108,19 +100,19 @@ func TestNetworkAmbiguity(t *testing.T) {
 		app, err := ddevapp.GetActiveApp(projName)
 		if err == nil {
 			err = app.Stop(true, false)
-			assert.NoError(err)
+			require.NoError(t, err)
 		}
 		// Create new app
 		app, err = ddevapp.NewApp(projDir, false)
-		assert.NoError(err)
+		require.NoError(t, err)
 		app.Type = nodeps.AppTypePHP
 		app.Name = projName
 		err = app.WriteConfig()
-		assert.NoError(err)
+		require.NoError(t, err)
 		err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.test.yaml"), app.GetConfigPath("docker-compose.test.yaml"))
-		assert.NoError(err)
+		require.NoError(t, err)
 		err = app.Start()
-		assert.NoError(err)
+		require.NoError(t, err)
 	}
 
 	// With the improved two-network handling, the simple service names
@@ -129,7 +121,7 @@ func TestNetworkAmbiguity(t *testing.T) {
 	expectations := map[string]int{"web": 1, "db": 1}
 	for projName := range projects {
 		app, err := ddevapp.GetActiveApp(projName)
-		assert.NoError(err)
+		require.NoError(t, err)
 		for c, expectation := range expectations {
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: c,
@@ -138,7 +130,7 @@ func TestNetworkAmbiguity(t *testing.T) {
 			require.NoError(t, err)
 			out = strings.Trim(out, "\r\n ")
 			ips := strings.Split(out, "\n")
-			assert.Len(ips, expectation)
+			require.Len(t, ips, expectation)
 		}
 	}
 }
@@ -149,14 +141,6 @@ func TestNetworkAmbiguity(t *testing.T) {
 // where projects can communicate with each other via hostnames without external_links
 // Related test: TestInternalAndExternalAccessToURL
 func TestNetworkAliases(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
-		t.Skip("Skipping on mac Apple Silicon/Lima/Colima/Rancher to ignore problems with 'connection reset by peer'")
-	}
-
-	assert := asrt.New(t)
-
-	runTime := util.TimeTrackC(t.Name())
-
 	origDir, _ := os.Getwd()
 
 	// Create two temporary projects
@@ -164,16 +148,21 @@ func TestNetworkAliases(t *testing.T) {
 		t.Name() + "-app1": testcommon.CreateTmpDir(t.Name() + "-app1"),
 		t.Name() + "-app2": testcommon.CreateTmpDir(t.Name() + "-app2"),
 	}
-	var err error
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
+		_ = os.Chdir(origDir)
+
+		out, _ := exec.RunHostCommand(DdevBin, "list")
+		t.Logf("\n=========== output of `ddev list` ==========\n%s\n============\n", out)
+		out, _ = exec.RunHostCommand("docker", "logs", "ddev-router")
+		t.Logf("\n=========== output of `docker logs ddev-router` ==========\n%s\n============\n", out)
+		out, _ = exec.RunHostCommand("docker", "inspect", "ddev-router", "--format", "{{json .NetworkSettings.Networks}}")
+		t.Logf("\n=========== output of `docker inspect ddev-router --format '{{json .NetworkSettings.Networks}}'` ==========\n%s\n============\n", out)
+
 		for projName, projDir := range projects {
 			app, err := ddevapp.GetActiveApp(projName)
 			if err == nil {
-				err = app.Stop(true, false)
-				assert.NoError(err)
+				_ = app.Stop(true, false)
 			}
 			_ = os.RemoveAll(projDir)
 		}
@@ -188,12 +177,12 @@ func TestNetworkAliases(t *testing.T) {
 			app, err := ddevapp.GetActiveApp(projName)
 			if err == nil {
 				err = app.Stop(true, false)
-				assert.NoError(err)
+				require.NoError(t, err)
 			}
 
 			// Create new app
 			app, err = ddevapp.NewApp(projDir, false)
-			assert.NoError(err)
+			require.NoError(t, err)
 			app.Type = nodeps.AppTypePHP
 			app.Name = projName
 
@@ -213,14 +202,14 @@ func TestNetworkAliases(t *testing.T) {
 			}
 
 			err = app.WriteConfig()
-			assert.NoError(err)
+			require.NoError(t, err)
 
 			// Copy test index.php file
 			err = fileutil.CopyFile(filepath.Join(origDir, "testdata", "TestNetworkAliases", "index.php"), filepath.Join(projDir, "index.php"))
-			assert.NoError(err)
+			require.NoError(t, err)
 
 			err = app.Start()
-			assert.NoError(err)
+			require.NoError(t, err)
 
 			apps = append(apps, app)
 		}
@@ -228,8 +217,12 @@ func TestNetworkAliases(t *testing.T) {
 
 	// Get app references after setup
 	var app1, app2 *ddevapp.DdevApp
-	if len(apps) >= 2 {
-		app1, app2 = apps[0], apps[1]
+	for _, app := range apps {
+		if strings.Contains(app.Name, "app1") {
+			app1 = app
+		} else {
+			app2 = app
+		}
 	}
 
 	// Define test case structure
@@ -348,20 +341,11 @@ func TestNetworkAliases(t *testing.T) {
 							Service: "web",
 							Cmd:     curlCmd,
 						})
-						assert.NoError(err)
-						assert.Contains(out, "Hello from "+tc.toApp.Name, "Response should contain %s project name (from %s, '%s')", tc.toApp.Name, tc.fromApp.Name, curlCmd)
+						require.NoError(t, err)
+						require.Contains(t, out, "Hello from "+tc.toApp.Name, "Response should contain %s project name (from %s, '%s')", tc.toApp.Name, tc.fromApp.Name, curlCmd)
 					})
 				}
 			}
 		})
 	}
-
-	out, err := exec.RunHostCommand(DdevBin, "list")
-	assert.NoError(err)
-	t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
-	out, err = exec.RunHostCommand("docker", "logs", "ddev-router")
-	assert.NoError(err)
-	t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
-
-	runTime()
 }

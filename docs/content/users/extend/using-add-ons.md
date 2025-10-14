@@ -30,16 +30,23 @@ Use [DDEV Add-on Registry](https://addons.ddev.com/) to discover, explore, and l
 
 ### Command Line Discovery
 
-List official add-ons:
+List all available add-ons:
 
 ```bash
 ddev add-on list
 ```
 
-See all possible add-ons (including community add-ons):
+Search for specific add-ons by name or description:
 
 ```bash
-ddev add-on list --all
+# Search for Redis-related add-ons
+ddev add-on search redis
+
+# Search with multiple terms (all must be present)
+ddev add-on search redis web
+
+# Search with multiple terms using quotes (currently same behavior)
+ddev add-on search "redis commander"
 ```
 
 ## Installing Add-ons
@@ -212,7 +219,7 @@ This approach:
 
 ### Platform and Cloud Integration
 
-- **[`ddev/ddev-platformsh`](https://github.com/ddev/ddev-platformsh)** - Platform.sh integration for project syncing and workflows
+- **[`ddev/ddev-upsun`](https://github.com/ddev/ddev-upsun)** - Upsun Fixed (formerly Platform.sh) and Flex integration for project syncing and workflows
 - **[`ddev/ddev-ibexa-cloud`](https://github.com/ddev/ddev-ibexa-cloud)** - Pull projects and data from Ibexa Cloud
 - **[`ddev/ddev-minio`](https://github.com/ddev/ddev-minio)** - MinIO S3-compatible object storage solution
 
@@ -264,7 +271,7 @@ This restarts all services and applies any configuration changes.
 ### Review Add-on Configuration
 
 ```bash
-ddev debug compose-config
+ddev utility compose-config
 ```
 
 This shows the final Docker Compose configuration including add-on services.

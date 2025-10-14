@@ -54,7 +54,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	internalIPAddr = strings.Trim(internalIPAddr, "\r\n\"'")
 	assert.NoError(err)
 
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	// Before we add the password with ddev auth ssh, we should not be able to access the SSH server
 	// Turn off StrictHostChecking because the server can have been run more than once with different

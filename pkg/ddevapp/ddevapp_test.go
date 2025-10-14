@@ -1581,7 +1581,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
+		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -2130,7 +2130,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 func TestWebserverPostgresDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
-	serverVersions := []string{"postgres:17", "postgres:16", "postgres:14", "postgres:9"}
+	serverVersions := []string{"postgres:18", "postgres:17", "postgres:16"}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
@@ -3526,7 +3526,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	// Make sure that valid yaml files get properly loaded in the proper order
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	//nolint: errcheck
 	defer app.Stop(true, false)
@@ -3597,7 +3597,7 @@ func TestFixupComposeYaml(t *testing.T) {
 
 	app, err := ddevapp.NewApp(testDir, true)
 	require.NoError(t, err)
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	t.Cleanup(func() {
 		err := app.Stop(true, false)
@@ -4710,7 +4710,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		"IS_DDEV_PROJECT":               "true",
 	}
 
-	app.DockerEnv()
+	_ = app.DockerEnv()
 	for k, v := range webContainerExpectations {
 		envVal, _, err := app.Exec(&ddevapp.ExecOpts{
 			Cmd: fmt.Sprintf("echo ${%s}", k),

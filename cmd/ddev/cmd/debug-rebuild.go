@@ -18,7 +18,7 @@ var (
 	service  string
 )
 
-// DebugRebuildCmd implements the ddev debug rebuild command
+// DebugRebuildCmd implements the ddev utility rebuild command
 var DebugRebuildCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "rebuild",
@@ -53,7 +53,7 @@ var DebugRebuildCmd = &cobra.Command{
 			util.Failed("Failed to get project: %v", err)
 		}
 
-		app.DockerEnv()
+		_ = app.DockerEnv()
 
 		if err = app.WriteDockerComposeYAML(); err != nil {
 			util.Failed("Failed to get compose-config: %v", err)

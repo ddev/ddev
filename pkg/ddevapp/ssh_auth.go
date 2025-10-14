@@ -3,16 +3,17 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	dockerContainer "github.com/docker/docker/api/types/container"
 	"os"
 	"path"
 	"path/filepath"
 	"text/template"
 
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/docker/docker/api/types/container"
 )
 
 // SSHAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
@@ -46,17 +47,22 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	dockerutil.EnsureDdevNetwork()
 
-	path, err := app.CreateSSHAuthComposeFile()
+	composeFile, err := app.CreateSSHAuthComposeFile()
 	if err != nil {
 		return err
 	}
 
-	app.DockerEnv()
+	_ = app.DockerEnv()
+
+	err = dockerutil.Pull(ddevImages.GetSSHAuthImage())
+	if err != nil {
+		return err
+	}
 
 	// run docker-compose up -d
 	// This will force-recreate, discarding existing auth if there is a stopped container.
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: []string{path},
+		ComposeFiles: []string{composeFile},
 		Action:       []string{"-p", SSHAuthName, "up", "--build", "--force-recreate", "-d"},
 	})
 	if err != nil {
@@ -109,7 +115,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 
 	uid, gid, username := util.GetContainerUIDGid()
 
-	app.DockerEnv()
+	_ = app.DockerEnv()
 
 	templateVars := map[string]interface{}{
 		"ssh_auth_image": versionconstants.SSHAuthImage,
@@ -154,17 +160,17 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 
 // findDdevSSHAuth uses FindContainerByLabels to get our sshAuth container and
 // return it (or nil if it doesn't exist yet)
-func findDdevSSHAuth() (*dockerContainer.Summary, error) {
+func findDdevSSHAuth() (*container.Summary, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.project": SSHAuthName,
 		"com.docker.compose.oneoff":  "False",
 	}
 
-	container, err := dockerutil.FindContainerByLabels(containerQuery)
+	c, err := dockerutil.FindContainerByLabels(containerQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute findContainersByLabels, %v", err)
 	}
-	return container, nil
+	return c, nil
 }
 
 // RenderSSHAuthStatus returns a user-friendly string showing sshAuth-status
@@ -190,15 +196,15 @@ func GetSSHAuthStatus() string {
 		"com.docker.compose.project": SSHAuthName,
 		"com.docker.compose.oneoff":  "False",
 	}
-	container, err := dockerutil.FindContainerByLabels(label)
+	c, err := dockerutil.FindContainerByLabels(label)
 
 	if err != nil {
 		util.Error("Failed to execute FindContainerByLabels(%v): %v", label, err)
 		return SiteStopped
 	}
-	if container == nil {
+	if c == nil {
 		return SiteStopped
 	}
-	health, _ := dockerutil.GetContainerHealth(container)
+	health, _ := dockerutil.GetContainerHealth(c)
 	return health
 }

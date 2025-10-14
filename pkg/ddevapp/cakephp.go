@@ -59,7 +59,6 @@ func cakephpPostStartAction(app *DdevApp) error {
 		"export APP_NAME":                    app.GetName(),
 		"export DEBUG":                       "true",
 		"export APP_ENCODING":                "UTF-8",
-		"export APP_DEFAULT_LOCALE":          "en_US",
 		"export DATABASE_URL":                dbConnection + "://db:db@db:" + port + "/db" + dbParams,
 		"export EMAIL_TRANSPORT_DEFAULT_URL": "smtp://localhost:1025",
 		"export SECURITY_SALT":               util.HashSalt(app.GetName()),

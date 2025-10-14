@@ -21,7 +21,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
-	"golang.org/x/term"
+	"github.com/moby/term"
 )
 
 // NoHealthCheck is a HealthConfig that disables any existing healthcheck when
@@ -418,7 +418,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 
 // RunSimpleContainerExtended runs a container (non-daemonized) and captures the stdout/stderr.
 // Accepts any config and hostConfig. If stdin is provided, enables interactive mode with stdin forwarding.
-func RunSimpleContainerExtended(name string, config *container.Config, hostConfig *container.HostConfig, removeContainerAfterRun bool, detach bool) (containerID string, output string, returnErr error) {
+func RunSimpleContainerExtended(name string, config *container.Config, hostConfig *container.HostConfig, removeContainerAfterRun bool, detach bool) (containerID string, out string, returnErr error) {
 	ctx, client, err := GetDockerClient()
 	if err != nil {
 		return "", "", err
@@ -459,7 +459,7 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 	if config.AttachStdin {
 		config.AttachStdin = true
 		config.OpenStdin = true
-		config.Tty = term.IsTerminal(int(os.Stdin.Fd()))
+		config.Tty = term.IsTerminal(os.Stdin.Fd())
 	}
 
 	if config.Labels == nil {
@@ -486,11 +486,6 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		defer RemoveContainer(c.ID)
 	}
 
-	err = client.ContainerStart(ctx, c.ID, container.StartOptions{})
-	if err != nil {
-		return c.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
-	}
-
 	var hijackedResp *types.HijackedResponse
 	var outputDone chan struct{}
 
@@ -510,12 +505,32 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		hijackedResp = &resp
 		defer hijackedResp.Close()
 
+		restoreTerminal, err := setupRawTerminal()
+		if err != nil {
+			return c.ID, "", err
+		}
+		defer restoreTerminal()
+
 		// Initialize synchronization channel for output completion
 		outputDone = make(chan struct{})
 
 		// Forward output from container to stdout
 		go func() {
-			_, _ = io.Copy(os.Stdout, resp.Reader)
+			if output.JSONOutput {
+				util.Warning("Ignoring all output from container in JSON mode with stdin attached")
+				buf := new(bytes.Buffer)
+				_, _ = buf.ReadFrom(hijackedResp.Reader)
+				text := strings.ReplaceAll(buf.String(), "\r\n", "\n")
+				text = strings.ReplaceAll(text, "\r", "\n")
+				lines := strings.Split(text, "\n")
+				for _, line := range lines {
+					if line != "" {
+						output.UserOut.Println(line)
+					}
+				}
+			} else {
+				_, _ = io.Copy(os.Stdout, hijackedResp.Reader)
+			}
 			if outputDone != nil {
 				close(outputDone)
 			}
@@ -523,8 +538,12 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 
 		// Forward input from stdin to container
 		go func() {
-			_, _ = io.Copy(resp.Conn, os.Stdin)
+			_, _ = io.Copy(hijackedResp.Conn, os.Stdin)
 		}()
+	}
+
+	if err := client.ContainerStart(ctx, c.ID, container.StartOptions{}); err != nil {
+		return c.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
 	}
 
 	exitCode := 0
@@ -877,4 +896,34 @@ func TruncateID(id string) string {
 		id = id[:shortLen]
 	}
 	return id
+}
+
+// setupRawTerminal sets the terminal to raw mode for TTY containers.
+// Returns a restore function that should be called to restore terminal state.
+func setupRawTerminal() (restore func(), err error) {
+	if !term.IsTerminal(os.Stdin.Fd()) || output.JSONOutput {
+		return func() {}, nil
+	}
+
+	stdinState, err := term.SetRawTerminal(os.Stdin.Fd())
+	if err != nil {
+		return nil, fmt.Errorf("failed to set stdin to raw mode: %v", err)
+	}
+
+	stdoutState, err := term.SetRawTerminalOutput(os.Stdout.Fd())
+	if err != nil {
+		_ = term.RestoreTerminal(os.Stdin.Fd(), stdinState)
+		return nil, fmt.Errorf("failed to set stdout to raw mode: %v", err)
+	}
+
+	restore = func() {
+		if stdinState != nil {
+			_ = term.RestoreTerminal(os.Stdin.Fd(), stdinState)
+		}
+		if stdoutState != nil {
+			_ = term.RestoreTerminal(os.Stdout.Fd(), stdoutState)
+		}
+	}
+
+	return restore, nil
 }

@@ -27,6 +27,7 @@ ignorePatterns:
   - pattern: "https://web.archive.org"
   - pattern: "https://specifications.freedesktop.org"
   - pattern: "https://mutagen.io"
+  - pattern: "https://www.npmjs.com"
 aliveStatusCodes:
   - 200
   - 206

@@ -13,7 +13,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDebugNFSMount tries out the `ddev debug nfsmount` command.
+// TestDebugNFSMount tries out the `ddev utility nfsmount` command.
 // It requires nfsd running of course.
 func TestDebugNFSMount(t *testing.T) {
 	t.Skip("Skipping because NFS is deprecated")
@@ -39,7 +39,7 @@ func TestDebugNFSMount(t *testing.T) {
 	//nolint: errcheck
 	defer exec.RunCommand(DdevBin, []string{"stop", "-RO"})
 
-	// Test basic `ddev debug nfsmount`
+	// Test basic `ddev utility nfsmount`
 	args = []string{"debug", "nfsmount"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)

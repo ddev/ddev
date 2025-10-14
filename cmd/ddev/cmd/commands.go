@@ -454,7 +454,7 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string, mutagenSync bool) 
 	return func(_ *cobra.Command, _ []string) {
 		if app != nil {
 			status, _ := app.SiteStatus()
-			app.DockerEnv()
+			_ = app.DockerEnv()
 			_ = os.Setenv("DDEV_PROJECT_STATUS", status)
 		} else {
 			_ = os.Setenv("DDEV_PROJECT_STATUS", "")
@@ -467,7 +467,7 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string, mutagenSync bool) 
 		var err error
 		// Load environment variables that may be useful for script.
 		if app != nil {
-			app.DockerEnv()
+			_ = app.DockerEnv()
 		}
 
 		runMutagenSync(app, mutagenSync)
@@ -502,7 +502,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 				util.Failed("Failed to start project for custom command: %v", err)
 			}
 		}
-		app.DockerEnv()
+		_ = app.DockerEnv()
 
 		if service == "web" {
 			runMutagenSync(app, mutagenSync)

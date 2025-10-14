@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestDebugRemoteDataCmd tests the ddev debug remote-data command
+// TestDebugRemoteDataCmd tests the ddev utility remote-data command
 func TestDebugRemoteDataCmd(t *testing.T) {
 	// Test help functionality
 	t.Run("Help", func(t *testing.T) {

@@ -3,6 +3,15 @@
 
 set -eu -o pipefail
 
+# We can skip builds with commit message of [skip buildkite] or [skip ci]
+DDEV_COMMIT_MESSAGE=$(GIT_PAGER="" git log -1 --pretty=%s 2>/dev/null || echo "")
+if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAGE:-} == *"[skip ci]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip buildkite]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip ci]"* ]]; then
+  echo "Skipping build because message has '[skip buildkite]' or '[skip ci]':"
+  echo "BUILDKITE_MESSAGE=${BUILDKITE_MESSAGE:-}"
+  echo "DDEV_COMMIT_MESSAGE=${DDEV_COMMIT_MESSAGE}"
+  exit 0
+fi
+
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 os=$(go env GOOS)
 
@@ -168,12 +177,6 @@ echo
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
 
-# We can skip builds with commit message of [skip buildkite]
-if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAGE:-} == *"[skip ci]"* ]]; then
-  echo "Skipping build because message has '[skip buildkite]' or '[skip ci]'"
-  exit 0
-fi
-
 # If this is a PR and the diff doesn't have code, skip it
 set -x
 if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ]; then
@@ -195,6 +198,9 @@ ${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh"
 echo "--- running sanetestbot.sh"
 ${TIMEOUT} 60s bash "$(dirname "$0")/sanetestbot.sh"
 
+# Close the setup sections before starting tests
+echo "~~~ Setup complete, starting tests"
+
 # Make sure we start with mutagen daemon off.
 unset MUTAGEN_DATA_DIRECTORY
 if [ -f ~/.ddev/bin/mutagen -o -f ~/.ddev/bin/mutagen.exe ]; then
@@ -212,7 +218,7 @@ echo "--- Running tests..."
 if [ "${os:-}" = "windows" ]; then
   echo "--- Running Windows installer tests first..."
   export DDEV_TEST_USE_REAL_INSTALLER=true
-  make testwininstaller TESTARGS="-failfast"
+  make testwininstaller TESTARGS="-failfast" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
   INSTALLER_RV=$?
   if [ $INSTALLER_RV -ne 0 ]; then
     echo "Windows installer tests failed with status=$INSTALLER_RV"
@@ -221,7 +227,7 @@ if [ "${os:-}" = "windows" ]; then
   echo "Windows installer tests completed successfully"
 fi
 
-make test TESTARGS="-failfast"
+make test TESTARGS="-failfast" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true

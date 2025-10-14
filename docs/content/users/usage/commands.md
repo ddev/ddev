@@ -72,7 +72,7 @@ Environment variables:
 
     ```bash
     export DDEV_GITHUB_TOKEN=<your-github-token>
-    ddev add-on list --all
+    ddev add-on list
     ```
 
 * `GH_TOKEN`: Alternative GitHub token variable (lower priority than `DDEV_GITHUB_TOKEN`).
@@ -159,28 +159,44 @@ ddev add-on remove ddev/ddev-redis --project my-project
 
 ### `add-on list`
 
-Download an add-on (service, provider, etc.).
+List available or installed DDEV add-ons.
 
 Flags:
 
-* `--all`: List unofficial *and* official add-ons. (default `true`)
 * `--installed`: List installed add-ons
 * `--project <projectName>`: Specify the project for which to list add-ons. Can only be used with the `--installed` flag. Defaults to checking for a project in the current directory.
 
 Example:
 
 ```shell
-# List official add-ons
+# List all available add-ons
 ddev add-on list
-
-# List official and third-party add-ons
-ddev add-on list --all
 
 # List installed add-ons
 ddev add-on list --installed
 
 # List installed add-ons for a specific project
 ddev add-on list --installed --project my-project
+```
+
+### `add-on search`
+
+Search available DDEV add-ons by name or description.
+
+Example:
+
+```shell
+# Search for Redis-related add-ons
+ddev add-on search redis
+
+# Search for database-related add-ons
+ddev add-on search database
+
+# Search with multiple terms (all must be present)
+ddev add-on search redis web
+
+# Search with multiple terms using quotes (currently same behavior)
+ddev add-on search "redis commander"
 ```
 
 ## `aliases`
@@ -455,13 +471,13 @@ Example:
 ddev dbeaver
 ```
 
-## `debug`
+## `utility`
 
-*Aliases: `d`, `dbg`.*
+*Aliases: `ut`, `debug`, `d`,`dbg`.*
 
-A collection of debugging commands, often useful for [troubleshooting](troubleshooting.md).
+A collection of utility and debugging commands, often useful for [troubleshooting](troubleshooting.md).
 
-### `debug cd`
+### `utility cd`
 
 Uses shell built-in `cd` to change to a project directory. For example, `ddevcd some-project` will change directories to the project root of the project named `some-project`.
 
@@ -469,12 +485,12 @@ Note that this command can't work until you make a small addition to your `.bash
 
 ```shell
 # To see the explanation of what you need to do
-ddev debug cd
+ddev utility cd
 # Where some-project is a project from the `ddev list`
 ddevcd some-project
 ```
 
-### `debug check-db-match`
+### `utility check-db-match`
 
 Verify that the database in the db server matches the configured [type and version](../extend/database-types.md).
 
@@ -482,10 +498,10 @@ Example:
 
 ```shell
 # Check whether project’s running database matches configuration
-ddev debug check-db-match
+ddev utility check-db-match
 ```
 
-### `debug compose-config`
+### `utility compose-config`
 
 Prints the current project’s docker-compose configuration.
 
@@ -493,13 +509,13 @@ Example:
 
 ```shell
 # Print docker-compose config for the current project
-ddev debug compose-config
+ddev utility compose-config
 
 # Print docker-compose config for `my-project`
-ddev debug compose-config my-project
+ddev utility compose-config my-project
 ```
 
-### `debug configyaml`
+### `utility configyaml`
 
 Prints the project [`config.*.yaml`](../configuration/config.md) usage.
 
@@ -514,22 +530,22 @@ Prints the project [`config.*.yaml`](../configuration/config.md) usage.
 
 ```shell
 # Print config for the current project
-ddev debug configyaml
+ddev utility configyaml
 
 # Print config specifically for `my-project`
-ddev debug configyaml my-project
+ddev utility configyaml my-project
 
 # Print complete YAML configuration
-ddev debug configyaml --full-yaml
+ddev utility configyaml --full-yaml
 
 # Hide sensitive environment variables
-ddev debug configyaml --omit-keys=web_environment
+ddev utility configyaml --omit-keys=web_environment
 
 # Combine flags: full YAML output without sensitive keys
-ddev debug configyaml --full-yaml --omit-keys=web_environment
+ddev utility configyaml --full-yaml --omit-keys=web_environment
 ```
 
-### `debug dockercheck`
+### `utility dockercheck`
 
 Diagnose DDEV Docker provider setup.
 
@@ -537,10 +553,10 @@ Example:
 
 ```shell
 # Output contextual details for the Docker provider
-ddev debug dockercheck
+ddev utility dockercheck
 ```
 
-### `debug download-images`
+### `utility download-images`
 
 Download the basic Docker images required by DDEV. This can be useful on a new machine to prevent `ddev start` or other commands having to download the various images.
 
@@ -548,14 +564,14 @@ Example:
 
 ```shell
 # Download DDEV’s basic Docker images
-ddev debug download-images
+ddev utility download-images
 # Download DDEV’s Docker images for `my-project`
-ddev debug download-images my-project
+ddev utility download-images my-project
 # Download DDEV’s Docker images for all projects
-ddev debug download-images --all
+ddev utility download-images --all
 ```
 
-### `debug fix-commands`
+### `utility fix-commands`
 
 Refreshes [custom command](../extend/custom-commands.md) definitions without running [`ddev start`](#start).
 
@@ -563,10 +579,10 @@ Example:
 
 ```shell
 # Refresh the current project’s custom commands
-ddev debug fix-commands
+ddev utility fix-commands
 ```
 
-### `debug get-volume-db-version`
+### `utility get-volume-db-version`
 
 Get the database type and version found in the `ddev-dbserver` database volume, which may not be the same as the configured database [type and version](../extend/database-types.md).
 
@@ -574,39 +590,38 @@ Example:
 
 ```shell
 # Print the database volume's engine and version
-ddev debug get-volume-db-version
+ddev utility get-volume-db-version
 ```
 
-### `debug gob-decode`
+### `utility gob-decode`
 
 Decode and display the contents of Go gob-encoded binary files used by DDEV, such as `.remote-config` files (remote configuration cache), `.amplitude.cache` files (analytics event cache), and sponsorship data files.
 
 The decoder automatically detects the file type and uses the appropriate structure. The output is displayed as formatted JSON for readability.
 
-*(Hidden - show hidden debug commands with `ddev debug --show-hidden`)*
+*(Hidden - show hidden utility commands with `ddev utility --show-hidden`)*
 
 Example:
 
 ```shell
 # Decode a remote config file
-ddev debug gob-decode ~/.ddev/.remote-config
+ddev utility gob-decode ~/.ddev/.remote-config
 
 # Decode an amplitude cache file
-ddev debug gob-decode ~/.ddev/.amplitude.cache
+ddev utility gob-decode ~/.ddev/.amplitude.cache
 
 # Decode any gob file with path expansion
-ddev debug gob-decode ~/path/to/file.gob
+ddev utility gob-decode ~/path/to/file.gob
 ```
 
-### `debug match-constraint`
+### `utility match-constraint`
 
 Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
 
 Example:
 
 ```shell
-# This is only supported with DDEV versions above v1.24.0
-if ddev debug match-constraint "< 1.25" >/dev/null 2>&1; then
+if ddev utility match-constraint "< 1.25" >/dev/null 2>&1; then
   # do something for ddev versions below 1.25
   ...
 else
@@ -618,20 +633,20 @@ fi
 !!!tip
     You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint).
 
-### `debug message-conditions`
+### `utility message-conditions`
 
 Show message conditions of this version of DDEV.
 
-*(Hidden - show hidden debug commands with `ddev debug --show-hidden`)*
+*(Hidden - show hidden utility commands with `ddev utility --show-hidden`)*
 
 Example:
 
 ```shell
 # Show message conditions for the current DDEV version
-ddev debug message-conditions
+ddev utility message-conditions
 ```
 
-### `debug migrate-database`
+### `utility migrate-database`
 
 Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL. It will export your database, create a snapshot, destroy your current database, and import into the new database type. It only migrates the 'db' database. It will update the database version in your project's `config.yaml` file.
 
@@ -639,10 +654,10 @@ Example:
 
 ```shell
 # Migrate the current project's database to MariaDB 10.7
-ddev debug migrate-database mariadb:10.7
+ddev utility migrate-database mariadb:10.7
 ```
 
-### `debug mutagen`
+### `utility mutagen`
 
 Allows access to any [Mutagen command](https://mutagen.io/documentation/introduction).
 
@@ -650,10 +665,10 @@ Example:
 
 ```shell
 # Run Mutagen's `sync list` command
-ddev debug mutagen sync list
+ddev utility mutagen sync list
 ```
 
-### `debug nfsmount`
+### `utility nfsmount`
 
 Checks to see if [NFS mounting](../install/performance.md#nfs) works for current project.
 
@@ -661,12 +676,12 @@ Example:
 
 ```shell
 # See if NFS is working as expected for the current project
-ddev debug nfsmount
+ddev utility nfsmount
 ```
 
-### `debug rebuild`
+### `utility rebuild`
 
-*Alias: `debug refresh`.*
+*Alias: `utility refresh`.*
 
 Rebuilds the project's Docker cache with verbose output and restarts the project or the specified service.
 
@@ -680,25 +695,25 @@ Example:
 
 ```shell
 # Rebuild the current project's web service without cache
-ddev debug rebuild
+ddev utility rebuild
 
 # Rebuild the current project's web service with cache
-ddev debug rebuild --cache
+ddev utility rebuild --cache
 
 # Rebuild the current project's db service without cache
-ddev debug rebuild --service db
+ddev utility rebuild --service db
 
 # Rebuild the current project's all services without cache
-ddev debug rebuild --all
+ddev utility rebuild --all
 ```
 
-### `debug remote-data`
+### `utility remote-data`
 
 Download and display remote configuration and sponsorship data used by DDEV from GitHub repositories.
 
 The downloaded content is displayed as formatted JSON to stdout. Optionally updates the local cached storage file (enabled by default).
 
-*(Hidden - show hidden debug commands with `ddev debug --show-hidden`)*
+*(Hidden - show hidden utility commands with `ddev utility --show-hidden`)*
 
 Flags:
 
@@ -709,13 +724,13 @@ Examples:
 
 ```shell
 # Download remote config (default type)
-ddev debug remote-data
+ddev utility remote-data
 
 # Download sponsorship data without updating local storage
-ddev debug remote-data --type=sponsorship-data --update-storage=false
+ddev utility remote-data --type=sponsorship-data --update-storage=false
 ```
 
-### `debug test`
+### `utility test`
 
 Run diagnostics using the embedded [test script](https://github.com/ddev/ddev/blob/main/cmd/ddev/cmd/scripts/test_ddev.sh).
 
@@ -723,18 +738,18 @@ Example:
 
 ```shell
 # Run DDEV's diagnostic suite
-ddev debug test
+ddev utility test
 ```
 
-### `debug testcleanup`
+### `utility testcleanup`
 
-Removes all diagnostic projects created with `ddev debug test`.
+Removes all diagnostic projects created with `ddev utility test`.
 
 Example:
 
 ```shell
 # Remove all DDEV's diagnostic projects
-ddev debug testcleanup
+ddev utility testcleanup
 ```
 
 ## `delete`
@@ -1372,20 +1387,20 @@ Example:
 # Pull a backup from the configured Pantheon project to use locally
 ddev pull pantheon
 
-# Pull a backup from the configured Platform.sh project to use locally
-ddev pull platform
+# Pull a backup from the configured Upsun project to use locally
+ddev pull upsun
 
 # Pull a backup from the configured Pantheon project without confirming
 ddev pull pantheon -y
 
-# Pull the Platform.sh database archive *only* without confirming
-ddev pull platform --skip-files -y
+# Pull the Upsun database *only* without confirming
+ddev pull upsun --skip-files -y
 
 # Pull the localfile integration’s files *only* without confirming
 ddev pull localfile --skip-db -y
 
-# Pull from Platform.sh specifying the environment variables PLATFORM_ENVIRONMENT and PLATFORM_CLI_TOKEN on the command line
-ddev pull platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=abcdef
+# Pull from Upsun specifying the environment variables UPSUN_ENVIRONMENT and UPSUN_CLI_TOKEN on the command line
+ddev pull upsun --environment=UPSUN_ENVIRONMENT=main,UPSUN_CLI_TOKEN=abcdef
 ```
 
 ## `push`
@@ -1398,14 +1413,14 @@ Example:
 # Push local files and database to the configured Pantheon project
 ddev push pantheon
 
-# Push local files and database to the configured Platform.sh project
-ddev push platform
+# Push local files and database to the configured Upsun project
+ddev push upsun
 
 # Push files and database to Pantheon without confirming
 ddev push pantheon -y
 
-# Push database only to Platform.sh without confirming
-ddev push platform --skip-files -y
+# Push database only to Upsun without confirming
+ddev push upsun --skip-files -y
 
 # Push files only to Acquia without confirming
 ddev push acquia --skip-db -y

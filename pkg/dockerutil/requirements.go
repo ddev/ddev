@@ -1,8 +1,11 @@
 package dockerutil
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	osexec "os/exec"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -136,4 +139,42 @@ func CheckAvailableSpace() {
 	if spaceAbsolute < nodeps.MinimumDockerSpaceWarning {
 		util.Error("Your Docker install has only %d available disk space, less than %d warning level (%d%% used). Please increase disk image size. More info at %s", spaceAbsolute, nodeps.MinimumDockerSpaceWarning, spacePercent, "https://docs.ddev.com/en/stable/users/usage/troubleshooting/#out-of-disk-space")
 	}
+}
+
+// CheckDockerAuth checks if Docker authentication is properly configured
+func CheckDockerAuth() error {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("unable to get home directory: %v", err)
+	}
+
+	configPath := filepath.Join(homeDir, ".docker", "config.json")
+	configData, err := os.ReadFile(configPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// No config file is not necessarily an error - Docker can work without it
+			return nil
+		}
+		return fmt.Errorf("unable to read Docker config: %v", err)
+	}
+
+	var config struct {
+		CredsStore  string            `json:"credsStore"`
+		CredHelpers map[string]string `json:"credHelpers"`
+	}
+
+	if err := json.Unmarshal(configData, &config); err != nil {
+		return fmt.Errorf("unable to parse Docker config: %v", err)
+	}
+
+	// If credsStore is set, verify the credential helper exists
+	if config.CredsStore != "" {
+		helperName := "docker-credential-" + config.CredsStore
+		_, err := osexec.LookPath(helperName)
+		if err != nil {
+			return fmt.Errorf("credsStore is set to '%s' in ~/.docker/config.json but '%s' is not found in PATH. This will cause 'ddev start' to fail when pulling images. Either install the credential helper or remove the 'credsStore' line from ~/.docker/config.json. See https://docs.docker.com/reference/cli/docker/login/#credential-helpers", config.CredsStore, helperName)
+		}
+	}
+
+	return nil
 }

@@ -38,7 +38,7 @@ ddev add-on remove ddev-someaddonname --project my-project
 			util.Failed("Unable to chdir to %v: %v", app.GetConfigPath(""), err)
 		}
 
-		app.DockerEnv()
+		_ = app.DockerEnv()
 
 		err = ddevapp.RemoveAddon(app, args[0], cmd.Flags().Changed("verbose"), false)
 		if err != nil {

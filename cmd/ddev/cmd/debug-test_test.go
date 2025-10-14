@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestCmdDebugTest ensures that `ddev debug test` has basic functionality
+// TestCmdDebugTest ensures that `ddev utility test` has basic functionality
 func TestCmdDebugTest(t *testing.T) {
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
@@ -25,6 +25,9 @@ func TestCmdDebugTest(t *testing.T) {
 	require.NoError(t, err, "out=%s", out)
 	require.Contains(t, out, "OS Information")
 	require.Contains(t, out, "webserver_type:")
+	if nodeps.IsLinux() {
+		require.Contains(t, out, "Distro:")
+	}
 	if !nodeps.IsWindows() {
 		require.Contains(t, out, "PING dkdkd.ddev.site")
 	}

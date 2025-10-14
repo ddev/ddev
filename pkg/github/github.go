@@ -33,7 +33,8 @@ func GetGitHubClient() (context.Context, *Client) {
 		githubContext = context.Background()
 		// Respect proxies set in the environment
 		githubClient = github.NewClientWithEnvProxy()
-		if githubToken := GetGitHubToken(); githubToken != "" {
+		githubToken, _ := GetGitHubToken()
+		if githubToken != "" {
 			githubClient = githubClient.WithAuthToken(githubToken)
 		}
 	})
@@ -50,7 +51,8 @@ func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloa
 		if resp != nil {
 			rate = resp.Rate
 		}
-		return "", "", fmt.Errorf("unable to get releases for %v: %v\nresp.Rate=%v", repo, err, rate)
+		_, tokenMessage := GetGitHubHeaders("https://github.com")
+		return "", "", fmt.Errorf("unable to get releases for %v: %w\nresp.Rate=%v\n%s", repo, err, rate, tokenMessage)
 	}
 	if len(releases) == 0 {
 		return "", "", fmt.Errorf("no releases found for %v", repo)
@@ -78,18 +80,22 @@ func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloa
 
 // GetGitHubHeaders returns headers to be used in GitHub REST API requests if the URL is for GitHub.
 // See https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api
-func GetGitHubHeaders(requestURL string) map[string]string {
+func GetGitHubHeaders(requestURL string) (map[string]string, string) {
 	headers := map[string]string{}
 	if !isGitHubURL(requestURL) {
-		return headers
+		return headers, ""
 	}
-	githubToken := GetGitHubToken()
+	githubToken, tokenVariable := GetGitHubToken()
 	if githubToken != "" {
 		headers["Authorization"] = "Bearer " + githubToken
 		// Use the same header as in vendor/github.com/google/go-github/v74/github/github.go
 		headers["X-Github-Api-Version"] = "2022-11-28"
 	}
-	return headers
+	tokenMessage := ""
+	if tokenVariable != "" {
+		tokenMessage = fmt.Sprintf("Request made with %s set", tokenVariable)
+	}
+	return headers, tokenMessage
 }
 
 // isGitHubURL checks if the given URL is for GitHub or any subdomain of GitHub
@@ -105,12 +111,18 @@ func isGitHubURL(requestURL string) bool {
 	return host == "github.com" || strings.HasSuffix(host, ".github.com")
 }
 
-// GetGitHubToken returns the GitHub access token from the environment variable.
-func GetGitHubToken() string {
+// GetGitHubToken returns the GitHub token from the environment and the name of the variable it was found in.
+func GetGitHubToken() (string, string) {
 	for _, token := range []string{"DDEV_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"} {
 		if githubToken := os.Getenv(token); githubToken != "" {
-			return githubToken
+			return githubToken, token
 		}
 	}
-	return ""
+	return "", ""
+}
+
+// HasGitHubToken returns true if a GitHub token is set in the environment.
+func HasGitHubToken() bool {
+	token, _ := GetGitHubToken()
+	return token != ""
 }

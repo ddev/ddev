@@ -10,6 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 
@@ -18,8 +19,8 @@ import (
 
 // TestCmdAddon tests various `ddev add-on` commands.
 func TestCmdAddon(t *testing.T) {
-	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
-		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
 	}
 	assert := asrt.New(t)
 
@@ -89,8 +90,8 @@ func TestCmdAddon(t *testing.T) {
 
 // TestCmdAddonInstalled tests `ddev add-on list --installed` and `ddev add-on remove`
 func TestCmdAddonInstalled(t *testing.T) {
-	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
-		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
 	}
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
@@ -149,8 +150,8 @@ func TestCmdAddonInstalled(t *testing.T) {
 
 // TestCmdAddonProjectFlag tests the `--project` flag in `ddev add-on` subcommands
 func TestCmdAddonProjectFlag(t *testing.T) {
-	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
-		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
 	}
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
@@ -576,4 +577,39 @@ services:
 		require.Error(t, err, "expected error when using image without PHP")
 		require.Contains(t, out, "php: not found", "Should show error about PHP not found")
 	})
+}
+
+func TestCmdAddonSearch(t *testing.T) {
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
+	}
+	assert := asrt.New(t)
+
+	// Test search for redis
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "search", "redis")
+	assert.NoError(err, "failed ddev add-on search redis: %v (%s)", err, out)
+	assert.Contains(out, "ddev/ddev-redis")
+	assert.Contains(out, "repositories found matching 'redis'")
+
+	// Test search with multiple keywords
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "redis", "cache")
+	assert.NoError(err, "failed ddev add-on search redis cache: %v (%s)", err, out)
+	assert.Contains(out, "ddev/ddev-redis")
+	assert.Contains(out, "repositories found matching 'redis cache'")
+
+	// Test search with quotes
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "redis commander")
+	assert.NoError(err, "failed ddev add-on search 'redis commander': %v (%s)", err, out)
+	assert.Contains(out, "ddev/ddev-redis-commander")
+	assert.Contains(out, "repositories found matching 'redis commander'")
+
+	// Test search with no results
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "nonexistentservice")
+	assert.NoError(err, "failed ddev add-on search nonexistentservice: %v (%s)", err, out)
+	assert.Contains(out, "No add-ons found matching 'nonexistentservice'")
+
+	// Test search
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "redis")
+	assert.NoError(err, "failed ddev add-on search redis: %v (%s)", err, out)
+	assert.Contains(out, "repositories found matching 'redis'")
 }

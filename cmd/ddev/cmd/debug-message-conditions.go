@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DebugMessageConditionsCmd implements the ddev debug message-conditions command
+// DebugMessageConditionsCmd implements the ddev utility message-conditions command
 var DebugMessageConditionsCmd = &cobra.Command{
 	Use:   "message-conditions",
 	Short: "Show message conditions of this version of ddev",
