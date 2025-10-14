@@ -1,6 +1,7 @@
 #ddev-generated
-# Pantheon.io provider configuration.
-
+# Pantheon.io provider configuration variation that pulls databases from
+#  existing backups.
+#
 # To use this configuration:
 #
 # 1. Get your Pantheon.io machine token:
