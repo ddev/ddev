@@ -205,14 +205,14 @@ Usage: `## Flags: <json-definition>`
 
 This is the minimal usage of a `Flags` definition:
 
-Example: `## Flags: [{"Name":"flag","Shorthand":"f","Usage":"sets the flag option"}]`
+Example: `## Flags: [{"Name":"flag","Usage":"sets the flag option"}]`
 
 Output:
 
 ```bash
 Flags:
   -h, --help          help for ddev
-  -f, --flag          sets the flag option
+      --flag          sets the flag option
 ```
 
 Multiple flags are separated by a comma:
