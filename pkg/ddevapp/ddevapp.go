@@ -1340,8 +1340,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		// Check again to make sure the Mutagen Docker volume exists. It's compatible if we found it above
 		// so we can keep it in that case.
 		if !dockerutil.VolumeExists(GetMutagenVolumeName(app)) {
-			util.Debug("Creating new docker volume '%s' with signature '%v'", GetMutagenVolumeName(app), GetDefaultMutagenVolumeSignature(app))
-			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: GetDefaultMutagenVolumeSignature(app)})
+			signature, _ := GetDefaultMutagenVolumeSignature(app)
+			util.Debug("Creating new docker volume '%s' with signature '%v'", GetMutagenVolumeName(app), signature)
+			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: signature})
 			if err != nil {
 				return fmt.Errorf("unable to create new Mutagen Docker volume %s: %v", GetMutagenVolumeName(app), err)
 			}
