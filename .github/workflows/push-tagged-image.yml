@@ -12,7 +12,6 @@ on:
         default: ddev-webserver
         type: choice
         options:
-          - ddev-gitpod-base
           - ddev-php-base
           - ddev-webserver
           - ddev-ssh-agent
@@ -43,10 +42,6 @@ jobs:
       matrix:
         arch: [amd64, arm64]
         image: ['${{ github.event.inputs.image }}']
-        # update 'meta' step below if you change this:
-        exclude:
-          - arch: arm64
-            image: ddev-gitpod-base
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     outputs:
       multi_arch: ${{ steps.meta.outputs.multi_arch }}
@@ -54,10 +49,7 @@ jobs:
       - name: Determine if multi-arch build
         id: meta
         run: |
-          case "${{ matrix.image }}" in
-            ddev-gitpod-base) echo "multi_arch=false" >> $GITHUB_OUTPUT ;;
-            *) echo "multi_arch=true" >> $GITHUB_OUTPUT ;;
-          esac
+          echo "multi_arch=true" >> $GITHUB_OUTPUT
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v3
         if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
