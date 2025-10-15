@@ -3,8 +3,11 @@
 {
 	"name": "Go",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-    "image": "mcr.microsoft.com/devcontainers/universal:2",
+    "image": "mcr.microsoft.com/devcontainers/base:debian-12",
 	"features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "version": "latest"
+        },
 		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
 			"packages": "autojump,curl,wget,xdg-utils"
 		},
