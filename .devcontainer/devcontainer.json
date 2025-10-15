@@ -8,6 +8,9 @@
         "ghcr.io/devcontainers/features/docker-in-docker:2": {
             "version": "latest"
         },
+        "ghcr.io/devcontainers/features/go:1": {
+            "version": "latest"
+        },
 		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
 			"packages": "autojump,curl,wget,xdg-utils"
 		},
