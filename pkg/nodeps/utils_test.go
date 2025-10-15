@@ -234,23 +234,6 @@ func TestIsWSL2(t *testing.T) {
 	}
 }
 
-// TestIsGitpod tests IsGitpod function
-func TestIsGitpod(t *testing.T) {
-	// Test that the function returns a boolean without error
-	result := nodeps.IsGitpod()
-	require.IsType(t, false, result)
-
-	// Test the logic based on current environment
-	// IsGitpod should return true only if:
-	// 1. DDEV_PRETEND_GITPOD=true (for testing purposes), OR
-	// 2. Running on Linux AND GITPOD_WORKSPACE_ID is set
-	pretendGitpod := os.Getenv("DDEV_PRETEND_GITPOD") == "true"
-	gitpodWorkspaceID := os.Getenv("GITPOD_WORKSPACE_ID") != ""
-	isLinux := runtime.GOOS == "linux"
-
-	expectedResult := pretendGitpod || (isLinux && gitpodWorkspaceID)
-	require.Equal(t, expectedResult, result)
-}
 
 // TestIsCodespaces tests IsCodespaces function
 func TestIsCodespaces(t *testing.T) {
