@@ -16,13 +16,14 @@ func AvailableUpdates(repoOrg string, repoName string, currentVersion string) (a
 	ctx, client := github.GetGitHubClient(true)
 	opt := &github.ListOptions{Page: 1}
 	releases, resp, err := client.Repositories.ListReleases(ctx, repoOrg, repoName, opt)
-	// Retry without GitHub auth
-	if err != nil && github.HasInvalidGitHubToken(resp) {
-		ctx, client = github.GetGitHubClient(false)
-		releasesNoAuth, _, errNoAuth := client.Repositories.ListReleases(ctx, repoOrg, repoName, opt)
-		if errNoAuth == nil {
-			releases = releasesNoAuth
-			err = nil
+	if err != nil {
+		if tokenErr := github.HasInvalidGitHubToken(resp); tokenErr != nil {
+			ctx, client = github.GetGitHubClient(false)
+			releasesNoAuth, _, errNoAuth := client.Repositories.ListReleases(ctx, repoOrg, repoName, opt)
+			if errNoAuth == nil {
+				releases = releasesNoAuth
+				err = errNoAuth
+			}
 		}
 	}
 	if err != nil {

@@ -692,20 +692,27 @@ func ListAvailableAddons() ([]*github.Repository, error) {
 	var allRepos []*github.Repository
 	for {
 		repos, resp, err := client.Search.Repositories(ctx, q, opts)
-		// Retry without GitHub auth
-		if err != nil && github.HasInvalidGitHubToken(resp) {
-			ctx, client = github.GetGitHubClient(false)
-			reposNoAuth, respNoAuth, errNoAuth := client.Search.Repositories(ctx, q, opts)
-			if errNoAuth == nil {
-				repos = reposNoAuth
-				resp = respNoAuth
-				err = nil
+		var tokenErr error
+		if err != nil {
+			if tokenErr = github.HasInvalidGitHubToken(resp); tokenErr != nil {
+				util.WarningOnce("Warning: %v, retrying without token", tokenErr)
+				ctx, client = github.GetGitHubClient(false)
+				reposNoAuth, respNoAuth, errNoAuth := client.Search.Repositories(ctx, q, opts)
+				if errNoAuth == nil {
+					repos = reposNoAuth
+					resp = respNoAuth
+					err = errNoAuth
+				}
 			}
 		}
 		if err != nil {
 			msg := fmt.Sprintf("Unable to get list of available services: %v", err)
 			if resp != nil {
-				msg = msg + fmt.Sprintf(" rateinfo=%v", resp.Rate)
+				rate := resp.Rate
+				if rate.Limit != 0 {
+					resetIn := time.Until(rate.Reset.Time).Round(time.Second)
+					msg += fmt.Sprintf("\nGitHub API Rate Limit: %d/%d remaining (resets in %s)", rate.Remaining, rate.Limit, resetIn)
+				}
 			}
 			return nil, fmt.Errorf("%s", msg)
 		}
