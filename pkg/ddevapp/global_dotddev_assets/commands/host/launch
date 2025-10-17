@@ -21,7 +21,7 @@ FULLURL=${DDEV_PRIMARY_URL}
 HTTPS=""
 if [ "${DDEV_PRIMARY_URL%://*}" = "https" ]; then HTTPS=true; fi
 IN_CLOUD=""
-if [[ -n "${GITPOD_INSTANCE_ID}" ]] || [[ "${CODESPACES}" == "true" ]]; then IN_CLOUD=true; fi
+if [[ "${CODESPACES}" == "true" ]]; then IN_CLOUD=true; fi
 
 get_fullurl_port() {
   docker run -i --rm ddev/ddev-utilities sh -c "echo '${FULLURL}' | grep -o ':[0-9]\+' | awk -F':' '{print \$2}' | head -1" 2>/dev/null
@@ -90,7 +90,7 @@ if [ -n "${1:-}" ]; then
     # relative path
     FULLURL="${FULLURL%/}/${1#/}"
   fi
-  # handle Gitpod and Codespaces
+  # handle Codespaces
   if [[ "${IN_CLOUD}" != "" ]]; then
     port="$(get_fullurl_port)"
     if [[ "${port}" != "" ]]; then
@@ -111,9 +111,7 @@ fi
 
 case $OSTYPE in
   linux-gnu)
-    if [[ ! -z "${GITPOD_INSTANCE_ID}" ]]; then
-        gp preview ${FULLURL}
-    elif command -v explorer.exe >/dev/null; then explorer.exe ${FULLURL} || true;
+    if command -v explorer.exe >/dev/null; then explorer.exe ${FULLURL} || true;
     elif command -v xdg-open >/dev/null; then xdg-open ${FULLURL};
     else
         echo "No technique found to open URL: ${FULLURL}; please install xdg-utils."

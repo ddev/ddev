@@ -54,7 +54,7 @@ func TestCmdStart(t *testing.T) {
 	assert.NoError(err, "ddev start with multiple project names should have succeeded, but failed, err: %v, output %s", err, out)
 	testcommon.CheckGoroutineOutput(t, out)
 	// If we omit the router, we should see the 127.0.0.1 URL.
-	// Whether we have the router or not is not up to us, since it is omitted on gitpod and codespaces.
+	// Whether we have the router or not is not up to us, since it is omitted on codespaces.
 	if slices.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-router") {
 		// Assert that the output contains the 127.0.0.1 URL
 		assert.Contains(out, "127.0.0.1", "The output should contain the 127.0.0.1 URL, but it does not: %s", out)
