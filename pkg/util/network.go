@@ -97,6 +97,17 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 				}
 				return
 			}
+			// Retry without GitHub auth
+			if resp.StatusCode == http.StatusUnauthorized && len(gitHubHeaders) > 0 {
+				CheckClose(resp.Body)
+				for key := range gitHubHeaders {
+					req.Header.Del(key)
+				}
+				respNoAuth, err := client.Do(req)
+				if err == nil {
+					resp = respNoAuth
+				}
+			}
 			if resp.StatusCode != http.StatusOK {
 				CheckClose(resp.Body)
 				err = fmt.Errorf("unexpected HTTP status downloading %s: %s", shaSumURL, resp.Status)
@@ -153,6 +164,17 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 				err = fmt.Errorf("%w\n%s", err, tokenMessage)
 			}
 			return
+		}
+		// Retry without GitHub auth
+		if resp.StatusCode == http.StatusUnauthorized && len(gitHubHeaders) > 0 {
+			CheckClose(resp.Body)
+			for key := range gitHubHeaders {
+				req.Header.Del(key)
+			}
+			respNoAuth, err := client.Do(req)
+			if err == nil {
+				resp = respNoAuth
+			}
 		}
 		if resp.StatusCode != http.StatusOK {
 			CheckClose(resp.Body)

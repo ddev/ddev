@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -23,34 +24,51 @@ var (
 	githubContext context.Context
 	// githubClient is the singleton instance of Client
 	githubClient *Client
+	// githubClientNoAuth is the singleton instance of Client without authentication
+	githubClientNoAuth *Client
 	// githubClientOnce ensures githubClient is initialized only once
 	githubClientOnce sync.Once
 )
 
 // GetGitHubClient returns a singleton GitHub client and context, initializing it if necessary.
-func GetGitHubClient() (context.Context, *Client) {
+func GetGitHubClient(withAuth bool) (context.Context, *Client) {
 	githubClientOnce.Do(func() {
 		githubContext = context.Background()
 		// Respect proxies set in the environment
-		githubClient = github.NewClientWithEnvProxy()
+		githubClientNoAuth = github.NewClientWithEnvProxy()
+		githubClient = githubClientNoAuth
 		githubToken, _ := GetGitHubToken()
 		if githubToken != "" {
 			githubClient = githubClient.WithAuthToken(githubToken)
 		}
 	})
-	return githubContext, githubClient
+	if withAuth {
+		return githubContext, githubClient
+	}
+	return githubContext, githubClientNoAuth
 }
 
 // GetGitHubRelease gets the tarball URL and version for a GitHub repository release
 func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloadedRelease string, err error) {
-	ctx, client := GetGitHubClient()
+	ctx, client := GetGitHubClient(true)
 
 	releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
+	// Retry without GitHub auth
+	if err != nil && HasInvalidGitHubToken(resp) {
+		ctx, client = GetGitHubClient(false)
+		releasesNoAuth, respNoAuth, errNoAuth := client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
+		if errNoAuth == nil {
+			releases = releasesNoAuth
+			resp = respNoAuth
+			err = nil
+		}
+	}
 	if err != nil {
 		var rate github.Rate
 		if resp != nil {
 			rate = resp.Rate
 		}
+
 		_, tokenMessage := GetGitHubHeaders("https://github.com")
 		return "", "", fmt.Errorf("unable to get releases for %v: %w\nresp.Rate=%v\n%s", repo, err, rate, tokenMessage)
 	}
@@ -125,4 +143,12 @@ func GetGitHubToken() (string, string) {
 func HasGitHubToken() bool {
 	token, _ := GetGitHubToken()
 	return token != ""
+}
+
+// HasInvalidGitHubToken checks if the response indicates an invalid GitHub token.
+func HasInvalidGitHubToken(response *github.Response) bool {
+	if response == nil {
+		return false
+	}
+	return response.StatusCode == http.StatusUnauthorized && response.Request.Header.Get("Authorization") != ""
 }

@@ -685,13 +685,23 @@ func GetAddonDdevWarningExitCode(action string) int {
 
 // ListAvailableAddons lists the add-ons that are listed on github
 func ListAvailableAddons() ([]*github.Repository, error) {
-	ctx, client := github.GetGitHubClient()
+	ctx, client := github.GetGitHubClient(true)
 	q := "topic:ddev-get fork:true archived:false"
 
 	opts := &github.SearchOptions{Sort: "updated", Order: "desc", ListOptions: github.ListOptions{PerPage: 200}}
 	var allRepos []*github.Repository
 	for {
 		repos, resp, err := client.Search.Repositories(ctx, q, opts)
+		// Retry without GitHub auth
+		if err != nil && github.HasInvalidGitHubToken(resp) {
+			ctx, client = github.GetGitHubClient(false)
+			reposNoAuth, respNoAuth, errNoAuth := client.Search.Repositories(ctx, q, opts)
+			if errNoAuth == nil {
+				repos = reposNoAuth
+				resp = respNoAuth
+				err = nil
+			}
+		}
 		if err != nil {
 			msg := fmt.Sprintf("Unable to get list of available services: %v", err)
 			if resp != nil {
