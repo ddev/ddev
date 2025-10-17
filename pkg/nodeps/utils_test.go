@@ -234,7 +234,6 @@ func TestIsWSL2(t *testing.T) {
 	}
 }
 
-
 // TestIsCodespaces tests IsCodespaces function
 func TestIsCodespaces(t *testing.T) {
 	// Test that the function returns a boolean without error
