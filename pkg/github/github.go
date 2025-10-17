@@ -154,6 +154,9 @@ func HasInvalidGitHubToken(response interface{}) error {
 	var httpResp *http.Response
 	switch r := response.(type) {
 	case *github.Response:
+		if r == nil {
+			return nil
+		}
 		httpResp = r.Response
 	case *http.Response:
 		httpResp = r

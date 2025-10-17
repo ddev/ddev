@@ -706,7 +706,7 @@ func ListAvailableAddons() ([]*github.Repository, error) {
 			}
 		}
 		if err != nil {
-			msg := fmt.Sprintf("Unable to get list of available add-ons: %v", err)
+			msg := err.Error()
 			if resp != nil {
 				rate := resp.Rate
 				if rate.Limit != 0 {
