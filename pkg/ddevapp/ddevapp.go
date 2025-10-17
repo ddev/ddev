@@ -2467,17 +2467,16 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
-	// For Gitpod, Codespaces
+	// For Codespaces
 	// * provide default host-side port bindings, assuming only one project running,
-	//   as is usual on Gitpod, but if more than one project, can override with normal
-	//   config.yaml settings.
+	//   but if more than one project, can override with normal config.yaml settings.
 	// Codespaces stumbles if not on a "standard" port like port 80
 	if nodeps.IsCodespaces() {
 		if app.HostWebserverPort == "" {
 			app.HostWebserverPort = "80"
 		}
 	}
-	if nodeps.IsGitpod() || nodeps.IsCodespaces() {
+	if nodeps.IsCodespaces() {
 		if app.HostWebserverPort == "" {
 			app.HostWebserverPort = "8080"
 		}
@@ -2603,7 +2602,6 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		"DDEV_GOOS":                      runtime.GOOS,
 		"DDEV_GOARCH":                    runtime.GOARCH,
 		"IS_DDEV_PROJECT":                "true",
-		"IS_GITPOD":                      strconv.FormatBool(nodeps.IsGitpod()),
 		"IS_CODESPACES":                  strconv.FormatBool(nodeps.IsCodespaces()),
 		"IS_WSL2":                        isWSL2,
 	}
@@ -3119,13 +3117,6 @@ func (app *DdevApp) GetHTTPSURL() string {
 
 // GetAllURLs returns an array of all the URLs for the project
 func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs []string) {
-	if nodeps.IsGitpod() {
-		url, err := exec.RunHostCommand("gp", "url", app.HostWebserverPort)
-		if err == nil {
-			url = netutil.NormalizeURL(strings.Trim(url, "\n"))
-			httpsURLs = append(httpsURLs, url)
-		}
-	}
 	if nodeps.IsCodespaces() {
 		codespaceName := os.Getenv("CODESPACE_NAME")
 		previewDomain := os.Getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
