@@ -723,6 +723,8 @@ will
 winnfsd
 with
 within
+worktree
+worktrees
 wp
 writeup
 wsize

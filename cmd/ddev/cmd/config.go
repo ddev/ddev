@@ -10,6 +10,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -125,7 +126,7 @@ var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
-	Use:     "config [provider or 'global']",
+	Use:     "config [global]",
 	Short:   "Create or modify a DDEV project configuration in the current directory",
 	Example: `"ddev config" or "ddev config --docroot=web --project-type=drupal11"`,
 	Args:    cobra.ExactArgs(0),
@@ -158,6 +159,11 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		if err != nil {
 			util.Failed("There was a problem configuring your project: %v", err)
 		}
+
+		if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault {
+			app.Name = ""
+		}
+
 		err = app.WriteConfig()
 		if err != nil {
 			util.Failed("Failed to write config: %v", err)
@@ -748,6 +754,13 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
 			return fmt.Errorf("unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', and you can try a migration with 'ddev debug migrate-database %s' see docs at %s", app.Name, app.Database.Type+":"+app.Database.Version, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://docs.ddev.com/en/stable/users/extend/database-types/")
 		}
+	}
+
+	// If global omit_project_name_by_default, empty the `name` field
+	// unless they explicitly specified it here.
+	if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault &&
+		!cmd.Flags().Changed("project-name") {
+		app.Name = ""
 	}
 
 	if err := app.WriteConfig(); err != nil {

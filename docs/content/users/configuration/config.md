@@ -438,6 +438,16 @@ Example: `omit_containers: [db, ddev-ssh-agent]` starts the project without a `d
 !!!warning
     Omitting the `db` container will cause database-dependent DDEV features to be unstable.
 
+## `omit_project_name_by_default`
+
+Determines whether `ddev config` updates the `name` field in the `.ddev/config.yaml` by default.
+
+| Type | Default | Usage
+| -- |---------| --
+| :octicons-globe-16: global | `true`  | If `true` then `ddev config` commands will populate the `name` field in `.ddev/config.yaml`.
+
+If the `name` field is omitted in `.ddev/config.yaml`, then DDEV gets the project name from the name of the directory the project is in. If this option is set to `true` then `ddev config` will not update the `name` field unless you use `ddev config --project-name=<name>` to explicitly set the project name. People using the `git worktree` functions often prefer to omit the project name so they can work on multiple projects at the same time in different `git` worktrees.
+
 ## `override_config`
 
 Whether to override config values instead of merging.

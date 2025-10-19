@@ -57,6 +57,12 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		}
 		dirty = true
 	}
+	if cmd.Flag("omit-project-name-by-default").Changed {
+		if v, _ := cmd.Flags().GetBool("omit-project-name-by-default"); v {
+			globalconfig.DdevGlobalConfig.OmitProjectNameByDefault = v
+			dirty = true
+		}
+	}
 	if cmd.Flag("web-environment").Changed {
 		env := strings.TrimSpace(webEnvironmentGlobal)
 		if env == "" || env == `""` || env == `''` {
@@ -332,6 +338,9 @@ func init() {
 	configGlobalCommand.Flags().String(configTypes.FlagXHProfModeName, configTypes.FlagXHProfModeDefault, configTypes.FlagXHProfModeDescription(configTypes.ConfigTypeGlobal))
 	_ = configGlobalCommand.RegisterFlagCompletionFunc(configTypes.FlagXHProfModeName, configCompletionFunc(configTypes.ValidXHProfModeOptions(configTypes.ConfigTypeGlobal)))
 	configGlobalCommand.Flags().Bool(configTypes.FlagXHProfModeResetName, false, configTypes.FlagXHProfModeResetDescription(configTypes.ConfigTypeGlobal))
+
+	configGlobalCommand.Flags().Bool("omit-project-name-by-default", true, "If true, do not automatically write the 'name' field in the .ddev/config.yaml file")
+	_ = configGlobalCommand.RegisterFlagCompletionFunc("omit-project-name-by-default", configCompletionFunc([]string{"true", "false"}))
 
 	configGlobalCommand.Flags().String("table-style", "default", fmt.Sprintf(`Table style for "ddev list" and "ddev describe", possible values are "%s"`, strings.Join(globalconfig.ValidTableStyleList(), `", "`)))
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("table-style", configCompletionFunc(globalconfig.ValidTableStyleList()))
