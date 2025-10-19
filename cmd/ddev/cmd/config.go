@@ -142,6 +142,19 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed("Unable to run `ddev config`: %v", err)
 	}
 
+	// Clean up any old global project list entries with the same approot but different name.
+	// This handles scenarios where config overrides change the project name.
+	projectList := globalconfig.GetGlobalProjectList()
+	var namesToRemove []string
+	for name, info := range projectList {
+		if info.AppRoot == app.AppRoot && name != app.Name {
+			namesToRemove = append(namesToRemove, name)
+		}
+	}
+	for _, name := range namesToRemove {
+		_ = globalconfig.RemoveProjectInfo(name)
+	}
+
 	err = app.CheckExistingAppInApproot()
 	if err != nil {
 		util.Failed(err.Error())
@@ -160,8 +173,16 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 			util.Failed("There was a problem configuring your project: %v", err)
 		}
 
+		// If omit_project_name_by_default is set, only omit the name if it
+		// matches the directory-based default (user didn't customize it)
 		if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault {
-			app.Name = ""
+			pwd, err := os.Getwd()
+			if err == nil {
+				dirBasedName := ddevapp.NormalizeProjectName(filepath.Base(pwd))
+				if app.Name == dirBasedName {
+					app.Name = ""
+				}
+			}
 		}
 
 		err = app.WriteConfig()
@@ -758,13 +779,27 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	// If global omit_project_name_by_default, empty the `name` field
 	// unless they explicitly specified it here.
+	// Save the original name so we can restore it for the global project list.
+	originalName := app.Name
+	omitName := false
 	if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault &&
 		!cmd.Flags().Changed("project-name") {
 		app.Name = ""
+		omitName = true
 	}
 
 	if err := app.WriteConfig(); err != nil {
 		return fmt.Errorf("could not write DDEV config file %s: %v", app.ConfigPath, err)
+	}
+
+	// Restore the name and update global project list with correct name
+	if omitName && originalName != "" {
+		// Remove the empty-name entry that was added by WriteConfig
+		_ = globalconfig.RemoveProjectInfo("")
+		app.Name = originalName
+		if err := app.UpdateGlobalProjectList(); err != nil {
+			return err
+		}
 	}
 
 	return nil

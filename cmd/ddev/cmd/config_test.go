@@ -945,3 +945,316 @@ func TestHasConfigNameOverride(t *testing.T) {
 	// app.Name inside .ddev/config.local.yaml should have the expected value
 	require.Equal(t, projectNameOverride, app.Name)
 }
+
+// TestOmitProjectNameByDefault tests the omit_project_name_by_default global config option
+func TestOmitProjectNameByDefault(t *testing.T) {
+	origDir, _ := os.Getwd()
+
+	// Create temporary XDG_CONFIG_HOME for isolated testing
+	tmpXdgConfigHomeDir := testcommon.CreateTmpDir(t.Name())
+	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(tmpXdgConfigHomeDir)
+	})
+
+	// Set XDG_CONFIG_HOME to use temporary directory
+	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
+
+	// Create the global DDEV directory structure
+	err := os.MkdirAll(tmpGlobalDdevDir, 0755)
+	require.NoError(t, err)
+
+	tests := []struct {
+		name                     string
+		omitProjectNameByDefault bool
+		useProjectNameFlag       bool
+		projectNameFlagValue     string
+		expectedNameInConfig     string // empty string means name should be omitted
+		description              string
+	}{
+		{
+			name:                     "default_behavior_no_flag",
+			omitProjectNameByDefault: false,
+			useProjectNameFlag:       false,
+			expectedNameInConfig:     "testproject", // Should match directory name
+			description:              "With omit_project_name_by_default=false (default), name should be written",
+		},
+		{
+			name:                     "omit_enabled_no_flag",
+			omitProjectNameByDefault: true,
+			useProjectNameFlag:       false,
+			expectedNameInConfig:     "", // Should be omitted
+			description:              "With omit_project_name_by_default=true and no --project-name flag, name should be omitted",
+		},
+		{
+			name:                     "omit_enabled_with_explicit_flag",
+			omitProjectNameByDefault: true,
+			useProjectNameFlag:       true,
+			projectNameFlagValue:     "myproject",
+			expectedNameInConfig:     "myproject",
+			description:              "With omit_project_name_by_default=true but --project-name specified, name should be written",
+		},
+		{
+			name:                     "omit_enabled_flag_matches_directory",
+			omitProjectNameByDefault: true,
+			useProjectNameFlag:       true,
+			projectNameFlagValue:     "testproject",
+			expectedNameInConfig:     "testproject",
+			description:              "With omit_project_name_by_default=true and --project-name matching directory, name should still be written (explicit flag overrides)",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a temporary directory for this test
+			tmpDir := testcommon.CreateTmpDir("testproject")
+			// Get the actual directory name (includes random suffix)
+			actualDirName := filepath.Base(tmpDir)
+
+			t.Cleanup(func() {
+				_ = os.Chdir(origDir)
+				out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", actualDirName, "myproject")
+				require.NoError(t, err, "output=%s", out)
+				_ = os.RemoveAll(tmpDir)
+			})
+
+			err := os.Chdir(tmpDir)
+			require.NoError(t, err)
+
+			// Set global config for this test
+			globalconfig.EnsureGlobalConfig()
+			globalconfig.DdevGlobalConfig.OmitProjectNameByDefault = tc.omitProjectNameByDefault
+			err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+			require.NoError(t, err)
+
+			// Build the ddev config command
+			args := []string{"config", "--project-type=php"}
+			if tc.useProjectNameFlag {
+				args = append(args, "--project-name="+tc.projectNameFlagValue)
+			}
+			out, err := exec.RunHostCommand(DdevBin, args...)
+			require.NoError(t, err, "ddev config failed: %s", out)
+
+			// Read the generated config.yaml
+			configPath := filepath.Join(tmpDir, ".ddev", "config.yaml")
+			require.FileExists(t, configPath)
+
+			configBytes, err := os.ReadFile(configPath)
+			require.NoError(t, err)
+
+			// Parse the YAML
+			var config map[string]interface{}
+			err = yaml.Unmarshal(configBytes, &config)
+			require.NoError(t, err)
+
+			// Check if name field exists and has expected value
+			name, nameExists := config["name"]
+			if tc.expectedNameInConfig == "" {
+				// Name should be omitted
+				require.False(t, nameExists, "name field should be omitted from config.yaml, but found: %v", name)
+			} else {
+				// Name should exist and match expected value
+				require.True(t, nameExists, "name field should exist in config.yaml")
+				// Adjust expected name if it was "testproject" to match actual dir name
+				expectedName := tc.expectedNameInConfig
+				if expectedName == "testproject" && !tc.useProjectNameFlag {
+					expectedName = actualDirName
+				}
+				require.Equal(t, expectedName, name, "name field has unexpected value")
+			}
+
+			// Verify the project still works correctly by loading it
+			app, err := ddevapp.NewApp(tmpDir, true)
+			require.NoError(t, err)
+
+			// App.Name should always be populated (from directory if not in config)
+			expectedRuntimeName := tc.expectedNameInConfig
+			if expectedRuntimeName == "" {
+				expectedRuntimeName = actualDirName // Directory name
+			} else if expectedRuntimeName == "testproject" && !tc.useProjectNameFlag {
+				expectedRuntimeName = actualDirName
+			}
+			require.Equal(t, expectedRuntimeName, app.Name, "app.Name should be derived correctly")
+		})
+	}
+}
+
+// TestOmitProjectNameReconfig tests that re-running config preserves omit behavior
+func TestOmitProjectNameReconfig(t *testing.T) {
+	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
+
+	// Create temporary XDG_CONFIG_HOME for isolated testing
+	tmpXdgConfigHomeDir := testcommon.CreateTmpDir(t.Name())
+	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(tmpXdgConfigHomeDir)
+	})
+
+	// Set XDG_CONFIG_HOME to use temporary directory
+	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
+
+	// Create the global DDEV directory structure
+	err := os.MkdirAll(tmpGlobalDdevDir, 0755)
+	require.NoError(t, err)
+
+	tmpDir := testcommon.CreateTmpDir("reconfig-test")
+	actualDirName := filepath.Base(tmpDir)
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", actualDirName)
+		assert.NoError(err, "output=%s", out)
+		_ = os.RemoveAll(tmpDir)
+	})
+
+	err = os.Chdir(tmpDir)
+	require.NoError(t, err)
+
+	// Enable omit_project_name_by_default
+	globalconfig.EnsureGlobalConfig()
+	globalconfig.DdevGlobalConfig.OmitProjectNameByDefault = true
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	// Initial config - name should be omitted
+	_, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php")
+	require.NoError(t, err)
+
+	configPath := filepath.Join(tmpDir, ".ddev", "config.yaml")
+	configBytes, err := os.ReadFile(configPath)
+	require.NoError(t, err)
+
+	var config map[string]interface{}
+	err = yaml.Unmarshal(configBytes, &config)
+	require.NoError(t, err)
+
+	_, nameExists := config["name"]
+	assert.False(nameExists, "name should be omitted in initial config")
+
+	// Re-run config with a different option - name should still be omitted
+	out, err := exec.RunHostCommand(DdevBin, "config", "--php-version=8.3")
+	require.NoError(t, err, "ddev config --php-version=8.3 failed: %s", out)
+
+	configBytes, err = os.ReadFile(configPath)
+	require.NoError(t, err)
+
+	err = yaml.Unmarshal(configBytes, &config)
+	require.NoError(t, err)
+
+	_, nameExists = config["name"]
+	assert.False(nameExists, "name should remain omitted after reconfig")
+	assert.Equal("8.3", config["php_version"], "php_version should be updated")
+}
+
+// TestOmitProjectNameWithConfigOverride tests interaction with config.*.yaml overrides
+func TestOmitProjectNameWithConfigOverride(t *testing.T) {
+	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
+
+	// Create temporary XDG_CONFIG_HOME for isolated testing
+	tmpXdgConfigHomeDir := testcommon.CreateTmpDir(t.Name())
+	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(tmpXdgConfigHomeDir)
+	})
+
+	// Set XDG_CONFIG_HOME to use temporary directory
+	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
+
+	// Create the global DDEV directory structure
+	err := os.MkdirAll(tmpGlobalDdevDir, 0755)
+	require.NoError(t, err)
+
+	tmpDir := testcommon.CreateTmpDir("override-test")
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", "overridden-name")
+		assert.NoError(err, "output=%s", out)
+		_ = os.RemoveAll(tmpDir)
+	})
+
+	err = os.Chdir(tmpDir)
+	require.NoError(t, err)
+
+	// Enable omit_project_name_by_default
+	globalconfig.EnsureGlobalConfig()
+	globalconfig.DdevGlobalConfig.OmitProjectNameByDefault = true
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	// Initial config - name should be omitted
+	_, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php")
+	require.NoError(t, err)
+
+	// Create a config.local.yaml with a name override
+	localConfigPath := filepath.Join(tmpDir, ".ddev", "config.local.yaml")
+	localConfig := `name: overridden-name
+`
+	err = os.WriteFile(localConfigPath, []byte(localConfig), 0644)
+	require.NoError(t, err)
+
+	// Load the app - it should use the overridden name
+	app, err := ddevapp.NewApp(tmpDir, true)
+	require.NoError(t, err)
+	assert.Equal("overridden-name", app.Name, "app should use name from config.local.yaml")
+
+	// Re-run config - name should still be omitted in main config.yaml
+	out, err := exec.RunHostCommand(DdevBin, "config", "--php-version=8.2")
+	require.NoError(t, err, "ddev config --php-version=8.2 failed: %s", out)
+
+	configPath := filepath.Join(tmpDir, ".ddev", "config.yaml")
+	configBytes, err := os.ReadFile(configPath)
+	require.NoError(t, err)
+
+	var config map[string]interface{}
+	err = yaml.Unmarshal(configBytes, &config)
+	require.NoError(t, err)
+
+	_, nameExists := config["name"]
+	assert.False(nameExists, "name should still be omitted in main config.yaml even with override file present")
+}
+
+// TestGlobalConfigOmitProjectNameDefault tests the global config flag handling
+func TestGlobalConfigOmitProjectNameDefault(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Create temporary XDG_CONFIG_HOME for isolated testing
+	tmpXdgConfigHomeDir := testcommon.CreateTmpDir(t.Name())
+	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+
+	t.Cleanup(func() {
+		_ = os.RemoveAll(tmpXdgConfigHomeDir)
+	})
+
+	// Set XDG_CONFIG_HOME to use temporary directory
+	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
+
+	// Create the global DDEV directory structure
+	err := os.MkdirAll(tmpGlobalDdevDir, 0755)
+	require.NoError(t, err)
+
+	// Ensure global config exists
+	globalconfig.EnsureGlobalConfig()
+
+	// Test setting to true
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--omit-project-name-by-default=true")
+	require.NoError(t, err)
+
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+	assert.True(globalconfig.DdevGlobalConfig.OmitProjectNameByDefault)
+
+	// Test setting to false
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--omit-project-name-by-default=false")
+	require.NoError(t, err)
+
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+	assert.False(globalconfig.DdevGlobalConfig.OmitProjectNameByDefault)
+}

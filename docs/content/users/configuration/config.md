@@ -444,9 +444,9 @@ Determines whether `ddev config` updates the `name` field in the `.ddev/config.y
 
 | Type | Default | Usage
 | -- |---------| --
-| :octicons-globe-16: global | `true`  | If `true` then `ddev config` commands will populate the `name` field in `.ddev/config.yaml`.
+| :octicons-globe-16: global | `false`  | Can be `true` or `false`.
 
-If the `name` field is omitted in `.ddev/config.yaml`, then DDEV gets the project name from the name of the directory the project is in. If this option is set to `true` then `ddev config` will not update the `name` field unless you use `ddev config --project-name=<name>` to explicitly set the project name. People using the `git worktree` functions often prefer to omit the project name so they can work on multiple projects at the same time in different `git` worktrees.
+When the `name` field is omitted in `.ddev/config.yaml`, DDEV gets the project name from the directory the project is in. If this option is set to `true`, `ddev config` will not update the `name` field unless you use `ddev config --project-name=<name>` to explicitly set the project name. People using `git worktree` often prefer to omit the project name so they can work on multiple projects at the same time in different worktrees.
 
 ## `override_config`
 
