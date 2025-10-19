@@ -53,10 +53,12 @@ case $1 in
     status=$(get_xdebug_status)
     if [ "${status}" = "1" ]; then
       result="xdebug enabled"
+      detail=$(php -d xdebug.start_with_request=no -r 'xdebug_info();' 2>/dev/null)
+      result="${result}\n${detail}"
     else
       result="xdebug disabled"
     fi
-    echo $result
+    echo -e "$result"
     ;;
   *)
     echo "Invalid argument: $1"
