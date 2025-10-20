@@ -265,11 +265,14 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```json
     {
-      "image": "mcr.microsoft.com/devcontainers/universal:2",
-      "features": {
-        "ghcr.io/ddev/ddev/install-ddev:latest": {}
-      },
-      "postCreateCommand": "echo 'it should all be set up'"
+        "image": "mcr.microsoft.com/devcontainers/base:debian-12",
+        "features": {
+            "ghcr.io/devcontainers/features/docker-in-docker:2": {
+                "version": "latest"
+            },
+            "ghcr.io/ddev/ddev/install-ddev:latest": {}
+        },
+        "postCreateCommand": "echo 'it should all be set up'"
     }
     ```
 
@@ -311,7 +314,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Docker integration
 
-    DDEV in Codespaces relies on [`docker-in-docker`](https://github.com/devcontainers/features), which is installed by default when you use the image `"mcr.microsoft.com/devcontainers/universal:2"`. Please be aware: GitHub Codespaces and its Docker-integration (docker-in-docker) are relatively new. See [devcontainers/features](https://github.com/devcontainers/features) for general support and issues regarding Docker-support.
+    DDEV in Codespaces relies on [`docker-in-docker`](https://github.com/devcontainers/features), which must be added manually to the features when using `"mcr.microsoft.com/devcontainers/base:debian-12"`. See [`devcontainers/features`](https://github.com/devcontainers/features) for general support and issues regarding Docker-support.
 
     ###  DDEV's router is not used
 
@@ -351,8 +354,11 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```json
     {
-        "image": "mcr.microsoft.com/devcontainers/universal:2",
+        "image": "mcr.microsoft.com/devcontainers/base:debian-12",
         "features": {
+            "ghcr.io/devcontainers/features/docker-in-docker:2": {
+                "version": "latest"
+            },
             "ghcr.io/ddev/ddev/install-ddev:latest": {}
         },
         "portsAttributes": {
