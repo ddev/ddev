@@ -63,6 +63,11 @@ const ConfigInstructions = `
 # see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 # For example Europe/Dublin or MST7MDT
 
+# composer_use_working_dir: false
+# Allow Composer to use the host's working directory when running commands.
+# If the "composer_root" is set, then the working directory will only be 
+# taken into account if it is a subdirectory of it. This is to ensure that
+# running DDEV from the project root will still work as expected.
 # composer_root: <relative_path>
 # Relative path to the Composer root directory from the project root. This is
 # the directory which contains the composer.json and where all Composer related
