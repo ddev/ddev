@@ -3,10 +3,12 @@ package github
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/google/go-github/v74/github"
 )
@@ -23,36 +25,60 @@ var (
 	githubContext context.Context
 	// githubClient is the singleton instance of Client
 	githubClient *Client
+	// githubClientNoAuth is the singleton instance of Client without authentication
+	githubClientNoAuth *Client
 	// githubClientOnce ensures githubClient is initialized only once
 	githubClientOnce sync.Once
 )
 
 // GetGitHubClient returns a singleton GitHub client and context, initializing it if necessary.
-func GetGitHubClient() (context.Context, *Client) {
+func GetGitHubClient(withAuth bool) (context.Context, *Client) {
 	githubClientOnce.Do(func() {
 		githubContext = context.Background()
 		// Respect proxies set in the environment
-		githubClient = github.NewClientWithEnvProxy()
+		githubClientNoAuth = github.NewClientWithEnvProxy()
+		githubClient = githubClientNoAuth
 		githubToken, _ := GetGitHubToken()
 		if githubToken != "" {
 			githubClient = githubClient.WithAuthToken(githubToken)
 		}
 	})
-	return githubContext, githubClient
+	if withAuth {
+		return githubContext, githubClient
+	}
+	return githubContext, githubClientNoAuth
 }
 
 // GetGitHubRelease gets the tarball URL and version for a GitHub repository release
 func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloadedRelease string, err error) {
-	ctx, client := GetGitHubClient()
+	ctx, client := GetGitHubClient(true)
 
 	releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
+	var tokenErr error
 	if err != nil {
-		var rate github.Rate
-		if resp != nil {
-			rate = resp.Rate
+		if tokenErr = HasInvalidGitHubToken(resp); tokenErr != nil {
+			ctx, client = GetGitHubClient(false)
+			releasesNoAuth, respNoAuth, errNoAuth := client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
+			if errNoAuth == nil {
+				releases = releasesNoAuth
+				resp = respNoAuth
+				err = errNoAuth
+			}
 		}
-		_, tokenMessage := GetGitHubHeaders("https://github.com")
-		return "", "", fmt.Errorf("unable to get releases for %v: %w\nresp.Rate=%v\n%s", repo, err, rate, tokenMessage)
+	}
+	if err != nil {
+		errorDetail := ""
+		if resp != nil {
+			rate := resp.Rate
+			if rate.Limit != 0 {
+				resetIn := time.Until(rate.Reset.Time).Round(time.Second)
+				errorDetail += fmt.Sprintf("\nGitHub API Rate Limit: %d/%d remaining (resets in %s)", rate.Remaining, rate.Limit, resetIn)
+			}
+			if tokenErr != nil {
+				errorDetail += "\nError: " + tokenErr.Error()
+			}
+		}
+		return "", "", fmt.Errorf("unable to get releases for %v: %w%s", repo, err, errorDetail)
 	}
 	if len(releases) == 0 {
 		return "", "", fmt.Errorf("no releases found for %v", repo)
@@ -80,22 +106,17 @@ func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloa
 
 // GetGitHubHeaders returns headers to be used in GitHub REST API requests if the URL is for GitHub.
 // See https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api
-func GetGitHubHeaders(requestURL string) (map[string]string, string) {
+func GetGitHubHeaders(requestURL string) map[string]string {
 	headers := map[string]string{}
 	if !isGitHubURL(requestURL) {
-		return headers, ""
+		return headers
 	}
-	githubToken, tokenVariable := GetGitHubToken()
-	if githubToken != "" {
+	if githubToken, _ := GetGitHubToken(); githubToken != "" {
 		headers["Authorization"] = "Bearer " + githubToken
 		// Use the same header as in vendor/github.com/google/go-github/v74/github/github.go
 		headers["X-Github-Api-Version"] = "2022-11-28"
 	}
-	tokenMessage := ""
-	if tokenVariable != "" {
-		tokenMessage = fmt.Sprintf("Request made with %s set", tokenVariable)
-	}
-	return headers, tokenMessage
+	return headers
 }
 
 // isGitHubURL checks if the given URL is for GitHub or any subdomain of GitHub
@@ -125,4 +146,38 @@ func GetGitHubToken() (string, string) {
 func HasGitHubToken() bool {
 	token, _ := GetGitHubToken()
 	return token != ""
+}
+
+// HasInvalidGitHubToken checks if the response indicates an invalid GitHub token.
+// This is possible if we get 401 or 404 response.
+func HasInvalidGitHubToken(response interface{}) error {
+	var httpResp *http.Response
+	switch r := response.(type) {
+	case *github.Response:
+		if r == nil {
+			return nil
+		}
+		httpResp = r.Response
+	case *http.Response:
+		httpResp = r
+	default:
+		return nil
+	}
+	if httpResp == nil || httpResp.Request == nil {
+		return nil
+	}
+	if !isGitHubURL(httpResp.Request.URL.String()) {
+		return nil
+	}
+	_, tokenVariable := GetGitHubToken()
+	if tokenVariable == "" {
+		return nil
+	}
+	if httpResp.StatusCode == http.StatusUnauthorized {
+		return fmt.Errorf("using %s, which is invalid or lacks required permissions", tokenVariable)
+	}
+	if httpResp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("using %s, which may be invalid or lack permissions", tokenVariable)
+	}
+	return nil
 }
