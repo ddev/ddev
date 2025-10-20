@@ -128,6 +128,7 @@ type DdevApp struct {
 	ShareDefaultProvider      string                `yaml:"share_default_provider,omitempty"`
 	ShareProviderArgs         string                `yaml:"share_provider_args,omitempty"`
 	Timezone                  string                `yaml:"timezone,omitempty"`
+	ComposerUseWorkingDir     bool                  `yaml:"composer_use_working_dir,omitempty"`
 	ComposerRoot              string                `yaml:"composer_root,omitempty"`
 	ComposerVersion           string                `yaml:"composer_version"`
 	DisableSettingsManagement bool                  `yaml:"disable_settings_management,omitempty"`
@@ -658,15 +659,25 @@ func (app DdevApp) GetAbsAppRoot(inContainer bool) string {
 func (app *DdevApp) GetComposerRoot(inContainer, showWarning bool) string {
 	var absComposerRoot string
 
+	composerDir := app.ComposerRoot
+	if app.ComposerUseWorkingDir {
+		workingDir := app.GetRelativeWorkingDirectory()
+		if composerDir == "" || strings.HasPrefix(workingDir, fmt.Sprintf("%s/", composerDir)) {
+			// Only use the working directory if it's not set or if it's a subdirectory of the default Composer root.
+			// This ensures that normal Composer commands from the root will still work as expected.
+			util.Verbose("Composer is using working directory '%s'", workingDir)
+			composerDir = workingDir
+		}
+	}
 	if inContainer {
-		absComposerRoot = path.Join(app.GetAbsAppRoot(true), app.ComposerRoot)
+		absComposerRoot = path.Join(app.GetAbsAppRoot(true), composerDir)
 	} else {
-		absComposerRoot = filepath.Join(app.GetAbsAppRoot(false), app.ComposerRoot)
+		absComposerRoot = filepath.Join(app.GetAbsAppRoot(false), composerDir)
 	}
 
 	// If requested, let the user know we are not using the default Composer
 	// root directory to avoid confusion.
-	if app.ComposerRoot != "" && showWarning {
+	if showWarning && composerDir != "" {
 		util.Warning("Using '%s' as Composer root directory", absComposerRoot)
 	}
 

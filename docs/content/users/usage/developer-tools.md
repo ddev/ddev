@@ -27,7 +27,17 @@ You can also add tools that are not provided by default using [`webimage_extra_p
 
 ## DDEV and Composer
 
-DDEV provides a built-in command to simplify use of PHP’s dependency manager, [Composer](https://getcomposer.org/), without requiring it to be installed on the host machine. Generally, executing any Composer command through DDEV is as simple as prepending the command with `ddev`. DDEV will execute the command at the project root in the web container, passing (almost) all arguments and flags to Composer. To execute Composer in other directories within the container, use `ddev ssh` or `ddev exec -d <dir>`. For example:
+DDEV provides a built-in command to simplify use of PHP’s dependency manager, [Composer](https://getcomposer.org/), without requiring it to be installed on the host machine.
+Generally, executing any Composer command through DDEV is as simple as prepending the command with `ddev`.
+By default, DDEV will execute the command at the project root in the web container, passing (almost) all arguments and flags to Composer.
+To execute Composer in other directories within the container, you may enable the functionality using DDEV’s `composer_use_working_dir` option in `.ddev/config.yaml` or `ddev config --composer-use-working-dir`;
+or alternatively, use `ddev ssh` or `ddev exec -d <dir>`.
+
+Do note that if the `composer_root` option is used to set the default composer directory, then the 
+`composer_use_working_dir` option will only work on subdirectories of the `composer_root` directory. This is to ensure 
+that running DDEV from the project root will still work as expected.
+
+Example commands:
 
 * `ddev composer help` runs Composer’s help command to learn more about what’s available.
 * `ddev composer require <package>` tells Composer to require a specific PHP package for the current project.
