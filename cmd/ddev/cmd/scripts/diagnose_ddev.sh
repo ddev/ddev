@@ -93,9 +93,11 @@ header "DDEV Diagnostic Report"
 # Environment Information
 header "Environment"
 if command -v ddev >/dev/null 2>&1; then
-  ddev_version=$(ddev version -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw."DDEV version"' 2>/dev/null || echo "unknown")
-  docker_platform=$(ddev version -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw."docker-platform"' 2>/dev/null || echo "unknown")
-  docker_version=$(ddev version -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw.docker' 2>/dev/null || echo "unknown")
+  # Get version info once and cache the raw JSON
+  version_json=$(ddev version -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw' 2>/dev/null)
+  ddev_version=$(echo "$version_json" | docker run --rm -i ddev/ddev-utilities jq -r '."DDEV version"' 2>/dev/null)
+  docker_platform=$(echo "$version_json" | docker run --rm -i ddev/ddev-utilities jq -r '."docker-platform"' 2>/dev/null)
+  docker_version=$(echo "$version_json" | docker run --rm -i ddev/ddev-utilities jq -r '.docker' 2>/dev/null)
 
   info "DDEV version: ${ddev_version}"
   info "OS: $(uname -s) $(uname -m)"
@@ -218,9 +220,11 @@ fi
 if ddev describe >/dev/null 2>&1; then
   header "Current Project"
 
-  project_name=$(ddev describe -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw.name' 2>/dev/null || echo "unknown")
-  project_status=$(ddev describe -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw.status' 2>/dev/null || echo "unknown")
-  project_type=$(ddev describe -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw.type' 2>/dev/null || echo "unknown")
+  # Get project info once and cache the raw JSON
+  project_json=$(ddev describe -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw' 2>/dev/null)
+  project_name=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.name' 2>/dev/null)
+  project_status=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.status' 2>/dev/null)
+  project_type=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.type' 2>/dev/null)
 
   info "Name: ${project_name}"
   info "Type: ${project_type}"
@@ -262,7 +266,7 @@ if ddev describe >/dev/null 2>&1; then
       success "Project containers are responsive"
 
       # Test HTTP access
-      http_url=$(ddev describe -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw.httpURLs[0]' 2>/dev/null)
+      http_url=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.httpURLs[0]' 2>/dev/null)
       if [ -n "$http_url" ] && [ "$http_url" != "null" ]; then
         http_response=$(curl --connect-timeout 5 --max-time 10 -sI "$http_url" 2>&1 | head -1)
         http_status=$(echo "$http_response" | grep -oE 'HTTP/[0-9.]+ [0-9]+' | awk '{print $2}')
