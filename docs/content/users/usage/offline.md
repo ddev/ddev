@@ -1,8 +1,20 @@
 # Using DDEV Offline
 
-!!!warning "Make sure to do a `ddev start` on every project you want to use before going offline"
+!!!warning "Prepare all projects and pull Docker images before going offline"
+    All necessary Docker images must be downloaded and built prior to working offline.
 
-    To work offline, you have to already have any needed Docker images pulled. That means you should do a `ddev start` on all of the projects before going offline. 
+    Run the following commands:
+
+    ```bash
+    # Download all images for all projects
+    ddev utility download-images --all
+
+    # Start all projects to ensure images are built
+    ddev start --all
+
+    # Stop all projects
+    ddev poweroff
+    ```
 
 DDEV attempts to work smoothly offline, and you shouldn’t have to do anything to make it work.
 
