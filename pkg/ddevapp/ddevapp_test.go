@@ -3189,6 +3189,13 @@ func TestDdevDescribe(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	// Copy testdata docker-compose file to test x-ddev.describe functionality
+	testdataDir := filepath.Join(origDir, "testdata", "TestDdevDescribe")
+	composeFile := filepath.Join(testdataDir, "docker-compose.testservice.yaml")
+	destFile := filepath.Join(app.AppRoot, ".ddev", "docker-compose.testservice.yaml")
+	err = fileutil.CopyFile(composeFile, destFile)
+	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
@@ -3197,6 +3204,8 @@ func TestDdevDescribe(t *testing.T) {
 		app.Hooks = nil
 		err = app.WriteConfig()
 		assert.NoError(err)
+		// Clean up the copied docker-compose file
+		_ = os.Remove(destFile)
 	})
 	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
@@ -3224,6 +3233,15 @@ func TestDdevDescribe(t *testing.T) {
 	assert.EqualValues(fileutil.ShortHomeJoin(app.GetAppRoot()), desc["shortroot"])
 	assert.EqualValues(app.GetAppRoot(), desc["approot"])
 	assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
+
+	// Verify x-ddev.describe functionality
+	services, ok := desc["services"].(map[string]map[string]interface{})
+	require.True(t, ok, "services should be a map[string]map[string]interface{}")
+	testservice, ok := services["testservice"]
+	require.True(t, ok, "testservice should exist in services")
+	describeValue, ok := testservice["describe"].(string)
+	require.True(t, ok, "describe field should exist in testservice")
+	assert.Equal("Test service info from x-ddev", describeValue, "describe value should match x-ddev.describe from docker-compose file")
 
 	assert.FileExists("hello-pre-describe-" + app.Name)
 	assert.FileExists("hello-post-describe-" + app.Name)

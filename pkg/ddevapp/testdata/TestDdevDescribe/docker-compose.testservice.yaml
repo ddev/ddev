@@ -1,0 +1,13 @@
+services:
+  testservice:
+    image: busybox:latest
+    container_name: ddev-${DDEV_SITENAME}-testservice
+    command: tail -f /dev/null
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    restart: "no"
+    expose:
+      - "8888"
+    x-ddev:
+      describe: "Test service info from x-ddev"

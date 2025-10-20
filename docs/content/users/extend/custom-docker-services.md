@@ -118,6 +118,32 @@ volumes:
   - "../:/var/www/html:cached"
 ```
 
+### Customizing ddev describe Output
+
+You can add custom descriptions that appear in `ddev describe` output using the `x-ddev` extension field. This is helpful for providing information about credentials, URLs, or usage instructions for your custom services.
+
+```yaml
+services:
+  rabbitmq:
+    container_name: "ddev-${DDEV_SITENAME}-rabbitmq"
+    image: rabbitmq:3-management-alpine
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    restart: "no"
+    ports:
+      - "15672"
+    environment:
+      - VIRTUAL_HOST=${DDEV_HOSTNAME}
+      - HTTP_EXPOSE=15672:15672
+      - RABBITMQ_DEFAULT_USER=rabbitmq
+      - RABBITMQ_DEFAULT_PASS=rabbitmq
+    x-ddev:
+      describe: "Username: rabbitmq, Password: rabbitmq"
+```
+
+The `x-ddev.describe` value appears in the URL/Port column when running `ddev describe`, making it easy for team members to see important service information without digging through configuration files.
+
 ## Advanced Service Examples
 
 ### SQL Server Database Service

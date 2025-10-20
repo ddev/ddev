@@ -31,3 +31,5 @@ services:
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
+    x-ddev:
+      describe: "Test service description for busybox2"
