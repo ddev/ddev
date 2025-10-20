@@ -1488,7 +1488,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// This needs to be done after WriteDockerComposeYAML() to get the right images
-	err = app.PullContainerImages(false, nil)
+	err = app.PullContainerImages(false)
 	if err != nil {
 		util.Warning("Unable to pull Docker images: %v", err)
 	}
@@ -1872,11 +1872,6 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 		}
 	}
 
-	err = app.PullContainerImages(false, profiles)
-	if err != nil {
-		util.Warning("Unable to pull Docker images: %v", err)
-	}
-
 	_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 		Profiles:     profiles,
@@ -1912,13 +1907,10 @@ func (app *DdevApp) Restart() error {
 }
 
 // PullContainerImages configured Docker images with full output, since docker-compose up doesn't have nice output
-func (app *DdevApp) PullContainerImages(pullAlways bool, profiles []string) error {
-	images, err := app.FindAllImages(profiles)
+func (app *DdevApp) PullContainerImages(pullAlways bool) error {
+	images, err := app.FindAllImages()
 	if err != nil {
 		return err
-	}
-	if app.XHProfMode == types.XHProfModeXHGui {
-		images = append(images, ddevImages.GetXhguiImage())
 	}
 	return dockerutil.PullImages(images, pullAlways)
 }
@@ -1939,7 +1931,7 @@ func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
 }
 
 // FindAllImages returns an array of image tags for all containers in the compose file
-func (app *DdevApp) FindAllImages(profiles []string) ([]string, error) {
+func (app *DdevApp) FindAllImages() ([]string, error) {
 	var images []string
 	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
 		return images, nil
@@ -1948,17 +1940,6 @@ func (app *DdevApp) FindAllImages(profiles []string) ([]string, error) {
 		image := service.Image
 		if image == "" {
 			continue
-		}
-		// If service has profiles, and we are not asked for all profiles (*),
-		// check for match with the requested profiles before pulling
-		if len(service.Profiles) > 0 && !slices.Contains(profiles, "*") {
-			hasMatch := slices.ContainsFunc(service.Profiles, func(sp string) bool {
-				return slices.Contains(profiles, sp)
-			})
-			// Skip pulling this image
-			if !hasMatch {
-				continue
-			}
 		}
 		if strings.HasSuffix(image, "-built") {
 			image = strings.TrimSuffix(image, "-built")
