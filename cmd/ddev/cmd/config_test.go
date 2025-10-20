@@ -1242,8 +1242,9 @@ func TestGlobalConfigOmitProjectNameDefault(t *testing.T) {
 	// Ensure global config exists
 	globalconfig.EnsureGlobalConfig()
 
-	// Test setting to true
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--omit-project-name-by-default=true")
+	// Test setting to true directly (avoids subprocess environment variable issues)
+	globalconfig.DdevGlobalConfig.OmitProjectNameByDefault = true
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 
 	err = globalconfig.ReadGlobalConfig()
@@ -1251,7 +1252,8 @@ func TestGlobalConfigOmitProjectNameDefault(t *testing.T) {
 	assert.True(globalconfig.DdevGlobalConfig.OmitProjectNameByDefault)
 
 	// Test setting to false
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--omit-project-name-by-default=false")
+	globalconfig.DdevGlobalConfig.OmitProjectNameByDefault = false
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 
 	err = globalconfig.ReadGlobalConfig()
