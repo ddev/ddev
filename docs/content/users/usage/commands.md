@@ -1756,6 +1756,9 @@ Enable or disable [Xdebug](../debugging-profiling/step-debugging.md) (global she
 # Display whether Xdebug is running
 ddev xdebug status
 
+# Display detailed Xdebug diagnostic information
+ddev xdebug info
+
 # Turn Xdebug on
 ddev xdebug
 
@@ -1768,6 +1771,8 @@ ddev xdebug off
 # Toggle Xdebug on and off
 ddev xdebug toggle
 ```
+
+The `ddev xdebug info` command displays detailed diagnostic information from Xdebug's `xdebug_info()` function, including enabled features, optional features, diagnostic log, step debugging status, and all Xdebug configuration directives. This may be useful for troubleshooting Xdebug configuration issues. `xdebug info` is only supported on Xdebug 3+.
 
 ## `xhgui`
 

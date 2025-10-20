@@ -2,11 +2,11 @@
 
 ## #ddev-generated
 ## Description: Enable or disable xdebug
-## Usage: xdebug on|off|enable|disable|true|false|toggle|status
-## Example: "ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug toggle", "ddev xdebug status"
+## Usage: xdebug on|off|enable|disable|true|false|toggle|status|info
+## Example: "ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug toggle", "ddev xdebug status", "ddev xdebug info"
 ## ExecRaw: false
 ## Flags: []
-## AutocompleteTerms: ["on","off","enable","disable","toggle","status"]
+## AutocompleteTerms: ["on","off","enable","disable","toggle","status","info"]
 
 if [ $# -eq 0 ] ; then
   enable_xdebug
@@ -26,12 +26,16 @@ get_xdebug_status() {
       fi
       ;;
     v2*)
-      echo $(php -d xdebug.remote_autostart=0 -r 'echo ini_get("xdebug.remote_enable");')
+      echo "not_supported"
       ;;
     *)
       echo "0"
       ;;
     esac
+}
+
+get_xdebug_info() {
+    php -d xdebug.start_with_request=no -r 'xdebug_info();' 2>/dev/null
 }
 
 case $1 in
@@ -51,14 +55,23 @@ case $1 in
     ;;
   status)
     status=$(get_xdebug_status)
-    if [ "${status}" = "1" ]; then
-      result="xdebug enabled"
-      detail=$(php -d xdebug.start_with_request=no -r 'xdebug_info();' 2>/dev/null)
-      result="${result}\n${detail}"
+    if [ "${status}" = "not_supported" ]; then
+      echo "xdebug info not supported on xdebug 2"
+    elif [ "${status}" = "1" ]; then
+      echo "xdebug enabled"
     else
-      result="xdebug disabled"
+      echo "xdebug disabled"
     fi
-    echo -e "$result"
+    ;;
+  info)
+    status=$(get_xdebug_status)
+    if [ "${status}" = "not_supported" ]; then
+      echo "xdebug info not supported on xdebug 2"
+    elif [ "${status}" = "1" ]; then
+      get_xdebug_info
+    else
+      echo "xdebug disabled"
+    fi
     ;;
   *)
     echo "Invalid argument: $1"
