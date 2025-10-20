@@ -63,7 +63,7 @@ ddev utility download-images --all
 				if err != nil {
 					util.Failed("Failed to run `docker-compose config` for '%s': %v", app.Name, err)
 				}
-				appImages, err := app.FindAllImages()
+				appImages, err := app.FindAllImages([]string{"*"})
 				if err != nil {
 					util.Failed("Failed to get images for '%s': %v", app.Name, err)
 				}
