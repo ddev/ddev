@@ -1303,7 +1303,7 @@ ddev npx create-next-app@latest
 Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (global shell web container command).
 
 !!!tip
-    Use of `ddev nvm` is discouraged because `nodejs_version` is much easier to use, can specify any version, and is more robust than using `nvm`.
+    Use of `ddev nvm` is discouraged because `nodejs_version` is much easier to use, can specify any version, and is more robust than using `nvm`. If your project previously made use of nvm, you will need to revert back to using system defined version by running `ddev nvm alias default system` as per the example below.
 
 Example:
 
