@@ -63,5 +63,5 @@ php85-todo:
 
 # temp workaround until php8.5 packages are available
 php85:
-  amd64: ["bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "pgsql", "readline", "soap", "sqlite3",   "xml", "zip"]
-  arm64: [ "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql",  "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
+  amd64: ["bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
+  arm64: ["bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
