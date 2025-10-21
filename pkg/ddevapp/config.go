@@ -1029,7 +1029,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	}
 
-	uid, gid, username := util.GetContainerUIDGid()
+	uid, gid, username := dockerutil.GetContainerUser()
 	_, err = app.GetProvider("")
 	if err != nil {
 		return "", err

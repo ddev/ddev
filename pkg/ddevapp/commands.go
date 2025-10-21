@@ -9,7 +9,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/util"
 )
 
 // PopulateGlobalCustomCommandFiles sets up the custom command files in the project
@@ -29,7 +28,7 @@ func PopulateGlobalCustomCommandFiles() error {
 	}
 
 	// Copy commands into container (this will create the directory if it's not there already)
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, _, _ := dockerutil.GetContainerUser()
 	err = dockerutil.CopyIntoVolume(sourceGlobalCommandPath, "ddev-global-cache", "global-commands", uid, "host", false)
 	if err != nil {
 		return err
@@ -63,6 +62,6 @@ func performTaskInContainer(command []string) (string, string, error) {
 
 	// If there is no running active site, use an anonymous container instead.
 	containerName := "performTaskInContainer" + nodeps.RandomString(12)
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, _, _ := dockerutil.GetContainerUser()
 	return dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), containerName, command, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
 }

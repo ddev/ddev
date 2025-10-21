@@ -4679,7 +4679,7 @@ func TestEnvironmentVariables(t *testing.T) {
 
 	primaryURL := app.GetPrimaryURL()
 	scheme, primaryURLWithoutPort, primaryURLPort := nodeps.ParseURL(primaryURL)
-	uidStr, gidStr, username := util.GetContainerUIDGid()
+	uidStr, gidStr, username := dockerutil.GetContainerUser()
 
 	// This set of webContainerExpectations should be maintained to match the list in the docs
 	webContainerExpectations := map[string]string{

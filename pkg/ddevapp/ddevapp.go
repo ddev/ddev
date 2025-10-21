@@ -813,7 +813,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		if err != nil {
 			return err
 		}
-		uid, _, _ := util.GetContainerUIDGid()
+		uid, _, _ := dockerutil.GetContainerUser()
 		// for PostgreSQL, must be written with PostgreSQL user
 		if app.Database.Type == nodeps.Postgres {
 			uid = "999"
@@ -1428,7 +1428,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Additional volumes can be added here. This allows us to run a single privileged
 	// container with a single focus of changing ownership, instead of having to use sudo
 	// inside the container
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, _, _ := dockerutil.GetContainerUser()
 
 	// On the web container, we can use mutagen to sync
 	// anything that changes in the .ddev folder by
@@ -1596,7 +1596,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if router == nil {
 			// Copy ca certs into ddev-global-cache/mkcert
 			if caRoot != "" {
-				uid, _, _ := util.GetContainerUIDGid()
+				uid, _, _ := dockerutil.GetContainerUser()
 				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
 				if err != nil {
 					util.Warning("Failed to copy root CA into Docker volume ddev-global-cache/mkcert: %v", err)
@@ -1616,7 +1616,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		targetSubdir := path.Join("traefik", "certs")
 
 		certPath := app.GetConfigPath("custom_certs")
-		uid, _, _ := util.GetContainerUIDGid()
+		uid, _, _ := dockerutil.GetContainerUser()
 		if fileutil.FileExists(certPath) && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
 			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", targetSubdir, uid, "", false)
 			if err != nil {
@@ -2461,7 +2461,7 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() map[string]string {
-	uidStr, gidStr, username := util.GetContainerUIDGid()
+	uidStr, gidStr, username := dockerutil.GetContainerUser()
 
 	// Warn about running as root if we're not on Windows.
 	if uidStr == "0" || gidStr == "0" {
@@ -2831,7 +2831,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		// But if we are using bind-mounts (normal situation), we can copy it to where the snapshot is
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
 		c := fmt.Sprintf("cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotFile)
-		uid, _, _ := util.GetContainerUIDGid()
+		uid, _, _ := dockerutil.GetContainerUser()
 		if app.Database.Type == nodeps.Postgres {
 			uid = "999"
 		}

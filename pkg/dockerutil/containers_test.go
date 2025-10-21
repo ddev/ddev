@@ -9,11 +9,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ddev/ddev/pkg/ddevapp"
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
@@ -124,6 +126,70 @@ func startTestContainer() (string, error) {
 	}
 
 	return containerID, nil
+}
+
+// TestGetContainerUser to make sure that the user provisioned in the container has
+// the proper uid/gid/username characteristics.
+func TestGetContainerUser(t *testing.T) {
+	origDir, _ := os.Getwd()
+
+	// Create temporary directory for test project
+	testDir := testcommon.CreateTmpDir(t.Name())
+	projName := t.Name()
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		app, err := ddevapp.GetActiveApp(projName)
+		if err == nil {
+			_ = app.Stop(true, false)
+		}
+		_ = os.RemoveAll(testDir)
+	})
+
+	// Clean up any existing name conflicts
+	app, err := ddevapp.GetActiveApp(projName)
+	if err == nil {
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+	}
+
+	// Create new app
+	app, err = ddevapp.NewApp(testDir, false)
+	require.NoError(t, err)
+	app.Type = nodeps.AppTypePHP
+	app.Name = projName
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	defer util.TimeTrackC(fmt.Sprintf("%s %s", projName, t.Name()))()
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	uid, gid, username := dockerutil.GetContainerUser()
+
+	for _, service := range []string{"web", "db"} {
+		out, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: service,
+			Cmd:     "id -un",
+		})
+		require.NoError(t, err)
+		require.Equal(t, username, strings.Trim(out, "\r\n"))
+
+		out, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: service,
+			Cmd:     "id -u",
+		})
+		require.NoError(t, err)
+		require.Equal(t, uid, strings.Trim(out, "\r\n"))
+
+		out, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: service,
+			Cmd:     "id -g",
+		})
+		require.NoError(t, err)
+		require.Equal(t, gid, strings.Trim(out, "\r\n"))
+	}
 }
 
 // TestGetContainerHealth tests the function for processing container readiness.
@@ -438,7 +504,7 @@ func TestCopyIntoContainer(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cid)
 
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, _, _ := dockerutil.GetContainerUser()
 	targetDir, _, err := dockerutil.Exec(cid.ID, "mktemp -d", uid)
 	require.NoError(t, err)
 	targetDir = strings.Trim(targetDir, "\n")

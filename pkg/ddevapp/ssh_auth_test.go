@@ -88,7 +88,7 @@ func TestSSHAuth(t *testing.T) {
 
 	// Add password/key to auth. This is an unfortunate perversion of using docker run directly, copied from
 	// ddev auth ssh command, and with an expect script to provide the passphrase.
-	uidStr, _, username := util.GetContainerUIDGid()
+	uidStr, _, username := dockerutil.GetContainerUser()
 	sshKeyPath := app.GetConfigPath(".ssh")
 
 	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag + "-built", "//test.expect.passphrase"})

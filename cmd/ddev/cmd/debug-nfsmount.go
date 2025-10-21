@@ -60,7 +60,7 @@ var DebugNFSMountCmd = &cobra.Command{
 			util.Failed("Failed to create volume %s: %v", testVolume, err)
 		}
 		_ = volume
-		uidStr, _, _ := util.GetContainerUIDGid()
+		uidStr, _, _ := dockerutil.GetContainerUser()
 
 		_, out, err := dockerutil.RunSimpleContainer(docker.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 		if err != nil {
