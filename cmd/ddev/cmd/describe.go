@@ -139,11 +139,11 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 					urlPortParts = append(urlPortParts, netutil.NormalizeURL(httpURL))
 				}
 
-			// Gitpod, web container only, using port proxied by Gitpod
-			case (nodeps.IsGitpod() || nodeps.IsCodespaces()) && k == "web":
+			// Codespaces, web container only, using port proxied by Codespaces
+			case nodeps.IsCodespaces() && k == "web":
 				urlPortParts = append(urlPortParts, app.GetPrimaryURL())
 
-			// Router disabled, but not because of Gitpod, use direct http url
+			// Router disabled, but not because of Codespaces, use direct http url
 			case ddevapp.IsRouterDisabled(app):
 				if httpURL, ok := v["host_http_url"].(string); ok && httpURL != "" {
 					urlPortParts = append(urlPortParts, netutil.NormalizeURL(httpURL))

@@ -71,7 +71,6 @@ GitLab
 GUI
 GUIs
 Get
-GitPod
 Gitter
 GlobalProtect
 Gotenberg
