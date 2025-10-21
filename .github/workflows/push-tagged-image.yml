@@ -49,6 +49,8 @@ jobs:
       - name: Determine if multi-arch build
         id: meta
         run: |
+          # use `case "${{ matrix.image }}"` to disable multi_arch for specific images
+          # for now, all images are multi-arch
           echo "multi_arch=true" >> $GITHUB_OUTPUT
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v3
