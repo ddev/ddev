@@ -26,7 +26,7 @@ get_xdebug_status() {
       fi
       ;;
     v2*)
-      echo "not_supported"
+      echo $(php -d xdebug.remote_autostart=0 -r 'echo ini_get("xdebug.remote_enable");')
       ;;
     *)
       echo "0"
@@ -35,7 +35,7 @@ get_xdebug_status() {
 }
 
 get_xdebug_info() {
-    php -d xdebug.start_with_request=no -r 'xdebug_info();' 2>/dev/null
+    php -d xdebug.start_with_request=no -r 'if (function_exists("xdebug_info")) { xdebug_info(); } else { echo "xdebug_info() not available\n"; }' 2>/dev/null
 }
 
 case $1 in
@@ -55,9 +55,7 @@ case $1 in
     ;;
   status)
     status=$(get_xdebug_status)
-    if [ "${status}" = "not_supported" ]; then
-      echo "xdebug info not supported on xdebug 2"
-    elif [ "${status}" = "1" ]; then
+    if [ "${status}" = "1" ]; then
       echo "xdebug enabled"
     else
       echo "xdebug disabled"
@@ -65,9 +63,7 @@ case $1 in
     ;;
   info)
     status=$(get_xdebug_status)
-    if [ "${status}" = "not_supported" ]; then
-      echo "xdebug info not supported on xdebug 2"
-    elif [ "${status}" = "1" ]; then
+    if [ "${status}" = "1" ]; then
       get_xdebug_info
     else
       echo "xdebug disabled"
