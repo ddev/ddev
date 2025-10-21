@@ -547,6 +547,36 @@ ddev utility configyaml --omit-keys=web_environment
 ddev utility configyaml --full-yaml --omit-keys=web_environment
 ```
 
+### `utility diagnose`
+
+Run quick diagnostics on your DDEV installation and current project. This command provides concise, actionable output for common troubleshooting scenarios.
+
+The command checks:
+
+* Docker environment and connectivity
+* Network configuration and DNS resolution
+* HTTPS/mkcert setup
+* Current project health (if in a project directory)
+
+For comprehensive output suitable for issue reports, use [`ddev utility test`](#utility-test) instead.
+
+**Environment variables:**
+
+* `DDEV_DIAGNOSE_FULL=true`: Include test project creation in diagnostics (slower but more thorough)
+
+**Examples:**
+
+```shell
+# Run diagnostics in a project directory
+ddev utility diagnose
+
+# Run with full diagnostics including test project creation
+DDEV_DIAGNOSE_FULL=true ddev utility diagnose
+
+# Run from anywhere (checks Docker and environment only)
+ddev utility diagnose
+```
+
 ### `utility dockercheck`
 
 Diagnose DDEV Docker provider setup.

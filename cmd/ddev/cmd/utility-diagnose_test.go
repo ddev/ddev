@@ -17,13 +17,13 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 	t.Run("NonProjectDirectory", func(t *testing.T) {
 		origDir, _ := os.Getwd()
 		tmpDir := testcommon.CreateTmpDir("TestUtilityDiagnose-NonProject")
-		defer os.RemoveAll(tmpDir)
+		t.Cleanup(func() {
+			_ = os.RemoveAll(tmpDir)
+			_ = os.Chdir(origDir)
+		})
 
 		err := os.Chdir(tmpDir)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			_ = os.Chdir(origDir)
-		})
 
 		// Should run but warn about not being in a project
 		out, _ := exec.RunHostCommand(DdevBin, "utility", "diagnose")
@@ -78,7 +78,10 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 
 		origDir, _ := os.Getwd()
 		tmpDir := testcommon.CreateTmpDir("TestUtilityDiagnose-OutsideHome")
-		defer os.RemoveAll(tmpDir)
+		t.Cleanup(func() {
+			_ = os.RemoveAll(tmpDir)
+			_ = os.Chdir(origDir)
+		})
 
 		// Copy test project to /tmp or similar
 		testDir := filepath.Join(origDir, "testdata", "TestUtilityDiagnoseCmd/BasicProject")
