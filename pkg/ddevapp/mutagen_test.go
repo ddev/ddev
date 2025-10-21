@@ -175,14 +175,11 @@ func TestMutagenSimple(t *testing.T) {
 	// Verify again that the mutagen-agents.tar.gz file was downloaded
 	assert.FileExists(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
 
-	// Make sure Mutagen daemon gets stopped on poweoff
+	// Make sure Mutagen daemon gets stopped on poweroff
 	ddevapp.PowerOff()
 	if nodeps.IsMacOS() || nodeps.IsLinux() {
 		// Verify that the Mutagen daemon stopped/died
-		sleepWait := time.Second * 1
-		if nodeps.IsLinux() {
-			sleepWait = time.Second * 5
-		}
+		sleepWait := time.Second * 5
 		time.Sleep(sleepWait)
 		// pkill -HUP checks for process existence.
 		_, err := exec.RunHostCommand("pkill", "-HUP", "mutagen")
