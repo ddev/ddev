@@ -62,7 +62,7 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 			if err.Error() == "no docker" {
 				util.Failed("Could not connect to Docker. Please ensure Docker is installed and running.")
 			} else {
-				util.Warning("Problem with your Docker provider: %v.", err)
+				util.WarningOnce("Problem with your Docker provider: %v.", err)
 			}
 		}
 

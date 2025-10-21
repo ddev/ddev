@@ -115,7 +115,7 @@ ddev ut dockercheck`,
 			if err.Error() == "no docker" {
 				util.Failed("Docker is not installed or the Docker client is not available in the $PATH")
 			} else {
-				util.Warning("Problem with your Docker provider: %v.", err)
+				util.WarningOnce("Problem with your Docker provider: %v.", err)
 			}
 		}
 		dockerAPIVersion, err := dockerutil.GetDockerAPIVersion()
