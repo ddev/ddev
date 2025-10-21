@@ -62,7 +62,6 @@ function containerwait {
 
 function cleanup {
 	docker rm -f $CONTAINER_NAME >/dev/null 2>&1 || true
-  #printf "not cleaning up, look at $CONTAINER_NAME\n"
 }
 trap cleanup EXIT
 cleanup
