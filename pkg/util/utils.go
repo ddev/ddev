@@ -114,6 +114,9 @@ func Success(format string, a ...interface{}) {
 // Debug Output controlled by DDEV_DEBUG environment variable
 func Debug(format string, a ...interface{}) {
 	if globalconfig.DdevDebug {
+		if output.JSONOutput {
+			return
+		}
 		n := time.Now()
 		s := fmt.Sprintf(format, a...)
 		if !output.JSONOutput {
@@ -127,6 +130,9 @@ func Debug(format string, a ...interface{}) {
 // Verbose Output controlled by DDEV_VERBOSE environment variable
 func Verbose(format string, a ...interface{}) {
 	if globalconfig.DdevVerbose {
+		if output.JSONOutput {
+			return
+		}
 		n := time.Now()
 		s := fmt.Sprintf(format, a...)
 		if !output.JSONOutput {
