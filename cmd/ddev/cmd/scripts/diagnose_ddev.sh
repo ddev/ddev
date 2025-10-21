@@ -96,11 +96,6 @@ if command -v ddev >/dev/null 2>&1; then
   # Get version info once and cache the raw JSON
   version_json=$(ddev version -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -c '.raw' 2>/dev/null)
 
-  # Debug: show what we captured
-  if [ "${DDEV_DEBUG:-}" = "true" ]; then
-    echo "DEBUG version_json: $version_json" >&2
-  fi
-
   ddev_version=$(echo "$version_json" | docker run --rm -i ddev/ddev-utilities jq -r '."DDEV version"' 2>/dev/null)
   docker_platform=$(echo "$version_json" | docker run --rm -i ddev/ddev-utilities jq -r '."docker-platform"' 2>/dev/null)
   docker_version=$(echo "$version_json" | docker run --rm -i ddev/ddev-utilities jq -r '.docker' 2>/dev/null)
@@ -228,11 +223,6 @@ if ddev describe >/dev/null 2>&1; then
 
   # Get project info once and cache the raw JSON
   project_json=$(ddev describe -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -c '.raw' 2>/dev/null)
-
-  # Debug: show what we captured
-  if [ "${DDEV_DEBUG:-}" = "true" ]; then
-    echo "DEBUG project_json: $project_json" >&2
-  fi
 
   project_name=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.name' 2>/dev/null)
   project_status=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.status' 2>/dev/null)
