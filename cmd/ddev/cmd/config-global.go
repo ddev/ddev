@@ -58,10 +58,9 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 	if cmd.Flag("omit-project-name-by-default").Changed {
-		if v, _ := cmd.Flags().GetBool("omit-project-name-by-default"); v {
-			globalconfig.DdevGlobalConfig.OmitProjectNameByDefault = v
-			dirty = true
-		}
+		v, _ := cmd.Flags().GetBool("omit-project-name-by-default")
+		globalconfig.DdevGlobalConfig.OmitProjectNameByDefault = v
+		dirty = true
 	}
 	if cmd.Flag("web-environment").Changed {
 		env := strings.TrimSpace(webEnvironmentGlobal)
