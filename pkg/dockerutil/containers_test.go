@@ -144,6 +144,7 @@ func TestGetContainerUser(t *testing.T) {
 			_ = app.Stop(true, false)
 		}
 		_ = os.RemoveAll(testDir)
+		testcommon.ClearDockerEnv()
 	})
 
 	// Clean up any existing name conflicts
