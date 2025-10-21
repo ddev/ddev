@@ -37,7 +37,7 @@ const mutagenConfigFileHashLabelName = `com.ddev.config-hash`
 // lots of bind-mounted files).
 func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// Make sure that if we have a volume mount it's got proper ownership
-	uidStr, gidStr, _ := util.GetContainerUIDGid()
+	uidStr, gidStr, _ := dockerutil.GetContainerUser()
 	util.Verbose("Chowning Mutagen Docker volume for user %s", uidStr)
 	_, _, err := app.Exec(
 		&ExecOpts{

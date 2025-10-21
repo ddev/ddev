@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"path/filepath"
 	"slices"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+	"unicode"
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/docker/api/types"
@@ -22,6 +26,9 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 	"github.com/moby/term"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 // NoHealthCheck is a HealthConfig that disables any existing healthcheck when
@@ -29,6 +36,76 @@ import (
 // See https://pkg.go.dev/github.com/moby/docker-image-spec/specs-go/v1#HealthcheckConfig
 var NoHealthCheck = container.HealthConfig{
 	Test: []string{"NONE"}, // Disables any existing health check
+}
+
+// containerUser holds the UID, GID, and username used to run containers
+type containerUser struct {
+	uidStr   string
+	gidStr   string
+	username string
+}
+
+var (
+	// sContainerUser is the singleton instance of containerUser
+	sContainerUser *containerUser
+	// sContainerUserOnce ensures sContainerUser is initialized only once
+	sContainerUserOnce sync.Once
+)
+
+// GetContainerUser returns the uid, gid, and username used to run most containers
+func GetContainerUser() (uidStr string, gidStr string, username string) {
+	sContainerUserOnce.Do(func() {
+		curUser, err := user.Current()
+		if err != nil {
+			util.Failed("Unable to determine username and related UID, etc. Please at least set $USER environment variable: %v", err)
+		}
+		uidStr = curUser.Uid
+		gidStr = curUser.Gid
+		username = curUser.Username
+
+		// Remove at least spaces that aren't allowed in Linux usernames and can appear in Windows
+		// Example problem usernames from https://stackoverflow.com/questions/64933879/docker-ddev-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xe9-in-positio/64934264#64934264
+		// "André Kraus", "Mück"
+		// With docker-compose 1.29.2 you can't have a proper fully-qualified user pathname either
+		// so end up with trouble based on that (not quoted correctly)
+		// But for the context path it's possible to change the User home directory with
+		// https://superuser.com/questions/890812/how-to-rename-the-user-folder-in-windows-10/1346983#1346983
+
+		// Normalize username per https://stackoverflow.com/a/65981868/215713
+		t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+		username, _, _ = transform.String(t, username)
+
+		username = strings.ReplaceAll(username, " ", "")
+		username = strings.ToLower(username)
+		username = strings.ReplaceAll(username, "(", "")
+		username = strings.ReplaceAll(username, ")", "")
+
+		// If we have a numeric username it's going to create havoc, so
+		// change it into "a" + number
+		// Example in https://github.com/ddev/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
+		if !nodeps.IsLetter(string(username[0])) {
+			username = "a" + username
+		}
+
+		// Windows usernames may have a \ to separate domain\user - get the user
+		parts := strings.Split(username, `\`)
+		username = parts[len(parts)-1]
+
+		// Windows user IDs are non-numeric,
+		// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
+		// 1000 seems not to cause file permissions issues at least on docker-for-windows.
+		if nodeps.IsWindows() {
+			uidStr = "1000"
+			gidStr = "1000"
+		}
+		sContainerUser = &containerUser{
+			uidStr:   uidStr,
+			gidStr:   gidStr,
+			username: username,
+		}
+	})
+
+	return sContainerUser.uidStr, sContainerUser.gidStr, sContainerUser.username
 }
 
 // InspectContainer returns the full result of inspection
@@ -748,7 +825,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return fmt.Errorf("copyIntoContainer unable to find a container named %s", containerName)
 	}
 
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, _, _ := GetContainerUser()
 	_, stderr, err := Exec(cid.ID, "mkdir -p "+dstPath, uid)
 	if err != nil {
 		return fmt.Errorf("unable to mkdir -p %s inside %s: %v (stderr=%s)", dstPath, containerName, err, stderr)

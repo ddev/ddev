@@ -188,7 +188,7 @@ func getCertificateForPrivateKey(path string, name string) (string, string) {
 // runSSHAuthContainer runs the SSH auth container using Docker client API
 func runSSHAuthContainer(keys []string) (int, error) {
 	// Container configuration
-	uidStr, _, _ := util.GetContainerUIDGid()
+	uidStr, _, _ := dockerutil.GetContainerUser()
 	infoMessage := `\033[0;33mAdding key %s\033[0m\n`
 	if output.JSONOutput {
 		infoMessage = `Adding key %s\n`
