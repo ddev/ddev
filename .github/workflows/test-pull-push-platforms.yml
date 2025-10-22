@@ -1,0 +1,36 @@
+name: Test Pull/Push Platforms
+on:
+  pull_request:
+    paths:
+      - "go.*"
+      - "pkg/**"
+      - "cmd/**"
+      - "Makefile"
+      - "vendor/**"
+      - ".github/workflows/**"
+      - "!.github/workflows/docs**"
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pull-push-test-platforms:
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      pull_push_test_platforms: "true"
+      gotest_short: "" # run all tests
+      debug_enabled: ${{ inputs.debug_enabled || false }}

@@ -1,79 +1,97 @@
-name: Tests
+name: Reusable Linux Test
+
 on:
-  pull_request:
-    paths:
-      - "go.*"
-      - "pkg/**"
-      - "cmd/**"
-      - "Makefile"
-      - "vendor/**"
-      - ".github/workflows/**"
-      - "!.github/workflows/docs**"
-  push:
-    branches: [ main, master ]
-
-#  schedule:
-#    - cron: '01 00 * * *'
-
-  workflow_dispatch:
+  workflow_call:
     inputs:
+      runner:
+        description: 'Runner to use'
+        required: false
+        type: string
+        default: 'ubuntu-24.04'
+      ddev_test_webserver_type:
+        description: 'DDEV_TEST_WEBSERVER_TYPE value'
+        required: false
+        type: string
+        default: ''
+      ddev_test_use_mutagen:
+        description: 'DDEV_TEST_USE_MUTAGEN value'
+        required: false
+        type: string
+        default: 'false'
+      ddev_test_no_bind_mounts:
+        description: 'DDEV_TEST_NO_BIND_MOUNTS value'
+        required: false
+        type: string
+        default: 'false'
+      cgo_enabled:
+        description: 'CGO_ENABLED value'
+        required: false
+        type: string
+        default: '0'
+      buildargs:
+        description: 'BUILDARGS value'
+        required: false
+        type: string
+        default: ''
+      testargs:
+        description: 'TESTARGS value'
+        required: false
+        type: string
+        default: '-failfast'
+      gotest_short:
+        description: 'GOTEST_SHORT value'
+        required: false
+        type: string
+        default: '16' # 16 is drupal11; means in TestFullSiteSetup we only use drupal11 by default
+      make_target:
+        description: 'MAKE_TARGET value'
+        required: false
+        type: string
+        default: 'test'
+      pull_push_test_platforms:
+        description: 'PULL_PUSH_TEST_PLATFORMS value'
+        required: false
+        type: string
+        default: 'false'
+      ddev_skip_nodejs_test:
+        description: 'DDEV_SKIP_NODEJS_TEST value'
+        required: false
+        type: string
+        default: 'true'
       debug_enabled:
         description: 'Run the build with tmate set "debug_enabled"'
-        type: boolean
         required: false
+        type: boolean
         default: false
-
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    secrets:
+      TESTS_SERVICE_ACCOUNT_TOKEN:
+        required: false
 
 defaults:
   run:
     shell: bash
 
-env:
-  BUILDKIT_PROGRESS: plain
-  DOCKER_CLI_EXPERIMENTAL: enabled
-  DDEV_DEBUG: true
-  DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-permissions:
-  contents: read
-
 jobs:
-  tests:
-    strategy:
-      matrix:
-        include:
-          - name: "apache-fpm"
-            webserver: "apache-fpm"
-          - name: "nginx-fpm"
-            webserver: "nginx-fpm"
-          - name: "mutagen"
-            mutagen: true
-          - name: "no-bind-mounts"
-            no-bind-mounts: "true"
-          - name: "pull-push-test-platforms"
-            pull-push-test-platforms: true
-          - name: "race-detection"
-            race-detection: true
-
-      fail-fast: false
-
-    runs-on: ubuntu-24.04
+  test:
+    runs-on: ${{ inputs.runner }}
 
     env:
-      CGO_ENABLED: 0
+      BUILDKIT_PROGRESS: plain
+      DOCKER_CLI_EXPERIMENTAL: enabled
+      DDEV_DEBUG: true
+      DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CGO_ENABLED: ${{ inputs.cgo_enabled }}
       DDEV_NONINTERACTIVE: "true"
-      DDEV_SKIP_NODEJS_TEST: "true"
-      GOTEST_SHORT: "16" # 16 is drupal11; means in TestFullSiteSetup we only use drupal11 by default
-      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
-      DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
-      DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
-      MAKE_TARGET: "test"
-      TESTARGS: "-failfast"
+      DDEV_SKIP_NODEJS_TEST: ${{ inputs.ddev_skip_nodejs_test }}
+      GOTEST_SHORT: ${{ inputs.gotest_short }}
+      MAKE_TARGET: ${{ inputs.make_target }}
+      TESTARGS: ${{ inputs.testargs }}
+      BUILDARGS: ${{ inputs.buildargs }}
+      PULL_PUSH_TEST_PLATFORMS: ${{ inputs.pull_push_test_platforms }}
+      DDEV_TEST_WEBSERVER_TYPE: ${{ inputs.ddev_test_webserver_type }}
+      DDEV_TEST_USE_MUTAGEN: ${{ inputs.ddev_test_use_mutagen }}
+      DDEV_TEST_NO_BIND_MOUNTS: ${{ inputs.ddev_test_no_bind_mounts }}
 
     steps:
       - uses: actions/checkout@v5
@@ -89,7 +107,7 @@ jobs:
 
       - name: DDEV test cache
         uses: actions/cache@v4
-        if: github.ref == 'refs/heads/main' && matrix.name == 'pull-push-test-platforms'
+        if: ${{ github.ref == 'refs/heads/main' && inputs.pull_push_test_platforms == 'true' }}
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
@@ -98,7 +116,7 @@ jobs:
 
       - name: DDEV test cache/restore
         uses: actions/cache/restore@v4
-        if: github.ref != 'refs/heads/main' || matrix.name != 'pull-push-test-platforms'
+        if: ${{ github.ref != 'refs/heads/main' || inputs.pull_push_test_platforms != 'true' }}
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
@@ -128,19 +146,12 @@ jobs:
           go-version: '>=1.23'
           check-latest: true
 
-      - name: Override environment variables for apache-fpm
-        if: ${{ matrix.apache-fpm }}
+      - name: Override environment variables for pull_push_test_platforms
+        if: ${{ inputs.pull_push_test_platforms == 'true' }}
         run: |
-          # GOTEST_SHORT=5 means use TYPO3 as the default codebase
-          echo "GOTEST_SHORT=5" >> $GITHUB_ENV
-
-      - name: Override environment variables for push-pull-test-platforms
-        run: |
-          echo "MAKE_TARGET=test" >> $GITHUB_ENV
-          echo "GOTEST_SHORT=" >> $GITHUB_ENV
           # When TestAcquiaPush actually works this can be enabled
           echo "DDEV_ALLOW_ACQUIA_PUSH=true" >> $GITHUB_ENV
-          # In push-pull-test-platforms we want to run all tests
+          # In pull_push_test_platforms we want to run all tests
           # that limit their scope when running with any value of GOTEST_SHORT
           TP=(
             "TestAppdirAlreadyInUse"
@@ -168,10 +179,10 @@ jobs:
           TESTARGS="-failfast -run '($(IFS="|"; echo "${TP[*]}"))'"
           echo "pull-push-test-platforms TESTARGS=$TESTARGS"
           echo "TESTARGS=${TESTARGS}" >> $GITHUB_ENV
-        if: ${{ matrix.pull-push-test-platforms }}
 
-      - name: Load 1password secret(s) for push-pull-test-platforms
-        if: ${{ matrix.pull-push-test-platforms && env.OP_SERVICE_ACCOUNT_TOKEN != '' }}
+      - name: Load 1password secret(s) for pull_push_test_platforms
+        if: ${{ inputs.pull_push_test_platforms == 'true' }}
+        continue-on-error: true
         uses: 1password/load-secrets-action@v3
         with:
           export-env: true
@@ -186,24 +197,21 @@ jobs:
           DDEV_PLATFORM_API_TOKEN: "op://test-secrets/DDEV_PLATFORM_API_TOKEN/credential"
           DDEV_UPSUN_API_TOKEN: "op://test-secrets/DDEV_UPSUN_API_TOKEN/credential"
 
-      - name: Override environment variables for plain nginx-fpm
-        if: ${{ matrix.webserver == 'nginx-fpm' }}
+      - name: Confirm environment variables
         run: |
-          echo "DDEV_SKIP_NODEJS_TEST=false" >> $GITHUB_ENV
-          echo "TESTARGS=" >> $GITHUB_ENV
-
-      - name: Override environment variables for race detection
-        if: ${{ matrix.race-detection }}
-        run: |
-          echo "BUILDARGS=-race" >> $GITHUB_ENV
-          echo "TESTARGS=-failfast -race" >> $GITHUB_ENV
-          echo "CGO_ENABLED=1" >> $GITHUB_ENV
-          echo "DDEV_TEST_USE_MUTAGEN=true" >>$GITHUB_ENV
-
-      - run: echo "BUILDARGS=${BUILDARGS} TESTARGS=${TESTARGS} CGO_ENABLED=${CGO_ENABLED} DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_NGINX_PROXY_ROUTER=${DDEV_TEST_USE_NGINX_PROXY_ROUTER} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
+          echo "BUILDARGS=${BUILDARGS}"
+          echo "TESTARGS=${TESTARGS}"
+          echo "CGO_ENABLED=${CGO_ENABLED}"
+          echo "GOTEST_SHORT=${GOTEST_SHORT}"
+          echo "DDEV_SKIP_NODEJS_TEST=${DDEV_SKIP_NODEJS_TEST}"
+          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
+          echo "DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE}"
+          echo "DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
+          echo "MAKE_TARGET=${MAKE_TARGET}"
+          echo "PULL_PUSH_TEST_PLATFORMS=${PULL_PUSH_TEST_PLATFORMS}"
 
       - name: Setup tmate session
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        if: ${{ inputs.debug_enabled }}
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: true
