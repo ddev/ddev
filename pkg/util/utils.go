@@ -113,34 +113,22 @@ func Success(format string, a ...interface{}) {
 
 // Debug Output controlled by DDEV_DEBUG environment variable
 func Debug(format string, a ...interface{}) {
-	if globalconfig.DdevDebug {
-		if output.JSONOutput {
-			return
-		}
-		n := time.Now()
-		s := fmt.Sprintf(format, a...)
-		if !output.JSONOutput {
-			output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
-		} else {
-			output.UserOut.Debugf("%s", s)
-		}
+	if !globalconfig.DdevDebug || output.JSONOutput {
+		return
 	}
+	n := time.Now()
+	s := fmt.Sprintf(format, a...)
+	output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
 }
 
 // Verbose Output controlled by DDEV_VERBOSE environment variable
 func Verbose(format string, a ...interface{}) {
-	if globalconfig.DdevVerbose {
-		if output.JSONOutput {
-			return
-		}
-		n := time.Now()
-		s := fmt.Sprintf(format, a...)
-		if !output.JSONOutput {
-			output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
-		} else {
-			output.UserOut.Debug(s)
-		}
+	if !globalconfig.DdevVerbose || output.JSONOutput {
+		return
 	}
+	n := time.Now()
+	s := fmt.Sprintf(format, a...)
+	output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
 }
 
 // ShowDots displays dots one per second until done gets true
