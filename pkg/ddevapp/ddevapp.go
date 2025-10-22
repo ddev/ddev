@@ -1449,6 +1449,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if app.Database.Type == nodeps.Postgres {
 			postgresDataDir := app.GetPostgresDataDir()
 			volumeMounts = append(volumeMounts, app.GetPostgresVolumeName()+":"+postgresDataDir)
+			// Chain postgres data dir chown while preserving exit codes from both operations.
 			chownCmd = fmt.Sprintf("%s || rc=$?; chown -R 999:999 %s || rc=$?; exit ${rc:-0};", chownCmd, postgresDataDir)
 		} else {
 			volumeMounts = append(volumeMounts, app.GetMariaDBVolumeName()+":/var/lib/mysql")
