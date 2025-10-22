@@ -52,6 +52,7 @@ type GlobalConfig struct {
 	MkcertCARoot                     string                      `yaml:"mkcert_caroot"`
 	NoBindMounts                     bool                        `yaml:"no_bind_mounts"`
 	OmitContainersGlobal             []string                    `yaml:"omit_containers,flow"`
+	OmitProjectNameByDefault         bool                        `yaml:"omit_project_name_by_default,omitempty"`
 	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
 	ProjectTldGlobal                 string                      `yaml:"project_tld"`
 	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
@@ -382,6 +383,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # no_bind_mounts: false
 # Whether to disable Docker bind mounts
+
+# omit_project_name_by_default: false
+# If true, 'ddev config' will not write a 'name'' field
+# in '.ddev/config.yaml' unless you use --name=NAME.
 
 # performance_mode: "<default for the OS>"
 # DDEV offers performance optimization strategies to improve the filesystem

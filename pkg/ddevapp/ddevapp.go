@@ -3503,7 +3503,7 @@ func FormatSiteStatus(status string) string {
 }
 
 // HasConfigNameOverride checks if the app name should be different,
-// returns true if the app name has been changed along with the new app name.
+// returns (true, newName) if the app name has been changed .
 func (app *DdevApp) HasConfigNameOverride() (bool, string) {
 	newApp := DdevApp{ConfigPath: app.ConfigPath}
 	if _, err := newApp.ReadConfig(false); err != nil {

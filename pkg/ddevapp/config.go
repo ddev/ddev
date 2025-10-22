@@ -230,7 +230,8 @@ func (app *DdevApp) WriteConfig() error {
 	// Work against a copy of the DdevApp, since we don't want to actually change it.
 	appcopy := *app
 
-	// If the app name has been changed, then remove it from the main config.yaml file.
+	// If the app name has been changed by `config.*.yaml`,
+	// remove it from the main config.yaml file.
 	if hasConfigNameOverride, _ := app.HasConfigNameOverride(); hasConfigNameOverride {
 		appcopy.Name = ""
 	}

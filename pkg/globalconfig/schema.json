@@ -83,6 +83,10 @@
       },
       "uniqueItems": true
     },
+    "omit_project_name_by_default": {
+      "description": "Whether to omit the project name from config.yaml and use directory name instead.",
+      "type": "boolean"
+    },
     "performance_mode": {
       "description": "Define the performance optimization mode to be used. Currently, Mutagen asynchronous caching and NFS are supported. Mutagen is enabled by default on Mac and Windows.",
       "type": "string",
