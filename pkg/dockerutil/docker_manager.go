@@ -161,6 +161,16 @@ func ResetDockerHost(host string) error {
 	return nil
 }
 
+// GetServerVersion gets the cached versions of Docker provider engine
+// This is a struct which has all info from "docker info" command
+func GetServerVersion() (types.Version, error) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return types.Version{}, err
+	}
+	return dm.serverVersion, nil
+}
+
 // GetDockerVersion gets the cached version of Docker provider engine
 func GetDockerVersion() (string, error) {
 	dm, err := getDockerManagerInstance()

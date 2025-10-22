@@ -1441,25 +1441,28 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	// TODO: We shouldn't be chowning /var/lib/mysql if PostgreSQL?
-	util.Debug("chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
-	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
-	if err != nil {
-		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
-	}
-	util.Debug("done chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
+	// Build list of volume mounts and their target paths for chown
+	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
+	chownCmd := fmt.Sprintf("chown -R %s /mnt/ddev-global-cache", uid)
 
-	// Chown the PostgreSQL volume; this shouldn't have to be a separate stanza, but the
-	// uid is 999 instead of current user
-	if app.Database.Type == nodeps.Postgres {
-		postgresDataDir := app.GetPostgresDataDir()
-		util.Debug("chowning %s to 999", postgresDataDir)
-		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s %s", "999:999", postgresDataDir)}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":" + postgresDataDir}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
-		if err != nil {
-			return fmt.Errorf("failed to RunSimpleContainer to chown PostgreSQL volume: %v, output=%s", err, out)
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		if app.Database.Type == nodeps.Postgres {
+			postgresDataDir := app.GetPostgresDataDir()
+			volumeMounts = append(volumeMounts, app.GetPostgresVolumeName()+":"+postgresDataDir)
+			// Chain postgres data dir chown while preserving exit codes from both operations.
+			chownCmd = fmt.Sprintf("%s || rc=$?; chown -R 999:999 %s || rc=$?; exit ${rc:-0};", chownCmd, postgresDataDir)
+		} else {
+			volumeMounts = append(volumeMounts, app.GetMariaDBVolumeName()+":/var/lib/mysql")
+			chownCmd = fmt.Sprintf("%s /var/lib/mysql", chownCmd)
 		}
-		util.Debug("done chowning %s", postgresDataDir)
 	}
+
+	util.Debug("Exec %s", chownCmd)
+	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
+	if err != nil {
+		return fmt.Errorf("failed to '%s' inside volumes: %v, output=%s", chownCmd, err, out)
+	}
+	util.Debug("Done %s: output=%s", chownCmd, out)
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
 		err = app.EnsureSSHAgentContainer()
@@ -2465,7 +2468,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 
 	// Warn about running as root if we're not on Windows.
 	if uidStr == "0" || gidStr == "0" {
-		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
+		util.WarningOnce("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
 	// For Codespaces
@@ -2703,9 +2706,9 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
 		if err != nil {
 			if globalconfig.DdevDebug {
-				out, err := app.CaptureLogs(containerType, false, "")
-				if err != nil {
-					util.Warning("Unable to capture logs from %s container: %v", containerType, err)
+				out, captureErr := app.CaptureLogs(containerType, false, "")
+				if captureErr != nil {
+					util.Warning("Unable to capture logs from %s container: %v", containerType, captureErr)
 				} else {
 					util.Debug("Logs from failed %s container:\n%s", containerType, out)
 				}
