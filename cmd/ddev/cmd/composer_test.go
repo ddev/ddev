@@ -153,22 +153,13 @@ func TestComposerCmdCreateRequireRemoveConfigVersion(t *testing.T) {
 }
 
 func TestComposerWithUseWorkingDir(t *testing.T) {
-	// 2022-05-24: I've spent lots of time debugging intermittent `composer create-project` failures when NFS
-	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
-	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
-	// to deal with similar issues in vagrant context, and has a hack now embedded into Composer.
-	if nodeps.PerformanceModeDefault == types.PerformanceModeNFS {
-		t.Skip("Composer has strange behavior in NFS context, so skipping")
-	}
-	assert := asrt.New(t)
-
 	origDir, err := os.Getwd()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	for _, composerRoot := range []string{"", "application/composer-root"} {
 		tmpDir := testcommon.CreateTmpDir(t.Name())
 		err = os.Chdir(tmpDir)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		beforeComposerRootDir := ""
 
@@ -178,7 +169,7 @@ func TestComposerWithUseWorkingDir(t *testing.T) {
 		if composerRoot != "" {
 			arguments = append(arguments, "--composer-root", composerRoot)
 			err = os.MkdirAll(filepath.Join(tmpDir, composerRoot), 0777)
-			assert.NoError(err)
+			require.NoError(t, err)
 
 			// Create a different composer.json file a level above the root directory.
 			// Because the "composer_root" has been declared, then running `ddev composer`
@@ -186,22 +177,23 @@ func TestComposerWithUseWorkingDir(t *testing.T) {
 			// scope of the configured root.
 			beforeComposerRootDir = filepath.Join(tmpDir, "before-composer-root")
 			err = os.MkdirAll(beforeComposerRootDir, 0777)
+			require.NoError(t, err)
 			subComposer := `{
 				"name": "ddev-test/before-root",
 				"type": "project",
 				"license": "The Unlicense"
 			}`
 			err = os.WriteFile(filepath.Join(beforeComposerRootDir, "composer.json"), []byte(subComposer), 0644)
-			assert.NoError(err)
+			require.NoError(t, err)
 		}
 
 		// Basic config for a php project
 		_, err = exec.RunHostCommand(DdevBin, arguments...)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		// Create the default index.php file
 		err = os.WriteFile(filepath.Join(tmpDir, composerRoot, "index.php"), []byte("<?php\necho 'Hello world';"), 0644)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		// Create composer.json at root with license MIT
 		rootComposer := `{
@@ -210,63 +202,63 @@ func TestComposerWithUseWorkingDir(t *testing.T) {
 			"license": "MIT"
 		}`
 		err = os.WriteFile(filepath.Join(tmpDir, composerRoot, "composer.json"), []byte(rootComposer), 0644)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		// Create a subdirectory with its own composer.json and a different license
 		subdir := filepath.Join(tmpDir, composerRoot, "sub")
 		err = os.MkdirAll(subdir, 0777)
-		assert.NoError(err)
+		require.NoError(t, err)
 		subComposer := `{
 			"name": "ddev-test/sub",
 			"type": "project",
 			"license": "BSD-3-Clause"
 		}`
 		err = os.WriteFile(filepath.Join(subdir, "composer.json"), []byte(subComposer), 0644)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		// Get an app so we can do waits
 		app, err := ddevapp.NewApp(tmpDir, true)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		t.Cleanup(func() {
 			//nolint: errcheck
 			err = app.Stop(true, false)
-			assert.NoError(err)
+			require.NoError(t, err)
 
 			err = os.Chdir(origDir)
-			assert.NoError(err)
+			require.NoError(t, err)
 			_ = os.RemoveAll(tmpDir)
 		})
 
 		// Change into subdirectory and run composer license.
 		// The root directory should still be used before `composer_use_working_dir` is set.
 		err = os.Chdir(subdir)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		out, err := exec.RunHostCommand(DdevBin, "composer", "license")
-		assert.NoError(err, "composer license before enabling use-working-dir failed: %v, out=\n%s", err, out)
+		require.NoError(t, err, "composer license before enabling use-working-dir failed: %v, out=\n%s", err, out)
 		// Expect root license (MIT)
-		assert.Contains(out, "MIT", "expected root license (MIT) when not using working dir; output=\n%s", out)
-		assert.NotContains(out, "BSD-3-Clause", "unexpected subdir license before enabling working dir; output=\n%s", out)
+		require.Contains(t, out, "MIT", "expected root license (MIT) when not using working dir; output=\n%s", out)
+		require.NotContains(t, out, "BSD-3-Clause", "unexpected subdir license before enabling working dir; output=\n%s", out)
 
 		// Enable Composer working dir
 		_, err = exec.RunHostCommand(DdevBin, "config", "--composer-use-working-dir")
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		// Rerun composer license; now should pick up the subdirectory's composer.json
 		out, err = exec.RunHostCommand(DdevBin, "composer", "license")
-		assert.NoError(err, "composer license after enabling use-working-dir failed: %v, out=\n%s", err, out)
-		assert.Contains(out, "BSD-3-Clause", "expected subdir license (BSD-3-Clause) when using working dir; output=\n%s", out)
+		require.NoError(t, err, "composer license after enabling use-working-dir failed: %v, out=\n%s", err, out)
+		require.Contains(t, out, "BSD-3-Clause", "expected subdir license (BSD-3-Clause) when using working dir; output=\n%s", out)
 
 		if beforeComposerRootDir != "" {
 			err = os.Chdir(beforeComposerRootDir)
-			assert.NoError(err)
+			require.NoError(t, err)
 			// Running composer on any directory above the Composer root should default to using
 			// the root composer.json.
 			out, err = exec.RunHostCommand(DdevBin, "composer", "license")
-			assert.NoError(err, "composer license after enabling use-working-dir failed: %v, out=\n%s", err, out)
-			assert.Contains(out, "MIT", "expected root license (MIT) when using working dir before the composer root; output=\n%s", out)
-			assert.NotContains(out, "The Unlicense", "unexpected before-composer-root license; output=\n%s", out)
+			require.NoError(t, err, "composer license after enabling use-working-dir failed: %v, out=\n%s", err, out)
+			require.Contains(t, out, "MIT", "expected root license (MIT) when using working dir before the composer root; output=\n%s", out)
+			require.NotContains(t, out, "The Unlicense", "unexpected before-composer-root license; output=\n%s", out)
 		}
 	}
 }
