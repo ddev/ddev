@@ -43,8 +43,8 @@ because the hosts file never gets manipulated.`,
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
 			if inHostsFile {
-				if os.Getenv("DDEV_NONINTERACTIVE") != "" {
-					printStderr("DDEV_NONINTERACTIVE is set. Not removing the host entry.\n")
+				if os.Getenv("DDEV_NONINTERACTIVE") == "true" || os.Getenv("CI") == "true" {
+					printStderr("DDEV_NONINTERACTIVE or CI is set. Not removing the host entry.\n")
 					os.Exit(0)
 				}
 				elevateIfNeeded()
@@ -70,8 +70,8 @@ because the hosts file never gets manipulated.`,
 		}
 		// By default, add a host name
 		if !inHostsFile {
-			if os.Getenv("DDEV_NONINTERACTIVE") != "" {
-				printStderr("DDEV_NONINTERACTIVE is set. Not adding the host entry.\n")
+			if os.Getenv("DDEV_NONINTERACTIVE") == "true" || os.Getenv("CI") == "true" {
+				printStderr("DDEV_NONINTERACTIVE or CI is set. Not adding the host entry.\n")
 				os.Exit(0)
 			}
 			elevateIfNeeded()

@@ -2,7 +2,6 @@ package hostname
 
 import (
 	"fmt"
-	"os"
 	exec2 "os/exec"
 	"strings"
 
@@ -51,8 +50,8 @@ func GetDdevHostnameBinary() string {
 // elevateHostsManipulation uses elevation (sudo or runas) to manipulate the hosts file.
 func elevateHostsManipulation(args []string) (out string, err error) {
 	// We can't elevate in tests, and they know how to deal with it.
-	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
-		util.Warning("DDEV_NONINTERACTIVE is set. You must manually run '%s'", strings.Join(args, " "))
+	if !globalconfig.IsInteractive() {
+		util.Warning("DDEV_NONINTERACTIVE or CI is set or terminal is not interactive. You must manually run '%s'", strings.Join(args, " "))
 		return "", nil
 	}
 

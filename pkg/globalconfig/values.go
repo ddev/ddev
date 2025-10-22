@@ -2,8 +2,10 @@ package globalconfig
 
 import (
 	"os"
+	"testing"
 
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/moby/term"
 )
 
 // Container types used with DDEV (duplicated from ddevapp, avoiding cross-package cycles)
@@ -36,6 +38,21 @@ var ValidXdebugIDELocations = []string{XdebugIDELocationContainer, XdebugIDELoca
 
 // GoroutineCount for tests
 var GoroutineCount = 0
+
+// IsInteractive returns true if we are running in an interactive mode
+func IsInteractive() bool {
+	if os.Getenv("DDEV_NONINTERACTIVE") == "true" || os.Getenv("CI") == "true" {
+		return false
+	}
+	// Pretend that terminal is interactive when running tests, because tests may mock input
+	if testing.Testing() {
+		return true
+	}
+	if term.IsTerminal(os.Stdin.Fd()) {
+		return true
+	}
+	return false
+}
 
 // IsValidXdebugIDELocation limits the choices for XdebugIDELocation
 func IsValidXdebugIDELocation(loc string) bool {
