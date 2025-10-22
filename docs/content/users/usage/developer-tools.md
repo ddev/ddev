@@ -33,8 +33,8 @@ By default, DDEV will execute the command at the project root in the web contain
 To execute Composer in other directories within the container, you may enable the functionality using DDEV’s `composer_use_working_dir` option in `.ddev/config.yaml` or `ddev config --composer-use-working-dir`;
 or alternatively, use `ddev ssh` or `ddev exec -d <dir>`.
 
-Do note that if the `composer_root` option is used to set the default composer directory, then the 
-`composer_use_working_dir` option will only work on subdirectories of the `composer_root` directory. This is to ensure 
+Do note that if the `composer_root` option is used to set the default composer directory, then the
+`composer_use_working_dir` option will only work on subdirectories of the `composer_root` directory. This is to ensure
 that running DDEV from the project root will still work as expected.
 
 Example commands:
