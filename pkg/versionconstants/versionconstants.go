@@ -44,7 +44,7 @@ var SSHAuthTag = "20250824_akibaat_buildx_arm_builder"
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "20250824_akibaat_buildx_arm_builder"
+var XhguiTag = "20251022_rfay_TestCmdXhgui"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"

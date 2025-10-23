@@ -60,12 +60,11 @@ func TestCmdXHGui(t *testing.T) {
 	// Use more retries as it may fail on macOS at first
 	opts := testcommon.HTTPRequestOpts{
 		TimeoutSeconds: 2,
-		MaxRetries:     5,
 	}
 
 	// Test to see if xhgui UI is working
 	// Hit the site
-	_, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), opts)
+	_, _, err = testcommon.GetLocalHTTPResponseWithBackoff(t, app.GetPrimaryURL(), 5, 500*time.Millisecond, opts)
 	require.NoError(t, err, "failed to get http response from %s", app.GetPrimaryURL())
 	// Give xhprof a moment to write the results; it may be asynchronous sometimes
 	time.Sleep(2 * time.Second)
@@ -77,7 +76,7 @@ func TestCmdXHGui(t *testing.T) {
 	require.NotNil(t, desc["xhgui_https_url"])
 	xhguiURL := desc["xhgui_https_url"].(string)
 
-	out, _, err = testcommon.GetLocalHTTPResponse(t, xhguiURL, opts)
+	out, _, err = testcommon.GetLocalHTTPResponseWithBackoff(t, xhguiURL, 5, 500*time.Millisecond, opts)
 	require.NoError(t, err)
 	// Output should contain at least one run
 	require.Contains(t, out, strings.ToLower(app.GetHostname()))

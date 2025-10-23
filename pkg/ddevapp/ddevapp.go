@@ -1894,6 +1894,12 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 		}
 	}
 
+	// Using `profiles` here assumes that profile and container name are the same
+	output.UserOut.Printf("Waiting for containers to become ready: %v", profiles)
+	err = app.Wait(profiles)
+	if err != nil {
+		return err
+	}
 	util.Success("Started optional compose profiles '%s'", strings.Join(profiles, ","))
 
 	return nil

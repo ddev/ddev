@@ -538,6 +538,45 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, params ...interface{}) (s
 	return bodyString, resp, lastErr
 }
 
+// GetLocalHTTPResponseWithBackoff calls GetLocalHTTPResponse with an external
+// retry/backoff strategy. It takes a number of attempts and an initialDelay
+// duration. params follow the same conventions as GetLocalHTTPResponse
+// (HTTPRequestOpts or int timeout). The inner call has MaxRetries forced to 1
+// to avoid nested retries.
+func GetLocalHTTPResponseWithBackoff(t *testing.T, rawurl string, attempts int, initialDelay time.Duration, params ...interface{}) (string, *http.Response, error) {
+	if attempts < 1 {
+		attempts = 1
+	}
+	// Build options from params but force inner MaxRetries to 1 to avoid nested retries.
+	innerOpts := parseHTTPRequestOpts(60, params...)
+	innerOpts.MaxRetries = 1
+
+	var lastBody string
+	var lastResp *http.Response
+	var lastErr error
+	delay := initialDelay
+
+	for attempt := 1; attempt <= attempts; attempt++ {
+		body, resp, err := GetLocalHTTPResponse(t, rawurl, innerOpts)
+		if err == nil {
+			return body, resp, nil
+		}
+		lastBody = body
+		lastResp = resp
+		lastErr = err
+
+		if attempt < attempts {
+			// Log and sleep with exponential backoff
+			t.Logf("GetLocalHTTPResponseWithBackoff attempt %d/%d failed for %s: %v; retrying after %s", attempt, attempts, rawurl, err, delay)
+			time.Sleep(delay)
+			// Double the delay for next attempt
+			delay *= 2
+		}
+	}
+
+	return lastBody, lastResp, lastErr
+}
+
 // EnsureLocalHTTPContent will verify a URL responds with a 200, expected content string, and optional parameters.
 // Parameters can be either:
 // - HTTPRequestOpts struct with TimeoutSeconds and MaxRetries fields
