@@ -33,9 +33,15 @@ You need to obtain and configure an API token first. This only needs to be done 
 ## Upsun Per-Project Configuration
 
 1. Check out the Upsun site and configure it with [`ddev config`](../usage/commands.md#config). You’ll want to use [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
-2. Add `PLATFORM_PROJECT` and `PLATFORM_ENVIRONMENT` variables to your project.
+2. Add `PLATFORM_PROJECT` and `PLATFORM_ENVIRONMENT` variables to your project, or rely on automatic derivation when possible.
 
-    * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
+    * Automatic derivation (no action required):
+      * If your repository contains `.upsun/local/project.yaml` with an `id:` key, DDEV will derive PLATFORM_PROJECT from that file.
+      * If your local git branch name corresponds to the Upsun environment name, DDEV will derive PLATFORM_ENVIRONMENT from the current git branch.
+      * In typical setups where both .upsun/local/project.yaml and a matching git branch exist, you do not need to set PLATFORM_PROJECT or PLATFORM_ENVIRONMENT manually.
+
+    * Manual configuration (only if automatic derivation is not suitable):
+      * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
 
         ```yaml
         web_environment:
@@ -43,11 +49,13 @@ You need to obtain and configure an API token first. This only needs to be done 
             - PLATFORM_ENVIRONMENT=main
         ```
 
-    * Or with a command from your terminal:
+      * Or with a command from your terminal:
 
         ```bash
         ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
         ```
+
+    For more information about how to set environment variables for containers and services see [Environment Variables for Containers and Services](../extend/customization-extendibility.md#environment-variables-for-containers-and-services).
 
 3. Run [`ddev restart`](../usage/commands.md#restart).
 4. Run `ddev pull upsun`. After you agree to the prompt, the current upstream databases and files will be downloaded.
