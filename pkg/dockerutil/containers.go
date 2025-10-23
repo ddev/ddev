@@ -17,6 +17,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -349,13 +350,13 @@ func ContainersWait(waittime int, labels map[string]string) error {
 }
 
 // getSuggestedCommandForContainerLog returns a command that can be used to find out what is wrong with a container
-func getSuggestedCommandForContainerLog(container *container.Summary, timeout int) (string, string) {
+func getSuggestedCommandForContainerLog(c *container.Summary, timeout int) (string, string) {
 	var suggestedCommands []string
-	service := container.Labels["com.docker.compose.service"]
+	service := c.Labels["com.docker.compose.service"]
 	if service != "" && service != "ddev-router" && service != "ddev-ssh-agent" {
 		suggestedCommands = append(suggestedCommands, fmt.Sprintf("ddev logs -s %s", service))
 	}
-	name := ContainerName(container)
+	name := ContainerName(c)
 	suggestedCommands = append(suggestedCommands, fmt.Sprintf("docker logs %s", name), fmt.Sprintf("docker inspect --format \"{{ json .State.Health }}\" %s | docker run -i --rm ddev/ddev-utilities jq -r", name))
 	troubleshootingCommand, _ := util.ArrayToReadableOutput(suggestedCommands)
 	suggestedCommand := "\nTroubleshoot this with these commands:\n" + troubleshootingCommand
@@ -363,6 +364,31 @@ func getSuggestedCommandForContainerLog(container *container.Summary, timeout in
 		timeoutNote := "\nIf your internet connection is slow, consider increasing the timeout by running this:\n"
 		timeoutCommand, _ := util.ArrayToReadableOutput([]string{fmt.Sprintf("ddev config --default-container-timeout=%d && ddev restart", timeout*2)})
 		suggestedCommand = suggestedCommand + timeoutNote + timeoutCommand
+	}
+	if globalconfig.DdevDebug {
+		ctx, client, err := GetDockerClient()
+		if err == nil {
+			var stdout bytes.Buffer
+			logOpts := container.LogsOptions{
+				ShowStdout: true,
+				ShowStderr: true,
+				Follow:     false,
+				Timestamps: false,
+			}
+			rc, err := client.ContainerLogs(ctx, c.ID, logOpts)
+			if err != nil {
+				util.Warning("Unable to capture logs from %s container: %v", name, err)
+			} else {
+				defer rc.Close()
+				_, err = stdcopy.StdCopy(&stdout, &stdout, rc)
+				if err != nil {
+					util.Warning("Unable to copy logs from %s container: %v", name, err)
+				}
+				util.Debug("Logs from failed %s container:\n%s\n", name, strings.TrimSpace(stdout.String()))
+			}
+			_, logOutput := GetContainerHealth(c)
+			util.Debug("Health log from failed %s container:\n%s\n", name, strings.TrimSpace(logOutput))
+		}
 	}
 	return name, suggestedCommand
 }
