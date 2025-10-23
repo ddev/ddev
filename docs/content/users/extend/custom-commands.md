@@ -180,7 +180,8 @@ Example: `## Usage: commandname [flags] [args]`
 
 Usage: `## Example: <command-example>`
 
-Example: 
+Example:
+
 ```
 ## Example: commandname
 ## Example: commandname -h
@@ -221,7 +222,7 @@ Flags:
 
 Multiple flags are separated by a comma:
 
-Example: 
+Example:
 
 ```
 ## Flags: [
