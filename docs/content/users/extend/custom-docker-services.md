@@ -139,10 +139,11 @@ services:
       - RABBITMQ_DEFAULT_USER=rabbitmq
       - RABBITMQ_DEFAULT_PASS=rabbitmq
     x-ddev:
-      describe: "Username: rabbitmq, Password: rabbitmq"
+      describe-info: "Username: rabbitmq, Password: rabbitmq"
+      describe-url-port: "extra help here"
 ```
 
-The `x-ddev.describe` value appears in the URL/Port column when running `ddev describe`, making it easy for team members to see important service information without digging through configuration files.
+The `x-ddev.describe-url-port` value appears in the URL/Port column when running `ddev describe` and the `x-ddev-describe-info` value appears in the `info` column, making it easy for team members to see important service information without digging through documentation and configuration files.
 
 ## Advanced Service Examples
 

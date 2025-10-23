@@ -10,4 +10,5 @@ services:
     expose:
       - "8888"
     x-ddev:
-      describe: "Test service info from x-ddev"
+      describe-url-port: "url-port Test service description for busybox2"
+      describe-info: "info test info for busybox2"

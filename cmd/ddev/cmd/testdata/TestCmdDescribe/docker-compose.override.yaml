@@ -32,4 +32,6 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
     x-ddev:
-      describe: "Test service description for busybox2"
+      describe-url-port: "url-port Test service description for busybox2"
+      describe-info: "info test info for busybox2"
+

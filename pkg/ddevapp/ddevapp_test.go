@@ -3239,9 +3239,12 @@ func TestDdevDescribe(t *testing.T) {
 	require.True(t, ok, "services should be a map[string]map[string]interface{}")
 	testservice, ok := services["testservice"]
 	require.True(t, ok, "testservice should exist in services")
-	describeValue, ok := testservice["describe"].(string)
-	require.True(t, ok, "describe field should exist in testservice")
-	assert.Equal("Test service info from x-ddev", describeValue, "describe value should match x-ddev.describe from docker-compose file")
+	describeValue, ok := testservice["describe-url-port"].(string)
+	require.True(t, ok, "describe-url-port field should exist in testservice")
+	assert.Equal("url-port Test service description for busybox2", describeValue, "describe-url-port value should match x-ddev.describe from docker-compose file")
+	describeValue, ok = testservice["describe-info"].(string)
+	require.True(t, ok, "describe-info field should exist in testservice")
+	assert.Equal("info test info for busybox2", describeValue, "info Test service description for busybox2")
 
 	assert.FileExists("hello-pre-describe-" + app.Name)
 	assert.FileExists("hello-post-describe-" + app.Name)

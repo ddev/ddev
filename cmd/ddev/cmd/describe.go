@@ -194,8 +194,13 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			}
 
 			// Add x-ddev.describe to URL/Port column if it exists
-			if desc, ok := v["describe"].(string); ok && desc != "" {
+			if desc, ok := v["describe-url-port"].(string); ok && desc != "" {
 				urlPortParts = append(urlPortParts, desc)
+			}
+
+			// Add x-ddev.info to info column if it exists
+			if desc, ok := v["describe-info"].(string); ok && desc != "" {
+				extraInfo = append(extraInfo, desc)
 			}
 
 			t.AppendRow(table.Row{k, ddevapp.FormatSiteStatus(v["status"].(string)), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})

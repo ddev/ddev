@@ -453,8 +453,11 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			if composeService, ok := app.ComposeYaml.Services[shortName]; ok {
 				if xDdev, ok := composeService.Extensions["x-ddev"]; ok {
 					if xDdevMap, ok := xDdev.(map[string]interface{}); ok {
-						if desc, ok := xDdevMap["describe"].(string); ok && desc != "" {
-							services[shortName]["describe"] = desc
+						if desc, ok := xDdevMap["describe-url-port"].(string); ok && desc != "" {
+							services[shortName]["describe-url-port"] = desc
+						}
+						if desc, ok := xDdevMap["describe-info"].(string); ok && desc != "" {
+							services[shortName]["describe-info"] = desc
 						}
 					}
 				}
