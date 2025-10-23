@@ -2,6 +2,16 @@
 # Upsun Fixed/Platform.sh provider configuration. This works out of the box, but can be edited or copied to add
 # your own preferences. If you edit it, remove the `ddev-generated` line from the top so
 # that it won't be overwritten.
+#
+# NOTE: Historically this recipe required you to set PLATFORM_PROJECT and PLATFORM_ENVIRONMENT
+# in your project environment. In most cases those values can be derived automatically:
+# - PLATFORM_PROJECT: derived from .platform/local/project.yaml (id field)
+# - PLATFORM_ENVIRONMENT: derived from your current git branch
+#
+# You only need to explicitly set those environment variables (e.g. in .ddev/config.yaml,
+# .ddev/config.<name>.yaml, or via `ddev config --web-environment-add=...`) when automatic
+# derivation is not appropriate for your workflow or the files are not present.
+#
 
 # Consider using `ddev add-on get ddev/ddev-upsun` (https://github.com/ddev/ddev-upsun) for more
 # complete Upsun integration.
@@ -25,7 +35,10 @@
 #        - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
 #    ```
 #
-# 3. Add PLATFORM_PROJECT and PLATFORM_ENVIRONMENT and optional PLATFORM_APP (only if your environment contains more than one app) variables to your project `.ddev/config.yaml` or a `.ddev/config.platform.yaml`
+# 3. Optionally add PLATFORM_PROJECT, PLATFORM_ENVIRONMENT,
+#    and PLATFORM_APP ( if your environment contains more than one app) variables to your
+#    project `.ddev/config.yaml` or a `.ddev/config.local.yaml`. You do not need to add these
+#    if your branch is the same as your environment and the project is specified in .platform/local/project.yaml.
 #    ```yaml
 #    web_environment:
 #        - PLATFORM_PROJECT=nf4amudfn23biyourproject
@@ -52,6 +65,17 @@
 auth_command:
   command: |
     set -eu -o pipefail
+    set -x
+    # Try explicit env, then derive from .platform/local/project.yaml and git branch.
+    if [ -z "${PLATFORM_PROJECT:-}" ] && [ -f .platform/local/project.yaml ]; then
+      PLATFORM_PROJECT="$(yq -r '.id' .platform/local/project.yaml 2>/dev/null || true)"
+      export PLATFORM_PROJECT
+    fi
+
+    if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then
+      export PLATFORM_ENVIRONMENT="$(git branch --show-current)"
+    fi
+
     if [ -z "${PLATFORMSH_CLI_TOKEN:-}" ]; then echo "Please make sure you have set PLATFORMSH_CLI_TOKEN." && exit 1; fi
     if [ -z "${PLATFORM_PROJECT:-}" ]; then echo "Please make sure you have set PLATFORM_PROJECT." && exit 1; fi
     if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then echo "Please make sure you have set PLATFORM_ENVIRONMENT." && exit 1; fi
@@ -60,6 +84,16 @@ db_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    if [ -z "${PLATFORM_PROJECT:-}" ] && [ -f .platform/local/project.yaml ]; then
+      PLATFORM_PROJECT="$(yq -r '.id' .platform/local/project.yaml 2>/dev/null || true)"
+      export PLATFORM_PROJECT
+    fi
+
+    if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then
+      PLATFORM_ENVIRONMENT="$(git branch --show-current)"
+      export PLATFORM_ENVIRONMENT
+    fi
+
     export PLATFORMSH_CLI_NO_INTERACTION=1
     # /tmp/db_relationships.yaml is the full yaml output of the database relationships
     db_relationships_file=/tmp/db_relationships.yaml
@@ -88,6 +122,16 @@ files_import_command:
   command: |
     #set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    if [ -z "${PLATFORM_PROJECT:-}" ] && [ -f .platform/local/project.yaml ]; then
+      PLATFORM_PROJECT="$(yq -r '.id' .platform/local/project.yaml 2>/dev/null || true)"
+      export PLATFORM_PROJECT
+    fi
+
+    if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then
+        PLATFORM_ENVIRONMENT="$(git branch --show-current)"
+        export PLATFORM_ENVIRONMENT
+    fi
+
     export PLATFORMSH_CLI_NO_INTERACTION=1
     # Use $PLATFORM_MOUNTS if it exists to get list of mounts to download, otherwise just web/sites/default/files (drupal)
     declare -a mounts=(${PLATFORM_MOUNTS:-/web/sites/default/files})
@@ -101,6 +145,16 @@ db_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    if [ -z "${PLATFORM_PROJECT:-}" ] && [ -f .platform/local/project.yaml ]; then
+      PLATFORM_PROJECT="$(yq -r '.id' .platform/local/project.yaml 2>/dev/null || true)"
+      export PLATFORM_PROJECT
+    fi
+
+    if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then
+      PLATFORM_ENVIRONMENT="$(git branch --show-current)"
+      export PLATFORM_ENVIRONMENT
+    fi
+
     export PLATFORMSH_CLI_NO_INTERACTION=1
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     if [ "${PLATFORM_PRIMARY_RELATIONSHIP:-}" != "" ] ; then
@@ -116,6 +170,15 @@ files_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    if [ -z "${PLATFORM_PROJECT:-}" ] && [ -f .platform/local/project.yaml ]; then
+      PLATFORM_PROJECT="$(yq -r '.id' .platform/local/project.yaml 2>/dev/null || true)"
+      export PLATFORM_PROJECT
+    fi
+
+    if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then
+        export PLATFORM_ENVIRONMENT="$(git branch --show-current)"
+    fi
+
     export PLATFORMSH_CLI_NO_INTERACTION=1
     ls "${DDEV_FILES_DIR}" >/dev/null # This just refreshes stale NFS if possible
     platform mount:upload --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" ${PLATFORM_APP:+"--app=${PLATFORM_APP}"} --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
