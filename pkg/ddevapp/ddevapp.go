@@ -2711,14 +2711,6 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 		waitTime := app.GetMaxContainerWaitTime()
 		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
 		if err != nil {
-			if globalconfig.DdevDebug {
-				out, captureErr := app.CaptureLogs(containerType, false, "")
-				if captureErr != nil {
-					util.Warning("Unable to capture logs from %s container: %v", containerType, captureErr)
-				} else {
-					util.Debug("Logs from failed %s container:\n%s", containerType, out)
-				}
-			}
 			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, logOutput, err)
 		}
 	}
