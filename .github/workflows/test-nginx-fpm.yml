@@ -33,5 +33,5 @@ jobs:
     with:
       ddev_test_webserver_type: "nginx-fpm"
       ddev_skip_nodejs_test: "false"
-      testargs: ""
+      testargs: "" # don't use "-failfast"
       debug_enabled: ${{ inputs.debug_enabled || false }}
