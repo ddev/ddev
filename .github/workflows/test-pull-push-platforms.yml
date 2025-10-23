@@ -59,8 +59,9 @@ jobs:
             "TestWriteDrushConfig"
             "Test.*(Push|Pull)"
           )
-          TESTARGS="-failfast -run ($(IFS="|"; echo "${TP[*]}"))"
-          echo "testargs=${TESTARGS}" >> $GITHUB_OUTPUT
+          TESTARGS="-failfast -run '($(IFS="|"; echo "${TP[*]}"))'"
+          echo "pull-push-test-platforms TESTARGS=$TESTARGS"
+          echo "testargs=${TESTARGS}" >> $GITHUB_ENV
 
   pull-push-test-platforms:
     needs: prepare-testargs
