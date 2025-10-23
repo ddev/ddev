@@ -1,0 +1,73 @@
+name: Test All Project Types
+on:
+  pull_request:
+    paths:
+      - "go.*"
+      - "pkg/**"
+      - "cmd/**"
+      - "Makefile"
+      - "vendor/**"
+      - ".github/workflows/**"
+      - "!.github/workflows/docs**"
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-testargs:
+    runs-on: ubuntu-latest
+    outputs:
+      testargs: ${{ steps.compute-testargs.outputs.testargs }}
+    steps:
+      - name: Compute TESTARGS
+        id: compute-testargs
+        run: |
+          # Run all tests that limit their scope when running with any value of GOTEST_SHORT
+          TP=(
+            "TestAppdirAlreadyInUse"
+            "TestAutocomplet"
+            "TestAvailableUpdates"
+            "TestComposerCreateCmd"
+            "TestCmdDescribe"
+            "TestCmdList"
+            "TestCmdStart"
+            "TestCmdStop"
+            "TestConfigDatabaseVersion"
+            "TestConfigValidate"
+            "TestDdevAllDatabases"
+            "TestDdevFullSite.*"
+            "TestDdevImportFiles.*"
+            "TestDdevUploadDir.*"
+            "TestDdevXdebugEnabled"
+            "TestDdevXhprofPrependEnabled"
+            "TestDdevXhprofXhguiEnabled"
+            "TestGetApps.*"
+            "TestPHPConfig"
+            "TestPHPWebserverType"
+            "TestWriteDrushConfig"
+          )
+          TESTARGS="-failfast -run '($(IFS="|"; echo "${TP[*]}"))'"
+          echo "testargs=${TESTARGS}"
+          echo "testargs=${TESTARGS}" >> $GITHUB_OUTPUT
+
+  all-project-types:
+    needs: prepare-testargs
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      gotest_short: "" # run tests for all project types
+      testargs: ${{ needs.prepare-testargs.outputs.testargs }}
+      debug_enabled: ${{ inputs.debug_enabled || false }}
