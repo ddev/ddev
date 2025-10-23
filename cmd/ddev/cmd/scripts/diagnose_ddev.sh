@@ -353,7 +353,7 @@ else
   suggestion "Review the issues and suggestions above"
   suggestion "Check troubleshooting docs: https://docs.ddev.com/en/stable/users/usage/troubleshooting/"
   suggestion "For comprehensive diagnostics: ddev debug test"
-  suggestion "Get help on Discord: https://discord.gg/5wjP76mBJD"
+  suggestion "Get help on Discord: https://ddev.com/s/discord"
   echo
   exit 1
 fi
