@@ -146,8 +146,6 @@ jobs:
 
       - name: Load 1password secret(s) for pull-push-providers
         if: ${{ inputs.pull_push_providers == 'true' }}
-        # Allow to fail in PRs where TESTS_SERVICE_ACCOUNT_TOKEN may not be available
-        continue-on-error: ${{ github.event_name == 'pull_request' }}
         uses: 1password/load-secrets-action@v3
         with:
           export-env: true

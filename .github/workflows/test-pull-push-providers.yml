@@ -28,6 +28,7 @@ permissions:
 
 jobs:
   pull-push-providers:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
