@@ -18,6 +18,7 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
+	"regexp"
 )
 
 const (
@@ -147,11 +148,6 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 			}
 		}
 
-		description = commandName
-		if val, ok := directives["Description"]; ok {
-			description = val
-		}
-
 		usage = commandName + " [flags] [args]"
 		if val, ok := directives["Usage"]; ok {
 			usage = val
@@ -163,6 +159,8 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		}
 
 		if val, ok := directives["Example"]; ok {
+			// Apply an indentation on the examples
+			val = strings.ReplaceAll(val, "\n", "\n  ")
 			example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
 		}
 
@@ -289,6 +287,17 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		descSuffix := " (shell " + service + " container command)"
 		if isGlobalSet {
 			descSuffix = " (global shell " + service + " container command)"
+		}
+
+		description = commandName
+		if val, ok := directives["Description"]; ok {
+			description = val
+			parts := strings.SplitN(description, "\n", 2)
+			description = parts[0]
+			if len(parts) == 2 {
+				// Add the rest of the description after the suffix.
+				descSuffix += "\n" + parts[1]
+			}
 		}
 
 		// Initialize the new command
@@ -550,22 +559,48 @@ func findDirectivesInScriptCommand(script string) map[string]string {
 	// nolint errcheck
 	defer f.Close()
 
+	directiveRegex := regexp.MustCompile("^[A-Z][a-zA-Z]+$")
 	var directives = make(map[string]string)
+
+	parsingDirective := false
+	currentDirective := ""
+	currentDirectiveValue := ""
 
 	// Splits on newlines by default.
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, "## ") && strings.Contains(line, ":") {
+		if strings.HasPrefix(line, "## ") {
 			line = strings.Replace(line, "## ", "", 1)
-			parts := strings.SplitN(line, ":", 2)
-			if parts[0] == "Example" {
-				parts[1] = strings.Trim(parts[1], " ")
-			} else {
-				parts[1] = strings.Trim(parts[1], " \"'")
+			currentDirectiveValue = line
+			if strings.Contains(line, ":") {
+				parts := strings.SplitN(line, ":", 2)
+				if directiveRegex.Match([]byte(parts[0])) {
+					parsingDirective = true
+					currentDirective = parts[0]
+					// Remove preceding whitespace after the colon
+					currentDirectiveValue = strings.TrimLeft(parts[1], " ")
+				}
 			}
-			directives[parts[0]] = parts[1]
+			if _, ok := directives[currentDirective]; ok {
+				separator := "\n"
+				if currentDirective == "Aliases" {
+					separator = ","
+				}
+				directives[currentDirective] += fmt.Sprintf("%s%s", separator, currentDirectiveValue)
+			} else {
+				// Apply special trimming on just the initial directive value
+				if currentDirective == "Example" {
+					currentDirectiveValue = strings.Trim(currentDirectiveValue, " ")
+				} else {
+					currentDirectiveValue = strings.Trim(currentDirectiveValue, " \"'")
+				}
+				directives[currentDirective] = currentDirectiveValue
+			}
+		} else if parsingDirective && line == "" {
+			// Stop parsing directives when an empty line has been reached
+			break
 		}
 	}
 
