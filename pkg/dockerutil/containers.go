@@ -436,8 +436,8 @@ func GetContainerHealth(container *container.Summary) (string, string) {
 		if numLogs > 0 {
 			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log[numLogs-1].Output)
 		}
-		// Podman doesn't update health status to unhealthy when container exits
-		if IsPodman() && status == "healthy" && inspect.State.Status == "exited" {
+		// Podman doesn't update health status to unhealthy when container is not running
+		if IsPodman() && status != "starting" && inspect.State.Status != "running" {
 			status = "unhealthy"
 		}
 	} else {
