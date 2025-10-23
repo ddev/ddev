@@ -62,7 +62,7 @@ jobs:
           )
           TESTARGS="-failfast -run '($(IFS="|"; echo "${TP[*]}"))'"
           echo "pull-push-test-platforms TESTARGS=$TESTARGS"
-          echo "testargs=${TESTARGS}" >> $GITHUB_ENV
+          echo "testargs=${TESTARGS}" >> $GITHUB_OUTPUT
 
   pull-push-test-platforms:
     needs: prepare-testargs
