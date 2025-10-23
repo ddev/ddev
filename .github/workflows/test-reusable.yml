@@ -103,7 +103,6 @@ jobs:
         id: get-date
         run: |
           echo "date=$(/bin/date -u "+%Y%V")" >> $GITHUB_OUTPUT
-        shell: bash
 
       - name: DDEV test cache
         uses: actions/cache@v4
@@ -145,40 +144,6 @@ jobs:
         with:
           go-version: '>=1.23'
           check-latest: true
-
-      - name: Override environment variables for pull_push_test_platforms
-        if: ${{ inputs.pull_push_test_platforms == 'true' }}
-        run: |
-          # When TestAcquiaPush actually works this can be enabled
-          echo "DDEV_ALLOW_ACQUIA_PUSH=true" >> $GITHUB_ENV
-          # In pull_push_test_platforms we want to run all tests
-          # that limit their scope when running with any value of GOTEST_SHORT
-          TP=(
-            "TestAppdirAlreadyInUse"
-            "TestAutocomplet"
-            "TestAvailableUpdates"
-            "TestComposerCreateCmd"
-            "TestCmdDescribe"
-            "TestCmdList"
-            "TestCmdStart"
-            "TestCmdStop"
-            "TestConfigDatabaseVersion"
-            "TestDdevAllDatabases"
-            "TestDdevFullSite.*"
-            "TestDdevImportFiles.*"
-            "TestDdevUploadDir.*"
-            "TestDdevXdebugEnabled"
-            "TestDdevXhprofPrependEnabled"
-            "TestDdevXhprofXhguiEnabled"
-            "TestGetApps.*"
-            "TestPHPConfig"
-            "TestPHPWebserverType"
-            "TestWriteDrushConfig"
-            "Test.*(Push|Pull)"
-          )
-          TESTARGS="-failfast -run '($(IFS="|"; echo "${TP[*]}"))'"
-          echo "pull-push-test-platforms TESTARGS=$TESTARGS"
-          echo "TESTARGS=${TESTARGS}" >> $GITHUB_ENV
 
       - name: Load 1password secret(s) for pull_push_test_platforms
         if: ${{ inputs.pull_push_test_platforms == 'true' }}

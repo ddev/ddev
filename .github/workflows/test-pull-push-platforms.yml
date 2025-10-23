@@ -27,10 +27,47 @@ permissions:
   contents: read
 
 jobs:
+  prepare-testargs:
+    runs-on: ubuntu-latest
+    outputs:
+      testargs: ${{ steps.compute-testargs.outputs.testargs }}
+    steps:
+      - name: Compute TESTARGS
+        id: compute-testargs
+        run: |
+          # Run all tests that limit their scope when running with any value of GOTEST_SHORT
+          TP=(
+            "TestAppdirAlreadyInUse"
+            "TestAutocomplet"
+            "TestAvailableUpdates"
+            "TestComposerCreateCmd"
+            "TestCmdDescribe"
+            "TestCmdList"
+            "TestCmdStart"
+            "TestCmdStop"
+            "TestConfigDatabaseVersion"
+            "TestDdevAllDatabases"
+            "TestDdevFullSite.*"
+            "TestDdevImportFiles.*"
+            "TestDdevUploadDir.*"
+            "TestDdevXdebugEnabled"
+            "TestDdevXhprofPrependEnabled"
+            "TestDdevXhprofXhguiEnabled"
+            "TestGetApps.*"
+            "TestPHPConfig"
+            "TestPHPWebserverType"
+            "TestWriteDrushConfig"
+            "Test.*(Push|Pull)"
+          )
+          TESTARGS="-failfast -run ($(IFS="|"; echo "${TP[*]}"))"
+          echo "testargs=${TESTARGS}" >> $GITHUB_OUTPUT
+
   pull-push-test-platforms:
+    needs: prepare-testargs
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
       pull_push_test_platforms: "true"
       gotest_short: "" # run all tests
+      testargs: ${{ needs.prepare-testargs.outputs.testargs }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
