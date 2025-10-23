@@ -302,6 +302,15 @@ services:
       - TZ={{ .Timezone }}
     depends_on:
       - db
+    healthcheck:
+      test: "/healthcheck.sh"
+      interval: "1s"
+      retries: 70
+      start_period: "{{ .DefaultContainerTimeout }}s"
+      {{ if templateCanUse "healthcheck.start_interval" -}}
+      start_interval: "1s"
+      {{- end }}
+      timeout: "70s"
     x-ddev:
       describe-url-port: "Launch: ddev xhgui"
   {{- end }}
