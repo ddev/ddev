@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -36,7 +36,7 @@ ddev pull platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=
 // appPull() does the work of pull
 func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDBArg bool, skipFilesArg bool, env string) {
 	// If we're not performing the import step, we won't be deleting the existing db or files.
-	if !skipConfirmation && !skipImportArg && os.Getenv("DDEV_NONINTERACTIVE") == "" {
+	if !skipConfirmation && !skipImportArg && globalconfig.IsInteractive() {
 		// Only warn the user about relevant risks.
 		var message string
 		if skipDBArg && skipFilesArg {

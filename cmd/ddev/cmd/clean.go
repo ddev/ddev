@@ -88,8 +88,16 @@ Additional commands that can help clean up resources:
 			return
 		}
 
-		if !util.ConfirmTo("Are you sure you want to continue?", false) {
-			os.Exit(1)
+		cleanImagesNoConfirm, _ := cmd.Flags().GetBool("yes")
+
+		if !cleanImagesNoConfirm {
+			if !util.ConfirmTo("Are you sure you want to continue?", false) {
+				if globalconfig.IsInteractive() {
+					util.Failed("User cancelled operation. Terminating without removing items.")
+				} else {
+					util.Failed("DDEV_NONINTERACTIVE or CI is set or terminal is not interactive. Use `--yes` flag to proceed.")
+				}
+			}
 		}
 
 		if needsPoweroffToDeleteImages {
@@ -143,5 +151,6 @@ Additional commands that can help clean up resources:
 func init() {
 	CleanCmd.Flags().BoolP("all", "a", false, "Clean all DDEV projects")
 	CleanCmd.Flags().Bool("dry-run", false, "Run the clean command without deleting")
+	CleanCmd.Flags().BoolP("yes", "y", false, "Yes - skip confirmation prompt")
 	RootCmd.AddCommand(CleanCmd)
 }

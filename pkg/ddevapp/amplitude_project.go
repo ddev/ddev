@@ -73,7 +73,7 @@ func (app *DdevApp) TrackProject() {
 		CorepackEnable(app.CorepackEnable).
 		DdevVersionConstraint(app.DdevVersionConstraint).
 		DisableSettingsManagement(app.DisableSettingsManagement).
-		NoProjectMount(app.NoProjectMount).Ci(os.Getenv(`CI`) == `true`)
+		NoProjectMount(app.NoProjectMount).Ci(os.Getenv("CI") == "true")
 
 	if !nodeps.ArrayContainsString(containersOmitted, "db") {
 		builder.

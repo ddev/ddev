@@ -283,6 +283,7 @@ Flags:
 
 * `--all`, `-a`: Clean all DDEV projects.
 * `--dry-run`: Run the clean command without deleting.
+* `--yes`, `-y`: Skip confirmation prompt.
 
 Example:
 

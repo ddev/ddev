@@ -235,7 +235,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 	// In tests or other non-interactive environments we don't need to show the
 	// Mutagen sync monitor output (and it fills up the test logs)
 
-	if os.Getenv("DDEV_NONINTERACTIVE") != "true" {
+	if globalconfig.IsInteractive() {
 		go func() {
 			previousStatus := ""
 			curStatus := ""
@@ -541,7 +541,7 @@ func DownloadMutagen() error {
 	if err != nil {
 		return fmt.Errorf("unable to create directory %s: %v", globalMutagenDir, err)
 	}
-	err = util.DownloadFile(destFile, mutagenURL, os.Getenv("DDEV_NONINTERACTIVE") != "true", shasumFileURL)
+	err = util.DownloadFile(destFile, mutagenURL, globalconfig.IsInteractive(), shasumFileURL)
 	if err != nil {
 		_ = fileutil.RemoveFilesMatchingGlob(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen*"))
 		_ = os.Remove(destFile)
