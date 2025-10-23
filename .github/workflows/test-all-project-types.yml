@@ -1,4 +1,4 @@
-name: Test Pull/Push Platforms
+name: Test All Project Types
 on:
   pull_request:
     paths:
@@ -58,18 +58,16 @@ jobs:
             "TestPHPConfig"
             "TestPHPWebserverType"
             "TestWriteDrushConfig"
-            "Test.*(Push|Pull)"
           )
           TESTARGS="-failfast -run '($(IFS="|"; echo "${TP[*]}"))'"
-          echo "pull-push-test-platforms TESTARGS=$TESTARGS"
+          echo "testargs=${TESTARGS}"
           echo "testargs=${TESTARGS}" >> $GITHUB_OUTPUT
 
-  pull-push-test-platforms:
+  all-project-types:
     needs: prepare-testargs
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
-      pull_push_test_platforms: "true"
-      gotest_short: "" # run all tests
+      gotest_short: "" # run tests for all project types
       testargs: ${{ needs.prepare-testargs.outputs.testargs }}
       debug_enabled: ${{ inputs.debug_enabled || false }}

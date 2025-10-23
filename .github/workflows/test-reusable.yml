@@ -48,8 +48,8 @@ on:
         required: false
         type: string
         default: 'test'
-      pull_push_test_platforms:
-        description: 'PULL_PUSH_TEST_PLATFORMS value'
+      pull_push_providers:
+        description: 'Run pull/push provider tests'
         required: false
         type: string
         default: 'false'
@@ -88,7 +88,6 @@ jobs:
       MAKE_TARGET: ${{ inputs.make_target }}
       TESTARGS: ${{ inputs.testargs }}
       BUILDARGS: ${{ inputs.buildargs }}
-      PULL_PUSH_TEST_PLATFORMS: ${{ inputs.pull_push_test_platforms }}
       DDEV_TEST_WEBSERVER_TYPE: ${{ inputs.ddev_test_webserver_type }}
       DDEV_TEST_USE_MUTAGEN: ${{ inputs.ddev_test_use_mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ inputs.ddev_test_no_bind_mounts }}
@@ -106,7 +105,7 @@ jobs:
 
       - name: DDEV test cache
         uses: actions/cache@v4
-        if: ${{ github.ref == 'refs/heads/main' && inputs.pull_push_test_platforms == 'true' }}
+        if: ${{ github.ref == 'refs/heads/main' && inputs.gotest_short == '' }}
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
@@ -115,7 +114,7 @@ jobs:
 
       - name: DDEV test cache/restore
         uses: actions/cache/restore@v4
-        if: ${{ github.ref != 'refs/heads/main' || inputs.pull_push_test_platforms != 'true' }}
+        if: ${{ github.ref != 'refs/heads/main' || inputs.gotest_short != '' }}
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
@@ -145,8 +144,8 @@ jobs:
           go-version: '>=1.23'
           check-latest: true
 
-      - name: Load 1password secret(s) for pull_push_test_platforms
-        if: ${{ inputs.pull_push_test_platforms == 'true' }}
+      - name: Load 1password secret(s) for pull-push-providers
+        if: ${{ inputs.pull_push_providers == 'true' }}
         # Allow to fail in PRs where TESTS_SERVICE_ACCOUNT_TOKEN may not be available
         continue-on-error: ${{ github.event_name == 'pull_request' }}
         uses: 1password/load-secrets-action@v3
@@ -174,7 +173,6 @@ jobs:
           echo "DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE}"
           echo "DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
           echo "MAKE_TARGET=${MAKE_TARGET}"
-          echo "PULL_PUSH_TEST_PLATFORMS=${PULL_PUSH_TEST_PLATFORMS}"
 
       - name: Setup tmate session
         if: ${{ inputs.debug_enabled }}
