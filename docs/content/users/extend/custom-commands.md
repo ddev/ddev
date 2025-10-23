@@ -174,11 +174,15 @@ Example: `## Usage: commandname [flags] [args]`
 
 ### `Example` Annotation
 
-`Example` should demonstrate how the command might be used. Use `\n` to force a line break.
+`Example` should demonstrate how the command might be used.
 
 Usage: `## Example: <command-example>`
 
-Example: `## Example: commandname\ncommandname -h`
+Example: 
+```
+## Example: commandname
+## Example: commandname -h
+```
 
 ### `Aliases` Annotation
 
@@ -215,7 +219,14 @@ Flags:
 
 Multiple flags are separated by a comma:
 
-Example: `## Flags: [{"Name":"flag1","Shorthand":"f","Usage":"flag1 usage"},{"Name":"flag2","Usage":"flag2 usage"}]`
+Example: 
+
+```
+## Flags: [
+##   {"Name":"flag1","Shorthand":"f","Usage":"flag1 usage"},
+##   {"Name":"flag2","Usage":"flag2 usage"}
+## ]
+```
 
 Output:
 
