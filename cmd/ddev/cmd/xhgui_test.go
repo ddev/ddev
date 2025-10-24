@@ -53,7 +53,7 @@ func TestCmdXHGui(t *testing.T) {
 
 	//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
 	if app.PHPVersion == nodeps.PHP85 {
-		t.Skip("Skipping tests for PHP8.5 untl xdebug lands in PHP8.5")
+		t.Skip("Skipping tests for PHP8.5 until xdebug lands in PHP8.5")
 	}
 
 	out, err = exec.RunHostCommand(DdevBin, "xhgui", "status")

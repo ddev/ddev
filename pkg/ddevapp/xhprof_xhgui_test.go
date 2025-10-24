@@ -91,7 +91,7 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 		for _, v := range phpKeys {
 			//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
 			if v == nodeps.PHP85 {
-				t.Log("Skipping tests for PHP8.5 untl xdebug lands in PHP8.5")
+				t.Log("Skipping tests for PHP8.5 until xdebug lands in PHP8.5")
 				continue
 			}
 
@@ -210,7 +210,7 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 		for _, v := range phpKeys {
 			//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
 			if v == nodeps.PHP85 {
-				t.Log("Skipping tests for PHP8.5 untl xdebug lands in PHP8.5")
+				t.Log("Skipping tests for PHP8.5 until xdebug lands in PHP8.5")
 				continue
 			}
 
