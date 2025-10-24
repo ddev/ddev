@@ -53,44 +53,64 @@ var (
 	sContainerUserOnce sync.Once
 )
 
+// sanitizeUsername converts a username to be safe for Linux containers.
+// Linux usernames can only contain: a-z, 0-9, _, -
+// and must start with a letter.
+func sanitizeUsername(rawUsername string) string {
+	username := rawUsername
+
+	// Normalize unicode characters (remove diacritics)
+	// Per https://stackoverflow.com/a/65981868/215713
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	username, _, _ = transform.String(t, username)
+
+	// Handle Windows domain\user format - extract username after backslash
+	if idx := strings.LastIndex(username, `\`); idx >= 0 {
+		username = username[idx+1:]
+	}
+
+	// Lowercase and remove all invalid characters
+	// Linux usernames can only contain: a-z, 0-9, _, -
+	username = strings.ToLower(username)
+	username = strings.Map(func(r rune) rune {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '_' || r == '-' {
+			return r
+		}
+		return -1 // Remove character
+	}, username)
+
+	// Ensure username starts with a letter (prepend 'a' if not)
+	// Example issue: username="310822" in https://github.com/ddev/ddev/issues/3187
+	if len(username) == 0 || !nodeps.IsLetter(string(username[0])) {
+		username = "a" + username
+	}
+
+	return username
+}
+
 // GetContainerUser returns the uid, gid, and username used to run most containers
 func GetContainerUser() (uidStr string, gidStr string, username string) {
 	sContainerUserOnce.Do(func() {
+		// Default fallback values if we can't determine the user
+		uidStr = "1000"
+		gidStr = "1000"
+		username = "ddev"
+
 		curUser, err := user.Current()
 		if err != nil {
-			util.Failed("Unable to determine username and related UID, etc. Please at least set $USER environment variable: %v", err)
+			// Use fallback values and warn
+			util.Warning("Unable to determine current user (UID, GID, username), using fallback uid=%s gid=%s username=%s: %v", uidStr, gidStr, username, err)
+		} else {
+			// Use actual user values
+			uidStr = curUser.Uid
+			gidStr = curUser.Gid
+			username = curUser.Username
+
+			// Sanitize username for safe use in Linux containers
+			// Example problem usernames: "André Kraus", "Mück", "DOMAIN\user", "user@example.com"
+			// See https://stackoverflow.com/questions/64933879
+			username = sanitizeUsername(username)
 		}
-		uidStr = curUser.Uid
-		gidStr = curUser.Gid
-		username = curUser.Username
-
-		// Remove at least spaces that aren't allowed in Linux usernames and can appear in Windows
-		// Example problem usernames from https://stackoverflow.com/questions/64933879/docker-ddev-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xe9-in-positio/64934264#64934264
-		// "André Kraus", "Mück"
-		// With docker-compose 1.29.2 you can't have a proper fully-qualified user pathname either
-		// so end up with trouble based on that (not quoted correctly)
-		// But for the context path it's possible to change the User home directory with
-		// https://superuser.com/questions/890812/how-to-rename-the-user-folder-in-windows-10/1346983#1346983
-
-		// Normalize username per https://stackoverflow.com/a/65981868/215713
-		t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-		username, _, _ = transform.String(t, username)
-
-		username = strings.ReplaceAll(username, " ", "")
-		username = strings.ToLower(username)
-		username = strings.ReplaceAll(username, "(", "")
-		username = strings.ReplaceAll(username, ")", "")
-
-		// If we have a numeric username it's going to create havoc, so
-		// change it into "a" + number
-		// Example in https://github.com/ddev/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
-		if !nodeps.IsLetter(string(username[0])) {
-			username = "a" + username
-		}
-
-		// Windows usernames may have a \ to separate domain\user - get the user
-		parts := strings.Split(username, `\`)
-		username = parts[len(parts)-1]
 
 		// Windows user IDs are non-numeric,
 		// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
