@@ -10,9 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ddev/ddev/pkg/nodeps"
-
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 )
 

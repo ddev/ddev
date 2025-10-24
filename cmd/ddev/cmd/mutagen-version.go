@@ -3,13 +3,14 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"sort"
+
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
-	"sort"
 )
 
 // MutagenVersionCmd implements the ddev mutagen version command

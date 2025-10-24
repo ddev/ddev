@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/amplitude"
-
 	"github.com/ddev/ddev/pkg/config/remoteconfig"
 	"github.com/ddev/ddev/pkg/config/state/storage/yaml"
 	"github.com/ddev/ddev/pkg/ddevapp"

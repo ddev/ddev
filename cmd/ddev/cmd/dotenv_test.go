@@ -1,16 +1,15 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/testcommon"
-	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/exec"
-	"github.com/stretchr/testify/require"
-
+	"github.com/ddev/ddev/pkg/testcommon"
+	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdDotEnvSetAndGet tests that `ddev dotenv get` and `ddev dotenv set` can read and write to .ddev/.env.* files

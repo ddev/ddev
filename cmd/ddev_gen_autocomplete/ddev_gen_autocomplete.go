@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/ddev/ddev/cmd/ddev/cmd"
-	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path/filepath"
+
+	"github.com/ddev/ddev/cmd/ddev/cmd"
+	"github.com/ddev/ddev/pkg/util"
 )
 
 var targetDir = ".gotmp/bin/completions"

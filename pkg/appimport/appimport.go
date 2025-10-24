@@ -3,12 +3,11 @@ package appimport
 import (
 	"errors"
 	"fmt"
-	"github.com/ddev/ddev/pkg/util"
 	"os"
-
+	"path/filepath"
 	"strings"
 
-	"path/filepath"
+	"github.com/ddev/ddev/pkg/util"
 )
 
 // ValidateAsset determines if a given asset matches the required criteria for a given asset type

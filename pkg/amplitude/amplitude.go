@@ -1,7 +1,6 @@
 package amplitude
 
 import (
-	"github.com/ddev/ddev/pkg/environment"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -12,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/amplitude/loggers"
 	"github.com/ddev/ddev/pkg/amplitude/storages"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/environment"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"

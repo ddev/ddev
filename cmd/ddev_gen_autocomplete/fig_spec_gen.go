@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/withfig/autocomplete-tools/integrations/cobra"
-	"os"
 )
 
 // Generate a Fig spec

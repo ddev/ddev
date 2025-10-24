@@ -8,12 +8,10 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/testcommon"
-
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
-
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdXHGui tests the `ddev xhgui` command

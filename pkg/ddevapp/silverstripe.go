@@ -2,11 +2,12 @@ package ddevapp
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"os"
-	"path/filepath"
 )
 
 // see https://github.com/ddev/ddev/pull/5058 if the bin folder changes.

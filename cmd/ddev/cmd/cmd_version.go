@@ -7,9 +7,8 @@ import (
 
 	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/styles"
-
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/jedib0t/go-pretty/v6/table"

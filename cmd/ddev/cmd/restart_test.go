@@ -2,18 +2,17 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"os"
 	"slices"
 	"strings"
 	"testing"
 
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/stretchr/testify/require"
-
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdRestart runs `ddev restart` on the test apps

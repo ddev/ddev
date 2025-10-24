@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // getRequestedProjects will collect and return the requested projects from command line arguments and flags.

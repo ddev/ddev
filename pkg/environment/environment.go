@@ -1,8 +1,9 @@
 package environment
 
 import (
-	"github.com/ddev/ddev/pkg/nodeps"
 	"runtime"
+
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 const (
