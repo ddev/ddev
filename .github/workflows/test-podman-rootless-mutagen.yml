@@ -27,11 +27,20 @@ permissions:
   contents: read
 
 jobs:
-  podman-rootless-mutagen-testpkg:
+  podman-rootless-mutagen-testddevapp:
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
-      make_target: "testpkg"
+      make_target: "testddevapp"
+      ddev_test_podman_rootless: "true"
+      ddev_test_use_mutagen: "true"
+      debug_enabled: ${{ inputs.debug_enabled || false }}
+
+  podman-rootless-mutagen-testnotddevapp:
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      make_target: "testnotddevapp"
       ddev_test_podman_rootless: "true"
       ddev_test_use_mutagen: "true"
       debug_enabled: ${{ inputs.debug_enabled || false }}
