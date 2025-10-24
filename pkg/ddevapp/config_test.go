@@ -3,8 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	dockerContainer "github.com/docker/docker/api/types/container"
-	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -15,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	dockerContainer "github.com/docker/docker/api/types/container"
+	copy2 "github.com/otiai10/copy"
 	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
