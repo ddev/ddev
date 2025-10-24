@@ -21,6 +21,7 @@ var PullCmd = &cobra.Command{
 	Example: `ddev pull pantheon
 ddev pull platform
 ddev pull pantheon -y
+ddev pull upsun -y
 ddev pull platform --skip-files -y
 ddev pull localfile --skip-db -y
 ddev pull lagoon --environment=LAGOON_PROJECT=amazeeio-ddev,LAGOON_ENVIRONMENT=pull

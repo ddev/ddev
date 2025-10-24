@@ -26,19 +26,25 @@ You need to obtain and configure an API token first. This is only needed once.
     ```
 
     !!!tip "What if I have more than one API token?"
-        To use multiple API tokens for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) file instead. This file is gitignored by default.
+        To use multiple API tokens for different projects, add them to your per-project configuration using the [`.ddev/config.local.yaml`](../configuration/config.md#environmental-overrides) or `.ddev/.env` file instead. This file is gitignored by default.
 
         ```yaml
         web_environment:
             - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
         ```
 
-## Upsun/Platform.sh Per-Project Configuration
+## Upsun Fixed/Platform.sh Per-Project Configuration
 
-1. Check out the site and configure it with [`ddev config`](../usage/commands.md#config). You’ll want to use [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
-2. Add `PLATFORM_PROJECT` and `PLATFORM_ENVIRONMENT` variables to your project.
+1. Check out the site and configure it with [`ddev config`](../usage/commands.md#config). You'll want to use [`ddev start`](../usage/commands.md#start) and make sure the basic functionality is working.
+2. You can optionally add `PLATFORM_PROJECT` and `PLATFORM_ENVIRONMENT` variables to your project, or rely on automatic derivation when possible.
 
-    * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
+    * Automatic derivation (no action required):
+      * If your repository contains `.platform/local/project.yaml` with an `id:` key, DDEV will derive PLATFORM_PROJECT from that file.
+      * If your local git branch name corresponds to the Platform.sh environment name, DDEV will derive PLATFORM_ENVIRONMENT from the current git branch.
+      * In typical setups where both .platform/local/project.yaml and a matching git branch exist, you do not need to set PLATFORM_PROJECT or PLATFORM_ENVIRONMENT manually.
+
+    * Manual configuration (only if automatic derivation is not suitable):
+      * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
 
         ```yaml
         web_environment:
@@ -46,11 +52,13 @@ You need to obtain and configure an API token first. This is only needed once.
             - PLATFORM_ENVIRONMENT=main
         ```
 
-    * Or with a command from your terminal:
+      * Or with a command from your terminal:
 
         ```bash
         ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
         ```
+
+    For more information about how to set environment variables for containers and services see [Environment Variables for Containers and Services](../extend/customization-extendibility.md#environment-variables-for-containers-and-services).
 
 3. Run [`ddev restart`](../usage/commands.md#restart).
 4. Run `ddev pull platform`. After you agree to the prompt, the current upstream databases and files will be downloaded.
