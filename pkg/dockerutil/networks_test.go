@@ -74,6 +74,10 @@ func TestNetworkDuplicates(t *testing.T) {
 // TestNetworkAmbiguity tests the behavior and setup of Docker networking.
 // There should be no crosstalk between different projects
 func TestNetworkAmbiguity(t *testing.T) {
+	if dockerutil.IsPodman() {
+		t.Skip("Skipping because Podman handles networking differently")
+	}
+
 	origDir, _ := os.Getwd()
 
 	projects := map[string]string{

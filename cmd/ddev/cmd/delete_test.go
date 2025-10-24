@@ -64,7 +64,7 @@ func TestDeleteCmd(t *testing.T) {
 		ddevImages.GetWebImage() + "-" + app.Name + "-built",
 	}
 	for _, img := range imgs {
-		require.Contains(t, out, fmt.Sprintf("Image %s for project %s was deleted", img, app.Name))
+		require.Contains(t, out, fmt.Sprintf("%s for project %s was deleted", img, app.Name))
 	}
 
 	labels := map[string]string{

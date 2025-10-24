@@ -4,7 +4,13 @@ services:
 
     # Prevent zombie container
     init: true
+    {{- if or .IsPodman .IsRootless }}
+    # Not setting user because of Traefik error
+    # listen tcp :443: bind: permission denied
+    #user: {{ .UID }}:{{ .GID }}
+    {{- else }}
     user: {{ .UID }}:{{ .GID }}
+    {{- end }}
 
     networks:
       ddev_default:
