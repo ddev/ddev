@@ -48,7 +48,7 @@ php84:
 # https://wiki.php.net/rfc/make_opcache_required
 # These extensions that DDEV uses are currently missing in php8.5 on Debian bookworm (arm64)
 #apcu
-#imagic
+#imagick
 #memcached
 #redis
 #uploadprogress
