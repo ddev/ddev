@@ -6,7 +6,7 @@
 
 To use Vite with DDEV, you need to:
 
-1. **Configure DDEV to expose Vite's port** in `.ddev/config.yaml`:
+1. Configure DDEV to expose Vite's port in `.ddev/config.yaml`:
 
     ```yaml
     web_extra_exposed_ports:
@@ -16,7 +16,7 @@ To use Vite with DDEV, you need to:
         https_port: 5173
     ```
 
-2. **Configure Vite** in your `vite.config.js`:
+2. Configure Vite in your `vite.config.js`:
 
     ```javascript
     import { defineConfig } from 'vite'
@@ -40,13 +40,13 @@ To use Vite with DDEV, you need to:
     })
     ```
 
-3. **Restart DDEV** to apply configuration changes:
+3. Restart DDEV to apply configuration changes:
 
     ```bash
     ddev restart
     ```
 
-4. **Start Vite development server**:
+4. Start Vite development server:
 
     ```bash
     ddev npm run dev
@@ -57,18 +57,14 @@ To use Vite with DDEV, you need to:
 Your Vite development server will be available at `https://yourproject.ddev.site:5173`.
 
 !!!note "HTTPS Configuration"
-    This guide assumes your project runs on `https://`. If you cannot access the HTTPS version of your project, see the [DDEV installation documentation](../install/ddev-installation.md).
+    This guide assumes your project runs on `https://`. If you are unable to access the HTTPS version of your project, refer to the [Configuring Browsers](../install/configuring-browsers.md).
 
 !!!tip "Custom TLD"
     If you use a custom `project_tld` other than `ddev.site`, adjust the CORS configuration accordingly in your `vite.config.js`.
 
-## Framework-Specific Configuration
-
-### Laravel
+## Laravel
 
 Laravel includes Vite as the default asset bundler since v9.19. Here's the recommended setup:
-
-#### DDEV Configuration
 
 Add to `.ddev/config.yaml`:
 
@@ -79,8 +75,6 @@ web_extra_exposed_ports:
     http_port: 5172
     https_port: 5173
 ```
-
-#### Laravel Vite Configuration
 
 Update your `vite.config.js`:
 
@@ -113,19 +107,17 @@ export default defineConfig({
 });
 ```
 
-#### Usage in Blade Templates
-
 In your Blade templates, use Laravel's Vite directives:
 
-```blade
+```php
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 ```
 
-### Drupal
+## Drupal
 
 For Drupal projects using the [Vite module](https://www.drupal.org/project/vite):
 
-#### Drupal DDEV Configuration
+Add to `.ddev/config.yaml`:
 
 ```yaml
 web_extra_exposed_ports:
@@ -135,7 +127,7 @@ web_extra_exposed_ports:
     https_port: 5173
 ```
 
-#### Drupal Vite Configuration
+Update your `vite.config.js`:
 
 ```javascript
 import { defineConfig } from 'vite'
@@ -164,11 +156,11 @@ export default defineConfig({
 })
 ```
 
-### TYPO3
+## TYPO3
 
 For TYPO3 projects using [vite-asset-collector](https://github.com/s2b/vite-asset-collector):
 
-#### TYPO3 DDEV Configuration
+Add to `.ddev/config.yaml`:
 
 ```yaml
 web_extra_exposed_ports:
@@ -178,7 +170,7 @@ web_extra_exposed_ports:
     https_port: 5173
 ```
 
-#### TYPO3 Vite Configuration
+Update your `vite.config.js`:
 
 ```javascript
 import { defineConfig } from 'vite'
@@ -206,11 +198,11 @@ export default defineConfig({
 })
 ```
 
-### WordPress
+## WordPress
 
 For WordPress projects using Vite with themes or plugins:
 
-#### WordPress DDEV Configuration
+Add to `.ddev/config.yaml`:
 
 ```yaml
 web_extra_exposed_ports:
@@ -220,7 +212,7 @@ web_extra_exposed_ports:
     https_port: 5173
 ```
 
-#### WordPress Vite Configuration
+Update your `vite.config.js`:
 
 ```javascript
 import { defineConfig } from 'vite'
@@ -248,11 +240,11 @@ export default defineConfig({
 })
 ```
 
-### Craft CMS
+## Craft CMS
 
 For Craft CMS projects using [`nystudio107`'s Vite plugin](https://nystudio107.com/docs/vite):
 
-#### Craft CMS DDEV Configuration
+Add to `.ddev/config.yaml`:
 
 ```yaml
 web_extra_exposed_ports:
@@ -262,7 +254,7 @@ web_extra_exposed_ports:
     https_port: 5173
 ```
 
-#### Craft CMS Vite Configuration
+Update your `vite.config.js`:
 
 ```javascript
 import { defineConfig } from 'vite'
@@ -293,9 +285,7 @@ export default defineConfig({
 })
 ```
 
-## Advanced Configuration
-
-### Auto-starting Vite
+## Auto-starting Vite
 
 You can configure DDEV to automatically start Vite when the project starts using [hooks](../configuration/hooks.md):
 
@@ -317,7 +307,7 @@ web_extra_daemons:
     directory: /var/www/html
 ```
 
-### Production Builds
+## Production Builds
 
 For production builds, ensure your `vite.config.js` includes proper manifest generation:
 
@@ -341,7 +331,7 @@ Build for production:
 ddev npm run build
 ```
 
-### DDEV Add-ons
+## DDEV Add-ons
 
 Several community add-ons are available to simplify Vite integration:
 
@@ -351,7 +341,7 @@ Several community add-ons are available to simplify Vite integration:
 
 Explore the [DDEV Add-on Registry](https://addons.ddev.com) for more Vite-related add-ons.
 
-### GitHub Codespaces
+## GitHub Codespaces
 
 When using DDEV with GitHub Codespaces, DDEV's router is not used, so some adjustments are needed:
 
@@ -367,11 +357,11 @@ services:
 
 See the [DDEV Codespaces documentation](https://docs.ddev.com/en/stable/users/install/ddev-installation/#github-codespaces) for more details.
 
-### Using with Node.js Projects
+## Using with Node.js Projects
 
 For Node.js-only projects (like SvelteKit, Nuxt, or Vue CLI projects):
 
-#### Node.js DDEV Configuration
+Add to `.ddev/config.yaml`:
 
 ```yaml
 project_type: generic
@@ -389,7 +379,7 @@ web_extra_daemons:
     directory: /var/www/html
 ```
 
-#### Node.js Vite Configuration
+Update your `vite.config.js`:
 
 ```javascript
 export default defineConfig({
@@ -534,29 +524,27 @@ export default defineConfig({
 
 ## Additional Resources
 
-### WordPress Libraries
-
 For WordPress projects, several libraries can help integrate Vite:
 
 - [php-wordpress-vite-assets](https://github.com/idleberg/php-wordpress-vite-assets)
 - [vite-for-wp](https://github.com/kucrut/vite-for-wp)
 - [wp-vite-manifest](https://github.com/iamntz/wp-vite-manifest)
 
-### Example Repositories
+Example repositories:
 
 - [Laravel + Vite](https://github.com/mandrasch/ddev-laravel-vite)
 - [WordPress + Vite Demo Theme](https://github.com/mandrasch/ddev-wp-vite-demo)
 - [Craft CMS + Vite](https://github.com/mandrasch/ddev-craftcms-vite)
 - [Laravel Breeze + SvelteKit](https://github.com/mandrasch/ddev-laravel-breeze-sveltekit)
 
-### Further Reading
+Further reading:
 
-- [Node.js Development with DDEV](https://www.lullabot.com/articles/nodejs-development-ddev) - Comprehensive guide to Node.js workflows in DDEV
+- [Node.js Development with DDEV](https://www.lullabot.com/articles/nodejs-development-ddev)
 - [How to Run Headless Drupal and Next.js on DDEV](https://www.velir.com/ideas/2024/05/13/how-to-run-headless-drupal-and-nextjs-on-ddev)
 - [How we use DDEV, Vite and Tailwind with Craft CMS](https://www.viget.com/articles/how-we-use-ddev-vite-and-tailwind-with-craft-cms/)
 - [Integrating Vite and DDEV into WordPress](https://www.viget.com/articles/integrating-vite-and-ddev-into-wordpress/)
 
-## Related Documentation
+Related documentation:
 
 - [Node.js Quickstart](../quickstart.md#nodejs)
 - [Laravel Quickstart](../quickstart.md#laravel)
