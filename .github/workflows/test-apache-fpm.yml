@@ -32,5 +32,5 @@ jobs:
     secrets: inherit
     with:
       ddev_test_webserver_type: "apache-fpm"
-      gotest_short: "5" # means use TYPO3 as the default codebase
+      #gotest_short: "5" # means use TYPO3 as the default codebase
       debug_enabled: ${{ inputs.debug_enabled || false }}
