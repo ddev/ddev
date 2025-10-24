@@ -109,6 +109,7 @@ MariaDB
 Matthias
 MinIO
 Misconfigured
+Monorepo
 MUTAGEN_DATA_DIRECTORY
 MyDevSite
 MySQL
@@ -167,6 +168,7 @@ Traefik
 TravisCI
 UAC
 UDP
+UnoCSS
 Unshare
 Upsun
 Usage
@@ -556,6 +558,7 @@ proot
 proto
 provided
 provider
+proxying
 ps
 psql
 public

@@ -22,6 +22,11 @@ To use Vite with DDEV, you need to:
     import { defineConfig } from 'vite'
 
     export default defineConfig({
+      // Your settings
+      // ...
+
+      // Adjust Vites dev server to work with DDEV
+      // https://vitejs.dev/config/server-options.html
       server: {
         // Respond to all network requests
         host: "0.0.0.0",
@@ -60,13 +65,67 @@ Your Vite development server will be available at `https://yourproject.ddev.site
     This guide assumes your project runs on `https://`. If you are unable to access the HTTPS version of your project, refer to the [Configuring Browsers](../install/configuring-browsers.md).
 
 !!!tip "Custom TLD"
-    If you use a custom `project_tld` other than `ddev.site`, adjust the CORS configuration accordingly in your `vite.config.js`.
+    If you use a custom [`project_tld`](../configuration/config.md#project_tld) other than `ddev.site`, adjust the CORS configuration accordingly in your `vite.config.js`, or use this snippet:
+
+    ```javascript
+    export default defineConfig({
+      server: {
+        cors: {
+          origin: new RegExp(
+            `https?:\/\/(${process.env.DDEV_HOSTNAME.split(",")
+              .map((h) => h.replace("*", "[^.]+"))
+              .join("|")})(?::\\d+)?$`
+          )
+        },
+      },
+    });
+    ```
+
+## Example Projects
+
+Example implementations demonstrating Vite integration with DDEV:
+
+- **[Working with Vite in DDEV](https://ddev.com/blog/working-with-vite-in-ddev/)** - Basic PHP project with step-by-step setup guide
+- **[vite-php-setup](https://github.com/andrefelipe/vite-php-setup)** - General PHP + Vite integration (adapt `VITE_HOST` for DDEV)
+
+For additional integration patterns and framework-specific examples:
+
+- **[Vite Backend Integration Guide](https://vitejs.dev/guide/backend-integration.html)** - Official Vite documentation for backend frameworks
+- **[Vite Awesome List](https://github.com/vitejs/awesome-vite#integrations-with-backends)** - Community-maintained list of integrations
+
+## Craft CMS
+
+The [Vite plugin by `nystudio107`](https://nystudio107.com/docs/vite/) provides official DDEV support with detailed [configuration instructions](https://nystudio107.com/docs/vite/#using-ddev) for `vite.config.js` and `config/vite.php`.
+
+!!!note "Port Configuration"
+    When using `web_extra_exposed_ports` in `.ddev/config.yaml`, the `.ddev/docker-compose.*.yaml` file for port exposure is not required.
+
+Example implementations:
+
+- **[Craft CMS with Vite integration](https://github.com/mandrasch/ddev-craftcms-vite)**
+- **[Craft CMS Starter](https://github.com/vigetlabs/craft-site-starter)**
+- **[How we use DDEV, Vite and Tailwind with Craft CMS](https://www.viget.com/articles/how-we-use-ddev-vite-and-tailwind-with-craft-cms/)**
+
+## Drupal
+
+Several tools and modules are available for integrating Vite with Drupal:
+
+- **[Vite module](https://www.drupal.org/project/vite)** - Uses Vite's manifest.json to map Drupal library files to compiled versions in `/dist` or to the Vite development server
+- **[UnoCSS Starter theme](https://www.drupal.org/project/unocss_starter)** - Drupal theme with Vite integration and DDEV setup instructions
+- **[Foxy](https://www.drupal.org/project/foxy)** - Alternative asset bundling solution for Drupal
+
+Community resources:
+
+- **[UnoCSS Starter Theme Documentation](https://www.drupalarchitect.info/projects/unocss-starter-theme)**
+- **[Proof of concept for Vite bundling in Drupal](https://github.com/darvanen/drupal-js)**
+
+The Drupal community is actively developing Vite integration solutions for bundling assets across multiple modules and themes.
 
 ## Laravel
 
-Laravel includes Vite as the default asset bundler since v9.19. Here's the recommended setup:
+Laravel adopted [Vite as the default asset bundler](https://laravel-news.com/vite-is-the-default-frontend-asset-bundler-for-laravel-applications) in v9.19, replacing Laravel Mix.
 
-Add to `.ddev/config.yaml`:
+Configure DDEV to expose Vite's port in `.ddev/config.yaml`:
 
 ```yaml
 web_extra_exposed_ports:
@@ -76,7 +135,7 @@ web_extra_exposed_ports:
     https_port: 5173
 ```
 
-Update your `vite.config.js`:
+Configure Vite in your `vite.config.js`:
 
 ```javascript
 import { defineConfig } from 'vite';
@@ -100,190 +159,82 @@ export default defineConfig({
     cors: {
       origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
     },
-    hmr: {
-      host: "localhost",
-    },
   },
 });
 ```
 
-In your Blade templates, use Laravel's Vite directives:
+Start the Vite development server:
 
-```php
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+```bash
+ddev npm run dev
 ```
 
-## Drupal
+Example implementation:
 
-For Drupal projects using the [Vite module](https://www.drupal.org/project/vite):
+- **[ddev-laravel-vite](https://github.com/mandrasch/ddev-laravel-vite)** - Laravel with Vite integration
 
-Add to `.ddev/config.yaml`:
+!!!note "Laravel-Specific Integration"
+    Laravel's Vite integration uses a `public/hot` file to manage development server state through its npm integration.
 
-```yaml
-web_extra_exposed_ports:
-  - name: vite
-    container_port: 5173
-    http_port: 5172
-    https_port: 5173
-```
+## Node.js
 
-Update your `vite.config.js`:
+DDEV supports Node.js-only projects by proxying requests to the correct ports within the web container. This configuration enables running Node.js applications like Keystone CMS or SvelteKit entirely within DDEV.
 
-```javascript
-import { defineConfig } from 'vite'
+This approach supports various architectures:
 
-export default defineConfig({
-  base: '/sites/default/files/vite/',
-  build: {
-    manifest: true,
-    outDir: 'sites/default/files/vite',
-    rollupOptions: {
-      input: {
-        main: 'assets/js/main.js',
-        style: 'assets/css/style.css',
-      }
-    }
-  },
-  server: {
-    host: "0.0.0.0",
-    port: 5173,
-    strictPort: true,
-    origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
-    cors: {
-      origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
-    },
-  },
-})
-```
+- **Monorepo setup**: Run a PHP backend with a Node.js frontend on separate subdomains within a single DDEV project
+- **Headless CMS**: Ideal for decoupled architectures combining traditional backends with modern JavaScript frameworks
+- **Multi-project setup**: Use separate DDEV projects for frontend and backend with [inter-project communication](../usage/managing-projects.md#inter-project-communication)
+
+Additional resources:
+
+- **[Node.js Development with DDEV](https://www.lullabot.com/articles/nodejs-development-ddev)** - Comprehensive guide to Node.js project configuration
+- **[How to Run Headless Drupal and Next.js on DDEV](https://www.velir.com/ideas/2024/05/13/how-to-run-headless-drupal-and-nextjs-on-ddev)** - Headless CMS implementation guide
+- **[ddev-laravel-breeze-sveltekit](https://github.com/mandrasch/ddev-laravel-breeze-sveltekit)** - Monorepo example with Laravel and SvelteKit
 
 ## TYPO3
 
-For TYPO3 projects using [vite-asset-collector](https://github.com/s2b/vite-asset-collector):
+Several tools are available for integrating Vite with TYPO3:
 
-Add to `.ddev/config.yaml`:
+- **[typo3-vite-demo](https://github.com/fgeierst/typo3-vite-demo)** - Vite demo project
+- **[vite-asset-collector](https://github.com/s2b/vite-asset-collector)** - TYPO3 extension for Vite integration
+- **[vite-plugin-typo3](https://github.com/s2b/vite-plugin-typo3)** - Vite plugin for TYPO3
+- **[ddev-vite-sidecar](https://github.com/s2b/ddev-vite-sidecar)** - DDEV add-on for zero-config Vite integration
 
-```yaml
-web_extra_exposed_ports:
-  - name: vite
-    container_port: 5173
-    http_port: 5172
-    https_port: 5173
-```
-
-Update your `vite.config.js`:
-
-```javascript
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  base: '/typo3temp/assets/vite/',
-  build: {
-    manifest: true,
-    outDir: 'public/typo3temp/assets/vite/',
-    rollupOptions: {
-      input: {
-        main: 'packages/site_package/Resources/Private/Assets/main.js',
-      }
-    }
-  },
-  server: {
-    host: "0.0.0.0",
-    port: 5173,
-    strictPort: true,
-    origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
-    cors: {
-      origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
-    },
-  },
-})
-```
+The vite-asset-collector extension provides detailed [DDEV installation instructions](https://docs.typo3.org/p/praetorius/vite-asset-collector/main/en-us/Installation/Index.html#installation-1). For questions or support, join the Vite channel on [TYPO3 Slack](https://typo3.org/community/meet/chat-slack).
 
 ## WordPress
 
-For WordPress projects using Vite with themes or plugins:
+Several libraries are available for integrating Vite with WordPress:
 
-Add to `.ddev/config.yaml`:
+- **[php-wordpress-vite-assets](https://github.com/idleberg/php-wordpress-vite-assets)** - PHP library for loading Vite assets in WordPress
+- **[vite-for-wp](https://github.com/kucrut/vite-for-wp)** - WordPress integration for Vite
+- **[wp-vite-manifest](https://github.com/iamntz/wp-vite-manifest)** - Vite manifest loader for WordPress
 
-```yaml
-web_extra_exposed_ports:
-  - name: vite
-    container_port: 5173
-    http_port: 5172
-    https_port: 5173
-```
+Example implementations:
 
-Update your `vite.config.js`:
+- **[ddev-wp-vite-demo](https://github.com/mandrasch/ddev-wp-vite-demo)** - Demo theme using php-wordpress-vite-assets
+- **[wp-vite-manifest usage guide](https://github.com/iamntz/wp-vite-manifest/wiki/How-to-use-inside-your-WP-plugin-theme#usage)** - Integration guide for themes and plugins
+- **[Integrating Vite and DDEV into WordPress](https://www.viget.com/articles/integrating-vite-and-ddev-into-wordpress/)**
 
-```javascript
-import { defineConfig } from 'vite'
+## GitHub Codespaces
 
-export default defineConfig({
-  base: '/wp-content/themes/your-theme/dist/',
-  build: {
-    manifest: true,
-    outDir: 'wp-content/themes/your-theme/dist',
-    rollupOptions: {
-      input: {
-        main: 'wp-content/themes/your-theme/src/main.js',
-      }
-    }
-  },
-  server: {
-    host: "0.0.0.0",
-    port: 5173,
-    strictPort: true,
-    origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
-    cors: {
-      origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
-    },
-  },
-})
-```
+DDEV supports Vite in GitHub Codespaces with alternative port configuration. Example implementations:
 
-## Craft CMS
+- **[Laravel with Vite in Codespaces](https://github.com/mandrasch/ddev-laravel-vite)**
+- **[Craft CMS with Vite in Codespaces](https://github.com/mandrasch/ddev-craftcms-vite)**
 
-For Craft CMS projects using [`nystudio107`'s Vite plugin](https://nystudio107.com/docs/vite):
+!!!note "Alternative Port Configuration Required"
+    The DDEV router is unavailable in Codespaces. Instead of using `web_extra_exposed_ports` in `.ddev/config.yaml`, create a `.ddev/docker-compose.vite-workaround.yaml` file:
 
-Add to `.ddev/config.yaml`:
+    ```yaml
+    services:
+      web:
+        ports:
+          - 5173:5173
+    ```
 
-```yaml
-web_extra_exposed_ports:
-  - name: vite
-    container_port: 5173
-    http_port: 5172
-    https_port: 5173
-```
-
-Update your `vite.config.js`:
-
-```javascript
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  base: '/dist/',
-  build: {
-    manifest: true,
-    outDir: 'web/dist/',
-    rollupOptions: {
-      input: {
-        app: 'src/js/app.js',
-      }
-    }
-  },
-  server: {
-    host: "0.0.0.0",
-    port: 5173,
-    strictPort: true,
-    origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
-    cors: {
-      origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
-    },
-    fs: {
-      strict: false
-    }
-  },
-})
-```
+For additional Codespaces configuration details, see the [DDEV Codespaces documentation](../install/ddev-installation.md#github-codespaces).
 
 ## Auto-starting Vite
 
@@ -295,17 +246,18 @@ Add to `.ddev/config.yaml`:
 hooks:
   post-start:
     - exec: "npm run dev"
-      service: web
 ```
 
-Or use a more robust daemon configuration:
+Or use a more robust daemon configuration (logs available via `ddev logs -s web`):
 
 ```yaml
 web_extra_daemons:
   - name: "vite"
-    command: "npm run dev"
+    command: bash -c 'npm install && npm run dev -- --host'
     directory: /var/www/html
 ```
+
+For a real-world daemon implementation example, see the [ddev.com repository](https://github.com/ddev/ddev.com) configuration.
 
 ## Production Builds
 
@@ -333,67 +285,13 @@ ddev npm run build
 
 ## DDEV Add-ons
 
-Several community add-ons are available to simplify Vite integration:
+Several community add-ons simplify Vite integration:
 
-- **[ddev-vite-sidecar](https://github.com/s2b/ddev-vite-sidecar)**: Zero-config integration of Vite into DDEV projects. The Vite development server is exposed as a `https://vite.*` subdomain, eliminating the need to expose ports to the host system.
+- **[ddev-vite-sidecar](https://github.com/s2b/ddev-vite-sidecar)** - Zero-config Vite integration exposing the development server as a `https://vite.*` subdomain, eliminating the need to expose ports to the host system
+- **[ddev-vitest](https://github.com/tyler36/ddev-vitest)** - Helper commands for projects using [Vitest](https://vitest.dev/), a Vite-native testing framework
+- **[ddev-viteserve](https://github.com/torenware/ddev-viteserve)** - First DDEV Vite add-on (no longer maintained, but pioneered the integration)
 
-- **[ddev-vitest](https://github.com/tyler36/ddev-vitest)**: Adds helper commands for projects using [Vitest](https://vitest.dev/), a Vite-native testing framework.
-
-Explore the [DDEV Add-on Registry](https://addons.ddev.com) for more Vite-related add-ons.
-
-## GitHub Codespaces
-
-When using DDEV with GitHub Codespaces, DDEV's router is not used, so some adjustments are needed:
-
-1. **Port exposure doesn't work via `.ddev/config.yaml`** - use a docker-compose file instead
-2. **Create `.ddev/docker-compose.vite-workaround.yaml`**:
-
-```yaml
-services:
-  web:
-    ports:
-      - "5173:5173"
-```
-
-See the [DDEV Codespaces documentation](https://docs.ddev.com/en/stable/users/install/ddev-installation/#github-codespaces) for more details.
-
-## Using with Node.js Projects
-
-For Node.js-only projects (like SvelteKit, Nuxt, or Vue CLI projects):
-
-Add to `.ddev/config.yaml`:
-
-```yaml
-project_type: generic
-webserver_type: generic
-
-web_extra_exposed_ports:
-  - name: vite
-    container_port: 5173
-    http_port: 80
-    https_port: 443
-
-web_extra_daemons:
-  - name: "vite-dev"
-    command: "npm run dev"
-    directory: /var/www/html
-```
-
-Update your `vite.config.js`:
-
-```javascript
-export default defineConfig({
-  server: {
-    host: "0.0.0.0",
-    port: 5173,
-    strictPort: true,
-    origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
-    cors: {
-      origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
-    },
-  },
-})
-```
+Additional Vite-related add-ons are available in the [DDEV Add-on Registry](https://addons.ddev.com).
 
 ## Troubleshooting
 
@@ -426,19 +324,23 @@ export default defineConfig({
 1. **Update CORS configuration** in `vite.config.js`:
 
     ```javascript
-    server: {
-      cors: {
-        origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
+    export default defineConfig({
+      server: {
+        cors: {
+          origin: /https?:\/\/([A-Za-z0-9\-\.]+)?(\.ddev\.site)(?::\d+)?$/,
+        },
       },
-    }
+    });
     ```
 
 2. **Check origin setting**:
 
     ```javascript
-    server: {
-      origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
-    }
+    export default defineConfig({
+      server: {
+        origin: `${process.env.DDEV_PRIMARY_URL_WITHOUT_PORT}:5173`,
+      },
+    });
     ```
 
 ### Port Already in Use
@@ -460,9 +362,11 @@ export default defineConfig({
 
     ```javascript
     // vite.config.js
-    server: {
-      port: 5174,
-    }
+    export default defineConfig({
+      server: {
+        port: 5174,
+      },
+    });
     ```
 
 2. **Kill existing process**:
@@ -470,27 +374,6 @@ export default defineConfig({
     ```bash
     ddev exec "pkill -f vite"
     ```
-
-### HMR Not Working
-
-**Problem**: Hot Module Replacement isn't working in the browser.
-
-**Solutions**:
-
-1. **Check HMR configuration**:
-
-    ```javascript
-    server: {
-      hmr: {
-        host: "localhost",
-        port: 5173,
-      },
-    }
-    ```
-
-2. **For Laravel projects**, ensure you're using the `@vite` directive in your Blade templates.
-
-3. **Check browser console** for WebSocket connection errors.
 
 ### Assets Not Loading
 
@@ -520,35 +403,4 @@ export default defineConfig({
 
 4. **Document your setup**: Include Vite configuration instructions in your project's readme.
 
-5. **Use environment variables**: Leverage `process.env.DDEV_PRIMARY_URL` for dynamic configuration.
-
-## Additional Resources
-
-For WordPress projects, several libraries can help integrate Vite:
-
-- [php-wordpress-vite-assets](https://github.com/idleberg/php-wordpress-vite-assets)
-- [vite-for-wp](https://github.com/kucrut/vite-for-wp)
-- [wp-vite-manifest](https://github.com/iamntz/wp-vite-manifest)
-
-Example repositories:
-
-- [Laravel + Vite](https://github.com/mandrasch/ddev-laravel-vite)
-- [WordPress + Vite Demo Theme](https://github.com/mandrasch/ddev-wp-vite-demo)
-- [Craft CMS + Vite](https://github.com/mandrasch/ddev-craftcms-vite)
-- [Laravel Breeze + SvelteKit](https://github.com/mandrasch/ddev-laravel-breeze-sveltekit)
-
-Further reading:
-
-- [Node.js Development with DDEV](https://www.lullabot.com/articles/nodejs-development-ddev)
-- [How to Run Headless Drupal and Next.js on DDEV](https://www.velir.com/ideas/2024/05/13/how-to-run-headless-drupal-and-nextjs-on-ddev)
-- [How we use DDEV, Vite and Tailwind with Craft CMS](https://www.viget.com/articles/how-we-use-ddev-vite-and-tailwind-with-craft-cms/)
-- [Integrating Vite and DDEV into WordPress](https://www.viget.com/articles/integrating-vite-and-ddev-into-wordpress/)
-
-Related documentation:
-
-- [Node.js Quickstart](../quickstart.md#nodejs)
-- [Laravel Quickstart](../quickstart.md#laravel)
-- [Custom Docker Services](../extend/custom-docker-services.md)
-- [Networking](networking.md)
-- [Hooks](../configuration/hooks.md)
-- [Troubleshooting](troubleshooting.md)
+5. **Use environment variables**: Leverage `process.env.DDEV_PRIMARY_URL_WITHOUT_PORT` for dynamic configuration.
