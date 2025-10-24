@@ -27,9 +27,18 @@ permissions:
   contents: read
 
 jobs:
-  podman-rootless:
+  podman-rootless-testpkg:
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
+      make_target: "testpkg"
+      ddev_test_podman_rootless: "true"
+      debug_enabled: ${{ inputs.debug_enabled || false }}
+
+  podman-rootless-testcmd:
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      make_target: "testcmd"
       ddev_test_podman_rootless: "true"
       debug_enabled: ${{ inputs.debug_enabled || false }}
