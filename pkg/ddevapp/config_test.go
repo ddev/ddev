@@ -990,6 +990,10 @@ func TestPHPConfig(t *testing.T) {
 	if os.Getenv("GOTEST_SHORT") != "" {
 		phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	}
+
+	//TODO: php8.5: Remove this exclusion when php85 has redis
+	phpKeys = util.SubtractSlices(phpKeys, []string{nodeps.PHP85})
+
 	sort.Strings(phpKeys)
 
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/.env"), filepath.Join(site.Dir, ".ddev/.env"))
@@ -1033,6 +1037,10 @@ func TestPHPConfig(t *testing.T) {
 
 		// This list does not contain all expected, as php5.6 is missing some, etc.
 		expectedExtensions := []string{"apcu", "bcmath", "bz2", "curl", "gd", "imagick", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
+		//TODO: PHP8.5: Remove this stanza when PHP8.5 extensions are completely available
+		if app.PHPVersion == nodeps.PHP85 {
+			expectedExtensions = []string{"bcmath", "bz2", "curl", "gd", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"}
+		}
 		for _, e := range expectedExtensions {
 			assert.Contains(out, fmt.Sprintf(`,%s,`, e))
 		}
