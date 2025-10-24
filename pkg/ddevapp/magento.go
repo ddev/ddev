@@ -23,7 +23,11 @@ func isMagentoApp(app *DdevApp) bool {
 
 // isMagento2App returns true if the app is of type magento2
 func isMagento2App(app *DdevApp) bool {
-	return fileutil.FileExists(filepath.Join(app.AppRoot, app.ComposerRoot, "bin", "magento"))
+	ism2, err := fileutil.FgrepStringInFile(filepath.Join(app.GetAbsDocroot(false), "..", "SECURITY.md"), `https://hackerone.com/`)
+	if err == nil && ism2 {
+		return true
+	}
+	return false
 }
 
 // createMagentoSettingsFile manages creation and modification of local.xml.
@@ -150,7 +154,7 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 
 // setMagento2SiteSettingsPaths sets the paths to env.php for templating.
 func setMagento2SiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.ComposerRoot, "app", "etc", "env.php")
+	app.SiteSettingsPath = filepath.Join(app.GetAbsDocroot(false), "..", "app", "etc", "env.php")
 }
 
 // magentoConfigOverrideAction is not currently required
