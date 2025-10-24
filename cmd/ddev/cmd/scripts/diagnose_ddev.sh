@@ -3,7 +3,7 @@
 #ddev-generated
 # diagnose_ddev.sh - User-friendly DDEV diagnostics
 # This script provides concise, actionable diagnostics for DDEV issues
-# For comprehensive output for issue reports, use 'ddev debug test'
+# For more extensive output for issue reports, use 'ddev debug test'
 
 set -o pipefail
 
@@ -79,6 +79,52 @@ get_default_shell() {
   else
     echo "${SHELL:-unknown}"
   fi
+}
+
+# Run a command with a timeout and show a dot once per second while it runs.
+# Usage: run_cmd_with_dots <timeout-seconds> "<user-friendly message>" <command> [args...]
+run_cmd_with_dots() {
+  local timeout_secs="$1"; shift
+  local msg="$1"; shift
+  local logfile
+  logfile=$(mktemp /tmp/ddev-diagnose.XXXXXX) || logfile="/tmp/ddev-diagnose.$$"
+  info "${msg} (this may take some time; showing progress)"
+  # Start the command in background, capture output to logfile
+  ( timeout "$timeout_secs" "$@" >"$logfile" 2>&1 ) &
+  local pid=$!
+
+  # Try to open the controlling terminal for immediate, unbuffered output.
+  # If that fails, fall back to stderr (may be buffered).
+  local dot_fd=2
+  if exec 3>/dev/tty 2>/dev/null; then
+    dot_fd=3
+  else
+    dot_fd=2
+  fi
+
+  # Print dots while the process runs (prefer the tty fd so dots appear immediately).
+  printf "  " >&$dot_fd
+  while kill -0 "$pid" 2>/dev/null; do
+    printf "." >&$dot_fd
+    sleep 1
+  done
+  wait "$pid"
+  local rc=$?
+  printf "\n" >&$dot_fd
+
+  # If we opened fd 3 for /dev/tty, close it.
+  if [ "$dot_fd" -eq 3 ]; then
+    exec 3>&-
+  fi
+
+  if [ $rc -eq 0 ]; then
+    success "${msg} completed"
+    rm -f "$logfile" 2>/dev/null || true
+  else
+    fail "${msg} failed (exit ${rc})"
+    info "Log: ${logfile}"
+  fi
+  return $rc
 }
 
 # Check if project is in home directory
@@ -175,12 +221,17 @@ fi
 # Network Checks
 header "Network Connectivity"
 
-# Check internet access from host
-if curl --connect-timeout 5 --max-time 10 -sfI https://www.google.com >/dev/null 2>&1; then
-  success "Internet accessible from host"
-else
-  fail "No internet access from host"
-  suggestion "Check your network connection"
+CURL_OK=$(command -v curl >/dev/null 2>&1 && echo "true" || echo "false")
+success "CURL_OK=${CURL_OK}"
+
+if [ ${CURL_OK} = "true" ]; then
+  # Check internet access from host
+  if curl --connect-timeout 5 --max-time 10 -sfI https://www.google.com >/dev/null 2>&1; then
+    success "Internet accessible from host"
+  else
+    fail "No internet access from host"
+    suggestion "Check your network connection"
+  fi
 fi
 
 # Check DNS resolution for *.ddev.site
@@ -191,6 +242,8 @@ if command -v ping >/dev/null; then
     warn "Cannot resolve *.ddev.site"
     suggestion "See: https://docs.ddev.com/en/stable/users/usage/networking/#restrictive-dns-servers"
   fi
+else
+  warn "ping command not found; skipping DNS resolution check"
 fi
 
 # Check for proxy settings
@@ -268,21 +321,23 @@ if ddev describe >/dev/null 2>&1; then
       success "Project containers are responsive"
 
       # Test HTTP access
-      http_url=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.httpURLs[0]' 2>/dev/null)
-      if [ -n "$http_url" ] && [ "$http_url" != "null" ]; then
-        http_response=$(curl --connect-timeout 5 --max-time 10 -sI "$http_url" 2>&1 | head -1)
-        http_status=$(echo "$http_response" | grep -oE 'HTTP/[0-9.]+ [0-9]+' | awk '{print $2}')
+      if [ ${CURL_OK} = "true" ] ; then
+        http_url=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.httpURLs[0]' 2>/dev/null)
+        if [ -n "$http_url" ] && [ "$http_url" != "null" ]; then
+          http_response=$(curl --connect-timeout 5 --max-time 10 -sI "$http_url" 2>&1 | head -1)
+          http_status=$(echo "$http_response" | grep -oE 'HTTP/[0-9.]+ [0-9]+' | awk '{print $2}')
 
-        if [ -n "$http_status" ] && [ "$http_status" = "200" ]; then
-          success "HTTP access working: ${http_url}"
-        elif [ -n "$http_status" ]; then
-          warn "HTTP returned status ${http_status} for ${http_url}"
-          info "This may be normal if your project is not fully configured"
-          suggestion "If unexpected, check: ddev logs"
-        else
-          warn "Cannot connect to project via HTTP: ${http_url}"
-          suggestion "Check router: ddev logs -s router"
-          suggestion "Check web container: ddev logs"
+          if [ -n "$http_status" ] && [ "$http_status" = "200" ]; then
+            success "HTTP access working: ${http_url}"
+          elif [ -n "$http_status" ]; then
+            warn "HTTP returned status ${http_status} for ${http_url}"
+            info "This may be normal if your project is not fully configured"
+            suggestion "If unexpected, check: ddev logs"
+          else
+            warn "Cannot connect to project via HTTP: ${http_url}"
+            suggestion "Check router: ddev logs -s router"
+            suggestion "Check web container: ddev logs"
+          fi
         fi
       fi
     else
@@ -310,18 +365,27 @@ if [ "${DDEV_DIAGNOSE_FULL:-}" = "true" ]; then
   if ddev config --project-name="${PROJECT_NAME}" --project-type=php --docroot=web --disable-upload-dirs-warning >/dev/null 2>&1; then
     success "Test project configured"
 
-    if timeout 120 ddev start -y >/dev/null 2>&1; then
+    # Pre-download images (takes the most time). Show dots while running and store logs in a temp file.
+    if command -v ddev >/dev/null 2>&1; then
+      # Give download-images a generous timeout (e.g., 10 minutes = 600s)
+      run_cmd_with_dots 600 "Downloading DDEV images (ddev utility download-images)" ddev utility download-images || warn "Image download failed or timed out; continuing to attempt ddev start"
+    fi
+
+    # Start the project, showing dots while starting. Keep previous 120s timeout for start.
+    if run_cmd_with_dots 120 "Starting DDEV project (ddev start -y)" ddev start -y; then
       success "Test project started successfully"
 
       # Quick HTTP test
-      test_url=$(ddev describe -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -c '.raw' 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.httpURLs[0]' 2>/dev/null)
-      if [ -n "$test_url" ] && [ "$test_url" != "null" ] && curl --connect-timeout 5 --max-time 10 -sf "$test_url" | grep -q "PHP Version" 2>/dev/null; then
-        success "Test project HTTP access working"
-      else
-        fail "Test project HTTP access failed"
+      if [ ${CURL_OK} = "true" ] ; then
+        test_url=$(ddev describe -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw.urls[0]' 2>/dev/null)
+        resp=$(curl -I --connect-timeout 5 --max-time 10 -sf ${test_url} | grep "HTTP/")
+        info "HTTP response: ${resp}"
+        if [ -n "$test_url" ] && [ "$test_url" != "null" ] && curl -sf ${test_url} | grep "PHP Version" >/dev/null; then
+          success "Test project HTTP access working"
+        else
+          fail "Test project HTTP access failed, tried accessing ${test_url}"
+        fi
       fi
-
-      ddev delete -Oy >/dev/null 2>&1
     else
       fail "Test project failed to start"
       suggestion "Check: ddev logs"
@@ -331,7 +395,9 @@ if [ "${DDEV_DIAGNOSE_FULL:-}" = "true" ]; then
   fi
 
   cd - >/dev/null 2>&1 || true
-  rm -rf "$PROJECT_DIR"
+
+  info "The project name is ${PROJECT_NAME} and it is located at ${PROJECT_DIR} if you want to investigate further."
+  info "You can delete the project when you don't need it any more with 'ddev delete -Oy ${PROJECT_NAME} && rm -rf '$PROJECT_DIR'"
 fi
 
 # Summary
@@ -352,7 +418,7 @@ else
   printf "${BOLD}Next steps:${NC}\n"
   suggestion "Review the issues and suggestions above"
   suggestion "Check troubleshooting docs: https://docs.ddev.com/en/stable/users/usage/troubleshooting/"
-  suggestion "For comprehensive diagnostics: ddev debug test"
+  suggestion "For more extensive diagnostics: ddev debug test"
   suggestion "Get help on Discord: https://ddev.com/s/discord"
   echo
   exit 1
