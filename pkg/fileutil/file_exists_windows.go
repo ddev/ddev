@@ -2,9 +2,10 @@ package fileutil
 
 import (
 	"errors"
-	"golang.org/x/sys/windows"
 	"os"
 	"syscall"
+
+	"golang.org/x/sys/windows"
 )
 
 // FileExists checks a file's existence

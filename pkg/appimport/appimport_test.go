@@ -1,12 +1,10 @@
 package appimport_test
 
 import (
-	"path/filepath"
-	"testing"
-
-	"strings"
-
 	"os"
+	"path/filepath"
+	"strings"
+	"testing"
 
 	"github.com/ddev/ddev/pkg/appimport"
 	"github.com/ddev/ddev/pkg/util"

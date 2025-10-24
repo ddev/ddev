@@ -1,8 +1,9 @@
 package ddevapp
 
 import (
-	"github.com/ddev/ddev/pkg/util"
 	"syscall"
+
+	"github.com/ddev/ddev/pkg/util"
 )
 
 // failOnRosetta checks to see if we're running under Rosetta and fails if we are.

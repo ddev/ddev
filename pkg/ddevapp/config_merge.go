@@ -1,10 +1,11 @@
 package ddevapp
 
 import (
-	"dario.cat/mergo"
 	"fmt"
-	"github.com/ddev/ddev/pkg/util"
 	"strings"
+
+	"dario.cat/mergo"
+	"github.com/ddev/ddev/pkg/util"
 )
 
 // mergeAdditionalConfigIntoApp takes the provided yaml `config.*.yaml` and merges

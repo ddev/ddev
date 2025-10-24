@@ -15,7 +15,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
-
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"

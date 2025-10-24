@@ -2,15 +2,16 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
 )
 
 // TestDebugMigrateDatabase checks to see if we can migrate database

@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"os"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 // TestCmdSnapshot runs `ddev snapshot` on the test apps

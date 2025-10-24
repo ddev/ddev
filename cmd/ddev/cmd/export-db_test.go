@@ -2,6 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	exec2 "github.com/ddev/ddev/pkg/exec"
@@ -9,10 +14,6 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"testing"
 )
 
 // TestCmdExportDB does an export-db

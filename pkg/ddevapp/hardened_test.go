@@ -6,10 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ddev/ddev/pkg/dockerutil"
-
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"

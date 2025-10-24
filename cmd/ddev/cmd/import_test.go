@@ -1,10 +1,9 @@
 package cmd
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
-
-	"os"
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"

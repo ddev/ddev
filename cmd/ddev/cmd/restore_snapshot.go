@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // DdevRestoreSnapshotCommand provides the ability to revert to a database snapshot

@@ -8,13 +8,12 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/stretchr/testify/require"
-
-	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdExecBadArgs run `ddev exec` without the proper args

@@ -12,9 +12,8 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
-
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdAddon tests various `ddev add-on` commands.

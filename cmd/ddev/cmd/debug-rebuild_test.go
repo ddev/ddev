@@ -1,15 +1,15 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/fileutil"
-	asrt "github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
+	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestDebugRebuildCmd tests that ddev utility rebuild actually clears Docker cache

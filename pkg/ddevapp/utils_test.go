@@ -1,13 +1,14 @@
 package ddevapp_test
 
 import (
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"testing"
 )
 
 func TestGetInactiveProjects(t *testing.T) {

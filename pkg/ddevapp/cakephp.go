@@ -2,12 +2,13 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 )
 
 // isCakephpApp returns true if the app is of type cakephp

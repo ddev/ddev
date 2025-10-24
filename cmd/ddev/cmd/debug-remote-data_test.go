@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 )
 

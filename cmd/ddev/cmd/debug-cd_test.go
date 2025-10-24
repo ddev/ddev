@@ -1,14 +1,15 @@
 package cmd
 
 import (
+	"path/filepath"
+	"strings"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
-	"path/filepath"
-	"strings"
-	"testing"
 )
 
 // TestDebugCdCmd runs `ddev utility cd` to see if it works.

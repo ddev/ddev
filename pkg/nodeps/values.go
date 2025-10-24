@@ -4,9 +4,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/maruel/natural"
-
 	"github.com/ddev/ddev/pkg/config/types"
+	"github.com/maruel/natural"
 )
 
 // Providers

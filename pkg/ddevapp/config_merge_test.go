@@ -1,15 +1,16 @@
 package ddevapp_test
 
 import (
+	"os"
+	"path/filepath"
+	"sort"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"sort"
-	"testing"
 )
 
 // TestConfigMerge takes a variety of test expectations and checks to see if they work out

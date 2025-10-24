@@ -2,15 +2,13 @@ package updatecheck
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/versionconstants"
+	"os"
 	"path/filepath"
 	"testing"
-
 	"time"
 
-	"os"
-
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
 )
 
