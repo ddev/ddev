@@ -114,6 +114,9 @@ func TestCmdDescribe(t *testing.T) {
 		require.NotContains(t, string(out), "InDocker: busybox2")
 		require.Contains(t, string(out), "  - busybox2:3333")
 		require.NotContains(t, string(out), "  - busybox2:3333 ->")
+		// busybox2 x-ddev.describe-url-ports
+		require.Contains(t, string(out), "url-port Test service description for busybox2")
+		require.Contains(t, string(out), "info test info for")
 
 		err = os.Chdir(v.Dir)
 		require.NoError(t, err)
@@ -142,6 +145,8 @@ func TestCmdDescribe(t *testing.T) {
 		require.NotContains(t, string(out), "InDocker: busybox2")
 		require.Contains(t, string(out), "  - busybox2:3333")
 		require.NotContains(t, string(out), "  - busybox2:3333 ->")
+		// busybox2 x-ddev.describe
+		require.Contains(t, string(out), "Test service description for busybox2")
 
 		// Test describe in current directory with json flag
 		out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
@@ -270,6 +275,12 @@ func TestCmdDescribe(t *testing.T) {
 		require.Equal(t, "", busybox2["host_ports"].(string))
 		require.Equal(t, make([]interface{}, 0), busybox2["host_ports_mapping"])
 		require.Contains(t, busybox2, "host_ports_mapping")
+		// busybox2 x-ddev.describe in JSON output
+		require.Contains(t, busybox2, "describe-url-port")
+		require.Equal(t, "url-port Test service description for busybox2", busybox2["describe-url-port"].(string))
+		require.Contains(t, busybox2, "describe-info")
+		require.Equal(t, "info test info for busybox2", busybox2["describe-info"].(string))
+
 		require.NotEmpty(t, item["msg"])
 
 		// Project must be stopped or later projects will collide on
