@@ -13,7 +13,7 @@ import (
 
 // isCakephpApp returns true if the app is of type cakephp
 func isCakephpApp(app *DdevApp) bool {
-	return fileutil.FileExists(filepath.Join(app.AppRoot, "bin/cake.php"))
+	return fileutil.FileExists(filepath.Join(app.AppRoot, app.ComposerRoot, "bin/cake.php"))
 }
 
 func cakephpPostStartAction(app *DdevApp) error {
@@ -22,14 +22,14 @@ func cakephpPostStartAction(app *DdevApp) error {
 		return nil
 	}
 	envFileName := "config/.env"
-	envFilePath := filepath.Join(app.AppRoot, envFileName)
+	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, envFileName)
 	_, _, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("unable to read .env file in config folder: %v", err)
 	}
 	if err == nil {
 		envFileName = "config/.env.ddev"
-		envFilePath = filepath.Join(app.AppRoot, envFileName)
+		envFilePath = filepath.Join(app.AppRoot, app.ComposerRoot, envFileName)
 		_, _, err = ReadProjectEnvFile(envFilePath)
 		if err == nil {
 			util.Warning("CakePHP: .env.ddev file exists already. Replacing it. You can rename it or copy settings to your .env file.")
@@ -39,7 +39,7 @@ func cakephpPostStartAction(app *DdevApp) error {
 	} else {
 		util.Success("CakePHP: Creating .env file to store your config settings.")
 	}
-	err = fileutil.CopyFile(filepath.Join(app.AppRoot, "config/.env.example"), envFilePath)
+	err = fileutil.CopyFile(filepath.Join(app.AppRoot, app.ComposerRoot, "config/.env.example"), envFilePath)
 	if err != nil {
 		util.Debug("CakePHP: .env.example does not exist yet in config folder, not trying to process it")
 		return nil
@@ -84,7 +84,7 @@ func cakephpConfigOverrideAction(app *DdevApp) error {
 
 func enableDotEnvLoading(app *DdevApp) error {
 	bootstrapFileName := "config/bootstrap.php"
-	bootstrapFilePath := filepath.Join(app.AppRoot, bootstrapFileName)
+	bootstrapFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, bootstrapFileName)
 	envFunction := "// if (!env('APP_NAME') && file_exists(CONFIG . '.env')) {\n//     $dotenv = new \\josegonzalez\\Dotenv\\Loader([CONFIG . '.env']);\n//     $dotenv->parse()\n//         ->putenv()\n//         ->toEnv()\n//         ->toServer();\n// }\n"
 	err := fileutil.ReplaceStringInFile(envFunction, strings.ReplaceAll(envFunction, "// ", ""), bootstrapFilePath, bootstrapFilePath)
 	if err != nil {

@@ -126,7 +126,7 @@ func craftCmsConfigOverrideAction(app *DdevApp) error {
 // constants were removed in src/Craft.php see
 // https://github.com/craftcms/cms/commit/1660ff90a3a69cec425271d47ade66523a4bd44e#diff-21e22a30e7c48265a4dcedc1b1c8b9372eca5d3fdeff6d72c7d9c6b671365c56
 func isCraftCms4orHigher(app *DdevApp) bool {
-	craftFilePath := filepath.Join(app.GetComposerRoot(false, false), "vendor", "craftcms", "cms", "src", "Craft.php")
+	craftFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, "vendor", "craftcms", "cms", "src", "Craft.php")
 	if !fileutil.FileExists(craftFilePath) {
 		// Sources are not installed, assuming v4 or higher.
 		return true

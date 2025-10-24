@@ -11,16 +11,9 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
-const (
-	// WarnTypeAbsent warns if type is absent
-	WarnTypeAbsent = iota
-	// WarnTypeNotConfigured warns if type not configured
-	WarnTypeNotConfigured = iota
-)
-
 // isLaravelApp returns true if the app is of type laravel
 func isLaravelApp(app *DdevApp) bool {
-	return fileutil.FileExists(filepath.Join(app.AppRoot, "artisan"))
+	return fileutil.FileExists(filepath.Join(app.AppRoot, app.ComposerRoot, "artisan"))
 }
 
 func laravelPostStartAction(app *DdevApp) error {
@@ -28,13 +21,13 @@ func laravelPostStartAction(app *DdevApp) error {
 	if app.DisableSettingsManagement {
 		return nil
 	}
-	envFilePath := filepath.Join(app.AppRoot, ".env")
+	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env")
 	_, envText, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("unable to read .env file: %v", err)
 	}
 	if os.IsNotExist(err) {
-		err = fileutil.CopyFile(filepath.Join(app.AppRoot, ".env.example"), filepath.Join(app.AppRoot, ".env"))
+		err = fileutil.CopyFile(filepath.Join(app.AppRoot, app.ComposerRoot, ".env.example"), filepath.Join(app.AppRoot, app.ComposerRoot, ".env"))
 		if err != nil {
 			util.Debug("Laravel: .env.example does not exist yet, not trying to process it")
 			return nil
@@ -59,7 +52,7 @@ func laravelPostStartAction(app *DdevApp) error {
 		dbConnection := "mariadb"
 
 		if app.Database.Type == nodeps.MariaDB {
-			hasMariaDBDriver, _ := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "config/database.php"), "mariadb")
+			hasMariaDBDriver, _ := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.ComposerRoot, "config/database.php"), "mariadb")
 			if !hasMariaDBDriver {
 				// Older versions of Laravel (before 11) use "mysql" driver for MariaDB
 				// This change is required to prevent this error on "php artisan migrate":

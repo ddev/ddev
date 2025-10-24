@@ -12,4 +12,3 @@
 PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}
 
 sake "$@"
-

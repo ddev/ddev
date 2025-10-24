@@ -103,9 +103,6 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	if err = t.Execute(f, settings); err != nil {
 		return err
 	}
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

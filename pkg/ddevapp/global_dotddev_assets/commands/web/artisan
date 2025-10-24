@@ -9,4 +9,5 @@
 ## ExecRaw: true
 ## MutagenSync: true
 
+cd "${DDEV_COMPOSER_ROOT:-/var/www/html}" || exit 1
 php ./artisan "$@"

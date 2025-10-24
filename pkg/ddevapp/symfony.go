@@ -11,12 +11,12 @@ import (
 
 // isSymfonyApp returns true if the app is of type symfony
 func isSymfonyApp(app *DdevApp) bool {
-	return fileutil.FileExists(filepath.Join(app.AppRoot, "bin", "console")) && fileutil.FileExists(filepath.Join(app.AppRoot, "src", "Kernel.php"))
+	return fileutil.FileExists(filepath.Join(app.AppRoot, app.ComposerRoot, "bin", "console")) && fileutil.FileExists(filepath.Join(app.AppRoot, app.ComposerRoot, "src", "Kernel.php"))
 }
 
 // setSymfonySiteSettingsPaths sets the paths to .env.local file.
 func setSymfonySiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.AppRoot, ".env.local")
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.ComposerRoot, ".env.local")
 }
 
 // symfonyEnvMailer sets up mail catcher environment variabels for symfony project type
@@ -88,7 +88,7 @@ func symfonyPostStartAction(app *DdevApp) error {
 		return nil
 	}
 
-	envFilePath := filepath.Join(app.AppRoot, ".env.local")
+	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env.local")
 	// won't throw any error here, as it will be created anyway
 	_, envText, _ := ReadProjectEnvFile(envFilePath)
 

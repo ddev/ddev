@@ -209,9 +209,7 @@ DDEV injects a number of special environment variables into the container (via `
 
 ### Running Craft in a Subdirectory
 
-In order for `ddev craft` to work when Craft is installed in a subdirectory, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container. For example, if the installation lives in `my-craft-site/app`, you would run `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` to apply the change.
-
-Read more about customizing the environment and persisting configuration in [Providing Custom Environment Variables to a Container](./extend/customization-extendibility.md#environment-variables-for-containers-and-services).
+Set [`composer_root`](./configuration/config.md#composer_root) to the subdirectory where Craft is installed. For example, `ddev config --composer-root=app`.
 
 !!!tip "Installing Craft"
     Read more about installing Craft in the [official documentation](https://craftcms.com/docs).

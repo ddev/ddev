@@ -14,7 +14,7 @@ import (
 
 // isShopware6App returns true if the app is of type shopware6
 func isShopware6App(app *DdevApp) bool {
-	isShopware6, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, "composer.json"), `"name": "shopware/production"`)
+	isShopware6, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json"), `"name": "shopware/production"`)
 	if err == nil && isShopware6 {
 		return true
 	}
@@ -23,7 +23,7 @@ func isShopware6App(app *DdevApp) bool {
 
 // setShopware6SiteSettingsPaths sets the paths to .env.local file.
 func setShopware6SiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.AppRoot, ".env.local")
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.ComposerRoot, ".env.local")
 }
 
 // shopware6ImportFilesAction defines the shopware6 workflow for importing user-generated files.
@@ -80,7 +80,7 @@ func shopware6PostStartAction(app *DdevApp) error {
 	if app.DisableSettingsManagement {
 		return nil
 	}
-	envFilePath := filepath.Join(app.AppRoot, ".env.local")
+	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env.local")
 	_, envText, err := ReadProjectEnvFile(envFilePath)
 	var envMap = map[string]string{
 		"DATABASE_URL": `mysql://db:db@db:3306/db`,
