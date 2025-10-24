@@ -5,7 +5,10 @@
 ## Usage: heidisql [database] [library]
 ## Example: "ddev heidisql" or "ddev heidisql database2 libpq-17.dll" to open a database named "database2" with the library "libpq-17.dll".
 ## OSTypes: windows,wsl2,linux
-## HostBinaryExists: /mnt/c/Program Files/HeidiSQL/heidisql.exe,C:\Program Files\HeidiSQL\Heidisql.exe,/usr/bin/heidisql,/usr/local/bin/heidisql
+## HostBinaryExists: /mnt/c/Program Files/HeidiSQL/heidisql.exe
+## HostBinaryExists: C:\Program Files\HeidiSQL\Heidisql.exe
+## HostBinaryExists: /usr/bin/heidisql
+## HostBinaryExists: /usr/local/bin/heidisql
 ## DBTypes: mysql,mariadb,postgres
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then

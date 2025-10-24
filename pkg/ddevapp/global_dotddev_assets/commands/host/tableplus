@@ -7,7 +7,9 @@
 ## Usage: tableplus
 ## Example: "ddev tableplus"
 ## OSTypes: darwin,wsl2
-## HostBinaryExists: /Applications/TablePlus.app,/Applications/Setapp/TablePlus.app,/mnt/c/Program Files/TablePlus/TablePlus.exe
+## HostBinaryExists: /Applications/TablePlus.app
+## HostBinaryExists: /Applications/Setapp/TablePlus.app
+## HostBinaryExists: /mnt/c/Program Files/TablePlus/TablePlus.exe
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"

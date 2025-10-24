@@ -585,7 +585,9 @@ func findDirectivesInScriptCommand(script string) map[string]string {
 			}
 			if _, ok := directives[currentDirective]; ok {
 				separator := "\n"
-				if currentDirective == "Aliases" {
+				if currentDirective == "Aliases" || currentDirective == "ProjectTypes" ||
+					currentDirective == "OSTypes" || currentDirective == "DBTypes" ||
+					currentDirective == "HostBinaryExists" {
 					separator = ","
 				}
 				directives[currentDirective] += fmt.Sprintf("%s%s", separator, currentDirectiveValue)
