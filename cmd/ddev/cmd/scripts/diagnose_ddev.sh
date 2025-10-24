@@ -222,7 +222,6 @@ fi
 header "Network Connectivity"
 
 CURL_OK=$(command -v curl >/dev/null 2>&1 && echo "true" || echo "false")
-success "CURL_OK=${CURL_OK}"
 
 if [ ${CURL_OK} = "true" ]; then
   # Check internet access from host
@@ -232,6 +231,8 @@ if [ ${CURL_OK} = "true" ]; then
     fail "No internet access from host"
     suggestion "Check your network connection"
   fi
+else
+  warn "curl command not found; skipping network checks; please install curl"
 fi
 
 # Check DNS resolution for *.ddev.site
