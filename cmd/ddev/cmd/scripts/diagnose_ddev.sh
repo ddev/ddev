@@ -404,6 +404,9 @@ fi
 # Summary
 header "Summary"
 
+if [ ${CURL_OK} != "true" ]; then
+  warn "curl command not found; some checks were skipped; please install curl for more complete diagnostics"
+fi
 if [ $ISSUES_FOUND -eq 0 ] && [ $WARNINGS_FOUND -eq 0 ]; then
   echo
   success "${GREEN}${BOLD}All checks passed!${NC} DDEV should work correctly."
