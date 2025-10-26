@@ -1250,13 +1250,6 @@ stopasgroup=true
 	// Configures postgres environment: healthcheck, .pgpass, config mounts, pg_hba.conf
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
-		restoreConfPath := "/var/lib/postgresql/recovery.conf"
-		if v, err := strconv.Atoi(app.Database.Version); err == nil && v >= 18 {
-			restoreConfPath = app.GetPostgresDataPath() + "/recovery.conf"
-		}
-		restoreConfDir := filepath.ToSlash(filepath.Dir(restoreConfPath))
-		waitTime := app.GetMaxContainerWaitTime()
-
 		extraDBContent = extraDBContent + fmt.Sprintf(`
 ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
@@ -1268,7 +1261,7 @@ if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buste
     rm -f /etc/apt/sources.list.d/pgdg.list
     echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
     echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
-    timeout %[3]d apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
+    timeout %[1]d apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
         -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true \
         debian-archive-keyring apt-transport-https ca-certificates
@@ -1276,18 +1269,17 @@ if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buste
 fi
 EOF
 
+USER %[2]s
+RUN echo "*:*:db:db:db" > ~/.pgpass && chmod 600 ~/.pgpass
+USER root
+
 RUN <<EOF
 set -eu -o pipefail
 chmod ugo+rx /postgres_healthcheck.sh
 mkdir -p /etc/postgresql/conf.d
 chmod 777 /etc/postgresql/conf.d
-echo "*:*:db:db:db" > ~postgres/.pgpass
-chown postgres:postgres ~postgres/.pgpass
-chmod 600 ~postgres/.pgpass
 chmod 777 /var/tmp
 ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql
-mkdir -p %[2]s
-echo "restore_command = 'true'" >>%[1]s
 
 echo "# TYPE DATABASE USER CIDR-ADDRESS  METHOD
 host  all         all 0.0.0.0/0 md5
@@ -1297,13 +1289,18 @@ host  replication all 0.0.0.0/0 trust
 local replication all trust
 local replication all peer" >/etc/postgresql/pg_hba.conf
 
-timeout %[3]d apt-get update || true
+timeout %[1]d apt-get update || true
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
     -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests \
     apt-transport-https bzip2 ca-certificates less procps pv vim-tiny
 update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
+
+# Change directories owned by postgres (and everything inside them)
+find / -type d \( -user postgres -o -group postgres \) -exec chown -Rh %[3]s:%[4]s {} + 2>/dev/null || true
+# Change any remaining individual files owned by postgres
+find / -type f \( -user postgres -o -group postgres \) -exec chown -h %[3]s:%[4]s {} + 2>/dev/null || true
 EOF
-`, restoreConfPath, restoreConfDir, waitTime)
+`, app.GetMaxContainerWaitTime(), username, uid, gid)
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)

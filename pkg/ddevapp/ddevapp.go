@@ -826,14 +826,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	// But if we don't have bind mounts, we have to copy dump into the container
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		dbContainerName := GetContainerName(app, "db")
-		if err != nil {
-			return err
-		}
 		uid, _, _ := dockerutil.GetContainerUser()
-		// for PostgreSQL, must be written with PostgreSQL user
-		if app.Database.Type == nodeps.Postgres {
-			uid = "999"
-		}
 
 		insideContainerImportPath, _, err = dockerutil.Exec(dbContainerName, "mktemp -d", uid)
 		if err != nil {
@@ -1444,7 +1437,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Additional volumes can be added here. This allows us to run a single privileged
 	// container with a single focus of changing ownership, instead of having to use sudo
 	// inside the container
-	uid, _, _ := dockerutil.GetContainerUser()
+	uid, gid, _ := dockerutil.GetContainerUser()
 
 	// On the web container, we can use mutagen to sync
 	// anything that changes in the .ddev folder by
@@ -1459,14 +1452,13 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// Build list of volume mounts and their target paths for chown
 	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
-	chownCmd := fmt.Sprintf("chown -R %s /mnt/ddev-global-cache", uid)
+	chownCmd := fmt.Sprintf("chown -R %s:%s /mnt/ddev-global-cache", uid, gid)
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		if app.Database.Type == nodeps.Postgres {
 			postgresDataDir := app.GetPostgresDataDir()
 			volumeMounts = append(volumeMounts, app.GetPostgresVolumeName()+":"+postgresDataDir)
-			// Chain postgres data dir chown while preserving exit codes from both operations.
-			chownCmd = fmt.Sprintf("%s || rc=$?; chown -R 999:999 %s || rc=$?; exit ${rc:-0};", chownCmd, postgresDataDir)
+			chownCmd = fmt.Sprintf("%s %s", chownCmd, postgresDataDir)
 		} else {
 			volumeMounts = append(volumeMounts, app.GetMariaDBVolumeName()+":/var/lib/mysql")
 			chownCmd = fmt.Sprintf("%s /var/lib/mysql", chownCmd)
@@ -2855,9 +2847,6 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
 		c := fmt.Sprintf("cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotFile)
 		uid, _, _ := dockerutil.GetContainerUser()
-		if app.Database.Type == nodeps.Postgres {
-			uid = "999"
-		}
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
 			return "", fmt.Errorf("failed to '%s': %v, stdout=%s, stderr=%s", c, err, stdout, stderr)
