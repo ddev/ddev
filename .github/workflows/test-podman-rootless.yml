@@ -27,19 +27,21 @@ permissions:
   contents: read
 
 jobs:
-  podman-rootless-testddevapp:
+  podman-rootless-testpkg-1:
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
-      make_target: "testddevapp"
+      make_target: "testpkg"
+      testargs: "-failfast -run ^Test[A-M]"
       ddev_test_podman_rootless: "true"
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
-  podman-rootless-testnotddevapp:
+  podman-rootless-testpkg-2:
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
-      make_target: "testnotddevapp"
+      make_target: "testpkg"
+      testargs: "-failfast -run ^Test[N-Z]"
       ddev_test_podman_rootless: "true"
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
