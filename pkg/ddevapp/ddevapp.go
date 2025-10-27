@@ -262,34 +262,31 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["database_type"] = app.Database.Type
 	appDesc["database_version"] = app.Database.Version
 
-	// Only show extended status for running sites.
-	if status == SiteRunning {
-		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-			dbinfo := make(map[string]interface{})
-			dbinfo["username"] = "db"
-			dbinfo["password"] = "db"
-			dbinfo["dbname"] = "db"
-			dbinfo["host"] = "db"
-			dbPublicPort, err := app.GetPublishedPort("db")
-			if err != nil {
-				util.Warning("failed to GetPublishedPort(db): %v", err)
-			}
-			dbinfo["dbPort"] = GetInternalPort(app, "db")
-			dbinfo["published_port"] = dbPublicPort
-			dbinfo["database_type"] = nodeps.MariaDB // default
-			dbinfo["database_type"] = app.Database.Type
-			dbinfo["database_version"] = app.Database.Version
-
-			appDesc["dbinfo"] = dbinfo
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		dbinfo := make(map[string]interface{})
+		dbinfo["username"] = "db"
+		dbinfo["password"] = "db"
+		dbinfo["dbname"] = "db"
+		dbinfo["host"] = "db"
+		dbPublicPort, err := app.GetPublishedPort("db")
+		if err != nil && status == SiteRunning {
+			util.Warning("failed to GetPublishedPort(db): %v", err)
 		}
+		dbinfo["dbPort"] = GetInternalPort(app, "db")
+		dbinfo["published_port"] = dbPublicPort
+		dbinfo["database_type"] = nodeps.MariaDB // default
+		dbinfo["database_type"] = app.Database.Type
+		dbinfo["database_version"] = app.Database.Version
 
-		appDesc["xhprof_mode"] = app.GetXHProfMode()
-		xhguiStatus := XHGuiStatus(app)
-		if xhguiStatus {
-			appDesc["xhgui_status"] = "enabled"
-		} else {
-			appDesc["xhgui_status"] = "disabled"
-		}
+		appDesc["dbinfo"] = dbinfo
+	}
+
+	appDesc["xhprof_mode"] = app.GetXHProfMode()
+	xhguiStatus := XHGuiStatus(app)
+	if xhguiStatus {
+		appDesc["xhgui_status"] = "enabled"
+	} else {
+		appDesc["xhgui_status"] = "disabled"
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
@@ -459,6 +456,142 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 						if desc, ok := xDdevMap["describe-info"].(string); ok && desc != "" {
 							services[shortName]["describe-info"] = strings.TrimSpace(desc)
 						}
+					}
+				}
+			}
+		}
+	}
+	// Add services that are defined in docker-compose but not currently running
+	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+		for serviceName, composeService := range app.ComposeYaml.Services {
+			// Skip services we already processed from running containers
+			if _, ok := services[serviceName]; ok {
+				continue
+			}
+			// Initialize the service map with default values for stopped services
+			services[serviceName] = map[string]interface{}{}
+			services[serviceName]["status"] = SiteStopped
+			services[serviceName]["short_name"] = serviceName
+			services[serviceName]["full_name"] = fmt.Sprintf("ddev-%s-%s", app.Name, serviceName)
+			// Strip the -built suffix from image names, just like for running containers
+			services[serviceName]["image"] = strings.TrimSuffix(composeService.Image, fmt.Sprintf("-%s-built", app.Name))
+
+			// Extract port information from docker-compose configuration
+			var exposedPrivatePorts []int
+			var exposedPrivatePortsStr []string
+
+			// First, collect ports from Ports section
+			if composeService.Ports != nil {
+				for _, portConfig := range composeService.Ports {
+					// Get the target (container) port
+					if portConfig.Target != 0 {
+						port := int(portConfig.Target)
+						if !slices.Contains(exposedPrivatePorts, port) {
+							exposedPrivatePorts = append(exposedPrivatePorts, port)
+						}
+					}
+				}
+			}
+
+			// Extract container ports from HTTP_EXPOSE and HTTPS_EXPOSE environment variables
+			if !IsRouterDisabled(app) && composeService.Environment != nil {
+				for envName, envValue := range composeService.Environment {
+					if envValue != nil && (envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
+						// Format is "routerPort:containerPort,routerPort2:containerPort2,..."
+						// Example: "9100:8080,8025:8025"
+						portMappings := strings.Split(*envValue, ",")
+						for _, mapping := range portMappings {
+							parts := strings.Split(mapping, ":")
+							if len(parts) == 2 {
+								// Extract the container port (second part)
+								if containerPort, err := strconv.Atoi(strings.TrimSpace(parts[1])); err == nil {
+									if !slices.Contains(exposedPrivatePorts, containerPort) {
+										exposedPrivatePorts = append(exposedPrivatePorts, containerPort)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// Sort and convert to strings
+			if len(exposedPrivatePorts) > 0 {
+				sort.Ints(exposedPrivatePorts)
+				for _, p := range exposedPrivatePorts {
+					exposedPrivatePortsStr = append(exposedPrivatePortsStr, strconv.FormatInt(int64(p), 10))
+				}
+			}
+
+			services[serviceName]["exposed_ports"] = strings.Join(exposedPrivatePortsStr, ",")
+			services[serviceName]["host_ports"] = ""
+			services[serviceName]["host_ports_mapping"] = []map[string]string{}
+
+			// Extract VIRTUAL_HOST, HTTP_EXPOSE, and HTTPS_EXPOSE from environment
+			if !IsRouterDisabled(app) && composeService.Environment != nil {
+				envMap := make(map[string]string)
+
+				// Parse environment variables
+				for envName, envValue := range composeService.Environment {
+					if envValue != nil && (envName == "VIRTUAL_HOST" || envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
+						envMap[envName] = *envValue
+					}
+				}
+
+				// Process VIRTUAL_HOST
+				if virtualHost, ok := envMap["VIRTUAL_HOST"]; ok {
+					vhostsList := strings.Split(virtualHost, ",")
+					if len(vhostsList) > 0 {
+						services[serviceName]["virtual_host"] = vhostsList[0]
+					}
+				}
+
+				// Determine hostname for URL construction
+				hostname, ok := services[serviceName]["virtual_host"]
+				appHostname := ""
+				if ok {
+					appHostname = hostname.(string)
+				} else {
+					appHostname = appDesc["hostname"].(string)
+				}
+
+				// Process HTTP_EXPOSE and HTTPS_EXPOSE
+				for name, portMapping := range envMap {
+					if name != "HTTP_EXPOSE" && name != "HTTPS_EXPOSE" {
+						continue
+					}
+
+					attributeName := "http_url"
+					protocol := "http://"
+					if name == "HTTPS_EXPOSE" {
+						attributeName = "https_url"
+						protocol = "https://"
+					}
+
+					portSpecs := strings.Split(portMapping, ",")
+					if len(portSpecs) > 0 {
+						ports := strings.Split(portSpecs[0], ":")
+						if ports[0] != app.GetMailpitHTTPPort() && ports[0] != app.GetMailpitHTTPSPort() {
+							services[serviceName][attributeName] = netutil.NormalizeURL(protocol + appHostname + ":" + ports[0])
+						}
+					}
+				}
+			}
+
+			// Add host_http_url and host_https_url for consistency, empty for stopped services
+			if serviceName == "web" {
+				services[serviceName]["host_http_url"] = ""
+				services[serviceName]["host_https_url"] = ""
+			}
+
+			// Extract x-ddev.describe extension data from compose file
+			if xDdev, ok := composeService.Extensions["x-ddev"]; ok {
+				if xDdevMap, ok := xDdev.(map[string]interface{}); ok {
+					if desc, ok := xDdevMap["describe-url-port"].(string); ok && desc != "" {
+						services[serviceName]["describe-url-port"] = strings.TrimSpace(desc)
+					}
+					if desc, ok := xDdevMap["describe-info"].(string); ok && desc != "" {
+						services[serviceName]["describe-info"] = strings.TrimSpace(desc)
 					}
 				}
 			}
