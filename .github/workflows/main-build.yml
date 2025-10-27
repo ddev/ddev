@@ -299,40 +299,40 @@ jobs:
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
 
       - name: Upload all artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: all-ddev-executables
           path: ${{ github.workspace }}/artifacts/*
       - name: Upload macos-amd64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-macos-amd64
           path: |
             .gotmp/bin/darwin_amd64/ddev
             .gotmp/bin/darwin_amd64/ddev-hostname
       - name: Upload macos-arm64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-macos-arm64
           path: |
             .gotmp/bin/darwin_arm64/ddev
             .gotmp/bin/darwin_arm64/ddev-hostname
       - name: Upload linux-arm64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-linux-arm64
           path: |
             .gotmp/bin/linux_arm64/ddev
             .gotmp/bin/linux_arm64/ddev-hostname
       - name: Upload linux-amd64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-linux-amd64
           path: |
             .gotmp/bin/linux_amd64/ddev
             .gotmp/bin/linux_amd64/ddev-hostname
       - name: Upload windows-amd64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-windows-amd64
           path: |
@@ -340,19 +340,19 @@ jobs:
             .gotmp/bin/windows_amd64/ddev-hostname.exe
 
       - name: Upload windows_amd64 installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-windows-amd64-installer
           path: .gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe
       - name: Upload windows-arm64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-windows-arm64
           path: |
             .gotmp/bin/windows_arm64/ddev.exe
             .gotmp/bin/windows_arm64/ddev-hostname.exe
       - name: Upload windows_arm64 installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-windows-arm64-installer
           path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
