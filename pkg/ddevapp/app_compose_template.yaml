@@ -299,6 +299,8 @@ services:
       - TZ={{ .Timezone }}
     depends_on:
       - db
+    x-ddev:
+      describe-url-port: "Launch: ddev xhgui"
   {{- end }}
 networks:
   ddev_default:

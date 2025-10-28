@@ -139,7 +139,11 @@ services:
       - RABBITMQ_DEFAULT_USER=rabbitmq
       - RABBITMQ_DEFAULT_PASS=rabbitmq
     x-ddev:
-      describe-info: "Username: rabbitmq, Password: rabbitmq"
+      # Can be multi-line block
+      describe-info: |
+        User: rabbitmq
+        Pass: rabbitmq
+      # Or single line string
       describe-url-port: "extra help here"
 ```
 

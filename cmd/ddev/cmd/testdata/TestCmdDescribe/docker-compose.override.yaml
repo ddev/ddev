@@ -33,5 +33,6 @@ services:
       com.ddev.approot: ${DDEV_APPROOT}
     x-ddev:
       describe-url-port: "url-port Test service description for busybox2"
-      describe-info: "info test info for busybox2"
-
+      describe-info: |
+        User: busybox2
+        Password: secret

@@ -116,7 +116,8 @@ func TestCmdDescribe(t *testing.T) {
 		require.NotContains(t, string(out), "  - busybox2:3333 ->")
 		// busybox2 x-ddev.describe-url-ports
 		require.Contains(t, string(out), "url-port Test service description for busybox2")
-		require.Contains(t, string(out), "info test info for")
+		require.Contains(t, string(out), "User: busybox2")
+		require.Contains(t, string(out), "Password: secret")
 
 		err = os.Chdir(v.Dir)
 		require.NoError(t, err)
@@ -279,7 +280,7 @@ func TestCmdDescribe(t *testing.T) {
 		require.Contains(t, busybox2, "describe-url-port")
 		require.Equal(t, "url-port Test service description for busybox2", busybox2["describe-url-port"].(string))
 		require.Contains(t, busybox2, "describe-info")
-		require.Equal(t, "info test info for busybox2", busybox2["describe-info"].(string))
+		require.Equal(t, "User: busybox2\nPassword: secret", busybox2["describe-info"].(string))
 
 		require.NotEmpty(t, item["msg"])
 
