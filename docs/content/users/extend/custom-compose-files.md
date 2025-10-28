@@ -133,9 +133,9 @@ Sometimes a third-party service (defined in a `.ddev/docker-compose.*.yaml` file
 
 By default, a third-party service does not trust DDEV's `mkcert` certificate authority (CA). In such cases, you have three main options:
 
-- Use plain HTTP between the containers.
-- Configure the third-party service to ignore HTTPS/TLS errors.
-- Make the third-party service trust DDEV's CA.
+* Use plain HTTP between the containers.
+* Configure the third-party service to ignore HTTPS/TLS errors.
+* Make the third-party service trust DDEV's CA.
 
 ### Option 1: Use HTTP Between Containers
 
@@ -222,11 +222,36 @@ RUN mkdir -p /usr/local/bin && \
 USER example
 ```
 
-## Creating a Container User Matching Host Permissions
+## Matching Container User to Host User
 
 When mounting host directories for file editing, it's often necessary to align container user permissions with those of the host user. This prevents ownership or permission mismatches when files are created or modified inside the container.
 
-This setup uses DDEV's built-in [environment variables](./custom-commands.md#environment-variables-provided) (`DDEV_USER`, `DDEV_UID`, and `DDEV_GID`) to automatically match the host user, ensuring consistent file ownership and permissions between host and container:
+### Option 1: Run as the Host User
+
+The simplest way is to run the container using the same UID and GID as the host user. DDEV automatically provides these values through its [environment variables](./custom-commands.md#environment-variables-provided) `DDEV_UID` and `DDEV_GID`.
+
+```yaml
+# .ddev/docker-compose.example.yaml
+services:
+  example:
+    container_name: ddev-${DDEV_SITENAME}-example
+    image: ${YOUR_DOCKER_IMAGE:-example/example:latest}
+    labels:
+      com.ddev.approot: ${DDEV_APPROOT}
+      com.ddev.site-name: ${DDEV_SITENAME}
+    restart: 'no'
+    # Run the container as the same user/group as the host
+    user: "${DDEV_UID}:${DDEV_GID}"
+    volumes:
+      - .:/mnt/ddev_config
+      - ddev-global-cache:/mnt/ddev-global-cache
+      # Mount the project root to /var/www/html inside the container
+      - ../:/var/www/html
+```
+
+### Option 2: Create Matching User Inside Container
+
+If you need a more sophisticated user setup, similar to what `ddev-webserver` uses, you can create a user inside the container during the build process that matches the host user's UID and GID.
 
 ```yaml
 # .ddev/docker-compose.example.yaml
@@ -245,6 +270,8 @@ services:
       com.ddev.approot: ${DDEV_APPROOT}
       com.ddev.site-name: ${DDEV_SITENAME}
     restart: 'no'
+    # Run the container as the same user/group as the host
+    user: "${DDEV_UID}:${DDEV_GID}"
     volumes:
       - .:/mnt/ddev_config
       - ddev-global-cache:/mnt/ddev-global-cache
