@@ -287,8 +287,6 @@ ARG YOUR_DOCKER_IMAGE="scratch"
 FROM $YOUR_DOCKER_IMAGE
 # Switch to root if needed (skip if already root)
 USER root
-# Allow large UIDs and GIDs (in case of very large values on host)
-RUN printf "UID_MAX 2147483647\nGID_MAX 2147483647\n" >> /etc/login.defs
 # Accept build arguments for user creation
 ARG username
 ARG uid
