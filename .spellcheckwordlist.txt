@@ -76,6 +76,7 @@ GlobalProtect
 Gotenberg
 Grav
 Gzipped
+HMR
 HOWTO
 HeidiSQL
 Homebrew
@@ -92,6 +93,7 @@ Kalabox
 Kubernetes
 Lando
 Laravel
+Laravel's
 Let's
 Lima
 Livewire
@@ -107,6 +109,7 @@ MariaDB
 Matthias
 MinIO
 Misconfigured
+Monorepo
 MUTAGEN_DATA_DIRECTORY
 MyDevSite
 MySQL
@@ -115,6 +118,7 @@ Nameserver
 NFS
 Netbeans
 Nginx
+Nuxt
 OSs
 OpenMage
 OpenSearch
@@ -164,6 +168,7 @@ Traefik
 TravisCI
 UAC
 UDP
+UnoCSS
 Unshare
 Upsun
 Usage
@@ -171,6 +176,7 @@ Use
 Uses
 Uz
 VCS
+Vitest
 VM
 VNC
 VPN
@@ -181,6 +187,7 @@ WSL
 WSL2
 WantedBy
 Webhosting
+WebSocket
 XDebug
 XDG
 Xhprof
@@ -552,6 +559,7 @@ proot
 proto
 provided
 provider
+proxying
 ps
 psql
 public

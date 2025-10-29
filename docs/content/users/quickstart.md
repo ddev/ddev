@@ -582,7 +582,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     ```
 
 !!!tip "Add Vite support?"
-    Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/vite). There are small tweaks needed in order to use it: [Working with Vite in DDEV - Laravel](https://ddev.com/blog/working-with-vite-in-ddev/#laravel).
+    Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/vite). See the [Vite Integration](usage/vite.md#laravel) documentation for complete setup instructions.
 
 ## Magento 2
 
@@ -710,7 +710,7 @@ ddev magento setup:upgrade
     ddev launch
     ```
 
-    SvelteKit requires just a bit of configuration to make it run. There are many ways to make any Node.js site work, these are just examples. The `svelte.config.js` and `vite.config.js` used above can be adapted in many ways.
+    SvelteKit requires just a bit of configuration to make it run. There are many ways to make any Node.js site work, these are just examples. The `svelte.config.js` and `vite.config.js` used above can be adapted in many ways. For more comprehensive Vite configuration options, see the [Vite Integration](usage/vite.md) documentation.
 
     * `svelte.config.js` example uses `adapter-node`.
     * `vite.config.js` uses port 3000 and `allowedHosts: true`
