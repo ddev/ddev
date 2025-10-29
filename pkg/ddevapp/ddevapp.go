@@ -447,6 +447,22 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			services[shortName]["host_http_url"] = app.GetWebContainerDirectHTTPURL()
 			services[shortName]["host_https_url"] = app.GetWebContainerDirectHTTPSURL()
 		}
+
+		// Extract x-ddev.describe extension data from compose file
+		if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+			if composeService, ok := app.ComposeYaml.Services[shortName]; ok {
+				if xDdev, ok := composeService.Extensions["x-ddev"]; ok {
+					if xDdevMap, ok := xDdev.(map[string]interface{}); ok {
+						if desc, ok := xDdevMap["describe-url-port"].(string); ok && desc != "" {
+							services[shortName]["describe-url-port"] = strings.TrimSpace(desc)
+						}
+						if desc, ok := xDdevMap["describe-info"].(string); ok && desc != "" {
+							services[shortName]["describe-info"] = strings.TrimSpace(desc)
+						}
+					}
+				}
+			}
+		}
 	}
 
 	err = app.ProcessHooks("post-describe")
