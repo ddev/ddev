@@ -129,23 +129,47 @@ By default, these commands interact with the `web` container for a project. All 
 
 ## Third Party Services May Need To Trust `ddev-webserver`
 
-Sometimes a third-party service (`docker-compose.*.yaml`) may need to consume content from the `ddev-webserver` container. A PDF generator like [Gotenberg](https://github.com/gotenberg/gotenberg), for example, might need to read in-container images or text in order to create a PDF. Or a testing service may need to read data in order to support tests.
+Sometimes a third-party service (defined in a `.ddev/docker-compose.*.yaml` file) needs to consume content from the `ddev-webserver` container. For example, a PDF generator such as [Gotenberg](https://github.com/gotenberg/gotenberg) might need to read in-container images or text to generate a PDF, or a testing service might need to read data to perform tests.
 
-A third-party service is not configured to trust DDEV’s `mkcert` certificate authority by default, so in cases like this you have to either use HTTP between the two containers, or make the third-party service ignore or trust the certificate authority.
+By default, a third-party service does not trust DDEV's `mkcert` certificate authority (CA). In such cases, you have three main options:
 
-Using plain HTTP between the containers is the simplest technique. For example, the [`ddev-selenium-standalone-chrome`](https://github.com/ddev/ddev-selenium-standalone-chrome) service must consume content, so it conducts interactions with the `ddev-webserver` [by accessing `http://web`](https://github.com/ddev/ddev-selenium-standalone-chrome/blob/main/config.selenium-standalone-chrome.yaml#L17). In this case, the `selenium-chrome` container accesses the `web` container via HTTP instead of HTTPS.
+* Use plain HTTP between the containers.
+* Configure the third-party service to ignore HTTPS/TLS errors.
+* Make the third-party service trust DDEV's CA.
 
-A second technique is to tell the third-party service to ignore HTTPS/TLS errors. For example, if the third-party service uses cURL, it could use `curl --insecure https://web` or `curl --insecure https://<project>.ddev.site`.
+### Option 1: Use HTTP Between Containers
 
-A third and more complex approach is to make the third-party container actually trust the self-signed certificate that the `ddev-webserver` container is using. This can be done in many cases using a custom `.ddev/example/Dockerfile` and some extra configuration in the `.ddev/docker-compose.example.yaml`. An example would be:
+Using HTTP is the simplest solution. For instance, the [`ddev-selenium-standalone-chrome`](https://github.com/ddev/ddev-selenium-standalone-chrome) service consumes web content by accessing the `ddev-webserver` over plain HTTP, see [its configuration here](https://github.com/ddev/ddev-selenium-standalone-chrome/blob/main/config.selenium-standalone-chrome.yaml#L17). In this case, the `selenium-chrome` container interacts with the `web` container via `http://web` instead of HTTPS.
+
+### Option 2: Ignore TLS Errors
+
+This solution configures the third-party service to ignore certificate errors.  
+For example, if it uses cURL, you can disable verification with:
+
+```bash
+curl --insecure https://web
+# or
+curl --insecure https://<project>.ddev.site
+```
+
+### Option 3: Make the Container Trust DDEV's Certificate Authority
+
+A more advanced solution is to configure the third-party container to trust the same self-signed certificate used by the `ddev-webserver` container:
 
 ```yaml
+# .ddev/docker-compose.example.yaml
 services:
   example:
     container_name: ddev-${DDEV_SITENAME}-example
+    # Run `mkcert -install` on container start
+    # (choose either this or the `post_start` approach, not both):
     command: "bash -c 'mkcert -install && original-start-command-from-image'"
+    # Or run `mkcert -install` on container post_start
+    # (choose either this or the `command` approach, not both):
+    post_start:
+      - command: mkcert -install
     # Add an image and a build stage so we can add `mkcert`, etc.
-    # The Dockerfile for the build stage goes in the `.ddev/example directory` here
+    # The Dockerfile for the build stage goes in the `.ddev/example/` directory
     image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-built
     build:
       context: example
@@ -172,24 +196,111 @@ services:
       - ddev-global-cache:/mnt/ddev-global-cache
 ```
 
+And the corresponding `Dockerfile`:
+
 ```Dockerfile
+# .ddev/example/Dockerfile
 ARG YOUR_DOCKER_IMAGE="scratch"
 FROM $YOUR_DOCKER_IMAGE
-
-# CAROOT for `mkcert` to use, has the CA config
+# Define CAROOT for mkcert
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
-
-# If the image build does not run as the default `root` user,
-# temporarily change to root. If the image already has the default setup
-# where it builds as `root`, then
-# there is no need to change user here.
+# Switch to root if needed (skip if already root)
 USER root
-# Give the `example` user full `sudo` privileges
-RUN echo "example ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/example && chmod 0440 /etc/sudoers.d/example
-# Install the correct architecture binary of `mkcert`
-RUN export TARGETPLATFORM=linux/$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && mkdir -p /usr/local/bin && curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=${TARGETPLATFORM}"
-RUN chmod +x /usr/local/bin/mkcert
-USER original_user
+# Optionally install sudo if missing
+RUN (apt-get update || true) && apt-get install -y --no-install-recommends sudo \
+    && rm -rf /var/lib/apt/lists/*
+# Allow the `example` user passwordless sudo for `mkcert -install`
+RUN mkdir -p /etc/sudoers.d && \
+    echo "example ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/example && \
+    chmod 0440 /etc/sudoers.d/example
+# Install mkcert for the correct architecture
+ARG TARGETARCH
+RUN mkdir -p /usr/local/bin && \
+    curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/${TARGETARCH}" && \
+    chmod +x /usr/local/bin/mkcert
+# Switch back to non-root user
+USER example
+```
+
+## Matching Container User to Host User
+
+When mounting host directories for file editing, it's often necessary to align container user permissions with those of the host user. This prevents ownership or permission mismatches when files are created or modified inside the container.
+
+### Option 1: Run as the Host User
+
+The simplest way is to run the container using the same UID and GID as the host user. DDEV automatically provides these values through its [environment variables](./custom-commands.md#environment-variables-provided) `DDEV_UID` and `DDEV_GID`.
+
+```yaml
+# .ddev/docker-compose.example.yaml
+services:
+  example:
+    container_name: ddev-${DDEV_SITENAME}-example
+    image: ${YOUR_DOCKER_IMAGE:-example/example:latest}
+    labels:
+      com.ddev.approot: ${DDEV_APPROOT}
+      com.ddev.site-name: ${DDEV_SITENAME}
+    restart: 'no'
+    # Run the container as the same user/group as the host
+    user: "${DDEV_UID}:${DDEV_GID}"
+    volumes:
+      - .:/mnt/ddev_config
+      - ddev-global-cache:/mnt/ddev-global-cache
+      # Mount the project root to /var/www/html inside the container
+      - ../:/var/www/html
+```
+
+### Option 2: Create Matching User Inside Container
+
+If you need a more sophisticated user setup, similar to what `ddev-webserver` uses, you can create a user inside the container during the build process that matches the host user's UID and GID.
+
+```yaml
+# .ddev/docker-compose.example.yaml
+services:
+  example:
+    container_name: ddev-${DDEV_SITENAME}-example
+    image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-built
+    build:
+      context: example
+      args:
+        YOUR_DOCKER_IMAGE: ${YOUR_DOCKER_IMAGE:-example/example:latest}
+        username: ${DDEV_USER}
+        uid: ${DDEV_UID}
+        gid: ${DDEV_GID}
+    labels:
+      com.ddev.approot: ${DDEV_APPROOT}
+      com.ddev.site-name: ${DDEV_SITENAME}
+    restart: 'no'
+    # Run the container as the same user/group as the host
+    user: "${DDEV_UID}:${DDEV_GID}"
+    volumes:
+      - .:/mnt/ddev_config
+      - ddev-global-cache:/mnt/ddev-global-cache
+      # Mount the project root to /var/www/html inside the container
+      - ../:/var/www/html
+```
+
+And the corresponding `Dockerfile`:
+
+```Dockerfile
+# .ddev/example/Dockerfile
+ARG YOUR_DOCKER_IMAGE="scratch"
+FROM $YOUR_DOCKER_IMAGE
+# Switch to root if needed (skip if already root)
+USER root
+# Accept build arguments for user creation
+ARG username
+ARG uid
+ARG gid
+# Ensure tty group exists
+RUN getent group tty || groupadd tty
+# Create group and user, trying multiple methods for compatibility
+RUN (groupadd --gid "$gid" "$username" || groupadd "$username" || true) && \
+    (useradd -G tty -l -m -s "/bin/bash" --gid "$username" --comment '' --uid "$uid" "$username" || \
+    useradd -G tty -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || \
+    useradd -G tty -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || \
+    useradd -G tty -l -m -s "/bin/bash" --comment '' "$username")
+# Switch to the created user
+USER "$username"
 ```
 
 ## Optional Services
