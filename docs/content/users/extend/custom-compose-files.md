@@ -139,11 +139,11 @@ By default, a third-party service does not trust DDEV's `mkcert` certificate aut
 
 ### Option 1: Use HTTP Between Containers
 
-Using HTTP is the simplest approach. For instance, the [`ddev-selenium-standalone-chrome`](https://github.com/ddev/ddev-selenium-standalone-chrome) service consumes web content by accessing the `ddev-webserver` over plain HTTP, see [its configuration here](https://github.com/ddev/ddev-selenium-standalone-chrome/blob/main/config.selenium-standalone-chrome.yaml#L17). In this case, the `selenium-chrome` container interacts with the `web` container via `http://web` instead of HTTPS.
+Using HTTP is the simplest solution. For instance, the [`ddev-selenium-standalone-chrome`](https://github.com/ddev/ddev-selenium-standalone-chrome) service consumes web content by accessing the `ddev-webserver` over plain HTTP, see [its configuration here](https://github.com/ddev/ddev-selenium-standalone-chrome/blob/main/config.selenium-standalone-chrome.yaml#L17). In this case, the `selenium-chrome` container interacts with the `web` container via `http://web` instead of HTTPS.
 
 ### Option 2: Ignore TLS Errors
 
-Another approach is to configure the third-party service to ignore certificate errors.  
+This solution configures the third-party service to ignore certificate errors.  
 For example, if it uses cURL, you can disable verification with:
 
 ```bash
