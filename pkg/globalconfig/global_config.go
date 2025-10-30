@@ -900,10 +900,9 @@ func IsInternetActive() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	// Using a random URL is more conclusive, but it's more intrusive because
-	// DNS may take some time, and it's really annoying.
-	testURL := "test.ddev.site"
-	addrs, err := IsInternetActiveNetResolver.LookupIP(ctx, "ip4", testURL)
+	// Test by using Cloudflare's one.one.one.one DNS.
+	testHostname := "one.one.one.one"
+	addrs, err := IsInternetActiveNetResolver.LookupIP(ctx, "ip4", testHostname)
 
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
@@ -911,7 +910,7 @@ func IsInternetActive() bool {
 		if !active {
 			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://docs.ddev.com/en/stable/users/usage/offline/ for info.")
 		}
-		output.UserErr.Debugf("IsInternetActive(): err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, testURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, testURL, DdevGlobalConfig.InternetDetectionTimeout)
+		output.UserErr.Debugf("IsInternetActive(): err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, testHostname=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, testHostname, DdevGlobalConfig.InternetDetectionTimeout)
 	}
 
 	// Remember the result to not call this twice

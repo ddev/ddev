@@ -169,7 +169,7 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
 		// If they have a new version (but not first-timer) then prompt to poweroff
 		if globalconfig.DdevGlobalConfig.LastStartedVersion != "v0.0" {
-			output.UserOut.Print("You seem to have a new DDEV version.")
+			output.UserOut.Printf("You seem to have a new DDEV version (new=%s, old=%s)", versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion)
 			okPoweroff := util.Confirm("During an upgrade it's important to `ddev poweroff`.\nMay I do `ddev poweroff` before continuing?\nThis does no harm and loses no data.")
 			if okPoweroff {
 				ddevapp.PowerOff()
