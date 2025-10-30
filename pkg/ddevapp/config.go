@@ -1260,7 +1260,7 @@ stopasgroup=true
 		extraDBContent = extraDBContent + fmt.Sprintf(`
 ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
-RUN echo "UID_MAX  2147483647\nGID_MAX  2147483647\n" >> /etc/login.defs
+
 RUN <<EOF
 set -eu -o pipefail
 source /etc/os-release || true

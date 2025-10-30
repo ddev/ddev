@@ -45,7 +45,6 @@ RUN set -x; if ( command -v mariadbd && ! command -v mysqld ); then \
 # And we're going to install our own percona.list if needed, so get that if needed
 # and remove it here
 USER root
-RUN echo "UID_MAX  2147483647\nGID_MAX  2147483647\n" >> /etc/login.defs
 RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
 RUN mkdir -p /var/lib/apt/lists/partial
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 less lsb-release pv tzdata vim-tiny wget
