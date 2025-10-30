@@ -60,7 +60,7 @@
 auth_command:
   command: |
     set -eu -o pipefail
-    set -x
+    # set -x   # You can enable bash debugging output by uncommenting
     # Try explicit env, then UPSUN_* fallback, then derive from .upsun/local/project.yaml and git branch.
     export PLATFORM_PROJECT="${PLATFORM_PROJECT:-${UPSUN_PROJECT:-}}"
     if [ -z "${PLATFORM_PROJECT:-}" ] && [ -f .upsun/local/project.yaml ]; then
@@ -74,8 +74,16 @@ auth_command:
     fi
 
     if [ -z "${UPSUN_CLI_TOKEN:-}" ]; then echo "Please make sure you have set UPSUN_CLI_TOKEN." && exit 1; fi
-    if [ -z "${PLATFORM_PROJECT:-}" ]; then echo "Please make sure you have set PLATFORM_PROJECT." && exit 1; fi
-    if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then echo "Please make sure you have set PLATFORM_ENVIRONMENT." && exit 1; fi
+    if [ -z "${PLATFORM_PROJECT:-}" ]; then
+      echo "Please make sure you have set PLATFORM_PROJECT." && exit 1
+    else
+      echo "Using PLATFORM_PROJECT=${PLATFORM_PROJECT:-}"
+    fi
+    if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then
+      echo "Please make sure you have set PLATFORM_ENVIRONMENT." && exit 1
+    else
+      echo "Using PLATFORM_ENVIRONMENT=${PLATFORM_ENVIRONMENT:-}"
+    fi
     if [ "$(upsun environment:info status -e ${PLATFORM_ENVIRONMENT})" != "active" ]; then
       upsun environment:resume -e ${PLATFORM_ENVIRONMENT} -y
     fi

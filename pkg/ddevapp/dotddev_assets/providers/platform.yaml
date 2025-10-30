@@ -65,7 +65,7 @@
 auth_command:
   command: |
     set -eu -o pipefail
-    set -x
+    # set -x   # You can enable bash debugging output by uncommenting
     # Try explicit env, then derive from .platform/local/project.yaml and git branch.
     if [ -z "${PLATFORM_PROJECT:-}" ] && [ -f .platform/local/project.yaml ]; then
       PLATFORM_PROJECT="$(yq -r '.id' .platform/local/project.yaml 2>/dev/null || true)"
