@@ -46,7 +46,7 @@ You can start a new [Backdrop](https://backdropcms.org) project or configure an 
 
         ```bash
         cat > setup-backdrop.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-backdrop-site && cd my-backdrop-site
         ddev config --project-type=backdrop
@@ -107,7 +107,7 @@ You can start a new [Backdrop](https://backdropcms.org) project or configure an 
 
         ```bash
         cat > setup-backdrop-existing.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-backdrop-site && cd my-backdrop-site
         git clone https://github.com/ddev/test-backdrop.git .
@@ -162,7 +162,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 
         ```bash
         cat > setup-cakephp.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-cakephp-site && cd my-cakephp-site
         ddev config --project-type=cakephp --docroot=webroot
@@ -203,7 +203,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
 
         ```bash
         cat > setup-cakephp-git.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         git clone <my-cakephp-repo> my-cakephp-site
         cd my-cakephp-site
@@ -269,7 +269,7 @@ ddev launch
 
     ```bash
     cat > setup-civicrm.sh << 'EOF'
-    #!/bin/bash
+    #!/usr/bin/env bash
     set -euo pipefail
     mkdir my-civicrm-site && cd my-civicrm-site
     ddev config --project-type=php --composer-root=core --upload-dirs=public/media
@@ -338,7 +338,7 @@ Further information on the DDEV procedure can also be found in the [Contao docum
 
         ```bash
         cat > setup-contao.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-contao-site && cd my-contao-site
         ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
@@ -392,7 +392,7 @@ Further information on the DDEV procedure can also be found in the [Contao docum
 
         ```bash
         cat > setup-contao-manager.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-contao-site && cd my-contao-site
         ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
@@ -449,7 +449,7 @@ DDEV injects a number of special environment variables into the container (via `
 
         ```bash
         cat > setup-craft.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-craft-site && cd my-craft-site
         ddev config --project-type=craftcms --docroot=web
@@ -498,7 +498,7 @@ DDEV injects a number of special environment variables into the container (via `
 
         ```bash
         cat > setup-craft-existing.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         git clone https://github.com/example/example-site my-craft-site
         cd my-craft-site
@@ -559,7 +559,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
         ```bash
         cat > setup-drupal11.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-drupal-site && cd my-drupal-site
         ddev config --project-type=drupal11 --docroot=web
@@ -607,7 +607,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
         ```bash
         cat > setup-drupal-cms.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-drupal-site && cd my-drupal-site
         ddev config --project-type=drupal11 --docroot=web
@@ -657,7 +657,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
         ```bash
         cat > setup-drupal10.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-drupal-site && cd my-drupal-site
         ddev config --project-type=drupal10 --docroot=web
@@ -702,7 +702,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
         ```bash
         cat > setup-drupal67.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         git clone https://github.com/example/my-drupal-site
         cd my-drupal-site
@@ -751,7 +751,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
         ```bash
         cat > setup-drupal-git.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         PROJECT_GIT_URL=https://github.com/ddev/test-drupal11.git
         git clone ${PROJECT_GIT_URL} my-drupal-site
@@ -805,7 +805,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
         ```bash
         cat > setup-ee.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-ee-site && cd my-ee-site
         curl -o ee.zip -L $(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
@@ -857,7 +857,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
         ```bash
         cat > setup-ee-git.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-ee-site && cd my-ee-site
         git clone https://github.com/ExpressionEngine/ExpressionEngine .
@@ -944,7 +944,7 @@ ddev launch $(ddev drush uli)
 
     ```bash
     cat > setup-frankenphp.sh << 'EOF'
-    #!/bin/bash
+    #!/usr/bin/env bash
     set -euo pipefail
     export FRANKENPHP_SITENAME=my-frankenphp-site
     mkdir ${FRANKENPHP_SITENAME} && cd ${FRANKENPHP_SITENAME}
@@ -1014,7 +1014,7 @@ ddev launch $(ddev drush uli)
 
         ```bash
         cat > setup-grav.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-grav-site && cd my-grav-site
         ddev config --omit-containers=db
@@ -1067,7 +1067,7 @@ ddev launch $(ddev drush uli)
 
         ```bash
         cat > setup-grav-git.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-grav-site && cd my-grav-site
         git clone -b master https://github.com/getgrav/grav.git .
@@ -1142,7 +1142,7 @@ Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/insta
 
     ```bash
     cat > setup-ibexa.sh << 'EOF'
-    #!/bin/bash
+    #!/usr/bin/env bash
     set -euo pipefail
     mkdir my-ibexa-site && cd my-ibexa-site
     ddev config --project-type=php --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
@@ -1192,7 +1192,7 @@ ddev launch /administrator
 
     ```bash
     cat > setup-joomla.sh << 'EOF'
-    #!/bin/bash
+    #!/usr/bin/env bash
     set -euo pipefail
     mkdir my-joomla-site && cd my-joomla-site
     curl -o joomla.zip -L $(curl -sL https://api.github.com/repos/joomla/joomla-cms/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^Joomla.*Stable-Full_Package\\.zip$")))[0].browser_download_url')
@@ -1244,7 +1244,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
 
         ```bash
         cat > setup-kirby.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-kirby-site && cd my-kirby-site
         ddev config --omit-containers=db --webserver-type=apache-fpm
@@ -1289,7 +1289,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
 
         ```bash
         cat > setup-kirby-existing.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         cd my-kirby-site
         ddev config --omit-containers=db --webserver-type=apache-fpm
@@ -1343,7 +1343,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
         ```bash
         cat > setup-laravel.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-laravel-site && cd my-laravel-site
         ddev config --project-type=laravel --docroot=public
@@ -1389,7 +1389,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
         ```bash
         cat > setup-laravel-sqlite.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-laravel-site && cd my-laravel-site
         ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
@@ -1429,7 +1429,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
         ```bash
         cat > switch-laravel-sqlite.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
         ddev restart
@@ -1503,7 +1503,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
         ```bash
         cat > setup-laravel-installer.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-laravel-site && cd my-laravel-site
         ddev config --project-type=laravel --docroot=public
@@ -1562,7 +1562,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
         ```bash
         cat > setup-laravel-git.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         git clone <my-laravel-repo> my-laravel-site
         cd my-laravel-site
@@ -1662,7 +1662,7 @@ Change the admin name and related information as needed.
 
     ```bash
     cat > setup-magento.sh << 'EOF'
-    #!/bin/bash
+    #!/usr/bin/env bash
     set -euo pipefail
     export MAGENTO_HOSTNAME=my-magento2-site
     mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
@@ -1742,7 +1742,7 @@ ddev magento setup:upgrade
 
         ```bash
         cat > setup-moodle.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-moodle-site && cd my-moodle-site
         ddev config --docroot=public --webserver-type=apache-fpm
@@ -1889,7 +1889,7 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
 
         ```bash
         cat > setup-openmage.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-openmage-site && cd my-openmage-site
         ddev config --project-type=magento --docroot=public_test --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
@@ -1953,7 +1953,7 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
 
         ```bash
         cat > setup-openmage-git.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-openmage-site && cd my-openmage-site
         git clone https://github.com/OpenMage/magento-lts .
@@ -2025,7 +2025,7 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
 
         ```bash
         cat > setup-pimcore.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-pimcore-site && cd my-pimcore-site
         ddev config --project-type=php --docroot=public --webimage-extra-packages='php${DDEV_PHP_VERSION}-amqp'
@@ -2086,7 +2086,7 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
 
         ```bash
         cat > setup-processwire-zip.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-processwire-site && cd my-processwire-site
         curl -LJOf https://github.com/processwire/processwire/archive/master.zip
@@ -2131,7 +2131,7 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
 
         ```bash
         cat > setup-processwire.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-processwire-site && cd my-processwire-site
         ddev config --project-type=php --webserver-type=apache-fpm
@@ -2177,7 +2177,7 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
 
         ```bash
         cat > setup-processwire-git.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-processwire-site && cd my-processwire-site
         git clone https://github.com/processwire/processwire.git .
@@ -2252,7 +2252,7 @@ If you have any questions there is lots of help in the [DDEV thread in the Proce
 
         ```bash
         cat > setup-shopware.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-shopware-site && cd my-shopware-site
         ddev config --project-type=shopware6 --docroot=public
@@ -2302,7 +2302,7 @@ Use a new or existing Composer project, or clone a Git repository.
 
         ```bash
         cat > setup-silverstripe.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-silverstripe-site && cd my-silverstripe-site
         ddev config --project-type=silverstripe --docroot=public
@@ -2368,7 +2368,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
 
         ```bash
         cat > setup-statamic.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-statamic-site && cd my-statamic-site
         ddev config --project-type=laravel --docroot=public
@@ -2466,7 +2466,7 @@ ddev launch /admin
 
     ```bash
     cat > setup-sulu.sh << 'EOF'
-    #!/bin/bash
+    #!/usr/bin/env bash
     set -euo pipefail
     mkdir my-sulu-site && cd my-sulu-site
     ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
@@ -2525,7 +2525,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
         ```bash
         cat > setup-symfony.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-symfony-site && cd my-symfony-site
         ddev config --project-type=symfony --docroot=public
@@ -2631,7 +2631,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
         ```bash
         cat > setup-typo3.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         PROJECT_NAME=my-typo3-site
         mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
@@ -2725,7 +2725,7 @@ There are several easy ways to use DDEV with WordPress:
 
         ```bash
         cat > setup-wordpress.sh << 'EOF'
-        #!/bin/bash
+        #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-wp-site && cd my-wp-site
         ddev config --project-type=wordpress
