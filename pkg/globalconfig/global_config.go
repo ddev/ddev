@@ -910,7 +910,7 @@ func IsInternetActive() bool {
 		if !active {
 			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://docs.ddev.com/en/stable/users/usage/offline/ for info.")
 		}
-		output.UserErr.Debugf("IsInternetActive(): err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, testHostname=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, testHostname, DdevGlobalConfig.InternetDetectionTimeout)
+		output.UserErr.Printf("IsInternetActive(): err=%v, ctx.Err()=%v, addrs=%v, IsInternetActive=%v, testHostname=%v, internet_detection_timeout_ms=%dms", err, ctx.Err(), addrs, active, testHostname, DdevGlobalConfig.InternetDetectionTimeout)
 	}
 
 	// Remember the result to not call this twice
