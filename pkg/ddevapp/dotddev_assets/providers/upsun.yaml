@@ -11,7 +11,10 @@
 # You only need to explicitly set those environment variables (e.g. in .ddev/config.yaml,
 # .ddev/config.<name>.yaml, or via `ddev config --web-environment-add=...`) when automatic
 # derivation is not appropriate for your workflow or the files are not present.
-#
+
+# Consider using `ddev add-on get ddev/ddev-upsun` (https://github.com/ddev/ddev-upsun) for more
+# complete Upsun integration.
+
 # To use this configuration,
 
 # 1. Check out the site from Upsun and then configure it with `ddev config`. You'll want to use `ddev start` and make sure the basic functionality is working.
@@ -25,7 +28,7 @@
 #    You can also do this with `ddev config global --web-environment-add="UPSUN_CLI_TOKEN=abcdeyourtoken"`.
 #
 #    To use multiple API tokens for different projects, add them to your per-project configuration
-#    using the .ddev/config.local.yaml or .ddev/.env file instead. These files are gitignored by default.
+#    using the .ddev/config.local.yaml file instead. These files are gitignored by default.
 #    ```yaml
 #    web_environment:
 #        - UPSUN_CLI_TOKEN=abcdeyourtoken
@@ -150,7 +153,7 @@ files_import_command:
 
 # push is very useful for non-production environments, but can be
 # very dangerous to production environments. If it is dangerous to your
-# workflow you can remove the lines below and remove the `#ddev-generated` in this file
+# workflow you can remove the lines below and remove the `ddev-generated` in this file
 db_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
@@ -176,7 +179,7 @@ db_push_command:
 
 # push is very useful for non-production environments, but can be
 # very dangerous to production environments. If it is dangerous to your
-# workflow you can remove the lines below and remove the `#ddev-generated` in this file
+# workflow you can remove the lines below and remove the `ddev-generated` in this file
 # TODO: This is a naive, Drupal-centric push, which needs adjustment for the mount to be pushed.
 files_push_command:
   command: |

@@ -11,10 +11,9 @@
 # You only need to explicitly set those environment variables (e.g. in .ddev/config.yaml,
 # .ddev/config.<name>.yaml, or via `ddev config --web-environment-add=...`) when automatic
 # derivation is not appropriate for your workflow or the files are not present.
-#
 
 # Consider using `ddev add-on get ddev/ddev-upsun` (https://github.com/ddev/ddev-upsun) for more
-# complete Upsun integration.
+# complete Upsun Fixed integration.
 
 # To use this configuration,
 
@@ -148,7 +147,7 @@ files_import_command:
 
 # push is very useful for non-production environments, but can be
 # very dangerous to production environments. If it is dangerous to your
-# workflow you can remove the lines below and remove the `#ddev-generated` in this file
+# workflow you can remove the lines below and remove the `ddev-generated` in this file
 db_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
@@ -172,7 +171,7 @@ db_push_command:
 
 # push is very useful for non-production environments, but can be
 # very dangerous to production environments. If it is dangerous to your
-# workflow you can remove the lines below and remove the `#ddev-generated` in this file
+# workflow you can remove the lines below and remove the `ddev-generated` in this file
 # TODO: This is a naive, Drupal-centric push, which needs adjustment for the mount to be pushed.
 files_push_command:
   command: |

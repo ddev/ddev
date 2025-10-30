@@ -69,7 +69,7 @@ files_import_command:
 
 # push is very useful for non-production environments, but can be
 # very dangerous to production environments. If it is dangerous to your
-# workflow you can remove the lines below and remove the `#ddev-generated` in this file
+# workflow you can remove the lines below and remove the `ddev-generated` in this file
 db_push_command:
   command: |
     set -eu -o pipefail

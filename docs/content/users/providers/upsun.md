@@ -2,6 +2,9 @@
 
 DDEV provides integration with the [Upsun by Platform](https://upsun.com/) hosting system, allowing Upsun users to easily download database and files from Upsun to a local DDEV-managed environment.
 
+!!!tip
+    Consider using `ddev add-on get ddev/ddev-upsun` ([ddev-upsun](https://github.com/ddev/ddev-upsun)) for more complete Upsun integration.
+
 DDEV’s Upsun integration pulls databases and files from an existing Upsun site/environment into your local system so you can develop locally.
 
 ## Upsun Global Configuration
@@ -37,25 +40,25 @@ You need to obtain and configure an API token first. This only needs to be done 
 
     * Automatic derivation (no action required):
 
-      * If your repository contains `.upsun/local/project.yaml` with an `id:` key, DDEV will derive `PLATFORM_PROJECT` from that file.
-      * If your local Git branch name corresponds to the Upsun environment name, DDEV will derive `PLATFORM_ENVIRONMENT` from the current Git branch.
-      * In typical setups where both `.upsun/local/project.yaml` and a matching Git branch exist, you do not need to set `PLATFORM_PROJECT` or `PLATFORM_ENVIRONMENT` manually.
+        * If your repository contains `.upsun/local/project.yaml` with an `id:` key, DDEV will derive `PLATFORM_PROJECT` from that file.
+        * If your local Git branch name corresponds to the Upsun environment name, DDEV will derive `PLATFORM_ENVIRONMENT` from the current Git branch.
+        * In typical setups where both `.upsun/local/project.yaml` and a matching Git branch exist, you do not need to set `PLATFORM_PROJECT` or `PLATFORM_ENVIRONMENT` manually.
 
     * Manual configuration (only if automatic derivation is not suitable):
 
-      * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
+        * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
 
-        ```yaml
-        web_environment:
-            - PLATFORM_PROJECT=nf4amudfn23biyourproject
-            - PLATFORM_ENVIRONMENT=main
-        ```
+            ```yaml
+            web_environment:
+                - PLATFORM_PROJECT=nf4amudfn23biyourproject
+                - PLATFORM_ENVIRONMENT=main
+            ```
 
-      * Or with a command from your terminal:
+        * Or with a command from your terminal:
 
-        ```bash
-        ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
-        ```
+            ```bash
+            ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
+            ```
 
     For more information about how to set environment variables for containers and services see [Environment Variables for Containers and Services](../extend/customization-extendibility.md#environment-variables-for-containers-and-services).
 
@@ -83,9 +86,9 @@ If your environment contains more than one app, add `PLATFORM_APP` variable to y
 
 ### Managing Multiple Databases
 
-If your project has only one database, it will automatically be pulled into and pushed from DDEV’s `'db'` database.
+If your project has only one database, it will automatically be pulled into and pushed from DDEV’s `db` database.
 
-If your project has multiple databases, they’ll all be pulled into DDEV with their respective remote names. You can optionally designate a *primary* to use DDEV’s default `'db'` database, which may be useful in some cases—particularly if you’ve been using the default solo-database behavior and happened to add another one to your project.
+If your project has multiple databases, they’ll all be pulled into DDEV with their respective remote names. You can optionally designate a *primary* to use DDEV’s default `db` database, which may be useful in some cases—particularly if you’ve been using the default solo-database behavior and happened to add another one to your project.
 
 You can designate the primary database using the `PLATFORM_PRIMARY_RELATIONSHIP` environment variable:
 
