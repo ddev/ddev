@@ -22,7 +22,7 @@ You can start a new [Backdrop](https://backdropcms.org) project or configure an 
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Download Backdrop core and create admin user:
@@ -86,7 +86,7 @@ You can start a new [Backdrop](https://backdropcms.org) project or configure an 
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Import database and files backups:
@@ -142,7 +142,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install CakePHP via Composer:
@@ -187,7 +187,7 @@ Please note that you will need to change the PHP version to 7.4 to be able to wo
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install dependencies and launch:
@@ -372,7 +372,7 @@ Further information on the DDEV procedure can also be found in the [Contao docum
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Download the Contao Manager:
@@ -431,7 +431,7 @@ DDEV injects a number of special environment variables into the container (via `
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Scaffold a new project with Composer:
@@ -480,7 +480,7 @@ DDEV injects a number of special environment variables into the container (via `
     Start DDEV and install Composer packages:
 
     ```bash
-    ddev start -y
+    ddev start
     ddev composer install
     ```
 
@@ -533,7 +533,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Drupal via Composer:
@@ -585,7 +585,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Drupal CMS via Composer:
@@ -631,7 +631,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Drupal via Composer:
@@ -689,7 +689,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     Start DDEV and launch:
 
     ```bash
-    ddev start -y
+    ddev start
     ddev launch /install.php
     ```
 
@@ -728,7 +728,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
     ```bash
     ddev config --project-type=drupal11 --docroot=web
-    ddev start -y
+    ddev start
     ```
 
     Install dependencies and set up Drupal:
@@ -787,7 +787,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
     ```bash
     ddev config --database=mysql:8.0
-    ddev start -y
+    ddev start
     ```
 
     Launch the installation wizard:
@@ -833,7 +833,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
     ```bash
     ddev config --database=mysql:8.0
-    ddev start -y
+    ddev start
     ```
 
     Install Composer dependencies and prepare installation:
@@ -993,7 +993,7 @@ ddev launch $(ddev drush uli)
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Grav via Composer:
@@ -1045,7 +1045,7 @@ ddev launch $(ddev drush uli)
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install dependencies and initialize Grav:
@@ -1224,7 +1224,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install the Kirby Starterkit:
@@ -1275,7 +1275,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Launch the site:
@@ -1323,7 +1323,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Laravel via Composer:
@@ -1369,7 +1369,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Laravel via Composer:
@@ -1466,7 +1466,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Run Laravel installer (follow prompts and select starter kit):
@@ -1540,7 +1540,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     ```bash
     ddev config --project-type=laravel --docroot=public
-    ddev start -y
+    ddev start
     ```
 
     Install dependencies and run post-install scripts:
@@ -1709,7 +1709,7 @@ ddev magento setup:upgrade
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Moodle via Composer:
@@ -1767,7 +1767,7 @@ ddev magento setup:upgrade
     export SVELTEKIT_SITENAME=my-sveltekit-site
     mkdir ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}
     ddev config --project-type=generic --webserver-type=generic
-    ddev start -y
+    ddev start
 
     cat <<EOF > .ddev/config.sveltekit.yaml
     web_extra_exposed_ports:
@@ -1806,7 +1806,7 @@ ddev magento setup:upgrade
     export NODEJS_SITENAME=my-nodejs-site
     mkdir ${NODEJS_SITENAME} && cd ${NODEJS_SITENAME}
     ddev config --project-type=generic --webserver-type=generic
-    ddev start -y
+    ddev start
     ddev npm install express
 
     cat <<EOF > .ddev/config.nodejs.yaml
@@ -1845,7 +1845,7 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Initialize and configure Composer:
@@ -1925,7 +1925,7 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
 
     ```bash
     ddev config --project-type=magento --php-version=8.1 --web-environment-add=MAGE_IS_DEVELOPER_MODE=1
-    ddev start -y
+    ddev start
     ```
 
     Install Composer dependencies:
@@ -1983,7 +1983,7 @@ Visit [OpenMage Docs](https://docs.openmage.org) for more installation details.
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Pimcore via Composer:
@@ -2072,7 +2072,7 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
 
     ```bash
     ddev config --project-type=php --webserver-type=apache-fpm
-    ddev start -y
+    ddev start
     ```
 
     Launch ProcessWire:
@@ -2111,7 +2111,7 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install ProcessWire via Composer:
@@ -2163,7 +2163,7 @@ To get started with [ProcessWire](https://processwire.com/), create a new direct
 
     ```bash
     ddev config --webserver-type=apache-fpm
-    ddev start -y
+    ddev start
     ```
 
     Launch ProcessWire:
@@ -2224,7 +2224,7 @@ If you have any questions there is lots of help in the [DDEV thread in the Proce
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Shopware via Composer:
@@ -2281,7 +2281,7 @@ Use a new or existing Composer project, or clone a Git repository.
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Silverstripe via Composer:
@@ -2321,7 +2321,7 @@ Use a new or existing Composer project, or clone a Git repository.
     git clone <my-silverstripe-repo> my-silverstripe-site
     cd my-silverstripe-site
     ddev config --project-type=silverstripe --docroot=public
-    ddev start -y
+    ddev start
     ddev composer install
     ddev sake dev/build flush=all
     ```
@@ -2386,7 +2386,7 @@ The Laravel project type can be used for [Statamic](https://statamic.com/) like 
     git clone <my-statamic-repo> my-statamic-site
     cd my-statamic-site
     ddev config --project-type=laravel --docroot=public
-    ddev start -y
+    ddev start
     ddev composer install
     ddev exec "php artisan key:generate"
     ddev launch /cp
@@ -2503,7 +2503,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install Symfony via Composer:
@@ -2543,7 +2543,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
     ddev config --project-type=symfony --docroot=public
-    ddev start -y
+    ddev start
     ddev exec symfony check:requirements
     ddev exec symfony new temp --version="7.1.*" --webapp
     # 'symfony new' can't install in the current directory right away,
@@ -2558,7 +2558,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     git clone <my-symfony-repo> my-symfony-site
     cd my-symfony-site
     ddev config --project-type=symfony --docroot=public
-    ddev start -y
+    ddev start
     ddev composer install
     ddev launch
     ```
@@ -2592,7 +2592,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Install TYPO3 via Composer:
@@ -2669,7 +2669,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
     git clone ${PROJECT_GIT_REPOSITORY} .
     ddev config --project-type=typo3 --docroot=public --php-version=8.3
-    ddev start -y
+    ddev start
     ddev composer install
     ddev exec touch public/FIRST_INSTALL
     ddev launch /typo3/install.php
@@ -2695,7 +2695,7 @@ There are several easy ways to use DDEV with WordPress:
     Start DDEV (this may take a minute):
 
     ```bash
-    ddev start -y
+    ddev start
     ```
 
     Download WordPress:
@@ -2745,7 +2745,7 @@ There are several easy ways to use DDEV with WordPress:
     ```bash
     mkdir my-wp-site && cd my-wp-site
     ddev config --project-type=wordpress --docroot=web
-    ddev start -y
+    ddev start
     ddev composer create-project roots/bedrock
     ```
 
@@ -2779,7 +2779,7 @@ There are several easy ways to use DDEV with WordPress:
     git clone ${PROJECT_GIT_URL} my-wp-site
     cd my-wp-site
     ddev config --project-type=wordpress
-    ddev start -y
+    ddev start
     ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
     ddev launch wp-admin/
     ```
