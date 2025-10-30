@@ -41,3 +41,27 @@ php83:
 php84:
   amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
   arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "opcache", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+
+# TODO: php8.5: These are the standard packages carried forward from php8.4 to php8.5
+# https://codeberg.org/oerdnj/deb.sury.org/issues/13#issuecomment-7573144
+# However, opcache is now enabled by default, so we need to add it to the list of extensions.
+# https://wiki.php.net/rfc/make_opcache_required
+# These extensions that DDEV uses are currently missing in php8.5 on Debian bookworm (arm64)
+#apcu
+#imagick
+#memcached
+#redis
+#uploadprogress
+#xdebug
+#xhprof
+#xmlrpc
+#yaml
+
+php85-todo:
+  amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+  arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+
+# TODO: php8.5 temp workaround until php8.5 packages are available
+php85:
+  amd64: ["bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
+  arm64: ["bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]

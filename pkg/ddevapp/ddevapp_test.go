@@ -985,6 +985,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
+		//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
+		if v == nodeps.PHP85 {
+			t.Log("Skipping xdebug tests for PHP8.5 until xdebug lands in PHP8.5")
+			continue
+		}
 		t.Logf("Beginning Xdebug checks with Xdebug php%s\n", v)
 
 		err = app.Restart()
@@ -1019,13 +1024,14 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Errorf("Aborting Xdebug check for php%s: %v", v, err)
 			continue
 		}
-		// PHP 7.2 through 8.4 get Xdebug 3.0+
-		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81, nodeps.PHP82, nodeps.PHP83, nodeps.PHP84}, app.PHPVersion) {
-			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
-			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
-		} else {
+
+		// Ancient PHP versions get Xdebug 2
+		if nodeps.ArrayContainsString([]string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71}, app.PHPVersion) {
 			assert.Contains(stdout, "xdebug support => enabled", "xdebug is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
+		} else { // But most get xdebug 3+
+			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
+			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
 		}
 
 		// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
