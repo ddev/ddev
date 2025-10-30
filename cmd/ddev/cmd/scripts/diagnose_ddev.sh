@@ -286,6 +286,12 @@ if ddev describe >/dev/null 2>&1; then
   info "Type: ${project_type}"
   info "Status: ${project_status}"
 
+  project_approot=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.approot' 2>/dev/null)
+
+  if [ -d "$project_approot" ]; then
+    cd "$project_approot" || true
+  fi
+
   # Check for customizations
   if [ -d .ddev ]; then
     custom_files=$(grep -rL "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/nginx* .ddev/*-build .ddev/apache .ddev/mysql .ddev/postgres .ddev/.env 2>/dev/null | grep -v '\.example$')
@@ -398,7 +404,7 @@ if [ "${DDEV_DIAGNOSE_FULL:-}" = "true" ]; then
   cd - >/dev/null 2>&1 || true
 
   info "The project name is ${PROJECT_NAME} and it is located at ${PROJECT_DIR} if you want to investigate further."
-  info "You can delete the project when you don't need it any more with 'ddev delete -Oy ${PROJECT_NAME} && rm -rf '$PROJECT_DIR'"
+  info "You can delete the project when you don't need it any more with \"ddev delete -Oy ${PROJECT_NAME} && rm -rf '$PROJECT_DIR'\""
 fi
 
 # Summary
