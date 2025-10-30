@@ -231,7 +231,7 @@ ddev config --project-type=php --composer-root=core --upload-dirs=public/media
 Start DDEV (this may take a minute):
 
 ```bash
-ddev start -y
+ddev start
 ```
 
 Download and extract CiviCRM:
@@ -893,7 +893,7 @@ ddev config --project-type=drupal11 --webserver-type=generic --docroot=web --php
 Start DDEV (this may take a minute):
 
 ```bash
-ddev start -y
+ddev start
 ```
 
 Create FrankenPHP configuration:
@@ -1111,7 +1111,7 @@ ddev config --project-type=php --docroot=public --web-environment-add DATABASE_U
 Start DDEV (this may take a minute):
 
 ```bash
-ddev start -y
+ddev start
 ```
 
 Install Ibexa via Composer:
@@ -1177,7 +1177,7 @@ ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
 Start DDEV (this may take a minute):
 
 ```bash
-ddev start -y
+ddev start
 ```
 
 Install Joomla and launch:
@@ -1623,7 +1623,7 @@ ddev add-on get ddev/ddev-opensearch
 Start DDEV (this may take a minute):
 
 ```bash
-ddev start -y
+ddev start
 ```
 
 Install Magento via Composer:
@@ -2404,7 +2404,7 @@ ddev config --project-type=php --docroot=public --upload-dirs=uploads --database
 Start DDEV (this may take a minute):
 
 ```bash
-ddev start -y
+ddev start
 ```
 
 Install Sulu via Composer:
