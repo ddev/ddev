@@ -951,20 +951,12 @@ func TestOmitProjectNameByDefault(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	// Create temporary XDG_CONFIG_HOME for isolated testing
-	tmpXdgConfigHomeDir := testcommon.CreateTmpDir(t.Name())
-	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
-		_ = os.RemoveAll(tmpXdgConfigHomeDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 	})
-
-	// Set XDG_CONFIG_HOME to use temporary directory
-	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
-
-	// Create the global DDEV directory structure
-	err := os.MkdirAll(tmpGlobalDdevDir, 0755)
-	require.NoError(t, err)
 
 	tests := []struct {
 		name                     string
@@ -1087,20 +1079,12 @@ func TestOmitProjectNameReconfig(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	// Create temporary XDG_CONFIG_HOME for isolated testing
-	tmpXdgConfigHomeDir := testcommon.CreateTmpDir(t.Name())
-	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
-		_ = os.RemoveAll(tmpXdgConfigHomeDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 	})
-
-	// Set XDG_CONFIG_HOME to use temporary directory
-	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
-
-	// Create the global DDEV directory structure
-	err := os.MkdirAll(tmpGlobalDdevDir, 0755)
-	require.NoError(t, err)
 
 	tmpDir := testcommon.CreateTmpDir("reconfig-test")
 	actualDirName := filepath.Base(tmpDir)
@@ -1111,7 +1095,7 @@ func TestOmitProjectNameReconfig(t *testing.T) {
 		_ = os.RemoveAll(tmpDir)
 	})
 
-	err = os.Chdir(tmpDir)
+	err := os.Chdir(tmpDir)
 	require.NoError(t, err)
 
 	// Enable omit_project_name_by_default
@@ -1156,20 +1140,12 @@ func TestOmitProjectNameWithConfigOverride(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	// Create temporary XDG_CONFIG_HOME for isolated testing
-	tmpXdgConfigHomeDir := testcommon.CreateTmpDir(t.Name())
-	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
-		_ = os.RemoveAll(tmpXdgConfigHomeDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 	})
-
-	// Set XDG_CONFIG_HOME to use temporary directory
-	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
-
-	// Create the global DDEV directory structure
-	err := os.MkdirAll(tmpGlobalDdevDir, 0755)
-	require.NoError(t, err)
 
 	tmpDir := testcommon.CreateTmpDir("override-test")
 	t.Cleanup(func() {
@@ -1179,7 +1155,7 @@ func TestOmitProjectNameWithConfigOverride(t *testing.T) {
 		_ = os.RemoveAll(tmpDir)
 	})
 
-	err = os.Chdir(tmpDir)
+	err := os.Chdir(tmpDir)
 	require.NoError(t, err)
 
 	// Enable omit_project_name_by_default
@@ -1225,26 +1201,18 @@ func TestGlobalConfigOmitProjectNameDefault(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Create temporary XDG_CONFIG_HOME for isolated testing
-	tmpXdgConfigHomeDir := testcommon.CreateTmpDir(t.Name())
-	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
-		_ = os.RemoveAll(tmpXdgConfigHomeDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 	})
-
-	// Set XDG_CONFIG_HOME to use temporary directory
-	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
-
-	// Create the global DDEV directory structure
-	err := os.MkdirAll(tmpGlobalDdevDir, 0755)
-	require.NoError(t, err)
 
 	// Ensure global config exists
 	globalconfig.EnsureGlobalConfig()
 
 	// Test setting to true directly (avoids subprocess environment variable issues)
 	globalconfig.DdevGlobalConfig.OmitProjectNameByDefault = true
-	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 
 	err = globalconfig.ReadGlobalConfig()
