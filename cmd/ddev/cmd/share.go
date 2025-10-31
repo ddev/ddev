@@ -90,6 +90,7 @@ ddev share myproject`,
 			case <-sigChan:
 				// Signal received, kill ngrok process
 				if ngrokCmd != nil && ngrokCmd.Process != nil {
+					// Ignore error from Kill() as we're already handling the exit via ngrokErr
 					_ = ngrokCmd.Process.Kill()
 				}
 				ngrokErr = <-done
