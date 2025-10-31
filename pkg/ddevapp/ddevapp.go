@@ -1254,7 +1254,7 @@ func (app *DdevApp) Start() error {
 	}
 
 	if !globalconfig.IsInternetActive() {
-		util.WarningOnce("Internet connection not detected, DNS may not work, see https://docs.ddev.com/en/stable/users/usage/offline/ for info.")
+		util.WarningOnce("Internet connection not detected, DNS may not work.\nSee https://docs.ddev.com/en/stable/users/usage/offline/ for info.")
 		if globalconfig.DdevDebug {
 			util.WarningOnce("Internet check error: %v", globalconfig.IsInternetActiveErr)
 		}
