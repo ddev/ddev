@@ -1837,6 +1837,8 @@ func validateHookYAML(source []byte) error {
 		"post-pull",
 		"pre-push",
 		"post-push",
+		"pre-share",
+		"post-share",
 		"pre-snapshot",
 		"post-snapshot",
 		"pre-restore-snapshot",
