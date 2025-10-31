@@ -15,7 +15,7 @@ var DebugInstrumentationFlushCmd = &cobra.Command{
 		amplitude.CheckSetUp()
 
 		if !globalconfig.IsInternetActive() {
-			util.WarningOnce("Internet check error: %v", globalconfig.IsInternetActiveErr)
+			util.WarningOnce("Warning: %v", globalconfig.IsInternetActiveErr)
 		}
 
 		if amplitude.IsDisabled() {
