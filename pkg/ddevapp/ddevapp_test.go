@@ -3219,45 +3219,69 @@ func TestDdevDescribe(t *testing.T) {
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	startErr := app.StartAndWait(0)
+	// Test both stopped and running states
+	for _, state := range []struct {
+		name    string
+		running bool
+	}{
+		{"stopped", false},
+		{"running", true},
+	} {
+		t.Run(state.name, func(t *testing.T) {
+			if state.running {
+				startErr := app.StartAndWait(0)
 
-	// If we have a problem starting, get the container logs and output.
-	if startErr != nil {
-		out, logsErr := app.CaptureLogs("web", false, "")
-		assert.NoError(logsErr)
+				// If we have a problem starting, get the container logs and output.
+				if startErr != nil {
+					out, logsErr := app.CaptureLogs("web", false, "")
+					assert.NoError(logsErr)
 
-		healthcheck, inspectErr := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
-		assert.NoError(inspectErr)
+					healthcheck, inspectErr := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
+					assert.NoError(inspectErr)
 
-		t.Fatalf("app.StartAndWait(%s) failed: %v, \nweb container healthcheck='%s', \n== web container logs=\n%s\n== END web container logs ==", site.Name, err, healthcheck, out)
+					t.Fatalf("app.StartAndWait(%s) failed: %v, \nweb container healthcheck='%s', \n== web container logs=\n%s\n== END web container logs ==", site.Name, err, healthcheck, out)
+				}
+			} else {
+				err = app.Stop(false, false)
+				assert.NoError(err)
+				// Ensure we have fresh compose config for stopped state
+				_ = app.DockerEnv()
+				err = app.WriteDockerComposeYAML()
+				require.NoError(t, err)
+			}
+
+			desc, err := app.Describe(false)
+			assert.NoError(err)
+			if state.running {
+				assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
+			} else {
+				assert.EqualValues(ddevapp.SiteStopped, desc["status"], "")
+			}
+			assert.EqualValues(app.GetName(), desc["name"])
+			assert.EqualValues(fileutil.ShortHomeJoin(app.GetAppRoot()), desc["shortroot"])
+			assert.EqualValues(app.GetAppRoot(), desc["approot"])
+			assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
+
+			// Verify x-ddev.describe functionality
+			services, ok := desc["services"].(map[string]map[string]interface{})
+			require.True(t, ok, "services should be a map[string]map[string]interface{}")
+			testservice, ok := services["testservice"]
+			require.True(t, ok, "testservice should exist in services")
+			describeValue, ok := testservice["describe-url-port"].(string)
+			require.True(t, ok, "describe-url-port field should exist in testservice")
+			assert.Equal("url-port Test service description for testservice", describeValue, "describe-url-port value should match x-ddev.describe from docker-compose file")
+			describeValue, ok = testservice["describe-info"].(string)
+			require.True(t, ok, "describe-info field should exist in testservice")
+			assert.Equal("info test info for testservice", describeValue, "info Test service description for busybox2")
+
+			assert.FileExists("hello-pre-describe-" + app.Name)
+			assert.FileExists("hello-post-describe-" + app.Name)
+			err = os.Remove("hello-pre-describe-" + app.Name)
+			assert.NoError(err)
+			err = os.Remove("hello-post-describe-" + app.Name)
+			assert.NoError(err)
+		})
 	}
-
-	desc, err := app.Describe(false)
-	assert.NoError(err)
-	assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
-	assert.EqualValues(app.GetName(), desc["name"])
-	assert.EqualValues(fileutil.ShortHomeJoin(app.GetAppRoot()), desc["shortroot"])
-	assert.EqualValues(app.GetAppRoot(), desc["approot"])
-	assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
-
-	// Verify x-ddev.describe functionality
-	services, ok := desc["services"].(map[string]map[string]interface{})
-	require.True(t, ok, "services should be a map[string]map[string]interface{}")
-	testservice, ok := services["testservice"]
-	require.True(t, ok, "testservice should exist in services")
-	describeValue, ok := testservice["describe-url-port"].(string)
-	require.True(t, ok, "describe-url-port field should exist in testservice")
-	assert.Equal("url-port Test service description for testservice", describeValue, "describe-url-port value should match x-ddev.describe from docker-compose file")
-	describeValue, ok = testservice["describe-info"].(string)
-	require.True(t, ok, "describe-info field should exist in testservice")
-	assert.Equal("info test info for testservice", describeValue, "info Test service description for busybox2")
-
-	assert.FileExists("hello-pre-describe-" + app.Name)
-	assert.FileExists("hello-post-describe-" + app.Name)
-	err = os.Remove("hello-pre-describe-" + app.Name)
-	assert.NoError(err)
-	err = os.Remove("hello-post-describe-" + app.Name)
-	assert.NoError(err)
 }
 
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.

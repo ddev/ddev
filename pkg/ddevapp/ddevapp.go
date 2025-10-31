@@ -403,13 +403,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 				}
 			}
 
-			hostname, ok := services[shortName]["virtual_host"]
-			appHostname := ""
-
-			if ok {
-				appHostname = hostname.(string)
-			} else {
-				appHostname = appDesc["hostname"].(string)
+			appHostname := appDesc["hostname"].(string)
+			if hostname, ok := services[shortName]["virtual_host"].(string); ok {
+				appHostname = hostname
 			}
 
 			for name, portMapping := range envMap {
@@ -477,24 +473,26 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			services[serviceName]["image"] = strings.TrimSuffix(composeService.Image, fmt.Sprintf("-%s-built", app.Name))
 
 			// Extract port information from docker-compose configuration
-			var exposedPrivatePorts []int
+			portSet := make(map[int]bool)
 			var exposedPrivatePortsStr []string
 
 			// First, collect ports from Ports section
-			if composeService.Ports != nil {
-				for _, portConfig := range composeService.Ports {
-					// Get the target (container) port
-					if portConfig.Target != 0 {
-						port := int(portConfig.Target)
-						if !slices.Contains(exposedPrivatePorts, port) {
-							exposedPrivatePorts = append(exposedPrivatePorts, port)
-						}
-					}
+			for _, portConfig := range composeService.Ports {
+				// Get the target (container) port
+				if portConfig.Target != 0 {
+					portSet[int(portConfig.Target)] = true
+				}
+			}
+
+			// Next, collect ports from Expose section
+			for _, portConfig := range composeService.Expose {
+				if port, err := strconv.Atoi(portConfig); err == nil {
+					portSet[port] = true
 				}
 			}
 
 			// Extract container ports from HTTP_EXPOSE and HTTPS_EXPOSE environment variables
-			if !IsRouterDisabled(app) && composeService.Environment != nil {
+			if !IsRouterDisabled(app) {
 				for envName, envValue := range composeService.Environment {
 					if envValue != nil && (envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
 						// Format is "routerPort:containerPort,routerPort2:containerPort2,..."
@@ -505,9 +503,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 							if len(parts) == 2 {
 								// Extract the container port (second part)
 								if containerPort, err := strconv.Atoi(strings.TrimSpace(parts[1])); err == nil {
-									if !slices.Contains(exposedPrivatePorts, containerPort) {
-										exposedPrivatePorts = append(exposedPrivatePorts, containerPort)
-									}
+									portSet[containerPort] = true
 								}
 							}
 						}
@@ -516,11 +512,13 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			}
 
 			// Sort and convert to strings
-			if len(exposedPrivatePorts) > 0 {
-				sort.Ints(exposedPrivatePorts)
-				for _, p := range exposedPrivatePorts {
-					exposedPrivatePortsStr = append(exposedPrivatePortsStr, strconv.FormatInt(int64(p), 10))
-				}
+			var exposedPrivatePorts []int
+			for p := range portSet {
+				exposedPrivatePorts = append(exposedPrivatePorts, p)
+			}
+			sort.Ints(exposedPrivatePorts)
+			for _, p := range exposedPrivatePorts {
+				exposedPrivatePortsStr = append(exposedPrivatePortsStr, strconv.FormatInt(int64(p), 10))
 			}
 
 			services[serviceName]["exposed_ports"] = strings.Join(exposedPrivatePortsStr, ",")
@@ -528,7 +526,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			services[serviceName]["host_ports_mapping"] = []map[string]string{}
 
 			// Extract VIRTUAL_HOST, HTTP_EXPOSE, and HTTPS_EXPOSE from environment
-			if !IsRouterDisabled(app) && composeService.Environment != nil {
+			if !IsRouterDisabled(app) {
 				envMap := make(map[string]string)
 
 				// Parse environment variables
@@ -547,12 +545,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 				}
 
 				// Determine hostname for URL construction
-				hostname, ok := services[serviceName]["virtual_host"]
-				appHostname := ""
-				if ok {
-					appHostname = hostname.(string)
-				} else {
-					appHostname = appDesc["hostname"].(string)
+				appHostname := appDesc["hostname"].(string)
+				if hostname, ok := services[serviceName]["virtual_host"].(string); ok {
+					appHostname = hostname
 				}
 
 				// Process HTTP_EXPOSE and HTTPS_EXPOSE
