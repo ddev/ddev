@@ -141,10 +141,10 @@ func TestProcessHooks(t *testing.T) {
 	// Test pre-share and post-share hooks
 	app.Hooks = map[string][]ddevapp.YAMLTask{
 		"pre-share": {
-			{"exec": "touch /var/www/html/pre-share-hook-ran.txt"},
+			{"exec-host": "touch " + filepath.Join(app.AppRoot, "pre-share-hook-ran.txt")},
 		},
 		"post-share": {
-			{"exec": "touch /var/www/html/post-share-hook-ran.txt"},
+			{"exec-host": "touch " + filepath.Join(app.AppRoot, "post-share-hook-ran.txt")},
 		},
 	}
 	err = app.ProcessHooks("pre-share")
