@@ -141,7 +141,7 @@ func Clean() {
 // CheckSetUp shows a warning to the user if the API key is not available.
 func CheckSetUp() {
 	if !output.JSONOutput && globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation && versionconstants.AmplitudeAPIKey == "" {
-		util.Warning("Instrumentation is opted in, but AmplitudeAPIKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
+		util.WarningOnce("Instrumentation is opted in, but AmplitudeAPIKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
 }
 
