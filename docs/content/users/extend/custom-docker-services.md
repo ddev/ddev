@@ -249,15 +249,18 @@ services:
 
 ### Available DDEV Variables
 
-Use these variables in your service definitions:
+Here is a compressed list of commonly used variables in your service definitions:
 
 - `${DDEV_SITENAME}` - Project name
-- `${DDEV_HOSTNAME}` - Primary hostname
+- `${DDEV_HOSTNAME}` - Comma-separated list of FQDN hostnames
+- `${DDEV_TLD}` - Default top-level domain (`ddev.site`)
 - `${DDEV_APPROOT}` - Full path to project root
 - `${DDEV_DOCROOT}` - Document root (relative to project root)
 - `${DDEV_PHP_VERSION}` - PHP version
 - `${DDEV_WEBSERVER_TYPE}` - Web server type
 - `${DDEV_DATABASE_FAMILY}` - Database family (`mysql`, `postgres`)
+
+For a full list, please see [Environment Variables Provided](custom-commands.md#environment-variables-provided).
 
 ### Custom Environment Variables
 
