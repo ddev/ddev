@@ -38,9 +38,12 @@ ddev exec --raw -- ls -lR`,
 			util.Failed("Failed to exec command: %v", err)
 		}
 
-		status, _ := app.SiteStatus()
-		if status != ddevapp.SiteRunning {
-			util.Failed("Project is not currently running. Try 'ddev start'.")
+		container, err := app.FindContainerByType(serviceType)
+		if err != nil {
+			util.Failed("Failed to find container for service '%s' in '%s' project: %v", serviceType, app.Name, err)
+		}
+		if container == nil {
+			util.Failed("No running container found for service '%s' in '%s' project", serviceType, app.Name)
 		}
 
 		_ = app.DockerEnv()
