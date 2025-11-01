@@ -104,6 +104,8 @@ func TestCmdDescribe(t *testing.T) {
 					_ = app.DockerEnv()
 					err = app.WriteDockerComposeYAML()
 					require.NoError(t, err)
+					err = app.UpdateGlobalProjectList()
+					require.NoError(t, err)
 				}
 
 				// First, try to do a describe from another directory.
