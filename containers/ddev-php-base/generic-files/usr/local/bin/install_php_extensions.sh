@@ -3,8 +3,8 @@
 set -eu -o pipefail
 
 if [ -z "${1:-}" ] || [ -z "${2:-}" ]; then
-    echo "Usage: $0 <PHP_VERSION> <ARCH>"
-    exit 1
+  echo "Usage: $0 <PHP_VERSION> <ARCH>"
+  exit 1
 fi
 
 if ! command -v yq >/dev/null ; then
@@ -27,3 +27,8 @@ echo "Installing packages for PHP ${PHP_VERSION/php/} on ${ARCH}: $pkgs"
 apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/php.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
 apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || true
 DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y $pkgs || exit $?
+
+# Reconfigure blackfire-php if installed, to match the current PHP version
+if dpkg -s blackfire-php >/dev/null 2>&1; then
+  dpkg-reconfigure blackfire-php
+fi
