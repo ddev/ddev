@@ -254,6 +254,12 @@
         "post-push": {
           "$ref": "#/definitions/DdevTask"
         },
+        "pre-share": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-share": {
+          "$ref": "#/definitions/DdevTask"
+        },
         "pre-snapshot": {
           "$ref": "#/definitions/DdevTask"
         },

@@ -3,7 +3,9 @@ package cmd
 import (
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/util"
@@ -35,13 +37,24 @@ ddev share myproject`,
 			util.Failed("Project is not yet running. Use 'ddev start' first.")
 		}
 
+		// Process pre-share hooks
+		err = app.ProcessHooks("pre-share")
+		if err != nil {
+			util.Failed("Failed to process pre-share hooks: %v", err)
+		}
+
 		ngrokLoc, err := exec.LookPath("ngrok")
 		if ngrokLoc == "" || err != nil {
 			util.Failed("ngrok not found in path, please install it, see https://ngrok.com/download")
 		}
 		urls := []string{app.GetWebContainerDirectHTTPURL()}
 
+		// Set up signal handling for SIGINT/SIGTERM to allow post-share hooks to run
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
 		var ngrokErr error
+		var ngrokCmd *exec.Cmd
 		for _, url := range urls {
 			ngrokArgs := []string{"http"}
 			ngrokArgs = append(ngrokArgs, url)
@@ -56,7 +69,7 @@ ddev share myproject`,
 				ngrokArgs = append(ngrokArgs, strings.Split(cmdNgrokArgs, " ")...)
 			}
 
-			ngrokCmd := exec.Command(ngrokLoc, ngrokArgs...)
+			ngrokCmd = exec.Command(ngrokLoc, ngrokArgs...)
 			ngrokCmd.Stdout = os.Stdout
 			ngrokCmd.Stderr = os.Stderr
 			err = ngrokCmd.Start()
@@ -65,7 +78,24 @@ ddev share myproject`,
 			}
 			util.Success("Running %s %s", ngrokLoc, strings.Join(ngrokArgs, " "))
 
-			ngrokErr = ngrokCmd.Wait()
+			// Wait for either ngrok to exit or a signal to be received
+			done := make(chan error, 1)
+			go func() {
+				done <- ngrokCmd.Wait()
+			}()
+
+			select {
+			case ngrokErr = <-done:
+				// ngrok exited on its own
+			case <-sigChan:
+				// Signal received, kill ngrok process
+				if ngrokCmd != nil && ngrokCmd.Process != nil {
+					// Ignore error from Kill() as we're already handling the exit via ngrokErr
+					_ = ngrokCmd.Process.Kill()
+				}
+				ngrokErr = <-done
+			}
+
 			// nil result means ngrok ran and exited normally.
 			// It seems to do this fine when hit by SIGTERM or SIGINT
 			if ngrokErr == nil {
@@ -88,6 +118,13 @@ ddev share myproject`,
 			}
 			// Otherwise we'll continue and do the next url or exit
 		}
+
+		// Process post-share hooks
+		err = app.ProcessHooks("post-share")
+		if err != nil {
+			util.Warning("Failed to process post-share hooks: %v", err)
+		}
+
 		os.Exit(0)
 	},
 }

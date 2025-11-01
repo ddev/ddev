@@ -137,4 +137,21 @@ func TestProcessHooks(t *testing.T) {
 	app.FailOnHookFail = true
 	err = app.ProcessHooks("hook-test")
 	require.Error(t, err)
+
+	// Test pre-share and post-share hooks
+	app.Hooks = map[string][]ddevapp.YAMLTask{
+		"pre-share": {
+			{"exec-host": "touch " + filepath.Join(app.AppRoot, "pre-share-hook-ran.txt")},
+		},
+		"post-share": {
+			{"exec-host": "touch " + filepath.Join(app.AppRoot, "post-share-hook-ran.txt")},
+		},
+	}
+	err = app.ProcessHooks("pre-share")
+	require.NoError(t, err)
+	require.FileExists(t, filepath.Join(app.AppRoot, "pre-share-hook-ran.txt"))
+
+	err = app.ProcessHooks("post-share")
+	require.NoError(t, err)
+	require.FileExists(t, filepath.Join(app.AppRoot, "post-share-hook-ran.txt"))
 }
