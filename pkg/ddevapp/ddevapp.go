@@ -1253,6 +1253,10 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
 
+	if !globalconfig.IsInternetActive() && globalconfig.DdevDebug {
+		util.WarningOnce("Internet connection not detected, DNS may not work.\nWarning: %v\nSee https://docs.ddev.com/en/stable/users/usage/offline/ for info.", globalconfig.IsInternetActiveErr)
+	}
+
 	// We don't yet know the ComposeYaml values, so make sure they're
 	// not set.
 	app.ComposeYaml = nil

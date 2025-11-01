@@ -879,6 +879,9 @@ var IsInternetActiveAlreadyChecked = false
 // IsInternetActiveResult is the result of the check
 var IsInternetActiveResult = false
 
+// IsInternetActiveErr is any error from the check
+var IsInternetActiveErr error
+
 // IsInternetActiveNetResolver wraps the standard DNS resolver.
 // In order to override net.DefaultResolver with a stub, we have to define an
 // interface on our own since there is none from the standard library.
@@ -906,16 +909,15 @@ func IsInternetActive() bool {
 
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
-	if DdevDebug {
-		if !active {
-			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://docs.ddev.com/en/stable/users/usage/offline/ for info.")
-		}
-		output.UserErr.Printf("IsInternetActive(): err=%v, ctx.Err()=%v, addrs=%v, IsInternetActive=%v, testHostname=%v, internet_detection_timeout_ms=%dms", err, ctx.Err(), addrs, active, testHostname, DdevGlobalConfig.InternetDetectionTimeout)
-	}
-
 	// Remember the result to not call this twice
 	IsInternetActiveAlreadyChecked = true
 	IsInternetActiveResult = active
+	if !active {
+		IsInternetActiveErr = fmt.Errorf("unable to resolve testHostname=%s, addrs=%v, internet_detection_timeout_ms=%dms: %w", testHostname, addrs, DdevGlobalConfig.InternetDetectionTimeout, err)
+		if ctx.Err() != nil {
+			IsInternetActiveErr = fmt.Errorf("%w; context error: %v", IsInternetActiveErr, ctx.Err())
+		}
+	}
 
 	return active
 }

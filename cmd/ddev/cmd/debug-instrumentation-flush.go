@@ -12,10 +12,14 @@ var DebugInstrumentationFlushCmd = &cobra.Command{
 	Use:   "flush",
 	Short: "Transmits usage statistics from the local cache",
 	Run: func(_ *cobra.Command, _ []string) {
-		if amplitude.IsDisabled() {
-			util.Warning("Instrumentation is currently disabled.")
+		amplitude.CheckSetUp()
 
-			return
+		if !globalconfig.IsInternetActive() {
+			util.WarningOnce("Warning: %v", globalconfig.IsInternetActiveErr)
+		}
+
+		if amplitude.IsDisabled() {
+			util.Failed("Instrumentation is currently disabled.")
 		}
 
 		debugBackup := globalconfig.DdevDebug
