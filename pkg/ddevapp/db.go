@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -141,11 +142,10 @@ func (app *DdevApp) GetPostgresDataDir() string {
 	if app.Database.Type != nodeps.Postgres {
 		return ""
 	}
-
-	if slices.Contains([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11, nodeps.Postgres12, nodeps.Postgres13, nodeps.Postgres14, nodeps.Postgres15, nodeps.Postgres16, nodeps.Postgres17}, app.Database.Version) {
+	v, _ := strconv.Atoi(app.Database.Version)
+	if v < 18 {
 		return "/var/lib/postgresql/data"
 	}
-
 	// Postgres 18+ changed the default mount point
 	// See https://github.com/docker-library/postgres/pull/1259
 	return "/var/lib/postgresql"
