@@ -1052,6 +1052,9 @@ func TestPHPConfig(t *testing.T) {
 
 // TestPostgresConfigOverride makes sure that overriding Postgres config works
 func TestPostgresConfigOverride(t *testing.T) {
+	if dockerutil.IsPodman() {
+		t.Skip("Skipping on Podman; postgres container fails to start")
+	}
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	tmpDir := testcommon.CreateTmpDir(t.Name())

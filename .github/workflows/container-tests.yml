@@ -6,13 +6,13 @@ defaults:
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-    # Only run when something changes in the actual containers
-    paths:
-    - "containers/**"
-    - ".github/workflows/**"
-    - "!.github/workflows/docs**"
+#  pull_request:
+#    branches: [ main, master ]
+#    # Only run when something changes in the actual containers
+#    paths:
+#    - "containers/**"
+#    - ".github/workflows/**"
+#    - "!.github/workflows/docs**"
   schedule:
     - cron: '01 00 * * *'
 

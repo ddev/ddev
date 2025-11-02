@@ -16,6 +16,7 @@ import (
 	"unicode"
 
 	"github.com/ddev/ddev/pkg/archive"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -455,6 +456,10 @@ func GetContainerHealth(container *container.Summary) (string, string) {
 		if numLogs > 0 {
 			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log[numLogs-1].Output)
 		}
+		// Podman doesn't update health status to unhealthy when container is not running
+		if IsPodman() && status != "starting" && inspect.State.Status != "running" {
+			status = "unhealthy"
+		}
 	} else {
 		// Some containers may not have a healthcheck. In that case
 		// we use State to determine health
@@ -573,6 +578,35 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		pullErr := Pull(image)
 		if pullErr != nil {
 			return "", "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
+		}
+	}
+
+	if IsPodman() {
+		if config.Healthcheck == nil {
+			// Podman doesn't recognize HEALTHCHECK from Dockerfile
+			// https://github.com/containers/podman/issues/18904
+			// We can set it explicitly
+			if strings.HasPrefix(config.Image, ddevImages.GetWebImage()) {
+				// HEALTHCHECK from containers/ddev-webserver/Dockerfile
+				config.Healthcheck = &container.HealthConfig{
+					Test:        []string{"CMD-SHELL", "/healthcheck.sh"},
+					Interval:    1 * time.Second,
+					Timeout:     120 * time.Second,
+					StartPeriod: 120 * time.Second,
+					Retries:     120,
+				}
+			}
+		}
+		if IsRootless() {
+			// Podman requires explicit user to set correct file ownership.
+			// Without it, files have incorrect permissions,
+			// causing issues with volume mounts and file access.
+			if config.User == "" {
+				config.User = "0"
+			}
+			// Podman: set the user namespace mode for the container
+			// https://docs.podman.io/en/v4.6.1/markdown/options/userns.container.html#userns-mode
+			hostConfig.UsernsMode = "keep-id"
 		}
 	}
 
