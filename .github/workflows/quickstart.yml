@@ -46,6 +46,17 @@ jobs:
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@main
 
+      - name: Remove unnecessary items on disk
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: true
+
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
 
