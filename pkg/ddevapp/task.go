@@ -24,6 +24,7 @@ type Task interface {
 // to be run in containers.
 type ExecTask struct {
 	service string   // Name of service, defaults to web
+	user    string   // User to run the command as
 	execRaw []string // Use execRaw if configured instead of exec
 	exec    string   // Actual command to be executed.
 	app     *DdevApp
@@ -47,6 +48,7 @@ type ComposerTask struct {
 func (c ExecTask) Execute() error {
 	opts := &ExecOpts{
 		Service:   c.service,
+		User:      c.user,
 		Cmd:       c.exec,
 		RawCmd:    c.execRaw,
 		Tty:       isatty.IsTerminal(os.Stdin.Fd()),
@@ -147,6 +149,14 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			if t.service, ok = ytask["service"].(string); !ok {
 				t.service = nodeps.WebContainer
 			}
+			// Handle user as either string or integer
+			if userVal, ok := ytask["user"].(string); ok {
+				t.user = userVal
+			} else if userVal, ok := ytask["user"].(int); ok {
+				t.user = fmt.Sprintf("%d", userVal)
+			} else {
+				t.user = ""
+			}
 			return t
 		}
 
@@ -160,6 +170,14 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			t := ExecTask{app: app, execRaw: raw}
 			if t.service, ok = ytask["service"].(string); !ok {
 				t.service = nodeps.WebContainer
+			}
+			// Handle user as either string or integer
+			if userVal, ok := ytask["user"].(string); ok {
+				t.user = userVal
+			} else if userVal, ok := ytask["user"].(int); ok {
+				t.user = fmt.Sprintf("%d", userVal)
+			} else {
+				t.user = ""
 			}
 			return t
 		}

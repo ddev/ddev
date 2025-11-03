@@ -42,7 +42,7 @@ DDEV currently supports these tasks:
 
 ### `exec`: Execute a shell command in a container (defaults to web container)
 
-Value: string providing the command to run. Commands requiring user interaction are not supported. You can also add a “service” key to the command, specifying to run it on the `db` container or any other container you use.
+Value: string providing the command to run. Commands requiring user interaction are not supported. You can also add a "service" key to the command, specifying to run it on the `db` container or any other container you use. Additionally, you can specify a "user" key to run the command as a specific user (defaults to the container's default user).
 
 Example: _Use Drush to rebuild all caches and get a user login link after database import_.
 
@@ -79,6 +79,16 @@ hooks:
 
 ```
 
+Example: _Execute a command as root user in the `db` container_.
+
+```yaml
+hooks:
+  post-start:
+    - exec: ls -la /root
+      service: db
+      user: root
+```
+
 Example: _Add the common `ll` alias into the `web` container’s `.bashrc` file_.
 
 ```yaml
@@ -95,8 +105,8 @@ Advanced usages may require running commands directly with explicit arguments. T
 ```yaml
 hooks:
   post-start:
-  - exec:
-    exec_raw: [ls, -lR, /var/www/html]
+    - exec:
+      exec_raw: [ls, -lR, /var/www/html]
 ```
 
 ### `exec-host`: Execute a shell command on the host system
@@ -174,6 +184,6 @@ hooks:
 
 ```yaml
 hooks:
-    post-start:
-      - composer: install
+  post-start:
+    - composer: install
 ```

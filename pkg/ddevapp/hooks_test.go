@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -61,97 +60,130 @@ func TestProcessHooks(t *testing.T) {
 
 	// 2022-02-16: I'm unable to get the Composer examples to work here. Intermittent results
 	// Half the time they work and get expected Composer output, the other half they come up with empty string.
-	tasks := []taskExpectation{
-		//{"composer: install", "", "Running task: Composer command '[install]' in web container"},
-		//{"composer: licenses --format=json", "no-version-set", "Running task: Composer command 'licenses --format=json' in web container"},
-		//{"composer:\n    exec_raw: [licenses, --format=json]", "no-version-set", "Running task: Composer command '[licenses --format=json]' in web container"},
-		{"exec: ls /usr/local/bin", "acli\nbuild_php_extension.sh\ncomposer", "Running task: Exec command 'ls /usr/local/bin'"},
-		{"exec-host: \"echo something\"", "something\n", "Running task: Exec command 'echo something' on the host"},
-		{"exec: echo MYSQL_HISTFILE=${MYSQL_HISTFILE:-}\n    service: db", "MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory", "Running task: Exec command 'echo MYSQL_HISTFILE=${MYSQL_HISTFILE:-}' in container/service 'db'"},
-		{"exec: \"echo TestProcessHooks > /var/www/html/TestProcessHooks-php-version-${DDEV_PHP_VERSION}.txt\"", "", "Running task: Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks-php-version-${DDEV_PHP_VERSION}.txt'"},
-		{"exec: \"touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt\"", "", "Running task: Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt'"},
-		{"exec:\n    exec_raw: [ls, /usr/local]", "bin\netc\ngames\n", "Exec command '[ls /usr/local] (raw)'"},
+	tasks := map[string]taskExpectation{
+		//"composer install":                     {"composer: install", "", "Running task: Composer command '[install]' in web container"},
+		//"composer licenses":                    {"composer: licenses --format=json", "no-version-set", "Running task: Composer command 'licenses --format=json' in web container"},
+		//"composer with exec_raw":               {"composer:\n    exec_raw: [licenses, --format=json]", "no-version-set", "Running task: Composer command '[licenses --format=json]' in web container"},
+		"exec ls in web":                       {"exec: ls /usr/local/bin", "acli\nbuild_php_extension.sh\ncomposer", "Running task: Exec command 'ls /usr/local/bin'"},
+		"exec-host echo":                       {"exec-host: \"echo something\"", "something\n", "Running task: Exec command 'echo something' on the host"},
+		"exec with service db":                 {"exec: echo MYSQL_HISTFILE=${MYSQL_HISTFILE:-}\n    service: db", "MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory", "Running task: Exec command 'echo MYSQL_HISTFILE=${MYSQL_HISTFILE:-}' in container/service 'db'"},
+		"exec with user root string":           {"exec: ls -la /root\n    service: db\n    user: root", "total ", "Running task: Exec command 'ls -la /root' in container/service 'db'"},
+		"exec with user 0 integer":             {"exec: ls -la /root\n    service: db\n    user: 0", "total ", "Running task: Exec command 'ls -la /root' in container/service 'db'"},
+		"exec with environment variable":       {"exec: \"echo TestProcessHooks > /var/www/html/TestProcessHooks-php-version-${DDEV_PHP_VERSION}.txt\"", "", "Running task: Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks-php-version-${DDEV_PHP_VERSION}.txt'"},
+		"exec with multiple commands using &&": {"exec: \"touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt\"", "", "Running task: Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt'"},
+		"exec with exec_raw array":             {"exec:\n    exec_raw: [ls, /usr/local]", "bin\netc\ngames\n", "Exec command '[ls /usr/local] (raw)'"},
 	}
-	for _, task := range tasks {
-		fName := app.GetConfigPath("config.hooks.yaml")
-		fullTask := []byte("hooks:\n  post-start:\n  - " + task.task + "\n")
-		err = os.WriteFile(fName, fullTask, 0644)
-		require.NoError(t, err)
+	for name, task := range tasks {
+		t.Run(name, func(t *testing.T) {
+			fName := app.GetConfigPath("config.hooks.yaml")
+			fullTask := []byte("hooks:\n  post-start:\n  - " + task.task + "\n")
+			err = os.WriteFile(fName, fullTask, 0644)
+			require.NoError(t, err)
 
-		app, err = ddevapp.NewApp(site.Dir, true)
-		require.NoError(t, err)
+			app, err = ddevapp.NewApp(site.Dir, true)
+			require.NoError(t, err)
 
-		captureOutputFunc, err := util.CaptureOutputToFile()
-		require.NoError(t, err, `failed to capture output to file for task='%v' err=%v`, task, err)
-		userOutFunc := util.CaptureUserOut()
+			captureOutputFunc, err := util.CaptureOutputToFile()
+			require.NoError(t, err, `failed to capture output to file for task='%v' err=%v`, task, err)
+			userOutFunc := util.CaptureUserOut()
 
-		err = app.Start()
-		require.NoError(t, err, `failed to app.Start() for task '%v' err='%v'`, task, err)
+			err = app.Start()
+			require.NoError(t, err, `failed to app.Start() for task '%v' err='%v'`, task, err)
 
-		out := captureOutputFunc()
-		userOut := userOutFunc()
-		require.Contains(t, out, task.stdoutExpect, "task: '%v'", task.task)
-		require.Contains(t, userOut, task.fulloutputExpect, "task: %v", task.task)
-		require.NotContains(t, userOut, "Task failed")
+			out := captureOutputFunc()
+			userOut := userOutFunc()
+			require.Contains(t, out, task.stdoutExpect, "task: '%v'", task.task)
+			require.Contains(t, userOut, task.fulloutputExpect, "task: %v", task.task)
+			require.NotContains(t, userOut, "Task failed")
 
-		err = app.Stop(true, false)
-		require.NoError(t, err)
+			err = app.Stop(true, false)
+			require.NoError(t, err)
+		})
 	}
 
 	err = app.Restart()
 	require.NoError(t, err)
 
-	require.FileExists(t, filepath.Join(app.AppRoot, fmt.Sprintf("%s-php-version-%s.txt", t.Name(), app.PHPVersion)))
-	require.FileExists(t, filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
+	t.Run("verify file creation from hooks", func(t *testing.T) {
+		require.FileExists(t, filepath.Join(app.AppRoot, "TestProcessHooks-php-version-"+app.PHPVersion+".txt"))
+		require.FileExists(t, filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
+	})
 
-	// Make sure skip hooks work
-	ddevapp.SkipHooks = true
-	app.Hooks = map[string][]ddevapp.YAMLTask{
-		"hook-test-skip-hooks": {
-			{"exec": "\"echo TestProcessHooks > /var/www/html/TestProcessHooksSkipHooks-php-version-${DDEV_PHP_VERSION}.txt\""},
-		},
-	}
-	err = app.ProcessHooks("hook-test")
-	require.NoError(t, err)
-	require.NoFileExists(t, filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooksSkipHooks-php-version-%s.txt", app.PHPVersion)))
-	ddevapp.SkipHooks = false
+	t.Run("skip hooks when SkipHooks is true", func(t *testing.T) {
+		ddevapp.SkipHooks = true
+		defer func() { ddevapp.SkipHooks = false }()
 
-	// Attempt processing hooks with a guaranteed failure
-	app.Hooks = map[string][]ddevapp.YAMLTask{
-		"hook-test": {
-			{"exec": "ls /does-not-exist"},
-		},
-	}
-	// With default setting, ProcessHooks should succeed
-	err = app.ProcessHooks("hook-test")
-	require.NoError(t, err)
+		app.Hooks = map[string][]ddevapp.YAMLTask{
+			"hook-test-skip-hooks": {
+				{"exec": "\"echo TestProcessHooks > /var/www/html/TestProcessHooksSkipHooks-php-version-${DDEV_PHP_VERSION}.txt\""},
+			},
+		}
+		err = app.ProcessHooks("hook-test")
+		require.NoError(t, err)
+		require.NoFileExists(t, filepath.Join(app.AppRoot, "TestProcessHooksSkipHooks-php-version-"+app.PHPVersion+".txt"))
+	})
 
-	// With FailOnHookFail or FailOnHookFailGlobal or both, it should fail.
-	app.FailOnHookFail = true
-	err = app.ProcessHooks("hook-test")
-	require.Error(t, err)
-	app.FailOnHookFail = false
-	app.FailOnHookFailGlobal = true
-	err = app.ProcessHooks("hook-test")
-	require.Error(t, err)
-	app.FailOnHookFail = true
-	err = app.ProcessHooks("hook-test")
-	require.Error(t, err)
+	t.Run("hook failure handling", func(t *testing.T) {
+		app.Hooks = map[string][]ddevapp.YAMLTask{
+			"hook-test": {
+				{"exec": "ls /does-not-exist"},
+			},
+		}
 
-	// Test pre-share and post-share hooks
-	app.Hooks = map[string][]ddevapp.YAMLTask{
-		"pre-share": {
-			{"exec-host": "touch " + filepath.Join(app.AppRoot, "pre-share-hook-ran.txt")},
-		},
-		"post-share": {
-			{"exec-host": "touch " + filepath.Join(app.AppRoot, "post-share-hook-ran.txt")},
-		},
-	}
-	err = app.ProcessHooks("pre-share")
-	require.NoError(t, err)
-	require.FileExists(t, filepath.Join(app.AppRoot, "pre-share-hook-ran.txt"))
+		t.Run("default setting allows hook failure", func(t *testing.T) {
+			err = app.ProcessHooks("hook-test")
+			require.NoError(t, err)
+		})
 
-	err = app.ProcessHooks("post-share")
-	require.NoError(t, err)
-	require.FileExists(t, filepath.Join(app.AppRoot, "post-share-hook-ran.txt"))
+		t.Run("FailOnHookFail causes failure", func(t *testing.T) {
+			app.FailOnHookFail = true
+			defer func() { app.FailOnHookFail = false }()
+
+			err = app.ProcessHooks("hook-test")
+			require.Error(t, err)
+		})
+
+		t.Run("FailOnHookFailGlobal causes failure", func(t *testing.T) {
+			app.FailOnHookFailGlobal = true
+			defer func() { app.FailOnHookFailGlobal = false }()
+
+			err = app.ProcessHooks("hook-test")
+			require.Error(t, err)
+		})
+
+		t.Run("both FailOnHookFail and FailOnHookFailGlobal cause failure", func(t *testing.T) {
+			app.FailOnHookFail = true
+			app.FailOnHookFailGlobal = true
+			defer func() {
+				app.FailOnHookFail = false
+				app.FailOnHookFailGlobal = false
+			}()
+
+			err = app.ProcessHooks("hook-test")
+			require.Error(t, err)
+		})
+	})
+
+	t.Run("pre-share and post-share hooks", func(t *testing.T) {
+		app.Hooks = map[string][]ddevapp.YAMLTask{
+			"pre-share": {
+				{"exec-host": "touch " + filepath.Join(app.AppRoot, "pre-share-hook-ran.txt")},
+			},
+			"post-share": {
+				{"exec-host": "touch " + filepath.Join(app.AppRoot, "post-share-hook-ran.txt")},
+			},
+		}
+
+		t.Run("pre-share hook executes", func(t *testing.T) {
+			err = app.ProcessHooks("pre-share")
+			require.NoError(t, err)
+			require.FileExists(t, filepath.Join(app.AppRoot, "pre-share-hook-ran.txt"))
+		})
+
+		t.Run("post-share hook executes", func(t *testing.T) {
+			err = app.ProcessHooks("post-share")
+			require.NoError(t, err)
+			require.FileExists(t, filepath.Join(app.AppRoot, "post-share-hook-ran.txt"))
+		})
+	})
 }

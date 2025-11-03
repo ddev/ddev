@@ -91,6 +91,10 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "root")
 
+	out, err = exec.RunHostCommand(DdevBin, "exec", "-u", "0", "-s", "db", "whoami")
+	assert.NoError(err)
+	assert.Contains(out, "root")
+
 	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "-u", "root", "--", "whoami")
 	assert.NoError(err)
 	assert.Contains(out, "root")
