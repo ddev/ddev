@@ -36,7 +36,7 @@ ddev ssh -d /var/www/html`,
 
 		// Use Bash for our containers, sh for 3rd-party containers
 		// that may not have Bash.
-		shell := app.GetXDdevExtension(serviceType).Shell
+		shell := app.GetXDdevExtension(serviceType).SSHShell
 
 		err = app.ExecWithTty(&ddevapp.ExecOpts{
 			Service: serviceType,

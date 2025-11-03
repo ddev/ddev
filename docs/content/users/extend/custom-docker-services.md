@@ -118,14 +118,11 @@ volumes:
   - "../:/var/www/html:cached"
 ```
 
-### Customizing `ddev describe` Output and Container Shell
+### Customizing `ddev describe` Output
 
-You can use the `x-ddev` extension field in your `.ddev/docker-compose.*.yaml` configuration to customize the output of [`ddev describe`](../usage/commands.md#describe) and set the default shell for `ddev exec` or `ddev ssh`.
+You can use the `x-ddev` extension field in your `.ddev/docker-compose.*.yaml` configuration to customize the output of [`ddev describe`](../usage/commands.md#describe).
 
-This feature is useful for:
-
-- Displaying credentials, URLs, or usage instructions for custom services.
-- Changing the default shell used inside containers.
+This feature is useful for showing credentials, URLs, or usage notes for custom services.
 
 ```yaml
 services:
@@ -151,30 +148,13 @@ services:
         Pass: rabbitmq
       # Or single line string
       describe-url-port: "extra help here"
-      # Custom shell (must be installed in the image)
-      shell: "bash"
 ```
 
-The `x-ddev.describe-url-port` value appears in the `URL/PORT` column when running [`ddev describe`](../usage/commands.md#describe) and the `x-ddev-describe-info` value appears in the `INFO` column, making it easy for team members to see important service information without digging through documentation and configuration files.
+- `x-ddev.describe-url-port`: Appears in the `URL/PORT` column when running [`ddev describe`](../usage/commands.md#describe).
+- `x-ddev.describe-info`: Appears in the `INFO` column, making it easy for team members to view relevant service details without checking config files.
 
-The `x-ddev.shell` value defines the default shell for [`ddev exec`](../usage/commands.md#exec) and [`ddev ssh`](../usage/commands.md#ssh). Ensure the shell (e.g., Zsh or Bash) is installed in the image, otherwise these commands will fail:
-
-Example: changing the default shell to Zsh inside the `web` container:
-
-```yaml
-# .ddev/config.yaml
-webimage_extra_packages: [zsh]
-```
-
-```yaml
-# .ddev/docker-compose.web-shell.yaml
-services:
-  web:
-    x-ddev:
-      shell: "zsh"
-```
-
-To change the shell for a custom service, add the `x-ddev.shell` field to that service's configuration and ensure the desired shell is [installed in the image](./customizing-images.md) if needed.
+!!!tip
+    See related `x-ddev.ssh-shell` configuration for [Changing `ddev ssh` Shell](../extend/in-container-configuration.md#changing-ddev-ssh-shell).
 
 ## Advanced Service Examples
 

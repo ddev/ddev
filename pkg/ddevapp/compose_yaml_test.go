@@ -33,12 +33,12 @@ services:
   db:
     image: ddev/ddev-utilities
     x-ddev:
-      shell: "  /bin/zsh  "
+      ssh-shell: "  /bin/zsh  "
       describe-info: "  db info with spaces  "
   custom:
     image: ddev/ddev-utilities
     x-ddev:
-      shell: fish
+      ssh-shell: fish
   noshell:
     image: ddev/ddev-utilities
     x-ddev:
@@ -56,7 +56,7 @@ services:
 		xDdev := app.GetXDdevExtension("web")
 		assert.Equal("web info", xDdev.DescribeInfo)
 		assert.Equal("web\ndescription", xDdev.DescribeURLPort)
-		assert.Equal("bash", xDdev.Shell)
+		assert.Equal("bash", xDdev.SSHShell)
 	})
 
 	// Test db service (overrides custom shell)
@@ -64,7 +64,7 @@ services:
 		xDdev := app.GetXDdevExtension("db")
 		assert.Equal("db info with spaces\nShell: /bin/zsh", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
-		assert.Equal("/bin/zsh", xDdev.Shell)
+		assert.Equal("/bin/zsh", xDdev.SSHShell)
 	})
 
 	// Test custom service - should use custom shell
@@ -72,7 +72,7 @@ services:
 		xDdev := app.GetXDdevExtension("custom")
 		assert.Equal("Shell: fish", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
-		assert.Equal("fish", xDdev.Shell)
+		assert.Equal("fish", xDdev.SSHShell)
 	})
 
 	// Test service with no shell - should default to sh
@@ -80,7 +80,7 @@ services:
 		xDdev := app.GetXDdevExtension("noshell")
 		assert.Equal("has info but no shell", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
-		assert.Equal("sh", xDdev.Shell)
+		assert.Equal("sh", xDdev.SSHShell)
 	})
 
 	// Test service with no x-ddev extension - should default to sh
@@ -88,7 +88,7 @@ services:
 		xDdev := app.GetXDdevExtension("noextension")
 		assert.Equal("", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
-		assert.Equal("sh", xDdev.Shell)
+		assert.Equal("sh", xDdev.SSHShell)
 	})
 
 	// Test non-existent service
@@ -96,7 +96,7 @@ services:
 		xDdev := app.GetXDdevExtension("nonexistent")
 		assert.Equal("", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
-		assert.Equal("sh", xDdev.Shell)
+		assert.Equal("sh", xDdev.SSHShell)
 	})
 
 	// Test with nil ComposeYaml
@@ -106,12 +106,12 @@ services:
 		xDdev := app.GetXDdevExtension("web")
 		assert.Equal("", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
-		assert.Equal("bash", xDdev.Shell)
+		assert.Equal("bash", xDdev.SSHShell)
 		// non-web/db service should default to sh
 		xDdev = app.GetXDdevExtension("custom")
 		assert.Equal("", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
-		assert.Equal("sh", xDdev.Shell)
+		assert.Equal("sh", xDdev.SSHShell)
 	})
 }
 

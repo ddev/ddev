@@ -2361,7 +2361,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if len(opts.RawCmd) == 0 { // Use opts.Cmd and prepend with bash
 		// Use Bash for our containers, sh for 3rd-party containers
 		// that may not have Bash.
-		shell := app.GetXDdevExtension(opts.Service).Shell
+		shell := "bash"
+		if !nodeps.ArrayContainsString([]string{"web", "db"}, opts.Service) {
+			shell = "sh"
+		}
 		errcheck := "set -eu"
 		opts.RawCmd = []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`}
 	}
@@ -2445,7 +2448,10 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 
 	// Use Bash for our containers, sh for 3rd-party containers
 	// that may not have Bash.
-	shell := app.GetXDdevExtension(opts.Service).Shell
+	shell := "bash"
+	if !nodeps.ArrayContainsString([]string{"web", "db"}, opts.Service) {
+		shell = "sh"
+	}
 
 	args = append(args, shell, "-c", opts.Cmd)
 
