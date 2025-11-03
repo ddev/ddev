@@ -42,7 +42,13 @@ DDEV currently supports these tasks:
 
 ### `exec`: Execute a shell command in a container (defaults to web container)
 
-Value: string providing the command to run. Commands requiring user interaction are not supported. You can also add a "service" key to the command, specifying to run it on the `db` container or any other container you use. Additionally, you can specify a "user" key to run the command as a specific user (defaults to the container's default user).
+Value: string providing the command to run. Commands requiring user interaction are not supported.
+
+**Optional keys:**
+
+* `service`: Specify which container to run the command in (defaults to `web`)
+* `user`: Specify which user to run the command as (username or UID, defaults to container's default user)
+* `exec_raw`: Array of command arguments for direct execution without shell interpretation (alternative to string command)
 
 Example: _Use Drush to rebuild all caches and get a user login link after database import_.
 
@@ -94,7 +100,7 @@ Example: _Add the common `ll` alias into the `web` container’s `.bashrc` file_
 ```yaml
 hooks:
   post-start:
-  - exec: sudo echo alias ll=\"ls -lhA\" >> ~/.bashrc
+    - exec: sudo echo alias ll=\"ls -lhA\" >> ~/.bashrc
 ```
 
 !!!tip
@@ -123,12 +129,25 @@ hooks:
 
 Value: string providing the Composer command to run.
 
+**Optional keys:**
+
+* `exec_raw`: Array of Composer command arguments (alternative to string command)
+
 Example:
 
 ```yaml
 hooks:
   post-start:
     - composer: config discard-changes true
+```
+
+Example with `exec_raw`:
+
+```yaml
+hooks:
+  post-start:
+    - composer:
+      exec_raw: [install, --no-dev]
 ```
 
 ## WordPress Example
