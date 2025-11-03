@@ -13,23 +13,31 @@ for ddev_path in $(which -a ddev | uniq); do
   case $ddev_path in
     "/usr/bin/ddev")
       if [[ ${OSTYPE} = "linux-gnu"* ]]; then
-        if command -v apt-get; then echo "You seem to have an apt-installed DDEV, upgrade with 'sudo apt-get update && sudo apt-get upgrade -y ddev'";
-        elif [ -f /etc/arch-release ] && command -v yay >/dev/null ; then echo "You seem to have yay-installed DDEV (AUR), upgrade with 'yay -Syu ddev-bin'";
-        elif command -v dnf; then echo "You seem to have dnf-installed DDEV, upgrade with 'sudo dnf install --refresh ddev'"; fi
+        packages_to_upgrade="ddev"
+        if [[ -f "/usr/bin/ddev-hostname.exe" ]]; then
+          packages_to_upgrade="$packages_to_upgrade ddev-wsl2"
+        fi
+        if command -v apt-get; then
+          echo "You seem to have an apt-installed DDEV, upgrade with 'sudo apt-get update && sudo apt-get install --only-upgrade ${packages_to_upgrade}'"
+        elif [ -f /etc/arch-release ]; then
+          echo "You seem to have an AUR-installed DDEV, upgrade with your AUR helper, for example, 'yay -Syu ddev-bin'"
+        elif command -v dnf; then
+          echo "You seem to have dnf-installed DDEV, upgrade with 'sudo dnf upgrade --refresh ${packages_to_upgrade}'"
+        fi
       fi
       ;;
 
     "/usr/local/bin/ddev")
       if [ ! -L /usr/local/bin/ddev ]; then
-        printf "DDEV appears to have been installed with install_ddev.sh, you can run that script again to update.\ncurl -fsSL https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev.sh | bash\n"
+        printf "DDEV appears to have been installed with a script, run it again for upgrade.\ncurl -fsSL https://ddev.com/install.sh | bash\n"
       elif command -v brew; then
-        echo "DDEV appears to have been installed with Homebrew, upgrade with 'brew update && brew upgrade ddev'"
+        echo "DDEV appears to have been installed with Homebrew, upgrade with 'brew update && brew upgrade ddev/ddev/ddev'"
       fi
       ;;
 
     "/opt/homebrew/bin/ddev" | "/home/linuxbrew/.linuxbrew/bin/ddev")
       if [ -L "$(which ddev)" ] && command -v brew; then
-        echo "DDEV appears to have been installed with Homebrew, upgrade with 'brew update && brew upgrade ddev'"
+        echo "DDEV appears to have been installed with Homebrew, upgrade with 'brew update && brew upgrade ddev/ddev/ddev'"
       fi
       ;;
 
