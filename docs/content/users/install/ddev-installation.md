@@ -37,8 +37,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         Use the `-s` argument to specify a specific stable or prerelease version:
 
         ```bash
-        # Download and run the script to install DDEV v1.23.5
-        curl -fsSL https://ddev.com/install.sh | bash -s v1.23.5
+        # Download and run the script to install DDEV v1.24.9
+        curl -fsSL https://ddev.com/install.sh | bash -s v1.24.9
         ```
 
 === "Linux"
@@ -92,7 +92,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     name=ddev
     baseurl=https://pkg.ddev.com/yum/
     gpgcheck=0
-    enabled=1' | perl -p -e 's/^ +//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
+    enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
 
     # Install DDEV
     sudo sh -c 'echo ""'
@@ -148,8 +148,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         Use the `-s` argument to specify a specific stable or prerelease version:
 
         ```bash
-        # Download and run the script to install DDEV v1.23.5
-        curl -fsSL https://ddev.com/install.sh | bash -s v1.23.5
+        # Download and run the script to install DDEV v1.24.9
+        curl -fsSL https://ddev.com/install.sh | bash -s v1.24.9
         ```
 
     ??? "Do you still have an old version after installing or upgrading?"

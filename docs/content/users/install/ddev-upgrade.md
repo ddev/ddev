@@ -13,7 +13,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```bash
     # Upgrade DDEV to the latest version
-    brew upgrade ddev/ddev/ddev
+    brew update && brew upgrade ddev/ddev/ddev
     ```
 
     ### Install Script (Unusual)
@@ -31,8 +31,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         Use the `-s` argument to specify a specific stable or prerelease version:
 
         ```bash
-        # Download and run the script to update to DDEV v1.24.6
-        curl -fsSL https://ddev.com/install.sh | bash -s v1.24.6
+        # Download and run the script to update to DDEV v1.24.9
+        curl -fsSL https://ddev.com/install.sh | bash -s v1.24.9
         ```
 
 === "Linux"
@@ -42,15 +42,18 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     ### Debian/Ubuntu (including WSL2)
 
     ```bash
-    # Update package information and all packages including DDEV
-    sudo apt-get update && sudo apt-get upgrade
+    # Update package information and ddev package
+    sudo apt-get update && sudo apt-get install --only-upgrade ddev
+
+    # If you are using WSL2, also upgrade the ddev-wsl2 package
+    sudo apt-get update && sudo apt-get install --only-upgrade ddev ddev-wsl2
     ```
 
     ### Fedora, Red Hat, etc.
 
     ```bash
     # Upgrade the DDEV package
-    sudo dnf upgrade ddev
+    sudo dnf upgrade --refresh ddev
     ```
 
     ### Arch Linux
@@ -75,8 +78,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     Open the WSL2 terminal, for example “Ubuntu” from the Windows start menu, and run the following:
 
     ```bash
-    # Upgrade the DDEV package
-    sudo apt-get update && sudo apt-get upgrade -y
+    # Update package information and ddev packages
+    sudo apt-get update && sudo apt-get install --only-upgrade ddev ddev-wsl2
     ```
 
     You can also download and run the DDEV Windows Installer again, and it will do the upgrade for you. Make sure to choose the type of installation you have (Docker CE or Docker/Rancher Desktop).
@@ -94,8 +97,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     ## GitHub Codespaces
 
     ```bash
-    # Update package information and all packages including DDEV
-    sudo apt-get update && sudo apt-get upgrade -y
+    # Update package information and ddev package
+    sudo apt-get update && sudo apt-get install --only-upgrade ddev
     ```
 
 === "Manual"
