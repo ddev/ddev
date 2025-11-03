@@ -118,9 +118,14 @@ volumes:
   - "../:/var/www/html:cached"
 ```
 
-### Customizing ddev describe Output and Container Shell
+### Customizing `ddev describe` Output and Container Shell
 
-You can add custom descriptions that appear in `ddev describe` output using the `x-ddev` extension field. This is helpful for providing information about credentials, URLs, or usage instructions for your custom services.
+You can use the `x-ddev` extension field in your `.ddev/docker-compose.*.yaml` configuration to customize the output of [`ddev describe`](../usage/commands.md#describe) and set the default shell for `ddev exec` or `ddev ssh`.
+
+This feature is useful for:
+
+- Displaying credentials, URLs, or usage instructions for custom services.
+- Changing the default shell used inside containers.
 
 ```yaml
 services:
@@ -146,13 +151,30 @@ services:
         Pass: rabbitmq
       # Or single line string
       describe-url-port: "extra help here"
-      # Use the desired shell, e.g., bash, sh, etc.
+      # Custom shell (must be installed in the image)
       shell: "bash"
 ```
 
 The `x-ddev.describe-url-port` value appears in the `URL/PORT` column when running [`ddev describe`](../usage/commands.md#describe) and the `x-ddev-describe-info` value appears in the `INFO` column, making it easy for team members to see important service information without digging through documentation and configuration files.
 
-The `x-ddev.shell` value sets the default shell used when running [`ddev exec`](../usage/commands.md#exec) and [`ddev ssh`](../usage/commands.md#ssh) commands.
+The `x-ddev.shell` value defines the default shell for [`ddev exec`](../usage/commands.md#exec) and [`ddev ssh`](../usage/commands.md#ssh). Ensure the shell (e.g., Zsh or Bash) is installed in the image, otherwise these commands will fail:
+
+Example: changing the default shell to Zsh inside the `web` container:
+
+```yaml
+# .ddev/config.yaml
+webimage_extra_packages: [zsh]
+```
+
+```yaml
+# .ddev/docker-compose.web-shell.yaml
+services:
+  web:
+    x-ddev:
+      shell: "zsh"
+```
+
+To change the shell for a custom service, add the `x-ddev.shell` field to that service's configuration and ensure the desired shell is [installed in the image](./customizing-images.md) if needed.
 
 ## Advanced Service Examples
 

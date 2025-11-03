@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -143,6 +144,11 @@ type XDdevExtension struct {
 // GetXDdevExtension retrieves the x-ddev extension for a given service from the ComposeYaml
 func (app *DdevApp) GetXDdevExtension(serviceName string) XDdevExtension {
 	var xDdev XDdevExtension
+	// Set defaults for web and db services
+	if serviceName == "web" || serviceName == "db" {
+		xDdev.Shell = "bash"
+	}
+	// And check for user overrides
 	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
 		if composeService, ok := app.ComposeYaml.Services[serviceName]; ok {
 			if found, err := composeService.Extensions.Get("x-ddev", &xDdev); err == nil && found {
@@ -153,13 +159,19 @@ func (app *DdevApp) GetXDdevExtension(serviceName string) XDdevExtension {
 			}
 		}
 	}
-	// Always default to bash for web and db services
-	if serviceName == "web" || serviceName == "db" {
-		xDdev.Shell = "bash"
-	}
-	// Default to sh for other services
+	// Default to sh if no shell specified
 	if xDdev.Shell == "" {
 		xDdev.Shell = "sh"
+	}
+	// Append shell info to DescribeInfo if it's not the default
+	hasCustomShell := false
+	if serviceName == "web" || serviceName == "db" {
+		hasCustomShell = xDdev.Shell != "bash"
+	} else {
+		hasCustomShell = xDdev.Shell != "sh"
+	}
+	if hasCustomShell {
+		xDdev.DescribeInfo = strings.TrimSpace(fmt.Sprintf("%s\nShell: %s", xDdev.DescribeInfo, xDdev.Shell))
 	}
 	return xDdev
 }

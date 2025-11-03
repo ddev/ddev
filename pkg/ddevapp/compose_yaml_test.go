@@ -26,7 +26,6 @@ services:
   web:
     image: ddev/ddev-utilities
     x-ddev:
-      shell: "/bin/bash"
       describe-url-port: |
         web
         description
@@ -39,7 +38,7 @@ services:
   custom:
     image: ddev/ddev-utilities
     x-ddev:
-      shell: "/bin/fish"
+      shell: fish
   noshell:
     image: ddev/ddev-utilities
     x-ddev:
@@ -52,48 +51,52 @@ services:
 	require.NoError(t, err)
 	app.ComposeYaml = project
 
-	// Test web service - should always get bash by default
+	// Test web service
 	t.Run("web service with shell", func(t *testing.T) {
 		xDdev := app.GetXDdevExtension("web")
-		assert.Equal("bash", xDdev.Shell)
-		assert.Equal("web\ndescription", xDdev.DescribeURLPort)
 		assert.Equal("web info", xDdev.DescribeInfo)
+		assert.Equal("web\ndescription", xDdev.DescribeURLPort)
+		assert.Equal("bash", xDdev.Shell)
 	})
 
-	// Test db service - should always get bash by default (overrides custom shell)
+	// Test db service (overrides custom shell)
 	t.Run("db service defaults to bash", func(t *testing.T) {
 		xDdev := app.GetXDdevExtension("db")
-		assert.Equal("bash", xDdev.Shell)
-		assert.Equal("db info with spaces", xDdev.DescribeInfo)
+		assert.Equal("db info with spaces\nShell: /bin/zsh", xDdev.DescribeInfo)
+		assert.Equal("", xDdev.DescribeURLPort)
+		assert.Equal("/bin/zsh", xDdev.Shell)
 	})
 
 	// Test custom service - should use custom shell
 	t.Run("custom service with custom shell", func(t *testing.T) {
 		xDdev := app.GetXDdevExtension("custom")
-		assert.Equal("/bin/fish", xDdev.Shell)
+		assert.Equal("Shell: fish", xDdev.DescribeInfo)
+		assert.Equal("", xDdev.DescribeURLPort)
+		assert.Equal("fish", xDdev.Shell)
 	})
 
 	// Test service with no shell - should default to sh
 	t.Run("service without shell defaults to sh", func(t *testing.T) {
 		xDdev := app.GetXDdevExtension("noshell")
-		assert.Equal("sh", xDdev.Shell)
 		assert.Equal("has info but no shell", xDdev.DescribeInfo)
+		assert.Equal("", xDdev.DescribeURLPort)
+		assert.Equal("sh", xDdev.Shell)
 	})
 
 	// Test service with no x-ddev extension - should default to sh
 	t.Run("service without x-ddev extension", func(t *testing.T) {
 		xDdev := app.GetXDdevExtension("noextension")
-		assert.Equal("sh", xDdev.Shell)
-		assert.Equal("", xDdev.DescribeURLPort)
 		assert.Equal("", xDdev.DescribeInfo)
+		assert.Equal("", xDdev.DescribeURLPort)
+		assert.Equal("sh", xDdev.Shell)
 	})
 
 	// Test non-existent service
 	t.Run("non-existent service", func(t *testing.T) {
 		xDdev := app.GetXDdevExtension("nonexistent")
-		assert.Equal("sh", xDdev.Shell)
-		assert.Equal("", xDdev.DescribeURLPort)
 		assert.Equal("", xDdev.DescribeInfo)
+		assert.Equal("", xDdev.DescribeURLPort)
+		assert.Equal("sh", xDdev.Shell)
 	})
 
 	// Test with nil ComposeYaml
@@ -101,9 +104,13 @@ services:
 		app.ComposeYaml = nil
 		// web service should still default to bash even with nil ComposeYaml
 		xDdev := app.GetXDdevExtension("web")
+		assert.Equal("", xDdev.DescribeInfo)
+		assert.Equal("", xDdev.DescribeURLPort)
 		assert.Equal("bash", xDdev.Shell)
 		// non-web/db service should default to sh
 		xDdev = app.GetXDdevExtension("custom")
+		assert.Equal("", xDdev.DescribeInfo)
+		assert.Equal("", xDdev.DescribeURLPort)
 		assert.Equal("sh", xDdev.Shell)
 	})
 }
