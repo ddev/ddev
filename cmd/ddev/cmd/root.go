@@ -20,6 +20,7 @@ import (
 var (
 	updateInterval     = time.Hour * 4 // Four-hour interval between updates
 	serviceType        string
+	serviceUser        string
 	updateDocURL       = "https://docs.ddev.com/en/stable/users/install/ddev-upgrade/"
 	instrumentationApp *ddevapp.DdevApp
 )

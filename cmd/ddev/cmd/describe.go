@@ -199,12 +199,12 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			extraInfo = append(extraInfo, "User/Pass: 'db/db'\nor 'root/root'")
 		}
 
-		// Add x-ddev.describe to URL/Port column if it exists
+		// Add x-ddev.describe-url-port to URL/Port column if it exists
 		if desc, ok := v["describe-url-port"].(string); ok && desc != "" {
 			urlPortParts = append(urlPortParts, desc)
 		}
 
-		// Add x-ddev.info to info column if it exists
+		// Add x-ddev.describe-info to info column if it exists
 		if desc, ok := v["describe-info"].(string); ok && desc != "" {
 			extraInfo = append(extraInfo, desc)
 		}

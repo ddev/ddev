@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -130,6 +131,37 @@ func (app *DdevApp) ReadDockerComposeYAML() error {
 		return err
 	}
 	return nil
+}
+
+// XDdevExtension represents the x-ddev extension data in docker-compose files
+type XDdevExtension struct {
+	DescribeURLPort string `mapstructure:"describe-url-port"`
+	DescribeInfo    string `mapstructure:"describe-info"`
+	Shell           string `mapstructure:"shell"`
+}
+
+// GetXDdevExtension retrieves the x-ddev extension for a given service from the ComposeYaml
+func (app *DdevApp) GetXDdevExtension(serviceName string) XDdevExtension {
+	var xDdev XDdevExtension
+	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+		if composeService, ok := app.ComposeYaml.Services[serviceName]; ok {
+			if found, err := composeService.Extensions.Get("x-ddev", &xDdev); err == nil && found {
+				// Trim whitespace from all string fields
+				xDdev.DescribeInfo = strings.TrimSpace(xDdev.DescribeInfo)
+				xDdev.DescribeURLPort = strings.TrimSpace(xDdev.DescribeURLPort)
+				xDdev.Shell = strings.TrimSpace(xDdev.Shell)
+			}
+		}
+	}
+	// Always default to bash for web and db services
+	if serviceName == "web" || serviceName == "db" {
+		xDdev.Shell = "bash"
+	}
+	// Default to sh for other services
+	if xDdev.Shell == "" {
+		xDdev.Shell = "sh"
+	}
+	return xDdev
 }
 
 // fixupComposeYaml makes minor changes to the `docker-compose config` output

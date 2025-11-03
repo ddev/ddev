@@ -83,6 +83,18 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "root")
 
+	out, err = exec.RunHostCommand(DdevBin, "exec", "-u", "root", "whoami")
+	assert.NoError(err)
+	assert.Contains(out, "root")
+
+	out, err = exec.RunHostCommand(DdevBin, "exec", "-u", "root", "-s", "db", "whoami")
+	assert.NoError(err)
+	assert.Contains(out, "root")
+
+	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "-u", "root", "--", "whoami")
+	assert.NoError(err)
+	assert.Contains(out, "root")
+
 	// Test that an nonexistent working directory generates an error
 	out, err = exec.RunHostCommand(DdevBin, "exec", "-d", "/does/not/exist", "pwd")
 	assert.Error(err)

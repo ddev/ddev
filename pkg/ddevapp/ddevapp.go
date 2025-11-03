@@ -442,20 +442,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		}
 
 		// Extract x-ddev.describe extension data from compose file
-		if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
-			if composeService, ok := app.ComposeYaml.Services[shortName]; ok {
-				if xDdev, ok := composeService.Extensions["x-ddev"]; ok {
-					if xDdevMap, ok := xDdev.(map[string]interface{}); ok {
-						if desc, ok := xDdevMap["describe-url-port"].(string); ok && desc != "" {
-							services[shortName]["describe-url-port"] = strings.TrimSpace(desc)
-						}
-						if desc, ok := xDdevMap["describe-info"].(string); ok && desc != "" {
-							services[shortName]["describe-info"] = strings.TrimSpace(desc)
-						}
-					}
-				}
-			}
-		}
+		xDdev := app.GetXDdevExtension(shortName)
+		services[shortName]["describe-url-port"] = xDdev.DescribeURLPort
+		services[shortName]["describe-info"] = xDdev.DescribeInfo
 	}
 	// Add services that are defined in docker-compose but not currently running
 	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
@@ -580,16 +569,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			}
 
 			// Extract x-ddev.describe extension data from compose file
-			if xDdev, ok := composeService.Extensions["x-ddev"]; ok {
-				if xDdevMap, ok := xDdev.(map[string]interface{}); ok {
-					if desc, ok := xDdevMap["describe-url-port"].(string); ok && desc != "" {
-						services[serviceName]["describe-url-port"] = strings.TrimSpace(desc)
-					}
-					if desc, ok := xDdevMap["describe-info"].(string); ok && desc != "" {
-						services[serviceName]["describe-info"] = strings.TrimSpace(desc)
-					}
-				}
-			}
+			xDdev := app.GetXDdevExtension(serviceName)
+			services[serviceName]["describe-url-port"] = xDdev.DescribeURLPort
+			services[serviceName]["describe-info"] = xDdev.DescribeInfo
 		}
 	}
 
@@ -2309,6 +2291,8 @@ type ExecOpts struct {
 	Detach bool
 	// Env is the array of environment variables
 	Env []string
+	// User is the user to run as inside the container
+	User string
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
@@ -2357,6 +2341,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		baseComposeExecCmd = append(baseComposeExecCmd, "--detach")
 	}
 
+	if opts.User != "" {
+		baseComposeExecCmd = append(baseComposeExecCmd, "-u", opts.User)
+	}
+
 	if len(opts.Env) > 0 {
 		for _, envVar := range opts.Env {
 			baseComposeExecCmd = append(baseComposeExecCmd, "-e", envVar)
@@ -2373,10 +2361,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if len(opts.RawCmd) == 0 { // Use opts.Cmd and prepend with bash
 		// Use Bash for our containers, sh for 3rd-party containers
 		// that may not have Bash.
-		shell := "bash"
-		if !nodeps.ArrayContainsString([]string{"web", "db"}, opts.Service) {
-			shell = "sh"
-		}
+		shell := app.GetXDdevExtension(opts.Service).Shell
 		errcheck := "set -eu"
 		opts.RawCmd = []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`}
 	}
@@ -2443,6 +2428,10 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 		args = append(args, "-w", opts.Dir)
 	}
 
+	if opts.User != "" {
+		args = append(args, "-u", opts.User)
+	}
+
 	args = append(args, opts.Service)
 
 	if opts.Cmd == "" {
@@ -2456,10 +2445,8 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 
 	// Use Bash for our containers, sh for 3rd-party containers
 	// that may not have Bash.
-	shell := "bash"
-	if !nodeps.ArrayContainsString([]string{"web", "db"}, opts.Service) {
-		shell = "sh"
-	}
+	shell := app.GetXDdevExtension(opts.Service).Shell
+
 	args = append(args, shell, "-c", opts.Cmd)
 
 	return dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{

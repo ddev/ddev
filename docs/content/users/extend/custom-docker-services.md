@@ -118,7 +118,7 @@ volumes:
   - "../:/var/www/html:cached"
 ```
 
-### Customizing ddev describe Output
+### Customizing ddev describe Output and Container Shell
 
 You can add custom descriptions that appear in `ddev describe` output using the `x-ddev` extension field. This is helpful for providing information about credentials, URLs, or usage instructions for your custom services.
 
@@ -131,11 +131,12 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
     restart: "no"
-    ports:
+    expose:
       - "15672"
     environment:
       - VIRTUAL_HOST=${DDEV_HOSTNAME}
       - HTTP_EXPOSE=15672:15672
+      - HTTPS_EXPOSE=15673:15672
       - RABBITMQ_DEFAULT_USER=rabbitmq
       - RABBITMQ_DEFAULT_PASS=rabbitmq
     x-ddev:
@@ -145,9 +146,13 @@ services:
         Pass: rabbitmq
       # Or single line string
       describe-url-port: "extra help here"
+      # Use the desired shell, e.g., bash, sh, etc.
+      shell: "bash"
 ```
 
-The `x-ddev.describe-url-port` value appears in the URL/Port column when running `ddev describe` and the `x-ddev-describe-info` value appears in the `info` column, making it easy for team members to see important service information without digging through documentation and configuration files.
+The `x-ddev.describe-url-port` value appears in the `URL/PORT` column when running [`ddev describe`](../usage/commands.md#describe) and the `x-ddev-describe-info` value appears in the `INFO` column, making it easy for team members to see important service information without digging through documentation and configuration files.
+
+The `x-ddev.shell` value sets the default shell used when running [`ddev exec`](../usage/commands.md#exec) and [`ddev ssh`](../usage/commands.md#ssh) commands.
 
 ## Advanced Service Examples
 

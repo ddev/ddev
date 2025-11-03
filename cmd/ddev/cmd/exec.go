@@ -25,7 +25,8 @@ var DdevExecCmd = &cobra.Command{
 ddev exec --service db
 ddev exec -s db
 ddev exec -s solr (assuming an add-on service named 'solr')
-ddev exec --raw -- ls -lR`,
+ddev exec --raw -- ls -lR
+ddev exec -s db -u root ls -la /root`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			err := cmd.Usage()
@@ -53,6 +54,7 @@ ddev exec --raw -- ls -lR`,
 			Dir:     execDirArg,
 			Cmd:     quoteArgs(args),
 			Tty:     true,
+			User:    serviceUser,
 		}
 
 		// If they've chosen raw, use the actual passed values.
@@ -62,6 +64,7 @@ ddev exec --raw -- ls -lR`,
 			path, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: serviceType,
 				Cmd:     "echo $PATH",
+				User:    serviceUser,
 			})
 			path = strings.Trim(path, "\n")
 			if err == nil && path != "" {
@@ -118,6 +121,7 @@ func init() {
 	DdevExecCmd.Flags().StringVarP(&execDirArg, "dir", "d", "", "Define the execution directory within the container")
 	DdevExecCmd.Flags().Bool("raw", true, "Use raw exec (do not interpret with Bash inside container)")
 	DdevExecCmd.Flags().BoolP("quiet", "q", false, "Suppress detailed error output")
+	DdevExecCmd.Flags().StringVarP(&serviceUser, "user", "u", "", "Defines the user to use within the container")
 	// This requires flags for exec to be specified prior to any arguments, allowing for
 	// flags to be ignored by cobra for commands that are to be executed in a container.
 	DdevExecCmd.Flags().SetInterspersed(false)
