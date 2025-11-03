@@ -473,317 +473,6 @@ Example:
 ddev dbeaver
 ```
 
-## `utility`
-
-*Aliases: `ut`, `debug`, `d`,`dbg`.*
-
-A collection of utility and debugging commands, often useful for [troubleshooting](troubleshooting.md).
-
-### `utility cd`
-
-Uses shell built-in `cd` to change to a project directory. For example, `ddevcd some-project` will change directories to the project root of the project named `some-project`.
-
-Note that this command can't work until you make a small addition to your `.bashrc`, `.zshrc`, or `config.fish`.
-
-```shell
-# To see the explanation of what you need to do
-ddev utility cd
-# Where some-project is a project from the `ddev list`
-ddevcd some-project
-```
-
-### `utility check-db-match`
-
-Verify that the database in the db server matches the configured [type and version](../extend/database-types.md).
-
-Example:
-
-```shell
-# Check whether project’s running database matches configuration
-ddev utility check-db-match
-```
-
-### `utility compose-config`
-
-Prints the current project’s docker-compose configuration.
-
-Example:
-
-```shell
-# Print docker-compose config for the current project
-ddev utility compose-config
-
-# Print docker-compose config for `my-project`
-ddev utility compose-config my-project
-```
-
-### `utility configyaml`
-
-Prints the project [`config.*.yaml`](../configuration/config.md) usage.
-
-**Arguments:** `[project_name]`
-
-**Flags:**
-
-* `--full-yaml`: Output complete processed YAML configuration instead of individual fields
-* `--omit-keys=<keys>`: Comma-separated list of keys to omit from output (e.g., `web_environment`)
-
-**Examples:**
-
-```shell
-# Print config for the current project
-ddev utility configyaml
-
-# Print config specifically for `my-project`
-ddev utility configyaml my-project
-
-# Print complete YAML configuration
-ddev utility configyaml --full-yaml
-
-# Hide sensitive environment variables
-ddev utility configyaml --omit-keys=web_environment
-
-# Combine flags: full YAML output without sensitive keys
-ddev utility configyaml --full-yaml --omit-keys=web_environment
-```
-
-### `utility diagnose`
-
-Run quick diagnostics on your DDEV installation and current project. This command provides concise, actionable output for common troubleshooting scenarios.
-
-The command checks:
-
-* Docker environment and connectivity
-* Network configuration and DNS resolution
-* HTTPS/mkcert setup
-* Current project health (if in a project directory)
-
-For comprehensive output suitable for issue reports, use [`ddev utility test`](#utility-test) instead.
-
-**Environment variables:**
-
-* `DDEV_DIAGNOSE_FULL=true`: Include test project creation in diagnostics (slower but more thorough)
-
-**Examples:**
-
-```shell
-# Run diagnostics in a project directory
-ddev utility diagnose
-
-# Run with full diagnostics including test project creation
-DDEV_DIAGNOSE_FULL=true ddev utility diagnose
-
-# Run from anywhere (checks Docker and environment only)
-ddev utility diagnose
-```
-
-### `utility dockercheck`
-
-Diagnose DDEV Docker provider setup.
-
-Example:
-
-```shell
-# Output contextual details for the Docker provider
-ddev utility dockercheck
-```
-
-### `utility download-images`
-
-Download the basic Docker images required by DDEV. This can be useful on a new machine to prevent `ddev start` or other commands having to download the various images.
-
-Example:
-
-```shell
-# Download DDEV’s basic Docker images
-ddev utility download-images
-# Download DDEV’s Docker images for `my-project`
-ddev utility download-images my-project
-# Download DDEV’s Docker images for all projects
-ddev utility download-images --all
-```
-
-### `utility fix-commands`
-
-Refreshes [custom command](../extend/custom-commands.md) definitions without running [`ddev start`](#start).
-
-Example:
-
-```shell
-# Refresh the current project’s custom commands
-ddev utility fix-commands
-```
-
-### `utility get-volume-db-version`
-
-Get the database type and version found in the `ddev-dbserver` database volume, which may not be the same as the configured database [type and version](../extend/database-types.md).
-
-Example:
-
-```shell
-# Print the database volume's engine and version
-ddev utility get-volume-db-version
-```
-
-### `utility gob-decode`
-
-Decode and display the contents of Go gob-encoded binary files used by DDEV, such as `.remote-config` files (remote configuration cache), `.amplitude.cache` files (analytics event cache), and sponsorship data files.
-
-The decoder automatically detects the file type and uses the appropriate structure. The output is displayed as formatted JSON for readability.
-
-*(Hidden - show hidden utility commands with `ddev utility --show-hidden`)*
-
-Example:
-
-```shell
-# Decode a remote config file
-ddev utility gob-decode ~/.ddev/.remote-config
-
-# Decode an amplitude cache file
-ddev utility gob-decode ~/.ddev/.amplitude.cache
-
-# Decode any gob file with path expansion
-ddev utility gob-decode ~/path/to/file.gob
-```
-
-### `utility match-constraint`
-
-Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
-
-Example:
-
-```shell
-if ddev utility match-constraint "< 1.25" >/dev/null 2>&1; then
-  # do something for ddev versions below 1.25
-  ...
-else
-  # do something for ddev versions 1.25+
-  ...
-fi
-```
-
-!!!tip
-    You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint).
-
-### `utility message-conditions`
-
-Show message conditions of this version of DDEV.
-
-*(Hidden - show hidden utility commands with `ddev utility --show-hidden`)*
-
-Example:
-
-```shell
-# Show message conditions for the current DDEV version
-ddev utility message-conditions
-```
-
-### `utility migrate-database`
-
-Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL. It will export your database, create a snapshot, destroy your current database, and import into the new database type. It only migrates the 'db' database. It will update the database version in your project's `config.yaml` file.
-
-Example:
-
-```shell
-# Migrate the current project's database to MariaDB 10.7
-ddev utility migrate-database mariadb:10.7
-```
-
-### `utility mutagen`
-
-Allows access to any [Mutagen command](https://mutagen.io/documentation/introduction).
-
-Example:
-
-```shell
-# Run Mutagen's `sync list` command
-ddev utility mutagen sync list
-```
-
-### `utility nfsmount`
-
-Checks to see if [NFS mounting](../install/performance.md#nfs) works for current project.
-
-Example:
-
-```shell
-# See if NFS is working as expected for the current project
-ddev utility nfsmount
-```
-
-### `utility rebuild`
-
-*Alias: `utility refresh`.*
-
-Rebuilds the project's Docker cache with verbose output and restarts the project or the specified service.
-
-Flags:
-
-* `--all`, `-a`: Rebuild all services and restart the project.
-* `--cache`: Keep Docker cache.
-* `--service`, `-s`: Rebuild the specified service and restart it. (default `web`)
-
-Example:
-
-```shell
-# Rebuild the current project's web service without cache
-ddev utility rebuild
-
-# Rebuild the current project's web service with cache
-ddev utility rebuild --cache
-
-# Rebuild the current project's db service without cache
-ddev utility rebuild --service db
-
-# Rebuild the current project's all services without cache
-ddev utility rebuild --all
-```
-
-### `utility remote-data`
-
-Download and display remote configuration and sponsorship data used by DDEV from GitHub repositories.
-
-The downloaded content is displayed as formatted JSON to stdout. Optionally updates the local cached storage file (enabled by default).
-
-*(Hidden - show hidden utility commands with `ddev utility --show-hidden`)*
-
-Flags:
-
-* `--type`, `-t`: Type of data to download: `remote-config` (default) or `sponsorship-data`.  
-* `--update-storage`: Update local cached storage file (default `true`).
-
-Examples:
-
-```shell
-# Download remote config (default type)
-ddev utility remote-data
-
-# Download sponsorship data without updating local storage
-ddev utility remote-data --type=sponsorship-data --update-storage=false
-```
-
-### `utility test`
-
-Run diagnostics using the embedded [test script](https://github.com/ddev/ddev/blob/main/cmd/ddev/cmd/scripts/test_ddev.sh).
-
-Example:
-
-```shell
-# Run DDEV's diagnostic suite
-ddev utility test
-```
-
-### `utility testcleanup`
-
-Removes all diagnostic projects created with `ddev utility test`.
-
-Example:
-
-```shell
-# Remove all DDEV's diagnostic projects
-ddev utility testcleanup
-```
-
 ## `delete`
 
 Remove all information, including the database, for an existing project.
@@ -1751,6 +1440,317 @@ Run the `typo3` command; available only in projects of type `typo3`, and only wo
 ```shell
 # Show typo3 site configuration
 ddev typo3 site:show
+```
+
+## `utility`
+
+*Aliases: `ut`, `debug`, `d`,`dbg`.*
+
+A collection of utility and debugging commands, often useful for [troubleshooting](troubleshooting.md).
+
+### `utility cd`
+
+Uses shell built-in `cd` to change to a project directory. For example, `ddevcd some-project` will change directories to the project root of the project named `some-project`.
+
+Note that this command can't work until you make a small addition to your `.bashrc`, `.zshrc`, or `config.fish`.
+
+```shell
+# To see the explanation of what you need to do
+ddev utility cd
+# Where some-project is a project from the `ddev list`
+ddevcd some-project
+```
+
+### `utility check-db-match`
+
+Verify that the database in the db server matches the configured [type and version](../extend/database-types.md).
+
+Example:
+
+```shell
+# Check whether project’s running database matches configuration
+ddev utility check-db-match
+```
+
+### `utility compose-config`
+
+Prints the current project’s docker-compose configuration.
+
+Example:
+
+```shell
+# Print docker-compose config for the current project
+ddev utility compose-config
+
+# Print docker-compose config for `my-project`
+ddev utility compose-config my-project
+```
+
+### `utility configyaml`
+
+Prints the project [`config.*.yaml`](../configuration/config.md) usage.
+
+**Arguments:** `[project_name]`
+
+**Flags:**
+
+* `--full-yaml`: Output complete processed YAML configuration instead of individual fields
+* `--omit-keys=<keys>`: Comma-separated list of keys to omit from output (e.g., `web_environment`)
+
+**Examples:**
+
+```shell
+# Print config for the current project
+ddev utility configyaml
+
+# Print config specifically for `my-project`
+ddev utility configyaml my-project
+
+# Print complete YAML configuration
+ddev utility configyaml --full-yaml
+
+# Hide sensitive environment variables
+ddev utility configyaml --omit-keys=web_environment
+
+# Combine flags: full YAML output without sensitive keys
+ddev utility configyaml --full-yaml --omit-keys=web_environment
+```
+
+### `utility diagnose`
+
+Run quick diagnostics on your DDEV installation and current project. This command provides concise, actionable output for common troubleshooting scenarios.
+
+The command checks:
+
+* Docker environment and connectivity
+* Network configuration and DNS resolution
+* HTTPS/mkcert setup
+* Current project health (if in a project directory)
+
+For comprehensive output suitable for issue reports, use [`ddev utility test`](#utility-test) instead.
+
+**Environment variables:**
+
+* `DDEV_DIAGNOSE_FULL=true`: Include test project creation in diagnostics (slower but more thorough)
+
+**Examples:**
+
+```shell
+# Run diagnostics in a project directory
+ddev utility diagnose
+
+# Run with full diagnostics including test project creation
+DDEV_DIAGNOSE_FULL=true ddev utility diagnose
+
+# Run from anywhere (checks Docker and environment only)
+ddev utility diagnose
+```
+
+### `utility dockercheck`
+
+Diagnose DDEV Docker provider setup.
+
+Example:
+
+```shell
+# Output contextual details for the Docker provider
+ddev utility dockercheck
+```
+
+### `utility download-images`
+
+Download the basic Docker images required by DDEV. This can be useful on a new machine to prevent `ddev start` or other commands having to download the various images.
+
+Example:
+
+```shell
+# Download DDEV’s basic Docker images
+ddev utility download-images
+# Download DDEV’s Docker images for `my-project`
+ddev utility download-images my-project
+# Download DDEV’s Docker images for all projects
+ddev utility download-images --all
+```
+
+### `utility fix-commands`
+
+Refreshes [custom command](../extend/custom-commands.md) definitions without running [`ddev start`](#start).
+
+Example:
+
+```shell
+# Refresh the current project’s custom commands
+ddev utility fix-commands
+```
+
+### `utility get-volume-db-version`
+
+Get the database type and version found in the `ddev-dbserver` database volume, which may not be the same as the configured database [type and version](../extend/database-types.md).
+
+Example:
+
+```shell
+# Print the database volume's engine and version
+ddev utility get-volume-db-version
+```
+
+### `utility gob-decode`
+
+Decode and display the contents of Go gob-encoded binary files used by DDEV, such as `.remote-config` files (remote configuration cache), `.amplitude.cache` files (analytics event cache), and sponsorship data files.
+
+The decoder automatically detects the file type and uses the appropriate structure. The output is displayed as formatted JSON for readability.
+
+*(Hidden - show hidden utility commands with `ddev utility --show-hidden`)*
+
+Example:
+
+```shell
+# Decode a remote config file
+ddev utility gob-decode ~/.ddev/.remote-config
+
+# Decode an amplitude cache file
+ddev utility gob-decode ~/.ddev/.amplitude.cache
+
+# Decode any gob file with path expansion
+ddev utility gob-decode ~/path/to/file.gob
+```
+
+### `utility match-constraint`
+
+Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
+
+Example:
+
+```shell
+if ddev utility match-constraint "< 1.25" >/dev/null 2>&1; then
+  # do something for ddev versions below 1.25
+  ...
+else
+  # do something for ddev versions 1.25+
+  ...
+fi
+```
+
+!!!tip
+You can also configure a [ddev version constraint per project](../configuration/config.md#ddev_version_constraint).
+
+### `utility message-conditions`
+
+Show message conditions of this version of DDEV.
+
+*(Hidden - show hidden utility commands with `ddev utility --show-hidden`)*
+
+Example:
+
+```shell
+# Show message conditions for the current DDEV version
+ddev utility message-conditions
+```
+
+### `utility migrate-database`
+
+Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL. It will export your database, create a snapshot, destroy your current database, and import into the new database type. It only migrates the 'db' database. It will update the database version in your project's `config.yaml` file.
+
+Example:
+
+```shell
+# Migrate the current project's database to MariaDB 10.7
+ddev utility migrate-database mariadb:10.7
+```
+
+### `utility mutagen`
+
+Allows access to any [Mutagen command](https://mutagen.io/documentation/introduction).
+
+Example:
+
+```shell
+# Run Mutagen's `sync list` command
+ddev utility mutagen sync list
+```
+
+### `utility nfsmount`
+
+Checks to see if [NFS mounting](../install/performance.md#nfs) works for current project.
+
+Example:
+
+```shell
+# See if NFS is working as expected for the current project
+ddev utility nfsmount
+```
+
+### `utility rebuild`
+
+*Alias: `utility refresh`.*
+
+Rebuilds the project's Docker cache with verbose output and restarts the project or the specified service.
+
+Flags:
+
+* `--all`, `-a`: Rebuild all services and restart the project.
+* `--cache`: Keep Docker cache.
+* `--service`, `-s`: Rebuild the specified service and restart it. (default `web`)
+
+Example:
+
+```shell
+# Rebuild the current project's web service without cache
+ddev utility rebuild
+
+# Rebuild the current project's web service with cache
+ddev utility rebuild --cache
+
+# Rebuild the current project's db service without cache
+ddev utility rebuild --service db
+
+# Rebuild the current project's all services without cache
+ddev utility rebuild --all
+```
+
+### `utility remote-data`
+
+Download and display remote configuration and sponsorship data used by DDEV from GitHub repositories.
+
+The downloaded content is displayed as formatted JSON to stdout. Optionally updates the local cached storage file (enabled by default).
+
+*(Hidden - show hidden utility commands with `ddev utility --show-hidden`)*
+
+Flags:
+
+* `--type`, `-t`: Type of data to download: `remote-config` (default) or `sponsorship-data`.
+* `--update-storage`: Update local cached storage file (default `true`).
+
+Examples:
+
+```shell
+# Download remote config (default type)
+ddev utility remote-data
+
+# Download sponsorship data without updating local storage
+ddev utility remote-data --type=sponsorship-data --update-storage=false
+```
+
+### `utility test`
+
+Run diagnostics using the embedded [test script](https://github.com/ddev/ddev/blob/main/cmd/ddev/cmd/scripts/test_ddev.sh).
+
+Example:
+
+```shell
+# Run DDEV's diagnostic suite
+ddev utility test
+```
+
+### `utility testcleanup`
+
+Removes all diagnostic projects created with `ddev utility test`.
+
+Example:
+
+```shell
+# Remove all DDEV's diagnostic projects
+ddev utility testcleanup
 ```
 
 ## `version`
