@@ -95,7 +95,7 @@ Additional commands that can help clean up resources:
 				if globalconfig.IsInteractive() {
 					util.Failed("User cancelled operation. Terminating without removing items.")
 				} else {
-					util.Failed("DDEV_NONINTERACTIVE or CI is set or terminal is not interactive. Use `--yes` flag to proceed.")
+					util.Failed("Unable to continue because DDEV_NONINTERACTIVE=true, use `--yes` flag to proceed.")
 				}
 			}
 		}
