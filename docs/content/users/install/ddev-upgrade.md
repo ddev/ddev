@@ -31,8 +31,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         Use the `-s` argument to specify a specific stable or prerelease version:
 
         ```bash
-        # Download and run the script to update to DDEV v1.24.9
-        curl -fsSL https://ddev.com/install.sh | bash -s v1.24.9
+        # Download and run the script to update to DDEV v1.24.10
+        curl -fsSL https://ddev.com/install.sh | bash -s v1.24.10
         ```
 
 === "Linux"

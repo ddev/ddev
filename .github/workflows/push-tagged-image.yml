@@ -19,7 +19,7 @@ on:
           - ddev-xhgui
           - test-ssh-server
       tag:
-        description: Tag for pushed image (v1.24.9 for example)
+        description: Tag for pushed image (v1.25.0 for example)
         required: true
         default: ""
       debug_enabled:

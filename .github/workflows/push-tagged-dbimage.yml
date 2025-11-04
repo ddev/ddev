@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Base tag for pushed dbimage (v1.24.9 for example)'
+        description: Base tag for pushed dbimage (v1.25.0 for example)'
         required: true
         default: ""
       debug_enabled:
