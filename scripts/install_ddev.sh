@@ -136,7 +136,6 @@ cd $TMPDIR
 $SHACMD -c "$SHAFILE"
 tar -xzf $TARBALL
 
-
 printf "${GREEN}Download verified. Ready to place ddev, ddev-hostname, and mkcert in your /usr/local/bin.${RESET}\n"
 
 if command -v brew >/dev/null && brew info ddev >/dev/null 2>/dev/null ; then
@@ -154,12 +153,12 @@ if [[ "$BINOWNER" != "$USER" ]]; then
   SUDO=sudo
 fi
 if [ ! -z "${SUDO}" ]; then
-    printf "${YELLOW}Running \"sudo mv  -f ${ARTIFACTS} /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
+    printf "${YELLOW}Running \"sudo mv -f ${ARTIFACTS} /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
 fi
 for item in ${ARTIFACTS}; do
   if [ -f ${item} ]; then
     chmod +x ${item}
-    ${SUDO} mv ${item} /usr/local/bin/
+    ${SUDO} mv -f ${item} /usr/local/bin/
   fi
 done
 
@@ -168,7 +167,7 @@ if command -v brew >/dev/null ; then
         bash_completion_dir=$(brew --prefix)/etc/bash_completion.d
         cp ddev_bash_completion.sh $bash_completion_dir/ddev
         printf "${GREEN}Installed ddev bash completions in $bash_completion_dir${RESET}\n"
-        rm ddev_bash_completion.sh
+        rm -f ddev_bash_completion.sh
     else
         printf "${YELLOW}Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completion.sh in your bash_completion.d directory.${RESET}\n"
     fi
@@ -177,7 +176,7 @@ if command -v brew >/dev/null ; then
         zsh_completion_dir=$(brew --prefix)/share/zsh-completions
         cp ddev_zsh_completion.sh $zsh_completion_dir/_ddev
         printf "${GREEN}Installed ddev zsh completions in $zsh_completion_dir${RESET}\n"
-        rm ddev_zsh_completion.sh
+        rm -f ddev_zsh_completion.sh
     else
         printf "${YELLOW}zsh completion for ddev was not installed. You may manually install ${TMPDIR}/ddev_zsh_completion.sh in your zsh-completions directory.${RESET}\n"
     fi

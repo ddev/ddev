@@ -11,6 +11,8 @@ set -o nounset
 if [ ! -d /usr/local/bin ]; then echo 'using sudo to mkdir missing /usr/local/bin' && sudo mkdir -p /usr/local/bin; fi
 
 DDEV_GITHUB_OWNER=${DDEV_GITHUB_OWNER:-ddev}
+ARTIFACTS="ddev ddev-hostname mkcert"
+
 TMPDIR=/tmp
 
 RED='\033[31m'
@@ -84,16 +86,23 @@ SUDO=""
 if [[ "$BINOWNER" != "$USER" ]]; then
   SUDO=sudo
 fi
-
 if [ ! -z "${SUDO}" ]; then
-    printf "${YELLOW}Running \"sudo mv ddev /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
+  printf "${YELLOW}Running \"sudo mv -f ${ARTIFACTS} /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
 fi
-
-chmod +x ddev
-${SUDO} mv ddev /usr/local/bin/
+for item in ${ARTIFACTS}; do
+  if [ -f ${item} ]; then
+    chmod +x ${item}
+    ${SUDO} mv -f ${item} /usr/local/bin/
+  fi
+done
 
 # Cleanup
 rm -f "ddev-${OS}-${ARCH}.zip"
+
+if command -v mkcert >/dev/null; then
+  printf "${YELLOW}Running mkcert -install, which may request your sudo password.'.${RESET}\n"
+  mkcert -install
+fi
 
 hash -r
 
