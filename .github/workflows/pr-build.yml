@@ -78,6 +78,7 @@ jobs:
           path: |
             .gotmp/bin/darwin_amd64/ddev
             .gotmp/bin/darwin_amd64/ddev-hostname
+            .gotmp/bin/darwin_amd64/mkcert
       - name: Upload macos-arm64 binary
         uses: actions/upload-artifact@v5
         with:
@@ -85,6 +86,7 @@ jobs:
           path: |
             .gotmp/bin/darwin_arm64/ddev
             .gotmp/bin/darwin_arm64/ddev-hostname
+            .gotmp/bin/darwin_arm64/mkcert
       - name: Upload linux-arm64 binary
         uses: actions/upload-artifact@v5
         with:
@@ -92,6 +94,7 @@ jobs:
           path: |
             .gotmp/bin/linux_arm64/ddev
             .gotmp/bin/linux_arm64/ddev-hostname
+            .gotmp/bin/linux_arm64/mkcert
       - name: Upload linux-amd64 binary
         uses: actions/upload-artifact@v5
         with:
@@ -99,6 +102,7 @@ jobs:
           path: |
             .gotmp/bin/linux_amd64/ddev
             .gotmp/bin/linux_amd64/ddev-hostname
+            .gotmp/bin/linux_amd64/mkcert
       - name: Upload windows-amd64 binary
         uses: actions/upload-artifact@v5
         with:
@@ -106,6 +110,7 @@ jobs:
           path: |
             .gotmp/bin/windows_amd64/ddev.exe
             .gotmp/bin/windows_amd64/ddev-hostname.exe
+            .gotmp/bin/windows_amd64/mkcert.exe
       - name: Upload windows_amd64 installer
         uses: actions/upload-artifact@v5
         with:
@@ -118,6 +123,7 @@ jobs:
           path: |
             .gotmp/bin/windows_arm64/ddev.exe
             .gotmp/bin/windows_arm64/ddev-hostname.exe
+            .gotmp/bin/windows_arm64/mkcert.exe
       - name: Upload windows_arm64 installer
         uses: actions/upload-artifact@v5
         with:
