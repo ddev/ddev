@@ -9,9 +9,20 @@
 
 set -euo pipefail
 
+# Enable debug output if DDEV_DEBUG is set
+if [[ "${DDEV_DEBUG:-}" == "true" ]]; then
+    set -x
+fi
+
 # Validate ngrok is installed
 if ! command -v ngrok &> /dev/null; then
     echo "Error: ngrok not found in PATH. Install from https://ngrok.com/download" >&2
+    exit 1
+fi
+
+# Validate jq is installed
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq not found in PATH. Install with 'brew install jq' or see https://jqlang.github.io/jq/download/" >&2
     exit 1
 fi
 
@@ -37,6 +48,20 @@ trap cleanup EXIT
 echo "Starting ngrok tunnel..." >&2
 URL=""
 for i in {1..30}; do
+    # Check if ngrok process is still running
+    if ! kill -0 "$NGROK_PID" 2>/dev/null; then
+        echo "Error: ngrok process died unexpectedly" >&2
+        echo "This may indicate an authentication issue. Check 'ngrok config add-authtoken <token>'" >&2
+        exit 1
+    fi
+
+    # Get API response for debugging
+    if [[ "${DDEV_DEBUG:-}" == "true" ]]; then
+        echo "Attempt $i: Polling ngrok API..." >&2
+        API_RESPONSE=$(curl -s http://localhost:4040/api/tunnels 2>&1)
+        echo "API Response: $API_RESPONSE" >&2
+    fi
+
     URL=$(curl -s http://localhost:4040/api/tunnels 2>/dev/null | \
           jq -r '.tunnels[0].public_url' 2>/dev/null || echo "")
 
