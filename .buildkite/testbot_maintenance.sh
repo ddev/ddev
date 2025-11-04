@@ -21,6 +21,18 @@ if ! command -v ngrok >/dev/null; then
     esac
 fi
 
+# Install cloudflared if it's not there.
+if ! command -v cloudflared >/dev/null; then
+    case $os in
+    darwin)
+        brew install cloudflared
+        ;;
+    windows)
+        (yes | choco install -y cloudflared) || true
+        ;;
+    esac
+fi
+
 # Upgrade various items on various operating systems
 case $os in
 darwin)
