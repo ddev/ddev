@@ -598,14 +598,15 @@ Flags:
 * `--raw`: Use raw exec (do not interpret with Bash inside container). (default `true`)
 * `--service`, `-s`: Define the service to connect to. (e.g. `web`, `db`) (default `"web"`)
 * `--quiet`, `-q`: Suppress detailed error message.
+* `--user`, `-u`: Defines the user to run shell as.
 
 Example:
 
 ```shell
-# List the web container’s docroot contents
+# List the web container's docroot contents
 ddev exec ls /var/www/html
 
-# List the web container’s vendor directory contents
+# List the web container's vendor directory contents
 ddev exec --dir /var/www/html/vendor ls
 
 # Output a long, recursive list of the files in the web container
@@ -614,6 +615,9 @@ ddev exec --raw -- ls -lR
 # Suppress detailed error message: 
 # "Failed to execute command `exit 1`: exit status 1"
 ddev exec -q "exit 1"
+
+# List the db container's /root directory contents as root user
+ddev exec -s db -u root ls -la /root
 ```
 
 ## `export-db`
@@ -1346,6 +1350,7 @@ Flags:
 
 * `--dir`, `-d`: Defines the destination directory within the container.
 * `--service`, `-s`: Defines the service to connect to. (default `"web"`)
+* `--user`, `-u`: Defines the user to run shell as.
 
 Example:
 
@@ -1355,6 +1360,9 @@ ddev ssh
 
 # SSH into the current project’s database container
 ddev ssh -s db
+
+# SSH into the current project’s database container as root user
+ddev ssh -s db -u root
 
 # SSH into the web container for my-project
 ddev ssh my-project

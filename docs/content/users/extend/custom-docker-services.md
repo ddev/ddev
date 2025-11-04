@@ -118,9 +118,11 @@ volumes:
   - "../:/var/www/html:cached"
 ```
 
-### Customizing ddev describe Output
+### Customizing `ddev describe` Output
 
-You can add custom descriptions that appear in `ddev describe` output using the `x-ddev` extension field. This is helpful for providing information about credentials, URLs, or usage instructions for your custom services.
+You can use the `x-ddev` extension field in your `.ddev/docker-compose.*.yaml` configuration to customize the output of [`ddev describe`](../usage/commands.md#describe).
+
+This feature is useful for showing credentials, URLs, or usage notes for custom services.
 
 ```yaml
 services:
@@ -131,11 +133,12 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
     restart: "no"
-    ports:
+    expose:
       - "15672"
     environment:
       - VIRTUAL_HOST=${DDEV_HOSTNAME}
       - HTTP_EXPOSE=15672:15672
+      - HTTPS_EXPOSE=15673:15672
       - RABBITMQ_DEFAULT_USER=rabbitmq
       - RABBITMQ_DEFAULT_PASS=rabbitmq
     x-ddev:
@@ -147,7 +150,11 @@ services:
       describe-url-port: "extra help here"
 ```
 
-The `x-ddev.describe-url-port` value appears in the URL/Port column when running `ddev describe` and the `x-ddev-describe-info` value appears in the `info` column, making it easy for team members to see important service information without digging through documentation and configuration files.
+- `x-ddev.describe-url-port`: Appears in the `URL/PORT` column when running [`ddev describe`](../usage/commands.md#describe).
+- `x-ddev.describe-info`: Appears in the `INFO` column, making it easy for team members to view relevant service details without checking config files.
+
+!!!tip
+    See related `x-ddev.ssh-shell` configuration for [Changing `ddev ssh` Shell](../extend/in-container-configuration.md#changing-ddev-ssh-shell).
 
 ## Advanced Service Examples
 
