@@ -11,7 +11,7 @@ import (
 
 // GetShareProviderScript returns the absolute path to a share provider script
 func (app *DdevApp) GetShareProviderScript(providerName string) (string, error) {
-	scriptPath := app.GetConfigPath("share-providers", providerName+".sh")
+	scriptPath := app.GetConfigPath(filepath.Join("share-providers", providerName+".sh"))
 
 	if !fileutil.FileExists(scriptPath) {
 		return "", fmt.Errorf("share provider '%s' not found at %s", providerName, scriptPath)
