@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
-	"regexp"
 )
 
 const (
