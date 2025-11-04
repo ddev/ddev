@@ -139,7 +139,6 @@ func TestConfirmTo(t *testing.T) {
 
 	// Unset the env var, then reset after the test
 	t.Setenv("DDEV_NONINTERACTIVE", "")
-	t.Setenv("CI", "")
 
 	// test a given input against a default value
 	testInput := func(input string, defaultTo bool, expected bool) {

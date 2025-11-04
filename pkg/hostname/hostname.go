@@ -51,7 +51,8 @@ func GetDdevHostnameBinary() string {
 func elevateHostsManipulation(args []string) (out string, err error) {
 	// We can't elevate in tests, and they know how to deal with it.
 	if !globalconfig.IsInteractive() {
-		util.Warning("DDEV_NONINTERACTIVE or CI is set or terminal is not interactive. You must manually run '%s'", strings.Join(args, " "))
+		util.Warning("Not trying to manipulate hosts file because DDEV_NONINTERACTIVE=true")
+		util.Warning("You must manually run '%s'", strings.Join(args, " "))
 		return "", nil
 	}
 
