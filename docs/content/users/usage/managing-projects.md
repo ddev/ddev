@@ -193,7 +193,7 @@ ddev exec mysql -h ddev-backend-db
 
 Example: two projects, `backend` and `frontend`.
 
-From v1.24.9+, DDEV supports direct HTTP/S calls between projects:
+From v1.24.10+, DDEV supports direct HTTP/S calls between projects:
 
 ```bash
 # From frontend web container to backend web container

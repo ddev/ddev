@@ -181,7 +181,7 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
     # Adding external_links allows connections to `https://example.ddev.site`,
     # which then can go through `ddev-router`
-    # Tip: external_links are not needed anymore in DDEV v1.24.9+
+    # Tip: external_links are not needed anymore in DDEV v1.24.10+
     external_links:
       - ddev-router:${DDEV_SITENAME}.${DDEV_TLD}
     labels:
