@@ -180,7 +180,7 @@ Usage: `## Example: <command-example>`
 
 Example:
 
-```
+```bash
 ## Example: commandname
 ## Example: commandname -h
 ```
@@ -222,7 +222,7 @@ Multiple flags are separated by a comma:
 
 Example:
 
-```
+```bash
 ## Flags: [
 ##   {"Name":"flag1","Shorthand":"f","Usage":"flag1 usage"},
 ##   {"Name":"flag2","Usage":"flag2 usage"}
@@ -300,7 +300,7 @@ Usage: `## HostBinaryExists: <path/to/file>`
 
 Example:
 
-```
+```bash
 ## HostBinaryExists: /Applications/DBeaver.app
 ## HostBinaryExists: /usr/bin/dbeaver
 ```
@@ -341,14 +341,14 @@ Multiline or multivalue annotations may be declared in two ways:
 
 1. Re-declaring the annotation on a new line, for example:
 
-    ```
+    ```bash
     ## Example: commandname
     ## Example: commandname -h
     ```
 
 2. Adding the additional entry on a new line, for example:
 
-    ```
+    ```bash
     ## Example: commandname
     ## commandname -h
     ```
