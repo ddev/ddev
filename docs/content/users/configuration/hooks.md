@@ -82,7 +82,6 @@ hooks:
   pre-import-db:
     - exec: mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS some_new_database;"
       service: db
-
 ```
 
 Example: _Execute a command as root user in the `db` container_.
