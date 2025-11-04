@@ -274,7 +274,7 @@ func DownloadDockerCompose() error {
 		_ = os.Remove(destFile)
 		return err
 	}
-	output.UserOut.Printf("Download complete.")
+	output.UserErr.Printf("Download complete.")
 
 	// Remove the cached DockerComposeVersion
 	globalconfig.DockerComposeVersion = ""

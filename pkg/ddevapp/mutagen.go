@@ -547,7 +547,7 @@ func DownloadMutagen() error {
 		_ = os.Remove(destFile)
 		return err
 	}
-	output.UserOut.Printf("Download complete.")
+	output.UserErr.Printf("Download complete.")
 
 	err = archive.Untar(destFile, globalMutagenDir, "")
 	_ = os.Remove(destFile)
