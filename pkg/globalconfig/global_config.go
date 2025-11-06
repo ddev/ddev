@@ -52,6 +52,7 @@ type GlobalConfig struct {
 	MkcertCARoot                     string                      `yaml:"mkcert_caroot"`
 	NoBindMounts                     bool                        `yaml:"no_bind_mounts"`
 	OmitContainersGlobal             []string                    `yaml:"omit_containers,flow"`
+	OmitProjectNameByDefault         bool                        `yaml:"omit_project_name_by_default,omitempty"`
 	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
 	ProjectTldGlobal                 string                      `yaml:"project_tld"`
 	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
@@ -382,6 +383,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # no_bind_mounts: false
 # Whether to disable Docker bind mounts
+
+# omit_project_name_by_default: false
+# If true, 'ddev config' will not write a 'name'' field
+# in '.ddev/config.yaml' unless you use --name=NAME.
 
 # performance_mode: "<default for the OS>"
 # DDEV offers performance optimization strategies to improve the filesystem
@@ -874,6 +879,9 @@ var IsInternetActiveAlreadyChecked = false
 // IsInternetActiveResult is the result of the check
 var IsInternetActiveResult = false
 
+// IsInternetActiveErr is any error from the check
+var IsInternetActiveErr error
+
 // IsInternetActiveNetResolver wraps the standard DNS resolver.
 // In order to override net.DefaultResolver with a stub, we have to define an
 // interface on our own since there is none from the standard library.
@@ -895,23 +903,21 @@ func IsInternetActive() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	// Using a random URL is more conclusive, but it's more intrusive because
-	// DNS may take some time, and it's really annoying.
-	testURL := "test.ddev.site"
-	addrs, err := IsInternetActiveNetResolver.LookupIP(ctx, "ip4", testURL)
+	// Test by using Cloudflare's one.one.one.one DNS.
+	testHostname := "one.one.one.one"
+	addrs, err := IsInternetActiveNetResolver.LookupIP(ctx, "ip4", testHostname)
 
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
-	if DdevDebug {
-		if !active {
-			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://docs.ddev.com/en/stable/users/usage/offline/ for info.")
-		}
-		output.UserErr.Debugf("IsInternetActive(): err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, testURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, testURL, DdevGlobalConfig.InternetDetectionTimeout)
-	}
-
 	// Remember the result to not call this twice
 	IsInternetActiveAlreadyChecked = true
 	IsInternetActiveResult = active
+	if !active {
+		IsInternetActiveErr = fmt.Errorf("unable to resolve testHostname=%s, addrs=%v, internet_detection_timeout_ms=%dms: %w", testHostname, addrs, DdevGlobalConfig.InternetDetectionTimeout, err)
+		if ctx.Err() != nil {
+			IsInternetActiveErr = fmt.Errorf("%w; context error: %v", IsInternetActiveErr, ctx.Err())
+		}
+	}
 
 	return active
 }

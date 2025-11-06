@@ -262,34 +262,31 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["database_type"] = app.Database.Type
 	appDesc["database_version"] = app.Database.Version
 
-	// Only show extended status for running sites.
-	if status == SiteRunning {
-		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-			dbinfo := make(map[string]interface{})
-			dbinfo["username"] = "db"
-			dbinfo["password"] = "db"
-			dbinfo["dbname"] = "db"
-			dbinfo["host"] = "db"
-			dbPublicPort, err := app.GetPublishedPort("db")
-			if err != nil {
-				util.Warning("failed to GetPublishedPort(db): %v", err)
-			}
-			dbinfo["dbPort"] = GetInternalPort(app, "db")
-			dbinfo["published_port"] = dbPublicPort
-			dbinfo["database_type"] = nodeps.MariaDB // default
-			dbinfo["database_type"] = app.Database.Type
-			dbinfo["database_version"] = app.Database.Version
-
-			appDesc["dbinfo"] = dbinfo
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		dbinfo := make(map[string]interface{})
+		dbinfo["username"] = "db"
+		dbinfo["password"] = "db"
+		dbinfo["dbname"] = "db"
+		dbinfo["host"] = "db"
+		dbPublicPort, err := app.GetPublishedPort("db")
+		if err != nil && status == SiteRunning {
+			util.Warning("failed to GetPublishedPort(db): %v", err)
 		}
+		dbinfo["dbPort"] = GetInternalPort(app, "db")
+		dbinfo["published_port"] = dbPublicPort
+		dbinfo["database_type"] = nodeps.MariaDB // default
+		dbinfo["database_type"] = app.Database.Type
+		dbinfo["database_version"] = app.Database.Version
 
-		appDesc["xhprof_mode"] = app.GetXHProfMode()
-		xhguiStatus := XHGuiStatus(app)
-		if xhguiStatus {
-			appDesc["xhgui_status"] = "enabled"
-		} else {
-			appDesc["xhgui_status"] = "disabled"
-		}
+		appDesc["dbinfo"] = dbinfo
+	}
+
+	appDesc["xhprof_mode"] = app.GetXHProfMode()
+	xhguiStatus := XHGuiStatus(app)
+	if xhguiStatus {
+		appDesc["xhgui_status"] = "enabled"
+	} else {
+		appDesc["xhgui_status"] = "disabled"
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
@@ -406,13 +403,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 				}
 			}
 
-			hostname, ok := services[shortName]["virtual_host"]
-			appHostname := ""
-
-			if ok {
-				appHostname = hostname.(string)
-			} else {
-				appHostname = appDesc["hostname"].(string)
+			appHostname := appDesc["hostname"].(string)
+			if hostname, ok := services[shortName]["virtual_host"].(string); ok {
+				appHostname = hostname
 			}
 
 			for name, portMapping := range envMap {
@@ -446,6 +439,139 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		if shortName == "web" {
 			services[shortName]["host_http_url"] = app.GetWebContainerDirectHTTPURL()
 			services[shortName]["host_https_url"] = app.GetWebContainerDirectHTTPSURL()
+		}
+
+		// Extract x-ddev.describe extension data from compose file
+		xDdev := app.GetXDdevExtension(shortName)
+		services[shortName]["describe-url-port"] = xDdev.DescribeURLPort
+		services[shortName]["describe-info"] = xDdev.DescribeInfo
+	}
+	// Add services that are defined in docker-compose but not currently running
+	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+		for serviceName, composeService := range app.ComposeYaml.Services {
+			// Skip services we already processed from running containers
+			if _, ok := services[serviceName]; ok {
+				continue
+			}
+			// Initialize the service map with default values for stopped services
+			services[serviceName] = map[string]interface{}{}
+			services[serviceName]["status"] = SiteStopped
+			services[serviceName]["short_name"] = serviceName
+			services[serviceName]["full_name"] = fmt.Sprintf("ddev-%s-%s", app.Name, serviceName)
+			// Strip the -built suffix from image names, just like for running containers
+			services[serviceName]["image"] = strings.TrimSuffix(composeService.Image, fmt.Sprintf("-%s-built", app.Name))
+
+			// Extract port information from docker-compose configuration
+			portSet := make(map[int]bool)
+			var exposedPrivatePortsStr []string
+
+			// First, collect ports from Ports section
+			for _, portConfig := range composeService.Ports {
+				// Get the target (container) port
+				if portConfig.Target != 0 {
+					portSet[int(portConfig.Target)] = true
+				}
+			}
+
+			// Next, collect ports from Expose section
+			for _, portConfig := range composeService.Expose {
+				if port, err := strconv.Atoi(portConfig); err == nil {
+					portSet[port] = true
+				}
+			}
+
+			// Extract container ports from HTTP_EXPOSE and HTTPS_EXPOSE environment variables
+			if !IsRouterDisabled(app) {
+				for envName, envValue := range composeService.Environment {
+					if envValue != nil && (envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
+						// Format is "routerPort:containerPort,routerPort2:containerPort2,..."
+						// Example: "9100:8080,8025:8025"
+						portMappings := strings.Split(*envValue, ",")
+						for _, mapping := range portMappings {
+							parts := strings.Split(mapping, ":")
+							if len(parts) == 2 {
+								// Extract the container port (second part)
+								if containerPort, err := strconv.Atoi(strings.TrimSpace(parts[1])); err == nil {
+									portSet[containerPort] = true
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// Sort and convert to strings
+			var exposedPrivatePorts []int
+			for p := range portSet {
+				exposedPrivatePorts = append(exposedPrivatePorts, p)
+			}
+			sort.Ints(exposedPrivatePorts)
+			for _, p := range exposedPrivatePorts {
+				exposedPrivatePortsStr = append(exposedPrivatePortsStr, strconv.FormatInt(int64(p), 10))
+			}
+
+			services[serviceName]["exposed_ports"] = strings.Join(exposedPrivatePortsStr, ",")
+			services[serviceName]["host_ports"] = ""
+			services[serviceName]["host_ports_mapping"] = []map[string]string{}
+
+			// Extract VIRTUAL_HOST, HTTP_EXPOSE, and HTTPS_EXPOSE from environment
+			if !IsRouterDisabled(app) {
+				envMap := make(map[string]string)
+
+				// Parse environment variables
+				for envName, envValue := range composeService.Environment {
+					if envValue != nil && (envName == "VIRTUAL_HOST" || envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
+						envMap[envName] = *envValue
+					}
+				}
+
+				// Process VIRTUAL_HOST
+				if virtualHost, ok := envMap["VIRTUAL_HOST"]; ok {
+					vhostsList := strings.Split(virtualHost, ",")
+					if len(vhostsList) > 0 {
+						services[serviceName]["virtual_host"] = vhostsList[0]
+					}
+				}
+
+				// Determine hostname for URL construction
+				appHostname := appDesc["hostname"].(string)
+				if hostname, ok := services[serviceName]["virtual_host"].(string); ok {
+					appHostname = hostname
+				}
+
+				// Process HTTP_EXPOSE and HTTPS_EXPOSE
+				for name, portMapping := range envMap {
+					if name != "HTTP_EXPOSE" && name != "HTTPS_EXPOSE" {
+						continue
+					}
+
+					attributeName := "http_url"
+					protocol := "http://"
+					if name == "HTTPS_EXPOSE" {
+						attributeName = "https_url"
+						protocol = "https://"
+					}
+
+					portSpecs := strings.Split(portMapping, ",")
+					if len(portSpecs) > 0 {
+						ports := strings.Split(portSpecs[0], ":")
+						if ports[0] != app.GetMailpitHTTPPort() && ports[0] != app.GetMailpitHTTPSPort() {
+							services[serviceName][attributeName] = netutil.NormalizeURL(protocol + appHostname + ":" + ports[0])
+						}
+					}
+				}
+			}
+
+			// Add host_http_url and host_https_url for consistency, empty for stopped services
+			if serviceName == "web" {
+				services[serviceName]["host_http_url"] = ""
+				services[serviceName]["host_https_url"] = ""
+			}
+
+			// Extract x-ddev.describe extension data from compose file
+			xDdev := app.GetXDdevExtension(serviceName)
+			services[serviceName]["describe-url-port"] = xDdev.DescribeURLPort
+			services[serviceName]["describe-info"] = xDdev.DescribeInfo
 		}
 	}
 
@@ -810,14 +936,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	// But if we don't have bind mounts, we have to copy dump into the container
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		dbContainerName := GetContainerName(app, "db")
-		if err != nil {
-			return err
-		}
-		uid, _, _ := util.GetContainerUIDGid()
-		// for PostgreSQL, must be written with PostgreSQL user
-		if app.Database.Type == nodeps.Postgres {
-			uid = "999"
-		}
+		uid, _, _ := dockerutil.GetContainerUser()
 
 		insideContainerImportPath, _, err = dockerutil.Exec(dbContainerName, "mktemp -d", uid)
 		if err != nil {
@@ -1237,6 +1356,10 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
 
+	if !globalconfig.IsInternetActive() && globalconfig.DdevDebug {
+		util.WarningOnce("Internet connection not detected, DNS may not work.\nWarning: %v\nSee https://docs.ddev.com/en/stable/users/usage/offline/ for info.", globalconfig.IsInternetActiveErr)
+	}
+
 	// We don't yet know the ComposeYaml values, so make sure they're
 	// not set.
 	app.ComposeYaml = nil
@@ -1340,8 +1463,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		// Check again to make sure the Mutagen Docker volume exists. It's compatible if we found it above
 		// so we can keep it in that case.
 		if !dockerutil.VolumeExists(GetMutagenVolumeName(app)) {
-			util.Debug("Creating new docker volume '%s' with signature '%v'", GetMutagenVolumeName(app), GetDefaultMutagenVolumeSignature(app))
-			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: GetDefaultMutagenVolumeSignature(app)})
+			signature, _ := GetDefaultMutagenVolumeSignature(app)
+			util.Debug("Creating new docker volume '%s' with signature '%v'", GetMutagenVolumeName(app), signature)
+			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: signature})
 			if err != nil {
 				return fmt.Errorf("unable to create new Mutagen Docker volume %s: %v", GetMutagenVolumeName(app), err)
 			}
@@ -1427,7 +1551,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Additional volumes can be added here. This allows us to run a single privileged
 	// container with a single focus of changing ownership, instead of having to use sudo
 	// inside the container
-	uid, _, _ := util.GetContainerUIDGid()
+	uid, gid, _ := dockerutil.GetContainerUser()
 
 	// On the web container, we can use mutagen to sync
 	// anything that changes in the .ddev folder by
@@ -1440,25 +1564,27 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	// TODO: We shouldn't be chowning /var/lib/mysql if PostgreSQL?
-	util.Debug("chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
-	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
-	if err != nil {
-		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
-	}
-	util.Debug("done chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
+	// Build list of volume mounts and their target paths for chown
+	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
+	chownCmd := fmt.Sprintf("chown -R %s:%s /mnt/ddev-global-cache", uid, gid)
 
-	// Chown the PostgreSQL volume; this shouldn't have to be a separate stanza, but the
-	// uid is 999 instead of current user
-	if app.Database.Type == nodeps.Postgres {
-		postgresDataDir := app.GetPostgresDataDir()
-		util.Debug("chowning %s to 999", postgresDataDir)
-		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s %s", "999:999", postgresDataDir)}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":" + postgresDataDir}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
-		if err != nil {
-			return fmt.Errorf("failed to RunSimpleContainer to chown PostgreSQL volume: %v, output=%s", err, out)
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		if app.Database.Type == nodeps.Postgres {
+			postgresDataDir := app.GetPostgresDataDir()
+			volumeMounts = append(volumeMounts, app.GetPostgresVolumeName()+":"+postgresDataDir)
+			chownCmd = fmt.Sprintf("%s %s", chownCmd, postgresDataDir)
+		} else {
+			volumeMounts = append(volumeMounts, app.GetMariaDBVolumeName()+":/var/lib/mysql")
+			chownCmd = fmt.Sprintf("%s /var/lib/mysql", chownCmd)
 		}
-		util.Debug("done chowning %s", postgresDataDir)
 	}
+
+	util.Debug("Exec %s", chownCmd)
+	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
+	if err != nil {
+		return fmt.Errorf("failed to '%s' inside volumes: %v, output=%s", chownCmd, err, out)
+	}
+	util.Debug("Done %s: output=%s", chownCmd, out)
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
 		err = app.EnsureSSHAgentContainer()
@@ -1595,7 +1721,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if router == nil {
 			// Copy ca certs into ddev-global-cache/mkcert
 			if caRoot != "" {
-				uid, _, _ := util.GetContainerUIDGid()
+				uid, _, _ := dockerutil.GetContainerUser()
 				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
 				if err != nil {
 					util.Warning("Failed to copy root CA into Docker volume ddev-global-cache/mkcert: %v", err)
@@ -1615,7 +1741,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		targetSubdir := path.Join("traefik", "certs")
 
 		certPath := app.GetConfigPath("custom_certs")
-		uid, _, _ := util.GetContainerUIDGid()
+		uid, _, _ := dockerutil.GetContainerUser()
 		if fileutil.FileExists(certPath) && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
 			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", targetSubdir, uid, "", false)
 			if err != nil {
@@ -1890,6 +2016,12 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 		}
 	}
 
+	// Using `profiles` here assumes that profile and container name are the same
+	output.UserOut.Printf("Waiting for containers to become ready: %v", profiles)
+	err = app.Wait(profiles)
+	if err != nil {
+		return err
+	}
 	util.Success("Started optional compose profiles '%s'", strings.Join(profiles, ","))
 
 	return nil
@@ -2159,6 +2291,8 @@ type ExecOpts struct {
 	Detach bool
 	// Env is the array of environment variables
 	Env []string
+	// User is the user to run as inside the container
+	User string
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
@@ -2205,6 +2339,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	if opts.Detach {
 		baseComposeExecCmd = append(baseComposeExecCmd, "--detach")
+	}
+
+	if opts.User != "" {
+		baseComposeExecCmd = append(baseComposeExecCmd, "-u", opts.User)
 	}
 
 	if len(opts.Env) > 0 {
@@ -2293,6 +2431,10 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 		args = append(args, "-w", opts.Dir)
 	}
 
+	if opts.User != "" {
+		args = append(args, "-u", opts.User)
+	}
+
 	args = append(args, opts.Service)
 
 	if opts.Cmd == "" {
@@ -2310,6 +2452,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	if !nodeps.ArrayContainsString([]string{"web", "db"}, opts.Service) {
 		shell = "sh"
 	}
+
 	args = append(args, shell, "-c", opts.Cmd)
 
 	return dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
@@ -2460,24 +2603,23 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() map[string]string {
-	uidStr, gidStr, username := util.GetContainerUIDGid()
+	uidStr, gidStr, username := dockerutil.GetContainerUser()
 
 	// Warn about running as root if we're not on Windows.
 	if uidStr == "0" || gidStr == "0" {
-		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
+		util.WarningOnce("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
-	// For Gitpod, Codespaces
+	// For Codespaces
 	// * provide default host-side port bindings, assuming only one project running,
-	//   as is usual on Gitpod, but if more than one project, can override with normal
-	//   config.yaml settings.
+	//   but if more than one project, can override with normal config.yaml settings.
 	// Codespaces stumbles if not on a "standard" port like port 80
 	if nodeps.IsCodespaces() {
 		if app.HostWebserverPort == "" {
 			app.HostWebserverPort = "80"
 		}
 	}
-	if nodeps.IsGitpod() || nodeps.IsCodespaces() {
+	if nodeps.IsCodespaces() {
 		if app.HostWebserverPort == "" {
 			app.HostWebserverPort = "8080"
 		}
@@ -2603,7 +2745,6 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		"DDEV_GOOS":                      runtime.GOOS,
 		"DDEV_GOARCH":                    runtime.GOARCH,
 		"IS_DDEV_PROJECT":                "true",
-		"IS_GITPOD":                      strconv.FormatBool(nodeps.IsGitpod()),
 		"IS_CODESPACES":                  strconv.FormatBool(nodeps.IsCodespaces()),
 		"IS_WSL2":                        isWSL2,
 	}
@@ -2830,10 +2971,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		// But if we are using bind-mounts (normal situation), we can copy it to where the snapshot is
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
 		c := fmt.Sprintf("cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotFile)
-		uid, _, _ := util.GetContainerUIDGid()
-		if app.Database.Type == nodeps.Postgres {
-			uid = "999"
-		}
+		uid, _, _ := dockerutil.GetContainerUser()
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
 			return "", fmt.Errorf("failed to '%s': %v, stdout=%s, stderr=%s", c, err, stdout, stderr)
@@ -3119,13 +3257,6 @@ func (app *DdevApp) GetHTTPSURL() string {
 
 // GetAllURLs returns an array of all the URLs for the project
 func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs []string) {
-	if nodeps.IsGitpod() {
-		url, err := exec.RunHostCommand("gp", "url", app.HostWebserverPort)
-		if err == nil {
-			url = netutil.NormalizeURL(strings.Trim(url, "\n"))
-			httpsURLs = append(httpsURLs, url)
-		}
-	}
 	if nodeps.IsCodespaces() {
 		codespaceName := os.Getenv("CODESPACE_NAME")
 		previewDomain := os.Getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
@@ -3500,7 +3631,7 @@ func FormatSiteStatus(status string) string {
 }
 
 // HasConfigNameOverride checks if the app name should be different,
-// returns true if the app name has been changed along with the new app name.
+// returns (true, newName) if the app name has been changed .
 func (app *DdevApp) HasConfigNameOverride() (bool, string) {
 	newApp := DdevApp{ConfigPath: app.ConfigPath}
 	if _, err := newApp.ReadConfig(false); err != nil {

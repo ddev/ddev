@@ -118,6 +118,44 @@ volumes:
   - "../:/var/www/html:cached"
 ```
 
+### Customizing `ddev describe` Output
+
+You can use the `x-ddev` extension field in your `.ddev/docker-compose.*.yaml` configuration to customize the output of [`ddev describe`](../usage/commands.md#describe).
+
+This feature is useful for showing credentials, URLs, or usage notes for custom services.
+
+```yaml
+services:
+  rabbitmq:
+    container_name: "ddev-${DDEV_SITENAME}-rabbitmq"
+    image: rabbitmq:3-management-alpine
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    restart: "no"
+    expose:
+      - "15672"
+    environment:
+      - VIRTUAL_HOST=${DDEV_HOSTNAME}
+      - HTTP_EXPOSE=15672:15672
+      - HTTPS_EXPOSE=15673:15672
+      - RABBITMQ_DEFAULT_USER=rabbitmq
+      - RABBITMQ_DEFAULT_PASS=rabbitmq
+    x-ddev:
+      # Can be multi-line block
+      describe-info: |
+        User: rabbitmq
+        Pass: rabbitmq
+      # Or single line string
+      describe-url-port: "extra help here"
+```
+
+- `x-ddev.describe-url-port`: Appears in the `URL/PORT` column when running [`ddev describe`](../usage/commands.md#describe).
+- `x-ddev.describe-info`: Appears in the `INFO` column, making it easy for team members to view relevant service details without checking config files.
+
+!!!tip
+    See related `x-ddev.ssh-shell` configuration for [Changing `ddev ssh` Shell](../extend/in-container-configuration.md#changing-ddev-ssh-shell).
+
 ## Advanced Service Examples
 
 ### SQL Server Database Service
@@ -218,15 +256,18 @@ services:
 
 ### Available DDEV Variables
 
-Use these variables in your service definitions:
+Here is a compressed list of commonly used variables in your service definitions:
 
 - `${DDEV_SITENAME}` - Project name
-- `${DDEV_HOSTNAME}` - Primary hostname
+- `${DDEV_HOSTNAME}` - Comma-separated list of FQDN hostnames
+- `${DDEV_TLD}` - Default top-level domain (`ddev.site`)
 - `${DDEV_APPROOT}` - Full path to project root
 - `${DDEV_DOCROOT}` - Document root (relative to project root)
 - `${DDEV_PHP_VERSION}` - PHP version
 - `${DDEV_WEBSERVER_TYPE}` - Web server type
 - `${DDEV_DATABASE_FAMILY}` - Database family (`mysql`, `postgres`)
+
+For a full list, please see [Environment Variables Provided](custom-commands.md#environment-variables-provided).
 
 ### Custom Environment Variables
 

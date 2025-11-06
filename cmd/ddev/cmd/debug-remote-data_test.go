@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 )
 
@@ -95,10 +96,13 @@ func TestDebugRemoteDataWithStorage(t *testing.T) {
 	// Create a temporary directory for test storage
 	tmpDir, err := os.MkdirTemp("", "ddev-download-test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
 
-	// Use t.Setenv to set XDG_CONFIG_HOME to tmpDir so .ddev is created there
-	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+
+	t.Cleanup(func() {
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+		_ = os.RemoveAll(tmpDir)
+	})
 
 	// Set up global config with remote config settings
 	globalconfig.EnsureGlobalConfig()
@@ -121,7 +125,7 @@ func TestDebugRemoteDataWithStorage(t *testing.T) {
 
 	t.Run("StorageUpdateDisabled", func(t *testing.T) {
 		storageFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".remote-config")
-		os.Remove(storageFile)
+		_ = os.Remove(storageFile)
 
 		// Test with storage update disabled
 		out, err := exec.RunHostCommand(DdevBin, "debug", "remote-data", "--type=remote-config", "--update-storage=false")

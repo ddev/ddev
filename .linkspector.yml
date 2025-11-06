@@ -6,6 +6,7 @@ ignorePatterns:
   - pattern: "https://www.drupal.org/project/"
   - pattern: "https://www.drupal.org/forum/"
   - pattern: "https://www.drupal.org/join-slack"
+  - pattern: "https://www.drupal.org/docs/develop/development-tools/editors-and-ides/configuring-phpstorm"
   - pattern: "https://www.php.net/manual/"
   - pattern: "https://www.drupaleasy.com"
   - pattern: "https://blackfire.io"

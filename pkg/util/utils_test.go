@@ -138,12 +138,7 @@ func TestConfirmTo(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Unset the env var, then reset after the test
-	noninteractiveEnv := "DDEV_NONINTERACTIVE"
-	defer os.Setenv(noninteractiveEnv, os.Getenv(noninteractiveEnv))
-	err := os.Unsetenv(noninteractiveEnv)
-	if err != nil {
-		t.Fatal(err.Error())
-	}
+	t.Setenv("DDEV_NONINTERACTIVE", "")
 
 	// test a given input against a default value
 	testInput := func(input string, defaultTo bool, expected bool) {

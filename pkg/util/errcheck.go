@@ -1,8 +1,9 @@
 package util
 
 import (
-	"github.com/ddev/ddev/pkg/output"
 	"io"
+
+	"github.com/ddev/ddev/pkg/output"
 )
 
 // CheckErr exits if an error is encountered.

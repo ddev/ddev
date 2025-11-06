@@ -113,7 +113,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		return "", err
 	}
 
-	uid, gid, username := util.GetContainerUIDGid()
+	uid, gid, username := dockerutil.GetContainerUser()
 
 	_ = app.DockerEnv()
 

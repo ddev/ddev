@@ -299,60 +299,66 @@ jobs:
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
 
       - name: Upload all artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: all-ddev-executables
           path: ${{ github.workspace }}/artifacts/*
       - name: Upload macos-amd64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-macos-amd64
           path: |
             .gotmp/bin/darwin_amd64/ddev
             .gotmp/bin/darwin_amd64/ddev-hostname
+            .gotmp/bin/darwin_amd64/mkcert
       - name: Upload macos-arm64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-macos-arm64
           path: |
             .gotmp/bin/darwin_arm64/ddev
             .gotmp/bin/darwin_arm64/ddev-hostname
+            .gotmp/bin/darwin_arm64/mkcert
       - name: Upload linux-arm64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-linux-arm64
           path: |
             .gotmp/bin/linux_arm64/ddev
             .gotmp/bin/linux_arm64/ddev-hostname
+            .gotmp/bin/linux_arm64/mkcert
       - name: Upload linux-amd64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-linux-amd64
           path: |
             .gotmp/bin/linux_amd64/ddev
             .gotmp/bin/linux_amd64/ddev-hostname
+            .gotmp/bin/linux_amd64/mkcert
       - name: Upload windows-amd64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-windows-amd64
           path: |
             .gotmp/bin/windows_amd64/ddev.exe
             .gotmp/bin/windows_amd64/ddev-hostname.exe
+            .gotmp/bin/windows_amd64/mkcert.exe
 
       - name: Upload windows_amd64 installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-windows-amd64-installer
           path: .gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe
       - name: Upload windows-arm64 binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-windows-arm64
           path: |
             .gotmp/bin/windows_arm64/ddev.exe
             .gotmp/bin/windows_arm64/ddev-hostname.exe
+            .gotmp/bin/windows_arm64/mkcert.exe
       - name: Upload windows_arm64 installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ddev-windows-arm64-installer
           path: .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
@@ -399,48 +405,3 @@ jobs:
           devcontainer-cli-version: "0.53.0"
           disable-repo-tagging: "true"
 
-  push-gitpod-base:
-    name: Push ddev-gitpod-base docker image
-    runs-on: ubuntu-latest
-    needs: artifacts
-
-    steps:
-      - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v3
-        with:
-          export-env: true
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
-          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
-      - uses: actions/checkout@v5
-        with:
-          # We need to get all branches and tags for git describe to work properly
-          fetch-depth: 0
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ env.DOCKERHUB_TOKEN }}
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ env.DOCKERHUB_TOKEN }}
-
-      - name: Push ddev-gitpod-base image
-        if: startsWith(github.ref, 'refs/tags/v1')
-        run: |
-          pushd containers/ddev-gitpod-base >/dev/null
-          # For testing, push to ddevhq docker org
-          set -x
-          make push VERSION="${GITHUB_REF##*/}" DOCKER_ORG=${DOCKER_ORG}
-          popd >/dev/null

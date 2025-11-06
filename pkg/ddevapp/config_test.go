@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	dockerContainer "github.com/docker/docker/api/types/container"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,8 +12,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	copy2 "github.com/otiai10/copy"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -27,6 +24,8 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	dockerContainer "github.com/docker/docker/api/types/container"
+	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -539,22 +538,21 @@ func TestReadConfigCRLF(t *testing.T) {
 
 // TestConfigValidate tests validation of configuration values.
 func TestConfigValidate(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() {
-		t.Skip("Skipping on Apple Silicon/Lima/Colima, lots of network connections failed")
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsMacOS() || nodeps.IsWindows()) {
+		t.Skip("Skipping on macOS/Windows")
 	}
 
-	assert := asrt.New(t)
 	site := TestSites[0]
 	app, err := ddevapp.NewApp(site.Dir, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 	savedApp := *app
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
-		assert.NoError(err)
+		require.NoError(t, err)
 		app = &savedApp
 		err = app.WriteConfig()
-		assert.NoError(err)
+		require.NoError(t, err)
 	})
 
 	appName := app.Name
@@ -612,7 +610,6 @@ func TestConfigValidate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			assert := asrt.New(t)
 			versionconstants.DdevVersion = tc.ddevVersion
 			app.DdevVersionConstraint = tc.versionConstraint
 			err = app.ValidateConfig()
@@ -620,7 +617,7 @@ func TestConfigValidate(t *testing.T) {
 				require.NoError(t, err)
 			} else {
 				require.Error(t, err)
-				assert.Contains(err.Error(), tc.error)
+				require.Contains(t, err.Error(), tc.error)
 			}
 			app.DdevVersionConstraint = ""
 			versionconstants.DdevVersion = ddevVersion
@@ -630,31 +627,31 @@ func TestConfigValidate(t *testing.T) {
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "not a valid project name")
+	require.Contains(t, err.Error(), "not a valid project name")
 
 	app.Name = appName
 	app.Type = "potato"
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "invalid app type")
+	require.Contains(t, err.Error(), "invalid app type")
 
 	app.Type = appType
 	app.PHPVersion = "1.1"
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "unsupported PHP")
+	require.Contains(t, err.Error(), "unsupported PHP")
 
 	app.PHPVersion = nodeps.PHPDefault
 	app.WebserverType = "server"
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "unsupported webserver type")
+	require.Contains(t, err.Error(), "unsupported webserver type")
 
 	app.WebserverType = nodeps.WebserverDefault
 	app.AdditionalHostnames = []string{"good", "b@d"}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "invalid hostname")
+	require.Contains(t, err.Error(), "invalid hostname")
 
 	app.AdditionalHostnames = []string{}
 	// web_extra_exposed_ports shouldn't allow duplicate names for different config items
@@ -664,28 +661,28 @@ func TestConfigValidate(t *testing.T) {
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "duplicate 'name: foo'")
+	require.Contains(t, err.Error(), "duplicate 'name: foo'")
 	// web_extra_exposed_ports shouldn't allow not specified ports (for example, container_port: 0)
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 0, HTTPPort: 3000, HTTPSPort: 3001},
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "invalid 'container_port: 0'")
+	require.Contains(t, err.Error(), "invalid 'container_port: 0'")
 	// web_extra_exposed_ports shouldn't allow wrong ports (for example, container_port: 123456)
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 123456, HTTPPort: 3000, HTTPSPort: 3001},
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "invalid 'container_port: 123456'")
+	require.Contains(t, err.Error(), "invalid 'container_port: 123456'")
 	// web_extra_exposed_ports shouldn't allow the same port for the same config item http_port/https_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3000},
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "same 'http_port: 3000' and 'https_port: 3000'")
+	require.Contains(t, err.Error(), "same 'http_port: 3000' and 'https_port: 3000'")
 	// web_extra_exposed_ports shouldn't allow the same port for different config items container_port/container_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
@@ -693,7 +690,7 @@ func TestConfigValidate(t *testing.T) {
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "duplicate 'container_port: 3000'")
+	require.Contains(t, err.Error(), "duplicate 'container_port: 3000'")
 	// web_extra_exposed_ports shouldn't allow the same port for different config items http_port/http_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
@@ -701,7 +698,7 @@ func TestConfigValidate(t *testing.T) {
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "duplicate 'http_port: 3000'")
+	require.Contains(t, err.Error(), "duplicate 'http_port: 3000'")
 	// web_extra_exposed_ports shouldn't allow the same port for different config items https_port/https_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
@@ -709,7 +706,7 @@ func TestConfigValidate(t *testing.T) {
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "duplicate 'https_port: 3001'")
+	require.Contains(t, err.Error(), "duplicate 'https_port: 3001'")
 	// web_extra_exposed_ports shouldn't allow the same port for the same config item container_port/http_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
@@ -717,7 +714,7 @@ func TestConfigValidate(t *testing.T) {
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "duplicate 'http_port: 3001'")
+	require.Contains(t, err.Error(), "duplicate 'http_port: 3001'")
 	// web_extra_exposed_ports shouldn't allow the same port for different config items container_port/https_port
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
@@ -725,13 +722,13 @@ func TestConfigValidate(t *testing.T) {
 	}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "duplicate 'https_port: 3000'")
+	require.Contains(t, err.Error(), "duplicate 'https_port: 3000'")
 
 	app.WebExtraExposedPorts = nil
 	app.AdditionalFQDNs = []string{"good.com", "b@d.com"}
 	err = app.ValidateConfig()
 	require.Error(t, err)
-	assert.Contains(err.Error(), "invalid hostname")
+	require.Contains(t, err.Error(), "invalid hostname")
 
 	app.AdditionalFQDNs = []string{}
 	// Timezone validation isn't possible on Windows.
@@ -750,21 +747,27 @@ func TestConfigValidate(t *testing.T) {
 	require.NoError(t, err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
-	// This seems to completely fail on git-bash/Windows/mutagen. Hard to figure out why.
-	// Traditional Windows is not a very high priority
+	// This seems to completely fail on git-bash/Windows/mutagen (which don't run by default here)
 	// This apparently started failing with Docker Desktop 4.19.0
 	// rfay 2023-05-02
-	if !nodeps.IsWindows() {
-		err = app.Start()
+
+	// We need the files loaded for the static expectation
+	if site.FilesTarballURL != "" {
+		_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 		require.NoError(t, err)
-		err = app.MutagenSyncFlush()
-		require.NoError(t, err)
-		staticURI := site.Safe200URIWithExpectation.URI
-		_, _, err = testcommon.GetLocalHTTPResponse(t, "http://x.ddev.site/"+staticURI)
-		require.NoError(t, err)
-		_, _, err = testcommon.GetLocalHTTPResponse(t, "http://somethjingrandom.any.ddev.site/"+staticURI)
+		err = app.ImportFiles("", tarballPath, "")
 		require.NoError(t, err)
 	}
+
+	err = app.Start()
+	require.NoError(t, err)
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err)
+	staticURI := site.Safe200URIWithExpectation.URI
+	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://x.ddev.site/"+staticURI)
+	require.NoError(t, err)
+	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://somethjingrandom.any.ddev.site/"+staticURI)
+	require.NoError(t, err)
 
 	// Make sure that a bare "*" in the additional_hostnames does *not* work
 	app.AdditionalHostnames = []string{"x", "*"}
@@ -987,6 +990,10 @@ func TestPHPConfig(t *testing.T) {
 	if os.Getenv("GOTEST_SHORT") != "" {
 		phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	}
+
+	//TODO: php8.5: Remove this exclusion when php85 has redis
+	phpKeys = util.SubtractSlices(phpKeys, []string{nodeps.PHP85})
+
 	sort.Strings(phpKeys)
 
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/.env"), filepath.Join(site.Dir, ".ddev/.env"))
@@ -1030,6 +1037,10 @@ func TestPHPConfig(t *testing.T) {
 
 		// This list does not contain all expected, as php5.6 is missing some, etc.
 		expectedExtensions := []string{"apcu", "bcmath", "bz2", "curl", "gd", "imagick", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
+		//TODO: PHP8.5: Remove this stanza when PHP8.5 extensions are completely available
+		if app.PHPVersion == nodeps.PHP85 {
+			expectedExtensions = []string{"bcmath", "bz2", "curl", "gd", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"}
+		}
 		for _, e := range expectedExtensions {
 			assert.Contains(out, fmt.Sprintf(`,%s,`, e))
 		}

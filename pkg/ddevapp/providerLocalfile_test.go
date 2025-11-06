@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

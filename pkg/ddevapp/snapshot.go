@@ -216,11 +216,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// If we have no bind mounts, we need to copy our snapshot into the snapshots volme
 	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		uid, _, _ := util.GetContainerUIDGid()
-		// For PostgreSQL, must be written with PostgreSQL user
-		if app.Database.Type == nodeps.Postgres {
-			uid = "999"
-		}
+		uid, _, _ := dockerutil.GetContainerUser()
 
 		// If the snapshot is an old-style directory-based snapshot, then we have to copy into a subdirectory
 		// named for the snapshot
@@ -240,18 +236,17 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		postgresDataDir := app.GetPostgresDataDir()
 		postgresDataPath := app.GetPostgresDataPath()
 		confdDir := path.Join(nodeps.PostgresConfigDir, "conf.d")
-		targetConfName := path.Join(confdDir, "recovery.conf")
 		v, _ := strconv.Atoi(app.Database.Version)
-		// Before PostgreSQL v12 the recovery info went into its own file
-		if v < 12 {
-			targetConfName = path.Join(nodeps.PostgresConfigDir, "recovery.conf")
-		}
-
 		// PostgreSQL 18+ requires restore_command parameter, older versions use recovery.conf
 		if v >= 18 {
 			restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s -zxf /mnt/snapshots/%s && chmod 700 %s && touch %s/recovery.signal && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf -c restore_command=true'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, snapshotFile, postgresDataPath, postgresDataPath, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
 		} else {
-			restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s -zxf /mnt/snapshots/%s && chmod 700 %s && touch %s/recovery.signal && cat /var/lib/postgresql/recovery.conf >>%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, snapshotFile, postgresDataPath, postgresDataPath, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
+			targetConfName := path.Join(confdDir, "recovery.conf")
+			// Before PostgreSQL v12 the recovery info went into its own file
+			if v < 12 {
+				targetConfName = path.Join(nodeps.PostgresConfigDir, "recovery.conf")
+			}
+			restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s -zxf /mnt/snapshots/%s && chmod 700 %s && touch %s/recovery.signal && echo "restore_command = 'true'" >>%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, snapshotFile, postgresDataPath, postgresDataPath, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
 		}
 	}
 	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)

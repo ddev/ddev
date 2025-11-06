@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"bufio"
+	"crypto/sha1"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -36,7 +37,7 @@ const mutagenConfigFileHashLabelName = `com.ddev.config-hash`
 // lots of bind-mounted files).
 func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// Make sure that if we have a volume mount it's got proper ownership
-	uidStr, gidStr, _ := util.GetContainerUIDGid()
+	uidStr, gidStr, _ := dockerutil.GetContainerUser()
 	util.Verbose("Chowning Mutagen Docker volume for user %s", uidStr)
 	_, _, err := app.Exec(
 		&ExecOpts{
@@ -234,7 +235,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 	// In tests or other non-interactive environments we don't need to show the
 	// Mutagen sync monitor output (and it fills up the test logs)
 
-	if os.Getenv("DDEV_NONINTERACTIVE") != "true" {
+	if globalconfig.IsInteractive() {
 		go func() {
 			previousStatus := ""
 			curStatus := ""
@@ -540,13 +541,13 @@ func DownloadMutagen() error {
 	if err != nil {
 		return fmt.Errorf("unable to create directory %s: %v", globalMutagenDir, err)
 	}
-	err = util.DownloadFile(destFile, mutagenURL, os.Getenv("DDEV_NONINTERACTIVE") != "true", shasumFileURL)
+	err = util.DownloadFile(destFile, mutagenURL, globalconfig.IsInteractive(), shasumFileURL)
 	if err != nil {
 		_ = fileutil.RemoveFilesMatchingGlob(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen*"))
 		_ = os.Remove(destFile)
 		return err
 	}
-	output.UserOut.Printf("Download complete.")
+	output.UserErr.Printf("Download complete.")
 
 	err = archive.Untar(destFile, globalMutagenDir, "")
 	_ = os.Remove(destFile)
@@ -759,10 +760,7 @@ func GetMutagenVolumeLabel(app *DdevApp) (string, error) {
 func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bool, info string) {
 	mutagenSyncExists := MutagenSyncExists(app)
 	volumeLabel, volumeLabelErr := GetMutagenVolumeLabel(app)
-	dockerHostSanitized, err := dockerutil.GetDockerHostSanitized()
-	if err != nil {
-		util.Failed(err.Error())
-	}
+	_, volumeSignaturePrefix := GetDefaultMutagenVolumeSignature(app)
 	mutagenLabel := ""
 	configFileHashLabel := ""
 	var mutagenSyncLabelErr error
@@ -792,14 +790,14 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 	case mutagenSyncLabelErr != nil:
 		return false, volumeExists, "Mutagen sync session exists but does not have label"
 	// If the labels do not have the current context as first part of label, we have trouble.
-	case !strings.HasPrefix(volumeLabel, dockerHostSanitized) || !strings.HasPrefix(mutagenLabel, dockerHostSanitized):
-		return false, volumeExists, fmt.Sprintf("Volume label '%s' or sync label '%s' does not start with current dockerHostSanitized (%s)", volumeLabel, mutagenLabel, dockerHostSanitized)
+	case !strings.HasPrefix(volumeLabel, volumeSignaturePrefix) || !strings.HasPrefix(mutagenLabel, volumeSignaturePrefix):
+		return false, volumeExists, fmt.Sprintf("Volume label '%s' or sync label '%s' does not start with current volumeSignaturePrefix (%s)", volumeLabel, mutagenLabel, volumeSignaturePrefix)
 	// if we have labels for both, and they match, it's all fine.
 	case mutagenLabel == volumeLabel:
 		return true, volumeExists, fmt.Sprintf("Volume and Mutagen sync session have the same label: %s", volumeLabel)
 	}
 
-	return false, volumeExists, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: dockerHostSanitized=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", dockerHostSanitized, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
+	return false, volumeExists, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: volumeSignaturePrefix=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", volumeSignaturePrefix, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
 }
 
 // GetMutagenSyncLabel gets the com.ddev.volume-signature label from an existing sync session
@@ -844,13 +842,18 @@ func TerminateAllMutagenSync() {
 	}
 }
 
-// GetDefaultMutagenVolumeSignature gets a new volume signature to be applied to Mutagen volume
-func GetDefaultMutagenVolumeSignature(_ *DdevApp) string {
-	dockerHostSanitized, err := dockerutil.GetDockerHostSanitized()
+// GetDefaultMutagenVolumeSignature generates a unique volume signature for Mutagen volumes.
+// Returns the volume signature in format "<host_hash>-<unix_timestamp>" and the host hash.
+// The host_hash is a SHA1 hash of the Docker host, ensuring volume uniqueness.
+// See https://mutagen.io/documentation/introduction/names-labels-identifiers/ for
+// Mutagen naming requirements (max 63 chars).
+func GetDefaultMutagenVolumeSignature(_ *DdevApp) (string, string) {
+	_, host, err := dockerutil.GetDockerContextNameAndHost()
 	if err != nil {
 		util.Failed(err.Error())
 	}
-	return fmt.Sprintf("%s-%v", dockerHostSanitized, time.Now().Unix())
+	host = fmt.Sprintf("%x", sha1.Sum([]byte(host)))
+	return fmt.Sprintf("%s-%v", host, time.Now().Unix()), host
 }
 
 // checkMutagenUploadDirs tells people if they are using Mutagen without upload_dir

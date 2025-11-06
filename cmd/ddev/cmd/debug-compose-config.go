@@ -3,9 +3,8 @@ package cmd
 import (
 	"strings"
 
-	"github.com/ddev/ddev/pkg/fileutil"
-
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"

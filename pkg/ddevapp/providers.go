@@ -1,10 +1,11 @@
 package ddevapp
 
 import (
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 // IsValidProvider is a helper function to determine if a provider value is valid, returning

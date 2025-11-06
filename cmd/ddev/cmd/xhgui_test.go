@@ -8,12 +8,11 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/testcommon"
-
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
-
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdXHGui tests the `ddev xhgui` command
@@ -52,6 +51,11 @@ func TestCmdXHGui(t *testing.T) {
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
 
+	//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
+	if app.PHPVersion == nodeps.PHP85 {
+		t.Skip("Skipping tests for PHP8.5 until xdebug lands in PHP8.5")
+	}
+
 	out, err = exec.RunHostCommand(DdevBin, "xhgui", "status")
 	require.NoError(t, err)
 	require.Contains(t, out, "XHProf is enabled and capturing")
@@ -60,12 +64,11 @@ func TestCmdXHGui(t *testing.T) {
 	// Use more retries as it may fail on macOS at first
 	opts := testcommon.HTTPRequestOpts{
 		TimeoutSeconds: 2,
-		MaxRetries:     5,
 	}
 
 	// Test to see if xhgui UI is working
 	// Hit the site
-	_, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), opts)
+	_, _, err = testcommon.GetLocalHTTPResponseWithBackoff(t, app.GetPrimaryURL(), 5, 500*time.Millisecond, opts)
 	require.NoError(t, err, "failed to get http response from %s", app.GetPrimaryURL())
 	// Give xhprof a moment to write the results; it may be asynchronous sometimes
 	time.Sleep(2 * time.Second)
@@ -77,7 +80,7 @@ func TestCmdXHGui(t *testing.T) {
 	require.NotNil(t, desc["xhgui_https_url"])
 	xhguiURL := desc["xhgui_https_url"].(string)
 
-	out, _, err = testcommon.GetLocalHTTPResponse(t, xhguiURL, opts)
+	out, _, err = testcommon.GetLocalHTTPResponseWithBackoff(t, xhguiURL, 5, 500*time.Millisecond, opts)
 	require.NoError(t, err)
 	// Output should contain at least one run
 	require.Contains(t, out, strings.ToLower(app.GetHostname()))

@@ -408,7 +408,7 @@ This timing ensures that:
 
 #### Real-world Example: Upsun Integration
 
-The [ddev-upsun](https://github.com/rfay/ddev-upsun) add-on demonstrates runtime dependencies by:
+The [ddev-upsun](https://github.com/ddev/ddev-upsun) add-on demonstrates runtime dependencies by:
 
 1. **Analyzing** `.upsun/config.yaml` during post-install
 2. **Detecting** services like Redis, Elasticsearch, Memcached

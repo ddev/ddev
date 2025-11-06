@@ -53,7 +53,7 @@ func FullRenderedRouterComposeYAMLPath() string {
 
 // IsRouterDisabled returns true if the router is disabled
 func IsRouterDisabled(app *DdevApp) bool {
-	if nodeps.IsGitpod() || nodeps.IsCodespaces() {
+	if nodeps.IsCodespaces() {
 		return true
 	}
 	return nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer)
@@ -209,7 +209,7 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 
 	dockerIP, _ := dockerutil.GetDockerIP()
 
-	uid, gid, username := util.GetContainerUIDGid()
+	uid, gid, username := dockerutil.GetContainerUser()
 	timezone, _ := util.GetLocalTimezone()
 
 	templateVars := map[string]interface{}{

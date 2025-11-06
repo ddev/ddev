@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Base tag for pushed dbimage (v1.24.9 for example)'
+        description: Base tag for pushed dbimage (v1.25.0 for example)'
         required: true
         default: ""
       debug_enabled:
@@ -114,7 +114,7 @@ jobs:
           fi
           echo "$INSPECT_OUTPUT" > image-info.txt
       - name: Upload image info artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: image-info-ddev-dbserver-${{ matrix.dbtype }}-${{ matrix.arch }}
           path: image-info.txt

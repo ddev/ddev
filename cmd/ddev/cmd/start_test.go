@@ -11,14 +11,13 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/config/state/storage/yaml"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
-
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdStart runs `ddev start` on the test apps
@@ -54,7 +53,7 @@ func TestCmdStart(t *testing.T) {
 	assert.NoError(err, "ddev start with multiple project names should have succeeded, but failed, err: %v, output %s", err, out)
 	testcommon.CheckGoroutineOutput(t, out)
 	// If we omit the router, we should see the 127.0.0.1 URL.
-	// Whether we have the router or not is not up to us, since it is omitted on gitpod and codespaces.
+	// Whether we have the router or not is not up to us, since it is omitted on codespaces.
 	if slices.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-router") {
 		// Assert that the output contains the 127.0.0.1 URL
 		assert.Contains(out, "127.0.0.1", "The output should contain the 127.0.0.1 URL, but it does not: %s", out)
@@ -159,29 +158,25 @@ func TestCmdStartShowsMessages(t *testing.T) {
 
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
+	err := os.Chdir(TestSites[0].Dir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"stop", site.Name})
+	require.NoError(t, err)
 
 	// Create temporary XDG_CONFIG_HOME for isolated testing
-	tmpXdgConfigHomeDir := testcommon.CreateTmpDir(t.Name())
-	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+	tmpGlobalDdevDir := globalconfig.GetGlobalDdevDir()
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
-		_ = os.RemoveAll(tmpXdgConfigHomeDir)
+		_ = app.Stop(true, false)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+		_ = app.Start()
 	})
-
-	// Set XDG_CONFIG_HOME to use temporary directory
-	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
-
-	// Create the global DDEV directory structure
-	err := os.MkdirAll(tmpGlobalDdevDir, 0755)
-	require.NoError(t, err)
-
-	// Copy necessary binaries from original global config
-	origGlobalDdevDir := globalconfig.GetGlobalDdevDirLocation()
-	if fileutil.IsDirectory(filepath.Join(origGlobalDdevDir, "bin")) {
-		err = fileutil.CopyDir(filepath.Join(origGlobalDdevDir, "bin"), filepath.Join(tmpGlobalDdevDir, "bin"))
-		require.NoError(t, err)
-	}
 
 	// Create a global config with shorter intervals for testing
 	globalconfig.EnsureGlobalConfig()
@@ -206,21 +201,6 @@ func TestCmdStartShowsMessages(t *testing.T) {
 	require.NoError(t, err)
 	err = state.Save()
 	require.NoError(t, err)
-
-	// Go to test site directory
-	err = os.Chdir(site.Dir)
-	require.NoError(t, err)
-
-	app, err := ddevapp.NewApp(site.Dir, false)
-	require.NoError(t, err)
-
-	// Stop the site first to ensure clean start
-	_, err = exec.RunCommand(DdevBin, []string{"stop", site.Name})
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		_ = app.Start() // Restore running state
-	})
 
 	// Start the site and capture output (start without specifying project name to use current directory)
 	out, err := exec.RunCommand(DdevBin, []string{"start", "-y"})
@@ -254,29 +234,25 @@ func TestCmdStartShowsSponsorshipData(t *testing.T) {
 
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
+	err := os.Chdir(TestSites[0].Dir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"stop", site.Name})
+	require.NoError(t, err)
 
 	// Create temporary XDG_CONFIG_HOME for isolated testing
-	tmpXdgConfigHomeDir := testcommon.CreateTmpDir(t.Name())
-	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+	tmpGlobalDdevDir := globalconfig.GetGlobalDdevDir()
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
-		_ = os.RemoveAll(tmpXdgConfigHomeDir)
+		_ = app.Stop(true, false)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+		_ = app.Start()
 	})
-
-	// Set XDG_CONFIG_HOME to use temporary directory
-	t.Setenv("XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
-
-	// Create the global DDEV directory structure
-	err := os.MkdirAll(tmpGlobalDdevDir, 0755)
-	require.NoError(t, err)
-
-	// Copy necessary binaries from original global config
-	origGlobalDdevDir := globalconfig.GetGlobalDdevDirLocation()
-	if fileutil.IsDirectory(filepath.Join(origGlobalDdevDir, "bin")) {
-		err = fileutil.CopyDir(filepath.Join(origGlobalDdevDir, "bin"), filepath.Join(tmpGlobalDdevDir, "bin"))
-		require.NoError(t, err)
-	}
 
 	// Create a global config with custom sponsorship settings
 	globalconfig.EnsureGlobalConfig()
@@ -319,21 +295,6 @@ func TestCmdStartShowsSponsorshipData(t *testing.T) {
 	}`
 	err = os.WriteFile(sponsorshipFile, []byte(mockSponsorshipData), 0644)
 	require.NoError(t, err)
-
-	// Go to test site directory
-	err = os.Chdir(site.Dir)
-	require.NoError(t, err)
-
-	app, err := ddevapp.NewApp(site.Dir, false)
-	require.NoError(t, err)
-
-	// Stop the site first to ensure clean start
-	_, err = exec.RunCommand(DdevBin, []string{"stop", site.Name})
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		_ = app.Start() // Restore running state
-	})
 
 	// Start the site and capture output (start without specifying project name to use current directory)
 	out, err := exec.RunCommand(DdevBin, []string{"start", "-y"})

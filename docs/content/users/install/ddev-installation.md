@@ -37,8 +37,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         Use the `-s` argument to specify a specific stable or prerelease version:
 
         ```bash
-        # Download and run the script to install DDEV v1.23.5
-        curl -fsSL https://ddev.com/install.sh | bash -s v1.23.5
+        # Download and run the script to install DDEV v1.24.10
+        curl -fsSL https://ddev.com/install.sh | bash -s v1.24.10
         ```
 
 === "Linux"
@@ -92,7 +92,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     name=ddev
     baseurl=https://pkg.ddev.com/yum/
     gpgcheck=0
-    enabled=1' | perl -p -e 's/^ +//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
+    enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
 
     # Install DDEV
     sudo sh -c 'echo ""'
@@ -148,8 +148,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         Use the `-s` argument to specify a specific stable or prerelease version:
 
         ```bash
-        # Download and run the script to install DDEV v1.23.5
-        curl -fsSL https://ddev.com/install.sh | bash -s v1.23.5
+        # Download and run the script to install DDEV v1.24.10
+        curl -fsSL https://ddev.com/install.sh | bash -s v1.24.10
         ```
 
     ??? "Do you still have an old version after installing or upgrading?"
@@ -265,11 +265,14 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```json
     {
-      "image": "mcr.microsoft.com/devcontainers/universal:2",
-      "features": {
-        "ghcr.io/ddev/ddev/install-ddev:latest": {}
-      },
-      "postCreateCommand": "echo 'it should all be set up'"
+        "image": "mcr.microsoft.com/devcontainers/base:debian-12",
+        "features": {
+            "ghcr.io/devcontainers/features/docker-in-docker:2": {
+                "version": "latest"
+            },
+            "ghcr.io/ddev/ddev/install-ddev:latest": {}
+        },
+        "postCreateCommand": "echo 'it should all be set up'"
     }
     ```
 
@@ -311,7 +314,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Docker integration
 
-    DDEV in Codespaces relies on [`docker-in-docker`](https://github.com/devcontainers/features), which is installed by default when you use the image `"mcr.microsoft.com/devcontainers/universal:2"`. Please be aware: GitHub Codespaces and its Docker-integration (docker-in-docker) are relatively new. See [devcontainers/features](https://github.com/devcontainers/features) for general support and issues regarding Docker-support.
+    DDEV in Codespaces relies on [`docker-in-docker`](https://github.com/devcontainers/features), which must be added manually to the features when using `"mcr.microsoft.com/devcontainers/base:debian-12"`. See [`devcontainers/features`](https://github.com/devcontainers/features) for general support and issues regarding Docker-support.
 
     ###  DDEV's router is not used
 
@@ -351,8 +354,11 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```json
     {
-        "image": "mcr.microsoft.com/devcontainers/universal:2",
+        "image": "mcr.microsoft.com/devcontainers/base:debian-12",
         "features": {
+            "ghcr.io/devcontainers/features/docker-in-docker:2": {
+                "version": "latest"
+            },
             "ghcr.io/ddev/ddev/install-ddev:latest": {}
         },
         "portsAttributes": {

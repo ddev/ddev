@@ -85,24 +85,32 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 				err = fmt.Errorf("creating request for shaSum URL %s: %w", shaSumURL, reqErr)
 				return
 			}
-			gitHubHeaders, tokenMessage := github.GetGitHubHeaders(shaSumURL)
+			gitHubHeaders := github.GetGitHubHeaders(shaSumURL)
 			for key, value := range gitHubHeaders {
 				req.Header.Set(key, value)
 			}
 			resp, getErr := client.Do(req)
-			if getErr != nil {
-				err = fmt.Errorf("downloading shaSum URL %s: %w\n%s", shaSumURL, getErr, tokenMessage)
-				if tokenMessage != "" {
-					err = fmt.Errorf("%w\n%s", err, tokenMessage)
+			if tokenErr := github.HasInvalidGitHubToken(resp); tokenErr != nil {
+				WarningOnce("Warning: %v, retrying without token", tokenErr)
+				for key := range gitHubHeaders {
+					req.Header.Del(key)
 				}
+				respNoAuth, err := client.Do(req)
+				if err == nil {
+					if resp != nil {
+						CheckClose(resp.Body)
+					}
+					resp = respNoAuth
+					getErr = err
+				}
+			}
+			if getErr != nil {
+				err = fmt.Errorf("downloading shaSum URL %s: %w", shaSumURL, getErr)
 				return
 			}
 			if resp.StatusCode != http.StatusOK {
 				CheckClose(resp.Body)
 				err = fmt.Errorf("unexpected HTTP status downloading %s: %s", shaSumURL, resp.Status)
-				if tokenMessage != "" {
-					err = fmt.Errorf("%w\n%s", err, tokenMessage)
-				}
 				return
 			}
 			body, readErr := io.ReadAll(resp.Body)
@@ -113,9 +121,6 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 					continue
 				}
 				err = fmt.Errorf("reading shaSum: %w", readErr)
-				if tokenMessage != "" {
-					err = fmt.Errorf("%w\n%s", err, tokenMessage)
-				}
 				return
 			}
 			expectedSHA = strings.TrimSpace(string(body))
@@ -141,26 +146,34 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 			err = fmt.Errorf("creating request for file URL %s: %w", fileURL, reqErr)
 			return
 		}
-		gitHubHeaders, tokenMessage := github.GetGitHubHeaders(fileURL)
+		gitHubHeaders := github.GetGitHubHeaders(fileURL)
 		for key, value := range gitHubHeaders {
 			req.Header.Set(key, value)
 		}
 		resp, getErr := client.Do(req)
+		if tokenErr := github.HasInvalidGitHubToken(resp); tokenErr != nil {
+			WarningOnce("Warning: %v, retrying without token", tokenErr)
+			for key := range gitHubHeaders {
+				req.Header.Del(key)
+			}
+			respNoAuth, err := client.Do(req)
+			if err == nil {
+				if resp != nil {
+					CheckClose(resp.Body)
+				}
+				resp = respNoAuth
+				getErr = err
+			}
+		}
 		if getErr != nil {
 			_ = outFile.Close()
 			err = fmt.Errorf("downloading file %s: %w", fileURL, getErr)
-			if tokenMessage != "" {
-				err = fmt.Errorf("%w\n%s", err, tokenMessage)
-			}
 			return
 		}
 		if resp.StatusCode != http.StatusOK {
 			CheckClose(resp.Body)
 			_ = outFile.Close()
 			err = fmt.Errorf("download link %s returned wrong status code: got %d want %d", fileURL, resp.StatusCode, http.StatusOK)
-			if tokenMessage != "" {
-				err = fmt.Errorf("%w\n%s", err, tokenMessage)
-			}
 			return
 		}
 
@@ -192,9 +205,6 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 				continue
 			}
 			err = copyErr
-			if tokenMessage != "" {
-				err = fmt.Errorf("%w\n%s", err, tokenMessage)
-			}
 			return
 		}
 		// Success - break out of retry loop

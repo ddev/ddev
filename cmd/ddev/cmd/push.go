@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -32,10 +32,10 @@ ddev push platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=
 	},
 }
 
-// apppush() does the work of push
-func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDBArg bool, skipFilesArg bool, env string) {
+// appPush does the work of push
+func appPush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDBArg bool, skipFilesArg bool, env string) {
 	// If we're not performing the import step, we won't be deleting the existing db or files.
-	if !skipConfirmation && !skipImportArg && os.Getenv("DDEV_NONINTERACTIVE") == "" {
+	if !skipConfirmation && !skipImportArg && globalconfig.IsInteractive() {
 		// Only warn the user about relevant risks.
 		var message string
 		if skipDBArg && skipFilesArg {
@@ -122,7 +122,7 @@ ddev push %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 				}
 				environment, _ := cmd.Flags().GetString("environment")
 
-				apppush(providerName, app, flags["skip-confirmation"], flags["skip-import"], flags["skip-db"], flags["skip-files"], environment)
+				appPush(providerName, app, flags["skip-confirmation"], flags["skip-import"], flags["skip-db"], flags["skip-files"], environment)
 			},
 		}
 		// Mark custom command

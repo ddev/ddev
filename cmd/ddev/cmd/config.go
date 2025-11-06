@@ -10,6 +10,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -125,7 +126,7 @@ var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
-	Use:     "config [provider or 'global']",
+	Use:     "config [global]",
 	Short:   "Create or modify a DDEV project configuration in the current directory",
 	Example: `"ddev config" or "ddev config --docroot=web --project-type=drupal11"`,
 	Args:    cobra.ExactArgs(0),
@@ -139,6 +140,19 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	err := ddevapp.HasAllowedLocation(app)
 	if err != nil {
 		util.Failed("Unable to run `ddev config`: %v", err)
+	}
+
+	// Clean up any old global project list entries with the same approot but different name.
+	// This handles scenarios where config overrides change the project name.
+	projectList := globalconfig.GetGlobalProjectList()
+	var namesToRemove []string
+	for name, info := range projectList {
+		if info.AppRoot == app.AppRoot && name != app.Name {
+			namesToRemove = append(namesToRemove, name)
+		}
+	}
+	for _, name := range namesToRemove {
+		_ = globalconfig.RemoveProjectInfo(name)
 	}
 
 	err = app.CheckExistingAppInApproot()
@@ -158,6 +172,19 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		if err != nil {
 			util.Failed("There was a problem configuring your project: %v", err)
 		}
+
+		// If omit_project_name_by_default is set, only omit the name if it
+		// matches the directory-based default (user didn't customize it)
+		if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault {
+			pwd, err := os.Getwd()
+			if err == nil {
+				dirBasedName := ddevapp.NormalizeProjectName(filepath.Base(pwd))
+				if app.Name == dirBasedName {
+					app.Name = ""
+				}
+			}
+		}
+
 		err = app.WriteConfig()
 		if err != nil {
 			util.Failed("Failed to write config: %v", err)
@@ -750,8 +777,29 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 	}
 
+	// If global omit_project_name_by_default, empty the `name` field
+	// unless they explicitly specified it here.
+	// Save the original name so we can restore it for the global project list.
+	originalName := app.Name
+	omitName := false
+	if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault &&
+		!cmd.Flags().Changed("project-name") {
+		app.Name = ""
+		omitName = true
+	}
+
 	if err := app.WriteConfig(); err != nil {
 		return fmt.Errorf("could not write DDEV config file %s: %v", app.ConfigPath, err)
+	}
+
+	// Restore the name and update global project list with correct name
+	if omitName && originalName != "" {
+		// Remove the empty-name entry that was added by WriteConfig
+		_ = globalconfig.RemoveProjectInfo("")
+		app.Name = originalName
+		if err := app.UpdateGlobalProjectList(); err != nil {
+			return err
+		}
 	}
 
 	return nil

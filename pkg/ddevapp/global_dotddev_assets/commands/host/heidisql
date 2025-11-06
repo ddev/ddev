@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-## #ddev-generated: If you want to edit and own this file, remove this line.
+## #ddev-generated
 ## Description: Run HeidiSQL against current db
-## Usage: heidisql
-## Example: "ddev heidisql"
+## Usage: heidisql [database] [library]
+## Example: "ddev heidisql" or "ddev heidisql database2 libpq-17.dll" to open a database named "database2" with the library "libpq-17.dll".
 ## OSTypes: windows,wsl2,linux
 ## HostBinaryExists: /mnt/c/Program Files/HeidiSQL/heidisql.exe,C:\Program Files\HeidiSQL\Heidisql.exe,/usr/bin/heidisql,/usr/local/bin/heidisql
-## DBTypes: mysql,mariadb
+## DBTypes: mysql,mariadb,postgres
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
@@ -15,31 +15,95 @@ if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
   exit $?
 fi
 
-# See: https://www.heidisql.com/help.php#commandline
-arguments=(
-  "--host=127.0.0.1"
-  "--port=${DDEV_HOST_DB_PORT}"
-  "--user=root"
-  "--password=root"
-  "--description=ddev-${DDEV_PROJECT}"
-)
-
+# Determine binary
 case $OSTYPE in
 win* | msys*)
-  start "" "C:\Program Files\HeidiSQL\heidisql.exe" "${arguments[@]}" &
+  binary="/c/Program Files/HeidiSQL/heidisql.exe"
   ;;
-
 linux-gnu)
   BINARIES=(
-    "/usr/local/bin/heidisql"
     "/usr/bin/heidisql"
+    "/usr/local/bin/heidisql"
     "/mnt/c/Program Files/HeidiSQL/heidisql.exe"
   )
   for binary in "${BINARIES[@]}"; do
     if [ -x "$binary" ]; then
-      "$binary" "${arguments[@]}" &>/dev/null & disown
+      binary="$binary"
       break
     fi
   done
+  ;;
+esac
+
+# Determine database type and version
+type="$(echo $DDEV_DATABASE | sed 's/:.*//')"
+version="$(echo $DDEV_DATABASE | sed 's/.*://')"
+
+# Arguments for MariaDB/MySQL
+nettype=0
+user="root"
+password="root"
+database="${1:-db}"
+library="${2}"
+
+# Arguments for Postgres
+if [ "$type" = "postgres" ]; then
+  nettype=8
+  user="db"
+  password="db"
+  
+  # When using this database type, we also need to specify the library
+  if [ -z "${library}" ]; then
+    # For Windows and WSL2, find best matching library in the installation directory
+    if [ "${binary##*.}" = "exe" ]; then
+      # Get all libraries in installation directory
+      shopt -s nullglob
+      libfiles=("${binary%/*}"/libpq-*.dll)
+      shopt -u nullglob
+      for libfile in "${libfiles[@]}"; do
+        libversion="$(echo "${libfile##*/}" | sed -n 's/^libpq-\([0-9]\+\)\.dll$/\1/p')"
+        # Select library if version is >= db version
+        if [ -n "${libversion}" ] && [ "${libversion}" -ge "${version}" ]; then
+          library="libpq-${libversion}.dll"
+          break
+        fi
+      done
+      # Select latest one if no matching version was found and there are any libraries
+      if [ -z "${library}" ] && [ ${#libfiles[@]} -gt 0 ]; then
+        library="${libfiles[-1]}"
+      fi
+    else
+      # For Linux, check if libpq is installed
+      library=$(ldconfig -p | grep -o '/.*libpq\.so\.5' | head -n1)
+    fi
+
+    # Error if no library is found (HeidiSQL will not fail to start if no library is specified)
+    if [ -z "${library}" ]; then
+      echo "Could not find libpq library. Please install or provide a valid library."
+      exit 1
+    fi
+  fi
+fi
+
+# See: https://www.heidisql.com/help.php#commandline
+arguments=(
+  "--nettype=${nettype}"
+  "--host=127.0.0.1"
+  "--port=${DDEV_HOST_DB_PORT}"
+  "--user=${user}"
+  "--password=${password}"
+  "--databases=${database}"
+  "--description=ddev-${DDEV_PROJECT}"
+  "${library:+--library=${library}}"
+)
+
+# Launch HeidiSQL
+case $OSTYPE in
+win* | msys*)
+  start "" "${binary}" "${arguments[@]}" &
+  ;;
+
+linux-gnu)
+  "${binary}" "${arguments[@]}" &>/dev/null & disown
   ;;
 esac

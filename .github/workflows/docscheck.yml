@@ -15,6 +15,7 @@ on:
       - "mkdocs.yml"
       - ".readthedocs.yaml"
       - ".github/workflows/**"
+      - ".linkspector.yml"
 
   workflow_dispatch:
     inputs:

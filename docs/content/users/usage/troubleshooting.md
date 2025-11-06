@@ -5,6 +5,7 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 ## General Troubleshooting Strategies
 
 * Please use the [current stable version of DDEV](../install/ddev-upgrade.md) and of your Docker provider before going too far or asking for support.
+* Run [`ddev utility diagnose`](commands.md#utility-diagnose) to get a quick assessment of your DDEV installation and current project. This provides concise, actionable diagnostics for common issues.
 * Start by running [`ddev poweroff`](commands.md#poweroff) to make sure all containers can start fresh.
 * Temporarily disable firewalls, VPNs, tunnels, network proxies, and virus checkers while you’re troubleshooting.
 * Temporarily disable any proxies you’ve established in Docker’s settings.
@@ -39,6 +40,17 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 Two environment variables meant for DDEV development may also be useful for broader troubleshooting: `DDEV_DEBUG` and `DDEV_VERBOSE`. When enabled, they’ll output more information when DDEV is executing a command. `DDEV_VERBOSE` can be particularly helpful debugging Dockerfile problems because it outputs complete information about the Dockerfile build stage within the `ddev start` command.
 
 You can set either one in your current session by running `export DDEV_DEBUG=true` and `export DDEV_VERBOSE=true`.
+
+## Front-End Development Tools
+
+### Vite Issues
+
+If you're experiencing issues with Vite development servers (like "Bad Gateway" errors, CORS problems, or HMR not working), see the comprehensive [Vite Integration troubleshooting section](vite.md#troubleshooting) which covers:
+
+* Configuration of `web_extra_exposed_ports`
+* CORS and origin settings
+* Port conflicts and HMR issues
+* Asset loading problems
 
 <a name="unable-listen"></a>
 

@@ -2,7 +2,7 @@ setup() {
   export DIR="$( cd "$( dirname "$BATS_TEST_FILENAME" )" >/dev/null 2>&1 && pwd )/.."
   export TESTDIR=$(mktemp -d -t testmemcached-XXXXXXXXXX)
   export PROJNAME=testmemcached
-  export DDEV_NON_INTERACTIVE=true
+  export DDEV_NONINTERACTIVE=true
   ddev delete -Oy ${PROJNAME} || true
   cd "${TESTDIR}"
   ddev config --project-name=${PROJNAME} --project-type=drupal9 --docroot=web

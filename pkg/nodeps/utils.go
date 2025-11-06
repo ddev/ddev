@@ -86,14 +86,6 @@ func IsLinux() bool {
 	return runtime.GOOS == "linux"
 }
 
-// IsGitpod returns true if running on gitpod.io
-func IsGitpod() bool {
-	if os.Getenv("DDEV_PRETEND_GITPOD") == "true" {
-		return true
-	}
-	return IsLinux() && os.Getenv("GITPOD_WORKSPACE_ID") != ""
-}
-
 // IsCodespaces returns true if running on GitHub Codespaces
 func IsCodespaces() bool {
 	if os.Getenv("DDEV_PRETEND_CODESPACES") == "true" {

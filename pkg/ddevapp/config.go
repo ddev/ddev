@@ -97,9 +97,9 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	// Provide a default app name based on directory name
 	app.Name = NormalizeProjectName(filepath.Base(app.AppRoot))
 
-	// Gather containers to omit, adding ddev-router for gitpod/codespaces
+	// Gather containers to omit, adding ddev-router for codespaces
 	app.OmitContainersGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
-	if nodeps.IsGitpod() || nodeps.IsCodespaces() {
+	if nodeps.IsCodespaces() {
 		app.OmitContainersGlobal = append(app.OmitContainersGlobal, "ddev-router")
 	}
 
@@ -230,7 +230,8 @@ func (app *DdevApp) WriteConfig() error {
 	// Work against a copy of the DdevApp, since we don't want to actually change it.
 	appcopy := *app
 
-	// If the app name has been changed, then remove it from the main config.yaml file.
+	// If the app name has been changed by `config.*.yaml`,
+	// remove it from the main config.yaml file.
 	if hasConfigNameOverride, _ := app.HasConfigNameOverride(); hasConfigNameOverride {
 		appcopy.Name = ""
 	}
@@ -987,7 +988,6 @@ type composeYAMLVars struct {
 	Docroot                   string
 	UploadDirsMap             []string
 	GitDirMount               bool
-	IsGitpod                  bool
 	IsCodespaces              bool
 	DefaultContainerTimeout   string
 	WebExtraContainerPorts    []int
@@ -1029,7 +1029,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	}
 
-	uid, gid, username := util.GetContainerUIDGid()
+	uid, gid, username := dockerutil.GetContainerUser()
 	_, err = app.GetProvider("")
 	if err != nil {
 		return "", err
@@ -1089,7 +1089,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Docroot:            app.GetDocroot(),
 		UploadDirsMap:      app.getUploadDirsHostContainerMapping(),
 		GitDirMount:        false,
-		IsGitpod:           nodeps.IsGitpod(),
 		IsCodespaces:       nodeps.IsCodespaces(),
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
@@ -1251,13 +1250,6 @@ stopasgroup=true
 	// Configures postgres environment: healthcheck, .pgpass, config mounts, pg_hba.conf
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
-		restoreConfPath := "/var/lib/postgresql/recovery.conf"
-		if v, err := strconv.Atoi(app.Database.Version); err == nil && v >= 18 {
-			restoreConfPath = app.GetPostgresDataPath() + "/recovery.conf"
-		}
-		restoreConfDir := filepath.ToSlash(filepath.Dir(restoreConfPath))
-		waitTime := app.GetMaxContainerWaitTime()
-
 		extraDBContent = extraDBContent + fmt.Sprintf(`
 ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
@@ -1269,7 +1261,7 @@ if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buste
     rm -f /etc/apt/sources.list.d/pgdg.list
     echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
     echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
-    timeout %[3]d apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
+    timeout %[1]d apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
         -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true \
         debian-archive-keyring apt-transport-https ca-certificates
@@ -1277,18 +1269,17 @@ if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buste
 fi
 EOF
 
+USER %[2]s
+RUN echo "*:*:db:db:db" > ~/.pgpass && chmod 600 ~/.pgpass
+USER root
+
 RUN <<EOF
 set -eu -o pipefail
 chmod ugo+rx /postgres_healthcheck.sh
 mkdir -p /etc/postgresql/conf.d
 chmod 777 /etc/postgresql/conf.d
-echo "*:*:db:db:db" > ~postgres/.pgpass
-chown postgres:postgres ~postgres/.pgpass
-chmod 600 ~postgres/.pgpass
 chmod 777 /var/tmp
 ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql
-mkdir -p %[2]s
-echo "restore_command = 'true'" >>%[1]s
 
 echo "# TYPE DATABASE USER CIDR-ADDRESS  METHOD
 host  all         all 0.0.0.0/0 md5
@@ -1298,13 +1289,18 @@ host  replication all 0.0.0.0/0 trust
 local replication all trust
 local replication all peer" >/etc/postgresql/pg_hba.conf
 
-timeout %[3]d apt-get update || true
+timeout %[1]d apt-get update || true
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
     -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests \
     apt-transport-https bzip2 ca-certificates less procps pv vim-tiny
 update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
+
+# Change directories owned by postgres (and everything inside them)
+find / -type d \( -user postgres -o -group postgres \) -exec chown -Rh %[3]s:%[4]s {} + 2>/dev/null || true
+# Change any remaining individual files owned by postgres
+find / -type f \( -user postgres -o -group postgres \) -exec chown -h %[3]s:%[4]s {} + 2>/dev/null || true
 EOF
-`, restoreConfPath, restoreConfDir, waitTime)
+`, app.GetMaxContainerWaitTime(), username, uid, gid)
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
@@ -1405,7 +1401,11 @@ ARG gid
 ARG DDEV_PHP_VERSION
 ARG DDEV_DATABASE
 RUN getent group tty || groupadd tty
-RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd -G tty -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd -G tty -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -G tty -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -G tty -l -m -s "/bin/bash" --comment '' $username )
+RUN (groupadd --gid "$gid" "$username" || groupadd "$username" || true) && \
+    (useradd -G tty -l -m -s "/bin/bash" --gid "$username" --comment '' --uid "$uid" "$username" || \
+    useradd -G tty -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || \
+    useradd -G tty -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || \
+    useradd -G tty -l -m -s "/bin/bash" --comment '' "$username")
 `
 
 	// If there are user pre.Dockerfile* files, insert their contents
@@ -1834,6 +1834,8 @@ func validateHookYAML(source []byte) error {
 		"post-pull",
 		"pre-push",
 		"post-push",
+		"pre-share",
+		"post-share",
 		"pre-snapshot",
 		"post-snapshot",
 		"pre-restore-snapshot",

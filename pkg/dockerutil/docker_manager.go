@@ -6,8 +6,6 @@ import (
 	"io"
 	"net"
 	"net/url"
-	"regexp"
-	"strings"
 	"sync"
 
 	"github.com/ddev/ddev/pkg/util"
@@ -30,7 +28,6 @@ type dockerManager struct {
 	host              string             // Docker daemon URL (e.g., "unix:///var/run/docker.sock")
 	hostIP            string             // IP address of Docker host
 	hostIPErr         error              // Error from Docker host IP lookup, if any
-	hostSanitized     string             // Docker host with special characters removed
 	info              system.Info        // Docker system information from daemon (version, OS, etc.)
 	serverVersion     types.Version      // Docker server version information
 }
@@ -64,7 +61,6 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		sDockerManager.host = sDockerManager.cli.DockerEndpoint().Host
 		util.Verbose("getDockerManagerInstance(): dockerContextName=%s, host=%s", sDockerManager.dockerContextName, sDockerManager.host)
 		sDockerManager.hostIP, sDockerManager.hostIPErr = getDockerIPFromDockerHost(sDockerManager.host)
-		sDockerManager.hostSanitized = getDockerHostSanitized(sDockerManager.host)
 		sDockerManager.goContext = context.Background()
 		// Set the Docker CLI version for User-Agent header
 		version.Version = "ddev-" + versionconstants.DdevVersion
@@ -116,16 +112,6 @@ func GetDockerContextNameAndHost() (string, string, error) {
 	return dm.dockerContextName, dm.host, nil
 }
 
-// GetDockerHostSanitized returns Docker host but with all special characters removed
-// It stands in for Docker context name, but Docker context name is not a reliable indicator
-func GetDockerHostSanitized() (string, error) {
-	dm, err := getDockerManagerInstance()
-	if err != nil {
-		return "", err
-	}
-	return dm.hostSanitized, nil
-}
-
 // GetDockerIP returns either the default Docker IP address (127.0.0.1)
 // or the value as configured by Docker host (if it is a tcp:// URL)
 func GetDockerIP() (string, error) {
@@ -172,8 +158,17 @@ func ResetDockerHost(host string) error {
 	}
 	dm.host = host
 	dm.hostIP, dm.hostIPErr = getDockerIPFromDockerHost(dm.host)
-	dm.hostSanitized = getDockerHostSanitized(dm.host)
 	return nil
+}
+
+// GetServerVersion gets the cached versions of Docker provider engine
+// This is a struct which has all info from "docker info" command
+func GetServerVersion() (types.Version, error) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return types.Version{}, err
+	}
+	return dm.serverVersion, nil
 }
 
 // GetDockerVersion gets the cached version of Docker provider engine
@@ -193,16 +188,4 @@ func GetDockerAPIVersion() (string, error) {
 		return "", err
 	}
 	return dm.serverVersion.APIVersion, nil
-}
-
-// getDockerHostSanitized returns Docker host but with all special characters removed
-func getDockerHostSanitized(host string) string {
-	// Make it shorter so we don't hit Mutagen 63-char limit
-	dockerHost := strings.TrimPrefix(host, "unix://")
-	dockerHost = strings.TrimSuffix(dockerHost, "docker.sock")
-	dockerHost = strings.Trim(dockerHost, "/.")
-	// Convert remaining descriptor to alphanumeric
-	reg := regexp.MustCompile("[^a-zA-Z0-9]+")
-	alphaOnly := reg.ReplaceAllString(dockerHost, "-")
-	return alphaOnly
 }

@@ -1,0 +1,38 @@
+name: Test Race Detection
+on:
+  pull_request:
+    paths:
+      - "go.*"
+      - "pkg/**"
+      - "cmd/**"
+      - "Makefile"
+      - "vendor/**"
+      - ".github/workflows/**"
+      - "!.github/workflows/docs**"
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  race-detection:
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      cgo_enabled: "1"
+      buildargs: "-race"
+      testargs: "-failfast -race"
+      ddev_test_use_mutagen: "true"
+      debug_enabled: ${{ inputs.debug_enabled || false }}

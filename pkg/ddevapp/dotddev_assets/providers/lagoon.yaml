@@ -31,29 +31,29 @@ db_import_command:
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     export MARIADB_HOST=db MARIADB_USERNAME=db MARIADB_PASSWORD=db MARIADB_DATABASE=db
-    lagoon-sync sync mariadb -p ${LAGOON_PROJECT} -e ${LAGOON_ENVIRONMENT} --no-interaction 
+    lagoon-sync sync mariadb -p ${LAGOON_PROJECT} -e ${LAGOON_ENVIRONMENT} --no-interaction
 
 files_import_command:
   command: |
     #set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
-    lagoon-sync sync files -p ${LAGOON_PROJECT} -e ${LAGOON_ENVIRONMENT} --no-interaction 
+    lagoon-sync sync files -p ${LAGOON_PROJECT} -e ${LAGOON_ENVIRONMENT} --no-interaction
 
 # push is very useful for non-production environments, but can be
 # very dangerous to production environments. If it is dangerous to your
-# workflow you can remove the lines below and remove the `#ddev-generated` in this file
+# workflow you can remove the lines below and remove the `ddev-generated` in this file
 db_push_command:
   command: |
     set -eu -o pipefail
     #set -x   # You can enable bash debugging output by uncommenting
     export MARIADB_HOST=db MARIADB_USERNAME=db MARIADB_PASSWORD=db MARIADB_DATABASE=db
-    lagoon-sync sync mariadb -p ${LAGOON_PROJECT} -t ${LAGOON_ENVIRONMENT} -e local --no-interaction 
+    lagoon-sync sync mariadb -p ${LAGOON_PROJECT} -t ${LAGOON_ENVIRONMENT} -e local --no-interaction
 
 # push is very useful for non-production environments, but can be
 # very dangerous to production environments. If it is dangerous to your
-# workflow you can remove the lines below and remove the `#ddev-generated` in this file
+# workflow you can remove the lines below and remove the `ddev-generated` in this file
 files_push_command:
   command: |
     set -eu -o pipefail
     #set -x   # You can enable bash debugging output by uncommenting
-    lagoon-sync sync files -p ${LAGOON_PROJECT} -e local -t ${LAGOON_ENVIRONMENT} --no-interaction 
+    lagoon-sync sync files -p ${LAGOON_PROJECT} -e local -t ${LAGOON_ENVIRONMENT} --no-interaction

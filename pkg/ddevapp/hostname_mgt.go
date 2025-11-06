@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"os"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/hostname"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/util"
@@ -23,8 +23,8 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
-	if os.Getenv("DDEV_NONINTERACTIVE") == "true" {
-		util.Warning("Not trying to add hostnames because DDEV_NONINTERACTIVE=true")
+	if !globalconfig.IsInteractive() {
+		util.Warning("Not trying to add hostnames to hosts file because DDEV_NONINTERACTIVE=true")
 		return nil
 	}
 
@@ -75,8 +75,8 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 // This should be run without administrative privileges and will elevate
 // where needed.
 func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
-	if os.Getenv("DDEV_NONINTERACTIVE") == "true" {
-		util.Warning("Not trying to remove hostnames because DDEV_NONINTERACTIVE=true")
+	if !globalconfig.IsInteractive() {
+		util.Warning("Not trying to remove hostnames from hosts file because DDEV_NONINTERACTIVE=true")
 		return nil
 	}
 

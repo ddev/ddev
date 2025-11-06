@@ -37,6 +37,11 @@ var ValidXdebugIDELocations = []string{XdebugIDELocationContainer, XdebugIDELoca
 // GoroutineCount for tests
 var GoroutineCount = 0
 
+// IsInteractive returns true if we are running in an interactive mode
+func IsInteractive() bool {
+	return os.Getenv("DDEV_NONINTERACTIVE") != "true"
+}
+
 // IsValidXdebugIDELocation limits the choices for XdebugIDELocation
 func IsValidXdebugIDELocation(loc string) bool {
 	switch {

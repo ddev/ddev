@@ -1,7 +1,6 @@
 package amplitude
 
 import (
-	"github.com/ddev/ddev/pkg/environment"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -12,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/amplitude/loggers"
 	"github.com/ddev/ddev/pkg/amplitude/storages"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/environment"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -141,7 +141,7 @@ func Clean() {
 // CheckSetUp shows a warning to the user if the API key is not available.
 func CheckSetUp() {
 	if !output.JSONOutput && globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation && versionconstants.AmplitudeAPIKey == "" {
-		util.Warning("Instrumentation is opted in, but AmplitudeAPIKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
+		util.WarningOnce("Instrumentation is opted in, but AmplitudeAPIKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
 }
 

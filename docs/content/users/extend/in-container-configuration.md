@@ -2,6 +2,8 @@
 
 Custom shell configuration (Bash or your preferred shell), your usual Git configuration, a Composer `auth.json` and more can be achieved within your containers.
 
+## Using `homeadditions` to Customize In-Container Home Directory
+
 Place all your dotfiles in your global`~/.ddev/homeadditions` or your project’s `.ddev/homeadditions` directory and DDEV will use these in your project’s `web` containers.
 
 !!!tip "Ignore `.ddev/.homeadditions`!"
@@ -30,6 +32,36 @@ Usage examples:
     ```bash
     alias ll="ls -lhA"
     ```
+
+## Changing `ddev ssh` Shell
+
+You can define a default shell for [`ddev ssh`](../usage/commands.md#ssh) using the `x-ddev` extension field in your `.ddev/docker-compose.*.yaml` configuration.
+
+Use the `x-ddev.ssh-shell` key and make sure that shell (such as `zsh` or `bash`) is included in the container image so `ddev ssh` work correctly. The selected shell also appears in the [`ddev describe`](../usage/commands.md#describe) output (if it's not the default one).
+
+Changing the default shell to `zsh` in the `web` and `db` containers:
+
+```yaml
+# .ddev/config.yaml
+webimage_extra_packages: [zsh]
+dbimage_extra_packages: [zsh]
+```
+
+```yaml
+# .ddev/docker-compose.ssh-shell.yaml
+services:
+  web:
+    x-ddev:
+      ssh-shell: zsh
+  db:
+    x-ddev:
+      ssh-shell: zsh
+```
+
+To change the shell for a custom service, add the `x-ddev.ssh-shell` field to that service's configuration and ensure the desired shell is [installed in the image](./customizing-images.md).
+
+!!!tip
+    See related `x-ddev.describe-*` configuration for [Customizing `ddev describe` Output](../extend/custom-docker-services.md#customizing-ddev-describe-output).
 
 ## Using `NO_COLOR` Inside Containers
 

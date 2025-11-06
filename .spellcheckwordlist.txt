@@ -71,12 +71,12 @@ GitLab
 GUI
 GUIs
 Get
-GitPod
 Gitter
 GlobalProtect
 Gotenberg
 Grav
 Gzipped
+HMR
 HOWTO
 HeidiSQL
 Homebrew
@@ -93,6 +93,7 @@ Kalabox
 Kubernetes
 Lando
 Laravel
+Laravel's
 Let's
 Lima
 Livewire
@@ -108,6 +109,7 @@ MariaDB
 Matthias
 MinIO
 Misconfigured
+Monorepo
 MUTAGEN_DATA_DIRECTORY
 MyDevSite
 MySQL
@@ -116,6 +118,7 @@ Nameserver
 NFS
 Netbeans
 Nginx
+Nuxt
 OSs
 OpenMage
 OpenSearch
@@ -150,6 +153,7 @@ Silverstripe
 Snapshotting
 Solr
 SomeExternalDrive
+Sonoma
 SQLite
 StarterKits
 Starts
@@ -164,6 +168,7 @@ Traefik
 TravisCI
 UAC
 UDP
+UnoCSS
 Unshare
 Upsun
 Usage
@@ -171,7 +176,7 @@ Use
 Uses
 Uz
 VCS
-Ventura
+Vitest
 VM
 VNC
 VPN
@@ -182,6 +187,7 @@ WSL
 WSL2
 WantedBy
 Webhosting
+WebSocket
 XDebug
 XDG
 Xhprof
@@ -359,6 +365,7 @@ fqdn
 fqdns
 from
 fsnotify
+gid
 github
 githubusercontent
 gitignore
@@ -552,6 +559,7 @@ proot
 proto
 provided
 provider
+proxying
 ps
 psql
 public
@@ -723,6 +731,8 @@ will
 winnfsd
 with
 within
+worktree
+worktrees
 wp
 writeup
 wsize

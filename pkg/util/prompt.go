@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/globalconfig"
 )
 
 var inputScanner = bufio.NewScanner(os.Stdin)
@@ -57,13 +59,13 @@ func Confirm(prompt string) bool {
 }
 
 // ConfirmTo handles the asking and interpreting of a basic yes/no question.
-// If DDEV_NONINTERACTIVE is set, Confirm() returns true.
+// If DDEV_NONINTERACTIVE is set, Confirm() returns defaultTo.
 // If response is blank, the defaultTo value is returned.
 // If response is invalid, the prompt will be presented at most three times
 // before returning false.
 func ConfirmTo(prompt string, defaultTo bool) bool {
-	if len(os.Getenv("DDEV_NONINTERACTIVE")) > 0 {
-		return true
+	if !globalconfig.IsInteractive() {
+		return defaultTo
 	}
 
 	var promptOptions string

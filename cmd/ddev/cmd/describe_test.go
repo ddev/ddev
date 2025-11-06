@@ -69,213 +69,310 @@ func TestCmdDescribe(t *testing.T) {
 	globalconfig.EnsureGlobalConfig()
 
 	require.NoError(t, err, "ddev config global failed with output: '%s'", out)
-	for _, v := range TestSites {
-		app, err := ddevapp.NewApp(v.Dir, false)
-		require.NoError(t, err)
-		overrideFile := app.GetConfigPath("docker-compose.override.yaml")
-		err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.override.yaml"), overrideFile)
-		require.NoError(t, err)
 
-		t.Cleanup(func() {
-			err = os.Remove(overrideFile)
-			require.NoError(t, err)
-			err = app.Start()
-			require.NoError(t, err)
-		})
-		err = app.Start()
-		require.NoError(t, err)
+	// Test both stopped and running states
+	for _, state := range []struct {
+		name    string
+		running bool
+	}{
+		{"stopped", false},
+		{"running", true},
+	} {
+		for _, v := range TestSites {
+			t.Run(v.Name+"_"+state.name, func(t *testing.T) {
+				app, err := ddevapp.NewApp(v.Dir, false)
+				require.NoError(t, err)
+				overrideFile := app.GetConfigPath("docker-compose.override.yaml")
+				err = fileutil.CopyFile(filepath.Join(origDir, "testdata", "TestCmdDescribe", "docker-compose.override.yaml"), overrideFile)
+				require.NoError(t, err)
 
-		// First, try to do a describe from another directory.
-		err = os.Chdir(tmpDir)
-		require.NoError(t, err)
+				t.Cleanup(func() {
+					err = os.Remove(overrideFile)
+					require.NoError(t, err)
+					err = app.Start()
+					require.NoError(t, err)
+				})
 
-		out, err = exec.RunHostCommand(DdevBin, "describe", v.Name)
-		require.NoError(t, err, "output=%s", out)
-		require.Contains(t, string(out), "SERVICE")
-		require.Contains(t, string(out), "STAT")
-		require.Contains(t, string(out), v.Name)
-		require.Contains(t, string(out), "OK")
-		// web ports
-		require.Contains(t, string(out), "web:5492")
-		require.Contains(t, string(out), "web:12394")
-		require.NotContains(t, string(out), "web:5492 ->")
-		require.NotContains(t, string(out), "web:12394 ->")
-		require.Contains(t, string(out), "  - web:5222 -> 127.0.0.1:5332")
-		require.Regexp(t, regexp.MustCompile(" {2}- web:12445 -> 127.0.0.1:[0-9]+"), string(out))
-		// db ports
-		require.Contains(t, string(out), "db:4352")
-		require.NotContains(t, string(out), "db:4352 ->")
-		require.Contains(t, string(out), "db:3999 -> 127.0.0.1:12312")
-		require.Regexp(t, regexp.MustCompile(" {2}- db:54355 -> 127.0.0.1:[0-9]+"), string(out))
-		// busybox1 for no exposed ports
-		require.Contains(t, string(out), "InDocker: busybox1")
-		// busybox2 for ONLY exposed ports (no host ports)
-		require.Contains(t, string(out), "InDocker:")
-		require.NotContains(t, string(out), "InDocker: busybox2")
-		require.Contains(t, string(out), "  - busybox2:3333")
-		require.NotContains(t, string(out), "  - busybox2:3333 ->")
-
-		err = os.Chdir(v.Dir)
-		require.NoError(t, err)
-		out, err = exec.RunHostCommand(DdevBin, "describe")
-		require.NoError(t, err, "output=%s", out)
-		require.Contains(t, string(out), "SERVICE")
-		require.Contains(t, string(out), "STAT")
-		require.Contains(t, string(out), v.Name)
-		require.Contains(t, string(out), "OK")
-		// web ports
-		require.Contains(t, string(out), "web:5492")
-		require.Contains(t, string(out), "web:12394")
-		require.NotContains(t, string(out), "web:5492 ->")
-		require.NotContains(t, string(out), "web:12394 ->")
-		require.Contains(t, string(out), "  - web:5222 -> 127.0.0.1:5332")
-		require.Regexp(t, regexp.MustCompile(" {2}- web:12445 -> 127.0.0.1:[0-9]+"), string(out))
-		// db ports
-		require.Contains(t, string(out), "db:4352")
-		require.NotContains(t, string(out), "db:4352 ->")
-		require.Contains(t, string(out), "db:3999 -> 127.0.0.1:12312")
-		require.Regexp(t, regexp.MustCompile(" {2}- db:54355 -> 127.0.0.1:[0-9]+"), string(out))
-		// busybox1 for no exposed ports
-		require.Contains(t, string(out), "InDocker: busybox1")
-		// busybox2 for ONLY exposed ports (no host ports)
-		require.Contains(t, string(out), "InDocker:")
-		require.NotContains(t, string(out), "InDocker: busybox2")
-		require.Contains(t, string(out), "  - busybox2:3333")
-		require.NotContains(t, string(out), "  - busybox2:3333 ->")
-
-		// Test describe in current directory with json flag
-		out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
-		require.NoError(t, err, "output=%s", out)
-		logItems, err := unmarshalJSONLogs(out)
-		require.NoError(t, err, "Unable to unmarshal ===\n%s\n===\n", out)
-
-		// The description log should be next last item; there may be a warning
-		// or other info before that.
-		var raw map[string]interface{}
-		rawFound := false
-		var item map[string]interface{}
-		for _, item = range logItems {
-			if item["level"] == "info" {
-				if raw, rawFound = item["raw"].(map[string]interface{}); rawFound {
-					break
+				// Start or stop based on test state
+				if state.running {
+					err = app.Start()
+					require.NoError(t, err)
+				} else {
+					err = app.Stop(false, false)
+					require.NoError(t, err)
+					// Ensure we have fresh compose config for stopped state
+					_ = app.DockerEnv()
+					err = app.WriteDockerComposeYAML()
+					require.NoError(t, err)
+					err = app.UpdateGlobalProjectList()
+					require.NoError(t, err)
 				}
-			}
+
+				// First, try to do a describe from another directory.
+				err = os.Chdir(tmpDir)
+				require.NoError(t, err)
+
+				out, err = exec.RunHostCommand(DdevBin, "describe", v.Name)
+				require.NoError(t, err, "output=%s", out)
+				require.Contains(t, string(out), "SERVICE")
+				require.Contains(t, string(out), "STAT")
+				require.Contains(t, string(out), v.Name)
+				if state.running {
+					require.Contains(t, string(out), "OK")
+				} else {
+					require.Contains(t, string(out), "stopped")
+				}
+				// web ports
+				require.Contains(t, string(out), "web:5492")
+				require.Contains(t, string(out), "web:12394")
+				require.NotContains(t, string(out), "web:5492 ->")
+				require.NotContains(t, string(out), "web:12394 ->")
+				if state.running {
+					require.Contains(t, string(out), "  - web:5222 -> 127.0.0.1:5332")
+					require.Regexp(t, regexp.MustCompile(" {2}- web:12445 -> 127.0.0.1:[0-9]+"), string(out))
+				} else {
+					require.NotContains(t, string(out), "web:5222 ->")
+					require.NotContains(t, string(out), "web:12445 ->")
+					require.Contains(t, string(out), "web:5222")
+					require.Contains(t, string(out), "web:12445")
+				}
+				// db ports
+				require.Contains(t, string(out), "db:4352")
+				require.NotContains(t, string(out), "db:4352 ->")
+				if state.running {
+					require.Contains(t, string(out), "db:3999 -> 127.0.0.1:12312")
+					require.Regexp(t, regexp.MustCompile(" {2}- db:54355 -> 127.0.0.1:[0-9]+"), string(out))
+				} else {
+					require.NotContains(t, string(out), "db:3999 ->")
+					require.NotContains(t, string(out), "db:54355 ->")
+					require.Contains(t, string(out), "db:3999")
+					require.Contains(t, string(out), "db:54355")
+				}
+				// busybox1 for no exposed ports
+				require.Contains(t, string(out), "InDocker: busybox1")
+				// busybox2 for ONLY exposed ports (no host ports)
+				require.Contains(t, string(out), "InDocker:")
+				require.NotContains(t, string(out), "InDocker: busybox2")
+				require.Contains(t, string(out), "  - busybox2:3333")
+				require.NotContains(t, string(out), "  - busybox2:3333 ->")
+				// busybox2 x-ddev.describe-url-ports
+				require.Contains(t, string(out), "url-port Test service description for busybox2")
+				require.Contains(t, string(out), "User: busybox2")
+				require.Contains(t, string(out), "Password: secret")
+
+				// Now try from within the project directory
+				err = os.Chdir(v.Dir)
+				require.NoError(t, err)
+				out, err = exec.RunHostCommand(DdevBin, "describe")
+				require.NoError(t, err, "output=%s", out)
+				require.Contains(t, string(out), "SERVICE")
+				require.Contains(t, string(out), "STAT")
+				require.Contains(t, string(out), v.Name)
+				if state.running {
+					require.Contains(t, string(out), "OK")
+				} else {
+					require.Contains(t, string(out), "stopped")
+				}
+				// web ports
+				require.Contains(t, string(out), "web:5492")
+				require.Contains(t, string(out), "web:12394")
+				require.NotContains(t, string(out), "web:5492 ->")
+				require.NotContains(t, string(out), "web:12394 ->")
+				if state.running {
+					require.Contains(t, string(out), "  - web:5222 -> 127.0.0.1:5332")
+					require.Regexp(t, regexp.MustCompile(" {2}- web:12445 -> 127.0.0.1:[0-9]+"), string(out))
+				} else {
+					require.NotContains(t, string(out), "web:5222 ->")
+					require.NotContains(t, string(out), "web:12445 ->")
+					require.Contains(t, string(out), "web:5222")
+					require.Contains(t, string(out), "web:12445")
+				}
+				// db ports
+				require.Contains(t, string(out), "db:4352")
+				require.NotContains(t, string(out), "db:4352 ->")
+				if state.running {
+					require.Contains(t, string(out), "db:3999 -> 127.0.0.1:12312")
+					require.Regexp(t, regexp.MustCompile(" {2}- db:54355 -> 127.0.0.1:[0-9]+"), string(out))
+				} else {
+					require.NotContains(t, string(out), "db:3999 ->")
+					require.NotContains(t, string(out), "db:54355 ->")
+					require.Contains(t, string(out), "db:3999")
+					require.Contains(t, string(out), "db:54355")
+				}
+				// busybox1 for no exposed ports
+				require.Contains(t, string(out), "InDocker: busybox1")
+				// busybox2 for ONLY exposed ports (no host ports)
+				require.Contains(t, string(out), "InDocker:")
+				require.NotContains(t, string(out), "InDocker: busybox2")
+				require.Contains(t, string(out), "  - busybox2:3333")
+				require.NotContains(t, string(out), "  - busybox2:3333 ->")
+				// busybox2 x-ddev.describe
+				require.Contains(t, string(out), "Test service description for busybox2")
+
+				// Test describe in current directory with json flag
+				out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
+				require.NoError(t, err, "output=%s", out)
+				logItems, err := unmarshalJSONLogs(out)
+				require.NoError(t, err, "Unable to unmarshal ===\n%s\n===\n", out)
+
+				// The description log should be next last item; there may be a warning
+				// or other info before that.
+				var raw map[string]interface{}
+				rawFound := false
+				var item map[string]interface{}
+				for _, item = range logItems {
+					if item["level"] == "info" {
+						if raw, rawFound = item["raw"].(map[string]interface{}); rawFound {
+							break
+						}
+					}
+				}
+				require.True(t, rawFound, "did not find 'raw' in item in logItems\n===\n%s\n===\n", out)
+				if state.running {
+					require.EqualValues(t, "running", raw["status"])
+					require.EqualValues(t, "running", raw["status_desc"])
+				} else {
+					require.EqualValues(t, "stopped", raw["status"])
+					require.EqualValues(t, "stopped", raw["status_desc"])
+				}
+				require.EqualValues(t, v.Name, raw["name"])
+				require.Equal(t, fileutil.ShortHomeJoin(v.Dir), raw["shortroot"].(string))
+				require.EqualValues(t, v.Dir, raw["approot"].(string))
+
+				// exposed and host ports
+				require.Contains(t, raw, "services")
+				services := raw["services"].(map[string]interface{})
+				// web ports
+				require.Contains(t, services, "web")
+				web := services["web"].(map[string]interface{})
+
+				require.Contains(t, web["exposed_ports"], "5492,")
+				require.Contains(t, web["exposed_ports"], ",57497")
+
+				var webExposedPortsInt []int
+				for _, p := range strings.Split(web["exposed_ports"].(string), ",") {
+					i, err := strconv.Atoi(p)
+					asrt.NoError(t, err)
+					webExposedPortsInt = append(webExposedPortsInt, i)
+				}
+				require.True(t, slices.IsSorted(webExposedPortsInt))
+
+				if state.running {
+					require.Contains(t, web["host_ports"], "5332,")
+					require.Contains(t, web["host_ports"], ",5555,")
+
+					var webHostPortsInt []int
+					for _, p := range strings.Split(web["host_ports"].(string), ",") {
+						i, err := strconv.Atoi(p)
+						asrt.NoError(t, err)
+						webHostPortsInt = append(webHostPortsInt, i)
+					}
+					require.True(t, slices.IsSorted(webHostPortsInt))
+				} else {
+					require.Equal(t, web["host_ports"], "")
+				}
+
+				require.Contains(t, web, "host_ports_mapping")
+				webPortMapping := web["host_ports_mapping"].([]interface{})
+				var webPortMappingTest = map[string]string{}
+				var webPortMappingReverseTest = map[string]string{}
+				var webPortMappingExposedPortInt []int
+				for _, portMapping := range webPortMapping {
+					i, err := strconv.Atoi(portMapping.(map[string]interface{})["exposed_port"].(string))
+					asrt.NoError(t, err)
+					webPortMappingExposedPortInt = append(webPortMappingExposedPortInt, i)
+					webPortMappingTest[portMapping.(map[string]interface{})["host_port"].(string)] = portMapping.(map[string]interface{})["exposed_port"].(string)
+					webPortMappingReverseTest[portMapping.(map[string]interface{})["exposed_port"].(string)] = portMapping.(map[string]interface{})["host_port"].(string)
+				}
+				require.True(t, slices.IsSorted(webPortMappingExposedPortInt))
+				if state.running {
+					require.Contains(t, webPortMappingTest, "5332")
+					require.Equal(t, "5222", webPortMappingTest["5332"])
+					require.Contains(t, webPortMappingReverseTest, "12445")
+					require.Regexp(t, regexp.MustCompile("[0-9]+"), webPortMappingReverseTest["12445"])
+				} else {
+					require.Len(t, webPortMappingTest, 0)
+					require.Len(t, webPortMappingReverseTest, 0)
+				}
+
+				// db ports
+				require.Contains(t, services, "db")
+				db := services["db"].(map[string]interface{})
+
+				require.Contains(t, db["exposed_ports"], "4352,")
+				require.Contains(t, db["exposed_ports"], ",6594")
+
+				var dbExposedPortsInt []int
+				for _, p := range strings.Split(db["exposed_ports"].(string), ",") {
+					i, err := strconv.Atoi(p)
+					asrt.NoError(t, err)
+					dbExposedPortsInt = append(dbExposedPortsInt, i)
+				}
+				require.True(t, slices.IsSorted(dbExposedPortsInt))
+
+				if state.running {
+					require.Contains(t, db["host_ports"], "12312,")
+
+					var dbbHostPortsInt []int
+					for _, p := range strings.Split(web["host_ports"].(string), ",") {
+						i, err := strconv.Atoi(p)
+						asrt.NoError(t, err)
+						dbbHostPortsInt = append(dbbHostPortsInt, i)
+					}
+					require.True(t, slices.IsSorted(dbbHostPortsInt))
+				} else {
+					require.Equal(t, db["host_ports"], "")
+				}
+
+				dbPortMapping := db["host_ports_mapping"].([]interface{})
+				var dbPortMappingTest = map[string]string{}
+				var dbPortMappingReverseTest = map[string]string{}
+				var dbPortMappingExposedPortInt []int
+				for _, portMapping := range dbPortMapping {
+					i, err := strconv.Atoi(portMapping.(map[string]interface{})["exposed_port"].(string))
+					asrt.NoError(t, err)
+					dbPortMappingExposedPortInt = append(dbPortMappingExposedPortInt, i)
+					dbPortMappingTest[portMapping.(map[string]interface{})["host_port"].(string)] = portMapping.(map[string]interface{})["exposed_port"].(string)
+					dbPortMappingReverseTest[portMapping.(map[string]interface{})["exposed_port"].(string)] = portMapping.(map[string]interface{})["host_port"].(string)
+				}
+				require.True(t, slices.IsSorted(dbPortMappingExposedPortInt))
+				if state.running {
+					require.Contains(t, dbPortMappingTest, "12312")
+					require.Equal(t, "3999", dbPortMappingTest["12312"])
+					require.Contains(t, dbPortMappingReverseTest, "54355")
+					require.Regexp(t, regexp.MustCompile("[0-9]+"), dbPortMappingReverseTest["54355"])
+				} else {
+					require.Len(t, dbPortMappingTest, 0)
+					require.Len(t, dbPortMappingReverseTest, 0)
+				}
+				// busybox1 for no exposed ports
+				require.Contains(t, services, "busybox1")
+				busybox1 := services["busybox1"].(map[string]interface{})
+				require.Equal(t, "", busybox1["exposed_ports"].(string))
+				require.Equal(t, "", busybox1["host_ports"].(string))
+				require.Equal(t, make([]interface{}, 0), busybox1["host_ports_mapping"])
+				require.Contains(t, busybox1, "host_ports_mapping")
+				// busybox2 for ONLY exposed ports (no host ports)
+				require.Contains(t, services, "busybox2")
+				busybox2 := services["busybox2"].(map[string]interface{})
+				require.Equal(t, "3333", busybox2["exposed_ports"].(string))
+				require.Equal(t, "", busybox2["host_ports"].(string))
+				require.Equal(t, make([]interface{}, 0), busybox2["host_ports_mapping"])
+				require.Contains(t, busybox2, "host_ports_mapping")
+				// busybox2 x-ddev.describe in JSON output
+				require.Contains(t, busybox2, "describe-url-port")
+				require.Equal(t, "url-port Test service description for busybox2", busybox2["describe-url-port"].(string))
+				require.Contains(t, busybox2, "describe-info")
+				require.Equal(t, "User: busybox2\nPassword: secret", busybox2["describe-info"].(string))
+
+				require.NotEmpty(t, item["msg"])
+
+				// Project must be stopped or later projects will collide on
+				// the docker-compose.override ports
+				err = app.Stop(false, false)
+				require.NoError(t, err)
+			})
 		}
-		require.True(t, rawFound, "did not find 'raw' in item in logItems\n===\n%s\n===\n", out)
-		require.EqualValues(t, "running", raw["status"])
-		require.EqualValues(t, "running", raw["status_desc"])
-		require.EqualValues(t, v.Name, raw["name"])
-		require.Equal(t, fileutil.ShortHomeJoin(v.Dir), raw["shortroot"].(string))
-		require.EqualValues(t, v.Dir, raw["approot"].(string))
-
-		// exposed and host ports
-		require.Contains(t, raw, "services")
-		services := raw["services"].(map[string]interface{})
-		// web ports
-		require.Contains(t, services, "web")
-		web := services["web"].(map[string]interface{})
-
-		require.Contains(t, web["exposed_ports"], "5492,")
-		require.Contains(t, web["exposed_ports"], ",57497")
-
-		var webExposedPortsInt []int
-		for _, p := range strings.Split(web["exposed_ports"].(string), ",") {
-			i, err := strconv.Atoi(p)
-			asrt.NoError(t, err)
-			webExposedPortsInt = append(webExposedPortsInt, i)
-		}
-		require.True(t, slices.IsSorted(webExposedPortsInt))
-
-		require.Contains(t, web["host_ports"], "5332,")
-		require.Contains(t, web["host_ports"], ",5555,")
-
-		var webHostPortsInt []int
-		for _, p := range strings.Split(web["host_ports"].(string), ",") {
-			i, err := strconv.Atoi(p)
-			asrt.NoError(t, err)
-			webHostPortsInt = append(webHostPortsInt, i)
-		}
-		require.True(t, slices.IsSorted(webHostPortsInt))
-
-		require.Contains(t, web, "host_ports_mapping")
-		webPortMapping := web["host_ports_mapping"].([]interface{})
-		var webPortMappingTest = map[string]string{}
-		var webPortMappingReverseTest = map[string]string{}
-		var webPortMappingExposedPortInt []int
-		for _, portMapping := range webPortMapping {
-			i, err := strconv.Atoi(portMapping.(map[string]interface{})["exposed_port"].(string))
-			asrt.NoError(t, err)
-			webPortMappingExposedPortInt = append(webPortMappingExposedPortInt, i)
-			webPortMappingTest[portMapping.(map[string]interface{})["host_port"].(string)] = portMapping.(map[string]interface{})["exposed_port"].(string)
-			webPortMappingReverseTest[portMapping.(map[string]interface{})["exposed_port"].(string)] = portMapping.(map[string]interface{})["host_port"].(string)
-		}
-		require.True(t, slices.IsSorted(webPortMappingExposedPortInt))
-		require.Contains(t, webPortMappingTest, "5332")
-		require.Equal(t, "5222", webPortMappingTest["5332"])
-		require.Contains(t, webPortMappingReverseTest, "12445")
-		require.Regexp(t, regexp.MustCompile("[0-9]+"), webPortMappingReverseTest["12445"])
-
-		// db ports
-		require.Contains(t, services, "db")
-		db := services["db"].(map[string]interface{})
-
-		require.Contains(t, db["exposed_ports"], "4352,")
-		require.Contains(t, db["exposed_ports"], ",6594")
-
-		var dbExposedPortsInt []int
-		for _, p := range strings.Split(db["exposed_ports"].(string), ",") {
-			i, err := strconv.Atoi(p)
-			asrt.NoError(t, err)
-			dbExposedPortsInt = append(dbExposedPortsInt, i)
-		}
-		require.True(t, slices.IsSorted(dbExposedPortsInt))
-
-		require.Contains(t, db["host_ports"], "12312,")
-
-		var dbbHostPortsInt []int
-		for _, p := range strings.Split(web["host_ports"].(string), ",") {
-			i, err := strconv.Atoi(p)
-			asrt.NoError(t, err)
-			dbbHostPortsInt = append(dbbHostPortsInt, i)
-		}
-		require.True(t, slices.IsSorted(dbbHostPortsInt))
-
-		dbPortMapping := db["host_ports_mapping"].([]interface{})
-		var dbPortMappingTest = map[string]string{}
-		var dbPortMappingReverseTest = map[string]string{}
-		var dbPortMappingExposedPortInt []int
-		for _, portMapping := range dbPortMapping {
-			i, err := strconv.Atoi(portMapping.(map[string]interface{})["exposed_port"].(string))
-			asrt.NoError(t, err)
-			dbPortMappingExposedPortInt = append(dbPortMappingExposedPortInt, i)
-			dbPortMappingTest[portMapping.(map[string]interface{})["host_port"].(string)] = portMapping.(map[string]interface{})["exposed_port"].(string)
-			dbPortMappingReverseTest[portMapping.(map[string]interface{})["exposed_port"].(string)] = portMapping.(map[string]interface{})["host_port"].(string)
-		}
-		require.True(t, slices.IsSorted(dbPortMappingExposedPortInt))
-		require.Contains(t, dbPortMappingTest, "12312")
-		require.Equal(t, "3999", dbPortMappingTest["12312"])
-		require.Contains(t, dbPortMappingReverseTest, "54355")
-		require.Regexp(t, regexp.MustCompile("[0-9]+"), dbPortMappingReverseTest["54355"])
-		// busybox1 for no exposed ports
-		require.Contains(t, services, "busybox1")
-		busybox1 := services["busybox1"].(map[string]interface{})
-		require.Equal(t, "", busybox1["exposed_ports"].(string))
-		require.Equal(t, "", busybox1["host_ports"].(string))
-		require.Equal(t, make([]interface{}, 0), busybox1["host_ports_mapping"])
-		require.Contains(t, busybox1, "host_ports_mapping")
-		// busybox2 for ONLY exposed ports (no host ports)
-		require.Contains(t, services, "busybox2")
-		busybox2 := services["busybox2"].(map[string]interface{})
-		require.Equal(t, "3333", busybox2["exposed_ports"].(string))
-		require.Equal(t, "", busybox2["host_ports"].(string))
-		require.Equal(t, make([]interface{}, 0), busybox2["host_ports_mapping"])
-		require.Contains(t, busybox2, "host_ports_mapping")
-		require.NotEmpty(t, item["msg"])
-
-		// Project must be stopped or later projects will collide on
-		// the docker-compose.override ports
-		err = app.Stop(false, false)
-		require.NoError(t, err)
 	}
 }
 

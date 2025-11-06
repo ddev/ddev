@@ -1,0 +1,195 @@
+name: Reusable Linux Test
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: 'Runner to use'
+        required: false
+        type: string
+        default: 'ubuntu-24.04'
+      ddev_test_webserver_type:
+        description: 'DDEV_TEST_WEBSERVER_TYPE value'
+        required: false
+        type: string
+        default: ''
+      ddev_test_use_mutagen:
+        description: 'DDEV_TEST_USE_MUTAGEN value'
+        required: false
+        type: string
+        default: 'false'
+      ddev_test_no_bind_mounts:
+        description: 'DDEV_TEST_NO_BIND_MOUNTS value'
+        required: false
+        type: string
+        default: 'false'
+      cgo_enabled:
+        description: 'CGO_ENABLED value'
+        required: false
+        type: string
+        default: '0'
+      buildargs:
+        description: 'BUILDARGS value'
+        required: false
+        type: string
+        default: ''
+      testargs:
+        description: 'TESTARGS value'
+        required: false
+        type: string
+        default: '-failfast'
+      gotest_short:
+        description: 'GOTEST_SHORT value'
+        required: false
+        type: string
+        default: '16' # 16 is drupal11; means in TestFullSiteSetup we only use drupal11 by default
+      make_target:
+        description: 'MAKE_TARGET value'
+        required: false
+        type: string
+        default: 'test'
+      pull_push_providers:
+        description: 'Run pull/push provider tests'
+        required: false
+        type: string
+        default: 'false'
+      ddev_skip_nodejs_test:
+        description: 'DDEV_SKIP_NODEJS_TEST value'
+        required: false
+        type: string
+        default: 'true'
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      TESTS_SERVICE_ACCOUNT_TOKEN:
+        required: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    runs-on: ${{ inputs.runner }}
+
+    env:
+      BUILDKIT_PROGRESS: plain
+      DOCKER_CLI_EXPERIMENTAL: enabled
+      DDEV_DEBUG: true
+      DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CGO_ENABLED: ${{ inputs.cgo_enabled }}
+      DDEV_NONINTERACTIVE: "true"
+      DDEV_SKIP_NODEJS_TEST: ${{ inputs.ddev_skip_nodejs_test }}
+      GOTEST_SHORT: ${{ inputs.gotest_short }}
+      MAKE_TARGET: ${{ inputs.make_target }}
+      TESTARGS: ${{ inputs.testargs }}
+      BUILDARGS: ${{ inputs.buildargs }}
+      DDEV_TEST_WEBSERVER_TYPE: ${{ inputs.ddev_test_webserver_type }}
+      DDEV_TEST_USE_MUTAGEN: ${{ inputs.ddev_test_use_mutagen }}
+      DDEV_TEST_NO_BIND_MOUNTS: ${{ inputs.ddev_test_no_bind_mounts }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
+
+      - name: Get Date
+        id: get-date
+        run: |
+          echo "date=$(/bin/date -u "+%Y%V")" >> $GITHUB_OUTPUT
+
+      - name: DDEV test cache
+        uses: actions/cache@v4
+        if: ${{ github.ref == 'refs/heads/main' && inputs.gotest_short == '' }}
+        with:
+          path: ~/.ddev/testcache/tarballs
+          key: ddev-test-cache-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ddev-test-cache-
+
+      - name: DDEV test cache/restore
+        uses: actions/cache/restore@v4
+        if: ${{ github.ref != 'refs/heads/main' || inputs.gotest_short != '' }}
+        with:
+          path: ~/.ddev/testcache/tarballs
+          key: ddev-test-cache-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ddev-test-cache-
+
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: Remove unnecessary items on disk
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: true
+
+      - name: Install Docker and deps (Linux)
+        run: ./.github/workflows/linux-setup.sh
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+
+      - name: Load 1password secret(s) for pull-push-providers
+        if: ${{ inputs.pull_push_providers == 'true' && env.OP_SERVICE_ACCOUNT_TOKEN != '' }}
+        uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.TESTS_SERVICE_ACCOUNT_TOKEN }}"
+          DDEV_ACQUIA_API_KEY: "op://test-secrets/DDEV_ACQUIA_API_KEY/credential"
+          DDEV_ACQUIA_API_SECRET: "op://test-secrets/DDEV_ACQUIA_API_SECRET/credential"
+          DDEV_ACQUIA_SSH_KEY: "op://test-secrets/DDEV_ACQUIA_SSH_KEY/private key?ssh-format=openssh"
+          DDEV_LAGOON_SSH_KEY: "op://test-secrets/DDEV_LAGOON_SSH_KEY/private key?ssh-format=openssh"
+          DDEV_PANTHEON_API_TOKEN: "op://test-secrets/DDEV_PANTHEON_API_TOKEN/credential"
+          DDEV_PANTHEON_SSH_KEY: "op://test-secrets/DDEV_PANTHEON_SSH_KEY/private key?ssh-format=openssh"
+          DDEV_PLATFORM_API_TOKEN: "op://test-secrets/DDEV_PLATFORM_API_TOKEN/credential"
+          DDEV_UPSUN_API_TOKEN: "op://test-secrets/DDEV_UPSUN_API_TOKEN/credential"
+
+      - name: Confirm environment variables
+        run: |
+          echo "BUILDARGS=${BUILDARGS}"
+          echo "TESTARGS=${TESTARGS}"
+          echo "CGO_ENABLED=${CGO_ENABLED}"
+          echo "GOTEST_SHORT=${GOTEST_SHORT}"
+          echo "DDEV_SKIP_NODEJS_TEST=${DDEV_SKIP_NODEJS_TEST}"
+          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
+          echo "DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE}"
+          echo "DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
+          echo "MAKE_TARGET=${MAKE_TARGET}"
+
+      - name: Setup tmate session
+        if: ${{ inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+
+      - name: DDEV tests
+        run: |
+          make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}"
+          cgo=$(.gotmp/bin/$(go env GOOS)_$(go env GOARCH)/ddev version 2>/dev/null | awk '/cgo_enabled/ { print $2 }')
+          if [ "${CGO_ENABLED}" != "${cgo}" ]; then
+            echo "CGO_ENABLED=${CGO_ENABLED} but built cgo=${cgo}" && exit 5
+          fi
+          make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET}
+
+      - name: Clean up Homebrew
+        continue-on-error: true
+        run: |
+          brew update
+          brew autoremove
+          brew cleanup

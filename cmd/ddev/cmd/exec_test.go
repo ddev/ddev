@@ -8,13 +8,12 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/stretchr/testify/require"
-
-	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdExecBadArgs run `ddev exec` without the proper args
@@ -81,6 +80,22 @@ func TestCmdExec(t *testing.T) {
 
 	// Test sudo
 	out, err = exec.RunHostCommand(DdevBin, "exec", "sudo", "whoami")
+	assert.NoError(err)
+	assert.Contains(out, "root")
+
+	out, err = exec.RunHostCommand(DdevBin, "exec", "-u", "root", "whoami")
+	assert.NoError(err)
+	assert.Contains(out, "root")
+
+	out, err = exec.RunHostCommand(DdevBin, "exec", "-u", "root", "-s", "db", "whoami")
+	assert.NoError(err)
+	assert.Contains(out, "root")
+
+	out, err = exec.RunHostCommand(DdevBin, "exec", "-u", "0", "-s", "db", "whoami")
+	assert.NoError(err)
+	assert.Contains(out, "root")
+
+	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "-u", "root", "--", "whoami")
 	assert.NoError(err)
 	assert.Contains(out, "root")
 

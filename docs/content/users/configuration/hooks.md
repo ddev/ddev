@@ -25,6 +25,7 @@ hooks:
 * `pre-import-db` and `post-import-db`: Execute tasks before or after database import.
 * `pre-import-files` and `post-import-files`: Execute tasks before or after files are imported.
 * `pre-composer` and `post-composer`: Execute tasks before or after the `composer` command.
+* `pre-share` and `post-share`: Execute tasks before or after the `share` command.
 * `pre-stop`, `pre-config`, `post-config`, `pre-exec`, `post-exec`, `pre-pull`, `post-pull`, `pre-push`, `post-push`, `pre-snapshot`, `post-snapshot`, `pre-delete-snapshot`, `post-delete-snapshot`, `pre-restore-snapshot`, `post-restore-snapshot`: Execute as the name suggests.
 * `post-stop`: Hooks into [`ddev stop`](../usage/commands.md#stop). Execute tasks after the project environment stopped.
 
@@ -41,7 +42,13 @@ DDEV currently supports these tasks:
 
 ### `exec`: Execute a shell command in a container (defaults to web container)
 
-Value: string providing the command to run. Commands requiring user interaction are not supported. You can also add a “service” key to the command, specifying to run it on the `db` container or any other container you use.
+Value: string providing the command to run. Commands requiring user interaction are not supported.
+
+**Optional keys:**
+
+* `service`: Specify which container to run the command in (defaults to `web`)
+* `user`: Specify which user to run the command as (username or UID, defaults to container's default user)
+* `exec_raw`: Array of command arguments for direct execution without shell interpretation (alternative to string command)
 
 Example: _Use Drush to rebuild all caches and get a user login link after database import_.
 
@@ -75,7 +82,16 @@ hooks:
   pre-import-db:
     - exec: mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS some_new_database;"
       service: db
+```
 
+Example: _Execute a command as root user in the `db` container_.
+
+```yaml
+hooks:
+  post-start:
+    - exec: ls -la /root
+      service: db
+      user: root
 ```
 
 Example: _Add the common `ll` alias into the `web` container’s `.bashrc` file_.
@@ -83,7 +99,7 @@ Example: _Add the common `ll` alias into the `web` container’s `.bashrc` file_
 ```yaml
 hooks:
   post-start:
-  - exec: sudo echo alias ll=\"ls -lhA\" >> ~/.bashrc
+    - exec: sudo echo alias ll=\"ls -lhA\" >> ~/.bashrc
 ```
 
 !!!tip
@@ -94,8 +110,8 @@ Advanced usages may require running commands directly with explicit arguments. T
 ```yaml
 hooks:
   post-start:
-  - exec:
-    exec_raw: [ls, -lR, /var/www/html]
+    - exec:
+      exec_raw: [ls, -lR, /var/www/html]
 ```
 
 ### `exec-host`: Execute a shell command on the host system
@@ -112,12 +128,25 @@ hooks:
 
 Value: string providing the Composer command to run.
 
+**Optional keys:**
+
+* `exec_raw`: Array of Composer command arguments (alternative to string command)
+
 Example:
 
 ```yaml
 hooks:
   post-start:
     - composer: config discard-changes true
+```
+
+Example with `exec_raw`:
+
+```yaml
+hooks:
+  post-start:
+    - composer:
+      exec_raw: [install, --no-dev]
 ```
 
 ## WordPress Example
@@ -173,6 +202,6 @@ hooks:
 
 ```yaml
 hooks:
-    post-start:
-      - composer: install
+  post-start:
+    - composer: install
 ```

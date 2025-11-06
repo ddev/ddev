@@ -324,7 +324,7 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 		return fmt.Errorf("failed to build PHP action environment: %v", err)
 	}
 
-	uidStr, _, _ := util.GetContainerUIDGid()
+	uidStr, _, _ := dockerutil.GetContainerUser()
 
 	config := &dockerContainer.Config{
 		Image:      image,
@@ -685,17 +685,34 @@ func GetAddonDdevWarningExitCode(action string) int {
 
 // ListAvailableAddons lists the add-ons that are listed on github
 func ListAvailableAddons() ([]*github.Repository, error) {
-	ctx, client := github.GetGitHubClient()
+	ctx, client := github.GetGitHubClient(true)
 	q := "topic:ddev-get fork:true archived:false"
 
 	opts := &github.SearchOptions{Sort: "updated", Order: "desc", ListOptions: github.ListOptions{PerPage: 200}}
 	var allRepos []*github.Repository
 	for {
 		repos, resp, err := client.Search.Repositories(ctx, q, opts)
+		var tokenErr error
 		if err != nil {
-			msg := fmt.Sprintf("Unable to get list of available services: %v", err)
+			if tokenErr = github.HasInvalidGitHubToken(resp); tokenErr != nil {
+				util.WarningOnce("Warning: %v, retrying without token", tokenErr)
+				ctx, client = github.GetGitHubClient(false)
+				reposNoAuth, respNoAuth, errNoAuth := client.Search.Repositories(ctx, q, opts)
+				if errNoAuth == nil {
+					repos = reposNoAuth
+					resp = respNoAuth
+					err = errNoAuth
+				}
+			}
+		}
+		if err != nil {
+			msg := err.Error()
 			if resp != nil {
-				msg = msg + fmt.Sprintf(" rateinfo=%v", resp.Rate)
+				rate := resp.Rate
+				if rate.Limit != 0 {
+					resetIn := time.Until(rate.Reset.Time).Round(time.Second)
+					msg += fmt.Sprintf("\nGitHub API Rate Limit: %d/%d remaining (resets in %s)", rate.Remaining, rate.Limit, resetIn)
+				}
 			}
 			return nil, fmt.Errorf("%s", msg)
 		}

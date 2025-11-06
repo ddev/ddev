@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/gob"
 	"encoding/json"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/stretchr/testify/require"
 )
 
 // TestDebugGobDecodeCmd tests the ddev utility gob-decode command

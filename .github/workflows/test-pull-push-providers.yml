@@ -1,0 +1,37 @@
+name: Test Pull/Push Providers
+on:
+  pull_request:
+    paths:
+      - "go.*"
+      - "pkg/**"
+      - "cmd/**"
+      - "Makefile"
+      - "vendor/**"
+      - ".github/workflows/**"
+      - "!.github/workflows/docs**"
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pull-push-providers:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      pull_push_providers: "true"
+      testargs: "-failfast -run 'Test.*(Push|Pull)'"
+      debug_enabled: ${{ inputs.debug_enabled || false }}

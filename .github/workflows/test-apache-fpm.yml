@@ -1,0 +1,36 @@
+name: Test Apache-FPM
+on:
+  pull_request:
+    paths:
+      - "go.*"
+      - "pkg/**"
+      - "cmd/**"
+      - "Makefile"
+      - "vendor/**"
+      - ".github/workflows/**"
+      - "!.github/workflows/docs**"
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  apache-fpm:
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      ddev_test_webserver_type: "apache-fpm"
+      #gotest_short: "5" # means use TYPO3 as the default codebase
+      debug_enabled: ${{ inputs.debug_enabled || false }}

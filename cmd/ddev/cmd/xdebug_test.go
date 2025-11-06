@@ -4,25 +4,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ddev/ddev/pkg/exec"
-	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestCmdXdebug tests the `ddev xdebug` command
 func TestCmdXdebug(t *testing.T) {
-	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() {
-		// 2022-03-16: On Docker Desktop 4.6.0, Mac M1, the `ddev xdebug status` fails to return after
-		// turning `ddev xdebug on`. Seems to be new problem with Docker Desktop 4.6.0, seems to be only
-		// on mac M1. Unable to recreate locally.
-		t.Skip("Skipping test on Mac M1 Docker Desktop")
-	}
-	assert := asrt.New(t)
-
 	globalconfig.DdevVerbose = true
 
 	// TestDdevXdebugEnabled has already tested enough versions, so limit it here.
@@ -37,64 +26,74 @@ func TestCmdXdebug(t *testing.T) {
 
 	t.Cleanup(func() {
 		_, err = exec.RunCommand(DdevBin, []string{"config", "--php-version", nodeps.PHPDefault, "--composer-version=\"\""})
-		assert.NoError(err)
+		require.NoError(t, err)
 		_, err = exec.RunCommand(DdevBin, []string{"xdebug", "off"})
-		assert.NoError(err)
+		require.NoError(t, err)
 		err := os.Chdir(pwd)
-		assert.NoError(err)
+		require.NoError(t, err)
 		_ = os.Setenv("DDEV_VERBOSE", "")
 		globalconfig.DdevVerbose = false
 	})
 
 	// An odd bug in v1.16.2 popped up only when Composer version was set, might as well set it here
 	_, err = exec.RunHostCommand(DdevBin, "config", "--composer-version=2")
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	for _, phpVersion := range phpVersions {
+		//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
+		if phpVersion == nodeps.PHP85 {
+			t.Log("Skipping xdebug tests for PHP8.5 until xdebug lands in PHP8.5")
+			continue
+		}
+
 		t.Logf("Testing Xdebug command in php%s", phpVersion)
 		_, err := exec.RunHostCommand(DdevBin, "config", "--php-version", phpVersion)
 		require.NoError(t, err)
 
 		_, err = exec.RunHostCommand(DdevBin, "restart")
-		assert.NoError(err, "Failed ddev start with php=%v: %v", phpVersion, err)
+		require.NoError(t, err, "Failed ddev start with php=%v: %v", phpVersion, err)
 
 		out, err := exec.RunHostCommand(DdevBin, "xdebug", "status")
-		assert.NoError(err, "Failed ddev xdebug status with php=%v: %v", phpVersion, err)
-		assert.Contains(string(out), "xdebug disabled")
+		require.NoError(t, err, "Failed ddev xdebug status with php=%v: %v", phpVersion, err)
+		require.Contains(t, string(out), "xdebug disabled")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "on")
-		assert.NoError(err)
-		assert.Contains(string(out), "Enabled xdebug")
+		require.NoError(t, err)
+		require.Contains(t, string(out), "Enabled xdebug")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "status")
-		assert.NoError(err)
-		assert.Contains(string(out), "xdebug enabled")
+		require.NoError(t, err)
+		require.Contains(t, string(out), "xdebug enabled")
+
+		out, err = exec.RunHostCommand(DdevBin, "xdebug", "info")
+		require.NoError(t, err)
+		require.Contains(t, string(out), "Step Debugger => ✔ enabled")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "off")
-		assert.NoError(err)
-		assert.Contains(string(out), "Disabled xdebug")
+		require.NoError(t, err)
+		require.Contains(t, string(out), "Disabled xdebug")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "status")
-		assert.NoError(err)
-		assert.Contains(string(out), "xdebug disabled")
+		require.NoError(t, err)
+		require.Contains(t, string(out), "xdebug disabled")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "toggle")
-		assert.NoError(err)
-		assert.Contains(string(out), "Enabled xdebug")
+		require.NoError(t, err)
+		require.Contains(t, string(out), "Enabled xdebug")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "status")
-		assert.NoError(err)
-		assert.Contains(string(out), "xdebug enabled")
+		require.NoError(t, err)
+		require.Contains(t, string(out), "xdebug enabled")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "toggle")
-		assert.NoError(err)
-		assert.Contains(string(out), "Disabled xdebug")
+		require.NoError(t, err)
+		require.Contains(t, string(out), "Disabled xdebug")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "status")
-		assert.NoError(err)
-		assert.Contains(string(out), "xdebug disabled")
+		require.NoError(t, err)
+		require.Contains(t, string(out), "xdebug disabled")
 
 		_, err = exec.RunHostCommand(DdevBin, "stop")
-		assert.NoError(err, "Failed ddev stop with php=%v: %v", phpVersion, err)
+		require.NoError(t, err, "Failed ddev stop with php=%v: %v", phpVersion, err)
 	}
 }

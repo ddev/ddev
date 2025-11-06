@@ -3,7 +3,6 @@ package output
 import (
 	"bytes"
 	"fmt"
-	"golang.org/x/term"
 	"io"
 	"os"
 	"sort"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/term"
 )
 
 // This file is minor adaptations from sirupsen/Logrus at f006c2a (v1.0.3)

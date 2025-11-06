@@ -113,7 +113,7 @@ The type and version of the database engine the project should use.
 
 | Type | Default       | Usage
 | -- |---------------| --
-| :octicons-file-directory-16: project | MariaDB 10.11 | Can be MariaDB 5.5–10.8, 10.11, 11.4, 11.8 and MySQL 5.5–8.0, 8.4, or PostgreSQL 9–17.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats. For very old database types see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/).
+| :octicons-file-directory-16: project | MariaDB 10.11 | Can be MariaDB 5.5–10.8, 10.11, 11.4, 11.8 and MySQL 5.5–8.0, 8.4, or PostgreSQL 9–18.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats. For very old database types see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/).
 
 ## `dbimage_extra_packages`
 
@@ -438,6 +438,16 @@ Example: `omit_containers: [db, ddev-ssh-agent]` starts the project without a `d
 !!!warning
     Omitting the `db` container will cause database-dependent DDEV features to be unstable.
 
+## `omit_project_name_by_default`
+
+Determines whether `ddev config` updates the `name` field in the `.ddev/config.yaml` by default.
+
+| Type | Default | Usage
+| -- |---------| --
+| :octicons-globe-16: global | `false`  | Can be `true` or `false`.
+
+When the `name` field is omitted in `.ddev/config.yaml`, DDEV gets the project name from the directory the project is in. If this option is set to `true`, `ddev config` will not update the `name` field unless you use `ddev config --project-name=<name>` to explicitly set the project name. People using `git worktree` often prefer to omit the project name so they can work on multiple projects at the same time in different worktrees.
+
 ## `override_config`
 
 Whether to override config values instead of merging.
@@ -655,6 +665,8 @@ Additional named sets of ports to [expose via `ddev-router`](../extend/customiza
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | `[]` | &zwnj;
+
+For common front-end development tools like Vite, see the [Vite Integration](../usage/vite.md) documentation for complete configuration examples.
 
 ## `webimage`
 

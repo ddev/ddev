@@ -10,7 +10,7 @@ services:
         BASE_IMAGE: $DDEV_DBIMAGE
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
-        gid: {{ if ne .DBType "postgres" }} {{ .GID }} {{ else }} "999" {{ end }}
+        gid: '{{ .GID }}'
     image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
     cap_add:
       - SYS_NICE
@@ -33,8 +33,7 @@ services:
       - ddev-global-cache:/mnt/ddev-global-cache
     restart: "no"
 
-    # The postgres image is set up for user 999, we won't try to change that.
-    user: {{ if ne .DBType "postgres" }} '$DDEV_UID:$DDEV_GID' {{ else }} "999:999" {{end}}
+    user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-db
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:{{ .DBPort }}"
@@ -299,6 +298,8 @@ services:
       - TZ={{ .Timezone }}
     depends_on:
       - db
+    x-ddev:
+      describe-url-port: "Launch: ddev xhgui"
   {{- end }}
 networks:
   ddev_default:
@@ -306,25 +307,15 @@ networks:
     external: true
   default:
     name: ${COMPOSE_PROJECT_NAME}_default
-    {{ if .IsGitpod }}{{/* see https://github.com/ddev/ddev/issues/3766 */}}
-    driver_opts:
-      com.docker.network.driver.mtu: 1440
-    {{ end }}
     labels:
       com.ddev.platform: ddev
 
 volumes:
-  {{if and (not .OmitDB) (ne .DBType "postgres") }}
+  {{ if not .OmitDB }}
   database:
-    name: "{{ .MariaDBVolumeName}}"
+    name: "{{ if eq .DBType "postgres" }}{{ .PostgresVolumeName }}{{ else }}{{ .MariaDBVolumeName }}{{ end }}"
     external: true
-  {{ end }} {{/* end if and (not .OmitDB) (ne .DBType postgres) */}}
-
-  {{if and (not .OmitDB) ( eq .DBType "postgres") }}
-  database:
-    name: "{{ .PostgresVolumeName }}"
-    external: true
-  {{ end }} {{/* end if and (not .OmitDB) ( ne .DBType postgres) */}}
+  {{ end }} {{/* end if not .OmitDB */}}
 
   {{ if not .OmitSSHAgent }}
   ddev-ssh-agent_socket_dir:

@@ -22,7 +22,7 @@ func XHGuiSetup(app *DdevApp) error {
 	GRANT ALL PRIVILEGES ON DATABASE xhgui TO db;" | psql -q -d postgres
 `
 	case nodeps.MySQL, nodeps.MariaDB:
-		dbCreationCommand = `mysql -e "CREATE DATABASE IF NOT EXISTS xhgui; GRANT ALL ON xhgui.* to 'db'@'%'; GRANT ALL ON xhgui.* TO 'db'@'%';"`
+		dbCreationCommand = `MYSQL_CMD=mysql; if command -v mariadb >/dev/null 2>&1; then MYSQL_CMD=mariadb; fi; ${MYSQL_CMD} -e "CREATE DATABASE IF NOT EXISTS xhgui; GRANT ALL ON xhgui.* TO 'db'@'%';"`
 	}
 
 	_, _, err := app.Exec(&ExecOpts{
@@ -37,17 +37,18 @@ func XHGuiSetup(app *DdevApp) error {
 		return err
 	}
 
-	// Sync after enabling xhprof to ensure code files are available
-	if err = app.MutagenSyncFlush(); err != nil {
-		return err
-	}
-
 	if !IsXHGuiContainerRunning(app) {
 		err = app.StartOptionalProfiles([]string{"xhgui"})
 		if err != nil {
 			return err
 		}
 	}
+
+	// Sync after enabling xhprof to ensure code files are available
+	if err = app.MutagenSyncFlush(); err != nil {
+		return err
+	}
+
 	return nil
 }
 

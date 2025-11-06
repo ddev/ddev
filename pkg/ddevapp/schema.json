@@ -10,17 +10,96 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "exec": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "Command to execute in a container"
+              },
+              {
+                "type": "null",
+                "description": "Use exec_raw for command array"
+              }
+            ]
           },
           "exec-host": {
-            "type": "string"
+            "type": "string",
+            "description": "Command to execute on the host"
           },
           "composer": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "Composer command to execute in the web container"
+              },
+              {
+                "type": "null",
+                "description": "Use exec_raw for command array"
+              }
+            ]
+          },
+          "service": {
+            "type": "string",
+            "description": "Service to run the exec command in (defaults to 'web')"
+          },
+          "user": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "description": "User to run the exec command as (username or UID)"
+          },
+          "exec_raw": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Raw command arguments array (used with exec or composer)"
           }
-        }
+        },
+        "oneOf": [
+          {
+            "required": ["exec"],
+            "properties": {
+              "exec": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "required": ["exec", "exec_raw"],
+            "properties": {
+              "exec": {
+                "type": "null"
+              }
+            }
+          },
+          {
+            "required": ["exec-host"]
+          },
+          {
+            "required": ["composer"],
+            "properties": {
+              "composer": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "required": ["composer", "exec_raw"],
+            "properties": {
+              "composer": {
+                "type": "null"
+              }
+            }
+          }
+        ]
       }
     }
   },
@@ -254,6 +333,12 @@
         "post-push": {
           "$ref": "#/definitions/DdevTask"
         },
+        "pre-share": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-share": {
+          "$ref": "#/definitions/DdevTask"
+        },
         "pre-snapshot": {
           "$ref": "#/definitions/DdevTask"
         },
@@ -361,7 +446,8 @@
         "8.1",
         "8.2",
         "8.3",
-        "8.4"
+        "8.4",
+        "8.5"
       ]
     },
     "project_tld": {

@@ -1,8 +1,9 @@
 package environment
 
 import (
-	"github.com/ddev/ddev/pkg/nodeps"
 	"runtime"
+
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 const (
@@ -11,7 +12,6 @@ const (
 	DDEVEnvironmentLinux        = "linux"
 	DDEVEnvironmentWSL2         = "wsl2"
 	DDEVEnvironmentWSL2Mirrored = "wsl2-mirrored"
-	DDEVEnvironmentGitpod       = "gitpod"
 	DDEVEnvironmentCodespaces   = "codespaces"
 )
 
@@ -21,8 +21,6 @@ func GetDDEVEnvironment() string {
 	switch {
 	case nodeps.IsCodespaces():
 		e = DDEVEnvironmentCodespaces
-	case nodeps.IsGitpod():
-		e = DDEVEnvironmentGitpod
 	case nodeps.IsWSL2MirroredMode():
 		e = DDEVEnvironmentWSL2Mirrored
 	case nodeps.IsWSL2():

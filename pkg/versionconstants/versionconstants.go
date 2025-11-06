@@ -20,31 +20,31 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20250824_akibaat_buildx_arm_builder" // Note that this can be overridden by make
+var WebTag = "v1.24.10" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20250824_akibaat_buildx_arm_builder"
+var BaseDBTag = "v1.24.10"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "20250824_akibaat_buildx_arm_builder"
+var TraefikRouterTag = "v1.24.10"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "20250824_akibaat_buildx_arm_builder"
+var SSHAuthTag = "v1.24.10"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "20250824_akibaat_buildx_arm_builder"
+var XhguiTag = "v1.24.10"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"
@@ -61,7 +61,7 @@ const RequiredMutagenVersion = "0.18.1"
 // RequiredDockerComposeVersionDefault defines the required version of docker-compose
 // Keep this in sync with github.com/compose-spec/compose-go/v2 in go.mod,
 // matching the version used in https://github.com/docker/compose/blob/main/go.mod for the same tag
-const RequiredDockerComposeVersionDefault = "v2.39.3"
+const RequiredDockerComposeVersionDefault = "v2.40.3"
 
 // ---
 // Fallback version derivation for developer builds not using the Makefile

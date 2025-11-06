@@ -87,11 +87,12 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "mailpit-http-port=8025")
 	assert.Contains(out, "mailpit-https-port=8026")
 	assert.Contains(out, "traefik-monitor-port=10999")
+	assert.Contains(out, "omit-project-name-by-default=false")
 
 	// Update a config
 	// Don't include no-bind-mounts because global testing
 	// will turn it on and break this
-	args = []string{"config", "global", "--project-tld=ddev.test", "--instrumentation-opt-in=false", "--omit-containers=ddev-ssh-agent", "--performance-mode=mutagen", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--table-style=bright", "--simple-formatting=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=some+val"`, `--xdebug-ide-location=container`, `--router-http-port=8081`, `--router-https-port=8882`, "--mailpit-http-port=18025", "--mailpit-https-port=10826", `--traefik-monitor-port=11999`}
+	args = []string{"config", "global", "--project-tld=ddev.test", "--instrumentation-opt-in=false", "--omit-containers=ddev-ssh-agent", "--performance-mode=mutagen", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--table-style=bright", "--simple-formatting=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=some+val"`, `--xdebug-ide-location=container`, `--router-http-port=8081`, `--router-https-port=8882`, "--mailpit-http-port=18025", "--mailpit-https-port=10826", `--omit-project-name-by-default=true`, `--traefik-monitor-port=11999`}
 	out, err = exec.RunCommand(DdevBin, args)
 	require.NoError(t, err)
 	assert.NoError(err, "error running ddev config global; output=%s", out)
@@ -102,6 +103,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "internet-detection-timeout-ms=850")
 	assert.Contains(out, "use-letsencrypt=false")
 	assert.Contains(out, "letsencrypt-email=\n")
+	assert.Contains(out, "omit-project-name-by-default=true\n")
 	assert.Contains(out, "table-style=bright")
 	assert.Contains(out, "simple-formatting=true")
 	assert.Contains(out, "use-hardened-images=true")

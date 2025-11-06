@@ -58,9 +58,6 @@ func GetHostDockerInternal() *HostDockerInternal {
 			ipAddress = "192.168.5.2"
 			message = "IsColima"
 
-		case nodeps.IsGitpod():
-			message = "IsGitpod uses 'host-gateway' in extra_hosts"
-
 		case nodeps.IsCodespaces():
 			message = "IsCodespaces uses 'host-gateway' in extra_hosts"
 

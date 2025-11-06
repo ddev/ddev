@@ -8,21 +8,16 @@ import (
 	"math/rand"
 	"os"
 	osexec "os/exec"
-	"os/user"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/jedib0t/go-pretty/v6/text"
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 )
 
 // outputOnceCache is a cache to keep track of messages that have already been shown
@@ -118,28 +113,22 @@ func Success(format string, a ...interface{}) {
 
 // Debug Output controlled by DDEV_DEBUG environment variable
 func Debug(format string, a ...interface{}) {
-	if globalconfig.DdevDebug {
-		n := time.Now()
-		s := fmt.Sprintf(format, a...)
-		if !output.JSONOutput {
-			output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
-		} else {
-			output.UserOut.Debugf("%s", s)
-		}
+	if !globalconfig.DdevDebug || output.JSONOutput {
+		return
 	}
+	n := time.Now()
+	s := fmt.Sprintf(format, a...)
+	output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
 }
 
 // Verbose Output controlled by DDEV_VERBOSE environment variable
 func Verbose(format string, a ...interface{}) {
-	if globalconfig.DdevVerbose {
-		n := time.Now()
-		s := fmt.Sprintf(format, a...)
-		if !output.JSONOutput {
-			output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
-		} else {
-			output.UserOut.Debug(s)
-		}
+	if !globalconfig.DdevVerbose || output.JSONOutput {
+		return
 	}
+	n := time.Now()
+	s := fmt.Sprintf(format, a...)
+	output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
 }
 
 // ShowDots displays dots one per second until done gets true
@@ -221,53 +210,6 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 		result = append(result, v)
 	}
 	return result
-}
-
-// GetContainerUIDGid returns the uid and gid (and string forms) to be used running most containers
-func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
-	curUser, err := user.Current()
-	if err != nil {
-		Failed("Unable to determine username and related UID, etc. Please at least set $USER environment variable: %v", err)
-	}
-	uidStr = curUser.Uid
-	gidStr = curUser.Gid
-	username = curUser.Username
-	// Remove at least spaces that aren't allowed in Linux usernames and can appear in Windows
-	// Example problem usernames from https://stackoverflow.com/questions/64933879/docker-ddev-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xe9-in-positio/64934264#64934264
-	// "André Kraus", "Mück"
-	// With docker-compose 1.29.2 you can't have a proper fully-qualified user pathname either
-	// so end up with trouble based on that (not quoted correctly)
-	// But for the context path it's possible to change the User home directory with
-	// https://superuser.com/questions/890812/how-to-rename-the-user-folder-in-windows-10/1346983#1346983
-
-	// Normalize username per https://stackoverflow.com/a/65981868/215713
-	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-	username, _, _ = transform.String(t, username)
-
-	username = strings.ReplaceAll(username, " ", "")
-	username = strings.ToLower(username)
-	username = strings.ReplaceAll(username, "(", "")
-	username = strings.ReplaceAll(username, ")", "")
-
-	// If we have a numeric username it's going to create havoc, so
-	// change it into "a" + number
-	// Example in https://github.com/ddev/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
-	if !nodeps.IsLetter(string(username[0])) {
-		username = "a" + username
-	}
-
-	// Windows usernames may have a \ to separate domain\user - get the user
-	parts := strings.Split(username, `\`)
-	username = parts[len(parts)-1]
-
-	//// Windows userids are non-numeric,
-	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
-	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.
-	if nodeps.IsWindows() {
-		uidStr = "1000"
-		gidStr = "1000"
-	}
-	return uidStr, gidStr, username
 }
 
 // IsCommandAvailable uses shell's "command" to find out if a command is available

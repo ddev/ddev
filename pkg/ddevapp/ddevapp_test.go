@@ -985,6 +985,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
+		//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
+		if v == nodeps.PHP85 {
+			t.Log("Skipping xdebug tests for PHP8.5 until xdebug lands in PHP8.5")
+			continue
+		}
 		t.Logf("Beginning Xdebug checks with Xdebug php%s\n", v)
 
 		err = app.Restart()
@@ -1019,13 +1024,14 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Errorf("Aborting Xdebug check for php%s: %v", v, err)
 			continue
 		}
-		// PHP 7.2 through 8.4 get Xdebug 3.0+
-		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81, nodeps.PHP82, nodeps.PHP83, nodeps.PHP84}, app.PHPVersion) {
-			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
-			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
-		} else {
+
+		// Ancient PHP versions get Xdebug 2
+		if nodeps.ArrayContainsString([]string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71}, app.PHPVersion) {
 			assert.Contains(stdout, "xdebug support => enabled", "xdebug is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
+		} else { // But most get xdebug 3+
+			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
+			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
 		}
 
 		// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
@@ -3189,6 +3195,13 @@ func TestDdevDescribe(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	// Copy testdata docker-compose file to test x-ddev.describe functionality
+	testdataDir := filepath.Join(origDir, "testdata", "TestDdevDescribe")
+	composeFile := filepath.Join(testdataDir, "docker-compose.testservice.yaml")
+	destFile := filepath.Join(app.AppRoot, ".ddev", "docker-compose.testservice.yaml")
+	err = fileutil.CopyFile(composeFile, destFile)
+	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
@@ -3197,6 +3210,8 @@ func TestDdevDescribe(t *testing.T) {
 		app.Hooks = nil
 		err = app.WriteConfig()
 		assert.NoError(err)
+		// Clean up the copied docker-compose file
+		_ = os.Remove(destFile)
 	})
 	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
@@ -3204,33 +3219,69 @@ func TestDdevDescribe(t *testing.T) {
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	startErr := app.StartAndWait(0)
+	// Test both stopped and running states
+	for _, state := range []struct {
+		name    string
+		running bool
+	}{
+		{"stopped", false},
+		{"running", true},
+	} {
+		t.Run(state.name, func(t *testing.T) {
+			if state.running {
+				startErr := app.StartAndWait(0)
 
-	// If we have a problem starting, get the container logs and output.
-	if startErr != nil {
-		out, logsErr := app.CaptureLogs("web", false, "")
-		assert.NoError(logsErr)
+				// If we have a problem starting, get the container logs and output.
+				if startErr != nil {
+					out, logsErr := app.CaptureLogs("web", false, "")
+					assert.NoError(logsErr)
 
-		healthcheck, inspectErr := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
-		assert.NoError(inspectErr)
+					healthcheck, inspectErr := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
+					assert.NoError(inspectErr)
 
-		t.Fatalf("app.StartAndWait(%s) failed: %v, \nweb container healthcheck='%s', \n== web container logs=\n%s\n== END web container logs ==", site.Name, err, healthcheck, out)
+					t.Fatalf("app.StartAndWait(%s) failed: %v, \nweb container healthcheck='%s', \n== web container logs=\n%s\n== END web container logs ==", site.Name, err, healthcheck, out)
+				}
+			} else {
+				err = app.Stop(false, false)
+				assert.NoError(err)
+				// Ensure we have fresh compose config for stopped state
+				_ = app.DockerEnv()
+				err = app.WriteDockerComposeYAML()
+				require.NoError(t, err)
+			}
+
+			desc, err := app.Describe(false)
+			assert.NoError(err)
+			if state.running {
+				assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
+			} else {
+				assert.EqualValues(ddevapp.SiteStopped, desc["status"], "")
+			}
+			assert.EqualValues(app.GetName(), desc["name"])
+			assert.EqualValues(fileutil.ShortHomeJoin(app.GetAppRoot()), desc["shortroot"])
+			assert.EqualValues(app.GetAppRoot(), desc["approot"])
+			assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
+
+			// Verify x-ddev.describe functionality
+			services, ok := desc["services"].(map[string]map[string]interface{})
+			require.True(t, ok, "services should be a map[string]map[string]interface{}")
+			testservice, ok := services["testservice"]
+			require.True(t, ok, "testservice should exist in services")
+			describeValue, ok := testservice["describe-url-port"].(string)
+			require.True(t, ok, "describe-url-port field should exist in testservice")
+			assert.Equal("url-port Test service description for testservice", describeValue, "describe-url-port value should match x-ddev.describe from docker-compose file")
+			describeValue, ok = testservice["describe-info"].(string)
+			require.True(t, ok, "describe-info field should exist in testservice")
+			assert.Equal("info test info for testservice", describeValue, "info Test service description for busybox2")
+
+			assert.FileExists("hello-pre-describe-" + app.Name)
+			assert.FileExists("hello-post-describe-" + app.Name)
+			err = os.Remove("hello-pre-describe-" + app.Name)
+			assert.NoError(err)
+			err = os.Remove("hello-post-describe-" + app.Name)
+			assert.NoError(err)
+		})
 	}
-
-	desc, err := app.Describe(false)
-	assert.NoError(err)
-	assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
-	assert.EqualValues(app.GetName(), desc["name"])
-	assert.EqualValues(fileutil.ShortHomeJoin(app.GetAppRoot()), desc["shortroot"])
-	assert.EqualValues(app.GetAppRoot(), desc["approot"])
-	assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
-
-	assert.FileExists("hello-pre-describe-" + app.Name)
-	assert.FileExists("hello-post-describe-" + app.Name)
-	err = os.Remove("hello-pre-describe-" + app.Name)
-	assert.NoError(err)
-	err = os.Remove("hello-post-describe-" + app.Name)
-	assert.NoError(err)
 }
 
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
@@ -3504,192 +3555,6 @@ func TestHttpsRedirection(t *testing.T) {
 				}
 			}
 		}
-	}
-}
-
-// TestMultipleComposeFiles checks to see if a set of docker-compose files gets
-// properly loaded in the right order, with .ddev/.ddev-docker-compose*yaml first and
-// with docker-compose.override.yaml last.
-func TestMultipleComposeFiles(t *testing.T) {
-	// Set up tests and give ourselves a working directory.
-	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
-
-	testDir := testcommon.CreateTmpDir(t.Name())
-	//_ = os.Chdir(testDir)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
-
-	err := fileutil.CopyDir(filepath.Join(pwd, "testdata", t.Name(), ".ddev"), filepath.Join(testDir, ".ddev"))
-	assert.NoError(err)
-
-	// Make sure that valid yaml files get properly loaded in the proper order
-	app, err := ddevapp.NewApp(testDir, true)
-	assert.NoError(err)
-	_ = app.DockerEnv()
-
-	//nolint: errcheck
-	defer app.Stop(true, false)
-
-	err = app.WriteConfig()
-	assert.NoError(err)
-	_, err = app.ReadConfig(true)
-	require.NoError(t, err)
-	err = app.WriteDockerComposeYAML()
-	require.NoError(t, err)
-
-	app, err = ddevapp.NewApp(testDir, true)
-	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
-
-	desc, err := app.Describe(false)
-	assert.NoError(err)
-	_ = desc
-
-	files, err := app.ComposeFiles()
-	assert.NoError(err)
-	require.NotEmpty(t, files)
-	assert.Equal(4, len(files))
-	require.Equal(t, app.GetConfigPath(".ddev-docker-compose-base.yaml"), files[0])
-	require.Equal(t, app.GetConfigPath("docker-compose.override.yaml"), files[len(files)-1])
-
-	require.NotEmpty(t, app.ComposeYaml)
-	require.NotEmpty(t, app.ComposeYaml.Services)
-	require.NotEmpty(t, app.ComposeYaml.Networks)
-	require.NotEmpty(t, app.ComposeYaml.Volumes)
-
-	webService, ok := app.ComposeYaml.Services["web"]
-	require.True(t, ok, "web service not found in app.ComposeYaml.Services")
-	// Verify that the env var DUMMY_BASE got set by docker-compose.override.yaml
-	// The docker-compose.override should have won with the value of DUMMY_BASE
-	require.NotNil(t, webService.Environment["DUMMY_BASE"])
-	assert.Equal("override", *webService.Environment["DUMMY_BASE"])
-	// But each of the DUMMY_COMPOSE_ONE/TWO/OVERRIDE which are unique
-	// should come through fine.
-	require.NotNil(t, webService.Environment["DUMMY_COMPOSE_ONE"])
-	assert.Equal("1", *webService.Environment["DUMMY_COMPOSE_ONE"])
-	require.NotNil(t, webService.Environment["DUMMY_COMPOSE_TWO"])
-	assert.Equal("2", *webService.Environment["DUMMY_COMPOSE_TWO"])
-	require.NotNil(t, webService.Environment["DUMMY_COMPOSE_OVERRIDE"])
-	assert.Equal("override", *webService.Environment["DUMMY_COMPOSE_OVERRIDE"])
-
-	_, err = app.ComposeFiles()
-	assert.NoError(err)
-}
-
-// TestFixupComposeYaml verifies that the fixupComposeYaml function properly applies
-// required DDEV configurations to all services in the compose project.
-func TestFixupComposeYaml(t *testing.T) {
-	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
-
-	testDir := testcommon.CreateTmpDir(t.Name())
-
-	t.Cleanup(func() {
-		testcommon.CleanupDir(testDir)
-	})
-
-	defer testcommon.Chdir(testDir)()
-
-	err := fileutil.CopyDir(filepath.Join(pwd, "testdata", t.Name(), ".ddev"), filepath.Join(testDir, ".ddev"))
-	require.NoError(t, err)
-
-	app, err := ddevapp.NewApp(testDir, true)
-	require.NoError(t, err)
-	_ = app.DockerEnv()
-
-	t.Cleanup(func() {
-		err := app.Stop(true, false)
-		assert.NoError(err)
-	})
-
-	err = app.WriteConfig()
-	require.NoError(t, err)
-
-	_, err = app.ReadConfig(true)
-	require.NoError(t, err)
-
-	err = app.WriteDockerComposeYAML()
-	require.NoError(t, err)
-
-	app, err = ddevapp.NewApp(testDir, true)
-	require.NoError(t, err)
-
-	require.NotEmpty(t, app.ComposeYaml)
-	require.NotEmpty(t, app.ComposeYaml.Services)
-
-	expectedServices := []string{"web", "db", "dummy1"}
-	for _, serviceName := range expectedServices {
-		_, ok := app.ComposeYaml.Services[serviceName]
-		require.True(t, ok, "%s service not found in app.ComposeYaml.Services", serviceName)
-	}
-
-	webService := app.ComposeYaml.Services["web"]
-	require.Nil(t, webService.Networks["ddev_default"])
-	require.NotNil(t, webService.Networks["default"])
-	assert.Equal(1, webService.Networks["default"].Priority)
-	require.NotNil(t, webService.Networks["dummy"])
-	assert.Equal(2, webService.Networks["dummy"].Priority)
-
-	hostDockerInternal := dockerutil.GetHostDockerInternal()
-
-	for serviceName, service := range app.ComposeYaml.Services {
-		t.Run("service_"+serviceName, func(t *testing.T) {
-			require.Contains(t, service.Networks, "ddev_default", "service %s missing ddev_default network", serviceName)
-			require.Contains(t, service.Networks, "default", "service %s missing default network", serviceName)
-
-			require.NotNil(t, service.Environment["HOST_DOCKER_INTERNAL_IP"], "service %s missing HOST_DOCKER_INTERNAL_IP", serviceName)
-			require.Equal(t, hostDockerInternal.IPAddress, *service.Environment["HOST_DOCKER_INTERNAL_IP"], "service %s HOST_DOCKER_INTERNAL_IP value incorrect", serviceName)
-
-			if hostDockerInternal.ExtraHost != "" {
-				require.NotNil(t, service.ExtraHosts, "service %s missing ExtraHosts", serviceName)
-				require.Contains(t, service.ExtraHosts, "host.docker.internal", "service %s missing host.docker.internal in ExtraHosts", serviceName)
-				require.Contains(t, service.ExtraHosts["host.docker.internal"], hostDockerInternal.ExtraHost, "service %s host.docker.internal should contain %s", serviceName, hostDockerInternal.ExtraHost)
-			}
-
-			for portIndex, port := range service.Ports {
-				require.Equal(t, "127.0.0.1", port.HostIP, "service %s port %d should have HostIP set to 127.0.0.1", serviceName, portIndex)
-			}
-		})
-	}
-
-	hasPort12345 := false
-	for _, port := range webService.Ports {
-		if port.Target == 12345 {
-			hasPort12345 = true
-			break
-		}
-	}
-	require.True(t, hasPort12345, "no port with Target 12345 found in web service")
-
-	// Test network configurations
-	networkTests := []struct {
-		key      string
-		name     string
-		external bool
-		label    string
-	}{
-		{"ddev_default", "ddev_default", true, ""},
-		{"default", app.GetDefaultNetworkName(), false, "com.ddev.platform"},
-		{"dummy", "dummy_name", false, "com.ddev.platform"},
-	}
-
-	require.Len(t, app.ComposeYaml.Networks, 3)
-
-	for _, networkTest := range networkTests {
-		t.Run("network_"+networkTest.key, func(t *testing.T) {
-			network, exists := app.ComposeYaml.Networks[networkTest.key]
-			require.True(t, exists, "network %s not found", networkTest.key)
-			assert.Equal(networkTest.name, network.Name, "unexpected name for %s", networkTest.key)
-			assert.Equal(networkTest.external, bool(network.External), "unexpected external for %s", networkTest.key)
-
-			if networkTest.label != "" {
-				require.NotNil(t, network.Labels, "labels missing for %s", networkTest.key)
-				_, hasLabel := network.Labels[networkTest.label]
-				assert.True(hasLabel, "%s label missing for %s", networkTest.label, networkTest.key)
-			}
-		})
 	}
 }
 
@@ -4679,7 +4544,7 @@ func TestEnvironmentVariables(t *testing.T) {
 
 	primaryURL := app.GetPrimaryURL()
 	scheme, primaryURLWithoutPort, primaryURLPort := nodeps.ParseURL(primaryURL)
-	uidStr, gidStr, username := util.GetContainerUIDGid()
+	uidStr, gidStr, username := dockerutil.GetContainerUser()
 
 	// This set of webContainerExpectations should be maintained to match the list in the docs
 	webContainerExpectations := map[string]string{
