@@ -13,114 +13,122 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestCmdList runs the binary with "ddev list" and checks the results
 func TestCmdList(t *testing.T) {
-	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
 
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
 
+	// Create temporary XDG_CONFIG_HOME for isolated testing
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
+	})
+
+	// Set SimpleFormatting in the isolated config
 	globalconfig.DdevGlobalConfig.SimpleFormatting = true
 	_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 
-	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-		globalconfig.DdevGlobalConfig.SimpleFormatting = false
-		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
-	})
-	// This gratuitous ddev start -a repopulates the ~/.ddev/project_list.yaml
-	// project list, which has been damaged by other tests which use
-	// direct app techniques.
+	// Clear project_list.yaml to ensure only TestSites projects are managed
+	// This prevents stale Test* projects from other test runs from interfering
+	err = globalconfig.WriteProjectList(map[string]*globalconfig.ProjectInfo{})
+	require.NoError(t, err)
+
+	// This gratuitous ddev start -a repopulates the project_list.yaml
+	// with only the current TestSites projects
 	_, err = exec.RunHostCommand(DdevBin, "start", "-a", "-y")
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Execute "ddev list" and harvest plain text output.
 	out, err := exec.RunHostCommand(DdevBin, "list", "-W")
-	assert.NoError(err, "error running ddev list: %v output=%s", out)
+	require.NoError(t, err, "error running ddev list: %v output=%s", out)
 
 	// Execute "ddev list -j" and harvest the json output
 	jsonOut, err := exec.RunHostCommand(DdevBin, "list", "-j")
-	assert.NoError(err, "error running ddev list -j: %v, output=%s", jsonOut)
+	require.NoError(t, err, "error running ddev list -j: %v, output=%s", jsonOut)
 
 	siteList := getTestingSitesFromList(t, jsonOut)
-	assert.Equal(len(TestSites), len(siteList), "didn't find expected number of sites in list: %v", siteList)
+	require.Equal(t, len(TestSites), len(siteList), "didn't find expected number of sites in list: %v", siteList)
 
 	for _, v := range TestSites {
 		app, err := ddevapp.GetActiveApp(v.Name)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		// Look for standard items in the regular ddev list output
-		assert.Contains(string(out), v.Name)
+		require.Contains(t, string(out), v.Name)
 		testURL := app.GetHTTPSURL()
 		if globalconfig.GetCAROOT() == "" {
 			testURL = app.GetHTTPURL()
 		}
-		assert.Contains(string(out), testURL)
-		assert.Contains(string(out), app.GetType())
-		assert.Contains(string(out), fileutil.ShortHomeJoin(app.GetAppRoot()))
+		require.Contains(t, string(out), testURL)
+		require.Contains(t, string(out), app.GetType())
+		require.Contains(t, string(out), fileutil.ShortHomeJoin(app.GetAppRoot()))
 
 		// Look through list results in json for this site.
 		found := false
 		for _, listitem := range siteList {
 			item, ok := listitem.(map[string]interface{})
-			assert.True(ok)
+			require.True(t, ok)
 			// Check to see that we can find our item
 			if item["name"] == v.Name {
 				found = true
-				assert.Equal(app.GetHTTPURL(), item["httpurl"])
-				assert.Equal(app.GetHTTPSURL(), item["httpsurl"])
-				assert.Equal(app.Name, item["name"])
-				assert.Equal(app.GetType(), item["type"])
-				assert.EqualValues(fileutil.ShortHomeJoin(app.GetAppRoot()), item["shortroot"])
-				assert.EqualValues(app.GetAppRoot(), item["approot"])
+				require.Equal(t, app.GetHTTPURL(), item["httpurl"])
+				require.Equal(t, app.GetHTTPSURL(), item["httpsurl"])
+				require.Equal(t, app.Name, item["name"])
+				require.Equal(t, app.GetType(), item["type"])
+				require.EqualValues(t, fileutil.ShortHomeJoin(app.GetAppRoot()), item["shortroot"])
+				require.EqualValues(t, app.GetAppRoot(), item["approot"])
 				break
 			}
 		}
-		assert.True(found, "Failed to find project %s in ddev list -j", v.Name)
+		require.True(t, found, "Failed to find project %s in ddev list -j", v.Name)
 	}
 
 	// Now filter the list by the type of the first running test app
 	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-j", "--type", TestSites[0].Type)
-	assert.NoError(err, "error running ddev list: %v output=%s", err, out)
+	require.NoError(t, err, "error running ddev list: %v output=%s", err, out)
 	siteList = getTestingSitesFromList(t, jsonOut)
-	assert.GreaterOrEqual(len(siteList), 1)
+	require.GreaterOrEqual(t, len(siteList), 1)
 
 	// Now filter the list by a not existing type
 	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-j", "--type", "not-existing-type")
-	assert.NoError(err, "error running ddev list: %v output=%s", err, out)
+	require.NoError(t, err, "error running ddev list: %v output=%s", err, out)
 	siteList = getTestingSitesFromList(t, jsonOut)
-	assert.Equal(0, len(siteList))
+	require.Equal(t, 0, len(siteList))
 
 	// Stop the first app
 	out, err = exec.RunHostCommand(DdevBin, "stop", TestSites[0].Name)
-	assert.NoError(err, "error running ddev stop %v: %v output=%s", TestSites[0].Name, err, out)
+	require.NoError(t, err, "error running ddev stop %v: %v output=%s", TestSites[0].Name, err, out)
 
 	// Execute "ddev list" and harvest json output.
 	// Now there should be one less active project in list
 	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-jA", "-W")
-	assert.NoError(err, "error running ddev list: %v output=%s", err, jsonOut)
+	require.NoError(t, err, "error running ddev list: %v output=%s", err, jsonOut)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
-	assert.Equal(len(TestSites)-1, len(siteList))
+	require.Equal(t, len(TestSites)-1, len(siteList))
 
 	// Now list without -A, make sure we show all projects
 	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-j")
-	assert.NoError(err, "error running ddev list: %v output=%s", err, out)
+	require.NoError(t, err, "error running ddev list: %v output=%s", err, out)
 	siteList = getTestingSitesFromList(t, jsonOut)
-	assert.Equal(len(TestSites), len(siteList))
+	require.Equal(t, len(TestSites), len(siteList))
 
 	// Leave firstApp running for other tests
 	out, err = exec.RunHostCommand(DdevBin, "start", "-y", TestSites[0].Name)
-	assert.NoError(err, "error running ddev start: %v output=%s", err, out)
+	require.NoError(t, err, "error running ddev start: %v output=%s", err, out)
 }
 
 // getSitesFromList takes the json output of ddev list -j
