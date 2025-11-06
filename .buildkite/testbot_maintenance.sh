@@ -15,9 +15,6 @@ if ! command -v ngrok >/dev/null; then
     darwin)
         brew install homebrew/cask/ngrok
         ;;
-    windows)
-        (yes | choco install -y ngrok) || true
-        ;;
     esac
 fi
 
@@ -26,9 +23,6 @@ if ! command -v cloudflared >/dev/null; then
     case $os in
     darwin)
         brew install cloudflared
-        ;;
-    windows)
-        (yes | choco install -y cloudflared) || true
         ;;
     esac
 fi
