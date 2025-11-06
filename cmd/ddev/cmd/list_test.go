@@ -24,10 +24,6 @@ func TestCmdList(t *testing.T) {
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
 
-	site := TestSites[0]
-	err := os.Chdir(site.Dir)
-	require.NoError(t, err)
-
 	// Create temporary XDG_CONFIG_HOME for isolated testing
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
@@ -43,13 +39,21 @@ func TestCmdList(t *testing.T) {
 
 	// Clear project_list.yaml to ensure only TestSites projects are managed
 	// This prevents stale Test* projects from other test runs from interfering
-	err = globalconfig.WriteProjectList(map[string]*globalconfig.ProjectInfo{})
+	err := globalconfig.WriteProjectList(map[string]*globalconfig.ProjectInfo{})
 	require.NoError(t, err)
 
-	// This gratuitous ddev start -a repopulates the project_list.yaml
-	// with only the current TestSites projects
-	_, err = exec.RunHostCommand(DdevBin, "start", "-a", "-y")
+	// If there were projects running, make sure they are stopped
+	_, err = exec.RunHostCommand(DdevBin, "poweroff")
 	require.NoError(t, err)
+
+	// Repopulate TestSites with running projects
+	for _, v := range TestSites {
+		err := os.Chdir(v.Dir)
+		require.NoError(t, err)
+		_, err = exec.RunHostCommand(DdevBin, "start")
+		require.NoError(t, err)
+	}
+	_ = os.Chdir(TestSites[0].Dir)
 
 	// Execute "ddev list" and harvest plain text output.
 	out, err := exec.RunHostCommand(DdevBin, "list", "-W")
