@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,6 +15,16 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
+
+// extractTunnelURL extracts tunnel URL from output
+func extractTunnelURL(output string) string {
+	re := regexp.MustCompile(`Tunnel URL:\s*(https://[^\s\x1b]+)`)
+	matches := re.FindStringSubmatch(output)
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	return ""
+}
 
 // TestShareCmdNgrok tests `ddev share` with ngrok provider
 func TestShareCmdNgrok(t *testing.T) {
