@@ -90,8 +90,8 @@ func TestPantheonPull(t *testing.T) {
 	err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
-	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_SITE=%s", pantheonPullTestSite))
-	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_ENVIRONMENT=%s", pantheonPullTestEnvironment))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("DDEV_PANTHEON_SITE=%s", pantheonPullTestSite))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("DDEV_PANTHEON_ENVIRONMENT=%s", pantheonPullTestEnvironment))
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -188,8 +188,8 @@ func TestPantheonPush(t *testing.T) {
 	err = os.WriteFile(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files", fName), fContent, 0644)
 	require.NoError(t, err)
 
-	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_SITE=%s", pantheonPushTestSite))
-	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("PANTHEON_ENVIRONMENT=%s", pantheonPushTestEnvironment))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("DDEV_PANTHEON_SITE=%s", pantheonPushTestSite))
+	app.WebEnvironment = append(app.WebEnvironment, fmt.Sprintf("DDEV_PANTHEON_ENVIRONMENT=%s", pantheonPushTestEnvironment))
 	err = app.WriteConfig()
 	require.NoError(t, err)
 

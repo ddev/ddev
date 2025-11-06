@@ -36,20 +36,20 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
 5. Configure the local checkout for DDEV using [`ddev config`](../usage/commands.md#config).
 
-6. Add `PANTHEON_SITE` and `PANTHEON_ENVIRONMENT` variables to your project `.ddev/config.yaml`:
+6. Add `DDEV_PANTHEON_SITE` and `DDEV_PANTHEON_ENVIRONMENT` variables to your project `.ddev/config.yaml`:
 
     ```yaml
     web_environment:
-        - PANTHEON_SITE=yourprojectname
-        - PANTHEON_ENVIRONMENT=dev
+        - DDEV_PANTHEON_SITE=yourprojectname
+        - DDEV_PANTHEON_ENVIRONMENT=dev
     ```
 
-    You can also do this with `ddev config --web-environment-add="PANTHEON_SITE=yourprojectname,PANTHEON_ENVIRONMENT=dev"`.
+    You can also do this with `ddev config --web-environment-add="DDEV_PANTHEON_SITE=yourprojectname,DDEV_PANTHEON_ENVIRONMENT=dev"`.
 
     You can usually use the site name, but in some environments you may need the site ID, which is the long third component of your site dashboard URL. So if the site dashboard is at `https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/`, the site ID is `009a2cda-2c22-4eee-8f9d-96f017321555`.
 
     Instead of setting the environment variables in configuration files, you can use
-    `ddev pull pantheon --environment=PANTHEON_SITE=yourprojectname,PANTHEON_ENVIRONMENT=dev` for example.
+    `ddev pull pantheon --environment=DDEV_PANTHEON_SITE=yourprojectname,DDEV_PANTHEON_ENVIRONMENT=dev` for example.
 
 7. Run [`ddev restart`](../usage/commands.md#restart).
 

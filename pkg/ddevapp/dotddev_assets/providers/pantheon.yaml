@@ -19,13 +19,13 @@
 #        - TERMINUS_MACHINE_TOKEN=abcdeyourtoken
 #    ```
 #
-# 2. Add PANTHEON_SITE and PANTHEON_ENVIRONMENT variables to your project `.ddev/config.yaml`:
+# 2. Add DDEV_PANTHEON_SITE and DDEV_PANTHEON_ENVIRONMENT variables to your project `.ddev/config.yaml`:
 #    ```yaml
 #    web_environment:
-#        - PANTHEON_SITE=yourproject
-#        - PANTHEON_ENVIRONMENT=dev
+#        - DDEV_PANTHEON_SITE=yourproject
+#        - DDEV_PANTHEON_ENVIRONMENT=dev
 #    ```
-#    You can also do this with `ddev config --web-environment-add="PANTHEON_SITE=yourproject,PANTHEON_ENVIRONMENT=dev"`.
+#    You can also do this with `ddev config --web-environment-add="DDEV_PANTHEON_SITE=yourproject,DDEV_PANTHEON_ENVIRONMENT=dev"`.
 #
 #    You can usually use the site name, but in some environments you may need the site uuid,
 #    which is the long 3rd component of your site dashboard URL. So if the site dashboard is at
@@ -46,7 +46,7 @@
 #
 
 # Instead of setting the environment variables in configuration files, you can use
-# `ddev pull pantheon --environment=PANTHEON_SITE=yourproject,PANTHEON_ENVIRONMENT=dev` for example
+# `ddev pull pantheon --environment=DDEV_PANTHEON_SITE=yourproject,DDEV_PANTHEON_ENVIRONMENT=dev` for example
 
 # Debugging: Use `ddev exec terminus auth:whoami` to see what terminus knows about
 # `ddev exec terminus site:list` will show available sites
@@ -55,8 +55,8 @@ auth_command:
   command: |
     set -eu -o pipefail
     if [ -z "${TERMINUS_MACHINE_TOKEN:-}" ]; then echo "Please make sure you have set TERMINUS_MACHINE_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
-    if [ -z "${PANTHEON_SITE:-}" ]; then echo "Please make sure you have set PANTHEON_SITE via config.yaml or with '--environment=PANTHEON_SITE=xxx'" && exit 1; fi
-    if [ -z "${PANTHEON_ENVIRONMENT:-}" ]; then echo "Please make sure you have set PANTHEON_ENVIRONMENT via config.yaml or with '--environment=PANTHEON_ENVIRONMENT=xxx'" && exit 1; fi
+    if [ -z "${DDEV_PANTHEON_SITE:-}" ]; then echo "Please make sure you have set DDEV_PANTHEON_SITE via config.yaml or with '--environment=PANTHEON_SITE=xxx'" && exit 1; fi
+    if [ -z "${DDEV_PANTHEON_ENVIRONMENT:-}" ]; then echo "Please make sure you have set DDEV_PANTHEON_ENVIRONMENT via config.yaml or with '--environment=DDEV_PANTHEON_ENVIRONMENT=xxx'" && exit 1; fi
     terminus auth:login --machine-token="${TERMINUS_MACHINE_TOKEN}" || ( echo "terminus auth login failed, check your TERMINUS_MACHINE_TOKEN" && exit 1 )
     terminus aliases 2>/dev/null
 
@@ -65,12 +65,12 @@ db_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
-    echo "Using PANTHEON_SITE=${PANTHEON_SITE} PANTHEON_ENVIRONMENT=${PANTHEON_ENVIRONMENT}"
+    echo "Using DDEV_PANTHEON_SITE=${DDEV_PANTHEON_SITE} DDEV_PANTHEON_ENVIRONMENT=${DDEV_PANTHEON_ENVIRONMENT}"
     pushd /var/www/html/.ddev/.downloads >/dev/null
     echo "Waking up Pantheon environment..."
-    terminus env:wake -- ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}
+    terminus env:wake -- ${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}
     echo "Generating and streaming fresh database dump (this may take several minutes)..."
-    FRESH_DB_DUMP_STRING=$(terminus connection:info "${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}" --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
+    FRESH_DB_DUMP_STRING=$(terminus connection:info "${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}" --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
     if [ "${DDEV_DEBUG:-}" = "true" ]; then
       echo "Debug: FRESH_DB_DUMP_STRING=$FRESH_DB_DUMP_STRING"
     fi
@@ -82,7 +82,7 @@ files_pull_command:
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     pushd /var/www/html/.ddev/.downloads >/dev/null;
-    terminus backup:get ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT} --element=files --to=files.tgz
+    terminus backup:get ${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT} --element=files --to=files.tgz
     mkdir -p files && tar --strip-components=1 -C files -zxf files.tgz
 
 # push is very useful for non-production environments, but can be
@@ -95,9 +95,9 @@ db_push_command:
     set -eu -o pipefail
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     echo "Waking up Pantheon environment..."
-    terminus env:wake -- ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}
+    terminus env:wake -- ${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}
     echo "Dropping existing database on Pantheon..."
-    MYSQL_CMD=$(terminus connection:info "${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}" --field=mysql_command)
+    MYSQL_CMD=$(terminus connection:info "${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}" --field=mysql_command)
     eval "$MYSQL_CMD -e 'DROP DATABASE pantheon; CREATE DATABASE pantheon;'"
     echo "Uploading database to Pantheon..."
     gzip -dc db.sql.gz | eval "$MYSQL_CMD"
@@ -113,4 +113,4 @@ files_push_command:
     set -eu -o pipefail
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
     terminus self:plugin:install terminus-rsync-plugin
-    terminus rsync -y ${DDEV_FILES_DIR}/ ${PANTHEON_SITE}.${PANTHEON_ENVIRONMENT}:files
+    terminus rsync -y ${DDEV_FILES_DIR}/ ${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}:files
