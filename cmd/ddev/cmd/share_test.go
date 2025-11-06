@@ -3,6 +3,8 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
@@ -128,6 +130,32 @@ func TestShareCmdNgrok(t *testing.T) {
 	// If we got a URL, verify it looks like ngrok
 	if hasURL {
 		require.Contains(t, stdoutOutput, "ngrok")
+
+		// Extract and verify we can actually fetch from the tunnel
+		tunnelURL := extractTunnelURL(stdoutOutput)
+		require.NotEmpty(t, tunnelURL, "Should extract tunnel URL from output")
+		t.Logf("Extracted tunnel URL: %s", tunnelURL)
+
+		// Try to fetch from the tunnel to verify it works
+		t.Log("Attempting to fetch from tunnel URL...")
+		client := &http.Client{Timeout: 10 * time.Second}
+
+		// Fetch the readme.html file that we know exists in WordPress test site
+		readmeURL := tunnelURL + "/readme.html"
+		t.Logf("Fetching %s", readmeURL)
+		resp, err := client.Get(readmeURL)
+		require.NoError(t, err, "Should be able to fetch from ngrok tunnel")
+		defer resp.Body.Close()
+		require.Equal(t, http.StatusOK, resp.StatusCode, "Tunnel should return 200 OK")
+		body, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.NotEmpty(t, body, "Tunnel should return content")
+
+		// Verify we got the expected WordPress readme content
+		bodyStr := string(body)
+		require.Contains(t, bodyStr, "Welcome. WordPress is a very special project to me.",
+			"Should receive actual WordPress content through tunnel")
+		t.Logf("Successfully fetched %d bytes from tunnel with expected content", len(body))
 	}
 }
 
@@ -209,6 +237,32 @@ func TestShareCmdCloudflared(t *testing.T) {
 	// Verify URL was displayed
 	require.Contains(t, stdoutOutput, "Tunnel URL:")
 	require.Contains(t, stdoutOutput, "trycloudflare.com")
+
+	// Extract and verify we can actually fetch from the tunnel
+	tunnelURL := extractTunnelURL(stdoutOutput)
+	require.NotEmpty(t, tunnelURL, "Should extract tunnel URL from output")
+	t.Logf("Extracted tunnel URL: %s", tunnelURL)
+
+	// Try to fetch from the tunnel to verify it works
+	t.Log("Attempting to fetch from tunnel URL...")
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	// Fetch the readme.html file that we know exists in WordPress test site
+	readmeURL := tunnelURL + "/readme.html"
+	t.Logf("Fetching %s", readmeURL)
+	resp, err := client.Get(readmeURL)
+	require.NoError(t, err, "Should be able to fetch from cloudflared tunnel")
+	defer resp.Body.Close()
+	require.Equal(t, http.StatusOK, resp.StatusCode, "Tunnel should return 200 OK")
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	require.NotEmpty(t, body, "Tunnel should return content")
+
+	// Verify we got the expected WordPress readme content
+	bodyStr := string(body)
+	require.Contains(t, bodyStr, "Welcome. WordPress is a very special project to me.",
+		"Should receive actual WordPress content through tunnel")
+	t.Logf("Successfully fetched %d bytes from tunnel with expected content", len(body))
 }
 
 // TestShareCmdProviderSystem tests the script-based provider system
