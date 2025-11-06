@@ -21,8 +21,12 @@ if [[ -z "${DDEV_LOCAL_URL:-}" ]]; then
     exit 1
 fi
 
-# Start cloudflared in background
-cloudflared tunnel --url "$DDEV_LOCAL_URL" ${DDEV_SHARE_CLOUDFLARED_ARGS:-} &
+# Start cloudflared in background and capture output
+echo "Starting cloudflared tunnel..." >&2
+TUNNEL_LOG=$(mktemp)
+trap "rm -f $TUNNEL_LOG" EXIT
+
+cloudflared tunnel --url "$DDEV_LOCAL_URL" ${DDEV_SHARE_CLOUDFLARED_ARGS:-} 2>&1 | tee "$TUNNEL_LOG" | grep -v "^[0-9]" >&2 &
 CF_PID=$!
 
 # Function to cleanup on exit
@@ -30,28 +34,26 @@ cleanup() {
     if kill -0 $CF_PID 2>/dev/null; then
         kill $CF_PID 2>/dev/null || true
     fi
+    rm -f "$TUNNEL_LOG"
 }
 trap cleanup EXIT
 
-# cloudflared exposes metrics API on random port 20241-20245
-# Poll all possible ports for tunnel URL
-echo "Starting cloudflared tunnel..." >&2
-HOSTNAME=""
+# Wait for cloudflared to output the tunnel URL
+URL=""
 for i in {1..30}; do
-    for PORT in {20241..20245}; do
-        HOSTNAME=$(curl -s "http://127.0.0.1:$PORT/quicktunnel" 2>/dev/null | \
-                   jq -r '.hostname' 2>/dev/null || echo "")
+    # Look for the "Your quick Tunnel has been created!" message and extract URL
+    URL=$(grep -oE "https://[a-z0-9-]+\.trycloudflare\.com" "$TUNNEL_LOG" | tail -1)
 
-        if [[ -n "$HOSTNAME" && "$HOSTNAME" != "null" ]]; then
-            echo "https://$HOSTNAME"  # Output to stdout - CRITICAL: This is captured by DDEV
-            break 2
-        fi
-    done
+    if [[ -n "$URL" ]]; then
+        echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV
+        break
+    fi
     sleep 1
 done
 
-if [[ -z "$HOSTNAME" || "$HOSTNAME" == "null" ]]; then
+if [[ -z "$URL" ]]; then
     echo "Error: Failed to get cloudflared URL after 30 seconds" >&2
+    cat "$TUNNEL_LOG" >&2
     exit 1
 fi
 
