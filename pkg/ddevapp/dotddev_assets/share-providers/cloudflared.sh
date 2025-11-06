@@ -21,12 +21,16 @@ if [[ -z "${DDEV_LOCAL_URL:-}" ]]; then
     exit 1
 fi
 
-# Start cloudflared in background and capture output
+# Start cloudflared and capture output
 echo "Starting cloudflared tunnel..." >&2
-TUNNEL_LOG=$(mktemp)
-trap "rm -f $TUNNEL_LOG" EXIT
 
-cloudflared tunnel --url "$DDEV_LOCAL_URL" ${DDEV_SHARE_CLOUDFLARED_ARGS:-} 2>&1 | tee "$TUNNEL_LOG" | grep -v "^[0-9]" >&2 &
+# Use a named pipe to capture stderr while also reading it
+PIPE=$(mktemp -u)
+mkfifo "$PIPE"
+trap "rm -f $PIPE" EXIT
+
+# Start cloudflared with stderr to pipe
+cloudflared tunnel --url "$DDEV_LOCAL_URL" ${DDEV_SHARE_CLOUDFLARED_ARGS:-} 2> "$PIPE" &
 CF_PID=$!
 
 # Function to cleanup on exit
@@ -34,28 +38,29 @@ cleanup() {
     if kill -0 $CF_PID 2>/dev/null; then
         kill $CF_PID 2>/dev/null || true
     fi
-    rm -f "$TUNNEL_LOG"
+    rm -f "$PIPE"
 }
 trap cleanup EXIT
 
-# Wait for cloudflared to output the tunnel URL
+# Read from pipe and extract URL
 URL=""
-for i in {1..30}; do
-    # Look for the "Your quick Tunnel has been created!" message and extract URL
-    URL=$(grep -oE "https://[a-z0-9-]+\.trycloudflare\.com" "$TUNNEL_LOG" | tail -1)
-
-    if [[ -n "$URL" ]]; then
+while IFS= read -r line; do
+    # Look for the cloudflared URL in the output
+    if [[ -z "$URL" ]] && [[ "$line" =~ https://[a-z0-9-]+\.trycloudflare\.com ]]; then
+        URL="${BASH_REMATCH[0]}"
         echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV
-        break
     fi
-    sleep 1
-done
-
-if [[ -z "$URL" ]]; then
-    echo "Error: Failed to get cloudflared URL after 30 seconds" >&2
-    cat "$TUNNEL_LOG" >&2
-    exit 1
-fi
+    # Continue reading and sending to stderr for logging
+    echo "$line" >&2
+done < "$PIPE" &
+READER_PID=$!
 
 # Wait for cloudflared to exit
 wait $CF_PID
+EXIT_CODE=$?
+
+# Clean up reader process
+kill $READER_PID 2>/dev/null || true
+wait $READER_PID 2>/dev/null || true
+
+exit $EXIT_CODE
