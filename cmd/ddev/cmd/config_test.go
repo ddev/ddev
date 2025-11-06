@@ -891,24 +891,17 @@ func TestHasConfigNameOverride(t *testing.T) {
 	assert := asrt.New(t)
 
 	projectName := strings.ToLower(t.Name())
+	projectNameOverride := projectName + "-override"
+
 	origDir, _ := os.Getwd()
-	_, _ = exec.RunHostCommand(DdevBin, "stop", "--unlist", projectName)
+	// Delete any existing projects with projectName or projectNameOverride
+	_, _ = exec.RunHostCommand(DdevBin, "stop", "--unlist", projectName, projectNameOverride)
 
 	// Create a temporary directory and switch to it.
 	tmpDir := testcommon.CreateTmpDir(t.Name())
 	_ = os.Chdir(tmpDir)
 
 	var err error
-
-	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", projectName)
-		assert.NoError(err, "output=%s", out)
-		_ = os.RemoveAll(tmpDir)
-	})
-
-	_ = os.Chdir(tmpDir)
 
 	// Create a dummy config file to make it look like it's an existing project
 	// Otherwise DDEV will not read the override
@@ -919,10 +912,20 @@ func TestHasConfigNameOverride(t *testing.T) {
 	_, err = os.Create(configFile)
 	require.NoError(t, err)
 
-	// Create an override for the project name
-	projectNameOverride := projectName + "-override"
 	err = os.WriteFile(configFileLocal, []byte(`name: `+projectNameOverride), 0644)
 	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		// Delete project in current directory first, while it has config.local.yaml etc
+		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy")
+		assert.NoError(err, "output=%s", out)
+
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		out, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", projectName, projectNameOverride)
+		assert.NoError(err, "output=%s", out)
+		_ = os.RemoveAll(tmpDir)
+	})
 
 	out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
 	require.NoError(t, err, "error running ddev config --auto: '%s'", out)
