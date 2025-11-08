@@ -145,9 +145,7 @@ const ConfigInstructions = `
 #   - "global":  uses the value from the global config.
 #   - "none":    disables performance optimization for this project.
 #   - "mutagen": enables Mutagen for this project.
-#   - "nfs":     enables NFS for this project.
 #
-# See https://docs.ddev.com/en/stable/users/install/performance/#nfs
 # See https://docs.ddev.com/en/stable/users/install/performance/#mutagen
 
 # fail_on_hook_fail: False
