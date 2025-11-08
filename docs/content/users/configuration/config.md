@@ -781,4 +781,4 @@ Whether XHProf should use `prepend` or `xhgui` mode.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `prepend` | Can be `global`, `prepend` or `xhgui`.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `xhgui` | Can be `global`, `prepend` or `xhgui`.

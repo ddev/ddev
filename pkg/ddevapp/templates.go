@@ -51,8 +51,7 @@ const ConfigInstructions = `
 # bind_all_ports is used (normally with router disabled)
 
 # xhprof_mode: [prepend|xhgui|global]
-# Set to "xhgui" to enable XHGui features
-# "xhgui" will become default in a future major release
+# Default is "xhgui"
 
 # webserver_type: nginx-fpm, apache-fpm, generic
 

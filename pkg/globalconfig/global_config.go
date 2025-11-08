@@ -440,8 +440,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Router port used for Mailpit HTTPS, can be overridden in project config
 
 # xhprof_mode: [prepend|xhgui]
-# Set to "xhgui" to enable XHGui features
-# "xhgui" will become default in a future major release
+# Default is "xhgui"
 
 # instrumentation_user: <your_username> # can be used to give DDEV specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
