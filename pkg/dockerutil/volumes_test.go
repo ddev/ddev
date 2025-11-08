@@ -43,16 +43,8 @@ func TestRemoveVolume(t *testing.T) {
 	spareVolume := "someVolumeThatCanNeverExit"
 
 	_ = dockerutil.RemoveVolume(testVolume)
-	pwd, err := os.Getwd()
-	assert.NoError(err)
 
-	source := pwd
-	if nodeps.IsMacOS() && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", source)) {
-		source = filepath.Join("/System/Volumes/Data", source)
-	}
-	nfsServerAddr, _ := dockerutil.GetNFSServerAddr()
-	vol, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr),
-		"device": ":" + dockerutil.MassageWindowsNFSMount(source)}, nil)
+	vol, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
 	assert.NoError(err)
 
 	volumes, err := client.VolumeList(ctx, volume.ListOptions{Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: testVolume})})

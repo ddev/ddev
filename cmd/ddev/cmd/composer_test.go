@@ -17,13 +17,6 @@ import (
 )
 
 func TestComposerCmdCreateConfigInstall(t *testing.T) {
-	// 2022-05-24: I've spent lots of time debugging intermittent `composer create-project` failures when NFS
-	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
-	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
-	// to deal with similar issues in vagrant context, and has a hack now embedded into Composer.
-	if nodeps.PerformanceModeDefault == types.PerformanceModeNFS {
-		t.Skip("Composer has strange behavior in NFS context, so skipping")
-	}
 	assert := asrt.New(t)
 
 	origDir, err := os.Getwd()
@@ -90,13 +83,6 @@ func TestComposerCmdCreateConfigInstall(t *testing.T) {
 }
 
 func TestComposerCmdCreateRequireRemoveConfigVersion(t *testing.T) {
-	// 2022-05-24: I've spent lots of time debugging intermittent `composer create-project` failures when NFS
-	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
-	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
-	// to deal with similar issues in vagrant context, and has a hack now embedded into Composer.
-	if nodeps.PerformanceModeDefault == types.PerformanceModeNFS {
-		t.Skip("Composer has strange behavior in NFS context, so skipping")
-	}
 	assert := asrt.New(t)
 
 	origDir, err := os.Getwd()
