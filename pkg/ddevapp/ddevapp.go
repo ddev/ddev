@@ -1623,10 +1623,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	// Delete the NFS volumes before we bring up docker-compose (and will be created again)
-	// We don't care if the volume wasn't there
-	_ = dockerutil.RemoveVolume(app.GetNFSMountVolumeName())
-
 	// The db_snapshots subdirectory may be created on docker-compose up, so
 	// we need to precreate it so permissions are correct (and not root:root)
 	if !fileutil.IsDirectory(app.GetConfigPath("db_snapshots")) {
@@ -3554,14 +3550,7 @@ func (app *DdevApp) GetHostWorkingDir(service string, dir string) string {
 	return filepath.Join(app.GetAbsAppRoot(false), strings.TrimPrefix(dir, containerWorkingDirPrefix))
 }
 
-// GetNFSMountVolumeName returns the Docker volume name of the nfs mount volume
-func (app *DdevApp) GetNFSMountVolumeName() string {
-	// This is lowercased because the automatic naming in docker-compose v1/2
-	// defaulted to lowercase the name
-	// Although some volume names are auto-lowercased by Docker, this one
-	// is explicitly specified by us and is not lowercased.
-	return "ddev-" + app.Name + "_nfsmount"
-}
+
 
 // GetMariaDBVolumeName returns the Docker volume name of the mariadb/database volume
 // For historical reasons this isn't lowercased.

@@ -396,10 +396,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Possible values are:
 #   - "none":    disables performance optimization.
 #   - "mutagen": enables Mutagen.
-#   - "nfs":     enables NFS.
 #
 # See https://docs.ddev.com/en/stable/users/install/performance/#mutagen
-# and https://docs.ddev.com/en/stable/users/install/performance/#nfs.
 
 # You can set the global project_tld. This way any project will use this tld. If not
 # set the local project_tld is used, or the default of DDEV.
