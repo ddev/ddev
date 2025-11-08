@@ -24,10 +24,14 @@ fi
 # Start cloudflared and capture output
 echo "Starting cloudflared tunnel..." >&2
 
+# Use a temp file to store URL when found by background reader
+URL_FILE=$(mktemp)
+trap "rm -f $URL_FILE" EXIT
+
 # Use a named pipe to capture stderr while also reading it
 PIPE=$(mktemp -u)
 mkfifo "$PIPE"
-trap "rm -f $PIPE" EXIT
+trap "rm -f $PIPE $URL_FILE" EXIT
 
 # Start cloudflared with stderr to pipe
 cloudflared tunnel --url "$DDEV_LOCAL_URL" ${DDEV_SHARE_CLOUDFLARED_ARGS:-} 2> "$PIPE" &
@@ -38,22 +42,55 @@ cleanup() {
     if kill -0 $CF_PID 2>/dev/null; then
         kill $CF_PID 2>/dev/null || true
     fi
-    rm -f "$PIPE"
+    rm -f "$PIPE" "$URL_FILE"
 }
 trap cleanup EXIT
 
-# Read from pipe and extract URL
-URL=""
+# Read from pipe and extract URL (background process)
 while IFS= read -r line; do
     # Look for the cloudflared URL in the output
-    if [[ -z "$URL" ]] && [[ "$line" =~ https://[a-z0-9-]+\.trycloudflare\.com ]]; then
-        URL="${BASH_REMATCH[0]}"
-        echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV
+    if [[ ! -s "$URL_FILE" ]] && [[ "$line" =~ https://[a-z0-9-]+\.trycloudflare\.com ]]; then
+        # Store URL in temp file instead of outputting immediately
+        echo "${BASH_REMATCH[0]}" > "$URL_FILE"
+        echo "Tunnel URL found, verifying connectivity..." >&2
     fi
     # Continue reading and sending to stderr for logging
     echo "$line" >&2
 done < "$PIPE" &
 READER_PID=$!
+
+# Wait for URL to be found (max 30 seconds)
+for i in {1..30}; do
+    if [[ -s "$URL_FILE" ]]; then
+        URL=$(cat "$URL_FILE")
+        break
+    fi
+    sleep 1
+done
+
+if [[ -z "$URL" ]]; then
+    echo "Error: Failed to get cloudflared URL after 30 seconds" >&2
+    kill $READER_PID 2>/dev/null || true
+    exit 1
+fi
+
+# Verify tunnel is actually functional before returning URL
+# Cloudflare may print the URL before the tunnel is fully connected
+echo "Waiting for tunnel to be ready..." >&2
+for i in {1..15}; do
+    # Try a HEAD request to verify tunnel responds
+    if curl -sf --head --max-time 2 "$URL" >/dev/null 2>&1; then
+        echo "Tunnel is ready!" >&2
+        echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV
+        break
+    fi
+    if [[ $i -eq 15 ]]; then
+        echo "Warning: Tunnel URL found but not responding after 15 seconds" >&2
+        echo "Cloudflare may still be establishing the connection" >&2
+        echo "$URL"  # Output URL anyway, let user decide
+    fi
+    sleep 1
+done
 
 # Wait for cloudflared to exit
 wait $CF_PID
