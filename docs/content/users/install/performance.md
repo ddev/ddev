@@ -41,7 +41,6 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     To stop using Mutagen on a project, run `ddev mutagen reset && ddev config --performance-mode=none`.
 
-    The `nfs-mount-enabled` feature is automatically turned off if you’re using Mutagen.
 
 
 
