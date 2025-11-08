@@ -377,7 +377,7 @@ Flags:
 * `--no-project-mount`: Whether to skip mounting project code into the `web` container.
 * `--nodejs-version`: Specify the Node.js version to use (see [default](../configuration/config.md#nodejs_version)).
 * `--omit-containers`: Comma-delimited list of container types that should not be started when the project is started.
-* `--performance-mode`: Performance optimization mode, possible values are `global`, `none`, `mutagen`, `nfs`.
+* `--performance-mode`: Performance optimization mode, possible values are `global`, `none`, `mutagen`.
 * `--performance-mode-reset`: Reset performance mode to global configuration.
 * `--php-version`: PHP version that will be enabled in the `web` container (see [default](../configuration/config.md#php_version)).
 * `--project-name`: Provide the project name of project to configure (normally the same as the last part of directory name).
@@ -424,7 +424,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--no-bind-mounts`: If `true`, don't use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible.
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent` or `--omit-containers=""`.
 * `--omit-project-name-by-default`: If `true`, `ddev config` will not write the `name` field to `.ddev/config.yaml` unless explicitly set with `--project-name` (see [default](../configuration/config.md#omit_project_name_by_default)).
-* `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
+* `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`.
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
 * `--project-tld`: Set the default top-level domain to be used for all projects, can be overridden by project configuration (see [default](../configuration/config.md#project_tld)).
 * `--router-bind-all-interfaces`: Bind host router ports on all interfaces, not only on the localhost network interface.
@@ -1677,16 +1677,6 @@ Example:
 ddev utility mutagen sync list
 ```
 
-### `utility nfsmount`
-
-Checks to see if [NFS mounting](../install/performance.md#nfs) works for current project.
-
-Example:
-
-```shell
-# See if NFS is working as expected for the current project
-ddev utility nfsmount
-```
 
 ### `utility rebuild`
 
