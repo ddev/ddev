@@ -47,11 +47,16 @@ trap cleanup EXIT
 # Poll ngrok API for public URL (30 second timeout)
 echo "Starting ngrok tunnel..." >&2
 URL=""
+
+# Disable pipefail temporarily - we expect jq to fail while API is starting
+set +o pipefail
+
 for i in {1..30}; do
     # Check if ngrok process is still running
     if ! kill -0 "$NGROK_PID" 2>/dev/null; then
         echo "Error: ngrok process died unexpectedly" >&2
         echo "This may indicate an authentication issue. Check 'ngrok config add-authtoken <token>'" >&2
+        set -o pipefail  # Re-enable before exit
         exit 1
     fi
 
@@ -66,11 +71,15 @@ for i in {1..30}; do
           jq -r '.tunnels[0].public_url' 2>/dev/null || echo "")
 
     if [[ -n "$URL" && "$URL" != "null" ]]; then
+        set -o pipefail  # Re-enable after success
         echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV
         break
     fi
     sleep 1
 done
+
+# Re-enable pipefail for rest of script
+set -o pipefail
 
 if [[ -z "$URL" || "$URL" == "null" ]]; then
     echo "Error: Failed to get ngrok URL after 30 seconds" >&2

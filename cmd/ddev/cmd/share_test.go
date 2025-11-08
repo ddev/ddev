@@ -52,7 +52,17 @@ func TestShareCmdNgrok(t *testing.T) {
 	site := TestSites[0]
 	defer site.Chdir()()
 
+	// Pre-flight: Kill any lingering ngrok processes from previous tests
+	// to avoid port 4040 conflicts when running full test suite
+	if killallPath, err := exec.LookPath("killall"); err == nil {
+		_, _ = exec2.RunHostCommand(killallPath, "-9", "ngrok")
+		// Give OS time to release port 4040
+		time.Sleep(500 * time.Millisecond)
+	}
+
 	cmd := exec.Command(DdevBin, "share", "--provider=ngrok")
+	// Enable debug output to get verbose ngrok.sh logging
+	cmd.Env = append(os.Environ(), "DDEV_DEBUG=true")
 	var stdoutBuf, stderrBuf strings.Builder
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
@@ -76,6 +86,7 @@ func TestShareCmdNgrok(t *testing.T) {
 	maxWait := 30 * time.Second
 	pollInterval := 2 * time.Second
 	elapsed := time.Duration(0)
+	lastStderrLen := 0
 
 	for elapsed < maxWait {
 		time.Sleep(pollInterval)
@@ -83,6 +94,13 @@ func TestShareCmdNgrok(t *testing.T) {
 
 		stdoutOutput := stdoutBuf.String()
 		stderrOutput := stderrBuf.String()
+
+		// Log new stderr content if there's been progress
+		if len(stderrOutput) > lastStderrLen {
+			newContent := stderrOutput[lastStderrLen:]
+			t.Logf("New stderr output:\n%s", newContent)
+			lastStderrLen = len(stderrOutput)
+		}
 
 		// Check for URL success
 		if strings.Contains(stdoutOutput, "Tunnel URL:") {
@@ -94,6 +112,23 @@ func TestShareCmdNgrok(t *testing.T) {
 		if strings.Contains(stderrOutput, "Your account is limited to 1 simultaneous") {
 			t.Logf("Ngrok account in use elsewhere (expected in development): %v", elapsed)
 			break
+		}
+
+		// Check for error conditions
+		if strings.Contains(stderrOutput, "Error:") {
+			t.Logf("Error detected in stderr after %v", elapsed)
+		}
+
+		// Diagnostic: Check if ngrok API is reachable
+		if elapsed == 4*time.Second {
+			resp, err := http.Get("http://localhost:4040/api/tunnels")
+			if err != nil {
+				t.Logf("Diagnostic: ngrok API not reachable at localhost:4040 after 4s: %v", err)
+			} else {
+				body, _ := io.ReadAll(resp.Body)
+				resp.Body.Close()
+				t.Logf("Diagnostic: ngrok API response at 4s: status=%d, body=%s", resp.StatusCode, string(body))
+			}
 		}
 
 		t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
