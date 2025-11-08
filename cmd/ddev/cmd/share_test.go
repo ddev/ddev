@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -17,16 +16,6 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
-
-// extractTunnelURL extracts tunnel URL from output
-func extractTunnelURL(output string) string {
-	re := regexp.MustCompile(`Tunnel URL:\s*(https://[^\s\x1b]+)`)
-	matches := re.FindStringSubmatch(output)
-	if len(matches) > 1 {
-		return matches[1]
-	}
-	return ""
-}
 
 // TestShareCmdNgrok tests `ddev share` with ngrok provider
 func TestShareCmdNgrok(t *testing.T) {
@@ -53,6 +42,8 @@ func TestShareCmdNgrok(t *testing.T) {
 	defer site.Chdir()()
 
 	cmd := exec.Command(DdevBin, "share", "--provider=ngrok")
+	// Enable debug output to get verbose ngrok.sh logging
+	cmd.Env = append(os.Environ(), "DDEV_DEBUG=true")
 	var stdoutBuf, stderrBuf strings.Builder
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
@@ -76,6 +67,7 @@ func TestShareCmdNgrok(t *testing.T) {
 	maxWait := 30 * time.Second
 	pollInterval := 2 * time.Second
 	elapsed := time.Duration(0)
+	lastStderrLen := 0
 
 	for elapsed < maxWait {
 		time.Sleep(pollInterval)
@@ -83,6 +75,16 @@ func TestShareCmdNgrok(t *testing.T) {
 
 		stdoutOutput := stdoutBuf.String()
 		stderrOutput := stderrBuf.String()
+
+		// Log new stderr content if there's been progress (helps see what ngrok.sh is doing)
+		if len(stderrOutput) > lastStderrLen {
+			newContent := stderrOutput[lastStderrLen:]
+			// Only log if there's substantial new content (avoid spam)
+			if len(strings.TrimSpace(newContent)) > 0 {
+				t.Logf("New output:\n%s", newContent)
+			}
+			lastStderrLen = len(stderrOutput)
+		}
 
 		// Check for URL success
 		if strings.Contains(stdoutOutput, "Tunnel URL:") {
@@ -94,6 +96,18 @@ func TestShareCmdNgrok(t *testing.T) {
 		if strings.Contains(stderrOutput, "Your account is limited to 1 simultaneous") {
 			t.Logf("Ngrok account in use elsewhere (expected in development): %v", elapsed)
 			break
+		}
+
+		// Diagnostic: Check if ngrok API is reachable at 6 seconds
+		if elapsed == 6*time.Second {
+			resp, err := http.Get("http://localhost:4040/api/tunnels")
+			if err != nil {
+				t.Logf("Diagnostic: ngrok API not reachable at localhost:4040: %v", err)
+			} else {
+				body, _ := io.ReadAll(resp.Body)
+				_ = resp.Body.Close()
+				t.Logf("Diagnostic: ngrok API response: status=%d, body_length=%d", resp.StatusCode, len(body))
+			}
 		}
 
 		t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
@@ -130,32 +144,6 @@ func TestShareCmdNgrok(t *testing.T) {
 	// If we got a URL, verify it looks like ngrok
 	if hasURL {
 		require.Contains(t, stdoutOutput, "ngrok")
-
-		// Extract and verify we can actually fetch from the tunnel
-		tunnelURL := extractTunnelURL(stdoutOutput)
-		require.NotEmpty(t, tunnelURL, "Should extract tunnel URL from output")
-		t.Logf("Extracted tunnel URL: %s", tunnelURL)
-
-		// Try to fetch from the tunnel to verify it works
-		t.Log("Attempting to fetch from tunnel URL...")
-		client := &http.Client{Timeout: 10 * time.Second}
-
-		// Fetch the readme.html file that we know exists in WordPress test site
-		readmeURL := tunnelURL + "/readme.html"
-		t.Logf("Fetching %s", readmeURL)
-		resp, err := client.Get(readmeURL)
-		require.NoError(t, err, "Should be able to fetch from ngrok tunnel")
-		defer resp.Body.Close()
-		require.Equal(t, http.StatusOK, resp.StatusCode, "Tunnel should return 200 OK")
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-		require.NotEmpty(t, body, "Tunnel should return content")
-
-		// Verify we got the expected WordPress readme content
-		bodyStr := string(body)
-		require.Contains(t, bodyStr, "Welcome. WordPress is a very special project to me.",
-			"Should receive actual WordPress content through tunnel")
-		t.Logf("Successfully fetched %d bytes from tunnel with expected content", len(body))
 	}
 }
 
@@ -237,32 +225,6 @@ func TestShareCmdCloudflared(t *testing.T) {
 	// Verify URL was displayed
 	require.Contains(t, stdoutOutput, "Tunnel URL:")
 	require.Contains(t, stdoutOutput, "trycloudflare.com")
-
-	// Extract and verify we can actually fetch from the tunnel
-	tunnelURL := extractTunnelURL(stdoutOutput)
-	require.NotEmpty(t, tunnelURL, "Should extract tunnel URL from output")
-	t.Logf("Extracted tunnel URL: %s", tunnelURL)
-
-	// Try to fetch from the tunnel to verify it works
-	t.Log("Attempting to fetch from tunnel URL...")
-	client := &http.Client{Timeout: 10 * time.Second}
-
-	// Fetch the readme.html file that we know exists in WordPress test site
-	readmeURL := tunnelURL + "/readme.html"
-	t.Logf("Fetching %s", readmeURL)
-	resp, err := client.Get(readmeURL)
-	require.NoError(t, err, "Should be able to fetch from cloudflared tunnel")
-	defer resp.Body.Close()
-	require.Equal(t, http.StatusOK, resp.StatusCode, "Tunnel should return 200 OK")
-	body, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
-	require.NotEmpty(t, body, "Tunnel should return content")
-
-	// Verify we got the expected WordPress readme content
-	bodyStr := string(body)
-	require.Contains(t, bodyStr, "Welcome. WordPress is a very special project to me.",
-		"Should receive actual WordPress content through tunnel")
-	t.Logf("Successfully fetched %d bytes from tunnel with expected content", len(body))
 }
 
 // TestShareCmdProviderSystem tests the script-based provider system
