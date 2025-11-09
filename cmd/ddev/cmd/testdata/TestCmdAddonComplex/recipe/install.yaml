@@ -1,12 +1,8 @@
 name: sample_get
 
+ddev_version_constraint: ">=1.22.0"
+
 pre_install_actions:
-- |
-  {{ $ddev := (env "DDEV_BINARY_FULLPATH") }}
-  {{ if not $ddev }} {{ $ddev = `ddev` }} {{end}}
-  if ! ( which {{ $ddev }} && {{ $ddev }} debug capabilities 2>/dev/null | grep ddev-get-yaml-interpolation >/dev/null 2>&1 ) ; then
-    echo "This add-on requires DDEV v1.19.3-10 or higher, please upgrade." && exit 2
-  fi
 - |
   cat <<EOF >.ddev/config.platformsh.yaml
   php_version: {{ trimPrefix "php:" .platformapp.type }}
