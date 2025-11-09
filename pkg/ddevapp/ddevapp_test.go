@@ -4060,8 +4060,6 @@ func TestCaptureLogs(t *testing.T) {
 	assert.NoError(err)
 }
 
-
-
 // TestHostDBPort tests to make sure that the host_db_port specification has the intended effect
 func TestHostDBPort(t *testing.T) {
 	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {

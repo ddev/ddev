@@ -3550,8 +3550,6 @@ func (app *DdevApp) GetHostWorkingDir(service string, dir string) string {
 	return filepath.Join(app.GetAbsAppRoot(false), strings.TrimPrefix(dir, containerWorkingDirPrefix))
 }
 
-
-
 // GetMariaDBVolumeName returns the Docker volume name of the mariadb/database volume
 // For historical reasons this isn't lowercased.
 func (app *DdevApp) GetMariaDBVolumeName() string {
