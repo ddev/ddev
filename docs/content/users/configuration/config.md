@@ -470,7 +470,6 @@ Defines the performance optimization mode to be used. Currently [Mutagen asynchr
 
 This is typically a global setting. The project-specific value will override global config.
 
-
 ## `php_version`
 
 The PHP version the project should use.

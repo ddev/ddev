@@ -1677,7 +1677,6 @@ Example:
 ddev utility mutagen sync list
 ```
 
-
 ### `utility rebuild`
 
 *Alias: `utility refresh`.*
