@@ -116,10 +116,10 @@ var (
 		{
 			Name: "TestPkgTypo3",
 			// tar -czf .tarballs/typo3v11_source.tgz --exclude=var --exclude=public/fileadmin .
-			SourceURL:                     "https://github.com/ddev/test-typo3/archive/refs/tags/v13.4.3.tar.gz",
-			ArchiveInternalExtractionPath: "test-typo3-13.4.3/",
-			DBTarURL:                      "https://github.com/ddev/test-typo3/releases/download/v13.4.3/typo3.sql.tar.gz",
-			FilesTarballURL:               "https://github.com/ddev/test-typo3/releases/download/v13.4.3/files.tgz",
+			SourceURL:                     "https://github.com/ddev/test-typo3/archive/refs/tags/v13.4.19.tar.gz",
+			ArchiveInternalExtractionPath: "test-typo3-13.4.19/",
+			DBTarURL:                      "https://github.com/ddev/test-typo3/releases/download/v13.4.19/typo3.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/test-typo3/releases/download/v13.4.19/files.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeTYPO3,
