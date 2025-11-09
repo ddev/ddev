@@ -1,14 +1,11 @@
 package dockerutil_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/volume"
