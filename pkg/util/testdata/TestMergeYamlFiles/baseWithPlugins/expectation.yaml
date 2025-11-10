@@ -8,8 +8,6 @@ certificatesResolvers:
       email: ""
       storage: /mnt/ddev-global-cache/traefik/acme.json
       tlsChallenge: {}
-core:
-  defaultRuleSyntax: v2
 entryPoints:
   http-80:
     address: :80
