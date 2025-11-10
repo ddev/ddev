@@ -241,8 +241,6 @@ func isTypo3ComposerV12OrHigher(app *DdevApp) bool {
 		return false
 	}
 
-	util.Debug("Found TYPO3 version %v for project %s.", version.Original(), app.Name)
-
 	return version.Major() >= 12
 }
 
@@ -287,8 +285,6 @@ func isTypo3LegacyV12OrHigher(app *DdevApp) bool {
 		util.Warning("Unexpected error while parsing TYPO3 version ('%s') for project %s: %v.", matches[1], app.Name, err)
 		return false
 	}
-
-	util.Debug("Found TYPO3 version %v for project %s.", version.Original(), app.Name)
 
 	return version.Major() >= 12
 }
