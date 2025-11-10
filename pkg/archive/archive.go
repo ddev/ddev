@@ -434,6 +434,8 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 			if err != nil {
 				return err
 			}
+			// Normalize to forward slashes for tar format
+			linkTarget = filepath.ToSlash(linkTarget)
 		}
 
 		// Create header - for symlinks, second arg is the link target
@@ -444,9 +446,7 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 
 		// update the name to correctly reflect the desired destination when untarring
 		header.Name = strings.TrimPrefix(strings.ReplaceAll(file, src, ""), string(filepath.Separator))
-		if nodeps.IsWindows() {
-			header.Name = strings.ReplaceAll(header.Name, `\`, `/`)
-		}
+		header.Name = filepath.ToSlash(header.Name)
 
 		// For regular files, handle file content
 		if fi.Mode().IsRegular() {
