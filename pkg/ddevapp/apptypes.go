@@ -188,6 +188,16 @@ func init() {
 			postStartAction: laravelPostStartAction,
 		},
 
+		nodeps.AppTypeCodeIgniter: {
+			settingsCreator:      createCodeIgniterSettingsFile,
+			uploadDirs:           getCodeIgniterUploadDirs,
+			hookDefaultComments:  getCodeIgniterHooks,
+			appTypeSettingsPaths: setCodeIgniterSiteSettingsPaths,
+			appTypeDetect:        isCodeIgniterApp,
+			postStartAction:      codeIgniterPostStartAction,
+			importFilesAction:    codeIgniterImportFilesAction,
+		},
+
 		nodeps.AppTypeSilverstripe: {
 			appTypeDetect:        isSilverstripeApp,
 			postStartAction:      silverstripePostStartAction,

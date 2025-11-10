@@ -1,0 +1,131 @@
+package ddevapp
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
+)
+
+// createCodeIgniterSettingsFile creates/updates the .env file for CodeIgniter 4
+func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
+	envFilePath := filepath.Join(app.AppRoot, ".env")
+
+	// Check if .env already exists
+	if fileutil.FileExists(envFilePath) {
+		output.UserOut.Printf("CodeIgniter .env file already exists at %s", envFilePath)
+		return envFilePath, nil
+	}
+
+	// Try to copy from env or .env.example
+	envExamplePath := filepath.Join(app.AppRoot, "env")
+	if !fileutil.FileExists(envExamplePath) {
+		envExamplePath = filepath.Join(app.AppRoot, ".env.example")
+	}
+
+	if fileutil.FileExists(envExamplePath) {
+		if err := fileutil.CopyFile(envExamplePath, envFilePath); err != nil {
+			return "", fmt.Errorf("failed to copy %s to .env: %v", envExamplePath, err)
+		}
+	}
+
+	// Append DDEV-specific database configuration
+	dbConfig := fmt.Sprintf(`
+		#ddev-generated
+		# Database Configuration
+		database.default.hostname = db
+		database.default.database = db  
+		database.default.username = db
+		database.default.password = db
+		database.default.DBDriver = MySQLi
+		database.default.DBPrefix =
+		database.default.port = 3306
+
+		# Base URL
+		app.baseURL = 'https://%s'
+		`,
+		app.GetPrimaryURL())
+
+	f, err := os.OpenFile(envFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	if _, err := f.WriteString(dbConfig); err != nil {
+		return "", err
+	}
+
+	return envFilePath, nil
+}
+
+// getCodeIgniterUploadDirs returns upload directories for CodeIgniter 4
+func getCodeIgniterUploadDirs(_ *DdevApp) []string {
+	return []string{"writable/uploads"}
+}
+
+// getCodeIgniterHooks returns example hook comments for CodeIgniter
+func getCodeIgniterHooks() []byte {
+	return []byte(`#  post-start:
+#    - exec: php spark migrate
+#    - exec: php spark db:seed`)
+}
+
+// setCodeIgniterSiteSettingsPaths sets the paths to settings files
+func setCodeIgniterSiteSettingsPaths(app *DdevApp) {
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, ".env")
+	app.SiteDdevSettingsFile = ""
+}
+
+// isCodeIgniterApp detects if this is a CodeIgniter 4 application
+func isCodeIgniterApp(app *DdevApp) bool {
+	// Check for CodeIgniter 4 specific files
+	sparkPath := filepath.Join(app.AppRoot, "spark")
+	appConfigPath := filepath.Join(app.AppRoot, "app", "Config", "App.php")
+	publicIndexPath := filepath.Join(app.AppRoot, "public", "index.php")
+
+	return fileutil.FileExists(sparkPath) &&
+		fileutil.FileExists(appConfigPath) &&
+		fileutil.FileExists(publicIndexPath)
+}
+
+// codeIgniterPostStartAction runs after container start
+func codeIgniterPostStartAction(app *DdevApp) error {
+	// Ensure writable directory has correct permissions
+	writableDir := "writable"
+
+	_, _, err := app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     fmt.Sprintf("chmod -R 775 %s", writableDir),
+	})
+
+	if err != nil {
+		util.Warning("Unable to set permissions on %s directory: %v", writableDir, err)
+	}
+
+	return nil
+}
+
+// codeIgniterImportFilesAction handles file imports
+func codeIgniterImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
+	destPath := app.calculateHostUploadDirFullPath(uploadDir)
+
+	// Ensure destination directory exists
+	err := os.MkdirAll(destPath, 0755)
+	if err != nil {
+		return err
+	}
+
+	// Copy files from import path to destination
+	if isTar(importPath) {
+		err = archive.Untar(importPath, destPath, extPath)
+	} else {
+		err = fileutil.CopyDir(importPath, destPath)
+	}
+
+	return err
+}

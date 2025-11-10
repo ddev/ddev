@@ -106,6 +106,7 @@ const (
 	AppTypeDrupal       = "drupal"
 	AppTypeGeneric      = "generic"
 	AppTypeLaravel      = "laravel"
+	AppTypeCodeIgniter  = "codeigniter"
 	AppTypeSilverstripe = "silverstripe"
 	AppTypeSymfony      = "symfony"
 	AppTypeMagento      = "magento"
