@@ -1,6 +1,9 @@
 package archive_test
 
 import (
+	"archive/tar"
+	"compress/gzip"
+	"io"
 	"io/fs"
 	"os"
 	"path"
@@ -209,6 +212,34 @@ func TestUntarSymlinks(t *testing.T) {
 
 	err = archive.Tar(srcDir, tarballFile.Name(), "")
 	require.NoError(t, err)
+
+	// Verify tarball contents contain proper symlink entries
+	tf, err := os.Open(tarballFile.Name())
+	require.NoError(t, err)
+	gzf, err := gzip.NewReader(tf)
+	require.NoError(t, err)
+	tr := tar.NewReader(gzf)
+
+	symlinkEntriesFound := make(map[string]string) // map of symlink name to link target
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(t, err)
+
+		if header.Typeflag == tar.TypeSymlink {
+			symlinkEntriesFound[header.Name] = header.Linkname
+		}
+	}
+	_ = gzf.Close()
+	_ = tf.Close()
+
+	// Verify both symlinks were stored as symlink entries in the tarball
+	require.Equal(t, "target.txt", symlinkEntriesFound["link_to_target.txt"],
+		"tarball should contain symlink entry for link_to_target.txt pointing to target.txt")
+	require.Equal(t, "../target.txt", symlinkEntriesFound["subdir/link_to_parent.txt"],
+		"tarball should contain symlink entry for subdir/link_to_parent.txt pointing to ../target.txt")
 
 	// Extract to new directory
 	extractDir := testcommon.CreateTmpDir(t.Name() + "_extract")
