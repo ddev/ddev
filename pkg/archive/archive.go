@@ -234,7 +234,7 @@ func Untar(source string, dest string, extractionDir string) error {
 
 		fullPath := filepath.Join(dest, file.Name)
 
-		// At this point only directories and block-files are handled. Symlinks and the like are ignored.
+		// Handle directories, regular files, and symlinks
 		switch file.Typeflag {
 		case tar.TypeDir:
 			// For a directory, if it doesn't exist, we create it.
@@ -274,6 +274,23 @@ func Untar(source string, dest string, extractionDir string) error {
 			err = util.Chmod(fullPath, fs.FileMode(file.Mode))
 			if err != nil {
 				return fmt.Errorf("failed to chmod %v file %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
+			}
+
+		case tar.TypeSymlink:
+			// Ensure the parent directory exists before creating the symlink.
+			fullPathDir := filepath.Dir(fullPath)
+			err = os.MkdirAll(fullPathDir, 0755)
+			if err != nil {
+				return fmt.Errorf("failed to create the directory %s, err: %v", fullPathDir, err)
+			}
+
+			// Remove any existing file/symlink at this path
+			_ = os.Remove(fullPath)
+
+			// Create the symlink
+			err = os.Symlink(file.Linkname, fullPath)
+			if err != nil {
+				return fmt.Errorf("failed to create symlink %v -> %v, err: %v", fullPath, file.Linkname, err)
 			}
 		}
 	}
@@ -400,46 +417,29 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 			return nil
 		}
 
-		// return on non-regular files (thanks to [kumo](https://medium.com/@komuw/just-like-you-did-fbdd7df829d3) for this suggested update)
 		fi, err := info.Info()
 		if err != nil {
 			return nil
 		}
-		if !fi.Mode().IsRegular() {
+
+		// Skip directories - WalkDir handles traversal
+		if fi.IsDir() {
 			return nil
 		}
 
-		// create a new dir/file header
-		header, err := tar.FileInfoHeader(fi, fi.Name())
-		if err != nil {
-			return err
-		}
-		// Windows may not get zero size of file, https://github.com/golang/go/issues/23493
-		// No idea why fi.Size() comes through as zero for a few files
-		stat, err := os.Stat(file)
-		if err != nil {
-			return err
-		}
-		header.Size = stat.Size()
-
-		// open files for tarring
-		f, err := os.Open(file)
-		if err != nil {
-			return err
-		}
-
-		// Windows filesystem has no concept of executable bit, but we're copying shell scripts
-		// and they need to be executable. So if we detect a shell script
-		// set its mode to executable. It seems this is what utilities like git-bash
-		// and cygwin, etc. have done for years to work around the lack of mode bits on NTFS,
-		// for example, see https://stackoverflow.com/a/25730108/215713
-		if nodeps.IsWindows() {
-			buffer := make([]byte, 16)
-			_, _ = f.Read(buffer)
-			_, _ = f.Seek(0, 0)
-			if strings.HasPrefix(string(buffer), "#!") {
-				header.Mode = 0755
+		// For symlinks, we need to read the link target
+		var linkTarget string
+		if fi.Mode()&os.ModeSymlink != 0 {
+			linkTarget, err = os.Readlink(file)
+			if err != nil {
+				return err
 			}
+		}
+
+		// Create header - for symlinks, second arg is the link target
+		header, err := tar.FileInfoHeader(fi, linkTarget)
+		if err != nil {
+			return err
 		}
 
 		// update the name to correctly reflect the desired destination when untarring
@@ -448,19 +448,55 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 			header.Name = strings.ReplaceAll(header.Name, `\`, `/`)
 		}
 
-		// write the header
-		if err := tw.WriteHeader(header); err != nil {
-			return err
-		}
+		// For regular files, handle file content
+		if fi.Mode().IsRegular() {
+			// Windows may not get zero size of file, https://github.com/golang/go/issues/23493
+			// No idea why fi.Size() comes through as zero for a few files
+			stat, err := os.Stat(file)
+			if err != nil {
+				return err
+			}
+			header.Size = stat.Size()
 
-		// copy file data into tar writer
-		if _, err := io.Copy(tw, f); err != nil {
-			return err
-		}
+			// open files for tarring
+			f, err := os.Open(file)
+			if err != nil {
+				return err
+			}
 
-		// manually close here after each file operation; deferring would cause each file close
-		// to wait until all operations have completed.
-		f.Close()
+			// Windows filesystem has no concept of executable bit, but we're copying shell scripts
+			// and they need to be executable. So if we detect a shell script
+			// set its mode to executable. It seems this is what utilities like git-bash
+			// and cygwin, etc. have done for years to work around the lack of mode bits on NTFS,
+			// for example, see https://stackoverflow.com/a/25730108/215713
+			if nodeps.IsWindows() {
+				buffer := make([]byte, 16)
+				_, _ = f.Read(buffer)
+				_, _ = f.Seek(0, 0)
+				if strings.HasPrefix(string(buffer), "#!") {
+					header.Mode = 0755
+				}
+			}
+
+			// write the header
+			if err := tw.WriteHeader(header); err != nil {
+				return err
+			}
+
+			// copy file data into tar writer
+			if _, err := io.Copy(tw, f); err != nil {
+				return err
+			}
+
+			// manually close here after each file operation; deferring would cause each file close
+			// to wait until all operations have completed.
+			f.Close()
+		} else {
+			// For symlinks and other special files, just write the header
+			if err := tw.WriteHeader(header); err != nil {
+				return err
+			}
+		}
 
 		return nil
 	})
