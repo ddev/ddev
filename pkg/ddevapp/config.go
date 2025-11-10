@@ -1269,7 +1269,7 @@ if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buste
 fi
 EOF
 
-USER %[2]s
+USER "$username"
 RUN echo "*:*:db:db:db" > ~/.pgpass && chmod 600 ~/.pgpass
 USER root
 
@@ -1296,11 +1296,11 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y \
 update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
 # Change directories owned by postgres (and everything inside them)
-find / -type d \( -user postgres -o -group postgres \) -exec chown -Rh %[3]s:%[4]s {} + 2>/dev/null || true
+find / -type d \( -user postgres -o -group postgres \) -exec chown -Rh %[2]s:%[3]s {} + 2>/dev/null || true
 # Change any remaining individual files owned by postgres
-find / -type f \( -user postgres -o -group postgres \) -exec chown -h %[3]s:%[4]s {} + 2>/dev/null || true
+find / -type f \( -user postgres -o -group postgres \) -exec chown -h %[2]s:%[3]s {} + 2>/dev/null || true
 EOF
-`, app.GetMaxContainerWaitTime(), username, uid, gid)
+`, app.GetMaxContainerWaitTime(), uid, gid)
 	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
