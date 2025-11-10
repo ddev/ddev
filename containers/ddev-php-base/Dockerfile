@@ -89,8 +89,6 @@ RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj
 # Install node without cache, make a symlink for nodejs
 RUN n install --cleanup "${NODE_VERSION}" && ln -sf "$(which node)" "$(which node)js"
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
-# Normal user needs to be able to write to php sessions
-RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl --fail -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
 
 # Loop through $PHP_VERSIONS, selecting packages for the target architecture.
 RUN for v in ${PHP_VERSIONS}; do \

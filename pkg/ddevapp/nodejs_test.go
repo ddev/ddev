@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
@@ -77,25 +76,6 @@ func TestNodeJSVersions(t *testing.T) {
 		assert.NoError(err)
 		assert.True(strings.HasPrefix(out, "v"+v), "Expected node version to start with '%s', but got %s", v, out)
 	}
-
-	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: `bash -ic "nvm install 6 && node --version"`,
-	})
-	require.NoError(t, err)
-	assert.Contains(out, "Now using node v6")
-
-	out, err = exec.RunHostCommand(DdevBin, "nvm", "install", "8")
-	require.NoError(t, err, "output=%v", out)
-	assert.Contains(out, "Now using node v8")
-	out, err = exec.RunHostCommand(DdevBin, "nvm", "use", "8")
-	require.NoError(t, err, "output=%v", out)
-	out, err = exec.RunHostCommand(DdevBin, "nvm", "alias", "default", "8")
-	require.NoError(t, err, "output=%v", out)
-
-	out, err = exec.RunHostCommand(DdevBin, "exec", "node", "--version")
-	require.NoError(t, err)
-
-	assert.Contains(out, "v8.17")
 }
 
 // TestCorepackEnable tests behavior of corepack_enable

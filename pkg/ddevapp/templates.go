@@ -82,9 +82,7 @@ const ConfigInstructions = `
 # nodejs_version: "24"
 # change from the default system Node.js version to any other version.
 # See https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version for more information
-# and https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation,
-# Note that using of 'ddev nvm' is discouraged because "nodejs_version" is much easier to use,
-# can specify any version, and is more robust than using 'nvm'.
+# and https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation.
 
 # corepack_enable: false
 # Change to 'true' to 'corepack enable' and gain access to latest versions of yarn/pnpm
