@@ -37,9 +37,6 @@ After changing nodejs_version, restart your project with 'ddev restart'.
 For more information, see:
 https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version
 
-If you need to use nvm directly, you can still run it inside the container:
-  ddev ssh
-  nvm install 20
 `)
 		util.Failed("ddev nvm has been removed")
 	},
