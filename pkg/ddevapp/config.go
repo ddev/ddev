@@ -843,7 +843,7 @@ func (app *DdevApp) CheckDeprecations() {
 // FixObsolete removes files that may be obsolete, etc.
 func (app *DdevApp) FixObsolete() {
 	// Remove old in-project commands (which have been moved to global)
-	for _, command := range []string{"db/mysql", "host/launch", "host/xhgui", "web/nvm", "web/xdebug"} {
+	for _, command := range []string{"db/mysql", "host/launch", "host/xhgui", "web/xdebug"} {
 		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
 		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
 		if err == nil && signatureFound {
@@ -864,9 +864,8 @@ func (app *DdevApp) FixObsolete() {
 	}
 
 	// Remove old global commands
-	for _, command := range []string{"host/yarn", "host/xhgui"} {
+	for _, command := range []string{"host/yarn", "host/xhgui", "web/nvm"} {
 		cmdPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/", command)
-		// TODO: Consider checking for #ddev-generated
 		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
 		if err == nil && signatureFound {
 			err = os.Remove(cmdPath)
