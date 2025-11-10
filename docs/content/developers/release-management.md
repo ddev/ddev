@@ -28,9 +28,12 @@ These are normally configured in the repository environment variables.
 * `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
 * `AUR_PACKAGE_NAME`: The base name of the AUR package. Normally `ddev` for production, but `ddev-test` for testing repository.
 * `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
+* `DDEV_IGNORE_EXPIRING_KEYS`: If the value is `"false"` then daily tests will fail if signing keys are expiring soon, default is `"false"` on `ddev/ddev`
+* `DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION`: Number of days before expiration to warn about expiring signing keys, default is `60` on `ddev/ddev`.
 * `DDEV_WINDOWS_SIGN`: If the value is `"true"` then `make` will attempt to sign the Windows executables, which requires building on our self-hosted Windows runner.
-* `DOCKER_ORG`: the organization on `hub.docker.org` to push to. Currently `ddev` on `ddev/ddev` and `ddevhq` on `ddev-test/ddev`.
+* `DISABLE_NOTARIZATION`: If the value is `"true"` then notarization of macOS apps will be skipped, otherwise notarization is attempted.
 * `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions. Usually `ddevmachinepush`.
+* `DOCKER_ORG`: The organization on `hub.docker.org` to push to. Currently `ddev` on `ddev/ddev` and `ddevhq` on `ddev-test/ddev`.
 * `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes. `drud` on `ddev/ddev` for historical reasons, and `rfay` on `ddev-test/ddev` because that's a spare account there.
 * `HOMEBREW_EDGE_REPOSITORY`: Like `ddev/homebrew-ddev-edge` but might be another repository like be `ddev-test/homebrew-ddev-edge`.
 * `HOMEBREW_STABLE_REPOSITORY`: Like `ddev/homebrew-ddev` but might be another repository like `ddev-test/homebrew-ddev`.
