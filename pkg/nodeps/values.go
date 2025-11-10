@@ -69,10 +69,6 @@ const NodeJSDefault = "22"
 // NoBindMountsDefault is default value for globalconfig.DDEVGlobalConfig.NoBindMounts
 var NoBindMountsDefault = false
 
-// UseNginxProxyRouter is used in testing to override the default
-// setting for tests.
-var UseNginxProxyRouter = false
-
 // SimpleFormatting is turned on by DDEV_USE_SIMPLE_FORMATTING
 // and makes ddev list and describe, etc. use simpler formatting
 var SimpleFormatting = false

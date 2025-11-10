@@ -73,8 +73,6 @@ For comprehensive developer documentation, see:
 
 - `containers/ddev-webserver/` - Web server container (Apache/Nginx + PHP)
 - `containers/ddev-dbserver/` - Database server container (MySQL/MariaDB/PostgreSQL)
-- `containers/ddev-nginx-proxy-router/` - Nginx reverse proxy router
-- `containers/ddev-traefik-router/` - Traefik reverse proxy router
 - `containers/ddev-ssh-agent/` - SSH agent container
 
 ### Project Structure

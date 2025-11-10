@@ -51,9 +51,6 @@ func init() {
 	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
 		nodeps.NoBindMountsDefault = true
 	}
-	if os.Getenv("DDEV_TEST_USE_NGINX_PROXY_ROUTER") == "true" {
-		nodeps.UseNginxProxyRouter = true
-	}
 	if g := os.Getenv("DDEV_TEST_GOROUTINE_LIMIT"); g != "" {
 		nodeps.GoroutineLimit, err = strconv.Atoi(g)
 		if err != nil {
