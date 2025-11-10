@@ -43,8 +43,8 @@ version="$(echo $DDEV_DATABASE | sed 's/.*://')"
 nettype=0
 user="root"
 password="root"
-database="${1:-db}"
-library="${2}"
+database="${1:-}"
+library="${2:-}"
 
 # Arguments for Postgres
 if [ "$type" = "postgres" ]; then
@@ -92,8 +92,8 @@ arguments=(
   "--port=${DDEV_HOST_DB_PORT}"
   "--user=${user}"
   "--password=${password}"
-  "--databases=${database}"
   "--description=ddev-${DDEV_PROJECT}"
+  "${database:+--databases=${database}}"
   "${library:+--library=${library}}"
 )
 
