@@ -1608,6 +1608,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/vite). See the [Vite Integration](usage/vite.md#laravel) documentation for complete setup instructions.
 
 ## CodeIgniter
+
 Use a new or existing Composer project, or clone a Git repository.
 
 DDEV automatically updates or creates the `.env` file with the database information.
