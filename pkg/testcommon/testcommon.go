@@ -408,7 +408,7 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 		return extractPath, archiveFullPath, nil
 	}
 
-	// Download if archive not already exists.
+	// Download if archive does not already exist.
 	if aErr != nil {
 		output.UserOut.Printf("Downloading %s", sourceURL)
 
