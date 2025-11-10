@@ -58,7 +58,7 @@ You can set custom environment variables in several places:
     MY_OTHER_ENV_VAR="someotherval"
     ```
 
-2. With DDEV v1.23.5+, an optional, project-level `.ddev/env.*` file (where `*` is a service name, like `web`, `db`, `redis`, etc.) provides environment variables to specific services or add-ons. For example, `.ddev/.env.redis` file can look something like this:
+2. With DDEV v1.23.5+, an optional, project-level `.ddev/.env.*` file (where `*` is a service name, like `web`, `db`, `redis`, etc.) provides environment variables to specific services or add-ons. For example, `.ddev/.env.redis` file can look something like this:
 
     ```dotenv
     REDIS_TAG="7-bookworm"
