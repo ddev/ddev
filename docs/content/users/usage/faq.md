@@ -140,9 +140,7 @@ Most likely because the docroot is misconfigured, or there’s no `index.php` or
 
 Apache runs in the web container, but when you use the `https://*.ddev.site` URL, it goes through `ddev-router`, which is an nginx reverse proxy. That’s why you see nginx headers even though your web container’s using Apache. Read more in [this Stack Overflow answer](https://stackoverflow.com/a/52780601/215713).
 
-### Why does `ddev start` fail with “error while mounting volume, Permission denied”?
 
-This error can occur due to permissions issues with Docker volumes or bind mounts.
 
 ### Why are my Apache HTTP → HTTPS redirects stuck in an infinite loop?
 

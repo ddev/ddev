@@ -8,7 +8,7 @@ On macOS and Windows with Docker Desktop, allocated resources and mounted filesy
 
 ## Filesystem Performance
 
-Mutagen can offer a big performance boost on macOS and Windows. It's fast and doesn't need any setup; you only need to enable it.
+Mutagen offers a huge performance boost on macOS and Traditional Windows. It's fast and doesn't need any setup; It's enabled by default in those environments, but you have the option of turning it off.
 
 Mutagen is enabled by default on Mac and traditional Windows, and it can be disabled per-project or globally.
 
@@ -18,7 +18,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     ### What Mutagen Does
 
-    The [Mutagen](https://mutagen.io) asynchronous caching feature is the best way to improve DDEV’s web-serving performance on macOS and Windows, and we recommend it for most projects. Massively faster than plain Docker or Colima, and it makes filesystem watchers (`fsnotify`/`inotify`) work correctly.
+    The [Mutagen](https://mutagen.io) asynchronous caching feature is the best way to improve DDEV’s web-serving performance on macOS and Windows, and we recommend it for most projects. It offers  enormous webserving performance benefits over most basic Docker providers, and it makes filesystem watchers (`fsnotify`/`inotify`) work correctly.
 
     Mutagen decouples in-container reads and writes from reads and writes on the host machine, so each can enjoy near-native speed. A change on the host gets changed “pretty soon” in the container, and a change in the container gets updated “pretty soon” on the host; neither filesystem is stuck waiting on the other one. This “pretty soon” means, however, that there’s a brief window where files on the host may not exactly match the files inside the container—so files that manage to change in both places can lead to conflicts.
 
