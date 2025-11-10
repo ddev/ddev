@@ -140,8 +140,6 @@ Most likely because the docroot is misconfigured, or there’s no `index.php` or
 
 Apache runs in the web container, but when you use the `https://*.ddev.site` URL, it goes through `ddev-router`, which is an nginx reverse proxy. That’s why you see nginx headers even though your web container’s using Apache. Read more in [this Stack Overflow answer](https://stackoverflow.com/a/52780601/215713).
 
-
-
 ### Why are my Apache HTTP → HTTPS redirects stuck in an infinite loop?
 
 It’s common to set up HTTP-to-TLS redirects in an `.htaccess` file, which leads to issues with the DDEV proxy setup. The TLS endpoint of a DDEV project is always the `ddev-router` container and requests are forwarded through plain HTTP to the project’s web server. This results in endless redirects, so you need to change the root `.htaccess` file for Apache correctly handles these requests for your local development environment with DDEV. The following snippet should work for most scenarios—even outside of DDEV—and could replace an existing redirect:
