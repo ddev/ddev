@@ -173,7 +173,9 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
 > `Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?`
 
-This error indicates that either Docker is not installed or the Docker daemon is not running:
+A message like this can mean that your Docker provider hasn't been started (or hasn't been installed). It can also mean that the wrong Docker context is selected, which happens sometimes when people are switching to a new Docker provider. `docker context ls` will show you the available contexts and which one is in use.
+
+But this error often indicates that either Docker is not installed or the Docker daemon is not running:
 
 - **macOS/Traditional Windows:** Start your Docker provider (e.g., OrbStack, Docker Desktop, Rancher Desktop) from your applications menu
 - **Linux/WSL2:** Run `sudo systemctl enable --now docker` to start and enable it to start automatically on boot
