@@ -42,14 +42,14 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [command
 
 ## Node.js Tools
 
-`node`, `nodejs`, `npm`, `npx`, `nvm` and `yarn` are preinstalled in the web container. You can configure the default value of the installed Node.js version with the [`nodejs_version`](../configuration/config.md#nodejs_version) option in `.ddev/config.yaml` or with `ddev config --nodejs-version`. You can also override that with any value using the built-in `nvm` in the web container or with [`ddev nvm`](../usage/commands.md#nvm), for example `ddev nvm install 6`. There is also a [`ddev yarn`](../usage/commands.md#yarn) command. (Note that since `nodejs_version` configuration can now specify any `node` version, including patch versions, it's preferred to using the less robust `ddev nvm` way of specifying the `node` version.)
+`node`, `nodejs`, `npm`, `npx` and `yarn` are preinstalled in the web container. You can configure the default value of the installed Node.js version with the [`nodejs_version`](../configuration/config.md#nodejs_version) option in `.ddev/config.yaml` or with `ddev config --nodejs-version`. There is also a [`ddev yarn`](../usage/commands.md#yarn) command.
 
 ## More Bundled Tools
 
 In addition to the [*commands*](../usage/commands.md) listed above, there are lots of tools included inside the containers:
 
 * [`ddev describe`](../usage/commands.md#describe) tells how to access **Mailpit**, which captures email in your development environment.
-* Composer, Git, Node.js, npm, nvm, symfony, and dozens of other tools are installed in the web container, and you can access them via [`ddev ssh`](../usage/commands.md#ssh) or [`ddev exec`](../usage/commands.md#exec).
+* Composer, Git, Node.js, npm, symfony, and dozens of other tools are installed in the web container, and you can access them via [`ddev ssh`](../usage/commands.md#ssh) or [`ddev exec`](../usage/commands.md#exec).
 * [`ddev logs`](../usage/commands.md#logs) gets you web server logs; `ddev logs -s db` gets database server logs.
 * `sqlite3` and the `mysql` and `psql` clients are inside the web container (and `mysql` or `psql` client is also in the `db` container).
 
