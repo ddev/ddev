@@ -94,6 +94,7 @@ Kubernetes
 Lando
 Laravel
 Laravel's
+CodeIgniter
 Let's
 Lima
 Livewire
