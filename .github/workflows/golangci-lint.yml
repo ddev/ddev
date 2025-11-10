@@ -48,7 +48,7 @@ jobs:
         run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
 
       - name: Lint Go Files
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
 
   check_modules:
     name: Check Go Modules
