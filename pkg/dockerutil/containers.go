@@ -21,11 +21,10 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/docker/go-connections/nat"
+	"github.com/moby/moby/api/pkg/stdcopy"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
+	"github.com/moby/moby/client"
 	"github.com/moby/term"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
@@ -131,7 +130,7 @@ func GetContainerUser() (uidStr string, gidStr string, username string) {
 
 // InspectContainer returns the full result of inspection
 func InspectContainer(name string) (container.InspectResponse, error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return container.InspectResponse{}, err
 	}
@@ -140,32 +139,35 @@ func InspectContainer(name string) (container.InspectResponse, error) {
 	if err != nil || c == nil {
 		return container.InspectResponse{}, err
 	}
-	x, err := client.ContainerInspect(ctx, c.ID)
-	return x, err
+	x, err := apiClient.ContainerInspect(ctx, c.ID, client.ContainerInspectOptions{})
+	if err != nil {
+		return container.InspectResponse{}, err
+	}
+	return x.Container, err
 }
 
 // FindContainerByName takes a container name and returns the container
 // If container is not found, returns nil with no error
 func FindContainerByName(name string) (*container.Summary, error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
 
-	containers, err := client.ContainerList(ctx, container.ListOptions{
+	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{
 		All:     true,
-		Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: name}),
+		Filters: client.Filters{}.Add("name", name),
 	})
 	if err != nil {
 		return nil, err
 	}
-	if len(containers) == 0 {
+	if len(containers.Items) == 0 {
 		return nil, nil
 	}
 
 	// ListContainers can return partial matches. Make sure we only match the exact one
 	// we're after.
-	for _, c := range containers {
+	for _, c := range containers.Items {
 		if c.Names[0] == "/"+name {
 			return &c, nil
 		}
@@ -174,7 +176,7 @@ func FindContainerByName(name string) (*container.Summary, error) {
 }
 
 // GetContainerStateByName returns container state for the named container
-func GetContainerStateByName(name string) (string, error) {
+func GetContainerStateByName(name string) (container.ContainerState, error) {
 	c, err := FindContainerByName(name)
 	if err != nil || c == nil {
 		return "doesnotexist", fmt.Errorf("container %s does not exist", name)
@@ -199,12 +201,15 @@ func FindContainerByLabels(labels map[string]string) (*container.Summary, error)
 
 // GetDockerContainers returns a slice of all Docker containers on the host system.
 func GetDockerContainers(allContainers bool) ([]container.Summary, error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
-	containers, err := client.ContainerList(ctx, container.ListOptions{All: allContainers})
-	return containers, err
+	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{All: allContainers})
+	if err != nil {
+		return nil, err
+	}
+	return containers.Items, err
 }
 
 // FindContainersByLabels takes a map of label names and values and returns any Docker containers which match all labels.
@@ -215,46 +220,46 @@ func FindContainersByLabels(labels map[string]string) ([]container.Summary, erro
 	if len(labels) < 1 {
 		return nil, fmt.Errorf("the provided list of labels was empty")
 	}
-	filterList := filters.NewArgs()
+	filterList := client.Filters{}
 	for k, v := range labels {
 		label := fmt.Sprintf("%s=%s", k, v)
 		// If no value is specified, filter any value by the key.
 		if v == "" {
 			label = k
 		}
-		filterList.Add("label", label)
+		filterList = filterList.Add("label", label)
 	}
 
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
-	containers, err := client.ContainerList(ctx, container.ListOptions{
+	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{
 		All:     true,
 		Filters: filterList,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return containers, nil
+	return containers.Items, nil
 }
 
 // FindContainersWithLabel returns all containers with the given label
 // It ignores the value of the label, is only interested that the label exists.
 func FindContainersWithLabel(label string) ([]container.Summary, error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
-	containers, err := client.ContainerList(ctx, container.ListOptions{
+	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{
 		All:     true,
-		Filters: filters.NewArgs(filters.KeyValuePair{Key: "label", Value: label}),
+		Filters: client.Filters{}.Add("label", label),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return containers, nil
+	return containers.Items, nil
 }
 
 // ContainerWait provides a wait loop to check for a single container in "healthy" status.
@@ -386,16 +391,16 @@ func getSuggestedCommandForContainerLog(c *container.Summary, timeout int) (stri
 		suggestedCommand = suggestedCommand + timeoutNote + timeoutCommand
 	}
 	if globalconfig.DdevDebug {
-		ctx, client, err := GetDockerClient()
+		ctx, apiClient, err := GetDockerClient()
 		if err == nil {
 			var stdout bytes.Buffer
-			logOpts := container.LogsOptions{
+			logOpts := client.ContainerLogsOptions{
 				ShowStdout: true,
 				ShowStderr: true,
 				Follow:     false,
 				Timestamps: false,
 			}
-			rc, err := client.ContainerLogs(ctx, c.ID, logOpts)
+			rc, err := apiClient.ContainerLogs(ctx, c.ID, logOpts)
 			if err != nil {
 				util.Warning("Unable to capture logs from %s container: %v", name, err)
 			} else {
@@ -414,31 +419,32 @@ func getSuggestedCommandForContainerLog(c *container.Summary, timeout int) (stri
 }
 
 // ContainerName returns the container's human-readable name.
-func ContainerName(container *container.Summary) string {
-	if len(container.Names) == 0 {
-		return container.ID
+func ContainerName(c *container.Summary) string {
+	if len(c.Names) == 0 {
+		return c.ID
 	}
-	return container.Names[0][1:]
+	return c.Names[0][1:]
 }
 
 // GetContainerHealth retrieves the health status of a given container.
 // returns status, most-recent-log
-func GetContainerHealth(container *container.Summary) (string, string) {
-	if container == nil {
+func GetContainerHealth(c *container.Summary) (string, string) {
+	if c == nil {
 		return "no container", ""
 	}
 
 	// If the container is not running, then return exited as the health.
 	// "exited" means stopped.
-	if container.State == "exited" || container.State == "restarting" {
-		return container.State, ""
+	cState := string(c.State)
+	if cState == "exited" || cState == "restarting" {
+		return cState, ""
 	}
 
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return "", ""
 	}
-	inspect, err := client.ContainerInspect(ctx, container.ID)
+	inspect, err := apiClient.ContainerInspect(ctx, c.ID, client.ContainerInspectOptions{})
 	if err != nil {
 		output.UserOut.Warnf("Error getting container to inspect: %v", err)
 		return "", ""
@@ -446,19 +452,19 @@ func GetContainerHealth(container *container.Summary) (string, string) {
 
 	logOutput := ""
 	status := ""
-	if inspect.State.Health != nil {
-		status = inspect.State.Health.Status
+	if inspect.Container.State.Health != nil {
+		status = string(inspect.Container.State.Health.Status)
 	}
 	// The last log is the most recent
 	if status != "" {
-		numLogs := len(inspect.State.Health.Log)
+		numLogs := len(inspect.Container.State.Health.Log)
 		if numLogs > 0 {
-			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log[numLogs-1].Output)
+			logOutput = fmt.Sprintf("%v", inspect.Container.State.Health.Log[numLogs-1].Output)
 		}
 	} else {
 		// Some containers may not have a healthcheck. In that case
 		// we use State to determine health
-		switch inspect.State.Status {
+		switch string(inspect.Container.State.Status) {
 		case "running":
 			status = "healthy"
 		case "exited":
@@ -483,15 +489,15 @@ func GetAppContainers(sitename string) ([]container.Summary, error) {
 }
 
 // GetContainerEnv returns the value of a given environment variable from a given container.
-func GetContainerEnv(key string, container container.Summary) string {
-	ctx, client, err := GetDockerClient()
+func GetContainerEnv(key string, c container.Summary) string {
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return ""
 	}
-	inspect, err := client.ContainerInspect(ctx, container.ID)
+	inspect, err := apiClient.ContainerInspect(ctx, c.ID, client.ContainerInspectOptions{})
 
 	if err == nil {
-		envVars := inspect.Config.Env
+		envVars := inspect.Container.Config.Env
 
 		for _, env := range envVars {
 			if strings.HasPrefix(env, key) {
@@ -503,8 +509,8 @@ func GetContainerEnv(key string, container container.Summary) string {
 }
 
 // GetPublishedPort returns the published port for a given private port.
-func GetPublishedPort(privatePort uint16, container container.Summary) int {
-	for _, port := range container.Ports {
+func GetPublishedPort(privatePort uint16, c container.Summary) int {
+	for _, port := range c.Ports {
 		if port.PrivatePort == privatePort {
 			return int(port.PublicPort)
 		}
@@ -522,7 +528,7 @@ func GetPublishedPort(privatePort uint16, container container.Summary) int {
 // or it can replace it or have other behaviors, see
 // https://pkg.go.dev/github.com/moby/docker-image-spec/specs-go/v1#HealthcheckConfig
 // Returns containerID, output, error
-func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string, portBindings nat.PortMap, healthConfig *container.HealthConfig) (containerID string, output string, returnErr error) {
+func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string, portBindings network.PortMap, healthConfig *container.HealthConfig) (containerID string, output string, returnErr error) {
 	config := &container.Config{
 		Image:       image,
 		Cmd:         cmd,
@@ -542,7 +548,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 // RunSimpleContainerExtended runs a container (non-daemonized) and captures the stdout/stderr.
 // Accepts any config and hostConfig. If stdin is provided, enables interactive mode with stdin forwarding.
 func RunSimpleContainerExtended(name string, config *container.Config, hostConfig *container.HostConfig, removeContainerAfterRun bool, detach bool) (containerID string, out string, returnErr error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return "", "", err
 	}
@@ -599,7 +605,7 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, "host.docker.internal:"+hostDockerInternal.ExtraHost)
 	}
 
-	c, err := client.ContainerCreate(ctx, config, hostConfig, nil, nil, name)
+	c, err := apiClient.ContainerCreate(ctx, client.ContainerCreateOptions{Config: config, HostConfig: hostConfig, Name: name})
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create/start Docker container %v (%v, %v): %v", name, config, hostConfig, err)
 	}
@@ -609,23 +615,23 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		defer RemoveContainer(c.ID)
 	}
 
-	var hijackedResp *types.HijackedResponse
+	var hijackedResp *client.HijackedResponse
 	var outputDone chan struct{}
 
 	if config.AttachStdin {
 		// Interactive mode with stdin - use attach for real-time I/O
-		attachOptions := container.AttachOptions{
+		attachOptions := client.ContainerAttachOptions{
 			Stream: true,
 			Stdin:  true,
 			Stdout: true,
 			Stderr: true,
 		}
 
-		resp, err := client.ContainerAttach(ctx, c.ID, attachOptions)
+		resp, err := apiClient.ContainerAttach(ctx, c.ID, attachOptions)
 		if err != nil {
 			return c.ID, "", fmt.Errorf("failed to attach to container: %v", err)
 		}
-		hijackedResp = &resp
+		hijackedResp = &resp.HijackedResponse
 		defer hijackedResp.Close()
 
 		restoreTerminal, err := setupRawTerminal()
@@ -665,18 +671,18 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		}()
 	}
 
-	if err := client.ContainerStart(ctx, c.ID, container.StartOptions{}); err != nil {
+	if _, err := apiClient.ContainerStart(ctx, c.ID, client.ContainerStartOptions{}); err != nil {
 		return c.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
 	}
 
 	exitCode := 0
 
 	if !detach {
-		waitChan, errChan := client.ContainerWait(ctx, c.ID, container.WaitConditionNotRunning)
+		waitResult := apiClient.ContainerWait(ctx, c.ID, client.ContainerWaitOptions{Condition: container.WaitConditionNotRunning})
 		select {
-		case status := <-waitChan:
+		case status := <-waitResult.Result:
 			exitCode = int(status.StatusCode)
-		case err := <-errChan:
+		case err := <-waitResult.Error:
 			return c.ID, "", fmt.Errorf("failed to ContainerWait: %v", err)
 		}
 
@@ -704,8 +710,8 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 	}
 
 	// Get logs so we can report them
-	options := container.LogsOptions{ShowStdout: true, ShowStderr: true}
-	rc, err := client.ContainerLogs(ctx, c.ID, options)
+	options := client.ContainerLogsOptions{ShowStdout: true, ShowStderr: true}
+	rc, err := apiClient.ContainerLogs(ctx, c.ID, options)
 	if err != nil {
 		return c.ID, "", fmt.Errorf("failed to get container logs: %v", err)
 	}
@@ -722,18 +728,18 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 
 // RemoveContainer stops and removes a container
 func RemoveContainer(id string) error {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return err
 	}
 
-	err = client.ContainerRemove(ctx, id, container.RemoveOptions{Force: true})
+	_, err = apiClient.ContainerRemove(ctx, id, client.ContainerRemoveOptions{Force: true})
 	return err
 }
 
 // RemoveContainersByLabels removes all containers that match a set of labels
 func RemoveContainersByLabels(labels map[string]string) error {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return err
 	}
@@ -745,7 +751,7 @@ func RemoveContainersByLabels(labels map[string]string) error {
 		return nil
 	}
 	for _, c := range containers {
-		err = client.ContainerRemove(ctx, c.ID, container.RemoveOptions{Force: true})
+		_, err = apiClient.ContainerRemove(ctx, c.ID, client.ContainerRemoveOptions{Force: true})
 		if err != nil {
 			return err
 		}
@@ -756,11 +762,11 @@ func RemoveContainersByLabels(labels map[string]string) error {
 // GetBoundHostPorts takes a container pointer and returns an array
 // of exposed ports (and error)
 func GetBoundHostPorts(containerID string) ([]string, error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
-	inspectInfo, err := client.ContainerInspect(ctx, containerID)
+	inspectInfo, err := apiClient.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
 
 	if err != nil {
 		return nil, err
@@ -768,8 +774,8 @@ func GetBoundHostPorts(containerID string) ([]string, error) {
 
 	portMap := map[string]bool{}
 
-	if inspectInfo.HostConfig != nil && inspectInfo.HostConfig.PortBindings != nil {
-		for _, portBindings := range inspectInfo.HostConfig.PortBindings {
+	if inspectInfo.Container.HostConfig != nil && inspectInfo.Container.HostConfig.PortBindings != nil {
+		for _, portBindings := range inspectInfo.Container.HostConfig.PortBindings {
 			if len(portBindings) > 0 {
 				for _, binding := range portBindings {
 					// Only include ports with a non-empty HostPort
@@ -794,7 +800,7 @@ func GetBoundHostPorts(containerID string) ([]string, error) {
 // with the specified uid (or defaults to root=0 if empty uid)
 // Returns stdout, stderr, error
 func Exec(containerID string, command string, uid string) (string, string, error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return "", "", err
 	}
@@ -802,7 +808,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 	if uid == "" {
 		uid = "0"
 	}
-	execCreate, err := client.ContainerExecCreate(ctx, containerID, container.ExecOptions{
+	execCreate, err := apiClient.ExecCreate(ctx, containerID, client.ExecCreateOptions{
 		Cmd:          []string{"sh", "-c", command},
 		AttachStdout: true,
 		AttachStderr: true,
@@ -813,9 +819,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 	}
 
 	var stdout, stderr bytes.Buffer
-	execAttach, err := client.ContainerExecAttach(ctx, execCreate.ID, container.ExecStartOptions{
-		Detach: false,
-	})
+	execAttach, err := apiClient.ExecAttach(ctx, execCreate.ID, client.ExecAttachOptions{})
 	if err != nil {
 		return "", "", err
 	}
@@ -826,7 +830,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 		return "", "", err
 	}
 
-	info, err := client.ContainerExecInspect(ctx, execCreate.ID)
+	info, err := apiClient.ExecInspect(ctx, execCreate.ID, client.ExecInspectOptions{})
 	if err != nil {
 		return stdout.String(), stderr.String(), err
 	}
@@ -859,7 +863,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		srcPath = dirName
 	}
 
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return err
 	}
@@ -901,7 +905,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	// nolint: errcheck
 	defer t.Close()
 
-	err = client.CopyToContainer(ctx, cid.ID, dstPath, t, container.CopyToContainerOptions{AllowOverwriteDirWithFile: true})
+	_, err = apiClient.CopyToContainer(ctx, cid.ID, client.CopyToContainerOptions{DestinationPath: dstPath, Content: t, AllowOverwriteDirWithFile: true})
 	if err != nil {
 		return err
 	}
@@ -918,7 +922,7 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 		return err
 	}
 
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return err
 	}
@@ -940,14 +944,14 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 	defer os.Remove(f.Name())
 	// nolint: errcheck
 
-	reader, _, err := client.CopyFromContainer(ctx, cid.ID, containerPath)
+	reader, err := apiClient.CopyFromContainer(ctx, cid.ID, client.CopyFromContainerOptions{SourcePath: containerPath})
 	if err != nil {
 		return err
 	}
 
-	defer reader.Close()
+	defer reader.Content.Close()
 
-	_, err = io.Copy(f, reader)
+	_, err = io.Copy(f, reader.Content)
 	if err != nil {
 		return err
 	}

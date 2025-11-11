@@ -13,23 +13,22 @@ import (
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/cli/version"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/system"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/api/types/system"
+	"github.com/moby/moby/client"
 )
 
 // dockerManager manages Docker client configuration and connection state
 // Some of these values are set on demand when first requested
 type dockerManager struct {
-	goContext         context.Context    // Go context for Docker API calls
-	client            client.APIClient   // Docker API for making calls to Docker daemon
-	cli               *command.DockerCli // Docker CLI for getting dockerContextName and host
-	dockerContextName string             // Current Docker context name (e.g., "default", "desktop-linux")
-	host              string             // Docker daemon URL (e.g., "unix:///var/run/docker.sock")
-	hostIP            string             // IP address of Docker host
-	hostIPErr         error              // Error from Docker host IP lookup, if any
-	info              system.Info        // Docker system information from daemon (version, OS, etc.)
-	serverVersion     types.Version      // Docker server version information
+	goContext         context.Context            // Go context for Docker API calls
+	apiClient         client.APIClient           // Docker API for making calls to Docker daemon
+	cli               *command.DockerCli         // Docker CLI for getting dockerContextName and host
+	dockerContextName string                     // Current Docker context name (e.g., "default", "desktop-linux")
+	host              string                     // Docker daemon URL (e.g., "unix:///var/run/docker.sock")
+	hostIP            string                     // IP address of Docker host
+	hostIPErr         error                      // Error from Docker host IP lookup, if any
+	info              system.Info                // Docker system information from daemon (version, OS, etc.)
+	serverVersion     client.ServerVersionResult // Docker server version information
 }
 
 var (
@@ -66,21 +65,23 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		version.Version = "ddev-" + versionconstants.DdevVersion
 		// We can't use sDockerManager.cli.Client(), see https://github.com/docker/cli/issues/4489
 		// That's why we create a new client from flags to catch errors
-		sDockerManager.client, sDockerManagerErr = command.NewAPIClientFromFlags(
+		sDockerManager.apiClient, sDockerManagerErr = command.NewAPIClientFromFlags(
 			opts,
 			sDockerManager.cli.ConfigFile(),
 		)
 		if sDockerManagerErr != nil {
 			return
 		}
-		sDockerManager.serverVersion, sDockerManagerErr = sDockerManager.client.ServerVersion(sDockerManager.goContext)
+		sDockerManager.serverVersion, sDockerManagerErr = sDockerManager.apiClient.ServerVersion(sDockerManager.goContext, client.ServerVersionOptions{})
 		if sDockerManagerErr != nil {
 			return
 		}
-		sDockerManager.info, sDockerManagerErr = sDockerManager.client.Info(sDockerManager.goContext)
-		if sDockerManagerErr != nil {
+		info, infoErr := sDockerManager.apiClient.Info(sDockerManager.goContext, client.InfoOptions{})
+		if infoErr != nil {
+			sDockerManagerErr = infoErr
 			return
 		}
+		sDockerManager.info = info.Info
 	})
 	return sDockerManager, sDockerManagerErr
 }
@@ -91,7 +92,7 @@ func GetDockerClient() (context.Context, client.APIClient, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	return dm.goContext, dm.client, nil
+	return dm.goContext, dm.apiClient, nil
 }
 
 // GetDockerClientInfo returns the Docker system information from the daemon
@@ -163,10 +164,10 @@ func ResetDockerHost(host string) error {
 
 // GetServerVersion gets the cached versions of Docker provider engine
 // This is a struct which has all info from "docker info" command
-func GetServerVersion() (types.Version, error) {
+func GetServerVersion() (client.ServerVersionResult, error) {
 	dm, err := getDockerManagerInstance()
 	if err != nil {
-		return types.Version{}, err
+		return client.ServerVersionResult{}, err
 	}
 	return dm.serverVersion, nil
 }

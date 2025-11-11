@@ -29,9 +29,10 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerContainer "github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/mattn/go-isatty"
+	"github.com/moby/moby/api/pkg/stdcopy"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/client"
 	"github.com/otiai10/copy"
 	"golang.org/x/term"
 )
@@ -196,7 +197,7 @@ func (app *DdevApp) Init(basePath string) error {
 }
 
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
-func (app *DdevApp) FindContainerByType(containerType string) (*dockerContainer.Summary, error) {
+func (app *DdevApp) FindContainerByType(containerType string) (*container.Summary, error) {
 	labels := map[string]string{
 		"com.ddev.site-name":         app.GetName(),
 		"com.docker.compose.service": containerType,
@@ -319,7 +320,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		}
 		fullName := strings.TrimPrefix(serviceName, "/")
 		services[shortName] = map[string]interface{}{}
-		services[shortName]["status"] = c.State.Status
+		services[shortName]["status"] = string(c.State.Status)
 		services[shortName]["full_name"] = fullName
 		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
 		services[shortName]["short_name"] = shortName
@@ -329,7 +330,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 		// Get all exposed ports from container config (works regardless of Docker Desktop changes)
 		for portSpec := range c.Config.ExposedPorts {
-			port := portSpec.Int()
+			port := int(portSpec.Num())
 			if !slices.Contains(exposedPrivatePorts, port) {
 				exposedPrivatePorts = append(exposedPrivatePorts, port)
 			}
@@ -595,11 +596,11 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 
 // GetPublishedPortForPrivatePort returns the host-exposed public port of a container for a given private port.
 func (app *DdevApp) GetPublishedPortForPrivatePort(serviceName string, privatePort uint16) (publicPort int, err error) {
-	container, err := app.FindContainerByType(serviceName)
-	if err != nil || container == nil {
+	c, err := app.FindContainerByType(serviceName)
+	if err != nil || c == nil {
 		return -1, fmt.Errorf("failed to find container of type %s: %v", serviceName, err)
 	}
-	publishedPort := dockerutil.GetPublishedPort(privatePort, *container)
+	publishedPort := dockerutil.GetPublishedPort(privatePort, *c)
 	return publishedPort, nil
 }
 
@@ -1125,14 +1126,14 @@ func (app *DdevApp) SiteStatus() (string, string) {
 	}
 
 	for service := range statuses {
-		container, err := app.FindContainerByType(service)
+		c, err := app.FindContainerByType(service)
 		if err != nil {
 			return "", ""
 		}
-		if container == nil {
+		if c == nil {
 			statuses[service] = SiteStopped
 		} else {
-			status, _ := dockerutil.GetContainerHealth(container)
+			status, _ := dockerutil.GetContainerHealth(c)
 
 			switch status {
 			case "exited":
@@ -1447,9 +1448,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			}
 			if volumeExists {
 				// Remove mounting container if necessary.
-				container, err := dockerutil.FindContainerByName("ddev-" + app.Name + "-web")
-				if err == nil && container != nil {
-					err = dockerutil.RemoveContainer(container.ID)
+				c, err := dockerutil.FindContainerByName("ddev-" + app.Name + "-web")
+				if err == nil && c != nil {
+					err = dockerutil.RemoveContainer(c.ID)
 					if err != nil {
 						return fmt.Errorf(`unable to remove web container, please 'ddev restart': %v`, err)
 					}
@@ -2500,30 +2501,30 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 // Logs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		return err
 	}
 
-	var container *dockerContainer.Summary
+	var c *container.Summary
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
-		container, err = dockerutil.FindContainerByLabels(map[string]string{
+		c, err = dockerutil.FindContainerByLabels(map[string]string{
 			"com.docker.compose.service": service,
 			"com.docker.compose.oneoff":  "False",
 		})
 	} else {
-		container, err = app.FindContainerByType(service)
+		c, err = app.FindContainerByType(service)
 	}
 	if err != nil {
 		return err
 	}
-	if container == nil {
+	if c == nil {
 		util.Warning("No running service container %s was found", service)
 		return nil
 	}
 
-	logOpts := dockerContainer.LogsOptions{
+	logOpts := client.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     follow,
@@ -2534,7 +2535,7 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 		logOpts.Tail = tailLines
 	}
 
-	rc, err := client.ContainerLogs(ctx, container.ID, logOpts)
+	rc, err := apiClient.ContainerLogs(ctx, c.ID, logOpts)
 	if err != nil {
 		return err
 	}
@@ -2552,31 +2553,31 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 // CaptureLogs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		return "", err
 	}
 
-	var container *dockerContainer.Summary
+	var c *container.Summary
 	// Let people access ddev-router and ddev-ssh-agent logs as well.
 	if service == "ddev-router" || service == "ddev-ssh-agent" {
-		container, err = dockerutil.FindContainerByLabels(map[string]string{
+		c, err = dockerutil.FindContainerByLabels(map[string]string{
 			"com.docker.compose.service": service,
 			"com.docker.compose.oneoff":  "False",
 		})
 	} else {
-		container, err = app.FindContainerByType(service)
+		c, err = app.FindContainerByType(service)
 	}
 	if err != nil {
 		return "", err
 	}
-	if container == nil {
+	if c == nil {
 		util.Warning("No running service container %s was found", service)
 		return "", nil
 	}
 
 	var stdout bytes.Buffer
-	logOpts := dockerContainer.LogsOptions{
+	logOpts := client.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     false,
@@ -2587,7 +2588,7 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 		logOpts.Tail = tailLines
 	}
 
-	rc, err := client.ContainerLogs(ctx, container.ID, logOpts)
+	rc, err := apiClient.ContainerLogs(ctx, c.ID, logOpts)
 	if err != nil {
 		return "", err
 	}
@@ -3603,13 +3604,13 @@ func GetContainerName(app *DdevApp, service string) string {
 }
 
 // GetContainer returns the container struct of the app service name provided.
-func GetContainer(app *DdevApp, service string) (*dockerContainer.Summary, error) {
+func GetContainer(app *DdevApp, service string) (*container.Summary, error) {
 	name := GetContainerName(app, service)
-	container, err := dockerutil.FindContainerByName(name)
-	if err != nil || container == nil {
+	c, err := dockerutil.FindContainerByName(name)
+	if err != nil || c == nil {
 		return nil, fmt.Errorf("unable to find container %s: %v", name, err)
 	}
-	return container, nil
+	return c, nil
 }
 
 // FormatSiteStatus formats "paused" or "running" with color

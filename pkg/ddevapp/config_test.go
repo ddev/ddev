@@ -24,7 +24,7 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerContainer "github.com/docker/docker/api/types/container"
+	"github.com/moby/moby/api/types/container"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1808,7 +1808,7 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 		// Inspect db container for correct healthcheck
 		c, err := dockerutil.InspectContainer(ddevapp.GetContainerName(app, "db"))
 		require.NoError(t, err)
-		require.NotEqual(t, dockerContainer.InspectResponse{}, c)
+		require.NotEqual(t, container.InspectResponse{}, c)
 		expectedWaitTime, _ := strconv.Atoi(maxWaitTime)
 		require.Equal(t, expectedWaitTime, int(c.Config.Healthcheck.StartPeriod.Seconds()), "db container healthcheck should have been %v with default_container_timeout set to %v", maxWaitTime, app.DefaultContainerTimeout)
 		_, err = app.Snapshot(t.Name() + maxWaitTime)
@@ -1819,7 +1819,7 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 		// Inspect container that results from snapshot restore
 		c, err = dockerutil.InspectContainer(ddevapp.GetContainerName(app, "db"))
 		require.NoError(t, err)
-		require.NotEqual(t, dockerContainer.InspectResponse{}, c)
+		require.NotEqual(t, container.InspectResponse{}, c)
 		expectedWaitTime = ddevapp.SnapshotRestoreDefaultWaitTime
 		// If the maxWaitTime was set to greater than the expected 600/SnapshotRestoreDefaultWaitTime
 		// (which is set in the snapshot restore code) then use the maxWaitTime value

@@ -21,8 +21,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	dockerTypes "github.com/docker/docker/api/types"
-	dockerContainer "github.com/docker/docker/api/types/container"
+	"github.com/moby/moby/api/types/container"
 )
 
 // RouterComposeProjectName is the docker-compose project name of ~/.ddev/.router-compose.yaml
@@ -87,8 +86,8 @@ func StopRouterIfNoContainers() error {
 				util.Debug("Lima/Colima/Rancher stopping router")
 				dockerContainers, _ := dockerutil.GetDockerContainers(true)
 				containerInfo := make([]string, len(dockerContainers))
-				for i, container := range dockerContainers {
-					containerInfo[i] = fmt.Sprintf("ID: %s, Name: %s, State: %s, Image: %s", dockerutil.TruncateID(container.ID), dockerutil.ContainerName(&container), container.State, container.Image)
+				for i, c := range dockerContainers {
+					containerInfo[i] = fmt.Sprintf("ID: %s, Name: %s, State: %s, Image: %s", dockerutil.TruncateID(c.ID), dockerutil.ContainerName(&c), c.State, c.Image)
 				}
 				containerList, _ := util.ArrayToReadableOutput(containerInfo)
 				util.Debug("All docker containers: %s", containerList)
@@ -269,22 +268,22 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 
 // FindDdevRouter uses FindContainerByLabels to get our router container and
 // return it.
-func FindDdevRouter() (*dockerContainer.Summary, error) {
+func FindDdevRouter() (*container.Summary, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": nodeps.RouterContainer,
 		"com.docker.compose.oneoff":  "False",
 	}
-	container, err := dockerutil.FindContainerByLabels(containerQuery)
+	c, err := dockerutil.FindContainerByLabels(containerQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute findContainersByLabels, %v", err)
 	}
-	if container == nil {
+	if c == nil {
 		return nil, fmt.Errorf("no ddev-router was found")
 	}
-	return container, nil
+	return c, nil
 }
 
-// GetRouterBoundPorts() returns the currently bound ports on ddev-router
+// GetRouterBoundPorts returns the currently bound ports on ddev-router
 // or an empty array if router not running
 func GetRouterBoundPorts() ([]uint16, error) {
 	boundPorts := []uint16{}
@@ -310,14 +309,14 @@ func RenderRouterStatus() (string, string) {
 		switch status {
 		case SiteStopped:
 			renderedStatus = util.ColorizeText(status, "red")
-		case "exited", dockerTypes.Unhealthy:
+		case "exited", string(container.Unhealthy):
 			renderedStatus = util.ColorizeText(status, "red")
 			errorInfo = "The router is not healthy, your projects may not be accessible, " +
 				"if it doesn't become healthy, run 'ddev poweroff && ddev start' on a project to recreate it."
 			if logOutput != "" {
 				errorInfo = errorInfo + "\n" + logOutput
 			}
-		case dockerTypes.Healthy:
+		case string(container.Healthy):
 			status = "OK"
 			fallthrough
 		default:
@@ -334,12 +333,12 @@ func RenderRouterStatus() (string, string) {
 // return status and most recent log
 func GetRouterStatus() (string, string) {
 	var status, logOutput string
-	container, err := FindDdevRouter()
+	c, err := FindDdevRouter()
 
-	if err != nil || container == nil {
+	if err != nil || c == nil {
 		status = SiteStopped
 	} else {
-		status, logOutput = dockerutil.GetContainerHealth(container)
+		status, logOutput = dockerutil.GetContainerHealth(c)
 	}
 
 	return status, logOutput
@@ -438,20 +437,20 @@ func getContainerBasedRouterPorts() []string {
 		util.Failed("Failed to retrieve containers for determining port mappings: %v", err)
 	}
 
-	for _, container := range containers {
-		if _, ok := container.Labels["com.ddev.site-name"]; ok {
-			if container.State != "running" {
+	for _, c := range containers {
+		if _, ok := c.Labels["com.ddev.site-name"]; ok {
+			if c.State != "running" {
 				continue
 			}
 			var exposePorts []string
 
-			httpPorts := dockerutil.GetContainerEnv("HTTP_EXPOSE", container)
+			httpPorts := dockerutil.GetContainerEnv("HTTP_EXPOSE", c)
 			if httpPorts != "" {
 				ports := strings.Split(httpPorts, ",")
 				exposePorts = append(exposePorts, ports...)
 			}
 
-			httpsPorts := dockerutil.GetContainerEnv("HTTPS_EXPOSE", container)
+			httpsPorts := dockerutil.GetContainerEnv("HTTPS_EXPOSE", c)
 			if httpsPorts != "" {
 				ports := strings.Split(httpsPorts, ",")
 				exposePorts = append(exposePorts, ports...)

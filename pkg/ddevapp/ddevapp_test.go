@@ -29,9 +29,8 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerContainer "github.com/docker/docker/api/types/container"
-	dockerVolume "github.com/docker/docker/api/types/volume"
 	"github.com/google/uuid"
+	"github.com/moby/moby/client"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -462,10 +461,10 @@ func TestMain(m *testing.M) {
 			output.UserErr.Warnf("TestMain startup: failed to ddev debug download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
-		for _, volume := range []string{app.Name + "-mariadb"} {
-			err = dockerutil.RemoveVolume(volume)
+		for _, vol := range []string{app.Name + "-mariadb"} {
+			err = dockerutil.RemoveVolume(vol)
 			if err != nil {
-				output.UserErr.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
+				output.UserErr.Errorf("TestMain startup: Failed to delete volume %s: %v", vol, err)
 			}
 		}
 
@@ -735,9 +734,9 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		err = app.StartAndWait(5)
 		require.NoError(t, err)
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
-			container, err := app.FindContainerByType("db")
+			c, err := app.FindContainerByType("db")
 			assert.NoError(err)
-			out, err := exec.RunHostCommand("docker", "logs", container.Names[0])
+			out, err := exec.RunHostCommand("docker", "logs", c.Names[0])
 			assert.NoError(err)
 			t.Logf("DB Logs after app.Start: \n%s\n== END DB LOGS ==", out)
 		}
@@ -3090,7 +3089,7 @@ func TestDdevExec(t *testing.T) {
 	assert.Contains(stderr, "this: not found")
 
 	// Now kill the busybox service and make sure that responses to app.Exec are correct
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		t.Fatalf("Could not get docker client: %v", err)
 	}
@@ -3098,7 +3097,7 @@ func TestDdevExec(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, bbc)
 	timeout := 2
-	err = client.ContainerStop(ctx, bbc.ID, dockerContainer.StopOptions{Timeout: &timeout})
+	_, err = apiClient.ContainerStop(ctx, bbc.ID, client.ContainerStopOptions{Timeout: &timeout})
 	assert.NoError(err)
 
 	simpleOpts := ddevapp.ExecOpts{
@@ -3109,7 +3108,7 @@ func TestDdevExec(t *testing.T) {
 	require.Error(t, err, "stdout='%s', stderr='%s'", stdout, stderr)
 	require.True(t, strings.Contains(err.Error(), "not currently running") || strings.Contains(err.Error(), "is not running") || strings.Contains(err.Error(), "state=exited"), "stdout='%s', stderr='%s'", stdout, stderr)
 
-	err = client.ContainerRemove(ctx, bbc.ID, dockerContainer.RemoveOptions{Force: true})
+	_, err = apiClient.ContainerRemove(ctx, bbc.ID, client.ContainerRemoveOptions{Force: true})
 	assert.NoError(err)
 	_, _, err = app.Exec(&simpleOpts)
 	assert.Error(err)
@@ -3339,14 +3338,14 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	}
 
 	// Ensure there are no volumes associated with this project
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		t.Fatalf("Could not get docker client: %v", err)
 	}
-	volumes, err := client.VolumeList(ctx, dockerVolume.ListOptions{})
+	volumes, err := apiClient.VolumeList(ctx, client.VolumeListOptions{})
 	assert.NoError(err)
-	for _, volume := range volumes.Volumes {
-		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
+	for _, vol := range volumes.Items {
+		assert.False(vol.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
 }
 
@@ -3387,8 +3386,8 @@ func TestRouterNotRunning(t *testing.T) {
 	containers, err := dockerutil.GetDockerContainers(false)
 	assert.NoError(err)
 
-	for _, container := range containers {
-		assert.NotEqual("ddev-router", dockerutil.ContainerName(&container), "ddev-router was not supposed to be running but it was")
+	for _, c := range containers {
+		assert.NotEqual("ddev-router", dockerutil.ContainerName(&c), "ddev-router was not supposed to be running but it was")
 	}
 }
 
@@ -4724,14 +4723,14 @@ func TestEnvFile(t *testing.T) {
 
 // constructContainerName builds a container name given the type (web/db) and the app
 func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
-	container, err := app.FindContainerByType(containerType)
+	c, err := app.FindContainerByType(containerType)
 	if err != nil {
 		return "", err
 	}
-	if container == nil {
+	if c == nil {
 		return "", fmt.Errorf("no container exists for containerType=%s app=%v", containerType, app)
 	}
-	name := dockerutil.ContainerName(container)
+	name := dockerutil.ContainerName(c)
 	return name, nil
 }
 

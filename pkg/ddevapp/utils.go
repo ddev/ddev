@@ -20,8 +20,8 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerContainer "github.com/docker/docker/api/types/container"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/moby/moby/client"
 	"github.com/spf13/cobra"
 )
 
@@ -89,7 +89,7 @@ func RenderAppRow(t table.Writer, row map[string]interface{}) {
 // Cleanup will remove DDEV containers and volumes even if docker-compose.yml
 // has been deleted.
 func Cleanup(app *DdevApp) error {
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		return err
 	}
@@ -122,12 +122,12 @@ func Cleanup(app *DdevApp) error {
 	// First, try stopping the listed containers if they are running.
 	for i := range containers {
 		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
-		removeOpts := dockerContainer.RemoveOptions{
+		removeOpts := client.ContainerRemoveOptions{
 			RemoveVolumes: true,
 			Force:         true,
 		}
 		output.UserOut.Printf("Removing container: %s", containerName)
-		if err = client.ContainerRemove(ctx, containers[i].ID, removeOpts); err != nil {
+		if _, err = apiClient.ContainerRemove(ctx, containers[i].ID, removeOpts); err != nil {
 			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}
 	}

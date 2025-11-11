@@ -16,9 +16,8 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	dockerContainer "github.com/docker/docker/api/types/container"
-	dockerMount "github.com/docker/docker/api/types/mount"
-	dockerStrslice "github.com/docker/docker/api/types/strslice"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/mount"
 	"github.com/spf13/cobra"
 )
 
@@ -224,16 +223,16 @@ mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && \
 func runSSHAuthContainer(keys []string) (int, error) {
 	uid, _, _ := dockerutil.GetContainerUser()
 
-	config := &dockerContainer.Config{
+	config := &container.Config{
 		Image:       docker.GetSSHAuthImage() + "-built",
-		Cmd:         dockerStrslice.StrSlice{"bash", "-c", GetAuthSSHCmd("ssh-add")},
-		Entrypoint:  dockerStrslice.StrSlice{},
+		Cmd:         []string{"bash", "-c", GetAuthSSHCmd("ssh-add")},
+		Entrypoint:  []string{},
 		AttachStdin: true,
 		User:        uid,
 	}
 
 	// Prepare mounts for Docker API
-	var mounts []dockerMount.Mount
+	var mounts []mount.Mount
 	// Map to track already added keys
 	addedKeys := make(map[string]struct{})
 	for i, keyPath := range keys {
@@ -244,8 +243,8 @@ func runSSHAuthContainer(keys []string) (int, error) {
 			filename = fmt.Sprintf("%s_%d", filename, i)
 		}
 		addedKeys[filename] = struct{}{}
-		mounts = append(mounts, dockerMount.Mount{
-			Type:     dockerMount.TypeBind,
+		mounts = append(mounts, mount.Mount{
+			Type:     mount.TypeBind,
 			Source:   keyPath,
 			Target:   "/tmp/sshtmp/" + filename,
 			ReadOnly: true,
@@ -253,8 +252,8 @@ func runSSHAuthContainer(keys []string) (int, error) {
 		util.Debug("Binding SSH private key %s into container as /tmp/sshtmp/%s", keyPath, filename)
 		// Mount optional OpenSSH certificate
 		if certPath, certName := getCertificateForPrivateKey(keyPath, filename); certPath != "" && certName != "" {
-			mounts = append(mounts, dockerMount.Mount{
-				Type:     dockerMount.TypeBind,
+			mounts = append(mounts, mount.Mount{
+				Type:     mount.TypeBind,
 				Source:   certPath,
 				Target:   "/tmp/sshtmp/" + certName,
 				ReadOnly: true,
@@ -264,7 +263,7 @@ func runSSHAuthContainer(keys []string) (int, error) {
 	}
 
 	// Host configuration with volume mounts
-	hostConfig := &dockerContainer.HostConfig{
+	hostConfig := &container.HostConfig{
 		Mounts:      mounts,
 		VolumesFrom: []string{ddevapp.SSHAuthName},
 	}
