@@ -618,7 +618,6 @@ To become an officially supported add-on:
 - **Add-on Template**: [ddev-addon-template](https://github.com/ddev/ddev-addon-template)
 - **Official Add-ons**: Browse examples at [addons.ddev.com](https://addons.ddev.com/)
 - **Redis Add-on**: [ddev-redis](https://github.com/ddev/ddev-redis) - Good example of PHP actions with `redis/scripts/`
-- **Community Examples**: [add-on registry](https://addons.ddev.com/)
 
 ## Getting Help
 
