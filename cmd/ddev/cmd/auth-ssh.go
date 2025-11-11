@@ -185,23 +185,26 @@ func getCertificateForPrivateKey(path string, name string) (string, string) {
 	return certPath, certName
 }
 
-// GetAuthSSHCmd returns the command to run inside the SSH auth container
+// GetAuthSSHCmd wraps the command to be run inside the SSH auth container.
+// SSH auth container mounts the SSH keys into /tmp/sshtmp location,
+// copies them to ~/.ssh (to avoid permission issues with mounted volumes),
+// sets ownership and permissions, and filters the private keys from provided files.
+// We have:
+// "ssh-add" - adds all found private keys to ssh-agent
+// "//test.expect.passphrase" - used for testing, adds a single key with passphrase
 func GetAuthSSHCmd(command string) string {
 	uid, gid, username := dockerutil.GetContainerUser()
 
 	commandToRun := command
 
 	if command == "ssh-add" {
-		infoMessage := util.ColorizeText("Adding key %s", "yellow") + "\n"
-		if output.JSONOutput {
-			infoMessage = `Adding key %s\n`
-		}
 		commandToRun = fmt.Sprintf(`
-# Add each key to ssh-agent
 for key in "${keys[@]}"; do \
-  printf "%[1]s" "$key" >&2; \
+  # Show which key is being added
+  printf "%[1]s\n" "$key" >&2; \
+  # Add the key to ssh-agent or exit immediately on failure
   %[2]s "$key" || exit $?; \
-done`, infoMessage, commandToRun)
+done`, util.ColorizeText("Adding key %s", "yellow"), commandToRun)
 	}
 
 	return fmt.Sprintf(`
