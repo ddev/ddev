@@ -429,7 +429,6 @@
         "global",
         "none",
         "mutagen",
-        "nfs"
       ]
     },
     "php_version": {

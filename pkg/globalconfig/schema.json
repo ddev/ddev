@@ -93,7 +93,6 @@
       "enum": [
         "none",
         "mutagen",
-        "nfs"
       ]
     },
     "project_tld": {
