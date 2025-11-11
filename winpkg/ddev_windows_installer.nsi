@@ -1262,17 +1262,12 @@ FunctionEnd
 Function InstallWSL2Common
     Push "Starting WSL2 Docker installation for $SELECTED_DISTRO"
     Call LogPrint
-    
-    ; Clean up any previous installation status
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "rm -f /tmp/ddev_installation_status.txt"'
-    Pop $1
-    Pop $2
-    
-    ; Mark installation as started
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"STARTED: WSL2 installation for $SELECTED_DISTRO\" >> /tmp/ddev_installation_status.txt"'
-    Pop $1
-    Pop $2
-    
+
+    ; Skip pre-installation status tracking commands that use bash -c
+    ; These were failing on some systems and are not critical for installation
+    Push "Skipping pre-installation status file setup (not critical for install)"
+    Call LogPrint
+
     Call InstallWSL2CommonSetup
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
