@@ -102,11 +102,15 @@
     extensions="$extensions redis json"
     ;;
   8.0|8.1|8.2|8.3|8.4)
-    # php8.0+: memcached missing, redis available, json built into PHP core (not separate extension)
+    # php8.0-8.4: redis available
     extensions="$extensions redis"
     ;;
+  # TODO: PHP8.5: Remove this stanza to enable redis testing on php8.5 when extensions are available
+  8.5)
+    # php8.5: redis not yet available in Debian Trixie Sury repo
+    ;;
   *)
-    # Default fallback for future PHP versions
+    # Default fallback for future PHP versions - assume redis available
     extensions="$extensions redis"
     ;;
   esac
