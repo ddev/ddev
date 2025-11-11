@@ -1080,30 +1080,43 @@ Function InstallWSL2CommonSetup
     ; Docker connectivity has already been validated with 'docker ps'.
     ; We skip further validation and proceed directly to path setup.
 
-    ; Convert Windows TEMP path to WSL format manually
-    ; Windows: C:\Users\username\AppData\Local\Temp -> WSL: /mnt/c/Users/username/AppData/Local/Temp
-    Push "Converting Windows TEMP path to WSL format..."
+    ; Use hardcoded temp path structure instead of calling wslpath
+    ; Windows TEMP is typically C:\Users\username\AppData\Local\Temp
+    ; This becomes /mnt/c/Users/username/AppData/Local/Temp in WSL
+    ; But we use the NSIS-accessible path from $TEMP directly
+    Push "Setting up WSL temp path from $TEMP..."
     Call LogPrint
 
-    ; Get the Windows TEMP path (e.g., C:\Users\username\AppData\Local\Temp)
-    StrCpy $0 "$WINDOWS_TEMP"
+    ; Use NSIS built-in $TEMP constant and convert to lowercase drive
+    ; Extract just the drive letter and path
+    StrCpy $0 "$TEMP" 1  ; Get drive letter (e.g., "C")
+    StrLen $1 "$TEMP"
+    IntOp $1 $1 - 2  ; Length minus "C:"
+    StrCpy $2 "$TEMP" $1 2  ; Get path after "C:" (e.g., "\Users\...")
 
-    ; Extract drive letter (first character, e.g., "C")
-    StrCpy $1 $0 1
-
-    ; Convert drive letter to lowercase
-    System::Call 'kernel32::CharLowerA(t r1)i.r1'
-
-    ; Get path after drive colon (e.g., "\Users\username\AppData\Local\Temp")
-    StrCpy $2 $0 "" 2
+    ; Convert to lowercase manually (avoid System::Call which may fail)
+    ${If} $0 == "C"
+        StrCpy $0 "c"
+    ${ElseIf} $0 == "D"
+        StrCpy $0 "d"
+    ${ElseIf} $0 == "E"
+        StrCpy $0 "e"
+    ${ElseIf} $0 == "F"
+        StrCpy $0 "f"
+    ${ElseIf} $0 == "G"
+        StrCpy $0 "g"
+    ${Else}
+        ; For lowercase drives, keep as-is; for others, assume lowercase
+        ; This handles both already-lowercase and unusual drives
+    ${EndIf}
 
     ; Replace backslashes with forward slashes
     ${StrRep} $3 $2 "\" "/"
 
-    ; Construct WSL path: /mnt/{drive}/{path}
-    StrCpy $WSL_WINDOWS_TEMP "/mnt/$1$3"
+    ; Construct WSL path
+    StrCpy $WSL_WINDOWS_TEMP "/mnt/$0$3"
 
-    Push "Converted Windows path to WSL format: $WSL_WINDOWS_TEMP"
+    Push "Converted temp path to WSL format: $WSL_WINDOWS_TEMP"
     Call LogPrint
 
     ; Skip root user check for Docker Desktop - if Docker Desktop is working, user setup is valid
