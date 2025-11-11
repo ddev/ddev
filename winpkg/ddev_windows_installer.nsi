@@ -875,6 +875,39 @@ SectionGroup /e "${PRODUCT_NAME}"
         Push "PATH addition completed with result: $R1"
         Call LogPrint
 
+        ; === DEBUG: Test if nsExec works right after PATH operation ===
+        Push "DEBUG: Testing nsExec immediately after PATH operation..."
+        Call LogPrint
+        Push "DEBUG: Current OutPath (working directory): [$OUTDIR]"
+        Call LogPrint
+        Push "DEBUG: INSTDIR: [$INSTDIR]"
+        Call LogPrint
+        Push "DEBUG: SELECTED_DISTRO variable: [$SELECTED_DISTRO]"
+        Call LogPrint
+        Push "DEBUG: About to test wsl command with hardcoded distro..."
+        Call LogPrint
+        nsExec::ExecToStack 'wsl -d DDEV echo "test from section"'
+        Pop $R8
+        Pop $R9
+        Push "DEBUG: nsExec test in Section (hardcoded DDEV) - exit code: [$R8], output: [$R9]"
+        Call LogPrint
+        Push "DEBUG: Now testing with $SELECTED_DISTRO variable..."
+        Call LogPrint
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO echo "test with variable"'
+        Pop $R8
+        Pop $R9
+        Push "DEBUG: nsExec test in Section (with variable) - exit code: [$R8], output: [$R9]"
+        Call LogPrint
+        Push "DEBUG: Checking if wsl.exe exists in System32..."
+        Call LogPrint
+        ${If} ${FileExists} "$WINDIR\System32\wsl.exe"
+            Push "DEBUG: wsl.exe found in System32"
+            Call LogPrint
+        ${Else}
+            Push "DEBUG: wsl.exe NOT found in System32!"
+            Call LogPrint
+        ${EndIf}
+
         ${If} $INSTALL_OPTION == "traditional"
             Call InstallTraditionalWindows
         ${Else}
