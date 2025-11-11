@@ -51,14 +51,15 @@ DOCKERFILEEND
   assert_success
 
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
   # validate running project
   run curl -sf -I https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "server: Caddy"
+  assert_output --partial "server: FrankenPHP"
+  assert_output --partial "x-powered-by: PHP/8.4"
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
   assert_output --partial "HTTP/2 200"
 }
