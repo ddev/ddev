@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -15,7 +16,7 @@ import (
 func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
 	envFilePath := filepath.Join(app.AppRoot, ".env")
 
-	// Check if .env already exists
+	// If .env already exists, leave it alone
 	if fileutil.FileExists(envFilePath) {
 		output.UserOut.Printf("CodeIgniter .env file already exists at %s", envFilePath)
 		return envFilePath, nil
@@ -26,29 +27,21 @@ func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
 	if !fileutil.FileExists(envExamplePath) {
 		envExamplePath = filepath.Join(app.AppRoot, ".env.example")
 	}
-
 	if fileutil.FileExists(envExamplePath) {
 		if err := fileutil.CopyFile(envExamplePath, envFilePath); err != nil {
 			return "", fmt.Errorf("failed to copy %s to .env: %v", envExamplePath, err)
 		}
 	}
 
-	// Append DDEV-specific database configuration
-	dbConfig := fmt.Sprintf(`
-		#ddev-generated
-		# Database Configuration
-		database.default.hostname = db
-		database.default.database = db  
-		database.default.username = db
-		database.default.password = db
-		database.default.DBDriver = MySQLi
-		database.default.DBPrefix =
-		database.default.port = 3306
+	// Build DB config dynamically from DDEV configuration.
+	dbConfig := buildCodeIgniterDBConfig(app)
 
-		# Base URL
-		app.baseURL = 'https://%s'
-		`,
-		app.GetPrimaryURL())
+	// Always add base URL
+	cfg := fmt.Sprintf(`# ddev-generated
+%s
+# Base URL
+app.baseURL = 'https://%s'
+`, dbConfig, app.GetPrimaryURL())
 
 	f, err := os.OpenFile(envFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -56,11 +49,84 @@ func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
 	}
 	defer f.Close()
 
-	if _, err := f.WriteString(dbConfig); err != nil {
+	if _, err := f.WriteString(cfg); err != nil {
 		return "", err
 	}
 
 	return envFilePath, nil
+}
+
+// buildCodeIgniterDBConfig returns the database stanza for CodeIgniter 4 based on DDEV config.
+// If the DB container is omitted, it returns an empty string.
+func buildCodeIgniterDBConfig(app *DdevApp) string {
+	// No DB requested: omit_containers: [db]
+	if isDBOmitted(app) {
+		return "# Database omitted by DDEV configuration"
+	}
+
+	// Determine DB type from new-style `database` field, with basic fallback to legacy fields.
+	dbType := ""
+	// Preferred: app.Database.Type (new-style)
+	if app != nil && app.Database.Type != "" {
+		dbType = app.Database.Type
+	}
+
+	// Fallbacks for very old configs that may still be present on the struct
+	if dbType == "" {
+		switch {
+		case app != nil && app.MySQLVersion != "":
+			dbType = "mysql"
+		case app != nil && app.MariaDBVersion != "":
+			dbType = "mariadb"
+		}
+	}
+
+	driver := "MySQLi"
+	port := 3306
+	switch strings.ToLower(dbType) {
+	case "postgres", "postgresql", "pgsql":
+		driver = "Postgre"
+		port = 5432
+	case "mysql", "mariadb", "":
+		// default remains MySQL/MariaDB; port stays 3306
+	default:
+		// Unknown type: keep safe MySQL defaults, but annotate
+		return fmt.Sprintf(`
+# Database Configuration (unknown DDEV database type: %s)
+database.default.hostname = db
+database.default.database = db
+database.default.username = db
+database.default.password = db
+database.default.DBDriver = MySQLi
+database.default.DBPrefix =
+database.default.port = 3306
+		`, dbType)
+	}
+
+	// Standard DDEV credentials/hostnames
+	return fmt.Sprintf(`
+# Database Configuration
+database.default.hostname = db
+database.default.database = db
+database.default.username = db
+database.default.password = db
+database.default.DBDriver = %s
+database.default.DBPrefix =
+database.default.port = %d
+	`, driver, port)
+}
+
+// isDBOmitted returns true if "db" is in omit_containers.
+func isDBOmitted(app *DdevApp) bool {
+	if app == nil {
+		return false
+	}
+	for _, s := range app.OmitContainers {
+		if s == "db" {
+			return true
+		}
+	}
+	return false
 }
 
 // getCodeIgniterUploadDirs returns upload directories for CodeIgniter 4
