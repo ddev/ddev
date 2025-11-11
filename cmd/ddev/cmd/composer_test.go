@@ -58,7 +58,6 @@ func TestComposerCmdCreateConfigInstall(t *testing.T) {
 		})
 
 		// Test create-project
-		// These two often fail on Windows with NFS, also Colima
 		// It appears to be something about Composer itself?
 
 		// ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log:1.1.0
@@ -122,10 +121,6 @@ func TestComposerCmdCreateRequireRemoveConfigVersion(t *testing.T) {
 			assert.NoError(err)
 			_ = os.RemoveAll(tmpDir)
 		})
-
-		// Test create-project
-		// These two often fail on Windows with NFS, also Colima
-		// It appears to be something about Composer itself?
 
 		// ddev composer create-project --prefer-dist --no-dev --no-install psr/log:1.1.0 .
 		args := []string{"composer", "create-project", "--prefer-dist", "--no-dev", "--no-install", "psr/log:1.1.0", "."}

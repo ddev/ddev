@@ -423,7 +423,7 @@
       "type": "boolean"
     },
     "performance_mode": {
-      "description": "Define the performance optimization mode to be used. Currently Mutagen asynchronous caching and NFS are supported. Mutagen is enabled by default on Mac and Windows.",
+      "description": "Define the performance optimization mode to be used. Currently Mutagen asynchronous caching is supported. Mutagen is enabled by default on Mac and Windows.",
       "type": "string",
       "enum": [
         "global",
