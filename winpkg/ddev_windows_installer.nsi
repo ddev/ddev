@@ -828,6 +828,11 @@ SectionGroup /e "${PRODUCT_NAME}"
     Section "${PRODUCT_NAME}" SecDDEV
         SectionIn 1 2 3 RO
 
+        ; Ensure 64-bit file system redirection is disabled
+        ; This is critical for accessing wsl.exe in System32
+        ${DisableX64FSRedirection}
+        SetRegView 64
+
         SetOutPath "$INSTDIR"
         SetOverwrite on
 
@@ -898,15 +903,29 @@ SectionGroup /e "${PRODUCT_NAME}"
         Pop $R9
         Push "DEBUG: nsExec test in Section (with variable) - exit code: [$R8], output: [$R9]"
         Call LogPrint
-        Push "DEBUG: Checking if wsl.exe exists in System32..."
+        Push "DEBUG: Checking if wsl.exe exists..."
+        Call LogPrint
+        Push "DEBUG: WINDIR = [$WINDIR]"
         Call LogPrint
         ${If} ${FileExists} "$WINDIR\System32\wsl.exe"
             Push "DEBUG: wsl.exe found in System32"
             Call LogPrint
         ${Else}
-            Push "DEBUG: wsl.exe NOT found in System32!"
+            Push "DEBUG: wsl.exe NOT found in $WINDIR\System32"
             Call LogPrint
         ${EndIf}
+        ${If} ${FileExists} "$WINDIR\SysNative\wsl.exe"
+            Push "DEBUG: wsl.exe found in SysNative (WOW64 context)"
+            Call LogPrint
+        ${EndIf}
+        ; Test with full path to wsl.exe
+        Push "DEBUG: Testing with full path to wsl.exe..."
+        Call LogPrint
+        nsExec::ExecToStack '"$WINDIR\System32\wsl.exe" -d DDEV echo "test with full path"'
+        Pop $R8
+        Pop $R9
+        Push "DEBUG: Full path test - exit code: [$R8], output: [$R9]"
+        Call LogPrint
 
         ${If} $INSTALL_OPTION == "traditional"
             Call InstallTraditionalWindows
