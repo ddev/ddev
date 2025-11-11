@@ -192,7 +192,7 @@ func GetAuthSSHCmd(command string) string {
 	commandToRun := command
 
 	if command == "ssh-add" {
-		infoMessage := `\033[0;33mAdding key %s\033[0m\n`
+		infoMessage := util.ColorizeText("Adding key %s", "yellow") + "\n"
 		if output.JSONOutput {
 			infoMessage = `Adding key %s\n`
 		}
