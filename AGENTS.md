@@ -358,6 +358,52 @@ For optimal performance with DDEV development, consider these configuration patt
 }
 ```
 
+### Claude Code for Web Environment
+
+The web-based Claude Code environment has specific limitations compared to desktop environments:
+
+**Environment Limitations:**
+
+- **Docker NOT Available**: Docker is not installed and cannot be used in the web environment
+- **Integration Tests**: Most DDEV integration tests require Docker and will fail in this environment
+- **Container Operations**: No ability to build, run, or test Docker containers
+
+**SessionStart Hook Solution:**
+
+A `.claude/SessionStart` hook automatically configures the environment for optimal web development:
+
+**What the hook does:**
+
+- Installs `markdownlint-cli` via npm (required for `make staticrequired`)
+- Sets `GOTEST_SHORT=true` to skip Docker-dependent tests
+- Sets `DDEV_NO_INSTRUMENTATION=true`
+- Displays environment status and available tools
+
+**Testing Strategy for Web Environment:**
+
+- ✅ **Unit tests**: `go test -short ./pkg/...` (works without Docker)
+- ✅ **Targeted tests**: `make testpkg TESTARGS="-run TestName"`
+- ✅ **Linting**: `make staticrequired` (fully supported)
+- ✅ **Building**: `make` and all build targets work normally
+- ❌ **Integration tests**: Skip tests that require Docker
+- ❌ **Container tests**: Cannot run in web environment
+
+**Recommended Workflow:**
+
+1. Make code changes
+2. Run unit tests: `go test -short ./pkg/[package]`
+3. Run linting: `make staticrequired`
+4. Build and verify: `make && .gotmp/bin/linux_amd64/ddev --version`
+5. Commit and push changes
+6. Let CI/CD run full integration tests with Docker
+
+**Tool Availability:**
+
+- ✅ `golangci-lint` - Pre-installed
+- ✅ `markdownlint` - Installed by SessionStart hook
+- ⚠️ `mkdocs` - Not available (gracefully skipped by Makefile)
+- ❌ `docker` - Not available in web environment
+
 ## General DDEV Development Patterns
 
 For standard DDEV organization patterns including communication style, branch naming, PR creation, and common development practices, see the [organization-wide AGENTS.md](https://github.com/ddev/.github/blob/main/AGENTS.md).
