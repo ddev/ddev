@@ -21,9 +21,6 @@ ${StrTrimNewLines}
   !error "TARGET_ARCH define is missing!"
 !endif
 
-; Enable Unicode support to handle internationalized command output (e.g., localized WSL output)
-Unicode true
-
 Name "DDEV"
 OutFile "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_windows_${TARGET_ARCH}_installer.exe"
 
