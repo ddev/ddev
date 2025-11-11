@@ -185,20 +185,51 @@ func getCertificateForPrivateKey(path string, name string) (string, string) {
 	return certPath, certName
 }
 
+// GetAuthSSHCmd wraps the command to be run inside the SSH auth container.
+// SSH auth container mounts the SSH keys into /tmp/sshtmp location,
+// copies them to ~/.ssh (to avoid permission issues with mounted volumes),
+// sets ownership and permissions, and filters the private keys from provided files.
+// We have:
+// "ssh-add" - adds all found private keys to ssh-agent
+// "//test.expect.passphrase" - used for testing, adds a single key with passphrase
+func GetAuthSSHCmd(command string) string {
+	uid, gid, username := dockerutil.GetContainerUser()
+
+	commandToRun := command
+
+	if command == "ssh-add" {
+		commandToRun = fmt.Sprintf(`
+for key in "${keys[@]}"; do \
+  # Show which key is being added
+  printf "%[1]s\n" "$key" >&2; \
+  # Add the key to ssh-agent or exit immediately on failure
+  %[2]s "$key" || exit $?; \
+done`, util.ColorizeText("Adding key %s", "yellow"), commandToRun)
+	}
+
+	return fmt.Sprintf(`
+# Copy SSH files and set proper ownership and permissions
+cp -r /tmp/sshtmp /home/%[1]s/.ssh && \
+chown -R %[2]s:%[3]s /home/%[1]s/.ssh && \
+chmod -R go-rwx /home/%[1]s/.ssh && \
+cd /home/%[1]s/.ssh && \
+# Find all private key files
+mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && \
+# Verify at least one key exists
+((${#keys[@]})) || { echo "No SSH private keys found." >&2; exit 1; } && \
+%[4]s`, username, uid, gid, commandToRun)
+}
+
 // runSSHAuthContainer runs the SSH auth container using Docker client API
 func runSSHAuthContainer(keys []string) (int, error) {
-	// Container configuration
-	uidStr, _, _ := dockerutil.GetContainerUser()
-	infoMessage := `\033[0;33mAdding key %s\033[0m\n`
-	if output.JSONOutput {
-		infoMessage = `Adding key %s\n`
-	}
+	uid, _, _ := dockerutil.GetContainerUser()
+
 	config := &dockerContainer.Config{
 		Image:       docker.GetSSHAuthImage() + "-built",
-		Cmd:         dockerStrslice.StrSlice{"bash", "-c", fmt.Sprintf(`cp -r /tmp/sshtmp ~/.ssh && chmod -R go-rwx ~/.ssh && cd ~/.ssh && mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && ((${#keys[@]})) || { echo "No SSH private keys found." >&2; exit 1; } && for key in "${keys[@]}"; do printf "%s" "$key" >&2; ssh-add "$key" || exit $?; done`, infoMessage)},
+		Cmd:         dockerStrslice.StrSlice{"bash", "-c", GetAuthSSHCmd("ssh-add")},
 		Entrypoint:  dockerStrslice.StrSlice{},
 		AttachStdin: true,
-		User:        uidStr,
+		User:        uid,
 	}
 
 	// Prepare mounts for Docker API
