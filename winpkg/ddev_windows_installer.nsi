@@ -21,6 +21,9 @@ ${StrTrimNewLines}
   !error "TARGET_ARCH define is missing!"
 !endif
 
+; Enable Unicode support to handle internationalized command output (e.g., localized WSL output)
+Unicode true
+
 Name "DDEV"
 OutFile "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_windows_${TARGET_ARCH}_installer.exe"
 
@@ -1075,15 +1078,15 @@ Function GetUbuntuDistros
 FunctionEnd
 
 Function InstallWSL2CommonSetup
-    ; Check for WSL2
-    Push "Checking WSL2 version..."
+    ; Check for WSL distros by listing them
+    Push "Checking for WSL distros..."
     Call LogPrint
     nsExec::ExecToStack 'wsl.exe -l -v'
     Pop $1
     Pop $0
-    Push "WSL version check output: $0"
+    Push "WSL distro list output: $0"
     Call LogPrint
-    Push "WSL version check exit code: $1"
+    Push "WSL distro list exit code: $1"
     Call LogPrint
     ${If} $1 != 0
         Push "ERROR: WSL2 not detected - exit code: $1, output: $0"
