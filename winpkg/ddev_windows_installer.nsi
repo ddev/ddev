@@ -1080,6 +1080,58 @@ Function InstallWSL2CommonSetup
     ; Docker connectivity has already been validated with 'docker ps'.
     ; We skip further validation and proceed directly to path setup.
 
+    ; === DEBUGGING: Test if nsExec still works at this point ===
+    Push "=== DEBUGGING: Testing nsExec and WSL commands ==="
+    Call LogPrint
+
+    ; Test 1: Simple wsl command without bash (same command that worked earlier)
+    Push "DEBUG: Test 1 - Simple wsl command (docker ps)"
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO docker ps'
+    Pop $R0
+    Pop $R1
+    Push "DEBUG: Test 1 result - exit code: [$R0], output: [$R1]"
+    Call LogPrint
+
+    ; Test 2: Very simple command (echo)
+    Push "DEBUG: Test 2 - wsl echo test"
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO echo hello'
+    Pop $R0
+    Pop $R1
+    Push "DEBUG: Test 2 result - exit code: [$R0], output: [$R1]"
+    Call LogPrint
+
+    ; Test 3: Test if bash is available
+    Push "DEBUG: Test 3 - bash version"
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash --version'
+    Pop $R0
+    Pop $R1
+    Push "DEBUG: Test 3 result - exit code: [$R0], output starts with: [$R1]"
+    Call LogPrint
+
+    ; Test 4: Simple bash -c command
+    Push "DEBUG: Test 4 - bash -c echo"
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo test123"'
+    Pop $R0
+    Pop $R1
+    Push "DEBUG: Test 4 result - exit code: [$R0], output: [$R1]"
+    Call LogPrint
+
+    ; Test 5: apt-get without bash wrapper
+    Push "DEBUG: Test 5 - apt-get help (should just show help)"
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO apt-get --help'
+    Pop $R0
+    Pop $R1
+    Push "DEBUG: Test 5 result - exit code: [$R0]"
+    Call LogPrint
+
+    Push "=== END DEBUGGING ==="
+    Call LogPrint
+
     ; Use hardcoded temp path structure instead of calling wslpath
     ; Windows TEMP is typically C:\Users\username\AppData\Local\Temp
     ; This becomes /mnt/c/Users/username/AppData/Local/Temp in WSL
@@ -1087,12 +1139,24 @@ Function InstallWSL2CommonSetup
     Push "Setting up WSL temp path from $TEMP..."
     Call LogPrint
 
+    ; Debug: Show what $TEMP contains
+    Push "DEBUG: NSIS $TEMP = [$TEMP]"
+    Call LogPrint
+
     ; Use NSIS built-in $TEMP constant and convert to lowercase drive
     ; Extract just the drive letter and path
     StrCpy $0 "$TEMP" 1  ; Get drive letter (e.g., "C")
+    Push "DEBUG: Extracted drive letter: [$0]"
+    Call LogPrint
+
     StrLen $1 "$TEMP"
+    Push "DEBUG: Total path length: [$1]"
+    Call LogPrint
+
     IntOp $1 $1 - 2  ; Length minus "C:"
     StrCpy $2 "$TEMP" $1 2  ; Get path after "C:" (e.g., "\Users\...")
+    Push "DEBUG: Path after drive: [$2]"
+    Call LogPrint
 
     ; Convert to lowercase manually (avoid System::Call which may fail)
     ${If} $0 == "C"
@@ -1109,14 +1173,18 @@ Function InstallWSL2CommonSetup
         ; For lowercase drives, keep as-is; for others, assume lowercase
         ; This handles both already-lowercase and unusual drives
     ${EndIf}
+    Push "DEBUG: Lowercase drive: [$0]"
+    Call LogPrint
 
     ; Replace backslashes with forward slashes
     ${StrRep} $3 $2 "\" "/"
+    Push "DEBUG: Path with forward slashes: [$3]"
+    Call LogPrint
 
     ; Construct WSL path
     StrCpy $WSL_WINDOWS_TEMP "/mnt/$0$3"
 
-    Push "Converted temp path to WSL format: $WSL_WINDOWS_TEMP"
+    Push "Converted temp path to WSL format: [$WSL_WINDOWS_TEMP]"
     Call LogPrint
 
     ; Skip root user check for Docker Desktop - if Docker Desktop is working, user setup is valid
