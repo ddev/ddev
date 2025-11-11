@@ -1078,22 +1078,8 @@ Function GetUbuntuDistros
 FunctionEnd
 
 Function InstallWSL2CommonSetup
-    ; Check for WSL distros by listing them
-    Push "Checking for WSL distros..."
-    Call LogPrint
-    nsExec::ExecToStack 'wsl.exe -l -v'
-    Pop $1
-    Pop $0
-    Push "WSL distro list output: $0"
-    Call LogPrint
-    Push "WSL distro list exit code: $1"
-    Call LogPrint
-    ${If} $1 != 0
-        Push "ERROR: WSL2 not detected - exit code: $1, output: $0"
-        Call LogPrint
-        Push "WSL2 does not seem to be installed. Please install WSL2 and Ubuntu before running this installer."
-        Call ShowErrorAndAbort
-    ${EndIf}
+    ; Note: WSL distros have already been enumerated from the registry and selected by the user.
+    ; We validate the selected distro works by checking it directly below.
 
     ; Check for Ubuntu in selected distro
     Push "Checking selected distro $SELECTED_DISTRO..."
