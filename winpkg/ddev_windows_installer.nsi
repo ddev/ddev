@@ -880,52 +880,14 @@ SectionGroup /e "${PRODUCT_NAME}"
         Push "PATH addition completed with result: $R1"
         Call LogPrint
 
-        ; === DEBUG: Test if nsExec works right after PATH operation ===
-        Push "DEBUG: Testing nsExec immediately after PATH operation..."
-        Call LogPrint
-        Push "DEBUG: Current OutPath (working directory): [$OUTDIR]"
-        Call LogPrint
-        Push "DEBUG: INSTDIR: [$INSTDIR]"
-        Call LogPrint
-        Push "DEBUG: SELECTED_DISTRO variable: [$SELECTED_DISTRO]"
-        Call LogPrint
-        Push "DEBUG: About to test wsl command with hardcoded distro..."
-        Call LogPrint
-        nsExec::ExecToStack 'wsl -d DDEV echo "test from section"'
-        Pop $R8
-        Pop $R9
-        Push "DEBUG: nsExec test in Section (hardcoded DDEV) - exit code: [$R8], output: [$R9]"
-        Call LogPrint
-        Push "DEBUG: Now testing with $SELECTED_DISTRO variable..."
-        Call LogPrint
-        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO echo "test with variable"'
-        Pop $R8
-        Pop $R9
-        Push "DEBUG: nsExec test in Section (with variable) - exit code: [$R8], output: [$R9]"
-        Call LogPrint
-        Push "DEBUG: Checking if wsl.exe exists..."
-        Call LogPrint
-        Push "DEBUG: WINDIR = [$WINDIR]"
-        Call LogPrint
+        ; Verify wsl.exe is accessible (critical for WSL operations)
         ${If} ${FileExists} "$WINDIR\System32\wsl.exe"
-            Push "DEBUG: wsl.exe found in System32"
+            Push "WSL executable found in System32"
             Call LogPrint
         ${Else}
-            Push "DEBUG: wsl.exe NOT found in $WINDIR\System32"
+            Push "WARNING: wsl.exe not found in System32 - file system redirection may be enabled"
             Call LogPrint
         ${EndIf}
-        ${If} ${FileExists} "$WINDIR\SysNative\wsl.exe"
-            Push "DEBUG: wsl.exe found in SysNative (WOW64 context)"
-            Call LogPrint
-        ${EndIf}
-        ; Test with full path to wsl.exe
-        Push "DEBUG: Testing with full path to wsl.exe..."
-        Call LogPrint
-        nsExec::ExecToStack '"$WINDIR\System32\wsl.exe" -d DDEV echo "test with full path"'
-        Pop $R8
-        Pop $R9
-        Push "DEBUG: Full path test - exit code: [$R8], output: [$R9]"
-        Call LogPrint
 
         ${If} $INSTALL_OPTION == "traditional"
             Call InstallTraditionalWindows
@@ -1130,87 +1092,50 @@ Function InstallWSL2CommonSetup
     ; Note: WSL distros have already been enumerated from the registry and selected by the user.
     ; The distro type (Ubuntu) has been verified from the registry Flavor field.
     ; Docker connectivity has already been validated with 'docker ps'.
-    ; We skip further validation and proceed directly to path setup.
 
-    ; === DEBUGGING: Test if nsExec still works at this point ===
-    Push "=== DEBUGGING: Testing nsExec and WSL commands ==="
+    ; List WSL distros and versions (helpful for troubleshooting)
+    Push "Listing WSL distributions and versions..."
     Call LogPrint
-
-    ; Test 1: Simple wsl command without bash (same command that worked earlier)
-    Push "DEBUG: Test 1 - Simple wsl command (docker ps)"
-    Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO docker ps'
+    nsExec::ExecToStack 'wsl.exe -l -v'
     Pop $R0
     Pop $R1
-    Push "DEBUG: Test 1 result - exit code: [$R0], output: [$R1]"
-    Call LogPrint
+    ${If} $R0 == 0
+        Push "WSL distros: $R1"
+        Call LogPrint
+    ${Else}
+        Push "WARNING: Could not list WSL distros (exit code: $R0)"
+        Call LogPrint
+    ${EndIf}
 
-    ; Test 2: Very simple command (echo)
-    Push "DEBUG: Test 2 - wsl echo test"
+    ; Verify selected distro is accessible
+    Push "Verifying selected distro $SELECTED_DISTRO is accessible..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO echo hello'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO echo "WSL connectivity test passed"'
     Pop $R0
     Pop $R1
-    Push "DEBUG: Test 2 result - exit code: [$R0], output: [$R1]"
+    ${If} $R0 != 0
+        Push "ERROR: Cannot access distro $SELECTED_DISTRO - exit code: $R0"
+        Call LogPrint
+        Push "Could not access the selected WSL distro. Please ensure it's working properly."
+        Call ShowErrorAndAbort
+    ${EndIf}
+    Push "Selected distro $SELECTED_DISTRO is accessible"
     Call LogPrint
 
-    ; Test 3: Test if bash is available
-    Push "DEBUG: Test 3 - bash version"
+    ; Convert Windows temp path to WSL format manually
+    ; Windows: C:\Users\username\AppData\Local\Temp -> WSL: /mnt/c/Users/username/AppData/Local/Temp
+    Push "Converting Windows temp path to WSL format..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash --version'
-    Pop $R0
-    Pop $R1
-    Push "DEBUG: Test 3 result - exit code: [$R0], output starts with: [$R1]"
+    Push "Windows TEMP: $TEMP"
     Call LogPrint
 
-    ; Test 4: Simple bash -c command
-    Push "DEBUG: Test 4 - bash -c echo"
-    Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo test123"'
-    Pop $R0
-    Pop $R1
-    Push "DEBUG: Test 4 result - exit code: [$R0], output: [$R1]"
-    Call LogPrint
-
-    ; Test 5: apt-get without bash wrapper
-    Push "DEBUG: Test 5 - apt-get help (should just show help)"
-    Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO apt-get --help'
-    Pop $R0
-    Pop $R1
-    Push "DEBUG: Test 5 result - exit code: [$R0]"
-    Call LogPrint
-
-    Push "=== END DEBUGGING ==="
-    Call LogPrint
-
-    ; Use hardcoded temp path structure instead of calling wslpath
-    ; Windows TEMP is typically C:\Users\username\AppData\Local\Temp
-    ; This becomes /mnt/c/Users/username/AppData/Local/Temp in WSL
-    ; But we use the NSIS-accessible path from $TEMP directly
-    Push "Setting up WSL temp path from $TEMP..."
-    Call LogPrint
-
-    ; Debug: Show what $TEMP contains
-    Push "DEBUG: NSIS $TEMP = [$TEMP]"
-    Call LogPrint
-
-    ; Use NSIS built-in $TEMP constant and convert to lowercase drive
-    ; Extract just the drive letter and path
+    ; Extract drive letter and path
     StrCpy $0 "$TEMP" 1  ; Get drive letter (e.g., "C")
-    Push "DEBUG: Extracted drive letter: [$0]"
-    Call LogPrint
-
     StrLen $1 "$TEMP"
-    Push "DEBUG: Total path length: [$1]"
-    Call LogPrint
-
     IntOp $1 $1 - 2  ; Length minus "C:"
-    StrCpy $2 "$TEMP" $1 2  ; Get path after "C:" (e.g., "\Users\...")
-    Push "DEBUG: Path after drive: [$2]"
-    Call LogPrint
+    StrCpy $2 "$TEMP" $1 2  ; Get path after "C:"
 
-    ; Convert to lowercase manually (avoid System::Call which may fail)
+    ; Convert drive letter to lowercase manually
     ${If} $0 == "C"
         StrCpy $0 "c"
     ${ElseIf} $0 == "D"
@@ -1222,21 +1147,16 @@ Function InstallWSL2CommonSetup
     ${ElseIf} $0 == "G"
         StrCpy $0 "g"
     ${Else}
-        ; For lowercase drives, keep as-is; for others, assume lowercase
-        ; This handles both already-lowercase and unusual drives
+        ; For lowercase drives, keep as-is
     ${EndIf}
-    Push "DEBUG: Lowercase drive: [$0]"
-    Call LogPrint
 
     ; Replace backslashes with forward slashes
     ${StrRep} $3 $2 "\" "/"
-    Push "DEBUG: Path with forward slashes: [$3]"
-    Call LogPrint
 
-    ; Construct WSL path
+    ; Construct WSL path: /mnt/{drive}/{path}
     StrCpy $WSL_WINDOWS_TEMP "/mnt/$0$3"
 
-    Push "Converted temp path to WSL format: [$WSL_WINDOWS_TEMP]"
+    Push "WSL temp path: $WSL_WINDOWS_TEMP"
     Call LogPrint
 
     ; Skip root user check for Docker Desktop - if Docker Desktop is working, user setup is valid
