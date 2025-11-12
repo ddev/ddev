@@ -1159,14 +1159,12 @@ Function InstallWSL2CommonSetup
     Push "WSL temp path: $WSL_WINDOWS_TEMP"
     Call LogPrint
 
-    ; Skip root user check for Docker Desktop - if Docker Desktop is working, user setup is valid
-    ${If} $INSTALL_OPTION != "wsl2-docker-desktop"
-        Push "Checking for root user in selected distro..."
-        Call LogPrint
-        Call CheckRootUser
-        Push "Root user check passed"
-        Call LogPrint
-    ${EndIf}
+    ; Check that default user is not root (required for all installation types)
+    Push "Checking for root user in selected distro..."
+    Call LogPrint
+    Call CheckRootUser
+    Push "Root user check passed"
+    Call LogPrint
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
         ; Make sure we're not running docker-ce or docker.io daemon (conflicts with Docker Desktop)
