@@ -42,9 +42,6 @@ func init() {
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		nodeps.WebserverDefault = testWebServerType
 	}
-	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount == "true" {
-		nodeps.PerformanceModeDefault = types.PerformanceModeNFS
-	}
 	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
 		nodeps.PerformanceModeDefault = types.PerformanceModeMutagen
 	}
@@ -947,7 +944,6 @@ type composeYAMLVars struct {
 	DBAPort                   string
 	DBPort                    string
 	DdevGenerated             string
-	NFSServerAddr             string
 	DisableSettingsManagement bool
 	MountType                 string
 	WebMount                  string
@@ -965,9 +961,6 @@ type composeYAMLVars struct {
 	PostgresVolumeName        string
 	MutagenEnabled            bool
 	MutagenVolumeName         string
-	NFSMountEnabled           bool
-	NFSSource                 string
-	NFSMountVolumeName        string
 	DockerIP                  string
 	IsWindowsFS               bool
 	NoProjectMount            bool
@@ -1009,11 +1002,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
 	util.Debug("%s", hostDockerInternal.Message)
 
-	nfsServerAddr, err := dockerutil.GetNFSServerAddr()
-	if err != nil {
-		util.Warning("Could not determine NFS server IP address: %v", err)
-	}
-
 	// The fallthrough default for hostDockerInternalIdentifier is the
 	// hostDockerInternalHostname == host.docker.internal
 
@@ -1054,7 +1042,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBMountDir:                "/var/lib/mysql",
 		DBPort:                    GetInternalPort(app, "db"),
 		DdevGenerated:             nodeps.DdevFileSignature,
-		NFSServerAddr:             nfsServerAddr,
 		DisableSettingsManagement: app.DisableSettingsManagement,
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
 		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
@@ -1062,8 +1049,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		BindAllInterfaces:         app.BindAllInterfaces,
 		MutagenEnabled:            app.IsMutagenEnabled(),
 
-		NFSMountEnabled:    app.IsNFSMountEnabled(),
-		NFSSource:          "",
 		IsWindowsFS:        nodeps.IsWindows(),
 		NoProjectMount:     app.NoProjectMount,
 		MountType:          "bind",
@@ -1081,7 +1066,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebEnvironment:     webEnvironment,
 		MariaDBVolumeName:  app.GetMariaDBVolumeName(),
 		PostgresVolumeName: app.GetPostgresVolumeName(),
-		NFSMountVolumeName: app.GetNFSMountVolumeName(),
 		NoBindMounts:       globalconfig.DdevGlobalConfig.NoBindMounts,
 		Docroot:            app.GetDocroot(),
 		UploadDirsMap:      app.getUploadDirsHostContainerMapping(),
@@ -1129,20 +1113,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	// If we expand to using bitnami for mariadb this will change.
 	if app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) {
 		templateVars.BitnamiVolumeDir = "/bitnami/mysql"
-	}
-	if app.IsNFSMountEnabled() {
-		templateVars.MountType = "volume"
-		templateVars.WebMount = "nfsmount"
-		templateVars.NFSSource = app.AppRoot
-		// Workaround for Catalina sharing nfs as /System/Volumes/Data
-		if nodeps.IsMacOS() && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
-			templateVars.NFSSource = filepath.Join("/System/Volumes/Data", app.AppRoot)
-		}
-		if nodeps.IsWindows() {
-			// WinNFSD can only handle a mountpoint like /C/Users/rfay/workspace/d8git
-			// and completely chokes in C:\Users\rfay...
-			templateVars.NFSSource = dockerutil.MassageWindowsNFSMount(app.AppRoot)
-		}
 	}
 
 	if app.IsMutagenEnabled() {

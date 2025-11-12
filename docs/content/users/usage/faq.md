@@ -140,12 +140,6 @@ Most likely because the docroot is misconfigured, or there’s no `index.php` or
 
 Apache runs in the web container, but when you use the `https://*.ddev.site` URL, it goes through `ddev-router`, which is an nginx reverse proxy. That’s why you see nginx headers even though your web container’s using Apache. Read more in [this Stack Overflow answer](https://stackoverflow.com/a/52780601/215713).
 
-### Why does `ddev start` fail with “error while mounting volume, Permission denied”?
-
-This almost always means NFS is enabled in your project, but NFS isn’t working on your machine.
-
-Start by completely turning NFS off for your projects with `ddev config --performance-mode=none && ddev config global --performance-mode=none`. Then later, [get NFS working](../install/performance.md#using-nfs-to-mount-the-project-into-the-web-container). NFS can improve macOS and traditional Windows performance, but is never needed on Linux or Windows WSL2. Most people on macOS and Windows use Mutagen instead of NFS because of its vastly improved performance, so instead of trying to fix this you can use Mutagen which is enabled by default. On Linux you can enable Mutagen for the project by running `ddev config --performance-mode=mutagen` or globally `ddev config global --performance-mode=mutagen`.
-
 ### Why are my Apache HTTP → HTTPS redirects stuck in an infinite loop?
 
 It’s common to set up HTTP-to-TLS redirects in an `.htaccess` file, which leads to issues with the DDEV proxy setup. The TLS endpoint of a DDEV project is always the `ddev-router` container and requests are forwarded through plain HTTP to the project’s web server. This results in endless redirects, so you need to change the root `.htaccess` file for Apache correctly handles these requests for your local development environment with DDEV. The following snippet should work for most scenarios—even outside of DDEV—and could replace an existing redirect:

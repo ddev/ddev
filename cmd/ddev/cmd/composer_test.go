@@ -6,24 +6,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestComposerCmdCreateConfigInstall(t *testing.T) {
-	// 2022-05-24: I've spent lots of time debugging intermittent `composer create-project` failures when NFS
-	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
-	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
-	// to deal with similar issues in vagrant context, and has a hack now embedded into Composer.
-	if nodeps.PerformanceModeDefault == types.PerformanceModeNFS {
-		t.Skip("Composer has strange behavior in NFS context, so skipping")
-	}
 	assert := asrt.New(t)
 
 	origDir, err := os.Getwd()
@@ -67,7 +58,6 @@ func TestComposerCmdCreateConfigInstall(t *testing.T) {
 		})
 
 		// Test create-project
-		// These two often fail on Windows with NFS, also Colima
 		// It appears to be something about Composer itself?
 
 		// ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log:1.1.0
@@ -90,13 +80,6 @@ func TestComposerCmdCreateConfigInstall(t *testing.T) {
 }
 
 func TestComposerCmdCreateRequireRemoveConfigVersion(t *testing.T) {
-	// 2022-05-24: I've spent lots of time debugging intermittent `composer create-project` failures when NFS
-	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
-	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
-	// to deal with similar issues in vagrant context, and has a hack now embedded into Composer.
-	if nodeps.PerformanceModeDefault == types.PerformanceModeNFS {
-		t.Skip("Composer has strange behavior in NFS context, so skipping")
-	}
 	assert := asrt.New(t)
 
 	origDir, err := os.Getwd()
@@ -138,10 +121,6 @@ func TestComposerCmdCreateRequireRemoveConfigVersion(t *testing.T) {
 			assert.NoError(err)
 			_ = os.RemoveAll(tmpDir)
 		})
-
-		// Test create-project
-		// These two often fail on Windows with NFS, also Colima
-		// It appears to be something about Composer itself?
 
 		// ddev composer create-project --prefer-dist --no-dev --no-install psr/log:1.1.0 .
 		args := []string{"composer", "create-project", "--prefer-dist", "--no-dev", "--no-install", "psr/log:1.1.0", "."}

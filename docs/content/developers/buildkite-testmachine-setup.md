@@ -28,7 +28,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 14. (Traditional Windows test runner only): Enable `gd`, `fileinfo`, and `curl` extensions in `/c/tools/php*/php.ini`.
 15. Set the “Sleep after time” setting in settings to never.
 16. Install [winaero tweaker](https://winaero.com/request.php?1796) and “Enable user autologin checkbox”. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck “require a password to log in”.
-17. (Traditional Windows test runner only): Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).
+17. (Traditional Windows test runner only): Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and has testbot Git config, etc).
 18. (Traditional Windows test runner only): `git config --global --add safe.directory '*'`.
 19. (Traditional Windows test runner only): Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/main/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 20. (Traditional Windows test runner only): Run `.buildkite/sanetestbot.sh` to check your work.
@@ -107,25 +107,24 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     * Set mount type to VirtioFS
 19. Run iTerm. You may need to allow full disk access permissions.
 20. Run `mkdir ~/workspace && cd ~/workspace && git clone https://github.com/ddev/ddev`.
-21. Set up `nfsd` by running `bash ~/workspace/ddev/scripts/macos_ddev_nfs_setup.sh`.
-22. `git config --global --add safe.directory '*'`.
-23. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
+21. `git config --global --add safe.directory '*'`.
+22. Edit `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
     * the agent `token` (from [agents tab](https://buildkite.com/organizations/ddev/agents), "Reveal Agent Token").
     * the agent `name` (the name of the machine).
     * `tags`, like `"os=macos,architecture=arm64,osvariant=sonoma,dockertype=dockerformac,rancher-desktop=true,orbstack=true,docker-desktop=true"`
     * `build-path="~/tmp/buildkite-agent/builds"`
-24. Run `brew services start buildkite-agent`.
-25. Run `bash ~/workspace/ddev/.buildkite/testbot_maintenance.sh`.
-26. Run `bash ~/workspace/ddev/.buildkite/sanetestbot.sh` to check your work.
-27. The `testbot` user's SSH account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
-28. Add the new machine to Icinga by copying an existing Icinga service to the new one. This is done in **Icinga Director** → **Services** → **Single Services** → **Select a Service** → **Clone** → **Deploy**. The new service has to have `by-ssh-address` set to the name of the test runner, and that address needs to be added to `pi.ddev.site`'s `/etc/hosts` file.
-29. If `zsh` is the shell configured, add `/etc/zshenv` so that `/usr/local/bin/docker` will be picked up:
+23. Run `brew services start buildkite-agent`.
+24. Run `bash ~/workspace/ddev/.buildkite/testbot_maintenance.sh`.
+25. Run `bash ~/workspace/ddev/.buildkite/sanetestbot.sh` to check your work.
+26. The `testbot` user's SSH account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
+27. Add the new machine to Icinga by copying an existing Icinga service to the new one. This is done in **Icinga Director** → **Services** → **Single Services** → **Select a Service** → **Clone** → **Deploy**. The new service has to have `by-ssh-address` set to the name of the test runner, and that address needs to be added to `pi.ddev.site`'s `/etc/hosts` file.
+28. If `zsh` is the shell configured, add `/etc/zshenv` so that `/usr/local/bin/docker` will be picked up:
 
     ```bash
     PATH=$PATH:/usr/local/bin:/opt/homebrew/bin
     ```
 
-30. In macOS Settings visit "full disk access" and grant access to `buildkite-agent`, `docker`, `iterm`, `orbstack`. This may prevent startup modal dialogs that prevent `buildkite-agent` or `docker` from continuing properly.
+29. In macOS Settings visit "full disk access" and grant access to `buildkite-agent`, `docker`, `iterm`, `orbstack`. This may prevent startup modal dialogs that prevent `buildkite-agent` or `docker` from continuing properly.
 
 ## Additional Colima macOS setup
 

@@ -212,7 +212,6 @@ Use backticks to differentiate between a product and command, like DDEV vs. `dde
 | Linux | linux
 | nginx or `nginx` | Nginx, NGINX
 | Node.js or `node` | Node, node
-| NFS | nfs
 | Pantheon | pantheon, Pantheon.io
 | PHP or `php` | php
 | PhpStorm | PHPStorm, PHPstorm, Phpstorm

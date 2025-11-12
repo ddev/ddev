@@ -12,7 +12,6 @@
       - "architecture=amd64"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
-      DDEV_TEST_USE_NFSMOUNT: false
       DOCKER_TYPE: rancher-desktop
       # C:\buildkite-agent\hooks\environment
       # DOCKERHUB_PULL_USERNAME

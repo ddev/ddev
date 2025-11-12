@@ -35,7 +35,7 @@ You can hand-edit the YAML files DDEV creates for you after running [`ddev confi
 
 You can override the per-project `config.yaml` with files named `config.*.yaml`, and files like this are often created by [DDEV add-ons](../extend/additional-services.md). For example, `config.elasticsearch.yaml` in [Elasticsearch add-on](https://github.com/ddev/ddev-elasticsearch) adds additional configuration related to Elasticsearch.
 
-Many teams use `config.local.yaml` for configuration that is specific to one environment, and not checked into the team’s default `config.yaml`. You might [enable Mutagen](../install/performance.md#mutagen) or [enable NFS](../install/performance.md#nfs) for the project, for example, only on your machine. Or maybe use a different database type. The file `config.local.yaml` is gitignored by default.
+Many teams use `config.local.yaml` for configuration that is specific to one environment, and not checked into the team’s default `config.yaml`. For example, you might enable `performance_mode: mutagen` only on your machine. Or you could use a different database type. The file `config.local.yaml` is gitignored by default.
 
 For examples, see the [Extending and Customizing Environments](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files) page.
 
@@ -462,15 +462,13 @@ See [Extending `config.yaml` with Custom `config.*.yaml` Files](../extend/custom
 
 ## `performance_mode`
 
-Defines the performance optimization mode to be used. Currently [Mutagen asynchronous caching](../install/performance.md#mutagen) and [NFS](../install/performance.md#nfs) are supported. Mutagen is enabled by default on Mac and Windows.
+Defines the performance optimization mode to be used. Currently [Mutagen asynchronous caching](../install/performance.md#mutagen) is supported. Mutagen is enabled by default on Mac and Traditional Windows.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `global`, `none`, `mutagen`, or (deprecated) `nfs`.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `global`, `none`, `mutagen`.
 
 This is typically a global setting. The project-specific value will override global config.
-
-The [NFS section in the "performance" doc](../install/performance.md#nfs) explains the deprecated `nfs` option.
 
 ## `php_version`
 

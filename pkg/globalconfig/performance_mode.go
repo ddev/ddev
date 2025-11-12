@@ -30,8 +30,3 @@ func (c *GlobalConfig) SetPerformanceMode(performanceMode string) *GlobalConfig 
 func (c *GlobalConfig) IsMutagenEnabled() bool {
 	return c.GetPerformanceMode() == types.PerformanceModeMutagen
 }
-
-// IsNFSMountEnabled returns true if NFS is enabled.
-func (c *GlobalConfig) IsNFSMountEnabled() bool {
-	return c.GetPerformanceMode() == types.PerformanceModeNFS
-}

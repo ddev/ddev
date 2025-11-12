@@ -125,7 +125,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.False(globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-ssh-agent")
 	assert.True(globalconfig.DdevGlobalConfig.IsMutagenEnabled())
-	assert.False(globalconfig.DdevGlobalConfig.IsNFSMountEnabled())
 	assert.Len(globalconfig.DdevGlobalConfig.OmitContainersGlobal, 1)
 	assert.Equal("ddev.test", globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 	assert.True(globalconfig.DdevGlobalConfig.UseHardenedImages)
@@ -140,19 +139,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	args = []string{"config", "global", `--web-environment-add="FOO=bar"`}
 	_, err = exec.RunCommand(DdevBin, args)
 	require.NoError(t, err)
-
-	// Test that NFS can be enabled
-	args = []string{"config", "global", "--performance-mode=nfs"}
-	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
-
-	assert.Contains(out, "performance-mode=nfs")
-
-	err = globalconfig.ReadGlobalConfig()
-	assert.NoError(err)
-
-	assert.False(globalconfig.DdevGlobalConfig.IsMutagenEnabled())
-	assert.True(globalconfig.DdevGlobalConfig.IsNFSMountEnabled())
 
 	// Test that we can remove array elements with `--item=""`
 	args = []string{"config", "global", `--web-environment=""`, `--omit-containers=""`}

@@ -8,7 +8,7 @@ On macOS and Windows with Docker Desktop, allocated resources and mounted filesy
 
 ## Filesystem Performance
 
-Mutagen can offer a big performance boost on macOS and Windows. It’s fast and doesn’t need any setup; you only need to enable it. Before Mutagen, Mac and Windows users configured NFS for speed improvements—though it requires setup and isn’t as fast.
+Mutagen offers a huge performance boost on macOS and Traditional Windows. It's fast and doesn't need any setup; It's enabled by default in those environments, but you have the option of turning it off.
 
 Mutagen is enabled by default on Mac and traditional Windows, and it can be disabled per-project or globally.
 
@@ -18,15 +18,15 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     ### What Mutagen Does
 
-    The [Mutagen](https://mutagen.io) asynchronous caching feature is the best way to improve DDEV’s web-serving performance on macOS and Windows, and we recommend it for most projects. It can be significantly faster than NFS, massively faster than plain Docker or Colima, and it makes filesystem watchers (`fsnotify`/`inotify`) work correctly.
+    The [Mutagen](https://mutagen.io) asynchronous caching feature is the best way to improve DDEV’s web-serving performance on macOS and Windows, and we recommend it for most projects. It offers  enormous webserving performance benefits over most basic Docker providers, and it makes filesystem watchers (`fsnotify`/`inotify`) work correctly.
 
     Mutagen decouples in-container reads and writes from reads and writes on the host machine, so each can enjoy near-native speed. A change on the host gets changed “pretty soon” in the container, and a change in the container gets updated “pretty soon” on the host; neither filesystem is stuck waiting on the other one. This “pretty soon” means, however, that there’s a brief window where files on the host may not exactly match the files inside the container—so files that manage to change in both places can lead to conflicts.
 
-    Docker bind-mounts, the traditional approach to getting your code into DDEV’s web container, check every file access against the file on the host. Docker’s way of doing these checks macOS and Windows is not very performant, even with NFS. Linux and Linux-like systems are faster because Docker provides native file-access performance.
+    Docker bind-mounts, the traditional approach to getting your code into DDEV’s web container, check every file access against the file on the host. Docker’s way of doing these checks macOS and Windows is not very performant. Linux and Linux-like systems are faster because Docker provides native file-access performance.
 
     While Mutagen works fine and has automated tests for Linux and Windows WSL2, it may not be worth enabling on those systems since it won’t make the dramatic difference it does on macOS and Windows.
 
-    Another major advantage of Mutagen over NFS is that it supports filesystem notifications, so file-watchers on both the host and inside the container will be notified when changes occur. This is a great advantage for many development tools, which otherwise have to poll for changes at greater expense. Instead, they can be notified via normal `inotify`/`fsnotify` techniques.
+    Mutagen supports filesystem notifications, so file-watchers on both the host and inside the container will be notified when changes occur. This is a great advantage for many development tools, which otherwise have to poll for changes at greater expense. Instead, they can be notified via normal `inotify`/`fsnotify` techniques.
 
     ### Enabling and Disabling Mutagen
 
@@ -41,7 +41,6 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     To stop using Mutagen on a project, run `ddev mutagen reset && ddev config --performance-mode=none`.
 
-    The `nfs-mount-enabled` feature is automatically turned off if you’re using Mutagen.
 
 
 
@@ -229,104 +228,6 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     ### Safe to Use with Other Mutagen Installations
 
     DDEV requires and provides a specific version of Mutagen, which you can see running [`ddev version`](../usage/commands.md#version).  If another `mutagen` instance or daemon is installed on your workstation it doesn't matter, because DDEV's version runs separately and uses a different data directory.
-
-=== "NFS"
-
-    ## NFS
-
-    !!!warning "NFS is deprecated"
-
-        NFS is deprecated and no longer recommended. It can be complex and unreliable. This feature will be
-        removed in DDEV v1.25.0.
-
-
-    ### Using NFS to Mount the Project into the Web Container
-
-    NFS (Network File System) is a classic, mature Unix technique to mount a filesystem from one device to another. It provides significantly improved web server performance on macOS and Windows. It doesn’t really impact performance on Linux, so we don’t recommend it there.
-
-    DDEV supports this technique and **requires pre-configuration on your host computer,** facilitated by a setup script that asks for your `sudo` password when it’s necessary:
-
-    1. Make sure DDEV is already working and you can use it.
-    2. Use the script below for your OS to configure the NFS server and exports files.
-    3. Test that NFS is working correctly by using [`ddev utility nfsmount`](../usage/commands.md#utility-nfsmount) in a project directory. The first line should report something like "Successfully accessed NFS mount of /path/to/project".
-    4. Enable NFS mounting globally with `ddev config global --performance-mode=nfs`.
-    You can also configure NFS mounting on a per-project basis with `ddev config --performance-mode=nfs` in the project directory, but this is unusual. The project-specific value will override global config.
-    5. [`ddev start`](../usage/commands.md#start) your project and make sure it works normally. Use [`ddev describe`](../usage/commands.md#describe) to verify that NFS mounting is being used. The NFS status is near the top of the output of `ddev describe`.
-
-    !!!tip "Skip step 2 if you’re already using NFS!"
-        If you’re already using NFS with Vagrant on macOS, for example, and you already have a number of exports, the default home directory export here won’t work—you’ll have overlaps in your `/etc/exports`. Or on Windows, you may want to use an NFS server other than [Winnfsd](https://github.com/winnfsd/winnfsd) like the [Allegro NFS Server](https://nfsforwindows.com).
-
-        The recommendations and scripts below are for getting started if, like most people, you *don’t* already use NFS.
-
-    === "macOS NFS Setup"
-
-        Download, inspect, make executable, and run [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/macos_ddev_nfs_setup.sh):
-
-        ```
-        curl -O https://raw.githubusercontent.com/ddev/ddev/main/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh
-        ```
-
-        This one-time setup stops running DDEV projects, adds your home directory to the `/etc/exports` config file that `nfsd` uses, and enables `nfsd` to run on your computer.
-
-        **This shares your home directory via NFS to any NFS client on your computer,** so it’s critical to consider security issues. You can make the shares in `/etc/exports` more limited, as long as they don’t overlap. NFS doesn’t allow overlapping exports.
-
-        If your DDEV projects are set up outside your home directory, you’ll need to add a line to `/etc/exports` for that share as well:
-
-        1. Run `sudo vi /etc/exports`.
-        2. Copy the line the script you created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`).
-        3. Edit to add the additional path, e.g:
-        `/Volumes/SomeExternalDrive -alldirs -mapall=<your_uid>:20 localhost`.
-
-        #### macOS Full Disk Access for Special Directories
-
-        * If your projects are in a subdirectory of the `~/Documents` or `~/Desktop` directories, or on an external drive, you must grant “Full Disk Access” privilege to `/sbin/nfsd` in *System Preferences* → *Security & Privacy* → *Privacy*. In the *Full Disk Access* section, click the “+” and add `/sbin/nfsd`:
-
-            ![Adding /sbin/nfsd to Full Disk Access](../../images/sbin-nfsd-selection.png)
-
-            You should then see `nfsd` in the list:
-
-            ![Enabling full disk access for nfsd](../../images/nfsd-full-disk-access.png)
-
-        * Run `sudo nfsd restart`.
-        * From a project directory, run [`ddev utility nfsmount`](../usage/commands.md#utility-nfsmount) to confirm successful output.
-
-        #### macOS NFS Debugging
-
-        * Temporarily disable any firewall or VPN.
-        * Use `showmount -e` to find out what’s exported via NFS. If you don’t see a parent of your project directory, NFS can’t work.
-        * If nothing is showing, use `nfsd checkexports` and look carefully for errors.
-        * Use `ps -ef | grep nfsd` to make sure `nfsd` is running.
-        * Restart `nfsd` with `sudo nfsd restart`.
-        * Add the following to your `/etc/nfs.conf`:
-            ```conf
-            nfs.server.mount.require_resv_port = 0
-            nfs.server.verbose = 3
-            ```
-        * Run Console.app and search for "nfsd" at the top. Run `sudo nfsd restart` and read the messages carefully. Try running [`ddev utility nfsmount`](../usage/commands.md#utility-nfsmount) in the problematic project directory:
-            ```bash
-            $ ddev utility nfsmount
-            Successfully accessed NFS mount of /Users/rfay/workspace/d8composer
-            TARGET    SOURCE                                                FSTYPE OPTIONS
-            /nfsmount :/System/Volumes/Data/Users/rfay/workspace/d8composer nfs    rw,relatime,vers=3,rsize=65536,wsize=65536,namlen=255,hard,    nolock,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.65.2,mountvers=3,mountproto=tcp,local_lock=all,addr=192.168.65.2
-            /nfsmount/.ddev
-            ```
-
-        #### Debugging `ddev start` Failures with NFS Mount Enabled
-
-        There are a number of reasons the NFS mount can fail on [`ddev start`](../usage/commands.md#start):
-
-        * Firewall issues.
-        * NFS Server not running.
-        * Trying to start more than one NFS server.
-        * Overlapping NFS exports, typically an issue if you’ve established another NFS client like Vagrant. You’ll need to reconfigure your exports paths so they don’t overlap.
-        * Path of project not shared in `~/.ddev/nfs_exports.txt`.
-
-        To debug and solve permission problems:
-
-        * Try [`ddev utility nfsmount`](../usage/commands.md#utility-nfsmount) in a project directory to see if basic NFS mounting is working. If that works, everything else probably will too.
-        * When debugging, run [`ddev restart`](../usage/commands.md#restart) in between each change. Otherwise, you can have stale mounts inside the container and you’ll miss any benefit you may find in the debugging process.
-        * Inspect `~/.ddev/nfs_exports.txt`.
-        * Restart the server with `sudo nssm restart nfsd`.
 
 ## Freeing Up System Resources
 
