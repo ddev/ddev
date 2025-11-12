@@ -1183,13 +1183,15 @@ Function InstallWSL2CommonSetup
         ${EndIf}
     ${EndIf}
 
-    ; Skip removing old Docker versions - apt-get will handle conflicts during installation
-    ; This avoids potential bash execution issues while maintaining functionality
-    Push "WSL($SELECTED_DISTRO): Skipping old Docker package removal (apt will handle conflicts)..."
+    ; Remove old Docker versions first (per Docker CE installation instructions)
+    Push "WSL($SELECTED_DISTRO): Removing old Docker packages if present..."
     Call LogPrint
-    ; Note: apt-get install will automatically handle package conflicts
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1 || true"'
+    Pop $1
+    Pop $0
+    ; Note: This command is allowed to fail if packages aren't installed
 
-    ; apt-get update (without bash wrapper to avoid execution issues)
+    ; apt-get update
     Push "WSL($SELECTED_DISTRO): Updating package database using apt-get update..."
     Call LogPrint
     Push "Please be patient - updating package database..."
