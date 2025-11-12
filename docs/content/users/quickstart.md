@@ -410,6 +410,60 @@ Further information on the DDEV procedure can also be found in the [Contao docum
     The [Contao demo website](https://demo.contao.org/) is maintained for the currently supported Contao versions and can be [optionally installed](https://github.com/contao/contao-demo).
     Via the Contao Manager you can select this option during the first installation.
 
+## CodeIgniter
+
+Use a new or existing Composer project, or clone a Git repository.
+
+DDEV automatically updates or creates the `.env` file with the database information.
+
+=== "Composer"
+
+    CodeIgniter defaults to MySQL:
+
+    Create the project directory and configure DDEV:
+
+    ```bash
+    mkdir my-ci4-site && cd my-ci4-site
+    ddev config --project-type=codeigniter --docroot=public
+    ```
+
+    Start DDEV (this may take a minute):
+
+    ```bash
+    ddev start
+    ```
+
+    Install CodeIgniter via Composer:
+
+    ```bash
+    ddev composer create codeigniter4/appstarter
+    ```
+
+    Launch the site:
+
+    ```bash
+    ddev launch
+    ```
+??? tip "Prefer to run as a script?"
+    To run the whole setup as a script, examine and run this script:
+
+    ```bash
+    cat > setup-codeigniter-git.sh << 'EOF'
+    #!/usr/bin/env bash
+    set -euo pipefail
+    git clone <my-ci4-repo> my-ci4-site
+    cd my-ci4-site
+    ddev config --project-type=codeigniter --docroot=public
+    ddev start -y
+    ddev composer install
+    ddev composer run-script post-root-package-install
+    ddev composer run-script post-create-project-cmd
+    ddev launch
+    EOF
+    chmod +x setup-codeigniter-git.sh
+    ./setup-codeigniter-git.sh
+    ```
+
 ## Craft CMS
 
 Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
@@ -1579,60 +1633,6 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
 !!!tip "Add Vite support?"
     Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/vite). See the [Vite Integration](usage/vite.md#laravel) documentation for complete setup instructions.
-
-## CodeIgniter
-
-Use a new or existing Composer project, or clone a Git repository.
-
-DDEV automatically updates or creates the `.env` file with the database information.
-
-=== "Composer"
-
-    CodeIgniter defaults to MySQL:
-
-    Create the project directory and configure DDEV:
-
-    ```bash
-    mkdir my-ci4-site && cd my-ci4-site
-    ddev config --project-type=codeigniter --docroot=public
-    ```
-
-    Start DDEV (this may take a minute):
-
-    ```bash
-    ddev start
-    ```
-
-    Install CodeIgniter via Composer:
-
-    ```bash
-    ddev composer create codeigniter4/appstarter
-    ```
-
-    Launch the site:
-
-    ```bash
-    ddev launch
-    ```
-??? tip "Prefer to run as a script?"
-    To run the whole setup as a script, examine and run this script:
-
-    ```bash
-    cat > setup-codeigniter-git.sh << 'EOF'
-    #!/usr/bin/env bash
-    set -euo pipefail
-    git clone <my-ci4-repo> my-ci4-site
-    cd my-ci4-site
-    ddev config --project-type=codeigniter --docroot=public
-    ddev start -y
-    ddev composer install
-    ddev composer run-script post-root-package-install
-    ddev composer run-script post-create-project-cmd
-    ddev launch
-    EOF
-    chmod +x setup-codeigniter-git.sh
-    ./setup-codeigniter-git.sh
-    ```
 
 ## Magento 2
 
