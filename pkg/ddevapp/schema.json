@@ -493,6 +493,7 @@
       "enum": [
         "backdrop",
         "cakephp",
+        "codeigniter",
         "craftcms",
         "drupal",
         "drupal6",
@@ -503,7 +504,6 @@
         "drupal11",
         "generic",
         "laravel",
-        "codeigniter",
         "magento",
         "magento2",
         "php",
