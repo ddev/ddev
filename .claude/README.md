@@ -57,7 +57,7 @@ The hook automatically detects your environment and adapts:
 ### Tool Availability
 
 **All Environments:**
-- ✅ Go 1.23+ toolchain
+- ✅ Go 1.24+ toolchain
 - ✅ golangci-lint (pre-installed)
 - ✅ markdownlint (installed by SessionStart hook)
 - ✅ npm/node for tool installation
