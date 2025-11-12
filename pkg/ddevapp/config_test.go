@@ -1235,6 +1235,29 @@ func TestTimezoneConfig(t *testing.T) {
 	}
 	require.Contains(t, validTimezones, inDBContainerTZData)
 
+	// Explicitly test UTC timezone (which may report as "Universal")
+	t.Setenv("TZ", "UTC")
+	app.Timezone = ""
+	err = app.Start()
+	require.NoError(t, err)
+	inWebContainerTZData, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
+	})
+	require.NoError(t, err)
+	// Container's /etc/localtime may symlink to either UTC or Universal (both are equivalent)
+	validUTCOutputs := []string{"timezone=UTC\nphptz=UTC", "timezone=Universal\nphptz=UTC"}
+	require.Contains(t, validUTCOutputs, inWebContainerTZData)
+
+	// Make sure db container also accepts UTC or Universal
+	inDBContainerTZData, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     "echo -n timezone=$(date +%Z)",
+	})
+	require.NoError(t, err)
+	validUTCTimezones := []string{"timezone=UTC", "timezone=Universal"}
+	require.Contains(t, validUTCTimezones, inDBContainerTZData)
+
 	// With timezone set, app.Timezone should be used first
 	t.Setenv("TZ", "Europe/Rome")
 	app.Timezone = "Europe/Paris"
