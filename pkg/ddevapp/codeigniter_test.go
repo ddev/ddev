@@ -111,7 +111,7 @@ func TestIsDBOmitted(t *testing.T) {
 	}
 }
 
-func TestCreateCodeIgniterSettingsFile_IdempotentAndIncludesDB(t *testing.T) {
+func TestCreateCodeIgniterSettingsFile(t *testing.T) {
 	root := t.TempDir()
 	makeCI4Layout(t, root)
 	app := &DdevApp{AppRoot: root}
