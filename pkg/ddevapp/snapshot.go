@@ -121,10 +121,11 @@ func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
 		return files[i].ModTime().After(files[j].ModTime())
 	})
 
-	m := regexp.MustCompile(`-(mariadb|mysql|postgres)_[0-9.]*\.gz$`)
+	// Match snapshot files created with gzip (.gz) or zstd (.zst)
+	m := regexp.MustCompile(`-(mariadb|mysql|postgres)_[0-9.]*\.(gz|zst)$`)
 
 	for _, f := range files {
-		if f.IsDir() || strings.HasSuffix(f.Name(), ".gz") {
+		if f.IsDir() || strings.HasSuffix(f.Name(), ".gz") || strings.HasSuffix(f.Name(), ".zst") {
 			n := m.ReplaceAll([]byte(f.Name()), []byte(""))
 			snapshot := Snapshot{
 				Name:    string(n),
@@ -178,7 +179,8 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			snapshotDBVersion = "unknown"
 		}
 	} else {
-		m1 := regexp.MustCompile(`((mysql|mariadb|postgres)_[0-9.]+)\.gz$`)
+		// Extract the DB type/version from the filename, supporting both .gz and .zst
+		m1 := regexp.MustCompile(`((mysql|mariadb|postgres)_[0-9.]+)\.(gz|zst)$`)
 		matches := m1.FindStringSubmatch(snapshotFile)
 		if len(matches) > 2 {
 			snapshotDBVersion = matches[1]
@@ -232,21 +234,33 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	restoreCmd := "restore_snapshot " + snapshotFile
+	// Determine compression type for potential conditional restore handling
+	isGzip := strings.HasSuffix(snapshotFile, ".gz")
+	isZstd := strings.HasSuffix(snapshotFile, ".zst")
+	if isGzip {
+		util.Warning("This snapshot was created with gzip. It's recommended to create a new snapshot using zstd for better performance.")
+	}
 	if app.Database.Type == nodeps.Postgres {
 		postgresDataDir := app.GetPostgresDataDir()
 		postgresDataPath := app.GetPostgresDataPath()
 		confdDir := path.Join(nodeps.PostgresConfigDir, "conf.d")
 		v, _ := strconv.Atoi(app.Database.Version)
+		// Choose proper tar flags based on compression
+		tarExtract := "-zxf" // gzip default
+		if isZstd {
+			// Use external program to decompress zstd
+			tarExtract = "-I zstdmt -xf"
+		}
 		// PostgreSQL 18+ requires restore_command parameter, older versions use recovery.conf
 		if v >= 18 {
-			restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s -zxf /mnt/snapshots/%s && chmod 700 %s && touch %s/recovery.signal && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf -c restore_command=true'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, snapshotFile, postgresDataPath, postgresDataPath, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
+			restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s %s /mnt/snapshots/%s && chmod 700 %s && touch %s/recovery.signal && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf -c restore_command=true'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, tarExtract, snapshotFile, postgresDataPath, postgresDataPath, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
 		} else {
 			targetConfName := path.Join(confdDir, "recovery.conf")
 			// Before PostgreSQL v12 the recovery info went into its own file
 			if v < 12 {
 				targetConfName = path.Join(nodeps.PostgresConfigDir, "recovery.conf")
 			}
-			restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s -zxf /mnt/snapshots/%s && chmod 700 %s && touch %s/recovery.signal && echo "restore_command = 'true'" >>%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, snapshotFile, postgresDataPath, postgresDataPath, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
+			restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s %s /mnt/snapshots/%s && chmod 700 %s && touch %s/recovery.signal && echo "restore_command = 'true'" >>%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, tarExtract, snapshotFile, postgresDataPath, postgresDataPath, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
 		}
 	}
 	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
@@ -308,13 +322,13 @@ func GetSnapshotFileFromName(name string, app *DdevApp) (string, error) {
 		return name, nil
 	}
 
-	// But if it's a gzipped tarball, we have to get the filename.
+	// But if it's a compressed tarball, we have to get the filename.
 	files, err := fileutil.ListFilesInDir(snapshotsDir)
 	if err != nil {
 		return "", err
 	}
 
-	m := regexp.MustCompile("^" + regexp.QuoteMeta(name) + `-(mariadb|mysql|postgres)_[0-9.]*\.gz$`)
+	m := regexp.MustCompile("^" + regexp.QuoteMeta(name) + `-(mariadb|mysql|postgres)_[0-9.]*\.(gz|zst)$`)
 
 	for _, file := range files {
 		if m.MatchString(file) {
