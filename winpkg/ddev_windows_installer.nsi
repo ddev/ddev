@@ -15,6 +15,7 @@
 ${StrStr}
 ${StrRep}
 ${StrTrimNewLines}
+${StrCase}
 ; Remove the Trim macro since we're using our own TrimWhitespace function
 
 !ifndef TARGET_ARCH # passed on command-line
@@ -1136,23 +1137,7 @@ Function InstallWSL2CommonSetup
     StrCpy $2 "$TEMP" $1 2  ; Get path after "C:"
 
     ; Convert drive letter to lowercase
-    ; Use simple if/else for reliability (covers most common drives)
-    ${If} $0 == "C"
-    ${OrIf} $0 == "c"
-        StrCpy $0 "c"
-    ${ElseIf} $0 == "D"
-    ${OrIf} $0 == "d"
-        StrCpy $0 "d"
-    ${ElseIf} $0 == "E"
-    ${OrIf} $0 == "e"
-        StrCpy $0 "e"
-    ${ElseIf} $0 == "F"
-    ${OrIf} $0 == "f"
-        StrCpy $0 "f"
-    ${ElseIf} $0 == "G"
-    ${OrIf} $0 == "g"
-        StrCpy $0 "g"
-    ${EndIf}
+    ${StrCase} $0 $0 "L"
 
     ; Replace backslashes with forward slashes
     ${StrRep} $3 $2 "\" "/"
