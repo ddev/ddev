@@ -84,6 +84,9 @@ RUN <<EOF
     fi
 EOF
 
+# Install zstd for database snapshots.
+RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" zstd
+
 RUN apt-get -qq autoclean
 
 RUN rm -rf /var/lib/mysql /etc/mysql
