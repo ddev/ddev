@@ -12,9 +12,6 @@ certificatesResolvers:
     acme:
       dnsChallenge:
         provider: cloudflare
-core:
-# defaultRuleSyntax overwritten to v3 in extra_overwrites_1
-  defaultRuleSyntax: v3
 entryPoints:
   http-80:
     address: :80

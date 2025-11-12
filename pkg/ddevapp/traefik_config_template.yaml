@@ -16,7 +16,6 @@ http:
       rule: {{ $length := len $s.ExternalHostnames }}{{ range $i, $h := $s.ExternalHostnames }}Host(`{{$h}}`){{if lt $i (sub $length 1)}} || {{end}}{{end}}
       {{ end }}
       service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}"
-      ruleSyntax: v3
       tls: false
       # middlewares:
       #   - "{{ $.App.Name }}-redirectHttps"
@@ -32,7 +31,6 @@ http:
       rule: {{ $length := len $s.ExternalHostnames }}{{ range $i, $h := $s.ExternalHostnames }}Host(`{{$h}}`){{if lt $i (sub $length 1)}} || {{end}}{{end}}
       {{ end }}
       service: "{{$appname}}-{{$s.Service.InternalServiceName}}-{{$s.Service.InternalServicePort}}"
-      ruleSyntax: v3
       {{ if not $.UseLetsEncrypt }}
       tls: true
       {{ else }}
