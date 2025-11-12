@@ -1003,7 +1003,7 @@ func TestPHPConfig(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
-		app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-redis"}
+		app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-solr"}
 		err = app.Restart()
 		require.NoError(t, err)
 
@@ -1138,7 +1138,7 @@ func TestExtraPackages(t *testing.T) {
 	require.NoError(t, err)
 
 	addedDBPackage := "sudo"
-	addedWebPackage := "dnsutils"
+	addedWebPackage := "bind9-dnsutils"
 
 	// Test db container to make sure no sudo in there at beginning
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
