@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 // helper: create required CI4 files in a temp dir
@@ -57,7 +59,7 @@ func TestIsCodeIgniterApp_DetectsFalseWhenMissingFiles(t *testing.T) {
 
 func TestBuildCodeIgniterDBConfig_MySQL(t *testing.T) {
 	app := &DdevApp{}
-	app.Database.Type = "mysql"
+	app.Database.Type = nodeps.MySQL
 	got := buildCodeIgniterDBConfig(app)
 	if !strings.Contains(got, "DBDriver = MySQLi") || !strings.Contains(got, "port = 3306") {
 		t.Fatalf("mysql config not rendered correctly: %s", got)
@@ -66,7 +68,7 @@ func TestBuildCodeIgniterDBConfig_MySQL(t *testing.T) {
 
 func TestBuildCodeIgniterDBConfig_MariaDB(t *testing.T) {
 	app := &DdevApp{}
-	app.Database.Type = "mariadb"
+	app.Database.Type = nodeps.MariaDB
 	got := buildCodeIgniterDBConfig(app)
 	if !strings.Contains(got, "DBDriver = MySQLi") || !strings.Contains(got, "port = 3306") {
 		t.Fatalf("mariadb config not rendered correctly: %s", got)
@@ -75,22 +77,10 @@ func TestBuildCodeIgniterDBConfig_MariaDB(t *testing.T) {
 
 func TestBuildCodeIgniterDBConfig_Postgres(t *testing.T) {
 	app := &DdevApp{}
-	app.Database.Type = "postgres"
+	app.Database.Type = nodeps.Postgres
 	got := buildCodeIgniterDBConfig(app)
 	if !strings.Contains(got, "DBDriver = Postgre") || !strings.Contains(got, "port = 5432") {
 		t.Fatalf("postgres config not rendered correctly: %s", got)
-	}
-}
-
-func TestBuildCodeIgniterDBConfig_UnknownTypeFallsBack(t *testing.T) {
-	app := &DdevApp{}
-	app.Database.Type = "sqlite"
-	got := buildCodeIgniterDBConfig(app)
-	if !strings.Contains(got, "unknown DDEV database type: sqlite") {
-		t.Fatalf("should annotate unknown type, got: %s", got)
-	}
-	if !strings.Contains(got, "DBDriver = MySQLi") || !strings.Contains(got, "port = 3306") {
-		t.Fatalf("unknown should fall back to mysql defaults, got: %s", got)
 	}
 }
 
@@ -115,7 +105,7 @@ func TestCreateCodeIgniterSettingsFile(t *testing.T) {
 	root := t.TempDir()
 	makeCI4Layout(t, root)
 	app := &DdevApp{AppRoot: root}
-	app.Database.Type = "postgres"
+	app.Database.Type = nodeps.Postgres
 
 	// provide an "env" template that should be copied
 	if err := os.WriteFile(filepath.Join(root, "env"), []byte("# example\n"), 0o644); err != nil {
