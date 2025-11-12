@@ -1216,7 +1216,13 @@ func TestTimezoneConfig(t *testing.T) {
 		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
 	})
 	assert.NoError(err)
-	assert.Equal(fmt.Sprintf("timezone=%s\nphptz=%s", hostTimezoneAbbr, hostTimezone), stdout)
+	// Windows may return either "UTC" or "Universal" for the same timezone
+	expectedStdout := fmt.Sprintf("timezone=%s\nphptz=%s", hostTimezoneAbbr, hostTimezone)
+	if nodeps.IsWindows() && hostTimezoneAbbr == "UTC" {
+		assert.True(stdout == expectedStdout || stdout == "timezone=Universal\nphptz=UTC", "stdout should match expected timezone (got %s)", stdout)
+	} else {
+		assert.Equal(expectedStdout, stdout)
+	}
 
 	// Make sure db container is also working
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1224,7 +1230,13 @@ func TestTimezoneConfig(t *testing.T) {
 		Cmd:     "echo -n timezone=$(date +%Z)",
 	})
 	assert.NoError(err)
-	assert.Equal(fmt.Sprintf("timezone=%s", hostTimezoneAbbr), stdout)
+	// Windows may return either "UTC" or "Universal" for the same timezone
+	expectedDBStdout := fmt.Sprintf("timezone=%s", hostTimezoneAbbr)
+	if nodeps.IsWindows() && hostTimezoneAbbr == "UTC" {
+		assert.True(stdout == expectedDBStdout || stdout == "timezone=Universal", "stdout should match expected timezone (got %s)", stdout)
+	} else {
+		assert.Equal(expectedDBStdout, stdout)
+	}
 
 	// With timezone set, app.Timezone should be used first
 	t.Setenv("TZ", "Europe/Rome")
