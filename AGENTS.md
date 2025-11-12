@@ -370,14 +370,16 @@ The web-based Claude Code environment has specific limitations compared to deskt
 
 **SessionStart Hook Solution:**
 
-A `.claude/SessionStart` hook automatically configures the environment for optimal web development:
+A `.claude/hooks/session-start.sh` hook automatically configures the environment for optimal development. The hook adapts to both desktop (with Docker) and web (without Docker) environments:
 
 **What the hook does:**
 
 - Installs `markdownlint-cli` via npm (required for `make staticrequired`)
-- Sets `GOTEST_SHORT=true` to skip Docker-dependent tests
-- Sets `DDEV_NO_INSTRUMENTATION=true`
-- Displays environment status and available tools
+- Detects Docker availability and adapts environment accordingly
+- Sets `GOTEST_SHORT=true` ONLY when Docker is not available (web environment)
+- Sets `DDEV_NO_INSTRUMENTATION=true` in all environments
+- Displays environment status and context-appropriate guidance
+- Uses `CLAUDE_ENV_FILE` to persist environment variables across tool calls
 
 **Testing Strategy for Web Environment:**
 
@@ -399,10 +401,20 @@ A `.claude/SessionStart` hook automatically configures the environment for optim
 
 **Tool Availability:**
 
-- ✅ `golangci-lint` - Pre-installed
+- ✅ `golangci-lint` - Pre-installed in both environments
 - ✅ `markdownlint` - Installed by SessionStart hook
-- ⚠️ `mkdocs` - Not available (gracefully skipped by Makefile)
+- ⚠️ `mkdocs` - Not available in web (gracefully skipped by Makefile)
 - ❌ `docker` - Not available in web environment
+- ✅ `docker` - Available in desktop environment
+
+**Environment Detection:**
+
+The SessionStart hook automatically detects Docker availability:
+
+- **Web Environment** (no Docker): Sets `GOTEST_SHORT=true`, shows Docker-free testing guidance
+- **Desktop Environment** (with Docker): Skips `GOTEST_SHORT`, shows full testing capabilities
+
+This ensures the hook works correctly in both environments without requiring manual configuration.
 
 ## General DDEV Development Patterns
 

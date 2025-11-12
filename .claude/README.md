@@ -14,7 +14,7 @@ This directory contains configuration for Claude Code development with DDEV.
 
 ## SessionStart Hook
 
-The SessionStart hook automatically configures the development environment when starting a Claude Code for Web session.
+The SessionStart hook automatically configures the development environment when starting a Claude Code session. It adapts to both desktop (with Docker) and web (without Docker) environments.
 
 **Configuration**: Defined in `settings.json` and triggered on session startup.
 
@@ -25,29 +25,47 @@ The SessionStart hook automatically configures the development environment when 
 1. **Installs Required Tools**
    - Installs `markdownlint-cli` via npm (required for `make staticrequired`)
 
-2. **Sets Environment Variables**
-   - `GOTEST_SHORT=true` - Limits test matrix and signals reduced environment
-   - `DDEV_NO_INSTRUMENTATION=true` - Disables analytics during development
+2. **Detects Docker Availability**
+   - Checks if Docker is installed and running
+   - Adapts environment configuration based on Docker availability
+
+3. **Sets Environment Variables**
+   - `DDEV_NO_INSTRUMENTATION=true` - Disables analytics (all environments)
+   - `GOTEST_SHORT=true` - Only set when Docker is NOT available (web environment)
    - Go build cache and GOPATH configuration
+   - Uses `CLAUDE_ENV_FILE` to persist variables across tool calls
 
-3. **Provides Environment Status**
+4. **Provides Environment Status**
    - Shows which development tools are available
-   - Warns about Docker not being available in web environment
-   - Displays usage guidelines for the limited environment
+   - Displays Docker availability status
+   - Shows context-appropriate usage guidelines based on environment
 
-### Environment Limitations
+### Environment Detection
 
-**Claude Code for Web does NOT have:**
-- Docker (cannot run integration tests that require containers)
-- mkdocs (documentation builds will be skipped)
+The hook automatically detects your environment and adapts:
 
-**Claude Code for Web DOES have:**
+**Web Environment (No Docker):**
+- Sets `GOTEST_SHORT=true` to skip Docker-dependent integration tests
+- Shows Docker-free testing guidance
+- Recommends using CI/CD for full integration tests
+
+**Desktop Environment (With Docker):**
+- Does NOT set `GOTEST_SHORT=true` (full tests available)
+- Shows full testing capabilities
+- Allows running complete integration test suite locally
+
+### Tool Availability
+
+**All Environments:**
 - ✅ Go 1.23+ toolchain
 - ✅ golangci-lint (pre-installed)
 - ✅ markdownlint (installed by SessionStart hook)
 - ✅ npm/node for tool installation
 - ✅ Full ability to build DDEV binaries
-- ✅ Ability to run unit tests that don't require Docker
+
+**Environment-Specific:**
+- ✅ Docker - Available in desktop, not in web
+- ⚠️ mkdocs - Not in web (gracefully skipped by Makefile)
 
 ### Recommended Development Workflow
 
