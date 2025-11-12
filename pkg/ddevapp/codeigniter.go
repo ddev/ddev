@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 )
@@ -64,43 +64,12 @@ func buildCodeIgniterDBConfig(app *DdevApp) string {
 		return "# Database omitted by DDEV configuration"
 	}
 
-	// Determine DB type from new-style `database` field, with basic fallback to legacy fields.
-	dbType := ""
-	// Preferred: app.Database.Type (new-style)
-	if app != nil && app.Database.Type != "" {
-		dbType = app.Database.Type
-	}
-
-	// Fallbacks for very old configs that may still be present on the struct
-	if dbType == "" {
-		switch {
-		case app != nil && app.MySQLVersion != "":
-			dbType = "mysql"
-		case app != nil && app.MariaDBVersion != "":
-			dbType = "mariadb"
-		}
-	}
-
+	// Simple mapping: default to MySQL/MariaDB; switch to Postgres when requested.
 	driver := "MySQLi"
 	port := 3306
-	switch strings.ToLower(dbType) {
-	case "postgres", "postgresql", "pgsql":
+	if app != nil && app.Database.Type == nodeps.Postgres {
 		driver = "Postgre"
 		port = 5432
-	case "mysql", "mariadb", "":
-		// default remains MySQL/MariaDB; port stays 3306
-	default:
-		// Unknown type: keep safe MySQL defaults, but annotate
-		return fmt.Sprintf(`
-# Database Configuration (unknown DDEV database type: %s)
-database.default.hostname = db
-database.default.database = db
-database.default.username = db
-database.default.password = db
-database.default.DBDriver = MySQLi
-database.default.DBPrefix =
-database.default.port = 3306
-		`, dbType)
 	}
 
 	// Standard DDEV credentials/hostnames
