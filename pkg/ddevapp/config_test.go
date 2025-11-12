@@ -1178,7 +1178,6 @@ func TestExtraPackages(t *testing.T) {
 
 // TestTimezoneConfig tests to make sure setting timezone config takes effect in the container.
 func TestTimezoneConfig(t *testing.T) {
-	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
 	site := TestSites[0]
@@ -1188,20 +1187,20 @@ func TestTimezoneConfig(t *testing.T) {
 	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", t.Name(), site.Name))
 
 	err := app.Init(site.Dir)
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = app.Stop(true, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
-		assert.NoError(err)
+		require.NoError(t, err)
 	})
 
 	// Start test with empty timezone env
 	t.Setenv("TZ", "")
 
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Without timezone set, we should find Etc/UTC on Windows
 	hostTimezoneAbbr := "UTC"
@@ -1211,72 +1210,70 @@ func TestTimezoneConfig(t *testing.T) {
 		hostTimezoneAbbr, _ = time.Now().In(time.Local).Zone()
 		hostTimezone, _ = util.GetLocalTimezone()
 	}
-	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+	inWebContainerTZData, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
 	})
-	assert.NoError(err)
-	// Windows may return either "UTC" or "Universal" for the same timezone
-	expectedStdout := fmt.Sprintf("timezone=%s\nphptz=%s", hostTimezoneAbbr, hostTimezone)
-	if nodeps.IsWindows() && hostTimezoneAbbr == "UTC" {
-		assert.True(stdout == expectedStdout || stdout == "timezone=Universal\nphptz=UTC", "stdout should match expected timezone (got %s)", stdout)
-	} else {
-		assert.Equal(expectedStdout, stdout)
+	require.NoError(t, err)
+	// Container's /etc/localtime may symlink to either UTC or Universal (both are equivalent)
+	validOutputs := []string{fmt.Sprintf("timezone=%s\nphptz=%s", hostTimezoneAbbr, hostTimezone)}
+	if hostTimezoneAbbr == "UTC" {
+		validOutputs = append(validOutputs, "timezone=Universal\nphptz=UTC")
 	}
+	require.Contains(t, validOutputs, inWebContainerTZData)
 
 	// Make sure db container is also working
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+	inDBContainerTZData, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     "echo -n timezone=$(date +%Z)",
 	})
-	assert.NoError(err)
-	// Windows may return either "UTC" or "Universal" for the same timezone
-	expectedDBStdout := fmt.Sprintf("timezone=%s", hostTimezoneAbbr)
-	if nodeps.IsWindows() && hostTimezoneAbbr == "UTC" {
-		assert.True(stdout == expectedDBStdout || stdout == "timezone=Universal", "stdout should match expected timezone (got %s)", stdout)
-	} else {
-		assert.Equal(expectedDBStdout, stdout)
+	require.NoError(t, err)
+	// Container's /etc/localtime may symlink to either UTC or Universal (both are equivalent)
+	validTimezones := []string{fmt.Sprintf("timezone=%s", hostTimezoneAbbr)}
+	if hostTimezoneAbbr == "UTC" {
+		validTimezones = append(validTimezones, "timezone=Universal")
 	}
+	require.Contains(t, validTimezones, inDBContainerTZData)
 
 	// With timezone set, app.Timezone should be used first
 	t.Setenv("TZ", "Europe/Rome")
 	app.Timezone = "Europe/Paris"
 	err = app.Start()
 	require.NoError(t, err)
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+	inWebContainerTZData, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
 	})
-	assert.NoError(err)
-	assert.Regexp(regexp.MustCompile("timezone=CES?T\nphptz=Europe/Paris"), stdout)
+	require.NoError(t, err)
+	require.Regexp(t, regexp.MustCompile("timezone=CES?T\nphptz=Europe/Paris"), inWebContainerTZData)
 
 	// Make sure db container is also working with CET
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+	inDBContainerTZData, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     "echo -n timezone=$(date +%Z)",
 	})
-	assert.NoError(err)
-	assert.Regexp(regexp.MustCompile("timezone=CES?T"), stdout)
+	require.NoError(t, err)
+	require.Regexp(t, regexp.MustCompile("timezone=CES?T"), inDBContainerTZData)
 
 	// With timezone set, TZ env should be used if app.Timezone is empty
 	t.Setenv("TZ", "Europe/Rome")
 	app.Timezone = ""
 	err = app.Start()
 	require.NoError(t, err)
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+	inWebContainerTZData, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
 	})
-	assert.NoError(err)
-	assert.Regexp(regexp.MustCompile("timezone=CES?T\nphptz=Europe/Rome"), stdout)
+	require.NoError(t, err)
+	require.Regexp(t, regexp.MustCompile("timezone=CES?T\nphptz=Europe/Rome"), inWebContainerTZData)
 
 	// Make sure db container is also working with CET
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+	inDBContainerTZData, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     "echo -n timezone=$(date +%Z)",
 	})
-	assert.NoError(err)
-	assert.Regexp(regexp.MustCompile("timezone=CES?T"), stdout)
+	require.NoError(t, err)
+	require.Regexp(t, regexp.MustCompile("timezone=CES?T"), inDBContainerTZData)
 
 	runTime()
 }
