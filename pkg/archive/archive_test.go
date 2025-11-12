@@ -277,5 +277,6 @@ func TestUntarSymlinks(t *testing.T) {
 
 	linkTarget2, err := os.Readlink(extractedSymlinkInSubdir)
 	require.NoError(t, err)
+	linkTarget2 = filepath.ToSlash(linkTarget2)
 	assert.Equal("../target.txt", linkTarget2)
 }
