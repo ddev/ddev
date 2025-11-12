@@ -85,7 +85,12 @@ RUN <<EOF
 EOF
 
 # Install zstd for database snapshots.
-RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" zstd
+RUN <<EOF
+    set -eu -o pipefail
+    if ! grep "Ubuntu 14.04" /etc/issue >/dev/null; then
+        apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" zstd
+    fi
+EOF
 
 RUN apt-get -qq autoclean
 

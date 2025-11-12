@@ -27,6 +27,9 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 		if app.Database.Type == nodeps.Postgres && app.Database.Version == nodeps.Postgres9 {
 			util.Failed("Snapshots are not supported for postgres:9")
 		}
+		if app.Database.Type == nodeps.MariaDB && app.Database.Version == nodeps.MariaDB55 {
+			util.Failed("Snapshots are not supported for mariadb:5.5")
+		}
 
 		if snapshotRestoreLatest {
 			if snapshotName, err = app.GetLatestSnapshot(); err != nil {
