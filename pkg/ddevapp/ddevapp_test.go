@@ -116,14 +116,14 @@ var (
 		{
 			Name: "TestPkgTypo3",
 			// tar -czf .tarballs/typo3v11_source.tgz --exclude=var --exclude=public/fileadmin .
-			SourceURL:                     "https://github.com/ddev/test-typo3/archive/refs/tags/v13.4.3.tar.gz",
-			ArchiveInternalExtractionPath: "test-typo3-13.4.3/",
-			DBTarURL:                      "https://github.com/ddev/test-typo3/releases/download/v13.4.3/typo3.sql.tar.gz",
-			FilesTarballURL:               "https://github.com/ddev/test-typo3/releases/download/v13.4.3/files.tgz",
+			SourceURL:                     "https://github.com/ddev/test-typo3/archive/refs/tags/v13.4.19.tar.gz",
+			ArchiveInternalExtractionPath: "test-typo3-13.4.19/",
+			DBTarURL:                      "https://github.com/ddev/test-typo3/releases/download/v13.4.19/typo3.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/test-typo3/releases/download/v13.4.19/files.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeTYPO3,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/fileadmin/README.txt", Expect: "junk readme simply for reading"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/fileadmin/test.txt", Expect: "junk readme simply for reading"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/testpage", Expect: "This is test text for TestDdevFullSiteSetup"},
 			FilesImageURI:                 "/fileadmin/introduction/images/map.png",
 		},
@@ -2297,7 +2297,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			assert.NoError(err)
 		}
 
-		// Get files before start, as syncing can start immediately.
+		// Load files if provided
 		if site.FilesTarballURL != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
@@ -3922,7 +3922,7 @@ func TestPHPWebserverType(t *testing.T) {
 // from host and from inside container by URL (with port)
 // Related test: TestNetworkAliases
 func TestInternalAndExternalAccessToURL(t *testing.T) {
-	if nodeps.IsAppleSilicon() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsAppleSilicon() {
 		t.Skip("Skipping on mac Apple Silicon/Lima/Colima/Rancher to ignore problems with 'connection reset by peer'")
 	}
 
@@ -3948,6 +3948,14 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 	})
+
+	// Load files if provided
+	if site.FilesTarballURL != "" {
+		_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+		require.NoError(t, err)
+		err = app.ImportFiles("", tarballPath, "")
+		assert.NoError(err)
+	}
 
 	// Add some additional hostnames
 	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}

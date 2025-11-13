@@ -1,6 +1,9 @@
 package archive_test
 
 import (
+	"archive/tar"
+	"compress/gzip"
+	"io"
 	"io/fs"
 	"os"
 	"path"
@@ -167,4 +170,113 @@ func TestDownloadAndExtractTarball(t *testing.T) {
 	require.FileExists(t, path.Join(dir, "install.yaml"))
 	cleanup()
 	require.NoDirExists(t, dir)
+}
+
+// TestUntarSymlinks tests that symlinks are properly extracted from tarballs
+func TestUntarSymlinks(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Create a temporary directory with a file and a symlink
+	srcDir := testcommon.CreateTmpDir(t.Name() + "_src")
+	t.Cleanup(func() {
+		_ = os.RemoveAll(srcDir)
+	})
+
+	// Create a test file
+	testFile := filepath.Join(srcDir, "target.txt")
+	err := os.WriteFile(testFile, []byte("test content"), 0644)
+	require.NoError(t, err)
+
+	// Create a subdirectory
+	subDir := filepath.Join(srcDir, "subdir")
+	err = os.MkdirAll(subDir, 0755)
+	require.NoError(t, err)
+
+	// Create a symlink in the root pointing to the file
+	symlinkPath := filepath.Join(srcDir, "link_to_target.txt")
+	err = os.Symlink("target.txt", symlinkPath)
+	require.NoError(t, err)
+
+	// Create a symlink in subdir pointing to parent file
+	symlinkInSubdir := filepath.Join(subDir, "link_to_parent.txt")
+	err = os.Symlink("../target.txt", symlinkInSubdir)
+	require.NoError(t, err)
+
+	// Create tarball
+	tarballFile, err := os.CreateTemp("", t.Name()+"_*.tar.gz")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = tarballFile.Close()
+		_ = os.Remove(tarballFile.Name())
+	})
+
+	err = archive.Tar(srcDir, tarballFile.Name(), "")
+	require.NoError(t, err)
+
+	// Verify tarball contents contain proper symlink entries
+	tf, err := os.Open(tarballFile.Name())
+	require.NoError(t, err)
+	gzf, err := gzip.NewReader(tf)
+	require.NoError(t, err)
+	tr := tar.NewReader(gzf)
+
+	symlinkEntriesFound := make(map[string]string) // map of symlink name to link target
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(t, err)
+
+		if header.Typeflag == tar.TypeSymlink {
+			symlinkEntriesFound[header.Name] = header.Linkname
+		}
+	}
+	_ = gzf.Close()
+	_ = tf.Close()
+
+	// Verify both symlinks were stored as symlink entries in the tarball
+	require.Equal(t, "target.txt", symlinkEntriesFound["link_to_target.txt"],
+		"tarball should contain symlink entry for link_to_target.txt pointing to target.txt")
+	require.Equal(t, "../target.txt", symlinkEntriesFound["subdir/link_to_parent.txt"],
+		"tarball should contain symlink entry for subdir/link_to_parent.txt pointing to ../target.txt")
+
+	// Extract to new directory
+	extractDir := testcommon.CreateTmpDir(t.Name() + "_extract")
+	t.Cleanup(func() {
+		_ = os.RemoveAll(extractDir)
+	})
+
+	err = archive.Untar(tarballFile.Name(), extractDir, "")
+	require.NoError(t, err)
+
+	// Verify the regular file exists
+	extractedFile := filepath.Join(extractDir, "target.txt")
+	assert.FileExists(extractedFile)
+
+	// Verify the symlink in root exists and points to correct target
+	extractedSymlink := filepath.Join(extractDir, "link_to_target.txt")
+	linkInfo, err := os.Lstat(extractedSymlink)
+	require.NoError(t, err)
+	assert.True(linkInfo.Mode()&os.ModeSymlink != 0, "link_to_target.txt should be a symlink")
+
+	linkTarget, err := os.Readlink(extractedSymlink)
+	require.NoError(t, err)
+	assert.Equal("target.txt", linkTarget)
+
+	// Verify we can read through the symlink
+	content, err := os.ReadFile(extractedSymlink)
+	require.NoError(t, err)
+	assert.Equal("test content", string(content))
+
+	// Verify the symlink in subdir exists and points to correct target
+	extractedSymlinkInSubdir := filepath.Join(extractDir, "subdir", "link_to_parent.txt")
+	linkInfo2, err := os.Lstat(extractedSymlinkInSubdir)
+	require.NoError(t, err)
+	assert.True(linkInfo2.Mode()&os.ModeSymlink != 0, "subdir/link_to_parent.txt should be a symlink")
+
+	linkTarget2, err := os.Readlink(extractedSymlinkInSubdir)
+	require.NoError(t, err)
+	linkTarget2 = filepath.ToSlash(linkTarget2)
+	assert.Equal("../target.txt", linkTarget2)
 }
