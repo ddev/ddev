@@ -92,7 +92,7 @@
       "type": "string",
       "enum": [
         "none",
-        "mutagen",
+        "mutagen"
       ]
     },
     "project_tld": {
