@@ -103,7 +103,8 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 There’s only one global `.ddev` directory, which normally lives in your home directory: `~/.ddev` (`$HOME/.ddev`) or in `~/.config/ddev`. `~/.ddev` takes precedence if it exists, unless `$XDG_CONFIG_HOME` is set, in which case it will be `$XDG_CONFIG_HOME/ddev`.
 
 !!!tip "Where is my global `.ddev` config?"
-    Use `ddev version` (look at `global-ddev-dir`) to check which location is used for the `.ddev` global directory.
+    Run `ddev version` and look for `global-ddev-dir` to see your actual global directory location.
+    Most users have `$HOME/.ddev`, but if you have `XDG_CONFIG_HOME` set, it will be at `$XDG_CONFIG_HOME/ddev`.
 
 !!!tip "What if I don't want to clutter up my `$HOME` with a `.ddev` directory?"
     DDEV can use the `$XDG_CONFIG_HOME` environment variable from [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) to move `~/.ddev` to the `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is [defined](https://superuser.com/questions/365847/where-should-the-xdg-config-home-variable-be-defined/):
