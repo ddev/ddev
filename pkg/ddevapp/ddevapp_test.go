@@ -1590,7 +1590,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
+		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:11.4", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -2003,9 +2003,7 @@ func TestDdevExportDB(t *testing.T) {
 func TestWebserverMariaMySQLDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
-	//serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4", "mariadb:11.8"}
-	// mariadb:11.4 seems not to work right now for upstream reasons 2025-09-25
-	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.8"}
+	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:11.4", "mariadb:11.8"}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
