@@ -1610,10 +1610,10 @@ Normal details of a Composer build for Magento 2 are on the [Magento 2 site](htt
     If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md):
 
     ```
-    mkdir -p ~/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json ~/.ddev/homeadditions/.composer/auth.json
+    mkdir -p $HOME/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json $HOME/.ddev/homeadditions/.composer/auth.json
     ```
 
-    Alternately, you can install the Adobe/Magento Composer credentials in your global `~/.ddev/homeadditions/.composer/auth.json` and never have to enter them again (see below):
+    Alternately, you can install the Adobe/Magento Composer credentials in your global `$HOME/.ddev/homeadditions/.composer/auth.json` and never have to enter them again (see below):
 
     ??? "Script to store Adobe/Magento Composer credentials (click me)"
         ```bash

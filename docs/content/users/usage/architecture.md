@@ -44,7 +44,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Where Docker-friendly users can provide their own [custom compose files](../extend/custom-compose-files.md) that add or override services. Read more in [Additional Service Configurations & Add-ons](../extend/additional-services.md).
 
 `homeadditions` directory
-: Files to be copied into the web container on startup. You could use this, for example, to override the default home directory contents (`.profile`, `.bashrc`, `.composer`, `.ssh`), or include scripts that you’d like to be available inside the container. (You can do the same thing globally in `~/.ddev/homeadditions`.) Check out the [homeadditions docs](../extend/in-container-configuration.md) for more.
+: Files to be copied into the web container on startup. You could use this, for example, to override the default home directory contents (`.profile`, `.bashrc`, `.composer`, `.ssh`), or include scripts that you’d like to be available inside the container. (You can do the same thing globally in `$HOME/.ddev/homeadditions`.) Check out the [homeadditions docs](../extend/in-container-configuration.md) for more.
 
 `mutagen` directory
 : Contains `mutagen.yml`, where you can [override the default Mutagen configuration](../install/performance.md#advanced-mutagen-configuration-options).
@@ -100,27 +100,27 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 
 ### Global Files
 
-There’s only one global `.ddev` directory, which normally lives in your home directory: `~/.ddev` (`$HOME/.ddev`) or in `~/.config/ddev`. `~/.ddev` takes precedence if it exists, unless `$XDG_CONFIG_HOME` is set, in which case it will be `$XDG_CONFIG_HOME/ddev`.
+There’s only one global `.ddev` directory, which normally lives in your home directory: `$HOME/.ddev` (`$HOME/.ddev`) or in `~/.config/ddev`. `$HOME/.ddev` takes precedence if it exists, unless `$XDG_CONFIG_HOME` is set, in which case it will be `$XDG_CONFIG_HOME/ddev`.
 
 !!!tip "Where is my global `.ddev` config?"
     Run `ddev version` and look for `global-ddev-dir` to see your actual global directory location.
     Most users have `$HOME/.ddev`, but if you have `XDG_CONFIG_HOME` set, it will be at `$XDG_CONFIG_HOME/ddev`.
 
 !!!tip "What if I don't want to clutter up my `$HOME` with a `.ddev` directory?"
-    DDEV can use the `$XDG_CONFIG_HOME` environment variable from [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) to move `~/.ddev` to the `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is [defined](https://superuser.com/questions/365847/where-should-the-xdg-config-home-variable-be-defined/):
+    DDEV can use the `$XDG_CONFIG_HOME` environment variable from [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) to move `$HOME/.ddev` to the `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is [defined](https://superuser.com/questions/365847/where-should-the-xdg-config-home-variable-be-defined/):
 
     ```bash
     ddev poweroff
     # permanently set environment variable using a directory that works for you
     export XDG_CONFIG_HOME="$HOME/.config"
     # restart the terminal and run:
-    mv ~/.ddev ${XDG_CONFIG_HOME}/ddev
+    mv $HOME/.ddev ${XDG_CONFIG_HOME}/ddev
     ```
 
-    Otherwise, on Linux/WSL2 only, the default `$HOME/.config/ddev` can be used when `~/.config/ddev` exists and `~/.ddev` does not exist.  You can move the config directory with:
+    Otherwise, on Linux/WSL2 only, the default `$HOME/.config/ddev` can be used when `~/.config/ddev` exists and `$HOME/.ddev` does not exist.  You can move the config directory with:
 
     ```bash
-    mv ~/.ddev ~/.config/ddev
+    mv $HOME/.ddev ~/.config/ddev
     ```
 
 `global_config.yaml`
@@ -170,7 +170,7 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 : An empty file whose purpose is mysterious and intriguing.
 
 !!!tip "`.ddev_mutagen_data_directory`"
-    DDEV uses a global `~/.ddev_mutagen_data_directory` for storing [Mutagen](../install/performance.md#mutagen) sync data.
+    DDEV uses a global `$HOME/.ddev_mutagen_data_directory` for storing [Mutagen](../install/performance.md#mutagen) sync data.
 
 ## Container Architecture
 

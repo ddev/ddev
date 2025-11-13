@@ -17,7 +17,7 @@ All Traefik configuration uses the *file* provider, not the *Docker* provider. E
 
 ### Traefik Static Configuration
 
-Static configuration is automatically generated in the `~/.ddev/traefik` directory. "Static" configuration means Traefik configuration which is only read when the router is started.
+Static configuration is automatically generated in the `$HOME/.ddev/traefik` directory. "Static" configuration means Traefik configuration which is only read when the router is started.
 
 * `.static_config.yaml` (a hidden file) is the configuration that gets used. It is not to be edited; it is generated from DDEV's base configuration while merging any files named `static_config.*.yaml`. It is read on router startup, and does not change until the router starts again (normally after `ddev poweroff`).
 * Additional static configuration may be added by adding `static_config.*.yaml` files, which will be merged into the generated `.static_config.yaml`. For example, a `static_config.loglevel.yaml` might override logging configuration, a `static_config.plugin.yaml` might contain external Traefik plugins, or a `static_config.dnschallenge.yaml` might provide configuration for additional `certificatesResolvers`. Merging is done with an **override** strategy, meaning that the final file in alphanumeric sort to touch a particular element of the YAML structure wins.
@@ -78,9 +78,9 @@ Project-specific configuration is automatically generated in the project’s `.d
 
 ## Router `docker-compose` Customization
 
-The default Docker Compose configuration for the router container is found in `~/.ddev/.router-compose.yaml`. It is quite unusual to override this configuration, but it can be overridden in the same way project configuration can be overridden (project `.ddev/docker-compose.*.yaml`). These ultimately get merged into `~/.ddev/.router-compose-full.yaml`
+The default Docker Compose configuration for the router container is found in `$HOME/.ddev/.router-compose.yaml`. It is quite unusual to override this configuration, but it can be overridden in the same way project configuration can be overridden (project `.ddev/docker-compose.*.yaml`). These ultimately get merged into `$HOME/.ddev/.router-compose-full.yaml`
 
-You can create a `~/.ddev/router-compose.*.yaml`. For example, as `~/.ddev/router-compose.cloudflare.yaml` might contain environment variables like this:
+You can create a `$HOME/.ddev/router-compose.*.yaml`. For example, as `$HOME/.ddev/router-compose.cloudflare.yaml` might contain environment variables like this:
 
 ```yaml
 services:

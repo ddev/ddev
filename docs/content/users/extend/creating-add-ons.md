@@ -36,7 +36,7 @@ removal_actions: []
 - **`name`**: The add-on name used in `ddev add-on` commands
 - **`pre_install_actions`**: Scripts executed before files are copied
 - **`project_files`**: Files copied to the project's `.ddev` directory
-- **`global_files`**: Files copied to the global `~/.ddev/` directory
+- **`global_files`**: Files copied to the global `$HOME/.ddev/` directory
 - **`post_install_actions`**: Scripts executed after files are copied
 - **`removal_actions`**: Scripts executed when removing the add-on
 
