@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -82,8 +83,11 @@ func TestShareCmd(t *testing.T) {
 			logLine := scanner.Text()
 			logLines = append(logLines, logLine)
 
+			// Strip ANSI escape codes before attempting JSON parsing
+			cleanLine := stripAnsiCodes(logLine)
+
 			var m map[string]any
-			if err := json.Unmarshal([]byte(logLine), &m); err != nil {
+			if err := json.Unmarshal([]byte(cleanLine), &m); err != nil {
 				// Continue scanning; some lines may not be JSON or may not match expected schema
 				t.Logf("Ignoring ngrok log line (unmarshal error):\n  Line: %s\n  Error: %v", logLine, err)
 				continue
@@ -188,4 +192,11 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// stripAnsiCodes removes ANSI escape sequences from a string
+func stripAnsiCodes(s string) string {
+	// Match ANSI escape sequences like \x1b[32m or \x1b[0m
+	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	return ansiRegex.ReplaceAllString(s, "")
 }
