@@ -1,7 +1,7 @@
 package hostname
 
 // This file contains tests for ddev-hostname functionality that require passwordless sudo.
-// These tests only run in CI environments (GitHub Actions) where passwordless sudo is available.
+// These tests only run in CI environments where passwordless sudo is available.
 // The tests verify that ddev-hostname can properly add and remove hostnames from the hosts file
 // without user interaction when DDEV_NONINTERACTIVE is unset.
 //
@@ -19,12 +19,12 @@ import (
 
 // TestDdevHostnameWithPasswordlessSudo tests ddev-hostname functionality when passwordless sudo is available.
 // This test only runs when:
-// 1. We're in a CI environment (GITHUB_ACTIONS=true)
+// 1. We're in a CI environment (CI=true)
 // 2. Passwordless sudo is available
 func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
-	// Skip if not in GitHub Actions
-	if os.Getenv("GITHUB_ACTIONS") != "true" {
-		t.Skip("Skipping because not in GitHub Actions (GITHUB_ACTIONS != true)")
+	// Skip if not in CI
+	if os.Getenv("CI") != "true" {
+		t.Skip("Skipping because not in CI (CI != true)")
 	}
 
 	// Check if passwordless sudo is available
@@ -96,12 +96,12 @@ func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 
 // TestElevateToAddRemoveHostEntry tests the ElevateToAddHostEntry and ElevateToRemoveHostEntry functions.
 // This test only runs when:
-// 1. We're in a CI environment (GITHUB_ACTIONS=true)
+// 1. We're in a CI environment (CI=true)
 // 2. Passwordless sudo is available
 func TestElevateToAddRemoveHostEntry(t *testing.T) {
-	// Skip if not in GitHub Actions
-	if os.Getenv("GITHUB_ACTIONS") != "true" {
-		t.Skip("Skipping because not in GitHub Actions (GITHUB_ACTIONS != true)")
+	// Skip if not in CI
+	if os.Getenv("CI") != "true" {
+		t.Skip("Skipping because not in CI (CI != true)")
 	}
 
 	// Check if passwordless sudo is available
