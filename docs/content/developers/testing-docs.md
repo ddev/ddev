@@ -42,7 +42,7 @@ For documentation development and testing, install the required tools once using
 scripts/install-dev-tools.sh
 ```
 
-This installs `mkdocs`, `pyspelling`, `markdownlint`, `textlint`, `linkspector`, and `aspell` to `~/.ddev-dev-tools/`.
+This installs `mkdocs`, `pyspelling`, `markdownlint`, `textlint`, `linkspector`, and `aspell` to `$HOME/.ddev-dev-tools/`.
 
 The project's `.envrc` automatically adds these tools to your PATH when you're in the DDEV directory. If you want the tools available globally, add this to your shell profile (`.bashrc`, `.bash_profile`, or `.zshrc`):
 
