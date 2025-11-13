@@ -15,7 +15,7 @@ MARIADB_VERSION=${DDEV_DATABASE#*:}
 
 # Configure the correct repository for mariadb
 set -x
-mariadb_repo_setup --mariadb-server-version="mariadb-${MARIADB_VERSION}" --skip-maxscale --skip-tools --skip-key-import \
+mariadb_repo_setup bookworm --mariadb-server-version="mariadb-${MARIADB_VERSION}" --skip-maxscale --skip-tools --skip-key-import \
   || log-stderr.sh mariadb_repo_setup --mariadb-server-version="mariadb-${MARIADB_VERSION}" --skip-maxscale --skip-tools --skip-key-import \
   || exit $?
 rm -f /etc/apt/sources.list.d/mariadb.list.old_*
