@@ -290,6 +290,58 @@ ddev launch
     ./setup-civicrm.sh
     ```
 
+## CodeIgniter
+
+Use a new or existing Composer project, or clone a Git repository.
+
+DDEV automatically updates or creates the `.env` file with the database information.
+
+=== "Composer"
+
+    CodeIgniter defaults to MySQL:
+
+    Create the project directory and configure DDEV:
+
+    ```bash
+    mkdir my-ci4-site && cd my-ci4-site
+    ddev config --project-type=codeigniter --docroot=public
+    ```
+
+    Start DDEV (this may take a minute):
+
+    ```bash
+    ddev start
+    ```
+
+    Install CodeIgniter via Composer:
+
+    ```bash
+    ddev composer create-project codeigniter4/appstarter
+    ```
+
+    Launch the site:
+
+    ```bash
+    ddev launch
+    ```
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > setup-codeigniter.sh << 'EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        mkdir my-ci4-site && cd my-ci4-site
+        ddev config --project-type=codeigniter --docroot=public
+        ddev start -y
+        ddev composer create-project codeigniter4/appstarter
+        ddev launch
+        EOF
+        chmod +x setup-codeigniter.sh
+        ./setup-codeigniter.sh
+        ```
+
 ## Contao
 
 Further information on the DDEV procedure can also be found in the [Contao documentation](https://docs.contao.org/manual/en/guides/local-installation/ddev/).
@@ -409,60 +461,6 @@ Further information on the DDEV procedure can also be found in the [Contao docum
 
     The [Contao demo website](https://demo.contao.org/) is maintained for the currently supported Contao versions and can be [optionally installed](https://github.com/contao/contao-demo).
     Via the Contao Manager you can select this option during the first installation.
-
-## CodeIgniter
-
-Use a new or existing Composer project, or clone a Git repository.
-
-DDEV automatically updates or creates the `.env` file with the database information.
-
-=== "Composer"
-
-    CodeIgniter defaults to MySQL:
-
-    Create the project directory and configure DDEV:
-
-    ```bash
-    mkdir my-ci4-site && cd my-ci4-site
-    ddev config --project-type=codeigniter --docroot=public
-    ```
-
-    Start DDEV (this may take a minute):
-
-    ```bash
-    ddev start
-    ```
-
-    Install CodeIgniter via Composer:
-
-    ```bash
-    ddev composer create codeigniter4/appstarter
-    ```
-
-    Launch the site:
-
-    ```bash
-    ddev launch
-    ```
-??? tip "Prefer to run as a script?"
-    To run the whole setup as a script, examine and run this script:
-
-    ```bash
-    cat > setup-codeigniter-git.sh << 'EOF'
-    #!/usr/bin/env bash
-    set -euo pipefail
-    git clone <my-ci4-repo> my-ci4-site
-    cd my-ci4-site
-    ddev config --project-type=codeigniter --docroot=public
-    ddev start -y
-    ddev composer install
-    ddev composer run-script post-root-package-install
-    ddev composer run-script post-create-project-cmd
-    ddev launch
-    EOF
-    chmod +x setup-codeigniter-git.sh
-    ./setup-codeigniter-git.sh
-    ```
 
 ## Craft CMS
 
