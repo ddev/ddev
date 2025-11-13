@@ -65,7 +65,9 @@
         },
         "oneOf": [
           {
-            "required": ["exec"],
+            "required": [
+              "exec"
+            ],
             "properties": {
               "exec": {
                 "type": "string"
@@ -73,7 +75,10 @@
             }
           },
           {
-            "required": ["exec", "exec_raw"],
+            "required": [
+              "exec",
+              "exec_raw"
+            ],
             "properties": {
               "exec": {
                 "type": "null"
@@ -81,10 +86,14 @@
             }
           },
           {
-            "required": ["exec-host"]
+            "required": [
+              "exec-host"
+            ]
           },
           {
-            "required": ["composer"],
+            "required": [
+              "composer"
+            ],
             "properties": {
               "composer": {
                 "type": "string"
@@ -92,7 +101,10 @@
             }
           },
           {
-            "required": ["composer", "exec_raw"],
+            "required": [
+              "composer",
+              "exec_raw"
+            ],
             "properties": {
               "composer": {
                 "type": "null"
@@ -231,7 +243,9 @@
           },
           "else": {
             "not": {
-              "required": ["version"]
+              "required": [
+                "version"
+              ]
             }
           }
         }
@@ -428,7 +442,7 @@
       "enum": [
         "global",
         "none",
-        "mutagen",
+        "mutagen"
       ]
     },
     "php_version": {
