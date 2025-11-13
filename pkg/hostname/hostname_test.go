@@ -1,5 +1,12 @@
 package hostname
 
+// This file contains tests for ddev-hostname functionality that require passwordless sudo.
+// These tests only run in CI environments (GitHub Actions) where passwordless sudo is available.
+// The tests verify that ddev-hostname can properly add and remove hostnames from the hosts file
+// without user interaction when DDEV_NONINTERACTIVE is unset.
+//
+// Related issue: https://github.com/ddev/ddev/issues/7790
+
 import (
 	"os"
 	"os/exec"
