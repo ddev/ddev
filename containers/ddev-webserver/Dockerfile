@@ -36,7 +36,9 @@ RUN rm -f /etc/apt/sources.list.d/symfony-stable.list && \
 # Install mariadb_repo_setup to get mariadb-client from them directly
 RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
 # Search for CHANGE_MARIADB_CLIENT to update related code.
-RUN mariadb_repo_setup --mariadb-server-version="mariadb-11.4" --skip-maxscale --skip-tools
+# It seems they still haven't updated to do mariadb_repo_setup with trixie
+# So we'll fake it by specifying bookworm. 20251112
+RUN mariadb_repo_setup bookworm --mariadb-server-version="mariadb-11.4" --skip-maxscale --skip-tools
 
 # Set up Postgresql apt repository
 RUN install -d /usr/share/postgresql-common/pgdg && curl -s -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
