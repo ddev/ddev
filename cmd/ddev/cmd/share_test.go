@@ -88,8 +88,11 @@ func TestShareCmd(t *testing.T) {
 
 			var m map[string]any
 			if err := json.Unmarshal([]byte(cleanLine), &m); err != nil {
-				// Continue scanning; some lines may not be JSON or may not match expected schema
-				t.Logf("Ignoring ngrok log line (unmarshal error):\n  Line: %s\n  Error: %v", logLine, err)
+				// Only log unmarshal errors for lines that look like JSON (start with '{')
+				// This filters out non-JSON output like "Running /opt/homebrew/bin/ngrok..."
+				if strings.HasPrefix(strings.TrimSpace(cleanLine), "{") {
+					t.Logf("Ignoring ngrok log line (unmarshal error):\n  Line: %s\n  Error: %v", logLine, err)
+				}
 				continue
 			}
 
