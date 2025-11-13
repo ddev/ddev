@@ -22,6 +22,7 @@ Cloudflare
 CMD
 CMS
 CMSes
+CodeIgniter
 Colima
 Contao
 CPUs
@@ -96,7 +97,6 @@ Kubernetes
 Lando
 Laravel
 Laravel's
-CodeIgniter
 Let's
 Lima
 Livewire
