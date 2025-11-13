@@ -82,7 +82,7 @@ func TestShareCmd(t *testing.T) {
 			var m map[string]any
 			if err := json.Unmarshal([]byte(logLine), &m); err != nil {
 				// Continue scanning; some lines may not be JSON or may not match expected schema
-				t.Logf("Ignoring ngrok log line (unmarshal error): %q, err=%v", logLine, err)
+				t.Logf("Ignoring ngrok log line (unmarshal error):\n  Line: %s\n  Error: %v", logLine, err)
 				continue
 			}
 
