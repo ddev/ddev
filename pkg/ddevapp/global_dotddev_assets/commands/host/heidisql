@@ -51,6 +51,7 @@ if [ "$type" = "postgres" ]; then
   nettype=8
   user="db"
   password="db"
+  database="${database:-"db"}"
   
   # When using this database type, we also need to specify the library
   if [ -z "${library}" ]; then
