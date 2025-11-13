@@ -32,6 +32,9 @@ func TestShareCmd(t *testing.T) {
 	}
 	assert := asrt.New(t)
 
+	// Disable DDEV_DEBUG to prevent non-JSON output in ngrok logs
+	t.Setenv("DDEV_DEBUG", "false")
+
 	site := TestSites[0]
 	defer site.Chdir()()
 
