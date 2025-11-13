@@ -24,7 +24,6 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/docker/docker/pkg/homedir"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -219,7 +218,7 @@ func OsTempDir() (string, error) {
 // and returns its path as a string. It's important that it's in
 // homedir since Colima doesn't mount things outside that.
 func CreateTmpDir(prefix string) string {
-	baseTmpDir := filepath.Join(homedir.Get(), "tmp", "ddevtest")
+	baseTmpDir := filepath.Join(util.GetHomeDir(), "tmp", "ddevtest")
 	_ = os.MkdirAll(baseTmpDir, 0755)
 	fullPath, err := os.MkdirTemp(baseTmpDir, prefix)
 	if err != nil {
@@ -381,7 +380,7 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 		return false, fmt.Errorf("unable to find container %s", checkName)
 	}
 
-	if c.State == checkState {
+	if string(c.State) == checkState {
 		return true, nil
 	}
 	return false, fmt.Errorf("container %s returned %s", checkName, c.State)

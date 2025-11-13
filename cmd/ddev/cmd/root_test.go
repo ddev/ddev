@@ -19,7 +19,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/docker/docker/pkg/homedir"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -314,11 +313,11 @@ func TestGetGlobalDdevDirLocation(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", "")
 	ddevDir := globalconfig.GetGlobalDdevDirLocation()
 	// Original ~/.ddev dir location
-	originalGlobalDdevDir := filepath.Join(homedir.Get(), ".ddev")
+	originalGlobalDdevDir := filepath.Join(util.GetHomeDir(), ".ddev")
 	// If test runs on Linux machine, where ~/.config/ddev is used
 	// if ~/.ddev does not exist:
 	if nodeps.IsLinux() && !fileutil.IsDirectory(originalGlobalDdevDir) {
-		linuxDdevDir := filepath.Join(homedir.Get(), ".config", "ddev")
+		linuxDdevDir := filepath.Join(util.GetHomeDir(), ".config", "ddev")
 		if fileutil.IsDirectory(linuxDdevDir) {
 			originalGlobalDdevDir = linuxDdevDir
 		}

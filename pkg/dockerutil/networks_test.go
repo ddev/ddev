@@ -13,7 +13,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/docker/docker/api/types/network"
+	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,7 +23,7 @@ import (
 // Note: duplicate networks cannot be created with Docker >= 25.x.x
 // See https://github.com/moby/moby/pull/46251
 func TestNetworkDuplicates(t *testing.T) {
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		t.Fatalf("Could not get docker client: %v", err)
 	}
@@ -35,28 +35,28 @@ func TestNetworkDuplicates(t *testing.T) {
 		err := dockerutil.RemoveNetwork(networkName)
 		require.NoError(t, err)
 
-		nets, err := client.NetworkList(ctx, network.ListOptions{})
+		nets, err := apiClient.NetworkList(ctx, client.NetworkListOptions{})
 		require.NoError(t, err)
 
 		// Ensure the network is not in the list
-		for _, net := range nets {
+		for _, net := range nets.Items {
 			require.NotEqual(t, networkName, net.Name)
 		}
 	})
 
 	labels := map[string]string{"com.ddev.platform": "ddev"}
-	netOptions := network.CreateOptions{
+	netOptions := client.NetworkCreateOptions{
 		Driver:   "bridge",
 		Internal: false,
 		Labels:   labels,
 	}
 
 	// Create the first network
-	_, err = client.NetworkCreate(ctx, networkName, netOptions)
+	_, err = apiClient.NetworkCreate(ctx, networkName, netOptions)
 	require.NoError(t, err)
 
 	// Create a second network with the same name
-	_, errDuplicate := client.NetworkCreate(ctx, networkName, netOptions)
+	_, errDuplicate := apiClient.NetworkCreate(ctx, networkName, netOptions)
 
 	// Go library docker/docker/client v25+ throws an error,
 	// no matter what version of Docker is installed
@@ -67,7 +67,7 @@ func TestNetworkDuplicates(t *testing.T) {
 	require.NoError(t, err)
 
 	// This check would fail if there is a network duplicate
-	_, err = client.NetworkInspect(ctx, networkName, network.InspectOptions{})
+	_, err = apiClient.NetworkInspect(ctx, networkName, client.NetworkInspectOptions{})
 	require.NoError(t, err)
 }
 

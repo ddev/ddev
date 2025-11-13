@@ -20,8 +20,8 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/go-connections/nat"
+	"github.com/moby/moby/api/types/network"
+	"github.com/moby/moby/client"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -105,11 +105,11 @@ func testMain(m *testing.M) int {
 
 // Start container for tests; returns containerID, error
 func startTestContainer() (string, error) {
-	portBinding := map[nat.Port][]nat.PortBinding{
-		"80/tcp": {
+	portBinding := map[network.Port][]network.PortBinding{
+		network.MustParsePort("80/tcp"): {
 			{HostPort: "8889"},
 		},
-		"8025/tcp": {
+		network.MustParsePort("8025/tcp"): {
 			{HostPort: "8890"},
 		}}
 	containerID, _, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), testContainerName, nil, nil, []string{
@@ -196,7 +196,7 @@ func TestGetContainerUser(t *testing.T) {
 // TestGetContainerHealth tests the function for processing container readiness.
 func TestGetContainerHealth(t *testing.T) {
 	assert := asrt.New(t)
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		t.Fatalf("Could not get docker client: %v", err)
 	}
@@ -237,7 +237,7 @@ func TestGetContainerHealth(t *testing.T) {
 
 	// Now break the container and make sure it's unhealthy
 	timeout := 10
-	err = client.ContainerStop(ctx, c.ID, container.StopOptions{Timeout: &timeout})
+	_, err = apiClient.ContainerStop(ctx, c.ID, client.ContainerStopOptions{Timeout: &timeout})
 	assert.NoError(err)
 
 	status, log = dockerutil.GetContainerHealth(c)
@@ -473,7 +473,7 @@ func TestGetBoundHostPorts(t *testing.T) {
 // TestDockerExec() checks docker.Exec()
 func TestDockerExec(t *testing.T) {
 	assert := asrt.New(t)
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		t.Fatalf("Could not get docker client: %v", err)
 	}
@@ -482,7 +482,7 @@ func TestDockerExec(t *testing.T) {
 	assert.NoError(err)
 
 	t.Cleanup(func() {
-		err = client.ContainerRemove(ctx, id, container.RemoveOptions{Force: true})
+		_, err = apiClient.ContainerRemove(ctx, id, client.ContainerRemoveOptions{Force: true})
 		assert.NoError(err)
 	})
 

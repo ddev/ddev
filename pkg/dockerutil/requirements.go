@@ -15,7 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/docker/docker/api/types/versions"
+	"github.com/moby/moby/client/pkg/versions"
 )
 
 type DockerVersionMatrix struct {

@@ -8,8 +8,10 @@ import (
 	"math/rand"
 	"os"
 	osexec "os/exec"
+	"os/user"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -488,4 +490,22 @@ func ExpandHomedir(path string) (string, error) {
 	}
 
 	return filepath.Join(dir, path[1:]), nil
+}
+
+// GetHomeDir returns the home directory of the current user with the help of
+// environment variables depending on the target operating system.
+// Returned path should be used with "path/filepath" to form new paths.
+//
+// On non-Windows platforms, it falls back to nss lookups, if the home
+// directory cannot be obtained from environment-variables.
+//
+// Adapted from https://github.com/moby/moby/blob/master/pkg/homedir/homedir.go
+func GetHomeDir() string {
+	home, _ := os.UserHomeDir()
+	if home == "" && runtime.GOOS != "windows" {
+		if u, err := user.Current(); err == nil {
+			return u.HomeDir
+		}
+	}
+	return home
 }

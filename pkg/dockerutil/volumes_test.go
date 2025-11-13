@@ -7,8 +7,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/api/types/volume"
+	"github.com/moby/moby/client"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +30,7 @@ func TestCreateVolume(t *testing.T) {
 // TestRemoveVolume makes sure we can remove a volume successfully
 func TestRemoveVolume(t *testing.T) {
 	assert := asrt.New(t)
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		t.Fatalf("Could not get docker client: %v", err)
 	}
@@ -44,19 +43,19 @@ func TestRemoveVolume(t *testing.T) {
 	vol, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
 	assert.NoError(err)
 
-	volumes, err := client.VolumeList(ctx, volume.ListOptions{Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: testVolume})})
+	volumes, err := apiClient.VolumeList(ctx, client.VolumeListOptions{Filters: client.Filters{}.Add("name", testVolume)})
 	assert.NoError(err)
-	require.Len(t, volumes.Volumes, 1)
-	assert.Equal(testVolume, volumes.Volumes[0].Name)
+	require.Len(t, volumes.Items, 1)
+	assert.Equal(testVolume, volumes.Items[0].Name)
 
 	require.NotNil(t, vol)
 	assert.Equal(testVolume, vol.Name)
 	err = dockerutil.RemoveVolume(testVolume)
 	assert.NoError(err)
 
-	volumes, err = client.VolumeList(ctx, volume.ListOptions{Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: testVolume})})
+	volumes, err = apiClient.VolumeList(ctx, client.VolumeListOptions{Filters: client.Filters{}.Add("name", testVolume)})
 	assert.NoError(err)
-	assert.Empty(volumes.Volumes)
+	assert.Empty(volumes.Items)
 
 	// Make sure spareVolume doesn't exist, then make sure removal
 	// of nonexistent volume doesn't result in error
