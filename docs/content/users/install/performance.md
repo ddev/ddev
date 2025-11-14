@@ -33,16 +33,11 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     !!!warning "Don’t Install Mutagen"
         You do not need to install anything to use Mutagen. DDEV installs and maintains its own `mutagen` binary.
 
-    On macOS and traditional Windows, Mutagen is enabled globally by default. You can disable it with `ddev mutagen reset && ddev config global --performance-mode=none && ddev config --performance-mode=none`.
+    On macOS and traditional Windows, Mutagen is enabled globally by default. 
 
-    If you’d rather use Mutagen on a specific project, run [`ddev stop`](../usage/commands.md#stop), enable it with `ddev config --performance-mode=mutagen`, and [`ddev start`](../usage/commands.md#start) again.
-
-    You can’t disable Mutagen on individual projects if it’s enabled globally.
-
-    To stop using Mutagen on a project, run `ddev mutagen reset && ddev config --performance-mode=none`.
-
-
-
+    To disable Mutagen on a single project, run `ddev config --performance-mode=none && ddev restart`.
+    
+    To disable Mutagen globally on all ddev projects, run `ddev mutagen reset && ddev config global --performance-mode=none && ddev config --performance-mode=none`. To then use Mutagen on a specific project, run [`ddev stop`](../usage/commands.md#stop), enable it with `ddev config --performance-mode=mutagen`, and [`ddev start`](../usage/commands.md#start) again.
 
     ### Mutagen and User-Generated Uploads
 
