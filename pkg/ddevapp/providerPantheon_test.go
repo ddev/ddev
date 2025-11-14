@@ -206,7 +206,7 @@ func TestPantheonPush(t *testing.T) {
 
 	// Make sure we have Drush
 	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: "composer require --no-interaction drush/drush >/dev/null 2>/dev/null",
+		Cmd: "composer require --no-interaction drush/drush",
 	})
 	require.NoError(t, err, "failed to composer require drush err=%v stdout='%s', stderr='%s'", err, stdout, stderr)
 	err = app.MutagenSyncFlush()
