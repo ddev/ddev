@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	exec2 "github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,6 +50,12 @@ func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 
 	// Get the binary name
 	binary := GetDdevHostnameBinary()
+
+	require.FileExists(t, binary, "ddev-hostname or ddev-hostname.exe binary should exist")
+
+	if nodeps.IsWSL2() || nodeps.IsWindows() {
+		t.Skip("Skip escalation because not passwordless on WSL2/Windows")
+	}
 
 	// Clean up any existing entry first
 	cleanupCmd := exec.Command(binary, "--remove", testHostname, testIP)
@@ -99,6 +106,9 @@ func TestElevateToAddRemoveHostEntry(t *testing.T) {
 	// Skip if not in CI
 	if os.Getenv("CI") != "true" {
 		t.Skip("Skipping because not in CI (CI != true)")
+	}
+	if nodeps.IsWSL2() || nodeps.IsWindows() {
+		t.Skip("Skip escalation because not passwordless on WSL2/Windows")
 	}
 
 	// Check if passwordless sudo is available
