@@ -46,8 +46,9 @@ When using `ddev composer create-project` your project should be essentially emp
 
 1. `composer create-project --no-plugins --no-scripts --no-install` clones a bare Composer package without any additional actions.
 2. `composer run-script post-root-package-install` runs if `--no-scripts` is not given as a flag to `ddev composer create-project`.
-3. `composer update` or `composer install` (if the `composer.lock` file is present) runs if `--no-install` is not given as a flag to `ddev composer create-project`.
-4. `composer run-script post-create-project-cmd` runs if `--no-scripts` is not given as a flag to `ddev composer create-project`.
+3. `composer install` runs if `--no-install` is not given as a flag to `ddev composer create-project`.
+4. If `composer install` fails, `composer update` runs if `--no-install` is not given as a flag to `ddev composer create-project`.
+5. `composer run-script post-create-project-cmd` runs if `--no-scripts` is not given as a flag to `ddev composer create-project`.
 
 All flags that you provide to `ddev composer create-project` are checked for validity. All invalid flags will be ignored. If they are valid for `composer create-project`, they will be also passed to `composer run-script` and `composer update`, but only if these commands support these flags.
 
