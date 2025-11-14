@@ -35,6 +35,7 @@ linters:
             - []
             - []
             - - skip-package-name-checks: true
+        - name: import-shadowing
   exclusions:
     presets:
       - comments

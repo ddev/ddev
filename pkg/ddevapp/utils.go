@@ -293,10 +293,10 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 }
 
 // isTar determines whether the object at the filepath is a .tar archive.
-func isTar(filepath string) bool {
+func isTar(filePath string) bool {
 	tarSuffixes := []string{".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz"}
 	for _, suffix := range tarSuffixes {
-		if strings.HasSuffix(filepath, suffix) {
+		if strings.HasSuffix(filePath, suffix) {
 			return true
 		}
 	}
@@ -305,8 +305,8 @@ func isTar(filepath string) bool {
 }
 
 // isZip determines if the object at hte filepath is a .zip.
-func isZip(filepath string) bool {
-	return strings.HasSuffix(filepath, ".zip")
+func isZip(filePath string) bool {
+	return strings.HasSuffix(filePath, ".zip")
 }
 
 // GetErrLogsFromApp is used to do app.Logs on an app after an error has
@@ -516,9 +516,9 @@ func GetServiceNamesFunc(existingOnly bool) func(*cobra.Command, []string, strin
 
 // GetRelativeDirectory returns the directory relative to project root
 // Note that the relative dir is returned as unix-style forward-slashes
-func (app *DdevApp) GetRelativeDirectory(path string) string {
+func (app *DdevApp) GetRelativeDirectory(targetPath string) string {
 	// Find the relative dir
-	relativeWorkingDir := strings.TrimPrefix(path, app.AppRoot)
+	relativeWorkingDir := strings.TrimPrefix(targetPath, app.AppRoot)
 	// Convert to slash/linux/macos notation, should work everywhere
 	relativeWorkingDir = filepath.ToSlash(relativeWorkingDir)
 	// Remove any leading /
