@@ -16,8 +16,7 @@ teardown() {
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # TODO: Remove --composer-version when https://github.com/civicrm/composer-compile-plugin/issues/32 is resolved
-  run ddev config --project-type=php --composer-root=core --upload-dirs=public/media --composer-version=2.8.12
+  run ddev config --project-type=php --composer-root=core --upload-dirs=public/media
   assert_success
 
   run ddev start
@@ -27,6 +26,9 @@ teardown() {
   assert_success
 
   run ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
+  assert_success
+
+  run ddev composer update civicrm/composer-compile-plugin --no-scripts
   assert_success
 
   run ddev composer require civicrm/cli-tools --no-scripts
