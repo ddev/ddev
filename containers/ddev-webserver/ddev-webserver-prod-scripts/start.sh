@@ -90,7 +90,7 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
+mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 
 if [ "${N_PREFIX:-}" != "" ] && [ "${N_INSTALL_VERSION:-}" != "" ]; then
   n-install.sh || true
@@ -107,8 +107,6 @@ fi)
 # ensure default yarn berry global folder is there to symlink cache afterwards
 mkdir -p ~/.yarn/berry
 ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
-ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
-if [ ! -f ~/.nvm/nvm.sh ]; then (log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" install_nvm.sh || true); fi
 
 # chown of ddev-global-cache must be done with privileged container in app.Start()
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
