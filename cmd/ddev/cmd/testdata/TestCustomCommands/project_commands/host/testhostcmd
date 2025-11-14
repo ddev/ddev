@@ -1,7 +1,25 @@
 #!/usr/bin/env bash
 
 ## Description: testhostcmd project
+## Additional description.
 ## Usage: testhostcmd
+## Aliases: testhostalias1,testhostalias2
+## testhostalias3
+## UnsupportedDirective: should be ignored rather than added to the previous directive
 ## Example: ddev testhostcmd\nddev testhostcmd -h
+## ddev testhostcmd --flag1
+## Example: ddev testhostcmd --flag2
+## AutocompleteTerms: [
+##   "autocomplete1"
+## ]
+## Flags: [
+##  {"Name":"hostflag1","Usage":"flag 1 description","Type":"string","NoOptDefVal":"default value1"},
+##  {"Name":"hostflag2","Usage":"flag 2 description","Type":"string","NoOptDefVal":"default value2"},
+##  {"Name":"hostflag3","Shorthand":"f","Usage":"flag 3 description","DefValue":"default value3","Type":"string","NoOptDefVal":
+# This comment is ignored. And testing that the double quote on the multiline value is not trimmed out.
+##  "default value 3"
+##  }
+## ]
 
-echo "testhostcmd was executed with args=$@ on host $(hostname)"
+echo "testhostcmd was executed with args=$* on host $(hostname)"
+## Description: this should not be parsed and added as it's not part of the initial annotation block.
