@@ -26,7 +26,7 @@ var WebTag = "20250728_rfay_debian_trixie" // Note that this can be overridden b
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.24.10"
+var BaseDBTag = "20251112_deviantintegral_snapshot_zstd"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
