@@ -225,7 +225,7 @@ Create the project directory and configure DDEV:
 
 ```bash
 mkdir my-civicrm-site && cd my-civicrm-site
-ddev config --project-type=php --composer-root=core --upload-dirs=public/media
+ddev config --project-type=php --composer-root=core --upload-dirs=public/media --composer-version=2.8.12
 ```
 
 Start DDEV (this may take a minute):
@@ -272,7 +272,7 @@ ddev launch
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir my-civicrm-site && cd my-civicrm-site
-    ddev config --project-type=php --composer-root=core --upload-dirs=public/media
+    ddev config --project-type=php --composer-root=core --upload-dirs=public/media --composer-version=2.8.12
     ddev start -y
     ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
     ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
@@ -2545,7 +2545,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev config --project-type=symfony --docroot=public
     ddev start
     ddev exec symfony check:requirements
-    ddev exec symfony new temp --version="7.1.*" --webapp
+    ddev exec symfony new temp --webapp
     # 'symfony new' can't install in the current directory right away,
     # so we use 'rsync' to move the installed files one level up
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
