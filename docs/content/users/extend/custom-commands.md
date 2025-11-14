@@ -6,7 +6,7 @@ search:
 
 Custom commands can easily be added to DDEV, to be executed on the host or in containers.
 
-This involves adding a Bash script to the project in `.ddev/commands/host`, a specific container in `.ddev/commands/<containername>`, or globally in `~/.ddev/commands`.
+This involves adding a Bash script to the project in `.ddev/commands/host`, a specific container in `.ddev/commands/<containername>`, or globally in `$HOME/.ddev/commands`.
 
 Example commands in `ddev/commands/*/*.example` can be copied, moved, or symlinked.
 
@@ -67,14 +67,14 @@ Changes to the command files in the global `.ddev` directory need a `ddev start`
 
 ## Shell Command Examples
 
-There are many examples of [global](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/global_dotddev_assets/commands) and [project-level](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/commands) custom/shell commands that ship with DDEV you can adapt for your own use. They can be found in your `~/.ddev/commands/*` directories and in your project’s `.ddev/commands/*` directories. There you’ll see how to provide usage, examples, and how to use arguments provided to the commands. For example, the [`xdebug` command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/web/xdebug) shows simple argument processing and the [launch command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/host/launch) demonstrates flag processing.
+There are many examples of [global](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/global_dotddev_assets/commands) and [project-level](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/commands) custom/shell commands that ship with DDEV you can adapt for your own use. They can be found in your `$HOME/.ddev/commands/*` directories and in your project’s `.ddev/commands/*` directories. There you’ll see how to provide usage, examples, and how to use arguments provided to the commands. For example, the [`xdebug` command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/web/xdebug) shows simple argument processing and the [launch command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/host/launch) demonstrates flag processing.
 
 ## Command Line Completion
 
 If your custom command has a set of pre-determined valid arguments it can accept, you can use the [`AutocompleteTerms`](#autocompleteterms-annotation). For command flag completion, use the [`Flags`](#flags-annotation) annotation.
 
 For dynamic completion, you can create a separate script with the same name in a directory named `autocomplete`.
-For example, if your command is in `~/.ddev/commands/web/my-command`, your autocompletion script will be in `~/.ddev/commands/web/autocomplete/my-command`.
+For example, if your command is in `$HOME/.ddev/commands/web/my-command`, your autocompletion script will be in `$HOME/.ddev/commands/web/autocomplete/my-command`.
 
 When you press tab on the command line after your command, the associated autocomplete script will be executed. The current command line (starting with the name of your command) will be passed into the completion script as arguments. If there is a space at the end of the command line, an empty argument will be included.
 

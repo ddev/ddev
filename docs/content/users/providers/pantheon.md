@@ -13,7 +13,7 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
 1. Get your Pantheon machine token:
     1. Log in to your Pantheon Dashboard and [Generate a Machine Token](https://pantheon.io/docs/machine-tokens/) for DDEV to use.
-    2. Add the API token to the `web_environment` section in your global DDEV configuration at `~/.ddev/global_config.yaml`.
+    2. Add the API token to the `web_environment` section in your global DDEV configuration at `$HOME/.ddev/global_config.yaml`.
 
         ```yaml
         web_environment:
