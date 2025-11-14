@@ -396,7 +396,7 @@ Note that specifying any non-default Node.js version will cause DDEV to download
 | -- | -- | --
 | :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `16`, `18.2`, `18.19.2`, etc.
 
-!!!tip "How to install the Node.js version from a file"
+!!!tip "How to define the Node.js version using a file"
     Your project team may specify the Node.js version in a more general way than in the `.ddev/config.yaml`. For example, you may use a `.nvmrc` file, the `package.json`, or a similar technique. In that case, DDEV can use the external configuration provided by that file.
 
     There is an `auto` label (see [full documentation](https://www.npmjs.com/package/n#specifying-nodejs-versions)):
