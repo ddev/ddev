@@ -7,13 +7,11 @@ import (
 
 // ServiceCmd is the top-level "ddev service" command
 var ServiceCmd = &cobra.Command{
-	Use:        "service [command]",
-	Short:      "The service commands have been deprecated and removed and replaced by ddev add-on",
-	Hidden:     true,
-	Deprecated: `true`,
-	Run: func(cmd *cobra.Command, _ []string) {
-		err := cmd.Usage()
-		util.CheckErr(err)
+	Use:    "service",
+	Short:  "The service commands have been removed",
+	Hidden: true,
+	Run: func(_ *cobra.Command, _ []string) {
+		util.Failed("The 'ddev service' command has been removed. Please use 'ddev add-on' commands instead.\n\nSee https://docs.ddev.com/en/stable/users/usage/commands/#add-on for more information.")
 	},
 }
 

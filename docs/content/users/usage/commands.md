@@ -1233,32 +1233,6 @@ Example:
 ddev sequelpro
 ```
 
-## `service`
-
-Add or remove, enable or disable [extra services](../extend/additional-services.md).
-
-### `service disable`
-
-Disable a service.
-
-Example:
-
-```shell
-# Disable the Solr service
-ddev service disable solr
-```
-
-### `service enable`
-
-Enable a service.
-
-Example:
-
-```shell
-# Enable the Solr service
-ddev service enable solr
-```
-
 ## `share`
 
 [Share the current project](../topics/sharing.md) on the internet via [ngrok](https://ngrok.com).
