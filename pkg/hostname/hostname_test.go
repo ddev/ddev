@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	exec2 "github.com/ddev/ddev/pkg/exec"
-	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,8 +32,6 @@ func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 	if err != nil {
 		t.Skip("Skipping because passwordless sudo is not available")
 	}
-
-	assert := asrt.New(t)
 
 	// Save and restore original DDEV_NONINTERACTIVE value
 	origNonInteractive := os.Getenv("DDEV_NONINTERACTIVE")
@@ -65,33 +62,33 @@ func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 
 	// Test adding hostname
 	addOut, err := exec2.RunHostCommand(binary, testHostname, testIP)
-	assert.NoError(err, "ddev-hostname add should succeed, output: %s", addOut)
-	assert.Contains(addOut, "Added", "output should indicate hostname was added: %s", addOut)
+	require.NoError(t, err, "ddev-hostname add should succeed, output: %s", addOut)
+	require.Contains(t, addOut, "Added", "output should indicate hostname was added: %s", addOut)
 
 	// Test checking hostname exists
 	checkCmd := exec.Command(binary, "--check", testHostname, testIP)
 	err = checkCmd.Run()
-	assert.NoError(err, "ddev-hostname --check should succeed for existing entry")
+	require.NoError(t, err, "ddev-hostname --check should succeed for existing entry")
 
 	// Test that hostname is actually in hosts file
 	exists, err := IsHostnameInHostsFile(testHostname)
-	assert.NoError(err, "IsHostnameInHostsFile should not error")
-	assert.True(exists, "hostname should be in hosts file")
+	require.NoError(t, err, "IsHostnameInHostsFile should not error")
+	require.True(t, exists, "hostname should be in hosts file")
 
 	// Test removing hostname
 	removeOut, err := exec2.RunHostCommand(binary, "--remove", testHostname, testIP)
-	assert.NoError(err, "ddev-hostname --remove should succeed, output: %s", removeOut)
-	assert.Contains(removeOut, "Removed", "output should indicate hostname was removed: %s", removeOut)
+	require.NoError(t, err, "ddev-hostname --remove should succeed, output: %s", removeOut)
+	require.Contains(t, removeOut, "Removed", "output should indicate hostname was removed: %s", removeOut)
 
 	// Verify hostname is removed
 	checkCmd = exec.Command(binary, "--check", testHostname, testIP)
 	err = checkCmd.Run()
-	assert.Error(err, "ddev-hostname --check should fail for removed entry")
+	require.Error(t, err, "ddev-hostname --check should fail for removed entry")
 
 	// Verify hostname is not in hosts file
 	exists, err = IsHostnameInHostsFile(testHostname)
-	assert.NoError(err, "IsHostnameInHostsFile should not error")
-	assert.False(exists, "hostname should not be in hosts file after removal")
+	require.NoError(t, err, "IsHostnameInHostsFile should not error")
+	require.False(t, exists, "hostname should not be in hosts file after removal")
 }
 
 // TestElevateToAddRemoveHostEntry tests the ElevateToAddHostEntry and ElevateToRemoveHostEntry functions.
@@ -110,8 +107,6 @@ func TestElevateToAddRemoveHostEntry(t *testing.T) {
 	if err != nil {
 		t.Skip("Skipping because passwordless sudo is not available")
 	}
-
-	assert := asrt.New(t)
 
 	// Save and restore original DDEV_NONINTERACTIVE value
 	origNonInteractive := os.Getenv("DDEV_NONINTERACTIVE")
@@ -137,25 +132,25 @@ func TestElevateToAddRemoveHostEntry(t *testing.T) {
 
 	// Test ElevateToAddHostEntry
 	out, err := ElevateToAddHostEntry(testHostname, testIP)
-	assert.NoError(err, "ElevateToAddHostEntry should succeed, output: %s", out)
+	require.NoError(t, err, "ElevateToAddHostEntry should succeed, output: %s", out)
 	if err == nil {
-		assert.Contains(out, "Added", "output should indicate hostname was added: %s", out)
+		require.Contains(t, out, "Added", "output should indicate hostname was added: %s", out)
 	}
 
 	// Verify hostname is in hosts file
 	exists, err := IsHostnameInHostsFile(testHostname)
-	assert.NoError(err, "IsHostnameInHostsFile should not error")
-	assert.True(exists, "hostname should be in hosts file")
+	require.NoError(t, err, "IsHostnameInHostsFile should not error")
+	require.True(t, exists, "hostname should be in hosts file")
 
 	// Test ElevateToRemoveHostEntry
 	out, err = ElevateToRemoveHostEntry(testHostname, testIP)
-	assert.NoError(err, "ElevateToRemoveHostEntry should succeed, output: %s", out)
+	require.NoError(t, err, "ElevateToRemoveHostEntry should succeed, output: %s", out)
 	if err == nil {
-		assert.Contains(out, "Removed", "output should indicate hostname was removed: %s", out)
+		require.Contains(t, out, "Removed", "output should indicate hostname was removed: %s", out)
 	}
 
 	// Verify hostname is not in hosts file
 	exists, err = IsHostnameInHostsFile(testHostname)
-	assert.NoError(err, "IsHostnameInHostsFile should not error")
-	assert.False(exists, "hostname should not be in hosts file after removal")
+	require.NoError(t, err, "IsHostnameInHostsFile should not error")
+	require.False(t, exists, "hostname should not be in hosts file after removal")
 }
