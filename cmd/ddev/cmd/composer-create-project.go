@@ -22,6 +22,13 @@ import (
 
 var composerDirectoryArg = ""
 
+var composerCreateProjectEnv = []string{
+	// Prevent Composer from debugging when Xdebug is enabled
+	"XDEBUG_MODE=off",
+	// Disable security blocking to allow installing any packages
+	"COMPOSER_NO_SECURITY_BLOCKING=1",
+}
+
 // ComposerCreateProjectCmd handles ddev composer create-project
 var ComposerCreateProjectCmd = &cobra.Command{
 	DisableFlagParsing: true,
@@ -125,7 +132,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 			RawCmd:  composerCmd,
 			Dir:     "/var/www/html",
 			Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-			Env:     []string{"XDEBUG_MODE=off"},
+			Env:     composerCreateProjectEnv,
 		})
 
 		if err != nil {
@@ -198,7 +205,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 				Dir:     getComposerRootInContainer(app),
 				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-				Env:     []string{"XDEBUG_MODE=off"},
+				Env:     composerCreateProjectEnv,
 			})
 
 			if err != nil {
@@ -216,20 +223,25 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 			prepareAppForComposer(app)
 		}
 
-		// If --no-install was not provided by the user, call composer install
+		// If --no-install was not provided by the user, call composer update/install
 		// now to finish the installation in the project root folder.
 		if !noInstallPresent {
+			installCommand := "update"
+			// If there is a composer.lock, we do install instead of update
+			if fileutil.FileExists(path.Join(composerRoot, composerDirectoryArg, "composer.lock")) {
+				installCommand = "install"
+			}
 			composerCmd = []string{
 				"composer",
-				"install",
+				installCommand,
 			}
 
 			for i, validCreateArg := range validCreateArgs {
-				if isValidComposerOption(app, "install", validCreateArg) {
+				if isValidComposerOption(app, installCommand, validCreateArg) {
 					composerCmd = append(composerCmd, validCreateArg)
 				} else if strings.HasPrefix(validCreateArg, "-") && i+1 < len(validCreateArgs) && !strings.HasPrefix(validCreateArgs[i+1], "-") {
 					// If this is an option with a value, add it.
-					if isValidComposerOption(app, "install", validCreateArg+" "+validCreateArgs[i+1]) {
+					if isValidComposerOption(app, installCommand, validCreateArg+" "+validCreateArgs[i+1]) {
 						composerCmd = append(composerCmd, validCreateArg, validCreateArgs[i+1])
 					}
 				}
@@ -244,7 +256,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 				RawCmd:  composerCmd,
 				Dir:     getComposerRootInContainer(app),
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-				Env:     []string{"XDEBUG_MODE=off"},
+				Env:     composerCreateProjectEnv,
 			})
 
 			if err != nil {
@@ -300,7 +312,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 				Dir:     getComposerRootInContainer(app),
 				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-				Env:     []string{"XDEBUG_MODE=off"},
+				Env:     composerCreateProjectEnv,
 			})
 
 			if err != nil {
@@ -417,7 +429,7 @@ func getListOfComposerOptionsThatCanHaveValues(app *ddevapp.DdevApp) []string {
 		Service: "web",
 		Dir:     app.GetComposerRoot(true, false),
 		RawCmd:  []string{"composer", "create-project", "--help"},
-		Env:     []string{"XDEBUG_MODE=off"},
+		Env:     composerCreateProjectEnv,
 	})
 	if err != nil {
 		return []string{}
@@ -462,7 +474,7 @@ func isValidComposerOption(app *ddevapp.DdevApp, command string, option string) 
 		Service: "web",
 		Dir:     getComposerRootInContainer(app),
 		RawCmd:  validateCmd,
-		Env:     []string{"XDEBUG_MODE=off"},
+		Env:     composerCreateProjectEnv,
 	})
 	out := userOutFunc()
 	if err == nil {

@@ -1434,6 +1434,11 @@ RUN (timeout %d apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-ge
 			composerSelfUpdateArg = "--" + composerSelfUpdateArg
 		}
 
+		// TODO: Remove this condition when Composer v2.9.2 is out
+		if composerSelfUpdateArg == "--2" {
+			composerSelfUpdateArg = "--snapshot"
+		}
+
 		// Try composer self-update twice because of troubles with Composer downloads
 		// breaking testing.
 		// First of all Composer is updated to latest stable release to ensure
