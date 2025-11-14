@@ -58,6 +58,12 @@ func GetHostDockerInternal() *HostDockerInternal {
 			ipAddress = "192.168.5.2"
 			message = "IsColima"
 
+		case IsDockerRootless():
+			// Docker rootless doesn't update "host-gateway" value
+			// https://github.com/moby/moby/issues/47684#issuecomment-2166149845
+			ipAddress = "10.0.2.2"
+			message = "IsDockerRootless"
+
 		case nodeps.IsCodespaces():
 			message = "IsCodespaces uses 'host-gateway' in extra_hosts"
 
