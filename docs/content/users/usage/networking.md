@@ -253,12 +253,12 @@ After configuration, restart the DDEV project if it is already running.
 - [Linux Docker Client Proxy Configuration](https://docs.docker.com/engine/cli/proxy/#configure-the-docker-client)
 - [Colima Proxy Configuration](https://gist.github.com/res0nat0r/e182f23272a331f20b83195156eef83f)
 
-## Restrictive DNS servers, especially Fritzbox routers
+## Restrictive DNS servers, especially Fritz!Box (FritzBox) routers
 
 The normal use of DDEV involves project URLs (and hostnames) like `*.ddev.site`. So a project with the name `mytypo3` will have the default hostname `mytypo3.ddev.site` and the default URL `https://mytypo3.ddev.site`. The way this works is that `*.ddev.site` is a Domain Name System (DNS) entry which always resolves to `127.0.0.1`, or `localhost`.
 
-There are a few DNS servers, mostly local Fritzbox routers, which do not allow a DNS lookup to result in `127.0.0.1`. In this situation, DDEV will ask you to use superuser (`sudo`) privileges to add the hostname to the system `hosts` file, often `/etc/hosts` or `C:\Windows\system32\drivers\etc\hosts`. **This is not the preferred behavior, as DDEV does not want to edit your system files.**
+There are a few DNS servers, mostly local Fritz!Box routers, which do not allow a DNS lookup to result in `127.0.0.1`. In this situation, DDEV will ask you to use superuser (`sudo`) privileges to add the hostname to the system `hosts` file, often `/etc/hosts` or `C:\Windows\system32\drivers\etc\hosts`. **This is not the preferred behavior, as DDEV does not want to edit your system files.**
 
-Instead, if DDEV is asking you to do this and add hostnames, it's best to solve the underlying problem by adding configuration to the DNS server (often Fritzbox router) or by using a less-restrictive DNS server like the Cloudflare `1.1.1.1` public DNS server.
+Instead, if DDEV is asking you to do this and add hostnames, it's best to solve the underlying problem by adding configuration to the DNS server (often Fritz!Box router) or by using a less-restrictive DNS server like the Cloudflare `1.1.1.1` public DNS server. Full details for Fritz!Box are at [Fritz!Box Routers and DDEV](https://ddev.com/blog/fritzbox-routers-and-ddev/).
 
 These options are explained in the [Troubleshooting - DNS Rebinding](troubleshooting.md#dns-rebinding-prohibited-mostly-on-fritzbox-routers) section of the documentation.
