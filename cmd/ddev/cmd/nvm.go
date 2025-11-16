@@ -21,10 +21,6 @@ After changing nodejs_version, restart your project with 'ddev restart'.
 
 For more information, see:
 https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version
-
-If you need to use nvm directly, you can still run it inside the container:
-  ddev ssh
-  nvm install 20
 `,
 	Run: func(_ *cobra.Command, args []string) {
 		output.UserErr.Print(`The 'ddev nvm' command has been removed in DDEV v1.25.0.
