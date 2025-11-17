@@ -69,6 +69,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
 
 RUN update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
+# Configure APT to use gpgv for signature verification to avoid SHA1 deprecation issues
+RUN echo 'APT::Key::gpgvcommand "/usr/bin/gpgv";' > /etc/apt/apt.conf.d/99-use-gpgv
+
 RUN printf "${DEFAULT_LOCALES}" > /etc/locale.gen && locale-gen
 
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
