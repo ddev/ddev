@@ -45,6 +45,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     bash-completion \
     gettext \
     git \
+    gpgv \
     graphviz \
     less \
     libcap2-bin \
