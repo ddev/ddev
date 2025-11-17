@@ -84,6 +84,9 @@ RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun/master
 RUN curl --fail -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2 && chmod 777 /usr/local/bin/magerun2
 RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/master/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar
 
+# Modernize APT sources to deb822 format for better security
+RUN apt modernize-sources -y 2>/dev/null || true
+
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 
 ADD ddev-webserver-base-files /
@@ -199,6 +202,9 @@ RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/*
 
 RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
+# Modernize APT sources to deb822 format for better security
+RUN apt modernize-sources -y 2>/dev/null || true
+
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
@@ -290,6 +296,9 @@ RUN chmod ugo+x /start.sh /healthcheck.sh
 RUN /sbin/mkhomedir_helper www-data
 
 RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
+
+# Modernize APT sources to deb822 format for better security
+RUN apt modernize-sources -y 2>/dev/null || true
 
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
