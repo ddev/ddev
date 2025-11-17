@@ -21,12 +21,12 @@ You can hand-edit the YAML files DDEV creates for you after running [`ddev confi
 === "config.yaml"
 
     ```yaml
-    php_version: "8.3"
+    php_version: "8.4"
     ```
 === "`ddev config`"
 
     ```shell
-    ddev config --php-version 8.3
+    ddev config --php-version 8.4
     ```
 
     Run `ddev help config` to see all the available config arguments.

@@ -21,7 +21,7 @@ export HOST_HTTPS_PORT="8443"
 export CONTAINER_HTTP_PORT="80"
 export CONTAINER_HTTPS_PORT="443"
 export CONTAINER_NAME=webserver-test
-export PHP_VERSION=8.3
+export PHP_VERSION=8.4
 export WEBSERVER_TYPE=nginx-fpm
 
 MOUNTUID=33
@@ -95,7 +95,7 @@ for PHP_VERSION in 8.2 8.3 8.4 8.5; do
 done
 
 for project_type in backdrop craftcms drupal drupal7 drupal10 drupal11 laravel magento magento2 symfony typo3 wordpress default; do
-	export PHP_VERSION="8.3"
+	export PHP_VERSION="8.4"
     export project_type
 	docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE >/dev/null
     if ! containerwait; then
@@ -108,14 +108,14 @@ for project_type in backdrop craftcms drupal drupal7 drupal10 drupal11 laravel m
     cleanup
 done
 
-docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=8.3" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v ddev-global-cache:/mnt/ddev-global-cache --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
+docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v ddev-global-cache:/mnt/ddev-global-cache --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
 containerwait
 
 bats tests/ddev-webserver/custom_config.bats
 
 cleanup
 
-docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=8.3" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v ddev-global-cache:/mnt/ddev-global-cache --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
+docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=8.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v ddev-global-cache:/mnt/ddev-global-cache --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
 containerwait
 bats tests/ddev-webserver/imagemagick.bats
 

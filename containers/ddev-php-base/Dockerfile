@@ -57,7 +57,7 @@ RUN apt-get -qq update
 ### This combines the packages and features of DDEV’s ddev-webserver and PHP image
 FROM base AS ddev-php-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
-ARG PHP_DEFAULT_VERSION="8.3"
+ARG PHP_DEFAULT_VERSION="8.4"
 ARG XDEBUG_MODE=off
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
 ARG PHP_VERSIONS="php8.2 php8.3 php8.4 php8.5"

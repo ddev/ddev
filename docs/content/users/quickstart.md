@@ -2589,7 +2589,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     PROJECT_NAME=my-typo3-site
     mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
-    ddev config --project-type=typo3 --docroot=public --php-version=8.3
+    ddev config --project-type=typo3 --docroot=public --php-version=8.4
     ```
 
     Start DDEV (this may take a minute):
@@ -2638,7 +2638,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         set -euo pipefail
         PROJECT_NAME=my-typo3-site
         mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
-        ddev config --project-type=typo3 --docroot=public --php-version=8.3
+        ddev config --project-type=typo3 --docroot=public --php-version=8.4
         ddev start -y
         ddev composer create-project "typo3/cms-base-distribution"
         ddev typo3 setup \
@@ -2671,7 +2671,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     PROJECT_NAME=my-typo3-site
     mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
     git clone ${PROJECT_GIT_REPOSITORY} .
-    ddev config --project-type=typo3 --docroot=public --php-version=8.3
+    ddev config --project-type=typo3 --docroot=public --php-version=8.4
     ddev start
     ddev composer install
     ddev exec touch public/FIRST_INSTALL
