@@ -1123,8 +1123,8 @@ func TestOmitProjectNameReconfig(t *testing.T) {
 	assert.False(nameExists, "name should be omitted in initial config")
 
 	// Re-run config with a different option - name should still be omitted
-	out, err := exec.RunHostCommand(DdevBin, "config", "--php-version=8.4")
-	require.NoError(t, err, "ddev config --php-version=8.4 failed: %s", out)
+	out, err := exec.RunHostCommand(DdevBin, "config", "--php-version="+nodeps.PHPDefault)
+	require.NoError(t, err, "ddev config --php-version=%s failed: %s", nodeps.PHPDefault, out)
 
 	configBytes, err = os.ReadFile(configPath)
 	require.NoError(t, err)
@@ -1134,7 +1134,7 @@ func TestOmitProjectNameReconfig(t *testing.T) {
 
 	_, nameExists = config["name"]
 	assert.False(nameExists, "name should remain omitted after reconfig")
-	assert.Equal("8.4", config["php_version"], "php_version should be updated")
+	assert.Equal(nodeps.PHPDefault, config["php_version"], "php_version should be updated")
 }
 
 // TestOmitProjectNameWithConfigOverride tests interaction with config.*.yaml overrides

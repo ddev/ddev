@@ -15,7 +15,7 @@ teardown() {
   PROJNAME=my-typo3-site
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  run ddev config --project-type=typo3 --docroot=public --php-version=8.4
+  run ddev config --project-type=typo3 --docroot=public --php-version=8.3
   assert_success
   run ddev start -y >/dev/null
   assert_success
@@ -121,8 +121,8 @@ teardown() {
   # cd my-typo3-site
   cd ${PROJNAME} || exit 2
   assert_success
-  # ddev config --project-type=typo3 --docroot=public --php-version=8.4
-  run ddev config --project-type=typo3 --docroot=public --php-version=8.4
+  # ddev config --project-type=typo3 --docroot=public --php-version=8.3
+  run ddev config --project-type=typo3 --docroot=public --php-version=8.3
   assert_success
   # ddev start -y
   run ddev start -y >/dev/null
@@ -148,7 +148,7 @@ teardown() {
   run mkdir my-typo3-site && cd my-typo3-site
   assert_success
 
-  run ddev config --project-type=typo3 --docroot=public --php-version=8.4 --xhprof-mode=xhgui
+  run ddev config --project-type=typo3 --docroot=public --php-version=8.3 --xhprof-mode=xhgui
   assert_success
 
   run ddev start -y >/dev/null
@@ -197,7 +197,7 @@ teardown() {
   run git clone https://github.com/TYPO3/TYPO3.CMS.BaseDistribution.git .
   assert_success
 
-  run ddev config --project-type=typo3 --docroot=public --php-version=8.4
+  run ddev config --project-type=typo3 --docroot=public --php-version=8.3
   assert_success
 
   run ddev start -y >/dev/null
