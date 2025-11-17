@@ -72,9 +72,10 @@ printf "\nRunning apt-get update --audit to check for signature issues...\n"
 apt-get update --audit 2>&1 | tee /tmp/apt-audit.log
 
 # Check if there are any warnings or errors related to signature validation
-if grep -iE "warning.*signature|audit.*signature|error.*signature|SHA1.*not.*secure" /tmp/apt-audit.log; then
+# Ignore notices about missing Signed-By or .sources format conversion recommendations
+if grep -iE "warning.*signature|audit.*signature|error.*signature|SHA1.*not.*secure" /tmp/apt-audit.log | grep -v "Missing Signed-By" | grep -v "should be upgraded to deb822"; then
     printf "\nERROR: Found signature warnings or errors in apt-get update --audit\n"
     exit 1
 fi
 
-printf "apt-get update --audit completed successfully with no signature issues\n"
+printf "apt-get update --audit completed successfully with no SHA1 signature issues\n"

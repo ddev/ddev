@@ -45,10 +45,6 @@ RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/
 # Workaround for Debian Trixie (13) not being supported yet - use bookworm compatibility. It's not expected that they will maintain any mariadb-10.11 compat without this.
 RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools --os-type=debian --os-version=bookworm
 
-# Convert mariadb.list to modern deb822 .sources format
-RUN rm -f /etc/apt/sources.list.d/mariadb.list && \
-    printf "Types: deb\nURIs: https://dlm.mariadb.com/repo/mariadb-server/10.11/repo/debian/\nSuites: bookworm\nComponents: main\n" > /etc/apt/sources.list.d/mariadb.sources
-
 # Set up Postgresql apt repository
 RUN install -d /usr/share/postgresql-common/pgdg && curl -s -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
 
