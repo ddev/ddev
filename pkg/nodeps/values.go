@@ -64,7 +64,7 @@ var PerformanceModeDefault = types.PerformanceModeEmpty
 // XHProfModeDefault is default value for app.XHProfMode
 var XHProfModeDefault = types.XHProfModeEmpty
 
-const NodeJSDefault = "22"
+const NodeJSDefault = "24"
 
 // NoBindMountsDefault is default value for globalconfig.DDEVGlobalConfig.NoBindMounts
 var NoBindMountsDefault = false
