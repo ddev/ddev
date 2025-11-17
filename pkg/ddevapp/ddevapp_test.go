@@ -200,19 +200,19 @@ var (
 		// 10: shopware6
 		{
 			Name: "testpkgshopware6",
-			// tar -czf .tarballs/shopware6_code.tgz --exclude=public/media .
-			SourceURL:                     "https://github.com/ddev/test-shopware6/releases/download/v1.0.4/shopware6_code.tgz",
-			ArchiveInternalExtractionPath: "",
+			// Normal release tarball
+			SourceURL:                     "https://github.com/ddev/test-shopware6/archive/refs/tags/v6.7.4.2-1.tar.gz",
+			ArchiveInternalExtractionPath: "test-shopware6-6.7.4.2-1/",
 			// cd public/media && tar -czf ../../.tarballs/shopware6_files.tgz .
-			FilesTarballURL: "https://github.com/ddev/test-shopware6/releases/download/v1.0.4/shopware6_files.tgz",
+			FilesTarballURL: "https://github.com/ddev/test-shopware6/releases/download/v6.7.4.2-1/shopware6_files.tgz",
 			// ddev export-db --gzip=false --file=.tarballs/db.sql && tar -czf .tarballs/shopware6_db.sql.tar.gz -C .tarballs db.sql
-			DBTarURL:                  "https://github.com/ddev/test-shopware6/releases/download/v1.0.4/shopware6_db.sql.tar.gz",
+			DBTarURL:                  "https://github.com/ddev/test-shopware6/releases/download/v6.7.4.2-1/shopware6_db.sql.tar.gz",
 			FullSiteTarballURL:        "",
 			Type:                      nodeps.AppTypeShopware6,
 			Docroot:                   "public",
 			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/maintenance.html", Expect: "Our website is currently undergoing maintenance"},
-			DynamicURI:                testcommon.URIWithExpect{URI: "/", Expect: "0180 - 000000"},
-			FilesImageURI:             "/thumbnail/4e/6e/dc/1700858326/hemd_600x600_1920x1920.jpg",
+			DynamicURI:                testcommon.URIWithExpect{URI: "/installer", Expect: "00 800 746 7626 0"},
+			FilesImageURI:             "/thumbnail/95/f2/b2/1763419228/hq_1280x1280_1280x528.jpg",
 		},
 		// 11: php
 		{
