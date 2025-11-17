@@ -18,7 +18,7 @@ type YamlStorageTestSuite struct {
 	suite.Suite
 }
 
-func (suite *YamlStorageTestSuite) TestReadProperlyLoadsState() {
+func (yamlStorageTestSuite *YamlStorageTestSuite) TestReadProperlyLoadsState() {
 	var tests = []struct {
 		Key   types.StateEntryKey
 		Value string
@@ -41,35 +41,35 @@ func (suite *YamlStorageTestSuite) TestReadProperlyLoadsState() {
 	storage := yaml.New(filepath.Join("testdata", "state.yml"))
 	data, err := storage.Read()
 
-	suite.NoError(err)
-	suite.NotNil(data)
+	yamlStorageTestSuite.NoError(err)
+	yamlStorageTestSuite.NotNil(data)
 
 	for _, tt := range tests {
-		suite.Run(tt.Key, func() {
-			suite.EqualValues(tt.Value, data[tt.Key].(map[string]interface{})["value"])
+		yamlStorageTestSuite.Run(tt.Key, func() {
+			yamlStorageTestSuite.EqualValues(tt.Value, data[tt.Key].(map[string]interface{})["value"])
 		})
 	}
 }
 
-func (suite *YamlStorageTestSuite) TestReadReturnsStateWithoutStateFile() {
+func (yamlStorageTestSuite *YamlStorageTestSuite) TestReadReturnsStateWithoutStateFile() {
 	storage := yaml.New(filepath.Join("testdata", "not_existing.yml"))
 	data, err := storage.Read()
 
-	suite.NoError(err)
-	suite.NotNil(data)
-	suite.EqualValues(types.RawState{}, data)
+	yamlStorageTestSuite.NoError(err)
+	yamlStorageTestSuite.NotNil(data)
+	yamlStorageTestSuite.EqualValues(types.RawState{}, data)
 }
 
-func (suite *YamlStorageTestSuite) TestReadReturnsErrorForInvalidStateFile() {
+func (yamlStorageTestSuite *YamlStorageTestSuite) TestReadReturnsErrorForInvalidStateFile() {
 	storage := yaml.New(filepath.Join("testdata", "invalid.yml"))
 	data, err := storage.Read()
 
-	suite.ErrorContains(err, "yaml: unmarshal errors")
-	suite.Nil(data)
+	yamlStorageTestSuite.ErrorContains(err, "yaml: unmarshal errors")
+	yamlStorageTestSuite.Nil(data)
 }
 
-func (suite *YamlStorageTestSuite) TestWriteProperlyWritesState() {
-	stateFile := filepath.Join(suite.T().TempDir(), "state.yml")
+func (yamlStorageTestSuite *YamlStorageTestSuite) TestWriteProperlyWritesState() {
+	stateFile := filepath.Join(yamlStorageTestSuite.T().TempDir(), "state.yml")
 	storage := yaml.New(stateFile)
 
 	// Simulation of the state.yml.
@@ -85,20 +85,20 @@ func (suite *YamlStorageTestSuite) TestWriteProperlyWritesState() {
 		},
 	})
 
-	suite.NoError(err)
-	suite.FileExists(stateFile)
+	yamlStorageTestSuite.NoError(err)
+	yamlStorageTestSuite.FileExists(stateFile)
 
 	want, err := os.ReadFile(filepath.Join("testdata", "state.yml"))
 	if err != nil {
-		suite.FailNow("error reading state file:", err)
+		yamlStorageTestSuite.FailNow("error reading state file:", err)
 	}
 
 	has, err := os.ReadFile(stateFile)
 	if err != nil {
-		suite.FailNow("error reading written state file:", err)
+		yamlStorageTestSuite.FailNow("error reading written state file:", err)
 	}
 
-	suite.Equal(want, has)
+	yamlStorageTestSuite.Equal(want, has)
 }
 
 func BenchmarkRead(b *testing.B) {

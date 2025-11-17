@@ -242,10 +242,10 @@ func ReplaceStringInFile(searchString string, replaceString string, origPath str
 		return err
 	}
 
-	output := bytes.ReplaceAll(input, []byte(searchString), []byte(replaceString))
+	modifiedContent := bytes.ReplaceAll(input, []byte(searchString), []byte(replaceString))
 
 	// nolint: revive
-	if err = os.WriteFile(destPath, output, 0666); err != nil {
+	if err = os.WriteFile(destPath, modifiedContent, 0666); err != nil {
 		return err
 	}
 	return nil
@@ -266,11 +266,11 @@ func IsSameFile(path1 string, path2 string) (bool, error) {
 
 // ReadFileIntoString gets the contents of file into string
 func ReadFileIntoString(path string) (string, error) {
-	bytes, err := os.ReadFile(path)
+	bytesFile, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
-	return string(bytes), err
+	return string(bytesFile), err
 }
 
 // AppendStringToFile takes a path to a file and a string to append

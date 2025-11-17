@@ -264,8 +264,6 @@ func TestCircularDependencyDetection(t *testing.T) {
 
 // TestParseRuntimeDependencies tests runtime dependency file parsing
 func TestParseRuntimeDependencies(t *testing.T) {
-	assert := assert.New(t)
-
 	// Create a temporary .runtime-deps file
 	tmpDir, err := os.MkdirTemp("", "test-runtime-deps")
 	require.NoError(t, err)
@@ -286,13 +284,13 @@ https://example.com/addon.tar.gz
 
 	// Test parsing
 	deps, err := ddevapp.ParseRuntimeDependencies(runtimeDepsFile)
-	assert.NoError(err)
-	assert.Equal([]string{"ddev/ddev-redis", "ddev/ddev-local-addon", "https://example.com/addon.tar.gz"}, deps)
+	require.NoError(t, err)
+	require.Equal(t, []string{"ddev/ddev-redis", "ddev/ddev-local-addon", "https://example.com/addon.tar.gz"}, deps)
 
 	// Test non-existent file
 	deps, err = ddevapp.ParseRuntimeDependencies(filepath.Join(tmpDir, "nonexistent"))
-	assert.NoError(err)
-	assert.Nil(deps)
+	require.NoError(t, err)
+	require.Nil(t, deps)
 }
 
 // TestMixedDependencyScenarios tests comprehensive mixed dependency scenarios

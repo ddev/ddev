@@ -39,7 +39,7 @@ type StateTestSuite struct {
 	suite.Suite
 }
 
-func (suite *StateTestSuite) TestGetReturnsCorrectState() {
+func (stateTestSuite *StateTestSuite) TestGetReturnsCorrectState() {
 	var tests = []struct {
 		Key      types.StateEntryKey
 		Expected TestStateEntry
@@ -105,16 +105,16 @@ func (suite *StateTestSuite) TestGetReturnsCorrectState() {
 	stateEntry := TestStateEntry{}
 
 	for _, tt := range tests {
-		suite.Run(tt.Key, func() {
-			suite.NoError(state.Get(tt.Key, &stateEntry))
-			suite.EqualValues(tt.Expected, stateEntry)
+		stateTestSuite.Run(tt.Key, func() {
+			stateTestSuite.NoError(state.Get(tt.Key, &stateEntry))
+			stateTestSuite.EqualValues(tt.Expected, stateEntry)
 		})
 	}
 }
 
-func (suite *StateTestSuite) TestSetUpdatesState() {
+func (stateTestSuite *StateTestSuite) TestSetUpdatesState() {
 	// Use a non existing state file from the temp dir.
-	state := yaml.NewState(filepath.Join(suite.T().TempDir(), "state.yml"))
+	state := yaml.NewState(filepath.Join(stateTestSuite.T().TempDir(), "state.yml"))
 
 	stateEntryOut := TestStateEntry{
 		BoolField1:   true,
@@ -137,12 +137,12 @@ func (suite *StateTestSuite) TestSetUpdatesState() {
 	}
 	stateEntryIn := TestStateEntry{}
 
-	suite.NoError(state.Set("test_state_entry", stateEntryOut))
-	suite.NoError(state.Get("test_state_entry", &stateEntryIn))
-	suite.EqualValues(stateEntryOut, stateEntryIn)
+	stateTestSuite.NoError(state.Set("test_state_entry", stateEntryOut))
+	stateTestSuite.NoError(state.Get("test_state_entry", &stateEntryIn))
+	stateTestSuite.EqualValues(stateEntryOut, stateEntryIn)
 }
 
-func (suite *StateTestSuite) TestSetPreservesExistingStates() {
+func (stateTestSuite *StateTestSuite) TestSetPreservesExistingStates() {
 	var tests = []struct {
 		Key   types.StateEntryKey
 		Entry TestStateEntry
@@ -195,57 +195,57 @@ func (suite *StateTestSuite) TestSetPreservesExistingStates() {
 	}
 
 	// Use a non existing state file from the temp dir.
-	state := yaml.NewState(filepath.Join(suite.T().TempDir(), "state.yml"))
+	state := yaml.NewState(filepath.Join(stateTestSuite.T().TempDir(), "state.yml"))
 
 	for _, tt := range tests {
-		suite.NoError(state.Set(tt.Key, tt.Entry))
+		stateTestSuite.NoError(state.Set(tt.Key, tt.Entry))
 	}
 
 	// Save and reload states.
-	suite.NoError(state.Save())
-	suite.NoError(state.Load())
+	stateTestSuite.NoError(state.Save())
+	stateTestSuite.NoError(state.Load())
 
 	// Add test state.
 	testState := TestStateEntry{
 		BoolField1: true,
 		BoolField2: true,
 	}
-	suite.NoError(state.Set("test", testState))
+	stateTestSuite.NoError(state.Set("test", testState))
 
 	// Verify previous states.
 	stateEntry := TestStateEntry{}
 
 	for _, tt := range tests {
-		suite.Run(tt.Key, func() {
-			suite.NoError(state.Get(tt.Key, &stateEntry))
-			suite.EqualValues(tt.Entry, stateEntry)
+		stateTestSuite.Run(tt.Key, func() {
+			stateTestSuite.NoError(state.Get(tt.Key, &stateEntry))
+			stateTestSuite.EqualValues(tt.Entry, stateEntry)
 		})
 	}
 
 	// Verify test state.
-	suite.NoError(state.Get("test", &stateEntry))
-	suite.EqualValues(testState, stateEntry)
+	stateTestSuite.NoError(state.Get("test", &stateEntry))
+	stateTestSuite.EqualValues(testState, stateEntry)
 }
 
-func (suite *StateTestSuite) TestGetExpectsPointer() {
+func (stateTestSuite *StateTestSuite) TestGetExpectsPointer() {
 	// Use a non existing state file from the temp dir.
-	state := yaml.NewState(filepath.Join(suite.T().TempDir(), "state.yml"))
+	state := yaml.NewState(filepath.Join(stateTestSuite.T().TempDir(), "state.yml"))
 
 	stateEntry := TestStateEntry{}
 
-	suite.ErrorContains(state.Get("test_state_entry", stateEntry), "stateEntry must be a pointer")
+	stateTestSuite.ErrorContains(state.Get("test_state_entry", stateEntry), "stateEntry must be a pointer")
 }
 
-func (suite *StateTestSuite) TestSetExpectsNonPointer() {
+func (stateTestSuite *StateTestSuite) TestSetExpectsNonPointer() {
 	// Use a non existing state file from the temp dir.
-	state := yaml.NewState(filepath.Join(suite.T().TempDir(), "state.yml"))
+	state := yaml.NewState(filepath.Join(stateTestSuite.T().TempDir(), "state.yml"))
 
 	stateEntry := TestStateEntry{}
 
-	suite.ErrorContains(state.Set("test_state_entry", &stateEntry), "stateEntry must not be a pointer")
+	stateTestSuite.ErrorContains(state.Set("test_state_entry", &stateEntry), "stateEntry must not be a pointer")
 }
 
-func (suite *StateTestSuite) TestLoadedIsProperlySet() {
+func (stateTestSuite *StateTestSuite) TestLoadedIsProperlySet() {
 	var tests = []struct {
 		Name string
 		File string
@@ -256,31 +256,31 @@ func (suite *StateTestSuite) TestLoadedIsProperlySet() {
 		},
 		{
 			Name: "StateNotExists",
-			File: filepath.Join(suite.T().TempDir(), "state.yml"),
+			File: filepath.Join(stateTestSuite.T().TempDir(), "state.yml"),
 		},
 	}
 
 	for _, tt := range tests {
-		suite.Run(tt.Name, func() {
+		stateTestSuite.Run(tt.Name, func() {
 			state := yaml.NewState(tt.File)
 
-			suite.False(state.Loaded())
-			suite.NoError(state.Load())
-			suite.True(state.Loaded())
-			suite.NoError(state.Save())
-			suite.True(state.Loaded())
+			stateTestSuite.False(state.Loaded())
+			stateTestSuite.NoError(state.Load())
+			stateTestSuite.True(state.Loaded())
+			stateTestSuite.NoError(state.Save())
+			stateTestSuite.True(state.Loaded())
 		})
 	}
 }
 
-func (suite *StateTestSuite) TestChangedIsProperlySet() {
-	state := yaml.NewState(filepath.Join(suite.T().TempDir(), "state.yml"))
+func (stateTestSuite *StateTestSuite) TestChangedIsProperlySet() {
+	state := yaml.NewState(filepath.Join(stateTestSuite.T().TempDir(), "state.yml"))
 
-	suite.False(state.Changed())
-	suite.NoError(state.Load())
-	suite.False(state.Changed())
-	suite.NoError(state.Set("test_state_entry", TestStateEntry{}))
-	suite.True(state.Changed())
-	suite.NoError(state.Save())
-	suite.False(state.Changed())
+	stateTestSuite.False(state.Changed())
+	stateTestSuite.NoError(state.Load())
+	stateTestSuite.False(state.Changed())
+	stateTestSuite.NoError(state.Set("test_state_entry", TestStateEntry{}))
+	stateTestSuite.True(state.Changed())
+	stateTestSuite.NoError(state.Save())
+	stateTestSuite.False(state.Changed())
 }

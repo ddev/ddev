@@ -316,11 +316,11 @@ func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 
 // Chdir will change to the directory for the site specified by TestSite.
 // It returns an anonymous function which will return to the original working directory when called.
-func Chdir(path string) func() {
+func Chdir(dirPath string) func() {
 	curDir, _ := os.Getwd()
-	err := os.Chdir(path)
+	err := os.Chdir(dirPath)
 	if err != nil {
-		output.UserErr.Errorf("Could not change to directory %s: %v\n", path, err)
+		output.UserErr.Errorf("Could not change to directory %s: %v\n", dirPath, err)
 	}
 
 	return func() {

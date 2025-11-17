@@ -19,8 +19,6 @@ import (
 // TestRemoteConfigEndToEnd tests the complete remote config functionality
 // including downloading from the actual GitHub repository
 func TestRemoteConfigEndToEnd(t *testing.T) {
-	require := require.New(t)
-
 	// Create a function that always returns true for testing
 	alwaysInternetActive := func() bool { return true }
 
@@ -33,12 +31,12 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 
 	// Test 1: Test generic JSONC downloader directly
 	t.Run("GenericJSONCDownloader", func(t *testing.T) {
-		downloader := downloader.NewURLJSONCDownloader("https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc")
+		d := downloader.NewURLJSONCDownloader("https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc")
 
 		var remoteConfig types.RemoteConfigData
 		ctx := context.Background()
-		err := downloader.Download(ctx, &remoteConfig)
-		require.NoError(err, "Failed to download remote config")
+		err := d.Download(ctx, &remoteConfig)
+		require.NoError(t, err, "Failed to download remote config")
 
 		// Debug: Print what we actually got
 		tickerMessages := len(remoteConfig.Messages.Ticker.Messages)
@@ -48,19 +46,19 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 		t.Logf("Ticker: Messages=%d, Interval=%d", tickerMessages, tickerInterval)
 
 		// Verify we got meaningful data
-		require.Greater(remoteConfig.UpdateInterval, 0, "Update interval should be greater than 0")
-		require.Greater(len(remoteConfig.Messages.Ticker.Messages), 50, "Should have many ticker messages")
-		require.Greater(remoteConfig.Messages.Ticker.Interval, 0, "Ticker interval should be greater than 0")
+		require.Greater(t, remoteConfig.UpdateInterval, 0, "Update interval should be greater than 0")
+		require.Greater(t, len(remoteConfig.Messages.Ticker.Messages), 50, "Should have many ticker messages")
+		require.Greater(t, remoteConfig.Messages.Ticker.Interval, 0, "Ticker interval should be greater than 0")
 
 		// Verify some message content
 		foundDDEVMessage := false
 		for _, msg := range remoteConfig.Messages.Ticker.Messages {
-			require.NotEmpty(msg.Message, "Message content should not be empty")
+			require.NotEmpty(t, msg.Message, "Message content should not be empty")
 			if len(msg.Message) > 4 && msg.Message[:4] == "DDEV" {
 				foundDDEVMessage = true
 			}
 		}
-		require.True(foundDDEVMessage, "Should find at least one message mentioning DDEV")
+		require.True(t, foundDDEVMessage, "Should find at least one message mentioning DDEV")
 	})
 
 	// Test 2: Test complete remote config system
@@ -76,19 +74,19 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 
 		// Create remote config instance
 		rc := remoteconfig.New(&config, stateManager, alwaysInternetActive)
-		require.NotNil(rc, "Remote config should not be nil")
+		require.NotNil(t, rc, "Remote config should not be nil")
 
 		// Verify local file was created (this tests the write functionality)
 		localFile := filepath.Join(tmpDir, ".remote-config")
 		_, err := os.Stat(localFile)
-		require.NoError(err, "Local remote config file should exist")
+		require.NoError(t, err, "Local remote config file should exist")
 
 		// Test ShowTicker and ShowNotifications don't panic
-		require.NotPanics(func() {
+		require.NotPanics(t, func() {
 			rc.ShowTicker()
 		}, "ShowTicker should not panic")
 
-		require.NotPanics(func() {
+		require.NotPanics(t, func() {
 			rc.ShowNotifications()
 		}, "ShowNotifications should not panic")
 	})
@@ -105,18 +103,18 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 		}
 
 		globalRC := remoteconfig.InitGlobal(config, stateManager, alwaysInternetActive)
-		require.NotNil(globalRC, "Global remote config should not be nil")
+		require.NotNil(t, globalRC, "Global remote config should not be nil")
 
 		// Test that we can get the global config
 		retrievedRC := remoteconfig.GetGlobal()
-		require.Equal(globalRC, retrievedRC, "Retrieved global config should match initialized config")
+		require.Equal(t, globalRC, retrievedRC, "Retrieved global config should match initialized config")
 
 		// Test ShowTicker and ShowNotifications work on global config
-		require.NotPanics(func() {
+		require.NotPanics(t, func() {
 			retrievedRC.ShowTicker()
 		}, "Global ShowTicker should not panic")
 
-		require.NotPanics(func() {
+		require.NotPanics(t, func() {
 			retrievedRC.ShowNotifications()
 		}, "Global ShowNotifications should not panic")
 	})
@@ -125,7 +123,7 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 	t.Run("LocalCaching", func(t *testing.T) {
 		cacheDir := tmpDir + "_cache_test"
 		err := os.MkdirAll(cacheDir, 0755)
-		require.NoError(err, "Should be able to create cache directory")
+		require.NoError(t, err, "Should be able to create cache directory")
 
 		// Create a separate state manager for this test to ensure fresh state
 		cacheStateManager := yaml.NewState(filepath.Join(cacheDir, "cache_state.yaml"))
@@ -140,7 +138,7 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 
 		// First creation should download
 		rc1 := remoteconfig.New(&config, cacheStateManager, alwaysInternetActive)
-		require.NotNil(rc1)
+		require.NotNil(t, rc1)
 
 		// Wait a moment for async operations to complete
 		time.Sleep(100 * time.Millisecond)
@@ -148,18 +146,16 @@ func TestRemoteConfigEndToEnd(t *testing.T) {
 		// Verify local file exists
 		localFile := filepath.Join(cacheDir, ".remote-config")
 		_, err = os.Stat(localFile)
-		require.NoError(err, "Local cache file should exist")
+		require.NoError(t, err, "Local cache file should exist")
 
 		// Second creation should use cache (since update interval is 1 hour and we just updated)
 		rc2 := remoteconfig.New(&config, cacheStateManager, func() bool { return false }) // No internet
-		require.NotNil(rc2, "Should work from cache even without internet")
+		require.NotNil(t, rc2, "Should work from cache even without internet")
 	})
 }
 
 // TestSponsorshipDataEndToEnd tests the sponsorship data functionality
 func TestSponsorshipDataEndToEnd(t *testing.T) {
-	require := require.New(t)
-
 	// Create a function that always returns true for testing
 	alwaysInternetActive := func() bool { return true }
 
@@ -173,72 +169,70 @@ func TestSponsorshipDataEndToEnd(t *testing.T) {
 	t.Run("SponsorshipManager", func(t *testing.T) {
 		// Create sponsorship manager
 		mgr := remoteconfig.NewSponsorshipManager(tmpDir, stateManager, alwaysInternetActive, 24, "https://ddev.com/s/sponsorship-data.json")
-		require.NotNil(mgr, "Sponsorship manager should not be nil")
+		require.NotNil(t, mgr, "Sponsorship manager should not be nil")
 
 		// Test getting sponsorship data
 		data, err := mgr.GetSponsorshipData()
-		require.NoError(err, "Should be able to get sponsorship data")
-		require.NotNil(data, "Sponsorship data should not be nil")
+		require.NoError(t, err, "Should be able to get sponsorship data")
+		require.NotNil(t, data, "Sponsorship data should not be nil")
 
 		// Verify data structure - note that we may get empty data if download fails,
 		// so we just check that we can access the fields without error
-		require.GreaterOrEqual(data.TotalMonthlyAverageIncome, float64(0), "Should have valid monthly income field")
-		require.GreaterOrEqual(data.GitHubDDEVSponsorships.TotalSponsors, 0, "Should have valid GitHub DDEV sponsors field")
-		require.GreaterOrEqual(data.GitHubDDEVSponsorships.TotalMonthlySponsorship, 0, "Should have valid GitHub DDEV sponsorship amount field")
+		require.GreaterOrEqual(t, data.TotalMonthlyAverageIncome, float64(0), "Should have valid monthly income field")
+		require.GreaterOrEqual(t, data.GitHubDDEVSponsorships.TotalSponsors, 0, "Should have valid GitHub DDEV sponsors field")
+		require.GreaterOrEqual(t, data.GitHubDDEVSponsorships.TotalMonthlySponsorship, 0, "Should have valid GitHub DDEV sponsorship amount field")
 
 		// Test utility methods
 		totalIncome := mgr.GetTotalMonthlyIncome()
-		require.Equal(data.TotalMonthlyAverageIncome, totalIncome, "Total income should match data field")
+		require.Equal(t, data.TotalMonthlyAverageIncome, totalIncome, "Total income should match data field")
 
 		totalSponsors := mgr.GetTotalSponsors()
 		expectedTotal := data.GitHubDDEVSponsorships.TotalSponsors +
 			data.GitHubRfaySponsorships.TotalSponsors +
 			data.MonthlyInvoicedSponsorships.TotalSponsors +
 			data.AnnualInvoicedSponsorships.TotalSponsors
-		require.Equal(expectedTotal, totalSponsors, "Total sponsors should match sum of all sponsor types")
+		require.Equal(t, expectedTotal, totalSponsors, "Total sponsors should match sum of all sponsor types")
 
 		// Test data freshness (should be fresh after just downloading)
-		require.False(mgr.IsDataStale(), "Data should be fresh after download")
+		require.False(t, mgr.IsDataStale(), "Data should be fresh after download")
 	})
 
 	t.Run("GlobalSponsorshipManager", func(t *testing.T) {
 		// Test global sponsorship manager
 		globalMgr := remoteconfig.InitGlobalSponsorship(tmpDir, stateManager, alwaysInternetActive, 24, "https://ddev.com/s/sponsorship-data.json")
-		require.NotNil(globalMgr, "Global sponsorship manager should not be nil")
+		require.NotNil(t, globalMgr, "Global sponsorship manager should not be nil")
 
 		// Test retrieval
 		retrievedMgr := remoteconfig.GetGlobalSponsorship()
-		require.Equal(globalMgr, retrievedMgr, "Retrieved global sponsorship manager should match initialized one")
+		require.Equal(t, globalMgr, retrievedMgr, "Retrieved global sponsorship manager should match initialized one")
 
 		// Test functionality
 		data, err := retrievedMgr.GetSponsorshipData()
-		require.NoError(err, "Should be able to get sponsorship data from global manager")
-		require.GreaterOrEqual(data.TotalMonthlyAverageIncome, float64(0), "Global manager should have valid data")
+		require.NoError(t, err, "Should be able to get sponsorship data from global manager")
+		require.GreaterOrEqual(t, data.TotalMonthlyAverageIncome, float64(0), "Global manager should have valid data")
 	})
 }
 
 // TestRemoteConfigStructure tests that the downloaded remote config has expected structure
 func TestRemoteConfigStructure(t *testing.T) {
-	require := require.New(t)
-
 	// Test the actual structure matches our expectations
-	downloader := downloader.NewURLJSONCDownloader("https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc")
+	d := downloader.NewURLJSONCDownloader("https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc")
 
 	var remoteConfig types.RemoteConfigData
 	ctx := context.Background()
-	err := downloader.Download(ctx, &remoteConfig)
-	require.NoError(err, "Should download remote config successfully")
+	err := d.Download(ctx, &remoteConfig)
+	require.NoError(t, err, "Should download remote config successfully")
 
 	// Test structure
-	require.Equal(10, remoteConfig.UpdateInterval, "Update interval should be 10 hours as per remote config")
-	require.Greater(remoteConfig.Messages.Ticker.Interval, 0, "Ticker interval should be positive")
-	require.Greater(len(remoteConfig.Messages.Ticker.Messages), 70, "Should have many ticker messages (at least 70)")
+	require.Equal(t, 10, remoteConfig.UpdateInterval, "Update interval should be 10 hours as per remote config")
+	require.Greater(t, remoteConfig.Messages.Ticker.Interval, 0, "Ticker interval should be positive")
+	require.Greater(t, len(remoteConfig.Messages.Ticker.Messages), 70, "Should have many ticker messages (at least 70)")
 
 	// Test message content quality
 	messageContentTypes := make(map[string]int)
 	for _, msg := range remoteConfig.Messages.Ticker.Messages {
-		require.NotEmpty(msg.Message, "Each message should have content")
-		require.LessOrEqual(len(msg.Message), 500, "Messages should be reasonably short")
+		require.NotEmpty(t, msg.Message, "Each message should have content")
+		require.LessOrEqual(t, len(msg.Message), 500, "Messages should be reasonably short")
 
 		// Categorize message content
 		content := msg.Message
@@ -259,14 +253,14 @@ func TestRemoteConfigStructure(t *testing.T) {
 	}
 
 	// Verify we have a good mix of message types
-	require.Greater(messageContentTypes["ddev"], 10, "Should have many DDEV-related messages")
+	require.Greater(t, messageContentTypes["ddev"], 10, "Should have many DDEV-related messages")
 	// Note: The current remote config messages are mostly DDEV-focused, so command/community categories may be minimal
-	require.GreaterOrEqual(messageContentTypes["command"], 0, "Command-related messages count")
-	require.GreaterOrEqual(messageContentTypes["community"], 0, "Community-related messages count")
+	require.GreaterOrEqual(t, messageContentTypes["command"], 0, "Command-related messages count")
+	require.GreaterOrEqual(t, messageContentTypes["community"], 0, "Community-related messages count")
 
 	// The important test is that we have meaningful DDEV-related content
 	totalCategorized := messageContentTypes["ddev"] + messageContentTypes["command"] + messageContentTypes["community"] + messageContentTypes["sponsor"] + messageContentTypes["other"]
-	require.Equal(len(remoteConfig.Messages.Ticker.Messages), totalCategorized, "All messages should be categorized")
+	require.Equal(t, len(remoteConfig.Messages.Ticker.Messages), totalCategorized, "All messages should be categorized")
 
 	t.Logf("Message content distribution: %+v", messageContentTypes)
 }

@@ -758,8 +758,8 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			urls = httpURLs
 		}
 		t.Logf("Testing these URLs: %v", urls)
-		for _, url := range urls {
-			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		for _, testURL := range urls {
+			_, _ = testcommon.EnsureLocalHTTPContent(t, testURL+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
@@ -1415,8 +1415,8 @@ func TestDdevImportDB(t *testing.T) {
 			assert.Equal(fmt.Sprintf("%s2", db), out)
 
 			// Import 2-user users.sql into users table
-			path := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
-			err = app.ImportDB(path, "", false, false, db)
+			sqlPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
+			err = app.ImportDB(sqlPath, "", false, false, db)
 			assert.NoError(err)
 			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db)
 			c[nodeps.Postgres] = fmt.Sprintf(`bash -c "echo '\dt' | psql -t -d %s | awk 'NF > 1'"`, db)
@@ -1430,8 +1430,8 @@ func TestDdevImportDB(t *testing.T) {
 			assert.Len(lines, 1)
 
 			// Import 1-user sql (users_just_one table) and make sure only one table is left there
-			path = filepath.Join(origDir, "testdata", t.Name(), dbType, "oneuser.sql")
-			err = app.ImportDB(path, "", false, false, db)
+			sqlPath = filepath.Join(origDir, "testdata", t.Name(), dbType, "oneuser.sql")
+			err = app.ImportDB(sqlPath, "", false, false, db)
 			assert.NoError(err)
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
@@ -1447,8 +1447,8 @@ func TestDdevImportDB(t *testing.T) {
 			if dbType != nodeps.Postgres {
 				// Import 2-user users.sql again, but with nodrop=true
 				// We should end up with 2 tables now
-				path = filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
-				err = app.ImportDB(path, "", false, true, db)
+				sqlPath = filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
+				err = app.ImportDB(sqlPath, "", false, true, db)
 				assert.NoError(err)
 				out, _, err = app.Exec(&ddevapp.ExecOpts{
 					Service: "db",
@@ -1488,15 +1488,15 @@ func TestDdevImportDB(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE IF EXISTS wp_posts;'"})
 	require.NoError(t, err)
 	file := "posts_with_ddl_content.sql"
-	path := filepath.Join(origDir, "testdata", t.Name(), "mariadb", file)
-	err = app.ImportDB(path, "", false, false, "db")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+	sqlPath := filepath.Join(origDir, "testdata", t.Name(), "mariadb", file)
+	err = app.ImportDB(sqlPath, "", false, false, "db")
+	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", sqlPath, err)
 	checkImportDBImports(t, app)
 
 	// Now test the same when importing from stdin, same file
 	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE wp_posts;'"})
 	require.NoError(t, err)
-	f, err := os.Open(path)
+	f, err := os.Open(sqlPath)
 	require.NoError(t, err)
 	defer f.Close()
 	oldStdin := os.Stdin
@@ -1505,7 +1505,7 @@ func TestDdevImportDB(t *testing.T) {
 	})
 	os.Stdin = f
 	err = app.ImportDB("", "", false, false, "db")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", sqlPath, err)
 	os.Stdin = oldStdin
 	checkImportDBImports(t, app)
 
@@ -3492,13 +3492,13 @@ func TestHttpsRedirection(t *testing.T) {
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/subdir", "/subdir/"})
 	}
 
-	types := ddevapp.GetValidAppTypes()
+	projectTypes := ddevapp.GetValidAppTypes()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	if os.Getenv("GOTEST_SHORT") != "" {
-		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
+		projectTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
 		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}
-	for _, projectType := range types {
+	for _, projectType := range projectTypes {
 		// TODO: Fix the Laravel config so it can do the redir_abs.php successfully on nginx-fpm
 		if projectType == nodeps.AppTypeLaravel {
 			t.Log("Skipping Laravel because it can't pass absolute redirect test, fix config")
@@ -4592,9 +4592,4 @@ func constructContainerName(containerType string, app *ddevapp.DdevApp) (string,
 	}
 	name := dockerutil.ContainerName(c)
 	return name, nil
-}
-
-func removeAllErrCheck(path string, assert *asrt.Assertions) {
-	err := os.RemoveAll(path)
-	assert.NoError(err)
 }
