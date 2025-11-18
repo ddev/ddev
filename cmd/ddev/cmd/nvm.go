@@ -21,23 +21,12 @@ After changing nodejs_version, restart your project with 'ddev restart'.
 
 For more information, see:
 https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version
-`,
-	Run: func(_ *cobra.Command, args []string) {
-		output.UserErr.Print(`The 'ddev nvm' command has been removed in DDEV v1.25.0.
-
-Use the 'nodejs_version' configuration in .ddev/config.yaml instead:
-
-  nodejs_version: "22"  # or any version like "20", "18.16.0", etc.
-
-After changing nodejs_version, restart your project with 'ddev restart'.
-
-For more information, see:
-https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version
 
 If you still want to use nvm, there is an add-on available:
 https://github.com/stasadev/ddev
-
-`)
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		output.UserErr.Print(cmd.Long)
 		util.Failed("ddev nvm has been removed")
 	},
 }
