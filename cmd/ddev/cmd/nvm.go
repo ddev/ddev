@@ -34,11 +34,10 @@ After changing nodejs_version, restart your project with 'ddev restart'.
 For more information, see:
 https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version
 
+If you still want to use nvm, there is an add-on available:
+https://github.com/stasadev/ddev
+
 `)
 		util.Failed("ddev nvm has been removed")
 	},
-}
-
-func init() {
-	RootCmd.AddCommand(NvmCmd)
 }
