@@ -259,6 +259,6 @@ The normal use of DDEV involves project URLs (and hostnames) like `*.ddev.site`.
 
 There are a few DNS servers, mostly local Fritz!Box routers, which do not allow a DNS lookup to result in `127.0.0.1`. In this situation, DDEV will ask you to use superuser (`sudo`) privileges to add the hostname to the system `hosts` file, often `/etc/hosts` or `C:\Windows\system32\drivers\etc\hosts`. **This is not the preferred behavior, as DDEV does not want to edit your system files.**
 
-Instead, if DDEV is asking you to do this and add hostnames, it's best to solve the underlying problem by adding configuration to the DNS server (often Fritz!Box router) or by using a less-restrictive DNS server like the Cloudflare `1.1.1.1` public DNS server. Full details for Fritz!Box are at [Fritz!Box Routers and DDEV](https://ddev.com/blog/fritzbox-routers-and-ddev/).
+Instead, if DDEV is asking you to do this and add hostnames, it's best to solve the underlying problem by adding configuration to the DNS server (often Fritz!Box router) or by using a less-restrictive DNS server like the Cloudflare `1.1.1.1` public DNS server. Full details are at [Fritz!Box Routers and DDEV](https://ddev.com/blog/fritzbox-routers-and-ddev/).
 
 These options are explained in the [Troubleshooting - DNS Rebinding](troubleshooting.md#dns-rebinding-prohibited-mostly-on-fritzbox-routers) section of the documentation.
