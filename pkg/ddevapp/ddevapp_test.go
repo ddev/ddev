@@ -101,16 +101,19 @@ var (
 		// 4: backdrop
 		{
 			Name:                          "TestPkgBackdrop",
-			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.29.2.tar.gz",
-			ArchiveInternalExtractionPath: "backdrop-1.29.2/",
-			DBTarURL:                      "https://github.com/ddev/test-backdrop/releases/download/1.29.2/db.sql.tar.gz",
-			FilesTarballURL:               "https://github.com/ddev/test-backdrop/releases/download/1.29.2/files.tgz",
+			SourceURL:                     "https://github.com/ddev/test-backdrop/archive/refs/tags/1.32.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-backdrop-1.32.1/",
+			DBTarURL:                      "https://github.com/ddev/test-backdrop/releases/download/1.32.1/db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/test-backdrop/releases/download/1.32.1/files.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeBackdrop,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/your-first-post", Expect: "This is your first post! You may edit or delete it."},
-			FilesImageURI:                 "/files/styles/card/public/field/image/card1-layout.png",
+			// Make backdrop use database-config instead of file-based config
+			PretestCmd: `printf "\n\$settings['config_active_class'] = 'ConfigDatabaseStorage';
+\n\$settings['config_staging_class'] = 'ConfigDatabaseStorage';\n" >> /var/www/html/settings.php`,
+			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/LICENSE.txt", Expect: "GNU GENERAL PUBLIC LICENSE"},
+			DynamicURI:                testcommon.URIWithExpect{URI: "/posts/your-first-post", Expect: "This is your first post! You may edit or delete it."},
+			FilesImageURI:             "/files/styles/card/public/field/image/card1-layout.png",
 		},
 		// 5: typo3
 		{
