@@ -35,7 +35,7 @@ var (
 	// projectTypeArg is the DDEV project type.
 	projectTypeArg string
 
-	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6-8.4 etc.
+	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6-8.5 etc.
 	phpVersionArg string
 
 	// routerHTTPPortArg overrides the default router HTTP port (80).

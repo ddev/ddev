@@ -472,8 +472,8 @@ This is typically a global setting. The project-specific value will override glo
 The PHP version the project should use.
 
 | Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project | `8.3` | Can be `5.6` through `8.4`. New versions are added when released upstream.
+| -- |---------| --
+| :octicons-file-directory-16: project | `8.4` | Can be `5.6` through `8.5`. New versions are added when released upstream.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
 
