@@ -22,12 +22,6 @@ ARG DEFAULT_LOCALES="en_CA.UTF-8 UTF-8\nen_US.UTF-8 UTF-8\nen_GB.UTF-8 UTF-8\nes
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
 
-# Convert php.list from base image to modern deb822 .sources format
-RUN if [ -f /etc/apt/sources.list.d/php.list ]; then \
-    rm -f /etc/apt/sources.list.d/php.list && \
-    printf "Types: deb\nURIs: https://packages.sury.org/php/\nSuites: trixie\nComponents: main\nSigned-By: /usr/share/keyrings/deb.sury.org-php.gpg\n" > /etc/apt/sources.list.d/php.sources; \
-    fi
-
 # This curl is here to catch diagnostic information for sury.org
 # failures, see https://github.com/oerdnj/deb.sury.org/issues/2046
 RUN curl -I https://packages.sury.org/php/dists/bookworm/InRelease
