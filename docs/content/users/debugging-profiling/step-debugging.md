@@ -161,14 +161,7 @@ WSL2 is a complicated environment for Xdebug, especially if you're running your 
 * If you’re on WSL2 using Docker Desktop, make sure that the `docker` command is the one provided by Docker Desktop. `ls -l $(which docker)` should show a link to `/mnt/wsl/docker-desktop...`. If you’re on WSL2 using Docker installed inside WSL2, make sure that `ls -l $(which docker)` is *not* a link to `/mnt/wsl`.
 * You can run `export DDEV_DEBUG=true` and `ddev start` to get information about how `host.docker.internal` is figured out, which can help in some situations especially with WSL2. (`host.docker.internal` inside the web container is where Xdebug thinks it should connect to your IDE. You can see what it is set to by running `ddev exec ping host.docker.internal`.)
 * On some WSL2 docker-ce systems you may have to work hard to find out the correct IP address for the Windows side. DDEV tries to figure this out for you, but it may not be able to do so. The IP address shown as `nameserver` in `/etc/resolv.conf` may be the correct one, and this used to be the recommended technique. If it's the address you need you can change the address DDEV will use for `host.docker.internal` using `ddev config global --xdebug-ide-location=<some-ip-address>`.
-* WSL2 networking can sometimes become corrupted. If `ping host.docker.internal`
-  from inside the DDEV web container fails, and `telnet host.docker.internal 9003`
-  also fails even when your IDE is listening, the most common cause is the Windows
-  Firewall (see above). However, the WSL2 virtual switch or HNS networking layer
-  may also be damaged. You can repair this by fully disabling and then re-enabling the Windows
-  Subsystem for Linux and Virtual Machine Platform features. This forces Windows
-  to rebuild the WSL2 networking stack (vSwitch, HNS, NAT rules) without deleting
-  any of your Linux distros. This is safe and does not destroy your WSL2 distro.
+* WSL2 networking can sometimes become corrupted. If `ping host.docker.internal` from inside the DDEV web container fails, and `telnet host.docker.internal 9003` also fails even when your IDE is listening, the most common cause is the Windows Firewall (see above). However, the WSL2 virtual switch or `HNS` networking layer may also be damaged. You can repair this by fully disabling and then re-enabling the Windows Subsystem for Linux and Virtual Machine Platform features. This forces Windows to rebuild the WSL2 networking stack without deleting any of your Linux distros. This is safe and does not destroy your WSL2 distro.
 
   **Using Windows UI:**
 
