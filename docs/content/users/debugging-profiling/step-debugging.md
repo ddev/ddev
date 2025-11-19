@@ -166,9 +166,9 @@ WSL2 is a complicated environment for Xdebug, especially if you're running your 
     **Using Windows UI:**
 
     * Open **Control Panel → Programs → Turn Windows features on or off**.
-    * Uncheck **Windows Subsystem for Linux** and **Virtual Machine Platform**
+    * Uncheck **Windows Subsystem for Linux** and **Virtual Machine Platform**.
     * Click **OK** and reboot when prompted.
-    * Return to the same dialog and re-enable the same two features, **Windows Subsystem for Linux** and **Virtual Machine Platform**
+    * Return to the same dialog and re-enable the same two features, **Windows Subsystem for Linux** and **Virtual Machine Platform**.
     * Click **OK** and reboot again.
 
     **Using PowerShell (Admin):**
@@ -185,5 +185,4 @@ WSL2 is a complicated environment for Xdebug, especially if you're running your 
     Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
     ```
 
-    Reboot once more, and WSL2 networking (including access inside web container
-    to `host.docker.internal`) should be restored.
+    Reboot once more, and WSL2 networking (including access inside web container to `host.docker.internal`) should be restored.
