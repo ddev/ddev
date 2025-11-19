@@ -3,7 +3,7 @@
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
 ARG DOCKER_ORG=ddev
-FROM ${DOCKER_ORG}/ddev-php-base:20251116_node_24 AS ddev-webserver-base
+FROM ${DOCKER_ORG}/ddev-php-base:20251117_default_php8_4 AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -103,7 +103,7 @@ FROM ddev-webserver-base AS ddev-webserver-dev-base
 SHELL ["/bin/bash", "-eu", "-o", "pipefail", "-c"]
 
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
-ENV PHP_DEFAULT_VERSION="8.3"
+ENV PHP_DEFAULT_VERSION="8.4"
 
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
@@ -207,7 +207,7 @@ RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 ### But for historical reasons, it's just ddev-webserver
 ### Build ddev-webserver by turning ddev-webserver-dev-base into one layer
 FROM scratch AS ddev-webserver
-ENV PHP_DEFAULT_VERSION="8.3"
+ENV PHP_DEFAULT_VERSION="8.4"
 ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
@@ -236,7 +236,7 @@ FROM ddev-webserver-base AS ddev-webserver-prod-base
 SHELL ["/bin/bash", "-eu", "-o", "pipefail", "-c"]
 
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
-ENV PHP_DEFAULT_VERSION="8.3"
+ENV PHP_DEFAULT_VERSION="8.4"
 ARG TARGETPLATFORM
 ARG TARGETARCH
 
@@ -298,7 +298,7 @@ RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 ### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
 ### (Withut dev features, single layer)
 FROM scratch AS ddev-webserver-prod
-ENV PHP_DEFAULT_VERSION="8.3"
+ENV PHP_DEFAULT_VERSION="8.4"
 ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache

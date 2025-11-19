@@ -72,7 +72,7 @@ $ ddev describe drup
 ├──────────┬──────┬───────────────────────────────────────────┬────────────────────┤
 │ SERVICE  │ STAT │ URL/PORT                                  │ INFO               │
 ├──────────┼──────┼───────────────────────────────────────────┼────────────────────┤
-│ web      │ OK   │ https://drup.ddev.site                    │ drupal PHP8.3      │
+│ web      │ OK   │ https://drup.ddev.site                    │ drupal PHP8.4      │
 │          │      │ InDocker: web:8025,443,80                 │ nginx-fpm          │
 │          │      │ Host: 127.0.0.1:33016,33017               │ docroot:'web'      │
 │          │      │                                           │ Perf mode: mutagen │

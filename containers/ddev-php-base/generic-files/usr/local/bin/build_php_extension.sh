@@ -75,7 +75,7 @@ if [ ! -f "${EXTENSION_FILE}" ]; then
 fi
 
 # Used as an example
-PHP_DEFAULT_VERSION=8.3
+PHP_DEFAULT_VERSION=8.4
 echo "Done building php${PHP_VERSION}-${EXTENSION_NAME} to ${EXTENSION_FILE}"
 echo "If this is a multistage build, add: 'COPY --from=ddev-php-extension-build ${EXTENSION_FILE} ${EXTENSION_FILE}'"
 echo "If there is no /etc/php/${PHP_VERSION}/mods-available/${EXTENSION_NAME}.ini file, add: 'RUN cp /etc/php/${PHP_DEFAULT_VERSION}/mods-available/${EXTENSION_NAME}.ini /etc/php/${PHP_VERSION}/mods-available/${EXTENSION_NAME}.ini'"

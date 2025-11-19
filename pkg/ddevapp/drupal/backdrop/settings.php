@@ -10,13 +10,19 @@
 /**
  * Database configuration:
  *
- * Most sites can configure their database by entering the connection string
- * below. If using primary/replica databases or multiple connections, see the
- * advanced database documentation at
- * https://api.backdropcms.org/database-configuration
+ * Most sites can configure their database by entering the connection details
+ * below. For advanced configurations, including:
+ *   - Custom 'port', 'prefix', 'charset', 'collation' or 'driver' values
+ *   - Primary/replica databases
+ *   - Multiple connections
+ * See the documentation at https://docs.backdropcms.org/database-configuration
  */
-$database = 'mysql://user:pass@localhost/database_name';
-$database_prefix = '';
+$database = array(
+  'database' => 'database_name',
+  'username' => 'user',
+  'password' => 'pass',
+  'host' => 'localhost',
+);
 
 /**
  * Configuration storage
@@ -55,8 +61,8 @@ $database_prefix = '';
  * $config_directories['staging'] = '/home/myusername/config/staging';
  * @endcode
  */
-$config_directories['active'] = 'files/config_' . md5($database) . '/active';
-$config_directories['staging'] = 'files/config_' . md5($database) . '/staging';
+$config_directories['active'] = 'files/config_' . md5(serialize($database)) . '/active';
+$config_directories['staging'] = 'files/config_' . md5(serialize($database)) . '/staging';
 
 /**
  * Skip the configuration staging directory cleanup
@@ -67,7 +73,7 @@ $config_directories['staging'] = 'files/config_' . md5($database) . '/staging';
 // $config['system.core']['config_sync_clear_staging'] = 0;
 
 /**
- * Access control for update.php script.
+ * Temporary access control for update.php script.
  *
  * If you are updating your Backdrop installation using the update.php script
  * but are not logged in using either an account with the "Administer software
@@ -78,6 +84,39 @@ $config_directories['staging'] = 'files/config_' . md5($database) . '/staging';
  * TRUE back to a FALSE!
  */
 $settings['update_free_access'] = FALSE;
+
+/**
+ * Temporary access control for the restore.php script.
+ *
+ * The restore.php script allows restoring database and configuration backups.
+ * Accounts with the "Restore system backups" permission can access this script.
+ * Change the FALSE to a TRUE to disable the access check. This can be used to
+ * restore your site in an emergency situation. After finishing the restore, be
+ * sure to open this file again and change the TRUE back to a FALSE.
+ */
+$settings['restore_free_access'] = FALSE;
+
+/**
+ * Enable creating database and config backups during the update.php process.
+ *
+ * By default the backup directory is stored within the files directory with a
+ * hashed path. For the best security, this directory should be in a location
+ * that is not publicly accessible through a web browser.
+ *
+ * Example using directories one parent level up:
+ * @code
+ * $settings['backup_directory'] = '../backups';
+ * @endcode
+ *
+ * Example using absolute paths:
+ * @code
+ * $settings['backup_directory'] = '/home/myusername/backups';
+ * @endcode
+ *
+ * This can also be set to a value of FALSE to disable the backup capability,
+ * for sites that have an alternative backup mechanism in place.
+ */
+$settings['backup_directory'] = '';
 
 /**
  * Salt for one-time login links and cancel links, form tokens, etc.
@@ -96,7 +135,6 @@ $settings['update_free_access'] = FALSE;
  * @code
  * $settings['hash_salt'] = file_get_contents('/home/example/salt.txt');
  * @endcode
- *
  */
 $settings['hash_salt'] = '';
 
