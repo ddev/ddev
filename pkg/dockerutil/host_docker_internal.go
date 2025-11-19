@@ -121,23 +121,48 @@ func GetHostDockerInternal() *HostDockerInternal {
 }
 
 // getWindowsReachableIP uses PowerShell to find a windows-side IP
-// address that can be accessed from inside a container.
-// This is needed for networkMode=mirrored in WSL2.
+// address that can be accessed from inside a container in WSL2 mirrored mode.
+//
+// Instead of scanning all interfaces, it:
+//  1. Finds the best default route (0.0.0.0/0) by RouteMetric/InterfaceMetric.
+//  2. Uses that route's InterfaceIndex.
+//  3. Returns the first non-link-local, non-loopback IPv4 on that interface.
 func getWindowsReachableIP() (string, error) {
-	cmd := exec.Command("powershell.exe", "-Command", `
-Get-NetIPAddress -AddressFamily IPv4 |
+	psScript := `
+$bestRoute = Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue |
+  Where-Object { $_.NextHop -ne '0.0.0.0' } |
+  Sort-Object -Property RouteMetric, InterfaceMetric |
+  Select-Object -First 1
+
+if (-not $bestRoute) {
+  return
+}
+
+$ifIndex = $bestRoute.InterfaceIndex
+
+$ip = Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $ifIndex -ErrorAction SilentlyContinue |
   Where-Object {
-    $_.IPAddress -notlike "169.254*" -and
-    $_.IPAddress -ne "127.0.0.1"
+    $_.IPAddress -and
+    $_.IPAddress -notlike '169.254*' -and
+    $_.IPAddress -ne '127.0.0.1'
   } |
-  Sort-Object InterfaceMetric |
   Select-Object -First 1 -ExpandProperty IPAddress
-`)
-	out, err := cmd.Output()
+
+$ip
+`
+
+	cmd := exec.Command("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", psScript)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("powershell failed: %w", err)
+		return "", fmt.Errorf("powershell failed in getWindowsReachableIP: %w (output: %s)", err, string(out))
 	}
-	return strings.TrimSpace(string(out)), nil
+
+	ip := strings.TrimSpace(string(out))
+	if ip == "" {
+		return "", fmt.Errorf("no suitable Windows host IPv4 address found from default route")
+	}
+
+	return ip, nil
 }
 
 // getWSL2WindowsHostIP uses 'ip -4 route show default' to get the Windows IP address
