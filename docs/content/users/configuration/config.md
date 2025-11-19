@@ -111,8 +111,8 @@ When `true`, `corepack enable` will be executed, making latest `yarn` and `pnpm`
 
 The type and version of the database engine the project should use.
 
-| Type | Default       | Usage
-| -- |---------------| --
+| Type | Default | Usage
+| -- | -- | --
 | :octicons-file-directory-16: project | MariaDB 10.11 | Can be MariaDB 5.5–10.8, 10.11, 11.4, 11.8 and MySQL 5.5–8.0, 8.4, or PostgreSQL 9–18.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats. For very old database types see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/).
 
 ## `dbimage_extra_packages`
@@ -440,8 +440,8 @@ Example: `omit_containers: [db, ddev-ssh-agent]` starts the project without a `d
 Determines whether `ddev config` updates the `name` field in the `.ddev/config.yaml` by default.
 
 | Type | Default | Usage
-| -- |---------| --
-| :octicons-globe-16: global | `false`  | Can be `true` or `false`.
+| -- | -- | --
+| :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
 When the `name` field is omitted in `.ddev/config.yaml`, DDEV gets the project name from the directory the project is in. If this option is set to `true`, `ddev config` will not update the `name` field unless you use `ddev config --project-name=<name>` to explicitly set the project name. People using `git worktree` often prefer to omit the project name so they can work on multiple projects at the same time in different worktrees.
 
@@ -472,8 +472,8 @@ This is typically a global setting. The project-specific value will override glo
 The PHP version the project should use.
 
 | Type | Default | Usage
-| -- |---------| --
-| :octicons-file-directory-16: project | `8.3`   | Can be `5.6` through `8.4`. New versions are added when released upstream.
+| -- | -- | --
+| :octicons-file-directory-16: project | `8.3` | Can be `5.6` through `8.4`. New versions are added when released upstream.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
 
@@ -759,16 +759,16 @@ Examples:
 Port for project’s XHGui HTTP URL (for router). Only changed when there are port conflicts on the default port 8143.
 
 | Type | Default | Usage
-| -- |---------| --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8143`  | Can be changed to avoid a port conflict.
+| -- | -- | --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8143` | Can be changed to avoid a port conflict.
 
 ## `xhgui_https_port`
 
 Port for project’s XHGui HTTPS URL (for router). Only changed when there are port conflicts on the default port 8142.
 
 | Type | Default | Usage
-| -- |---------| --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8142`  | Can be changed to avoid a port conflict.
+| -- | -- | --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8142` | Can be changed to avoid a port conflict.
 
 ## `xhprof_mode`
 

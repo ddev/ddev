@@ -25,10 +25,10 @@ Packet-inspecting VPNs like **Zscaler**, **GlobalProtect**, and similar products
 
 This creates two separate problems in Docker-based workflows:
 
-| Layer                  | Problem                                                                 | Solution |
-|------------------------|-------------------------------------------------------------------------|----------|
-| Docker Engine          | `docker pull` fails with certificate errors when connecting to Docker registries like `hub.docker.com` | Configure Docker Engine to trust the corporate CA |
-| Inside Containers      | Tools like `curl` or `composer` inside containers fail to connect to the internet | Install the corporate CA in the container image |
+| Layer             | Problem                                                                                                | Solution                                          |
+|-------------------|--------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| Docker Engine     | `docker pull` fails with certificate errors when connecting to Docker registries like `hub.docker.com` | Configure Docker Engine to trust the corporate CA |
+| Inside Containers | Tools like `curl` or `composer` inside containers fail to connect to the internet                      | Install the corporate CA in the container image   |
 
 ### 🧩 Docker Engine SSL Trust (for `docker pull`)
 
@@ -169,13 +169,13 @@ If your file contains this header, renaming it to `.crt` is sufficient for use w
 
 ### VPN Trust Summary by Provider
 
-| Provider           | Engine Trust Needed? | Auto-Inherits Host Trust? | Notes                                 |
-|-------------------|----------------------|----------------------------|---------------------------------------|
-| Docker Desktop     | No                   | ✅                          | Uses macOS/Windows system keychain    |
-| Orbstack           | No                   | ✅                          | Fully integrated with macOS keychain  |
-| Colima             | Yes                  | 🚫                          | Requires pre-start copy of certs      |
-| Rancher Desktop    | Yes (dockerd)        | Partial                    | Depends on Lima config and backend    |
-| WSL2 + docker-ce   | Yes                  | 🚫                          | Must configure trust inside WSL       |
+| Provider         | Engine Trust Needed? | Auto-Inherits Host Trust? | Notes                                  |
+|------------------|----------------------|---------------------------|----------------------------------------|
+| Docker Desktop   | No                   | ✅                         | Uses macOS/Windows system keychain     |
+| Orbstack         | No                   | ✅                         | Fully integrated with macOS keychain   |
+| Colima           | Yes                  | 🚫                        | Requires pre-start copy of certs       |
+| Rancher Desktop  | Yes (dockerd)        | Partial                   | Depends on Lima config and backend     |
+| WSL2 + docker-ce | Yes                  | 🚫                        | Must configure trust inside WSL        |
 
 <!-- textlint-disable -->
 ## Corporate or Internet Provider Proxy
