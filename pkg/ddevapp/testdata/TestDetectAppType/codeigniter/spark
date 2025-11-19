@@ -1,0 +1,4 @@
+#!/usr/bin/env php
+<?php
+
+// spark is CodeIgniter 4's command-line interface (CLI) tool that allows you to run framework commands like generating controllers, running migrations, clearing cache, and executing custom commands from the terminal.
