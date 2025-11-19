@@ -1618,6 +1618,7 @@ Create the project directory and configure DDEV:
 ```bash
 export MAGENTO_HOSTNAME=my-magento2-site
 mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
+# The Magento 2 `composer create-project` is incompatible with Composer 2.9+
 ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --composer-version=2.8.12
 ddev add-on get ddev/ddev-opensearch
 ```
