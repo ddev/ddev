@@ -248,7 +248,43 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 			})
 
 			if err != nil {
-				util.Failed("Failed to install project: %v\nstderr=%v", err, stderr)
+				util.Warning("Failed to install project: %v\nstderr=%v", err, stderr)
+				// Try to run composer update instead.
+				output.UserOut.Println("Trying 'composer update' instead of 'composer install'...")
+
+				composerCmd = []string{
+					"composer",
+					"update",
+				}
+
+				for i, validCreateArg := range validCreateArgs {
+					if isValidComposerOption(app, "update", validCreateArg) {
+						composerCmd = append(composerCmd, validCreateArg)
+					} else if strings.HasPrefix(validCreateArg, "-") && i+1 < len(validCreateArgs) && !strings.HasPrefix(validCreateArgs[i+1], "-") {
+						// If this is an option with a value, add it.
+						if isValidComposerOption(app, "update", validCreateArg+" "+validCreateArgs[i+1]) {
+							composerCmd = append(composerCmd, validCreateArg, validCreateArgs[i+1])
+						}
+					}
+				}
+
+				composerCmd = wrapTTYCommandWithStdin(inputData, composerCmd)
+				// Run update command.
+				output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
+
+				stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
+					Service: "web",
+					RawCmd:  composerCmd,
+					Dir:     getComposerRootInContainer(app),
+					Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+					// Disable security blocking to allow installing any packages,
+					// this is a new feature in Composer 2.9+, which may break `composer install`.
+					Env: []string{"XDEBUG_MODE=off", "COMPOSER_NO_SECURITY_BLOCKING=1"},
+				})
+
+				if err != nil {
+					util.Failed("Failed to install project: %v\nstderr=%v", err, stderr)
+				}
 			}
 
 			if len(stdout) > 0 {

@@ -239,6 +239,7 @@ Download and extract CiviCRM:
 ```bash
 ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
 ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
+ddev composer update civicrm/composer-compile-plugin --no-scripts
 ddev composer require civicrm/cli-tools --no-scripts
 ```
 
@@ -276,6 +277,7 @@ ddev launch
     ddev start -y
     ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
     ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
+    ddev composer update civicrm/composer-compile-plugin --no-scripts
     ddev composer require civicrm/cli-tools --no-scripts
     ddev exec cv core:install \
         --cms-base-url='$DDEV_PRIMARY_URL' \
@@ -2545,7 +2547,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev config --project-type=symfony --docroot=public
     ddev start
     ddev exec symfony check:requirements
-    ddev exec symfony new temp --version="7.1.*" --webapp
+    ddev exec symfony new temp --webapp
     # 'symfony new' can't install in the current directory right away,
     # so we use 'rsync' to move the installed files one level up
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
