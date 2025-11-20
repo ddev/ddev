@@ -289,7 +289,7 @@ ddev utility rebuild
 or
 
 ```
-~/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml --progress=plain build --no-cache
+$HOME/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml --progress=plain build --no-cache
 ```
 
 ### Docker build fails `apt-get update`, perhaps "SSL certificate problem: self-signed certificate"

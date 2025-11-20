@@ -58,7 +58,7 @@ Here’s how to try it for yourself:
 
 10. If you want to redirect HTTP to HTTPS, edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
 11. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
-12. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `~/.ddev/traefik/static_config.staging.yaml` with the contents:
+12. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `$HOME/.ddev/traefik/static_config.staging.yaml` with the contents:
 
     ```yaml
     certificatesResolvers:
@@ -122,7 +122,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 * You may want to see more than just error output. You can enable debug output with the command below. You can make additional changes to the logging level as needed.
 
     ```bash
-    cp ~/.ddev/traefik/static_config.loglevel.yaml.example ~/.ddev/traefik/static_config.loglevel.yaml
+    cp $HOME/.ddev/traefik/static_config.loglevel.yaml.example $HOME/.ddev/traefik/static_config.loglevel.yaml
     ddev poweroff
     ```
 

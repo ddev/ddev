@@ -1557,10 +1557,10 @@ Example:
 
 ```shell
 # Decode a remote config file
-ddev utility gob-decode ~/.ddev/.remote-config
+ddev utility gob-decode $HOME/.ddev/.remote-config
 
 # Decode an amplitude cache file
-ddev utility gob-decode ~/.ddev/.amplitude.cache
+ddev utility gob-decode $HOME/.ddev/.amplitude.cache
 
 # Decode any gob file with path expansion
 ddev utility gob-decode ~/path/to/file.gob
