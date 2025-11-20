@@ -33,7 +33,7 @@ teardown() {
   run ddev bee si --username=admin --password=Password123 --db-name=db --db-user=db --db-pass=db --db-host=db --auto
   assert_success
 
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
@@ -62,19 +62,19 @@ teardown() {
   run ddev start -y
   assert_success
 
-  run curl -fLO https://github.com/ddev/test-backdrop/releases/download/1.29.2/db.sql.gz
+  run curl -fLO https://github.com/ddev/test-backdrop/releases/download/1.32.1/db.sql.gz
   assert_success
 
   run ddev import-db --file=db.sql.gz
   assert_success
 
-  run curl -fLO https://github.com/ddev/test-backdrop/releases/download/1.29.2/files.tgz
+  run curl -fLO https://github.com/ddev/test-backdrop/releases/download/1.32.1/files.tgz
   assert_success
 
   run ddev import-files --source=files.tgz
   assert_success
 
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
