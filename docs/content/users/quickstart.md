@@ -989,7 +989,7 @@ ddev launch $(ddev drush uli)
 
     ```bash
     mkdir my-grav-site && cd my-grav-site
-    ddev config --omit-containers=db
+    ddev config --php-version=8.3 --omit-containers=db
     ```
 
     Start DDEV (this may take a minute):
@@ -1019,7 +1019,7 @@ ddev launch $(ddev drush uli)
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-grav-site && cd my-grav-site
-        ddev config --omit-containers=db
+        ddev config --php-version=8.3 --omit-containers=db
         ddev start -y
         ddev composer create-project getgrav/grav
         ddev exec gpm install admin -y
@@ -1041,7 +1041,7 @@ ddev launch $(ddev drush uli)
     Configure DDEV:
 
     ```bash
-    ddev config --omit-containers=db
+    ddev config --php-version=8.3 --omit-containers=db
     ```
 
     Start DDEV (this may take a minute):
@@ -1073,7 +1073,7 @@ ddev launch $(ddev drush uli)
         set -euo pipefail
         mkdir my-grav-site && cd my-grav-site
         git clone -b master https://github.com/getgrav/grav.git .
-        ddev config --omit-containers=db
+        ddev config --php-version=8.3 --omit-containers=db
         ddev start -y
         ddev composer install
         ddev exec grav install
