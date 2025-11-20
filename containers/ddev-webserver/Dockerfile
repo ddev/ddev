@@ -3,7 +3,7 @@
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
 ARG DOCKER_ORG=ddev
-FROM ${DOCKER_ORG}/ddev-php-base:20251117_default_php8_4 AS ddev-webserver-base
+FROM ${DOCKER_ORG}/ddev-php-base:20251117_apt_sources AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -29,6 +29,10 @@ RUN curl -I https://packages.sury.org/php/dists/bookworm/InRelease
 # symfony cli
 RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash
 
+# Convert symfony-stable.list to modern deb822 .sources format
+RUN rm -f /etc/apt/sources.list.d/symfony-stable.list && \
+    printf "Types: deb deb-src\nURIs: https://dl.cloudsmith.io/public/symfony/stable/deb/debian/\nSuites: trixie\nComponents: main\nSigned-By: /usr/share/keyrings/symfony-stable-archive-keyring.gpg\n" > /etc/apt/sources.list.d/symfony-stable.sources
+
 # Install mariadb_repo_setup to get mariadb-client from them directly
 RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
 # Search for CHANGE_MARIADB_CLIENT to update related code.
@@ -45,6 +49,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     bash-completion \
     gettext \
     git \
+    gpgv \
     graphviz \
     less \
     libcap2-bin \
@@ -67,6 +72,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     zip
 
 RUN update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
+
+# Configure APT to use gpgv for signature verification to avoid SHA1 deprecation issues
+RUN echo 'APT::Key::gpgvcommand "/usr/bin/gpgv";' > /etc/apt/apt.conf.d/99-use-gpgv
 
 RUN printf "${DEFAULT_LOCALES}" > /etc/locale.gen && locale-gen
 
@@ -106,7 +114,8 @@ ENV CAROOT=/mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.4"
 
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
+# Create blackfire.sources in modern deb822 format
+RUN printf "Types: deb\nURIs: http://packages.blackfire.io/debian/\nSuites: any\nComponents: main\nSigned-By: /usr/share/keyrings/blackfire-archive-keyring.asc\n" > /etc/apt/sources.list.d/blackfire.sources
 RUN apt-get -qq update
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
@@ -141,8 +150,18 @@ RUN curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phi
 RUN set -o pipefail && curl --fail -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl -L --fail --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
 # Install platform cli
 RUN set -o pipefail && curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | bash
+
+# Convert platformsh-cli.list to modern deb822 .sources format
+RUN rm -f /etc/apt/sources.list.d/platformsh-cli.list && \
+    printf "Types: deb deb-src\nURIs: https://dl.cloudsmith.io/public/platformsh/cli/deb/debian/\nSuites: trixie\nComponents: main\nSigned-By: /usr/share/keyrings/platformsh-cli-archive-keyring.gpg\n" > /etc/apt/sources.list.d/platformsh-cli.sources
+
 # Install upsun cli
 RUN set -o pipefail && curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | VENDOR=upsun bash
+
+# Convert platformsh-upsun-cli.list to modern deb822 .sources format
+RUN rm -f /etc/apt/sources.list.d/platformsh-upsun-cli.list && \
+    printf "Types: deb deb-src\nURIs: https://dl.cloudsmith.io/public/platformsh/upsun-cli/deb/debian/\nSuites: trixie\nComponents: main\nSigned-By: /usr/share/keyrings/platformsh-upsun-cli-archive-keyring.gpg\n" > /etc/apt/sources.list.d/platformsh-upsun-cli.sources
+
 # Install lagoon cli
 RUN set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-cli/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-cli/releases/download/$tag/lagoon-cli-$tag-linux-${TARGETARCH}" --output /usr/local/bin/lagoon && chmod 777 /usr/local/bin/lagoon
 # Install lagoon-sync
@@ -241,7 +260,8 @@ ARG TARGETPLATFORM
 ARG TARGETARCH
 
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
+# Create blackfire.sources in modern deb822 format
+RUN printf "Types: deb\nURIs: http://packages.blackfire.io/debian/\nSuites: any\nComponents: main\nSigned-By: /usr/share/keyrings/blackfire-archive-keyring.asc\n" > /etc/apt/sources.list.d/blackfire.sources
 RUN apt-get -qq update
 
 # Blackfire outputs errors about not having systemd, but they do no harm to our usage

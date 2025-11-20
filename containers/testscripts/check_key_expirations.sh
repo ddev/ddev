@@ -5,6 +5,17 @@
 
 set -eu -o pipefail
 
+# Detect whether apt-get update supports --audit
+apt_supports_audit() {
+  # First word after 'apt' is the version, e.g. "apt 3.0.3 (amd64)"
+  local ver
+  ver="$(apt-get --version 2>/dev/null | awk 'NR==1 {print $2}')"
+
+  # Bookworm: 2.6.x  → no --audit
+  # Trixie/testing/sid: 2.9.x / 3.x → has --audit
+  dpkg --compare-versions "$ver" ge "2.9.7"
+}
+
 # Directories containing keyrings
 directories=("/etc/apt/trusted.gpg.d/" "/usr/share/keyrings/")
 # Today's date in Unix time
@@ -66,3 +77,21 @@ for dir in "${directories[@]}"; do
         '
     done
 done
+
+# Run apt-get update --audit (if available) to check for signature issues
+if apt_supports_audit; then \
+  printf "\nRunning apt-get update --audit to check for signature issues...\n"
+  apt-get update --audit 2>&1 | tee /tmp/apt-audit.log; \
+else \
+  exit 0; \
+fi
+
+
+# Check if there are any warnings or errors related to signature validation
+# Ignore notices about missing Signed-By or .sources format conversion recommendations
+if grep -iE "warning.*signature|audit.*signature|error.*signature|SHA1.*not.*secure" /tmp/apt-audit.log | grep -v "Missing Signed-By" | grep -v "should be upgraded to deb822"; then
+    printf "\nERROR: Found signature warnings or errors in apt-get update --audit\n"
+    exit 1
+fi
+
+printf "apt-get update --audit completed successfully with no SHA1 signature issues\n"
