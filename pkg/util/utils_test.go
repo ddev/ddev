@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -341,5 +342,17 @@ func TestSubtractSlices(t *testing.T) {
 				t.Errorf("SubtractSlices(%v, %v) = %v; want %v", tt.a, tt.b, result, tt.expected)
 			}
 		})
+	}
+}
+
+// TestGetHomeDir tests GetHomeDir
+func TestGetHomeDir(t *testing.T) {
+	home := util.GetHomeDir()
+	if home == "" {
+		t.Fatal("returned home directory is empty")
+	}
+
+	if !filepath.IsAbs(home) {
+		t.Fatalf("returned path is not absolute: %s", home)
 	}
 }

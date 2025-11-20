@@ -13,7 +13,8 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	dockerImage "github.com/docker/docker/api/types/image"
+	"github.com/moby/moby/api/types/image"
+	"github.com/moby/moby/client"
 	"github.com/spf13/cobra"
 )
 
@@ -80,35 +81,35 @@ func init() {
 // or com.docker.compose.project starting with "ddev-"
 // If dryRun is true, it only prints images to be deleted without removing them.
 func deleteDdevImages(deleteAll, dryRun bool) error {
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		return err
 	}
 
-	allImages, err := client.ImageList(ctx, dockerImage.ListOptions{
+	allImages, err := apiClient.ImageList(ctx, client.ImageListOptions{
 		All: true,
 	})
 	if err != nil {
 		return err
 	}
 
-	var images []dockerImage.Summary
-	for _, image := range allImages {
+	var images []image.Summary
+	for _, img := range allImages.Items {
 		exists := false
-		if len(image.RepoTags) > 0 {
-			for _, tag := range image.RepoTags {
+		if len(img.RepoTags) > 0 {
+			for _, tag := range img.RepoTags {
 				if strings.HasPrefix(tag, "ddev/ddev-") || strings.HasPrefix(tag, "drud/ddev-") {
-					images = append(images, image)
+					images = append(images, img)
 					exists = true
 					break
 				}
 			}
 		}
 		if !exists {
-			if len(image.RepoDigests) > 0 {
-				for _, tag := range image.RepoDigests {
+			if len(img.RepoDigests) > 0 {
+				for _, tag := range img.RepoDigests {
 					if strings.HasPrefix(tag, "ddev/ddev-") || strings.HasPrefix(tag, "drud/ddev-") {
-						images = append(images, image)
+						images = append(images, img)
 						exists = true
 						break
 					}
@@ -116,8 +117,8 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 			}
 		}
 		if !exists {
-			if projectName, ok := image.Labels["com.docker.compose.project"]; ok && strings.HasPrefix(projectName, "ddev-") {
-				images = append(images, image)
+			if projectName, ok := img.Labels["com.docker.compose.project"]; ok && strings.HasPrefix(projectName, "ddev-") {
+				images = append(images, img)
 			}
 		}
 	}
@@ -149,12 +150,12 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 		xhguiImage := ddevImages.GetXhguiImage()
 		utilitiesImage := versionconstants.UtilitiesImage
 
-		var filteredImages []dockerImage.Summary
-		for _, image := range images {
-			projectName := image.Labels["com.docker.compose.project"]
+		var filteredImages []image.Summary
+		for _, img := range images {
+			projectName := img.Labels["com.docker.compose.project"]
 			// Remove images from unlisted or not properly deleted projects
 			if projectName != "" && projectName != ddevapp.SSHAuthName && !slices.Contains(composeProjectNames, projectName) {
-				filteredImages = append(filteredImages, image)
+				filteredImages = append(filteredImages, img)
 				continue
 			}
 
@@ -173,7 +174,7 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 				}
 			}
 
-			for _, tag := range image.RepoTags {
+			for _, tag := range img.RepoTags {
 				// check for third-party service images that should not be deleted
 				if projectName != "" {
 					for _, serviceName := range serviceNames {
@@ -202,7 +203,7 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 				}
 			}
 			if !skip {
-				filteredImages = append(filteredImages, image)
+				filteredImages = append(filteredImages, img)
 			}
 		}
 		images = filteredImages
@@ -238,27 +239,27 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 		util.Warning("Warning: the following %d Docker image(s) will be deleted:\n", len(images))
 		output.UserOut.Printf("IMAGE ID       REPOSITORY:TAG")
 	}
-	for _, image := range images {
-		shortImageID := dockerutil.TruncateID(image.ID)
+	for _, img := range images {
+		shortImageID := dockerutil.TruncateID(img.ID)
 		imageName := "<none>:<none>"
-		if len(image.RepoTags) > 0 {
-			imageName = strings.Join(image.RepoTags, ", ")
-		} else if len(image.RepoDigests) > 0 {
+		if len(img.RepoTags) > 0 {
+			imageName = strings.Join(img.RepoTags, ", ")
+		} else if len(img.RepoDigests) > 0 {
 			var names []string
-			for _, digest := range image.RepoDigests {
+			for _, digest := range img.RepoDigests {
 				name := strings.SplitN(digest, "@", 2)[0]
 				names = append(names, name+":<none>")
 			}
 			imageName = strings.Join(names, ", ")
 		}
 		if dryRun {
-			if slices.Contains(imageIDinUse, image.ID) {
+			if slices.Contains(imageIDinUse, img.ID) {
 				needsPoweroffToDeleteImages = true
 			}
 			output.UserOut.Printf("%s", shortImageID+"   "+imageName)
 			continue
 		}
-		if err := dockerutil.RemoveImage(image.ID); err != nil {
+		if err := dockerutil.RemoveImage(img.ID); err != nil {
 			return err
 		}
 	}

@@ -115,7 +115,6 @@ MyDevSite
 MySQL
 MySite
 Nameserver
-NFS
 Netbeans
 Nginx
 Nuxt
@@ -492,9 +491,6 @@ namespaced
 namlen
 natively
 netstat
-nfs
-nfsd
-nfsmount
 nginx
 ngrok
 ngrok's
@@ -728,7 +724,6 @@ webspace
 webspaces
 webtag
 will
-winnfsd
 with
 within
 worktree

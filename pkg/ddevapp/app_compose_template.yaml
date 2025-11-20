@@ -332,15 +332,6 @@ volumes:
     name: ddev-${DDEV_SITENAME}-snapshots
     external: true
   {{ end }}{{/* end if .NoBindMounts */}}
-  {{ if and .NFSMountEnabled (not .NoProjectMount) }}
-  nfsmount:
-    name: "{{ .NFSMountVolumeName }}"
-    driver: local
-    driver_opts:
-      type: nfs
-      o: "addr={{ .NFSServerAddr }},hard,nolock,rw,wsize=32768,rsize=32768"
-      device: ':{{ .NFSSource }}'
-  {{ end }}{{/* end if and .NFSMountEnabled (not .NoProjectMount) */}}
   {{ if and .MutagenEnabled (not .NoProjectMount) }}
   project_mutagen:
     name: {{ .MutagenVolumeName }}

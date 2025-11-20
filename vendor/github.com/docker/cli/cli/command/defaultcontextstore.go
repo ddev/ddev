@@ -1,13 +1,15 @@
 // FIXME(thaJeztah): remove once we are a module; the go:build directive prevents go from downgrading language version to go1.16:
-//go:build go1.23
+//go:build go1.24
 
 package command
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/docker/cli/cli/context/docker"
 	"github.com/docker/cli/cli/context/store"
 	cliflags "github.com/docker/cli/cli/flags"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -51,8 +53,8 @@ type EndpointDefaultResolver interface {
 	ResolveDefault() (any, *store.EndpointTLSData, error)
 }
 
-// ResolveDefaultContext creates a Metadata for the current CLI invocation parameters
-func ResolveDefaultContext(opts *cliflags.ClientOptions, config store.Config) (*DefaultContext, error) {
+// resolveDefaultContext creates a Metadata for the current CLI invocation parameters
+func resolveDefaultContext(opts *cliflags.ClientOptions, config store.Config) (*DefaultContext, error) {
 	contextTLSData := store.ContextTLSData{
 		Endpoints: make(map[string]store.EndpointTLSData),
 	}
@@ -185,7 +187,7 @@ func (s *ContextStoreWithDefault) GetTLSData(contextName, endpointName, fileName
 			return nil, err
 		}
 		if defaultContext.TLS.Endpoints[endpointName].Files[fileName] == nil {
-			return nil, notFound(errors.Errorf("TLS data for %s/%s/%s does not exist", DefaultContextName, endpointName, fileName))
+			return nil, notFound(fmt.Errorf("TLS data for %s/%s/%s does not exist", DefaultContextName, endpointName, fileName))
 		}
 		return defaultContext.TLS.Endpoints[endpointName].Files[fileName], nil
 	}

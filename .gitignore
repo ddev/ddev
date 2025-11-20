@@ -48,10 +48,13 @@ node_modules/
 # ignore everything in .claude…
 .claude/*
 
-# …but keep your config, prompts, commands, etc.
+# …but keep your config, prompts, commands, hooks, etc.
 !.claude/config.yaml
+!.claude/settings.json
 !.claude/prompts/
 !.claude/commands/
+!.claude/hooks/
+!.claude/*.md
 
 # and still ignore all secrets, caches and logs
 .claude/api_key*

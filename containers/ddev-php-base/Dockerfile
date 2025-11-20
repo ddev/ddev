@@ -1,6 +1,6 @@
 ### ---------------------------------base-----------------------------------------
 ### Build the base Debian image that will be used in every other image
-FROM debian:bookworm-slim AS base
+FROM debian:trixie-slim AS base
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
@@ -33,18 +33,13 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
 RUN url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETPLATFORM#linux/}"; wget ${url} -q -O /usr/bin/yq && chmod +x /usr/bin/yq
 ADD generic-files /
 
-RUN curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-    | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
-RUN echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
-http://nginx.org/packages/debian `lsb_release -cs` nginx" > /etc/apt/sources.list.d/nginx.list
-
 # This curl -I is debugging for intermittent failures on https://github.com/oerdnj/deb.sury.org/issues/2046
 RUN curl -s -I https://packages.sury.org/php/
 
 RUN curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb && \
     dpkg -i /tmp/debsuryorg-archive-keyring.deb
 RUN rm -f /tmp/debsuryorg-archive-keyring.deb && \
-    echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
+    printf "Types: deb\nURIs: https://packages.sury.org/php/\nSuites: $(lsb_release -sc)\nComponents: main\nSigned-By: /usr/share/keyrings/deb.sury.org-php.gpg\n" > /etc/apt/sources.list.d/php.sources
 RUN apt-get -qq update
 ### -------------------------------END base---------------------------------------
 
@@ -62,13 +57,13 @@ RUN apt-get -qq update
 ### This combines the packages and features of DDEV’s ddev-webserver and PHP image
 FROM base AS ddev-php-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
-ARG PHP_DEFAULT_VERSION="8.3"
+ARG PHP_DEFAULT_VERSION="8.4"
 ARG XDEBUG_MODE=off
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
 ARG PHP_VERSIONS="php8.2 php8.3 php8.4 php8.5"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ARG DRUSH_VERSION=8.5.0
-ENV NODE_VERSION=22
+ENV NODE_VERSION=24
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_PROCESS_TIMEOUT=2000
@@ -94,8 +89,6 @@ RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj
 # Install node without cache, make a symlink for nodejs
 RUN n install --cleanup "${NODE_VERSION}" && ln -sf "$(which node)" "$(which node)js"
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
-# Normal user needs to be able to write to php sessions
-RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl --fail -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
 
 # Loop through $PHP_VERSIONS, selecting packages for the target architecture.
 RUN for v in ${PHP_VERSIONS}; do \

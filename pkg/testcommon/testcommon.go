@@ -24,7 +24,6 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/docker/docker/pkg/homedir"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -219,13 +218,13 @@ func OsTempDir() (string, error) {
 // and returns its path as a string. It's important that it's in
 // homedir since Colima doesn't mount things outside that.
 func CreateTmpDir(prefix string) string {
-	baseTmpDir := filepath.Join(homedir.Get(), "tmp", "ddevtest")
+	baseTmpDir := filepath.Join(util.GetHomeDir(), "tmp", "ddevtest")
 	_ = os.MkdirAll(baseTmpDir, 0755)
 	fullPath, err := os.MkdirTemp(baseTmpDir, prefix)
 	if err != nil {
 		output.UserErr.Fatalf("Failed to create temp directory %s, err=%v", fullPath, err)
 	}
-	// Make the tmpdir fully writeable/readable, NFS problems
+	// Make the tmpdir fully writeable/readable
 	_ = util.Chmod(fullPath, 0777)
 	return fullPath
 }
@@ -317,11 +316,11 @@ func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
 
 // Chdir will change to the directory for the site specified by TestSite.
 // It returns an anonymous function which will return to the original working directory when called.
-func Chdir(path string) func() {
+func Chdir(dirPath string) func() {
 	curDir, _ := os.Getwd()
-	err := os.Chdir(path)
+	err := os.Chdir(dirPath)
 	if err != nil {
-		output.UserErr.Errorf("Could not change to directory %s: %v\n", path, err)
+		output.UserErr.Errorf("Could not change to directory %s: %v\n", dirPath, err)
 	}
 
 	return func() {
@@ -381,7 +380,7 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 		return false, fmt.Errorf("unable to find container %s", checkName)
 	}
 
-	if c.State == checkState {
+	if string(c.State) == checkState {
 		return true, nil
 	}
 	return false, fmt.Errorf("container %s returned %s", checkName, c.State)
@@ -408,7 +407,7 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 		return extractPath, archiveFullPath, nil
 	}
 
-	// Download if archive not already exists.
+	// Download if archive does not already exist.
 	if aErr != nil {
 		output.UserOut.Printf("Downloading %s", sourceURL)
 

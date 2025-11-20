@@ -22,8 +22,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 		Dir:     app.GetComposerRoot(true, true),
 		RawCmd:  append([]string{"composer"}, args...),
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-		// Prevent Composer from debugging when Xdebug is enabled
-		Env: []string{"XDEBUG_MODE=off"},
+		Env:     getComposerEnv(),
 	})
 	if err != nil {
 		return stdout, stderr, fmt.Errorf("composer command failed: %v", err)
@@ -42,4 +41,26 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	}
 
 	return stdout, stderr, nil
+}
+
+// getComposerEnv returns environment variables to use when running composer
+func getComposerEnv() []string {
+	env := []string{
+		// Prevent Composer from debugging when Xdebug is enabled
+		"XDEBUG_MODE=off",
+	}
+
+	// List of Composer environment variables to pass through from host
+	// https://getcomposer.org/doc/03-cli.md#environment-variables
+	composerEnvVars := []string{
+		"COMPOSER_NO_SECURITY_BLOCKING",
+	}
+
+	for _, varName := range composerEnvVars {
+		if value, exists := os.LookupEnv(varName); exists {
+			env = append(env, fmt.Sprintf(`%s=%s`, varName, value))
+		}
+	}
+
+	return env
 }

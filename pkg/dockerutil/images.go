@@ -4,19 +4,19 @@ import (
 	"fmt"
 
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/api/types/image"
+	"github.com/moby/moby/api/types/image"
+	"github.com/moby/moby/client"
 )
 
 // ImageExistsLocally determines if an image is available locally.
 func ImageExistsLocally(imageName string) (bool, error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return false, err
 	}
 
 	// If inspect succeeds, we have an image.
-	_, err = client.ImageInspect(ctx, imageName)
+	_, err = apiClient.ImageInspect(ctx, imageName)
 	if err == nil {
 		return true, nil
 	}
@@ -29,7 +29,7 @@ func FindImagesByLabels(labels map[string]string, danglingOnly bool) ([]image.Su
 	if len(labels) < 1 {
 		return nil, fmt.Errorf("the provided list of labels was empty")
 	}
-	filterList := filters.NewArgs()
+	filterList := client.Filters{}
 	for k, v := range labels {
 		label := fmt.Sprintf("%s=%s", k, v)
 		// If no value is specified, filter any value by the key.
@@ -43,29 +43,29 @@ func FindImagesByLabels(labels map[string]string, danglingOnly bool) ([]image.Su
 		filterList.Add("dangling", "true")
 	}
 
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
-	images, err := client.ImageList(ctx, image.ListOptions{
+	images, err := apiClient.ImageList(ctx, client.ImageListOptions{
 		All:     true,
 		Filters: filterList,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return images, nil
+	return images.Items, nil
 }
 
 // RemoveImage removes an image with force
 func RemoveImage(tag string) error {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return err
 	}
-	_, err = client.ImageInspect(ctx, tag)
+	_, err = apiClient.ImageInspect(ctx, tag)
 	if err == nil {
-		_, err = client.ImageRemove(ctx, tag, image.RemoveOptions{Force: true})
+		_, err = apiClient.ImageRemove(ctx, tag, client.ImageRemoveOptions{Force: true})
 
 		if err == nil {
 			util.Debug("Deleted Docker image %s", tag)

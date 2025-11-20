@@ -1,30 +1,29 @@
 package dockerutil
 
 import (
-	"errors"
 	"strings"
 
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/errdefs"
+	"github.com/moby/moby/api/types/network"
+	"github.com/moby/moby/client"
 )
 
 // NetName provides the default network name for ddev.
 const NetName = "ddev_default"
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
-func EnsureNetwork(name string, netOptions network.CreateOptions) error {
+func EnsureNetwork(name string, netOptions client.NetworkCreateOptions) error {
 	// Pre-check for network duplicates
 	RemoveNetworkDuplicates(name)
 
 	if !NetExists(name) {
-		ctx, client, err := GetDockerClient()
+		ctx, apiClient, err := GetDockerClient()
 		if err != nil {
 			return err
 		}
-		_, err = client.NetworkCreate(ctx, name, netOptions)
+		_, err = apiClient.NetworkCreate(ctx, name, netOptions)
 		if err != nil {
 			return err
 		}
@@ -37,7 +36,7 @@ func EnsureNetwork(name string, netOptions network.CreateOptions) error {
 // exits with fatal.
 func EnsureDdevNetwork() {
 	// Ensure we have the fallback global DDEV network
-	netOptions := network.CreateOptions{
+	netOptions := client.NetworkCreateOptions{
 		Driver:   "bridge",
 		Internal: false,
 		Labels:   map[string]string{"com.ddev.platform": "ddev"},
@@ -56,15 +55,15 @@ func NetworkExists(netName string) bool {
 
 // NetExists checks to see if the Docker network for DDEV exists.
 func NetExists(name string) bool {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return false
 	}
-	nets, err := client.NetworkList(ctx, network.ListOptions{})
+	nets, err := apiClient.NetworkList(ctx, client.NetworkListOptions{})
 	if err != nil {
 		return false
 	}
-	for _, n := range nets {
+	for _, n := range nets.Items {
 		if n.Name == name {
 			return true
 		}
@@ -74,18 +73,18 @@ func NetExists(name string) bool {
 
 // FindNetworksWithLabel returns all networks with the given label
 // It ignores the value of the label, is only interested that the label exists.
-func FindNetworksWithLabel(label string) ([]network.Inspect, error) {
-	ctx, client, err := GetDockerClient()
+func FindNetworksWithLabel(label string) ([]network.Summary, error) {
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
-	nets, err := client.NetworkList(ctx, network.ListOptions{})
+	nets, err := apiClient.NetworkList(ctx, client.NetworkListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	var matchingNetworks []network.Inspect
-	for _, net := range nets {
+	var matchingNetworks []network.Summary
+	for _, net := range nets.Items {
 		if net.Labels != nil {
 			if _, exists := net.Labels[label]; exists {
 				matchingNetworks = append(matchingNetworks, net)
@@ -99,21 +98,21 @@ func FindNetworksWithLabel(label string) ([]network.Inspect, error) {
 // RemoveNetwork removes the named Docker network
 // netName can also be network's ID
 func RemoveNetwork(netName string) error {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return err
 	}
-	nets, err := client.NetworkList(ctx, network.ListOptions{})
+	nets, err := apiClient.NetworkList(ctx, client.NetworkListOptions{})
 	if err != nil {
 		return err
 	}
 	// the loop below may not contain such a network
-	err = errdefs.NotFound(errors.New("not found"))
+	err = cerrdefs.ErrNotFound
 	// loop through all networks because there may be duplicates
 	// and delete only by ID - it's unique, but the name isn't
-	for _, net := range nets {
+	for _, net := range nets.Items {
 		if net.Name == netName || net.ID == netName {
-			err = client.NetworkRemove(ctx, net.ID)
+			_, err = apiClient.NetworkRemove(ctx, net.ID, client.NetworkRemoveOptions{})
 		}
 	}
 	return err
@@ -134,19 +133,19 @@ func RemoveNetworkWithWarningOnError(netName string) {
 // This means that if there is only one network with this name - no action,
 // and if there are several such networks, then we leave the first one, and delete the others
 func RemoveNetworkDuplicates(netName string) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return
 	}
-	nets, err := client.NetworkList(ctx, network.ListOptions{})
+	nets, err := apiClient.NetworkList(ctx, client.NetworkListOptions{})
 	if err != nil {
 		return
 	}
 	networkMatchFound := false
-	for _, net := range nets {
+	for _, net := range nets.Items {
 		if net.Name == netName || net.ID == netName {
 			if networkMatchFound {
-				err := client.NetworkRemove(ctx, net.ID)
+				_, err := apiClient.NetworkRemove(ctx, net.ID, client.NetworkRemoveOptions{})
 				// If it's a "no such network" there's no reason to report error
 				if err != nil && !IsErrNotFound(err) {
 					util.WarningOnce("Unable to remove network %s: %v", netName, err)

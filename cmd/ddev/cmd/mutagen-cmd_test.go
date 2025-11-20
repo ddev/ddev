@@ -59,7 +59,7 @@ func TestCmdMutagen(t *testing.T) {
 		assert.NoError(err)
 
 		require.Equal(t, nodeps.IsMacOS() || nodeps.IsWindows(), globalconfig.DdevGlobalConfig.IsMutagenEnabled())
-		require.Equal(t, (nodeps.IsMacOS() || nodeps.IsWindows()) && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
+		require.Equal(t, nodeps.IsMacOS() || nodeps.IsWindows(), app.IsMutagenEnabled())
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
@@ -67,7 +67,7 @@ func TestCmdMutagen(t *testing.T) {
 	})
 
 	require.Equal(t, nodeps.IsMacOS() || nodeps.IsWindows(), globalconfig.DdevGlobalConfig.IsMutagenEnabled())
-	require.Equal(t, (nodeps.IsMacOS() || nodeps.IsWindows()) && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
+	require.Equal(t, nodeps.IsMacOS() || nodeps.IsWindows(), app.IsMutagenEnabled())
 
 	// Turn Mutagen off globally
 	out, err := exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=none")
@@ -151,7 +151,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure it got turned on if not overridden by test
-	assert.Equal(nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
+	assert.Equal(true, app.IsMutagenEnabled())
 
 	// Turn it off again
 	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=none")

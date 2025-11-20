@@ -187,5 +187,4 @@ files_push_command:
     fi
 
     export PLATFORMSH_CLI_NO_INTERACTION=1
-    ls "${DDEV_FILES_DIR}" >/dev/null # This just refreshes stale NFS if possible
     platform mount:upload --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" ${PLATFORM_APP:+"--app=${PLATFORM_APP}"} --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files

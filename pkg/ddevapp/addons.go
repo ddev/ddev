@@ -23,9 +23,8 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	dockerContainer "github.com/docker/docker/api/types/container"
-	dockerMount "github.com/docker/docker/api/types/mount"
-	dockerStrslice "github.com/docker/docker/api/types/strslice"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/mount"
 	"github.com/otiai10/copy"
 	"go.yaml.in/yaml/v3"
 )
@@ -326,18 +325,18 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 
 	uidStr, _, _ := dockerutil.GetContainerUser()
 
-	config := &dockerContainer.Config{
+	config := &container.Config{
 		Image:      image,
-		Cmd:        dockerStrslice.StrSlice(cmd),
+		Cmd:        cmd,
 		WorkingDir: "/var/www/html/.ddev",
 		Env:        env,
 		User:       uidStr,
 	}
 
-	hostConfig := &dockerContainer.HostConfig{
-		Mounts: []dockerMount.Mount{
+	hostConfig := &container.HostConfig{
+		Mounts: []mount.Mount{
 			{
-				Type:   dockerMount.TypeBind,
+				Type:   mount.TypeBind,
 				Source: app.AppRoot,
 				Target: "/var/www/html",
 			},

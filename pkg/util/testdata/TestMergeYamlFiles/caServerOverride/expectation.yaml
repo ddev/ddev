@@ -14,8 +14,6 @@ certificatesResolvers:
       caServer: https://acme-staging-v02.api.letsencrypt.org/directory
       dnsChallenge:
         provider: cloudflare
-core:
-  defaultRuleSyntax: v2
 entryPoints:
   http-80:
     address: :80

@@ -94,13 +94,6 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("nfs-mount-enabled").Changed {
-		if v, _ := cmd.Flags().GetBool("nfs-mount-enabled"); v {
-			globalconfig.DdevGlobalConfig.SetPerformanceMode(configTypes.PerformanceModeNFS)
-			dirty = true
-		}
-	}
-
 	if cmd.Flag("mutagen-enabled").Changed {
 		if v, _ := cmd.Flags().GetBool("mutagen-enabled"); v {
 			globalconfig.DdevGlobalConfig.SetPerformanceMode(configTypes.PerformanceModeMutagen)
@@ -311,8 +304,6 @@ func init() {
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("omit-containers", configCompletionFuncWithCommas(globalconfig.GetValidOmitContainers()))
 	configGlobalCommand.Flags().StringVarP(&webEnvironmentGlobal, "web-environment", "", "", `Set the environment variables in the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	configGlobalCommand.Flags().StringVarP(&webEnvironmentGlobal, "web-environment-add", "", "", `Append environment variables to the web container: --web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
-	configGlobalCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting on all projects globally")
-	_ = configGlobalCommand.Flags().MarkDeprecated("nfs-mount-enabled", fmt.Sprintf("please use --%s instead", configTypes.FlagPerformanceModeName))
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", true, "Whether to allow instrumentation reporting with --instrumentation-opt-in=true")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("instrumentation-opt-in", configCompletionFunc([]string{"true", "false"}))
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "Bind host router ports on all interfaces, not only on the localhost network interface")

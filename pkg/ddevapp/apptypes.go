@@ -380,8 +380,8 @@ func (app *DdevApp) GetComposerCreateAllowedPaths() ([]string, error) {
 		if err != nil {
 			return []string{""}, err
 		}
-		for _, path := range paths {
-			allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(path))...)
+		for _, composerPath := range paths {
+			allowed = append(allowed, nodeps.PathWithSlashesToArray(app.GetRelativeDirectory(composerPath))...)
 		}
 	}
 	allowed = util.SliceToUniqueSlice(&allowed)

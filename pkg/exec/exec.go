@@ -95,7 +95,7 @@ func RunInteractiveCommand(command string, args []string) error {
 
 // RunInteractiveCommandWithOutput writes to the host and
 // also to the passed io.Writer
-func RunInteractiveCommandWithOutput(command string, args []string, output io.Writer) error {
+func RunInteractiveCommandWithOutput(command string, args []string, out io.Writer) error {
 	cmd := HostCommand(command, args...)
 	cmd.Stdin = os.Stdin
 
@@ -112,7 +112,7 @@ func RunInteractiveCommandWithOutput(command string, args []string, output io.Wr
 	}
 
 	go func() {
-		_ = CleanAndCopy(output, pr)
+		_ = CleanAndCopy(out, pr)
 		_ = pr.Close()
 	}()
 

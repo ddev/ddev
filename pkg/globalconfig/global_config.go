@@ -396,10 +396,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Possible values are:
 #   - "none":    disables performance optimization.
 #   - "mutagen": enables Mutagen.
-#   - "nfs":     enables NFS.
 #
 # See https://docs.ddev.com/en/stable/users/install/performance/#mutagen
-# and https://docs.ddev.com/en/stable/users/install/performance/#nfs.
 
 # You can set the global project_tld. This way any project will use this tld. If not
 # set the local project_tld is used, or the default of DDEV.
@@ -440,8 +438,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Router port used for Mailpit HTTPS, can be overridden in project config
 
 # xhprof_mode: [prepend|xhgui]
-# Set to "xhgui" to enable XHGui features
-# "xhgui" will become default in a future major release
+# Default is "xhgui"
 
 # instrumentation_user: <your_username> # can be used to give DDEV specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.

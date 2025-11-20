@@ -5,7 +5,6 @@ http:
         - http-80
       rule: HostRegexp(`^d11\.ddev\.site$`)
       service: "d11-web-80"
-      ruleSyntax: v3
       tls: false
 
   services:

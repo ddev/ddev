@@ -12,7 +12,6 @@ const (
 	PerformanceModeGlobal  PerformanceMode = "global"
 	PerformanceModeNone    PerformanceMode = "none"
 	PerformanceModeMutagen PerformanceMode = "mutagen"
-	PerformanceModeNFS     PerformanceMode = "nfs"
 )
 
 // ValidPerformanceModeOptions returns a slice of valid performance mode
@@ -23,14 +22,12 @@ func ValidPerformanceModeOptions(configType ConfigType) []PerformanceMode {
 		return []PerformanceMode{
 			PerformanceModeNone,
 			PerformanceModeMutagen,
-			PerformanceModeNFS,
 		}
 	case ConfigTypeProject:
 		return []PerformanceMode{
 			PerformanceModeGlobal,
 			PerformanceModeNone,
 			PerformanceModeMutagen,
-			PerformanceModeNFS,
 		}
 	default:
 		panic(fmt.Errorf("invalid ConfigType: %v", configType))

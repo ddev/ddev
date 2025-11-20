@@ -21,12 +21,12 @@ You can hand-edit the YAML files DDEV creates for you after running [`ddev confi
 === "config.yaml"
 
     ```yaml
-    php_version: "8.3"
+    php_version: "8.4"
     ```
 === "`ddev config`"
 
     ```shell
-    ddev config --php-version 8.3
+    ddev config --php-version 8.4
     ```
 
     Run `ddev help config` to see all the available config arguments.
@@ -35,7 +35,7 @@ You can hand-edit the YAML files DDEV creates for you after running [`ddev confi
 
 You can override the per-project `config.yaml` with files named `config.*.yaml`, and files like this are often created by [DDEV add-ons](../extend/additional-services.md). For example, `config.elasticsearch.yaml` in [Elasticsearch add-on](https://github.com/ddev/ddev-elasticsearch) adds additional configuration related to Elasticsearch.
 
-Many teams use `config.local.yaml` for configuration that is specific to one environment, and not checked into the team’s default `config.yaml`. You might [enable Mutagen](../install/performance.md#mutagen) or [enable NFS](../install/performance.md#nfs) for the project, for example, only on your machine. Or maybe use a different database type. The file `config.local.yaml` is gitignored by default.
+Many teams use `config.local.yaml` for configuration that is specific to one environment, and not checked into the team’s default `config.yaml`. For example, you might enable `performance_mode: mutagen` only on your machine. Or you could use a different database type. The file `config.local.yaml` is gitignored by default.
 
 For examples, see the [Extending and Customizing Environments](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files) page.
 
@@ -111,8 +111,8 @@ When `true`, `corepack enable` will be executed, making latest `yarn` and `pnpm`
 
 The type and version of the database engine the project should use.
 
-| Type | Default       | Usage
-| -- |---------------| --
+| Type | Default | Usage
+| -- | -- | --
 | :octicons-file-directory-16: project | MariaDB 10.11 | Can be MariaDB 5.5–10.8, 10.11, 11.4, 11.8 and MySQL 5.5–8.0, 8.4, or PostgreSQL 9–18.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats. For very old database types see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/).
 
 ## `dbimage_extra_packages`
@@ -396,7 +396,7 @@ Note that specifying any non-default Node.js version will cause DDEV to download
 | -- | -- | --
 | :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `16`, `18.2`, `18.19.2`, etc.
 
-!!!tip "How to install the Node.js version from a file"
+!!!tip "How to define the Node.js version using a file"
     Your project team may specify the Node.js version in a more general way than in the `.ddev/config.yaml`. For example, you may use a `.nvmrc` file, the `package.json`, or a similar technique. In that case, DDEV can use the external configuration provided by that file.
 
     There is an `auto` label (see [full documentation](https://www.npmjs.com/package/n#specifying-nodejs-versions)):
@@ -422,9 +422,6 @@ Note that specifying any non-default Node.js version will cause DDEV to download
     RUN ln -sf /var/www/html/frontend/.nvmrc /var/www/.nvmrc
     ```
 
-!!!note "Switching from `nvm` to `nodejs_version`"
-    If switching from using `nvm` to using `nodejs_version`, you may find that the container continues to use the previously specified version. If this happens, use `ddev nvm alias default system` or `ddev ssh` into the container (`ddev ssh`) and run `rm -rf /mnt/ddev-global-cache/nvm_dir/${DDEV_PROJECT}-web`, then `ddev restart`.
-
 ## `omit_containers`
 
 Containers that should not be loaded automatically for one or more projects.
@@ -443,8 +440,8 @@ Example: `omit_containers: [db, ddev-ssh-agent]` starts the project without a `d
 Determines whether `ddev config` updates the `name` field in the `.ddev/config.yaml` by default.
 
 | Type | Default | Usage
-| -- |---------| --
-| :octicons-globe-16: global | `false`  | Can be `true` or `false`.
+| -- | -- | --
+| :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
 When the `name` field is omitted in `.ddev/config.yaml`, DDEV gets the project name from the directory the project is in. If this option is set to `true`, `ddev config` will not update the `name` field unless you use `ddev config --project-name=<name>` to explicitly set the project name. People using `git worktree` often prefer to omit the project name so they can work on multiple projects at the same time in different worktrees.
 
@@ -462,15 +459,13 @@ See [Extending `config.yaml` with Custom `config.*.yaml` Files](../extend/custom
 
 ## `performance_mode`
 
-Defines the performance optimization mode to be used. Currently [Mutagen asynchronous caching](../install/performance.md#mutagen) and [NFS](../install/performance.md#nfs) are supported. Mutagen is enabled by default on Mac and Windows.
+Defines the performance optimization mode to be used. Currently [Mutagen asynchronous caching](../install/performance.md#mutagen) is supported. Mutagen is enabled by default on Mac and Traditional Windows.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `global`, `none`, `mutagen`, or (deprecated) `nfs`.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `global`, `none`, `mutagen`.
 
 This is typically a global setting. The project-specific value will override global config.
-
-The [NFS section in the "performance" doc](../install/performance.md#nfs) explains the deprecated `nfs` option.
 
 ## `php_version`
 
@@ -478,7 +473,7 @@ The PHP version the project should use.
 
 | Type | Default | Usage
 | -- |---------| --
-| :octicons-file-directory-16: project | `8.3`   | Can be `5.6` through `8.4`. New versions are added when released upstream.
+| :octicons-file-directory-16: project | `8.4` | Can be `5.6` through `8.5`. New versions are added when released upstream.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
 
@@ -764,16 +759,16 @@ Examples:
 Port for project’s XHGui HTTP URL (for router). Only changed when there are port conflicts on the default port 8143.
 
 | Type | Default | Usage
-| -- |---------| --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8143`  | Can be changed to avoid a port conflict.
+| -- | -- | --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8143` | Can be changed to avoid a port conflict.
 
 ## `xhgui_https_port`
 
 Port for project’s XHGui HTTPS URL (for router). Only changed when there are port conflicts on the default port 8142.
 
 | Type | Default | Usage
-| -- |---------| --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8142`  | Can be changed to avoid a port conflict.
+| -- | -- | --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `8142` | Can be changed to avoid a port conflict.
 
 ## `xhprof_mode`
 
@@ -781,4 +776,4 @@ Whether XHProf should use `prepend` or `xhgui` mode.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `prepend` | Can be `global`, `prepend` or `xhgui`.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `xhgui` | Can be `global`, `prepend` or `xhgui`.

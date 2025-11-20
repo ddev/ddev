@@ -13,7 +13,7 @@ if [ ${OS} = "Darwin" ]; then
   if ! command -v brew >/dev/null; then
     echo "On macOS, homebrew is required to get gnu-getopt" && exit 1
   fi
-  if ! brew info gnu-getopt >/dev/null; then
+  if ! brew list gnu-getopt 2>&1 >/dev/null; then
     echo "On macOS, brew install gnu-getopt"
     exit 1
   fi

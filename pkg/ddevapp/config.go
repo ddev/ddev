@@ -42,9 +42,6 @@ func init() {
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		nodeps.WebserverDefault = testWebServerType
 	}
-	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount == "true" {
-		nodeps.PerformanceModeDefault = types.PerformanceModeNFS
-	}
 	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
 		nodeps.PerformanceModeDefault = types.PerformanceModeMutagen
 	}
@@ -867,9 +864,8 @@ func (app *DdevApp) FixObsolete() {
 	}
 
 	// Remove old global commands
-	for _, command := range []string{"host/yarn", "host/xhgui"} {
+	for _, command := range []string{"host/yarn", "host/xhgui", "web/nvm", "web/autocomplete/nvm"} {
 		cmdPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/", command)
-		// TODO: Consider checking for #ddev-generated
 		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
 		if err == nil && signatureFound {
 			err = os.Remove(cmdPath)
@@ -947,7 +943,6 @@ type composeYAMLVars struct {
 	DBAPort                   string
 	DBPort                    string
 	DdevGenerated             string
-	NFSServerAddr             string
 	DisableSettingsManagement bool
 	MountType                 string
 	WebMount                  string
@@ -965,9 +960,6 @@ type composeYAMLVars struct {
 	PostgresVolumeName        string
 	MutagenEnabled            bool
 	MutagenVolumeName         string
-	NFSMountEnabled           bool
-	NFSSource                 string
-	NFSMountVolumeName        string
 	DockerIP                  string
 	IsWindowsFS               bool
 	NoProjectMount            bool
@@ -1009,11 +1001,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
 	util.Debug("%s", hostDockerInternal.Message)
 
-	nfsServerAddr, err := dockerutil.GetNFSServerAddr()
-	if err != nil {
-		util.Warning("Could not determine NFS server IP address: %v", err)
-	}
-
 	// The fallthrough default for hostDockerInternalIdentifier is the
 	// hostDockerInternalHostname == host.docker.internal
 
@@ -1054,7 +1041,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBMountDir:                "/var/lib/mysql",
 		DBPort:                    GetInternalPort(app, "db"),
 		DdevGenerated:             nodeps.DdevFileSignature,
-		NFSServerAddr:             nfsServerAddr,
 		DisableSettingsManagement: app.DisableSettingsManagement,
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
 		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
@@ -1062,8 +1048,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		BindAllInterfaces:         app.BindAllInterfaces,
 		MutagenEnabled:            app.IsMutagenEnabled(),
 
-		NFSMountEnabled:    app.IsNFSMountEnabled(),
-		NFSSource:          "",
 		IsWindowsFS:        nodeps.IsWindows(),
 		NoProjectMount:     app.NoProjectMount,
 		MountType:          "bind",
@@ -1081,7 +1065,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebEnvironment:     webEnvironment,
 		MariaDBVolumeName:  app.GetMariaDBVolumeName(),
 		PostgresVolumeName: app.GetPostgresVolumeName(),
-		NFSMountVolumeName: app.GetNFSMountVolumeName(),
 		NoBindMounts:       globalconfig.DdevGlobalConfig.NoBindMounts,
 		Docroot:            app.GetDocroot(),
 		UploadDirsMap:      app.getUploadDirsHostContainerMapping(),
@@ -1130,20 +1113,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) {
 		templateVars.BitnamiVolumeDir = "/bitnami/mysql"
 	}
-	if app.IsNFSMountEnabled() {
-		templateVars.MountType = "volume"
-		templateVars.WebMount = "nfsmount"
-		templateVars.NFSSource = app.AppRoot
-		// Workaround for Catalina sharing nfs as /System/Volumes/Data
-		if nodeps.IsMacOS() && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
-			templateVars.NFSSource = filepath.Join("/System/Volumes/Data", app.AppRoot)
-		}
-		if nodeps.IsWindows() {
-			// WinNFSD can only handle a mountpoint like /C/Users/rfay/workspace/d8git
-			// and completely chokes in C:\Users\rfay...
-			templateVars.NFSSource = dockerutil.MassageWindowsNFSMount(app.AppRoot)
-		}
-	}
 
 	if app.IsMutagenEnabled() {
 		templateVars.MutagenVolumeName = GetMutagenVolumeName(app)
@@ -1177,7 +1146,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
-	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + fmt.Sprintf(`
 ENV N_PREFIX=/home/$username/.n
@@ -1186,12 +1154,6 @@ ENV N_INSTALL_VERSION="%s"
 	}
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
-	}
-	// TODO: When we have this from upstream Debian 13 Trixie, we must remove this condition
-	if app.Type == nodeps.AppTypeDrupal11 {
-		extraWebContent = extraWebContent + `
-### DDEV-injected SQLite 3.45.1 is required for Drupal 11 tests, change the project type if you don't need this
-RUN apt-get install -y /usr/local/sqlite3-drupal11/*.deb`
 	}
 	// Add supervisord config for WebExtraDaemons
 	var supervisorGroup []string

@@ -15,6 +15,7 @@
 ${StrStr}
 ${StrRep}
 ${StrTrimNewLines}
+${StrCase}
 ; Remove the Trim macro since we're using our own TrimWhitespace function
 
 !ifndef TARGET_ARCH # passed on command-line
@@ -828,6 +829,11 @@ SectionGroup /e "${PRODUCT_NAME}"
     Section "${PRODUCT_NAME}" SecDDEV
         SectionIn 1 2 3 RO
 
+        ; Ensure 64-bit file system redirection is disabled
+        ; This is critical for accessing wsl.exe in System32
+        ${DisableX64FSRedirection}
+        SetRegView 64
+
         SetOutPath "$INSTDIR"
         SetOverwrite on
 
@@ -874,6 +880,15 @@ SectionGroup /e "${PRODUCT_NAME}"
         
         Push "PATH addition completed with result: $R1"
         Call LogPrint
+
+        ; Verify wsl.exe is accessible (critical for WSL operations)
+        ${If} ${FileExists} "$WINDIR\System32\wsl.exe"
+            Push "WSL executable found in System32"
+            Call LogPrint
+        ${Else}
+            Push "WARNING: wsl.exe not found in System32 - file system redirection may be enabled"
+            Call LogPrint
+        ${EndIf}
 
         ${If} $INSTALL_OPTION == "traditional"
             Call InstallTraditionalWindows
@@ -1075,83 +1090,65 @@ Function GetUbuntuDistros
 FunctionEnd
 
 Function InstallWSL2CommonSetup
-    ; Check for WSL2
-    Push "Checking WSL2 version..."
+    ; Note: WSL distros have already been enumerated from the registry and selected by the user.
+    ; The distro type (Ubuntu) has been verified from the registry Flavor field.
+    ; Docker connectivity has already been validated with 'docker ps'.
+
+    ; List WSL distros and versions (helpful for troubleshooting)
+    Push "Listing WSL distributions and versions..."
     Call LogPrint
     nsExec::ExecToStack 'wsl.exe -l -v'
-    Pop $1
-    Pop $0
-    Push "WSL version check output: $0"
-    Call LogPrint
-    Push "WSL version check exit code: $1"
-    Call LogPrint
-    ${If} $1 != 0
-        Push "ERROR: WSL2 not detected - exit code: $1, output: $0"
+    Pop $R0
+    Pop $R1
+    ${If} $R0 == 0
+        Push "WSL distros: $R1"
         Call LogPrint
-        Push "WSL2 does not seem to be installed. Please install WSL2 and Ubuntu before running this installer."
-        Call ShowErrorAndAbort
+    ${Else}
+        Push "WARNING: Could not list WSL distros (exit code: $R0)"
+        Call LogPrint
     ${EndIf}
 
-    ; Check for Ubuntu in selected distro
-    Push "Checking selected distro $SELECTED_DISTRO..."
+    ; Verify selected distro is accessible
+    Push "Verifying selected distro $SELECTED_DISTRO is accessible..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "cat /etc/os-release | grep -i ^NAME="'
-    Pop $1
-    Pop $0
-    ${If} $1 != 0
-        Push "ERROR: Cannot access distro $SELECTED_DISTRO - exit code: $1, output: $0"
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO echo "WSL connectivity test passed"'
+    Pop $R0
+    Pop $R1
+    ${If} $R0 != 0
+        Push "ERROR: Cannot access distro $SELECTED_DISTRO - exit code: $R0"
         Call LogPrint
-        Push "Could not access the selected distro. Please ensure it's working properly."
+        Push "Could not access the selected WSL distro. Please ensure it's working properly."
         Call ShowErrorAndAbort
     ${EndIf}
-
-    ; Check for WSL2 kernel
-    Push "Checking WSL2 kernel..."
-    Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO uname -v'
-    Pop $1
-    Pop $0
-    Push "WSL kernel version: $0"
-    Call LogPrint
-    ${If} $1 != 0
-        Push "ERROR: WSL version check failed - exit code: $1, output: $0"
-        Call LogPrint
-        Push "Could not check WSL version. Please ensure WSL is working."
-        Call ShowErrorAndAbort
-    ${EndIf}
-    ${If} $0 == ""
-        Push "ERROR: Empty WSL version output"
-        Call LogPrint
-        Push "Could not detect WSL version. Please ensure WSL is working."
-        Call ShowErrorAndAbort
-    ${EndIf}
-    ${If} $0 == "WSL"
-        Push "ERROR: WSL1 detected instead of WSL2 - version output: $0"
-        Call LogPrint
-        Push "The selected distro ($SELECTED_DISTRO) is not WSL2. Please use a WSL2 distro."
-        Call ShowErrorAndAbort
-    ${EndIf}
-    Push "WSL2 detected successfully."
+    Push "Selected distro $SELECTED_DISTRO is accessible"
     Call LogPrint
 
-    ; Convert Windows TEMP path to WSL format using wslpath (only needed for WSL2 operations)
-    Push "Converting Windows TEMP path to WSL format..."
+    ; Convert Windows temp path to WSL format manually
+    ; Windows: C:\Users\username\AppData\Local\Temp -> WSL: /mnt/c/Users/username/AppData/Local/Temp
+    Push "Converting Windows temp path to WSL format..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO wslpath -u "$WINDOWS_TEMP"'
-    Pop $0
-    Pop $WSL_WINDOWS_TEMP
+    Push "Windows TEMP: $TEMP"
+    Call LogPrint
 
-    ${If} $0 != 0
-        Push "ERROR: Failed to convert Windows TEMP path to WSL format - exit code: $0, output: $WSL_WINDOWS_TEMP"
-        Call LogPrint
-        Push "Failed to convert Windows TEMP path to WSL format. Error: $WSL_WINDOWS_TEMP"
-        Call ShowErrorAndAbort
-    ${EndIf}
-    
-    ; Trim newline from WSL path
-    ${StrTrimNewLines} $WSL_WINDOWS_TEMP $WSL_WINDOWS_TEMP
+    ; Extract drive letter and path
+    StrCpy $0 "$TEMP" 1  ; Get drive letter (e.g., "C")
+    StrLen $1 "$TEMP"
+    IntOp $1 $1 - 2  ; Length minus "C:"
+    StrCpy $2 "$TEMP" $1 2  ; Get path after "C:"
 
-    ; Check for root user in selected distro
+    ; Convert drive letter to lowercase
+    ${StrCase} $0 $0 "L"
+
+    ; Replace backslashes with forward slashes
+    ${StrRep} $3 $2 "\" "/"
+
+    ; Construct WSL path: /mnt/{drive}/{path}
+    StrCpy $WSL_WINDOWS_TEMP "/mnt/$0$3"
+
+    Push "WSL temp path: $WSL_WINDOWS_TEMP"
+    Call LogPrint
+
+    ; Check that default user is not root (required for all installation types)
     Push "Checking for root user in selected distro..."
     Call LogPrint
     Call CheckRootUser
@@ -1173,10 +1170,10 @@ Function InstallWSL2CommonSetup
         ${EndIf}
     ${EndIf}
 
-    ; Remove old Docker versions first
+    ; Remove old Docker versions first (per Docker CE installation instructions)
     Push "WSL($SELECTED_DISTRO): Removing old Docker packages if present..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1 || true"'
     Pop $1
     Pop $0
     ; Note: This command is allowed to fail if packages aren't installed
@@ -1186,14 +1183,13 @@ Function InstallWSL2CommonSetup
     Call LogPrint
     Push "Please be patient - updating package database..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "apt-get update >/dev/null 2>&1 || true"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root apt-get update'
     Pop $1
     Pop $0
     ${If} $1 != 0
-        Push "ERROR: apt-get update failed - exit code: $1, output: $0"
+        Push "WARNING: apt-get update returned non-zero exit code: $1, output: $0"
         Call LogPrint
-        Push "Failed to apt-get update. Error: $0"
-        Call ShowErrorAndAbort
+        ; Continue anyway - update warnings are often non-fatal
     ${EndIf}
 
     ; Install linux packages
@@ -1295,17 +1291,12 @@ FunctionEnd
 Function InstallWSL2Common
     Push "Starting WSL2 Docker installation for $SELECTED_DISTRO"
     Call LogPrint
-    
-    ; Clean up any previous installation status
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "rm -f /tmp/ddev_installation_status.txt"'
-    Pop $1
-    Pop $2
-    
-    ; Mark installation as started
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"STARTED: WSL2 installation for $SELECTED_DISTRO\" >> /tmp/ddev_installation_status.txt"'
-    Pop $1
-    Pop $2
-    
+
+    ; Skip pre-installation status tracking commands that use bash -c
+    ; These were failing on some systems and are not critical for installation
+    Push "Skipping pre-installation status file setup (not critical for install)"
+    Call LogPrint
+
     Call InstallWSL2CommonSetup
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"

@@ -10,7 +10,7 @@ import (
 	ddevexec "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/docker/docker/api/types/network"
+	"github.com/moby/moby/client"
 )
 
 // HostDockerInternal contains host.docker.internal configuration
@@ -165,17 +165,17 @@ func getWSL2WindowsHostIP() (string, error) {
 
 // getDockerLinuxBridgeIP gets the IP address of the Docker bridge on Linux
 func getDockerLinuxBridgeIP() (string, error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return "", err
 	}
-	n, err := client.NetworkInspect(ctx, "bridge", network.InspectOptions{})
+	n, err := apiClient.NetworkInspect(ctx, "bridge", client.NetworkInspectOptions{})
 	if err != nil {
 		return "", err
 	}
-	if len(n.IPAM.Config) > 0 {
-		if n.IPAM.Config[0].Gateway != "" {
-			bridgeIP := n.IPAM.Config[0].Gateway
+	if len(n.Network.IPAM.Config) > 0 {
+		if n.Network.IPAM.Config[0].Gateway.IsValid() {
+			bridgeIP := n.Network.IPAM.Config[0].Gateway.String()
 			return bridgeIP, nil
 		}
 	}

@@ -29,7 +29,7 @@ These are normally configured in the repository environment variables.
 * `AUR_PACKAGE_NAME`: The base name of the AUR package. Normally `ddev` for production, but `ddev-test` for testing repository.
 * `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
 * `DDEV_IGNORE_EXPIRING_KEYS`: If the value is `"false"` then daily tests will fail if signing keys are expiring soon, default is `"false"` on `ddev/ddev`
-* `DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION`: Number of days before expiration to warn about expiring signing keys, default is `60` on `ddev/ddev`.
+* `DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION`: Number of days before expiration to warn about expiring signing keys, default is `90` on `ddev/ddev`.
 * `DDEV_WINDOWS_SIGN`: If the value is `"true"` then `make` will attempt to sign the Windows executables, which requires building on our self-hosted Windows runner.
 * `DISABLE_NOTARIZATION`: If the value is `"true"` then notarization of macOS apps will be skipped, otherwise notarization is attempted.
 * `DOCKERHUB_USERNAME`: Username for pushing to `hub.docker.com` or updating image descriptions. Usually `ddevmachinepush`.

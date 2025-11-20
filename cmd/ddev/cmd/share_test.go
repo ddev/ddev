@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -31,6 +32,9 @@ func TestShareCmd(t *testing.T) {
 		t.Skip("Skipping on GitHub actions because no auth can be provided")
 	}
 	assert := asrt.New(t)
+
+	// Disable DDEV_DEBUG to prevent non-JSON output in ngrok logs
+	t.Setenv("DDEV_DEBUG", "false")
 
 	site := TestSites[0]
 	defer site.Chdir()()
@@ -65,7 +69,10 @@ func TestShareCmd(t *testing.T) {
 			assert.NoError(err)
 		}
 	})
-	logData := make(map[string]string)
+
+	// Use map[string]any to tolerate non-string log fields (e.g., enabled:false)
+	var logData map[string]any
+	var logLines []string
 
 	scanDone := make(chan bool, 1)
 	defer close(scanDone)
@@ -74,39 +81,72 @@ func TestShareCmd(t *testing.T) {
 	go func() {
 		for scanner.Scan() {
 			logLine := scanner.Text()
+			logLines = append(logLines, logLine)
 
-			err := json.Unmarshal([]byte(logLine), &logData)
-			if err != nil {
-				switch err.(type) {
-				case *json.SyntaxError:
-					continue
+			// Strip ANSI escape codes before attempting JSON parsing
+			cleanLine := stripAnsiCodes(logLine)
+
+			var m map[string]any
+			if err := json.Unmarshal([]byte(cleanLine), &m); err != nil {
+				// Only log unmarshal errors for lines that look like JSON (start with '{')
+				// This filters out non-JSON output like "Running /opt/homebrew/bin/ngrok..."
+				if strings.HasPrefix(strings.TrimSpace(cleanLine), "{") {
+					t.Logf("Ignoring ngrok log line (unmarshal error):\n  Line: %s\n  Error: %v", logLine, err)
+				}
+				continue
+			}
+
+			// Assign to the shared logData only after successful unmarshal
+			logData = m
+
+			// If ngrok emitted an error, try to surface it
+			if rawErr, ok := m["err"]; ok && rawErr != nil {
+				switch e := rawErr.(type) {
+				case string:
+					if e != "" && e != "<nil>" {
+						if strings.Contains(e, "Your account is limited to 1 simultaneous") {
+							t.Errorf("Failed because ngrok account in use elsewhere: %s", e)
+							break
+						}
+						t.Logf("ngrok error: %s", e)
+					}
 				default:
-					t.Errorf("failed unmarshaling %v: %v", logLine, err)
-					break
+					if b, _ := json.Marshal(e); len(b) > 0 {
+						t.Logf("ngrok error payload: %s", string(b))
+					} else {
+						t.Logf("ngrok error payload (non-JSON-marshalable): %#v", e)
+					}
 				}
 			}
-			if logErr, ok := logData["err"]; ok && logErr != "<nil>" {
-				if strings.Contains(logErr, "Your account is limited to 1 simultaneous") {
-					t.Errorf("Failed because ngrok account in use elsewhere: %s", logErr)
-					break
-				}
-			}
-			if _, ok := logData["url"]; ok {
+
+			// Stop reading once ngrok announces a URL
+			if _, ok := m["url"]; ok {
 				break
 			}
 		}
 		scanDone <- true
 	}()
+
 	err = cmd.Start()
 	require.NoError(t, err)
 	select {
 	case <-scanDone:
 		fmt.Printf("Scanning all done at %v\n", time.Now())
 	case <-time.After(20 * time.Second):
+		// On timeout, print recent ngrok logs to help debugging
+		t.Logf("Timed out waiting for ngrok; last %d log lines follow:", len(logLines))
+		for i := max(0, len(logLines)-20); i < len(logLines); i++ {
+			t.Logf("ngrok[%d]: %s", i, logLines[i])
+		}
 		t.Fatal("Timed out waiting for reads\n", time.Now())
 	}
 	// If URL is provided, try to hit it and look for expected response
-	if url, ok := logData["url"]; ok {
+	if rawURL, ok := logData["url"]; ok {
+		url, ok := rawURL.(string)
+		if !ok || url == "" {
+			t.Errorf("url present but not a string: %#v (full logData=%#v)", rawURL, logData)
+			return
+		}
 		resp, err := http.Get(url + site.Safe200URIWithExpectation.URI)
 		if err != nil {
 			t.Logf("http.Get on url=%s failed, err=%v", url+site.Safe200URIWithExpectation.URI, err)
@@ -120,7 +160,12 @@ func TestShareCmd(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(string(body), site.Safe200URIWithExpectation.Expect)
 	} else {
-		t.Errorf("no URL found: %v", logData)
+		// No URL found; dump recent logs for clarity
+		t.Logf("No URL found in ngrok output; last %d log lines follow:", len(logLines))
+		for i := max(0, len(logLines)-20); i < len(logLines); i++ {
+			t.Logf("ngrok[%d]: %s", i, logLines[i])
+		}
+		t.Errorf("no URL found; last parsed logData=%#v", logData)
 	}
 }
 
@@ -143,4 +188,18 @@ func pKill(cmd *exec.Cmd) error {
 		err = cmd.Process.Kill()
 	}
 	return err
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+// stripAnsiCodes removes ANSI escape sequences from a string
+func stripAnsiCodes(s string) string {
+	// Match ANSI escape sequences like \x1b[32m or \x1b[0m
+	ansiRegex := regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	return ansiRegex.ReplaceAllString(s, "")
 }

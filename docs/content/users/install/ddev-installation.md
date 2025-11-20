@@ -78,7 +78,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         If you previously used DDEV’s [install script](#install-script), you can remove that version:
 
         ```
-        sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh
+        sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert
         ```
 
         If you previously [installed DDEV with Homebrew](#homebrew), you can run `brew unlink ddev` to get rid of the Homebrew version.

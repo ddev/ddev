@@ -15,7 +15,7 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
-# php_version: "8.3"  # PHP version to use, "5.6" through "8.5"
+# php_version: "8.4"  # PHP version to use, "5.6" through "8.5"
 
 # You can explicitly specify the webimage but this
 # is not recommended, as the images are often closely tied to DDEV's' behavior,
@@ -51,8 +51,7 @@ const ConfigInstructions = `
 # bind_all_ports is used (normally with router disabled)
 
 # xhprof_mode: [prepend|xhgui|global]
-# Set to "xhgui" to enable XHGui features
-# "xhgui" will become default in a future major release
+# Default is "xhgui"
 
 # webserver_type: nginx-fpm, apache-fpm, generic
 
@@ -80,12 +79,10 @@ const ConfigInstructions = `
 # Alternatively, an explicit Composer version may be specified, for example "2.2.18".
 # To reinstall Composer after the image was built, run "ddev debug rebuild".
 
-# nodejs_version: "22"
+# nodejs_version: "24"
 # change from the default system Node.js version to any other version.
 # See https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version for more information
-# and https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation,
-# Note that using of 'ddev nvm' is discouraged because "nodejs_version" is much easier to use,
-# can specify any version, and is more robust than using 'nvm'.
+# and https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation.
 
 # corepack_enable: false
 # Change to 'true' to 'corepack enable' and gain access to latest versions of yarn/pnpm
@@ -145,9 +142,7 @@ const ConfigInstructions = `
 #   - "global":  uses the value from the global config.
 #   - "none":    disables performance optimization for this project.
 #   - "mutagen": enables Mutagen for this project.
-#   - "nfs":     enables NFS for this project.
 #
-# See https://docs.ddev.com/en/stable/users/install/performance/#nfs
 # See https://docs.ddev.com/en/stable/users/install/performance/#mutagen
 
 # fail_on_hook_fail: False

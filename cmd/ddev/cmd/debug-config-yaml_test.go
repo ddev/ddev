@@ -5,14 +5,11 @@ import (
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestDebugConfigYamlCmd tests that ddev utility configyaml works
 func TestDebugConfigYamlCmd(t *testing.T) {
-	assert := assert.New(t)
-
 	// Create a temporary directory and switch to it.
 	tmpdir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(tmpdir)
@@ -36,44 +33,44 @@ func TestDebugConfigYamlCmd(t *testing.T) {
 	// Test basic configyaml output (field-by-field mode)
 	t.Run("basic configyaml output", func(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml"})
-		assert.NoError(err)
+		require.NoError(t, err)
 		// Note: "These config files were loaded" now goes to stderr, not stdout
-		assert.Contains(out, "name: config-yaml-test")
-		assert.Contains(out, "type: php")
-		assert.Contains(out, "docroot: .")
+		require.Contains(t, out, "name: config-yaml-test")
+		require.Contains(t, out, "type: php")
+		require.Contains(t, out, "docroot: .")
 	})
 
 	// Test --full-yaml mode
 	t.Run("full-yaml mode", func(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--full-yaml"})
-		assert.NoError(err)
+		require.NoError(t, err)
 		// Note: "These config files were loaded" now goes to stderr, not stdout
-		assert.Contains(out, "# Complete processed project configuration:")
-		assert.Contains(out, "name: config-yaml-test")
-		assert.Contains(out, "type: php")
-		assert.Contains(out, "docroot: .")
+		require.Contains(t, out, "# Complete processed project configuration:")
+		require.Contains(t, out, "name: config-yaml-test")
+		require.Contains(t, out, "type: php")
+		require.Contains(t, out, "docroot: .")
 		// Should be valid YAML format
-		assert.Contains(out, "webserver_type:")
-		assert.Contains(out, "php_version:")
+		require.Contains(t, out, "webserver_type:")
+		require.Contains(t, out, "php_version:")
 	})
 
 	// Test --omit-keys functionality in regular mode
 	t.Run("omit-keys in regular mode", func(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--omit-keys=name,type"})
-		assert.NoError(err)
-		assert.NotContains(out, "name: config-yaml-test")
-		assert.NotContains(out, "type: php")
-		assert.Contains(out, "docroot: .") // This should still be present
+		require.NoError(t, err)
+		require.NotContains(t, out, "name: config-yaml-test")
+		require.NotContains(t, out, "type: php")
+		require.Contains(t, out, "docroot: .") // This should still be present
 	})
 
 	// Test --omit-keys functionality in full-yaml mode
 	t.Run("omit-keys in full-yaml mode", func(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--full-yaml", "--omit-keys=name,type"})
-		assert.NoError(err)
-		assert.Contains(out, "# Complete processed project configuration:")
-		assert.NotContains(out, "name: config-yaml-test")
-		assert.NotContains(out, "type: php")
-		assert.Contains(out, "docroot: .") // This should still be present
+		require.NoError(t, err)
+		require.Contains(t, out, "# Complete processed project configuration:")
+		require.NotContains(t, out, "name: config-yaml-test")
+		require.NotContains(t, out, "type: php")
+		require.Contains(t, out, "docroot: .") // This should still be present
 	})
 
 	// Test omitting environment variables (the main security use case)
@@ -87,30 +84,30 @@ func TestDebugConfigYamlCmd(t *testing.T) {
 
 		// Test that environment variables appear by default
 		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--full-yaml"})
-		assert.NoError(err)
-		assert.Contains(out, "SECRET_KEY=supersecret")
-		assert.Contains(out, "API_TOKEN=sensitive")
+		require.NoError(t, err)
+		require.Contains(t, out, "SECRET_KEY=supersecret")
+		require.Contains(t, out, "API_TOKEN=sensitive")
 
 		// Test that they're hidden with --omit-keys
 		out, err = exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--full-yaml", "--omit-keys=web_environment"})
-		assert.NoError(err)
-		assert.NotContains(out, "SECRET_KEY=supersecret")
-		assert.NotContains(out, "API_TOKEN=sensitive")
-		assert.Contains(out, "name: config-yaml-test") // Other fields should still be present
+		require.NoError(t, err)
+		require.NotContains(t, out, "SECRET_KEY=supersecret")
+		require.NotContains(t, out, "API_TOKEN=sensitive")
+		require.Contains(t, out, "name: config-yaml-test") // Other fields should still be present
 	})
 
 	// Test with spaces in omit-keys (should handle trimming)
 	t.Run("omit-keys with spaces", func(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--omit-keys= name , type "})
-		assert.NoError(err)
-		assert.NotContains(out, "name: config-yaml-test")
-		assert.NotContains(out, "type: php")
-		assert.Contains(out, "docroot: .") // This should still be present
+		require.NoError(t, err)
+		require.NotContains(t, out, "name: config-yaml-test")
+		require.NotContains(t, out, "type: php")
+		require.Contains(t, out, "docroot: .") // This should still be present
 	})
 
 	// Test that non-existent project name fails gracefully
 	t.Run("non-existent project", func(t *testing.T) {
 		_, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "non-existent-project"})
-		assert.Error(err)
+		require.Error(t, err)
 	})
 }

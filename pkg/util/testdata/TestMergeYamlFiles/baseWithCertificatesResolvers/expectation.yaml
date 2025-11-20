@@ -12,8 +12,6 @@ certificatesResolvers:
     acme:
       dnsChallenge:
         provider: cloudflare
-core:
-  defaultRuleSyntax: v2
 entryPoints:
   http-80:
     address: :80

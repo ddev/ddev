@@ -31,5 +31,9 @@
     "MD040": false,
 
     // Exclude code block style
-    "MD046": false
+    "MD046": false,
+
+    // Table column alignment style - disabled as it creates maintenance burden
+    // without improving rendered output
+    "MD060": false
 }

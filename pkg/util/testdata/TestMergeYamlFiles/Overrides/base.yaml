@@ -12,9 +12,6 @@ api:
   dashboard: true
   insecure: true
 
-core:
-  defaultRuleSyntax: v2
-
 certificatesResolvers:
   acme-tlsChallenge:
     acme:

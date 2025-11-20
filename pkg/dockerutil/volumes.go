@@ -8,29 +8,28 @@ import (
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/api/types/volume"
+	"github.com/moby/moby/api/types/volume"
+	"github.com/moby/moby/client"
 )
 
 // RemoveVolume removes named volume. Does not throw error if the volume did not exist.
 func RemoveVolume(volumeName string) error {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return err
 	}
-	if _, err := client.VolumeInspect(ctx, volumeName); err == nil {
-		err := client.VolumeRemove(ctx, volumeName, true)
+	if _, err := apiClient.VolumeInspect(ctx, volumeName, client.VolumeInspectOptions{}); err == nil {
+		_, err := apiClient.VolumeRemove(ctx, volumeName, client.VolumeRemoveOptions{Force: true})
 		if err != nil {
 			if err.Error() == "volume in use and cannot be removed" {
-				containers, err := client.ContainerList(ctx, container.ListOptions{
+				containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{
 					All:     true,
-					Filters: filters.NewArgs(filters.KeyValuePair{Key: "volume", Value: volumeName}),
+					Filters: client.Filters{}.Add("volume", volumeName),
 				})
 				// Get names of containers which are still using the volume.
 				var containerNames []string
 				if err == nil {
-					for _, c := range containers {
+					for _, c := range containers.Items {
 						// Skip first character, it's a slash.
 						containerNames = append(containerNames, c.Names[0][1:])
 					}
@@ -47,11 +46,11 @@ func RemoveVolume(volumeName string) error {
 
 // VolumeExists checks to see if the named volume exists.
 func VolumeExists(volumeName string) bool {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return false
 	}
-	_, err = client.VolumeInspect(ctx, volumeName)
+	_, err = apiClient.VolumeInspect(ctx, volumeName, client.VolumeInspectOptions{})
 	if err != nil {
 		return false
 	}
@@ -60,26 +59,29 @@ func VolumeExists(volumeName string) bool {
 
 // VolumeLabels returns map of labels found on volume.
 func VolumeLabels(volumeName string) (map[string]string, error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
-	v, err := client.VolumeInspect(ctx, volumeName)
+	v, err := apiClient.VolumeInspect(ctx, volumeName, client.VolumeInspectOptions{})
 	if err != nil {
 		return nil, err
 	}
-	return v.Labels, nil
+	return v.Volume.Labels, nil
 }
 
 // CreateVolume creates a Docker volume
 func CreateVolume(volumeName string, driver string, driverOpts map[string]string, labels map[string]string) (volume.Volume, error) {
-	ctx, client, err := GetDockerClient()
+	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return volume.Volume{}, err
 	}
-	vol, err := client.VolumeCreate(ctx, volume.CreateOptions{Name: volumeName, Labels: labels, Driver: driver, DriverOpts: driverOpts})
+	vol, err := apiClient.VolumeCreate(ctx, client.VolumeCreateOptions{Name: volumeName, Labels: labels, Driver: driver, DriverOpts: driverOpts})
+	if err != nil {
+		return volume.Volume{}, err
+	}
 
-	return vol, err
+	return vol.Volume, err
 }
 
 // CopyIntoVolume copies a file or directory on the host into a Docker volume

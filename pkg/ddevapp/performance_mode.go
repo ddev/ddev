@@ -23,8 +23,3 @@ func (app *DdevApp) SetPerformanceMode(performanceMode string) *DdevApp {
 
 	return app
 }
-
-// IsNFSMountEnabled determines whether NFS is enabled.
-func (app *DdevApp) IsNFSMountEnabled() bool {
-	return !app.IsMutagenEnabled() && app.GetPerformanceMode() == types.PerformanceModeNFS
-}

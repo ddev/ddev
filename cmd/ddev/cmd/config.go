@@ -35,7 +35,7 @@ var (
 	// projectTypeArg is the DDEV project type.
 	projectTypeArg string
 
-	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6-8.4 etc.
+	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6-8.5 etc.
 	phpVersionArg string
 
 	// routerHTTPPortArg overrides the default router HTTP port (80).
@@ -265,8 +265,6 @@ func init() {
 	_ = ConfigCommand.RegisterFlagCompletionFunc(types.FlagXHProfModeName, configCompletionFunc(types.ValidXHProfModeOptions(types.ConfigTypeProject)))
 	ConfigCommand.Flags().Bool(types.FlagXHProfModeResetName, false, types.FlagXHProfModeResetDescription(types.ConfigTypeProject))
 
-	ConfigCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting of project in container")
-	_ = ConfigCommand.Flags().MarkDeprecated("nfs-mount-enabled", fmt.Sprintf("please use --%s instead", types.FlagPerformanceModeName))
 	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
 	_ = ConfigCommand.RegisterFlagCompletionFunc("fail-on-hook-fail", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound HTTP port")
@@ -517,12 +515,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if cmd.Flag("host-db-port").Changed {
 		app.HostDBPort = hostDBPortArg
-	}
-
-	if cmd.Flag("nfs-mount-enabled").Changed {
-		if v, _ := cmd.Flags().GetBool("nfs-mount-enabled"); v {
-			app.SetPerformanceMode(types.PerformanceModeNFS)
-		}
 	}
 
 	if cmd.Flag("mutagen-enabled").Changed {

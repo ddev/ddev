@@ -26,6 +26,7 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/moby/moby/client"
 )
 
 const mutagenSignatureLabelName = `com.ddev.volume-signature`
@@ -702,7 +703,7 @@ func (app *DdevApp) GenerateMutagenYml() error {
 
 // IsMutagenVolumeMounted checks to see if the Mutagen volume is mounted
 func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
-	ctx, client, err := dockerutil.GetDockerClient()
+	ctx, apiClient, err := dockerutil.GetDockerClient()
 	if err != nil {
 		return false, err
 	}
@@ -711,11 +712,11 @@ func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
 	if err != nil || container == nil {
 		return false, nil
 	}
-	inspect, err := client.ContainerInspect(ctx, container.ID)
+	inspect, err := apiClient.ContainerInspect(ctx, container.ID, client.ContainerInspectOptions{})
 	if err != nil {
 		return false, err
 	}
-	for _, m := range inspect.Mounts {
+	for _, m := range inspect.Container.Mounts {
 		if m.Name == GetMutagenVolumeName(app) {
 			return true, nil
 		}
