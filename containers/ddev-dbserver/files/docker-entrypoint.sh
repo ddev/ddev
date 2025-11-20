@@ -56,7 +56,7 @@ if [ $# = "2" ] && [ "${1:-}" = "restore_snapshot" ] ; then
     cd "${target}"
     case "$ext" in
       zst)
-        zstdmt -dc --quiet "${snapshot}" | ${STREAMTOOL} -x
+        zstd -T0 -dc --quiet "${snapshot}" | ${STREAMTOOL} -x
         ;;
       gz)
         gunzip -c "${snapshot}" | ${STREAMTOOL} -x
