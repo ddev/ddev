@@ -6,6 +6,16 @@ services:
     init: true
     user: {{ .UID }}:{{ .GID }}
 
+    {{ if and .IsPodman .IsRootless }}
+    userns_mode: keep-id
+    {{ end }}
+
+    {{ if or .IsPodman .IsRootless }}
+    # For: listen tcp :443: bind: permission denied
+    cap_add:
+      - NET_BIND_SERVICE
+    {{ end }}
+
     networks:
       ddev_default:
         {{ if .Hostnames }}

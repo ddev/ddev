@@ -1,0 +1,57 @@
+name: Test Podman Root Mutagen
+on:
+  pull_request:
+    paths:
+      - "go.*"
+      - "pkg/**"
+      - "cmd/**"
+      - "Makefile"
+      - "vendor/**"
+      - ".github/workflows/**"
+      - "!.github/workflows/docs**"
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  podman-root-mutagen-testpkg-1:
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      make_target: "testpkg"
+      testargs: "-failfast -run ^Test[A-G]"
+      ddev_test_podman_root: "true"
+      ddev_test_use_mutagen: "true"
+      debug_enabled: ${{ inputs.debug_enabled || false }}
+
+  podman-root-mutagen-testpkg-2:
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      make_target: "testpkg"
+      testargs: "-failfast -run ^Test[H-Z]"
+      ddev_test_podman_root: "true"
+      ddev_test_use_mutagen: "true"
+      debug_enabled: ${{ inputs.debug_enabled || false }}
+
+  podman-root-mutagen-testcmd:
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      make_target: "testcmd"
+      ddev_test_podman_root: "true"
+      ddev_test_use_mutagen: "true"
+      debug_enabled: ${{ inputs.debug_enabled || false }}
