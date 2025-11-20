@@ -237,8 +237,9 @@ fi
 
 # Check DNS resolution for *.ddev.site
 if command -v ping >/dev/null; then
-  if ping -c 1 -W 2 test.ddev.site >/dev/null 2>&1; then
-    success "DNS resolves *.ddev.site to 127.0.0.1"
+  IP=$(ping -c 1 -W 2 test.ddev.site 2>/dev/null | awk -F'[()]' '/PING/{print $2}')
+  if [ -n "$IP" ]; then
+    success "DNS resolves *.ddev.site to $IP"
   else
     warn "Cannot resolve *.ddev.site"
     suggestion "See: https://docs.ddev.com/en/stable/users/usage/networking/#restrictive-dns-servers"
