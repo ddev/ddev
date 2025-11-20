@@ -706,6 +706,9 @@ func TestDdevStartCustomEntrypoint(t *testing.T) {
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
+	if nodeps.IsWSL2MirroredMode() {
+		t.Skip("Skipping on WSL2 Mirrored Mode, always fails with 'tls: failed to verify certificate: x509: certificate signed by unknown authority'")
+	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
