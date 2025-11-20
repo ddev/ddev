@@ -2077,14 +2077,14 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 
 			// Search for CHANGE_MARIADB_CLIENT to update related code.
 			if dbType == nodeps.MariaDB {
-				// For MariaDB, we have installed the 11.4 client by default.
-				expectedClientVersion = "11.4"
+				// For MariaDB, we have installed the 11.8 client by default.
+				expectedClientVersion = "11.8"
 				// Add MariaDB versions that can have their own client here:
 				switch dbVersion {
+				case nodeps.MariaDB1011:
+					expectedClientVersion = "10.11"
 				case nodeps.MariaDB114:
 					expectedClientVersion = "11.4"
-				case nodeps.MariaDB118:
-					expectedClientVersion = "11.8"
 				}
 			}
 			// Output might be "mysql  Ver 8.0.36 for Linux on aarch64 (Source distribution)"

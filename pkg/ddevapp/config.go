@@ -1190,11 +1190,16 @@ stopasgroup=true
 	if app.Database.Type == nodeps.MySQL {
 		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
 	}
-	// Some MariaDB versions may have their own client in the ddev-webserver
-	// Search for CHANGE_MARIADB_CLIENT to update related code
-	if app.Database.Type == nodeps.MariaDB && slices.Contains([]string{nodeps.MariaDB114, nodeps.MariaDB118}, app.Database.Version) {
-		extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
+	if app.Database.Type == nodeps.MariaDB {
+		// Some MariaDB versions may have their own client in the ddev-webserver
+		// Search for CHANGE_MARIADB_CLIENT to update related code
+		if slices.Contains([]string{nodeps.MariaDB1011, nodeps.MariaDB114}, app.Database.Version) {
+			extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
+		}
 	}
+	// MariaDB uses mariadb-* command names, but legacy mysql* commands are commonly used
+	// Install compatibility wrappers for MariaDB, remove them when not needed
+	extraWebContent = extraWebContent + "\nRUN mariadb-compat-install.sh || true\n"
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {

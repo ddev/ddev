@@ -380,7 +380,7 @@ func testBasicDdevFunctionality(t *testing.T, distroName string) {
 	require.NoError(err, "Failed to create index.html: %v", err)
 
 	// Initialize ddev project
-	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", fmt.Sprintf("cd %s && ddev config --auto && ddev start -y", projectDir))
+	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", fmt.Sprintf("cd %s && ddev delete -Oy %s && ddev config --auto && ddev start -y", projectDir, projectName))
 	require.NoError(err, "ddev config/start failed: %v, output: %s", err, out)
 	t.Logf("ddev config/start output: %s", out)
 
