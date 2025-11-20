@@ -174,11 +174,16 @@ Example: `## Usage: commandname [flags] [args]`
 
 ### `Example` Annotation
 
-`Example` should demonstrate how the command might be used. Use `\n` to force a line break.
+`Example` should demonstrate how the command might be used.
 
 Usage: `## Example: <command-example>`
 
-Example: `## Example: commandname\ncommandname -h`
+Example:
+
+```bash
+## Example: commandname
+## Example: commandname -h
+```
 
 ### `Aliases` Annotation
 
@@ -215,7 +220,14 @@ Flags:
 
 Multiple flags are separated by a comma:
 
-Example: `## Flags: [{"Name":"flag1","Shorthand":"f","Usage":"flag1 usage"},{"Name":"flag2","Usage":"flag2 usage"}]`
+Example:
+
+```bash
+## Flags: [
+##   {"Name":"flag1","Shorthand":"f","Usage":"flag1 usage"},
+##   {"Name":"flag2","Usage":"flag2 usage"}
+## ]
+```
 
 Output:
 
@@ -282,10 +294,16 @@ Example: `## OSTypes: darwin,linux`
 ### `HostBinaryExists` Annotation (Host Commands Only)
 
 If your host command should only run if a particular file exists, add the `HostBinaryExists` annotation.
+Multiple files are separated by a comma, or by adding the annotation multiple times.
 
 Usage: `## HostBinaryExists: <path/to/file>`
 
-Example: `## HostBinaryExists: /Applications/Sequel ace.app`
+Example:
+
+```bash
+## HostBinaryExists: /Applications/DBeaver.app
+## HostBinaryExists: /usr/bin/dbeaver
+```
 
 ### `DBTypes` Annotation
 
@@ -316,6 +334,24 @@ Example: `## ExecRaw: true`
 Use `MutagenSync: true` to ensure [Mutagen](../install/performance.md#mutagen) sync runs before and after the command (where Mutagen is enabled and the project is running).
 
 We recommend using this annotation if your `host` or `web` command can modify, add, or remove files in the project directory.
+
+## Multiline or Multivalue Annotations
+
+Multiline or multivalue annotations may be declared in two ways:
+
+1. Re-declaring the annotation on a new line, for example:
+
+    ```bash
+    ## Example: commandname
+    ## Example: commandname -h
+    ```
+
+2. Adding the additional entry on a new line, for example:
+
+    ```bash
+    ## Example: commandname
+    ## commandname -h
+    ```
 
 ## Known Windows Issues
 

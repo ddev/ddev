@@ -473,7 +473,9 @@ more
 mountaddr
 mountproto
 mountvers
+multiline
 multisite
+multivalue
 mutagen
 mv
 mxcl
