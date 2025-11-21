@@ -3929,8 +3929,8 @@ func TestPHPWebserverType(t *testing.T) {
 // from host and from inside container by URL (with port)
 // Related test: TestNetworkAliases
 func TestInternalAndExternalAccessToURL(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsAppleSilicon() {
-		t.Skip("Skipping on mac Apple Silicon/Lima/Colima/Rancher to ignore problems with 'connection reset by peer'")
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsAppleSilicon() || nodeps.IsWSL2MirroredMode()) {
+		t.Skip("Skipping on mac Apple Silicon/Lima/Colima/Rancher/WSLMirrored to ignore problems with 'connection reset by peer'")
 	}
 
 	assert := asrt.New(t)
