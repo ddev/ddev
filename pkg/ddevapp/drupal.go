@@ -469,7 +469,7 @@ func drupalPostStartAction(app *DdevApp) error {
 		if app.Database.Type == nodeps.MariaDB || app.Database.Type == nodeps.MySQL {
 			_, _, err := app.Exec(&ExecOpts{
 				Service:   "db",
-				Cmd:       `mysql -uroot -proot -e "SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED;" >/dev/null 2>&1`,
+				Cmd:       fmt.Sprintf(`%s -uroot -proot -e "SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED;" >/dev/null 2>&1`, app.GetDBClientCommand()),
 				NoCapture: false,
 			})
 			if err != nil {
