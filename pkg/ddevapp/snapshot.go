@@ -249,7 +249,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		tarExtract := "-zxf" // gzip default
 		if isZstd {
 			// Use external program to decompress zstd
-			tarExtract = "-I 'zstd -T0' -xf"
+			tarExtract = "-I \"zstd -T0\" -xf"
 		}
 		// PostgreSQL 18+ requires restore_command parameter, older versions use recovery.conf
 		if v >= 18 {
