@@ -37,7 +37,7 @@ func TestDebugMigrateDatabase(t *testing.T) {
 
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     fmt.Sprintf(`mysql -e 'DROP TABLE IF EXISTS %s;'`, t.Name()),
+			Cmd:     fmt.Sprintf(`%s -e 'DROP TABLE IF EXISTS %s;'`, app.GetDBClientCommand(), t.Name()),
 		})
 		assert.NoError(err, "DROP table didn't work, out='%s', stderr='%s'", out, stderr)
 		_ = os.Chdir(origDir)
@@ -48,7 +48,7 @@ func TestDebugMigrateDatabase(t *testing.T) {
 
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `mysql -N -e 'SELECT VERSION();'`,
+		Cmd:     fmt.Sprintf(`%s -N -e 'SELECT VERSION();'`, app.GetDBClientCommand()),
 	})
 	require.NoError(t, err)
 	// It should have our default version
@@ -60,19 +60,22 @@ func TestDebugMigrateDatabase(t *testing.T) {
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS example_table (name VARCHAR(255) NOT NULL); INSERT INTO example_table (name) VALUES ("%s");'`, t.Name()),
+		Cmd:     fmt.Sprintf(`%s -e 'CREATE TABLE IF NOT EXISTS example_table (name VARCHAR(255) NOT NULL); INSERT INTO example_table (name) VALUES ("%s");'`, app.GetDBClientCommand(), t.Name()),
 	})
 	require.NoError(t, err)
 
 	// Try a migration
-	out, err = exec.RunHostCommand(DdevBin, "debug", "migrate-database", fmt.Sprintf("%s:%s", nodeps.MySQL, nodeps.MySQL80))
+	out, err = exec.RunHostCommand(DdevBin, "utility", "migrate-database", fmt.Sprintf("%s:%s", nodeps.MySQL, nodeps.MySQL80))
 	require.NoError(t, err, "failed to migrate database; out='%s'", out)
 	require.Contains(t, out, fmt.Sprintf("Database was converted to %s:%s", nodeps.MySQL, nodeps.MySQL80))
+
+	_, err = app.ReadConfig(true)
+	require.NoError(t, err)
 
 	// Make sure our inserted data is still there
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf(`mysql -N -e 'SELECT name FROM example_table WHERE name = "%s";'`, t.Name()),
+		Cmd:     fmt.Sprintf(`%s -N -e 'SELECT name FROM example_table WHERE name = "%s";'`, app.GetDBClientCommand(), t.Name()),
 	})
 	require.NoError(t, err)
 	require.Contains(t, out, t.Name())
@@ -80,7 +83,7 @@ func TestDebugMigrateDatabase(t *testing.T) {
 	// Make sure we have the expected new version
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `mysql -N  -e 'SELECT VERSION();'`,
+		Cmd:     fmt.Sprintf(`%s -N  -e 'SELECT VERSION();'`, app.GetDBClientCommand()),
 	})
 	require.NoError(t, err)
 	require.True(t, strings.HasPrefix(out, nodeps.MySQL80))
