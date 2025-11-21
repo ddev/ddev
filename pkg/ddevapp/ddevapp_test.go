@@ -3455,8 +3455,8 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 // TestHttpsRedirection tests to make sure that webserver and php redirect to correct
 // scheme (http or https).
 func TestHttpsRedirection(t *testing.T) {
-	if nodeps.IsAppleSilicon() && os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" {
-		t.Skip("Skipping on Apple Silicon to ignore problems with 'connection reset by peer'")
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsAppleSilicon() || nodeps.IsWSL2MirroredMode()) {
+		t.Skip("Skipping on Apple Silicon/Mirrored mode to ignore problems with 'connection reset by peer'")
 	}
 	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because MkcertCARoot is not set, no https")
