@@ -919,7 +919,6 @@ Create Dockerfile for FrankenPHP:
 ```bash
 cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.frankenphp
 RUN curl -s https://frankenphp.dev/install.sh | sh
-RUN mv frankenphp /usr/local/bin/
 RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local/etc/php
 DOCKERFILEEND
 ```
@@ -967,7 +966,6 @@ ddev launch $(ddev drush uli)
 
     cat <<'INNEREOF' >.ddev/web-build/Dockerfile.frankenphp
     RUN curl -s https://frankenphp.dev/install.sh | sh
-    RUN mv frankenphp /usr/local/bin/
     RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local/etc/php
     INNEREOF
 
