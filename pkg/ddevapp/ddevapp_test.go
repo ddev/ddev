@@ -352,10 +352,10 @@ var (
 		// 20: frankenphp
 		{
 			Name:                          "TestPkgFrankenPHP",
-			SourceURL:                     "https://github.com/ddev/test-frankenphp/archive/refs/tags/11.1.1.tar.gz",
-			ArchiveInternalExtractionPath: "test-frankenphp-11.1.1/",
-			FilesTarballURL:               "https://github.com/ddev/test-frankenphp/releases/download/11.1.1/files.tgz",
-			DBTarURL:                      "https://github.com/ddev/test-frankenphp/releases/download/11.1.1/db.sql.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-frankenphp/archive/refs/tags/11.1.2.tar.gz",
+			ArchiveInternalExtractionPath: "test-frankenphp-11.1.2/",
+			FilesTarballURL:               "https://github.com/ddev/test-frankenphp/releases/download/11.1.2/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-frankenphp/releases/download/11.1.2/db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal11,
 			Docroot:                       "web",
