@@ -48,7 +48,7 @@ func TestCmdExportDB(t *testing.T) {
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -e 'SHOW TABLES;'",
+		Cmd:     fmt.Sprintf(`%s -e 'SHOW TABLES;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 
@@ -119,7 +119,7 @@ func TestCmdExportDB(t *testing.T) {
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql nondefault -e 'SHOW TABLES;'",
+		Cmd:     fmt.Sprintf(`%s nondefault -e 'SHOW TABLES;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 
@@ -134,7 +134,7 @@ func TestCmdExportDB(t *testing.T) {
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql nondefault -e 'SELECT * FROM nondefault_table;'",
+		Cmd:     fmt.Sprintf(`%s nondefault -e 'SELECT * FROM nondefault_table;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 }

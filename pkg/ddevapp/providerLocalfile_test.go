@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -79,7 +80,7 @@ func TestLocalfilePull(t *testing.T) {
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "docs/developers/building-contributing.md"))
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd:     "echo 'select COUNT(*) from users_field_data where mail=\"margaret.hopper@example.com\";' | mysql -N",
+		Cmd:     fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail=\"margaret.hopper@example.com\";' | %s -N`, app.GetDBClientCommand()),
 		Service: "db",
 	})
 	assert.NoError(err)

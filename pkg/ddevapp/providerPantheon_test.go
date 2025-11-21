@@ -104,7 +104,7 @@ func TestPantheonPull(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "2025-07/test-site-pic.jpg"))
-	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s mysql -N`, DdevBin))
+	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s %s -N`, app.GetDBClientCommand(), DdevBin))
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
 
@@ -220,7 +220,7 @@ func TestPantheonPush(t *testing.T) {
 
 	// Create database and files entries that we can verify after push
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval),
+		Cmd: fmt.Sprintf(`%s -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, app.GetDBClientCommand(), t.Name(), t.Name(), tval),
 	})
 	require.NoError(t, err)
 

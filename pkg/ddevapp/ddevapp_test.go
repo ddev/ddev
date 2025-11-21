@@ -1136,36 +1136,36 @@ func TestDdevMysqlWorks(t *testing.T) {
 	// Test that MySQL + .my.cnf works on web container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "mysql -e 'SELECT USER();' | grep 'root@'",
+		Cmd:     fmt.Sprintf(`%s -e 'SELECT USER();' | grep 'root@'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	// Test that the 'db' user works
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "mysql -udb -pdb -e 'SELECT USER();' | grep 'db@'",
+		Cmd:     fmt.Sprintf(`%s -udb -pdb -e 'SELECT USER();' | grep 'db@'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "mysql -e 'SELECT DATABASE();' | grep 'db'",
+		Cmd:     fmt.Sprintf(`%s -e 'SELECT DATABASE();' | grep 'db'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 
 	// Test that MySQL + .my.cnf works on db container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -e 'SELECT USER();' | grep 'root@localhost'",
+		Cmd:     fmt.Sprintf(`%s -e 'SELECT USER();' | grep 'root@localhost'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	// Test that the 'db' user works
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -udb -pdb -e 'SELECT USER();' | grep 'db@localhost'",
+		Cmd:     fmt.Sprintf(`%s -udb -pdb -e 'SELECT USER();' | grep 'db@localhost'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -e 'SELECT DATABASE();' | grep 'db'",
+		Cmd:     fmt.Sprintf(`%s -e 'SELECT DATABASE();' | grep 'db'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 
@@ -1316,7 +1316,7 @@ func TestDdevImportDB(t *testing.T) {
 		err = app.Start()
 		require.NoError(t, err)
 
-		c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
+		c[nodeps.MariaDB] = fmt.Sprintf(`%s -N -e 'DROP DATABASE IF EXISTS test;'`, app.GetDBClientCommand())
 		c[nodeps.Postgres] = `echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
@@ -1339,7 +1339,7 @@ func TestDdevImportDB(t *testing.T) {
 				continue
 			}
 
-			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW TABLES;' | cat`
+			c[nodeps.MariaDB] = fmt.Sprintf(`set -eu -o pipefail; %s -N -e 'SHOW TABLES;' | cat`, app.GetDBClientCommand())
 			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -v ON_ERROR_STOP=1 db -c '\dt' |awk -F' *\| *' '{ if (NF>2) print $2 }' `
 			// There should be exactly the one "users" table for each of these files
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -1349,7 +1349,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
 
-			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`
+			c[nodeps.MariaDB] = fmt.Sprintf(`set -eu -o pipefail; %s -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`, app.GetDBClientCommand())
 			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
 
 			// Verify that no extra database was created
@@ -1405,7 +1405,7 @@ func TestDdevImportDB(t *testing.T) {
 			os.Stdin = savedStdin
 			assert.NoError(err)
 
-			c[nodeps.MariaDB] = fmt.Sprintf(`mysql -N %s -e "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, db, db)
+			c[nodeps.MariaDB] = fmt.Sprintf(`%s -N %s -e "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, app.GetDBClientCommand(), db, db)
 			c[nodeps.Postgres] = fmt.Sprintf(`psql -t -d %s -c "SELECT datname FROM pg_database WHERE datname='%s' ;" && psql -t -d %s -c "SELECT COUNT(*) from stdintable"`, db, db, db)
 
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -1422,7 +1422,7 @@ func TestDdevImportDB(t *testing.T) {
 			sqlPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
 			err = app.ImportDB(sqlPath, "", false, false, db)
 			assert.NoError(err)
-			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db)
+			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | %s -N %s`, app.GetDBClientCommand(), db, db)
 			c[nodeps.Postgres] = fmt.Sprintf(`bash -c "echo '\dt' | psql -t -d %s | awk 'NF > 1'"`, db)
 			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
@@ -1481,7 +1481,7 @@ func TestDdevImportDB(t *testing.T) {
 	// Test database that has SQL DDL in the content to make sure nothing gets corrupted.
 	// Make sure database "test" does not exist initially
 	dbType := nodeps.MariaDB
-	c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
+	c[nodeps.MariaDB] = fmt.Sprintf(`%s -N -e 'DROP DATABASE IF EXISTS test;'`, app.GetDBClientCommand())
 	c[nodeps.Postgres] = `echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`
 	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
@@ -1489,7 +1489,7 @@ func TestDdevImportDB(t *testing.T) {
 	})
 	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
 
-	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE IF EXISTS wp_posts;'"})
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: fmt.Sprintf(`%s -N -e 'DROP TABLE IF EXISTS wp_posts;'`, app.GetDBClientCommand())})
 	require.NoError(t, err)
 	file := "posts_with_ddl_content.sql"
 	sqlPath := filepath.Join(origDir, "testdata", t.Name(), "mariadb", file)
@@ -1498,7 +1498,7 @@ func TestDdevImportDB(t *testing.T) {
 	checkImportDBImports(t, app)
 
 	// Now test the same when importing from stdin, same file
-	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE wp_posts;'"})
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: fmt.Sprintf(`%s -N -e 'DROP TABLE wp_posts;'`, app.GetDBClientCommand())})
 	require.NoError(t, err)
 	f, err := os.Open(sqlPath)
 	require.NoError(t, err)
@@ -1517,7 +1517,7 @@ func TestDdevImportDB(t *testing.T) {
 	// import due to embedded DDL statements.
 	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `mysql -N -e 'SELECT COUNT(*) FROM wp_posts;'`,
+		Cmd:     fmt.Sprintf(`%s -N -e 'SELECT COUNT(*) FROM wp_posts;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
 	assert.Equal("180\n", out)
@@ -1562,7 +1562,7 @@ func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
 	// There should be exactly the one wp_posts table for this file
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -N -e 'SHOW TABLES;' | cat",
+		Cmd:     fmt.Sprintf(`%s -N -e 'SHOW TABLES;' | cat`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	assert.Equal("wp_posts\n", out)
@@ -1570,7 +1570,7 @@ func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
 	// Verify that no additional database was created (this one has a CREATE DATABASE statement)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`,
+		Cmd:     fmt.Sprintf(`%s -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	assert.Equal("db\n", out)
@@ -1674,7 +1674,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			// Make sure default charset is utf8mb4
 			charSet, _, _ := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     `mysql -n -e "SELECT @@character_set_database;"`,
+				Cmd:     fmt.Sprintf(`%s -n -e "SELECT @@character_set_database;"`, app.GetDBClientCommand()),
 			})
 			assert.Equal("@@character_set_database\nutf8mb4", strings.Trim(charSet, "\n\r "))
 		}
@@ -1750,7 +1750,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		// Delete the user in the database so we can later verify snapshot restore
 		c := map[string]string{
 			nodeps.MySQL:    `echo "DELETE FROM users;" | mysql`,
-			nodeps.MariaDB:  `echo "DELETE FROM users;" | mysql`,
+			nodeps.MariaDB:  fmt.Sprintf(`echo "DELETE FROM users;" | %s`, app.GetDBClientCommand()),
 			nodeps.Postgres: `echo "DELETE FROM users;" | psql`,
 		}
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1780,7 +1780,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			// Make sure overriding configuration works
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
+				Cmd:     fmt.Sprintf(`%s -sN -e "SELECT @@global.time_zone"`, app.GetDBClientCommand()),
 			})
 			assert.NoError(err)
 			assert.Equal("SYSTEM\n", out, "out: %s, stderr: %s", out, stderr)
@@ -1793,7 +1793,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			require.NoError(t, err)
 			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
+				Cmd:     fmt.Sprintf(`%s -sN -e "SELECT @@global.time_zone"`, app.GetDBClientCommand()),
 			})
 			assert.NoError(err)
 			assert.Equal("+08:00\n", out, "out: %s, stderr: %s", out, stderr, "did not find expected timezone value on %v", dbTypeVersion)
@@ -1804,7 +1804,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		c = map[string]string{
 			nodeps.MySQL:    `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
-			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+			nodeps.MariaDB:  fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | %s -N`, app.GetDBClientCommand()),
 			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -t`,
 		}
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -1982,7 +1982,7 @@ func TestDdevExportDB(t *testing.T) {
 		require.NoError(t, err, `dbType=%v: unable to importDB importPath=%s targetDB=thirddb`, dbType, importPath)
 
 		c := map[string]string{
-			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`,
+			nodeps.MariaDB:  fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | %s -N thirddb`, app.GetDBClientCommand()),
 			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -t -q thirddb`,
 		}
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -2065,12 +2065,13 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 			existingProjects, _ := exec.RunHostCommand("ddev", "list")
 			require.NoError(t, startErr, "failed to start %s:%s, existing projects:'%s', existing containers=%s", dbType, dbVersion, existingProjects, existingContainers)
 		}
+		// Check legacy mysql commands (suppress deprecation warnings)
 		for _, tool := range []string{"mysql", "mysqladmin", "mysqldump"} {
-			cmd := tool + " --version"
+			cmd := tool + " --version 2>/dev/null"
 			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Cmd: cmd,
 			})
-			require.NoError(t, err, "mysql --version with dbTypeVersion=%s, stdout=%s, stderr=%s", dbTypeVersion, stdout, stderr)
+			require.NoError(t, err, "%s --version with dbTypeVersion=%s, stdout=%s, stderr=%s", tool, dbTypeVersion, stdout, stderr)
 			parts := strings.Fields(stdout)
 			require.True(t, len(parts) > 5)
 			expectedClientVersion := dbVersion
@@ -2092,18 +2093,41 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 			require.True(t, strings.HasPrefix(parts[4], expectedClientVersion) || strings.HasPrefix(parts[2], expectedClientVersion), "tool='%s' dbType='%s' dbVersion='%s' should have dbVersion='%s' as prefix but received stdout='%s'", tool, dbType, dbVersion, expectedClientVersion, strings.TrimSpace(stdout))
 		}
 
+		// For MariaDB 10.5+, also check that canonical mariadb commands exist
+		if dbType == nodeps.MariaDB {
+			isNewMariaDB, _ := util.SemverValidate(">= 10.5", dbVersion)
+			if isNewMariaDB {
+				for _, tool := range []string{"mariadb", "mariadb-admin", "mariadb-dump"} {
+					cmd := tool + " --version"
+					stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+						Cmd: cmd,
+					})
+					require.NoError(t, err, "failed to execute %s in db container: stderr=%s", cmd, stderr)
+					parts := strings.Split(stdout, " ")
+					require.GreaterOrEqual(t, len(parts), 5, "malformed --version response, stdout='%s'", stdout)
+					expectedClientVersion := dbVersion
+					if dbType == nodeps.MariaDB {
+						// mysql client tools all have version "15.1"
+						expectedClientVersion = "15.1"
+					}
+					// Output might be "mariadb  Ver 15.1 Distrib 11.8.0-MariaDB, for Linux (aarch64) using readline 5.1"
+					require.True(t, strings.HasPrefix(parts[4], expectedClientVersion) || strings.HasPrefix(parts[2], expectedClientVersion), "tool='%s' dbType='%s' dbVersion='%s' should have dbVersion='%s' as prefix but received stdout='%s'", tool, dbType, dbVersion, expectedClientVersion, strings.TrimSpace(stdout))
+				}
+			}
+		}
+
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
 		err = fileutil.CopyFile(importPath, filepath.Join(app.AppRoot, "users.sql"))
 		require.NoError(t, err)
 		err = app.MutagenSyncFlush()
 		require.NoError(t, err)
 		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-			Cmd: "mysql db < users.sql",
+			Cmd: fmt.Sprintf(`%s db < users.sql`, app.GetDBClientCommand()),
 		})
-		require.NoError(t, err, "mysql db <users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
+		require.NoError(t, err, "mysql/mariadb db <users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
 
 		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "mysqldump db > dbdump.sql",
+			Cmd: fmt.Sprintf(`%s db > dbdump.sql`, app.GetDBDumpCommand()),
 		})
 		require.NoError(t, err, "mysqldump failed, stdout=%s, stderr=%s", stdout, stderr)
 
@@ -2120,12 +2144,12 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 		}
 
 		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "mysql db < dbdump.sql",
+			Cmd: fmt.Sprintf(`%s db < dbdump.sql`, app.GetDBClientCommand()),
 		})
-		require.NoError(t, err, "mysql db </tmp/users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
+		require.NoError(t, err, "mysql/mariadb db </tmp/users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
 
 		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: `mysql -B --skip-column-names -e "SELECT COUNT(*) FROM users;"`,
+			Cmd: fmt.Sprintf(`%s -B --skip-column-names -e "SELECT COUNT(*) FROM users;"`, app.GetDBClientCommand()),
 		})
 		require.NoError(t, err)
 		stdout = strings.Trim(stdout, "\n")
@@ -3046,12 +3070,12 @@ func TestDdevExec(t *testing.T) {
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -e 'DROP DATABASE db;'",
+		Cmd:     fmt.Sprintf(`%s -e 'DROP DATABASE db;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql information_schema -e 'CREATE DATABASE db;'",
+		Cmd:     fmt.Sprintf(`%s information_schema -e 'CREATE DATABASE db;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 
@@ -4101,7 +4125,7 @@ func TestHostDBPort(t *testing.T) {
 	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
 		switch dbType {
 		case nodeps.MariaDB:
-			clientTool = "mysql"
+			clientTool = app.GetDBClientCommand()
 			app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.MariaDBDefaultVersion}
 		case nodeps.Postgres:
 			clientTool = "psql"
@@ -4135,8 +4159,7 @@ func TestHostDBPort(t *testing.T) {
 			} else {
 				// Running MySQL or psql against the container ensures that we can get there via the values
 				// in ddev describe
-				c := fmt.Sprintf(
-					"export MYSQL_PWD=db; mysql -N --user=db --host=%s --port=%d --database=db -e 'SELECT 1;'", dockerIP, dbPort)
+				c := fmt.Sprintf(`export MYSQL_PWD=db; %s -N --user=db --host=%s --port=%d --database=db -e 'SELECT 1;'`, app.GetDBClientCommand(), dockerIP, dbPort)
 				if dbType == nodeps.Postgres {
 					c = fmt.Sprintf("export PGPASSWORD=db; psql -U db -t --host=%s --port=%d --dbname=db -c 'SELECT 1;'", dockerIP, dbPort)
 				}

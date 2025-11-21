@@ -186,7 +186,7 @@ func startAndCheckUpsunPush(t *testing.T, app *ddevapp.DdevApp, provider *ddevap
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)
 	tableName := testName
-	c := fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, tableName, tableName, tval)
+	c := fmt.Sprintf(`%s -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, app.GetDBClientCommand(), tableName, tableName, tval)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: c,
 	})
