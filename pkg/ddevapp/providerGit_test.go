@@ -68,7 +68,7 @@ func TestGitPull(t *testing.T) {
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "tmp/veggie-pasta-bake-hero-umami.jpg"))
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd:     fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail=\"margaret.hopper@example.com\";' | %s -N`, app.GetDBClientCommand()),
+		Cmd:     fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s -N`, app.GetDBClientCommand()),
 		Service: "db",
 	})
 	assert.NoError(err)
