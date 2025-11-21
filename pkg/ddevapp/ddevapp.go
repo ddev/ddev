@@ -822,6 +822,30 @@ func (app *DdevApp) GetMailpitHTTPSPort() string {
 	return port
 }
 
+// GetDBClientCommand returns the appropriate database client command (mysql or mariadb)
+// based on the database type and version.
+func (app *DdevApp) GetDBClientCommand() string {
+	// Use canonical mariadb client for MariaDB 10.5+
+	if app.Database.Type == nodeps.MariaDB {
+		if isNewMariaDB, _ := util.SemverValidate(">= 10.5", app.Database.Version); isNewMariaDB {
+			return "mariadb"
+		}
+	}
+	return "mysql"
+}
+
+// GetDBDumpCommand returns the appropriate database dump command (mysqldump or mariadb-dump)
+// based on the database type and version.
+func (app *DdevApp) GetDBDumpCommand() string {
+	// Use canonical mariadb-dump for MariaDB 10.5+
+	if app.Database.Type == nodeps.MariaDB {
+		if isNewMariaDB, _ := util.SemverValidate(">= 10.5", app.Database.Version); isNewMariaDB {
+			return "mariadb-dump"
+		}
+	}
+	return "mysqldump"
+}
+
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool, noDrop bool, targetDB string) error {
 	_ = app.DockerEnv()
@@ -959,6 +983,9 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	// throw off imports.
 	// It also removes the new `/*!999999\- enable the sandbox mode */` introduced in
 	// LTS versions of MariaDB 2024-05.
+	// It also removes COLLATE clauses to avoid incompatibilities when importing dumps
+	// from newer database versions (e.g., MariaDB 11.x utf8mb4_uca1400_ai_ci) into
+	// older versions or different database types.
 	// This is a scary manipulation, as it must not match actual content
 	// as has actually happened with https://www.ddevhq.org/ddev-local/ddev-local-database-management/
 	// and in https://github.com/ddev/ddev/issues/2787
@@ -970,17 +997,18 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	case nodeps.MySQL:
 		fallthrough
 	case nodeps.MariaDB:
+		dbClientCmd := app.GetDBClientCommand()
 		preImportSQL = fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
 		if !noDrop {
 			preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 		}
 
 		// Case for reading from file
-		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -e "%s" %s && pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//' | mysql %s %s`, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, insideContainerImportPath, "`", targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && %s -e "%s" %s && pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//; s/\s*COLLATE\s*=?\s*\w+//gi' | %s %s %s`, dbClientCmd, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, insideContainerImportPath, "`", dbClientCmd, targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
 
 		// Alternate case where we are reading from stdin
 		if dumpFile == "" && extractPath == "" {
-			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -e "%s" %s && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s %s`, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, "`", targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && %s -e "%s" %s && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//; s/\s*COLLATE\s*=?\s*\w+//gi' | %s %s %s`, dbClientCmd, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, "`", dbClientCmd, targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
 		}
 
 	case nodeps.Postgres:
@@ -1047,7 +1075,7 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 		targetDB = "db"
 	}
 
-	exportCmd := "mysqldump " + targetDB + nodeps.MySQLRemoveDeprecatedMessage
+	exportCmd := app.GetDBDumpCommand() + " " + targetDB + nodeps.MySQLRemoveDeprecatedMessage
 	if app.Database.Type == "postgres" {
 		exportCmd = "pg_dump -U db " + targetDB
 	}
@@ -1853,7 +1881,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';`
 		userOutFunc := util.CaptureUserOut()
 		_, _, err = app.Exec(&ExecOpts{
-			Cmd:     fmt.Sprintf(`mysql -uroot -proot -e "%s"`, alterString),
+			Cmd:     fmt.Sprintf(`%s -uroot -proot -e "%s"`, app.GetDBClientCommand(), alterString),
 			Service: `db`,
 		})
 		_ = userOutFunc()
