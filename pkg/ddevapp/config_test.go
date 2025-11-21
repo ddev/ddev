@@ -1758,7 +1758,7 @@ func TestConfigFunctionality(t *testing.T) {
 	}
 
 	// Make sure that the db port is configured
-	out, err = exec.RunHostCommand(app.GetDBClientCommand(), "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
+	out, err = exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
 	require.NoError(t, err, "failed host-side mysql command, output='%v'", out)
 }
 
