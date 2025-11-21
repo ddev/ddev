@@ -26,7 +26,7 @@ var WebTag = "20251117_apt_sources" // Note that this can be overridden by make
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20251117_apt_sources"
+var BaseDBTag = "20251112_deviantintegral_snapshot_zstd"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
