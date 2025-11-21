@@ -1422,7 +1422,7 @@ func TestDdevImportDB(t *testing.T) {
 			sqlPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
 			err = app.ImportDB(sqlPath, "", false, false, db)
 			assert.NoError(err)
-			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | %s -N %s`, app.GetDBClientCommand(), db, db)
+			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | %s -N %s`, db, app.GetDBClientCommand(), db)
 			c[nodeps.Postgres] = fmt.Sprintf(`bash -c "echo '\dt' | psql -t -d %s | awk 'NF > 1'"`, db)
 			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
