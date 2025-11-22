@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"fmt"
 	"math/rand"
 	"net"
 	"os"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
@@ -196,13 +194,11 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 
 // Test that the app assigns an ephemeral port if the default one is not available.
 func TestUseEphemeralPort(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() || globalconfig.GetCAROOT() == "" {
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() || globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
 		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
 	}
-	carootInfo, _ := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`ls -lR "%s"`, globalconfig.GetCAROOT())})
-	t.Logf("CAROOT=%s, content=%s", globalconfig.GetCAROOT(), carootInfo)
 
 	targetHTTPPort, targetHTTPSPort := "28080", "28443"
 	const testString = "Hello from TestUseEphemeralPort"
