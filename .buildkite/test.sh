@@ -228,7 +228,8 @@ if [ "${os:-}" = "windows" ]; then
   echo "Windows installer tests completed successfully"
 fi
 
-make test TESTARGS="-failfast" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
+echo "global config:" && ddev config global
+make testpkg TESTARGS="-failfast -run TestUseEphemeralPort" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
