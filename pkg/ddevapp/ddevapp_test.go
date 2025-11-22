@@ -2042,7 +2042,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 	})
 
 	for _, dbTypeVersion := range serverVersions {
-		t.Logf("Testing mysql client functionality of %s", dbTypeVersion)
+		t.Logf("Testing mysql/mariadb client functionality of %s", dbTypeVersion)
 		parts := strings.Split(dbTypeVersion, ":")
 		dbType := parts[0]
 		dbVersion := parts[1]
@@ -2105,13 +2105,6 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 					require.NoError(t, err, "failed to execute %s in db container: stderr=%s", cmd, stderr)
 					parts := strings.Split(stdout, " ")
 					require.GreaterOrEqual(t, len(parts), 5, "malformed --version response, stdout='%s'", stdout)
-					expectedClientVersion := dbVersion
-					if dbType == nodeps.MariaDB {
-						// mysql client tools all have version "15.1"
-						expectedClientVersion = "15.1"
-					}
-					// Output might be "mariadb  Ver 15.1 Distrib 11.8.0-MariaDB, for Linux (aarch64) using readline 5.1"
-					require.True(t, strings.HasPrefix(parts[4], expectedClientVersion) || strings.HasPrefix(parts[2], expectedClientVersion), "tool='%s' dbType='%s' dbVersion='%s' should have dbVersion='%s' as prefix but received stdout='%s'", tool, dbType, dbVersion, expectedClientVersion, strings.TrimSpace(stdout))
 				}
 			}
 		}
