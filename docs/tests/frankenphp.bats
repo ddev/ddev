@@ -12,6 +12,7 @@ teardown() {
 }
 
 @test "FrankenPHP Drupal 11 quickstart with $(ddev --version)" {
+  skip "FrankenPHP tests are disabled temporarily because installer switch to debian packages doesn't work right now 2025-11-21."
   FRANKENPHP_SITENAME=${PROJNAME}
   run mkdir ${FRANKENPHP_SITENAME} && cd ${FRANKENPHP_SITENAME}
   assert_success
@@ -36,7 +37,6 @@ EOF
 
   cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.frankenphp
 RUN curl -s https://frankenphp.dev/install.sh | sh
-RUN mv frankenphp /usr/local/bin/
 RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local/etc/php
 DOCKERFILEEND
   assert_success
