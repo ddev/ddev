@@ -12,6 +12,7 @@ teardown() {
 }
 
 @test "FrankenPHP Drupal 11 quickstart with $(ddev --version)" {
+  skip "FrankenPHP tests are disabled temporarily because installer switch to debian packages doesn't work right now 2025-11-21."
   FRANKENPHP_SITENAME=${PROJNAME}
   run mkdir ${FRANKENPHP_SITENAME} && cd ${FRANKENPHP_SITENAME}
   assert_success
