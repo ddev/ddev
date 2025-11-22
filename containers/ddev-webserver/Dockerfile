@@ -33,11 +33,19 @@ RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | b
 RUN rm -f /etc/apt/sources.list.d/symfony-stable.list && \
     printf "Types: deb deb-src\nURIs: https://dl.cloudsmith.io/public/symfony/stable/deb/debian/\nSuites: trixie\nComponents: main\nSigned-By: /usr/share/keyrings/symfony-stable-archive-keyring.gpg\n" > /etc/apt/sources.list.d/symfony-stable.sources
 
-# Install mariadb_repo_setup to get mariadb-client from them directly
-RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
+# Set up MariaDB apt repository
+# The key is from https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/installing-mariadb/binary-packages/gpg#mariadb-community-server-debian-ubuntu-key
 # Search for CHANGE_MARIADB_CLIENT to update related code.
-# Workaround for Debian Trixie (13) not being supported yet - use bookworm compatibility. It's not expected that they will maintain any mariadb-10.11 compat without this.
-RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools --os-type=debian --os-version=bookworm
+RUN KEYRING_URL="https://supplychain.mariadb.com/mariadb-keyring-2019.gpg" && \
+    KEYRING_FILE="mariadb-keyring-2019.gpg" && \
+    KEYRING_PATH="/usr/share/keyrings/${KEYRING_FILE}" && \
+    curl -fsSL -O "${KEYRING_URL}" && \
+    curl -fsSL -O "${KEYRING_URL}.sha256" && \
+    sha256sum -c --quiet "${KEYRING_FILE}.sha256" && \
+    gpg --dearmor < "${KEYRING_FILE}" > "${KEYRING_PATH}" && \
+    rm -f "${KEYRING_FILE}" "${KEYRING_FILE}.sha256" && \
+    printf "Package: *\nPin: origin archive.mariadb.org\nPin-Priority: 1000\n" > /etc/apt/preferences.d/mariadb-archive.pref && \
+    printf "Types: deb\nURIs: https://archive.mariadb.org/mariadb-11.8/repo/debian\nSuites: trixie\nComponents: main\nSigned-By: ${KEYRING_PATH}\n" > /etc/apt/sources.list.d/mariadb-archive.sources
 
 # Set up Postgresql apt repository
 RUN install -d /usr/share/postgresql-common/pgdg && curl -s -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
@@ -102,6 +110,10 @@ RUN if [ "$(dpkg --print-architecture)" = "arm64" ]; then cd /tmp && curl -L -s 
 RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then cd /tmp && curl -L -s --fail -O "https://dlm.mariadb.com/3607675/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client_10.11.6+maria~deb12_amd64.deb" -O "https://dlm.mariadb.com/3607123/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client-core_10.11.6+maria~deb12_amd64.deb"; fi
 RUN set -x && cd /tmp && for item in *.deb; do dpkg-deb -x ${item} extracted; done
 RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariadb,mariadb-dump,mysql,mysqldump} /usr/local/mariadb-old/bin
+
+# Install mariadb wrappers
+# Search for CHANGE_MARIADB_CLIENT to update related code.
+RUN DDEV_DATABASE="mariadb:11.8" mariadb-compat-install.sh
 
 ### -------------------------END ddev-webserver-base------------------------------
 

@@ -273,7 +273,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			// also used to use "pidof mysqld", but apparently the
 			// server may not quite be ready when its pid appears
 			out, _, err := app.Exec(&ExecOpts{
-				Cmd:     `(echo "SHOW VARIABLES like 'v%';" | mysql 2>/dev/null) || true`,
+				Cmd:     fmt.Sprintf(`(echo "SHOW VARIABLES like 'v%%';" | %s 2>/dev/null) || true`, app.GetDBClientCommand()),
 				Service: "db",
 				Tty:     false,
 			})
