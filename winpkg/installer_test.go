@@ -366,7 +366,7 @@ func testBasicDdevFunctionality(t *testing.T, distroName string) {
 	projectName := "tp"
 
 	// Make sure previous has been deleted
-	_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev delete -Oy tp")
+	_, _ = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "ddev delete -Oy tp")
 
 	// Clean up any existing test project
 	_, _ = exec.RunHostCommand("wsl.exe", "-d", distroName, "rm", "-rf", projectDir)
