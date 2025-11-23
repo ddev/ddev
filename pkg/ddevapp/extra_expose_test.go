@@ -10,7 +10,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/netutil"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,8 +18,8 @@ import (
 // TestExtraPortExpose tests exposing additional ports with web_extra_exposed_ports.
 // It also tests web_extra_daemons
 func TestExtraPortExpose(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() || nodeps.IsWSL2MirroredMode()) {
-		t.Skip("skipping on Lima/Colima/Mirrored because of unpredictable behavior, unable to connect")
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+		t.Skip("skipping on Lima/Colima because of unpredictable behavior, unable to connect")
 	}
 	assert := asrt.New(t)
 

@@ -706,9 +706,6 @@ func TestDdevStartCustomEntrypoint(t *testing.T) {
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
-	if nodeps.IsWSL2MirroredMode() {
-		t.Skip("Skipping on WSL2 Mirrored Mode, always fails with 'tls: failed to verify certificate: x509: certificate signed by unknown authority'")
-	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -2274,8 +2271,8 @@ func readFileTail(fileName string, maxBytes int64) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() || nodeps.IsWSL2MirroredMode()) {
-		t.Skip("Skipping on Windows/Lima/Colima/Rancher/MirroredWSL as this is tested adequately elsewhere")
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -3455,8 +3452,8 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 // TestHttpsRedirection tests to make sure that webserver and php redirect to correct
 // scheme (http or https).
 func TestHttpsRedirection(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsAppleSilicon() || nodeps.IsWSL2MirroredMode()) {
-		t.Skip("Skipping on Apple Silicon/Mirrored mode to ignore problems with 'connection reset by peer'")
+	if nodeps.IsAppleSilicon() && os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" {
+		t.Skip("Skipping on Apple Silicon to ignore problems with 'connection reset by peer'")
 	}
 	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because MkcertCARoot is not set, no https")
@@ -3929,8 +3926,8 @@ func TestPHPWebserverType(t *testing.T) {
 // from host and from inside container by URL (with port)
 // Related test: TestNetworkAliases
 func TestInternalAndExternalAccessToURL(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsAppleSilicon() || nodeps.IsWSL2MirroredMode()) {
-		t.Skip("Skipping on mac Apple Silicon/Lima/Colima/Rancher/WSLMirrored to ignore problems with 'connection reset by peer'")
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsAppleSilicon() {
+		t.Skip("Skipping on mac Apple Silicon/Lima/Colima/Rancher to ignore problems with 'connection reset by peer'")
 	}
 
 	assert := asrt.New(t)

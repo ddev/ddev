@@ -194,7 +194,7 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 
 // Test that the app assigns an ephemeral port if the default one is not available.
 func TestUseEphemeralPort(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() || globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
 		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
