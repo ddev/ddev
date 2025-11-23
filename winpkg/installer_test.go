@@ -61,6 +61,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			t.Cleanup(func() {
 				t.Logf("Cleaning up %s test - powering off ddev", tc.name)
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev poweroff")
+				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev delete -Oy tp")
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "-u", "root", "bash", "-c", "apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce")
 
 				// Install system ddev to ensure subsequent tests have a working ddev
@@ -363,6 +364,9 @@ func testBasicDdevFunctionality(t *testing.T, distroName string) {
 
 	projectDir := "~/tp"
 	projectName := "tp"
+
+	// Make sure previous has been deleted
+	_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev delete -Oy tp")
 
 	// Clean up any existing test project
 	_, _ = exec.RunHostCommand("wsl.exe", "-d", distroName, "rm", "-rf", projectDir)
