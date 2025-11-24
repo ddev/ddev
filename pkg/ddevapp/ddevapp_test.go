@@ -352,7 +352,6 @@ var (
 		// 20: frankenphp
 		{
 			Name:                          "TestPkgFrankenPHP",
-			Disable:                       true,
 			SourceURL:                     "https://github.com/ddev/test-frankenphp/archive/refs/tags/11.1.2.tar.gz",
 			ArchiveInternalExtractionPath: "test-frankenphp-11.1.2/",
 			FilesTarballURL:               "https://github.com/ddev/test-frankenphp/releases/download/11.1.2/files.tgz",

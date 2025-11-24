@@ -12,7 +12,6 @@ teardown() {
 }
 
 @test "FrankenPHP Drupal 11 quickstart with $(ddev --version)" {
-  skip "FrankenPHP tests are disabled temporarily because installer switch to debian packages doesn't work right now 2025-11-21."
   FRANKENPHP_SITENAME=${PROJNAME}
   run mkdir ${FRANKENPHP_SITENAME} && cd ${FRANKENPHP_SITENAME}
   assert_success
@@ -36,8 +35,19 @@ EOF
   assert_success
 
   cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.frankenphp
-RUN curl -s https://frankenphp.dev/install.sh | sh
-RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local/etc/php
+RUN curl -fsSL https://key.henderkes.com/static-php.gpg -o /usr/share/keyrings/static-php.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/static-php.gpg] https://deb.henderkes.com/ stable main" > /etc/apt/sources.list.d/static-php.list
+# Install FrankenPHP and extensions, see https://frankenphp.dev/docs/#deb-packages for details.
+# You can find the list of available extensions at https://deb.henderkes.com/pool/main/p/
+RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests \
+    frankenphp \
+    php-zts-cli \
+    php-zts-gd \
+    php-zts-pdo-mysql
+# Make sure that 'php' command uses the ZTS version of PHP
+# and that the php.ini in use by FrankenPHP is the one from DDEV.
+RUN ln -sf /usr/bin/php-zts /usr/local/bin/php && \
+    ln -sf /etc/php/${DDEV_PHP_VERSION}/fpm/php.ini /etc/php-zts/php.ini
 DOCKERFILEEND
   assert_success
 
@@ -59,7 +69,6 @@ DOCKERFILEEND
   run curl -sf -I https://${PROJNAME}.ddev.site
   assert_success
   assert_output --regexp "server: (Caddy|FrankenPHP)"
-  assert_output --partial "x-powered-by: PHP/8.4"
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
   assert_output --partial "HTTP/2 200"
 }
