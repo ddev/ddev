@@ -918,9 +918,19 @@ Create Dockerfile for FrankenPHP:
 
 ```bash
 cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.frankenphp
-RUN curl -s https://frankenphp.dev/install.sh | sh
-RUN mv frankenphp /usr/local/bin/
-RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local/etc/php
+RUN curl -fsSL https://key.henderkes.com/static-php.gpg -o /usr/share/keyrings/static-php.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/static-php.gpg] https://deb.henderkes.com/ stable main" > /etc/apt/sources.list.d/static-php.list
+# Install FrankenPHP and extensions, see https://frankenphp.dev/docs/#deb-packages for details.
+# You can find the list of available extensions at https://deb.henderkes.com/pool/main/p/
+RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests \
+    frankenphp \
+    php-zts-cli \
+    php-zts-gd \
+    php-zts-pdo-mysql
+# Make sure that 'php' command uses the ZTS version of PHP
+# and that the php.ini in use by FrankenPHP is the one from DDEV.
+RUN ln -sf /usr/bin/php-zts /usr/local/bin/php && \
+    ln -sf /etc/php/${DDEV_PHP_VERSION}/fpm/php.ini /etc/php-zts/php.ini
 DOCKERFILEEND
 ```
 
@@ -966,9 +976,19 @@ ddev launch $(ddev drush uli)
     INNEREOF
 
     cat <<'INNEREOF' >.ddev/web-build/Dockerfile.frankenphp
-    RUN curl -s https://frankenphp.dev/install.sh | sh
-    RUN mv frankenphp /usr/local/bin/
-    RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local/etc/php
+    RUN curl -fsSL https://key.henderkes.com/static-php.gpg -o /usr/share/keyrings/static-php.gpg && \
+        echo "deb [signed-by=/usr/share/keyrings/static-php.gpg] https://deb.henderkes.com/ stable main" > /etc/apt/sources.list.d/static-php.list
+    # Install FrankenPHP and extensions, see https://frankenphp.dev/docs/#deb-packages for details.
+    # You can find the list of available extensions at https://deb.henderkes.com/pool/main/p/
+    RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests \
+        frankenphp \
+        php-zts-cli \
+        php-zts-gd \
+        php-zts-pdo-mysql
+    # Make sure that 'php' command uses the ZTS version of PHP
+    # and that the php.ini in use by FrankenPHP is the one from DDEV.
+    RUN ln -sf /usr/bin/php-zts /usr/local/bin/php && \
+        ln -sf /etc/php/${DDEV_PHP_VERSION}/fpm/php.ini /etc/php-zts/php.ini
     INNEREOF
 
     ddev composer create-project drupal/recommended-project
