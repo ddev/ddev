@@ -622,7 +622,7 @@ To become an officially supported add-on:
 ## Getting Help
 
 - **DDEV Discord**: Join [DDEV Discord](https://ddev.com/s/discord) for development support
-- **GitHub Discussions**: Use [DDEV Discussions](https://github.com/ddev/ddev/discussions) for questions
-- **Stack Overflow**: Tag questions with [ddev](https://stackoverflow.com/tags/ddev)
+- **GitHub Issues**: Use [DDEV Issues](https://github.com/ddev/ddev/issues) for problems and questions
+- **Add-on Trainings and Resources**: [ddev.com search](https://ddev.com/search/)
 
 Creating DDEV add-ons is a powerful way to contribute to the DDEV ecosystem. Whether you use traditional Bash actions or the new PHP-based actions, you can create sophisticated extensions that help developers worldwide.

@@ -11,7 +11,6 @@ Not all maintainers can do all these things at any given time, but these are the
 * **Support**: We try to give friendly, accurate, and timely responses to those who need help in:
     * [Issue queue](https://github.com/ddev/ddev/issues) (and discussions, etc). Please follow all in at least the ddev/ddev project. On the Watch/Unwatch button at the top of the repository, consider selecting "All Activity". Also consider this on other projects in the `ddev` organization or other projects that are in your interest area.
     * Discord: Please read everything that happens in the [DDEV Discord](https://ddev.com/s/discord) and respond to questions that you can help with.
-    * Stack Overflow. You can subscribe to the [ddev tag on Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) using the [email filter](https://meta.stackoverflow.com/a/400613/8097891) and answer or comment on questions there.
     * Often in [Drupal Slack](https://www.drupal.org/join-slack) #ddev channel. We have tried and tried to get people over to Discord, but it's still pretty active there.
     * Other add-on repositories or related repos where we can help.
 * **Test Runner and Test System Maintenance**: The testing system is complex, and most tests are end-to-end tests, which can be fragile due to design, internet problems, changes upstream, etc. When something goes wrong, we want to figure out what it is and make it better. This can include debugging or rebooting Buildkite-runners, etc.
@@ -64,16 +63,15 @@ There are cases like access to hosting provider integrations that have essential
 * Upsun test accounts
 * Pantheon test account
 * Lagoon test account
-* [Newmonitor.thefays.us](https://newmonitor.thefays.us/icingaweb2/dashboard) (Test runner monitoring).
-* SSH (and sudo) access to `newmonitor.thefays.us`
+* [monitor.ddev.com](https://monitor.ddev.com/icingaweb2/dashboard) (Test runner monitoring).
+* SSH (and sudo) access to `monitor.ddev.com`
 * **[developer.apple.com](https://developer.apple.com)** - Maintainers should be added to the DDEV team in the Apple Developer program, so that they can create new certificates.
-* **SSH access to newmonitor.thefays.us**.
+* **SSH access to monitor.ddev.com**.
 * **Account on pi.ddev.site**.
-* **Notifications from newmonitor.thefays.us**.
-* **Web access to newmonitor.thefays.us**.
+* **Notifications from monitor.ddev.com**.
+* **Web access to monitor.ddev.com**.
 * **SSH access to behind-firewall monitoring proxy**.
 * **Amplitude**: Invite new user at [team management](https://analytics.amplitude.com/ddev/settings/team).
-* **Stack Overflow**: Follow the [ddev tag on Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) and answer or comment on questions there when possible.
 
 ## GitHub Notifications for Organization
 
@@ -102,13 +100,13 @@ How to understand who receives notifications about scheduled events:
 2. Filter by Event: select `schedule`. (If there are none, skip this repository.)
 3. Go through all the workflows and open the last workflow log for the job, it will show which user triggered the event.
 
-## Newmonitor.thefays.us Use and Maintenance
+## monitor.ddev.com Use and Maintenance
 
-[Newmonitor.thefays.us](https://newmonitor.thefays.us) is an Icinga instance that monitors our Buildkite test runners and a few other things like [ddev.com](https://ddev.com), etc. It also monitors some of Randy's small sites, but those can be ignored.
+[monitor.ddev.com](https://monitor.ddev.com) is an Icinga instance that monitors our Buildkite test runners and a few other things like [ddev.com](https://ddev.com), etc. It also monitors some of Randy's small sites, but those can be ignored.
 
-Maintainers have a login to [the dashboard](https://newmonitor.thefays.us/icingaweb2/dashboard) and should receive emails when problems are discovered.
+Maintainers have a login to [the dashboard](https://monitor.ddev.com/icingaweb2/dashboard) and should receive emails when problems are discovered.
 
-You can quickly check [the dashboard](https://newmonitor.thefays.us/icingaweb2/dashboard) to see the current status if you get an email notification. Sometimes the tests are flaky, and of course during power outages or internet outages there may be un-resolvable items.
+You can quickly check [the dashboard](https://monitor.ddev.com/icingaweb2/dashboard) to see the current status if you get an email notification. Sometimes the tests are flaky, and of course during power outages or internet outages there may be un-resolvable items.
 
 ## Test Runner Maintenance
 

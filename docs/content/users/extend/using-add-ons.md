@@ -287,7 +287,6 @@ This shows the final Docker Compose configuration including add-on services.
 - **Add-on documentation**: Check the add-on's GitHub repository readme
 - **DDEV Discord**: Join the [DDEV Discord](https://ddev.com/s/discord) for community support
 - **GitHub Issues**: Report add-on-specific issues to the add-on's repository
-- **Stack Overflow**: Use the [ddev tag](https://stackoverflow.com/tags/ddev)
 
 ## Next Steps
 
