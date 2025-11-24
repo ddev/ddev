@@ -201,7 +201,7 @@ Several tools are available for integrating Vite with TYPO3:
 - **[vite-plugin-typo3](https://github.com/s2b/vite-plugin-typo3)** - Vite plugin for TYPO3
 - **[ddev-vite-sidecar](https://github.com/s2b/ddev-vite-sidecar)** - DDEV add-on for zero-config Vite integration
 
-The vite-asset-collector extension provides detailed [DDEV installation instructions](https://docs.typo3.org/p/praetorius/vite-asset-collector/main/en-us/Installation/Index.html#installation-1). For questions or support, join the Vite channel on [TYPO3 Slack](https://typo3.org/community/meet/chat-slack).
+The vite-asset-collector extension provides detailed [DDEV installation instructions](https://docs.typo3.org/p/praetorius/vite-asset-collector/main/en-us/Installation/Index.html#installation-1). For questions or support, join the Vite channel on [TYPO3 Slack](https://typo3.community/meet/slack).
 
 ## WordPress
 
