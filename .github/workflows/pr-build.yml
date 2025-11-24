@@ -39,7 +39,7 @@ jobs:
     env:
       AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY_DEV }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0

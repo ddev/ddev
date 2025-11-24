@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
@@ -97,7 +97,7 @@ jobs:
       DDEV_WINDOWS_SIGN: ${{ vars.DDEV_WINDOWS_SIGN }}
     steps:
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Build and sign windows amd64/arm64 binaries and installers
@@ -161,7 +161,7 @@ jobs:
       - name: "setup macOS"
         run: |
           brew install coreutils gnu-getopt jq
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
@@ -230,7 +230,7 @@ jobs:
           FURY_TOKEN: "op://push-secrets/FURY_TOKEN/credential_${{ github.repository_owner }}"
           GORELEASER_KEY: "op://push-secrets/GORELEASER_KEY/credential"
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Restore build-most builds
@@ -387,7 +387,7 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
           GITHUB_TOKEN: "op://push-secrets/DDEV_GITHUB_TOKEN/credential"
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0

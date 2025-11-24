@@ -59,7 +59,7 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
           DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
