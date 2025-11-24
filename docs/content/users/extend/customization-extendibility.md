@@ -152,7 +152,7 @@ There are many ways to deploy Node.js in any project, so DDEV tries to let you s
 - You can manually run Node.js scripts using [`ddev exec <script>`](../usage/commands.md#exec) or `ddev exec node <script>`.
 
 !!!tip "Please share your techniques!"
-    There are several ways to share your favorite Node.js tips and techniques. Best are [DDEV add-ons](using-add-ons.md) and [Stack Overflow](https://stackoverflow.com/tags/ddev).
+    There are several ways to share your favorite Node.js tips and techniques. The best ways are by packaging with [DDEV add-ons](using-add-ons.md).
 
 ### Using Node.js as DDEV's primary web server
 

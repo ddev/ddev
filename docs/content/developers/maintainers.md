@@ -11,7 +11,6 @@ Not all maintainers can do all these things at any given time, but these are the
 * **Support**: We try to give friendly, accurate, and timely responses to those who need help in:
     * [Issue queue](https://github.com/ddev/ddev/issues) (and discussions, etc). Please follow all in at least the ddev/ddev project. On the Watch/Unwatch button at the top of the repository, consider selecting "All Activity". Also consider this on other projects in the `ddev` organization or other projects that are in your interest area.
     * Discord: Please read everything that happens in the [DDEV Discord](https://ddev.com/s/discord) and respond to questions that you can help with.
-    * Stack Overflow. You can subscribe to the [ddev tag on Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) using the [email filter](https://meta.stackoverflow.com/a/400613/8097891) and answer or comment on questions there.
     * Often in [Drupal Slack](https://www.drupal.org/join-slack) #ddev channel. We have tried and tried to get people over to Discord, but it's still pretty active there.
     * Other add-on repositories or related repos where we can help.
 * **Test Runner and Test System Maintenance**: The testing system is complex, and most tests are end-to-end tests, which can be fragile due to design, internet problems, changes upstream, etc. When something goes wrong, we want to figure out what it is and make it better. This can include debugging or rebooting Buildkite-runners, etc.
@@ -67,13 +66,12 @@ There are cases like access to hosting provider integrations that have essential
 * [Newmonitor.thefays.us](https://newmonitor.thefays.us/icingaweb2/dashboard) (Test runner monitoring).
 * SSH (and sudo) access to `newmonitor.thefays.us`
 * **[developer.apple.com](https://developer.apple.com)** - Maintainers should be added to the DDEV team in the Apple Developer program, so that they can create new certificates.
-* **SSH access to newmonitor.thefays.us**.
+* **SSH access to monitor.ddev.com**.
 * **Account on pi.ddev.site**.
-* **Notifications from newmonitor.thefays.us**.
+* **Notifications from monitor.ddev.com**.
 * **Web access to newmonitor.thefays.us**.
 * **SSH access to behind-firewall monitoring proxy**.
 * **Amplitude**: Invite new user at [team management](https://analytics.amplitude.com/ddev/settings/team).
-* **Stack Overflow**: Follow the [ddev tag on Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) and answer or comment on questions there when possible.
 
 ## GitHub Notifications for Organization
 
