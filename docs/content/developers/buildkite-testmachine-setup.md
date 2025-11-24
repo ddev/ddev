@@ -73,11 +73,11 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 ## Icinga2 monitoring setup for WSL2 instances
 
-1. Icinga Director web UI, configure the host on `newmonitor.thefays.us`, normally making a copy of an existing identical item.
+1. Icinga Director web UI, configure the host on `monitor.ddev.com`, normally making a copy of an existing identical item.
 2. Deploy the new host using Icinga Director.
 3. `sudo icinga2 node wizard` to configure the agent, see [docs](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#agentsatellite-setup-on-linux)
 4. Restart `sudo systemctl restart icinga2`
-5. On `newmonitor.thefays.us` edit `/usr/local/bin/check_buildkite_agents.sh` to include the hostname of the new instance.
+5. On `monitor.ddev.com` edit `/usr/local/bin/check_buildkite_agents.sh` to include the hostname of the new instance.
 
 ## macOS Docker Desktop Test Agent Setup (Intel and Apple Silicon)
 

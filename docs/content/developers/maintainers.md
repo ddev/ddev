@@ -63,13 +63,13 @@ There are cases like access to hosting provider integrations that have essential
 * Upsun test accounts
 * Pantheon test account
 * Lagoon test account
-* [Newmonitor.thefays.us](https://newmonitor.thefays.us/icingaweb2/dashboard) (Test runner monitoring).
-* SSH (and sudo) access to `newmonitor.thefays.us`
+* [monitor.ddev.com](https://monitor.ddev.com/icingaweb2/dashboard) (Test runner monitoring).
+* SSH (and sudo) access to `monitor.ddev.com`
 * **[developer.apple.com](https://developer.apple.com)** - Maintainers should be added to the DDEV team in the Apple Developer program, so that they can create new certificates.
 * **SSH access to monitor.ddev.com**.
 * **Account on pi.ddev.site**.
 * **Notifications from monitor.ddev.com**.
-* **Web access to newmonitor.thefays.us**.
+* **Web access to monitor.ddev.com**.
 * **SSH access to behind-firewall monitoring proxy**.
 * **Amplitude**: Invite new user at [team management](https://analytics.amplitude.com/ddev/settings/team).
 
@@ -100,13 +100,13 @@ How to understand who receives notifications about scheduled events:
 2. Filter by Event: select `schedule`. (If there are none, skip this repository.)
 3. Go through all the workflows and open the last workflow log for the job, it will show which user triggered the event.
 
-## Newmonitor.thefays.us Use and Maintenance
+## monitor.ddev.com Use and Maintenance
 
-[Newmonitor.thefays.us](https://newmonitor.thefays.us) is an Icinga instance that monitors our Buildkite test runners and a few other things like [ddev.com](https://ddev.com), etc. It also monitors some of Randy's small sites, but those can be ignored.
+[monitor.ddev.com](https://monitor.ddev.com) is an Icinga instance that monitors our Buildkite test runners and a few other things like [ddev.com](https://ddev.com), etc. It also monitors some of Randy's small sites, but those can be ignored.
 
-Maintainers have a login to [the dashboard](https://newmonitor.thefays.us/icingaweb2/dashboard) and should receive emails when problems are discovered.
+Maintainers have a login to [the dashboard](https://monitor.ddev.com/icingaweb2/dashboard) and should receive emails when problems are discovered.
 
-You can quickly check [the dashboard](https://newmonitor.thefays.us/icingaweb2/dashboard) to see the current status if you get an email notification. Sometimes the tests are flaky, and of course during power outages or internet outages there may be un-resolvable items.
+You can quickly check [the dashboard](https://monitor.ddev.com/icingaweb2/dashboard) to see the current status if you get an email notification. Sometimes the tests are flaky, and of course during power outages or internet outages there may be un-resolvable items.
 
 ## Test Runner Maintenance
 
