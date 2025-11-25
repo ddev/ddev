@@ -105,7 +105,7 @@ func TestPantheonPull(t *testing.T) {
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "2025-07/test-site-pic.jpg"))
 	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s %s -N`, app.GetDBClientCommand(), DdevBin))
-	assert.NoError(err)
+	assert.NoError(err, "failed to run mysql command: %v, out=%v", err, out)
 	assert.True(strings.HasPrefix(out, "1\n"))
 
 	err = app.MutagenSyncFlush()
