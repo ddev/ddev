@@ -3,7 +3,6 @@
 # Use more widely accepted collations by default
 character-set-server = utf8mb4
 collation-server     = utf8mb4_unicode_520_ci
-character_set_collations = utf8mb4=utf8mb4_unicode_520_ci
 
 # caching_sha2_password is the default for mysql 8.0, no config required
 # default-authentication-plugin=caching_sha2_password
