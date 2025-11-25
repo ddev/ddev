@@ -150,6 +150,10 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 	_ = app.Stop(true, false)
 
+	// Pantheon can't handle new collation from Mariadb 11.8's utf8mb4_uca1400_ai_ci
+	app.Database.Type = nodeps.MariaDB
+	app.Database.Version = nodeps.MariaDB1011
+
 	err = os.Chdir(d11code.Dir)
 	require.NoError(t, err)
 
