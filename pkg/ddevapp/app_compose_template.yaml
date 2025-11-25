@@ -83,11 +83,7 @@ services:
       - USER={{ .Username }}
     command: ${DDEV_DB_CONTAINER_COMMAND}
     healthcheck:
-      {{- if eq .DBType "postgres" }}
-      test: "/postgres_healthcheck.sh"
-      {{- else }}
       test: "/healthcheck.sh"
-      {{- end }}
       interval: "1s"
       retries: 70
       start_period: "{{ .DefaultContainerTimeout }}s"
