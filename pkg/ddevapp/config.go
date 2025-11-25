@@ -1216,7 +1216,7 @@ stopasgroup=true
 	if app.Database.Type == nodeps.Postgres {
 		extraDBContent = extraDBContent + fmt.Sprintf(`
 ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
-ADD postgres_healthcheck.sh /
+ADD healthcheck.sh /
 
 RUN <<EOF
 set -eu -o pipefail
@@ -1239,7 +1239,7 @@ USER root
 
 RUN <<EOF
 set -eu -o pipefail
-chmod ugo+rx /postgres_healthcheck.sh
+chmod ugo+rx /healthcheck.sh
 mkdir -p /etc/postgresql/conf.d
 chmod 777 /etc/postgresql/conf.d
 chmod 777 /var/tmp
