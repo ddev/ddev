@@ -15,7 +15,7 @@ teardown() {
   PROJNAME=my-typo3-site
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  run ddev config --project-type=typo3 --docroot=public --php-version=8.3
+  run ddev config --project-type=typo3 --docroot=public
   assert_success
   run ddev start -y >/dev/null
   assert_success
@@ -118,22 +118,16 @@ teardown() {
   PROJNAME=my-typo3-site
   run git clone ${PROJECT_GIT_URL} ${PROJNAME}
   assert_success
-  # cd my-typo3-site
   cd ${PROJNAME} || exit 2
   assert_success
-  # ddev config --project-type=typo3 --docroot=public --php-version=8.3
-  run ddev config --project-type=typo3 --docroot=public --php-version=8.3
+  run ddev config --project-type=typo3 --docroot=public
   assert_success
-  # ddev start -y
   run ddev start -y >/dev/null
   assert_success
-  # ddev composer install
   run ddev composer install >/dev/null
   assert_success
-  # ddev exec touch public/FIRST_INSTALL
   run ddev exec touch public/FIRST_INSTALL
   assert_success
-  # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
@@ -148,13 +142,13 @@ teardown() {
   run mkdir my-typo3-site && cd my-typo3-site
   assert_success
 
-  run ddev config --project-type=typo3 --docroot=public --php-version=8.3 --xhprof-mode=xhgui
+  run ddev config --project-type=typo3 --docroot=public --xhprof-mode=xhgui
   assert_success
 
   run ddev start -y >/dev/null
   assert_success
 
-  run ddev composer create-project typo3/cms-base-distribution >/dev/null
+  run ddev composer create-project typo3/cms-base-distribution:^13 >/dev/null
   assert_success
 
   run ddev exec touch public/FIRST_INSTALL
@@ -186,24 +180,18 @@ teardown() {
   assert_success
 }
 
-# This test is for the future, when we have a v14 quickstart. For now, it's
-# to ensure compatibility with upcoming v14
+# This test is for the future, when we have a v14 quickstart.
 # bats test_tags=typo3-setup,t3v14
-@test "TYPO3 v14 DEV 'ddev typo3 setup' composer test with $(ddev --version)" {
+@test "TYPO3 v14 'ddev typo3 setup' composer test with $(ddev --version)" {
+  skip "re-enable this when typo3 v14 composer build works, see https://github.com/TYPO3/TYPO3.CMS.BaseDistribution/issues/76"
   PROJNAME=my-typo3-site
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
-
-  run git clone https://github.com/TYPO3/TYPO3.CMS.BaseDistribution.git .
+  run ddev config --project-type=typo3 --docroot=public
   assert_success
-
-  run ddev config --project-type=typo3 --docroot=public --php-version=8.3
-  assert_success
-
   run ddev start -y >/dev/null
   assert_success
-
-  run ddev composer install >/dev/null
+  run ddev composer create-project "typo3/cms-base-distribution:^14" >/dev/null
   assert_success
 
   run ddev typo3 setup \
@@ -222,35 +210,14 @@ teardown() {
     --force
   assert_success
 
-  # Restart to get the additional.php settings in there
-  run ddev restart -y
+  run bash -c "DDEV_DEBUG=true ddev launch"
+  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
-  # I don't understand why this would be necessary
-  sleep 2
-
-  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with"
+  run bats_pipe curl -sfI https://${PROJNAME}.ddev.site/ \| grep "HTTP/2 200"
+  assert_success
+  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with <a href=\"https://typo3.org\">TYPO3</a>"
   assert_success
   run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
-  assert_success
-
-  # Now try it with /admin as the BE entrypoint
-  echo '$GLOBALS["TYPO3_CONF_VARS"]["BE"]["entryPoint"] = "/admin";' >> config/system/additional.php
-  assert_success
-  # Sync it into the container immediately
-  run ddev mutagen sync
-  assert_success
-
-  # We not only have to do mutagen sync, but also have to convince
-  # opcache to reset, otherwise it takes 2s to catch the difference
-  run ddev exec killall -USR2 php-fpm
-  assert_success
-
-  run curl -If https://${PROJNAME}.ddev.site/typo3/
-  assert_failure
-  run curl -If https://${PROJNAME}.ddev.site/admin/
-  assert_success
-
-  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/admin/ \| grep "TYPO3 CMS Login:"
   assert_success
 }
