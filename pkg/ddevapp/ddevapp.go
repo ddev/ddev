@@ -3059,7 +3059,12 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 	case app.Database.Type == nodeps.MariaDB && nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version):
 		fallthrough
 	case app.Database.Type == nodeps.MySQL:
-		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | zstd -T0 --quiet > "%s"`, path.Base(targetFile), targetFile)
+		// This old Debian 9 container has zstd 1.1.2 which doesn't support multithreading.
+		if app.Database.Version == "5.5" {
+			c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | zstd --quiet > "%s"`, path.Base(targetFile), targetFile)
+		} else {
+			c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | zstd -T0 --quiet > "%s"`, path.Base(targetFile), targetFile)
+		}
 	case app.Database.Type == nodeps.Postgres:
 		postgresDataPath := app.GetPostgresDataPath()
 		postgresDataDir := app.GetPostgresDataDir()
