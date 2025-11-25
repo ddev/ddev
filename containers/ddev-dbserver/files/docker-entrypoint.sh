@@ -56,7 +56,12 @@ if [ $# = "2" ] && [ "${1:-}" = "restore_snapshot" ] ; then
     cd "${target}"
     case "$ext" in
       zst)
-        zstd -T0 -dc --quiet "${snapshot}" | ${STREAMTOOL} -x
+        # Only use zstd if multithreading is supported (zstd 1.2.0+).
+        if zstd --version | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+' | awk -F. '{if ($1*10000 + $2*100 + $3 < 10200) exit 1; else exit 0}'; then
+          zstd -T0 -dc --quiet "${snapshot}" | ${STREAMTOOL} -x
+        else
+          zstd -dc --quiet "${snapshot}" | ${STREAMTOOL} -x
+        fi
         ;;
       gz)
         gunzip -c "${snapshot}" | ${STREAMTOOL} -x
