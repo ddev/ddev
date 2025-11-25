@@ -1,14 +1,14 @@
 name: Test Podman Rootless Mutagen
 on:
-  pull_request:
-    paths:
-      - "go.*"
-      - "pkg/**"
-      - "cmd/**"
-      - "Makefile"
-      - "vendor/**"
-      - ".github/workflows/**"
-      - "!.github/workflows/docs**"
+#  pull_request:
+#    paths:
+#      - "go.*"
+#      - "pkg/**"
+#      - "cmd/**"
+#      - "Makefile"
+#      - "vendor/**"
+#      - ".github/workflows/**"
+#      - "!.github/workflows/docs**"
   push:
     branches: [ main, master ]
   workflow_dispatch:

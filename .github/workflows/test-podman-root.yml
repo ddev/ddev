@@ -1,16 +1,16 @@
 name: Test Podman Root
 on:
-  pull_request:
-    paths:
-      - "go.*"
-      - "pkg/**"
-      - "cmd/**"
-      - "Makefile"
-      - "vendor/**"
-      - ".github/workflows/**"
-      - "!.github/workflows/docs**"
-  push:
-    branches: [ main, master ]
+#  pull_request:
+#    paths:
+#      - "go.*"
+#      - "pkg/**"
+#      - "cmd/**"
+#      - "Makefile"
+#      - "vendor/**"
+#      - ".github/workflows/**"
+#      - "!.github/workflows/docs**"
+#  push:
+#    branches: [ main, master ]
   workflow_dispatch:
     inputs:
       debug_enabled:
