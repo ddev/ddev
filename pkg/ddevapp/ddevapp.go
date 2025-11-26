@@ -997,18 +997,18 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	case nodeps.MySQL:
 		fallthrough
 	case nodeps.MariaDB:
-		//dbClientCmd := app.GetDBClientCommand()
+		dbClientCmd := app.GetDBClientCommand()
 		preImportSQL = fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
 		if !noDrop {
 			preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 		}
 
 		// Case for reading from file
-		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -e "%s" %s && pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//' | mysql %s %s`, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, insideContainerImportPath, "`", targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && %s -e "%s" %s && pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//' | %s %s %s`, dbClientCmd, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, insideContainerImportPath, "`", dbClientCmd, targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
 
 		// Alternate case where we are reading from stdin
 		if dumpFile == "" && extractPath == "" {
-			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -e "%s" %s && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s %s`, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, "`", targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && %s -e "%s" %s && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | %s %s %s`, dbClientCmd, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, "`", dbClientCmd, targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
 		}
 
 	case nodeps.Postgres:
