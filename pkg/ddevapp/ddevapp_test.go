@@ -1478,6 +1478,48 @@ func TestDdevImportDB(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
+	// Test COLLATE handling: modern collations should be replaced, legacy should be preserved
+	dbType := nodeps.MariaDB
+	var out, stderr string
+	// Test modern collations (should be replaced with utf8mb4_unicode_ci)
+	modernCollationsFile := filepath.Join(origDir, "testdata", t.Name(), dbType, "modern_collations.sql")
+	err = app.ImportDB(modernCollationsFile, "", false, false, "db")
+	assert.NoError(err, "Failed to import modern_collations.sql")
+
+	// Verify modern MariaDB 11.x collation was replaced
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e "SHOW CREATE TABLE modern_mariadb\G" db | grep -i collate`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "Failed to check modern_mariadb collation, stderr=%s", stderr)
+	assert.NotContains(out, "utf8mb4_uca1400_ai_ci", "Modern MariaDB collation should have been replaced")
+	assert.Contains(out, "utf8mb4_unicode_ci", "Modern MariaDB collation should be replaced with utf8mb4_unicode_ci")
+
+	// Verify modern MySQL 8.0+ collation was replaced
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e "SHOW CREATE TABLE modern_mysql\G" db | grep -i collate`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "Failed to check modern_mysql collation, stderr=%s", stderr)
+	assert.NotContains(out, "utf8mb4_0900_ai_ci", "Modern MySQL collation should have been replaced")
+	assert.Contains(out, "utf8mb4_unicode_ci", "Modern MySQL collation should be replaced with utf8mb4_unicode_ci")
+
+	// Test legacy collations (should be preserved as-is)
+	legacyCollationsFile := filepath.Join(origDir, "testdata", t.Name(), dbType, "legacy_collations.sql")
+	err = app.ImportDB(legacyCollationsFile, "", false, false, "db")
+	assert.NoError(err, "Failed to import legacy_collations.sql")
+
+	// Verify legacy collations were preserved
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e "SHOW CREATE TABLE legacy_collations\G" db`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "Failed to check legacy_collations table, stderr=%s", stderr)
+	assert.Contains(out, "ascii_general_ci", "Legacy ascii_general_ci collation should be preserved")
+	assert.Contains(out, "utf8mb4_general_ci", "Legacy utf8mb4_general_ci collation should be preserved")
+	assert.Contains(out, "utf8mb4_unicode_ci", "Legacy utf8mb4_unicode_ci collation should be preserved")
+	assert.Contains(out, "latin1_swedish_ci", "Legacy latin1_swedish_ci collation should be preserved")
+
 	// Test database that has SQL DDL in the content to make sure nothing gets corrupted.
 	// Make sure database "test" does not exist initially
 	dbType := nodeps.MariaDB
