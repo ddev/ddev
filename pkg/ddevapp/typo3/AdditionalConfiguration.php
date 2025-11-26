@@ -17,7 +17,7 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
                         'driver' => '{{ .DBDriver }}',
                         'host' => '{{ .DBHostname }}',
                         'password' => 'db',
-                        'port' => '{{ .DBPort }}',
+                        'port' => {{ .DBPort }},
                         'user' => 'db',
                     ],
                 ],
