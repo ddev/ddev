@@ -87,7 +87,6 @@ func init() {
 			postImportDBAction:         backdropPostImportDBAction,
 			postStartAction:            backdropPostStartAction,
 			importFilesAction:          backdropImportFilesAction,
-			defaultWorkingDirMap:       docrootWorkingDir,
 			composerCreateAllowedPaths: getBackdropComposerCreateAllowedPaths,
 		},
 
@@ -114,7 +113,6 @@ func init() {
 			configOverrideAction:       drupalConfigOverrideAction,
 			postStartAction:            drupal6PostStartAction,
 			importFilesAction:          drupalImportFilesAction,
-			defaultWorkingDirMap:       docrootWorkingDir,
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
@@ -127,7 +125,6 @@ func init() {
 			configOverrideAction:       drupal7ConfigOverrideAction,
 			postStartAction:            drupal7PostStartAction,
 			importFilesAction:          drupalImportFilesAction,
-			defaultWorkingDirMap:       docrootWorkingDir,
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
