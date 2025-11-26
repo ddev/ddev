@@ -3060,7 +3060,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 		fallthrough
 	case app.Database.Type == nodeps.MySQL:
 		// This old Debian 9 container has zstd 1.1.2 which doesn't support multithreading.
-		if app.Database.Version == "5.5" {
+		if app.Database.Version == "5.5" || app.Database.Version == "5.6" {
 			c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | zstd --quiet > "%s"`, path.Base(targetFile), targetFile)
 		} else {
 			c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | zstd -T0 --quiet > "%s"`, path.Base(targetFile), targetFile)
