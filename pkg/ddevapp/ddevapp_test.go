@@ -1564,6 +1564,39 @@ func TestDdevImportDB(t *testing.T) {
 	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
 	assert.Equal("180\n", out)
 
+	// Test that invalid SQL is properly detected and reported
+	// This verifies the PIPESTATUS check catches mysql/mariadb errors
+	invalidSQLFile := filepath.Join(origDir, "testdata", t.Name(), "mariadb", "invalid.sql")
+	err = app.ImportDB(invalidSQLFile, "", false, false, "db")
+	assert.Error(err, "Expected import of invalid.sql to fail")
+	assert.Contains(err.Error(), "failed to import database", "Error should mention import failure")
+
+	// Verify the table from before the error was created, but table after error was not
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e 'SHOW TABLES LIKE "test_table";'`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
+	assert.Contains(out, "test_table", "Table before error should have been created")
+
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e 'SHOW TABLES LIKE "should_not_exist";'`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
+	assert.NotContains(out, "should_not_exist", "Table after error should not have been created")
+
+	// Test invalid SQL via stdin as well
+	invalidFile, err := os.Open(invalidSQLFile)
+	require.NoError(t, err)
+	oldStdin = os.Stdin
+	os.Stdin = invalidFile
+	err = app.ImportDB("", "", false, false, "db")
+	os.Stdin = oldStdin
+	invalidFile.Close()
+	assert.Error(err, "Expected stdin import of invalid SQL to fail")
+	assert.Contains(err.Error(), "failed to import database", "Stdin import error should mention import failure")
+
 	// Now check standard archive imports
 	if site.DBTarURL != "" {
 		_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)

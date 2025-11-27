@@ -1008,15 +1008,17 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		// 1. Strips sandbox mode comments, CREATE DATABASE, and USE statements from the dump
 		// 2. Replaces MariaDB 11.x modern collation (utf8mb4_uca1400_ai_ci) with compatible fallback (utf8mb4_unicode_ci)
 		// 3. Replaces MySQL 8.0+ modern collation (utf8mb4_0900_ai_ci) with compatible fallback (utf8mb4_unicode_ci)
-		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && %s -e "%s" %s && pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//; s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE utf8mb4_unicode_ci/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE utf8mb4_unicode_ci/gi' | %s %s %s`, dbClientCmd, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, insideContainerImportPath, "`", dbClientCmd, targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
+		// The PIPESTATUS check ensures we catch and report errors from the mysql command
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s -e "%s" %s; pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//; s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE utf8mb4_unicode_ci/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE utf8mb4_unicode_ci/gi' | %s %s %s; status=${PIPESTATUS[2]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, insideContainerImportPath, "`", dbClientCmd, targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
 
 		// Alternate case where we are reading from stdin
 		// The Perl regex does three things:
 		// 1. Strips CREATE DATABASE and USE statements from the dump
 		// 2. Replaces MariaDB 11.x modern collation (utf8mb4_uca1400_ai_ci) with compatible fallback (utf8mb4_unicode_ci)
 		// 3. Replaces MySQL 8.0+ modern collation (utf8mb4_0900_ai_ci) with compatible fallback (utf8mb4_unicode_ci)
+		// The PIPESTATUS check ensures we catch and report errors from the mysql command even when reading from stdin
 		if dumpFile == "" && extractPath == "" {
-			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && %s -e "%s" %s && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//; s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE utf8mb4_unicode_ci/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE utf8mb4_unicode_ci/gi' | %s %s %s`, dbClientCmd, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, "`", dbClientCmd, targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s -e "%s" %s; perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//; s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE utf8mb4_unicode_ci/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE utf8mb4_unicode_ci/gi' | %s %s %s; status=${PIPESTATUS[1]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, "`", dbClientCmd, targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
 		}
 
 	case nodeps.Postgres:
