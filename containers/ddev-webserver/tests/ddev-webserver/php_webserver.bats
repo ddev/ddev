@@ -4,42 +4,40 @@
 # bats tests/ddev-webserver/php_webserver.bats
 
 @test "http and https phpstatus access work inside and outside container for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    curl -sSL --fail http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
-    if [ "${OS:-$(uname)}" != "Windows_NT" ] ; then
-        # TODO: Why doesn't this work on Windows?
-        curl -sSL --fail https://127.0.0.1:$HOST_HTTPS_PORT/test/phptest.php
-    fi
-    docker exec -t $CONTAINER_NAME curl --fail http://127.0.0.1/test/phptest.php
-    docker exec -t $CONTAINER_NAME curl --fail https://127.0.0.1/test/phptest.php
+  curl -sSL --fail http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
+  if [ "${OS:-$(uname)}" != "Windows_NT" ] ; then
+    # TODO: Why doesn't this work on Windows?
+    curl -sSL --fail https://127.0.0.1:$HOST_HTTPS_PORT/test/phptest.php
+  fi
+  docker exec -t $CONTAINER_NAME curl --fail http://127.0.0.1/test/phptest.php
+  docker exec -t $CONTAINER_NAME curl --fail https://127.0.0.1/test/phptest.php
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    # TODO: PHP8.5: Enable for php8.5 when extensions are available
-    if [ "${PHP_VERSION}" = "8.5" ]; then skip "xdebug not yet available on PHP8.5"; fi
-    CURRENT_ARCH=$(../get_arch.sh)
-    docker exec -t $CONTAINER_NAME enable_xdebug
-    if [[ ${PHP_VERSION} != 8.? ]] ; then
-      docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
-    else
-      docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.mode"
-    fi
-    curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php | grep "Xdebug is enabled"
-    docker exec -t $CONTAINER_NAME disable_xdebug
-    docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.*does not exist"
-    curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php | grep "Xdebug is disabled"
+  # TODO: PHP8.5: Enable for php8.5 when extensions are available
+  if [ "${PHP_VERSION}" = "8.5" ]; then skip "xdebug not yet available on PHP8.5"; fi
+  CURRENT_ARCH=$(../get_arch.sh)
+  docker exec -t $CONTAINER_NAME enable_xdebug
+  if [[ ${PHP_VERSION} != 8.? ]] ; then
+    docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
+  else
+    docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.mode"
+  fi
+  curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php | grep "Xdebug is enabled"
+  docker exec -t $CONTAINER_NAME disable_xdebug
+  docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.*does not exist"
+  curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php | grep "Xdebug is disabled"
 }
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    # TODO: PHP8.5: Enable for php8.5 when extensions are available
-    if [ "${PHP_VERSION}" = "8.5" ]; then skip "xhprof not yet available on PHP8.5"; fi
-    CURRENT_ARCH=$(../get_arch.sh)
+  CURRENT_ARCH=$(../get_arch.sh)
 
-    docker exec -t $CONTAINER_NAME enable_xhprof
-    docker exec -t $CONTAINER_NAME php --re xhprof | grep "xhprof.output_dir"
-    curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is enabled"
-    docker exec -t $CONTAINER_NAME disable_xhprof
-    docker exec -t $CONTAINER_NAME php --re xhprof | grep "does not exist"
-    curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is disabled"
+  docker exec -t $CONTAINER_NAME enable_xhprof
+  docker exec -t $CONTAINER_NAME php --re xhprof | grep "xhprof.output_dir"
+  curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is enabled"
+  docker exec -t $CONTAINER_NAME disable_xhprof
+  docker exec -t $CONTAINER_NAME php --re xhprof | grep "does not exist"
+  curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is disabled"
 }
 
 @test "verify mailpit for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
@@ -58,56 +56,52 @@
 }
 
 @test "verify phpstatus endpoint for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    curl -s 127.0.0.1:$HOST_HTTP_PORT/phpstatus | egrep "idle processes|php is working"
+  curl -s 127.0.0.1:$HOST_HTTP_PORT/phpstatus | egrep "idle processes|php is working"
 }
 
 @test "verify error conditions for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    # These are just the standard nginx 403 and 404 pages
-    curl 127.0.0.1:$HOST_HTTP_PORT/asdf | grep "404 Not Found"
-    # We're just checking the error code here - there's not much more we can do in
-    # this case because the container is *NOT* intercepting 50x errors.
-    for item in 400 401 500; do
-        curl -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/${item}.php | grep $item
-    done
+  # These are just the standard nginx 403 and 404 pages
+  curl 127.0.0.1:$HOST_HTTP_PORT/asdf | grep "404 Not Found"
+  # We're just checking the error code here - there's not much more we can do in
+  # this case because the container is *NOT* intercepting 50x errors.
+  for item in 400 401 500; do
+    curl -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/${item}.php | grep $item
+  done
 }
 
 @test "verify that test/phptest.php is interpreted ($project_type)" {
-	curl --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
+  curl --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
 }
 
 @test "verify key php extensions are loaded on PHP${PHP_VERSION}" {
   if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then skip "Skipping on apache-fpm because we don't have to do this twice"; fi
-  # TODO: PHP8.5: Enable for php8.5 when extensions are available
-  if [ "${PHP_VERSION}" = "8.5" ]; then skip "Extensions not yet available on PHP8.5"; fi
 
-  # EXPERIMENTAL: Conditional extension list based on Debian Trixie Sury repository availability
+  # Conditional extension list based on Debian Trixie Sury repository availability
   # Base extensions that should always be available
-  extensions="apcu bcmath bz2 curl gd imagick intl ldap mbstring memcached mysqli pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
-  
+  extensions="apcu bcmath bz2 curl gd imagick intl ldap mbstring mysqli pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
+
   # Conditionally add extensions based on PHP version and known Sury repository issues
+  # https://codeberg.org/oerdnj/deb.sury.org/issues
   case ${PHP_VERSION} in
   5.6)
-    # php5.6: memcached missing on arm64, redis available, json available
-    extensions="$extensions redis json"
-    if [ "$(uname -m)" != "aarch64" ] && [ "$(uname -m)" != "arm64" ]; then
-      extensions="$extensions memcached"
-    fi
+    extensions="$extensions json memcached redis xdebug"
     ;;
   7.0|7.1|7.2|7.3)
-    # php7.0-7.3: both memcached and redis missing in Debian Trixie Sury repo, json available
-    extensions="$extensions json"
+    extensions="$extensions json memcached xdebug"
+    # php7.0-7.3: redis arm64 is missing in Debian Trixie Sury
+    if [ "$(uname -m)" != "aarch64" ] && [ "$(uname -m)" != "arm64" ]; then
+      extensions="$extensions redis"
+    fi
     ;;
   7.4)
-    # php7.4: memcached missing, redis available, json available  
-    extensions="$extensions redis json"
+    extensions="$extensions json memcached redis xdebug"
     ;;
   8.0|8.1|8.2|8.3|8.4)
-    # php8.0-8.4: redis available
-    extensions="$extensions redis"
+    extensions="$extensions memcached redis xdebug"
     ;;
-  # TODO: PHP8.5: Remove this stanza to enable redis testing on php8.5 when extensions are available
   8.5)
-    # php8.5: redis not yet available in Debian Trixie Sury repo
+    # TODO: PHP8.5: memcached and xdebug not yet available in Debian Trixie Sury repo
+    extensions="$extensions redis"
     ;;
   *)
     # Default fallback for future PHP versions - assume redis available
@@ -115,17 +109,23 @@
     ;;
   esac
 
-  run docker exec -t $CONTAINER_NAME enable_xdebug
+  # TODO: PHP8.5: Enable for php8.5 when xdebug is available
+  if [ "${PHP_VERSION}" != "8.5" ]; then
+    run docker exec -t $CONTAINER_NAME enable_xdebug
+  fi
   run docker exec -t $CONTAINER_NAME enable_xhprof
   run docker exec -t $CONTAINER_NAME bash -c "php -r \"print_r(get_loaded_extensions());\" 2>/dev/null | tr -d '\r\n'"
   loaded="${output}"
   # echo "# loaded=${output}" >&3
   for item in $extensions; do
-#    echo "# extension: $item on PHP${PHP_VERSION}" >&3
+    # echo "# extension: $item on PHP${PHP_VERSION}" >&3
     grep -q "=> $item " <<< ${loaded} || (echo "# extension ${item} not loaded" >&3 && false)
   done
 
-  run docker exec -t $CONTAINER_NAME disable_xdebug
+  # TODO: PHP8.5: Enable for php8.5 when xdebug is available
+  if [ "${PHP_VERSION}" != "8.5" ]; then
+    run docker exec -t $CONTAINER_NAME disable_xdebug
+  fi
   run docker exec -t $CONTAINER_NAME disable_xhprof
 }
 
