@@ -991,6 +991,9 @@ func TestPHPConfig(t *testing.T) {
 		phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	}
 
+	//TODO: php8.5: Remove this exclusion when php85 has solr
+	phpKeys = util.SubtractSlices(phpKeys, []string{nodeps.PHP85})
+
 	sort.Strings(phpKeys)
 
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/.env"), filepath.Join(site.Dir, ".ddev/.env"))

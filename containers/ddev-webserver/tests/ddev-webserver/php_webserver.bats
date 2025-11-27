@@ -109,19 +109,19 @@
     ;;
   esac
 
-  run docker exec -t $CONTAINER_NAME enable_xdebug
-  run docker exec -t $CONTAINER_NAME enable_xhprof
-
-  run docker exec -t $CONTAINER_NAME bash -c "php${PHP_VERSION} -r \"print_r(get_loaded_extensions());\" 2>/dev/null | tr -d '\r\n'"
+  # Load xhprof first, then xdebug, because loading xhprof disables xdebug
+  run docker exec $CONTAINER_NAME enable_xhprof
+  run docker exec $CONTAINER_NAME enable_xdebug
+  run docker exec $CONTAINER_NAME bash -c "php -r 'foreach (get_loaded_extensions() as \$e) echo \$e, PHP_EOL;' 2>/dev/null"
   loaded="${output}"
   # echo "# loaded=${output}" >&3
   for item in $extensions; do
-    # echo "# extension: $item on PHP${PHP_VERSION}" >&3
-    grep -q "=> $item " <<< ${loaded} || (echo "# extension ${item} not loaded" >&3 && false)
+    # echo "# extension: $item on php${PHP_VERSION}" >&3
+    grep -qx "$item" <<< "${loaded}" || (echo "# extension ${item} not loaded" >&3 && false)
   done
 
-  run docker exec -t $CONTAINER_NAME disable_xdebug
-  run docker exec -t $CONTAINER_NAME disable_xhprof
+  run docker exec $CONTAINER_NAME disable_xhprof
+  run docker exec $CONTAINER_NAME disable_xdebug
 }
 
 @test "verify that both nginx logs and fpm logs are being tailed (${WEBSERVER_TYPE})" {
