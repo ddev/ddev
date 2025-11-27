@@ -3078,7 +3078,13 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -I 'zstd -T0' -cf %s -C /var/tmp/pgstructure/ .", postgresDataPath, path.Base(targetFile), versionDir, versionDir, targetFile)
 		} else {
 			// PostgreSQL ≤17: original behavior
-			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -I 'zstd -T0' -cf %s -C /var/tmp/pgbackup/ .", postgresDataPath, path.Base(targetFile), targetFile)
+			// As well, handle older images not containing multithreaded zstd.
+			pgVersion, _ := strconv.ParseFloat(app.Database.Version, 64)
+			if pgVersion >= 12 {
+				c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -I 'zstd -T0' -cf %s -C /var/tmp/pgbackup/ .", postgresDataPath, path.Base(targetFile), targetFile)
+			} else {
+				c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -I 'zstd' -cf %s -C /var/tmp/pgbackup/ .", postgresDataPath, path.Base(targetFile), targetFile)
+			}
 		}
 	}
 	return c
