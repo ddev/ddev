@@ -2298,7 +2298,7 @@ Use a new or existing Composer project, or clone a Git repository.
 
     ```bash
     mkdir my-silverstripe-site && cd my-silverstripe-site
-    ddev config --project-type=silverstripe --docroot=public
+    ddev config --project-type=silverstripe --docroot=public --php-version=8.3
     ```
 
     Start DDEV (this may take a minute):
@@ -2328,7 +2328,7 @@ Use a new or existing Composer project, or clone a Git repository.
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-silverstripe-site && cd my-silverstripe-site
-        ddev config --project-type=silverstripe --docroot=public
+        ddev config --project-type=silverstripe --docroot=public --php-version=8.3
         ddev start -y
         ddev composer create-project --prefer-dist silverstripe/installer
         ddev sake dev/build flush=all
@@ -2343,7 +2343,7 @@ Use a new or existing Composer project, or clone a Git repository.
     ```bash
     git clone <my-silverstripe-repo> my-silverstripe-site
     cd my-silverstripe-site
-    ddev config --project-type=silverstripe --docroot=public
+    ddev config --project-type=silverstripe --docroot=public --php-version=8.3
     ddev start
     ddev composer install
     ddev sake dev/build flush=all
@@ -2520,7 +2520,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
-    ddev config --project-type=symfony --docroot=public
+    ddev config --project-type=symfony --docroot=public --php-version=8.3
     ```
 
     Start DDEV (this may take a minute):
@@ -2551,7 +2551,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-symfony-site && cd my-symfony-site
-        ddev config --project-type=symfony --docroot=public
+        ddev config --project-type=symfony --docroot=public --php-version=8.3
         ddev start -y
         ddev composer create-project symfony/skeleton
         ddev composer require webapp
@@ -2565,7 +2565,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
-    ddev config --project-type=symfony --docroot=public
+    ddev config --project-type=symfony --docroot=public --php-version=8.3
     ddev start
     ddev exec symfony check:requirements
     ddev exec symfony new temp --webapp
@@ -2580,7 +2580,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     git clone <my-symfony-repo> my-symfony-site
     cd my-symfony-site
-    ddev config --project-type=symfony --docroot=public
+    ddev config --project-type=symfony --docroot=public --php-version=8.3
     ddev start
     ddev composer install
     ddev launch

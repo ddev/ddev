@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "TYPO3 v13 'ddev typo3 setup' composer test with $(ddev --version)" {
+  # TODO: quickstart, waiting for fix from TYPO3
+  skip "re-enable this when typo3 v13 composer build works, see https://forge.typo3.org/issues/108349"
   PROJNAME=my-typo3-site
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -38,7 +40,7 @@ teardown() {
     --force
   assert_success
 
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
@@ -77,7 +79,7 @@ teardown() {
     --force
   assert_success
 
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
@@ -102,7 +104,7 @@ teardown() {
   run ddev exec touch public/FIRST_INSTALL
   assert_success
 
-  run bash -c "DDEV_DEBUG=true ddev launch /typo3/install.php"
+  DDEV_DEBUG=true run ddev launch /typo3/install.php
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/typo3/install.php"
   assert_success
 
@@ -111,7 +113,6 @@ teardown() {
   run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/typo3/install.php \| grep "data-init=\"TYPO3/CMS/Install/Installer\""
   assert_success
 }
-
 
 @test "TYPO3 git based quickstart with $(ddev --version)" {
   PROJECT_GIT_URL=https://github.com/ddev/test-typo3.git
@@ -128,7 +129,7 @@ teardown() {
   assert_success
   run ddev exec touch public/FIRST_INSTALL
   assert_success
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
@@ -183,6 +184,7 @@ teardown() {
 # This test is for the future, when we have a v14 quickstart.
 # bats test_tags=typo3-setup,t3v14
 @test "TYPO3 v14 'ddev typo3 setup' composer test with $(ddev --version)" {
+  # TODO: quickstart, waiting for fix from TYPO3, this is probably the same issue as v13
   skip "re-enable this when typo3 v14 composer build works, see https://github.com/TYPO3/TYPO3.CMS.BaseDistribution/issues/76"
   PROJNAME=my-typo3-site
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
@@ -210,7 +212,7 @@ teardown() {
     --force
   assert_success
 
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
