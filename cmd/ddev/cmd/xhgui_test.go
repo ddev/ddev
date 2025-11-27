@@ -10,7 +10,6 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 )
@@ -50,11 +49,6 @@ func TestCmdXHGui(t *testing.T) {
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
-
-	//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
-	if app.PHPVersion == nodeps.PHP85 {
-		t.Skip("Skipping tests for PHP8.5 until xdebug lands in PHP8.5")
-	}
 
 	out, err = exec.RunHostCommand(DdevBin, "xhgui", "status")
 	require.NoError(t, err)

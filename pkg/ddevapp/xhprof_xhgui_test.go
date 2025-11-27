@@ -89,12 +89,6 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 		app.WebserverType = webserverKey
 
 		for _, v := range phpKeys {
-			//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
-			if v == nodeps.PHP85 {
-				t.Log("Skipping tests for PHP8.5 until xdebug lands in PHP8.5")
-				continue
-			}
-
 			t.Logf("Beginning XHProf checks with XHProf webserver_type=%s php%s\n", webserverKey, v)
 			fmt.Printf("Attempting XHProf checks with XHProf PHP%s\n", v)
 			app.PHPVersion = v
@@ -208,12 +202,6 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 		app.WebserverType = webserverKey
 
 		for _, v := range phpKeys {
-			//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
-			if v == nodeps.PHP85 {
-				t.Log("Skipping tests for PHP8.5 until xdebug lands in PHP8.5")
-				continue
-			}
-
 			t.Logf("Beginning XHProf checks with XHProf webserver_type=%s php%s\n", webserverKey, v)
 			fmt.Printf("Attempting XHProf checks with XHProf PHP%s\n", v)
 			app.PHPVersion = v
