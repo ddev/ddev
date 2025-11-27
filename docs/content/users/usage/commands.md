@@ -122,7 +122,7 @@ ddev add-on get /path/to/tarball.tar.gz
 ddev add-on get ddev/ddev-redis --project my-project
 
 # Install an add-on without installing its dependencies
-ddev add-on get ddev/ddev-redis-commander --skip-deps
+ddev add-on get ddev/ddev-redis-insight --skip-deps
 ```
 
 **Automatic Dependency Installation:**
@@ -196,7 +196,7 @@ ddev add-on search database
 ddev add-on search redis web
 
 # Search with multiple terms using quotes (currently same behavior)
-ddev add-on search "redis commander"
+ddev add-on search "redis insight"
 ```
 
 ## `aliases`

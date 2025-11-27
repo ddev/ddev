@@ -46,9 +46,9 @@ func TestGetGitHubRelease(t *testing.T) {
 
 	// Test real addon with dependencies
 	t.Run("RealAddonWithDependencies", func(t *testing.T) {
-		// Test ddev-redis-commander which depends on ddev-redis
-		tarballURL, version, err := github.GetGitHubRelease("ddev", "ddev-redis-commander", "")
-		require.NoError(t, err, "Should successfully get ddev-redis-commander release")
+		// Test ddev-redis-insight which depends on ddev-redis
+		tarballURL, version, err := github.GetGitHubRelease("ddev", "ddev-redis-insight", "")
+		require.NoError(t, err, "Should successfully get ddev-redis-insight release")
 		require.NotEmpty(t, tarballURL, "Tarball URL should not be empty")
 		require.NotEmpty(t, version, "Version should not be empty")
 		require.Contains(t, tarballURL, "github.com", "Tarball URL should be from GitHub")
