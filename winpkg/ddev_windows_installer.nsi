@@ -32,6 +32,7 @@ RequestExecutionLevel admin
 !define PRODUCT_NAME "DDEV"
 !define PRODUCT_VERSION "${VERSION}"
 !define PRODUCT_PUBLISHER "DDEV Foundation"
+!define RELEASES_URL "https://github.com/ddev/ddev/releases"
 
 ; Variables
 Var /GLOBAL INSTALL_OPTION
@@ -2084,12 +2085,12 @@ Function .onInit
     ; TARGET_ARCH is set at compile time to either "amd64" or "arm64"
     !if "${TARGET_ARCH}" == "amd64"
         ${IfNot} ${IsNativeAMD64}
-            MessageBox MB_ICONSTOP|MB_OK "This installer is for AMD64 (x86-64) Windows systems.$\n$\nYour system appears to be ARM64. Please download the ARM64 installer instead:$\nhttps://github.com/ddev/ddev/releases"
+            MessageBox MB_ICONSTOP|MB_OK "This installer is for AMD64 (x86-64) Windows systems.$\n$\nYour system appears to be ARM64. Please download the ARM64 installer instead:$\n${RELEASES_URL}"
             Abort
         ${EndIf}
     !else if "${TARGET_ARCH}" == "arm64"
         ${IfNot} ${IsNativeARM64}
-            MessageBox MB_ICONSTOP|MB_OK "This installer is for ARM64 Windows systems.$\n$\nYour system appears to be AMD64 (x86-64). Please download the AMD64 installer instead:$\nhttps://github.com/ddev/ddev/releases"
+            MessageBox MB_ICONSTOP|MB_OK "This installer is for ARM64 Windows systems.$\n$\nYour system appears to be AMD64 (x86-64). Please download the AMD64 installer instead:$\n${RELEASES_URL}"
             Abort
         ${EndIf}
     !endif
