@@ -1562,7 +1562,16 @@ func TestDdevImportDB(t *testing.T) {
 		Cmd:     fmt.Sprintf(`%s -N -e 'SELECT COUNT(*) FROM wp_posts;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
-	assert.Equal("180\n", out)
+	assert.Equal("181\n", out)
+
+	// Verify that collation names in data content are preserved (not replaced)
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e 'SELECT post_content FROM wp_posts WHERE ID=1;'`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
+	assert.Contains(out, "COLLATE utf8mb4_uca1400_ai_ci", "Data content should preserve original collation names")
+	assert.Contains(out, "COLLATE=utf8mb4_0900_ai_ci", "Data content should preserve original collation names with =")
 
 	// Test that invalid SQL is properly detected and reported
 	// This verifies the PIPESTATUS check catches mysql/mariadb errors
