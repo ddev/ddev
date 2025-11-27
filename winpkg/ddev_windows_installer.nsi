@@ -2080,6 +2080,20 @@ Function .onInit
     ; Get Windows TEMP environment variable
     ReadEnvStr $WINDOWS_TEMP "TEMP"
 
+    ; Check that this installer matches the system architecture
+    ; TARGET_ARCH is set at compile time to either "amd64" or "arm64"
+    !if "${TARGET_ARCH}" == "amd64"
+        ${IfNot} ${IsNativeAMD64}
+            MessageBox MB_ICONSTOP|MB_OK "This installer is for AMD64 (x86-64) Windows systems.$\n$\nYour system appears to be ARM64. Please download the ARM64 installer instead:$\nhttps://github.com/ddev/ddev/releases"
+            Abort
+        ${EndIf}
+    !else if "${TARGET_ARCH}" == "arm64"
+        ${IfNot} ${IsNativeARM64}
+            MessageBox MB_ICONSTOP|MB_OK "This installer is for ARM64 Windows systems.$\n$\nYour system appears to be AMD64 (x86-64). Please download the AMD64 installer instead:$\nhttps://github.com/ddev/ddev/releases"
+            Abort
+        ${EndIf}
+    !endif
+
     ; Initialize directory to proper Program Files location
     ${If} ${RunningX64}
         StrCpy $INSTDIR "$PROGRAMFILES64\DDEV"
