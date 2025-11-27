@@ -1522,10 +1522,10 @@ func TestDdevImportDB(t *testing.T) {
 
 	// Test database that has SQL DDL in the content to make sure nothing gets corrupted.
 	// Make sure database "test" does not exist initially
-	dbType := nodeps.MariaDB
+	dbType = nodeps.MariaDB
 	c[nodeps.MariaDB] = fmt.Sprintf(`%s -N -e 'DROP DATABASE IF EXISTS test;'`, app.GetDBClientCommand())
 	c[nodeps.Postgres] = `echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`
-	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     c[dbType],
 	})
