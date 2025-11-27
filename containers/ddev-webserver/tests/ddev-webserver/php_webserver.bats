@@ -109,12 +109,10 @@
     ;;
   esac
 
-  # TODO: PHP8.5: Enable for php8.5 when xdebug is available
-  if [ "${PHP_VERSION}" != "8.5" ]; then
-    run docker exec -t $CONTAINER_NAME enable_xdebug
-  fi
+  run docker exec -t $CONTAINER_NAME enable_xdebug
   run docker exec -t $CONTAINER_NAME enable_xhprof
-  run docker exec -t $CONTAINER_NAME bash -c "php -r \"print_r(get_loaded_extensions());\" 2>/dev/null | tr -d '\r\n'"
+
+  run docker exec -t $CONTAINER_NAME bash -c "php${PHP_VERSION} -r \"print_r(get_loaded_extensions());\" 2>/dev/null | tr -d '\r\n'"
   loaded="${output}"
   # echo "# loaded=${output}" >&3
   for item in $extensions; do
@@ -122,10 +120,7 @@
     grep -q "=> $item " <<< ${loaded} || (echo "# extension ${item} not loaded" >&3 && false)
   done
 
-  # TODO: PHP8.5: Enable for php8.5 when xdebug is available
-  if [ "${PHP_VERSION}" != "8.5" ]; then
-    run docker exec -t $CONTAINER_NAME disable_xdebug
-  fi
+  run docker exec -t $CONTAINER_NAME disable_xdebug
   run docker exec -t $CONTAINER_NAME disable_xhprof
 }
 
