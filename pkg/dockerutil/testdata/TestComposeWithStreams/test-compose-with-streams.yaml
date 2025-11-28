@@ -31,6 +31,7 @@ services:
       com.ddev.site-name: TestComposeWithStreams
     restart: "no"
     healthcheck:
+      test: "/healthcheck.sh"
       interval: 1s
       retries: 25
       start_period: 20s
