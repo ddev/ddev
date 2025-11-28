@@ -26,7 +26,7 @@ var WebTag = "20251127_stasadev_php85" // Note that this can be overridden by ma
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20251117_apt_sources"
+var BaseDBTag = "20251125_rfay_collation"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"

@@ -42,7 +42,10 @@ function load_configs {
     value=$(mysql ${SKIP_SSL} --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT \
   -e "SHOW VARIABLES LIKE '${config}';" | awk -F'\t' '{print $2}')
     echo "# Checking ${config}: Expected=${expected_value}, Found=${value}"
-    [ "${value}" = "${expected_value}" ]
+    if [ "${value}" != "${expected_value}" ]; then
+      echo "# FAILED: ${config} - Expected '${expected_value}' but got '${value}'"
+      false
+    fi
   done
 }
 
