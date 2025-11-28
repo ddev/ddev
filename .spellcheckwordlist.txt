@@ -59,6 +59,7 @@ ExecStart
 ExecStop
 Execute
 Executes
+Executables
 ExpressionEngine
 FPATH
 FSTYPE
