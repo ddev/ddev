@@ -1010,7 +1010,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		// 3. Replaces MySQL 8.0+ modern collation (utf8mb4_0900_ai_ci) with compatible fallback (utf8mb4_unicode_ci)
 		// The collation replacements skip INSERT and VALUES lines to avoid corrupting data that mentions these collations
 		// The PIPESTATUS check ensures we catch and report errors from the mysql command
-		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s -e "%s" %s; pv %s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %s)[^;]*(;|\*\/)//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE utf8mb4_unicode_ci/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE utf8mb4_unicode_ci/gi; }' | %s %s %s; status=${PIPESTATUS[2]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, insideContainerImportPath, "`", dbClientCmd, targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %[1]s -e "%[2]s"; pv %[3]s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %[4]s)[^;]*(;|\*\/)//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE utf8mb4_unicode_ci/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE utf8mb4_unicode_ci/gi; }' | %[1]s %[5]s; status=${PIPESTATUS[2]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, insideContainerImportPath, "`", targetDB)}
 
 		// Alternate case where we are reading from stdin
 		// The Perl regex does three things:
@@ -1020,7 +1020,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		// The collation replacements skip INSERT and VALUES lines to avoid corrupting data that mentions these collations
 		// The PIPESTATUS check ensures we catch and report errors from the mysql command even when reading from stdin
 		if dumpFile == "" && extractPath == "" {
-			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s -e "%s" %s; perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE utf8mb4_unicode_ci/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE utf8mb4_unicode_ci/gi; }' | %s %s %s; status=${PIPESTATUS[1]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, nodeps.MySQLRemoveDeprecatedMessage, "`", dbClientCmd, targetDB, nodeps.MySQLRemoveDeprecatedMessage)}
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %[1]s -e "%[2]s"; perl -p -e 's/^(CREATE DATABASE \/\*|USE %[3]s)[^;]*;//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE utf8mb4_unicode_ci/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE utf8mb4_unicode_ci/gi; }' | %[1]s %[4]s; status=${PIPESTATUS[1]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, "`", targetDB)}
 		}
 
 	case nodeps.Postgres:
@@ -1087,7 +1087,7 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 		targetDB = "db"
 	}
 
-	exportCmd := app.GetDBDumpCommand() + " " + targetDB + nodeps.MySQLRemoveDeprecatedMessage
+	exportCmd := app.GetDBDumpCommand() + " " + targetDB
 	if app.Database.Type == "postgres" {
 		exportCmd = "pg_dump -U db " + targetDB
 	}
