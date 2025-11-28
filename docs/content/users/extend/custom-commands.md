@@ -6,7 +6,7 @@ search:
 
 Custom commands can easily be added to DDEV, to be executed on the host or in containers.
 
-This involves adding a Bash script to the project in `.ddev/commands/host`, a specific container in `.ddev/commands/<containername>`, or globally in `$HOME/.ddev/commands`.
+This involves adding a Bash script to the project in `.ddev/commands/host`, a specific container in `.ddev/commands/<containername>`, or globally in `$HOME/.ddev/commands` (see [global configuration directory](../usage/architecture.md#global-files)).
 
 Example commands in `ddev/commands/*/*.example` can be copied, moved, or symlinked.
 
@@ -67,7 +67,7 @@ Changes to the command files in the global `.ddev` directory need a `ddev start`
 
 ## Shell Command Examples
 
-There are many examples of [global](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/global_dotddev_assets/commands) and [project-level](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/commands) custom/shell commands that ship with DDEV you can adapt for your own use. They can be found in your `$HOME/.ddev/commands/*` directories and in your project’s `.ddev/commands/*` directories. There you’ll see how to provide usage, examples, and how to use arguments provided to the commands. For example, the [`xdebug` command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/web/xdebug) shows simple argument processing and the [launch command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/host/launch) demonstrates flag processing.
+There are many examples of [global](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/global_dotddev_assets/commands) and [project-level](https://github.com/ddev/ddev/tree/main/pkg/ddevapp/dotddev_assets/commands) custom/shell commands that ship with DDEV you can adapt for your own use. They can be found in your `$HOME/.ddev/commands/*` directories (see [global configuration directory](../usage/architecture.md#global-files)) and in your project’s `.ddev/commands/*` directories. There you’ll see how to provide usage, examples, and how to use arguments provided to the commands. For example, the [`xdebug` command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/web/xdebug) shows simple argument processing and the [launch command](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/host/launch) demonstrates flag processing.
 
 ## Command Line Completion
 

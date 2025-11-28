@@ -21,7 +21,7 @@ Here’s how to try it for yourself:
 7. Save all databases with `ddev snapshot --all` before beginning, so you can restore your database if you have to change the name of the project.
 8. Tell DDEV to listen on all network interfaces, omit the SSH agent, use hardened images, and enable Let’s Encrypt:
 
-    ```
+    ```bash
     ddev config global --router-bind-all-interfaces --omit-containers=ddev-ssh-agent --use-hardened-images --performance-mode=none --use-letsencrypt --letsencrypt-email=you@example.com
     ```
 
@@ -40,6 +40,7 @@ Here’s how to try it for yourself:
         Unfortunately, the `traefik` integration with Let's Encrypt does not work if you have hostnames specified that are not resolvable, so every single hostname referenced must be resolvable in DNS. (You can use `additional_fqdns` as well as `additional_hostnames`, but all combinations must be resolvable in DNS.) Some examples:
 
         **Project name = example, URL = `example.com`, also serving `www.example.com` and `mysite.com`**
+
         ```yaml
         project_tld: com
         name: example
@@ -58,7 +59,7 @@ Here’s how to try it for yourself:
 
 10. If you want to redirect HTTP to HTTPS, edit the `.ddev/traefik/config/<projectname>.yaml` to remove the `#ddev-generated` and uncomment the `middlewares:` and `- "redirectHttps"` lines in the HTTP router section.
 11. Run [`ddev start`](../usage/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
-12. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `$HOME/.ddev/traefik/static_config.staging.yaml` with the contents:
+12. If you see trouble with Let's Encrypt `ACME` failures, you can temporarily switch to the `ACME` staging server, and avoid getting rate-limited while you are experimenting. The certificates it serves will not be valid, but you'll see that they're coming from Let's Encrypt anyway. Add a `$HOME/.ddev/traefik/static_config.staging.yaml` (see [global configuration directory](../usage/architecture.md#global-files)) with the contents:
 
     ```yaml
     certificatesResolvers:
@@ -119,7 +120,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 ## Troubleshooting
 
 * `docker logs -f ddev-router` is a great way to see what's going on with the router.
-* You may want to see more than just error output. You can enable debug output with the command below. You can make additional changes to the logging level as needed.
+* You may want to see more than just error output. You can enable debug output with the command below (see [global configuration directory](../usage/architecture.md#global-files)). You can make additional changes to the logging level as needed.
 
     ```bash
     cp $HOME/.ddev/traefik/static_config.loglevel.yaml.example $HOME/.ddev/traefik/static_config.loglevel.yaml

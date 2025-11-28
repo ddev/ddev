@@ -4,7 +4,7 @@
 
 When you start DDEV for the first time or install a new release, you’ll be asked whether to send usage and error information to DDEV’s developers.
 
-Regardless of your choice, you can change this at any time by editing `$HOME/.ddev/global_config.yaml` and setting `instrumentation_opt_in: true` or `instrumentation_opt_in: false`.
+Regardless of your choice, you can change this at any time by editing `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../usage/architecture.md#global-files)) and setting `instrumentation_opt_in: true` or `instrumentation_opt_in: false`.
 
 If you choose to share diagnostics, it helps us tremendously in our effort to improve the tool. Here’s an example of what we might see:
 

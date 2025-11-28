@@ -46,7 +46,7 @@ Separate from the main config, DDEV downloads sponsorship data from a JSON endpo
 
 ## Storage Format
 
-DDEV stores downloaded data locally using Go's `gob` binary encoding format in the user's global DDEV directory:
+DDEV stores downloaded data locally using Go's `gob` binary encoding format in the user's [global configuration directory](../users/usage/architecture.md#global-files):
 
 - `$HOME/.ddev/.remote-config`: Main remote configuration cache
 - `$HOME/.ddev/.sponsorship-data`: Sponsorship information cache  
@@ -143,7 +143,7 @@ be found in the [Masterminds SemVer repository](https://github.com/Masterminds/s
 
 ### Global Configuration
 
-Users can configure remote config behavior in `$HOME/.ddev/global_config.yaml`:
+Users can configure remote config behavior in `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../users/usage/architecture.md#global-files)):
 
 ```yaml
 remote_config:
@@ -192,7 +192,7 @@ To test changes to remote configuration:
 
 1. **Change the upstream configuration** in [ddev/remote-config](https://github.com/ddev/remote-config) or use a fork/branch.
 
-2. **Set up test configuration** in `$HOME/.ddev/global_config.yaml`:
+2. **Set up test configuration** in `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../users/usage/architecture.md#global-files)):
 
    ```yaml
    remote_config:
@@ -204,7 +204,7 @@ To test changes to remote configuration:
 3. **Clear or edit cached data**:
 
    ```bash
-   rm $HOME/.ddev/.state.yaml $HOME/.ddev/.remote-config
+   rm -f $HOME/.ddev/.state.yaml $HOME/.ddev/.remote-config
    ```
 
 4. **Test with verbose output**:

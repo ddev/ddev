@@ -50,7 +50,7 @@ Run [`ddev list`](../usage/commands.md#list) or `ddev list --active-only` curren
  d10             stopped       ~/workspace/d10                                           drupal10
  drup            running (ok)  ~/workspace/drup            https://drup.ddev.site        drupal
  my-cakephp-app  stopped       ~/workspace/my-cakephp-app                                cakephp
- Router          healthy       $HOME/.ddev                     http://127.0.0.1:10999        traefik
+ Router          healthy       ~/.ddev                     http://127.0.0.1:10999        traefik
 ```
 
 ```
@@ -58,7 +58,7 @@ Run [`ddev list`](../usage/commands.md#list) or `ddev list --active-only` curren
 ➜  ddev list --active-only
  NAME        STATUS        LOCATION                URL                           TYPE
  drup        running (ok)  ~/workspace/drup        https://drup.ddev.site        drupal
- Router      healthy       $HOME/.ddev                 http://127.0.0.1:10999        traefik
+ Router      healthy       ~/.ddev                 http://127.0.0.1:10999        traefik
 ```
 
 You can also see more detailed information about a project by running [`ddev describe`](../usage/commands.md#describe) from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.

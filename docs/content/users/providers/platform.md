@@ -12,7 +12,7 @@ DDEV’s Upsun Fixed integration pulls databases and files from an existing Upsu
 You need to obtain and configure an API token first. This is only needed once.
 
 1. Login to the Upsun Dashboard and go to *Account* → *API Tokens*. Create an API token DDEV can use.
-2. Add the API token to the `web_environment` section in your global DDEV configuration at `$HOME/.ddev/global_config.yaml`:
+2. Add the API token to the `web_environment` section in your global DDEV configuration at `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../usage/architecture.md#global-files)):
 
     ```yaml
     web_environment:
