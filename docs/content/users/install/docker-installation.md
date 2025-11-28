@@ -146,7 +146,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     1. Download and install Docker Desktop from [docker.com](https://www.docker.com/products/docker-desktop).
     2. During installation, ensure "Use WSL 2 instead of Hyper-V" is selected.
     3. After installation, open Docker Desktop settings and navigate to **Resources → WSL Integration**.
-    4. Enable integration with your Ubuntu-based WSL2 distro (e.g., Ubuntu, Ubuntu-20.04, Ubuntu-24.04).
+    4. Enable integration with your Ubuntu-based WSL2 distro (e.g., Ubuntu, Ubuntu-24.04, Ubuntu-22.04).
     5. Apply the changes and restart Docker Desktop if prompted.
     6. Verify that `docker ps` works in git-bash, PowerShell, or WSL2, wherever you're using it.
 
@@ -155,7 +155,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     1. Download and install [Rancher Desktop](https://rancherdesktop.io/).
     2. During installation, choose **Docker** as the container runtime and disable Kubernetes.
     3. After installation, open Rancher Desktop and go to **WSL Integration** in the settings.
-    4. Enable integration with your Ubuntu-based WSL2 distro (e.g., Ubuntu, Ubuntu-20.04, Ubuntu-22.04).
+    4. Enable integration with your Ubuntu-based WSL2 distro (e.g., Ubuntu, Ubuntu-24.04, Ubuntu-22.04).
     5. Apply the changes and restart Rancher Desktop if needed.
     6. Verify that `docker ps` works in git-bash, PowerShell, or WSL2, wherever you're using it.
 

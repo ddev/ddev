@@ -199,6 +199,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     The easiest way to install DDEV on Windows is to use the DDEV Windows installer, which can handle different installation scenarios:
 
     1. **Download the Windows installer** from the [DDEV releases page](https://github.com/ddev/ddev/releases). Make sure to download the correct installer for your system architecture:
+
         - **AMD64 (x86-64)**: Most traditional Windows PCs (Intel/AMD processors) → `ddev_windows_amd64_installer.*.exe`
         - **ARM64**: Windows on ARM devices like Microsoft Surface Pro X, Surface Pro 9 (5G), or other ARM-based Windows devices → `ddev_windows_arm64_installer.*.exe`
 
@@ -207,9 +208,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     2. **Run the installer** and choose your installation type:
 
-           - **Docker CE inside WSL2** (Recommended): The installer will automatically install Docker CE in your WSL2 environment. This is the fastest and most reliable option.
-           - **Docker Desktop/Rancher Desktop**: Choose this if you already have Docker Desktop or Rancher Desktop installed or prefer to use them.
-           - **Traditional Windows**: Choose this for non-WSL2 installations (requires Docker Desktop or Rancher Desktop). Note that both Docker Desktop and Rancher Desktop themselves use WSL2, but you will interact with DDEV in Git Bash, PowerShell, or Cmd on the Windows side.
+        - **Docker CE inside WSL2** (Recommended): The installer will automatically install Docker CE in your WSL2 environment. This is the fastest and most reliable option.
+        - **Docker Desktop/Rancher Desktop**: Choose this if you already have Docker Desktop or Rancher Desktop installed or prefer to use them.
+        - **Traditional Windows**: Choose this for non-WSL2 installations (requires Docker Desktop or Rancher Desktop). Note that both Docker Desktop and Rancher Desktop themselves use WSL2, but you will interact with DDEV in Git Bash, PowerShell, or Cmd on the Windows side.
 
     The installer will automatically configure DDEV for your chosen Docker provider and WSL2 environment. If you run the wrong installer for your architecture, it will detect the mismatch and direct you to download the correct one.
 
@@ -258,7 +259,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         If you get the prompt `Installing to the system store is not yet supported on this Linux`, you may need to add `/usr/sbin` to the `$PATH` so that `/usr/sbin/update-ca-certificates` can be found.
 
     !!!note "Windows Firefox Trusted CA"
-
         The `mkcert -install` step on Windows isn’t enough for Firefox. You need to [configure your browser](configuring-browsers.md).
 
 === "Codespaces"
