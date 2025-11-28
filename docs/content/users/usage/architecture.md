@@ -44,7 +44,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Where Docker-friendly users can provide their own [custom compose files](../extend/custom-compose-files.md) that add or override services. Read more in [Additional Service Configurations & Add-ons](../extend/additional-services.md).
 
 `homeadditions` directory
-: Files to be copied into the web container on startup. You could use this, for example, to override the default home directory contents (`.profile`, `.bashrc`, `.composer`, `.ssh`), or include scripts that you’d like to be available inside the container. (You can do the same thing globally in `~/.ddev/homeadditions`.) Check out the [homeadditions docs](../extend/in-container-configuration.md) for more.
+: Files to be copied into the web container on startup. You could use this, for example, to override the default home directory contents (`.profile`, `.bashrc`, `.composer`, `.ssh`), or include scripts that you’d like to be available inside the container. (You can do the same thing globally in `$HOME/.ddev/homeadditions`.) Check out the [homeadditions docs](../extend/in-container-configuration.md) for more.
 
 `mutagen` directory
 : Contains `mutagen.yml`, where you can [override the default Mutagen configuration](../install/performance.md#advanced-mutagen-configuration-options).
@@ -100,26 +100,38 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 
 ### Global Files
 
-There’s only one global `.ddev` directory, which normally lives in your home directory: `~/.ddev` (`$HOME/.ddev`) or in `~/.config/ddev`. `~/.ddev` takes precedence if it exists, unless `$XDG_CONFIG_HOME` is set, in which case it will be `$XDG_CONFIG_HOME/ddev`.
+There’s only one global `.ddev` directory, which normally lives in your home directory: `$HOME/.ddev`, but can be overwritten (first match wins):
 
-!!!tip "Where is my global `.ddev` config?"
-    Use `ddev version` (look at `global-ddev-dir`) to check which location is used for the `.ddev` global directory.
+1. `$XDG_CONFIG_HOME/ddev` if `$XDG_CONFIG_HOME` is set
+2. `$HOME/.ddev`, which means:
+    - `/Users/<username>/.ddev` on macOS
+    - `/home/<username>/.ddev` on Linux/WSL2
+    - `C:\Users\<username>\.ddev` on Windows
+3. `$HOME/.config/ddev` on Linux/WSL2 only, if `$HOME/.ddev` doesn't exist
 
-!!!tip "What if I don't want to clutter up my `$HOME` with a `.ddev` directory?"
-    DDEV can use the `$XDG_CONFIG_HOME` environment variable from [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) to move `~/.ddev` to the `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is [defined](https://superuser.com/questions/365847/where-should-the-xdg-config-home-variable-be-defined/):
+To find your actual location, run:
+
+```bash
+ddev version | grep global-ddev-dir
+```
+
+!!!tip "Using `$XDG_CONFIG_HOME` or `$HOME/.config/ddev`"
+    DDEV can use the `$XDG_CONFIG_HOME` environment variable from [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) to move `$HOME/.ddev` to the `$XDG_CONFIG_HOME/ddev` directory if `$XDG_CONFIG_HOME` is [defined](https://superuser.com/questions/365847/where-should-the-xdg-config-home-variable-be-defined/).
+
+    To use `$HOME/.config/ddev` (or any other directory) instead of `$HOME/.ddev`:
 
     ```bash
     ddev poweroff
     # permanently set environment variable using a directory that works for you
     export XDG_CONFIG_HOME="$HOME/.config"
     # restart the terminal and run:
-    mv ~/.ddev ${XDG_CONFIG_HOME}/ddev
+    mv $HOME/.ddev ${XDG_CONFIG_HOME}/ddev
     ```
 
-    Otherwise, on Linux/WSL2 only, the default `$HOME/.config/ddev` can be used when `~/.config/ddev` exists and `~/.ddev` does not exist.  You can move the config directory with:
+    On Linux/WSL2, you can move the directory to `$HOME/.config/ddev` without setting `$XDG_CONFIG_HOME`:
 
     ```bash
-    mv ~/.ddev ~/.config/ddev
+    mv $HOME/.ddev $HOME/.config/ddev
     ```
 
 `global_config.yaml`
@@ -169,7 +181,7 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 : An empty file whose purpose is mysterious and intriguing.
 
 !!!tip "`.ddev_mutagen_data_directory`"
-    DDEV uses a global `~/.ddev_mutagen_data_directory` for storing [Mutagen](../install/performance.md#mutagen) sync data.
+    DDEV uses a global `$HOME/.ddev_mutagen_data_directory` for storing [Mutagen](../install/performance.md#mutagen) sync data.
 
 ## Container Architecture
 
@@ -177,16 +189,16 @@ It’s easiest to think of DDEV as a set of little networked computers (Docker c
 
 When you install or upgrade DDEV you’re mostly installing a single `ddev` binary. When you use it, it downloads the Docker images it needs, and then starts them based on what’s needed for your projects.
 
-* The `ddev-webserver` container (one per project) runs `nginx` or `apache` and `php-fpm` for a single site, so it does all the basic work of a PHP-interpreting web server.
-* The `ddev-dbserver` container (one per project) handles MariaDB/MySQL/PostgreSQL database management. It can be reached from the web server by the hostname `db` or with the more explicit name `ddev-<projectname>-db`.
-* Additional add-on services may be there for a given project, for example `phpmyadmin`, `solr`, `elasticsearch`, or `memcached`.
+- The `ddev-webserver` container (one per project) runs `nginx` or `apache` and `php-fpm` for a single site, so it does all the basic work of a PHP-interpreting web server.
+- The `ddev-dbserver` container (one per project) handles MariaDB/MySQL/PostgreSQL database management. It can be reached from the web server by the hostname `db` or with the more explicit name `ddev-<projectname>-db`.
+- Additional add-on services may be there for a given project, for example `phpmyadmin`, `solr`, `elasticsearch`, or `memcached`.
 
 Although it’s not common usage, different projects can communicate with each other as described in the [FAQ](faq.md#can-different-projects-communicate-with-each-other).
 
 Now for the two oddball global containers (there’s only one of each):
 
-* The `ddev-router` container is a “reverse proxy”. It takes incoming HTTP/S requests, looks up the hostname in the incoming URL, and routes it to the correct project’s `ddev-webserver`. Depending on the project’s configuration with [`additional_hostnames`](../configuration/config.md#additional_hostnames) and [`additional_fqdns`](../configuration/config.md#additional_fqdns), it can route many different URLs to a single project’s `ddev-webserver`. If, like most people, you use the named URLs like `https://something.ddev.site`, your request goes through the router. When you use the `127.0.0.1` URLs, the requests go directly to the `ddev-webserver`.
-* The `ddev-ssh-agent` container runs an `ssh-agent` inside the Docker network so that after run [`ddev auth ssh`](../usage/commands.md#auth-ssh) all the different projects can use your SSH keys for outgoing requests—like private Composer access or SCP from a remote host.
+- The `ddev-router` container is a “reverse proxy”. It takes incoming HTTP/S requests, looks up the hostname in the incoming URL, and routes it to the correct project’s `ddev-webserver`. Depending on the project’s configuration with [`additional_hostnames`](../configuration/config.md#additional_hostnames) and [`additional_fqdns`](../configuration/config.md#additional_fqdns), it can route many different URLs to a single project’s `ddev-webserver`. If, like most people, you use the named URLs like `https://something.ddev.site`, your request goes through the router. When you use the `127.0.0.1` URLs, the requests go directly to the `ddev-webserver`.
+- The `ddev-ssh-agent` container runs an `ssh-agent` inside the Docker network so that after run [`ddev auth ssh`](../usage/commands.md#auth-ssh) all the different projects can use your SSH keys for outgoing requests—like private Composer access or SCP from a remote host.
 
 Here’s a basic diagram of how it works inside the Docker network:
 

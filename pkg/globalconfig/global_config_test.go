@@ -202,3 +202,95 @@ func TestIsInternetActive(t *testing.T) {
 	// and calling it again, should also still be true
 	asrt.True(t, globalconfig.IsInternetActive())
 }
+
+// TestCheckForMultipleGlobalDdevDirs tests CheckForMultipleGlobalDdevDirs behavior
+func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
+	// Test 1: No conflict - only one directory exists
+	t.Run("NoConflict", func(t *testing.T) {
+		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_NoConflict")
+		defer os.RemoveAll(tmpHome)
+
+		t.Setenv("HOME", tmpHome)
+		t.Setenv("XDG_CONFIG_HOME", "")
+
+		// Create only XDG directory
+		xdgDir := tmpHome + "/.config/ddev"
+		err := os.MkdirAll(xdgDir, 0755)
+		require.NoError(t, err)
+
+		// Should not return error as ~/.ddev doesn't exist
+		err = globalconfig.CheckForMultipleGlobalDdevDirs()
+		require.NoError(t, err)
+	})
+
+	// Test 2: Conflict - both directories exist (Linux only)
+	t.Run("ConflictBothExist", func(t *testing.T) {
+		if !nodeps.IsLinux() {
+			t.Skip("This test only runs on Linux")
+		}
+
+		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_Conflict")
+		defer os.RemoveAll(tmpHome)
+
+		t.Setenv("HOME", tmpHome)
+		t.Setenv("XDG_CONFIG_HOME", "")
+
+		// Create both directories
+		defaultDir := tmpHome + "/.ddev"
+		err := os.MkdirAll(defaultDir, 0755)
+		require.NoError(t, err)
+
+		xdgDir := tmpHome + "/.config/ddev"
+		err = os.MkdirAll(xdgDir, 0755)
+		require.NoError(t, err)
+
+		// Should detect conflict
+		err = globalconfig.CheckForMultipleGlobalDdevDirs()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "multiple global DDEV configurations found")
+	})
+
+	// Test 3: XDG_CONFIG_HOME set - should detect conflict
+	t.Run("XDGConfigHomeSet", func(t *testing.T) {
+		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_XDGHome")
+		defer os.RemoveAll(tmpHome)
+
+		tmpXdg := testcommon.CreateTmpDir("TestCheckMultipleDirs_XDG")
+		defer os.RemoveAll(tmpXdg)
+
+		t.Setenv("HOME", tmpHome)
+		t.Setenv("XDG_CONFIG_HOME", tmpXdg)
+
+		// Create both directories
+		defaultDir := tmpHome + "/.ddev"
+		err := os.MkdirAll(defaultDir, 0755)
+		require.NoError(t, err)
+
+		xdgDir := tmpXdg + "/ddev"
+		err = os.MkdirAll(xdgDir, 0755)
+		require.NoError(t, err)
+
+		// Should detect conflict between XDG and default
+		err = globalconfig.CheckForMultipleGlobalDdevDirs()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "multiple global DDEV configurations found")
+	})
+
+	// Test 4: Only default directory exists
+	t.Run("OnlyDefaultExists", func(t *testing.T) {
+		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_Default")
+		defer os.RemoveAll(tmpHome)
+
+		t.Setenv("HOME", tmpHome)
+		t.Setenv("XDG_CONFIG_HOME", "")
+
+		// Create only default directory
+		defaultDir := tmpHome + "/.ddev"
+		err := os.MkdirAll(defaultDir, 0755)
+		require.NoError(t, err)
+
+		// Should not return error
+		err = globalconfig.CheckForMultipleGlobalDdevDirs()
+		require.NoError(t, err)
+	})
+}

@@ -280,16 +280,16 @@ You could test it with `ddev ssh`, `sudo -s`, and then `npm install --global for
 
 The error messages you get will be more informative than messages that come when the Dockerfile is processed.
 
-You can also see the output from the full Docker build using either
+You can also see the output from the full Docker build using either:
 
-```
+```bash
 ddev utility rebuild
 ```
 
-or
+or (see [global configuration directory](../usage/architecture.md#global-files) for `docker-compose` location):
 
-```
-~/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml --progress=plain build --no-cache
+```bash
+$HOME/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml --progress=plain build --no-cache
 ```
 
 ### Docker build fails `apt-get update`, perhaps "SSL certificate problem: self-signed certificate"
