@@ -21,6 +21,7 @@ Cloudflare
 CMD
 CMS
 CMSes
+CodeIgniter
 Colima
 Contao
 CPUs
