@@ -104,8 +104,9 @@ func TestPantheonPull(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "2025-07/test-site-pic.jpg"))
+	// Use host-side mysql command to query whether we got the right result
 	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s mysql -N`, DdevBin))
-	assert.NoError(err)
+	assert.NoError(err, "failed to run mysql command: %v, out=%v", err, out)
 	assert.True(strings.HasPrefix(out, "1\n"))
 
 	err = app.MutagenSyncFlush()
@@ -148,6 +149,10 @@ func TestPantheonPush(t *testing.T) {
 	app, err := ddevapp.NewApp(d11code.Dir, false)
 	require.NoError(t, err)
 	_ = app.Stop(true, false)
+
+	// Pantheon can't handle new collation from Mariadb 11.8's utf8mb4_uca1400_ai_ci
+	app.Database.Type = nodeps.MariaDB
+	app.Database.Version = nodeps.MariaDB1011
 
 	err = os.Chdir(d11code.Dir)
 	require.NoError(t, err)
@@ -220,7 +225,7 @@ func TestPantheonPush(t *testing.T) {
 
 	// Create database and files entries that we can verify after push
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval),
+		Cmd: fmt.Sprintf(`%s -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, app.GetDBClientCommand(), t.Name(), t.Name(), tval),
 	})
 	require.NoError(t, err)
 

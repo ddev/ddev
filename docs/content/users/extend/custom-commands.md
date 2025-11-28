@@ -90,7 +90,7 @@ The autocomplete script should echo the valid arguments as a string separated by
 A number of environment variables are provided to these command scripts. These are generally supported, but please avoid using undocumented environment variables. Useful variables for host scripts are:
 
 * `DDEV_APPROOT`: File system location of the project on the host
-* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.4`)
+* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.8`)
 * `DDEV_DATABASE_FAMILY`: Database "family" (example: `mysql`, `postgres`), useful for database connection URLs
 * `DDEV_DOCROOT`: Relative path from approot to docroot
 * `DDEV_GID`: Group ID the `web` container runs as
@@ -127,7 +127,7 @@ A number of environment variables are provided to these command scripts. These a
 Useful variables for container scripts are:
 
 * `DDEV_APPROOT`: Absolute path to the project files within the web container
-* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.4`)
+* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.8`)
 * `DDEV_DATABASE_FAMILY`: Database "family" (example: `mysql`, `postgres`), useful for database connection URLs
 * `DDEV_DOCROOT`: Relative path from approot to docroot
 * `DDEV_FILES_DIR`: *Deprecated*, first directory of user-uploaded files

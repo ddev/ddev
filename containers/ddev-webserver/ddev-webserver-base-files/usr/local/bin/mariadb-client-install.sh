@@ -4,6 +4,7 @@
 # in ddev-webserver
 # It should be called with the appropriate mariadb version as an argument
 # This script is intended to be run with root privileges (normally in a docker build phase)
+# Can be tested with "ddev exec sudo DDEV_DATABASE=mariadb:11.4 mariadb-client-install.sh"
 
 set -eu -o pipefail
 
@@ -13,23 +14,27 @@ if [ "${DDEV_DATABASE_FAMILY}" != "mariadb" ]; then
 fi
 MARIADB_VERSION=${DDEV_DATABASE#*:}
 
-# Configure the correct repository for mariadb
-set -x
-mariadb_repo_setup --mariadb-server-version="mariadb-${MARIADB_VERSION}" --skip-maxscale --skip-tools --skip-key-import \
-  || log-stderr.sh mariadb_repo_setup --mariadb-server-version="mariadb-${MARIADB_VERSION}" --skip-maxscale --skip-tools --skip-key-import \
-  || exit $?
-rm -f /etc/apt/sources.list.d/mariadb.list.old_*
+sed -i "s|^URIs:.*|URIs: https://archive.mariadb.org/mariadb-${MARIADB_VERSION}/repo/debian|" /etc/apt/sources.list.d/mariadb-archive.sources
 
-# --skip-key-import flag doesn't download the existing key again and omits "apt-get update",
-# so we can run "apt-get update" manually only for mariadb and debian repos to make it faster
-log-stderr.sh apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/mariadb.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
+# Select the appropriate Debian suite based on MariaDB version availability.
+# Note: Versions below 10.11 require libssl1.1 and will not work on current Debian
+# without creating a FrankenDebian system (https://wiki.debian.org/DontBreakDebian).
+# The logic for these older versions is provided as-is for those who may need it.
+# Search for CHANGE_MARIADB_CLIENT to update related code.
+if [ "${MARIADB_VERSION}" = "11.8" ]; then
+  sed -i "s/^Suites:.*/Suites: trixie/" /etc/apt/sources.list.d/mariadb-archive.sources
+elif [ "${MARIADB_VERSION}" = "10.11" ] || [ "${MARIADB_VERSION}" = "11.4" ]; then
+  sed -i "s/^Suites:.*/Suites: bookworm/" /etc/apt/sources.list.d/mariadb-archive.sources
+elif [ "${MARIADB_VERSION}" = "10.5" ] || [ "${MARIADB_VERSION}" = "10.6" ] || [ "${MARIADB_VERSION}" = "10.7" ] || [ "${MARIADB_VERSION}" = "10.8" ]; then
+  sed -i "s/^Suites:.*/Suites: bullseye/" /etc/apt/sources.list.d/mariadb-archive.sources
+elif [ "${MARIADB_VERSION}" = "10.1" ] || [ "${MARIADB_VERSION}" = "10.2" ] || [ "${MARIADB_VERSION}" = "10.3" ] || [ "${MARIADB_VERSION}" = "10.4" ]; then
+  sed -i "s/^Suites:.*/Suites: stretch/" /etc/apt/sources.list.d/mariadb-archive.sources
+fi
+
+# Run "apt-get update" manually only for mariadb and debian repos to make it faster
+log-stderr.sh apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/mariadb-archive.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
 log-stderr.sh apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
 
 # Install the mariadb-client
 export DEBIAN_FRONTEND=noninteractive
-if apt-cache search mariadb-client-compat 2>/dev/null | grep -q mariadb-client-compat; then
-  # MariaDB 11.x moved MySQL symlinks into a separate package
-  log-stderr.sh apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y mariadb-client mariadb-client-compat || exit $?
-else
-  log-stderr.sh apt-get install --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y mariadb-client || exit $?
-fi
+log-stderr.sh apt-get install --allow-downgrades --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y mariadb-client || exit $?
