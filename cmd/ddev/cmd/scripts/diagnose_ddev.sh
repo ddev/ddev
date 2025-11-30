@@ -237,8 +237,16 @@ fi
 
 # Check DNS resolution for *.ddev.site
 if command -v ping >/dev/null; then
-  if ping -c 1 -W 2 test.ddev.site >/dev/null 2>&1; then
-    success "DNS resolves *.ddev.site"
+  if [[ "$OSTYPE" == "msys" ]]; then
+    OUTPUT=$(ping -n 1 -w 2 "$HOST")
+  else
+    OUTPUT=$(ping -c 1 -W 2 "$HOST" 2>/dev/null)
+  fi
+
+  IP=$(echo "$OUTPUT" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n 1)
+
+  if [ -n "$IP" ]; then
+    success "DNS resolves *.ddev.site to $IP"
   else
     warn "Cannot resolve *.ddev.site"
     suggestion "See: https://docs.ddev.com/en/stable/users/usage/networking/#restrictive-dns-servers"
