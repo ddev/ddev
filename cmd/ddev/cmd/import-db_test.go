@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -44,9 +45,9 @@ func TestCmdImportDB(t *testing.T) {
 	// Make sure we start with nothing in db
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "mysql -N -e 'SHOW TABLES;'",
+		Cmd:     fmt.Sprintf(`%s -N -e 'SHOW TABLES;'`, app.GetDBClientCommand()),
 	})
-	assert.NoError(err, "mysql exec output=%s", out)
+	assert.NoError(err, "mysql/mariadb exec output=%s", out)
 	require.Equal(t, "", out)
 
 	if app.IsMutagenEnabled() {
@@ -76,7 +77,7 @@ func TestCmdImportDB(t *testing.T) {
 
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "mysql -e 'SHOW TABLES;'",
+		Cmd:     fmt.Sprintf(`%s -e 'SHOW TABLES;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	assert.Equal("Tables_in_db\nusers\n", out)
@@ -92,7 +93,7 @@ func TestCmdImportDB(t *testing.T) {
 	assert.NoError(err, "failed import-db: %v (%s)", err, string(byteout))
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N sparedb`,
+		Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | %s -N sparedb`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	assert.Equal("2\n", out)

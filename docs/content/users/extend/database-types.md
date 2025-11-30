@@ -6,9 +6,9 @@ The following database types are currently supported:
 
 - MariaDB 5.5-10.8, 10.11, 11.4, 11.8
 - MySQL 5.5-8.0, 8.4
-- Postgres 9-17
+- Postgres 9-18
 
-The default database type is MariaDB, and the default version is currently 10.11.
+The default database type is MariaDB, and the default version is currently 11.8.
 
 For very old database types and situations see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/).
 New LTS versions of each of these are typically added soon after they are released. The very old versions are kept for compatibility with older projects.
