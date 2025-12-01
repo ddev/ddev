@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 )
 
@@ -16,20 +16,22 @@ import (
 func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
 	envFilePath := filepath.Join(app.AppRoot, ".env")
 
-	// If .env already exists, leave it alone
+	// Check if .env already has DDEV config
 	if fileutil.FileExists(envFilePath) {
-		output.UserOut.Printf("CodeIgniter .env file already exists at %s", envFilePath)
-		return envFilePath, nil
-	}
-
-	// Try to copy from env or .env.example
-	envExamplePath := filepath.Join(app.AppRoot, "env")
-	if !fileutil.FileExists(envExamplePath) {
-		envExamplePath = filepath.Join(app.AppRoot, ".env.example")
-	}
-	if fileutil.FileExists(envExamplePath) {
-		if err := fileutil.CopyFile(envExamplePath, envFilePath); err != nil {
-			return "", fmt.Errorf("failed to copy %s to .env: %v", envExamplePath, err)
+		content, err := fileutil.ReadFileIntoString(envFilePath)
+		if err == nil && strings.Contains(content, "# ddev-generated") {
+			return envFilePath, nil
+		}
+	} else {
+		// .env doesn't exist, try to copy from env or .env.example
+		envExamplePath := filepath.Join(app.AppRoot, "env")
+		if !fileutil.FileExists(envExamplePath) {
+			envExamplePath = filepath.Join(app.AppRoot, ".env.example")
+		}
+		if fileutil.FileExists(envExamplePath) {
+			if err := fileutil.CopyFile(envExamplePath, envFilePath); err != nil {
+				return "", fmt.Errorf("failed to copy %s to .env: %v", envExamplePath, err)
+			}
 		}
 	}
 
