@@ -40,7 +40,7 @@ func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
 	cfg := fmt.Sprintf(`# ddev-generated
 %s
 # Base URL
-app.baseURL = 'https://%s'
+app.baseURL = '%s'
 `, dbConfig, app.GetPrimaryURL())
 
 	f, err := os.OpenFile(envFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
