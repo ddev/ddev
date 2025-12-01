@@ -166,3 +166,20 @@ func codeIgniterImportFilesAction(app *DdevApp, uploadDir, importPath, extPath s
 
 	return err
 }
+
+func getCodeIgniterComposerCreateAllowedPaths(app *DdevApp) ([]string, error) {
+	return []string{
+		"app",
+		"public",
+		"writable",
+		"tests",
+		"spark",
+		"composer.json",
+		"composer.lock",
+		"env",
+		".env",
+		"phpunit.xml.dist",
+		"builds",
+		"vendor",
+	}, nil
+}

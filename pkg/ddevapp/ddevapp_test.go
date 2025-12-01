@@ -364,6 +364,17 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/3", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
 			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
+		// 21: CodeIgniter
+		{
+			Name:                          "TestPkgCodeigniter4",
+			SourceURL:                     "https://github.com/ddev/test-codeigniter/archive/refs/tags/0.0.2.tar.gz",
+			ArchiveInternalExtractionPath: "test-codeigniter-0.0.2/",
+			DBTarURL:                      "https://github.com/ddev/test-codeigniter/releases/download/0.0.2/db.sql.tar.gz",
+			Docroot:                       "public",
+			Type:                          nodeps.AppTypeCodeIgniter,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "Welcome to CodeIgniter"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to CodeIgniter"},
+		},
 	}
 
 	FullTestSites = TestSites
@@ -2449,7 +2460,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NoError(err)
 
 		switch app.Type {
-		case nodeps.AppTypeCraftCms, nodeps.AppTypeShopware6, nodeps.AppTypeSymfony:
+		case nodeps.AppTypeCraftCms, nodeps.AppTypeCodeIgniter, nodeps.AppTypeShopware6, nodeps.AppTypeSymfony:
 			// Skip the check for the above types because they use app.SiteSettingsPath differently
 		default:
 			assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
