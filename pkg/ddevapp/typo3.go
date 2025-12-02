@@ -219,7 +219,6 @@ func isTypo3ComposerV12OrHigher(app *DdevApp) bool {
 	// installed into the folder public/typo3 so we can early return if the file
 	// is not found in the vendor folder.
 	if err != nil {
-		util.Debug("TYPO3 version class not found in '%s' for project %s, installed version is assumed to be older than 11.5.0: %v", versionFilePath, app.Name, err)
 		return false
 	}
 
@@ -264,7 +263,6 @@ func isTypo3LegacyV12OrHigher(app *DdevApp) bool {
 	// installed into the folder public/typo3 so we can early return if the file
 	// is not found in the vendor folder.
 	if err != nil {
-		util.Debug("TYPO3 version class not found in '%s' for project %s, installed version is assumed to be older than 11.5.0: %v", versionFilePath, app.Name, err)
 		return false
 	}
 
