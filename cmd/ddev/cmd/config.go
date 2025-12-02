@@ -255,8 +255,6 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&webWorkingDirDefaultArg, "web-working-dir-default", false, `Unset a web service working directory override, the same as --web-working-dir=""`)
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, `Unset a db service working directory override, the same as --db-working-dir=""`)
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unset all service working directory overrides")
-	ConfigCommand.Flags().Bool("mutagen-enabled", false, "Enable Mutagen asynchronous update of project in web container")
-	_ = ConfigCommand.Flags().MarkDeprecated("mutagen-enabled", fmt.Sprintf("please use --%s instead", types.FlagPerformanceModeName))
 	ConfigCommand.Flags().String(types.FlagPerformanceModeName, types.FlagPerformanceModeDefault, types.FlagPerformanceModeDescription(types.ConfigTypeProject))
 	_ = ConfigCommand.RegisterFlagCompletionFunc(types.FlagPerformanceModeName, configCompletionFunc(types.ValidPerformanceModeOptions(types.ConfigTypeProject)))
 	ConfigCommand.Flags().Bool(types.FlagPerformanceModeResetName, false, types.FlagPerformanceModeResetDescription(types.ConfigTypeProject))
@@ -515,12 +513,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if cmd.Flag("host-db-port").Changed {
 		app.HostDBPort = hostDBPortArg
-	}
-
-	if cmd.Flag("mutagen-enabled").Changed {
-		if v, _ := cmd.Flags().GetBool("mutagen-enabled"); v {
-			app.SetPerformanceMode(types.PerformanceModeMutagen)
-		}
 	}
 
 	if cmd.Flag(types.FlagPerformanceModeName).Changed {
