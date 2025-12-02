@@ -2,6 +2,7 @@
 
 # Use more widely accepted collations by default
 character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_520_ci
 
 # caching_sha2_password is the default for mysql 8.4
 # This config is removed in MySQL 8.4
