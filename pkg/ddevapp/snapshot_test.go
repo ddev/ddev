@@ -100,6 +100,32 @@ func TestGetLatestSnapshot(t *testing.T) {
 	s3Name, err := app.Snapshot(snapshots[2]) // last = latest
 	assert.NoError(err)
 
+	// Verify the snapshot files exist and have .zst extension
+	snapshotsDir := app.GetConfigPath("db_snapshots")
+	files, err := filepath.Glob(filepath.Join(snapshotsDir, "*-*_*"))
+	require.NoError(t, err)
+	require.NotEmpty(t, files, "Expected at least one snapshot file to exist")
+
+	// Check that the snapshot file has .zst extension
+	foundZstdFile := false
+	for _, file := range files {
+		if strings.HasSuffix(file, ".zst") {
+			foundZstdFile = true
+			// Verify the file follows the expected naming pattern: <name>-<dbtype>_<version>.zst
+			baseName := filepath.Base(file)
+			assert.Contains(baseName, app.Database.Type, "Snapshot filename should contain database type")
+			assert.Contains(baseName, app.Database.Version, "Snapshot filename should contain database version")
+			assert.True(strings.HasSuffix(baseName, ".zst"), "Snapshot file should have .zst extension")
+
+			// Verify the file is not empty
+			fileInfo, err := os.Stat(file)
+			require.NoError(t, err)
+			assert.Greater(fileInfo.Size(), int64(0), "Snapshot file should not be empty")
+			break
+		}
+	}
+	assert.True(foundZstdFile, "Expected to find at least one .zst snapshot file")
+
 	latestSnapshot, err := app.GetLatestSnapshot()
 	assert.NoError(err)
 	assert.Equal(s3Name, latestSnapshot)
