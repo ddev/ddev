@@ -53,8 +53,8 @@
 # `ddev pull pantheon --environment=DDEV_PANTHEON_SITE=yourproject,DDEV_PANTHEON_ENVIRONMENT=dev` for example
 #
 # To use existing backups instead of generating fresh database dumps (faster), add:
-# `PANTHEON_USE_BACKUP=true` to your web_environment or use
-# `ddev pull pantheon --environment=PANTHEON_USE_BACKUP=true`
+# `DDEV_USE_PANTHEON_BACKUP=true` to your web_environment or use
+# `ddev pull pantheon --environment=DDEV_USE_PANTHEON_BACKUP=true`
 
 # Debugging: Use `ddev exec terminus auth:whoami` to see what terminus knows about
 # `ddev exec terminus site:list` will show available sites
@@ -94,7 +94,7 @@ db_pull_command:
     pushd /var/www/html/.ddev/.downloads >/dev/null
     echo "Waking up Pantheon environment..."
     terminus env:wake -- ${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}
-    if [ "${PANTHEON_USE_BACKUP:-false}" = "true" ]; then
+    if [ "${DDEV_USE_PANTHEON_BACKUP:-false}" = "true" ]; then
       echo "Downloading latest database backup..."
       terminus backup:get ${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT} --element=database --to=db.sql.gz
     else

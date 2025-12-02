@@ -64,18 +64,18 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
 By default, `ddev pull pantheon` generates a fresh database dump, which ensures you get the most current data but can take several minutes. For faster pulls, you can use existing Pantheon backups instead.
 
-To use existing backups, set `PANTHEON_USE_BACKUP=true`:
+To use existing backups, set `DDEV_USE_PANTHEON_BACKUP=true`:
 
 ```yaml
 # In .ddev/config.yaml
 web_environment:
-    - PANTHEON_USE_BACKUP=true
+    - DDEV_USE_PANTHEON_BACKUP=true
 ```
 
 Or use it for a one-time pull:
 
 ```bash
-ddev pull pantheon --environment=PANTHEON_USE_BACKUP=true
+ddev pull pantheon --environment=DDEV_USE_PANTHEON_BACKUP=true
 ```
 
 !!!tip "When to use existing backups"
