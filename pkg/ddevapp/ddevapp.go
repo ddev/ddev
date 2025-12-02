@@ -2028,7 +2028,8 @@ func warnMissingDocroot(app *DdevApp) {
 	}
 }
 
-// Warn if WSL2 project is on Windows filesystem
+// warnWSL2WindowsFilesystem warns users if their DDEV project is located on the Windows filesystem
+// in WSL2, which can cause significant performance issues. Projects should be on the Linux filesystem.
 func warnWSL2WindowsFilesystem(app *DdevApp) {
 	if !nodeps.IsWSL2() {
 		return
