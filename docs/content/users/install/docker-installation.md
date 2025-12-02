@@ -119,7 +119,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     The easiest way to install DDEV on Windows is to use the Windows installer, which can handle different installation scenarios:
 
-    1. **Download the Windows installer** from the [DDEV releases page](https://github.com/ddev/ddev/releases).
+    1. **Download the Windows installer** from the [DDEV releases page](https://github.com/ddev/ddev/releases). (Use the correct installer for your system architecture. Most people have AMD64/X86_64 architecture, so `ddev_windows_amd64_installer.<version>.exe` for most people, but `ddev_windows_arm64_installer.<version>.exe` for those with ARM64 Windows devices.)
     2. **Run the installer** and choose your installation type:
        - **Docker CE inside WSL2** (Recommended): The installer will automatically install Docker CE in your WSL2 environment. This is the fastest and most reliable option.
        - **Docker Desktop**: Choose this if you already have Docker Desktop installed or prefer to use it.
