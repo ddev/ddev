@@ -65,6 +65,7 @@ type GlobalConfig struct {
 	RouterMailpitHTTPSPort           string                      `yaml:"mailpit_https_port,omitempty"`
 	RouterXHGuiHTTPPort              string                      `yaml:"xhgui_http_port,omitempty"`
 	RouterXHGuiHTTPSPort             string                      `yaml:"xhgui_https_port,omitempty"`
+	ShareDefaultProvider             string                      `yaml:"share_default_provider,omitempty"`
 	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
 	TableStyle                       string                      `yaml:"table_style"`
 	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
