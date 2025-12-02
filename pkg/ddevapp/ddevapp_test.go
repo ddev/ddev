@@ -372,7 +372,7 @@ var (
 			DBTarURL:                      "https://github.com/ddev/test-codeigniter/releases/download/0.0.2/db.sql.tar.gz",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeCodeIgniter,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "Welcome to CodeIgniter"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/robots.txt", Expect: "User-agent: *"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to CodeIgniter"},
 		},
 	}
