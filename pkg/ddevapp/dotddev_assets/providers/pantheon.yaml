@@ -95,10 +95,10 @@ db_pull_command:
     echo "Waking up Pantheon environment..."
     terminus env:wake -- ${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}
     if [ "${DDEV_USE_PANTHEON_BACKUP:-false}" = "true" ]; then
-      echo "Downloading latest database backup..."
+      echo "Downloading latest database backup from Pantheon..."
       terminus backup:get ${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT} --element=database --to=db.sql.gz
     else
-      echo "Generating and streaming fresh database dump (this may take several minutes)..."
+      echo "Dumping and streaming fresh/current database dump (this may take several minutes)... (You can use DDEV_USE_PANTHEON_BACKUP=true to skip this step and use an existing backup)"
       FRESH_DB_DUMP_STRING=$(terminus connection:info "${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}" --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
       if [ "${DDEV_DEBUG:-}" = "true" ]; then
         echo "Debug: FRESH_DB_DUMP_STRING=$FRESH_DB_DUMP_STRING"
