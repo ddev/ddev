@@ -15,8 +15,7 @@ teardown() {
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # TODO: quickstart, I reported the problem with PHP 8.4 upstream, see https://github.com/silverstripe/silverstripe-framework/issues/11913
-  run ddev config --project-type=silverstripe --docroot=public --php-version=8.3
+  run ddev config --project-type=silverstripe --docroot=public
   assert_success
 
   run ddev start -y

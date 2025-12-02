@@ -1638,8 +1638,7 @@ Create the project directory and configure DDEV:
 ```bash
 export MAGENTO_HOSTNAME=my-magento2-site
 mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
-# The Magento 2 `composer create-project` is incompatible with Composer 2.9+
-ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --composer-version=2.8.12
+ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
 ddev add-on get ddev/ddev-opensearch
 ```
 
@@ -2298,7 +2297,7 @@ Use a new or existing Composer project, or clone a Git repository.
 
     ```bash
     mkdir my-silverstripe-site && cd my-silverstripe-site
-    ddev config --project-type=silverstripe --docroot=public --php-version=8.3
+    ddev config --project-type=silverstripe --docroot=public
     ```
 
     Start DDEV (this may take a minute):
@@ -2328,7 +2327,7 @@ Use a new or existing Composer project, or clone a Git repository.
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-silverstripe-site && cd my-silverstripe-site
-        ddev config --project-type=silverstripe --docroot=public --php-version=8.3
+        ddev config --project-type=silverstripe --docroot=public
         ddev start -y
         ddev composer create-project --prefer-dist silverstripe/installer
         ddev sake dev/build flush=all
@@ -2343,7 +2342,7 @@ Use a new or existing Composer project, or clone a Git repository.
     ```bash
     git clone <my-silverstripe-repo> my-silverstripe-site
     cd my-silverstripe-site
-    ddev config --project-type=silverstripe --docroot=public --php-version=8.3
+    ddev config --project-type=silverstripe --docroot=public
     ddev start
     ddev composer install
     ddev sake dev/build flush=all
@@ -2520,7 +2519,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
-    ddev config --project-type=symfony --docroot=public --php-version=8.3
+    ddev config --project-type=symfony --docroot=public
     ```
 
     Start DDEV (this may take a minute):
@@ -2551,7 +2550,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-symfony-site && cd my-symfony-site
-        ddev config --project-type=symfony --docroot=public --php-version=8.3
+        ddev config --project-type=symfony --docroot=public
         ddev start -y
         ddev composer create-project symfony/skeleton
         ddev composer require webapp
@@ -2565,7 +2564,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
-    ddev config --project-type=symfony --docroot=public --php-version=8.3
+    ddev config --project-type=symfony --docroot=public
     ddev start
     ddev exec symfony check:requirements
     ddev exec symfony new temp --webapp
@@ -2580,7 +2579,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     git clone <my-symfony-repo> my-symfony-site
     cd my-symfony-site
-    ddev config --project-type=symfony --docroot=public --php-version=8.3
+    ddev config --project-type=symfony --docroot=public
     ddev start
     ddev composer install
     ddev launch
