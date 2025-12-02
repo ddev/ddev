@@ -363,6 +363,16 @@ Extra flags for [configuring ngrok](https://ngrok.com/docs/agent/config) when [s
 
 Example: `--basic-auth username:pass1234 --domain foo.ngrok-free.app`.
 
+## `share_default_provider`
+
+The default share provider to use with the [`ddev share`](../usage/commands.md#share) command.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global<br>:octicons-file-directory-16: project | `ngrok` | Built-in providers: `ngrok`, `cloudflared`. Custom providers can be added to `.ddev/share-providers/`. Project config overrides global config.
+
+Set globally with `ddev config global --share-provider=cloudflared` or per-project with `ddev config --share-default-provider=cloudflared`. Can also be overridden with the `--provider` flag when running `ddev share`.
+
 ## `no_bind_mounts`
 
 Whether to not use Docker bind mounts.

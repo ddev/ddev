@@ -50,8 +50,11 @@ while IFS= read -r line; do
         URL="${BASH_REMATCH[0]}"
         echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV
     fi
-    # Continue reading and sending to stderr for logging
-    echo "$line" >&2
+    # Only show error messages and warnings to user, suppress verbose INFO logs
+    # Skip benign errors about origin certificate (not needed for quick tunnels)
+    if [[ "$line" =~ ^[0-9T:-]+Z\ (ERR|WRN|FTL) ]] && [[ ! "$line" =~ "Cannot determine default origin certificate" ]]; then
+        echo "$line" >&2
+    fi
 done < "$PIPE" &
 READER_PID=$!
 

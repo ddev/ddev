@@ -245,6 +245,12 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("share-provider").Changed {
+		val, _ := cmd.Flags().GetString("share-provider")
+		globalconfig.DdevGlobalConfig.ShareDefaultProvider = val
+		dirty = true
+	}
+
 	if dirty {
 		err = globalconfig.ValidateGlobalConfig()
 		if err != nil {
@@ -348,5 +354,7 @@ func init() {
 	_ = configGlobalCommand.Flags().MarkHidden("router")
 	configGlobalCommand.Flags().String("traefik-monitor-port", nodeps.TraefikMonitorPortDefault, `Can be used to change the Traefik monitor port in case of port conflicts, for example "ddev config global --traefik-monitor-port=11999"`)
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("traefik-monitor-port", configCompletionFunc([]string{nodeps.TraefikMonitorPortDefault}))
+	configGlobalCommand.Flags().String("share-provider", "", `The default share provider for all projects (ngrok, cloudflared, or custom), can be overridden by project configuration`)
+	_ = configGlobalCommand.RegisterFlagCompletionFunc("share-provider", configCompletionFunc([]string{"ngrok", "cloudflared"}))
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

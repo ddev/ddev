@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -41,8 +42,11 @@ ddev share myproject`,
 			util.Failed("Project is not yet running. Use 'ddev start' first.")
 		}
 
-		// Determine which provider to use: flag > config > default
+		// Determine which provider to use: flag > project config > global config > default
 		providerName := "ngrok" // default
+		if globalconfig.DdevGlobalConfig.ShareDefaultProvider != "" {
+			providerName = globalconfig.DdevGlobalConfig.ShareDefaultProvider
+		}
 		if app.ShareDefaultProvider != "" {
 			providerName = app.ShareDefaultProvider
 		}
