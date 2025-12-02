@@ -262,6 +262,8 @@ chromedriver
 cli
 clis
 client
+cloudflared
+cloudflare's
 cms
 codebase
 codespace
