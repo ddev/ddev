@@ -20,13 +20,13 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20250728_rfay_debian_trixie" // Note that this can be overridden by make
+var WebTag = "20251110_mariadb_11_4" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.24.10"
+var BaseDBTag = "20251117_apt_sources"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"

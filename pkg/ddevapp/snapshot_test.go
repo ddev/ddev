@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -172,7 +173,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+		Cmd:     fmt.Sprintf(`echo "SELECT title FROM node WHERE nid=1;" | %s -N`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	assert.Contains(stdout, "d7 tester test 1 has 1 node")
@@ -215,7 +216,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+		Cmd:     fmt.Sprintf(`echo "SELECT title FROM node WHERE nid=1;" | %s -N`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	assert.Contains(stdout, "d7 tester test 2 has 2 nodes")
@@ -245,7 +246,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+		Cmd:     fmt.Sprintf(`echo "SELECT title FROM node WHERE nid=1;" | %s -N`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	assert.Contains(stdout, "d7 tester test 1 has 1 node")
@@ -255,7 +256,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+		Cmd:     fmt.Sprintf(`echo "SELECT title FROM node WHERE nid=1;" | %s -N`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	assert.Contains(stdout, "d7 tester test 2 has 2 nodes")
@@ -312,7 +313,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     `echo "DROP TABLE IF EXISTS users;" | mysql`,
+			Cmd:     fmt.Sprintf(`echo "DROP TABLE IF EXISTS users;" | %s`, app.GetDBClientCommand()),
 		})
 		assert.NoError(err)
 
@@ -324,7 +325,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+			Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | %s -N`, app.GetDBClientCommand()),
 		})
 		assert.NoError(err)
 		assert.Equal(stdout, "2\n")

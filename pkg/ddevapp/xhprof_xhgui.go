@@ -22,7 +22,7 @@ func XHGuiSetup(app *DdevApp) error {
 	GRANT ALL PRIVILEGES ON DATABASE xhgui TO db;" | psql -q -d postgres
 `
 	case nodeps.MySQL, nodeps.MariaDB:
-		dbCreationCommand = `MYSQL_CMD=mysql; if command -v mariadb >/dev/null 2>&1; then MYSQL_CMD=mariadb; fi; ${MYSQL_CMD} -e "CREATE DATABASE IF NOT EXISTS xhgui; GRANT ALL ON xhgui.* TO 'db'@'%';"`
+		dbCreationCommand = fmt.Sprintf(`%s -e "CREATE DATABASE IF NOT EXISTS xhgui; GRANT ALL ON xhgui.* TO 'db'@'%%';"`, app.GetDBClientCommand())
 	}
 
 	_, _, err := app.Exec(&ExecOpts{

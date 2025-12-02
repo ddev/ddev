@@ -3,7 +3,7 @@
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
 ARG DOCKER_ORG=ddev
-FROM ${DOCKER_ORG}/ddev-php-base:20250728_rfay_debian_trixie AS ddev-webserver-base
+FROM ${DOCKER_ORG}/ddev-php-base:20251127_stasadev_php85 AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -29,11 +29,23 @@ RUN curl -I https://packages.sury.org/php/dists/bookworm/InRelease
 # symfony cli
 RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash
 
-# Install mariadb_repo_setup to get mariadb-client from them directly
-RUN curl -LsSf https://r.mariadb.com/downloads/mariadb_repo_setup -o /usr/local/bin/mariadb_repo_setup && chmod +x /usr/local/bin/mariadb_repo_setup
+# Convert symfony-stable.list to modern deb822 .sources format
+RUN rm -f /etc/apt/sources.list.d/symfony-stable.list && \
+    printf "Types: deb deb-src\nURIs: https://dl.cloudsmith.io/public/symfony/stable/deb/debian/\nSuites: trixie\nComponents: main\nSigned-By: /usr/share/keyrings/symfony-stable-archive-keyring.gpg\n" > /etc/apt/sources.list.d/symfony-stable.sources
+
+# Set up MariaDB apt repository
+# The key is from https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/installing-mariadb/binary-packages/gpg#mariadb-community-server-debian-ubuntu-key
 # Search for CHANGE_MARIADB_CLIENT to update related code.
-# Workaround for Debian Trixie (13) not being supported yet - use bookworm compatibility. It's not expected that they will maintain any mariadb-10.11 compat without this.
-RUN mariadb_repo_setup --mariadb-server-version="mariadb-10.11" --skip-maxscale --skip-tools --os-type=debian --os-version=bookworm
+RUN KEYRING_URL="https://supplychain.mariadb.com/mariadb-keyring-2019.gpg" && \
+    KEYRING_FILE="mariadb-keyring-2019.gpg" && \
+    KEYRING_PATH="/usr/share/keyrings/${KEYRING_FILE}" && \
+    curl -fsSL -O "${KEYRING_URL}" && \
+    curl -fsSL -O "${KEYRING_URL}.sha256" && \
+    sha256sum -c --quiet "${KEYRING_FILE}.sha256" && \
+    gpg --dearmor < "${KEYRING_FILE}" > "${KEYRING_PATH}" && \
+    rm -f "${KEYRING_FILE}" "${KEYRING_FILE}.sha256" && \
+    printf "Package: *\nPin: origin archive.mariadb.org\nPin-Priority: 1000\n" > /etc/apt/preferences.d/mariadb-archive.pref && \
+    printf "Types: deb\nURIs: https://archive.mariadb.org/mariadb-11.8/repo/debian\nSuites: trixie\nComponents: main\nSigned-By: ${KEYRING_PATH}\n" > /etc/apt/sources.list.d/mariadb-archive.sources
 
 # Set up Postgresql apt repository
 RUN install -d /usr/share/postgresql-common/pgdg && curl -s -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
@@ -45,6 +57,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     bash-completion \
     gettext \
     git \
+    gpgv \
     graphviz \
     less \
     libcap2-bin \
@@ -67,6 +80,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     zip
 
 RUN update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
+
+# Configure APT to use gpgv for signature verification to avoid SHA1 deprecation issues
+RUN echo 'APT::Key::gpgvcommand "/usr/bin/gpgv";' > /etc/apt/apt.conf.d/99-use-gpgv
 
 RUN printf "${DEFAULT_LOCALES}" > /etc/locale.gen && locale-gen
 
@@ -95,6 +111,10 @@ RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then cd /tmp && curl -L -s 
 RUN set -x && cd /tmp && for item in *.deb; do dpkg-deb -x ${item} extracted; done
 RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariadb,mariadb-dump,mysql,mysqldump} /usr/local/mariadb-old/bin
 
+# Install mariadb wrappers
+# Search for CHANGE_MARIADB_CLIENT to update related code.
+RUN DDEV_DATABASE="mariadb:11.8" mariadb-compat-install.sh
+
 ### -------------------------END ddev-webserver-base------------------------------
 
 ### -------------------------ddev-webserver-dev-base------------------------------
@@ -103,10 +123,11 @@ FROM ddev-webserver-base AS ddev-webserver-dev-base
 SHELL ["/bin/bash", "-eu", "-o", "pipefail", "-c"]
 
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
-ENV PHP_DEFAULT_VERSION="8.3"
+ENV PHP_DEFAULT_VERSION="8.4"
 
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
+# Create blackfire.sources in modern deb822 format
+RUN printf "Types: deb\nURIs: http://packages.blackfire.io/debian/\nSuites: any\nComponents: main\nSigned-By: /usr/share/keyrings/blackfire-archive-keyring.asc\n" > /etc/apt/sources.list.d/blackfire.sources
 RUN apt-get -qq update
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
@@ -141,8 +162,18 @@ RUN curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phi
 RUN set -o pipefail && curl --fail -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl -L --fail --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
 # Install platform cli
 RUN set -o pipefail && curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | bash
+
+# Convert platformsh-cli.list to modern deb822 .sources format
+RUN rm -f /etc/apt/sources.list.d/platformsh-cli.list && \
+    printf "Types: deb deb-src\nURIs: https://dl.cloudsmith.io/public/platformsh/cli/deb/debian/\nSuites: trixie\nComponents: main\nSigned-By: /usr/share/keyrings/platformsh-cli-archive-keyring.gpg\n" > /etc/apt/sources.list.d/platformsh-cli.sources
+
 # Install upsun cli
 RUN set -o pipefail && curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | VENDOR=upsun bash
+
+# Convert platformsh-upsun-cli.list to modern deb822 .sources format
+RUN rm -f /etc/apt/sources.list.d/platformsh-upsun-cli.list && \
+    printf "Types: deb deb-src\nURIs: https://dl.cloudsmith.io/public/platformsh/upsun-cli/deb/debian/\nSuites: trixie\nComponents: main\nSigned-By: /usr/share/keyrings/platformsh-upsun-cli-archive-keyring.gpg\n" > /etc/apt/sources.list.d/platformsh-upsun-cli.sources
+
 # Install lagoon cli
 RUN set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-cli/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-cli/releases/download/$tag/lagoon-cli-$tag-linux-${TARGETARCH}" --output /usr/local/bin/lagoon && chmod 777 /usr/local/bin/lagoon
 # Install lagoon-sync
@@ -207,7 +238,7 @@ RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 ### But for historical reasons, it's just ddev-webserver
 ### Build ddev-webserver by turning ddev-webserver-dev-base into one layer
 FROM scratch AS ddev-webserver
-ENV PHP_DEFAULT_VERSION="8.3"
+ENV PHP_DEFAULT_VERSION="8.4"
 ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
@@ -236,12 +267,13 @@ FROM ddev-webserver-base AS ddev-webserver-prod-base
 SHELL ["/bin/bash", "-eu", "-o", "pipefail", "-c"]
 
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
-ENV PHP_DEFAULT_VERSION="8.3"
+ENV PHP_DEFAULT_VERSION="8.4"
 ARG TARGETPLATFORM
 ARG TARGETARCH
 
 RUN curl -s --fail https://packages.blackfire.io/gpg.key > /usr/share/keyrings/blackfire-archive-keyring.asc
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/blackfire-archive-keyring.asc] http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
+# Create blackfire.sources in modern deb822 format
+RUN printf "Types: deb\nURIs: http://packages.blackfire.io/debian/\nSuites: any\nComponents: main\nSigned-By: /usr/share/keyrings/blackfire-archive-keyring.asc\n" > /etc/apt/sources.list.d/blackfire.sources
 RUN apt-get -qq update
 
 # Blackfire outputs errors about not having systemd, but they do no harm to our usage
@@ -298,7 +330,7 @@ RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 ### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
 ### (Withut dev features, single layer)
 FROM scratch AS ddev-webserver-prod
-ENV PHP_DEFAULT_VERSION="8.3"
+ENV PHP_DEFAULT_VERSION="8.4"
 ENV NGINX_SITE_TEMPLATE=/etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE=/etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache

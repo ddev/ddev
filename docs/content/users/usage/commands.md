@@ -122,7 +122,7 @@ ddev add-on get /path/to/tarball.tar.gz
 ddev add-on get ddev/ddev-redis --project my-project
 
 # Install an add-on without installing its dependencies
-ddev add-on get ddev/ddev-redis-commander --skip-deps
+ddev add-on get ddev/ddev-redis-insight --skip-deps
 ```
 
 **Automatic Dependency Installation:**
@@ -196,7 +196,7 @@ ddev add-on search database
 ddev add-on search redis web
 
 # Search with multiple terms using quotes (currently same behavior)
-ddev add-on search "redis commander"
+ddev add-on search "redis insight"
 ```
 
 ## `aliases`
@@ -1023,37 +1023,6 @@ ddev npx @biomejs/biome init
 ddev npx create-next-app@latest
 ```
 
-## `nvm`
-
-Run [`nvm`](https://github.com/nvm-sh/nvm#usage) inside the web container (global shell web container command).
-
-!!!tip
-    Use of `ddev nvm` is discouraged because `nodejs_version` is much easier to use, can specify any version, and is more robust than using `nvm`.
-
-    If your project previously made use of `nvm`, you will need to revert back to using system defined version by running `ddev nvm alias default system` as per the example below.
-
-Example:
-
-```shell
-# Use `nvm` to switch to Node.js v20
-ddev nvm install 20
-
-# Check the installed Node.js version
-ddev nvm current
-
-# Reset Node.js to `nodejs_version`
-ddev nvm alias default system
-
-# Switch between two installed Node.js versions
-ddev nvm install 20
-ddev nvm install 18
-ddev nvm alias default 20
-ddev nvm alias default 18
-```
-
-!!!warning "`nvm use` works only inside the web container after `ddev ssh`"
-    Use `ddev nvm alias default <version>` instead.
-
 ## `php`
 
 Run `php` inside the web container (global shell web container command).
@@ -1231,32 +1200,6 @@ Example:
 ```shell
 # Open the current project’s database in Sequel Pro
 ddev sequelpro
-```
-
-## `service`
-
-Add or remove, enable or disable [extra services](../extend/additional-services.md).
-
-### `service disable`
-
-Disable a service.
-
-Example:
-
-```shell
-# Disable the Solr service
-ddev service disable solr
-```
-
-### `service enable`
-
-Enable a service.
-
-Example:
-
-```shell
-# Enable the Solr service
-ddev service enable solr
 ```
 
 ## `share`

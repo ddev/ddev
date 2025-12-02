@@ -239,6 +239,7 @@ Download and extract CiviCRM:
 ```bash
 ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
 ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
+ddev composer update civicrm/composer-compile-plugin --no-scripts
 ddev composer require civicrm/cli-tools --no-scripts
 ```
 
@@ -276,6 +277,7 @@ ddev launch
     ddev start -y
     ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
     ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
+    ddev composer update civicrm/composer-compile-plugin --no-scripts
     ddev composer require civicrm/cli-tools --no-scripts
     ddev exec cv core:install \
         --cms-base-url='$DDEV_PRIMARY_URL' \
@@ -968,9 +970,19 @@ Create Dockerfile for FrankenPHP:
 
 ```bash
 cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.frankenphp
-RUN curl -s https://frankenphp.dev/install.sh | sh
-RUN mv frankenphp /usr/local/bin/
-RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local/etc/php
+RUN curl -fsSL https://key.henderkes.com/static-php.gpg -o /usr/share/keyrings/static-php.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/static-php.gpg] https://deb.henderkes.com/ stable main" > /etc/apt/sources.list.d/static-php.list
+# Install FrankenPHP and extensions, see https://frankenphp.dev/docs/#deb-packages for details.
+# You can find the list of available extensions at https://deb.henderkes.com/pool/main/p/
+RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests \
+    frankenphp \
+    php-zts-cli \
+    php-zts-gd \
+    php-zts-pdo-mysql
+# Make sure that 'php' command uses the ZTS version of PHP
+# and that the php.ini in use by FrankenPHP is the one from DDEV.
+RUN ln -sf /usr/bin/php-zts /usr/local/bin/php && \
+    ln -sf /etc/php/${DDEV_PHP_VERSION}/fpm/php.ini /etc/php-zts/php.ini
 DOCKERFILEEND
 ```
 
@@ -1016,9 +1028,19 @@ ddev launch $(ddev drush uli)
     INNEREOF
 
     cat <<'INNEREOF' >.ddev/web-build/Dockerfile.frankenphp
-    RUN curl -s https://frankenphp.dev/install.sh | sh
-    RUN mv frankenphp /usr/local/bin/
-    RUN mkdir -p /usr/local/etc && ln -s /etc/php/${DDEV_PHP_VERSION}/fpm /usr/local/etc/php
+    RUN curl -fsSL https://key.henderkes.com/static-php.gpg -o /usr/share/keyrings/static-php.gpg && \
+        echo "deb [signed-by=/usr/share/keyrings/static-php.gpg] https://deb.henderkes.com/ stable main" > /etc/apt/sources.list.d/static-php.list
+    # Install FrankenPHP and extensions, see https://frankenphp.dev/docs/#deb-packages for details.
+    # You can find the list of available extensions at https://deb.henderkes.com/pool/main/p/
+    RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests \
+        frankenphp \
+        php-zts-cli \
+        php-zts-gd \
+        php-zts-pdo-mysql
+    # Make sure that 'php' command uses the ZTS version of PHP
+    # and that the php.ini in use by FrankenPHP is the one from DDEV.
+    RUN ln -sf /usr/bin/php-zts /usr/local/bin/php && \
+        ln -sf /etc/php/${DDEV_PHP_VERSION}/fpm/php.ini /etc/php-zts/php.ini
     INNEREOF
 
     ddev composer create-project drupal/recommended-project
@@ -1039,7 +1061,7 @@ ddev launch $(ddev drush uli)
 
     ```bash
     mkdir my-grav-site && cd my-grav-site
-    ddev config --omit-containers=db
+    ddev config --php-version=8.3 --omit-containers=db
     ```
 
     Start DDEV (this may take a minute):
@@ -1069,7 +1091,7 @@ ddev launch $(ddev drush uli)
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-grav-site && cd my-grav-site
-        ddev config --omit-containers=db
+        ddev config --php-version=8.3 --omit-containers=db
         ddev start -y
         ddev composer create-project getgrav/grav
         ddev exec gpm install admin -y
@@ -1091,7 +1113,7 @@ ddev launch $(ddev drush uli)
     Configure DDEV:
 
     ```bash
-    ddev config --omit-containers=db
+    ddev config --php-version=8.3 --omit-containers=db
     ```
 
     Start DDEV (this may take a minute):
@@ -1123,7 +1145,7 @@ ddev launch $(ddev drush uli)
         set -euo pipefail
         mkdir my-grav-site && cd my-grav-site
         git clone -b master https://github.com/getgrav/grav.git .
-        ddev config --omit-containers=db
+        ddev config --php-version=8.3 --omit-containers=db
         ddev start -y
         ddev composer install
         ddev exec grav install
@@ -1668,7 +1690,8 @@ Create the project directory and configure DDEV:
 ```bash
 export MAGENTO_HOSTNAME=my-magento2-site
 mkdir ${MAGENTO_HOSTNAME} && cd ${MAGENTO_HOSTNAME}
-ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
+# The Magento 2 `composer create-project` is incompatible with Composer 2.9+
+ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --composer-version=2.8.12
 ddev add-on get ddev/ddev-opensearch
 ```
 
@@ -2327,7 +2350,7 @@ Use a new or existing Composer project, or clone a Git repository.
 
     ```bash
     mkdir my-silverstripe-site && cd my-silverstripe-site
-    ddev config --project-type=silverstripe --docroot=public
+    ddev config --project-type=silverstripe --docroot=public --php-version=8.3
     ```
 
     Start DDEV (this may take a minute):
@@ -2357,7 +2380,7 @@ Use a new or existing Composer project, or clone a Git repository.
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-silverstripe-site && cd my-silverstripe-site
-        ddev config --project-type=silverstripe --docroot=public
+        ddev config --project-type=silverstripe --docroot=public --php-version=8.3
         ddev start -y
         ddev composer create-project --prefer-dist silverstripe/installer
         ddev sake dev/build flush=all
@@ -2372,7 +2395,7 @@ Use a new or existing Composer project, or clone a Git repository.
     ```bash
     git clone <my-silverstripe-repo> my-silverstripe-site
     cd my-silverstripe-site
-    ddev config --project-type=silverstripe --docroot=public
+    ddev config --project-type=silverstripe --docroot=public --php-version=8.3
     ddev start
     ddev composer install
     ddev sake dev/build flush=all
@@ -2549,7 +2572,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
-    ddev config --project-type=symfony --docroot=public
+    ddev config --project-type=symfony --docroot=public --php-version=8.3
     ```
 
     Start DDEV (this may take a minute):
@@ -2580,7 +2603,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-symfony-site && cd my-symfony-site
-        ddev config --project-type=symfony --docroot=public
+        ddev config --project-type=symfony --docroot=public --php-version=8.3
         ddev start -y
         ddev composer create-project symfony/skeleton
         ddev composer require webapp
@@ -2594,10 +2617,10 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
     ```bash
     mkdir my-symfony-site && cd my-symfony-site
-    ddev config --project-type=symfony --docroot=public
+    ddev config --project-type=symfony --docroot=public --php-version=8.3
     ddev start
     ddev exec symfony check:requirements
-    ddev exec symfony new temp --version="7.1.*" --webapp
+    ddev exec symfony new temp --webapp
     # 'symfony new' can't install in the current directory right away,
     # so we use 'rsync' to move the installed files one level up
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
@@ -2609,7 +2632,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     git clone <my-symfony-repo> my-symfony-site
     cd my-symfony-site
-    ddev config --project-type=symfony --docroot=public
+    ddev config --project-type=symfony --docroot=public --php-version=8.3
     ddev start
     ddev composer install
     ddev launch
@@ -2638,7 +2661,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```bash
     PROJECT_NAME=my-typo3-site
     mkdir ${PROJECT_NAME} && cd ${PROJECT_NAME}
-    ddev config --project-type=typo3 --docroot=public --php-version=8.3
+    ddev config --project-type=typo3 --docroot=public
     ```
 
     Start DDEV (this may take a minute):
@@ -2650,7 +2673,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     Install TYPO3 via Composer:
 
     ```bash
-    ddev composer create-project "typo3/cms-base-distribution"
+    ddev composer create-project "typo3/cms-base-distribution:^13"
     ```
 
     Run the TYPO3 setup:
@@ -2687,9 +2710,9 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         set -euo pipefail
         PROJECT_NAME=my-typo3-site
         mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
-        ddev config --project-type=typo3 --docroot=public --php-version=8.3
+        ddev config --project-type=typo3 --docroot=public
         ddev start -y
-        ddev composer create-project "typo3/cms-base-distribution"
+        ddev composer create-project "typo3/cms-base-distribution:^13"
         ddev typo3 setup \
             --admin-user-password="Demo123*" \
             --driver=mysqli \
@@ -2720,7 +2743,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     PROJECT_NAME=my-typo3-site
     mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
     git clone ${PROJECT_GIT_REPOSITORY} .
-    ddev config --project-type=typo3 --docroot=public --php-version=8.3
+    ddev config --project-type=typo3 --docroot=public
     ddev start
     ddev composer install
     ddev exec touch public/FIRST_INSTALL

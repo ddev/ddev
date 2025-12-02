@@ -46,7 +46,7 @@ ddev add-on search redis
 ddev add-on search redis web
 
 # Search with multiple terms using quotes (currently same behavior)
-ddev add-on search "redis commander"
+ddev add-on search "redis insight"
 ```
 
 ## Installing Add-ons
@@ -214,7 +214,7 @@ This approach:
 
 - **[`ddev/ddev-adminer`](https://github.com/ddev/ddev-adminer)** - Adminer web-based MySQL, MariaDB, PostgreSQL database browser
 - **[`ddev/ddev-phpmyadmin`](https://github.com/ddev/ddev-phpmyadmin)** - Web-based phpMyAdmin interface for MySQL, MariaDB
-- **[`ddev/ddev-redis-commander`](https://github.com/ddev/ddev-redis-commander)** - Redis Commander Web UI for use with Redis service
+- **[`ddev/ddev-redis-insight`](https://github.com/ddev/ddev-redis-insight)** - Redis Insight Web UI for use with Redis service
 - **[`ddev/ddev-browsersync`](https://github.com/ddev/ddev-browsersync)** - Live-reload and HTTPS auto-refresh on file changes
 
 ### Platform and Cloud Integration
@@ -287,7 +287,6 @@ This shows the final Docker Compose configuration including add-on services.
 - **Add-on documentation**: Check the add-on's GitHub repository readme
 - **DDEV Discord**: Join the [DDEV Discord](https://ddev.com/s/discord) for community support
 - **GitHub Issues**: Report add-on-specific issues to the add-on's repository
-- **Stack Overflow**: Use the [ddev tag](https://stackoverflow.com/tags/ddev)
 
 ## Next Steps
 

@@ -83,7 +83,7 @@ extract_php_configs() {
         # Add deb.sury.org repository
         curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb
         dpkg -i /tmp/debsuryorg-archive-keyring.deb
-        echo 'deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ bookworm main' > /etc/apt/sources.list.d/php.list
+        printf 'Types: deb\nURIs: https://packages.sury.org/php/\nSuites: bookworm\nComponents: main\nSigned-By: /usr/share/keyrings/deb.sury.org-php.gpg\n' > /etc/apt/sources.list.d/php.sources
 
         # Update package lists
         apt-get update -qq

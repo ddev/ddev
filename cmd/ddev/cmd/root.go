@@ -151,6 +151,9 @@ func init() {
 		if err != nil {
 			util.Warning("Adding custom/shell commands failed: %v", err)
 		}
+
+		// Add fallback nvm command which notifies user that nvm has been removed.
+		addCommandIfNotExists(RootCmd, NvmCmd)
 	}
 
 	setHelpFunc(RootCmd)
@@ -188,4 +191,14 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 	}
 
 	return nil
+}
+
+// addCommandIfNotExists adds cmdToAdd to rootCmd if a command with the same name does not already exist.
+func addCommandIfNotExists(rootCmd *cobra.Command, cmdToAdd *cobra.Command) {
+	for _, existingCmd := range rootCmd.Commands() {
+		if existingCmd.Name() == cmdToAdd.Name() {
+			return
+		}
+	}
+	rootCmd.AddCommand(cmdToAdd)
 }

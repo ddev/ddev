@@ -864,9 +864,8 @@ func (app *DdevApp) FixObsolete() {
 	}
 
 	// Remove old global commands
-	for _, command := range []string{"host/yarn", "host/xhgui"} {
+	for _, command := range []string{"host/yarn", "host/xhgui", "web/nvm", "web/autocomplete/nvm"} {
 		cmdPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/", command)
-		// TODO: Consider checking for #ddev-generated
 		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
 		if err == nil && signatureFound {
 			err = os.Remove(cmdPath)
@@ -1147,7 +1146,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
-	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + fmt.Sprintf(`
 ENV N_PREFIX=/home/$username/.n
@@ -1192,11 +1190,16 @@ stopasgroup=true
 	if app.Database.Type == nodeps.MySQL {
 		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
 	}
-	// Some MariaDB versions may have their own client in the ddev-webserver
-	// Search for CHANGE_MARIADB_CLIENT to update related code
-	if app.Database.Type == nodeps.MariaDB && slices.Contains([]string{nodeps.MariaDB114, nodeps.MariaDB118}, app.Database.Version) {
-		extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
+	if app.Database.Type == nodeps.MariaDB {
+		// Some MariaDB versions may have their own client in the ddev-webserver
+		// Search for CHANGE_MARIADB_CLIENT to update related code
+		if slices.Contains([]string{nodeps.MariaDB1011, nodeps.MariaDB114}, app.Database.Version) {
+			extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
+		}
 	}
+	// MariaDB uses mariadb-* command names, but legacy mysql* commands are commonly used
+	// Install compatibility wrappers for MariaDB, remove them when not needed
+	extraWebContent = extraWebContent + "\nRUN mariadb-compat-install.sh || true\n"
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {

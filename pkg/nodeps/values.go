@@ -22,11 +22,6 @@ const (
 	Postgres = "postgres"
 )
 
-// MySQLRemoveDeprecatedMessage is used to remove the deprecation from stderr when using mysql tools with MariaDB 11.x and later.
-// mysql: Deprecated program name. It will be removed in a future release, use '/usr/bin/mariadb' instead
-// mysqldump: Deprecated program name. It will be removed in a future release, use '/usr/bin/mariadb-dump' instead
-const MySQLRemoveDeprecatedMessage = " 2> >(grep -v 'Deprecated program name.' >&2) "
-
 // Container types used with ddev
 const (
 	DdevSSHAgentContainer = "ddev-ssh-agent"
@@ -64,7 +59,7 @@ var PerformanceModeDefault = types.PerformanceModeEmpty
 // XHProfModeDefault is default value for app.XHProfMode
 var XHProfModeDefault = types.XHProfModeEmpty
 
-const NodeJSDefault = "22"
+const NodeJSDefault = "24"
 
 // NoBindMountsDefault is default value for globalconfig.DDEVGlobalConfig.NoBindMounts
 var NoBindMountsDefault = false

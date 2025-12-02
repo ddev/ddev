@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -67,7 +68,7 @@ func TestGitPull(t *testing.T) {
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "tmp/veggie-pasta-bake-hero-umami.jpg"))
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd:     "echo 'select COUNT(*) from users_field_data where mail=\"margaret.hopper@example.com\";' | mysql -N",
+		Cmd:     fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s -N`, app.GetDBClientCommand()),
 		Service: "db",
 	})
 	assert.NoError(err)

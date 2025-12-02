@@ -19,12 +19,17 @@ done
 
 RUN ls -l /usr/sbin/dpkg-split /usr/sbin/dpkg-deb /usr/sbin/tar /usr/sbin/rm
 
+# Add backports repository to have ability to install newer packages
+# See https://backports.debian.org/Instructions/
+# This is used to install updated curl, see https://github.com/curl/curl/issues/18336
+RUN printf "Types: deb\nURIs: http://deb.debian.org/debian\nSuites: trixie-backports\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.pgp\n" > /etc/apt/sources.list.d/debian-backports.sources
+
 RUN apt-get -qq update
 RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     apt-transport-https \
     ca-certificates \
     bzip2 \
-    curl \
+    curl/trixie-backports \
     git \
     gnupg \
     lsb-release \
@@ -39,7 +44,7 @@ RUN curl -s -I https://packages.sury.org/php/
 RUN curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb && \
     dpkg -i /tmp/debsuryorg-archive-keyring.deb
 RUN rm -f /tmp/debsuryorg-archive-keyring.deb && \
-    echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
+    printf "Types: deb\nURIs: https://packages.sury.org/php/\nSuites: $(lsb_release -sc)\nComponents: main\nSigned-By: /usr/share/keyrings/deb.sury.org-php.gpg\n" > /etc/apt/sources.list.d/php.sources
 RUN apt-get -qq update
 ### -------------------------------END base---------------------------------------
 
@@ -57,13 +62,13 @@ RUN apt-get -qq update
 ### This combines the packages and features of DDEV’s ddev-webserver and PHP image
 FROM base AS ddev-php-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
-ARG PHP_DEFAULT_VERSION="8.3"
+ARG PHP_DEFAULT_VERSION="8.4"
 ARG XDEBUG_MODE=off
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
 ARG PHP_VERSIONS="php8.2 php8.3 php8.4 php8.5"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ARG DRUSH_VERSION=8.5.0
-ENV NODE_VERSION=22
+ENV NODE_VERSION=24
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_PROCESS_TIMEOUT=2000
@@ -89,8 +94,6 @@ RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj
 # Install node without cache, make a symlink for nodejs
 RUN n install --cleanup "${NODE_VERSION}" && ln -sf "$(which node)" "$(which node)js"
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
-# Normal user needs to be able to write to php sessions
-RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl --fail -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
 
 # Loop through $PHP_VERSIONS, selecting packages for the target architecture.
 RUN for v in ${PHP_VERSIONS}; do \

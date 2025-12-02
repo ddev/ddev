@@ -3,7 +3,9 @@ numpy>=1.25.2
 pandas>=2.0.3
 matplotlib>=3.7.2
 Babel>=2.9.1
-click>=7.1.2
+# Temporarily pin click until this is resolved in MkDocs,
+# see https://github.com/mkdocs/mkdocs/issues/4032
+click>=7.1.2,<=8.2.1
 future>=0.18.2
 gitdb>=4.0.7
 GitPython>=3.1.14

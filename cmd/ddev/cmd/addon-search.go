@@ -25,8 +25,8 @@ var AddonSearchCmd = &cobra.Command{
 	Long:  `Search available DDEV add-ons by name or description.`,
 	Example: `ddev add-on search redis
 ddev add-on search database
-ddev add-on search redis commander
-ddev add-on search "redis commander"`,
+ddev add-on search redis insight
+ddev add-on search "redis insight"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		searchTerms := strings.Join(args, " ")
 

@@ -101,16 +101,19 @@ var (
 		// 4: backdrop
 		{
 			Name:                          "TestPkgBackdrop",
-			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.29.2.tar.gz",
-			ArchiveInternalExtractionPath: "backdrop-1.29.2/",
-			DBTarURL:                      "https://github.com/ddev/test-backdrop/releases/download/1.29.2/db.sql.tar.gz",
-			FilesTarballURL:               "https://github.com/ddev/test-backdrop/releases/download/1.29.2/files.tgz",
+			SourceURL:                     "https://github.com/ddev/test-backdrop/archive/refs/tags/1.32.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-backdrop-1.32.1/",
+			DBTarURL:                      "https://github.com/ddev/test-backdrop/releases/download/1.32.1/db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/test-backdrop/releases/download/1.32.1/files.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeBackdrop,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/your-first-post", Expect: "This is your first post! You may edit or delete it."},
-			FilesImageURI:                 "/files/styles/card/public/field/image/card1-layout.png",
+			// Make backdrop use database-config instead of file-based config
+			PretestCmd: `printf "\n\$settings['config_active_class'] = 'ConfigDatabaseStorage';
+\n\$settings['config_staging_class'] = 'ConfigDatabaseStorage';\n" >> /var/www/html/settings.php`,
+			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/LICENSE.txt", Expect: "GNU GENERAL PUBLIC LICENSE"},
+			DynamicURI:                testcommon.URIWithExpect{URI: "/posts/your-first-post", Expect: "This is your first post! You may edit or delete it."},
+			FilesImageURI:             "/files/styles/card/public/field/image/card1-layout.png",
 		},
 		// 5: typo3
 		{
@@ -200,19 +203,19 @@ var (
 		// 10: shopware6
 		{
 			Name: "testpkgshopware6",
-			// tar -czf .tarballs/shopware6_code.tgz --exclude=public/media .
-			SourceURL:                     "https://github.com/ddev/test-shopware6/releases/download/v1.0.4/shopware6_code.tgz",
-			ArchiveInternalExtractionPath: "",
+			// Normal release tarball
+			SourceURL:                     "https://github.com/ddev/test-shopware6/archive/refs/tags/v6.7.4.2-1.tar.gz",
+			ArchiveInternalExtractionPath: "test-shopware6-6.7.4.2-1/",
 			// cd public/media && tar -czf ../../.tarballs/shopware6_files.tgz .
-			FilesTarballURL: "https://github.com/ddev/test-shopware6/releases/download/v1.0.4/shopware6_files.tgz",
+			FilesTarballURL: "https://github.com/ddev/test-shopware6/releases/download/v6.7.4.2-1/shopware6_files.tgz",
 			// ddev export-db --gzip=false --file=.tarballs/db.sql && tar -czf .tarballs/shopware6_db.sql.tar.gz -C .tarballs db.sql
-			DBTarURL:                  "https://github.com/ddev/test-shopware6/releases/download/v1.0.4/shopware6_db.sql.tar.gz",
+			DBTarURL:                  "https://github.com/ddev/test-shopware6/releases/download/v6.7.4.2-1/shopware6_db.sql.tar.gz",
 			FullSiteTarballURL:        "",
 			Type:                      nodeps.AppTypeShopware6,
 			Docroot:                   "public",
 			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/maintenance.html", Expect: "Our website is currently undergoing maintenance"},
-			DynamicURI:                testcommon.URIWithExpect{URI: "/", Expect: "0180 - 000000"},
-			FilesImageURI:             "/thumbnail/4e/6e/dc/1700858326/hemd_600x600_1920x1920.jpg",
+			DynamicURI:                testcommon.URIWithExpect{URI: "/installer", Expect: "00 800 746 7626 0"},
+			FilesImageURI:             "/thumbnail/95/f2/b2/1763419228/hq_1280x1280_1280x528.jpg",
 		},
 		// 11: php
 		{
@@ -252,14 +255,15 @@ var (
 		// be a `.tar.gz` file, `.zip` will NOT work) and add to `DBTarURL`.
 		{
 			Name:                          "TestPkgCraftCms",
-			SourceURL:                     "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/craft-cms-4.2.3.zip",
-			ArchiveInternalExtractionPath: "cms-4.2.3/",
-			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/craftcms-4.2.3-files.tar.gz",
-			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/craftcms-4.2.3-db.sql.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-craftcms/archive/refs/tags/5.8.19.tar.gz",
+			ArchiveInternalExtractionPath: "test-craftcms-5.8.19/",
+			FilesTarballURL:               "https://github.com/ddev/test-craftcms/releases/download/5.8.19/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-craftcms/releases/download/5.8.19/db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeCraftCms,
 			Docroot:                       "web",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: "Thanks for testing Craft CMS"},
+			PretestCmd:                    `craft setup/security-key --interactive=0`,
 			UploadDirs:                    []string{"files"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
 			FilesImageURI:                 "/files/happy-brad.jpg",
@@ -296,10 +300,10 @@ var (
 		// 16: drupal11
 		{
 			Name:                          "TestPkgDrupal11",
-			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.0.9.tar.gz",
-			ArchiveInternalExtractionPath: "test-drupal11-11.0.9/",
-			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.0.9/files.tgz",
-			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.0.9/db.sql.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.2.8.tar.gz",
+			ArchiveInternalExtractionPath: "test-drupal11-11.2.8/",
+			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.2.8/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.2.8/db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal11,
 			Docroot:                       "web",
@@ -348,10 +352,10 @@ var (
 		// 20: frankenphp
 		{
 			Name:                          "TestPkgFrankenPHP",
-			SourceURL:                     "https://github.com/ddev/test-frankenphp/archive/refs/tags/11.1.1.tar.gz",
-			ArchiveInternalExtractionPath: "test-frankenphp-11.1.1/",
-			FilesTarballURL:               "https://github.com/ddev/test-frankenphp/releases/download/11.1.1/files.tgz",
-			DBTarURL:                      "https://github.com/ddev/test-frankenphp/releases/download/11.1.1/db.sql.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-frankenphp/archive/refs/tags/11.1.2.tar.gz",
+			ArchiveInternalExtractionPath: "test-frankenphp-11.1.2/",
+			FilesTarballURL:               "https://github.com/ddev/test-frankenphp/releases/download/11.1.2/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-frankenphp/releases/download/11.1.2/db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal11,
 			Docroot:                       "web",
@@ -769,8 +773,8 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			urls = httpURLs
 		}
 		t.Logf("Testing these URLs: %v", urls)
-		for _, url := range urls {
-			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		for _, testURL := range urls {
+			_, _ = testcommon.EnsureLocalHTTPContent(t, testURL+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
@@ -1143,36 +1147,36 @@ func TestDdevMysqlWorks(t *testing.T) {
 	// Test that MySQL + .my.cnf works on web container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "mysql -e 'SELECT USER();' | grep 'root@'",
+		Cmd:     fmt.Sprintf(`%s -e 'SELECT USER();' | grep 'root@'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	// Test that the 'db' user works
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "mysql -udb -pdb -e 'SELECT USER();' | grep 'db@'",
+		Cmd:     fmt.Sprintf(`%s -udb -pdb -e 'SELECT USER();' | grep 'db@'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "mysql -e 'SELECT DATABASE();' | grep 'db'",
+		Cmd:     fmt.Sprintf(`%s -e 'SELECT DATABASE();' | grep 'db'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 
 	// Test that MySQL + .my.cnf works on db container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -e 'SELECT USER();' | grep 'root@localhost'",
+		Cmd:     fmt.Sprintf(`%s -e 'SELECT USER();' | grep 'root@localhost'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	// Test that the 'db' user works
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -udb -pdb -e 'SELECT USER();' | grep 'db@localhost'",
+		Cmd:     fmt.Sprintf(`%s -udb -pdb -e 'SELECT USER();' | grep 'db@localhost'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -e 'SELECT DATABASE();' | grep 'db'",
+		Cmd:     fmt.Sprintf(`%s -e 'SELECT DATABASE();' | grep 'db'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 
@@ -1323,7 +1327,7 @@ func TestDdevImportDB(t *testing.T) {
 		err = app.Start()
 		require.NoError(t, err)
 
-		c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
+		c[nodeps.MariaDB] = fmt.Sprintf(`%s -N -e 'DROP DATABASE IF EXISTS test;'`, app.GetDBClientCommand())
 		c[nodeps.Postgres] = `echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
@@ -1346,7 +1350,7 @@ func TestDdevImportDB(t *testing.T) {
 				continue
 			}
 
-			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW TABLES;' | cat`
+			c[nodeps.MariaDB] = fmt.Sprintf(`set -eu -o pipefail; %s -N -e 'SHOW TABLES;' | cat`, app.GetDBClientCommand())
 			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -v ON_ERROR_STOP=1 db -c '\dt' |awk -F' *\| *' '{ if (NF>2) print $2 }' `
 			// There should be exactly the one "users" table for each of these files
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -1356,7 +1360,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
 
-			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`
+			c[nodeps.MariaDB] = fmt.Sprintf(`set -eu -o pipefail; %s -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`, app.GetDBClientCommand())
 			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
 
 			// Verify that no extra database was created
@@ -1412,7 +1416,7 @@ func TestDdevImportDB(t *testing.T) {
 			os.Stdin = savedStdin
 			assert.NoError(err)
 
-			c[nodeps.MariaDB] = fmt.Sprintf(`mysql -N %s -e "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, db, db)
+			c[nodeps.MariaDB] = fmt.Sprintf(`%s -N %s -e "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, app.GetDBClientCommand(), db, db)
 			c[nodeps.Postgres] = fmt.Sprintf(`psql -t -d %s -c "SELECT datname FROM pg_database WHERE datname='%s' ;" && psql -t -d %s -c "SELECT COUNT(*) from stdintable"`, db, db, db)
 
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -1426,10 +1430,10 @@ func TestDdevImportDB(t *testing.T) {
 			assert.Equal(fmt.Sprintf("%s2", db), out)
 
 			// Import 2-user users.sql into users table
-			path := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
-			err = app.ImportDB(path, "", false, false, db)
+			sqlPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
+			err = app.ImportDB(sqlPath, "", false, false, db)
 			assert.NoError(err)
-			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db)
+			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | %s -N %s`, db, app.GetDBClientCommand(), db)
 			c[nodeps.Postgres] = fmt.Sprintf(`bash -c "echo '\dt' | psql -t -d %s | awk 'NF > 1'"`, db)
 			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
@@ -1441,8 +1445,8 @@ func TestDdevImportDB(t *testing.T) {
 			assert.Len(lines, 1)
 
 			// Import 1-user sql (users_just_one table) and make sure only one table is left there
-			path = filepath.Join(origDir, "testdata", t.Name(), dbType, "oneuser.sql")
-			err = app.ImportDB(path, "", false, false, db)
+			sqlPath = filepath.Join(origDir, "testdata", t.Name(), dbType, "oneuser.sql")
+			err = app.ImportDB(sqlPath, "", false, false, db)
 			assert.NoError(err)
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
@@ -1458,8 +1462,8 @@ func TestDdevImportDB(t *testing.T) {
 			if dbType != nodeps.Postgres {
 				// Import 2-user users.sql again, but with nodrop=true
 				// We should end up with 2 tables now
-				path = filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
-				err = app.ImportDB(path, "", false, true, db)
+				sqlPath = filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
+				err = app.ImportDB(sqlPath, "", false, true, db)
 				assert.NoError(err)
 				out, _, err = app.Exec(&ddevapp.ExecOpts{
 					Service: "db",
@@ -1485,29 +1489,71 @@ func TestDdevImportDB(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
+	// Test COLLATE handling: modern collations should be replaced, legacy should be preserved
+	dbType := nodeps.MariaDB
+	var out, stderr string
+	// Test modern collations (should be replaced with utf8mb4_unicode_ci)
+	modernCollationsFile := filepath.Join(origDir, "testdata", t.Name(), dbType, "modern_collations.sql")
+	err = app.ImportDB(modernCollationsFile, "", false, false, "db")
+	assert.NoError(err, "Failed to import modern_collations.sql")
+
+	// Verify modern MariaDB 11.x collation was replaced
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e "SHOW CREATE TABLE modern_mariadb\G" db | grep -i collate`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "Failed to check modern_mariadb collation, stderr=%s", stderr)
+	assert.NotContains(out, "utf8mb4_uca1400_ai_ci", "Modern MariaDB collation should have been replaced")
+	assert.Contains(out, "utf8mb4_unicode_ci", "Modern MariaDB collation should be replaced with utf8mb4_unicode_ci")
+
+	// Verify modern MySQL 8.0+ collation was replaced
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e "SHOW CREATE TABLE modern_mysql\G" db | grep -i collate`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "Failed to check modern_mysql collation, stderr=%s", stderr)
+	assert.NotContains(out, "utf8mb4_0900_ai_ci", "Modern MySQL collation should have been replaced")
+	assert.Contains(out, "utf8mb4_unicode_ci", "Modern MySQL collation should be replaced with utf8mb4_unicode_ci")
+
+	// Test legacy collations (should be preserved as-is)
+	legacyCollationsFile := filepath.Join(origDir, "testdata", t.Name(), dbType, "legacy_collations.sql")
+	err = app.ImportDB(legacyCollationsFile, "", false, false, "db")
+	assert.NoError(err, "Failed to import legacy_collations.sql")
+
+	// Verify legacy collations were preserved
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e "SHOW CREATE TABLE legacy_collations\G" db`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "Failed to check legacy_collations table, stderr=%s", stderr)
+	assert.Contains(out, "ascii_general_ci", "Legacy ascii_general_ci collation should be preserved")
+	assert.Contains(out, "utf8mb4_general_ci", "Legacy utf8mb4_general_ci collation should be preserved")
+	assert.Contains(out, "utf8mb4_unicode_ci", "Legacy utf8mb4_unicode_ci collation should be preserved")
+	assert.Contains(out, "latin1_swedish_ci", "Legacy latin1_swedish_ci collation should be preserved")
+
 	// Test database that has SQL DDL in the content to make sure nothing gets corrupted.
 	// Make sure database "test" does not exist initially
-	dbType := nodeps.MariaDB
-	c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
+	dbType = nodeps.MariaDB
+	c[nodeps.MariaDB] = fmt.Sprintf(`%s -N -e 'DROP DATABASE IF EXISTS test;'`, app.GetDBClientCommand())
 	c[nodeps.Postgres] = `echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`
-	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     c[dbType],
 	})
 	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
 
-	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE IF EXISTS wp_posts;'"})
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: fmt.Sprintf(`%s -N -e 'DROP TABLE IF EXISTS wp_posts;'`, app.GetDBClientCommand())})
 	require.NoError(t, err)
 	file := "posts_with_ddl_content.sql"
-	path := filepath.Join(origDir, "testdata", t.Name(), "mariadb", file)
-	err = app.ImportDB(path, "", false, false, "db")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+	sqlPath := filepath.Join(origDir, "testdata", t.Name(), "mariadb", file)
+	err = app.ImportDB(sqlPath, "", false, false, "db")
+	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", sqlPath, err)
 	checkImportDBImports(t, app)
 
 	// Now test the same when importing from stdin, same file
-	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE wp_posts;'"})
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: fmt.Sprintf(`%s -N -e 'DROP TABLE wp_posts;'`, app.GetDBClientCommand())})
 	require.NoError(t, err)
-	f, err := os.Open(path)
+	f, err := os.Open(sqlPath)
 	require.NoError(t, err)
 	defer f.Close()
 	oldStdin := os.Stdin
@@ -1516,7 +1562,7 @@ func TestDdevImportDB(t *testing.T) {
 	})
 	os.Stdin = f
 	err = app.ImportDB("", "", false, false, "db")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", sqlPath, err)
 	os.Stdin = oldStdin
 	checkImportDBImports(t, app)
 
@@ -1524,10 +1570,52 @@ func TestDdevImportDB(t *testing.T) {
 	// import due to embedded DDL statements.
 	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `mysql -N -e 'SELECT COUNT(*) FROM wp_posts;'`,
+		Cmd:     fmt.Sprintf(`%s -N -e 'SELECT COUNT(*) FROM wp_posts;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
-	assert.Equal("180\n", out)
+	assert.Equal("181\n", out)
+
+	// Verify that collation names in data content are preserved (not replaced)
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e 'SELECT post_content FROM wp_posts WHERE ID=1;'`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
+	assert.Contains(out, "COLLATE utf8mb4_uca1400_ai_ci", "Data content should preserve original collation names")
+	assert.Contains(out, "COLLATE=utf8mb4_0900_ai_ci", "Data content should preserve original collation names with =")
+
+	// Test that invalid SQL is properly detected and reported
+	// This verifies the PIPESTATUS check catches mysql/mariadb errors
+	invalidSQLFile := filepath.Join(origDir, "testdata", t.Name(), "mariadb", "invalid.sql")
+	err = app.ImportDB(invalidSQLFile, "", false, false, "db")
+	assert.Error(err, "Expected import of invalid.sql to fail")
+	assert.Contains(err.Error(), "failed to import database", "Error should mention import failure")
+
+	// Verify the table from before the error was created, but table after error was not
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e 'SHOW TABLES LIKE "test_table";'`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
+	assert.Contains(out, "test_table", "Table before error should have been created")
+
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`%s -N -e 'SHOW TABLES LIKE "should_not_exist";'`, app.GetDBClientCommand()),
+	})
+	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
+	assert.NotContains(out, "should_not_exist", "Table after error should not have been created")
+
+	// Test invalid SQL via stdin as well
+	invalidFile, err := os.Open(invalidSQLFile)
+	require.NoError(t, err)
+	oldStdin = os.Stdin
+	os.Stdin = invalidFile
+	err = app.ImportDB("", "", false, false, "db")
+	os.Stdin = oldStdin
+	invalidFile.Close()
+	assert.Error(err, "Expected stdin import of invalid SQL to fail")
+	assert.Contains(err.Error(), "failed to import database", "Stdin import error should mention import failure")
 
 	// Now check standard archive imports
 	if site.DBTarURL != "" {
@@ -1569,7 +1657,7 @@ func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
 	// There should be exactly the one wp_posts table for this file
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -N -e 'SHOW TABLES;' | cat",
+		Cmd:     fmt.Sprintf(`%s -N -e 'SHOW TABLES;' | cat`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	assert.Equal("wp_posts\n", out)
@@ -1577,7 +1665,7 @@ func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
 	// Verify that no additional database was created (this one has a CREATE DATABASE statement)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`,
+		Cmd:     fmt.Sprintf(`%s -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql|sys)$"`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	assert.Equal("db\n", out)
@@ -1597,7 +1685,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
+		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:11.4", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -1681,7 +1769,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			// Make sure default charset is utf8mb4
 			charSet, _, _ := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     `mysql -n -e "SELECT @@character_set_database;"`,
+				Cmd:     fmt.Sprintf(`%s -n -e "SELECT @@character_set_database;"`, app.GetDBClientCommand()),
 			})
 			assert.Equal("@@character_set_database\nutf8mb4", strings.Trim(charSet, "\n\r "))
 		}
@@ -1757,7 +1845,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		// Delete the user in the database so we can later verify snapshot restore
 		c := map[string]string{
 			nodeps.MySQL:    `echo "DELETE FROM users;" | mysql`,
-			nodeps.MariaDB:  `echo "DELETE FROM users;" | mysql`,
+			nodeps.MariaDB:  fmt.Sprintf(`echo "DELETE FROM users;" | %s`, app.GetDBClientCommand()),
 			nodeps.Postgres: `echo "DELETE FROM users;" | psql`,
 		}
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1787,7 +1875,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			// Make sure overriding configuration works
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
+				Cmd:     fmt.Sprintf(`%s -sN -e "SELECT @@global.time_zone"`, app.GetDBClientCommand()),
 			})
 			assert.NoError(err)
 			assert.Equal("SYSTEM\n", out, "out: %s, stderr: %s", out, stderr)
@@ -1800,7 +1888,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			require.NoError(t, err)
 			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     `mysql -sN -e "SELECT @@global.time_zone"`,
+				Cmd:     fmt.Sprintf(`%s -sN -e "SELECT @@global.time_zone"`, app.GetDBClientCommand()),
 			})
 			assert.NoError(err)
 			assert.Equal("+08:00\n", out, "out: %s, stderr: %s", out, stderr, "did not find expected timezone value on %v", dbTypeVersion)
@@ -1811,7 +1899,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		c = map[string]string{
 			nodeps.MySQL:    `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
-			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+			nodeps.MariaDB:  fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | %s -N`, app.GetDBClientCommand()),
 			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -t`,
 		}
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -1989,7 +2077,7 @@ func TestDdevExportDB(t *testing.T) {
 		require.NoError(t, err, `dbType=%v: unable to importDB importPath=%s targetDB=thirddb`, dbType, importPath)
 
 		c := map[string]string{
-			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`,
+			nodeps.MariaDB:  fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | %s -N thirddb`, app.GetDBClientCommand()),
 			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -t -q thirddb`,
 		}
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -2010,9 +2098,7 @@ func TestDdevExportDB(t *testing.T) {
 func TestWebserverMariaMySQLDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
-	//serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.4", "mariadb:11.8"}
-	// mariadb:11.4 seems not to work right now for upstream reasons 2025-09-25
-	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:10.4", "mariadb:11.8"}
+	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:11.4", "mariadb:11.8"}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
@@ -2051,7 +2137,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 	})
 
 	for _, dbTypeVersion := range serverVersions {
-		t.Logf("Testing mysql client functionality of %s", dbTypeVersion)
+		t.Logf("Testing mysql/mariadb client functionality of %s", dbTypeVersion)
 		parts := strings.Split(dbTypeVersion, ":")
 		dbType := parts[0]
 		dbVersion := parts[1]
@@ -2074,31 +2160,48 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 			existingProjects, _ := exec.RunHostCommand("ddev", "list")
 			require.NoError(t, startErr, "failed to start %s:%s, existing projects:'%s', existing containers=%s", dbType, dbVersion, existingProjects, existingContainers)
 		}
+		// Check legacy mysql commands (suppress deprecation warnings)
 		for _, tool := range []string{"mysql", "mysqladmin", "mysqldump"} {
-			cmd := tool + " --version"
+			cmd := tool + " --version 2>/dev/null"
 			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Cmd: cmd,
 			})
-			require.NoError(t, err, "mysql --version with dbTypeVersion=%s, stdout=%s, stderr=%s", dbTypeVersion, stdout, stderr)
+			require.NoError(t, err, "%s --version with dbTypeVersion=%s, stdout=%s, stderr=%s", tool, dbTypeVersion, stdout, stderr)
 			parts := strings.Fields(stdout)
 			require.True(t, len(parts) > 5)
 			expectedClientVersion := dbVersion
 
 			// Search for CHANGE_MARIADB_CLIENT to update related code.
 			if dbType == nodeps.MariaDB {
-				// For MariaDB, we have installed the 10.11 client by default.
-				expectedClientVersion = "10.11"
+				// For MariaDB, we have installed the 11.8 client by default.
+				expectedClientVersion = "11.8"
 				// Add MariaDB versions that can have their own client here:
 				switch dbVersion {
+				case nodeps.MariaDB1011:
+					expectedClientVersion = "10.11"
 				case nodeps.MariaDB114:
 					expectedClientVersion = "11.4"
-				case nodeps.MariaDB118:
-					expectedClientVersion = "11.8"
 				}
 			}
 			// Output might be "mysql  Ver 8.0.36 for Linux on aarch64 (Source distribution)"
 			// Or "mysql  Ver 14.14 Distrib 5.7.44, for Linux (aarch64) using  EditLine wrapper"
 			require.True(t, strings.HasPrefix(parts[4], expectedClientVersion) || strings.HasPrefix(parts[2], expectedClientVersion), "tool='%s' dbType='%s' dbVersion='%s' should have dbVersion='%s' as prefix but received stdout='%s'", tool, dbType, dbVersion, expectedClientVersion, strings.TrimSpace(stdout))
+		}
+
+		// For MariaDB 10.5+, also check that canonical mariadb commands exist
+		if dbType == nodeps.MariaDB {
+			isNewMariaDB, _ := util.SemverValidate(">= 10.5", dbVersion)
+			if isNewMariaDB {
+				for _, tool := range []string{"mariadb", "mariadb-admin", "mariadb-dump"} {
+					cmd := tool + " --version"
+					stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+						Cmd: cmd,
+					})
+					require.NoError(t, err, "failed to execute %s in db container: stderr=%s", cmd, stderr)
+					parts := strings.Split(stdout, " ")
+					require.GreaterOrEqual(t, len(parts), 5, "malformed --version response, stdout='%s'", stdout)
+				}
+			}
 		}
 
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
@@ -2107,12 +2210,12 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 		err = app.MutagenSyncFlush()
 		require.NoError(t, err)
 		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-			Cmd: "mysql db < users.sql",
+			Cmd: fmt.Sprintf(`%s db < users.sql`, app.GetDBClientCommand()),
 		})
-		require.NoError(t, err, "mysql db <users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
+		require.NoError(t, err, "mysql/mariadb db <users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
 
 		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "mysqldump db > dbdump.sql",
+			Cmd: fmt.Sprintf(`%s db > dbdump.sql`, app.GetDBDumpCommand()),
 		})
 		require.NoError(t, err, "mysqldump failed, stdout=%s, stderr=%s", stdout, stderr)
 
@@ -2129,12 +2232,12 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 		}
 
 		stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "mysql db < dbdump.sql",
+			Cmd: fmt.Sprintf(`%s db < dbdump.sql`, app.GetDBClientCommand()),
 		})
-		require.NoError(t, err, "mysql db </tmp/users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
+		require.NoError(t, err, "mysql/mariadb db </tmp/users.sql failed: stdout=%s, stderr=%s", stdout, stderr)
 
 		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: `mysql -B --skip-column-names -e "SELECT COUNT(*) FROM users;"`,
+			Cmd: fmt.Sprintf(`%s -B --skip-column-names -e "SELECT COUNT(*) FROM users;"`, app.GetDBClientCommand()),
 		})
 		require.NoError(t, err)
 		stdout = strings.Trim(stdout, "\n")
@@ -3055,12 +3158,12 @@ func TestDdevExec(t *testing.T) {
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql -e 'DROP DATABASE db;'",
+		Cmd:     fmt.Sprintf(`%s -e 'DROP DATABASE db;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "mysql information_schema -e 'CREATE DATABASE db;'",
+		Cmd:     fmt.Sprintf(`%s information_schema -e 'CREATE DATABASE db;'`, app.GetDBClientCommand()),
 	})
 	assert.NoError(err)
 
@@ -3503,13 +3606,13 @@ func TestHttpsRedirection(t *testing.T) {
 		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/subdir", "/subdir/"})
 	}
 
-	types := ddevapp.GetValidAppTypes()
+	projectTypes := ddevapp.GetValidAppTypes()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	if os.Getenv("GOTEST_SHORT") != "" {
-		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
+		projectTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
 		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}
-	for _, projectType := range types {
+	for _, projectType := range projectTypes {
 		// TODO: Fix the Laravel config so it can do the redir_abs.php successfully on nginx-fpm
 		if projectType == nodeps.AppTypeLaravel {
 			t.Log("Skipping Laravel because it can't pass absolute redirect test, fix config")
@@ -4110,7 +4213,7 @@ func TestHostDBPort(t *testing.T) {
 	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
 		switch dbType {
 		case nodeps.MariaDB:
-			clientTool = "mysql"
+			clientTool = app.GetDBClientCommand()
 			app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.MariaDBDefaultVersion}
 		case nodeps.Postgres:
 			clientTool = "psql"
@@ -4144,8 +4247,7 @@ func TestHostDBPort(t *testing.T) {
 			} else {
 				// Running MySQL or psql against the container ensures that we can get there via the values
 				// in ddev describe
-				c := fmt.Sprintf(
-					"export MYSQL_PWD=db; mysql -N --user=db --host=%s --port=%d --database=db -e 'SELECT 1;'", dockerIP, dbPort)
+				c := fmt.Sprintf(`export MYSQL_PWD=db; %s -N --user=db --host=%s --port=%d --database=db -e 'SELECT 1;'`, app.GetDBClientCommand(), dockerIP, dbPort)
 				if dbType == nodeps.Postgres {
 					c = fmt.Sprintf("export PGPASSWORD=db; psql -U db -t --host=%s --port=%d --dbname=db -c 'SELECT 1;'", dockerIP, dbPort)
 				}
@@ -4603,9 +4705,4 @@ func constructContainerName(containerType string, app *ddevapp.DdevApp) (string,
 	}
 	name := dockerutil.ContainerName(c)
 	return name, nil
-}
-
-func removeAllErrCheck(path string, assert *asrt.Assertions) {
-	err := os.RemoveAll(path)
-	assert.NoError(err)
 }

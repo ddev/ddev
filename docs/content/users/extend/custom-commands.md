@@ -85,14 +85,12 @@ For example:
 
 The autocomplete script should echo the valid arguments as a string separated by line breaks. You don't need to filter the arguments by the last argument string (e.g. if the last argument is `som`, you don't need to filter out any arguments that don't start with `som`). That will be handled for you before the result is given to your shell as completion suggestions.
 
-The web container's [`nvm` autocomplete script](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/global_dotddev_assets/commands/web/autocomplete/nvm) shows how this can be used to forward completion requests to a relevant script in the container.
-
 ## Environment Variables Provided
 
 A number of environment variables are provided to these command scripts. These are generally supported, but please avoid using undocumented environment variables. Useful variables for host scripts are:
 
 * `DDEV_APPROOT`: File system location of the project on the host
-* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.4`)
+* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.8`)
 * `DDEV_DATABASE_FAMILY`: Database "family" (example: `mysql`, `postgres`), useful for database connection URLs
 * `DDEV_DOCROOT`: Relative path from approot to docroot
 * `DDEV_GID`: Group ID the `web` container runs as
@@ -129,7 +127,7 @@ A number of environment variables are provided to these command scripts. These a
 Useful variables for container scripts are:
 
 * `DDEV_APPROOT`: Absolute path to the project files within the web container
-* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.4`)
+* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:11.8`)
 * `DDEV_DATABASE_FAMILY`: Database "family" (example: `mysql`, `postgres`), useful for database connection URLs
 * `DDEV_DOCROOT`: Relative path from approot to docroot
 * `DDEV_FILES_DIR`: *Deprecated*, first directory of user-uploaded files

@@ -164,7 +164,9 @@ func TestDownloadAndExtractTarball(t *testing.T) {
 	testTarball := "https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz"
 
 	dir, cleanup, err := archive.DownloadAndExtractTarball(testTarball, true)
-	defer cleanup()
+	if cleanup != nil {
+		defer cleanup()
+	}
 	require.NoError(t, err)
 	require.DirExists(t, dir)
 	require.FileExists(t, path.Join(dir, "install.yaml"))

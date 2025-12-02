@@ -16,7 +16,7 @@ ignorePatterns:
   - pattern: "https://buildkite.com/organizations/ddev"
   - pattern: "https://github.com/orgs/ddev"
   - pattern: "https://github.com/watching"
-  - pattern: "https://newmonitor.thefays.us/icingaweb2"
+  - pattern: "https://monitor.ddev.com/icingaweb2"
   - pattern: "https://analytics.amplitude.com"
   - pattern: "https://stackoverflow.com"
   - pattern: "https://meta.stackoverflow.com"

@@ -304,6 +304,11 @@ services:
 
 		// Clean up test config
 		_ = os.Remove(app.GetConfigPath("test-config.yaml"))
+
+		// Stop the project to ensure addon-created containers are properly stopped
+		// before the parent cleanup removes the addon
+		err = app.Stop(false, false)
+		require.NoError(t, err, "failed to stop project after ComplexPHPAddon test")
 	})
 
 	// Test mixed bash/PHP addon
@@ -398,6 +403,11 @@ services:
 		// Check for some key varnish commands
 		require.FileExists(t, app.GetConfigPath("commands/varnish/varnishadm"))
 		require.FileExists(t, app.GetConfigPath("commands/varnish/varnishlog"))
+
+		// Stop the project to ensure addon-created containers are properly stopped
+		// before the parent cleanup removes the addon
+		err = app.Stop(false, false)
+		require.NoError(t, err, "failed to stop project after VarnishPHPAddon test")
 	})
 
 	// Test repository access addon - demonstrates full project access
@@ -597,10 +607,10 @@ func TestCmdAddonSearch(t *testing.T) {
 	assert.Contains(out, "repositories found matching 'redis cache'")
 
 	// Test search with quotes
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "redis commander")
-	assert.NoError(err, "failed ddev add-on search 'redis commander': %v (%s)", err, out)
-	assert.Contains(out, "ddev/ddev-redis-commander")
-	assert.Contains(out, "repositories found matching 'redis commander'")
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "redis insight")
+	assert.NoError(err, "failed ddev add-on search 'redis insight': %v (%s)", err, out)
+	assert.Contains(out, "ddev/ddev-redis-insight")
+	assert.Contains(out, "repositories found matching 'redis insight'")
 
 	// Test search with no results
 	out, err = exec.RunHostCommand(DdevBin, "add-on", "search", "nonexistentservice")

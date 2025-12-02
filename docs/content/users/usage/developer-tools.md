@@ -17,7 +17,7 @@ Hundreds of useful developer tools are included inside the containers and can be
 * [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as `wp` and as `wp-cli`.
 * [n98-magerun](https://github.com/netz98/n98-magerun) - Command-line tool for Magento 1 / OpenMage installations, available as `magerun`.
 * [n98-magerun2](https://github.com/netz98/n98-magerun2) - Command-line tool for Magento Open Source / Mage-OS / Adobe Commerce installations, available as `magerun2`.
-* `npm`, `nvm`, and `yarn` (these also have `ddev` shortcuts like [`ddev npm`](../usage/commands.md#npm), [`ddev nvm`](../usage/commands.md#nvm), [`ddev yarn`](../usage/commands.md#yarn)).
+* `npm` and `yarn` (these also have `ddev` shortcuts like [`ddev npm`](../usage/commands.md#npm) and [`ddev yarn`](../usage/commands.md#yarn)).
 * `node` (for front-end build tools like [Vite](vite.md), see the [Vite Integration](vite.md) documentation)
 * `sqlite3`
 
@@ -46,7 +46,7 @@ When using `ddev composer create-project` your project should be essentially emp
 
 1. `composer create-project --no-plugins --no-scripts --no-install` clones a bare Composer package without any additional actions.
 2. `composer run-script post-root-package-install` runs if `--no-scripts` is not given as a flag to `ddev composer create-project`.
-3. `composer install` runs if `--no-install` is not given as a flag to `ddev composer create-project`.
+3. `composer install` runs if `--no-install` is not given as a flag to `ddev composer create-project`. If `composer install` fails, DDEV runs `COMPOSER_NO_SECURITY_BLOCKING=1 composer update` to attempt installation of older package versions that may have security advisories.
 4. `composer run-script post-create-project-cmd` runs if `--no-scripts` is not given as a flag to `ddev composer create-project`.
 
 All flags that you provide to `ddev composer create-project` are checked for validity. All invalid flags will be ignored. If they are valid for `composer create-project`, they will be also passed to `composer run-script` and `composer install`, but only if these commands support these flags.
