@@ -44,11 +44,4 @@ if [ "$(go env GOOS)" = "windows"  -a "$(git config core.autocrlf)" != "false" ]
  exit 3
 fi
 
-CURRENT_DDEV_VERSION=$(ddev --version  | awk '{ gsub(/^v/, "", $3); sub(/-.*$/, "", $3); print $3}' )
-CURRENT_DDEV_VERSION=$(ddev --version | awk '{ print $3 }')
-if command -v ddev >/dev/null && version_gt ${MIN_DDEV_VERSION} ${CURRENT_DDEV_VERSION} ; then
-  echo "ddev version in $(command -v ddev) is inadequate: $(ddev --version)"
-  exit 4
-fi
-
 echo "-- testbot $HOSTNAME seems to be set up OK --"
