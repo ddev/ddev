@@ -78,11 +78,17 @@ ddev share myproject`,
 			util.Failed("Failed to create stdout pipe: %v", err)
 		}
 
+		// Create pipe to capture stderr (to filter shutdown errors)
+		stderrReader, stderrWriter, err := os.Pipe()
+		if err != nil {
+			util.Failed("Failed to create stderr pipe: %v", err)
+		}
+
 		// Execute provider script
 		providerCmd := exec.Command(scriptPath)
 		providerCmd.Env = env
 		providerCmd.Stdout = stdoutWriter
-		providerCmd.Stderr = os.Stderr
+		providerCmd.Stderr = stderrWriter
 
 		// Set up signal handling for SIGINT/SIGTERM
 		sigChan := make(chan os.Signal, 1)
@@ -106,6 +112,20 @@ ddev share myproject`,
 			// Keep reading to prevent provider from blocking on stdout
 			for scanner.Scan() {
 				// Discard additional stdout
+			}
+		}()
+
+		// Forward stderr to user, but stop after provider is killed
+		stderrDone := make(chan bool, 1)
+		go func() {
+			scanner := bufio.NewScanner(stderrReader)
+			for scanner.Scan() {
+				select {
+				case <-stderrDone:
+					return
+				default:
+					_, _ = os.Stderr.WriteString(scanner.Text() + "\n")
+				}
 			}
 		}()
 
@@ -148,6 +168,10 @@ ddev share myproject`,
 			util.Warning("Failed to process pre-share hooks: %v", err)
 		}
 
+		// Close write ends of pipes so readers can finish
+		_ = stdoutWriter.Close()
+		_ = stderrWriter.Close()
+
 		// Wait for either provider to exit or signal to be received
 		done := make(chan error, 1)
 		go func() {
@@ -165,16 +189,22 @@ ddev share myproject`,
 			err = <-done
 		}
 
+		// Stop forwarding stderr (to suppress shutdown errors)
+		close(stderrDone)
+
 		// Process post-share hooks
 		hookErr := app.ProcessHooks("post-share")
 		if hookErr != nil {
 			util.Warning("Failed to process post-share hooks: %v", hookErr)
 		}
 
-		// Report provider exit status if non-zero
+		// Report provider exit status if non-zero and not killed by signal
 		if err != nil {
 			if exitErr, ok := err.(*exec.ExitError); ok {
-				util.Warning("Provider '%s' exited with code %d", providerName, exitErr.ExitCode())
+				// Don't warn about exit code -1 which is from Kill()
+				if exitErr.ExitCode() != -1 {
+					util.Warning("Provider '%s' exited with code %d", providerName, exitErr.ExitCode())
+				}
 			}
 		}
 
