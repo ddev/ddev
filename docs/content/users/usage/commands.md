@@ -373,7 +373,8 @@ Flags:
 * `--host-webserver-port`: The `web` container’s localhost-bound HTTP port.
 * `--mailpit-http-port`: Router port to be used for Mailpit HTTP access (see [default](../configuration/config.md#mailpit_http_port)).
 * `--mailpit-https-port`: Router port to be used for Mailpit HTTPS access (see [default](../configuration/config.md#mailpit_https_port)).
-* `--ngrok-args`: Provide extra args to `ngrok` in `ddev share`.
+* `--ngrok-args`: Provide extra args to `ngrok` in `ddev share` (deprecated: use [`share_ngrok_args`](../configuration/config.md#ngrok_args) in config.yaml).
+* `--share-default-provider`: Set the default share provider for the project (ngrok, cloudflared, or custom). Can be overridden globally with `ddev config global --share-provider=<provider>`.
 * `--no-project-mount`: Whether to skip mounting project code into the `web` container.
 * `--nodejs-version`: Specify the Node.js version to use (see [default](../configuration/config.md#nodejs_version)).
 * `--omit-containers`: Comma-delimited list of container types that should not be started when the project is started.
@@ -1204,22 +1205,31 @@ ddev sequelpro
 
 ## `share`
 
-[Share the current project](../topics/sharing.md) on the internet via [ngrok](https://ngrok.com).
+[Share the current project](../topics/sharing.md) on the internet via a tunnel provider like ngrok or cloudflared.
 
-!!!tip
-    Any ngrok flag can also be specified in the [`ngrok_args` config setting](../configuration/config.md#ngrok_args).
+DDEV supports multiple share providers:
+
+* **ngrok** (default) - Requires an [ngrok.com](https://ngrok.com) account
+* **cloudflared** - Free, no account required. Requires [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation) to be installed
+* **Custom providers** - Add your own providers in `.ddev/share-providers/`
 
 Flags:
 
-* `--ngrok-args`: Accepts any flag from `ngrok http --help`.
+* `--provider`: Share provider to use (ngrok, cloudflared, or custom).
+* `--ngrok-args`: Accepts any flag from `ngrok http --help` (deprecated: use [`share_ngrok_args`](../configuration/config.md#ngrok_args) in config.yaml).
 
-Example:
+The default provider can be configured globally with `ddev config global --share-provider=<provider>` or per-project with `ddev config --share-default-provider=<provider>`. See [`share_default_provider`](../configuration/config.md#share_default_provider) for more details.
+
+Examples:
 
 ```shell
-# Share the current project with ngrok
+# Share the current project with the default provider (ngrok)
 ddev share
 
-# Share the current project with ngrok, using domain `foo.ngrok-free.app`
+# Share with cloudflared
+ddev share --provider=cloudflared
+
+# Share with ngrok, using domain `foo.ngrok-free.app`
 ddev share --ngrok-args "--domain foo.ngrok-free.app"
 
 # Share the current project using ngrok’s basic-auth argument

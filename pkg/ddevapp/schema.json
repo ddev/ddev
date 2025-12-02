@@ -412,6 +412,10 @@
       "description": "Provide extra args to ngrok in \"ddev share\".",
       "type": "string"
     },
+    "share_default_provider": {
+      "description": "Default share provider for the project (ngrok, cloudflared, or custom). Overrides global configuration.",
+      "type": "string"
+    },
     "no_project_mount": {
       "description": "Whether to skip mounting project into web container.",
       "type": "boolean"
