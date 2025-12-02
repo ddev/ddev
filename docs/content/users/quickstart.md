@@ -2620,7 +2620,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     Install TYPO3 via Composer:
 
     ```bash
-    ddev composer create-project "typo3/cms-base-distribution:^13"
+    ddev composer create-project "typo3/cms-base-distribution:^14"
     ```
 
     Run the TYPO3 setup:
@@ -2659,7 +2659,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
         ddev config --project-type=typo3 --docroot=public
         ddev start -y
-        ddev composer create-project "typo3/cms-base-distribution:^13"
+        ddev composer create-project "typo3/cms-base-distribution:^14"
         ddev typo3 setup \
             --admin-user-password="Demo123*" \
             --driver=mysqli \
