@@ -293,7 +293,8 @@ func init() {
 	_ = ConfigCommand.RegisterFlagCompletionFunc("use-dns-when-possible", configCompletionFunc([]string{"true", "false"}))
 
 	ConfigCommand.Flags().StringVarP(&ngrokArgs, "ngrok-args", "", "", "Provide extra args to ngrok in ddev share (deprecated: use --share-ngrok-args)")
-	ConfigCommand.Flags().StringVar(&shareDefaultProvider, "share-provider", "", "Default share provider for the project (ngrok, cloudflared, or custom)")
+	ConfigCommand.Flags().StringVar(&shareDefaultProvider, "share-default-provider", "", "Default share provider for the project (ngrok, cloudflared, or custom)")
+	_ = ConfigCommand.RegisterFlagCompletionFunc("share-default-provider", configCompletionFunc([]string{"ngrok", "cloudflared"}))
 	ConfigCommand.Flags().StringVar(&shareNgrokArgs, "share-ngrok-args", "", "Provide extra args to ngrok provider in ddev share")
 	ConfigCommand.Flags().StringVar(&shareCloudflaredArgs, "share-cloudflared-args", "", "Provide extra args to cloudflared provider in ddev share")
 
@@ -612,7 +613,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.NgrokArgs = ngrokArgs
 	}
 
-	if cmd.Flag("share-provider").Changed {
+	if cmd.Flag("share-default-provider").Changed {
 		app.ShareDefaultProvider = shareDefaultProvider
 	}
 
