@@ -15,7 +15,6 @@ teardown() {
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # TODO: quickstart, Symfony 8.0 requires PHP 8.4, but there are some issues with dependencies at this time, pin it to 8.3 for now.
   run ddev config --project-type=symfony --docroot=public --php-version=8.3
   assert_success
 
@@ -48,8 +47,7 @@ teardown() {
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # TODO: quickstart, Symfony 8.0 requires PHP 8.4, but there are some issues with dependencies at this time, pin it to 8.3 for now.
-  run ddev config --project-type=symfony --docroot=public --php-version=8.3
+  run ddev config --project-type=symfony --docroot=public
   assert_success
 
   run ddev start -y

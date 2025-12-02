@@ -17,14 +17,12 @@ teardown() {
     skip "MAGENTO2_PUBLIC_ACCESS_KEY not provided (forked PR)"
   fi
 
-  # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  # ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
-  run ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management --composer-version=2.8.12
+
+  run ddev config --project-type=magento2 --docroot=pub --upload-dirs=media --disable-settings-management
   assert_success
 
-  # mkdir -p .ddev/homeadditions/.composer
   mkdir -p ./.ddev/homeadditions/.composer
 
   # add the env variable credentials to auth.json
@@ -39,27 +37,23 @@ teardown() {
 }
 EOF
 
-  # ddev add-on get ddev/ddev-opensearch
   run ddev add-on get ddev/ddev-opensearch
   assert_success
 
-  # ddev start -y
   run ddev start -y
   assert_success
 
-  # ddev composer create-project --repository https://repo.magento.com/ magento/project-community-edition
   run ddev composer create-project --repository https://repo.magento.com/ magento/project-community-edition
   assert_success
 
-    # Copy the auth.json into var/composer_home for the deploying the sample data sep
+  # Copy the auth.json into var/composer_home for the deploying the sample data sep
   run ddev exec "mkdir -p var/composer_home && cp ~/.composer/auth.json var/composer_home/auth.json"
   assert_success
 
-  # rm -f app/etc/env.php
   run rm -f app/etc/env.php
   assert_success
+  assert_file_not_exist app/etc/env.php
 
-  # magento setup:install
   run ddev magento setup:install --base-url="https://${PROJNAME}.ddev.site/" \
       --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
       --opensearch-host=opensearch --search-engine=opensearch --opensearch-port=9200 \
@@ -67,19 +61,15 @@ EOF
       --admin-user=admin --admin-password=Password123 --language=en_US
   assert_success
 
-  # ddev magento deploy:mode:set developer
   run ddev magento deploy:mode:set developer
   assert_success
 
-  # ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
   run ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
   assert_success
 
-  # ddev config --disable-settings-management=false
   run ddev config --disable-settings-management=false
   assert_success
 
-  # ddev magento setup:config:set --backend-frontname="admin_ddev" --no-interaction
   run ddev magento setup:config:set --backend-frontname="admin_ddev" --no-interaction
   assert_success
 
@@ -92,7 +82,7 @@ EOF
   assert_success
 
   # validate ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch /admin_ddev"
+  DDEV_DEBUG=true run ddev launch /admin_ddev
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin_ddev"
   assert_success
   # validate running project
@@ -111,7 +101,7 @@ EOF
   assert_output --partial "HTTP/2 200"
   run curl -sf https://${PROJNAME}.ddev.site/index.php/admin_ddev/
   assert_success
-  assert_output --partial "Copyright &copy; 2025 Magento Commerce Inc. All rights reserved."
+  assert_output --partial "Copyright &copy; $(date +%Y) Magento Commerce Inc. All rights reserved."
   run curl -sf https://${PROJNAME}.ddev.site:5602/app/home#/
   assert_success
   assert_output --partial "<title>OpenSearch Dashboards</title>"
