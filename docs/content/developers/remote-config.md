@@ -46,11 +46,11 @@ Separate from the main config, DDEV downloads sponsorship data from a JSON endpo
 
 ## Storage Format
 
-DDEV stores downloaded data locally using Go's `gob` binary encoding format in the user's global DDEV directory:
+DDEV stores downloaded data locally using Go's `gob` binary encoding format in the user's [global configuration directory](../users/usage/architecture.md#global-files):
 
-- `~/.ddev/.remote-config`: Main remote configuration cache
-- `~/.ddev/.sponsorship-data`: Sponsorship information cache  
-- `~/.ddev/.amplitude.cache`: Analytics event cache (if enabled)
+- `$HOME/.ddev/.remote-config`: Main remote configuration cache
+- `$HOME/.ddev/.sponsorship-data`: Sponsorship information cache  
+- `$HOME/.ddev/.amplitude.cache`: Analytics event cache (if enabled)
 
 ## Debugging Tools
 
@@ -60,13 +60,13 @@ DDEV provides several debugging commands for working with remote configuration:
 
 ```bash
 # Decode and view cached remote config
-ddev utility gob-decode ~/.ddev/.remote-config
+ddev utility gob-decode $HOME/.ddev/.remote-config
 
 # Decode sponsorship data
-ddev utility gob-decode ~/.ddev/.sponsorship-data
+ddev utility gob-decode $HOME/.ddev/.sponsorship-data
 
 # Decode analytics cache  
-ddev utility gob-decode ~/.ddev/.amplitude.cache
+ddev utility gob-decode $HOME/.ddev/.amplitude.cache
 ```
 
 ### Download Fresh Data
@@ -143,7 +143,7 @@ be found in the [Masterminds SemVer repository](https://github.com/Masterminds/s
 
 ### Global Configuration
 
-Users can configure remote config behavior in `~/.ddev/global_config.yaml`:
+Users can configure remote config behavior in `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../users/usage/architecture.md#global-files)):
 
 ```yaml
 remote_config:
@@ -192,7 +192,7 @@ To test changes to remote configuration:
 
 1. **Change the upstream configuration** in [ddev/remote-config](https://github.com/ddev/remote-config) or use a fork/branch.
 
-2. **Set up test configuration** in `~/.ddev/global_config.yaml`:
+2. **Set up test configuration** in `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../users/usage/architecture.md#global-files)):
 
    ```yaml
    remote_config:
@@ -204,7 +204,7 @@ To test changes to remote configuration:
 3. **Clear or edit cached data**:
 
    ```bash
-   rm ~/.ddev/.state.yaml ~/.ddev/.remote-config
+   rm -f $HOME/.ddev/.state.yaml $HOME/.ddev/.remote-config
    ```
 
 4. **Test with verbose output**:
@@ -222,7 +222,7 @@ Use the debug commands to validate your configuration:
 ddev utility remote-data --type=remote-config --update-storage=false
 
 # View the current cached config
-ddev utility gob-decode ~/.ddev/.remote-config
+ddev utility gob-decode $HOME/.ddev/.remote-config
 
 # Verify message conditions work
 ddev utility message-conditions

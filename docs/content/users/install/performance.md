@@ -145,17 +145,18 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
     * Rename your project’s `.ddev/mutagen/mutagen.yml` file to `.ddev/mutagen/mutagen.yml.bak` and run `ddev restart`. This ensures you’ll have a fresh version in case the file has been changed and `#ddev-generated` removed.
     * Avoid having Mutagen sync large binaries, which can cause `ddev start` to take a long time. The `.tarballs` directory is automatically excluded, so Mutagen will ignore anything you move there. To see what Mutagen is trying to sync, run `ddev mutagen status -l` in another window.
     * `DDEV_DEBUG=true ddev start` will provide more information about what’s going on with Mutagen.
-    * DDEV’s Mutagen daemon keeps its data in a DDEV-only `MUTAGEN_DATA_DIRECTORY` in `~/.ddev_mutagen_data_directory`.
-    * DDEV’s private Mutagen binary is installed in `~/.ddev/bin/mutagen` (or `$XDG_CONFIG_BASE/ddev/bin/mutagen`. You can use all the features of Mutagen with `ddev utility mutagen`. For example:
+    * DDEV’s Mutagen daemon keeps its data in a DDEV-only `MUTAGEN_DATA_DIRECTORY` in `$HOME/.ddev_mutagen_data_directory`.
+    * DDEV’s private Mutagen binary is installed in `$HOME/.ddev/bin/mutagen` (see [global configuration directory](../usage/architecture.md#global-files)). You can use all the features of Mutagen with `ddev utility mutagen`. For example:
 
         ```bash
         ddev utility mutagen sync list --template "{{ json (index . 0) }}" | docker run -i --rm ddev/ddev-utilities jq -r
         ddev utility mutagen sync monitor <projectname> -l
         ```
+
     * You can run the [diagnose_mutagen.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/diagnose_mutagen.sh) script to gather information about Mutagen’s setup. Please share output from it when creating an issue or seeking support.
-    * Try `ddev poweroff` or `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the Mutagen daemon if you suspect it’s hanging.
+    * Try `ddev poweroff` or `$HOME/.ddev/bin/mutagen daemon stop && $HOME/.ddev/bin/mutagen daemon start` to restart the Mutagen daemon if you suspect it’s hanging.
     * Use `ddev mutagen reset` if you suspect trouble, and *always* after changing `.ddev/mutagen/mutagen.yml`. This restarts the project’s Mutagen data (Docker volume + Mutagen session) from scratch.
-    * `ddev mutagen monitor` can help watch Mutagen behavior. It’s the same as `~/.ddev/bin/mutagen sync monitor <syncname>`.
+    * `ddev mutagen monitor` can help watch Mutagen behavior. It’s the same as `$HOME/.ddev/bin/mutagen sync monitor <syncname>`.
     * If you’re working on the host and expecting things to show up immediately inside the container, you can learn a lot by running `ddev mutagen monitor` in a separate window as you work. You’ll see when Mutagen responds to your changes and get an idea about how much delay there is.
     * Consider `ddev stop` before massive file change operations, like moving a directory.
     * If you get in real trouble, run `ddev stop`, reset your files with Git, and run `ddev mutagen reset` to throw away the Docker volume which may already have incorrect files on it.

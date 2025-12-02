@@ -78,7 +78,7 @@ If you’d like to use a GUI database client, you’ll need the right connection
     * Explore away!
 * VS Code or any of its forks (Cursor, Windsurf, etc.) has [DevDb](https://marketplace.visualstudio.com/items?itemName=damms005.devdb), an extension that lets you access your database directly inside the editor.
 * There’s a sample custom command that will run the free MySQL Workbench on macOS, Windows or Linux. To use it, run:
-    * `cp ~/.ddev/commands/host/mysqlworkbench.example ~/.ddev/commands/host/mysqlworkbench`
+    * `cp $HOME/.ddev/commands/host/mysqlworkbench.example $HOME/.ddev/commands/host/mysqlworkbench`
     * `ddev mysqlworkbench`
 
 ## Database Query Examples

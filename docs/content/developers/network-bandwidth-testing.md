@@ -107,7 +107,7 @@ DDEV_VERBOSE=true ddev start
 ddev logs -f
 
 # Force download of docker-compose binary
-rm -f ~/.ddev/bin/docker-compose && DDEV_DEBUG=true ddev version
+rm -f $HOME/.ddev/bin/docker-compose && DDEV_DEBUG=true ddev version
 
 # Test composer operations
 ddev composer install

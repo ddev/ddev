@@ -19,7 +19,7 @@ Write so a DDEV beginner can follow your guidance and a DDEV veteran could use t
 
 | Write This 👍 | Not This ❌
 | -- | --
-| You can run `ddev restart` to apply changes you’ve made to your global `~/.ddev/global_config.yaml` or per-project `.ddev/config.yaml`. | Just `ddev restart` to apply YAML config changes.
+| You can run `ddev restart` to apply changes you’ve made to your global `$HOME/.ddev/global_config.yaml` or per-project `.ddev/config.yaml`. | Just `ddev restart` to apply YAML config changes.
 
 <!-- textlint-enable -->
 
@@ -254,7 +254,7 @@ One-off tips that don’t fit nicely into any of the sections above:
 | web server | webserver
 | add-on | addon
 | JSON, YAML, CSS | json, Yaml, css
-| `.json`, `.yaml`, `.css`, `~/.ddev` | .json, .yaml, .css, ~/.ddev
+| `.json`, `.yaml`, `.css`, `$HOME/.ddev` | .json, .yaml, .css, $HOME/.ddev
 | <kbd>CTRL</kbd> + <kbd>C</kbd> | control-c, control + c, ctrl+c
 | *Menu Item* → *Another Menu Item* → *Setting* | Menu Item>Another Menu Item>Setting<br>Menu Item -> Another Menu Item -> Setting
 | several CMSes | several CMSs, several CMS’s

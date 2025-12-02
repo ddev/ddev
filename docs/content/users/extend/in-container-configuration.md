@@ -4,34 +4,111 @@ Custom shell configuration (Bash or your preferred shell), your usual Git config
 
 ## Using `homeadditions` to Customize In-Container Home Directory
 
-Place all your dotfiles in your global`~/.ddev/homeadditions` or your project’s `.ddev/homeadditions` directory and DDEV will use these in your project’s `web` containers.
+!!!tip "Finding Your Global DDEV Directory"
+    The examples below use `$HOME/.ddev/homeadditions` which is the default location. If you have `$XDG_CONFIG_HOME` set, your global directory will be at `$XDG_CONFIG_HOME/ddev` instead. To find your actual location, run:
+
+    ```bash
+    ddev version | grep global-ddev-dir
+    ```
+
+    Then use that path with `/homeadditions` appended. See [global configuration directory](../usage/architecture.md#global-files) for details.
+
+Place all your dotfiles in your global `$HOME/.ddev/homeadditions` or your project's `.ddev/homeadditions` directory and DDEV will use these in your project's `web` containers.
 
 !!!tip "Ignore `.ddev/.homeadditions`!"
     A hidden/transient `.ddev/.homeadditions`—emphasis on the leading `.`—is used for processing global `homeadditions` and should be ignored.
 
 On [`ddev start`](../usage/commands.md#start), DDEV attempts to create a user inside the `web` and `db` containers with the same name and user ID as the one you have on the host machine.
 
-DDEV looks for the `homeadditions` directory both in the global `~/.ddev/homeadditions` directory and the project-level `.ddev/homeadditions` directory, and will copy their contents recursively into the in-container home directory during `ddev start`. Project `homeadditions` contents override the global `homeadditions`.
+DDEV looks for the `homeadditions` directory both in the global `$HOME/.ddev/homeadditions` directory and the project-level `.ddev/homeadditions` directory, and will copy their contents recursively into the in-container home directory during `ddev start`. Project `homeadditions` contents override the global `homeadditions`.
 
 Usage examples:
 
-* If you use Git inside the container, you may want to symlink your `~/.gitconfig` into `~/.ddev/homeadditions` or the project’s `.ddev/homeadditions` so that in-container `git` commands use whatever username and email you’ve configured on your host machine. For example, `ln -s ~/.gitconfig ~/.ddev/homeadditions/.gitconfig`.
-* If you use SSH inside the container and want to use your `.ssh/config`, consider `mkdir -p ~/.ddev/homeadditions/.ssh && ln -s ~/.ssh/config ~/.ddev/homeadditions/.ssh/config`. Some people will be able to symlink their entire `.ssh` directory, `ln -s ~/.ssh ~/.ddev/homeadditions/.ssh`. If you provide your own `.ssh/config` though, please make sure it includes these lines:
+### Git Configuration
 
-    ```text
-    UserKnownHostsFile=/home/.ssh-agent/known_hosts
-    StrictHostKeyChecking=accept-new
-    ```
+If you use Git inside the container, you may want to symlink your `$HOME/.gitconfig` into `$HOME/.ddev/homeadditions` or the project's `.ddev/homeadditions` so that in-container `git` commands use whatever username and email you've configured on your host machine.
 
-* If you need to add a script or other executable component into the project (or global configuration), you can put it in the project or global `.ddev/homeadditions/bin` directory and `~/bin/<script` will be created inside the container. This is useful for adding a script to one project or every project, or for overriding standard scripts, as `~/bin` is first in the `$PATH` in the `web` container.
-* If you use private, password-protected Composer repositories with [Satis](https://composer.github.io/satis/), for example, and use a global `auth.json`, you might want to `mkdir -p ~/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json ~/.ddev/homeadditions/.composer/auth.json`, but be careful that you exclude it from getting checked in by using a `.gitignore` or equivalent.
-* You can add small scripts to the `.bashrc.d` directory and they will be executed on [`ddev ssh`](../usage/commands.md#ssh). For example, add a `~/.ddev/homeadditions/.bashrc.d/whereami` containing `echo "I am in the $(hostname) container"` and (after `ddev restart`) when you `ddev ssh` that will be executed.
-* If you have a favorite `.bashrc`, copy it into either the global or project `homeadditions`.
-* If you like the traditional `ll` Bash alias for `ls -l`, add a `.ddev/homeadditions/.bash_aliases` with these contents:
+```bash
+ln -s $HOME/.gitconfig $HOME/.ddev/homeadditions/.gitconfig
+```
 
-    ```bash
-    alias ll="ls -lhA"
-    ```
+### SSH Configuration
+
+If you use SSH inside the container and want to use your `.ssh/config`, you can symlink it into the homeadditions directory. Some people will be able to symlink their entire `.ssh` directory.
+
+```bash
+mkdir -p $HOME/.ddev/homeadditions/.ssh
+ln -s $HOME/.ssh/config $HOME/.ddev/homeadditions/.ssh/config
+```
+
+Or symlink the entire directory:
+
+```bash
+ln -s $HOME/.ssh $HOME/.ddev/homeadditions/.ssh
+```
+
+If you provide your own `.ssh/config` though, please make sure it includes these lines:
+
+```text
+UserKnownHostsFile=/home/.ssh-agent/known_hosts
+StrictHostKeyChecking=accept-new
+```
+
+### Custom Scripts and Executables
+
+If you need to add a script or other executable component into the project (or global configuration), you can put it in the project or global `.ddev/homeadditions/bin` directory and `$HOME/bin/<script>` will be created inside the container. This is useful for adding a script to one project or every project, or for overriding standard scripts, as `$HOME/bin` is first in the `$PATH` in the `web` container.
+
+For example, to add a custom script:
+
+```bash
+# Create the bin directory
+mkdir -p $HOME/.ddev/homeadditions/bin
+# Add your script
+echo '#!/usr/bin/env bash' > $HOME/.ddev/homeadditions/bin/myscript
+echo 'echo "Hello from custom script"' >> $HOME/.ddev/homeadditions/bin/myscript
+chmod +x $HOME/.ddev/homeadditions/bin/myscript
+```
+
+### Composer Authentication
+
+If you use private, password-protected Composer repositories with [Satis](https://composer.github.io/satis/), for example, and use a global `auth.json`, you can symlink it into `homeadditions`. Be careful to exclude it from getting checked in by using a `.gitignore` or equivalent.
+
+```bash
+mkdir -p $HOME/.ddev/homeadditions/.composer
+ln -s $HOME/.composer/auth.json $HOME/.ddev/homeadditions/.composer/auth.json
+```
+
+### Startup Scripts
+
+You can add small scripts to the `.bashrc.d` directory, and they will be executed on [`ddev ssh`](../usage/commands.md#ssh).
+
+For example, create a script that shows which container you're in:
+
+```bash
+# Create the .bashrc.d directory
+mkdir -p $HOME/.ddev/homeadditions/.bashrc.d
+
+# Add a script that runs on ddev ssh
+echo 'echo "I am in the $(hostname) container"' > $HOME/.ddev/homeadditions/.bashrc.d/whereami
+```
+
+After `ddev restart`, when you `ddev ssh` this script will be executed.
+
+### Custom Bashrc
+
+If you have a favorite `.bashrc`, copy it into either the global or project `homeadditions`:
+
+```bash
+cp $HOME/.bashrc $HOME/.ddev/homeadditions/.bashrc
+```
+
+### Bash Aliases
+
+If you like the traditional `ll` Bash alias for `ls -lhA`, add a `.bash_aliases` file to either the global or project `homeadditions`:
+
+```bash
+echo 'alias ll="ls -lhA"' > $HOME/.ddev/homeadditions/.bash_aliases
+```
 
 ## Changing `ddev ssh` Shell
 
@@ -65,7 +142,7 @@ To change the shell for a custom service, add the `x-ddev.ssh-shell` field to th
 
 ## Using `NO_COLOR` Inside Containers
 
-To set the `NO_COLOR` variable in all containers across all projects, define the `NO_COLOR` environment variable in your shell configuration file (e.g., `~/.bashrc` or `~/.zshrc`), outside of DDEV, for example:
+To set the `NO_COLOR` variable in all containers across all projects, define the `NO_COLOR` environment variable in your shell configuration file (e.g., `$HOME/.bashrc` or `$HOME/.zshrc`), outside of DDEV, for example:
 
 ```bash
 export NO_COLOR=1
@@ -75,7 +152,7 @@ export NO_COLOR=1
 
 ## Using `PAGER` Inside Containers
 
-To set the `PAGER` variable in the `web` and `db` containers across all projects, define the `DDEV_PAGER` environment variable in your shell configuration file (e.g., `~/.bashrc` or `~/.zshrc`), outside of DDEV, for example:
+To set the `PAGER` variable in the `web` and `db` containers across all projects, define the `DDEV_PAGER` environment variable in your shell configuration file (e.g., `$HOME/.bashrc` or `$HOME/.zshrc`), outside of DDEV, for example:
 
 ```bash
 export DDEV_PAGER="less -SFXR"
