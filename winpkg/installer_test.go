@@ -63,10 +63,6 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev poweroff")
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "ddev delete -Oy tp")
 				_, _ = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "-u", "root", "bash", "-c", "apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce")
-
-				// Install system ddev to ensure subsequent tests have a working ddev
-				t.Logf("Installing system ddev for subsequent tests")
-				installSystemDdev(t)
 			})
 
 			// Get absolute path to installer
@@ -196,10 +192,6 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 	t.Cleanup(func() {
 		t.Logf("Cleaning up Traditional Windows test")
 		cleanupTraditionalWindowsEnv(t)
-
-		// Install system ddev to ensure subsequent tests have a working ddev
-		t.Logf("Installing system ddev for subsequent tests")
-		installSystemDdev(t)
 	})
 
 	// Get absolute path to installer
@@ -223,31 +215,9 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 
 // Helper functions
 
-// cleanupTestEnv removes the test WSL2 distro and runs the uninstaller if it exists
+// cleanupTestEnv removes the test WSL2 distro
 func cleanupTestEnv(t *testing.T, distroName string) {
 	t.Logf("Cleaning up test environment")
-
-	// First, run the uninstaller to clean up Windows-side components
-	// Try common installation locations for the uninstaller
-	possiblePaths := []string{
-		`C:\Program Files\DDEV\ddev_uninstall.exe`,
-	}
-
-	var uninstallerPath string
-	for _, path := range possiblePaths {
-		if fileutil.FileExists(path) {
-			uninstallerPath = path
-			break
-		}
-	}
-
-	if uninstallerPath != "" {
-		t.Logf("Running uninstaller: %s", uninstallerPath)
-		out, err := exec.RunHostCommand(uninstallerPath, "/S")
-		t.Logf("Uninstaller result - err: %v, output: %s", err, out)
-	} else {
-		t.Logf("No uninstaller found (DDEV may not be installed yet)")
-	}
 
 	// Clean up test distro
 	t.Logf("Cleaning up test distro: %s", distroName)
@@ -417,33 +387,12 @@ func isDockerDesktopWorkingOnWindows() bool {
 	return err == nil
 }
 
-// cleanupTraditionalWindowsEnv removes DDEV Traditional Windows installation
+// cleanupTraditionalWindowsEnv cleans up Traditional Windows test environment
 func cleanupTraditionalWindowsEnv(t *testing.T) {
 	t.Logf("Cleaning up Traditional Windows environment")
 
 	// Stop any running DDEV projects
 	_, _ = exec.RunHostCommand("ddev.exe", "poweroff")
-
-	// Run the uninstaller to clean up Windows-side components
-	possiblePaths := []string{
-		`C:\Program Files\DDEV\ddev_uninstall.exe`,
-	}
-
-	var uninstallerPath string
-	for _, path := range possiblePaths {
-		if fileutil.FileExists(path) {
-			uninstallerPath = path
-			break
-		}
-	}
-
-	if uninstallerPath != "" {
-		t.Logf("Running uninstaller: %s", uninstallerPath)
-		out, err := exec.RunHostCommand(uninstallerPath, "/S")
-		t.Logf("Uninstaller result - err: %v, output: %s", err, out)
-	} else {
-		t.Logf("No uninstaller found (DDEV may not be installed yet)")
-	}
 }
 
 // testDdevTraditionalInstallation verifies that ddev is properly installed on Windows
@@ -523,31 +472,4 @@ func testBasicDdevTraditionalFunctionality(t *testing.T) {
 	t.Logf("Project working and accessible from Windows: %s", siteURL)
 
 	t.Logf("Basic Traditional Windows ddev functionality test completed successfully")
-}
-
-// installSystemDdev installs a system ddev using the traditional Windows installer
-func installSystemDdev(t *testing.T) {
-	t.Logf("Installing system ddev for subsequent tests using traditional Windows installer")
-
-	// Get absolute path to installer (same as used in tests)
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Logf("Failed to get working directory: %v", err)
-		return
-	}
-	installerFullPath := filepath.Join(wd, installerPath)
-
-	if !fileutil.FileExists(installerFullPath) {
-		t.Logf("Installer not found at %s, cannot install system ddev", installerFullPath)
-		return
-	}
-
-	// Run installer in traditional Windows mode with silent flag
-	t.Logf("Running traditional Windows installer in silent mode: %s", installerFullPath)
-	out, err := exec.RunHostCommand(installerFullPath, "/traditional", "/S")
-	if err != nil {
-		t.Logf("Failed to install system ddev via traditional installer: %v, output: %s", err, out)
-	} else {
-		t.Logf("Successfully installed system ddev via traditional installer: %s", out)
-	}
 }
