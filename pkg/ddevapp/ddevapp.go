@@ -2035,7 +2035,7 @@ func warnWSL2WindowsFilesystem(app *DdevApp) {
 		return
 	}
 	if nodeps.IsPathOnWindowsFilesystem(app.AppRoot) {
-		util.Warning("Your project is on the Windows filesystem (%s) which can lead to very poor performance.\nFor best results, move your project to the WSL2 filesystem (e.g., /home/<your_username>/projects).\nSee https://docs.ddev.com/en/stable/users/install/ddev-installation/#wsl2-install-script for more information.", app.AppRoot)
+		util.Warning("Your project is on the Windows filesystem (%s) which can lead to very poor performance.\nFor best results, move your project to the WSL2 filesystem (e.g., /home/<your_username>/projects).\nSee https://docs.ddev.com/en/stable/users/usage/faq#migrate-windows-wsl2 for more information.", app.AppRoot)
 	}
 }
 

@@ -272,9 +272,20 @@ Take a snapshot, move the project files, and restore the snapshot in a new proje
 4. On the new computer, run `ddev start && ddev snapshot restore --latest`.
 5. Optionally, on the old computer, run `ddev delete --omit-snapshot` to remove its copy of the database.
 
+<a name="migrate-windows-wsl2"></a>
+
 ### How can I move a project from traditional Windows to WSL2?
 
-This is exactly the same as moving a project from one computer to another described above. Make sure you move the project into a native filesystem in WSL2, most likely `/home`.
+WSL2 has intolerably slow access to the Traditional Windows NTFS/CIFS filesystem, but the WSL2 filesystem is blazingly fast. It's really important to move your project to the WSL2 native filesystem. This is exactly the same as moving a project from one computer to another described above. Make a backup of the database, `ddev snapshot && ddev stop --unlist`, and then copy your project to the new WSL2 location. For example, if your project is at `C:\Users\you\sites\someproject` you could do this in your WSL2 distro:
+
+```bash
+cd $HOME
+mkdir -p sites && cd sites
+cp -r "/mnt/c/you/sites/someproject" .
+cd someproject
+ddev start
+ddev snapshot restore --latest
+```
 
 ### Why does DDEV want to edit `/etc/hosts`?
 

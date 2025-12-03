@@ -119,6 +119,7 @@ Nameserver
 Netbeans
 Nginx
 Nuxt
+NTFS
 OSs
 OpenMage
 OpenSearch
@@ -236,6 +237,7 @@ belonging
 behat
 blackfire
 blackfire's
+blazingly
 bool
 breakpoint
 browser
