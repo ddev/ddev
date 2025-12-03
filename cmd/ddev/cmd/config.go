@@ -244,8 +244,6 @@ func init() {
 	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment-add", "", `Append environment variables to the web container: --web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the .ddev/config.yaml file if it exists, or error that it doesn't exist")
 	ConfigCommand.Flags().StringSlice("upload-dirs", []string{}, `Set the project's upload directories, the destination directories of the 'ddev import-files' command, or --upload-dirs="" to remove previously configured values`)
-	ConfigCommand.Flags().String("upload-dir", "", "Set the project's upload directories, the destination directories of the import-files command")
-	_ = ConfigCommand.Flags().MarkDeprecated("upload-dir", "please use --upload-dirs instead")
 	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", nodeps.WebserverDefault, fmt.Sprintf("Set the project's desired webserver type: %s", strings.Join(nodeps.GetValidWebserverTypes(), "/")))
 	_ = ConfigCommand.RegisterFlagCompletionFunc("webserver-type", configCompletionFunc(nodeps.GetValidWebserverTypes()))
 	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Set the web container image (for advanced use only)")
@@ -687,11 +685,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 		app.Database.Type = parts[0]
 		app.Database.Version = parts[1]
-	}
-
-	if cmd.Flag("upload-dir").Changed {
-		uploadDirRaw, _ := cmd.Flags().GetString("upload-dir")
-		app.UploadDirs = []string{uploadDirRaw}
 	}
 
 	if cmd.Flag("upload-dirs").Changed {
