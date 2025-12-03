@@ -119,6 +119,15 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.Type = nodeps.AppTypeDrupalLatestStable
 	}
 
+	// Upgrade any pre-v1.19.0 config that has mariadb_version or mysql_version
+	if app.MariaDBVersion != "" {
+		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: app.MariaDBVersion}
+		app.MariaDBVersion = ""
+	}
+	if app.MySQLVersion != "" {
+		app.Database = DatabaseDesc{Type: nodeps.MySQL, Version: app.MySQLVersion}
+		app.MySQLVersion = ""
+	}
 	if app.Database.Type == "" {
 		app.Database = DatabaseDefault
 	}
@@ -133,6 +142,13 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		if nodeps.IsWindows() {
 			app.DefaultContainerTimeout = "240"
 		}
+	}
+
+	// Migrate UploadDir to UploadDirs
+	if app.UploadDirDeprecated != "" {
+		uploadDirDeprecated := app.UploadDirDeprecated
+		app.UploadDirDeprecated = ""
+		app.addUploadDir(uploadDirDeprecated)
 	}
 
 	// Remove dba

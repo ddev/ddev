@@ -1653,6 +1653,51 @@ func TestPkgConfigDatabaseDBVersion(t *testing.T) {
 	}
 }
 
+// TestDatabaseConfigUpgrade tests whether upgrade from mariadb_version/mysql_version
+// to database format works correctly
+func TestDatabaseConfigUpgrade(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
+	require.NoError(t, err)
+
+	_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(tmpDir, false)
+	require.NoError(t, err)
+	app.Name = t.Name()
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+	for _, v := range []string{"mariadb:10.5", "mysql:5.7"} {
+		parts := strings.Split(v, ":")
+		require.True(t, len(parts) == 2)
+		configFile := app.ConfigPath
+		err = os.RemoveAll(configFile)
+		assert.NoError(err)
+		err = fileutil.AppendStringToFile(configFile, fmt.Sprintf("name: %s\n%s_version: %s\n", t.Name(), parts[0], parts[1]))
+		app, err := ddevapp.NewApp(tmpDir, false)
+		require.NoError(t, err)
+		assert.Equal(parts[0], app.Database.Type)
+		assert.Equal(parts[1], app.Database.Version)
+		assert.Empty(app.MySQLVersion)
+		assert.Empty(app.MariaDBVersion)
+	}
+}
+
 // TestConfigFunctionality tests to make sure that config values actually
 // cause their desired effects
 func TestConfigFunctionality(t *testing.T) {

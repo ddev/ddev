@@ -95,6 +95,8 @@ type DdevApp struct {
 	NoProjectMount            bool                  `yaml:"no_project_mount,omitempty"`
 	AdditionalHostnames       []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
+	MariaDBVersion            string                `yaml:"mariadb_version,omitempty"`
+	MySQLVersion              string                `yaml:"mysql_version,omitempty"`
 	Database                  DatabaseDesc          `yaml:"database"`
 	PerformanceMode           types.PerformanceMode `yaml:"performance_mode,omitempty"`
 	FailOnHookFail            bool                  `yaml:"fail_on_hook_fail,omitempty"`
@@ -106,6 +108,7 @@ type DdevApp struct {
 	SiteDdevSettingsFile      string                `yaml:"-"`
 	ProviderInstance          *Provider             `yaml:"-"`
 	Hooks                     map[string][]YAMLTask `yaml:"hooks,omitempty"`
+	UploadDirDeprecated       string                `yaml:"upload_dir,omitempty"`
 	UploadDirs                []string              `yaml:"upload_dirs,omitempty"`
 	WorkingDir                map[string]string     `yaml:"working_dir,omitempty"`
 	OmitContainers            []string              `yaml:"omit_containers,omitempty,flow"`

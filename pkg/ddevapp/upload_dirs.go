@@ -48,6 +48,12 @@ func (app *DdevApp) GetUploadDirs() []string {
 		return []string{}
 	}
 
+	if app.UploadDirDeprecated != "" {
+		uploadDirDeprecated := app.UploadDirDeprecated
+		app.UploadDirDeprecated = ""
+		app.addUploadDir(uploadDirDeprecated)
+	}
+
 	// If an UploadDirs has been specified for the app, it overrides
 	// anything that the project type would give us.
 	if len(app.UploadDirs) > 0 {
