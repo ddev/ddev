@@ -198,10 +198,17 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     The easiest way to install DDEV on Windows is to use the DDEV Windows installer, which can handle different installation scenarios:
 
-    1. **Download the Windows installer** from the [DDEV releases page](https://github.com/ddev/ddev/releases). Make sure to download the correct installer for your system architecture:
+    1. **Download the Windows installer**. Make sure to download the correct installer for your system architecture:
 
-        - **AMD64 (x86-64)**: Most traditional Windows PCs (Intel/AMD processors) → `ddev_windows_amd64_installer.*.exe`
-        - **ARM64**: Windows on ARM devices like Microsoft Surface Pro X, Surface Pro 9 (5G), or other ARM-based Windows devices → `ddev_windows_arm64_installer.*.exe`
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; text-align: center;">
+        [Download for AMD64 :material-microsoft-windows:<br>(Intel/AMD) :material-download:](https://ddev.com/download/ddev_windows_amd64_installer.exe "For computers with Intel or AMD processors (most common)"){ .md-button .md-button--primary }
+        [Download for ARM64 :material-microsoft-windows:<br>(Snapdragon) :material-download:](https://ddev.com/download/ddev_windows_arm64_installer.exe "For computers with ARM processors like Qualcomm Snapdragon"){ .md-button .md-button--primary }
+        </div>
+
+        - **AMD64 (x86-64)**: Most traditional Windows PCs (Intel/AMD processors)
+        - **ARM64**: Windows on ARM devices like Microsoft Surface Pro X, Surface Pro 9 (5G), or other ARM-based Windows devices
+
+        Or browse all versions on the [DDEV releases page](https://github.com/ddev/ddev/releases).
 
         !!!tip "Check your system architecture"
             Not sure which architecture you have? Open PowerShell and run: `$env:PROCESSOR_ARCHITECTURE`. It will show `AMD64` or `ARM64`. Alternatively, in WSL2/Ubuntu run `uname -m` which shows `x86_64` for AMD64 or `aarch64` for ARM64.
