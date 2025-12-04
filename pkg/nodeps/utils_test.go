@@ -363,3 +363,19 @@ require_once 'utils.php';`
 	expected8 := []string{"$10.50", "$5.25", "$15.75"}
 	require.Equal(t, expected8, matches8)
 }
+
+// TestIsPathOnWindowsFilesystem tests IsPathOnWindowsFilesystem function
+func TestIsPathOnWindowsFilesystem(t *testing.T) {
+	// Paths on Windows filesystem (mounted under /mnt/)
+	require.True(t, nodeps.IsPathOnWindowsFilesystem("/mnt/c/Users/username/projects"))
+	require.True(t, nodeps.IsPathOnWindowsFilesystem("/mnt/d/projects"))
+	require.True(t, nodeps.IsPathOnWindowsFilesystem("/mnt/e"))
+	require.True(t, nodeps.IsPathOnWindowsFilesystem("/mnt/"))
+
+	// Paths on WSL2 Linux filesystem (should return false)
+	require.False(t, nodeps.IsPathOnWindowsFilesystem("/home/username/projects"))
+	require.False(t, nodeps.IsPathOnWindowsFilesystem("/root/projects"))
+	require.False(t, nodeps.IsPathOnWindowsFilesystem("/var/www"))
+	require.False(t, nodeps.IsPathOnWindowsFilesystem("/tmp/test"))
+	require.False(t, nodeps.IsPathOnWindowsFilesystem(""))
+}

@@ -1446,6 +1446,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if nodeps.IsMacOS() {
 		failOnRosetta()
 	}
+	warnWSL2WindowsFilesystem(app)
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
@@ -2024,6 +2025,17 @@ func warnMissingDocroot(app *DdevApp) {
 	}
 	if len(matches) == 0 {
 		util.WarningWithColor("magenta", "The index.php or index.html does not yet exist at this path:\n%s\nYou may get 403 errors 'permission denied' from the browser until it does.\nIgnore if a later action (like `ddev composer create-project`) will create it.\n", pattern)
+	}
+}
+
+// warnWSL2WindowsFilesystem warns users if their DDEV project is located on the Windows filesystem
+// in WSL2, which can cause significant performance issues. Projects should be on the Linux filesystem.
+func warnWSL2WindowsFilesystem(app *DdevApp) {
+	if !nodeps.IsWSL2() {
+		return
+	}
+	if nodeps.IsPathOnWindowsFilesystem(app.AppRoot) {
+		util.Warning("Your project is on the Windows filesystem (%s) which can lead to very poor performance.\nFor best results, move your project to the WSL2 filesystem (e.g., /home/<your_username>/projects).\nSee https://docs.ddev.com/en/stable/users/usage/faq#migrate-windows-wsl2 for more information.", app.AppRoot)
 	}
 }
 

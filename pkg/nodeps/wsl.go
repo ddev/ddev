@@ -54,3 +54,9 @@ func GetWSL2NetworkingMode() (string, error) {
 	}
 	return mode, nil
 }
+
+// IsPathOnWindowsFilesystem checks if the given path is on the Windows filesystem
+// when running in WSL2. The Windows filesystem is mounted under /mnt/ in WSL2.
+func IsPathOnWindowsFilesystem(path string) bool {
+	return strings.HasPrefix(path, "/mnt/")
+}
