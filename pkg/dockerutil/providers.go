@@ -1,6 +1,10 @@
 package dockerutil
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/ddev/ddev/pkg/nodeps"
+)
 
 // IsDockerDesktop detects if running on Docker Desktop
 func IsDockerDesktop() bool {
@@ -108,7 +112,8 @@ func IsPodmanRootless() bool {
 	return IsRootless() && IsPodman()
 }
 
-// IsDockerRootless detects if Docker is running in rootless mode
+// IsDockerRootless detects if Docker is running in rootless mode on Linux
+// It must not be Podman or Lima, which can be rootless as well.
 func IsDockerRootless() bool {
-	return IsRootless() && !IsPodman()
+	return IsRootless() && nodeps.IsLinux() && !IsPodman() && !IsLima()
 }
