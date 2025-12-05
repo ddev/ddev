@@ -76,7 +76,7 @@ for i in {1..30}; do
     # Get API response for debugging
     if [[ "${DDEV_DEBUG:-}" == "true" ]]; then
         echo "Attempt $i: Polling ngrok API..." >&2
-        API_RESPONSE=$(curl -s http://localhost:4040/api/tunnels 2>&1)
+        API_RESPONSE=$(curl -s http://localhost:4040/api/tunnels 2>&1 || true)
         echo "API Response: $API_RESPONSE" >&2
     fi
 
@@ -96,4 +96,4 @@ if [[ -z "$URL" || "$URL" == "null" ]]; then
 fi
 
 # Wait for ngrok to exit
-wait $NGROK_PID
+wait "$NGROK_PID"
