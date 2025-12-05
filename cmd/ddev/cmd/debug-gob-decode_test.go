@@ -17,7 +17,7 @@ import (
 func TestDebugGobDecodeCmd(t *testing.T) {
 	// Test error handling for non-existent file
 	t.Run("NonExistentFile", func(t *testing.T) {
-		_, err := exec.RunHostCommand(DdevBin, "debug", "gob-decode", "/nonexistent/file")
+		_, err := exec.RunHostCommand(DdevBin, "utility", "gob-decode", "/nonexistent/file")
 		require.Error(t, err, "Should return error for non-existent file")
 	})
 
@@ -26,7 +26,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-remote-config.gob")
 
 		// Test decoding the file
-		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", testFile)
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "gob-decode", testFile)
 		require.NoError(t, err)
 
 		// Parse the JSON output
@@ -86,7 +86,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		file.Close()
 
 		// Test that output is valid JSON
-		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", testFile)
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "gob-decode", testFile)
 		require.NoError(t, err)
 
 		// Verify output contains valid JSON
@@ -106,13 +106,13 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 	// Test home directory expansion (test that command processes ~ correctly)
 	t.Run("HomeDirectoryExpansion", func(t *testing.T) {
 		// This test verifies that the ~ expansion works by testing with a non-existent file
-		_, err := exec.RunHostCommand(DdevBin, "debug", "gob-decode", "~/nonexistent-test-file-12345")
+		_, err := exec.RunHostCommand(DdevBin, "utility", "gob-decode", "~/nonexistent-test-file-12345")
 		require.Error(t, err, "Should return error for non-existent file even with ~ expansion")
 	})
 
 	// Test command help
 	t.Run("Help", func(t *testing.T) {
-		out, err := exec.RunHostCommand(DdevBin, "debug", "gob-decode", "--help")
+		out, err := exec.RunHostCommand(DdevBin, "utility", "gob-decode", "--help")
 		require.NoError(t, err)
 		require.Contains(t, out, "Decode and display the contents of Go gob-encoded binary files")
 		require.Contains(t, out, "ddev utility gob-decode ~/.ddev/.remote-config")
@@ -130,7 +130,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		err = os.WriteFile(invalidFile, []byte("this is not gob data"), 0644)
 		require.NoError(t, err)
 
-		_, err = exec.RunHostCommand(DdevBin, "debug", "gob-decode", invalidFile)
+		_, err = exec.RunHostCommand(DdevBin, "utility", "gob-decode", invalidFile)
 		require.Error(t, err, "Should return error for invalid gob file")
 	})
 	// Test amplitude cache gob file
@@ -138,7 +138,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-amplitude-cache.gob")
 
 		// Test decoding the file
-		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", testFile)
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "gob-decode", testFile)
 		require.NoError(t, err)
 
 		// Parse the JSON output
@@ -170,7 +170,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-sponsorship-data.gob")
 
 		// Test decoding the file
-		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", testFile)
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "gob-decode", testFile)
 		require.NoError(t, err)
 
 		// Parse the JSON output
@@ -193,7 +193,7 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-generic.gob")
 
 		// Test decoding the file - this should fail because generic fallback has limitations
-		_, err := exec.RunHostCommand(DdevBin, "debug", "gob-decode", testFile)
+		_, err := exec.RunHostCommand(DdevBin, "utility", "gob-decode", testFile)
 		require.Error(t, err, "Generic gob decoding should fail for concrete types not encoded as interface{}")
 	})
 }
@@ -212,7 +212,7 @@ func TestDebugGobDecodeWithRealRemoteConfig(t *testing.T) {
 	}
 
 	// Test decoding the real remote config
-	out, err := exec.RunHostCommandSeparateStreams(DdevBin, "debug", "gob-decode", remoteConfigPath)
+	out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "gob-decode", remoteConfigPath)
 	require.NoError(t, err)
 
 	// Verify it's valid JSON

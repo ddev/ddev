@@ -7,5 +7,5 @@
 ddev list
 ddev describe
 ddev mutagen version
-ddev debug mutagen sync list -l
-ddev debug mutagen version
+ddev utility mutagen sync list -l
+ddev utility mutagen version

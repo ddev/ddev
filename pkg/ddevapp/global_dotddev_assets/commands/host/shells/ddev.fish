@@ -8,11 +8,11 @@
 # "ddevcd project-name" to cd into the project directory.
 
 function ddevcd
-  cd (DDEV_VERBOSE=false DDEV_DEBUG=false ddev debug cd --get-approot -- "$argv[1]")
+  cd (DDEV_VERBOSE=false DDEV_DEBUG=false ddev utility cd --get-approot -- "$argv[1]")
 end
 
 function __ddevcd_autocomplete
-  DDEV_VERBOSE=false DDEV_DEBUG=false ddev debug cd --list 2>/dev/null
+  DDEV_VERBOSE=false DDEV_DEBUG=false ddev utility cd --list 2>/dev/null
 end
 
 complete -c ddevcd -f -a "(__ddevcd_autocomplete)"

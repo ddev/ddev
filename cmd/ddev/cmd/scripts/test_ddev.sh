@@ -7,7 +7,7 @@
 # If you're on Windows (not WSL2) please run it in a git-bash window
 # When you are reporting an issue, please include the full output of this script.
 
-# Disable instrumentation inside `ddev debug test`
+# Disable instrumentation inside `ddev utility test`
 export DDEV_NO_INSTRUMENTATION=true
 
 PROJECT_NAME=tryddevproject-${RANDOM}
@@ -81,8 +81,8 @@ header "DDEV version"
 DDEV_DEBUG=true ddev version
 docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw."docker-platform"' 2>/dev/null)
 
-header "project configuration via ddev debug configyaml"
-ddev debug configyaml --full-yaml --omit-keys=web_environment 2>/dev/null || { ddev debug configyaml | (grep -v "^web_environment" || true); }
+header "project configuration via ddev utility configyaml"
+ddev utility configyaml --full-yaml --omit-keys=web_environment 2>/dev/null || { ddev utility configyaml | (grep -v "^web_environment" || true); }
 
 header "DDEV Global Information"
 if [ "$XDG_CONFIG_HOME" != "" ]; then
@@ -142,7 +142,7 @@ set -eu
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
 cd "${PROJECT_DIR}" || exit 3
 
-ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev debug test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
+ddev config --project-type=php --docroot=web --disable-upload-dirs-warning || (printf "\n\nPlease run 'ddev utility test' in the root of the existing project where you're having trouble.\n\n" && exit 4)
 
 mkdir -p .ddev/web-build
 printf "RUN timeout 30 apt-get update || true\nRUN curl --connect-timeout 10 --max-time 20 --fail -I https://www.google.com || true\n" > .ddev/web-build/Dockerfile.test
@@ -253,11 +253,9 @@ cat <<END >web/index.php
   printf("The output file for Discord or issue queue is in\n<b>%s</b><br />\nfile://%s<br />\n", "$1", "$1", "$1");
 END
 
-header "ddev debug rebuild"
-if ddev debug rebuild -h | grep rebuild >/dev/null; then
-  ddev debug rebuild
-else
-  ddev debug refresh
+header "ddev utility rebuild"
+if ddev utility rebuild -h | grep rebuild >/dev/null; then
+  ddev utility rebuild
 fi
 
 header "Project startup"
