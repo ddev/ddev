@@ -301,7 +301,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 			service.ExternalLinks = nil
 
 			if service.HealthCheck != nil {
-				// can't set healthcheck.start_interval as feature require Docker Engine v25 or later
+				// can't set healthcheck.start_interval as this feature requires Docker Engine v25 or later
 				if service.HealthCheck.StartInterval != nil {
 					service.HealthCheck.StartInterval = nil
 				}
