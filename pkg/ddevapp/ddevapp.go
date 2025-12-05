@@ -838,16 +838,16 @@ func (app *DdevApp) GetDBClientCommand() string {
 // database type and version.
 func (app *DdevApp) GetZstdCommand() string {
 	if app.Database.Type == nodeps.Postgres {
-		if isNewPostgresDB, _ := util.SemverValidate(">= 12", app.Database.Version); isNewPostgresDB {
-			return "zstdmt --quiet"
+		if isNewPostgresDB, _ := util.SemverValidate("< 12", app.Database.Version); isNewPostgresDB {
+			return "zstd --quiet"
 		}
 	}
 	if app.Database.Type == nodeps.MySQL {
-		if isNewMysqlDB, _ := util.SemverValidate(">= 8.0", app.Database.Version); isNewMysqlDB {
-			return "zstdmt --quiet"
+		if isNewMysqlDB, _ := util.SemverValidate("< 8.0", app.Database.Version); isNewMysqlDB {
+			return "zstd --quiet"
 		}
 	}
-	return "zstd --quiet"
+	return "zstdmt --quiet"
 }
 
 // GetDBDumpCommand returns the appropriate database dump command (mysqldump or mariadb-dump)
