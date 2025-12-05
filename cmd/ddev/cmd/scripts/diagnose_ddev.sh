@@ -3,7 +3,7 @@
 #ddev-generated
 # diagnose_ddev.sh - User-friendly DDEV diagnostics
 # This script provides concise, actionable diagnostics for DDEV issues
-# For more extensive output for issue reports, use 'ddev debug test'
+# For more extensive output for issue reports, use 'ddev utility test'
 
 set -o pipefail
 
@@ -435,7 +435,7 @@ else
   printf "${BOLD}Next steps:${NC}\n"
   suggestion "Review the issues and suggestions above"
   suggestion "Check troubleshooting docs: https://docs.ddev.com/en/stable/users/usage/troubleshooting/"
-  suggestion "For more extensive diagnostics: ddev debug test"
+  suggestion "For more extensive diagnostics: ddev utility test"
   suggestion "Get help on Discord: https://ddev.com/s/discord"
   echo
   exit 1
