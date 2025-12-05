@@ -834,6 +834,22 @@ func (app *DdevApp) GetDBClientCommand() string {
 	return "mysql"
 }
 
+// GetZstdCommand returns the appropriate zstd command (zstd or zstdmt) based on the
+// database type and version.
+func (app *DdevApp) GetZstdCommand() string {
+	if app.Database.Type == nodeps.Postgres {
+		if isNewPostgresDb, _ := util.SemverValidate(">= 12", app.Database.Version); isNewPostgresDb {
+			return "zstdmt --quiet"
+		}
+	}
+	if app.Database.Type == nodeps.MySQL {
+		if isNewMysqlDb, _ := util.SemverValidate(">= 8.0", app.Database.Version); isNewMysqlDb {
+			return "zstdmt --quiet"
+		}
+	}
+	return "zstd --quiet"
+}
+
 // GetDBDumpCommand returns the appropriate database dump command (mysqldump or mariadb-dump)
 // based on the database type and version.
 func (app *DdevApp) GetDBDumpCommand() string {
@@ -3050,7 +3066,9 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 // getBackupCommand returns the command to dump the entire db system for the various databases
 func getBackupCommand(app *DdevApp, targetFile string) string {
-	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | zstd -T0 --quiet > "%s"`, path.Base(targetFile), targetFile)
+	zstdCommand := app.GetZstdCommand()
+
+	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | %s > "%s"`, path.Base(targetFile), zstdCommand, targetFile)
 
 	oldMariaVersions := []string{"5.5", "10.0"}
 
@@ -3059,12 +3077,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 	case app.Database.Type == nodeps.MariaDB && nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version):
 		fallthrough
 	case app.Database.Type == nodeps.MySQL:
-		// This old Debian 9 container has zstd 1.1.2 which doesn't support multithreading.
-		if slices.Contains([]string{nodeps.MySQL55, nodeps.MySQL56}, app.Database.Version) {
-			c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | zstd --quiet > "%s"`, path.Base(targetFile), targetFile)
-		} else {
-			c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | zstd -T0 --quiet > "%s"`, path.Base(targetFile), targetFile)
-		}
+		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | %s > "%s"`, path.Base(targetFile), zstdCommand, targetFile)
 	case app.Database.Type == nodeps.Postgres:
 		postgresDataPath := app.GetPostgresDataPath()
 		postgresDataDir := app.GetPostgresDataDir()
@@ -3075,16 +3088,10 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 			// Create the full directory structure (e.g., 18/docker/) that matches the container layout
 			versionDir := filepath.Base(filepath.Dir(postgresDataPath)) // Extract "18" from "/var/lib/postgresql/18/docker"
 			// Use zstd compression via tar -I to ensure availability regardless of tar's built-in --zstd support
-			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -I 'zstd -T0' -cf %s -C /var/tmp/pgstructure/ .", postgresDataPath, path.Base(targetFile), versionDir, versionDir, targetFile)
+			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -I '%s' -cf %s -C /var/tmp/pgstructure/ .", postgresDataPath, path.Base(targetFile), versionDir, versionDir, zstdCommand, targetFile)
 		} else {
 			// PostgreSQL ≤17: original behavior
-			// As well, handle older images not containing multithreaded zstd.
-			pgVersion, _ := strconv.ParseFloat(app.Database.Version, 64)
-			if pgVersion >= 12 {
-				c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -I 'zstd -T0' -cf %s -C /var/tmp/pgbackup/ .", postgresDataPath, path.Base(targetFile), targetFile)
-			} else {
-				c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -I 'zstd' -cf %s -C /var/tmp/pgbackup/ .", postgresDataPath, path.Base(targetFile), targetFile)
-			}
+			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -I '%s' -cf %s -C /var/tmp/pgbackup/ .", postgresDataPath, path.Base(targetFile), zstdCommand, targetFile)
 		}
 	}
 	return c
