@@ -136,7 +136,7 @@ You can quickly check [the dashboard](https://monitor.ddev.com/icingaweb2/dashbo
 
 ## Test Runner Maintenance
 
-* When you change things on a test runner, or you solve a problem, or reboot it, add a comment to [ddev/maintainer-info/issues/1](https://github.com/ddev/maintainer-info/issues/1) so others will know what's going on.
+* When you change things on a test runner, or you solve a problem, or reboot it, add a comment to [ddev/maintainer-info/issues/6](https://github.com/ddev/maintainer-info/issues/6) so others will know what's going on.
 
 ## Managing Forks
 
@@ -144,5 +144,5 @@ When other maintainers merge PRs from your fork, your branch is not deleted auto
 
 To automate this:
 
-1. Enable the "Automatically delete head branches" option in the repository "Settings" -> "General".
-2. Invite other maintainers as repository collaborators in "Settings" -> "Collaborators".
+1. Enable the "Automatically delete head branches" option in the fork repository "Settings" -> "General".
+2. Invite other maintainers as collaborators in the fork repository "Settings" -> "Collaborators".
