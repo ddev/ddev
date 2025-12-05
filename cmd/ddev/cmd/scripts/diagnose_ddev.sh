@@ -81,6 +81,16 @@ get_default_shell() {
   fi
 }
 
+get_docker_binary() {
+  if command -v docker >/dev/null 2>&1; then
+    echo "docker"
+  elif command -v podman >/dev/null 2>&1; then
+    echo "podman"
+  else
+    echo "docker"
+  fi
+}
+
 # Run a command with a timeout and show a dot once per second while it runs.
 # Usage: run_cmd_with_dots <timeout-seconds> "<user-friendly message>" <command> [args...]
 run_cmd_with_dots() {
@@ -140,11 +150,11 @@ header "DDEV Diagnostic Report"
 header "Environment"
 if command -v ddev >/dev/null 2>&1; then
   # Get version info once and cache the raw JSON
-  version_json=$(ddev version -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -c '.raw' 2>/dev/null)
+  version_json=$(ddev version -j 2>/dev/null | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -c '.raw' 2>/dev/null)
 
-  ddev_version=$(echo "$version_json" | docker run --rm -i ddev/ddev-utilities jq -r '."DDEV version"' 2>/dev/null)
-  docker_platform=$(echo "$version_json" | docker run --rm -i ddev/ddev-utilities jq -r '."docker-platform"' 2>/dev/null)
-  docker_version=$(echo "$version_json" | docker run --rm -i ddev/ddev-utilities jq -r '.docker' 2>/dev/null)
+  ddev_version=$(echo "$version_json" | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '."DDEV version"' 2>/dev/null)
+  docker_platform=$(echo "$version_json" | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '."docker-platform"' 2>/dev/null)
+  docker_version=$(echo "$version_json" | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '.docker' 2>/dev/null)
 
   info "DDEV version: ${ddev_version}"
   info "OS: $(uname -s) $(uname -m)"
@@ -170,7 +180,7 @@ fi
 header "Docker Environment"
 
 # Check Docker is running
-if ! docker ps >/dev/null 2>&1; then
+if ! "$(get_docker_binary)" ps >/dev/null 2>&1; then
   fail "Docker is not running or not accessible"
   suggestion "Start your Docker provider (Docker Desktop, Colima, OrbStack, etc.)"
   suggestion "Check: https://docs.ddev.com/en/stable/users/install/docker-installation/"
@@ -178,14 +188,14 @@ else
   success "Docker is running"
 
   # Check Docker disk space
-  disk_usage=$(docker run --rm ddev/ddev-utilities df -h // 2>/dev/null | awk 'NR==2 {print $5}' | tr -d '%')
+  disk_usage=$("$(get_docker_binary)" run --rm ddev/ddev-utilities df -h // 2>/dev/null | awk 'NR==2 {print $5}' | tr -d '%')
   if [ -n "$disk_usage" ] && [ "$disk_usage" -gt 90 ]; then
     warn "Docker disk usage is ${disk_usage}%"
-    suggestion "Run: docker system prune to free up space"
+    suggestion "Run: $(get_docker_binary) system prune to free up space"
     suggestion "Or: ddev clean --all"
   elif [ -n "$disk_usage" ] && [ "$disk_usage" -gt 80 ]; then
     warn "Docker disk usage is ${disk_usage}%"
-    suggestion "Consider cleaning up: docker system prune"
+    suggestion "Consider cleaning up: $(get_docker_binary) system prune"
   else
     success "Docker disk space: ${disk_usage}% used"
   fi
@@ -283,17 +293,17 @@ if ddev describe >/dev/null 2>&1; then
   header "Current Project"
 
   # Get project info once and cache the raw JSON
-  project_json=$(ddev describe -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -c '.raw' 2>/dev/null)
+  project_json=$(ddev describe -j 2>/dev/null | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -c '.raw' 2>/dev/null)
 
-  project_name=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.name' 2>/dev/null)
-  project_status=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.status' 2>/dev/null)
-  project_type=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.type' 2>/dev/null)
+  project_name=$(echo "$project_json" | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '.name' 2>/dev/null)
+  project_status=$(echo "$project_json" | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '.status' 2>/dev/null)
+  project_type=$(echo "$project_json" | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '.type' 2>/dev/null)
 
   info "Name: ${project_name}"
   info "Type: ${project_type}"
   info "Status: ${project_status}"
 
-  project_approot=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.approot' 2>/dev/null)
+  project_approot=$(echo "$project_json" | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '.approot' 2>/dev/null)
 
   if [ -d "$project_approot" ]; then
     cd "$project_approot" || true
@@ -318,7 +328,7 @@ if ddev describe >/dev/null 2>&1; then
     fi
 
     # Check for add-ons
-    addons=$(ddev add-on list --installed -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw[].Name' 2>/dev/null)
+    addons=$(ddev add-on list --installed -j 2>/dev/null | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '.raw[].Name' 2>/dev/null)
     if [ -n "$addons" ]; then
       addon_count=$(echo "$addons" | wc -l | tr -d ' ')
       info "Installed add-ons (${addon_count}):"
@@ -336,7 +346,7 @@ if ddev describe >/dev/null 2>&1; then
 
       # Test HTTP access
       if [ ${CURL_OK} = "true" ] ; then
-        http_url=$(echo "$project_json" | docker run --rm -i ddev/ddev-utilities jq -r '.httpURLs[0]' 2>/dev/null)
+        http_url=$(echo "$project_json" | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '.httpURLs[0]' 2>/dev/null)
         if [ -n "$http_url" ] && [ "$http_url" != "null" ]; then
           http_response=$(curl --connect-timeout 5 --max-time 10 -sI "$http_url" 2>&1 | head -1)
           http_status=$(echo "$http_response" | grep -oE 'HTTP/[0-9.]+ [0-9]+' | awk '{print $2}')
@@ -391,7 +401,7 @@ if [ "${DDEV_DIAGNOSE_FULL:-}" = "true" ]; then
 
       # Quick HTTP test
       if [ ${CURL_OK} = "true" ] ; then
-        test_url=$(ddev describe -j 2>/dev/null | docker run --rm -i ddev/ddev-utilities jq -r '.raw.urls[0]' 2>/dev/null)
+        test_url=$(ddev describe -j 2>/dev/null | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '.raw.urls[0]' 2>/dev/null)
         resp=$(curl -I --connect-timeout 5 --max-time 10 -sf ${test_url} | grep "HTTP/")
         info "HTTP response: ${resp}"
         if [ -n "$test_url" ] && [ "$test_url" != "null" ] && curl -sf ${test_url} | grep "PHP Version" >/dev/null; then

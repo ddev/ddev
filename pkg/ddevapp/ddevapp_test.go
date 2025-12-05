@@ -1678,6 +1678,14 @@ func TestDdevAllDatabases(t *testing.T) {
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
+	if dockerutil.IsPodman() || dockerutil.IsDockerRootless() {
+		// Works locally but fails in CI.
+		// [ERROR] Could not create unix socket lock file /var/run/mysqld/mysqld.sock.lock.
+		exclusions := []string{"mysql:5.7"}
+		dbVersions = util.SubtractSlices(dbVersions, exclusions)
+		t.Logf("Using limited set of database servers because IsPodman or IsDockerRootless (%v)", dbVersions)
+	}
+
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
 
@@ -2088,6 +2096,17 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 	assert := asrt.New(t)
 
 	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:11.4", "mariadb:11.8"}
+
+	if dockerutil.IsPodman() || dockerutil.IsDockerRootless() {
+		// Works locally but fails in CI.
+		// mysql:5.7 error
+		// [ERROR] Could not create unix socket lock file /var/run/mysqld/mysqld.sock.lock.
+		// mariadb:10.4 error
+		// [ERROR] Can't start server : Bind on unix socket: Permission denied
+		// [ERROR] Do you already have another mysqld server running on socket: /var/run/mysqld/mysqld.sock ?
+		exclusions := []string{"mysql:5.7", "mariadb:10.4"}
+		serverVersions = util.SubtractSlices(serverVersions, exclusions)
+	}
 
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()

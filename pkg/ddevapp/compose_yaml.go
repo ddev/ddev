@@ -221,6 +221,11 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 		bindIP = "0.0.0.0"
 	}
 
+	isPodman := dockerutil.IsPodman()
+	isRootless := dockerutil.IsRootless()
+	uid, gid, _ := dockerutil.GetContainerUser()
+	userGroup := uid + ":" + gid
+
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
 
 	// Ensure all services have required networks and environment variables
@@ -281,6 +286,38 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 			}
 			service.Ports[i] = port
 		}
+
+		// Podman: set the user namespace mode for the container
+		// https://docs.podman.io/en/v4.6.1/markdown/options/userns.container.html#userns-mode
+		if isPodman && isRootless && service.User == userGroup {
+			service.UserNSMode = "keep-id"
+		}
+
+		if isPodman {
+			if service.Links != nil || service.ExternalLinks != nil {
+				util.WarningOnce("Podman does not support 'links' or 'external_links'. These options will be ignored for service '%s' in project '%s'.", name, app.Name)
+			}
+			service.Links = nil
+			service.ExternalLinks = nil
+
+			if service.HealthCheck != nil {
+				// can't set healthcheck.start_interval as this feature requires Docker Engine v25 or later
+				if service.HealthCheck.StartInterval != nil {
+					service.HealthCheck.StartInterval = nil
+				}
+				if service.HealthCheck.Test == nil {
+					util.WarningOnce("Service %s in project %s defines a healthcheck without a 'test' command. Podman may not execute it correctly.", name, app.Name)
+				}
+			}
+		}
+
+		if isPodman || isRootless {
+			// "ping" command needs extra capability
+			if !slices.Contains(service.CapAdd, "NET_RAW") {
+				service.CapAdd = append(service.CapAdd, "NET_RAW")
+			}
+		}
+
 		project.Services[name] = service
 	}
 

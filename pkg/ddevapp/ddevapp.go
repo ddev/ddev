@@ -1613,6 +1613,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Build list of volume mounts and their target paths for chown
 	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
 	chownCmd := fmt.Sprintf("chown -R %s:%s /mnt/ddev-global-cache", uid, gid)
+	labels := map[string]string{"com.ddev.site-name": ""}
+	if dockerutil.IsPodmanRootless() {
+		labels["com.ddev.userns"] = "keep-id"
+	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		if app.Database.Type == nodeps.Postgres {
@@ -1626,7 +1630,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	util.Debug("Exec %s", chownCmd)
-	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
+	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, labels, nil, &dockerutil.NoHealthCheck)
 	if err != nil {
 		return fmt.Errorf("failed to '%s' inside volumes: %v, output=%s", chownCmd, err, out)
 	}
