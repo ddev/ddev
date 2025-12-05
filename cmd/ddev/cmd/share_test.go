@@ -135,11 +135,11 @@ func TestShareCmdNgrok(t *testing.T) {
 	t.Logf("Stdout output:\n%s", stdoutOutput)
 	t.Logf("Stderr output:\n%s", stderrOutput)
 
-	// Verify URL was displayed (or account limit was hit - both indicate ngrok worked)
+	// Verify ngrok provider successfully established tunnel
+	// The test should only pass if ngrok actually worked
 	hasURL := strings.Contains(stdoutOutput, "Tunnel URL:")
-	hasAccountLimit := strings.Contains(stderrOutput, "Your account is limited to 1 simultaneous")
-	require.True(t, hasURL || hasAccountLimit,
-		"Should either show Tunnel URL or hit account limit (both indicate ngrok provider is working)")
+	require.True(t, hasURL,
+		"Should show Tunnel URL (ngrok provider successfully established tunnel)")
 
 	// If we got a URL, verify it looks like ngrok
 	if hasURL {
@@ -352,7 +352,7 @@ sleep 30
 	// Test 3: Provider priority (flag > config > default)
 	t.Run("ProviderPriority", func(t *testing.T) {
 		// Set config default provider
-		cmd := exec.Command(DdevBin, "config", "--share-provider=config-provider")
+		cmd := exec.Command(DdevBin, "config", "--share-default-provider=config-provider")
 		err := cmd.Run()
 		require.NoError(t, err)
 
@@ -389,7 +389,7 @@ sleep 2
 			_ = pKill(cmd)
 			_ = cmd.Wait()
 			// Reset config
-			_ = exec.Command(DdevBin, "config", "--share-provider=").Run()
+			_ = exec.Command(DdevBin, "config", "--share-default-provider=").Run()
 		})
 
 		// Wait for provider to output URL and ddev share to capture/display it

@@ -32,8 +32,11 @@ if [[ -z "${DDEV_LOCAL_URL:-}" ]]; then
     exit 1
 fi
 
-# Start ngrok in background
-ngrok http "$DDEV_LOCAL_URL" ${DDEV_SHARE_NGROK_ARGS:-} &
+# Create temporary file to capture ngrok's stderr (for error messages like account limits)
+NGROK_ERR=$(mktemp)
+
+# Start ngrok in background, capturing stderr for error detection
+ngrok http "$DDEV_LOCAL_URL" ${DDEV_SHARE_NGROK_ARGS:-} 2>"$NGROK_ERR" &
 NGROK_PID=$!
 
 # Function to cleanup on exit
@@ -41,6 +44,7 @@ cleanup() {
     if kill -0 $NGROK_PID 2>/dev/null; then
         kill $NGROK_PID 2>/dev/null || true
     fi
+    rm -f "$NGROK_ERR"
 }
 trap cleanup EXIT
 
@@ -50,8 +54,22 @@ URL=""
 for i in {1..30}; do
     # Check if ngrok process is still running
     if ! kill -0 "$NGROK_PID" 2>/dev/null; then
+        # ngrok died - save error output before cleanup trap removes the file
+        # Give ngrok a moment to write any final error output
+        sleep 0.1
+        NGROK_ERROR_CONTENT=""
+        if [ -f "$NGROK_ERR" ] && [ -s "$NGROK_ERR" ]; then
+            NGROK_ERROR_CONTENT=$(cat "$NGROK_ERR" 2>/dev/null || echo "")
+        fi
+
+        # Now we can exit, which will trigger cleanup trap
         echo "Error: ngrok process died unexpectedly" >&2
-        echo "This may indicate an authentication issue. Check 'ngrok config add-authtoken <token>'" >&2
+        if [ -n "$NGROK_ERROR_CONTENT" ]; then
+            echo "ngrok error output:" >&2
+            echo "$NGROK_ERROR_CONTENT" >&2
+        else
+            echo "This may indicate an authentication issue. Check 'ngrok config add-authtoken <token>'" >&2
+        fi
         exit 1
     fi
 
