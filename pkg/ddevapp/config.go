@@ -1256,7 +1256,7 @@ local replication all peer" >/etc/postgresql/pg_hba.conf
 timeout %[1]d apt-get update || true
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
     -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests \
-    apt-transport-https bzip2 ca-certificates less procps pv vim-tiny
+    apt-transport-https bzip2 ca-certificates less procps pv vim-tiny zstd
 update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
 # Change directories owned by postgres (and everything inside them)
