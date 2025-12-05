@@ -75,9 +75,35 @@ There are cases like access to hosting provider integrations that have essential
 
 ## GitHub Notifications for Organization
 
-To receive emails from DDEV org to a specific email such as `@ddev.com`, maintainers should add it to `Settings > Emails` in their GitHub account and create routing for organization and email in `Settings > Notifications > Custom routing`.
+To receive emails from the DDEV org to a specific email like `@ddev.com`, maintainers should add it in "Settings" -> "Emails" in their GitHub account and set up routing for the organization and email in "Settings" -> "Notifications" -> "Custom routing".
 
-GitHub doesn't automatically send activity notifications for the entire organization, maintainers need to `Watch > All Activity` for each repository. It's also helpful to subscribe to other repositories outside the organization by asking the colleagues what they have in their [Watched repositories](https://github.com/watching).
+GitHub does not automatically subscribe you to notifications for all repositories in an organization. Maintainers should:
+
+* Subscribe to each repository manually by opening the repository page, clicking the "Watch" button in the top right corner, and selecting "All Activity".
+* When new repositories are created or transferred, remember to subscribe to them as well.
+
+## Watching Third-Party Repositories
+
+Subscribe to repositories outside the organization by checking what colleagues have in their [Watched repositories](https://github.com/watching).
+
+One important repository to watch is [oerdnj/deb.sury.org](https://codeberg.org/oerdnj/deb.sury.org).
+
+It is not required to watch all activity in third-party repositories, but maintainers should consider watching the following for important updates ("Watch" -> "Custom" -> select "Releases"):
+
+* [abiosoft/colima](https://github.com/abiosoft/colima)
+* [docker/compose](https://github.com/docker/compose)
+* [goreleaser/goreleaser](https://github.com/goreleaser/goreleaser)
+* [lima-vm/lima](https://github.com/lima-vm/lima)
+* [MariaDB/server](https://github.com/MariaDB/server)
+* [moby/moby](https://github.com/moby/moby)
+* [rancher-sandbox/rancher-desktop](https://github.com/rancher-sandbox/rancher-desktop)
+* [traefik/traefik](https://github.com/traefik/traefik)
+* [xdebug/xdebug](https://github.com/xdebug/xdebug)
+
+Non-GitHub resources to monitor for important updates:
+
+* [Docker Desktop Release Notes](https://docs.docker.com/desktop/release-notes/)
+* [OrbStack Release Notes](https://docs.orbstack.dev/release-notes)
 
 ## GitHub Notifications for Scheduled Workflow Runs
 
@@ -111,3 +137,12 @@ You can quickly check [the dashboard](https://monitor.ddev.com/icingaweb2/dashbo
 ## Test Runner Maintenance
 
 * When you change things on a test runner, or you solve a problem, or reboot it, add a comment to [ddev/maintainer-info/issues/1](https://github.com/ddev/maintainer-info/issues/1) so others will know what's going on.
+
+## Managing Forks
+
+When other maintainers merge PRs from your fork, your branch is not deleted automatically.
+
+To automate this:
+
+1. Enable the "Automatically delete head branches" option in the repository "Settings" -> "General".
+2. Invite other maintainers as repository collaborators in "Settings" -> "Collaborators".
