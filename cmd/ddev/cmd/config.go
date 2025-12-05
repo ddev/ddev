@@ -15,7 +15,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 // Define flags for the config command
@@ -309,26 +308,6 @@ func init() {
 	ConfigCommand.Flags().Bool("corepack-enable", false, `Whether to run 'corepack enable' on Node.js configuration`)
 	_ = ConfigCommand.RegisterFlagCompletionFunc("corepack-enable", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.Flags().Bool("update", false, `Update project settings based on detection and project-type overrides (except for 'generic' type)`)
-
-	// Keep old flag names for backwards compatibility
-	var renamedFlags = map[string]string{
-		"http-port":          "router-http-port",
-		"https-port":         "router-https-port",
-		"mailhog-port":       "mailpit-http-port",
-		"mailhog-https-port": "mailpit-https-port",
-		"projectname":        "project-name",
-		"projecttype":        "project-type",
-		"apptype":            "project-type",
-		"sitename":           "project-name",
-		"image-defaults":     "web-image-default",
-	}
-	ConfigCommand.Flags().SetNormalizeFunc(func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
-		if newName, ok := renamedFlags[name]; ok {
-			_, _ = fmt.Fprintf(os.Stderr, "Flag --%s has been deprecated, use --%s instead\n", name, newName)
-			return pflag.NormalizedName(newName)
-		}
-		return pflag.NormalizedName(name)
-	})
 
 	// Keep removed flags for backwards compatibility
 	var removedFlags = []string{
