@@ -3,7 +3,7 @@
 #ddev-generated
 # diagnose_ddev.sh - User-friendly DDEV diagnostics
 # This script provides concise, actionable diagnostics for DDEV issues
-# For more extensive output for issue reports, use 'ddev debug test'
+# For more extensive output for issue reports, use 'ddev utility test'
 
 set -o pipefail
 
@@ -237,8 +237,15 @@ fi
 
 # Check DNS resolution for *.ddev.site
 if command -v ping >/dev/null; then
-  if ping -c 1 -W 2 test.ddev.site >/dev/null 2>&1; then
-    success "DNS resolves *.ddev.site to 127.0.0.1"
+  case "$OSTYPE" in
+    darwin* ) ping_arguments=(-c 1 -W 1000) ;;
+    linux* ) ping_arguments=(-c 1 -W 1) ;;
+    msys* ) ping_arguments=(-n 1 -w 1000) ;;
+    * ) ping_arguments=(-c 1) ;;
+  esac
+
+  if ping "${ping_arguments[@]}" test.ddev.site >/dev/null 2>&1; then
+    success "DNS resolves *.ddev.site"
   else
     warn "Cannot resolve *.ddev.site"
     suggestion "See: https://docs.ddev.com/en/stable/users/usage/networking/#restrictive-dns-servers"
@@ -428,7 +435,7 @@ else
   printf "${BOLD}Next steps:${NC}\n"
   suggestion "Review the issues and suggestions above"
   suggestion "Check troubleshooting docs: https://docs.ddev.com/en/stable/users/usage/troubleshooting/"
-  suggestion "For more extensive diagnostics: ddev debug test"
+  suggestion "For more extensive diagnostics: ddev utility test"
   suggestion "Get help on Discord: https://ddev.com/s/discord"
   echo
   exit 1
