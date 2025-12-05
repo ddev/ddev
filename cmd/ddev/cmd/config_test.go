@@ -318,12 +318,12 @@ func TestConfigSetValues(t *testing.T) {
 
 	args = []string{
 		"config",
-		"--image-defaults",
 		"--working-dir-defaults",
+		"--web-image-default",
 	}
 
-	_, err = exec.RunHostCommand(DdevBin, args...)
-	require.NoError(t, err)
+	out, err = exec.RunHostCommand(DdevBin, args...)
+	require.NoError(t, err, "args=%v, output=%s", args, out)
 
 	configContents, err = os.ReadFile(configFile)
 	require.NoError(t, err, "Unable to read %s: %v", configFile, err)
