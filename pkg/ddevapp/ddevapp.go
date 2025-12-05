@@ -125,6 +125,9 @@ type DdevApp struct {
 	UseDNSWhenPossible        bool                  `yaml:"use_dns_when_possible"`
 	MkcertEnabled             bool                  `yaml:"-"`
 	NgrokArgs                 string                `yaml:"ngrok_args,omitempty"`
+	ShareDefaultProvider      string                `yaml:"share_default_provider,omitempty"`
+	ShareNgrokArgs            string                `yaml:"share_ngrok_args,omitempty"`
+	ShareCloudflaredArgs      string                `yaml:"share_cloudflared_args,omitempty"`
 	Timezone                  string                `yaml:"timezone,omitempty"`
 	ComposerRoot              string                `yaml:"composer_root,omitempty"`
 	ComposerVersion           string                `yaml:"composer_version"`

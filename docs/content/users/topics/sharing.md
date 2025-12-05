@@ -8,13 +8,19 @@ Even though DDEV is intended for local development on a single machine, not as a
 
 There are at least three different ways to share a running DDEV project outside the local developer machine:
 
-* [`ddev share`](../usage/commands.md#share) (using ngrok to share over the internet)
+* [`ddev share`](../usage/commands.md#share) (using a tunnel provider like ngrok or cloudflared to share over the internet)
 * Local name resolution and sharing the project on the local network
 * Sharing the HTTP port of the local machine on the local network
 
 ## Using `ddev share` (Easiest)
 
-`ddev share` proxies the project via [ngrok](https://ngrok.com) for sharing your project with others on your team or around the world. It’s built into DDEV and requires an [ngrok.com](https://ngrok.com) account. Run `ddev share` and then give the resultant URL to your collaborator or use it on your mobile device.
+`ddev share` proxies the project via a tunnel provider for sharing your project with others on your team or around the world. DDEV supports multiple providers:
+
+* **ngrok** (default) - Requires an [ngrok.com](https://ngrok.com) account
+* **cloudflared** - Free, no account required. Requires [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation) to be installed
+* **Custom providers** - You can add your own providers in `.ddev/share-providers/`
+
+Run `ddev share` to use the default provider, or `ddev share --provider=cloudflared` to use a specific provider. The URL will be displayed and can be shared with collaborators or used on mobile devices.
 
 !!!tip "ngrok in depth"
     Run `ddev share -h` for more, and consider reading [ngrok’s getting started guide](https://ngrok.com/docs/getting-started/) and [DrupalEasy’s more detailed walkthrough of the `share` command](https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok).
@@ -49,7 +55,34 @@ This set of steps assumes an ngrok domain `mg2.ngrok-free.app`:
 * Edit your `.ddev/config.yaml`.
 * Run [`ddev ssh`](../usage/commands.md#ssh).
 * Run `bin/magento setup:store-config:set --base-url="https://mg2.ngrok-free.app/`.
-* Run [`ddev share`](../usage/commands.md#share) and you’ll see your project at `mg2.ngrok-free.app`.
+* Run [`ddev share`](../usage/commands.md#share) and you'll see your project at `mg2.ngrok-free.app`.
+
+## Using Cloudflared
+
+[Cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/) is a free alternative to ngrok that doesn't require an account. Each tunnel gets a random temporary URL like `https://example-name.trycloudflare.com`.
+
+### Prerequisites
+
+Install cloudflared from [Cloudflare's installation guide](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation).
+
+### Usage
+
+```bash
+# Use cloudflared for a single share session
+ddev share --provider=cloudflared
+
+# Set cloudflared as default for all projects
+ddev config global --share-provider=cloudflared
+
+# Set cloudflared as default for current project only
+ddev config --share-default-provider=cloudflared
+```
+
+The provider priority is: command-line flag > project config > global config > default (ngrok).
+
+### Cloudflared Configuration
+
+You can pass additional arguments to cloudflared using the `DDEV_SHARE_CLOUDFLARED_ARGS` environment variable or by creating a custom provider script in `.ddev/share-providers/cloudflared.sh`.
 
 ## Using nip.io or Custom Name Resolution Locally
 

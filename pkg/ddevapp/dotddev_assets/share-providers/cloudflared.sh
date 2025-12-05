@@ -1,0 +1,69 @@
+#!/bin/bash
+#ddev-generated
+
+# cloudflared share provider for DDEV
+# Documentation: https://ddev.readthedocs.io/en/stable/users/topics/sharing/
+#
+# To customize: remove the '#ddev-generated' line above and edit as needed.
+
+set -euo pipefail
+
+# Validate cloudflared is installed
+if ! command -v cloudflared &> /dev/null; then
+    echo "Error: cloudflared not found in PATH." >&2
+    echo "Install from https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation" >&2
+    exit 1
+fi
+
+# Validate required environment variables
+if [[ -z "${DDEV_LOCAL_URL:-}" ]]; then
+    echo "Error: DDEV_LOCAL_URL not set" >&2
+    exit 1
+fi
+
+# Start cloudflared and capture output
+echo "Starting cloudflared tunnel..." >&2
+
+# Use a named pipe to capture stderr while also reading it
+PIPE=$(mktemp -u)
+mkfifo "$PIPE"
+trap "rm -f $PIPE" EXIT
+
+# Start cloudflared with stderr to pipe
+cloudflared tunnel --url "$DDEV_LOCAL_URL" ${DDEV_SHARE_CLOUDFLARED_ARGS:-} 2> "$PIPE" &
+CF_PID=$!
+
+# Function to cleanup on exit
+cleanup() {
+    if kill -0 $CF_PID 2>/dev/null; then
+        kill $CF_PID 2>/dev/null || true
+    fi
+    rm -f "$PIPE"
+}
+trap cleanup EXIT
+
+# Read from pipe and extract URL
+URL=""
+while IFS= read -r line; do
+    # Look for the cloudflared URL in the output
+    if [[ -z "$URL" ]] && [[ "$line" =~ https://[a-z0-9-]+\.trycloudflare\.com ]]; then
+        URL="${BASH_REMATCH[0]}"
+        echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV
+    fi
+    # Only show error messages and warnings to user, suppress verbose INFO logs
+    # Skip benign errors about origin certificate (not needed for quick tunnels)
+    if [[ "$line" =~ ^[0-9T:-]+Z\ (ERR|WRN|FTL) ]] && [[ ! "$line" =~ "Cannot determine default origin certificate" ]]; then
+        echo "$line" >&2
+    fi
+done < "$PIPE" &
+READER_PID=$!
+
+# Wait for cloudflared to exit
+wait $CF_PID
+EXIT_CODE=$?
+
+# Clean up reader process
+kill $READER_PID 2>/dev/null || true
+wait $READER_PID 2>/dev/null || true
+
+exit $EXIT_CODE
