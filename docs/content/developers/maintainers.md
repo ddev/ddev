@@ -86,19 +86,19 @@ GitHub does not automatically subscribe you to notifications for all repositorie
 
 Subscribe to repositories outside the organization by checking what colleagues have in their [Watched repositories](https://github.com/watching).
 
-One important repository to watch is [oerdnj/deb.sury.org](https://codeberg.org/oerdnj/deb.sury.org).
+One important repository to watch is [`oerdnj/deb.sury.org`](https://codeberg.org/oerdnj/deb.sury.org).
 
 It is not required to watch all activity in third-party repositories, but maintainers should consider watching the following for important updates ("Watch" -> "Custom" -> select "Releases"):
 
-* [abiosoft/colima](https://github.com/abiosoft/colima)
-* [docker/compose](https://github.com/docker/compose)
-* [goreleaser/goreleaser](https://github.com/goreleaser/goreleaser)
-* [lima-vm/lima](https://github.com/lima-vm/lima)
-* [MariaDB/server](https://github.com/MariaDB/server)
-* [moby/moby](https://github.com/moby/moby)
-* [rancher-sandbox/rancher-desktop](https://github.com/rancher-sandbox/rancher-desktop)
-* [traefik/traefik](https://github.com/traefik/traefik)
-* [xdebug/xdebug](https://github.com/xdebug/xdebug)
+* [`abiosoft/colima`](https://github.com/abiosoft/colima)
+* [`docker/compose`](https://github.com/docker/compose)
+* [`goreleaser/goreleaser`](https://github.com/goreleaser/goreleaser)
+* [`lima-vm/lima`](https://github.com/lima-vm/lima)
+* [`MariaDB/server`](https://github.com/MariaDB/server)
+* [`moby/moby`](https://github.com/moby/moby)
+* [`rancher-sandbox/rancher-desktop`](https://github.com/rancher-sandbox/rancher-desktop)
+* [`traefik/traefik`](https://github.com/traefik/traefik)
+* [`xdebug/xdebug`](https://github.com/xdebug/xdebug)
 
 Non-GitHub resources to monitor for important updates:
 
