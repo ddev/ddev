@@ -312,8 +312,6 @@ func init() {
 	// Keep removed flags for backwards compatibility
 	var removedFlags = []string{
 		"create-docroot",
-		"db-image",
-		"db-image-default",
 	}
 	for _, removedFlag := range removedFlags {
 		// allow any values passed in here
