@@ -23,7 +23,7 @@ This command checks:
 - HTTPS/mkcert setup
 - Current project health (if in a project directory)
 
-For comprehensive output suitable for issue reports, use 'ddev debug test' instead.`,
+For comprehensive output suitable for issue reports, use 'ddev utility test' instead.`,
 	Example: `ddev utility diagnose
 ddev ut diagnose
 DDEV_DIAGNOSE_FULL=true ddev utility diagnose  # Include test project creation`,
@@ -62,7 +62,7 @@ DDEV_DIAGNOSE_FULL=true ddev utility diagnose  # Include test project creation`,
 		util.Success("* Temporarily disable VPN and firewall")
 		util.Success("* Troubleshooting guide: https://docs.ddev.com/en/stable/users/usage/troubleshooting/")
 		output.UserOut.Println()
-		output.UserOut.Println("For comprehensive output for issue reports, use 'ddev debug test' instead.")
+		output.UserOut.Println("For comprehensive output for issue reports, use 'ddev utility test' instead.")
 		output.UserOut.Println()
 
 		// Run the script with output to stdout

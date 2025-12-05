@@ -462,7 +462,7 @@ func TestMain(m *testing.M) {
 		// Pre-download any images we may need, to get them out of the way so they don't clutter tests
 		_, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("%s debug download-images >/dev/null", DdevBin))
 		if err != nil {
-			output.UserErr.Warnf("TestMain startup: failed to ddev debug download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
+			output.UserErr.Warnf("TestMain startup: failed to ddev utility download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
 		for _, vol := range []string{app.Name + "-mariadb"} {
@@ -4251,7 +4251,7 @@ func TestHostDBPort(t *testing.T) {
 
 			// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
 			// is getting in there available to host custom commands.
-			_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+			_, _ = exec.RunHostCommand(DdevBin, "utility", "fix-commands")
 			out, err := exec.RunHostCommand(DdevBin, "showport")
 			assert.NoError(err)
 			assert.Contains(out, "DDEV_HOST_DB_PORT="+dbPortStr, "dbType=%s, out=%s, err=%v", dbType, out, err)

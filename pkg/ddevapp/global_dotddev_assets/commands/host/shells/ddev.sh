@@ -6,11 +6,11 @@
 # "ddevcd project-name" to cd into the project directory.
 
 ddevcd() {
-  cd "$(DDEV_VERBOSE=false DDEV_DEBUG=false ddev debug cd --get-approot -- "$1")"
+  cd "$(DDEV_VERBOSE=false DDEV_DEBUG=false ddev utility cd --get-approot -- "$1")"
 }
 
 _ddevcd_autocomplete() {
-  COMPREPLY=( $(compgen -W "$(DDEV_VERBOSE=false DDEV_DEBUG=false ddev debug cd --list 2>/dev/null)" -- "${COMP_WORDS[COMP_CWORD]}") )
+  COMPREPLY=( $(compgen -W "$(DDEV_VERBOSE=false DDEV_DEBUG=false ddev utility cd --list 2>/dev/null)" -- "${COMP_WORDS[COMP_CWORD]}") )
 }
 
 complete -F _ddevcd_autocomplete ddevcd

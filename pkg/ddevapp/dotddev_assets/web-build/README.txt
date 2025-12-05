@@ -16,7 +16,7 @@ Finally, you can also use `prepend.` variants that are inserted on top of the Do
 
 See https://docs.docker.com/build/building/multi-stage/
 
-Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with `ddev debug rebuild -s web`.
+Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with `ddev utility rebuild -s web`.
 
 You can use the `.ddev/web-build` directory as the Docker “context” directory as well. So for example, if a file named `file.txt` exists in `.ddev/web-build`, you can use `ADD file.txt /` in the Dockerfile.
 

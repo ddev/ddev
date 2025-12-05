@@ -32,7 +32,7 @@ func TestDebugMigrateDatabase(t *testing.T) {
 	app.Database.Version = nodeps.MariaDB118
 
 	t.Cleanup(func() {
-		out, err := exec.RunHostCommand(DdevBin, "debug", "migrate-database", fmt.Sprintf("%s:%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
+		out, err := exec.RunHostCommand(DdevBin, "utility", "migrate-database", fmt.Sprintf("%s:%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
 		require.NoError(t, err, "failed to migrate database; out='%s'", out)
 
 		require.Contains(t, out, fmt.Sprintf("Database was converted to %s:%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion))

@@ -482,8 +482,8 @@ func TestAutocompleteServiceForServiceFlag(t *testing.T) {
 		}
 	}
 
-	// ddev debug rebuild should contain all services, no matter if they are running or not
-	out, err := exec.RunHostCommand(DdevBin, "__complete", "debug", "rebuild", "-s", "")
+	// ddev utility rebuild should contain all services, no matter if they are running or not
+	out, err := exec.RunHostCommand(DdevBin, "__complete", "utility", "rebuild", "-s", "")
 	assert.NoError(err)
 	assert.Contains(out, "web")
 	assert.Contains(out, "db")
@@ -512,8 +512,8 @@ func TestAutocompleteServiceForServiceFlag(t *testing.T) {
 		}
 	}
 
-	// ddev debug rebuild should contain all services, no matter if they are running or not (with project argument)
-	out, err = exec.RunHostCommand(DdevBin, "__complete", "debug", "rebuild", site.Name, "-s", "")
+	// ddev utility rebuild should contain all services, no matter if they are running or not (with project argument)
+	out, err = exec.RunHostCommand(DdevBin, "__complete", "utility", "rebuild", site.Name, "-s", "")
 	assert.NoError(err)
 	assert.Contains(out, "web")
 	assert.Contains(out, "db")
@@ -563,7 +563,7 @@ func TestAutocompleteTermsForCustomCmds(t *testing.T) {
 	assert.NoError(err)
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	require.NoError(t, err)
-	_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+	_, _ = exec.RunHostCommand(DdevBin, "utility", "fix-commands")
 
 	// Must sync our added commands before using them.
 	err = app.MutagenSyncFlush()

@@ -35,7 +35,7 @@ func TestDebugDownloadImages(t *testing.T) {
 	require.NoError(t, err, "Failed to run ddev config: %s", out)
 
 	t.Setenv("DDEV_DEBUG", "true")
-	out, err = exec.RunHostCommand(DdevBin, "debug", "download-images")
+	out, err = exec.RunHostCommand(DdevBin, "utility", "download-images")
 	require.NoError(t, err, "Failed to run ddev utility download-images: %s", out)
 	assert.Contains(out, docker.GetWebImage())
 	assert.Contains(out, docker.GetRouterImage())

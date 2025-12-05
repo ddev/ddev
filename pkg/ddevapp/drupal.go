@@ -441,7 +441,7 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 			app.Database = DatabaseDefault
 		} else if app.Database.Type == DatabaseDefault.Type && app.Database != DatabaseDefault && drupalVersion >= 8 {
 			defaultType := DatabaseDefault.Type + ":" + DatabaseDefault.Version
-			util.Warning("Default database type is %s, but the current actual database type is %s, you may want to migrate with 'ddev debug migrate-database %s'.", defaultType, dbType, defaultType)
+			util.Warning("Default database type is %s, but the current actual database type is %s, you may want to migrate with 'ddev utility migrate-database %s'.", defaultType, dbType, defaultType)
 		}
 	}
 

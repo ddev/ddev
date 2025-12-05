@@ -32,7 +32,7 @@ func TestDebugConfigYamlCmd(t *testing.T) {
 
 	// Test basic configyaml output (field-by-field mode)
 	t.Run("basic configyaml output", func(t *testing.T) {
-		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml"})
+		out, err := exec.RunCommand(DdevBin, []string{"utility", "configyaml"})
 		require.NoError(t, err)
 		// Note: "These config files were loaded" now goes to stderr, not stdout
 		require.Contains(t, out, "name: config-yaml-test")
@@ -42,7 +42,7 @@ func TestDebugConfigYamlCmd(t *testing.T) {
 
 	// Test --full-yaml mode
 	t.Run("full-yaml mode", func(t *testing.T) {
-		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--full-yaml"})
+		out, err := exec.RunCommand(DdevBin, []string{"utility", "configyaml", "--full-yaml"})
 		require.NoError(t, err)
 		// Note: "These config files were loaded" now goes to stderr, not stdout
 		require.Contains(t, out, "# Complete processed project configuration:")
@@ -56,7 +56,7 @@ func TestDebugConfigYamlCmd(t *testing.T) {
 
 	// Test --omit-keys functionality in regular mode
 	t.Run("omit-keys in regular mode", func(t *testing.T) {
-		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--omit-keys=name,type"})
+		out, err := exec.RunCommand(DdevBin, []string{"utility", "configyaml", "--omit-keys=name,type"})
 		require.NoError(t, err)
 		require.NotContains(t, out, "name: config-yaml-test")
 		require.NotContains(t, out, "type: php")
@@ -65,7 +65,7 @@ func TestDebugConfigYamlCmd(t *testing.T) {
 
 	// Test --omit-keys functionality in full-yaml mode
 	t.Run("omit-keys in full-yaml mode", func(t *testing.T) {
-		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--full-yaml", "--omit-keys=name,type"})
+		out, err := exec.RunCommand(DdevBin, []string{"utility", "configyaml", "--full-yaml", "--omit-keys=name,type"})
 		require.NoError(t, err)
 		require.Contains(t, out, "# Complete processed project configuration:")
 		require.NotContains(t, out, "name: config-yaml-test")
@@ -83,13 +83,13 @@ func TestDebugConfigYamlCmd(t *testing.T) {
 		require.NoError(t, err)
 
 		// Test that environment variables appear by default
-		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--full-yaml"})
+		out, err := exec.RunCommand(DdevBin, []string{"utility", "configyaml", "--full-yaml"})
 		require.NoError(t, err)
 		require.Contains(t, out, "SECRET_KEY=supersecret")
 		require.Contains(t, out, "API_TOKEN=sensitive")
 
 		// Test that they're hidden with --omit-keys
-		out, err = exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--full-yaml", "--omit-keys=web_environment"})
+		out, err = exec.RunCommand(DdevBin, []string{"utility", "configyaml", "--full-yaml", "--omit-keys=web_environment"})
 		require.NoError(t, err)
 		require.NotContains(t, out, "SECRET_KEY=supersecret")
 		require.NotContains(t, out, "API_TOKEN=sensitive")
@@ -98,7 +98,7 @@ func TestDebugConfigYamlCmd(t *testing.T) {
 
 	// Test with spaces in omit-keys (should handle trimming)
 	t.Run("omit-keys with spaces", func(t *testing.T) {
-		out, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "--omit-keys= name , type "})
+		out, err := exec.RunCommand(DdevBin, []string{"utility", "configyaml", "--omit-keys= name , type "})
 		require.NoError(t, err)
 		require.NotContains(t, out, "name: config-yaml-test")
 		require.NotContains(t, out, "type: php")
@@ -107,7 +107,7 @@ func TestDebugConfigYamlCmd(t *testing.T) {
 
 	// Test that non-existent project name fails gracefully
 	t.Run("non-existent project", func(t *testing.T) {
-		_, err := exec.RunCommand(DdevBin, []string{"debug", "configyaml", "non-existent-project"})
+		_, err := exec.RunCommand(DdevBin, []string{"utility", "configyaml", "non-existent-project"})
 		require.Error(t, err)
 	})
 }

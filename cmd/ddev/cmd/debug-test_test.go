@@ -21,7 +21,7 @@ func TestCmdDebugTest(t *testing.T) {
 	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
 	_ = os.Setenv("DDEV_DEBUG", "true")
 
-	out, err := exec.RunHostCommand(DdevBin, "debug", "test")
+	out, err := exec.RunHostCommand(DdevBin, "utility", "test")
 	require.NoError(t, err, "out=%s", out)
 	require.Contains(t, out, "OS Information")
 	require.Contains(t, out, "webserver_type:")
