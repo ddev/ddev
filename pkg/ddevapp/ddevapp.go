@@ -838,12 +838,12 @@ func (app *DdevApp) GetDBClientCommand() string {
 // database type and version.
 func (app *DdevApp) GetZstdCommand() string {
 	if app.Database.Type == nodeps.Postgres {
-		if isNewPostgresDb, _ := util.SemverValidate(">= 12", app.Database.Version); isNewPostgresDb {
+		if isNewPostgresDB, _ := util.SemverValidate(">= 12", app.Database.Version); isNewPostgresDB {
 			return "zstdmt --quiet"
 		}
 	}
 	if app.Database.Type == nodeps.MySQL {
-		if isNewMysqlDb, _ := util.SemverValidate(">= 8.0", app.Database.Version); isNewMysqlDb {
+		if isNewMysqlDB, _ := util.SemverValidate(">= 8.0", app.Database.Version); isNewMysqlDB {
 			return "zstdmt --quiet"
 		}
 	}
