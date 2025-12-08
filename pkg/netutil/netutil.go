@@ -31,7 +31,7 @@ func IsPortActive(port string) bool {
 		return false
 	}
 
-	util.Verbose("Checking if port %s is active", port)
+	util.Debug("Checking if port %s is active", port)
 	conn, err := net.DialTimeout("tcp", dockerIP+":"+port, dialTimeout)
 
 	// If we were able to connect, something is listening on the port.
@@ -48,9 +48,11 @@ func IsPortActive(port string) bool {
 		}
 		_, _, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "port-active-"+util.RandString(6), []string{"true"}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, portBindings, &dockerutil.NoHealthCheck)
 		if err == nil {
+			util.Debug("Port %s is not active (able to bind)", port)
 			// If we can bind to the port, it means the port is not actually active
 			return false
 		}
+		util.Debug("Port %s is active (not able to bind)", port)
 		// If we can't bind to the port, it means the port is active
 		return true
 	}
@@ -76,7 +78,7 @@ func IsPortActive(port string) bool {
 		var WSAECONNREFUSED syscall.Errno = 10061
 
 		if ok && (syscallErr.Err == syscall.ECONNREFUSED || syscallErr.Err == WSAECONNREFUSED) {
-			util.Verbose("port %s shows connection refused so not active", port)
+			util.Debug("port %s shows connection refused so not active", port)
 			return false
 		}
 	}
