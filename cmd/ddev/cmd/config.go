@@ -292,7 +292,8 @@ func init() {
 	ConfigCommand.Flags().BoolVarP(&useDNSWhenPossibleArg, "use-dns-when-possible", "", true, "Use DNS for hostname resolution instead of /etc/hosts when possible")
 	_ = ConfigCommand.RegisterFlagCompletionFunc("use-dns-when-possible", configCompletionFunc([]string{"true", "false"}))
 
-	ConfigCommand.Flags().StringVarP(&ngrokArgs, "ngrok-args", "", "", "Provide extra args to ngrok in ddev share (deprecated: use --share-ngrok-args)")
+	ConfigCommand.Flags().StringVarP(&ngrokArgs, "ngrok-args", "", "", "Provide extra args to ngrok in ddev share")
+	_ = ConfigCommand.Flags().MarkDeprecated("ngrok-args", "please use --share-ngrok-args instead")
 	ConfigCommand.Flags().StringVar(&shareDefaultProvider, "share-default-provider", "", "Default share provider for the project (ngrok, cloudflared, or custom)")
 	_ = ConfigCommand.RegisterFlagCompletionFunc("share-default-provider", configCompletionFunc([]string{"ngrok", "cloudflared"}))
 	ConfigCommand.Flags().StringVar(&shareNgrokArgs, "share-ngrok-args", "", "Provide extra args to ngrok provider in ddev share")
