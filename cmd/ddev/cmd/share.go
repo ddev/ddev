@@ -70,8 +70,14 @@ ddev share myproject`,
 			os.Exit(1)
 		}
 
+		// Get provider args override from command line
+		var providerArgsOverride string
+		if cmd.Flags().Changed("provider-args") {
+			providerArgsOverride, _ = cmd.Flags().GetString("provider-args")
+		}
+
 		// Get environment for provider
-		env := app.GetShareProviderEnvironment(providerName)
+		env := app.GetShareProviderEnvironment(providerName, providerArgsOverride)
 
 		// Create pipe to capture stdout (for URL)
 		stdoutReader, stdoutWriter, err := os.Pipe()
@@ -218,5 +224,6 @@ ddev share myproject`,
 func init() {
 	RootCmd.AddCommand(DdevShareCommand)
 	DdevShareCommand.Flags().String("provider", "", "share provider to use (ngrok, cloudflared, or custom)")
+	DdevShareCommand.Flags().String("provider-args", "", "arguments to pass to the share provider")
 	DdevShareCommand.Flags().String("ngrok-args", "", `accepts any flag from "ngrok http --help" (deprecated: use share_ngrok_args in config.yaml)`)
 }
