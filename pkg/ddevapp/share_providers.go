@@ -53,27 +53,40 @@ func (app *DdevApp) ListShareProviders() ([]string, error) {
 }
 
 // GetShareProviderEnvironment builds environment variables for provider script
-func (app *DdevApp) GetShareProviderEnvironment(providerName string) []string {
+// providerArgsOverride allows command-line args to override config file args
+func (app *DdevApp) GetShareProviderEnvironment(providerName string, providerArgsOverride string) []string {
 	env := os.Environ()
 
 	// Add DDEV_LOCAL_URL
 	localURL := app.GetWebContainerDirectHTTPURL()
 	env = append(env, fmt.Sprintf("DDEV_LOCAL_URL=%s", localURL))
 
-	// Add provider-specific args
-	switch providerName {
-	case "ngrok":
-		args := app.ShareNgrokArgs
-		if args == "" && app.NgrokArgs != "" {
-			args = app.NgrokArgs // Backward compatibility
+	// Determine args: command-line override takes precedence over config
+	var args string
+	if providerArgsOverride != "" {
+		args = providerArgsOverride
+	} else {
+		// Use provider-specific config
+		switch providerName {
+		case "ngrok":
+			args = app.ShareNgrokArgs
+			if args == "" && app.NgrokArgs != "" {
+				args = app.NgrokArgs // Backward compatibility
+			}
+		case "cloudflared":
+			args = app.ShareCloudflaredArgs
 		}
-		if args != "" {
-			env = append(env, fmt.Sprintf("DDEV_SHARE_NGROK_ARGS=%s", args))
-		}
-	case "cloudflared":
-		if app.ShareCloudflaredArgs != "" {
-			env = append(env, fmt.Sprintf("DDEV_SHARE_CLOUDFLARED_ARGS=%s", app.ShareCloudflaredArgs))
-		}
+	}
+
+	// Set the generic DDEV_SHARE_ARGS for any provider to use
+	if args != "" {
+		env = append(env, fmt.Sprintf("DDEV_SHARE_ARGS=%s", args))
+	}
+
+	// Also set provider-specific env var for backward compatibility
+	if args != "" {
+		upperProvider := strings.ToUpper(providerName)
+		env = append(env, fmt.Sprintf("DDEV_SHARE_%s_ARGS=%s", upperProvider, args))
 	}
 
 	return env

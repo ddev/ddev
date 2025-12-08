@@ -353,15 +353,17 @@ The URL-friendly name DDEV should use to reference the project.
 | -- | -- | --
 | :octicons-file-directory-16: project | enclosing directory name | Must be unique; no two projects can have the same name. It’s best if this matches the directory name. If this option is omitted, the project will take the name of the enclosing directory. This value may also be set via `ddev config --project-name=<name>`. (The `ddev config` flag is `project-name`, not `name`, see [`ddev config` docs](../usage/commands.md#config).)"
 
-## `ngrok_args`
+## `share_cloudflared_args`
 
-Extra flags for [configuring ngrok](https://ngrok.com/docs/agent/config) when [sharing projects](../topics/sharing.md) with the [`ddev share`](../usage/commands.md#share) command.
+Extra flags for cloudflared when [sharing projects](../topics/sharing.md) with the [`ddev share`](../usage/commands.md#share) command.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | `` | &zwnj;
 
-Example: `--basic-auth username:pass1234 --domain foo.ngrok-free.app`.
+Example for named tunnel with custom domain: `--tunnel my-tunnel --hostname mysite.example.com`.
+
+See [Using Cloudflared with a Custom Domain](../topics/sharing.md#using-cloudflared-with-a-custom-domain) for setup instructions.
 
 ## `share_default_provider`
 
@@ -372,6 +374,19 @@ The default share provider to use with the [`ddev share`](../usage/commands.md#s
 | :octicons-globe-16: global<br>:octicons-file-directory-16: project | `ngrok` | Built-in providers: `ngrok`, `cloudflared`. Custom providers can be added to `.ddev/share-providers/`. Project config overrides global config.
 
 Set globally with `ddev config global --share-provider=cloudflared` or per-project with `ddev config --share-default-provider=cloudflared`. Can also be overridden with the `--provider` flag when running `ddev share`.
+
+## `share_ngrok_args`
+
+Extra flags for [configuring ngrok](https://ngrok.com/docs/agent/config) when [sharing projects](../topics/sharing.md) with the [`ddev share`](../usage/commands.md#share) command.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | `` | &zwnj;
+
+Example: `--basic-auth username:pass1234 --domain foo.ngrok-free.app`.
+
+!!!note "Replaces `ngrok_args`"
+    This option replaces the deprecated `ngrok_args`. The old name still works for backward compatibility.
 
 ## `no_bind_mounts`
 

@@ -5,6 +5,15 @@
 # Documentation: https://ddev.readthedocs.io/en/stable/users/topics/sharing/
 #
 # To customize: remove the '#ddev-generated' line above and edit as needed.
+#
+# Quick tunnel (default): Creates a temporary URL like https://xxx.trycloudflare.com
+#   No configuration needed - just run `ddev share --provider=cloudflared`
+#
+# Named tunnel (custom domain): Use your own domain managed by Cloudflare
+#   1. Create tunnel: cloudflared tunnel create my-tunnel
+#   2. Add DNS: cloudflared tunnel route dns my-tunnel mysite.example.com
+#   3. Configure: ddev config --share-cloudflared-args="--tunnel my-tunnel --hostname mysite.example.com"
+#   4. Run: ddev share --provider=cloudflared
 
 set -euo pipefail
 
@@ -36,8 +45,33 @@ PIPE=$(mktemp -u)
 mkfifo "$PIPE"
 trap "rm -f $PIPE" EXIT
 
-# Start cloudflared with stderr to pipe
-cloudflared tunnel --url "$DDEV_LOCAL_URL" ${DDEV_SHARE_CLOUDFLARED_ARGS:-} 2> "$PIPE" &
+# Parse args to determine tunnel mode
+ARGS="${DDEV_SHARE_CLOUDFLARED_ARGS:-}"
+TUNNEL_NAME=""
+HOSTNAME=""
+OTHER_ARGS=""
+
+# Check for named tunnel mode (--tunnel flag present)
+if [[ "$ARGS" =~ --tunnel[[:space:]]+([^[:space:]]+) ]]; then
+    TUNNEL_NAME="${BASH_REMATCH[1]}"
+    # Remove --tunnel and its value from args
+    OTHER_ARGS=$(echo "$ARGS" | sed -E 's/--tunnel[[:space:]]+[^[:space:]]+//')
+fi
+
+# Extract hostname if present (for URL output)
+if [[ "$ARGS" =~ --hostname[[:space:]]+([^[:space:]]+) ]]; then
+    HOSTNAME="${BASH_REMATCH[1]}"
+fi
+
+# Build and run the cloudflared command
+if [[ -n "$TUNNEL_NAME" ]]; then
+    # Named tunnel mode: cloudflared tunnel run <name> --url <url> [other args]
+    echo "Using named tunnel: $TUNNEL_NAME" >&2
+    cloudflared tunnel run "$TUNNEL_NAME" --url "$DDEV_LOCAL_URL" $OTHER_ARGS 2> "$PIPE" &
+else
+    # Quick tunnel mode (default): cloudflared tunnel --url <url> [args]
+    cloudflared tunnel --url "$DDEV_LOCAL_URL" $ARGS 2> "$PIPE" &
+fi
 CF_PID=$!
 
 # Function to cleanup on exit
@@ -49,13 +83,21 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Read from pipe and extract URL
-URL=""
+# For named tunnels with known hostname, output URL immediately
+# For quick tunnels, we need to wait for cloudflared to report the URL
+if [[ -n "$HOSTNAME" ]]; then
+    # Named tunnel with known hostname - output URL now
+    echo "https://$HOSTNAME"  # Output to stdout - CRITICAL: This is captured by DDEV
+    URL="https://$HOSTNAME"
+fi
+
+# Read from pipe and extract URL (for quick tunnels) or just forward output
+URL_FOUND="${URL:-}"
 while IFS= read -r line; do
-    # Look for the cloudflared URL in the output
-    if [[ -z "$URL" ]] && [[ "$line" =~ https://[a-z0-9-]+\.trycloudflare\.com ]]; then
-        URL="${BASH_REMATCH[0]}"
-        echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV
+    # For quick tunnels, look for the cloudflared URL in the output
+    if [[ -z "$URL_FOUND" ]] && [[ "$line" =~ https://[a-z0-9-]+\.trycloudflare\.com ]]; then
+        URL_FOUND="${BASH_REMATCH[0]}"
+        echo "$URL_FOUND"  # Output to stdout - CRITICAL: This is captured by DDEV
     fi
     # In verbose mode, show all output; otherwise only show errors/warnings
     if [[ -n "$VERBOSE" ]]; then

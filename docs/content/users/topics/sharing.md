@@ -31,8 +31,8 @@ CMSes like WordPress and Magento 2 make this a little harder by only responding 
 
 1. [Get a free static domain](https://ngrok.com/blog-post/free-static-domains-ngrok-users) from ngrok. Let's say we got `wp23.ngrok-free.app`.
 2. Pass the domain to the ngrok args:
-    * In `.ddev/config.yaml`, `ngrok_args: --domain wp23.ngrok-free.app` will result in ngrok always using `wp23.ngrok-free.app` as the URL, so it’s not changing on you all the time.
-    * Alternatively you can pass the domain directly to `ddev share --ngrok-args "--domain wp23.ngrok-free.app"`
+    * In `.ddev/config.yaml`, `share_ngrok_args: --domain wp23.ngrok-free.app` will result in ngrok always using `wp23.ngrok-free.app` as the URL, so it's not changing on you all the time.
+    * Alternatively you can pass the domain directly to `ddev share --provider-args="--domain wp23.ngrok-free.app"`
 
 ### WordPress: Change the URL with `wp search-replace`
 
@@ -40,19 +40,18 @@ WordPress only has the one base URL, but the `wp` command is built into DDEV’s
 
 This set of steps assumes an ngrok domain of `wp23.ngrok-free.app` and a starting URL of `https://wordpress.ddev.site`.
 
-* Configure `.ddev/config.yaml` to use a custom domain: `ngrok_args: --domain wp23.ngrok-free.app`.
+* Configure `.ddev/config.yaml` to use a custom domain: `share_ngrok_args: --domain wp23.ngrok-free.app`.
 * Make a backup of your database with [`ddev export-db`](../usage/commands.md#export-db) or [`ddev snapshot`](../usage/commands.md#snapshot).
 * Edit `wp-config-ddev.php` (or whatever your config is) to change `WP_HOME`, for example, `define('WP_HOME', 'https://wp23.ngrok-free.app');`
-* `ddev wp search-replace https://wordpress.ddev.site https://wp23.ngrok-free.app`, assuming your project is configured for `https://wordpress.ddev.site` and your `ngrok_args` are configured for the `wp23.ngrok-free.app` domain.
+* `ddev wp search-replace https://wordpress.ddev.site https://wp23.ngrok-free.app`, assuming your project is configured for `https://wordpress.ddev.site` and your `share_ngrok_args` are configured for the `wp23.ngrok-free.app` domain.
 * Now run [`ddev share`](../usage/commands.md#share).
 
 ### Magento2: Change the URL with Magento Tool
 
 This set of steps assumes an ngrok domain `mg2.ngrok-free.app`:
 
-* Configure `.ddev/config.yaml` to use a custom domain with `ngrok_args: --domain mg2.ngrok-free.app`.
+* Configure `.ddev/config.yaml` to use a custom domain with `share_ngrok_args: --domain mg2.ngrok-free.app`.
 * Make a backup of your database.
-* Edit your `.ddev/config.yaml`.
 * Run [`ddev ssh`](../usage/commands.md#ssh).
 * Run `bin/magento setup:store-config:set --base-url="https://mg2.ngrok-free.app/`.
 * Run [`ddev share`](../usage/commands.md#share) and you'll see your project at `mg2.ngrok-free.app`.
@@ -82,7 +81,83 @@ The provider priority is: command-line flag > project config > global config > d
 
 ### Cloudflared Configuration
 
-You can pass additional arguments to cloudflared using the `DDEV_SHARE_CLOUDFLARED_ARGS` environment variable or by creating a custom provider script in `.ddev/share-providers/cloudflared.sh`.
+You can configure cloudflared arguments in your `.ddev/config.yaml`:
+
+```yaml
+share_cloudflared_args: "--your-args-here"
+```
+
+Or pass them on the command line:
+
+```bash
+ddev share --provider=cloudflared --provider-args="--your-args-here"
+```
+
+### Using Cloudflared with a Custom Domain
+
+If you have a domain managed by Cloudflare, you can use a named tunnel for a stable, permanent URL instead of the random `trycloudflare.com` URLs.
+
+#### Requirements
+
+* A domain managed by Cloudflare (DNS hosted on Cloudflare)
+* cloudflared installed and authenticated: `cloudflared tunnel login`
+
+#### Setup Steps
+
+1. **Create a named tunnel:**
+
+    ```bash
+    cloudflared tunnel create my-ddev-tunnel
+    ```
+
+    This creates a tunnel and saves credentials in `~/.cloudflared/`.
+
+2. **Add a DNS route for your tunnel:**
+
+    ```bash
+    cloudflared tunnel route dns my-ddev-tunnel mysite.example.com
+    ```
+
+    This creates a CNAME record pointing your subdomain to the tunnel.
+
+3. **Configure DDEV to use the named tunnel:**
+
+    ```bash
+    ddev config --share-cloudflared-args="--tunnel my-ddev-tunnel --hostname mysite.example.com"
+    ```
+
+    Or add to `.ddev/config.yaml`:
+
+    ```yaml
+    share_cloudflared_args: --tunnel my-ddev-tunnel --hostname mysite.example.com
+    ```
+
+4. **Share your project:**
+
+    ```bash
+    ddev share --provider=cloudflared
+    ```
+
+    Your project will be available at `https://mysite.example.com`.
+
+#### Example for WordPress or Magento
+
+With a stable URL, you can configure WordPress or Magento to use your custom domain without needing to change the database URL each time:
+
+```bash
+# Configure the tunnel
+ddev config --share-cloudflared-args="--tunnel my-wp-tunnel --hostname wp.example.com"
+ddev config --share-default-provider=cloudflared
+
+# Update WordPress to use the tunnel URL
+ddev wp search-replace https://myproject.ddev.site https://wp.example.com
+
+# Start sharing
+ddev share
+```
+
+!!!tip "Multiple Tunnels"
+    You can create multiple named tunnels for different projects. Each tunnel needs a unique name and DNS record.
 
 ## Using nip.io or Custom Name Resolution Locally
 
