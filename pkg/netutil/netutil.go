@@ -3,6 +3,7 @@ package netutil
 import (
 	"fmt"
 	"net"
+	"net/netip"
 	"net/url"
 	"os"
 	"slices"
@@ -13,6 +14,8 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/moby/moby/api/types/network"
 )
 
 // IsPortActive checks to see if the given port on Docker IP is answering.
@@ -34,6 +37,21 @@ func IsPortActive(port string) bool {
 	// If we were able to connect, something is listening on the port.
 	if err == nil {
 		_ = conn.Close()
+		// Try to bind dockerIP:port to internal port (for example, 80/tcp, it doesn't matter)
+		// to verify port availability
+		containerPort, _ := network.ParsePort("80/tcp")
+		hostIP, _ := netip.ParseAddr(dockerIP)
+		portBindings := network.PortMap{
+			containerPort: []network.PortBinding{
+				{HostIP: hostIP, HostPort: port},
+			},
+		}
+		_, _, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "port-active-"+util.RandString(6), []string{"true"}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, portBindings, &dockerutil.NoHealthCheck)
+		if err == nil {
+			// If we can bind to the port, it means the port is not actually active
+			return false
+		}
+		// If we can't bind to the port, it means the port is active
 		return true
 	}
 
