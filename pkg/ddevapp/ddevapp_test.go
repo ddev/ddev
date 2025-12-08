@@ -988,11 +988,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
-		//TODO: php8.5: Remove exclusion when xdebug lands in PHP8.5
-		if v == nodeps.PHP85 {
-			t.Log("Skipping xdebug tests for PHP8.5 until xdebug lands in PHP8.5")
-			continue
-		}
 		t.Logf("Beginning Xdebug checks with Xdebug php%s\n", v)
 
 		err = app.Restart()
