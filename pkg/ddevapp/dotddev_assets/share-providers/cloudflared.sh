@@ -13,6 +13,7 @@
 #   1. Create tunnel: cloudflared tunnel create my-tunnel
 #   2. Add DNS: cloudflared tunnel route dns my-tunnel mysite.example.com
 #   3. Configure: ddev config --share-cloudflared-args="--tunnel my-tunnel --hostname mysite.example.com"
+#      (--hostname tells DDEV what URL to display; DNS routing is done in step 2)
 #   4. Run: ddev share --provider=cloudflared
 
 set -euo pipefail
@@ -58,16 +59,19 @@ if [[ "$ARGS" =~ --tunnel[[:space:]]+([^[:space:]]+) ]]; then
     OTHER_ARGS=$(echo "$ARGS" | sed -E 's/--tunnel[[:space:]]+[^[:space:]]+//')
 fi
 
-# Extract hostname if present (for URL output)
+# Extract hostname if present (for URL output only - not passed to cloudflared)
 if [[ "$ARGS" =~ --hostname[[:space:]]+([^[:space:]]+) ]]; then
     HOSTNAME="${BASH_REMATCH[1]}"
+    # Remove --hostname from OTHER_ARGS (it's only for DDEV URL display, not cloudflared CLI)
+    OTHER_ARGS=$(echo "$OTHER_ARGS" | sed -E 's/--hostname[[:space:]]+[^[:space:]]+//')
 fi
 
 # Build and run the cloudflared command
 if [[ -n "$TUNNEL_NAME" ]]; then
-    # Named tunnel mode: cloudflared tunnel run <name> --url <url> [other args]
+    # Named tunnel mode: cloudflared --url <url> tunnel run <name>
+    # Note: --url must come BEFORE "tunnel run"
     echo "Using named tunnel: $TUNNEL_NAME" >&2
-    cloudflared tunnel run "$TUNNEL_NAME" --url "$DDEV_LOCAL_URL" $OTHER_ARGS 2> "$PIPE" &
+    cloudflared --url "$DDEV_LOCAL_URL" tunnel run "$TUNNEL_NAME" 2> "$PIPE" &
 else
     # Quick tunnel mode (default): cloudflared tunnel --url <url> [args]
     cloudflared tunnel --url "$DDEV_LOCAL_URL" $ARGS 2> "$PIPE" &
