@@ -156,10 +156,7 @@ ddev share myproject`,
 		util.Success("Tunnel URL: %s", shareURL)
 
 		// Set DDEV_SHARE_URL environment variable for hooks
-		err = os.Setenv("DDEV_SHARE_URL", shareURL)
-		if err != nil {
-			util.Warning("Failed to set DDEV_SHARE_URL: %v", err)
-		}
+		_ = os.Setenv("DDEV_SHARE_URL", shareURL)
 
 		// Process pre-share hooks NOW (after URL is captured)
 		// This fixes issue #7784 - hooks can now access DDEV_SHARE_URL
