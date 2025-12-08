@@ -435,6 +435,51 @@ echo "https://test.example.com"
 		require.Error(t, err)
 		require.Contains(t, string(output), "not executable")
 	})
+
+	// Test 6: --provider-args flag passes DDEV_SHARE_ARGS to provider
+	t.Run("ProviderArgsFlag", func(t *testing.T) {
+		// Create a mock provider that echoes DDEV_SHARE_ARGS to stderr
+		mockScript := `#!/bin/bash
+echo "ARGS_RECEIVED: DDEV_SHARE_ARGS=${DDEV_SHARE_ARGS}" >&2
+echo "https://args-test.example.com"
+sleep 2
+`
+		mockPath := site.Dir + "/.ddev/share-providers/args-test.sh"
+		err := os.WriteFile(mockPath, []byte(mockScript), 0755)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_ = os.Remove(mockPath)
+		})
+
+		cmd := exec.Command(DdevBin, "share", "--provider=args-test", "--provider-args=--custom-flag value123")
+		var stdoutBuf, stderrBuf strings.Builder
+		cmd.Stdout = &stdoutBuf
+		cmd.Stderr = &stderrBuf
+
+		err = cmd.Start()
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			_ = pKill(cmd)
+			_ = cmd.Wait()
+		})
+
+		// Wait for provider to execute
+		time.Sleep(3 * time.Second)
+
+		_ = pKill(cmd)
+		_ = cmd.Wait()
+
+		stderrOutput := stderrBuf.String()
+		stdoutOutput := stdoutBuf.String()
+		t.Logf("Stdout: %s", stdoutOutput)
+		t.Logf("Stderr: %s", stderrOutput)
+
+		// Verify DDEV_SHARE_ARGS was passed to the provider
+		require.Contains(t, stderrOutput, "ARGS_RECEIVED: DDEV_SHARE_ARGS=--custom-flag value123",
+			"Provider should receive DDEV_SHARE_ARGS from --provider-args flag")
+		require.Contains(t, stdoutOutput, "Tunnel URL:")
+	})
 }
 
 // pKill kills a started cmd; If windows, it shells out to the
