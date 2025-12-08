@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"io"
 	"net/url"
 	"os"
 	"os/exec"
@@ -109,9 +110,14 @@ ddev share myproject`,
 			} else {
 				urlChan <- ""
 			}
-			// Keep reading to prevent provider from blocking on stdout
-			for scanner.Scan() {
-				// Discard additional stdout
+			// In verbose mode, pass through remaining stdout; otherwise discard
+			if globalconfig.DdevVerbose {
+				_, _ = io.Copy(os.Stdout, stdoutReader)
+			} else {
+				// Keep reading to prevent provider from blocking on stdout
+				for scanner.Scan() {
+					// Discard additional stdout
+				}
 			}
 		}()
 

@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# localtunnel share provider example for DDEV
+# Documentation: https://github.com/localtunnel/localtunnel
+#
+# To use this provider:
+# 1. Copy or symlink this file to .ddev/share-providers/localtunnel.sh
+# 2. Install localtunnel: brew install localtunnel, or npm install -g localtunnel
+# 3. Run: ddev share --provider=localtunnel
+#
+# This is an EXAMPLE file - it will not be executed until you remove .example
+
+set -euo pipefail
+
+# Enable debug output if DDEV_DEBUG or DDEV_VERBOSE is set
+if [[ "${DDEV_DEBUG:-}" == "true" ]] || [[ "${DDEV_VERBOSE:-}" == "true" ]]; then
+    set -x
+fi
+
+# Validate localtunnel is installed
+if ! command -v lt &> /dev/null; then
+    echo "Error: localtunnel (lt) not found in PATH." >&2
+    echo "Install with: npm install -g localtunnel" >&2
+    echo "Or run with npx: npx localtunnel" >&2
+    exit 1
+fi
+
+# Validate required environment variables
+if [[ -z "${DDEV_LOCAL_URL:-}" ]]; then
+    echo "Error: DDEV_LOCAL_URL not set" >&2
+    exit 1
+fi
+
+# Extract port from DDEV_LOCAL_URL (e.g., http://127.0.0.1:8080 -> 8080)
+PORT=$(echo "$DDEV_LOCAL_URL" | sed -E 's/.*:([0-9]+).*/\1/')
+if [[ -z "$PORT" ]]; then
+    echo "Error: Could not extract port from DDEV_LOCAL_URL: $DDEV_LOCAL_URL" >&2
+    exit 1
+fi
+
+echo "Starting localtunnel on port $PORT..." >&2
+
+# Start localtunnel - it outputs the URL to stdout
+# The URL format is: your url is: https://xxx.loca.lt
+# We capture stdout and parse out the URL
+
+# Use a temporary file to capture the URL
+URL_FILE=$(mktemp)
+trap "rm -f $URL_FILE" EXIT
+
+# Start localtunnel in background, capturing output
+lt --port "$PORT" ${DDEV_SHARE_LOCALTUNNEL_ARGS:-} 2>&1 | while IFS= read -r line; do
+    # Output all lines to stderr for user visibility
+    echo "$line" >&2
+
+    # Look for the URL line: "your url is: https://xxx.loca.lt"
+    if [[ "$line" =~ https://[a-z0-9-]+\.loca\.lt ]]; then
+        URL="${BASH_REMATCH[0]}"
+        echo "$URL" > "$URL_FILE"
+        # Output URL to stdout for DDEV to capture
+        echo "$URL"
+    fi
+done &
+LT_PID=$!
+
+# Wait for URL to be captured (30 second timeout)
+for i in {1..30}; do
+    if [[ -s "$URL_FILE" ]]; then
+        break
+    fi
+    sleep 1
+done
+
+if [[ ! -s "$URL_FILE" ]]; then
+    echo "Error: Failed to get localtunnel URL after 30 seconds" >&2
+    kill $LT_PID 2>/dev/null || true
+    exit 1
+fi
+
+# Wait for localtunnel to exit
+wait $LT_PID

@@ -8,6 +8,13 @@
 
 set -euo pipefail
 
+# Enable debug output if DDEV_DEBUG or DDEV_VERBOSE is set
+VERBOSE=""
+if [[ "${DDEV_DEBUG:-}" == "true" ]] || [[ "${DDEV_VERBOSE:-}" == "true" ]]; then
+    set -x
+    VERBOSE="true"
+fi
+
 # Validate cloudflared is installed
 if ! command -v cloudflared &> /dev/null; then
     echo "Error: cloudflared not found in PATH." >&2
@@ -50,9 +57,12 @@ while IFS= read -r line; do
         URL="${BASH_REMATCH[0]}"
         echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV
     fi
-    # Only show error messages and warnings to user, suppress verbose INFO logs
-    # Skip benign errors about origin certificate (not needed for quick tunnels)
-    if [[ "$line" =~ ^[0-9T:-]+Z\ (ERR|WRN|FTL) ]] && [[ ! "$line" =~ "Cannot determine default origin certificate" ]]; then
+    # In verbose mode, show all output; otherwise only show errors/warnings
+    if [[ -n "$VERBOSE" ]]; then
+        echo "$line" >&2
+    elif [[ "$line" =~ ^[0-9T:-]+Z\ (ERR|WRN|FTL) ]] && [[ ! "$line" =~ "Cannot determine default origin certificate" ]]; then
+        # Only show error messages and warnings to user, suppress verbose INFO logs
+        # Skip benign errors about origin certificate (not needed for quick tunnels)
         echo "$line" >&2
     fi
 done < "$PIPE" &

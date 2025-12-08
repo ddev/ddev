@@ -445,6 +445,7 @@ localhost
 localization
 localizations
 localpath
+localtunnel
 logs
 lookups
 lose

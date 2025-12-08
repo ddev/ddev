@@ -9,8 +9,8 @@
 
 set -euo pipefail
 
-# Enable debug output if DDEV_DEBUG is set
-if [[ "${DDEV_DEBUG:-}" == "true" ]]; then
+# Enable debug output if DDEV_DEBUG or DDEV_VERBOSE is set
+if [[ "${DDEV_DEBUG:-}" == "true" ]] || [[ "${DDEV_VERBOSE:-}" == "true" ]]; then
     set -x
 fi
 
@@ -74,7 +74,7 @@ for i in {1..30}; do
     fi
 
     # Get API response for debugging
-    if [[ "${DDEV_DEBUG:-}" == "true" ]]; then
+    if [[ "${DDEV_DEBUG:-}" == "true" ]] || [[ "${DDEV_VERBOSE:-}" == "true" ]]; then
         echo "Attempt $i: Polling ngrok API..." >&2
         API_RESPONSE=$(curl -s http://localhost:4040/api/tunnels 2>&1 || true)
         echo "API Response: $API_RESPONSE" >&2
