@@ -36,7 +36,7 @@ fi
 NGROK_ERR=$(mktemp)
 
 # Start ngrok in background, capturing stderr for error detection
-ngrok http "$DDEV_LOCAL_URL" ${DDEV_SHARE_NGROK_ARGS:-} 2>"$NGROK_ERR" &
+ngrok http "$DDEV_LOCAL_URL" ${DDEV_SHARE_ARGS:-} 2>"$NGROK_ERR" &
 NGROK_PID=$!
 
 # Function to cleanup on exit
