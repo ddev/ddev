@@ -363,7 +363,7 @@ Extra flags for cloudflared when [sharing projects](../topics/sharing.md) with t
 
 Example for named tunnel with custom domain: `--tunnel my-tunnel --hostname mysite.example.com`.
 
-See [Using Cloudflared with a Custom Domain](../topics/sharing.md#using-cloudflared-with-a-custom-domain) for setup instructions.
+See [Setting up a Stable Cloudflared Domain](../topics/sharing.md#setting-up-a-stable-cloudflared-domain) for setup instructions.
 
 ## `share_default_provider`
 

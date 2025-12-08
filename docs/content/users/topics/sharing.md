@@ -93,7 +93,7 @@ Or pass them on the command line:
 ddev share --provider=cloudflared --provider-args="--your-args-here"
 ```
 
-### Using Cloudflared with a Custom Domain
+### Setting up a Stable Cloudflared Domain
 
 If you have a domain managed by Cloudflare, you can use a named tunnel for a stable, permanent URL instead of the random `trycloudflare.com` URLs.
 
@@ -136,6 +136,12 @@ If you have a domain managed by Cloudflare, you can use a named tunnel for a sta
 
     ```bash
     ddev share --provider=cloudflared
+    ```
+
+    Or use `--provider-args` to pass the tunnel configuration on the command line:
+
+    ```bash
+    ddev share --provider=cloudflared --provider-args="--tunnel my-ddev-tunnel --hostname mysite.example.com"
     ```
 
     Your project will be available at `https://mysite.example.com`.
