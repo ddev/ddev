@@ -115,11 +115,8 @@ var (
 	// shareDefaultProvider sets the default share provider for the project
 	shareDefaultProvider string
 
-	// shareNgrokArgs provides additional args to the ngrok provider
-	shareNgrokArgs string
-
-	// shareCloudflaredArgs provides additional args to the cloudflared provider
-	shareCloudflaredArgs string
+	// shareProviderArgs provides additional args to the share provider
+	shareProviderArgs string
 
 	webEnvironmentLocal string
 
@@ -293,11 +290,10 @@ func init() {
 	_ = ConfigCommand.RegisterFlagCompletionFunc("use-dns-when-possible", configCompletionFunc([]string{"true", "false"}))
 
 	ConfigCommand.Flags().StringVarP(&ngrokArgs, "ngrok-args", "", "", "Provide extra args to ngrok in ddev share")
-	_ = ConfigCommand.Flags().MarkDeprecated("ngrok-args", "please use --share-ngrok-args instead")
+	_ = ConfigCommand.Flags().MarkDeprecated("ngrok-args", "please use --share-provider-args instead")
 	ConfigCommand.Flags().StringVar(&shareDefaultProvider, "share-default-provider", "", "Default share provider for the project (ngrok, cloudflared, or custom)")
 	_ = ConfigCommand.RegisterFlagCompletionFunc("share-default-provider", configCompletionFunc([]string{"ngrok", "cloudflared"}))
-	ConfigCommand.Flags().StringVar(&shareNgrokArgs, "share-ngrok-args", "", "Provide extra args to ngrok provider in ddev share")
-	ConfigCommand.Flags().StringVar(&shareCloudflaredArgs, "share-cloudflared-args", "", "Provide extra args to cloudflared provider in ddev share")
+	ConfigCommand.Flags().StringVar(&shareProviderArgs, "share-provider-args", "", "Provide extra args to share provider in ddev share")
 
 	ConfigCommand.Flags().String("timezone", "", "Specify timezone for containers and PHP, like Europe/London or America/Denver or GMT or UTC. If unset, DDEV will attempt to derive it from the host system timezone")
 
@@ -618,12 +614,8 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.ShareDefaultProvider = shareDefaultProvider
 	}
 
-	if cmd.Flag("share-ngrok-args").Changed {
-		app.ShareNgrokArgs = shareNgrokArgs
-	}
-
-	if cmd.Flag("share-cloudflared-args").Changed {
-		app.ShareCloudflaredArgs = shareCloudflaredArgs
+	if cmd.Flag("share-provider-args").Changed {
+		app.ShareProviderArgs = shareProviderArgs
 	}
 
 	if cmd.Flag("project-tld").Changed {

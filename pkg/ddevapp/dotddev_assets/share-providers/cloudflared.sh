@@ -12,7 +12,7 @@
 # Named tunnel (custom domain): Use your own domain managed by Cloudflare
 #   1. Create tunnel: cloudflared tunnel create my-tunnel
 #   2. Add DNS: cloudflared tunnel route dns my-tunnel mysite.example.com
-#   3. Configure: ddev config --share-cloudflared-args="--tunnel my-tunnel --hostname mysite.example.com"
+#   3. Configure: ddev config --share-provider-args="--tunnel my-tunnel --hostname mysite.example.com"
 #      (--hostname tells DDEV what URL to display; DNS routing is done in step 2)
 #   4. Run: ddev share --provider=cloudflared
 
@@ -47,7 +47,7 @@ mkfifo "$PIPE"
 trap "rm -f $PIPE" EXIT
 
 # Parse args to determine tunnel mode
-ARGS="${DDEV_SHARE_CLOUDFLARED_ARGS:-}"
+ARGS="${DDEV_SHARE_ARGS:-}"
 TUNNEL_NAME=""
 HOSTNAME=""
 OTHER_ARGS=""

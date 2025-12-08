@@ -225,5 +225,5 @@ func init() {
 	RootCmd.AddCommand(DdevShareCommand)
 	DdevShareCommand.Flags().String("provider", "", "share provider to use (ngrok, cloudflared, or custom)")
 	DdevShareCommand.Flags().String("provider-args", "", "arguments to pass to the share provider")
-	DdevShareCommand.Flags().String("ngrok-args", "", `accepts any flag from "ngrok http --help" (deprecated: use share_ngrok_args in config.yaml)`)
+	DdevShareCommand.Flags().String("ngrok-args", "", `accepts any flag from "ngrok http --help" (deprecated: use share_provider_args in config.yaml)`)
 }
