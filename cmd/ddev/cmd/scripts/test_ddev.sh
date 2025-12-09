@@ -254,9 +254,7 @@ cat <<END >web/index.php
 END
 
 header "ddev utility rebuild"
-if ddev utility rebuild -h | grep rebuild >/dev/null; then
-  ddev utility rebuild
-fi
+ddev utility rebuild
 
 header "Project startup"
 if ! DDEV_DEBUG=true ddev start -y; then
