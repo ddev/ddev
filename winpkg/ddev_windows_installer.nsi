@@ -25,9 +25,9 @@ ${StrCase}
 Name "DDEV"
 OutFile "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_windows_${TARGET_ARCH}_installer.exe"
 
-; Use proper Program Files directory for 64-bit applications
-InstallDir "$PROGRAMFILES64\DDEV"
-RequestExecutionLevel admin
+; Use per-user installation directory to avoid requiring admin privileges
+InstallDir "$LOCALAPPDATA\Programs\DDEV"
+RequestExecutionLevel user
 
 !define PRODUCT_NAME "DDEV"
 !define PRODUCT_VERSION "${VERSION}"
@@ -46,11 +46,11 @@ Var /GLOBAL WSL_WINDOWS_TEMP
 Var /GLOBAL WINDOWS_TEMP
 Var StartMenuGroup
 
-!define REG_INSTDIR_ROOT "HKLM"
+!define REG_INSTDIR_ROOT "HKCU"
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
-!define REG_UNINST_ROOT "HKLM"
+!define REG_UNINST_ROOT "HKCU"
 !define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
-!define REG_SETTINGS_ROOT "HKLM"
+!define REG_SETTINGS_ROOT "HKCU"
 !define REG_SETTINGS_KEY "Software\DDEV\Settings"
 
 ; Installer Types
@@ -483,13 +483,13 @@ Page custom DockerCheckPage DockerCheckPageLeave
 !define MUI_DIRECTORYPAGE_HEADER_TEXT "Choose Windows install folder"
 !insertmacro MUI_PAGE_DIRECTORY
 
-; Start menu page
-!define MUI_STARTMENUPAGE_DEFAULTFOLDER "${PRODUCT_NAME}"
-!define MUI_STARTMENUPAGE_REGISTRY_ROOT ${REG_UNINST_ROOT}
-!define MUI_STARTMENUPAGE_REGISTRY_KEY "${REG_UNINST_KEY}"
-!define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "StartMenuGroup"
-!define MUI_PAGE_CUSTOMFUNCTION_PRE StartMenuPagePre
-!insertmacro MUI_PAGE_STARTMENU Application $StartMenuGroup
+; Start menu page - Disabled for per-user installation simplification
+; !define MUI_STARTMENUPAGE_DEFAULTFOLDER "${PRODUCT_NAME}"
+; !define MUI_STARTMENUPAGE_REGISTRY_ROOT ${REG_UNINST_ROOT}
+; !define MUI_STARTMENUPAGE_REGISTRY_KEY "${REG_UNINST_KEY}"
+; !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "StartMenuGroup"
+; !define MUI_PAGE_CUSTOMFUNCTION_PRE StartMenuPagePre
+; !insertmacro MUI_PAGE_STARTMENU Application $StartMenuGroup
 
 ; Installation page
 !insertmacro MUI_PAGE_INSTFILES
@@ -867,13 +867,13 @@ SectionGroup /e "${PRODUCT_NAME}"
         Call RunMkcertInstall
 
         ; Add DDEV installation directory to PATH (EnVar::AddValue handles duplicates)
-        Push "Adding DDEV installation directory to system PATH..."
+        Push "Adding DDEV installation directory to user PATH..."
         Call LogPrint
-        ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path"
+        ReadRegStr $R0 HKCU "Environment" "Path"
         Push "PATH before addition: $R0"
         Call LogPrint
-        
-        EnVar::SetHKLM
+
+        EnVar::SetHKCU
         EnVar::AddValue "Path" "$INSTDIR"
         Pop $R1
         Push "EnVar::AddValue result: $R1"
@@ -897,13 +897,7 @@ SectionGroup /e "${PRODUCT_NAME}"
             Call InstallWSL2Common
         ${EndIf}
 
-        ; Create shortcuts only for traditional install
-        ${If} $INSTALL_OPTION == "traditional"
-            !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-            CreateDirectory "$SMPROGRAMS\$StartMenuGroup"
-            CreateShortCut "$SMPROGRAMS\$StartMenuGroup\DDEV.lnk" "$INSTDIR\ddev.exe" "" "$INSTDIR\Icons\ddev.ico"
-            !insertmacro MUI_STARTMENU_WRITE_END
-        ${EndIf}
+        ; Start Menu shortcuts removed for simplification
     SectionEnd
 
 SectionGroupEnd
@@ -929,9 +923,7 @@ Section -Post
     IntFmt $0 "0x%08X" $0
     WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "EstimatedSize" "$0"
 
-    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\Uninstall ${PRODUCT_NAME}.lnk" "$INSTDIR\ddev_uninstall.exe"
-    !insertmacro MUI_STARTMENU_WRITE_END
+    ; Uninstall shortcut removed for simplification - users can uninstall via Windows Settings
 SectionEnd
 
 Section Uninstall
@@ -941,8 +933,8 @@ Section Uninstall
     ; Clean up mkcert environment variables
     Call un.CleanupMkcertEnvironment
 
-    ; Remove install directory from system PATH
-    EnVar::SetHKLM
+    ; Remove install directory from user PATH
+    EnVar::SetHKCU
     EnVar::DeleteValue "Path" "$INSTDIR"
 
     ; Remove all installed files
@@ -959,16 +951,7 @@ Section Uninstall
     RMDir /r "$INSTDIR\Icons"
     RMDir /r "$INSTDIR\Links"
 
-    ; Remove all installed shortcuts if they exist
-    !insertmacro MUI_STARTMENU_GETFOLDER "Application" $StartMenuGroup
-    ${If} "$StartMenuGroup" != ""
-        Delete "$SMPROGRAMS\$StartMenuGroup\DDEV.lnk"
-        Delete "$SMPROGRAMS\$StartMenuGroup\DDEV Website.lnk"
-        Delete "$SMPROGRAMS\$StartMenuGroup\DDEV Documentation.lnk"
-        Delete "$SMPROGRAMS\$StartMenuGroup\Uninstall ${PRODUCT_NAME}.lnk"
-        RMDir /r "$SMPROGRAMS\$StartMenuGroup\mkcert"
-        RMDir "$SMPROGRAMS\$StartMenuGroup"
-    ${EndIf}
+    ; Start Menu shortcuts removal - not needed since we no longer create them
 
     ; Remove registry keys
     DeleteRegKey ${REG_UNINST_ROOT} "${REG_UNINST_KEY}"
@@ -1684,19 +1667,7 @@ Function InstallTraditionalWindows
     SetOverwrite try
     File /oname=ddev.ico "graphics\ddev-install.ico"
 
-    ; Create shortcuts
-    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-    CreateDirectory "$INSTDIR\Links"
-    CreateDirectory "$SMPROGRAMS\$StartMenuGroup"
-
-    ; Use literal names for website and documentation
-    WriteIniStr "$INSTDIR\Links\DDEV Website.url" "InternetShortcut" "URL" "https://ddev.com"
-    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\DDEV Website.lnk" "$INSTDIR\Links\DDEV Website.url" "" "$INSTDIR\Icons\ddev.ico"
-
-    WriteIniStr "$INSTDIR\Links\DDEV Documentation.url" "InternetShortcut" "URL" "https://docs.ddev.com"
-    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\DDEV Documentation.lnk" "$INSTDIR\Links\DDEV Documentation.url" "" "$INSTDIR\Icons\ddev.ico"
-
-    !insertmacro MUI_STARTMENU_WRITE_END
+    ; Start Menu shortcuts removed for simplification
 
     Push "Traditional Windows installation completed."
     Call LogPrint
@@ -1759,7 +1730,7 @@ Function SetupWindowsCAROOT
         Call LogPrint
         
         ; Set CAROOT environment variable using EnVar plugin
-        EnVar::SetHKLM
+        EnVar::SetHKCU
         EnVar::Delete "CAROOT"  ; Remove entire variable first
         Pop $0  ; Get error code from Delete
         Push "EnVar::Delete CAROOT result: $0"
@@ -1771,7 +1742,7 @@ Function SetupWindowsCAROOT
         Call LogPrint
         
         ; Get current WSLENV value from registry
-        ReadRegStr $R2 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+        ReadRegStr $R2 HKCU "Environment" "WSLENV"
         ${If} ${Errors}
             StrCpy $R2 ""
         ${EndIf}
@@ -1839,8 +1810,8 @@ Function SetupWindowsCAROOT
         
         Push "WSLENV cleaned and updated: [$R4] -> [$R2]"
         Call LogPrint
-        
-        EnVar::SetHKLM
+
+        EnVar::SetHKCU
         EnVar::Delete "WSLENV"  ; Remove existing WSLENV entirely
         Pop $0  ; Get error code from Delete
 
@@ -1848,13 +1819,13 @@ Function SetupWindowsCAROOT
         Pop $0  ; Get error code from AddValue
         
         ; Verify by reading from registry
-        ReadRegStr $R5 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+        ReadRegStr $R5 HKCU "Environment" "WSLENV"
 
         Push "mkcert certificate sharing with WSL2 configured successfully."
         Call LogPrint
-        
+
         ; Read current value from registry for verification
-        ; ReadRegStr $R6 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+        ; ReadRegStr $R6 HKCU "Environment" "WSLENV"
     ${Else}
         Push "Failed to get CAROOT directory from mkcert"
         Call LogPrint
@@ -1867,13 +1838,13 @@ Function SetupMkcertInWSL2
     Call LogPrint
     
     ; Check current Windows CAROOT environment variable from registry
-    ReadRegStr $R2 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "CAROOT"
+    ReadRegStr $R2 HKCU "Environment" "CAROOT"
     StrCpy $WINDOWS_CAROOT $R2  ; Save to global variable for later use
     Push "Windows CAROOT environment variable: $WINDOWS_CAROOT"
     Call LogPrint
-    
+
     ; Check current Windows WSLENV environment variable from registry
-    ReadRegStr $R3 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+    ReadRegStr $R3 HKCU "Environment" "WSLENV"
     ; DetailPrint "Windows WSLENV environment variable: $R3"
     
     ; Install and run temporary sudoers script
@@ -2095,9 +2066,9 @@ Function .onInit
         ${EndIf}
     !endif
 
-    ; Initialize directory to proper Program Files location
+    ; Initialize directory to per-user location
     ${If} ${RunningX64}
-        StrCpy $INSTDIR "$PROGRAMFILES64\DDEV"
+        StrCpy $INSTDIR "$LOCALAPPDATA\Programs\DDEV"
     ${Else}
         MessageBox MB_ICONSTOP|MB_OK "This installer is for 64-bit Windows only."
         Abort
@@ -2206,7 +2177,7 @@ Function un.CleanupMkcertEnvironment
     DetailPrint "Cleaning up mkcert environment variables..."
     
     ; Get CAROOT directory before cleanup
-    ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "CAROOT"
+    ReadRegStr $R0 HKCU "Environment" "CAROOT"
     ${IfNot} ${Errors}
         DetailPrint "CAROOT directory: $R0"
         
@@ -2236,7 +2207,7 @@ Function un.CleanupMkcertEnvironment
     
     ; Remove CAROOT environment variable (skip in silent mode to preserve for subsequent installs)
     ${IfNot} ${Silent}
-        DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "CAROOT"
+        DeleteRegValue HKCU "Environment" "CAROOT"
         DetailPrint "Removed CAROOT environment variable"
     ${Else}
         DetailPrint "Preserving CAROOT environment variable in silent mode"
@@ -2244,7 +2215,7 @@ Function un.CleanupMkcertEnvironment
     
     ; Clean up WSLENV by removing CAROOT/up (skip in silent mode to preserve for subsequent installs)
     ${IfNot} ${Silent}
-        ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+        ReadRegStr $R0 HKCU "Environment" "WSLENV"
         ${If} ${Errors}
             DetailPrint "WSLENV not found, nothing to clean up"
             Return
@@ -2271,10 +2242,10 @@ Function un.CleanupMkcertEnvironment
         
         ; Update or delete WSLENV
         ${If} $R0 == ""
-            DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+            DeleteRegValue HKCU "Environment" "WSLENV"
             DetailPrint "Removed empty WSLENV"
         ${Else}
-            WriteRegStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV" "$R0"
+            WriteRegStr HKCU "Environment" "WSLENV" "$R0"
             DetailPrint "Updated WSLENV to: $R0"
         ${EndIf}
     ${Else}
