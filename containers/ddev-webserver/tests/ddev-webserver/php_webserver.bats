@@ -14,8 +14,6 @@
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  # TODO: PHP8.5: Enable for php8.5 when extensions are available
-  if [ "${PHP_VERSION}" = "8.5" ]; then skip "xdebug not yet available on PHP8.5"; fi
   CURRENT_ARCH=$(../get_arch.sh)
   docker exec -t $CONTAINER_NAME enable_xdebug
   if [[ ${PHP_VERSION} != 8.? ]] ; then
@@ -100,8 +98,8 @@
     extensions="$extensions memcached redis xdebug"
     ;;
   8.5)
-    # TODO: PHP8.5: memcached and xdebug not yet available in Debian Trixie Sury repo
-    extensions="$extensions redis"
+    # TODO: php8.5: memcached not yet available in Debian Trixie Sury arm64
+    extensions="$extensions redis xdebug"
     ;;
   *)
     # Default fallback for future PHP versions - assume redis available
