@@ -94,13 +94,6 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("mutagen-enabled").Changed {
-		if v, _ := cmd.Flags().GetBool("mutagen-enabled"); v {
-			globalconfig.DdevGlobalConfig.SetPerformanceMode(configTypes.PerformanceModeMutagen)
-			dirty = true
-		}
-	}
-
 	if cmd.Flag(configTypes.FlagPerformanceModeName).Changed {
 		performanceMode, _ := cmd.Flags().GetString(configTypes.FlagPerformanceModeName)
 
@@ -319,8 +312,6 @@ func init() {
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("use-hardened-images", configCompletionFunc([]string{"true", "false"}))
 	configGlobalCommand.Flags().Bool("fail-on-hook-fail", false, "If true, 'ddev start' will fail when a hook fails")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("fail-on-hook-fail", configCompletionFunc([]string{"true", "false"}))
-	configGlobalCommand.Flags().Bool("mutagen-enabled", false, "If true, web container will use Mutagen caching/asynchronous updates")
-	_ = configGlobalCommand.Flags().MarkDeprecated("mutagen-enabled", fmt.Sprintf("please use --%s instead", configTypes.FlagPerformanceModeName))
 	configGlobalCommand.Flags().String(configTypes.FlagPerformanceModeName, configTypes.FlagPerformanceModeDefault, configTypes.FlagPerformanceModeDescription(configTypes.ConfigTypeGlobal))
 	configGlobalCommand.Flags().Bool(configTypes.FlagPerformanceModeResetName, false, configTypes.FlagPerformanceModeResetDescription(configTypes.ConfigTypeGlobal))
 	_ = configGlobalCommand.RegisterFlagCompletionFunc(configTypes.FlagPerformanceModeName, configCompletionFunc(configTypes.ValidPerformanceModeOptions(configTypes.ConfigTypeGlobal)))

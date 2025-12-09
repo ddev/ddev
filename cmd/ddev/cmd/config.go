@@ -15,7 +15,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 // Define flags for the config command
@@ -244,8 +243,6 @@ func init() {
 	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment-add", "", `Append environment variables to the web container: --web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the .ddev/config.yaml file if it exists, or error that it doesn't exist")
 	ConfigCommand.Flags().StringSlice("upload-dirs", []string{}, `Set the project's upload directories, the destination directories of the 'ddev import-files' command, or --upload-dirs="" to remove previously configured values`)
-	ConfigCommand.Flags().String("upload-dir", "", "Set the project's upload directories, the destination directories of the import-files command")
-	_ = ConfigCommand.Flags().MarkDeprecated("upload-dir", "please use --upload-dirs instead")
 	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", nodeps.WebserverDefault, fmt.Sprintf("Set the project's desired webserver type: %s", strings.Join(nodeps.GetValidWebserverTypes(), "/")))
 	_ = ConfigCommand.RegisterFlagCompletionFunc("webserver-type", configCompletionFunc(nodeps.GetValidWebserverTypes()))
 	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Set the web container image (for advanced use only)")
@@ -255,8 +252,6 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&webWorkingDirDefaultArg, "web-working-dir-default", false, `Unset a web service working directory override, the same as --web-working-dir=""`)
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, `Unset a db service working directory override, the same as --db-working-dir=""`)
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unset all service working directory overrides")
-	ConfigCommand.Flags().Bool("mutagen-enabled", false, "Enable Mutagen asynchronous update of project in web container")
-	_ = ConfigCommand.Flags().MarkDeprecated("mutagen-enabled", fmt.Sprintf("please use --%s instead", types.FlagPerformanceModeName))
 	ConfigCommand.Flags().String(types.FlagPerformanceModeName, types.FlagPerformanceModeDefault, types.FlagPerformanceModeDescription(types.ConfigTypeProject))
 	_ = ConfigCommand.RegisterFlagCompletionFunc(types.FlagPerformanceModeName, configCompletionFunc(types.ValidPerformanceModeOptions(types.ConfigTypeProject)))
 	ConfigCommand.Flags().Bool(types.FlagPerformanceModeResetName, false, types.FlagPerformanceModeResetDescription(types.ConfigTypeProject))
@@ -314,31 +309,9 @@ func init() {
 	_ = ConfigCommand.RegisterFlagCompletionFunc("corepack-enable", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.Flags().Bool("update", false, `Update project settings based on detection and project-type overrides (except for 'generic' type)`)
 
-	// Keep old flag names for backwards compatibility
-	var renamedFlags = map[string]string{
-		"http-port":          "router-http-port",
-		"https-port":         "router-https-port",
-		"mailhog-port":       "mailpit-http-port",
-		"mailhog-https-port": "mailpit-https-port",
-		"projectname":        "project-name",
-		"projecttype":        "project-type",
-		"apptype":            "project-type",
-		"sitename":           "project-name",
-		"image-defaults":     "web-image-default",
-	}
-	ConfigCommand.Flags().SetNormalizeFunc(func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
-		if newName, ok := renamedFlags[name]; ok {
-			_, _ = fmt.Fprintf(os.Stderr, "Flag --%s has been deprecated, use --%s instead\n", name, newName)
-			return pflag.NormalizedName(newName)
-		}
-		return pflag.NormalizedName(name)
-	})
-
 	// Keep removed flags for backwards compatibility
 	var removedFlags = []string{
 		"create-docroot",
-		"db-image",
-		"db-image-default",
 	}
 	for _, removedFlag := range removedFlags {
 		// allow any values passed in here
@@ -349,16 +322,6 @@ func init() {
 	}
 
 	RootCmd.AddCommand(ConfigCommand)
-
-	// Add hidden pantheon subcommand for people who have it in their fingers
-	ConfigCommand.AddCommand(&cobra.Command{
-		Use:    "pantheon",
-		Short:  "ddev config pantheon is no longer needed, see docs",
-		Hidden: true,
-		Run: func(_ *cobra.Command, _ []string) {
-			output.UserOut.Print("`ddev config pantheon` is no longer needed, see docs")
-		},
-	})
 }
 
 // getConfigApp() does the basic setup of the app (with provider) and returns it.
@@ -515,12 +478,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if cmd.Flag("host-db-port").Changed {
 		app.HostDBPort = hostDBPortArg
-	}
-
-	if cmd.Flag("mutagen-enabled").Changed {
-		if v, _ := cmd.Flags().GetBool("mutagen-enabled"); v {
-			app.SetPerformanceMode(types.PerformanceModeMutagen)
-		}
 	}
 
 	if cmd.Flag(types.FlagPerformanceModeName).Changed {
@@ -695,11 +652,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 		app.Database.Type = parts[0]
 		app.Database.Version = parts[1]
-	}
-
-	if cmd.Flag("upload-dir").Changed {
-		uploadDirRaw, _ := cmd.Flags().GetString("upload-dir")
-		app.UploadDirs = []string{uploadDirRaw}
 	}
 
 	if cmd.Flag("upload-dirs").Changed {
