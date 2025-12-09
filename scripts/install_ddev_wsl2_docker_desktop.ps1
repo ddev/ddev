@@ -35,9 +35,14 @@ if (-not(wsl -e docker ps) ) {
 $ErrorActionPreference = "Stop"
 
 # Remove old Windows ddev.exe if it exists using uninstaller
+# Check both old system-wide location and new per-user location
 if (Test-Path "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe") {
-    Write-Host "Removing old Windows ddev.exe installation"
+    Write-Host "Removing old Windows ddev.exe installation (system-wide)"
     Start-Process "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe" -ArgumentList "/SILENT" -Wait
+}
+if (Test-Path "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe") {
+    Write-Host "Removing old Windows ddev.exe installation (per-user)"
+    Start-Process "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe" -ArgumentList "/SILENT" -Wait
 }
 
 wsl -u root -e bash -c "apt-get update && apt-get install -y curl"
