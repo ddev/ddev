@@ -243,7 +243,7 @@ func TestShareCmdProviderSystem(t *testing.T) {
 
 	// Test 1: Create a mock provider and verify URL capture
 	t.Run("MockProviderURLCapture", func(t *testing.T) {
-		mockScript := `#!/bin/bash
+		mockScript := `#!/usr/bin/env bash
 echo "Starting mock tunnel..." >&2
 sleep 1
 echo "https://mock-test-tunnel.example.com"
@@ -289,7 +289,7 @@ sleep 2
 
 	// Test 2: Verify hooks have access to DDEV_SHARE_URL
 	t.Run("HookURLAccess", func(t *testing.T) {
-		mockScript := `#!/bin/bash
+		mockScript := `#!/usr/bin/env bash
 echo "https://hook-test-tunnel.example.com"
 sleep 30
 `
@@ -359,7 +359,7 @@ sleep 30
 		// Create mock providers and collect paths for cleanup
 		var mockPaths []string
 		for _, name := range []string{"config-provider", "flag-provider"} {
-			mockScript := fmt.Sprintf(`#!/bin/bash
+			mockScript := fmt.Sprintf(`#!/usr/bin/env bash
 echo "https://%s-tunnel.example.com"
 sleep 2
 `, name)
@@ -420,7 +420,7 @@ sleep 2
 
 	// Test 5: Provider script validation (not executable)
 	t.Run("ProviderNotExecutable", func(t *testing.T) {
-		mockScript := `#!/bin/bash
+		mockScript := `#!/usr/bin/env bash
 echo "https://test.example.com"
 `
 		mockPath := site.Dir + "/.ddev/share-providers/not-executable.sh"
@@ -439,7 +439,7 @@ echo "https://test.example.com"
 	// Test 6: --provider-args flag passes DDEV_SHARE_ARGS to provider
 	t.Run("ProviderArgsFlag", func(t *testing.T) {
 		// Create a mock provider that echoes DDEV_SHARE_ARGS to stderr
-		mockScript := `#!/bin/bash
+		mockScript := `#!/usr/bin/env bash
 echo "ARGS_RECEIVED: DDEV_SHARE_ARGS=${DDEV_SHARE_ARGS}" >&2
 echo "https://args-test.example.com"
 sleep 2

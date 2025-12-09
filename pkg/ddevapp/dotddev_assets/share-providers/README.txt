@@ -84,7 +84,7 @@ Every share provider must follow this contract:
 ### Input (Environment Variables)
 
 - `DDEV_LOCAL_URL`: Local URL to tunnel (e.g., `http://127.0.0.1:8080`)
-- `DDEV_SHARE_<PROVIDER>_ARGS`: Provider-specific arguments (optional)
+- `DDEV_SHARE_ARGS`: Provider-specific arguments (optional)
 - All standard DDEV environment variables
 
 ### Output
