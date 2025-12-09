@@ -71,7 +71,7 @@ Install cloudflared from [Cloudflare's installation guide](https://developers.cl
 ddev share --provider=cloudflared
 
 # Set cloudflared as default for all projects
-ddev config global --share-provider=cloudflared
+ddev config global --share-default-provider=cloudflared
 
 # Set cloudflared as default for current project only
 ddev config --share-default-provider=cloudflared

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"net/url"
 	"os"
@@ -14,19 +15,21 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // DdevShareCommand contains the "ddev share" command
 var DdevShareCommand = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "share [project]",
-	Short:             "Share project on the internet via tunnel provider (ngrok, cloudflared).",
+	Short:             "Share project on the internet via tunnel provider (ngrok, cloudflared, or custom).",
 	Long: `Share your project on the internet using a tunnel provider.
 Built-in providers: ngrok (default), cloudflared.
 Custom providers can be added to .ddev/share-providers/`,
 	Example: `ddev share
 ddev share --provider=cloudflared
-ddev share --ngrok-args "--basic-auth username:pass1234"
+ddev share --provider-args "--basic-auth username:pass1234"
+ddev share --provider=cloudflared --provider-args="--tunnel my-tunnel --hostname mysite.example.com"
 ddev share myproject`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
@@ -61,10 +64,10 @@ ddev share myproject`,
 		// Get provider script path
 		scriptPath, err := app.GetShareProviderScript(providerName)
 		if err != nil {
-			util.Failed("Failed to find share provider '%s': %v\n\nAvailable providers:", providerName, err)
+			util.Error("Failed to find share provider '%s': %v\n\nAvailable providers:", providerName, err)
 			if providers, listErr := app.ListShareProviders(); listErr == nil && len(providers) > 0 {
 				for _, p := range providers {
-					util.Failed("  - %s", p)
+					util.Error("  - %s", p)
 				}
 			}
 			os.Exit(1)
@@ -213,6 +216,9 @@ ddev share myproject`,
 				// Don't warn about exit code -1 which is from Kill()
 				if exitErr.ExitCode() != -1 {
 					util.Warning("Provider '%s' exited with code %d", providerName, exitErr.ExitCode())
+					if !globalconfig.DdevDebug {
+						util.Warning(`For details, run: DDEV_DEBUG=true %s`, prettyCmd(os.Args))
+					}
 				}
 			}
 		}
@@ -225,5 +231,12 @@ func init() {
 	RootCmd.AddCommand(DdevShareCommand)
 	DdevShareCommand.Flags().String("provider", "", "share provider to use (ngrok, cloudflared, or custom)")
 	DdevShareCommand.Flags().String("provider-args", "", "arguments to pass to the share provider")
-	DdevShareCommand.Flags().String("ngrok-args", "", `accepts any flag from "ngrok http --help" (deprecated: use share_provider_args in config.yaml)`)
+	DdevShareCommand.Flags().SetNormalizeFunc(func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
+		if name == "ngrok-args" {
+			newName := "provider-args"
+			_, _ = fmt.Fprintf(os.Stderr, "Flag --%s has been deprecated, use --%s instead\n", name, newName)
+			name = newName
+		}
+		return pflag.NormalizedName(name)
+	})
 }
