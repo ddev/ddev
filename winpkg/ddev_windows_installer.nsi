@@ -465,6 +465,9 @@ FunctionEnd
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE ddevLicLeave
 !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
 
+; Custom install scope page
+Page custom InstallScopePage InstallScopePageLeave
+
 ; Custom install type selection
 Page custom InstallChoicePage InstallChoicePageLeave
 
@@ -511,6 +514,34 @@ Page custom DockerCheckPage DockerCheckPageLeave
 
 ; Reserve plugin files for faster startup
 ReserveFile /plugin EnVar.dll
+
+Function InstallScopePage
+    nsDialogs::Create 1018
+    Pop $0
+    ${If} $0 == error
+        Abort
+    ${EndIf}
+
+    ${NSD_CreateLabel} 0 0 100% 12u "Choose installation scope:"
+    Pop $1
+
+    ${NSD_CreateRadioButton} 10 20u 100% 12u "Install for current user only"
+    Pop $2
+    ${NSD_SetState} $2 ${BST_CHECKED}
+
+    ${NSD_CreateRadioButton} 10 40u 100% 12u "Install for all users (not available)"
+    Pop $3
+    EnableWindow $3 0  ; Disable this option
+
+    ${NSD_CreateLabel} 10 60u 100% 40u "DDEV must be installed per-user because WSL2 distros are per-user and cannot be shared between Windows users.$\r$\n$\r$\nEach Windows user who needs DDEV should run this installer under their own account.$\r$\n$\r$\nInstallation location: %LOCALAPPDATA%\Programs\DDEV"
+    Pop $4
+
+    nsDialogs::Show
+FunctionEnd
+
+Function InstallScopePageLeave
+    ; Nothing to do - only one option available
+FunctionEnd
 
 Function InstallChoicePage
     ; Skip this page if install type was specified via command line
