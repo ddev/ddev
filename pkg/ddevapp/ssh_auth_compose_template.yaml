@@ -6,6 +6,9 @@ volumes:
 
 services:
   ddev-ssh-agent:
+    {{ if .IsPodmanRootless }}
+    userns_mode: keep-id
+    {{ end }}
     container_name: ddev-ssh-agent
     hostname: ddev-ssh-agent
     build:
@@ -26,6 +29,7 @@ services:
     environment:
       - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
     healthcheck:
+      test: "/healthcheck.sh"
       interval: 1s
       retries: 2
       start_period: 10s

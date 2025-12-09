@@ -225,6 +225,8 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 		"TraefikMonitorPort":         globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 		"Timezone":                   timezone,
 		"Hostnames":                  determineRouterHostnames(activeApps),
+		"IsPodman":                   dockerutil.IsPodman(),
+		"IsRootless":                 dockerutil.IsRootless(),
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")

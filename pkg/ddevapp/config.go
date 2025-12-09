@@ -1216,7 +1216,7 @@ stopasgroup=true
 	if app.Database.Type == nodeps.Postgres {
 		extraDBContent = extraDBContent + fmt.Sprintf(`
 ENV PATH=$PATH:/usr/lib/postgresql/$PG_MAJOR/bin
-ADD postgres_healthcheck.sh /
+ADD healthcheck.sh /
 
 RUN <<EOF
 set -eu -o pipefail
@@ -1239,7 +1239,7 @@ USER root
 
 RUN <<EOF
 set -eu -o pipefail
-chmod ugo+rx /postgres_healthcheck.sh
+chmod ugo+rx /healthcheck.sh
 mkdir -p /etc/postgresql/conf.d
 chmod 777 /etc/postgresql/conf.d
 chmod 777 /var/tmp
@@ -1530,6 +1530,14 @@ EOF
 RUN chmod 777 /run/php /var/log
 RUN mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof
 `
+		// Files from containers/ddev-webserver/ddev-webserver-base-files/var/www/html
+		// are added to host on `ddev start` when using Podman with Mutagen enabled
+		if dockerutil.IsPodman() && app.IsMutagenEnabled() {
+			contents = contents + `
+### DDEV-injected cleanup of /var/www/html for Podman with Mutagen
+RUN rm -rf /var/www/html && mkdir -p /var/www/html
+`
+		}
 	}
 
 	return WriteImageDockerfile(fullpath, []byte(contents))

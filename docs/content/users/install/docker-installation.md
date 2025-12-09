@@ -84,8 +84,12 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ## Linux
 
-    !!!warning "Docker Desktop for Linux may work but does not have automated test coverage"
-        Casual manual testing of Docker Desktop for Linux seems to work, but DDEV does not have explicit support for it and does not have automated testing.
+    * [Docker](#docker-for-linux): Recommended, free, open-source, best performance and stability.
+    * [Docker rootless](#docker-rootless): Experimental support, free, open-source, more complex setup, has limitations.
+    * [Podman](#podman-for-linux): Experimental support, free, open-source, more complex setup, has limitations.
+    * [Docker Desktop](#docker-desktop-for-linux): Not open-source, may require license, may be unstable, doesn't have explicit support from DDEV and doesn't have automated test coverage.
+
+    ### Docker for Linux
 
     The best way to install Docker on Linux is to use your native package management tool (`apt`, `dnf`, etc.) with the official Docker repository. While many Linux distributions provide Docker packages in their own repositories, these are often outdated and may not include the latest features required for stability in a development environment like DDEV. To ensure you're using a supported version, install Docker directly from the official Docker repository. 
 
@@ -97,13 +101,24 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     * [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/)
     * [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
 
-
-    Linux installation **absolutely** requires adding your Linux user to the `docker` group, and configuring the Docker daemon to start at boot. Don't install rootless mode, it is not supported by DDEV. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
+    Linux installation **absolutely** requires adding your Linux user to the `docker` group, and configuring the Docker daemon to start at boot. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
 
     !!!warning "Don’t `sudo` with `docker` or `ddev`"
         Don’t use `sudo` with the `docker` command. If you find yourself needing it, you haven’t finished the installation. You also shouldn’t use `sudo` with `ddev` unless it’s specifically for the [`ddev hostname`](../usage/commands.md#hostname) command.
 
     On systems without `systemd` or its equivalent—mostly if you’re installing inside WSL2—you’ll need to manually start Docker with `service docker start` or the equivalent in your distro. You can add this to your shell profile.
+
+    ### Docker Rootless
+
+    DDEV has experimental support for Docker rootless mode on Linux. See [Podman and Docker Rootless in DDEV](https://ddev.com/blog/podman-and-docker-rootless/) for details.
+
+    ### Podman for Linux
+
+    DDEV has experimental support for Podman on Linux. See [Podman and Docker Rootless in DDEV](https://ddev.com/blog/podman-and-docker-rootless/) for details.
+
+    ### Docker Desktop for Linux
+
+    Docker Desktop for Linux can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). Casual manual testing seems to work, but DDEV does not have explicit support for it and does not have automated testing.
 
 === "Windows"
 

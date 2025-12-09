@@ -57,8 +57,18 @@ get_default_shell() {
   fi
 }
 
+get_docker_binary() {
+  if command -v docker >/dev/null 2>&1; then
+    echo "docker"
+  elif command -v podman >/dev/null 2>&1; then
+    echo "podman"
+  else
+    echo "docker"
+  fi
+}
+
 get_global_ddev_dir() {
-  ddev version -j | docker run --rm -i ddev/ddev-utilities jq -r '.raw["global-ddev-dir"]'
+  ddev version -j | "$(get_docker_binary)" run --rm -i ddev/ddev-utilities jq -r '.raw["global-ddev-dir"]'
 }
 
 function cleanup {
@@ -74,12 +84,12 @@ fi
 header "Output file will be in $1"
 if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory, preferably the problem project.\nIt doesn't work in other directories.\n"; exit 2; fi
 
-header "docker pull ddev/ddev-utilities"
-docker pull ddev/ddev-utilities >/dev/null
+header "$(get_docker_binary) pull ddev/ddev-utilities"
+"$(get_docker_binary)" pull ddev/ddev-utilities >/dev/null
 
 header "DDEV version"
 DDEV_DEBUG=true ddev version
-docker_platform=$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw."docker-platform"' 2>/dev/null)
+docker_platform=$(ddev version -j | "$(get_docker_binary)" run -i --rm ddev/ddev-utilities jq -r '.raw."docker-platform"' 2>/dev/null)
 
 header "project configuration via ddev utility configyaml"
 ddev utility configyaml --full-yaml --omit-keys=web_environment 2>/dev/null || { ddev utility configyaml | (grep -v "^web_environment" || true); }
@@ -154,12 +164,12 @@ trap cleanup SIGINT SIGTERM SIGQUIT EXIT
 header "User information (id -a)"
 id -a
 
-header "DOCKER provider info"
-docker_client="$(which docker)"
-printf "docker client location: %s\n\n" "$(ls -l "${docker_client}")"
+header "$(get_docker_binary) provider info"
+docker_client="$(which "$(get_docker_binary)")"
+printf "$(get_docker_binary) client location: %s\n\n" "$(ls -l "${docker_client}")"
 
-echo "docker client alternate locations:"
-which -a docker
+echo "$(get_docker_binary) client alternate locations:"
+which -a "$(get_docker_binary)"
 echo
 
 printf "Docker provider: %s\n" "${docker_platform}"
@@ -178,11 +188,11 @@ if [ "${OSTYPE%-*}" != "linux" ] && [ "$docker_platform" = "docker-desktop" ]; t
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 fi
 
-header "docker version"
-docker version
+header "$(get_docker_binary) version"
+"$(get_docker_binary)" version
 
-header "docker context ls"
-DOCKER_HOST="" docker context ls
+header "$(get_docker_binary) context ls"
+DOCKER_HOST="" "$(get_docker_binary)" context ls
 
 printf "\nDOCKER_HOST=%s\nDOCKER_CONTEXT=%s\nDOCKER_DEFAULT_PLATFORM=%s\n" "${DOCKER_HOST:-notset}" "${DOCKER_CONTEXT:-notset}" "${DOCKER_DEFAULT_PLATFORM:-notset}"
 
@@ -204,23 +214,23 @@ esac
 header "ddev utility dockercheck"
 ddev utility dockercheck 2>/dev/null || true
 
-printf "\nDocker disk space:\n" && docker run --rm ddev/ddev-utilities df -h //
+printf "\nDocker disk space:\n" && "$(get_docker_binary)" run --rm ddev/ddev-utilities df -h //
 
-header "Existing docker containers"
-docker ps -a
+header "Existing $(get_docker_binary) containers"
+"$(get_docker_binary)" ps -a
 
-header "docker system df"
-docker system df
+header "$(get_docker_binary) system df"
+"$(get_docker_binary)" system df
 
 echo "
   Tips:
-  1. Periodically check your Docker filesystem usage with 'docker system df'
-  2. Use 'docker builder prune' to remove unused Docker build cache (it doesn't remove your data)
+  1. Periodically check your Docker filesystem usage with '$(get_docker_binary) system df'
+  2. Use '$(get_docker_binary) builder prune' to remove unused Docker build cache (it doesn't remove your data)
   3. To remove all containers and images (it doesn't remove your data):
     \`\`\`
     ddev poweroff
-    docker rm -f \$(docker ps -aq) || true
-    docker rmi -f \$(docker images -q)
+    $(get_docker_binary) rm -f \$($(get_docker_binary) ps -aq) || true
+    $(get_docker_binary) rmi -f \$($(get_docker_binary) images -q)
     \`\`\`
     (DDEV images will be downloaded again on 'ddev start')"
 
@@ -262,25 +272,25 @@ if ! DDEV_DEBUG=true ddev start -y; then
   ddev list
   ddev describe
   printf "============= ddev-%s-web healthcheck run =========\n" "${PROJECT_NAME}"
-  docker exec ddev-${PROJECT_NAME}-web bash -xc 'rm -f /tmp/healthy && /healthcheck.sh' || true
+  "$(get_docker_binary)" exec ddev-${PROJECT_NAME}-web bash -xc 'rm -f /tmp/healthy && /healthcheck.sh' || true
   printf "========= web container healthcheck ======\n"
-  docker inspect --format "{{json .State.Health }}" ddev-${PROJECT_NAME}-web || true
+  "$(get_docker_binary)" inspect --format "{{json .State.Health }}" ddev-${PROJECT_NAME}-web || true
   printf "============= ddev-router healthcheck =========\n"
-  docker inspect --format "{{json .State.Health }}" ddev-router || true
+  "$(get_docker_binary)" inspect --format "{{json .State.Health }}" ddev-router || true
   printf "============= Global ddev homeadditions =========\n"
   globalDir=$(get_global_ddev_dir)
   ls -lR ${globalDir}/homeadditions/
   printf "============= ddev logs =========\n"
   ddev logs | tail -20l
   printf "============= contents of /mnt/ddev_config  =========\n"
-  docker exec -it ddev-${PROJECT_NAME}-db ls -l /mnt/ddev_config || true
+  "$(get_docker_binary)" exec -it ddev-${PROJECT_NAME}-db ls -l /mnt/ddev_config || true
   printf "Start failed.\n"
   exit 1
 fi
 
-host_http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw.services.web.host_http_url' 2>/dev/null)
-http_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw.httpURLs[0]' 2>/dev/null)
-https_url=$(ddev describe -j | docker run -i --rm ddev/ddev-utilities jq -r '.raw.httpsURLs[0]' 2>/dev/null)
+host_http_url=$(ddev describe -j | "$(get_docker_binary)" run -i --rm ddev/ddev-utilities jq -r '.raw.services.web.host_http_url' 2>/dev/null)
+http_url=$(ddev describe -j | "$(get_docker_binary)" run -i --rm ddev/ddev-utilities jq -r '.raw.httpURLs[0]' 2>/dev/null)
+https_url=$(ddev describe -j | "$(get_docker_binary)" run -i --rm ddev/ddev-utilities jq -r '.raw.httpsURLs[0]' 2>/dev/null)
 
 header "curl -I of http://127.0.0.1 from inside container"
 ddev exec curl --connect-timeout 10 --max-time 20 --fail -I http://127.0.0.1

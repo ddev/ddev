@@ -23,6 +23,21 @@ on:
         required: false
         type: string
         default: 'false'
+      ddev_test_podman_rootless:
+        description: 'DDEV_TEST_PODMAN_ROOTLESS value'
+        required: false
+        type: string
+        default: 'false'
+      ddev_test_podman_root:
+        description: 'DDEV_TEST_PODMAN_ROOT value'
+        required: false
+        type: string
+        default: 'false'
+      ddev_test_docker_rootless:
+        description: 'DDEV_TEST_DOCKER_ROOTLESS value'
+        required: false
+        type: string
+        default: 'false'
       cgo_enabled:
         description: 'CGO_ENABLED value'
         required: false
@@ -91,6 +106,9 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: ${{ inputs.ddev_test_webserver_type }}
       DDEV_TEST_USE_MUTAGEN: ${{ inputs.ddev_test_use_mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ inputs.ddev_test_no_bind_mounts }}
+      DDEV_TEST_PODMAN_ROOTLESS: ${{ inputs.ddev_test_podman_rootless }}
+      DDEV_TEST_PODMAN_ROOT: ${{ inputs.ddev_test_podman_root }}
+      DDEV_TEST_DOCKER_ROOTLESS: ${{ inputs.ddev_test_docker_rootless }}
 
     steps:
       - uses: actions/checkout@v5
@@ -170,6 +188,9 @@ jobs:
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
           echo "DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE}"
           echo "DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
+          echo "DDEV_TEST_PODMAN_ROOTLESS=${DDEV_TEST_PODMAN_ROOTLESS}"
+          echo "DDEV_TEST_PODMAN_ROOT=${DDEV_TEST_PODMAN_ROOT}"
+          echo "DDEV_TEST_DOCKER_ROOTLESS=${DDEV_TEST_DOCKER_ROOTLESS}"
           echo "MAKE_TARGET=${MAKE_TARGET}"
 
       - name: Setup tmate session

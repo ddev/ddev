@@ -94,6 +94,13 @@ func GetHostDockerInternal() *HostDockerInternal {
 			// host.docker.internal is already taken care of by extra_hosts in docker-compose
 			message = "IsLinux uses 'host-gateway' in extra_hosts"
 
+			if IsDockerRootless() {
+				// Docker rootless doesn't update "host-gateway" value
+				// https://github.com/moby/moby/issues/47684#issuecomment-2166149845
+				ipAddress = "10.0.2.2"
+				message = "IsDockerRootless"
+			}
+
 		default:
 			message = "no other case was discovered"
 		}
