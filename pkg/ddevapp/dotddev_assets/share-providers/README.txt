@@ -1,4 +1,7 @@
-# DDEV Share Providers
+DDEV Share Providers README
+================
+
+#ddev-generated
 
 Share providers are scripts that create internet-accessible tunnels to your local DDEV project.
 
@@ -17,7 +20,7 @@ ddev share
 ddev share --provider=cloudflared
 
 # Set default provider for project
-ddev config --share-provider=cloudflared
+ddev config --share-default-provider=cloudflared
 ```
 
 ## Configuration
@@ -26,8 +29,7 @@ In `.ddev/config.yaml`:
 
 ```yaml
 share_default_provider: ngrok
-share_ngrok_args: "--basic-auth username:password"
-share_cloudflared_args: ""
+share_provider_args: "--basic-auth username:password"
 ```
 
 ## Customizing Providers
@@ -58,7 +60,7 @@ ddev share --provider=my-ngrok
 Create a new executable script in `.ddev/share-providers/`:
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Start your tunnel tool
@@ -104,14 +106,14 @@ Every share provider must follow this contract:
 - Must handle SIGINT (Ctrl+C) and SIGTERM gracefully
 - Use `trap` to cleanup background processes on exit
 - Example:
-  ```bash
-  cleanup() {
-      if kill -0 $PID 2>/dev/null; then
-          kill $PID 2>/dev/null || true
-      fi
-  }
-  trap cleanup EXIT
-  ```
+    ```bash
+    cleanup() {
+        if kill -0 $PID 2>/dev/null; then
+            kill $PID 2>/dev/null || true
+        fi
+    }
+    trap cleanup EXIT
+    ```
 
 ### Error Handling
 
@@ -124,7 +126,7 @@ Every share provider must follow this contract:
 ### Simple Provider (stdout parsing)
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Start tunnel, parse URL from output
@@ -136,7 +138,7 @@ localtunnel --port 8080 | grep -o 'https://[^[:space:]]*' | head -1
 ### API Polling Provider
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Start tunnel
@@ -161,7 +163,7 @@ wait $TUNNEL_PID
 ### File-based Provider
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Start tunnel (writes URL to file)
@@ -195,11 +197,11 @@ Example `.ddev/config.yaml`:
 
 ```yaml
 hooks:
-  pre-share:
-    - exec: |
-        echo "Tunnel URL: $DDEV_SHARE_URL"
-        curl -X POST https://api.example.com/webhook \
-          -d "url=$DDEV_SHARE_URL"
+    pre-share:
+        - exec: |
+            echo "Tunnel URL: $DDEV_SHARE_URL"
+            curl -X POST https://api.example.com/webhook \
+                -d "url=$DDEV_SHARE_URL"
 ```
 
 ## Troubleshooting

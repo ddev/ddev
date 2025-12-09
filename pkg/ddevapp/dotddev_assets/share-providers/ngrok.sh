@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #ddev-generated
 
 # ngrok share provider for DDEV
@@ -17,12 +17,6 @@ fi
 # Validate ngrok is installed
 if ! command -v ngrok &> /dev/null; then
     echo "Error: ngrok not found in PATH. Install from https://ngrok.com/download" >&2
-    exit 1
-fi
-
-# Validate jq is installed
-if ! command -v jq &> /dev/null; then
-    echo "Error: jq not found in PATH. Install with 'brew install jq' or see https://jqlang.github.io/jq/download/" >&2
     exit 1
 fi
 
@@ -81,7 +75,7 @@ for i in {1..30}; do
     fi
 
     URL=$(curl -s http://localhost:4040/api/tunnels 2>/dev/null | \
-          jq -r '.tunnels[0].public_url' 2>/dev/null || echo "")
+          ddev exec jq -r '.tunnels[0].public_url' 2>/dev/null || echo "")
 
     if [[ -n "$URL" && "$URL" != "null" ]]; then
         echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV

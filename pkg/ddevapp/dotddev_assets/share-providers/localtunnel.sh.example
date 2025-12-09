@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#ddev-generated
 
 # localtunnel share provider example for DDEV
 # Documentation: https://github.com/localtunnel/localtunnel
@@ -49,7 +50,7 @@ URL_FILE=$(mktemp)
 trap "rm -f $URL_FILE" EXIT
 
 # Start localtunnel in background, capturing output
-lt --port "$PORT" ${DDEV_SHARE_LOCALTUNNEL_ARGS:-} 2>&1 | while IFS= read -r line; do
+lt --port "$PORT" ${DDEV_SHARE_ARGS:-} 2>&1 | while IFS= read -r line; do
     # Output all lines to stderr for user visibility
     echo "$line" >&2
 

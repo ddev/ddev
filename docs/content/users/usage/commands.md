@@ -373,8 +373,7 @@ Flags:
 * `--host-webserver-port`: The `web` container’s localhost-bound HTTP port.
 * `--mailpit-http-port`: Router port to be used for Mailpit HTTP access (see [default](../configuration/config.md#mailpit_http_port)).
 * `--mailpit-https-port`: Router port to be used for Mailpit HTTPS access (see [default](../configuration/config.md#mailpit_https_port)).
-* `--ngrok-args`: Provide extra args to `ngrok` in `ddev share` (deprecated: use [`share_ngrok_args`](../configuration/config.md#share_ngrok_args) in config.yaml).
-* `--share-default-provider`: Set the default share provider for the project (ngrok, cloudflared, or custom). Can be overridden globally with `ddev config global --share-provider=<provider>`.
+* `--ngrok-args`: Provide extra args to `ngrok` in `ddev share` (deprecated: use [`share_provider_args`](../configuration/config.md#share_provider_args) in `.ddev/config.yaml`).
 * `--no-project-mount`: Whether to skip mounting project code into the `web` container.
 * `--nodejs-version`: Specify the Node.js version to use (see [default](../configuration/config.md#nodejs_version)).
 * `--omit-containers`: Comma-delimited list of container types that should not be started when the project is started.
@@ -386,6 +385,8 @@ Flags:
 * `--project-type`: Provide [the project type](../configuration/config.md#type) of project to configure. This is autodetected and this flag is necessary only to override the detection.
 * `--router-http-port`: The router HTTP port for this project (see [default](../configuration/config.md#router_http_port)).
 * `--router-https-port`: The router HTTPS port for this project (see [default](../configuration/config.md#router_https_port)).
+* `--share-default-provider`: Set the default share provider for the project (`ngrok`, `cloudflared`, or custom). Can be overridden globally with `ddev config global --share-default-provider=<provider>`.
+* `--share-provider-args`: Provide extra args to the share provider in `ddev share`.
 * `--show-config-location`: Output the location of the `.ddev/config.yaml` file if it exists, or error that it doesn’t exist.
 * `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`. If unset, DDEV will attempt to derive it from the host system timezone.
 * `--update`: Update project settings based on detection and `project-type` overrides (except for `generic` type).
@@ -1217,14 +1218,11 @@ Flags:
 
 * `--provider`: Share provider to use (ngrok, cloudflared, or custom).
 * `--provider-args`: Arguments to pass to the share provider (overrides config file settings).
-* `--ngrok-args`: (Deprecated) Use [`share_ngrok_args`](../configuration/config.md#share_ngrok_args) in config.yaml instead.
+* `--ngrok-args`: (Deprecated) Use `--provider-args` instead.
 
-The default provider can be configured globally with `ddev config global --share-provider=<provider>` or per-project with `ddev config --share-default-provider=<provider>`. See [`share_default_provider`](../configuration/config.md#share_default_provider) for more details.
+The default provider can be configured globally with `ddev config global --share-default-provider=<provider>` or per-project with `ddev config --share-default-provider=<provider>`. See [`share_default_provider`](../configuration/config.md#share_default_provider) for more details.
 
-Provider-specific arguments can be configured in config.yaml:
-
-* [`share_ngrok_args`](../configuration/config.md#share_ngrok_args) for ngrok
-* [`share_cloudflared_args`](../configuration/config.md#share_cloudflared_args) for cloudflared
+Provider-specific arguments can be configured in `.ddev/config.yaml` with [`share_provider_args`](../configuration/config.md#share_provider_args).
 
 Examples:
 
