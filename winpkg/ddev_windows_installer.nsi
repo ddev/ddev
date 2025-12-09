@@ -44,7 +44,6 @@ Var /GLOBAL DEBUG_LOG_HANDLE
 Var /GLOBAL DEBUG_LOG_PATH
 Var /GLOBAL WSL_WINDOWS_TEMP
 Var /GLOBAL WINDOWS_TEMP
-Var StartMenuGroup
 
 !define REG_INSTDIR_ROOT "HKCU"
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
@@ -843,13 +842,6 @@ Function DockerCancelButtonClick
     Call LogPrint
     SendMessage $HWNDPARENT ${WM_CLOSE} 0 0
     Quit
-FunctionEnd
-
-Function StartMenuPagePre
-    ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-    ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
-        Abort ; Skip the start menu page for WSL2 installations
-    ${EndIf}
 FunctionEnd
 
 Section "-Initialize"
@@ -2075,6 +2067,61 @@ Function ParseCommandLine
     ${EndIf}
 FunctionEnd
 
+; CheckOldSystemInstallation - Detect and offer to remove old system-wide DDEV installation
+; Old versions installed to $PROGRAMFILES\DDEV; new versions install to $LOCALAPPDATA\Programs\DDEV
+Function CheckOldSystemInstallation
+    Push $R0
+    Push $R1
+
+    ; Check for old system-wide installation in Program Files
+    ${If} ${FileExists} "$PROGRAMFILES64\DDEV\ddev.exe"
+        Push "Found old system-wide DDEV installation at $PROGRAMFILES64\DDEV"
+        Call LogPrint
+
+        ; Check if uninstaller exists
+        ${If} ${FileExists} "$PROGRAMFILES64\DDEV\ddev_uninstall.exe"
+            Push "Old uninstaller found at $PROGRAMFILES64\DDEV\ddev_uninstall.exe"
+            Call LogPrint
+
+            ${IfNot} ${Silent}
+                MessageBox MB_YESNO|MB_ICONQUESTION "An old system-wide DDEV installation was found at:$\n$PROGRAMFILES64\DDEV$\n$\nDDEV now installs per-user to avoid administrator account issues.$\n$\nWould you like to remove the old installation?$\n(Requires administrator privileges)" IDYES remove_old IDNO skip_old
+            ${Else}
+                ; In silent mode, try to remove automatically
+                Goto remove_old
+            ${EndIf}
+            Goto skip_old
+
+            remove_old:
+                Push "Attempting to remove old system-wide installation..."
+                Call LogPrint
+                ; Run the old uninstaller - it will request elevation if needed
+                ExecWait '"$PROGRAMFILES64\DDEV\ddev_uninstall.exe" /S' $R0
+                ${If} $R0 == 0
+                    Push "Old installation removed successfully"
+                    Call LogPrint
+                ${Else}
+                    Push "Old uninstaller returned code: $R0"
+                    Call LogPrint
+                    ${IfNot} ${Silent}
+                        MessageBox MB_OK|MB_ICONINFORMATION "The old installation could not be fully removed (you may have cancelled the elevation prompt).$\n$\nYou can manually uninstall it later from Programs and Features.$\n$\nContinuing with new installation..."
+                    ${EndIf}
+                ${EndIf}
+
+            skip_old:
+        ${Else}
+            ; No uninstaller found - just warn the user
+            Push "Old installation found but no uninstaller present"
+            Call LogPrint
+            ${IfNot} ${Silent}
+                MessageBox MB_OK|MB_ICONINFORMATION "An old DDEV installation was found at:$\n$PROGRAMFILES64\DDEV$\n$\nNo uninstaller was found. You may need to manually remove this directory and clean up the system PATH.$\n$\nContinuing with new installation..."
+            ${EndIf}
+        ${EndIf}
+    ${EndIf}
+
+    Pop $R1
+    Pop $R0
+FunctionEnd
+
 Function .onInit
     ; Set proper 64-bit handling
     SetRegView 64
@@ -2109,7 +2156,10 @@ Function .onInit
     Call InitializeDebugLog
     Push "Debug log initialized at: $DEBUG_LOG_PATH"
     Call LogPrint
-    
+
+    ; Check for old system-wide installation and offer to remove it
+    Call CheckOldSystemInstallation
+
     ; Parse command line arguments
     Call ParseCommandLine
     
