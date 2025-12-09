@@ -85,7 +85,7 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	assert.Equal(origRandomDB, newRandomDB)
 
 	// Now run ddev utility rebuild to blow away the Docker cache
-	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild")
+	_, err = exec.RunHostCommand(DdevBin, "utility", "rebuild")
 	require.NoError(t, err)
 
 	// Now with rebuild having been done, we should see a new value for random
@@ -106,7 +106,7 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	assert.Equal(origRandomDB, freshRandomDB)
 
 	// Now run ddev utility rebuild to blow away the Docker cache for db
-	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild", "--service", "db")
+	_, err = exec.RunHostCommand(DdevBin, "utility", "rebuild", "--service", "db")
 	require.NoError(t, err)
 
 	// It should remain the same for web
@@ -129,7 +129,7 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	assert.NotEqual(freshRandomDB, freshRandomDBNew)
 
 	// Repeat the same with all services, but use cache
-	_, err = exec.RunHostCommand(DdevBin, "debug", "rebuild", "--all", "--cache")
+	_, err = exec.RunHostCommand(DdevBin, "utility", "rebuild", "--all", "--cache")
 	require.NoError(t, err)
 
 	// It should remain the same for web

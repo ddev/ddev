@@ -178,7 +178,7 @@ func (app *DdevApp) GetConfigPath(filename string) string {
 }
 
 // GetProcessedProjectConfigYAML returns the processed project configuration as YAML
-// This is equivalent to what 'ddev debug configyaml' shows - the project configuration
+// This is equivalent to what 'ddev utility configyaml' shows - the project configuration
 // after all config.*.yaml files have been merged and processed
 func (app *DdevApp) GetProcessedProjectConfigYAML(omitKeys ...string) ([]byte, error) {
 	// Ensure we have the latest processed configuration

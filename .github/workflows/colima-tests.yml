@@ -125,7 +125,7 @@ jobs:
         run: |
           mkdir -p ~/workspace/d9 && cd ~/workspace/d9
           ddev config --project-type=drupal9 --docroot=web
-          ddev debug download-images
+          ddev utility download-images
           ddev poweroff
           docker buildx prune -f -a || true
           docker rm -f $(docker ps -aq) >/dev/null || true

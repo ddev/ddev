@@ -13,24 +13,24 @@ body:
           required: true
         - label: I have checked the [troubleshooting guide](https://docs.ddev.com/en/stable/users/usage/troubleshooting/)
           required: true
-        - label: I have run `ddev debug test` to include output below
+        - label: I have run `ddev utility test` or at least `ddev utility diagnose` to include output below
           required: true
 
   - type: textarea
     attributes:
-      label: Output of `ddev debug test`
+      label: Output of `ddev utility test` or `ddev utility diagnose`
       value: |
-        <details><summary>Expand `ddev debug test` diagnostic information</summary>
+        <details><summary>Expand `ddev utility test` diagnostic information</summary>
         
         ```
-        [COPY-PASTE HERE THE OUTPUT OF `ddev debug test`]
+        [COPY-PASTE HERE THE OUTPUT OF `ddev utility test`]
         ```
         </details>
       description: |
         Whether you’re having trouble or not, help us with context that will skip a bunch of questions we'd have to ask afterwards:
 
         1. Make sure you’re on the [latest stable version](https://github.com/ddev/ddev/releases/latest) before reporting, [upgrading](https://docs.ddev.com/en/stable/users/install/ddev-installation/) if necessary.
-        2. Run a diagnostic and post the results as a new Gist (or your favorite equivalent). Run `ddev debug test`, or download and run [test_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/main/cmd/ddev/cmd/scripts/test_ddev.sh), and share a link to the results via https://gist.github.com. (If this works, there may not be something wrong with DDEV but something to [troubleshoot in your project](https://docs.ddev.com/en/stable/users/usage/troubleshooting/).)
+        2. Run a diagnostic and post the results as a new Gist (or your favorite equivalent). Run `ddev utility test`, and share a link to the results via https://gist.github.com. (If this works, there may not be something wrong with DDEV but something to [troubleshoot in your project](https://docs.ddev.com/en/stable/users/usage/troubleshooting/).)
     validations:
       required: false
   - type: textarea

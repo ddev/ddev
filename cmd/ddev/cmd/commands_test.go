@@ -92,8 +92,8 @@ func TestCustomCommands(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
 
-	out, err = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
-	require.NoError(t, err, "failed to run ddev debug fix-commands, out='%s', err=%v", out, err)
+	out, err = exec.RunHostCommand(DdevBin, "utility", "fix-commands")
+	require.NoError(t, err, "failed to run ddev utility fix-commands, out='%s', err=%v", out, err)
 	out, err = exec.RunHostCommand(DdevBin)
 	require.NoError(t, err, "failed to run DDEV command, output='%s', err=%v", out, err)
 	assert.Contains(out, "mysql client in db container")
@@ -118,7 +118,7 @@ func TestCustomCommands(t *testing.T) {
 	// Now copy a project commands and global commands and make sure they show up and execute properly
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
 	assert.NoError(err)
-	_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+	_, _ = exec.RunHostCommand(DdevBin, "utility", "fix-commands")
 
 	// Must sync our added in-container commands before using them.
 	err = app.MutagenSyncFlush()
@@ -200,7 +200,7 @@ func TestCustomCommands(t *testing.T) {
 	app.Type = nodeps.AppTypeTYPO3
 	_ = app.WriteConfig()
 
-	_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+	_, _ = exec.RunHostCommand(DdevBin, "utility", "fix-commands")
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 	for _, c := range []string{"typo3"} {

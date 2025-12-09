@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// MutagenCmd is the top-level "ddev debug" command
+// MutagenCmd is the top-level "ddev utility" command
 var MutagenCmd = &cobra.Command{
 	Use:   "mutagen [command]",
 	Short: "Commands for Mutagen status and sync, etc.",

@@ -40,7 +40,7 @@ func TestComposeConfigCmd(t *testing.T) {
 	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", "compose-config"})
 
 	// Ensure ddev utility compose-config works as expected
-	args = []string{"debug", "compose-config"}
+	args = []string{"utility", "compose-config"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
 	assert.Contains(t, out, "services")
@@ -51,7 +51,7 @@ func TestComposeConfigCmd(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Ensure ddev utility compose-config includes override values
-	args = []string{"debug", "compose-config"}
+	args = []string{"utility", "compose-config"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
 	assert.Contains(t, out, "my_custom: value_here")

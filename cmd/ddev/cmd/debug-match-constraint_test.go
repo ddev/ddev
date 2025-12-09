@@ -12,18 +12,18 @@ import (
 // TestDebugMatchConstraintCmd checks to see match-constraint behaves as expected
 // @see https://github.com/Masterminds/semver#checking-version-constraints
 func TestDebugMatchConstraintCmd(t *testing.T) {
-	out, err := exec.RunHostCommand(DdevBin, "debug", "match-constraint", "-h")
+	out, err := exec.RunHostCommand(DdevBin, "utility", "match-constraint", "-h")
 	require.NoError(t, err, "Match constraint should not have errored for help, out='%s'", out)
 	require.Contains(t, out, "Check if the currently installed ddev matches the specified version constraint")
 
 	constraint := ">= 1.twentythree"
-	out, err = exec.RunHostCommand(DdevBin, "debug", "match-constraint", constraint)
+	out, err = exec.RunHostCommand(DdevBin, "utility", "match-constraint", constraint)
 	require.Error(t, err, "Match constraint should have errored for %s, out='%s'", constraint, out)
 	require.Contains(t, out, "constraint is not valid")
 
 	// Check against NOT nonexistent version
 	constraint = "!= v1.23.9999"
-	out, err = exec.RunHostCommand(DdevBin, "debug", "match-constraint", constraint)
+	out, err = exec.RunHostCommand(DdevBin, "utility", "match-constraint", constraint)
 	require.NoError(t, err, "Match constraint should not have errored for %s, out='%s'", constraint, out)
 
 	if !regexp.MustCompile(`^v[0-9]+\.`).MatchString(versionconstants.DdevVersion) {
@@ -31,10 +31,10 @@ func TestDebugMatchConstraintCmd(t *testing.T) {
 	}
 
 	constraint = ">= 1.0"
-	out, err = exec.RunHostCommand(DdevBin, "debug", "match-constraint", constraint)
+	out, err = exec.RunHostCommand(DdevBin, "utility", "match-constraint", constraint)
 	require.NoError(t, err, "Match constraint should not have errored for %s, out='%s'", constraint, out)
 
 	constraint = "< 1.0"
-	out, err = exec.RunHostCommand(DdevBin, "debug", "match-constraint", constraint)
+	out, err = exec.RunHostCommand(DdevBin, "utility", "match-constraint", constraint)
 	require.Error(t, err, "Match constraint should have errored for %s, out='%s'", constraint, out)
 }
