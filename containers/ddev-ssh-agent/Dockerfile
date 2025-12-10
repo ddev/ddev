@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # check=skip=SecretsUsedInArgOrEnv
 
-FROM debian:bookworm-slim AS ddev-ssh-agent
+FROM debian:trixie-slim AS ddev-ssh-agent
 
 RUN apt-get update && apt-get install -y bash expect file gpg openssh-client socat psmisc && apt-get autoclean
 
