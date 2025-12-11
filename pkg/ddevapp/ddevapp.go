@@ -3741,4 +3741,3 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 
 	return nil
 }
-
