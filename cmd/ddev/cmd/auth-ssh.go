@@ -278,7 +278,7 @@ func runSSHAuthContainer(keys []string) (int, error) {
 	}
 
 	containerName := "ddev-ssh-auth-" + util.RandString(6)
-	_, _, err := dockerutil.RunSimpleContainerExtended(containerName, config, hostConfig, false, false)
+	_, _, err := dockerutil.RunSimpleContainerExtended(containerName, config, hostConfig, true, false)
 
 	exitCode := 0
 	if err != nil {
