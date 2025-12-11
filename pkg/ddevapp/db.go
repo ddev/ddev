@@ -59,16 +59,25 @@ func (app *DdevApp) getDBVersionFromVolume() (string, error) {
 		exit 0
 	`}
 
+	var volumesNeeded []string
+	if dockerutil.VolumeExists(app.GetMariaDBVolumeName()) {
+		volumesNeeded = append(volumesNeeded, app.GetMariaDBVolumeName()+":/var/tmp/mysql")
+	}
+	if dockerutil.VolumeExists(app.GetPostgresVolumeName()) {
+		volumesNeeded = append(volumesNeeded, app.GetPostgresVolumeName()+":/var/tmp/postgres")
+	}
+	// No database volumesNeeded exist
+	if len(volumesNeeded) == 0 {
+		return "", nil
+	}
+
 	_, out, err := dockerutil.RunSimpleContainer(
 		versionconstants.UtilitiesImage,
 		"GetExistingDBType-"+app.Name+"-"+util.RandString(6),
 		cmd,
 		[]string{}, // envVars
 		[]string{}, // uid
-		[]string{ // volumes
-			app.GetMariaDBVolumeName() + ":/var/tmp/mysql",
-			app.GetPostgresVolumeName() + ":/var/tmp/postgres",
-		},
+		volumesNeeded,
 		"",    // workingDir
 		true,  // rm
 		false, // detach
