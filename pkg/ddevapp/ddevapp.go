@@ -2718,7 +2718,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 	hostHTTPPort, err := app.GetPublishedPort("web")
 	hostHTTPPortStr := ""
 	// Otherwise we'll use the configured value from app.HostWebserverPort
-	if hostHTTPPort > 0 || err == nil {
+	if hostHTTPPort > 0 && err == nil {
 		hostHTTPPortStr = strconv.Itoa(hostHTTPPort)
 	} else {
 		hostHTTPPortStr = app.HostWebserverPort
@@ -2729,7 +2729,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 	// for the vast majority of applications
 	hostHTTPSPort, err := app.GetPublishedPortForPrivatePort("web", 443)
 	hostHTTPSPortStr := ""
-	if hostHTTPSPort > 0 || err == nil {
+	if hostHTTPSPort > 0 && err == nil {
 		hostHTTPSPortStr = strconv.Itoa(hostHTTPSPort)
 	} else {
 		hostHTTPSPortStr = app.HostHTTPSPort
