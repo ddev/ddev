@@ -411,11 +411,12 @@ func testDdevTraditionalInstallation(t *testing.T) {
 	require.NoError(err, "ddev-hostname failed: %v, output: %s", err, out)
 	t.Logf("ddev-hostname available")
 
-	// Verify files exist in expected location
-	ddevPath := `C:\Program Files\DDEV\ddev.exe`
-	hostnameePath := `C:\Program Files\DDEV\ddev-hostname.exe`
+	// Verify files exist in expected per-user location
+	localAppData := os.Getenv("LOCALAPPDATA")
+	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
+	hostnamePath := filepath.Join(localAppData, "Programs", "DDEV", "ddev-hostname.exe")
 	require.True(fileutil.FileExists(ddevPath), "ddev.exe not found at %s", ddevPath)
-	require.True(fileutil.FileExists(hostnameePath), "ddev-hostname.exe not found at %s", hostnameePath)
+	require.True(fileutil.FileExists(hostnamePath), "ddev-hostname.exe not found at %s", hostnamePath)
 }
 
 // testBasicDdevTraditionalFunctionality tests basic ddev project creation and start on Windows
