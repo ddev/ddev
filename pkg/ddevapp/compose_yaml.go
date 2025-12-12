@@ -223,6 +223,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 
 	isPodman := dockerutil.IsPodman()
 	isRootless := dockerutil.IsRootless()
+	isSELinux := dockerutil.IsSELinux()
 	uid, gid, _ := dockerutil.GetContainerUser()
 	userGroup := uid + ":" + gid
 
@@ -315,6 +316,27 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 			// "ping" command needs extra capability
 			if !slices.Contains(service.CapAdd, "NET_RAW") {
 				service.CapAdd = append(service.CapAdd, "NET_RAW")
+			}
+		}
+
+		// Add SELinux labels to bind mounts when SELinux is enabled
+		if isSELinux {
+			for i, vol := range service.Volumes {
+				if vol.Type == "bind" {
+					// Initialize Bind struct if needed
+					if vol.Bind == nil {
+						vol.Bind = &composeTypes.ServiceVolumeBind{}
+					}
+					if vol.Bind.SELinux == "" {
+						// Use "z" (shared) label for bind mounts
+						// This allows multiple containers to share the same volume
+						vol.Bind.SELinux = composeTypes.SELinuxShared
+						// And set CreateHostPath to true, because SELinux doesn't work without it
+						// See https://github.com/docker/compose/issues/13396
+						vol.Bind.CreateHostPath = true
+					}
+					service.Volumes[i] = vol
+				}
 			}
 		}
 

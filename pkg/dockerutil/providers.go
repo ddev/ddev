@@ -117,3 +117,17 @@ func IsPodmanRootless() bool {
 func IsDockerRootless() bool {
 	return IsRootless() && nodeps.IsLinux() && !IsPodman() && !IsLima()
 }
+
+// IsSELinux detects if SELinux is enabled
+func IsSELinux() bool {
+	info, err := GetDockerClientInfo()
+	if err != nil {
+		return false
+	}
+	for _, opt := range info.SecurityOptions {
+		if opt == "name=selinux" {
+			return true
+		}
+	}
+	return false
+}
