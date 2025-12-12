@@ -85,6 +85,10 @@ func GetDockerPlatform() (string, error) {
 		platform += "-rootless"
 	}
 
+	if dockerutil.IsSELinux() {
+		platform += "-selinux"
+	}
+
 	return platform, nil
 }
 
