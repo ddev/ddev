@@ -108,6 +108,7 @@ var AuthSSHCommand = &cobra.Command{
 func getSSHKeyPaths(sshKeyPathArray []string, acceptsDirsOnly bool, acceptsFilesOnly bool) []string {
 	var files []string
 	for _, sshKeyPath := range sshKeyPathArray {
+		sshKeyPath, _ = util.ExpandHomedir(sshKeyPath)
 		if !filepath.IsAbs(sshKeyPath) {
 			cwd, err := os.Getwd()
 			if err != nil {
@@ -146,7 +147,7 @@ func getSSHKeyPaths(sshKeyPathArray []string, acceptsDirsOnly bool, acceptsFiles
 
 // fileIsPrivateKey checks if a file is readable and that it is a private key.
 // Regex isn't used here because files can be huge.
-// The full check if it's really a private key is done with grep -l '^-----BEGIN .* PRIVATE KEY-----'.
+// The full check if it's really a private key is done with grep -l '^-----BEGIN .*PRIVATE KEY-----'.
 func fileIsPrivateKey(filePath string) bool {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -217,7 +218,7 @@ chown -R %[2]s:%[3]s /home/%[1]s/.ssh && \
 chmod -R go-rwx /home/%[1]s/.ssh && \
 cd /home/%[1]s/.ssh && \
 # Find all private key files
-mapfile -t keys < <(grep -l '^-----BEGIN .* PRIVATE KEY-----' *) && \
+mapfile -t keys < <(grep -l '^-----BEGIN .*PRIVATE KEY-----' *) && \
 # Verify at least one key exists
 ((${#keys[@]})) || { echo "No SSH private keys found." >&2; exit 1; } && \
 %[4]s`, username, uid, gid, commandToRun)

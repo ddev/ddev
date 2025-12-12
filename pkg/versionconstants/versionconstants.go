@@ -38,7 +38,7 @@ var TraefikRouterTag = "v1.24.10"
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.24.10"
+var SSHAuthTag = "20251210_ssh_agent_trixie"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
