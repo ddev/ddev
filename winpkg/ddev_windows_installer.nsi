@@ -44,6 +44,7 @@ Var /GLOBAL DEBUG_LOG_HANDLE
 Var /GLOBAL DEBUG_LOG_PATH
 Var /GLOBAL WSL_WINDOWS_TEMP
 Var /GLOBAL WINDOWS_TEMP
+Var /GLOBAL MKCERT_UNINSTALL_APPROVED  ; Track if user approved mkcert removal during uninstall
 
 !define REG_INSTDIR_ROOT "HKCU"
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
@@ -1707,6 +1708,9 @@ Function InstallTraditionalWindows
     SetOverwrite try
     File /oname=ddev.ico "graphics\ddev-install.ico"
 
+    ; Create Start Menu folder first (must exist before creating shortcuts)
+    CreateDirectory "$SMPROGRAMS\DDEV"
+
     ; Create Start Menu shortcuts for Traditional Windows
     ; DDEV Terminal - prefer Git Bash if available, fallback to PowerShell
     ${If} ${FileExists} "$PROGRAMFILES64\Git\bin\bash.exe"
@@ -1728,7 +1732,7 @@ FunctionEnd
 
 Function RunMkcertInstall
     ${If} ${Silent}
-        ; In silent mode, skip mkcert.exe -install to avoid UAC prompts
+        ; In silent mode, skip mkcert.exe -install because it pops up a dialog window
         ; But still set up CAROOT environment variable
         Push "Setting up CAROOT environment variable in silent mode..."
         Call LogPrint
@@ -1738,10 +1742,9 @@ Function RunMkcertInstall
     
     Push "Setting up mkcert.exe (Windows) for trusted HTTPS certificates..."
     Call LogPrint
-    
+
     ; Unset CAROOT environment variable in current process
-    System::Call 'kernel32::SetEnvironmentVariable(t "CAROOT", i 0)'
-    Pop $0
+    System::Call 'kernel32::SetEnvironmentVariable(t "CAROOT", i 0) i .r0'
 
     ; Run mkcert.exe -install to create fresh certificate authority
     Push "Running mkcert.exe -install to create certificate authority..."
@@ -1764,124 +1767,131 @@ Function RunMkcertInstall
 FunctionEnd
 
 Function SetupWindowsCAROOT
-    Push "Setting up mkcert certificate sharing with WSL2..."
+    Push "Setting up mkcert CAROOT environment variable..."
     Call LogPrint
-    
+
     ; Get the CAROOT directory from mkcert (mkcert -install already completed)
     nsExec::ExecToStack '"$INSTDIR\mkcert.exe" -CAROOT'
     Pop $R0 ; error code
     Pop $R1 ; output (CAROOT path)
-    
+
     ${If} $R0 = 0
         ; Trim whitespace from CAROOT path
         Push $R1
         Call TrimNewline
         Pop $R1
-        
+
         Push "CAROOT directory: $R1"
         Call LogPrint
-        
+
         ; Set CAROOT environment variable using EnVar plugin
         EnVar::SetHKCU
         EnVar::Delete "CAROOT"  ; Remove entire variable first
         Pop $0  ; Get error code from Delete
         Push "EnVar::Delete CAROOT result: $0"
         Call LogPrint
-        
+
         EnVar::AddValue "CAROOT" "$R1"
         Pop $0  ; Get error code from AddValue
         Push "EnVar::AddValue CAROOT result: $0"
         Call LogPrint
-        
-        ; Get current WSLENV value from registry
-        ReadRegStr $R2 HKCU "Environment" "WSLENV"
-        ${If} ${Errors}
-            StrCpy $R2 ""
-        ${EndIf}
 
-        ; Store original value for debugging
-        StrCpy $R4 $R2
-        
-        ; Clean up any existing CAROOT/up entries first
-        StrCpy $R3 $R2  ; Copy to working variable
-        
-        ; Remove all instances of CAROOT/up; (with semicolon)
-        ${Do}
-            ${StrStr} $R5 $R3 "CAROOT/up;"
-            ${If} $R5 == ""
-                ${Break}
+        ; Only set up WSLENV for WSL2 installations (not traditional Windows)
+        ${If} $INSTALL_OPTION == "traditional"
+            Push "Skipping WSLENV setup for traditional Windows installation"
+            Call LogPrint
+            Push "CAROOT environment variable configured successfully."
+            Call LogPrint
+        ${Else}
+            ; Get current WSLENV value from registry
+            ReadRegStr $R2 HKCU "Environment" "WSLENV"
+            ${If} ${Errors}
+                StrCpy $R2 ""
             ${EndIf}
-            ${StrRep} $R3 $R3 "CAROOT/up;" ""
-        ${Loop}
-        
-        ; Remove all instances of ;CAROOT/up (with leading semicolon)
-        ${Do}
-            ${StrStr} $R5 $R3 ";CAROOT/up"
-            ${If} $R5 == ""
-                ${Break}
+
+            ; Store original value for debugging
+            StrCpy $R4 $R2
+
+            ; Clean up any existing CAROOT/up entries first
+            StrCpy $R3 $R2  ; Copy to working variable
+
+            ; Remove all instances of CAROOT/up; (with semicolon)
+            ${Do}
+                ${StrStr} $R5 $R3 "CAROOT/up;"
+                ${If} $R5 == ""
+                    ${Break}
+                ${EndIf}
+                ${StrRep} $R3 $R3 "CAROOT/up;" ""
+            ${Loop}
+
+            ; Remove all instances of ;CAROOT/up (with leading semicolon)
+            ${Do}
+                ${StrStr} $R5 $R3 ";CAROOT/up"
+                ${If} $R5 == ""
+                    ${Break}
+                ${EndIf}
+                ${StrRep} $R3 $R3 ";CAROOT/up" ""
+            ${Loop}
+
+            ; Remove if it's exactly "CAROOT/up" by itself
+            ${If} $R3 == "CAROOT/up"
+                StrCpy $R3 ""
             ${EndIf}
-            ${StrRep} $R3 $R3 ";CAROOT/up" ""
-        ${Loop}
-        
-        ; Remove if it's exactly "CAROOT/up" by itself
-        ${If} $R3 == "CAROOT/up"
-            StrCpy $R3 ""
-        ${EndIf}
-        
-        ; Clean up any double semicolons that might have been created
-        ${Do}
-            ${StrStr} $R5 $R3 ";;"
-            ${If} $R5 == ""
-                ${Break}
-            ${EndIf}
-            ${StrRep} $R3 $R3 ";;" ";"
-        ${Loop}
-        
-        ; Remove leading or trailing semicolons
-        ${If} $R3 != ""
-            StrCpy $R5 $R3 1  ; Get first character
-            ${If} $R5 == ";"
-                StrCpy $R3 $R3 "" 1  ; Remove first character
-            ${EndIf}
+
+            ; Clean up any double semicolons that might have been created
+            ${Do}
+                ${StrStr} $R5 $R3 ";;"
+                ${If} $R5 == ""
+                    ${Break}
+                ${EndIf}
+                ${StrRep} $R3 $R3 ";;" ";"
+            ${Loop}
+
+            ; Remove leading or trailing semicolons
             ${If} $R3 != ""
-                StrLen $R6 $R3
-                IntOp $R6 $R6 - 1
-                StrCpy $R5 $R3 1 $R6  ; Get last character
+                StrCpy $R5 $R3 1  ; Get first character
                 ${If} $R5 == ";"
-                    StrCpy $R3 $R3 $R6  ; Remove last character
+                    StrCpy $R3 $R3 "" 1  ; Remove first character
+                ${EndIf}
+                ${If} $R3 != ""
+                    StrLen $R6 $R3
+                    IntOp $R6 $R6 - 1
+                    StrCpy $R5 $R3 1 $R6  ; Get last character
+                    ${If} $R5 == ";"
+                        StrCpy $R3 $R3 $R6  ; Remove last character
+                    ${EndIf}
                 ${EndIf}
             ${EndIf}
+
+            ; Now add CAROOT/up to the cleaned string
+            ${If} $R3 != ""
+                StrCpy $R2 "CAROOT/up;$R3"
+            ${Else}
+                StrCpy $R2 "CAROOT/up"
+            ${EndIf}
+
+            Push "WSLENV cleaned and updated: [$R4] -> [$R2]"
+            Call LogPrint
+
+            EnVar::SetHKCU
+            EnVar::Delete "WSLENV"  ; Remove existing WSLENV entirely
+            Pop $0  ; Get error code from Delete
+
+            EnVar::AddValue "WSLENV" "$R2"
+            Pop $0  ; Get error code from AddValue
+
+            ; Verify by reading from registry
+            ReadRegStr $R5 HKCU "Environment" "WSLENV"
+
+            Push "mkcert certificate sharing with WSL2 configured successfully."
+            Call LogPrint
         ${EndIf}
-        
-        ; Now add CAROOT/up to the cleaned string
-        ${If} $R3 != ""
-            StrCpy $R2 "CAROOT/up;$R3"
-        ${Else}
-            StrCpy $R2 "CAROOT/up"
-        ${EndIf}
-        
-        Push "WSLENV cleaned and updated: [$R4] -> [$R2]"
-        Call LogPrint
-
-        EnVar::SetHKCU
-        EnVar::Delete "WSLENV"  ; Remove existing WSLENV entirely
-        Pop $0  ; Get error code from Delete
-
-        EnVar::AddValue "WSLENV" "$R2"
-        Pop $0  ; Get error code from AddValue
-        
-        ; Verify by reading from registry
-        ReadRegStr $R5 HKCU "Environment" "WSLENV"
-
-        Push "mkcert certificate sharing with WSL2 configured successfully."
-        Call LogPrint
-
-        ; Read current value from registry for verification
-        ; ReadRegStr $R6 HKCU "Environment" "WSLENV"
     ${Else}
         Push "Failed to get CAROOT directory from mkcert"
         Call LogPrint
-        MessageBox MB_ICONEXCLAMATION|MB_OK "Failed to get CAROOT directory from mkcert. WSL2 certificate sharing may not work properly."
+        ${IfNot} ${Silent}
+            MessageBox MB_ICONEXCLAMATION|MB_OK "Failed to get CAROOT directory from mkcert. WSL2 certificate sharing may not work properly."
+        ${EndIf}
     ${EndIf}
 FunctionEnd
 
@@ -2253,68 +2263,67 @@ Function TrimNewline
 FunctionEnd
 
 Function un.mkcertUninstall
+    ; Initialize to not approved
+    StrCpy $MKCERT_UNINSTALL_APPROVED "0"
+
     ${If} ${FileExists} "$INSTDIR\mkcert.exe"
         Push $0
-        
+
         ; Read setup status from registry
         ReadRegDWORD $0 ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mkcertSetup"
-        
+
         ; Check if setup was done
         ${If} $0 == 1
             ${If} ${Silent}
-                ; Silent mode - skip mkcert -uninstall to avoid UAC/certificate store popups
+                ; Silent mode - skip mkcert -uninstall because it pops up a dialog window
                 ; Just clean up the CAROOT directory manually if possible
             ${Else}
                 ; Interactive mode - get user confirmation
                 MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "mkcert was found in this installation. Do you like to remove the mkcert configuration?" /SD IDNO IDYES +2
                 Goto Skip
-                
+
+                ; User said YES - set flag and proceed
+                StrCpy $MKCERT_UNINSTALL_APPROVED "1"
                 MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to disable trusted https. Please accept the mkcert dialog box that may follow."
-                
+
                 nsExec::ExecToStack '"$INSTDIR\mkcert.exe" -uninstall'
                 Pop $0 ; get return value
                 Pop $1 ; get output
             ${EndIf}
-            
+
         Skip:
         ${EndIf}
-        
+
         Pop $0
     ${EndIf}
 FunctionEnd
 
 Function un.CleanupMkcertEnvironment
+    ; Skip mkcert cleanup if user said no to mkcert removal (and not silent mode)
+    ${IfNot} ${Silent}
+        ${If} $MKCERT_UNINSTALL_APPROVED != "1"
+            DetailPrint "Skipping mkcert environment cleanup (user declined mkcert removal)"
+            Return
+        ${EndIf}
+    ${EndIf}
+
     DetailPrint "Cleaning up mkcert environment variables..."
-    
+
     ; Get CAROOT directory before cleanup
     ReadRegStr $R0 HKCU "Environment" "CAROOT"
     ${IfNot} ${Errors}
         DetailPrint "CAROOT directory: $R0"
-        
-        ; Run mkcert -uninstall first to properly clean up certificates (skip in silent mode)
-        ${If} ${FileExists} "$INSTDIR\mkcert.exe"
-            ${IfNot} ${Silent}
-                DetailPrint "Running mkcert -uninstall to clean up certificates..."
-                nsExec::ExecToStack '"$INSTDIR\mkcert.exe" -uninstall'
-                Pop $R1
-                Pop $R2 ; get output
-                ${If} $R1 = 0
-                    DetailPrint "mkcert -uninstall completed successfully"
-                ${Else}
-                    DetailPrint "mkcert -uninstall failed with exit code: $R1"
-                ${EndIf}
-            ${Else}
-                DetailPrint "Skipping mkcert -uninstall in silent mode to avoid UAC prompts"
-            ${EndIf}
-        ${EndIf}
-        
+
+        ; mkcert -uninstall was already run in un.mkcertUninstall if user approved
+        ; No need to run it again here
+
         ; Remove any remaining CAROOT directory
         ${If} ${FileExists} "$R0"
             DetailPrint "Removing remaining CAROOT directory: $R0"
             RMDir /r "$R0"
         ${EndIf}
     ${EndIf}
-    
+
     ; Remove CAROOT environment variable (skip in silent mode to preserve for subsequent installs)
     ${IfNot} ${Silent}
         DeleteRegValue HKCU "Environment" "CAROOT"
@@ -2322,7 +2331,7 @@ Function un.CleanupMkcertEnvironment
     ${Else}
         DetailPrint "Preserving CAROOT environment variable in silent mode"
     ${EndIf}
-    
+
     ; Clean up WSLENV by removing CAROOT/up (skip in silent mode to preserve for subsequent installs)
     ${IfNot} ${Silent}
         ReadRegStr $R0 HKCU "Environment" "WSLENV"
@@ -2330,9 +2339,9 @@ Function un.CleanupMkcertEnvironment
             DetailPrint "WSLENV not found, nothing to clean up"
             Return
         ${EndIf}
-        
+
         DetailPrint "Current WSLENV: $R0"
-        
+
         ; Remove CAROOT/up; from the beginning
         ${WordFind} "$R0" "CAROOT/up;" "E+1{" $R1
         ${If} $R1 != $R0
@@ -2349,7 +2358,7 @@ Function un.CleanupMkcertEnvironment
                 ${EndIf}
             ${EndIf}
         ${EndIf}
-        
+
         ; Update or delete WSLENV
         ${If} $R0 == ""
             DeleteRegValue HKCU "Environment" "WSLENV"
@@ -2361,7 +2370,7 @@ Function un.CleanupMkcertEnvironment
     ${Else}
         DetailPrint "Preserving WSLENV environment variable in silent mode"
     ${EndIf}
-    
+
     DetailPrint "mkcert environment variables cleanup completed"
 FunctionEnd
 
