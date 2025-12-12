@@ -162,7 +162,16 @@ func TestCustomCommands(t *testing.T) {
 	c := "testhostcmd"
 	out, err = exec.RunHostCommand(DdevBin, "help", c)
 	assert.NoError(err, "Failed to run ddev %s %s", "help", c)
-	assert.Contains(out, "Examples:\n  ddev testhostcmd\n  ddev testhostcmd -h")
+	assert.Contains(out, "testhostcmd project (shell host container command)\nAdditional description.")
+	assert.Contains(out, "Aliases:\n  testhostcmd, testhostalias1, testhostalias2, testhostalias3")
+	assert.Contains(out, "Examples:\n  ddev testhostcmd\n  ddev testhostcmd -h\n  ddev testhostcmd --flag1\n  ddev testhostcmd --flag2")
+	// Test the presence of the flags
+	assert.Contains(out, `    --hostflag1 string[="default value1"]    flag 1 description`)
+	assert.Contains(out, `    --hostflag2 string[="default value2"]    flag 2 description`)
+	assert.Contains(out, `-f, --hostflag3 string[="default value 3"]   flag 3 description (default "default value3")`)
+	// Ensure that unsupported directives are not present in the output
+	assert.NotContains(out, "UnsupportedDirective")
+	assert.NotContains(out, "this should not be parsed and added as it's not part of the initial annotation block.")
 
 	// Test flags are imported from comments
 	c = "testhostcmdflags"
