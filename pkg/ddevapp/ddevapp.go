@@ -3050,7 +3050,9 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 // getBackupCommand returns the command to dump the entire db system for the various databases
 func getBackupCommand(app *DdevApp, targetFile string) string {
-	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
+	// Remove any existing file or directory at the target path to avoid "Is a directory" errors
+	cleanupCmd := fmt.Sprintf(`rm -rf "%s"`, targetFile)
+	c := fmt.Sprintf(`%s && mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, cleanupCmd, path.Base(targetFile), targetFile)
 
 	oldMariaVersions := []string{"5.5", "10.0"}
 
@@ -3059,7 +3061,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 	case app.Database.Type == nodeps.MariaDB && nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version):
 		fallthrough
 	case app.Database.Type == nodeps.MySQL:
-		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
+		c = fmt.Sprintf(`%s && xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, cleanupCmd, path.Base(targetFile), targetFile)
 	case app.Database.Type == nodeps.Postgres:
 		postgresDataPath := app.GetPostgresDataPath()
 		postgresDataDir := app.GetPostgresDataDir()
@@ -3069,10 +3071,10 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 			// PostgreSQL 18+: backup from actual data path and create tar preserving directory structure
 			// Create the full directory structure (e.g., 18/docker/) that matches the container layout
 			versionDir := filepath.Base(filepath.Dir(postgresDataPath)) // Extract "18" from "/var/lib/postgresql/18/docker"
-			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -czf %s -C /var/tmp/pgstructure/ .", postgresDataPath, path.Base(targetFile), versionDir, versionDir, targetFile)
+			c = fmt.Sprintf("cd %s && %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -czf %s -C /var/tmp/pgstructure/ .", postgresDataPath, cleanupCmd, path.Base(targetFile), versionDir, versionDir, targetFile)
 		} else {
 			// PostgreSQL ≤17: original behavior
-			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", postgresDataPath, path.Base(targetFile), targetFile)
+			c = fmt.Sprintf("cd %s && %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", postgresDataPath, cleanupCmd, path.Base(targetFile), targetFile)
 		}
 	}
 	return c
