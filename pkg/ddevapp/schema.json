@@ -409,7 +409,7 @@
       "type": "string"
     },
     "ngrok_args": {
-      "description": "Provide extra args to ngrok in \"ddev share\".",
+      "description": "(Deprecated) Use share_provider_args instead, provide extra args to ngrok in \"ddev share\".",
       "type": "string"
     },
     "no_project_mount": {
@@ -473,6 +473,14 @@
     },
     "router_https_port": {
       "description": "Router HTTPS port for this project.",
+      "type": "string"
+    },
+    "share_default_provider": {
+      "description": "Default share provider for the project (ngrok, cloudflared, or custom). Overrides global configuration.",
+      "type": "string"
+    },
+    "share_provider_args": {
+      "description": "Arguments to pass to the share provider when starting a share session.",
       "type": "string"
     },
     "timezone": {

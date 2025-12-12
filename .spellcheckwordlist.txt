@@ -262,6 +262,8 @@ chromedriver
 cli
 clis
 client
+cloudflared
+cloudflare's
 cms
 codebase
 codespace
@@ -443,6 +445,7 @@ localhost
 localization
 localizations
 localpath
+localtunnel
 logs
 lookups
 lose

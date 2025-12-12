@@ -15,8 +15,14 @@ if ! command -v ngrok >/dev/null; then
     darwin)
         brew install homebrew/cask/ngrok
         ;;
-    windows)
-        (yes | choco install -y ngrok) || true
+    esac
+fi
+
+# Install cloudflared if it's not there.
+if ! command -v cloudflared >/dev/null; then
+    case $os in
+    darwin)
+        brew install cloudflared
         ;;
     esac
 fi

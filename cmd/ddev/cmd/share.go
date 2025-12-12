@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"bufio"
+	"fmt"
+	"io"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -8,19 +12,24 @@ import (
 	"syscall"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // DdevShareCommand contains the "ddev share" command
 var DdevShareCommand = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "share [project]",
-	Short:             "Share project on the internet via ngrok.",
-	Long:              `Requires an account on ngrok.com, use the "ngrok config add-authtoken <token>" command to set up ngrok. Any ngrok flag can be added in the "ngrok_args" section of .ddev/config.yaml or via --ngrok-args.`,
+	Short:             "Share project on the internet via tunnel provider (ngrok, cloudflared, or custom).",
+	Long: `Share your project on the internet using a tunnel provider.
+Built-in providers: ngrok (default), cloudflared.
+Custom providers can be added to .ddev/share-providers/`,
 	Example: `ddev share
-ddev share --ngrok-args "--basic-auth username:pass1234"
-ddev share --ngrok-args "--domain foo.ngrok-free.app"
+ddev share --provider=cloudflared
+ddev share --provider-args "--basic-auth username:pass1234"
+ddev share --provider=cloudflared --provider-args="--tunnel my-tunnel --hostname mysite.example.com"
 ddev share myproject`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
@@ -37,92 +46,181 @@ ddev share myproject`,
 			util.Failed("Project is not yet running. Use 'ddev start' first.")
 		}
 
-		// Process pre-share hooks
-		err = app.ProcessHooks("pre-share")
+		// Determine which provider to use: flag > project config > global config > default
+		providerName := "ngrok" // default
+		if globalconfig.DdevGlobalConfig.ShareDefaultProvider != "" {
+			providerName = globalconfig.DdevGlobalConfig.ShareDefaultProvider
+		}
+		if app.ShareDefaultProvider != "" {
+			providerName = app.ShareDefaultProvider
+		}
+		if cmd.Flags().Changed("provider") {
+			providerName, err = cmd.Flags().GetString("provider")
+			if err != nil {
+				util.Failed("Unable to get --provider flag: %v", err)
+			}
+		}
+
+		// Get provider script path
+		scriptPath, err := app.GetShareProviderScript(providerName)
 		if err != nil {
-			util.Failed("Failed to process pre-share hooks: %v", err)
+			util.Error("Failed to find share provider '%s': %v\n\nAvailable providers:", providerName, err)
+			if providers, listErr := app.ListShareProviders(); listErr == nil && len(providers) > 0 {
+				for _, p := range providers {
+					util.Error("  - %s", p)
+				}
+			}
+			os.Exit(1)
 		}
 
-		ngrokLoc, err := exec.LookPath("ngrok")
-		if ngrokLoc == "" || err != nil {
-			util.Failed("ngrok not found in path, please install it, see https://ngrok.com/download")
+		// Get provider args override from command line
+		var providerArgsOverride string
+		if cmd.Flags().Changed("provider-args") {
+			providerArgsOverride, _ = cmd.Flags().GetString("provider-args")
 		}
-		urls := []string{app.GetWebContainerDirectHTTPURL()}
 
-		// Set up signal handling for SIGINT/SIGTERM to allow post-share hooks to run
+		// Get environment for provider
+		env := app.GetShareProviderEnvironment(providerName, providerArgsOverride)
+
+		// Create pipe to capture stdout (for URL)
+		stdoutReader, stdoutWriter, err := os.Pipe()
+		if err != nil {
+			util.Failed("Failed to create stdout pipe: %v", err)
+		}
+
+		// Create pipe to capture stderr (to filter shutdown errors)
+		stderrReader, stderrWriter, err := os.Pipe()
+		if err != nil {
+			util.Failed("Failed to create stderr pipe: %v", err)
+		}
+
+		// Execute provider script
+		providerCmd := exec.Command(scriptPath)
+		providerCmd.Env = env
+		providerCmd.Stdout = stdoutWriter
+		providerCmd.Stderr = stderrWriter
+
+		// Set up signal handling for SIGINT/SIGTERM
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-		var ngrokErr error
-		var ngrokCmd *exec.Cmd
-		for _, url := range urls {
-			ngrokArgs := []string{"http"}
-			ngrokArgs = append(ngrokArgs, url)
-			if app.NgrokArgs != "" {
-				ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
-			}
-			if cmd.Flags().Changed("ngrok-args") {
-				cmdNgrokArgs, err := cmd.Flags().GetString("ngrok-args")
-				if err != nil {
-					util.Failed("Unable to get --ngrok-args flag: %v", err)
-				}
-				ngrokArgs = append(ngrokArgs, strings.Split(cmdNgrokArgs, " ")...)
-			}
-
-			ngrokCmd = exec.Command(ngrokLoc, ngrokArgs...)
-			ngrokCmd.Stdout = os.Stdout
-			ngrokCmd.Stderr = os.Stderr
-			err = ngrokCmd.Start()
-			if err != nil {
-				util.Failed("Failed to run %s %s: %v", ngrokLoc, strings.Join(ngrokArgs, " "), err)
-			}
-			util.Success("Running %s %s", ngrokLoc, strings.Join(ngrokArgs, " "))
-
-			// Wait for either ngrok to exit or a signal to be received
-			done := make(chan error, 1)
-			go func() {
-				done <- ngrokCmd.Wait()
-			}()
-
-			select {
-			case ngrokErr = <-done:
-				// ngrok exited on its own
-			case <-sigChan:
-				// Signal received, kill ngrok process
-				if ngrokCmd != nil && ngrokCmd.Process != nil {
-					// Ignore error from Kill() as we're already handling the exit via ngrokErr
-					_ = ngrokCmd.Process.Kill()
-				}
-				ngrokErr = <-done
-			}
-
-			// nil result means ngrok ran and exited normally.
-			// It seems to do this fine when hit by SIGTERM or SIGINT
-			if ngrokErr == nil {
-				break
-			}
-
-			exitErr, ok := ngrokErr.(*exec.ExitError)
-			if !ok {
-				// Normally we'd have an ExitError, but if not, notify
-				util.Error("ngrok exited: %v", ngrokErr)
-				break
-			}
-
-			exitCode := exitErr.ExitCode()
-			// In the case of exitCode==1, ngrok seems to have died due to an error,
-			// most likely inadequate user permissions.
-			if exitCode != 1 {
-				util.Error("ngrok exited: %v", exitErr)
-				break
-			}
-			// Otherwise we'll continue and do the next url or exit
+		// Start provider
+		err = providerCmd.Start()
+		if err != nil {
+			util.Failed("Failed to start share provider '%s': %v", providerName, err)
 		}
 
-		// Process post-share hooks
-		err = app.ProcessHooks("post-share")
+		// Capture URL from first line of stdout
+		urlChan := make(chan string, 1)
+		go func() {
+			scanner := bufio.NewScanner(stdoutReader)
+			if scanner.Scan() {
+				urlChan <- scanner.Text()
+			} else {
+				urlChan <- ""
+			}
+			// In verbose mode, pass through remaining stdout; otherwise discard
+			if globalconfig.DdevVerbose {
+				_, _ = io.Copy(os.Stdout, stdoutReader)
+			} else {
+				// Keep reading to prevent provider from blocking on stdout
+				for scanner.Scan() {
+					// Discard additional stdout
+				}
+			}
+		}()
+
+		// Forward stderr to user, but stop after provider is killed
+		stderrDone := make(chan bool, 1)
+		go func() {
+			scanner := bufio.NewScanner(stderrReader)
+			for scanner.Scan() {
+				select {
+				case <-stderrDone:
+					return
+				default:
+					_, _ = os.Stderr.WriteString(scanner.Text() + "\n")
+				}
+			}
+		}()
+
+		// Wait for URL with timeout
+		var shareURL string
+		select {
+		case shareURL = <-urlChan:
+			if shareURL == "" {
+				_ = providerCmd.Process.Kill()
+				util.Failed("Provider '%s' did not output a URL", providerName)
+			}
+		case <-sigChan:
+			// Signal received before URL captured
+			if providerCmd.Process != nil {
+				_ = providerCmd.Process.Kill()
+			}
+			util.Failed("Interrupted before tunnel URL was established")
+		}
+
+		// Validate URL
+		shareURL = strings.TrimSpace(shareURL)
+		parsedURL, err := url.Parse(shareURL)
+		if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
+			_ = providerCmd.Process.Kill()
+			util.Failed("Provider '%s' output invalid URL: %s", providerName, shareURL)
+		}
+
+		util.Success("Tunnel URL: %s", shareURL)
+
+		// Set DDEV_SHARE_URL environment variable for hooks
+		_ = os.Setenv("DDEV_SHARE_URL", shareURL)
+
+		// Process pre-share hooks NOW (after URL is captured)
+		// This fixes issue #7784 - hooks can now access DDEV_SHARE_URL
+		err = app.ProcessHooks("pre-share")
 		if err != nil {
-			util.Warning("Failed to process post-share hooks: %v", err)
+			util.Warning("Failed to process pre-share hooks: %v", err)
+		}
+
+		// Close write ends of pipes so readers can finish
+		_ = stdoutWriter.Close()
+		_ = stderrWriter.Close()
+
+		// Wait for either provider to exit or signal to be received
+		done := make(chan error, 1)
+		go func() {
+			done <- providerCmd.Wait()
+		}()
+
+		select {
+		case err = <-done:
+			// Provider exited on its own
+		case <-sigChan:
+			// Signal received, kill provider process
+			if providerCmd.Process != nil {
+				_ = providerCmd.Process.Kill()
+			}
+			err = <-done
+		}
+
+		// Stop forwarding stderr (to suppress shutdown errors)
+		close(stderrDone)
+
+		// Process post-share hooks
+		hookErr := app.ProcessHooks("post-share")
+		if hookErr != nil {
+			util.Warning("Failed to process post-share hooks: %v", hookErr)
+		}
+
+		// Report provider exit status if non-zero and not killed by signal
+		if err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				// Don't warn about exit code -1 which is from Kill()
+				if exitErr.ExitCode() != -1 {
+					util.Warning("Provider '%s' exited with code %d", providerName, exitErr.ExitCode())
+					if !globalconfig.DdevDebug {
+						util.Warning(`For details, run: DDEV_DEBUG=true %s`, prettyCmd(os.Args))
+					}
+				}
+			}
 		}
 
 		os.Exit(0)
@@ -131,5 +229,14 @@ ddev share myproject`,
 
 func init() {
 	RootCmd.AddCommand(DdevShareCommand)
-	DdevShareCommand.Flags().String("ngrok-args", "", `accepts any flag from "ngrok http --help"`)
+	DdevShareCommand.Flags().String("provider", "", "share provider to use (ngrok, cloudflared, or custom)")
+	DdevShareCommand.Flags().String("provider-args", "", "arguments to pass to the share provider")
+	DdevShareCommand.Flags().SetNormalizeFunc(func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
+		if name == "ngrok-args" {
+			newName := "provider-args"
+			_, _ = fmt.Fprintf(os.Stderr, "Flag --%s has been deprecated, use --%s instead\n", name, newName)
+			name = newName
+		}
+		return pflag.NormalizedName(name)
+	})
 }

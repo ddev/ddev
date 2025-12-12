@@ -187,12 +187,15 @@ const ConfigInstructions = `
 # project_tld: ddev.site
 # The top-level domain used for project URLs
 # The default "ddev.site" allows DNS lookup via a wildcard
-# If you prefer you can change this to "ddev.local" to preserve
-# pre-v1.9 behavior.
 
-# ngrok_args: --basic-auth username:pass1234
-# Provide extra flags to the "ngrok http" command, see
-# https://ngrok.com/docs/agent/config/v3/#agent-configuration or run "ngrok http -h"
+# share_default_provider: ngrok
+# The default share provider to use for "ddev share"
+# Defaults to global configuration, usually "ngrok"
+# Can be "ngrok" or "cloudflared" or the name of a custom provider from .ddev/share-providers/
+
+# share_provider_args: --basic-auth username:pass1234
+# Provide extra flags to the share provider script
+# See https://docs.ddev.com/en/stable/users/configuration/config/#share_provider_args
 
 # disable_settings_management: false
 # If true, DDEV will not create CMS-specific settings files like
