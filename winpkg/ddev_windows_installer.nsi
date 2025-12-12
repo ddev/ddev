@@ -946,7 +946,19 @@ Section -Post
     IntFmt $0 "0x%08X" $0
     WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "EstimatedSize" "$0"
 
-    ; Uninstall shortcut removed for simplification - users can uninstall via Windows Settings
+    ; Create Start Menu shortcuts (for all installation types)
+    CreateDirectory "$SMPROGRAMS\DDEV"
+    CreateDirectory "$INSTDIR\Links"
+
+    ; Documentation and website links (useful for all users)
+    WriteIniStr "$INSTDIR\Links\DDEV Documentation.url" "InternetShortcut" "URL" "https://docs.ddev.com"
+    CreateShortCut "$SMPROGRAMS\DDEV\DDEV Documentation.lnk" "$INSTDIR\Links\DDEV Documentation.url" "" "$INSTDIR\Icons\ddev.ico"
+
+    WriteIniStr "$INSTDIR\Links\DDEV Website.url" "InternetShortcut" "URL" "https://ddev.com"
+    CreateShortCut "$SMPROGRAMS\DDEV\DDEV Website.lnk" "$INSTDIR\Links\DDEV Website.url" "" "$INSTDIR\Icons\ddev.ico"
+
+    ; Uninstall link opens Windows Settings Apps page (modern approach)
+    CreateShortCut "$SMPROGRAMS\DDEV\Uninstall DDEV.lnk" "ms-settings:appsfeatures"
 SectionEnd
 
 Section Uninstall
@@ -974,7 +986,12 @@ Section Uninstall
     RMDir /r "$INSTDIR\Icons"
     RMDir /r "$INSTDIR\Links"
 
-    ; Start Menu shortcuts removal - not needed since we no longer create them
+    ; Remove Start Menu shortcuts
+    Delete "$SMPROGRAMS\DDEV\DDEV Terminal.lnk"
+    Delete "$SMPROGRAMS\DDEV\DDEV Documentation.lnk"
+    Delete "$SMPROGRAMS\DDEV\DDEV Website.lnk"
+    Delete "$SMPROGRAMS\DDEV\Uninstall DDEV.lnk"
+    RMDir "$SMPROGRAMS\DDEV"
 
     ; Remove registry keys
     DeleteRegKey ${REG_UNINST_ROOT} "${REG_UNINST_KEY}"
@@ -1690,7 +1707,19 @@ Function InstallTraditionalWindows
     SetOverwrite try
     File /oname=ddev.ico "graphics\ddev-install.ico"
 
-    ; Start Menu shortcuts removed for simplification
+    ; Create Start Menu shortcuts for Traditional Windows
+    ; DDEV Terminal - prefer Git Bash if available, fallback to PowerShell
+    ${If} ${FileExists} "$PROGRAMFILES64\Git\bin\bash.exe"
+        ; Git Bash found - create shortcut that opens Git Bash
+        CreateShortCut "$SMPROGRAMS\DDEV\DDEV Terminal.lnk" "$PROGRAMFILES64\Git\bin\bash.exe" '--login -i' "$INSTDIR\Icons\ddev.ico"
+        Push "Created DDEV Terminal shortcut using Git Bash"
+        Call LogPrint
+    ${Else}
+        ; Fallback to PowerShell
+        CreateShortCut "$SMPROGRAMS\DDEV\DDEV Terminal.lnk" "powershell.exe" "" "$INSTDIR\Icons\ddev.ico"
+        Push "Created DDEV Terminal shortcut using PowerShell (Git Bash not found)"
+        Call LogPrint
+    ${EndIf}
 
     Push "Traditional Windows installation completed."
     Call LogPrint
