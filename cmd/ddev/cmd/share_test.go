@@ -28,6 +28,7 @@ func TestShareCmdNgrok(t *testing.T) {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		t.Skip("Skipping on GitHub actions because no auth can be provided")
 	}
+	t.Setenv(`DDEV_GOROUTINES`, "")
 
 	// Check if ngrok is installed
 	_, err := exec.LookPath("ngrok")
@@ -158,6 +159,7 @@ func TestShareCmdCloudflared(t *testing.T) {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		t.Skip("Skipping on GitHub actions")
 	}
+	t.Setenv(`DDEV_GOROUTINES`, "")
 
 	// Check if cloudflared is installed
 	_, err := exec.LookPath("cloudflared")
@@ -232,6 +234,7 @@ func TestShareCmdProviderSystem(t *testing.T) {
 	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
 		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
 	}
+	t.Setenv(`DDEV_GOROUTINES`, "")
 
 	site := TestSites[0]
 	defer site.Chdir()()
