@@ -97,6 +97,17 @@ func init() {
 			postStartAction:      cakephpPostStartAction,
 		},
 
+		nodeps.AppTypeCodeIgniter: {
+			settingsCreator:            createCodeIgniterSettingsFile,
+			uploadDirs:                 getCodeIgniterUploadDirs,
+			hookDefaultComments:        getCodeIgniterHooks,
+			appTypeSettingsPaths:       setCodeIgniterSiteSettingsPaths,
+			appTypeDetect:              isCodeIgniterApp,
+			postStartAction:            codeIgniterPostStartAction,
+			importFilesAction:          codeIgniterImportFilesAction,
+			composerCreateAllowedPaths: getCodeIgniterComposerCreateAllowedPaths,
+		},
+
 		nodeps.AppTypeCraftCms: {
 			settingsCreator:      updateCraftCMSDotEnv,
 			importFilesAction:    craftCmsImportFilesAction,
