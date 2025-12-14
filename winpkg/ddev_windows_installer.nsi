@@ -25,9 +25,9 @@ ${StrCase}
 Name "DDEV"
 OutFile "..\.gotmp\bin\windows_${TARGET_ARCH}\ddev_windows_${TARGET_ARCH}_installer.exe"
 
-; Use proper Program Files directory for 64-bit applications
-InstallDir "$PROGRAMFILES64\DDEV"
-RequestExecutionLevel admin
+; Use per-user installation directory to avoid requiring admin privileges
+InstallDir "$LOCALAPPDATA\Programs\DDEV"
+RequestExecutionLevel user
 
 !define PRODUCT_NAME "DDEV"
 !define PRODUCT_VERSION "${VERSION}"
@@ -44,13 +44,13 @@ Var /GLOBAL DEBUG_LOG_HANDLE
 Var /GLOBAL DEBUG_LOG_PATH
 Var /GLOBAL WSL_WINDOWS_TEMP
 Var /GLOBAL WINDOWS_TEMP
-Var StartMenuGroup
+Var /GLOBAL MKCERT_UNINSTALL_APPROVED  ; Track if user approved mkcert removal during uninstall
 
-!define REG_INSTDIR_ROOT "HKLM"
+!define REG_INSTDIR_ROOT "HKCU"
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
-!define REG_UNINST_ROOT "HKLM"
+!define REG_UNINST_ROOT "HKCU"
 !define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
-!define REG_SETTINGS_ROOT "HKLM"
+!define REG_SETTINGS_ROOT "HKCU"
 !define REG_SETTINGS_KEY "Software\DDEV\Settings"
 
 ; Installer Types
@@ -465,6 +465,9 @@ FunctionEnd
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE ddevLicLeave
 !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
 
+; Custom install scope page
+Page custom InstallScopePage InstallScopePageLeave
+
 ; Custom install type selection
 Page custom InstallChoicePage InstallChoicePageLeave
 
@@ -483,13 +486,13 @@ Page custom DockerCheckPage DockerCheckPageLeave
 !define MUI_DIRECTORYPAGE_HEADER_TEXT "Choose Windows install folder"
 !insertmacro MUI_PAGE_DIRECTORY
 
-; Start menu page
-!define MUI_STARTMENUPAGE_DEFAULTFOLDER "${PRODUCT_NAME}"
-!define MUI_STARTMENUPAGE_REGISTRY_ROOT ${REG_UNINST_ROOT}
-!define MUI_STARTMENUPAGE_REGISTRY_KEY "${REG_UNINST_KEY}"
-!define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "StartMenuGroup"
-!define MUI_PAGE_CUSTOMFUNCTION_PRE StartMenuPagePre
-!insertmacro MUI_PAGE_STARTMENU Application $StartMenuGroup
+; Start menu page - Disabled for per-user installation simplification
+; !define MUI_STARTMENUPAGE_DEFAULTFOLDER "${PRODUCT_NAME}"
+; !define MUI_STARTMENUPAGE_REGISTRY_ROOT ${REG_UNINST_ROOT}
+; !define MUI_STARTMENUPAGE_REGISTRY_KEY "${REG_UNINST_KEY}"
+; !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "StartMenuGroup"
+; !define MUI_PAGE_CUSTOMFUNCTION_PRE StartMenuPagePre
+; !insertmacro MUI_PAGE_STARTMENU Application $StartMenuGroup
 
 ; Installation page
 !insertmacro MUI_PAGE_INSTFILES
@@ -511,6 +514,34 @@ Page custom DockerCheckPage DockerCheckPageLeave
 
 ; Reserve plugin files for faster startup
 ReserveFile /plugin EnVar.dll
+
+Function InstallScopePage
+    nsDialogs::Create 1018
+    Pop $0
+    ${If} $0 == error
+        Abort
+    ${EndIf}
+
+    ${NSD_CreateLabel} 0 0 100% 12u "Choose installation scope:"
+    Pop $1
+
+    ${NSD_CreateRadioButton} 10 20u 100% 12u "Install for current user only"
+    Pop $2
+    ${NSD_SetState} $2 ${BST_CHECKED}
+
+    ${NSD_CreateRadioButton} 10 40u 100% 12u "Install for all users (not available)"
+    Pop $3
+    EnableWindow $3 0  ; Disable this option
+
+    ${NSD_CreateLabel} 10 60u 100% 40u "DDEV must be installed per-user because WSL2 distros are per-user and cannot be shared between Windows users.$\r$\n$\r$\nEach Windows user who needs DDEV should run this installer under their own account.$\r$\n$\r$\nInstallation location: %LOCALAPPDATA%\Programs\DDEV"
+    Pop $4
+
+    nsDialogs::Show
+FunctionEnd
+
+Function InstallScopePageLeave
+    ; Nothing to do - only one option available
+FunctionEnd
 
 Function InstallChoicePage
     ; Skip this page if install type was specified via command line
@@ -814,13 +845,6 @@ Function DockerCancelButtonClick
     Quit
 FunctionEnd
 
-Function StartMenuPagePre
-    ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-    ${OrIf} $INSTALL_OPTION == "wsl2-docker-desktop"
-        Abort ; Skip the start menu page for WSL2 installations
-    ${EndIf}
-FunctionEnd
-
 Section "-Initialize"
     ; Create the installation directory
     CreateDirectory "$INSTDIR"
@@ -867,13 +891,13 @@ SectionGroup /e "${PRODUCT_NAME}"
         Call RunMkcertInstall
 
         ; Add DDEV installation directory to PATH (EnVar::AddValue handles duplicates)
-        Push "Adding DDEV installation directory to system PATH..."
+        Push "Adding DDEV installation directory to user PATH..."
         Call LogPrint
-        ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "Path"
+        ReadRegStr $R0 HKCU "Environment" "Path"
         Push "PATH before addition: $R0"
         Call LogPrint
-        
-        EnVar::SetHKLM
+
+        EnVar::SetHKCU
         EnVar::AddValue "Path" "$INSTDIR"
         Pop $R1
         Push "EnVar::AddValue result: $R1"
@@ -897,13 +921,7 @@ SectionGroup /e "${PRODUCT_NAME}"
             Call InstallWSL2Common
         ${EndIf}
 
-        ; Create shortcuts only for traditional install
-        ${If} $INSTALL_OPTION == "traditional"
-            !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-            CreateDirectory "$SMPROGRAMS\$StartMenuGroup"
-            CreateShortCut "$SMPROGRAMS\$StartMenuGroup\DDEV.lnk" "$INSTDIR\ddev.exe" "" "$INSTDIR\Icons\ddev.ico"
-            !insertmacro MUI_STARTMENU_WRITE_END
-        ${EndIf}
+        ; Start Menu shortcuts removed for simplification
     SectionEnd
 
 SectionGroupEnd
@@ -929,9 +947,19 @@ Section -Post
     IntFmt $0 "0x%08X" $0
     WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "EstimatedSize" "$0"
 
-    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\Uninstall ${PRODUCT_NAME}.lnk" "$INSTDIR\ddev_uninstall.exe"
-    !insertmacro MUI_STARTMENU_WRITE_END
+    ; Create Start Menu shortcuts (for all installation types)
+    CreateDirectory "$SMPROGRAMS\DDEV"
+    CreateDirectory "$INSTDIR\Links"
+
+    ; Documentation and website links (useful for all users)
+    WriteIniStr "$INSTDIR\Links\DDEV Documentation.url" "InternetShortcut" "URL" "https://docs.ddev.com"
+    CreateShortCut "$SMPROGRAMS\DDEV\DDEV Documentation.lnk" "$INSTDIR\Links\DDEV Documentation.url" "" "$INSTDIR\Icons\ddev.ico"
+
+    WriteIniStr "$INSTDIR\Links\DDEV Website.url" "InternetShortcut" "URL" "https://ddev.com"
+    CreateShortCut "$SMPROGRAMS\DDEV\DDEV Website.lnk" "$INSTDIR\Links\DDEV Website.url" "" "$INSTDIR\Icons\ddev.ico"
+
+    ; Uninstall link opens Windows Settings Apps page (modern approach)
+    CreateShortCut "$SMPROGRAMS\DDEV\Uninstall DDEV.lnk" "ms-settings:appsfeatures"
 SectionEnd
 
 Section Uninstall
@@ -941,8 +969,8 @@ Section Uninstall
     ; Clean up mkcert environment variables
     Call un.CleanupMkcertEnvironment
 
-    ; Remove install directory from system PATH
-    EnVar::SetHKLM
+    ; Remove install directory from user PATH
+    EnVar::SetHKCU
     EnVar::DeleteValue "Path" "$INSTDIR"
 
     ; Remove all installed files
@@ -959,16 +987,12 @@ Section Uninstall
     RMDir /r "$INSTDIR\Icons"
     RMDir /r "$INSTDIR\Links"
 
-    ; Remove all installed shortcuts if they exist
-    !insertmacro MUI_STARTMENU_GETFOLDER "Application" $StartMenuGroup
-    ${If} "$StartMenuGroup" != ""
-        Delete "$SMPROGRAMS\$StartMenuGroup\DDEV.lnk"
-        Delete "$SMPROGRAMS\$StartMenuGroup\DDEV Website.lnk"
-        Delete "$SMPROGRAMS\$StartMenuGroup\DDEV Documentation.lnk"
-        Delete "$SMPROGRAMS\$StartMenuGroup\Uninstall ${PRODUCT_NAME}.lnk"
-        RMDir /r "$SMPROGRAMS\$StartMenuGroup\mkcert"
-        RMDir "$SMPROGRAMS\$StartMenuGroup"
-    ${EndIf}
+    ; Remove Start Menu shortcuts
+    Delete "$SMPROGRAMS\DDEV\DDEV Terminal.lnk"
+    Delete "$SMPROGRAMS\DDEV\DDEV Documentation.lnk"
+    Delete "$SMPROGRAMS\DDEV\DDEV Website.lnk"
+    Delete "$SMPROGRAMS\DDEV\Uninstall DDEV.lnk"
+    RMDir "$SMPROGRAMS\DDEV"
 
     ; Remove registry keys
     DeleteRegKey ${REG_UNINST_ROOT} "${REG_UNINST_KEY}"
@@ -1684,19 +1708,43 @@ Function InstallTraditionalWindows
     SetOverwrite try
     File /oname=ddev.ico "graphics\ddev-install.ico"
 
-    ; Create shortcuts
-    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-    CreateDirectory "$INSTDIR\Links"
-    CreateDirectory "$SMPROGRAMS\$StartMenuGroup"
+    ; Create Start Menu folder first (must exist before creating shortcuts)
+    CreateDirectory "$SMPROGRAMS\DDEV"
 
-    ; Use literal names for website and documentation
-    WriteIniStr "$INSTDIR\Links\DDEV Website.url" "InternetShortcut" "URL" "https://ddev.com"
-    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\DDEV Website.lnk" "$INSTDIR\Links\DDEV Website.url" "" "$INSTDIR\Icons\ddev.ico"
+    ; Create Start Menu shortcuts for Traditional Windows
+    ; DDEV Terminal - prefer Git Bash if available, fallback to PowerShell
+    ${If} ${FileExists} "$PROGRAMFILES64\Git\bin\bash.exe"
+        ; Git Bash found - create shortcut that opens Git Bash
+        CreateShortCut "$SMPROGRAMS\DDEV\DDEV Terminal.lnk" "$PROGRAMFILES64\Git\bin\bash.exe" '--login -i' "$INSTDIR\Icons\ddev.ico"
+        Push "Created DDEV Terminal shortcut using Git Bash"
+        Call LogPrint
+    ${Else}
+        ; Fallback to PowerShell
+        CreateShortCut "$SMPROGRAMS\DDEV\DDEV Terminal.lnk" "powershell.exe" "" "$INSTDIR\Icons\ddev.ico"
+        Push "Created DDEV Terminal shortcut using PowerShell (Git Bash not found)"
+        Call LogPrint
+    ${EndIf}
 
-    WriteIniStr "$INSTDIR\Links\DDEV Documentation.url" "InternetShortcut" "URL" "https://docs.ddev.com"
-    CreateShortCut "$SMPROGRAMS\$StartMenuGroup\DDEV Documentation.lnk" "$INSTDIR\Links\DDEV Documentation.url" "" "$INSTDIR\Icons\ddev.ico"
+    ; Verify installation completed by checking ddev.exe exists
+    ; This ensures filesystem writes are complete before installer exits
+    Push "Verifying installation files..."
+    Call LogPrint
 
-    !insertmacro MUI_STARTMENU_WRITE_END
+    StrCpy $R0 0  ; retry counter
+    ${Do}
+        ${If} ${FileExists} "$INSTDIR\ddev.exe"
+            Push "Verified: ddev.exe exists at $INSTDIR\ddev.exe"
+            Call LogPrint
+            ${ExitDo}
+        ${EndIf}
+        IntOp $R0 $R0 + 1
+        ${If} $R0 > 10
+            Push "WARNING: ddev.exe verification failed after 10 retries"
+            Call LogPrint
+            ${ExitDo}
+        ${EndIf}
+        Sleep 500  ; Wait 500ms before retry
+    ${Loop}
 
     Push "Traditional Windows installation completed."
     Call LogPrint
@@ -1705,7 +1753,7 @@ FunctionEnd
 
 Function RunMkcertInstall
     ${If} ${Silent}
-        ; In silent mode, skip mkcert.exe -install to avoid UAC prompts
+        ; In silent mode, skip mkcert.exe -install because it pops up a dialog window
         ; But still set up CAROOT environment variable
         Push "Setting up CAROOT environment variable in silent mode..."
         Call LogPrint
@@ -1715,10 +1763,9 @@ Function RunMkcertInstall
     
     Push "Setting up mkcert.exe (Windows) for trusted HTTPS certificates..."
     Call LogPrint
-    
+
     ; Unset CAROOT environment variable in current process
-    System::Call 'kernel32::SetEnvironmentVariable(t "CAROOT", i 0)'
-    Pop $0
+    System::Call 'kernel32::SetEnvironmentVariable(t "CAROOT", i 0) i .r0'
 
     ; Run mkcert.exe -install to create fresh certificate authority
     Push "Running mkcert.exe -install to create certificate authority..."
@@ -1741,124 +1788,131 @@ Function RunMkcertInstall
 FunctionEnd
 
 Function SetupWindowsCAROOT
-    Push "Setting up mkcert certificate sharing with WSL2..."
+    Push "Setting up mkcert CAROOT environment variable..."
     Call LogPrint
-    
+
     ; Get the CAROOT directory from mkcert (mkcert -install already completed)
     nsExec::ExecToStack '"$INSTDIR\mkcert.exe" -CAROOT'
     Pop $R0 ; error code
     Pop $R1 ; output (CAROOT path)
-    
+
     ${If} $R0 = 0
         ; Trim whitespace from CAROOT path
         Push $R1
         Call TrimNewline
         Pop $R1
-        
+
         Push "CAROOT directory: $R1"
         Call LogPrint
-        
+
         ; Set CAROOT environment variable using EnVar plugin
-        EnVar::SetHKLM
+        EnVar::SetHKCU
         EnVar::Delete "CAROOT"  ; Remove entire variable first
         Pop $0  ; Get error code from Delete
         Push "EnVar::Delete CAROOT result: $0"
         Call LogPrint
-        
+
         EnVar::AddValue "CAROOT" "$R1"
         Pop $0  ; Get error code from AddValue
         Push "EnVar::AddValue CAROOT result: $0"
         Call LogPrint
-        
-        ; Get current WSLENV value from registry
-        ReadRegStr $R2 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
-        ${If} ${Errors}
-            StrCpy $R2 ""
-        ${EndIf}
 
-        ; Store original value for debugging
-        StrCpy $R4 $R2
-        
-        ; Clean up any existing CAROOT/up entries first
-        StrCpy $R3 $R2  ; Copy to working variable
-        
-        ; Remove all instances of CAROOT/up; (with semicolon)
-        ${Do}
-            ${StrStr} $R5 $R3 "CAROOT/up;"
-            ${If} $R5 == ""
-                ${Break}
+        ; Only set up WSLENV for WSL2 installations (not traditional Windows)
+        ${If} $INSTALL_OPTION == "traditional"
+            Push "Skipping WSLENV setup for traditional Windows installation"
+            Call LogPrint
+            Push "CAROOT environment variable configured successfully."
+            Call LogPrint
+        ${Else}
+            ; Get current WSLENV value from registry
+            ReadRegStr $R2 HKCU "Environment" "WSLENV"
+            ${If} ${Errors}
+                StrCpy $R2 ""
             ${EndIf}
-            ${StrRep} $R3 $R3 "CAROOT/up;" ""
-        ${Loop}
-        
-        ; Remove all instances of ;CAROOT/up (with leading semicolon)
-        ${Do}
-            ${StrStr} $R5 $R3 ";CAROOT/up"
-            ${If} $R5 == ""
-                ${Break}
+
+            ; Store original value for debugging
+            StrCpy $R4 $R2
+
+            ; Clean up any existing CAROOT/up entries first
+            StrCpy $R3 $R2  ; Copy to working variable
+
+            ; Remove all instances of CAROOT/up; (with semicolon)
+            ${Do}
+                ${StrStr} $R5 $R3 "CAROOT/up;"
+                ${If} $R5 == ""
+                    ${Break}
+                ${EndIf}
+                ${StrRep} $R3 $R3 "CAROOT/up;" ""
+            ${Loop}
+
+            ; Remove all instances of ;CAROOT/up (with leading semicolon)
+            ${Do}
+                ${StrStr} $R5 $R3 ";CAROOT/up"
+                ${If} $R5 == ""
+                    ${Break}
+                ${EndIf}
+                ${StrRep} $R3 $R3 ";CAROOT/up" ""
+            ${Loop}
+
+            ; Remove if it's exactly "CAROOT/up" by itself
+            ${If} $R3 == "CAROOT/up"
+                StrCpy $R3 ""
             ${EndIf}
-            ${StrRep} $R3 $R3 ";CAROOT/up" ""
-        ${Loop}
-        
-        ; Remove if it's exactly "CAROOT/up" by itself
-        ${If} $R3 == "CAROOT/up"
-            StrCpy $R3 ""
-        ${EndIf}
-        
-        ; Clean up any double semicolons that might have been created
-        ${Do}
-            ${StrStr} $R5 $R3 ";;"
-            ${If} $R5 == ""
-                ${Break}
-            ${EndIf}
-            ${StrRep} $R3 $R3 ";;" ";"
-        ${Loop}
-        
-        ; Remove leading or trailing semicolons
-        ${If} $R3 != ""
-            StrCpy $R5 $R3 1  ; Get first character
-            ${If} $R5 == ";"
-                StrCpy $R3 $R3 "" 1  ; Remove first character
-            ${EndIf}
+
+            ; Clean up any double semicolons that might have been created
+            ${Do}
+                ${StrStr} $R5 $R3 ";;"
+                ${If} $R5 == ""
+                    ${Break}
+                ${EndIf}
+                ${StrRep} $R3 $R3 ";;" ";"
+            ${Loop}
+
+            ; Remove leading or trailing semicolons
             ${If} $R3 != ""
-                StrLen $R6 $R3
-                IntOp $R6 $R6 - 1
-                StrCpy $R5 $R3 1 $R6  ; Get last character
+                StrCpy $R5 $R3 1  ; Get first character
                 ${If} $R5 == ";"
-                    StrCpy $R3 $R3 $R6  ; Remove last character
+                    StrCpy $R3 $R3 "" 1  ; Remove first character
+                ${EndIf}
+                ${If} $R3 != ""
+                    StrLen $R6 $R3
+                    IntOp $R6 $R6 - 1
+                    StrCpy $R5 $R3 1 $R6  ; Get last character
+                    ${If} $R5 == ";"
+                        StrCpy $R3 $R3 $R6  ; Remove last character
+                    ${EndIf}
                 ${EndIf}
             ${EndIf}
-        ${EndIf}
-        
-        ; Now add CAROOT/up to the cleaned string
-        ${If} $R3 != ""
-            StrCpy $R2 "CAROOT/up;$R3"
-        ${Else}
-            StrCpy $R2 "CAROOT/up"
-        ${EndIf}
-        
-        Push "WSLENV cleaned and updated: [$R4] -> [$R2]"
-        Call LogPrint
-        
-        EnVar::SetHKLM
-        EnVar::Delete "WSLENV"  ; Remove existing WSLENV entirely
-        Pop $0  ; Get error code from Delete
 
-        EnVar::AddValue "WSLENV" "$R2"
-        Pop $0  ; Get error code from AddValue
-        
-        ; Verify by reading from registry
-        ReadRegStr $R5 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+            ; Now add CAROOT/up to the cleaned string
+            ${If} $R3 != ""
+                StrCpy $R2 "CAROOT/up;$R3"
+            ${Else}
+                StrCpy $R2 "CAROOT/up"
+            ${EndIf}
 
-        Push "mkcert certificate sharing with WSL2 configured successfully."
-        Call LogPrint
-        
-        ; Read current value from registry for verification
-        ; ReadRegStr $R6 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+            Push "WSLENV cleaned and updated: [$R4] -> [$R2]"
+            Call LogPrint
+
+            EnVar::SetHKCU
+            EnVar::Delete "WSLENV"  ; Remove existing WSLENV entirely
+            Pop $0  ; Get error code from Delete
+
+            EnVar::AddValue "WSLENV" "$R2"
+            Pop $0  ; Get error code from AddValue
+
+            ; Verify by reading from registry
+            ReadRegStr $R5 HKCU "Environment" "WSLENV"
+
+            Push "mkcert certificate sharing with WSL2 configured successfully."
+            Call LogPrint
+        ${EndIf}
     ${Else}
         Push "Failed to get CAROOT directory from mkcert"
         Call LogPrint
-        MessageBox MB_ICONEXCLAMATION|MB_OK "Failed to get CAROOT directory from mkcert. WSL2 certificate sharing may not work properly."
+        ${IfNot} ${Silent}
+            MessageBox MB_ICONEXCLAMATION|MB_OK "Failed to get CAROOT directory from mkcert. WSL2 certificate sharing may not work properly."
+        ${EndIf}
     ${EndIf}
 FunctionEnd
 
@@ -1867,13 +1921,13 @@ Function SetupMkcertInWSL2
     Call LogPrint
     
     ; Check current Windows CAROOT environment variable from registry
-    ReadRegStr $R2 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "CAROOT"
+    ReadRegStr $R2 HKCU "Environment" "CAROOT"
     StrCpy $WINDOWS_CAROOT $R2  ; Save to global variable for later use
     Push "Windows CAROOT environment variable: $WINDOWS_CAROOT"
     Call LogPrint
-    
+
     ; Check current Windows WSLENV environment variable from registry
-    ReadRegStr $R3 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+    ReadRegStr $R3 HKCU "Environment" "WSLENV"
     ; DetailPrint "Windows WSLENV environment variable: $R3"
     
     ; Install and run temporary sudoers script
@@ -2073,6 +2127,61 @@ Function ParseCommandLine
     ${EndIf}
 FunctionEnd
 
+; CheckOldSystemInstallation - Detect and offer to remove old system-wide DDEV installation
+; Old versions installed to $PROGRAMFILES\DDEV; new versions install to $LOCALAPPDATA\Programs\DDEV
+Function CheckOldSystemInstallation
+    Push $R0
+    Push $R1
+
+    ; Check for old system-wide installation in Program Files
+    ${If} ${FileExists} "$PROGRAMFILES64\DDEV\ddev.exe"
+        Push "Found old system-wide DDEV installation at $PROGRAMFILES64\DDEV"
+        Call LogPrint
+
+        ; Check if uninstaller exists
+        ${If} ${FileExists} "$PROGRAMFILES64\DDEV\ddev_uninstall.exe"
+            Push "Old uninstaller found at $PROGRAMFILES64\DDEV\ddev_uninstall.exe"
+            Call LogPrint
+
+            ${IfNot} ${Silent}
+                MessageBox MB_YESNO|MB_ICONQUESTION "An old system-wide DDEV installation was found at:$\n$PROGRAMFILES64\DDEV$\n$\nDDEV now installs per-user to avoid administrator account issues.$\n$\nWould you like to remove the old installation?$\n(Requires administrator privileges)" IDYES remove_old IDNO skip_old
+            ${Else}
+                ; In silent mode, try to remove automatically
+                Goto remove_old
+            ${EndIf}
+            Goto skip_old
+
+            remove_old:
+                Push "Attempting to remove old system-wide installation..."
+                Call LogPrint
+                ; Run the old uninstaller - it will request elevation if needed
+                ExecWait '"$PROGRAMFILES64\DDEV\ddev_uninstall.exe" /S' $R0
+                ${If} $R0 == 0
+                    Push "Old installation removed successfully"
+                    Call LogPrint
+                ${Else}
+                    Push "Old uninstaller returned code: $R0"
+                    Call LogPrint
+                    ${IfNot} ${Silent}
+                        MessageBox MB_OK|MB_ICONINFORMATION "The old installation could not be fully removed (you may have cancelled the elevation prompt).$\n$\nYou can manually uninstall it later from Programs and Features.$\n$\nContinuing with new installation..."
+                    ${EndIf}
+                ${EndIf}
+
+            skip_old:
+        ${Else}
+            ; No uninstaller found - just warn the user
+            Push "Old installation found but no uninstaller present"
+            Call LogPrint
+            ${IfNot} ${Silent}
+                MessageBox MB_OK|MB_ICONINFORMATION "An old DDEV installation was found at:$\n$PROGRAMFILES64\DDEV$\n$\nNo uninstaller was found. You may need to manually remove this directory and clean up the system PATH.$\n$\nContinuing with new installation..."
+            ${EndIf}
+        ${EndIf}
+    ${EndIf}
+
+    Pop $R1
+    Pop $R0
+FunctionEnd
+
 Function .onInit
     ; Set proper 64-bit handling
     SetRegView 64
@@ -2095,9 +2204,9 @@ Function .onInit
         ${EndIf}
     !endif
 
-    ; Initialize directory to proper Program Files location
+    ; Initialize directory to per-user location
     ${If} ${RunningX64}
-        StrCpy $INSTDIR "$PROGRAMFILES64\DDEV"
+        StrCpy $INSTDIR "$LOCALAPPDATA\Programs\DDEV"
     ${Else}
         MessageBox MB_ICONSTOP|MB_OK "This installer is for 64-bit Windows only."
         Abort
@@ -2107,7 +2216,10 @@ Function .onInit
     Call InitializeDebugLog
     Push "Debug log initialized at: $DEBUG_LOG_PATH"
     Call LogPrint
-    
+
+    ; Check for old system-wide installation and offer to remove it
+    Call CheckOldSystemInstallation
+
     ; Parse command line arguments
     Call ParseCommandLine
     
@@ -2172,86 +2284,85 @@ Function TrimNewline
 FunctionEnd
 
 Function un.mkcertUninstall
+    ; Initialize to not approved
+    StrCpy $MKCERT_UNINSTALL_APPROVED "0"
+
     ${If} ${FileExists} "$INSTDIR\mkcert.exe"
         Push $0
-        
+
         ; Read setup status from registry
         ReadRegDWORD $0 ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mkcertSetup"
-        
+
         ; Check if setup was done
         ${If} $0 == 1
             ${If} ${Silent}
-                ; Silent mode - skip mkcert -uninstall to avoid UAC/certificate store popups
+                ; Silent mode - skip mkcert -uninstall because it pops up a dialog window
                 ; Just clean up the CAROOT directory manually if possible
             ${Else}
                 ; Interactive mode - get user confirmation
                 MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "mkcert was found in this installation. Do you like to remove the mkcert configuration?" /SD IDNO IDYES +2
                 Goto Skip
-                
+
+                ; User said YES - set flag and proceed
+                StrCpy $MKCERT_UNINSTALL_APPROVED "1"
                 MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to disable trusted https. Please accept the mkcert dialog box that may follow."
-                
+
                 nsExec::ExecToStack '"$INSTDIR\mkcert.exe" -uninstall'
                 Pop $0 ; get return value
                 Pop $1 ; get output
             ${EndIf}
-            
+
         Skip:
         ${EndIf}
-        
+
         Pop $0
     ${EndIf}
 FunctionEnd
 
 Function un.CleanupMkcertEnvironment
+    ; Skip mkcert cleanup if user said no to mkcert removal (and not silent mode)
+    ${IfNot} ${Silent}
+        ${If} $MKCERT_UNINSTALL_APPROVED != "1"
+            DetailPrint "Skipping mkcert environment cleanup (user declined mkcert removal)"
+            Return
+        ${EndIf}
+    ${EndIf}
+
     DetailPrint "Cleaning up mkcert environment variables..."
-    
+
     ; Get CAROOT directory before cleanup
-    ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "CAROOT"
+    ReadRegStr $R0 HKCU "Environment" "CAROOT"
     ${IfNot} ${Errors}
         DetailPrint "CAROOT directory: $R0"
-        
-        ; Run mkcert -uninstall first to properly clean up certificates (skip in silent mode)
-        ${If} ${FileExists} "$INSTDIR\mkcert.exe"
-            ${IfNot} ${Silent}
-                DetailPrint "Running mkcert -uninstall to clean up certificates..."
-                nsExec::ExecToStack '"$INSTDIR\mkcert.exe" -uninstall'
-                Pop $R1
-                Pop $R2 ; get output
-                ${If} $R1 = 0
-                    DetailPrint "mkcert -uninstall completed successfully"
-                ${Else}
-                    DetailPrint "mkcert -uninstall failed with exit code: $R1"
-                ${EndIf}
-            ${Else}
-                DetailPrint "Skipping mkcert -uninstall in silent mode to avoid UAC prompts"
-            ${EndIf}
-        ${EndIf}
-        
+
+        ; mkcert -uninstall was already run in un.mkcertUninstall if user approved
+        ; No need to run it again here
+
         ; Remove any remaining CAROOT directory
         ${If} ${FileExists} "$R0"
             DetailPrint "Removing remaining CAROOT directory: $R0"
             RMDir /r "$R0"
         ${EndIf}
     ${EndIf}
-    
+
     ; Remove CAROOT environment variable (skip in silent mode to preserve for subsequent installs)
     ${IfNot} ${Silent}
-        DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "CAROOT"
+        DeleteRegValue HKCU "Environment" "CAROOT"
         DetailPrint "Removed CAROOT environment variable"
     ${Else}
         DetailPrint "Preserving CAROOT environment variable in silent mode"
     ${EndIf}
-    
+
     ; Clean up WSLENV by removing CAROOT/up (skip in silent mode to preserve for subsequent installs)
     ${IfNot} ${Silent}
-        ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+        ReadRegStr $R0 HKCU "Environment" "WSLENV"
         ${If} ${Errors}
             DetailPrint "WSLENV not found, nothing to clean up"
             Return
         ${EndIf}
-        
+
         DetailPrint "Current WSLENV: $R0"
-        
+
         ; Remove CAROOT/up; from the beginning
         ${WordFind} "$R0" "CAROOT/up;" "E+1{" $R1
         ${If} $R1 != $R0
@@ -2268,19 +2379,19 @@ Function un.CleanupMkcertEnvironment
                 ${EndIf}
             ${EndIf}
         ${EndIf}
-        
+
         ; Update or delete WSLENV
         ${If} $R0 == ""
-            DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV"
+            DeleteRegValue HKCU "Environment" "WSLENV"
             DetailPrint "Removed empty WSLENV"
         ${Else}
-            WriteRegStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "WSLENV" "$R0"
+            WriteRegStr HKCU "Environment" "WSLENV" "$R0"
             DetailPrint "Updated WSLENV to: $R0"
         ${EndIf}
     ${Else}
         DetailPrint "Preserving WSLENV environment variable in silent mode"
     ${EndIf}
-    
+
     DetailPrint "mkcert environment variables cleanup completed"
 FunctionEnd
 

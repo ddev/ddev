@@ -1,13 +1,20 @@
 # This PowerShell script tries to do almost all the things required to set up
 # an Ubuntu WSL2 instance for use with DDEV and docker-ce installed inside WSL2.
-# These days it's very unusual to do this because DDEV v1.24.7+ ships with a GUI installer for Windows/WSL2
-# So use that instead.
-# This requires that an Ubuntu-based WSL2 distro be installed already, preferably with `wsl --install`, but it can also be
-# done manually. The distro you want to act on must be set to the default WSL2 distro.
 #
-# You can download, inspect, and run this, or run it directly with
-# Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
-# iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_inside.ps1'))
+# **DDEV now ships with a GUI installer for Windows/WSL2 which is usually easier.**
+# See https://ddev.com/download
+#
+# Prerequisites:
+# - An Ubuntu-based WSL2 distro installed (preferably with `wsl --install`)
+# - The distro you want must be set as the default WSL2 distro
+# - Docker Desktop must NOT be installed, or WSL2 integration must be disabled
+#
+# Quick install - run this one-liner in PowerShell:
+#   iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_inside.ps1'))
+#
+# Alternatively, download the script first to inspect it, then run with:
+#   Set-ExecutionPolicy Bypass -Scope Process -Force
+#   .\install_ddev_wsl2_docker_inside.ps1
 
 # Make sure wsl is installed and working
 if (-not(wsl -l -v)) {
@@ -31,9 +38,14 @@ if (wsl bash -c "test -d /mnt/wsl/docker-desktop >/dev/null 2>&1" ) {
 $ErrorActionPreference = "Stop"
 
 # Remove old Windows ddev.exe if it exists using uninstaller
+# Check both old system-wide location and new per-user location
 if (Test-Path "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe") {
-    Write-Host "Removing old Windows ddev.exe installation"
+    Write-Host "Removing old Windows ddev.exe installation (system-wide)"
     Start-Process "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe" -ArgumentList "/SILENT" -Wait
+}
+if (Test-Path "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe") {
+    Write-Host "Removing old Windows ddev.exe installation (per-user)"
+    Start-Process "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe" -ArgumentList "/SILENT" -Wait
 }
 
 wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"
