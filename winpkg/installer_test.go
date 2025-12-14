@@ -206,6 +206,22 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 	require.NoError(err, "Installer failed: %v, output: %s", err, out)
 	t.Logf("Installer output: %s", out)
 
+	// Wait for installer to complete by checking for ddev.exe at expected location
+	// NSIS installers in silent mode may return before fully completing
+	localAppData := os.Getenv("LOCALAPPDATA")
+	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
+	const maxWaitSeconds = 60
+	for i := 0; i < maxWaitSeconds; i++ {
+		if fileutil.FileExists(ddevPath) {
+			t.Logf("ddev.exe found at %s after %d seconds", ddevPath, i)
+			break
+		}
+		if i == maxWaitSeconds-1 {
+			require.Fail("ddev.exe not found at expected location after %d seconds: %s", maxWaitSeconds, ddevPath)
+		}
+		time.Sleep(1 * time.Second)
+	}
+
 	// Test that ddev is installed and working on Windows
 	testDdevTraditionalInstallation(t)
 
@@ -391,8 +407,14 @@ func isDockerDesktopWorkingOnWindows() bool {
 func cleanupTraditionalWindowsEnv(t *testing.T) {
 	t.Logf("Cleaning up Traditional Windows environment")
 
-	// Stop any running DDEV projects
-	_, _ = exec.RunHostCommand("ddev.exe", "poweroff")
+	// Use full path since the current process doesn't see the PATH update from the installer
+	localAppData := os.Getenv("LOCALAPPDATA")
+	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
+
+	// Stop any running DDEV projects (ignore errors if ddev not installed)
+	if fileutil.FileExists(ddevPath) {
+		_, _ = exec.RunHostCommand(ddevPath, "poweroff")
+	}
 }
 
 // testDdevTraditionalInstallation verifies that ddev is properly installed on Windows
@@ -400,29 +422,35 @@ func testDdevTraditionalInstallation(t *testing.T) {
 	require := require.New(t)
 	t.Logf("Testing ddev installation on Windows")
 
-	// Test ddev version
-	out, err := exec.RunHostCommand("ddev.exe", "version")
+	// Use full paths since the current process doesn't see the PATH update from the installer
+	localAppData := os.Getenv("LOCALAPPDATA")
+	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
+	hostnamePath := filepath.Join(localAppData, "Programs", "DDEV", "ddev-hostname.exe")
+
+	// Verify files exist in expected per-user location
+	require.True(fileutil.FileExists(ddevPath), "ddev.exe not found at %s", ddevPath)
+	require.True(fileutil.FileExists(hostnamePath), "ddev-hostname.exe not found at %s", hostnamePath)
+
+	// Test ddev version using full path
+	out, err := exec.RunHostCommand(ddevPath, "version")
 	require.NoError(err, "ddev version failed: %v, output: %s", err, out)
 	require.Contains(out, "DDEV version")
 	t.Logf("ddev version output: %s", out)
 
-	// Test ddev-hostname
-	out, err = exec.RunHostCommand("ddev-hostname.exe", "--help")
+	// Test ddev-hostname using full path
+	out, err = exec.RunHostCommand(hostnamePath, "--help")
 	require.NoError(err, "ddev-hostname failed: %v, output: %s", err, out)
 	t.Logf("ddev-hostname available")
-
-	// Verify files exist in expected per-user location
-	localAppData := os.Getenv("LOCALAPPDATA")
-	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
-	hostnamePath := filepath.Join(localAppData, "Programs", "DDEV", "ddev-hostname.exe")
-	require.True(fileutil.FileExists(ddevPath), "ddev.exe not found at %s", ddevPath)
-	require.True(fileutil.FileExists(hostnamePath), "ddev-hostname.exe not found at %s", hostnamePath)
 }
 
 // testBasicDdevTraditionalFunctionality tests basic ddev project creation and start on Windows
 func testBasicDdevTraditionalFunctionality(t *testing.T) {
 	require := require.New(t)
 	t.Logf("Testing basic ddev functionality on Windows")
+
+	// Use full path since the current process doesn't see the PATH update from the installer
+	localAppData := os.Getenv("LOCALAPPDATA")
+	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
 
 	// Create a temporary directory for the test project
 	tempDir, err := os.MkdirTemp("", "ddev-test-")
@@ -449,20 +477,20 @@ func testBasicDdevTraditionalFunctionality(t *testing.T) {
 	err = os.Chdir(projectDir)
 	require.NoError(err, "Failed to change to project directory: %v", err)
 
-	// Initialize ddev project
-	out, err := exec.RunHostCommand("ddev.exe", "config", "--auto")
+	// Initialize ddev project using full path
+	out, err := exec.RunHostCommand(ddevPath, "config", "--auto")
 	require.NoError(err, "ddev config failed: %v, output: %s", err, out)
 	t.Logf("ddev config output: %s", out)
 
-	// Start the project
-	out, err = exec.RunHostCommand("ddev.exe", "start", "-y")
+	// Start the project using full path
+	out, err = exec.RunHostCommand(ddevPath, "start", "-y")
 	require.NoError(err, "ddev start failed: %v, output: %s", err, out)
 	t.Logf("ddev start output: %s", out)
 
-	// Ensure cleanup
+	// Ensure cleanup using full path
 	t.Cleanup(func() {
-		_, _ = exec.RunHostCommand("ddev.exe", "delete", "-Oy")
-		_, _ = exec.RunHostCommand("ddev.exe", "poweroff")
+		_, _ = exec.RunHostCommand(ddevPath, "delete", "-Oy")
+		_, _ = exec.RunHostCommand(ddevPath, "poweroff")
 	})
 
 	// Test HTTPS response from Windows

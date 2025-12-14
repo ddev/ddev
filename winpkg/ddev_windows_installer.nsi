@@ -1725,6 +1725,27 @@ Function InstallTraditionalWindows
         Call LogPrint
     ${EndIf}
 
+    ; Verify installation completed by checking ddev.exe exists
+    ; This ensures filesystem writes are complete before installer exits
+    Push "Verifying installation files..."
+    Call LogPrint
+
+    StrCpy $R0 0  ; retry counter
+    ${Do}
+        ${If} ${FileExists} "$INSTDIR\ddev.exe"
+            Push "Verified: ddev.exe exists at $INSTDIR\ddev.exe"
+            Call LogPrint
+            ${ExitDo}
+        ${EndIf}
+        IntOp $R0 $R0 + 1
+        ${If} $R0 > 10
+            Push "WARNING: ddev.exe verification failed after 10 retries"
+            Call LogPrint
+            ${ExitDo}
+        ${EndIf}
+        Sleep 500  ; Wait 500ms before retry
+    ${Loop}
+
     Push "Traditional Windows installation completed."
     Call LogPrint
 
