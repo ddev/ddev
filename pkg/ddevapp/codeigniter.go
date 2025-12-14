@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -133,8 +134,15 @@ func isCodeIgniterApp(app *DdevApp) bool {
 // codeIgniterPostStartAction runs after container start
 func codeIgniterPostStartAction(app *DdevApp) error {
 	// Ensure writable directory has correct permissions
-	writableDir := "writable"
+	composerRoot := app.GetComposerRoot(true, false)
+	writableDir := path.Join(composerRoot, "writable")
 
+	// Check if writable directory exists
+	if _, err := os.Stat(writableDir); os.IsNotExist(err) {
+		return nil // Directory doesn't exist: do nothing
+	}
+
+	// Set permissions on writable dir
 	_, _, err := app.Exec(&ExecOpts{
 		Service: "web",
 		Cmd:     fmt.Sprintf("chmod -R 775 %s", writableDir),
