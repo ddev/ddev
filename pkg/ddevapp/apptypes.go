@@ -103,7 +103,6 @@ func init() {
 			hookDefaultComments:        getCodeIgniterHooks,
 			appTypeSettingsPaths:       setCodeIgniterSiteSettingsPaths,
 			appTypeDetect:              isCodeIgniterApp,
-			postStartAction:            codeIgniterPostStartAction,
 			importFilesAction:          codeIgniterImportFilesAction,
 			composerCreateAllowedPaths: getCodeIgniterComposerCreateAllowedPaths,
 		},
