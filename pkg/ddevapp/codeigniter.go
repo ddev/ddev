@@ -13,7 +13,7 @@ import (
 
 // createCodeIgniterSettingsFile creates/updates the .env file for CodeIgniter 4
 func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
-	envFilePath := filepath.Join(app.AppRoot, ".env")
+	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env")
 
 	// Check if .env already has DDEV config
 	if fileutil.FileExists(envFilePath) {
