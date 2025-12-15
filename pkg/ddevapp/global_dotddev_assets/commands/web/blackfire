@@ -17,7 +17,14 @@ function enable {
   fi
   phpdismod xhprof xdebug
   phpenmod blackfire
-  killall -USR2 php-fpm && killall -HUP nginx
+  if [ "${DDEV_WEBSERVER_TYPE:-}" = "generic" ]; then
+    # we don't know what process is running php, restart all web_extra_daemons
+    supervisorctl restart 'webextradaemons:*' || true
+  else
+    killall -USR2 php-fpm && killall -HUP nginx
+  fi
+  # if blackfire is not enabled, there will be a visible warning in stderr
+  php -m >/dev/null || true
   # Can't use killall here because it kills this process!
   pid=$(ps -ef | awk '$8~/^blackfire.*/ { print $2 }' 2>/dev/null)
   if [ "${pid}" != "" ]; then kill $pid; fi
@@ -28,7 +35,12 @@ function enable {
 }
 function disable {
   phpdismod blackfire
-  killall -USR2 php-fpm
+  if [ "${DDEV_WEBSERVER_TYPE:-}" = "generic" ]; then
+    # we don't know what process is running php, restart all web_extra_daemons
+    supervisorctl restart 'webextradaemons:*' || true
+  else
+    killall -USR2 php-fpm
+  fi
   # Can't use killall here because it kills this process!
   pid=$(ps -ef | awk '$8~/^blackfire.*/ { print $2 }' 2>/dev/null)
   if [ "${pid}" != "" ]; then kill ${pid}; fi

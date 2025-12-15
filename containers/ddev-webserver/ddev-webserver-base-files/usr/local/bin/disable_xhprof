@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 export PATH=$PATH:/usr/sbin:/sbin
 phpdismod xhprof
-killall -USR2 php-fpm 2>/dev/null || true
+if [ "${DDEV_WEBSERVER_TYPE:-}" = "generic" ]; then
+  # we don't know what process is running php, restart all web_extra_daemons
+  supervisorctl restart 'webextradaemons:*' || true
+else
+  killall -USR2 php-fpm 2>/dev/null || true
+fi
 echo "Disabled xhprof"

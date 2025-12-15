@@ -3,7 +3,14 @@ export PATH=$PATH:/usr/sbin:/sbin
 phpdismod blackfire xdebug
 mkdir -p ${XHPROF_OUTPUT_DIR}
 phpenmod xhprof
-killall -USR2 php-fpm 2>/dev/null || true
+if [ "${DDEV_WEBSERVER_TYPE:-}" = "generic" ]; then
+  # we don't know what process is running php, restart all web_extra_daemons
+  supervisorctl restart 'webextradaemons:*' || true
+else
+  killall -USR2 php-fpm 2>/dev/null || true
+fi
+# if xhprof is not enabled, there will be a visible warning in stderr
+php -m >/dev/null || true
 echo "Enabled xhprof with xhprof_mode=${DDEV_XHPROF_MODE}"
 case "${DDEV_XHPROF_MODE}" in
   xhgui)
