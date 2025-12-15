@@ -78,7 +78,7 @@ jobs:
 
 
       - name: save build results to cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-${{ github.ref }}-build-most
@@ -136,7 +136,7 @@ jobs:
         # After 3.0.5 they were using zstdmt which is not available on Windows
         # See https://github.com/actions/cache/issues/891
         # But trying again with @v3, 2023-02-18
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .gotmp/bin/windows*
@@ -171,7 +171,7 @@ jobs:
           check-latest: true
 
       - name: restore build-most results from cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: buildmost
         with:
           path: .gotmp/bin
@@ -200,7 +200,7 @@ jobs:
             fi
           done
       - name: Save notarized binaries to cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .gotmp/bin/darwin*
           key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
@@ -234,7 +234,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Restore build-most builds
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: buildmost
         with:
           path: .gotmp/bin
@@ -246,7 +246,7 @@ jobs:
         run: exit 1
 
       - name: Restore Signed Windows artifacts
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: signedwindows
         with:
           path: |
@@ -260,7 +260,7 @@ jobs:
         run: exit 1
 
       - name: Restore Signed Mac artifacts
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: notarizedmac
         with:
           path: .gotmp/bin/darwin*
