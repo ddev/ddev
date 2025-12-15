@@ -98,13 +98,12 @@ func init() {
 		},
 
 		nodeps.AppTypeCodeIgniter: {
-			settingsCreator:            createCodeIgniterSettingsFile,
-			uploadDirs:                 getCodeIgniterUploadDirs,
-			hookDefaultComments:        getCodeIgniterHooks,
-			appTypeSettingsPaths:       setCodeIgniterSiteSettingsPaths,
-			appTypeDetect:              isCodeIgniterApp,
-			importFilesAction:          codeIgniterImportFilesAction,
-			composerCreateAllowedPaths: getCodeIgniterComposerCreateAllowedPaths,
+			settingsCreator:      createCodeIgniterSettingsFile,
+			uploadDirs:           getCodeIgniterUploadDirs,
+			hookDefaultComments:  getCodeIgniterHooks,
+			appTypeSettingsPaths: setCodeIgniterSiteSettingsPaths,
+			appTypeDetect:        isCodeIgniterApp,
+			importFilesAction:    codeIgniterImportFilesAction,
 		},
 
 		nodeps.AppTypeCraftCms: {
