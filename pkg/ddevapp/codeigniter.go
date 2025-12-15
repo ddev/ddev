@@ -3,14 +3,12 @@ package ddevapp
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/util"
 )
 
 // createCodeIgniterSettingsFile creates/updates the .env file for CodeIgniter 4
@@ -129,30 +127,6 @@ func isCodeIgniterApp(app *DdevApp) bool {
 	return fileutil.FileExists(sparkPath) &&
 		fileutil.FileExists(appConfigPath) &&
 		fileutil.FileExists(publicIndexPath)
-}
-
-// codeIgniterPostStartAction runs after container start
-func codeIgniterPostStartAction(app *DdevApp) error {
-	// Ensure writable directory has correct permissions
-	composerRoot := app.GetComposerRoot(true, false)
-	writableDir := path.Join(composerRoot, "writable")
-
-	// Check if writable directory exists
-	if _, err := os.Stat(writableDir); os.IsNotExist(err) {
-		return nil // Directory doesn't exist: do nothing
-	}
-
-	// Set permissions on writable dir
-	_, _, err := app.Exec(&ExecOpts{
-		Service: "web",
-		Cmd:     fmt.Sprintf("chmod -R 775 %s", writableDir),
-	})
-
-	if err != nil {
-		util.Warning("Unable to set permissions on %s directory: %v", writableDir, err)
-	}
-
-	return nil
 }
 
 // codeIgniterImportFilesAction handles file imports
