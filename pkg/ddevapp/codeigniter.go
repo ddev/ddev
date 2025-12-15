@@ -37,10 +37,19 @@ func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
 	// Build DB config dynamically from DDEV configuration.
 	dbConfig := buildCodeIgniterDBConfig(app)
 
-	// Always add base URL
+	// Always add base URL and set the enviroment to development
 	cfg := fmt.Sprintf(`# ddev-generated
 %s
-# Base URL
+#--------------------------------------------------------------------
+# ENVIRONMENT
+#--------------------------------------------------------------------
+
+CI_ENVIRONMENT = development
+
+#--------------------------------------------------------------------
+# APP
+#--------------------------------------------------------------------
+
 app.baseURL = '%s'
 `, dbConfig, app.GetPrimaryURL())
 
@@ -75,7 +84,10 @@ func buildCodeIgniterDBConfig(app *DdevApp) string {
 
 	// Standard DDEV credentials/hostnames
 	return fmt.Sprintf(`
-# Database Configuration
+#--------------------------------------------------------------------
+# DATABASE
+#--------------------------------------------------------------------
+
 database.default.hostname = db
 database.default.database = db
 database.default.username = db
