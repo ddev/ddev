@@ -370,6 +370,90 @@ func TestProcessExposePorts(t *testing.T) {
 	}
 }
 
+// TestTraefikMonitorPortAlwaysLocalhost verifies that the Traefik monitor port
+// is always bound to localhost, even when router_bind_all_interfaces=true
+func TestTraefikMonitorPortAlwaysLocalhost(t *testing.T) {
+	assert := asrt.New(t)
+
+	origRouterBindAllInterfaces := globalconfig.DdevGlobalConfig.RouterBindAllInterfaces
+	origRouter := globalconfig.DdevGlobalConfig.Router
+
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.RouterBindAllInterfaces = origRouterBindAllInterfaces
+		globalconfig.DdevGlobalConfig.Router = origRouter
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		ddevapp.PowerOff()
+	})
+
+	// Test with router_bind_all_interfaces=true (security concern)
+	globalconfig.DdevGlobalConfig.RouterBindAllInterfaces = true
+	globalconfig.DdevGlobalConfig.Router = "traefik"
+	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	site := TestSites[0]
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Read the generated router compose file
+	routerComposeFile := ddevapp.RouterComposeYAMLPath()
+	content, err := fileutil.ReadFileIntoString(routerComposeFile)
+	require.NoError(t, err)
+
+	// The Traefik monitor port should ALWAYS be bound to dockerIP (localhost),
+	// never to all interfaces (0.0.0.0)
+	dockerIP, _ := dockerutil.GetDockerIP()
+	monitorPort := globalconfig.DdevGlobalConfig.TraefikMonitorPort
+
+	// Expected format: "127.0.0.1:10999:10999" (or similar dockerIP)
+	expectedBinding := dockerIP + ":" + monitorPort + ":" + monitorPort
+
+	assert.Contains(content, expectedBinding,
+		"Traefik monitor port must always be bound to localhost (%s), not all interfaces", dockerIP)
+
+	// Make sure it's NOT bound to all interfaces
+	allInterfacesBinding := "- \"" + monitorPort + ":" + monitorPort + "\""
+	assert.NotContains(content, allInterfacesBinding,
+		"Traefik monitor port must NOT be bound to all interfaces (security risk)")
+
+	// Test that the dashboard is accessible via localhost
+	localhostDashboardURL := "http://" + dockerIP + ":" + monitorPort + "/api/overview"
+	_, err = testcommon.EnsureLocalHTTPContent(t, localhostDashboardURL, "")
+	assert.NoError(err, "Traefik dashboard should be accessible via localhost at %s", localhostDashboardURL)
+
+	// Note: The dashboard may also be accessible via project hostnames on the monitor port
+	// (e.g., http://project.ddev.site:10999) because the hostname resolves to localhost.
+	// This is acceptable because the port is bound to localhost only, preventing external access.
+	// The key security protection is that the port is NOT bound to 0.0.0.0, which would
+	// expose it to the network.
+
+	// Verify the port is NOT listening on all interfaces (0.0.0.0)
+	// This is the key security check - the port should only be bound to localhost
+	// We verify this by checking that the port binding in the router container
+	// uses dockerIP (127.0.0.1) and not 0.0.0.0
+	router, err := ddevapp.FindDdevRouter()
+	require.NoError(t, err)
+	require.NotNil(t, router)
+
+	// Check the actual port bindings on the router container
+	foundMonitorPortBinding := false
+	for _, port := range router.Ports {
+		portStr := strconv.Itoa(int(port.PublicPort))
+		if portStr == monitorPort {
+			foundMonitorPortBinding = true
+			// The IP should be 127.0.0.1 (or equivalent dockerIP), not 0.0.0.0
+			// port.IP is a netip.Addr, so convert to string for comparison
+			actualIP := port.IP.String()
+			assert.Equal(dockerIP, actualIP,
+				"Traefik monitor port must be bound to localhost (%s), not all interfaces (0.0.0.0)", dockerIP)
+		}
+	}
+	assert.True(foundMonitorPortBinding, "Monitor port binding should be found in router container")
+}
+
 // TestAssignRouterPortsToGenericWebserverPorts ensures that RouterHTTPPort and RouterHTTPSPort
 // are assigned correctly based on WebExtraExposedPorts for Generic webservers.
 func TestAssignRouterPortsToGenericWebserverPorts(t *testing.T) {
