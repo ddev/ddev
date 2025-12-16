@@ -25,7 +25,7 @@ func createCodeIgniterSettingsFile(app *DdevApp) (string, error) {
 		// .env doesn't exist, try to copy from env or .env.example
 		envExamplePath := filepath.Join(app.AppRoot, app.ComposerRoot, "env")
 		if !fileutil.FileExists(envExamplePath) {
-			envExamplePath = filepath.Join(app.AppRoot, ".env.example")
+			envExamplePath = filepath.Join(app.AppRoot, app.ComposerRoot, ".env.example")
 		}
 		if fileutil.FileExists(envExamplePath) {
 			if err := fileutil.CopyFile(envExamplePath, envFilePath); err != nil {
