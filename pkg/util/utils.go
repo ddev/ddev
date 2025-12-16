@@ -250,16 +250,14 @@ func FindBashPath() string {
 	}
 
 	// Check for system-wide Git Bash installation
-	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
-	if err != nil {
-		// This one could come back with the WSL Bash, in which case we may have some trouble.
-		windowsBashPath, err = osexec.LookPath("bash.exe")
-		if err != nil {
-			Warning("Not loading custom commands; Bash is not in PATH")
-			return ""
-		}
+	systemWideBashPath := `C:\Program Files\Git\bin\bash.exe`
+	if _, err := os.Stat(systemWideBashPath); err == nil {
+		return systemWideBashPath
 	}
-	return windowsBashPath
+
+	// Not found - don't search PATH as it may return WSL bash which won't work
+	Warning("Not loading custom commands; Git Bash is not installed in standard locations")
+	return ""
 }
 
 // ElapsedTime is an easy way to report how long something took.
