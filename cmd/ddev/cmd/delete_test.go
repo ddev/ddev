@@ -11,6 +11,7 @@ import (
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
 
@@ -44,9 +45,12 @@ func TestDeleteCmd(t *testing.T) {
 
 	// Check that volumes are deleted
 	vols := []string{
-		app.GetMariaDBVolumeName(),
-		app.GetPostgresVolumeName(),
 		"third-party-tmp-busybox-volume",
+	}
+	if app.Database.Type == nodeps.Postgres {
+		vols = append(vols, app.GetPostgresVolumeName())
+	} else {
+		vols = append(vols, app.GetMariaDBVolumeName())
 	}
 	if app.IsMutagenEnabled() {
 		vols = append(vols, ddevapp.GetMutagenVolumeName(app))
