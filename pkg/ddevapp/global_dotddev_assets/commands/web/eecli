@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run ExpressionEngine CLI command inside the web container
+## Usage: eecli [flags] [args]
+## Example: "ddev eecli cache:clear" or "ddev eecli make:addon" (see https://docs.expressionengine.com/latest/cli/intro.html)
+## ProjectTypes: expressionengine
+## ExecRaw: true
+## MutagenSync: true
+
+cd "${EECLI_CMD_ROOT:-"${DDEV_DOCROOT:-/var/www/html}"}" || exit 1
+
+# Find eecli.php by parsing index.php for the system path
+if [ -n "$EECLI_PATH" ]; then
+  # User specified custom path
+  EECLI="$EECLI_PATH"
+elif [ -f "index.php" ]; then
+  # Parse index.php to find $system_path variable
+  SYSTEM_PATH=$(grep -oP '\$system_path\s*=\s*[\x27"]([^\x27"]+)[\x27"]' index.php | sed -E 's/.*[\x27"]([^\x27"]+)[\x27"].*/\1/')
+
+  if [ -n "$SYSTEM_PATH" ]; then
+    EECLI="${SYSTEM_PATH}/ee/eecli.php"
+    if [ ! -f "$EECLI" ]; then
+      echo "Error: Found system path '$SYSTEM_PATH' in index.php, but $EECLI does not exist." >&2
+      exit 1
+    fi
+  else
+    echo "Error: Could not parse system path from index.php. Please set EECLI_PATH environment variable." >&2
+    exit 1
+  fi
+else
+  echo "Error: index.php not found in $(pwd). Please set EECLI_CMD_ROOT or EECLI_PATH." >&2
+  exit 1
+fi
+
+php "$EECLI" "$@"

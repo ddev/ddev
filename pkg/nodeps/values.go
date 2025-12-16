@@ -99,6 +99,7 @@ const (
 	AppTypeDrupal11 = "drupal11"
 	// AppTypeDrupal is an alias for "most recent Drupal version"
 	AppTypeDrupal       = "drupal"
+	AppTypeExpressionEngine = "expressionengine"
 	AppTypeGeneric      = "generic"
 	AppTypeLaravel      = "laravel"
 	AppTypeSilverstripe = "silverstripe"
