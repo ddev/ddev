@@ -51,9 +51,6 @@ ddev snapshot --all`,
 		}
 
 		for _, app := range apps {
-			if app.Database.Type == nodeps.Postgres && app.Database.Version == nodeps.Postgres9 {
-				util.Failed("Snapshots are not supported for postgres:9")
-			}
 			switch {
 			case snapshotCleanup:
 				deleteAppSnapshot(app)

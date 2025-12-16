@@ -24,9 +24,6 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 		if nodeps.ArrayContainsString(app.OmitContainers, "db") {
 			util.Failed("Snapshots are not available when database container is omitted")
 		}
-		if app.Database.Type == nodeps.Postgres && app.Database.Version == nodeps.Postgres9 {
-			util.Failed("Snapshots are not supported for postgres:9")
-		}
 
 		if snapshotRestoreLatest {
 			if snapshotName, err = app.GetLatestSnapshot(); err != nil {

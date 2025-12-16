@@ -47,13 +47,26 @@ fi
 if [ $# = "2" ] && [ "${1:-}" = "restore_snapshot" ] ; then
   snapshot_basename=${2:-nothingthere}
   snapshot="/mnt/snapshots/${snapshot_basename}"
-  # If a gzipped snapshot is passed in, unzip it
-  if [ -f "$snapshot" ] && [ "${snapshot_basename##*.}" = "gz" ]; then
+  # If a compressed snapshot file is passed in, decompress and extract stream
+  if [ -f "$snapshot" ]; then
     echo "Restoring from snapshot file $snapshot"
+    ext="${snapshot_basename##*.}"
     target="/var/tmp/${snapshot_basename}"
     mkdir -p "${target}"
     cd "${target}"
-    gunzip -c ${snapshot} | ${STREAMTOOL} -x
+    case "$ext" in
+      zst)
+        # Only use zstdmt if multithreading is supported (zstd 1.2.0+).
+        "$(command -v zstdmt 2>/dev/null || echo zstd)" -dc --quiet "${snapshot}" | ${STREAMTOOL} -x
+        ;;
+      gz)
+        gunzip -c "${snapshot}" | ${STREAMTOOL} -x
+        ;;
+      *)
+        echo "Unknown snapshot compression: .$ext"
+        exit 101
+        ;;
+    esac
     rm -rf ${DATADIR}/*
   # Otherwise use it as is from the directory
   elif [ -d "$snapshot" ] ; then
