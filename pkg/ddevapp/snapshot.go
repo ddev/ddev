@@ -238,7 +238,11 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	isGzip := strings.HasSuffix(snapshotFile, ".gz")
 	isZstd := strings.HasSuffix(snapshotFile, ".zst")
 	if isGzip {
-		util.Warning("This snapshot was created with gzip. It's recommended to create a new snapshot using zstd for better performance.")
+		// MariaDB 5.5 does not support zstd compression
+		isMariaDB55 := app.Database.Type == nodeps.MariaDB && app.Database.Version == nodeps.MariaDB55
+		if !isMariaDB55 {
+			util.Warning("This snapshot uses gzip compression. Creating a new snapshot will automatically use faster zstd compression.")
+		}
 	}
 	if app.Database.Type == nodeps.Postgres {
 		postgresDataDir := app.GetPostgresDataDir()
