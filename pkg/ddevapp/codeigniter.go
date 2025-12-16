@@ -125,7 +125,7 @@ func getCodeIgniterHooks() []byte {
 
 // setCodeIgniterSiteSettingsPaths sets the paths to settings files
 func setCodeIgniterSiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.AppRoot, ".env")
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.ComposerRoot, ".env")
 	app.SiteDdevSettingsFile = ""
 }
 
