@@ -239,6 +239,17 @@ func FindBashPath() string {
 	if !nodeps.IsWindows() {
 		return "bash"
 	}
+
+	// Check for user-local Git Bash installation first (installed for current user only)
+	// This takes precedence over system-wide installations
+	if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
+		userLocalBashPath := filepath.Join(localAppData, `Programs\Git\bin\bash.exe`)
+		if _, err := os.Stat(userLocalBashPath); err == nil {
+			return userLocalBashPath
+		}
+	}
+
+	// Check for system-wide Git Bash installation
 	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
 	if err != nil {
 		// This one could come back with the WSL Bash, in which case we may have some trouble.

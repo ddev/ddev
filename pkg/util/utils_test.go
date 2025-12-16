@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -355,4 +356,35 @@ func TestGetHomeDir(t *testing.T) {
 	if !filepath.IsAbs(home) {
 		t.Fatalf("returned path is not absolute: %s", home)
 	}
+}
+
+// TestFindBashPath tests FindBashPath
+func TestFindBashPath(t *testing.T) {
+	assert := asrt.New(t)
+	require := require.New(t)
+
+	bashPath := util.FindBashPath()
+
+	// On non-Windows systems, it should return "bash"
+	if !nodeps.IsWindows() {
+		assert.Equal("bash", bashPath)
+		return
+	}
+
+	// On Windows, if bash is found, it should return a valid path
+	// We can't guarantee a specific path because it depends on the installation
+	if bashPath != "" {
+		// Should be an absolute path
+		require.True(filepath.IsAbs(bashPath), "Expected absolute path, got: %s", bashPath)
+
+		// Should end with bash.exe on Windows
+		assert.True(strings.HasSuffix(strings.ToLower(bashPath), "bash.exe"),
+			"Expected path ending with bash.exe, got: %s", bashPath)
+
+		// Verify the file exists
+		_, err := os.Stat(bashPath)
+		require.NoError(err, "Bash path %s does not exist", bashPath)
+	}
+	// Note: We don't fail if bashPath is empty because bash might not be installed
+	// in the test environment
 }
