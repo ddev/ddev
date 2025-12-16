@@ -356,7 +356,7 @@ func TestLaunchCommand(t *testing.T) {
 		out, err := exec.RunHostCommand("bash", "-c", c)
 		out = strings.Trim(out, "\r\n")
 		assert.NoError(err, `couldn't run "%s"", output=%s`, c, out)
-		assert.Equal(out, expect, "output of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
+		assert.Equal(expect, out, "output of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
 	}
 }
 
