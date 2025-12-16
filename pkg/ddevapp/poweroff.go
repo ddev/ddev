@@ -47,6 +47,11 @@ func PowerOff() {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)
 	}
 
+	// Remove the SSH agent volume to clear stored SSH host keys
+	if err := dockerutil.RemoveVolume("ddev-ssh-agent_socket_dir"); err != nil {
+		util.Warning("Failed to remove ddev-ssh-agent_socket_dir volume: %v", err)
+	}
+
 	// Remove global DDEV default network
 	dockerutil.RemoveNetworkWithWarningOnError(dockerutil.NetName)
 
