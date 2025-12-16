@@ -248,7 +248,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		// Choose proper tar flags based on compression
 		tarExtract := "-zxf" // gzip default
 		if isZstd {
-			tarExtract = fmt.Sprintf(`-I "%s" -xf`, app.GetZstdCommand())
+			tarExtract = fmt.Sprintf(`-I "%s" -xf`, app.GetDBCompressionCommand())
 		}
 		// PostgreSQL 18+ requires restore_command parameter, older versions use recovery.conf
 		if v >= 18 {

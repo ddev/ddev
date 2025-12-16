@@ -834,18 +834,22 @@ func (app *DdevApp) GetDBClientCommand() string {
 	return "mysql"
 }
 
-// GetZstdCommand returns the appropriate zstd command (zstd or zstdmt) based on the
-// database type and version.
-func (app *DdevApp) GetZstdCommand() string {
+// GetDBCompressionCommand returns the appropriate database compression command
+// based on the database type and version.
+func (app *DdevApp) GetDBCompressionCommand() string {
 	if app.Database.Type == nodeps.Postgres {
-		if isNewPostgresDB, _ := util.SemverValidate("< 12", app.Database.Version); isNewPostgresDB {
+		if isOldPostgresDB, _ := util.SemverValidate("< 12", app.Database.Version); isOldPostgresDB {
 			return "zstd --quiet"
 		}
 	}
 	if app.Database.Type == nodeps.MySQL {
-		if isNewMysqlDB, _ := util.SemverValidate("< 8.0", app.Database.Version); isNewMysqlDB {
+		if isOldMysqlDB, _ := util.SemverValidate("< 8.0", app.Database.Version); isOldMysqlDB {
 			return "zstd --quiet"
 		}
+	}
+	// MariaDB 5.5 is based on Ubuntu 14.04 which lacks zstd support
+	if app.Database.Type == nodeps.MariaDB && app.Database.Version == nodeps.MariaDB55 {
+		return "gzip --quiet"
 	}
 	return "zstdmt --quiet"
 }
@@ -2993,7 +2997,12 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		return "", fmt.Errorf("invalid snapshot name '%s': it may only contain letters, numbers, hyphens, periods, and underscores", snapshotName)
 	}
 
-	snapshotFile := snapshotName + "-" + app.Database.Type + "_" + app.Database.Version + ".zst"
+	suffix := ".zst"
+	// MariaDB 5.5 is based on Ubuntu 14.04 which lacks zstd support
+	if app.Database.Type == nodeps.MariaDB && app.Database.Version == nodeps.MariaDB55 {
+		suffix = ".gz"
+	}
+	snapshotFile := snapshotName + "-" + app.Database.Type + "_" + app.Database.Version + suffix
 
 	existingSnapshots, err := app.ListSnapshotNames()
 	if err != nil {
@@ -3066,9 +3075,9 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 // getBackupCommand returns the command to dump the entire db system for the various databases
 func getBackupCommand(app *DdevApp, targetFile string) string {
-	zstdCommand := app.GetZstdCommand()
+	compressionCommand := app.GetDBCompressionCommand()
 
-	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | %s > "%s"`, path.Base(targetFile), zstdCommand, targetFile)
+	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%s.log | %s > "%s"`, path.Base(targetFile), compressionCommand, targetFile)
 
 	oldMariaVersions := []string{"5.5", "10.0"}
 
@@ -3077,7 +3086,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 	case app.Database.Type == nodeps.MariaDB && nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version):
 		fallthrough
 	case app.Database.Type == nodeps.MySQL:
-		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | %s > "%s"`, path.Base(targetFile), zstdCommand, targetFile)
+		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%s.log | %s > "%s"`, path.Base(targetFile), compressionCommand, targetFile)
 	case app.Database.Type == nodeps.Postgres:
 		postgresDataPath := app.GetPostgresDataPath()
 		postgresDataDir := app.GetPostgresDataDir()
@@ -3088,10 +3097,15 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 			// Create the full directory structure (e.g., 18/docker/) that matches the container layout
 			versionDir := filepath.Base(filepath.Dir(postgresDataPath)) // Extract "18" from "/var/lib/postgresql/18/docker"
 			// Use zstd compression via tar -I to ensure availability regardless of tar's built-in --zstd support
-			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -I '%s' -cf %s -C /var/tmp/pgstructure/ .", postgresDataPath, path.Base(targetFile), versionDir, versionDir, zstdCommand, targetFile)
+			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -I '%s' -cf %s -C /var/tmp/pgstructure/ .", postgresDataPath, path.Base(targetFile), versionDir, versionDir, compressionCommand, targetFile)
 		} else {
+			// PostgreSQL 9 needs "-X fetch" to ensure WAL files are included in backup
+			walMethod := ""
+			if app.Database.Version == nodeps.Postgres9 {
+				walMethod = "-X fetch"
+			}
 			// PostgreSQL ≤17: original behavior
-			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -I '%s' -cf %s -C /var/tmp/pgbackup/ .", postgresDataPath, path.Base(targetFile), zstdCommand, targetFile)
+			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup %s -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -I '%s' -cf %s -C /var/tmp/pgbackup/ .", postgresDataPath, walMethod, path.Base(targetFile), compressionCommand, targetFile)
 		}
 	}
 	return c
