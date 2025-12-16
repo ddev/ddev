@@ -361,7 +361,6 @@ func TestGetHomeDir(t *testing.T) {
 // TestFindBashPath tests FindBashPath
 func TestFindBashPath(t *testing.T) {
 	assert := asrt.New(t)
-	require := require.New(t)
 
 	bashPath := util.FindBashPath()
 
@@ -375,7 +374,7 @@ func TestFindBashPath(t *testing.T) {
 	// We can't guarantee a specific path because it depends on the installation
 	if bashPath != "" {
 		// Should be an absolute path
-		require.True(filepath.IsAbs(bashPath), "Expected absolute path, got: %s", bashPath)
+		require.True(t, filepath.IsAbs(bashPath), "Expected absolute path, got: %s", bashPath)
 
 		// Should end with bash.exe on Windows
 		assert.True(strings.HasSuffix(strings.ToLower(bashPath), "bash.exe"),
@@ -383,7 +382,7 @@ func TestFindBashPath(t *testing.T) {
 
 		// Verify the file exists
 		_, err := os.Stat(bashPath)
-		require.NoError(err, "Bash path %s does not exist", bashPath)
+		require.NoError(t, err, "Bash path %s does not exist", bashPath)
 	}
 	// Note: We don't fail if bashPath is empty because bash might not be installed
 	// in the test environment
