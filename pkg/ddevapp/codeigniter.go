@@ -132,9 +132,9 @@ func setCodeIgniterSiteSettingsPaths(app *DdevApp) {
 // isCodeIgniterApp detects if this is a CodeIgniter 4 application
 func isCodeIgniterApp(app *DdevApp) bool {
 	// Check for CodeIgniter 4 specific files
-	sparkPath := filepath.Join(app.AppRoot, "spark")
-	appConfigPath := filepath.Join(app.AppRoot, "app", "Config", "App.php")
-	publicIndexPath := filepath.Join(app.AppRoot, "public", "index.php")
+	sparkPath := filepath.Join(app.AppRoot, app.ComposerRoot, "spark")
+	appConfigPath := filepath.Join(app.AppRoot, app.ComposerRoot, "app", "Config", "App.php")
+	publicIndexPath := filepath.Join(app.AppRoot, app.ComposerRoot, "public", "index.php")
 
 	return fileutil.FileExists(sparkPath) &&
 		fileutil.FileExists(appConfigPath) &&
