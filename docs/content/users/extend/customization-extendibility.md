@@ -219,7 +219,7 @@ web_extra_daemons:
 - `web_extra_daemons` is a shortcut for adding a configuration to `supervisord`, which organizes daemons inside the web container. If the default settings are inadequate for your use, you can write a [complete config file for your daemon](#explicit-supervisord-configuration-for-additional-daemons).
 - Your daemon is expected to run in the foreground, not to daemonize itself, `supervisord` will take care of that.
 - To debug and/or get your daemon running to begin with, experiment with running it manually inside `ddev ssh`. Then when it works perfectly implement auto-start with `web_extra_daemons`.
-- You can manually restart all daemons with `ddev exec supervisorctl restart webextradaemons:*` or `ddev exec supervisorctl restart webextradaemons:<yourdaemon>`. (`supervisorctl stop` and `supervisorctl start` are available as you would expect.)
+- You can manually restart all daemons with `ddev exec supervisorctl restart 'webextradaemons:*'` or `ddev exec supervisorctl restart webextradaemons:<yourdaemon>`. (`supervisorctl stop` and `supervisorctl start` are available as you would expect.)
 
 ## Exposing Extra Ports via `ddev-router`
 
