@@ -195,7 +195,14 @@ EOF
 Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_DISABLE_HOST_LOOPBACK=false"
 EOF
   # Install rootless docker
-  curl -fsSL https://get.docker.com/rootless | sh
+  # Download the rootless installer script
+  curl -fsSL https://get.docker.com/rootless -o /tmp/docker-rootless-install.sh
+  # Get Docker version from docker --version (format: "Docker version 29.1.3, build f52814d454")
+  DOCKER_VERSION=$(docker --version | sed -E 's/Docker version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+  # Replace STABLE_LATEST with the current Docker version to match rootful installation
+  sed -i "s/STABLE_LATEST=\"[0-9.]*\"/STABLE_LATEST=\"${DOCKER_VERSION}\"/" /tmp/docker-rootless-install.sh
+  # Execute the modified script
+  sh /tmp/docker-rootless-install.sh
   cat /etc/subuid
   cat /etc/subgid
 fi
