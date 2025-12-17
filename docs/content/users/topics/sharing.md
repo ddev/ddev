@@ -241,8 +241,8 @@ All standard DDEV environment variables are also available.
 
 #### Output
 
-* **stdout**: Public URL (first line only - captured by DDEV)
-* **stderr**: Logs, status messages (passed through to user)
+* **`stdout`**: Public URL (first line only - captured by DDEV)
+* **`stderr`**: Logs, status messages (passed through to user)
 
 #### Lifecycle
 
@@ -255,7 +255,7 @@ All standard DDEV environment variables are also available.
 
 #### Signal Handling
 
-Providers must handle SIGINT (Ctrl+C) and SIGTERM gracefully. Use `trap` to cleanup background processes:
+Providers must handle `SIGINT` (Ctrl+C) and `SIGTERM` gracefully. Use `trap` to cleanup background processes:
 
 ```bash
 cleanup() {
@@ -268,17 +268,16 @@ trap cleanup EXIT
 
 ### Hooks Integration
 
-After the tunnel URL is captured, DDEV sets the `DDEV_SHARE_URL` environment variable and runs pre-share hooks. This allows you to register webhooks, update DNS records, send notifications, or configure SSO callbacks.
+After the tunnel URL is captured, DDEV sets the `DDEV_SHARE_URL` environment variable and runs pre-share hooks. This allows you to alter projects as needed (like WordPress `ddev wp search-replace`, for example).
 
-Example `.ddev/config.yaml`:
+Example `.ddev/config.share.yaml`:
 
 ```yaml
 hooks:
   pre-share:
     - exec: |
-        echo "Tunnel URL: $DDEV_SHARE_URL"
-        curl -X POST https://api.example.com/webhook \
-            -d "url=$DDEV_SHARE_URL"
+        echo "Tunnel URL: ${DDEV_SHARE_URL}"
+        wp search-replace ${DDEV_PRIMARY_URL} ${DDEV_SHARE_URL}
 ```
 
 ### Troubleshooting Custom Providers
@@ -302,7 +301,7 @@ chmod +x .ddev/share-providers/foo.sh
 Error: provider 'ngrok' did not output a URL
 ```
 
-Common causes: tool not installed, authentication required, API timeout. Debug by running the provider directly:
+Common causes: tool not installed, authentication required, no internet. Debug by running the provider directly:
 
 ```bash
 export DDEV_LOCAL_URL=http://127.0.0.1:8080
