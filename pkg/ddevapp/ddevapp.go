@@ -1531,20 +1531,35 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if !dockerutil.VolumeExists(GetMutagenVolumeName(app)) {
 			signature, _ := GetDefaultMutagenVolumeSignature(app)
 			util.Debug("Creating new docker volume '%s' with signature '%v'", GetMutagenVolumeName(app), signature)
-			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: signature})
+			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{
+				mutagenSignatureLabelName:    signature,
+				"com.docker.compose.project": app.GetComposeProjectName(),
+			})
 			if err != nil {
 				return fmt.Errorf("unable to create new Mutagen Docker volume %s: %v", GetMutagenVolumeName(app), err)
 			}
 		}
 	}
 
-	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
+	volumesNeeded := []string{"ddev-global-cache"}
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		volumesNeeded = append(volumesNeeded, app.Name+"-ddev-config")
 	}
+	if !slices.Contains(app.GetOmittedContainers(), "db") {
+		volumesNeeded = append(volumesNeeded, "ddev-"+app.Name+"-snapshots")
+		if app.Database.Type == nodeps.Postgres {
+			volumesNeeded = append(volumesNeeded, app.GetPostgresVolumeName())
+		} else {
+			volumesNeeded = append(volumesNeeded, app.GetMariaDBVolumeName())
+		}
+	}
 	for _, v := range volumesNeeded {
 		util.Debug("creating docker volume %s", v)
-		_, err = dockerutil.CreateVolume(v, "local", nil, nil)
+		labels := map[string]string{}
+		if strings.HasPrefix(v, app.Name) || strings.HasPrefix(v, "ddev-"+app.Name) {
+			labels["com.docker.compose.project"] = app.GetComposeProjectName()
+		}
+		_, err = dockerutil.CreateVolume(v, "local", nil, labels)
 		if err != nil {
 			return fmt.Errorf("unable to create Docker volume %s: %v", v, err)
 		}
