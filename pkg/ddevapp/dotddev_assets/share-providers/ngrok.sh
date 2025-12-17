@@ -87,6 +87,11 @@ done
 
 if [[ -z "$URL" || "$URL" == "null" ]]; then
     echo "Error: Failed to get ngrok URL after 30 seconds" >&2
+    # Show any stderr output from ngrok
+    if [ -f "$NGROK_ERR" ] && [ -s "$NGROK_ERR" ]; then
+        echo "ngrok error output:" >&2
+        cat "$NGROK_ERR" >&2
+    fi
     exit 1
 fi
 

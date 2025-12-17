@@ -44,7 +44,9 @@ echo "Starting cloudflared tunnel..." >&2
 # Use a named pipe to capture stderr while also reading it
 PIPE=$(mktemp -u)
 mkfifo "$PIPE"
-trap "rm -f $PIPE" EXIT
+# Also capture all stderr to a file for failure diagnostics
+STDERR_LOG=$(mktemp)
+trap "rm -f $PIPE $STDERR_LOG" EXIT
 
 # Parse args to determine tunnel mode
 ARGS="${DDEV_SHARE_ARGS:-}"
@@ -101,10 +103,16 @@ fi
 # Read from pipe and extract URL (for quick tunnels) or just forward output
 URL_FOUND="${URL:-}"
 while IFS= read -r line; do
+    # Save all output for failure diagnostics
+    echo "$line" >> "$STDERR_LOG"
     # For quick tunnels, look for the cloudflared URL in the output
+    # Exclude api.trycloudflare.com which appears in error messages
     if [[ -z "$URL_FOUND" ]] && [[ "$line" =~ https://[a-z0-9-]+\.trycloudflare\.com ]]; then
-        URL_FOUND="${BASH_REMATCH[0]}"
-        echo "$URL_FOUND"  # Output to stdout - CRITICAL: This is captured by DDEV
+        POTENTIAL_URL="${BASH_REMATCH[0]}"
+        if [[ ! "$POTENTIAL_URL" =~ api\.trycloudflare\.com ]]; then
+            URL_FOUND="$POTENTIAL_URL"
+            echo "$URL_FOUND"  # Output to stdout - CRITICAL: This is captured by DDEV
+        fi
     fi
     # In verbose mode, show all output; otherwise only show errors/warnings
     if [[ -n "$VERBOSE" ]]; then
@@ -125,5 +133,14 @@ EXIT_CODE=$?
 # Clean up reader process
 kill $READER_PID 2>/dev/null || true
 wait $READER_PID 2>/dev/null || true
+
+# On failure, show full stderr log for diagnostics
+if [[ $EXIT_CODE -ne 0 ]] && [[ -z "$URL_FOUND" ]]; then
+    echo "Error: cloudflared exited with code $EXIT_CODE" >&2
+    if [ -f "$STDERR_LOG" ] && [ -s "$STDERR_LOG" ]; then
+        echo "cloudflared output:" >&2
+        cat "$STDERR_LOG" >&2
+    fi
+fi
 
 exit $EXIT_CODE
