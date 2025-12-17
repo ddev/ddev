@@ -30,6 +30,7 @@ fi
 NGROK_ERR=$(mktemp)
 
 # Start ngrok in background, capturing stderr for error detection
+echo "Running: ngrok http $DDEV_LOCAL_URL ${DDEV_SHARE_ARGS:-}" >&2
 ngrok http "$DDEV_LOCAL_URL" ${DDEV_SHARE_ARGS:-} 2>"$NGROK_ERR" &
 NGROK_PID=$!
 

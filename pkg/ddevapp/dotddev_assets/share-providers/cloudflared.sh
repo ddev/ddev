@@ -72,9 +72,11 @@ if [[ -n "$TUNNEL_NAME" ]]; then
     # Named tunnel mode: cloudflared --url <url> --protocol http2 tunnel run <name>
     # Note: --url and --protocol must come BEFORE "tunnel run"
     echo "Using named tunnel: $TUNNEL_NAME" >&2
+    echo "Running: cloudflared --url $DDEV_LOCAL_URL --protocol http2 tunnel run $TUNNEL_NAME" >&2
     cloudflared --url "$DDEV_LOCAL_URL" --protocol http2 tunnel run "$TUNNEL_NAME" 2> "$PIPE" &
 else
     # Quick tunnel mode (default): cloudflared tunnel --url <url> --protocol http2 [args]
+    echo "Running: cloudflared tunnel --url $DDEV_LOCAL_URL --protocol http2 $ARGS" >&2
     cloudflared tunnel --url "$DDEV_LOCAL_URL" --protocol http2 $ARGS 2> "$PIPE" &
 fi
 CF_PID=$!
