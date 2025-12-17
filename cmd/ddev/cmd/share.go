@@ -156,11 +156,9 @@ ddev share myproject`,
 			}
 		}()
 
-		// Capture stderr in buffer while also forwarding to user
-		// This allows us to display stderr on failure even if we haven't been forwarding it
+		// Capture stderr in buffer to display on failure
 		var stderrBuf bytes.Buffer
 		var stderrMu sync.Mutex
-		stderrDone := make(chan bool, 1)
 		go func() {
 			scanner := bufio.NewScanner(stderrReader)
 			for scanner.Scan() {
@@ -168,12 +166,6 @@ ddev share myproject`,
 				stderrMu.Lock()
 				stderrBuf.WriteString(line + "\n")
 				stderrMu.Unlock()
-				select {
-				case <-stderrDone:
-					return
-				default:
-					_, _ = os.Stderr.WriteString(line + "\n")
-				}
 			}
 		}()
 
@@ -245,9 +237,6 @@ ddev share myproject`,
 			}
 			err = <-done
 		}
-
-		// Stop forwarding stderr (to suppress shutdown errors)
-		close(stderrDone)
 
 		// Process post-share hooks
 		hookErr := app.ProcessHooks("post-share")
