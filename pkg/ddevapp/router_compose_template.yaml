@@ -28,8 +28,8 @@ services:
     ports: {{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
       - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
       - "{{ $port }}:{{ $port }}"{{ end }}{{ end }}
-      # Traefik router; configured in static config as entrypoint
-      - "{{ if not .router_bind_all_interfaces }}{{ $dockerIP }}:{{ end }}{{.TraefikMonitorPort}}:{{.TraefikMonitorPort}}"
+      # Traefik monitor port: Always bind to localhost only for security
+      - "{{ $dockerIP }}:{{.TraefikMonitorPort}}:{{.TraefikMonitorPort}}"
     labels:
       # For cleanup on ddev poweroff
       com.ddev.site-name: ""
