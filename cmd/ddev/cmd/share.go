@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"net/url"
@@ -9,7 +10,9 @@ import (
 	"os/exec"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
+	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -130,16 +133,23 @@ ddev share myproject`,
 			}
 		}()
 
-		// Forward stderr to user, but stop after provider is killed
+		// Capture stderr in buffer while also forwarding to user
+		// This allows us to display stderr on failure even if we haven't been forwarding it
+		var stderrBuf bytes.Buffer
+		var stderrMu sync.Mutex
 		stderrDone := make(chan bool, 1)
 		go func() {
 			scanner := bufio.NewScanner(stderrReader)
 			for scanner.Scan() {
+				line := scanner.Text()
+				stderrMu.Lock()
+				stderrBuf.WriteString(line + "\n")
+				stderrMu.Unlock()
 				select {
 				case <-stderrDone:
 					return
 				default:
-					_, _ = os.Stderr.WriteString(scanner.Text() + "\n")
+					_, _ = os.Stderr.WriteString(line + "\n")
 				}
 			}
 		}()
@@ -150,6 +160,14 @@ ddev share myproject`,
 		case shareURL = <-urlChan:
 			if shareURL == "" {
 				_ = providerCmd.Process.Kill()
+				// Give stderr goroutine time to capture any error output
+				time.Sleep(100 * time.Millisecond)
+				stderrMu.Lock()
+				stderrOutput := stderrBuf.String()
+				stderrMu.Unlock()
+				if stderrOutput != "" {
+					util.Error("Provider stderr output:\n%s", stderrOutput)
+				}
 				util.Failed("Provider '%s' did not output a URL", providerName)
 			}
 		case <-sigChan:
@@ -165,6 +183,14 @@ ddev share myproject`,
 		parsedURL, err := url.Parse(shareURL)
 		if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
 			_ = providerCmd.Process.Kill()
+			// Give stderr goroutine time to capture any error output
+			time.Sleep(100 * time.Millisecond)
+			stderrMu.Lock()
+			stderrOutput := stderrBuf.String()
+			stderrMu.Unlock()
+			if stderrOutput != "" {
+				util.Error("Provider stderr output:\n%s", stderrOutput)
+			}
 			util.Failed("Provider '%s' output invalid URL: %s", providerName, shareURL)
 		}
 
@@ -216,8 +242,12 @@ ddev share myproject`,
 				// Don't warn about exit code -1 which is from Kill()
 				if exitErr.ExitCode() != -1 {
 					util.Warning("Provider '%s' exited with code %d", providerName, exitErr.ExitCode())
-					if !globalconfig.DdevDebug {
-						util.Warning(`For details, run: DDEV_DEBUG=true %s`, prettyCmd(os.Args))
+					// Always show stderr output on error, not just with DDEV_DEBUG
+					stderrMu.Lock()
+					stderrOutput := stderrBuf.String()
+					stderrMu.Unlock()
+					if stderrOutput != "" {
+						util.Error("Provider stderr output:\n%s", stderrOutput)
 					}
 				}
 			}
