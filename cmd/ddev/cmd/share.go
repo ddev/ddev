@@ -97,6 +97,24 @@ ddev share myproject`,
 			util.Failed("Failed to create stderr pipe: %v", err)
 		}
 
+		// Show what script is being run
+		util.Success("Using share provider script: %s", scriptPath)
+
+		// Extract key environment variables for display
+		var localURL, shareArgs string
+		for _, e := range env {
+			if strings.HasPrefix(e, "DDEV_LOCAL_URL=") {
+				localURL = strings.TrimPrefix(e, "DDEV_LOCAL_URL=")
+			} else if strings.HasPrefix(e, "DDEV_SHARE_ARGS=") {
+				shareArgs = strings.TrimPrefix(e, "DDEV_SHARE_ARGS=")
+			}
+		}
+		if shareArgs != "" {
+			util.Success("Sharing %s with args: %s", localURL, shareArgs)
+		} else {
+			util.Success("Sharing %s", localURL)
+		}
+
 		// Execute provider script
 		providerCmd := exec.Command(scriptPath)
 		providerCmd.Env = env
