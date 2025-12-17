@@ -249,14 +249,17 @@ func FindBashPath() string {
 		}
 	}
 
-	// Check for system-wide Git Bash installation
-	systemWideBashPath := `C:\Program Files\Git\bin\bash.exe`
-	if _, err := os.Stat(systemWideBashPath); err == nil {
-		return systemWideBashPath
+	// Check for system-wide Git Bash installation using PROGRAMFILES environment variable
+	// This works even if Program Files is on a different drive
+	if programFiles := os.Getenv("PROGRAMFILES"); programFiles != "" {
+		systemWideBashPath := filepath.Join(programFiles, `Git\bin\bash.exe`)
+		if _, err := os.Stat(systemWideBashPath); err == nil {
+			return systemWideBashPath
+		}
 	}
 
 	// Not found - don't search PATH as it may return WSL bash which won't work
-	WarningOnce("Not loading custom commands; Git Bash is not installed in standard locations")
+	WarningOnce("Git Bash is not installed in standard locations, so some features like custom commands may not work correctly")
 	return ""
 }
 
