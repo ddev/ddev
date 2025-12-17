@@ -131,6 +131,11 @@ ddev share myproject`,
 			util.Failed("Failed to start share provider '%s': %v", providerName, err)
 		}
 
+		// Close write ends immediately after Start - child has its own copy
+		// This ensures readers see EOF when child exits (fixes hang on provider failure)
+		_ = stdoutWriter.Close()
+		_ = stderrWriter.Close()
+
 		// Capture URL from first line of stdout
 		urlChan := make(chan string, 1)
 		go func() {
@@ -223,10 +228,6 @@ ddev share myproject`,
 		if err != nil {
 			util.Warning("Failed to process pre-share hooks: %v", err)
 		}
-
-		// Close write ends of pipes so readers can finish
-		_ = stdoutWriter.Close()
-		_ = stderrWriter.Close()
 
 		// Wait for either provider to exit or signal to be received
 		done := make(chan error, 1)
