@@ -3099,7 +3099,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 			// Create the full directory structure (e.g., 18/docker/) that matches the container layout
 			versionDir := filepath.Base(filepath.Dir(postgresDataPath)) // Extract "18" from "/var/lib/postgresql/18/docker"
 			// Use zstd compression via tar -I to ensure availability regardless of tar's built-in --zstd support
-			c = fmt.Sprintf("cd %s && %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -I '%s' -cf %s -C /var/tmp/pgstructure/ .", cleanupCmd, postgresDataPath, path.Base(targetFile), versionDir, versionDir, compressionCommand, targetFile)
+			c = fmt.Sprintf("cd %s && %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -I '%s' -cf %s -C /var/tmp/pgstructure/ .", postgresDataPath, cleanupCmd, path.Base(targetFile), versionDir, versionDir, compressionCommand, targetFile)
 		} else {
 			// PostgreSQL 9 needs "-X fetch" to ensure WAL files are included in backup
 			walMethod := ""
