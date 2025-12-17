@@ -107,9 +107,10 @@ while IFS= read -r line; do
     # In verbose mode, show all output; otherwise only show errors/warnings
     if [[ -n "$VERBOSE" ]]; then
         echo "$line" >&2
-    elif [[ "$line" =~ ^[0-9T:-]+Z\ (ERR|WRN|FTL) ]] && [[ ! "$line" =~ "Cannot determine default origin certificate" ]]; then
+    elif [[ "$line" =~ ^[0-9T:-]+Z\ (ERR|WRN|FTL) ]] && [[ ! "$line" =~ "Cannot determine default origin certificate" ]] && [[ ! "$line" =~ "ping_group_range" ]] && [[ ! "$line" =~ "ICMP proxy" ]]; then
         # Only show error messages and warnings to user, suppress verbose INFO logs
         # Skip benign errors about origin certificate (not needed for quick tunnels)
+        # Skip ping/ICMP proxy warnings (not needed for web tunnels, common on WSL2)
         echo "$line" >&2
     fi
 done < "$PIPE" &
