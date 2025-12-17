@@ -256,7 +256,7 @@ func FindBashPath() string {
 	}
 
 	// Not found - don't search PATH as it may return WSL bash which won't work
-	Warning("Not loading custom commands; Git Bash is not installed in standard locations")
+	WarningOnce("Not loading custom commands; Git Bash is not installed in standard locations")
 	return ""
 }
 

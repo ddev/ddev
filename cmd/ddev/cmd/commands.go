@@ -37,11 +37,9 @@ func IsUserDefinedCustomCommand(cmd *cobra.Command) bool {
 // .ddev/commands/<servicename> and .ddev/commands/host
 // and if it finds them adds them to Cobra's commands.
 func addCustomCommands(rootCmd *cobra.Command) error {
-	// Custom commands are shell scripts - so we can't use them on windows without bash.
+	// Custom commands are shell scripts - so we can't use them on Windows without bash.
 	if nodeps.IsWindows() {
-		windowsBashPath := util.FindBashPath()
-		if windowsBashPath == "" {
-			util.Warning("Unable to find bash.exe in PATH, not loading custom commands")
+		if windowsBashPath := util.FindBashPath(); windowsBashPath == "" {
 			return nil
 		}
 	}
