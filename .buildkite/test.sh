@@ -33,7 +33,7 @@ if [ "${os:-}" = "darwin" ]; then
     if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
     command -v colima 2>/dev/null && echo "Stopping colima" && (colima stop || true)
     command -v colima 2>/dev/null && echo "Stopping colima_vz" && (colima stop vz || true)
-    command -v limactl 2>/dev/null && echo "Stopping lima" && (limactl stop lima-vz || true)
+    command -v limactl 2>/dev/null && echo "Stopping lima" && (limactl stop -f lima-vz || true)
     if [ -f ~/.rd/bin/rdctl ]; then echo "Stopping Rancher Desktop" && (~/.rd/bin/rdctl shutdown || true); fi
     docker context use default
     # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop
