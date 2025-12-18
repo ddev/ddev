@@ -3098,7 +3098,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 func getBackupCommand(app *DdevApp, targetFile string) string {
 	compressionCommand := app.GetDBCompressionCommand()
 
-	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%s.log | %s > "%s"`, path.Base(targetFile), compressionCommand, targetFile)
+	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%[1]s.log | %[2]s > "%[3]s"`, path.Base(targetFile), compressionCommand, targetFile)
 
 	oldMariaVersions := []string{"5.5", "10.0"}
 
@@ -3107,7 +3107,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 	case app.Database.Type == nodeps.MariaDB && nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version):
 		fallthrough
 	case app.Database.Type == nodeps.MySQL:
-		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%s.log | %s > "%s"`, path.Base(targetFile), compressionCommand, targetFile)
+		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%[1]s.log | %[2]s > "%[3]s"`, path.Base(targetFile), compressionCommand, targetFile)
 	case app.Database.Type == nodeps.Postgres:
 		postgresDataPath := app.GetPostgresDataPath()
 		postgresDataDir := app.GetPostgresDataDir()
@@ -3118,7 +3118,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 			// Create the full directory structure (e.g., 18/docker/) that matches the container layout
 			versionDir := filepath.Base(filepath.Dir(postgresDataPath)) // Extract "18" from "/var/lib/postgresql/18/docker"
 			// Use zstd compression via tar -I to ensure availability regardless of tar's built-in --zstd support
-			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && mkdir -p /var/tmp/pgstructure/%s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%s/docker/ && tar -I '%s' -cf %s -C /var/tmp/pgstructure/ .", postgresDataPath, path.Base(targetFile), versionDir, versionDir, compressionCommand, targetFile)
+			c = fmt.Sprintf("cd %[1]s && rm -rf /var/tmp/pgbackup && pg_basebackup -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%[2]s.log && mkdir -p /var/tmp/pgstructure/%[3]s/docker && cp -a /var/tmp/pgbackup/* /var/tmp/pgstructure/%[3]s/docker/ && tar -I '%[4]s' -cf %[5]s -C /var/tmp/pgstructure/ .", postgresDataPath, path.Base(targetFile), versionDir, compressionCommand, targetFile)
 		} else {
 			// PostgreSQL 9 needs "-X fetch" to ensure WAL files are included in backup
 			walMethod := ""
@@ -3126,9 +3126,13 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 				walMethod = "-X fetch"
 			}
 			// PostgreSQL ≤17: original behavior
-			c = fmt.Sprintf("cd %s && rm -rf /var/tmp/pgbackup && pg_basebackup %s -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -I '%s' -cf %s -C /var/tmp/pgbackup/ .", postgresDataPath, walMethod, path.Base(targetFile), compressionCommand, targetFile)
+			c = fmt.Sprintf("cd %[1]s && rm -rf /var/tmp/pgbackup && pg_basebackup %[2]s -c fast -D /var/tmp/pgbackup 2>/tmp/snapshot_%[3]s.log && tar -I '%[4]s' -cf %[5]s -C /var/tmp/pgbackup/ .", postgresDataPath, walMethod, path.Base(targetFile), compressionCommand, targetFile)
 		}
 	}
+
+	// Remove any existing file or directory at the target path to avoid "Is a directory" errors
+	cleanupCmd := fmt.Sprintf(`rm -rf "%s"`, targetFile)
+	c = fmt.Sprintf("%s && %s", cleanupCmd, c)
 	return c
 }
 
