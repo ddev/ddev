@@ -115,6 +115,10 @@
       "description": "Router HTTPS port for all projects, can be overridden in project config.",
       "type": "string"
     },
+    "share_default_provider": {
+      "description": "Default share provider for all projects (ngrok, cloudflared, or custom), can be overridden in project config.",
+      "type": "string"
+    },
     "simple_formatting": {
       "description": "Whether to disable most \"ddev list\" and \"ddev describe\" table formatting.",
       "type": "boolean"

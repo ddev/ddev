@@ -203,6 +203,7 @@ nav:
     - users/extend/in-container-configuration.md
     - users/extend/custom-tls-certificates.md
     - users/extend/traefik-router.md
+    - users/extend/share-providers.md
   - 'Debugging & Profiling':
       - users/debugging-profiling/step-debugging.md
       - 'Profiling':

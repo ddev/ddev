@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+#ddev-generated
+
+# ngrok share provider for DDEV
+# Documentation: https://ddev.readthedocs.io/en/stable/users/topics/sharing/
+#
+# To customize: remove the '#ddev-generated' line above and edit as needed.
+# To create a variant: copy to a new file like my-ngrok.sh
+
+set -euo pipefail
+
+# Enable debug output if DDEV_DEBUG or DDEV_VERBOSE is set
+if [[ "${DDEV_DEBUG:-}" == "true" ]] || [[ "${DDEV_VERBOSE:-}" == "true" ]]; then
+    set -x
+fi
+
+# Validate ngrok is installed
+if ! command -v ngrok &> /dev/null; then
+    echo "Error: ngrok not found in PATH. Install from https://ngrok.com/download" >&2
+    exit 1
+fi
+
+# Validate required environment variables
+if [[ -z "${DDEV_LOCAL_URL:-}" ]]; then
+    echo "Error: DDEV_LOCAL_URL not set" >&2
+    exit 1
+fi
+
+# Create temporary file to capture ngrok's stderr (for error messages like account limits)
+NGROK_ERR=$(mktemp)
+
+# Start ngrok in background, capturing stderr for error detection
+echo "Running: ngrok http $DDEV_LOCAL_URL ${DDEV_SHARE_ARGS:-}" >&2
+ngrok http "$DDEV_LOCAL_URL" ${DDEV_SHARE_ARGS:-} 2>"$NGROK_ERR" &
+NGROK_PID=$!
+
+# Function to cleanup on exit
+cleanup() {
+    if kill -0 $NGROK_PID 2>/dev/null; then
+        kill $NGROK_PID 2>/dev/null || true
+    fi
+    rm -f "$NGROK_ERR"
+}
+trap cleanup EXIT
+
+# Poll ngrok API for public URL (30 second timeout)
+echo "Starting ngrok tunnel..." >&2
+URL=""
+for i in {1..30}; do
+    # Check if ngrok process is still running
+    if ! kill -0 "$NGROK_PID" 2>/dev/null; then
+        # ngrok died - save error output before cleanup trap removes the file
+        # Give ngrok a moment to write any final error output
+        sleep 0.1
+        NGROK_ERROR_CONTENT=""
+        if [ -f "$NGROK_ERR" ] && [ -s "$NGROK_ERR" ]; then
+            NGROK_ERROR_CONTENT=$(cat "$NGROK_ERR" 2>/dev/null || echo "")
+        fi
+
+        # Now we can exit, which will trigger cleanup trap
+        echo "Error: ngrok process died unexpectedly" >&2
+        if [ -n "$NGROK_ERROR_CONTENT" ]; then
+            echo "ngrok error output:" >&2
+            echo "$NGROK_ERROR_CONTENT" >&2
+        else
+            echo "This may indicate an authentication issue. Check 'ngrok config add-authtoken <token>'" >&2
+        fi
+        exit 1
+    fi
+
+    # Get API response for debugging
+    if [[ "${DDEV_DEBUG:-}" == "true" ]] || [[ "${DDEV_VERBOSE:-}" == "true" ]]; then
+        echo "Attempt $i: Polling ngrok API..." >&2
+        API_RESPONSE=$(curl -s http://localhost:4040/api/tunnels 2>&1 || true)
+        echo "API Response: $API_RESPONSE" >&2
+    fi
+
+    URL=$(curl -s http://localhost:4040/api/tunnels 2>/dev/null | \
+          ddev exec jq -r '.tunnels[0].public_url' 2>/dev/null || echo "")
+
+    if [[ -n "$URL" && "$URL" != "null" ]]; then
+        echo "$URL"  # Output to stdout - CRITICAL: This is captured by DDEV
+        break
+    fi
+    sleep 1
+done
+
+if [[ -z "$URL" || "$URL" == "null" ]]; then
+    echo "Error: Failed to get ngrok URL after 30 seconds" >&2
+    # Show any stderr output from ngrok
+    if [ -f "$NGROK_ERR" ] && [ -s "$NGROK_ERR" ]; then
+        echo "ngrok error output:" >&2
+        cat "$NGROK_ERR" >&2
+    fi
+    exit 1
+fi
+
+# Wait for ngrok to exit
+wait "$NGROK_PID"
