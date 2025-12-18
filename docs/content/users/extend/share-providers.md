@@ -1,3 +1,8 @@
+---
+search:
+  boost: .5
+---
+
 # Custom Share Providers
 
 You can customize the built-in providers or create your own share providers in `.ddev/share-providers/`.

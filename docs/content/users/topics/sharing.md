@@ -1,3 +1,8 @@
+---
+search:
+  boost: 2
+---
+
 # Sharing Your Project
 
 Even though DDEV is intended for local development on a single machine, not as a public server, there are a number of reasons you might want to expose your work in progress more broadly:
@@ -24,26 +29,27 @@ Run `ddev share` to use the default provider, or `ddev share --provider=cloudfla
 
 CMSes like WordPress and Magento 2 make this a little harder by only responding to a single base URL that’s coded into the database. ngrok allows you to use one static domain for free so you won’t have to frequently change the base URL. Cloudflared stable custom domains require a free Cloudflare account and a domain with DNS hosted on Cloudflare.
 
-### Using ngrok
+## Using ngrok
 
 [ngrok](https://ngrok.com/docs/what-is-ngrok) is the traditional tunneling solution used by DDEV. It requires an ngrok account (free or paid) and the free account allows you to create tunnels with random URLs or a single static URL.
 
-#### Installing ngrok
+### Installing ngrok
 
 1. Create an ngrok account at [ngrok.com](https://ngrok.com/signup).
 2. Install ngrok with one of [many techniques](https://ngrok.com/download/mac-os) including `brew install ngrok` (macOS) or `snap install ngrok` (Linux/WSL2).
 3. Get your token from the [dashboard](https://dashboard.ngrok.com/get-started/your-authtoken).
 4. Connect ngrok to your account with `ngrok config add-authtoken <your-token>`.
 
-<a name="setting-up-a-stable-ngrok-domain">
-#### Setting up a Stable ngrok Domain (optional)
+<a name="setting-up-a-stable-ngrok-domain"></a>
+
+### Setting up a Stable ngrok Domain (optional)
 
 1. [Get a free static domain](https://ngrok.com/blog-post/free-static-domains-ngrok-users) from ngrok. Let's say we got `wp23.ngrok-free.app`.
 2. Pass the domain to the ngrok args:
     * In `.ddev/config.yaml`, `share_provider_args: --domain wp23.ngrok-free.app` will result in ngrok always using `wp23.ngrok-free.app` as the URL, so it's not changing on you all the time.
     * Alternatively you can pass the domain directly to `ddev share --provider-args="--domain wp23.ngrok-free.app"`
 
-#### WordPress special handling: Change the URL with `wp search-replace`
+### WordPress special handling: Change the URL with `wp search-replace`
 
 WordPress only has the one base URL, but the `wp` command is built into DDEV’s web container.
 
@@ -55,7 +61,7 @@ This set of steps assumes an ngrok domain of `wp23.ngrok-free.app` and a startin
 * `ddev wp search-replace https://wordpress.ddev.site https://wp23.ngrok-free.app`, assuming your project is configured for `https://wordpress.ddev.site` and your `share_provider_args` are configured for the `wp23.ngrok-free.app` domain.
 * Now run [`ddev share`](../usage/commands.md#share).
 
-#### Magento2 special handling: Change the URL with Magento Tool
+### Magento2 special handling: Change the URL with Magento Tool
 
 This set of steps assumes an ngrok domain `mg2.ngrok-free.app`:
 
@@ -65,15 +71,15 @@ This set of steps assumes an ngrok domain `mg2.ngrok-free.app`:
 * Run `bin/magento setup:store-config:set --base-url="https://mg2.ngrok-free.app/"`.
 * Run [`ddev share`](../usage/commands.md#share) and you'll see your project at `mg2.ngrok-free.app`.
 
-### Using Cloudflared
+## Using Cloudflared
 
 [Cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/) is a free alternative to ngrok that doesn't require an account. Each tunnel gets a random temporary URL like `https://example-name.trycloudflare.com`.
 
-#### Prerequisites
+### Prerequisites
 
 Install cloudflared from [Cloudflare's installation guide](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation).
 
-#### Usage
+### Usage
 
 ```bash
 # Use cloudflared for a single share session
@@ -88,7 +94,7 @@ ddev config --share-default-provider=cloudflared
 
 The provider priority is: command-line flag > project config > global config > default (ngrok).
 
-#### Cloudflared Configuration
+### Cloudflared Configuration
 
 You can configure cloudflared arguments in your `.ddev/config.yaml`:
 
@@ -102,16 +108,16 @@ Or pass them on the command line:
 ddev share --provider=cloudflared --provider-args="--your-args-here"
 ```
 
-#### Setting up a Stable Cloudflared Domain
+### Setting up a Stable Cloudflared Domain
 
 If you have a domain managed by Cloudflare, you can use a named tunnel for a stable, permanent URL instead of the random `trycloudflare.com` URLs.
 
-##### Cloudflared Static Domain Requirements
+#### Cloudflared Static Domain Requirements
 
 * A domain managed by Cloudflare (DNS hosted on Cloudflare)
 * cloudflared installed and authenticated: `cloudflared tunnel login`
 
-##### Setup Steps
+#### Setup Steps
 
 1. **Create a named tunnel:**
 
@@ -120,6 +126,9 @@ If you have a domain managed by Cloudflare, you can use a named tunnel for a sta
     ```
 
     This creates a tunnel and saves credentials in `~/.cloudflared/`.
+
+    !!!tip "Multiple Tunnels"
+        You can create multiple named tunnels for different projects. Each tunnel needs a unique name and DNS record.
 
 2. **Add a DNS route for your tunnel:**
 
@@ -155,10 +164,7 @@ If you have a domain managed by Cloudflare, you can use a named tunnel for a sta
 
     Your project will be available at `https://mysite.example.com`.
 
-!!!tip "Multiple Tunnels"
-    You can create multiple named tunnels for different projects. Each tunnel needs a unique name and DNS record.
-
-### Custom Share Providers
+## Using Custom Share Providers
 
 You can customize the built-in providers or create your own share providers. See [Custom Share Providers](../extend/share-providers.md) for details.
 
