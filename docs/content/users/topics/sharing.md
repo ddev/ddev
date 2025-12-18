@@ -22,11 +22,11 @@ There are at least three different ways to share a running DDEV project outside 
 
 Run `ddev share` to use the default provider, or `ddev share --provider=cloudflared` to use a specific provider. The URL will be displayed and can be shared with collaborators or used on mobile devices.
 
-CMSes like WordPress and Magento 2 make this a little harder by only responding to a single base URL that’s coded into the database. ngrok allows you to use one static domain for free so you won’t have to frequently change the base URL. Cloudflared allows unlimited static domains but requires a free account and a domain name that you control.
+CMSes like WordPress and Magento 2 make this a little harder by only responding to a single base URL that’s coded into the database. ngrok allows you to use one static domain for free so you won’t have to frequently change the base URL. Cloudflared stable custom domains require a free Cloudflare account and a domain with DNS hosted on Cloudflare.
 
 ### Using ngrok
 
-[ngrok](https://ngrok.com/docs/what-is-ngrok) is the traditional tunneling solution used by DDEV. It requires an ngrok account (free or paid) and the free account allows you to create tunnels with random URLs or a single static URL. 
+[ngrok](https://ngrok.com/docs/what-is-ngrok) is the traditional tunneling solution used by DDEV. It requires an ngrok account (free or paid) and the free account allows you to create tunnels with random URLs or a single static URL.
 
 #### Installing ngrok
 
@@ -35,7 +35,7 @@ CMSes like WordPress and Magento 2 make this a little harder by only responding 
 3. Get your token from the [dashboard](https://dashboard.ngrok.com/get-started/your-authtoken).
 4. Connect ngrok to your account with `ngrok config add-authtoken <your-token>`.
 
-
+<a name="setting-up-a-stable-ngrok-domain">
 #### Setting up a Stable ngrok Domain (optional)
 
 1. [Get a free static domain](https://ngrok.com/blog-post/free-static-domains-ngrok-users) from ngrok. Let's say we got `wp23.ngrok-free.app`.
@@ -62,7 +62,7 @@ This set of steps assumes an ngrok domain `mg2.ngrok-free.app`:
 * Configure `.ddev/config.yaml` to use a custom domain with `share_provider_args: --domain mg2.ngrok-free.app`.
 * Make a backup of your database.
 * Run [`ddev ssh`](../usage/commands.md#ssh).
-* Run `bin/magento setup:store-config:set --base-url="https://mg2.ngrok-free.app/`.
+* Run `bin/magento setup:store-config:set --base-url="https://mg2.ngrok-free.app/"`.
 * Run [`ddev share`](../usage/commands.md#share) and you'll see your project at `mg2.ngrok-free.app`.
 
 ### Using Cloudflared
