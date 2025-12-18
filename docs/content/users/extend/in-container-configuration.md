@@ -157,3 +157,23 @@ To set the `PAGER` variable in the `web` and `db` containers across all projects
 ```bash
 export DDEV_PAGER="less -SFXR"
 ```
+
+## In-container `ssh` or `rsync` failures
+
+If you use `ddev auth ssh` and use `ssh` or `rsync` inside the container and see a message like this:
+
+```bash
+$ ddev exec ssh <hostname>
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+```
+
+It means that the host you are connecting to has actually changed its identification. If you know why that is, and accept the situation, you can clean up the situation with this command:
+
+```bash
+ddev exec ssh-keygen -f '/home/.ssh-agent/known_hosts' -R '<hostname>'
+```
+
+Use the hostname that gave you trouble.
