@@ -268,6 +268,7 @@ ddev share myproject`,
 func init() {
 	RootCmd.AddCommand(DdevShareCommand)
 	DdevShareCommand.Flags().String("provider", "", "share provider to use (ngrok, cloudflared, or custom)")
+	_ = DdevShareCommand.RegisterFlagCompletionFunc("provider", configCompletionFunc([]string{"ngrok", "cloudflared"}))
 	DdevShareCommand.Flags().String("provider-args", "", "arguments to pass to the share provider")
 	DdevShareCommand.Flags().SetNormalizeFunc(func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
 		if name == "ngrok-args" {
