@@ -38,7 +38,7 @@ var TraefikRouterTag = "20251227_rfay_traefik_healthcheck"
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "20251222_stasadev_tzdata_legacy"
+var SSHAuthTag = "20251219_rfay_skip_paused_projects"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
