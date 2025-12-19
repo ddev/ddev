@@ -231,9 +231,6 @@ func TestShareCmdCloudflared(t *testing.T) {
 
 // TestShareCmdProviderSystem tests the script-based provider system
 func TestShareCmdProviderSystem(t *testing.T) {
-	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
-		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
-	}
 	t.Setenv(`DDEV_GOROUTINES`, "")
 
 	site := TestSites[0]
@@ -478,8 +475,8 @@ sleep 2
 		t.Logf("Stdout: %s", stdoutOutput)
 		t.Logf("Stderr: %s", stderrOutput)
 
-		// Verify DDEV_SHARE_ARGS was passed to the provider
-		require.Contains(t, stderrOutput, "ARGS_RECEIVED: DDEV_SHARE_ARGS=--custom-flag value123",
+		// Verify DDEV_SHARE_ARGS was passed to the provider (shown in ddev's output message)
+		require.Contains(t, stdoutOutput, "with args: --custom-flag value123",
 			"Provider should receive DDEV_SHARE_ARGS from --provider-args flag")
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 	})
