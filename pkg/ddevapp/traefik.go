@@ -127,6 +127,8 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	if err != nil {
 		return fmt.Errorf("failed to create global Traefik certs dir: %v", err)
 	}
+	// Remove and recreate config dir to clear stale project configs from previous runs
+	_ = os.RemoveAll(sourceConfigDir)
 	err = os.MkdirAll(sourceConfigDir, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create global Traefik config dir: %v", err)
