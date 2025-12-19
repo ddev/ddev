@@ -4,6 +4,7 @@
     "name": "Go",
     // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
     "image": "mcr.microsoft.com/devcontainers/base:debian-12",
+    // Features to add to the dev container. More info: https://containers.dev/features.
     "features": {
         "ghcr.io/devcontainers/features/docker-in-docker:2": {
             "version": "latest"
@@ -17,9 +18,6 @@
         "ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {},
         "ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
     },
-
-    // Features to add to the dev container. More info: https://containers.dev/features.
-    // "features": {},
 
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
