@@ -391,6 +391,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
                 "label": "web https"
             }
         },
+        "containerEnv": {
+            "XDG_CONFIG_HOME": "/workspaces/.config"
+        },
         "postCreateCommand": "bash .devcontainer/setup_project.sh"
     }
     ```
