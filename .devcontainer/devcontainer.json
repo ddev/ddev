@@ -24,6 +24,11 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
+    // A set of name-value pairs that sets or overrides environment variables for the container.
+    "containerEnv": {
+        "XDG_CONFIG_HOME": "/workspaces/.config"
+    },
+
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "./.devcontainer/setup_test_project.sh",
 
