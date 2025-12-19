@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -331,13 +332,13 @@ sleep 30
 		require.NoError(t, err)
 
 		// Check stderr for hook output
-		hookSuccess := false
+		var hookSuccess atomic.Bool
 		scanner := bufio.NewScanner(stderrReader)
 		go func() {
 			for scanner.Scan() {
 				line := scanner.Text()
 				if strings.Contains(line, "HOOK_SUCCESS") && strings.Contains(line, "hook-test-tunnel") {
-					hookSuccess = true
+					hookSuccess.Store(true)
 					break
 				}
 			}
@@ -346,7 +347,7 @@ sleep 30
 		// Wait for hook execution
 		time.Sleep(3 * time.Second)
 
-		require.True(t, hookSuccess, "Pre-share hook should have access to DDEV_SHARE_URL")
+		require.True(t, hookSuccess.Load(), "Pre-share hook should have access to DDEV_SHARE_URL")
 	})
 
 	// Test 3: Provider priority (flag > config > default)
