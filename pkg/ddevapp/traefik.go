@@ -259,11 +259,42 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return err
 	}
 
-	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
+	// Copy active project configs and certs into the global traefik directory,
+	// so we can do a single CopyIntoVolume with destroyExisting=true.
+	// This ensures only running projects have their routing active in the router.
+	for _, app := range activeApps {
+		projectConfigDir := app.GetConfigPath("traefik/config")
+		projectCertsDir := app.GetConfigPath("traefik/certs")
+
+		// Copy project's config yaml to global config dir
+		projectConfigFile := filepath.Join(projectConfigDir, app.Name+".yaml")
+		if fileutil.FileExists(projectConfigFile) {
+			destFile := filepath.Join(sourceConfigDir, app.Name+".yaml")
+			err = fileutil.CopyFile(projectConfigFile, destFile)
+			if err != nil {
+				util.Warning("Failed to copy traefik config for project %s: %v", app.Name, err)
+			}
+		}
+
+		// Copy project's certs to global certs dir
+		for _, ext := range []string{".crt", ".key"} {
+			projectCertFile := filepath.Join(projectCertsDir, app.Name+ext)
+			if fileutil.FileExists(projectCertFile) {
+				destFile := filepath.Join(sourceCertsPath, app.Name+ext)
+				err = fileutil.CopyFile(projectCertFile, destFile)
+				if err != nil {
+					util.Warning("Failed to copy traefik cert for project %s: %v", app.Name, err)
+				}
+			}
+		}
+	}
+
+	// Single copy with destroyExisting=true to clear stale configs from paused/stopped projects
+	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", true)
 	if err != nil {
 		return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
 	}
-	util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik", sourceCertsPath)
+	util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik", globalTraefikDir)
 
 	return nil
 }
