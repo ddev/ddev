@@ -285,6 +285,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
             },
             "ghcr.io/ddev/ddev/install-ddev:latest": {}
         },
+        "containerEnv": {
+            "XDG_CONFIG_HOME": "/workspaces/.config"
+        },
         "postCreateCommand": "echo 'it should all be set up'"
     }
     ```
@@ -387,6 +390,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
             "8443": {
                 "label": "web https"
             }
+        },
+        "containerEnv": {
+            "XDG_CONFIG_HOME": "/workspaces/.config"
         },
         "postCreateCommand": "bash .devcontainer/setup_project.sh"
     }
