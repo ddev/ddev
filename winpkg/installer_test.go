@@ -3,9 +3,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	osexec "os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -18,6 +21,54 @@ import (
 const (
 	installerPath = "../.gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe"
 )
+
+// getInstallerDebugLogs finds and returns the contents of the most recent installer debug log
+func getInstallerDebugLogs(t *testing.T) string {
+	t.Helper()
+
+	// Get Windows temp directory
+	tempDir := os.Getenv("TEMP")
+	if tempDir == "" {
+		tempDir = os.Getenv("TMP")
+	}
+	if tempDir == "" {
+		t.Log("Could not determine Windows temp directory")
+		return ""
+	}
+
+	// Find all installer debug logs
+	pattern := filepath.Join(tempDir, "ddev_installer_debug_*.log")
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		t.Logf("Error finding installer debug logs: %v", err)
+		return ""
+	}
+
+	if len(matches) == 0 {
+		t.Logf("No installer debug logs found in %s", tempDir)
+		return ""
+	}
+
+	// Sort by modification time (newest first)
+	sort.Slice(matches, func(i, j int) bool {
+		fi, _ := os.Stat(matches[i])
+		fj, _ := os.Stat(matches[j])
+		if fi == nil || fj == nil {
+			return false
+		}
+		return fi.ModTime().After(fj.ModTime())
+	})
+
+	// Read the most recent log
+	logPath := matches[0]
+	content, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Logf("Error reading installer debug log %s: %v", logPath, err)
+		return ""
+	}
+
+	return fmt.Sprintf("=== Installer Debug Log: %s ===\n%s", logPath, string(content))
+}
 
 // TestWindowsInstallerWSL2 tests WSL2 installation paths using a test matrix
 func TestWindowsInstallerWSL2(t *testing.T) {
@@ -53,6 +104,16 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 			require := require.New(t)
 
+			// Dump installer debug logs on test failure (registered first, runs last)
+			t.Cleanup(func() {
+				if t.Failed() {
+					t.Log("Test failed - dumping installer debug logs:")
+					if logs := getInstallerDebugLogs(t); logs != "" {
+						t.Log(logs)
+					}
+				}
+			})
+
 			// Create fresh test WSL2 distro
 			cleanupTestEnv(t, tc.distro)
 			configureTestWSL2Distro(t, tc.distro)
@@ -79,7 +140,24 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			out, _ := exec.RunHostCommand("tasklist.exe", "/FI", "IMAGENAME eq msiexec.exe")
 			t.Logf("MSI processes running: %s", out)
 
-			out, err = exec.RunHostCommand(installerFullPath, tc.installerArgs...)
+			// Run installer with a 10-minute timeout to prevent infinite hangs
+			const installerTimeout = 10 * time.Minute
+			ctx, cancel := context.WithTimeout(context.Background(), installerTimeout)
+			defer cancel()
+
+			cmd := osexec.CommandContext(ctx, installerFullPath, tc.installerArgs...)
+			installerOutput, err := cmd.CombinedOutput()
+			out = string(installerOutput)
+
+			if ctx.Err() == context.DeadlineExceeded {
+				t.Logf("Installer TIMED OUT after %v", installerTimeout)
+				t.Logf("Dumping installer debug log for timeout diagnosis:")
+				if logs := getInstallerDebugLogs(t); logs != "" {
+					t.Log(logs)
+				}
+				require.Fail("Installer timeout", "Installer did not complete within %v", installerTimeout)
+			}
+
 			if err != nil {
 				t.Logf("Installer failed with error trying to run with '%s': %v", installerFullPath+" "+strings.Join(tc.installerArgs, " "), err)
 				t.Logf("Installer output: %s", out)
@@ -92,9 +170,15 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 					t.Logf("Installer processes: %s", procOut)
 				}
 
+				// Dump debug log on any error
+				t.Logf("Dumping installer debug log for error diagnosis:")
+				if logs := getInstallerDebugLogs(t); logs != "" {
+					t.Log(logs)
+				}
+
 				require.NoError(err, "Installer failed: %v, output: %s", err, out)
 			}
-			t.Logf("Installer completed successfully but may be asynchronous, output: %s", out)
+			t.Logf("Installer completed successfully, output: %s", out)
 
 			// Check $CAROOT env var on Windows side
 			caRootOut, caRootErr := exec.RunHostCommand("cmd.exe", "/c", "echo %CAROOT%")
@@ -186,6 +270,16 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 	}
 
 	require := require.New(t)
+
+	// Dump installer debug logs on test failure (registered first, runs last)
+	t.Cleanup(func() {
+		if t.Failed() {
+			t.Log("Test failed - dumping installer debug logs:")
+			if logs := getInstallerDebugLogs(t); logs != "" {
+				t.Log(logs)
+			}
+		}
+	})
 
 	// Clean up any existing DDEV installation
 	cleanupTraditionalWindowsEnv(t)
