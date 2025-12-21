@@ -320,6 +320,10 @@ func RenderRouterStatus() (string, string) {
 			}
 		case string(container.Healthy):
 			status = "OK"
+			// If there's a warning message in the health output, show it
+			if logOutput != "" && strings.Contains(logOutput, "WARNING:") {
+				errorInfo = logOutput
+			}
 			fallthrough
 		default:
 			renderedStatus = util.ColorizeText(status, "green")

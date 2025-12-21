@@ -38,17 +38,19 @@ if [ $exit_code -eq 0 ]; then
         touch /tmp/healthy
         exit 0
     fi
-    # Set descriptive error message for failure
+    # Set descriptive warning message, but return success (exit 0)
+    # This allows the router to be "healthy" even with configuration issues
     if [ "$file_router_count" -eq 0 ]; then
-        check="No file-based routers found"
-        exit_code=1
+        check="WARNING: No file-based routers found"
     elif [ "$error_count" -gt 0 ]; then
-        check="Detected ${error_count} configuration error(s) in project"
-        exit_code=2
+        check="WARNING: Detected ${error_count} configuration error(s) - check 'docker logs ddev-router' for details"
     else
-        check="Unknown failure"
-        exit_code=255
+        check="WARNING: Unknown issue detected"
     fi
+    # Return success with warning message
+    printf "%s" "${check}"
+    touch /tmp/healthy
+    exit 0
 fi
 
 printf "Traefik healthcheck failed: %s" "${check}"
