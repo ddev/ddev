@@ -134,24 +134,26 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			statusFile := "/tmp/ddev_installation_status.txt"
 
 			for i := 0; i < maxTries; i++ {
-				out, err := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "tail -1l "+statusFile+" 2>/dev/null")
-				if err == nil {
-					t.Logf("Installation status on try %d: %s", i, strings.TrimSpace(out))
-					break
+				// Log current status for debugging
+				statusOut, _ := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "tail -1l "+statusFile+" 2>/dev/null")
+				if statusOut != "" {
+					t.Logf("Installation status on try %d: %s", i, strings.TrimSpace(statusOut))
 				}
-				out, err = exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "grep '^COMPLETED' "+statusFile+" 2>/dev/null")
-				if err == nil {
+
+				// Check for COMPLETED marker - only break when installation is actually done
+				out, err := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "grep '^COMPLETED' "+statusFile+" 2>/dev/null")
+				if err == nil && strings.Contains(out, "COMPLETED") {
 					t.Logf("Installation completion confirmed: %s", strings.TrimSpace(out))
 					break
 				}
 
 				// Check for errors
 				errOut, errErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "bash", "-c", "grep '^ERROR' "+statusFile+" 2>/dev/null")
-				if errErr == nil {
-					require.Error(errErr, "Installation failed", "Error found in status file: %s", strings.TrimSpace(errOut))
+				if errErr == nil && strings.Contains(errOut, "ERROR") {
+					require.Fail("Installation failed", "Error found in status file: %s", strings.TrimSpace(errOut))
 				}
 				if i == maxTries-1 {
-					require.Less(i, maxTries, "Installation timeout", "No completion marker found after %d tries", i)
+					require.Fail("Installation timeout", "No completion marker found after %d tries. Last status: %s", maxTries, strings.TrimSpace(statusOut))
 				}
 
 				time.Sleep(1 * time.Second)
