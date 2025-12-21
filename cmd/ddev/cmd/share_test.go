@@ -232,6 +232,9 @@ func TestShareCmdCloudflared(t *testing.T) {
 
 // TestShareCmdProviderSystem tests the script-based provider system
 func TestShareCmdProviderSystem(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("Skipping: Test cannot work on traditional windows (pkill, etc). ddev share may not work on traditional windows at all")
+	}
 	t.Setenv(`DDEV_GOROUTINES`, "")
 
 	site := TestSites[0]
