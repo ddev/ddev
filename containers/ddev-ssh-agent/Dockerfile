@@ -3,7 +3,8 @@
 
 FROM debian:trixie-slim AS ddev-ssh-agent
 
-RUN apt-get update && apt-get install -y bash expect file gpg openssh-client socat psmisc && apt-get autoclean
+# tzdata-legacy - to avoid issues with deprecated timezones
+RUN apt-get update && apt-get install -y bash expect file gpg openssh-client socat psmisc tzdata-legacy && apt-get autoclean
 
 # Copy container files
 COPY files /

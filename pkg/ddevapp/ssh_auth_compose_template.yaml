@@ -28,6 +28,7 @@ services:
       - "socket_dir:/tmp/.ssh-agent"
     environment:
       - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
+      - TZ={{ .Timezone }}
     healthcheck:
       test: "/healthcheck.sh"
       interval: 1s
