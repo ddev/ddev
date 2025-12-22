@@ -53,7 +53,7 @@ func TestCmdAddon(t *testing.T) {
 	// Test with many input styles
 	for _, arg := range []string{
 		"ddev/ddev-memcached",
-		"https://github.com/ddev/ddev-memcached/archive/refs/tags/v1.1.1.tar.gz",
+		"https://github.com/ddev/ddev-memcached/archive/refs/tags/v1.1.8.tar.gz",
 		tarballFile} {
 		out, err := exec.RunHostCommand(DdevBin, "add-on", "get", arg)
 		assert.NoError(err, "failed ddev add-on get %s", arg)
