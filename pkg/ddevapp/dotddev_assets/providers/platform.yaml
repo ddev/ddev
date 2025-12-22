@@ -86,6 +86,9 @@ auth_command:
     else
       echo "Using PLATFORM_ENVIRONMENT=${PLATFORM_ENVIRONMENT:-}"
     fi
+    if [ "$(platform environment:info status -e ${PLATFORM_ENVIRONMENT})" != "active" ]; then
+      platform environment:resume -e ${PLATFORM_ENVIRONMENT} -y
+    fi
 
 db_pull_command:
   command: |
