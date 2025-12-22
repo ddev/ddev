@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -231,8 +232,8 @@ func TestShareCmdCloudflared(t *testing.T) {
 
 // TestShareCmdProviderSystem tests the script-based provider system
 func TestShareCmdProviderSystem(t *testing.T) {
-	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
-		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
+	if nodeps.IsWindows() {
+		t.Skip("Skipping: Test cannot work on traditional windows (pkill, etc). ddev share may not work on traditional windows at all")
 	}
 	t.Setenv(`DDEV_GOROUTINES`, "")
 
@@ -334,13 +335,13 @@ sleep 30
 		require.NoError(t, err)
 
 		// Check stderr for hook output
-		hookSuccess := false
+		var hookSuccess atomic.Bool
 		scanner := bufio.NewScanner(stderrReader)
 		go func() {
 			for scanner.Scan() {
 				line := scanner.Text()
 				if strings.Contains(line, "HOOK_SUCCESS") && strings.Contains(line, "hook-test-tunnel") {
-					hookSuccess = true
+					hookSuccess.Store(true)
 					break
 				}
 			}
@@ -349,7 +350,7 @@ sleep 30
 		// Wait for hook execution
 		time.Sleep(3 * time.Second)
 
-		require.True(t, hookSuccess, "Pre-share hook should have access to DDEV_SHARE_URL")
+		require.True(t, hookSuccess.Load(), "Pre-share hook should have access to DDEV_SHARE_URL")
 	})
 
 	// Test 3: Provider priority (flag > config > default)
@@ -478,8 +479,8 @@ sleep 2
 		t.Logf("Stdout: %s", stdoutOutput)
 		t.Logf("Stderr: %s", stderrOutput)
 
-		// Verify DDEV_SHARE_ARGS was passed to the provider
-		require.Contains(t, stderrOutput, "ARGS_RECEIVED: DDEV_SHARE_ARGS=--custom-flag value123",
+		// Verify DDEV_SHARE_ARGS was passed to the provider (shown in ddev's output message)
+		require.Contains(t, stdoutOutput, "with args: --custom-flag value123",
 			"Provider should receive DDEV_SHARE_ARGS from --provider-args flag")
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 	})
