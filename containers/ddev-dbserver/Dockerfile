@@ -47,8 +47,17 @@ RUN set -x; if ( command -v mariadbd && ! command -v mysqld ); then \
 USER root
 RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
 RUN mkdir -p /var/lib/apt/lists/partial
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 gpgv less lsb-release pv tzdata vim-tiny wget
-RUN update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
+RUN <<EOF
+    set -eu -o pipefail
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 gpgv less lsb-release pv tzdata vim-tiny wget
+    update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
+
+    # Install tzdata-legacy to avoid issues with deprecated timezones
+    if apt-cache show tzdata-legacy >/dev/null 2>&1; then
+        DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" tzdata-legacy
+    fi
+EOF
 
 # Configure APT to use gpgv for signature verification to avoid SHA1 deprecation issues
 RUN echo 'APT::Key::gpgvcommand "/usr/bin/gpgv";' > /etc/apt/apt.conf.d/99-use-gpgv

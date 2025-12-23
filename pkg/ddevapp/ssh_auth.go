@@ -114,6 +114,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	}
 
 	uid, gid, username := dockerutil.GetContainerUser()
+	timezone, _ := util.GetLocalTimezone()
 
 	_ = app.DockerEnv()
 
@@ -123,6 +124,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		"Username":         username,
 		"UID":              uid,
 		"GID":              gid,
+		"Timezone":         timezone,
 		"BuildContext":     context,
 		"IsPodmanRootless": dockerutil.IsPodmanRootless(),
 	}

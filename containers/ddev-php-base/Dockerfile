@@ -24,8 +24,9 @@ RUN ls -l /usr/sbin/dpkg-split /usr/sbin/dpkg-deb /usr/sbin/tar /usr/sbin/rm
 # This is used to install updated curl, see https://github.com/curl/curl/issues/18336
 RUN printf "Types: deb\nURIs: http://deb.debian.org/debian\nSuites: trixie-backports\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.pgp\n" > /etc/apt/sources.list.d/debian-backports.sources
 
-RUN apt-get -qq update
-RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
+# curl/trixie-backports - newer curl version from backports
+# tzdata-legacy - to avoid issues with deprecated timezones
+RUN apt-get -qq update && apt-get -qq install --no-install-recommends --no-install-suggests -y \
     apt-transport-https \
     ca-certificates \
     bzip2 \
@@ -34,6 +35,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     gnupg \
     lsb-release \
     procps \
+    tzdata-legacy \
     wget
 RUN url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETPLATFORM#linux/}"; wget ${url} -q -O /usr/bin/yq && chmod +x /usr/bin/yq
 ADD generic-files /
@@ -78,8 +80,7 @@ ENV COMPOSER_PROCESS_TIMEOUT=2000
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
-RUN apt-get -qq update
-RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
+RUN apt-get -qq update && apt-get -qq install --no-install-recommends --no-install-suggests -y \
     apache2 \
     file \
     ghostscript \

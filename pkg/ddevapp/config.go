@@ -1259,6 +1259,11 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y \
     apt-transport-https bzip2 ca-certificates less procps pv vim-tiny zstd
 update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
+# Install tzdata-legacy to avoid issues with deprecated timezones
+if apt-cache show tzdata-legacy >/dev/null 2>&1; then
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" tzdata-legacy
+fi
+
 # Change directories owned by postgres (and everything inside them)
 find / -type d \( -user postgres -o -group postgres \) -exec chown -Rh %[2]s:%[3]s {} + 2>/dev/null || true
 # Change any remaining individual files owned by postgres
