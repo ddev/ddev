@@ -177,6 +177,33 @@ If your file contains this header, renaming it to `.crt` is sufficient for use w
 | Rancher Desktop  | Yes (dockerd)        | Partial                   | Depends on Lima config and backend     |
 | WSL2 + docker-ce | Yes                  | 🚫                        | Must configure trust inside WSL        |
 
+### Cloudflare WARP
+
+If you are using Cloudflare WARP (often used with Zero Trust), you might find that `*.ddev.site` domains do not resolve because WARP intercepts and routes all traffic through its network, bypassing your local loopback.
+
+To fix this, you need to configure **Split Tunneling** in your Cloudflare dashboard (or local settings if available):
+
+1.  Log in to your Cloudflare Zero Trust dashboard.
+2.  Go to **Settings** > **WARP Client** > **Device Settings**.
+3.  Locate your profile and click **Edit**.
+4.  Under **Split Tunnels**, ensure the mode is set to **Exclude** (default).
+5.  Add the following **Selector** entries:
+
+**Domains:**
+*   `*.ddev.site`
+*   `ddev.site`
+
+**IP Addresses (Docker Default Ranges):**
+To ensure Docker internal networking remains local, add these CIDR ranges:
+*   `172.16.0.0/14` (Covers 172.16.x.x to 172.19.x.x)
+*   `172.20.0.0/14` (Covers 172.20.x.x to 172.23.x.x)
+*   `172.25.0.0/16`
+*   `172.26.0.0/15` (Covers 172.26.x.x to 172.27.x.x)
+*   `172.28.0.0/14` (Covers 172.28.x.x to 172.31.x.x)
+*   `127.0.0.1/8` (Localhost)
+
+After saving these settings, you may need to disconnect and reconnect WARP for the changes to take effect.
+
 <!-- textlint-disable -->
 ## Corporate or Internet Provider Proxy
 <!-- textlint-enable -->
