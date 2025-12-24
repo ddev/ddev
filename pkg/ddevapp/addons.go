@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -14,6 +15,9 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/config/remoteconfig/downloader"
+	"github.com/ddev/ddev/pkg/config/remoteconfig/storage"
+	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -26,6 +30,7 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/mount"
 	"github.com/otiai10/copy"
+	"github.com/spf13/cobra"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -686,55 +691,206 @@ func GetAddonDdevWarningExitCode(action string) int {
 	return 0
 }
 
-// ListAvailableAddons lists the add-ons that are listed on github
-func ListAvailableAddons() ([]*github.Repository, error) {
-	ctx, client := github.GetGitHubClient(true)
-	q := "topic:ddev-get fork:true archived:false"
+// ListAvailableAddonsFromRegistry returns the list of addons from the registry
+func ListAvailableAddonsFromRegistry() ([]types.Addon, error) {
+	addonData, err := getAddonRegistryWithFallback()
+	if err != nil {
+		return nil, err
+	}
+	return addonData.Addons, nil
+}
 
-	opts := &github.SearchOptions{Sort: "updated", Order: "desc", ListOptions: github.ListOptions{PerPage: 200}}
-	var allRepos []*github.Repository
-	for {
-		repos, resp, err := client.Search.Repositories(ctx, q, opts)
-		var tokenErr error
-		if err != nil {
-			if tokenErr = github.HasInvalidGitHubToken(resp); tokenErr != nil {
-				util.WarningOnce("Warning: %v, retrying without token", tokenErr)
-				ctx, client = github.GetGitHubClient(false)
-				reposNoAuth, respNoAuth, errNoAuth := client.Search.Repositories(ctx, q, opts)
-				if errNoAuth == nil {
-					repos = reposNoAuth
-					resp = respNoAuth
-					err = errNoAuth
-				}
+// getAddonRegistryWithFallback retrieves addon data from cache or downloads if stale
+// It respects the UpdateInterval setting from global config
+func getAddonRegistryWithFallback() (*types.AddonData, error) {
+	globalconfig.EnsureGlobalConfig()
+	globalDir := globalconfig.GetGlobalDdevDir()
+	cacheFile := filepath.Join(globalDir, ".addon-data")
+	addonStorage := storage.NewAddonFileStorage(cacheFile)
+
+	// Try to read from cache first
+	cachedData, err := addonStorage.Read()
+
+	// Check if cache is stale
+	cacheIsStale := true
+	if err == nil && len(cachedData.Addons) > 0 {
+		// Get file modification time to check staleness
+		fileInfo, statErr := os.Stat(cacheFile)
+		if statErr == nil {
+			updateInterval := globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval
+			if updateInterval == 0 {
+				updateInterval = 24 // Default to 24 hours if not set
 			}
+			staleTime := time.Duration(updateInterval) * time.Hour
+			cacheIsStale = fileInfo.ModTime().Add(staleTime).Before(time.Now())
 		}
+	}
+
+	// If cache is fresh, return it
+	if !cacheIsStale {
+		return cachedData, nil
+	}
+
+	// Cache is stale or missing, try to download fresh data
+	freshData, downloadErr := downloadAddonRegistry()
+	if downloadErr == nil {
+		return freshData, nil
+	}
+
+	// Download failed, return cached data if we have it
+	if err == nil && len(cachedData.Addons) > 0 {
+		// Return stale cache as fallback
+		return cachedData, nil
+	}
+
+	// Both download and cache failed
+	return nil, fmt.Errorf("failed to download add-on registry and no cache available: %w", downloadErr)
+}
+
+// downloadAddonRegistry downloads the add-on registry from the configured URL
+// and caches it in the global config directory
+func downloadAddonRegistry() (*types.AddonData, error) {
+	globalconfig.EnsureGlobalConfig()
+
+	// Get the addon data URL from global config, or use default
+	addonDataURL := globalconfig.DdevGlobalConfig.RemoteConfig.AddonDataURL
+	if addonDataURL == "" {
+		addonDataURL = globalconfig.DefaultAddonDataURL
+	}
+
+	// Create downloader
+	d := downloader.NewURLJSONCDownloader(addonDataURL)
+
+	// Download the data with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	var addonData types.AddonData
+	err := d.Download(ctx, &addonData)
+	if err != nil {
+		return nil, fmt.Errorf("downloading add-on registry from %s: %w", addonDataURL, err)
+	}
+
+	// Validate downloaded data
+	if len(addonData.Addons) == 0 {
+		return nil, fmt.Errorf("downloaded add-on registry from %s is empty", addonDataURL)
+	}
+
+	// Store in global config directory
+	globalDir := globalconfig.GetGlobalDdevDir()
+	addonStorage := storage.NewAddonFileStorage(filepath.Join(globalDir, ".addon-data"))
+	err = addonStorage.Write(&addonData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to write add-on registry to cache: %w", err)
+	}
+
+	return &addonData, nil
+}
+
+// GetAddonTarballURL retrieves the tarball URL for an addon from the add-on registry
+// based on the provided owner/repo and flags.
+//
+// Parameters:
+//   - ownerRepo: The owner/repo string (e.g., "ddev/ddev-redis")
+//   - gitRef: Specific git reference to install - can be a tag (v1.2.3), branch name (main), or commit SHA
+//   - head: If true, use the default_branch from registry instead of latest release tag
+//   - prNumber: If non-zero, use refs/pull/{prNumber}/head
+//
+// Returns:
+//   - tarballURL: The GitHub tarball URL to download
+//   - version: The version string (tag, branch, or PR reference)
+//   - error: Any error encountered
+func GetAddonTarballURL(ownerRepo, gitRef string, head bool, prNumber int) (tarballURL, version string, err error) {
+	// Parse owner/repo
+	parts := strings.Split(ownerRepo, "/")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid add-on format '%s', expected owner/repo", ownerRepo)
+	}
+	owner, repo := parts[0], parts[1]
+	baseURL := fmt.Sprintf("https://github.com/%s/%s/tarball", owner, repo)
+
+	// If specific git ref is requested, use it directly
+	if gitRef != "" {
+		tarballURL = fmt.Sprintf("%s/%s", baseURL, gitRef)
+		return tarballURL, gitRef, nil
+	}
+
+	// If PR number is specified, use it
+	if prNumber > 0 {
+		tarballURL = fmt.Sprintf("%s/refs/pull/%d/head", baseURL, prNumber)
+		version = fmt.Sprintf("pr-%d", prNumber)
+		return tarballURL, version, nil
+	}
+
+	// Use cached registry to get latest commit from default_branch
+	if head {
+		addonData, err := getAddonRegistryWithFallback()
 		if err != nil {
-			msg := err.Error()
-			if resp != nil {
-				rate := resp.Rate
-				if rate.Limit != 0 {
-					resetIn := time.Until(rate.Reset.Time).Round(time.Second)
-					msg += fmt.Sprintf("\nGitHub API Rate Limit: %d/%d remaining (resets in %s)", rate.Remaining, rate.Limit, resetIn)
-				}
-			}
-			return nil, fmt.Errorf("%s", msg)
-		}
-		allRepos = append(allRepos, repos.Repositories...)
-		if resp.NextPage == 0 {
-			break
+			return "", "", fmt.Errorf("failed to get add-on registry: %w", err)
 		}
 
-		// Set the next page number for the next request
-		opts.Page = resp.NextPage
+		addon := addonData.FindAddon(ownerRepo)
+		if addon == nil {
+			return "", "", fmt.Errorf("add-on '%s' not found in registry", ownerRepo)
+		}
+
+		if addon.DefaultBranch == "" {
+			return "", "", fmt.Errorf("add-on '%s' has no default_branch specified in registry", ownerRepo)
+		}
+		tarballURL = fmt.Sprintf("%s/%s", baseURL, addon.DefaultBranch)
+		version = addon.DefaultBranch
+		return tarballURL, version, nil
 	}
-	out := ""
-	for _, r := range allRepos {
-		out = out + fmt.Sprintf("%s: %s\n", r.GetFullName(), r.GetDescription())
+
+	// For default behavior (no flags), try GitHub API first for fresh release info
+	// This ensures users get the latest release, falling back to registry if API fails
+	tarballURL, version, err = github.GetGitHubRelease(owner, repo, "")
+	if err == nil {
+		// Successfully got fresh release from GitHub
+		return tarballURL, version, nil
 	}
-	if len(allRepos) == 0 {
-		return nil, fmt.Errorf("no add-ons found")
+
+	// GitHub API failed (rate limit, network, etc.), fall back to cached registry
+	util.Warning("Warning: %v\nFalling back to cached add-on registry...", err)
+	addonData, cacheErr := getAddonRegistryWithFallback()
+	if cacheErr != nil {
+		// Both GitHub and cache failed, return the GitHub error
+		return "", "", err
 	}
-	return allRepos, nil
+
+	addon := addonData.FindAddon(ownerRepo)
+	if addon == nil {
+		return "", "", fmt.Errorf("add-on '%s' not found in cached add-on registry", ownerRepo)
+	}
+
+	// Use cached tag_name
+	if !addon.TagName.IsSet || addon.TagName.Value == "" {
+		return "", "", fmt.Errorf("add-on '%s' has no releases in cached add-on registry", ownerRepo)
+	}
+
+	tarballURL = fmt.Sprintf("%s/%s", baseURL, addon.TagName.Value)
+	version = addon.TagName.Value
+	return tarballURL, version, nil
+}
+
+// GetAddonNamesFunc returns a function for autocomplete that provides addon names
+// from the cached add-on registry
+func GetAddonNamesFunc() func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		addons, err := ListAvailableAddonsFromRegistry()
+		if err != nil {
+			// If we can't get addons, return no completions
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		// Extract addon names in owner/repo format
+		var addonNames []string
+		for _, addon := range addons {
+			addonName := fmt.Sprintf("%s/%s", addon.User, addon.Repo)
+			addonNames = append(addonNames, addonName)
+		}
+
+		return addonNames, cobra.ShellCompDirectiveNoFileComp
+	}
 }
 
 // RemoveAddon removes an addon, taking care to respect #ddev-generated
@@ -1079,8 +1235,8 @@ func InstallAddonFromGitHub(app *DdevApp, addonName, requestedVersion string, ve
 		}
 	}
 
-	// Get GitHub release
-	tarballURL, downloadedRelease, err := github.GetGitHubRelease(owner, repo, requestedVersion)
+	// Get tarball URL with registry fallback
+	tarballURL, downloadedRelease, err := GetAddonTarballURL(addonName, requestedVersion, false, 0)
 	if err != nil {
 		return err
 	}

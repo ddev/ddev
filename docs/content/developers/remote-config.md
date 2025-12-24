@@ -49,7 +49,8 @@ Separate from the main config, DDEV downloads sponsorship data from a JSON endpo
 DDEV stores downloaded data locally using Go's `gob` binary encoding format in the user's [global configuration directory](../users/usage/architecture.md#global-files):
 
 - `$HOME/.ddev/.remote-config`: Main remote configuration cache
-- `$HOME/.ddev/.sponsorship-data`: Sponsorship information cache  
+- `$HOME/.ddev/.sponsorship-data`: Sponsorship information cache
+- `$HOME/.ddev/.addon-data`: Add-on registry cache
 - `$HOME/.ddev/.amplitude.cache`: Analytics event cache (if enabled)
 
 ## Debugging Tools
@@ -65,7 +66,10 @@ ddev utility gob-decode $HOME/.ddev/.remote-config
 # Decode sponsorship data
 ddev utility gob-decode $HOME/.ddev/.sponsorship-data
 
-# Decode analytics cache  
+# Decode add-on registry cache
+ddev utility gob-decode $HOME/.ddev/.addon-data
+
+# Decode analytics cache
 ddev utility gob-decode $HOME/.ddev/.amplitude.cache
 ```
 
@@ -77,6 +81,9 @@ ddev utility remote-data --type=remote-config
 
 # Download sponsorship data without updating cache
 ddev utility remote-data --type=sponsorship-data --update-storage=false
+
+# Download add-on registry data (updates cache by default)
+ddev utility remote-data --type=addon-data
 ```
 
 ### View Available Conditions
@@ -150,6 +157,7 @@ remote_config:
   update_interval: 24  # Hours between updates
   remote_config_url: "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
   sponsorship_data_url: "https://ddev.com/s/sponsorship-data.json"
+  addon_data_url: "https://addons.ddev.com/addons.json"
 ```
 
 ### Per-User Control
@@ -199,6 +207,7 @@ To test changes to remote configuration:
      update_interval: 1  # Update every hour for testing
      remote_config_url: "https://raw.githubusercontent.com/your-username/remote-config/your-test-branch/remote-config.jsonc"
      sponsorship_data_url: "https://ddev.com/s/sponsorship-data.json"  # Or your test URL
+     addon_data_url: "https://addons.ddev.com/addons.json"
    ```
 
 3. **Clear or edit cached data**:

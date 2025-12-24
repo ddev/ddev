@@ -22,6 +22,7 @@ func TestDebugRemoteDataCmd(t *testing.T) {
 		require.Contains(t, out, "Download and display remote data used by DDEV from GitHub repositories")
 		require.Contains(t, out, "remote-config: DDEV remote configuration")
 		require.Contains(t, out, "sponsorship-data: DDEV sponsorship information")
+		require.Contains(t, out, "addon-data: DDEV add-on registry")
 		require.Contains(t, out, "--type string")
 		require.Contains(t, out, "--update-storage")
 	})
@@ -75,6 +76,36 @@ func TestDebugRemoteDataCmd(t *testing.T) {
 
 		// The update time should be recent-ish (within the last year)
 		require.False(t, sponsorshipData.UpdatedDateTime.IsZero(), "Updated datetime should be set")
+	})
+
+	// Test add-on data download (without updating storage)
+	t.Run("AddonDataDownload", func(t *testing.T) {
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "remote-data", "--type=addon-data", "--update-storage=false")
+		require.NoError(t, err, "Should successfully download add-on data, output='%v'", out)
+
+		// Parse the JSON output
+		var addonData types.AddonData
+		err = json.Unmarshal([]byte(out), &addonData)
+		require.NoError(t, err, "Output should be valid JSON: %s", out)
+
+		// Verify basic structure
+		require.Greater(t, addonData.TotalAddonsCount, 0, "Should have at least one addon")
+		require.GreaterOrEqual(t, addonData.OfficialAddonsCount, 0, "Official addon count should be non-negative")
+		require.GreaterOrEqual(t, addonData.ContribAddonsCount, 0, "Contrib addon count should be non-negative")
+		require.Greater(t, len(addonData.Addons), 0, "Should have addon entries")
+
+		// Verify at least one addon has required fields
+		hasValidAddon := false
+		for _, addon := range addonData.Addons {
+			if addon.Title != "" && addon.User != "" && addon.Repo != "" {
+				hasValidAddon = true
+				break
+			}
+		}
+		require.True(t, hasValidAddon, "Should have at least one valid addon with title, user, and repo")
+
+		// The update time should be set
+		require.False(t, addonData.UpdatedDateTime.IsZero(), "Updated datetime should be set")
 	})
 
 	// Test default behavior (should default to remote-config)
@@ -136,6 +167,32 @@ func TestDebugRemoteDataWithStorage(t *testing.T) {
 		_, err = os.Stat(storageFile)
 		require.Error(t, err, "Storage file should not have been created")
 	})
+
+	t.Run("AddonDataStorageUpdateEnabled", func(t *testing.T) {
+		// Test with storage update enabled for add-on data
+		out, err := exec.RunHostCommand(DdevBin, "utility", "remote-data", "--type=addon-data")
+		require.NoError(t, err, "Should successfully download and update add-on data storage, output='%v'", out)
+		require.Contains(t, out, "Local add-on data storage updated successfully")
+
+		// Verify that the storage file was created
+		storageFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".addon-data")
+		_, err = os.Stat(storageFile)
+		require.NoErrorf(t, err, "Add-on data storage file should have been created at %s", storageFile)
+	})
+
+	t.Run("AddonDataStorageUpdateDisabled", func(t *testing.T) {
+		storageFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".addon-data")
+		_ = os.Remove(storageFile)
+
+		// Test with storage update disabled for add-on data
+		out, err := exec.RunHostCommand(DdevBin, "utility", "remote-data", "--type=addon-data", "--update-storage=false")
+		require.NoError(t, err, "Should successfully download add-on data without updating storage, output='%v'", out)
+		require.NotContains(t, out, "Local add-on data storage updated successfully")
+
+		// Verify that no storage file was created
+		_, err = os.Stat(storageFile)
+		require.Error(t, err, "Add-on data storage file should not have been created")
+	})
 }
 
 // TestJSONValidation tests that the output is always valid JSON
@@ -157,6 +214,20 @@ func TestJSONValidation(t *testing.T) {
 	t.Run("SponsorshipDataValidJSON", func(t *testing.T) {
 		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "remote-data", "--type=sponsorship-data", "--update-storage=false")
 		require.NoError(t, err, "Should successfully download sponsorship data, output='%v'", out)
+
+		// Test that it's valid JSON
+		var jsonData interface{}
+		err = json.Unmarshal([]byte(out), &jsonData)
+		require.NoError(t, err, "Output should be valid JSON")
+
+		// Test round-trip
+		_, err = json.Marshal(jsonData)
+		require.NoError(t, err, "JSON should be serializable")
+	})
+
+	t.Run("AddonDataValidJSON", func(t *testing.T) {
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "remote-data", "--type=addon-data", "--update-storage=false")
+		require.NoError(t, err, "Should successfully download add-on data, output='%v'", out)
 
 		// Test that it's valid JSON
 		var jsonData interface{}

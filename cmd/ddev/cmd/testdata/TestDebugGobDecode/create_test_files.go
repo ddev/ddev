@@ -41,6 +41,10 @@ type sponsorshipFileStorageData struct {
 	SponsorshipData types.SponsorshipData
 }
 
+type addonFileStorageData struct {
+	AddonData types.AddonData
+}
+
 func main() {
 	// Create test remote config file
 	remoteConfigData := fileStorageData{
@@ -156,5 +160,41 @@ func main() {
 
 	file, _ = os.Create("test-generic.gob")
 	gob.NewEncoder(file).Encode(genericData)
+	file.Close()
+
+	// Create test addon data file
+	addonData := addonFileStorageData{
+		AddonData: types.AddonData{
+			UpdatedDateTime:     time.Date(2024, 8, 1, 12, 0, 0, 0, time.UTC),
+			TotalAddonsCount:    2,
+			OfficialAddonsCount: 1,
+			ContribAddonsCount:  1,
+			Addons: []types.Addon{
+				{
+					Title:         "ddev/ddev-redis",
+					GitHubURL:     "https://github.com/ddev/ddev-redis",
+					Description:   "Redis service for DDEV",
+					User:          "ddev",
+					Repo:          "ddev-redis",
+					DefaultBranch: "main",
+					TagName:       types.FlexibleString{Value: "v1.0.0", IsSet: true},
+					Type:          "official",
+				},
+				{
+					Title:         "example/ddev-solr",
+					GitHubURL:     "https://github.com/example/ddev-solr",
+					Description:   "Solr service for DDEV",
+					User:          "example",
+					Repo:          "ddev-solr",
+					DefaultBranch: "main",
+					TagName:       types.FlexibleString{Value: "v2.0.0", IsSet: true},
+					Type:          "contrib",
+				},
+			},
+		},
+	}
+
+	file, _ = os.Create("test-addon-data.gob")
+	gob.NewEncoder(file).Encode(addonData)
 	file.Close()
 }

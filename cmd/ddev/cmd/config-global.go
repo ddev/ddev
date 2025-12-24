@@ -285,6 +285,8 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	keys = append(keys, "remote-config-url")
 	valMap["sponsorship-data-url"] = globalconfig.DdevGlobalConfig.RemoteConfig.SponsorshipDataURL
 	keys = append(keys, "sponsorship-data-url")
+	valMap["addon-data-url"] = globalconfig.DdevGlobalConfig.RemoteConfig.AddonDataURL
+	keys = append(keys, "addon-data-url")
 	valMap["remote-config-update-interval"] = fmt.Sprintf("%d", globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval)
 	keys = append(keys, "remote-config-update-interval")
 
