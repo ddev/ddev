@@ -194,6 +194,7 @@ To fix this, configure **Split Tunneling** in your Cloudflare dashboard (or loca
 
 - `*.ddev.site`
 - `ddev.site`
+- Any other domain you use with DDEV which resolves to `127.0.0.1`
 
 **IP Addresses:**
 
