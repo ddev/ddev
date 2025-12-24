@@ -155,7 +155,7 @@ func TestTraefikStaticConfig(t *testing.T) {
 	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
-		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
+		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably release ports")
 	}
 	origDir, _ := os.Getwd()
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
