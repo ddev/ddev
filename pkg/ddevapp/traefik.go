@@ -13,7 +13,6 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	copy2 "github.com/otiai10/copy"
 )
 
 type TraefikRouting struct {
@@ -284,6 +283,24 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 				}
 			}
 		}
+
+		// Copy custom certs from project's .ddev/custom_certs/ to global certs dir
+		projectCustomCertsPath := app.GetConfigPath("custom_certs")
+		customCertFile := filepath.Join(projectCustomCertsPath, app.Name+".crt")
+		if fileutil.FileExists(customCertFile) {
+			for _, ext := range []string{".crt", ".key"} {
+				srcFile := filepath.Join(projectCustomCertsPath, app.Name+ext)
+				if fileutil.FileExists(srcFile) {
+					destFile := filepath.Join(globalSourceCertsPath, app.Name+ext)
+					err = fileutil.CopyFile(srcFile, destFile)
+					if err != nil {
+						util.Warning("Failed to copy custom cert for project %s: %v", app.Name, err)
+					} else {
+						util.Debug("Copied custom cert %s to global traefik certs dir", srcFile)
+					}
+				}
+			}
+		}
 	}
 
 	// Single copy with destroyExisting=true to clear stale configs from paused/stopped projects
@@ -311,7 +328,6 @@ func configureTraefikForApp(app *DdevApp) error {
 	projectSourceCertsPath := filepath.Join(projectTraefikDir, "certs")
 	projectSourceConfigDir := filepath.Join(projectTraefikDir, "config")
 	inContainerTargetCertsPath := "/mnt/ddev-global-cache/traefik/certs"
-	projectCustomCertsPath := app.GetConfigPath("custom_certs")
 
 	err = os.MkdirAll(projectSourceCertsPath, 0755)
 	if err != nil {
@@ -402,6 +418,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		if err != nil {
 			return fmt.Errorf("failed to create Traefik config file: %v", err)
 		}
+		defer f.Close()
 		t, err := template.New("traefik_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
 		if err != nil {
 			return fmt.Errorf("could not create template from traefik_config_template.yaml: %v", err)
@@ -413,24 +430,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		}
 	}
 
-	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
-	globalSourceCertsPath := filepath.Join(globalTraefikDir, "certs")
-	if fileutil.FileExists(filepath.Join(projectCustomCertsPath, fmt.Sprintf("%s.crt", app.Name))) {
-		err = copy2.Copy(projectCustomCertsPath, globalSourceCertsPath)
-		if err != nil {
-			util.Warning("Failed copying custom certs into global traefik certs dir: %v", err)
-		} else {
-			util.Debug("Copied custom certs in %s to global traefik certs dir", projectCustomCertsPath)
-		}
-	}
-
-	uid, _, _ := dockerutil.GetContainerUser()
-	err = dockerutil.CopyIntoVolume(projectTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
-	if err != nil {
-		util.Warning("Failed to copy Traefik certs and config into Docker volume ddev-global-cache/traefik: %v", err)
-	} else {
-		util.Debug("Copied Traefik certs and config in %s to ddev-global-cache/traefik", projectSourceCertsPath)
-	}
-
+	// Project config and certs are now collected and pushed by PushGlobalTraefikConfig
+	// which handles all active projects in a single operation
 	return nil
 }
