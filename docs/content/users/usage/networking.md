@@ -164,6 +164,7 @@ If your file contains this header, renaming it to `.crt` is sufficient for use w
 
 ### Corporate Packet-inspection VPN Resources
 
+- [Network Test Environments: Packet-Inspection VPN Simulation](../../developers/network-test-environments.md)
 - [Adding Self-signed Registry Certs to Docker & Docker for Mac](https://blog.container-solutions.com/adding-self-signed-registry-certs-docker-mac)
 - [Docker Docs: How Do I Add TLS Certificates](https://docs.docker.com/desktop/troubleshoot-and-support/faqs/macfaqs/#how-do-i-add-tls-certificates)
 
@@ -176,6 +177,35 @@ If your file contains this header, renaming it to `.crt` is sufficient for use w
 | Colima           | Yes                  | 🚫                        | Requires pre-start copy of certs       |
 | Rancher Desktop  | Yes (dockerd)        | Partial                   | Depends on Lima config and backend     |
 | WSL2 + docker-ce | Yes                  | 🚫                        | Must configure trust inside WSL        |
+
+### Cloudflare WARP (Zero Trust)
+
+If you are using [Cloudflare WARP](https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/warp/) (Zero Trust), you might find that `*.ddev.site` domains (or other domains you might use that resolve to 127.0.0.1) do not resolve because WARP intercepts and routes all traffic through its network, bypassing your local loopback.
+
+To fix this, configure **Split Tunneling** in your Cloudflare dashboard (or local settings):
+
+1. Log in to your Cloudflare Zero Trust dashboard.
+2. Go to **Settings** > **WARP Client** > **Device Settings**.
+3. Locate your profile and click **Edit**.
+4. Under **Split Tunnels**, ensure the mode is set to **Exclude**.
+5. Add the following **Selector** entries:
+
+**Domains:**
+
+- `*.ddev.site`
+- `ddev.site`
+- Any other domain you use with DDEV which resolves to `127.0.0.1`
+
+**IP Addresses:**
+
+- `127.0.0.1/8` (Localhost)
+- `172.16.0.0/12` (Standard Docker range)
+
+!!!note
+    The `172.16.0.0/12` range might overlap with your internal corporate networks. If you lose access to corporate resources:
+
+    - Identify the specific Docker ranges you need using a CIDR calculator and only exclude those.
+    - Or [reconfigure Docker's default IP ranges](https://www.lullabot.com/articles/fixing-docker-and-vpn-ip-address-conflicts) to use a different range and exclude that one instead.
 
 <!-- textlint-disable -->
 ## Corporate or Internet Provider Proxy
@@ -247,6 +277,7 @@ After configuration, restart the DDEV project if it is already running.
 
 ### Proxy Resources
 
+- [HTTP Proxy Test Environments](../../developers/http-proxy-test-environments.md)
 - [Configuring Rancher Desktop Proxy](https://github.com/rancher-sandbox/rancher-desktop/issues/2259#issuecomment-1136833849)
 - [Colima proxy setup](https://gist.github.com/res0nat0r/e182f23272a331f20b83195156eef83f)
 - [Linux Docker Daemon Proxy Configuration](https://docs.docker.com/engine/daemon/proxy/#daemon-configuration)
