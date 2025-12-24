@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
@@ -43,18 +43,18 @@ ddev add-on list --installed --project my-project
 			return
 		}
 
-		// List available add-ons
+		// List available add-ons from registry
 		// these do not require an app context
-		repos, err := ddevapp.ListAvailableAddons()
+		addons, err := ddevapp.ListAvailableAddonsFromRegistry()
 		if err != nil {
 			util.Failed("Failed to list available add-ons: %v", err)
 		}
-		if len(repos) == 0 {
-			util.Warning("No DDEV add-ons found with GitHub topic 'ddev-get'.")
+		if len(addons) == 0 {
+			util.Warning("No DDEV add-ons found in registry.")
 			return
 		}
-		out := renderRepositoryList(repos)
-		output.UserOut.WithField("raw", repos).Print(out)
+		out := renderRepositoryList(addons)
+		output.UserOut.WithField("raw", addons).Print(out)
 	},
 }
 
@@ -97,14 +97,13 @@ func ListInstalledAddons(app *ddevapp.DdevApp) {
 	output.UserOut.WithField("raw", manifests).Println(out.String())
 }
 
-// renderRepositoryList renders the found list of repositories
-func renderRepositoryList(repos []*github.Repository) string {
+// renderRepositoryList renders the found list of addons from the registry
+func renderRepositoryList(addons []types.Addon) string {
 	var out bytes.Buffer
 
 	t := table.NewWriter()
 	t.SetOutputMirror(&out)
 	styles.SetGlobalTableStyle(t, false)
-	//tWidth, _ := nodeps.GetTerminalWidthHeight()
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{
 			Name: "Service",
@@ -113,22 +112,22 @@ func renderRepositoryList(repos []*github.Repository) string {
 			Name: "Description",
 		},
 	})
-	sort.Slice(repos, func(i, j int) bool {
-		return strings.Compare(strings.ToLower(repos[i].GetFullName()), strings.ToLower(repos[j].GetFullName())) == -1
+	sort.Slice(addons, func(i, j int) bool {
+		return strings.Compare(strings.ToLower(addons[i].Title), strings.ToLower(addons[j].Title)) == -1
 	})
 	t.AppendHeader(table.Row{"Add-on", "Description"})
 
-	for _, repo := range repos {
-		d := repo.GetDescription()
-		if repo.GetOwner().GetLogin() == globalconfig.DdevGithubOrg {
+	for _, addon := range addons {
+		d := addon.Description
+		if addon.Type == "official" {
 			d = d + "*"
 		}
-		t.AppendRow([]interface{}{repo.GetFullName(), text.WrapSoft(d, 50)})
+		t.AppendRow([]interface{}{addon.Title, text.WrapSoft(d, 50)})
 	}
 
 	t.Render()
 
-	return out.String() + fmt.Sprintf("%d repositories found. Add-ons marked with '*' are officially maintained DDEV add-ons.", len(repos))
+	return out.String() + fmt.Sprintf("%d add-ons found. Add-ons marked with '*' are officially maintained DDEV add-ons.", len(addons))
 }
 
 func init() {

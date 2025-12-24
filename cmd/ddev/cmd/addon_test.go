@@ -10,7 +10,6 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,9 +17,6 @@ import (
 
 // TestCmdAddon tests various `ddev add-on` commands.
 func TestCmdAddon(t *testing.T) {
-	if !github.HasGitHubToken() {
-		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
-	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -89,9 +85,6 @@ func TestCmdAddon(t *testing.T) {
 
 // TestCmdAddonInstalled tests `ddev add-on list --installed` and `ddev add-on remove`
 func TestCmdAddonInstalled(t *testing.T) {
-	if !github.HasGitHubToken() {
-		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
-	}
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
 	assert := asrt.New(t)
@@ -149,9 +142,6 @@ func TestCmdAddonInstalled(t *testing.T) {
 
 // TestCmdAddonProjectFlag tests the `--project` flag in `ddev add-on` subcommands
 func TestCmdAddonProjectFlag(t *testing.T) {
-	if !github.HasGitHubToken() {
-		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
-	}
 	origDdevDebug := os.Getenv("DDEV_DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
 	assert := asrt.New(t)
@@ -589,9 +579,6 @@ services:
 }
 
 func TestCmdAddonSearch(t *testing.T) {
-	if !github.HasGitHubToken() {
-		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
-	}
 	assert := asrt.New(t)
 
 	// Test search for redis

@@ -6,9 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/github"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
@@ -30,14 +29,14 @@ ddev add-on search "redis insight"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		searchTerms := strings.Join(args, " ")
 
-		// Get available add-ons using the same source as list command
-		repos, err := ddevapp.ListAvailableAddons()
+		// Get available add-ons from the registry
+		addons, err := ddevapp.ListAvailableAddonsFromRegistry()
 		if err != nil {
 			util.Failed("Failed to search available add-ons: %v", err)
 		}
 
-		// Filter repositories based on search keywords
-		var filteredRepos []*github.Repository
+		// Filter addons based on search keywords
+		var filteredAddons []types.Addon
 
 		// Extract all keywords from all arguments
 		var keywords []string
@@ -47,10 +46,10 @@ ddev add-on search "redis insight"`,
 			keywords = append(keywords, words...)
 		}
 
-		for _, repo := range repos {
-			repoName := strings.ToLower(repo.GetFullName())
-			repoDesc := strings.ToLower(repo.GetDescription())
-			searchText := repoName + " " + repoDesc
+		for _, addon := range addons {
+			addonTitle := strings.ToLower(addon.Title)
+			addonDesc := strings.ToLower(addon.Description)
+			searchText := addonTitle + " " + addonDesc
 
 			// Check if all keywords appear in name or description
 			matches := true
@@ -62,22 +61,22 @@ ddev add-on search "redis insight"`,
 			}
 
 			if matches {
-				filteredRepos = append(filteredRepos, repo)
+				filteredAddons = append(filteredAddons, addon)
 			}
 		}
 
-		if len(filteredRepos) == 0 {
+		if len(filteredAddons) == 0 {
 			output.UserOut.Printf("No add-ons found matching '%s'\n", searchTerms)
 			return
 		}
 
-		out := renderSearchResults(filteredRepos, searchTerms)
-		output.UserOut.WithField("raw", filteredRepos).Print(out)
+		out := renderSearchResults(filteredAddons, searchTerms)
+		output.UserOut.WithField("raw", filteredAddons).Print(out)
 	},
 }
 
-// renderSearchResults renders the filtered list of repositories
-func renderSearchResults(repos []*github.Repository, searchTerm string) string {
+// renderSearchResults renders the filtered list of addons from the registry
+func renderSearchResults(addons []types.Addon, searchTerm string) string {
 	var out bytes.Buffer
 
 	t := table.NewWriter()
@@ -91,22 +90,22 @@ func renderSearchResults(repos []*github.Repository, searchTerm string) string {
 			Name: "Description",
 		},
 	})
-	sort.Slice(repos, func(i, j int) bool {
-		return strings.Compare(strings.ToLower(repos[i].GetFullName()), strings.ToLower(repos[j].GetFullName())) == -1
+	sort.Slice(addons, func(i, j int) bool {
+		return strings.Compare(strings.ToLower(addons[i].Title), strings.ToLower(addons[j].Title)) == -1
 	})
 	t.AppendHeader(table.Row{"Add-on", "Description"})
 
-	for _, repo := range repos {
-		d := repo.GetDescription()
-		if repo.GetOwner().GetLogin() == globalconfig.DdevGithubOrg {
+	for _, addon := range addons {
+		d := addon.Description
+		if addon.Type == "official" {
 			d = d + "*"
 		}
-		t.AppendRow([]any{repo.GetFullName(), text.WrapSoft(d, 50)})
+		t.AppendRow([]any{addon.Title, text.WrapSoft(d, 50)})
 	}
 
 	t.Render()
 
-	return out.String() + fmt.Sprintf("%d repositories found matching '%s'. Add-ons marked with '*' are officially maintained DDEV add-ons.", len(repos), searchTerm)
+	return out.String() + fmt.Sprintf("%d add-ons found matching '%s'. Add-ons marked with '*' are officially maintained DDEV add-ons.", len(addons), searchTerm)
 }
 
 func init() {
