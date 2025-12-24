@@ -255,6 +255,15 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return err
 	}
 
+	// Remove ~/.ddev/traefik/config and ~/.ddev/traefik/certs for clean start
+	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "config"))
+	if err != nil {
+		return fmt.Errorf("failed to purge global Traefik config dir: %v", err)
+	}
+	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "certs"))
+	if err != nil {
+		return fmt.Errorf("failed to purge global Traefik certs dir: %v", err)
+	}
 	// Copy active project configs and certs into the global traefik directory,
 	// so we can do a single CopyIntoVolume with destroyExisting=true.
 	// This ensures only running projects have their routing active in the router.
