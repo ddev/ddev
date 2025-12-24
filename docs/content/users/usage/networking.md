@@ -179,30 +179,28 @@ If your file contains this header, renaming it to `.crt` is sufficient for use w
 
 ### Cloudflare WARP
 
-If you are using Cloudflare WARP (often used with Zero Trust), you might find that `*.ddev.site` domains do not resolve because WARP intercepts and routes all traffic through its network, bypassing your local loopback.
+If you are using Cloudflare WARP (Zero Trust), you might find that `*.ddev.site` domains do not resolve because WARP intercepts and routes all traffic through its network, bypassing your local loopback.
 
-To fix this, you need to configure **Split Tunneling** in your Cloudflare dashboard (or local settings if available):
+To fix this, configure **Split Tunneling** in your Cloudflare dashboard (or local settings):
 
 1.  Log in to your Cloudflare Zero Trust dashboard.
 2.  Go to **Settings** > **WARP Client** > **Device Settings**.
 3.  Locate your profile and click **Edit**.
-4.  Under **Split Tunnels**, ensure the mode is set to **Exclude** (default).
+4.  Under **Split Tunnels**, ensure the mode is set to **Exclude**.
 5.  Add the following **Selector** entries:
 
 **Domains:**
 *   `*.ddev.site`
 *   `ddev.site`
 
-**IP Addresses (Docker Default Ranges):**
-To ensure Docker internal networking remains local, add these CIDR ranges:
-*   `172.16.0.0/14` (Covers 172.16.x.x to 172.19.x.x)
-*   `172.20.0.0/14` (Covers 172.20.x.x to 172.23.x.x)
-*   `172.25.0.0/16`
-*   `172.26.0.0/15` (Covers 172.26.x.x to 172.27.x.x)
-*   `172.28.0.0/14` (Covers 172.28.x.x to 172.31.x.x)
+**IP Addresses:**
 *   `127.0.0.1/8` (Localhost)
+*   `172.16.0.0/12` (Standard Docker range)
 
-After saving these settings, you may need to disconnect and reconnect WARP for the changes to take effect.
+> [!NOTE]
+> The `172.16.0.0/12` range might overlap with your internal corporate networks. If you lose access to corporate resources:
+> *   Identify the specific Docker ranges you need using a CIDR calculator and only exclude those.
+> *   Or [reconfigure Docker's default IP ranges](https://www.lullabot.com/articles/fixing-docker-and-vpn-ip-address-conflicts) to use a different range and exclude that one instead.
 
 <!-- textlint-disable -->
 ## Corporate or Internet Provider Proxy
