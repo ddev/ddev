@@ -180,7 +180,7 @@ If your file contains this header, renaming it to `.crt` is sufficient for use w
 
 ### Cloudflare WARP (Zero Trust)
 
-If you are using Cloudflare WARP (Zero Trust), you might find that `*.ddev.site` domains do not resolve because WARP intercepts and routes all traffic through its network, bypassing your local loopback.
+If you are using [Cloudflare WARP](https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/warp/) (Zero Trust), you might find that `*.ddev.site` domains (or other domains you might use that resolve to 127.0.0.1) do not resolve because WARP intercepts and routes all traffic through its network, bypassing your local loopback.
 
 To fix this, configure **Split Tunneling** in your Cloudflare dashboard (or local settings):
 
