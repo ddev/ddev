@@ -189,6 +189,15 @@ func StartDdevRouter() error {
 	}
 	util.Debug("ddev-router is ready")
 
+	util.Debug("Getting traefik error output")
+	router, _ = FindDdevRouter()
+
+	traefikErr, _, _ := dockerutil.Exec(router.ID, "cat /tmp/ddev-traefik-errors.txt || true", "0")
+	traefikErr = strings.TrimSpace(traefikErr)
+	if traefikErr != "" {
+		util.Warning("Warning: There are router configuration problems:\n%s", traefikErr)
+	}
+
 	return nil
 }
 
