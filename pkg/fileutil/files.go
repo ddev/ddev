@@ -164,7 +164,9 @@ func PurgeDirectory(path string) error {
 		}
 		err = os.RemoveAll(filepath.Join(path, file))
 		if err != nil {
-			return err
+			// On Traditional Windows tests tests fail cleaning up:
+			// config\default_config.yaml: The process cannot access the file because it is being used by another process
+			util.Warning("unable to fully purge '%s': %v", filepath.Join(path, file), err)
 		}
 	}
 	return nil
