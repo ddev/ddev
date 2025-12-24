@@ -391,14 +391,14 @@ func configureTraefikForApp(app *DdevApp) error {
 		}
 	}
 
-	traefikYamlFile := filepath.Join(projectSourceConfigDir, app.Name+".yaml")
+	projectTraefikYamlFile := filepath.Join(projectSourceConfigDir, app.Name+".yaml")
 	// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
-	err = fileutil.CheckSignatureOrNoFile(traefikYamlFile, nodeps.DdevFileSignature)
+	err = fileutil.CheckSignatureOrNoFile(projectTraefikYamlFile, nodeps.DdevFileSignature)
 	sigExists = (err == nil)
 	if !sigExists {
-		util.Debug("Not creating %s because it exists and is managed by user", traefikYamlFile)
+		util.Debug("Not creating %s because it exists and is managed by user", projectTraefikYamlFile)
 	} else {
-		f, err := os.Create(traefikYamlFile)
+		f, err := os.Create(projectTraefikYamlFile)
 		if err != nil {
 			return fmt.Errorf("failed to create Traefik config file: %v", err)
 		}
@@ -427,9 +427,9 @@ func configureTraefikForApp(app *DdevApp) error {
 	uid, _, _ := dockerutil.GetContainerUser()
 	err = dockerutil.CopyIntoVolume(projectTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
 	if err != nil {
-		util.Warning("Failed to copy Traefik into Docker volume ddev-global-cache/traefik: %v", err)
+		util.Warning("Failed to copy Traefik certs and config into Docker volume ddev-global-cache/traefik: %v", err)
 	} else {
-		util.Debug("Copied Traefik certs in %s to ddev-global-cache/traefik", projectSourceCertsPath)
+		util.Debug("Copied Traefik certs and config in %s to ddev-global-cache/traefik", projectSourceCertsPath)
 	}
 
 	return nil
