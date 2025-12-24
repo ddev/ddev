@@ -190,10 +190,7 @@ func StartDdevRouter() error {
 	util.Debug("ddev-router is ready")
 
 	util.Debug("Getting traefik error output")
-	router, _ = FindDdevRouter()
-
-	traefikErr, _, _ := dockerutil.Exec(router.ID, "cat /tmp/ddev-traefik-errors.txt || true", "0")
-	traefikErr = strings.TrimSpace(traefikErr)
+	traefikErr := GetRouterConfigErrors()
 	if traefikErr != "" {
 		util.Warning("Warning: There are router configuration problems:\n%s", traefikErr)
 	}
@@ -329,9 +326,10 @@ func RenderRouterStatus() (string, string) {
 			}
 		case string(container.Healthy):
 			status = "OK"
-			// If there's a warning message in the health output, show it
-			if logOutput != "" && strings.Contains(logOutput, "WARNING:") {
-				errorInfo = logOutput
+			// If there are router configuration errors, show them
+			if configErrors := GetRouterConfigErrors(); configErrors != "" {
+				lines := strings.Split(configErrors, "\n")
+				errorInfo = fmt.Sprintf("Detected %d configuration error(s):\n%s", len(lines), configErrors)
 			}
 			fallthrough
 		default:
@@ -357,6 +355,17 @@ func GetRouterStatus() (string, string) {
 	}
 
 	return status, logOutput
+}
+
+// GetRouterConfigErrors reads traefik configuration errors from the router container
+func GetRouterConfigErrors() string {
+	router, err := FindDdevRouter()
+	if err != nil || router == nil {
+		return ""
+	}
+
+	traefikErr, _, _ := dockerutil.Exec(router.ID, "cat /tmp/ddev-traefik-errors.txt 2>/dev/null || true", "0")
+	return strings.TrimSpace(traefikErr)
 }
 
 // determineRouterHostnames returns a list of all hostnames for all active projects
