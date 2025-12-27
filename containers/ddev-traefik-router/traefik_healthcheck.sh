@@ -43,7 +43,8 @@ if [ $exit_code -eq 0 ]; then
     fi
     
     # Count routers loaded via file provider (.ddev/traefik/config/<project>.yaml)
-    file_router_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers" 2>/dev/null | jq '[.[] | select(.provider == "file")] | length' 2>/dev/null || echo 0)
+    # Add per_page parameter to handle large number of routers (default is 100)
+    file_router_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers?per_page=10000" 2>/dev/null | jq '[.[] | select(.provider == "file")] | length' 2>/dev/null || echo 0)
     
     # Sum up router/service/middleware config errors reported by Traefik
     error_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview" 2>/dev/null | jq '(.http.routers.errors // 0) + (.http.services.errors // 0) + (.http.middlewares.errors // 0)' 2>/dev/null || echo 0)
