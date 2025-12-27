@@ -99,17 +99,21 @@ When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#p
 
 If you see a warning on `ddev start` about router configuration problems, it is most likely a result of custom configuration problems, which could be an invalid `docker-compose.*.yaml` or leftover project `.ddev/traefik/config/*.yaml` files.
 
+#### "Cannot start the provider *file.Provider error="error adding file watcher: no space left on device"
+
+This warning on `ddev start` is sometimes encountered on Linux systems, the solution is below.
+
 ### Linux file watcher errors
 
 If you encounter Traefik file watcher errors on Linux systems, these are common solutions:
 
 #### Error adding file watcher: no space left on device
 
-This error appears in the router logs, `docker logs ddev-router`, as:
+This error appears during `ddev start` or in the router logs, `docker logs ddev-router`, as:
 
 > ERR Cannot start the provider *file.Provider error="error adding file watcher: no space left on device"
 
-This indicates that the system has reached the limit for inotify watches. First, check the current value:
+This indicates that the system has reached the limit for inotify watches on your Linux computer. First, check the current value:
 
 ```bash
 sysctl fs.inotify.max_user_watches
@@ -129,7 +133,7 @@ sudo sysctl -p /etc/sysctl.d/60-inotify.conf
 
 #### Error creating file watcher: too many open files
 
-This error appears in the router logs, `docker logs ddev-router`, as:
+This error appears during `ddev start` or in the router logs, `docker logs ddev-router`, as:
 
 > ERR Cannot start the provider *file.Provider error="error creating file watcher: too many open files"
 
