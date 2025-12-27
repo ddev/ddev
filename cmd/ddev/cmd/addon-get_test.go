@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"testing"
 
@@ -70,11 +69,12 @@ func TestCmdAddonComplex(t *testing.T) {
 	require.FileExists(t, app.GetConfigPath(fmt.Sprintf("junk_%s_%s.txt", runtime.GOOS, runtime.GOARCH)))
 	info, err := os.Stat(app.GetConfigPath("extra/no-ddev-generated.txt"))
 	require.NoError(t, err, "stat of no-ddev-generated.txt failed")
-	require.True(t, info.Size() == 0)
+	// With empty file handling, the empty file is overwritten with addon content (39 bytes)
+	require.True(t, info.Size() == 39, "empty file should be overwritten with addon content")
 
 	require.Contains(t, out, fmt.Sprintf("👍 %s", filepath.Join("extra", "has-ddev-generated.txt")))
-	require.NotContains(t, out, fmt.Sprintf("👍 %s", filepath.Join("extra", "no-ddev-generated.txt")))
-	require.Regexp(t, regexp.MustCompile(fmt.Sprintf(`NOT overwriting [^ ]*%s`, regexp.QuoteMeta(filepath.Join("extra", "no-ddev-generated.txt")))), out)
+	// With empty file handling, no-ddev-generated.txt is also installed (empty files are overwritten)
+	require.Contains(t, out, fmt.Sprintf("👍 %s", filepath.Join("extra", "no-ddev-generated.txt")))
 }
 
 // TestCmdAddonComplex tests advanced usages
