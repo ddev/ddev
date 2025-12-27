@@ -136,16 +136,14 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	sigExists := true
 	for _, pemFile := range []string{"default_cert.crt", "default_key.key"} {
 		origFile := filepath.Join(sourceCertsPath, pemFile)
-		if fileutil.FileExists(origFile) {
-			// Check to see if file has #ddev-generated in it, meaning we can recreate it.
-			sigExists, err = fileutil.FgrepStringInFile(origFile, nodeps.DdevFileSignature)
-			if err != nil {
-				return err
-			}
-			// If either of the files has #ddev-generated, we will respect both
-			if !sigExists {
-				break
-			}
+		// We can overwrite the file if it has the #ddev-generated
+		// or if it is an empty file.
+		sigFound, err := fileutil.FgrepStringInFile(origFile, nodeps.DdevFileSignature)
+		s, _ := os.Stat(origFile)
+		if !(sigFound || (s != nil && s.Size() == 0) || err != nil) {
+			// File exists, is not empty, and doesn't have #ddev-generated
+			sigExists = false
+			break
 		}
 	}
 
@@ -208,15 +206,13 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 
 	defaultConfigPath := filepath.Join(sourceConfigDir, "default_config.yaml")
 	sigExists = true
-	// TODO: Systematize this checking-for-signature, allow an arg to skip if empty
-	fi, err := os.Stat(defaultConfigPath)
-	// Don't use simple fileutil.FileExists() because of the danger of an empty file
-	if err == nil && fi.Size() > 0 {
-		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
-		sigExists, err = fileutil.FgrepStringInFile(defaultConfigPath, nodeps.DdevFileSignature)
-		if err != nil {
-			return err
-		}
+	// We can overwrite the file if it has the #ddev-generated
+	// or if it is an empty file.
+	sigFound, err := fileutil.FgrepStringInFile(defaultConfigPath, nodeps.DdevFileSignature)
+	s, _ := os.Stat(defaultConfigPath)
+	if !(sigFound || (s != nil && s.Size() == 0) || err != nil) {
+		// File exists, is not empty, and doesn't have #ddev-generated
+		sigExists = false
 	}
 	if !sigExists {
 		util.Debug("Not creating %s because it exists and is managed by user", defaultConfigPath)
