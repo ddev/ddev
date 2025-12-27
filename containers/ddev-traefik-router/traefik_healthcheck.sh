@@ -48,21 +48,13 @@ if [ $exit_code -eq 0 ]; then
     # Sum up router/service/middleware config errors reported by Traefik
     error_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview" 2>/dev/null | jq '(.http.routers.errors // 0) + (.http.services.errors // 0) + (.http.middlewares.errors // 0)' 2>/dev/null || echo 0)
     
-    # Check backend service status - verify all services are UP
-    services_not_up=0
-    if [ "$file_router_count" -gt 0 ]; then
-        services_not_up=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/services" 2>/dev/null | jq '[.[] | select(.provider == "file") | select(.serverStatus != "UP")] | length' 2>/dev/null || echo 0)
-    fi
-    
     # Healthy if:
     # 1. Config files found and expected routers > 0
     # 2. Actual router count matches expected count
     # 3. No config errors
-    # 4. All backend services are UP
     if [ "$expected_router_count" -gt 0 ] && \
        [ "$file_router_count" -eq "$expected_router_count" ] && \
-       [ "$error_count" -eq 0 ] && \
-       [ "$services_not_up" -eq 0 ]; then
+       [ "$error_count" -eq 0 ]; then
         printf "%s" "${check}"
         touch /tmp/healthy
         exit 0
@@ -70,6 +62,8 @@ if [ $exit_code -eq 0 ]; then
     
     # Set descriptive error message for failure
     elif [ "$error_count" -gt 0 ]; then
+        check="Detected ${error_count} configuration error(s) in project"
+        exit_code=3
     else
         check="WARNING: Unknown issue detected"
     fi
