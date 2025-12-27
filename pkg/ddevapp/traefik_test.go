@@ -185,7 +185,7 @@ func TestTraefikStaticConfig(t *testing.T) {
 		{"extraPlugin", "extraPlugin"},
 	}
 	for _, tc := range testCases {
-		t.Run("", func(t *testing.T) {
+		t.Run(tc.content, func(t *testing.T) {
 			testSourceDir := filepath.Join(testData, tc.dir)
 			traefikGlobalConfigDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 
