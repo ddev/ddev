@@ -136,7 +136,7 @@ Then the Buildkite agent must be configured with tags `colima_vz=true`.
 
 ## Additional Lima macOS setup
 
-1. `limactl create --name=lima-vz --vm-type=vz --mount-type=virtiofs --mount-writable --mount="~/:w" --memory=6 --cpus=4 --disk=60 template://docker`
+1. `limactl create --name=lima-vz --vm-type=vz --mount-type=virtiofs --mount-writable --mount="~/:w" --memory=6 --cpus=4 --disk=60 template:docker`
 2. `limactl start lima-vz`
 3. `docker context use lima-lima-vz`
 
