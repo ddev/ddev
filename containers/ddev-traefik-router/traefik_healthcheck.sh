@@ -50,7 +50,7 @@ if [ $exit_code -eq 0 ]; then
     error_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview" 2>/dev/null | jq '(.http.routers.errors // 0) + (.http.services.errors // 0) + (.http.middlewares.errors // 0)' 2>/dev/null || echo 0)
     
     # Healthy if:
-    # 1. Config files found and expected routers > 0
+    # 1. Expected routers > 0 (config files found)
     # 2. Actual router count matches expected count
     # 3. No config errors
     if [ "$expected_router_count" -gt 0 ] && \
@@ -60,11 +60,16 @@ if [ $exit_code -eq 0 ]; then
         touch /tmp/healthy
         exit 0
     fi
-    
-    # Set descriptive error message for failure
+
+    # Set descriptive warning message, but return success (exit 0)
+    # This allows the router to be "healthy" even with configuration issues
+    # The user will see these warnings via GetRouterConfigErrors() in router.go
+    if [ "$expected_router_count" -eq 0 ]; then
+        check="WARNING: No config files found or no routers expected"
+    elif [ "$file_router_count" -ne "$expected_router_count" ]; then
+        check="WARNING: Router count mismatch: ${file_router_count} loaded, ${expected_router_count} expected"
     elif [ "$error_count" -gt 0 ]; then
-        check="Detected ${error_count} configuration error(s) in project"
-        exit_code=3
+        check="WARNING: Detected ${error_count} configuration error(s) - check 'docker logs ddev-router' for details"
     else
         check="WARNING: Unknown issue detected"
     fi
