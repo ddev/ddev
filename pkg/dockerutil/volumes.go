@@ -145,3 +145,40 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	track()
 	return nil
 }
+
+// PurgeDirectoryContentsInVolume removes all files inside directories within a Docker volume
+// while keeping the directories themselves intact. This is important for inotify watchers that
+// monitor the directory - if the directory is deleted and recreated, the watch breaks.
+// volumeName is the volume to operate on
+// subdirs are the paths within the volume to purge (e.g., "traefik/config", "traefik/certs")
+func PurgeDirectoryContentsInVolume(volumeName string, subdirs []string, uid string) error {
+	volPath := "/mnt/v"
+
+	containerName := "PurgeInVolume_" + nodeps.RandomString(12)
+
+	track := util.TimeTrackC("PurgeDirectoryContentsInVolume " + volumeName)
+
+	// Build mkdir commands and rm glob patterns
+	var mkdirs []string
+	var rmPaths []string
+	for _, subdir := range subdirs {
+		fullPath := volPath + "/" + subdir
+		mkdirs = append(mkdirs, fmt.Sprintf(`"%s"`, fullPath))
+		rmPaths = append(rmPaths, fmt.Sprintf(`"%s"/*`, fullPath))
+	}
+	c := fmt.Sprintf("mkdir -p %s && rm -rf %s", strings.Join(mkdirs, " "), strings.Join(rmPaths, " "))
+
+	labels := map[string]string{"com.ddev.site-name": ""}
+	if IsPodmanRootless() {
+		labels["com.ddev.userns"] = "keep-id"
+	}
+	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, labels, nil, nil)
+	if err != nil {
+		return err
+	}
+	// nolint: errcheck
+	defer RemoveContainer(containerID)
+
+	track()
+	return nil
+}
