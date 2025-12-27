@@ -22,6 +22,9 @@ var (
 	// docrootRelPathArg is the relative path to the docroot where index.php is.
 	docrootRelPathArg string
 
+	// composerUseWorkingDirArg allows a user to run Composer relative to the host's working directory.
+	composerUseWorkingDirArg bool
+
 	// composerRootRelPathArg allows a user to define the Composer root directory for the web service.
 	composerRootRelPathArg string
 
@@ -227,6 +230,7 @@ func init() {
 
 	ConfigCommand.Flags().StringVar(&projectNameArg, "project-name", "", projectNameUsage)
 	ConfigCommand.Flags().StringVar(&docrootRelPathArg, "docroot", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
+	ConfigCommand.Flags().BoolVar(&composerUseWorkingDirArg, "composer-use-working-dir", false, "Whether composer should be run relating to the host's working directory")
 	ConfigCommand.Flags().StringVar(&composerRootRelPathArg, "composer-root", "", "The relative path, from the project root, to the directory containing composer.json (This is where all Composer-related commands are executed.)")
 	ConfigCommand.Flags().BoolVar(&composerRootRelPathDefaultArg, "composer-root-default", false, `Unsets a web service Composer root directory override, the same as --composer-root=""`)
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "project-type", "", projectTypeUsage)
@@ -422,6 +426,10 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	// Set Composer root directory overrides
 	if cmd.Flag("composer-root").Changed {
 		app.ComposerRoot = composerRootRelPathArg
+	}
+	// Allow Composer to use the current working directory
+	if cmd.Flag("composer-use-working-dir").Changed {
+		app.ComposerUseWorkingDir = composerUseWorkingDirArg
 	}
 
 	if composerRootRelPathDefaultArg {
