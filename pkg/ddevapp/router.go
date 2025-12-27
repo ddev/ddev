@@ -224,6 +224,7 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 		"Hostnames":                  determineRouterHostnames(activeApps),
 		"IsPodman":                   dockerutil.IsPodman(),
 		"IsRootless":                 dockerutil.IsRootless(),
+		"ExpectedProjectCount":       len(activeApps),
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")

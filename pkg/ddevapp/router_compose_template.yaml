@@ -45,6 +45,7 @@ services:
       - USE_LETSENCRYPT={{ .letsencrypt }}
         {{ end }}{{/* end if .letsencrypt */}}
       - TZ={{ .Timezone }}
+      - EXPECTED_PROJECT_COUNT={{ .ExpectedProjectCount }}
       # Bypass proxies to allow internal container connections
       - NO_PROXY=*
       - no_proxy=*

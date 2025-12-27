@@ -135,31 +135,23 @@ fi
 # Ping succeeded - now inspect additional health indicators
 # Traefik API endpoints https://doc.traefik.io/traefik/operations/api/#endpoints
 
+    # Get expected project count from environment (set by DDEV when starting router)
+    expected_project_count=${EXPECTED_PROJECT_COUNT:-0}
+
+    # If no projects expected, we're healthy as soon as traefik ping works
+    if [ "$expected_project_count" -eq 0 ]; then
+        printf "%s" "${check}"
+        touch /tmp/healthy
+        exit 0
+    fi
+
 # If no dynamic config directory, we're done
 if [ ! -d "${config_dir}" ]; then
     clear_warnings
     mark_healthy "${check}"
 fi
 
-# Get expected and actual router counts
-expected_router_count=$(get_expected_router_count)
-file_router_count=$(get_file_router_count)
-error_count=$(get_error_count)
 
-# Wait for traefik to finish loading if needed (avoids false warnings during startup)
-wait_for_routers "$file_router_count" "$expected_router_count" "$error_count"
-file_router_count=$ROUTER_COUNT
-error_count=$ERROR_COUNT
-
-# Check if configuration is healthy:
-# 1. Expected routers > 0 (config files found)
-# 2. Actual router count matches expected count
-# 3. No config errors
-if [ "$expected_router_count" -gt 0 ] && \
-   [ "$file_router_count" -eq "$expected_router_count" ] && \
-   [ "$error_count" -eq 0 ]; then
-    clear_warnings
-    mark_healthy "${check}"
 fi
 
 # Configuration has issues - generate and record warning
