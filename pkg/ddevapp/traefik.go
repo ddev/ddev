@@ -122,7 +122,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	globalSourceConfigDir := filepath.Join(globalTraefikDir, "config")
 	inContainerTargetCertsPath := "/mnt/ddev-global-cache/traefik/certs"
 
-	// Set up directores in ~/.ddev/traefik
+	// Set up directories in ~/.ddev/traefik
 	err = os.MkdirAll(globalSourceCertsPath, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create global Traefik certs dir: %v", err)
@@ -260,10 +260,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	if err != nil {
 		return fmt.Errorf("failed to purge global Traefik config dir: %v", err)
 	}
-	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "certs"))
-	if err != nil {
-		return fmt.Errorf("failed to purge global Traefik certs dir: %v", err)
-	}
+
 	// Copy active project configs and certs into the global traefik directory.
 	// This ensures only running projects have their routing active in the router.
 	for _, app := range activeApps {
@@ -311,12 +308,12 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		}
 	}
 
-	// Purge config and certs directories inside the volume while keeping the directories themselves.
+	// Purge config directory inside the volume while keeping the directories themselves.
 	// This is critical for inotify watchers - if we destroy the entire traefik directory,
 	// traefik's file watcher breaks on Linux and doesn't see new configs.
-	err = dockerutil.PurgeDirectoryContentsInVolume("ddev-global-cache", []string{"traefik/config", "traefik/certs"}, uid)
+	err = dockerutil.PurgeDirectoryContentsInVolume("ddev-global-cache", []string{"traefik/config"}, uid)
 	if err != nil {
-		return fmt.Errorf("failed to purge traefik config/certs in ddev-global-cache volume: %v", err)
+		return fmt.Errorf("failed to purge traefik config in ddev-global-cache volume: %v", err)
 	}
 
 	// Copy with destroyExisting=false since we've already purged the subdirectories
