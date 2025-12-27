@@ -193,6 +193,7 @@ func StartDdevRouter() error {
 	traefikErr := GetRouterConfigErrors()
 	if traefikErr != "" {
 		util.Warning("Warning: There are router configuration problems:\n%s", traefikErr)
+		util.Warning("For help go to: https://docs.ddev.com/en/stable/users/extend/traefik-router/#troubleshooting-traefik-routing")
 	}
 
 	return nil
