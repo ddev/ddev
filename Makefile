@@ -150,17 +150,25 @@ test: testpkg testcmd
 testcmd: $(DEFAULT_BUILD) setup
 	@echo LDFLAGS=$(LDFLAGS)
 	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
+	@echo "Running ddev version check..."
+	@$(DDEV_BINARY_FULLPATH) version
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(TESTARGS)
 
 testpkg: testnotddevapp testddevapp
 
 testddevapp: $(DEFAULT_BUILD) setup
+	@echo "Running ddev version check..."
+	@$(DDEV_BINARY_FULLPATH) version
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp $(TESTARGS)
 
 testnotddevapp: $(DEFAULT_BUILD) setup
+	@echo "Running ddev version check..."
+	@$(DDEV_BINARY_FULLPATH) version
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) $(TESTARGS)
 
 testfullsitesetup: $(DEFAULT_BUILD) setup
+	@echo "Running ddev version check..."
+	@$(DDEV_BINARY_FULLPATH) version
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp -run TestDdevFullSiteSetup $(TESTARGS)
 
 testwininstaller: windows_amd64_install
@@ -341,6 +349,8 @@ go-mod-update:
 quickstart-test: build
 	@echo "quickstart-test:"
 	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
+	@echo "Running ddev version check..."
+	@$(DDEV_BINARY_FULLPATH) version
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); bats docs/tests
 
 version:
