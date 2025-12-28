@@ -154,3 +154,62 @@ func TestFormatBytes(t *testing.T) {
 		})
 	}
 }
+
+// TestGetVolumeSize tests getting the size of a Docker volume using the Docker API
+func TestGetVolumeSize(t *testing.T) {
+	assert := asrt.New(t)
+
+	testVolume := "test_volume_size_check"
+	_ = dockerutil.RemoveVolume(testVolume)
+
+	// Create a volume
+	_, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = dockerutil.RemoveVolume(testVolume)
+		assert.NoError(err)
+	})
+
+	// Get the volume size
+	sizeBytes, sizeHuman, err := dockerutil.GetVolumeSize(testVolume)
+	assert.NoError(err)
+	// Empty volume should be 0 bytes or very small
+	assert.GreaterOrEqual(sizeBytes, int64(0))
+	assert.NotEmpty(sizeHuman)
+
+	// Test non-existent volume
+	sizeBytes, sizeHuman, err = dockerutil.GetVolumeSize("nonexistent_volume_xyz")
+	assert.NoError(err) // Should not error, just return 0
+	assert.Equal(int64(0), sizeBytes)
+	assert.Equal("0B", sizeHuman)
+}
+
+// TestParseDockerSystemDf tests parsing Docker system df output via API
+func TestParseDockerSystemDf(t *testing.T) {
+	assert := asrt.New(t)
+
+	testVolume := "test_parse_df_volume"
+	_ = dockerutil.RemoveVolume(testVolume)
+
+	// Create a test volume
+	_, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = dockerutil.RemoveVolume(testVolume)
+		assert.NoError(err)
+	})
+
+	// Parse Docker system df
+	volumeSizes, err := dockerutil.ParseDockerSystemDf()
+	assert.NoError(err)
+	assert.NotNil(volumeSizes)
+
+	// Our test volume should be in the results
+	volSize, exists := volumeSizes[testVolume]
+	assert.True(exists, "Test volume should exist in results")
+	assert.Equal(testVolume, volSize.Name)
+	assert.GreaterOrEqual(volSize.SizeBytes, int64(0))
+	assert.NotEmpty(volSize.SizeHuman)
+}

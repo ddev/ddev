@@ -271,3 +271,51 @@ func TestMutagenConfigChange(t *testing.T) {
 
 	util.Debug("origSyncID=%s afterRestartSyncID=%s afterChangeSyncID=%s", origSyncID, afterRestartSyncID, afterChangeSyncID)
 }
+
+// TestMutagenDiagnose tests the MutagenDiagnose function
+func TestMutagenDiagnose(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("TestMutagenDiagnose skipped on Windows")
+	}
+	assert := asrt.New(t)
+
+	// Make sure there's not an existing Mutagen running
+	_, _ = exec.RunHostCommand("pkill", "mutagen")
+
+	// Use a simple test site
+	site := TestSites[0]
+	app := &ddevapp.DdevApp{Name: site.Name}
+	_ = app.Stop(true, false)
+	_ = globalconfig.RemoveProjectInfo(site.Name)
+
+	err := site.Prepare()
+	require.NoError(t, err)
+
+	err = app.Init(site.Dir)
+	require.NoError(t, err)
+	app.SetPerformanceMode(types.PerformanceModeMutagen)
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Run DiagnoseMutagenConfiguration
+	result := ddevapp.DiagnoseMutagenConfiguration(app)
+	require.NotNil(t, result)
+
+	// Basic sanity checks on the diagnostic result
+	assert.True(result.SessionExists, "Mutagen session should exist")
+	assert.NotEmpty(result.SyncStatus, "Sync status should not be empty")
+	assert.GreaterOrEqual(result.VolumeSize, int64(0), "Volume size should be >= 0")
+	assert.NotEmpty(result.VolumeSizeHuman, "Volume size human should not be empty")
+
+	// Check that volume was detected
+	volumeName := ddevapp.GetMutagenVolumeName(app)
+	assert.True(dockerutil.VolumeExists(volumeName), "Mutagen volume should exist")
+}
