@@ -185,6 +185,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 	if err != nil {
 		return fmt.Errorf("unable to mutagenSyncSessionExists(): %v", err)
 	}
+	isResumingExistingSession := sessionExists
 	if sessionExists {
 		util.Verbose("Resume Mutagen sync if session already exists")
 		err := ResumeMutagenSync(app)
@@ -281,6 +282,16 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 	}
 
 	outputComing := false
+	secondsWaiting := 0
+	hintShown := false
+
+	// Different thresholds based on whether we're resuming or creating new
+	// Resuming should be fast (30s), creating new can take longer (180s)
+	warningThreshold := 180
+	if isResumingExistingSession {
+		warningThreshold = 30
+	}
+
 	for {
 		select {
 		// Complete when the MutagenSyncFlush() completes
@@ -293,6 +304,22 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		case <-time.After(1 * time.Second):
 			if !outputComing {
 				_, _ = fmt.Fprintf(os.Stderr, ".")
+			}
+			secondsWaiting++
+
+			// If sync is taking a long time, suggest running diagnose
+			if !hintShown && secondsWaiting >= warningThreshold {
+				_, _ = fmt.Fprintf(os.Stderr, "\n")
+				if isResumingExistingSession {
+					util.Warning("Mutagen sync is taking longer than expected (%d seconds).", secondsWaiting)
+					util.Warning("Resuming an existing session should be fast - there may be sync problems.")
+				} else {
+					util.Warning("Mutagen sync is taking longer than expected (%d seconds).", secondsWaiting)
+					util.Warning("This may be normal for a large project on first sync.")
+				}
+				util.Warning("After startup completes, run 'ddev utility mutagen-diagnose' to check for issues.")
+				_, _ = fmt.Fprintf(os.Stderr, "Continuing to wait for sync")
+				hintShown = true
 			}
 		}
 	}
