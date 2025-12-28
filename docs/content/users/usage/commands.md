@@ -1637,6 +1637,34 @@ Example:
 ddev utility mutagen sync list
 ```
 
+### `utility mutagen-diagnose`
+
+Diagnose Mutagen sync configuration and performance issues. This command analyzes your Mutagen setup and provides actionable recommendations for improving sync performance.
+
+The command checks:
+
+* Volume sizes and disk usage (warns if >5GB, critical if >10GB)
+* Upload directories configuration
+* Sync session status and problems
+* Large files being synced that could impact performance (>50MB)
+* Ignore pattern configuration
+
+**Flags:**
+
+* `--all`, `-a`: Show all Mutagen volumes system-wide instead of just the current project
+
+**Examples:**
+
+```shell
+# Diagnose the current project's Mutagen configuration
+ddev utility mutagen-diagnose
+
+# Show all Mutagen volumes across all projects
+ddev utility mutagen-diagnose --all
+```
+
+See the [Mutagen troubleshooting documentation](../install/performance.md#mutagen-troubleshooting) for more details.
+
 ### `utility rebuild`
 
 *Alias: `utility refresh`.*
