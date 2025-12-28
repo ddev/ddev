@@ -1183,6 +1183,82 @@ type MutagenDiagnosticResult struct {
 	WarningCount int
 }
 
+// formatMutagenProblems parses and formats Mutagen problems for human readability
+// Mutagen problems are typically a slice of maps with "path" and "error" keys
+func formatMutagenProblems(problems interface{}, problemType string) []string {
+	var formatted []string
+
+	// Translate technical terms to user-friendly descriptions
+	contextMap := map[string]string{
+		"Alpha":            "Host filesystem",
+		"Beta":             "Container filesystem",
+		"Alpha transition": "Host filesystem transition",
+		"Beta transition":  "Container filesystem transition",
+		"Sync conflict":    "Sync conflict",
+	}
+
+	userFriendlyType := contextMap[problemType]
+	if userFriendlyType == "" {
+		userFriendlyType = problemType
+	}
+
+	// Problems can be a slice of maps
+	if problemSlice, ok := problems.([]interface{}); ok {
+		for _, problem := range problemSlice {
+			if problemMap, ok := problem.(map[string]interface{}); ok {
+				problemPath := ""
+				errorMsg := ""
+
+				if p, ok := problemMap["path"].(string); ok {
+					problemPath = p
+				}
+				if e, ok := problemMap["error"].(string); ok {
+					errorMsg = e
+				}
+
+				// Format based on what information we have
+				if problemPath != "" && errorMsg != "" {
+					msg := fmt.Sprintf("%s: %s (path: %s)", userFriendlyType, errorMsg, problemPath)
+
+					// Add helpful hints for common errors - different for host vs container
+					isContainerProblem := (problemType == "Beta" || problemType == "Beta transition")
+					if strings.Contains(errorMsg, "permission denied") {
+						if isContainerProblem {
+							msg += "\n      → Fix: Run 'ddev mutagen reset' to recreate the container filesystem from host"
+							msg += "\n      → Or: Use 'ddev exec chmod' to fix permissions inside the container"
+						} else {
+							msg += "\n      → Fix: Check file/directory permissions with 'ls -la " + problemPath + "' and adjust with 'chmod'"
+						}
+					} else if strings.Contains(errorMsg, "no such file") {
+						if isContainerProblem {
+							msg += "\n      → Fix: Run 'ddev mutagen reset' to resync from host filesystem"
+						} else {
+							msg += "\n      → Fix: The file or directory was deleted or moved on the host"
+						}
+					}
+
+					formatted = append(formatted, msg)
+				} else if problemPath != "" {
+					formatted = append(formatted, fmt.Sprintf("%s problem with path: %s", userFriendlyType, problemPath))
+				} else if errorMsg != "" {
+					formatted = append(formatted, fmt.Sprintf("%s: %s", userFriendlyType, errorMsg))
+				} else {
+					// Fallback if structure is unexpected
+					formatted = append(formatted, fmt.Sprintf("%s problem: %v", userFriendlyType, problem))
+				}
+			} else {
+				// Not a map, just use string representation
+				formatted = append(formatted, fmt.Sprintf("%s problem: %v", userFriendlyType, problem))
+			}
+		}
+	} else {
+		// Not a slice, fallback to string representation
+		formatted = append(formatted, fmt.Sprintf("%s problems: %v", userFriendlyType, problems))
+	}
+
+	return formatted
+}
+
 // DiagnoseMutagenConfiguration performs comprehensive diagnostic checks on Mutagen configuration
 func DiagnoseMutagenConfiguration(app *DdevApp) MutagenDiagnosticResult {
 	result := MutagenDiagnosticResult{}
@@ -1200,22 +1276,27 @@ func DiagnoseMutagenConfiguration(app *DdevApp) MutagenDiagnosticResult {
 		if mapResult != nil {
 			if alpha, ok := mapResult["alpha"].(map[string]interface{}); ok {
 				if scanProblems, ok := alpha["scanProblems"]; ok {
-					result.Problems = append(result.Problems, fmt.Sprintf("Alpha scan problems: %v", scanProblems))
+					formatted := formatMutagenProblems(scanProblems, "Alpha")
+					result.Problems = append(result.Problems, formatted...)
 				}
 				if transProblems, ok := alpha["transitionProblems"]; ok {
-					result.Problems = append(result.Problems, fmt.Sprintf("Alpha transition problems: %v", transProblems))
+					formatted := formatMutagenProblems(transProblems, "Alpha transition")
+					result.Problems = append(result.Problems, formatted...)
 				}
 			}
 			if beta, ok := mapResult["beta"].(map[string]interface{}); ok {
 				if scanProblems, ok := beta["scanProblems"]; ok {
-					result.Problems = append(result.Problems, fmt.Sprintf("Beta scan problems: %v", scanProblems))
+					formatted := formatMutagenProblems(scanProblems, "Beta")
+					result.Problems = append(result.Problems, formatted...)
 				}
 				if transProblems, ok := beta["transitionProblems"]; ok {
-					result.Problems = append(result.Problems, fmt.Sprintf("Beta transition problems: %v", transProblems))
+					formatted := formatMutagenProblems(transProblems, "Beta transition")
+					result.Problems = append(result.Problems, formatted...)
 				}
 			}
 			if conflicts, ok := mapResult["conflicts"]; ok {
-				result.Problems = append(result.Problems, fmt.Sprintf("Conflicts: %v", conflicts))
+				formatted := formatMutagenProblems(conflicts, "Sync conflict")
+				result.Problems = append(result.Problems, formatted...)
 			}
 		}
 	}

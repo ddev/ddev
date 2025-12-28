@@ -83,6 +83,18 @@ func runMutagenDiagnose(showAll bool) int {
 			return 0
 		}
 
+		// Check if project is running - start it if needed
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
+			output.UserOut.Printf("Project '%s' is not running. Starting project to enable sync diagnostics...\n", app.Name)
+			output.UserOut.Println()
+			err := app.Start()
+			if err != nil {
+				util.Failed("Failed to start project: %v", err)
+				return 1
+			}
+		}
+
 		projectHasIssues := showProjectDiagnostics(app)
 		if projectHasIssues {
 			hasIssues = true
