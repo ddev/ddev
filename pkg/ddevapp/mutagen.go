@@ -1146,7 +1146,7 @@ func CheckLargeFilesInSync(app *DdevApp) (warnings []string) {
 			}
 
 			// Format file size
-			sizeStr := formatFileSize(file.size)
+			sizeStr := util.FormatBytes(file.size)
 
 			if !isExcluded {
 				severity := "Large"
@@ -1159,20 +1159,6 @@ func CheckLargeFilesInSync(app *DdevApp) (warnings []string) {
 	}
 
 	return warnings
-}
-
-// formatFileSize converts bytes to human-readable format
-func formatFileSize(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGT"[exp])
 }
 
 // MutagenDiagnosticResult holds comprehensive diagnostic information about Mutagen configuration

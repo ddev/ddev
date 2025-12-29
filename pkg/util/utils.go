@@ -521,3 +521,21 @@ func GetHomeDir() string {
 	}
 	return home
 }
+
+// FormatBytes converts bytes to a human-readable string
+// Returns format like: "2.3GB", "156.7MB", "1.5KB", "0B"
+func FormatBytes(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%dB", bytes)
+	}
+
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+
+	units := []string{"KB", "MB", "GB", "TB", "PB"}
+	return fmt.Sprintf("%.1f%s", float64(bytes)/float64(div), units[exp])
+}

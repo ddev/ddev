@@ -239,6 +239,5 @@ nav:
     - developers/http-proxy-test-environments.md
     - developers/network-test-environments.md
     - developers/network-bandwidth-testing.md
-    - developers/tmp/mutagen-diagnose-plan.md
   - 'Blog': https://ddev.com/blog
   - 'Add-on Registry': https://addons.ddev.com

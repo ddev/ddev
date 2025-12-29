@@ -180,7 +180,7 @@ func ParseDockerSystemDf() (map[string]VolumeSize, error) {
 			sizeBytes = vol.UsageData.Size
 		}
 
-		sizeHuman := FormatBytes(sizeBytes)
+		sizeHuman := util.FormatBytes(sizeBytes)
 
 		volumeSizes[vol.Name] = VolumeSize{
 			Name:      vol.Name,
@@ -190,24 +190,6 @@ func ParseDockerSystemDf() (map[string]VolumeSize, error) {
 	}
 
 	return volumeSizes, nil
-}
-
-// FormatBytes converts bytes to a human-readable string
-// Returns format like: "2.3GB", "156.7MB", "1.5KB", "0B"
-func FormatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%dB", bytes)
-	}
-
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-
-	units := []string{"KB", "MB", "GB", "TB", "PB"}
-	return fmt.Sprintf("%.1f%s", float64(bytes)/float64(div), units[exp])
 }
 
 // GetVolumeSize returns the size of a specific Docker volume

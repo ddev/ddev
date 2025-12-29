@@ -148,7 +148,7 @@ func showAllMutagenVolumes() bool {
 	}
 
 	output.UserOut.Println()
-	totalSizeHuman := formatBytes(totalSize)
+	totalSizeHuman := util.FormatBytes(totalSize)
 	output.UserOut.Printf("  Total Mutagen disk usage: %s across %d project(s)\n", totalSizeHuman, len(volumes))
 	output.UserOut.Println()
 
@@ -240,7 +240,7 @@ func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
 	// Show total across all projects
 	volumes, totalSize, err := ddevapp.GetAllMutagenVolumes()
 	if err == nil && len(volumes) > 1 {
-		totalSizeHuman := formatBytes(totalSize)
+		totalSizeHuman := util.FormatBytes(totalSize)
 		output.UserOut.Printf("  ℹ Total Mutagen volumes: %s across %d project(s)\n", totalSizeHuman, len(volumes))
 	}
 
@@ -404,18 +404,4 @@ func getStatusSymbol(status string) string {
 	default:
 		return "?"
 	}
-}
-
-// formatBytes converts bytes to human-readable format
-func formatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGT"[exp])
 }
