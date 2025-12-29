@@ -157,6 +157,9 @@ func TestFormatBytes(t *testing.T) {
 
 // TestGetVolumeSize tests getting the size of a Docker volume using the Docker API
 func TestGetVolumeSize(t *testing.T) {
+	if dockerutil.IsPodman() {
+		t.Skip("Podman does not support docker system df volume sizing")
+	}
 	assert := asrt.New(t)
 
 	testVolume := "test_volume_size_check"
@@ -171,12 +174,31 @@ func TestGetVolumeSize(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	// Write some data to the volume to ensure it has a measurable size
+	// Create a 1MB file in the volume
+	_, _, err = dockerutil.RunSimpleContainer(
+		versionconstants.UtilitiesImage,
+		"",
+		[]string{"sh", "-c", "dd if=/dev/zero of=/mnt/testvolume/testfile bs=1M count=1"},
+		nil,
+		nil,
+		[]string{testVolume + ":/mnt/testvolume"},
+		"0",
+		true,
+		false,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+
 	// Get the volume size
 	sizeBytes, sizeHuman, err := dockerutil.GetVolumeSize(testVolume)
 	assert.NoError(err)
-	// Empty volume should be 0 bytes or very small
-	assert.GreaterOrEqual(sizeBytes, int64(0))
+	// Volume should now have at least 1MB of data
+	assert.Greater(sizeBytes, int64(1024*1024-1), "Volume should contain at least 1MB of data")
 	assert.NotEmpty(sizeHuman)
+	assert.NotEqual("0B", sizeHuman, "Volume should not be empty")
 
 	// Test non-existent volume
 	sizeBytes, sizeHuman, err = dockerutil.GetVolumeSize("nonexistent_volume_xyz")
