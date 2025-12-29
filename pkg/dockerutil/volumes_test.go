@@ -187,6 +187,9 @@ func TestGetVolumeSize(t *testing.T) {
 
 // TestParseDockerSystemDf tests parsing Docker system df output via API
 func TestParseDockerSystemDf(t *testing.T) {
+	if dockerutil.IsPodman() {
+		t.Skip("Podman does not support docker system df")
+	}
 	assert := asrt.New(t)
 
 	testVolume := "test_parse_df_volume"
