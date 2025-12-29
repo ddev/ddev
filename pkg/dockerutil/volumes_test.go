@@ -126,8 +126,6 @@ subdir1.txt
 
 // TestFormatBytes tests the byte formatting function
 func TestFormatBytes(t *testing.T) {
-	assert := asrt.New(t)
-
 	tests := []struct {
 		name     string
 		bytes    int64
@@ -150,7 +148,7 @@ func TestFormatBytes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := dockerutil.FormatBytes(tt.bytes)
-			assert.Equal(tt.expected, result, "FormatBytes(%d) should return %s, got %s", tt.bytes, tt.expected, result)
+			require.Equal(t, tt.expected, result, "FormatBytes(%d) should return %s, got %s", tt.bytes, tt.expected, result)
 		})
 	}
 }
@@ -194,17 +192,17 @@ func TestGetVolumeSize(t *testing.T) {
 
 	// Get the volume size
 	sizeBytes, sizeHuman, err := dockerutil.GetVolumeSize(testVolume)
-	assert.NoError(err)
+	require.NoError(t, err)
 	// Volume should now have at least 1MB of data
-	assert.Greater(sizeBytes, int64(1024*1024-1), "Volume should contain at least 1MB of data")
-	assert.NotEmpty(sizeHuman)
-	assert.NotEqual("0B", sizeHuman, "Volume should not be empty")
+	require.Greater(t, sizeBytes, int64(1024*1024-1), "Volume should contain at least 1MB of data")
+	require.NotEmpty(t, sizeHuman)
+	require.NotEqual(t, "0B", sizeHuman, "Volume should not be empty")
 
 	// Test non-existent volume
 	sizeBytes, sizeHuman, err = dockerutil.GetVolumeSize("nonexistent_volume_xyz")
-	assert.NoError(err) // Should not error, just return 0
-	assert.Equal(int64(0), sizeBytes)
-	assert.Equal("0B", sizeHuman)
+	require.NoError(t, err) // Should not error, just return 0
+	require.Equal(t, int64(0), sizeBytes)
+	require.Equal(t, "0B", sizeHuman)
 }
 
 // TestParseDockerSystemDf tests parsing Docker system df output via API
@@ -228,13 +226,13 @@ func TestParseDockerSystemDf(t *testing.T) {
 
 	// Parse Docker system df
 	volumeSizes, err := dockerutil.ParseDockerSystemDf()
-	assert.NoError(err)
-	assert.NotNil(volumeSizes)
+	require.NoError(t, err)
+	require.NotNil(t, volumeSizes)
 
 	// Our test volume should be in the results
 	volSize, exists := volumeSizes[testVolume]
-	assert.True(exists, "Test volume should exist in results")
-	assert.Equal(testVolume, volSize.Name)
-	assert.GreaterOrEqual(volSize.SizeBytes, int64(0))
-	assert.NotEmpty(volSize.SizeHuman)
+	require.True(t, exists, "Test volume should exist in results")
+	require.Equal(t, testVolume, volSize.Name)
+	require.GreaterOrEqual(t, volSize.SizeBytes, int64(0))
+	require.NotEmpty(t, volSize.SizeHuman)
 }
