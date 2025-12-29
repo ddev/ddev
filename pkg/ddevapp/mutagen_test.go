@@ -310,12 +310,12 @@ func TestMutagenDiagnose(t *testing.T) {
 	require.NotNil(t, result)
 
 	// Basic sanity checks on the diagnostic result
-	assert.True(result.SessionExists, "Mutagen session should exist")
-	assert.NotEmpty(result.SyncStatus, "Sync status should not be empty")
-	assert.GreaterOrEqual(result.VolumeSize, int64(0), "Volume size should be >= 0")
-	assert.NotEmpty(result.VolumeSizeHuman, "Volume size human should not be empty")
+	require.True(t, result.SessionExists, "Mutagen session should exist")
+	require.NotEmpty(t, result.SyncStatus, "Sync status should not be empty")
+	require.GreaterOrEqual(t, result.VolumeSize, int64(0), "Volume size should be >= 0")
+	require.NotEmpty(t, result.VolumeSizeHuman, "Volume size human should not be empty")
 
 	// Check that volume was detected
 	volumeName := ddevapp.GetMutagenVolumeName(app)
-	assert.True(dockerutil.VolumeExists(volumeName), "Mutagen volume should exist")
+	require.True(t, dockerutil.VolumeExists(volumeName), "Mutagen volume should exist")
 }
