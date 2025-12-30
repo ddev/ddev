@@ -167,7 +167,8 @@ http:
       rule: Host(\`test-missing-svc.ddev.site\`)
       service: this-service-does-not-exist
 EOF"
-  sleep 2
+  # Wait for traefik to reload config (file watcher)
+  sleep 3
 
   # Verify router is disabled with error
   run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-missing-svc@file | jq -r .status'
@@ -240,7 +241,8 @@ http:
       rule: Host(\`test-bad-ep.ddev.site\`)
       service: d11-web-80
 EOF"
-  sleep 2
+  # Wait for traefik to reload config (file watcher)
+  sleep 3
 
   # Verify router is disabled with error
   run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-bad-ep@file | jq -r .status'

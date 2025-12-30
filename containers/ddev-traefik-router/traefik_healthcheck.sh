@@ -51,10 +51,26 @@ if [ $exit_code -eq 0 ]; then
     # Count routers loaded via file provider (.ddev/traefik/config/<project>.yaml)
     # Add per_page parameter to handle large number of routers (default is 100)
     file_router_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers?per_page=10000" 2>/dev/null | jq '[.[] | select(.provider == "file")] | length' 2>/dev/null || echo 0)
-    
+
     # Sum up router/service/middleware config errors reported by Traefik
     error_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview" 2>/dev/null | jq '(.http.routers.errors // 0) + (.http.services.errors // 0) + (.http.middlewares.errors // 0)' 2>/dev/null || echo 0)
-    
+
+    # If traefik is still loading (0 routers but we expect some), wait briefly and retry
+    # This avoids false warnings during initial config loading
+    # Only retry if: no routers loaded yet AND we expect some AND no errors yet
+    if [ "$file_router_count" -eq 0 ] && [ "$expected_router_count" -gt 0 ] && [ "$error_count" -eq 0 ]; then
+        max_retries=10
+        for attempt in $(seq 1 $max_retries); do
+            sleep 1
+            file_router_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers?per_page=10000" 2>/dev/null | jq '[.[] | select(.provider == "file")] | length' 2>/dev/null || echo 0)
+            error_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview" 2>/dev/null | jq '(.http.routers.errors // 0) + (.http.services.errors // 0) + (.http.middlewares.errors // 0)' 2>/dev/null || echo 0)
+            # Break out if routers are now loaded or errors appeared
+            if [ "$file_router_count" -gt 0 ] || [ "$error_count" -gt 0 ]; then
+                break
+            fi
+        done
+    fi
+
     # Healthy if:
     # 1. Expected routers > 0 (config files found)
     # 2. Actual router count matches expected count
