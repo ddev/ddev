@@ -3,6 +3,7 @@
 ## traefik health check
 set -u -o pipefail
 sleeptime=59
+error_file="/tmp/ddev-traefik-errors.txt"
 
 # Since docker doesn't provide a lazy period for startup,
 # we track health. If the last check showed healthy
@@ -24,6 +25,11 @@ exit_code=$?
 if [ $exit_code -eq 0 ]; then
     # If there is no dynamic config, don't check for additional endpoints
     if [ ! -d /mnt/ddev-global-cache/traefik/config ]; then
+        # Clear any previous healthcheck warnings since config is now gone
+        if [ -f "${error_file}" ]; then
+            sed -i '/^WARNING:/d' "${error_file}"
+            [ ! -s "${error_file}" ] && rm -f "${error_file}"
+        fi
         printf "%s" "${check}"
         touch /tmp/healthy
         exit 0
@@ -56,6 +62,13 @@ if [ $exit_code -eq 0 ]; then
     if [ "$expected_router_count" -gt 0 ] && \
        [ "$file_router_count" -eq "$expected_router_count" ] && \
        [ "$error_count" -eq 0 ]; then
+        # Clear any previous healthcheck warnings (lines starting with WARNING:)
+        # Keep traefik's own ERR/WRN logs which have a different format
+        if [ -f "${error_file}" ]; then
+            sed -i '/^WARNING:/d' "${error_file}"
+            # Remove file if now empty
+            [ ! -s "${error_file}" ] && rm -f "${error_file}"
+        fi
         printf "%s" "${check}"
         touch /tmp/healthy
         exit 0
@@ -73,6 +86,13 @@ if [ $exit_code -eq 0 ]; then
     else
         check="WARNING: Unknown issue detected"
     fi
+
+    # Write warning to error file so GetRouterConfigErrors() can read it
+    # Only write if the message isn't already in the file (avoid duplicates)
+    if ! grep -qF "${check}" "${error_file}" 2>/dev/null; then
+        echo "${check}" >> "${error_file}"
+    fi
+
     # Return success with warning message
     printf "%s" "${check}"
     touch /tmp/healthy
