@@ -147,27 +147,58 @@ func StartDdevRouter() error {
 	}
 
 	activeApps := GetActiveProjects()
-	routerComposeFullPath, err := generateRouterCompose(activeApps)
-	if err != nil {
-		return err
-	}
-	err = PushGlobalTraefikConfig(activeApps)
-	if err != nil {
-		return fmt.Errorf("failed to push global Traefik config: %v", err)
+	
+	// Check if router needs to be recreated due to port changes
+	needsRecreation := false
+	if router != nil && err == nil && router.State == "running" {
+		// Router is running, check if ports have changed
+		existingPorts, err := dockerutil.GetBoundHostPorts(router.ID)
+		if err != nil {
+			util.Debug("Error getting bound ports, will recreate router: %v", err)
+			needsRecreation = true
+		} else {
+			neededPorts := determineRouterPorts(activeApps)
+			if !PortsMatch(existingPorts, neededPorts) {
+				util.Debug("Router ports have changed, will recreate router")
+				needsRecreation = true
+			} else {
+				util.Debug("Router ports have not changed, skipping recreation")
+			}
+		}
+	} else {
+		// Router is not running, needs to be started
+		needsRecreation = true
 	}
 
-	err = CheckRouterPorts(activeApps)
-	if err != nil {
-		return fmt.Errorf("unable to listen on required ports, %v,\nTroubleshooting suggestions at https://docs.ddev.com/en/stable/users/usage/troubleshooting/#unable-listen", err)
-	}
+	if needsRecreation {
+		routerComposeFullPath, err := generateRouterCompose(activeApps)
+		if err != nil {
+			return err
+		}
+		err = PushGlobalTraefikConfig(activeApps)
+		if err != nil {
+			return fmt.Errorf("failed to push global Traefik config: %v", err)
+		}
 
-	// Run docker-compose up -d against the ddev-router full compose file
-	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: []string{routerComposeFullPath},
-		Action:       []string{"-p", RouterComposeProjectName, "up", "--build", "-d"},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to start ddev-router: %v", err)
+		err = CheckRouterPorts(activeApps)
+		if err != nil {
+			return fmt.Errorf("unable to listen on required ports, %v,\nTroubleshooting suggestions at https://docs.ddev.com/en/stable/users/usage/troubleshooting/#unable-listen", err)
+		}
+
+		// Run docker-compose up -d against the ddev-router full compose file
+		_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+			ComposeFiles: []string{routerComposeFullPath},
+			Action:       []string{"-p", RouterComposeProjectName, "up", "--build", "-d"},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to start ddev-router: %v", err)
+		}
+	} else {
+		// Even if we don't recreate, update the Traefik config for the new project
+		err = PushGlobalTraefikConfig(activeApps)
+		if err != nil {
+			return fmt.Errorf("failed to push global Traefik config: %v", err)
+		}
 	}
 
 	// Ensure we have a happy router
@@ -308,6 +339,28 @@ func GetRouterBoundPorts() ([]uint16, error) {
 		}
 	}
 	return boundPorts, nil
+}
+
+// PortsMatch compares two slices of port strings and returns true if they contain the same ports
+func PortsMatch(existingPorts, neededPorts []string) bool {
+	if len(existingPorts) != len(neededPorts) {
+		return false
+	}
+
+	// Create a map of existing ports for quick lookup
+	existingMap := make(map[string]bool)
+	for _, port := range existingPorts {
+		existingMap[port] = true
+	}
+
+	// Check if all needed ports are in existing ports
+	for _, port := range neededPorts {
+		if !existingMap[port] {
+			return false
+		}
+	}
+
+	return true
 }
 
 // RenderRouterStatus returns a user-friendly string showing router-status

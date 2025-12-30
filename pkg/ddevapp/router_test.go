@@ -516,3 +516,57 @@ func TestAssignRouterPortsToGenericWebserverPorts(t *testing.T) {
 		})
 	}
 }
+
+// TestPortsMatch tests the portsMatch function
+func TestPortsMatch(t *testing.T) {
+	tests := []struct {
+		name          string
+		existingPorts []string
+		neededPorts   []string
+		expected      bool
+	}{
+		{
+			name:          "empty slices match",
+			existingPorts: []string{},
+			neededPorts:   []string{},
+			expected:      true,
+		},
+		{
+			name:          "same ports match",
+			existingPorts: []string{"80", "443"},
+			neededPorts:   []string{"80", "443"},
+			expected:      true,
+		},
+		{
+			name:          "same ports different order match",
+			existingPorts: []string{"443", "80"},
+			neededPorts:   []string{"80", "443"},
+			expected:      true,
+		},
+		{
+			name:          "different ports don't match",
+			existingPorts: []string{"80", "443"},
+			neededPorts:   []string{"80", "8443"},
+			expected:      false,
+		},
+		{
+			name:          "different length don't match",
+			existingPorts: []string{"80", "443"},
+			neededPorts:   []string{"80", "443", "8080"},
+			expected:      false,
+		},
+		{
+			name:          "subset doesn't match",
+			existingPorts: []string{"80", "443", "8080"},
+			neededPorts:   []string{"80", "443"},
+			expected:      false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := ddevapp.PortsMatch(tc.existingPorts, tc.neededPorts)
+			require.Equal(t, tc.expected, result)
+		})
+	}
+}
