@@ -2,68 +2,83 @@
 
 ## traefik health check
 set -u -o pipefail
+
+# Configuration
 sleeptime=59
 error_file="/tmp/ddev-traefik-errors.txt"
+healthy_marker="/tmp/healthy"
+config_dir="/mnt/ddev-global-cache/traefik/config"
 
-# Since docker doesn't provide a lazy period for startup,
-# we track health. If the last check showed healthy
-# as determined by existence of /tmp/healthy, then
-# sleep at startup. This requires the timeout to be set
-# higher than the sleeptime used here.
-if [ -f /tmp/healthy ]; then
-    printf "container was previously healthy, so sleeping %s seconds before continuing healthcheck...  " ${sleeptime}
-    sleep ${sleeptime}
-fi
+# --- Helper Functions ---
 
-# If we can now access the traefik ping endpoint, then we're healthy
-# Technique from https://doc.traefik.io/traefik/operations/ping/#entrypoint
-check=$(traefik healthcheck --ping 2>&1)
-exit_code=$?
-
-# If ping is successful, inspect additional health indicators
-# Traefik API endpoints https://doc.traefik.io/traefik/operations/api/#endpoints
-if [ $exit_code -eq 0 ]; then
-    # If there is no dynamic config, don't check for additional endpoints
-    if [ ! -d /mnt/ddev-global-cache/traefik/config ]; then
-        # Clear any previous healthcheck warnings since config is now gone
-        if [ -f "${error_file}" ]; then
-            sed -i '/^WARNING:/d' "${error_file}"
-            [ ! -s "${error_file}" ] && rm -f "${error_file}"
-        fi
-        printf "%s" "${check}"
-        touch /tmp/healthy
-        exit 0
+# Clear healthcheck warnings from error file (preserves traefik ERR/WRN logs)
+clear_warnings() {
+    if [ -f "${error_file}" ]; then
+        sed -i '/^WARNING:/d' "${error_file}"
+        # Remove file if now empty
+        [ ! -s "${error_file}" ] && rm -f "${error_file}"
     fi
-    
-    # Calculate expected router count by parsing config files
-    expected_router_count=0
-    if [ -d /mnt/ddev-global-cache/traefik/config ]; then
-        config_files=$(find /mnt/ddev-global-cache/traefik/config -name "*.yaml" -o -name "*.yml" 2>/dev/null)
+}
+
+# Get count of routers loaded via file provider from Traefik API
+get_file_router_count() {
+    curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers?per_page=10000" 2>/dev/null \
+        | jq '[.[] | select(.provider == "file")] | length' 2>/dev/null || echo 0
+}
+
+# Get total config error count from Traefik API (routers + services + middlewares)
+get_error_count() {
+    curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview" 2>/dev/null \
+        | jq '(.http.routers.errors // 0) + (.http.services.errors // 0) + (.http.middlewares.errors // 0)' 2>/dev/null || echo 0
+}
+
+# Calculate expected router count by parsing config files
+get_expected_router_count() {
+    local count=0
+    if [ -d "${config_dir}" ]; then
+        local config_files
+        config_files=$(find "${config_dir}" -name "*.yaml" -o -name "*.yml" 2>/dev/null)
         if [ -n "$config_files" ]; then
             for config_file in $config_files; do
-                # Count routers in each config file using yq
+                local routers_in_file
                 routers_in_file=$(yq eval '.http.routers | length' "$config_file" 2>/dev/null || echo 0)
-                expected_router_count=$((expected_router_count + routers_in_file))
+                count=$((count + routers_in_file))
             done
         fi
     fi
-    
-    # Count routers loaded via file provider (.ddev/traefik/config/<project>.yaml)
-    # Add per_page parameter to handle large number of routers (default is 100)
-    file_router_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers?per_page=10000" 2>/dev/null | jq '[.[] | select(.provider == "file")] | length' 2>/dev/null || echo 0)
+    echo "$count"
+}
 
-    # Sum up router/service/middleware config errors reported by Traefik
-    error_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview" 2>/dev/null | jq '(.http.routers.errors // 0) + (.http.services.errors // 0) + (.http.middlewares.errors // 0)' 2>/dev/null || echo 0)
+# Mark container as healthy and exit successfully
+mark_healthy() {
+    local message="$1"
+    printf "%s" "${message}"
+    touch "${healthy_marker}"
+    exit 0
+}
 
-    # If traefik is still loading (0 routers but we expect some), wait briefly and retry
-    # This avoids false warnings during initial config loading
+# Write warning to error file (avoids duplicates)
+write_warning() {
+    local warning="$1"
+    if ! grep -qF "${warning}" "${error_file}" 2>/dev/null; then
+        echo "${warning}" >> "${error_file}"
+    fi
+}
+
+# Wait for traefik to load routers (during initial startup)
+# Only waits if 0 routers loaded but some expected and no errors yet
+wait_for_routers() {
+    local file_router_count="$1"
+    local expected_router_count="$2"
+    local error_count="$3"
+    local max_retries=10
+
     # Only retry if: no routers loaded yet AND we expect some AND no errors yet
     if [ "$file_router_count" -eq 0 ] && [ "$expected_router_count" -gt 0 ] && [ "$error_count" -eq 0 ]; then
-        max_retries=10
-        for attempt in $(seq 1 $max_retries); do
+        for _ in $(seq 1 $max_retries); do
             sleep 1
-            file_router_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers?per_page=10000" 2>/dev/null | jq '[.[] | select(.provider == "file")] | length' 2>/dev/null || echo 0)
-            error_count=$(curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview" 2>/dev/null | jq '(.http.routers.errors // 0) + (.http.services.errors // 0) + (.http.middlewares.errors // 0)' 2>/dev/null || echo 0)
+            file_router_count=$(get_file_router_count)
+            error_count=$(get_error_count)
             # Break out if routers are now loaded or errors appeared
             if [ "$file_router_count" -gt 0 ] || [ "$error_count" -gt 0 ]; then
                 break
@@ -71,50 +86,85 @@ if [ $exit_code -eq 0 ]; then
         done
     fi
 
-    # Healthy if:
-    # 1. Expected routers > 0 (config files found)
-    # 2. Actual router count matches expected count
-    # 3. No config errors
-    if [ "$expected_router_count" -gt 0 ] && \
-       [ "$file_router_count" -eq "$expected_router_count" ] && \
-       [ "$error_count" -eq 0 ]; then
-        # Clear any previous healthcheck warnings (lines starting with WARNING:)
-        # Keep traefik's own ERR/WRN logs which have a different format
-        if [ -f "${error_file}" ]; then
-            sed -i '/^WARNING:/d' "${error_file}"
-            # Remove file if now empty
-            [ ! -s "${error_file}" ] && rm -f "${error_file}"
-        fi
-        printf "%s" "${check}"
-        touch /tmp/healthy
-        exit 0
-    fi
+    # Return values via global variables (bash limitation)
+    ROUTER_COUNT=$file_router_count
+    ERROR_COUNT=$error_count
+}
 
-    # Set descriptive warning message, but return success (exit 0)
-    # This allows the router to be "healthy" even with configuration issues
-    # The user will see these warnings via GetRouterConfigErrors() in router.go
-    if [ "$expected_router_count" -eq 0 ]; then
-        check="WARNING: No config files found or no routers expected"
-    elif [ "$file_router_count" -ne "$expected_router_count" ]; then
-        check="WARNING: Router count mismatch: ${file_router_count} loaded, ${expected_router_count} expected"
-    elif [ "$error_count" -gt 0 ]; then
-        check="WARNING: Detected ${error_count} configuration error(s) - check 'docker logs ddev-router' for details"
+# Generate appropriate warning message based on state
+generate_warning_message() {
+    local expected="$1"
+    local actual="$2"
+    local errors="$3"
+
+    if [ "$expected" -eq 0 ]; then
+        echo "WARNING: No config files found or no routers expected"
+    elif [ "$actual" -ne "$expected" ]; then
+        echo "WARNING: Router count mismatch: ${actual} loaded, ${expected} expected"
+    elif [ "$errors" -gt 0 ]; then
+        echo "WARNING: Detected ${errors} configuration error(s) - check 'docker logs ddev-router' for details"
     else
-        check="WARNING: Unknown issue detected"
+        echo "WARNING: Unknown issue detected"
     fi
+}
 
-    # Write warning to error file so GetRouterConfigErrors() can read it
-    # Only write if the message isn't already in the file (avoid duplicates)
-    if ! grep -qF "${check}" "${error_file}" 2>/dev/null; then
-        echo "${check}" >> "${error_file}"
-    fi
+# --- Main Script ---
 
-    # Return success with warning message
-    printf "%s" "${check}"
-    touch /tmp/healthy
-    exit 0
+# Since docker doesn't provide a lazy period for startup,
+# we track health. If the last check showed healthy
+# as determined by existence of /tmp/healthy, then
+# sleep at startup. This requires the timeout to be set
+# higher than the sleeptime used here.
+if [ -f "${healthy_marker}" ]; then
+    printf "container was previously healthy, so sleeping %s seconds before continuing healthcheck...  " ${sleeptime}
+    sleep ${sleeptime}
 fi
 
-printf "Traefik healthcheck failed: %s" "${check}"
-rm -f /tmp/healthy
-exit $exit_code
+# Check traefik ping endpoint
+# Technique from https://doc.traefik.io/traefik/operations/ping/#entrypoint
+check=$(traefik healthcheck --ping 2>&1)
+exit_code=$?
+
+# If ping fails, traefik is unhealthy
+if [ $exit_code -ne 0 ]; then
+    printf "Traefik healthcheck failed: %s" "${check}"
+    rm -f "${healthy_marker}"
+    exit $exit_code
+fi
+
+# Ping succeeded - now inspect additional health indicators
+# Traefik API endpoints https://doc.traefik.io/traefik/operations/api/#endpoints
+
+# If no dynamic config directory, we're done
+if [ ! -d "${config_dir}" ]; then
+    clear_warnings
+    mark_healthy "${check}"
+fi
+
+# Get expected and actual router counts
+expected_router_count=$(get_expected_router_count)
+file_router_count=$(get_file_router_count)
+error_count=$(get_error_count)
+
+# Wait for traefik to finish loading if needed (avoids false warnings during startup)
+wait_for_routers "$file_router_count" "$expected_router_count" "$error_count"
+file_router_count=$ROUTER_COUNT
+error_count=$ERROR_COUNT
+
+# Check if configuration is healthy:
+# 1. Expected routers > 0 (config files found)
+# 2. Actual router count matches expected count
+# 3. No config errors
+if [ "$expected_router_count" -gt 0 ] && \
+   [ "$file_router_count" -eq "$expected_router_count" ] && \
+   [ "$error_count" -eq 0 ]; then
+    clear_warnings
+    mark_healthy "${check}"
+fi
+
+# Configuration has issues - generate and record warning
+# Return success (exit 0) so router is "healthy" but user sees warnings
+# via GetRouterConfigErrors() in router.go
+warning=$(generate_warning_message "$expected_router_count" "$file_router_count" "$error_count")
+write_warning "${warning}"
+mark_healthy "${warning}"
