@@ -182,10 +182,22 @@ func StartDdevRouter() error {
 	if globalconfig.DdevGlobalConfig.UseLetsEncrypt {
 		routerWaitTimeout = 180
 	}
-	output.UserOut.Printf("Waiting %ds for %s to become ready...", routerWaitTimeout, nodeps.RouterContainer)
+	// Print without newline so we can append elapsed time on the same line
+	if !output.JSONOutput {
+		_, _ = fmt.Fprintf(os.Stdout, "Waiting for %s to become ready...", nodeps.RouterContainer)
+	}
+	util.Debug("Router wait: checking for container with labels %v, polling every 500ms for healthy status", label)
+	startTime := time.Now()
 	logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
+	elapsed := time.Since(startTime)
 	if err != nil {
-		return fmt.Errorf("ddev-router failed to become ready; log=%s, err=%v", logOutput, err)
+		if !output.JSONOutput {
+			_, _ = fmt.Fprintf(os.Stdout, "\n")
+		}
+		return fmt.Errorf("ddev-router failed to become ready after %.1fs; log=%s, err=%v", elapsed.Seconds(), logOutput, err)
+	}
+	if !output.JSONOutput {
+		_, _ = fmt.Fprintf(os.Stdout, " ready in %.1fs, %s\n", elapsed.Seconds(), logOutput)
 	}
 
 	util.Debug("Getting traefik error output")

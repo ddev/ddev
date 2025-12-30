@@ -275,6 +275,9 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 	defer timeoutChan.Stop()
 
 	status := ""
+	lastStatus := ""
+	startTime := time.Now()
+	lastLogTime := startTime
 
 	for {
 		select {
@@ -297,6 +300,17 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 				return "", fmt.Errorf("failed to query container labels=%v: %v", labels, err)
 			}
 			health, logOutput := GetContainerHealth(c)
+
+			// Log status changes and periodic updates under DDEV_DEBUG
+			elapsed := time.Since(startTime).Round(time.Millisecond)
+			if health != lastStatus {
+				util.Debug("ContainerWait: status changed to '%s' after %v", health, elapsed)
+				lastStatus = health
+				lastLogTime = time.Now()
+			} else if time.Since(lastLogTime) >= 5*time.Second {
+				util.Debug("ContainerWait: still waiting, status='%s' after %v", health, elapsed)
+				lastLogTime = time.Now()
+			}
 
 			switch health {
 			case "healthy":
@@ -325,6 +339,9 @@ func ContainersWait(waittime int, labels map[string]string) error {
 	defer tickChan.Stop()
 
 	status := ""
+	lastStatus := ""
+	startTime := time.Now()
+	lastLogTime := startTime
 
 	for {
 		select {
@@ -348,11 +365,14 @@ func ContainersWait(waittime int, labels map[string]string) error {
 				return fmt.Errorf("failed to query container labels=%v: %v", labels, err)
 			}
 			allHealthy := true
+			healthyCount := 0
+			totalCount := len(containers)
 			for _, c := range containers {
 				health, logOutput := GetContainerHealth(&c)
 
 				switch health {
 				case "healthy":
+					healthyCount++
 					continue
 				case "unhealthy":
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&c, 0)
@@ -364,6 +384,19 @@ func ContainersWait(waittime int, labels map[string]string) error {
 					allHealthy = false
 				}
 			}
+
+			// Log status changes and periodic updates under DDEV_DEBUG
+			currentStatus := fmt.Sprintf("%d/%d healthy", healthyCount, totalCount)
+			elapsed := time.Since(startTime).Round(time.Millisecond)
+			if currentStatus != lastStatus {
+				util.Debug("ContainersWait: status changed to '%s' after %v", currentStatus, elapsed)
+				lastStatus = currentStatus
+				lastLogTime = time.Now()
+			} else if time.Since(lastLogTime) >= 5*time.Second {
+				util.Debug("ContainersWait: still waiting, status='%s' after %v", currentStatus, elapsed)
+				lastLogTime = time.Now()
+			}
+
 			if allHealthy {
 				return nil
 			}
