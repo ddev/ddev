@@ -144,6 +144,7 @@ func StartDdevRouter() error {
 		if err != nil {
 			return err
 		}
+		router = nil
 	}
 
 	activeApps := GetActiveProjects()
