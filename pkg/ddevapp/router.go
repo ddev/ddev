@@ -148,7 +148,7 @@ func StartDdevRouter() error {
 	}
 
 	activeApps := GetActiveProjects()
-	
+
 	// Check if router needs to be recreated due to port changes
 	needsRecreation := false
 	if router != nil && err == nil && router.State == "running" {
