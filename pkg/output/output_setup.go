@@ -1,10 +1,12 @@
 package output
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -109,4 +111,35 @@ func ParseBoolFlag(long string, short string) bool {
 // Implementation from https://no-color.org/
 func ColorsEnabled() bool {
 	return os.Getenv("NO_COLOR") == "" || os.Getenv("NO_COLOR") == "0"
+}
+
+// WaitTimer tracks elapsed time for wait operations with inline output
+type WaitTimer struct {
+	startTime time.Time
+}
+
+// StartWait prints a waiting message (without newline) and returns a WaitTimer
+// to track elapsed time. Call Complete() when the operation finishes.
+// In JSON mode, no message is printed.
+func StartWait(message string) *WaitTimer {
+	if !JSONOutput {
+		_, _ = fmt.Fprintf(os.Stdout, "%s...", message)
+	}
+	return &WaitTimer{startTime: time.Now()}
+}
+
+// Complete prints the elapsed time on the same line as the wait message.
+// If err is non-nil, just prints a newline. If extra is provided, it's appended after the time.
+func (w *WaitTimer) Complete(err error, extra string) time.Duration {
+	elapsed := time.Since(w.startTime)
+	if !JSONOutput {
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stdout, "\n")
+		} else if extra != "" {
+			_, _ = fmt.Fprintf(os.Stdout, " ready in %.1fs, %s\n", elapsed.Seconds(), extra)
+		} else {
+			_, _ = fmt.Fprintf(os.Stdout, " ready in %.1fs\n", elapsed.Seconds())
+		}
+	}
+	return elapsed
 }
