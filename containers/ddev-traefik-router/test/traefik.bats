@@ -150,3 +150,183 @@ EOF"
   assert_success
   refute_output --partial "WARNING:"
 }
+
+@test "verify API detects router with missing service reference" {
+  # Clean up any leftover state
+  docker exec ${CONTAINER_NAME} rm -f /tmp/ddev-traefik-errors.txt
+  docker exec ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev-global-cache/traefik/config/test*.yaml'
+  sleep 1
+
+  # Add a config with a router referencing a non-existent service
+  docker exec ${CONTAINER_NAME} bash -c "cat > /mnt/ddev-global-cache/traefik/config/test_missing_service.yaml << 'EOF'
+http:
+  routers:
+    test-missing-svc:
+      entrypoints:
+        - http-80
+      rule: Host(\`test-missing-svc.ddev.site\`)
+      service: this-service-does-not-exist
+EOF"
+  sleep 2
+
+  # Verify router is disabled with error
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-missing-svc@file | jq -r .status'
+  assert_success
+  assert_output "disabled"
+
+  # Verify error message mentions the missing service
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-missing-svc@file | jq -r ".error[]"'
+  assert_success
+  assert_output --partial "this-service-does-not-exist"
+  assert_output --partial "does not exist"
+
+  # Verify overview shows error count > 0
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview | jq ".http.routers.errors > 0"'
+  assert_success
+  assert_output "true"
+
+  # Clean up
+  docker exec ${CONTAINER_NAME} rm -f /mnt/ddev-global-cache/traefik/config/test_missing_service.yaml
+}
+
+@test "verify API detects router with missing middleware reference" {
+  # Clean up any leftover state
+  docker exec ${CONTAINER_NAME} rm -f /tmp/ddev-traefik-errors.txt
+  docker exec ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev-global-cache/traefik/config/test*.yaml'
+  sleep 1
+
+  # Add a config with a router referencing a non-existent middleware
+  docker exec ${CONTAINER_NAME} bash -c "cat > /mnt/ddev-global-cache/traefik/config/test_missing_middleware.yaml << 'EOF'
+http:
+  routers:
+    test-missing-mw:
+      entrypoints:
+        - http-80
+      rule: Host(\`test-missing-mw.ddev.site\`)
+      service: d11-web-80
+      middlewares:
+        - nonexistent-middleware
+EOF"
+  sleep 2
+
+  # Verify router is disabled with error
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-missing-mw@file | jq -r .status'
+  assert_success
+  assert_output "disabled"
+
+  # Verify error message mentions the missing middleware
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-missing-mw@file | jq -r ".error[]"'
+  assert_success
+  assert_output --partial "nonexistent-middleware"
+  assert_output --partial "does not exist"
+
+  # Clean up
+  docker exec ${CONTAINER_NAME} rm -f /mnt/ddev-global-cache/traefik/config/test_missing_middleware.yaml
+}
+
+@test "verify API detects router with invalid entrypoint" {
+  # Clean up any leftover state
+  docker exec ${CONTAINER_NAME} rm -f /tmp/ddev-traefik-errors.txt
+  docker exec ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev-global-cache/traefik/config/test*.yaml'
+  sleep 1
+
+  # Add a config with a router using a non-existent entrypoint
+  docker exec ${CONTAINER_NAME} bash -c "cat > /mnt/ddev-global-cache/traefik/config/test_bad_entrypoint.yaml << 'EOF'
+http:
+  routers:
+    test-bad-ep:
+      entrypoints:
+        - nonexistent-entrypoint
+      rule: Host(\`test-bad-ep.ddev.site\`)
+      service: d11-web-80
+EOF"
+  sleep 2
+
+  # Verify router is disabled with error
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-bad-ep@file | jq -r .status'
+  assert_success
+  assert_output "disabled"
+
+  # Verify error message mentions the entrypoint issue
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-bad-ep@file | jq -r ".error[]" | head -1'
+  assert_success
+  assert_output --partial "nonexistent-entrypoint"
+
+  # Clean up
+  docker exec ${CONTAINER_NAME} rm -f /mnt/ddev-global-cache/traefik/config/test_bad_entrypoint.yaml
+}
+
+@test "verify API detects router with invalid rule syntax" {
+  # Clean up any leftover state
+  docker exec ${CONTAINER_NAME} rm -f /tmp/ddev-traefik-errors.txt
+  docker exec ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev-global-cache/traefik/config/test*.yaml'
+  sleep 1
+
+  # Add a config with a router having invalid rule syntax
+  docker exec ${CONTAINER_NAME} bash -c "cat > /mnt/ddev-global-cache/traefik/config/test_bad_rule.yaml << 'EOF'
+http:
+  routers:
+    test-bad-rule:
+      entrypoints:
+        - http-80
+      rule: InvalidSyntax(((broken
+      service: d11-web-80
+EOF"
+  sleep 2
+
+  # Verify router is disabled with error
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-bad-rule@file | jq -r .status'
+  assert_success
+  assert_output "disabled"
+
+  # Verify error message mentions parsing error with the specific rule
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-bad-rule@file | jq -r ".error[]"'
+  assert_success
+  assert_output --partial "InvalidSyntax"
+  assert_output --partial "parsing rule"
+
+  # Clean up
+  docker exec ${CONTAINER_NAME} rm -f /mnt/ddev-global-cache/traefik/config/test_bad_rule.yaml
+}
+
+@test "verify healthcheck detects config errors from API overview" {
+  # Clean up any leftover state - truncate error file to avoid cross-pollution
+  docker exec ${CONTAINER_NAME} bash -c 'true > /tmp/ddev-traefik-errors.txt'
+  docker exec ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev-global-cache/traefik/config/test*.yaml'
+  sleep 2
+
+  # First verify we start with no errors
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview | jq ".http.routers.errors"'
+  assert_success
+  assert_output "0"
+
+  # Add a config with a router referencing a non-existent service (creates API error)
+  docker exec ${CONTAINER_NAME} bash -c "cat > /mnt/ddev-global-cache/traefik/config/test_api_error.yaml << 'EOF'
+http:
+  routers:
+    test-api-error:
+      entrypoints:
+        - http-80
+      rule: Host(\`test-api-error.ddev.site\`)
+      service: service-that-does-not-exist
+EOF"
+  sleep 2
+
+  # Verify API shows error count > 0
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/overview | jq ".http.routers.errors"'
+  assert_success
+  assert_output "1"
+
+  # Force healthcheck to run - should detect the error
+  run docker exec ${CONTAINER_NAME} bash -c 'rm -f /tmp/healthy && /healthcheck.sh'
+  assert_success
+  assert_output --partial "WARNING: Detected 1 configuration error"
+
+  # Verify warning was written to error file with specific message
+  run docker exec ${CONTAINER_NAME} cat /tmp/ddev-traefik-errors.txt
+  assert_success
+  assert_output --partial "WARNING: Detected 1 configuration error"
+
+  # Clean up
+  docker exec ${CONTAINER_NAME} rm -f /mnt/ddev-global-cache/traefik/config/test_api_error.yaml
+}
