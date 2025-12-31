@@ -65,6 +65,21 @@ To execute a fully-featured `composer create-project` command, you can execute t
 !!!tip "How to debug Composer itself?"
     To use Xdebug with Composer, [see instructions](../debugging-profiling/step-debugging.md#composer).
 
+### Update Composer to latest release
+
+When you start a new project, the latest Composer version is always installed on first `ddev start`, or when DDEV is updated.
+
+You can trigger the `composer self-update` command, by rebuilding the web image with:
+
+`ddev utility rebuild`
+
+Another way is to force the specific Composer version to be installed in a project (good for teams, so everyone has the same version):
+
+```
+ddev config --composer-version=2.9.3
+ddev restart
+```
+
 ### Composer from `vendor/bin/composer`
 
 If your `composer.json` specifies `composer/composer`, the version in `vendor/bin/composer` can be run with:
