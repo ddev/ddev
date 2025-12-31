@@ -2914,7 +2914,7 @@ func (app *DdevApp) Pause() error {
 		return err
 	}
 
-	return StopRouterIfNoContainers()
+	return nil
 }
 
 // WaitForServices waits for all the services in docker-compose to come up

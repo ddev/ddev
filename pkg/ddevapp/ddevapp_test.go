@@ -3484,18 +3484,6 @@ func TestGetAppsEmpty(t *testing.T) {
 	assert.Equal(0, len(apps), "Expected to find no apps but found %d apps=%v", len(apps), apps)
 }
 
-// TestRouterNotRunning ensures the router is shut down after all sites are stopped.
-// This depends on TestGetAppsEmpty() having shut everything down.
-func TestRouterNotRunning(t *testing.T) {
-	assert := asrt.New(t)
-	containers, err := dockerutil.GetDockerContainers(false)
-	assert.NoError(err)
-
-	for _, c := range containers {
-		assert.NotEqual("ddev-router", dockerutil.ContainerName(&c), "ddev-router was not supposed to be running but it was")
-	}
-}
-
 type URLRedirectExpectations struct {
 	url                 string
 	uri                 string
