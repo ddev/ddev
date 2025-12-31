@@ -62,8 +62,8 @@ To execute a fully-featured `composer create-project` command, you can execute t
 
 ### Composer Limitations
 
-!!!warning "Container Changes Do Not Persist"
-    Changes made to non-bind-mounted directories inside the container do not persist across container restarts. This affects Composer commands that modify files outside your project directory.
+!!!warning "Container changes do not persist"
+    Changes made to non-bind-mounted directories inside the container do not persist across container restarts. This affects Composer commands that modify files outside your project directory, see below for details.
 
 #### Composer Global Packages Do Not Persist
 
