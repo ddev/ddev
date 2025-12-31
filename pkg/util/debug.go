@@ -2,7 +2,6 @@ package util
 
 import (
 	"bytes"
-	"os"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 )
 
 // TimeTrack determines the amount of time a function takes to return. Timer
@@ -85,7 +85,7 @@ func timeTrack(name *string) func() {
 // Use with `defer util.CheckGoroutines()`
 func CheckGoroutines() {
 	globalconfig.GoroutineCount = runtime.NumGoroutine()
-	if os.Getenv("DDEV_GOROUTINES") != "" {
+	if settings.GetString("GOROUTINES") != "" {
 		if globalconfig.DdevVerbose {
 			buf := new(bytes.Buffer)
 

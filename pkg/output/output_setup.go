@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ddev/ddev/pkg/settings"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -19,7 +20,7 @@ var (
 		l := log.New()
 		l.SetOutput(os.Stdout)
 		logLevel := log.InfoLevel
-		if os.Getenv("DDEV_DEBUG") == "true" || os.Getenv("DDEV_VERBOSE") == "true" {
+		if settings.GetBool("DEBUG") || settings.GetBool("VERBOSE") {
 			logLevel = log.DebugLevel
 		}
 		l.SetLevel(logLevel)

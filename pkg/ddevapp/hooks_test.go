@@ -7,6 +7,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -34,8 +35,8 @@ func TestProcessHooks(t *testing.T) {
 	require.NoError(t, err)
 
 	// We don't get the expected task debug output without DDEV_DEBUG
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Setenv(`DDEV_DEBUG`, `true`) // test requires DDEV_DEBUG to see task output
+	origDdevDebug := settings.GetString("DEBUG")
+	settings.Set(`DEBUG`, `true`) // test requires DDEV_DEBUG to see task output
 
 	t.Cleanup(func() {
 		runTime()
@@ -45,7 +46,7 @@ func TestProcessHooks(t *testing.T) {
 		assert.NoError(err)
 		_ = os.RemoveAll(app.GetConfigPath("config.hooks.yaml"))
 		_ = os.RemoveAll(filepath.Join(app.AppRoot, "composer.json"))
-		_ = os.Setenv(`DDEV_DEBUG`, origDdevDebug)
+		settings.Set(`DEBUG`, origDdevDebug)
 	})
 	err = app.Restart()
 	require.NoError(t, err)

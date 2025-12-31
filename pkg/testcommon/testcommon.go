@@ -23,6 +23,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
@@ -97,8 +98,7 @@ func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
 
-	err := os.Setenv("DDEV_NONINTERACTIVE", "true")
-	util.CheckErr(err)
+	settings.Set("NONINTERACTIVE", "true")
 
 	cachedSrcDir, _, err := GetCachedArchive(site.Name, site.Name+"_siteArchive", site.ArchiveInternalExtractionPath, site.SourceURL)
 
@@ -606,7 +606,7 @@ func CheckGoroutineOutput(t *testing.T, out string) {
 	// regex to find "goroutines=4 at exit of main()"
 	re := regexp.MustCompile(`goroutines=(\d+) at exit of main\(\)`)
 	matches := re.FindAllStringSubmatch(out, -1)
-	require.Equal(t, 1, len(matches), "must be exactly one match for goroutines=<value>, DDEV_GOROUTINES=%s actual output='%s'", os.Getenv(`DDEV_GOROUTINES`), out)
+	require.Equal(t, 1, len(matches), "must be exactly one match for goroutines=<value>, DDEV_GOROUTINES=%s actual output='%s'", settings.GetString("GOROUTINES"), out)
 	num, err := strconv.Atoi(matches[0][1])
 	require.NoError(t, err, "can't convert %s to number: %v", matches[0][1])
 	require.LessOrEqual(t, num, goroutineLimit, "number of goroutines=%v, higher than limit=%d", num, goroutineLimit)

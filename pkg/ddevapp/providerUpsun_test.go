@@ -11,10 +11,17 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
+}
 
 /**
  * These tests rely on an external test account. To run them, you'll
@@ -43,7 +50,7 @@ func TestUpsunPull(t *testing.T) {
 	util.SkipIfEmbargoed(t)
 
 	var token string
-	if token = os.Getenv("DDEV_UPSUN_API_TOKEN"); token == "" {
+	if token = settings.GetString("UPSUN_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_UPSUN_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
 	var err error
@@ -83,7 +90,7 @@ func TestUpsunPush(t *testing.T) {
 	util.SkipIfEmbargoed(t)
 
 	var token string
-	if token = os.Getenv("DDEV_UPSUN_API_TOKEN"); token == "" {
+	if token = settings.GetString("UPSUN_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_UPSUN_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
 

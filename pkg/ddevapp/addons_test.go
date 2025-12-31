@@ -10,6 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -564,7 +565,9 @@ func TestDependencyManifestCreation(t *testing.T) {
 	// Set up test magic directory
 	testAddonsDir := testcommon.CreateTmpDir(t.Name() + "_test_addons")
 	t.Setenv("DDEV_ADDON_TEST_DIR", testAddonsDir)
+	settings.Set("ADDON_TEST_DIR", testAddonsDir)
 	defer func() {
+		settings.Set("ADDON_TEST_DIR", "")
 		err := os.RemoveAll(testAddonsDir)
 		assert.NoError(t, err)
 	}()
@@ -675,7 +678,9 @@ func TestDependencyValidationDuringRemoval(t *testing.T) {
 	// Set up test magic directory
 	testAddonsDir := testcommon.CreateTmpDir(t.Name() + "_test_addons")
 	t.Setenv("DDEV_ADDON_TEST_DIR", testAddonsDir)
+	settings.Set("ADDON_TEST_DIR", testAddonsDir)
 	defer func() {
+		settings.Set("ADDON_TEST_DIR", "")
 		err := os.RemoveAll(testAddonsDir)
 		assert.NoError(t, err)
 	}()

@@ -13,6 +13,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/ddev/ddev/pkg/settings"
 	"golang.org/x/term"
 )
 
@@ -88,7 +89,7 @@ func IsLinux() bool {
 
 // IsCodespaces returns true if running on GitHub Codespaces
 func IsCodespaces() bool {
-	if os.Getenv("DDEV_PRETEND_CODESPACES") == "true" {
+	if settings.GetBool("PRETEND_CODESPACES") {
 		return true
 	}
 	return IsLinux() && os.Getenv("CODESPACES") == "true"

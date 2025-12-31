@@ -17,6 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 )
 
@@ -266,9 +267,8 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s %s /mnt/snapshots/%s && chmod 700 %s && touch %s/recovery.signal && echo "restore_command = 'true'" >>%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, tarExtract, snapshotFile, postgresDataPath, postgresDataPath, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
 		}
 	}
-	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
-	// nolint: errcheck
-	defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
+	settings.Set("DB_CONTAINER_COMMAND", restoreCmd)
+	defer settings.Set("DB_CONTAINER_COMMAND", "")
 	// If the default_container_timeout does not already specify a longer period
 	// then allow extra time by default for the snapshot restore. This is arbitrary but may help.
 	origTimeout := app.DefaultContainerTimeout

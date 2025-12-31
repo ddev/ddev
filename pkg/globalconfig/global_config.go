@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"go.yaml.in/yaml/v4"
 )
@@ -107,6 +108,7 @@ func New() GlobalConfig {
 
 // EnsureGlobalConfig Make sure the global configuration has been initialized
 func EnsureGlobalConfig() {
+	RefreshGlobalValues()
 	DdevGlobalConfig = New()
 	DdevProjectList = make(map[string]*ProjectInfo)
 	err := ReadGlobalConfig()
@@ -269,7 +271,7 @@ func ReadGlobalConfig() error {
 		return err
 	}
 
-	caRootEnv := os.Getenv("CAROOT")
+	caRootEnv := settings.GetString("CAROOT")
 	if GetCAROOT() == "" || !fileExists(filepath.Join(DdevGlobalConfig.MkcertCARoot, "rootCA.pem")) || (caRootEnv != "" && caRootEnv != DdevGlobalConfig.MkcertCARoot) {
 		DdevGlobalConfig.MkcertCARoot = readCAROOT()
 	}
@@ -669,7 +671,7 @@ func GetGlobalDdevDirLocation() string {
 
 	// If $XDG_CONFIG_HOME is set, use $XDG_CONFIG_HOME/ddev,
 	// we create this directory.
-	xdgConfigHomeDir := os.Getenv("XDG_CONFIG_HOME")
+	xdgConfigHomeDir := settings.GetString("XDG_CONFIG_HOME")
 	// Handle ~/xxx without failure; MUTAGEN_DATA_DIRECTORY, for example, can't have it.
 	if strings.HasPrefix(xdgConfigHomeDir, `~`) {
 		xdgConfigHomeDir = userHome + xdgConfigHomeDir[1:]
@@ -706,7 +708,7 @@ func CheckForMultipleGlobalDdevDirs() error {
 	}
 	userHomeDotDdev := filepath.Clean(filepath.Join(userHome, ".ddev"))
 	// On Linux, also check for $HOME/.config/ddev if XDG_CONFIG_HOME is not set
-	if nodeps.IsLinux() && os.Getenv("XDG_CONFIG_HOME") == "" {
+	if nodeps.IsLinux() && settings.GetString("XDG_CONFIG_HOME") == "" {
 		userConfigDir, err := os.UserConfigDir()
 		if err == nil {
 			linuxDir := filepath.Join(userConfigDir, "ddev")

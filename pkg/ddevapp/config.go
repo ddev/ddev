@@ -21,6 +21,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
 	"go.yaml.in/yaml/v4"
@@ -42,16 +43,16 @@ var RunValidateConfig = true
 func init() {
 	var err error
 	// This is for automated testing only. It allows us to override the webserver type.
-	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
+	if testWebServerType := settings.GetString("TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		nodeps.WebserverDefault = testWebServerType
 	}
-	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
+	if testMutagen := settings.GetBool("TEST_USE_MUTAGEN"); testMutagen {
 		nodeps.PerformanceModeDefault = types.PerformanceModeMutagen
 	}
-	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
+	if settings.GetBool("TEST_NO_BIND_MOUNTS") {
 		nodeps.NoBindMountsDefault = true
 	}
-	if g := os.Getenv("DDEV_TEST_GOROUTINE_LIMIT"); g != "" {
+	if g := settings.GetString("TEST_GOROUTINE_LIMIT"); g != "" {
 		nodeps.GoroutineLimit, err = strconv.Atoi(g)
 		if err != nil {
 			util.Failed("DDEV_TEST_GOROUTINE_LIMIT must be empty or numeric value, not '%v'", g)
@@ -202,7 +203,7 @@ func (app *DdevApp) GetProcessedProjectConfigYAML(omitKeys ...string) ([]byte, e
 	}
 
 	// Parse YAML into a map to filter keys
-	var configMap map[string]interface{}
+	var configMap map[string]any
 	err = yaml.Unmarshal(configYAML, &configMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse YAML for filtering: %v", err)
@@ -406,7 +407,7 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	}
 
 	// ReadConfig config values from file.
-	err = yaml.Unmarshal(source, app)
+	err = settings.Unmarshal(app)
 	if err != nil {
 		return err
 	}
@@ -1856,7 +1857,7 @@ func validateHookYAML(source []byte) error {
 	}
 
 	type Validate struct {
-		Commands map[string][]map[string]interface{} `yaml:"hooks,omitempty"`
+		Commands map[string][]map[string]any `yaml:"hooks,omitempty"`
 	}
 	val := &Validate{}
 

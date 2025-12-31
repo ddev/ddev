@@ -26,6 +26,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -396,11 +397,14 @@ var (
 )
 
 func init() {
-	// Make sets DDEV_BINARY_FULLPATH when building the executable
-	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
-		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	if err := settings.Init(); err != nil {
+		panic(fmt.Sprintf("failed to initialize settings: %v", err))
 	}
-	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
+	// Make sets DDEV_BINARY_FULLPATH when building the executable
+	if settings.GetString("BINARY_FULLPATH") != "" {
+		DdevBin = settings.GetString("BINARY_FULLPATH")
+	}
+	if settings.GetBool("TEST_NO_BIND_MOUNTS") {
 		globalconfig.DdevGlobalConfig.NoBindMounts = true
 	}
 
@@ -416,7 +420,7 @@ func TestMain(m *testing.M) {
 
 	// Avoid having sudo try to add to /etc/hosts.
 	// This is normally done by Testsite.Prepare()
-	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
+	settings.Set("NONINTERACTIVE", "true")
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 	_ = os.Setenv("DOCKER_CLI_HINTS", "false")
 
@@ -2418,7 +2422,7 @@ func readFileTail(fileName string, maxBytes int64) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+	if !settings.GetBool("RUN_TEST_ANYWAY") && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
 	}
 	assert := asrt.New(t)
@@ -3588,7 +3592,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 // TestHttpsRedirection tests to make sure that webserver and php redirect to correct
 // scheme (http or https).
 func TestHttpsRedirection(t *testing.T) {
-	if nodeps.IsAppleSilicon() && os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" {
+	if nodeps.IsAppleSilicon() && !settings.GetBool("RUN_TEST_ANYWAY") {
 		t.Skip("Skipping on Apple Silicon to ignore problems with 'connection reset by peer'")
 	}
 	if globalconfig.GetCAROOT() == "" {
@@ -4048,7 +4052,7 @@ func TestPHPWebserverType(t *testing.T) {
 		}
 
 		// Set the apptype back to whatever the default was so we don't break any following tests.
-		testVar := os.Getenv("DDEV_TEST_WEBSERVER_TYPE")
+		testVar := settings.GetString("TEST_WEBSERVER_TYPE")
 		if testVar != "" {
 			app.WebserverType = testVar
 			err = app.WriteConfig()
@@ -4062,7 +4066,7 @@ func TestPHPWebserverType(t *testing.T) {
 // from host and from inside container by URL (with port)
 // Related test: TestNetworkAliases
 func TestInternalAndExternalAccessToURL(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsAppleSilicon() {
+	if !settings.GetBool("RUN_TEST_ANYWAY") && nodeps.IsAppleSilicon() {
 		t.Skip("Skipping on mac Apple Silicon/Lima/Colima/Rancher to ignore problems with 'connection reset by peer'")
 	}
 
@@ -4509,8 +4513,8 @@ func TestEnvironmentVariables(t *testing.T) {
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
-	origDDEVDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Setenv("DDEV_DEBUG", "")
+	origDDEVDebug := settings.GetString("DEBUG")
+	settings.Set("DEBUG", "")
 	customCmd := filepath.Join(origDir, "testdata", t.Name(), "showhostenvvar")
 	site := TestSites[0]
 
@@ -4538,7 +4542,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		_ = os.Setenv("DDEV_DEBUG", origDDEVDebug)
+		settings.Set("DEBUG", origDDEVDebug)
 	})
 
 	err = app.Restart()

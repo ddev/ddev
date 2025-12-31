@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 )
 
 // Container types used with DDEV (duplicated from ddevapp, avoiding cross-package cycles)
@@ -23,14 +24,29 @@ var ValidOmitContainers = map[string]bool{
 }
 
 // DdevNoInstrumentation is set to true if the env var is set
-var DdevNoInstrumentation = os.Getenv("DDEV_NO_INSTRUMENTATION") == "true" || os.Getenv("CI") == "true"
+var DdevNoInstrumentation bool
 
 // DdevDebug is set to true if the env var is set
 // If DdevVerbose is true, DdevDebug is true
-var DdevDebug = os.Getenv("DDEV_DEBUG") == "true" || DdevVerbose
+var DdevDebug bool
 
 // DdevVerbose is set to true if the env var is set
-var DdevVerbose = os.Getenv("DDEV_VERBOSE") == "true"
+var DdevVerbose bool
+
+// RefreshGlobalValues updates the global variables from the settings provider.
+// This should be called after settings.Init().
+func RefreshGlobalValues() {
+	DdevNoInstrumentation = settings.GetBool("NO_INSTRUMENTATION") || settings.GetBool("CI")
+	DdevVerbose = settings.GetBool("VERBOSE")
+	DdevDebug = settings.GetBool("DEBUG") || DdevVerbose
+}
+
+func init() {
+	// Initialize with defaults or fallback to Getenv if settings not yet ready
+	DdevNoInstrumentation = settings.GetBool("NO_INSTRUMENTATION") || os.Getenv("CI") == "true"
+	DdevVerbose = settings.GetBool("VERBOSE")
+	DdevDebug = settings.GetBool("DEBUG") || DdevVerbose
+}
 
 var ValidXdebugIDELocations = []string{XdebugIDELocationContainer, XdebugIDELocationWSL2, ""}
 
@@ -39,7 +55,7 @@ var GoroutineCount = 0
 
 // IsInteractive returns true if we are running in an interactive mode
 func IsInteractive() bool {
-	return os.Getenv("DDEV_NONINTERACTIVE") != "true"
+	return !settings.GetBool("NONINTERACTIVE")
 }
 
 // IsValidXdebugIDELocation limits the choices for XdebugIDELocation

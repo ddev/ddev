@@ -13,6 +13,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 )
 
 // CmdOption is a function type for configuring exec.Cmd
@@ -45,7 +46,10 @@ func WithEnv(env []string) CmdOption {
 // especially DDEV_EXECUTABLE, the full path to running DDEV instance.
 func HostCommand(name string, args ...string) *exec.Cmd {
 	c := exec.Command(name, args...)
-	ddevExecutable, _ := os.Executable()
+	ddevExecutable := settings.GetString("EXECUTABLE")
+	if ddevExecutable == "" {
+		ddevExecutable, _ = os.Executable()
+	}
 	c.Env = append(os.Environ(),
 		"DDEV_EXECUTABLE="+ddevExecutable,
 	)

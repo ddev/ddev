@@ -1,24 +1,30 @@
 package version
 
 import (
-	"os"
 	"runtime"
 	"testing"
 
 	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
+}
 
 var DdevBin = "ddev"
 
 func TestGetVersionInfo(t *testing.T) {
 	assert := asrt.New(t)
 
-	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
-		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	if settings.GetString("BINARY_FULLPATH") != "" {
+		DdevBin = settings.GetString("BINARY_FULLPATH")
 	}
 
 	// Run `ddev version` so we force download of docker-compose if we don't have one.

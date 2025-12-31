@@ -7,8 +7,15 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
+}
 
 // TestRandomString tests if RandomString returns the correct character length
 func TestRandomString(t *testing.T) {
@@ -244,7 +251,7 @@ func TestIsCodespaces(t *testing.T) {
 	// IsCodespaces should return true only if:
 	// 1. DDEV_PRETEND_CODESPACES=true (for testing purposes), OR
 	// 2. Running on Linux AND CODESPACES=true
-	pretendCodespaces := os.Getenv("DDEV_PRETEND_CODESPACES") == "true"
+	pretendCodespaces := settings.GetBool("PRETEND_CODESPACES")
 	codespacesEnv := os.Getenv("CODESPACES") == "true"
 	isLinux := runtime.GOOS == "linux"
 

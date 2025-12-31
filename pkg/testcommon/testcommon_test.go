@@ -12,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,6 +20,9 @@ import (
 var DdevBin = "ddev"
 
 func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
 	globalconfig.EnsureGlobalConfig()
 }
 
@@ -61,8 +65,8 @@ func TestCreateTmpDir(t *testing.T) {
 func TestValidTestSite(t *testing.T) {
 	assert := asrt.New(t)
 
-	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
-		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	if settings.GetString("BINARY_FULLPATH") != "" {
+		DdevBin = settings.GetString("BINARY_FULLPATH")
 	}
 	origDir, _ := os.Getwd()
 
@@ -118,8 +122,8 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 
 	dockerutil.EnsureDdevNetwork()
 
-	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
-		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	if settings.GetString("BINARY_FULLPATH") != "" {
+		DdevBin = settings.GetString("BINARY_FULLPATH")
 	}
 
 	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents

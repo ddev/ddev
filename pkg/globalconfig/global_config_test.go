@@ -13,6 +13,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
@@ -20,6 +21,9 @@ import (
 )
 
 func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
 	globalconfig.EnsureGlobalConfig()
 }
 

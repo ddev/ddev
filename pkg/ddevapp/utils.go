@@ -18,6 +18,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -170,6 +171,21 @@ func getTemplateFuncMap() map[string]interface{} {
 	// Add helpful utilities on top of it
 	m["joinPath"] = path.Join
 	m["templateCanUse"] = templateCanUse
+
+	// Override "env" to use our settings package (Viper-backed)
+	// so that env variable overrides are respected in templates.
+	m["env"] = func(key string) string {
+		// If it's a DDEV variable, settings package handles it
+		if strings.HasPrefix(key, "DDEV_") {
+			return settings.GetString(key[5:])
+		}
+		// Special cases bound in settings
+		if key == "XDG_CONFIG_HOME" || key == "CAROOT" {
+			return settings.GetString(key)
+		}
+		// Fallback to os.Getenv for others
+		return os.Getenv(key)
+	}
 
 	return m
 }

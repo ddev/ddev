@@ -12,11 +12,18 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
+}
 
 /**
  * These tests rely on an external test account.
@@ -36,7 +43,7 @@ const lagoonSiteExpectation = "Super easy vegetarian pasta"
 
 func lagoonSetupSSHKey(t *testing.T) string {
 	sshkey := ""
-	if sshkey = os.Getenv("DDEV_LAGOON_SSH_KEY"); sshkey == "" {
+	if sshkey = settings.GetString("LAGOON_SSH_KEY"); sshkey == "" {
 		t.Skipf("No DDEV_LAGOON_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
 	return sshkey + "\n"

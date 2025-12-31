@@ -14,8 +14,15 @@ import (
 
 	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
+}
 
 // TestDdevHostnameWithPasswordlessSudo tests ddev-hostname functionality when passwordless sudo is available.
 // This test only runs when:
@@ -35,14 +42,13 @@ func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 	}
 
 	// Save and restore original DDEV_NONINTERACTIVE value
-	origNonInteractive := os.Getenv("DDEV_NONINTERACTIVE")
+	origNonInteractive := settings.GetString("NONINTERACTIVE")
 	t.Cleanup(func() {
-		_ = os.Setenv("DDEV_NONINTERACTIVE", origNonInteractive)
+		settings.Set("NONINTERACTIVE", origNonInteractive)
 	})
 
 	// Unset DDEV_NONINTERACTIVE to allow hostname manipulation
-	err = os.Setenv("DDEV_NONINTERACTIVE", "")
-	require.NoError(t, err)
+	settings.Set("NONINTERACTIVE", "")
 
 	// Use a unique hostname for testing
 	testHostname := "test-ddev-hostname.local"
@@ -119,14 +125,13 @@ func TestElevateToAddRemoveHostEntry(t *testing.T) {
 	}
 
 	// Save and restore original DDEV_NONINTERACTIVE value
-	origNonInteractive := os.Getenv("DDEV_NONINTERACTIVE")
+	origNonInteractive := settings.GetString("NONINTERACTIVE")
 	t.Cleanup(func() {
-		_ = os.Setenv("DDEV_NONINTERACTIVE", origNonInteractive)
+		settings.Set("NONINTERACTIVE", origNonInteractive)
 	})
 
 	// Unset DDEV_NONINTERACTIVE to allow hostname manipulation
-	err = os.Setenv("DDEV_NONINTERACTIVE", "")
-	require.NoError(t, err)
+	settings.Set("NONINTERACTIVE", "")
 
 	// Use a unique hostname for testing
 	testHostname := "test-elevate-hostname.local"

@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/google/go-github/v81/github"
 )
 
@@ -134,7 +135,10 @@ func isGitHubURL(requestURL string) bool {
 
 // GetGitHubToken returns the GitHub token from the environment and the name of the variable it was found in.
 func GetGitHubToken() (string, string) {
-	for _, token := range []string{"DDEV_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"} {
+	if token := settings.GetString("GITHUB_TOKEN"); token != "" {
+		return token, "DDEV_GITHUB_TOKEN"
+	}
+	for _, token := range []string{"GH_TOKEN", "GITHUB_TOKEN"} {
 		if githubToken := os.Getenv(token); githubToken != "" {
 			return githubToken, token
 		}

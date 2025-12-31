@@ -9,9 +9,10 @@ type ConfigProvider interface {
 	GetString(key string) string
 	GetInt(key string) int
 	GetBool(key string) bool
-	SetDefault(key string, value interface{})
+	SetDefault(key string, value any)
 	BindEnv(key string, envVar string)
-	Set(key string, value interface{})
+	Set(key string, value any)
+	Unmarshal(rawVal any) error
 	// Add more methods as needed
 }
 
@@ -32,7 +33,7 @@ func (vc *viperConfig) GetBool(key string) bool {
 	return vc.v.GetBool(key)
 }
 
-func (vc *viperConfig) SetDefault(key string, value interface{}) {
+func (vc *viperConfig) SetDefault(key string, value any) {
 	vc.v.SetDefault(key, value)
 }
 
@@ -40,32 +41,33 @@ func (vc *viperConfig) BindEnv(key string, envVar string) {
 	_ = vc.v.BindEnv(key, envVar)
 }
 
-func (vc *viperConfig) Set(key string, value interface{}) {
+func (vc *viperConfig) Set(key string, value any) {
 	vc.v.Set(key, value)
+}
+
+func (vc *viperConfig) Unmarshal(rawVal any) error {
+	return vc.v.Unmarshal(rawVal)
 }
 
 var config ConfigProvider
 
-// Init initializes the settings system. Call this early in main().
-func Init() {
-	v := viper.New()
+func init() {
+	// Initialize with a default provider so we never have nil panics
+	_ = Init()
+}
 
-	// Set environment prefix to DDEV_
+// Init initializes the settings system. Call this early in main() if you need to re-init.
+func Init() error {
+	v := viper.New()
 	v.SetEnvPrefix("DDEV")
-	// Read in environment variables that match
 	v.AutomaticEnv()
 
-	// Example: set config file name and path
-	// v.SetConfigName("config")
-	// v.AddConfigPath(".")
-
-	// Optionally, read a config file
-	// err := v.ReadInConfig()
-	// if err != nil {
-	// 	// log warning or handle error
-	// }
+	// Bind standard environment variables that don't have DDEV_ prefix
+	_ = v.BindEnv("XDG_CONFIG_HOME", "XDG_CONFIG_HOME")
+	_ = v.BindEnv("CAROOT", "CAROOT")
 
 	config = &viperConfig{v: v}
+	return nil
 }
 
 // GetString returns the string value for a key using the current config provider.
@@ -81,7 +83,7 @@ func GetBool(key string) bool {
 	return config.GetBool(key)
 }
 
-func SetDefault(key string, value interface{}) {
+func SetDefault(key string, value any) {
 	config.SetDefault(key, value)
 }
 
@@ -89,8 +91,10 @@ func BindEnv(key string, envVar string) {
 	config.BindEnv(key, envVar)
 }
 
-func Set(key string, value interface{}) {
+func Set(key string, value any) {
 	config.Set(key, value)
 }
 
-// Optionally, add Set, Unmarshal, etc. as needed
+func Unmarshal(rawVal any) error {
+	return config.Unmarshal(rawVal)
+}

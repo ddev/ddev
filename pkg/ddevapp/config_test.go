@@ -21,6 +21,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -538,7 +539,7 @@ func TestReadConfigCRLF(t *testing.T) {
 
 // TestConfigValidate tests validation of configuration values.
 func TestConfigValidate(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsMacOS() || nodeps.IsWindows()) {
+	if !settings.GetBool("RUN_TEST_ANYWAY") && (nodeps.IsMacOS() || nodeps.IsWindows()) {
 		t.Skip("Skipping on macOS/Windows")
 	}
 

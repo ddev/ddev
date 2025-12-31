@@ -4,8 +4,15 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/github"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
+}
 
 // TestGetGitHubRelease tests the GetGitHubRelease function with various scenarios.
 func TestGetGitHubRelease(t *testing.T) {
@@ -60,7 +67,7 @@ func TestGetGitHubToken(t *testing.T) {
 	// Test precedence: DDEV_GITHUB_TOKEN > GH_TOKEN > GITHUB_TOKEN
 	t.Run("Precedence", func(t *testing.T) {
 		// Clean environment
-		t.Setenv("DDEV_GITHUB_TOKEN", "")
+		settings.Set("GITHUB_TOKEN", "")
 		t.Setenv("GH_TOKEN", "")
 		t.Setenv("GITHUB_TOKEN", "")
 
@@ -79,7 +86,7 @@ func TestGetGitHubToken(t *testing.T) {
 		require.Equal(t, "gh_token_value", token, "Should return GH_TOKEN when both GH_TOKEN and GITHUB_TOKEN are set")
 
 		// Test DDEV_GITHUB_TOKEN has the highest precedence
-		t.Setenv("DDEV_GITHUB_TOKEN", "ddev_token_value")
+		settings.Set("GITHUB_TOKEN", "ddev_token_value")
 		token, _ = github.GetGitHubToken()
 		require.Equal(t, "ddev_token_value", token, "Should return DDEV_GITHUB_TOKEN when all tokens are set")
 	})
@@ -88,7 +95,7 @@ func TestGetGitHubToken(t *testing.T) {
 // TestGetGitHubHeaders tests the GetGitHubHeaders function URL filtering.
 func TestGetGitHubHeaders(t *testing.T) {
 	t.Run("GitHubURLs", func(t *testing.T) {
-		t.Setenv("DDEV_GITHUB_TOKEN", "test_token")
+		settings.Set("GITHUB_TOKEN", "test_token")
 
 		// Test https://github.com URLs
 		headers := github.GetGitHubHeaders("https://github.com/owner/repo")
@@ -102,7 +109,7 @@ func TestGetGitHubHeaders(t *testing.T) {
 	})
 
 	t.Run("NonGitHubURLs", func(t *testing.T) {
-		t.Setenv("DDEV_GITHUB_TOKEN", "test_token")
+		settings.Set("GITHUB_TOKEN", "test_token")
 
 		// Test non-GitHub URLs
 		testURLs := []string{
@@ -119,7 +126,7 @@ func TestGetGitHubHeaders(t *testing.T) {
 	})
 
 	t.Run("NoToken", func(t *testing.T) {
-		t.Setenv("DDEV_GITHUB_TOKEN", "")
+		settings.Set("GITHUB_TOKEN", "")
 		t.Setenv("GH_TOKEN", "")
 		t.Setenv("GITHUB_TOKEN", "")
 
