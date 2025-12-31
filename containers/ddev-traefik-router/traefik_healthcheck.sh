@@ -101,8 +101,6 @@ generate_warning_message() {
         echo "WARNING: No config files found or no routers expected"
     elif [ "$actual" -ne "$expected" ]; then
         echo "WARNING: Router count mismatch: ${actual} loaded, ${expected} expected"
-    elif [ "$errors" -gt 0 ]; then
-        echo "WARNING: Detected ${errors} configuration error(s) - check 'docker logs ddev-router' for details"
     else
         echo "WARNING: Unknown issue detected"
     fi
