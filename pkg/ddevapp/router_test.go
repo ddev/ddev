@@ -554,16 +554,16 @@ func TestPortsMatch(t *testing.T) {
 			expected:      false,
 		},
 		{
-			name:          "different length don't match",
+			name:          "missing needed port doesn't match",
 			existingPorts: []string{"80", "443"},
 			neededPorts:   []string{"80", "443", "8080"},
 			expected:      false,
 		},
 		{
-			name:          "subset doesn't match",
+			name:          "router with extra ports still matches",
 			existingPorts: []string{"80", "443", "8080"},
 			neededPorts:   []string{"80", "443"},
-			expected:      false,
+			expected:      true,
 		},
 	}
 

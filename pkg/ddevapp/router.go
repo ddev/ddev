@@ -268,12 +268,10 @@ func FindDdevRouter() (*container.Summary, error) {
 	return c, nil
 }
 
-// PortsMatch compares two slices of port strings and returns true if they contain the same ports
+// PortsMatch returns true if the existing ports contain all the needed ports.
+// It's fine for the router to have extra ports bound (from other projects that have stopped),
+// we only need to recreate the router when it's missing ports we need.
 func PortsMatch(existingPorts, neededPorts []string) bool {
-	if len(existingPorts) != len(neededPorts) {
-		return false
-	}
-
 	// Create a map of existing ports for quick lookup
 	existingMap := make(map[string]bool)
 	for _, port := range existingPorts {
