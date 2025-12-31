@@ -132,15 +132,15 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return fmt.Errorf("failed to create global Traefik config dir: %v", err)
 	}
 
-	// Assume that the #ddev-generated exists in files unless it doesn't
-	sigExists := true
+	// Assume that the #ddev-generated doesn't exist in files
+	sigExists := false
 	for _, pemFile := range []string{"default_cert.crt", "default_key.key"} {
 		origFile := filepath.Join(sourceCertsPath, pemFile)
 		// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
 		err = fileutil.CheckSignatureOrNoFile(origFile, nodeps.DdevFileSignature)
-		if err != nil {
-			// File exists, has content, but no signature - cannot overwrite
-			sigExists = false
+		if err == nil {
+			// File has a signature, or doesn't exists, or has no content - overwrite it
+			sigExists = true
 			break
 		}
 	}
@@ -295,15 +295,15 @@ func configureTraefikForApp(app *DdevApp) error {
 	}
 
 	baseName := filepath.Join(sourceCertsPath, app.Name)
-	// Assume that the #ddev-generated exists in files unless it doesn't
-	sigExists := true
+	// Assume that the #ddev-generated doesn't exist in files
+	sigExists := false
 	for _, pemFile := range []string{app.Name + ".crt", app.Name + ".key"} {
 		origFile := filepath.Join(sourceCertsPath, pemFile)
 		// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
 		err = fileutil.CheckSignatureOrNoFile(origFile, nodeps.DdevFileSignature)
-		if err != nil {
-			// File exists, has content, but no signature - cannot overwrite
-			sigExists = false
+		if err == nil {
+			// File has a signature, or doesn't exists, or has no content - overwrite it
+			sigExists = true
 			break
 		}
 	}
