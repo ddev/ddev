@@ -17,6 +17,10 @@ error_file="/tmp/ddev-traefik-errors.txt"
 "$@" 2>&1 | while IFS= read -r line; do
   echo "$line"
   if echo "$line" | grep -qE "(ERR|WRN)"; then
-    echo "$line" >> "${error_file}"
+    # Strip timestamp (everything after first space) and only add if not duplicate
+    msg=$(echo "$line" | cut -d' ' -f2-)
+    if ! grep -qF "$msg" "${error_file}" 2>/dev/null; then
+      echo "$msg" >> "${error_file}"
+    fi
   fi
 done
