@@ -421,13 +421,13 @@ func TestMain(m *testing.M) {
 	// Avoid having sudo try to add to /etc/hosts.
 	// This is normally done by Testsite.Prepare()
 	settings.Set("NONINTERACTIVE", "true")
-	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
-	_ = os.Setenv("DOCKER_CLI_HINTS", "false")
+	settings.Set("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
+	settings.Set("DOCKER_CLI_HINTS", "false")
 
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage
 	// in the array. Any value can be used, it will default to using the
 	// first site in the array.
-	gotestShort := os.Getenv("GOTEST_SHORT")
+	gotestShort := settings.GetString("GOTEST_SHORT")
 	if gotestShort != "" {
 		useSite := 0
 		if site, err := strconv.Atoi(gotestShort); err == nil && site >= 0 && site < len(TestSites) {
@@ -1012,7 +1012,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	sort.Strings(phpKeys)
 
 	// Test only the default version if GOTEST_SHORT is set
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		phpKeys = []string{nodeps.PHPDefault}
 	}
 
@@ -1700,7 +1700,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	dbVersions := nodeps.GetValidDatabaseVersions()
 
 	//Use a smaller list if GOTEST_SHORT
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:11.8", "mariadb:11.4", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
@@ -3638,7 +3638,7 @@ func TestHttpsRedirection(t *testing.T) {
 
 	projectTypes := ddevapp.GetValidAppTypes()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		projectTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
 		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}

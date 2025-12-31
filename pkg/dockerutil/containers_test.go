@@ -43,7 +43,7 @@ func testMain(m *testing.M) int {
 	testcommon.ClearDockerEnv()
 
 	settings.Set("NONINTERACTIVE", "true")
-	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
+	settings.Set("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
 	labels := map[string]string{
 		"com.ddev.site-name":        testContainerName,

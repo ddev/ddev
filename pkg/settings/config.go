@@ -89,6 +89,12 @@ func Init() error {
 	_ = v.BindEnv("VERSION", "VERSION")
 	_ = v.BindEnv("GITHUB_TOKEN", "GITHUB_TOKEN")
 	_ = v.BindEnv("GH_TOKEN", "GH_TOKEN")
+	_ = v.BindEnv("HOME", "HOME")
+	_ = v.BindEnv("PWD", "PWD")
+	_ = v.BindEnv("USER", "USER")
+	_ = v.BindEnv("LOGNAME", "LOGNAME")
+	_ = v.BindEnv("SHELL", "SHELL")
+	_ = v.BindEnv("TERM", "TERM")
 
 	config = &viperConfig{v: v}
 	return nil

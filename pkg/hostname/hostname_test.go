@@ -8,7 +8,6 @@ package hostname
 // Related issue: https://github.com/ddev/ddev/issues/7790
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 
@@ -110,7 +109,7 @@ func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 // 2. Passwordless sudo is available
 func TestElevateToAddRemoveHostEntry(t *testing.T) {
 	// Skip if not in CI
-	if os.Getenv("CI") != "true" {
+	if !settings.GetBool("CI") {
 		t.Skip("Skipping because not in CI (CI != true)")
 	}
 	if nodeps.IsWSL2() || nodeps.IsWindows() {

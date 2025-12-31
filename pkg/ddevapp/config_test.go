@@ -988,7 +988,7 @@ func TestPHPConfig(t *testing.T) {
 	// so we can subtract those if GOTEST_SHORT==""
 	phpKeys := nodeps.GetValidPHPVersions()
 	exclusions := []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	}
 

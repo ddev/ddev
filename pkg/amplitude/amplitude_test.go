@@ -1,13 +1,13 @@
 package amplitude_test
 
 import (
-	"os"
 	"runtime"
 	"testing"
 	"time"
 
 	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
@@ -32,7 +32,7 @@ func (t *AmplitudeSuite) TestGetEventOptions() {
 
 	require.Equal(versionconstants.DdevVersion, amplitude.GetEventOptions().AppVersion)
 	require.Equal(amplitude.GetDeviceID(), amplitude.GetEventOptions().DeviceID)
-	require.Equal(os.Getenv("LANG"), amplitude.GetEventOptions().Language)
+	require.Equal(settings.GetString("LANG"), amplitude.GetEventOptions().Language)
 	require.Equal(runtime.GOOS, amplitude.GetEventOptions().OSName)
 	require.Equal(runtime.GOARCH, amplitude.GetEventOptions().Platform)
 	require.Equal("ddev cli", amplitude.GetEventOptions().ProductID)

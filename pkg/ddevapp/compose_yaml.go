@@ -12,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 )
 
@@ -272,7 +273,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 		}
 		// Pass NO_COLOR to containers
 		if !output.ColorsEnabled() && service.Environment["NO_COLOR"] == nil {
-			noColor := os.Getenv("NO_COLOR")
+			noColor := settings.GetString("NO_COLOR")
 			service.Environment["NO_COLOR"] = &noColor
 		}
 

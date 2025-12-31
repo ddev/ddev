@@ -448,8 +448,8 @@ func GetTimezone(path string) (string, error) {
 // GetLocalTimezone tries to find local timezone from $TZ or /etc/localtime symlink
 func GetLocalTimezone() (string, error) {
 	timezone := ""
-	if os.Getenv("TZ") != "" {
-		timezone = os.Getenv("TZ")
+	if settings.GetString("TZ") != "" {
+		timezone = settings.GetString("TZ")
 	} else {
 		localtimeFile := filepath.Join("/etc", "localtime")
 		var err error

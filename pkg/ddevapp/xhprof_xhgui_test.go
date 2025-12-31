@@ -14,6 +14,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	assert2 "github.com/stretchr/testify/assert"
@@ -53,7 +54,7 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 	sort.Strings(phpKeys)
 
 	// If GOTESt_SHORT is set, we'll just use the default version instead
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		phpKeys = []string{nodeps.PHPDefault}
 	}
 
@@ -75,7 +76,7 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 
 	webserverKeys := nodeps.GetPHPWebserverTypes()
 	// Most of the time we can just test with the default webserver_type
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		webserverKeys = []string{nodeps.WebserverDefault}
 	}
 
@@ -171,7 +172,7 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 	sort.Strings(phpKeys)
 
 	// If GOTESt_SHORT is set, we'll just use the default version instead
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		phpKeys = []string{nodeps.PHPDefault}
 	}
 
@@ -188,7 +189,7 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 
 	webserverKeys := nodeps.GetPHPWebserverTypes()
 	// Most of the time we can just test with the default webserver_type
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		webserverKeys = []string{nodeps.WebserverDefault}
 	}
 

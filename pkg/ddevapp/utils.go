@@ -175,16 +175,13 @@ func getTemplateFuncMap() map[string]interface{} {
 	// Override "env" to use our settings package (Viper-backed)
 	// so that env variable overrides are respected in templates.
 	m["env"] = func(key string) string {
-		// If it's a DDEV variable, settings package handles it
+		// Use settings package for all environment variables.
+		// settings is configured to automatically handle DDEV_ prefix 
+		// and explicitly bound standard variables.
 		if strings.HasPrefix(key, "DDEV_") {
 			return settings.GetString(key[5:])
 		}
-		// Special cases bound in settings
-		if key == "XDG_CONFIG_HOME" || key == "CAROOT" {
-			return settings.GetString(key)
-		}
-		// Fallback to os.Getenv for others
-		return os.Getenv(key)
+		return settings.GetString(key)
 	}
 
 	return m

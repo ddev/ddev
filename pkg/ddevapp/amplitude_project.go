@@ -3,13 +3,13 @@ package ddevapp
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/third_party/ampli"
 	"github.com/denisbrodbeck/machineid"
@@ -76,7 +76,7 @@ func (app *DdevApp) TrackProject() {
 		CorepackEnable(app.CorepackEnable).
 		DdevVersionConstraint(app.DdevVersionConstraint).
 		DisableSettingsManagement(app.DisableSettingsManagement).
-		NoProjectMount(app.NoProjectMount).Ci(os.Getenv("CI") == "true")
+		NoProjectMount(app.NoProjectMount).Ci(settings.GetBool("CI"))
 
 	if !nodeps.ArrayContainsString(containersOmitted, "db") {
 		builder.

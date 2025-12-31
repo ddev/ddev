@@ -229,7 +229,7 @@ func TestIsWSL2(t *testing.T) {
 		require.False(t, result, "Should be false on non-Linux platforms")
 	} else {
 		// On Linux, check if we're actually in WSL2
-		wslInterop := os.Getenv("WSL_INTEROP") != ""
+		wslInterop := settings.GetString("WSL_INTEROP") != ""
 		procVersionContainsMicrosoft := false
 
 		if procVersionBytes, err := os.ReadFile("/proc/version"); err == nil {
@@ -252,7 +252,7 @@ func TestIsCodespaces(t *testing.T) {
 	// 1. DDEV_PRETEND_CODESPACES=true (for testing purposes), OR
 	// 2. Running on Linux AND CODESPACES=true
 	pretendCodespaces := settings.GetBool("PRETEND_CODESPACES")
-	codespacesEnv := os.Getenv("CODESPACES") == "true"
+	codespacesEnv := settings.GetBool("CODESPACES")
 	isLinux := runtime.GOOS == "linux"
 
 	expectedResult := pretendCodespaces || (isLinux && codespacesEnv)
@@ -267,7 +267,7 @@ func TestGetWSLDistro(t *testing.T) {
 
 	// Test the logic based on current environment
 	// GetWSLDistro should return WSL_DISTRO_NAME only if running on Linux
-	wslDistroName := os.Getenv("WSL_DISTRO_NAME")
+	wslDistroName := settings.GetString("WSL_DISTRO_NAME")
 	isLinux := runtime.GOOS == "linux"
 
 	if isLinux {

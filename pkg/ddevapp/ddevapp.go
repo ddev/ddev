@@ -2927,9 +2927,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 
 	// Only set values if they don't already exist in env.
 	for k, v := range envVars {
-		if err := os.Setenv(k, v); err != nil {
-			util.Error("Failed to set the environment variable %s=%s: %v", k, v, err)
-		}
+		settings.Set(k, v)
 	}
 	return envVars
 }

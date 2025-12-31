@@ -2,11 +2,11 @@ package updatecheck
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
@@ -67,7 +67,7 @@ func TestIsReleaseVersion(t *testing.T) {
 // TestAvailableUpdates tests isReleaseVersion to ensure it correctly picks up on release builds vs dev builds
 func TestAvailableUpdates(t *testing.T) {
 	assert := asrt.New(t)
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		t.Skip("Skipping TestAvailableUpdates because GOTEST_SHORT env var is set")
 	}
 	var versionTests = []struct {

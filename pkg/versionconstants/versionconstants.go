@@ -1,10 +1,11 @@
 package versionconstants
 
 import (
-	"os"
 	"os/exec"
 	"runtime/debug"
 	"strings"
+
+	"github.com/ddev/ddev/pkg/settings"
 )
 
 // DdevVersion is the current version of DDEV. Normally set via -ldflags from the Makefile
@@ -91,7 +92,7 @@ func init() {
 
 // deriveVersionFromEnv reads VERSION environment variable (if set) and returns it.
 func deriveVersionFromEnv() string {
-	v := strings.TrimSpace(os.Getenv("VERSION"))
+	v := strings.TrimSpace(settings.GetString("VERSION"))
 	return v
 }
 
