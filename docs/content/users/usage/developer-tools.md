@@ -57,13 +57,40 @@ To execute a fully-featured `composer create-project` command, you can execute t
 
 **composer.json Location**: It’s most common for `composer.json` to be in the project root, but you can specify an alternate Composer root using DDEV’s `composer_root` option in `.ddev/config.yaml`, or `ddev config --composer-root <dir>`. The `composer_root` value is the *relative* path from the project root to the directory containing `composer.json`. If yours is at `docroot/composer.json`, for example, the `composer_root` value should be `docroot`.
 
-!!!tip "Careful with Global Requirements!"
-    If you run `ddev composer global require` (or `composer global require` inside the web container), global packages will be installed at the home directory within the container (`~/.composer`) and will disappear when the container restarts—meaning you’ll need to re-run the command.
-
-    You may want to synchronize created Composer configuration and installed packages with the DDEV’s [`homeadditions` directory](../extend/in-container-configuration.md) on your host machine.
-
 !!!tip "How to debug Composer itself?"
     To use Xdebug with Composer, [see instructions](../debugging-profiling/step-debugging.md#composer).
+
+### Composer Limitations
+
+!!!warning "Container Changes Do Not Persist"
+    Changes made to non-bind-mounted directories inside the container do not persist across container restarts. This affects Composer commands that modify files outside your project directory.
+
+#### Composer Global Packages Do Not Persist
+
+If you run `ddev composer global require` (or `composer global require` inside the web container), global packages will be installed at the home directory within the container (`$HOME/.composer`) and will disappear when the container restarts.
+
+You may want to synchronize created Composer configuration and installed packages with DDEV's [`homeadditions` directory](../extend/in-container-configuration.md) on your host machine.
+
+#### Composer Self-Update Changes Do Not Persist
+
+Running `ddev composer self-update` (or `composer self-update` inside the web container) will update Composer within the container, but the change will be lost when the container restarts.
+
+The Composer version is cached after the first image build and automatically updates only when DDEV is upgraded.
+
+If you need to update Composer:
+
+1. Check the [`composer_version`](../configuration/config.md#composer_version) setting in `.ddev/config.yaml` and set it to your desired version:
+
+    * `composer_version: ""` (empty) - equivalent to `composer self-update --stable`
+    * `composer_version: "2"` (v2) - equivalent to `composer self-update --2`
+    * `composer_version: "2.2"` (v2.2 LTS) - equivalent to `composer self-update --2.2`
+    * `composer_version: "2.9.3"` (specific) - equivalent to `composer self-update 2.9.3`. This is the most consistent option for teams, as it ensures all members use the exact same version regardless of when they first build the image, avoiding inconsistencies in dependency resolution.
+
+2. Trigger a [rebuild](../usage/commands.md#utility-rebuild) to install the configured version:
+
+    ```bash
+    ddev utility rebuild
+    ```
 
 ### Composer from `vendor/bin/composer`
 

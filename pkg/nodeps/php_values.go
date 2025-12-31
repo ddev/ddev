@@ -44,5 +44,5 @@ var PreinstalledPHPVersions = map[string]bool{
 	PHP85: true,
 }
 
-// Composer version default - will get latest Composer v2
+// ComposerDefault will get latest Composer v2
 var ComposerDefault = "2"
