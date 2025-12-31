@@ -48,21 +48,20 @@ func init() {
 // runMutagenDiagnose performs the diagnostic checks and outputs results
 // Returns exit code: 0 if no issues, 1 if issues found
 func runMutagenDiagnose(showAll bool) int {
-	var app *ddevapp.DdevApp
 	hasIssues := false
 
 	// Try to load app from current directory (optional)
-	app, _ = ddevapp.GetActiveApp("")
+	app, _ := ddevapp.GetActiveApp("")
 
 	// If showAll is true or we're not in a project, show system-wide analysis
-	if showAll || app == nil {
+	if showAll || app.AppRoot == "" {
 		hasIssues = showAllMutagenVolumes()
-		if app == nil {
+		if app.AppRoot == "" {
 			// Not in a project directory and not using --all
 			if !showAll {
-				output.UserOut.Println("Not in a DDEV project directory.")
-				output.UserOut.Println("Use --all flag to analyze all Mutagen volumes system-wide.")
 				output.UserOut.Println()
+				util.Warning("Not in a DDEV project directory.")
+				util.Warning("Use --all flag to analyze all Mutagen volumes system-wide.")
 			}
 			if hasIssues {
 				return 1
@@ -72,21 +71,20 @@ func runMutagenDiagnose(showAll bool) int {
 	}
 
 	// If we have an app, analyze it
-	if app != nil {
+	if app.AppRoot != "" {
 		// Check if Mutagen is enabled for this project
 		if !app.IsMutagenEnabled() {
-			output.UserOut.Printf("Mutagen is not enabled for project '%s'\n", app.Name)
-			output.UserOut.Println()
-			output.UserOut.Println("To enable Mutagen:")
-			output.UserOut.Println("  ddev config --performance-mode=mutagen")
-			output.UserOut.Println("  ddev restart")
+			util.Warning("Mutagen is not enabled for project '%s'\n", app.Name)
+			util.Warning("To enable Mutagen:")
+			util.Warning("  ddev config --performance-mode=mutagen")
+			util.Warning("  ddev restart")
 			return 0
 		}
 
 		// Check if project is running - start it if needed
 		status, _ := app.SiteStatus()
 		if status != ddevapp.SiteRunning {
-			output.UserOut.Printf("Project '%s' is not running. Starting project to enable sync diagnostics...\n", app.Name)
+			output.UserOut.Printf("Project '%s' is not running. Starting project to enable sync diagnostics...", app.Name)
 			output.UserOut.Println()
 			err := app.Start()
 			if err != nil {
@@ -144,20 +142,19 @@ func showAllMutagenVolumes() bool {
 			sizeWarning = " ✓"
 		}
 
-		output.UserOut.Printf("  %s Project: %s - Volume: %s (%s)\n", sizeWarning, vol.Project, vol.Name, vol.SizeHuman)
+		output.UserOut.Printf("  %s Project: %s - Volume: %s (%s)", sizeWarning, vol.Project, vol.Name, vol.SizeHuman)
 	}
 
 	output.UserOut.Println()
 	totalSizeHuman := util.FormatBytes(totalSize)
-	output.UserOut.Printf("  Total Mutagen disk usage: %s across %d project(s)\n", totalSizeHuman, len(volumes))
-	output.UserOut.Println()
+	output.UserOut.Printf("  Total Mutagen disk usage: %s across %d project(s)", totalSizeHuman, len(volumes))
 
 	if hasIssues {
+		output.UserOut.Println()
 		output.UserOut.Println("  Recommendations:")
 		output.UserOut.Println("    - Review large volumes and consider excluding unnecessary directories")
 		output.UserOut.Println("    - Configure upload_dirs to exclude user-generated files")
 		output.UserOut.Println("    - Exclude node_modules and other large dependency directories")
-		output.UserOut.Println()
 	}
 
 	return hasIssues
@@ -166,7 +163,7 @@ func showAllMutagenVolumes() bool {
 // showProjectDiagnostics displays detailed diagnostics for a specific project
 // Returns true if issues were found
 func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
-	output.UserOut.Printf("Mutagen Diagnostics for Project: %s\n", app.Name)
+	output.UserOut.Printf("Mutagen Diagnostics for Project: %s", app.Name)
 	output.UserOut.Println()
 
 	// Run comprehensive diagnostics
@@ -210,14 +207,12 @@ func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
 
 	// Show problems if any
 	if len(result.Problems) > 0 {
-		output.UserOut.Println()
-		output.UserOut.Println("  Problems detected:")
+		output.UserOut.Println("  Problems detected:\n")
 		for _, problem := range result.Problems {
-			output.UserOut.Printf("    ✗ %s\n", problem)
+			output.UserOut.Printf("    ✗ %s", problem)
+			output.UserOut.Println()
 		}
 	}
-
-	output.UserOut.Println()
 
 	// Show Volume Size Analysis section
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -241,7 +236,7 @@ func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
 	volumes, totalSize, err := ddevapp.GetAllMutagenVolumes()
 	if err == nil && len(volumes) > 1 {
 		totalSizeHuman := util.FormatBytes(totalSize)
-		output.UserOut.Printf("  ℹ Total Mutagen volumes: %s across %d project(s)\n", totalSizeHuman, len(volumes))
+		output.UserOut.Printf("  ℹ Total Mutagen volumes: %s across %d project(s)", totalSizeHuman, len(volumes))
 	}
 
 	output.UserOut.Println()
@@ -252,11 +247,11 @@ func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	if result.UploadDirsConfigured {
-		output.UserOut.Printf("  ✓ upload_dirs configured: %s\n", strings.Join(result.UploadDirs, ", "))
+		output.UserOut.Printf("  ✓ upload_dirs configured: %s", strings.Join(result.UploadDirs, ", "))
 	} else {
 		if result.UploadDirsSuggestion != "" {
-			output.UserOut.Printf("  ✗ No upload_dirs configured for %s project\n", app.Type)
-			output.UserOut.Printf("    → Suggestion: Add 'upload_dirs: [\"%s\"]' to .ddev/config.yaml\n", result.UploadDirsSuggestion)
+			output.UserOut.Printf("  ✗ No upload_dirs configured for %s project", app.Type)
+			output.UserOut.Printf("    → Suggestion: Add 'upload_dirs: [\"%s\"]' to .ddev/config.yaml", result.UploadDirsSuggestion)
 			output.UserOut.Println("    → Then run: ddev mutagen reset && ddev restart")
 		} else {
 			output.UserOut.Println("  ℹ No upload_dirs configured (may not be needed for this project type)")
@@ -286,9 +281,9 @@ func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
 
 	for dirType, warnings := range warningsByType {
 		if len(warnings) == 1 {
-			output.UserOut.Printf("  ⚠ %s directory exists but is not excluded from sync (%s)\n", dirType, warnings[0].Reason)
+			output.UserOut.Printf("  ⚠ %s directory exists but is not excluded from sync (%s)", dirType, warnings[0].Reason)
 		} else {
-			output.UserOut.Printf("  ⚠ %d %s directories exist but are not excluded from sync (%s)\n", len(warnings), dirType, warnings[0].Reason)
+			output.UserOut.Printf("  ⚠ %d %s directories exist but are not excluded from sync (%s)", len(warnings), dirType, warnings[0].Reason)
 		}
 
 		output.UserOut.Println("    → Add to .ddev/config.yaml (include existing upload_dirs if any):")
@@ -296,12 +291,12 @@ func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
 		// Show existing upload_dirs first
 		if len(result.UploadDirs) > 0 {
 			for _, dir := range result.UploadDirs {
-				output.UserOut.Printf("        - %s\n", dir)
+				output.UserOut.Printf("        - %s", dir)
 			}
 		}
 		// Show all paths for this directory type
 		for _, warn := range warnings {
-			output.UserOut.Printf("        - %s\n", warn.UploadDirsPath)
+			output.UserOut.Printf("        - %s", warn.UploadDirsPath)
 		}
 		output.UserOut.Println("    → Then run: ddev restart")
 		output.UserOut.Println("    → (Files in upload_dirs are not synced by Mutagen but available via Docker bind-mount)")
@@ -318,7 +313,7 @@ func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
 			}
 		}
 		if !skipWarning {
-			output.UserOut.Printf("  ⚠ %s\n", warning)
+			output.UserOut.Printf("  ⚠ %s", warning)
 		}
 	}
 
@@ -341,10 +336,10 @@ func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	if result.WarningCount > 0 {
-		output.UserOut.Printf("  ⚠ %d warning(s) found\n", result.WarningCount)
+		output.UserOut.Printf("  ⚠ %d warning(s) found", result.WarningCount)
 	}
 	if result.IssueCount > 0 {
-		output.UserOut.Printf("  ✗ %d issue(s) found\n", result.IssueCount)
+		output.UserOut.Printf("  ✗ %d issue(s) found", result.IssueCount)
 	}
 	if result.IssueCount == 0 && result.WarningCount == 0 {
 		output.UserOut.Println("  ✓ No issues found - Mutagen configuration looks good!")
@@ -375,7 +370,7 @@ func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
 		}
 
 		for i, rec := range recommendations {
-			output.UserOut.Printf("  %d. %s\n", i+1, rec)
+			output.UserOut.Printf("  %d. %s", i+1, rec)
 		}
 
 		output.UserOut.Println()
