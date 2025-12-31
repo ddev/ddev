@@ -116,7 +116,7 @@ generate_warning_message() {
 # sleep at startup. This requires the timeout to be set
 # higher than the sleeptime used here.
 if [ -f "${healthy_marker}" ]; then
-    printf "container was previously healthy, so sleeping %s seconds before continuing healthcheck...  " ${sleeptime}
+    printf "container was previously healthy, so sleeping %s seconds before continuing healthcheck... " ${sleeptime}
     sleep ${sleeptime}
 fi
 

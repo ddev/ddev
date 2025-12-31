@@ -133,6 +133,7 @@ func StartWait(message string) *WaitTimer {
 func (w *WaitTimer) Complete(err error, extra string) time.Duration {
 	elapsed := time.Since(w.startTime)
 	if !JSONOutput {
+		extra = strings.TrimSpace(extra)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stdout, "\n")
 		} else if extra != "" {
