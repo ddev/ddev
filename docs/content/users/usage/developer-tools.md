@@ -69,7 +69,7 @@ To execute a fully-featured `composer create-project` command, you can execute t
 
 If you run `ddev composer global require` (or `composer global require` inside the web container), global packages will be installed at the home directory within the container (`$HOME/.composer`) and will disappear when the container restarts.
 
-You may want to synchronize created Composer configuration and installed packages with DDEV's [`homeadditions` directory](../extend/in-container-configuration.md) on your host machine.
+You may want to synchronize created Composer configuration and installed packages with DDEV's [`homeadditions` directory](../extend/in-container-configuration.md#using-homeadditions-to-customize-in-container-home-directory) on your host machine.
 
 #### Composer Self-Update Changes Do Not Persist
 
