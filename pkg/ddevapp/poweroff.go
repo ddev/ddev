@@ -46,6 +46,9 @@ func PowerOff() {
 	if err := RemoveSSHAgentContainer(); err != nil {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)
 	}
+	if err := RemoveRouterContainer(); err != nil {
+		util.Error("Failed to remove ddev-router: %v", err)
+	}
 
 	// Remove global DDEV default network
 	dockerutil.RemoveNetworkWithWarningOnError(dockerutil.NetName)

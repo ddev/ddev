@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"path"
@@ -12,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-	"time"
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -58,80 +56,20 @@ func IsRouterDisabled(app *DdevApp) bool {
 	return nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer)
 }
 
-// StopRouterIfNoContainers stops the router if there are no DDEV containers running.
-func StopRouterIfNoContainers() error {
-	containersRunning, err := ddevContainersRunning()
+// RemoveRouterContainer stops and removes the ddev-router container.
+func RemoveRouterContainer() error {
+	_, err := FindDdevRouter()
 	if err != nil {
-		return err
+		// Router not found, nothing to remove
+		return nil
 	}
-
-	if !containersRunning {
-		routerPorts, err := GetRouterBoundPorts()
-		if err != nil {
+	err = dockerutil.RemoveContainer(nodeps.RouterContainer)
+	if err != nil {
+		if ok := dockerutil.IsErrNotFound(err); !ok {
 			return err
-		}
-		util.Debug("stopping ddev-router because all project containers are stopped")
-		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
-		if err != nil {
-			if ok := dockerutil.IsErrNotFound(err); !ok {
-				return err
-			}
-		}
-
-		// Colima and Lima don't release ports very fast after container is removed
-		// see https://github.com/lima-vm/lima/issues/2536 and
-		// https://github.com/abiosoft/colima/issues/644
-		if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
-			if globalconfig.DdevDebug {
-				util.Debug("Lima/Colima/Rancher stopping router")
-				dockerContainers, _ := dockerutil.GetDockerContainers(true)
-				containerInfo := make([]string, len(dockerContainers))
-				for i, c := range dockerContainers {
-					containerInfo[i] = fmt.Sprintf("ID: %s, Name: %s, State: %s, Image: %s", dockerutil.TruncateID(c.ID), dockerutil.ContainerName(&c), c.State, c.Image)
-				}
-				containerList, _ := util.ArrayToReadableOutput(containerInfo)
-				util.Debug("All docker containers: %s", containerList)
-			}
-			util.Debug("Waiting for router ports to be released on Lima-based systems because ports aren't released immediately")
-			waitForPortsToBeReleased(routerPorts, time.Second*5)
-			// Wait another couple of seconds
-			time.Sleep(time.Second * 2)
 		}
 	}
 	return nil
-}
-
-// waitForPortsToBeReleased waits until the specified ports are released or the timeout is reached.
-func waitForPortsToBeReleased(ports []uint16, timeout time.Duration) {
-	util.Debug("starting port release for ports: %v", ports)
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	ticker := time.NewTicker(500 * time.Millisecond) // Check every 500 milliseconds
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			util.Debug("Timeout reached, stopping check.")
-			return
-		case <-ticker.C:
-			allReleased := true
-			for _, portInt := range ports {
-				port := fmt.Sprintf("%d", portInt)
-				if netutil.IsPortActive(port) {
-					util.Debug("Port %s is still in use.", port)
-					allReleased = false
-				} else {
-					util.Debug("Port %s is released.", port)
-				}
-			}
-			if allReleased {
-				util.Debug("All ports are released.")
-				return
-			}
-		}
-	}
 }
 
 // StartDdevRouter ensures the router is running.
@@ -328,23 +266,6 @@ func FindDdevRouter() (*container.Summary, error) {
 		return nil, fmt.Errorf("no ddev-router was found")
 	}
 	return c, nil
-}
-
-// GetRouterBoundPorts returns the currently bound ports on ddev-router
-// or an empty array if router not running
-func GetRouterBoundPorts() ([]uint16, error) {
-	boundPorts := []uint16{}
-	r, err := FindDdevRouter()
-	if err != nil {
-		return []uint16{}, nil
-	}
-
-	for _, p := range r.Ports {
-		if p.PublicPort != 0 {
-			boundPorts = append(boundPorts, p.PublicPort)
-		}
-	}
-	return boundPorts, nil
 }
 
 // PortsMatch compares two slices of port strings and returns true if they contain the same ports

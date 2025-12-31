@@ -200,6 +200,10 @@ func TestUseEphemeralPort(t *testing.T) {
 		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
 	}
 
+	// Stop all projects and the router first so we can occupy the ports they would normally use
+	// Without this, leftover containers from other tests may have ports that interfere
+	ddevapp.PowerOff()
+
 	targetHTTPPort, targetHTTPSPort := "28080", "28443"
 	const testString = "Hello from TestUseEphemeralPort"
 
