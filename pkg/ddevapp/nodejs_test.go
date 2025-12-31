@@ -9,15 +9,22 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
+}
+
 // TestNodeJSVersions whether we can configure nodejs versions
 func TestNodeJSVersions(t *testing.T) {
-	if os.Getenv("DDEV_SKIP_NODEJS_TEST") == "true" {
+	if settings.GetBool("SKIP_NODEJS_TEST") {
 		t.Skip("Skipping TestNodeJSVersions because DDEV_SKIP_NODEJS_TEST is true")
 	}
 	assert := asrt.New(t)

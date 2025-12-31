@@ -17,6 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -29,6 +30,9 @@ import (
 var testContainerName = "TestDockerUtils"
 
 func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
 	globalconfig.EnsureGlobalConfig()
 	dockerutil.EnsureDdevNetwork()
 }
@@ -38,7 +42,7 @@ func TestMain(m *testing.M) { os.Exit(testMain(m)) }
 func testMain(m *testing.M) int {
 	testcommon.ClearDockerEnv()
 
-	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
+	settings.Set("NONINTERACTIVE", "true")
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
 	labels := map[string]string{

@@ -14,6 +14,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -41,13 +42,13 @@ func TestAcquiaPull(t *testing.T) {
 	acquiaKey := ""
 	acquiaSecret := ""
 	sshkey := ""
-	if acquiaKey = os.Getenv("DDEV_ACQUIA_API_KEY"); acquiaKey == "" {
+	if acquiaKey = settings.GetString("ACQUIA_API_KEY"); acquiaKey == "" {
 		t.Skipf("No DDEV_ACQUIA_API_KEY env var has been set. Skipping %v", t.Name())
 	}
-	if acquiaSecret = os.Getenv("DDEV_ACQUIA_API_SECRET"); acquiaSecret == "" {
-		t.Skipf("No DDEV_ACQUIA_SECRET env var has been set. Skipping %v", t.Name())
+	if acquiaSecret = settings.GetString("ACQUIA_API_SECRET"); acquiaSecret == "" {
+		t.Skipf("No DDEV_ACQUIA_API_SECRET env var has been set. Skipping %v", t.Name())
 	}
-	if sshkey = os.Getenv("DDEV_ACQUIA_SSH_KEY"); sshkey == "" {
+	if sshkey = settings.GetString("ACQUIA_SSH_KEY"); sshkey == "" {
 		t.Skipf("No DDEV_ACQUIA_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
 
@@ -134,13 +135,13 @@ func TestAcquiaPush(t *testing.T) {
 	acquiaKey := ""
 	acquiaSecret := ""
 	sshkey := ""
-	if acquiaKey = os.Getenv("DDEV_ACQUIA_API_KEY"); acquiaKey == "" {
+	if acquiaKey = settings.GetString("ACQUIA_API_KEY"); acquiaKey == "" {
 		t.Skipf("No DDEV_ACQUIA_API_KEY env var has been set. Skipping %v", t.Name())
 	}
-	if acquiaSecret = os.Getenv("DDEV_ACQUIA_API_SECRET"); acquiaSecret == "" {
+	if acquiaSecret = settings.GetString("ACQUIA_API_SECRET"); acquiaSecret == "" {
 		t.Skipf("No DDEV_ACQUIA_API_SECRET env var has been set. Skipping %v", t.Name())
 	}
-	if sshkey = os.Getenv("DDEV_ACQUIA_SSH_KEY"); sshkey == "" {
+	if sshkey = settings.GetString("ACQUIA_SSH_KEY"); sshkey == "" {
 		t.Skipf("No DDEV_ACQUIA_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
 

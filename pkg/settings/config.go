@@ -10,9 +10,10 @@ type ConfigProvider interface {
 	GetInt(key string) int
 	GetBool(key string) bool
 	SetDefault(key string, value any)
-	BindEnv(key string, envVar string)
+	BindEnv(key string, envVar string) error
 	Set(key string, value any)
 	Unmarshal(rawVal any) error
+	Unset(key string)
 	// Add more methods as needed
 }
 
@@ -37,12 +38,18 @@ func (vc *viperConfig) SetDefault(key string, value any) {
 	vc.v.SetDefault(key, value)
 }
 
-func (vc *viperConfig) BindEnv(key string, envVar string) {
-	_ = vc.v.BindEnv(key, envVar)
+func (vc *viperConfig) BindEnv(key string, envVar string) error {
+	return vc.v.BindEnv(key, envVar)
 }
 
 func (vc *viperConfig) Set(key string, value any) {
 	vc.v.Set(key, value)
+}
+
+func (vc *viperConfig) Unset(key string) {
+	// Viper doesn't have a direct Unset, so we set to nil or empty string?
+	// Actually, the common way is to set it to nil.
+	vc.v.Set(key, nil)
 }
 
 func (vc *viperConfig) Unmarshal(rawVal any) error {
@@ -62,9 +69,26 @@ func Init() error {
 	v.SetEnvPrefix("DDEV")
 	v.AutomaticEnv()
 
-	// Bind standard environment variables that don't have DDEV_ prefix
+	// Bind standard environment variables that DDEV uses
 	_ = v.BindEnv("XDG_CONFIG_HOME", "XDG_CONFIG_HOME")
 	_ = v.BindEnv("CAROOT", "CAROOT")
+	_ = v.BindEnv("CI", "CI")
+	_ = v.BindEnv("CODESPACES", "CODESPACES")
+	_ = v.BindEnv("WSL_INTEROP", "WSL_INTEROP")
+	_ = v.BindEnv("WSL_DISTRO_NAME", "WSL_DISTRO_NAME")
+	_ = v.BindEnv("TZ", "TZ")
+	_ = v.BindEnv("NO_COLOR", "NO_COLOR")
+	_ = v.BindEnv("GOTEST_SHORT", "GOTEST_SHORT")
+	_ = v.BindEnv("LANG", "LANG")
+	_ = v.BindEnv("COMPOSE_PROJECT_NAME", "COMPOSE_PROJECT_NAME")
+	_ = v.BindEnv("LOCALAPPDATA", "LOCALAPPDATA")
+	_ = v.BindEnv("PROGRAMFILES", "PROGRAMFILES")
+	_ = v.BindEnv("CODESPACE_NAME", "CODESPACE_NAME")
+	_ = v.BindEnv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN", "GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
+	_ = v.BindEnv("MUTAGEN_DATA_DIRECTORY", "MUTAGEN_DATA_DIRECTORY")
+	_ = v.BindEnv("VERSION", "VERSION")
+	_ = v.BindEnv("GITHUB_TOKEN", "GITHUB_TOKEN")
+	_ = v.BindEnv("GH_TOKEN", "GH_TOKEN")
 
 	config = &viperConfig{v: v}
 	return nil
@@ -97,4 +121,9 @@ func Set(key string, value any) {
 
 func Unmarshal(rawVal any) error {
 	return config.Unmarshal(rawVal)
+}
+
+// Unset unsets a key in the global configuration.
+func Unset(key string) {
+	config.Unset(key)
 }

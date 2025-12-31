@@ -12,18 +12,25 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
+}
+
 // TestHardenedStart makes sure we can do a start and basic use with hardened images
 func TestHardenedStart(t *testing.T) {
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		t.Skip("Skipping TestHardenedStart because NoBindMounts is true and Mutagen is incompatible with hardened images")
 	}
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsAppleSilicon() || nodeps.IsWSL2() || dockerutil.IsRancherDesktop()) {
+	if !settings.GetBool("RUN_TEST_ANYWAY") && (nodeps.IsAppleSilicon() || nodeps.IsWSL2() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping TestHardenedStart because of useless failures to connect on some platforms, no need to test hardened on arm64")
 	}
 

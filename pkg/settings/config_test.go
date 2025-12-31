@@ -36,4 +36,8 @@ func TestViperConfiguration(t *testing.T) {
 	// 4. Test Set/override
 	Set("some_key", "manual_value")
 	assert.Equal(t, "manual_value", GetString("some_key"))
+
+	// 5. Test Unset
+	Unset("some_key")
+	assert.Equal(t, "", GetString("some_key"), "Unset should remove the key's value")
 }

@@ -3462,8 +3462,8 @@ func (app *DdevApp) GetHTTPSURL() string {
 // GetAllURLs returns an array of all the URLs for the project
 func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs []string) {
 	if nodeps.IsCodespaces() {
-		codespaceName := os.Getenv("CODESPACE_NAME")
-		previewDomain := os.Getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
+		codespaceName := settings.GetString("CODESPACE_NAME")
+		previewDomain := settings.GetString("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
 		if codespaceName != "" && previewDomain != "" {
 			url := fmt.Sprintf("https://%s-%s.%s", codespaceName, app.HostWebserverPort, previewDomain)
 			httpsURLs = append(httpsURLs, netutil.NormalizeURL(url))

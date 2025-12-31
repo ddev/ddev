@@ -20,6 +20,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
 )
@@ -187,10 +188,10 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	}
 
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return stdout.String(), stderr, fmt.Errorf("composeCmd timed out after %v and failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", cmd.Timeout, os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
+		return stdout.String(), stderr, fmt.Errorf("composeCmd timed out after %v and failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", cmd.Timeout, settings.GetString("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
 	}
 	if err != nil {
-		return stdout.String(), stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
+		return stdout.String(), stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", settings.GetString("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
 	}
 	return stdout.String(), stderr, nil
 }

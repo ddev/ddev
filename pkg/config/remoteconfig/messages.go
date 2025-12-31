@@ -2,7 +2,6 @@ package remoteconfig
 
 import (
 	"math/rand"
-	"os"
 	"strings"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -118,7 +118,6 @@ func (c *remoteConfig) ShowTicker() {
 	if !c.showTickerMessage() || len(tickerData.Messages) == 0 {
 		return
 	}
-
 	messageOffset := c.state.LastTickerMessage
 	messageCount := len(tickerData.Messages)
 
@@ -130,13 +129,13 @@ func (c *remoteConfig) ShowTicker() {
 		messageOffset = rand.Intn(messageCount)
 	}
 
-	for i := range tickerData.Messages {
+	for _ = range tickerData.Messages {
 		messageOffset++
 		if messageOffset > messageCount {
 			messageOffset = 1
 		}
 
-		message := &tickerData.Messages[i+messageOffset-1]
+		message := &tickerData.Messages[messageOffset-1]
 
 		if c.checkConditions(message.Conditions) && c.checkVersions(message.Versions) {
 			t := table.NewWriter()
@@ -221,7 +220,7 @@ func (c *remoteConfig) getTickerInterval() time.Duration {
 // interval has been elapsed.
 func (c *remoteConfig) showTickerMessage() bool {
 	return !output.JSONOutput &&
-		os.Getenv("CI") != "true" &&
+		!settings.GetBool("CI") &&
 		!c.isTickerDisabled() &&
 		c.state.LastTickerAt.Add(c.getTickerInterval()).Before(time.Now())
 }
@@ -232,7 +231,7 @@ func (c *remoteConfig) showSponsorshipMessage() bool {
 	// Use the same interval as ticker for consistency (once per day)
 	sponsorshipInterval := c.getTickerInterval()
 	return !output.JSONOutput &&
-		os.Getenv("CI") != "true" &&
+		!settings.GetBool("CI") &&
 		!c.isTickerDisabled() &&
 		c.state.LastSponsorshipAt.Add(sponsorshipInterval).Before(time.Now())
 }

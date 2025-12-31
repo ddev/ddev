@@ -30,7 +30,7 @@ func init() {
 // 2. Passwordless sudo is available
 func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 	// Skip if not in CI
-	if os.Getenv("CI") != "true" {
+	if !settings.GetBool("CI") {
 		t.Skip("Skipping because not in CI (CI != true)")
 	}
 

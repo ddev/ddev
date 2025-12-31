@@ -12,10 +12,17 @@ import (
 
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	if err := settings.Init(); err != nil {
+		panic(err)
+	}
+}
 
 // TestRandString ensures that RandString only generates string of the correct value and characters.
 func TestRandString(t *testing.T) {
@@ -140,7 +147,7 @@ func TestConfirmTo(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Unset the env var, then reset after the test
-	t.Setenv("DDEV_NONINTERACTIVE", "")
+	settings.Set("NONINTERACTIVE", "")
 
 	// test a given input against a default value
 	testInput := func(input string, defaultTo bool, expected bool) {

@@ -1,8 +1,6 @@
 package globalconfig
 
 import (
-	"os"
-
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/settings"
 )
@@ -43,7 +41,7 @@ func RefreshGlobalValues() {
 
 func init() {
 	// Initialize with defaults or fallback to Getenv if settings not yet ready
-	DdevNoInstrumentation = settings.GetBool("NO_INSTRUMENTATION") || os.Getenv("CI") == "true"
+	DdevNoInstrumentation = settings.GetBool("NO_INSTRUMENTATION") || settings.GetBool("CI")
 	DdevVerbose = settings.GetBool("VERBOSE")
 	DdevDebug = settings.GetBool("DEBUG") || DdevVerbose
 }

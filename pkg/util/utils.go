@@ -19,6 +19,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
@@ -242,7 +243,7 @@ func FindBashPath() string {
 
 	// Check for user-local Git Bash installation first (installed for current user only)
 	// This takes precedence over system-wide installations
-	if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
+	if localAppData := settings.GetString("LOCALAPPDATA"); localAppData != "" {
 		userLocalBashPath := filepath.Join(localAppData, `Programs\Git\bin\bash.exe`)
 		if _, err := os.Stat(userLocalBashPath); err == nil {
 			return userLocalBashPath
@@ -251,7 +252,7 @@ func FindBashPath() string {
 
 	// Check for system-wide Git Bash installation using PROGRAMFILES environment variable
 	// This works even if Program Files is on a different drive
-	if programFiles := os.Getenv("PROGRAMFILES"); programFiles != "" {
+	if programFiles := settings.GetString("PROGRAMFILES"); programFiles != "" {
 		systemWideBashPath := filepath.Join(programFiles, `Git\bin\bash.exe`)
 		if _, err := os.Stat(systemWideBashPath); err == nil {
 			return systemWideBashPath

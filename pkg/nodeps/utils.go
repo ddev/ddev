@@ -92,7 +92,7 @@ func IsCodespaces() bool {
 	if settings.GetBool("PRETEND_CODESPACES") {
 		return true
 	}
-	return IsLinux() && os.Getenv("CODESPACES") == "true"
+	return IsLinux() && settings.GetBool("CODESPACES")
 }
 
 // IsDevcontainer returns true if running in any Devcontainer (including Codespaces)
@@ -107,7 +107,7 @@ func IsDevcontainer() bool {
 func GetWSLDistro() string {
 	wslDistro := ""
 	if IsLinux() {
-		wslDistro = os.Getenv("WSL_DISTRO_NAME")
+		wslDistro = settings.GetString("WSL_DISTRO_NAME")
 	}
 	return wslDistro
 }

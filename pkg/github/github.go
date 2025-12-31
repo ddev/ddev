@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -139,7 +138,7 @@ func GetGitHubToken() (string, string) {
 		return token, "DDEV_GITHUB_TOKEN"
 	}
 	for _, token := range []string{"GH_TOKEN", "GITHUB_TOKEN"} {
-		if githubToken := os.Getenv(token); githubToken != "" {
+		if githubToken := settings.GetString(token); githubToken != "" {
 			return githubToken, token
 		}
 	}

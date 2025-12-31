@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -50,7 +51,7 @@ func GetEventOptions() (options ampli.EventOptions) {
 		AppVersion: versionconstants.DdevVersion,
 		Platform:   runtime.GOARCH,
 		OSName:     runtime.GOOS,
-		Language:   os.Getenv("LANG"),
+		Language:   settings.GetString("LANG"),
 		ProductID:  "ddev cli",
 	}
 
