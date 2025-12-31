@@ -9,6 +9,9 @@ type ConfigProvider interface {
 	GetString(key string) string
 	GetInt(key string) int
 	GetBool(key string) bool
+	SetDefault(key string, value interface{})
+	BindEnv(key string, envVar string)
+	Set(key string, value interface{})
 	// Add more methods as needed
 }
 
@@ -29,15 +32,32 @@ func (vc *viperConfig) GetBool(key string) bool {
 	return vc.v.GetBool(key)
 }
 
+func (vc *viperConfig) SetDefault(key string, value interface{}) {
+	vc.v.SetDefault(key, value)
+}
+
+func (vc *viperConfig) BindEnv(key string, envVar string) {
+	_ = vc.v.BindEnv(key, envVar)
+}
+
+func (vc *viperConfig) Set(key string, value interface{}) {
+	vc.v.Set(key, value)
+}
+
 var config ConfigProvider
 
 // Init initializes the settings system. Call this early in main().
 func Init() {
 	v := viper.New()
+
+	// Set environment prefix to DDEV_
+	v.SetEnvPrefix("DDEV")
+	// Read in environment variables that match
+	v.AutomaticEnv()
+
 	// Example: set config file name and path
 	// v.SetConfigName("config")
 	// v.AddConfigPath(".")
-	// v.AutomaticEnv() // read in environment variables that match
 
 	// Optionally, read a config file
 	// err := v.ReadInConfig()
@@ -59,6 +79,18 @@ func GetInt(key string) int {
 
 func GetBool(key string) bool {
 	return config.GetBool(key)
+}
+
+func SetDefault(key string, value interface{}) {
+	config.SetDefault(key, value)
+}
+
+func BindEnv(key string, envVar string) {
+	config.BindEnv(key, envVar)
+}
+
+func Set(key string, value interface{}) {
+	config.Set(key, value)
 }
 
 // Optionally, add Set, Unmarshal, etc. as needed
