@@ -136,8 +136,6 @@ func (w *WaitTimer) Complete(err error, extra string) time.Duration {
 		extra = strings.TrimSpace(extra)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stdout, "\n")
-		} else if extra != "" {
-			_, _ = fmt.Fprintf(os.Stdout, " ready in %.1fs, %s\n", elapsed.Seconds(), extra)
 		} else {
 			_, _ = fmt.Fprintf(os.Stdout, " ready in %.1fs\n", elapsed.Seconds())
 		}
