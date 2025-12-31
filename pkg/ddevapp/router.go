@@ -185,7 +185,7 @@ func StartDdevRouter() error {
 	wait := output.StartWait(fmt.Sprintf("Waiting for %s to become ready", nodeps.RouterContainer))
 	util.Debug("Router wait: checking for container with labels %v, polling every 500ms for healthy status", label)
 	logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
-	elapsed := wait.Complete(err, logOutput)
+	elapsed := wait.Complete(err)
 	if err != nil {
 		return fmt.Errorf("ddev-router failed to become ready after %.1fs; log=%s, err=%v", elapsed.Seconds(), logOutput, err)
 	}

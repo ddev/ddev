@@ -129,11 +129,10 @@ func StartWait(message string) *WaitTimer {
 }
 
 // Complete prints the elapsed time on the same line as the wait message.
-// If err is non-nil, just prints a newline. If extra is provided, it's appended after the time.
-func (w *WaitTimer) Complete(err error, extra string) time.Duration {
+// If err is non-nil, just prints a newline.
+func (w *WaitTimer) Complete(err error) time.Duration {
 	elapsed := time.Since(w.startTime)
 	if !JSONOutput {
-		extra = strings.TrimSpace(extra)
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stdout, "\n")
 		} else {

@@ -1937,7 +1937,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 	wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", dependers))
 	waitErr := app.Wait(dependers)
-	wait.Complete(waitErr, "")
+	wait.Complete(waitErr)
 
 	if !slices.Contains(app.OmitContainers, "db") && app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) && slices.Contains([]string{nodeps.PHP73, nodeps.PHP72, nodeps.PHP71, nodeps.PHP70, nodeps.PHP56}, app.PHPVersion) {
 		alterString := `ALTER USER 'db'@'%' IDENTIFIED WITH mysql_native_password BY 'db';
@@ -2023,7 +2023,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if len(containerNames) > 0 {
 		wait := output.StartWait(fmt.Sprintf("Waiting for additional project containers %v to become ready", containerNames))
 		err = app.WaitByLabels(waitLabels)
-		wait.Complete(err, "")
+		wait.Complete(err)
 		if err != nil {
 			return err
 		}
@@ -2126,7 +2126,7 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 	// Using `profiles` here assumes that profile and container name are the same
 	wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", profiles))
 	err = app.Wait(profiles)
-	wait.Complete(err, "")
+	wait.Complete(err)
 	if err != nil {
 		return err
 	}
@@ -2935,7 +2935,7 @@ func (app *DdevApp) WaitForServices() error {
 	}
 	waitTime := app.GetMaxContainerWaitTime()
 	_, err := dockerutil.ContainerWait(waitTime, labels)
-	elapsed := wait.Complete(err, "")
+	elapsed := wait.Complete(err)
 	if err != nil {
 		return fmt.Errorf("timed out waiting for containers (%v) to start after %.1fs: err=%v", requiredContainers, elapsed.Seconds(), err)
 	}
