@@ -574,3 +574,83 @@ func TestPortsMatch(t *testing.T) {
 		})
 	}
 }
+
+// TestRouterNotRebuiltWithExtraPorts verifies that when a project with extra ports
+// is running and a simpler project starts, the router is not recreated.
+// The router should only be recreated when NEW ports are needed, not when it has
+// extra ports from other projects.
+func TestRouterNotRebuiltWithExtraPorts(t *testing.T) {
+	// Start clean
+	ddevapp.PowerOff()
+
+	// Create a temporary project with extra exposed ports
+	extraPortsDir := testcommon.CreateTmpDir(t.Name() + "_extraports")
+	t.Cleanup(func() {
+		_ = os.RemoveAll(extraPortsDir)
+	})
+
+	extraPortsApp, err := ddevapp.NewApp(extraPortsDir, true)
+	require.NoError(t, err)
+	extraPortsApp.Name = t.Name() + "-extraports"
+	extraPortsApp.Type = nodeps.AppTypePHP
+	// Add extra exposed ports that will be unique to this project
+	extraPortsApp.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+		{Name: "extra1", WebContainerPort: 3000, HTTPPort: 3080, HTTPSPort: 3443},
+		{Name: "extra2", WebContainerPort: 4000, HTTPPort: 4080, HTTPSPort: 4443},
+	}
+	err = extraPortsApp.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = extraPortsApp.Stop(true, false)
+	})
+
+	// Start the extra ports project - this creates the router with extra ports
+	err = extraPortsApp.Start()
+	require.NoError(t, err)
+
+	// Get the router's bound ports after starting the extra ports project
+	router, err := ddevapp.FindDdevRouter()
+	require.NoError(t, err)
+	portsAfterExtraProject, err := dockerutil.GetBoundHostPorts(router.ID)
+	require.NoError(t, err)
+
+	// Verify the extra ports are bound
+	require.Contains(t, portsAfterExtraProject, "3080", "Router should have extra HTTP port 3080")
+	require.Contains(t, portsAfterExtraProject, "3443", "Router should have extra HTTPS port 3443")
+	require.Contains(t, portsAfterExtraProject, "4080", "Router should have extra HTTP port 4080")
+	require.Contains(t, portsAfterExtraProject, "4443", "Router should have extra HTTPS port 4443")
+
+	// Now start a simpler project (TestSites[0]) that doesn't need those extra ports
+	site := TestSites[0]
+	simpleApp, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+	// Clear any extra ports from previous test runs
+	simpleApp.WebExtraExposedPorts = nil
+	err = simpleApp.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = simpleApp.Stop(true, false)
+	})
+
+	err = simpleApp.Start()
+	require.NoError(t, err)
+
+	// Get the router's bound ports after starting the simple project
+	router, err = ddevapp.FindDdevRouter()
+	require.NoError(t, err)
+	portsAfterSimpleProject, err := dockerutil.GetBoundHostPorts(router.ID)
+	require.NoError(t, err)
+
+	// The router should still have the extra ports from the first project
+	// This proves the router was not recreated when the simple project started
+	require.Contains(t, portsAfterSimpleProject, "3080", "Router should still have extra HTTP port 3080 after starting simple project")
+	require.Contains(t, portsAfterSimpleProject, "3443", "Router should still have extra HTTPS port 3443 after starting simple project")
+	require.Contains(t, portsAfterSimpleProject, "4080", "Router should still have extra HTTP port 4080 after starting simple project")
+	require.Contains(t, portsAfterSimpleProject, "4443", "Router should still have extra HTTPS port 4443 after starting simple project")
+
+	// Verify the port lists are identical (router wasn't recreated)
+	require.ElementsMatch(t, portsAfterExtraProject, portsAfterSimpleProject,
+		"Router ports should be unchanged after starting simple project - router should not have been recreated")
+}
