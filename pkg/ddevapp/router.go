@@ -159,6 +159,11 @@ func StartDdevRouter() error {
 			needsRecreation = true
 		} else {
 			neededPorts := determineRouterPorts(activeApps)
+			// Add the Traefik monitor port to the needed list for comparison
+			// (it's always bound by the router but not returned by determineRouterPorts
+			// since it's added separately in the static config template)
+			neededPorts = append(neededPorts, globalconfig.DdevGlobalConfig.TraefikMonitorPort)
+			util.Debug("Router port comparison: existing=%v needed=%v match=%v", existingPorts, neededPorts, PortsMatch(existingPorts, neededPorts))
 			if !PortsMatch(existingPorts, neededPorts) {
 				util.Debug("Router ports have changed, will recreate router")
 				needsRecreation = true

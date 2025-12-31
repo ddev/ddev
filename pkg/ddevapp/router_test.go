@@ -517,7 +517,7 @@ func TestAssignRouterPortsToGenericWebserverPorts(t *testing.T) {
 	}
 }
 
-// TestPortsMatch tests the portsMatch function
+// TestPortsMatch tests the PortsMatch function
 func TestPortsMatch(t *testing.T) {
 	tests := []struct {
 		name          string
