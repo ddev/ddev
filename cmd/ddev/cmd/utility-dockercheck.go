@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	exec2 "github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -98,13 +98,13 @@ ddev ut dockercheck`,
 			hasWarnings = true
 		} else {
 			util.Success("Using Docker context: %s", dockerContextName)
-			dockerContextName = os.Getenv("DOCKER_CONTEXT")
+			dockerContextName = settings.GetString("DOCKER_CONTEXT")
 			if dockerContextName != "" {
 				util.Success("From DOCKER_CONTEXT=%s", dockerContextName)
 			}
 
 			util.Success("Using Docker host: %s", dockerHost)
-			dockerHost = os.Getenv("DOCKER_HOST")
+			dockerHost = settings.GetString("DOCKER_HOST")
 			if dockerHost != "" {
 				util.Success("From DOCKER_HOST=%s", dockerHost)
 			}

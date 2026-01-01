@@ -16,6 +16,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -54,7 +55,7 @@ func TestDescribeBadArgs(t *testing.T) {
 func TestCmdDescribe(t *testing.T) {
 	origDir, _ := os.Getwd()
 
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	origDdevDebug := settings.GetString("DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
 	tmpDir := testcommon.CreateTmpDir("")
 

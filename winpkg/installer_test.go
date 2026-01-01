@@ -15,6 +15,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,9 +28,9 @@ func getInstallerDebugLogs(t *testing.T) string {
 	t.Helper()
 
 	// Get Windows temp directory
-	tempDir := os.Getenv("TEMP")
+	tempDir := settings.GetString("TEMP")
 	if tempDir == "" {
-		tempDir = os.Getenv("TMP")
+		tempDir = settings.GetString("TMP")
 	}
 	if tempDir == "" {
 		t.Log("Could not determine Windows temp directory")
@@ -72,7 +73,7 @@ func getInstallerDebugLogs(t *testing.T) string {
 
 // TestWindowsInstallerWSL2 tests WSL2 installation paths using a test matrix
 func TestWindowsInstallerWSL2(t *testing.T) {
-	if os.Getenv("DDEV_TEST_USE_REAL_INSTALLER") == "" {
+	if settings.GetString("TEST_USE_REAL_INSTALLER") == "" {
 		t.Skip("Skipping installer test, set DDEV_TEST_USE_REAL_INSTALLER=true to run")
 	}
 
@@ -261,7 +262,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 // TestWindowsInstallerTraditional tests the Traditional Windows installation path
 func TestWindowsInstallerTraditional(t *testing.T) {
-	if os.Getenv("DDEV_TEST_USE_REAL_INSTALLER") == "" {
+	if settings.GetString("TEST_USE_REAL_INSTALLER") == "" {
 		t.Skip("Skipping installer test, set DDEV_TEST_USE_REAL_INSTALLER=true to run")
 	}
 	// Check if Docker Desktop is working on Windows
@@ -304,7 +305,7 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 
 	// Wait for installer to complete by checking for ddev.exe at expected location
 	// NSIS installers in silent mode may return before fully completing
-	localAppData := os.Getenv("LOCALAPPDATA")
+	localAppData := settings.GetString("LOCALAPPDATA")
 	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
 	const maxWaitSeconds = 60
 	for i := 0; i < maxWaitSeconds; i++ {
@@ -391,7 +392,7 @@ func configureTestWSL2Distro(t *testing.T, distroName string) {
 
 		// Complete distro setup with root user (avoids interactive user setup)
 		t.Logf("Completing distro setup with root user only")
-		userProfile := os.Getenv("USERPROFILE")
+		userProfile := settings.GetString("USERPROFILE")
 		// Convert Ubuntu-22.04 to ubuntu2204.exe
 		exeName := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(distroName, "-", ""), ".", "")) + ".exe"
 		ubuntuExePath := filepath.Join(userProfile, "AppData", "Local", "Microsoft", "WindowsApps", exeName)
@@ -504,7 +505,7 @@ func cleanupTraditionalWindowsEnv(t *testing.T) {
 	t.Logf("Cleaning up Traditional Windows environment")
 
 	// Use full path since the current process doesn't see the PATH update from the installer
-	localAppData := os.Getenv("LOCALAPPDATA")
+	localAppData := settings.GetString("LOCALAPPDATA")
 	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
 
 	// Stop any running DDEV projects (ignore errors if ddev not installed)
@@ -519,7 +520,7 @@ func testDdevTraditionalInstallation(t *testing.T) {
 	t.Logf("Testing ddev installation on Windows")
 
 	// Use full paths since the current process doesn't see the PATH update from the installer
-	localAppData := os.Getenv("LOCALAPPDATA")
+	localAppData := settings.GetString("LOCALAPPDATA")
 	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
 	hostnamePath := filepath.Join(localAppData, "Programs", "DDEV", "ddev-hostname.exe")
 
@@ -545,7 +546,7 @@ func testBasicDdevTraditionalFunctionality(t *testing.T) {
 	t.Logf("Testing basic ddev functionality on Windows")
 
 	// Use full path since the current process doesn't see the PATH update from the installer
-	localAppData := os.Getenv("LOCALAPPDATA")
+	localAppData := settings.GetString("LOCALAPPDATA")
 	ddevPath := filepath.Join(localAppData, "Programs", "DDEV", "ddev.exe")
 
 	// Create a temporary directory for the test project

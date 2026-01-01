@@ -12,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +32,7 @@ func TestComposerCreateProjectCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	validAppTypes := ddevapp.GetValidAppTypes()
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		validAppTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
 	}
 
@@ -203,7 +204,7 @@ func TestComposerCreateProjectCmd(t *testing.T) {
 
 func TestComposerCreateAutocomplete(t *testing.T) {
 	// DDEV_DEBUG may result in extra output that we don't want
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	origDdevDebug := settings.GetString("DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
 	// Change to the directory for the project to test.
 	// We don't really care what the project is, they should

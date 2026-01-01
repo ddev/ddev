@@ -11,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,7 +22,7 @@ func TestCmdMutagen(t *testing.T) {
 	assert := asrt.New(t)
 	// Gather reporting about goroutines at exit
 	_ = os.Setenv("DDEV_GOROUTINES", "true")
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	origDdevDebug := settings.GetString("DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
 
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
@@ -93,19 +94,19 @@ func TestCmdMutagen(t *testing.T) {
 	// Make sure it got turned on
 	assert.True(app.IsMutagenEnabled())
 
-	t.Logf("DDEV_GOROUTINES before app.StartAndWait()=%s", os.Getenv(`DDEV_GOROUTINES`))
+	t.Logf("DDEV_GOROUTINES before app.StartAndWait()=%s", settings.GetString(`DDEV_GOROUTINES`))
 
 	// Now test subcommands. Wait a bit for Mutagen to get completely done, with transition problems sorted out
 	err = app.StartAndWait(10)
 	require.NoError(t, err)
-	t.Logf("DDEV_GOROUTINES before first mutagen status --verbose=%s", os.Getenv(`DDEV_GOROUTINES`))
+	t.Logf("DDEV_GOROUTINES before first mutagen status --verbose=%s", settings.GetString(`DDEV_GOROUTINES`))
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	testcommon.CheckGoroutineOutput(t, out)
 
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "Mutagen: ok"), "expected Mutagen: ok. Full output: %s", out)
 	assert.Contains(out, "Mutagen: ok")
-	t.Logf("DDEV_GOROUTINES before second mutagen status --verbose=%s", os.Getenv(`DDEV_GOROUTINES`))
+	t.Logf("DDEV_GOROUTINES before second mutagen status --verbose=%s", settings.GetString(`DDEV_GOROUTINES`))
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	assert.NoError(err)
 	assert.Contains(out, "Alpha:")

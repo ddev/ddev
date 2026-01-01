@@ -17,6 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -67,8 +68,8 @@ var (
 func TestMain(m *testing.M) {
 	testcommon.ClearDockerEnv()
 
-	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
-		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	if settings.GetString("BINARY_FULLPATH") != "" {
+		DdevBin = settings.GetString("BINARY_FULLPATH")
 	} else {
 		binPath, err := osexec.LookPath(DdevBin)
 		if err == nil {
@@ -93,7 +94,7 @@ func TestMain(m *testing.M) {
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage
 	// in the array. Any value can be used, it will default to using the
 	// first site in the array.
-	gotestShort := os.Getenv("GOTEST_SHORT")
+	gotestShort := settings.GetString("GOTEST_SHORT")
 	if gotestShort != "" {
 		useSite := 0
 		if site, err := strconv.Atoi(gotestShort); err == nil && site >= 0 && site < len(TestSites) {

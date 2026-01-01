@@ -15,18 +15,19 @@ import (
 
 	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/stretchr/testify/require"
 )
 
 // TestShareCmdNgrok tests `ddev share` with ngrok provider
 func TestShareCmdNgrok(t *testing.T) {
-	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
+	if settings.GetString("TEST_SHARE_CMD") != "true" {
 		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
 	}
 	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsWindows() {
 		t.Skip("Skipping because unreliable on Windows due to DNS lookup failure")
 	}
-	if os.Getenv("GITHUB_ACTIONS") == "true" {
+	if settings.GetString("GITHUB_ACTIONS") == "true" {
 		t.Skip("Skipping on GitHub actions because no auth can be provided")
 	}
 	t.Setenv(`DDEV_GOROUTINES`, "")
@@ -151,13 +152,13 @@ func TestShareCmdNgrok(t *testing.T) {
 
 // TestShareCmdCloudflared tests `ddev share` with cloudflared
 func TestShareCmdCloudflared(t *testing.T) {
-	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
+	if settings.GetString("TEST_SHARE_CMD") != "true" {
 		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
 	}
 	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsWindows() {
 		t.Skip("Skipping because unreliable on Windows")
 	}
-	if os.Getenv("GITHUB_ACTIONS") == "true" {
+	if settings.GetString("GITHUB_ACTIONS") == "true" {
 		t.Skip("Skipping on GitHub actions")
 	}
 	t.Setenv(`DDEV_GOROUTINES`, "")

@@ -18,11 +18,11 @@
 package ampli
 
 import (
-	"os"
 	"sync"
 
 	"github.com/amplitude/analytics-go/amplitude"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 )
 
 type (
@@ -724,5 +724,5 @@ func (a *Ampli) Project(userID string, event ProjectEvent, eventOptions ...Event
 
 // debugOrVerboseEnabled returns true if DDEV_DEBUG=true or DDEV_VERBOSE=true
 func debugOrVerboseEnabled() bool {
-	return os.Getenv("DDEV_DEBUG") == "true" || os.Getenv("DDEV_VERBOSE") == "true"
+	return settings.GetString("DEBUG") == "true" || settings.GetString("VERBOSE") == "true"
 }

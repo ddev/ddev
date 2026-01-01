@@ -14,6 +14,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
@@ -589,7 +590,7 @@ func TestConfigDatabaseVersion(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 	versionsToTest := nodeps.GetValidDatabaseVersions()
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if settings.GetString("GOTEST_SHORT") != "" {
 		versionsToTest = []string{"mariadb:10.11", "mysql:8.0", "postgres:18"}
 	}
 

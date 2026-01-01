@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 )
@@ -43,7 +44,7 @@ because the hosts file never gets manipulated.`,
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
 			if inHostsFile {
-				if os.Getenv("DDEV_NONINTERACTIVE") == "true" {
+				if settings.GetString("NONINTERACTIVE") == "true" {
 					printStderr("Not removing the host entry because DDEV_NONINTERACTIVE=true\n")
 					os.Exit(0)
 				}
@@ -70,7 +71,7 @@ because the hosts file never gets manipulated.`,
 		}
 		// By default, add a host name
 		if !inHostsFile {
-			if os.Getenv("DDEV_NONINTERACTIVE") == "true" {
+			if settings.GetString("NONINTERACTIVE") == "true" {
 				printStderr("Not adding the host entry because DDEV_NONINTERACTIVE=true\n")
 				os.Exit(0)
 			}

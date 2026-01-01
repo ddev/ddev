@@ -10,6 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -18,11 +19,11 @@ import (
 
 // TestCmdSSH runs `ddev ssh` on basic apps, including with a dot and a dash in them
 func TestCmdSSH(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsAppleSilicon() {
+	if settings.GetString("RUN_TEST_ANYWAY") != "true" && nodeps.IsAppleSilicon() {
 		t.Skip("Skipping TestCmdSSH on Apple Silicon because of intermittent failures to connect")
 	}
 	assert := asrt.New(t)
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	origDdevDebug := settings.GetString("DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
 
 	// Create a temporary directory and change to it for the duration of this test.

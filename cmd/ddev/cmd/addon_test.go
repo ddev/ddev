@@ -12,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/settings"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -92,7 +93,7 @@ func TestCmdAddonInstalled(t *testing.T) {
 	if !github.HasGitHubToken() {
 		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
 	}
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	origDdevDebug := settings.GetString("DEBUG")
 	_ = os.Unsetenv("DDEV_DEBUG")
 	assert := asrt.New(t)
 

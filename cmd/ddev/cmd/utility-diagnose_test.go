@@ -7,6 +7,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 )
@@ -72,7 +73,7 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 	// Test outside home directory warning
 	t.Run("OutsideHomeDirectory", func(t *testing.T) {
 		// Only test on systems where we can easily test outside home
-		if os.Getenv("DDEV_TEST_OUTSIDE_HOME") != "true" {
+		if settings.GetString("TEST_OUTSIDE_HOME") != "true" {
 			t.Skip("Skipping outside home test - set DDEV_TEST_OUTSIDE_HOME=true to enable")
 		}
 
@@ -93,7 +94,7 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 
 		out, _ := exec.RunHostCommand(DdevBin, "utility", "diagnose")
 		// Should warn about not being in home directory
-		if os.Getenv("HOME") != "" && tmpDir[:len(os.Getenv("HOME"))] != os.Getenv("HOME") {
+		if settings.GetString("HOME") != "" && tmpDir[:len(settings.GetString("HOME"))] != settings.GetString("HOME") {
 			require.Contains(t, out, "should usually be in a subdirectory of your home directory")
 		}
 	})

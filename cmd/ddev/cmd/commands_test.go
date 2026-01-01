@@ -14,6 +14,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -144,7 +145,7 @@ func TestCustomCommands(t *testing.T) {
 			userHome, err := os.UserHomeDir()
 			assert.NoError(err)
 			globalDdevDir := globalconfig.GetGlobalDdevDir()
-			homeEnv := os.Getenv("HOME")
+			homeEnv := settings.GetString("HOME")
 			t.Errorf("userHome=%s, globalDdevDir=%s, homeEnv=%s", userHome, globalDdevDir, homeEnv)
 			t.Errorf("Failed to run ddev %s: %v, home=%s output=%s", c, err, userHome, out)
 			out, err = exec.RunHostCommand("ls", "-lR", globalDdevDir, "commands")
