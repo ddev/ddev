@@ -207,7 +207,7 @@ func showProjectDiagnostics(app *ddevapp.DdevApp) bool {
 
 	// Show problems if any
 	if len(result.Problems) > 0 {
-		output.UserOut.Println("  Problems detected:\n")
+		output.UserOut.Println("  Problems detected:")
 		for _, problem := range result.Problems {
 			output.UserOut.Printf("    ✗ %s", problem)
 			output.UserOut.Println()
