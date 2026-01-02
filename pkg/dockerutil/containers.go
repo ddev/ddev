@@ -296,19 +296,23 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 
 		case <-tickChan.C:
 			c, err := FindContainerByLabels(labels)
+			cName := ""
+			if len(c.Names) > 0 {
+				cName = strings.TrimPrefix(c.Names[0], "/")
+			}
 			if err != nil || c == nil {
-				return "", fmt.Errorf("failed to query container labels=%v: %v", labels, err)
+				return "", fmt.Errorf("failed to query container %s labels=%v: %v", cName, labels, err)
 			}
 			health, logOutput := GetContainerHealth(c)
 
 			// Log status changes and periodic updates under DDEV_DEBUG
 			elapsed := time.Since(startTime).Round(time.Millisecond)
 			if health != lastStatus {
-				util.Debug("ContainerWait: status changed to '%s' after %v", health, elapsed)
+				util.Debug("ContainerWait: %s status change: '%s' after %v", cName, health, elapsed)
 				lastStatus = health
 				lastLogTime = time.Now()
 			} else if time.Since(lastLogTime) >= 5*time.Second {
-				util.Debug("ContainerWait: still waiting, status='%s' after %v", health, elapsed)
+				util.Debug("ContainerWait: still waiting for %s, status='%s' after %v", cName, health, elapsed)
 				lastLogTime = time.Now()
 			}
 
