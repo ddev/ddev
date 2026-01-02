@@ -9,6 +9,7 @@ setup() {
 # executed after each test
 teardown() {
   _common_teardown
+  true
 }
 
 @test "backdrop new-project quickstart with $(ddev --version)" {
@@ -59,10 +60,13 @@ teardown() {
   run ddev add-on get backdrop-ops/ddev-backdrop-bee
   assert_success
 
-  run ddev start -y
+  DDEV_DEBUG=true run ddev start -y >&3
   assert_success
+#  echo "# DEBUG: ddev start completed at $(date), exit code: $status" >&3
+#  echo "# DEBUG: ddev start output: " >&3
+#  echo "# $output" >&3
 
-  run curl -fLO https://github.com/ddev/test-backdrop/releases/download/1.32.1/db.sql.gz
+  run curl -fLOv https://github.com/ddev/test-backdrop/releases/download/1.32.1/db.sql.gz
   assert_success
 
   run ddev import-db --file=db.sql.gz
@@ -75,17 +79,17 @@ teardown() {
   assert_success
 
   # Clear cache after importing db and files to ensure Backdrop is ready
-  run ddev bee cc
+  run ddev bee cc all
   assert_success
 
   DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "Welcome to My Backdrop Site!"
+  assert_success
 }
