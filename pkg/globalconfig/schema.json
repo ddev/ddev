@@ -198,6 +198,11 @@
           "description": "URL for downloading sponsorship data.",
           "type": "string",
           "format": "uri"
+        },
+        "addon_data_url": {
+          "description": "URL for downloading add-on registry data.",
+          "type": "string",
+          "format": "uri"
         }
       }
     }

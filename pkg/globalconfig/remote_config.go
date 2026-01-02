@@ -5,6 +5,8 @@ const (
 	DefaultRemoteConfigURL = "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
 	// DefaultSponsorshipDataURL is the default URL for sponsorship data
 	DefaultSponsorshipDataURL = "https://ddev.com/s/sponsorship-data.json"
+	// DefaultAddonDataURL is the default URL for add-on registry data
+	DefaultAddonDataURL = "https://addons.ddev.com/addons.json"
 )
 
 // RemoteConfig is the struct defining the remote-config config.
@@ -12,4 +14,5 @@ type RemoteConfig struct {
 	UpdateInterval     int    `yaml:"update_interval,omitempty"`
 	RemoteConfigURL    string `yaml:"remote_config_url,omitempty"`
 	SponsorshipDataURL string `yaml:"sponsorship_data_url,omitempty"`
+	AddonDataURL       string `yaml:"addon_data_url,omitempty"`
 }
