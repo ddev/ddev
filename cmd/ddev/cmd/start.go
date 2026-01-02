@@ -132,10 +132,13 @@ ddev start --all`,
 			instrumentationApp = projects[0]
 		}
 
+		noCache, _ := cmd.Flags().GetBool("no-cache")
+
 		for _, project := range projects {
 			if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {
 				util.Failed("Failed to start %s: %v", project.GetName(), err)
 			}
+			project.NoCache = noCache
 
 			output.UserOut.Printf("Starting %s...", project.GetName())
 
@@ -167,6 +170,7 @@ func emitReachProjectMessage(project *ddevapp.DdevApp) {
 func init() {
 	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
 	StartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
+	StartCmd.Flags().BoolP("no-cache", "", false, "Build Docker images without using cache")
 	StartCmd.Flags().String("profiles", "", "Start optional comma-separated docker compose profiles")
 	StartCmd.Flags().BoolP("select", "s", false, "Interactively select a project to start")
 	err := StartCmd.Flags().MarkHidden("select")
