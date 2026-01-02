@@ -124,6 +124,9 @@ type WaitTimer struct {
 func StartWait(message string) *WaitTimer {
 	if !JSONOutput {
 		_, _ = fmt.Fprintf(os.Stdout, "%s...", message)
+		if os.Getenv("DDEV_DEBUG") == "true" || os.Getenv("DDEV_VERBOSE") == "true" {
+			_, _ = fmt.Fprintln(os.Stdout)
+		}
 	}
 	return &WaitTimer{startTime: time.Now()}
 }
