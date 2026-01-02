@@ -74,10 +74,13 @@ teardown() {
   run ddev import-files --source=files.tgz
   assert_success
 
+  # Clear cache after importing db and files to ensure Backdrop is ready
+  run ddev bee cc
+  assert_success
+
   DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
-
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
   assert_success
