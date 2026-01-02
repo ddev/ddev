@@ -70,12 +70,14 @@ func TestConfigOverrideAction(t *testing.T) {
 		nodeps.AppTypeDrupal6:      nodeps.PHP56,
 		nodeps.AppTypeDrupal7:      nodeps.PHP82,
 		nodeps.AppTypeDrupal11:     nodeps.PHPDefault,
+		nodeps.AppTypeExpressionEngine: nodeps.PHPDefault,
 		nodeps.AppTypeLaravel:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento2:     nodeps.PHPDefault,
 		nodeps.AppTypeSilverstripe: nodeps.PHPDefault,
 		nodeps.AppTypeSymfony:      nodeps.PHPDefault,
 		nodeps.AppTypeWordPress:    nodeps.PHPDefault,
+		
 	}
 
 	for appType, expectedPHPVersion := range appTypes {

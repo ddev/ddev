@@ -179,6 +179,12 @@ func init() {
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
+		nodeps.AppTypeExpressionEngine: {
+			settingsCreator:      updateExpressionEngineDotEnv,
+			appTypeDetect:        isExpressionEngineApp,
+			appTypeSettingsPaths: setExpressionEngineSettingsPaths,
+		},
+
 		nodeps.AppTypeGeneric: {
 			postStartAction: nil,
 		},
@@ -248,6 +254,7 @@ func init() {
 			appTypeDetect:        isWordpressApp,
 			importFilesAction:    wordpressImportFilesAction,
 		},
+
 	}
 
 	// Now add "drupal" type as a copy of latest stable, but don't allow it to be detected as a type
