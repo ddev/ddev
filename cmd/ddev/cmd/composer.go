@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -37,6 +38,8 @@ ddev composer create-project drupal/recommended-project .`,
 				util.Failed("Failed to start %s: %v", app.Name, err)
 			}
 		}
+
+		showComposerWarningForNotPersistentChanges(args)
 
 		stdout, stderr, err := app.Composer(args)
 		if err != nil {
@@ -130,4 +133,29 @@ func getComposerCompletionFunc(isCreateCommand bool) func(*cobra.Command, []stri
 
 		return completion, cobra.ShellCompDirectiveNoFileComp
 	}
+}
+
+func showComposerWarningForNotPersistentChanges(args []string) {
+	// Find the first actual command argument (skip flags, handle -- separator)
+	command := ""
+	for i, arg := range args {
+		if arg == "--" {
+			if i+1 < len(args) {
+				command = args[i+1]
+			}
+			break
+		}
+		if strings.HasPrefix(arg, "-") {
+			continue
+		}
+		command = arg
+		break
+	}
+
+	// Warn for commands that modify the container in non-persistent ways
+	if !slices.Contains([]string{"self-update", "selfupdate", "global"}, command) {
+		return
+	}
+
+	util.Warning("Composer %s changes do not persist across DDEV restarts.\nSee https://docs.ddev.com/en/stable/users/usage/developer-tools/#composer-limitations for details.", command)
 }
