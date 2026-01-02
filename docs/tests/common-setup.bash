@@ -12,9 +12,11 @@ _common_setup() {
     export DDEV_NONINTERACTIVE=true
     mkdir -p ${tmpdir} && cd ${tmpdir} || exit 1
     ddev delete -Oy ${PROJNAME:-notset} >/dev/null
+#    echo "# Starting test at $(date)" >&3
 }
 
 _common_teardown() {
+#  echo "# Ending test at $(date)" >&3
   ddev delete -Oy ${PROJNAME} >/dev/null
   rm -rf ${tmpdir}
 }
