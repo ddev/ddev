@@ -1276,9 +1276,16 @@ func (app *DdevApp) ImportFiles(uploadDir, importPath, extractPath string) error
 	if err := app.dispatchImportFilesAction(uploadDir, importPath, extractPath); err != nil {
 		return err
 	}
+	// Some projects (backdrop or some drupal) need config that gets loaded from files dir.
+	// These require mutagen sync before it will be available in container.
+	// This is especially true with no-bind-mounts
+	err := app.MutagenSyncFlush()
+	if err != nil {
+		return err
+	}
 
 	//nolint: revive
-	if err := app.ProcessHooks("post-import-files"); err != nil {
+	if err = app.ProcessHooks("post-import-files"); err != nil {
 		return err
 	}
 
