@@ -271,3 +271,67 @@ func TestMutagenConfigChange(t *testing.T) {
 
 	util.Debug("origSyncID=%s afterRestartSyncID=%s afterChangeSyncID=%s", origSyncID, afterRestartSyncID, afterChangeSyncID)
 }
+
+// TestMutagenDiagnose tests the MutagenDiagnose function
+func TestMutagenDiagnose(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("TestMutagenDiagnose skipped on Windows")
+	}
+	assert := asrt.New(t)
+
+	// Make sure there's not an existing Mutagen running
+	_, _ = exec.RunHostCommand("pkill", "mutagen")
+
+	// Use a simple test site
+	site := TestSites[0]
+	app := &ddevapp.DdevApp{Name: site.Name}
+	_ = app.Stop(true, false)
+	_ = globalconfig.RemoveProjectInfo(site.Name)
+
+	err := site.Prepare()
+	require.NoError(t, err)
+
+	err = app.Init(site.Dir)
+	require.NoError(t, err)
+	app.SetPerformanceMode(types.PerformanceModeMutagen)
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Run DiagnoseMutagenConfiguration
+	result := ddevapp.DiagnoseMutagenConfiguration(app)
+	require.NotNil(t, result)
+
+	// Basic sanity checks on the diagnostic result
+	require.True(t, result.SessionExists, "Mutagen session should exist")
+	require.NotEmpty(t, result.SyncStatus, "Sync status should not be empty")
+	require.GreaterOrEqual(t, result.VolumeSize, int64(0), "Volume size should be >= 0")
+	require.NotEmpty(t, result.VolumeSizeHuman, "Volume size human should not be empty")
+
+	// Check that volume was detected
+	volumeName := ddevapp.GetMutagenVolumeName(app)
+	require.True(t, dockerutil.VolumeExists(volumeName), "Mutagen volume should exist")
+
+	// Verify issue counting logic:
+	// When HasProblems is true, IssueCount should include those problems
+	// When HasProblems is false, Problems slice should be empty
+	if result.HasProblems {
+		// If HasProblems is set, IssueCount should reflect at least 1 issue from sync problems
+		require.GreaterOrEqual(t, result.IssueCount, 1, "IssueCount should be >= 1 when HasProblems is true")
+	} else {
+		// When there are no sync problems, Problems slice should be empty
+		require.Empty(t, result.Problems, "Problems slice should be empty when HasProblems is false")
+	}
+
+	// For a healthy sync (status "ok"), HasProblems should be false
+	if result.SyncStatus == "ok" {
+		require.False(t, result.HasProblems, "HasProblems should be false when sync status is 'ok'")
+	}
+}

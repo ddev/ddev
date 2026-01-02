@@ -145,3 +145,64 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	track()
 	return nil
 }
+
+// VolumeSize holds information about a Docker volume's size
+type VolumeSize struct {
+	Name      string
+	SizeBytes int64
+	SizeHuman string
+}
+
+// ParseDockerSystemDf retrieves volume sizes using the Docker API
+// Returns map of volume names to their sizes
+func ParseDockerSystemDf() (map[string]VolumeSize, error) {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Docker client: %v", err)
+	}
+
+	// Use Docker API to get disk usage with verbose volume information
+	diskUsage, err := apiClient.DiskUsage(ctx, client.DiskUsageOptions{
+		Volumes: true,
+		Verbose: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get disk usage from Docker API: %v", err)
+	}
+
+	volumeSizes := make(map[string]VolumeSize)
+
+	// Extract volume sizes from the disk usage result
+	for _, vol := range diskUsage.Volumes.Items {
+		var sizeBytes int64
+		// UsageData is only available for local volumes
+		if vol.UsageData != nil && vol.UsageData.Size >= 0 {
+			sizeBytes = vol.UsageData.Size
+		}
+
+		sizeHuman := util.FormatBytes(sizeBytes)
+
+		volumeSizes[vol.Name] = VolumeSize{
+			Name:      vol.Name,
+			SizeBytes: sizeBytes,
+			SizeHuman: sizeHuman,
+		}
+	}
+
+	return volumeSizes, nil
+}
+
+// GetVolumeSize returns the size of a specific Docker volume
+func GetVolumeSize(volumeName string) (int64, string, error) {
+	volumeSizes, err := ParseDockerSystemDf()
+	if err != nil {
+		return 0, "", err
+	}
+
+	if volSize, exists := volumeSizes[volumeName]; exists {
+		return volSize.SizeBytes, volSize.SizeHuman, nil
+	}
+
+	// Volume not found in df output, might not exist or have no size
+	return 0, "0B", nil
+}

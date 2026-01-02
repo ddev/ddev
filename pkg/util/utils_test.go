@@ -387,3 +387,32 @@ func TestFindBashPath(t *testing.T) {
 	// Note: We don't fail if bashPath is empty because bash might not be installed
 	// in the test environment
 }
+
+// TestFormatBytes tests the byte formatting function
+func TestFormatBytes(t *testing.T) {
+	tests := []struct {
+		name     string
+		bytes    int64
+		expected string
+	}{
+		{"Zero bytes", 0, "0B"},
+		{"Small bytes", 512, "512B"},
+		{"Exactly 1KB", 1024, "1.0KB"},
+		{"Multiple KB", 2560, "2.5KB"},
+		{"Exactly 1MB", 1024 * 1024, "1.0MB"},
+		{"Fractional MB", 1024*1024 + 512*1024, "1.5MB"},
+		{"Large MB", 157286400, "150.0MB"},
+		{"Exactly 1GB", 1024 * 1024 * 1024, "1.0GB"},
+		{"Fractional GB", int64(1024*1024*1024) + int64(512*1024*1024), "1.5GB"},
+		{"Multiple GB", int64(5) * 1024 * 1024 * 1024, "5.0GB"},
+		{"Exactly 1TB", int64(1024) * 1024 * 1024 * 1024, "1.0TB"},
+		{"Large volume", 982700000, "937.2MB"}, // Approximate d11 volume size
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := util.FormatBytes(tt.bytes)
+			require.Equal(t, tt.expected, result, "FormatBytes(%d) should return %s, got %s", tt.bytes, tt.expected, result)
+		})
+	}
+}

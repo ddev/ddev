@@ -185,6 +185,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 	if err != nil {
 		return fmt.Errorf("unable to mutagenSyncSessionExists(): %v", err)
 	}
+	isResumingExistingSession := sessionExists
 	if sessionExists {
 		util.Verbose("Resume Mutagen sync if session already exists")
 		err := ResumeMutagenSync(app)
@@ -281,6 +282,16 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 	}
 
 	outputComing := false
+	secondsWaiting := 0
+	hintShown := false
+
+	// Different thresholds based on whether we're resuming or creating new
+	// Resuming should be fast (30s), creating new can take longer (180s)
+	warningThreshold := 180
+	if isResumingExistingSession {
+		warningThreshold = 30
+	}
+
 	for {
 		select {
 		// Complete when the MutagenSyncFlush() completes
@@ -293,6 +304,22 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		case <-time.After(1 * time.Second):
 			if !outputComing {
 				_, _ = fmt.Fprintf(os.Stderr, ".")
+			}
+			secondsWaiting++
+
+			// If sync is taking a long time, suggest running diagnose
+			if !hintShown && secondsWaiting >= warningThreshold {
+				_, _ = fmt.Fprintf(os.Stderr, "\n")
+				if isResumingExistingSession {
+					util.Warning("Mutagen sync is taking longer than expected (%d seconds).", secondsWaiting)
+					util.Warning("Resuming an existing session should be fast - there may be sync problems.")
+				} else {
+					util.Warning("Mutagen sync is taking longer than expected (%d seconds).", secondsWaiting)
+					util.Warning("This may be normal for a large project on first sync.")
+				}
+				util.Warning("After startup completes, run 'ddev utility mutagen-diagnose' to check for issues.")
+				_, _ = fmt.Fprintf(os.Stderr, "Continuing to wait for sync")
+				hintShown = true
 			}
 		}
 	}
@@ -864,4 +891,525 @@ func (app *DdevApp) checkMutagenUploadDirs() {
 		util.Warning("For faster startup and less disk usage, set upload_dirs to where your user-generated files are stored.")
 		util.Warning("If this is intended you can disable this warning with `ddev config --disable-upload-dirs-warning`.")
 	}
+}
+
+// MutagenVolumeInfo holds information about a Mutagen Docker volume
+type MutagenVolumeInfo struct {
+	Name      string
+	SizeBytes int64
+	SizeHuman string
+	Project   string // extracted from <project>_project_mutagen
+}
+
+// GetMutagenVolumeSize returns the size of a Mutagen volume for the given app
+func GetMutagenVolumeSize(app *DdevApp) (int64, string, error) {
+	volumeName := GetMutagenVolumeName(app)
+	return dockerutil.GetVolumeSize(volumeName)
+}
+
+// GetAllMutagenVolumes lists all Mutagen volumes on the system with their sizes
+func GetAllMutagenVolumes() ([]MutagenVolumeInfo, int64, error) {
+	volumeSizes, err := dockerutil.ParseDockerSystemDf()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var mutagenVolumes []MutagenVolumeInfo
+	var totalSize int64
+
+	// Look for volumes matching pattern *_project_mutagen
+	for volumeName, volSize := range volumeSizes {
+		if strings.HasSuffix(volumeName, "_project_mutagen") {
+			// Extract project name from volume name
+			projectName := strings.TrimSuffix(volumeName, "_project_mutagen")
+
+			mutagenVolumes = append(mutagenVolumes, MutagenVolumeInfo{
+				Name:      volumeName,
+				SizeBytes: volSize.SizeBytes,
+				SizeHuman: volSize.SizeHuman,
+				Project:   projectName,
+			})
+
+			totalSize += volSize.SizeBytes
+		}
+	}
+
+	return mutagenVolumes, totalSize, nil
+}
+
+// CheckMutagenIgnorePatterns analyzes mutagen.yml for potential performance issues
+// Returns lists of issues and warnings about ignore patterns
+// IgnorePatternWarning holds information about a directory that should be excluded
+type IgnorePatternWarning struct {
+	Directory      string // Name of the directory (e.g., "node_modules")
+	Reason         string // Why it should be excluded
+	UploadDirsPath string // Path relative to docroot for upload_dirs
+	AbsolutePath   string // Full filesystem path
+}
+
+func CheckMutagenIgnorePatterns(app *DdevApp) (issues []string, warnings []string, patternWarnings []IgnorePatternWarning) {
+	mutagenYmlPath := GetMutagenConfigFilePath(app)
+
+	// Check if file exists
+	if !fileutil.FileExists(mutagenYmlPath) {
+		issues = append(issues, "mutagen.yml file not found")
+		return issues, warnings, patternWarnings
+	}
+
+	// Read the file
+	content, err := fileutil.ReadFileIntoString(mutagenYmlPath)
+	if err != nil {
+		issues = append(issues, fmt.Sprintf("failed to read mutagen.yml: %v", err))
+		return issues, warnings, patternWarnings
+	}
+
+	// Find all node_modules directories in the project
+	nodeModulesDirs := findNodeModulesDirectories(app.AppRoot)
+	docrootPath := filepath.Join(app.AppRoot, app.Docroot)
+
+	if len(nodeModulesDirs) > 0 {
+		// Check if any node_modules pattern is in ignore patterns
+		if !strings.Contains(content, "node_modules") {
+			for _, dirPath := range nodeModulesDirs {
+				// Calculate path relative to docroot for upload_dirs
+				relPath, err := filepath.Rel(docrootPath, dirPath)
+				if err != nil {
+					// Fallback to just the directory name
+					relPath = "node_modules"
+				}
+
+				patternWarnings = append(patternWarnings, IgnorePatternWarning{
+					Directory:      "node_modules",
+					Reason:         "Node.js dependencies can be very large and slow to sync",
+					UploadDirsPath: relPath,
+					AbsolutePath:   dirPath,
+				})
+			}
+
+			if len(nodeModulesDirs) == 1 {
+				warnings = append(warnings, "node_modules directory exists but is not excluded from sync (Node.js dependencies can be very large and slow to sync)")
+			} else {
+				warnings = append(warnings, fmt.Sprintf("%d node_modules directories exist but are not excluded from sync (Node.js dependencies can be very large and slow to sync)", len(nodeModulesDirs)))
+			}
+		}
+	}
+
+	// Check for .tarballs directory (single location check)
+	tarballsPath := filepath.Join(app.AppRoot, ".tarballs")
+	if !strings.Contains(content, ".tarballs") && fileutil.FileExists(tarballsPath) {
+		relPath, err := filepath.Rel(docrootPath, tarballsPath)
+		if err != nil {
+			relPath = ".tarballs"
+		}
+
+		warnings = append(warnings, ".tarballs directory exists but is not excluded from sync (Archive files should be excluded from sync)")
+		patternWarnings = append(patternWarnings, IgnorePatternWarning{
+			Directory:      ".tarballs",
+			Reason:         "Archive files should be excluded from sync",
+			UploadDirsPath: relPath,
+			AbsolutePath:   tarballsPath,
+		})
+	}
+
+	return issues, warnings, patternWarnings
+}
+
+// findNodeModulesDirectories finds all node_modules directories in the project
+// Returns a list of absolute paths to node_modules directories
+func findNodeModulesDirectories(appRoot string) []string {
+	var nodeModulesDirs []string
+
+	err := filepath.Walk(appRoot, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Skip files we can't access
+		}
+
+		// Skip hidden directories except node_modules itself
+		if info.IsDir() && strings.HasPrefix(info.Name(), ".") && info.Name() != "." {
+			return filepath.SkipDir
+		}
+
+		// If we found a node_modules directory
+		if info.IsDir() && info.Name() == "node_modules" {
+			nodeModulesDirs = append(nodeModulesDirs, path)
+			// Don't recurse into node_modules directories
+			return filepath.SkipDir
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		util.Debug("Error walking project directory for node_modules: %v", err)
+	}
+
+	return nodeModulesDirs
+}
+
+// CheckLargeFilesInSync scans the project directory for large files that might be synced
+// Returns warnings about files larger than thresholds that could impact performance
+func CheckLargeFilesInSync(app *DdevApp) (warnings []string) {
+	const largeSizeThreshold = 50 * 1024 * 1024 // 50MB
+	const hugeSizeThreshold = 100 * 1024 * 1024 // 100MB
+
+	mutagenYmlPath := GetMutagenConfigFilePath(app)
+
+	// Read mutagen.yml to check exclude patterns
+	mutagenContent := ""
+	if fileutil.FileExists(mutagenYmlPath) {
+		content, err := fileutil.ReadFileIntoString(mutagenYmlPath)
+		if err == nil {
+			mutagenContent = content
+		}
+	}
+
+	// Get upload_dirs - files in these directories are not synced to the container
+	// upload_dirs are relative to the docroot, not the project root
+	uploadDirs := app.GetUploadDirs()
+	uploadDirPaths := make(map[string]bool)
+	for _, dir := range uploadDirs {
+		// Build full path: AppRoot/Docroot/upload_dir
+		fullPath := filepath.Join(app.AppRoot, app.Docroot, dir)
+		uploadDirPaths[fullPath] = true
+	}
+
+	// Walk the project directory looking for large files
+	largeFiles := []struct {
+		path        string
+		size        int64
+		inUploadDir bool
+	}{}
+
+	err := filepath.Walk(app.AppRoot, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Skip files we can't access
+		}
+
+		// Skip directories
+		if info.IsDir() {
+			// Skip .git, .ddev, and other hidden directories
+			if strings.HasPrefix(info.Name(), ".") && info.Name() != "." {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// Check if file is large
+		if info.Size() >= largeSizeThreshold {
+			// Check if file is in upload_dirs
+			inUploadDir := false
+			for uploadDirPath := range uploadDirPaths {
+				if strings.HasPrefix(path, uploadDirPath) {
+					inUploadDir = true
+					break
+				}
+			}
+
+			largeFiles = append(largeFiles, struct {
+				path        string
+				size        int64
+				inUploadDir bool
+			}{path, info.Size(), inUploadDir})
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		util.Debug("Error walking project directory: %v", err)
+	}
+
+	// Report large files that are being synced (not in upload_dirs)
+	for _, file := range largeFiles {
+		if !file.inUploadDir {
+			relPath, err := filepath.Rel(app.AppRoot, file.path)
+			if err != nil {
+				relPath = file.path
+			}
+
+			// Check if file appears to be excluded by mutagen.yml
+			// This is a basic heuristic check looking for exact patterns in the ignore paths section
+			// It's not a complete Mutagen pattern matcher, but catches common cases
+			isExcluded := false
+			if mutagenContent != "" {
+				// Convert relative path to absolute pattern format used in mutagen.yml
+				// e.g., "web/hugedb.sql.gz" -> "/web/hugedb.sql.gz"
+				pathPattern := "/" + filepath.ToSlash(relPath)
+
+				// Check if the exact path pattern appears as an ignore path
+				// Look for patterns like: - "/web/hugedb.sql.gz"
+				if strings.Contains(mutagenContent, fmt.Sprintf(`- "%s"`, pathPattern)) ||
+					strings.Contains(mutagenContent, fmt.Sprintf(`- '%s'`, pathPattern)) ||
+					strings.Contains(mutagenContent, fmt.Sprintf("- %s\n", pathPattern)) {
+					isExcluded = true
+				}
+			}
+
+			// Format file size
+			sizeStr := util.FormatBytes(file.size)
+
+			if !isExcluded {
+				severity := "Large"
+				if file.size >= hugeSizeThreshold {
+					severity = "Very large"
+				}
+				warnings = append(warnings, fmt.Sprintf("%s file being synced: %s (%s) - consider excluding from sync. See https://docs.ddev.com/en/stable/users/install/performance/#mutagen-troubleshooting", severity, relPath, sizeStr))
+			}
+		}
+	}
+
+	return warnings
+}
+
+// MutagenDiagnosticResult holds comprehensive diagnostic information about Mutagen configuration
+type MutagenDiagnosticResult struct {
+	// Sync Status
+	SyncStatus       string
+	SyncStatusDetail string
+	SessionExists    bool
+	HasProblems      bool
+	Problems         []string
+
+	// Volume Info
+	VolumeSize      int64
+	VolumeSizeHuman string
+	VolumeWarning   bool // true if >5GB
+	VolumeCritical  bool // true if >10GB
+
+	// Upload Dirs
+	UploadDirsConfigured bool
+	UploadDirs           []string
+	UploadDirsSuggestion string
+
+	// Configuration
+	MutagenYmlCustomized bool
+	ConfigHashMatch      bool
+	LabelsMatch          bool
+
+	// Performance
+	IgnoreIssues          []string
+	IgnoreWarnings        []string
+	IgnorePatternWarnings []IgnorePatternWarning
+
+	// Overall
+	IssueCount   int
+	WarningCount int
+}
+
+// formatMutagenProblems parses and formats Mutagen problems for human readability
+// Mutagen problems are typically a slice of maps with "path" and "error" keys
+func formatMutagenProblems(problems interface{}, problemType string) []string {
+	var formatted []string
+
+	// Translate technical terms to user-friendly descriptions
+	contextMap := map[string]string{
+		"Alpha":            "Host filesystem",
+		"Beta":             "Container filesystem",
+		"Alpha transition": "Host filesystem transition",
+		"Beta transition":  "Container filesystem transition",
+		"Sync conflict":    "Sync conflict",
+	}
+
+	userFriendlyType := contextMap[problemType]
+	if userFriendlyType == "" {
+		userFriendlyType = problemType
+	}
+
+	// Problems can be a slice of maps
+	if problemSlice, ok := problems.([]interface{}); ok {
+		for _, problem := range problemSlice {
+			if problemMap, ok := problem.(map[string]interface{}); ok {
+				problemPath := ""
+				errorMsg := ""
+
+				if p, ok := problemMap["path"].(string); ok {
+					problemPath = p
+				}
+				if e, ok := problemMap["error"].(string); ok {
+					errorMsg = e
+				}
+
+				// Format based on what information we have
+				if problemPath != "" && errorMsg != "" {
+					msg := fmt.Sprintf("%s: %s (path: %s)", userFriendlyType, errorMsg, problemPath)
+
+					// Add helpful hints for common errors - different for host vs container
+					isContainerProblem := (problemType == "Beta" || problemType == "Beta transition")
+					if strings.Contains(errorMsg, "permission denied") {
+						if isContainerProblem {
+							msg += "\n      → Fix: Run 'ddev mutagen reset' to recreate the container filesystem from host"
+							msg += "\n      → Or: Use 'ddev exec chmod' to fix permissions inside the container"
+						} else {
+							msg += "\n      → Fix: Check file/directory permissions with 'ls -la " + problemPath + "' and adjust with 'chmod'"
+						}
+					} else if strings.Contains(errorMsg, "no such file") {
+						if isContainerProblem {
+							msg += "\n      → Fix: Run 'ddev mutagen reset' to resync from host filesystem"
+						} else {
+							msg += "\n      → Fix: The file or directory was deleted or moved on the host"
+						}
+					}
+
+					formatted = append(formatted, msg)
+				} else if problemPath != "" {
+					formatted = append(formatted, fmt.Sprintf("%s problem with path: %s", userFriendlyType, problemPath))
+				} else if errorMsg != "" {
+					formatted = append(formatted, fmt.Sprintf("%s: %s", userFriendlyType, errorMsg))
+				} else {
+					// Fallback if structure is unexpected
+					formatted = append(formatted, fmt.Sprintf("%s problem: %v", userFriendlyType, problem))
+				}
+			} else {
+				// Not a map, just use string representation
+				formatted = append(formatted, fmt.Sprintf("%s problem: %v", userFriendlyType, problem))
+			}
+		}
+	} else {
+		// Not a slice, fallback to string representation
+		formatted = append(formatted, fmt.Sprintf("%s problems: %v", userFriendlyType, problems))
+	}
+
+	return formatted
+}
+
+// DiagnoseMutagenConfiguration performs comprehensive diagnostic checks on Mutagen configuration
+func DiagnoseMutagenConfiguration(app *DdevApp) MutagenDiagnosticResult {
+	result := MutagenDiagnosticResult{}
+
+	// Check sync status
+	status, shortResult, mapResult, err := app.MutagenStatus()
+	result.SyncStatus = status
+	result.SyncStatusDetail = shortResult
+	result.SessionExists = (status != "nosession" && err == nil)
+
+	if status == "problems" || status == "failing" {
+		result.HasProblems = true
+
+		// Extract problem details from session map
+		if mapResult != nil {
+			if alpha, ok := mapResult["alpha"].(map[string]interface{}); ok {
+				if scanProblems, ok := alpha["scanProblems"]; ok {
+					formatted := formatMutagenProblems(scanProblems, "Alpha")
+					result.Problems = append(result.Problems, formatted...)
+				}
+				if transProblems, ok := alpha["transitionProblems"]; ok {
+					formatted := formatMutagenProblems(transProblems, "Alpha transition")
+					result.Problems = append(result.Problems, formatted...)
+				}
+			}
+			if beta, ok := mapResult["beta"].(map[string]interface{}); ok {
+				if scanProblems, ok := beta["scanProblems"]; ok {
+					formatted := formatMutagenProblems(scanProblems, "Beta")
+					result.Problems = append(result.Problems, formatted...)
+				}
+				if transProblems, ok := beta["transitionProblems"]; ok {
+					formatted := formatMutagenProblems(transProblems, "Beta transition")
+					result.Problems = append(result.Problems, formatted...)
+				}
+			}
+			if conflicts, ok := mapResult["conflicts"]; ok {
+				formatted := formatMutagenProblems(conflicts, "Sync conflict")
+				result.Problems = append(result.Problems, formatted...)
+			}
+		}
+
+		// Count sync problems as issues so they appear in the summary
+		// If we have problems but couldn't extract details, count at least 1 issue
+		if len(result.Problems) > 0 {
+			result.IssueCount += len(result.Problems)
+		} else {
+			result.IssueCount++
+		}
+	}
+
+	// Check volume size
+	sizeBytes, sizeHuman, err := GetMutagenVolumeSize(app)
+	if err == nil {
+		result.VolumeSize = sizeBytes
+		result.VolumeSizeHuman = sizeHuman
+
+		// Thresholds: 5GB warning, 10GB critical
+		fiveGB := int64(5 * 1024 * 1024 * 1024)
+		tenGB := int64(10 * 1024 * 1024 * 1024)
+
+		if sizeBytes > tenGB {
+			result.VolumeCritical = true
+			result.IssueCount++
+		} else if sizeBytes > fiveGB {
+			result.VolumeWarning = true
+			result.WarningCount++
+		}
+	}
+
+	// Check upload_dirs configuration
+	uploadDirs := app.GetUploadDirs()
+	result.UploadDirs = uploadDirs
+	result.UploadDirsConfigured = len(uploadDirs) > 0
+
+	if !result.UploadDirsConfigured {
+		// Get CMS-specific suggestions
+		result.UploadDirsSuggestion = getCMSDefaultUploadDirsSuggestion(app.Type)
+		if result.UploadDirsSuggestion != "" {
+			result.IssueCount++
+		}
+	}
+
+	// Check if mutagen.yml is customized
+	mutagenYmlPath := GetMutagenConfigFilePath(app)
+	if fileutil.FileExists(mutagenYmlPath) {
+		sigExists, err := fileutil.FgrepStringInFile(mutagenYmlPath, nodeps.DdevFileSignature)
+		if err == nil {
+			result.MutagenYmlCustomized = !sigExists
+		}
+	}
+
+	// Check config hash and label compatibility
+	ok, _, info := CheckMutagenVolumeSyncCompatibility(app)
+	result.LabelsMatch = ok
+	if !ok {
+		result.Problems = append(result.Problems, fmt.Sprintf("Volume/session compatibility issue: %s", info))
+		result.IssueCount++
+	}
+
+	// Check ignore patterns
+	issues, warnings, patternWarnings := CheckMutagenIgnorePatterns(app)
+	result.IgnoreIssues = issues
+	result.IgnoreWarnings = warnings
+	result.IgnorePatternWarnings = patternWarnings
+	result.IssueCount += len(issues)
+	result.WarningCount += len(warnings)
+
+	// Check for large files being synced
+	largeFileWarnings := CheckLargeFilesInSync(app)
+	result.IgnoreWarnings = append(result.IgnoreWarnings, largeFileWarnings...)
+	result.WarningCount += len(largeFileWarnings)
+
+	return result
+}
+
+// getCMSDefaultUploadDirsSuggestion returns a suggestion for upload_dirs based on project type
+func getCMSDefaultUploadDirsSuggestion(projectType string) string {
+	suggestions := map[string]string{
+		"drupal6":      "sites/default/files",
+		"drupal7":      "sites/default/files",
+		"drupal":       "sites/default/files", // Drupal 8+
+		"drupal8":      "sites/default/files",
+		"drupal9":      "sites/default/files",
+		"drupal10":     "sites/default/files",
+		"drupal11":     "sites/default/files",
+		"backdrop":     "files",
+		"wordpress":    "wp-content/uploads",
+		"typo3":        "fileadmin",
+		"magento":      "media",
+		"magento2":     "media",
+		"shopware6":    "media",
+		"silverstripe": "assets",
+		"craftcms":     "files",
+	}
+
+	if suggestion, ok := suggestions[projectType]; ok {
+		return suggestion
+	}
+
+	return ""
 }

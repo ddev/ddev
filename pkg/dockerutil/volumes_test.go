@@ -123,3 +123,87 @@ subdir1.txt
 	_, _, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "", []string{"ls", "/mnt/" + t.Name() + "/subdir1/only-the-new-stuff.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil, nil, nil)
 	require.NoError(t, err)
 }
+
+// TestGetVolumeSize tests getting the size of a Docker volume using the Docker API
+func TestGetVolumeSize(t *testing.T) {
+	if dockerutil.IsPodman() {
+		t.Skip("Podman does not support docker system df volume sizing")
+	}
+	assert := asrt.New(t)
+
+	testVolume := "test_volume_size_check"
+	_ = dockerutil.RemoveVolume(testVolume)
+
+	// Create a volume
+	_, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = dockerutil.RemoveVolume(testVolume)
+		assert.NoError(err)
+	})
+
+	// Write some data to the volume to ensure it has a measurable size
+	// Create a 1MB file in the volume
+	_, _, err = dockerutil.RunSimpleContainer(
+		versionconstants.UtilitiesImage,
+		"",
+		[]string{"sh", "-c", "dd if=/dev/zero of=/mnt/testvolume/testfile bs=1M count=1"},
+		nil,
+		nil,
+		[]string{testVolume + ":/mnt/testvolume"},
+		"0",
+		true,
+		false,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+
+	// Get the volume size
+	sizeBytes, sizeHuman, err := dockerutil.GetVolumeSize(testVolume)
+	require.NoError(t, err)
+	// Volume should now have at least 1MB of data
+	require.Greater(t, sizeBytes, int64(1024*1024-1), "Volume should contain at least 1MB of data")
+	require.NotEmpty(t, sizeHuman)
+	require.NotEqual(t, "0B", sizeHuman, "Volume should not be empty")
+
+	// Test non-existent volume
+	sizeBytes, sizeHuman, err = dockerutil.GetVolumeSize("nonexistent_volume_xyz")
+	require.NoError(t, err) // Should not error, just return 0
+	require.Equal(t, int64(0), sizeBytes)
+	require.Equal(t, "0B", sizeHuman)
+}
+
+// TestParseDockerSystemDf tests parsing Docker system df output via API
+func TestParseDockerSystemDf(t *testing.T) {
+	if dockerutil.IsPodman() {
+		t.Skip("Podman does not support docker system df")
+	}
+	assert := asrt.New(t)
+
+	testVolume := "test_parse_df_volume"
+	_ = dockerutil.RemoveVolume(testVolume)
+
+	// Create a test volume
+	_, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = dockerutil.RemoveVolume(testVolume)
+		assert.NoError(err)
+	})
+
+	// Parse Docker system df
+	volumeSizes, err := dockerutil.ParseDockerSystemDf()
+	require.NoError(t, err)
+	require.NotNil(t, volumeSizes)
+
+	// Our test volume should be in the results
+	volSize, exists := volumeSizes[testVolume]
+	require.True(t, exists, "Test volume should exist in results")
+	require.Equal(t, testVolume, volSize.Name)
+	require.GreaterOrEqual(t, volSize.SizeBytes, int64(0))
+	require.NotEmpty(t, volSize.SizeHuman)
+}
