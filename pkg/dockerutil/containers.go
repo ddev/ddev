@@ -297,11 +297,11 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 		case <-tickChan.C:
 			c, err := FindContainerByLabels(labels)
 			cName := ""
-			if len(c.Names) > 0 {
-				cName = strings.TrimPrefix(c.Names[0], "/")
-			}
 			if err != nil || c == nil {
 				return "", fmt.Errorf("failed to query container %s labels=%v: %v", cName, labels, err)
+			}
+			if len(c.Names) > 0 {
+				cName = strings.TrimPrefix(c.Names[0], "/")
 			}
 			health, logOutput := GetContainerHealth(c)
 
