@@ -1935,8 +1935,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		dependers = append(dependers, "db")
 	}
-	output.UserOut.Printf("Waiting for containers to become ready: %v", dependers)
+	wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", dependers))
 	waitErr := app.Wait(dependers)
+	wait.Complete(waitErr)
 
 	if !slices.Contains(app.OmitContainers, "db") && app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) && slices.Contains([]string{nodeps.PHP73, nodeps.PHP72, nodeps.PHP71, nodeps.PHP70, nodeps.PHP56}, app.PHPVersion) {
 		alterString := `ALTER USER 'db'@'%' IDENTIFIED WITH mysql_native_password BY 'db';
@@ -2020,11 +2021,17 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 	containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")}, "ddev-"+app.Name+"-")
 	if len(containerNames) > 0 {
-		output.UserOut.Printf("Waiting %ds for additional project containers %v to become ready...", app.GetMaxContainerWaitTime(), containerNames)
-	}
-	err = app.WaitByLabels(waitLabels)
-	if err != nil {
-		return err
+		wait := output.StartWait(fmt.Sprintf("Waiting for additional project containers %v to become ready", containerNames))
+		err = app.WaitByLabels(waitLabels)
+		wait.Complete(err)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = app.WaitByLabels(waitLabels)
+		if err != nil {
+			return err
+		}
 	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
@@ -2117,8 +2124,9 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 	}
 
 	// Using `profiles` here assumes that profile and container name are the same
-	output.UserOut.Printf("Waiting for containers to become ready: %v", profiles)
+	wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", profiles))
 	err = app.Wait(profiles)
+	wait.Complete(err)
 	if err != nil {
 		return err
 	}
@@ -2919,7 +2927,7 @@ func (app *DdevApp) WaitForServices() error {
 	} else {
 		util.Failed("unable to get required startup services to wait for")
 	}
-	output.UserOut.Printf("Waiting for these services to become ready: %v", requiredContainers)
+	wait := output.StartWait(fmt.Sprintf("Waiting for these services to become ready: %v", requiredContainers))
 
 	labels := map[string]string{
 		"com.ddev.site-name":        app.GetName(),
@@ -2927,8 +2935,9 @@ func (app *DdevApp) WaitForServices() error {
 	}
 	waitTime := app.GetMaxContainerWaitTime()
 	_, err := dockerutil.ContainerWait(waitTime, labels)
+	elapsed := wait.Complete(err)
 	if err != nil {
-		return fmt.Errorf("timed out waiting for containers (%v) to start: err=%v", requiredContainers, err)
+		return fmt.Errorf("timed out waiting for containers (%v) to start after %.1fs: err=%v", requiredContainers, elapsed.Seconds(), err)
 	}
 	return nil
 }

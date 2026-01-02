@@ -182,12 +182,13 @@ func StartDdevRouter() error {
 	if globalconfig.DdevGlobalConfig.UseLetsEncrypt {
 		routerWaitTimeout = 180
 	}
-	util.Debug(`Waiting for ddev-router to become ready, timeout=%v`, routerWaitTimeout)
+	wait := output.StartWait(fmt.Sprintf("Waiting for %s to become ready", nodeps.RouterContainer))
+	util.Debug("Router wait: checking for container with labels %v, polling every 500ms for healthy status", label)
 	logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
+	elapsed := wait.Complete(err)
 	if err != nil {
-		return fmt.Errorf("ddev-router failed to become ready; log=%s, err=%v", logOutput, err)
+		return fmt.Errorf("ddev-router failed to become ready after %.1fs; log=%s, err=%v", elapsed.Seconds(), logOutput, err)
 	}
-	util.Debug("ddev-router is ready")
 
 	util.Debug("Getting traefik error output")
 	traefikErr := GetRouterConfigErrors()
@@ -329,8 +330,7 @@ func RenderRouterStatus() (string, string) {
 			status = "OK"
 			// If there are router configuration errors, show them
 			if configErrors := GetRouterConfigErrors(); configErrors != "" {
-				lines := strings.Split(configErrors, "\n")
-				errorInfo = fmt.Sprintf("Detected %d configuration error(s):\n%s", len(lines), configErrors)
+				errorInfo = fmt.Sprintf("Detected configuration error(s):\n%s", configErrors)
 			}
 			fallthrough
 		default:

@@ -275,6 +275,9 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 	defer timeoutChan.Stop()
 
 	status := ""
+	lastStatus := ""
+	startTime := time.Now()
+	lastLogTime := startTime
 
 	for {
 		select {
@@ -293,10 +296,25 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 
 		case <-tickChan.C:
 			c, err := FindContainerByLabels(labels)
+			cName := ""
 			if err != nil || c == nil {
-				return "", fmt.Errorf("failed to query container labels=%v: %v", labels, err)
+				return "", fmt.Errorf("failed to query container %s labels=%v: %v", cName, labels, err)
+			}
+			if len(c.Names) > 0 {
+				cName = strings.TrimPrefix(c.Names[0], "/")
 			}
 			health, logOutput := GetContainerHealth(c)
+
+			// Log status changes and periodic updates under DDEV_DEBUG
+			elapsed := time.Since(startTime).Round(time.Millisecond)
+			if health != lastStatus {
+				util.Debug("ContainerWait: %s status change: '%s' after %v", cName, health, elapsed)
+				lastStatus = health
+				lastLogTime = time.Now()
+			} else if time.Since(lastLogTime) >= 5*time.Second {
+				util.Debug("ContainerWait: still waiting for %s, status='%s' after %v", cName, health, elapsed)
+				lastLogTime = time.Now()
+			}
 
 			switch health {
 			case "healthy":
@@ -325,6 +343,9 @@ func ContainersWait(waittime int, labels map[string]string) error {
 	defer tickChan.Stop()
 
 	status := ""
+	lastStatus := ""
+	startTime := time.Now()
+	lastLogTime := startTime
 
 	for {
 		select {
@@ -348,11 +369,14 @@ func ContainersWait(waittime int, labels map[string]string) error {
 				return fmt.Errorf("failed to query container labels=%v: %v", labels, err)
 			}
 			allHealthy := true
+			healthyCount := 0
+			totalCount := len(containers)
 			for _, c := range containers {
 				health, logOutput := GetContainerHealth(&c)
 
 				switch health {
 				case "healthy":
+					healthyCount++
 					continue
 				case "unhealthy":
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&c, 0)
@@ -364,6 +388,19 @@ func ContainersWait(waittime int, labels map[string]string) error {
 					allHealthy = false
 				}
 			}
+
+			// Log status changes and periodic updates under DDEV_DEBUG
+			currentStatus := fmt.Sprintf("%d/%d healthy", healthyCount, totalCount)
+			elapsed := time.Since(startTime).Round(time.Millisecond)
+			if currentStatus != lastStatus {
+				util.Debug("ContainersWait: status changed to '%s' after %v", currentStatus, elapsed)
+				lastStatus = currentStatus
+				lastLogTime = time.Now()
+			} else if time.Since(lastLogTime) >= 5*time.Second {
+				util.Debug("ContainersWait: still waiting, status='%s' after %v", currentStatus, elapsed)
+				lastLogTime = time.Now()
+			}
+
 			if allHealthy {
 				return nil
 			}
