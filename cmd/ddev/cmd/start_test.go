@@ -318,3 +318,128 @@ func TestCmdStartShowsSponsorshipData(t *testing.T) {
 
 	t.Logf("Sponsorship configuration verified in global config")
 }
+
+// TestCmdStartRestartNoCache tests that --no-cache flag bypasses Docker build cache
+func TestCmdStartRestartNoCache(t *testing.T) {
+	// Create a temporary directory and switch to it
+	origDir, _ := os.Getwd()
+	tmpdir := testcommon.CreateTmpDir(t.Name())
+
+	err := os.Chdir(tmpdir)
+	require.NoError(t, err)
+	_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
+	require.NoError(t, err)
+
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(tmpdir)
+	})
+
+	// Add Dockerfiles that write random numbers to files
+	err = fileutil.AppendStringToFile(app.GetConfigPath("web-build/Dockerfile"), `
+RUN shuf -i 0-99999 -n1 > /random-web.txt
+`)
+	require.NoError(t, err)
+
+	err = fileutil.AppendStringToFile(app.GetConfigPath("db-build/Dockerfile"), `
+RUN shuf -i 0-99999 -n1 > /random-db.txt
+`)
+	require.NoError(t, err)
+
+	// Populate examples (normally done in root's init())
+	err = ddevapp.PopulateExamplesCommandsHomeadditions("")
+	require.NoError(t, err)
+
+	// Initial start
+	err = app.Start()
+	require.NoError(t, err)
+
+	origRandomWeb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
+	})
+	require.NoError(t, err)
+
+	origRandomDB, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
+	})
+	require.NoError(t, err)
+
+	// Test 1: Regular restart should use cache for both web and db
+	_, err = exec.RunHostCommand(DdevBin, "restart", app.Name)
+	require.NoError(t, err)
+
+	cachedRandomWeb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
+	})
+	require.NoError(t, err)
+	require.Equal(t, origRandomWeb, cachedRandomWeb, "Regular restart should use cache for web")
+
+	cachedRandomDB, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
+	})
+	require.NoError(t, err)
+	require.Equal(t, origRandomDB, cachedRandomDB, "Regular restart should use cache for db")
+
+	// Test 2: restart --no-cache should bypass cache for both web and db
+	_, err = exec.RunHostCommand(DdevBin, "restart", "--no-cache", app.Name)
+	require.NoError(t, err)
+
+	noCacheRandomWeb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
+	})
+	require.NoError(t, err)
+	require.NotEqual(t, origRandomWeb, noCacheRandomWeb, "restart --no-cache should bypass cache for web")
+
+	noCacheRandomDB, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
+	})
+	require.NoError(t, err)
+	require.NotEqual(t, origRandomDB, noCacheRandomDB, "restart --no-cache should bypass cache for db")
+
+	// Test 3: Regular start after stop should use cache for both web and db
+	err = app.Stop(false, false)
+	require.NoError(t, err)
+
+	_, err = exec.RunHostCommand(DdevBin, "start", app.Name)
+	require.NoError(t, err)
+
+	startCachedRandomWeb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
+	})
+	require.NoError(t, err)
+	require.Equal(t, noCacheRandomWeb, startCachedRandomWeb, "Regular start should use cache for web")
+
+	startCachedRandomDB, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
+	})
+	require.NoError(t, err)
+	require.Equal(t, noCacheRandomDB, startCachedRandomDB, "Regular start should use cache for db")
+
+	// Test 4: start --no-cache should bypass cache for both web and db
+	err = app.Stop(false, false)
+	require.NoError(t, err)
+
+	_, err = exec.RunHostCommand(DdevBin, "start", "--no-cache", app.Name)
+	require.NoError(t, err)
+
+	startNoCacheRandomWeb, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
+	})
+	require.NoError(t, err)
+	require.NotEqual(t, noCacheRandomWeb, startNoCacheRandomWeb, "start --no-cache should bypass cache for web")
+
+	startNoCacheRandomDB, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
+	})
+	require.NoError(t, err)
+	require.NotEqual(t, noCacheRandomDB, startNoCacheRandomDB, "start --no-cache should bypass cache for db")
+}
