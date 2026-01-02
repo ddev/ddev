@@ -61,7 +61,7 @@ func runMutagenDiagnose(showAll bool) int {
 			if !showAll {
 				output.UserOut.Println()
 				util.Warning("Not in a DDEV project directory.")
-				util.Warning("Use --all flag to analyze all Mutagen volumes system-wide.")
+				util.Warning("Used --all flag to analyze all Mutagen volumes system-wide.")
 			}
 			if hasIssues {
 				return 1
