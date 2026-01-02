@@ -42,8 +42,10 @@ ddev restart --all`,
 			util.Failed(err.Error())
 		}
 
-		for _, app := range projects {
+		noCache, _ := cmd.Flags().GetBool("no-cache")
 
+		for _, app := range projects {
+			app.NoCache = noCache
 			output.UserOut.Printf("Restarting project %s...", app.GetName())
 			err = app.Restart()
 			if err != nil {
@@ -58,6 +60,7 @@ ddev restart --all`,
 
 func init() {
 	RestartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
+	RestartCmd.Flags().BoolP("no-cache", "", false, "Build Docker images without using cache")
 	RestartCmd.Flags().BoolVarP(&restartAll, "all", "a", false, "Restart all projects")
 	RootCmd.AddCommand(RestartCmd)
 }
