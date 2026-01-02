@@ -318,4 +318,20 @@ func TestMutagenDiagnose(t *testing.T) {
 	// Check that volume was detected
 	volumeName := ddevapp.GetMutagenVolumeName(app)
 	require.True(t, dockerutil.VolumeExists(volumeName), "Mutagen volume should exist")
+
+	// Verify issue counting logic:
+	// When HasProblems is true, IssueCount should include those problems
+	// When HasProblems is false, Problems slice should be empty
+	if result.HasProblems {
+		// If HasProblems is set, IssueCount should reflect at least 1 issue from sync problems
+		require.GreaterOrEqual(t, result.IssueCount, 1, "IssueCount should be >= 1 when HasProblems is true")
+	} else {
+		// When there are no sync problems, Problems slice should be empty
+		require.Empty(t, result.Problems, "Problems slice should be empty when HasProblems is false")
+	}
+
+	// For a healthy sync (status "ok"), HasProblems should be false
+	if result.SyncStatus == "ok" {
+		require.False(t, result.HasProblems, "HasProblems should be false when sync status is 'ok'")
+	}
 }

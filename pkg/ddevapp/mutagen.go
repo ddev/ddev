@@ -1312,6 +1312,14 @@ func DiagnoseMutagenConfiguration(app *DdevApp) MutagenDiagnosticResult {
 				result.Problems = append(result.Problems, formatted...)
 			}
 		}
+
+		// Count sync problems as issues so they appear in the summary
+		// If we have problems but couldn't extract details, count at least 1 issue
+		if len(result.Problems) > 0 {
+			result.IssueCount += len(result.Problems)
+		} else {
+			result.IssueCount++
+		}
 	}
 
 	// Check volume size
