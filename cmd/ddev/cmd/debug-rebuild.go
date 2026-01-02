@@ -115,7 +115,7 @@ var DebugRebuildCmd = &cobra.Command{
 			if err != nil {
 				util.Failed("Failed to execute `%s %v`: %v", composeBinaryPath, prettyCmd(restartArgs), err)
 			}
-			output.UserOut.Printf("Waiting %ds for project container [%v] to become ready...", app.GetMaxContainerWaitTime(), service)
+			output.UserOut.Printf("Waiting for project container [%v] to become ready...", service)
 			err = app.WaitByLabels(labels)
 			if err != nil {
 				util.Failed("Failed to wait for project container [%v] to become ready: %v", service, err)
