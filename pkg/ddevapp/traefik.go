@@ -132,17 +132,15 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return fmt.Errorf("failed to create global Traefik config dir: %v", err)
 	}
 
-	// Assume that the #ddev-generated exists in file unless it doesn't
-	sigExists := true
+	// Assume that the #ddev-generated doesn't exist in files
+	sigExists := false
 	for _, pemFile := range []string{"default_cert.crt", "default_key.key"} {
 		origFile := filepath.Join(sourceCertsPath, pemFile)
-		// We can overwrite the file if it has the #ddev-generated
-		// or if it is an empty file.
-		sigFound, err := fileutil.FgrepStringInFile(origFile, nodeps.DdevFileSignature)
-		s, _ := os.Stat(origFile)
-		if !(sigFound || (s != nil && s.Size() == 0) || err != nil) {
-			// File exists, is not empty, and doesn't have #ddev-generated
-			sigExists = false
+		// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
+		err = fileutil.CheckSignatureOrNoFile(origFile, nodeps.DdevFileSignature)
+		if err == nil {
+			// File has a signature, or doesn't exists, or has no content - overwrite it
+			sigExists = true
 			break
 		}
 	}
@@ -205,15 +203,9 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	}
 
 	defaultConfigPath := filepath.Join(sourceConfigDir, "default_config.yaml")
-	sigExists = true
-	// We can overwrite the file if it has the #ddev-generated
-	// or if it is an empty file.
-	sigFound, err := fileutil.FgrepStringInFile(defaultConfigPath, nodeps.DdevFileSignature)
-	s, _ := os.Stat(defaultConfigPath)
-	if !(sigFound || (s != nil && s.Size() == 0) || err != nil) {
-		// File exists, is not empty, and doesn't have #ddev-generated
-		sigExists = false
-	}
+	// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
+	err = fileutil.CheckSignatureOrNoFile(defaultConfigPath, nodeps.DdevFileSignature)
+	sigExists = (err == nil)
 	if !sigExists {
 		util.Debug("Not creating %s because it exists and is managed by user", defaultConfigPath)
 	} else {
@@ -303,20 +295,16 @@ func configureTraefikForApp(app *DdevApp) error {
 	}
 
 	baseName := filepath.Join(sourceCertsPath, app.Name)
-	// Assume that the #ddev-generated exists in file unless it doesn't
-	sigExists := true
+	// Assume that the #ddev-generated doesn't exist in files
+	sigExists := false
 	for _, pemFile := range []string{app.Name + ".crt", app.Name + ".key"} {
 		origFile := filepath.Join(sourceCertsPath, pemFile)
-		if fileutil.FileExists(origFile) {
-			// Check to see if file has #ddev-generated in it, meaning we can recreate it.
-			sigExists, err = fileutil.FgrepStringInFile(origFile, nodeps.DdevFileSignature)
-			if err != nil {
-				return err
-			}
-			// If either of the files has #ddev-generated, we will respect both
-			if !sigExists {
-				break
-			}
+		// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
+		err = fileutil.CheckSignatureOrNoFile(origFile, nodeps.DdevFileSignature)
+		if err == nil {
+			// File has a signature, or doesn't exists, or has no content - overwrite it
+			sigExists = true
+			break
 		}
 	}
 	// Assuming the certs don't exist, or they have #ddev-generated so can be replaced, create them
@@ -376,16 +364,9 @@ func configureTraefikForApp(app *DdevApp) error {
 	}
 
 	traefikYamlFile := filepath.Join(sourceConfigDir, app.Name+".yaml")
-	sigExists = true
-	fi, err := os.Stat(traefikYamlFile)
-	// Don't use simple fileutil.FileExists() because of the danger of an empty file
-	if err == nil && fi.Size() > 0 {
-		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
-		sigExists, err = fileutil.FgrepStringInFile(traefikYamlFile, nodeps.DdevFileSignature)
-		if err != nil {
-			return err
-		}
-	}
+	// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
+	err = fileutil.CheckSignatureOrNoFile(traefikYamlFile, nodeps.DdevFileSignature)
+	sigExists = (err == nil)
 	if !sigExists {
 		util.Debug("Not creating %s because it exists and is managed by user", traefikYamlFile)
 	} else {
