@@ -330,8 +330,7 @@ func RenderRouterStatus() (string, string) {
 			status = "OK"
 			// If there are router configuration errors, show them
 			if configErrors := GetRouterConfigErrors(); configErrors != "" {
-				lines := strings.Split(configErrors, "\n")
-				errorInfo = fmt.Sprintf("Detected %d configuration error(s):\n%s", len(lines), configErrors)
+				errorInfo = fmt.Sprintf("Detected configuration error(s):\n%s", configErrors)
 			}
 			fallthrough
 		default:
