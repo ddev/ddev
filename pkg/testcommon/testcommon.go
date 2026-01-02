@@ -262,6 +262,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	globalconfig.EnsureGlobalConfig()
 	// Copy some settings from ~/.ddev to $XDG_CONFIG_HOME/ddev
 	globalconfig.DdevGlobalConfig.PerformanceMode = originalGlobalConfig.PerformanceMode
+	globalconfig.DdevGlobalConfig.NoBindMounts = originalGlobalConfig.NoBindMounts
 	globalconfig.DdevGlobalConfig.LastStartedVersion = originalGlobalConfig.LastStartedVersion
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
