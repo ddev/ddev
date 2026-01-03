@@ -3,6 +3,7 @@ package cmd
 import (
 	"net"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -146,58 +148,15 @@ func runXdebugDiagnose() int {
 
 	// Only run connection test if port 9003 is not already in use
 	if !portInUse {
-		output.UserOut.Println("  Starting test listener on host port 9003...")
+		// Detect if we're in WSL2 NAT mode
+		isWSL2NAT := nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode()
 
-		// Start listener in background
-		listener, err := net.Listen("tcp", "0.0.0.0:9003")
-		if err != nil {
-			output.UserOut.Printf("  ✗ Failed to start test listener: %v\n", err)
-			hasIssues = true
+		if isWSL2NAT {
+			output.UserOut.Println("  Detected WSL2 NAT mode - using PowerShell proxy on Windows side...")
+			hasIssues = testWSL2NATConnection(app) || hasIssues
 		} else {
-			defer listener.Close()
-			output.UserOut.Println("  ✓ Test listener started on 0.0.0.0:9003")
-
-			// Accept connections in background
-			connChan := make(chan net.Conn, 1)
-			errChan := make(chan error, 1)
-			go func() {
-				conn, err := listener.Accept()
-				if err != nil {
-					errChan <- err
-					return
-				}
-				connChan <- conn
-			}()
-
-			// Test connection from container
-			output.UserOut.Println("  Testing connection from web container...")
-			ncOut, _, ncErr := app.Exec(&ddevapp.ExecOpts{
-				Cmd: "bash -c 'echo test from container | nc -w 2 host.docker.internal 9003'",
-			})
-
-			// Wait for connection with timeout
-			select {
-			case conn := <-connChan:
-				output.UserOut.Println("  ✓ Successfully connected from web container to host port 9003")
-				buf := make([]byte, 1024)
-				conn.SetReadDeadline(time.Now().Add(2 * time.Second))
-				n, err := conn.Read(buf)
-				if err == nil && n > 0 {
-					message := strings.TrimSpace(string(buf[:n]))
-					output.UserOut.Printf("  ✓ Received message: '%s'\n", message)
-				}
-				conn.Close()
-			case err := <-errChan:
-				output.UserOut.Printf("  ✗ Failed to accept connection: %v\n", err)
-				hasIssues = true
-			case <-time.After(5 * time.Second):
-				output.UserOut.Println("  ✗ Timeout waiting for connection from web container")
-				if ncErr != nil {
-					output.UserOut.Printf("    nc error: %v\n", ncErr)
-					output.UserOut.Printf("    nc output: %s\n", ncOut)
-				}
-				hasIssues = true
-			}
+			output.UserOut.Println("  Starting test listener on host port 9003...")
+			hasIssues = testSimpleConnection(app) || hasIssues
 		}
 	} else {
 		output.UserOut.Println("  ℹ Skipping connection test (port 9003 already in use)")
@@ -294,4 +253,184 @@ func runXdebugDiagnose() int {
 	output.UserOut.Println()
 
 	return 0
+}
+
+// testSimpleConnection tests connection using a simple TCP listener (for non-WSL2-NAT scenarios)
+func testSimpleConnection(app *ddevapp.DdevApp) bool {
+	hasIssues := false
+
+	// Start listener in background
+	listener, err := net.Listen("tcp", "0.0.0.0:9003")
+	if err != nil {
+		output.UserOut.Printf("  ✗ Failed to start test listener: %v\n", err)
+		return true
+	}
+	defer listener.Close()
+	output.UserOut.Println("  ✓ Test listener started on 0.0.0.0:9003")
+
+	// Accept connections in background
+	connChan := make(chan net.Conn, 1)
+	errChan := make(chan error, 1)
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			errChan <- err
+			return
+		}
+		connChan <- conn
+	}()
+
+	// Test connection from container
+	output.UserOut.Println("  Testing connection from web container...")
+	ncOut, _, ncErr := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "bash -c 'echo test from container | nc -w 2 host.docker.internal 9003'",
+	})
+
+	// Wait for connection with timeout
+	select {
+	case conn := <-connChan:
+		output.UserOut.Println("  ✓ Successfully connected from web container to host port 9003")
+		buf := make([]byte, 1024)
+		conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+		n, err := conn.Read(buf)
+		if err == nil && n > 0 {
+			message := strings.TrimSpace(string(buf[:n]))
+			output.UserOut.Printf("  ✓ Received message: '%s'\n", message)
+		}
+		conn.Close()
+	case err := <-errChan:
+		output.UserOut.Printf("  ✗ Failed to accept connection: %v\n", err)
+		hasIssues = true
+	case <-time.After(5 * time.Second):
+		output.UserOut.Println("  ✗ Timeout waiting for connection from web container")
+		if ncErr != nil {
+			output.UserOut.Printf("    nc error: %v\n", ncErr)
+			output.UserOut.Printf("    nc output: %s\n", ncOut)
+		}
+		hasIssues = true
+	}
+
+	return hasIssues
+}
+
+// testWSL2NATConnection tests connection using PowerShell proxy on Windows side (for WSL2 NAT mode)
+func testWSL2NATConnection(app *ddevapp.DdevApp) bool {
+	hasIssues := false
+
+	// PowerShell script to create a TCP proxy that forwards Windows port 9003 to WSL2 port 9000
+	// The IDE will listen on Windows port 9003, this proxy forwards to WSL2 where we listen on 9000
+	psScript := `
+param($LADDR="0.0.0.0",$LPORT=9003,$TADDR="127.0.0.1",$TPORT=9000)
+
+$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Parse($LADDR), $LPORT)
+$listener.Start()
+Write-Host "Listening on $LADDR:$LPORT -> $TADDR:$TPORT" 1>&2
+
+while ($true) {
+  $client = $listener.AcceptTcpClient()
+  Start-ThreadJob -ArgumentList $client,$TADDR,$TPORT -ScriptBlock {
+    param($client,$TADDR,$TPORT)
+    try {
+      $target = [System.Net.Sockets.TcpClient]::new($TADDR,$TPORT)
+
+      $cs = $client.GetStream()
+      $ts = $target.GetStream()
+
+      $a = $cs.CopyToAsync($ts)
+      $b = $ts.CopyToAsync($cs)
+      [Threading.Tasks.Task]::WaitAny(@($a,$b)) | Out-Null
+    } catch {
+      # swallow
+    } finally {
+      try { $client.Close() } catch {}
+      try { $target.Close() } catch {}
+    }
+  } | Out-Null
+}
+`
+
+	// Start PowerShell proxy on Windows side
+	output.UserOut.Println("  Starting PowerShell proxy on Windows (port 9003 -> WSL2 port 9000)...")
+	cmd := exec.Command("powershell.exe",
+		"-NoProfile",
+		"-ExecutionPolicy", "Bypass",
+		"-Command", psScript,
+		"-LADDR", "0.0.0.0",
+		"-LPORT", "9003",
+		"-TADDR", "127.0.0.1",
+		"-TPORT", "9000",
+	)
+
+	// Start the PowerShell proxy in background
+	err := cmd.Start()
+	if err != nil {
+		output.UserOut.Printf("  ✗ Failed to start PowerShell proxy: %v\n", err)
+		output.UserOut.Println("    Make sure PowerShell is available and you have necessary permissions")
+		return true
+	}
+
+	// Ensure we clean up the PowerShell process
+	defer func() {
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
+	}()
+
+	// Give PowerShell proxy a moment to start
+	time.Sleep(2 * time.Second)
+	output.UserOut.Println("  ✓ PowerShell proxy started on Windows side")
+
+	// Now start listener in WSL2 on port 9000
+	listener, err := net.Listen("tcp", "127.0.0.1:9000")
+	if err != nil {
+		output.UserOut.Printf("  ✗ Failed to start test listener on WSL2: %v\n", err)
+		return true
+	}
+	defer listener.Close()
+	output.UserOut.Println("  ✓ Test listener started in WSL2 on 127.0.0.1:9000")
+
+	// Accept connections in background
+	connChan := make(chan net.Conn, 1)
+	errChan := make(chan error, 1)
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			errChan <- err
+			return
+		}
+		connChan <- conn
+	}()
+
+	// Test connection from container
+	output.UserOut.Println("  Testing connection from web container...")
+	ncOut, _, ncErr := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "bash -c 'echo test from container | nc -w 2 host.docker.internal 9003'",
+	})
+
+	// Wait for connection with timeout
+	select {
+	case conn := <-connChan:
+		output.UserOut.Println("  ✓ Successfully connected from web container through Windows proxy to WSL2")
+		buf := make([]byte, 1024)
+		conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+		n, err := conn.Read(buf)
+		if err == nil && n > 0 {
+			message := strings.TrimSpace(string(buf[:n]))
+			output.UserOut.Printf("  ✓ Received message: '%s'\n", message)
+		}
+		conn.Close()
+	case err := <-errChan:
+		output.UserOut.Printf("  ✗ Failed to accept connection: %v\n", err)
+		hasIssues = true
+	case <-time.After(10 * time.Second):
+		output.UserOut.Println("  ✗ Timeout waiting for connection from web container")
+		output.UserOut.Println("    This may indicate firewall or networking issues in WSL2 NAT mode")
+		if ncErr != nil {
+			output.UserOut.Printf("    nc error: %v\n", ncErr)
+			output.UserOut.Printf("    nc output: %s\n", ncOut)
+		}
+		hasIssues = true
+	}
+
+	return hasIssues
 }
