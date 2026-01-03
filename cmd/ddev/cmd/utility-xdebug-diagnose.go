@@ -78,13 +78,15 @@ func runXdebugDiagnose() int {
 	output.UserOut.Println("Port 9003 Pre-Check")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-	if netutil.IsPortActive("9003") {
+	portInUse := netutil.IsPortActive("9003")
+	if portInUse {
 		output.UserOut.Println("  ⚠ Port 9003 is already in use on the host")
 		output.UserOut.Println("    This is likely your IDE listening for Xdebug connections (which is good!)")
 		output.UserOut.Println("    Or it could be another process interfering with Xdebug.")
-		portInUseWarning := true
-		// We don't fail here because IDE listening is expected behavior
-		_ = portInUseWarning
+		output.UserOut.Println()
+		output.UserOut.Println("  To identify what's listening on port 9003, run:")
+		output.UserOut.Println("    • Linux/macOS: sudo lsof -i :9003 -sTCP:LISTEN")
+		output.UserOut.Println("    • Windows: netstat -ano | findstr :9003")
 	} else {
 		output.UserOut.Println("  ℹ Port 9003 is not currently in use on the host")
 		output.UserOut.Println("    Your IDE should be listening on this port for Xdebug to work.")
@@ -143,7 +145,7 @@ func runXdebugDiagnose() int {
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	// Only run connection test if port 9003 is not already in use
-	if !netutil.IsPortActive("9003") {
+	if !portInUse {
 		output.UserOut.Println("  Starting test listener on host port 9003...")
 
 		// Start listener in background
