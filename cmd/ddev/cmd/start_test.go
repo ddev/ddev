@@ -16,6 +16,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -105,13 +106,13 @@ func TestCmdStartOptionalProfiles(t *testing.T) {
 	require.NoError(t, err, "failed to start %s, output='%s'", site.Name, out)
 
 	// Make sure that "optional" busybox1 service has Traefik entrypoint even when it's not started
-	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-http@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
+	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", "-w", util.CurlDiagnosticSuffix + "%{http_code}", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-http@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
 	require.NoError(t, err, "failed to check for http router for %s, output='%s'", site.Name, out)
-	validateEntrypointForTraefikRouter(t, out, "http-18125", "http")
+	validateEntrypointForTraefikRouter(t, util.ExtractCurlBody(out), "http-18125", "http")
 
-	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-https@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
+	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", "-w", util.CurlDiagnosticSuffix + "%{http_code}", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-https@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
 	require.NoError(t, err, "failed to check for https router for %s, output='%s'", site.Name, out)
-	validateEntrypointForTraefikRouter(t, out, "http-18126", "https")
+	validateEntrypointForTraefikRouter(t, util.ExtractCurlBody(out), "http-18126", "https")
 
 	// Make sure the busybox service didn't get started
 	container, err := ddevapp.GetContainer(app, "busybox")
@@ -129,13 +130,13 @@ func TestCmdStartOptionalProfiles(t *testing.T) {
 	}
 
 	// Make sure that "optional" busybox1 service has Traefik entrypoint when it's started
-	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-http@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
+	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", "-w", util.CurlDiagnosticSuffix + "%{http_code}", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-http@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
 	require.NoError(t, err, "failed to check for http router for %s, output='%s'", site.Name, out)
-	validateEntrypointForTraefikRouter(t, out, "http-18125", "http")
+	validateEntrypointForTraefikRouter(t, util.ExtractCurlBody(out), "http-18125", "http")
 
-	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-https@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
+	out, err = exec.RunCommand(DdevBin, []string{"exec", "curl", "-sf", "-w", util.CurlDiagnosticSuffix + "%{http_code}", fmt.Sprintf("%s:%s/api/http/routers/%s-busybox1-80-https@file", ddevapp.RouterComposeProjectName, globalconfig.DdevGlobalConfig.TraefikMonitorPort, site.Name)})
 	require.NoError(t, err, "failed to check for https router for %s, output='%s'", site.Name, out)
-	validateEntrypointForTraefikRouter(t, out, "http-18126", "https")
+	validateEntrypointForTraefikRouter(t, util.ExtractCurlBody(out), "http-18126", "https")
 }
 
 // validateEntrypointForTraefikRouter validates a JSON response from ddev-router:10999/api/http/routers/routerName
