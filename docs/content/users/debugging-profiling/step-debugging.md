@@ -127,6 +127,21 @@ Here are basic steps to take to sort out any difficulty:
 * `ddev logs` may show you something like `Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (fallback through xdebug.client_host/xdebug.client_port) :-(`. If it does, it may mean that your firewall is blocking the connection, or in a small number of cases that `host.docker.internal` is not figured out successfully by DDEV or Docker. If it does:
     * Temporarily disable your firewall. On Windows/WSL this is typically Windows Defender; on macOS you'll find it in settings; on Debian/Ubuntu it's typically `ufw` so `sudo ufw disable`.
     * If disabling the firewall fixes the problem, re-enable the firewall and add an exception for port 9003. Your firewall will have a way to do this; on Debian/Ubuntu run `sudo ufw allow 9003`.
+    * If your machine is managed by corporate endpoint security (Cisco Secure Endpoint, CrowdStrike, etc.), it may block container → host connections even when the OS firewall is “off”.
+        * If possible, temporarily disable the endpoint security agent and try again.
+        * If you can’t disable it, ask your IT/security team to allow inbound connections to your IDE on port 9003 from the container/VM subnet(s).
+        * On macOS/Linux, you can confirm whether traffic is reaching the host by watching for packets while connecting from the container:
+        
+        ```bash
+        # On the host (in one terminal)
+        sudo tcpdump -ni any tcp port 9003
+        
+        # In the web container (in another terminal)
+        ddev ssh
+        nc -vz -w2 host.docker.internal 9003
+        ```
+        
+        If `tcpdump` shows nothing while `nc` runs, something upstream (often endpoint security) is filtering the traffic.
 * Delete existing PhpStorm "servers" in settings, or recreate VS Code’s `launch.json` file exactly as shown in the instructions here.
 * Remember the standard Xdebug port is port 9003, and that's what all instructions here use. In the past some IDEs used port 9000.
 * If your `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../usage/architecture.md#global-files)) has `xdebug_ide_location` set, remove that to begin with except for [very unusual situations](../configuration/config.md#xdebug_ide_location). You can set it to the default value with `ddev config global --xdebug-ide-location=""`.
