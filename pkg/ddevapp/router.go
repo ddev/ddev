@@ -66,36 +66,12 @@ func StopRouterIfNoContainers() error {
 	}
 
 	if !containersRunning {
-		routerPorts, err := GetRouterBoundPorts()
-		if err != nil {
-			return err
-		}
 		util.Debug("stopping ddev-router because all project containers are stopped")
 		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
 		if err != nil {
 			if ok := dockerutil.IsErrNotFound(err); !ok {
 				return err
 			}
-		}
-
-		// Colima and Lima don't release ports very fast after container is removed
-		// see https://github.com/lima-vm/lima/issues/2536 and
-		// https://github.com/abiosoft/colima/issues/644
-		if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
-			if globalconfig.DdevDebug {
-				util.Debug("Lima/Colima/Rancher stopping router")
-				dockerContainers, _ := dockerutil.GetDockerContainers(true)
-				containerInfo := make([]string, len(dockerContainers))
-				for i, c := range dockerContainers {
-					containerInfo[i] = fmt.Sprintf("ID: %s, Name: %s, State: %s, Image: %s", dockerutil.TruncateID(c.ID), dockerutil.ContainerName(&c), c.State, c.Image)
-				}
-				containerList, _ := util.ArrayToReadableOutput(containerInfo)
-				util.Debug("All docker containers: %s", containerList)
-			}
-			util.Debug("Waiting for router ports to be released on Lima-based systems because ports aren't released immediately")
-			waitForPortsToBeReleased(routerPorts, time.Second*5)
-			// Wait another couple of seconds
-			time.Sleep(time.Second * 2)
 		}
 	}
 	return nil
