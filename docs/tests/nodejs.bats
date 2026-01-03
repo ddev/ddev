@@ -46,11 +46,11 @@ EOF
 
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
+  assert_output "FULLURL https://${PROJNAME}.ddev.site"
 
   # validate running project
-  run curl -sf https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "DDEV experimental Node.js"
+  assert_success
 }
