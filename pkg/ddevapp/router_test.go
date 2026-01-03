@@ -132,6 +132,10 @@ func TestRouterConfigOverride(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
+	// Remove the router so it gets recreated with the custom config
+	err := ddevapp.RemoveRouterContainer()
+	assert.NoError(err)
+
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
 	err = app.WriteConfig()
