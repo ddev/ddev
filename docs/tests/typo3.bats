@@ -202,13 +202,13 @@ teardown() {
   assert_failure
 
   # Profile site
-  run curl -sfI https://${PROJNAME}.ddev.site/typo3/install.php
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/typo3/install.php
   assert_output --partial "HTTP/2 200"
-
-  run curl -sf https://${PROJNAME}.ddev.site/typo3/install.php
   assert_success
+
+  run curl -sfv https://${PROJNAME}.ddev.site/typo3/install.php
   assert_output --partial "Installing TYPO3 CMS"
+  assert_success
 
   # wait for XHGui
   sleep 5
