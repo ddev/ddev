@@ -172,7 +172,7 @@ func runXdebugDiagnose() int {
 			// Test connection from container
 			output.UserOut.Println("  Testing connection from web container...")
 			ncOut, _, ncErr := app.Exec(&ddevapp.ExecOpts{
-				Cmd: "bash -c \"echo 'test from container' | nc -w 2 host.docker.internal 9003\"",
+				Cmd: "bash -c 'echo test from container | nc -w 2 host.docker.internal 9003'",
 			})
 
 			// Wait for connection with timeout
@@ -240,7 +240,7 @@ func runXdebugDiagnose() int {
 
 			// Test with PHP
 			phpOut, _, err := app.Exec(&ddevapp.ExecOpts{
-				Cmd: "php -i",
+				Cmd: "php -m",
 			})
 			if err == nil {
 				if strings.Contains(phpOut, "xdebug") {
