@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -118,16 +117,17 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	if err != nil {
 		return fmt.Errorf("failed to create global .ddev/traefik directory: %v", err)
 	}
-	sourceCertsPath := filepath.Join(globalTraefikDir, "certs")
+	globalSourceCertsPath := filepath.Join(globalTraefikDir, "certs")
 	// SourceConfigDir for dynamic config
-	sourceConfigDir := filepath.Join(globalTraefikDir, "config")
-	targetCertsPath := path.Join("/mnt/ddev-global-cache/traefik/certs")
+	globalSourceConfigDir := filepath.Join(globalTraefikDir, "config")
+	inContainerTargetCertsPath := "/mnt/ddev-global-cache/traefik/certs"
 
-	err = os.MkdirAll(sourceCertsPath, 0755)
+	// Set up directories in ~/.ddev/traefik
+	err = os.MkdirAll(globalSourceCertsPath, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create global Traefik certs dir: %v", err)
 	}
-	err = os.MkdirAll(sourceConfigDir, 0755)
+	err = os.MkdirAll(globalSourceConfigDir, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create global Traefik config dir: %v", err)
 	}
@@ -135,7 +135,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	// Assume that the #ddev-generated doesn't exist in files
 	sigExists := false
 	for _, pemFile := range []string{"default_cert.crt", "default_key.key"} {
-		origFile := filepath.Join(sourceCertsPath, pemFile)
+		origFile := filepath.Join(globalSourceCertsPath, pemFile)
 		// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
 		err = fileutil.CheckSignatureOrNoFile(origFile, nodeps.DdevFileSignature)
 		if err == nil {
@@ -148,17 +148,13 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	// If using Let's Encrypt, the default_cert.crt must not exist or
 	// Traefik will use it.
 	if globalconfig.DdevGlobalConfig.UseLetsEncrypt && sigExists {
-		_ = os.RemoveAll(filepath.Join(sourceCertsPath, "default_cert.crt"))
-		_ = os.RemoveAll(filepath.Join(sourceCertsPath, "default_key.key"))
-		err = dockerutil.CopyIntoVolume(sourceCertsPath, "ddev-global-cache", "certs", uid, "", true)
-		if err != nil {
-			util.Warning("Failed to clear certs in ddev-global-cache volume certs directory: %v", err)
-		}
+		_ = os.RemoveAll(filepath.Join(globalSourceCertsPath, "default_cert.crt"))
+		_ = os.RemoveAll(filepath.Join(globalSourceCertsPath, "default_key.key"))
 	}
 	// Install default certs, except when using Let's Encrypt (when they would
 	// get used instead of Let's Encrypt certs)
 	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
-		c := []string{"--cert-file", filepath.Join(sourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(sourceCertsPath, "default_key.key"), "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default", "*.ddev.site"}
+		c := []string{"--cert-file", filepath.Join(globalSourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(globalSourceCertsPath, "default_key.key"), "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default", "*.ddev.site"}
 		if globalconfig.DdevGlobalConfig.ProjectTldGlobal != "" {
 			c = append(c, "*."+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 		}
@@ -170,7 +166,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 
 		// Prepend #ddev-generated in generated crt and key files
 		for _, pemFile := range []string{"default_cert.crt", "default_key.key"} {
-			origFile := filepath.Join(sourceCertsPath, pemFile)
+			origFile := filepath.Join(globalSourceCertsPath, pemFile)
 
 			contents, err := fileutil.ReadFileIntoString(origFile)
 			if err != nil {
@@ -195,14 +191,14 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		TraefikMonitorPort string
 	}
 	templateData := traefikData{
-		TargetCertsPath:    targetCertsPath,
+		TargetCertsPath:    inContainerTargetCertsPath,
 		RouterPorts:        determineRouterPorts(activeApps),
 		UseLetsEncrypt:     globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		LetsEncryptEmail:   globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		TraefikMonitorPort: globalconfig.DdevGlobalConfig.TraefikMonitorPort,
 	}
 
-	defaultConfigPath := filepath.Join(sourceConfigDir, "default_config.yaml")
+	defaultConfigPath := filepath.Join(globalSourceConfigDir, "default_config.yaml")
 	// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
 	err = fileutil.CheckSignatureOrNoFile(defaultConfigPath, nodeps.DdevFileSignature)
 	sigExists = (err == nil)
@@ -259,17 +255,79 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return err
 	}
 
+	// Remove ~/.ddev/traefik/config and ~/.ddev/traefik/certs for clean start
+	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "config"))
+	if err != nil {
+		return fmt.Errorf("failed to purge global Traefik config dir: %v", err)
+	}
+
+	// Copy active project configs and certs into the global traefik directory.
+	// This ensures only running projects have their routing active in the router.
+	for _, app := range activeApps {
+		projectConfigDir := app.GetConfigPath("traefik/config")
+		projectCertsDir := app.GetConfigPath("traefik/certs")
+
+		// Copy project's config yaml to global config dir
+		projectConfigFile := filepath.Join(projectConfigDir, app.Name+".yaml")
+		if fileutil.FileExists(projectConfigFile) {
+			destFile := filepath.Join(globalSourceConfigDir, app.Name+".yaml")
+			err = fileutil.CopyFile(projectConfigFile, destFile)
+			if err != nil {
+				util.Warning("Failed to copy traefik config for project %s: %v", app.Name, err)
+			}
+		}
+
+		// Copy project's certs to global certs dir
+		for _, ext := range []string{".crt", ".key"} {
+			projectCertFile := filepath.Join(projectCertsDir, app.Name+ext)
+			if fileutil.FileExists(projectCertFile) {
+				destFile := filepath.Join(globalSourceCertsPath, app.Name+ext)
+				err = fileutil.CopyFile(projectCertFile, destFile)
+				if err != nil {
+					util.Warning("Failed to copy traefik cert for project %s: %v", app.Name, err)
+				}
+			}
+		}
+
+		// Copy custom certs from project's .ddev/custom_certs/ to global certs dir
+		projectCustomCertsPath := app.GetConfigPath("custom_certs")
+		customCertFile := filepath.Join(projectCustomCertsPath, app.Name+".crt")
+		if fileutil.FileExists(customCertFile) {
+			for _, ext := range []string{".crt", ".key"} {
+				srcFile := filepath.Join(projectCustomCertsPath, app.Name+ext)
+				if fileutil.FileExists(srcFile) {
+					destFile := filepath.Join(globalSourceCertsPath, app.Name+ext)
+					err = fileutil.CopyFile(srcFile, destFile)
+					if err != nil {
+						util.Warning("Failed to copy custom cert for project %s: %v", app.Name, err)
+					} else {
+						util.Debug("Copied custom cert %s to global traefik certs dir", srcFile)
+					}
+				}
+			}
+		}
+	}
+
+	// Purge config directory inside the volume while keeping the directories themselves.
+	// This is critical for inotify watchers - if we destroy the entire traefik directory,
+	// traefik's file watcher breaks on Linux and doesn't see new configs.
+	err = dockerutil.PurgeDirectoryContentsInVolume("ddev-global-cache", []string{"traefik/config"}, uid)
+	if err != nil {
+		return fmt.Errorf("failed to purge traefik config in ddev-global-cache volume: %v", err)
+	}
+
+	// Copy with destroyExisting=false since we've already purged the subdirectories
 	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
 	if err != nil {
 		return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
 	}
-	util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik", sourceCertsPath)
+	util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik", globalTraefikDir)
 
 	return nil
 }
 
 // configureTraefikForApp configures the dynamic configuration and creates cert+key
-// in .ddev/traefik
+// in .ddev/traefik/certs
 func configureTraefikForApp(app *DdevApp) error {
 	routingTable, hostnames, err := detectAppRouting(app)
 	if err != nil {
@@ -280,25 +338,24 @@ func configureTraefikForApp(app *DdevApp) error {
 	if err != nil {
 		return fmt.Errorf("failed to create .ddev/traefik directory: %v", err)
 	}
-	sourceCertsPath := filepath.Join(projectTraefikDir, "certs")
-	sourceConfigDir := filepath.Join(projectTraefikDir, "config")
-	targetCertsPath := path.Join("/mnt/ddev-global-cache/traefik/certs")
-	customCertsPath := app.GetConfigPath("custom_certs")
+	projectSourceCertsPath := filepath.Join(projectTraefikDir, "certs")
+	projectSourceConfigDir := filepath.Join(projectTraefikDir, "config")
+	inContainerTargetCertsPath := "/mnt/ddev-global-cache/traefik/certs"
 
-	err = os.MkdirAll(sourceCertsPath, 0755)
+	err = os.MkdirAll(projectSourceCertsPath, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create Traefik certs dir: %v", err)
+		return fmt.Errorf("failed to create project Traefik certs dir: %v", err)
 	}
-	err = os.MkdirAll(sourceConfigDir, 0755)
+	err = os.MkdirAll(projectSourceConfigDir, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create Traefik config dir: %v", err)
+		return fmt.Errorf("failed to create project Traefik config dir: %v", err)
 	}
 
-	baseName := filepath.Join(sourceCertsPath, app.Name)
+	baseName := filepath.Join(projectSourceCertsPath, app.Name)
 	// Assume that the #ddev-generated doesn't exist in files
 	sigExists := false
 	for _, pemFile := range []string{app.Name + ".crt", app.Name + ".key"} {
-		origFile := filepath.Join(sourceCertsPath, pemFile)
+		origFile := filepath.Join(projectSourceCertsPath, pemFile)
 		// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
 		err = fileutil.CheckSignatureOrNoFile(origFile, nodeps.DdevFileSignature)
 		if err == nil {
@@ -322,7 +379,7 @@ func configureTraefikForApp(app *DdevApp) error {
 
 		// Prepend #ddev-generated in generated crt and key files
 		for _, pemFile := range []string{app.Name + ".crt", app.Name + ".key"} {
-			origFile := filepath.Join(sourceCertsPath, pemFile)
+			origFile := filepath.Join(projectSourceCertsPath, pemFile)
 
 			contents, err := fileutil.ReadFileIntoString(origFile)
 			if err != nil {
@@ -348,7 +405,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		App:             app,
 		Hostnames:       []string{},
 		PrimaryHostname: app.GetHostname(),
-		TargetCertsPath: targetCertsPath,
+		TargetCertsPath: inContainerTargetCertsPath,
 		RoutingTable:    routingTable,
 		UseLetsEncrypt:  globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 	}
@@ -363,17 +420,18 @@ func configureTraefikForApp(app *DdevApp) error {
 		}
 	}
 
-	traefikYamlFile := filepath.Join(sourceConfigDir, app.Name+".yaml")
+	projectTraefikYamlFile := filepath.Join(projectSourceConfigDir, app.Name+".yaml")
 	// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
-	err = fileutil.CheckSignatureOrNoFile(traefikYamlFile, nodeps.DdevFileSignature)
+	err = fileutil.CheckSignatureOrNoFile(projectTraefikYamlFile, nodeps.DdevFileSignature)
 	sigExists = (err == nil)
 	if !sigExists {
-		util.Debug("Not creating %s because it exists and is managed by user", traefikYamlFile)
+		util.Debug("Not creating %s because it exists and is managed by user", projectTraefikYamlFile)
 	} else {
-		f, err := os.Create(traefikYamlFile)
+		f, err := os.Create(projectTraefikYamlFile)
 		if err != nil {
 			return fmt.Errorf("failed to create Traefik config file: %v", err)
 		}
+		defer f.Close()
 		t, err := template.New("traefik_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
 		if err != nil {
 			return fmt.Errorf("could not create template from traefik_config_template.yaml: %v", err)
@@ -385,21 +443,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		}
 	}
 
-	uid, _, _ := dockerutil.GetContainerUser()
-
-	err = dockerutil.CopyIntoVolume(projectTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
-	if err != nil {
-		util.Warning("Failed to copy Traefik into Docker volume ddev-global-cache/traefik: %v", err)
-	} else {
-		util.Debug("Copied Traefik certs in %s to ddev-global-cache/traefik", sourceCertsPath)
-	}
-	if fileutil.FileExists(filepath.Join(customCertsPath, fmt.Sprintf("%s.crt", app.Name))) {
-		err = dockerutil.CopyIntoVolume(app.GetConfigPath("custom_certs"), "ddev-global-cache", "traefik/certs", uid, "", false)
-		if err != nil {
-			util.Warning("Failed copying custom certs into Docker volume ddev-global-cache/traefik/certs: %v", err)
-		} else {
-			util.Debug("Copied custom certs in %s to ddev-global-cache/traefik", sourceCertsPath)
-		}
-	}
+	// Project config and certs are now collected and pushed by PushGlobalTraefikConfig
+	// which handles all active projects in a single operation
 	return nil
 }

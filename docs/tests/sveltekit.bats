@@ -57,7 +57,7 @@ EOF
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sf https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "to your new"
+  assert_success
 }
