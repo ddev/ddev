@@ -24,7 +24,6 @@ teardown() {
   # ddev wp core download
   run ddev wp core download
   assert_success
-  # ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
   # ddev launch
@@ -34,7 +33,7 @@ teardown() {
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "link: <https://my-wp-site.ddev.site/wp-json/>; rel=\"https://api.w.org/\""
+  assert_output --partial "link: <https://my-wp-site.ddev.site/index.php?rest_route=/>; rel=\"https://api.w.org/\""
   assert_output --partial "HTTP/2 200"
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
@@ -66,7 +65,7 @@ teardown() {
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "link: <https://my-wp-site.ddev.site/wp-json/>; rel=\"https://api.w.org/\""
+  assert_output --partial "link: <https://my-wp-site.ddev.site/index.php?rest_route=/>; rel=\"https://api.w.org/\""
   assert_output --partial "HTTP/2 200"
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
@@ -105,14 +104,13 @@ teardown() {
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "link: <https://${PROJNAME}.ddev.site/wp-json/>; rel=\"https://api.w.org/\""
+  assert_output --partial "link: <https://my-wp-site.ddev.site/index.php?rest_route=/>; rel=\"https://api.w.org/\""
   assert_output --partial "HTTP/2 200"
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
   assert_success
-  assert_output --partial "location: https://${PROJNAME}.ddev.site/wp/wp-admin/"
-  assert_output --partial "link: <https://${PROJNAME}.ddev.site/wp-json/>; rel=\"https://api.w.org/\""
-  assert_output --partial "HTTP/2 302"
+  assert_output --partial "link: <https://my-wp-site.ddev.site/index.php?rest_route=/>; rel=\"https://api.w.org/\""
+  assert_output --partial "HTTP/2 200"
 }
 
 @test "WordPress git based quickstart with $(ddev --version)" {
@@ -140,11 +138,11 @@ teardown() {
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "link: <https://my-wp-site.ddev.site/wp-json/>; rel=\"https://api.w.org/\""
+  assert_output --partial  "link: <https://my-wp-site.ddev.site/index.php?rest_route=/>; rel=\"https://api.w.org/\""
   assert_output --partial "HTTP/2 200"
-  # validate running project
+  # validate running project /wp-admin
   run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
   assert_success
-  assert_output --partial "location: https://my-wp-site.ddev.site/wp-login.php"
+  assert_output --partial "location: https://my-wp-site.ddev.site/wp-login.php?redirect_to=https%3A%2F%2Fmy-wp-site.ddev.site%2Fwp-admin%2F&reauth=1"
   assert_output --partial "HTTP/2 302"
 }
