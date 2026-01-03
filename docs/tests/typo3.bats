@@ -42,11 +42,14 @@ teardown() {
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
-  run bats_pipe curl -sfI https://${PROJNAME}.ddev.site/ \| grep "HTTP/2 200"
+  run curl -sfIv "https://${PROJNAME}.ddev.site/"
+  assert_output --partial "HTTP/2 200"
   assert_success
-  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with <a href=\"https://typo3.org\">TYPO3</a>"
+  run curl -sfL "https://${PROJNAME}.ddev.site/"
+  assert_output --partial "Welcome to a default website made with "
   assert_success
-  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
+  run curl -sfL "https://${PROJNAME}.ddev.site/typo3/"
+  assert_output --partial "TYPO3 CMS Login:"
   assert_success
 }
 
