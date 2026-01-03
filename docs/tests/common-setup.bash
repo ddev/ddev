@@ -15,6 +15,13 @@ _common_setup() {
 #    echo "# Starting test at $(date)" >&3
 }
 
+_extra_info() {
+  HOST_HTTP_URL=$(ddev describe -j ${PROJNAME} | jq -r .raw.services.web.host_http_url)
+  HOST_HTTPS_URL=$(ddev describe -j ${PROJNAME} | jq -r .raw.services.web.host_https_url)
+  PRIMARY_HTTP_URL=$(ddev describe -j ${PROJNAME} | jq -r .raw.httpurl)
+  PRIMARY_HTTPS_URL=$(ddev describe -j ${PROJNAME} | jq -r .raw.httpsurl)
+}
+
 _common_teardown() {
 #  echo "# Ending test at $(date)" >&3
   ddev delete -Oy ${PROJNAME} >/dev/null

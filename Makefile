@@ -346,13 +346,20 @@ go-mod-update:
 	go mod tidy
 	go mod vendor
 
-quickstart-test: build
+quickstart-test: build dummy-project
 	@echo "quickstart-test:"
 	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); bats docs/tests
+# bats refuses ever to exit until all processes started by it
+# have exited. So we don't want to let bats/ddev start mutagen daemon
+dummy-project: build
+	mkdir -p ~/tmp/dummy-project && pushd ~/tmp/dummy-project >/dev/null && $(DDEV_BINARY_FULLPATH) config --performance-mode=mutagen >/dev/null 2>&1 && popd >/dev/null
+	$(DDEV_BINARY_FULLPATH) start -y dummy-project >/dev/null 2>&1
 
+DDEV_BINARY_FULLPATH:
+	@echo $(DDEV_BINARY_FULLPATH)
 version:
 	@echo VERSION:$(VERSION)
 

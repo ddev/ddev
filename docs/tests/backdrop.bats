@@ -37,13 +37,26 @@ teardown() {
   DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
+
+  _extra_info
+  # Check direct http/https URLs
+  run curl -sfIv ${HOST_HTTP_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+  run curl -sfIv ${HOST_HTTPS_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv ${PRIMARY_HTTPS_URL}
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfIv ${PRIMARY_HTTP_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+  run curl -sfv ${PRIMARY_HTTPS_URL}
   assert_output --partial "Welcome to My Backdrop Site!"
+  assert_success
 }
 
 @test "backdrop existing project with $(ddev --version)" {
@@ -82,14 +95,28 @@ teardown() {
   run ddev bee cc all
   assert_success
 
+  _extra_info
+
+  # Check direct http/https URLs
+  run curl -sfIv ${HOST_HTTP_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+  run curl -sfIv ${HOST_HTTPS_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+
   DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
+
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_HTTPS_URL}
   assert_output --partial "HTTP/2 200"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_HTTP_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+  run curl -sfv ${PRIMARY_HTTPS_URL}
   assert_output --partial "Welcome to My Backdrop Site!"
   assert_success
 }
