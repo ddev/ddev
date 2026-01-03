@@ -39,8 +39,8 @@ func TestCmdXdebugDiagnose(t *testing.T) {
 	require.Contains(t, out, "Xdebug Diagnostics for Project")
 	require.Contains(t, out, "Port 9003 Pre-Check")
 	require.Contains(t, out, "host.docker.internal Configuration")
-	require.Contains(t, out, "Network Connectivity Test")
 	require.Contains(t, out, "Global Configuration")
+	require.Contains(t, out, "Connection Test")
 	require.Contains(t, out, "Xdebug Status")
 	require.Contains(t, out, "Summary")
 
