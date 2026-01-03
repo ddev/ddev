@@ -143,6 +143,19 @@ func StartDdevRouter() error {
 		if err != nil {
 			return fmt.Errorf("failed to push global Traefik config: %v", err)
 		}
+
+		// Force the healthcheck to run and wait for Traefik to load the new config.
+		// Remove /tmp/healthy so the healthcheck doesn't sleep for 59 seconds,
+		// then run the healthcheck which waits for routers to load.
+		router, err = FindDdevRouter()
+		if err != nil {
+			return fmt.Errorf("failed to find router for healthcheck: %v", err)
+		}
+		util.Debug("Forcing router healthcheck to verify new config is loaded")
+		_, _, err = dockerutil.Exec(router.ID, "rm -f /tmp/healthy && /healthcheck.sh", "0")
+		if err != nil {
+			return fmt.Errorf("router healthcheck failed: %v", err)
+		}
 	}
 
 	// Ensure we have a happy router
