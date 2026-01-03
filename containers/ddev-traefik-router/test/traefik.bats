@@ -22,8 +22,8 @@ setup() {
 
   setup_test_data
 
-  echo "# Starting ${IMAGE}" >&3
-  docker run --rm --name ${CONTAINER_NAME} -p ${HOSTPORT_HTTP}:80 -p ${HOSTPORT_HTTPS}:443 -v ${TEST_VOLUME_NAME}:/mnt/ddev-global-cache -d ${IMAGE} --configFile=/mnt/ddev-global-cache/traefik/.static_config.yaml
+  #echo "# Starting ${IMAGE}" >&3
+  docker run --rm --name ${CONTAINER_NAME} -p ${HOSTPORT_HTTP}:80 -p ${HOSTPORT_HTTPS}:443 -v ${TEST_VOLUME_NAME}:/mnt/ddev-global-cache -d ${IMAGE} --configFile=/mnt/ddev-global-cache/traefik/.static_config.yaml >/dev/null
   containercheck
 }
 
@@ -69,7 +69,7 @@ setup() {
 
   # Clean up any leftover state
   docker exec ${CONTAINER_NAME} rm -f /tmp/ddev-traefik-errors.txt "${config_file}"
-  sleep 1
+  wait_for_config_reload
 
   # Add an invalid config file with duplicate router name
   docker exec ${CONTAINER_NAME} bash -c "cat > ${config_file} << 'EOF'
@@ -83,7 +83,7 @@ http:
       tls: false
 EOF"
   # Wait for traefik to reload config
-  sleep 2
+  wait_for_config_reload
 
   # Force healthcheck to run
   run docker exec ${CONTAINER_NAME} bash -c 'rm -f /tmp/healthy && /healthcheck.sh'
@@ -106,7 +106,7 @@ EOF"
   # Clean up any leftover state
   docker exec ${CONTAINER_NAME} rm -f /tmp/ddev-traefik-errors.txt
   docker exec ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev-global-cache/traefik/config/test*.yaml'
-  sleep 2
+  wait_for_config_reload
 
   # First verify we start with no warnings (router count should match)
   run docker exec ${CONTAINER_NAME} bash -c 'rm -f /tmp/healthy && /healthcheck.sh'
@@ -124,7 +124,7 @@ http:
       service: nonexistent-service
       tls: false
 EOF"
-  sleep 2
+  wait_for_config_reload
 
   # Force healthcheck to capture the warning
   run docker exec ${CONTAINER_NAME} bash -c 'rm -f /tmp/healthy && /healthcheck.sh'
@@ -138,7 +138,7 @@ EOF"
 
   # Remove the invalid config to resolve the issue
   docker exec ${CONTAINER_NAME} rm -f /mnt/ddev-global-cache/traefik/config/test_invalid.yaml
-  sleep 2
+  wait_for_config_reload
 
   # Force healthcheck to run again - should clear warnings
   run docker exec ${CONTAINER_NAME} bash -c 'rm -f /tmp/healthy && /healthcheck.sh'
@@ -155,7 +155,7 @@ EOF"
   # Clean up any leftover state
   docker exec ${CONTAINER_NAME} rm -f /tmp/ddev-traefik-errors.txt
   docker exec ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev-global-cache/traefik/config/test*.yaml'
-  sleep 1
+  wait_for_config_reload
 
   # Add a config with a router referencing a non-existent service
   docker exec ${CONTAINER_NAME} bash -c "cat > /mnt/ddev-global-cache/traefik/config/test_missing_service.yaml << 'EOF'
@@ -167,8 +167,8 @@ http:
       rule: Host(\`test-missing-svc.ddev.site\`)
       service: this-service-does-not-exist
 EOF"
-  # Wait for traefik to reload config (file watcher)
-  sleep 3
+  # Wait for traefik to reload config
+  wait_for_config_reload
 
   # Verify router is disabled with error
   run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-missing-svc@file | jq -r .status'
@@ -194,7 +194,7 @@ EOF"
   # Clean up any leftover state
   docker exec ${CONTAINER_NAME} rm -f /tmp/ddev-traefik-errors.txt
   docker exec ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev-global-cache/traefik/config/test*.yaml'
-  sleep 1
+  wait_for_config_reload
 
   # Add a config with a router referencing a non-existent middleware
   docker exec ${CONTAINER_NAME} bash -c "cat > /mnt/ddev-global-cache/traefik/config/test_missing_middleware.yaml << 'EOF'
@@ -208,7 +208,7 @@ http:
       middlewares:
         - nonexistent-middleware
 EOF"
-  sleep 2
+  wait_for_config_reload
 
   # Verify router is disabled with error
   run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-missing-mw@file | jq -r .status'
@@ -229,7 +229,7 @@ EOF"
   # Clean up any leftover state
   docker exec ${CONTAINER_NAME} rm -f /tmp/ddev-traefik-errors.txt
   docker exec ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev-global-cache/traefik/config/test*.yaml'
-  sleep 1
+  wait_for_config_reload
 
   # Add a config with a router using a non-existent entrypoint
   docker exec ${CONTAINER_NAME} bash -c "cat > /mnt/ddev-global-cache/traefik/config/test_bad_entrypoint.yaml << 'EOF'
@@ -241,8 +241,8 @@ http:
       rule: Host(\`test-bad-ep.ddev.site\`)
       service: d11-web-80
 EOF"
-  # Wait for traefik to reload config (file watcher)
-  sleep 3
+  # Wait for traefik to reload config
+  wait_for_config_reload
 
   # Verify router is disabled with error
   run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-bad-ep@file | jq -r .status'
@@ -262,7 +262,7 @@ EOF"
   # Clean up any leftover state
   docker exec ${CONTAINER_NAME} rm -f /tmp/ddev-traefik-errors.txt
   docker exec ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev-global-cache/traefik/config/test*.yaml'
-  sleep 1
+  wait_for_config_reload
 
   # Add a config with a router having invalid rule syntax
   docker exec ${CONTAINER_NAME} bash -c "cat > /mnt/ddev-global-cache/traefik/config/test_bad_rule.yaml << 'EOF'
@@ -274,7 +274,7 @@ http:
       rule: InvalidSyntax(((broken
       service: d11-web-80
 EOF"
-  sleep 2
+  wait_for_config_reload
 
   # Verify router is disabled with error
   run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-bad-rule@file | jq -r .status'
