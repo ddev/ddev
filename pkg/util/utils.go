@@ -522,6 +522,36 @@ func GetHomeDir() string {
 	return home
 }
 
+// CurlDiagnosticSuffix is the marker used by ExtractCurlBody to separate
+// the response body from diagnostic information appended by curl's -w option.
+const CurlDiagnosticSuffix = "\n_CURL_HTTP_CODE_:"
+
+// ExtractCurlBody extracts the response body from curl output that includes
+// diagnostic information appended via the -w (write-out) option.
+//
+// This is useful when you need to:
+// 1. Parse JSON responses from curl while also capturing HTTP status codes for debugging
+// 2. See the HTTP status code in test failure messages without breaking JSON parsing
+//
+// Usage:
+//
+//	// Run curl with -w to append HTTP code after body (on a new line)
+//	out, err := exec.RunCommand("ddev", []string{"exec", "curl", "-sf",
+//	    "-w", "\n_CURL_HTTP_CODE_:%{http_code}",
+//	    "http://example.com/api/endpoint"})
+//	// Full output is preserved for error messages: "{"key":"value"}\n_CURL_HTTP_CODE_:200"
+//	require.NoError(t, err, "curl failed, output=%s", out)
+//	// Extract just the JSON body for parsing
+//	body := util.ExtractCurlBody(out)
+//	var result map[string]interface{}
+//	json.Unmarshal([]byte(body), &result)
+func ExtractCurlBody(curlOutput string) string {
+	if idx := strings.Index(curlOutput, CurlDiagnosticSuffix); idx != -1 {
+		return curlOutput[:idx]
+	}
+	return curlOutput
+}
+
 // FormatBytes converts bytes to a human-readable string
 // Returns format like: "2.3GB", "156.7MB", "1.5KB", "0B"
 func FormatBytes(bytes int64) string {
