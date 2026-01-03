@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"os/exec"
@@ -80,19 +81,37 @@ func runXdebugDiagnose() int {
 	output.UserOut.Println("Port 9003 Pre-Check")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-	portInUse := netutil.IsPortActive("9003")
-	if portInUse {
-		output.UserOut.Println("  ⚠ Port 9003 is already in use on the host")
-		output.UserOut.Println("    This is likely your IDE listening for Xdebug connections (which is good!)")
-		output.UserOut.Println("    Or it could be another process interfering with Xdebug.")
-		output.UserOut.Println()
-		output.UserOut.Println("  To identify what's listening on port 9003, run:")
-		output.UserOut.Println("    • Linux/macOS: sudo lsof -i :9003 -sTCP:LISTEN")
-		output.UserOut.Println("    • Windows: netstat -ano | findstr :9003")
+	// In WSL2 NAT mode, the IDE runs on Windows, so check Windows port
+	isWSL2NAT := nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode()
+	var portInUse bool
+	if isWSL2NAT {
+		portInUse = isWindowsPortInUse(9003)
+		if portInUse {
+			output.UserOut.Println("  ✓ Port 9003 is in use on Windows")
+			output.UserOut.Println("    This is likely your IDE listening for Xdebug connections (which is good!)")
+			output.UserOut.Println()
+			output.UserOut.Println("  To identify what's listening on port 9003, run in PowerShell:")
+			output.UserOut.Println("    Get-NetTCPConnection -LocalPort 9003 | Select-Object OwningProcess")
+		} else {
+			output.UserOut.Println("  ℹ Port 9003 is not currently in use on Windows")
+			output.UserOut.Println("    Your IDE should be listening on this port for Xdebug to work.")
+			hasIssues = true
+		}
 	} else {
-		output.UserOut.Println("  ℹ Port 9003 is not currently in use on the host")
-		output.UserOut.Println("    Your IDE should be listening on this port for Xdebug to work.")
-		hasIssues = true
+		portInUse = netutil.IsPortActive("9003")
+		if portInUse {
+			output.UserOut.Println("  ⚠ Port 9003 is already in use on the host")
+			output.UserOut.Println("    This is likely your IDE listening for Xdebug connections (which is good!)")
+			output.UserOut.Println("    Or it could be another process interfering with Xdebug.")
+			output.UserOut.Println()
+			output.UserOut.Println("  To identify what's listening on port 9003, run:")
+			output.UserOut.Println("    • Linux/macOS: sudo lsof -i :9003 -sTCP:LISTEN")
+			output.UserOut.Println("    • Windows: netstat -ano | findstr :9003")
+		} else {
+			output.UserOut.Println("  ℹ Port 9003 is not currently in use on the host")
+			output.UserOut.Println("    Your IDE should be listening on this port for Xdebug to work.")
+			hasIssues = true
+		}
 	}
 	output.UserOut.Println()
 
@@ -106,26 +125,7 @@ func runXdebugDiagnose() int {
 	output.UserOut.Printf("  Derivation: %s\n", hostDockerInternal.Message)
 	output.UserOut.Println()
 
-	// Check 3: Test ping to host.docker.internal from container
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	output.UserOut.Println("Network Connectivity Test")
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
-	// Test ping
-	pingOut, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: "sudo ping -c 1 -W 2 host.docker.internal",
-	})
-	if err != nil {
-		output.UserOut.Println("  ✗ Cannot ping host.docker.internal from web container")
-		output.UserOut.Printf("    Error: %v\n", err)
-		hasIssues = true
-	} else {
-		output.UserOut.Println("  ✓ Can ping host.docker.internal from web container")
-		util.Verbose("ping output: %s", pingOut)
-	}
-	output.UserOut.Println()
-
-	// Check 4: Check xdebug_ide_location setting
+	// Check 3: Check xdebug_ide_location setting
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("Global Configuration")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -141,7 +141,7 @@ func runXdebugDiagnose() int {
 	}
 	output.UserOut.Println()
 
-	// Check 5: Start a test listener and test connection
+	// Check 4: Start a test listener and test connection
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("Connection Test")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -152,7 +152,7 @@ func runXdebugDiagnose() int {
 		isWSL2NAT := nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode()
 
 		if isWSL2NAT {
-			output.UserOut.Println("  Detected WSL2 NAT mode - using PowerShell proxy on Windows side...")
+			output.UserOut.Println("  Detected WSL2 NAT mode - testing connection to Windows host...")
 			hasIssues = testWSL2NATConnection(app) || hasIssues
 		} else {
 			output.UserOut.Println("  Starting test listener on host port 9003...")
@@ -164,7 +164,7 @@ func runXdebugDiagnose() int {
 	}
 	output.UserOut.Println()
 
-	// Check 6: Check Xdebug status
+	// Check 5: Check Xdebug status
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("Xdebug Status")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -180,7 +180,7 @@ func runXdebugDiagnose() int {
 	}
 	output.UserOut.Println()
 
-	// Check 7: Test Xdebug with PHP if enabled, or enable temporarily
+	// Check 6: Test Xdebug with PHP if enabled, or enable temporarily
 	wasEnabled := !strings.Contains(statusOut, "disabled")
 	if !wasEnabled {
 		output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -313,59 +313,60 @@ func testSimpleConnection(app *ddevapp.DdevApp) bool {
 	return hasIssues
 }
 
-// testWSL2NATConnection tests connection using PowerShell proxy on Windows side (for WSL2 NAT mode)
+// testWSL2NATConnection tests connection using PowerShell listener on Windows side (for WSL2 NAT mode)
+// In WSL2 NAT mode, the Docker container connects to host.docker.internal which routes to Windows.
+// The IDE typically runs on Windows and listens on port 9003, so we test that path directly.
 func testWSL2NATConnection(app *ddevapp.DdevApp) bool {
 	hasIssues := false
 
-	// PowerShell script to create a TCP proxy that forwards Windows port 9003 to WSL2 port 9000
-	// The IDE will listen on Windows port 9003, this proxy forwards to WSL2 where we listen on 9000
+	// PowerShell script to create a simple TCP listener on Windows port 9003
+	// This simulates what an IDE would do - listen for incoming Xdebug connections
 	psScript := `
-param($LADDR="0.0.0.0",$LPORT=9003,$TADDR="127.0.0.1",$TPORT=9000)
-
-$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Parse($LADDR), $LPORT)
-$listener.Start()
-Write-Host "Listening on $LADDR:$LPORT -> $TADDR:$TPORT" 1>&2
-
-while ($true) {
-  $client = $listener.AcceptTcpClient()
-  Start-ThreadJob -ArgumentList $client,$TADDR,$TPORT -ScriptBlock {
-    param($client,$TADDR,$TPORT)
-    try {
-      $target = [System.Net.Sockets.TcpClient]::new($TADDR,$TPORT)
-
-      $cs = $client.GetStream()
-      $ts = $target.GetStream()
-
-      $a = $cs.CopyToAsync($ts)
-      $b = $ts.CopyToAsync($cs)
-      [Threading.Tasks.Task]::WaitAny(@($a,$b)) | Out-Null
-    } catch {
-      # swallow
-    } finally {
-      try { $client.Close() } catch {}
-      try { $target.Close() } catch {}
-    }
-  } | Out-Null
+$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Any, 9003)
+try {
+    $listener.Start()
+} catch {
+    Write-Output "INUSE:$($_.Exception.Message)"
+    exit 0
 }
+Write-Output "LISTENING"
+$listener.Server.ReceiveTimeout = 15000
+try {
+    $client = $listener.AcceptTcpClient()
+    $stream = $client.GetStream()
+    $buffer = New-Object byte[] 1024
+    $count = $stream.Read($buffer, 0, $buffer.Length)
+    if ($count -gt 0) {
+        $msg = [System.Text.Encoding]::ASCII.GetString($buffer, 0, $count).Trim()
+        Write-Output "RECEIVED:$msg"
+    }
+    $client.Close()
+} catch {
+    Write-Output "ERROR:$($_.Exception.Message)"
+}
+$listener.Stop()
 `
 
-	// Start PowerShell proxy on Windows side
-	output.UserOut.Println("  Starting PowerShell proxy on Windows (port 9003 -> WSL2 port 9000)...")
+	// Start PowerShell listener on Windows side
+	output.UserOut.Println("  Starting test listener on Windows port 9003...")
 	cmd := exec.Command("powershell.exe",
 		"-NoProfile",
 		"-ExecutionPolicy", "Bypass",
 		"-Command", psScript,
-		"-LADDR", "0.0.0.0",
-		"-LPORT", "9003",
-		"-TADDR", "127.0.0.1",
-		"-TPORT", "9000",
 	)
 
-	// Start the PowerShell proxy in background
-	err := cmd.Start()
+	// Capture stdout to monitor listener status
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		output.UserOut.Printf("  ✗ Failed to start PowerShell proxy: %v\n", err)
-		output.UserOut.Println("    Make sure PowerShell is available and you have necessary permissions")
+		output.UserOut.Printf("  ✗ Failed to create stdout pipe: %v\n", err)
+		return true
+	}
+
+	// Start the PowerShell listener
+	err = cmd.Start()
+	if err != nil {
+		output.UserOut.Printf("  ✗ Failed to start PowerShell listener: %v\n", err)
+		output.UserOut.Println("    Make sure PowerShell is available")
 		return true
 	}
 
@@ -376,61 +377,104 @@ while ($true) {
 		}
 	}()
 
-	// Give PowerShell proxy a moment to start
-	time.Sleep(2 * time.Second)
-	output.UserOut.Println("  ✓ PowerShell proxy started on Windows side")
-
-	// Now start listener in WSL2 on port 9000
-	listener, err := net.Listen("tcp", "127.0.0.1:9000")
-	if err != nil {
-		output.UserOut.Printf("  ✗ Failed to start test listener on WSL2: %v\n", err)
-		return true
-	}
-	defer listener.Close()
-	output.UserOut.Println("  ✓ Test listener started in WSL2 on 127.0.0.1:9000")
-
-	// Accept connections in background
-	connChan := make(chan net.Conn, 1)
-	errChan := make(chan error, 1)
+	// Wait for listener to be ready by reading the LISTENING output
+	readyChan := make(chan bool, 1)
+	outputLines := make(chan string, 10)
 	go func() {
-		conn, err := listener.Accept()
-		if err != nil {
-			errChan <- err
-			return
+		buf := make([]byte, 4096)
+		listenerReady := false
+		for {
+			n, err := stdout.Read(buf)
+			if err != nil {
+				return
+			}
+			lines := strings.Split(string(buf[:n]), "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				// Handle Windows CRLF line endings
+				line = strings.TrimSuffix(line, "\r")
+				if line == "" {
+					continue
+				}
+				if line == "LISTENING" && !listenerReady {
+					listenerReady = true
+					readyChan <- true
+					continue // Don't put LISTENING in outputLines
+				}
+				// Handle port already in use on Windows
+				if strings.HasPrefix(line, "INUSE:") {
+					outputLines <- line
+					return // Exit goroutine, listener won't start
+				}
+				outputLines <- line
+			}
 		}
-		connChan <- conn
 	}()
 
+	// Wait for listener to be ready (or detect port already in use)
+	select {
+	case <-readyChan:
+		output.UserOut.Println("  ✓ Test listener started on Windows 0.0.0.0:9003")
+	case line := <-outputLines:
+		if strings.HasPrefix(line, "INUSE:") {
+			output.UserOut.Println("  ✓ Port 9003 is already in use on Windows")
+			output.UserOut.Println("    This is likely your IDE listening for Xdebug connections (which is good!)")
+			output.UserOut.Println("    Skipping connection test since we cannot bind to the port.")
+			return false // Not an issue - port is in use, presumably by IDE
+		}
+		output.UserOut.Printf("  ✗ Unexpected output from Windows listener: %s\n", line)
+		return true
+	case <-time.After(5 * time.Second):
+		output.UserOut.Println("  ✗ Timeout waiting for Windows listener to start")
+		return true
+	}
+
 	// Test connection from container
-	output.UserOut.Println("  Testing connection from web container...")
-	ncOut, _, ncErr := app.Exec(&ddevapp.ExecOpts{
-		Cmd: "bash -c 'echo test from container | nc -w 2 host.docker.internal 9003'",
+	output.UserOut.Println("  Testing connection from web container to Windows...")
+	_, _, ncErr := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "bash -c 'echo test-from-container | nc -w 5 host.docker.internal 9003'",
 	})
 
-	// Wait for connection with timeout
+	// Check if PowerShell received the connection
 	select {
-	case conn := <-connChan:
-		output.UserOut.Println("  ✓ Successfully connected from web container through Windows proxy to WSL2")
-		buf := make([]byte, 1024)
-		conn.SetReadDeadline(time.Now().Add(2 * time.Second))
-		n, err := conn.Read(buf)
-		if err == nil && n > 0 {
-			message := strings.TrimSpace(string(buf[:n]))
+	case line := <-outputLines:
+		if strings.HasPrefix(line, "RECEIVED:") {
+			message := strings.TrimPrefix(line, "RECEIVED:")
+			output.UserOut.Println("  ✓ Successfully connected from web container to Windows")
 			output.UserOut.Printf("  ✓ Received message: '%s'\n", message)
+		} else if strings.HasPrefix(line, "ERROR:") {
+			errMsg := strings.TrimPrefix(line, "ERROR:")
+			output.UserOut.Printf("  ✗ PowerShell listener error: %s\n", errMsg)
+			hasIssues = true
+		} else {
+			output.UserOut.Printf("  ✓ Received response from listener: %s\n", line)
 		}
-		conn.Close()
-	case err := <-errChan:
-		output.UserOut.Printf("  ✗ Failed to accept connection: %v\n", err)
-		hasIssues = true
 	case <-time.After(10 * time.Second):
 		output.UserOut.Println("  ✗ Timeout waiting for connection from web container")
 		output.UserOut.Println("    This may indicate firewall or networking issues in WSL2 NAT mode")
+		output.UserOut.Println("    Check Windows Firewall settings for port 9003")
 		if ncErr != nil {
-			output.UserOut.Printf("    nc error: %v\n", ncErr)
-			output.UserOut.Printf("    nc output: %s\n", ncOut)
+			output.UserOut.Printf("    Container connection error: %v\n", ncErr)
 		}
 		hasIssues = true
 	}
 
 	return hasIssues
+}
+
+// isWindowsPortInUse checks if a port is in use on Windows from WSL2
+// by using PowerShell to query Windows networking
+func isWindowsPortInUse(port int) bool {
+	// Use PowerShell to check if the port is listening on Windows
+	psScript := `
+$connections = Get-NetTCPConnection -LocalPort ` + fmt.Sprintf("%d", port) + ` -State Listen -ErrorAction SilentlyContinue
+if ($connections) { Write-Output "INUSE" } else { Write-Output "FREE" }
+`
+	cmd := exec.Command("powershell.exe", "-NoProfile", "-Command", psScript)
+	output, err := cmd.Output()
+	if err != nil {
+		// If PowerShell fails, assume port is free
+		return false
+	}
+	return strings.TrimSpace(string(output)) == "INUSE"
 }
