@@ -30,7 +30,7 @@ func TestCmdXdebugDiagnose(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run xdebug-diagnose command
-	out, err := exec.RunHostCommand(DdevBin, "utility", "xdebug-diagnose")
+	out, _ := exec.RunHostCommand(DdevBin, "utility", "xdebug-diagnose")
 	// Command may exit with 0 or 1 depending on diagnostic results
 	// We just check that it runs and produces expected output
 	t.Logf("xdebug-diagnose output: %s", out)
@@ -69,4 +69,28 @@ func TestCmdXdebugDiagnoseNotInProject(t *testing.T) {
 	out, err := exec.RunHostCommand(DdevBin, "utility", "xdebug-diagnose")
 	require.Error(t, err)
 	require.Contains(t, out, "Not in a DDEV project directory")
+}
+
+// TestCmdXdebugDiagnoseInteractiveFlag tests that --interactive flag exists and
+// falls back to standard mode when DDEV_NONINTERACTIVE is set
+func TestCmdXdebugDiagnoseInteractiveFlag(t *testing.T) {
+	pwd, _ := os.Getwd()
+	v := TestSites[0]
+
+	err := os.Chdir(v.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err := os.Chdir(pwd)
+		require.NoError(t, err)
+	})
+
+	// Test that --interactive flag is recognized (with DDEV_NONINTERACTIVE to skip prompts)
+	t.Setenv("DDEV_NONINTERACTIVE", "true")
+	out, _ := exec.RunHostCommand(DdevBin, "utility", "xdebug-diagnose", "--interactive")
+
+	// Should see the fallback warning when DDEV_NONINTERACTIVE is set
+	require.Contains(t, out, "Interactive mode requested but DDEV_NONINTERACTIVE is set")
+	// Should still run standard diagnostics
+	require.Contains(t, out, "Xdebug Diagnostics for Project")
 }
