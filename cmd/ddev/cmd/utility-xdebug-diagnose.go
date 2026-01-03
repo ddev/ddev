@@ -113,7 +113,7 @@ func runXdebugDiagnose() int {
 
 	// Test ping
 	pingOut, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: "ping -c 1 -W 2 host.docker.internal",
+		Cmd: "sudo ping -c 1 -W 2 host.docker.internal",
 	})
 	if err != nil {
 		output.UserOut.Println("  ✗ Cannot ping host.docker.internal from web container")
