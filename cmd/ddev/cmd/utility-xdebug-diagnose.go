@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net"
 	"os"
@@ -581,7 +582,7 @@ func runInteractiveXdebugDiagnose() int {
 	// Step 6: Test DBGp Protocol
 	output.UserOut.Println("Step 6: IDE Protocol Test")
 	output.UserOut.Println("─────────────────────────────────────────────────────────────")
-	protocolOK := testDBGpProtocol(ideLocation, envType)
+	protocolOK := testDBGpProtocol(app, ideLocation, envType)
 	output.UserOut.Println()
 
 	// Summary
@@ -772,121 +773,185 @@ func promptEnableListening(projectName string, ideType string) {
 	util.Confirm("Press Enter when your IDE is listening for debug connections")
 }
 
-// testDBGpProtocol tests the DBGp protocol by connecting to the IDE and sending an init packet
-func testDBGpProtocol(ideLocation string, envType string) bool {
-	output.UserOut.Println("  Connecting to IDE on port 9003...")
+// testDBGpProtocol tests the DBGp protocol by connecting to the IDE from inside the web container
+func testDBGpProtocol(app *ddevapp.DdevApp, ideLocation string, envType string) bool {
+	output.UserOut.Println("  Connecting to IDE on port 9003 from web container...")
 
-	// Determine the target address based on IDE location and environment
-	var targetAddr string
+	// Determine the target host based on IDE location and environment
+	// The connection must be made from inside the web container
+	var targetHost string
 	switch ideLocation {
-	case "windows":
-		// For WSL2 NAT mode, connect to Windows host
-		// Get the Windows IP from the default gateway
-		targetAddr = getWindowsHostIP() + ":9003"
-	case "wsl2":
-		targetAddr = "127.0.0.1:9003"
+	case "windows", "wsl2", "macos", "linux":
+		// From inside container, always use host.docker.internal to reach host
+		targetHost = "host.docker.internal"
 	case "remote":
 		output.UserOut.Println("  ℹ For remote IDE setups, please ensure port forwarding is configured.")
 		output.UserOut.Println("    Skipping protocol test for remote IDE.")
 		return true
 	default:
-		targetAddr = "127.0.0.1:9003"
+		targetHost = "host.docker.internal"
 	}
 
-	output.UserOut.Printf("  Target: %s\n", targetAddr)
+	output.UserOut.Printf("  Target: %s:9003 (from web container)\n", targetHost)
 
-	// Connect to the IDE
-	conn, err := net.DialTimeout("tcp", targetAddr, 5*time.Second)
-	if err != nil {
-		output.UserOut.Printf("  ✗ Cannot connect to IDE: %v\n", err)
+	// Create a PHP script to test the DBGp protocol using base64 encoding to avoid quoting issues
+	// PHP provides better control over socket communication than nc
+	phpScript := `<?php
+$sock = @fsockopen('HOST_PLACEHOLDER', 9003, $errno, $errstr, 5);
+if (!$sock) {
+    echo "ERROR: $errstr ($errno)\n";
+    exit(1);
+}
+
+$initXML = base64_decode('PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPGluaXQgeG1sbnM9InVybjpkZWJ1Z2dlcl9wcm90b2NvbF92MSIKICAgICAgeG1sbnM6eGRlYnVnPSJodHRwczovL3hkZWJ1Zy5vcmcvZGJncC94ZGVidWciCiAgICAgIGZpbGV1cmk9ImZpbGU6Ly8vdmFyL3d3dy9odG1sL2luZGV4LnBocCIKICAgICAgbGFuZ3VhZ2U9IlBIUCIKICAgICAgcHJvdG9jb2xfdmVyc2lvbj0iMS4wIgogICAgICBhcHBpZD0iZGRldi10ZXN0IgogICAgICBpZGVrZXk9IlBIUFNUT1JNIj4KICA8ZW5naW5lIHZlcnNpb249IjMuMy4wIj48IVtDREFUQVtYZGVidWddXT48L2VuZ2luZT4KPC9pbml0Pg==');
+
+$packet = strlen($initXML) . "\0" . $initXML . "\0";
+fwrite($sock, $packet);
+fflush($sock);
+
+stream_set_timeout($sock, 3);
+$response = fread($sock, 8192);
+
+if ($response) {
+    echo "SUCCESS: " . strlen($response) . " bytes\n";
+    echo $response;
+} else {
+    $info = stream_get_meta_data($sock);
+    if ($info['timed_out']) {
+        echo "TIMEOUT\n";
+    } else {
+        echo "NO_RESPONSE\n";
+    }
+}
+
+fclose($sock);
+?>`
+	phpScript = strings.Replace(phpScript, "HOST_PLACEHOLDER", targetHost, 1)
+
+	// Use base64 to avoid all shell interpretation issues
+	phpScriptB64 := base64.StdEncoding.EncodeToString([]byte(phpScript))
+	cmd := fmt.Sprintf("echo %s | base64 -d > /tmp/ddev_xdebug_test.php && php /tmp/ddev_xdebug_test.php && rm -f /tmp/ddev_xdebug_test.php", phpScriptB64)
+
+	output.UserOut.Println("  Sending DBGp init packet from web container...")
+	testOut, testErr, execErr := app.Exec(&ddevapp.ExecOpts{
+		Cmd: cmd,
+	})
+
+	if execErr != nil {
+		output.UserOut.Printf("  ✗ Failed to execute test: %v\n", execErr)
 		output.UserOut.Println("    Make sure your IDE is listening for debug connections.")
 		return false
 	}
-	defer conn.Close()
-	output.UserOut.Println("  ✓ Connected to IDE")
 
-	// Send a simulated DBGp init packet
-	// Format: length\0xml\0
-	initXML := `<?xml version="1.0" encoding="UTF-8"?>
-<init xmlns="urn:debugger_protocol_v1"
-      xmlns:xdebug="https://xdebug.org/dbgp/xdebug"
-      appid="ddev-test"
-      idekey="DDEV_TEST"
-      session=""
-      thread="1"
-      language="PHP"
-      protocol_version="1.0"
-      fileuri="file:///var/www/html/index.php">
-  <engine version="3.0.0"><![CDATA[Xdebug]]></engine>
-</init>`
-
-	// DBGp format: length + null + xml + null
-	packet := fmt.Sprintf("%d\x00%s\x00", len(initXML), initXML)
-
-	output.UserOut.Println("  Sending DBGp init packet...")
-	_ = conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
-	_, err = conn.Write([]byte(packet))
-	if err != nil {
-		output.UserOut.Printf("  ✗ Failed to send init packet: %v\n", err)
-		return false
-	}
-	output.UserOut.Println("  ✓ Init packet sent")
-
-	// Wait for IDE response
-	output.UserOut.Println("  Waiting for IDE response...")
-	_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
-	buf := make([]byte, 4096)
-	n, err := conn.Read(buf)
-	if err != nil {
-		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-			output.UserOut.Println("  ✗ Timeout waiting for IDE response")
-			output.UserOut.Println("    The IDE connected but did not respond to the init packet.")
-			output.UserOut.Println("    This might indicate the IDE is not properly configured for Xdebug.")
-			return false
+	// Check for connection errors
+	if strings.Contains(testOut, "ERROR:") {
+		errMsg := strings.TrimPrefix(testOut, "ERROR: ")
+		output.UserOut.Printf("  ✗ Connection failed: %s\n", strings.TrimSpace(errMsg))
+		if strings.Contains(errMsg, "Connection refused") {
+			output.UserOut.Println("    Your IDE is not listening on port 9003.")
+			output.UserOut.Println("    Please start your IDE's debug listener and try again.")
 		}
-		output.UserOut.Printf("  ✗ Error reading IDE response: %v\n", err)
 		return false
 	}
 
-	if n > 0 {
-		// Parse the response - DBGp responses start with length + null byte
-		response := string(buf[:n])
-		output.UserOut.Println("  ✓ Received response from IDE!")
+	// Check stderr for errors
+	if testErr != "" && !strings.Contains(testErr, "Deprecated") {
+		output.UserOut.Printf("  ⚠ Warning: %s\n", testErr)
+	}
 
-		// Look for common DBGp commands in the response
-		if strings.Contains(response, "feature_get") ||
-			strings.Contains(response, "feature_set") ||
-			strings.Contains(response, "status") ||
-			strings.Contains(response, "breakpoint") {
-			output.UserOut.Println("  ✓ IDE responded with valid DBGp commands")
-			output.UserOut.Println("  ✓ Your IDE is correctly configured for Xdebug!")
+	output.UserOut.Println("  ✓ Successfully sent DBGp init packet to IDE")
+
+	// Check for IDE response
+	if strings.Contains(testOut, "SUCCESS:") {
+		// Extract response data (everything after the SUCCESS line)
+		lines := strings.SplitN(testOut, "\n", 2)
+		if len(lines) > 1 {
+			response := lines[1]
+			// Parse the byte count
+			if strings.HasPrefix(lines[0], "SUCCESS: ") {
+				byteCountStr := strings.TrimPrefix(lines[0], "SUCCESS: ")
+				byteCountStr = strings.TrimSuffix(byteCountStr, " bytes")
+				output.UserOut.Printf("  ✓ IDE responded with %s bytes\n", byteCountStr)
+			}
+
+			// Parse and display the DBGp commands
+			output.UserOut.Println("    IDE commands received:")
+
+			// Split by common command keywords to separate multiple commands
+			// The response contains space-separated commands like: eval -i 1 -- base64 feature_set -i 2 -n name -v val
+			commands := []string{}
+			if strings.Contains(response, "eval") {
+				commands = append(commands, "eval")
+			}
+			if strings.Contains(response, "feature_set") {
+				commands = append(commands, "feature_set")
+			}
+			if strings.Contains(response, "feature_get") {
+				commands = append(commands, "feature_get")
+			}
+			if strings.Contains(response, "status") {
+				commands = append(commands, "status")
+			}
+			if strings.Contains(response, "breakpoint") {
+				commands = append(commands, "breakpoint")
+			}
+			if strings.Contains(response, "run") {
+				commands = append(commands, "run")
+			}
+			if strings.Contains(response, "step") {
+				commands = append(commands, "step")
+			}
+
+			if len(commands) > 0 {
+				for _, cmd := range commands {
+					output.UserOut.Printf("      • %s\n", cmd)
+				}
+			} else {
+				output.UserOut.Println("      • (unknown commands)")
+			}
+
+			// Look for common DBGp commands in the response
+			if strings.Contains(response, "feature_get") ||
+				strings.Contains(response, "feature_set") ||
+				strings.Contains(response, "eval") ||
+				strings.Contains(response, "status") ||
+				strings.Contains(response, "breakpoint") ||
+				strings.Contains(response, "run") ||
+				strings.Contains(response, "step") {
+				output.UserOut.Println("  ✓ IDE responded with valid DBGp commands")
+				output.UserOut.Println("  ✓ Your IDE is correctly configured for Xdebug!")
+			} else {
+				output.UserOut.Println("  ✓ IDE is responding to Xdebug connections")
+			}
 			return true
 		}
-
-		// Any response is actually good - it means the IDE is listening and responding
-		output.UserOut.Println("  ✓ IDE is responding to Xdebug connections")
-		util.Debug("DBGp response: %s", response)
-		return true
 	}
 
-	output.UserOut.Println("  ⚠ IDE connected but sent empty response")
+	// Handle timeout or no response
+	if strings.Contains(testOut, "TIMEOUT") {
+		output.UserOut.Println("  ⚠ IDE connection timed out waiting for response")
+		output.UserOut.Println("    The IDE accepted the connection but did not send commands.")
+		output.UserOut.Println("    This could indicate:")
+		output.UserOut.Println("    - Your IDE is listening but may not be properly configured for Xdebug")
+		output.UserOut.Println("    - Some IDEs don't respond until Xdebug is actually enabled")
+		output.UserOut.Println()
+		output.UserOut.Println("  Try enabling Xdebug and setting a breakpoint to test fully:")
+		output.UserOut.Println("    ddev xdebug on")
+		return false
+	}
+
+	if strings.Contains(testOut, "NO_RESPONSE") {
+		output.UserOut.Println("  ⚠ IDE accepted connection but did not send any response")
+		output.UserOut.Println("    This could indicate:")
+		output.UserOut.Println("    - Your IDE is listening but may not be properly configured for Xdebug")
+		output.UserOut.Println("    - Some IDEs don't respond until Xdebug is actually enabled")
+		output.UserOut.Println()
+		output.UserOut.Println("  Try enabling Xdebug and setting a breakpoint to test fully:")
+		output.UserOut.Println("    ddev xdebug on")
+		return false
+	}
+
+	// Unexpected output
+	output.UserOut.Printf("  ⚠ Unexpected test output: %s\n", testOut)
 	return false
-}
-
-// getWindowsHostIP gets the Windows host IP from WSL2
-func getWindowsHostIP() string {
-	// In WSL2, the Windows host is typically accessible via the default gateway
-	cmd := exec.Command("ip", "route", "show", "default")
-	out, err := cmd.Output()
-	if err != nil {
-		return "127.0.0.1"
-	}
-	// Parse "default via 172.x.x.x dev eth0"
-	fields := strings.Fields(string(out))
-	for i, field := range fields {
-		if field == "via" && i+1 < len(fields) {
-			return fields[i+1]
-		}
-	}
-	return "127.0.0.1"
 }
