@@ -14,6 +14,14 @@ function teardown {
   docker volume rm ${TEST_VOLUME_NAME} 2>/dev/null || true
 }
 
+# Wait for Traefik to reload config by running the healthcheck.
+# This is more reliable than sleep as the healthcheck has built-in
+# wait_for_routers() logic that polls the API for up to 10 seconds.
+function wait_for_config_reload {
+  docker exec ${CONTAINER_NAME} bash -c 'rm -f /tmp/healthy && /healthcheck.sh' >/dev/null
+  sleep 1
+}
+
 # Wait for container to be ready.
 function containercheck {
   for i in {60..0}; do
@@ -44,7 +52,7 @@ function containercheck {
 # Must use --entrypoint to override the traefik entrypoint
 function setup_test_data {
   # Make sure rootCA is created and installed on the ddev-global-cache/mkcert
-  mkcert -install
+  mkcert -install >/dev/null 2>&1
 
   # Copy test data using --entrypoint to override default entrypoint
   docker run --rm --entrypoint /bin/bash \
@@ -52,5 +60,5 @@ function setup_test_data {
     -v "${TEST_SCRIPT_DIR}/testdata:/mnt/testdata" \
     -v ${TEST_VOLUME_NAME}:/mnt/ddev-global-cache \
     "${IMAGE}" \
-    -c "mkdir -p /mnt/ddev-global-cache/{mkcert,traefik} && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache && cp -rT /mnt/testdata/ /mnt/ddev-global-cache/traefik/"
+    -c "mkdir -p /mnt/ddev-global-cache/{mkcert,traefik} && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache && cp -rT /mnt/testdata/ /mnt/ddev-global-cache/traefik/" >/dev/null
 }

@@ -94,6 +94,7 @@ You can start a new [Backdrop](https://backdropcms.org) project or configure an 
     ```bash
     ddev import-db --file=/path/to/db.sql.gz
     ddev import-files --source=/path/to/files.tar.gz
+    ddev bee cc all
     ```
 
     Launch the site:
@@ -116,6 +117,7 @@ You can start a new [Backdrop](https://backdropcms.org) project or configure an 
         ddev start -y
         ddev import-db --file=/path/to/db.sql.gz
         ddev import-files --source=/path/to/files.tar.gz
+        ddev bee cc all
         ddev launch
         EOF
         chmod +x setup-backdrop-existing.sh
