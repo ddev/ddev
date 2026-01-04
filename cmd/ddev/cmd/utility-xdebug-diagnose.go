@@ -114,9 +114,8 @@ func runXdebugDiagnose() int {
 			output.UserOut.Println("  To identify what's listening on port 9003, run in PowerShell:")
 			output.UserOut.Println("    Get-NetTCPConnection -LocalPort 9003 | Select-Object OwningProcess")
 		} else {
-			output.UserOut.Println("  ℹ Port 9003 is not currently in use on Windows")
-			output.UserOut.Println("    Your IDE should be listening on this port for Xdebug to work.")
-			hasIssues = true
+			output.UserOut.Println("  Port 9003 is not currently in use on Windows")
+			output.UserOut.Println("  When you're ready to debug, start your IDE's debug listener on port 9003.")
 		}
 	} else {
 		portInUse = netutil.IsPortActive("9003")
@@ -129,9 +128,8 @@ func runXdebugDiagnose() int {
 			output.UserOut.Println("    • Linux/macOS: sudo lsof -i :9003 -sTCP:LISTEN")
 			output.UserOut.Println("    • Windows: netstat -ano | findstr :9003")
 		} else {
-			output.UserOut.Println("  ℹ Port 9003 is not currently in use on the host")
-			output.UserOut.Println("    Your IDE should be listening on this port for Xdebug to work.")
-			hasIssues = true
+			output.UserOut.Println("  Port 9003 is not currently in use on the host")
+			output.UserOut.Println("  When you're ready to debug, start your IDE's debug listener on port 9003.")
 		}
 	}
 	output.UserOut.Println()
@@ -196,8 +194,8 @@ func runXdebugDiagnose() int {
 	output.UserOut.Printf("  Current status: %s\n", strings.TrimSpace(statusOut))
 
 	if strings.Contains(statusOut, "disabled") {
-		output.UserOut.Println("  ℹ Xdebug is currently disabled")
-		output.UserOut.Println("    Enable with: ddev xdebug on")
+		output.UserOut.Println("  Xdebug is currently disabled")
+		output.UserOut.Println("  When you're ready to debug, enable it with: ddev xdebug on")
 	}
 	output.UserOut.Println()
 
@@ -538,13 +536,23 @@ func runInteractiveXdebugDiagnose() int {
 	envType := detectAndDisplayEnvironment(app)
 	output.UserOut.Println()
 
-	// Step 2: Ask user to close IDE
+	// Turn off Xdebug to prevent it from interfering with the test
+	output.UserOut.Println("  Ensuring Xdebug is disabled for testing...")
+	_, _, _ = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "xdebug off",
+	})
+	output.UserOut.Println()
+
+	// Step 2: Prepare for connectivity test
 	output.UserOut.Println("Step 2: Prepare for Connectivity Test")
 	output.UserOut.Println("─────────────────────────────────────────────────────────────")
 	output.UserOut.Println("We need to test if the network path from your container to your")
 	output.UserOut.Println("host is working. To do this, we need to temporarily use port 9003.")
 	output.UserOut.Println()
-	if !util.Confirm("Please close or stop your IDE's debug listener, then press Enter to continue") {
+	output.UserOut.Println("If your IDE is currently listening for Xdebug connections, please")
+	output.UserOut.Println("stop it temporarily. You'll be asked to start it again in a moment.")
+	output.UserOut.Println()
+	if !util.Confirm("Press Enter when your IDE's debug listener is stopped") {
 		output.UserOut.Println("Cancelled by user.")
 		return 1
 	}
@@ -593,10 +601,11 @@ func runInteractiveXdebugDiagnose() int {
 	if connectivityOK && protocolOK {
 		output.UserOut.Println("  ✓ All tests passed! Your Xdebug setup is working correctly.")
 		output.UserOut.Println()
-		output.UserOut.Println("Next steps:")
+		output.UserOut.Println("Next steps to start debugging:")
 		output.UserOut.Println("  1. Enable Xdebug: ddev xdebug on")
-		output.UserOut.Println("  2. Set a breakpoint in your code")
-		output.UserOut.Println("  3. Visit your site in a browser")
+		output.UserOut.Println("  2. Ensure your IDE is listening for debug connections")
+		output.UserOut.Println("  3. Set a breakpoint in your code")
+		output.UserOut.Println("  4. Visit your site in a browser")
 		output.UserOut.Println()
 		return 0
 	}
