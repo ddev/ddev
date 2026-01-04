@@ -44,9 +44,8 @@ RUN url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TAR
 # xdebugctl - Tool to control Xdebug settings at runtime
 RUN ARCH="${TARGETPLATFORM#linux/}"; \
     if [ "$ARCH" = "amd64" ]; then ARCH=""; else ARCH="-${ARCH}"; fi; \
-    wget -q https://xdebug.org/files/binaries/dbgpClient${ARCH} -O /usr/local/bin/dbgpClient && \
     wget -q https://xdebug.org/files/binaries/xdebugctl${ARCH} -O /usr/local/bin/xdebugctl && \
-    chmod +x /usr/local/bin/dbgpClient /usr/local/bin/xdebugctl
+    chmod +x /usr/local/bin/xdebugctl
 
 ADD generic-files /
 
