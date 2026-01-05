@@ -67,7 +67,7 @@ if [ "${os:-}" = "darwin" ]; then
       colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'docker rm -f $(docker ps -aq) || true'
       colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'sudo rm -rf /var/lib/docker/containers/*'
       colima ssh -p ${COLIMA_INSTANCE} -- sudo systemctl restart docker
-      colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'ls /var/lib/docker/containers && docker ps -aq'
+      colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'sudo ls /var/lib/docker/containers && docker ps -aq'
       docker context use colima-${COLIMA_INSTANCE}
       set +x
       ;;
