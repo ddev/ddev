@@ -8,11 +8,6 @@ on:
         required: false
         type: string
         default: 'ubuntu-24.04'
-      commit_message:
-        description: 'Latest commit message from the caller workflow (used for [skip github]/[skip ci])'
-        required: false
-        type: string
-        default: ''
       ddev_test_webserver_type:
         description: 'DDEV_TEST_WEBSERVER_TYPE value'
         required: false
@@ -92,10 +87,28 @@ defaults:
     shell: bash
 
 jobs:
+  check-skip:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - id: check
+        run: |
+          MESSAGE=$(git log -1 --pretty=%B)
+          if [[ "$MESSAGE" == *"[skip github]"* ]]; then
+            echo "Found [skip github] in commit message, skipping tests"
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+          fi
+
   test:
-    if: >
-      !contains(inputs.commit_message, '[skip github]') &&
-      !contains(inputs.commit_message, '[skip ci]')
+    needs: check-skip
+    if: needs.check-skip.outputs.should_skip != 'true'
     runs-on: ${{ inputs.runner }}
 
     env:
@@ -130,8 +143,8 @@ jobs:
           echo "date=$(/bin/date -u "+%Y%V")" >> $GITHUB_OUTPUT
 
       - name: DDEV test cache
-        if: ${{ github.ref == 'refs/heads/main' && inputs.gotest_short == '' }}
         uses: actions/cache@v5
+        if: ${{ github.ref == 'refs/heads/main' && inputs.gotest_short == '' }}
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
@@ -139,8 +152,8 @@ jobs:
             ddev-test-cache-
 
       - name: DDEV test cache/restore
-        if: ${{ github.ref != 'refs/heads/main' || inputs.gotest_short != '' }}
         uses: actions/cache/restore@v5
+        if: ${{ github.ref != 'refs/heads/main' || inputs.gotest_short != '' }}
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
