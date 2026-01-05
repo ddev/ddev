@@ -9,7 +9,6 @@ setup() {
 # executed after each test
 teardown() {
   _common_teardown
-  true
 }
 
 @test "backdrop new-project quickstart with $(ddev --version)" {
