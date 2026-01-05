@@ -134,7 +134,34 @@ func runXdebugDiagnose() int {
 	}
 	output.UserOut.Println()
 
-	// Check 2: Get host.docker.internal information
+	// Check 2: WSL2 Mirrored Mode - hostAddressLoopback setting
+	if isWSL2 && nodeps.IsWSL2MirroredMode() {
+		output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		output.UserOut.Println("WSL2 Mirrored Mode Configuration")
+		output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+		if nodeps.IsWSL2HostAddressLoopbackEnabled() {
+			output.UserOut.Println("  ✓ hostAddressLoopback=true is enabled in .wslconfig")
+			output.UserOut.Println("    This is required for Xdebug in WSL2 mirrored mode.")
+		} else {
+			output.UserOut.Println("  ✗ hostAddressLoopback=true is NOT set in .wslconfig")
+			output.UserOut.Println("    This setting is REQUIRED for Xdebug to work in WSL2 mirrored mode.")
+			output.UserOut.Println()
+			output.UserOut.Println("  To fix this, add the following to your Windows .wslconfig file")
+			output.UserOut.Println("  (located at C:\\Users\\<username>\\.wslconfig):")
+			output.UserOut.Println()
+			output.UserOut.Println("    [experimental]")
+			output.UserOut.Println("    hostAddressLoopback=true")
+			output.UserOut.Println()
+			output.UserOut.Println("  Then restart WSL with: wsl --shutdown")
+			output.UserOut.Println()
+			output.UserOut.Println("  See: https://ddev.readthedocs.io/en/stable/users/debugging-profiling/step-debugging/")
+			hasIssues = true
+		}
+		output.UserOut.Println()
+	}
+
+	// Check 3: Get host.docker.internal information
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("host.docker.internal Configuration")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -144,7 +171,7 @@ func runXdebugDiagnose() int {
 	output.UserOut.Printf("  Derivation: %s\n", hostDockerInternal.Message)
 	output.UserOut.Println()
 
-	// Check 3: Check xdebug_ide_location setting
+	// Check 4: Check xdebug_ide_location setting
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("Global Configuration")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -160,7 +187,7 @@ func runXdebugDiagnose() int {
 	}
 	output.UserOut.Println()
 
-	// Check 4: Start a test listener and test connection
+	// Check 5: Start a test listener and test connection
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("Connection Test")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -181,7 +208,7 @@ func runXdebugDiagnose() int {
 	}
 	output.UserOut.Println()
 
-	// Check 5: Check Xdebug status
+	// Check 6: Check Xdebug status
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("Xdebug Status")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -197,7 +224,7 @@ func runXdebugDiagnose() int {
 	}
 	output.UserOut.Println()
 
-	// Check 6: Test Xdebug with PHP if enabled, or enable temporarily
+	// Check 7: Test Xdebug with PHP if enabled, or enable temporarily
 	wasEnabled := !strings.Contains(statusOut, "disabled")
 	if !wasEnabled {
 		output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -468,8 +495,14 @@ $listener.Stop()
 		}
 	case <-time.After(10 * time.Second):
 		output.UserOut.Println("  ✗ Timeout waiting for connection from web container")
-		output.UserOut.Println("    This may indicate firewall or networking issues in WSL2 NAT mode")
+		output.UserOut.Println("    This may indicate firewall or networking issues in WSL2")
 		output.UserOut.Println("    Check Windows Firewall settings for port 9003")
+		if nodeps.IsWSL2MirroredMode() && !nodeps.IsWSL2HostAddressLoopbackEnabled() {
+			output.UserOut.Println()
+			output.UserOut.Println("  ⚠ You are using WSL2 mirrored mode but hostAddressLoopback is not enabled!")
+			output.UserOut.Println("    Add to your .wslconfig under [experimental]: hostAddressLoopback=true")
+			output.UserOut.Println("    Then restart WSL with: wsl --shutdown")
+		}
 		if ncErr != nil {
 			output.UserOut.Printf("    Container connection error: %v\n", ncErr)
 		}
@@ -625,6 +658,14 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 		if nodeps.IsWSL2MirroredMode() {
 			envType = "wsl2-mirrored"
 			output.UserOut.Println("  Environment: WSL2 (Mirrored networking mode)")
+			// Check for hostAddressLoopback setting
+			if nodeps.IsWSL2HostAddressLoopbackEnabled() {
+				output.UserOut.Println("  ✓ hostAddressLoopback=true is enabled")
+			} else {
+				output.UserOut.Println("  ✗ hostAddressLoopback=true is NOT set in .wslconfig")
+				output.UserOut.Println("    This is required for Xdebug in mirrored mode!")
+				output.UserOut.Println("    Add to .wslconfig under [experimental]: hostAddressLoopback=true")
+			}
 		} else {
 			envType = "wsl2-nat"
 			output.UserOut.Println("  Environment: WSL2 (NAT networking mode)")
