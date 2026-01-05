@@ -88,6 +88,12 @@ defaults:
 
 jobs:
   test:
+    if: >
+      github.event.head_commit == null ||
+      (
+        !contains(github.event.head_commit.message, '[skip github]') &&
+        !contains(github.event.head_commit.message, '[skip ci]')
+      )
     runs-on: ${{ inputs.runner }}
 
     env:
@@ -122,8 +128,8 @@ jobs:
           echo "date=$(/bin/date -u "+%Y%V")" >> $GITHUB_OUTPUT
 
       - name: DDEV test cache
-        uses: actions/cache@v5
         if: ${{ github.ref == 'refs/heads/main' && inputs.gotest_short == '' }}
+        uses: actions/cache@v5
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
@@ -131,8 +137,8 @@ jobs:
             ddev-test-cache-
 
       - name: DDEV test cache/restore
-        uses: actions/cache/restore@v5
         if: ${{ github.ref != 'refs/heads/main' || inputs.gotest_short != '' }}
+        uses: actions/cache/restore@v5
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
