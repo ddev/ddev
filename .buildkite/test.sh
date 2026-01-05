@@ -198,7 +198,7 @@ case ${DOCKER_TYPE:-none} in
     echo "colima version=$(colima version)"
     ;;
   "lima")
-    echo "limactl version=$(limactl version)"
+    echo "limactl --version=$(limactl --version)"
     ;;
   "orbstack")
     echo "orbstack version=$(orbctl version)"
