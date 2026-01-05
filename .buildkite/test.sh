@@ -62,7 +62,6 @@ if [ "${os:-}" = "darwin" ]; then
   case ${DOCKER_TYPE:=none} in
     "colima_vz")
       export COLIMA_INSTANCE=vz
-      set -x
       colima start ${COLIMA_INSTANCE}
 
       # Try to delete any containers first. Ignore rm errors, but if anything remains, go into cleanup path.
@@ -89,14 +88,12 @@ if [ "${os:-}" = "darwin" ]; then
       colima ssh -p "${COLIMA_INSTANCE}" -- bash -lc 'sudo ls /var/lib/docker/containers && docker ps -aq'
 
       docker context use colima-${COLIMA_INSTANCE}
-      set +x
       ;;
 
     "lima")
       export LIMA_INSTANCE=lima-vz
       export HOMEDIR=/home/testbot.linux
       limactl start ${LIMA_INSTANCE}
-      set -x
 
       # Try to delete any containers first. Ignore rm errors, but if anything remains, go into cleanup path.
       limactl shell ${LIMA_INSTANCE} bash -lc '
@@ -122,7 +119,6 @@ if [ "${os:-}" = "darwin" ]; then
       limactl shell ${LIMA_INSTANCE} bash -lc "ls ${HOMEDIR}/.local/share/docker/containers && docker ps -aq"
 
       docker context use lima-${LIMA_INSTANCE}
-      set +x
       ;;
 
     "docker-desktop")
@@ -190,7 +186,9 @@ case ${DOCKER_TYPE:-none} in
   "colima_vz")
     echo "colima version=$(colima version)"
     ;;
-
+  "lima")
+    echo "limactl version=$(limactl version)"
+    ;;
   "orbstack")
     echo "orbstack version=$(orbctl version)"
     ;;
