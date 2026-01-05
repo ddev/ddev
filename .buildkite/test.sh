@@ -65,7 +65,7 @@ if [ "${os:-}" = "darwin" ]; then
       set -x
       colima start ${COLIMA_INSTANCE}
       colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'docker rm -f $(docker ps -aq) || true'
-      colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'sudo rm -rf /var/lib/docker/containers/*'
+      colima ssh -p "${COLIMA_INSTANCE}" -- sudo bash -c 'rm -rf /var/lib/docker/containers/* || true'
       colima ssh -p ${COLIMA_INSTANCE} -- sudo systemctl restart docker
       colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'sudo ls /var/lib/docker/containers && docker ps -aq'
       docker context use colima-${COLIMA_INSTANCE}
@@ -78,7 +78,7 @@ if [ "${os:-}" = "darwin" ]; then
       limactl start ${LIMA_INSTANCE}
       set -x
       limactl shell ${LIMA_INSTANCE} bash -c 'docker rm -f $(docker ps -aq) || true'
-      limactl shell lima-vz bash -c 'rm -rf ${HOMEDIR}/.local/share/docker/containers/*'
+      limactl shell lima-vz bash -c "rm -rf ${HOMEDIR}/.local/share/docker/containers/*"
       limactl shell ${LIMA_INSTANCE} systemctl --user restart docker
       limactl shell ${LIMA_INSTANCE} bash -c "ls ${HOMEDIR}/.local/share/docker/containers && docker ps -aq"
       docker context use lima-${LIMA_INSTANCE}
