@@ -60,21 +60,23 @@ if [ "${os:-}" = "darwin" ]; then
 
   # Now start the docker provider we want
   case ${DOCKER_TYPE:=none} in
-    "colima")
-      colima start
-      # Colima seems to end up working better with less failures if we restart after starting
-      colima restart
-      docker context use colima
-      ;;
     "colima_vz")
-      colima start vz
-      colima restart vz
-      docker context use colima-vz
+      COLIMA_INSTANCE=vz
+      colima start ${COLIMA_INSTANCE}
+      colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'docker rm -f $(docker ps -aq) || true'
+      colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'sudo rm -rf /var/lib/docker/containers/*'
+      colima ssh -p ${COLIMA_INSTANCE} -- sudo systemctl restart docker
+      docker context use colima-${COLIMA_INSTANCE}
       ;;
 
     "lima")
-      limactl start lima-vz
-      docker context use lima-lima-vz
+      LIMA_INSTANCE=lima-vz
+      HOMEDIR=/home/testbot.linux
+      limactl start ${LIMA_INSTANCE}
+      limactl shell ${LIMA_INSTANCE} bash -c 'docker rm -f $(docker ps -aq) || true'
+      limactl shell lima-vz bash -c 'rm -rf /home/testbot.linux/.local/share/docker/containers/*'
+      limactl shell ${LIMA_INSTANCE} systemctl --user restart docker
+      docker context use lima-${LIMA_INSTANCE}
       ;;
 
     "docker-desktop")
