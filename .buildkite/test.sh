@@ -64,8 +64,10 @@ if [ "${os:-}" = "darwin" ]; then
       export COLIMA_INSTANCE=vz
       colima start ${COLIMA_INSTANCE}
 
-      # Try to delete any containers first. Ignore rm errors, but if anything remains, go into cleanup path.
-      colima ssh -p ${COLIMA_INSTANCE} -- bash -lc '
+      cleanup_needed=false
+
+      # Try to delete any containers first. Ignore rm errors, but if anything remains, enter the cleanup path.
+      if ! colima ssh -p "${COLIMA_INSTANCE}" -- bash -lc '
         ids=$(docker ps -aq || true)
         if [ -n "$ids" ]; then
           docker rm -f $ids >/dev/null 2>&1 || true
@@ -73,21 +75,23 @@ if [ "${os:-}" = "darwin" ]; then
 
         remaining=$(docker ps -aq || true)
         if [ -z "$remaining" ]; then
-          echo "No containers remain; skipping cleanup"
-          exit 0 # Exiting script inside colima vm
+          echo "No containers remain; skipping docker-state cleanup"
+          exit 0
         fi
 
-        echo "CLEANUP REQUIRED: Containers still remain after docker rm -f; entering cleanup path" >&2
-        echo "$remaining" >&2
+        echo "CLEANUP REQUIRED: Containers still remain after docker rm -f" >&2
+        docker ps -a >&2 || true
         exit 1
-      '
+      '; then
+        cleanup_needed=true
+      fi
 
       # If removing container state has any problems, show them (do not suppress errors).
-      colima ssh -p "${COLIMA_INSTANCE}" -- sudo bash -lc 'rm -rf /var/lib/docker/containers/*'
-      colima ssh -p "${COLIMA_INSTANCE}" -- sudo systemctl restart docker
-      colima ssh -p "${COLIMA_INSTANCE}" -- bash -lc 'sudo ls /var/lib/docker/containers && docker ps -aq'
-
-      docker context use colima-${COLIMA_INSTANCE}
+      if [ "$cleanup_needed" = true ]; then
+        colima ssh -p "${COLIMA_INSTANCE}" -- sudo bash -lc 'rm -rf /var/lib/docker/containers/*'
+        colima ssh -p "${COLIMA_INSTANCE}" -- sudo systemctl restart docker
+        colima ssh -p "${COLIMA_INSTANCE}" -- bash -lc 'sudo ls /var/lib/docker/containers && docker ps -aq'
+      fi
       ;;
 
     "lima")
@@ -95,8 +99,10 @@ if [ "${os:-}" = "darwin" ]; then
       export HOMEDIR=/home/testbot.linux
       limactl start ${LIMA_INSTANCE}
 
-      # Try to delete any containers first. Ignore rm errors, but if anything remains, go into cleanup path.
-      limactl shell ${LIMA_INSTANCE} bash -lc '
+      cleanup_needed=false
+
+      # Try to delete any containers first. Ignore rm errors, but if anything remains, enter the cleanup path.
+      if ! limactl shell ${LIMA_INSTANCE} bash -lc '
         ids=$(docker ps -aq || true)
         if [ -n "$ids" ]; then
           docker rm -f $ids >/dev/null 2>&1 || true
@@ -104,21 +110,23 @@ if [ "${os:-}" = "darwin" ]; then
 
         remaining=$(docker ps -aq || true)
         if [ -z "$remaining" ]; then
-          echo "No containers remain; skipping cleanup"
-          exit 0 # Exiting script inside lima vm
+          echo "No containers remain; skipping docker-state cleanup"
+          exit 0
         fi
 
-        echo "CLEANUP REQUIRED: Containers still remain after docker rm -f; entering cleanup path" >&2
-        echo "$remaining" >&2
+        echo "CLEANUP REQUIRED: Containers still remain after docker rm -f" >&2
+        docker ps -a >&2 || true
         exit 1
-      '
+      '; then
+        cleanup_needed=true
+      fi
 
       # If removing container state has any problems, show them (do not suppress errors).
-      limactl shell lima-vz bash -lc "rm -rf ${HOMEDIR}/.local/share/docker/containers/*"
-      limactl shell ${LIMA_INSTANCE} systemctl --user restart docker
-      limactl shell ${LIMA_INSTANCE} bash -lc "ls ${HOMEDIR}/.local/share/docker/containers && docker ps -aq"
-
-      docker context use lima-${LIMA_INSTANCE}
+      if [ "$cleanup_needed" = true ]; then
+        limactl shell lima-vz bash -lc "rm -rf ${HOMEDIR}/.local/share/docker/containers/*"
+        limactl shell ${LIMA_INSTANCE} systemctl --user restart docker
+        limactl shell ${LIMA_INSTANCE} bash -lc "ls ${HOMEDIR}/.local/share/docker/containers && docker ps -aq"
+      fi
       ;;
 
     "docker-desktop")
