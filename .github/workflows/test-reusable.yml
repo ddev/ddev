@@ -8,6 +8,11 @@ on:
         required: false
         type: string
         default: 'ubuntu-24.04'
+      commit_message:
+        description: 'Latest commit message from the caller workflow (used for [skip github]/[skip ci])'
+        required: false
+        type: string
+        default: ''
       ddev_test_webserver_type:
         description: 'DDEV_TEST_WEBSERVER_TYPE value'
         required: false
@@ -89,11 +94,8 @@ defaults:
 jobs:
   test:
     if: >
-      github.event.head_commit == null ||
-      (
-        !contains(github.event.head_commit.message, '[skip github]') &&
-        !contains(github.event.head_commit.message, '[skip ci]')
-      )
+      !contains(inputs.commit_message, '[skip github]') &&
+      !contains(inputs.commit_message, '[skip ci]')
     runs-on: ${{ inputs.runner }}
 
     env:
