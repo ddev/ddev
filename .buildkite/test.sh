@@ -64,10 +64,30 @@ if [ "${os:-}" = "darwin" ]; then
       export COLIMA_INSTANCE=vz
       set -x
       colima start ${COLIMA_INSTANCE}
-      colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'docker rm -f $(docker ps -aq) || true'
-      colima ssh -p "${COLIMA_INSTANCE}" -- sudo bash -c 'rm -rf /var/lib/docker/containers/* || true'
-      colima ssh -p ${COLIMA_INSTANCE} -- sudo systemctl restart docker
-      colima ssh -p ${COLIMA_INSTANCE} -- bash -c 'sudo ls /var/lib/docker/containers && docker ps -aq'
+
+      # Try to delete any containers first. Ignore rm errors, but if anything remains, go into cleanup path.
+      colima ssh -p ${COLIMA_INSTANCE} -- bash -lc '
+        ids=$(docker ps -aq || true)
+        if [ -n "$ids" ]; then
+          docker rm -f $ids >/dev/null 2>&1 || true
+        fi
+
+        remaining=$(docker ps -aq || true)
+        if [ -z "$remaining" ]; then
+          echo "No containers remain; skipping cleanup"
+          exit 0 # Exiting script inside colima vm
+        fi
+
+        echo "CLEANUP REQUIRED: Containers still remain after docker rm -f; entering cleanup path" >&2
+        echo "$remaining" >&2
+        exit 1
+      '
+
+      # If removing container state has any problems, show them (do not suppress errors).
+      colima ssh -p "${COLIMA_INSTANCE}" -- sudo bash -lc 'rm -rf /var/lib/docker/containers/*'
+      colima ssh -p "${COLIMA_INSTANCE}" -- sudo systemctl restart docker
+      colima ssh -p "${COLIMA_INSTANCE}" -- bash -lc 'sudo ls /var/lib/docker/containers && docker ps -aq'
+
       docker context use colima-${COLIMA_INSTANCE}
       set +x
       ;;
@@ -77,10 +97,30 @@ if [ "${os:-}" = "darwin" ]; then
       export HOMEDIR=/home/testbot.linux
       limactl start ${LIMA_INSTANCE}
       set -x
-      limactl shell ${LIMA_INSTANCE} bash -c 'docker rm -f $(docker ps -aq) || true'
-      limactl shell lima-vz bash -c "rm -rf ${HOMEDIR}/.local/share/docker/containers/*"
+
+      # Try to delete any containers first. Ignore rm errors, but if anything remains, go into cleanup path.
+      limactl shell ${LIMA_INSTANCE} bash -lc '
+        ids=$(docker ps -aq || true)
+        if [ -n "$ids" ]; then
+          docker rm -f $ids >/dev/null 2>&1 || true
+        fi
+
+        remaining=$(docker ps -aq || true)
+        if [ -z "$remaining" ]; then
+          echo "No containers remain; skipping cleanup"
+          exit 0 # Exiting script inside lima vm
+        fi
+
+        echo "CLEANUP REQUIRED: Containers still remain after docker rm -f; entering cleanup path" >&2
+        echo "$remaining" >&2
+        exit 1
+      '
+
+      # If removing container state has any problems, show them (do not suppress errors).
+      limactl shell lima-vz bash -lc "rm -rf ${HOMEDIR}/.local/share/docker/containers/*"
       limactl shell ${LIMA_INSTANCE} systemctl --user restart docker
-      limactl shell ${LIMA_INSTANCE} bash -c "ls ${HOMEDIR}/.local/share/docker/containers && docker ps -aq"
+      limactl shell ${LIMA_INSTANCE} bash -lc "ls ${HOMEDIR}/.local/share/docker/containers && docker ps -aq"
+
       docker context use lima-${LIMA_INSTANCE}
       set +x
       ;;
