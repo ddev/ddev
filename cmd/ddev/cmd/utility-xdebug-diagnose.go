@@ -102,10 +102,10 @@ func runXdebugDiagnose() int {
 	output.UserOut.Println("Port 9003 Pre-Check")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-	// In WSL2 NAT mode, the IDE runs on Windows, so check Windows port
-	isWSL2NAT := nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode()
+	// In WSL2 (both NAT and mirrored modes), the IDE runs on Windows, so check Windows port
+	isWSL2 := nodeps.IsWSL2()
 	var portInUse bool
-	if isWSL2NAT {
+	if isWSL2 {
 		portInUse = isWindowsPortInUse(9003)
 		if portInUse {
 			output.UserOut.Println("  ✓ Port 9003 is in use on Windows")
@@ -167,11 +167,9 @@ func runXdebugDiagnose() int {
 
 	// Only run connection test if port 9003 is not already in use
 	if !portInUse {
-		// Detect if we're in WSL2 NAT mode
-		isWSL2NAT := nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode()
-
-		if isWSL2NAT {
-			output.UserOut.Println("  Detected WSL2 NAT mode - testing connection to Windows host...")
+		// In WSL2 (both NAT and mirrored modes), test connection to Windows host
+		if nodeps.IsWSL2() {
+			output.UserOut.Println("  Detected WSL2 - testing connection to Windows host...")
 			hasIssues = testWSL2NATConnection(app) || hasIssues
 		} else {
 			output.UserOut.Println("  Starting test listener on host port 9003...")
@@ -652,7 +650,8 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 
 // runConnectivityTest runs the appropriate connectivity test based on environment
 func runConnectivityTest(app *ddevapp.DdevApp, envType string) bool {
-	if envType == "wsl2-nat" {
+	// In WSL2 (both NAT and mirrored modes), test connection to Windows host
+	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
 		output.UserOut.Println("  Testing connection to Windows host...")
 		return !testWSL2NATConnection(app)
 	}
@@ -689,7 +688,7 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 
 	// Ask where IDE is running
 	var locationItems []string
-	if envType == "wsl2-nat" {
+	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
 		locationItems = []string{
 			"Windows (recommended for WSL2)",
 			"Inside WSL2",
@@ -716,7 +715,7 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 	if err != nil {
 		ideLocation = "local"
 	} else {
-		if envType == "wsl2-nat" {
+		if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
 			switch idx {
 			case 0:
 				ideLocation = "windows"
