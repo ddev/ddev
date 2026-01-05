@@ -92,6 +92,8 @@ if [ "${os:-}" = "darwin" ]; then
         colima ssh -p "${COLIMA_INSTANCE}" -- sudo systemctl restart docker
         colima ssh -p "${COLIMA_INSTANCE}" -- bash -lc 'sudo ls /var/lib/docker/containers && docker ps -aq'
       fi
+      docker context use colima-${COLIMA_INSTANCE}
+
       ;;
 
     "lima")
@@ -127,6 +129,7 @@ if [ "${os:-}" = "darwin" ]; then
         limactl shell ${LIMA_INSTANCE} systemctl --user restart docker
         limactl shell ${LIMA_INSTANCE} bash -lc "ls ${HOMEDIR}/.local/share/docker/containers && docker ps -aq"
       fi
+      docker context use lima-${LIMA_INSTANCE}
       ;;
 
     "docker-desktop")
