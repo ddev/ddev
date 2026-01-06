@@ -553,13 +553,26 @@ func CheckRouterPorts(activeApps []*DdevApp) error {
 // Returns the port found, and a boolean that determines if the
 // port is valid (true) or not (false), and the port is marked as allocated
 func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
+	// Get ports already bound by the router - these can be reused
+	var routerBoundPorts []string
+	if router, err := FindDdevRouter(); err == nil && router != nil {
+		routerBoundPorts, _ = dockerutil.GetBoundHostPorts(router.ID)
+	}
+
 	for p := start; p <= upTo; p++ {
-		// If we have already assigned this port, continue looking
+		portStr := fmt.Sprint(p)
+		// If we have already assigned this port in this session, continue looking
 		if _, portAlreadyUsed := EphemeralRouterPortsAssigned[p]; portAlreadyUsed {
 			continue
 		}
-		// But if we find the port is still available, use it, after marking it as assigned
-		if !netutil.IsPortActive(fmt.Sprint(p)) {
+		// If the port is already bound by the router, we can reuse it
+		if nodeps.ArrayContainsString(routerBoundPorts, portStr) {
+			util.Debug("AllocateAvailablePortForRouter: port %s is already bound by router, reusing it", portStr)
+			EphemeralRouterPortsAssigned[p] = true
+			return p, true
+		}
+		// If the port is not active (available), use it
+		if !netutil.IsPortActive(portStr) {
 			EphemeralRouterPortsAssigned[p] = true
 			return p, true
 		}

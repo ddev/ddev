@@ -286,6 +286,92 @@ func TestUseEphemeralPort(t *testing.T) {
 	}
 }
 
+// TestEphemeralPortsReusedOnRestart tests that ephemeral ports assigned to a project
+// are reused when the project restarts, preventing unnecessary router recreation.
+func TestEphemeralPortsReusedOnRestart(t *testing.T) {
+	if os.Getenv("GOTEST_SHORT") != "" {
+		t.Skip("Skipping because GOTEST_SHORT is set")
+	}
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
+	}
+
+	// Stop all projects and the router first so we can occupy the ports they would normally use
+	ddevapp.PowerOff()
+	// Clear ephemeral port assignments from previous tests
+	ddevapp.EphemeralRouterPortsAssigned = make(map[int]bool)
+
+	targetHTTPPort, targetHTTPSPort := "29080", "29443"
+
+	site := filepath.Join(testcommon.CreateTmpDir(t.Name()))
+	_ = os.MkdirAll(site, 0755)
+	err := fileutil.TemplateStringToFile("Hello from TestEphemeralPortsReusedOnRestart", nil, filepath.Join(site, "index.html"))
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(site, false)
+	require.NoError(t, err)
+	app.RouterHTTPPort, app.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	// Occupy target router ports so that app will be forced to use ephemeral ports
+	var listeners []net.Listener
+	for _, p := range []string{targetHTTPPort, targetHTTPSPort} {
+		listener, err := net.Listen("tcp", "127.0.0.1:"+p)
+		require.NoError(t, err)
+		listeners = append(listeners, listener)
+	}
+	t.Cleanup(func() {
+		for _, l := range listeners {
+			_ = l.Close()
+		}
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(app.AppRoot)
+		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
+	})
+
+	// Start the app - it should use ephemeral ports
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Get the ephemeral ports that were assigned
+	app, err = ddevapp.NewApp(app.GetAppRoot(), true)
+	require.NoError(t, err)
+	firstHTTPPort := app.GetPrimaryRouterHTTPPort()
+	firstHTTPSPort := app.GetPrimaryRouterHTTPSPort()
+
+	// Make sure they're ephemeral ports (not the target ports)
+	require.NotEqual(t, targetHTTPPort, firstHTTPPort, "HTTP port should be ephemeral")
+	require.NotEqual(t, targetHTTPSPort, firstHTTPSPort, "HTTPS port should be ephemeral")
+
+	// Get router container ID before restart
+	router, err := ddevapp.FindDdevRouter()
+	require.NoError(t, err)
+	originalRouterID := router.ID
+
+	// Clear ephemeral port assignments to simulate new process
+	ddevapp.EphemeralRouterPortsAssigned = make(map[int]bool)
+
+	// Restart the app - the ephemeral ports should be reused
+	err = app.Restart()
+	require.NoError(t, err)
+
+	// Get the ports after restart
+	app, err = ddevapp.NewApp(app.GetAppRoot(), true)
+	require.NoError(t, err)
+	secondHTTPPort := app.GetPrimaryRouterHTTPPort()
+	secondHTTPSPort := app.GetPrimaryRouterHTTPSPort()
+
+	// Verify the same ephemeral ports are used
+	require.Equal(t, firstHTTPPort, secondHTTPPort, "HTTP ephemeral port should be reused on restart")
+	require.Equal(t, firstHTTPSPort, secondHTTPSPort, "HTTPS ephemeral port should be reused on restart")
+
+	// Verify the router was not recreated (same container ID)
+	router, err = ddevapp.FindDdevRouter()
+	require.NoError(t, err)
+	require.Equal(t, originalRouterID, router.ID, "Router should not be recreated when ephemeral ports are reused")
+}
+
 // TestProcessExposePorts tests the ProcessExposePorts function for various input scenarios
 func TestProcessExposePorts(t *testing.T) {
 	type testCase struct {
