@@ -87,7 +87,28 @@ defaults:
     shell: bash
 
 jobs:
+  check-skip:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - id: check
+        run: |
+          MESSAGE=$(git log -1 --pretty=%B)
+          if [[ "$MESSAGE" == *"[skip github]"* ]]; then
+            echo "Found [skip github] in commit message, skipping tests"
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+          fi
+
   test:
+    needs: check-skip
+    if: needs.check-skip.outputs.should_skip != 'true'
     runs-on: ${{ inputs.runner }}
 
     env:
