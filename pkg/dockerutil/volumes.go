@@ -242,3 +242,80 @@ func PurgeDirectoryContentsInVolume(volumeName string, subdirs []string, uid str
 	track()
 	return nil
 }
+
+// ListFilesInVolume returns a list of filenames in a volume subdirectory.
+// volumeName is the volume to list from
+// subdir is the path within the volume (e.g., "traefik/config")
+// Returns a slice of filenames (not full paths)
+func ListFilesInVolume(volumeName string, subdir string) ([]string, error) {
+	volPath := "/mnt/v"
+	fullPath := volPath + "/" + subdir
+
+	containerName := "ListInVolume_" + nodeps.RandomString(12)
+
+	track := util.TimeTrackC("ListFilesInVolume " + volumeName + "/" + subdir)
+	defer track()
+
+	// List files, suppress errors if directory doesn't exist
+	c := fmt.Sprintf(`ls -1 "%s" 2>/dev/null || true`, fullPath)
+
+	labels := map[string]string{"com.ddev.site-name": ""}
+	if IsPodmanRootless() {
+		labels["com.ddev.userns"] = "keep-id"
+	}
+	containerID, stdout, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, labels, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	// nolint: errcheck
+	defer RemoveContainer(containerID)
+
+	// Parse the output into a slice of filenames
+	var files []string
+	for _, line := range strings.Split(stdout, "\n") {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			files = append(files, line)
+		}
+	}
+
+	return files, nil
+}
+
+// RemoveFilesFromVolume removes specific files from a volume subdirectory.
+// volumeName is the volume to operate on
+// subdir is the path within the volume (e.g., "traefik/config")
+// files is a list of filenames to remove (not full paths)
+func RemoveFilesFromVolume(volumeName string, subdir string, files []string) error {
+	if len(files) == 0 {
+		return nil
+	}
+
+	volPath := "/mnt/v"
+	fullPath := volPath + "/" + subdir
+
+	containerName := "RemoveFromVolume_" + nodeps.RandomString(12)
+
+	track := util.TimeTrackC("RemoveFilesFromVolume " + volumeName + "/" + subdir)
+	defer track()
+
+	// Build rm command for each file
+	var rmPaths []string
+	for _, f := range files {
+		rmPaths = append(rmPaths, fmt.Sprintf(`"%s/%s"`, fullPath, f))
+	}
+	c := fmt.Sprintf("rm -f %s", strings.Join(rmPaths, " "))
+
+	labels := map[string]string{"com.ddev.site-name": ""}
+	if IsPodmanRootless() {
+		labels["com.ddev.userns"] = "keep-id"
+	}
+	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, labels, nil, nil)
+	if err != nil {
+		return err
+	}
+	// nolint: errcheck
+	defer RemoveContainer(containerID)
+
+	return nil
+}

@@ -703,6 +703,16 @@ func (app *DdevApp) CheckCustomConfig() {
 				customConfig = true
 			}
 		}
+		// Check for custom-global-config directory (middleware, routers, etc.)
+		customGlobalConfigDir := filepath.Join(traefikGlobalConfigPath, "custom-global-config")
+		if fileutil.IsDirectory(customGlobalConfigDir) {
+			customGlobalFiles, err := fileutil.ListFilesInDir(customGlobalConfigDir)
+			if err == nil && len(customGlobalFiles) > 0 {
+				printableFiles, _ := util.ArrayToReadableOutput(customGlobalFiles)
+				util.Warning("Using custom global Traefik dynamic configuration from %s: %v", customGlobalConfigDir, printableFiles)
+				customConfig = true
+			}
+		}
 	}
 	traefikConfigPath := filepath.Join(ddevDir, "traefik/config")
 	if _, err := os.Stat(traefikConfigPath); err == nil {

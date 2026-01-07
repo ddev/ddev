@@ -56,7 +56,17 @@ Static configuration is automatically generated in the `$HOME/.ddev/traefik` dir
         ```
 
 * `certs/default_cert.*` files are the default DDEV-generated certificates, normally created by `mkcert`.
-* `config/default_config.yaml` contains global *dynamic* configuration, including pointers to the default certificates. It is possible to add other Traefik configuration in the `config` directory, which will apply to all projects. For example, a `config/router_middlewares.yaml` file might provide middleware implementations that would apply to all projects.
+* `config/default_config.yaml` contains global *dynamic* configuration, including pointers to the default certificates.
+* `custom-global-config/` is a directory where you can add custom Traefik dynamic configuration files (such as middleware, routers, or services) that will be automatically included for all projects. Files in this directory are copied to the router's config volume on each `ddev start`. For example, a `custom-global-config/global_middlewares.yaml` file might provide middleware implementations that apply to all projects:
+
+    ```yaml
+    http:
+      middlewares:
+        global-ratelimit:
+          rateLimit:
+            average: 100
+            burst: 50
+    ```
 
 ### Project Traefik Configuration
 

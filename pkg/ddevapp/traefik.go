@@ -255,10 +255,20 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return err
 	}
 
-	// Remove ~/.ddev/traefik/config and ~/.ddev/traefik/certs for clean start
+	// Remove ~/.ddev/traefik/config for clean start (regenerate from active projects)
 	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "config"))
 	if err != nil {
 		return fmt.Errorf("failed to purge global Traefik config dir: %v", err)
+	}
+
+	// Track expected files in the volume for later sync
+	expectedConfigs := map[string]bool{"default_config.yaml": true}
+	expectedCerts := map[string]bool{}
+
+	// Add default certs to expected list if not using Let's Encrypt
+	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+		expectedCerts["default_cert.crt"] = true
+		expectedCerts["default_key.key"] = true
 	}
 
 	// Copy active project configs and certs into the global traefik directory.
@@ -275,6 +285,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 			if err != nil {
 				util.Warning("Failed to copy traefik config for project %s: %v", app.Name, err)
 			}
+			expectedConfigs[app.Name+".yaml"] = true
 		}
 
 		// Copy project's certs to global certs dir
@@ -286,6 +297,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 				if err != nil {
 					util.Warning("Failed to copy traefik cert for project %s: %v", app.Name, err)
 				}
+				expectedCerts[app.Name+ext] = true
 			}
 		}
 
@@ -303,25 +315,77 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 					} else {
 						util.Debug("Copied custom cert %s to global traefik certs dir", srcFile)
 					}
+					expectedCerts[app.Name+ext] = true
 				}
 			}
 		}
 	}
 
-	// Purge config directory inside the volume while keeping the directories themselves.
-	// This is critical for inotify watchers - if we destroy the entire traefik directory,
-	// traefik's file watcher breaks on Linux and doesn't see new configs.
-	err = dockerutil.PurgeDirectoryContentsInVolume("ddev-global-cache", []string{"traefik/config"}, uid)
-	if err != nil {
-		return fmt.Errorf("failed to purge traefik config in ddev-global-cache volume: %v", err)
+	// Copy user-managed custom global config files from ~/.ddev/traefik/custom-global-config/
+	customGlobalConfigDir := filepath.Join(globalTraefikDir, "custom-global-config")
+	if fileutil.IsDirectory(customGlobalConfigDir) {
+		customFiles, err := fileutil.ListFilesInDir(customGlobalConfigDir)
+		if err != nil {
+			util.Warning("Failed to list custom global config files: %v", err)
+		} else {
+			for _, f := range customFiles {
+				srcFile := filepath.Join(customGlobalConfigDir, f)
+				destFile := filepath.Join(globalSourceConfigDir, f)
+				err = fileutil.CopyFile(srcFile, destFile)
+				if err != nil {
+					util.Warning("Failed to copy custom global config file %s: %v", f, err)
+				} else {
+					util.Debug("Copied custom global config %s to traefik config dir", f)
+					expectedConfigs[f] = true
+				}
+			}
+		}
 	}
 
-	// Copy with destroyExisting=false since we've already purged the subdirectories
+	// Copy to volume (adds new files, overwrites existing)
 	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
 	if err != nil {
 		return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
 	}
 	util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik", globalTraefikDir)
+
+	// Sync config directory - remove stale project configs from the volume
+	actualConfigs, err := dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/config")
+	if err != nil {
+		return fmt.Errorf("failed to list traefik config files in volume: %v", err)
+	}
+	var staleConfigs []string
+	for _, f := range actualConfigs {
+		if !expectedConfigs[f] {
+			staleConfigs = append(staleConfigs, f)
+		}
+	}
+	if len(staleConfigs) > 0 {
+		err = dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/config", staleConfigs)
+		if err != nil {
+			return fmt.Errorf("failed to remove stale traefik configs from volume: %v", err)
+		}
+		util.Debug("Removed stale traefik configs from volume: %v", staleConfigs)
+	}
+
+	// Sync certs directory - remove stale project certs from the volume
+	actualCerts, err := dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/certs")
+	if err != nil {
+		return fmt.Errorf("failed to list traefik cert files in volume: %v", err)
+	}
+	var staleCerts []string
+	for _, f := range actualCerts {
+		if !expectedCerts[f] {
+			staleCerts = append(staleCerts, f)
+		}
+	}
+	if len(staleCerts) > 0 {
+		err = dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/certs", staleCerts)
+		if err != nil {
+			return fmt.Errorf("failed to remove stale traefik certs from volume: %v", err)
+		}
+		util.Debug("Removed stale traefik certs from volume: %v", staleCerts)
+	}
 
 	return nil
 }
