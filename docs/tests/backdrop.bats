@@ -36,13 +36,26 @@ teardown() {
   DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
+
+  _extra_info
+  # Check direct http/https URLs
+  run curl -sfIv ${HOST_HTTP_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+  run curl -sfIv ${HOST_HTTPS_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv ${PRIMARY_HTTPS_URL}
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfIv ${PRIMARY_HTTP_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+  run curl -sfv ${PRIMARY_HTTPS_URL}
   assert_output --partial "Welcome to My Backdrop Site!"
+  assert_success
 }
 
 @test "backdrop existing project with $(ddev --version)" {
@@ -59,10 +72,13 @@ teardown() {
   run ddev add-on get backdrop-ops/ddev-backdrop-bee
   assert_success
 
-  run ddev start -y
+  DDEV_DEBUG=true run ddev start -y >&3
   assert_success
+#  echo "# DEBUG: ddev start completed at $(date), exit code: $status" >&3
+#  echo "# DEBUG: ddev start output: " >&3
+#  echo "# $output" >&3
 
-  run curl -fLO https://github.com/ddev/test-backdrop/releases/download/1.32.1/db.sql.gz
+  run curl -fLOv https://github.com/ddev/test-backdrop/releases/download/1.32.1/db.sql.gz
   assert_success
 
   run ddev import-db --file=db.sql.gz
@@ -74,15 +90,32 @@ teardown() {
   run ddev import-files --source=files.tgz
   assert_success
 
+  # Clear cache after importing db and files to ensure Backdrop is ready
+  run ddev bee cc all
+  assert_success
+
+  _extra_info
+
+  # Check direct http/https URLs
+  run curl -sfIv ${HOST_HTTP_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+  run curl -sfIv ${HOST_HTTPS_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+
   DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv ${PRIMARY_HTTPS_URL}
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfIv ${PRIMARY_HTTP_URL}
+  assert_output --partial "HTTP/1.1 200"
+  assert_success
+  run curl -sfv ${PRIMARY_HTTPS_URL}
   assert_output --partial "Welcome to My Backdrop Site!"
+  assert_success
 }

@@ -34,7 +34,8 @@ func PowerOff() {
 		for _, c := range containers {
 			err = dockerutil.RemoveContainer(c.ID)
 			if err != nil {
-				util.Warning("Failed to remove container %s", c.Names[0])
+				util.Warning("Failed to remove container %v: %v", c.ID, err)
+				util.Warning("Failed Container deletion detail='%v'", c)
 			}
 		}
 	} else {
@@ -45,6 +46,9 @@ func PowerOff() {
 
 	if err := RemoveSSHAgentContainer(); err != nil {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)
+	}
+	if err := RemoveRouterContainer(); err != nil {
+		util.Error("Failed to remove ddev-router: %v", err)
 	}
 
 	// Remove global DDEV default network

@@ -80,7 +80,7 @@ func testMain(m *testing.M) int {
 		if foundContainer != nil {
 			err = dockerutil.RemoveContainer(foundContainer.ID)
 			if err != nil {
-				output.UserErr.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
+				output.UserErr.Warningf("-- FAIL: dockerutils_test failed to remove test container '%v': %v", foundContainer, err)
 			}
 		}
 	}()
@@ -164,7 +164,7 @@ func TestGetContainerUser(t *testing.T) {
 
 	defer util.TimeTrackC(fmt.Sprintf("%s %s", projName, t.Name()))()
 
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 
 	uid, gid, username := dockerutil.GetContainerUser()

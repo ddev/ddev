@@ -54,16 +54,23 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	_ = app.DockerEnv()
 
+	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ComposeFiles: []string{composeFile},
+		Action:       []string{"down"},
+	})
+	if err != nil {
+		util.Warning("failed to docker-compose down on %s: %v", composeFile, err)
+	}
+
 	err = dockerutil.Pull(ddevImages.GetSSHAuthImage())
 	if err != nil {
 		return err
 	}
 
-	// run docker-compose up -d
-	// This will force-recreate, discarding existing auth if there is a stopped container.
+	// Now restart ddev-ssh-agent
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{composeFile},
-		Action:       []string{"-p", SSHAuthName, "up", "--build", "--force-recreate", "-d"},
+		Action:       []string{"-p", SSHAuthName, "up", "--build", "-d"},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)

@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"path"
@@ -12,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-	"time"
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -58,80 +56,20 @@ func IsRouterDisabled(app *DdevApp) bool {
 	return nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer)
 }
 
-// StopRouterIfNoContainers stops the router if there are no DDEV containers running.
-func StopRouterIfNoContainers() error {
-	containersRunning, err := ddevContainersRunning()
+// RemoveRouterContainer stops and removes the ddev-router container.
+func RemoveRouterContainer() error {
+	_, err := FindDdevRouter()
 	if err != nil {
-		return err
+		// Router not found, nothing to remove
+		return nil
 	}
-
-	if !containersRunning {
-		routerPorts, err := GetRouterBoundPorts()
-		if err != nil {
+	err = dockerutil.RemoveContainer(nodeps.RouterContainer)
+	if err != nil {
+		if ok := dockerutil.IsErrNotFound(err); !ok {
 			return err
-		}
-		util.Debug("stopping ddev-router because all project containers are stopped")
-		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
-		if err != nil {
-			if ok := dockerutil.IsErrNotFound(err); !ok {
-				return err
-			}
-		}
-
-		// Colima and Lima don't release ports very fast after container is removed
-		// see https://github.com/lima-vm/lima/issues/2536 and
-		// https://github.com/abiosoft/colima/issues/644
-		if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() {
-			if globalconfig.DdevDebug {
-				util.Debug("Lima/Colima/Rancher stopping router")
-				dockerContainers, _ := dockerutil.GetDockerContainers(true)
-				containerInfo := make([]string, len(dockerContainers))
-				for i, c := range dockerContainers {
-					containerInfo[i] = fmt.Sprintf("ID: %s, Name: %s, State: %s, Image: %s", dockerutil.TruncateID(c.ID), dockerutil.ContainerName(&c), c.State, c.Image)
-				}
-				containerList, _ := util.ArrayToReadableOutput(containerInfo)
-				util.Debug("All docker containers: %s", containerList)
-			}
-			util.Debug("Waiting for router ports to be released on Lima-based systems because ports aren't released immediately")
-			waitForPortsToBeReleased(routerPorts, time.Second*5)
-			// Wait another couple of seconds
-			time.Sleep(time.Second * 2)
 		}
 	}
 	return nil
-}
-
-// waitForPortsToBeReleased waits until the specified ports are released or the timeout is reached.
-func waitForPortsToBeReleased(ports []uint16, timeout time.Duration) {
-	util.Debug("starting port release for ports: %v", ports)
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	ticker := time.NewTicker(500 * time.Millisecond) // Check every 500 milliseconds
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			util.Debug("Timeout reached, stopping check.")
-			return
-		case <-ticker.C:
-			allReleased := true
-			for _, portInt := range ports {
-				port := fmt.Sprintf("%d", portInt)
-				if netutil.IsPortActive(port) {
-					util.Debug("Port %s is still in use.", port)
-					allReleased = false
-				} else {
-					util.Debug("Port %s is released.", port)
-				}
-			}
-			if allReleased {
-				util.Debug("All ports are released.")
-				return
-			}
-		}
-	}
 }
 
 // StartDdevRouter ensures the router is running.
@@ -144,30 +82,80 @@ func StartDdevRouter() error {
 		if err != nil {
 			return err
 		}
+		router = nil
 	}
 
 	activeApps := GetActiveProjects()
-	routerComposeFullPath, err := generateRouterCompose(activeApps)
-	if err != nil {
-		return err
-	}
-	err = PushGlobalTraefikConfig(activeApps)
-	if err != nil {
-		return fmt.Errorf("failed to push global Traefik config: %v", err)
+
+	// Check if router needs to be recreated due to port changes
+	needsRecreation := false
+	if router != nil && err == nil && router.State == "running" {
+		// Router is running, check if ports have changed
+		existingPorts, err := dockerutil.GetBoundHostPorts(router.ID)
+		if err != nil {
+			util.Debug("Error getting bound ports, will recreate router: %v", err)
+			needsRecreation = true
+		} else {
+			neededPorts := determineRouterPorts(activeApps)
+			// Add the Traefik monitor port to the needed list for comparison
+			// (it's always bound by the router but not returned by determineRouterPorts
+			// since it's added separately in the static config template)
+			neededPorts = append(neededPorts, globalconfig.DdevGlobalConfig.TraefikMonitorPort)
+			util.Debug("Router port comparison: existing=%v needed=%v match=%v", existingPorts, neededPorts, PortsMatch(existingPorts, neededPorts))
+			if !PortsMatch(existingPorts, neededPorts) {
+				util.Debug("Router ports have changed, will recreate router")
+				needsRecreation = true
+			} else {
+				util.Debug("Router ports have not changed, skipping recreation")
+			}
+		}
+	} else {
+		// Router is not running, needs to be started
+		needsRecreation = true
 	}
 
-	err = CheckRouterPorts(activeApps)
-	if err != nil {
-		return fmt.Errorf("unable to listen on required ports, %v,\nTroubleshooting suggestions at https://docs.ddev.com/en/stable/users/usage/troubleshooting/#unable-listen", err)
-	}
+	if needsRecreation {
+		routerComposeFullPath, err := generateRouterCompose(activeApps)
+		if err != nil {
+			return err
+		}
+		err = PushGlobalTraefikConfig(activeApps)
+		if err != nil {
+			return fmt.Errorf("failed to push global Traefik config: %v", err)
+		}
 
-	// Run docker-compose up -d against the ddev-router full compose file
-	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: []string{routerComposeFullPath},
-		Action:       []string{"-p", RouterComposeProjectName, "up", "--build", "-d"},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to start ddev-router: %v", err)
+		err = CheckRouterPorts(activeApps)
+		if err != nil {
+			return fmt.Errorf("unable to listen on required ports, %v\nTroubleshooting suggestions at https://docs.ddev.com/en/stable/users/usage/troubleshooting/#unable-listen", err)
+		}
+
+		// Run docker-compose up -d against the ddev-router full compose file
+		_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+			ComposeFiles: []string{routerComposeFullPath},
+			Action:       []string{"-p", RouterComposeProjectName, "up", "--build", "-d"},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to start ddev-router: %v", err)
+		}
+	} else {
+		// Even if we don't recreate, update the Traefik config for the new project
+		err = PushGlobalTraefikConfig(activeApps)
+		if err != nil {
+			return fmt.Errorf("failed to push global Traefik config: %v", err)
+		}
+
+		// Force the healthcheck to run and wait for Traefik to load the new config.
+		// Remove /tmp/healthy so the healthcheck doesn't sleep for 59 seconds,
+		// then run the healthcheck which waits for routers to load.
+		router, err = FindDdevRouter()
+		if err != nil {
+			return fmt.Errorf("failed to find router for healthcheck: %v", err)
+		}
+		util.Debug("Forcing router healthcheck to verify new config is loaded")
+		_, _, err = dockerutil.Exec(router.ID, "rm -f /tmp/healthy && /healthcheck.sh", "0")
+		if err != nil {
+			return fmt.Errorf("router healthcheck failed: %v", err)
+		}
 	}
 
 	// Ensure we have a happy router
@@ -293,21 +281,24 @@ func FindDdevRouter() (*container.Summary, error) {
 	return c, nil
 }
 
-// GetRouterBoundPorts returns the currently bound ports on ddev-router
-// or an empty array if router not running
-func GetRouterBoundPorts() ([]uint16, error) {
-	boundPorts := []uint16{}
-	r, err := FindDdevRouter()
-	if err != nil {
-		return []uint16{}, nil
+// PortsMatch returns true if the existing ports contain all the needed ports.
+// It's fine for the router to have extra ports bound (from other projects that have stopped),
+// we only need to recreate the router when it's missing ports we need.
+func PortsMatch(existingPorts, neededPorts []string) bool {
+	// Create a map of existing ports for quick lookup
+	existingMap := make(map[string]bool)
+	for _, port := range existingPorts {
+		existingMap[port] = true
 	}
 
-	for _, p := range r.Ports {
-		if p.PublicPort != 0 {
-			boundPorts = append(boundPorts, p.PublicPort)
+	// Check if all needed ports are in existing ports
+	for _, port := range neededPorts {
+		if !existingMap[port] {
+			return false
 		}
 	}
-	return boundPorts, nil
+
+	return true
 }
 
 // RenderRouterStatus returns a user-friendly string showing router-status
@@ -562,13 +553,26 @@ func CheckRouterPorts(activeApps []*DdevApp) error {
 // Returns the port found, and a boolean that determines if the
 // port is valid (true) or not (false), and the port is marked as allocated
 func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
+	// Get ports already bound by the router - these can be reused
+	var routerBoundPorts []string
+	if router, err := FindDdevRouter(); err == nil && router != nil {
+		routerBoundPorts, _ = dockerutil.GetBoundHostPorts(router.ID)
+	}
+
 	for p := start; p <= upTo; p++ {
-		// If we have already assigned this port, continue looking
+		portStr := fmt.Sprint(p)
+		// If we have already assigned this port in this session, continue looking
 		if _, portAlreadyUsed := EphemeralRouterPortsAssigned[p]; portAlreadyUsed {
 			continue
 		}
-		// But if we find the port is still available, use it, after marking it as assigned
-		if !netutil.IsPortActive(fmt.Sprint(p)) {
+		// If the port is already bound by the router, we can reuse it
+		if nodeps.ArrayContainsString(routerBoundPorts, portStr) {
+			util.Debug("AllocateAvailablePortForRouter: port %s is already bound by router, reusing it", portStr)
+			EphemeralRouterPortsAssigned[p] = true
+			return p, true
+		}
+		// If the port is not active (available), use it
+		if !netutil.IsPortActive(portStr) {
 			EphemeralRouterPortsAssigned[p] = true
 			return p, true
 		}

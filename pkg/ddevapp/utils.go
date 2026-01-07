@@ -138,8 +138,7 @@ func Cleanup(app *DdevApp) error {
 		_ = dockerutil.RemoveVolume(volName)
 	}
 
-	err = StopRouterIfNoContainers()
-	return err
+	return nil
 }
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.
@@ -157,24 +156,6 @@ func CheckForConf(confPath string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no %s file was found in this directory or any parent", filepath.Join(".ddev", "config.yaml"))
-}
-
-// ddevContainersRunning determines if any ddev-controlled containers are currently running.
-func ddevContainersRunning() (bool, error) {
-	labels := map[string]string{
-		"com.ddev.platform": "ddev",
-	}
-	containers, err := dockerutil.FindContainersByLabels(labels)
-	if err != nil {
-		return false, err
-	}
-
-	for _, container := range containers {
-		if _, ok := container.Labels["com.ddev.platform"]; ok {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 // getTemplateFuncMap will return a map of useful template functions.

@@ -3484,18 +3484,6 @@ func TestGetAppsEmpty(t *testing.T) {
 	assert.Equal(0, len(apps), "Expected to find no apps but found %d apps=%v", len(apps), apps)
 }
 
-// TestRouterNotRunning ensures the router is shut down after all sites are stopped.
-// This depends on TestGetAppsEmpty() having shut everything down.
-func TestRouterNotRunning(t *testing.T) {
-	assert := asrt.New(t)
-	containers, err := dockerutil.GetDockerContainers(false)
-	assert.NoError(err)
-
-	for _, c := range containers {
-		assert.NotEqual("ddev-router", dockerutil.ContainerName(&c), "ddev-router was not supposed to be running but it was")
-	}
-}
-
 type URLRedirectExpectations struct {
 	url                 string
 	uri                 string
@@ -4435,15 +4423,19 @@ func TestCustomCerts(t *testing.T) {
 		_ = os.Chdir(origDir)
 	})
 
+	// Start with PowerOff to have clean router, otherwise router is already live with unknown content
+	ddevapp.PowerOff()
+
 	// Start without cert and make sure normal DNS names are there
 	err = app.Start()
 	require.NoError(t, err)
+	c := fmt.Sprintf("openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetPrimaryRouterHTTPSPort(), app.GetHostname())
 	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetPrimaryRouterHTTPSPort(), app.GetHostname()),
+		Cmd: c,
 	})
-	require.NoError(t, err, "failed to run openssl command, stdout='%s', stderr='%s'", stdout, stderr)
+	require.NoError(t, err, "failed to run openssl command '%s' against router, stdout='%s', stderr='%s'", c, stdout, stderr)
 	stdout = strings.Trim(stdout, "\r\n")
-	// This should be our regular wildcard cert
+	// This should be our default wildcard cert
 	require.Contains(t, stdout, "*.ddev.site")
 
 	// Now stop it so we can install new custom cert.

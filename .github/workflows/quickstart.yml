@@ -79,10 +79,10 @@ jobs:
 
       - name: Run quickstart test
         run: |
+          brew unlink ddev || true
+          rm -f ~/.config/ddev
+          make
+          unset XDG_CONFIG_HOME
           # Use mutagen by default as it may cause different behaviors
-          ddev config global --performance-mode=mutagen
-          # bats refuses ever to exit until all processes started by it
-          # have exited. So we don't want to let bats/ddev start mutagen daemon
-          mkdir -p ~/tmp/dummystart && pushd ~/tmp/dummystart && ddev config --auto && ddev start -y && popd
+          $(make DDEV_BINARY_FULLPATH) config global --performance-mode=mutagen
           make quickstart-test
-          ddev poweroff
