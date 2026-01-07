@@ -115,7 +115,7 @@ Finally, to support [Multi-stage builds](https://docs.docker.com/build/building/
 
 Multi-stage builds are useful to anyone who has struggled to optimize Dockerfiles while keeping them easy to read and maintain.
 
-Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev utility rebuild`](../usage/commands.md#utility-rebuild). `ddev utility rebuild` is also great because it shows you the entire process of the build for debugging.
+Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev restart --no-cache`](../usage/commands.md#restart) or [`ddev utility rebuild`](../usage/commands.md#utility-rebuild). `ddev utility rebuild` is also great because it shows you the entire process of the build for debugging.
 
 Examples of possible Dockerfiles are `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example`, created in your project when you run [`ddev config`](../usage/commands.md#config).
 

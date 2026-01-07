@@ -145,6 +145,7 @@ type DdevApp struct {
 	HostXHGuiPort             string                `yaml:"host_xhgui_port,omitempty"`
 	XHProfMode                types.XHProfMode      `yaml:"xhprof_mode,omitempty"`
 	ComposeYaml               *composeTypes.Project `yaml:"-"`
+	NoCache                   bool                  `yaml:"-"`
 }
 
 // SkipHooks Global variable that's set from --skip-hooks global flag.
@@ -1752,10 +1753,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 	buildDurationStart := util.ElapsedDuration(time.Now())
 	progress := "plain"
-	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
+	action := []string{"--progress=" + progress, "build"}
+	if app.NoCache {
+		action = append(action, "--no-cache")
+	}
+	util.Debug("Executing docker-compose -f %s %s", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "))
 	out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-		Action:       []string{"--progress=" + progress, "build"},
+		Action:       action,
 		Progress:     true,
 		Timeout:      time.Hour * 1,
 	})
@@ -1769,7 +1774,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	_, logStderrOutput, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	// If the web image is dirty, try to rebuild it immediately
 	if err == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
-		util.Debug("Executing docker-compose -f %s build web --progress=%s --no-cache", app.DockerComposeFullRenderedYAMLPath(), progress)
+		util.Debug("Executing docker-compose -f %s --progress=%s build web --no-cache", app.DockerComposeFullRenderedYAMLPath(), progress)
 		out, stderr, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 			Action:       []string{"--progress=" + progress, "build", "web", "--no-cache"},

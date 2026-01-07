@@ -97,9 +97,11 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 !!!warning "Composer version is cached at container build time"
     DDEV installs Composer at container build time and caches it. If you use a non-specific version like `2`, `2.2`, `""` (empty), or `stable`, DDEV installs the latest available version in that range at build time.
 
-    The next update of Composer will be done automatically when DDEV is upgraded. If you want to update Composer in the web container before then, use [rebuild](../usage/commands.md#utility-rebuild):
+    The next update of Composer will be done automatically when DDEV is upgraded. If you want to update Composer in the web container before then, [restart](../usage/commands.md#restart) with `--no-cache` or [rebuild](../usage/commands.md#utility-rebuild):
 
     ```bash
+    ddev restart --no-cache
+    # or
     ddev utility rebuild
     ```
 

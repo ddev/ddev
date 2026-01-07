@@ -86,9 +86,11 @@ If you need to update Composer:
     * `composer_version: "2.2"` (v2.2 LTS) - equivalent to `composer self-update --2.2`
     * `composer_version: "2.9.3"` (specific) - equivalent to `composer self-update 2.9.3`. This is the most consistent option for teams, as it ensures all members use the exact same version regardless of when they first build the image, avoiding inconsistencies in dependency resolution.
 
-2. Trigger a [rebuild](../usage/commands.md#utility-rebuild) to install the configured version:
+2. [Restart](../usage/commands.md#restart) with `--no-cache` or [rebuild](../usage/commands.md#utility-rebuild) to install the configured version:
 
     ```bash
+    ddev restart --no-cache
+    # or
     ddev utility rebuild
     ```
 

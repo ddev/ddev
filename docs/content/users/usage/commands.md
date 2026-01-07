@@ -1142,12 +1142,16 @@ Restart one or several projects.
 Flags:
 
 * `--all`, `-a`: Restart all projects.
+* `--no-cache`: Build Docker images without using cache.
 
 Example:
 
 ```shell
 # Restart the current project
 ddev restart
+
+# Restart the current project without using Docker cache
+ddev restart --no-cache
 
 # Restart my-project and my-other-project
 ddev restart my-project my-other-project
@@ -1340,6 +1344,7 @@ Start a DDEV project.
 Flags:
 
 * `--all`, `-a`: Start all projects.
+* `--no-cache`: Build Docker images without using cache.
 * `--profiles=<optional-compose-profile-list>`: Start services labeled with the Docker Compose profiles in comma-separated list of profiles.
 * `--skip-confirmation`, `-y`: Skip any confirmation steps.
 
@@ -1348,6 +1353,9 @@ Example:
 ```shell
 # Start the current project
 ddev start
+
+# Start the current project without using Docker cache
+ddev start --no-cache
 
 # Start my-project and my-other-project
 ddev start my-project my-other-project
