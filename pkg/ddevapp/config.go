@@ -1431,9 +1431,9 @@ RUN (timeout %d apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-ge
 		// Remove leading and trailing spaces
 		composerSelfUpdateArg = strings.TrimSpace(composerVersion)
 
-		// Composer v2 is default
+		// If no version is specified, use "stable"
 		if composerSelfUpdateArg == "" {
-			composerSelfUpdateArg = "2"
+			composerSelfUpdateArg = "stable"
 		}
 
 		// Major and minor versions have to be provided as option so add '--' prefix.

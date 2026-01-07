@@ -92,7 +92,18 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be a minor version like `2.2` for the latest release of that branch, an explicit version like `1.0.22`, or a keyword like `stable`, `preview` or `snapshot`. See Composer documentation.
+| :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be the LTS version `2.2` (there's no other `2.x` LTS), an explicit version like `2.9.3`, or a keyword like `stable`, `preview` or `snapshot`. See [Composer documentation](https://getcomposer.org/doc/03-cli.md#self-update-selfupdate).
+
+!!!warning "Composer version is cached at container build time"
+    DDEV installs Composer at container build time and caches it. If you use a non-specific version like `2`, `2.2`, `""` (empty), or `stable`, DDEV installs the latest available version in that range at build time.
+
+    The next update of Composer will be done automatically when DDEV is upgraded. If you want to update Composer in the web container before then, use [rebuild](../usage/commands.md#utility-rebuild):
+
+    ```bash
+    ddev utility rebuild
+    ```
+
+    See [Composer Self-Update Changes Do Not Persist](../usage/developer-tools.md#composer-self-update-changes-do-not-persist) for details.
 
 !!!tip "Using `vendor/bin/composer`"
     See the example in [Composer from `vendor/bin/composer`](../usage/developer-tools.md#composer-from-vendorbincomposer).
