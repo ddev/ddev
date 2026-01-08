@@ -152,7 +152,8 @@ func StartDdevRouter() error {
 			return fmt.Errorf("failed to find router for healthcheck: %v", err)
 		}
 		util.Debug("Forcing router healthcheck to verify new config is loaded")
-		_, _, err = dockerutil.Exec(router.ID, "rm -f /tmp/healthy && /healthcheck.sh", "0")
+		uid, _, _ := dockerutil.GetContainerUser()
+		_, _, err = dockerutil.Exec(router.ID, "rm -f /tmp/healthy && /healthcheck.sh", uid)
 		if err != nil {
 			return fmt.Errorf("router healthcheck failed: %v", err)
 		}
