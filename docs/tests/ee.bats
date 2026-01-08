@@ -37,11 +37,15 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin.php"
   assert_success
 
-  run docker ps \
+  run bash -c '
+  docker ps -q \
     --filter "label=com.ddev.platform=ddev" \
     --filter "label=com.docker.compose.service=web" \
-    --filter "label=com.docker.compose.oneoff=False" \
-    --format 'table {{.ID}}\t{{.Names}}\t{{.Status}}'
+    --filter "label=com.docker.compose.oneoff=False" |
+  xargs -r docker inspect --format "{{.Name}} {{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{else}}no-health{{end}}"
+'
+  assert_output --partial "my-ee-site-web running healthy"
+  assert_success
   echo "# Existing containers: $output" >&3
 
   # Diagnostic: show traefik config files in volume
