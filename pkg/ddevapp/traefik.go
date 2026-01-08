@@ -277,6 +277,12 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		projectConfigDir := app.GetConfigPath("traefik/config")
 		projectCertsDir := app.GetConfigPath("traefik/certs")
 
+		// Mark this project's config as expected - even if we can't copy it now,
+		// we don't want to remove an existing config from the volume
+		expectedConfigs[app.Name+".yaml"] = true
+		expectedCerts[app.Name+".crt"] = true
+		expectedCerts[app.Name+".key"] = true
+
 		// Copy project's config yaml to global config dir
 		projectConfigFile := filepath.Join(projectConfigDir, app.Name+".yaml")
 		if fileutil.FileExists(projectConfigFile) {
@@ -285,7 +291,6 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 			if err != nil {
 				util.Warning("Failed to copy traefik config for project %s: %v", app.Name, err)
 			}
-			expectedConfigs[app.Name+".yaml"] = true
 		}
 
 		// Copy project's certs to global certs dir
@@ -297,7 +302,6 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 				if err != nil {
 					util.Warning("Failed to copy traefik cert for project %s: %v", app.Name, err)
 				}
-				expectedCerts[app.Name+ext] = true
 			}
 		}
 
@@ -315,7 +319,6 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 					} else {
 						util.Debug("Copied custom cert %s to global traefik certs dir", srcFile)
 					}
-					expectedCerts[app.Name+ext] = true
 				}
 			}
 		}
