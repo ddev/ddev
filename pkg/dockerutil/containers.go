@@ -466,6 +466,7 @@ func ContainerName(c *container.Summary) string {
 
 // GetContainerHealth retrieves the health status of a given container.
 // returns status, most-recent-log
+// The container is only considered "healthy" if it's also "running", contrary to Docker's normal usage
 func GetContainerHealth(c *container.Summary) (string, string) {
 	if c == nil {
 		return "no container", ""
