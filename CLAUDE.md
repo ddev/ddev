@@ -18,7 +18,6 @@ For comprehensive developer documentation, see:
 ```bash
 make                    # Build for host OS/arch. Output: .gotmp/bin/<os>_<arch>/ddev
 make linux_amd64        # Cross-compile for specific platform
-make clean              # Remove build artifacts
 ```
 
 ### Testing
@@ -35,17 +34,17 @@ make quickstart-test                          # Run Bats docs tests
 - Use subset testing with regex patterns for faster iteration
 - Set `DDEV_DEBUG=true` to see executed commands
 - Set `GOTEST_SHORT=true` to limit test matrix
-- Set `DDEV_NO_INSTRUMENTATION=true` to disable analytics
+- `DDEV_NO_INSTRUMENTATION=true` should always be set to disable analytics
 
 ### Linting and Code Quality
+
+These are implemented as PreToolUse and PostToolUse hooks, so should not be separately required:
 
 ```bash
 make staticrequired                           # Run all required static analysis
 gofmt -w $FILE                                # Format Go files after editing
 markdownlint --fix $FILE                      # Fix markdown formatting
 ```
-
-**MANDATORY: Always run `make staticrequired` before committing.**
 
 ## Architecture
 
@@ -75,7 +74,6 @@ markdownlint --fix $FILE                      # Fix markdown formatting
 
 - `.ddev/config.yaml` - Per-project configuration
 - `~/.ddev/global_config.yaml` - Global configuration
-- Container configs in `containers/*/` directories
 
 ## Development Notes
 
@@ -90,23 +88,14 @@ markdownlint --fix $FILE                      # Fix markdown formatting
 - Formatting: `gofmt` enforced via golangci-lint
 - Linters configured in `.golangci.yml`: errcheck, govet, revive, staticcheck, whitespace
 - **Never add trailing whitespace** - blank lines must be completely empty
-- **Prefer `require` over `assert`** in tests for critical assertions
+- **Prefer `require` over `assert`** in tests for all assertions
 - Focus on surgical, minimal changes that maintain compatibility
 
 ### Testing Philosophy
 
 - Integration tests in `pkg/ddevapp/` test full workflows
-- Documentation tests use Bats framework in `docs/tests`
+- Documentation and docker image tests use Bats framework in `docs/tests`
 - Do not commit secrets - Amplitude API keys are injected at build time
-
-### Docker Image Development
-
-When modifying Docker images:
-
-1. Build with a specific tag: `cd containers/ddev-webserver && make VERSION=<branchname>`
-2. Push to Docker Hub: `make push DOCKER_REPO=youruser/yourimage VERSION=<branchname>`
-3. Update `pkg/versionconstants/versionconstants.go` with new image tag
-4. Rebuild DDEV: `make`
 
 ## Git Workflow
 
@@ -138,7 +127,7 @@ Examples:
 
 ### Pull Request Template
 
-Follow `.github/PULL_REQUEST_TEMPLATE.md` with these required sections:
+In the initial commit for a PR, use the format in  `.github/PULL_REQUEST_TEMPLATE.md` with these required sections:
 
 - **The Issue:** Reference issue with `#<number>`
 - **How This PR Solves The Issue:** Technical explanation
