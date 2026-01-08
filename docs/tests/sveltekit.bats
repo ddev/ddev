@@ -59,6 +59,17 @@ EOF
   run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
   echo "# Traefik routers: $output"
 
+  run bash -c '
+  docker ps -q \
+    --filter "label=com.ddev.platform=ddev" \
+    --filter "label=com.docker.compose.service=web" \
+    --filter "label=com.docker.compose.oneoff=False" |
+  xargs -r docker inspect --format "{{.Name}} {{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{else}}no-health{{end}}"
+'
+  assert_output --partial "${PROJNAME}-web running healthy"
+  assert_success
+  echo "# Existing containers: $output" >&3
+
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch"
   assert_output "FULLURL https://${PROJNAME}.ddev.site"

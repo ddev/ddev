@@ -44,7 +44,7 @@ teardown() {
     --filter "label=com.docker.compose.oneoff=False" |
   xargs -r docker inspect --format "{{.Name}} {{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{else}}no-health{{end}}"
 '
-  assert_output --partial "my-ee-site-web running healthy"
+  assert_output --partial "${PROJNAME}-web running healthy"
   assert_success
   echo "# Existing containers: $output" >&3
 
