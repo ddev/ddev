@@ -38,10 +38,10 @@ func GetActiveProjects() []*DdevApp {
 
 	if err == nil {
 		for _, siteContainer := range containers {
-			// Skip containers that are not running (e.g., paused projects)
-			if siteContainer.State != "running" {
-				continue
-			}
+			//// Skip containers that are not running (e.g., paused projects)
+			//if siteContainer.State != "running" {
+			//	continue
+			//}
 			approot, ok := siteContainer.Labels["com.ddev.approot"]
 			if !ok {
 				break
