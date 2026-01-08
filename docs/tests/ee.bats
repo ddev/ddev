@@ -29,14 +29,22 @@ teardown() {
   assert_success
 
   # ddev start -y
-  run ddev start -y
+  DDEV_DEBUG=true run ddev start -y
   assert_success
 
   # validate ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch /admin.php"
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin.php"
   assert_success
-    # validate running project
+
+  # Diagnostic: show traefik config files in volume
+  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
+  echo "# Traefik config files: $output"
+  # Diagnostic: show traefik router API response (just router names)
+  run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
+  echo "# Traefik routers: $output"
+
+  # validate running project
   run curl -sfIv https://${PROJNAME}.ddev.site/admin.php
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
@@ -60,7 +68,7 @@ teardown() {
   assert_success
 
   # ddev start -y
-  run ddev start -y
+  DDEV_DEBUG=true run ddev start -y
   assert_success
 
   # ddev composer install
@@ -80,6 +88,14 @@ teardown() {
   run bash -c "DDEV_DEBUG=true ddev launch /admin.php"
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin.php"
   assert_success
+
+  # Diagnostic: show traefik config files in volume
+  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
+  echo "# Traefik config files: $output"
+  # Diagnostic: show traefik router API response (just router names)
+  run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
+  echo "# Traefik routers: $output"
+
   # validate running project
   run curl -sfIv https://${PROJNAME}.ddev.site/admin.php
   assert_output --partial "server: nginx"
