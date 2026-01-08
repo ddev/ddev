@@ -729,10 +729,20 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 
 	// Ask where IDE is running
 	var locationItems []string
+	var ideName string
+	switch ideType {
+	case "phpstorm":
+		ideName = "PHPStorm"
+	case "vscode":
+		ideName = "VS Code"
+	default:
+		ideName = "your IDE"
+	}
+
 	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
 		locationItems = []string{
-			"Windows (recommended for WSL2)",
-			"Inside WSL2",
+			fmt.Sprintf("%s installed on Windows (recommended for WSL2)", ideName),
+			fmt.Sprintf("%s installed in WSL2 and running with WSLg", ideName),
 			"Remote/Other",
 		}
 	} else {
@@ -743,7 +753,7 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 	}
 
 	locationPrompt := promptui.Select{
-		Label: "Where is your IDE running",
+		Label: fmt.Sprintf("Where is %s installed and running", ideName),
 		Items: locationItems,
 		Templates: &promptui.SelectTemplates{
 			Label:    "{{ . }}?",
@@ -794,22 +804,34 @@ func promptEnableListening(projectName string, ideType string) {
 		output.UserOut.Println("    - Debug port: 9003")
 		output.UserOut.Println("    - 'Can accept external connections' is checked")
 	case "vscode":
-		output.UserOut.Println("  VS Code setup:")
-		output.UserOut.Println("    1. Install the 'PHP Debug' extension by Xdebug")
-		output.UserOut.Println("    2. Create/update .vscode/launch.json with:")
-		output.UserOut.Println(`       {
+		// Check for existing launch.json
+		launchPath := ".vscode/launch.json"
+		launchOK := checkVSCodeLaunchJSON(launchPath)
+
+		if launchOK {
+			output.UserOut.Println("  ✓ Found compliant .vscode/launch.json")
+			output.UserOut.Println("  VS Code setup:")
+			output.UserOut.Println("    1. Ensure 'PHP Debug' extension by Xdebug is installed")
+			output.UserOut.Println("    2. Press F5 or go to Run -> Start Debugging")
+		} else {
+			output.UserOut.Println("  VS Code setup:")
+			output.UserOut.Println("    1. Install the 'PHP Debug' extension by Xdebug")
+			output.UserOut.Println("    2. Create/update .vscode/launch.json with:")
+			output.UserOut.Println(`       {
          "version": "0.2.0",
          "configurations": [{
            "name": "Listen for Xdebug",
            "type": "php",
            "request": "launch",
            "port": 9003,
+           "hostname": "0.0.0.0",
            "pathMappings": {
              "/var/www/html": "${workspaceFolder}"
            }
          }]
        }`)
-		output.UserOut.Println("    3. Press F5 or go to Run -> Start Debugging")
+			output.UserOut.Println("    3. Press F5 or go to Run -> Start Debugging")
+		}
 	default:
 		output.UserOut.Println("  IDE setup:")
 		output.UserOut.Println("    1. Configure your IDE to listen on port 9003")
@@ -820,6 +842,22 @@ func promptEnableListening(projectName string, ideType string) {
 
 	output.UserOut.Println()
 	util.Confirm("Press Enter when your IDE is listening for debug connections")
+}
+
+// checkVSCodeLaunchJSON checks if .vscode/launch.json exists and has proper Xdebug configuration
+func checkVSCodeLaunchJSON(path string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+
+	content := string(data)
+	// Check for key requirements
+	hasPort9003 := strings.Contains(content, `"port": 9003`) || strings.Contains(content, `"port":9003`)
+	hasHostname := strings.Contains(content, `"hostname"`) && strings.Contains(content, `"0.0.0.0"`)
+	hasPathMapping := strings.Contains(content, `"/var/www/html"`)
+
+	return hasPort9003 && hasHostname && hasPathMapping
 }
 
 // testDBGpProtocol tests the DBGp protocol by connecting to the IDE from inside the web container
