@@ -37,13 +37,19 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin.php"
   assert_success
 
+  run docker ps \
+    --filter "label=com.ddev.platform=ddev" \
+    --filter "label=com.docker.compose.service=web" \
+    --filter "label=com.docker.compose.oneoff=False" \
+    --format 'table {{.ID}}\t{{.Names}}\t{{.Status}}'
+  echo "# Existing containers: $output" >&3
+
   # Diagnostic: show traefik config files in volume
   run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
-  echo "# Traefik config files: $output"
+  echo "# Traefik config files: $output" >&3
   # Diagnostic: show traefik router API response (just router names)
   run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
   echo "# Traefik routers: $output"
-
   # validate running project
   run curl -sfIv https://${PROJNAME}.ddev.site/admin.php
   assert_output --partial "server: nginx"
