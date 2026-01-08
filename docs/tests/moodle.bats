@@ -30,8 +30,8 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site/login"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "HTTP/2 200"
   assert_output --partial "set-cookie: MoodleSession="
+  assert_success
 }

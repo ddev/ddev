@@ -66,9 +66,9 @@ DOCKERFILEEND
   assert_success
 
   # validate running project
-  run curl -sf -I https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfv -I https://${PROJNAME}.ddev.site
   assert_output --regexp "server: (Caddy|FrankenPHP)"
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
   assert_output --partial "HTTP/2 200"
+  assert_success
 }

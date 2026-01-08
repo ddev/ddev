@@ -29,13 +29,13 @@ teardown() {
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "HTTP/2 200"
-
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "Laravel"
+  assert_success
 
   # check used database
   run ddev artisan about
@@ -61,13 +61,13 @@ teardown() {
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "HTTP/2 200"
-
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "Laravel"
+  assert_success
 
   # check used database
   run ddev artisan about
@@ -120,13 +120,13 @@ DOCKERFILEEND
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "HTTP/2 200"
-
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "Laravel"
+  assert_success
 
   # check used database
   run ddev artisan about

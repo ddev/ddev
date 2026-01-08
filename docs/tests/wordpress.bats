@@ -31,15 +31,15 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "link: <https://my-wp-site.ddev.site/index.php?rest_route=/>; rel=\"https://api.w.org/\""
   assert_output --partial "HTTP/2 200"
-  # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
   assert_success
+  # validate running project
+  run curl -sfIv https://${PROJNAME}.ddev.site/wp-admin/
   assert_output --partial "location: https://my-wp-site.ddev.site/wp-login.php"
   assert_output --partial "HTTP/2 302"
+  assert_success
 }
 
 @test "WordPress wp-cli based quickstart (different docroot) with $(ddev --version)" {
@@ -63,15 +63,15 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "link: <https://my-wp-site.ddev.site/index.php?rest_route=/>; rel=\"https://api.w.org/\""
   assert_output --partial "HTTP/2 200"
-  # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
   assert_success
+  # validate running project
+  run curl -sfIv https://${PROJNAME}.ddev.site/wp-admin/
   assert_output --partial "location: https://my-wp-site.ddev.site/wp-login.php"
   assert_output --partial "HTTP/2 302"
+  assert_success
 }
 
 @test "WordPress Bedrock based quickstart with $(ddev --version)" {
@@ -102,15 +102,15 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "link: <https://my-wp-site.ddev.site/index.php?rest_route=/>; rel=\"https://api.w.org/\""
   assert_output --partial "HTTP/2 200"
+  assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/wp-admin/
   assert_output --partial "link: <https://my-wp-site.ddev.site/index.php?rest_route=/>; rel=\"https://api.w.org/\""
   assert_output --partial "HTTP/2 200"
+  assert_success
 }
 
 @test "WordPress git based quickstart with $(ddev --version)" {
@@ -136,13 +136,13 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial  "link: <https://my-wp-site.ddev.site/index.php?rest_route=/>; rel=\"https://api.w.org/\""
   assert_output --partial "HTTP/2 200"
-  # validate running project /wp-admin
-  run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
   assert_success
+  # validate running project /wp-admin
+  run curl -sfIv https://${PROJNAME}.ddev.site/wp-admin/
   assert_output --partial "location: https://my-wp-site.ddev.site/wp-login.php?redirect_to=https%3A%2F%2Fmy-wp-site.ddev.site%2Fwp-admin%2F&reauth=1"
   assert_output --partial "HTTP/2 302"
+  assert_success
 }

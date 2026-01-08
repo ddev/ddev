@@ -86,23 +86,23 @@ EOF
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin_ddev"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "Copyright © 2013-present Magento, Inc. All rights reserved."
   assert_output --partial "Here is what\`s trending on Luma right now"
   assert_output --partial "title=\"Argus All-Weather Tank\""
-  run curl -sfI https://${PROJNAME}.ddev.site/index.php/admin_ddev/
   assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/index.php/admin_ddev/
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site/index.php/admin_ddev/
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site/index.php/admin_ddev/
   assert_output --partial "Copyright &copy; $(date +%Y) Magento Commerce Inc. All rights reserved."
-  run curl -sf https://${PROJNAME}.ddev.site:5602/app/home#/
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site:5602/app/home#/
   assert_output --partial "<title>OpenSearch Dashboards</title>"
+  assert_success
 }

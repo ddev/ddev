@@ -37,8 +37,8 @@ teardown() {
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/admin
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/admin
   assert_output --partial "sw-context-token,sw-access-key,sw-language-id,sw-version-id,sw-inheritance"
   assert_output --partial "HTTP/2 200"
+  assert_success
 }

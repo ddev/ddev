@@ -49,8 +49,8 @@ teardown() {
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "location: /civicrm/home"
   assert_output --partial "HTTP/2 302"
+  assert_success
 }

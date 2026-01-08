@@ -32,17 +32,17 @@ teardown() {
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/Security/login
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/Security/login
   assert_output --partial "server: Apache"
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "Welcome to Silverstripe"
-  run curl -sf https://${PROJNAME}.ddev.site/Security/login
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site/Security/login
   assert_output --partial "<title>Your Site Name: Log in</title>"
   assert_output --partial "id=\"MemberLoginForm_LoginForm\""
+  assert_success
 }
 
 @test "Silverstripe CMS Git Clone  quickstart with $(ddev --version)" {

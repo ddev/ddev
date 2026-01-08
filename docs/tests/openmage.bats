@@ -36,22 +36,22 @@ teardown() {
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "set-cookie: om_frontend"
+  assert_success
 
   # Check if the frontend is working
-  run curl -sf https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "<title>Madison Island</title>"
   assert_output --partial "<meta name=\"keywords\" content=\"Magento, Varien, E-commerce\" />"
+  assert_success
 
   # Check if the admin is working
-  run curl -sf https://${PROJNAME}.ddev.site/index.php/admin/
-  assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site/index.php/admin/
   assert_output --partial "Log into OpenMage Admin Page"
+  assert_success
 }
 
 @test "OpenMage composer based quickstart with $(ddev --version)" {
@@ -115,20 +115,20 @@ teardown() {
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "set-cookie: om_frontend"
+  assert_success
 
   # Check if the frontend is working
-  run curl -sf https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "<title>Madison Island</title>"
   assert_output --partial "<meta name=\"keywords\" content=\"Magento, Varien, E-commerce\" />"
+  assert_success
 
   # Check if the admin is working
-  run curl -sf https://${PROJNAME}.ddev.site/index.php/admin/
-  assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site/index.php/admin/
   assert_output --partial "Log into OpenMage Admin Page"
+  assert_success
 }
