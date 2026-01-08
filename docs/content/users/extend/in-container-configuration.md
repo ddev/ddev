@@ -54,6 +54,8 @@ UserKnownHostsFile=/home/.ssh-agent/known_hosts
 StrictHostKeyChecking=accept-new
 ```
 
+Alternatively, you may also place multiple ssh config files within the `.ddev/homeadditions/.ssh/config.d` directory, and they'll be included alongside the default DDEV ssh config. Please note that the files must have a `.conf` extension in order to be included.
+
 ### Custom Scripts and Executables
 
 If you need to add a script or other executable component into the project (or global configuration), you can put it in the project or global `.ddev/homeadditions/bin` directory and `$HOME/bin/<script>` will be created inside the container. This is useful for adding a script to one project or every project, or for overriding standard scripts, as `$HOME/bin` is first in the `$PATH` in the `web` container.
