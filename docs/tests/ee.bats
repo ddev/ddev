@@ -37,13 +37,13 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin.php"
   assert_success
     # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/admin.php
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/admin.php
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site/admin.php
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site/admin.php
   assert_output --partial "<title>Install ExpressionEngine"
+  assert_success
 }
 
 @test "Expression Engine Git Clone quickstart with $(ddev --version)" {
@@ -81,11 +81,11 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin.php"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/admin.php
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/admin.php
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site/admin.php
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site/admin.php
   assert_output --partial "<title>Install ExpressionEngine"
+  assert_success
 }

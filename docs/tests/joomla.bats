@@ -35,14 +35,14 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site/administrator/"
   assert_success
   # validate running project
-  run curl -sf https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "<meta name=\"generator\" content=\"Joomla! - Open Source Content Management\">"
   assert_output --partial "alt=\"My Joomla Site\""
-  run curl -sfI https://${PROJNAME}.ddev.site/administrator/
   assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/administrator/
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site/administrator/
+  run curl -sfv https://${PROJNAME}.ddev.site/administrator/
   assert_success
   assert_output --partial "<meta name=\"generator\" content=\"Joomla! - Open Source Content Management\">"
+  assert_success
 }

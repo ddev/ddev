@@ -39,16 +39,16 @@ teardown() {
   assert_success
 
   ## validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "x-powered-by: Craft CMS"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "<title>Welcome to Craft CMS</title>"
   assert_output --partial "<h2>Popular Resources</h2>"
-  run curl -sf https://${PROJNAME}.ddev.site/admin/login
+  assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site/admin/login
   assert_success
   assert_output --partial "<title>Sign In - CraftCMS</title>"
 }

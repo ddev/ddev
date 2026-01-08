@@ -30,12 +30,12 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "server: Apache"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "This tool will guide you through the installation process."
+  assert_success
 }
 
 @test "processwire composer with $(ddev --version)" {
@@ -55,11 +55,11 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "server: Apache"
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "This tool will guide you through the installation process."
+  assert_success
 }

@@ -35,10 +35,10 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
   assert_output --partial "HTTP/2 200"
+  assert_success
 }
 
 @test "Drupal 10 quickstart with $(ddev --version)" {
@@ -65,10 +65,10 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "x-generator: Drupal 10 (https://www.drupal.org)"
   assert_output --partial "HTTP/2 200"
+  assert_success
 }
 
 @test "Drupal 11 git based quickstart with $(ddev --version)" {
@@ -97,10 +97,10 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
   assert_output --partial "HTTP/2 200"
+  assert_success
 }
 
 @test "Drupal CMS composer quickstart with $(ddev --version)" {
@@ -127,12 +127,12 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "HTTP/2 200"
   assert_output --partial "expires: Sun, 19 Nov 1978 05:00:00 GMT"
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
-  run curl -sf https://${PROJNAME}.ddev.site
+  assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_success
   assert_output --partial "<title>Home | Drush Site-Install</title>"
   assert_output --partial "<span>A celebration of Drupal and open-source contributions</span>"

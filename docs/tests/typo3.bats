@@ -84,11 +84,11 @@ teardown() {
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
-  run bats_pipe curl -sfI https://${PROJNAME}.ddev.site/ \| grep "HTTP/2 200"
+  run bats_pipe curl -sfIv https://${PROJNAME}.ddev.site/ \| grep "HTTP/2 200"
   assert_success
-  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with <a href=\"https://typo3.org\">TYPO3</a>"
+  run bats_pipe curl -sfLv https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with <a href=\"https://typo3.org\">TYPO3</a>"
   assert_success
-  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
+  run bats_pipe curl -sfLv https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
   assert_success
 }
 
@@ -123,11 +123,11 @@ teardown() {
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
-  run bats_pipe curl -sfI https://${PROJNAME}.ddev.site/ \| grep "HTTP/2 200"
+  run bats_pipe curl -sfIv https://${PROJNAME}.ddev.site/ \| grep "HTTP/2 200"
   assert_success
-  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with <a href=\"https://typo3.org\">TYPO3</a>"
+  run bats_pipe curl -sfLv https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with <a href=\"https://typo3.org\">TYPO3</a>"
   assert_success
-  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
+  run bats_pipe curl -sfLv https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
   assert_success
 }
 
@@ -148,9 +148,9 @@ teardown() {
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/typo3/install.php"
   assert_success
 
-  run bats_pipe curl -sfI https://${PROJNAME}.ddev.site/typo3/install.php \| grep "HTTP/2 200"
+  run bats_pipe curl -sfIv https://${PROJNAME}.ddev.site/typo3/install.php \| grep "HTTP/2 200"
   assert_success
-  run bats_pipe curl -sfL https://${PROJNAME}.ddev.site/typo3/install.php \| grep "data-init=\"TYPO3/CMS/Install/Installer\""
+  run bats_pipe curl -sfLv https://${PROJNAME}.ddev.site/typo3/install.php \| grep "data-init=\"TYPO3/CMS/Install/Installer\""
   assert_success
 }
 
@@ -173,10 +173,10 @@ teardown() {
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/typo3/install.php
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/typo3/install.php
   assert_output --partial "content-security-policy: default-src 'self'; script-src 'self'"
   assert_output --partial "HTTP/2 200"
+  assert_success
 }
 
 @test "TYPO3 XHGui composer test with $(ddev --version)" {
