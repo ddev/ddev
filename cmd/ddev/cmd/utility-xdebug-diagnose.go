@@ -615,7 +615,7 @@ func runInteractiveXdebugDiagnose() int {
 	// Step 5: Guide user to enable listening
 	output.UserOut.Println("Step 5: Enable Debug Listening")
 	output.UserOut.Println("─────────────────────────────────────────────────────────────")
-	promptEnableListening(app.Name, ideType)
+	promptEnableListening(app.Name, ideType, ideLocation, envType)
 	output.UserOut.Println()
 
 	// Step 6: Test DBGp Protocol
@@ -740,10 +740,19 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 	}
 
 	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
-		locationItems = []string{
-			fmt.Sprintf("%s installed on Windows (recommended for WSL2)", ideName),
-			fmt.Sprintf("%s installed in WSL2 and running with WSLg", ideName),
-			"Remote/Other",
+		if ideType == "vscode" {
+			locationItems = []string{
+				"VS Code on Windows using WSL extension (recommended)",
+				"VS Code running in WSLg",
+				"VS Code using Remote Containers",
+				"Remote/Other",
+			}
+		} else {
+			locationItems = []string{
+				fmt.Sprintf("%s installed on Windows (recommended for WSL2)", ideName),
+				fmt.Sprintf("%s running in WSL2/WSLg", ideName),
+				"Remote/Other",
+			}
 		}
 	} else {
 		locationItems = []string{
@@ -767,13 +776,28 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 		ideLocation = "local"
 	} else {
 		if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
-			switch idx {
-			case 0:
-				ideLocation = "windows"
-			case 1:
-				ideLocation = "wsl2"
-			default:
-				ideLocation = "remote"
+			if ideType == "vscode" {
+				// VS Code has 4 options: WSL extension, WSLg, Remote Containers, Remote/Other
+				switch idx {
+				case 0:
+					ideLocation = "windows" // VS Code on Windows using WSL extension
+				case 1:
+					ideLocation = "wslg" // VS Code running in WSLg
+				case 2:
+					ideLocation = "container" // VS Code using Remote Containers
+				default:
+					ideLocation = "remote"
+				}
+			} else {
+				// Other IDEs have 3 options
+				switch idx {
+				case 0:
+					ideLocation = "windows"
+				case 1:
+					ideLocation = "wsl2"
+				default:
+					ideLocation = "remote"
+				}
 			}
 		} else {
 			switch idx {
@@ -789,7 +813,7 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 }
 
 // promptEnableListening guides the user to enable debug listening in their IDE
-func promptEnableListening(projectName string, ideType string) {
+func promptEnableListening(projectName string, ideType string, ideLocation string, envType string) {
 	output.UserOut.Printf("  Please open project '%s' in your IDE.\n", projectName)
 	output.UserOut.Println()
 
@@ -804,20 +828,38 @@ func promptEnableListening(projectName string, ideType string) {
 		output.UserOut.Println("    - Debug port: 9003")
 		output.UserOut.Println("    - 'Can accept external connections' is checked")
 	case "vscode":
-		// Check for existing launch.json
-		launchPath := ".vscode/launch.json"
-		launchOK := checkVSCodeLaunchJSON(launchPath)
+		// WSL2-specific VS Code instructions
+		isWSL2 := envType == "wsl2-nat" || envType == "wsl2-mirrored"
+		if isWSL2 && ideLocation == "windows" {
+			output.UserOut.Println("  VS Code on Windows with WSL extension setup:")
+			output.UserOut.Println()
+			output.UserOut.Println("  IMPORTANT: This is the recommended WSL2 configuration!")
+			output.UserOut.Println()
+			output.UserOut.Println("  1. Install the 'WSL' extension in VS Code (if not already installed)")
+			output.UserOut.Println("     Extension ID: ms-vscode-remote.remote-wsl")
+			output.UserOut.Println()
+			output.UserOut.Println("  2. Open your WSL2 project folder:")
+			output.UserOut.Println("     • Press F1 in VS Code")
+			output.UserOut.Println("     • Run command: 'WSL: Open Folder in WSL'")
+			output.UserOut.Println("     • Navigate to your project directory")
+			output.UserOut.Println()
+			output.UserOut.Println("  3. Install 'PHP Debug' extension IN WSL (not Windows):")
+			output.UserOut.Println("     • Open Extensions view (Ctrl+Shift+X)")
+			output.UserOut.Println("     • Search for 'PHP Debug' by Xdebug")
+			output.UserOut.Println("     • Click 'Install in WSL' (NOT 'Install')")
+			output.UserOut.Println("     • You should see the extension listed under 'WSL: <distro>' section")
+			output.UserOut.Println()
+			output.UserOut.Println("  4. Configure launch.json (if needed):")
 
-		if launchOK {
-			output.UserOut.Println("  ✓ Found compliant .vscode/launch.json")
-			output.UserOut.Println("  VS Code setup:")
-			output.UserOut.Println("    1. Ensure 'PHP Debug' extension by Xdebug is installed")
-			output.UserOut.Println("    2. Press F5 or go to Run -> Start Debugging")
-		} else {
-			output.UserOut.Println("  VS Code setup:")
-			output.UserOut.Println("    1. Install the 'PHP Debug' extension by Xdebug")
-			output.UserOut.Println("    2. Create/update .vscode/launch.json with:")
-			output.UserOut.Println(`       {
+			// Check for existing launch.json
+			launchPath := ".vscode/launch.json"
+			launchOK := checkVSCodeLaunchJSON(launchPath)
+
+			if launchOK {
+				output.UserOut.Println("     ✓ Found compliant .vscode/launch.json")
+			} else {
+				output.UserOut.Println("     Create .vscode/launch.json with:")
+				output.UserOut.Println(`       {
          "version": "0.2.0",
          "configurations": [{
            "name": "Listen for Xdebug",
@@ -830,7 +872,51 @@ func promptEnableListening(projectName string, ideType string) {
            }
          }]
        }`)
-			output.UserOut.Println("    3. Press F5 or go to Run -> Start Debugging")
+			}
+			output.UserOut.Println()
+			output.UserOut.Println("  5. Start debugging:")
+			output.UserOut.Println("     Press F5 or go to Run -> Start Debugging")
+		} else if isWSL2 && (ideLocation == "wslg" || ideLocation == "container") {
+			output.UserOut.Println("  VS Code in WSLg/Container setup:")
+			output.UserOut.Println()
+			output.UserOut.Println("  ⚠  Note: This is an unusual configuration.")
+			output.UserOut.Println("      The recommended setup is VS Code on Windows with WSL extension.")
+			output.UserOut.Println()
+			output.UserOut.Println("  1. Install 'PHP Debug' extension by Xdebug")
+			output.UserOut.Println("  2. Create/update .vscode/launch.json")
+			output.UserOut.Println("  3. Start debugging with F5")
+			output.UserOut.Println()
+			output.UserOut.Println("  For this setup, you may need to set:")
+			output.UserOut.Println("    ddev config global --xdebug-ide-location=wsl2")
+		} else {
+			// Non-WSL2 VS Code setup
+			launchPath := ".vscode/launch.json"
+			launchOK := checkVSCodeLaunchJSON(launchPath)
+
+			if launchOK {
+				output.UserOut.Println("  ✓ Found compliant .vscode/launch.json")
+				output.UserOut.Println("  VS Code setup:")
+				output.UserOut.Println("    1. Ensure 'PHP Debug' extension by Xdebug is installed")
+				output.UserOut.Println("    2. Press F5 or go to Run -> Start Debugging")
+			} else {
+				output.UserOut.Println("  VS Code setup:")
+				output.UserOut.Println("    1. Install the 'PHP Debug' extension by Xdebug")
+				output.UserOut.Println("    2. Create/update .vscode/launch.json with:")
+				output.UserOut.Println(`       {
+         "version": "0.2.0",
+         "configurations": [{
+           "name": "Listen for Xdebug",
+           "type": "php",
+           "request": "launch",
+           "port": 9003,
+           "hostname": "0.0.0.0",
+           "pathMappings": {
+             "/var/www/html": "${workspaceFolder}"
+           }
+         }]
+       }`)
+				output.UserOut.Println("    3. Press F5 or go to Run -> Start Debugging")
+			}
 		}
 	default:
 		output.UserOut.Println("  IDE setup:")
@@ -868,7 +954,7 @@ func testDBGpProtocol(app *ddevapp.DdevApp, ideLocation string, envType string) 
 	// The connection must be made from inside the web container
 	var targetHost string
 	switch ideLocation {
-	case "windows", "wsl2", "macos", "linux":
+	case "windows", "wsl2", "wslg", "container", "local", "macos", "linux":
 		// From inside container, always use host.docker.internal to reach host
 		targetHost = "host.docker.internal"
 	case "remote":
