@@ -783,7 +783,8 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     Download and extract the latest ExpressionEngine release:
 
     ```bash
-    curl -o ee.zip -L $(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+    DOWNLOAD_URL=$(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+    curl -o ee.zip -L "${DOWNLOAD_URL}"
     unzip ee.zip && rm -f ee.zip
     ```
 
@@ -812,7 +813,8 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-ee-site && cd my-ee-site
-        curl -o ee.zip -L $(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+        DOWNLOAD_URL=$(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+        curl -o ee.zip -L "${DOWNLOAD_URL}"
         unzip ee.zip && rm -f ee.zip
         ddev config --database=mysql:8.0
         ddev start -y
@@ -1188,7 +1190,8 @@ Create the project directory and download Joomla:
 mkdir my-joomla-site && cd my-joomla-site
 # Download the latest version of Joomla! and unzip it.
 # This can be manually downloaded from https://downloads.joomla.org/ or done using curl as here.
-curl -o joomla.zip -L $(curl -sL https://api.github.com/repos/joomla/joomla-cms/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^Joomla.*Stable-Full_Package\\.zip$")))[0].browser_download_url')
+DOWNLOAD_URL=$(curl -sL https://api.github.com/repos/joomla/joomla-cms/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^Joomla.*Stable-Full_Package\\.zip$")))[0].browser_download_url')
+curl -o joomla.zip -L "${DOWNLOAD_URL}"
 unzip joomla.zip && rm -f joomla.zip
 ```
 
@@ -1219,7 +1222,8 @@ ddev launch /administrator
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir my-joomla-site && cd my-joomla-site
-    curl -o joomla.zip -L $(curl -sL https://api.github.com/repos/joomla/joomla-cms/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^Joomla.*Stable-Full_Package\\.zip$")))[0].browser_download_url')
+    DOWNLOAD_URL=$(curl -sL https://api.github.com/repos/joomla/joomla-cms/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^Joomla.*Stable-Full_Package\\.zip$")))[0].browser_download_url')
+    curl -o joomla.zip -L "${DOWNLOAD_URL}"
     unzip joomla.zip && rm -f joomla.zip
     ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
     ddev start -y
