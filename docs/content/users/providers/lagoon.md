@@ -28,6 +28,7 @@ DDEV provides integration with [Lagoon](https://lagoon.sh/), allowing users to q
           config:
             sync-directory: "/var/www/html/web/sites/default/files"
     ```
+
 4. Configure an [SSH key](https://docs.lagoon.sh/using-lagoon-advanced/ssh/) for your Lagoon user.
 5. Run `ddev auth ssh` to make your SSH key available in the project’s web container.
 6. Run [`ddev restart`](../usage/commands.md#restart).
