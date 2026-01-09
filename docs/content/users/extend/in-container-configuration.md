@@ -54,7 +54,7 @@ UserKnownHostsFile=/home/.ssh-agent/known_hosts
 StrictHostKeyChecking=accept-new
 ```
 
-Alternatively, you may also place multiple ssh config files within the `.ddev/homeadditions/.ssh/config.d` directory, and they'll be included alongside the default DDEV ssh config. Please note that the files must have a `.conf` extension in order to be included.
+Alternatively, you may also place multiple SSH config files within the `.ddev/homeadditions/.ssh/config.d` directory, and they'll be automatically included as part of the default DDEV SSH config. Please note that the files must have a `.conf` extension in order to be included.
 
 ### Custom Scripts and Executables
 
