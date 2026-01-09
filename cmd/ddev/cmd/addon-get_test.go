@@ -553,3 +553,79 @@ func TestAddonGetPostInstallRuntimeDependencies(t *testing.T) {
 	runtimeDepsFile := app.GetConfigPath(".runtime-deps-post-install-runtime-deps-addon")
 	require.NoFileExists(t, runtimeDepsFile, "Runtime dependencies file should be cleaned up after processing")
 }
+
+// TestAddonGetWithPRFlag tests the --pr flag functionality
+func TestAddonGetWithPRFlag(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "ddev-redis")
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Test that --pr flag with invalid value fails
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--pr", "0")
+	require.Error(t, err, "Should fail with --pr=0, out=%s", out)
+	require.Contains(t, out, "--pr flag requires a positive integer value")
+
+	// Test that --pr flag with negative value fails
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--pr", "-1")
+	require.Error(t, err, "Should fail with --pr=-1, out=%s", out)
+	require.Contains(t, out, "--pr flag requires a positive integer value")
+
+	// Test that --pr flag with valid value works (PR #54 exists for ddev-redis)
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--pr", "54")
+	require.NoError(t, err, "Should succeed with --pr=54, out=%s", out)
+	require.Contains(t, out, "Installing ddev/ddev-redis:pr-54")
+}
+
+// TestAddonGetWithVersionFlag tests the --version flag functionality
+func TestAddonGetWithVersionFlag(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "ddev-redis")
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Test that --version flag with empty value fails
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--version", "")
+	require.Error(t, err, "Should fail with --version='', out=%s", out)
+	require.Contains(t, out, "--version flag requires a non-empty value")
+
+	// Test that --version flag with valid value works
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--version", "v2.2.0")
+	require.NoError(t, err, "Should succeed with --version=v2.2.0, out=%s", out)
+	require.Contains(t, out, "Installing ddev/ddev-redis:v2.2.0")
+}
+
+// TestAddonGetWithLatestFlag tests the --latest flag functionality
+func TestAddonGetWithLatestFlag(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "ddev-redis")
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Test that --latest flag works and installs from default branch
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--latest")
+	require.NoError(t, err, "Should succeed with --latest, out=%s", out)
+	// Should install from main branch (default_branch for ddev-redis)
+	require.Contains(t, out, "Installing ddev/ddev-redis:main")
+}

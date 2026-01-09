@@ -150,6 +150,7 @@ remote_config:
   update_interval: 24  # Hours between updates
   remote_config_url: "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
   sponsorship_data_url: "https://ddev.com/s/sponsorship-data.json"
+  addon_data_url: "https://addons.ddev.com/addons.json"
 ```
 
 ### Per-User Control
