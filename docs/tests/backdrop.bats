@@ -78,13 +78,13 @@ teardown() {
 #  echo "# DEBUG: ddev start output: " >&3
 #  echo "# $output" >&3
 
-  run curl -fLOv https://github.com/ddev/test-backdrop/releases/download/1.32.1/db.sql.gz
+  run _curl_github -fLOv https://github.com/ddev/test-backdrop/releases/download/1.32.1/db.sql.gz
   assert_success
 
   run ddev import-db --file=db.sql.gz
   assert_success
 
-  run curl -fLO https://github.com/ddev/test-backdrop/releases/download/1.32.1/files.tgz
+  run _curl_github -fLO https://github.com/ddev/test-backdrop/releases/download/1.32.1/files.tgz
   assert_success
 
   run ddev import-files --source=files.tgz
