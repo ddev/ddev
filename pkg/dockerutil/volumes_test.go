@@ -303,6 +303,7 @@ func TestPurgeDirectoryContentsInVolume(t *testing.T) {
 	require.Len(t, files, 1)
 	require.Contains(t, files, "file1.txt")
 	files, err = dockerutil.ListFilesInVolume(testVolume, "subdir2")
+	require.NoError(t, err)
 	require.Len(t, files, 1)
 	require.Contains(t, files, "file2.txt")
 
@@ -314,6 +315,7 @@ func TestPurgeDirectoryContentsInVolume(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, files, 0)
 	files, err = dockerutil.ListFilesInVolume(testVolume, "subdir2")
+	require.NoError(t, err)
 	require.Len(t, files, 0)
 }
 
