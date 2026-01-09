@@ -255,8 +255,13 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return err
 	}
 
-	// Remove ~/.ddev/traefik/config for clean start (regenerate from active projects)
+	// Remove ~/.ddev/traefik/config and certs for clean start (regenerate from active projects)
 	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "config"))
+	if err != nil {
+		return fmt.Errorf("failed to purge global Traefik config dir: %v", err)
+	}
+
+	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "certs"))
 	if err != nil {
 		return fmt.Errorf("failed to purge global Traefik config dir: %v", err)
 	}
