@@ -699,9 +699,9 @@ func (app *DdevApp) GetWebserverType() string {
 // GetPrimaryRouterHTTPPort returns app's primary router http port
 // It has to choose from (highest to lowest priority):
 // 1. Empty string if webserver type is generic and no web_extra_exposed_ports are defined
-// 2. The actual port configured into running container via DDEV_ROUTER_HTTP_PORT
-// 3. The project router_http_port
-// 4. The global router_http_port
+// 2. The project router_http_port
+// 3. The global router_http_port
+// 4. Default port 80
 func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 	proposedPrimaryRouterHTTPPort := "80"
 	if globalconfig.DdevGlobalConfig.RouterHTTPPort != "" {
@@ -709,9 +709,6 @@ func (app *DdevApp) GetPrimaryRouterHTTPPort() string {
 	}
 	if app.RouterHTTPPort != "" {
 		proposedPrimaryRouterHTTPPort = app.RouterHTTPPort
-	}
-	if httpPort := app.GetWebEnvVar("DDEV_ROUTER_HTTP_PORT"); httpPort != "" {
-		proposedPrimaryRouterHTTPPort = httpPort
 	}
 	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) == 0 {
 		proposedPrimaryRouterHTTPPort = ""
@@ -762,9 +759,9 @@ func (app *DdevApp) TargetPortFromExposeVariable(exposeEnvVar string, targetPort
 // GetPrimaryRouterHTTPSPort returns app's primary router https port
 // It has to choose from (highest to lowest priority):
 // 1. Empty string if webserver type is generic and no web_extra_exposed_ports are defined
-// 2. The actual port configured into running container via DDEV_ROUTER_HTTPS_PORT
-// 3. The project router_https_port
-// 4. The global router_https_port
+// 2. The project router_https_port
+// 3. The global router_https_port
+// 4. Default port 443
 func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
 	proposedPrimaryRouterHTTPSPort := "443"
 	if globalconfig.DdevGlobalConfig.RouterHTTPSPort != "" {
@@ -772,9 +769,6 @@ func (app *DdevApp) GetPrimaryRouterHTTPSPort() string {
 	}
 	if app.RouterHTTPSPort != "" {
 		proposedPrimaryRouterHTTPSPort = app.RouterHTTPSPort
-	}
-	if httpsPort := app.GetWebEnvVar("DDEV_ROUTER_HTTPS_PORT"); httpsPort != "" {
-		proposedPrimaryRouterHTTPSPort = httpsPort
 	}
 	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) == 0 {
 		proposedPrimaryRouterHTTPSPort = ""
