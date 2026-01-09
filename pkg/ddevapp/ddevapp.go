@@ -2003,7 +2003,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if !IsRouterDisabled(app) {
-		output.UserOut.Printf("Starting %s if necessary...", nodeps.RouterContainer)
 		err = StartDdevRouter()
 		if err != nil {
 			return err
