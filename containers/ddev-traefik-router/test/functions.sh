@@ -22,6 +22,24 @@ function wait_for_config_reload {
   sleep 1
 }
 
+# Wait for a specific router to appear in the Traefik API.
+# Args: router_name (without @provider suffix)
+# Returns: 0 if router found, 1 if timeout
+function wait_for_router {
+  local router_name="$1"
+  local max_attempts=20
+  local attempt=0
+
+  while [ $attempt -lt $max_attempts ]; do
+    if docker exec ${CONTAINER_NAME} bash -c "curl -sf http://127.0.0.1:\${TRAEFIK_MONITOR_PORT}/api/http/routers/${router_name}@file" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.5
+    attempt=$((attempt + 1))
+  done
+  return 1
+}
+
 # Wait for container to be ready.
 function containercheck {
   for i in {60..0}; do

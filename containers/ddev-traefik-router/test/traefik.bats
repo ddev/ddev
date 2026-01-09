@@ -169,6 +169,7 @@ http:
 EOF"
   # Wait for traefik to reload config
   wait_for_config_reload
+  wait_for_router "test-missing-svc"
 
   # Verify router is disabled with error
   run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-missing-svc@file | jq -r .status'
@@ -209,6 +210,7 @@ http:
         - nonexistent-middleware
 EOF"
   wait_for_config_reload
+  wait_for_router "test-missing-mw"
 
   # Verify router is disabled with error
   run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-missing-mw@file | jq -r .status'
@@ -243,6 +245,7 @@ http:
 EOF"
   # Wait for traefik to reload config
   wait_for_config_reload
+  wait_for_router "test-bad-ep"
 
   # Verify router is disabled with error
   run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-bad-ep@file | jq -r .status'
@@ -275,6 +278,7 @@ http:
       service: d11-web-80
 EOF"
   wait_for_config_reload
+  wait_for_router "test-bad-rule"
 
   # Verify router is disabled with error
   run docker exec ${CONTAINER_NAME} bash -c 'curl -sf http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers/test-bad-rule@file | jq -r .status'
