@@ -233,12 +233,10 @@ func PurgeDirectoryContentsInVolume(volumeName string, subdirs []string, uid str
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
-	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, labels, nil, nil)
+	_, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
 	if err != nil {
 		return err
 	}
-	// nolint: errcheck
-	defer RemoveContainer(containerID)
 
 	track()
 	return nil
@@ -264,12 +262,10 @@ func ListFilesInVolume(volumeName string, subdir string) ([]string, error) {
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
-	containerID, stdout, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, labels, nil, nil)
+	_, stdout, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	// nolint: errcheck
-	defer RemoveContainer(containerID)
 
 	// Parse the output into a slice of filenames
 	var files []string
@@ -311,12 +307,10 @@ func RemoveFilesFromVolume(volumeName string, subdir string, files []string) err
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
-	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, labels, nil, nil)
+	_, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
 	if err != nil {
 		return err
 	}
-	// nolint: errcheck
-	defer RemoveContainer(containerID)
 
 	return nil
 }
