@@ -259,10 +259,12 @@ func TestCustomGlobalConfig(t *testing.T) {
 	require.NoError(t, err)
 	projectTraefikConfigFile := filepath.Join(projectTraefikConfigDir, app.Name+".yaml")
 
-	// Read the template and replace APPNAME with actual app name
+	// Read the template and replace APPNAME_LOWERCASE and APPNAME_ORIGCASE with actual app name
 	projectConfigTemplate, err := fileutil.ReadFileIntoString(filepath.Join(testDataDir, "project-traefik-config.yaml"))
 	require.NoError(t, err)
-	projectTraefikConfig := strings.ReplaceAll(projectConfigTemplate, "APPNAME", strings.ToLower(app.Name))
+	projectTraefikConfig := strings.ReplaceAll(projectConfigTemplate, "APPNAME_LOWERCASE", strings.ToLower(app.Name))
+	projectTraefikConfig = strings.ReplaceAll(projectTraefikConfig, "APPNAME_ORIGCASE", app.Name)
+
 	err = os.WriteFile(projectTraefikConfigFile, []byte(projectTraefikConfig), 0644)
 	require.NoError(t, err)
 
@@ -274,7 +276,7 @@ func TestCustomGlobalConfig(t *testing.T) {
 		ddevapp.PowerOff()
 	})
 
-	// Start the project - this should push the custom config to the router
+	// Start the project and push the custom config to the router
 	err = app.Start()
 	require.NoError(t, err)
 
@@ -307,14 +309,8 @@ func TestCustomGlobalConfig(t *testing.T) {
 		},
 	}
 
-	httpResp, err := client.Get(app.GetHTTPURL())
+	httpResp, err := client.Get(app.GetPrimaryURL())
 	require.NoError(t, err)
-	defer httpResp.Body.Close()
-
-	// Headers are from the *original* response, not the redirect target
-	require.Equal(t, testHeaderValue, httpResp.Header.Get(testHeaderName))
-
-	require.NoError(t, err, "Failed to fetch test URL")
 	defer httpResp.Body.Close()
 	require.Equal(t, testHeaderValue, httpResp.Header.Get(testHeaderName),
 		"Response should contain the custom header from global middleware")

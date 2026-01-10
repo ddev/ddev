@@ -3,37 +3,37 @@
 
 http:
   routers:
-    APPNAME-web-80-http:
+    APPNAME_LOWERCASE-web-80-http:
       entrypoints:
         - http-80
-      rule: HostRegexp(`^APPNAME\.ddev\.site$`)
-      service: "APPNAME-web-80"
+      rule: HostRegexp(`^APPNAME_LOWERCASE\.ddev\.site$`)
+      service: "APPNAME_LOWERCASE-web-80"
       tls: false
       middlewares:
         - test-custom-middleware@file
 
-    APPNAME-web-80-https:
+    APPNAME_LOWERCASE-web-80-https:
       entrypoints:
         - http-443
-      rule: HostRegexp(`^APPNAME\.ddev\.site$`)
-      service: "APPNAME-web-80"
+      rule: HostRegexp(`^APPNAME_LOWERCASE\.ddev\.site$`)
+      service: "APPNAME_LOWERCASE-web-80"
       tls: true
       middlewares:
         - test-custom-middleware@file
 
   middlewares:
-    APPNAME-redirectHttps:
+    APPNAME_LOWERCASE-redirectHttps:
       redirectScheme:
         scheme: https
         permanent: true
 
   services:
-    APPNAME-web-80:
+    APPNAME_LOWERCASE-web-80:
       loadbalancer:
         servers:
-          - url: http://ddev-APPNAME-web:80
+          - url: http://ddev-APPNAME_LOWERCASE-web:80
 
 tls:
   certificates:
-    - certFile: /mnt/ddev-global-cache/traefik/certs/APPNAME.crt
-      keyFile: /mnt/ddev-global-cache/traefik/certs/APPNAME.key
+    - certFile: /mnt/ddev-global-cache/traefik/certs/APPNAME_ORIGCASE.crt
+      keyFile: /mnt/ddev-global-cache/traefik/certs/APPNAME_ORIGCASE.key
