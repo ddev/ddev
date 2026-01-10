@@ -102,10 +102,14 @@ func runXdebugDiagnose() int {
 	output.UserOut.Println("Port 9003 Pre-Check")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-	// In WSL2 (both NAT and mirrored modes), the IDE runs on Windows, so check Windows port
 	isWSL2 := nodeps.IsWSL2()
+	xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
 	var portInUse bool
-	if isWSL2 {
+
+	// Determine where to check for the port based on IDE location
+	// If xdebug_ide_location=wsl2, the IDE listener runs in WSL2
+	// Otherwise in WSL2, the IDE typically runs on Windows
+	if isWSL2 && xdebugIDELocation != "wsl2" {
 		portInUse = isWindowsPortInUse(9003)
 		if portInUse {
 			output.UserOut.Println("  ✓ Port 9003 is in use on Windows")
@@ -120,13 +124,16 @@ func runXdebugDiagnose() int {
 	} else {
 		portInUse = netutil.IsPortActive("9003")
 		if portInUse {
-			output.UserOut.Println("  ⚠ Port 9003 is already in use on the host")
+			output.UserOut.Println("  ✓ Port 9003 is in use on the host")
 			output.UserOut.Println("    This is likely your IDE listening for Xdebug connections (which is good!)")
-			output.UserOut.Println("    Or it could be another process interfering with Xdebug.")
 			output.UserOut.Println()
 			output.UserOut.Println("  To identify what's listening on port 9003, run:")
-			output.UserOut.Println("    • Linux/macOS: sudo lsof -i :9003 -sTCP:LISTEN")
-			output.UserOut.Println("    • Windows: netstat -ano | findstr :9003")
+			if isWSL2 {
+				output.UserOut.Println("    • WSL2: sudo lsof -i :9003 -sTCP:LISTEN")
+			} else {
+				output.UserOut.Println("    • Linux/macOS: sudo lsof -i :9003 -sTCP:LISTEN")
+				output.UserOut.Println("    • Windows: netstat -ano | findstr :9003")
+			}
 		} else {
 			output.UserOut.Println("  Port 9003 is not currently in use on the host")
 			output.UserOut.Println("  When you're ready to debug, start your IDE's debug listener on port 9003.")
@@ -176,14 +183,56 @@ func runXdebugDiagnose() int {
 	output.UserOut.Println("Global Configuration")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-	xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
-	if xdebugIDELocation == "" {
-		output.UserOut.Println("  ✓ xdebug_ide_location is set to default (empty)")
-		output.UserOut.Println("    This is correct for most users.")
+	output.UserOut.Printf("  xdebug_ide_location: %s\n", func() string {
+		if xdebugIDELocation == "" {
+			return "(empty/default)"
+		}
+		return "\"" + xdebugIDELocation + "\""
+	}())
+
+	// Special check for WSL2 + VS Code with WSL extension
+	if isWSL2 {
+		output.UserOut.Println()
+		output.UserOut.Println("  WSL2 + VS Code Setup:")
+		output.UserOut.Println()
+		output.UserOut.Println("  If you are using VS Code on Windows with the WSL extension:")
+		output.UserOut.Println("    • VS Code file explorer should show [WSL: <distro>] (e.g., [WSL: Ubuntu])")
+		output.UserOut.Println("    • PHP Debug extension must be installed IN WSL (not Windows)")
+		output.UserOut.Println("    • xdebug_ide_location MUST be set to 'wsl2'")
+		output.UserOut.Println()
+
+		if xdebugIDELocation == "wsl2" {
+			output.UserOut.Println("  ✓ xdebug_ide_location is correctly set to 'wsl2'")
+		} else if xdebugIDELocation == "" {
+			output.UserOut.Println("  ✗ xdebug_ide_location is not set")
+			output.UserOut.Println("    For VS Code with WSL extension, you MUST run:")
+			output.UserOut.Println("      ddev config global --xdebug-ide-location=wsl2")
+			hasIssues = true
+		} else {
+			output.UserOut.Printf("  ⚠ xdebug_ide_location is set to '%s'\n", xdebugIDELocation)
+			output.UserOut.Println("    For VS Code with WSL extension, it should be 'wsl2'")
+			output.UserOut.Println("    If using VS Code with WSL extension, run:")
+			output.UserOut.Println("      ddev config global --xdebug-ide-location=wsl2")
+		}
+		output.UserOut.Println()
+		output.UserOut.Println("  If you are NOT using VS Code, or running it in WSLg/container:")
+		if xdebugIDELocation == "" {
+			output.UserOut.Println("  ✓ xdebug_ide_location is correctly set to default (empty)")
+		} else if xdebugIDELocation != "wsl2" {
+			output.UserOut.Println("  ✓ xdebug_ide_location is set for a special configuration")
+		} else {
+			output.UserOut.Println("  ⚠ xdebug_ide_location='wsl2' should only be used with VS Code WSL extension")
+		}
 	} else {
-		output.UserOut.Printf("  ⚠ xdebug_ide_location is set to: '%s'\n", xdebugIDELocation)
-		output.UserOut.Println("    This should only be set for special cases (WSL2 IDE, container IDE, etc.)")
-		output.UserOut.Println("    If you're having issues, try: ddev config global --xdebug-ide-location=\"\"")
+		// Non-WSL2 environments
+		if xdebugIDELocation == "" {
+			output.UserOut.Println("  ✓ This is correct for most users.")
+		} else {
+			output.UserOut.Println()
+			output.UserOut.Printf("  ⚠ xdebug_ide_location is set to: '%s'\n", xdebugIDELocation)
+			output.UserOut.Println("    This should only be set for special cases (container IDE, remote IDE, etc.)")
+			output.UserOut.Println("    If you're having issues, try: ddev config global --xdebug-ide-location=\"\"")
+		}
 	}
 	output.UserOut.Println()
 
@@ -194,12 +243,18 @@ func runXdebugDiagnose() int {
 
 	// Only run connection test if port 9003 is not already in use
 	if !portInUse {
-		// In WSL2 (both NAT and mirrored modes), test connection to Windows host
-		if nodeps.IsWSL2() {
+		// Determine which connection test to use based on IDE location
+		// If xdebug_ide_location=wsl2, the listener runs in WSL2, use simple connection test
+		// Otherwise in WSL2, the listener runs on Windows, use WSL2 NAT connection test
+		if isWSL2 && xdebugIDELocation != "wsl2" {
 			output.UserOut.Println("  Detected WSL2 - testing connection to Windows host...")
 			hasIssues = testWSL2NATConnection(app) || hasIssues
 		} else {
-			output.UserOut.Println("  Starting test listener on host port 9003...")
+			if isWSL2 && xdebugIDELocation == "wsl2" {
+				output.UserOut.Println("  Starting test listener in WSL2 on port 9003...")
+			} else {
+				output.UserOut.Println("  Starting test listener on host port 9003...")
+			}
 			hasIssues = testSimpleConnection(app) || hasIssues
 		}
 	} else {
@@ -297,6 +352,39 @@ func runXdebugDiagnose() int {
 	output.UserOut.Println()
 
 	return 0
+}
+
+// testContainerToHostConnectivity tests if the container can connect to a host:port
+// Returns true if connection succeeds, false otherwise
+func testContainerToHostConnectivity(app *ddevapp.DdevApp, host string, port int) (bool, string) {
+	// Use PHP fsockopen for reliable connectivity testing
+	connectTestScript := fmt.Sprintf(`<?php
+$sock = @fsockopen('%s', %d, $errno, $errstr, 3);
+if (!$sock) {
+    echo "FAILED: $errstr ($errno)\n";
+    exit(1);
+}
+fclose($sock);
+echo "SUCCESS\n";
+?>`, host, port)
+
+	connectTestB64 := base64.StdEncoding.EncodeToString([]byte(connectTestScript))
+	connectCmd := fmt.Sprintf("echo %s | base64 -d | php", connectTestB64)
+
+	connectOut, _, connectErr := app.Exec(&ddevapp.ExecOpts{
+		Cmd: connectCmd,
+	})
+
+	if connectErr != nil || strings.Contains(connectOut, "FAILED:") {
+		errMsg := "Connection failed"
+		if strings.Contains(connectOut, "FAILED:") {
+			errMsg = strings.TrimPrefix(connectOut, "FAILED: ")
+			errMsg = strings.TrimSpace(errMsg)
+		}
+		return false, errMsg
+	}
+
+	return true, ""
 }
 
 // testSimpleConnection tests connection using a simple TCP listener (for non-WSL2-NAT scenarios)
@@ -612,6 +700,53 @@ func runInteractiveXdebugDiagnose() int {
 	ideType, ideLocation := promptIDEInfo(envType)
 	output.UserOut.Println()
 
+	// Step 4.5: Validate xdebug_ide_location for VS Code with WSL extension
+	if (envType == "wsl2-nat" || envType == "wsl2-mirrored") && ideType == "vscode" && ideLocation == "windows" {
+		output.UserOut.Println("Step 4.5: Validate xdebug_ide_location Setting")
+		output.UserOut.Println("─────────────────────────────────────────────────────────────")
+		xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
+		output.UserOut.Printf("  Current xdebug_ide_location: %s\n", func() string {
+			if xdebugIDELocation == "" {
+				return "(empty/default)"
+			}
+			return "\"" + xdebugIDELocation + "\""
+		}())
+		output.UserOut.Println()
+
+		if xdebugIDELocation != "wsl2" {
+			output.UserOut.Println("  ✗ For VS Code on Windows with WSL extension, xdebug_ide_location MUST be 'wsl2'")
+			output.UserOut.Println()
+			output.UserOut.Println("  This setting tells DDEV where your IDE's debug listener is located.")
+			output.UserOut.Println("  Without it, Xdebug connections will fail.")
+			output.UserOut.Println()
+
+			if util.Confirm("Would you like to set xdebug_ide_location=wsl2 now?") {
+				globalconfig.DdevGlobalConfig.XdebugIDELocation = "wsl2"
+				err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+				if err != nil {
+					output.UserOut.Printf("  ✗ Failed to update global config: %v\n", err)
+					output.UserOut.Println("  Please run manually: ddev config global --xdebug-ide-location=wsl2")
+				} else {
+					output.UserOut.Println("  ✓ xdebug_ide_location has been set to 'wsl2'")
+					output.UserOut.Println()
+					output.UserOut.Println("  Restarting project to apply changes...")
+					if err := app.Restart(); err != nil {
+						output.UserOut.Printf("  ⚠ Failed to restart project: %v\n", err)
+						output.UserOut.Println("    Please restart manually: ddev restart")
+					} else {
+						output.UserOut.Println("  ✓ Project restarted successfully")
+					}
+				}
+			} else {
+				output.UserOut.Println("  Please run manually: ddev config global --xdebug-ide-location=wsl2")
+				output.UserOut.Println("  Then restart your project: ddev restart")
+			}
+		} else {
+			output.UserOut.Println("  ✓ xdebug_ide_location is correctly set to 'wsl2'")
+		}
+		output.UserOut.Println()
+	}
+
 	// Step 5: Guide user to enable listening
 	output.UserOut.Println("Step 5: Enable Debug Listening")
 	output.UserOut.Println("─────────────────────────────────────────────────────────────")
@@ -691,12 +826,21 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 
 // runConnectivityTest runs the appropriate connectivity test based on environment
 func runConnectivityTest(app *ddevapp.DdevApp, envType string) bool {
-	// In WSL2 (both NAT and mirrored modes), test connection to Windows host
-	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
+	xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
+
+	// Determine which connection test to use based on IDE location
+	// If xdebug_ide_location=wsl2, the listener runs in WSL2, use simple connection test
+	// Otherwise in WSL2, the listener runs on Windows, use WSL2 NAT connection test
+	if (envType == "wsl2-nat" || envType == "wsl2-mirrored") && xdebugIDELocation != "wsl2" {
 		output.UserOut.Println("  Testing connection to Windows host...")
 		return !testWSL2NATConnection(app)
 	}
-	output.UserOut.Println("  Testing connection to host...")
+
+	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
+		output.UserOut.Println("  Testing connection to WSL2 host...")
+	} else {
+		output.UserOut.Println("  Testing connection to host...")
+	}
 	return !testSimpleConnection(app)
 }
 
@@ -948,8 +1092,6 @@ func checkVSCodeLaunchJSON(path string) bool {
 
 // testDBGpProtocol tests the DBGp protocol by connecting to the IDE from inside the web container
 func testDBGpProtocol(app *ddevapp.DdevApp, ideLocation string, envType string) bool {
-	output.UserOut.Println("  Connecting to IDE on port 9003 from web container...")
-
 	// Determine the target host based on IDE location and environment
 	// The connection must be made from inside the web container
 	var targetHost string
@@ -965,7 +1107,28 @@ func testDBGpProtocol(app *ddevapp.DdevApp, ideLocation string, envType string) 
 		targetHost = "host.docker.internal"
 	}
 
-	output.UserOut.Printf("  Target: %s:9003 (from web container)\n", targetHost)
+	// Step 1: Simple connectivity check first
+	output.UserOut.Printf("  Testing basic connectivity to %s:9003...\n", targetHost)
+
+	connected, errMsg := testContainerToHostConnectivity(app, targetHost, 9003)
+	if !connected {
+		output.UserOut.Println("  ✗ Cannot connect to port 9003")
+		output.UserOut.Println("    Your IDE is not listening on port 9003.")
+		output.UserOut.Println()
+		output.UserOut.Printf("    Error: %s\n", errMsg)
+		output.UserOut.Println()
+		output.UserOut.Println("  Please ensure:")
+		output.UserOut.Println("    • Your IDE's debug listener is started")
+		output.UserOut.Println("    • The listener is configured for port 9003")
+		output.UserOut.Println("    • No firewall is blocking the connection")
+		return false
+	}
+
+	output.UserOut.Println("  ✓ Successfully connected to port 9003")
+	output.UserOut.Println()
+
+	// Step 2: Now test the DBGp protocol
+	output.UserOut.Println("  Testing DBGp protocol communication...")
 
 	// Create a PHP script to test the DBGp protocol using base64 encoding to avoid quoting issues
 	// PHP provides better control over socket communication than nc
@@ -1005,24 +1168,36 @@ fclose($sock);
 	phpScriptB64 := base64.StdEncoding.EncodeToString([]byte(phpScript))
 	cmd := fmt.Sprintf("echo %s | base64 -d > /tmp/ddev_xdebug_test.php && php /tmp/ddev_xdebug_test.php && rm -f /tmp/ddev_xdebug_test.php", phpScriptB64)
 
-	output.UserOut.Println("  Sending DBGp init packet from web container...")
+	output.UserOut.Println("  Sending DBGp init packet to IDE...")
 	testOut, testErr, execErr := app.Exec(&ddevapp.ExecOpts{
 		Cmd: cmd,
 	})
 
+	// Handle exec errors gracefully (timeout, command failure, etc.)
 	if execErr != nil {
-		output.UserOut.Printf("  ✗ Failed to execute test: %v\n", execErr)
-		output.UserOut.Println("    Make sure your IDE is listening for debug connections.")
+		// Don't show the ugly raw error, provide a friendly message
+		output.UserOut.Println("  ✗ Failed to complete protocol test")
+		output.UserOut.Println()
+		output.UserOut.Println("  This could mean:")
+		output.UserOut.Println("    • Your IDE is listening but not responding to Xdebug packets")
+		output.UserOut.Println("    • The IDE's debug configuration is incorrect")
+		output.UserOut.Println("    • A network issue is preventing communication")
+		output.UserOut.Println()
+		output.UserOut.Println("  Try enabling Xdebug and testing with a real breakpoint:")
+		output.UserOut.Println("    ddev xdebug on")
 		return false
 	}
 
-	// Check for connection errors
+	// Check for connection errors from PHP script
 	if strings.Contains(testOut, "ERROR:") {
 		errMsg := strings.TrimPrefix(testOut, "ERROR: ")
-		output.UserOut.Printf("  ✗ Connection failed: %s\n", strings.TrimSpace(errMsg))
+		errMsg = strings.TrimSpace(errMsg)
+		output.UserOut.Println("  ✗ Connection failed")
 		if strings.Contains(errMsg, "Connection refused") {
 			output.UserOut.Println("    Your IDE is not listening on port 9003.")
 			output.UserOut.Println("    Please start your IDE's debug listener and try again.")
+		} else {
+			output.UserOut.Printf("    Error: %s\n", errMsg)
 		}
 		return false
 	}
