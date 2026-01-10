@@ -329,24 +329,16 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		}
 	}
 
-	// Copy user-managed custom global config files from ~/.ddev/traefik/custom-global-config/
+	// Copy user-managed custom global config *.yaml files from ~/.ddev/traefik/custom-global-config/
 	customGlobalConfigDir := filepath.Join(globalTraefikDir, "custom-global-config")
 	if fileutil.IsDirectory(customGlobalConfigDir) {
-		customFiles, err := fileutil.ListFilesInDir(customGlobalConfigDir)
+		copiedFiles, err := fileutil.CopyFilesMatchingGlob(customGlobalConfigDir, globalSourceConfigDir, "*.yaml")
 		if err != nil {
-			util.Warning("Failed to list custom global config files: %v", err)
-		} else {
-			for _, f := range customFiles {
-				srcFile := filepath.Join(customGlobalConfigDir, f)
-				destFile := filepath.Join(globalSourceConfigDir, f)
-				err = fileutil.CopyFile(srcFile, destFile)
-				if err != nil {
-					util.Warning("Failed to copy custom global config file %s: %v", f, err)
-				} else {
-					util.Debug("Copied custom global config %s to traefik config dir", f)
-					expectedConfigs[f] = true
-				}
-			}
+			util.Warning("Failed to copy custom global config files: %v", err)
+		}
+		for _, f := range copiedFiles {
+			util.Debug("Copied custom global config %s to traefik config dir", f)
+			expectedConfigs[f] = true
 		}
 	}
 
