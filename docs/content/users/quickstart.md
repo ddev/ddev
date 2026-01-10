@@ -302,8 +302,6 @@ DDEV automatically updates or creates the `.env` file with the database informat
 
 === "Composer"
 
-    CodeIgniter defaults to MySQL:
-
     Create the project directory and configure DDEV:
 
     ```bash
