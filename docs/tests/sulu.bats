@@ -51,9 +51,9 @@ teardown() {
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "x-generator: Sulu"
   assert_output --partial "HTTP/2 200"
+  assert_success
 }
 

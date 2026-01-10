@@ -41,9 +41,9 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site/contao"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/contao/login
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/contao/login
   assert_output --partial "HTTP/2 200"
+  assert_success
 }
 
 @test "Contao Manager quickstart with $(ddev --version)" {
@@ -67,8 +67,8 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site/contao-manager.phar.php"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/contao-manager.phar.php
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/contao-manager.phar.php
   assert_output --partial "HTTP/2 302"
   assert_output --partial "location: /contao-manager.phar.php/"
+  assert_success
 }

@@ -744,3 +744,85 @@ func TestRouterNotRebuiltWithExtraPorts(t *testing.T) {
 	require.ElementsMatch(t, portsAfterExtraProject, portsAfterSimpleProject,
 		"Router ports should be unchanged after starting simple project - router should not have been recreated")
 }
+
+// TestPausedProjectsExcludedFromRouter verifies that when a project is paused,
+// its Traefik configuration is removed from the router when another project starts.
+// This simulates the scenario where Docker restarts and projects end up paused,
+// then only the started project should have its config in the router.
+func TestPausedProjectsExcludedFromRouter(t *testing.T) {
+	// Start clean
+	ddevapp.PowerOff()
+
+	// Create two temporary projects
+	project1Dir := testcommon.CreateTmpDir(t.Name() + "_project1")
+	project2Dir := testcommon.CreateTmpDir(t.Name() + "_project2")
+
+	t.Cleanup(func() {
+		_ = os.RemoveAll(project1Dir)
+		_ = os.RemoveAll(project2Dir)
+	})
+
+	// Set up project 1
+	app1, err := ddevapp.NewApp(project1Dir, true)
+	require.NoError(t, err)
+	app1.Name = t.Name() + "-project1"
+	app1.Type = nodeps.AppTypePHP
+	err = app1.WriteConfig()
+	require.NoError(t, err)
+
+	// Set up project 2
+	app2, err := ddevapp.NewApp(project2Dir, true)
+	require.NoError(t, err)
+	app2.Name = t.Name() + "-project2"
+	app2.Type = nodeps.AppTypePHP
+	err = app2.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = app1.Stop(true, false)
+		_ = app2.Stop(true, false)
+		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
+	})
+
+	// Start both projects
+	err = app1.Start()
+	require.NoError(t, err)
+	err = app2.Start()
+	require.NoError(t, err)
+
+	// Verify both project configs exist in the router
+	configDir := "/mnt/ddev-global-cache/traefik/config"
+	stdout, _, err := dockerutil.Exec(nodeps.RouterContainer, "ls "+configDir, "")
+	require.NoError(t, err, "failed to list router config directory")
+
+	require.Contains(t, stdout, app1.Name+".yaml",
+		"Router should have config for project1 after both projects started")
+	require.Contains(t, stdout, app2.Name+".yaml",
+		"Router should have config for project2 after both projects started")
+
+	// Pause project1 (simulates Docker restart leaving containers stopped)
+	err = app1.Pause()
+	require.NoError(t, err)
+
+	// Verify project1 is paused
+	status, _ := app1.SiteStatus()
+	require.Equal(t, ddevapp.SitePaused, status, "Project1 should be paused")
+
+	// Restart project2 - this triggers PushGlobalTraefikConfig which should
+	// exclude the paused project1
+	err = app2.Restart()
+	require.NoError(t, err)
+
+	// Verify only project2's config exists in the router now
+	stdout, _, err = dockerutil.Exec(nodeps.RouterContainer, "ls "+configDir, "")
+	require.NoError(t, err, "failed to list router config directory after restart")
+
+	require.NotContains(t, stdout, app1.Name+".yaml",
+		"Router should NOT have config for paused project1 after project2 restart")
+	require.Contains(t, stdout, app2.Name+".yaml",
+		"Router should still have config for running project2")
+
+	// Verify project2 is still accessible
+	status, _ = app2.SiteStatus()
+	require.Equal(t, ddevapp.SiteRunning, status, "Project2 should be running")
+}

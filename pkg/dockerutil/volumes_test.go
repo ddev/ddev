@@ -207,3 +207,235 @@ func TestParseDockerSystemDf(t *testing.T) {
 	require.GreaterOrEqual(t, volSize.SizeBytes, int64(0))
 	require.NotEmpty(t, volSize.SizeHuman)
 }
+
+// TestVolumeExists tests the VolumeExists function
+func TestVolumeExists(t *testing.T) {
+	testVolume := t.Name()
+	_ = dockerutil.RemoveVolume(testVolume)
+
+	t.Cleanup(func() {
+		_ = dockerutil.RemoveVolume(testVolume)
+	})
+
+	// Volume should not exist initially
+	require.False(t, dockerutil.VolumeExists(testVolume))
+
+	// Create the volume
+	_, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
+	require.NoError(t, err)
+
+	// Volume should exist now
+	require.True(t, dockerutil.VolumeExists(testVolume))
+
+	// Remove the volume
+	err = dockerutil.RemoveVolume(testVolume)
+	require.NoError(t, err)
+
+	// Volume should not exist anymore
+	require.False(t, dockerutil.VolumeExists(testVolume))
+}
+
+// TestVolumeLabels tests the VolumeLabels function
+func TestVolumeLabels(t *testing.T) {
+	testVolume := t.Name()
+	_ = dockerutil.RemoveVolume(testVolume)
+
+	t.Cleanup(func() {
+		_ = dockerutil.RemoveVolume(testVolume)
+	})
+
+	// Test with labels
+	labels := map[string]string{
+		"com.ddev.site-name":    "test-site",
+		"com.ddev.platform":     "ddev",
+		"com.ddev.custom-label": "custom-value",
+	}
+	_, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, labels)
+	require.NoError(t, err)
+
+	// Get labels from the volume
+	retrievedLabels, err := dockerutil.VolumeLabels(testVolume)
+	require.NoError(t, err)
+	require.NotNil(t, retrievedLabels)
+
+	// Verify all labels are present
+	require.Equal(t, "test-site", retrievedLabels["com.ddev.site-name"])
+	require.Equal(t, "ddev", retrievedLabels["com.ddev.platform"])
+	require.Equal(t, "custom-value", retrievedLabels["com.ddev.custom-label"])
+
+	// Test non-existent volume
+	_, err = dockerutil.VolumeLabels("nonexistent_volume_xyz")
+	require.Error(t, err)
+}
+
+// TestPurgeDirectoryContentsInVolume tests purging directory contents in a volume
+func TestPurgeDirectoryContentsInVolume(t *testing.T) {
+	testVolume := t.Name()
+	_ = dockerutil.RemoveVolume(testVolume)
+
+	t.Cleanup(func() {
+		_ = dockerutil.RemoveVolume(testVolume)
+	})
+
+	// Create a volume
+	_, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
+	require.NoError(t, err)
+
+	// Create some files in the volume
+	_, _, err = dockerutil.RunSimpleContainer(
+		versionconstants.UtilitiesImage,
+		"",
+		[]string{"sh", "-c", "mkdir -p /mnt/v/subdir1 /mnt/v/subdir2 && echo 'file1' > /mnt/v/subdir1/file1.txt && echo 'file2' > /mnt/v/subdir2/file2.txt"},
+		nil,
+		nil,
+		[]string{testVolume + ":/mnt/v"},
+		"0",
+		true,
+		false,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+
+	files, err := dockerutil.ListFilesInVolume(testVolume, "subdir1")
+	require.NoError(t, err)
+	require.Len(t, files, 1)
+	require.Contains(t, files, "file1.txt")
+	files, err = dockerutil.ListFilesInVolume(testVolume, "subdir2")
+	require.NoError(t, err)
+	require.Len(t, files, 1)
+	require.Contains(t, files, "file2.txt")
+
+	// Purge directory contents
+	err = dockerutil.PurgeDirectoryContentsInVolume(testVolume, []string{"subdir1", "subdir2"}, "0")
+	require.NoError(t, err)
+
+	files, err = dockerutil.ListFilesInVolume(testVolume, "subdir1")
+	require.NoError(t, err)
+	require.Len(t, files, 0)
+	files, err = dockerutil.ListFilesInVolume(testVolume, "subdir2")
+	require.NoError(t, err)
+	require.Len(t, files, 0)
+}
+
+// TestListFilesInVolume tests listing files in a volume subdirectory
+func TestListFilesInVolume(t *testing.T) {
+	testVolume := t.Name()
+	_ = dockerutil.RemoveVolume(testVolume)
+
+	t.Cleanup(func() {
+		_ = dockerutil.RemoveVolume(testVolume)
+	})
+
+	// Create a volume
+	_, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
+	require.NoError(t, err)
+
+	// Create some files in a subdirectory
+	_, _, err = dockerutil.RunSimpleContainer(
+		versionconstants.UtilitiesImage,
+		"",
+		[]string{"sh", "-c", "mkdir -p /mnt/v/testdir && echo 'a' > /mnt/v/testdir/file1.txt && echo 'b' > /mnt/v/testdir/file2.txt && echo 'c' > /mnt/v/testdir/file3.conf"},
+		nil,
+		nil,
+		[]string{testVolume + ":/mnt/v"},
+		"0",
+		true,
+		false,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+
+	// List files in the subdirectory
+	files, err := dockerutil.ListFilesInVolume(testVolume, "testdir")
+	require.NoError(t, err)
+	require.Len(t, files, 3)
+	require.Contains(t, files, "file1.txt")
+	require.Contains(t, files, "file2.txt")
+	require.Contains(t, files, "file3.conf")
+
+	// List files in non-existent directory (should return empty, not error)
+	files, err = dockerutil.ListFilesInVolume(testVolume, "nonexistent")
+	require.NoError(t, err)
+	require.Empty(t, files)
+
+	// List files in root of volume
+	_, _, err = dockerutil.RunSimpleContainer(
+		versionconstants.UtilitiesImage,
+		"",
+		[]string{"sh", "-c", "echo 'root' > /mnt/v/rootfile.txt"},
+		nil,
+		nil,
+		[]string{testVolume + ":/mnt/v"},
+		"0",
+		true,
+		false,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+
+	files, err = dockerutil.ListFilesInVolume(testVolume, "")
+	require.NoError(t, err)
+	require.Contains(t, files, "rootfile.txt")
+	require.Contains(t, files, "testdir")
+}
+
+// TestRemoveFilesFromVolume tests removing specific files from a volume
+func TestRemoveFilesFromVolume(t *testing.T) {
+	testVolume := t.Name()
+	_ = dockerutil.RemoveVolume(testVolume)
+
+	t.Cleanup(func() {
+		_ = dockerutil.RemoveVolume(testVolume)
+	})
+
+	// Create a volume
+	_, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{}, nil)
+	require.NoError(t, err)
+
+	// Create some files in a subdirectory
+	_, _, err = dockerutil.RunSimpleContainer(
+		versionconstants.UtilitiesImage,
+		"",
+		[]string{"sh", "-c", "mkdir -p /mnt/v/config && echo 'a' > /mnt/v/config/keep.txt && echo 'b' > /mnt/v/config/remove1.txt && echo 'c' > /mnt/v/config/remove2.txt"},
+		nil,
+		nil,
+		[]string{testVolume + ":/mnt/v"},
+		"0",
+		true,
+		false,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+
+	// Remove specific files
+	err = dockerutil.RemoveFilesFromVolume(testVolume, "config", []string{"remove1.txt", "remove2.txt"})
+	require.NoError(t, err)
+
+	// Verify only keep.txt remains
+	files, err := dockerutil.ListFilesInVolume(testVolume, "config")
+	require.NoError(t, err)
+	require.Len(t, files, 1)
+	require.Contains(t, files, "keep.txt")
+
+	// Removing empty list should not error
+	err = dockerutil.RemoveFilesFromVolume(testVolume, "config", []string{})
+	require.NoError(t, err)
+
+	// Removing non-existent files should not error (rm -f behavior)
+	err = dockerutil.RemoveFilesFromVolume(testVolume, "config", []string{"nonexistent.txt"})
+	require.NoError(t, err)
+
+	// keep.txt should still be there
+	files, err = dockerutil.ListFilesInVolume(testVolume, "config")
+	require.NoError(t, err)
+	require.Len(t, files, 1)
+	require.Contains(t, files, "keep.txt")
+}

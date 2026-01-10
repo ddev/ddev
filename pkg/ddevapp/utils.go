@@ -26,7 +26,7 @@ import (
 )
 
 // GetActiveProjects returns an array of DDEV projects
-// that are currently live in docker.
+// that are currently running in docker (excludes paused/stopped projects).
 func GetActiveProjects() []*DdevApp {
 	apps := make([]*DdevApp, 0)
 	labels := map[string]string{
@@ -38,9 +38,13 @@ func GetActiveProjects() []*DdevApp {
 
 	if err == nil {
 		for _, siteContainer := range containers {
+			// Skip containers that are not running (e.g., paused projects)
+			if siteContainer.State != "running" {
+				continue
+			}
 			approot, ok := siteContainer.Labels["com.ddev.approot"]
 			if !ok {
-				break
+				continue
 			}
 
 			app, err := NewApp(approot, true)

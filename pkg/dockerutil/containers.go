@@ -466,6 +466,7 @@ func ContainerName(c *container.Summary) string {
 
 // GetContainerHealth retrieves the health status of a given container.
 // returns status, most-recent-log
+// The container is only considered "healthy" if it's also "running", contrary to Docker's normal usage
 func GetContainerHealth(c *container.Summary) (string, string) {
 	if c == nil {
 		return "no container", ""
@@ -499,8 +500,9 @@ func GetContainerHealth(c *container.Summary) (string, string) {
 		if numLogs > 0 {
 			logOutput = fmt.Sprintf("%v", inspect.Container.State.Health.Log[numLogs-1].Output)
 		}
-		// Podman doesn't update health status to unhealthy when container is not running
-		if IsPodman() && status != "starting" && inspect.Container.State.Status != "running" {
+		// A container can't be healthy if it's not running.
+		// Docker/Podman may cache the last health status even after state changes.
+		if inspect.Container.State.Status != "running" {
 			status = "unhealthy"
 		}
 	} else {

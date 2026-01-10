@@ -39,23 +39,23 @@ teardown() {
   assert_success
 
     # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "x-powered-by: Statamic"
-  run curl -sfI https://${PROJNAME}.ddev.site/cp/auth/login
   assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site/cp/auth/login
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "x-powered-by: Statamic"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "<title>Home</title>"
   assert_output --partial "<li><a href=\"https://statamic.dev\">Head to the docs</a> and learn how Statamic&nbsp;works.</li>"
-  run curl -sf https://${PROJNAME}.ddev.site/cp/auth/login
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site/cp/auth/login
   assert_output --partial "<title>Log in ‹ Statamic</title>"
+  assert_success
 }
 
 

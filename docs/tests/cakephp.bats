@@ -33,12 +33,12 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "CakePHP: the rapid development PHP framework:"
   assert_output --partial "Welcome to CakePHP"
+  assert_success
 }
