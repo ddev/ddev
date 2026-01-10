@@ -294,6 +294,56 @@ ddev launch
     ./setup-civicrm.sh
     ```
 
+## CodeIgniter
+
+Use a new or existing Composer project, or clone a Git repository.
+
+DDEV automatically updates or creates the `.env` file with the database information.
+
+=== "Composer"
+
+    Create the project directory and configure DDEV:
+
+    ```bash
+    mkdir my-ci4-site && cd my-ci4-site
+    ddev config --project-type=codeigniter --docroot=public
+    ```
+
+    Start DDEV (this may take a minute):
+
+    ```bash
+    ddev start
+    ```
+
+    Install CodeIgniter via Composer:
+
+    ```bash
+    ddev composer create-project codeigniter4/appstarter
+    ```
+
+    Launch the site:
+
+    ```bash
+    ddev launch
+    ```
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > setup-codeigniter.sh << 'EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        mkdir my-ci4-site && cd my-ci4-site
+        ddev config --project-type=codeigniter --docroot=public
+        ddev start -y
+        ddev composer create-project codeigniter4/appstarter
+        ddev launch
+        EOF
+        chmod +x setup-codeigniter.sh
+        ./setup-codeigniter.sh
+        ```
+
 ## Contao
 
 Further information on the DDEV procedure can also be found in the [Contao documentation](https://docs.contao.org/manual/en/guides/local-installation/ddev/).
