@@ -428,6 +428,38 @@ func RemoveFilesMatchingGlob(pattern string) error {
 	return nil
 }
 
+// CopyFilesMatchingGlob copies files matching a glob pattern from srcDir to destDir.
+// It returns the list of filenames (not full paths) that were copied.
+// Directories are skipped. If no files match, it returns an empty slice with no error.
+func CopyFilesMatchingGlob(srcDir string, destDir string, globPattern string) ([]string, error) {
+	pattern := filepath.Join(srcDir, globPattern)
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("error finding files matching %s: %v", pattern, err)
+	}
+
+	var copiedFiles []string
+	for _, srcFile := range matches {
+		info, err := os.Stat(srcFile)
+		if err != nil {
+			return copiedFiles, fmt.Errorf("error stating file %s: %v", srcFile, err)
+		}
+		// Skip directories
+		if info.IsDir() {
+			continue
+		}
+
+		filename := filepath.Base(srcFile)
+		destFile := filepath.Join(destDir, filename)
+		if err := CopyFile(srcFile, destFile); err != nil {
+			return copiedFiles, fmt.Errorf("error copying %s to %s: %v", srcFile, destFile, err)
+		}
+		copiedFiles = append(copiedFiles, filename)
+	}
+
+	return copiedFiles, nil
+}
+
 // TemplateStringToFile takes a template string, runs templ.Execute on it, and writes it out to file
 func TemplateStringToFile(content string, vars map[string]interface{}, targetFilePath string) error {
 	templ := template.New("templateStringToFile:" + targetFilePath)

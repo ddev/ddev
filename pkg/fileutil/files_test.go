@@ -285,6 +285,51 @@ func TestRemoveFilesMatchingGlob(t *testing.T) {
 	}
 }
 
+// TestCopyFilesMatchingGlob tests that CopyFilesMatchingGlob works
+func TestCopyFilesMatchingGlob(t *testing.T) {
+	srcDir := t.TempDir()
+	destDir := t.TempDir()
+
+	// Create test files in source directory
+	files := []string{"config1.yaml", "config2.yaml", "readme.txt", "notes.md"}
+	for _, name := range files {
+		err := os.WriteFile(filepath.Join(srcDir, name), []byte("content of "+name), 0644)
+		require.NoError(t, err)
+	}
+
+	// Create a subdirectory named "subdir.yaml" to ensure directories are skipped
+	err := os.Mkdir(filepath.Join(srcDir, "subdir.yaml"), 0755)
+	require.NoError(t, err)
+
+	// Copy only *.yaml files
+	copiedFiles, err := fileutil.CopyFilesMatchingGlob(srcDir, destDir, "*.yaml")
+	require.NoError(t, err)
+	require.Len(t, copiedFiles, 2)
+	require.Contains(t, copiedFiles, "config1.yaml")
+	require.Contains(t, copiedFiles, "config2.yaml")
+
+	// Verify the copied files exist and have correct content
+	for _, name := range []string{"config1.yaml", "config2.yaml"} {
+		destPath := filepath.Join(destDir, name)
+		require.True(t, fileutil.FileExists(destPath), "expected %s to exist in dest", name)
+		content, err := os.ReadFile(destPath)
+		require.NoError(t, err)
+		require.Equal(t, "content of "+name, string(content))
+	}
+
+	// Verify non-matching files were not copied
+	for _, name := range []string{"readme.txt", "notes.md", "subdir.yaml"} {
+		destPath := filepath.Join(destDir, name)
+		require.False(t, fileutil.FileExists(destPath), "expected %s to not exist in dest", name)
+	}
+
+	// Test with no matches - should return empty slice with no error
+	emptyDest := t.TempDir()
+	copiedFiles, err = fileutil.CopyFilesMatchingGlob(srcDir, emptyDest, "*.nomatch")
+	require.NoError(t, err)
+	require.Len(t, copiedFiles, 0)
+}
+
 // TestCheckSignatureOrNoFile tests the CheckSignatureOrNoFile function
 // including the correct handling of empty files per commit 986812445
 func TestCheckSignatureOrNoFile(t *testing.T) {
