@@ -215,13 +215,22 @@ func runXdebugDiagnose() int {
 			output.UserOut.Println("      ddev config global --xdebug-ide-location=wsl2")
 		}
 		output.UserOut.Println()
-		output.UserOut.Println("  If you are NOT using VS Code, or running it in WSLg/container:")
+		output.UserOut.Println("  If your IDE runs in WSLg, WSL2, or a container:")
+		if xdebugIDELocation == "wsl2" {
+			output.UserOut.Println("  ✓ xdebug_ide_location is correctly set to 'wsl2'")
+		} else {
+			output.UserOut.Println("  ✗ xdebug_ide_location should be set to 'wsl2'")
+			output.UserOut.Println("    Run: ddev config global --xdebug-ide-location=wsl2")
+		}
+		output.UserOut.Println()
+		output.UserOut.Println("  If your IDE runs on Windows (e.g., PHPStorm on Windows):")
 		if xdebugIDELocation == "" {
 			output.UserOut.Println("  ✓ xdebug_ide_location is correctly set to default (empty)")
 		} else if xdebugIDELocation != "wsl2" {
 			output.UserOut.Println("  ✓ xdebug_ide_location is set for a special configuration")
 		} else {
-			output.UserOut.Println("  ⚠ xdebug_ide_location='wsl2' should only be used with VS Code WSL extension")
+			output.UserOut.Println("  ⚠ xdebug_ide_location should be empty for IDEs on Windows")
+			output.UserOut.Println("    Run: ddev config global --xdebug-ide-location=\"\"")
 		}
 	} else {
 		// Non-WSL2 environments
@@ -700,8 +709,35 @@ func runInteractiveXdebugDiagnose() int {
 	ideType, ideLocation := promptIDEInfo(envType)
 	output.UserOut.Println()
 
-	// Step 4.5: Validate xdebug_ide_location for VS Code with WSL extension
-	if (envType == "wsl2-nat" || envType == "wsl2-mirrored") && ideType == "vscode" && ideLocation == "windows" {
+	// Step 4.5: Validate xdebug_ide_location for WSL2 scenarios that require it
+	// This includes: VS Code with WSL extension, IDEs in WSLg, IDEs in containers
+	needsWSL2Setting := false
+	var setupDescription string
+
+	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
+		switch ideLocation {
+		case "windows":
+			// VS Code on Windows with WSL extension
+			if ideType == "vscode" {
+				needsWSL2Setting = true
+				setupDescription = "VS Code on Windows with WSL extension"
+			}
+		case "wslg":
+			// Any IDE running in WSLg (graphical Linux app in WSL2)
+			needsWSL2Setting = true
+			setupDescription = "IDE running in WSLg"
+		case "wsl2":
+			// PHPStorm or other IDE running directly in WSL2
+			needsWSL2Setting = true
+			setupDescription = "IDE running in WSL2"
+		case "container":
+			// VS Code Remote Containers or similar
+			needsWSL2Setting = true
+			setupDescription = "IDE running in container"
+		}
+	}
+
+	if needsWSL2Setting {
 		output.UserOut.Println("Step 4.5: Validate xdebug_ide_location Setting")
 		output.UserOut.Println("─────────────────────────────────────────────────────────────")
 		xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
@@ -714,7 +750,7 @@ func runInteractiveXdebugDiagnose() int {
 		output.UserOut.Println()
 
 		if xdebugIDELocation != "wsl2" {
-			output.UserOut.Println("  ✗ For VS Code on Windows with WSL extension, xdebug_ide_location MUST be 'wsl2'")
+			output.UserOut.Printf("  ✗ For %s, xdebug_ide_location MUST be 'wsl2'\n", setupDescription)
 			output.UserOut.Println()
 			output.UserOut.Println("  This setting tells DDEV where your IDE's debug listener is located.")
 			output.UserOut.Println("  Without it, Xdebug connections will fail.")
@@ -1023,15 +1059,37 @@ func promptEnableListening(projectName string, ideType string, ideLocation strin
 		} else if isWSL2 && (ideLocation == "wslg" || ideLocation == "container") {
 			output.UserOut.Println("  VS Code in WSLg/Container setup:")
 			output.UserOut.Println()
-			output.UserOut.Println("  ⚠  Note: This is an unusual configuration.")
-			output.UserOut.Println("      The recommended setup is VS Code on Windows with WSL extension.")
+			output.UserOut.Println("  ℹ  Note: The recommended setup is VS Code on Windows with WSL extension,")
+			output.UserOut.Println("      but this configuration works if you prefer running VS Code in WSLg.")
 			output.UserOut.Println()
-			output.UserOut.Println("  1. Install 'PHP Debug' extension by Xdebug")
-			output.UserOut.Println("  2. Create/update .vscode/launch.json")
-			output.UserOut.Println("  3. Start debugging with F5")
-			output.UserOut.Println()
-			output.UserOut.Println("  For this setup, you may need to set:")
-			output.UserOut.Println("    ddev config global --xdebug-ide-location=wsl2")
+
+			// Check for existing launch.json
+			launchPath := ".vscode/launch.json"
+			launchOK := checkVSCodeLaunchJSON(launchPath)
+
+			if launchOK {
+				output.UserOut.Println("  ✓ Found compliant .vscode/launch.json")
+				output.UserOut.Println()
+				output.UserOut.Println("  1. Ensure 'PHP Debug' extension by Xdebug is installed")
+				output.UserOut.Println("  2. Press F5 or go to Run -> Start Debugging")
+			} else {
+				output.UserOut.Println("  1. Install 'PHP Debug' extension by Xdebug")
+				output.UserOut.Println("  2. Create .vscode/launch.json with:")
+				output.UserOut.Println(`       {
+         "version": "0.2.0",
+         "configurations": [{
+           "name": "Listen for Xdebug",
+           "type": "php",
+           "request": "launch",
+           "port": 9003,
+           "hostname": "0.0.0.0",
+           "pathMappings": {
+             "/var/www/html": "${workspaceFolder}"
+           }
+         }]
+       }`)
+				output.UserOut.Println("  3. Press F5 or go to Run -> Start Debugging")
+			}
 		} else {
 			// Non-WSL2 VS Code setup
 			launchPath := ".vscode/launch.json"
