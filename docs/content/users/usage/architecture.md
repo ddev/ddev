@@ -65,7 +65,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Contains examples and implementations to demonstrate how the [`ddev pull`](../usage/commands.md#pull) command can work with [hosting providers](../providers/index.md).
 
 `traefik` directory
-: Configures the `ddev-router` when it is using [Traefik](../extend/traefik-router.md).
+: Configures the [Traefik](../extend/traefik-router.md)-based `ddev-router`. Full details in the [Traefik docs](../extend/traefik-router.md).
 
 `web-build` directory
 : Can be used to provide a [custom Dockerfile](../extend/customizing-images.md) for the web container.
