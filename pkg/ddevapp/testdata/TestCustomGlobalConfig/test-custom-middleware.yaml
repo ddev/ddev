@@ -1,0 +1,6 @@
+http:
+  middlewares:
+    test-custom-middleware:
+      headers:
+        customResponseHeaders:
+          X-Test-Custom-Global: "ddev-test-value"
