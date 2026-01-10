@@ -1,0 +1,39 @@
+# Custom traefik config with test middleware added
+# Does not have ddev-generated so this won't be overwritten
+
+http:
+  routers:
+    APPNAME-web-80-http:
+      entrypoints:
+        - http-80
+      rule: HostRegexp(`^APPNAME\.ddev\.site$`)
+      service: "APPNAME-web-80"
+      tls: false
+      middlewares:
+        - test-custom-middleware@file
+
+    APPNAME-web-80-https:
+      entrypoints:
+        - http-443
+      rule: HostRegexp(`^APPNAME\.ddev\.site$`)
+      service: "APPNAME-web-80"
+      tls: true
+      middlewares:
+        - test-custom-middleware@file
+
+  middlewares:
+    APPNAME-redirectHttps:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+  services:
+    APPNAME-web-80:
+      loadbalancer:
+        servers:
+          - url: http://ddev-APPNAME-web:80
+
+tls:
+  certificates:
+    - certFile: /mnt/ddev-global-cache/traefik/certs/APPNAME.crt
+      keyFile: /mnt/ddev-global-cache/traefik/certs/APPNAME.key

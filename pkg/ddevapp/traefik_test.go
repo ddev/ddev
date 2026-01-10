@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -224,4 +225,97 @@ func TestTraefikStaticConfig(t *testing.T) {
 			require.Equal(t, string(unmarshalledExpectationString), renderedStaticConfig)
 		})
 	}
+}
+
+// TestCustomGlobalConfig tests that custom Traefik config from
+// ~/.ddev/traefik/custom-global-config/ is pushed to the router and loaded by Traefik
+func TestCustomGlobalConfig(t *testing.T) {
+	origDir, _ := os.Getwd()
+	testDataDir := filepath.Join(origDir, "testdata", t.Name())
+
+	site := TestSites[0]
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+
+	// Set up paths
+	customGlobalConfigDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik", "custom-global-config")
+	testMiddlewareName := "test-custom-middleware"
+	testConfigFile := filepath.Join(customGlobalConfigDir, testMiddlewareName+".yaml")
+	testHeaderName := "X-Test-Custom-Global"
+	testHeaderValue := "ddev-test-value"
+
+	// Create the custom-global-config directory if it doesn't exist
+	err = os.MkdirAll(customGlobalConfigDir, 0755)
+	require.NoError(t, err)
+
+	// Copy the middleware config from testdata to custom-global-config
+	err = fileutil.CopyFile(filepath.Join(testDataDir, "test-custom-middleware.yaml"), testConfigFile)
+	require.NoError(t, err)
+
+	// Create project-level traefik config that replaces the ddev-generated one
+	// and adds the test middleware to routers
+	projectTraefikConfigDir := app.GetConfigPath("traefik/config")
+	err = os.MkdirAll(projectTraefikConfigDir, 0755)
+	require.NoError(t, err)
+	projectTraefikConfigFile := filepath.Join(projectTraefikConfigDir, app.Name+".yaml")
+
+	// Read the template and replace APPNAME with actual app name
+	projectConfigTemplate, err := fileutil.ReadFileIntoString(filepath.Join(testDataDir, "project-traefik-config.yaml"))
+	require.NoError(t, err)
+	projectTraefikConfig := strings.ReplaceAll(projectConfigTemplate, "APPNAME", strings.ToLower(app.Name))
+	err = os.WriteFile(projectTraefikConfigFile, []byte(projectTraefikConfig), 0644)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
+		_ = os.Remove(testConfigFile)
+		_ = os.Remove(projectTraefikConfigFile)
+		ddevapp.PowerOff()
+	})
+
+	// Start the project - this should push the custom config to the router
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Verify the config file exists in the router's config directory
+	configDir := "/mnt/ddev-global-cache/traefik/config"
+	stdout, _, err := dockerutil.Exec("ddev-router", "ls "+configDir, "")
+	require.NoError(t, err, "failed to list router config directory")
+	require.Contains(t, stdout, testMiddlewareName+".yaml",
+		"Router config directory should contain the custom global config file")
+
+	// Verify the middleware is loaded by Traefik via its API
+	dockerIP, _ := dockerutil.GetDockerIP()
+	monitorPort := globalconfig.DdevGlobalConfig.TraefikMonitorPort
+	middlewaresURL := "http://" + dockerIP + ":" + monitorPort + "/api/http/middlewares"
+
+	// Query Traefik API for middlewares - the custom middleware should be listed
+	body, resp, err := testcommon.GetLocalHTTPResponse(t, middlewaresURL, 30)
+	require.NoError(t, err, "Failed to query Traefik API for middlewares")
+	require.Equal(t, 200, resp.StatusCode, "Traefik API should return 200")
+	require.Contains(t, body, testMiddlewareName,
+		"Traefik API should show the custom middleware is loaded")
+
+	// Verify the middleware is actually applied by checking the response header
+	// Use a simple HTTP client - we only care about headers, not status code
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// Returning any error stops redirects.
+			// http.ErrUseLastResponse is the canonical choice.
+			return http.ErrUseLastResponse
+		},
+	}
+
+	httpResp, err := client.Get(app.GetHTTPURL())
+	require.NoError(t, err)
+	defer httpResp.Body.Close()
+
+	// Headers are from the *original* response, not the redirect target
+	require.Equal(t, testHeaderValue, httpResp.Header.Get(testHeaderName))
+
+	require.NoError(t, err, "Failed to fetch test URL")
+	defer httpResp.Body.Close()
+	require.Equal(t, testHeaderValue, httpResp.Header.Get(testHeaderName),
+		"Response should contain the custom header from global middleware")
 }
