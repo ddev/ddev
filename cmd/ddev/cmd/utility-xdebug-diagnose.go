@@ -710,7 +710,7 @@ func runInteractiveXdebugDiagnose() int {
 	output.UserOut.Println()
 
 	// Step 4.5: Validate xdebug_ide_location for WSL2 scenarios that require it
-	// This includes: VS Code with WSL extension, IDEs in WSLg, IDEs in containers
+	// This includes: VS Code with WSL extension, PhpStorm with Gateway, IDEs in WSLg, IDEs in containers
 	needsWSL2Setting := false
 	var setupDescription string
 
@@ -722,12 +722,17 @@ func runInteractiveXdebugDiagnose() int {
 				needsWSL2Setting = true
 				setupDescription = "VS Code on Windows with WSL extension"
 			}
+			// PhpStorm native on Windows does NOT need wsl2 setting
+		case "gateway-wsl2":
+			// PhpStorm with JetBrains Gateway WSL2 backend
+			needsWSL2Setting = true
+			setupDescription = "PhpStorm with JetBrains Gateway WSL2 backend"
 		case "wslg":
 			// Any IDE running in WSLg (graphical Linux app in WSL2)
 			needsWSL2Setting = true
 			setupDescription = "IDE running in WSLg"
 		case "wsl2":
-			// PHPStorm or other IDE running directly in WSL2
+			// PhpStorm or other IDE running directly in WSL2
 			needsWSL2Setting = true
 			setupDescription = "IDE running in WSL2"
 		case "container":
@@ -885,7 +890,7 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 	// Ask which IDE
 	idePrompt := promptui.Select{
 		Label: "Which IDE are you using",
-		Items: []string{"PHPStorm / IntelliJ", "VS Code", "Other"},
+		Items: []string{"PhpStorm / IntelliJ", "VS Code", "Other"},
 		Templates: &promptui.SelectTemplates{
 			Label:    "{{ . }}?",
 			Active:   "▸ {{ . | cyan }}",
@@ -912,7 +917,7 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 	var ideName string
 	switch ideType {
 	case "phpstorm":
-		ideName = "PHPStorm"
+		ideName = "PhpStorm"
 	case "vscode":
 		ideName = "VS Code"
 	default:
@@ -925,6 +930,13 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 				"VS Code on Windows using WSL extension (recommended)",
 				"VS Code running in WSLg",
 				"VS Code using Remote Containers",
+				"Remote/Other",
+			}
+		} else if ideType == "phpstorm" {
+			locationItems = []string{
+				"PhpStorm on Windows (native) with project on WSL2 distro (recommended)",
+				"PhpStorm with JetBrains Gateway WSL2 backend",
+				"PhpStorm running in WSL2/WSLg",
 				"Remote/Other",
 			}
 		} else {
@@ -968,6 +980,18 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 				default:
 					ideLocation = "remote"
 				}
+			} else if ideType == "phpstorm" {
+				// PhpStorm has 4 options: Native on Windows, Gateway WSL2, WSL2/WSLg, Remote/Other
+				switch idx {
+				case 0:
+					ideLocation = "windows" // PhpStorm on Windows (native) - recommended
+				case 1:
+					ideLocation = "gateway-wsl2" // PhpStorm with JetBrains Gateway WSL2 backend
+				case 2:
+					ideLocation = "wsl2" // PhpStorm running in WSL2/WSLg
+				default:
+					ideLocation = "remote"
+				}
 			} else {
 				// Other IDEs have 3 options
 				switch idx {
@@ -999,14 +1023,35 @@ func promptEnableListening(projectName string, ideType string, ideLocation strin
 
 	switch ideType {
 	case "phpstorm":
-		output.UserOut.Println("  PHPStorm setup:")
-		output.UserOut.Println("    1. Go to Run -> Start Listening for PHP Debug Connections")
-		output.UserOut.Println("       (or click the phone/bug icon in the toolbar)")
-		output.UserOut.Println("    2. Ensure the icon shows a green bug or 'listening' state")
-		output.UserOut.Println()
-		output.UserOut.Println("  Settings to verify (File -> Settings -> PHP -> Debug):")
-		output.UserOut.Println("    - Debug port: 9003")
-		output.UserOut.Println("    - 'Can accept external connections' is checked")
+		isWSL2 := envType == "wsl2-nat" || envType == "wsl2-mirrored"
+		if isWSL2 && ideLocation == "gateway-wsl2" {
+			output.UserOut.Println("  PhpStorm with JetBrains Gateway WSL2 backend setup:")
+			output.UserOut.Println()
+			output.UserOut.Println("  1. Ensure JetBrains Gateway is installed and connected to your WSL2 distro")
+			output.UserOut.Println("     • The IDE backend runs in WSL2, UI runs on Windows")
+			output.UserOut.Println("     • Project must be opened through Gateway connection")
+			output.UserOut.Println()
+			output.UserOut.Println("  2. Configure PHP interpreter:")
+			output.UserOut.Println("     • File -> Settings -> PHP")
+			output.UserOut.Println("     • Interpreter should point to PHP in WSL2")
+			output.UserOut.Println()
+			output.UserOut.Println("  3. Start debug listener:")
+			output.UserOut.Println("     • Run -> Start Listening for PHP Debug Connections")
+			output.UserOut.Println("     • Or click the phone/bug icon in the toolbar")
+			output.UserOut.Println()
+			output.UserOut.Println("  4. Verify debug settings (File -> Settings -> PHP -> Debug):")
+			output.UserOut.Println("     • Debug port: 9003")
+			output.UserOut.Println("     • 'Can accept external connections' is checked")
+		} else {
+			output.UserOut.Println("  PhpStorm setup:")
+			output.UserOut.Println("    1. Go to Run -> Start Listening for PHP Debug Connections")
+			output.UserOut.Println("       (or click the phone/bug icon in the toolbar)")
+			output.UserOut.Println("    2. Ensure the icon shows a green bug or 'listening' state")
+			output.UserOut.Println()
+			output.UserOut.Println("  Settings to verify (File -> Settings -> PHP -> Debug):")
+			output.UserOut.Println("    - Debug port: 9003")
+			output.UserOut.Println("    - 'Can accept external connections' is checked")
+		}
 	case "vscode":
 		// WSL2-specific VS Code instructions
 		isWSL2 := envType == "wsl2-nat" || envType == "wsl2-mirrored"
@@ -1154,7 +1199,7 @@ func testDBGpProtocol(app *ddevapp.DdevApp, ideLocation string, envType string) 
 	// The connection must be made from inside the web container
 	var targetHost string
 	switch ideLocation {
-	case "windows", "wsl2", "wslg", "container", "local", "macos", "linux":
+	case "windows", "gateway-wsl2", "wsl2", "wslg", "container", "local", "macos", "linux":
 		// From inside container, always use host.docker.internal to reach host
 		targetHost = "host.docker.internal"
 	case "remote":
