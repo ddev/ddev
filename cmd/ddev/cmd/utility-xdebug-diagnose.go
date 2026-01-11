@@ -928,13 +928,15 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 		if ideType == "vscode" {
 			locationItems = []string{
 				"VS Code on Windows using WSL extension (recommended)",
+				"VS Code on Windows with project on Windows filesystem",
 				"VS Code running in WSLg",
 				"VS Code using Remote Containers",
 				"Remote/Other",
 			}
 		} else if ideType == "phpstorm" {
 			locationItems = []string{
-				"PhpStorm on Windows (native) with project on WSL2 distro (recommended)",
+				"PhpStorm on Windows with project on WSL2 distro (recommended)",
+				"PhpStorm on Windows with project on Windows filesystem",
 				"PhpStorm with JetBrains Gateway WSL2 backend",
 				"PhpStorm running in WSL2/WSLg",
 				"Remote/Other",
@@ -969,25 +971,29 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 	} else {
 		if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
 			if ideType == "vscode" {
-				// VS Code has 4 options: WSL extension, WSLg, Remote Containers, Remote/Other
+				// VS Code has 5 options
 				switch idx {
 				case 0:
 					ideLocation = "windows" // VS Code on Windows using WSL extension
 				case 1:
-					ideLocation = "wslg" // VS Code running in WSLg
+					ideLocation = "windows-native" // VS Code on Windows with project on Windows filesystem
 				case 2:
+					ideLocation = "wslg" // VS Code running in WSLg
+				case 3:
 					ideLocation = "container" // VS Code using Remote Containers
 				default:
 					ideLocation = "remote"
 				}
 			} else if ideType == "phpstorm" {
-				// PhpStorm has 4 options: Native on Windows, Gateway WSL2, WSL2/WSLg, Remote/Other
+				// PhpStorm has 5 options
 				switch idx {
 				case 0:
-					ideLocation = "windows" // PhpStorm on Windows (native) - recommended
+					ideLocation = "windows" // PhpStorm on Windows with project on WSL2 distro - recommended
 				case 1:
-					ideLocation = "gateway-wsl2" // PhpStorm with JetBrains Gateway WSL2 backend
+					ideLocation = "windows-native" // PhpStorm on Windows with project on Windows filesystem
 				case 2:
+					ideLocation = "gateway-wsl2" // PhpStorm with JetBrains Gateway WSL2 backend
+				case 3:
 					ideLocation = "wsl2" // PhpStorm running in WSL2/WSLg
 				default:
 					ideLocation = "remote"
@@ -1040,6 +1046,18 @@ func promptEnableListening(projectName string, ideType string, ideLocation strin
 			output.UserOut.Println("     • Or click the phone/bug icon in the toolbar")
 			output.UserOut.Println()
 			output.UserOut.Println("  4. Verify debug settings (File -> Settings -> PHP -> Debug):")
+			output.UserOut.Println("     • Debug port: 9003")
+			output.UserOut.Println("     • 'Can accept external connections' is checked")
+		} else if isWSL2 && ideLocation == "windows-native" {
+			output.UserOut.Println("  PhpStorm on Windows with project on Windows filesystem:")
+			output.UserOut.Println()
+			output.UserOut.Println("  ℹ  Note: The recommended setup is having your project on the WSL2")
+			output.UserOut.Println("      filesystem for better performance with DDEV.")
+			output.UserOut.Println()
+			output.UserOut.Println("  1. Go to Run -> Start Listening for PHP Debug Connections")
+			output.UserOut.Println("     (or click the phone/bug icon in the toolbar)")
+			output.UserOut.Println()
+			output.UserOut.Println("  2. Verify settings (File -> Settings -> PHP -> Debug):")
 			output.UserOut.Println("     • Debug port: 9003")
 			output.UserOut.Println("     • 'Can accept external connections' is checked")
 		} else {
@@ -1101,6 +1119,25 @@ func promptEnableListening(projectName string, ideType string, ideLocation strin
 			output.UserOut.Println()
 			output.UserOut.Println("  5. Start debugging:")
 			output.UserOut.Println("     Press F5 or go to Run -> Start Debugging")
+		} else if isWSL2 && ideLocation == "windows-native" {
+			output.UserOut.Println("  VS Code on Windows with project on Windows filesystem:")
+			output.UserOut.Println()
+			output.UserOut.Println("  ℹ  Note: The recommended setup is using the WSL extension with")
+			output.UserOut.Println("      your project on the WSL2 filesystem for better performance.")
+			output.UserOut.Println()
+			output.UserOut.Println("  1. Install 'PHP Debug' extension by Xdebug")
+			output.UserOut.Println("  2. Create .vscode/launch.json with:")
+			output.UserOut.Println(`       {
+         "version": "0.2.0",
+         "configurations": [{
+           "name": "Listen for Xdebug",
+           "type": "php",
+           "request": "launch",
+           "port": 9003,
+           "hostname": "0.0.0.0"
+         }]
+       }`)
+			output.UserOut.Println("  3. Press F5 or go to Run -> Start Debugging")
 		} else if isWSL2 && (ideLocation == "wslg" || ideLocation == "container") {
 			output.UserOut.Println("  VS Code in WSLg/Container setup:")
 			output.UserOut.Println()
@@ -1199,7 +1236,7 @@ func testDBGpProtocol(app *ddevapp.DdevApp, ideLocation string, envType string) 
 	// The connection must be made from inside the web container
 	var targetHost string
 	switch ideLocation {
-	case "windows", "gateway-wsl2", "wsl2", "wslg", "container", "local", "macos", "linux":
+	case "windows", "windows-native", "gateway-wsl2", "wsl2", "wslg", "container", "local", "macos", "linux":
 		// From inside container, always use host.docker.internal to reach host
 		targetHost = "host.docker.internal"
 	case "remote":
