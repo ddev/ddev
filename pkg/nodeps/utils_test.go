@@ -379,3 +379,82 @@ func TestIsPathOnWindowsFilesystem(t *testing.T) {
 	require.False(t, nodeps.IsPathOnWindowsFilesystem("/tmp/test"))
 	require.False(t, nodeps.IsPathOnWindowsFilesystem(""))
 }
+
+// TestParseWSLConfigHostAddressLoopback tests the .wslconfig parsing for hostAddressLoopback
+func TestParseWSLConfigHostAddressLoopback(t *testing.T) {
+	tests := map[string]struct {
+		content  string
+		expected bool
+	}{
+		"enabled in experimental section": {
+			content: `[wsl2]
+networkingMode=mirrored
+[experimental]
+hostAddressLoopback=true`,
+			expected: true,
+		},
+		"enabled with different casing": {
+			content: `[EXPERIMENTAL]
+HostAddressLoopback=True`,
+			expected: true,
+		},
+		"enabled with spaces around equals": {
+			content: `[experimental]
+hostAddressLoopback = true`,
+			expected: true,
+		},
+		"enabled with Windows CRLF line endings": {
+			content:  "[experimental]\r\nhostAddressLoopback=true\r\n",
+			expected: true,
+		},
+		"disabled explicitly": {
+			content: `[experimental]
+hostAddressLoopback=false`,
+			expected: false,
+		},
+		"not in experimental section": {
+			content: `[wsl2]
+hostAddressLoopback=true`,
+			expected: false,
+		},
+		"no experimental section": {
+			content: `[wsl2]
+networkingMode=mirrored`,
+			expected: false,
+		},
+		"empty file": {
+			content:  "",
+			expected: false,
+		},
+		"only comments": {
+			content: `# This is a comment
+; This is also a comment
+[experimental]
+# hostAddressLoopback=true`,
+			expected: false,
+		},
+		"setting after another section": {
+			content: `[wsl2]
+networkingMode=mirrored
+[experimental]
+hostAddressLoopback=true
+[other]
+something=else`,
+			expected: true,
+		},
+		"setting in wrong section after experimental": {
+			content: `[experimental]
+someother=value
+[wsl2]
+hostAddressLoopback=true`,
+			expected: false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := nodeps.ParseWSLConfigHostAddressLoopback(tc.content)
+			require.Equal(t, tc.expected, result, "ParseWSLConfigHostAddressLoopback(%q)", tc.content)
+		})
+	}
+}
