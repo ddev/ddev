@@ -132,6 +132,18 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return fmt.Errorf("failed to create global Traefik config dir: %v", err)
 	}
 
+	// Remove old files from ~/.ddev/traefik/config and certs before creating new ones
+	// This ensures we start with a clean slate for regeneration from active projects
+	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "config"))
+	if err != nil {
+		return fmt.Errorf("failed to purge global Traefik config dir: %v", err)
+	}
+
+	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "certs"))
+	if err != nil {
+		return fmt.Errorf("failed to purge global Traefik certs dir: %v", err)
+	}
+
 	// Assume that the #ddev-generated doesn't exist in files
 	sigExists := false
 	for _, pemFile := range []string{"default_cert.crt", "default_key.key"} {
@@ -253,17 +265,6 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	err = os.WriteFile(staticConfigFinalPath, []byte(resultYaml), 0755)
 	if err != nil {
 		return err
-	}
-
-	// Remove ~/.ddev/traefik/config and certs for clean start (regenerate from active projects)
-	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "config"))
-	if err != nil {
-		return fmt.Errorf("failed to purge global Traefik config dir: %v", err)
-	}
-
-	err = fileutil.PurgeDirectory(filepath.Join(globalTraefikDir, "certs"))
-	if err != nil {
-		return fmt.Errorf("failed to purge global Traefik config dir: %v", err)
 	}
 
 	// Track expected files in the volume for later sync

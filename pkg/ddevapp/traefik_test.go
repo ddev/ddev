@@ -69,7 +69,20 @@ func TestTraefikSimple(t *testing.T) {
 	desc, err := app.Describe(false)
 	assert.Equal(desc["router"].(string), types.RouterTypeTraefik)
 
-	// Test reachabiliity in each of the hostnames
+	// Verify default_config.yaml exists in the router volume
+	stdout, _, err := dockerutil.Exec("ddev-router", "cat /mnt/ddev-global-cache/traefik/config/default_config.yaml", "")
+	require.NoError(t, err, "default_config.yaml should exist in router volume")
+	require.Contains(t, stdout, "defaultCertificate", "default_config.yaml should contain default certificate configuration")
+
+	// Verify default certificates exist in the router volume (if not using Let's Encrypt)
+	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+		stdout, _, err = dockerutil.Exec("ddev-router", "ls -la /mnt/ddev-global-cache/traefik/certs/", "")
+		require.NoError(t, err, "should be able to list certs directory")
+		require.Contains(t, stdout, "default_cert.crt", "default_cert.crt should exist in router volume")
+		require.Contains(t, stdout, "default_key.key", "default_key.key should exist in router volume")
+	}
+
+	// Test reachability in each of the hostnames
 	httpURLs, _, allURLs := app.GetAllURLs()
 
 	// If no mkcert trusted https, use only the httpURLs
