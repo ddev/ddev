@@ -15,7 +15,7 @@ teardown() {
   # mkdir my-processwire-site && cd my-processwire-site
   run mkdir -p my-processwire-site && cd my-processwire-site
   assert_success
-  run curl -LJOf https://github.com/processwire/processwire/archive/master.zip
+  run _curl_github -LJOf https://github.com/processwire/processwire/archive/master.zip
   assert_success
   run unzip processwire-master.zip && rm -f processwire-master.zip && mv processwire-master/* . && mv processwire-master/.* . 2>/dev/null && rm -rf processwire-master
   assert_success

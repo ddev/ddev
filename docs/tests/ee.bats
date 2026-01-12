@@ -17,7 +17,7 @@ teardown() {
   assert_success
 
   # Download the latest version of Expression Engine
-  run curl -o ee.zip -L $(curl -sL https://api.github.com/repos/ExpressionEngine/ExpressionEngine/releases/latest | docker run -i --rm ddev/ddev-utilities jq -r '.assets | map(select(.name | test("^ExpressionEngine.*\\.zip$")))[0].browser_download_url')
+  run _github_release_download "ExpressionEngine/ExpressionEngine" "^ExpressionEngine.*\\.zip$" "ee.zip"
   assert_success
 
   # unzip ee.zip && rm -f ee.zip
