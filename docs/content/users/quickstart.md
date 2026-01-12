@@ -1148,7 +1148,6 @@ Run Ibexa installation:
 
 ```bash
 ddev exec console ibexa:install
-ddev exec console ibexa:graphql:generate-schema
 ```
 
 Launch the admin interface:
