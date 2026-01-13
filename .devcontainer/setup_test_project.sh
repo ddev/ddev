@@ -6,8 +6,9 @@ echo "You don't need to wait for the test project to be set up."
 sudo chown ${USER} /workspaces || true
 mkdir -p /workspaces/.config
 set -x
-git remote add ddev-upstream https://github.com/ddev/ddev || true
-git fetch ddev-upstream || true
+DDEV_UPSTREAM_NAME=ddev-upstream
+git remote add ${DDEV_UPSTREAM_NAME} https://github.com/ddev/ddev || true
+git fetch ${DDEV_UPSTREAM_NAME} || true
 make
 sudo ln -sf "${PWD}/.gotmp/bin/linux_$(dpkg --print-architecture)/ddev" /usr/local/bin/ddev
 ddev utility download-images
