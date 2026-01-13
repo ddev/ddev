@@ -13,7 +13,6 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -102,24 +101,13 @@ func runXdebugDiagnose() int {
 
 	isWSL2 := nodeps.IsWSL2()
 	xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
-	hostDockerInternal := dockerutil.GetHostDockerInternal()
 
-	// Check 1: Port 9003 status
-	var portInUse bool
-	if isWSL2 && xdebugIDELocation != "wsl2" {
-		portInUse = isWindowsPortInUse(9003)
-		if portInUse {
-			output.UserOut.Println("✓ Port 9003: IDE listening (Windows)")
-		} else {
-			output.UserOut.Println("○ Port 9003: No listener detected (Windows)")
-		}
+	// Check 1: Port 9003 status - check from inside container
+	portInUse, _ := testContainerToHostConnectivity(app, "host.docker.internal", 9003)
+	if portInUse {
+		output.UserOut.Println("✓ Port 9003: IDE listening")
 	} else {
-		portInUse = netutil.IsPortActive("9003")
-		if portInUse {
-			output.UserOut.Println("✓ Port 9003: IDE listening")
-		} else {
-			output.UserOut.Println("○ Port 9003: No listener detected")
-		}
+		output.UserOut.Println("○ Port 9003: No listener detected")
 	}
 
 	// Check 2: WSL2 Mirrored Mode - hostAddressLoopback setting
@@ -136,24 +124,31 @@ func runXdebugDiagnose() int {
 	}
 
 	// Check 3: host.docker.internal
+	hostDockerInternal := dockerutil.GetHostDockerInternal()
 	output.UserOut.Printf("✓ host.docker.internal: %s\n", hostDockerInternal.IPAddress)
 
 	// Check 4: xdebug_ide_location setting
-	ideLocDisplay := "(default)"
-	if xdebugIDELocation != "" {
-		ideLocDisplay = "\"" + xdebugIDELocation + "\""
-	}
-	output.UserOut.Printf("○ xdebug_ide_location: %s\n", ideLocDisplay)
-
-	// WSL2-specific configuration warning
-	if isWSL2 && xdebugIDELocation == "" {
-		output.UserOut.Println("  ⚠ If using VS Code with WSL extension, run:")
-		output.UserOut.Println("    ddev config global --xdebug-ide-location=wsl2")
+	// Having xdebug_ide_location set is usually an error, EXCEPT for WSL2 + VS Code with WSL extension
+	if xdebugIDELocation == "" {
+		output.UserOut.Println("✓ xdebug_ide_location: (default)")
+		if isWSL2 {
+			output.UserOut.Println("  Note: If using VS Code with WSL extension, set to 'wsl2'")
+		}
+	} else {
+		// It's set - this is usually wrong
+		output.UserOut.Printf("✗ xdebug_ide_location: \"%s\"\n", xdebugIDELocation)
+		if isWSL2 && xdebugIDELocation == "wsl2" {
+			output.UserOut.Println("  This is correct for VS Code with WSL extension")
+		} else {
+			issues = append(issues, issue{
+				problem: fmt.Sprintf("xdebug_ide_location is set to '%s' (usually should be empty)", xdebugIDELocation),
+				fix:     "ddev config global --xdebug-ide-location=\"\"",
+			})
+		}
 	}
 
 	// Check 5: Connection test
 	if !portInUse {
-		output.UserOut.Print("○ Connection test: ")
 		var connFailed bool
 		if isWSL2 && xdebugIDELocation != "wsl2" {
 			connFailed = testWSL2NATConnectionQuiet(app)
@@ -161,13 +156,13 @@ func runXdebugDiagnose() int {
 			connFailed = testSimpleConnectionQuiet(app)
 		}
 		if connFailed {
-			output.UserOut.Println("FAILED")
+			output.UserOut.Println("✗ Connection test: FAILED")
 			issues = append(issues, issue{
 				problem: "Container cannot connect to host on port 9003",
 				fix:     "Check firewall settings - port 9003 must be accessible",
 			})
 		} else {
-			output.UserOut.Println("OK")
+			output.UserOut.Println("✓ Connection test: OK")
 		}
 	} else {
 		output.UserOut.Println("○ Connection test: Skipped (port in use)")
@@ -514,7 +509,7 @@ func testSimpleConnectionQuiet(app *ddevapp.DdevApp) bool {
 	}()
 
 	_, _, _ = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "bash -c 'echo test | nc -w 2 host.docker.internal 9003'",
+		Cmd: "bash -c 'echo test | nc -w 2 host.docker.internal 9003 2>/dev/null'",
 	})
 
 	select {
@@ -628,6 +623,25 @@ func runInteractiveXdebugDiagnose() int {
 	output.UserOut.Println("[1/5] Environment")
 	envType := detectAndDisplayEnvironment(app)
 	_, _, _ = app.Exec(&ddevapp.ExecOpts{Cmd: "xdebug off"})
+
+	// Check xdebug_ide_location early - it being set is usually wrong (except WSL2 + VS Code)
+	xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
+	isWSL2Env := envType == "wsl2-nat" || envType == "wsl2-mirrored"
+	if xdebugIDELocation != "" && !(isWSL2Env && xdebugIDELocation == "wsl2") {
+		output.UserOut.Printf("✗ xdebug_ide_location is set to '%s' (almost always should be empty)\n", xdebugIDELocation)
+		if util.Confirm("Clear it and restart project?") {
+			globalconfig.DdevGlobalConfig.XdebugIDELocation = ""
+			if err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig); err != nil {
+				output.UserOut.Printf("Failed: %v\n", err)
+			} else {
+				output.UserOut.Println("✓ Cleared, restarting...")
+				dockerutil.ResetHostDockerInternal()
+				_ = app.Restart()
+			}
+		} else {
+			output.UserOut.Println("Run: ddev config global --xdebug-ide-location=\"\"")
+		}
+	}
 	output.UserOut.Println()
 
 	// Step 2: Connectivity test
@@ -674,24 +688,22 @@ func runInteractiveXdebugDiagnose() int {
 		}
 	}
 
-	if needsWSL2Setting {
-		xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
-		if xdebugIDELocation != "wsl2" {
-			output.UserOut.Printf("✗ %s requires xdebug_ide_location=wsl2\n", setupDescription)
-			if util.Confirm("Set it now?") {
-				globalconfig.DdevGlobalConfig.XdebugIDELocation = "wsl2"
-				if err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig); err != nil {
-					output.UserOut.Printf("Failed: %v\n", err)
-					output.UserOut.Println("Run: ddev config global --xdebug-ide-location=wsl2")
-				} else {
-					output.UserOut.Println("✓ Set to 'wsl2', restarting...")
-					_ = app.Restart()
-				}
-			} else {
+	// For WSL2 scenarios that need xdebug_ide_location=wsl2, check and offer to set it
+	if needsWSL2Setting && xdebugIDELocation != "wsl2" {
+		output.UserOut.Printf("✗ %s requires xdebug_ide_location=wsl2\n", setupDescription)
+		if util.Confirm("Set it now?") {
+			globalconfig.DdevGlobalConfig.XdebugIDELocation = "wsl2"
+			if err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig); err != nil {
+				output.UserOut.Printf("Failed: %v\n", err)
 				output.UserOut.Println("Run: ddev config global --xdebug-ide-location=wsl2")
+			} else {
+				output.UserOut.Println("✓ Set to 'wsl2', restarting...")
+				_ = app.Restart()
 			}
-			output.UserOut.Println()
+		} else {
+			output.UserOut.Println("Run: ddev config global --xdebug-ide-location=wsl2")
 		}
+		output.UserOut.Println()
 	}
 
 	// Step 4: Enable listening
