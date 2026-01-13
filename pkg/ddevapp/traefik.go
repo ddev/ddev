@@ -145,7 +145,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	}
 
 	mkcertIsAvailable := false
-	_, err = exec.RunHostCommand("command -v mkcert >/dev/null 2>&1")
+	_, err = exec.RunHostCommand("bash", "-c", "command -v mkcert >/dev/null 2>&1")
 	if err == nil {
 		mkcertIsAvailable = true
 	}
@@ -412,7 +412,7 @@ func configureTraefikForApp(app *DdevApp) error {
 	}
 
 	mkcertIsAvailable := false
-	_, err = exec.RunHostCommand("command -v mkcert >/dev/null 2>&1")
+	_, err = exec.RunHostCommand("bash", "-c", "command -v mkcert >/dev/null 2>&1")
 	if err == nil {
 		mkcertIsAvailable = true
 	}
