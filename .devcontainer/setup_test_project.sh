@@ -11,7 +11,7 @@ ddev delete -Oy tmp >/dev/null || true
 ddev --version
 
 export DDEV_NONINTERACTIVE=true CI=true
-DDEV_REPO=${DDEV_REPO:-https://github.com/ddev/d10simple}
+DDEV_REPO=${DDEV_REPO:-https://github.com/ddev/d11simple}
 DDEV_ARTIFACTS=${DDEV_REPO}-artifacts
 git clone ${DDEV_ARTIFACTS} "/tmp/${DDEV_ARTIFACTS##*/}" || true
 reponame=${DDEV_REPO##*/}
