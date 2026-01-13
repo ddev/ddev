@@ -163,9 +163,16 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		_ = os.RemoveAll(filepath.Join(globalSourceCertsPath, "default_cert.crt"))
 		_ = os.RemoveAll(filepath.Join(globalSourceCertsPath, "default_key.key"))
 	}
+
+	mkcertIsAvailable := false
+	_, err = exec.RunHostCommand("command -v mkcert >/dev/null 2>&1")
+	if err == nil {
+		mkcertIsAvailable = true
+	}
+
 	// Install default certs, except when using Let's Encrypt (when they would
 	// get used instead of Let's Encrypt certs)
-	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+	if mkcertIsAvailable && !globalconfig.DdevGlobalConfig.UseLetsEncrypt && sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
 		c := []string{"--cert-file", filepath.Join(globalSourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(globalSourceCertsPath, "default_key.key"), "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default", "*.ddev.site"}
 		if globalconfig.DdevGlobalConfig.ProjectTldGlobal != "" {
 			c = append(c, "*."+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
@@ -429,9 +436,16 @@ func configureTraefikForApp(app *DdevApp) error {
 			break
 		}
 	}
+
+	mkcertIsAvailable := false
+	_, err = exec.RunHostCommand("command -v mkcert >/dev/null 2>&1")
+	if err == nil {
+		mkcertIsAvailable = true
+	}
+
 	// Assuming the certs don't exist, or they have #ddev-generated so can be replaced, create them
 	// But not if we don't have mkcert already set up.
-	if sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+	if mkcertIsAvailable && sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
 		c := []string{"--cert-file", baseName + ".crt", "--key-file", baseName + ".key", "*.ddev.site", "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default"}
 		c = append(c, hostnames...)
 		if app.ProjectTLD != nodeps.DdevDefaultTLD {
