@@ -288,8 +288,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         "containerEnv": {
             "XDG_CONFIG_HOME": "/workspaces/.config"
         },
-        "postCreateCommand": "echo 'it should all be set up'"
-    }
+        "postCreateCommand": "sudo chown ${USER} /workspaces && echo 'it should all be set up now'"
     ```
 
     Launch your repository in Codespaces:
