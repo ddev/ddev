@@ -1147,14 +1147,8 @@ ddev composer create-project ibexa/oss-skeleton
 Run Ibexa installation:
 
 ```bash
-ddev exec console ibexa:install
+ddev exec console ibexa:install --no-interaction
 ```
-
-The installation asks for an admin password with the following constraints:
-
-- 10 characters long
-- at least one upper case letter
-- at least one number
 
 Launch the admin interface:
 
@@ -1162,7 +1156,7 @@ Launch the admin interface:
 ddev launch /admin/login
 ```
 
-In the web browser, log into your account using user `admin` and the password you have chosen.
+In the web browser, log into your account using `admin` and `publish`.
 
 Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/install_with_ddev/) for more cases.
 
