@@ -3,6 +3,8 @@
 set -eu -o pipefail
 
 echo "You don't need to wait for the test project to be set up."
+sudo chown ${USER} /workspaces || true
+mkdir -p /workspaces/.config
 set -x
 make
 sudo ln -sf ${PWD}/.gotmp/bin/linux_amd64/ddev /usr/local/bin/ddev
