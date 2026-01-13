@@ -604,7 +604,10 @@ $listener.Stop()
 // runInteractiveXdebugDiagnose runs the interactive guided diagnostic
 func runInteractiveXdebugDiagnose() int {
 	output.UserOut.Println("Interactive Xdebug Diagnostics")
-	output.UserOut.Println()
+	output.UserOut.Println("==============================")
+	output.UserOut.Println("This test will first check for Xdebug connectivity without your IDE listening, then ask you to")
+	output.UserOut.Println("have your IDE listen for Xdebug for an actual communication test.")
+	output.UserOut.Println("")
 
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
@@ -629,10 +632,16 @@ func runInteractiveXdebugDiagnose() int {
 
 	// Step 2: Connectivity test
 	output.UserOut.Println("[2/5] Connectivity Test")
-	output.UserOut.Println("Stop your IDE's debug listener temporarily for this test.")
-	if !util.Confirm("Press Enter when ready") {
-		return 1
+
+	// Check if port 9003 is in use from the container's perspective
+	portInUse, _ := testContainerToHostConnectivity(app, "host.docker.internal", 9003)
+	if portInUse {
+		output.UserOut.Println("Port 9003 is in use - stop your IDE listener temporarily for this test.")
+		if !util.Confirm("Press Enter when ready") {
+			return 1
+		}
 	}
+
 	connectivityOK := runConnectivityTest(app, envType)
 	if !connectivityOK {
 		output.UserOut.Println("✗ Network connectivity failed")
