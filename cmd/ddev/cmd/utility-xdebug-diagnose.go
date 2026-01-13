@@ -69,296 +69,165 @@ func init() {
 		"Run interactive guided diagnostics with step-by-step prompts")
 }
 
+// issue represents a detected problem with fix instructions
+type issue struct {
+	problem string
+	fix     string
+}
+
 // runXdebugDiagnose performs the diagnostic checks and outputs results
 // Returns exit code: 0 if no issues, 1 if issues found
 func runXdebugDiagnose() int {
-	hasIssues := false
+	var issues []issue
 
 	// Try to load app from current directory
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		util.Warning("Not in a DDEV project directory.")
-		util.Warning("Please run this command from within a DDEV project.")
 		return 1
 	}
 
 	// Check if project is running
 	status, _ := app.SiteStatus()
 	if status != ddevapp.SiteRunning {
-		output.UserOut.Printf("Project '%s' is not running. Starting project for diagnostics...", app.Name)
-		output.UserOut.Println()
-		err := app.Start()
-		if err != nil {
+		output.UserOut.Printf("Starting project '%s' for diagnostics...\n", app.Name)
+		if err := app.Start(); err != nil {
 			util.Failed("Failed to start project: %v", err)
 			return 1
 		}
 	}
 
-	output.UserOut.Printf("Xdebug Diagnostics for Project: %s", app.Name)
+	output.UserOut.Printf("Xdebug Diagnostics: %s\n", app.Name)
 	output.UserOut.Println()
-
-	// Check 1: Check if something is already listening on port 9003
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	output.UserOut.Println("Port 9003 Pre-Check")
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	isWSL2 := nodeps.IsWSL2()
 	xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
-	var portInUse bool
+	hostDockerInternal := dockerutil.GetHostDockerInternal()
 
-	// Determine where to check for the port based on IDE location
-	// If xdebug_ide_location=wsl2, the IDE listener runs in WSL2
-	// Otherwise in WSL2, the IDE typically runs on Windows
+	// Check 1: Port 9003 status
+	var portInUse bool
 	if isWSL2 && xdebugIDELocation != "wsl2" {
 		portInUse = isWindowsPortInUse(9003)
 		if portInUse {
-			output.UserOut.Println("  ✓ Port 9003 is in use on Windows")
-			output.UserOut.Println("    This is likely your IDE listening for Xdebug connections (which is good!)")
-			output.UserOut.Println()
-			output.UserOut.Println("  To identify what's listening on port 9003, run in PowerShell:")
-			output.UserOut.Println("    Get-NetTCPConnection -LocalPort 9003 | Select-Object OwningProcess")
+			output.UserOut.Println("✓ Port 9003: IDE listening (Windows)")
 		} else {
-			output.UserOut.Println("  Port 9003 is not currently in use on Windows")
-			output.UserOut.Println("  When you're ready to debug, start your IDE's debug listener on port 9003.")
+			output.UserOut.Println("○ Port 9003: No listener detected (Windows)")
 		}
 	} else {
 		portInUse = netutil.IsPortActive("9003")
 		if portInUse {
-			output.UserOut.Println("  ✓ Port 9003 is in use on the host")
-			output.UserOut.Println("    This is likely your IDE listening for Xdebug connections (which is good!)")
-			output.UserOut.Println()
-			output.UserOut.Println("  To identify what's listening on port 9003, run:")
-			if isWSL2 {
-				output.UserOut.Println("    • WSL2: sudo lsof -i :9003 -sTCP:LISTEN")
-			} else {
-				output.UserOut.Println("    • Linux/macOS: sudo lsof -i :9003 -sTCP:LISTEN")
-				output.UserOut.Println("    • Windows: netstat -ano | findstr :9003")
-			}
+			output.UserOut.Println("✓ Port 9003: IDE listening")
 		} else {
-			output.UserOut.Println("  Port 9003 is not currently in use on the host")
-			output.UserOut.Println("  When you're ready to debug, start your IDE's debug listener on port 9003.")
+			output.UserOut.Println("○ Port 9003: No listener detected")
 		}
 	}
-	output.UserOut.Println()
 
 	// Check 2: WSL2 Mirrored Mode - hostAddressLoopback setting
 	if isWSL2 && nodeps.IsWSL2MirroredMode() {
-		output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-		output.UserOut.Println("WSL2 Mirrored Mode Configuration")
-		output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
 		if nodeps.IsWSL2HostAddressLoopbackEnabled() {
-			output.UserOut.Println("  ✓ hostAddressLoopback=true is enabled in .wslconfig")
-			output.UserOut.Println("    This is required for Xdebug in WSL2 mirrored mode.")
+			output.UserOut.Println("✓ WSL2 mirrored mode: hostAddressLoopback enabled")
 		} else {
-			output.UserOut.Println("  ✗ hostAddressLoopback=true is NOT set in .wslconfig")
-			output.UserOut.Println("    This setting is REQUIRED for Xdebug to work in WSL2 mirrored mode.")
-			output.UserOut.Println()
-			output.UserOut.Println("  To fix this, add the following to your Windows .wslconfig file")
-			output.UserOut.Println("  (located at C:\\Users\\<username>\\.wslconfig):")
-			output.UserOut.Println()
-			output.UserOut.Println("    [experimental]")
-			output.UserOut.Println("    hostAddressLoopback=true")
-			output.UserOut.Println()
-			output.UserOut.Println("  Then restart WSL with: wsl --shutdown")
-			output.UserOut.Println()
-			output.UserOut.Println("  See: https://ddev.readthedocs.io/en/stable/users/debugging-profiling/step-debugging/")
-			hasIssues = true
+			output.UserOut.Println("✗ WSL2 mirrored mode: hostAddressLoopback NOT enabled")
+			issues = append(issues, issue{
+				problem: "WSL2 mirrored mode requires hostAddressLoopback=true",
+				fix:     "Add to C:\\Users\\<username>\\.wslconfig:\n     [experimental]\n     hostAddressLoopback=true\n   Then run: wsl --shutdown",
+			})
 		}
-		output.UserOut.Println()
 	}
 
-	// Check 3: Get host.docker.internal information
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	output.UserOut.Println("host.docker.internal Configuration")
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	// Check 3: host.docker.internal
+	output.UserOut.Printf("✓ host.docker.internal: %s\n", hostDockerInternal.IPAddress)
 
-	hostDockerInternal := dockerutil.GetHostDockerInternal()
-	output.UserOut.Printf("  IP address: %s\n", hostDockerInternal.IPAddress)
-	output.UserOut.Printf("  Derivation: %s\n", hostDockerInternal.Message)
-	output.UserOut.Println()
-
-	// Check 4: Check xdebug_ide_location setting
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	output.UserOut.Println("Global Configuration")
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
-	output.UserOut.Printf("  xdebug_ide_location: %s\n", func() string {
-		if xdebugIDELocation == "" {
-			return "(empty/default)"
-		}
-		return "\"" + xdebugIDELocation + "\""
-	}())
-
-	// Special check for WSL2 + VS Code with WSL extension
-	if isWSL2 {
-		output.UserOut.Println()
-		output.UserOut.Println("  WSL2 + VS Code Setup:")
-		output.UserOut.Println()
-		output.UserOut.Println("  If you are using VS Code on Windows with the WSL extension:")
-		output.UserOut.Println("    • VS Code file explorer should show [WSL: <distro>] (e.g., [WSL: Ubuntu])")
-		output.UserOut.Println("    • PHP Debug extension must be installed IN WSL (not Windows)")
-		output.UserOut.Println("    • xdebug_ide_location MUST be set to 'wsl2'")
-		output.UserOut.Println()
-
-		if xdebugIDELocation == "wsl2" {
-			output.UserOut.Println("  ✓ xdebug_ide_location is correctly set to 'wsl2'")
-		} else if xdebugIDELocation == "" {
-			output.UserOut.Println("  ✗ xdebug_ide_location is not set")
-			output.UserOut.Println("    For VS Code with WSL extension, you MUST run:")
-			output.UserOut.Println("      ddev config global --xdebug-ide-location=wsl2")
-			hasIssues = true
-		} else {
-			output.UserOut.Printf("  ⚠ xdebug_ide_location is set to '%s'\n", xdebugIDELocation)
-			output.UserOut.Println("    For VS Code with WSL extension, it should be 'wsl2'")
-			output.UserOut.Println("    If using VS Code with WSL extension, run:")
-			output.UserOut.Println("      ddev config global --xdebug-ide-location=wsl2")
-		}
-		output.UserOut.Println()
-		output.UserOut.Println("  If your IDE runs in WSLg, WSL2, or a container:")
-		if xdebugIDELocation == "wsl2" {
-			output.UserOut.Println("  ✓ xdebug_ide_location is correctly set to 'wsl2'")
-		} else {
-			output.UserOut.Println("  ✗ xdebug_ide_location should be set to 'wsl2'")
-			output.UserOut.Println("    Run: ddev config global --xdebug-ide-location=wsl2")
-		}
-		output.UserOut.Println()
-		output.UserOut.Println("  If your IDE runs on Windows (e.g., PHPStorm on Windows):")
-		if xdebugIDELocation == "" {
-			output.UserOut.Println("  ✓ xdebug_ide_location is correctly set to default (empty)")
-		} else if xdebugIDELocation != "wsl2" {
-			output.UserOut.Println("  ✓ xdebug_ide_location is set for a special configuration")
-		} else {
-			output.UserOut.Println("  ⚠ xdebug_ide_location should be empty for IDEs on Windows")
-			output.UserOut.Println("    Run: ddev config global --xdebug-ide-location=\"\"")
-		}
-	} else {
-		// Non-WSL2 environments
-		if xdebugIDELocation == "" {
-			output.UserOut.Println("  ✓ This is correct for most users.")
-		} else {
-			output.UserOut.Println()
-			output.UserOut.Printf("  ⚠ xdebug_ide_location is set to: '%s'\n", xdebugIDELocation)
-			output.UserOut.Println("    This should only be set for special cases (container IDE, remote IDE, etc.)")
-			output.UserOut.Println("    If you're having issues, try: ddev config global --xdebug-ide-location=\"\"")
-		}
+	// Check 4: xdebug_ide_location setting
+	ideLocDisplay := "(default)"
+	if xdebugIDELocation != "" {
+		ideLocDisplay = "\"" + xdebugIDELocation + "\""
 	}
-	output.UserOut.Println()
+	output.UserOut.Printf("○ xdebug_ide_location: %s\n", ideLocDisplay)
 
-	// Check 5: Start a test listener and test connection
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	output.UserOut.Println("Connection Test")
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	// WSL2-specific configuration warning
+	if isWSL2 && xdebugIDELocation == "" {
+		output.UserOut.Println("  ⚠ If using VS Code with WSL extension, run:")
+		output.UserOut.Println("    ddev config global --xdebug-ide-location=wsl2")
+	}
 
-	// Only run connection test if port 9003 is not already in use
+	// Check 5: Connection test
 	if !portInUse {
-		// Determine which connection test to use based on IDE location
-		// If xdebug_ide_location=wsl2, the listener runs in WSL2, use simple connection test
-		// Otherwise in WSL2, the listener runs on Windows, use WSL2 NAT connection test
+		output.UserOut.Print("○ Connection test: ")
+		var connFailed bool
 		if isWSL2 && xdebugIDELocation != "wsl2" {
-			output.UserOut.Println("  Detected WSL2 - testing connection to Windows host...")
-			hasIssues = testWSL2NATConnection(app) || hasIssues
+			connFailed = testWSL2NATConnectionQuiet(app)
 		} else {
-			if isWSL2 && xdebugIDELocation == "wsl2" {
-				output.UserOut.Println("  Starting test listener in WSL2 on port 9003...")
-			} else {
-				output.UserOut.Println("  Starting test listener on host port 9003...")
-			}
-			hasIssues = testSimpleConnection(app) || hasIssues
+			connFailed = testSimpleConnectionQuiet(app)
+		}
+		if connFailed {
+			output.UserOut.Println("FAILED")
+			issues = append(issues, issue{
+				problem: "Container cannot connect to host on port 9003",
+				fix:     "Check firewall settings - port 9003 must be accessible",
+			})
+		} else {
+			output.UserOut.Println("OK")
 		}
 	} else {
-		output.UserOut.Println("  ℹ Skipping connection test (port 9003 already in use)")
-		output.UserOut.Println("    To test connectivity, stop your IDE's debug listener and run this command again.")
+		output.UserOut.Println("○ Connection test: Skipped (port in use)")
 	}
-	output.UserOut.Println()
 
-	// Check 6: Check Xdebug status
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	output.UserOut.Println("Xdebug Status")
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
+	// Check 6: Xdebug status
 	statusOut, _, _ := app.Exec(&ddevapp.ExecOpts{
 		Cmd: "xdebug status",
 	})
-	output.UserOut.Printf("  Current status: %s\n", strings.TrimSpace(statusOut))
-
-	if strings.Contains(statusOut, "disabled") {
-		output.UserOut.Println("  Xdebug is currently disabled")
-		output.UserOut.Println("  When you're ready to debug, enable it with: ddev xdebug on")
+	xdebugEnabled := !strings.Contains(statusOut, "disabled")
+	if xdebugEnabled {
+		output.UserOut.Println("✓ Xdebug: Enabled")
+	} else {
+		output.UserOut.Println("○ Xdebug: Disabled (enable with: ddev xdebug on)")
 	}
+
+	// Check 7: PHP module test (only if xdebug was disabled)
+	if !xdebugEnabled {
+		_, _, err := app.Exec(&ddevapp.ExecOpts{Cmd: "xdebug on"})
+		if err != nil {
+			output.UserOut.Printf("✗ Xdebug enable: Failed (%v)\n", err)
+			issues = append(issues, issue{
+				problem: "Failed to enable Xdebug",
+				fix:     "Check container logs with: ddev logs",
+			})
+		} else {
+			phpOut, _, _ := app.Exec(&ddevapp.ExecOpts{Cmd: "php -m"})
+			if strings.Contains(phpOut, "xdebug") {
+				output.UserOut.Println("✓ PHP module: Xdebug loaded")
+			} else {
+				output.UserOut.Println("✗ PHP module: Xdebug NOT loaded")
+				issues = append(issues, issue{
+					problem: "Xdebug PHP module not loading",
+					fix:     "Try: ddev restart",
+				})
+			}
+			// Restore disabled state
+			_, _, _ = app.Exec(&ddevapp.ExecOpts{Cmd: "xdebug off"})
+		}
+	}
+
 	output.UserOut.Println()
 
-	// Check 7: Test Xdebug with PHP if enabled, or enable temporarily
-	wasEnabled := !strings.Contains(statusOut, "disabled")
-	if !wasEnabled {
-		output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-		output.UserOut.Println("Xdebug PHP Test")
-		output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-		output.UserOut.Println("  Enabling Xdebug temporarily for testing...")
-
-		_, _, err := app.Exec(&ddevapp.ExecOpts{
-			Cmd: "xdebug on",
-		})
-		if err != nil {
-			output.UserOut.Printf("  ✗ Failed to enable Xdebug: %v\n", err)
-			hasIssues = true
-		} else {
-			output.UserOut.Println("  ✓ Xdebug enabled")
-
-			// Test with PHP
-			phpOut, _, err := app.Exec(&ddevapp.ExecOpts{
-				Cmd: "php -m",
-			})
-			if err == nil {
-				if strings.Contains(phpOut, "xdebug") {
-					output.UserOut.Println("  ✓ Xdebug is loaded in PHP")
-					// Check for xdebug.mode
-					if strings.Contains(phpOut, "xdebug.mode") {
-						output.UserOut.Println("  ✓ xdebug.mode is configured")
-					}
-				} else {
-					output.UserOut.Println("  ✗ Xdebug does not appear to be loaded in PHP")
-					hasIssues = true
-				}
-			}
-
-			// Disable Xdebug again if it wasn't enabled before
-			output.UserOut.Println("  Disabling Xdebug...")
-			_, _, _ = app.Exec(&ddevapp.ExecOpts{
-				Cmd: "xdebug off",
-			})
-			output.UserOut.Println("  ✓ Xdebug disabled (restored previous state)")
-		}
-		output.UserOut.Println()
-	}
-
 	// Summary
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	output.UserOut.Println("Summary")
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
-	if hasIssues {
-		output.UserOut.Println("  ⚠ Issues detected. See recommendations below.")
+	if len(issues) > 0 {
+		output.UserOut.Printf("Found %d issue(s):\n", len(issues))
 		output.UserOut.Println()
-		output.UserOut.Println("Recommendations:")
-		output.UserOut.Println("  1. Ensure your IDE is listening for Xdebug on port 9003")
-		output.UserOut.Println("  2. Check firewall settings - port 9003 must be open")
-		output.UserOut.Println("  3. If using WSL2, VPN, or proxy, see:")
-		output.UserOut.Println("     https://ddev.readthedocs.io/en/stable/users/debugging-profiling/step-debugging/#troubleshooting-xdebug")
-		output.UserOut.Println("  4. Try: ddev config global --xdebug-ide-location=\"\"")
-		output.UserOut.Println("  5. Enable Xdebug with: ddev xdebug on")
-		output.UserOut.Println()
+		for i, iss := range issues {
+			output.UserOut.Printf("%d. %s\n", i+1, iss.problem)
+			output.UserOut.Printf("   Fix: %s\n", iss.fix)
+			output.UserOut.Println()
+		}
+		output.UserOut.Println("Docs: https://ddev.readthedocs.io/en/stable/users/debugging-profiling/step-debugging/")
 		return 1
 	}
 
-	output.UserOut.Println("  ✓ No major issues detected - Xdebug configuration looks good!")
-	output.UserOut.Println()
-	output.UserOut.Println("Next steps:")
-	output.UserOut.Println("  1. Enable Xdebug: ddev xdebug on")
-	output.UserOut.Println("  2. Start your IDE's debug listener")
-	output.UserOut.Println("  3. Set a breakpoint in your code")
-	output.UserOut.Println("  4. Visit your site in a browser")
-	output.UserOut.Println()
+	output.UserOut.Println("No issues detected. Ready to debug:")
+	output.UserOut.Println("  1. ddev xdebug on")
+	output.UserOut.Println("  2. Start IDE debug listener")
+	output.UserOut.Println("  3. Set breakpoint and visit site")
 
 	return 0
 }
@@ -626,32 +495,126 @@ if ($connections) { Write-Output "INUSE" } else { Write-Output "FREE" }
 	return strings.TrimSpace(string(psOutput)) == "INUSE"
 }
 
+// testSimpleConnectionQuiet tests connection without verbose output
+// Returns true if connection failed, false if successful
+func testSimpleConnectionQuiet(app *ddevapp.DdevApp) bool {
+	listener, err := net.Listen("tcp", "0.0.0.0:9003")
+	if err != nil {
+		return true
+	}
+	defer listener.Close()
+
+	connChan := make(chan net.Conn, 1)
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			return
+		}
+		connChan <- conn
+	}()
+
+	_, _, _ = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "bash -c 'echo test | nc -w 2 host.docker.internal 9003'",
+	})
+
+	select {
+	case conn := <-connChan:
+		conn.Close()
+		return false
+	case <-time.After(5 * time.Second):
+		return true
+	}
+}
+
+// testWSL2NATConnectionQuiet tests WSL2 NAT connection without verbose output
+// Returns true if connection failed, false if successful
+func testWSL2NATConnectionQuiet(app *ddevapp.DdevApp) bool {
+	psScript := `
+$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Any, 9003)
+try { $listener.Start() } catch { Write-Output "INUSE"; exit 0 }
+Write-Output "LISTENING"
+$listener.Server.ReceiveTimeout = 10000
+try {
+    $client = $listener.AcceptTcpClient()
+    Write-Output "RECEIVED"
+    $client.Close()
+} catch { Write-Output "ERROR" }
+$listener.Stop()
+`
+	cmd := exec.Command("powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", psScript)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return true
+	}
+	if err := cmd.Start(); err != nil {
+		return true
+	}
+	defer func() {
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
+	}()
+
+	resultChan := make(chan string, 1)
+	go func() {
+		buf := make([]byte, 1024)
+		for {
+			n, err := stdout.Read(buf)
+			if err != nil {
+				return
+			}
+			output := strings.TrimSpace(string(buf[:n]))
+			if strings.Contains(output, "INUSE") {
+				resultChan <- "inuse"
+				return
+			}
+			if strings.Contains(output, "LISTENING") {
+				continue
+			}
+			if strings.Contains(output, "RECEIVED") {
+				resultChan <- "ok"
+				return
+			}
+			if strings.Contains(output, "ERROR") {
+				resultChan <- "error"
+				return
+			}
+		}
+	}()
+
+	// Wait for listener to be ready
+	time.Sleep(500 * time.Millisecond)
+
+	_, _, _ = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "bash -c 'echo test | nc -w 5 host.docker.internal 9003'",
+	})
+
+	select {
+	case result := <-resultChan:
+		return result != "ok" && result != "inuse"
+	case <-time.After(10 * time.Second):
+		return true
+	}
+}
+
 // =============================================================================
 // Interactive Mode Functions
 // =============================================================================
 
 // runInteractiveXdebugDiagnose runs the interactive guided diagnostic
 func runInteractiveXdebugDiagnose() int {
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("Interactive Xdebug Diagnostics")
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	output.UserOut.Println()
-	output.UserOut.Println("This wizard will guide you through testing your Xdebug setup.")
 	output.UserOut.Println()
 
-	// Load the app
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		util.Warning("Not in a DDEV project directory.")
-		util.Warning("Please run this command from within a DDEV project.")
 		return 1
 	}
 
-	// Ensure project is running
 	status, _ := app.SiteStatus()
 	if status != ddevapp.SiteRunning {
-		output.UserOut.Printf("Project '%s' is not running. Starting project...", app.Name)
-		output.UserOut.Println()
+		output.UserOut.Printf("Starting project '%s'...\n", app.Name)
 		if err := app.Start(); err != nil {
 			util.Failed("Failed to start project: %v", err)
 			return 1
@@ -659,208 +622,123 @@ func runInteractiveXdebugDiagnose() int {
 	}
 
 	// Step 1: Environment Detection
-	output.UserOut.Println("Step 1: Environment Detection")
-	output.UserOut.Println("─────────────────────────────────────────────────────────────")
+	output.UserOut.Println("[1/5] Environment")
 	envType := detectAndDisplayEnvironment(app)
+	_, _, _ = app.Exec(&ddevapp.ExecOpts{Cmd: "xdebug off"})
 	output.UserOut.Println()
 
-	// Turn off Xdebug to prevent it from interfering with the test
-	output.UserOut.Println("  Ensuring Xdebug is disabled for testing...")
-	_, _, _ = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "xdebug off",
-	})
-	output.UserOut.Println()
-
-	// Step 2: Prepare for connectivity test
-	output.UserOut.Println("Step 2: Prepare for Connectivity Test")
-	output.UserOut.Println("─────────────────────────────────────────────────────────────")
-	output.UserOut.Println("We need to test if the network path from your container to your")
-	output.UserOut.Println("host is working. To do this, we need to temporarily use port 9003.")
-	output.UserOut.Println()
-	output.UserOut.Println("If your IDE is currently listening for Xdebug connections, please")
-	output.UserOut.Println("stop it temporarily. You'll be asked to start it again in a moment.")
-	output.UserOut.Println()
-	if !util.Confirm("Press Enter when your IDE's debug listener is stopped") {
-		output.UserOut.Println("Cancelled by user.")
+	// Step 2: Connectivity test
+	output.UserOut.Println("[2/5] Connectivity Test")
+	output.UserOut.Println("Stop your IDE's debug listener temporarily for this test.")
+	if !util.Confirm("Press Enter when ready") {
 		return 1
 	}
-	output.UserOut.Println()
-
-	// Step 3: Basic Connectivity Test
-	output.UserOut.Println("Step 3: Network Connectivity Test")
-	output.UserOut.Println("─────────────────────────────────────────────────────────────")
 	connectivityOK := runConnectivityTest(app, envType)
-	output.UserOut.Println()
-
 	if !connectivityOK {
-		output.UserOut.Println("  ✗ Network connectivity test failed.")
-		output.UserOut.Println("    Please resolve the connectivity issues before continuing.")
-		output.UserOut.Println()
-		output.UserOut.Println("Common fixes:")
-		output.UserOut.Println("  - Check firewall settings for port 9003")
-		output.UserOut.Println("  - If using WSL2, ensure proper network configuration")
-		output.UserOut.Println("  - See: https://ddev.readthedocs.io/en/stable/users/debugging-profiling/step-debugging/")
+		output.UserOut.Println("✗ Network connectivity failed")
+		output.UserOut.Println("  Check firewall settings for port 9003")
 		return 1
 	}
+	output.UserOut.Println()
 
-	// Step 4: Ask about IDE
-	output.UserOut.Println("Step 4: IDE Information")
-	output.UserOut.Println("─────────────────────────────────────────────────────────────")
+	// Step 3: IDE Information
+	output.UserOut.Println("[3/5] IDE Setup")
 	ideType, ideLocation := promptIDEInfo(envType)
 	output.UserOut.Println()
 
-	// Step 4.5: Validate xdebug_ide_location for WSL2 scenarios that require it
-	// This includes: VS Code with WSL extension, PhpStorm with Gateway, IDEs in WSLg, IDEs in containers
+	// Step 3.5: Validate xdebug_ide_location for WSL2 scenarios
 	needsWSL2Setting := false
 	var setupDescription string
-
 	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
 		switch ideLocation {
 		case "windows":
-			// VS Code on Windows with WSL extension
 			if ideType == "vscode" {
 				needsWSL2Setting = true
-				setupDescription = "VS Code on Windows with WSL extension"
+				setupDescription = "VS Code with WSL extension"
 			}
-			// PhpStorm native on Windows does NOT need wsl2 setting
 		case "gateway-wsl2":
-			// PhpStorm with JetBrains Gateway WSL2 backend
 			needsWSL2Setting = true
-			setupDescription = "PhpStorm with JetBrains Gateway WSL2 backend"
-		case "wslg":
-			// Any IDE running in WSLg (graphical Linux app in WSL2)
+			setupDescription = "PhpStorm with Gateway"
+		case "wslg", "wsl2", "container":
 			needsWSL2Setting = true
-			setupDescription = "IDE running in WSLg"
-		case "wsl2":
-			// PhpStorm or other IDE running directly in WSL2
-			needsWSL2Setting = true
-			setupDescription = "IDE running in WSL2"
-		case "container":
-			// VS Code Remote Containers or similar
-			needsWSL2Setting = true
-			setupDescription = "IDE running in container"
+			setupDescription = "IDE in WSL2/container"
 		}
 	}
 
 	if needsWSL2Setting {
-		output.UserOut.Println("Step 4.5: Validate xdebug_ide_location Setting")
-		output.UserOut.Println("─────────────────────────────────────────────────────────────")
 		xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
-		output.UserOut.Printf("  Current xdebug_ide_location: %s\n", func() string {
-			if xdebugIDELocation == "" {
-				return "(empty/default)"
-			}
-			return "\"" + xdebugIDELocation + "\""
-		}())
-		output.UserOut.Println()
-
 		if xdebugIDELocation != "wsl2" {
-			output.UserOut.Printf("  ✗ For %s, xdebug_ide_location MUST be 'wsl2'\n", setupDescription)
-			output.UserOut.Println()
-			output.UserOut.Println("  This setting tells DDEV where your IDE's debug listener is located.")
-			output.UserOut.Println("  Without it, Xdebug connections will fail.")
-			output.UserOut.Println()
-
-			if util.Confirm("Would you like to set xdebug_ide_location=wsl2 now?") {
+			output.UserOut.Printf("✗ %s requires xdebug_ide_location=wsl2\n", setupDescription)
+			if util.Confirm("Set it now?") {
 				globalconfig.DdevGlobalConfig.XdebugIDELocation = "wsl2"
-				err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-				if err != nil {
-					output.UserOut.Printf("  ✗ Failed to update global config: %v\n", err)
-					output.UserOut.Println("  Please run manually: ddev config global --xdebug-ide-location=wsl2")
+				if err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig); err != nil {
+					output.UserOut.Printf("Failed: %v\n", err)
+					output.UserOut.Println("Run: ddev config global --xdebug-ide-location=wsl2")
 				} else {
-					output.UserOut.Println("  ✓ xdebug_ide_location has been set to 'wsl2'")
-					output.UserOut.Println()
-					output.UserOut.Println("  Restarting project to apply changes...")
-					if err := app.Restart(); err != nil {
-						output.UserOut.Printf("  ⚠ Failed to restart project: %v\n", err)
-						output.UserOut.Println("    Please restart manually: ddev restart")
-					} else {
-						output.UserOut.Println("  ✓ Project restarted successfully")
-					}
+					output.UserOut.Println("✓ Set to 'wsl2', restarting...")
+					_ = app.Restart()
 				}
 			} else {
-				output.UserOut.Println("  Please run manually: ddev config global --xdebug-ide-location=wsl2")
-				output.UserOut.Println("  Then restart your project: ddev restart")
+				output.UserOut.Println("Run: ddev config global --xdebug-ide-location=wsl2")
 			}
-		} else {
-			output.UserOut.Println("  ✓ xdebug_ide_location is correctly set to 'wsl2'")
+			output.UserOut.Println()
 		}
-		output.UserOut.Println()
 	}
 
-	// Step 5: Guide user to enable listening
-	output.UserOut.Println("Step 5: Enable Debug Listening")
-	output.UserOut.Println("─────────────────────────────────────────────────────────────")
+	// Step 4: Enable listening
+	output.UserOut.Println("[4/5] Start IDE Listener")
 	promptEnableListening(app.Name, ideType, ideLocation, envType)
 	output.UserOut.Println()
 
-	// Step 6: Test DBGp Protocol
-	output.UserOut.Println("Step 6: IDE Protocol Test")
-	output.UserOut.Println("─────────────────────────────────────────────────────────────")
+	// Step 5: Protocol test
+	output.UserOut.Println("[5/5] Protocol Test")
 	protocolOK := testDBGpProtocol(app, ideLocation, envType)
 	output.UserOut.Println()
 
 	// Summary
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	output.UserOut.Println("Summary")
-	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
 	if connectivityOK && protocolOK {
-		output.UserOut.Println("  ✓ All tests passed! Your Xdebug setup is working correctly.")
-		output.UserOut.Println()
-		output.UserOut.Println("Next steps to start debugging:")
-		output.UserOut.Println("  1. Enable Xdebug: ddev xdebug on")
-		output.UserOut.Println("  2. Ensure your IDE is listening for debug connections")
-		output.UserOut.Println("  3. Set a breakpoint in your code")
-		output.UserOut.Println("  4. Visit your site in a browser")
-		output.UserOut.Println()
+		output.UserOut.Println("✓ All tests passed!")
+		output.UserOut.Println("  1. ddev xdebug on")
+		output.UserOut.Println("  2. Set breakpoint and visit site")
 		return 0
 	}
 
-	output.UserOut.Println("  ⚠ Some tests failed. See the output above for details.")
+	output.UserOut.Println("✗ Some tests failed. See output above.")
 	return 1
 }
 
 // detectAndDisplayEnvironment detects and displays the current environment
 // Returns the environment type string for later use
 func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
-	output.UserOut.Printf("  Project: %s\n", app.Name)
-	output.UserOut.Printf("  Project root: %s\n", app.AppRoot)
+	output.UserOut.Printf("Project: %s\n", app.Name)
 
 	var envType string
-
-	// Detect environment
 	if nodeps.IsWSL2() {
 		if nodeps.IsWSL2MirroredMode() {
 			envType = "wsl2-mirrored"
-			output.UserOut.Println("  Environment: WSL2 (Mirrored networking mode)")
-			// Check for hostAddressLoopback setting
+			output.UserOut.Print("Platform: WSL2 (mirrored) ")
 			if nodeps.IsWSL2HostAddressLoopbackEnabled() {
-				output.UserOut.Println("  ✓ hostAddressLoopback=true is enabled")
+				output.UserOut.Println("✓")
 			} else {
-				output.UserOut.Println("  ✗ hostAddressLoopback=true is NOT set in .wslconfig")
-				output.UserOut.Println("    This is required for Xdebug in mirrored mode!")
-				output.UserOut.Println("    Add to .wslconfig under [experimental]: hostAddressLoopback=true")
+				output.UserOut.Println("✗ hostAddressLoopback not set")
 			}
 		} else {
 			envType = "wsl2-nat"
-			output.UserOut.Println("  Environment: WSL2 (NAT networking mode)")
-			output.UserOut.Println("    Note: Your IDE likely runs on Windows, not in WSL2")
+			output.UserOut.Println("Platform: WSL2 (NAT)")
 		}
 	} else if runtime.GOOS == "darwin" {
 		envType = "macos"
-		output.UserOut.Println("  Environment: macOS")
+		output.UserOut.Println("Platform: macOS")
 	} else if runtime.GOOS == "windows" {
 		envType = "windows"
-		output.UserOut.Println("  Environment: Windows")
+		output.UserOut.Println("Platform: Windows")
 	} else {
 		envType = "linux"
-		output.UserOut.Println("  Environment: Linux")
+		output.UserOut.Println("Platform: Linux")
 	}
 
-	// Show Docker info
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
-	output.UserOut.Printf("  host.docker.internal: %s\n", hostDockerInternal.IPAddress)
+	output.UserOut.Printf("host.docker.internal: %s\n", hostDockerInternal.IPAddress)
 
 	return envType
 }
@@ -1024,194 +902,32 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 
 // promptEnableListening guides the user to enable debug listening in their IDE
 func promptEnableListening(projectName string, ideType string, ideLocation string, envType string) {
-	output.UserOut.Printf("  Please open project '%s' in your IDE.\n", projectName)
-	output.UserOut.Println()
-
 	switch ideType {
 	case "phpstorm":
-		isWSL2 := envType == "wsl2-nat" || envType == "wsl2-mirrored"
-		if isWSL2 && ideLocation == "gateway-wsl2" {
-			output.UserOut.Println("  PhpStorm with JetBrains Gateway WSL2 backend setup:")
-			output.UserOut.Println()
-			output.UserOut.Println("  1. Ensure JetBrains Gateway is installed and connected to your WSL2 distro")
-			output.UserOut.Println("     • The IDE backend runs in WSL2, UI runs on Windows")
-			output.UserOut.Println("     • Project must be opened through Gateway connection")
-			output.UserOut.Println()
-			output.UserOut.Println("  2. Configure PHP interpreter:")
-			output.UserOut.Println("     • File -> Settings -> PHP")
-			output.UserOut.Println("     • Interpreter should point to PHP in WSL2")
-			output.UserOut.Println()
-			output.UserOut.Println("  3. Start debug listener:")
-			output.UserOut.Println("     • Run -> Start Listening for PHP Debug Connections")
-			output.UserOut.Println("     • Or click the phone/bug icon in the toolbar")
-			output.UserOut.Println()
-			output.UserOut.Println("  4. Verify debug settings (File -> Settings -> PHP -> Debug):")
-			output.UserOut.Println("     • Debug port: 9003")
-			output.UserOut.Println("     • 'Can accept external connections' is checked")
-		} else if isWSL2 && ideLocation == "windows-native" {
-			output.UserOut.Println("  PhpStorm on Windows with project on Windows filesystem:")
-			output.UserOut.Println()
-			output.UserOut.Println("  ℹ  Note: The recommended setup is having your project on the WSL2")
-			output.UserOut.Println("      filesystem for better performance with DDEV.")
-			output.UserOut.Println()
-			output.UserOut.Println("  1. Go to Run -> Start Listening for PHP Debug Connections")
-			output.UserOut.Println("     (or click the phone/bug icon in the toolbar)")
-			output.UserOut.Println()
-			output.UserOut.Println("  2. Verify settings (File -> Settings -> PHP -> Debug):")
-			output.UserOut.Println("     • Debug port: 9003")
-			output.UserOut.Println("     • 'Can accept external connections' is checked")
-		} else {
-			output.UserOut.Println("  PhpStorm setup:")
-			output.UserOut.Println("    1. Go to Run -> Start Listening for PHP Debug Connections")
-			output.UserOut.Println("       (or click the phone/bug icon in the toolbar)")
-			output.UserOut.Println("    2. Ensure the icon shows a green bug or 'listening' state")
-			output.UserOut.Println()
-			output.UserOut.Println("  Settings to verify (File -> Settings -> PHP -> Debug):")
-			output.UserOut.Println("    - Debug port: 9003")
-			output.UserOut.Println("    - 'Can accept external connections' is checked")
-		}
+		output.UserOut.Println("PhpStorm: Run -> Start Listening for PHP Debug Connections")
+		output.UserOut.Println("Verify: Settings -> PHP -> Debug -> Port 9003, Accept external connections")
 	case "vscode":
-		// WSL2-specific VS Code instructions
 		isWSL2 := envType == "wsl2-nat" || envType == "wsl2-mirrored"
-		if isWSL2 && ideLocation == "windows" {
-			output.UserOut.Println("  VS Code on Windows with WSL extension setup:")
-			output.UserOut.Println()
-			output.UserOut.Println("  IMPORTANT: This is the recommended WSL2 configuration!")
-			output.UserOut.Println()
-			output.UserOut.Println("  1. Install the 'WSL' extension in VS Code (if not already installed)")
-			output.UserOut.Println("     Extension ID: ms-vscode-remote.remote-wsl")
-			output.UserOut.Println()
-			output.UserOut.Println("  2. Open your WSL2 project folder:")
-			output.UserOut.Println("     • Press F1 in VS Code")
-			output.UserOut.Println("     • Run command: 'WSL: Open Folder in WSL'")
-			output.UserOut.Println("     • Navigate to your project directory")
-			output.UserOut.Println()
-			output.UserOut.Println("  3. Install 'PHP Debug' extension IN WSL (not Windows):")
-			output.UserOut.Println("     • Open Extensions view (Ctrl+Shift+X)")
-			output.UserOut.Println("     • Search for 'PHP Debug' by Xdebug")
-			output.UserOut.Println("     • Click 'Install in WSL' (NOT 'Install')")
-			output.UserOut.Println("     • You should see the extension listed under 'WSL: <distro>' section")
-			output.UserOut.Println()
-			output.UserOut.Println("  4. Configure launch.json (if needed):")
+		launchOK := checkVSCodeLaunchJSON(".vscode/launch.json")
 
-			// Check for existing launch.json
-			launchPath := ".vscode/launch.json"
-			launchOK := checkVSCodeLaunchJSON(launchPath)
-
-			if launchOK {
-				output.UserOut.Println("     ✓ Found compliant .vscode/launch.json")
-			} else {
-				output.UserOut.Println("     Create .vscode/launch.json with:")
-				output.UserOut.Println(`       {
-         "version": "0.2.0",
-         "configurations": [{
-           "name": "Listen for Xdebug",
-           "type": "php",
-           "request": "launch",
-           "port": 9003,
-           "hostname": "0.0.0.0",
-           "pathMappings": {
-             "/var/www/html": "${workspaceFolder}"
-           }
-         }]
-       }`)
-			}
-			output.UserOut.Println()
-			output.UserOut.Println("  5. Start debugging:")
-			output.UserOut.Println("     Press F5 or go to Run -> Start Debugging")
-		} else if isWSL2 && ideLocation == "windows-native" {
-			output.UserOut.Println("  VS Code on Windows with project on Windows filesystem:")
-			output.UserOut.Println()
-			output.UserOut.Println("  ℹ  Note: The recommended setup is using the WSL extension with")
-			output.UserOut.Println("      your project on the WSL2 filesystem for better performance.")
-			output.UserOut.Println()
-			output.UserOut.Println("  1. Install 'PHP Debug' extension by Xdebug")
-			output.UserOut.Println("  2. Create .vscode/launch.json with:")
-			output.UserOut.Println(`       {
-         "version": "0.2.0",
-         "configurations": [{
-           "name": "Listen for Xdebug",
-           "type": "php",
-           "request": "launch",
-           "port": 9003,
-           "hostname": "0.0.0.0"
-         }]
-       }`)
-			output.UserOut.Println("  3. Press F5 or go to Run -> Start Debugging")
-		} else if isWSL2 && (ideLocation == "wslg" || ideLocation == "container") {
-			output.UserOut.Println("  VS Code in WSLg/Container setup:")
-			output.UserOut.Println()
-			output.UserOut.Println("  ℹ  Note: The recommended setup is VS Code on Windows with WSL extension,")
-			output.UserOut.Println("      but this configuration works if you prefer running VS Code in WSLg.")
-			output.UserOut.Println()
-
-			// Check for existing launch.json
-			launchPath := ".vscode/launch.json"
-			launchOK := checkVSCodeLaunchJSON(launchPath)
-
-			if launchOK {
-				output.UserOut.Println("  ✓ Found compliant .vscode/launch.json")
-				output.UserOut.Println()
-				output.UserOut.Println("  1. Ensure 'PHP Debug' extension by Xdebug is installed")
-				output.UserOut.Println("  2. Press F5 or go to Run -> Start Debugging")
-			} else {
-				output.UserOut.Println("  1. Install 'PHP Debug' extension by Xdebug")
-				output.UserOut.Println("  2. Create .vscode/launch.json with:")
-				output.UserOut.Println(`       {
-         "version": "0.2.0",
-         "configurations": [{
-           "name": "Listen for Xdebug",
-           "type": "php",
-           "request": "launch",
-           "port": 9003,
-           "hostname": "0.0.0.0",
-           "pathMappings": {
-             "/var/www/html": "${workspaceFolder}"
-           }
-         }]
-       }`)
-				output.UserOut.Println("  3. Press F5 or go to Run -> Start Debugging")
-			}
+		if launchOK {
+			output.UserOut.Println("✓ .vscode/launch.json found")
 		} else {
-			// Non-WSL2 VS Code setup
-			launchPath := ".vscode/launch.json"
-			launchOK := checkVSCodeLaunchJSON(launchPath)
-
-			if launchOK {
-				output.UserOut.Println("  ✓ Found compliant .vscode/launch.json")
-				output.UserOut.Println("  VS Code setup:")
-				output.UserOut.Println("    1. Ensure 'PHP Debug' extension by Xdebug is installed")
-				output.UserOut.Println("    2. Press F5 or go to Run -> Start Debugging")
-			} else {
-				output.UserOut.Println("  VS Code setup:")
-				output.UserOut.Println("    1. Install the 'PHP Debug' extension by Xdebug")
-				output.UserOut.Println("    2. Create/update .vscode/launch.json with:")
-				output.UserOut.Println(`       {
-         "version": "0.2.0",
-         "configurations": [{
-           "name": "Listen for Xdebug",
-           "type": "php",
-           "request": "launch",
-           "port": 9003,
-           "hostname": "0.0.0.0",
-           "pathMappings": {
-             "/var/www/html": "${workspaceFolder}"
-           }
-         }]
-       }`)
-				output.UserOut.Println("    3. Press F5 or go to Run -> Start Debugging")
-			}
+			output.UserOut.Println("Create .vscode/launch.json:")
+			output.UserOut.Println(`  {"version":"0.2.0","configurations":[{"name":"Xdebug","type":"php",`)
+			output.UserOut.Println(`   "request":"launch","port":9003,"hostname":"0.0.0.0",`)
+			output.UserOut.Println(`   "pathMappings":{"/var/www/html":"${workspaceFolder}"}}]}`)
 		}
+		if isWSL2 && ideLocation == "windows" {
+			output.UserOut.Println("Note: Install PHP Debug extension IN WSL, not Windows")
+		}
+		output.UserOut.Println("Press F5 to start debugging")
 	default:
-		output.UserOut.Println("  IDE setup:")
-		output.UserOut.Println("    1. Configure your IDE to listen on port 9003")
-		output.UserOut.Println("    2. Enable debug listening mode")
-		output.UserOut.Println("    3. Ensure path mappings are set correctly:")
-		output.UserOut.Println("       Container: /var/www/html -> Your project root")
+		output.UserOut.Println("Configure IDE: listen on port 9003, map /var/www/html to project root")
 	}
 
 	output.UserOut.Println()
-	util.Confirm("Press Enter when your IDE is listening for debug connections")
+	util.Confirm("Press Enter when IDE is listening")
 }
 
 // checkVSCodeLaunchJSON checks if .vscode/launch.json exists and has proper Xdebug configuration
@@ -1232,43 +948,19 @@ func checkVSCodeLaunchJSON(path string) bool {
 
 // testDBGpProtocol tests the DBGp protocol by connecting to the IDE from inside the web container
 func testDBGpProtocol(app *ddevapp.DdevApp, ideLocation string, envType string) bool {
-	// Determine the target host based on IDE location and environment
-	// The connection must be made from inside the web container
-	var targetHost string
-	switch ideLocation {
-	case "windows", "windows-native", "gateway-wsl2", "wsl2", "wslg", "container", "local", "macos", "linux":
-		// From inside container, always use host.docker.internal to reach host
-		targetHost = "host.docker.internal"
-	case "remote":
-		output.UserOut.Println("  ℹ For remote IDE setups, please ensure port forwarding is configured.")
-		output.UserOut.Println("    Skipping protocol test for remote IDE.")
+	targetHost := "host.docker.internal"
+	if ideLocation == "remote" {
+		output.UserOut.Println("Skipping protocol test for remote IDE")
 		return true
-	default:
-		targetHost = "host.docker.internal"
 	}
-
-	// Step 1: Simple connectivity check first
-	output.UserOut.Printf("  Testing basic connectivity to %s:9003...\n", targetHost)
 
 	connected, errMsg := testContainerToHostConnectivity(app, targetHost, 9003)
 	if !connected {
-		output.UserOut.Println("  ✗ Cannot connect to port 9003")
-		output.UserOut.Println("    Your IDE is not listening on port 9003.")
-		output.UserOut.Println()
-		output.UserOut.Printf("    Error: %s\n", errMsg)
-		output.UserOut.Println()
-		output.UserOut.Println("  Please ensure:")
-		output.UserOut.Println("    • Your IDE's debug listener is started")
-		output.UserOut.Println("    • The listener is configured for port 9003")
-		output.UserOut.Println("    • No firewall is blocking the connection")
+		output.UserOut.Printf("✗ Cannot connect to port 9003: %s\n", errMsg)
+		output.UserOut.Println("  Ensure IDE listener is started on port 9003")
 		return false
 	}
-
-	output.UserOut.Println("  ✓ Successfully connected to port 9003")
-	output.UserOut.Println()
-
-	// Step 2: Now test the DBGp protocol
-	output.UserOut.Println("  Testing DBGp protocol communication...")
+	output.UserOut.Println("✓ Connected to port 9003")
 
 	// Create a PHP script to test the DBGp protocol using base64 encoding to avoid quoting issues
 	// PHP provides better control over socket communication than nc
@@ -1308,138 +1000,25 @@ fclose($sock);
 	phpScriptB64 := base64.StdEncoding.EncodeToString([]byte(phpScript))
 	cmd := fmt.Sprintf("echo %s | base64 -d > /tmp/ddev_xdebug_test.php && php /tmp/ddev_xdebug_test.php && rm -f /tmp/ddev_xdebug_test.php", phpScriptB64)
 
-	output.UserOut.Println("  Sending DBGp init packet to IDE...")
-	testOut, testErr, execErr := app.Exec(&ddevapp.ExecOpts{
-		Cmd: cmd,
-	})
+	testOut, _, execErr := app.Exec(&ddevapp.ExecOpts{Cmd: cmd})
 
-	// Handle exec errors gracefully (timeout, command failure, etc.)
-	if execErr != nil {
-		// Don't show the ugly raw error, provide a friendly message
-		output.UserOut.Println("  ✗ Failed to complete protocol test")
-		output.UserOut.Println()
-		output.UserOut.Println("  This could mean:")
-		output.UserOut.Println("    • Your IDE is listening but not responding to Xdebug packets")
-		output.UserOut.Println("    • The IDE's debug configuration is incorrect")
-		output.UserOut.Println("    • A network issue is preventing communication")
-		output.UserOut.Println()
-		output.UserOut.Println("  Try enabling Xdebug and testing with a real breakpoint:")
-		output.UserOut.Println("    ddev xdebug on")
+	if execErr != nil || strings.Contains(testOut, "ERROR:") {
+		output.UserOut.Println("✗ Protocol test failed")
+		output.UserOut.Println("  Try: ddev xdebug on, then set a breakpoint")
 		return false
 	}
 
-	// Check for connection errors from PHP script
-	if strings.Contains(testOut, "ERROR:") {
-		errMsg := strings.TrimPrefix(testOut, "ERROR: ")
-		errMsg = strings.TrimSpace(errMsg)
-		output.UserOut.Println("  ✗ Connection failed")
-		if strings.Contains(errMsg, "Connection refused") {
-			output.UserOut.Println("    Your IDE is not listening on port 9003.")
-			output.UserOut.Println("    Please start your IDE's debug listener and try again.")
-		} else {
-			output.UserOut.Printf("    Error: %s\n", errMsg)
-		}
-		return false
-	}
-
-	// Check stderr for errors
-	if testErr != "" && !strings.Contains(testErr, "Deprecated") {
-		output.UserOut.Printf("  ⚠ Warning: %s\n", testErr)
-	}
-
-	output.UserOut.Println("  ✓ Successfully sent DBGp init packet to IDE")
-
-	// Check for IDE response
 	if strings.Contains(testOut, "SUCCESS:") {
-		// Extract response data (everything after the SUCCESS line)
-		lines := strings.SplitN(testOut, "\n", 2)
-		if len(lines) > 1 {
-			response := lines[1]
-			// Parse the byte count
-			if strings.HasPrefix(lines[0], "SUCCESS: ") {
-				byteCountStr := strings.TrimPrefix(lines[0], "SUCCESS: ")
-				byteCountStr = strings.TrimSuffix(byteCountStr, " bytes")
-				output.UserOut.Printf("  ✓ IDE responded with %s bytes\n", byteCountStr)
-			}
-
-			// Parse and display the DBGp commands
-			output.UserOut.Println("    IDE commands received:")
-
-			// Split by common command keywords to separate multiple commands
-			// The response contains space-separated commands like: eval -i 1 -- base64 feature_set -i 2 -n name -v val
-			commands := []string{}
-			if strings.Contains(response, "eval") {
-				commands = append(commands, "eval")
-			}
-			if strings.Contains(response, "feature_set") {
-				commands = append(commands, "feature_set")
-			}
-			if strings.Contains(response, "feature_get") {
-				commands = append(commands, "feature_get")
-			}
-			if strings.Contains(response, "status") {
-				commands = append(commands, "status")
-			}
-			if strings.Contains(response, "breakpoint") {
-				commands = append(commands, "breakpoint")
-			}
-			if strings.Contains(response, "run") {
-				commands = append(commands, "run")
-			}
-			if strings.Contains(response, "step") {
-				commands = append(commands, "step")
-			}
-
-			if len(commands) > 0 {
-				for _, cmd := range commands {
-					output.UserOut.Printf("      • %s\n", cmd)
-				}
-			} else {
-				output.UserOut.Println("      • (unknown commands)")
-			}
-
-			// Look for common DBGp commands in the response
-			if strings.Contains(response, "feature_get") ||
-				strings.Contains(response, "feature_set") ||
-				strings.Contains(response, "eval") ||
-				strings.Contains(response, "status") ||
-				strings.Contains(response, "breakpoint") ||
-				strings.Contains(response, "run") ||
-				strings.Contains(response, "step") {
-				output.UserOut.Println("  ✓ IDE responded with valid DBGp commands")
-				output.UserOut.Println("  ✓ Your IDE is correctly configured for Xdebug!")
-			} else {
-				output.UserOut.Println("  ✓ IDE is responding to Xdebug connections")
-			}
-			return true
-		}
+		output.UserOut.Println("✓ IDE responding to DBGp protocol")
+		return true
 	}
 
-	// Handle timeout or no response
-	if strings.Contains(testOut, "TIMEOUT") {
-		output.UserOut.Println("  ⚠ IDE connection timed out waiting for response")
-		output.UserOut.Println("    The IDE accepted the connection but did not send commands.")
-		output.UserOut.Println("    This could indicate:")
-		output.UserOut.Println("    - Your IDE is listening but may not be properly configured for Xdebug")
-		output.UserOut.Println("    - Some IDEs don't respond until Xdebug is actually enabled")
-		output.UserOut.Println()
-		output.UserOut.Println("  Try enabling Xdebug and setting a breakpoint to test fully:")
-		output.UserOut.Println("    ddev xdebug on")
+	if strings.Contains(testOut, "TIMEOUT") || strings.Contains(testOut, "NO_RESPONSE") {
+		output.UserOut.Println("⚠ IDE accepted connection but no response")
+		output.UserOut.Println("  Some IDEs only respond when Xdebug is enabled")
+		output.UserOut.Println("  Try: ddev xdebug on, then set a breakpoint")
 		return false
 	}
 
-	if strings.Contains(testOut, "NO_RESPONSE") {
-		output.UserOut.Println("  ⚠ IDE accepted connection but did not send any response")
-		output.UserOut.Println("    This could indicate:")
-		output.UserOut.Println("    - Your IDE is listening but may not be properly configured for Xdebug")
-		output.UserOut.Println("    - Some IDEs don't respond until Xdebug is actually enabled")
-		output.UserOut.Println()
-		output.UserOut.Println("  Try enabling Xdebug and setting a breakpoint to test fully:")
-		output.UserOut.Println("    ddev xdebug on")
-		return false
-	}
-
-	// Unexpected output
-	output.UserOut.Printf("  ⚠ Unexpected test output: %s\n", testOut)
 	return false
 }

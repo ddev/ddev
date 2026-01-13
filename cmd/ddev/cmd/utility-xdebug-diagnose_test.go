@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/exec"
@@ -35,21 +34,12 @@ func TestCmdXdebugDiagnose(t *testing.T) {
 	// We just check that it runs and produces expected output
 	t.Logf("xdebug-diagnose output: %s", out)
 
-	// Check for expected sections in output
-	require.Contains(t, out, "Xdebug Diagnostics for Project")
-	require.Contains(t, out, "Port 9003 Pre-Check")
-	require.Contains(t, out, "host.docker.internal Configuration")
-	require.Contains(t, out, "Global Configuration")
-	require.Contains(t, out, "Connection Test")
-	require.Contains(t, out, "Xdebug Status")
-	require.Contains(t, out, "Summary")
-
-	// Check that we get information about host.docker.internal
-	require.Contains(t, out, "IP address:")
-	require.Contains(t, out, "Derivation:")
-
-	// Check for xdebug_ide_location check
-	require.True(t, strings.Contains(out, "xdebug_ide_location") || strings.Contains(out, "Global Configuration"))
+	// Check for expected content in compact output
+	require.Contains(t, out, "Xdebug Diagnostics:")
+	require.Contains(t, out, "Port 9003:")
+	require.Contains(t, out, "host.docker.internal:")
+	require.Contains(t, out, "xdebug_ide_location:")
+	require.Contains(t, out, "Xdebug:")
 }
 
 // TestCmdXdebugDiagnoseNotInProject tests running the command outside a project
@@ -92,5 +82,5 @@ func TestCmdXdebugDiagnoseInteractiveFlag(t *testing.T) {
 	// Should see the fallback warning when DDEV_NONINTERACTIVE is set
 	require.Contains(t, out, "Interactive mode requested but DDEV_NONINTERACTIVE is set")
 	// Should still run standard diagnostics
-	require.Contains(t, out, "Xdebug Diagnostics for Project")
+	require.Contains(t, out, "Xdebug Diagnostics:")
 }
