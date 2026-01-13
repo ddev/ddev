@@ -3,15 +3,20 @@
 set -eu -o pipefail
 
 echo "You don't need to wait for the test project to be set up."
+sudo chown ${USER} /workspaces || true
+mkdir -p /workspaces/.config
 set -x
+DDEV_UPSTREAM_NAME=ddev-upstream
+git remote add ${DDEV_UPSTREAM_NAME} https://github.com/ddev/ddev || true
+git fetch ${DDEV_UPSTREAM_NAME} || true
 make
-sudo ln -sf ${PWD}/.gotmp/bin/linux_amd64/ddev /usr/local/bin/ddev
+sudo ln -sf "${PWD}/.gotmp/bin/linux_$(dpkg --print-architecture)/ddev" /usr/local/bin/ddev
 ddev utility download-images
 ddev delete -Oy tmp >/dev/null || true
 ddev --version
 
 export DDEV_NONINTERACTIVE=true CI=true
-DDEV_REPO=${DDEV_REPO:-https://github.com/ddev/d10simple}
+DDEV_REPO=${DDEV_REPO:-https://github.com/ddev/d11simple}
 DDEV_ARTIFACTS=${DDEV_REPO}-artifacts
 git clone ${DDEV_ARTIFACTS} "/tmp/${DDEV_ARTIFACTS##*/}" || true
 reponame=${DDEV_REPO##*/}

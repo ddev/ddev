@@ -7,7 +7,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../d10simple",
+            "cwd": "${workspaceRoot}/../d11simple",
             "env": {"DDEV_DEBUG": "true"},
             "args": ["start", "-y"],
             "showLog": true
@@ -18,7 +18,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../d10simple",
+            "cwd": "${workspaceRoot}/../d11simple",
             "env": {"DDEV_DEBUG": "true"},
             "args": ["snapshot"],
             "showLog": true
@@ -31,7 +31,7 @@
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
             "env": {"DDEV_DEBUG": "true"},
-            "args": ["describe"],
+            "args": ["describe", "d11simple"],
             "showLog": true
         },
         {
@@ -40,7 +40,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../d9",
+            "cwd": "${workspaceRoot}/../d11simple",
             "env": {"DDEV_DEBUG": "true"},
             "args": ["list"],
             "showLog": true
@@ -66,36 +66,6 @@
             "env": {"DDEV_DEBUG": "true"},
             "args": ["delete", "images", "-y", "-a"],
             "showLog": true
-        },
-        {
-            "name": "pkg-level test",
-            "type": "go",
-            "request": "launch",
-            "mode": "test",
-            "port": 2345,
-            "host": "127.0.0.1",
-            "program": "${workspaceRoot}/pkg/plugins/platform",
-            "env": {"DDEV_DEBUG": "true"},
-            "args": [],
-            "showLog": true
-        },
-        {
-            "type": "bashdb",
-            "request": "launch",
-            "name": "Bash-Debug (select script from list of sh files)",
-            "cwd": "${workspaceFolder}",
-            "program": "${command:SelectScriptName}",
-            "args": []
-        },
-        {
-            "name": "Listen for Xdebug",
-            "type": "php",
-            "request": "launch",
-            "hostname": "0.0.0.0",
-            "port": 9003,
-            "pathMappings": {
-                "/var/www/html": "${workspaceRoot}/../d10simple"
-            }
         }
     ]
 }
