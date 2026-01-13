@@ -144,26 +144,6 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return fmt.Errorf("failed to purge global Traefik certs dir: %v", err)
 	}
 
-	// Assume that the #ddev-generated doesn't exist in files
-	sigExists := false
-	for _, pemFile := range []string{"default_cert.crt", "default_key.key"} {
-		origFile := filepath.Join(globalSourceCertsPath, pemFile)
-		// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
-		err = fileutil.CheckSignatureOrNoFile(origFile, nodeps.DdevFileSignature)
-		if err == nil {
-			// File has a signature, or doesn't exists, or has no content - overwrite it
-			sigExists = true
-			break
-		}
-	}
-
-	// If using Let's Encrypt, the default_cert.crt must not exist or
-	// Traefik will use it.
-	if globalconfig.DdevGlobalConfig.UseLetsEncrypt && sigExists {
-		_ = os.RemoveAll(filepath.Join(globalSourceCertsPath, "default_cert.crt"))
-		_ = os.RemoveAll(filepath.Join(globalSourceCertsPath, "default_key.key"))
-	}
-
 	mkcertIsAvailable := false
 	_, err = exec.RunHostCommand("command -v mkcert >/dev/null 2>&1")
 	if err == nil {
@@ -172,7 +152,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 
 	// Install default certs, except when using Let's Encrypt (when they would
 	// get used instead of Let's Encrypt certs)
-	if mkcertIsAvailable && !globalconfig.DdevGlobalConfig.UseLetsEncrypt && sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+	if mkcertIsAvailable && !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
 		c := []string{"--cert-file", filepath.Join(globalSourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(globalSourceCertsPath, "default_key.key"), "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default", "*.ddev.site"}
 		if globalconfig.DdevGlobalConfig.ProjectTldGlobal != "" {
 			c = append(c, "*."+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
@@ -219,25 +199,19 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 
 	defaultConfigPath := filepath.Join(globalSourceConfigDir, "default_config.yaml")
 	// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
-	err = fileutil.CheckSignatureOrNoFile(defaultConfigPath, nodeps.DdevFileSignature)
-	sigExists = (err == nil)
-	if !sigExists {
-		util.Debug("Not creating %s because it exists and is managed by user", defaultConfigPath)
-	} else {
-		f, err := os.Create(defaultConfigPath)
-		if err != nil {
-			util.Failed("Failed to create Traefik config file: %v", err)
-		}
-		defer f.Close()
-		t, err := template.New("traefik_global_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_global_config_template.yaml")
-		if err != nil {
-			return fmt.Errorf("could not create template from traefik_global_config_template.yaml: %v", err)
-		}
+	f, err := os.Create(defaultConfigPath)
+	if err != nil {
+		util.Failed("Failed to create Traefik default_config.yaml file: %v", err)
+	}
+	defer f.Close()
+	t, err := template.New("traefik_global_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_global_config_template.yaml")
+	if err != nil {
+		return fmt.Errorf("could not create template from traefik_global_config_template.yaml: %v", err)
+	}
 
-		err = t.Execute(f, templateData)
-		if err != nil {
-			return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
-		}
+	err = t.Execute(f, templateData)
+	if err != nil {
+		return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
 	}
 
 	staticConfigFinalPath := filepath.Join(globalTraefikDir, ".static_config.yaml")
@@ -247,7 +221,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return err
 	}
 
-	t, err := template.New("traefik_static_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
+	t, err = template.New("traefik_static_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
 	if err != nil {
 		return fmt.Errorf("could not create template from traefik_static_config_template.yaml: %v", err)
 	}
