@@ -6,6 +6,7 @@ echo "You don't need to wait for the test project to be set up."
 sudo chown ${USER} /workspaces || true
 mkdir -p /workspaces/.config
 set -x
+git remote add upstream https://github.com/ddev/ddev || true
 git fetch upstream
 make
 sudo ln -sf "${PWD}/.gotmp/bin/linux_$(dpkg --print-architecture)/ddev" /usr/local/bin/ddev
