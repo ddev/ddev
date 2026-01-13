@@ -27,9 +27,6 @@ teardown() {
   # ddev exec console ibexa:install --no-interaction
   run ddev exec console ibexa:install --no-interaction
   assert_success
-  # ddev exec console ibexa:graphql:generate-schema
-  run ddev exec console ibexa:graphql:generate-schema
-  assert_success
   # ddev launch
   run bash -c "DDEV_DEBUG=true ddev launch /admin/login"
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin/login"
