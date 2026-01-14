@@ -51,7 +51,7 @@ func FullRenderedRouterComposeYAMLPath() string {
 
 // IsRouterDisabled returns true if the router is disabled
 func IsRouterDisabled(app *DdevApp) bool {
-	if nodeps.IsCodespaces() {
+	if nodeps.IsCodespaces() || nodeps.IsDevcontainer() {
 		return true
 	}
 	return nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer)

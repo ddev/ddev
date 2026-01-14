@@ -144,8 +144,8 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				urlPortParts = append(urlPortParts, netutil.NormalizeURL(httpURL))
 			}
 
-		// Codespaces, web container only, using port proxied by Codespaces
-		case nodeps.IsCodespaces() && k == "web":
+		// Codespaces, web container only, using port proxied by Codespaces/Devcontainer
+		case nodeps.IsDevcontainer() && k == "web":
 			urlPortParts = append(urlPortParts, app.GetPrimaryURL())
 
 		// Router disabled, but not because of Codespaces, use direct http url

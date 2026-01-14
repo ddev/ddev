@@ -24,7 +24,8 @@
 
     // A set of name-value pairs that sets or overrides environment variables for the container.
     "containerEnv": {
-        "XDG_CONFIG_HOME": "/workspaces/.config"
+        "XDG_CONFIG_HOME": "/workspaces/.config",
+        "IN_DEVCONTAINER": "true"
     },
 
     // Use 'postCreateCommand' to run commands after the container is created.

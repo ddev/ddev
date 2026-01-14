@@ -286,7 +286,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
             "ghcr.io/ddev/ddev/install-ddev:latest": {}
         },
         "containerEnv": {
-            "XDG_CONFIG_HOME": "/workspaces/.config"
+            "XDG_CONFIG_HOME": "/workspaces/.config",
+            "IN_DEVCONTAINER": "true"
         },
         "postCreateCommand": "sudo chown ${USER} /workspaces && echo 'it should all be set up now'"
     ```
@@ -391,7 +392,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
             }
         },
         "containerEnv": {
-            "XDG_CONFIG_HOME": "/workspaces/.config"
+            "XDG_CONFIG_HOME": "/workspaces/.config",
+            "IN_DEVCONTAINER": "true"
         },
         "postCreateCommand": "bash .devcontainer/setup_project.sh"
     }

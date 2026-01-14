@@ -13,6 +13,7 @@ const (
 	DDEVEnvironmentWSL2         = "wsl2"
 	DDEVEnvironmentWSL2Mirrored = "wsl2-mirrored"
 	DDEVEnvironmentCodespaces   = "codespaces"
+	DDEVEnvironmentDevcontainer = "devcontainer"
 )
 
 // GetDDEVEnvironment returns the type of environment DDEV is being used in
@@ -21,6 +22,8 @@ func GetDDEVEnvironment() string {
 	switch {
 	case nodeps.IsCodespaces():
 		e = DDEVEnvironmentCodespaces
+	case nodeps.IsDevcontainer():
+		e = DDEVEnvironmentDevcontainer
 	case nodeps.IsWSL2MirroredMode():
 		e = DDEVEnvironmentWSL2Mirrored
 	case nodeps.IsWSL2():
