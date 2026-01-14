@@ -202,9 +202,8 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		if err != nil {
 			return fmt.Errorf("unable to GetMutagenConfigFileHash(): %v", err)
 		}
-		// Use container name if available (with leading slash removed), otherwise fall back to ID
-		containerRef := dockerutil.ContainerName(container)
-		// Mutagen docker protocol expects the name with leading slash
+		// Mutagen docker protocol expects the container name with leading slash, or ID as fallback
+		containerRef := container.ID
 		if len(container.Names) > 0 {
 			containerRef = container.Names[0]
 		}
