@@ -168,7 +168,7 @@ if [ "${DOCKER_TYPE:-}" = "docker-ce" ] || [ "${DOCKER_TYPE:-}" = "wsl2dockerins
   # Try to delete any containers first. Ignore rm errors, but if anything remains, enter the cleanup path.
   ids=$(docker ps -aq || true)
   if [ -n "$ids" ]; then
-    docker rm -f $ids >/dev/null 2>&1 || true
+    docker rm -f "$ids" >/dev/null 2>&1 || true
   fi
 
   remaining=$(docker ps -aq || true)
