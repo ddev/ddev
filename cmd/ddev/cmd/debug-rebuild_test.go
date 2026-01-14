@@ -14,6 +14,11 @@ import (
 
 // TestDebugRebuildCmd tests that ddev utility rebuild actually clears Docker cache
 func TestDebugRebuildCmd(t *testing.T) {
+	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
+	if os.Getenv("GOTEST_SHORT") != "" {
+		t.Skip("Skip because GOTEST_SHORT is set")
+	}
+
 	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it.
