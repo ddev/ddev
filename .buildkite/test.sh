@@ -161,6 +161,33 @@ if [ "${os:-}" = "darwin" ]; then
   esac
 fi
 
+# Handle docker-ce cleanup for WSL and other native Docker CE instances
+if [ "${DOCKER_TYPE:-}" = "docker-ce" ]; then
+  cleanup_needed=false
+
+  # Try to delete any containers first. Ignore rm errors, but if anything remains, enter the cleanup path.
+  ids=$(docker ps -aq || true)
+  if [ -n "$ids" ]; then
+    docker rm -f $ids >/dev/null 2>&1 || true
+  fi
+
+  remaining=$(docker ps -aq || true)
+  if [ -n "$remaining" ]; then
+    echo "CLEANUP REQUIRED: Containers still remain after docker rm -f" >&2
+    docker ps -a >&2 || true
+    cleanup_needed=true
+  else
+    echo "No containers remain; skipping docker-state cleanup"
+  fi
+
+  # If removing container state has any problems, show them (do not suppress errors).
+  if [ "$cleanup_needed" = true ]; then
+    sudo rm -rf /var/lib/docker/containers/*
+    sudo systemctl restart docker
+    sudo ls /var/lib/docker/containers && docker ps -aq
+  fi
+fi
+
 # Find a suitable timeout command for reliability and readability
 if command -v gtimeout >/dev/null 2>&1; then
   TIMEOUT="gtimeout"
@@ -188,6 +215,9 @@ echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER
 
 echo
 case ${DOCKER_TYPE:-none} in
+  "docker-ce")
+    echo "Running docker-ce (Docker CE)"
+    ;;
   "docker-desktop")
     echo "docker-desktop for mac version=$(scripts/docker-desktop-version.sh)"
     ;;
