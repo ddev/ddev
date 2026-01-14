@@ -31,7 +31,11 @@ func RemoveVolume(volumeName string) error {
 				if err == nil {
 					for _, c := range containers.Items {
 						// Skip first character, it's a slash.
-						containerNames = append(containerNames, c.Names[0][1:])
+						if len(c.Names) > 0 {
+							containerNames = append(containerNames, c.Names[0][1:])
+						} else {
+							containerNames = append(containerNames, c.ID)
+						}
 					}
 					var containerNamesString = strings.Join(containerNames, " ")
 					return fmt.Errorf("docker volume '%s' is in use by one or more containers and cannot be removed. Use 'docker rm -f %s' to remove them", volumeName, containerNamesString)

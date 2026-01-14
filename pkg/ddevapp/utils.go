@@ -121,7 +121,10 @@ func Cleanup(app *DdevApp) error {
 	}
 	// First, try stopping the listed containers if they are running.
 	for i := range containers {
-		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
+		containerName := containers[i].ID
+		if len(containers[i].Names) > 0 {
+			containerName = containers[i].Names[0][1:len(containers[i].Names[0])]
+		}
 		removeOpts := client.ContainerRemoveOptions{
 			RemoveVolumes: true,
 			Force:         true,

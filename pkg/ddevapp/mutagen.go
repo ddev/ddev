@@ -202,6 +202,9 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		if err != nil {
 			return fmt.Errorf("unable to GetMutagenConfigFileHash(): %v", err)
 		}
+		if len(container.Names) == 0 {
+			return fmt.Errorf("container for %s has no name", app.Name)
+		}
 		// TODO: Consider using a function to specify the Docker beta
 		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", container.Names[0]), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel, "--label", mutagenConfigFileHashLabelName + "=" + hLabel}
 		if configFile != "" {

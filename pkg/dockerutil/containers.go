@@ -169,7 +169,7 @@ func FindContainerByName(name string) (*container.Summary, error) {
 	// ListContainers can return partial matches. Make sure we only match the exact one
 	// we're after.
 	for _, c := range containers.Items {
-		if c.Names[0] == "/"+name {
+		if len(c.Names) > 0 && c.Names[0] == "/"+name {
 			return &c, nil
 		}
 	}
