@@ -123,7 +123,7 @@ func Cleanup(app *DdevApp) error {
 	for i := range containers {
 		containerName := containers[i].ID
 		if len(containers[i].Names) > 0 {
-			containerName = containers[i].Names[0][1:len(containers[i].Names[0])]
+			containerName = containers[i].Names[0][1:]
 		}
 		removeOpts := client.ContainerRemoveOptions{
 			RemoveVolumes: true,
