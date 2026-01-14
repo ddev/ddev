@@ -162,7 +162,7 @@ if [ "${os:-}" = "darwin" ]; then
 fi
 
 # Handle docker-ce cleanup for WSL and other native Docker CE instances
-if [ "${DOCKER_TYPE:-}" = "docker-ce" ]; then
+if [ "${DOCKER_TYPE:-}" = "docker-ce" ] || [ "${DOCKER_TYPE:-}" = "wsl2dockerinside" ]; then
   cleanup_needed=false
 
   # Try to delete any containers first. Ignore rm errors, but if anything remains, enter the cleanup path.
