@@ -182,9 +182,27 @@ if [ "${DOCKER_TYPE:-}" = "docker-ce" ] || [ "${DOCKER_TYPE:-}" = "wsl2dockerins
 
   # If removing container state has any problems, show them (do not suppress errors).
   if [ "$cleanup_needed" = true ]; then
-    sudo rm -rf /var/lib/docker/containers/*
+    echo "Performing deep cleanup: removing container state and restarting docker"
+    sudo bash -c "rm -rf /var/lib/docker/containers/*"
     sudo systemctl restart docker
-    sudo ls /var/lib/docker/containers && docker ps -aq
+    
+    # Wait for docker to come back up
+    for i in {1..30}; do
+      if docker ps >/dev/null 2>&1 ; then
+        break
+      fi
+      echo "Waiting for docker to restart: $i"
+      sleep 1
+    done
+    
+    # Verify cleanup was successful
+    remaining_after_cleanup=$(docker ps -aq || true)
+    if [ -n "$remaining_after_cleanup" ]; then
+      echo "ERROR: Cleanup failed, containers still remain after deep cleanup:" >&2
+      docker ps -a >&2 || true
+      exit 1
+    fi
+    echo "Deep cleanup succeeded: all containers removed"
   fi
 fi
 
