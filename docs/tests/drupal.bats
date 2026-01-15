@@ -91,7 +91,7 @@ teardown() {
   run ddev drush site:install --account-name=admin --account-pass=admin -y
   assert_success
 
-  DDEV_DEBUG=true true ddev launch
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
