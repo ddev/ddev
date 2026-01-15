@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run Symfony CLI inside the web container
+## Usage: symfony [flags] [args]
+## Example: "ddev symfony check:requirements" or "ddev symfony server:ca:install"
+## Aliases: sf
+## ProjectTypes: symfony
+## ExecRaw: true
+## MutagenSync: true
+
+if ! command -v symfony >/dev/null; then
+  echo "Symfony CLI is not available in the container."
+  echo "See https://symfony.com/download for installation instructions."
+  exit 1
+fi
+
+symfony "$@"
