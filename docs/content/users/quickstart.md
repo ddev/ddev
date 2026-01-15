@@ -644,6 +644,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
     ```bash
     ddev composer create-project drupal/cms
+    ddev composer drupal:recipe-unpack
     ```
 
     Launch the site:
@@ -665,6 +666,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         ddev config --project-type=drupal11 --docroot=web
         ddev start -y
         ddev composer create-project drupal/cms
+        ddev composer drupal:recipe-unpack
         ddev launch
         EOF
         chmod +x setup-drupal-cms.sh
