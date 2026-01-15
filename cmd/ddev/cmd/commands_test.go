@@ -191,7 +191,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err, "Failed to run ddev %s --version", c)
 	}
 	// The various CMS commands should not be available here
-	for _, c := range []string{"artisan", "art", "cake", "drush", "magento", "typo3", "wp"} {
+	for _, c := range []string{"artisan", "art", "cake", "console", "drush", "magento", "sf", "symfony", "typo3", "wp"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.Error(err, "found command %s when it should not have been there (no error) app.Type=%s", c, app.Type)
 	}
