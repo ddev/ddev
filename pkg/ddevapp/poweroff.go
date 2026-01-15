@@ -9,7 +9,7 @@ import (
 func PowerOff() {
 	apps, err := GetProjects(true)
 	if err != nil {
-		util.Failed("Failed to get project(s): %v", err)
+		util.Warning("Failed to get project(s): %v", err)
 	}
 
 	// Remove any custom certs that may have been added
@@ -22,9 +22,10 @@ func PowerOff() {
 	// Iterate through the list of apps built above, stopping each one.
 	for _, app := range apps {
 		if err := app.Stop(false, false); err != nil {
-			util.Failed("Failed to stop project %s: \n%v", app.GetName(), err)
+			util.Warning("Failed to stop project %s: \n%v", app.GetName(), err)
+		} else {
+			util.Success("Project %s has been stopped.", app.GetName())
 		}
-		util.Success("Project %s has been stopped.", app.GetName())
 	}
 
 	// Any straggling containers that have label "com.ddev.site-name" should be removed.
