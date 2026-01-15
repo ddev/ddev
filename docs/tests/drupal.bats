@@ -156,6 +156,9 @@ teardown() {
   assert_success
   assert_output --partial "Congratulations, you’ve installed Drupal CMS!"
 
+  run ddev composer drupal:recipe-unpack
+  assert_success
+
   # Run Drush site install to set up the site
   run ddev drush si --account-name=admin --account-pass=admin -y
   assert_success
