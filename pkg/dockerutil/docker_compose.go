@@ -156,7 +156,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
 	// Container Stopped or Created
 	// No resource found to remove (when doing a stop and no project exists)
-	ignoreRegex := "(^ *(Network|Container|Volume|Service) .* (Creat|Start|Stopp|Remov|Build|Buil|Runn)(ing|t)$|.* Built$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove|Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
+	ignoreRegex := "(^ *(Network|Container|Image|Volume|Service) .* (Creat|Start|Stopp|Remov|Build|Buil|Runn)(ing|t) $|.* Built$|^ *Container .*(Build|Stopp|Recreat|Creat)(ed|ing) *$|No services to build|Warning: No resource found to remove|Warning: Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
 	downRE, err := regexp.Compile(ignoreRegex)
 	if err != nil {
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
