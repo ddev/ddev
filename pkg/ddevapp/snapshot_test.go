@@ -155,6 +155,11 @@ func TestGetLatestSnapshot(t *testing.T) {
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
 func TestDdevRestoreSnapshot(t *testing.T) {
+	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
+	if os.Getenv("GOTEST_SHORT") != "" {
+		t.Skip("Skip because GOTEST_SHORT is set")
+	}
+
 	assert := assert2.New(t)
 
 	runTime := util.TimeTrackC(t.Name())

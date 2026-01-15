@@ -17,8 +17,12 @@ import (
 )
 
 func TestComposerCreateProjectCmd(t *testing.T) {
+	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
+	if os.Getenv("GOTEST_SHORT") != "" {
+		t.Skip("Skip because GOTEST_SHORT is set")
+	}
 	if nodeps.IsWindows() {
-		t.Skip("Skipping on windows where it hangs")
+		t.Skip("Skipping on traditional windows where it hangs")
 	}
 	composerVersionForThisTest := nodeps.ComposerDefault
 	//composerVersionForThisTest := "2.8.0"

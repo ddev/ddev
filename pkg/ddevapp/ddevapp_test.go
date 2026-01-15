@@ -1263,6 +1263,10 @@ func TestGetApps(t *testing.T) {
 
 // TestDdevImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestDdevImportDB(t *testing.T) {
+	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
+	if os.Getenv("GOTEST_SHORT") != "" {
+		t.Skip("Skip because GOTEST_SHORT is set")
+	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
@@ -1657,8 +1661,9 @@ func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
 
 // TestDdevAllDatabases tests db import/export/snapshot/restore/start with supported database versions
 func TestDdevAllDatabases(t *testing.T) {
-	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
-		t.Skip("Skipping on Lima/Colima/Rancher")
+	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
+	if os.Getenv("GOTEST_SHORT") != "" {
+		t.Skip("Skipping when GOTEST_SHORT unset")
 	}
 	assert := asrt.New(t)
 
@@ -2085,6 +2090,11 @@ func TestDdevExportDB(t *testing.T) {
 // TestWebserverMariaMySQLDBClient tests functionality of mysql/mariadb
 // database clients in the ddev-webserver
 func TestWebserverMariaMySQLDBClient(t *testing.T) {
+	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
+	if os.Getenv("GOTEST_SHORT") != "" {
+		t.Skip("Skip because GOTEST_SHORT is set")
+	}
+
 	assert := asrt.New(t)
 
 	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:11.4", "mariadb:11.8"}
