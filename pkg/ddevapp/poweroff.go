@@ -3,20 +3,12 @@ package ddevapp
 import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 )
 
 func PowerOff() {
 	apps, err := GetProjects(true)
 	if err != nil {
 		util.Warning("Failed to get project(s): %v", err)
-	}
-
-	// Remove any custom certs that may have been added
-	// along with all Traefik configuration.
-	_, _, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "poweroff-"+util.RandString(6), []string{"sh", "-c", "rm -rf /mnt/ddev-global-cache/custom_certs/* /mnt/ddev-global-cache/traefik/*"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, &dockerutil.NoHealthCheck)
-	if err != nil {
-		util.Warning("Failed removing custom certs/traefik configuration: %v", err)
 	}
 
 	// Iterate through the list of apps built above, stopping each one.
