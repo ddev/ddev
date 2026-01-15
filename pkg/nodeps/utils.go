@@ -99,7 +99,7 @@ func IsDevcontainer() bool {
 	if os.Getenv("DDEV_PRETEND_DEVCONTAINER") == "true" {
 		return true
 	}
-	return IsLinux() && (os.Getenv("CODESPACES") == "true" || os.Getenv("DDEV_PRETEND_DEVCONTAINER") == "true")
+	return IsLinux() && (os.Getenv("CODESPACES") == "true" || os.Getenv("IN_DEVCONTAINER") == "true")
 }
 
 // GetWSLDistro returns the WSL2 distro name if on Linux
