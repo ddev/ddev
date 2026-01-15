@@ -61,7 +61,7 @@ echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
 ddev poweroff || true
 if [ "$(docker ps -aq | wc -l )" -gt 0 ] ; then
-	docker rm -f $(docker ps -aq) >/dev/null 2>&1
+	docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 fi
 
 docker system prune --volumes --force
