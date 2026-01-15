@@ -161,6 +161,51 @@ if [ "${os:-}" = "darwin" ]; then
   esac
 fi
 
+# Handle docker-ce cleanup for WSL and other native Docker CE instances
+if [ "${DOCKER_TYPE:-}" = "docker-ce" ] || [ "${DOCKER_TYPE:-}" = "wsl2dockerinside" ]; then
+  cleanup_needed=false
+
+  # Try to delete any containers first. Ignore rm errors, but if anything remains, enter the cleanup path.
+  ids=$(docker ps -aq || true)
+  if [ -n "$ids" ]; then
+    docker rm -f "$ids" >/dev/null 2>&1 || true
+  fi
+
+  remaining=$(docker ps -aq || true)
+  if [ -n "$remaining" ]; then
+    echo "CLEANUP REQUIRED: Containers still remain after docker rm -f" >&2
+    docker ps -a >&2 || true
+    cleanup_needed=true
+  else
+    echo "No containers remain; skipping docker-state cleanup"
+  fi
+
+  # If removing container state has any problems, show them (do not suppress errors).
+  if [ "$cleanup_needed" = true ]; then
+    echo "Performing deep cleanup: removing container state and restarting docker"
+    sudo bash -c "rm -rf /var/lib/docker/containers/*"
+    sudo systemctl restart docker
+    
+    # Wait for docker to come back up
+    for i in {1..30}; do
+      if docker ps >/dev/null 2>&1 ; then
+        break
+      fi
+      echo "Waiting for docker to restart: $i"
+      sleep 1
+    done
+    
+    # Verify cleanup was successful
+    remaining_after_cleanup=$(docker ps -aq || true)
+    if [ -n "$remaining_after_cleanup" ]; then
+      echo "ERROR: Cleanup failed, containers still remain after deep cleanup:" >&2
+      docker ps -a >&2 || true
+      exit 1
+    fi
+    echo "Deep cleanup succeeded: all containers removed"
+  fi
+fi
+
 # Find a suitable timeout command for reliability and readability
 if command -v gtimeout >/dev/null 2>&1; then
   TIMEOUT="gtimeout"
@@ -188,6 +233,9 @@ echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER
 
 echo
 case ${DOCKER_TYPE:-none} in
+  "docker-ce")
+    echo "Running docker-ce (Docker CE)"
+    ;;
   "docker-desktop")
     echo "docker-desktop for mac version=$(scripts/docker-desktop-version.sh)"
     ;;
