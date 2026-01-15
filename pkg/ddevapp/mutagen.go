@@ -203,11 +203,8 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 			return fmt.Errorf("unable to GetMutagenConfigFileHash(): %v", err)
 		}
 		// Mutagen docker protocol expects the container name with leading slash, or ID as fallback
-		// Prefer name if available because the `beta` in mutaagen sync list is easier to understand
-		containerRef := container.ID
-		if len(container.Names) > 0 {
-			containerRef = container.Names[0]
-		}
+		// Prefer name if available because the `beta` in mutagen sync list is easier to understand
+		containerRef := dockerutil.ContainerName(container)
 		// TODO: Consider using a function to specify the Docker beta
 		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", containerRef), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel, "--label", mutagenConfigFileHashLabelName + "=" + hLabel}
 		if configFile != "" {
