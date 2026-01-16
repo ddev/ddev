@@ -1306,6 +1306,15 @@ ddev snapshot restore --latest
 ddev snapshot restore my_snapshot_name
 ```
 
+## `spark`
+
+Run the `spark` command; available only in projects of type `codeigniter`, and only available if `spark` is in the project root.
+
+```shell
+# Show all spark subcommands
+ddev spark list
+```
+
 ## `ssh`
 
 Starts a shell session in a service container. Uses the web service by default.

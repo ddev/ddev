@@ -37,6 +37,7 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [command
 * [`ddev yarn`](../usage/commands.md#yarn) gives direct access to the `yarn` CLI.
 * [`ddev cake`](../usage/commands.md#cake) (CakePHP only) gives direct access to the `cake` CLI.
 * [`ddev sake`](../usage/commands.md#sake) (Silverstripe CMS only) gives direct access to the `sake` CLI.
+* [`ddev spark`](../usage/commands.md#spark) (CodeIgniter) gives direct access to the `spark` CLI.
 * [`ddev typo3`](../usage/commands.md#typo3) (TYPO3 only) gives direct access to the `typo3` CLI.
 * [`ddev wp`](../usage/commands.md#wp) (WordPress only) gives direct access to the `wp` CLI.
 
