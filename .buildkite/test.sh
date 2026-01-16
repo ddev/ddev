@@ -88,9 +88,18 @@ if [ "${os:-}" = "darwin" ]; then
 
       # If removing container state has any problems, show them (do not suppress errors).
       if [ "$cleanup_needed" = true ]; then
+        echo "Performing deep cleanup: removing container state and restarting colima"
         colima ssh -p "${COLIMA_INSTANCE}" -- sudo bash -lc 'rm -rf /var/lib/docker/containers/*'
-        colima ssh -p "${COLIMA_INSTANCE}" -- sudo systemctl restart docker
-        colima ssh -p "${COLIMA_INSTANCE}" -- bash -lc 'sudo ls /var/lib/docker/containers && docker ps -aq'
+        colima restart ${COLIMA_INSTANCE}
+
+        # Verify cleanup was successful
+        remaining_after_cleanup=$(colima ssh -p "${COLIMA_INSTANCE}" -- bash -lc 'docker ps -aq' || true)
+        if [ -n "$remaining_after_cleanup" ]; then
+          echo "ERROR: Cleanup failed, containers still remain after deep cleanup:" >&2
+          colima ssh -p "${COLIMA_INSTANCE}" -- bash -lc 'docker ps -a' >&2 || true
+          exit 1
+        fi
+        echo "Deep cleanup succeeded: all containers removed"
       fi
       docker context use colima-${COLIMA_INSTANCE}
 
@@ -125,9 +134,27 @@ if [ "${os:-}" = "darwin" ]; then
 
       # If removing container state has any problems, show them (do not suppress errors).
       if [ "$cleanup_needed" = true ]; then
+        echo "Performing deep cleanup: removing container state and restarting docker"
         limactl shell lima-vz bash -lc "rm -rf ${HOMEDIR}/.local/share/docker/containers/*"
         limactl shell ${LIMA_INSTANCE} systemctl --user restart docker
-        limactl shell ${LIMA_INSTANCE} bash -lc "ls ${HOMEDIR}/.local/share/docker/containers && docker ps -aq"
+
+        # Wait for docker to come back up inside lima
+        for i in {1..30}; do
+          if limactl shell ${LIMA_INSTANCE} bash -lc 'docker ps >/dev/null 2>&1'; then
+            break
+          fi
+          echo "Waiting for docker to restart in lima: $i"
+          sleep 1
+        done
+
+        # Verify cleanup was successful
+        remaining_after_cleanup=$(limactl shell ${LIMA_INSTANCE} bash -lc 'docker ps -aq' || true)
+        if [ -n "$remaining_after_cleanup" ]; then
+          echo "ERROR: Cleanup failed, containers still remain after deep cleanup:" >&2
+          limactl shell ${LIMA_INSTANCE} bash -lc 'docker ps -a' >&2 || true
+          exit 1
+        fi
+        echo "Deep cleanup succeeded: all containers removed"
       fi
       docker context use lima-${LIMA_INSTANCE}
       ;;

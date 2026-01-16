@@ -9,7 +9,7 @@ import (
 func PowerOff() {
 	apps, err := GetProjects(true)
 	if err != nil {
-		util.Failed("Failed to get project(s): %v", err)
+		util.Warning("Failed to get project(s): %v", err)
 	}
 
 	// Remove any custom certs that may have been added
@@ -22,9 +22,10 @@ func PowerOff() {
 	// Iterate through the list of apps built above, stopping each one.
 	for _, app := range apps {
 		if err := app.Stop(false, false); err != nil {
-			util.Failed("Failed to stop project %s: \n%v", app.GetName(), err)
+			util.Warning("Failed to stop project %s: \n%v", app.GetName(), err)
+		} else {
+			util.Success("Project %s has been stopped.", app.GetName())
 		}
-		util.Success("Project %s has been stopped.", app.GetName())
 	}
 
 	// Any straggling containers that have label "com.ddev.site-name" should be removed.
@@ -34,8 +35,7 @@ func PowerOff() {
 		for _, c := range containers {
 			err = dockerutil.RemoveContainer(c.ID)
 			if err != nil {
-				util.Warning("Failed to remove container %v: %v", c.ID, err)
-				util.Warning("Failed Container deletion detail='%v'", c)
+				util.Warning("Failed to remove container %+v", c)
 			}
 		}
 	} else {
@@ -45,10 +45,10 @@ func PowerOff() {
 	StopMutagenDaemon("")
 
 	if err := RemoveSSHAgentContainer(); err != nil {
-		util.Error("Failed to remove ddev-ssh-agent: %v", err)
+		util.Warning("Failed to remove ddev-ssh-agent: %v", err)
 	}
 	if err := RemoveRouterContainer(); err != nil {
-		util.Error("Failed to remove ddev-router: %v", err)
+		util.Warning("Failed to remove ddev-router: %v", err)
 	}
 
 	// Remove global DDEV default network

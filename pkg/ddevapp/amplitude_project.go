@@ -41,6 +41,9 @@ func (app *DdevApp) TrackProject() {
 	containers, err := dockerutil.GetAppContainers(app.Name)
 	if err == nil {
 		for _, k := range containers {
+			if len(k.Names) == 0 {
+				continue
+			}
 			serviceName := strings.TrimPrefix(k.Names[0], "/")
 			shortName := strings.Replace(serviceName, fmt.Sprintf("ddev-%s-", app.Name), "", 1)
 			services = append(services, shortName)

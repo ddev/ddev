@@ -313,6 +313,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	}
 	services := appDesc["services"].(map[string]map[string]interface{})
 	for _, k := range containers {
+		if len(k.Names) == 0 {
+			continue
+		}
 		serviceName := strings.TrimPrefix(k.Names[0], "/")
 		shortName := strings.Replace(serviceName, fmt.Sprintf("ddev-%s-", app.Name), "", 1)
 
