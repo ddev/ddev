@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -654,7 +655,11 @@ func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
 }
 
 // AssignRouterPortsToGenericWebserverPorts assigns the router ports to the generic webserver.
-// If it's a generic webserver, use the first pair of exposed ports as router ports.
+// For generic webservers, the router ports come from WebExtraExposedPorts[0].
+//
+// IMPORTANT: This function assumes SortWebExtraExposedPorts was called by app.ReadConfig,
+// which ensures the entry matching the configured router ports (80/443 by default) is at index 0.
+// See SortWebExtraExposedPorts for the sorting logic.
 func AssignRouterPortsToGenericWebserverPorts(app *DdevApp) {
 	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
 		app.RouterHTTPPort = strconv.Itoa(app.WebExtraExposedPorts[0].HTTPPort)
@@ -662,8 +667,12 @@ func AssignRouterPortsToGenericWebserverPorts(app *DdevApp) {
 	}
 }
 
-// SyncGenericWebserverPortsWithRouterPorts syncs the generic webserver ports with the router ports.
-// If the used ephemeral router ports are different, the first pair webserver ports should be updated.
+// SyncGenericWebserverPortsWithRouterPorts updates WebExtraExposedPorts[0] with ephemeral ports.
+// When configured ports (e.g., 80/443) are busy, DDEV assigns ephemeral ports instead.
+// This function syncs those ephemeral ports back to the primary WebExtraExposedPorts entry.
+//
+// IMPORTANT: This function assumes SortWebExtraExposedPorts was called by app.ReadConfig,
+// which ensures the primary entry is at index 0. See SortWebExtraExposedPorts for details.
 func SyncGenericWebserverPortsWithRouterPorts(app *DdevApp) {
 	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
 		if httpPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPPort()); err == nil {
@@ -673,4 +682,52 @@ func SyncGenericWebserverPortsWithRouterPorts(app *DdevApp) {
 			app.WebExtraExposedPorts[0].HTTPSPort = httpsPort
 		}
 	}
+}
+
+// SortWebExtraExposedPorts sorts WebExtraExposedPorts so the entry matching
+// the configured router ports comes first (index 0).
+//
+// This is called during app initialization to ensure AssignRouterPortsToGenericWebserverPorts
+// and SyncGenericWebserverPortsWithRouterPorts work correctly with WebExtraExposedPorts[0].
+//
+// Priority for matching: app.RouterHTTPPort -> global config -> defaults (80/443).
+// Entries with full match (both HTTP and HTTPS) come before partial matches.
+func SortWebExtraExposedPorts(app *DdevApp) {
+	if len(app.WebExtraExposedPorts) <= 1 {
+		return
+	}
+	// Priority: app config -> global config -> defaults
+	preferredHTTP := app.RouterHTTPPort
+	if preferredHTTP == "" {
+		preferredHTTP = globalconfig.DdevGlobalConfig.RouterHTTPPort
+	}
+	if preferredHTTP == "" {
+		preferredHTTP = nodeps.DdevDefaultRouterHTTPPort
+	}
+	preferredHTTPS := app.RouterHTTPSPort
+	if preferredHTTPS == "" {
+		preferredHTTPS = globalconfig.DdevGlobalConfig.RouterHTTPSPort
+	}
+	if preferredHTTPS == "" {
+		preferredHTTPS = nodeps.DdevDefaultRouterHTTPSPort
+	}
+	httpPort, _ := strconv.Atoi(preferredHTTP)
+	httpsPort, _ := strconv.Atoi(preferredHTTPS)
+
+	slices.SortStableFunc(app.WebExtraExposedPorts, func(a, b WebExposedPort) int {
+		aMatch := 0
+		bMatch := 0
+		// Full match = 2, partial = 1, none = 0
+		if a.HTTPPort == httpPort && a.HTTPSPort == httpsPort {
+			aMatch = 2
+		} else if a.HTTPPort == httpPort || a.HTTPSPort == httpsPort {
+			aMatch = 1
+		}
+		if b.HTTPPort == httpPort && b.HTTPSPort == httpsPort {
+			bMatch = 2
+		} else if b.HTTPPort == httpPort || b.HTTPSPort == httpsPort {
+			bMatch = 1
+		}
+		return bMatch - aMatch // Higher match comes first
+	})
 }

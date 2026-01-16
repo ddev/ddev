@@ -378,6 +378,9 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		}
 	}
 
+	// Sort WebExtraExposedPorts so the entry matching configured router ports comes first
+	SortWebExtraExposedPorts(app)
+
 	return append([]string{app.ConfigPath}, configOverrides...), nil
 }
 
