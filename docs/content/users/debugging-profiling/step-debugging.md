@@ -131,17 +131,17 @@ Here are basic steps to take to sort out any difficulty:
         * If possible, temporarily disable the endpoint security agent and try again.
         * If you can’t disable it, ask your IT/security team to allow inbound connections to your IDE on port 9003 from the container/VM subnet(s).
         * On macOS/Linux, you can confirm whether traffic is reaching the host by watching for packets while connecting from the container:
+
+            ```bash
+            # On the host (in one terminal)
+            sudo tcpdump -ni any tcp port 9003
         
-        ```bash
-        # On the host (in one terminal)
-        sudo tcpdump -ni any tcp port 9003
-        
-        # In the web container (in another terminal)
-        ddev ssh
-        nc -vz -w2 host.docker.internal 9003
-        ```
-        
-        If `tcpdump` shows nothing while `nc` runs, something upstream (often endpoint security) is filtering the traffic.
+            # In the web container (in another terminal)
+            ddev exec nc -vz -w2 host.docker.internal 9003
+            ```
+
+            If `tcpdump` shows nothing while `nc` runs, something upstream (often endpoint security) is filtering the traffic.
+
 * Delete existing PhpStorm "servers" in settings, or recreate VS Code’s `launch.json` file exactly as shown in the instructions here.
 * Remember the standard Xdebug port is port 9003, and that's what all instructions here use. In the past some IDEs used port 9000.
 * If your `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../usage/architecture.md#global-files)) has `xdebug_ide_location` set, remove that to begin with except for [very unusual situations](../configuration/config.md#xdebug_ide_location). You can set it to the default value with `ddev config global --xdebug-ide-location=""`.
