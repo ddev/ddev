@@ -215,7 +215,7 @@ func runXdebugDiagnose() int {
 			output.UserOut.Printf("   Fix: %s\n", iss.fix)
 			output.UserOut.Println()
 		}
-		output.UserOut.Println("Docs: https://ddev.readthedocs.io/en/stable/users/debugging-profiling/step-debugging/")
+		output.UserOut.Println("Docs: https://docs.ddev.com/en/stable/users/debugging-profiling/step-debugging/")
 		return 1
 	}
 
