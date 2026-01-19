@@ -416,3 +416,52 @@ func TestFormatBytes(t *testing.T) {
 		})
 	}
 }
+
+// TestExtractCurlBody demonstrates extracting response body from curl output with diagnostics.
+//
+// This pattern is useful when you need both:
+// - Parseable response body (e.g., JSON for validation)
+// - HTTP status code visible in error messages for debugging
+//
+// Usage:
+//
+//	out, err := exec.RunHostCommand("curl", "-sf",
+//	    "-w", util.CurlDiagnosticSuffix+"%{http_code}",
+//	    "http://example.com/api/endpoint")
+//	require.NoError(t, err, "curl failed, output='%s'", out)  // Full output with HTTP code for debugging
+//	body := util.ExtractCurlBody(out)                          // Clean body for JSON parsing
+//	var result map[string]interface{}
+//	json.Unmarshal([]byte(body), &result)
+func TestExtractCurlBody(t *testing.T) {
+	if _, err := exec.LookPath("curl"); err != nil {
+		t.Skip("curl not available, skipping test")
+	}
+
+	// Run actual curl command with -w to append HTTP code
+	cmd := exec.Command("curl", "-sf",
+		"-w", util.CurlDiagnosticSuffix+"%{http_code}",
+		"https://httpbin.org/json")
+	outBytes, err := cmd.CombinedOutput()
+	out := string(outBytes)
+
+	require.NoError(t, err, "curl command failed, output='%s'", out)
+
+	// The raw output must include the HTTP code suffix we added
+	require.Contains(t, out, "_CURL_HTTP_CODE_:200",
+		"raw output should contain HTTP code suffix, got: %s", out)
+
+	// ExtractCurlBody strips the diagnostic suffix, leaving clean JSON
+	body := util.ExtractCurlBody(out)
+
+	// Verify extraction actually removed something
+	require.Less(t, len(body), len(out),
+		"extracted body should be shorter than raw output (suffix removed)")
+
+	// Verify the suffix is gone from extracted body
+	require.NotContains(t, body, "_CURL_HTTP_CODE_",
+		"extracted body should not contain diagnostic suffix, got: %s", body)
+
+	// Verify the body is valid JSON that can be parsed
+	require.True(t, strings.HasPrefix(strings.TrimSpace(body), "{"),
+		"extracted body should be valid JSON, got: %s", body)
+}

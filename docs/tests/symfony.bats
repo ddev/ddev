@@ -33,14 +33,14 @@ teardown() {
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 404"
   run curl https://${PROJNAME}.ddev.site
-  assert_success
   assert_output --partial "<title>Welcome to Symfony!</title>"
   assert_output --partial "You are seeing this page because the homepage URL is not configured and"
   assert_output --partial "<a target=\"_blank\" href=\"https://symfony.com/community#interact\">Follow Symfony</a>"
+  assert_success
 }
 
 @test "Symfony CLI quickstart with $(ddev --version)" {
@@ -68,12 +68,12 @@ teardown() {
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 404"
   run curl https://${PROJNAME}.ddev.site
-  assert_success
   assert_output --partial "<title>Welcome to Symfony!</title>"
   assert_output --partial "You are seeing this page because the homepage URL is not configured and"
   assert_output --partial "<a target=\"_blank\" href=\"https://symfony.com/community#interact\">Follow Symfony</a>"
+  assert_success
 }

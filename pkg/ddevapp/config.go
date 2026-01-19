@@ -706,32 +706,38 @@ func (app *DdevApp) CheckCustomConfig() {
 				customConfig = true
 			}
 		}
-	}
-	traefikConfigPath := filepath.Join(ddevDir, "traefik/config")
-	if _, err := os.Stat(traefikConfigPath); err == nil {
-		traefikFiles, err := filepath.Glob(filepath.Join(traefikConfigPath, "*.yaml"))
-		util.CheckErr(err)
-		customTraefikFiles := filterCustomConfigFiles(traefikFiles)
-		if len(customTraefikFiles) > 0 {
-			printableFiles, _ := util.ArrayToReadableOutput(customTraefikFiles)
-			util.Warning("Using custom Traefik configuration (use `docker logs ddev-router` for troubleshooting): %v", printableFiles)
-			customConfig = true
-		}
-		// Warn if there are unexpected files in .ddev/traefik/config
-		if len(traefikFiles) > 0 {
-			var unexpected []string
-			for _, f := range traefikFiles {
+		// Check for custom-global-config directory (middleware, routers, etc.)
+		customGlobalConfigDir := filepath.Join(traefikGlobalConfigPath, "custom-global-config")
+		if fileutil.IsDirectory(customGlobalConfigDir) {
+			customGlobalFiles, err := fileutil.ListFilesInDir(customGlobalConfigDir)
+			// Remove README.md and local-auth.yaml.example from the list
+			customGlobalFiles = slices.DeleteFunc(customGlobalFiles, func(f string) bool {
 				base := filepath.Base(f)
-				expected := app.Name + ".yaml"
-				if base != expected {
-					unexpected = append(unexpected, f)
-				}
-			}
-			unexpectedTraefikConfigFiles := filterCustomConfigFiles(unexpected)
-			if len(unexpectedTraefikConfigFiles) > 0 {
-				util.Warning("Unexpected files found in .ddev/traefik/config (expected only %s): %v", app.Name+".yaml", unexpectedTraefikConfigFiles)
+				return base == "README.md" || base == "local-auth.yaml.example"
+			})
+
+			if err == nil && len(customGlobalFiles) > 0 {
+				printableFiles, _ := util.ArrayToReadableOutput(customGlobalFiles)
+				util.Warning("Using custom global Traefik dynamic configuration from %s: %v", customGlobalConfigDir, printableFiles)
 				customConfig = true
 			}
+		}
+	}
+
+	// Warn if traefik config overridden
+	mainProjectTraefikFile := app.GetConfigPath("traefik/config/" + app.Name + ".yaml")
+	if isCustomConfigFile(mainProjectTraefikFile) {
+		util.Warning("Using custom Traefik configuration (use `docker logs ddev-router` for troubleshooting): %v", mainProjectTraefikFile)
+		customConfig = true
+	}
+	traefikProjectConfigPath := app.GetConfigPath("traefik/config")
+	if _, err := os.Stat(traefikProjectConfigPath); err == nil {
+		traefikFiles, err := filepath.Glob(filepath.Join(traefikProjectConfigPath, "*.yaml"))
+		util.CheckErr(err)
+		ignoredTraefikFiles := filterCustomConfigFiles(traefikFiles)
+		// Warn if there are unused files in project .ddev/traefik/config
+		if len(ignoredTraefikFiles) > 0 {
+			util.Warning("Ignored project traefik config files found in .ddev/traefik/config (only %s will be used): %v", app.Name+".yaml", ignoredTraefikFiles)
 		}
 	}
 

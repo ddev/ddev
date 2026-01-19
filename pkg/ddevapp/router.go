@@ -116,6 +116,7 @@ func StartDdevRouter() error {
 	}
 
 	if needsRecreation {
+		output.UserOut.Printf("Starting %s, pushing config...", nodeps.RouterContainer)
 		routerComposeFullPath, err := generateRouterCompose(activeApps)
 		if err != nil {
 			return err
@@ -139,6 +140,8 @@ func StartDdevRouter() error {
 			return fmt.Errorf("failed to start ddev-router: %v", err)
 		}
 	} else {
+		output.UserOut.Printf("%s already running, pushing new config...", nodeps.RouterContainer)
+
 		// Even if we don't recreate, update the Traefik config for the new project
 		err = PushGlobalTraefikConfig(activeApps)
 		if err != nil {
@@ -154,7 +157,7 @@ func StartDdevRouter() error {
 		}
 		util.Debug("Forcing router healthcheck to verify new config is loaded")
 		uid, _, _ := dockerutil.GetContainerUser()
-		_, _, err = dockerutil.Exec(router.ID, "rm -f /tmp/healthy && /healthcheck.sh", uid)
+		_, _, err = dockerutil.Exec(router.ID, "rm -f /tmp/healthy ddev-traefik-errors.txt && /healthcheck.sh", uid)
 		if err != nil {
 			return fmt.Errorf("router healthcheck failed: %v", err)
 		}

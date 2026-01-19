@@ -205,3 +205,111 @@ func GetVolumeSize(volumeName string) (int64, string, error) {
 	// Volume not found in df output, might not exist or have no size
 	return 0, "0B", nil
 }
+
+// PurgeDirectoryContentsInVolume removes all files inside directories within a Docker volume
+// while keeping the directories themselves intact. This is important for inotify watchers that
+// monitor the directory - if the directory is deleted and recreated, the watch breaks.
+// volumeName is the volume to operate on
+// subdirs are the paths within the volume to purge (e.g., "traefik/config", "traefik/certs")
+func PurgeDirectoryContentsInVolume(volumeName string, subdirs []string, uid string) error {
+	volPath := "/mnt/v"
+
+	containerName := "PurgeInVolume_" + nodeps.RandomString(12)
+
+	track := util.TimeTrackC("PurgeDirectoryContentsInVolume " + volumeName)
+
+	// Build mkdir commands and rm glob patterns
+	var mkdirs []string
+	var rmPaths []string
+	for _, subdir := range subdirs {
+		fullPath := volPath + "/" + subdir
+		mkdirs = append(mkdirs, fmt.Sprintf(`"%s"`, fullPath))
+		rmPaths = append(rmPaths, fmt.Sprintf(`"%s"/*`, fullPath))
+	}
+	c := fmt.Sprintf("mkdir -p %s && rm -rf %s", strings.Join(mkdirs, " "), strings.Join(rmPaths, " "))
+
+	labels := map[string]string{"com.ddev.site-name": ""}
+	if IsPodmanRootless() {
+		labels["com.ddev.userns"] = "keep-id"
+	}
+	_, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	track()
+	return nil
+}
+
+// ListFilesInVolume returns a list of filenames in a volume subdirectory.
+// volumeName is the volume to list from
+// subdir is the path within the volume (e.g., "traefik/config")
+// Returns a slice of filenames (not full paths)
+func ListFilesInVolume(volumeName string, subdir string) ([]string, error) {
+	volPath := "/mnt/v"
+	fullPath := volPath + "/" + subdir
+
+	containerName := "ListInVolume_" + nodeps.RandomString(12)
+
+	track := util.TimeTrackC("ListFilesInVolume " + volumeName + "/" + subdir)
+	defer track()
+
+	// List files, suppress errors if directory doesn't exist
+	c := fmt.Sprintf(`ls -1 "%s" 2>/dev/null || true`, fullPath)
+
+	labels := map[string]string{"com.ddev.site-name": ""}
+	if IsPodmanRootless() {
+		labels["com.ddev.userns"] = "keep-id"
+	}
+	_, stdout, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse the output into a slice of filenames
+	var files []string
+	for _, line := range strings.Split(stdout, "\n") {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			files = append(files, line)
+		}
+	}
+
+	return files, nil
+}
+
+// RemoveFilesFromVolume removes specific files from a volume subdirectory.
+// volumeName is the volume to operate on
+// subdir is the path within the volume (e.g., "traefik/config")
+// files is a list of filenames to remove (not full paths)
+func RemoveFilesFromVolume(volumeName string, subdir string, files []string) error {
+	if len(files) == 0 {
+		return nil
+	}
+
+	volPath := "/mnt/v"
+	fullPath := volPath + "/" + subdir
+
+	containerName := "RemoveFromVolume_" + nodeps.RandomString(12)
+
+	track := util.TimeTrackC("RemoveFilesFromVolume " + volumeName + "/" + subdir)
+	defer track()
+
+	// Build rm command for each file
+	var rmPaths []string
+	for _, f := range files {
+		rmPaths = append(rmPaths, fmt.Sprintf(`"%s/%s"`, fullPath, f))
+	}
+	c := fmt.Sprintf("rm -f %s", strings.Join(rmPaths, " "))
+
+	labels := map[string]string{"com.ddev.site-name": ""}
+	if IsPodmanRootless() {
+		labels["com.ddev.userns"] = "keep-id"
+	}
+	_, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -1,7 +1,7 @@
 FROM traefik:3 AS ddev-traefik-router
 
 ENV TRAEFIK_MONITOR_PORT=10999
-RUN apk add --no-cache bash curl htop jq vim yq
+RUN apk add --no-cache bash curl file htop jq openssl vim yq
 WORKDIR /mnt/ddev-global-cache/traefik
 ADD monitor-traefik-stderr.sh /usr/local/bin/monitor-traefik-stderr.sh
 RUN chmod ugo+rx /usr/local/bin/monitor-traefik-stderr.sh

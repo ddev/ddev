@@ -853,6 +853,10 @@ func GetGlobalProjectList() map[string]*ProjectInfo {
 
 // GetCAROOT is a wrapper on global config
 func GetCAROOT() string {
+	_, err := exec.LookPath("mkcert")
+	if err != nil {
+		return ""
+	}
 	return DdevGlobalConfig.MkcertCARoot
 }
 

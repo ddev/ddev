@@ -32,18 +32,18 @@ teardown() {
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin/login"
   assert_success
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_success
+  run curl -sfIv https://${PROJNAME}.ddev.site
   assert_output --partial "x-powered-by: Ibexa Open Source v5"
   assert_output --partial "HTTP/2 200"
-
-  run curl -sf https://${PROJNAME}.ddev.site
   assert_success
+
+  run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "Open-source solution for building custom, scalable websites."
   assert_output --partial "Powered by Ibexa DXP"
-
-  run curl -sf https://${PROJNAME}.ddev.site/admin/login
   assert_success
+
+  run curl -sfv https://${PROJNAME}.ddev.site/admin/login
   assert_output --partial "Welcome to<br/> Ibexa DXP"
   assert_output --partial "<h3 class=\"ibexa-login__support-headline\">Get to know Ibexa DXP</h3>"
+  assert_success
 }

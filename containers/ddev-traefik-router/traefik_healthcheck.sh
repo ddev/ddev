@@ -65,22 +65,31 @@ write_warning() {
     fi
 }
 
-# Wait for traefik to load routers (during initial startup)
-# Only waits if 0 routers loaded but some expected and no errors yet
+# Wait for traefik to reflect file-provider routers (startup and after config pushes)
+# Only waits when we expect routers, there are no errors yet, and counts don't match
 wait_for_routers() {
     local file_router_count="$1"
     local expected_router_count="$2"
     local error_count="$3"
-    local max_retries=10
 
-    # Only retry if: no routers loaded yet AND we expect some AND no errors yet
-    if [ "$file_router_count" -eq 0 ] && [ "$expected_router_count" -gt 0 ] && [ "$error_count" -eq 0 ]; then
+    # How long to wait (seconds) for Traefik to reflect new file-provider config.
+    # This covers both initial startup and later config pushes.
+    local max_retries=60
+
+    # Only retry if: we expect some routers AND there are no errors yet AND counts don't match yet.
+    if [ "$expected_router_count" -gt 0 ] && [ "$error_count" -eq 0 ] && [ "$file_router_count" -ne "$expected_router_count" ]; then
         for _ in $(seq 1 $max_retries); do
             sleep 1
             file_router_count=$(get_file_router_count)
             error_count=$(get_error_count)
-            # Break out if routers are now loaded or errors appeared
-            if [ "$file_router_count" -gt 0 ] || [ "$error_count" -gt 0 ]; then
+
+            # Success: counts match and still no errors.
+            if [ "$file_router_count" -eq "$expected_router_count" ] && [ "$error_count" -eq 0 ]; then
+                break
+            fi
+
+            # Stop early if errors appeared (surface them immediately).
+            if [ "$error_count" -gt 0 ]; then
                 break
             fi
         done
@@ -99,10 +108,10 @@ generate_warning_message() {
 
     if [ "$expected" -eq 0 ]; then
         echo "WARNING: No config files found or no routers expected"
-    elif [ "$actual" -ne "$expected" ]; then
-        echo "WARNING: Router count mismatch: ${actual} loaded, ${expected} expected"
     elif [ "$errors" -gt 0 ]; then
         echo "WARNING: Detected ${errors} configuration error(s)"
+    elif [ "$actual" -ne "$expected" ]; then
+        echo "WARNING: Router count mismatch: ${actual} loaded, ${expected} expected"
     else
         echo "WARNING: Unknown issue detected"
     fi
