@@ -89,7 +89,9 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 		// this slice will be used for nested composer commands
 		validCreateArgs := createArgs
 
-		if !slices.Contains(createArgs, "--no-plugins") {
+		// Remember if --no-plugins was provided by the user
+		noPluginsPresent := slices.Contains(createArgs, "--no-plugins")
+		if !noPluginsPresent {
 			// Don't run plugin events for "composer create-project", but run them for "composer run-script" and "composer install"
 			createArgs = append(createArgs, "--no-plugins")
 		}
@@ -304,7 +306,8 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 			util.Failed("Failed to read composer.json: %v", err)
 		}
 
-		if !noScriptsPresent && composerManifest.HasPostCreateProjectCmdScript() {
+		if (!noScriptsPresent && composerManifest.HasPostCreateProjectCmdScript()) ||
+			(!noPluginsPresent && hasPostCreateProjectCmdEvent(app)) {
 			// Try to run post-create-project-cmd.
 			composerCmd = []string{
 				"composer",
@@ -515,6 +518,39 @@ func isValidComposerOption(app *ddevapp.DdevApp, command string, option string) 
 	}
 	// The option is not valid for other commands on any error.
 	return false
+}
+
+// hasPostCreateProjectCmdEvent checks if any installed Composer plugin subscribes
+// to the post-create-project-cmd event. It parses the verbose output of
+// `composer run-script --list` to extract plugin class names, then uses PHP
+// reflection to check each plugin's getSubscribedEvents() method for the event.
+// Returns true if any plugin handles post-create-project-cmd, false otherwise.
+func hasPostCreateProjectCmdEvent(app *ddevapp.DdevApp) bool {
+	userOutFunc := util.CaptureUserOut()
+	_, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     getComposerRootInContainer(app),
+		Cmd: `
+			composer run-script --list -vvv 2>&1 |
+			grep -i 'Loading plugin' |
+			awk '{print $3}' |
+			while IFS= read -r class; do
+				php -r "
+					require 'vendor/autoload.php';
+					\$pluginClass = '$class';
+					if (method_exists(\$pluginClass, 'getSubscribedEvents')) {
+						\$events = \$pluginClass::getSubscribedEvents();
+						foreach (array_keys(\$events) as \$eventName) {
+							echo \$eventName . PHP_EOL;
+						}
+					}
+				"
+			done | grep -q '^post-create-project-cmd$'
+		`,
+		Env: []string{"XDEBUG_MODE=off"},
+	})
+	_ = userOutFunc()
+	return err == nil
 }
 
 // getComposerRootInContainer returns the composer root in the container
