@@ -118,7 +118,25 @@ According to the [Composer docs](https://getcomposer.org/doc/articles/troublesho
 
 ## Troubleshooting Xdebug
 
-The basic thing to understand about Xdebug is that it’s a network protocol. Your IDE (like PhpStorm) will listen on the Xdebug port (port 9003). If Xdebug is enabled in the DDEV web container (`ddev xdebug on`), PHP inside that container will try to open a TCP connection to the IDE. Docker’s networking places the host-side listening IDE at `host.docker.internal:9003`, so you have to make sure the network connection is clear and can be made and everything should work. Firewalls may get in the way.
+### Use the Xdebug Diagnostics Tool
+
+The easiest way to troubleshoot Xdebug issues is to use the (experimental) built-in diagnostic tool:
+
+```bash
+ddev utility xdebug-diagnose
+```
+
+This command checks your Xdebug configuration, network connectivity, and IDE settings. For a guided step-by-step diagnostic that tests your actual IDE, use:
+
+```bash
+ddev utility xdebug-diagnose --interactive
+```
+
+The interactive mode will walk you through each step and verify that your IDE is correctly configured and responding to Xdebug connections.
+
+### Understanding the Xdebug Network Protocol
+
+The basic thing to understand about Xdebug is that it's a network protocol. Your IDE (like PhpStorm) will listen on the Xdebug port (port 9003). If Xdebug is enabled in the DDEV web container (`ddev xdebug on`), PHP inside that container will try to open a TCP connection to the IDE. Docker’s networking places the host-side listening IDE at `host.docker.internal:9003`, so you have to make sure the network connection is clear and can be made and everything should work. Firewalls may get in the way.
 
 Here are basic steps to take to sort out any difficulty:
 

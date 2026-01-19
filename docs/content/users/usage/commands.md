@@ -1755,6 +1755,20 @@ Example:
 ddev utility testcleanup
 ```
 
+### `utility xdebug-diagnose`
+
+Diagnose Xdebug configuration (experimental)
+
+Example:
+
+```shell
+# Run quick check
+ddev utility xdebug-diagnose
+
+# Run more complete interactive check
+ddev utility xdebug-diagnose --interactive
+```
+
 ## `version`
 
 Print DDEV and component versions.

@@ -38,6 +38,15 @@ RUN apt-get -qq update && apt-get -qq install --no-install-recommends --no-insta
     tzdata-legacy \
     wget
 RUN url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETPLATFORM#linux/}"; wget ${url} -q -O /usr/bin/yq && chmod +x /usr/bin/yq
+
+# Install Xdebug dbgpClient and xdebugctl tools
+# dbgpClient - Command-line DBGp client for testing Xdebug connections
+# xdebugctl - Tool to control Xdebug settings at runtime
+RUN ARCH="${TARGETPLATFORM#linux/}"; \
+    if [ "$ARCH" = "amd64" ]; then ARCH=""; else ARCH="-${ARCH}"; fi; \
+    wget -q https://xdebug.org/files/binaries/xdebugctl${ARCH} -O /usr/local/bin/xdebugctl && \
+    chmod +x /usr/local/bin/xdebugctl
+
 ADD generic-files /
 
 # This curl -I is debugging for intermittent failures on https://github.com/oerdnj/deb.sury.org/issues/2046
