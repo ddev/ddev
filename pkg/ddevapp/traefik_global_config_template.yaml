@@ -2,7 +2,7 @@
 
 tls:
   stores:
-  {{ if not .UseLetsEncrypt }}
+  {{ if and (not .UseLetsEncrypt) .HasCAROOT }}
     default:
       defaultCertificate:
         certFile: {{ .TargetCertsPath }}/default_cert.crt

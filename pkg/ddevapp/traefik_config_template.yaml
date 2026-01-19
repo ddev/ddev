@@ -59,7 +59,7 @@ http:
     {{ end }}
 
 {{/* let's encrypt doesn't work if there's already a provided cert, so omit there */}}
-{{- if not .UseLetsEncrypt -}}
+{{- if and (not .UseLetsEncrypt) .HasCAROOT -}}
 tls:
   certificates:
     - certFile: {{ .TargetCertsPath }}/{{ .App.Name }}.crt

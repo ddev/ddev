@@ -94,13 +94,11 @@ services:
 Traefik provides a dynamic description of its configuration you can visit at `http://localhost:10999`.
 When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#poweroff) and then start your project again by running [`ddev start`](../usage/commands.md#start). Examine the router’s logs to see what the Traefik daemon is doing (or failing at) by running `docker logs ddev-router` or `docker logs -f ddev-router`. The Traefik logs are set to a minimal set by default, but you can enable much more extensive logging and access logs with a `static_config.loglevel.yaml` as [described above](#traefik-static-configuration).
 
-### "Warning: There are router configuration problems"
+### Warning: There are router configuration problems
 
 If you see a warning on `ddev start` about router configuration problems, it is most likely a result of custom configuration problems, which could be an invalid `docker-compose.*.yaml` or leftover project `.ddev/traefik/config/*.yaml` files.
 
-#### "Cannot start the provider *file.Provider error="error adding file watcher: no space left on device"
-
-This warning on `ddev start` is sometimes encountered on Linux systems, the solution is below.
+On Linux systems, file watcher errors related to the `*file.Provider` are a common cause. See the section below for solutions.
 
 ### Linux file watcher errors
 

@@ -8,7 +8,7 @@ import (
 	"text/template"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
+	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -144,21 +144,15 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return fmt.Errorf("failed to purge global Traefik certs dir: %v", err)
 	}
 
-	mkcertIsAvailable := false
-	_, err = exec.RunHostCommand("bash", "-c", "command -v mkcert >/dev/null 2>&1")
-	if err == nil {
-		mkcertIsAvailable = true
-	}
-
 	// Install default certs, except when using Let's Encrypt (when they would
 	// get used instead of Let's Encrypt certs)
-	if mkcertIsAvailable && !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.GetCAROOT() != "" {
 		c := []string{"--cert-file", filepath.Join(globalSourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(globalSourceCertsPath, "default_key.key"), "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default", "*.ddev.site"}
 		if globalconfig.DdevGlobalConfig.ProjectTldGlobal != "" {
 			c = append(c, "*."+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 		}
 
-		out, err := exec.RunHostCommand("mkcert", c...)
+		out, err := exec2.RunHostCommand("mkcert", c...)
 		if err != nil {
 			util.Failed("failed to create global mkcert certificate, check mkcert operation: %v", out)
 		}
@@ -188,6 +182,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		UseLetsEncrypt     bool
 		LetsEncryptEmail   string
 		TraefikMonitorPort string
+		HasCAROOT          bool
 	}
 	templateData := traefikData{
 		TargetCertsPath:    inContainerTargetCertsPath,
@@ -195,28 +190,24 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		UseLetsEncrypt:     globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		LetsEncryptEmail:   globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		TraefikMonitorPort: globalconfig.DdevGlobalConfig.TraefikMonitorPort,
+		HasCAROOT:          globalconfig.GetCAROOT() != "",
 	}
 
-	// We don't want to create default_config.yaml if we aren't using mkcert
-	// or it's not available anyway. Its job is to tell traefik where the certs
-	// are, but there are no certs available in this situation.
-	if globalconfig.DdevGlobalConfig.MkcertCARoot != "" && mkcertIsAvailable {
-		defaultConfigPath := filepath.Join(globalSourceConfigDir, "default_config.yaml")
-		// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
-		f, err := os.Create(defaultConfigPath)
-		if err != nil {
-			util.Failed("Failed to create Traefik default_config.yaml file: %v", err)
-		}
-		defer f.Close()
-		t, err := template.New("traefik_global_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_global_config_template.yaml")
-		if err != nil {
-			return fmt.Errorf("could not create template from traefik_global_config_template.yaml: %v", err)
-		}
+	defaultConfigPath := filepath.Join(globalSourceConfigDir, "default_config.yaml")
+	// Check to see if file can be safely overwritten (has signature, is empty, or doesn't exist)
+	f, err := os.Create(defaultConfigPath)
+	if err != nil {
+		util.Failed("Failed to create Traefik default_config.yaml file: %v", err)
+	}
+	defer f.Close()
+	t, err := template.New("traefik_global_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_global_config_template.yaml")
+	if err != nil {
+		return fmt.Errorf("could not create template from traefik_global_config_template.yaml: %v", err)
+	}
 
-		err = t.Execute(f, templateData)
-		if err != nil {
-			return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
-		}
+	err = t.Execute(f, templateData)
+	if err != nil {
+		return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
 	}
 
 	staticConfigFinalPath := filepath.Join(globalTraefikDir, ".static_config.yaml")
@@ -226,7 +217,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return err
 	}
 
-	t, err := template.New("traefik_static_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
+	t, err = template.New("traefik_static_config_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
 	if err != nil {
 		return fmt.Errorf("could not create template from traefik_static_config_template.yaml: %v", err)
 	}
@@ -258,7 +249,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	expectedCerts := map[string]bool{}
 
 	// Add default certs to expected list if not using Let's Encrypt
-	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.GetCAROOT() != "" {
 		expectedCerts["default_cert.crt"] = true
 		expectedCerts["default_key.key"] = true
 	}
@@ -416,21 +407,15 @@ func configureTraefikForApp(app *DdevApp) error {
 		}
 	}
 
-	mkcertIsAvailable := false
-	_, err = exec.RunHostCommand("bash", "-c", "command -v mkcert >/dev/null 2>&1")
-	if err == nil {
-		mkcertIsAvailable = true
-	}
-
 	// Assuming the certs don't exist, or they have #ddev-generated so can be replaced, create them
 	// But not if we don't have mkcert already set up.
-	if mkcertIsAvailable && sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+	if sigExists && globalconfig.GetCAROOT() != "" {
 		c := []string{"--cert-file", baseName + ".crt", "--key-file", baseName + ".key", "*.ddev.site", "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default"}
 		c = append(c, hostnames...)
 		if app.ProjectTLD != nodeps.DdevDefaultTLD {
 			c = append(c, "*."+app.ProjectTLD)
 		}
-		out, err := exec.RunHostCommand("mkcert", c...)
+		out, err := exec2.RunHostCommand("mkcert", c...)
 		if err != nil {
 			util.Failed("Failed to create certificates for project, check mkcert operation: %v; err=%v", out, err)
 		}
@@ -458,6 +443,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		TargetCertsPath string
 		RoutingTable    []TraefikRouting
 		UseLetsEncrypt  bool
+		HasCAROOT       bool
 	}
 	templateData := traefikData{
 		App:             app,
@@ -466,6 +452,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		TargetCertsPath: inContainerTargetCertsPath,
 		RoutingTable:    routingTable,
 		UseLetsEncrypt:  globalconfig.DdevGlobalConfig.UseLetsEncrypt,
+		HasCAROOT:       globalconfig.GetCAROOT() != "",
 	}
 
 	// Convert externalHostnames wildcards like `*.<anything>` to `[a-zA-Z0-9-]+.wild.ddev.site`

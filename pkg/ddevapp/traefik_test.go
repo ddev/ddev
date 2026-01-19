@@ -75,7 +75,7 @@ func TestTraefikSimple(t *testing.T) {
 	require.Contains(t, stdout, "defaultCertificate", "default_config.yaml should contain default certificate configuration")
 
 	// Verify default certificates exist in the router volume (if not using Let's Encrypt)
-	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.GetCAROOT() != "" {
 		stdout, _, err = dockerutil.Exec("ddev-router", "ls -la /mnt/ddev-global-cache/traefik/certs/", "")
 		require.NoError(t, err, "should be able to list certs directory")
 		require.Contains(t, stdout, "default_cert.crt", "default_cert.crt should exist in router volume")
@@ -159,7 +159,7 @@ func TestTraefikVirtualHost(t *testing.T) {
 
 	// Test Reachability to nginx special VIRTUAL_HOST
 	_, _ = testcommon.EnsureLocalHTTPContent(t, "http://extra.ddev.site", "Welcome to nginx")
-	if globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+	if globalconfig.GetCAROOT() != "" {
 		_, _ = testcommon.EnsureLocalHTTPContent(t, "https://extra.ddev.site", "Welcome to nginx")
 	}
 }
