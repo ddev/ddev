@@ -25,7 +25,7 @@ var interactiveFlag bool
 // XdebugDiagnoseCmd implements the ddev utility xdebug-diagnose command
 var XdebugDiagnoseCmd = &cobra.Command{
 	Use:   "xdebug-diagnose",
-	Short: "Diagnose Xdebug configuration and connectivity",
+	Short: "Diagnose Xdebug configuration and connectivity (Experimental)",
 	Long: `Diagnose Xdebug setup and test connectivity between IDE and web container.
 
 This command checks:

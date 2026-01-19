@@ -120,7 +120,7 @@ According to the [Composer docs](https://getcomposer.org/doc/articles/troublesho
 
 ### Use the Xdebug Diagnostics Tool
 
-The easiest way to troubleshoot Xdebug issues is to use the built-in diagnostic tool:
+The easiest way to troubleshoot Xdebug issues is to use the (experimental) built-in diagnostic tool:
 
 ```bash
 ddev utility xdebug-diagnose
