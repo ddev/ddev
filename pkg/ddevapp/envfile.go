@@ -33,9 +33,11 @@ func WriteProjectEnvFile(envFilePath string, envMap map[string]string, envText s
 		// If the item is already in envText, use regex to replace it
 		// otherwise, append it to the envText.
 		// (^|[\r\n]+) - first group $1 matches the start of a line or newline characters
-		// #*\s* - matches optional comments with whitespaces, i.e. find lines like '# FOO=BAR'
-		// (%s) - second group $2 matches the variable name
-		exp := regexp.MustCompile(fmt.Sprintf(`(^|[\r\n]+)#*\s*(%s)=(.*)`, k))
+		// #*[ \t]* - matches optional comments with spaces/tabs, i.e. find lines like '# FOO=BAR'
+		// (%s) - second group $2 matches the variable name (QuoteMeta escapes dots and other
+		//        regex special chars, e.g. for CodeIgniter's "database.default.hostname")
+		// [ \t]*=[ \t]* - matches equals sign with optional spaces/tabs
+		exp := regexp.MustCompile(fmt.Sprintf(`(^|[\r\n]+)#*[ \t]*(%s)[ \t]*=[ \t]*(.*)`, regexp.QuoteMeta(k)))
 		if exp.MatchString(envText) {
 			// To insert a literal $ in the output, use $$ in the template.
 			// See https://pkg.go.dev/regexp?utm_source=godoc#Regexp.Expand

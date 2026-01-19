@@ -266,6 +266,17 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 	}
 
+	// CodeIgniter commands should only be available for type codeigniter
+	app.Type = nodeps.AppTypeCodeIgniter
+	_ = app.WriteConfig()
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+	for _, c := range []string{"spark"} {
+		_, err = exec.RunHostCommand(DdevBin, "help", c)
+		assert.NoError(err)
+	}
+
 	// Make sure that the non-command stuff we installed has been copied into /mnt/ddev-global-cache
 	commandDirInVolume := "/mnt/ddev-global-cache/global-commands/"
 	for _, f := range []string{".gitattributes", "db/mysqldump.example", "db/README.txt", "web/README.txt"} {
