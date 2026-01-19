@@ -611,6 +611,139 @@ func TestAssignRouterPortsToGenericWebserverPorts(t *testing.T) {
 	}
 }
 
+// TestSortWebExtraExposedPorts verifies that WebExtraExposedPorts are sorted
+// so the entry matching configured router ports comes first (index 0).
+func TestSortWebExtraExposedPorts(t *testing.T) {
+	// Save and restore global config
+	origHTTPPort := globalconfig.DdevGlobalConfig.RouterHTTPPort
+	origHTTPSPort := globalconfig.DdevGlobalConfig.RouterHTTPSPort
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.RouterHTTPPort = origHTTPPort
+		globalconfig.DdevGlobalConfig.RouterHTTPSPort = origHTTPSPort
+	})
+
+	type testCase struct {
+		name                 string
+		webExtraExposedPorts []ddevapp.WebExposedPort
+		appHTTPPort          string // app.RouterHTTPPort
+		appHTTPSPort         string // app.RouterHTTPSPort
+		globalHTTPPort       string // global config
+		globalHTTPSPort      string // global config
+		expectedFirstName    string // expected Name of first entry after sort
+	}
+
+	tests := []testCase{
+		{
+			name:                 "Empty slice - no change",
+			webExtraExposedPorts: []ddevapp.WebExposedPort{},
+			expectedFirstName:    "",
+		},
+		{
+			name: "Single entry - no change",
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{Name: "only", HTTPPort: 8080, HTTPSPort: 8443},
+			},
+			expectedFirstName: "only",
+		},
+		{
+			name: "Standard ports (80/443) listed second - moves to first",
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{Name: "reverb", HTTPPort: 8081, HTTPSPort: 8080},
+				{Name: "main", HTTPPort: 80, HTTPSPort: 443},
+			},
+			expectedFirstName: "main",
+		},
+		{
+			name: "Standard ports listed first - stays first",
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{Name: "main", HTTPPort: 80, HTTPSPort: 443},
+				{Name: "reverb", HTTPPort: 8081, HTTPSPort: 8080},
+			},
+			expectedFirstName: "main",
+		},
+		{
+			name: "Partial match HTTP 80 only - moves to first",
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{Name: "other", HTTPPort: 8081, HTTPSPort: 8080},
+				{Name: "partial", HTTPPort: 80, HTTPSPort: 8443},
+			},
+			expectedFirstName: "partial",
+		},
+		{
+			name: "Full match beats partial match",
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{Name: "partial", HTTPPort: 80, HTTPSPort: 8080},
+				{Name: "full", HTTPPort: 80, HTTPSPort: 443},
+			},
+			expectedFirstName: "full",
+		},
+		{
+			name: "No matching ports - first entry stays first",
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{Name: "first", HTTPPort: 8081, HTTPSPort: 8080},
+				{Name: "second", HTTPPort: 3000, HTTPSPort: 3443},
+			},
+			expectedFirstName: "first",
+		},
+		{
+			name: "App config ports preferred over defaults",
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{Name: "default", HTTPPort: 80, HTTPSPort: 443},
+				{Name: "custom", HTTPPort: 8080, HTTPSPort: 8443},
+			},
+			appHTTPPort:       "8080",
+			appHTTPSPort:      "8443",
+			expectedFirstName: "custom",
+		},
+		{
+			name: "Global config ports preferred over defaults",
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{Name: "default", HTTPPort: 80, HTTPSPort: 443},
+				{Name: "global", HTTPPort: 9080, HTTPSPort: 9443},
+			},
+			globalHTTPPort:    "9080",
+			globalHTTPSPort:   "9443",
+			expectedFirstName: "global",
+		},
+		{
+			name: "App config takes priority over global config",
+			webExtraExposedPorts: []ddevapp.WebExposedPort{
+				{Name: "global", HTTPPort: 9080, HTTPSPort: 9443},
+				{Name: "app", HTTPPort: 8080, HTTPSPort: 8443},
+			},
+			appHTTPPort:       "8080",
+			appHTTPSPort:      "8443",
+			globalHTTPPort:    "9080",
+			globalHTTPSPort:   "9443",
+			expectedFirstName: "app",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Set global config
+			globalconfig.DdevGlobalConfig.RouterHTTPPort = tc.globalHTTPPort
+			globalconfig.DdevGlobalConfig.RouterHTTPSPort = tc.globalHTTPSPort
+
+			app := &ddevapp.DdevApp{
+				WebExtraExposedPorts: tc.webExtraExposedPorts,
+				RouterHTTPPort:       tc.appHTTPPort,
+				RouterHTTPSPort:      tc.appHTTPSPort,
+			}
+
+			ddevapp.SortWebExtraExposedPorts(app)
+
+			if tc.expectedFirstName == "" {
+				require.Empty(t, app.WebExtraExposedPorts)
+			} else {
+				require.NotEmpty(t, app.WebExtraExposedPorts)
+				require.Equal(t, tc.expectedFirstName, app.WebExtraExposedPorts[0].Name,
+					"Expected entry '%s' to be first after sort", tc.expectedFirstName)
+			}
+		})
+	}
+}
+
 // TestPortsMatch tests the PortsMatch function
 func TestPortsMatch(t *testing.T) {
 	tests := []struct {
