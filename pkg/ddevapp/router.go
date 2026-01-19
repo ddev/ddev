@@ -687,7 +687,7 @@ func SyncGenericWebserverPortsWithRouterPorts(app *DdevApp) {
 // SortWebExtraExposedPorts sorts WebExtraExposedPorts so the entry matching
 // the configured router ports comes first (index 0).
 //
-// This is called during app initialization to ensure AssignRouterPortsToGenericWebserverPorts
+// This is called by app.ReadConfig to ensure AssignRouterPortsToGenericWebserverPorts
 // and SyncGenericWebserverPortsWithRouterPorts work correctly with WebExtraExposedPorts[0].
 //
 // Priority for matching: app.RouterHTTPPort -> global config -> defaults (80/443).
@@ -714,10 +714,17 @@ func SortWebExtraExposedPorts(app *DdevApp) {
 	httpPort, _ := strconv.Atoi(preferredHTTP)
 	httpsPort, _ := strconv.Atoi(preferredHTTPS)
 
+	// Sort ports so the best match for the requested HTTP/HTTPS ports comes first.
+	// The order is stable, so ports with the same match quality keep their
+	// original relative order.
 	slices.SortStableFunc(app.WebExtraExposedPorts, func(a, b WebExposedPort) int {
 		aMatch := 0
 		bMatch := 0
-		// Full match = 2, partial = 1, none = 0
+
+		// Match scoring:
+		// 2 = both HTTP and HTTPS ports match exactly
+		// 1 = either HTTP or HTTPS port matches
+		// 0 = no match at all
 		if a.HTTPPort == httpPort && a.HTTPSPort == httpsPort {
 			aMatch = 2
 		} else if a.HTTPPort == httpPort || a.HTTPSPort == httpsPort {
@@ -728,6 +735,7 @@ func SortWebExtraExposedPorts(app *DdevApp) {
 		} else if b.HTTPPort == httpPort || b.HTTPSPort == httpsPort {
 			bMatch = 1
 		}
-		return bMatch - aMatch // Higher match comes first
+		// Sort in descending order so higher-quality matches appear first
+		return bMatch - aMatch
 	})
 }
