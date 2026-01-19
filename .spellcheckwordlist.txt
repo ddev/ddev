@@ -36,6 +36,7 @@ Commands
 Completely
 Create
 CRM
+CrowdStrike
 DBeaver
 DDEV's
 DDEV
@@ -643,6 +644,7 @@ styleguide
 subdirectory
 subdirectories
 subfield
+subnet
 sudo
 superglobal
 supervisord
