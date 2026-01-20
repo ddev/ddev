@@ -19,18 +19,12 @@ done
 
 RUN ls -l /usr/sbin/dpkg-split /usr/sbin/dpkg-deb /usr/sbin/tar /usr/sbin/rm
 
-# Add backports repository to have ability to install newer packages
-# See https://backports.debian.org/Instructions/
-# This is used to install updated curl, see https://github.com/curl/curl/issues/18336
-RUN printf "Types: deb\nURIs: http://deb.debian.org/debian\nSuites: trixie-backports\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.pgp\n" > /etc/apt/sources.list.d/debian-backports.sources
-
-# curl/trixie-backports - newer curl version from backports
 # tzdata-legacy - to avoid issues with deprecated timezones
 RUN apt-get -qq update && apt-get -qq install --no-install-recommends --no-install-suggests -y \
     apt-transport-https \
     ca-certificates \
     bzip2 \
-    curl/trixie-backports \
+    curl \
     git \
     gnupg \
     lsb-release \

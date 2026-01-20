@@ -92,6 +92,9 @@ fi
 
 exit_code=$?
 
+# Wait for background process substitution (tee) to complete writing to file
+wait
+
 # Exit on success
 if [ "${exit_code}" -eq 0 ]; then
   rm -f "${tmp_error_file}" "${error_file}"

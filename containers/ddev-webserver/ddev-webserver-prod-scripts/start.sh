@@ -93,7 +93,7 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 
 if [ "${N_PREFIX:-}" != "" ] && [ "${N_INSTALL_VERSION:-}" != "" ]; then
-  n-install.sh || true
+  log-stderr.sh n-install.sh || true
 fi
 
 # The following ensures a persistent and shared "global" cache for
