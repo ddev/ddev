@@ -46,7 +46,7 @@ teardown() {
   assert_output --partial "HTTP/2 200"
   assert_success
   run curl -sfLv "https://${PROJNAME}.ddev.site/"
-  assert_output --partial "Welcome to a default website made with "
+  assert_output --partial "Welcome to your default website"
   assert_success
   run curl -sfLv "https://${PROJNAME}.ddev.site/typo3/"
   assert_output --partial "TYPO3 CMS Login:"
