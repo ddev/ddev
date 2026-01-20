@@ -12,11 +12,20 @@ teardown() {
 }
 
 @test "CiviCRM quickstart with $(ddev --version)" {
-  # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
   run ddev config --project-type=php --composer-root=core --upload-dirs=public/media
+  assert_success
+
+  # GitHub Actions always fail on "ddev composer require civicrm/cli-tools --no-scripts"
+  # We can use newer curl from backports for testing to avoid this problem.
+  # More info: https://github.com/ddev/ddev/pull/7897
+  cat << 'EOF' > .ddev/web-build/pre.Dockerfile.backports
+RUN printf "Types: deb\nURIs: http://deb.debian.org/debian\nSuites: trixie-backports\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.pgp\n" > /etc/apt/sources.list.d/debian-backports.sources
+EOF
+  assert_file_exist .ddev/web-build/pre.Dockerfile.backports
+  run ddev config --webimage-extra-packages="curl/trixie-backports"
   assert_success
 
   run ddev start
@@ -26,9 +35,6 @@ teardown() {
   assert_success
 
   run ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
-  assert_success
-
-  run ddev composer update civicrm/composer-compile-plugin --no-scripts
   assert_success
 
   run ddev composer require civicrm/cli-tools --no-scripts
