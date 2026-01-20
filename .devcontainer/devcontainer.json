@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
-    "name": "Go",
+    "name": "DDEV Development",
     // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
     "image": "mcr.microsoft.com/devcontainers/base:debian-12",
     // Features to add to the dev container. More info: https://containers.dev/features.
@@ -13,7 +13,7 @@
             "version": "latest"
         },
         "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
-            "packages": "autojump,curl,wget,xdg-utils"
+            "packages": "autojump,curl,wget,xdg-utils,mkcert"
         },
         "ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {},
         "ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
@@ -29,5 +29,5 @@
     },
 
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "bash -x ./.devcontainer/setup_test_project.sh && echo 'Test project set up.' || echo 'Test project installation failed'",
+    "postCreateCommand": "bash -x ./.devcontainer/setup_test_project.sh && echo 'Test project set up.' || echo 'Test project installation failed'"
 }
