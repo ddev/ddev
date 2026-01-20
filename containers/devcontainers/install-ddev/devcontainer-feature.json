@@ -1,6 +1,15 @@
 {
-    "name": "Install DDEV for Codespaces",
     "id": "install-ddev",
     "version": "${DDEV_VERSION}",
-    "description": "DDEV Devcontainer feature for Codespaces/Devcontainers"
+    "name": "Install DDEV for Codespaces",
+    "description": "DDEV Devcontainer feature for Codespaces/Devcontainers",
+    "documentationURL": "https://docs.ddev.com/en/stable/users/install/ddev-installation/#github-codespaces",
+    "installsAfter": [
+        "ghcr.io/devcontainers/features/docker-in-docker"
+    ],
+    "containerEnv": {
+        "XDG_CONFIG_HOME": "/workspaces/.config",
+        "IN_DEVCONTAINER": "true"
+    },
+    "postCreateCommand": "/usr/local/bin/ddev-post-create.sh"
 }
