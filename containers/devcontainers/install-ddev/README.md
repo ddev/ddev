@@ -21,9 +21,15 @@ Add the feature to your `.devcontainer/devcontainer.json`:
 The feature automatically:
 - Installs DDEV from the apt repository
 - Configures environment variables (`XDG_CONFIG_HOME`, `IN_DEVCONTAINER`)
-- Sets up mkcert for SSL certificates
+- Installs mkcert binary (DDEV will generate certificates as needed)
 - Fixes `/workspaces` permissions for config storage
 - Verifies installation with `ddev version`
+
+**Note:** The feature does not run `mkcert -install` because:
+- In Codespaces, the browser runs on your host machine, not in the container
+- Installing CA certificates in the container doesn't help the remote browser
+- Codespaces provides HTTPS URLs via port forwarding, not mkcert
+- DDEV functions properly without trusted certificates
 
 ## Testing the Feature
 
