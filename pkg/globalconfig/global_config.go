@@ -90,6 +90,8 @@ func New() GlobalConfig {
 		RouterHTTPSPort:              nodeps.DdevDefaultRouterHTTPSPort,
 		RouterMailpitHTTPPort:        nodeps.DdevDefaultMailpitHTTPPort,
 		RouterMailpitHTTPSPort:       nodeps.DdevDefaultMailpitHTTPSPort,
+		RouterXHGuiHTTPPort:          nodeps.DdevDefaultXHGuiHTTPPort,
+		RouterXHGuiHTTPSPort:         nodeps.DdevDefaultXHGuiHTTPSPort,
 		LastStartedVersion:           "v0.0",
 		NoBindMounts:                 nodeps.NoBindMountsDefault,
 		Router:                       types.RouterTypeTraefik,
@@ -339,8 +341,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 		cfgCopy.PerformanceMode = cfgCopy.GetPerformanceMode()
 	}
 
+	// Overwrite XHProfMode with effective value if empty.
 	if cfgCopy.XHProfMode == configTypes.XHProfModeEmpty {
-		cfgCopy.XHProfMode = nodeps.XHProfModeDefault
+		cfgCopy.XHProfMode = cfgCopy.GetXHProfMode()
 	}
 
 	// Clear remote config URLs if they match defaults so they don't appear in config file
