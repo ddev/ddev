@@ -235,13 +235,13 @@ func TestGetContainerHealth(t *testing.T) {
 	status, log := dockerutil.GetContainerHealth(c)
 	assert.Equal("healthy", status, "container should be healthy; log=%v", log)
 
-	// Now break the container and make sure it's unhealthy
+	// Now stop the container and make sure it's exited
 	timeout := 10
 	_, err = apiClient.ContainerStop(ctx, c.ID, client.ContainerStopOptions{Timeout: &timeout})
 	assert.NoError(err)
 
 	status, log = dockerutil.GetContainerHealth(c)
-	assert.Equal("unhealthy", status, "container should be unhealthy; log=%v", log)
+	assert.Equal("exited", status, "container should be exited; log=%v", log)
 	assert.NoError(err)
 }
 

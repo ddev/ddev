@@ -2910,6 +2910,32 @@ func (app *DdevApp) Pause() error {
 	}); err != nil {
 		return err
 	}
+
+	// Wait for containers to fully transition to exited state
+	// This prevents race conditions where SiteStatus() might return "unhealthy"
+	// instead of "paused" when checked immediately after Pause() returns
+	// Poll for up to 5 seconds with 100ms intervals
+	maxAttempts := 50
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		containers, err := dockerutil.GetAppContainers(app.Name)
+		if err != nil {
+			// If we can't get containers, assume they're stopped
+			break
+		}
+
+		allExited := true
+		for _, c := range containers {
+			if c.State != container.StateExited {
+				allExited = false
+				break
+			}
+		}
+		if allExited {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
 	err = app.ProcessHooks("post-pause")
 	if err != nil {
 		return err

@@ -182,7 +182,7 @@ func GetContainerStateByName(name string) (container.ContainerState, error) {
 	if err != nil || c == nil {
 		return "doesnotexist", fmt.Errorf("container %s does not exist", name)
 	}
-	if c.State == "running" {
+	if c.State == container.StateRunning {
 		return c.State, nil
 	}
 	return c.State, fmt.Errorf("container %s is in state=%s so can't be accessed", name, c.State)
@@ -287,7 +287,7 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 			c, err := FindContainerByLabels(labels)
 			if err == nil && c != nil {
 				health, _ := GetContainerHealth(c)
-				if health != "healthy" {
+				if health != string(container.Healthy) {
 					name, suggestedCommand := getSuggestedCommandForContainerLog(c, waittime)
 					desc = desc + fmt.Sprintf(" %s:%s\n%s", name, health, suggestedCommand)
 				}
@@ -317,12 +317,12 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 			}
 
 			switch health {
-			case "healthy":
+			case string(container.Healthy):
 				return logOutput, nil
-			case "unhealthy":
+			case string(container.Unhealthy):
 				name, suggestedCommand := getSuggestedCommandForContainerLog(c, 0)
 				return logOutput, fmt.Errorf("%s container is unhealthy, log=%s\n%s", name, logOutput, suggestedCommand)
-			case "exited":
+			case string(container.StateExited):
 				name, suggestedCommand := getSuggestedCommandForContainerLog(c, 0)
 				return logOutput, fmt.Errorf("%s container exited,\n%s", name, suggestedCommand)
 			}
@@ -355,7 +355,7 @@ func ContainersWait(waittime int, labels map[string]string) error {
 			if err == nil && containers != nil {
 				for _, c := range containers {
 					health, _ := GetContainerHealth(&c)
-					if health != "healthy" {
+					if health != string(container.Healthy) {
 						name, suggestedCommand := getSuggestedCommandForContainerLog(&c, waittime)
 						desc = desc + fmt.Sprintf(" %s:%s\n%s", name, health, suggestedCommand)
 					}
@@ -375,13 +375,13 @@ func ContainersWait(waittime int, labels map[string]string) error {
 				health, logOutput := GetContainerHealth(&c)
 
 				switch health {
-				case "healthy":
+				case string(container.Healthy):
 					healthyCount++
 					continue
-				case "unhealthy":
+				case string(container.Unhealthy):
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&c, 0)
 					return fmt.Errorf("%s container is unhealthy, log=%s\n%s", name, logOutput, suggestedCommand)
-				case "exited":
+				case string(container.StateExited):
 					name, suggestedCommand := getSuggestedCommandForContainerLog(&c, 0)
 					return fmt.Errorf("%s container exited.\n%s", name, suggestedCommand)
 				default:
@@ -475,7 +475,7 @@ func GetContainerHealth(c *container.Summary) (string, string) {
 	// If the container is not running, then return exited as the health.
 	// "exited" means stopped.
 	cState := string(c.State)
-	if cState == "exited" || cState == "restarting" {
+	if cState == string(container.StateExited) || cState == string(container.StateRestarting) {
 		return cState, ""
 	}
 
@@ -502,17 +502,24 @@ func GetContainerHealth(c *container.Summary) (string, string) {
 		}
 		// A container can't be healthy if it's not running.
 		// Docker/Podman may cache the last health status even after state changes.
-		if inspect.Container.State.Status != "running" {
-			status = "unhealthy"
+		if inspect.Container.State.Status != container.StateRunning {
+			// Return actual state for known non-running states
+			switch inspect.Container.State.Status {
+			case container.StateExited, container.StateRestarting:
+				status = string(inspect.Container.State.Status)
+			default:
+				// For other non-running states, override cached health to unhealthy
+				status = string(container.Unhealthy)
+			}
 		}
 	} else {
 		// Some containers may not have a healthcheck. In that case
 		// we use State to determine health
-		switch string(inspect.Container.State.Status) {
-		case "running":
-			status = "healthy"
-		case "exited":
-			status = "exited"
+		switch inspect.Container.State.Status {
+		case container.StateRunning:
+			status = string(container.Healthy)
+		case container.StateExited:
+			status = string(container.StateExited)
 		}
 	}
 
