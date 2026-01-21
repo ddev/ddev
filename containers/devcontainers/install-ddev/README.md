@@ -37,17 +37,17 @@ To test local changes to this feature before publishing:
 
 1. Create a test devcontainer configuration that references the local feature:
 
-```json
-{
-  "image": "mcr.microsoft.com/devcontainers/base:debian-12",
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest"
-    },
-    "./path/to/install-ddev": {}
-  }
-}
-```
+    ```json
+    {
+      "image": "mcr.microsoft.com/devcontainers/base:debian-12",
+      "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+          "version": "latest"
+        },
+        "./path/to/install-ddev": {}
+      }
+    }
+    ```
 
 2. The feature directory must be within the `.devcontainer/` folder (VS Code security requirement)
 3. Copy or symlink the feature files into `.devcontainer/install-ddev/`
@@ -59,26 +59,26 @@ To test with a development build of DDEV (from source) instead of the released a
 
 1. Add the Go feature and mount your DDEV source:
 
-```json
-{
-  "image": "mcr.microsoft.com/devcontainers/base:debian-12",
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/go:1": {
-      "version": "latest"
-    },
-    "./install-ddev": {}
-  },
-  "containerEnv": {
-    "DDEV_BUILD_FROM_SOURCE": "/workspaces/ddev"
-  },
-  "mounts": [
-    "source=/path/to/ddev/source,target=/workspaces/ddev,type=bind"
-  ]
-}
-```
+    ```json
+    {
+      "image": "mcr.microsoft.com/devcontainers/base:debian-12",
+      "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+          "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/go:1": {
+          "version": "latest"
+        },
+        "./install-ddev": {}
+      },
+      "containerEnv": {
+        "DDEV_BUILD_FROM_SOURCE": "/workspaces/ddev"
+      },
+      "mounts": [
+        "source=/path/to/ddev/source,target=/workspaces/ddev,type=bind"
+      ]
+    }
+    ```
 
 2. When `DDEV_BUILD_FROM_SOURCE` is set and points to a valid DDEV source directory:
    - The stable DDEV is installed from apt during build (fast)
@@ -87,9 +87,9 @@ To test with a development build of DDEV (from source) instead of the released a
 
 3. To rebuild DDEV manually after making changes:
 
-```bash
-cd /workspaces/ddev && make && sudo cp .gotmp/bin/linux_$(dpkg --print-architecture)/ddev /usr/local/bin/ddev
-```
+    ```bash
+    cd /workspaces/ddev && make && sudo cp .gotmp/bin/linux_$(dpkg --print-architecture)/ddev /usr/local/bin/ddev
+    ```
 
 ## Files
 
