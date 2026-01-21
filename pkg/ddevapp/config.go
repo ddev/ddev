@@ -91,9 +91,9 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	// Provide a default app name based on directory name
 	app.Name = NormalizeProjectName(filepath.Base(app.AppRoot))
 
-	// Gather containers to omit, adding ddev-router for codespaces
+	// Gather containers to omit, adding ddev-router for codespaces/devcontainer
 	app.OmitContainersGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
-	if nodeps.IsCodespaces() {
+	if nodeps.IsDevcontainer() {
 		app.OmitContainersGlobal = append(app.OmitContainersGlobal, "ddev-router")
 	}
 
@@ -987,6 +987,7 @@ type composeYAMLVars struct {
 	UploadDirsMap             []string
 	GitDirMount               bool
 	IsCodespaces              bool
+	IsDevcontainer            bool
 	DefaultContainerTimeout   string
 	WebExtraContainerPorts    []int
 	WebExtraHTTPPorts         string
@@ -1079,6 +1080,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		UploadDirsMap:      app.getUploadDirsHostContainerMapping(),
 		GitDirMount:        false,
 		IsCodespaces:       nodeps.IsCodespaces(),
+		IsDevcontainer:     nodeps.IsDevcontainer(),
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
 		XHGuiHTTPPort:           app.GetXHGuiHTTPPort(),

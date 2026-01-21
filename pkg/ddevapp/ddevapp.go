@@ -2719,16 +2719,16 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		util.WarningOnce("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
-	// For Codespaces
+	// For Codespaces/Devcontainer
 	// * provide default host-side port bindings, assuming only one project running,
 	//   but if more than one project, can override with normal config.yaml settings.
 	// Codespaces stumbles if not on a "standard" port like port 80
-	if nodeps.IsCodespaces() {
+	if nodeps.IsDevcontainer() {
 		if app.HostWebserverPort == "" {
 			app.HostWebserverPort = "80"
 		}
 	}
-	if nodeps.IsCodespaces() {
+	if nodeps.IsDevcontainer() {
 		if app.HostWebserverPort == "" {
 			app.HostWebserverPort = "8080"
 		}
@@ -2855,6 +2855,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		"DDEV_GOARCH":                    runtime.GOARCH,
 		"IS_DDEV_PROJECT":                "true",
 		"IS_CODESPACES":                  strconv.FormatBool(nodeps.IsCodespaces()),
+		"IS_DEVCONTAINER":                strconv.FormatBool(nodeps.IsDevcontainer()),
 		"IS_WSL2":                        isWSL2,
 	}
 

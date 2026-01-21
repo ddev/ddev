@@ -70,6 +70,9 @@ func GetHostDockerInternal() *HostDockerInternal {
 		case nodeps.IsCodespaces():
 			message = "IsCodespaces uses 'host-gateway' in extra_hosts"
 
+		case nodeps.IsDevcontainer():
+			message = "IsDevcontainer uses 'host-gateway' in extra_hosts"
+
 		case nodeps.IsWSL2() && IsDockerDesktop():
 			// If IDE is on Windows, return; we don't have to do anything.
 			message = "IsWSL2 and IsDockerDesktop"
