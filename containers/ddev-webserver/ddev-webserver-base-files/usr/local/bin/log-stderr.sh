@@ -4,12 +4,22 @@
 # When you run a command through it, stderr gets saved to /tmp/ddev-log-stderr-*.txt
 # but only if the command fails.
 #
-# During `ddev start`, we call "log-stderr.sh --show" from app.Start() to display
-# all warnings that were collected. If there are any errors, and you have internet,
-# DDEV will rebuild the web image without cache to try to fix the problem.
+# There are two different contexts where this is used:
 #
-# This helps catch issues that would be hidden otherwise, like network problems
-# during image build and container startup.
+# 1. During image build (additional layers in `.ddev/.webimageBuild/Dockerfile`)
+#    - Use: log-stderr.sh <command>
+#    - Errors saved here will trigger a rebuild without cache on next `ddev start`
+#    - This catches build-time problems like missing dependencies or network issues
+#
+# 2. During container startup (using /start.sh script)
+#    - Use: log-stderr.sh [--timeout <seconds>] <command>
+#    - Errors are shown to the user but DON'T trigger rebuild (image is already built)
+#    - Optional --timeout can be used for commands that might hang (like network calls)
+#    - Timeout logs are saved separately and cleaned up by --show
+#    - This catches runtime issues like slow networks or unavailable services
+#
+# During `ddev start`, we call "log-stderr.sh --show" from app.Start() to display
+# all collected warnings to the user.
 
 # Function to display usage information
 usage() {
