@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 
-# This script is used to run a command with optional timeout
-# and save stderr to /tmp/ddev-log-stderr-{whoami}-{command-md5sum}.txt
+# This script wraps commands to catch and save their stderr output.
+# When you run a command through it, stderr gets saved to /tmp/ddev-log-stderr-*.txt
+# but only if the command fails.
+#
+# During `ddev start`, we call "log-stderr.sh --show" from app.Start() to display
+# all warnings that were collected. If there are any errors, and you have internet,
+# DDEV will rebuild the web image without cache to try to fix the problem.
+#
+# This helps catch issues that would be hidden otherwise, like network problems
+# during image build and container startup.
 
 # Function to display usage information
 usage() {
