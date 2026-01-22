@@ -24,7 +24,9 @@ RUN for file in /etc/bash.bashrc /etc/bash.nointeractive.bashrc; do \
         echo '[ -s "$DDEV_APPROOT/env/bin/activate" ] && source "$DDEV_APPROOT/env/bin/activate"' >> "$file"; \
     done
 DOCKERFILEEND
+  run ddev mutagen sync
   assert_success
+  assert_file_exist .ddev/web-build/Dockerfile.python-venv
 
   run ddev start -y
   assert_success
@@ -62,7 +64,9 @@ web_extra_exposed_ports:
       http_port: 80
       https_port: 443
 EOF
+  run ddev mutagen sync
   assert_success
+  assert_file_exist .ddev/config.wagtail.yaml
 
   run ddev restart
   assert_success

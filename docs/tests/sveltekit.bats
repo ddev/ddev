@@ -32,7 +32,9 @@ web_extra_daemons:
       command: "node build"
       directory: /var/www/html
 EOF
+  run ddev mutagen sync
   assert_success
+  assert_file_exist .ddev/config.sveltekit.yaml
 
   run ddev exec "yes | npx sv create --template=demo --types=ts --no-add-ons --no-install ."
   assert_success

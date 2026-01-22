@@ -36,7 +36,9 @@ web_extra_daemons:
       command: "node server.js"
       directory: /var/www/html
 EOF
+  run ddev mutagen sync
   assert_success
+  assert_file_exist .ddev/config.nodejs.yaml
 
   run ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
   assert_success

@@ -20,7 +20,9 @@ teardown() {
   assert_success
 
   echo "<?php phpinfo(); ?>" > index.php
+  run ddev mutagen sync
   assert_success
+  assert_file_exist index.php
 
   cat <<'EOF' > .ddev/config.php-server.yaml
 web_extra_daemons:
@@ -33,7 +35,9 @@ web_extra_exposed_ports:
       http_port: 80
       https_port: 443
 EOF
+  run ddev mutagen sync
   assert_success
+  assert_file_exist .ddev/config.php-server.yaml
 
   run ddev start -y
   assert_success
