@@ -34,7 +34,7 @@ DOCKERFILEEND
   run ddev exec python -m venv env
   assert_success
 
-  run ddev exec pip install wagtail
+  run ddev exec pip install wagtail gunicorn
   assert_success
 
   run ddev exec wagtail start mysite .
@@ -56,7 +56,7 @@ DOCKERFILEEND
   cat <<'EOF' > .ddev/config.wagtail.yaml
 web_extra_daemons:
     - name: "wagtail"
-      command: "python manage.py runserver 0.0.0.0:8000"
+      command: "gunicorn mysite.wsgi:application -b 0.0.0.0:8000"
       directory: /var/www/html
 web_extra_exposed_ports:
     - name: "wagtail"
@@ -78,7 +78,7 @@ EOF
 
   # validate running project - check if Wagtail is responding
   run curl -sfI https://${PROJNAME}.ddev.site
-  assert_output --regexp "server:.*Python"
+  assert_output --partial "server: gunicorn"
   assert_success
 
   # Verify main site is running

@@ -928,9 +928,9 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
 ## Generic
 
-The [`generic` webserver type](./configuration/config.md#webserver_type) allows you to define your own web server process(es) and exposed ports for projects that don't use the standard `nginx-fpm` or `apache-fpm` configurations.
+The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows you to define your own web server process(es) and exposed ports for projects that don't use the standard `nginx-fpm` or `apache-fpm` configurations.
 
-!!!tip "Looking for more advanced generic webserver examples?"
+!!!tip "Looking for more advanced generic web server examples?"
     Check out the [Node.js](#nodejs) and [Wagtail](#wagtail) examples below.
 
     See also the [ddev-frankenphp](https://github.com/ddev/ddev-frankenphp) add-on, which uses the `generic` webserver under the hood.
@@ -951,7 +951,7 @@ Create a sample PHP info page:
 echo "<?php phpinfo(); ?>" > index.php
 ```
 
-Configure the webserver to run PHP's built-in server:
+Configure the web server to run PHP's built-in server:
 
 ```bash
 cat <<'EOF' > .ddev/config.php-server.yaml
@@ -2737,7 +2737,7 @@ Create a Python virtual environment and install Wagtail:
 
 ```bash
 ddev exec python -m venv env
-ddev exec pip install wagtail
+ddev exec pip install wagtail gunicorn
 ```
 
 Initialize the Wagtail project:
@@ -2766,7 +2766,7 @@ Configure DDEV to run the Wagtail development server:
 cat <<'EOF' > .ddev/config.wagtail.yaml
 web_extra_daemons:
     - name: "wagtail"
-      command: "python manage.py runserver 0.0.0.0:8000"
+      command: "gunicorn mysite.wsgi:application -b 0.0.0.0:8000"
       directory: /var/www/html
 web_extra_exposed_ports:
     - name: "wagtail"
@@ -2805,7 +2805,7 @@ ddev launch /admin
     INNEREOF
     ddev start -y
     ddev exec python -m venv env
-    ddev exec pip install wagtail
+    ddev exec pip install wagtail gunicorn
     ddev exec wagtail start mysite .
     ddev exec pip install -r requirements.txt
     ddev exec "echo \"CSRF_TRUSTED_ORIGINS = ['https://*.\$DDEV_TLD']\" >> mysite/settings/dev.py"
@@ -2814,7 +2814,7 @@ ddev launch /admin
     cat <<'INNEREOF' > .ddev/config.wagtail.yaml
     web_extra_daemons:
         - name: "wagtail"
-          command: "python manage.py runserver 0.0.0.0:8000"
+          command: "gunicorn mysite.wsgi:application -b 0.0.0.0:8000"
           directory: /var/www/html
     web_extra_exposed_ports:
         - name: "wagtail"
