@@ -8,6 +8,7 @@ import (
 	"os"
 	goexec "os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -873,9 +874,17 @@ func GetAddonTarballURL(ownerRepo, gitRef string, head bool, prNumber int) (tarb
 }
 
 // GetAddonNamesFunc returns a function for autocomplete that provides addon names
-// from the cached add-on registry
-func GetAddonNamesFunc() func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
-	return func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+// from the cached add-on registry.
+// If numArgs is 0, completion will be provided for infinite arguments,
+// otherwise it will only be provided for the numArgs number of arguments.
+func GetAddonNamesFunc(numArgs int) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
+		// Don't provide completions if the user keeps hitting space after
+		// exhausting all of the valid arguments.
+		if numArgs > 0 && len(args)+1 > numArgs {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
 		addons, err := ListAvailableAddonsFromRegistry()
 		if err != nil {
 			// If we can't get addons, return no completions
@@ -883,10 +892,13 @@ func GetAddonNamesFunc() func(*cobra.Command, []string, string) ([]string, cobra
 		}
 
 		// Extract addon names in owner/repo format
+		// Don't show arguments that are already written on the command line
 		var addonNames []string
 		for _, addon := range addons {
 			addonName := fmt.Sprintf("%s/%s", addon.User, addon.Repo)
-			addonNames = append(addonNames, addonName)
+			if !slices.Contains(args, addonName) {
+				addonNames = append(addonNames, addonName)
+			}
 		}
 
 		return addonNames, cobra.ShellCompDirectiveNoFileComp

@@ -24,7 +24,7 @@ var AddonGetCmd = &cobra.Command{
 	Use:               "get <addonOrURL>",
 	Aliases:           []string{"install"},
 	Args:              cobra.ExactArgs(1),
-	ValidArgsFunction: ddevapp.GetAddonNamesFunc(),
+	ValidArgsFunction: ddevapp.GetAddonNamesFunc(1),
 	Short:             "Get/Download a 3rd party add-on (service, provider, etc.)",
 	Long:              `Get/Download a 3rd party add-on (service, provider, etc.). This can be a GitHub repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory.`,
 	Example: `ddev add-on get ddev/ddev-redis

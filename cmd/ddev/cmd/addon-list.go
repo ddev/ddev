@@ -127,7 +127,7 @@ func renderRepositoryList(addons []types.Addon) string {
 
 	t.Render()
 
-	return out.String() + fmt.Sprintf("%d add-ons found. Add-ons marked with '*' are officially maintained DDEV add-ons.", len(addons))
+	return out.String() + fmt.Sprintf("%d add-ons found. Those marked with '*' are officially maintained by DDEV.", len(addons))
 }
 
 func init() {

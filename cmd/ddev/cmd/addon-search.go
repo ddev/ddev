@@ -66,7 +66,7 @@ ddev add-on search "redis insight"`,
 		}
 
 		if len(filteredAddons) == 0 {
-			output.UserOut.Printf("No add-ons found matching '%s'\n", searchTerms)
+			util.Warning("No add-ons found matching '%s'\n", searchTerms)
 			return
 		}
 
@@ -105,7 +105,7 @@ func renderSearchResults(addons []types.Addon, searchTerm string) string {
 
 	t.Render()
 
-	return out.String() + fmt.Sprintf("%d add-ons found matching '%s'. Add-ons marked with '*' are officially maintained DDEV add-ons.", len(addons), searchTerm)
+	return out.String() + fmt.Sprintf("%d add-ons found matching '%s'. Those marked with '*' are officially maintained by DDEV.", len(addons), searchTerm)
 }
 
 func init() {
