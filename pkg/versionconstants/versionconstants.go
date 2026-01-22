@@ -61,7 +61,7 @@ const RequiredMutagenVersion = "0.18.1"
 // RequiredDockerComposeVersionDefault defines the required version of docker-compose
 // Keep this in sync with github.com/compose-spec/compose-go/v2 in go.mod,
 // matching the version used in https://github.com/docker/compose/blob/main/go.mod for the same tag
-const RequiredDockerComposeVersionDefault = "v5.0.1"
+const RequiredDockerComposeVersionDefault = "v5.0.2"
 
 // ---
 // Fallback version derivation for developer builds not using the Makefile

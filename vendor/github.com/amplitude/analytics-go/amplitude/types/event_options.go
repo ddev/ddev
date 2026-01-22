@@ -7,6 +7,7 @@ import (
 type EventOptions struct {
 	UserID             string             `json:"user_id,omitempty"`
 	DeviceID           string             `json:"device_id,omitempty"`
+	UserAgent          string             `json:"user_agent,omitempty"`
 	Time               int64              `json:"time,omitempty"`
 	InsertID           string             `json:"insert_id,omitempty"`
 	Library            string             `json:"library,omitempty"`

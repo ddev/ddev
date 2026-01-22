@@ -23,7 +23,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Regexp pattern to determine if a hostname is valid per RFC 1123.

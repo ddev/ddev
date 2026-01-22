@@ -12,7 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // processTestAddon is a helper function to process addon install.yaml files from testdata
