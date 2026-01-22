@@ -1493,9 +1493,15 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	warnMissingDocroot(app)
 
-	var additionalImages []string
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-		additionalImages = append(additionalImages, app.GetDBImage())
+	// WriteConfig .ddev-docker-compose-*.yaml
+	err = app.WriteDockerComposeYAML()
+	if err != nil {
+		return err
+	}
+	// This needs to be done after WriteDockerComposeYAML() to get the right images
+	additionalImages, err := app.FindAllImages()
+	if err != nil {
+		return err
 	}
 
 	err = PullBaseContainerImages(additionalImages, false)
@@ -1714,12 +1720,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
 		return err
-	}
-
-	// This needs to be done after WriteDockerComposeYAML() to get the right images
-	err = app.PullContainerImages(false)
-	if err != nil {
-		util.Warning("Unable to pull Docker images: %v", err)
 	}
 
 	err = app.AddHostsEntriesIfNeeded()
@@ -2144,15 +2144,6 @@ func (app *DdevApp) Restart() error {
 	}
 	err = app.Start()
 	return err
-}
-
-// PullContainerImages configured Docker images with full output, since docker-compose up doesn't have nice output
-func (app *DdevApp) PullContainerImages(pullAlways bool) error {
-	images, err := app.FindAllImages()
-	if err != nil {
-		return err
-	}
-	return dockerutil.PullImages(images, pullAlways)
 }
 
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
