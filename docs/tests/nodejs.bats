@@ -26,15 +26,15 @@ teardown() {
 
   cat <<EOF > .ddev/config.nodejs.yaml
 web_extra_exposed_ports:
-- name: node-example
-  container_port: 3000
-  http_port: 80
-  https_port: 443
+    - name: node-example
+      container_port: 3000
+      http_port: 80
+      https_port: 443
 
 web_extra_daemons:
-- name: "node-example"
-  command: "node server.js"
-  directory: /var/www/html
+    - name: "node-example"
+      command: "node server.js"
+      directory: /var/www/html
 EOF
   assert_success
 

@@ -23,14 +23,14 @@ teardown() {
 
   cat <<EOF > .ddev/config.sveltekit.yaml
 web_extra_exposed_ports:
-- name: svelte
-  container_port: 3000
-  http_port: 80
-  https_port: 443
+    - name: svelte
+      container_port: 3000
+      http_port: 80
+      https_port: 443
 web_extra_daemons:
-- name: "sveltekit-demo"
-  command: "node build"
-  directory: /var/www/html
+    - name: "sveltekit-demo"
+      command: "node build"
+      directory: /var/www/html
 EOF
   assert_success
 
