@@ -64,6 +64,7 @@ func cakephpPostStartAction(app *DdevApp) error {
 		"export EMAIL_TRANSPORT_DEFAULT_URL": "smtp://localhost:1025",
 		"export SECURITY_SALT":               util.HashSalt(app.GetName()),
 		"export DEBUG_KIT_SAFE_TLD":          "site",
+		"export APP_FULL_BASE_URL":           app.GetPrimaryURL(),
 	}
 	err = WriteProjectEnvFile(envFilePath, envMap, envText)
 	if err != nil {
