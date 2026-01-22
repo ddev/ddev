@@ -8,43 +8,43 @@
 set -eu -o pipefail
 
 if [ "${N_PREFIX:-}" = "" ]; then
-  echo "This script requires N_PREFIX to be set" && exit 1
+  echo "This script requires N_PREFIX to be set" >&2
+  exit 1
 fi
 
 if [ "${N_INSTALL_VERSION:-}" = "" ]; then
-  echo "This script requires N_INSTALL_VERSION to be set" && exit 2
+  echo "This script requires N_INSTALL_VERSION to be set" >&2
+  exit 2
 fi
 
 if [ "${HOSTNAME:-}" = "" ]; then
-  echo "This script requires HOSTNAME to be set" && exit 3
+  echo "This script requires HOSTNAME to be set" >&2
+  exit 3
 fi
 
 if [ ! -d "/mnt/ddev-global-cache/n_prefix/${HOSTNAME}" ]; then
-  echo "This script requires the directory /mnt/ddev-global-cache/n_prefix/${HOSTNAME}" && exit 4
+  echo "This script requires the directory /mnt/ddev-global-cache/n_prefix/${HOSTNAME}" >&2
+  exit 4
 fi
 
 system_node_dir="$(dirname "$(which node)")"
 
 if [ ! -w "${system_node_dir}" ]; then
-  echo "This script cannot write to the directory ${system_node_dir}" && exit 5
+  echo "This script cannot write to the directory ${system_node_dir}" >&2
+  exit 5
 fi
 
 ln -sf "/mnt/ddev-global-cache/n_prefix/${HOSTNAME}" "${N_PREFIX}"
 
-# try online install that also uses cache
 n_install_result=true
-log-stderr.sh --timeout "${START_SCRIPT_TIMEOUT:-30}" n install "${N_INSTALL_VERSION}" || n_install_result=false
-
-# try offline install on fail
-if [ "${n_install_result}" = "false" ] && n install "${N_INSTALL_VERSION}" --offline; then
-  n_install_result=true
-  # remove stderr log from the previous command
-  log-stderr.sh --remove n install "${N_INSTALL_VERSION}" || true
-fi
+# try online install with timeout, fall back to offline, set n_install_result=false on failure
+timeout "${START_SCRIPT_TIMEOUT:-30}" n install "${N_INSTALL_VERSION}" || n install "${N_INSTALL_VERSION}" --offline || n_install_result=false
 
 # remove the symlink on error so that the system Node.js can be used
 if [ "${n_install_result}" = "false" ]; then
-  rm -f "${N_PREFIX}" && exit 6
+  echo "Unable to install Node.js version '${N_INSTALL_VERSION}'" >&2
+  rm -f "${N_PREFIX}"
+  exit 6
 fi
 
 # create symlinks on success
@@ -57,6 +57,6 @@ done
 ln -sf "${system_node_dir}/node" "${system_node_dir}/nodejs"
 
 # prune orphaned Node.js versions
-log-stderr.sh n prune || true
+n prune
 
 hash -r

@@ -10,7 +10,8 @@ set -eu -o pipefail
 
 DDEV_DATABASE_FAMILY=${DDEV_DATABASE%:*}
 if [ "${DDEV_DATABASE_FAMILY}" != "mariadb" ]; then
-  echo "This script is to be used only with a project using mariadb" && exit 1
+  echo "This script is to be used only with a project using mariadb" >&2
+  exit 1
 fi
 MARIADB_VERSION=${DDEV_DATABASE#*:}
 
@@ -32,9 +33,9 @@ elif [ "${MARIADB_VERSION}" = "10.1" ] || [ "${MARIADB_VERSION}" = "10.2" ] || [
 fi
 
 # Run "apt-get update" manually only for mariadb and debian repos to make it faster
-log-stderr.sh apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/mariadb-archive.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
-log-stderr.sh apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" || exit $?
+apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/mariadb-archive.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
+apt-get update -o Acquire::Retries=5 -o Dir::Etc::sourcelist="sources.list.d/debian.sources" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
 
 # Install the mariadb-client
 export DEBIAN_FRONTEND=noninteractive
-log-stderr.sh apt-get install --allow-downgrades --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y mariadb-client || exit $?
+apt-get install --allow-downgrades --no-install-recommends --no-install-suggests -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y mariadb-client

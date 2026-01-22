@@ -1199,18 +1199,18 @@ stopasgroup=true
 	}
 	// For MySQL 5.5+ we'll install the matching mysql client (and mysqldump) in the ddev-webserver
 	if app.Database.Type == nodeps.MySQL {
-		extraWebContent = extraWebContent + "\nRUN mysql-client-install.sh || true\n"
+		extraWebContent = extraWebContent + "\nRUN log-stderr.sh mysql-client-install.sh || true\n"
 	}
 	if app.Database.Type == nodeps.MariaDB {
 		// Some MariaDB versions may have their own client in the ddev-webserver
 		// Search for CHANGE_MARIADB_CLIENT to update related code
 		if slices.Contains([]string{nodeps.MariaDB1011, nodeps.MariaDB114}, app.Database.Version) {
-			extraWebContent = extraWebContent + "\nRUN mariadb-client-install.sh || true\n"
+			extraWebContent = extraWebContent + "\nRUN log-stderr.sh mariadb-client-install.sh || true\n"
 		}
 	}
 	// MariaDB uses mariadb-* command names, but legacy mysql* commands are commonly used
 	// Install compatibility wrappers for MariaDB, remove them when not needed
-	extraWebContent = extraWebContent + "\nRUN mariadb-compat-install.sh || true\n"
+	extraWebContent = extraWebContent + "\nRUN log-stderr.sh mariadb-compat-install.sh || true\n"
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
@@ -1543,8 +1543,9 @@ EOF
 	if strings.Contains(fullpath, "webimageBuild") {
 		contents = contents + `
 ### DDEV-injected folders permission fix
-RUN chmod 777 /run/php /var/log
-RUN mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof
+RUN chmod 777 /run/php /var/log && \
+    chmod -f ugo+rwx /usr/local/bin /usr/local/bin/* && \
+    mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof
 `
 		// Files from containers/ddev-webserver/ddev-webserver-base-files/var/www/html
 		// are added to host on `ddev start` when using Podman with Mutagen enabled
