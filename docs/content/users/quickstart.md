@@ -931,20 +931,20 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows you to define your own web server process(es) and exposed ports for projects that don't use the standard `nginx-fpm` or `apache-fpm` configurations.
 
 !!!tip "Looking for more advanced generic web server examples?"
-    Check out the [Node.js](#nodejs) and [Wagtail](#wagtail) examples below.
+    Check out the [Node.js](#nodejs) and [Wagtail](#wagtail-python-generic) examples below.
 
     See also the [ddev-frankenphp](https://github.com/ddev/ddev-frankenphp) add-on, which uses the `generic` webserver under the hood.
 
 === "PHP's built-in web server"
 
-    This trivial example simply demonstrates running PHP's built-in web server inside DDEV's web container. The `ddev-webserver` container will not start the default `nginx` or `php-fpm` daemons—the PHP built-in server will handle all requests. You probably wouldn't find this useful compared to the normal `nginx-fpm` or `apache-fpm` configurations, but it's offered here as an example of how the `generic` webserver type works.
+    This trivial example demonstrates running PHP's built-in web server inside DDEV's web container. The `ddev-webserver` container will not start the default `nginx` or `php-fpm` daemons—the PHP built-in server will handle all requests. You probably wouldn't find this useful compared to the normal `nginx-fpm` or `apache-fpm` configurations, but it's offered here as an example of how the `generic` webserver type works.
 
     Create the project directory and configure DDEV:
 
     ```bash
     export GENERIC_SITENAME=my-generic-site
     mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
-    ddev config --project-type=generic --webserver-type=generic
+    ddev config --project-type=php
     ```
 
     Create a sample PHP info page:
@@ -957,9 +957,10 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
 
     ```bash
     cat <<'EOF' > .ddev/config.php-server.yaml
+    webserver_type: generic
     web_extra_daemons:
         - name: "php-server"
-          command: "php -S 0.0.0.0:8000"
+          command: "php -S 0.0.0.0:8000 -t \"${DDEV_DOCROOT:-.}\""
           directory: /var/www/html
     web_extra_exposed_ports:
         - name: "php-server"
@@ -990,12 +991,13 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
         set -euo pipefail
         export GENERIC_SITENAME=my-generic-site
         mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
-        ddev config --project-type=generic --webserver-type=generic
+        ddev config --project-type=php
         echo "<?php phpinfo(); ?>" > index.php
         cat <<'INNEREOF' > .ddev/config.php-server.yaml
+        webserver_type: generic
         web_extra_daemons:
             - name: "php-server"
-              command: "php -S 0.0.0.0:8000"
+              command: "php -S 0.0.0.0:8000 -t \"${DDEV_DOCROOT:-.}\""
               directory: /var/www/html
         web_extra_exposed_ports:
             - name: "php-server"
@@ -2707,7 +2709,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev launch /typo3/install.php
     ```
 
-## Wagtail (python, generic)
+## Wagtail (Python, Generic)
 
 [Wagtail](https://wagtail.org/) is a popular, open-source content management system built on the Django web framework. This quickstart demonstrates how to set up a new Wagtail project using DDEV with Python and a virtual environment.
 
@@ -2752,7 +2754,7 @@ ddev exec wagtail start mysite .
 ddev exec pip install -r requirements.txt
 ```
 
-Configure Django to detect HTTPS behind Traefik reverse proxy:
+Configure Django to detect HTTPS behind the [Traefik](./extend/traefik-router.md) router:
 
 ```bash
 ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"

@@ -16,7 +16,7 @@ teardown() {
   run mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
   assert_success
 
-  run ddev config --project-type=generic --webserver-type=generic
+  run ddev config --project-type=php
   assert_success
 
   echo "<?php phpinfo(); ?>" > index.php
@@ -25,9 +25,10 @@ teardown() {
   assert_file_exist index.php
 
   cat <<'EOF' > .ddev/config.php-server.yaml
+webserver_type: generic
 web_extra_daemons:
     - name: "php-server"
-      command: "php -S 0.0.0.0:8000"
+      command: "php -S 0.0.0.0:8000 -t \"${DDEV_DOCROOT:-.}\""
       directory: /var/www/html
 web_extra_exposed_ports:
     - name: "php-server"
