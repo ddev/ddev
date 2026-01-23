@@ -600,23 +600,18 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	if proposedPort == "" {
 		return proposedPort, "", false
 	}
-	// If the router is alive and well, we can see if it's already handling the proposedPort
-	status, _ := GetRouterStatus()
-	if status == "healthy" {
-		util.Debug("GetAvailableRouterPort(): Router is healthy and running")
-		r, err := FindDdevRouter()
-		// If we have error getting router (Impossible, because we just got healthy status)
-		if err != nil {
-			return proposedPort, "", false
-		}
-
+	// If the router exists, check if it's already handling the proposedPort
+	// regardless of its health status. This prevents allocating ephemeral ports
+	// when the router is running but unhealthy (e.g., broken Traefik config).
+	r, err := FindDdevRouter()
+	if r != nil && err == nil {
+		util.Debug("GetAvailableRouterPort(): Router exists, checking bound ports")
 		// Check if the proposedPort is already being handled by the router.
 		routerPortsAlreadyBound, err := dockerutil.GetBoundHostPorts(r.ID)
 		if err != nil {
-			// If error getting ports (mostly impossible)
-			return proposedPort, "", false
-		}
-		if nodeps.ArrayContainsString(routerPortsAlreadyBound, proposedPort) {
+			util.Debug("GetAvailableRouterPort(): Error getting bound ports: %v", err)
+			// Continue to port availability check below
+		} else if nodeps.ArrayContainsString(routerPortsAlreadyBound, proposedPort) {
 			// If the proposedPort is already bound by the router,
 			// there's no need to go find an ephemeral port.
 			util.Debug("GetAvailableRouterPort(): proposedPort %s already bound on ddev-router, accepting it", proposedPort)
