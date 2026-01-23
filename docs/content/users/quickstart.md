@@ -935,62 +935,28 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
 
     See also the [ddev-frankenphp](https://github.com/ddev/ddev-frankenphp) add-on, which uses the `generic` webserver under the hood.
 
-This example demonstrates running PHP's built-in web server. The `ddev-webserver` container will not start the default `nginx` or `php-fpm` daemons—the PHP built-in server will handle all requests.
+=== "PHP's built-in web server"
 
-Create the project directory and configure DDEV:
-
-```bash
-export GENERIC_SITENAME=my-generic-site
-mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
-ddev config --project-type=generic --webserver-type=generic
-```
-
-Create a sample PHP info page:
-
-```bash
-echo "<?php phpinfo(); ?>" > index.php
-```
-
-Configure the web server to run PHP's built-in server:
-
-```bash
-cat <<'EOF' > .ddev/config.php-server.yaml
-web_extra_daemons:
-    - name: "php-server"
-      command: "php -S 0.0.0.0:8000"
-      directory: /var/www/html
-web_extra_exposed_ports:
-    - name: "php-server"
-      container_port: 8000
-      http_port: 80
-      https_port: 443
-EOF
-```
-
-Start DDEV (this may take a minute):
-
-```bash
-ddev start
-```
-
-Launch the site:
-
-```bash
-ddev launch
-```
-
-??? tip "Prefer to run as a script?"
-    To run the whole setup as a script, examine and run this script:
-
+    This example demonstrates running PHP's built-in web server. The `ddev-webserver` container will not start the default `nginx` or `php-fpm` daemons—the PHP built-in server will handle all requests.
+    
+    Create the project directory and configure DDEV:
+    
     ```bash
-    cat > setup-generic.sh << 'EOF'
-    #!/usr/bin/env bash
-    set -euo pipefail
     export GENERIC_SITENAME=my-generic-site
     mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
     ddev config --project-type=generic --webserver-type=generic
+    ```
+    
+    Create a sample PHP info page:
+    
+    ```bash
     echo "<?php phpinfo(); ?>" > index.php
-    cat <<'INNEREOF' > .ddev/config.php-server.yaml
+    ```
+    
+    Configure the web server to run PHP's built-in server:
+    
+    ```bash
+    cat <<'EOF' > .ddev/config.php-server.yaml
     web_extra_daemons:
         - name: "php-server"
           command: "php -S 0.0.0.0:8000"
@@ -1000,13 +966,49 @@ ddev launch
           container_port: 8000
           http_port: 80
           https_port: 443
-    INNEREOF
-    ddev start -y
-    ddev launch
     EOF
-    chmod +x setup-generic.sh
-    ./setup-generic.sh
     ```
+    
+    Start DDEV (this may take a minute):
+    
+    ```bash
+    ddev start
+    ```
+    
+    Launch the site:
+    
+    ```bash
+    ddev launch
+    ```
+    
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+    
+        ```bash
+        cat > setup-generic.sh << 'EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        export GENERIC_SITENAME=my-generic-site
+        mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
+        ddev config --project-type=generic --webserver-type=generic
+        echo "<?php phpinfo(); ?>" > index.php
+        cat <<'INNEREOF' > .ddev/config.php-server.yaml
+        web_extra_daemons:
+            - name: "php-server"
+              command: "php -S 0.0.0.0:8000"
+              directory: /var/www/html
+        web_extra_exposed_ports:
+            - name: "php-server"
+              container_port: 8000
+              http_port: 80
+              https_port: 443
+        INNEREOF
+        ddev start -y
+        ddev launch
+        EOF
+        chmod +x setup-generic.sh
+        ./setup-generic.sh
+        ```
 
 ## Grav
 
