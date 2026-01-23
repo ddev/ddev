@@ -675,8 +675,8 @@ func TestAddonGetWithVersionFlag(t *testing.T) {
 	require.Contains(t, out, "Installing ddev/ddev-redis:b50ac77")
 }
 
-// TestAddonGetWithHeadFlag tests the --head flag functionality
-func TestAddonGetWithHeadFlag(t *testing.T) {
+// TestAddonGetWithDefaultBranchFlag tests the --default-branch flag functionality
+func TestAddonGetWithDefaultBranchFlag(t *testing.T) {
 	if !github.HasGitHubToken() {
 		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
 	}
@@ -692,9 +692,9 @@ func TestAddonGetWithHeadFlag(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	// Test that --head flag works and installs from default branch
-	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--head")
-	require.NoError(t, err, "Should succeed with --head, out=%s", out)
+	// Test that --default-branch flag works and installs from default branch
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--default-branch")
+	require.NoError(t, err, "Should succeed with --default-branch, out=%s", out)
 	// Should install from main branch (default_branch for ddev-redis)
 	require.Contains(t, out, "Installing ddev/ddev-redis:main")
 }

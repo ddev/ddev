@@ -793,14 +793,14 @@ func downloadAddonRegistry() (*types.AddonData, error) {
 // Parameters:
 //   - ownerRepo: The owner/repo string (e.g., "ddev/ddev-redis")
 //   - gitRef: Specific git reference to install - can be a tag (v1.2.3), branch name (main), or commit SHA
-//   - head: If true, use the default_branch from registry instead of latest release tag
+//   - defaultBranch: If true, use the default_branch from registry instead of latest release tag
 //   - prNumber: If non-zero, use refs/pull/{prNumber}/head
 //
 // Returns:
 //   - tarballURL: The GitHub tarball URL to download
 //   - version: The version string (tag, branch, or PR reference)
 //   - error: Any error encountered
-func GetAddonTarballURL(ownerRepo, gitRef string, head bool, prNumber int) (tarballURL, version string, err error) {
+func GetAddonTarballURL(ownerRepo, gitRef string, defaultBranch bool, prNumber int) (tarballURL, version string, err error) {
 	// Parse owner/repo
 	parts := strings.Split(ownerRepo, "/")
 	if len(parts) != 2 {
@@ -823,7 +823,7 @@ func GetAddonTarballURL(ownerRepo, gitRef string, head bool, prNumber int) (tarb
 	}
 
 	// Use cached registry to get latest commit from default_branch
-	if head {
+	if defaultBranch {
 		addonData, err := getAddonRegistryWithFallback()
 		if err != nil {
 			return "", "", fmt.Errorf("failed to get add-on registry: %w", err)

@@ -791,7 +791,7 @@ func TestGetAddonTarballURL(t *testing.T) {
 		name            string
 		ownerRepo       string
 		gitRef          string
-		head            bool
+		defaultBranch   bool
 		prNumber        int
 		expectedURL     string
 		expectedVersion string
@@ -801,7 +801,7 @@ func TestGetAddonTarballURL(t *testing.T) {
 			name:            "with specific version tag",
 			ownerRepo:       "ddev/ddev-redis",
 			gitRef:          "v1.2.3",
-			head:            false,
+			defaultBranch:   false,
 			prNumber:        0,
 			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/v1.2.3",
 			expectedVersion: "v1.2.3",
@@ -811,7 +811,7 @@ func TestGetAddonTarballURL(t *testing.T) {
 			name:            "with branch name",
 			ownerRepo:       "ddev/ddev-redis",
 			gitRef:          "main",
-			head:            false,
+			defaultBranch:   false,
 			prNumber:        0,
 			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/main",
 			expectedVersion: "main",
@@ -821,7 +821,7 @@ func TestGetAddonTarballURL(t *testing.T) {
 			name:            "with commit SHA",
 			ownerRepo:       "ddev/ddev-redis",
 			gitRef:          "b50ac77",
-			head:            false,
+			defaultBranch:   false,
 			prNumber:        0,
 			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/b50ac77",
 			expectedVersion: "b50ac77",
@@ -831,27 +831,27 @@ func TestGetAddonTarballURL(t *testing.T) {
 			name:            "with PR number",
 			ownerRepo:       "ddev/ddev-redis",
 			gitRef:          "",
-			head:            false,
+			defaultBranch:   false,
 			prNumber:        54,
 			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/refs/pull/54/head",
 			expectedVersion: "pr-54",
 			expectError:     false,
 		},
 		{
-			name:            "with head flag and specific version (version takes precedence)",
+			name:            "with defaultBranch flag and specific version (version takes precedence)",
 			ownerRepo:       "ddev/ddev-redis",
 			gitRef:          "v2.0.0",
-			head:            true,
+			defaultBranch:   true,
 			prNumber:        0,
 			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/v2.0.0",
 			expectedVersion: "v2.0.0",
 			expectError:     false,
 		},
 		{
-			name:            "with head flag and PR number (PR takes precedence)",
+			name:            "with defaultBranch flag and PR number (PR takes precedence)",
 			ownerRepo:       "ddev/ddev-redis",
 			gitRef:          "",
-			head:            true,
+			defaultBranch:   true,
 			prNumber:        42,
 			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/refs/pull/42/head",
 			expectedVersion: "pr-42",
@@ -861,7 +861,7 @@ func TestGetAddonTarballURL(t *testing.T) {
 			name:            "invalid owner/repo format",
 			ownerRepo:       "invalid",
 			gitRef:          "",
-			head:            false,
+			defaultBranch:   false,
 			prNumber:        0,
 			expectedURL:     "",
 			expectedVersion: "",
@@ -871,7 +871,7 @@ func TestGetAddonTarballURL(t *testing.T) {
 			name:            "invalid owner/repo with too many slashes",
 			ownerRepo:       "owner/repo/extra",
 			gitRef:          "",
-			head:            false,
+			defaultBranch:   false,
 			prNumber:        0,
 			expectedURL:     "",
 			expectedVersion: "",
@@ -881,7 +881,7 @@ func TestGetAddonTarballURL(t *testing.T) {
 			name:            "empty owner/repo",
 			ownerRepo:       "",
 			gitRef:          "",
-			head:            false,
+			defaultBranch:   false,
 			prNumber:        0,
 			expectedURL:     "",
 			expectedVersion: "",
@@ -891,7 +891,7 @@ func TestGetAddonTarballURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tarballURL, version, err := ddevapp.GetAddonTarballURL(tt.ownerRepo, tt.gitRef, tt.head, tt.prNumber)
+			tarballURL, version, err := ddevapp.GetAddonTarballURL(tt.ownerRepo, tt.gitRef, tt.defaultBranch, tt.prNumber)
 
 			if tt.expectError {
 				require.Error(t, err)

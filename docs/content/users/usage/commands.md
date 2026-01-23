@@ -89,11 +89,11 @@ Flags:
 * `--skip-deps`: Skip installing add-on dependencies (default `false`)
 * `--project <projectName>`: Specify a project to install the add-on into. Defaults to checking for a project in the current directory.
 * `--version <version>`: Specify a version, branch name, or commit SHA to download
-* `--head`: Install from the last commit in the default branch (default `false`)
+* `--default-branch`: Install from the last commit in the default branch (default `false`)
 * `--pr <number>`: Install from a pull request number
 * `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
 
-Note: The `--version`, `--head`, and `--pr` flags are mutually exclusive.
+Note: The `--version`, `--default-branch`, and `--pr` flags are mutually exclusive.
 
 Example:
 
@@ -114,7 +114,7 @@ ddev add-on get ddev/ddev-redis --version main
 ddev add-on get ddev/ddev-redis --version b50ac77
 
 # Download the official Redis add-on from the latest commit in the default branch
-ddev add-on get ddev/ddev-redis --head
+ddev add-on get ddev/ddev-redis --default-branch
 
 # Download the official Redis add-on from pull request #54
 ddev add-on get ddev/ddev-redis --pr 54

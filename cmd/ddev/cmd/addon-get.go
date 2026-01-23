@@ -31,7 +31,7 @@ var AddonGetCmd = &cobra.Command{
 ddev add-on get ddev/ddev-redis --version v2.2.0
 ddev add-on get ddev/ddev-redis --version main
 ddev add-on get ddev/ddev-redis --version b50ac77
-ddev add-on get ddev/ddev-redis --head
+ddev add-on get ddev/ddev-redis --default-branch
 ddev add-on get ddev/ddev-redis --pr 54
 ddev add-on get ddev/ddev-redis --project my-project
 ddev add-on get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
@@ -59,7 +59,7 @@ ddev add-on get /path/to/tarball.tar.gz
 		verbose := false
 		requestedVersion := ""
 		skipDeps := false
-		head := false
+		defaultBranch := false
 		prNumber := 0
 
 		if cmd.Flags().Changed("version") {
@@ -68,7 +68,7 @@ ddev add-on get /path/to/tarball.tar.gz
 
 		verbose, _ = cmd.Flags().GetBool("verbose")
 		skipDeps, _ = cmd.Flags().GetBool("skip-deps")
-		head, _ = cmd.Flags().GetBool("head")
+		defaultBranch, _ = cmd.Flags().GetBool("default-branch")
 
 		if cmd.Flags().Changed("pr") {
 			prNumber, _ = cmd.Flags().GetInt("pr")
@@ -117,7 +117,7 @@ ddev add-on get /path/to/tarball.tar.gz
 			repo = parts[1]
 
 			// Use the addons registry to determine the tarball URL
-			tarballURL, downloadedRelease, err = ddevapp.GetAddonTarballURL(sourceRepoArg, requestedVersion, head, prNumber)
+			tarballURL, downloadedRelease, err = ddevapp.GetAddonTarballURL(sourceRepoArg, requestedVersion, defaultBranch, prNumber)
 			if err != nil {
 				util.Failed("Unable to get %s: %v", sourceRepoArg, err)
 			}
@@ -341,10 +341,10 @@ func init() {
 	_ = AddonGetCmd.RegisterFlagCompletionFunc("skip-deps", configCompletionFunc([]string{"true", "false"}))
 	AddonGetCmd.Flags().String("project", "", "Name of the project to install the add-on in")
 	_ = AddonGetCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
-	AddonGetCmd.Flags().Bool("head", false, "Install from the last commit in the default branch")
-	_ = AddonGetCmd.RegisterFlagCompletionFunc("head", configCompletionFunc([]string{"true", "false"}))
+	AddonGetCmd.Flags().Bool("default-branch", false, "Install from the last commit in the default branch")
+	_ = AddonGetCmd.RegisterFlagCompletionFunc("default-branch", configCompletionFunc([]string{"true", "false"}))
 	AddonGetCmd.Flags().Int("pr", 0, "Install from a pull request number")
-	AddonGetCmd.MarkFlagsMutuallyExclusive("version", "head", "pr")
+	AddonGetCmd.MarkFlagsMutuallyExclusive("version", "default-branch", "pr")
 
 	AddonCmd.AddCommand(AddonGetCmd)
 }
