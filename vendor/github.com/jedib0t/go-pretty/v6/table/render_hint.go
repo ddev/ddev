@@ -15,7 +15,6 @@ type renderHint struct {
 	isTitleRow        bool // title row?
 	rowLineNumber     int  // the line number for a multi-line row
 	rowNumber         int  // the row number/index
-	separatorType     separatorType
 }
 
 func (h *renderHint) isBorderOrSeparator() bool {
@@ -38,13 +37,3 @@ func (h *renderHint) isHeaderOrFooterSeparator() bool {
 func (h *renderHint) isLastLineOfLastRow() bool {
 	return h.isLastLineOfRow && h.isLastRow
 }
-
-type renderMode string
-
-const (
-	renderModeDefault  renderMode = "default"
-	renderModeCSV      renderMode = "csv"
-	renderModeMarkdown renderMode = "markdown"
-	renderModeTSV      renderMode = "tsv"
-	renderModeHTML     renderMode = "html"
-)

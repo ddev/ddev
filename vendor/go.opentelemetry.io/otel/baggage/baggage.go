@@ -648,7 +648,7 @@ func parsePropertyInternal(s string) (p Property, ok bool) {
 	// If we couldn't find any valid key character,
 	// it means the key is either empty or invalid.
 	if keyStart == keyEnd {
-		return p, ok
+		return
 	}
 
 	// Skip spaces after the key: "   key<    >=    value  ".
@@ -658,13 +658,13 @@ func parsePropertyInternal(s string) (p Property, ok bool) {
 		// A key can have no value, like: "   key    ".
 		ok = true
 		p.key = s[keyStart:keyEnd]
-		return p, ok
+		return
 	}
 
 	// If we have not reached the end and we can't find the '=' delimiter,
 	// it means the property is invalid.
 	if s[index] != keyValueDelimiter[0] {
-		return p, ok
+		return
 	}
 
 	// Attempting to parse the value.
@@ -690,14 +690,14 @@ func parsePropertyInternal(s string) (p Property, ok bool) {
 	// we have not reached the end, it means the property is
 	// invalid, something like: "   key    =    value  value1".
 	if index != len(s) {
-		return p, ok
+		return
 	}
 
 	// Decode a percent-encoded value.
 	rawVal := s[valueStart:valueEnd]
 	unescapeVal, err := url.PathUnescape(rawVal)
 	if err != nil {
-		return p, ok
+		return
 	}
 	value := replaceInvalidUTF8Sequences(len(rawVal), unescapeVal)
 
@@ -706,7 +706,7 @@ func parsePropertyInternal(s string) (p Property, ok bool) {
 	p.hasValue = true
 
 	p.value = value
-	return p, ok
+	return
 }
 
 func skipSpace(s string, offset int) int {

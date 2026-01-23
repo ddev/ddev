@@ -156,9 +156,9 @@ github.com/go-viper/mapstructure/v2/internal/errors
 github.com/goodhosts/hostsfile
 github.com/goodhosts/hostsfile/mage/install
 github.com/goodhosts/hostsfile/mage/test
-# github.com/google/go-github/v74 v74.0.0
-## explicit; go 1.23.0
-github.com/google/go-github/v74/github
+# github.com/google/go-github/v81 v81.0.0
+## explicit; go 1.24.0
+github.com/google/go-github/v81/github
 # github.com/google/go-querystring v1.1.0
 ## explicit; go 1.10
 github.com/google/go-querystring/query
@@ -416,6 +416,10 @@ go.opentelemetry.io/proto/otlp/trace/v1
 # go.yaml.in/yaml/v3 v3.0.4
 ## explicit; go 1.16
 go.yaml.in/yaml/v3
+# go.yaml.in/yaml/v4 v4.0.0-rc.4
+## explicit; go 1.18
+go.yaml.in/yaml/v4
+go.yaml.in/yaml/v4/internal/libyaml
 # golang.org/x/crypto v0.42.0
 ## explicit; go 1.24.0
 golang.org/x/crypto/bcrypt

@@ -60,7 +60,7 @@ const (
 //	  </tfoot>
 //	</table>
 func (t *Table) RenderHTML() string {
-	t.initForRender(renderModeHTML)
+	t.initForRender()
 
 	var out strings.Builder
 	if t.numColumns > 0 {
@@ -106,15 +106,11 @@ func (t *Table) htmlRenderCaption(out *strings.Builder) {
 }
 
 func (t *Table) htmlRenderColumn(out *strings.Builder, colStr string) {
-	// convertEscSequencesToSpans already escapes text content, so skip
-	// EscapeText if ConvertColorsToSpans is true
-	if t.style.HTML.ConvertColorsToSpans {
-		colStr = convertEscSequencesToSpans(colStr)
-	} else if t.style.HTML.EscapeText {
+	if t.style.HTML.EscapeText {
 		colStr = html.EscapeString(colStr)
 	}
 	if t.style.HTML.Newline != "\n" {
-		colStr = strings.ReplaceAll(colStr, "\n", t.style.HTML.Newline)
+		colStr = strings.Replace(colStr, "\n", t.style.HTML.Newline, -1)
 	}
 	out.WriteString(colStr)
 }
@@ -151,7 +147,7 @@ func (t *Table) htmlRenderColumnAutoIndex(out *strings.Builder, hint renderHint)
 		out.WriteString("</td>\n")
 	} else {
 		out.WriteString("    <td align=\"right\">")
-		fmt.Fprint(out, hint.rowNumber)
+		out.WriteString(fmt.Sprint(hint.rowNumber))
 		out.WriteString("</td>\n")
 	}
 }
@@ -191,10 +187,10 @@ func (t *Table) htmlRenderRow(out *strings.Builder, row rowStr, hint renderHint)
 		t.htmlRenderColumnAttributes(out, colIdx, hint, align)
 		if extraColumnsRendered > 0 {
 			out.WriteString(" colspan=")
-			fmt.Fprint(out, extraColumnsRendered+1)
+			out.WriteString(fmt.Sprint(extraColumnsRendered + 1))
 		} else if rowSpan := t.shouldMergeCellsVerticallyBelow(colIdx, hint); rowSpan > 1 {
 			out.WriteString(" rowspan=")
-			fmt.Fprint(out, rowSpan)
+			out.WriteString(fmt.Sprint(rowSpan))
 		}
 		out.WriteString(">")
 		if len(colStr) == 0 {

@@ -31,12 +31,9 @@ func newBuckets[N int64 | float64](attrs attribute.Set, n int) *buckets[N] {
 
 func (b *buckets[N]) sum(value N) { b.total += value }
 
-func (b *buckets[N]) bin(idx int) {
+func (b *buckets[N]) bin(idx int, value N) {
 	b.counts[idx]++
 	b.count++
-}
-
-func (b *buckets[N]) minMax(value N) {
 	if value < b.min {
 		b.min = value
 	} else if value > b.max {
@@ -47,19 +44,18 @@ func (b *buckets[N]) minMax(value N) {
 // histValues summarizes a set of measurements as an histValues with
 // explicitly defined buckets.
 type histValues[N int64 | float64] struct {
-	noMinMax bool
-	noSum    bool
-	bounds   []float64
+	noSum  bool
+	bounds []float64
 
 	newRes   func(attribute.Set) FilteredExemplarReservoir[N]
-	limit    limiter[buckets[N]]
+	limit    limiter[*buckets[N]]
 	values   map[attribute.Distinct]*buckets[N]
 	valuesMu sync.Mutex
 }
 
 func newHistValues[N int64 | float64](
 	bounds []float64,
-	noMinMax, noSum bool,
+	noSum bool,
 	limit int,
 	r func(attribute.Set) FilteredExemplarReservoir[N],
 ) *histValues[N] {
@@ -70,12 +66,11 @@ func newHistValues[N int64 | float64](
 	b := slices.Clone(bounds)
 	slices.Sort(b)
 	return &histValues[N]{
-		noMinMax: noMinMax,
-		noSum:    noSum,
-		bounds:   b,
-		newRes:   r,
-		limit:    newLimiter[buckets[N]](limit),
-		values:   make(map[attribute.Distinct]*buckets[N]),
+		noSum:  noSum,
+		bounds: b,
+		newRes: r,
+		limit:  newLimiter[*buckets[N]](limit),
+		values: make(map[attribute.Distinct]*buckets[N]),
 	}
 }
 
@@ -97,32 +92,24 @@ func (s *histValues[N]) measure(
 	s.valuesMu.Lock()
 	defer s.valuesMu.Unlock()
 
-	b, ok := s.values[fltrAttr.Equivalent()]
+	attr := s.limit.Attributes(fltrAttr, s.values)
+	b, ok := s.values[attr.Equivalent()]
 	if !ok {
-		fltrAttr = s.limit.Attributes(fltrAttr, s.values)
-		// If we overflowed, make sure we add to the existing overflow series
-		// if it already exists.
-		b, ok = s.values[fltrAttr.Equivalent()]
-		if !ok {
-			// N+1 buckets. For example:
-			//
-			//   bounds = [0, 5, 10]
-			//
-			// Then,
-			//
-			//   buckets = (-∞, 0], (0, 5.0], (5.0, 10.0], (10.0, +∞)
-			b = newBuckets[N](fltrAttr, len(s.bounds)+1)
-			b.res = s.newRes(fltrAttr)
+		// N+1 buckets. For example:
+		//
+		//   bounds = [0, 5, 10]
+		//
+		// Then,
+		//
+		//   buckets = (-∞, 0], (0, 5.0], (5.0, 10.0], (10.0, +∞)
+		b = newBuckets[N](attr, len(s.bounds)+1)
+		b.res = s.newRes(attr)
 
-			// Ensure min and max are recorded values (not zero), for new buckets.
-			b.min, b.max = value, value
-			s.values[fltrAttr.Equivalent()] = b
-		}
+		// Ensure min and max are recorded values (not zero), for new buckets.
+		b.min, b.max = value, value
+		s.values[attr.Equivalent()] = b
 	}
-	b.bin(idx)
-	if !s.noMinMax {
-		b.minMax(value)
-	}
+	b.bin(idx, value)
 	if !s.noSum {
 		b.sum(value)
 	}
@@ -138,7 +125,8 @@ func newHistogram[N int64 | float64](
 	r func(attribute.Set) FilteredExemplarReservoir[N],
 ) *histogram[N] {
 	return &histogram[N]{
-		histValues: newHistValues[N](boundaries, noMinMax, noSum, limit, r),
+		histValues: newHistValues[N](boundaries, noSum, limit, r),
+		noMinMax:   noMinMax,
 		start:      now(),
 	}
 }
@@ -148,7 +136,8 @@ func newHistogram[N int64 | float64](
 type histogram[N int64 | float64] struct {
 	*histValues[N]
 
-	start time.Time
+	noMinMax bool
+	start    time.Time
 }
 
 func (s *histogram[N]) delta(

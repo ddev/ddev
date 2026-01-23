@@ -20,7 +20,7 @@ type PingOptions struct {
 	//
 	// If a manual override is in place, either through the "DOCKER_API_VERSION"
 	// ([EnvOverrideAPIVersion]) environment variable, or if the client is initialized
-	// with a fixed version ([WithAPIVersion]), no negotiation is performed.
+	// with a fixed version ([WithVersion]), no negotiation is performed.
 	//
 	// If the API server's ping response does not contain an API version, or if the
 	// client did not get a successful ping response, it assumes it is connected with
@@ -29,8 +29,9 @@ type PingOptions struct {
 	NegotiateAPIVersion bool
 
 	// ForceNegotiate forces the client to re-negotiate the API version, even if
-	// API-version negotiation already happened or it the client is configured
-	// with a fixed version (using [WithAPIVersion] or [WithAPIVersionFromEnv]).
+	// API-version negotiation already happened. This option cannot be
+	// used if the client is configured with a fixed version using (using
+	// [WithVersion] or [WithVersionFromEnv]).
 	//
 	// This option has no effect if NegotiateAPIVersion is not set.
 	ForceNegotiate bool
@@ -71,12 +72,10 @@ type SwarmStatus struct {
 // for other non-success status codes, failing to connect to the API, or failing
 // to parse the API response.
 func (cli *Client) Ping(ctx context.Context, options PingOptions) (PingResult, error) {
-	if !options.NegotiateAPIVersion {
-		// No API version negotiation needed; just return ping response.
+	if cli.manualOverride {
 		return cli.ping(ctx)
 	}
-	if cli.negotiated.Load() && !options.ForceNegotiate {
-		// API version was already negotiated or manually set.
+	if !options.NegotiateAPIVersion && !cli.negotiateVersion {
 		return cli.ping(ctx)
 	}
 
@@ -86,19 +85,10 @@ func (cli *Client) Ping(ctx context.Context, options PingOptions) (PingResult, e
 
 	ping, err := cli.ping(ctx)
 	if err != nil {
-		return ping, err
+		return cli.ping(ctx)
 	}
 
 	if cli.negotiated.Load() && !options.ForceNegotiate {
-		// API version was already negotiated or manually set.
-		//
-		// We check cli.negotiated again under lock, to account for race
-		// conditions with the check at the start of this function.
-		return ping, nil
-	}
-
-	if ping.APIVersion == "" {
-		cli.setAPIVersion(MaxAPIVersion)
 		return ping, nil
 	}
 
@@ -122,15 +112,10 @@ func (cli *Client) ping(ctx context.Context) (PingResult, error) {
 		// response-body to get error details from.
 		return newPingResult(resp), nil
 	}
-	// close to allow reusing connection.
-	ensureReaderClosed(resp)
 
 	// HEAD failed or returned a non-OK status; fallback to GET.
-	req2, err := cli.buildRequest(ctx, http.MethodGet, path.Join(cli.basePath, "/_ping"), nil, nil)
-	if err != nil {
-		return PingResult{}, err
-	}
-	resp, err = cli.doRequest(req2)
+	req.Method = http.MethodGet
+	resp, err = cli.doRequest(req)
 	defer ensureReaderClosed(resp)
 	if err != nil {
 		// Failed to connect.

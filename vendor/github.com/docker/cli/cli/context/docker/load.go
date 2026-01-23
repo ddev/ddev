@@ -134,7 +134,7 @@ func (ep *Endpoint) ClientOpts() ([]client.Opt, error) {
 		}
 	}
 
-	result = append(result, client.WithAPIVersionFromEnv())
+	result = append(result, client.WithVersionFromEnv(), client.WithAPIVersionNegotiation())
 	return result, nil
 }
 

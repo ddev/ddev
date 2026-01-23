@@ -5,7 +5,6 @@ package tui
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/docker/cli/cli/streams"
 	"github.com/morikuni/aec"
@@ -13,7 +12,7 @@ import (
 
 type Output struct {
 	*streams.Out
-	noColor bool
+	isTerminal bool
 }
 
 type terminalPrintable interface {
@@ -21,28 +20,24 @@ type terminalPrintable interface {
 }
 
 func NewOutput(out *streams.Out) Output {
-	noColor := !out.IsTerminal()
-	if os.Getenv("NO_COLOR") != "" {
-		noColor = true
-	}
 	return Output{
-		Out:     out,
-		noColor: noColor,
+		Out:        out,
+		isTerminal: out.IsTerminal(),
 	}
 }
 
 func (o Output) Color(clr aec.ANSI) aec.ANSI {
-	if o.noColor {
-		return ColorNone
+	if o.isTerminal {
+		return clr
 	}
-	return clr
+	return ColorNone
 }
 
 func (o Output) Sprint(all ...any) string {
 	var out []any
 	for _, p := range all {
 		if s, ok := p.(terminalPrintable); ok {
-			out = append(out, s.String(!o.noColor))
+			out = append(out, s.String(o.isTerminal))
 		} else {
 			out = append(out, p)
 		}
@@ -52,7 +47,7 @@ func (o Output) Sprint(all ...any) string {
 
 func (o Output) PrintlnWithColor(clr aec.ANSI, args ...any) {
 	msg := o.Sprint(args...)
-	if !o.noColor {
+	if o.isTerminal {
 		msg = clr.Apply(msg)
 	}
 	_, _ = fmt.Fprintln(o.Out, msg)

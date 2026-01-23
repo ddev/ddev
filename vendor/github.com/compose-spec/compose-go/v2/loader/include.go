@@ -21,12 +21,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/compose-spec/compose-go/v2/dotenv"
 	interp "github.com/compose-spec/compose-go/v2/interpolation"
-	"github.com/compose-spec/compose-go/v2/override"
-	"github.com/compose-spec/compose-go/v2/tree"
 	"github.com/compose-spec/compose-go/v2/types"
 )
 
@@ -51,7 +50,7 @@ func loadIncludeConfig(source any) ([]types.IncludeConfig, error) {
 	return requires, err
 }
 
-func ApplyInclude(ctx context.Context, workingDir string, environment types.Mapping, model map[string]any, options *Options, included []string, processor PostProcessor) error {
+func ApplyInclude(ctx context.Context, workingDir string, environment types.Mapping, model map[string]any, options *Options, included []string) error {
 	includeConfig, err := loadIncludeConfig(model["include"])
 	if err != nil {
 		return err
@@ -118,9 +117,6 @@ func ApplyInclude(ctx context.Context, workingDir string, environment types.Mapp
 		} else {
 			envFile := []string{}
 			for _, f := range r.EnvFile {
-				if f == "/dev/null" {
-					continue
-				}
 				if !filepath.IsAbs(f) {
 					f = filepath.Join(workingDir, f)
 					s, err := os.Stat(f)
@@ -155,7 +151,7 @@ func ApplyInclude(ctx context.Context, workingDir string, environment types.Mapp
 		if err != nil {
 			return err
 		}
-		err = importResources(imported, model, processor)
+		err = importResources(imported, model)
 		if err != nil {
 			return err
 		}
@@ -165,29 +161,29 @@ func ApplyInclude(ctx context.Context, workingDir string, environment types.Mapp
 }
 
 // importResources import into model all resources defined by imported, and report error on conflict
-func importResources(source map[string]any, target map[string]any, processor PostProcessor) error {
-	if err := importResource(source, target, "services", processor); err != nil {
+func importResources(source map[string]any, target map[string]any) error {
+	if err := importResource(source, target, "services"); err != nil {
 		return err
 	}
-	if err := importResource(source, target, "volumes", processor); err != nil {
+	if err := importResource(source, target, "volumes"); err != nil {
 		return err
 	}
-	if err := importResource(source, target, "networks", processor); err != nil {
+	if err := importResource(source, target, "networks"); err != nil {
 		return err
 	}
-	if err := importResource(source, target, "secrets", processor); err != nil {
+	if err := importResource(source, target, "secrets"); err != nil {
 		return err
 	}
-	if err := importResource(source, target, "configs", processor); err != nil {
+	if err := importResource(source, target, "configs"); err != nil {
 		return err
 	}
-	if err := importResource(source, target, "models", processor); err != nil {
+	if err := importResource(source, target, "models"); err != nil {
 		return err
 	}
 	return nil
 }
 
-func importResource(source map[string]any, target map[string]any, key string, processor PostProcessor) error {
+func importResource(source map[string]any, target map[string]any, key string) error {
 	from := source[key]
 	if from != nil {
 		var to map[string]any
@@ -197,25 +193,13 @@ func importResource(source map[string]any, target map[string]any, key string, pr
 			to = map[string]any{}
 		}
 		for name, a := range from.(map[string]any) {
-			conflict, ok := to[name]
-			if !ok {
-				to[name] = a
-				continue
+			if conflict, ok := to[name]; ok {
+				if reflect.DeepEqual(a, conflict) {
+					continue
+				}
+				return fmt.Errorf("%s.%s conflicts with imported resource", key, name)
 			}
-			err := processor.Apply(map[string]any{
-				key: map[string]any{
-					name: a,
-				},
-			})
-			if err != nil {
-				return err
-			}
-
-			merged, err := override.MergeYaml(a, conflict, tree.NewPath(key, name))
-			if err != nil {
-				return err
-			}
-			to[name] = merged
+			to[name] = a
 		}
 		target[key] = to
 	}

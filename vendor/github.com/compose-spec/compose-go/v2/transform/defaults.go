@@ -29,7 +29,6 @@ func init() {
 	DefaultValues["services.*.ports.*"] = portDefaults
 	DefaultValues["services.*.deploy.resources.reservations.devices.*"] = deviceRequestDefaults
 	DefaultValues["services.*.gpus.*"] = deviceRequestDefaults
-	DefaultValues["services.*.volumes.*.bind"] = defaultVolumeBind
 }
 
 // RegisterDefaultValue registers a custom transformer for the given path pattern

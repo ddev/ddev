@@ -105,7 +105,7 @@ type delegatedInstrument interface {
 	setDelegate(metric.Meter)
 }
 
-// instID are the identifying properties of an instrument.
+// instID are the identifying properties of a instrument.
 type instID struct {
 	// name is the name of the stream.
 	name string

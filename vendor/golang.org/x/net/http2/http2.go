@@ -34,6 +34,7 @@ var (
 	VerboseLogs    bool
 	logFrameWrites bool
 	logFrameReads  bool
+	inTests        bool
 
 	// Enabling extended CONNECT by causes browsers to attempt to use
 	// WebSockets-over-HTTP/2. This results in problems when the server's websocket

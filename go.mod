@@ -14,7 +14,7 @@ require (
 	github.com/docker/cli v29.0.0+incompatible
 	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/goodhosts/hostsfile v0.1.6
-	github.com/google/go-github/v74 v74.0.0
+	github.com/google/go-github/v81 v81.0.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/jedib0t/go-pretty/v6 v6.6.8
@@ -33,7 +33,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/ulikunitz/xz v0.5.15
 	github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1
-	go.yaml.in/yaml/v3 v3.0.4
+	go.yaml.in/yaml/v4 v4.0.0-rc.4
 	golang.org/x/mod v0.28.0
 	golang.org/x/sys v0.36.0
 	golang.org/x/term v0.35.0
@@ -101,6 +101,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.8.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/net v0.44.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
