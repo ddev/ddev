@@ -131,7 +131,10 @@ If your project requires multiple versions of PHP, and one of them is EOL, you c
 
 ## Changing Web Server Type
 
-DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-fpm (`apache-fpm`). You can change this with the [`webserver_type`](../configuration/config.md#webserver_type) config option, or using the [`ddev config`](../usage/commands.md#config) command with the `--webserver-type` flag.
+DDEV supports nginx with php-fpm by default (`nginx-fpm`), Apache with php-fpm (`apache-fpm`), and `generic` for [custom web servers](../quickstart.md#generic). You can change this with the [`webserver_type`](../configuration/config.md#webserver_type) config option, or using the [`ddev config`](../usage/commands.md#config) command with the `--webserver-type` flag.
+
+!!!tip "Using FrankenPHP web server"
+    The `webserver_type: generic` setting allows you to use FrankenPHP as your web server. See the [ddev-frankenphp](https://github.com/ddev/ddev-frankenphp) add-on for details.
 
 ## Adding Services to a Project
 

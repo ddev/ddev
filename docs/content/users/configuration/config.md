@@ -733,6 +733,9 @@ Then run [`ddev restart`](../usage/commands.md#restart) to have the change take 
 
 The `generic` type is special: It tells DDEV not to run any web server daemons, and the user can configure their own with the [`web_extra_daemons`](#web_extra_daemons) option.
 
+!!!tip
+    For generic web server configuration examples, see the [quickstart guide](../quickstart.md#generic).
+
 ## `working_dir`
 
 Working directories used by [`ddev exec`](../usage/commands.md#exec) and [`ddev ssh`](../usage/commands.md#ssh).

@@ -926,132 +926,91 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         ./setup-ee-git.sh
         ```
 
-## Generic (FrankenPHP)
+## Generic
 
-This example of the `webserver_type: generic` puts [FrankenPHP](https://frankenphp.dev/) into DDEV as an experimental first step in using the innovative Golang-based PHP interpreter. It is in its infancy and may someday become a full-fledged `webserver_type`. Your feedback and improvements are welcome.
+The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows you to define your own web server process(es) and exposed ports for projects that don't use the standard `nginx-fpm` or `apache-fpm` configurations.
 
-This particular example uses a `drupal11` project with FrankenPHP, which then uses its own PHP 8.4 interpreter. The normal DDEV database container is used for database access.
+!!!tip "Looking for more advanced generic web server examples?"
+    Check out the [Node.js](#nodejs) and [Wagtail](#wagtail-python-generic) examples below.
 
-In this example, inside the web container the normal `php` CLI use used for CLI activities. Xdebug (and `ddev xdebug`) do not yet work.
+    See also the [ddev-frankenphp](https://github.com/ddev/ddev-frankenphp) add-on, which uses the `generic` webserver under the hood.
 
-The `generic` `webserver_type` is used here, so the `ddev-webserver` does not start the `nginx` or `php-fpm` daemons, and the `frankenphp` process does all the work.
+=== "PHP's built-in web server"
 
-Create the project directory and configure DDEV:
+    This trivial example demonstrates running PHP's built-in web server inside DDEV's web container. The `ddev-webserver` container will not start the default `nginx` or `php-fpm` daemons—the PHP built-in server will handle all requests. You probably wouldn't find this useful compared to the normal `nginx-fpm` or `apache-fpm` configurations, but it's offered here as an example of how the `generic` webserver type works.
 
-```bash
-export FRANKENPHP_SITENAME=my-frankenphp-site
-mkdir ${FRANKENPHP_SITENAME} && cd ${FRANKENPHP_SITENAME}
-ddev config --project-type=drupal11 --webserver-type=generic --docroot=web --php-version=8.4
-```
-
-Start DDEV (this may take a minute):
-
-```bash
-ddev start
-```
-
-Create FrankenPHP configuration:
-
-```bash
-cat <<'EOF' > .ddev/config.frankenphp.yaml
-web_extra_daemons:
-    - name: "frankenphp"
-      command: "frankenphp php-server --listen=0.0.0.0:80 --root=\"/var/www/html/${DDEV_DOCROOT:-}\" -v -a"
-      directory: /var/www/html
-web_extra_exposed_ports:
-    - name: "frankenphp"
-      container_port: 80
-      http_port: 80
-      https_port: 443
-EOF
-```
-
-Create Dockerfile for FrankenPHP:
-
-```bash
-cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.frankenphp
-RUN curl -fsSL https://key.henderkes.com/static-php.gpg -o /usr/share/keyrings/static-php.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/static-php.gpg] https://deb.henderkes.com/ stable main" > /etc/apt/sources.list.d/static-php.list
-# Install FrankenPHP and extensions, see https://frankenphp.dev/docs/#deb-packages for details.
-# You can find the list of available extensions at https://deb.henderkes.com/pool/main/p/
-RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests \
-    frankenphp \
-    php-zts-cli \
-    php-zts-gd \
-    php-zts-pdo-mysql
-# Make sure that 'php' command uses the ZTS version of PHP
-# and that the php.ini in use by FrankenPHP is the one from DDEV.
-RUN ln -sf /usr/bin/php-zts /usr/local/bin/php && \
-    ln -sf /etc/php/${DDEV_PHP_VERSION}/fpm/php.ini /etc/php-zts/php.ini
-DOCKERFILEEND
-```
-
-Install Drupal and configure:
-
-```bash
-ddev composer create-project drupal/recommended-project
-ddev composer require drush/drush
-ddev restart
-ddev drush site:install demo_umami --account-name=admin --account-pass=admin -y
-```
-
-Launch your site:
-
-```bash
-ddev launch
-# or automatically log in with:
-ddev launch $(ddev drush uli)
-```
-
-??? tip "Prefer to run as a script?"
-    To run the whole setup as a script, examine and run this script:
+    Create the project directory and configure DDEV:
 
     ```bash
-    cat > setup-frankenphp.sh << 'EOF'
-    #!/usr/bin/env bash
-    set -euo pipefail
-    export FRANKENPHP_SITENAME=my-frankenphp-site
-    mkdir ${FRANKENPHP_SITENAME} && cd ${FRANKENPHP_SITENAME}
-    ddev config --project-type=drupal11 --webserver-type=generic --docroot=web --php-version=8.4
-    ddev start -y
+    export GENERIC_SITENAME=my-generic-site
+    mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
+    ddev config --project-type=php
+    ```
 
-    cat <<'INNEREOF' > .ddev/config.frankenphp.yaml
+    Create a sample PHP info page:
+
+    ```bash
+    echo "<?php phpinfo(); ?>" > index.php
+    ```
+
+    Configure the web server to run PHP's built-in server:
+
+    ```bash
+    cat <<'EOF' > .ddev/config.php-server.yaml
+    webserver_type: generic
     web_extra_daemons:
-        - name: "frankenphp"
-          command: "frankenphp php-server --listen=0.0.0.0:80 --root=\"/var/www/html/${DDEV_DOCROOT:-}\" -v -a"
+        - name: "php-server"
+          command: "php -S 0.0.0.0:8000 -t \"${DDEV_DOCROOT:-.}\""
           directory: /var/www/html
     web_extra_exposed_ports:
-        - name: "frankenphp"
-          container_port: 80
+        - name: "php-server"
+          container_port: 8000
           http_port: 80
           https_port: 443
-    INNEREOF
-
-    cat <<'INNEREOF' >.ddev/web-build/Dockerfile.frankenphp
-    RUN curl -fsSL https://key.henderkes.com/static-php.gpg -o /usr/share/keyrings/static-php.gpg && \
-        echo "deb [signed-by=/usr/share/keyrings/static-php.gpg] https://deb.henderkes.com/ stable main" > /etc/apt/sources.list.d/static-php.list
-    # Install FrankenPHP and extensions, see https://frankenphp.dev/docs/#deb-packages for details.
-    # You can find the list of available extensions at https://deb.henderkes.com/pool/main/p/
-    RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests \
-        frankenphp \
-        php-zts-cli \
-        php-zts-gd \
-        php-zts-pdo-mysql
-    # Make sure that 'php' command uses the ZTS version of PHP
-    # and that the php.ini in use by FrankenPHP is the one from DDEV.
-    RUN ln -sf /usr/bin/php-zts /usr/local/bin/php && \
-        ln -sf /etc/php/${DDEV_PHP_VERSION}/fpm/php.ini /etc/php-zts/php.ini
-    INNEREOF
-
-    ddev composer create-project drupal/recommended-project
-    ddev composer require drush/drush
-    ddev restart
-    ddev drush site:install demo_umami --account-name=admin --account-pass=admin -y
-    ddev launch
     EOF
-    chmod +x setup-frankenphp.sh
-    ./setup-frankenphp.sh
     ```
+
+    Start DDEV (this may take a minute):
+
+    ```bash
+    ddev start
+    ```
+
+    Launch the site:
+
+    ```bash
+    ddev launch
+    ```
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > setup-generic.sh << 'EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        export GENERIC_SITENAME=my-generic-site
+        mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
+        ddev config --project-type=php
+        echo "<?php phpinfo(); ?>" > index.php
+        cat <<'INNEREOF' > .ddev/config.php-server.yaml
+        webserver_type: generic
+        web_extra_daemons:
+            - name: "php-server"
+              command: "php -S 0.0.0.0:8000 -t \"${DDEV_DOCROOT:-.}\""
+              directory: /var/www/html
+        web_extra_exposed_ports:
+            - name: "php-server"
+              container_port: 8000
+              http_port: 80
+              https_port: 443
+        INNEREOF
+        ddev start -y
+        ddev launch
+        EOF
+        chmod +x setup-generic.sh
+        ./setup-generic.sh
+        ```
 
 ## Grav
 
@@ -1846,14 +1805,14 @@ ddev magento setup:upgrade
 
     cat <<EOF > .ddev/config.sveltekit.yaml
     web_extra_exposed_ports:
-    - name: svelte
-      container_port: 3000
-      http_port: 80
-      https_port: 443
+        - name: svelte
+          container_port: 3000
+          http_port: 80
+          https_port: 443
     web_extra_daemons:
-    - name: "sveltekit-demo"
-      command: "node build"
-      directory: /var/www/html
+        - name: "sveltekit-demo"
+          command: "node build"
+          directory: /var/www/html
     EOF
 
     ddev exec "npx sv create --template=demo --types=ts --no-add-ons --no-install ."
@@ -1886,15 +1845,15 @@ ddev magento setup:upgrade
 
     cat <<EOF > .ddev/config.nodejs.yaml
     web_extra_exposed_ports:
-    - name: node-example
-      container_port: 3000
-      http_port: 80
-      https_port: 443
+        - name: node-example
+          container_port: 3000
+          http_port: 80
+          https_port: 443
 
     web_extra_daemons:
-    - name: "node-example"
-      command: "node server.js"
-      directory: /var/www/html
+        - name: "node-example"
+          command: "node server.js"
+          directory: /var/www/html
     EOF
 
     ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
@@ -2748,6 +2707,136 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev composer install
     ddev exec touch public/FIRST_INSTALL
     ddev launch /typo3/install.php
+    ```
+
+## Wagtail (Python, Generic)
+
+[Wagtail](https://wagtail.org/) is a popular, open-source content management system built on the Django web framework. This quickstart demonstrates how to set up a new Wagtail project using DDEV with Python and a virtual environment.
+
+Create the project directory and configure DDEV:
+
+```bash
+export WAGTAIL_SITENAME=my-wagtail-site
+mkdir ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
+ddev config --project-type=generic --webserver-type=generic \
+    --webimage-extra-packages=python3-pip,python3-venv \
+    --web-environment-add=DJANGO_SETTINGS_MODULE=mysite.settings.dev \
+    --omit-containers=db
+```
+
+Configure the container to automatically activate the Python virtual environment:
+
+```bash
+cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.python-venv
+RUN for file in /etc/bash.bashrc /etc/bash.nointeractive.bashrc; do \
+        echo '[ -s "$DDEV_APPROOT/env/bin/activate" ] && source "$DDEV_APPROOT/env/bin/activate"' >> "$file"; \
+    done
+DOCKERFILEEND
+```
+
+Start DDEV (this may take a minute):
+
+```bash
+ddev start
+```
+
+Create a Python virtual environment and install Wagtail:
+
+```bash
+ddev exec python -m venv env
+ddev exec pip install wagtail gunicorn
+```
+
+Initialize the Wagtail project:
+
+```bash
+ddev exec wagtail start mysite .
+ddev exec pip install -r requirements.txt
+```
+
+Configure Django to detect HTTPS behind the [Traefik](./extend/traefik-router.md) router:
+
+```bash
+ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
+```
+
+Run database migrations and create a superuser:
+
+```bash
+ddev exec python manage.py migrate --noinput
+ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
+```
+
+Configure DDEV to run the Wagtail development server:
+
+```bash
+cat <<'EOF' > .ddev/config.wagtail.yaml
+web_extra_daemons:
+    - name: "wagtail"
+      command: "gunicorn mysite.wsgi:application -b 0.0.0.0:8000"
+      directory: /var/www/html
+web_extra_exposed_ports:
+    - name: "wagtail"
+      container_port: 8000
+      http_port: 80
+      https_port: 443
+EOF
+```
+
+Restart DDEV to apply the configuration:
+
+```bash
+ddev restart
+```
+
+Launch the Wagtail admin interface (login with `admin` and `admin`):
+
+```bash
+ddev launch /admin
+```
+
+??? tip "Prefer to run as a script?"
+    To run the whole setup as a script, examine and run this script:
+
+    ```bash
+    cat > setup-wagtail.sh << 'EOF'
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export WAGTAIL_SITENAME=my-wagtail-site
+    mkdir ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
+    ddev config --project-type=generic --webserver-type=generic \
+        --webimage-extra-packages=python3-pip,python3-venv \
+        --web-environment-add=DJANGO_SETTINGS_MODULE=mysite.settings.dev \
+        --omit-containers=db
+    cat <<'INNEREOF' >.ddev/web-build/Dockerfile.python-venv
+    RUN for file in /etc/bash.bashrc /etc/bash.nointeractive.bashrc; do \
+            echo '[ -s "$DDEV_APPROOT/env/bin/activate" ] && source "$DDEV_APPROOT/env/bin/activate"' >> "$file"; \
+        done
+    INNEREOF
+    ddev start -y
+    ddev exec python -m venv env
+    ddev exec pip install wagtail gunicorn
+    ddev exec wagtail start mysite .
+    ddev exec pip install -r requirements.txt
+    ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
+    ddev exec python manage.py migrate --noinput
+    ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
+    cat <<'INNEREOF' > .ddev/config.wagtail.yaml
+    web_extra_daemons:
+        - name: "wagtail"
+          command: "gunicorn mysite.wsgi:application -b 0.0.0.0:8000"
+          directory: /var/www/html
+    web_extra_exposed_ports:
+        - name: "wagtail"
+          container_port: 8000
+          http_port: 80
+          https_port: 443
+    INNEREOF
+    ddev restart
+    ddev launch /admin
+    EOF
+    chmod +x setup-wagtail.sh
+    ./setup-wagtail.sh
     ```
 
 ## WordPress
