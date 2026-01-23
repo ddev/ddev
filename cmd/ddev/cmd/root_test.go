@@ -440,6 +440,79 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	assert.GreaterOrEqual(sshCreateTime, oldTimeInt)
 }
 
+// TestNoPoweroffPromptWhenStopped checks that poweroff prompt is skipped when containers are already stopped
+func TestNoPoweroffPromptWhenStopped(t *testing.T) {
+	if !nodeps.IsLinux() {
+		t.Skip("No need to test except on Linux")
+	}
+	var err error
+
+	origDir, _ := os.Getwd()
+
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+
+	// Create a test project
+	testName := t.Name() + "-testproject"
+	_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", testName)
+
+	tmpTestProjectDir := testcommon.CreateTmpDir(testName)
+	err = os.Chdir(tmpTestProjectDir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+
+		t.Logf("attempting to remove project %s", testName)
+		_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", testName)
+
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+
+		// Restart test sites
+		for _, site := range TestSites {
+			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+		}
+
+		_ = os.RemoveAll(tmpTestProjectDir)
+	})
+
+	// Configure and start a project
+	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name", testName, "--project-type", "php")
+	require.NoError(t, err, "out=%s", out)
+	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
+	require.NoError(t, err)
+
+	// Now poweroff all containers
+	out, err = exec.RunHostCommand(DdevBin, "poweroff")
+	require.NoError(t, err, "poweroff failed: %v, output=%s", err, out)
+
+	// Verify no containers are running
+	apps := ddevapp.GetActiveProjects()
+	require.Equal(t, 0, len(apps), "Expected no active projects after poweroff")
+
+	sshAgent, _ := dockerutil.FindContainerByName("ddev-ssh-agent")
+	require.Nil(t, sshAgent, "Expected ddev-ssh-agent to be stopped")
+
+	router, _ := dockerutil.FindContainerByName("ddev-router")
+	require.Nil(t, router, "Expected ddev-router to be stopped")
+
+	// Set a different version to trigger the version check
+	globalconfig.DdevGlobalConfig.LastStartedVersion = "v0.1"
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	// Start should NOT prompt for poweroff since everything is already stopped
+	out, err = exec.RunHostCommand(DdevBin, "start", "-y")
+	require.NoError(t, err, "start failed, out='%s', err=%v", out, err)
+
+	// The output should NOT contain the poweroff-related messages
+	require.NotContains(t, out, "May I do `ddev poweroff`", "Should not prompt for poweroff when containers already stopped")
+	require.NotContains(t, out, "ddev-ssh-agent container has been removed", "Should not show poweroff messages when containers already stopped")
+
+	// Verify project started successfully
+	apps = ddevapp.GetActiveProjects()
+	require.Equal(t, 1, len(apps), "Expected one active project after start")
+}
+
 // addSites runs `ddev start` on the test apps
 func addSites() error {
 	output.UserOut.Debugln("Removing any existing TestSites")

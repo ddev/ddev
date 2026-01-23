@@ -173,10 +173,19 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
 		// If they have a new version (but not first-timer) then prompt to poweroff
 		if globalconfig.DdevGlobalConfig.LastStartedVersion != "v0.0" {
-			output.UserOut.Printf("You seem to have a new DDEV version (new=%s, old=%s)", versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion)
-			okPoweroff := util.Confirm("During an upgrade it's important to `ddev poweroff`.\nMay I do `ddev poweroff` before continuing?\nThis does no harm and loses no data.")
-			if okPoweroff {
-				ddevapp.PowerOff()
+			// Check if any containers are running before prompting for poweroff
+			activeProjects := ddevapp.GetActiveProjects()
+			sshAgent, _ := dockerutil.FindContainerByName("ddev-ssh-agent")
+			router, _ := dockerutil.FindContainerByName("ddev-router")
+
+			// Only prompt for poweroff if there are active containers
+			// If all are nil/empty, the user has effectively already done a poweroff
+			if len(activeProjects) > 0 || sshAgent != nil || router != nil {
+				output.UserOut.Printf("You seem to have a new DDEV version (new=%s, old=%s)", versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion)
+				okPoweroff := util.Confirm("During an upgrade it's important to `ddev poweroff`.\nMay I do `ddev poweroff` before continuing?\nThis does no harm and loses no data.")
+				if okPoweroff {
+					ddevapp.PowerOff()
+				}
 			}
 		}
 
