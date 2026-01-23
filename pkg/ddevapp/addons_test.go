@@ -8,6 +8,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/assert"
@@ -777,6 +778,9 @@ project_files:
 
 // TestGetAddonTarballURL tests the GetAddonTarballURL function
 func TestGetAddonTarballURL(t *testing.T) {
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
+	}
 	// The test should succeed without real GitHub tokens
 	// GetAddonTarballURL can call GetGitHubRelease under the hood
 	t.Setenv("DDEV_GITHUB_TOKEN", "dummy-token")
