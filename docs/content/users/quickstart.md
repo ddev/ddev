@@ -937,7 +937,7 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
 
 === "PHP's built-in web server"
 
-    This example demonstrates running PHP's built-in web server. The `ddev-webserver` container will not start the default `nginx` or `php-fpm` daemons—the PHP built-in server will handle all requests.
+    This trivial example simply demonstrates running PHP's built-in web server inside DDEV's web container. The `ddev-webserver` container will not start the default `nginx` or `php-fpm` daemons—the PHP built-in server will handle all requests. You probably wouldn't find this useful compared to the normal `nginx-fpm` or `apache-fpm` configurations, but it's offered here as an example of how the `generic` webserver type works.
 
     Create the project directory and configure DDEV:
 
@@ -2707,7 +2707,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev launch /typo3/install.php
     ```
 
-## Wagtail
+## Wagtail (python, generic)
 
 [Wagtail](https://wagtail.org/) is a popular, open-source content management system built on the Django web framework. This quickstart demonstrates how to set up a new Wagtail project using DDEV with Python and a virtual environment.
 
