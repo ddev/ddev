@@ -938,23 +938,23 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
 === "PHP's built-in web server"
 
     This example demonstrates running PHP's built-in web server. The `ddev-webserver` container will not start the default `nginx` or `php-fpm` daemons—the PHP built-in server will handle all requests.
-    
+
     Create the project directory and configure DDEV:
-    
+
     ```bash
     export GENERIC_SITENAME=my-generic-site
     mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
     ddev config --project-type=generic --webserver-type=generic
     ```
-    
+
     Create a sample PHP info page:
-    
+
     ```bash
     echo "<?php phpinfo(); ?>" > index.php
     ```
-    
+
     Configure the web server to run PHP's built-in server:
-    
+
     ```bash
     cat <<'EOF' > .ddev/config.php-server.yaml
     web_extra_daemons:
@@ -968,22 +968,22 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
           https_port: 443
     EOF
     ```
-    
+
     Start DDEV (this may take a minute):
-    
+
     ```bash
     ddev start
     ```
-    
+
     Launch the site:
-    
+
     ```bash
     ddev launch
     ```
-    
+
     ??? tip "Prefer to run as a script?"
         To run the whole setup as a script, examine and run this script:
-    
+
         ```bash
         cat > setup-generic.sh << 'EOF'
         #!/usr/bin/env bash
@@ -2716,7 +2716,10 @@ Create the project directory and configure DDEV:
 ```bash
 export WAGTAIL_SITENAME=my-wagtail-site
 mkdir ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
-ddev config --project-type=generic --webserver-type=generic --webimage-extra-packages=python3-pip,python3-venv --omit-containers=db
+ddev config --project-type=generic --webserver-type=generic \
+    --webimage-extra-packages=python3-pip,python3-venv \
+    --web-environment-add=DJANGO_SETTINGS_MODULE=mysite.settings.dev \
+    --omit-containers=db
 ```
 
 Configure the container to automatically activate the Python virtual environment:
@@ -2749,10 +2752,10 @@ ddev exec wagtail start mysite .
 ddev exec pip install -r requirements.txt
 ```
 
-Configure Django to trust DDEV's domain for CSRF protection:
+Configure Django to detect HTTPS behind Traefik reverse proxy:
 
 ```bash
-ddev exec "echo \"CSRF_TRUSTED_ORIGINS = ['https://*.\$DDEV_TLD']\" >> mysite/settings/dev.py"
+ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
 ```
 
 Run database migrations and create a superuser:
@@ -2799,7 +2802,10 @@ ddev launch /admin
     set -euo pipefail
     export WAGTAIL_SITENAME=my-wagtail-site
     mkdir ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
-    ddev config --project-type=generic --webserver-type=generic --webimage-extra-packages=python3-pip,python3-venv --omit-containers=db
+    ddev config --project-type=generic --webserver-type=generic \
+        --webimage-extra-packages=python3-pip,python3-venv \
+        --web-environment-add=DJANGO_SETTINGS_MODULE=mysite.settings.dev \
+        --omit-containers=db
     cat <<'INNEREOF' >.ddev/web-build/Dockerfile.python-venv
     RUN for file in /etc/bash.bashrc /etc/bash.nointeractive.bashrc; do \
             echo '[ -s "$DDEV_APPROOT/env/bin/activate" ] && source "$DDEV_APPROOT/env/bin/activate"' >> "$file"; \
@@ -2810,7 +2816,7 @@ ddev launch /admin
     ddev exec pip install wagtail gunicorn
     ddev exec wagtail start mysite .
     ddev exec pip install -r requirements.txt
-    ddev exec "echo \"CSRF_TRUSTED_ORIGINS = ['https://*.\$DDEV_TLD']\" >> mysite/settings/dev.py"
+    ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
     ddev exec python manage.py migrate --noinput
     ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
     cat <<'INNEREOF' > .ddev/config.wagtail.yaml

@@ -38,7 +38,6 @@ Completely
 Create
 CRM
 CrowdStrike
-CSRF
 DBeaver
 DDEV's
 DDEV

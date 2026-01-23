@@ -16,7 +16,10 @@ teardown() {
   run mkdir ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
   assert_success
 
-  run ddev config --project-type=generic --webserver-type=generic --webimage-extra-packages=python3-pip,python3-venv --omit-containers=db
+  run ddev config --project-type=generic --webserver-type=generic \
+    --webimage-extra-packages=python3-pip,python3-venv \
+    --web-environment-add=DJANGO_SETTINGS_MODULE=mysite.settings.dev \
+    --omit-containers=db
   assert_success
 
   cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.python-venv
@@ -43,7 +46,7 @@ DOCKERFILEEND
   run ddev exec pip install -r requirements.txt
   assert_success
 
-  run ddev exec "echo \"CSRF_TRUSTED_ORIGINS = ['https://*.\$DDEV_TLD']\" >> mysite/settings/dev.py"
+  run ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
   assert_success
 
   run ddev exec python manage.py migrate --noinput
