@@ -442,10 +442,9 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 // TestNoPoweroffPromptWhenStopped checks that poweroff prompt is skipped when containers are already stopped
 func TestNoPoweroffPromptWhenStopped(t *testing.T) {
-	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
-		t.Skip("Fails on Docker Desktop because of the apparent removal of ~/.docker, skipping")
+	if !nodeps.IsLinux() {
+		t.Skip("No need to test except on Linux")
 	}
-	assert := asrt.New(t)
 	var err error
 
 	origDir, _ := os.Getwd()
@@ -458,16 +457,13 @@ func TestNoPoweroffPromptWhenStopped(t *testing.T) {
 
 	tmpTestProjectDir := testcommon.CreateTmpDir(testName)
 	err = os.Chdir(tmpTestProjectDir)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
+		_ = os.Chdir(origDir)
 
 		t.Logf("attempting to remove project %s", testName)
-		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", testName)
-		require.NoError(t, err, "failed to remove project %s, out='%s' err=%v", testName, out, err)
-		t.Logf("Output from 'ddev delete -Oy %s' was '%s'", testName, out)
+		_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", testName)
 
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 
@@ -476,32 +472,28 @@ func TestNoPoweroffPromptWhenStopped(t *testing.T) {
 			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
 		}
 
-		t.Logf("attempting to remove project files in %s", tmpTestProjectDir)
-		err = os.RemoveAll(tmpTestProjectDir)
-		if err != nil {
-			t.Logf("failed to remove test project files in %s: %v", tmpTestProjectDir, err)
-		}
+		_ = os.RemoveAll(tmpTestProjectDir)
 	})
 
 	// Configure and start a project
 	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name", testName, "--project-type", "php")
-	assert.NoError(err, "out=%s", out)
+	require.NoError(t, err, "out=%s", out)
 	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Now poweroff all containers
 	out, err = exec.RunHostCommand(DdevBin, "poweroff")
-	assert.NoError(err, "poweroff failed: %v, output=%s", err, out)
+	require.NoError(t, err, "poweroff failed: %v, output=%s", err, out)
 
 	// Verify no containers are running
 	apps := ddevapp.GetActiveProjects()
-	assert.Equal(0, len(apps), "Expected no active projects after poweroff")
+	require.Equal(t, 0, len(apps), "Expected no active projects after poweroff")
 
 	sshAgent, _ := dockerutil.FindContainerByName("ddev-ssh-agent")
-	assert.Nil(sshAgent, "Expected ddev-ssh-agent to be stopped")
+	require.Nil(t, sshAgent, "Expected ddev-ssh-agent to be stopped")
 
 	router, _ := dockerutil.FindContainerByName("ddev-router")
-	assert.Nil(router, "Expected ddev-router to be stopped")
+	require.Nil(t, router, "Expected ddev-router to be stopped")
 
 	// Set a different version to trigger the version check
 	globalconfig.DdevGlobalConfig.LastStartedVersion = "v0.1"
@@ -513,12 +505,12 @@ func TestNoPoweroffPromptWhenStopped(t *testing.T) {
 	require.NoError(t, err, "start failed, out='%s', err=%v", out, err)
 
 	// The output should NOT contain the poweroff-related messages
-	assert.NotContains(out, "May I do `ddev poweroff`", "Should not prompt for poweroff when containers already stopped")
-	assert.NotContains(out, "ddev-ssh-agent container has been removed", "Should not show poweroff messages when containers already stopped")
+	require.NotContains(t, out, "May I do `ddev poweroff`", "Should not prompt for poweroff when containers already stopped")
+	require.NotContains(t, out, "ddev-ssh-agent container has been removed", "Should not show poweroff messages when containers already stopped")
 
 	// Verify project started successfully
 	apps = ddevapp.GetActiveProjects()
-	assert.Equal(1, len(apps), "Expected one active project after start")
+	require.Equal(t, 1, len(apps), "Expected one active project after start")
 }
 
 // addSites runs `ddev start` on the test apps
