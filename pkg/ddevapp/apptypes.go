@@ -188,6 +188,18 @@ func init() {
 			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
 		},
 
+		nodeps.AppTypeDrupal12: {
+			settingsCreator:            createDrupalSettingsPHP,
+			uploadDirs:                 getDrupalUploadDirs,
+			hookDefaultComments:        getDrupalHooks,
+			appTypeSettingsPaths:       setDrupalSiteSettingsPaths,
+			appTypeDetect:              isDrupal12App,
+			configOverrideAction:       drupalConfigOverrideAction,
+			postStartAction:            drupalPostStartAction,
+			importFilesAction:          drupalImportFilesAction,
+			composerCreateAllowedPaths: getDrupalComposerCreateAllowedPaths,
+		},
+
 		nodeps.AppTypeGeneric: {
 			postStartAction: nil,
 		},

@@ -98,6 +98,7 @@ const (
 	AppTypeDrupal9     = "drupal9"
 	AppTypeDrupal10    = "drupal10"
 	AppTypeDrupal11    = "drupal11"
+	AppTypeDrupal12    = "drupal12"
 	// AppTypeDrupal is an alias for "most recent Drupal version"
 	AppTypeDrupal       = "drupal"
 	AppTypeGeneric      = "generic"

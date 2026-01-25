@@ -377,6 +377,15 @@ func isDrupal10App(app *DdevApp) bool {
 	return vStr == "10"
 }
 
+// isDrupal12App detects whether the code found is Drupal 12
+func isDrupal12App(app *DdevApp) bool {
+	vStr, err := GetDrupalVersion(app)
+	if err != nil {
+		return false
+	}
+	return vStr == "12"
+}
+
 // isDrupal11App detects whether the code found is Drupal 11
 func isDrupal11App(app *DdevApp) bool {
 	vStr, err := GetDrupalVersion(app)
@@ -428,11 +437,14 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 		drupalVersion = 9
 	case nodeps.AppTypeDrupal10:
 		drupalVersion = 10
-	case nodeps.AppTypeDrupal:
-		fallthrough
 	case nodeps.AppTypeDrupal11:
 		app.CorepackEnable = true
 		drupalVersion = 11
+	case nodeps.AppTypeDrupal:
+		fallthrough
+	case nodeps.AppTypeDrupal12:
+		app.CorepackEnable = true
+		drupalVersion = 12
 	}
 	// If there is no database, update it to the default one,
 	// otherwise show a warning to the user.
