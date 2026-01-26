@@ -116,7 +116,43 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		require.NoError(t, err)
 		require.Contains(t, out, "Decode and display the contents of Go gob-encoded binary files")
 		require.Contains(t, out, "ddev utility gob-decode ~/.ddev/.remote-config")
+		require.Contains(t, out, "ddev utility gob-decode ~/.ddev/.sponsorship-data")
+		require.Contains(t, out, "ddev utility gob-decode ~/.ddev/.addon-data")
 		require.Contains(t, out, ".remote-config files (remote configuration cache)")
+		require.Contains(t, out, ".sponsorship-data files (contributor sponsorship information)")
+		require.Contains(t, out, ".addon-data files (add-on registry cache)")
+	})
+
+	// Test add-on data gob file
+	t.Run("AddonDataFile", func(t *testing.T) {
+		testFile := filepath.Join("testdata", "TestDebugGobDecode", "test-addon-data.gob")
+
+		// Test decoding the file
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "gob-decode", testFile)
+		require.NoError(t, err)
+
+		// Parse the JSON output
+		var decodedData types.AddonData
+		err = json.Unmarshal([]byte(out), &decodedData)
+		require.NoError(t, err, "failed to parse JSON output: %s", out)
+
+		// Verify the decoded data matches expected test data
+		require.Equal(t, 2, decodedData.TotalAddonsCount)
+		require.Equal(t, 1, decodedData.OfficialAddonsCount)
+		require.Equal(t, 1, decodedData.ContribAddonsCount)
+		require.Len(t, decodedData.Addons, 2)
+
+		// Verify first addon
+		require.Equal(t, "ddev/ddev-redis", decodedData.Addons[0].Title)
+		require.Equal(t, "ddev", decodedData.Addons[0].User)
+		require.Equal(t, "ddev-redis", decodedData.Addons[0].Repo)
+		require.Equal(t, "official", decodedData.Addons[0].Type)
+		require.Equal(t, "v1.0.0", decodedData.Addons[0].TagName.Value)
+		require.True(t, decodedData.Addons[0].TagName.IsSet)
+
+		// Verify second addon
+		require.Equal(t, "example/ddev-solr", decodedData.Addons[1].Title)
+		require.Equal(t, "contrib", decodedData.Addons[1].Type)
 	})
 
 	// Test with invalid gob file
@@ -198,35 +234,88 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 	})
 }
 
-// TestDebugGobDecodeWithRealRemoteConfig tests with an actual remote config if it exists
-func TestDebugGobDecodeWithRealRemoteConfig(t *testing.T) {
-	// Try to find a real remote config file
+// TestDebugGobDecodeWithRealCacheFiles tests with actual cache files if they exist
+func TestDebugGobDecodeWithRealCacheFiles(t *testing.T) {
+	// Try to find home directory
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		t.Skip("Cannot determine home directory")
 	}
 
-	remoteConfigPath := filepath.Join(homeDir, ".ddev", ".remote-config")
-	if _, err := os.Stat(remoteConfigPath); os.IsNotExist(err) {
-		t.Skip("No real remote config file found, skipping test")
-	}
-
-	// Test decoding the real remote config
-	out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "gob-decode", remoteConfigPath)
-	require.NoError(t, err)
-
-	// Verify it's valid JSON
-	var remoteConfig types.RemoteConfigData
-	err = json.Unmarshal([]byte(out), &remoteConfig)
-	require.NoError(t, err, "Real remote config should decode to valid JSON")
-
-	// Basic structure validation
-	require.GreaterOrEqual(t, remoteConfig.UpdateInterval, 0, "Update interval should be non-negative")
-
-	// If there are ticker messages, validate structure
-	if len(remoteConfig.Messages.Ticker.Messages) > 0 {
-		for i, msg := range remoteConfig.Messages.Ticker.Messages {
-			require.NotEmpty(t, msg.Message, "Ticker message %d should not be empty", i)
+	t.Run("RemoteConfig", func(t *testing.T) {
+		filePath := filepath.Join(homeDir, ".ddev", ".remote-config")
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			t.Skip("No real remote config file found, skipping test")
 		}
-	}
+
+		// Test decoding the file
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "gob-decode", filePath)
+		require.NoError(t, err)
+
+		// Verify it's valid JSON
+		var data types.RemoteConfigData
+		err = json.Unmarshal([]byte(out), &data)
+		require.NoError(t, err, "Real remote config should decode to valid JSON")
+
+		// Basic structure validation
+		require.GreaterOrEqual(t, data.UpdateInterval, 0, "Update interval should be non-negative")
+
+		// If there are ticker messages, validate structure
+		if len(data.Messages.Ticker.Messages) > 0 {
+			for i, msg := range data.Messages.Ticker.Messages {
+				require.NotEmpty(t, msg.Message, "Ticker message %d should not be empty", i)
+			}
+		}
+	})
+
+	t.Run("SponsorshipData", func(t *testing.T) {
+		filePath := filepath.Join(homeDir, ".ddev", ".sponsorship-data")
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			t.Skip("No real sponsorship data file found, skipping test")
+		}
+
+		// Test decoding the file
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "gob-decode", filePath)
+		require.NoError(t, err)
+
+		// Verify it's valid JSON
+		var data types.SponsorshipData
+		err = json.Unmarshal([]byte(out), &data)
+		require.NoError(t, err, "Real sponsorship data should decode to valid JSON")
+
+		// Basic structure validation
+		require.GreaterOrEqual(t, data.TotalMonthlyAverageIncome, 0.0, "Total income should be non-negative")
+		require.GreaterOrEqual(t, data.GitHubDDEVSponsorships.TotalSponsors, 0, "GitHub DDEV sponsors should be non-negative")
+		require.False(t, data.UpdatedDateTime.IsZero(), "Updated datetime should be set")
+	})
+
+	t.Run("AddonData", func(t *testing.T) {
+		filePath := filepath.Join(homeDir, ".ddev", ".addon-data")
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			t.Skip("No real add-on data file found, skipping test")
+		}
+
+		// Test decoding the file
+		out, err := exec.RunHostCommandSeparateStreams(DdevBin, "utility", "gob-decode", filePath)
+		require.NoError(t, err)
+
+		// Verify it's valid JSON
+		var data types.AddonData
+		err = json.Unmarshal([]byte(out), &data)
+		require.NoError(t, err, "Real add-on data should decode to valid JSON")
+
+		// Basic structure validation
+		require.Greater(t, data.TotalAddonsCount, 0, "Should have at least one addon")
+		require.GreaterOrEqual(t, data.OfficialAddonsCount, 0, "Official addon count should be non-negative")
+		require.GreaterOrEqual(t, data.ContribAddonsCount, 0, "Contrib addon count should be non-negative")
+		require.Greater(t, len(data.Addons), 0, "Should have addon entries")
+		require.False(t, data.UpdatedDateTime.IsZero(), "Updated datetime should be set")
+
+		// If there are addons, validate structure
+		for i, addon := range data.Addons {
+			require.NotEmpty(t, addon.Title, "Addon %d title should not be empty", i)
+			require.NotEmpty(t, addon.User, "Addon %d user should not be empty", i)
+			require.NotEmpty(t, addon.Repo, "Addon %d repo should not be empty", i)
+		}
+	})
 }

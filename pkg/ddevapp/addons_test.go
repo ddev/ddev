@@ -8,6 +8,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/assert"
@@ -773,4 +774,132 @@ project_files:
 	require.False(t, fileutil.FileExists(app.GetConfigPath("dependency-config.yaml")), "Dependency config file should be removed")
 	manifests = ddevapp.GetInstalledAddons(app)
 	require.Len(t, manifests, 0, "Should have no addons remaining")
+}
+
+// TestGetAddonTarballURL tests the GetAddonTarballURL function
+func TestGetAddonTarballURL(t *testing.T) {
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
+	}
+	// The test should succeed without real GitHub tokens
+	// GetAddonTarballURL can call GetGitHubRelease under the hood
+	t.Setenv("DDEV_GITHUB_TOKEN", "dummy-token")
+	t.Setenv("GH_TOKEN", "dummy-token")
+	t.Setenv("GITHUB_TOKEN", "dummy-token")
+
+	tests := []struct {
+		name            string
+		ownerRepo       string
+		gitRef          string
+		defaultBranch   bool
+		prNumber        int
+		expectedURL     string
+		expectedVersion string
+		expectError     bool
+	}{
+		{
+			name:            "with specific version tag",
+			ownerRepo:       "ddev/ddev-redis",
+			gitRef:          "v1.2.3",
+			defaultBranch:   false,
+			prNumber:        0,
+			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/v1.2.3",
+			expectedVersion: "v1.2.3",
+			expectError:     false,
+		},
+		{
+			name:            "with branch name",
+			ownerRepo:       "ddev/ddev-redis",
+			gitRef:          "main",
+			defaultBranch:   false,
+			prNumber:        0,
+			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/main",
+			expectedVersion: "main",
+			expectError:     false,
+		},
+		{
+			name:            "with commit SHA",
+			ownerRepo:       "ddev/ddev-redis",
+			gitRef:          "b50ac77",
+			defaultBranch:   false,
+			prNumber:        0,
+			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/b50ac77",
+			expectedVersion: "b50ac77",
+			expectError:     false,
+		},
+		{
+			name:            "with PR number",
+			ownerRepo:       "ddev/ddev-redis",
+			gitRef:          "",
+			defaultBranch:   false,
+			prNumber:        54,
+			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/refs/pull/54/head",
+			expectedVersion: "pr-54",
+			expectError:     false,
+		},
+		{
+			name:            "with defaultBranch flag and specific version (version takes precedence)",
+			ownerRepo:       "ddev/ddev-redis",
+			gitRef:          "v2.0.0",
+			defaultBranch:   true,
+			prNumber:        0,
+			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/v2.0.0",
+			expectedVersion: "v2.0.0",
+			expectError:     false,
+		},
+		{
+			name:            "with defaultBranch flag and PR number (PR takes precedence)",
+			ownerRepo:       "ddev/ddev-redis",
+			gitRef:          "",
+			defaultBranch:   true,
+			prNumber:        42,
+			expectedURL:     "https://github.com/ddev/ddev-redis/tarball/refs/pull/42/head",
+			expectedVersion: "pr-42",
+			expectError:     false,
+		},
+		{
+			name:            "invalid owner/repo format",
+			ownerRepo:       "invalid",
+			gitRef:          "",
+			defaultBranch:   false,
+			prNumber:        0,
+			expectedURL:     "",
+			expectedVersion: "",
+			expectError:     true,
+		},
+		{
+			name:            "invalid owner/repo with too many slashes",
+			ownerRepo:       "owner/repo/extra",
+			gitRef:          "",
+			defaultBranch:   false,
+			prNumber:        0,
+			expectedURL:     "",
+			expectedVersion: "",
+			expectError:     true,
+		},
+		{
+			name:            "empty owner/repo",
+			ownerRepo:       "",
+			gitRef:          "",
+			defaultBranch:   false,
+			prNumber:        0,
+			expectedURL:     "",
+			expectedVersion: "",
+			expectError:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tarballURL, version, err := ddevapp.GetAddonTarballURL(tt.ownerRepo, tt.gitRef, tt.defaultBranch, tt.prNumber)
+
+			if tt.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expectedURL, tarballURL, "tarball URL should match")
+				require.Equal(t, tt.expectedVersion, version, "version should match")
+			}
+		})
+	}
 }

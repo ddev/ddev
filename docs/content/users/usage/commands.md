@@ -88,8 +88,12 @@ Flags:
 
 * `--skip-deps`: Skip installing add-on dependencies (default `false`)
 * `--project <projectName>`: Specify a project to install the add-on into. Defaults to checking for a project in the current directory.
-* `--version <version>`: Specify a version to download
+* `--version <version>`: Specify a version, branch name, or commit SHA to download
+* `--default-branch`: Install from the last commit in the default branch (default `false`)
+* `--pr <number>`: Install from a pull request number
 * `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
+
+Note: The `--version`, `--default-branch`, and `--pr` flags are mutually exclusive.
 
 Example:
 
@@ -102,6 +106,18 @@ ddev add-on get ddev/ddev-redis --verbose
 
 # Download the official Redis add-on, version v1.0.4
 ddev add-on get ddev/ddev-redis --version v1.0.4
+
+# Download the official Redis add-on from the main branch
+ddev add-on get ddev/ddev-redis --version main
+
+# Download the official Redis add-on from a specific commit SHA
+ddev add-on get ddev/ddev-redis --version b50ac77
+
+# Download the official Redis add-on from the latest commit in the default branch
+ddev add-on get ddev/ddev-redis --default-branch
+
+# Download the official Redis add-on from pull request #54
+ddev add-on get ddev/ddev-redis --pr 54
 
 # Download the Drupal Solr add-on from its v1.2.3 release tarball
 ddev add-on get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
@@ -1581,7 +1597,7 @@ ddev utility get-volume-db-version
 
 ### `utility gob-decode`
 
-Decode and display the contents of Go gob-encoded binary files used by DDEV, such as `.remote-config` files (remote configuration cache), `.amplitude.cache` files (analytics event cache), and sponsorship data files.
+Decode and display the contents of Go gob-encoded binary files used by DDEV, such as `.remote-config` files (remote configuration cache), `.amplitude.cache` files (analytics event cache), `.sponsorship-data` files (contributor sponsorship information), and `.addon-data` files (add-on registry cache).
 
 The decoder automatically detects the file type and uses the appropriate structure. The output is displayed as formatted JSON for readability.
 
@@ -1592,6 +1608,12 @@ Example:
 ```shell
 # Decode a remote config file
 ddev utility gob-decode $HOME/.ddev/.remote-config
+
+# Decode a sponsorship data file
+ddev utility gob-decode $HOME/.ddev/.sponsorship-data
+
+# Decode an add-on registry cache file
+ddev utility gob-decode $HOME/.ddev/.addon-data
 
 # Decode an amplitude cache file
 ddev utility gob-decode $HOME/.ddev/.amplitude.cache
@@ -1720,7 +1742,7 @@ The downloaded content is displayed as formatted JSON to stdout. Optionally upda
 
 Flags:
 
-* `--type`, `-t`: Type of data to download: `remote-config` (default) or `sponsorship-data`.
+* `--type`, `-t`: Type of data to download: `remote-config` (default), `sponsorship-data`, or `addon-data`.
 * `--update-storage`: Update local cached storage file (default `true`).
 
 Examples:
@@ -1731,6 +1753,9 @@ ddev utility remote-data
 
 # Download sponsorship data without updating local storage
 ddev utility remote-data --type=sponsorship-data --update-storage=false
+
+# Download add-on registry data
+ddev utility remote-data --type=addon-data
 ```
 
 ### `utility test`

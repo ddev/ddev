@@ -9,6 +9,8 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/github"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -552,4 +554,147 @@ func TestAddonGetPostInstallRuntimeDependencies(t *testing.T) {
 	// Verify the runtime deps file was cleaned up
 	runtimeDepsFile := app.GetConfigPath(".runtime-deps-post-install-runtime-deps-addon")
 	require.NoFileExists(t, runtimeDepsFile, "Runtime dependencies file should be cleaned up after processing")
+}
+
+// TestAddonGetWithPRFlag tests the --project flag functionality
+func TestCmdAddonProjectFlag(t *testing.T) {
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
+	}
+	origDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Unsetenv("DDEV_DEBUG")
+	assert := asrt.New(t)
+
+	site := TestSites[0]
+	// Explicitly don't chdir to the project
+
+	t.Cleanup(func() {
+		_, err := exec.RunHostCommand(DdevBin, "add-on", "remove", "redis", "--project", site.Name)
+		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
+	})
+
+	// Install the add-on using the `--project` flag
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--project", site.Name, "--json-output")
+	require.NoError(t, err, "failed ddev add-on get ddev/ddev-redis --project %s --json-output: %v (output='%s')", site.Name, err, out)
+
+	redisManifest := getManifestFromLogs(t, out)
+	require.NoError(t, err)
+
+	installedOutput, err := exec.RunHostCommand(DdevBin, "add-on", "list", "--installed", "--project", site.Name, "--json-output")
+	require.NoError(t, err, "failed ddev add-on list --installed --project %s --json-output: %v (output='%s')", site.Name, err, installedOutput)
+	installedManifests := getManifestMapFromLogs(t, installedOutput)
+
+	require.NotEmptyf(t, redisManifest["Version"], "redis manifest is empty: %v", redisManifest)
+	assert.Equal(redisManifest["Version"], installedManifests["redis"]["Version"])
+
+	// Remove the add-on using the `--project` flag
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "ddev/ddev-redis", "--project", site.Name)
+	require.NoError(t, err, "unable to ddev add-on remove ddev/ddev-redis --project %s: %v, output='%s'", site.Name, err, out)
+
+	// Now make sure we put it back so it can be removed in cleanup
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--project", site.Name)
+	assert.NoError(err, "unable to ddev add-on get ddev/ddev-redis --project %s: %v, output='%s'", site.Name, err, out)
+}
+
+// TestAddonGetWithPRFlag tests the --pr flag functionality
+func TestAddonGetWithPRFlag(t *testing.T) {
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
+	}
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "ddev-redis")
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Test that --pr flag with invalid value fails
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--pr", "0")
+	require.Error(t, err, "Should fail with --pr=0, out=%s", out)
+	require.Contains(t, out, "--pr flag requires a positive integer value")
+
+	// Test that --pr flag with negative value fails
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--pr", "-1")
+	require.Error(t, err, "Should fail with --pr=-1, out=%s", out)
+	require.Contains(t, out, "--pr flag requires a positive integer value")
+
+	// Test that --pr flag with valid value works (PR #54 exists for ddev-redis)
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--pr", "54")
+	require.NoError(t, err, "Should succeed with --pr=54, out=%s", out)
+	require.Contains(t, out, "Installing ddev/ddev-redis:pr-54")
+}
+
+// TestAddonGetWithVersionFlag tests the --version flag functionality
+func TestAddonGetWithVersionFlag(t *testing.T) {
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
+	}
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "ddev-redis")
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Test that --version flag with empty value fails
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--version", "")
+	require.Error(t, err, "Should fail with --version='', out=%s", out)
+	require.Contains(t, out, "--version flag requires a non-empty value")
+
+	// Test that --version flag with valid tag works
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--version", "v2.2.0")
+	require.NoError(t, err, "Should succeed with --version=v2.2.0, out=%s", out)
+	require.Contains(t, out, "Installing ddev/ddev-redis:v2.2.0")
+
+	// Clean up before next test
+	_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "ddev-redis")
+
+	// Test that --version flag with branch name works
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--version", "main")
+	require.NoError(t, err, "Should succeed with --version=main, out=%s", out)
+	require.Contains(t, out, "Installing ddev/ddev-redis:main")
+
+	// Clean up before next test
+	_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "ddev-redis")
+
+	// Test that --version flag with commit SHA works
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--version", "b50ac77")
+	require.NoError(t, err, "Should succeed with --version=b50ac77, out=%s", out)
+	require.Contains(t, out, "Installing ddev/ddev-redis:b50ac77")
+}
+
+// TestAddonGetWithDefaultBranchFlag tests the --default-branch flag functionality
+func TestAddonGetWithDefaultBranchFlag(t *testing.T) {
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
+	}
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "ddev-redis")
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// Test that --default-branch flag works and installs from default branch
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", "ddev/ddev-redis", "--default-branch")
+	require.NoError(t, err, "Should succeed with --default-branch, out=%s", out)
+	// Should install from main branch (default_branch for ddev-redis)
+	require.Contains(t, out, "Installing ddev/ddev-redis:main")
 }

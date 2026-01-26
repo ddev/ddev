@@ -23,6 +23,11 @@ type sponsorshipFileStorageData struct {
 	SponsorshipData types.SponsorshipData `json:"sponsorship_data"`
 }
 
+// addonFileStorageData is used for gob decoding of add-on data storage
+type addonFileStorageData struct {
+	AddonData types.AddonData
+}
+
 // Amplitude event cache structures (not available in remoteconfig/types)
 type StorageEvent struct {
 	EventType  string                 `json:"event_type,omitempty"`
@@ -48,7 +53,8 @@ var DebugGobDecodeCmd = &cobra.Command{
 This command can decode various gob files used by DDEV, including:
   - .remote-config files (remote configuration cache)
   - .amplitude.cache files (analytics event cache)
-  - sponsorship data files (contributor sponsorship information)
+  - .sponsorship-data files (contributor sponsorship information)
+  - .addon-data files (add-on registry cache)
 
 The decoder automatically detects the file type and uses the appropriate structure.
 The output is displayed as formatted JSON for readability.
@@ -56,6 +62,8 @@ The output is displayed as formatted JSON for readability.
 Note: Generic gob files with unknown concrete types may not be decodable due to
 Go's gob encoding limitations.`,
 	Example: `ddev utility gob-decode ~/.ddev/.remote-config
+ddev utility gob-decode ~/.ddev/.sponsorship-data
+ddev utility gob-decode ~/.ddev/.addon-data
 ddev utility gob-decode ~/.ddev/.amplitude.cache
 ddev utility gob-decode /path/to/some/file.gob`,
 	Args: cobra.ExactArgs(1),
@@ -99,6 +107,7 @@ func decodeGobFile(filename string) error {
 	}{
 		{"remote config", tryDecodeRemoteConfig},
 		{"sponsorship data", tryDecodeSponsorshipData},
+		{"add-on data", tryDecodeAddonData},
 		{"amplitude event cache", tryDecodeAmplitudeCache},
 	}
 
@@ -188,6 +197,32 @@ func tryDecodeSponsorshipData(filename string) error {
 	}
 
 	output.UserErr.Printf("Sponsorship data file contents:\n")
+	output.UserOut.Printf("%s\n", string(jsonData))
+	return nil
+}
+
+// tryDecodeAddonData attempts to decode the file as add-on data
+func tryDecodeAddonData(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var data addonFileStorageData
+	decoder := gob.NewDecoder(file)
+	err = decoder.Decode(&data)
+	if err != nil {
+		return err
+	}
+
+	// Convert to JSON for readable output
+	jsonData, err := json.MarshalIndent(data.AddonData, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	output.UserErr.Printf("Add-on data file contents:\n")
 	output.UserOut.Printf("%s\n", string(jsonData))
 	return nil
 }

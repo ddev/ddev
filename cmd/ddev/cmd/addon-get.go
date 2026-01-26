@@ -10,7 +10,6 @@ import (
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -22,13 +21,18 @@ import (
 
 // AddonGetCmd is the "ddev add-on get" command
 var AddonGetCmd = &cobra.Command{
-	Use:     "get <addonOrURL>",
-	Aliases: []string{"install"},
-	Args:    cobra.ExactArgs(1),
-	Short:   "Get/Download a 3rd party add-on (service, provider, etc.)",
-	Long:    `Get/Download a 3rd party add-on (service, provider, etc.). This can be a GitHub repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory.`,
+	Use:               "get <addonOrURL>",
+	Aliases:           []string{"install"},
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: ddevapp.GetAddonNamesFunc(1),
+	Short:             "Get/Download a 3rd party add-on (service, provider, etc.)",
+	Long:              `Get/Download a 3rd party add-on (service, provider, etc.). This can be a GitHub repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory.`,
 	Example: `ddev add-on get ddev/ddev-redis
-ddev add-on get ddev/ddev-redis --version v1.0.4
+ddev add-on get ddev/ddev-redis --version v2.2.0
+ddev add-on get ddev/ddev-redis --version main
+ddev add-on get ddev/ddev-redis --version b50ac77
+ddev add-on get ddev/ddev-redis --default-branch
+ddev add-on get ddev/ddev-redis --pr 54
 ddev add-on get ddev/ddev-redis --project my-project
 ddev add-on get https://github.com/ddev/ddev-drupal-solr/archive/refs/tags/v1.2.3.tar.gz
 ddev add-on get https://github.com/ddev/ddev-drupal-contrib/tarball/main
@@ -36,21 +40,38 @@ ddev add-on get https://github.com/ddev/ddev-opensearch/tarball/refs/pull/15/hea
 ddev add-on get /path/to/package
 ddev add-on get /path/to/tarball.tar.gz
 `,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		// Validate --version flag
+		if cmd.Flags().Changed("version") {
+			if v := cmd.Flag("version").Value.String(); v == "" {
+				return fmt.Errorf("--version flag requires a non-empty value")
+			}
+		}
+		// Validate --pr flag
+		if cmd.Flags().Changed("pr") {
+			if pr, _ := cmd.Flags().GetInt("pr"); pr <= 0 {
+				return fmt.Errorf("--pr flag requires a positive integer value")
+			}
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose := false
 		requestedVersion := ""
 		skipDeps := false
+		defaultBranch := false
+		prNumber := 0
 
 		if cmd.Flags().Changed("version") {
 			requestedVersion = cmd.Flag("version").Value.String()
 		}
 
-		if cmd.Flags().Changed("verbose") {
-			verbose = true
-		}
+		verbose, _ = cmd.Flags().GetBool("verbose")
+		skipDeps, _ = cmd.Flags().GetBool("skip-deps")
+		defaultBranch, _ = cmd.Flags().GetBool("default-branch")
 
-		if cmd.Flags().Changed("skip-deps") {
-			skipDeps = true
+		if cmd.Flags().Changed("pr") {
+			prNumber, _ = cmd.Flags().GetInt("pr")
 		}
 
 		app, err := ddevapp.GetActiveApp(cmd.Flag("project").Value.String())
@@ -94,11 +115,13 @@ ddev add-on get /path/to/tarball.tar.gz
 			argType = "github"
 			owner = parts[0]
 			repo = parts[1]
-			tarballURL, downloadedRelease, err = github.GetGitHubRelease(owner, repo, requestedVersion)
+
+			// Use the addons registry to determine the tarball URL
+			tarballURL, downloadedRelease, err = ddevapp.GetAddonTarballURL(sourceRepoArg, requestedVersion, defaultBranch, prNumber)
 			if err != nil {
-				util.Failed("%v", err)
+				util.Failed("Unable to get %s: %v", sourceRepoArg, err)
 			}
-			util.Success("Installing %s/%s:%s", owner, repo, downloadedRelease)
+			util.Success("Installing %s:%s", sourceRepoArg, downloadedRelease)
 			fallthrough
 
 		// Otherwise, use the provided source as a URL to a tarball
@@ -313,9 +336,15 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 func init() {
 	AddonGetCmd.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	AddonGetCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")
+	_ = AddonGetCmd.RegisterFlagCompletionFunc("verbose", configCompletionFunc([]string{"true", "false"}))
 	AddonGetCmd.Flags().Bool("skip-deps", false, "Skip installing add-on dependencies")
+	_ = AddonGetCmd.RegisterFlagCompletionFunc("skip-deps", configCompletionFunc([]string{"true", "false"}))
 	AddonGetCmd.Flags().String("project", "", "Name of the project to install the add-on in")
 	_ = AddonGetCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
+	AddonGetCmd.Flags().Bool("default-branch", false, "Install from the last commit in the default branch")
+	_ = AddonGetCmd.RegisterFlagCompletionFunc("default-branch", configCompletionFunc([]string{"true", "false"}))
+	AddonGetCmd.Flags().Int("pr", 0, "Install from a pull request number")
+	AddonGetCmd.MarkFlagsMutuallyExclusive("version", "default-branch", "pr")
 
 	AddonCmd.AddCommand(AddonGetCmd)
 }

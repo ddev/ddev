@@ -314,6 +314,9 @@ func ReadGlobalConfig() error {
 	if DdevGlobalConfig.RemoteConfig.SponsorshipDataURL == "" {
 		DdevGlobalConfig.RemoteConfig.SponsorshipDataURL = DefaultSponsorshipDataURL
 	}
+	if DdevGlobalConfig.RemoteConfig.AddonDataURL == "" {
+		DdevGlobalConfig.RemoteConfig.AddonDataURL = DefaultAddonDataURL
+	}
 
 	err = ValidateGlobalConfig()
 	if err != nil {
@@ -352,6 +355,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	}
 	if cfgCopy.RemoteConfig.SponsorshipDataURL == DefaultSponsorshipDataURL {
 		cfgCopy.RemoteConfig.SponsorshipDataURL = ""
+	}
+	if cfgCopy.RemoteConfig.AddonDataURL == DefaultAddonDataURL {
+		cfgCopy.RemoteConfig.AddonDataURL = ""
 	}
 
 	// We only have one router, so this field is old, and when writing we can omitempty
@@ -528,6 +534,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #  update_interval: 24 # Interval in hours to download the remote config and sponsorship data
 #  remote_config_url: "https://raw.githubusercontent.com/ddev/remote-config/main/remote-config.jsonc"
 #  sponsorship_data_url: "https://ddev.com/s/sponsorship-data.json"
+#  addon_data_url: "https://addons.ddev.com/addons.json"
 `
 	cfgbytes = append(cfgbytes, instructions...)
 

@@ -8,42 +8,42 @@ import (
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 )
 
-// SponsorshipStorage defines interface for sponsorship data persistence
-type SponsorshipStorage interface {
-	Read() (*types.SponsorshipData, error)
-	Write(*types.SponsorshipData) error
+// AddonStorage defines interface for addon data persistence
+type AddonStorage interface {
+	Read() (*types.AddonData, error)
+	Write(*types.AddonData) error
 }
 
-// NewSponsorshipFileStorage creates a new file-based sponsorship storage
-func NewSponsorshipFileStorage(fileName string) SponsorshipStorage {
-	return &sponsorshipFileStorage{
+// NewAddonFileStorage creates a new file-based addon storage
+func NewAddonFileStorage(fileName string) AddonStorage {
+	return &addonFileStorage{
 		fileName: fileName,
 		loaded:   false,
 	}
 }
 
-type sponsorshipFileStorage struct {
+type addonFileStorage struct {
 	fileName string
 	loaded   bool
-	data     sponsorshipFileStorageData
+	data     addonFileStorageData
 }
 
-// sponsorshipFileStorageData is the structure used for the file
-type sponsorshipFileStorageData struct {
-	SponsorshipData types.SponsorshipData
+// addonFileStorageData is the structure used for the file
+type addonFileStorageData struct {
+	AddonData types.AddonData
 }
 
-func (s *sponsorshipFileStorage) Read() (*types.SponsorshipData, error) {
+func (s *addonFileStorage) Read() (*types.AddonData, error) {
 	err := s.loadData()
 	if err != nil {
-		return &types.SponsorshipData{}, err
+		return &types.AddonData{}, err
 	}
 
-	return &s.data.SponsorshipData, nil
+	return &s.data.AddonData, nil
 }
 
-func (s *sponsorshipFileStorage) Write(sponsorshipData *types.SponsorshipData) error {
-	s.data.SponsorshipData = *sponsorshipData
+func (s *addonFileStorage) Write(addonData *types.AddonData) error {
+	s.data.AddonData = *addonData
 
 	// Ensure directory exists
 	dir := filepath.Dir(s.fileName)
@@ -54,8 +54,8 @@ func (s *sponsorshipFileStorage) Write(sponsorshipData *types.SponsorshipData) e
 	return s.saveData()
 }
 
-// loadData reads the sponsorship data from the data file
-func (s *sponsorshipFileStorage) loadData() error {
+// loadData reads the addon data from the data file
+func (s *addonFileStorage) loadData() error {
 	// The cache is read once per run time, early exit if already loaded
 	if s.loaded {
 		return nil
@@ -85,8 +85,8 @@ func (s *sponsorshipFileStorage) loadData() error {
 	return err
 }
 
-// saveData writes the sponsorship data to the file
-func (s *sponsorshipFileStorage) saveData() error {
+// saveData writes the addon data to the file
+func (s *addonFileStorage) saveData() error {
 	file, err := os.Create(s.fileName)
 
 	if err == nil {
