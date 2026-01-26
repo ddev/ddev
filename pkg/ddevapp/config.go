@@ -734,10 +734,15 @@ func (app *DdevApp) CheckCustomConfig() {
 	if _, err := os.Stat(traefikProjectConfigPath); err == nil {
 		traefikFiles, err := filepath.Glob(filepath.Join(traefikProjectConfigPath, "*.yaml"))
 		util.CheckErr(err)
+		// Remove the main project traefik file from the list
+		traefikFiles = slices.DeleteFunc(traefikFiles, func(f string) bool {
+			return filepath.Base(f) == app.Name+".yaml"
+		})
 		ignoredTraefikFiles := filterCustomConfigFiles(traefikFiles)
 		// Warn if there are unused files in project .ddev/traefik/config
 		if len(ignoredTraefikFiles) > 0 {
-			util.Warning("Ignored project traefik config files found in .ddev/traefik/config (only %s will be used): %v", app.Name+".yaml", ignoredTraefikFiles)
+			printableFiles, _ := util.ArrayToReadableOutput(ignoredTraefikFiles)
+			util.Warning("Ignored project traefik config files found in .ddev/traefik/config (only %s will be used): %v", app.Name+".yaml", printableFiles)
 		}
 	}
 
