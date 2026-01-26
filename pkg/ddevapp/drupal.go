@@ -445,6 +445,7 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 	case nodeps.AppTypeDrupal12:
 		app.CorepackEnable = true
 		drupalVersion = 12
+		app.PHPVersion = nodeps.PHP85
 	}
 	// If there is no database, update it to the default one,
 	// otherwise show a warning to the user.
