@@ -84,7 +84,7 @@ func TestLagoonPull(t *testing.T) {
 	app.Docroot = "web"
 	app.Database = ddevapp.DatabaseDesc{
 		Type:    nodeps.MySQL,
-		Version: nodeps.MySQL57,
+		Version: nodeps.MySQL80,
 	}
 
 	err = app.WriteConfig()
@@ -147,7 +147,7 @@ func TestLagoonPush(t *testing.T) {
 	app.Docroot = "web"
 	app.Database = ddevapp.DatabaseDesc{
 		Type:    nodeps.MySQL,
-		Version: nodeps.MySQL57,
+		Version: nodeps.MySQL80,
 	}
 
 	err = app.WriteConfig()
