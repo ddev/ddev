@@ -19,16 +19,7 @@ DDEV provides integration with [Lagoon](https://lagoon.sh/), allowing users to q
     ddev config --web-environment-add="LAGOON_PROJECT=<project-name>,LAGOON_ENVIRONMENT=<environment-name>"
     ```
 
-3. (optional) Add `.lagoon-sync.yaml` to the root of your project in order to set the local file sync directory. See [lagoon-sync](https://github.com/uselagoon/lagoon-sync) for more details. For a Drupal project installed in the `web` directory, your file will look like this:
-
-    ```yaml
-    lagoon-sync:
-      files:
-        local:
-          config:
-            sync-directory: "/var/www/html/web/sites/default/files"
-    ```
-
+3. Syncing is done via [`lagoon-sync`](https://github.com/uselagoon/lagoon-sync) which must be configured, see the [amazeeio-ddev example `.lagoon.yml`](https://github.com/amazeeio-demos/amazeeio-ddev/blob/main/.lagoon.yml#L27-L37).
 4. Configure an [SSH key](https://docs.lagoon.sh/using-lagoon-advanced/ssh/) for your Lagoon user.
 5. Run `ddev auth ssh` to make your SSH key available in the project’s web container.
 6. Run [`ddev restart`](../usage/commands.md#restart).
