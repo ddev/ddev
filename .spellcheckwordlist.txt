@@ -6,6 +6,7 @@ Andrasch
 Apache
 Acquia
 amazee.io
+amazeeio
 Autocompletion
 Available
 Bash
