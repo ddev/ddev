@@ -437,11 +437,12 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 		drupalVersion = 9
 	case nodeps.AppTypeDrupal10:
 		drupalVersion = 10
+	// AppTypeDrupal is an alias for latest stable (currently drupal11)
+	case nodeps.AppTypeDrupal:
+		fallthrough
 	case nodeps.AppTypeDrupal11:
 		app.CorepackEnable = true
 		drupalVersion = 11
-	case nodeps.AppTypeDrupal:
-		fallthrough
 	case nodeps.AppTypeDrupal12:
 		app.CorepackEnable = true
 		drupalVersion = 12
