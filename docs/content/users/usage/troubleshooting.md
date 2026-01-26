@@ -172,7 +172,18 @@ The resulting output displays which command is running and its PID. Choose the a
 
 You may also be able to find what’s using a port using `curl`. On Linux, macOS, or in Git Bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about which application is at fault.
 
-We welcome your [suggestions](https://github.com/ddev/ddev/issues/new) based on other issues you’ve run into and your troubleshooting technique.
+We welcome your [suggestions](https://github.com/ddev/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
+
+### Security Software Interfering with Port Detection
+
+If you see messages like:
+
+```
+Unable to check port availability
+Assuming ports are available, see https://ddev.com/s/port-conflict
+```
+
+DDEV will rely on Docker to report actual port conflicts. This can happen when security software intercepts localhost traffic.
 
 ### Debugging Port Issues on WSL2
 
