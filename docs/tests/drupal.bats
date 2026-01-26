@@ -21,7 +21,7 @@ teardown() {
   run ddev start -y
   assert_success
 
-  run ddev composer create-project drupal/recommended-project:main-dev@dev "install-dir"
+  run ddev composer create-project drupal/recommended-project:main-dev@dev
   assert_success
 
   run ddev composer require drush/drush
