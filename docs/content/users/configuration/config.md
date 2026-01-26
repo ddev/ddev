@@ -603,11 +603,11 @@ The DDEV-specific project type.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `cakephp`, `codeigniter`, `craftcms`, `drupal`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `drupal10`, `drupal11`, `generic`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `symfony`, `typo3`, or `wordpress`.
+| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `cakephp`, `codeigniter`, `craftcms`, `drupal`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `drupal10`, `drupal11`, `drupal12`, `generic`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `silverstripe`, `symfony`, `typo3`, or `wordpress`.
 
 The `php` type doesn’t attempt [CMS configuration](../../users/quickstart.md) or settings file management and can work with any project.
 
-The many versions of the Drupal project types can be used, for example `drupal11` or `drupal6`. There is also a special `drupal` type that is interpreted as "latest stable Drupal version", so in 2025, `drupal` means `drupal11`.
+The many versions of the Drupal project types can be used, for example `drupal11` or `drupal6`. There is also a special `drupal` type that is interpreted as "latest stable Drupal version", so in 2026, `drupal` means `drupal11`.
 
 The special `generic` project type does nothing and implies nothing. It is normally used with `webserver_type: generic`.
 

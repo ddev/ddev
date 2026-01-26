@@ -209,7 +209,7 @@ func TestCustomCommands(t *testing.T) {
 	}
 
 	// Drupal commands should be available for type drupal/backdrop projects
-	for _, drupalType := range []string{nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal8, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal10, nodeps.AppTypeDrupal11, nodeps.AppTypeBackdrop} {
+	for _, drupalType := range []string{nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal8, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal10, nodeps.AppTypeDrupal11, nodeps.AppTypeDrupal12, nodeps.AppTypeBackdrop} {
 		app.Type = drupalType
 		_ = app.WriteConfig()
 		_, _ = exec.RunHostCommand(DdevBin)

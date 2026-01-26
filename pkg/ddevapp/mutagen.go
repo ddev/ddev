@@ -1403,6 +1403,7 @@ func getCMSDefaultUploadDirsSuggestion(projectType string) string {
 		"drupal9":      "sites/default/files",
 		"drupal10":     "sites/default/files",
 		"drupal11":     "sites/default/files",
+		"drupal12":     "sites/default/files",
 		"backdrop":     "files",
 		"wordpress":    "wp-content/uploads",
 		"typo3":        "fileadmin",

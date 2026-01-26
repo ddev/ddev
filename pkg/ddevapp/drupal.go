@@ -377,15 +377,6 @@ func isDrupal10App(app *DdevApp) bool {
 	return vStr == "10"
 }
 
-// isDrupal12App detects whether the code found is Drupal 12
-func isDrupal12App(app *DdevApp) bool {
-	vStr, err := GetDrupalVersion(app)
-	if err != nil {
-		return false
-	}
-	return vStr == "12"
-}
-
 // isDrupal11App detects whether the code found is Drupal 11
 func isDrupal11App(app *DdevApp) bool {
 	vStr, err := GetDrupalVersion(app)
@@ -393,6 +384,15 @@ func isDrupal11App(app *DdevApp) bool {
 		return false
 	}
 	return vStr == "11"
+}
+
+// isDrupal12App detects whether the code found is Drupal 12
+func isDrupal12App(app *DdevApp) bool {
+	vStr, err := GetDrupalVersion(app)
+	if err != nil {
+		return false
+	}
+	return vStr == "12"
 }
 
 // isDrupalApp returns true if the app is modern Drupal (drupal8+)

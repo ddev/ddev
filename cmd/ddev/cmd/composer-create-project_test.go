@@ -57,7 +57,7 @@ func TestComposerCreateProjectCmd(t *testing.T) {
 				// Normally for Drupal the docroot would be web, and the composer root would be the
 				// project root (default). But here we're making sure we can use the docroot
 				// as the composer_root. Acquia sites often do this...
-				if slices.Contains([]string{nodeps.AppTypeDrupal11, nodeps.AppTypeDrupal10, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal8}, projectType) {
+				if slices.Contains([]string{nodeps.AppTypeDrupal12, nodeps.AppTypeDrupal11, nodeps.AppTypeDrupal10, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal8}, projectType) {
 					arguments = append(arguments, "--composer-root", docRoot)
 					composerDirOnHost = filepath.Join(tmpDir, docRoot)
 				}
