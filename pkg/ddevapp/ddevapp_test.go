@@ -300,10 +300,10 @@ var (
 		// 16: drupal11
 		{
 			Name:                          "TestPkgDrupal11",
-			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.2.8.tar.gz",
-			ArchiveInternalExtractionPath: "test-drupal11-11.2.8/",
-			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.2.8/files.tgz",
-			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.2.8/db.sql.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.3.2.tar.gz",
+			ArchiveInternalExtractionPath: "test-drupal11-11.3.2/",
+			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.3.2/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.3.2/db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal11,
 			Docroot:                       "web",
