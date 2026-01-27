@@ -300,10 +300,10 @@ var (
 		// 16: drupal11
 		{
 			Name:                          "TestPkgDrupal11",
-			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.2.8.tar.gz",
-			ArchiveInternalExtractionPath: "test-drupal11-11.2.8/",
-			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.2.8/files.tgz",
-			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.2.8/db.sql.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-drupal11/archive/refs/tags/11.3.2.tar.gz",
+			ArchiveInternalExtractionPath: "test-drupal11-11.3.2/",
+			FilesTarballURL:               "https://github.com/ddev/test-drupal11/releases/download/11.3.2/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-drupal11/releases/download/11.3.2/db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal11,
 			Docroot:                       "web",
@@ -375,6 +375,20 @@ var (
 			Type:                          nodeps.AppTypeCodeIgniter,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/robots.txt", Expect: "User-agent: *"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to CodeIgniter"},
+		},
+		// 22: drupal12
+		{
+			Name:                          "TestPkgDrupal12",
+			SourceURL:                     "https://github.com/ddev/test-drupal12/archive/refs/tags/12.x-dev.tar.gz",
+			ArchiveInternalExtractionPath: "test-drupal12-12.x-dev/",
+			FilesTarballURL:               "https://github.com/ddev/test-drupal12/releases/download/12.x-dev/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-drupal12/releases/download/12.x-dev/db.sql.tar.gz",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeDrupal12,
+			Docroot:                       "web",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/recipes/super-easy-vegetarian-pasta-bake", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
+			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
 	}
 
@@ -2859,6 +2873,7 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		nodeps.AppTypeDrupal6:      {"sites/default/files"},
 		nodeps.AppTypeDrupal7:      {"sites/default/files"},
 		nodeps.AppTypeDrupal11:     {"sites/default/files"},
+		nodeps.AppTypeDrupal12:     {"sites/default/files"},
 		nodeps.AppTypeShopware6:    {"media"},
 		nodeps.AppTypeBackdrop:     {"files"},
 		nodeps.AppTypeTYPO3:        {"fileadmin"},

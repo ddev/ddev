@@ -24,8 +24,8 @@ type settingsLocations struct {
 var drupalBackdropSettingsLocations = map[string]settingsLocations{
 	nodeps.AppTypeDrupal6:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal7:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	nodeps.AppTypeDrupal10: {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal11: {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	nodeps.AppTypeDrupal12: {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeBackdrop: {main: "settings.php", local: "settings.ddev.php"},
 }
 
@@ -103,7 +103,7 @@ func TestWriteDrushConfig(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 
-		if !nodeps.ArrayContainsString([]string{"drupal7", "drupal8", "drupal9", "drupal10", "drupal", "backdrop"}, site.Type) {
+		if !nodeps.ArrayContainsString([]string{"drupal7", "drupal10", "drupal11", "drupal12", "drupal", "backdrop"}, site.Type) {
 			continue
 		}
 		err := app.Init(site.Dir)

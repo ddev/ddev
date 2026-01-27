@@ -11,6 +11,38 @@ teardown() {
   _common_teardown
 }
 
+@test "Drupal 12 quickstart with $(ddev --version)" {
+  _skip_test_if_needed "drupal12-composer"
+
+  run mkdir my-drupal-site && cd my-drupal-site
+  assert_success
+
+  run ddev config --project-type=drupal12 --docroot=web
+  assert_success
+
+  run ddev start -y
+  assert_success
+
+  run ddev composer create-project drupal/recommended-project:main-dev@dev
+  assert_success
+
+  run ddev composer require drush/drush
+  assert_success
+
+  run ddev drush site:install --account-name=admin --account-pass=admin -y
+  assert_success
+
+  DDEV_DEBUG=true run ddev launch
+  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_success
+
+  # validate running project
+  run curl -sfIv https://${PROJNAME}.ddev.site
+  assert_output --partial "x-generator: Drupal 12 (https://www.drupal.org)"
+  assert_output --partial "HTTP/2 200"
+  assert_success
+}
+
 @test "Drupal 11 quickstart with $(ddev --version)" {
   _skip_test_if_needed "drupal11-composer"
 
