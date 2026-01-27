@@ -376,6 +376,20 @@ var (
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/robots.txt", Expect: "User-agent: *"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to CodeIgniter"},
 		},
+		// 22: drupal12
+		{
+			Name:                          "TestPkgDrupal12",
+			SourceURL:                     "https://github.com/ddev/test-drupal12/archive/refs/tags/12.x-dev.tar.gz",
+			ArchiveInternalExtractionPath: "test-drupal12-12.x-dev/",
+			FilesTarballURL:               "https://github.com/ddev/test-drupal12/releases/download/12.x-dev/files.tgz",
+			DBTarURL:                      "https://github.com/ddev/test-drupal12/releases/download/12.x-dev/db.sql.tar.gz",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeDrupal12,
+			Docroot:                       "web",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/recipes/super-easy-vegetarian-pasta-bake", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
+			FilesImageURI:                 "/sites/default/files/Logo.png",
+		},
 	}
 
 	FullTestSites = TestSites
