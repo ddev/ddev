@@ -3,20 +3,22 @@
 
 # To use this configuration,
 
-# 1. Check out the project and then configure it with 'ddev config'. You'll want to use 'ddev start' and make sure the basic functionality is working. Your project must have a .lagoon.yml properly configured.
-# 2. Configure an SSH key for your Lagoon user https://docs.lagoon.sh/using-lagoon-advanced/ssh/
-# 3. `ddev auth ssh`.
-# 4. Add LAGOON_PROJECT and LAGOON_ENVIRONMENT variables to your project in 'web_environment' or a '.ddev/.env'
+# 1. Check out the project and then configure it with 'ddev config'. You'll want to use 'ddev start' and make sure the basic functionality is working.
+# 2. Add LAGOON_PROJECT and LAGOON_ENVIRONMENT variables to your project in 'web_environment' or a '.ddev/.env'
 #    ```yaml
 #    web_environment:
 #        - LAGOON_PROJECT=<project-name>
 #        - LAGOON_ENVIRONMENT=<environment-name>
 #    ```
 #    You can also do this with `ddev config --web-environment-add="LAGOON_PROJECT=<project-name>,LAGOON_ENVIRONMENT=<environment-name>"`.
-#
-# 5. `ddev restart`
-#
-# 'ddev pull lagoon'
+# 3. Syncing is done via lagoon-sync which must be configured in your .lagoon.yml or .lagoon-sync.yml,
+#    see the DDEV example .lagoon.yml at https://github.com/ddev/test-amazeeio-lagoon/blob/main/.lagoon.yml#L27-L37
+# 4. Configure an SSH key for your Lagoon user https://docs.lagoon.sh/using-lagoon-advanced/ssh/
+# 5. `ddev auth ssh`.
+# 6. `ddev restart`
+# 7. `ddev pull lagoon`. After you agree to the prompt, the current upstream databases and files will be downloaded.
+# 8. Optionally `ddev push lagoon` to push local files and database to Lagoon. This must be done with great care
+#    if you're pushing to a production environment, but is great for pushing to branch environments.
 
 auth_command:
   command: |

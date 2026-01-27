@@ -19,11 +19,12 @@ DDEV provides integration with [Lagoon](https://lagoon.sh/), allowing users to q
     ddev config --web-environment-add="LAGOON_PROJECT=<project-name>,LAGOON_ENVIRONMENT=<environment-name>"
     ```
 
-3. Configure an [SSH key](https://docs.lagoon.sh/using-lagoon-advanced/ssh/) for your Lagoon user.
-4. Run `ddev auth ssh` to make your SSH key available in the project’s web container.
-5. Run [`ddev restart`](../usage/commands.md#restart).
-6. Run `ddev pull lagoon`. After you agree to the prompt, the current upstream databases and files will be downloaded.
-7. Optionally run `ddev push lagoon` to push local files and database to Lagoon. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
+3. Syncing is done via [`lagoon-sync`](https://github.com/uselagoon/lagoon-sync) which must be configured in your `.lagoon.yml` or `.lagoon-sync.yml`, see the [DDEV example `.lagoon.yml`](https://github.com/ddev/test-amazeeio-lagoon/blob/main/.lagoon.yml#L27-L37).
+4. Configure an [SSH key](https://docs.lagoon.sh/using-lagoon-advanced/ssh/) for your Lagoon user.
+5. Run `ddev auth ssh` to make your SSH key available in the project’s web container.
+6. Run [`ddev restart`](../usage/commands.md#restart).
+7. Run `ddev pull lagoon`. After you agree to the prompt, the current upstream databases and files will be downloaded.
+8. Optionally run `ddev push lagoon` to push local files and database to Lagoon. The [`ddev push`](../usage/commands.md#push). This must be done with great care if you're pushing to a production environment, but is great for pushing to branch environments.
 
 ## Usage
 
