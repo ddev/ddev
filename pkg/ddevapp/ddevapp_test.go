@@ -2873,6 +2873,7 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 		nodeps.AppTypeDrupal6:      {"sites/default/files"},
 		nodeps.AppTypeDrupal7:      {"sites/default/files"},
 		nodeps.AppTypeDrupal11:     {"sites/default/files"},
+		nodeps.AppTypeDrupal12:     {"sites/default/files"},
 		nodeps.AppTypeShopware6:    {"media"},
 		nodeps.AppTypeBackdrop:     {"files"},
 		nodeps.AppTypeTYPO3:        {"fileadmin"},
