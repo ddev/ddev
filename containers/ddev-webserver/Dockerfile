@@ -31,12 +31,25 @@ RUN rm -f /etc/apt/sources.list.d/symfony-stable.list && \
 
 # Set up MariaDB apt repository
 # The key is from https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/installing-mariadb/binary-packages/gpg#mariadb-community-server-debian-ubuntu-key
+# See https://r.mariadb.com/downloads/mariadb_repo_setup
 # Search for CHANGE_MARIADB_CLIENT to update related code.
-RUN KEYRING_URL="https://supplychain.mariadb.com/mariadb-keyring-2019.gpg" && \
-    KEYRING_FILE="mariadb-keyring-2019.gpg" && \
+RUN KEYRING_URL="https://supplychain.mariadb.com/mariadb-keyring-2025.gpg" && \
+    KEYRING_FILE="mariadb-keyring-2025.gpg" && \
     KEYRING_PATH="/usr/share/keyrings/${KEYRING_FILE}" && \
-    curl -fsSL -O "${KEYRING_URL}" && \
-    curl -fsSL -O "${KEYRING_URL}.sha256" && \
+    curl -fsSL \
+        -H 'sec-ch-ua: "Not:A-Brand";v="99", "Chromium";v="145"' \
+        -H 'sec-ch-ua-mobile: ?0' \
+        -H 'sec-ch-ua-platform: "Linux"' \
+        -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \
+        -o "${KEYRING_FILE}" \
+        "${KEYRING_URL}" && \
+    curl -fsSL \
+        -H 'sec-ch-ua: "Not:A-Brand";v="99", "Chromium";v="145"' \
+        -H 'sec-ch-ua-mobile: ?0' \
+        -H 'sec-ch-ua-platform: "Linux"' \
+        -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \
+        -o "${KEYRING_FILE}.sha256" \
+        "${KEYRING_URL}.sha256" && \
     sha256sum -c --quiet "${KEYRING_FILE}.sha256" && \
     gpg --dearmor < "${KEYRING_FILE}" > "${KEYRING_PATH}" && \
     rm -f "${KEYRING_FILE}" "${KEYRING_FILE}.sha256" && \
@@ -102,8 +115,20 @@ RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
 
 # Install older mariadb client and mariadb-dump into /usr/local/mariadb-old/bin
 # to solve variety of problems with newer mariadb-dump.
-RUN if [ "$(dpkg --print-architecture)" = "arm64" ]; then cd /tmp && curl -L -s --fail -O "https://dlm.mariadb.com/3607865/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client_10.11.6+maria~deb12_arm64.deb" -O "https://dlm.mariadb.com/3607494/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client-core_10.11.6+maria~deb12_arm64.deb"; fi
-RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then cd /tmp && curl -L -s --fail -O "https://dlm.mariadb.com/3607675/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client_10.11.6+maria~deb12_amd64.deb" -O "https://dlm.mariadb.com/3607123/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client-core_10.11.6+maria~deb12_amd64.deb"; fi
+RUN if [ "$(dpkg --print-architecture)" = "arm64" ]; then cd /tmp && curl -L -s --fail \
+        -H 'sec-ch-ua: "Not:A-Brand";v="99", "Chromium";v="145"' \
+        -H 'sec-ch-ua-mobile: ?0' \
+        -H 'sec-ch-ua-platform: "Linux"' \
+        -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \
+        -O "https://dlm.mariadb.com/3607865/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client_10.11.6+maria~deb12_arm64.deb" \
+        -O "https://dlm.mariadb.com/3607494/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client-core_10.11.6+maria~deb12_arm64.deb"; fi
+RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then cd /tmp && curl -L -s --fail \
+        -H 'sec-ch-ua: "Not:A-Brand";v="99", "Chromium";v="145"' \
+        -H 'sec-ch-ua-mobile: ?0' \
+        -H 'sec-ch-ua-platform: "Linux"' \
+        -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \
+        -O "https://dlm.mariadb.com/3607675/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client_10.11.6+maria~deb12_amd64.deb" \
+        -O "https://dlm.mariadb.com/3607123/MariaDB/mariadb-10.11.6/repo/debian/pool/main/m/mariadb/mariadb-client-core_10.11.6+maria~deb12_amd64.deb"; fi
 RUN set -x && cd /tmp && for item in *.deb; do dpkg-deb -x ${item} extracted; done
 RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariadb,mariadb-dump,mysql,mysqldump} /usr/local/mariadb-old/bin
 
