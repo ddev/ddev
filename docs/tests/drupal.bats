@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Drupal 12 quickstart with $(ddev --version)" {
+  _skip_test_if_needed "drupal12-composer"
+
   run mkdir my-drupal-site && cd my-drupal-site
   assert_success
 
