@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Node.js quickstart with $(ddev --version)" {
+  _skip_test_if_needed "nodejs-express"
+
   NODEJS_SITENAME=${PROJNAME}
   run mkdir ${NODEJS_SITENAME} && cd ${NODEJS_SITENAME}
   assert_success
@@ -54,7 +56,7 @@ EOF
   echo "# Traefik routers: $output"
 
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_success
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
 

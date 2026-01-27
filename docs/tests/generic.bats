@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Generic PHP built-in server quickstart with $(ddev --version)" {
+  _skip_test_if_needed "generic-php"
+
   GENERIC_SITENAME=${PROJNAME}
   run mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
   assert_success

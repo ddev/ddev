@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Moodle quickstart with $(ddev --version)" {
+  _skip_test_if_needed "moodle-composer"
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -26,7 +28,7 @@ teardown() {
   run ddev exec 'php admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch /login"
+  DDEV_DEBUG=true run ddev launch /login
   assert_output "FULLURL https://${PROJNAME}.ddev.site/login"
   assert_success
   # validate running project

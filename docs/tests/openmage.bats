@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "OpenMage git based quickstart with $(ddev --version)" {
+  _skip_test_if_needed "openmage-git"
+
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
@@ -31,7 +33,7 @@ teardown() {
   run ddev openmage-install -q
   assert_success
 
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
@@ -55,6 +57,8 @@ teardown() {
 }
 
 @test "OpenMage composer based quickstart with $(ddev --version)" {
+  _skip_test_if_needed "openmage-composer"
+
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
@@ -110,7 +114,7 @@ teardown() {
   run ddev openmage-install -q
   assert_success
 
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 

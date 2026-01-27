@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Sulu quickstart with $(ddev --version)" {
+  _skip_test_if_needed "sulu-composer"
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -47,7 +49,7 @@ teardown() {
   run ddev exec bin/adminconsole sulu:build dev --no-interaction
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch /admin"
+  DDEV_DEBUG=true run ddev launch /admin
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
   assert_success
   # validate running project

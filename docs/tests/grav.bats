@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Grav Composer quickstart with $(ddev --version)" {
+  _skip_test_if_needed "grav-composer"
+
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
@@ -41,6 +43,8 @@ teardown() {
 
 
 @test "Grav Git Clone quickstart with $(ddev --version)" {
+  _skip_test_if_needed "grav-git"
+
   run mkdir my-grav-site && cd my-grav-site
   assert_success
 

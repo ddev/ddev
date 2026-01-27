@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Drupal 11 quickstart with $(ddev --version)" {
+  _skip_test_if_needed "drupal11-composer"
+
   run mkdir my-drupal-site && cd my-drupal-site
   assert_success
 
@@ -42,6 +44,8 @@ teardown() {
 }
 
 @test "Drupal 10 quickstart with $(ddev --version)" {
+  _skip_test_if_needed "drupal10-composer"
+
   run mkdir my-drupal-site && cd my-drupal-site
   assert_success
 
@@ -72,6 +76,8 @@ teardown() {
 }
 
 @test "Drupal 11 git based quickstart with $(ddev --version)" {
+  _skip_test_if_needed "drupal11-git"
+
   PROJECT_GIT_URL=https://github.com/ddev/test-drupal11.git
   run git clone ${PROJECT_GIT_URL} ${PROJNAME}
   assert_success
@@ -103,6 +109,8 @@ teardown() {
 }
 
 @test "Drupal CMS composer quickstart with $(ddev --version)" {
+  _skip_test_if_needed "drupal-cms-composer"
+
   run mkdir my-drupal-site && cd my-drupal-site
   assert_success
 

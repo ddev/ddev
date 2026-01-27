@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Ibexa DXP quickstart with $(ddev --version)" {
+  _skip_test_if_needed "ibexa-composer"
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -28,7 +30,7 @@ teardown() {
   run ddev exec console ibexa:install --no-interaction
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch /admin/login"
+  DDEV_DEBUG=true run ddev launch /admin/login
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin/login"
   assert_success
   # validate running project

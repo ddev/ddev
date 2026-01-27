@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Joomla quickstart with $(ddev --version)" {
+  _skip_test_if_needed "joomla-zip"
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -31,7 +33,7 @@ teardown() {
   run ddev php installation/joomla.php install --site-name="My Joomla Site" --admin-user="Administrator" --admin-username=admin --admin-password=AdminAdmin1! --admin-email=admin@example.com --db-type=mysql --db-encryption=0 --db-host=db --db-user=db --db-pass="db" --db-name=db --db-prefix=ddev_ --public-folder=""
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch /administrator/"
+  DDEV_DEBUG=true run ddev launch /administrator/
   assert_output "FULLURL https://${PROJNAME}.ddev.site/administrator/"
   assert_success
   # validate running project

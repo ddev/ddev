@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Expression Engine Zip File Download quickstart with $(ddev --version)" {
+  _skip_test_if_needed "ee-zip"
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -33,7 +35,7 @@ teardown() {
   assert_success
 
   # validate ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch /admin.php"
+  DDEV_DEBUG=true run ddev launch /admin.php
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin.php"
   assert_success
 
@@ -65,6 +67,8 @@ teardown() {
 }
 
 @test "Expression Engine Git Clone quickstart with $(ddev --version)" {
+  _skip_test_if_needed "ee-git"
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -96,7 +100,7 @@ teardown() {
   assert_file_exist .env.php
 
   # validate ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch /admin.php"
+  DDEV_DEBUG=true run ddev launch /admin.php
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin.php"
   assert_success
 
