@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Pimcore Composer quickstart with $(ddev --version)" {
+  _skip_test_if_needed "pimcore-composer"
+
   skip "Pimcore requires a license key"
 
   # mkdir -p ${PROJNAME} && cd ${PROJNAME}
@@ -41,7 +43,7 @@ teardown() {
   run ddev restart -y
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch /admin"
+  DDEV_DEBUG=true run ddev launch /admin
   assert_output "FULLURL https://${PROJNAME}.ddev.site/admin"
   assert_success
   # validate running project

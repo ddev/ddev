@@ -30,6 +30,7 @@ concurrency:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  DDEV_SKIP_QUICKSTART_TEST: ${{ vars.DDEV_SKIP_QUICKSTART_TEST || 'symfony-composer,symfony-cli' }}
 
 permissions:
   actions: write

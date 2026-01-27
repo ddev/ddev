@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "processwire zipball with $(ddev --version)" {
+  _skip_test_if_needed "processwire-zip"
+
   run mkdir -p my-processwire-site && cd my-processwire-site
   assert_success
   run _curl_github -LJOf https://github.com/processwire/processwire/archive/master.zip
@@ -22,7 +24,7 @@ teardown() {
   assert_success
   DDEV_DEBUG=true run ddev start -y
   assert_success
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
@@ -60,6 +62,8 @@ teardown() {
 }
 
 @test "processwire composer with $(ddev --version)" {
+  _skip_test_if_needed "processwire-composer"
+
   # mkdir my-processwire-site && cd my-processwire-site
   run mkdir -p my-processwire-site && cd my-processwire-site
   assert_success
@@ -72,7 +76,7 @@ teardown() {
   # ddev composer create-project "processwire/processwire:^3"
   run ddev composer create-project "processwire/processwire:^3"
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 

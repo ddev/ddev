@@ -15,6 +15,27 @@ _common_setup() {
 #    echo "# Starting test at $(date)" >&3
 }
 
+# Check if a test should be skipped based on DDEV_SKIP_QUICKSTART_TEST
+# Set DDEV_SKIP_QUICKSTART_TEST to a comma-separated list of test identifiers to skip
+# Examples:
+#   DDEV_SKIP_QUICKSTART_TEST="symfony-composer" make quickstart-test
+#   DDEV_SKIP_QUICKSTART_TEST="symfony-composer,symfony-cli,drupal10-composer" make quickstart-test
+# Usage in test files: _skip_test_if_needed "test-identifier"
+_skip_test_if_needed() {
+    local test_id="$1"
+    if [ -n "${DDEV_SKIP_QUICKSTART_TEST:-}" ]; then
+        IFS=',' read -ra SKIP_TESTS <<< "${DDEV_SKIP_QUICKSTART_TEST}"
+        local skip_id
+        for skip_id in "${SKIP_TESTS[@]}"; do
+            # Trim whitespace
+            skip_id=$(echo "$skip_id" | xargs)
+            if [ "$skip_id" = "$test_id" ]; then
+                skip "Test skipped via DDEV_SKIP_QUICKSTART_TEST: ${test_id}"
+            fi
+        done
+    fi
+}
+
 _extra_info() {
   HOST_HTTP_URL=$(ddev describe -j ${PROJNAME} | jq -r .raw.services.web.host_http_url)
   HOST_HTTPS_URL=$(ddev describe -j ${PROJNAME} | jq -r .raw.services.web.host_https_url)

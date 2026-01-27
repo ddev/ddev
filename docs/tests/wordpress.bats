@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "WordPress wp-cli based quickstart with $(ddev --version)" {
+  _skip_test_if_needed "wordpress-cli"
+
   # mkdir my-wp-site && cd my-wp-site
   run mkdir my-wp-site && cd my-wp-site
   assert_success
@@ -27,7 +29,7 @@ teardown() {
   run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
@@ -43,6 +45,8 @@ teardown() {
 }
 
 @test "WordPress wp-cli based quickstart (different docroot) with $(ddev --version)" {
+  _skip_test_if_needed "wordpress-cli-docroot"
+
   # mkdir my-wp-site && cd my-wp-site
   run mkdir my-wp-site && cd my-wp-site
   assert_success
@@ -59,7 +63,7 @@ teardown() {
   run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
@@ -75,6 +79,8 @@ teardown() {
 }
 
 @test "WordPress Bedrock based quickstart with $(ddev --version)" {
+  _skip_test_if_needed "wordpress-bedrock"
+
   # mkdir my-wp-site && cd my-wp-site
   run mkdir my-wp-site && cd my-wp-site
   assert_success
@@ -98,7 +104,7 @@ teardown() {
   run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project
@@ -114,6 +120,8 @@ teardown() {
 }
 
 @test "WordPress git based quickstart with $(ddev --version)" {
+  _skip_test_if_needed "wordpress-git"
+
   # PROJECT_GIT_URL=https://github.com/ddev/test-wordpress.git
   PROJECT_GIT_URL=https://github.com/ddev/test-wordpress.git
   # git clone ${PROJECT_GIT_URL} ${PROJNAME}
@@ -132,7 +140,7 @@ teardown() {
   run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project

@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "sveltekit quickstart with $(ddev --version)" {
+  _skip_test_if_needed "sveltekit-demo"
+
   SVELTEKIT_SITENAME=${PROJNAME}
   run mkdir ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}
   assert_success
@@ -73,7 +75,7 @@ EOF
   echo "# Existing containers: $output" >&3
 
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
   # validate running project

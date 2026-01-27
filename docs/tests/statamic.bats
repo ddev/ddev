@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Statamic Composer quickstart with $(ddev --version)" {
+  _skip_test_if_needed "statamic-composer"
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -31,10 +33,10 @@ teardown() {
 
 
   # validate ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch"
+  DDEV_DEBUG=true run ddev launch
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
-  run bash -c "DDEV_DEBUG=true ddev launch /cp"
+  DDEV_DEBUG=true run ddev launch /cp
   assert_output "FULLURL https://${PROJNAME}.ddev.site/cp"
   assert_success
 
@@ -60,5 +62,7 @@ teardown() {
 
 
 @test "Statamic Git Clone quickstart with $(ddev --version)" {
+  _skip_test_if_needed "statamic-git"
+
   skip "Does not have a test yet"
 }

@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Shopware Composer based quickstart with $(ddev --version)" {
+  _skip_test_if_needed "shopware-composer"
+
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
 

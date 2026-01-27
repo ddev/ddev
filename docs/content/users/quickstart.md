@@ -1397,7 +1397,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 
     ```bash
     mkdir my-laravel-site && cd my-laravel-site
-    ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
+    ddev config --project-type=laravel --docroot=public --omit-containers=db
     ```
 
     Start DDEV (this may take a minute):
@@ -1426,7 +1426,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir my-laravel-site && cd my-laravel-site
-        ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
+        ddev config --project-type=laravel --docroot=public --omit-containers=db
         ddev start -y
         ddev composer create-project "laravel/laravel:^12"
         ddev launch
@@ -1440,7 +1440,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Configure for SQLite and restart:
 
     ```bash
-    ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
+    ddev config --project-type=laravel --docroot=public --omit-containers=db
     ddev restart
     ```
 
@@ -1465,7 +1465,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         cat > switch-laravel-sqlite.sh << 'EOF'
         #!/usr/bin/env bash
         set -euo pipefail
-        ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
+        ddev config --project-type=laravel --docroot=public --omit-containers=db
         ddev restart
         ddev composer run-script post-root-package-install
         ddev dotenv set .env --db-connection=sqlite
@@ -1484,7 +1484,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     mkdir my-laravel-site && cd my-laravel-site
     ddev config --project-type=laravel --docroot=public
     # For SQLite instead, use:
-    # ddev config --project-type=laravel --docroot=public --omit-containers=db --disable-settings-management=true
+    # ddev config --project-type=laravel --docroot=public --omit-containers=db
     ```
 
     Create Dockerfile to add Laravel installer:

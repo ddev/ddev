@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Wagtail quickstart with $(ddev --version)" {
+  _skip_test_if_needed "wagtail-gunicorn"
+
   WAGTAIL_SITENAME=${PROJNAME}
   run mkdir ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
   assert_success

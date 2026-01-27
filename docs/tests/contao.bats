@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Contao Composer quickstart with $(ddev --version)" {
+  _skip_test_if_needed "contao-composer"
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -37,7 +39,7 @@ teardown() {
   run ddev exec contao-console contao:user:create --username=admin --name=Administrator --email=admin@example.com --language=en --password=Password123 --admin
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch contao"
+  DDEV_DEBUG=true run ddev launch contao
   assert_output "FULLURL https://${PROJNAME}.ddev.site/contao"
   assert_success
   # validate running project
@@ -47,6 +49,8 @@ teardown() {
 }
 
 @test "Contao Manager quickstart with $(ddev --version)" {
+  _skip_test_if_needed "contao-manager"
+
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -63,7 +67,7 @@ teardown() {
   run ddev exec "wget -O public/contao-manager.phar.php https://download.contao.org/contao-manager/stable/contao-manager.phar"
   assert_success
   # ddev launch
-  run bash -c "DDEV_DEBUG=true ddev launch contao-manager.phar.php"
+  DDEV_DEBUG=true run ddev launch contao-manager.phar.php
   assert_output "FULLURL https://${PROJNAME}.ddev.site/contao-manager.phar.php"
   assert_success
   # validate running project

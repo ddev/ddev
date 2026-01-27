@@ -12,6 +12,8 @@ teardown() {
 }
 
 @test "Laravel composer based quickstart with $(ddev --version)" {
+  _skip_test_if_needed "laravel-composer"
+
   run mkdir my-laravel-site && cd my-laravel-site
   assert_success
 
@@ -44,6 +46,8 @@ teardown() {
 }
 
 @test "Laravel composer (SQLite) based quickstart with $(ddev --version)" {
+  _skip_test_if_needed "laravel-composer-sqlite"
+
   run mkdir my-laravel-site && cd my-laravel-site
   assert_success
 
@@ -76,6 +80,8 @@ teardown() {
 }
 
 @test "Laravel installer quickstart with $(ddev --version)" {
+  _skip_test_if_needed "laravel-installer"
+
   run mkdir my-laravel-site && cd my-laravel-site
   assert_success
 
