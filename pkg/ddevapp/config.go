@@ -594,6 +594,9 @@ func ValidateDocroot(docroot string) error {
 // isCustomConfigFile returns true if the file exists and is not marked with
 // either the standard DDEV signature or the silent-no-warn marker.
 func isCustomConfigFile(filePath string) bool {
+	if !fileutil.FileExists(filePath) {
+		return false
+	}
 	sigFound, _ := fileutil.FgrepStringInFile(filePath, nodeps.DdevFileSignature)
 	silentNoWarnFound, _ := fileutil.FgrepStringInFile(filePath, nodeps.DdevSilentNoWarn)
 	return !sigFound && !silentNoWarnFound
