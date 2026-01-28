@@ -56,7 +56,7 @@ teardown() {
   assert_output --partial "<li><a href=\"https://statamic.dev\">Head to the docs</a> and learn how Statamic&nbsp;works.</li>"
   assert_success
   run curl -sfv https://${PROJNAME}.ddev.site/cp/auth/login
-  assert_output --partial "<title>Log in ‹ Statamic</title>"
+  assert_output --regexp 'component.*auth.*Login'
   assert_success
 }
 
