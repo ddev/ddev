@@ -1363,7 +1363,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Install Laravel via Composer:
 
     ```bash
-    ddev composer create-project laravel/laravel
+    ddev composer create-project "laravel/laravel:^12"
     ```
 
     Launch the site:
@@ -1382,7 +1382,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         mkdir my-laravel-site && cd my-laravel-site
         ddev config --project-type=laravel --docroot=public
         ddev start -y
-        ddev composer create-project laravel/laravel
+        ddev composer create-project "laravel/laravel:^12"
         ddev launch
         EOF
         chmod +x setup-laravel.sh
@@ -1409,7 +1409,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Install Laravel via Composer:
 
     ```bash
-    ddev composer create-project laravel/laravel
+    ddev composer create-project "laravel/laravel:^12"
     ```
 
     Launch the site:
@@ -1428,7 +1428,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         mkdir my-laravel-site && cd my-laravel-site
         ddev config --project-type=laravel --docroot=public --omit-containers=db
         ddev start -y
-        ddev composer create-project laravel/laravel
+        ddev composer create-project "laravel/laravel:^12"
         ddev launch
         EOF
         chmod +x setup-laravel-sqlite.sh
@@ -2632,7 +2632,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     Install TYPO3 via Composer:
 
     ```bash
-    ddev composer create-project typo3/cms-base-distribution
+    ddev composer create-project "typo3/cms-base-distribution:^14"
     ```
 
     Run the TYPO3 setup:
@@ -2671,7 +2671,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
         ddev config --project-type=typo3 --docroot=public
         ddev start -y
-        ddev composer create-project typo3/cms-base-distribution
+        ddev composer create-project "typo3/cms-base-distribution:^14"
         ddev typo3 setup \
             --admin-user-password="Demo123*" \
             --driver=mysqli \
