@@ -152,7 +152,7 @@ teardown() {
   run ddev start -y
   assert_success
 
-  run ddev composer create-project drupal/cms
+  run ddev composer create-project "drupal/cms:^1"
   assert_success
   assert_output --partial "Congratulations, you’ve installed Drupal CMS!"
 
