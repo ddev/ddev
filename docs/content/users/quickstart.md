@@ -644,6 +644,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
     ```bash
     ddev composer create-project drupal/cms
+    # Note: recipe-unpack runs automatically in DDEV v1.25.0+
     ddev composer drupal:recipe-unpack
     ```
 
@@ -666,6 +667,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         ddev config --project-type=drupal11 --docroot=web
         ddev start -y
         ddev composer create-project drupal/cms
+        # Note: recipe-unpack runs automatically in DDEV v1.25.0+
         ddev composer drupal:recipe-unpack
         ddev launch
         EOF
