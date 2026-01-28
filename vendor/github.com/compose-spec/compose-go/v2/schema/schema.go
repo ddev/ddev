@@ -19,7 +19,6 @@ package schema
 import (
 	// Enable support for embedded static resources
 	_ "embed"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -49,11 +48,11 @@ var Schema string
 // Validate uses the jsonschema to validate the configuration
 func Validate(config map[string]interface{}) error {
 	compiler := jsonschema.NewCompiler()
-	shema, err := jsonschema.UnmarshalJSON(strings.NewReader(Schema))
+	json, err := jsonschema.UnmarshalJSON(strings.NewReader(Schema))
 	if err != nil {
 		return err
 	}
-	err = compiler.AddResource("compose-spec.json", shema)
+	err = compiler.AddResource("compose-spec.json", json)
 	if err != nil {
 		return err
 	}
@@ -62,21 +61,7 @@ func Validate(config map[string]interface{}) error {
 		Validate: durationFormatChecker,
 	})
 	schema := compiler.MustCompile("compose-spec.json")
-
-	// santhosh-tekuri doesn't allow derived types
-	// see https://github.com/santhosh-tekuri/jsonschema/pull/240
-	marshaled, err := json.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	var raw map[string]interface{}
-	err = json.Unmarshal(marshaled, &raw)
-	if err != nil {
-		return err
-	}
-
-	err = schema.Validate(raw)
+	err = schema.Validate(config)
 	var verr *jsonschema.ValidationError
 	if ok := errors.As(err, &verr); ok {
 		return validationError{getMostSpecificError(verr)}

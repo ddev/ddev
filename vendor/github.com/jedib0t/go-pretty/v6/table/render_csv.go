@@ -14,7 +14,7 @@ import (
 //	300,Tyrion,Lannister,5000,
 //	,,Total,10000,
 func (t *Table) RenderCSV() string {
-	t.initForRender(renderModeCSV)
+	t.initForRender()
 
 	var out strings.Builder
 	if t.numColumns > 0 {
@@ -36,11 +36,11 @@ func (t *Table) RenderCSV() string {
 }
 
 func (t *Table) csvFixCommas(str string) string {
-	return strings.ReplaceAll(str, ",", "\\,")
+	return strings.Replace(str, ",", "\\,", -1)
 }
 
 func (t *Table) csvFixDoubleQuotes(str string) string {
-	return strings.ReplaceAll(str, "\"", "\\\"")
+	return strings.Replace(str, "\"", "\\\"", -1)
 }
 
 func (t *Table) csvRenderRow(out *strings.Builder, row rowStr, hint renderHint) {
@@ -54,7 +54,7 @@ func (t *Table) csvRenderRow(out *strings.Builder, row rowStr, hint renderHint) 
 		// auto-index column
 		if colIdx == 0 && t.autoIndex {
 			if hint.isRegularRow() {
-				fmt.Fprint(out, hint.rowNumber)
+				out.WriteString(fmt.Sprint(hint.rowNumber))
 			}
 			out.WriteRune(',')
 		}
