@@ -30,7 +30,9 @@ concurrency:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  DDEV_SKIP_QUICKSTART_TEST: ${{ vars.DDEV_SKIP_QUICKSTART_TEST || 'symfony-composer,symfony-cli' }}
+  # Add tests you want to skip here, delimited by commas
+  # Search for _skip_test_if_needed to see how this is used
+  DDEV_SKIP_QUICKSTART_TEST: ${{ vars.DDEV_SKIP_QUICKSTART_TEST || '' }}
 
 permissions:
   actions: write
