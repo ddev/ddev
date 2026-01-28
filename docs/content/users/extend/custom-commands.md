@@ -289,18 +289,12 @@ Example: `## HostBinaryExists: /Applications/Sequel ace.app`
 
 > [!NOTE]
 > Windows Path Format (Git Bash Only)
-> 
+>
 > When using DDEV directly with Git Bash on native Windows (not WSL), `HostBinaryExists` requires **native Windows paths** (e.g., `C:\Program Files\DBeaver\dbeaver.exe`), not Git Bash/MSYS-style paths (e.g., `/c/Program Files/DBeaver/dbeaver.exe`). This is because DDEV checks file existence using native file system calls, which expect Windows path formats.
 >
 > This does not apply when using DDEV through WSL2, where Unix-style paths like `/mnt/c/Program Files/...` work correctly.
 >
 > Within your script body (which runs in bash), you can use Git Bash-style paths since bash translates them automatically.
->
-> Example for a command supporting both WSL2 and native Windows (Git Bash):
-> ```bash
-> ## HostBinaryExists: /Applications/DBeaver.app,/mnt/c/Program Files/DBeaver/dbeaver.exe,C:\Program Files\DBeaver\dbeaver.exe
-> ## OSTypes: darwin,wsl2,windows
-> ```
 
 ### `DBTypes` Annotation
 
