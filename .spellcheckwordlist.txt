@@ -485,6 +485,7 @@ more
 mountaddr
 mountproto
 mountvers
+MSYS
 multisite
 mutagen
 mv
