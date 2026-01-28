@@ -543,14 +543,39 @@ func CheckRouterPorts(activeApps []*DdevApp) error {
 	}
 	newRouterPorts := determineRouterPorts(activeApps)
 
+	// Check if any of the new ports are already in use
+	var portError error
 	for _, port := range newRouterPorts {
 		if nodeps.ArrayContainsString(existingExposedPorts, port) {
 			continue
 		}
 		if netutil.IsPortActive(port) {
-			return fmt.Errorf("port %s is already in use", port)
+			portError = fmt.Errorf("port %s is already in use", port)
+			break
 		}
 	}
+
+	// If we found a port conflict, check if it might be a security software false positive
+	if portError != nil {
+		// If all ephemeral ports appear active, it's likely security software interference.
+		// Let Docker report any real conflicts.
+		// See https://github.com/ddev/ddev/issues/7921
+		freePortsAvailable := false
+		for p := MinEphemeralPort; p <= MaxEphemeralPort; p++ {
+			if !netutil.IsPortActive(fmt.Sprint(p)) {
+				freePortsAvailable = true
+				break
+			}
+		}
+		if !freePortsAvailable {
+			util.WarningOnce("Unable to check port availability")
+			util.WarningOnce("Assuming ports are available, see https://ddev.com/s/port-conflict")
+			return nil
+		}
+		// There are free ports available, so this is a real conflict
+		return portError
+	}
+
 	return nil
 }
 
@@ -629,12 +654,12 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 
 	ephemeralPort, ok := AllocateAvailablePortForRouter(minPort, maxPort)
 	if !ok {
-		// Unlikely
-		util.Debug("GetAvailableRouterPort(): unable to AllocateAvailablePortForRouter()")
+		// Unlikely, but this can happen if security software makes all ports appear active.
+		util.Debug("GetAvailableRouterPort(): proposedPort %s is not available, no ephemeral ports in range %d-%d are available", proposedPort, minPort, maxPort)
 		return proposedPort, "", false
 	}
 
-	util.Debug("GetAvailableRouterPort(): proposedPort %s is not available, epheneralPort=%d is available, use it", proposedPort, ephemeralPort)
+	util.Debug("GetAvailableRouterPort(): proposedPort %s is not available, ephemeralPort=%d is available, use it", proposedPort, ephemeralPort)
 
 	return proposedPort, strconv.Itoa(ephemeralPort), true
 }
