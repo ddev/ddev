@@ -120,7 +120,7 @@ if [ "${DDEV_DEBUG:-}" = "true" ] || [ "${DDEV_VERBOSE:-}" = "true" ]; then
 fi
 
 case $OSTYPE in
-  linux-gnu)
+  "linux-gnu")
     if command -v explorer.exe >/dev/null; then explorer.exe ${FULLURL} || true;
     elif command -v xdg-open >/dev/null; then xdg-open ${FULLURL};
     else
@@ -131,7 +131,7 @@ case $OSTYPE in
   "darwin"*)
     open ${FULLURL}
     ;;
-  "win*"* | "msys"*)
+  "win"* | "msys"* | "cygwin")
     start ${FULLURL}
     ;;
 esac
