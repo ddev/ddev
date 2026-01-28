@@ -41,11 +41,17 @@ func TestDdevApp_StartOptionalProfiles(t *testing.T) {
 	require.Nil(t, container)
 
 	// Now StartOptionalProfiles() and make sure the service is there
-	profiles := []string{"busybox1", "busybox2"}
+	profiles := []string{"busybox-first", "busybox-second"}
 	err = app.StartOptionalProfiles(profiles)
 	require.NoError(t, err)
+	// Map profile names to service names for verification
+	profileToService := map[string]string{
+		"busybox-first":  "busybox1",
+		"busybox-second": "busybox2",
+	}
 	for _, prof := range profiles {
-		container, err = ddevapp.GetContainer(app, prof)
+		serviceName := profileToService[prof]
+		container, err = ddevapp.GetContainer(app, serviceName)
 		require.NoError(t, err)
 		require.NotNil(t, container)
 	}
