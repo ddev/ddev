@@ -3,7 +3,7 @@
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
 ARG DOCKER_ORG=ddev
-FROM ${DOCKER_ORG}/ddev-php-base:20260120_stasadev_stderr_logs AS ddev-webserver-base
+FROM ${DOCKER_ORG}/ddev-php-base:v1.25.0 AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -22,10 +22,6 @@ ARG DEFAULT_LOCALES="en_CA.UTF-8 UTF-8\nen_US.UTF-8 UTF-8\nen_GB.UTF-8 UTF-8\nes
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
 
-# This curl is here to catch diagnostic information for sury.org
-# failures, see https://github.com/oerdnj/deb.sury.org/issues/2046
-RUN curl -I https://packages.sury.org/php/dists/bookworm/InRelease
-
 # symfony cli
 RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash
 
@@ -36,8 +32,10 @@ RUN rm -f /etc/apt/sources.list.d/symfony-stable.list && \
 # Set up MariaDB apt repository
 # The key is from https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/installing-mariadb/binary-packages/gpg#mariadb-community-server-debian-ubuntu-key
 # Search for CHANGE_MARIADB_CLIENT to update related code.
-RUN KEYRING_URL="https://supplychain.mariadb.com/mariadb-keyring-2019.gpg" && \
-    KEYRING_FILE="mariadb-keyring-2019.gpg" && \
+RUN KEYRING_URL="https://supplychain.mariadb.com/mariadb-keyring-2025.gpg" && \
+    curl -fsSL https://r.mariadb.com/downloads/mariadb_repo_setup | grep -q "${KEYRING_URL}" || \
+        (echo "ERROR: KEYRING_URL does not match mariadb_repo_setup script" >&2 && exit 1) && \
+    KEYRING_FILE="${KEYRING_URL##*/}" && \
     KEYRING_PATH="/usr/share/keyrings/${KEYRING_FILE}" && \
     curl -fsSL -O "${KEYRING_URL}" && \
     curl -fsSL -O "${KEYRING_URL}.sha256" && \

@@ -17,10 +17,10 @@ fi
 
 # Determine binary
 case $OSTYPE in
-win* | msys*)
+"win"* | "msys"* | "cygwin")
   binary="/c/Program Files/HeidiSQL/heidisql.exe"
   ;;
-linux-gnu)
+"linux-gnu")
   BINARIES=(
     "/usr/bin/heidisql"
     "/usr/local/bin/heidisql"
@@ -100,11 +100,11 @@ arguments=(
 
 # Launch HeidiSQL
 case $OSTYPE in
-win* | msys*)
+"win"* | "msys"* | "cygwin")
   start "" "${binary}" "${arguments[@]}" &
   ;;
 
-linux-gnu)
+"linux-gnu")
   "${binary}" "${arguments[@]}" &>/dev/null & disown
   ;;
 esac
