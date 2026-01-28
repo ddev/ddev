@@ -32,19 +32,30 @@ fi
 CONNECTION="name=ddev-${DDEV_PROJECT}|driver=${type}|database=${database}|user=${user}|password=${user}|savePassword=true|showSystemObjects=true|showUtilityObjects=true|prop.allowPublicKeyRetrieval=true|prop.useSSL=false|host=127.0.0.1|port=${DDEV_HOST_DB_PORT}|openConsole=true|folder=DDEV"
 
 case $OSTYPE in
-  "linux-gnu"|"cygwin"|"msys")
+  "linux-gnu")
     # Check for different binaries. Launch the first one found.
     BINARIES=(
       /usr/bin/dbeaver{,-ce,-le,-ue,-ee}
       /var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity
       /snap/bin/dbeaver-ce
       '/mnt/c/Program Files/DBeaver'{,Lite,Ultimate,EE}'/dbeaver.exe'
-      '/c/Program Files/DBeaver'{,Lite,Ultimate,EE}'/dbeaver.exe'
     )
     for binary in "${BINARIES[@]}"; do
       if [ -x "$binary" ]; then
         echo "Launching $binary"
         "$binary" -con "$CONNECTION" &> /dev/null & disown
+        exit 0
+      fi
+    done
+    ;;
+  "win"* | "msys"* | "cygwin")
+    BINARIES=(
+      '/c/Program Files/DBeaver'{,Lite,Ultimate,EE}'/dbeaver.exe'
+    )
+    for binary in "${BINARIES[@]}"; do
+      if [ -x "$binary" ]; then
+        echo "Launching $binary"
+        "$binary" -con "$CONNECTION" &
         exit 0
       fi
     done
