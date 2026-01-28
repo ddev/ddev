@@ -591,7 +591,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     Install Drupal via Composer:
 
     ```bash
-    ddev composer create-project "drupal/recommended-project:^11"
+    ddev composer create-project drupal/recommended-project
     ddev composer require drush/drush
     ```
 
@@ -616,7 +616,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         mkdir my-drupal-site && cd my-drupal-site
         ddev config --project-type=drupal11 --docroot=web
         ddev start -y
-        ddev composer create-project "drupal/recommended-project:^11"
+        ddev composer create-project drupal/recommended-project
         ddev composer require drush/drush
         ddev drush site:install --account-name=admin --account-pass=admin -y
         ddev launch
@@ -1363,7 +1363,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Install Laravel via Composer:
 
     ```bash
-    ddev composer create-project "laravel/laravel:^12"
+    ddev composer create-project laravel/laravel
     ```
 
     Launch the site:
@@ -1382,7 +1382,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         mkdir my-laravel-site && cd my-laravel-site
         ddev config --project-type=laravel --docroot=public
         ddev start -y
-        ddev composer create-project "laravel/laravel:^12"
+        ddev composer create-project laravel/laravel
         ddev launch
         EOF
         chmod +x setup-laravel.sh
@@ -1409,7 +1409,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Install Laravel via Composer:
 
     ```bash
-    ddev composer create-project "laravel/laravel:^12"
+    ddev composer create-project laravel/laravel
     ```
 
     Launch the site:
@@ -1428,7 +1428,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         mkdir my-laravel-site && cd my-laravel-site
         ddev config --project-type=laravel --docroot=public --omit-containers=db
         ddev start -y
-        ddev composer create-project "laravel/laravel:^12"
+        ddev composer create-project laravel/laravel
         ddev launch
         EOF
         chmod +x setup-laravel-sqlite.sh
@@ -2632,7 +2632,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     Install TYPO3 via Composer:
 
     ```bash
-    ddev composer create-project "typo3/cms-base-distribution:^14"
+    ddev composer create-project typo3/cms-base-distribution
     ```
 
     Run the TYPO3 setup:
@@ -2671,7 +2671,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
         ddev config --project-type=typo3 --docroot=public
         ddev start -y
-        ddev composer create-project "typo3/cms-base-distribution:^14"
+        ddev composer create-project typo3/cms-base-distribution
         ddev typo3 setup \
             --admin-user-password="Demo123*" \
             --driver=mysqli \
