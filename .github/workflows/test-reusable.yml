@@ -74,7 +74,7 @@ on:
         type: string
         default: 'true'
       ddev_embargo_tests:
-        description: 'DDEV_EMBARGO_TESTS value - comma-separated list of test names to skip'
+        description: 'DDEV_EMBARGO_TESTS value - pipe-separated list of test names to skip (e.g., TestName1|TestName2)'
         required: false
         type: string
         default: ''

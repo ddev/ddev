@@ -146,3 +146,35 @@ To automate this:
 
 1. Enable the "Automatically delete head branches" option in the fork repository "Settings" -> "General".
 2. Invite other maintainers as collaborators in the fork repository "Settings" -> "Collaborators".
+
+## Skipping Tests
+
+### Skipping Tests via Commit Message
+
+Include these keywords in your commit message or pull request title to skip CI runs:
+
+* `[skip buildkite]` - Skip Buildkite tests only
+* `[skip github]` - Skip GitHub Actions tests only
+* `[skip ci]` - Skip all tests
+
+### Skipping Specific Tests via Repository Variables
+
+For maintainers with access to [repository variables](https://github.com/ddev/ddev/settings/variables/actions), you can skip specific tests globally. Note: This does not work for pull requests from forks.
+
+**Skip specific quickstart tests:**
+
+```bash
+DDEV_EMBARGO_QUICKSTART_TESTS="symfony-composer|symfony-cli|drupal10-composer"
+```
+
+**Skip specific Go tests (e.g., provider tests):**
+
+```bash
+DDEV_EMBARGO_TESTS="TestLagoonPull|TestAcquiaPull|TestPantheonPush"
+```
+
+Both variables use pipe-separated test names (`|`) to specify multiple tests to skip.
+
+### Skipping Tests via Workflow Dispatch
+
+When manually triggering workflows through GitHub's "Run workflow" button, you can provide a `ddev_embargo_tests` input with pipe-separated test names to skip specific tests for that run only.

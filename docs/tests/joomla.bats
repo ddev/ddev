@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "Joomla quickstart with $(ddev --version)" {
-  _skip_test_if_needed "joomla-zip"
+  _skip_if_embargoed "joomla-zip"
 
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}

@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "Sulu quickstart with $(ddev --version)" {
-  _skip_test_if_needed "sulu-composer"
+  _skip_if_embargoed "sulu-composer"
 
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}

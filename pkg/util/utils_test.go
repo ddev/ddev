@@ -482,19 +482,19 @@ func TestIsTestEmbargoed(t *testing.T) {
 		},
 		{
 			name:        "Test in embargo list",
-			embargoList: "TestLagoonPull,TestAcquiaPull",
+			embargoList: "TestLagoonPull|TestAcquiaPull",
 			testName:    "TestLagoonPull",
 			shouldSkip:  true,
 		},
 		{
 			name:        "Test not in embargo list",
-			embargoList: "TestLagoonPull,TestAcquiaPull",
+			embargoList: "TestLagoonPull|TestAcquiaPull",
 			testName:    "TestSomethingElse",
 			shouldSkip:  false,
 		},
 		{
 			name:        "Test with spaces in embargo list",
-			embargoList: "TestLagoonPull, TestAcquiaPull, TestPantheonPull",
+			embargoList: "TestLagoonPull| TestAcquiaPull| TestPantheonPull",
 			testName:    "TestAcquiaPull",
 			shouldSkip:  true,
 		},

@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "processwire zipball with $(ddev --version)" {
-  _skip_test_if_needed "processwire-zip"
+  _skip_if_embargoed "processwire-zip"
 
   run mkdir -p my-processwire-site && cd my-processwire-site
   assert_success
@@ -62,7 +62,7 @@ teardown() {
 }
 
 @test "processwire composer with $(ddev --version)" {
-  _skip_test_if_needed "processwire-composer"
+  _skip_if_embargoed "processwire-composer"
 
   # mkdir my-processwire-site && cd my-processwire-site
   run mkdir -p my-processwire-site && cd my-processwire-site

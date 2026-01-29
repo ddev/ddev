@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "Node.js quickstart with $(ddev --version)" {
-  _skip_test_if_needed "nodejs-express"
+  _skip_if_embargoed "nodejs-express"
 
   NODEJS_SITENAME=${PROJNAME}
   run mkdir ${NODEJS_SITENAME} && cd ${NODEJS_SITENAME}

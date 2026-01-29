@@ -31,8 +31,8 @@ concurrency:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   # Add tests you want to skip here, delimited by commas
-  # Search for _skip_test_if_needed to see how this is used
-  DDEV_SKIP_QUICKSTART_TEST: ${{ vars.DDEV_SKIP_QUICKSTART_TEST || '' }}
+  # Search for _skip_if_embargoed to see how this is used
+  DDEV_EMBARGO_QUICKSTART_TESTS: ${{ vars.DDEV_EMBARGO_QUICKSTART_TESTS || '' }}
 
 permissions:
   actions: write

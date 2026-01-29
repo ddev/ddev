@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "Contao Composer quickstart with $(ddev --version)" {
-  _skip_test_if_needed "contao-composer"
+  _skip_if_embargoed "contao-composer"
 
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
@@ -49,7 +49,7 @@ teardown() {
 }
 
 @test "Contao Manager quickstart with $(ddev --version)" {
-  _skip_test_if_needed "contao-manager"
+  _skip_if_embargoed "contao-manager"
 
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}

@@ -19,7 +19,7 @@ on:
         required: false
         default: false
       ddev_embargo_tests:
-        description: 'Comma-separated list of test names to skip'
+        description: 'Pipe-separated list of test names to skip (e.g., TestName1|TestName2)'
         type: string
         required: false
         default: ''

@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "TYPO3 v14 'ddev typo3 setup' composer test with $(ddev --version)" {
-  _skip_test_if_needed "typo3-v14-setup"
+  _skip_if_embargoed "typo3-v14-setup"
 
   PROJNAME=my-typo3-site
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
@@ -56,7 +56,7 @@ teardown() {
 }
 
 @test "TYPO3 v13 'ddev typo3 setup' composer test with $(ddev --version)" {
-  _skip_test_if_needed "typo3-v13-setup"
+  _skip_if_embargoed "typo3-v13-setup"
 
   PROJNAME=my-typo3-site
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
@@ -97,7 +97,7 @@ teardown() {
 }
 
 @test "TYPO3 v12 'ddev typo3 setup' composer test with $(ddev --version)" {
-  _skip_test_if_needed "typo3-v12-setup"
+  _skip_if_embargoed "typo3-v12-setup"
 
   PROJNAME=my-typo3-site
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
@@ -138,7 +138,7 @@ teardown() {
 }
 
 @test "TYPO3 v11 'web installer' composer test with $(ddev --version)" {
-  _skip_test_if_needed "typo3-v11-installer"
+  _skip_if_embargoed "typo3-v11-installer"
 
   PROJNAME=my-typo3-site
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
@@ -163,7 +163,7 @@ teardown() {
 }
 
 @test "TYPO3 git based quickstart with $(ddev --version)" {
-  _skip_test_if_needed "typo3-git"
+  _skip_if_embargoed "typo3-git"
 
   PROJECT_GIT_URL=https://github.com/ddev/test-typo3.git
   PROJNAME=my-typo3-site
@@ -190,7 +190,7 @@ teardown() {
 }
 
 @test "TYPO3 XHGui composer test with $(ddev --version)" {
-  _skip_test_if_needed "typo3-xhgui"
+  _skip_if_embargoed "typo3-xhgui"
 
   run mkdir my-typo3-site && cd my-typo3-site
   assert_success

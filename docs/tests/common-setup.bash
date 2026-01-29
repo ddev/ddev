@@ -15,22 +15,22 @@ _common_setup() {
 #    echo "# Starting test at $(date)" >&3
 }
 
-# Check if a test should be skipped based on DDEV_SKIP_QUICKSTART_TEST
-# Set DDEV_SKIP_QUICKSTART_TEST to a comma-separated list of test identifiers to skip
+# Check if a test should be skipped based on DDEV_EMBARGO_QUICKSTART_TESTS
+# Set DDEV_EMBARGO_QUICKSTART_TESTS to a pipe-separated list of test identifiers to skip
 # Examples:
-#   DDEV_SKIP_QUICKSTART_TEST="symfony-composer" make quickstart-test
-#   DDEV_SKIP_QUICKSTART_TEST="symfony-composer,symfony-cli,drupal10-composer" make quickstart-test
-# Usage in test files: _skip_test_if_needed "test-identifier"
-_skip_test_if_needed() {
+#   DDEV_EMBARGO_QUICKSTART_TESTS="symfony-composer" make quickstart-test
+#   DDEV_EMBARGO_QUICKSTART_TESTS="symfony-composer|symfony-cli|drupal10-composer" make quickstart-test
+# Usage in test files: _skip_if_embargoed "test-identifier"
+_skip_if_embargoed() {
     local test_id="$1"
-    if [ -n "${DDEV_SKIP_QUICKSTART_TEST:-}" ]; then
-        IFS=',' read -ra SKIP_TESTS <<< "${DDEV_SKIP_QUICKSTART_TEST}"
+    if [ -n "${DDEV_EMBARGO_QUICKSTART_TESTS:-}" ]; then
+        IFS='|' read -ra SKIP_TESTS <<< "${DDEV_EMBARGO_QUICKSTART_TESTS}"
         local skip_id
         for skip_id in "${SKIP_TESTS[@]}"; do
             # Trim whitespace
             skip_id=$(echo "$skip_id" | xargs)
             if [ "$skip_id" = "$test_id" ]; then
-                skip "Test skipped via DDEV_SKIP_QUICKSTART_TEST: ${test_id}"
+                skip "Test skipped via DDEV_EMBARGO_QUICKSTART_TESTS: ${test_id}"
             fi
         done
     fi
