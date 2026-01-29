@@ -33,8 +33,8 @@ RUN rm -f /etc/apt/sources.list.d/symfony-stable.list && \
 # The key is from https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/installing-mariadb/binary-packages/gpg#mariadb-community-server-debian-ubuntu-key
 # Search for CHANGE_MARIADB_CLIENT to update related code.
 RUN KEYRING_URL="https://supplychain.mariadb.com/mariadb-keyring-2025.gpg" && \
-    curl -fsSL https://r.mariadb.com/downloads/mariadb_repo_setup | grep -q "${KEYRING_URL}" || \
-        (echo "ERROR: KEYRING_URL does not match mariadb_repo_setup script" >&2 && exit 1) && \
+    SCRIPT=$(curl -fsSL https://r.mariadb.com/downloads/mariadb_repo_setup) && \
+    echo "${SCRIPT}" | grep -q "${KEYRING_URL}" || (echo "ERROR: KEYRING_URL does not match mariadb_repo_setup script" >&2 && exit 1) && \
     KEYRING_FILE="${KEYRING_URL##*/}" && \
     KEYRING_PATH="/usr/share/keyrings/${KEYRING_FILE}" && \
     curl -fsSL -O "${KEYRING_URL}" && \
