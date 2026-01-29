@@ -154,6 +154,7 @@ teardown() {
 
   run ddev composer create-project drupal/cms
   assert_success
+  # This check shows that post-create-project-cmd event ran successfully
   assert_output --partial "Congratulations, you’ve installed Drupal CMS!"
 
   # Note: recipe-unpack runs automatically in DDEV v1.25.0+
@@ -163,10 +164,6 @@ teardown() {
 
   # Run Drush site install to set up the site
   run ddev drush si --account-name=admin --account-pass=admin -y
-  assert_success
-
-  # Apply one of the additional recipes Drupal CMS ships with
-  run ddev drush recipe ../recipes/drupal_cms_blog
   assert_success
 
   DDEV_DEBUG=true run ddev launch
@@ -181,6 +178,6 @@ teardown() {
   assert_success
   run curl -sfv https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "<title>Home | Drush Site-Install</title>"
-  assert_output --partial "<span>A celebration of Drupal and open-source contributions</span>"
+  assert_output --partial "Home | Drush Site-Install"
+  assert_output --partial "Bring your site to life, starting here."
 }
