@@ -135,6 +135,42 @@ In the initial commit for a PR, use the format in  `.github/PULL_REQUEST_TEMPLAT
 - **Automated Testing Overview:** Test coverage explanation
 - **Release/Deployment Notes:** Impact assessment
 
+### Creating Commits with PR Template
+
+When creating the initial commit for a PR, use `git commit -F -` to read from stdin. This preserves markdown formatting including `##` headers:
+
+```bash
+cat <<'EOF' | git commit -F -
+<type>: <description>
+
+## The Issue
+
+- #<issue_number>
+
+[Issue description]
+
+## How This PR Solves The Issue
+
+[Technical explanation]
+
+## Manual Testing Instructions
+
+[Step-by-step testing guide]
+
+## Automated Testing Overview
+
+[Test coverage explanation]
+
+## Release/Deployment Notes
+
+[Impact assessment]
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+EOF
+```
+
+**Important:** Use `-F -` (read from stdin) instead of `-m "$(cat <<'EOF'...)"` to preserve all formatting.
+
 ### Pre-Commit Checklist
 
 1. Run appropriate tests: `go test -v -run TestName ./pkg/...`
