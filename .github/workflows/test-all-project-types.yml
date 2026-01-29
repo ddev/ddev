@@ -18,6 +18,11 @@ on:
         type: boolean
         required: false
         default: false
+      ddev_embargo_tests:
+        description: 'Pipe-separated list of test names to skip (e.g., TestName1|TestName2)'
+        type: string
+        required: false
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -70,4 +75,5 @@ jobs:
     with:
       gotest_short: "" # run tests for all project types
       testargs: ${{ needs.prepare-testargs.outputs.testargs }}
+      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}

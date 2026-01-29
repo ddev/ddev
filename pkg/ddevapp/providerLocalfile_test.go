@@ -19,6 +19,8 @@ import (
 
 // TestLocalfilePull ensures we can pull backups from a flat file for a configured environment.
 func TestLocalfilePull(t *testing.T) {
+	util.SkipIfEmbargoed(t)
+
 	assert := asrt.New(t)
 	var err error
 

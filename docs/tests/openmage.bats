@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "OpenMage git based quickstart with $(ddev --version)" {
-  _skip_test_if_needed "openmage-git"
+  _skip_if_embargoed "openmage-git"
 
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -57,7 +57,7 @@ teardown() {
 }
 
 @test "OpenMage composer based quickstart with $(ddev --version)" {
-  _skip_test_if_needed "openmage-composer"
+  _skip_if_embargoed "openmage-composer"
 
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success

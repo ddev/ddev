@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "WordPress wp-cli based quickstart with $(ddev --version)" {
-  _skip_test_if_needed "wordpress-cli"
+  _skip_if_embargoed "wordpress-cli"
 
   # mkdir my-wp-site && cd my-wp-site
   run mkdir my-wp-site && cd my-wp-site
@@ -45,7 +45,7 @@ teardown() {
 }
 
 @test "WordPress wp-cli based quickstart (different docroot) with $(ddev --version)" {
-  _skip_test_if_needed "wordpress-cli-docroot"
+  _skip_if_embargoed "wordpress-cli-docroot"
 
   # mkdir my-wp-site && cd my-wp-site
   run mkdir my-wp-site && cd my-wp-site
@@ -79,7 +79,7 @@ teardown() {
 }
 
 @test "WordPress Bedrock based quickstart with $(ddev --version)" {
-  _skip_test_if_needed "wordpress-bedrock"
+  _skip_if_embargoed "wordpress-bedrock"
 
   # mkdir my-wp-site && cd my-wp-site
   run mkdir my-wp-site && cd my-wp-site
@@ -120,7 +120,7 @@ teardown() {
 }
 
 @test "WordPress git based quickstart with $(ddev --version)" {
-  _skip_test_if_needed "wordpress-git"
+  _skip_if_embargoed "wordpress-git"
 
   # PROJECT_GIT_URL=https://github.com/ddev/test-wordpress.git
   PROJECT_GIT_URL=https://github.com/ddev/test-wordpress.git

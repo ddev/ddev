@@ -18,6 +18,11 @@ on:
         type: boolean
         required: false
         default: false
+      ddev_embargo_tests:
+        description: 'Pipe-separated list of test names to skip (e.g., TestName1|TestName2)'
+        type: string
+        required: false
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -33,4 +38,5 @@ jobs:
     with:
       ddev_test_docker_rootless: "true"
       ddev_test_no_bind_mounts: "true"
+      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}

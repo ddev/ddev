@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,6 +36,8 @@ const acquiaSiteExpectation = "Super easy vegetarian pasta"
 
 // TestAcquiaPull ensures we can pull backups from Acquia
 func TestAcquiaPull(t *testing.T) {
+	util.SkipIfEmbargoed(t)
+
 	acquiaKey := ""
 	acquiaSecret := ""
 	sshkey := ""
@@ -126,6 +129,8 @@ func TestAcquiaPull(t *testing.T) {
 
 // TestAcquiaPush ensures we can push to acquia for a configured environment.
 func TestAcquiaPush(t *testing.T) {
+	util.SkipIfEmbargoed(t)
+
 	acquiaKey := ""
 	acquiaSecret := ""
 	sshkey := ""

@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "CiviCRM quickstart with $(ddev --version)" {
-  _skip_test_if_needed "civicrm-standalone"
+  _skip_if_embargoed "civicrm-standalone"
 
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success

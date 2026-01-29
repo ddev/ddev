@@ -73,6 +73,11 @@ on:
         required: false
         type: string
         default: 'true'
+      ddev_embargo_tests:
+        description: 'DDEV_EMBARGO_TESTS value - pipe-separated list of test names to skip (e.g., TestName1|TestName2)'
+        required: false
+        type: string
+        default: ''
       debug_enabled:
         description: 'Run the build with tmate set "debug_enabled"'
         required: false
@@ -120,6 +125,7 @@ jobs:
       CGO_ENABLED: ${{ inputs.cgo_enabled }}
       DDEV_NONINTERACTIVE: "true"
       DDEV_SKIP_NODEJS_TEST: ${{ inputs.ddev_skip_nodejs_test }}
+      DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests }}
       GOTEST_SHORT: ${{ inputs.gotest_short }}
       MAKE_TARGET: ${{ inputs.make_target }}
       TESTARGS: ${{ inputs.testargs }}
@@ -206,6 +212,7 @@ jobs:
           echo "CGO_ENABLED=${CGO_ENABLED}"
           echo "GOTEST_SHORT=${GOTEST_SHORT}"
           echo "DDEV_SKIP_NODEJS_TEST=${DDEV_SKIP_NODEJS_TEST}"
+          echo "DDEV_EMBARGO_TESTS=${DDEV_EMBARGO_TESTS}"
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
           echo "DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE}"
           echo "DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"

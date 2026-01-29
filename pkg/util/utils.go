@@ -569,3 +569,56 @@ func FormatBytes(bytes int64) string {
 	units := []string{"KB", "MB", "GB", "TB", "PB"}
 	return fmt.Sprintf("%.1f%s", float64(bytes)/float64(div), units[exp])
 }
+
+// IsTestEmbargoed checks if a test name is in the DDEV_EMBARGO_TESTS environment variable.
+// DDEV_EMBARGO_TESTS should contain a pipe-separated list of test names to skip.
+// Returns true if the test should be skipped, false otherwise.
+//
+// This function is typically used via SkipIfEmbargoed(t) rather than called directly.
+// See SkipIfEmbargoed for usage examples.
+func IsTestEmbargoed(testName string) bool {
+	embargoList := os.Getenv("DDEV_EMBARGO_TESTS")
+	if embargoList == "" {
+		return false
+	}
+
+	tests := strings.Split(embargoList, "|")
+	for _, t := range tests {
+		if strings.TrimSpace(t) == testName {
+			return true
+		}
+	}
+	return false
+}
+
+// SkipIfEmbargoed skips the current test if it's listed in DDEV_EMBARGO_TESTS.
+// This should be called at the beginning of tests that may need to be temporarily disabled.
+//
+// The DDEV_EMBARGO_TESTS environment variable should contain a pipe-separated list
+// of test names to skip. Whitespace around test names is automatically trimmed.
+//
+// Usage in tests:
+//
+//	func TestSomething(t *testing.T) {
+//	    util.SkipIfEmbargoed(t)
+//	    // rest of test code
+//	}
+//
+// Running tests with embargoed tests:
+//
+//	# Skip a single test
+//	DDEV_EMBARGO_TESTS="TestLagoonPull" go test ./pkg/ddevapp
+//
+//	# Skip multiple tests
+//	DDEV_EMBARGO_TESTS="TestLagoonPull|TestAcquiaPull|TestPantheonPush" go test ./pkg/ddevapp
+//
+//	# Spaces are allowed and trimmed automatically
+//	DDEV_EMBARGO_TESTS="TestLagoonPull| TestAcquiaPull" make testpkg
+func SkipIfEmbargoed(t interface {
+	Name() string
+	Skipf(format string, args ...interface{})
+}) {
+	if IsTestEmbargoed(t.Name()) {
+		t.Skipf("Skipping %s because embargoed by DDEV_EMBARGO_TESTS=%s", t.Name(), os.Getenv("DDEV_EMBARGO_TESTS"))
+	}
+}

@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "CakePHP Composer quickstart with $(ddev --version)" {
-  _skip_test_if_needed "cakephp-composer"
+  _skip_if_embargoed "cakephp-composer"
 
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}

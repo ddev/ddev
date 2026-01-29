@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "Symfony Composer quickstart with $(ddev --version)" {
-  _skip_test_if_needed "symfony-composer"
+  _skip_if_embargoed "symfony-composer"
 
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -46,7 +46,7 @@ teardown() {
 }
 
 @test "Symfony CLI quickstart with $(ddev --version)" {
-  _skip_test_if_needed "symfony-cli"
+  _skip_if_embargoed "symfony-cli"
 
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success

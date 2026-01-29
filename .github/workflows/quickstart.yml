@@ -23,6 +23,11 @@ on:
         type: boolean
         required: false
         default: false
+      ddev_embargo_tests:
+        description: 'Pipe-separated list of test names to skip (e.g., symfony-composer|symfony-cli)'
+        type: string
+        required: false
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,8 +36,8 @@ concurrency:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   # Add tests you want to skip here, delimited by commas
-  # Search for _skip_test_if_needed to see how this is used
-  DDEV_SKIP_QUICKSTART_TEST: ${{ vars.DDEV_SKIP_QUICKSTART_TEST || '' }}
+  # Search for _skip_if_embargoed to see how this is used
+  DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
 
 permissions:
   actions: write

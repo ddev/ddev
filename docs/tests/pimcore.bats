@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "Pimcore Composer quickstart with $(ddev --version)" {
-  _skip_test_if_needed "pimcore-composer"
+  _skip_if_embargoed "pimcore-composer"
 
   skip "Pimcore requires a license key"
 

@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "Statamic Composer quickstart with $(ddev --version)" {
-  _skip_test_if_needed "statamic-composer"
+  _skip_if_embargoed "statamic-composer"
 
   # mkdir ${PROJNAME} && cd ${PROJNAME}
   run mkdir ${PROJNAME} && cd ${PROJNAME}
@@ -62,7 +62,7 @@ teardown() {
 
 
 @test "Statamic Git Clone quickstart with $(ddev --version)" {
-  _skip_test_if_needed "statamic-git"
+  _skip_if_embargoed "statamic-git"
 
   skip "Does not have a test yet"
 }

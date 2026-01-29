@@ -162,5 +162,5 @@ files_push_command:
     if [ -n "${PANTHEON_ENVIRONMENT:-}" ] && [ -z "${DDEV_PANTHEON_ENVIRONMENT:-}" ]; then
       DDEV_PANTHEON_ENVIRONMENT="${PANTHEON_ENVIRONMENT}"
     fi
-    terminus self:plugin:install terminus-rsync-plugin
+    COMPOSER_NO_SECURITY_BLOCKING=1 terminus self:plugin:install terminus-rsync-plugin
     terminus rsync -y ${DDEV_FILES_DIR}/ ${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}:files

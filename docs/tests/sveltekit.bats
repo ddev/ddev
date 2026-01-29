@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "sveltekit quickstart with $(ddev --version)" {
-  _skip_test_if_needed "sveltekit-demo"
+  _skip_if_embargoed "sveltekit-demo"
 
   SVELTEKIT_SITENAME=${PROJNAME}
   run mkdir ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}

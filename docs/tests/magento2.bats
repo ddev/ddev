@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "Magento 2 quickstart with $(ddev --version)" {
-  _skip_test_if_needed "magento2-composer"
+  _skip_if_embargoed "magento2-composer"
 
   if [ "${MAGENTO2_PUBLIC_ACCESS_KEY}" = "" ]; then
     skip "MAGENTO2_PUBLIC_ACCESS_KEY not provided (forked PR)"

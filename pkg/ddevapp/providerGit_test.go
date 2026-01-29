@@ -10,12 +10,15 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestGitPull ensures we can pull backups from a Git repository
 func TestGitPull(t *testing.T) {
+	util.SkipIfEmbargoed(t)
+
 	assert := asrt.New(t)
 	var err error
 

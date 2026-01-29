@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "Silverstripe CMS Composer quickstart with $(ddev --version)" {
-  _skip_test_if_needed "silverstripe-composer"
+  _skip_if_embargoed "silverstripe-composer"
 
   run mkdir ${PROJNAME} && cd ${PROJNAME}
   assert_success
@@ -48,7 +48,7 @@ teardown() {
 }
 
 @test "Silverstripe CMS Git Clone  quickstart with $(ddev --version)" {
-  _skip_test_if_needed "silverstripe-git"
+  _skip_if_embargoed "silverstripe-git"
 
   skip "Does not have a test yet"
 }
