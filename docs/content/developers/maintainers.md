@@ -161,19 +161,18 @@ Include these keywords in your commit message or pull request title to skip CI r
 
 For maintainers with access to [repository variables](https://github.com/ddev/ddev/settings/variables/actions), you can skip specific tests globally. Note: This does not work for pull requests from forks.
 
-**Skip specific quickstart tests:**
+Use pipe-separated test names (`|`) to skip multiple tests:
 
 ```bash
-DDEV_EMBARGO_QUICKSTART_TESTS="symfony-composer|symfony-cli|drupal10-composer"
-```
+# Skip quickstart tests
+DDEV_EMBARGO_TESTS="symfony-composer|symfony-cli|drupal10-composer"
 
-**Skip specific Go tests (e.g., provider tests):**
-
-```bash
+# Skip Go tests (e.g., provider tests)
 DDEV_EMBARGO_TESTS="TestLagoonPull|TestAcquiaPull|TestPantheonPush"
-```
 
-Both variables use pipe-separated test names (`|`) to specify multiple tests to skip.
+# Or combine both
+DDEV_EMBARGO_TESTS="symfony-composer|TestLagoonPull|TestAcquiaPull"
+```
 
 ### Skipping Tests via Workflow Dispatch
 
