@@ -18,6 +18,11 @@ on:
         type: boolean
         required: false
         default: false
+      ddev_embargo_tests:
+        description: 'Comma-separated list of test names to skip'
+        type: string
+        required: false
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -34,6 +39,7 @@ jobs:
       make_target: "testpkg"
       testargs: "-failfast -run ^Test[A-G]"
       ddev_test_podman_rootless: "true"
+      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   podman-rootless-testpkg-2:
@@ -43,6 +49,7 @@ jobs:
       make_target: "testpkg"
       testargs: "-failfast -run ^Test[H-Z]"
       ddev_test_podman_rootless: "true"
+      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   podman-rootless-testcmd:
@@ -51,4 +58,5 @@ jobs:
     with:
       make_target: "testcmd"
       ddev_test_podman_rootless: "true"
+      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
