@@ -40,5 +40,5 @@ jobs:
       buildargs: "-race"
       testargs: "-failfast -race"
       ddev_test_use_mutagen: "true"
-      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || '' }}
+      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}

@@ -37,5 +37,5 @@ jobs:
     secrets: inherit
     with:
       ddev_test_no_bind_mounts: "true"
-      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || '' }}
+      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}

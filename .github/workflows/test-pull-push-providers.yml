@@ -39,5 +39,5 @@ jobs:
     with:
       pull_push_providers: "true"
       testargs: "-failfast -run 'Test.*(Push|Pull)'"
-      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || '' }}
+      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
