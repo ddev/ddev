@@ -12,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,6 +39,8 @@ const pantheonPushGitURL = "ssh://codeserver.dev.d32c631e-c998-480f-93bc-7c36e6a
 
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
+	util.SkipIfEmbargoed(t)
+
 	token := ""
 	if token = os.Getenv("DDEV_PANTHEON_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
@@ -121,6 +124,8 @@ func TestPantheonPull(t *testing.T) {
 
 // TestPantheonPush ensures we can push to pantheon for a configured environment.
 func TestPantheonPush(t *testing.T) {
+	util.SkipIfEmbargoed(t)
+
 	token := ""
 	sshkey := ""
 	if token = os.Getenv("DDEV_PANTHEON_API_TOKEN"); token == "" {

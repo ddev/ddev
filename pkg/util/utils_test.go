@@ -465,3 +465,78 @@ func TestExtractCurlBody(t *testing.T) {
 	require.True(t, strings.HasPrefix(strings.TrimSpace(body), "{"),
 		"extracted body should be valid JSON, got: %s", body)
 }
+
+// TestIsTestEmbargoed tests the IsTestEmbargoed function
+func TestIsTestEmbargoed(t *testing.T) {
+	tests := []struct {
+		name        string
+		embargoList string
+		testName    string
+		shouldSkip  bool
+	}{
+		{
+			name:        "Empty embargo list",
+			embargoList: "",
+			testName:    "TestSomething",
+			shouldSkip:  false,
+		},
+		{
+			name:        "Test in embargo list",
+			embargoList: "TestLagoonPull,TestAcquiaPull",
+			testName:    "TestLagoonPull",
+			shouldSkip:  true,
+		},
+		{
+			name:        "Test not in embargo list",
+			embargoList: "TestLagoonPull,TestAcquiaPull",
+			testName:    "TestSomethingElse",
+			shouldSkip:  false,
+		},
+		{
+			name:        "Test with spaces in embargo list",
+			embargoList: "TestLagoonPull, TestAcquiaPull, TestPantheonPull",
+			testName:    "TestAcquiaPull",
+			shouldSkip:  true,
+		},
+		{
+			name:        "Single test in embargo list",
+			embargoList: "TestLagoonPull",
+			testName:    "TestLagoonPull",
+			shouldSkip:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set the environment variable
+			t.Setenv("DDEV_EMBARGO_TESTS", tt.embargoList)
+
+			// Test the function
+			result := util.IsTestEmbargoed(tt.testName)
+			require.Equal(t, tt.shouldSkip, result,
+				"IsTestEmbargoed(%s) with DDEV_EMBARGO_TESTS=%s should return %v, got %v",
+				tt.testName, tt.embargoList, tt.shouldSkip, result)
+		})
+	}
+}
+
+// TestSkipIfEmbargoed tests the SkipIfEmbargoed helper function
+func TestSkipIfEmbargoed(t *testing.T) {
+	// Test that it doesn't skip when not embargoed
+	t.Run("Does not skip when not embargoed", func(t *testing.T) {
+		t.Setenv("DDEV_EMBARGO_TESTS", "SomeOtherTest")
+
+		ranToCompletion := false
+		util.SkipIfEmbargoed(t)
+		ranToCompletion = true
+		require.True(t, ranToCompletion, "Test should have run to completion")
+	})
+
+	// Test that it skips when embargoed
+	// Note: We can't easily test the skip behavior directly because t.Skip() exits the test
+	// But we can verify the function exists and works with IsTestEmbargoed
+	t.Run("Verifies embargo check logic", func(t *testing.T) {
+		t.Setenv("DDEV_EMBARGO_TESTS", "TestSkipIfEmbargoed")
+		require.True(t, util.IsTestEmbargoed("TestSkipIfEmbargoed"), "Should detect embargoed test")
+	})
+}

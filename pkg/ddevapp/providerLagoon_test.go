@@ -13,6 +13,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -43,6 +44,8 @@ func lagoonSetupSSHKey(t *testing.T) string {
 
 // TestLagoonPull ensures we can pull from lagoon
 func TestLagoonPull(t *testing.T) {
+	util.SkipIfEmbargoed(t)
+
 	var err error
 
 	sshKey := lagoonSetupSSHKey(t)
@@ -115,6 +118,8 @@ func TestLagoonPull(t *testing.T) {
 
 // TestLagoonPush ensures we can push to lagoon for a configured environment.
 func TestLagoonPush(t *testing.T) {
+	util.SkipIfEmbargoed(t)
+
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
