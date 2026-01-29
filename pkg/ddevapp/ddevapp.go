@@ -2124,12 +2124,26 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 		}
 	}
 
-	// Using `profiles` here assumes that profile and container name are the same
-	wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", profiles))
-	err = app.Wait(profiles)
-	wait.Complete(err)
-	if err != nil {
-		return err
+	// Get the actual service names from the profiles
+	var serviceNames []string
+	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+		for serviceName, service := range app.ComposeYaml.Services {
+			for _, profile := range profiles {
+				if slices.Contains(service.Profiles, profile) {
+					serviceNames = append(serviceNames, serviceName)
+					break
+				}
+			}
+		}
+	}
+
+	if len(serviceNames) > 0 {
+		wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", serviceNames))
+		err = app.Wait(serviceNames)
+		wait.Complete(err)
+		if err != nil {
+			return err
+		}
 	}
 	util.Success("Started optional compose profiles '%s'", strings.Join(profiles, ","))
 

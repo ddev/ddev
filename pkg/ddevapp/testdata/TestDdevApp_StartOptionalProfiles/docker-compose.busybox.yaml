@@ -3,7 +3,7 @@ services:
     image: busybox:stable
     command: tail -f /dev/null
     profiles:
-      - busybox1
+      - busybox-first
     container_name: ddev-${DDEV_SITENAME}-busybox1
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
@@ -12,7 +12,7 @@ services:
     image: busybox:stable
     command: tail -f /dev/null
     profiles:
-      - busybox2
+      - busybox-second
     container_name: ddev-${DDEV_SITENAME}-busybox2
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
