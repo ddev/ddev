@@ -6,6 +6,40 @@ search:
 
 This version history has been driven by what we hear from our wonderful community of users. Please share your comments or ideas in the [issue queue](https://github.com/ddev/ddev/issues). We listen. Or talk to us in any of the [support locations](https://docs.ddev.com/en/stable/#support).
 
+## v1.25 (Released 2025-02)
+
+- [x] Debian Trixie base image for `ddev-webserver` and `ddev-ssh-agent`
+- [x] PHP 8.4 is default for new projects (PHP 8.5 support added)
+- [x] Node.js 24 is default for new projects
+- [x] MariaDB 11.8 is default for new projects
+- [x] XHGui is now the default profiler
+- [x] Completely revised Windows installer with per-user installation (no admin required)
+- [x] ARM64 Windows installer support
+- [x] Configurable `ddev share` command with new cloudflared provider
+- [x] `ddev utility xdebug-diagnose` and `ddev utility mutagen-diagnose` commands
+- [x] `ddev snapshot` now uses zstd compression for faster exports/restores
+- [x] `ddev npx` command support
+- [x] `ddev describe` works on stopped projects
+- [x] User flag (`-u`) for `ddev exec` and `ddev ssh`
+- [x] MySQL 8.4 and PostgreSQL 18 support
+- [x] `codeigniter` and `drupal12` project types
+- [x] Generic web server type for Node.js projects
+- [x] Experimental Podman and Docker Rootless support
+- [x] Parallel Docker image pulls for faster startup
+- [x] Docker Compose profiles for selective service launching
+- [x] Refactored Docker API code eliminating binary calls and YAML fragility
+- [x] Add-on Registry launched with 181+ add-ons
+- [x] Official add-ons: `ddev-frankenphp`, `ddev-redis-insight`, `ddev-upsun`, and `ddev-nmv`
+- [x] Automatic downloading of add-on dependencies
+- [x] `x-ddev` extension allows add-ons to enhance `ddev describe` output
+- [x] PHP-based add-ons support
+- [x] Automatic HTTP/S communication between DDEV projects
+- [x] Improved WSL2 "Mirrored" Networking support
+- [x] Enhanced Pantheon provider integration
+- [x] Enhanced Upsun provider integration
+- [x] NFS support removed (use Mutagen instead)
+- [x] `ddev service` and `ddev nvm` commands removed
+
 ## v1.24 (Released 2024-12)
 
 - [x] Added PHP 8.4. PHP 8.3 is default for new projects
