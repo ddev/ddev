@@ -124,6 +124,12 @@ ddev stop --remove-data`,
 			util.Success("Project %s has been stopped.", project.GetName())
 		}
 
+		// Clear the router healthcheck to ensure status reflects current state
+		err = ddevapp.ClearRouterHealthcheck()
+		if err != nil {
+			util.Warning("Failed to clear router healthcheck: %v", err)
+		}
+
 		if stopSSHAgent {
 			if err := ddevapp.RemoveSSHAgentContainer(); err != nil {
 				util.Error("Failed to remove ddev-ssh-agent: %v", err)
