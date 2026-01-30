@@ -803,6 +803,9 @@ func TestPortsMatch(t *testing.T) {
 // The router should only be recreated when NEW ports are needed, not when it has
 // extra ports from other projects.
 func TestRouterNotRebuiltWithExtraPorts(t *testing.T) {
+	if dockerutil.IsRancherDesktop() {
+		t.Skip("Rancher Desktop starts extra project with ephemeral ports, not default ones, causing test instability")
+	}
 	// Start clean
 	ddevapp.PowerOff()
 
