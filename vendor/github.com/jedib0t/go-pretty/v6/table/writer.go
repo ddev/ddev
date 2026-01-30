@@ -11,7 +11,6 @@ type Writer interface {
 	AppendRow(row Row, configs ...RowConfig)
 	AppendRows(rows []Row, configs ...RowConfig)
 	AppendSeparator()
-	FilterBy(filterBy []FilterBy)
 	ImportGrid(grid interface{}) bool
 	Length() int
 	Pager(opts ...PagerOption) Pager
