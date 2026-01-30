@@ -106,11 +106,9 @@ generate_warning_message() {
     local actual="$2"
     local errors="$3"
 
-    if [ "$expected" -eq 0 ]; then
-        echo "WARNING: No config files found or no routers expected"
-    elif [ "$errors" -gt 0 ]; then
+    if [ "$errors" -gt 0 ]; then
         echo "WARNING: Detected ${errors} configuration error(s)"
-    elif [ "$actual" -ne "$expected" ]; then
+    elif [ "$expected" -gt 0 ] && [ "$actual" -ne "$expected" ]; then
         echo "WARNING: Router count mismatch: ${actual} loaded, ${expected} expected"
     else
         echo "WARNING: Unknown issue detected"
@@ -161,12 +159,13 @@ file_router_count=$ROUTER_COUNT
 error_count=$ERROR_COUNT
 
 # Check if configuration is healthy:
-# 1. Expected routers > 0 (config files found)
-# 2. Actual router count matches expected count
-# 3. No config errors
-if [ "$expected_router_count" -gt 0 ] && \
-   [ "$file_router_count" -eq "$expected_router_count" ] && \
-   [ "$error_count" -eq 0 ]; then
+# 1. No config errors
+# 2. Either:
+#    a. No config files expected (all projects stopped) OR
+#    b. Expected routers > 0 AND actual router count matches expected count
+if [ "$error_count" -eq 0 ] && \
+   { [ "$expected_router_count" -eq 0 ] || \
+     { [ "$expected_router_count" -gt 0 ] && [ "$file_router_count" -eq "$expected_router_count" ]; }; }; then
     clear_warnings
     mark_healthy "${check}"
 fi

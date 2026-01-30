@@ -149,17 +149,9 @@ func StartDdevRouter() error {
 		}
 
 		// Force the healthcheck to run and wait for Traefik to load the new config.
-		// Remove /tmp/healthy so the healthcheck doesn't sleep for 59 seconds,
-		// then run the healthcheck which waits for routers to load.
-		router, err = FindDdevRouter()
+		err = ClearRouterHealthcheck()
 		if err != nil {
-			return fmt.Errorf("failed to find router for healthcheck: %v", err)
-		}
-		util.Debug("Forcing router healthcheck to verify new config is loaded")
-		uid, _, _ := dockerutil.GetContainerUser()
-		_, _, err = dockerutil.Exec(router.ID, "rm -f /tmp/healthy ddev-traefik-errors.txt && /healthcheck.sh", uid)
-		if err != nil {
-			return fmt.Errorf("router healthcheck failed: %v", err)
+			return err
 		}
 	}
 
@@ -363,6 +355,25 @@ func GetRouterConfigErrors() string {
 
 	traefikErr, _, _ := dockerutil.Exec(router.ID, "cat /tmp/ddev-traefik-errors.txt 2>/dev/null || true", "0")
 	return strings.TrimSpace(traefikErr)
+}
+
+// ClearRouterHealthcheck forces the router healthcheck to run immediately by
+// removing the healthy marker and error file, then executing the healthcheck.
+// This ensures the router status reflects the current configuration state.
+func ClearRouterHealthcheck() error {
+	router, err := FindDdevRouter()
+	if err != nil || router == nil {
+		// Router not found or error - nothing to clear
+		return nil
+	}
+
+	util.Debug("Forcing router healthcheck to clear status")
+	uid, _, _ := dockerutil.GetContainerUser()
+	_, _, err = dockerutil.Exec(router.ID, "rm -f /tmp/healthy /tmp/ddev-traefik-errors.txt && /healthcheck.sh", uid)
+	if err != nil {
+		return fmt.Errorf("router healthcheck failed: %v", err)
+	}
+	return nil
 }
 
 // determineRouterHostnames returns a list of all hostnames for all active projects
