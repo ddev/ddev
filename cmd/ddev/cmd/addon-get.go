@@ -12,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
@@ -297,7 +298,7 @@ ddev add-on get /path/to/tarball.tar.gz
 		if argType == "github" {
 			util.Success("Please read instructions for this add-on at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
-		util.Success("Installed %[1]s:%[2]s from %[3]s\nUse `ddev restart` to enable %[1]s:%[2]s.", manifest.Name, manifest.Version, manifest.Repository)
+		output.UserOut.WithField("raw", manifest).Printf("Installed %[1]s:%[2]s from %[3]s\nUse `ddev restart` to enable %[1]s:%[2]s", manifest.Name, manifest.Version, manifest.Repository)
 	},
 }
 
