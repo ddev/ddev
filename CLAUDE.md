@@ -145,7 +145,7 @@ cat <<'EOF' | git commit -F -
 
 ## The Issue
 
-- #<issue_number>
+- Fixes #<issue_number>
 
 [Issue description]
 

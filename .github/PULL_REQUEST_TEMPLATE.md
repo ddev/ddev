@@ -5,13 +5,17 @@
 
 ## The Issue
 
-- #<issue number>
+- Fixes #REPLACE_ME_WITH_RELATED_ISSUE_NUMBER
 
 <!-- Provide a brief description of the issue. -->
 
 ## How This PR Solves The Issue
 
+<!-- Describe the key change(s) in this PR that address the issue above. -->
+
 ## Manual Testing Instructions
+
+<!-- If this PR changes logic, consider adding additional steps or context to the instructions below. -->
 
 ## Automated Testing Overview
 
