@@ -298,7 +298,11 @@ ddev add-on get /path/to/tarball.tar.gz
 		if argType == "github" {
 			util.Success("Please read instructions for this add-on at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
-		output.UserOut.WithField("raw", manifest).Printf("Installed %[1]s:%[2]s from %[3]s\nUse `ddev restart` to enable %[1]s:%[2]s", manifest.Name, manifest.Version, manifest.Repository)
+		addonID := manifest.Name
+		if manifest.Version != "" {
+			addonID = fmt.Sprintf("%s:%s", manifest.Name, manifest.Version)
+		}
+		output.UserOut.WithField("raw", manifest).Printf("Installed %[1]s from %[2]s\nUse `ddev restart` to enable %[1]s", addonID, manifest.Repository)
 	},
 }
 
