@@ -476,8 +476,9 @@
       "type": "string"
     },
     "share_default_provider": {
-      "description": "Default share provider for the project (ngrok, cloudflared, or custom). Overrides global configuration.",
-      "type": "string"
+      "description": "Default share provider for the project. Overrides global configuration.",
+      "type": "string",
+      "examples": ["ngrok", "cloudflared"]
     },
     "share_provider_args": {
       "description": "Arguments to pass to the share provider when starting a share session.",

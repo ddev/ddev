@@ -39,7 +39,7 @@
       "type": "string"
     },
     "letsencrypt_email": {
-      "description": "Email associated with Let's Encrypt feature. (Works in conjunction with use_letsencrypt.) (Not currently compatible with Traefik router.)",
+      "description": "Email associated with Let's Encrypt feature. (Works in conjunction with use_letsencrypt.)",
       "type": "string"
     },
     "mailpit_http_port": {
@@ -116,8 +116,9 @@
       "type": "string"
     },
     "share_default_provider": {
-      "description": "Default share provider for all projects (ngrok, cloudflared, or custom), can be overridden in project config.",
-      "type": "string"
+      "description": "Default share provider for all projects, can be overridden in project config.",
+      "type": "string",
+      "examples": ["ngrok", "cloudflared"]
     },
     "simple_formatting": {
       "description": "Whether to disable most \"ddev list\" and \"ddev describe\" table formatting.",
