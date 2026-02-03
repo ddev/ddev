@@ -20,8 +20,8 @@ clear_warnings() {
     fi
 }
 
-# Get count of routers loaded via file provider from Traefik API
-get_file_router_count() {
+# Get count of routers from Traefik API (all are from file provider)
+get_traefiks_router_count() {
     curl -sf "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers?per_page=10000" 2>/dev/null \
         | jq '[.[] | select(.provider == "file")] | length' 2>/dev/null || echo 0
 }
@@ -33,6 +33,7 @@ get_error_count() {
 }
 
 # Calculate expected router count by parsing config files
+# that we've given to traefik
 get_expected_router_count() {
     local count=0
     if [ -d "${config_dir}" ]; then
@@ -80,7 +81,7 @@ wait_for_routers() {
     if [ "$expected_router_count" -gt 0 ] && [ "$error_count" -eq 0 ] && [ "$file_router_count" -ne "$expected_router_count" ]; then
         for _ in $(seq 1 $max_retries); do
             sleep 1
-            file_router_count=$(get_file_router_count)
+            file_router_count=$(get_traefiks_router_count)
             error_count=$(get_error_count)
 
             # Success: counts match and still no errors.
@@ -101,15 +102,19 @@ wait_for_routers() {
 }
 
 # Generate appropriate warning message based on state
+# Pass to it
+# $1=expected_router_count
+# $2=actual_router_count
+# #3=error count
 generate_warning_message() {
-    local expected="$1"
-    local actual="$2"
+    local expected_router_count="$1"
+    local actual_router_count="$2"
     local errors="$3"
 
     if [ "$errors" -gt 0 ]; then
         echo "WARNING: Detected ${errors} configuration error(s)"
-    elif [ "$expected" -gt 0 ] && [ "$actual" -ne "$expected" ]; then
-        echo "WARNING: Router count mismatch: ${actual} loaded, ${expected} expected"
+    elif [ "${expected_router_count}" -gt 0 ] && [ "${actual_router_count}" -ne "${expected_router_count}" ]; then
+        echo "WARNING: Router count mismatch: ${actual_router_count} loaded, ${expected_router_count} expected"
     else
         echo "WARNING: Unknown issue detected"
     fi
@@ -150,7 +155,7 @@ fi
 
 # Get expected and actual router counts
 expected_router_count=$(get_expected_router_count)
-file_router_count=$(get_file_router_count)
+file_router_count=$(get_traefiks_router_count)
 error_count=$(get_error_count)
 
 # Wait for traefik to finish loading if needed (avoids false warnings during startup)
