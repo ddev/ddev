@@ -71,7 +71,7 @@ if [ "$type" = "postgres" ]; then
       done
       # Select latest one if no matching version was found and there are any libraries
       if [ -z "${library}" ] && [ ${#libfiles[@]} -gt 0 ]; then
-        library="${libfiles[-1]}"
+        library="${libfiles[-1]##*/}"
       fi
     else
       # For Linux, check if libpq is installed
