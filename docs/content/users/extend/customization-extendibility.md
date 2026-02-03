@@ -101,7 +101,7 @@ ddev config global --web-environment-add="MY_ENV_VAR=someval"
 
 You can use the `--web-environment` flag to overwrite existing values rather than adding them.
 
-To apply changes in the environment variables, you have to restart the whole project or individual containers.
+To apply changes in the environment variables, do a `ddev restart`.
 
 !!!warning "Don’t check in sensitive values!"
     Sensitive variables like API keys should not be checked in with your project. You might use an `.env` file and _not_ check that in, but offer a `.env.example` with expected keys that don’t have values. Some use global configuration for sensitive values, as that’s not normally checked in either. (If you provide a `.env.example` it can be checked in, overriding the `.ddev/.gitignore`, with `git add -f .ddev/.env.example`.)
