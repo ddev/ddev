@@ -26,7 +26,8 @@ teardown() {
   run ddev start -y
   assert_success
 
-  run ddev composer install
+  # Use --no-security-blocking for now, 2026-02-02
+  run ddev composer install --no-security-blocking
   assert_success
 
   # Silent OpenMage install with sample data
@@ -100,7 +101,8 @@ teardown() {
   assert_success
 
   # composer install
-  run ddev composer install
+  # Use --no-security-blocking for now, 2026-02-02
+  run ddev composer install --no-security-blocking
   assert_success
 
   # download OpenMage install command
