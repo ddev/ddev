@@ -142,7 +142,22 @@
     },
     "composer_version": {
       "description": "Composer version for the web container and the ddev composer command.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "2",
+            "2.2",
+            "stable",
+            "preview",
+            "snapshot"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "corepack_enable": {
       "description": "Whether to run \"corepack enable\" on Node.js configuration.",
@@ -268,6 +283,24 @@
       "type": [
         "integer",
         "string"
+      ],
+      "anyOf": [
+        {
+          "type": [
+            "integer",
+            "string"
+          ],
+          "enum": [
+            120,
+            "120"
+          ]
+        },
+        {
+          "type": [
+            "integer",
+            "string"
+          ]
+        }
       ]
     },
     "disable_settings_management": {
@@ -398,11 +431,33 @@
     },
     "mailpit_http_port": {
       "description": "Router port to be used for Mailpit HTTP access.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "8025"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "mailpit_https_port": {
       "description": "Router port to be used for Mailpit HTTPS access.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "8026"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "name": {
       "description": "Provide the name of the project to configure (normally the same as the last part of directory name).",
@@ -418,7 +473,33 @@
     },
     "nodejs_version": {
       "description": "Node.js version for the web container's \"system\" version.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "6",
+            "8",
+            "10",
+            "12",
+            "14",
+            "16",
+            "18",
+            "20",
+            "22",
+            "24",
+            "auto",
+            "lts",
+            "latest",
+            "current",
+            "engine",
+            "nightly"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "omit_containers": {
       "description": "A list of container types that should not be started when the project is started.",
@@ -465,19 +546,64 @@
     },
     "project_tld": {
       "description": "Set the top-level domain to be used for projects, defaults to ddev.site (default \"ddev.site\").",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ddev.site"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "router_http_port": {
       "description": "Router HTTP port for this project.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "80"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "router_https_port": {
       "description": "Router HTTPS port for this project.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "443"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "share_default_provider": {
-      "description": "Default share provider for the project (ngrok, cloudflared, or custom). Overrides global configuration.",
-      "type": "string"
+      "description": "Default share provider for the project. Overrides global configuration.",
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ngrok",
+            "cloudflared"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "share_provider_args": {
       "description": "Arguments to pass to the share provider when starting a share session.",
@@ -520,7 +646,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "uniqueItems": true
     },
     "use_dns_when_possible": {
       "description": "Use DNS for hostname resolution instead of /etc/hosts when possible.",
@@ -531,7 +658,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "uniqueItems": true
     },
     "web_extra_daemons": {
       "description": "Additional daemons that should automatically be started in the web container.",
@@ -583,7 +711,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "uniqueItems": true
     },
     "webserver_type": {
       "description": "Set the project's desired webserver type.",
@@ -614,11 +743,33 @@
     },
     "xhgui_http_port": {
       "description": "Router port to be used for XHGui HTTP access.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "8143"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "xhgui_https_port": {
       "description": "Router port to be used for XHGui HTTPS access.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "8142"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "xhprof_mode": {
       "description": "Define the XHProf usage mode used by the project.",

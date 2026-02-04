@@ -39,16 +39,38 @@
       "type": "string"
     },
     "letsencrypt_email": {
-      "description": "Email associated with Let's Encrypt feature. (Works in conjunction with use_letsencrypt.) (Not currently compatible with Traefik router.)",
+      "description": "Email associated with Let's Encrypt feature. (Works in conjunction with use_letsencrypt.)",
       "type": "string"
     },
     "mailpit_http_port": {
       "description": "Router port used for Mailpit HTTP, can be overridden in project config.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "8025"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "mailpit_https_port": {
       "description": "Router port used for Mailpit HTTPS, can be overridden in project config.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "8026"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "messages": {
       "description": "Configure messages like the Tip of the Day.",
@@ -97,7 +119,18 @@
     },
     "project_tld": {
       "description": "Set the top-level domain to be used for projects, defaults to \"ddev.site\".",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ddev.site"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "required_docker_compose_version": {
       "description": "Specific docker-compose version for download.",
@@ -109,15 +142,49 @@
     },
     "router_http_port": {
       "description": "Router HTTP port for all projects, can be overridden in project config.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "80"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "router_https_port": {
       "description": "Router HTTPS port for all projects, can be overridden in project config.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "443"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "share_default_provider": {
-      "description": "Default share provider for all projects (ngrok, cloudflared, or custom), can be overridden in project config.",
-      "type": "string"
+      "description": "Default share provider for all projects, can be overridden in project config.",
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ngrok",
+            "cloudflared"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "simple_formatting": {
       "description": "Whether to disable most \"ddev list\" and \"ddev describe\" table formatting.",
@@ -134,7 +201,18 @@
     },
     "traefik_monitor_port": {
       "description": "Specify an alternate port for the Traefik (ddev-router) monitor port. This defaults to 10999 and rarely needs to be changed, but can be changed in cases of port conflicts.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "10999"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "use_docker_compose_from_path": {
       "description": "Whether to use the system-installed docker-compose. You can otherwise use required_docker_compose_version to specify a version for download.",
@@ -153,7 +231,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "uniqueItems": true
     },
     "wsl2_no_windows_hosts_mgt": {
       "description": "(WSL2 only) Whether to disable the management and checking of the Windows hosts file. By default, when using WSL2, DDEV manages the system-wide hosts file on the Windows side (normally C:\\Windows\\system32\\drivers\\etc\\hosts) by using ddev.exe installed on the Windows side. This normally works better for all applications, including browsers and IDEs. However, this behavior can be disabled by setting \"wsl_no_windows_hosts_mgt: true\".",
@@ -165,11 +244,33 @@
     },
     "xhgui_http_port": {
       "description": "Router port used for XHGui HTTP, can be overridden in project config.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "8143"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "xhgui_https_port": {
       "description": "Router port used for XHGui HTTPS, can be overridden in project config.",
-      "type": "string"
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "8142"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "xhprof_mode": {
       "description": "Define the default XHProf usage mode.",
