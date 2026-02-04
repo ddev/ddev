@@ -55,7 +55,7 @@ teardown() {
   run ddev start -y
   assert_success
 
-  run ddev composer create-project "drupal/recommended-project:^11"
+  run ddev composer create-project "drupal/recommended-project"
   assert_success
 
   run ddev composer require drush/drush
