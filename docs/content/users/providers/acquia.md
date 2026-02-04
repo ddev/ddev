@@ -51,4 +51,4 @@ DDEV’s Acquia integration pulls database and files from an existing project in
 
 ## Usage
 
-`ddev pull acquia` will connect to the Acquia Cloud Platform to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+`ddev pull acquia` will connect to the Acquia Cloud Platform to download the database and files; note that it will download the latest available backup, rather than use a fresh copy of the database. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
