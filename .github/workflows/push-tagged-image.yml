@@ -167,9 +167,9 @@ jobs:
           # Create and push multi-arch manifests
           for ORG_IMAGE in ${MULTI_ARCH_IMAGES}; do
             docker buildx imagetools create -t ${ORG_IMAGE}:${TAG} ${ORG_IMAGE}:${TAG}-amd64 ${ORG_IMAGE}:${TAG}-arm64
-            if [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              docker buildx imagetools create -t ${ORG_IMAGE}:latest ${ORG_IMAGE}:${TAG}
-            fi
+            # if [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            #   docker buildx imagetools create -t ${ORG_IMAGE}:latest ${ORG_IMAGE}:${TAG}
+            # fi
           done
 
           # Clean up intermediary single-arch tags from remote registry
