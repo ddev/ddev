@@ -29,3 +29,6 @@ indent_size = 2
 [*.{nsi,nsh}]
 end_of_line = crlf
 indent_size = 2
+
+[*schema.json]
+indent_size = 2
