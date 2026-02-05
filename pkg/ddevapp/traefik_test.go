@@ -1,11 +1,15 @@
 package ddevapp_test
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -329,6 +333,71 @@ func TestCustomGlobalConfig(t *testing.T) {
 		"Response should contain the custom header from global middleware")
 }
 
+// waitForTraefikRouterMiddleware polls Traefik API until the specified router has the expected middleware
+func waitForTraefikRouterMiddleware(t *testing.T, routerName string, expectedMiddleware string, timeout time.Duration) error {
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		return fmt.Errorf("failed to get Docker IP: %v", err)
+	}
+
+	monitorPort := globalconfig.DdevGlobalConfig.TraefikMonitorPort
+	routerURL := fmt.Sprintf("http://%s:%s/api/http/routers/%s@file", dockerIP, monitorPort, routerName)
+	t.Logf("Polling Traefik API: %s", routerURL)
+
+	deadline := time.Now().Add(timeout)
+	attempt := 0
+	for time.Now().Before(deadline) {
+		attempt++
+		resp, err := http.Get(routerURL)
+		if err != nil {
+			t.Logf("Attempt %d: Failed to query API: %v", attempt, err)
+			time.Sleep(200 * time.Millisecond)
+			continue
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			t.Logf("Attempt %d: Failed to read response: %v", attempt, err)
+			time.Sleep(200 * time.Millisecond)
+			continue
+		}
+
+		if resp.StatusCode == 404 {
+			t.Logf("Attempt %d: Router not found (404), response: %s", attempt, string(body))
+			time.Sleep(200 * time.Millisecond)
+			continue
+		}
+
+		var router struct {
+			Middlewares []string `json:"middlewares"`
+			Status      string   `json:"status"`
+		}
+
+		err = json.Unmarshal(body, &router)
+		if err != nil {
+			t.Logf("Attempt %d: Failed to parse JSON: %v, body: %s", attempt, err, string(body))
+			time.Sleep(200 * time.Millisecond)
+			continue
+		}
+
+		t.Logf("Attempt %d: Router %s has middlewares: %v (expecting %s)", attempt, routerName, router.Middlewares, expectedMiddleware)
+
+		// Check if router has the expected middleware
+		// Traefik appends the provider name (e.g., "@file") to middleware names in the API
+		for _, mw := range router.Middlewares {
+			if mw == expectedMiddleware || mw == expectedMiddleware+"@file" {
+				t.Logf("SUCCESS: Found expected middleware %s on router %s", mw, routerName)
+				return nil
+			}
+		}
+
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	return fmt.Errorf("timeout waiting for middleware %s on router %s after %d attempts", expectedMiddleware, routerName, attempt)
+}
+
 // TestTraefikCustomProjectConfig tests project-level Traefik customization including:
 // - Custom Traefik config without #ddev-generated signature
 // - Additional certificate files in .ddev/traefik/certs/
@@ -411,6 +480,14 @@ func TestTraefikCustomProjectConfig(t *testing.T) {
 	// Restart the project
 	err = app.Start()
 	require.NoError(t, err)
+
+	// Wait for Traefik to load the custom config with middleware
+	// This is critical because the marker file approach triggers a reload,
+	// but we need to verify Traefik actually processed the new config
+	httpRouterName := app.Name + "-web-80-http"
+	expectedMiddleware := app.Name + "-redirectHttps"
+	err = waitForTraefikRouterMiddleware(t, httpRouterName, expectedMiddleware, 10*time.Second)
+	require.NoError(t, err, "Traefik should load the redirectHttps middleware")
 
 	// Verify custom config is NOT overwritten (still has our custom comment)
 	configAfterStart, err := fileutil.ReadFileIntoString(projectTraefikConfigFile)
