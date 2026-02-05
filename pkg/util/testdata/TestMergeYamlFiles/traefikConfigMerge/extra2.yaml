@@ -1,0 +1,15 @@
+# Additional router configuration
+http:
+  routers:
+    testproject-api-80-http:
+      entrypoints:
+        - http-80
+      rule: HostRegexp(`^api\.testproject\.ddev\.site$`)
+      service: "testproject-api-80"
+      tls: false
+
+  services:
+    testproject-api-80:
+      loadbalancer:
+        servers:
+          - url: http://ddev-testproject-web:8080

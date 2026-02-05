@@ -1,0 +1,22 @@
+# Base traefik configuration for the test project
+http:
+  routers:
+    testproject-web-80-http:
+      entrypoints:
+        - http-80
+      rule: HostRegexp(`^testproject\.ddev\.site$`)
+      service: "testproject-web-80"
+      tls: false
+
+    testproject-web-80-https:
+      entrypoints:
+        - http-443
+      rule: HostRegexp(`^testproject\.ddev\.site$`)
+      service: "testproject-web-80"
+      tls: true
+
+  services:
+    testproject-web-80:
+      loadbalancer:
+        servers:
+          - url: http://ddev-testproject-web:80
