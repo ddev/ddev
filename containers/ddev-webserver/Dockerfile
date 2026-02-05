@@ -59,7 +59,14 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
     graphviz \
     less \
     libcap2-bin \
+    # AVIF write support for ImageMagick \
+    libheif-plugin-aomdec \
+    libheif-plugin-aomenc \
+    # HEIC write support for ImageMagick \
+    libheif-plugin-libde265 \
+    libheif-plugin-x265 \
     libldap-common \
+    # SVG support for ImageMagick \
     libmagickcore-7.q16-10-extra \
     locales \
     mariadb-client \
