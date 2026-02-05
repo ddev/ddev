@@ -277,9 +277,9 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 			}
 
 			// Filter out the main config file from the list of additional files
+			// Note: GlobFilenames returns full paths, not just filenames
 			var extraConfigFiles []string
-			for _, f := range additionalFiles {
-				fullPath := filepath.Join(projectConfigDir, f)
+			for _, fullPath := range additionalFiles {
 				if fullPath != projectConfigFile {
 					extraConfigFiles = append(extraConfigFiles, fullPath)
 				}
