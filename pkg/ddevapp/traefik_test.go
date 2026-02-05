@@ -391,6 +391,10 @@ http:
 	require.Contains(t, mergedConfigContent, app.Name+"-redirectHttps", "Merged config should contain redirectHttps middleware reference")
 	require.Contains(t, mergedConfigContent, "middlewares:", "Merged config should contain middlewares section")
 
+	// Verify project still works correctly with custom config
+	_, err = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+	require.NoError(t, err, "Project should still be accessible with merged traefik config")
+
 	// Test that HTTP to HTTPS redirect actually works
 	// Get the HTTP URLs
 	httpURLs, _, _ := app.GetAllURLs()
