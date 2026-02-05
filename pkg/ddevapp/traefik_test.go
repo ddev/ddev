@@ -332,28 +332,21 @@ func TestCustomGlobalConfig(t *testing.T) {
 // TestMergeTraefikProjectConfig tests that multiple project traefik config files are properly merged
 // and that the merged configuration works correctly with HTTP to HTTPS redirect
 func TestMergeTraefikProjectConfig(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
-		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
-	}
-
 	origDir, _ := os.Getwd()
 
 	site := TestSites[0] // 0 == wordpress
 	app, err := ddevapp.NewApp(site.Dir, true)
 	require.NoError(t, err)
 
-	ddevapp.PowerOff()
 	origRouter := globalconfig.DdevGlobalConfig.Router
 	globalconfig.DdevGlobalConfig.Router = types.RouterTypeTraefik
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
-	origConfig := *app
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
 		_ = app.Stop(true, false)
 		ddevapp.PowerOff()
-		_ = origConfig.WriteConfig()
 		globalconfig.DdevGlobalConfig.Router = origRouter
 		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 
@@ -364,6 +357,10 @@ func TestMergeTraefikProjectConfig(t *testing.T) {
 
 	// Start the app first to generate base traefik config
 	err = app.Start()
+	require.NoError(t, err)
+
+	// Stop to add the extra config file
+	err = app.Stop(false, false)
 	require.NoError(t, err)
 
 	// Create an extra traefik config file that enables HTTP to HTTPS redirect
@@ -379,8 +376,8 @@ http:
 	err = os.WriteFile(extraConfigFile, []byte(extraConfig), 0644)
 	require.NoError(t, err)
 
-	// Restart to pick up the new config
-	err = app.Restart()
+	// Start again to pick up the new config
+	err = app.Start()
 	require.NoError(t, err)
 
 	// Check that the merged config file exists in global traefik config
@@ -395,30 +392,31 @@ http:
 	require.Contains(t, mergedConfigContent, "middlewares:", "Merged config should contain middlewares section")
 
 	// Test that HTTP to HTTPS redirect actually works
-	// Only test if we have mkcert/CAROOT available
-	if globalconfig.GetCAROOT() != "" {
-		client := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				// Don't follow redirects, we want to check the redirect response
-				return http.ErrUseLastResponse
-			},
-		}
+	// Get the HTTP URLs
+	httpURLs, _, _ := app.GetAllURLs()
+	require.NotEmpty(t, httpURLs, "Should have at least one HTTP URL")
 
-		httpURL := strings.Replace(app.GetPrimaryURL(), "https://", "http://", 1)
-		resp, err := client.Get(httpURL)
-		require.NoError(t, err)
-		defer resp.Body.Close()
-
-		// Check that we got a redirect response
-		require.Equal(t, http.StatusMovedPermanently, resp.StatusCode,
-			"HTTP request should return 301 Moved Permanently for redirect")
-
-		// Check that the Location header points to HTTPS
-		location := resp.Header.Get("Location")
-		require.NotEmpty(t, location, "Redirect should have Location header")
-		require.True(t, strings.HasPrefix(location, "https://"),
-			"Redirect location should be HTTPS URL, got: %s", location)
+	// Create client that doesn't follow redirects so we can check the redirect response
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
+
+	// Make request to HTTP URL
+	resp, err := client.Get(httpURLs[0] + site.Safe200URIWithExpectation.URI)
+	require.NoError(t, err, "HTTP request should succeed")
+	defer resp.Body.Close()
+
+	// Should get a redirect (301 or 308)
+	require.True(t, resp.StatusCode == 301 || resp.StatusCode == 308,
+		"HTTP request should return redirect status (got %d)", resp.StatusCode)
+
+	// Redirect location should be HTTPS version of the URL
+	location := resp.Header.Get("Location")
+	require.NotEmpty(t, location, "Redirect should have Location header")
+	require.True(t, strings.HasPrefix(location, "https://"),
+		"Redirect location should be HTTPS (got %s)", location)
 }
 
 
