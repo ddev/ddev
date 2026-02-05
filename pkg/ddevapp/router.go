@@ -147,12 +147,6 @@ func StartDdevRouter() error {
 		if err != nil {
 			return fmt.Errorf("failed to push global Traefik config: %v", err)
 		}
-
-		// Force the healthcheck to run and wait for Traefik to load the new config.
-		err = ClearRouterHealthcheck()
-		if err != nil {
-			return err
-		}
 	}
 
 	// Ensure we have a happy router
@@ -173,6 +167,13 @@ func StartDdevRouter() error {
 	elapsed := wait.Complete(err)
 	if err != nil {
 		return fmt.Errorf("ddev-router failed to become ready after %.1fs; log=%s, err=%v", elapsed.Seconds(), logOutput, err)
+	}
+
+	// Force healthcheck to verify Traefik has loaded the configuration.
+	// This ensures the router has processed any config changes before proceeding.
+	err = ClearRouterHealthcheck()
+	if err != nil {
+		return fmt.Errorf("router failed to load configuration: %v", err)
 	}
 
 	util.Debug("Getting traefik error output")
