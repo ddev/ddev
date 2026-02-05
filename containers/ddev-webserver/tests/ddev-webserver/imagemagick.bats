@@ -26,3 +26,9 @@
   docker exec -t $CONTAINER_NAME magick /tmp/logo.avif /tmp/logo_avif.png
   docker exec -t $CONTAINER_NAME bash -c "magick -list format | grep -i 'AV1 Image File Format' | grep 'rw+'"
 }
+
+@test "ImageMagick can convert HEIC files" {
+  docker cp tests/ddev-webserver/testdata/imagemagick/logo.heic ${CONTAINER_NAME}:/tmp/logo.heic
+  docker exec -t $CONTAINER_NAME magick /tmp/logo.heic /tmp/logo_heic.png
+  docker exec -t $CONTAINER_NAME bash -c "magick -list format | grep -i 'High Efficiency Image Format' | grep 'rw+'"
+}
