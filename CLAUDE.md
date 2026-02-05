@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 DDEV is an open-source tool for running local web development environments for PHP and Node.js. It uses Docker containers to provide consistent, isolated development environments with minimal configuration.
 
-For comprehensive developer documentation, see:
+For developer documentation, see:
 
 - [Developer Documentation](https://docs.ddev.com/en/stable/developers/)
 - [Building and Contributing](docs/content/developers/building-contributing.md)
@@ -90,6 +90,12 @@ markdownlint --fix $FILE                      # Fix markdown formatting
 - **Never add trailing whitespace** - blank lines must be completely empty
 - **Prefer `require` over `assert`** in tests for all assertions
 - Focus on surgical, minimal changes that maintain compatibility
+- Tests should prefer `require` over `assert`
+
+### English Language Usage
+
+- Never use the words `comprehensive` or `seamless`
+- Avoid flowery or flattering usage in conversation, code, or comments
 
 ### Testing Philosophy
 
