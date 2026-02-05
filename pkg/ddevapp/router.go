@@ -2,7 +2,10 @@ package ddevapp
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -12,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -374,6 +378,94 @@ func ClearRouterHealthcheck() error {
 	if err != nil {
 		return fmt.Errorf("router healthcheck failed: %v", err)
 	}
+
+	// Wait for Traefik to actually reload the configuration
+	// The healthcheck only verifies router counts match, which doesn't detect
+	// configuration updates to existing routers (e.g., adding middleware)
+	err = WaitForTraefikConfigReload()
+	if err != nil {
+		return fmt.Errorf("traefik config reload verification failed: %v", err)
+	}
+
+	return nil
+}
+
+// WaitForTraefikConfigReload waits for Traefik to reload its file provider configuration.
+// This works around an issue where Docker volume fsnotify events may not propagate reliably
+// when files are copied by a temporary container into a volume that another container is watching.
+//
+// By touching a marker file from INSIDE the router container itself, we ensure Traefik's
+// fsnotify definitely sees a filesystem change and triggers a reload.
+func WaitForTraefikConfigReload() error {
+	router, err := FindDdevRouter()
+	if err != nil || router == nil {
+		util.Debug("Router not found, skipping config reload trigger")
+		return nil
+	}
+
+	// Touch a marker file inside the router container to trigger fsnotify
+	// This works because the touch happens in the same container that's watching,
+	// unlike the files copied via temporary container which may not trigger fsnotify
+	// IMPORTANT: Must be in the /config directory that Traefik is actually watching
+	markerPath := "/mnt/ddev-global-cache/traefik/config/.reload-marker"
+	uid, _, _ := dockerutil.GetContainerUser()
+
+	util.Debug("Triggering Traefik config reload by touching %s", markerPath)
+	stdout, stderr, err := dockerutil.Exec(router.ID, fmt.Sprintf("touch %s", markerPath), uid)
+	if err != nil {
+		util.Debug("Failed to touch reload marker (stdout=%s, stderr=%s): %v", stdout, stderr, err)
+		// Not fatal - config may have loaded anyway
+	}
+
+	// Give Traefik a moment to detect the change and reload
+	// Traefik uses fsnotify which should be near-instantaneous, but we add a small buffer
+	time.Sleep(1000 * time.Millisecond)
+
+	// Verify Traefik API is responsive and check for errors
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		util.Debug("Could not get Docker IP for Traefik verification: %v", err)
+		return nil // Not fatal
+	}
+
+	monitorPort := globalconfig.DdevGlobalConfig.TraefikMonitorPort
+	overviewURL := fmt.Sprintf("http://%s:%s/api/overview", dockerIP, monitorPort)
+
+	resp, err := http.Get(overviewURL)
+	if err != nil {
+		util.Debug("Failed to verify Traefik API after reload: %v", err)
+		return nil // Not fatal
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		util.Debug("Failed to read Traefik API response: %v", err)
+		return nil
+	}
+
+	var overview struct {
+		HTTP struct {
+			Routers struct {
+				Total  int64 `json:"total"`
+				Errors int64 `json:"errors"`
+			} `json:"routers"`
+		} `json:"http"`
+	}
+
+	err = json.Unmarshal(body, &overview)
+	if err != nil {
+		util.Debug("Failed to parse Traefik API response: %v", err)
+		return nil
+	}
+
+	util.Debug("Traefik state after reload trigger: %d routers, %d errors",
+		overview.HTTP.Routers.Total, overview.HTTP.Routers.Errors)
+
+	if overview.HTTP.Routers.Errors > 0 {
+		return fmt.Errorf("traefik has %d router errors after configuration reload", overview.HTTP.Routers.Errors)
+	}
+
 	return nil
 }
 
