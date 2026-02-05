@@ -1,0 +1,39 @@
+# Expected merged result
+http:
+  middlewares:
+    testproject-custom-headers:
+      headers:
+        customRequestHeaders:
+          X-Custom-Header: test-value
+    testproject-rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
+  routers:
+    testproject-api-80-http:
+      entrypoints:
+        - http-80
+      rule: HostRegexp(`^api\.testproject\.ddev\.site$`)
+      service: testproject-api-80
+      tls: false
+    testproject-web-80-http:
+      entrypoints:
+        - http-80
+      rule: HostRegexp(`^testproject\.ddev\.site$`)
+      service: testproject-web-80
+      tls: false
+    testproject-web-80-https:
+      entrypoints:
+        - http-443
+      rule: HostRegexp(`^testproject\.ddev\.site$`)
+      service: testproject-web-80
+      tls: true
+  services:
+    testproject-api-80:
+      loadbalancer:
+        servers:
+          - url: http://ddev-testproject-web:8080
+    testproject-web-80:
+      loadbalancer:
+        servers:
+          - url: http://ddev-testproject-web:80

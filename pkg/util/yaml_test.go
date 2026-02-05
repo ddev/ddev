@@ -84,6 +84,7 @@ func TestMergeYamlFiles(t *testing.T) {
 		{"certificates resolvers", "baseWithCertificatesResolvers"},
 		{"Overrides", "Overrides"},
 		{"caServerOverride", "caServerOverride"},
+		{"traefik config merge with multiple files", "traefikConfigMerge"},
 	}
 	for _, tc := range testCases {
 		t.Run("", func(t *testing.T) {
