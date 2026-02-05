@@ -591,7 +591,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     Install Drupal via Composer:
 
     ```bash
-    ddev composer create-project "drupal/recommended-project:^11"
+    ddev composer create-project drupal/recommended-project
     ddev composer require drush/drush
     ```
 
@@ -616,7 +616,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         mkdir my-drupal-site && cd my-drupal-site
         ddev config --project-type=drupal11 --docroot=web
         ddev start -y
-        ddev composer create-project "drupal/recommended-project:^11"
+        ddev composer create-project drupal/recommended-project
         ddev composer require drush/drush
         ddev drush site:install --account-name=admin --account-pass=admin -y
         ddev launch
