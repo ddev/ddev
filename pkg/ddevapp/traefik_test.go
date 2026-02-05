@@ -328,3 +328,144 @@ func TestCustomGlobalConfig(t *testing.T) {
 	require.Equal(t, testHeaderValue, httpResp.Header.Get(testHeaderName),
 		"Response should contain the custom header from global middleware")
 }
+
+// TestTraefikCustomProjectConfig tests project-level Traefik customization including:
+// - Custom Traefik config without #ddev-generated signature
+// - Additional certificate files in .ddev/traefik/certs/
+func TestTraefikCustomProjectConfig(t *testing.T) {
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+
+	origRouter := globalconfig.DdevGlobalConfig.Router
+	globalconfig.DdevGlobalConfig.Router = types.RouterTypeTraefik
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
+		ddevapp.PowerOff()
+		globalconfig.DdevGlobalConfig.Router = origRouter
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	})
+
+	// Start project to generate default traefik config
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Stop to modify the config
+	err = app.Stop(false, false)
+	require.NoError(t, err)
+
+	// Create custom project traefik config WITHOUT #ddev-generated
+	projectTraefikConfigDir := app.GetConfigPath("traefik/config")
+	projectTraefikConfigFile := filepath.Join(projectTraefikConfigDir, app.Name+".yaml")
+
+	// Read generated config and modify it (remove #ddev-generated signature)
+	generatedConfig, err := fileutil.ReadFileIntoString(projectTraefikConfigFile)
+	require.NoError(t, err)
+
+	// Remove #ddev-generated and add a custom comment
+	customConfig := strings.Replace(generatedConfig, "#ddev-generated", "# Custom Traefik config for testing", 1)
+
+	// Enable the redirectHttps middleware on the HTTP router by uncommenting it
+	customConfig = strings.Replace(customConfig, "# middlewares:", "middlewares:", 1)
+	customConfig = strings.Replace(customConfig, "#   - \""+app.Name+"-redirectHttps\"", "  - \""+app.Name+"-redirectHttps\"", 1)
+
+	// Verify the middleware was uncommented
+	require.Contains(t, customConfig, "middlewares:",
+		"Config should contain uncommented middlewares")
+	require.Contains(t, customConfig, "- \""+app.Name+"-redirectHttps\"",
+		"Config should contain uncommented redirectHttps middleware")
+
+	err = os.WriteFile(projectTraefikConfigFile, []byte(customConfig), 0644)
+	require.NoError(t, err)
+
+	// Add extra certificate files to .ddev/traefik/certs/
+	projectCertsDir := app.GetConfigPath("traefik/certs")
+	err = os.MkdirAll(projectCertsDir, 0755)
+	require.NoError(t, err)
+
+	// Create dummy certificate files for testing
+	customCertContent := "-----BEGIN CERTIFICATE-----\nTEST CERT CONTENT\n-----END CERTIFICATE-----\n"
+	customKeyContent := "-----BEGIN PRIVATE KEY-----\nTEST KEY CONTENT\n-----END PRIVATE KEY-----\n"
+
+	testCerts := map[string]string{
+		"custom-ca.crt":     customCertContent,
+		"custom-ca.key":     customKeyContent,
+		"mtls-client.crt":   customCertContent,
+		"mtls-client.key":   customKeyContent,
+		"extra-service.crt": customCertContent,
+		"extra-service.key": customKeyContent,
+	}
+
+	for filename, content := range testCerts {
+		certPath := filepath.Join(projectCertsDir, filename)
+		err = os.WriteFile(certPath, []byte(content), 0644)
+		require.NoError(t, err)
+	}
+
+	// Restart the project
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Verify custom config is NOT overwritten (still has our custom comment)
+	configAfterStart, err := fileutil.ReadFileIntoString(projectTraefikConfigFile)
+	require.NoError(t, err)
+	require.Contains(t, configAfterStart, "# Custom Traefik config for testing",
+		"Custom config should be preserved after restart")
+	require.NotContains(t, configAfterStart, "#ddev-generated",
+		"Custom config should not have #ddev-generated after restart")
+
+	// Verify all custom cert files are present in the router volume
+	certsDir := "/mnt/ddev-global-cache/traefik/certs"
+	stdout, _, err := dockerutil.Exec("ddev-router", "ls "+certsDir, "")
+	require.NoError(t, err, "failed to list router certs directory")
+
+	for filename := range testCerts {
+		require.Contains(t, stdout, filename,
+			"Router certs directory should contain custom cert file: "+filename)
+	}
+
+	// Verify the custom cert files have the expected content
+	for filename, expectedContent := range testCerts {
+		stdout, _, err := dockerutil.Exec("ddev-router", "cat "+filepath.Join(certsDir, filename), "")
+		require.NoError(t, err, "failed to read cert file "+filename)
+		require.Equal(t, expectedContent, stdout,
+			"Cert file "+filename+" should have the expected content")
+	}
+
+	// Verify project still works correctly with custom config
+	_, err = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+	require.NoError(t, err, "Project should still be accessible with custom traefik config")
+
+	// Verify the HTTP->HTTPS redirect middleware is working
+	// Get the HTTP URL (not HTTPS)
+	httpURLs, _, _ := app.GetAllURLs()
+	require.NotEmpty(t, httpURLs, "Should have at least one HTTP URL")
+
+	// Create client that doesn't follow redirects so we can check the redirect response
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	// Make request to HTTP URL
+	resp, err := client.Get(httpURLs[0] + site.Safe200URIWithExpectation.URI)
+	require.NoError(t, err, "HTTP request should succeed")
+	defer resp.Body.Close()
+
+	// Should get a redirect (301 or 308)
+	require.True(t, resp.StatusCode == 301 || resp.StatusCode == 308,
+		"HTTP request should return redirect status (got %d)", resp.StatusCode)
+
+	// Redirect location should be HTTPS version of the URL
+	location := resp.Header.Get("Location")
+	require.NotEmpty(t, location, "Redirect should have Location header")
+	require.True(t, strings.HasPrefix(location, "https://"),
+		"Redirect location should be HTTPS (got %s)", location)
+}
