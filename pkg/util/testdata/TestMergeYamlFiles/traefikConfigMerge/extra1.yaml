@@ -1,0 +1,11 @@
+# Additional middleware configuration to be merged
+http:
+  middlewares:
+    testproject-custom-headers:
+      headers:
+        customRequestHeaders:
+          X-Custom-Header: "test-value"
+    testproject-rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
