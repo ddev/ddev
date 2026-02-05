@@ -931,9 +931,9 @@ func TestPausedProjectsExcludedFromRouter(t *testing.T) {
 	stdout, _, err := dockerutil.Exec(nodeps.RouterContainer, "ls "+configDir, "")
 	require.NoError(t, err, "failed to list router config directory")
 
-	require.Contains(t, stdout, app1.Name+".yaml",
+	require.Contains(t, stdout, app1.Name+"_merged.yaml",
 		"Router should have config for project1 after both projects started")
-	require.Contains(t, stdout, app2.Name+".yaml",
+	require.Contains(t, stdout, app2.Name+"_merged.yaml",
 		"Router should have config for project2 after both projects started")
 
 	// Pause project1 (simulates Docker restart leaving containers stopped)
@@ -953,9 +953,9 @@ func TestPausedProjectsExcludedFromRouter(t *testing.T) {
 	stdout, _, err = dockerutil.Exec(nodeps.RouterContainer, "ls "+configDir, "")
 	require.NoError(t, err, "failed to list router config directory after restart")
 
-	require.NotContains(t, stdout, app1.Name+".yaml",
+	require.NotContains(t, stdout, app1.Name+"_merged.yaml",
 		"Router should NOT have config for paused project1 after project2 restart")
-	require.Contains(t, stdout, app2.Name+".yaml",
+	require.Contains(t, stdout, app2.Name+"_merged.yaml",
 		"Router should still have config for running project2")
 
 	// Verify project2 is still accessible

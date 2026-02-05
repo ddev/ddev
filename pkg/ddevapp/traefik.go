@@ -260,9 +260,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		projectConfigDir := app.GetConfigPath("traefik/config")
 		projectCertsDir := app.GetConfigPath("traefik/certs")
 
-		// Mark this project's config as expected - even if we can't copy it now,
-		// we don't want to remove an existing config from the volume
-		// The merged config will be named <projectname>_merged.yaml if there are additional files
+		// Mark this project's config as expected - always use _merged.yaml suffix for consistency
 		expectedConfigs[app.Name+"_merged.yaml"] = true
 		expectedCerts[app.Name+".crt"] = true
 		expectedCerts[app.Name+".key"] = true
@@ -285,7 +283,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 				}
 			}
 
-			// If there are additional config files, merge them; otherwise, just copy the main file
+			// Always use _merged.yaml suffix for consistency
 			destFile := filepath.Join(globalSourceConfigDir, app.Name+"_merged.yaml")
 			if len(extraConfigFiles) > 0 {
 				util.Debug("Merging traefik config files for project %s: base=%s, additional=%v", app.Name, projectConfigFile, extraConfigFiles)
