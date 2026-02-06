@@ -328,3 +328,113 @@ func TestCustomGlobalConfig(t *testing.T) {
 	require.Equal(t, testHeaderValue, httpResp.Header.Get(testHeaderName),
 		"Response should contain the custom header from global middleware")
 }
+
+// TestCustomProjectConfig tests that custom project-level Traefik configuration
+// (after removing #ddev-generated) is properly deployed and affects behavior
+func TestCustomProjectConfig(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+
+	if app.CanUseHTTPOnly() {
+		t.Skip("Skipping because HTTPS is not available")
+	}
+
+	projectTraefikConfigDir := app.GetConfigPath("traefik/config")
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
+		// Remove the custom config directory so it will be regenerated
+		_ = os.RemoveAll(projectTraefikConfigDir)
+		ddevapp.PowerOff()
+	})
+
+	// Start the project to generate initial Traefik config
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Path to the project's Traefik config file
+	projectTraefikConfigFile := filepath.Join(projectTraefikConfigDir, app.Name+".yaml")
+
+	// Verify the config file was generated
+	require.FileExists(t, projectTraefikConfigFile, "Project Traefik config should be generated")
+
+	// Read the generated config
+	configContent, err := fileutil.ReadFileIntoString(projectTraefikConfigFile)
+	require.NoError(t, err)
+
+	// Remove the #ddev-generated line so DDEV won't overwrite it
+	configContent = strings.Replace(configContent, "#ddev-generated\n", "", 1)
+
+	// Enable the HTTP→HTTPS redirect middleware by uncommenting it
+	// The default config has these lines commented out:
+	//      # middlewares:
+	//      #   - "{{ $.App.Name }}-redirectHttps"
+	// We need to find the HTTP router and uncomment the middleware
+	configContent = strings.ReplaceAll(configContent, "      # middlewares:\n      #   - \""+app.Name+"-redirectHttps\"",
+		"      middlewares:\n        - \""+app.Name+"-redirectHttps\"")
+
+	// Write the modified config back
+	err = os.WriteFile(projectTraefikConfigFile, []byte(configContent), 0644)
+	require.NoError(t, err)
+
+	// Restart the project to push the custom config
+	err = app.Restart()
+	require.NoError(t, err)
+
+	// Verify the custom config exists in the global traefik config directory
+	globalTraefikConfigDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik", "config")
+	globalProjectConfigFile := filepath.Join(globalTraefikConfigDir, app.Name+".yaml")
+	require.FileExists(t, globalProjectConfigFile,
+		"Custom project config should be copied to global traefik config directory")
+
+	// Verify the content was copied correctly
+	globalConfigContent, err := fileutil.ReadFileIntoString(globalProjectConfigFile)
+	require.NoError(t, err)
+	require.Equal(t, configContent, globalConfigContent,
+		"Global config should match the custom project config")
+
+	// Verify the config exists in the router's volume
+	configDir := "/mnt/ddev-global-cache/traefik/config"
+	stdout, _, err := dockerutil.Exec("ddev-router", "ls "+configDir, "")
+	require.NoError(t, err, "Failed to list router config directory")
+	require.Contains(t, stdout, app.Name+".yaml",
+		"Router config directory should contain the project config file")
+
+	// Verify the config content in the router volume
+	stdout, _, err = dockerutil.Exec("ddev-router", "cat "+configDir+"/"+app.Name+".yaml", "")
+	require.NoError(t, err, "Failed to read project config from router volume")
+	require.Contains(t, stdout, "middlewares:",
+		"Router config should contain the enabled middlewares section")
+	require.Contains(t, stdout, app.Name+"-redirectHttps",
+		"Router config should reference the redirect middleware")
+
+	// Most important: Verify the HTTP→HTTPS redirect actually works
+	// Create an HTTP client that doesn't follow redirects
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	// Make an HTTP request to the project
+	httpURL := strings.Replace(app.GetPrimaryURL(), "https://", "http://", 1)
+	httpResp, err := client.Get(httpURL) //nolint:noctx
+	require.NoError(t, err)
+	require.NotNil(t, httpResp)
+	defer func() {
+		_ = httpResp.Body.Close()
+	}()
+
+	// Verify we get a redirect response
+	require.True(t, httpResp.StatusCode == http.StatusMovedPermanently || httpResp.StatusCode == http.StatusFound,
+		"HTTP request should return redirect status (301 or 302), got %d", httpResp.StatusCode)
+
+	// Verify the Location header points to HTTPS
+	location := httpResp.Header.Get("Location")
+	require.NotEmpty(t, location, "Redirect response should have Location header")
+	require.True(t, strings.HasPrefix(location, "https://"),
+		"Redirect location should use https://, got: %s", location)
+}
