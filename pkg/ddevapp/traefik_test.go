@@ -477,16 +477,79 @@ func TestTraefikCustomProjectConfig(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	// DEBUG: Verify config file content before restart
+	configBeforeRestart, err := fileutil.ReadFileIntoString(projectTraefikConfigFile)
+	require.NoError(t, err)
+	configSnippet := configBeforeRestart
+	if len(configSnippet) > 500 {
+		configSnippet = configSnippet[:500]
+	}
+	t.Logf("Config file on host before restart (first 500 chars):\n%s", configSnippet)
+	hasMiddlewareInHost := strings.Contains(configBeforeRestart, "middlewares:") &&
+		strings.Contains(configBeforeRestart, app.Name+"-redirectHttps")
+	t.Logf("Host config has middleware directive: %v", hasMiddlewareInHost)
+
 	// Restart the project
 	err = app.Start()
 	require.NoError(t, err)
 
+	// DEBUG: Check what's actually in the router volume after restart
+	configInVolume := "/mnt/ddev-global-cache/traefik/config/" + app.Name + ".yaml"
+	stdout, stderr, err := dockerutil.Exec("ddev-router", "cat "+configInVolume, "")
+	if err != nil {
+		t.Logf("Failed to read config from router volume: %v, stderr: %s", err, stderr)
+	} else {
+		volumeSnippet := stdout
+		if len(volumeSnippet) > 500 {
+			volumeSnippet = volumeSnippet[:500]
+		}
+		t.Logf("Config file in router volume (first 500 chars):\n%s", volumeSnippet)
+		hasMiddlewareInVolume := strings.Contains(stdout, "middlewares:") &&
+			strings.Contains(stdout, app.Name+"-redirectHttps")
+		t.Logf("Volume config has middleware directive: %v", hasMiddlewareInVolume)
+
+		if hasMiddlewareInHost != hasMiddlewareInVolume {
+			t.Logf("WARNING: Config mismatch! Host has middleware=%v but volume has middleware=%v",
+				hasMiddlewareInHost, hasMiddlewareInVolume)
+		}
+	}
+
+	// DEBUG: Check Traefik logs for file provider reload messages
+	logs, _, _ := dockerutil.Exec("ddev-router", `grep -i "configuration" /tmp/traefik-stderr.txt 2>/dev/null | tail -20 || echo "No logs found"`, "")
+	t.Logf("Recent Traefik configuration logs:\n%s", logs)
+
 	// Wait for Traefik to load the custom config with middleware
-	// This is critical because the marker file approach triggers a reload,
-	// but we need to verify Traefik actually processed the new config
 	httpRouterName := app.Name + "-web-80-http"
 	expectedMiddleware := app.Name + "-redirectHttps"
 	err = waitForTraefikRouterMiddleware(t, httpRouterName, expectedMiddleware, 10*time.Second)
+
+	// If it failed, dump more diagnostic info
+	if err != nil {
+		t.Logf("DIAGNOSTIC: Middleware not found, gathering more info...")
+
+		// List all routers
+		allRoutersURL := fmt.Sprintf("http://127.0.0.1:%s/api/http/routers", globalconfig.DdevGlobalConfig.TraefikMonitorPort)
+		resp, _ := http.Get(allRoutersURL)
+		if resp != nil {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			routersSnippet := string(body)
+			if len(routersSnippet) > 2000 {
+				routersSnippet = routersSnippet[:2000]
+			}
+			t.Logf("All routers in Traefik:\n%s", routersSnippet)
+		}
+
+		// Check overview for errors
+		overviewURL := fmt.Sprintf("http://127.0.0.1:%s/api/overview", globalconfig.DdevGlobalConfig.TraefikMonitorPort)
+		resp2, _ := http.Get(overviewURL)
+		if resp2 != nil {
+			body2, _ := io.ReadAll(resp2.Body)
+			resp2.Body.Close()
+			t.Logf("Traefik overview:\n%s", string(body2))
+		}
+	}
+
 	require.NoError(t, err, "Traefik should load the redirectHttps middleware")
 
 	// Verify custom config is NOT overwritten (still has our custom comment)
@@ -499,7 +562,7 @@ func TestTraefikCustomProjectConfig(t *testing.T) {
 
 	// Verify all custom cert files are present in the router volume
 	certsDir := "/mnt/ddev-global-cache/traefik/certs"
-	stdout, _, err := dockerutil.Exec("ddev-router", "ls "+certsDir, "")
+	stdout, _, err = dockerutil.Exec("ddev-router", "ls "+certsDir, "")
 	require.NoError(t, err, "failed to list router certs directory")
 
 	for filename := range testCerts {
