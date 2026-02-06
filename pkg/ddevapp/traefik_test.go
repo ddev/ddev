@@ -439,7 +439,6 @@ func TestCustomProjectConfig(t *testing.T) {
 		"Redirect location should use https://, got: %s", location)
 }
 
-
 // TestTraefikMultipleCerts tests that multiple certificate files from
 // .ddev/traefik/certs/ are copied to the router container
 func TestTraefikMultipleCerts(t *testing.T) {
@@ -490,4 +489,3 @@ func TestTraefikMultipleCerts(t *testing.T) {
 			"certificate %s should contain expected content", certName)
 	}
 }
-
