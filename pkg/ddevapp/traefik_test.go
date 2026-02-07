@@ -354,6 +354,10 @@ func TestCustomProjectTraefikConfig(t *testing.T) {
 		ddevapp.PowerOff()
 	})
 
+	// We need a clean set of ports for this test because we're doing a specific alteration
+	// of the traefik config that won't work if the port changes, so avoid ephemeral port use
+	ddevapp.PowerOff()
+
 	// Start the project to generate initial Traefik config
 	err = app.Start()
 	require.NoError(t, err)
