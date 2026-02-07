@@ -358,6 +358,14 @@ func TestCustomProjectTraefikConfig(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
+	// Skip if ephemeral ports are in use due to port conflicts
+	// This happens on Lima-based providers when ports 80/443 are already in use
+	httpPort := app.GetPrimaryRouterHTTPPort()
+	httpsPort := app.GetPrimaryRouterHTTPSPort()
+	if httpPort != "80" || httpsPort != "443" {
+		t.Skipf("Skipping because non-standard ports are in use (HTTP=%s, HTTPS=%s) - likely due to port conflicts; this breaks the assumption in the altered traefik config", httpPort, httpsPort)
+	}
+
 	// Path to the project's Traefik config file
 	projectTraefikConfigFile := filepath.Join(projectTraefikConfigDir, app.Name+".yaml")
 
