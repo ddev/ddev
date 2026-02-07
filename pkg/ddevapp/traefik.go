@@ -263,8 +263,6 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		// Mark this project's config as expected - even if we can't copy it now,
 		// we don't want to remove an existing config from the volume
 		expectedConfigs[app.Name+".yaml"] = true
-		expectedCerts[app.Name+".crt"] = true
-		expectedCerts[app.Name+".key"] = true
 
 		// Copy project's config yaml to global config dir
 		projectConfigFile := filepath.Join(projectConfigDir, app.Name+".yaml")
@@ -276,14 +274,26 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 			}
 		}
 
-		// Copy project's certs to global certs dir
-		for _, ext := range []string{".crt", ".key"} {
-			projectCertFile := filepath.Join(projectCertsDir, app.Name+ext)
-			if fileutil.FileExists(projectCertFile) {
-				destFile := filepath.Join(globalSourceCertsPath, app.Name+ext)
-				err = fileutil.CopyFile(projectCertFile, destFile)
+		// Copy all certs from project's certs directory to global certs dir
+		// This allows users to place additional certificates (e.g., mTLS CA certs) in .ddev/traefik/certs/
+		if fileutil.IsDirectory(projectCertsDir) {
+			for _, ext := range []string{".crt", ".key"} {
+				certFiles, err := fileutil.GlobFilenames(projectCertsDir, "*"+ext)
 				if err != nil {
-					util.Warning("Failed to copy traefik cert for project %s: %v", app.Name, err)
+					util.Warning("Failed to list cert files in %s: %v", projectCertsDir, err)
+					continue
+				}
+				for _, certFilePath := range certFiles {
+					certFile := filepath.Base(certFilePath)
+					destFile := filepath.Join(globalSourceCertsPath, certFile)
+					err = fileutil.CopyFile(certFilePath, destFile)
+					if err != nil {
+						util.Warning("Failed to copy traefik cert %s for project %s: %v", certFile, app.Name, err)
+					} else {
+						// Track this cert as expected so it won't be removed during cleanup
+						expectedCerts[certFile] = true
+						util.Debug("Copied cert %s from project %s to global traefik certs dir", certFile, app.Name)
+					}
 				}
 			}
 		}

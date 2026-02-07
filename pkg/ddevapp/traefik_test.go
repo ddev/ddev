@@ -438,3 +438,54 @@ func TestCustomProjectConfig(t *testing.T) {
 	require.True(t, strings.HasPrefix(location, "https://"),
 		"Redirect location should use https://, got: %s", location)
 }
+
+// TestTraefikMultipleCerts tests that multiple certificate files from
+// .ddev/traefik/certs/ are copied to the router container
+func TestTraefikMultipleCerts(t *testing.T) {
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+
+	// Set up paths
+	projectCertsDir := app.GetConfigPath("traefik/certs")
+	err = os.MkdirAll(projectCertsDir, 0755)
+	require.NoError(t, err)
+
+	// Create multiple test certificate files
+	testCerts := map[string]string{
+		"ca.crt":         "test CA certificate content",
+		"custom-ca.crt":  "custom CA certificate content",
+		"client.crt":     "client certificate content",
+		"client.key":     "client key content",
+		"additional.crt": "additional certificate content",
+		"additional.key": "additional key content",
+	}
+
+	for certName, content := range testCerts {
+		certPath := filepath.Join(projectCertsDir, certName)
+		err = os.WriteFile(certPath, []byte(content), 0644)
+		require.NoError(t, err)
+	}
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(projectCertsDir)
+		ddevapp.PowerOff()
+	})
+
+	// Start the project - this will trigger PushGlobalTraefikConfig
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Verify all certificate files exist in the router's certs directory
+	certsDir := "/mnt/ddev-global-cache/traefik/certs"
+	for certName := range testCerts {
+		stdout, _, err := dockerutil.Exec("ddev-router", "cat "+certsDir+"/"+certName, "")
+		require.NoError(t, err, "certificate %s should exist in router volume", certName)
+		require.Contains(t, stdout, testCerts[certName],
+			"certificate %s should contain expected content", certName)
+	}
+}
