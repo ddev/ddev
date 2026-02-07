@@ -332,9 +332,9 @@ func TestCustomGlobalConfig(t *testing.T) {
 // TestCustomProjectTraefikConfig tests that custom project-level Traefik configuration
 // (after removing #ddev-generated) is properly deployed and affects behavior
 func TestCustomProjectTraefikConfig(t *testing.T) {
-	if dockerutil.IsRancherDesktop() {
-		t.Skip("Skipping on Rancher Desktop because it seems to be slower")
-	}
+	//if dockerutil.IsRancherDesktop() {
+	//	t.Skip("Skipping on Rancher Desktop because it seems to be too slow to pick up fsnotify on changed traefik config files")
+	//}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	app, err := ddevapp.NewApp(site.Dir, true)
