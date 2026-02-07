@@ -330,12 +330,35 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		}
 	}
 
-	// Copy to volume (adds new files, overwrites existing)
-	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "custom-global-config", false)
-	if err != nil {
-		return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
+	// Copy to router container if running, otherwise copy to volume
+	// Copying directly to the router ensures Traefik's fsnotify detects changes reliably
+	router, err := FindDdevRouter()
+	if err == nil && router != nil {
+		// Router is running - copy directly to it using container name without leading slash
+		// This triggers fsnotify reliably because changes happen inside the container that's watching
+		containerName := strings.TrimPrefix(router.Names[0], "/")
+		err = dockerutil.CopyIntoContainer(globalTraefikDir, containerName, "/mnt/ddev-global-cache/traefik", "custom-global-config")
+		if err != nil {
+			return fmt.Errorf("failed to copy global Traefik config to router container: %v", err)
+		}
+
+		// Fix ownership of copied files to match what CopyIntoVolume does
+		chownCmd := fmt.Sprintf("chown -R %s /mnt/ddev-global-cache/traefik", uid)
+		stdout, stderr, err := dockerutil.Exec(router.ID, chownCmd, "0")
+		if err != nil {
+			util.Debug("Failed to chown traefik files (stdout=%s, stderr=%s): %v", stdout, stderr, err)
+			return fmt.Errorf("failed to set ownership on traefik files: %v", err)
+		}
+
+		util.Debug("Copied global Traefik config in %s directly to router container %s", globalTraefikDir, containerName)
+	} else {
+		// Router not running yet - copy to volume as fallback
+		err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "custom-global-config", false)
+		if err != nil {
+			return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
+		}
+		util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik volume", globalTraefikDir)
 	}
-	util.Debug("Copied global Traefik config in %s to ddev-global-cache/traefik", globalTraefikDir)
 
 	// Sync config directory - remove stale project configs from the volume
 	actualConfigs, err := dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/config")
