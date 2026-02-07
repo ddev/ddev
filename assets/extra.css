@@ -1,0 +1,123 @@
+/* variables */
+:root {
+    /* #4051b5 (indigo primary) in decimal RGB */
+    --custom-bg-color: rgba(64, 81, 181, .1);
+    --custom-header-color: var(--md-primary-fg-color);
+}
+
+/* dark color scheme overrides */
+[data-md-color-scheme="slate"] {
+    --custom-header-color: var(--md-primary-fg-color--light);
+}
+
+/* table does not need a scrollbar, see https://github.com/ddev/ddev/pull/3290#issuecomment-942888867
+ */
+.md-typeset__table {
+    padding-right: 0;
+}
+
+dt {
+    font-weight: bold;
+}
+
+.md-typeset :is(.admonition,details) {
+    font-size: .70rem;
+    background-color: inherit;
+}
+
+.md-typeset .tabbed-content {
+    background-color: var(--custom-bg-color);
+    padding: 10px;
+}
+
+/* typography */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+    font-weight: 700;
+    margin-bottom: .5em;
+    color: var(--custom-header-color);
+}
+
+.md-content {
+    max-width: 130ch;
+}
+
+/* main menu */
+.md-container > nav .md-tabs__item {
+    position: relative !important;
+    height: 2rem;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.md-container > nav .md-tabs__link {
+    margin-top: 0;
+}
+
+.md-container > nav .md-tabs__link:after {
+    content: '';
+    background: #fff;
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    top: 0;
+}
+
+.md-container > nav .md-tabs__link:hover:after,
+.md-container > nav .md-tabs__link--active:after {
+    opacity: 0.1;
+}
+
+.md-tabs[hidden] .md-tabs__link,
+.md-container > nav .md-tabs[hidden] .md-tabs__link {
+    transform: unset;
+    transition: opacity .3s ease;
+}
+
+/* blockquote */
+[dir=ltr] .md-typeset blockquote {
+    border-left-color: var(--custom-header-color);
+    background: var(--custom-bg-color);
+    padding: .6rem 1rem;
+}
+
+[dir=ltr] .md-typeset blockquote strong {
+    color: var(--custom-header-color);
+}
+
+[dir=ltr] .md-typeset blockquote p:first-child {
+    margin-top: 0;
+}
+
+[dir=ltr] .md-typeset blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* tabs */
+.md-typeset .tabbed-labels label {
+    font-size: 0.75rem;
+}
+
+.md-typeset .tabbed-button {
+    width: 30px;
+    height: 100%;
+    border-radius: unset!important;
+}
+
+.md-typeset .tabbed-button:after {
+    -webkit-mask-size: cover;
+    mask-size: cover;
+    mask-position: center;
+    -webkit-mask-position: center;
+}
+
+img[alt="Figurative Mark"], img[alt="Word/Figurative Mark"] {
+    height: 150px
+}
