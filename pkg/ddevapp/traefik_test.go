@@ -423,7 +423,6 @@ http:
 		"Redirect location should be HTTPS (got %s)", location)
 }
 
-
 // TestCustomProjectConfig tests that custom project-level Traefik configuration
 // (after removing #ddev-generated) is properly deployed and affects behavior
 func TestCustomProjectTraefikConfig(t *testing.T) {
