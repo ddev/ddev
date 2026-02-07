@@ -150,7 +150,7 @@ jobs:
 
       - name: DDEV test cache
         uses: actions/cache@v5
-        if: ${{ github.ref == 'refs/heads/main' && inputs.gotest_short == '' }}
+        if: ${{ github.event_name == 'push' }}
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
@@ -159,7 +159,7 @@ jobs:
 
       - name: DDEV test cache/restore
         uses: actions/cache/restore@v5
-        if: ${{ github.ref != 'refs/heads/main' || inputs.gotest_short != '' }}
+        if: ${{ github.event_name != 'push' }}
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
