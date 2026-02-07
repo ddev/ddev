@@ -329,9 +329,12 @@ func TestCustomGlobalConfig(t *testing.T) {
 		"Response should contain the custom header from global middleware")
 }
 
-// TestCustomProjectConfig tests that custom project-level Traefik configuration
+// TestCustomProjectTraefikConfig tests that custom project-level Traefik configuration
 // (after removing #ddev-generated) is properly deployed and affects behavior
-func TestCustomProjectConfig(t *testing.T) {
+func TestCustomProjectTraefikConfig(t *testing.T) {
+	if dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Rancher Desktop because it seems to be slower")
+	}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	app, err := ddevapp.NewApp(site.Dir, true)
