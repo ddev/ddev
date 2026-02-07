@@ -91,11 +91,6 @@ type ClientActiveRequests struct {
 	metric.Int64UpDownCounter
 }
 
-var newClientActiveRequestsOpts = []metric.Int64UpDownCounterOption{
-	metric.WithDescription("Number of active HTTP requests."),
-	metric.WithUnit("{request}"),
-}
-
 // NewClientActiveRequests returns a new ClientActiveRequests instrument.
 func NewClientActiveRequests(
 	m metric.Meter,
@@ -106,18 +101,15 @@ func NewClientActiveRequests(
 		return ClientActiveRequests{noop.Int64UpDownCounter{}}, nil
 	}
 
-	if len(opt) == 0 {
-		opt = newClientActiveRequestsOpts
-	} else {
-		opt = append(opt, newClientActiveRequestsOpts...)
-	}
-
 	i, err := m.Int64UpDownCounter(
 		"http.client.active_requests",
-		opt...,
+		append([]metric.Int64UpDownCounterOption{
+			metric.WithDescription("Number of active HTTP requests."),
+			metric.WithUnit("{request}"),
+		}, opt...)...,
 	)
 	if err != nil {
-		return ClientActiveRequests{noop.Int64UpDownCounter{}}, err
+	    return ClientActiveRequests{noop.Int64UpDownCounter{}}, err
 	}
 	return ClientActiveRequests{i}, nil
 }
@@ -231,11 +223,6 @@ type ClientConnectionDuration struct {
 	metric.Float64Histogram
 }
 
-var newClientConnectionDurationOpts = []metric.Float64HistogramOption{
-	metric.WithDescription("The duration of the successfully established outbound HTTP connections."),
-	metric.WithUnit("s"),
-}
-
 // NewClientConnectionDuration returns a new ClientConnectionDuration instrument.
 func NewClientConnectionDuration(
 	m metric.Meter,
@@ -246,18 +233,15 @@ func NewClientConnectionDuration(
 		return ClientConnectionDuration{noop.Float64Histogram{}}, nil
 	}
 
-	if len(opt) == 0 {
-		opt = newClientConnectionDurationOpts
-	} else {
-		opt = append(opt, newClientConnectionDurationOpts...)
-	}
-
 	i, err := m.Float64Histogram(
 		"http.client.connection.duration",
-		opt...,
+		append([]metric.Float64HistogramOption{
+			metric.WithDescription("The duration of the successfully established outbound HTTP connections."),
+			metric.WithUnit("s"),
+		}, opt...)...,
 	)
 	if err != nil {
-		return ClientConnectionDuration{noop.Float64Histogram{}}, err
+	    return ClientConnectionDuration{noop.Float64Histogram{}}, err
 	}
 	return ClientConnectionDuration{i}, nil
 }
@@ -326,7 +310,6 @@ func (m ClientConnectionDuration) Record(
 func (m ClientConnectionDuration) RecordSet(ctx context.Context, val float64, set attribute.Set) {
 	if set.Len() == 0 {
 		m.Float64Histogram.Record(ctx, val)
-		return
 	}
 
 	o := recOptPool.Get().(*[]metric.RecordOption)
@@ -370,11 +353,6 @@ type ClientOpenConnections struct {
 	metric.Int64UpDownCounter
 }
 
-var newClientOpenConnectionsOpts = []metric.Int64UpDownCounterOption{
-	metric.WithDescription("Number of outbound HTTP connections that are currently active or idle on the client."),
-	metric.WithUnit("{connection}"),
-}
-
 // NewClientOpenConnections returns a new ClientOpenConnections instrument.
 func NewClientOpenConnections(
 	m metric.Meter,
@@ -385,18 +363,15 @@ func NewClientOpenConnections(
 		return ClientOpenConnections{noop.Int64UpDownCounter{}}, nil
 	}
 
-	if len(opt) == 0 {
-		opt = newClientOpenConnectionsOpts
-	} else {
-		opt = append(opt, newClientOpenConnectionsOpts...)
-	}
-
 	i, err := m.Int64UpDownCounter(
 		"http.client.open_connections",
-		opt...,
+		append([]metric.Int64UpDownCounterOption{
+			metric.WithDescription("Number of outbound HTTP connections that are currently active or idle on the client."),
+			metric.WithUnit("{connection}"),
+		}, opt...)...,
 	)
 	if err != nil {
-		return ClientOpenConnections{noop.Int64UpDownCounter{}}, err
+	    return ClientOpenConnections{noop.Int64UpDownCounter{}}, err
 	}
 	return ClientOpenConnections{i}, nil
 }
@@ -513,11 +488,6 @@ type ClientRequestBodySize struct {
 	metric.Int64Histogram
 }
 
-var newClientRequestBodySizeOpts = []metric.Int64HistogramOption{
-	metric.WithDescription("Size of HTTP client request bodies."),
-	metric.WithUnit("By"),
-}
-
 // NewClientRequestBodySize returns a new ClientRequestBodySize instrument.
 func NewClientRequestBodySize(
 	m metric.Meter,
@@ -528,18 +498,15 @@ func NewClientRequestBodySize(
 		return ClientRequestBodySize{noop.Int64Histogram{}}, nil
 	}
 
-	if len(opt) == 0 {
-		opt = newClientRequestBodySizeOpts
-	} else {
-		opt = append(opt, newClientRequestBodySizeOpts...)
-	}
-
 	i, err := m.Int64Histogram(
 		"http.client.request.body.size",
-		opt...,
+		append([]metric.Int64HistogramOption{
+			metric.WithDescription("Size of HTTP client request bodies."),
+			metric.WithUnit("By"),
+		}, opt...)...,
 	)
 	if err != nil {
-		return ClientRequestBodySize{noop.Int64Histogram{}}, err
+	    return ClientRequestBodySize{noop.Int64Histogram{}}, err
 	}
 	return ClientRequestBodySize{i}, nil
 }
@@ -626,7 +593,6 @@ func (m ClientRequestBodySize) Record(
 func (m ClientRequestBodySize) RecordSet(ctx context.Context, val int64, set attribute.Set) {
 	if set.Len() == 0 {
 		m.Int64Histogram.Record(ctx, val)
-		return
 	}
 
 	o := recOptPool.Get().(*[]metric.RecordOption)
@@ -696,11 +662,6 @@ type ClientRequestDuration struct {
 	metric.Float64Histogram
 }
 
-var newClientRequestDurationOpts = []metric.Float64HistogramOption{
-	metric.WithDescription("Duration of HTTP client requests."),
-	metric.WithUnit("s"),
-}
-
 // NewClientRequestDuration returns a new ClientRequestDuration instrument.
 func NewClientRequestDuration(
 	m metric.Meter,
@@ -711,18 +672,15 @@ func NewClientRequestDuration(
 		return ClientRequestDuration{noop.Float64Histogram{}}, nil
 	}
 
-	if len(opt) == 0 {
-		opt = newClientRequestDurationOpts
-	} else {
-		opt = append(opt, newClientRequestDurationOpts...)
-	}
-
 	i, err := m.Float64Histogram(
 		"http.client.request.duration",
-		opt...,
+		append([]metric.Float64HistogramOption{
+			metric.WithDescription("Duration of HTTP client requests."),
+			metric.WithUnit("s"),
+		}, opt...)...,
 	)
 	if err != nil {
-		return ClientRequestDuration{noop.Float64Histogram{}}, err
+	    return ClientRequestDuration{noop.Float64Histogram{}}, err
 	}
 	return ClientRequestDuration{i}, nil
 }
@@ -795,7 +753,6 @@ func (m ClientRequestDuration) Record(
 func (m ClientRequestDuration) RecordSet(ctx context.Context, val float64, set attribute.Set) {
 	if set.Len() == 0 {
 		m.Float64Histogram.Record(ctx, val)
-		return
 	}
 
 	o := recOptPool.Get().(*[]metric.RecordOption)
@@ -865,11 +822,6 @@ type ClientResponseBodySize struct {
 	metric.Int64Histogram
 }
 
-var newClientResponseBodySizeOpts = []metric.Int64HistogramOption{
-	metric.WithDescription("Size of HTTP client response bodies."),
-	metric.WithUnit("By"),
-}
-
 // NewClientResponseBodySize returns a new ClientResponseBodySize instrument.
 func NewClientResponseBodySize(
 	m metric.Meter,
@@ -880,18 +832,15 @@ func NewClientResponseBodySize(
 		return ClientResponseBodySize{noop.Int64Histogram{}}, nil
 	}
 
-	if len(opt) == 0 {
-		opt = newClientResponseBodySizeOpts
-	} else {
-		opt = append(opt, newClientResponseBodySizeOpts...)
-	}
-
 	i, err := m.Int64Histogram(
 		"http.client.response.body.size",
-		opt...,
+		append([]metric.Int64HistogramOption{
+			metric.WithDescription("Size of HTTP client response bodies."),
+			metric.WithUnit("By"),
+		}, opt...)...,
 	)
 	if err != nil {
-		return ClientResponseBodySize{noop.Int64Histogram{}}, err
+	    return ClientResponseBodySize{noop.Int64Histogram{}}, err
 	}
 	return ClientResponseBodySize{i}, nil
 }
@@ -978,7 +927,6 @@ func (m ClientResponseBodySize) Record(
 func (m ClientResponseBodySize) RecordSet(ctx context.Context, val int64, set attribute.Set) {
 	if set.Len() == 0 {
 		m.Int64Histogram.Record(ctx, val)
-		return
 	}
 
 	o := recOptPool.Get().(*[]metric.RecordOption)
@@ -1048,11 +996,6 @@ type ServerActiveRequests struct {
 	metric.Int64UpDownCounter
 }
 
-var newServerActiveRequestsOpts = []metric.Int64UpDownCounterOption{
-	metric.WithDescription("Number of active HTTP server requests."),
-	metric.WithUnit("{request}"),
-}
-
 // NewServerActiveRequests returns a new ServerActiveRequests instrument.
 func NewServerActiveRequests(
 	m metric.Meter,
@@ -1063,18 +1006,15 @@ func NewServerActiveRequests(
 		return ServerActiveRequests{noop.Int64UpDownCounter{}}, nil
 	}
 
-	if len(opt) == 0 {
-		opt = newServerActiveRequestsOpts
-	} else {
-		opt = append(opt, newServerActiveRequestsOpts...)
-	}
-
 	i, err := m.Int64UpDownCounter(
 		"http.server.active_requests",
-		opt...,
+		append([]metric.Int64UpDownCounterOption{
+			metric.WithDescription("Number of active HTTP server requests."),
+			metric.WithUnit("{request}"),
+		}, opt...)...,
 	)
 	if err != nil {
-		return ServerActiveRequests{noop.Int64UpDownCounter{}}, err
+	    return ServerActiveRequests{noop.Int64UpDownCounter{}}, err
 	}
 	return ServerActiveRequests{i}, nil
 }
@@ -1178,11 +1118,6 @@ type ServerRequestBodySize struct {
 	metric.Int64Histogram
 }
 
-var newServerRequestBodySizeOpts = []metric.Int64HistogramOption{
-	metric.WithDescription("Size of HTTP server request bodies."),
-	metric.WithUnit("By"),
-}
-
 // NewServerRequestBodySize returns a new ServerRequestBodySize instrument.
 func NewServerRequestBodySize(
 	m metric.Meter,
@@ -1193,18 +1128,15 @@ func NewServerRequestBodySize(
 		return ServerRequestBodySize{noop.Int64Histogram{}}, nil
 	}
 
-	if len(opt) == 0 {
-		opt = newServerRequestBodySizeOpts
-	} else {
-		opt = append(opt, newServerRequestBodySizeOpts...)
-	}
-
 	i, err := m.Int64Histogram(
 		"http.server.request.body.size",
-		opt...,
+		append([]metric.Int64HistogramOption{
+			metric.WithDescription("Size of HTTP server request bodies."),
+			metric.WithUnit("By"),
+		}, opt...)...,
 	)
 	if err != nil {
-		return ServerRequestBodySize{noop.Int64Histogram{}}, err
+	    return ServerRequestBodySize{noop.Int64Histogram{}}, err
 	}
 	return ServerRequestBodySize{i}, nil
 }
@@ -1288,7 +1220,6 @@ func (m ServerRequestBodySize) Record(
 func (m ServerRequestBodySize) RecordSet(ctx context.Context, val int64, set attribute.Set) {
 	if set.Len() == 0 {
 		m.Int64Histogram.Record(ctx, val)
-		return
 	}
 
 	o := recOptPool.Get().(*[]metric.RecordOption)
@@ -1368,11 +1299,6 @@ type ServerRequestDuration struct {
 	metric.Float64Histogram
 }
 
-var newServerRequestDurationOpts = []metric.Float64HistogramOption{
-	metric.WithDescription("Duration of HTTP server requests."),
-	metric.WithUnit("s"),
-}
-
 // NewServerRequestDuration returns a new ServerRequestDuration instrument.
 func NewServerRequestDuration(
 	m metric.Meter,
@@ -1383,18 +1309,15 @@ func NewServerRequestDuration(
 		return ServerRequestDuration{noop.Float64Histogram{}}, nil
 	}
 
-	if len(opt) == 0 {
-		opt = newServerRequestDurationOpts
-	} else {
-		opt = append(opt, newServerRequestDurationOpts...)
-	}
-
 	i, err := m.Float64Histogram(
 		"http.server.request.duration",
-		opt...,
+		append([]metric.Float64HistogramOption{
+			metric.WithDescription("Duration of HTTP server requests."),
+			metric.WithUnit("s"),
+		}, opt...)...,
 	)
 	if err != nil {
-		return ServerRequestDuration{noop.Float64Histogram{}}, err
+	    return ServerRequestDuration{noop.Float64Histogram{}}, err
 	}
 	return ServerRequestDuration{i}, nil
 }
@@ -1464,7 +1387,6 @@ func (m ServerRequestDuration) Record(
 func (m ServerRequestDuration) RecordSet(ctx context.Context, val float64, set attribute.Set) {
 	if set.Len() == 0 {
 		m.Float64Histogram.Record(ctx, val)
-		return
 	}
 
 	o := recOptPool.Get().(*[]metric.RecordOption)
@@ -1544,11 +1466,6 @@ type ServerResponseBodySize struct {
 	metric.Int64Histogram
 }
 
-var newServerResponseBodySizeOpts = []metric.Int64HistogramOption{
-	metric.WithDescription("Size of HTTP server response bodies."),
-	metric.WithUnit("By"),
-}
-
 // NewServerResponseBodySize returns a new ServerResponseBodySize instrument.
 func NewServerResponseBodySize(
 	m metric.Meter,
@@ -1559,18 +1476,15 @@ func NewServerResponseBodySize(
 		return ServerResponseBodySize{noop.Int64Histogram{}}, nil
 	}
 
-	if len(opt) == 0 {
-		opt = newServerResponseBodySizeOpts
-	} else {
-		opt = append(opt, newServerResponseBodySizeOpts...)
-	}
-
 	i, err := m.Int64Histogram(
 		"http.server.response.body.size",
-		opt...,
+		append([]metric.Int64HistogramOption{
+			metric.WithDescription("Size of HTTP server response bodies."),
+			metric.WithUnit("By"),
+		}, opt...)...,
 	)
 	if err != nil {
-		return ServerResponseBodySize{noop.Int64Histogram{}}, err
+	    return ServerResponseBodySize{noop.Int64Histogram{}}, err
 	}
 	return ServerResponseBodySize{i}, nil
 }
@@ -1654,7 +1568,6 @@ func (m ServerResponseBodySize) Record(
 func (m ServerResponseBodySize) RecordSet(ctx context.Context, val int64, set attribute.Set) {
 	if set.Len() == 0 {
 		m.Int64Histogram.Record(ctx, val)
-		return
 	}
 
 	o := recOptPool.Get().(*[]metric.RecordOption)

@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/compose-spec/compose-go/v2/tree"
-	"go.yaml.in/yaml/v4"
+	"go.yaml.in/yaml/v3"
 )
 
 type ResetProcessor struct {

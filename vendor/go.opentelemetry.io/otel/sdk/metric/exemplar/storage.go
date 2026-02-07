@@ -13,28 +13,24 @@ import (
 
 // storage is an exemplar storage for [Reservoir] implementations.
 type storage struct {
-	// measurements are the measurements sampled.
+	// store are the measurements sampled.
 	//
 	// This does not use []metricdata.Exemplar because it potentially would
 	// require an allocation for trace and span IDs in the hot path of Offer.
-	measurements []measurement
+	store []measurement
 }
 
 func newStorage(n int) *storage {
-	return &storage{measurements: make([]measurement, n)}
-}
-
-func (r *storage) store(idx int, m measurement) {
-	r.measurements[idx] = m
+	return &storage{store: make([]measurement, n)}
 }
 
 // Collect returns all the held exemplars.
 //
 // The Reservoir state is preserved after this call.
 func (r *storage) Collect(dest *[]Exemplar) {
-	*dest = reset(*dest, len(r.measurements), len(r.measurements))
+	*dest = reset(*dest, len(r.store), len(r.store))
 	var n int
-	for _, m := range r.measurements {
+	for _, m := range r.store {
 		if !m.valid {
 			continue
 		}
