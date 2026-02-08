@@ -50,16 +50,22 @@ EOF
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
+  echo "#" >&3
   run docker exec ddev-router curl -sI http://ddev-my-generic-site-web:8000
-  printf "# curl from inside router:\n$output" >&3
+  echo "# === curl from inside router (php-server) ===" >&3
+  printf '%s\n' "$output" | sed 's/^/# /' >&3
   assert_line --partial "200 OK"
 
+  echo "#" >&3
   # Diagnostic: show traefik config files in volume
   run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
-  printf "\n# Traefik config files:\n$output\n" >&3
+  echo "# === Traefik config files (router volume) ===" >&3
+  printf '%s\n' "$output" | sed 's/^/# /' >&3
+
   # Diagnostic: show traefik router API response (just router names)
   run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
-  printf "\n# Traefik routers: \n$(echo $output | jq -r)\n" >&3
+  echo "# === Traefik routers (API) ===" >&3
+  printf '%s\n' "$(echo "$output" | jq -r)" | sed 's/^/# /' >&3
 
   # validate running project
   run curl -sfI https://${PROJNAME}.ddev.site
