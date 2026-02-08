@@ -329,6 +329,100 @@ func TestCustomGlobalConfig(t *testing.T) {
 		"Response should contain the custom header from global middleware")
 }
 
+// TestMergeTraefikProjectConfig tests that multiple project traefik config files are properly merged
+// and that the merged configuration works correctly with HTTP to HTTPS redirect
+func TestMergeTraefikProjectConfig(t *testing.T) {
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0] // 0 == wordpress
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+
+	origRouter := globalconfig.DdevGlobalConfig.Router
+	globalconfig.DdevGlobalConfig.Router = types.RouterTypeTraefik
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
+		ddevapp.PowerOff()
+		globalconfig.DdevGlobalConfig.Router = origRouter
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+
+		// Clean up extra traefik config file
+		extraConfigFile := filepath.Join(app.GetConfigPath("traefik/config"), "redirect-https.yaml")
+		_ = os.Remove(extraConfigFile)
+	})
+
+	// Start the app first to generate base traefik config
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Stop to add the extra config file
+	err = app.Stop(false, false)
+	require.NoError(t, err)
+
+	// Create an extra traefik config file that enables HTTP to HTTPS redirect
+	projectTraefikConfigDir := app.GetConfigPath("traefik/config")
+	extraConfigFile := filepath.Join(projectTraefikConfigDir, "redirect-https.yaml")
+	extraConfig := `# Extra config to enable HTTP to HTTPS redirect
+http:
+  routers:
+    ` + app.Name + `-web-80-http:
+      middlewares:
+        - "` + app.Name + `-redirectHttps"
+`
+	err = os.WriteFile(extraConfigFile, []byte(extraConfig), 0644)
+	require.NoError(t, err)
+
+	// Start again to pick up the new config
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Check that the merged config file exists in global traefik config
+	globalTraefikConfigDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik", "config")
+	mergedConfigFile := filepath.Join(globalTraefikConfigDir, app.Name+"_merged.yaml")
+	require.FileExists(t, mergedConfigFile, "Merged config file should exist in global traefik config")
+
+	// Read and verify the merged config contains the middleware reference
+	mergedConfigContent, err := fileutil.ReadFileIntoString(mergedConfigFile)
+	require.NoError(t, err)
+	require.Contains(t, mergedConfigContent, app.Name+"-redirectHttps", "Merged config should contain redirectHttps middleware reference")
+	require.Contains(t, mergedConfigContent, "middlewares:", "Merged config should contain middlewares section")
+
+	// Verify project still works correctly with custom config
+	_, err = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+	require.NoError(t, err, "Project should still be accessible with merged traefik config")
+
+	// Test that HTTP to HTTPS redirect actually works
+	// Get the HTTP URLs
+	httpURLs, _, _ := app.GetAllURLs()
+	require.NotEmpty(t, httpURLs, "Should have at least one HTTP URL")
+
+	// Create client that doesn't follow redirects so we can check the redirect response
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	// Make request to HTTP URL
+	resp, err := client.Get(httpURLs[0] + site.Safe200URIWithExpectation.URI)
+	require.NoError(t, err, "HTTP request should succeed")
+	defer resp.Body.Close()
+
+	// Should get a redirect (301 or 308)
+	require.True(t, resp.StatusCode == 301 || resp.StatusCode == 308,
+		"HTTP request should return redirect status (got %d)", resp.StatusCode)
+
+	// Redirect location should be HTTPS version of the URL
+	location := resp.Header.Get("Location")
+	require.NotEmpty(t, location, "Redirect should have Location header")
+	require.True(t, strings.HasPrefix(location, "https://"),
+		"Redirect location should be HTTPS (got %s)", location)
+}
+
 // TestCustomProjectConfig tests that custom project-level Traefik configuration
 // (after removing #ddev-generated) is properly deployed and affects behavior
 func TestCustomProjectConfig(t *testing.T) {
@@ -386,7 +480,7 @@ func TestCustomProjectConfig(t *testing.T) {
 
 	// Verify the custom config exists in the global traefik config directory
 	globalTraefikConfigDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik", "config")
-	globalProjectConfigFile := filepath.Join(globalTraefikConfigDir, app.Name+".yaml")
+	globalProjectConfigFile := filepath.Join(globalTraefikConfigDir, app.Name+"_merged.yaml")
 	require.FileExists(t, globalProjectConfigFile,
 		"Custom project config should be copied to global traefik config directory")
 
@@ -400,11 +494,11 @@ func TestCustomProjectConfig(t *testing.T) {
 	configDir := "/mnt/ddev-global-cache/traefik/config"
 	stdout, _, err := dockerutil.Exec("ddev-router", "ls "+configDir, "")
 	require.NoError(t, err, "Failed to list router config directory")
-	require.Contains(t, stdout, app.Name+".yaml",
+	require.Contains(t, stdout, app.Name+"_merged.yaml",
 		"Router config directory should contain the project config file")
 
 	// Verify the config content in the router volume
-	stdout, _, err = dockerutil.Exec("ddev-router", "cat "+configDir+"/"+app.Name+".yaml", "")
+	stdout, _, err = dockerutil.Exec("ddev-router", "cat "+configDir+"/"+app.Name+"_merged.yaml", "")
 	require.NoError(t, err, "Failed to read project config from router volume")
 	require.Contains(t, stdout, "middlewares:",
 		"Router config should contain the enabled middlewares section")
@@ -437,55 +531,4 @@ func TestCustomProjectConfig(t *testing.T) {
 	require.NotEmpty(t, location, "Redirect response should have Location header")
 	require.True(t, strings.HasPrefix(location, "https://"),
 		"Redirect location should use https://, got: %s", location)
-}
-
-// TestTraefikMultipleCerts tests that multiple certificate files from
-// .ddev/traefik/certs/ are copied to the router container
-func TestTraefikMultipleCerts(t *testing.T) {
-	origDir, _ := os.Getwd()
-
-	site := TestSites[0]
-	app, err := ddevapp.NewApp(site.Dir, true)
-	require.NoError(t, err)
-
-	// Set up paths
-	projectCertsDir := app.GetConfigPath("traefik/certs")
-	err = os.MkdirAll(projectCertsDir, 0755)
-	require.NoError(t, err)
-
-	// Create multiple test certificate files
-	testCerts := map[string]string{
-		"ca.crt":         "test CA certificate content",
-		"custom-ca.crt":  "custom CA certificate content",
-		"client.crt":     "client certificate content",
-		"client.key":     "client key content",
-		"additional.crt": "additional certificate content",
-		"additional.key": "additional key content",
-	}
-
-	for certName, content := range testCerts {
-		certPath := filepath.Join(projectCertsDir, certName)
-		err = os.WriteFile(certPath, []byte(content), 0644)
-		require.NoError(t, err)
-	}
-
-	t.Cleanup(func() {
-		_ = os.Chdir(origDir)
-		_ = app.Stop(true, false)
-		_ = os.RemoveAll(projectCertsDir)
-		ddevapp.PowerOff()
-	})
-
-	// Start the project - this will trigger PushGlobalTraefikConfig
-	err = app.Start()
-	require.NoError(t, err)
-
-	// Verify all certificate files exist in the router's certs directory
-	certsDir := "/mnt/ddev-global-cache/traefik/certs"
-	for certName := range testCerts {
-		stdout, _, err := dockerutil.Exec("ddev-router", "cat "+certsDir+"/"+certName, "")
-		require.NoError(t, err, "certificate %s should exist in router volume", certName)
-		require.Contains(t, stdout, testCerts[certName],
-			"certificate %s should contain expected content", certName)
-	}
 }

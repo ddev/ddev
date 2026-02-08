@@ -260,17 +260,48 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		projectConfigDir := app.GetConfigPath("traefik/config")
 		projectCertsDir := app.GetConfigPath("traefik/certs")
 
-		// Mark this project's config as expected - even if we can't copy it now,
-		// we don't want to remove an existing config from the volume
-		expectedConfigs[app.Name+".yaml"] = true
+		// Mark this project's config as expected - always use _merged.yaml suffix for consistency
+		expectedConfigs[app.Name+"_merged.yaml"] = true
+		expectedCerts[app.Name+".crt"] = true
+		expectedCerts[app.Name+".key"] = true
 
-		// Copy project's config yaml to global config dir
+		// Merge project's config yaml files and copy to global config dir
 		projectConfigFile := filepath.Join(projectConfigDir, app.Name+".yaml")
 		if fileutil.FileExists(projectConfigFile) {
-			destFile := filepath.Join(globalSourceConfigDir, app.Name+".yaml")
-			err = fileutil.CopyFile(projectConfigFile, destFile)
+			// Find all additional *.yaml files in the project config directory (excluding the main file)
+			additionalFiles, err := fileutil.GlobFilenames(projectConfigDir, "*.yaml")
 			if err != nil {
-				util.Warning("Failed to copy traefik config for project %s: %v", app.Name, err)
+				util.Warning("Failed to glob traefik config files for project %s: %v", app.Name, err)
+			}
+
+			// Filter out the main config file from the list of additional files
+			// Note: GlobFilenames returns full paths, not just filenames
+			var extraConfigFiles []string
+			for _, fullPath := range additionalFiles {
+				if fullPath != projectConfigFile {
+					extraConfigFiles = append(extraConfigFiles, fullPath)
+				}
+			}
+
+			// Always use _merged.yaml suffix for consistency
+			destFile := filepath.Join(globalSourceConfigDir, app.Name+"_merged.yaml")
+			if len(extraConfigFiles) > 0 {
+				util.Debug("Merging traefik config files for project %s: base=%s, additional=%v", app.Name, projectConfigFile, extraConfigFiles)
+				mergedYaml, err := util.MergeYamlFiles(projectConfigFile, extraConfigFiles...)
+				if err != nil {
+					util.Warning("Failed to merge traefik config files for project %s: %v", app.Name, err)
+				} else {
+					err = os.WriteFile(destFile, []byte(mergedYaml), 0644)
+					if err != nil {
+						util.Warning("Failed to write merged traefik config for project %s: %v", app.Name, err)
+					}
+				}
+			} else {
+				// No additional files, just copy the main config file
+				err = fileutil.CopyFile(projectConfigFile, destFile)
+				if err != nil {
+					util.Warning("Failed to copy traefik config for project %s: %v", app.Name, err)
+				}
 			}
 		}
 
