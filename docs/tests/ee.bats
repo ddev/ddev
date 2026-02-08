@@ -54,8 +54,8 @@ teardown() {
   run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
   echo "# Traefik config files: $output" >&3
   # Diagnostic: show traefik router API response (just router names)
-  run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
-  echo "# Traefik routers: $output"
+#  run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
+#  echo "# Traefik routers: \n $(echo $output | jq -r)" >&3
   # validate running project
   run curl -sfIv https://${PROJNAME}.ddev.site/admin.php
   assert_output --partial "server: nginx"
