@@ -495,7 +495,7 @@ func TestCustomProjectTraefikConfig(t *testing.T) {
 
 	// Verify the custom config exists in the global traefik config directory
 	globalTraefikConfigDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik", "config")
-	globalProjectConfigFile := filepath.Join(globalTraefikConfigDir, app.Name+".yaml")
+	globalProjectConfigFile := filepath.Join(globalTraefikConfigDir, app.Name+"_merged.yaml")
 	require.FileExists(t, globalProjectConfigFile,
 		"Custom project config should be copied to global traefik config directory")
 
@@ -509,11 +509,11 @@ func TestCustomProjectTraefikConfig(t *testing.T) {
 	configDir := "/mnt/ddev-global-cache/traefik/config"
 	stdout, _, err := dockerutil.Exec("ddev-router", "ls "+configDir, "")
 	require.NoError(t, err, "Failed to list router config directory")
-	require.Contains(t, stdout, app.Name+".yaml",
+	require.Contains(t, stdout, app.Name+"_merged.yaml",
 		"Router config directory should contain the project config file")
 
 	// Verify the config content in the router volume
-	stdout, _, err = dockerutil.Exec("ddev-router", "cat "+configDir+"/"+app.Name+".yaml", "")
+	stdout, _, err = dockerutil.Exec("ddev-router", "cat "+configDir+"/"+app.Name+"_merged.yaml", "")
 	require.NoError(t, err, "Failed to read project config from router volume")
 	require.Contains(t, stdout, "middlewares:",
 		"Router config should contain the enabled middlewares section")
