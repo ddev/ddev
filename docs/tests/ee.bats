@@ -52,10 +52,12 @@ teardown() {
 
   # Diagnostic: show traefik config files in volume
   run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
-  echo "# Traefik config files: $output" >&3
+  echo "# Traefik config files:" >&3
+  printf '%s\n' "$output" | sed 's/^/# /' >&3
 
   run docker exec ddev-router curl -sI http://ddev-my-ee-site-web:80/admin.php
-  printf "# curl from inside router:\n$output" >&3
+  echo "# curl from inside router:" >&3
+  printf '%s\n' "$output" | sed 's/^/# /' >&3
   assert_line --partial "200 OK"
 
   # Diagnostic: show traefik router API response (just router names)
@@ -111,17 +113,19 @@ teardown() {
 
   # Diagnostic: show traefik config files in volume
   run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
-  echo "# Traefik config files: $output"
+  echo "# Traefik config files:" >&3
+  printf '%s\n' "$output" | sed 's/^/# /' >&3
   # Diagnostic: show traefik router API response (just router names)
   run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
-  echo "# Traefik routers: $output"
+  echo "# Traefik routers:" >&3
+  printf '%s\n' "$(echo "$output" | jq -r)" | sed 's/^/# /' >&3
 
   # validate running project
   run curl -sfIv https://${PROJNAME}.ddev.site/admin.php
-  assert_output --partial "server: nginx"
-  assert_output --partial "HTTP/2 200"
+  assert_line --partial "server: nginx"
+  assert_line --partial "HTTP/2 200"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site/admin.php
+  run curl -sf https://${PROJNAME}.ddev.site/admin.php
   assert_output --partial "<title>Install ExpressionEngine"
   assert_success
 }
