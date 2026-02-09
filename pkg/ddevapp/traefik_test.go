@@ -329,9 +329,12 @@ func TestCustomGlobalConfig(t *testing.T) {
 		"Response should contain the custom header from global middleware")
 }
 
-// TestCustomProjectConfig tests that custom project-level Traefik configuration
+// TestCustomProjectTraefikConfig tests that custom project-level Traefik configuration
 // (after removing #ddev-generated) is properly deployed and affects behavior
-func TestCustomProjectConfig(t *testing.T) {
+func TestCustomProjectTraefikConfig(t *testing.T) {
+	//if dockerutil.IsRancherDesktop() {
+	//	t.Skip("Skipping on Rancher Desktop because it seems to be too slow to pick up fsnotify on changed traefik config files")
+	//}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	app, err := ddevapp.NewApp(site.Dir, true)
@@ -351,9 +354,21 @@ func TestCustomProjectConfig(t *testing.T) {
 		ddevapp.PowerOff()
 	})
 
+	// We need a clean set of ports for this test because we're doing a specific alteration
+	// of the traefik config that won't work if the port changes, so avoid ephemeral port use
+	ddevapp.PowerOff()
+
 	// Start the project to generate initial Traefik config
 	err = app.Start()
 	require.NoError(t, err)
+
+	// Skip if ephemeral ports are in use due to port conflicts
+	// This happens on Lima-based providers when ports 80/443 are already in use
+	httpPort := app.GetPrimaryRouterHTTPPort()
+	httpsPort := app.GetPrimaryRouterHTTPSPort()
+	if httpPort != "80" || httpsPort != "443" {
+		t.Skipf("Skipping because non-standard ports are in use (HTTP=%s, HTTPS=%s) - likely due to port conflicts; this breaks the assumption in the altered traefik config", httpPort, httpsPort)
+	}
 
 	// Path to the project's Traefik config file
 	projectTraefikConfigFile := filepath.Join(projectTraefikConfigDir, app.Name+".yaml")
