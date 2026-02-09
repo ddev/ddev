@@ -84,17 +84,12 @@ ddev ut dockercheck`,
 			}
 		}
 
-		// buildx is Docker-specific, skip for Podman
-		if !dockerutil.IsPodman() {
-			buildxVersion, err := exec2.RunHostCommand(bashPath, "-c", "docker buildx version | awk '{print $2}'")
-			if err != nil {
-				util.Failed("buildx is required and does not seem to be installed. Please install with 'brew install docker-buildx' or see https://github.com/docker/buildx#installing")
-			} else {
-				buildxVersion = strings.Trim(buildxVersion, "\r\n ")
-				util.Success("docker buildx version %s", buildxVersion)
-			}
+		buildxVersion, err := exec2.RunHostCommand(bashPath, "-c", "docker buildx version | awk '{print $2}'")
+		if err != nil {
+			util.Failed("buildx is required and does not seem to be installed. Please install with 'brew install docker-buildx' or see https://github.com/docker/buildx#installing")
 		} else {
-			util.Success("Podman detected - buildx check skipped")
+			buildxVersion = strings.Trim(buildxVersion, "\r\n ")
+			util.Success("docker buildx version %s", buildxVersion)
 		}
 
 		dockerContextName, dockerHost, err := dockerutil.GetDockerContextNameAndHost()
@@ -167,14 +162,12 @@ ddev ut dockercheck`,
 
 		dockerutil.CheckAvailableSpace()
 
-		// Test buildx with a trivial build (Docker only)
-		if !dockerutil.IsPodman() {
-			out, err = exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("echo 'FROM %s' | docker buildx build --quiet -f- -t ddev-buildx-test:latest . && docker rmi -f ddev-buildx-test:latest", versionconstants.UtilitiesImage))
-			if err != nil {
-				util.Warning("Unable to perform trivial build with buildx: %v; output=%s", err, out)
-			} else {
-				util.Success("docker buildx is working correctly (trivial build succeeded)")
-			}
+		// Test buildx with a trivial build on the host
+		out, err = exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("echo 'FROM %s' | docker buildx build --quiet -f- -t ddev-buildx-test:latest . && docker rmi -f ddev-buildx-test:latest", versionconstants.UtilitiesImage))
+		if err != nil {
+			util.Warning("Unable to perform trivial build with buildx: %v; output=%s", err, out)
+		} else {
+			util.Success("docker buildx is working correctly (trivial build succeeded)")
 		}
 
 		// Check docker auth configuration
