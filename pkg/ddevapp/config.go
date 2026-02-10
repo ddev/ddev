@@ -733,6 +733,21 @@ func (app *DdevApp) CheckCustomConfig() {
 		util.Warning("Using custom Traefik configuration (use `docker logs ddev-router` for troubleshooting): %v", mainProjectTraefikFile)
 		customConfig = true
 	}
+	traefikProjectConfigPath := app.GetConfigPath("traefik/config")
+	if _, err := os.Stat(traefikProjectConfigPath); err == nil {
+		traefikFiles, err := filepath.Glob(filepath.Join(traefikProjectConfigPath, "*.yaml"))
+		util.CheckErr(err)
+		// Remove the main project traefik file from the list
+		traefikFiles = slices.DeleteFunc(traefikFiles, func(f string) bool {
+			return filepath.Base(f) == app.Name+".yaml"
+		})
+		extraTraefikFiles := filterCustomConfigFiles(traefikFiles)
+		// Warn if there are extra config files in project .ddev/traefik/config
+		if len(extraTraefikFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(extraTraefikFiles)
+			util.Warning("Extra project traefik config files found in .ddev/traefik/config: %v", printableFiles)
+		}
+	}
 
 	nginxFullConfigPath := app.GetConfigPath("nginx_full/nginx-site.conf")
 	if isCustomConfigFile(nginxFullConfigPath) && app.WebserverType == nodeps.WebserverNginxFPM {
