@@ -2459,6 +2459,11 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		baseComposeExecCmd = append(baseComposeExecCmd, "-u", opts.User)
 	}
 
+	// Ensure web service exec gets BASH_ENV so non-interactive shells load addon path and vendor/bin
+	if opts.Service == "web" {
+		baseComposeExecCmd = append(baseComposeExecCmd, "-e", "BASH_ENV=/etc/bash.nointeractive.bashrc")
+	}
+
 	if len(opts.Env) > 0 {
 		for _, envVar := range opts.Env {
 			baseComposeExecCmd = append(baseComposeExecCmd, "-e", envVar)
