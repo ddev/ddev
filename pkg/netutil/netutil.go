@@ -29,20 +29,10 @@ func IsPortActive(port string) bool {
 	}
 
 	// Skip port check for remote Docker hosts (non-local IPs)
-	// Remote IPs cause timeouts and false positives
-	parsedIP := net.ParseIP(dockerIP)
-	if parsedIP != nil && !parsedIP.IsLoopback() && dockerIP != "127.0.0.1" {
-		localIPs, localErr := GetLocalIPs()
-		isLocal := false
-		if localErr == nil {
-			for _, lip := range localIPs {
-				if lip == dockerIP {
-					isLocal = true
-					break
-				}
-			}
-		}
-		if !isLocal {
+	// Remote IPs may cause timeouts and false positives
+	if parsedIP := net.ParseIP(dockerIP); parsedIP != nil && !parsedIP.IsLoopback() {
+		localIPs, _ := GetLocalIPs()
+		if !slices.Contains(localIPs, dockerIP) {
 			util.Verbose("Skipping port check for remote Docker host %s:%s", dockerIP, port)
 			return false
 		}
