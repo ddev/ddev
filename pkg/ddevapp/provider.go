@@ -309,7 +309,9 @@ func (p *Provider) doFilesPullCommand() ([]string, error) {
 	_ = os.MkdirAll(destDir, 0755)
 
 	if p.FilesPullCommand.Command == "" {
-		util.Warning("No files_pull_command provided, so skipping files pull")
+		if p.FilesImportCommand.Command == "" {
+			util.Warning("No files_pull_command provided, so skipping files pull")
+		}
 		return nil, nil
 	}
 	s := p.FilesPullCommand.Service
