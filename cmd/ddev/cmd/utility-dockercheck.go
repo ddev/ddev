@@ -26,6 +26,12 @@ ddev ut dockercheck`,
 			util.Failed("This command takes no additional arguments")
 		}
 
+		// Ensure docker-compose is available before getting version info
+		_, err := dockerutil.DownloadDockerComposeIfNeeded()
+		if err != nil {
+			util.Warning("Unable to download docker-compose: %v", err)
+		}
+
 		versionInfo := version.GetVersionInfo()
 		bashPath := util.FindBashPath()
 		util.Success("Docker platform: %v", versionInfo["docker-platform"])
@@ -80,7 +86,7 @@ ddev ut dockercheck`,
 
 		buildxVersion, err := exec2.RunHostCommand(bashPath, "-c", "docker buildx version | awk '{print $2}'")
 		if err != nil {
-			util.Failed("buildx is required and does not seem to be installed. Please install with 'brew install docker-buildx or see %s", buildxVersion, "https://github.com/docker/buildx#installing")
+			util.Failed("buildx is required and does not seem to be installed. Please install with 'brew install docker-buildx' or see https://github.com/docker/buildx#installing")
 		} else {
 			buildxVersion = strings.Trim(buildxVersion, "\r\n ")
 			util.Success("docker buildx version %s", buildxVersion)
@@ -101,6 +107,21 @@ ddev ut dockercheck`,
 		dockerHost = os.Getenv("DOCKER_HOST")
 		if dockerHost != "" {
 			util.Success("From DOCKER_HOST=%s", dockerHost)
+		}
+
+		// Show TLS configuration
+		dockerTLSVerify := os.Getenv("DOCKER_TLS_VERIFY")
+		dockerTLS := os.Getenv("DOCKER_TLS")
+		dockerCertPath := os.Getenv("DOCKER_CERT_PATH")
+		if dockerTLSVerify != "" {
+			util.Success("DOCKER_TLS_VERIFY=%s (TLS enabled with verification)", dockerTLSVerify)
+		} else if dockerTLS != "" {
+			util.Success("DOCKER_TLS=%s (TLS enabled without verification)", dockerTLS)
+		} else {
+			util.Success("TLS not configured (no DOCKER_TLS_VERIFY or DOCKER_TLS)")
+		}
+		if dockerCertPath != "" {
+			util.Success("DOCKER_CERT_PATH=%s", dockerCertPath)
 		}
 
 		util.Success("docker-compose: %s", versionInfo["docker-compose"])

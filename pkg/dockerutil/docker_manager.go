@@ -15,6 +15,7 @@ import (
 	"github.com/docker/cli/cli/version"
 	"github.com/moby/moby/api/types/system"
 	"github.com/moby/moby/client"
+	"github.com/spf13/pflag"
 )
 
 // dockerManager manages Docker client configuration and connection state
@@ -51,7 +52,14 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		if sDockerManagerErr != nil {
 			return
 		}
+		// InstallFlags and SetDefaultOptions are necessary to match
+		// the plugin mode behavior to handle env vars such as
+		// DOCKER_TLS and DOCKER_TLS_VERIFY.
+		// See https://github.com/docker/cli/blob/master/cmd/docker-trust/trust/commands.go
+		flagSet := pflag.NewFlagSet("ddev", pflag.ContinueOnError)
 		opts := flags.NewClientOptions()
+		opts.InstallFlags(flagSet)
+		opts.SetDefaultOptions(flagSet)
 		sDockerManagerErr = sDockerManager.cli.Initialize(opts)
 		if sDockerManagerErr != nil {
 			return
