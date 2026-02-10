@@ -3242,7 +3242,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 	if status == SiteRunning {
 		_, _, err = app.Exec(&ExecOpts{
-			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
+			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/config/%s_merged.yaml", app.Name),
 		})
 		if err != nil {
 			util.Warning("Unable to clean up Traefik configuration: %v", err)
@@ -3251,7 +3251,11 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 	// Clean up ddev-global-cache
 	if removeData {
-		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s-{web,db} /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name, app.Name)
+		if err != nil {
+			util.Warning("Unable to clean up Traefik certificates for %s: %v", app.Name, err)
+		}
+
+		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-{web,db} /mnt/ddev-global-cache/traefik/*/%[1]s.{crt,key} /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 		util.Debug("Cleaning ddev-global-cache with command '%s'", c)
 		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, &dockerutil.NoHealthCheck)
 		if err != nil {
