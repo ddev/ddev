@@ -172,10 +172,10 @@ const ConfigInstructions = `
 # The mailpit port is not normally bound on the host at all, instead being routed
 # through ddev-router, but it can be bound directly to localhost if specified here.
 
-# webimage_extra_packages: [php7.4-tidy, php-bcmath]
+# webimage_extra_packages: ['php${DDEV_PHP_VERSION}-tidy', 'php${DDEV_PHP_VERSION}-yac']
 # Extra Debian packages that are needed in the webimage can be added here
 
-# dbimage_extra_packages: [telnet,netcat]
+# dbimage_extra_packages: [netcat, telnet, sudo]
 # Extra Debian packages that are needed in the dbimage can be added here
 
 # use_dns_when_possible: true
