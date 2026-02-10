@@ -203,7 +203,6 @@ To solve this:
 * Update `.ddev/config.yaml` to use the new [database type or version](../extend/database-types.md).
 * Start the project and import the database from your export.
 
-
 ### MariaDB/MySQL client: "SSL is required, but the server does not support it"
 
 If you see `ERROR 2026 (HY000): TLS/SSL error: SSL is required, but the server does not support it` when using `ddev drush sql-cli`, `ddev mysql`, or other MySQL/MariaDB client commands, the client is trying to use SSL while the DDEV database server does not provide it.
