@@ -12,7 +12,7 @@
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ddev/ddev)
 <a href="https://github.com/codespaces/new/ddev/ddev"><img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces" style="max-width: 100%; height: 20px;"></a>
 
-![Tested on PHP 7.2 to 8.5](https://img.shields.io/badge/tested%20on-PHP%205.6%20|%207.0%20|%207.1%20|%207.2%20|%207.3%20|%207.4%20|%208.0%20|%208.1%20|%208.2%20|%208.3%20|%208.4%20|%208.5-brightgreen.svg?maxAge=2419200)
+![Tested on PHP 5.6 to 8.5](https://img.shields.io/badge/tested%20on-PHP%208.5%20%7C%208.4%20%7C%208.3%20%7C%208.2%20%7C%208.1%20%7C%208.0%20%7C%207.4%20%7C%207.3%20%7C%207.2%20%7C%207.1%20%7C%207.0%20%7C%205.6-blue.svg)
 
 DDEV is an open-source tool for running local web development environments for PHP and Node.js, ready in minutes. Its powerful, flexible per-project environment configurations can be extended, version controlled, and shared. DDEV allows development teams to adopt a consistent Docker workflow without the complexities of bespoke configuration.
 
