@@ -72,7 +72,7 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	for _, envFile := range envFiles {
 		action = append(action, "--env-file", envFile)
 	}
-	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	fullContents, _, err := app.ComposeCmdWithProjectEnv(dockerutil.ComposeCmdOpts{
 		ComposeFiles: files,
 		Profiles:     []string{`*`},
 		Action:       append(action, "config"),

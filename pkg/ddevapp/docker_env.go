@@ -1,5 +1,12 @@
 package ddevapp
 
+// BuildProjectEnv returns the project-specific environment map for compose and other
+// subprocess use. Prefer this over DockerEnv() when you need "project env" as a map;
+// it provides a single semantic entry point and helps prevent misuse in non-compose contexts.
+func BuildProjectEnv(app *DdevApp) map[string]string {
+	return app.DockerEnv()
+}
+
 // ComposeEnvVarNames lists all environment variable keys that DockerEnv() sets.
 // Used by testcommon.ClearDockerEnv() and for documentation. Keep in sync with
 // the keys in DockerEnv()'s envVars map.

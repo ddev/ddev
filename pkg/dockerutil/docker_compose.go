@@ -31,8 +31,39 @@ type ComposeCmdOpts struct {
 	Action       []string
 	Progress     bool // Add dots every second while the compose command is running
 	Timeout      time.Duration
-	ProjectName  string // Optional project name to set via -p flag
-	Env          []string
+	ProjectName  string   // Optional project name to set via -p flag
+	Env          []string // Additional env vars appended to the base (e.g. COMPOSE_DISABLE_ENV_FILE=1)
+	// EnvOverrides: when set, these replace inherited vars for the compose subprocess only.
+	// Process env is unchanged. Keys in EnvOverrides are stripped from the inherited base,
+	// then overrides are applied, so the subprocess receives exactly the intended values.
+	EnvOverrides map[string]string
+}
+
+// buildComposeEnv builds the environment for the compose subprocess. When EnvOverrides
+// is set, keys present in EnvOverrides are stripped from the inherited process env and
+// replaced with the override values, ensuring the subprocess does not receive stale or
+// conflicting vars from the parent (fixes ddev/ddev#472).
+func buildComposeEnv(cmd *ComposeCmdOpts) []string {
+	var base []string
+	if cmd.EnvOverrides != nil {
+		strip := make(map[string]struct{}, len(cmd.EnvOverrides))
+		for k := range cmd.EnvOverrides {
+			strip[k] = struct{}{}
+		}
+		for _, e := range os.Environ() {
+			if idx := strings.Index(e, "="); idx > 0 {
+				if _, ok := strip[e[:idx]]; !ok {
+					base = append(base, e)
+				}
+			}
+		}
+		for k, v := range cmd.EnvOverrides {
+			base = append(base, k+"="+v)
+		}
+	} else {
+		base = os.Environ()
+	}
+	return append(base, cmd.Env...)
 }
 
 // ComposeWithStreams executes a docker-compose command but allows the caller to specify
@@ -79,7 +110,7 @@ func ComposeWithStreams(cmd *ComposeCmdOpts, stdin io.Reader, stdout io.Writer, 
 	} else {
 		proc.Stdin = stdin
 	}
-	proc.Env = append(os.Environ(), cmd.Env...)
+	proc.Env = buildComposeEnv(cmd)
 
 	err = proc.Run()
 	return err
@@ -139,7 +170,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	} else {
 		proc.Stdin = os.Stdin
 	}
-	proc.Env = append(os.Environ(), cmd.Env...)
+	proc.Env = buildComposeEnv(cmd)
 
 	stderrPipe, err := proc.StderrPipe()
 	if err != nil {

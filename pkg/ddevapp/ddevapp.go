@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -1761,7 +1762,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		action = append(action, "--no-cache")
 	}
 	util.Debug("Executing docker-compose -f %s %s", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "))
-	out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	out, stderr, err := app.ComposeCmdWithProjectEnv(dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 		Action:       action,
 		Progress:     true,
@@ -1778,7 +1779,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// If the web image is dirty, try to rebuild it immediately
 	if err == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
 		util.Debug("Executing docker-compose -f %s --progress=%s build web --no-cache", app.DockerComposeFullRenderedYAMLPath(), progress)
-		out, stderr, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		out, stderr, err = app.ComposeCmdWithProjectEnv(dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 			Action:       []string{"--progress=" + progress, "build", "web", "--no-cache"},
 			Progress:     true,
@@ -1805,7 +1806,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
-	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	_, _, err = app.ComposeCmdWithProjectEnv(dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 		Action:       []string{"up", "-d"},
 	})
@@ -2105,7 +2106,7 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 		}
 	}
 
-	_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	_, stderr, err := app.ComposeCmdWithProjectEnv(dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 		Profiles:     profiles,
 		Action:       []string{"up", "-d"},
@@ -2413,8 +2414,6 @@ type ExecOpts struct {
 // Returns ComposeCmd results of stdout, stderr, err
 // If Nocapture arg is true, stdout/stderr will be empty and output directly to stdout/stderr
 func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
-	_ = app.DockerEnv()
-
 	defer util.TimeTrackC(fmt.Sprintf("app.Exec %v", opts))()
 
 	if opts.Cmd == "" && len(opts.RawCmd) == 0 {
@@ -2496,12 +2495,12 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	var outRes, errRes string
 	r := append(baseComposeExecCmd, opts.RawCmd...)
 	if opts.NoCapture || opts.Tty {
-		err = dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
+		err = app.ComposeWithStreamsWithProjectEnv(dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 			Action:       r,
 		}, os.Stdin, stdout, stderr)
 	} else {
-		outRes, errRes, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		outRes, errRes, err = app.ComposeCmdWithProjectEnv(dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 			Action:       r,
 		})
@@ -2521,8 +2520,6 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 // ExecWithTty executes a given command in the container of given type.
 // It allocates a pty for interactive work.
 func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
-	_ = app.DockerEnv()
-
 	if opts.Service == "" {
 		opts.Service = "web"
 	}
@@ -2569,7 +2566,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 
 	args = append(args, shell, "-c", opts.Cmd)
 
-	return dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
+	return app.ComposeWithStreamsWithProjectEnv(dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 		Action:       args,
 	}, os.Stdin, os.Stdout, os.Stderr)
@@ -2715,7 +2712,9 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 	return stdout.String(), nil
 }
 
-// DockerEnv sets environment variables for a docker-compose run.
+// DockerEnv builds and returns the project-specific environment map for docker-compose.
+// It does not mutate the process environment. Call BuildProjectEnv for the canonical
+// entry point; callers that need this map for compose should use ComposeCmdWithProjectEnv.
 func (app *DdevApp) DockerEnv() map[string]string {
 	uidStr, gidStr, username := dockerutil.GetContainerUser()
 
@@ -2884,19 +2883,25 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		envVars["DDEV_HOSTNAME"] = strings.Join(app.GetHostnames(), ",")
 	}
 
-	// Only set values if they don't already exist in env.
-	for k, v := range envVars {
-		if err := os.Setenv(k, v); err != nil {
-			util.Error("Failed to set the environment variable %s=%s: %v", k, v, err)
-		}
-	}
 	return envVars
+}
+
+// ComposeCmdWithProjectEnv runs ComposeCmd with project-specific env passed only to the compose
+// subprocess. Process env is unchanged. Use this for all project compose operations.
+func (app *DdevApp) ComposeCmdWithProjectEnv(opts dockerutil.ComposeCmdOpts) (string, string, error) {
+	opts.EnvOverrides = BuildProjectEnv(app)
+	return dockerutil.ComposeCmd(&opts)
+}
+
+// ComposeWithStreamsWithProjectEnv runs ComposeWithStreams with project-specific env passed only
+// to the compose subprocess. Process env is unchanged. Use this for all project compose operations.
+func (app *DdevApp) ComposeWithStreamsWithProjectEnv(opts dockerutil.ComposeCmdOpts, stdin io.Reader, stdout, stderr io.Writer) error {
+	opts.EnvOverrides = BuildProjectEnv(app)
+	return dockerutil.ComposeWithStreams(&opts, stdin, stdout, stderr)
 }
 
 // Pause initiates docker-compose stop
 func (app *DdevApp) Pause() error {
-	_ = app.DockerEnv()
-
 	status, _ := app.SiteStatus()
 	if status == SiteStopped {
 		return nil
@@ -2909,7 +2914,7 @@ func (app *DdevApp) Pause() error {
 
 	_ = SyncAndPauseMutagenSession(app)
 
-	if _, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	if _, _, err := app.ComposeCmdWithProjectEnv(dockerutil.ComposeCmdOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 		Profiles:     []string{`*`},
 		Action:       []string{"stop"},
