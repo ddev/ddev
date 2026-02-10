@@ -92,7 +92,7 @@ Composer version for the web container and the [`ddev composer`](../usage/comman
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `2` | Can be `2`, `1`, or empty (`""`) for latest major version at container build time.<br><br>Can also be the LTS version `2.2` (there's no other `2.x` LTS), an explicit version like `2.9.3`, or a keyword like `stable`, `preview` or `snapshot`. See [Composer documentation](https://getcomposer.org/doc/03-cli.md#self-update-selfupdate).
+| :octicons-file-directory-16: project | `2` | Can be `2` or empty (`""`) for latest major version at container build time.<br><br>Can also be the LTS version `2.2` (there's no other `2.x` LTS), an explicit version like `2.9.3`, or a keyword like `stable`, `preview` or `snapshot`. See [Composer documentation](https://getcomposer.org/doc/03-cli.md#self-update-selfupdate).
 
 !!!warning "Composer version is cached at container build time"
     DDEV installs Composer at container build time and caches it. If you use a non-specific version like `2`, `2.2`, `""` (empty), or `stable`, DDEV installs the latest available version in that range at build time.
