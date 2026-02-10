@@ -126,14 +126,6 @@ func TestComposerVersion(t *testing.T) {
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(stdout, "Composer 2") || strings.HasPrefix(stdout, "Composer version 2"), "Composer version not the expected Composer 2: %v", stdout)
 
-	// Make sure it does the right thing with 1.x
-	app.ComposerVersion = "1"
-	err = app.Restart()
-	require.NoError(t, err)
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
-	assert.NoError(err)
-	assert.Contains(stdout, "Composer version 1")
-
 	// With version "2" we should be back to latest v2
 	app.ComposerVersion = "2"
 	err = app.Restart()

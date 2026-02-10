@@ -151,6 +151,12 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.addUploadDir(uploadDirDeprecated)
 	}
 
+	// Migrate composer_version "1" to "2" (Packagist no longer supports Composer 1)
+	if app.ComposerVersion == "1" {
+		app.ComposerVersion = "2"
+		util.Warning("composer_version: 1 is no longer supported by Packagist; using 2 instead. Run 'ddev config' to update .ddev/config.yaml.")
+	}
+
 	// Remove dba
 	if nodeps.ArrayContainsString(app.OmitContainers, "dba") || nodeps.ArrayContainsString(app.OmitContainersGlobal, "dba") {
 		app.OmitContainers = nodeps.RemoveItemFromSlice(app.OmitContainers, "dba")
@@ -1456,7 +1462,7 @@ RUN (timeout %d apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-ge
 		}
 
 		// Major and minor versions have to be provided as option so add '--' prefix.
-		// E.g. a major version can be 1 or 2, a minor version 2.2 or 2.1 etc.
+		// E.g. a major version can be 2, a minor version 2.2 or 2.1 etc.
 		if strings.Count(composerVersion, ".") < 2 {
 			composerSelfUpdateArg = "--" + composerSelfUpdateArg
 		}
