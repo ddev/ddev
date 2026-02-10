@@ -58,13 +58,13 @@ EOF
 
   echo "#" >&3
   # Diagnostic: show traefik config files in volume
-  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
-  echo "# === Traefik config files (router volume) ===" >&3
+  # run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
+  # echo "# === Traefik config files (router volume) ===" >&3
   printf '%s\n' "$output" | sed 's/^/# /' >&3
 
   # Diagnostic: show traefik router API response (just router names)
-  run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
-  echo "# === Traefik routers (API) ===" >&3
+  # run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
+  # echo "# === Traefik routers (API) ===" >&3
   printf '%s\n' "$(echo "$output" | jq -r)" | sed 's/^/# /' >&3
 
   # validate running project
