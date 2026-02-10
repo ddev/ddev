@@ -333,34 +333,10 @@ func Chdir(dirPath string) func() {
 }
 
 // ClearDockerEnv unsets env vars set in platform DockerEnv() so that
-// they can be set by another test run.
+// they can be set by another test run. Uses ddevapp.ComposeEnvVarNames
+// to stay in sync with DockerEnv().
 func ClearDockerEnv() {
-	envVars := []string{
-		"COMPOSE_PROJECT_NAME",
-		"DDEV_SITENAME",
-		"DDEV_DBIMAGE",
-		"DDEV_WEBIMAGE",
-		"DDEV_APPROOT",
-		"DDEV_HOST_WEBSERVER_PORT",
-		"DDEV_HOST_HTTPS_PORT",
-		"DDEV_DOCROOT",
-		"DDEV_HOSTNAME",
-		"DDEV_DB_CONTAINER_COMMAND",
-		"DDEV_PHP_VERSION",
-		"DDEV_WEBSERVER_TYPE",
-		"DDEV_PROJECT_TYPE",
-		"DDEV_ROUTER_HTTP_PORT",
-		"DDEV_ROUTER_HTTPS_PORT",
-		"DDEV_HOST_DB_PORT",
-		"DDEV_HOST_WEBSERVER_PORT",
-		"DDEV_MAILPIT_PORT",
-		"DDEV_MAILPIT_HTTPS_PORT",
-		"COLUMNS",
-		"LINES",
-		"DDEV_XDEBUG_ENABLED",
-		"IS_DDEV_PROJECT",
-	}
-	for _, env := range envVars {
+	for _, env := range ddevapp.ComposeEnvVarNames {
 		err := os.Unsetenv(env)
 		if err != nil {
 			output.UserErr.Warnf("failed to unset %s: %v\n", env, err)
