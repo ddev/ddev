@@ -126,6 +126,15 @@ func TestComposerVersion(t *testing.T) {
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(stdout, "Composer 2") || strings.HasPrefix(stdout, "Composer version 2"), "Composer version not the expected Composer 2: %v", stdout)
 
+	// With version "1" we should get Composer v2.2 LTS
+	// See https://blog.packagist.com/shutting-down-packagist-org-support-for-composer-1-x/
+	app.ComposerVersion = "1"
+	err = app.Restart()
+	require.NoError(t, err)
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
+	assert.NoError(err)
+	assert.Contains(stdout, "Composer version 2.2")
+
 	// With version "2" we should be back to latest v2
 	app.ComposerVersion = "2"
 	err = app.Restart()

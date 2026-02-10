@@ -151,12 +151,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.addUploadDir(uploadDirDeprecated)
 	}
 
-	// Migrate composer_version "1" to "2" (Packagist no longer supports Composer 1)
-	if app.ComposerVersion == "1" {
-		app.ComposerVersion = "2"
-		util.Warning("composer_version: 1 is no longer supported by Packagist; using 2 instead. Run 'ddev config' to update .ddev/config.yaml.")
-	}
-
 	// Remove dba
 	if nodeps.ArrayContainsString(app.OmitContainers, "dba") || nodeps.ArrayContainsString(app.OmitContainersGlobal, "dba") {
 		app.OmitContainers = nodeps.RemoveItemFromSlice(app.OmitContainers, "dba")
@@ -266,6 +260,11 @@ func (app *DdevApp) WriteConfig() error {
 	// Ensure valid type
 	if appcopy.Type == nodeps.AppTypeNone {
 		appcopy.Type = nodeps.AppTypePHP
+	}
+
+	if appcopy.ComposerVersion == "1" {
+		appcopy.ComposerVersion = "2.2"
+		util.WarningOnce(`Project '%s' now uses Composer v2.2 LTS. Composer v1 is no longer supported by Packagist, see https://blog.packagist.com/shutting-down-packagist-org-support-for-composer-1-x/`, app.Name)
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
@@ -860,7 +859,11 @@ func (app *DdevApp) CheckCustomConfig() {
 
 // CheckDeprecations warns the user if anything in use is deprecated.
 func (app *DdevApp) CheckDeprecations() {
-
+	if app.ComposerVersion == "1" {
+		app.ComposerVersion = "2.2"
+		util.WarningOnce(`Project '%s' now uses Composer v2.2 LTS. Composer v1 is no longer supported by Packagist, see https://blog.packagist.com/shutting-down-packagist-org-support-for-composer-1-x/
+Run 'ddev config --auto' to remove this Composer warning.`, app.Name)
+	}
 }
 
 // FixObsolete removes files that may be obsolete, etc.

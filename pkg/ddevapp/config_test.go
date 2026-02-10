@@ -488,22 +488,6 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestComposerVersion1MigratedTo2 ensures that composer_version "1" in config is migrated to "2" on load.
-func TestComposerVersion1MigratedTo2(t *testing.T) {
-	testDir := testcommon.CreateTmpDir(t.Name())
-	defer func() { _ = os.RemoveAll(testDir) }()
-
-	configDir := filepath.Join(testDir, ".ddev")
-	require.NoError(t, os.MkdirAll(configDir, 0755))
-	configPath := filepath.Join(configDir, "config.yaml")
-	configContent := "name: " + filepath.Base(testDir) + "\ntype: php\ncomposer_version: \"1\"\n"
-	require.NoError(t, os.WriteFile(configPath, []byte(configContent), 0644))
-
-	app, err := ddevapp.NewApp(testDir, false)
-	require.NoError(t, err)
-	require.Equal(t, "2", app.ComposerVersion, "composer_version 1 should be migrated to 2")
-}
-
 // TestReadConfig tests reading config values from file and fallback to defaults for values not exposed.
 func TestReadConfig(t *testing.T) {
 	assert := asrt.New(t)

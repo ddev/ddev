@@ -69,7 +69,7 @@ const ConfigInstructions = `
 # commands are executed.
 
 # composer_version: "2"
-# You can set it to "" or "2" (default) for Composer v2 or "1" for Composer v1
+# You can set it to "" or "2" (default) for Composer v2
 # to use the latest major version available at the time your container is built.
 # It is also possible to use each other Composer version channel. This includes:
 #   - 2.2 (latest Composer LTS version)
