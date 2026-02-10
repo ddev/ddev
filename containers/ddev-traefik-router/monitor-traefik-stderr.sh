@@ -18,7 +18,8 @@ error_file="/tmp/ddev-traefik-errors.txt"
 # Run the command in background, capture output, filter for ERR only, and log
 "$@" 2>&1 | while IFS= read -r line; do
   echo "$line"
-  if echo "$line" | grep -qE '\bERR\b'; then
+  # Check if line contains "ERR" after stripping ANSI color codes
+  if echo "$line" | sed -r 's/\x1B\[[0-9;]*m//g' | grep -qw 'ERR'; then
     # Strip timestamp (everything after first space) and only add if not duplicate
     msg=$(echo "$line" | cut -d' ' -f2-)
     if ! grep -qF "$msg" "${error_file}" 2>/dev/null; then
