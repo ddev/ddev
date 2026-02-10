@@ -245,7 +245,7 @@ func TestAutocompletionForConfigCmd(t *testing.T) {
 		"--project-tld":                 {nodeps.DdevDefaultTLD},
 		"--use-dns-when-possible":       {"true", "false"},
 		"--disable-settings-management": {"true", "false"},
-		"--composer-version":            {"2", "2.2", "1", "stable", "preview", "snapshot"},
+		"--composer-version":            {"2", "2.2", "stable", "preview", "snapshot"},
 		"--bind-all-interfaces":         {"true", "false"},
 		"--database":                    nodeps.GetValidDatabaseVersions(),
 		"--nodejs-version":              {nodeps.NodeJSDefault, "auto", "engine"},
