@@ -103,6 +103,11 @@ RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/maste
 
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 
+# MariaDB 10.6+ clients default to requiring SSL, but the DDEV db server
+# does not provide SSL. Disable SSL for client tools to avoid errors
+# like "SSL is required, but the server does not support it" (issue #8119).
+RUN mkdir -p /etc/mysql && printf '[client]\nskip-ssl\nssl-mode=DISABLED\n' > /etc/mysql/my.cnf
+
 ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
 

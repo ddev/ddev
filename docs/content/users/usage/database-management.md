@@ -55,7 +55,7 @@ Snapshots are stored as simple gzipped files in the project's `.ddev/db_snapshot
 
 The `ddev mysql` and `ddev psql` commands give you direct access to the `mysql` and `psql` clients in the database container, which can be useful for quickly running commands while you work. You might run `ddev mysql` to use interactive commands like `DROP DATABASE backend;` or `SHOW TABLES;`, or do things like `echo "SHOW TABLES;" | ddev mysql` or `ddev mysql -udb -pdb` to run with `db` user privileges.
 
-The `web` and `db` containers are each ready with MySQL/PostgreSQL clients, so you can [`ddev ssh`](../usage/commands.md#ssh) or `ddev ssh -s db` and use `mysql` or `psql`.
+The `web` and `db` containers are each ready with MySQL/PostgreSQL clients, so you can [`ddev ssh`](../usage/commands.md#ssh) or `ddev ssh -s db` and use `mysql` or `psql`. DDEV configures the MySQL/MariaDB client so it does not require SSL when connecting to the project database; if you see an SSL-related error, see [troubleshooting](../usage/troubleshooting.md#mariadbmysql-client-ssl-is-required-but-the-server-does-not-support-it).
 
 ## `mysqldump` and `pg_dump`
 

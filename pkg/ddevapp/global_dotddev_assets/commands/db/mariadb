@@ -8,9 +8,12 @@
 ## DBTypes: mariadb
 ## ExecRaw: true
 
-# Prefer 'mariadb' instead of 'mysql' (older versions of MariaDB only have the 'mysql' binary)
+# Pass --skip-ssl when the client supports it (DDEV db server does not provide SSL, issue #8119)
+SKIP_SSL=""
 if command -v mariadb >/dev/null 2>&1; then
-    mariadb "$@"
+    if mariadb --help 2>&1 | grep -q -- '--skip-ssl'; then SKIP_SSL="--skip-ssl"; fi
+    exec mariadb $SKIP_SSL "$@"
 else
-    mysql "$@"
+    if mysql --help 2>&1 | grep -q -- '--skip-ssl'; then SKIP_SSL="--skip-ssl"; fi
+    exec mysql $SKIP_SSL "$@"
 fi
