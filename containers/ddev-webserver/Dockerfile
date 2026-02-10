@@ -106,7 +106,7 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 # MariaDB 10.6+ clients default to requiring SSL, but the DDEV db server
 # does not provide SSL. Disable SSL for client tools to avoid errors
 # like "SSL is required, but the server does not support it" (issue #8119).
-RUN mkdir -p /etc/mysql && printf '[client]\nskip-ssl\nssl-mode=DISABLED\n' > /etc/mysql/my.cnf
+RUN mkdir -p /etc/mysql && printf '[client]\nskip-ssl\n' > /etc/mysql/my.cnf
 
 ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
