@@ -64,6 +64,7 @@ ExecStop
 Execute
 Executes
 Executables
+ERR
 ExpressionEngine
 FPATH
 FSTYPE
@@ -194,6 +195,7 @@ WSL2
 WantedBy
 Webhosting
 WebSocket
+WRN
 XDebug
 XDG
 Xhprof

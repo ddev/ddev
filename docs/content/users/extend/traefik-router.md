@@ -96,7 +96,7 @@ When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#p
 
 ### Warning: There are router configuration problems
 
-If you see a warning on `ddev start` about router configuration problems, it is most likely a result of custom configuration problems, which could be an invalid `docker-compose.*.yaml` or leftover project `.ddev/traefik/config/*.yaml` files.
+If you see a warning on `ddev start` about router configuration problems, it is most likely a result of custom configuration problems, which could be an invalid `docker-compose.*.yaml` or leftover project `.ddev/traefik/config/*.yaml` files. Only Traefik **error**-level (ERR) messages are shown there; **warning**-level (WRN) and debug output from Traefik appear only in `docker logs ddev-router`.
 
 On Linux systems, file watcher errors related to the `*file.Provider` are a common cause. See the section below for solutions.
 
