@@ -88,10 +88,13 @@ func StartDdevRouter() error {
 
 	activeApps := GetActiveProjects()
 
-	// Check if router needs to be recreated due to port changes
+	// Check if router needs to be recreated due to port or hostname changes
 	needsRecreation := false
 	if router != nil && err == nil && router.State == "running" {
-		// Router is running, check if ports have changed
+		// Router is running, check if ports or hostnames have changed
+		var portsChanged, hostnamesChanged bool
+
+		// Check ports
 		existingPorts, err := dockerutil.GetBoundHostPorts(router.ID)
 		if err != nil {
 			util.Debug("Error getting bound ports, will recreate router: %v", err)
@@ -102,12 +105,36 @@ func StartDdevRouter() error {
 			// (it's always bound by the router but not returned by determineRouterPorts
 			// since it's added separately in the static config template)
 			neededPorts = append(neededPorts, globalconfig.DdevGlobalConfig.TraefikMonitorPort)
-			util.Debug("Router port comparison: existing=%v needed=%v match=%v", existingPorts, neededPorts, PortsMatch(existingPorts, neededPorts))
-			if !PortsMatch(existingPorts, neededPorts) {
-				util.Debug("Router ports have changed, will recreate router")
+			portsChanged = !PortsMatch(existingPorts, neededPorts)
+			util.Debug("Router port comparison: existing=%v needed=%v changed=%v", existingPorts, neededPorts, portsChanged)
+		}
+
+		// Check hostnames (network aliases)
+		if !needsRecreation {
+			existingHostnames, err := dockerutil.GetRouterNetworkAliases(router.ID)
+			if err != nil {
+				util.Debug("Error getting network aliases, will recreate router: %v", err)
 				needsRecreation = true
 			} else {
-				util.Debug("Router ports have not changed, skipping recreation")
+				neededHostnames := determineRouterHostnames(activeApps)
+				hostnamesChanged = !HostnamesMatch(existingHostnames, neededHostnames)
+				util.Debug("Router hostname comparison: existing=%v needed=%v changed=%v", existingHostnames, neededHostnames, hostnamesChanged)
+			}
+		}
+
+		// Determine if recreation is needed
+		if !needsRecreation {
+			if portsChanged || hostnamesChanged {
+				if portsChanged && hostnamesChanged {
+					util.Debug("Router ports and hostnames have changed, will recreate router")
+				} else if portsChanged {
+					util.Debug("Router ports have changed, will recreate router")
+				} else {
+					util.Debug("Router hostnames have changed, will recreate router")
+				}
+				needsRecreation = true
+			} else {
+				util.Debug("Router ports and hostnames have not changed, skipping recreation")
 			}
 		}
 	} else {
@@ -291,6 +318,26 @@ func PortsMatch(existingPorts, neededPorts []string) bool {
 	// Check if all needed ports are in existing ports
 	for _, port := range neededPorts {
 		if !existingMap[port] {
+			return false
+		}
+	}
+
+	return true
+}
+
+// HostnamesMatch returns true if the existing hostnames contain all the needed hostnames.
+// It's fine for the router to have extra hostnames (from other projects that have stopped),
+// we only need to recreate the router when it's missing hostnames we need.
+func HostnamesMatch(existingHostnames, neededHostnames []string) bool {
+	// Create a map of existing hostnames for quick lookup
+	existingMap := make(map[string]bool)
+	for _, hostname := range existingHostnames {
+		existingMap[hostname] = true
+	}
+
+	// Check if all needed hostnames are in existing hostnames
+	for _, hostname := range neededHostnames {
+		if !existingMap[hostname] {
 			return false
 		}
 	}
