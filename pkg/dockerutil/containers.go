@@ -880,6 +880,46 @@ func GetBoundHostPorts(containerID string) ([]string, error) {
 	return ports, nil
 }
 
+// GetRouterNetworkAliases takes a container ID and returns network aliases
+// from the ddev_default network (and error)
+func GetRouterNetworkAliases(containerID string) ([]string, error) {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return nil, err
+	}
+
+	inspectInfo, err := apiClient.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	aliasMap := map[string]bool{}
+
+	// Extract aliases from ddev_default network
+	if inspectInfo.Container.NetworkSettings != nil && inspectInfo.Container.NetworkSettings.Networks != nil {
+		if ddevNetwork, ok := inspectInfo.Container.NetworkSettings.Networks["ddev_default"]; ok {
+			if ddevNetwork.Aliases != nil {
+				for _, alias := range ddevNetwork.Aliases {
+					// Filter out the router's own container name and ID
+					// Docker automatically adds these, but we only want project hostnames
+					if alias != "ddev-router" && alias != containerID[:12] {
+						aliasMap[alias] = true
+					}
+				}
+			}
+		}
+	}
+
+	aliases := []string{}
+	for k := range aliasMap {
+		aliases = append(aliases, k)
+	}
+	sort.Slice(aliases, func(i, j int) bool {
+		return aliases[i] < aliases[j]
+	})
+	return aliases, nil
+}
+
 // Exec does a simple docker exec, no frills, it executes the command
 // with the specified uid (or defaults to root=0 if empty uid)
 // Returns stdout, stderr, error
