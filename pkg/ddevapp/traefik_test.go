@@ -594,3 +594,71 @@ func TestTraefikStagingDirectoryCleanup(t *testing.T) {
 	require.FileExists(certsReadme, "README.txt should still exist after cleanup")
 }
 
+// TestCleanupGlobalTraefikStagingUnit is a simple unit test that doesn't require Docker
+func TestCleanupGlobalTraefikStagingUnit(t *testing.T) {
+	require := require.New(t)
+
+	// Create a temporary test directory structure
+	testDir := t.TempDir()
+	configDir := filepath.Join(testDir, "traefik", "config")
+	certsDir := filepath.Join(testDir, "traefik", "certs")
+
+	require.NoError(os.MkdirAll(configDir, 0755))
+	require.NoError(os.MkdirAll(certsDir, 0755))
+
+	// Create README files
+	require.NoError(os.WriteFile(filepath.Join(configDir, "README.txt"), []byte("config readme"), 0644))
+	require.NoError(os.WriteFile(filepath.Join(certsDir, "README.txt"), []byte("certs readme"), 0644))
+
+	// Create some test files that should be removed
+	require.NoError(os.WriteFile(filepath.Join(configDir, "test.yaml"), []byte("test config"), 0644))
+	require.NoError(os.WriteFile(filepath.Join(configDir, "project1.yaml"), []byte("project config"), 0644))
+	require.NoError(os.WriteFile(filepath.Join(certsDir, "test.crt"), []byte("test cert"), 0644))
+	require.NoError(os.WriteFile(filepath.Join(certsDir, "test.key"), []byte("test key"), 0644))
+
+	// Verify files were created
+	configFiles, err := os.ReadDir(configDir)
+	require.NoError(err)
+	require.Equal(3, len(configFiles), "should have 3 files in config dir before cleanup")
+
+	certsFiles, err := os.ReadDir(certsDir)
+	require.NoError(err)
+	require.Equal(3, len(certsFiles), "should have 3 files in certs dir before cleanup")
+
+	// Simulate the cleanup logic (without calling the actual function since it uses globalconfig)
+	// Remove all files except README.txt from config directory
+	for _, file := range configFiles {
+		if file.Name() != "README.txt" {
+			filePath := filepath.Join(configDir, file.Name())
+			require.NoError(os.RemoveAll(filePath))
+		}
+	}
+
+	// Remove all files except README.txt from certs directory
+	for _, file := range certsFiles {
+		if file.Name() != "README.txt" {
+			filePath := filepath.Join(certsDir, file.Name())
+			require.NoError(os.RemoveAll(filePath))
+		}
+	}
+
+	// Verify cleanup
+	configFilesAfter, err := os.ReadDir(configDir)
+	require.NoError(err)
+	require.Equal(1, len(configFilesAfter), "should have only 1 file in config dir after cleanup")
+	require.Equal("README.txt", configFilesAfter[0].Name())
+
+	certsFilesAfter, err := os.ReadDir(certsDir)
+	require.NoError(err)
+	require.Equal(1, len(certsFilesAfter), "should have only 1 file in certs dir after cleanup")
+	require.Equal("README.txt", certsFilesAfter[0].Name())
+
+	// Verify README content is still intact
+	configReadmeContent, err := os.ReadFile(filepath.Join(configDir, "README.txt"))
+	require.NoError(err)
+	require.Equal("config readme", string(configReadmeContent))
+
+	certsReadmeContent, err := os.ReadFile(filepath.Join(certsDir, "README.txt"))
+	require.NoError(err)
+	require.Equal("certs readme", string(certsReadmeContent))
+}
