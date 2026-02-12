@@ -319,7 +319,6 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 
 	// Copy user-managed custom global config *.yaml files from ~/.ddev/traefik/custom-global-config/
 	customGlobalConfigDir := filepath.Join(globalTraefikDir, "custom-global-config")
-
 	if fileutil.IsDirectory(customGlobalConfigDir) {
 		copiedFiles, err := fileutil.CopyFilesMatchingGlob(customGlobalConfigDir, globalSourceConfigDir, "*.yaml")
 		if err != nil {
@@ -407,48 +406,16 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 // to prevent issues when downgrading DDEV versions.
 func CleanupGlobalTraefikStaging() error {
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
-	globalSourceCertsPath := filepath.Join(globalTraefikDir, "certs")
-	globalSourceConfigDir := filepath.Join(globalTraefikDir, "config")
+	except := map[string]bool{"README.txt": true}
 
-	// Only purge if directories exist
-	if fileutil.IsDirectory(globalSourceConfigDir) {
-		// Read all files in config directory
-		files, err := os.ReadDir(globalSourceConfigDir)
-		if err != nil {
-			return fmt.Errorf("failed to read global Traefik config dir: %v", err)
-		}
-
-		// Remove all files except README.txt
-		for _, file := range files {
-			if file.Name() != "README.txt" {
-				filePath := filepath.Join(globalSourceConfigDir, file.Name())
-				err = os.RemoveAll(filePath)
-				if err != nil {
-					util.Warning("unable to remove '%s': %v", filePath, err)
-				}
+	for _, sub := range []string{"config", "certs"} {
+		dir := filepath.Join(globalTraefikDir, sub)
+		if fileutil.IsDirectory(dir) {
+			if err := fileutil.PurgeDirectoryExcept(dir, except); err != nil {
+				return err
 			}
 		}
 	}
-
-	if fileutil.IsDirectory(globalSourceCertsPath) {
-		// Read all files in certs directory
-		files, err := os.ReadDir(globalSourceCertsPath)
-		if err != nil {
-			return fmt.Errorf("failed to read global Traefik certs dir: %v", err)
-		}
-
-		// Remove all files except README.txt
-		for _, file := range files {
-			if file.Name() != "README.txt" {
-				filePath := filepath.Join(globalSourceCertsPath, file.Name())
-				err = os.RemoveAll(filePath)
-				if err != nil {
-					util.Warning("unable to remove '%s': %v", filePath, err)
-				}
-			}
-		}
-	}
-
 	return nil
 }
 

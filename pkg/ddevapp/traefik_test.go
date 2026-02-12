@@ -593,69 +593,29 @@ func TestTraefikStagingDirectoryCleanup(t *testing.T) {
 	require.FileExists(t, certsReadme, "README.txt should still exist after cleanup")
 }
 
-// TestCleanupGlobalTraefikStagingUnit is a simple unit test that doesn't require Docker
-func TestCleanupGlobalTraefikStagingUnit(t *testing.T) {
-	// Create a temporary test directory structure
-	testDir := t.TempDir()
-	configDir := filepath.Join(testDir, "traefik", "config")
-	certsDir := filepath.Join(testDir, "traefik", "certs")
+// TestPurgeDirectoryExcept tests fileutil.PurgeDirectoryExcept directly
+func TestPurgeDirectoryExcept(t *testing.T) {
+	dir := t.TempDir()
 
-	require.NoError(t, os.MkdirAll(configDir, 0755))
-	require.NoError(t, os.MkdirAll(certsDir, 0755))
+	// Create files: README.txt plus some others
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "README.txt"), []byte("keep me"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "test.yaml"), []byte("remove me"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "project1.yaml"), []byte("remove me too"), 0644))
 
-	// Create README files
-	require.NoError(t, os.WriteFile(filepath.Join(configDir, "README.txt"), []byte("config readme"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(certsDir, "README.txt"), []byte("certs readme"), 0644))
-
-	// Create some test files that should be removed
-	require.NoError(t, os.WriteFile(filepath.Join(configDir, "test.yaml"), []byte("test config"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(configDir, "project1.yaml"), []byte("project config"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(certsDir, "test.crt"), []byte("test cert"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(certsDir, "test.key"), []byte("test key"), 0644))
-
-	// Verify files were created
-	configFiles, err := os.ReadDir(configDir)
+	files, err := os.ReadDir(dir)
 	require.NoError(t, err)
-	require.Equal(t, 3, len(configFiles), "should have 3 files in config dir before cleanup")
+	require.Equal(t, 3, len(files))
 
-	certsFiles, err := os.ReadDir(certsDir)
+	err = fileutil.PurgeDirectoryExcept(dir, map[string]bool{"README.txt": true})
 	require.NoError(t, err)
-	require.Equal(t, 3, len(certsFiles), "should have 3 files in certs dir before cleanup")
 
-	// Simulate the cleanup logic (without calling the actual function since it uses globalconfig)
-	// Remove all files except README.txt from config directory
-	for _, file := range configFiles {
-		if file.Name() != "README.txt" {
-			filePath := filepath.Join(configDir, file.Name())
-			require.NoError(t, os.RemoveAll(filePath))
-		}
-	}
-
-	// Remove all files except README.txt from certs directory
-	for _, file := range certsFiles {
-		if file.Name() != "README.txt" {
-			filePath := filepath.Join(certsDir, file.Name())
-			require.NoError(t, os.RemoveAll(filePath))
-		}
-	}
-
-	// Verify cleanup
-	configFilesAfter, err := os.ReadDir(configDir)
+	filesAfter, err := os.ReadDir(dir)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(configFilesAfter), "should have only 1 file in config dir after cleanup")
-	require.Equal(t, "README.txt", configFilesAfter[0].Name())
+	require.Equal(t, 1, len(filesAfter))
+	require.Equal(t, "README.txt", filesAfter[0].Name())
 
-	certsFilesAfter, err := os.ReadDir(certsDir)
+	// Verify preserved file content is intact
+	content, err := os.ReadFile(filepath.Join(dir, "README.txt"))
 	require.NoError(t, err)
-	require.Equal(t, 1, len(certsFilesAfter), "should have only 1 file in certs dir after cleanup")
-	require.Equal(t, "README.txt", certsFilesAfter[0].Name())
-
-	// Verify README content is still intact
-	configReadmeContent, err := os.ReadFile(filepath.Join(configDir, "README.txt"))
-	require.NoError(t, err)
-	require.Equal(t, "config readme", string(configReadmeContent))
-
-	certsReadmeContent, err := os.ReadFile(filepath.Join(certsDir, "README.txt"))
-	require.NoError(t, err)
-	require.Equal(t, "certs readme", string(certsReadmeContent))
+	require.Equal(t, "keep me", string(content))
 }
