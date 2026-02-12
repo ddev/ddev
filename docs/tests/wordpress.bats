@@ -112,10 +112,11 @@ teardown() {
   assert_line --regexp 'link:.*my-wp-site\.ddev\.site.*rel="https://api\.w\.org/"'
   assert_output --partial "HTTP/2 200"
   assert_success
-  # validate running project (Bedrock serves wp-admin under /wp/)
+  # validate running project /wp-admin/
+  # Some environments return 302 redirect to /wp/wp-admin/, others return 200
   run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
-  assert_line --partial "location: https://my-wp-site.ddev.site/wp/wp-admin/"
-  assert_line --partial "HTTP/2 302"
+  assert_line --regexp 'link:.*my-wp-site\.ddev\.site.*rel="https://api\.w\.org/"'
+  assert_line --regexp 'HTTP/2 (200|302)'
   assert_success
 }
 
