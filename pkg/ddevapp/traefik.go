@@ -144,6 +144,25 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		return fmt.Errorf("failed to purge global Traefik certs dir: %v", err)
 	}
 
+	// Install README files to explain the purpose of staging directories
+	readmeConfigSrc, err := bundledAssets.ReadFile("global_dotddev_assets/traefik/README_config.txt")
+	if err != nil {
+		return fmt.Errorf("failed to read README_config.txt: %v", err)
+	}
+	err = os.WriteFile(filepath.Join(globalSourceConfigDir, "README.txt"), readmeConfigSrc, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write README.txt to config dir: %v", err)
+	}
+
+	readmeCertsSrc, err := bundledAssets.ReadFile("global_dotddev_assets/traefik/README_certs.txt")
+	if err != nil {
+		return fmt.Errorf("failed to read README_certs.txt: %v", err)
+	}
+	err = os.WriteFile(filepath.Join(globalSourceCertsPath, "README.txt"), readmeCertsSrc, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write README.txt to certs dir: %v", err)
+	}
+
 	// Install default certs, except when using Let's Encrypt (when they would
 	// get used instead of Let's Encrypt certs)
 	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.GetCAROOT() != "" {
@@ -319,6 +338,26 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 
 	// Copy user-managed custom global config *.yaml files from ~/.ddev/traefik/custom-global-config/
 	customGlobalConfigDir := filepath.Join(globalTraefikDir, "custom-global-config")
+
+	// Install README in custom-global-config directory
+	err = os.MkdirAll(customGlobalConfigDir, 0755)
+	if err != nil {
+		return fmt.Errorf("failed to create custom-global-config dir: %v", err)
+	}
+	readmeCustomSrc, err := bundledAssets.ReadFile("global_dotddev_assets/traefik/README_custom-global-config.txt")
+	if err != nil {
+		return fmt.Errorf("failed to read README_custom-global-config.txt: %v", err)
+	}
+	customReadmePath := filepath.Join(customGlobalConfigDir, "README.txt")
+	// Only write README if it doesn't exist or contains #ddev-generated
+	err = fileutil.CheckSignatureOrNoFile(customReadmePath, nodeps.DdevFileSignature)
+	if err == nil {
+		err = os.WriteFile(customReadmePath, readmeCustomSrc, 0644)
+		if err != nil {
+			return fmt.Errorf("failed to write README.txt to custom-global-config dir: %v", err)
+		}
+	}
+
 	if fileutil.IsDirectory(customGlobalConfigDir) {
 		copiedFiles, err := fileutil.CopyFilesMatchingGlob(customGlobalConfigDir, globalSourceConfigDir, "*.yaml")
 		if err != nil {
@@ -396,6 +435,56 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 			return fmt.Errorf("failed to remove stale traefik certs from volume: %v", err)
 		}
 		util.Debug("Removed stale traefik certs from volume: %v", staleCerts)
+	}
+
+	return nil
+}
+
+// CleanupGlobalTraefikStaging removes staging files from ~/.ddev/traefik/{config,certs}
+// after they have been pushed into the Docker volume. This is called on poweroff
+// to prevent issues when downgrading DDEV versions.
+func CleanupGlobalTraefikStaging() error {
+	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
+	globalSourceCertsPath := filepath.Join(globalTraefikDir, "certs")
+	globalSourceConfigDir := filepath.Join(globalTraefikDir, "config")
+
+	// Only purge if directories exist
+	if fileutil.IsDirectory(globalSourceConfigDir) {
+		// Read all files in config directory
+		files, err := os.ReadDir(globalSourceConfigDir)
+		if err != nil {
+			return fmt.Errorf("failed to read global Traefik config dir: %v", err)
+		}
+
+		// Remove all files except README.txt
+		for _, file := range files {
+			if file.Name() != "README.txt" {
+				filePath := filepath.Join(globalSourceConfigDir, file.Name())
+				err = os.RemoveAll(filePath)
+				if err != nil {
+					util.Warning("unable to remove '%s': %v", filePath, err)
+				}
+			}
+		}
+	}
+
+	if fileutil.IsDirectory(globalSourceCertsPath) {
+		// Read all files in certs directory
+		files, err := os.ReadDir(globalSourceCertsPath)
+		if err != nil {
+			return fmt.Errorf("failed to read global Traefik certs dir: %v", err)
+		}
+
+		// Remove all files except README.txt
+		for _, file := range files {
+			if file.Name() != "README.txt" {
+				filePath := filepath.Join(globalSourceCertsPath, file.Name())
+				err = os.RemoveAll(filePath)
+				if err != nil {
+					util.Warning("unable to remove '%s': %v", filePath, err)
+				}
+			}
+		}
 	}
 
 	return nil
