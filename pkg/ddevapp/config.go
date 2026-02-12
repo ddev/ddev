@@ -29,6 +29,9 @@ import (
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
+// Regexp pattern to match Composer v1 versions: "1" or "1.x.y"
+var composerV1Regex = regexp.MustCompile(`^1(\.\d+\.\d+)?$`)
+
 // RunValidateConfig controls whether to run ValidateConfig() function.
 // In some cases we don't actually need to check the config, e.g. when deleting the project.
 // It is enabled by default.
@@ -262,7 +265,7 @@ func (app *DdevApp) WriteConfig() error {
 		appcopy.Type = nodeps.AppTypePHP
 	}
 
-	if appcopy.ComposerVersion == "1" {
+	if composerV1Regex.MatchString(appcopy.ComposerVersion) {
 		appcopy.ComposerVersion = "2.2"
 		util.WarningOnce(`Project '%s' now uses Composer v2.2 LTS. Composer v1 is no longer supported by Packagist, see https://blog.packagist.com/shutting-down-packagist-org-support-for-composer-1-x/`, app.Name)
 	}
@@ -859,7 +862,7 @@ func (app *DdevApp) CheckCustomConfig() {
 
 // CheckDeprecations warns the user if anything in use is deprecated.
 func (app *DdevApp) CheckDeprecations() {
-	if app.ComposerVersion == "1" {
+	if composerV1Regex.MatchString(app.ComposerVersion) {
 		app.ComposerVersion = "2.2"
 		util.WarningOnce(`Project '%s' now uses Composer v2.2 LTS. Composer v1 is no longer supported by Packagist, see https://blog.packagist.com/shutting-down-packagist-org-support-for-composer-1-x/
 Run 'ddev config --auto' to remove this Composer warning.`, app.Name)

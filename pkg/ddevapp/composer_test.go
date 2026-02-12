@@ -135,6 +135,14 @@ func TestComposerVersion(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(stdout, "Composer version 2.2")
 
+	// With version "1.10.25" we should also get Composer v2.2 LTS.
+	app.ComposerVersion = "1.10.25"
+	err = app.Restart()
+	require.NoError(t, err)
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
+	assert.NoError(err)
+	assert.Contains(stdout, "Composer version 2.2")
+
 	// With version "2" we should be back to latest v2
 	app.ComposerVersion = "2"
 	err = app.Restart()
