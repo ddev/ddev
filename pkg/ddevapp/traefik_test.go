@@ -592,30 +592,3 @@ func TestTraefikStagingDirectoryCleanup(t *testing.T) {
 	require.FileExists(t, configReadme, "README.txt should still exist after cleanup")
 	require.FileExists(t, certsReadme, "README.txt should still exist after cleanup")
 }
-
-// TestPurgeDirectoryExcept tests fileutil.PurgeDirectoryExcept directly
-func TestPurgeDirectoryExcept(t *testing.T) {
-	dir := t.TempDir()
-
-	// Create files: README.txt plus some others
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "README.txt"), []byte("keep me"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "test.yaml"), []byte("remove me"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "project1.yaml"), []byte("remove me too"), 0644))
-
-	files, err := os.ReadDir(dir)
-	require.NoError(t, err)
-	require.Equal(t, 3, len(files))
-
-	err = fileutil.PurgeDirectoryExcept(dir, map[string]bool{"README.txt": true})
-	require.NoError(t, err)
-
-	filesAfter, err := os.ReadDir(dir)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(filesAfter))
-	require.Equal(t, "README.txt", filesAfter[0].Name())
-
-	// Verify preserved file content is intact
-	content, err := os.ReadFile(filepath.Join(dir, "README.txt"))
-	require.NoError(t, err)
-	require.Equal(t, "keep me", string(content))
-}
