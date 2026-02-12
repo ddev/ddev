@@ -36,6 +36,12 @@ func PowerOff() {
 
 	StopMutagenDaemon("")
 
+	// Clean up Traefik staging directories after all projects are stopped
+	// This prevents issues when downgrading DDEV versions
+	if err := CleanupGlobalTraefikStaging(); err != nil {
+		util.Warning("Failed to clean up Traefik staging directories: %v", err)
+	}
+
 	if err := RemoveSSHAgentContainer(); err != nil {
 		util.Warning("Failed to remove ddev-ssh-agent: %v", err)
 	}
