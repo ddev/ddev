@@ -190,20 +190,19 @@ func TestNetworkAliases(t *testing.T) {
 			app.Type = nodeps.AppTypePHP
 			app.Name = projName
 
-			// Add different hostnames, FQDNs, and router ports for each project
+			// Add different hostnames and FQDNs for each project
+			// Both projects use the SAME ports to test issue #8110:
+			// when ports match but hostnames differ, router should be recreated
 			if strings.Contains(projName, "app1") {
 				app.AdditionalHostnames = []string{"api", "admin"}
 				app.AdditionalFQDNs = []string{"test1.example.com"}
-				// Use custom router ports for app1
-				app.RouterHTTPPort = "8080"
-				app.RouterHTTPSPort = "8443"
 			} else {
 				app.AdditionalHostnames = []string{"backend", "service"}
 				app.AdditionalFQDNs = []string{"test2.example.com"}
-				// Use default ports (80/443) for app2
-				app.RouterHTTPPort = "80"
-				app.RouterHTTPSPort = "443"
 			}
+			// Use the same ports for both projects (default 80/443)
+			app.RouterHTTPPort = "80"
+			app.RouterHTTPSPort = "443"
 
 			err = app.WriteConfig()
 			require.NoError(t, err)
@@ -249,8 +248,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app1_to_app2",
 				fromApp:     app1,
 				toApp:       app2,
-				httpURL:     "http://" + app2.GetHostname(),
-				httpsURL:    "https://" + app2.GetHostname(),
+				httpURL:     app2.GetHTTPURL(),
+				httpsURL:    app2.GetHTTPSURL(),
 				description: "app1 should be able to reach app2 by project name",
 			},
 			{
@@ -258,8 +257,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://" + app1.GetHostname() + ":8080",
-				httpsURL:    "https://" + app1.GetHostname() + ":8443",
+				httpURL:     app1.GetHTTPURL(),
+				httpsURL:    app1.GetHTTPSURL(),
 				description: "app2 should be able to reach app1 by project name",
 			},
 			// Additional hostnames tests
@@ -286,8 +285,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1_api",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://api.ddev.site:8080",
-				httpsURL:    "https://api.ddev.site:8443",
+				httpURL:     "http://api.ddev.site",
+				httpsURL:    "https://api.ddev.site",
 				description: "app2 should be able to reach app1 api hostname",
 			},
 			{
@@ -295,8 +294,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1_admin",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://admin.ddev.site:8080",
-				httpsURL:    "https://admin.ddev.site:8443",
+				httpURL:     "http://admin.ddev.site",
+				httpsURL:    "https://admin.ddev.site",
 				description: "app2 should be able to reach app1 admin hostname",
 			},
 			// Additional FQDNs tests
@@ -314,8 +313,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://test1.example.com:8080",
-				httpsURL:    "https://test1.example.com:8443",
+				httpURL:     "http://test1.example.com",
+				httpsURL:    "https://test1.example.com",
 				description: "app2 should be able to reach app1 additional FQDNs",
 			},
 		}
@@ -352,4 +351,57 @@ func TestNetworkAliases(t *testing.T) {
 			}
 		})
 	}
+
+	// Test the scenario from issue #8110: when the second project starts with ports
+	// that match the first project, the router should still be recreated because the
+	// hostnames (network aliases) are different. This ensures inter-container HTTPS
+	// communication works for both projects.
+	t.Run("router_recreated_for_new_hostname", func(t *testing.T) {
+		if globalconfig.GetCAROOT() == "" {
+			t.Skip("Skipping HTTPS test because mkcert is not available")
+		}
+
+		require.NotEmpty(t, apps, "apps should be populated from setup_projects")
+		require.NotNil(t, app1, "app1 should be set")
+		require.NotNil(t, app2, "app2 should be set")
+
+		// Verify both projects can access each other via HTTPS through the router
+		// This confirms network aliases were added when router was recreated
+		testPairs := []struct {
+			fromApp *ddevapp.DdevApp
+			toApp   *ddevapp.DdevApp
+		}{
+			{app1, app2},
+			{app2, app1},
+		}
+
+		for _, pair := range testPairs {
+			port := pair.toApp.GetPrimaryRouterHTTPSPort()
+			url := "https://" + pair.toApp.GetHostname()
+			if port != "443" {
+				url += ":" + port
+			}
+
+			curlCmd := "curl -sS --fail " + url
+			out, _, err := pair.fromApp.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     curlCmd,
+			})
+			require.NoError(t, err, "%s should be able to access %s at %s via router", pair.fromApp.Name, pair.toApp.Name, url)
+			require.Contains(t, out, "Hello from "+pair.toApp.Name)
+		}
+
+		// Verify both project hostnames exist as network aliases in the router
+		router, err := ddevapp.FindDdevRouter()
+		require.NoError(t, err)
+		require.NotNil(t, router)
+
+		aliases, err := dockerutil.GetRouterNetworkAliases(router.ID)
+		require.NoError(t, err)
+
+		for _, app := range apps {
+			require.Contains(t, aliases, app.GetHostname(),
+				"Router should have network alias for %s (aliases found: %v)", app.GetHostname(), aliases)
+		}
+	})
 }
