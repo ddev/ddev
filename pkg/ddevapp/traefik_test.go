@@ -512,14 +512,12 @@ func TestTraefikStagingDirectoryCleanup(t *testing.T) {
 		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
 	}
 
-	assert := asrt.New(t)
-
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
 
 	site := TestSites[0] // 0 == wordpress
 	app, err := ddevapp.NewApp(site.Dir, true)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	ddevapp.PowerOff()
 	origRouter := globalconfig.DdevGlobalConfig.Router
@@ -529,13 +527,13 @@ func TestTraefikStagingDirectoryCleanup(t *testing.T) {
 
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
-		assert.NoError(err)
+		require.NoError(t, err)
 		err = app.Stop(true, false)
-		assert.NoError(err)
+		require.NoError(t, err)
 		ddevapp.PowerOff()
 		globalconfig.DdevGlobalConfig.Router = origRouter
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		assert.NoError(err)
+		require.NoError(t, err)
 	})
 
 	// Start the app to trigger Traefik config generation

@@ -191,6 +191,10 @@ func PurgeDirectoryExcept(path string, except map[string]bool) error {
 		if except[file] {
 			continue
 		}
+		err = util.Chmod(filepath.Join(path, file), 0777)
+		if err != nil {
+			return err
+		}
 		err = os.RemoveAll(filepath.Join(path, file))
 		if err != nil {
 			util.Warning("unable to remove '%s': %v", filepath.Join(path, file), err)
