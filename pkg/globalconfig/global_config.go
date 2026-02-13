@@ -262,7 +262,7 @@ func ReadGlobalConfig() error {
 	}
 
 	// Load global config using unified settings loader.
-	err = settings.LoadGlobalConfig(globalConfigFile, &DdevGlobalConfig)
+	err = settings.LoadGlobalConfigWithEnv(globalConfigFile, &DdevGlobalConfig)
 	if err != nil {
 		return fmt.Errorf("unable to load DDEV global config file %s: %v", globalConfigFile, err)
 	}
@@ -582,8 +582,8 @@ func ReadProjectList() error {
 		return err
 	}
 
-	// Load project list using unified settings loader.
-	err = settings.LoadGlobalConfig(globalProjectsFile, &DdevProjectList)
+	// Load project list using unified settings loader (clean to avoid poisoning).
+	err = settings.LoadCleanConfig(globalProjectsFile, &DdevProjectList)
 	if err != nil {
 		return fmt.Errorf("unable to load DDEV global projects file %s: %v", globalProjectsFile, err)
 	}

@@ -1089,7 +1089,7 @@ func TestPHPConfig(t *testing.T) {
 		require.Contains(t, out, `float(0.6)`)
 
 		// Verify that environment variables are available in php-fpm
-		out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/phpinfo.php")
+		out, _, err = testcommon.GetLocalHTTPResponseWithBackoff(t, app.GetHTTPURL()+"/phpinfo.php", 10, 2*time.Second)
 		require.NoError(t, err)
 		assert.Contains(out, "phpversion="+v)
 		// Make sure that php-fpm isn't clearing environment variables
