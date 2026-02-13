@@ -2976,21 +2976,14 @@ func (app *DdevApp) WaitForServices() error {
 }
 
 // Wait ensures that the app service containers are healthy.
+// All requested containers are waited on in parallel using a single polling loop.
 func (app *DdevApp) Wait(requiredContainers []string) error {
-	for _, containerType := range requiredContainers {
-		labels := map[string]string{
-			"com.ddev.site-name":         app.GetName(),
-			"com.docker.compose.service": containerType,
-			"com.docker.compose.oneoff":  "False",
-		}
-		waitTime := app.GetMaxContainerWaitTime()
-		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
-		if err != nil {
-			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, logOutput, err)
-		}
+	labels := map[string]string{
+		"com.ddev.site-name":        app.GetName(),
+		"com.docker.compose.oneoff": "False",
 	}
-
-	return nil
+	waitTime := app.GetMaxContainerWaitTime()
+	return dockerutil.ContainersWait(waitTime, labels, requiredContainers...)
 }
 
 // WaitByLabels waits for containers found by list of labels to be
