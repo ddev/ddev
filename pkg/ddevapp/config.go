@@ -29,6 +29,9 @@ import (
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
+// Regexp pattern to match Composer v1 versions: "1" or "1.x.y"
+var composerV1Regex = regexp.MustCompile(`^1(\.\d+\.\d+)?$`)
+
 // RunValidateConfig controls whether to run ValidateConfig() function.
 // In some cases we don't actually need to check the config, e.g. when deleting the project.
 // It is enabled by default.
@@ -260,6 +263,11 @@ func (app *DdevApp) WriteConfig() error {
 	// Ensure valid type
 	if appcopy.Type == nodeps.AppTypeNone {
 		appcopy.Type = nodeps.AppTypePHP
+	}
+
+	if composerV1Regex.MatchString(appcopy.ComposerVersion) {
+		appcopy.ComposerVersion = "2.2"
+		util.WarningOnce(`Project '%s' now uses Composer v2.2 LTS. Composer v1 is no longer supported by Packagist, see https://blog.packagist.com/shutting-down-packagist-org-support-for-composer-1-x/`, app.Name)
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
@@ -854,7 +862,11 @@ func (app *DdevApp) CheckCustomConfig() {
 
 // CheckDeprecations warns the user if anything in use is deprecated.
 func (app *DdevApp) CheckDeprecations() {
-
+	if composerV1Regex.MatchString(app.ComposerVersion) {
+		app.ComposerVersion = "2.2"
+		util.WarningOnce(`Project '%s' now uses Composer v2.2 LTS. Composer v1 is no longer supported by Packagist, see https://blog.packagist.com/shutting-down-packagist-org-support-for-composer-1-x/
+Run 'ddev config --auto' to remove this Composer warning.`, app.Name)
+	}
 }
 
 // FixObsolete removes files that may be obsolete, etc.
@@ -1456,7 +1468,7 @@ RUN (timeout %d apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-ge
 		}
 
 		// Major and minor versions have to be provided as option so add '--' prefix.
-		// E.g. a major version can be 1 or 2, a minor version 2.2 or 2.1 etc.
+		// E.g. a major version can be 2, a minor version 2.2 or 2.1 etc.
 		if strings.Count(composerVersion, ".") < 2 {
 			composerSelfUpdateArg = "--" + composerSelfUpdateArg
 		}

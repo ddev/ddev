@@ -300,8 +300,8 @@ func init() {
 	ConfigCommand.Flags().Bool("disable-settings-management", false, "Prevent DDEV from creating or updating CMS settings files")
 	_ = ConfigCommand.RegisterFlagCompletionFunc("disable-settings-management", configCompletionFunc([]string{"true", "false"}))
 
-	ConfigCommand.Flags().String("composer-version", nodeps.ComposerDefault, `Specify override for Composer version in web container. This may be "", "1", "2", "2.2", "stable", "preview", "snapshot" or a specific version`)
-	_ = ConfigCommand.RegisterFlagCompletionFunc("composer-version", configCompletionFunc([]string{"2", "2.2", "1", "stable", "preview", "snapshot"}))
+	ConfigCommand.Flags().String("composer-version", nodeps.ComposerDefault, `Specify override for Composer version in web container. This may be "", "2", "2.2", "stable", "preview", "snapshot" or a specific version`)
+	_ = ConfigCommand.RegisterFlagCompletionFunc("composer-version", configCompletionFunc([]string{"2", "2.2", "stable", "preview", "snapshot"}))
 
 	ConfigCommand.Flags().Bool("auto", false, `Automatically run config without prompting`)
 	ConfigCommand.Flags().Bool("bind-all-interfaces", false, `Bind host ports on all interfaces, not only on the localhost network interface`)

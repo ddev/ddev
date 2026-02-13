@@ -1327,7 +1327,7 @@ func TestComposerVersionConfig(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	for _, testVersion := range []string{"2", "2.2", "2.5.5", "1", "stable", "preview", "snapshot"} {
+	for _, testVersion := range []string{"2", "2.2", "2.5.5", "stable", "preview", "snapshot"} {
 		app.ComposerVersion = testVersion
 		err = app.Start()
 		assert.NoError(err)

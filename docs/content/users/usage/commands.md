@@ -372,7 +372,7 @@ Flags:
 * `--bind-all-interfaces`: Bind host ports on all interfaces, not only on the localhost network interface.
 * `--composer-root`: The relative path, from the project root, to the directory containing `composer.json`. (This is where all Composer-related commands are executed.)
 * `--composer-root-default`: Unset a `web` service Composer root directory override, the same as `--composer-root=""`.
-* `--composer-version`: Specify override for Composer version in the web container. This may be `""`, `"1"`, `"2"`, `"2.2"`, `"stable"`, `"preview"`, `"snapshot"`, or a specific version.
+* `--composer-version`: Specify override for Composer version in the web container. This may be `""`, `"2"`, `"2.2"`, `"stable"`, `"preview"`, `"snapshot"`, or a specific version.
 * `--corepack-enable`: Whether to run `corepack enable` on Node.js configuration.
 * `--database`: Specify the database `type:version` to use (see [default](../configuration/config.md#database)).
 * `--db-working-dir`: Override the default working directory for the `db` service.
