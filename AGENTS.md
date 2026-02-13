@@ -235,6 +235,43 @@ Examples:
 
 **For commits that will become PRs:** Include the complete PR template content in commit messages. This ensures GitHub PRs are pre-populated and don't require additional editing.
 
+**Creating PRs with `gh`:**
+
+When creating or editing PRs with `gh pr create` or `gh pr edit`, always use the same template structure from `.github/PULL_REQUEST_TEMPLATE.md` for the `--body` argument. Use a HEREDOC for the body to preserve markdown formatting:
+
+```bash
+gh pr create --title "<type>: <description>" --body "$(cat <<'EOF'
+## The Issue
+
+- Fixes #<issue_number>
+
+[Issue description]
+
+## How This PR Solves The Issue
+
+[Technical explanation]
+
+## Manual Testing Instructions
+
+[Step-by-step testing guide]
+
+## Automated Testing Overview
+
+[Test coverage explanation]
+
+## Release/Deployment Notes
+
+[Impact assessment]
+EOF
+)"
+```
+
+When `gh pr edit` fails silently (e.g., due to GitHub API deprecation warnings), use the API directly:
+
+```bash
+gh api repos/ddev/ddev/pulls/<PR_NUMBER> -X PATCH -f body='...'
+```
+
 ### Pre-Commit Workflow
 
 **MANDATORY: Always run `make staticrequired` before any commit**
