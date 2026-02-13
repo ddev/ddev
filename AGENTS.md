@@ -266,12 +266,6 @@ EOF
 )"
 ```
 
-When `gh pr edit` fails silently (e.g., due to GitHub API deprecation warnings), use the API directly:
-
-```bash
-gh api repos/ddev/ddev/pulls/<PR_NUMBER> -X PATCH -f body='...'
-```
-
 ### Pre-Commit Workflow
 
 **MANDATORY: Always run `make staticrequired` before any commit**
