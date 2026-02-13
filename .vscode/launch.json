@@ -2,12 +2,23 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "🚀 Debug ddev (prompt for args)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/cmd/ddev",
+            "cwd": "${workspaceRoot}/../d11",
+            "env": {"DDEV_DEBUG": "true"},
+            "args": "${input:ddevArgs}",
+            "showLog": true
+        },
+        {
             "name": "debug ddev start",
             "type": "go",
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../d11simple",
+            "cwd": "${workspaceRoot}/../d11",
             "env": {"DDEV_DEBUG": "true"},
             "args": ["start", "-y"],
             "showLog": true
@@ -18,7 +29,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../d11simple",
+            "cwd": "${workspaceRoot}/../d11",
             "env": {"DDEV_DEBUG": "true"},
             "args": ["snapshot"],
             "showLog": true
@@ -31,7 +42,7 @@
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
             "env": {"DDEV_DEBUG": "true"},
-            "args": ["describe", "d11simple"],
+            "args": ["describe", "d11"],
             "showLog": true
         },
         {
@@ -40,7 +51,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../d11simple",
+            "cwd": "${workspaceRoot}/../d11",
             "env": {"DDEV_DEBUG": "true"},
             "args": ["list"],
             "showLog": true
@@ -66,6 +77,14 @@
             "env": {"DDEV_DEBUG": "true"},
             "args": ["delete", "images", "-y", "-a"],
             "showLog": true
+        }
+    ],
+    "inputs": [
+        {
+            "id": "ddevArgs",
+            "type": "promptString",
+            "description": "Enter ddev command and arguments (e.g., 'start -y' or 'describe' or 'list')",
+            "default": "version"
         }
     ]
 }
