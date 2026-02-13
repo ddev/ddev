@@ -312,4 +312,4 @@ When adding a new PHP version, ensure you:
 - [PHP Configuration Directives](https://www.php.net/manual/en/ini.php)
 - [PHP-FPM Configuration](https://www.php.net/manual/en/install.fpm.configuration.php)
 - [deb.sury.org PHP packages](https://packages.sury.org/php/)
-- [DDEV PHP Documentation](https://ddev.readthedocs.io/en/stable/users/extend/customization-extendibility/#providing-custom-php-configuration-phpini)
+- [DDEV PHP Documentation](https://docs.ddev.com/en/stable/users/extend/customization-extendibility/#providing-custom-php-configuration-phpini)

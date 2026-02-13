@@ -256,6 +256,6 @@ Provider scripts should use `bash` (not `sh`) and avoid platform-specific comman
 
 ## More Information
 
-- [DDEV Sharing Documentation](https://ddev.readthedocs.io/en/stable/users/topics/sharing/)
+- [DDEV Sharing Documentation](https://docs.ddev.com/en/stable/users/topics/sharing/)
 - [ngrok Documentation](https://ngrok.com/docs)
 - [Cloudflare Tunnel Documentation](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/)

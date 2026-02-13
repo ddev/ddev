@@ -2,7 +2,7 @@
 #ddev-generated
 
 # ngrok share provider for DDEV
-# Documentation: https://ddev.readthedocs.io/en/stable/users/topics/sharing/
+# Documentation: https://docs.ddev.com/en/stable/users/topics/sharing/
 #
 # To customize: remove the '#ddev-generated' line above and edit as needed.
 # To create a variant: copy to a new file like my-ngrok.sh
