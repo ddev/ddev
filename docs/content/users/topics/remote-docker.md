@@ -2,18 +2,52 @@
 
 ## Remote Docker Instances
 
-You can use remote Docker instances, whether on the internet, inside your network, or running in a virtual machine.
+You can use remote Docker instances, whether on the internet, inside your network, or running in a virtual machine. This lets you offload Docker resource usage from your local machine, which can improve battery life and performance on less powerful devices.
 
-* On the remote machine, the Docker port must be exposed if it’s not already. See [instructions](https://gist.github.com/styblope/dc55e0ad2a9848f2cc3307d4819d819f) for how to do this on a systemd-based remote server. **Be aware that this has serious security implications and must not be done without taking those into consideration.** In fact, `dockerd` will complain:
+### Connecting to the Remote Docker Host
 
-    > Binding to IP address without `--tlsverify` is insecure and gives root access on this machine to everyone who has access to your network.  host="tcp://0.0.0.0:2375".
+There are two main ways to connect to a remote Docker instance:
 
-* If you do not already have the Docker client installed (like you would from Docker Desktop), install *only* the client with `brew install docker`.
-* Create a Docker context that points to the remote Docker instance. For example, if the remote hostname is `debian-11`, then `docker context create debian-11 --docker host=tcp://debian-11:2375 && docker context use debian-11`. Alternately, you can use the `DOCKER_HOST` environment variable, e.g. `export DOCKER_HOST=debian-11` or `export DOCKER_HOST=tcp://debian-11:2375`.
-* Make sure you can access the remote machine using `docker ps`.
-* Bind mounts cannot work on a remote Docker setup, so you must use `ddev config global --no-bind-mounts`. This will cause DDEV to push needed information to and from the remote Docker instance when needed. This also automatically turns on Mutagen caching.
-* You may want to use a FQDN other than `*.ddev.site` because the DDEV site will *not* be at `127.0.0.1`. For example, `ddev config --additional-fqdns=debian-11` and then use `https://debian-11` to access the site.
-* If the Docker host is reachable on the internet, you can actually enable real HTTPS for it using Let’s Encrypt as described in [Hosting with DDEV](../topics/hosting.md). Make sure port 2375 is not available on the internet.
+#### SSH-Based Docker Context (Recommended)
+
+The SSH approach is more secure because it uses your existing SSH authentication and does not require exposing the Docker port on the network:
+
+```bash
+docker context create remotedocker --docker "host=ssh://user@remote-host"
+docker context use remotedocker
+```
+
+#### TCP-Based Docker Context
+
+You can expose the Docker API over TCP, but **be aware that this has serious security implications**. See [instructions](https://gist.github.com/styblope/dc55e0ad2a9848f2cc3307d4819d819f) for how to do this on a systemd-based remote server. `dockerd` will warn:
+
+> Binding to IP address without `--tlsverify` is insecure and gives root access on this machine to everyone who has access to your network.  host="tcp://0.0.0.0:2375".
+
+```bash
+docker context create remote --docker "host=tcp://remote-host:2375"
+docker context use remote
+```
+
+If you do not already have the Docker client installed (like you would from Docker Desktop), install *only* the client with `brew install docker`.
+
+Verify your connection with `docker ps`.
+
+### Required DDEV Configuration
+
+* **Disable bind mounts**: Bind mounts cannot work with a remote Docker setup, so you must use `ddev config global --no-bind-mounts`. This causes DDEV to push needed information to and from the remote Docker instance when needed. This also automatically turns on Mutagen caching.
+* **Bind all interfaces**: The router and project containers must bind to all interfaces on the remote host rather than to the Docker IP (which is the remote host's IP, not a valid local bind address). Configure this with:
+
+    ```bash
+    ddev config global --router-bind-all-interfaces
+    ddev config --bind-all-interfaces
+    ```
+
+### Accessing Your Sites
+
+The DDEV site will *not* be at `127.0.0.1`. You have two options:
+
+* **SSH tunnel**: Forward DDEV ports (like 8080, 8443) from the remote host to your local machine. This lets you access sites at `localhost:<port>` without exposing ports on the remote host.
+* **Direct access with custom FQDN**: Use `ddev config --additional-fqdns=remote-host` and access the site at `https://remote-host`. If the Docker host is reachable on the internet, you can enable real HTTPS using Let's Encrypt as described in [Hosting with DDEV](../topics/hosting.md). Make sure port 2375 is not available on the internet.
 
 ## Continuous Integration (CI)
 

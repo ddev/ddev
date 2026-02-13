@@ -131,6 +131,29 @@ func GetDockerIP() (string, error) {
 	return dm.hostIP, dm.hostIPErr
 }
 
+// IsRemoteDockerHost returns true if the Docker host IP is not a local address,
+// indicating that Docker is running on a remote machine.
+func IsRemoteDockerHost() bool {
+	dockerIP, err := GetDockerIP()
+	if err != nil {
+		return false
+	}
+	parsedIP := net.ParseIP(dockerIP)
+	if parsedIP == nil || parsedIP.IsLoopback() {
+		return false
+	}
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return true // If we can't determine local IPs, assume remote to be safe
+	}
+	for _, addr := range addrs {
+		if ipNet, ok := addr.(*net.IPNet); ok && ipNet.IP.Equal(parsedIP) {
+			return false
+		}
+	}
+	return true
+}
+
 // getDockerIPFromDockerHost returns the IP address of the Docker host based on the provided Docker host string.
 func getDockerIPFromDockerHost(host string) (string, error) {
 	// Default to localhost
