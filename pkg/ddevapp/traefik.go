@@ -410,7 +410,10 @@ func CleanupGlobalTraefikStaging() error {
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	except := map[string]bool{"README.txt": true}
 
-	for _, sub := range []string{"config", "certs"} {
+	// The config directory gets purged, but we can leave certs
+	// as they would be overwritten as needed, and
+	// could affect Let's Encrypt behavior, see https://github.com/ddev/ddev/issues/7940
+	for _, sub := range []string{"config"} {
 		dir := filepath.Join(globalTraefikDir, sub)
 		if fileutil.IsDirectory(dir) {
 			if err := fileutil.PurgeDirectoryExcept(dir, except); err != nil {

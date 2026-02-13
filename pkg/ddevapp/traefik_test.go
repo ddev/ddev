@@ -508,6 +508,7 @@ func TestTraefikMultipleCerts(t *testing.T) {
 // TestTraefikStagingDirectoryCleanup tests that README files are created
 // and that staging directories are cleaned up on poweroff
 func TestTraefikStagingDirectoryCleanup(t *testing.T) {
+
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
 
@@ -573,10 +574,11 @@ func TestTraefikStagingDirectoryCleanup(t *testing.T) {
 	require.Equal(t, 1, len(configFilesAfter), "config directory should only contain README.txt after poweroff")
 	require.Equal(t, "README.txt", configFilesAfter[0].Name(), "only README.txt should remain in config directory")
 
+	// Deliberately not checking certs dir as we don't clean it up
+	// https://github.com/ddev/ddev/issues/7940
 	certsFilesAfter, err := os.ReadDir(globalSourceCertsPath)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(certsFilesAfter), "certs directory should only contain README.txt after poweroff")
-	require.Equal(t, "README.txt", certsFilesAfter[0].Name(), "only README.txt should remain in certs directory")
+	require.Contains(t, "README.txt", certsFilesAfter[0].Name(), "README.txt should remain in certs directory")
 
 	// Verify README.txt still exists and has expected content
 	require.FileExists(t, configReadme, "README.txt should still exist after cleanup")
