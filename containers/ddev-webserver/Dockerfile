@@ -119,6 +119,8 @@ RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariad
 # Install mariadb wrappers
 # Search for CHANGE_MARIADB_CLIENT to update related code.
 RUN DDEV_DATABASE="mariadb:11.8" mariadb-compat-install.sh
+# Install MariaDB SSL skip wrappers to disable one-way TLS verification (enabled by default in MariaDB 11.4+)
+RUN DDEV_DATABASE="mariadb:11.8" mariadb-skip-ssl-wrapper-install.sh
 
 ### -------------------------END ddev-webserver-base------------------------------
 

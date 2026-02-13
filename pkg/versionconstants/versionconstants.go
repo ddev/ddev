@@ -20,7 +20,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20260204_stasadev_avif" // Note that this can be overridden by make
+var WebTag = "20260213_stasadev_mariadb_skip_ssl" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
