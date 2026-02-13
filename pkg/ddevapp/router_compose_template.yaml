@@ -28,8 +28,10 @@ services:
     ports: {{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
       - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
       - "{{ $port }}:{{ $port }}"{{ end }}{{ end }}
-      # Traefik monitor port: Always bind to localhost only for security
-      - "{{ $dockerIP }}:{{.TraefikMonitorPort}}:{{.TraefikMonitorPort}}"
+      # Traefik monitor port: Always bind to 127.0.0.1 only for security
+      # Use hardcoded 127.0.0.1 instead of $dockerIP because on remote Docker
+      # hosts, $dockerIP is the remote IP which cannot be used as a bind address
+      - "127.0.0.1:{{.TraefikMonitorPort}}:{{.TraefikMonitorPort}}"
     labels:
       # For cleanup on ddev poweroff
       com.ddev.site-name: ""

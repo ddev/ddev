@@ -220,6 +220,11 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, erro
 	if app.BindAllInterfaces {
 		bindIP = "0.0.0.0"
 	}
+	// On remote Docker hosts, the Docker IP (e.g. a cloud provider's public IP)
+	// is not a valid bind address on the Docker host itself, so bind to all interfaces.
+	if dockerutil.IsRemoteDockerHost() {
+		bindIP = "0.0.0.0"
+	}
 
 	isPodman := dockerutil.IsPodman()
 	isRootless := dockerutil.IsRootless()
