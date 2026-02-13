@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 )
 
@@ -14,7 +15,8 @@ type ConfigProvider interface {
 	Set(key string, value any)
 	Unmarshal(rawVal any) error
 	Unset(key string)
-	// Add more methods as needed
+	ReadConfig(path string) error
+	MergeConfig(path string) error
 }
 
 // viperConfig implements ConfigProvider using Viper.
@@ -53,7 +55,21 @@ func (vc *viperConfig) Unset(key string) {
 }
 
 func (vc *viperConfig) Unmarshal(rawVal any) error {
-	return vc.v.Unmarshal(rawVal)
+	return vc.v.Unmarshal(rawVal, func(dc *mapstructure.DecoderConfig) {
+		dc.TagName = "yaml"
+	})
+}
+
+func (vc *viperConfig) ReadConfig(path string) error {
+	vc.v.SetConfigFile(path)
+	vc.v.SetConfigType("yaml")
+	return vc.v.ReadInConfig()
+}
+
+func (vc *viperConfig) MergeConfig(path string) error {
+	vc.v.SetConfigFile(path)
+	vc.v.SetConfigType("yaml")
+	return vc.v.MergeInConfig()
 }
 
 var config ConfigProvider
@@ -95,8 +111,8 @@ func Init() error {
 	_ = v.BindEnv("LOGNAME", "LOGNAME")
 	_ = v.BindEnv("SHELL", "SHELL")
 	_ = v.BindEnv("TERM", "TERM")
-	_ = v.BindEnv("DOCKER_CONTEXT", "DOCKER_CONTEXT")
-	_ = v.BindEnv("DOCKER_HOST", "DOCKER_HOST")
+	_ = v.BindEnv("DOCKER_CONTEXT", "DDEV_DOCKER_CONTEXT", "DOCKER_CONTEXT")
+	_ = v.BindEnv("DOCKER_HOST", "DDEV_DOCKER_HOST", "DOCKER_HOST")
 	_ = v.BindEnv("TEMP", "TEMP")
 	_ = v.BindEnv("TMP", "TMP")
 	_ = v.BindEnv("USERPROFILE", "USERPROFILE")
@@ -104,6 +120,36 @@ func Init() error {
 
 	config = &viperConfig{v: v}
 	return nil
+}
+
+// NewConfigProvider returns a new isolated ConfigProvider.
+func NewConfigProvider() ConfigProvider {
+	return &viperConfig{v: viper.New()}
+}
+
+// LoadGlobalConfig loads a global configuration file into the target struct.
+func LoadGlobalConfig(path string, target interface{}) error {
+	cfg := NewConfigProvider()
+	if err := cfg.ReadConfig(path); err != nil {
+		return err
+	}
+	return cfg.Unmarshal(target)
+}
+
+// LoadProjectConfig loads a main project config and merges optional overrides into the target struct.
+func LoadProjectConfig(mainPath string, overridePaths []string, target interface{}) error {
+	cfg := NewConfigProvider()
+	if err := cfg.ReadConfig(mainPath); err != nil {
+		return err
+	}
+
+	for _, path := range overridePaths {
+		if err := cfg.MergeConfig(path); err != nil {
+			return err
+		}
+	}
+
+	return cfg.Unmarshal(target)
 }
 
 // GetString returns the string value for a key using the current config provider.
