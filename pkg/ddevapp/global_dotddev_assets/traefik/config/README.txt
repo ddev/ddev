@@ -19,4 +19,4 @@ deleted. Instead:
   files to ~/.ddev/traefik/custom-global-config/ directory.
 
 For more information, see:
-https://ddev.readthedocs.io/en/stable/users/extend/traefik-router/
+https://docs.ddev.com/en/stable/users/extend/traefik-router/
