@@ -2,7 +2,7 @@
 #ddev-generated
 
 # cloudflared share provider for DDEV
-# Documentation: https://ddev.readthedocs.io/en/stable/users/topics/sharing/
+# Documentation: https://docs.ddev.com/en/stable/users/topics/sharing/
 #
 # To customize: remove the '#ddev-generated' line above and edit as needed.
 #
