@@ -18,4 +18,4 @@ deleted. Instead:
 * Default certificates are managed automatically by DDEV using mkcert.
 
 For more information, see:
-https://ddev.readthedocs.io/en/stable/users/extend/traefik-router/
+https://docs.ddev.com/en/stable/users/extend/traefik-router/

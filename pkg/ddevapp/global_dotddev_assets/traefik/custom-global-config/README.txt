@@ -24,4 +24,4 @@ Example: Create custom-global-config/global_middlewares.yaml with:
           burst: 50
 
 For more information, see:
-https://ddev.readthedocs.io/en/stable/users/extend/traefik-router/
+https://docs.ddev.com/en/stable/users/extend/traefik-router/

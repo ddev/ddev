@@ -508,10 +508,6 @@ func TestTraefikMultipleCerts(t *testing.T) {
 // TestTraefikStagingDirectoryCleanup tests that README files are created
 // and that staging directories are cleaned up on poweroff
 func TestTraefikStagingDirectoryCleanup(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
-		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
-	}
-
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
 
@@ -520,24 +516,20 @@ func TestTraefikStagingDirectoryCleanup(t *testing.T) {
 	require.NoError(t, err)
 
 	ddevapp.PowerOff()
-	origRouter := globalconfig.DdevGlobalConfig.Router
-	globalconfig.DdevGlobalConfig.Router = types.RouterTypeTraefik
+
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		require.NoError(t, err)
-		err = app.Stop(true, false)
-		require.NoError(t, err)
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
 		ddevapp.PowerOff()
-		globalconfig.DdevGlobalConfig.Router = origRouter
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		require.NoError(t, err)
 	})
 
 	// Start the app to trigger Traefik config generation
-	err = app.StartAndWait(5)
+	err = app.Start()
 	require.NoError(t, err)
 
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
