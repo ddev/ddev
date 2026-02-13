@@ -15,6 +15,8 @@ For developer documentation, see:
 
 ### Building
 
+**IMPORTANT: Always use `make` to build, never `go build` directly.**
+
 ```bash
 make                    # Build for host OS/arch. Output: .gotmp/bin/<os>_<arch>/ddev
 make linux_amd64        # Cross-compile for specific platform
@@ -38,7 +40,9 @@ make quickstart-test                          # Run Bats docs tests
 
 ### Linting and Code Quality
 
-These are implemented as PreToolUse and PostToolUse hooks, so should not be separately required:
+**IMPORTANT: Always run `make staticrequired` to validate changes, never use `go build` or individual linters directly.**
+
+Individual linters (`gofmt`, `markdownlint`) are implemented as PreToolUse and PostToolUse hooks, so should not be separately required:
 
 ```bash
 make staticrequired                           # Run all required static analysis

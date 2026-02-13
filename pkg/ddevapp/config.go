@@ -720,12 +720,8 @@ func (app *DdevApp) CheckCustomConfig() {
 		// Check for custom-global-config directory (middleware, routers, etc.)
 		customGlobalConfigDir := filepath.Join(traefikGlobalConfigPath, "custom-global-config")
 		if fileutil.IsDirectory(customGlobalConfigDir) {
-			customGlobalFiles, err := fileutil.ListFilesInDir(customGlobalConfigDir)
-			// Remove README.md and local-auth.yaml.example from the list
-			customGlobalFiles = slices.DeleteFunc(customGlobalFiles, func(f string) bool {
-				base := filepath.Base(f)
-				return base == "README.md" || base == "local-auth.yaml.example"
-			})
+			customGlobalFiles, err := fileutil.ListFilesInDirFullPath(customGlobalConfigDir, true)
+			customGlobalFiles = filterCustomConfigFiles(customGlobalFiles)
 
 			if err == nil && len(customGlobalFiles) > 0 {
 				printableFiles, _ := util.ArrayToReadableOutput(customGlobalFiles)
