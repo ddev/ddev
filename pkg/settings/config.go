@@ -102,7 +102,7 @@ func LoadGlobalConfig(path string, target interface{}) error {
 
 // LoadProjectConfig loads a main project config and merges optional overrides into the target struct.
 func LoadProjectConfig(mainPath string, overridePaths []string, target interface{}) error {
-	cfg := NewConfigProvider()
+	cfg := NewConfigProvider().(*viperConfig)
 	if err := cfg.ReadConfig(mainPath); err != nil {
 		return err
 	}

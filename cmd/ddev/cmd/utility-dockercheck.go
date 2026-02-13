@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"os"
+
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	exec2 "github.com/ddev/ddev/pkg/exec"
