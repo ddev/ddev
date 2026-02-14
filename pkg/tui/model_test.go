@@ -941,3 +941,154 @@ func TestIsLoading(t *testing.T) {
 	m.logLoading = true
 	require.True(t, m.isLoading())
 }
+
+// --- Multi-project operations tests ---
+
+func TestStartAllConfirmation(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{
+		{Name: "a", Status: ddevapp.SiteStopped},
+		{Name: "b", Status: ddevapp.SiteStopped},
+	}
+
+	// Press S to start all — should enter confirmation
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'S'}})
+	model := updated.(AppModel)
+
+	require.True(t, model.confirming, "should enter confirmation mode")
+	require.Equal(t, "start-all", model.confirmAction)
+	require.Contains(t, model.statusMsg, "Start all 2 projects")
+	require.Nil(t, cmd, "should not execute yet")
+}
+
+func TestStopAllConfirmation(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{
+		{Name: "a", Status: ddevapp.SiteRunning},
+		{Name: "b", Status: ddevapp.SiteRunning},
+	}
+
+	// Press X to stop all — should enter confirmation
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'X'}})
+	model := updated.(AppModel)
+
+	require.True(t, model.confirming, "should enter confirmation mode")
+	require.Equal(t, "stop-all", model.confirmAction)
+	require.Contains(t, model.statusMsg, "Stop all 2 projects")
+	require.Nil(t, cmd)
+}
+
+func TestConfirmStartAll(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{{Name: "a"}}
+	m.confirming = true
+	m.confirmAction = "start-all"
+
+	// Press y to confirm
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming, "should exit confirmation")
+	require.Empty(t, model.confirmAction)
+	require.Contains(t, model.statusMsg, "Starting all")
+	require.NotNil(t, cmd, "should return exec command")
+}
+
+func TestConfirmStopAll(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{{Name: "a"}}
+	m.confirming = true
+	m.confirmAction = "stop-all"
+
+	// Press y to confirm
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming)
+	require.Contains(t, model.statusMsg, "Stopping all")
+	require.NotNil(t, cmd)
+}
+
+func TestCancelConfirmation(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{{Name: "a"}}
+	m.confirming = true
+	m.confirmAction = "start-all"
+	m.statusMsg = "Start all?"
+
+	// Press any non-y key to cancel
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'n'}})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming, "should cancel confirmation")
+	require.Empty(t, model.confirmAction)
+	require.Empty(t, model.statusMsg, "status should be cleared")
+	require.Nil(t, cmd)
+}
+
+func TestStartAllNoProjectsNoop(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	// No projects
+
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'S'}})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming, "should not confirm with no projects")
+}
+
+func TestStartAllHintVisible(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.width = 120
+	m.projects = []ProjectInfo{{Name: "a"}}
+
+	view := m.View()
+
+	require.Contains(t, view, "start all", "should show start all hint")
+	require.Contains(t, view, "stop all", "should show stop all hint")
+}
+
+// --- Error resilience tests ---
+
+func TestProjectsLoadedErrorShowsMessage(t *testing.T) {
+	m := NewAppModel()
+	m.loading = true
+
+	updated, _ := m.Update(projectsLoadedMsg{err: errTest})
+	model := updated.(AppModel)
+
+	require.False(t, model.loading)
+	require.Error(t, model.err)
+	require.Contains(t, model.statusMsg, "Error loading projects")
+}
+
+func TestProjectsLoadedErrorClearsOnSuccess(t *testing.T) {
+	m := NewAppModel()
+	m.err = errTest
+	m.statusMsg = "Error loading projects: test error"
+
+	updated, _ := m.Update(projectsLoadedMsg{
+		projects: []ProjectInfo{{Name: "a"}},
+	})
+	model := updated.(AppModel)
+
+	require.NoError(t, model.err, "error should be cleared on success")
+}
+
+func TestErrorViewShowsRetryHint(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.err = errTest
+	m.width = 60
+
+	view := m.View()
+
+	require.Contains(t, view, "Error", "should show error")
+	require.Contains(t, view, "Press R to retry", "should show retry hint")
+}
