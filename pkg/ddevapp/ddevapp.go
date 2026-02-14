@@ -1857,7 +1857,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 	buildDurationStart := util.ElapsedDuration(time.Now())
-	out, err = app.composeBuild("")
+	_, err = app.composeBuild("")
 	if err != nil {
 		return err
 	}
@@ -1865,7 +1865,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	_, logStderrOutput, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	// If the web image is dirty, try to rebuild it immediately
 	if err == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
-		out, err = app.composeBuild("web", "--no-cache")
+		_, err = app.composeBuild("web", "--no-cache")
 		if err != nil {
 			return err
 		}
