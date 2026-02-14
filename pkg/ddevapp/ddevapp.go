@@ -1423,6 +1423,108 @@ func (app *DdevApp) GetDBImage() string {
 	return dbImage
 }
 
+// composeBuild builds Docker Compose services either all sequentially or a specific service.
+// This method is an experimental workaround for the Docker BuildKit race condition affecting
+// parallel builds with the containerd image store (moby/buildkit#4024, docker/compose#13043).
+// See https://github.com/ddev/ddev/issues/8136
+// See also PR #8142 for an alternative retry-based approach.
+//
+// Parameters:
+//   - serviceName: If empty, discovers and builds all services sequentially.
+//     If specified, builds only that service.
+//   - extraArgs: Additional arguments to pass to docker-compose build (e.g., "--no-cache").
+//
+// Returns:
+//   - Combined stdout output from all build operations
+//   - Error if any build fails
+//
+// The --progress=plain flag is always used for consistent output.
+func (app *DdevApp) composeBuild(serviceName string, extraArgs ...string) (string, error) {
+	progress := "plain"
+	var combinedOutput strings.Builder
+
+	// If serviceName is empty, build all services sequentially
+	if serviceName == "" {
+		// Discover services using docker-compose config --services
+		servicesOut, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+			Action:       []string{"config", "--services"},
+		})
+		if err != nil {
+			return "", fmt.Errorf("failed to discover services: %v", err)
+		}
+
+		// Parse service names from output
+		serviceNames := []string{}
+		for _, line := range strings.Split(strings.TrimSpace(servicesOut), "\n") {
+			line = strings.TrimSpace(line)
+			if line != "" {
+				serviceNames = append(serviceNames, line)
+			}
+		}
+
+		if len(serviceNames) == 0 {
+			return "", fmt.Errorf("no services found to build")
+		}
+
+		// Build each service sequentially
+		for _, svc := range serviceNames {
+			util.Debug("Building service: %s", svc)
+
+			// Construct action with progress flag, build command, service name, and extra args
+			action := []string{"--progress=" + progress, "build", svc}
+			if app.NoCache {
+				action = append(action, "--no-cache")
+			}
+			action = append(action, extraArgs...)
+
+			util.Debug("Executing docker-compose -f %s %s", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "))
+			out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+				ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+				Action:       action,
+				Progress:     true,
+				Timeout:      time.Hour * 1,
+			})
+			if err != nil {
+				return combinedOutput.String(), fmt.Errorf("docker-compose build %s failed: %v, output='%s', stderr='%s'", svc, err, out, stderr)
+			}
+
+			combinedOutput.WriteString(out)
+			if globalconfig.DdevVerbose {
+				util.Debug("docker-compose build %s output:\n%s\n\n", svc, out)
+			}
+		}
+	} else {
+		// Build a specific service
+		util.Debug("Building service: %s", serviceName)
+
+		// Construct action with progress flag, build command, service name, and extra args
+		action := []string{"--progress=" + progress, "build", serviceName}
+		if app.NoCache {
+			action = append(action, "--no-cache")
+		}
+		action = append(action, extraArgs...)
+
+		util.Debug("Executing docker-compose -f %s %s", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "))
+		out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+			Action:       action,
+			Progress:     true,
+			Timeout:      time.Hour * 1,
+		})
+		if err != nil {
+			return "", fmt.Errorf("docker-compose build %s failed: %v, output='%s', stderr='%s'", serviceName, err, out, stderr)
+		}
+
+		combinedOutput.WriteString(out)
+		if globalconfig.DdevVerbose {
+			util.Debug("docker-compose build %s output:\n%s\n\n", serviceName, out)
+		}
+	}
+
+	return combinedOutput.String(), nil
+}
+
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
@@ -1755,40 +1857,17 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 	buildDurationStart := util.ElapsedDuration(time.Now())
-	progress := "plain"
-	action := []string{"--progress=" + progress, "build"}
-	if app.NoCache {
-		action = append(action, "--no-cache")
-	}
-	util.Debug("Executing docker-compose -f %s %s", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "))
-	out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-		Action:       action,
-		Progress:     true,
-		Timeout:      time.Hour * 1,
-	})
+	out, err = app.composeBuild("")
 	if err != nil {
-		return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
-	}
-	if globalconfig.DdevVerbose {
-		util.Debug("docker-compose build output:\n%s\n\n", out)
+		return err
 	}
 
 	_, logStderrOutput, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	// If the web image is dirty, try to rebuild it immediately
 	if err == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
-		util.Debug("Executing docker-compose -f %s --progress=%s build web --no-cache", app.DockerComposeFullRenderedYAMLPath(), progress)
-		out, stderr, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-			Action:       []string{"--progress=" + progress, "build", "web", "--no-cache"},
-			Progress:     true,
-			Timeout:      time.Hour * 1,
-		})
+		out, err = app.composeBuild("web", "--no-cache")
 		if err != nil {
-			return fmt.Errorf("docker-compose build web --no-cache failed: %v, output='%s', stderr='%s'", err, out, stderr)
-		}
-		if globalconfig.DdevVerbose {
-			util.Debug("docker-compose build web --no-cache output:\n%s\n\n", out)
+			return err
 		}
 	}
 
