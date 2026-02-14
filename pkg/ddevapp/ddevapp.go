@@ -2,8 +2,11 @@ package ddevapp
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"embed"
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -1424,6 +1427,34 @@ func (app *DdevApp) GetDBImage() string {
 	return dbImage
 }
 
+// buildContextFingerprint returns a SHA-256 hash of the build context directories
+// (.webimageBuild, .dbimageBuild) and base image names. This is used to detect
+// when docker-compose build can be skipped because nothing has changed.
+func (app *DdevApp) buildContextFingerprint() string {
+	h := sha256.New()
+	// Include base image names so version upgrades trigger a rebuild
+	h.Write([]byte(ddevImages.GetWebImage()))
+	h.Write([]byte(app.GetDBImage()))
+	for _, dir := range []string{".webimageBuild", ".dbimageBuild"} {
+		fullDir := app.GetConfigPath(dir)
+		_ = filepath.WalkDir(fullDir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() {
+				return nil
+			}
+			rel, _ := filepath.Rel(fullDir, path)
+			h.Write([]byte(rel))
+			f, fErr := os.Open(path)
+			if fErr != nil {
+				return nil
+			}
+			defer f.Close()
+			_, _ = io.Copy(h, f)
+			return nil
+		})
+	}
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
@@ -1725,12 +1756,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
-	// WriteConfig .ddev-docker-compose-*.yaml
-	err = app.WriteDockerComposeYAML()
-	if err != nil {
-		return err
-	}
-
 	err = app.AddHostsEntriesIfNeeded()
 	if err != nil {
 		return err
@@ -1750,37 +1775,25 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	// Build extra layers on web and db images if necessary
-	if output.JSONOutput {
-		output.UserOut.Printf("Building project images...")
-	} else {
-		// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
-		// See https://github.com/sirupsen/logrus/issues/167
-		// We want the progress dots to appear on the same line.
-		fmt.Print("Building project images...")
-		// Print a newline before util.Debug below
-		if globalconfig.DdevDebug {
-			output.UserOut.Debugln()
+	// Build extra layers on web and db images if necessary.
+	// Skip the build entirely if the build context hasn't changed and built images exist.
+	buildHashFile := app.GetConfigPath(".build-hash")
+	currentBuildHash := app.buildContextFingerprint()
+	savedBuildHash, _ := os.ReadFile(buildHashFile)
+	buildNeeded := app.NoCache || currentBuildHash != string(savedBuildHash)
+
+	if !buildNeeded {
+		// Verify the built images still exist locally
+		webBuilt := ddevImages.GetWebImage() + "-" + app.Name + "-built"
+		dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
+		webExists, _ := dockerutil.ImageExistsLocally(webBuilt)
+		dbExists := true
+		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+			dbExists, _ = dockerutil.ImageExistsLocally(dbBuilt)
 		}
-	}
-	buildDurationStart := util.ElapsedDuration(time.Now())
-	progress := "plain"
-	action := []string{"--progress=" + progress, "build"}
-	if app.NoCache {
-		action = append(action, "--no-cache")
-	}
-	util.Debug("Executing docker-compose -f %s %s", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "))
-	out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-		Action:       action,
-		Progress:     true,
-		Timeout:      time.Hour * 1,
-	})
-	if err != nil {
-		return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
-	}
-	if globalconfig.DdevVerbose {
-		util.Debug("docker-compose build output:\n%s\n\n", out)
+		if !webExists || !dbExists {
+			buildNeeded = true
+		}
 	}
 
 	// Wait for chown + SSH to finish before proceeding
@@ -1792,56 +1805,91 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return sshErr
 	}
 
-	// Run log-stderr check and dangling image cleanup concurrently
-	var logStderrOutput string
-	var logStderrErr error
-	var danglingErr error
-	var postBuildWg sync.WaitGroup
-
-	postBuildWg.Add(1)
-	go func() {
-		defer postBuildWg.Done()
-		_, logStderrOutput, logStderrErr = dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
-	}()
-
-	postBuildWg.Add(1)
-	go func() {
-		defer postBuildWg.Done()
-		util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
-		danglingImages, dErr := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
-		if dErr != nil {
-			danglingErr = fmt.Errorf("unable to get dangling images for the project %s: %v", app.GetComposeProjectName(), dErr)
-			return
+	if buildNeeded {
+		buildDurationStart := util.ElapsedDuration(time.Now())
+		if output.JSONOutput {
+			output.UserOut.Printf("Building project images...")
+		} else {
+			fmt.Print("Building project images...")
+			if globalconfig.DdevDebug {
+				output.UserOut.Debugln()
+			}
 		}
-		for _, danglingImage := range danglingImages {
-			_ = dockerutil.RemoveImage(danglingImage.ID)
+		progress := "plain"
+		action := []string{"--progress=" + progress, "build"}
+		if app.NoCache {
+			action = append(action, "--no-cache")
 		}
-	}()
-
-	postBuildWg.Wait()
-	if danglingErr != nil {
-		return danglingErr
-	}
-
-	// If the web image is dirty, try to rebuild it immediately
-	if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
-		util.Debug("Executing docker-compose -f %s --progress=%s build web --no-cache", app.DockerComposeFullRenderedYAMLPath(), progress)
-		out, stderr, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		util.Debug("Executing docker-compose -f %s %s", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "))
+		out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-			Action:       []string{"--progress=" + progress, "build", "web", "--no-cache"},
+			Action:       action,
 			Progress:     true,
 			Timeout:      time.Hour * 1,
 		})
 		if err != nil {
-			return fmt.Errorf("docker-compose build web --no-cache failed: %v, output='%s', stderr='%s'", err, out, stderr)
+			return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
 		}
 		if globalconfig.DdevVerbose {
-			util.Debug("docker-compose build web --no-cache output:\n%s\n\n", out)
+			util.Debug("docker-compose build output:\n%s\n\n", out)
 		}
-	}
 
-	buildDuration := util.FormatDuration(buildDurationStart())
-	util.Success("Project images built in %s.", buildDuration)
+		// Run log-stderr check and dangling image cleanup concurrently
+		var logStderrOutput string
+		var logStderrErr error
+		var danglingErr error
+		var postBuildWg sync.WaitGroup
+
+		postBuildWg.Add(1)
+		go func() {
+			defer postBuildWg.Done()
+			_, logStderrOutput, logStderrErr = dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+		}()
+
+		postBuildWg.Add(1)
+		go func() {
+			defer postBuildWg.Done()
+			util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
+			danglingImages, dErr := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
+			if dErr != nil {
+				danglingErr = fmt.Errorf("unable to get dangling images for the project %s: %v", app.GetComposeProjectName(), dErr)
+				return
+			}
+			for _, danglingImage := range danglingImages {
+				_ = dockerutil.RemoveImage(danglingImage.ID)
+			}
+		}()
+
+		postBuildWg.Wait()
+		if danglingErr != nil {
+			return danglingErr
+		}
+
+		// If the web image is dirty, try to rebuild it immediately
+		if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
+			util.Debug("Executing docker-compose -f %s --progress=%s build web --no-cache", app.DockerComposeFullRenderedYAMLPath(), progress)
+			out, stderr, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+				ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+				Action:       []string{"--progress=" + progress, "build", "web", "--no-cache"},
+				Progress:     true,
+				Timeout:      time.Hour * 1,
+			})
+			if err != nil {
+				return fmt.Errorf("docker-compose build web --no-cache failed: %v, output='%s', stderr='%s'", err, out, stderr)
+			}
+			if globalconfig.DdevVerbose {
+				util.Debug("docker-compose build web --no-cache output:\n%s\n\n", out)
+			}
+		}
+
+		// Save build hash on successful build
+		_ = os.WriteFile(buildHashFile, []byte(currentBuildHash), 0644)
+
+		buildDuration := util.FormatDuration(buildDurationStart())
+		util.Success("Project images built in %s.", buildDuration)
+	} else {
+		util.Debug("Skipping docker-compose build, build context unchanged and images exist")
+	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
@@ -1997,11 +2045,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if globalconfig.DdevVerbose {
-		out, err = app.CaptureLogs("web", true, "200")
-		if err != nil {
-			util.Warning("Unable to capture logs from web container: %v", err)
+		logOut, logErr := app.CaptureLogs("web", true, "200")
+		if logErr != nil {
+			util.Warning("Unable to capture logs from web container: %v", logErr)
 		} else {
-			util.Debug("docker-compose up output:\n%s\n\n", out)
+			util.Debug("docker-compose up output:\n%s\n\n", logOut)
 		}
 	}
 
