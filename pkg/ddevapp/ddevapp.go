@@ -1787,7 +1787,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Build extra layers on web and db images if necessary.
 	// Skip the build entirely if the build context hasn't changed and built images exist.
 	buildHashFile := app.GetConfigPath(".build-hash")
-	currentBuildHash := app.buildContextFingerprint()
+	currentBuildHash := nodeps.DdevFileSignature + "\n" + app.buildContextFingerprint()
 	savedBuildHash, _ := os.ReadFile(buildHashFile)
 	buildNeeded := app.NoCache || currentBuildHash != string(savedBuildHash)
 
