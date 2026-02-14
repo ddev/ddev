@@ -1231,6 +1231,8 @@ stopasgroup=true
 	// MariaDB uses mariadb-* command names, but legacy mysql* commands are commonly used
 	// Install compatibility wrappers for MariaDB, remove them when not needed
 	extraWebContent = extraWebContent + "\nRUN log-stderr.sh mariadb-compat-install.sh || true\n"
+	// MariaDB 11.4+ has enabled SSL verification by default, which can cause issues.
+	extraWebContent = extraWebContent + "\nRUN log-stderr.sh mariadb-skip-ssl-wrapper-install.sh || true\n"
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
