@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
@@ -1916,7 +1917,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if err != nil {
 		util.Warning("Unable to run /start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 	}
-
 	// With NoBindMounts we have to symlink the copied xhprof_prepend.php into /usr/local/bin
 	// When in prepend mode, which will soon become fairly obsolete.
 	// Normally it's bind-mounted into there in prepend mode.
@@ -1958,11 +1958,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Debug(`mysql 8, php 5.6-7.3, set mysql_native_password`)
 	}
 
-	err = PopulateGlobalCustomCommandFiles()
-	if err != nil {
-		util.Warning("Failed to populate global custom command files: %v", err)
-	}
-
 	if globalconfig.DdevVerbose {
 		out, err = app.CaptureLogs("web", true, "200")
 		if err != nil {
@@ -1988,51 +1983,90 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	util.Debug("Testing to see if /mnt/ddev_config is properly mounted")
-	_, _, err = app.Exec(&ExecOpts{
-		Cmd: `ls -l /mnt/ddev_config/nginx_full/nginx-site.conf >/dev/null`,
-	})
-	if err != nil {
+	// Run mount check, log-stderr, PopulateGlobalCustomCommandFiles, and
+	// router start concurrently. These are all independent operations:
+	// - Mount check and log-stderr only need the web container (already healthy)
+	// - PopulateGlobalCustomCommandFiles uses the web container or an anonymous container
+	// - Router start is completely independent
+	var logStderr string
+	type execResult struct {
+		mountErr    error
+		logStderr   string
+		commandsErr error
+		routerErr   error
+		waitErr2    error
+	}
+	result := execResult{}
+	var wg sync.WaitGroup
+
+	// Goroutine 1: mount check + log-stderr (sequential, both need web container)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		util.Debug("Testing to see if /mnt/ddev_config is properly mounted")
+		_, _, result.mountErr = app.Exec(&ExecOpts{
+			Cmd: `ls -l /mnt/ddev_config/nginx_full/nginx-site.conf >/dev/null`,
+		})
+
+		util.Debug("Getting stderr output from 'log-stderr.sh --show'")
+		stderr, _, _ := app.Exec(&ExecOpts{
+			Cmd: "log-stderr.sh --show 2>/dev/null || true",
+		})
+		result.logStderr = strings.TrimSpace(stderr)
+	}()
+
+	// Goroutine 2: PopulateGlobalCustomCommandFiles
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		result.commandsErr = PopulateGlobalCustomCommandFiles()
+	}()
+
+	// Goroutine 3: router start + additional containers wait
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if !IsRouterDisabled(app) {
+			result.routerErr = StartDdevRouter()
+		}
+
+		if result.routerErr != nil {
+			return
+		}
+
+		waitLabels := map[string]string{
+			"com.ddev.site-name":        app.GetName(),
+			"com.docker.compose.oneoff": "False",
+		}
+		containersAwaited, findErr := dockerutil.FindContainersByLabels(waitLabels)
+		if findErr != nil {
+			result.waitErr2 = findErr
+			return
+		}
+		containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")}, "ddev-"+app.Name+"-")
+		if len(containerNames) > 0 {
+			wait := output.StartWait(fmt.Sprintf("Waiting for additional project containers %v to become ready", containerNames))
+			result.waitErr2 = app.WaitByLabels(waitLabels)
+			wait.Complete(result.waitErr2)
+		} else {
+			result.waitErr2 = app.WaitByLabels(waitLabels)
+		}
+	}()
+
+	wg.Wait()
+
+	if result.mountErr != nil {
 		util.Warning("Something is wrong with your Docker provider and /mnt/ddev_config is not mounted from the project .ddev folder. Your project cannot normally function successfully with this situation. Is your project in your home directory?")
 	}
-
-	util.Debug("Getting stderr output from 'log-stderr.sh --show'")
-	logStderr, _, _ := app.Exec(&ExecOpts{
-		Cmd: "log-stderr.sh --show 2>/dev/null || true",
-	})
-	logStderr = strings.TrimSpace(logStderr)
-	if logStderr != "" {
-		util.Warning(logStderr)
+	if result.commandsErr != nil {
+		util.Warning("Failed to populate global custom command files: %v", result.commandsErr)
 	}
-
-	if !IsRouterDisabled(app) {
-		err = StartDdevRouter()
-		if err != nil {
-			return err
-		}
+	logStderr = result.logStderr
+	if result.routerErr != nil {
+		return result.routerErr
 	}
-
-	waitLabels := map[string]string{
-		"com.ddev.site-name":        app.GetName(),
-		"com.docker.compose.oneoff": "False",
-	}
-	containersAwaited, err := dockerutil.FindContainersByLabels(waitLabels)
-	if err != nil {
-		return err
-	}
-	containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")}, "ddev-"+app.Name+"-")
-	if len(containerNames) > 0 {
-		wait := output.StartWait(fmt.Sprintf("Waiting for additional project containers %v to become ready", containerNames))
-		err = app.WaitByLabels(waitLabels)
-		wait.Complete(err)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = app.WaitByLabels(waitLabels)
-		if err != nil {
-			return err
-		}
+	if result.waitErr2 != nil {
+		return result.waitErr2
 	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
