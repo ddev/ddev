@@ -1818,6 +1818,15 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
+	// WriteConfig .ddev-docker-compose-*.yaml
+	// This must run after CheckDeprecations()/FixObsolete() so the
+	// rendered Dockerfile in .webimageBuild/ reflects corrected config
+	// values (e.g. ComposerVersion "1" → "2.2").
+	err = app.WriteDockerComposeYAML()
+	if err != nil {
+		return err
+	}
+
 	err = app.AddHostsEntriesIfNeeded()
 	if err != nil {
 		return err
