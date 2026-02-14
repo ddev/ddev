@@ -15,6 +15,11 @@ type KeyMap struct {
 	Up      key.Binding
 	Down    key.Binding
 	Enter   key.Binding
+	Detail  key.Binding
+	Back    key.Binding
+	Logs    key.Binding
+	LogWeb  key.Binding
+	LogDB   key.Binding
 }
 
 // DefaultKeyMap returns the default key bindings.
@@ -63,6 +68,26 @@ func DefaultKeyMap() KeyMap {
 		Enter: key.NewBinding(
 			key.WithKeys("enter"),
 			key.WithHelp("enter", "select"),
+		),
+		Detail: key.NewBinding(
+			key.WithKeys("enter", "d"),
+			key.WithHelp("enter/d", "detail"),
+		),
+		Back: key.NewBinding(
+			key.WithKeys("esc", "backspace"),
+			key.WithHelp("esc", "back"),
+		),
+		Logs: key.NewBinding(
+			key.WithKeys("l"),
+			key.WithHelp("l", "logs"),
+		),
+		LogWeb: key.NewBinding(
+			key.WithKeys("w"),
+			key.WithHelp("w", "web logs"),
+		),
+		LogDB: key.NewBinding(
+			key.WithKeys("d"),
+			key.WithHelp("d", "db logs"),
 		),
 	}
 }

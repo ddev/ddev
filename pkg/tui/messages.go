@@ -22,6 +22,51 @@ type operationFinishedMsg struct {
 	err error
 }
 
+// operationDetailFinishedMsg is sent when an operation finishes in detail view.
+type operationDetailFinishedMsg struct {
+	err error
+}
+
+// ServiceInfo holds the name and status of a container service.
+type ServiceInfo struct {
+	Name   string
+	Status string
+}
+
+// ProjectDetail holds the full detail for a DDEV project (equivalent to `ddev describe`).
+type ProjectDetail struct {
+	Name            string
+	Status          string
+	Type            string
+	PHPVersion      string
+	WebserverType   string
+	NodeJSVersion   string
+	Docroot         string
+	DatabaseType    string
+	DatabaseVersion string
+	XdebugEnabled   bool
+	PerformanceMode string
+	URLs            []string
+	MailpitURL      string
+	DBPublishedPort string
+	Addons          []string
+	Services        []ServiceInfo
+	AppRoot         string
+}
+
+// projectDetailLoadedMsg is sent when project detail has been fetched.
+type projectDetailLoadedMsg struct {
+	detail ProjectDetail
+	err    error
+}
+
+// logsLoadedMsg is sent when container logs have been fetched.
+type logsLoadedMsg struct {
+	logs    string
+	service string
+	err     error
+}
+
 // routerStatusMsg carries the router health status.
 type routerStatusMsg struct {
 	status string
