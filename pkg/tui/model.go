@@ -160,19 +160,27 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.statusMsg = "Operation completed"
 		}
-		// Reload detail after an operation
+		// Reload both detail and project list after an operation
+		m.loading = true
 		if m.detail != nil {
 			m.detailLoading = true
-			return m, loadDetailCmd(m.detail.AppRoot)
+			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), loadProjects)
 		}
-		return m, nil
+		return m, loadProjects
 
 	case tickMsg:
-		// Only auto-refresh on the dashboard view
-		if m.viewMode == viewDashboard {
+		// Auto-refresh based on current view
+		switch m.viewMode {
+		case viewDetail:
+			if m.detail != nil {
+				return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), tickCmd())
+			}
+			return m, tickCmd()
+		case viewDashboard:
 			return m, tea.Batch(loadProjects, tickCmd())
+		default:
+			return m, tickCmd()
 		}
-		return m, tickCmd()
 
 	case tea.KeyMsg:
 		switch m.viewMode {

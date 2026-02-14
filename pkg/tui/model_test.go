@@ -738,12 +738,13 @@ func TestOperationDetailFinishedMsg(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	// Successful operation
+	// Successful operation should reload both detail and project list
 	updated, cmd := m.Update(operationDetailFinishedMsg{err: nil})
 	model := updated.(AppModel)
 
 	require.Equal(t, "Operation completed", model.statusMsg)
 	require.True(t, model.detailLoading, "should reload detail after operation")
+	require.True(t, model.loading, "should reload project list after operation")
 	require.NotNil(t, cmd)
 
 	// Failed operation
@@ -752,17 +753,24 @@ func TestOperationDetailFinishedMsg(t *testing.T) {
 	require.Contains(t, model.statusMsg, "Error")
 }
 
-func TestTickOnlyRefreshesDashboard(t *testing.T) {
+func TestTickRefreshesByViewMode(t *testing.T) {
 	// On dashboard, tick should reload projects
 	m := NewAppModel()
 	m.viewMode = viewDashboard
 	_, cmd := m.Update(tickMsg{})
 	require.NotNil(t, cmd, "tick on dashboard should return commands")
 
-	// On detail view, tick should only re-tick (not reload projects)
+	// On detail view, tick should refresh detail
+	detail := sampleDetail()
+	m.detail = &detail
 	m.viewMode = viewDetail
 	_, cmd = m.Update(tickMsg{})
-	require.NotNil(t, cmd, "tick on detail should return tick cmd")
+	require.NotNil(t, cmd, "tick on detail should return commands")
+
+	// On log view, tick should only re-tick
+	m.viewMode = viewLogs
+	_, cmd = m.Update(tickMsg{})
+	require.NotNil(t, cmd, "tick on logs should return tick cmd")
 }
 
 func TestDetailNoEntryWithNoProjects(t *testing.T) {
