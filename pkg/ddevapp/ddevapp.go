@@ -3240,18 +3240,22 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	if status == SiteRunning {
-		_, _, err = app.Exec(&ExecOpts{
-			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
-		})
-		if err != nil {
-			util.Warning("Unable to clean up Traefik configuration: %v", err)
-		}
+	// Remove the merged traefik config yaml files on stop, but don't delete certs
+	// Certs may want to remain for Let's Encrypt, for example, and should do no harm
+	// for stopped project
+	c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
+	util.Debug("Removing merged config for project with command '%s'", c)
+	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, &dockerutil.NoHealthCheck)
+	if err != nil {
+		util.Warning("Unable to remove project merged traefik yaml: %v, output='%s'", err, out)
 	}
 
-	// Clean up ddev-global-cache
+	// If removedata, clean up any data taht was in the ddev-global-cache, including
+	// merged traefik config and certs.
 	if removeData {
-		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s-{web,db} /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name, app.Name)
+		// If removing data, we want to get rid of the official certs and merged traefik config
+		// This would not remove extra certs that they had put in certs directory.
+		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-{web,db} /mnt/ddev-global-cache/traefik/*/%[1]s.{crt,key} /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 		util.Debug("Cleaning ddev-global-cache with command '%s'", c)
 		_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, &dockerutil.NoHealthCheck)
 		if err != nil {

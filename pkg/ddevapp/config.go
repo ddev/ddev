@@ -749,11 +749,11 @@ func (app *DdevApp) CheckCustomConfig() {
 		traefikFiles = slices.DeleteFunc(traefikFiles, func(f string) bool {
 			return filepath.Base(f) == app.Name+".yaml"
 		})
-		ignoredTraefikFiles := filterCustomConfigFiles(traefikFiles)
-		// Warn if there are unused files in project .ddev/traefik/config
-		if len(ignoredTraefikFiles) > 0 {
-			printableFiles, _ := util.ArrayToReadableOutput(ignoredTraefikFiles)
-			util.Warning("Ignored project traefik config files found in .ddev/traefik/config (only %s will be used): %v", app.Name+".yaml", printableFiles)
+		extraTraefikFiles := filterCustomConfigFiles(traefikFiles)
+		// Warn if there are extra config files in project .ddev/traefik/config
+		if len(extraTraefikFiles) > 0 {
+			printableFiles, _ := util.ArrayToReadableOutput(extraTraefikFiles)
+			util.Warning("Extra project traefik config files found in .ddev/traefik/config: %v", printableFiles)
 		}
 	}
 
