@@ -2,10 +2,12 @@ package tui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -48,14 +50,19 @@ type AppModel struct {
 	logService string
 	logScroll  int
 	logLoading bool
+
+	// Spinner
+	spinner spinner.Model
 }
 
 // NewAppModel creates a new TUI model.
 func NewAppModel() AppModel {
+	s := spinner.New(spinner.WithSpinner(spinner.Dot))
 	return AppModel{
 		keys:    DefaultKeyMap(),
 		styles:  NewStyles(),
 		loading: true,
+		spinner: s,
 	}
 }
 
@@ -64,6 +71,7 @@ func (m AppModel) Init() tea.Cmd {
 	return tea.Batch(
 		loadProjects,
 		tickCmd(),
+		m.spinner.Tick,
 	)
 }
 
@@ -152,7 +160,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		// Reload projects after an operation
 		m.loading = true
-		return m, loadProjects
+		return m, tea.Batch(loadProjects, m.spinner.Tick)
 
 	case operationDetailFinishedMsg:
 		if msg.err != nil {
@@ -164,9 +172,9 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = true
 		if m.detail != nil {
 			m.detailLoading = true
-			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), loadProjects)
+			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), loadProjects, m.spinner.Tick)
 		}
-		return m, loadProjects
+		return m, tea.Batch(loadProjects, m.spinner.Tick)
 
 	case tickMsg:
 		// Auto-refresh based on current view
@@ -182,6 +190,14 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tickCmd()
 		}
 
+	case spinner.TickMsg:
+		if m.isLoading() {
+			var cmd tea.Cmd
+			m.spinner, cmd = m.spinner.Update(msg)
+			return m, cmd
+		}
+		return m, nil
+
 	case tea.KeyMsg:
 		switch m.viewMode {
 		case viewDetail:
@@ -194,6 +210,11 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+// isLoading returns true if any loading state is active.
+func (m AppModel) isLoading() bool {
+	return m.loading || m.detailLoading || m.logLoading
 }
 
 func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -259,7 +280,7 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.detail = nil
 			m.detailLoading = true
 			m.statusMsg = ""
-			return m, loadDetailCmd(p.AppRoot)
+			return m, tea.Batch(loadDetailCmd(p.AppRoot), m.spinner.Tick)
 		}
 		return m, nil
 
@@ -289,7 +310,7 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case key.Matches(msg, m.keys.Refresh):
 		m.loading = true
 		m.statusMsg = "Refreshing..."
-		return m, loadProjects
+		return m, tea.Batch(loadProjects, m.spinner.Tick)
 
 	case key.Matches(msg, m.keys.Filter):
 		m.filtering = true
@@ -320,7 +341,7 @@ func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.logContent = ""
 			m.logScroll = 0
 			m.logLoading = true
-			return m, loadLogsCmd(m.detail.AppRoot, "web")
+			return m, tea.Batch(loadLogsCmd(m.detail.AppRoot, "web"), m.spinner.Tick)
 		}
 		return m, nil
 
@@ -356,7 +377,7 @@ func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.detail != nil {
 			m.detailLoading = true
 			m.statusMsg = "Refreshing..."
-			return m, loadDetailCmd(m.detail.AppRoot)
+			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), m.spinner.Tick)
 		}
 
 	case key.Matches(msg, m.keys.Quit):
@@ -398,7 +419,7 @@ func (m AppModel) handleLogKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.logContent = ""
 			m.logScroll = 0
 			m.logLoading = true
-			return m, loadLogsCmd(m.detail.AppRoot, "web")
+			return m, tea.Batch(loadLogsCmd(m.detail.AppRoot, "web"), m.spinner.Tick)
 		}
 		return m, nil
 
@@ -408,14 +429,14 @@ func (m AppModel) handleLogKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.logContent = ""
 			m.logScroll = 0
 			m.logLoading = true
-			return m, loadLogsCmd(m.detail.AppRoot, "db")
+			return m, tea.Batch(loadLogsCmd(m.detail.AppRoot, "db"), m.spinner.Tick)
 		}
 		return m, nil
 
 	case key.Matches(msg, m.keys.Refresh):
 		if m.detail != nil {
 			m.logLoading = true
-			return m, loadLogsCmd(m.detail.AppRoot, m.logService)
+			return m, tea.Batch(loadLogsCmd(m.detail.AppRoot, m.logService), m.spinner.Tick)
 		}
 
 	case key.Matches(msg, m.keys.Quit):
@@ -484,7 +505,7 @@ func (m AppModel) dashboardView() string {
 
 	// Loading indicator
 	if m.loading && len(m.projects) == 0 {
-		b.WriteString("  Loading projects...\n")
+		b.WriteString(fmt.Sprintf("  %s Loading projects...\n", m.spinner.View()))
 	} else {
 		filtered := m.filteredProjects()
 		if len(filtered) == 0 {
@@ -501,13 +522,28 @@ func (m AppModel) dashboardView() string {
 					cursor = m.styles.Cursor.Render("> ")
 				}
 
-				name := m.styles.ProjectName.Render(fmt.Sprintf("%-16s", p.Name))
+				nameWidth := 16
+				typeWidth := 12
+				// Narrow terminal: shrink name and hide URL
+				narrow := m.width > 0 && m.width < 60
+				if narrow {
+					nameWidth = min(nameWidth, max(8, m.width/4))
+				}
+
+				displayName := truncate(p.Name, nameWidth)
+				name := m.styles.ProjectName.Render(fmt.Sprintf("%-*s", nameWidth, displayName))
 				status := m.renderStatus(p.Status)
-				pType := m.styles.ProjectType.Render(fmt.Sprintf("%-12s", p.Type))
+				pType := m.styles.ProjectType.Render(fmt.Sprintf("%-*s", typeWidth, p.Type))
 
 				url := ""
-				if p.URL != "" && p.Status == ddevapp.SiteRunning {
-					url = m.styles.URL.Render(p.URL)
+				if !narrow && p.URL != "" && p.Status == ddevapp.SiteRunning {
+					// Truncate URL if it would overflow
+					maxURL := m.width - nameWidth - 10 - typeWidth - 8
+					if m.width > 0 && maxURL > 10 {
+						url = m.styles.URL.Render(truncate(p.URL, maxURL))
+					} else if m.width <= 0 {
+						url = m.styles.URL.Render(p.URL)
+					}
 				}
 
 				b.WriteString(fmt.Sprintf("%s%s %s  %s  %s\n", cursor, name, status, pType, url))
@@ -547,7 +583,7 @@ func (m AppModel) detailView() string {
 	if m.detailLoading || m.detail == nil {
 		b.WriteString(m.styles.Title.Render("DDEV Project") + "\n")
 		b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-		b.WriteString("\n  Loading project detail...\n")
+		b.WriteString(fmt.Sprintf("\n  %s Loading project detail...\n", m.spinner.View()))
 		return b.String()
 	}
 
@@ -617,11 +653,12 @@ func (m AppModel) detailView() string {
 
 	b.WriteString("\n")
 
-	// Services
+	// Services (sorted: web first, db second, rest alphabetical)
 	if len(d.Services) > 0 {
+		sorted := sortServices(d.Services)
 		b.WriteString(" " + label("Services:") + "\n   ")
 		var svcParts []string
-		for _, svc := range d.Services {
+		for _, svc := range sorted {
 			svcParts = append(svcParts, fmt.Sprintf("%s %s", m.styles.ProjectName.Render(svc.Name), m.renderStatus(svc.Status)))
 		}
 		b.WriteString(strings.Join(svcParts, "  "))
@@ -664,7 +701,7 @@ func (m AppModel) logView() string {
 	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
 
 	if m.logLoading {
-		b.WriteString("\n  Loading logs...\n")
+		b.WriteString(fmt.Sprintf("\n  %s Loading logs...\n", m.spinner.View()))
 	} else if m.logContent == "" {
 		b.WriteString("\n  No log output.\n")
 	} else {
@@ -696,6 +733,39 @@ func (m AppModel) logView() string {
 	b.WriteString(m.logKeyHints())
 
 	return b.String()
+}
+
+// sortServices returns services sorted: web first, db second, rest alphabetical.
+func sortServices(services []ServiceInfo) []ServiceInfo {
+	sorted := make([]ServiceInfo, len(services))
+	copy(sorted, services)
+	sort.Slice(sorted, func(i, j int) bool {
+		return serviceOrder(sorted[i].Name) < serviceOrder(sorted[j].Name)
+	})
+	return sorted
+}
+
+// serviceOrder returns a sort key: web=0, db=1, everything else=2+name.
+func serviceOrder(name string) string {
+	switch name {
+	case "web":
+		return "0"
+	case "db":
+		return "1"
+	default:
+		return "2" + name
+	}
+}
+
+// truncate shortens a string to maxLen, adding ellipsis if needed.
+func truncate(s string, maxLen int) string {
+	if maxLen <= 0 || len(s) <= maxLen {
+		return s
+	}
+	if maxLen <= 3 {
+		return s[:maxLen]
+	}
+	return s[:maxLen-3] + "..."
 }
 
 func (m AppModel) renderStatus(status string) string {

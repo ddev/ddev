@@ -841,3 +841,103 @@ func TestLogRefresh(t *testing.T) {
 	require.True(t, model.logLoading, "should set loading on refresh")
 	require.NotNil(t, cmd)
 }
+
+// --- Visual polish tests ---
+
+func TestSortServices(t *testing.T) {
+	services := []ServiceInfo{
+		{Name: "redis", Status: ddevapp.SiteRunning},
+		{Name: "db", Status: ddevapp.SiteRunning},
+		{Name: "elasticsearch", Status: ddevapp.SiteRunning},
+		{Name: "web", Status: ddevapp.SiteRunning},
+	}
+
+	sorted := sortServices(services)
+
+	require.Len(t, sorted, 4)
+	require.Equal(t, "web", sorted[0].Name, "web should be first")
+	require.Equal(t, "db", sorted[1].Name, "db should be second")
+	require.Equal(t, "elasticsearch", sorted[2].Name, "rest should be alphabetical")
+	require.Equal(t, "redis", sorted[3].Name)
+
+	// Original should not be modified
+	require.Equal(t, "redis", services[0].Name, "original slice should not be modified")
+}
+
+func TestSortServicesMinimal(t *testing.T) {
+	// Only web
+	sorted := sortServices([]ServiceInfo{{Name: "web", Status: "running"}})
+	require.Len(t, sorted, 1)
+	require.Equal(t, "web", sorted[0].Name)
+
+	// Empty
+	sorted = sortServices(nil)
+	require.Empty(t, sorted)
+}
+
+func TestTruncate(t *testing.T) {
+	require.Equal(t, "hello", truncate("hello", 10), "short string should not be truncated")
+	require.Equal(t, "hello", truncate("hello", 5), "exact length should not be truncated")
+	require.Equal(t, "he...", truncate("hello world", 5), "long string should be truncated with ellipsis")
+	require.Equal(t, "hel...", truncate("hello world", 6))
+	require.Equal(t, "hello world", truncate("hello world", 0), "maxLen 0 should return original")
+	require.Equal(t, "he", truncate("hello", 2), "very short maxLen returns prefix")
+}
+
+func TestNarrowTerminalDashboard(t *testing.T) {
+	m := NewAppModel()
+	m.width = 40
+	m.height = 24
+	m.loading = false
+	m.projects = []ProjectInfo{
+		{Name: "very-long-project-name", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://very-long-project-name.ddev.site"},
+	}
+
+	view := m.View()
+
+	// Should still render without URL (narrow hides URLs)
+	require.Contains(t, view, "drupal")
+	require.NotContains(t, view, "https://", "URL should be hidden in narrow terminal")
+}
+
+func TestWideTerminalDashboard(t *testing.T) {
+	m := NewAppModel()
+	m.width = 120
+	m.height = 24
+	m.loading = false
+	m.projects = []ProjectInfo{
+		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site"},
+	}
+
+	view := m.View()
+
+	require.Contains(t, view, "https://mysite.ddev.site", "URL should be visible in wide terminal")
+}
+
+func TestSpinnerInLoadingView(t *testing.T) {
+	m := NewAppModel()
+	m.loading = true
+	m.width = 60
+
+	view := m.View()
+	require.Contains(t, view, "Loading projects", "should show loading text")
+}
+
+func TestIsLoading(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.detailLoading = false
+	m.logLoading = false
+	require.False(t, m.isLoading())
+
+	m.loading = true
+	require.True(t, m.isLoading())
+
+	m.loading = false
+	m.detailLoading = true
+	require.True(t, m.isLoading())
+
+	m.detailLoading = false
+	m.logLoading = true
+	require.True(t, m.isLoading())
+}
