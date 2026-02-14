@@ -134,12 +134,14 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 
 	// Remove old files from ~/.ddev/traefik/config and certs before creating new ones
 	// This ensures we start with a clean slate for regeneration from active projects
-	err = fileutil.PurgeDirectory(globalSourceConfigDir)
+	// Preserve README.txt which is installed by CopyEmbedAssets
+	except := map[string]bool{"README.txt": true}
+	err = fileutil.PurgeDirectoryExcept(globalSourceConfigDir, except)
 	if err != nil {
 		return fmt.Errorf("failed to purge global Traefik config dir: %v", err)
 	}
 
-	err = fileutil.PurgeDirectory(globalSourceCertsPath)
+	err = fileutil.PurgeDirectoryExcept(globalSourceCertsPath, except)
 	if err != nil {
 		return fmt.Errorf("failed to purge global Traefik certs dir: %v", err)
 	}
@@ -398,6 +400,27 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		util.Debug("Removed stale traefik certs from volume: %v", staleCerts)
 	}
 
+	return nil
+}
+
+// CleanupGlobalTraefikStaging removes staging files from ~/.ddev/traefik/{config,certs}
+// after they have been pushed into the Docker volume. This is called on poweroff
+// to prevent issues when downgrading DDEV versions.
+func CleanupGlobalTraefikStaging() error {
+	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
+	except := map[string]bool{"README.txt": true}
+
+	// The config directory gets purged, but we can leave certs
+	// as they would be overwritten as needed, and
+	// could affect Let's Encrypt behavior, see https://github.com/ddev/ddev/issues/7940
+	for _, sub := range []string{"config"} {
+		dir := filepath.Join(globalTraefikDir, sub)
+		if fileutil.IsDirectory(dir) {
+			if err := fileutil.PurgeDirectoryExcept(dir, except); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

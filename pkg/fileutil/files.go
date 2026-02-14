@@ -172,6 +172,37 @@ func PurgeDirectory(path string) error {
 	return nil
 }
 
+// PurgeDirectoryExcept removes all contents of a directory except
+// files whose names are in the except map.
+func PurgeDirectoryExcept(path string, except map[string]bool) error {
+	dir, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	defer util.CheckClose(dir)
+
+	files, err := dir.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if except[file] {
+			continue
+		}
+		err = util.Chmod(filepath.Join(path, file), 0777)
+		if err != nil {
+			return err
+		}
+		err = os.RemoveAll(filepath.Join(path, file))
+		if err != nil {
+			util.Warning("unable to remove '%s': %v", filepath.Join(path, file), err)
+		}
+	}
+	return nil
+}
+
 // FgrepStringInFile is a small hammer for looking for a literal string in a file.
 // It should only be used against very modest sized files, as the entire file is read
 // into a string.

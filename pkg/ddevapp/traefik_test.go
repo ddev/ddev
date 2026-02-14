@@ -504,3 +504,79 @@ func TestTraefikMultipleCerts(t *testing.T) {
 			"certificate %s should contain expected content", certName)
 	}
 }
+
+// TestTraefikStagingDirectoryCleanup tests that README files are created
+// and that staging directories are cleaned up on poweroff
+func TestTraefikStagingDirectoryCleanup(t *testing.T) {
+	// Make sure this leaves us in the original test directory
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0] // 0 == wordpress
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+
+	ddevapp.PowerOff()
+
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
+		ddevapp.PowerOff()
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		require.NoError(t, err)
+	})
+
+	// Start the app to trigger Traefik config generation
+	err = app.Start()
+	require.NoError(t, err)
+
+	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
+	globalSourceCertsPath := filepath.Join(globalTraefikDir, "certs")
+	globalSourceConfigDir := filepath.Join(globalTraefikDir, "config")
+	customGlobalConfigDir := filepath.Join(globalTraefikDir, "custom-global-config")
+
+	// Verify README files were created in staging directories
+	configReadme := filepath.Join(globalSourceConfigDir, "README.txt")
+	require.FileExists(t, configReadme, "README.txt should exist in config staging directory")
+	configContent, err := os.ReadFile(configReadme)
+	require.NoError(t, err)
+	require.Contains(t, string(configContent), "#ddev-generated", "config README should have #ddev-generated")
+	require.Contains(t, string(configContent), "STAGING DIRECTORY ONLY", "config README should mention staging")
+
+	certsReadme := filepath.Join(globalSourceCertsPath, "README.txt")
+	require.FileExists(t, certsReadme, "README.txt should exist in certs staging directory")
+	certsContent, err := os.ReadFile(certsReadme)
+	require.NoError(t, err)
+	require.Contains(t, string(certsContent), "#ddev-generated", "certs README should have #ddev-generated")
+	require.Contains(t, string(certsContent), "STAGING DIRECTORY ONLY", "certs README should mention staging")
+
+	customReadme := filepath.Join(customGlobalConfigDir, "README.txt")
+	require.FileExists(t, customReadme, "README.txt should exist in custom-global-config directory")
+	customContent, err := os.ReadFile(customReadme)
+	require.NoError(t, err)
+	require.Contains(t, string(customContent), "#ddev-generated", "custom README should have #ddev-generated")
+	require.Contains(t, string(customContent), "USER-MANAGED", "custom README should mention user-managed")
+
+	// Verify that staging directories contain generated files
+	configFiles, err := os.ReadDir(globalSourceConfigDir)
+	require.NoError(t, err)
+	require.Greater(t, len(configFiles), 1, "config directory should have more than just README.txt")
+
+	// Stop all projects and poweroff
+	ddevapp.PowerOff()
+
+	// Verify that staging directories were cleaned up but README files remain
+	configFilesAfter, err := os.ReadDir(globalSourceConfigDir)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(configFilesAfter), "config directory should only contain README.txt after poweroff")
+	require.Equal(t, "README.txt", configFilesAfter[0].Name(), "only README.txt should remain in config directory")
+
+	// Certs dir is deliberately not cleaned up on poweroff
+	// https://github.com/ddev/ddev/issues/7940
+
+	// Verify README.txt still exists and has expected content
+	require.FileExists(t, configReadme, "README.txt should still exist after cleanup")
+	require.FileExists(t, certsReadme, "README.txt should still exist after cleanup")
+}
