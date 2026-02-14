@@ -200,6 +200,11 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 	defer util.CheckClose(f)
 
 	dockerIP, _ := dockerutil.GetDockerIP()
+	// On remote Docker hosts, the Docker IP (e.g. a cloud provider's public IP)
+	// is not a valid bind address on the Docker host itself, so bind to all interfaces.
+	if dockerutil.IsRemoteDockerHost() {
+		dockerIP = "0.0.0.0"
+	}
 
 	uid, gid, username := dockerutil.GetContainerUser()
 	timezone, _ := util.GetLocalTimezone()

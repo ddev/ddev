@@ -497,16 +497,15 @@ func TestTraefikMonitorPortAlwaysLocalhost(t *testing.T) {
 	content, err := fileutil.ReadFileIntoString(routerComposeFile)
 	require.NoError(t, err)
 
-	// The Traefik monitor port should ALWAYS be bound to dockerIP (localhost),
-	// never to all interfaces (0.0.0.0)
-	dockerIP, _ := dockerutil.GetDockerIP()
+	// The Traefik monitor port should ALWAYS be bound to 127.0.0.1,
+	// never to all interfaces (0.0.0.0) or a remote Docker IP
 	monitorPort := globalconfig.DdevGlobalConfig.TraefikMonitorPort
 
-	// Expected format: "127.0.0.1:10999:10999" (or similar dockerIP)
-	expectedBinding := dockerIP + ":" + monitorPort + ":" + monitorPort
+	// Expected format: "127.0.0.1:10999:10999"
+	expectedBinding := "127.0.0.1:" + monitorPort + ":" + monitorPort
 
 	assert.Contains(content, expectedBinding,
-		"Traefik monitor port must always be bound to localhost (%s), not all interfaces", dockerIP)
+		"Traefik monitor port must always be bound to 127.0.0.1, not all interfaces")
 
 	// Make sure it's NOT bound to all interfaces
 	allInterfacesBinding := "- \"" + monitorPort + ":" + monitorPort + "\""
@@ -514,7 +513,7 @@ func TestTraefikMonitorPortAlwaysLocalhost(t *testing.T) {
 		"Traefik monitor port must NOT be bound to all interfaces (security risk)")
 
 	// Test that the dashboard is accessible via localhost
-	localhostDashboardURL := "http://" + dockerIP + ":" + monitorPort + "/api/overview"
+	localhostDashboardURL := "http://127.0.0.1:" + monitorPort + "/api/overview"
 	_, err = testcommon.EnsureLocalHTTPContent(t, localhostDashboardURL, "")
 	assert.NoError(err, "Traefik dashboard should be accessible via localhost at %s", localhostDashboardURL)
 
@@ -527,7 +526,7 @@ func TestTraefikMonitorPortAlwaysLocalhost(t *testing.T) {
 	// Verify the port is NOT listening on all interfaces (0.0.0.0)
 	// This is the key security check - the port should only be bound to localhost
 	// We verify this by checking that the port binding in the router container
-	// uses dockerIP (127.0.0.1) and not 0.0.0.0
+	// uses 127.0.0.1 and not 0.0.0.0
 	router, err := ddevapp.FindDdevRouter()
 	require.NoError(t, err)
 	require.NotNil(t, router)
@@ -538,11 +537,10 @@ func TestTraefikMonitorPortAlwaysLocalhost(t *testing.T) {
 		portStr := strconv.Itoa(int(port.PublicPort))
 		if portStr == monitorPort {
 			foundMonitorPortBinding = true
-			// The IP should be 127.0.0.1 (or equivalent dockerIP), not 0.0.0.0
-			// port.IP is a netip.Addr, so convert to string for comparison
+			// The IP should be 127.0.0.1, not 0.0.0.0 or a remote Docker IP
 			actualIP := port.IP.String()
-			assert.Equal(dockerIP, actualIP,
-				"Traefik monitor port must be bound to localhost (%s), not all interfaces (0.0.0.0)", dockerIP)
+			assert.Equal("127.0.0.1", actualIP,
+				"Traefik monitor port must be bound to 127.0.0.1, not all interfaces (0.0.0.0)")
 		}
 	}
 	assert.True(foundMonitorPortBinding, "Monitor port binding should be found in router container")

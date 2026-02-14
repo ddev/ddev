@@ -1328,7 +1328,7 @@ EOF
 	if err != nil {
 		return "", err
 	}
-	if app.BindAllInterfaces {
+	if app.BindAllInterfaces || dockerutil.IsRemoteDockerHost() {
 		templateVars.DockerIP = "0.0.0.0"
 	}
 
