@@ -470,6 +470,29 @@ func TestGetBoundHostPorts(t *testing.T) {
 	assert.Equal([]string{"8889", "8890"}, ports)
 }
 
+// TestGetRouterNetworkAliases() checks that network aliases can be retrieved from a container
+func TestGetRouterNetworkAliases(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Test with invalid container ID - should return error
+	_, err := dockerutil.GetRouterNetworkAliases("nonexistent-container-id")
+	assert.Error(err)
+
+	// Test with a real container - should not error
+	// (aliases may be empty if container isn't on ddev_default network)
+	testContainer, err := dockerutil.FindContainerByLabels(map[string]string{
+		"com.ddev.site-name":        testContainerName,
+		"com.docker.compose.oneoff": "False",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, testContainer)
+	aliases, err := dockerutil.GetRouterNetworkAliases(testContainer.ID)
+	assert.NoError(err)
+	assert.NotNil(aliases)
+	// The test container may or may not have network aliases, so we just verify
+	// the function returns without error and returns a valid (possibly empty) slice
+}
+
 // TestDockerExec() checks docker.Exec()
 func TestDockerExec(t *testing.T) {
 	assert := asrt.New(t)

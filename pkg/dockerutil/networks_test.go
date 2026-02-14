@@ -190,20 +190,19 @@ func TestNetworkAliases(t *testing.T) {
 			app.Type = nodeps.AppTypePHP
 			app.Name = projName
 
-			// Add different hostnames, FQDNs, and router ports for each project
+			// Add different hostnames and FQDNs for each project
+			// Both projects use the SAME ports to test issue #8110:
+			// when ports match but hostnames differ, router should be recreated
 			if strings.Contains(projName, "app1") {
 				app.AdditionalHostnames = []string{"api", "admin"}
 				app.AdditionalFQDNs = []string{"test1.example.com"}
-				// Use custom router ports for app1
-				app.RouterHTTPPort = "8080"
-				app.RouterHTTPSPort = "8443"
 			} else {
 				app.AdditionalHostnames = []string{"backend", "service"}
 				app.AdditionalFQDNs = []string{"test2.example.com"}
-				// Use default ports (80/443) for app2
-				app.RouterHTTPPort = "80"
-				app.RouterHTTPSPort = "443"
 			}
+			// Use the same ports for both projects (default 80/443)
+			app.RouterHTTPPort = "80"
+			app.RouterHTTPSPort = "443"
 
 			err = app.WriteConfig()
 			require.NoError(t, err)
@@ -249,8 +248,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app1_to_app2",
 				fromApp:     app1,
 				toApp:       app2,
-				httpURL:     "http://" + app2.GetHostname(),
-				httpsURL:    "https://" + app2.GetHostname(),
+				httpURL:     app2.GetHTTPURL(),
+				httpsURL:    app2.GetHTTPSURL(),
 				description: "app1 should be able to reach app2 by project name",
 			},
 			{
@@ -258,8 +257,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://" + app1.GetHostname() + ":8080",
-				httpsURL:    "https://" + app1.GetHostname() + ":8443",
+				httpURL:     app1.GetHTTPURL(),
+				httpsURL:    app1.GetHTTPSURL(),
 				description: "app2 should be able to reach app1 by project name",
 			},
 			// Additional hostnames tests
@@ -286,8 +285,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1_api",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://api.ddev.site:8080",
-				httpsURL:    "https://api.ddev.site:8443",
+				httpURL:     "http://api.ddev.site",
+				httpsURL:    "https://api.ddev.site",
 				description: "app2 should be able to reach app1 api hostname",
 			},
 			{
@@ -295,8 +294,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1_admin",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://admin.ddev.site:8080",
-				httpsURL:    "https://admin.ddev.site:8443",
+				httpURL:     "http://admin.ddev.site",
+				httpsURL:    "https://admin.ddev.site",
 				description: "app2 should be able to reach app1 admin hostname",
 			},
 			// Additional FQDNs tests
@@ -314,8 +313,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://test1.example.com:8080",
-				httpsURL:    "https://test1.example.com:8443",
+				httpURL:     "http://test1.example.com",
+				httpsURL:    "https://test1.example.com",
 				description: "app2 should be able to reach app1 additional FQDNs",
 			},
 		}

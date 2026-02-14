@@ -798,6 +798,60 @@ func TestPortsMatch(t *testing.T) {
 	}
 }
 
+// TestHostnamesMatch tests the HostnamesMatch function
+func TestHostnamesMatch(t *testing.T) {
+	tests := []struct {
+		name              string
+		existingHostnames []string
+		neededHostnames   []string
+		expected          bool
+	}{
+		{
+			name:              "empty slices match",
+			existingHostnames: []string{},
+			neededHostnames:   []string{},
+			expected:          true,
+		},
+		{
+			name:              "same hostnames match",
+			existingHostnames: []string{"test1.ddev.site", "test2.ddev.site"},
+			neededHostnames:   []string{"test1.ddev.site", "test2.ddev.site"},
+			expected:          true,
+		},
+		{
+			name:              "same hostnames different order match",
+			existingHostnames: []string{"test2.ddev.site", "test1.ddev.site"},
+			neededHostnames:   []string{"test1.ddev.site", "test2.ddev.site"},
+			expected:          true,
+		},
+		{
+			name:              "different hostnames don't match",
+			existingHostnames: []string{"test1.ddev.site", "test2.ddev.site"},
+			neededHostnames:   []string{"test1.ddev.site", "test3.ddev.site"},
+			expected:          false,
+		},
+		{
+			name:              "missing needed hostname doesn't match",
+			existingHostnames: []string{"test1.ddev.site", "test2.ddev.site"},
+			neededHostnames:   []string{"test1.ddev.site", "test2.ddev.site", "test3.ddev.site"},
+			expected:          false,
+		},
+		{
+			name:              "router with extra hostnames still matches",
+			existingHostnames: []string{"test1.ddev.site", "test2.ddev.site", "test3.ddev.site"},
+			neededHostnames:   []string{"test1.ddev.site", "test2.ddev.site"},
+			expected:          true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := ddevapp.HostnamesMatch(tc.existingHostnames, tc.neededHostnames)
+			require.Equal(t, tc.expected, result)
+		})
+	}
+}
+
 // TestRouterNotRebuiltWithExtraPorts verifies that when a project with extra ports
 // is running and a simpler project starts, the router is not recreated.
 // The router should only be recreated when NEW ports are needed, not when it has
