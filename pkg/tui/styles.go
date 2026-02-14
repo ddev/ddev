@@ -22,6 +22,8 @@ type Styles struct {
 	Cursor      lipgloss.Style
 	Divider     lipgloss.Style
 	HelpOverlay lipgloss.Style
+	DetailLabel lipgloss.Style
+	DetailValue lipgloss.Style
 }
 
 // NewStyles creates styles respecting SimpleFormatting and NO_COLOR.
@@ -43,6 +45,8 @@ func NewStyles() Styles {
 			Cursor:      lipgloss.NewStyle().Bold(true),
 			Divider:     lipgloss.NewStyle(),
 			HelpOverlay: lipgloss.NewStyle().Padding(1, 2),
+			DetailLabel: lipgloss.NewStyle().Bold(true).Width(14),
+			DetailValue: lipgloss.NewStyle(),
 		}
 	}
 
@@ -66,5 +70,7 @@ func NewStyles() Styles {
 		Cursor:      lipgloss.NewStyle().Bold(true).Foreground(cyan),
 		Divider:     lipgloss.NewStyle().Foreground(gray),
 		HelpOverlay: lipgloss.NewStyle().Padding(1, 2).Border(lipgloss.RoundedBorder()).BorderForeground(cyan),
+		DetailLabel: lipgloss.NewStyle().Bold(true).Foreground(gray).Width(14),
+		DetailValue: lipgloss.NewStyle().Foreground(lipgloss.Color("7")),
 	}
 }
