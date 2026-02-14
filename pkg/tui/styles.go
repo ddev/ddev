@@ -1,0 +1,76 @@
+package tui
+
+import (
+	"os"
+
+	"github.com/charmbracelet/lipgloss"
+	"github.com/ddev/ddev/pkg/globalconfig"
+)
+
+// Styles holds all the lipgloss styles used by the TUI.
+type Styles struct {
+	Title       lipgloss.Style
+	StatusBar   lipgloss.Style
+	HelpKey     lipgloss.Style
+	HelpDesc    lipgloss.Style
+	Running     lipgloss.Style
+	Stopped     lipgloss.Style
+	Paused      lipgloss.Style
+	ProjectName lipgloss.Style
+	ProjectType lipgloss.Style
+	URL         lipgloss.Style
+	Cursor      lipgloss.Style
+	Divider     lipgloss.Style
+	HelpOverlay lipgloss.Style
+	DetailLabel lipgloss.Style
+	DetailValue lipgloss.Style
+}
+
+// NewStyles creates styles respecting SimpleFormatting and NO_COLOR.
+func NewStyles() Styles {
+	noColor := globalconfig.DdevGlobalConfig.SimpleFormatting || os.Getenv("NO_COLOR") != ""
+
+	if noColor {
+		return Styles{
+			Title:       lipgloss.NewStyle().Bold(true),
+			StatusBar:   lipgloss.NewStyle(),
+			HelpKey:     lipgloss.NewStyle().Bold(true),
+			HelpDesc:    lipgloss.NewStyle(),
+			Running:     lipgloss.NewStyle(),
+			Stopped:     lipgloss.NewStyle(),
+			Paused:      lipgloss.NewStyle(),
+			ProjectName: lipgloss.NewStyle().Bold(true),
+			ProjectType: lipgloss.NewStyle(),
+			URL:         lipgloss.NewStyle(),
+			Cursor:      lipgloss.NewStyle().Bold(true),
+			Divider:     lipgloss.NewStyle(),
+			HelpOverlay: lipgloss.NewStyle().Padding(1, 2),
+			DetailLabel: lipgloss.NewStyle().Bold(true).Width(14),
+			DetailValue: lipgloss.NewStyle(),
+		}
+	}
+
+	green := lipgloss.Color("2")
+	red := lipgloss.Color("1")
+	yellow := lipgloss.Color("3")
+	cyan := lipgloss.Color("6")
+	gray := lipgloss.Color("8")
+
+	return Styles{
+		Title:       lipgloss.NewStyle().Bold(true).Foreground(cyan),
+		StatusBar:   lipgloss.NewStyle().Foreground(gray),
+		HelpKey:     lipgloss.NewStyle().Bold(true).Foreground(cyan),
+		HelpDesc:    lipgloss.NewStyle().Foreground(gray),
+		Running:     lipgloss.NewStyle().Foreground(green),
+		Stopped:     lipgloss.NewStyle().Foreground(red),
+		Paused:      lipgloss.NewStyle().Foreground(yellow),
+		ProjectName: lipgloss.NewStyle().Bold(true),
+		ProjectType: lipgloss.NewStyle().Foreground(gray),
+		URL:         lipgloss.NewStyle().Foreground(cyan),
+		Cursor:      lipgloss.NewStyle().Bold(true).Foreground(cyan),
+		Divider:     lipgloss.NewStyle().Foreground(gray),
+		HelpOverlay: lipgloss.NewStyle().Padding(1, 2).Border(lipgloss.RoundedBorder()).BorderForeground(cyan),
+		DetailLabel: lipgloss.NewStyle().Bold(true).Foreground(gray).Width(14),
+		DetailValue: lipgloss.NewStyle().Foreground(lipgloss.Color("7")),
+	}
+}
