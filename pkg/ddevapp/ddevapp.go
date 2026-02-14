@@ -1690,20 +1690,28 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	util.Debug("Exec %s", chownCmd)
-	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, labels, nil, &dockerutil.NoHealthCheck)
-	if err != nil {
-		return fmt.Errorf("failed to '%s' inside volumes: %v, output=%s", chownCmd, err, out)
-	}
-	util.Debug("Done %s: output=%s", chownCmd, out)
-
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
-		err = app.EnsureSSHAgentContainer()
-		if err != nil {
-			return err
+	// Run chown + SSH agent concurrently with config/build steps below.
+	// chown operates on volumes, compose build operates on images — independent.
+	var chownErr error
+	var sshErr error
+	var chownWg sync.WaitGroup
+	chownWg.Add(1)
+	go func() {
+		defer chownWg.Done()
+		util.Debug("Exec %s", chownCmd)
+		_, chownOut, cErr := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, labels, nil, &dockerutil.NoHealthCheck)
+		if cErr != nil {
+			chownErr = fmt.Errorf("failed to '%s' inside volumes: %v, output=%s", chownCmd, cErr, chownOut)
+			return
 		}
-	}
+		util.Debug("Done %s: output=%s", chownCmd, chownOut)
 
+		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
+			sshErr = app.EnsureSSHAgentContainer()
+		}
+	}()
+
+	// While chown + SSH run in background, do config and compose build
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
@@ -1775,9 +1783,48 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Debug("docker-compose build output:\n%s\n\n", out)
 	}
 
-	_, logStderrOutput, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+	// Wait for chown + SSH to finish before proceeding
+	chownWg.Wait()
+	if chownErr != nil {
+		return chownErr
+	}
+	if sshErr != nil {
+		return sshErr
+	}
+
+	// Run log-stderr check and dangling image cleanup concurrently
+	var logStderrOutput string
+	var logStderrErr error
+	var danglingErr error
+	var postBuildWg sync.WaitGroup
+
+	postBuildWg.Add(1)
+	go func() {
+		defer postBuildWg.Done()
+		_, logStderrOutput, logStderrErr = dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+	}()
+
+	postBuildWg.Add(1)
+	go func() {
+		defer postBuildWg.Done()
+		util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
+		danglingImages, dErr := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
+		if dErr != nil {
+			danglingErr = fmt.Errorf("unable to get dangling images for the project %s: %v", app.GetComposeProjectName(), dErr)
+			return
+		}
+		for _, danglingImage := range danglingImages {
+			_ = dockerutil.RemoveImage(danglingImage.ID)
+		}
+	}()
+
+	postBuildWg.Wait()
+	if danglingErr != nil {
+		return danglingErr
+	}
+
 	// If the web image is dirty, try to rebuild it immediately
-	if err == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
+	if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
 		util.Debug("Executing docker-compose -f %s --progress=%s build web --no-cache", app.DockerComposeFullRenderedYAMLPath(), progress)
 		out, stderr, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
@@ -1795,15 +1842,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	buildDuration := util.FormatDuration(buildDurationStart())
 	util.Success("Project images built in %s.", buildDuration)
-
-	util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
-	danglingImages, err := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
-	if err != nil {
-		return fmt.Errorf("unable to get dangling images for the project %s: %v", app.GetComposeProjectName(), err)
-	}
-	for _, danglingImage := range danglingImages {
-		_ = dockerutil.RemoveImage(danglingImage.ID)
-	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
