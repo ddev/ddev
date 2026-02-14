@@ -56,6 +56,10 @@ const (
 
 	// SiteUnhealthy is the status for a project whose services are not all reporting healthy yet
 	SiteUnhealthy = "unhealthy"
+
+	// composeBuildMaxRetries is the maximum number of attempts for docker-compose build
+	// when encountering BuildKit snapshot race conditions
+	composeBuildMaxRetries = 3
 )
 
 // DatabaseDefault is the default database/version
@@ -1423,6 +1427,66 @@ func (app *DdevApp) GetDBImage() string {
 	return dbImage
 }
 
+// composeBuild executes docker-compose build with retry logic for BuildKit snapshot race conditions.
+// This is an experimental workaround for moby/buildkit#4024 (Docker 29+ with containerd image store).
+// The race condition causes intermittent failures with "parent snapshot ... does not exist: not found"
+// when multiple services share base layers and build in parallel.
+//
+// args are optional extra arguments to pass to the build command (e.g., service name, "--no-cache")
+// Returns the stdout output on success, or an error if all retries are exhausted.
+func (app *DdevApp) composeBuild(args ...string) (string, error) {
+	progress := "plain"
+
+	// NOTE: --progress=plain is always used here. There is an unconfirmed hypothesis
+	// that progress output handling could contribute to the BuildKit snapshot race
+	// condition (moby/buildkit#4024). If the retry approach proves insufficient,
+	// consider testing without --progress as an alternative mitigation.
+	action := []string{"--progress=" + progress, "build"}
+	if app.NoCache {
+		action = append(action, "--no-cache")
+	}
+	action = append(action, args...)
+
+	var lastErr error
+	var out, stderr string
+
+	for attempt := 1; attempt <= composeBuildMaxRetries; attempt++ {
+		util.Debug("Executing docker-compose -f %s %s (attempt %d/%d)", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "), attempt, composeBuildMaxRetries)
+
+		out, stderr, lastErr = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+			Action:       action,
+			Progress:     true,
+			Timeout:      time.Hour * 1,
+		})
+
+		if lastErr == nil {
+			// Success
+			if globalconfig.DdevVerbose {
+				util.Debug("docker-compose build output:\n%s\n\n", out)
+			}
+			return out, nil
+		}
+
+		// Check if this is the known BuildKit snapshot race condition
+		errorText := fmt.Sprintf("%v %s", lastErr, stderr)
+		isSnapshotRace := strings.Contains(errorText, "parent snapshot") && strings.Contains(errorText, "does not exist")
+
+		if !isSnapshotRace {
+			// Not a snapshot race error, fail immediately without retry
+			return out, fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", lastErr, out, stderr)
+		}
+
+		// This is a snapshot race error - retry if we have attempts remaining
+		if attempt < composeBuildMaxRetries {
+			util.Warning("BuildKit snapshot race condition detected (moby/buildkit#4024). Retrying build (attempt %d/%d)...", attempt+1, composeBuildMaxRetries)
+		}
+	}
+
+	// All retries exhausted
+	return out, fmt.Errorf("docker-compose build failed after %d attempts: %v, output='%s', stderr='%s'", composeBuildMaxRetries, lastErr, out, stderr)
+}
+
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
@@ -1755,40 +1819,18 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 	buildDurationStart := util.ElapsedDuration(time.Now())
-	progress := "plain"
-	action := []string{"--progress=" + progress, "build"}
-	if app.NoCache {
-		action = append(action, "--no-cache")
-	}
-	util.Debug("Executing docker-compose -f %s %s", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "))
-	out, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-		Action:       action,
-		Progress:     true,
-		Timeout:      time.Hour * 1,
-	})
+
+	_, err = app.composeBuild()
 	if err != nil {
-		return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
-	}
-	if globalconfig.DdevVerbose {
-		util.Debug("docker-compose build output:\n%s\n\n", out)
+		return err
 	}
 
 	_, logStderrOutput, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	// If the web image is dirty, try to rebuild it immediately
 	if err == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
-		util.Debug("Executing docker-compose -f %s --progress=%s build web --no-cache", app.DockerComposeFullRenderedYAMLPath(), progress)
-		out, stderr, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-			Action:       []string{"--progress=" + progress, "build", "web", "--no-cache"},
-			Progress:     true,
-			Timeout:      time.Hour * 1,
-		})
+		_, err = app.composeBuild("web", "--no-cache")
 		if err != nil {
-			return fmt.Errorf("docker-compose build web --no-cache failed: %v, output='%s', stderr='%s'", err, out, stderr)
-		}
-		if globalconfig.DdevVerbose {
-			util.Debug("docker-compose build web --no-cache output:\n%s\n\n", out)
+			return err
 		}
 	}
 
