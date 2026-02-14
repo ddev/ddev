@@ -53,6 +53,10 @@ type AppModel struct {
 
 	// Spinner
 	spinner spinner.Model
+
+	// Confirmation overlay
+	confirming    bool
+	confirmAction string // "start-all" or "stop-all"
 }
 
 // NewAppModel creates a new TUI model.
@@ -121,8 +125,10 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		if msg.err != nil {
 			m.err = msg.err
+			m.statusMsg = fmt.Sprintf("Error loading projects: %v", msg.err)
 			return m, nil
 		}
+		m.err = nil
 		m.projects = msg.projects
 		// Keep cursor in bounds
 		filtered := m.filteredProjects()
@@ -218,6 +224,28 @@ func (m AppModel) isLoading() bool {
 }
 
 func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Confirmation overlay takes priority
+	if m.confirming {
+		if key.Matches(msg, m.keys.Confirm) {
+			action := m.confirmAction
+			m.confirming = false
+			m.confirmAction = ""
+			switch action {
+			case "start-all":
+				m.statusMsg = "Starting all projects..."
+				return m, ddevExecCommand("start", "--all")
+			case "stop-all":
+				m.statusMsg = "Stopping all projects..."
+				return m, ddevExecCommand("stop", "--all")
+			}
+		}
+		// Any other key cancels
+		m.confirming = false
+		m.confirmAction = ""
+		m.statusMsg = ""
+		return m, nil
+	}
+
 	// If filtering, handle text input
 	if m.filtering {
 		switch {
@@ -305,6 +333,22 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case key.Matches(msg, m.keys.Open):
 		if p := m.selectedProject(); p != nil && p.URL != "" {
 			return m, ddevExecCommandInDir(p.AppRoot, "launch")
+		}
+
+	case key.Matches(msg, m.keys.StartAll):
+		if len(m.projects) > 0 {
+			m.confirming = true
+			m.confirmAction = "start-all"
+			m.statusMsg = fmt.Sprintf("Start all %d projects? (y to confirm, any key to cancel)", len(m.projects))
+			return m, nil
+		}
+
+	case key.Matches(msg, m.keys.StopAll):
+		if len(m.projects) > 0 {
+			m.confirming = true
+			m.confirmAction = "stop-all"
+			m.statusMsg = fmt.Sprintf("Stop all %d projects? (y to confirm, any key to cancel)", len(m.projects))
+			return m, nil
 		}
 
 	case key.Matches(msg, m.keys.Refresh):
@@ -506,6 +550,9 @@ func (m AppModel) dashboardView() string {
 	// Loading indicator
 	if m.loading && len(m.projects) == 0 {
 		b.WriteString(fmt.Sprintf("  %s Loading projects...\n", m.spinner.View()))
+	} else if m.err != nil && len(m.projects) == 0 {
+		b.WriteString(fmt.Sprintf("  Error: %v\n", m.err))
+		b.WriteString("  Is Docker running? Press R to retry.\n")
 	} else {
 		filtered := m.filteredProjects()
 		if len(filtered) == 0 {
@@ -790,6 +837,8 @@ func (m AppModel) dashboardKeyHints() string {
 		{"s", "start"},
 		{"x", "stop"},
 		{"r", "restart"},
+		{"S", "start all"},
+		{"X", "stop all"},
 		{"o", "open"},
 		{"enter", "detail"},
 		{"/", "filter"},
@@ -861,6 +910,8 @@ Actions:
   s               Start selected project
   x               Stop selected project
   r               Restart selected project
+  S               Start all projects
+  X               Stop all projects
   o               Open project URL in browser
   e               SSH into web container (from detail view)
   l               View logs (from detail view)

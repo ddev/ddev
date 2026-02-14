@@ -26,6 +26,10 @@ func loadProjects() tea.Msg {
 // loadDetailCmd fetches full project detail in the background.
 func loadDetailCmd(appRoot string) tea.Cmd {
 	return func() tea.Msg {
+		if _, err := os.Stat(appRoot); os.IsNotExist(err) {
+			return projectDetailLoadedMsg{err: fmt.Errorf("project directory no longer exists: %s", appRoot)}
+		}
+
 		app, err := ddevapp.NewApp(appRoot, true)
 		if err != nil {
 			return projectDetailLoadedMsg{err: err}
@@ -83,6 +87,10 @@ func loadDetailCmd(appRoot string) tea.Cmd {
 // loadLogsCmd fetches container logs in the background.
 func loadLogsCmd(appRoot string, service string) tea.Cmd {
 	return func() tea.Msg {
+		if _, err := os.Stat(appRoot); os.IsNotExist(err) {
+			return logsLoadedMsg{err: fmt.Errorf("project directory no longer exists: %s", appRoot), service: service}
+		}
+
 		app, err := ddevapp.NewApp(appRoot, true)
 		if err != nil {
 			return logsLoadedMsg{err: err, service: service}

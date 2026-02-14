@@ -4,23 +4,26 @@ import "github.com/charmbracelet/bubbles/key"
 
 // KeyMap defines all key bindings for the TUI.
 type KeyMap struct {
-	Start   key.Binding
-	Stop    key.Binding
-	Restart key.Binding
-	Open    key.Binding
-	Refresh key.Binding
-	Filter  key.Binding
-	Help    key.Binding
-	Quit    key.Binding
-	Up      key.Binding
-	Down    key.Binding
-	Enter   key.Binding
-	Detail  key.Binding
-	Back    key.Binding
-	Logs    key.Binding
-	LogWeb  key.Binding
-	LogDB   key.Binding
-	SSH     key.Binding
+	Start    key.Binding
+	Stop     key.Binding
+	Restart  key.Binding
+	Open     key.Binding
+	Refresh  key.Binding
+	Filter   key.Binding
+	Help     key.Binding
+	Quit     key.Binding
+	Up       key.Binding
+	Down     key.Binding
+	Enter    key.Binding
+	Detail   key.Binding
+	Back     key.Binding
+	Logs     key.Binding
+	LogWeb   key.Binding
+	LogDB    key.Binding
+	SSH      key.Binding
+	StartAll key.Binding
+	StopAll  key.Binding
+	Confirm  key.Binding
 }
 
 // DefaultKeyMap returns the default key bindings.
@@ -93,6 +96,18 @@ func DefaultKeyMap() KeyMap {
 		SSH: key.NewBinding(
 			key.WithKeys("e"),
 			key.WithHelp("e", "ssh"),
+		),
+		StartAll: key.NewBinding(
+			key.WithKeys("S"),
+			key.WithHelp("S", "start all"),
+		),
+		StopAll: key.NewBinding(
+			key.WithKeys("X"),
+			key.WithHelp("X", "stop all"),
+		),
+		Confirm: key.NewBinding(
+			key.WithKeys("y"),
+			key.WithHelp("y", "confirm"),
 		),
 	}
 }
