@@ -251,6 +251,12 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("no-tui").Changed {
+		val, _ := cmd.Flags().GetBool("no-tui")
+		globalconfig.DdevGlobalConfig.NoTUI = val
+		dirty = true
+	}
+
 	if dirty {
 		err = globalconfig.ValidateGlobalConfig()
 		if err != nil {
@@ -358,5 +364,7 @@ func init() {
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("traefik-monitor-port", configCompletionFunc([]string{nodeps.TraefikMonitorPortDefault}))
 	configGlobalCommand.Flags().String("share-default-provider", "", `The default share provider for all projects (ngrok, cloudflared, or custom), can be overridden by project configuration`)
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("share-default-provider", configCompletionFunc([]string{"ngrok", "cloudflared"}))
+	configGlobalCommand.Flags().Bool("no-tui", false, "If true, disable the interactive TUI dashboard when running bare 'ddev'")
+	_ = configGlobalCommand.RegisterFlagCompletionFunc("no-tui", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

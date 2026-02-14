@@ -51,6 +51,7 @@ type GlobalConfig struct {
 	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
 	MkcertCARoot                     string                      `yaml:"mkcert_caroot"`
 	NoBindMounts                     bool                        `yaml:"no_bind_mounts"`
+	NoTUI                            bool                        `yaml:"no_tui,omitempty"`
 	OmitContainersGlobal             []string                    `yaml:"omit_containers,flow"`
 	OmitProjectNameByDefault         bool                        `yaml:"omit_project_name_by_default,omitempty"`
 	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
