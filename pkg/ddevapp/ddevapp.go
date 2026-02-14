@@ -1029,24 +1029,35 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 			preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 		}
 
+		// Query the database server's default collation to use as the replacement target
+		// for modern collations. Falls back to utf8mb4_unicode_ci if the query fails.
+		replacedCollation := "utf8mb4_unicode_ci"
+		stdout, _, err := app.Exec(&ExecOpts{
+			Service: "db",
+			RawCmd:  []string{"bash", "-c", fmt.Sprintf(`%s -sN -e "SELECT @@collation_server"`, dbClientCmd)},
+		})
+		if err == nil {
+			replacedCollation = strings.TrimSpace(stdout)
+		}
+
 		// Case for reading from file
 		// The Perl regex does three things:
 		// 1. Strips sandbox mode comments, CREATE DATABASE, and USE statements from the dump
-		// 2. Replaces MariaDB 11.x modern collation (utf8mb4_uca1400_ai_ci) with compatible fallback (utf8mb4_unicode_ci)
-		// 3. Replaces MySQL 8.0+ modern collation (utf8mb4_0900_ai_ci) with compatible fallback (utf8mb4_unicode_ci)
+		// 2. Replaces MariaDB 11.x modern collation (utf8mb4_uca1400_ai_ci) with server's default collation
+		// 3. Replaces MySQL 8.0+ modern collation (utf8mb4_0900_ai_ci) with server's default collation
 		// The collation replacements skip INSERT and VALUES lines to avoid corrupting data that mentions these collations
 		// The PIPESTATUS check ensures we catch and report errors from the mysql command
-		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %[1]s -e "%[2]s"; pv %[3]s/*.*sql |  perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %[4]s)[^;]*(;|\*\/)//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE utf8mb4_unicode_ci/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE utf8mb4_unicode_ci/gi; }' | %[1]s %[5]s; status=${PIPESTATUS[2]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, insideContainerImportPath, "`", targetDB)}
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %[1]s -e "%[2]s"; pv %[3]s/*.*sql | perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %[4]s)[^;]*(;|\*\/)//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE %[6]s/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE %[6]s/gi; }' | %[1]s %[5]s; status=${PIPESTATUS[2]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, insideContainerImportPath, "`", targetDB, replacedCollation)}
 
 		// Alternate case where we are reading from stdin
 		// The Perl regex does three things:
 		// 1. Strips CREATE DATABASE and USE statements from the dump
-		// 2. Replaces MariaDB 11.x modern collation (utf8mb4_uca1400_ai_ci) with compatible fallback (utf8mb4_unicode_ci)
-		// 3. Replaces MySQL 8.0+ modern collation (utf8mb4_0900_ai_ci) with compatible fallback (utf8mb4_unicode_ci)
+		// 2. Replaces MariaDB 11.x modern collation (utf8mb4_uca1400_ai_ci) with server's default collation
+		// 3. Replaces MySQL 8.0+ modern collation (utf8mb4_0900_ai_ci) with server's default collation
 		// The collation replacements skip INSERT and VALUES lines to avoid corrupting data that mentions these collations
 		// The PIPESTATUS check ensures we catch and report errors from the mysql command even when reading from stdin
 		if dumpFile == "" && extractPath == "" {
-			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %[1]s -e "%[2]s"; perl -p -e 's/^(CREATE DATABASE \/\*|USE %[3]s)[^;]*;//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE utf8mb4_unicode_ci/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE utf8mb4_unicode_ci/gi; }' | %[1]s %[4]s; status=${PIPESTATUS[1]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, "`", targetDB)}
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %[1]s -e "%[2]s"; perl -p -e 's/^(CREATE DATABASE \/\*|USE %[3]s)[^;]*;//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE %[5]s/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE %[5]s/gi; }' | %[1]s %[4]s; status=${PIPESTATUS[1]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, "`", targetDB, replacedCollation)}
 		}
 
 	case nodeps.Postgres:
