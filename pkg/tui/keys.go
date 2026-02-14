@@ -20,6 +20,7 @@ type KeyMap struct {
 	Logs    key.Binding
 	LogWeb  key.Binding
 	LogDB   key.Binding
+	SSH     key.Binding
 }
 
 // DefaultKeyMap returns the default key bindings.
@@ -88,6 +89,10 @@ func DefaultKeyMap() KeyMap {
 		LogDB: key.NewBinding(
 			key.WithKeys("d"),
 			key.WithHelp("d", "db logs"),
+		),
+		SSH: key.NewBinding(
+			key.WithKeys("e"),
+			key.WithHelp("e", "ssh"),
 		),
 	}
 }
