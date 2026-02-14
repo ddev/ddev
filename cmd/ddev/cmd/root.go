@@ -10,9 +10,11 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/tui"
 	"github.com/ddev/ddev/pkg/updatecheck"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
 )
@@ -33,7 +35,24 @@ var RootCmd = &cobra.Command{
 Docs: https://docs.ddev.com
 Support: https://docs.ddev.com/en/stable/users/support/`,
 	Version: versionconstants.DdevVersion,
+	Run: func(cmd *cobra.Command, _ []string) {
+		// Launch TUI if: stdin is a TTY, not JSON output, not opted out, and DDEV_NO_TUI not set
+		if isatty.IsTerminal(os.Stdin.Fd()) &&
+			!output.JSONOutput &&
+			!globalconfig.DdevGlobalConfig.NoTUI &&
+			os.Getenv("DDEV_NO_TUI") == "" {
+			if err := tui.Launch(); err != nil {
+				util.Failed("TUI failed: %v", err)
+			}
+			return
+		}
+		// Fall back to showing help
+		_ = cmd.Help()
+	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if len(os.Args) < 2 {
+			return
+		}
 		command := os.Args[1]
 
 		// Anonymize user defined custom commands.
