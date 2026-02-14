@@ -177,6 +177,37 @@ EOF
 
 **Important:** Use `-F -` (read from stdin) instead of `-m "$(cat <<'EOF'...)"` to preserve all formatting.
 
+### Creating PRs with `gh`
+
+When creating or editing PRs with `gh pr create` or `gh pr edit`, use the same template structure from `.github/PULL_REQUEST_TEMPLATE.md` for the `--body` argument. Use a HEREDOC for the body to preserve markdown formatting:
+
+```bash
+gh pr create --title "<type>: <description>" --body "$(cat <<'EOF'
+## The Issue
+
+- Fixes #<issue_number>
+
+[Issue description]
+
+## How This PR Solves The Issue
+
+[Technical explanation]
+
+## Manual Testing Instructions
+
+[Step-by-step testing guide]
+
+## Automated Testing Overview
+
+[Test coverage explanation]
+
+## Release/Deployment Notes
+
+[Impact assessment]
+EOF
+)"
+```
+
 ### Pre-Commit Checklist
 
 1. Run appropriate tests: `go test -v -run TestName ./pkg/...`
