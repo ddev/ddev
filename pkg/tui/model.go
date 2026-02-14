@@ -347,6 +347,11 @@ func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, ddevExecCommandDetail(m.detail.AppRoot, "launch")
 		}
 
+	case key.Matches(msg, m.keys.SSH):
+		if m.detail != nil {
+			return m, ddevExecCommandDetail(m.detail.AppRoot, "ssh")
+		}
+
 	case key.Matches(msg, m.keys.Refresh):
 		if m.detail != nil {
 			m.detailLoading = true
@@ -733,6 +738,7 @@ func (m AppModel) detailKeyHints() string {
 		{"x", "stop"},
 		{"r", "restart"},
 		{"o", "open"},
+		{"e", "ssh"},
 		{"l", "logs"},
 		{"R", "refresh"},
 		{"esc", "back"},
@@ -786,6 +792,7 @@ Actions:
   x               Stop selected project
   r               Restart selected project
   o               Open project URL in browser
+  e               SSH into web container (from detail view)
   l               View logs (from detail view)
   R               Refresh
 

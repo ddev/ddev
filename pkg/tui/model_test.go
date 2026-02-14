@@ -704,6 +704,28 @@ func TestDetailActionRestart(t *testing.T) {
 	require.NotNil(t, cmd)
 }
 
+func TestDetailActionSSH(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'e'}})
+	require.NotNil(t, cmd, "e should return a command to ssh")
+}
+
+func TestDetailSSHHintVisible(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	m.width = 80
+	m.height = 30
+	detail := sampleDetail()
+	m.detail = &detail
+
+	view := m.View()
+	require.Contains(t, view, "ssh", "detail view should show ssh key hint")
+}
+
 func TestDetailQuit(t *testing.T) {
 	m := NewAppModel()
 	m.viewMode = viewDetail
