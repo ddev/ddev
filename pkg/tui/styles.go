@@ -54,23 +54,22 @@ func NewStyles() Styles {
 	red := lipgloss.Color("1")
 	yellow := lipgloss.Color("3")
 	cyan := lipgloss.Color("6")
-	gray := lipgloss.Color("8")
 
 	return Styles{
 		Title:       lipgloss.NewStyle().Bold(true).Foreground(cyan),
-		StatusBar:   lipgloss.NewStyle().Foreground(gray),
+		StatusBar:   lipgloss.NewStyle().Faint(true),
 		HelpKey:     lipgloss.NewStyle().Bold(true).Foreground(cyan),
-		HelpDesc:    lipgloss.NewStyle().Foreground(gray),
+		HelpDesc:    lipgloss.NewStyle().Faint(true),
 		Running:     lipgloss.NewStyle().Foreground(green),
 		Stopped:     lipgloss.NewStyle().Foreground(red),
 		Paused:      lipgloss.NewStyle().Foreground(yellow),
 		ProjectName: lipgloss.NewStyle().Bold(true),
-		ProjectType: lipgloss.NewStyle().Foreground(gray),
+		ProjectType: lipgloss.NewStyle().Faint(true),
 		URL:         lipgloss.NewStyle().Foreground(cyan),
 		Cursor:      lipgloss.NewStyle().Bold(true).Foreground(cyan),
-		Divider:     lipgloss.NewStyle().Foreground(gray),
+		Divider:     lipgloss.NewStyle().Faint(true),
 		HelpOverlay: lipgloss.NewStyle().Padding(1, 2).Border(lipgloss.RoundedBorder()).BorderForeground(cyan),
-		DetailLabel: lipgloss.NewStyle().Bold(true).Foreground(gray).Width(14),
-		DetailValue: lipgloss.NewStyle().Foreground(lipgloss.Color("7")),
+		DetailLabel: lipgloss.NewStyle().Bold(true).Faint(true).Width(14),
+		DetailValue: lipgloss.NewStyle(),
 	}
 }

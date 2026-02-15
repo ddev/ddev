@@ -104,6 +104,16 @@ func (m AppModel) filteredProjects() []ProjectInfo {
 	return result
 }
 
+// allStopped returns true if all projects are stopped.
+func (m AppModel) allStopped() bool {
+	for _, p := range m.projects {
+		if p.Status != ddevapp.SiteStopped {
+			return false
+		}
+	}
+	return true
+}
+
 // selectedProject returns the currently selected project, or nil.
 func (m AppModel) selectedProject() *ProjectInfo {
 	filtered := m.filteredProjects()
@@ -599,6 +609,11 @@ func (m AppModel) dashboardView() string {
 	}
 
 	b.WriteString("\n")
+
+	// Hint when all projects are stopped
+	if len(m.projects) > 0 && m.allStopped() {
+		b.WriteString(m.styles.StatusBar.Render("  All projects are stopped. Press 's' to start selected project, or 'S' to start all.") + "\n")
+	}
 
 	// Router status
 	if m.routerStatus != "" {

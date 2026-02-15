@@ -1054,6 +1054,33 @@ func TestStartAllHintVisible(t *testing.T) {
 	require.Contains(t, view, "stop all", "should show stop all hint")
 }
 
+func TestAllStoppedHint(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.width = 120
+	m.projects = []ProjectInfo{
+		{Name: "a", Status: ddevapp.SiteStopped},
+		{Name: "b", Status: ddevapp.SiteStopped},
+	}
+
+	view := m.View()
+	require.Contains(t, view, "All projects are stopped", "should show all-stopped hint")
+	require.Contains(t, view, "start selected project", "should show start hint")
+}
+
+func TestAllStoppedHintHiddenWhenRunning(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.width = 120
+	m.projects = []ProjectInfo{
+		{Name: "a", Status: ddevapp.SiteRunning},
+		{Name: "b", Status: ddevapp.SiteStopped},
+	}
+
+	view := m.View()
+	require.NotContains(t, view, "All projects are stopped", "should not show all-stopped hint when some are running")
+}
+
 // --- Error resilience tests ---
 
 func TestProjectsLoadedErrorShowsMessage(t *testing.T) {
