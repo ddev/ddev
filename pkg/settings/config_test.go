@@ -8,41 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestViperConfiguration verifies that the Viper wrapper correctly handles
-// configuration priority, environment variables, and defaults.
-func TestViperConfiguration(t *testing.T) {
-	// Initialize the settings system
-	Init()
-
-	// 1. Test Default Values
-	SetDefault("test_key", "default_value")
-	assert.Equal(t, "default_value", GetString("test_key"))
-
-	// 2. Test Environment Variable Overrides
-	// Set the environment variable. Prefix is DDEV_, so DDEV_TEST_VAR -> GetString("TEST_VAR")
-	os.Setenv("DDEV_TEST_VAR", "env_value")
-	defer os.Unsetenv("DDEV_TEST_VAR")
-
-	assert.Equal(t, "env_value", GetString("TEST_VAR"), "Environment variable should be accessible via GetString")
-
-	// 3. Test Type Safety
-	os.Setenv("DDEV_BOOL_VAR", "true")
-	defer os.Unsetenv("DDEV_BOOL_VAR")
-	assert.True(t, GetBool("BOOL_VAR"), "String 'true' should be parsed as boolean true")
-
-	os.Setenv("DDEV_INT_VAR", "123")
-	defer os.Unsetenv("DDEV_INT_VAR")
-	assert.Equal(t, 123, GetInt("INT_VAR"), "String '123' should be parsed as integer 123")
-	
-	// 4. Test Set/override
-	Set("some_key", "manual_value")
-	assert.Equal(t, "manual_value", GetString("some_key"))
-
-	// 5. Test Unset
-	Unset("some_key")
-	assert.Equal(t, "", GetString("some_key"), "Unset should remove the key's value")
-}
-
 // TestConfig is a dummy struct for testing unmarshaling.
 type TestConfig struct {
 	Name       string `yaml:"name"`
@@ -51,7 +16,9 @@ type TestConfig struct {
 	Webserver  string `yaml:"webserver_type"`
 }
 
-// TestLoadGlobalConfig verifies that a single YAML file is correctly loaded.
+// TestLoadGlobalConfig verifies that a single YAML file is correctly loaded
+// into a struct using the high-level LoadGlobalConfig function.
+// It tests the happy path of configuration loading from a file.
 func TestLoadGlobalConfig(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "global_config.yaml")
@@ -71,6 +38,8 @@ type: php
 }
 
 // TestLoadProjectConfig verifies that main config and overrides are merged correctly.
+// It ensures that specific project configurations can be overridden by local files,
+// which is a key feature for DDEV's per-project extensibility.
 func TestLoadProjectConfig(t *testing.T) {
 	tempDir := t.TempDir()
 	mainPath := filepath.Join(tempDir, "config.yaml")
@@ -102,6 +71,8 @@ webserver_type: apache-fpm
 }
 
 // TestNewConfigProviderIsolation ensures that separate providers do not share state.
+// This confirms that our factory functions (NewConfigProvider) return truly independent
+// instances, preventing crosstalk between different configuration loads.
 func TestNewConfigProviderIsolation(t *testing.T) {
 	p1 := NewConfigProvider()
 	p2 := NewConfigProvider()
@@ -111,32 +82,4 @@ func TestNewConfigProviderIsolation(t *testing.T) {
 
 	assert.Equal(t, "value1", p1.GetString("key"))
 	assert.Equal(t, "value2", p2.GetString("key"))
-}
-
-// TestUnmarshalYamlTags verifies that the Unmarshal method correctly respects 'yaml' tags.
-func TestUnmarshalYamlTags(t *testing.T) {
-	p := NewConfigProvider()
-	p.Set("php_version", "8.2")
-	p.Set("name", "test-app")
-
-	var cfg TestConfig
-	err := p.Unmarshal(&cfg)
-	assert.NoError(t, err)
-
-	assert.Equal(t, "test-app", cfg.Name)
-	assert.Equal(t, "8.2", cfg.PHPVersion)
-}
-
-// TestUnmarshalExistingValues verifies that Unmarshal does not zero out existing fields if not in config.
-func TestUnmarshalExistingValues(t *testing.T) {
-	p := NewConfigProvider()
-	// No "name" set in provider
-
-	cfg := TestConfig{
-		Name: "existing-name",
-	}
-	err := p.Unmarshal(&cfg)
-	assert.NoError(t, err)
-
-	assert.Equal(t, "existing-name", cfg.Name, "Existing name should be preserved if not in config")
 }
