@@ -1,6 +1,10 @@
 package tui
 
-import "github.com/ddev/ddev/pkg/ddevapp"
+import (
+	"os"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+)
 
 // ProjectInfo holds the display-relevant fields for a DDEV project.
 type ProjectInfo struct {
@@ -60,12 +64,19 @@ type projectDetailLoadedMsg struct {
 	err    error
 }
 
-// logsLoadedMsg is sent when container logs have been fetched.
-type logsLoadedMsg struct {
-	logs    string
-	service string
-	err     error
+// logStreamStartedMsg is sent when the log streaming subprocess has started.
+type logStreamStartedMsg struct {
+	lines   <-chan string
+	process *os.Process
 }
+
+// logLineMsg is sent for each new line of log output.
+type logLineMsg struct {
+	line string
+}
+
+// logStreamEndedMsg is sent when the log stream closes.
+type logStreamEndedMsg struct{}
 
 // routerStatusMsg carries the router health status.
 type routerStatusMsg struct {

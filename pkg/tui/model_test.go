@@ -394,20 +394,114 @@ func TestViewTransitionDashboardToDetailWithD(t *testing.T) {
 	require.NotNil(t, cmd)
 }
 
-func TestViewTransitionDetailToLogs(t *testing.T) {
+func TestDetailActionLogs(t *testing.T) {
 	m := NewAppModel()
 	m.viewMode = viewDetail
 	detail := sampleDetail()
 	m.detail = &detail
 
-	// Press 'L' to open logs
+	// Press 'L' to open streaming log view
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'L'}})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewLogs, model.viewMode, "should switch to log view")
-	require.Equal(t, "web", model.logService, "should default to web logs")
-	require.True(t, model.logLoading, "should be loading logs")
-	require.NotNil(t, cmd, "should return a command to load logs")
+	require.NotNil(t, cmd, "L should return a command to start log stream")
+	require.Empty(t, model.logLines, "log lines should start empty")
+}
+
+func TestLogStreamMessages(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewLogs
+	detail := sampleDetail()
+	m.detail = &detail
+
+	ch := make(chan string, 10)
+	ch <- "line1"
+
+	// Simulate stream started
+	updated, cmd := m.Update(logStreamStartedMsg{lines: ch, process: nil})
+	model := updated.(AppModel)
+	require.NotNil(t, model.logSub, "should store log channel")
+	require.NotNil(t, cmd, "should return cmd to wait for lines")
+
+	// Simulate receiving a log line
+	updated, cmd = model.Update(logLineMsg{line: "hello from logs"})
+	model = updated.(AppModel)
+	require.Len(t, model.logLines, 1)
+	require.Equal(t, "hello from logs", model.logLines[0])
+	require.NotNil(t, cmd, "should return cmd to wait for next line")
+
+	// Simulate stream ended
+	updated, _ = model.Update(logStreamEndedMsg{})
+	model = updated.(AppModel)
+	require.Nil(t, model.logProcess, "process should be cleared")
+	require.Nil(t, model.logSub, "channel should be cleared")
+}
+
+func TestBackFromLogToDetail(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewLogs
+	detail := sampleDetail()
+	m.detail = &detail
+	m.logLines = []string{"some log"}
+
+	// Press Esc to go back
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	model := updated.(AppModel)
+
+	require.Equal(t, viewDetail, model.viewMode, "esc from logs should return to detail")
+	require.Nil(t, model.logLines, "log lines should be cleared")
+	require.Nil(t, model.logSub, "log channel should be cleared")
+}
+
+func TestLogViewRendering(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewLogs
+	m.width = 80
+	m.height = 30
+	detail := sampleDetail()
+	m.detail = &detail
+	m.logLines = []string{"log line 1", "log line 2", "log line 3"}
+
+	view := m.View()
+
+	require.Contains(t, view, "DDEV Logs: mysite", "should contain log title")
+	require.Contains(t, view, "log line 1", "should contain log content")
+	require.Contains(t, view, "log line 3", "should contain log content")
+	require.Contains(t, view, "back", "should contain back hint")
+}
+
+func TestLogViewWaitingRendering(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewLogs
+	m.width = 60
+	detail := sampleDetail()
+	m.detail = &detail
+
+	view := m.View()
+
+	require.Contains(t, view, "Waiting for log output", "should show waiting message")
+}
+
+func TestLogViewAutoScrollsToBottom(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewLogs
+	m.width = 80
+	m.height = 10 // small height: viewHeight = 10 - 4 = 6
+
+	detail := sampleDetail()
+	m.detail = &detail
+
+	// Add more lines than fit
+	for i := 0; i < 20; i++ {
+		m.logLines = append(m.logLines, fmt.Sprintf("line %d", i))
+	}
+
+	view := m.View()
+
+	// Should show the last lines, not the first
+	require.Contains(t, view, "line 19", "should show last line")
+	require.NotContains(t, view, "line 0", "should not show first line")
 }
 
 func TestBackFromDetailToDashboard(t *testing.T) {
@@ -435,22 +529,6 @@ func TestBackFromDetailWithBackspace(t *testing.T) {
 	model := updated.(AppModel)
 
 	require.Equal(t, viewDashboard, model.viewMode, "backspace should return to dashboard")
-}
-
-func TestBackFromLogToDetail(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	detail := sampleDetail()
-	m.detail = &detail
-	m.logContent = "some log content"
-
-	// Press Esc to go back
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyEscape})
-	model := updated.(AppModel)
-
-	require.Equal(t, viewDetail, model.viewMode, "esc from logs should return to detail")
-	require.Empty(t, model.logContent, "log content should be cleared")
-	require.Equal(t, 0, model.logScroll, "log scroll should be reset")
 }
 
 func TestProjectDetailLoadedMsg(t *testing.T) {
@@ -482,104 +560,6 @@ func TestProjectDetailLoadedError(t *testing.T) {
 	require.False(t, model.detailLoading)
 	require.Equal(t, viewDashboard, model.viewMode, "should return to dashboard on error")
 	require.Contains(t, model.statusMsg, "Error")
-}
-
-func TestLogsLoadedMsg(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	m.logLoading = true
-
-	updated, _ := m.Update(logsLoadedMsg{logs: "line1\nline2\nline3", service: "web"})
-	model := updated.(AppModel)
-
-	require.False(t, model.logLoading)
-	require.Equal(t, "line1\nline2\nline3", model.logContent)
-	require.Equal(t, "web", model.logService)
-	require.Equal(t, 0, model.logScroll)
-}
-
-func TestLogsLoadedError(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	m.logLoading = true
-
-	updated, _ := m.Update(logsLoadedMsg{err: errTest, service: "web"})
-	model := updated.(AppModel)
-
-	require.False(t, model.logLoading)
-	require.Contains(t, model.statusMsg, "Error")
-}
-
-func TestLogServiceToggle(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	detail := sampleDetail()
-	m.detail = &detail
-	m.logService = "web"
-	m.logContent = "web logs"
-
-	// Switch to db logs
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'d'}})
-	model := updated.(AppModel)
-
-	require.Equal(t, "db", model.logService)
-	require.True(t, model.logLoading)
-	require.Empty(t, model.logContent, "content should clear when switching")
-	require.NotNil(t, cmd)
-
-	// Switch back to web logs
-	model.logLoading = false
-	model.logContent = "db logs"
-	updated, cmd = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'w'}})
-	model = updated.(AppModel)
-
-	require.Equal(t, "web", model.logService)
-	require.True(t, model.logLoading)
-	require.NotNil(t, cmd)
-}
-
-func TestLogServiceToggleNoOpWhenSame(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	detail := sampleDetail()
-	m.detail = &detail
-	m.logService = "web"
-	m.logContent = "web logs"
-
-	// Press 'w' when already on web — should be a no-op
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'w'}})
-	model := updated.(AppModel)
-
-	require.Equal(t, "web", model.logService)
-	require.False(t, model.logLoading, "should not reload when service unchanged")
-	require.Nil(t, cmd)
-}
-
-func TestLogScrolling(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	m.height = 10
-	// Create content with many lines
-	var lines []string
-	for i := 0; i < 50; i++ {
-		lines = append(lines, fmt.Sprintf("log line %d", i))
-	}
-	m.logContent = strings.Join(lines, "\n")
-
-	// Scroll down
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
-	model := updated.(AppModel)
-	require.Equal(t, 1, model.logScroll, "j should scroll down")
-
-	// Scroll up
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
-	model = updated.(AppModel)
-	require.Equal(t, 0, model.logScroll, "k should scroll up")
-
-	// Scroll up at top — should stay at 0
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
-	model = updated.(AppModel)
-	require.Equal(t, 0, model.logScroll, "should not scroll below 0")
 }
 
 func TestDetailViewRendering(t *testing.T) {
@@ -620,51 +600,6 @@ func TestDetailViewLoadingRendering(t *testing.T) {
 	view := m.View()
 
 	require.Contains(t, view, "Loading project detail", "should show loading message")
-}
-
-func TestLogViewRendering(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	m.width = 80
-	m.height = 30
-	detail := sampleDetail()
-	m.detail = &detail
-	m.logService = "web"
-	m.logContent = "test log line 1\ntest log line 2"
-
-	view := m.View()
-
-	require.Contains(t, view, "DDEV Logs: mysite (web)", "should contain log title")
-	require.Contains(t, view, "test log line 1", "should contain log content")
-	require.Contains(t, view, "test log line 2", "should contain log content")
-	require.Contains(t, view, "scroll", "should contain scroll hint")
-	require.Contains(t, view, "back", "should contain back hint")
-}
-
-func TestLogViewLoadingRendering(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	m.logLoading = true
-	m.width = 60
-	detail := sampleDetail()
-	m.detail = &detail
-
-	view := m.View()
-
-	require.Contains(t, view, "Loading logs", "should show loading message")
-}
-
-func TestLogViewEmptyRendering(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	m.width = 60
-	m.logContent = ""
-	detail := sampleDetail()
-	m.detail = &detail
-
-	view := m.View()
-
-	require.Contains(t, view, "No log output", "should show empty message")
 }
 
 func TestDetailActionStart(t *testing.T) {
@@ -795,20 +730,6 @@ func TestDetailQuit(t *testing.T) {
 	require.True(t, ok, "q in detail should quit")
 }
 
-func TestLogQuit(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	detail := sampleDetail()
-	m.detail = &detail
-
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
-	require.NotNil(t, cmd)
-
-	msg := cmd()
-	_, ok := msg.(tea.QuitMsg)
-	require.True(t, ok, "q in log view should quit")
-}
-
 func TestOperationDetailFinishedMsg(t *testing.T) {
 	m := NewAppModel()
 	m.viewMode = viewDetail
@@ -843,11 +764,6 @@ func TestTickRefreshesByViewMode(t *testing.T) {
 	m.viewMode = viewDetail
 	_, cmd = m.Update(tickMsg{})
 	require.NotNil(t, cmd, "tick on detail should return commands")
-
-	// On log view, tick should only re-tick
-	m.viewMode = viewLogs
-	_, cmd = m.Update(tickMsg{})
-	require.NotNil(t, cmd, "tick on logs should return tick cmd")
 }
 
 func TestDetailNoEntryWithNoProjects(t *testing.T) {
@@ -866,7 +782,6 @@ func TestNewAppModelViewMode(t *testing.T) {
 	m := NewAppModel()
 	require.Equal(t, viewDashboard, m.viewMode, "should start on dashboard")
 	require.Nil(t, m.detail, "detail should start nil")
-	require.Empty(t, m.logContent, "log content should start empty")
 }
 
 func TestDetailRefresh(t *testing.T) {
@@ -880,20 +795,6 @@ func TestDetailRefresh(t *testing.T) {
 
 	require.True(t, model.detailLoading, "should set loading on refresh")
 	require.Contains(t, model.statusMsg, "Refreshing")
-	require.NotNil(t, cmd)
-}
-
-func TestLogRefresh(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewLogs
-	detail := sampleDetail()
-	m.detail = &detail
-	m.logService = "web"
-
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'R'}})
-	model := updated.(AppModel)
-
-	require.True(t, model.logLoading, "should set loading on refresh")
 	require.NotNil(t, cmd)
 }
 
@@ -982,7 +883,6 @@ func TestIsLoading(t *testing.T) {
 	m := NewAppModel()
 	m.loading = false
 	m.detailLoading = false
-	m.logLoading = false
 	require.False(t, m.isLoading())
 
 	m.loading = true
@@ -990,10 +890,6 @@ func TestIsLoading(t *testing.T) {
 
 	m.loading = false
 	m.detailLoading = true
-	require.True(t, m.isLoading())
-
-	m.detailLoading = false
-	m.logLoading = true
 	require.True(t, m.isLoading())
 }
 

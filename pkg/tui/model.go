@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -45,11 +46,10 @@ type AppModel struct {
 	detail        *ProjectDetail
 	detailLoading bool
 
-	// Log view
-	logContent string
-	logService string
-	logScroll  int
-	logLoading bool
+	// Log streaming
+	logLines   []string
+	logProcess *os.Process
+	logSub     <-chan string
 
 	// Spinner
 	spinner spinner.Model
@@ -157,15 +157,22 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.detail = &msg.detail
 		return m, nil
 
-	case logsLoadedMsg:
-		m.logLoading = false
-		if msg.err != nil {
-			m.statusMsg = fmt.Sprintf("Error loading logs: %v", msg.err)
-			return m, nil
+	case logStreamStartedMsg:
+		m.logProcess = msg.process
+		m.logSub = msg.lines
+		return m, waitForLogLineCmd(m.logSub)
+
+	case logLineMsg:
+		m.logLines = append(m.logLines, msg.line)
+		// Cap at 1000 lines to prevent unbounded growth
+		if len(m.logLines) > 1000 {
+			m.logLines = m.logLines[len(m.logLines)-500:]
 		}
-		m.logContent = msg.logs
-		m.logService = msg.service
-		m.logScroll = 0
+		return m, waitForLogLineCmd(m.logSub)
+
+	case logStreamEndedMsg:
+		m.logProcess = nil
+		m.logSub = nil
 		return m, nil
 
 	case operationFinishedMsg:
@@ -200,6 +207,9 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), tickCmd())
 			}
 			return m, tickCmd()
+		case viewLogs:
+			// No auto-refresh while streaming logs
+			return m, tickCmd()
 		case viewDashboard:
 			return m, tea.Batch(loadProjects, tickCmd())
 		default:
@@ -230,7 +240,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // isLoading returns true if any loading state is active.
 func (m AppModel) isLoading() bool {
-	return m.loading || m.detailLoading || m.logLoading
+	return m.loading || m.detailLoading
 }
 
 func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -396,11 +406,8 @@ func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case key.Matches(msg, m.keys.Logs):
 		if m.detail != nil {
 			m.viewMode = viewLogs
-			m.logService = "web"
-			m.logContent = ""
-			m.logScroll = 0
-			m.logLoading = true
-			return m, tea.Batch(loadLogsCmd(m.detail.AppRoot, "web"), m.spinner.Tick)
+			m.logLines = nil
+			return m, startLogStreamCmd(m.detail.AppRoot)
 		}
 		return m, nil
 
@@ -454,71 +461,23 @@ func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m AppModel) handleLogKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch {
 	case key.Matches(msg, m.keys.Back):
+		if m.logProcess != nil {
+			_ = m.logProcess.Kill()
+		}
+		m.logProcess = nil
+		m.logSub = nil
+		m.logLines = nil
 		m.viewMode = viewDetail
-		m.logContent = ""
-		m.logScroll = 0
 		return m, nil
-
-	case key.Matches(msg, m.keys.Up):
-		if m.logScroll > 0 {
-			m.logScroll--
-		}
-		return m, nil
-
-	case key.Matches(msg, m.keys.Down):
-		lines := strings.Split(m.logContent, "\n")
-		viewHeight := m.logViewHeight()
-		maxScroll := len(lines) - viewHeight
-		if maxScroll < 0 {
-			maxScroll = 0
-		}
-		if m.logScroll < maxScroll {
-			m.logScroll++
-		}
-		return m, nil
-
-	case key.Matches(msg, m.keys.LogWeb):
-		if m.detail != nil && m.logService != "web" {
-			m.logService = "web"
-			m.logContent = ""
-			m.logScroll = 0
-			m.logLoading = true
-			return m, tea.Batch(loadLogsCmd(m.detail.AppRoot, "web"), m.spinner.Tick)
-		}
-		return m, nil
-
-	case key.Matches(msg, m.keys.LogDB):
-		if m.detail != nil && m.logService != "db" {
-			m.logService = "db"
-			m.logContent = ""
-			m.logScroll = 0
-			m.logLoading = true
-			return m, tea.Batch(loadLogsCmd(m.detail.AppRoot, "db"), m.spinner.Tick)
-		}
-		return m, nil
-
-	case key.Matches(msg, m.keys.Refresh):
-		if m.detail != nil {
-			m.logLoading = true
-			return m, tea.Batch(loadLogsCmd(m.detail.AppRoot, m.logService), m.spinner.Tick)
-		}
 
 	case key.Matches(msg, m.keys.Quit):
+		if m.logProcess != nil {
+			_ = m.logProcess.Kill()
+		}
 		return m, tea.Quit
 	}
 
 	return m, nil
-}
-
-// logViewHeight returns the number of lines available for log content.
-func (m AppModel) logViewHeight() int {
-	// Reserve lines for: title, divider, bottom divider, key hints
-	overhead := 4
-	h := m.height - overhead
-	if h < 5 {
-		h = 20
-	}
-	return h
 }
 
 // View renders the TUI.
@@ -767,44 +726,44 @@ func (m AppModel) logView() string {
 	}
 
 	// Title
-	titleText := fmt.Sprintf("DDEV Logs: %s (%s)", name, m.logService)
+	titleText := fmt.Sprintf("DDEV Logs: %s", name)
 	title := m.styles.Title.Render(titleText)
 	b.WriteString(title + "\n")
 	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
 
-	if m.logLoading {
-		b.WriteString(fmt.Sprintf("\n  %s Loading logs...\n", m.spinner.View()))
-	} else if m.logContent == "" {
-		b.WriteString("\n  No log output.\n")
+	if len(m.logLines) == 0 {
+		b.WriteString(fmt.Sprintf("\n  %s Waiting for log output...\n", m.spinner.View()))
 	} else {
-		lines := strings.Split(m.logContent, "\n")
-		viewHeight := m.logViewHeight()
-
-		start := m.logScroll
-		if start > len(lines) {
-			start = len(lines)
+		// Show the last N lines that fit the terminal (auto-scroll to bottom)
+		viewHeight := m.height - 4 // title, divider, bottom divider, hints
+		if viewHeight < 5 {
+			viewHeight = 20
 		}
-		end := start + viewHeight
-		if end > len(lines) {
-			end = len(lines)
+		start := 0
+		if len(m.logLines) > viewHeight {
+			start = len(m.logLines) - viewHeight
 		}
-
-		visible := lines[start:end]
-		b.WriteString("\n")
-		for _, line := range visible {
+		for _, line := range m.logLines[start:] {
 			b.WriteString(line + "\n")
 		}
 	}
 
-	// Status message
-	if m.statusMsg != "" {
-		b.WriteString(m.statusMsg + "\n")
-	}
-
+	// Bottom divider
 	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
 	b.WriteString(m.logKeyHints())
 
 	return b.String()
+}
+
+func (m AppModel) logKeyHints() string {
+	hints := []struct {
+		key  string
+		desc string
+	}{
+		{"esc", "back"},
+		{"q", "quit"},
+	}
+	return m.renderHints(hints)
 }
 
 // sortServices returns services sorted: web first, db second, rest alphabetical.
@@ -892,20 +851,6 @@ func (m AppModel) detailKeyHints() string {
 	return m.renderHints(hints)
 }
 
-func (m AppModel) logKeyHints() string {
-	hints := []struct {
-		key  string
-		desc string
-	}{
-		{"w", "web"},
-		{"d", "db"},
-		{"j/k", "scroll"},
-		{"R", "refresh"},
-		{"esc", "back"},
-	}
-	return m.renderHints(hints)
-}
-
 func (m AppModel) renderHints(hints []struct {
 	key  string
 	desc string
@@ -942,7 +887,7 @@ Actions:
   l               Launch project URL in browser
   m               Launch Mailpit in browser
   e               SSH into web container (from detail view)
-  L               View logs (from detail view)
+  L               Follow logs (from detail view)
   R               Refresh
 
 Other:

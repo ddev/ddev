@@ -19,8 +19,6 @@ type KeyMap struct {
 	Detail   key.Binding
 	Back     key.Binding
 	Logs     key.Binding
-	LogWeb   key.Binding
-	LogDB    key.Binding
 	SSH      key.Binding
 	StartAll key.Binding
 	StopAll  key.Binding
@@ -89,14 +87,6 @@ func DefaultKeyMap() KeyMap {
 		Logs: key.NewBinding(
 			key.WithKeys("L"),
 			key.WithHelp("L", "logs"),
-		),
-		LogWeb: key.NewBinding(
-			key.WithKeys("w"),
-			key.WithHelp("w", "web logs"),
-		),
-		LogDB: key.NewBinding(
-			key.WithKeys("d"),
-			key.WithHelp("d", "db logs"),
 		),
 		SSH: key.NewBinding(
 			key.WithKeys("e"),

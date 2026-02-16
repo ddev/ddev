@@ -1,7 +1,9 @@
 package tui
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 
@@ -84,20 +86,63 @@ func loadDetailCmd(appRoot string) tea.Cmd {
 	}
 }
 
-// loadLogsCmd fetches container logs in the background.
-func loadLogsCmd(appRoot string, service string) tea.Cmd {
+// startLogStreamCmd starts `ddev logs -f` as a background subprocess and
+// streams its output line-by-line into the TUI via a channel.
+func startLogStreamCmd(appRoot string) tea.Cmd {
 	return func() tea.Msg {
-		if _, err := os.Stat(appRoot); os.IsNotExist(err) {
-			return logsLoadedMsg{err: fmt.Errorf("project directory no longer exists: %s", appRoot), service: service}
-		}
-
-		app, err := ddevapp.NewApp(appRoot, true)
+		ddevBin, err := os.Executable()
 		if err != nil {
-			return logsLoadedMsg{err: err, service: service}
+			return logStreamEndedMsg{}
 		}
 
-		logs, err := app.CaptureLogs(service, false, "100")
-		return logsLoadedMsg{logs: logs, service: service, err: err}
+		cmd := exec.Command(ddevBin, "logs", "-f")
+		cmd.Dir = appRoot
+		cmd.Env = append(os.Environ(), "DDEV_NO_TUI=true")
+
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return logStreamEndedMsg{}
+		}
+		stderr, err := cmd.StderrPipe()
+		if err != nil {
+			return logStreamEndedMsg{}
+		}
+
+		if err := cmd.Start(); err != nil {
+			return logStreamEndedMsg{}
+		}
+
+		ch := make(chan string, 100)
+		// Merge stdout and stderr into the channel
+		scan := func(r io.Reader) {
+			scanner := bufio.NewScanner(r)
+			for scanner.Scan() {
+				ch <- scanner.Text()
+			}
+		}
+		go scan(stdout)
+		go func() {
+			scan(stderr)
+			// Wait for process to finish, then close channel
+			_ = cmd.Wait()
+			close(ch)
+		}()
+
+		return logStreamStartedMsg{lines: ch, process: cmd.Process}
+	}
+}
+
+// waitForLogLineCmd waits for the next line from the log stream channel.
+func waitForLogLineCmd(ch <-chan string) tea.Cmd {
+	if ch == nil {
+		return nil
+	}
+	return func() tea.Msg {
+		line, ok := <-ch
+		if !ok {
+			return logStreamEndedMsg{}
+		}
+		return logLineMsg{line: line}
 	}
 }
 
