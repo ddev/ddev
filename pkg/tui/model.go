@@ -340,9 +340,14 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, ddevExecCommand("restart", p.Name)
 		}
 
-	case key.Matches(msg, m.keys.Open):
+	case key.Matches(msg, m.keys.Launch):
 		if p := m.selectedProject(); p != nil && p.URL != "" {
 			return m, ddevExecCommandInDir(p.AppRoot, "launch")
+		}
+
+	case key.Matches(msg, m.keys.Mailpit):
+		if p := m.selectedProject(); p != nil && p.URL != "" {
+			return m, ddevExecCommandInDir(p.AppRoot, "launch", "-m")
 		}
 
 	case key.Matches(msg, m.keys.StartAll):
@@ -417,9 +422,14 @@ func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, ddevExecCommandDetail(m.detail.AppRoot, "restart")
 		}
 
-	case key.Matches(msg, m.keys.Open):
+	case key.Matches(msg, m.keys.Launch):
 		if m.detail != nil && len(m.detail.URLs) > 0 {
 			return m, ddevExecCommandDetail(m.detail.AppRoot, "launch")
+		}
+
+	case key.Matches(msg, m.keys.Mailpit):
+		if m.detail != nil && m.detail.MailpitURL != "" {
+			return m, ddevExecCommandDetail(m.detail.AppRoot, "launch", "-m")
 		}
 
 	case key.Matches(msg, m.keys.SSH):
@@ -854,7 +864,8 @@ func (m AppModel) dashboardKeyHints() string {
 		{"r", "restart"},
 		{"S", "start all"},
 		{"X", "stop all"},
-		{"o", "open"},
+		{"l", "launch"},
+		{"m", "mailpit"},
 		{"enter", "detail"},
 		{"/", "filter"},
 		{"?", "help"},
@@ -871,9 +882,10 @@ func (m AppModel) detailKeyHints() string {
 		{"s", "start"},
 		{"x", "stop"},
 		{"r", "restart"},
-		{"o", "open"},
+		{"l", "launch"},
+		{"m", "mailpit"},
 		{"e", "ssh"},
-		{"l", "logs"},
+		{"L", "logs"},
 		{"R", "refresh"},
 		{"esc", "back"},
 	}
@@ -927,9 +939,10 @@ Actions:
   r               Restart selected project
   S               Start all projects
   X               Stop all projects
-  o               Open project URL in browser
+  l               Launch project URL in browser
+  m               Launch Mailpit in browser
   e               SSH into web container (from detail view)
-  l               View logs (from detail view)
+  L               View logs (from detail view)
   R               Refresh
 
 Other:

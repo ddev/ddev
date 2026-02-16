@@ -400,8 +400,8 @@ func TestViewTransitionDetailToLogs(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	// Press 'l' to open logs
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	// Press 'L' to open logs
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'L'}})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewLogs, model.viewMode, "should switch to log view")
@@ -605,6 +605,8 @@ func TestDetailViewRendering(t *testing.T) {
 	require.Contains(t, view, "8026", "should contain mailpit URL")
 	require.Contains(t, view, "32773", "should contain DB port")
 	require.Contains(t, view, "ddev-redis", "should contain add-on")
+	require.Contains(t, view, "launch", "should contain launch key hint")
+	require.Contains(t, view, "mailpit", "should contain mailpit key hint")
 	require.Contains(t, view, "logs", "should contain logs key hint")
 	require.Contains(t, view, "back", "should contain back key hint")
 }
@@ -702,6 +704,59 @@ func TestDetailActionRestart(t *testing.T) {
 
 	require.Contains(t, model.statusMsg, "Restarting mysite")
 	require.NotNil(t, cmd)
+}
+
+func TestDetailActionLaunch(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	require.NotNil(t, cmd, "l should return a command to launch")
+}
+
+func TestDetailActionMailpit(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'m'}})
+	require.NotNil(t, cmd, "m should return a command to launch mailpit")
+}
+
+func TestDetailActionMailpitNoURL(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	detail.MailpitURL = ""
+	m.detail = &detail
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'m'}})
+	require.Nil(t, cmd, "m should be no-op when no mailpit URL")
+}
+
+func TestDashboardActionLaunch(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{
+		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site", AppRoot: "/tmp/mysite"},
+	}
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	require.NotNil(t, cmd, "l should return a command to launch from dashboard")
+}
+
+func TestDashboardActionMailpit(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{
+		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site", AppRoot: "/tmp/mysite"},
+	}
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'m'}})
+	require.NotNil(t, cmd, "m should return a command to launch mailpit from dashboard")
 }
 
 func TestDetailActionSSH(t *testing.T) {

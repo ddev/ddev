@@ -7,7 +7,8 @@ type KeyMap struct {
 	Start    key.Binding
 	Stop     key.Binding
 	Restart  key.Binding
-	Open     key.Binding
+	Launch   key.Binding
+	Mailpit  key.Binding
 	Refresh  key.Binding
 	Filter   key.Binding
 	Help     key.Binding
@@ -41,9 +42,13 @@ func DefaultKeyMap() KeyMap {
 			key.WithKeys("r"),
 			key.WithHelp("r", "restart"),
 		),
-		Open: key.NewBinding(
-			key.WithKeys("o"),
-			key.WithHelp("o", "open"),
+		Launch: key.NewBinding(
+			key.WithKeys("l"),
+			key.WithHelp("l", "launch"),
+		),
+		Mailpit: key.NewBinding(
+			key.WithKeys("m"),
+			key.WithHelp("m", "mailpit"),
 		),
 		Refresh: key.NewBinding(
 			key.WithKeys("R"),
@@ -82,8 +87,8 @@ func DefaultKeyMap() KeyMap {
 			key.WithHelp("esc", "back"),
 		),
 		Logs: key.NewBinding(
-			key.WithKeys("l"),
-			key.WithHelp("l", "logs"),
+			key.WithKeys("L"),
+			key.WithHelp("L", "logs"),
 		),
 		LogWeb: key.NewBinding(
 			key.WithKeys("w"),
