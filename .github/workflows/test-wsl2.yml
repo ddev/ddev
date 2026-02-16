@@ -56,8 +56,11 @@ jobs:
           Write-Host "Setting WSL default version to 2"
           wsl --set-default-version 2
           Write-Host "Installing Ubuntu distro (no launch)"
-          wsl --install --name DDEV
+          wsl --install --name DDEV --no-launch
           wsl --set-default DDEV
+          Write-Host "Setting up DDEV distro with root as initial user"
+          DDEV install --root
+
           Write-Host "Verifying WSL installation"
           wsl --list --verbose
           wsl -- uname -a
