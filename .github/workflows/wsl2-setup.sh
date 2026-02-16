@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+# This script runs as root inside WSL2 to set up the environment for DDEV testing.
+# It installs Docker CE, Go, build dependencies, and creates a testuser.
+
+set -eu -o pipefail
+set -x
+
+# Accept GO_VERSION from the environment, default to a known good version
+GO_VERSION="${GO_VERSION:-1.24.0}"
+
+export DEBIAN_FRONTEND=noninteractive
+
+echo "=== Updating apt packages ==="
+apt-get update -qq >/dev/null
+apt-get upgrade -qq -y >/dev/null
+apt-get install -qq -y \
+  apt-transport-https \
+  build-essential \
+  ca-certificates \
+  curl \
+  git \
+  gnupg \
+  jq \
+  libnss3-tools \
+  lsb-release \
+  make \
+  postgresql-client \
+  software-properties-common \
+  unzip \
+  >/dev/null
+
+echo "=== Installing Docker CE ==="
+install -m 0755 -d /etc/apt/keyrings
+rm -f /etc/apt/keyrings/docker.gpg
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+  | tee /etc/apt/sources.list.d/docker.list >/dev/null
+apt-get update -qq >/dev/null
+apt-get install -qq -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin >/dev/null
+
+echo "=== Starting Docker daemon ==="
+# Try systemctl first (systemd-enabled WSL2), fall back to manual dockerd
+if command -v systemctl >/dev/null 2>&1 && systemctl is-system-running >/dev/null 2>&1; then
+  systemctl enable docker
+  systemctl start docker
+else
+  echo "systemd not available, starting dockerd manually"
+  dockerd &>/var/log/dockerd.log &
+  # Wait for Docker to be ready
+  for i in $(seq 1 30); do
+    if docker info >/dev/null 2>&1; then
+      echo "Docker is ready after ${i}s"
+      break
+    fi
+    if [ "$i" -eq 30 ]; then
+      echo "ERROR: Docker failed to start within 30s"
+      cat /var/log/dockerd.log
+      exit 1
+    fi
+    sleep 1
+  done
+fi
+
+echo "=== Installing Go ${GO_VERSION} ==="
+curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
+rm -rf /usr/local/go
+tar -C /usr/local -xzf /tmp/go.tar.gz
+rm /tmp/go.tar.gz
+ln -sf /usr/local/go/bin/go /usr/local/bin/go
+ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
+
+echo "=== Installing mkcert ==="
+MKCERT_VERSION="v1.4.4"
+curl -fsSL "https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64" -o /usr/local/bin/mkcert
+chmod +x /usr/local/bin/mkcert
+
+echo "=== Installing ngrok ==="
+curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+  | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
+  | tee /etc/apt/sources.list.d/ngrok.list >/dev/null
+apt-get update -qq >/dev/null
+apt-get install -qq -y ngrok >/dev/null
+
+echo "=== Creating testuser ==="
+if ! id testuser >/dev/null 2>&1; then
+  useradd -m -s /bin/bash testuser
+fi
+usermod -aG docker testuser
+# Passwordless sudo for testuser
+echo "testuser ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/testuser
+chmod 440 /etc/sudoers.d/testuser
+
+echo "=== Configuring WSL default user ==="
+cat > /etc/wsl.conf <<'WSLCONF'
+[user]
+default=testuser
+WSLCONF
+
+echo "=== Configuring git safe directory ==="
+git config --global --add safe.directory '*'
+# Also set for testuser
+su - testuser -c "git config --global --add safe.directory '*'"
+
+echo "=== Configuring curlrc for mkcert ==="
+su - testuser -c 'echo "capath=/etc/ssl/certs/" >> ~/.curlrc'
+
+echo "=== Verifying installations ==="
+go version
+docker version
+mkcert --version || true
+git --version
+
+echo "=== WSL2 setup complete ==="
