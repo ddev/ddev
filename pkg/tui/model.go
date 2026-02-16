@@ -552,18 +552,31 @@ func (m AppModel) dashboardView() string {
 				b.WriteString("  No projects match the filter.\n")
 			}
 		} else {
+			// Calculate name width: fit the longest project name, with limits
+			nameWidth := 16
+			for _, fp := range filtered {
+				if len(fp.Name) > nameWidth {
+					nameWidth = len(fp.Name)
+				}
+			}
+			// Cap: leave room for cursor(2) + status(12) + type(12) + spacing(7) + URL
+			maxNameWidth := 30
+			if m.width > 0 {
+				maxNameWidth = max(16, m.width/3)
+			}
+			if nameWidth > maxNameWidth {
+				nameWidth = maxNameWidth
+			}
+			typeWidth := 12
+			narrow := m.width > 0 && m.width < 60
+			if narrow {
+				nameWidth = min(nameWidth, max(8, m.width/4))
+			}
+
 			for i, p := range filtered {
 				cursor := "  "
 				if i == m.cursor {
 					cursor = m.styles.Cursor.Render("> ")
-				}
-
-				nameWidth := 16
-				typeWidth := 12
-				// Narrow terminal: shrink name and hide URL
-				narrow := m.width > 0 && m.width < 60
-				if narrow {
-					nameWidth = min(nameWidth, max(8, m.width/4))
 				}
 
 				displayName := truncate(p.Name, nameWidth)
