@@ -10,11 +10,13 @@ import (
 
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/docker/cli/cli-plugins/manager"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/cli/cli/version"
 	"github.com/moby/moby/api/types/system"
 	"github.com/moby/moby/client"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
@@ -30,6 +32,9 @@ type dockerManager struct {
 	hostIPErr         error                      // Error from Docker host IP lookup, if any
 	info              system.Info                // Docker system information from daemon (version, OS, etc.)
 	serverVersion     client.ServerVersionResult // Docker server version information
+	cliPlugins        []manager.Plugin           // Lazily discovered CLI plugins
+	cliPluginsOnce    sync.Once                  // Ensures CLI plugins are discovered only once
+	cliPluginsErr     error                      // Error from CLI plugin discovery, if any
 }
 
 var (
@@ -197,4 +202,37 @@ func GetDockerAPIVersion() (string, error) {
 		return "", err
 	}
 	return dm.serverVersion.APIVersion, nil
+}
+
+// GetCLIPlugins returns the list of Docker CLI plugins installed on the system.
+// Results are cached after the first call.
+func GetCLIPlugins() ([]manager.Plugin, error) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return nil, err
+	}
+	dm.cliPluginsOnce.Do(func() {
+		// A minimal cobra.Command is sufficient since we only need plugin
+		// metadata, not builtin-command conflict detection.
+		rootCmd := &cobra.Command{Use: "ddev"}
+		dm.cliPlugins, dm.cliPluginsErr = manager.ListPlugins(dm.cli, rootCmd)
+	})
+	return dm.cliPlugins, dm.cliPluginsErr
+}
+
+// GetCLIPluginVersion returns the version string for a named Docker CLI plugin.
+func GetCLIPluginVersion(name string) (string, error) {
+	plugins, err := GetCLIPlugins()
+	if err != nil {
+		return "", err
+	}
+	for _, p := range plugins {
+		if p.Name == name {
+			if p.Err != nil {
+				return "", fmt.Errorf("plugin %q has error: %v", name, p.Err)
+			}
+			return p.Version, nil
+		}
+	}
+	return "", fmt.Errorf("docker CLI plugin %q not found", name)
 }

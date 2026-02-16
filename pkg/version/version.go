@@ -48,6 +48,9 @@ func GetVersionInfo() map[string]string {
 	if versionInfo["docker-compose"], err = dockerutil.GetDockerComposeVersion(); err != nil {
 		versionInfo["docker-compose"] = fmt.Sprintf("Failed to GetDockerComposeVersion(): %v", err)
 	}
+	if versionInfo["docker-buildx"], err = dockerutil.GetBuildxVersion(); err != nil {
+		versionInfo["docker-buildx"] = fmt.Sprintf("Failed to GetBuildxVersion(): %v", err)
+	}
 	versionInfo["mutagen"] = versionconstants.RequiredMutagenVersion
 	versionInfo["xhgui-image"] = docker.GetXhguiImage()
 

@@ -23,6 +23,7 @@ type DockerVersionMatrix struct {
 	Version                  string
 	PodmanVersion            string
 	ComposeVersionConstraint string
+	BuildxVersionConstraint  string
 }
 
 // DockerRequirements defines the minimum Docker version required by DDEV.
@@ -43,6 +44,7 @@ var DockerRequirements = DockerVersionMatrix{
 	Version:                  "25.0",
 	PodmanVersion:            "5.0",
 	ComposeVersionConstraint: ">= 2.24.3",
+	BuildxVersionConstraint:  ">= 0.17.0",
 }
 
 // CheckDockerVersion determines if the Docker version of the host system meets the provided
@@ -154,6 +156,51 @@ func CheckAvailableSpace() {
 	if spaceAbsolute < nodeps.MinimumDockerSpaceWarning {
 		util.Error("Your Docker install has only %d available disk space, less than %d warning level (%d%% used). Please increase disk image size. More info at %s", spaceAbsolute, nodeps.MinimumDockerSpaceWarning, spacePercent, "https://docs.ddev.com/en/stable/users/usage/troubleshooting/#out-of-disk-space")
 	}
+}
+
+// GetBuildxVersion returns the version of the Docker buildx plugin.
+func GetBuildxVersion() (string, error) {
+	v, err := GetCLIPluginVersion("buildx")
+	if err != nil {
+		return "", err
+	}
+	// Strip leading "v" prefix if present for semver compatibility
+	return strings.TrimPrefix(v, "v"), nil
+}
+
+// CheckDockerBuildx checks that the Docker buildx plugin is installed
+// and meets the minimum version requirement.
+func CheckDockerBuildx(dockerVersionMatrix DockerVersionMatrix) error {
+	defer util.TimeTrack()()
+
+	v, err := GetBuildxVersion()
+	if err != nil {
+		return fmt.Errorf("docker buildx plugin is required but not found: %v.\nPlease install buildx: https://github.com/docker/buildx#installing", err)
+	}
+
+	buildxVersion, err := semver.NewVersion(v)
+	if err != nil {
+		return fmt.Errorf("unable to parse buildx version %q: %v", v, err)
+	}
+
+	constraint, err := semver.NewConstraint(dockerVersionMatrix.BuildxVersionConstraint)
+	if err != nil {
+		return fmt.Errorf("unable to parse buildx version constraint %q: %v", dockerVersionMatrix.BuildxVersionConstraint, err)
+	}
+
+	match, errs := constraint.Validate(buildxVersion)
+	if !match {
+		if len(errs) <= 1 {
+			return fmt.Errorf("docker buildx version %s does not meet the requirement %q: %v.\nPlease update buildx: https://github.com/docker/buildx#installing", v, dockerVersionMatrix.BuildxVersionConstraint, errs[0])
+		}
+		msgs := "\n"
+		for _, err := range errs {
+			msgs = fmt.Sprint(msgs, err, "\n")
+		}
+		return fmt.Errorf("docker buildx version %s does not meet the requirement %q: %s", v, dockerVersionMatrix.BuildxVersionConstraint, msgs)
+	}
+
+	return nil
 }
 
 // CheckDockerAuth checks if Docker authentication is properly configured

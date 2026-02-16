@@ -67,6 +67,11 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 			}
 		}
 
+		err = dockerutil.CheckDockerBuildx(dockerutil.DockerRequirements)
+		if err != nil {
+			util.Failed("Docker buildx check failed: %v", err)
+		}
+
 		updateFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".update")
 
 		// Do periodic detection of whether an update is available for DDEV users.

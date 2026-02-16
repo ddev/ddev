@@ -84,12 +84,17 @@ ddev ut dockercheck`,
 			}
 		}
 
-		buildxVersion, err := exec2.RunHostCommand(bashPath, "-c", "docker buildx version | awk '{print $2}'")
+		buildxVersion, err := dockerutil.GetBuildxVersion()
 		if err != nil {
-			util.Failed("buildx is required and does not seem to be installed. Please install with 'brew install docker-buildx' or see https://github.com/docker/buildx#installing")
+			util.Failed("buildx is required and does not seem to be installed: %v\nPlease install with 'brew install docker-buildx' or see https://github.com/docker/buildx#installing", err)
 		} else {
-			buildxVersion = strings.Trim(buildxVersion, "\r\n ")
 			util.Success("docker buildx version %s", buildxVersion)
+		}
+		err = dockerutil.CheckDockerBuildx(dockerutil.DockerRequirements)
+		if err != nil {
+			util.Warning("Docker buildx version check: %v", err)
+		} else {
+			util.Success("docker buildx version meets requirements")
 		}
 
 		dockerContextName, dockerHost, err := dockerutil.GetDockerContextNameAndHost()
