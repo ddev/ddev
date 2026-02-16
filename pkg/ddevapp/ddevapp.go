@@ -1475,7 +1475,7 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 
 		// This is a snapshot race error - retry if we have attempts remaining
 		if attempt < composeBuildMaxRetries {
-			util.Warning("BuildKit snapshot race condition detected (moby/buildkit#4024). Retrying build (attempt %d/%d)...", attempt+1, composeBuildMaxRetries)
+			util.Warning("BuildKit snapshot race condition detected (moby/buildkit#6521). Retrying build (attempt %d/%d)...", attempt+1, composeBuildMaxRetries)
 		}
 	}
 
