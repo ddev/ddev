@@ -17,10 +17,7 @@ import (
 
 // IsPortActive checks to see if the given port on Docker IP is answering.
 func IsPortActive(port string) bool {
-	dialTimeout := 1 * time.Second
-	if nodeps.IsWSL2() {
-		dialTimeout = 200 * time.Millisecond
-	}
+	dialTimeout := 200 * time.Millisecond
 
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
