@@ -360,6 +360,11 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, ddevExecCommandInDir(p.AppRoot, "launch", "-m")
 		}
 
+	case key.Matches(msg, m.keys.XHGui):
+		if p := m.selectedProject(); p != nil {
+			return m, ddevExecCommandInDir(p.AppRoot, "xhgui")
+		}
+
 	case key.Matches(msg, m.keys.StartAll):
 		if len(m.projects) > 0 {
 			m.confirming = true
@@ -437,6 +442,11 @@ func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case key.Matches(msg, m.keys.Mailpit):
 		if m.detail != nil && m.detail.MailpitURL != "" {
 			return m, ddevExecCommandDetail(m.detail.AppRoot, "launch", "-m")
+		}
+
+	case key.Matches(msg, m.keys.XHGui):
+		if m.detail != nil {
+			return m, ddevExecCommandDetail(m.detail.AppRoot, "xhgui")
 		}
 
 	case key.Matches(msg, m.keys.SSH):
@@ -819,12 +829,13 @@ func (m AppModel) dashboardKeyHints() string {
 		desc string
 	}{
 		{"s", "start"},
-		{"x", "stop"},
+		{"S", "stop"},
 		{"r", "restart"},
-		{"S", "start all"},
-		{"X", "stop all"},
+		{"a", "start all"},
+		{"A", "stop all"},
 		{"l", "launch"},
 		{"m", "mailpit"},
+		{"x", "xhgui"},
 		{"enter", "detail"},
 		{"/", "filter"},
 		{"?", "help"},
@@ -839,10 +850,11 @@ func (m AppModel) detailKeyHints() string {
 		desc string
 	}{
 		{"s", "start"},
-		{"x", "stop"},
+		{"S", "stop"},
 		{"r", "restart"},
 		{"l", "launch"},
 		{"m", "mailpit"},
+		{"x", "xhgui"},
 		{"e", "ssh"},
 		{"L", "logs"},
 		{"R", "refresh"},
@@ -880,12 +892,13 @@ Navigation:
 
 Actions:
   s               Start selected project
-  x               Stop selected project
+  S               Stop selected project
   r               Restart selected project
-  S               Start all projects
-  X               Stop all projects
+  a               Start all projects
+  A               Stop all projects
   l               Launch project URL in browser
   m               Launch Mailpit in browser
+  x               Launch XHGui (enable xhprof + open UI)
   e               SSH into web container (from detail view)
   L               Follow logs (from detail view)
   R               Refresh

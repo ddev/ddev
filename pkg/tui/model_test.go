@@ -621,11 +621,32 @@ func TestDetailActionStop(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'S'}})
 	model := updated.(AppModel)
 
 	require.Contains(t, model.statusMsg, "Stopping mysite")
 	require.NotNil(t, cmd)
+}
+
+func TestDetailActionXHGui(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
+	require.NotNil(t, cmd, "x should return a command to launch xhgui")
+}
+
+func TestDashboardActionXHGui(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{
+		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site", AppRoot: "/tmp/mysite"},
+	}
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
+	require.NotNil(t, cmd, "x should return a command to launch xhgui from dashboard")
 }
 
 func TestDetailActionRestart(t *testing.T) {
@@ -903,8 +924,8 @@ func TestStartAllConfirmation(t *testing.T) {
 		{Name: "b", Status: ddevapp.SiteStopped},
 	}
 
-	// Press S to start all — should enter confirmation
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'S'}})
+	// Press 'a' to start all — should enter confirmation
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
 	model := updated.(AppModel)
 
 	require.True(t, model.confirming, "should enter confirmation mode")
@@ -921,8 +942,8 @@ func TestStopAllConfirmation(t *testing.T) {
 		{Name: "b", Status: ddevapp.SiteRunning},
 	}
 
-	// Press X to stop all — should enter confirmation
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'X'}})
+	// Press 'A' to stop all — should enter confirmation
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'A'}})
 	model := updated.(AppModel)
 
 	require.True(t, model.confirming, "should enter confirmation mode")
@@ -987,7 +1008,7 @@ func TestStartAllNoProjectsNoop(t *testing.T) {
 	m.loading = false
 	// No projects
 
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'S'}})
+	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
 	model := updated.(AppModel)
 
 	require.False(t, model.confirming, "should not confirm with no projects")

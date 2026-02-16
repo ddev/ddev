@@ -9,6 +9,7 @@ type KeyMap struct {
 	Restart  key.Binding
 	Launch   key.Binding
 	Mailpit  key.Binding
+	XHGui    key.Binding
 	Refresh  key.Binding
 	Filter   key.Binding
 	Help     key.Binding
@@ -33,8 +34,8 @@ func DefaultKeyMap() KeyMap {
 			key.WithHelp("s", "start"),
 		),
 		Stop: key.NewBinding(
-			key.WithKeys("x"),
-			key.WithHelp("x", "stop"),
+			key.WithKeys("S"),
+			key.WithHelp("S", "stop"),
 		),
 		Restart: key.NewBinding(
 			key.WithKeys("r"),
@@ -47,6 +48,10 @@ func DefaultKeyMap() KeyMap {
 		Mailpit: key.NewBinding(
 			key.WithKeys("m"),
 			key.WithHelp("m", "mailpit"),
+		),
+		XHGui: key.NewBinding(
+			key.WithKeys("x"),
+			key.WithHelp("x", "xhgui"),
 		),
 		Refresh: key.NewBinding(
 			key.WithKeys("R"),
@@ -93,12 +98,12 @@ func DefaultKeyMap() KeyMap {
 			key.WithHelp("e", "ssh"),
 		),
 		StartAll: key.NewBinding(
-			key.WithKeys("S"),
-			key.WithHelp("S", "start all"),
+			key.WithKeys("a"),
+			key.WithHelp("a", "start all"),
 		),
 		StopAll: key.NewBinding(
-			key.WithKeys("X"),
-			key.WithHelp("X", "stop all"),
+			key.WithKeys("A"),
+			key.WithHelp("A", "stop all"),
 		),
 		Confirm: key.NewBinding(
 			key.WithKeys("y"),
