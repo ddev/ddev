@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
@@ -71,6 +72,11 @@ running 'ddev describe <projectname>'.`,
 
 // renderAppDescribe takes the map describing the app and renders it for plain-text output
 func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (string, error) {
+	dockerIP, _ := dockerutil.GetDockerIP()
+	if dockerIP == "" {
+		dockerIP = "127.0.0.1"
+	}
+
 	var out bytes.Buffer
 
 	t := table.NewWriter()
@@ -170,7 +176,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				for _, exposedPort := range strings.Split(p, ",") {
 					portStr += "\n - " + v["short_name"].(string) + ":" + exposedPort
 					if host, ok := portMappingDockerHost[exposedPort]; ok {
-						portStr += " -> 127.0.0.1:" + host
+						portStr += " -> " + dockerIP + ":" + host
 					}
 				}
 				urlPortParts = append(urlPortParts, portStr)

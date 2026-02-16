@@ -35,12 +35,6 @@ Verify your connection with `docker ps`.
 ### Required DDEV Configuration
 
 * **Disable bind mounts**: Bind mounts cannot work with a remote Docker setup, so you must use `ddev config global --no-bind-mounts`. This causes DDEV to push needed information to and from the remote Docker instance when needed. This also automatically turns on Mutagen caching.
-* **Bind all interfaces**: The router and project containers must bind to all interfaces on the remote host rather than to the Docker IP (which is the remote host's IP, not a valid local bind address). Configure this with:
-
-    ```bash
-    ddev config global --router-bind-all-interfaces
-    ddev config --bind-all-interfaces
-    ```
 
 ### Accessing Your Sites
 
