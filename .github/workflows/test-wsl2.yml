@@ -50,12 +50,18 @@ jobs:
     timeout-minutes: 120
 
     steps:
+      - name: Setup tmate session
+        if: ${{ inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+
       - name: Install WSL2 distribution
         shell: pwsh
         run: |
           Write-Host "Setting WSL default version to 2"
           wsl --set-default-version 2
-          Write-Host "Installing Ubuntu distro (no launch)"
+          Write-Host "Installing DDEV Ubuntu distro (no launch)"
           wsl --install --name DDEV --no-launch
           wsl --set-default DDEV
           Write-Host "Setting up DDEV distro with root as initial user"
@@ -94,12 +100,6 @@ jobs:
           $branchName = "${{ github.ref_name }}"
           # Full clone with tags so git describe works for version info
           wsl -u testuser -- bash -exc "mkdir -p ~/workspace && cd ~/workspace && git clone --single-branch --branch '$branchName' '$repoUrl' ddev && cd ddev && git fetch --tags && echo 'Checked out:' && git log -1 --oneline && git describe --tags --always"
-
-      - name: Setup tmate session
-        if: ${{ inputs.debug_enabled }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
 
       - name: Start Docker and verify readiness
         shell: pwsh
