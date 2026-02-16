@@ -1428,7 +1428,7 @@ func (app *DdevApp) GetDBImage() string {
 }
 
 // composeBuild executes docker-compose build with retry logic for BuildKit snapshot race conditions.
-// This is an experimental workaround for moby/buildkit#4024 (Docker 29+ with containerd image store).
+// This is an experimental workaround for moby/buildkit#6521 (Docker 29+ with containerd image store).
 // The race condition causes intermittent failures with "parent snapshot ... does not exist: not found"
 // when multiple services share base layers and build in parallel.
 //
@@ -1437,10 +1437,6 @@ func (app *DdevApp) GetDBImage() string {
 func (app *DdevApp) composeBuild(args ...string) (string, error) {
 	progress := "plain"
 
-	// NOTE: --progress=plain is always used here. There is an unconfirmed hypothesis
-	// that progress output handling could contribute to the BuildKit snapshot race
-	// condition (moby/buildkit#4024). If the retry approach proves insufficient,
-	// consider testing without --progress as an alternative mitigation.
 	action := []string{"--progress=" + progress, "build"}
 	if app.NoCache {
 		action = append(action, "--no-cache")
