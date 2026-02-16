@@ -444,6 +444,10 @@ func TestMain(m *testing.M) {
 		output.UserErr.Fatalf("could not read globalconfig: %v", err)
 	}
 
+	if os.Getenv("DDEV_SKIP_TESTSITES_SETUP") == "true" {
+		TestSites = []testcommon.TestSite{}
+	}
+
 	for i, site := range TestSites {
 		if site.Disable {
 			continue

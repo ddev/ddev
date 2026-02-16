@@ -1707,13 +1707,24 @@ func TestPkgConfigDatabaseDBVersion(t *testing.T) {
 		assert.NoError(err)
 	})
 	dbVersions := nodeps.GetValidDatabaseVersions()
+	// Unset environment variables that could interfere with the test, as the user's
+	// environment setup might have these set, causing the test to fail.
+	envs := []string{"DDEV_DATABASE", "DDEV_MARIADB_VERSION", "DDEV_MYSQL_VERSION", "DDEV_POSTGRES_VERSION", "DDEV_DATABASE_TYPE", "DDEV_DATABASE_VERSION"}
+	for _, e := range envs {
+		env := e
+		if val, ok := os.LookupEnv(env); ok {
+			t.Cleanup(func() { _ = os.Setenv(env, val) })
+			_ = os.Unsetenv(env)
+		}
+	}
+
 	for _, v := range dbVersions {
 		parts := strings.Split(v, ":")
 		require.True(t, len(parts) == 2)
 		configFile := app.ConfigPath
 		err = os.RemoveAll(configFile)
 		assert.NoError(err)
-		err = fileutil.AppendStringToFile(configFile, fmt.Sprintf("database:\n  type: %s\n  version: %s ", parts[0], parts[1]))
+		err = fileutil.AppendStringToFile(configFile, fmt.Sprintf("database:\n  type: %s\n  version: '%s' ", parts[0], parts[1]))
 		_, err = app.ReadConfig(false)
 		assert.NoError(err)
 		assert.Equal(parts[0], app.Database.Type)
