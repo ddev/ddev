@@ -75,6 +75,14 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     !!!warning "Colima can only work in your home directory unless you do further configuration"
         By default, Colima only works with DDEV projects in your home directory. You need to have your projects somewhere in your home directory for DDEV to work unless you do additional configuration. See the `~/.colima/default/colima.yaml` for more information, or notes in [colima.yaml](https://github.com/abiosoft/colima/blob/main/embedded/defaults/colima.yaml#L160-L173).
 
+    ### Docker Buildx
+
+    DDEV requires the [Docker buildx plugin](https://github.com/docker/buildx). Most Docker providers (OrbStack, Docker Desktop, Rancher Desktop, Colima, Lima) already include it. If `docker buildx version` doesn't work, install it with:
+
+    ```bash
+    brew install docker-buildx
+    ```
+
     #### Migrating Projects Between Docker Providers
 
     * OrbStack has built-in migration of images and volumes from Docker Desktop.
@@ -107,6 +115,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         Don’t use `sudo` with the `docker` command. If you find yourself needing it, you haven’t finished the installation. You also shouldn’t use `sudo` with `ddev` unless it’s specifically for the [`ddev hostname`](../usage/commands.md#hostname) command.
 
     On systems without `systemd` or its equivalent—mostly if you’re installing inside WSL2—you’ll need to manually start Docker with `service docker start` or the equivalent in your distro. You can add this to your shell profile.
+
+    ### Docker Buildx
+
+    DDEV requires the [Docker buildx plugin](https://github.com/docker/buildx). Docker CE installed from the official Docker repository includes it. If `docker buildx version` doesn't work, install the `docker-buildx-plugin` package from the Docker repository (e.g. `sudo apt-get install docker-buildx-plugin` on Debian/Ubuntu) or follow any of the installation instructions from [Docker buildx](https://github.com/docker/buildx#installing).
 
     ### Docker Rootless
 
@@ -187,6 +199,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     4. Enable integration with your Ubuntu-based WSL2 distro (e.g., Ubuntu, Ubuntu-24.04, Ubuntu-22.04).
     5. Apply the changes and restart Rancher Desktop if needed.
     6. Verify that `docker ps` works in git-bash, PowerShell, or WSL2, wherever you're using it.
+
+    ### Docker Buildx
+
+    DDEV requires the [Docker buildx plugin](https://github.com/docker/buildx). Docker CE inside WSL2, Docker Desktop, and Rancher Desktop all include it. If `docker buildx version` doesn't work, install the `docker-buildx-plugin` package inside WSL2 (e.g. `sudo apt-get install docker-buildx-plugin` on Ubuntu).
 
 === "Codespaces"
 
