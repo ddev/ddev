@@ -21,9 +21,9 @@ import (
 type DockerVersionMatrix struct {
 	APIVersion               string
 	Version                  string
+	BuildxVersion            string
 	PodmanVersion            string
 	ComposeVersionConstraint string
-	BuildxVersionConstraint  string
 }
 
 // DockerRequirements defines the minimum Docker version required by DDEV.
@@ -42,9 +42,9 @@ type DockerVersionMatrix struct {
 var DockerRequirements = DockerVersionMatrix{
 	APIVersion:               "1.44",
 	Version:                  "25.0",
+	BuildxVersion:            "0.17.0",
 	PodmanVersion:            "5.0",
 	ComposeVersionConstraint: ">= 2.24.3",
-	BuildxVersionConstraint:  ">= 0.17.0",
 }
 
 // CheckDockerVersion determines if the Docker version of the host system meets the provided
@@ -177,14 +177,14 @@ func GetBuildxLocation() (string, error) {
 	return plugin.Path, nil
 }
 
-// CheckDockerBuildx checks that the Docker buildx plugin is installed
+// CheckDockerBuildxVersion checks that the Docker buildx plugin is installed
 // and meets the minimum version requirement.
-func CheckDockerBuildx(dockerVersionMatrix DockerVersionMatrix) error {
+func CheckDockerBuildxVersion(dockerVersionMatrix DockerVersionMatrix) error {
 	defer util.TimeTrack()()
 
 	v, err := GetBuildxVersion()
 	if err != nil {
-		return fmt.Errorf("docker buildx plugin is required but not found: %v.\nPlease install buildx: https://github.com/docker/buildx#installing", err)
+		return fmt.Errorf("compose build requires buildx %s or later: %v.\nPlease install buildx: https://github.com/docker/buildx#installing", dockerVersionMatrix.BuildxVersion, err)
 	}
 
 	pluginPath, err := GetBuildxLocation()
@@ -192,26 +192,8 @@ func CheckDockerBuildx(dockerVersionMatrix DockerVersionMatrix) error {
 		pluginPath = "unknown"
 	}
 
-	buildxVersion, err := semver.NewVersion(v)
-	if err != nil {
-		return fmt.Errorf("unable to parse buildx version %q (plugin path: %s): %v", v, pluginPath, err)
-	}
-
-	constraint, err := semver.NewConstraint(dockerVersionMatrix.BuildxVersionConstraint)
-	if err != nil {
-		return fmt.Errorf("unable to parse buildx version constraint %q: %v", dockerVersionMatrix.BuildxVersionConstraint, err)
-	}
-
-	match, errs := constraint.Validate(buildxVersion)
-	if !match {
-		if len(errs) <= 1 {
-			return fmt.Errorf("docker buildx version %s (plugin path: %s) does not meet the requirement %q: %v.\nPlease update buildx: https://github.com/docker/buildx#installing", v, pluginPath, dockerVersionMatrix.BuildxVersionConstraint, errs[0])
-		}
-		msgs := "\n"
-		for _, err := range errs {
-			msgs = fmt.Sprint(msgs, err, "\n")
-		}
-		return fmt.Errorf("docker buildx version %s (plugin path: %s) does not meet the requirement %q: %s", v, pluginPath, dockerVersionMatrix.BuildxVersionConstraint, msgs)
+	if versions.LessThan(v, dockerVersionMatrix.BuildxVersion) {
+		return fmt.Errorf("compose build requires buildx %s or later.\nInstalled docker buildx: %s (plugin path: %s)\nPlease update buildx: https://github.com/docker/buildx#installing", dockerVersionMatrix.BuildxVersion, v, pluginPath)
 	}
 
 	return nil

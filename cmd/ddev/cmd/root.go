@@ -67,7 +67,7 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 			}
 		}
 
-		err = dockerutil.CheckDockerBuildx(dockerutil.DockerRequirements)
+		err = dockerutil.CheckDockerBuildxVersion(dockerutil.DockerRequirements)
 		if err != nil {
 			util.Failed("Docker buildx check failed: %v", err)
 		}

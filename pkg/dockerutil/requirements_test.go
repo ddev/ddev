@@ -61,9 +61,9 @@ func TestGetBuildxLocation(t *testing.T) {
 	require.NotEmpty(t, pluginPath, "expected non-empty buildx plugin path")
 }
 
-// TestCheckBuildx tests that CheckDockerBuildx passes on a host with buildx installed.
+// TestCheckBuildx tests that CheckDockerBuildxVersion passes on a host with buildx installed.
 func TestCheckBuildx(t *testing.T) {
-	err := dockerutil.CheckDockerBuildx(dockerutil.DockerRequirements)
+	err := dockerutil.CheckDockerBuildxVersion(dockerutil.DockerRequirements)
 	require.NoError(t, err)
 }
 

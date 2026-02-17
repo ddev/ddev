@@ -26,11 +26,10 @@ ddev ut dockercheck`,
 			util.Failed("This command takes no additional arguments")
 		}
 
+		hasWarnings := false
+
 		// Ensure docker-compose is available before getting version info
-		_, err := dockerutil.DownloadDockerComposeIfNeeded()
-		if err != nil {
-			util.Warning("Unable to download docker-compose: %v", err)
-		}
+		_, dockerComposeErr := dockerutil.DownloadDockerComposeIfNeeded()
 
 		versionInfo := version.GetVersionInfo()
 		bashPath := util.FindBashPath()
@@ -84,39 +83,31 @@ ddev ut dockercheck`,
 			}
 		}
 
-		buildxVersion, err := dockerutil.GetBuildxVersion()
-		if err != nil {
-			util.Failed("buildx is required and does not seem to be installed: %v\nPlease install with 'brew install docker-buildx' or see https://github.com/docker/buildx#installing", err)
+		buildxErr := dockerutil.CheckDockerBuildxVersion(dockerutil.DockerRequirements)
+		if buildxErr != nil {
+			util.Warning("Docker buildx version check: %v", buildxErr)
+			hasWarnings = true
 		} else {
-			buildxPath, err := dockerutil.GetBuildxLocation()
-			if err != nil {
-				util.Warning("docker buildx version %s (plugin path could not be determined: %v)", buildxVersion, err)
-			} else {
-				util.Success("docker buildx version %s (plugin path: %s)", buildxVersion, buildxPath)
-			}
-		}
-		err = dockerutil.CheckDockerBuildx(dockerutil.DockerRequirements)
-		if err != nil {
-			util.Warning("Docker buildx version check: %v", err)
-		} else {
-			util.Success("docker buildx version meets requirements")
+			buildxVersion, _ := dockerutil.GetBuildxVersion()
+			util.Success("docker buildx version %s meets requirements for minimum %s", buildxVersion, dockerutil.DockerRequirements.BuildxVersion)
 		}
 
 		dockerContextName, dockerHost, err := dockerutil.GetDockerContextNameAndHost()
 		if err != nil {
-			util.Failed("Could not get Docker context and host: %v", err)
-		}
+			util.Warning("Could not get Docker context and host: %v", err)
+			hasWarnings = true
+		} else {
+			util.Success("Using Docker context: %s", dockerContextName)
+			dockerContextName = os.Getenv("DOCKER_CONTEXT")
+			if dockerContextName != "" {
+				util.Success("From DOCKER_CONTEXT=%s", dockerContextName)
+			}
 
-		util.Success("Using Docker context: %s", dockerContextName)
-		dockerContextName = os.Getenv("DOCKER_CONTEXT")
-		if dockerContextName != "" {
-			util.Success("From DOCKER_CONTEXT=%s", dockerContextName)
-		}
-
-		util.Success("Using Docker host: %s", dockerHost)
-		dockerHost = os.Getenv("DOCKER_HOST")
-		if dockerHost != "" {
-			util.Success("From DOCKER_HOST=%s", dockerHost)
+			util.Success("Using Docker host: %s", dockerHost)
+			dockerHost = os.Getenv("DOCKER_HOST")
+			if dockerHost != "" {
+				util.Success("From DOCKER_HOST=%s", dockerHost)
+			}
 		}
 
 		// Show TLS configuration
@@ -134,31 +125,42 @@ ddev ut dockercheck`,
 			util.Success("DOCKER_CERT_PATH=%s", dockerCertPath)
 		}
 
-		util.Success("docker-compose: %s", versionInfo["docker-compose"])
+		if dockerComposeErr != nil {
+			util.Warning("Docker compose check failed: %v", dockerComposeErr)
+			hasWarnings = true
+		} else {
+			util.Success("docker-compose: %s", versionInfo["docker-compose"])
+		}
 
 		dockerVersion, err := dockerutil.GetDockerVersion()
 		if err != nil {
-			util.Failed("Unable to get Docker version: %v", err)
+			util.Warning("Unable to get Docker version: %v", err)
+			hasWarnings = true
+		} else {
+			util.Success("Docker version: %s", dockerVersion)
 		}
-		util.Success("Docker version: %s", dockerVersion)
 		err = dockerutil.CheckDockerVersion(dockerutil.DockerRequirements)
 		if err != nil {
 			if err.Error() == "no docker" {
-				util.Failed("Docker is not installed or the Docker client is not available in the $PATH")
+				util.Warning("Docker is not installed or the Docker client is not available in the $PATH")
 			} else {
 				util.WarningOnce("Problem with your Docker provider: %v.", err)
 			}
+			hasWarnings = true
 		}
 		dockerAPIVersion, err := dockerutil.GetDockerAPIVersion()
 		if err != nil {
-			util.Failed("Unable to get Docker API version: %v", err)
+			util.Warning("Unable to get Docker API version: %v", err)
+			hasWarnings = true
+		} else {
+			util.Success("Docker API version: %s", dockerAPIVersion)
 		}
-		util.Success("Docker API version: %s", dockerAPIVersion)
 
 		uid, _, _ := dockerutil.GetContainerUser()
 		_, out, err := dockerutil.RunSimpleContainer(docker.GetWebImage(), "dockercheck-runcontainer--"+util.RandString(6), []string{"ls", "/mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to run simple container: %v; output=%s", err, out)
+			hasWarnings = true
 		} else {
 			util.Success("Able to run simple container that mounts a volume.")
 		}
@@ -166,6 +168,7 @@ ddev ut dockercheck`,
 		_, _, err = dockerutil.RunSimpleContainer(docker.GetWebImage(), "dockercheck-curl--"+util.RandString(6), []string{"curl", "-sfLI", "https://google.com"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache/bashhistory"}, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to run use internet inside container, many things will fail: %v", err)
+			hasWarnings = true
 		} else {
 			util.Success("Able to use internet inside container.")
 		}
@@ -173,19 +176,30 @@ ddev ut dockercheck`,
 		dockerutil.CheckAvailableSpace()
 
 		// Test buildx with a trivial build on the host
-		out, err = exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("echo 'FROM %s' | docker buildx build --quiet -f- -t ddev-buildx-test:latest . && docker rmi -f ddev-buildx-test:latest", versionconstants.UtilitiesImage))
-		if err != nil {
-			util.Warning("Unable to perform trivial build with buildx: %v; output=%s", err, out)
+		if buildxErr == nil {
+			out, err = exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("echo 'FROM %s' | docker buildx build --quiet -f- -t ddev-buildx-test:latest . && docker rmi -f ddev-buildx-test:latest", versionconstants.UtilitiesImage))
+			if err != nil {
+				util.Warning("Unable to perform trivial build with buildx: %v; output=%s", err, out)
+				hasWarnings = true
+			} else {
+				util.Success("docker buildx is working correctly (trivial build succeeded)")
+			}
 		} else {
-			util.Success("docker buildx is working correctly (trivial build succeeded)")
+			util.Warning("Skipping buildx test due to earlier buildx version check error.")
+			hasWarnings = true
 		}
 
 		// Check docker auth configuration
 		err = dockerutil.CheckDockerAuth()
 		if err != nil {
-			util.Failed("Docker authentication may have issues: %v", err)
+			util.Warning("Docker authentication may have issues: %v", err)
+			hasWarnings = true
 		} else {
 			util.Success("Docker authentication is configured correctly")
+		}
+
+		if hasWarnings {
+			util.Failed("Docker provider checks completed with warnings. Please address the issues above.")
 		}
 	},
 }
