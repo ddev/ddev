@@ -119,7 +119,7 @@ jobs:
           Write-Host ""
           Write-Host "=== WSL Distro ==="
           wsl --version
-          wsl -- bash -c "echo Architecture: $(uname -m) && echo Kernel: $(uname -r) && echo Distro: $(lsb_release -ds 2>/dev/null || cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2) && echo User: $(whoami) && echo Go: $(go version 2>/dev/null || echo not installed yet) && echo Docker: $(docker --version 2>/dev/null || echo not installed yet)"
+          wsl -- bash -c 'echo "Architecture: $(uname -m)" && echo "Kernel: $(uname -r)" && echo "Distro: $(. /etc/os-release && echo $PRETTY_NAME)" && echo "User: $(whoami)"'
 
       - name: Clone repo and run setup inside WSL2
         shell: pwsh
