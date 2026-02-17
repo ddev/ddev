@@ -31,6 +31,29 @@ echo "BUILDARGS=${BUILDARGS}"
 echo "TESTARGS=${TESTARGS}"
 echo "MAKE_TARGET=${MAKE_TARGET}"
 
+echo "=== Starting Docker daemon if not running ==="
+# Try systemctl first (systemd-enabled WSL2), fall back to manual dockerd
+if command -v systemctl >/dev/null 2>&1 && sudo systemctl is-system-running >/dev/null 2>&1; then
+  sudo systemctl start docker || true
+fi
+echo "Waiting for Docker daemon..."
+for i in $(seq 1 60); do
+  if docker info >/dev/null 2>&1; then
+    echo "Docker is ready after ${i}s"
+    break
+  fi
+  if [ "$i" -eq 30 ]; then
+    echo "Docker not ready after 30s, trying manual dockerd start"
+    sudo dockerd &>/tmp/dockerd.log &
+  fi
+  if [ "$i" -eq 60 ]; then
+    echo "ERROR: Docker not ready after 60s"
+    sudo cat /tmp/dockerd.log 2>/dev/null || true
+    exit 1
+  fi
+  sleep 1
+done
+
 echo "=== Verifying prerequisites ==="
 go version
 docker version
