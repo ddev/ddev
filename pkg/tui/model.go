@@ -165,8 +165,10 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case xdebugToggledMsg:
 		if msg.err != nil {
 			m.statusMsg = fmt.Sprintf("Xdebug toggle failed: %v", msg.err)
+		} else if msg.enabled {
+			m.statusMsg = "Xdebug enabled"
 		} else {
-			m.statusMsg = "Xdebug toggled"
+			m.statusMsg = "Xdebug disabled"
 		}
 		// Reload detail to reflect new xdebug state
 		if m.detail != nil {

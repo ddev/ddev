@@ -1153,16 +1153,30 @@ func TestXdebugToggleIgnoredWhenStopped(t *testing.T) {
 	require.Nil(t, cmd, "X should be no-op when project is stopped")
 }
 
-func TestXdebugToggledMsgSuccess(t *testing.T) {
+func TestXdebugToggledMsgEnabled(t *testing.T) {
 	m := NewAppModel()
 	m.viewMode = viewDetail
 	detail := sampleDetail()
 	m.detail = &detail
 
-	updated, cmd := m.Update(xdebugToggledMsg{err: nil})
+	updated, cmd := m.Update(xdebugToggledMsg{err: nil, enabled: true})
 	model := updated.(AppModel)
 
-	require.Equal(t, "Xdebug toggled", model.statusMsg)
+	require.Equal(t, "Xdebug enabled", model.statusMsg)
+	require.True(t, model.detailLoading, "should reload detail after xdebug toggle")
+	require.NotNil(t, cmd)
+}
+
+func TestXdebugToggledMsgDisabled(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+
+	updated, cmd := m.Update(xdebugToggledMsg{err: nil, enabled: false})
+	model := updated.(AppModel)
+
+	require.Equal(t, "Xdebug disabled", model.statusMsg)
 	require.True(t, model.detailLoading, "should reload detail after xdebug toggle")
 	require.NotNil(t, cmd)
 }

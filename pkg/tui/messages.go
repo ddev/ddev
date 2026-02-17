@@ -85,7 +85,8 @@ type routerStatusMsg struct {
 
 // xdebugToggledMsg is sent after xdebug toggle completes.
 type xdebugToggledMsg struct {
-	err error
+	err     error
+	enabled bool
 }
 
 // clipboardMsg is sent after a clipboard copy attempt.

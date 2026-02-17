@@ -243,8 +243,13 @@ func xdebugToggleCmd(appRoot string) tea.Cmd {
 		c.Env = append(os.Environ(), "DDEV_NO_TUI=true")
 		c.Dir = appRoot
 
-		err = c.Run()
-		return xdebugToggledMsg{err: err}
+		out, err := c.CombinedOutput()
+		if err != nil {
+			return xdebugToggledMsg{err: err}
+		}
+		// The toggle output contains "enabled" or "disabled"
+		enabled := strings.Contains(strings.ToLower(string(out)), "enabled")
+		return xdebugToggledMsg{err: nil, enabled: enabled}
 	}
 }
 
