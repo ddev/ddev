@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # This script runs as testuser inside WSL2 to build and test DDEV.
+# It mirrors the "DDEV tests" step in test-reusable.yml.
 # It expects to be run from within the cloned ddev repo directory.
 
 set -eu -o pipefail
@@ -31,9 +32,8 @@ echo "BUILDARGS=${BUILDARGS}"
 echo "TESTARGS=${TESTARGS}"
 echo "MAKE_TARGET=${MAKE_TARGET}"
 
-echo "=== Starting Docker daemon if not running ==="
+echo "=== Ensuring Docker is running ==="
 sudo systemctl start docker
-echo "Waiting for Docker daemon..."
 for i in $(seq 1 30); do
   if docker info >/dev/null 2>&1; then
     echo "Docker is ready after ${i}s"
@@ -49,30 +49,10 @@ done
 echo "=== Verifying prerequisites ==="
 go version
 docker version
-docker info
 git --version
-
-echo "=== Installing mkcert CA ==="
-mkcert -install
-
-echo "=== Cleaning up any leftover containers ==="
-ids=$(docker ps -aq || true)
-if [ -n "$ids" ]; then
-  docker rm -f $ids >/dev/null 2>&1 || true
-fi
 
 echo "=== Building DDEV ==="
 make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}"
 
-echo "=== Verifying DDEV build ==="
-.gotmp/bin/linux_amd64/ddev version
-
 echo "=== Running tests ==="
 make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET}
-RV=$?
-
-echo "=== Powering off DDEV ==="
-.gotmp/bin/linux_amd64/ddev poweroff || true
-
-echo "=== Tests completed with status=${RV} ==="
-exit $RV

@@ -87,6 +87,9 @@ su - testuser -c "git config --global --add safe.directory '*'"
 echo "=== Configuring curlrc for mkcert ==="
 su - testuser -c 'echo "capath=/etc/ssl/certs/" >> ~/.curlrc'
 
+echo "=== Installing mkcert CA for testuser ==="
+su - testuser -c "mkcert -install"
+
 echo "=== Verifying installations ==="
 go version
 docker version
