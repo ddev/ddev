@@ -41,27 +41,7 @@ apt-get update -qq >/dev/null
 apt-get install -qq -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin >/dev/null
 
 echo "=== Starting Docker daemon ==="
-# Try systemctl first (systemd-enabled WSL2), fall back to manual dockerd
-if command -v systemctl >/dev/null 2>&1 && systemctl is-system-running >/dev/null 2>&1; then
-  systemctl enable docker
-  systemctl start docker
-else
-  echo "systemd not available, starting dockerd manually"
-  dockerd &>/var/log/dockerd.log &
-  # Wait for Docker to be ready
-  for i in $(seq 1 30); do
-    if docker info >/dev/null 2>&1; then
-      echo "Docker is ready after ${i}s"
-      break
-    fi
-    if [ "$i" -eq 30 ]; then
-      echo "ERROR: Docker failed to start within 30s"
-      cat /var/log/dockerd.log
-      exit 1
-    fi
-    sleep 1
-  done
-fi
+systemctl enable --now docker
 
 echo "=== Installing Go ${GO_VERSION} ==="
 curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
