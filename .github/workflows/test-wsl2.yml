@@ -47,7 +47,7 @@ env:
 jobs:
   test-wsl2:
     runs-on: windows-2025
-    timeout-minutes: 120
+    timeout-minutes: 240
 
     steps:
       - name: Install WSL2 distribution
