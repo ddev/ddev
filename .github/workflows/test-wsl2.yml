@@ -57,7 +57,7 @@ jobs:
           wsl --set-default-version 2
           Write-Host "Installing DDEV Ubuntu distro"
           wsl --install --name DDEV --no-launch
-          wsl -d DDEV --user root bash -c "useradd -m -s /bin/bash testbot && echo 'testbot:password' | chpasswd && usermod -aG sudo testbot && printf '[user]\ndefault=testbot\n' > /etc/wsl.conf"
+          wsl -d DDEV --user root bash -c "useradd -m -s /bin/bash testuser && echo 'testuser:password' | chpasswd && usermod -aG sudo testuser && printf '[user]\ndefault=testuser\n' > /etc/wsl.conf"
 
           wsl --set-default DDEV
 
@@ -104,31 +104,32 @@ jobs:
       - name: Start Docker and verify readiness
         shell: pwsh
         run: |
-          wsl -u testuser -- bash -exc @'
-            echo "Starting Docker daemon if not running..."
-            # Try systemctl first, fall back to manual dockerd
-            if command -v systemctl >/dev/null 2>&1 && sudo systemctl is-system-running >/dev/null 2>&1; then
-              sudo systemctl start docker || true
+          @'
+          set -ex
+          echo "Starting Docker daemon if not running..."
+          # Try systemctl first, fall back to manual dockerd
+          if command -v systemctl >/dev/null 2>&1 && sudo systemctl is-system-running >/dev/null 2>&1; then
+            sudo systemctl start docker || true
+          fi
+          echo "Waiting for Docker daemon..."
+          for i in $(seq 1 60); do
+            if docker info >/dev/null 2>&1; then
+              echo "Docker is ready after ${i}s"
+              break
             fi
-            echo "Waiting for Docker daemon..."
-            for i in $(seq 1 60); do
-              if docker info >/dev/null 2>&1; then
-                echo "Docker is ready after ${i}s"
-                break
-              fi
-              if [ "$i" -eq 30 ]; then
-                echo "Docker not ready after 30s, trying manual dockerd start"
-                sudo dockerd &>/tmp/dockerd.log &
-              fi
-              if [ "$i" -eq 60 ]; then
-                echo "ERROR: Docker not ready after 60s"
-                sudo cat /tmp/dockerd.log 2>/dev/null || true
-                exit 1
-              fi
-              sleep 1
-            done
-            docker version
-          '@
+            if [ "$i" -eq 30 ]; then
+              echo "Docker not ready after 30s, trying manual dockerd start"
+              sudo dockerd &>/tmp/dockerd.log &
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "ERROR: Docker not ready after 60s"
+              sudo cat /tmp/dockerd.log 2>/dev/null || true
+              exit 1
+            fi
+            sleep 1
+          done
+          docker version
+          '@ | wsl -u testuser -- bash
 
       - name: Run DDEV tests
         shell: pwsh
@@ -139,12 +140,13 @@ jobs:
           DDEV_EMBARGO_TESTS: ${{ env.DDEV_EMBARGO_TESTS }}
           DDEV_SKIP_NODEJS_TEST: ${{ env.DDEV_SKIP_NODEJS_TEST }}
         run: |
-          wsl -u testuser -- bash -exc @"
-            export GOTEST_SHORT='$env:GOTEST_SHORT'
-            export TESTARGS='$env:TESTARGS'
-            export MAKE_TARGET='$env:MAKE_TARGET'
-            export DDEV_EMBARGO_TESTS='$env:DDEV_EMBARGO_TESTS'
-            export DDEV_SKIP_NODEJS_TEST='$env:DDEV_SKIP_NODEJS_TEST'
-            cd ~/workspace/ddev
-            bash -e .github/workflows/wsl2-test.sh
-          "@
+          @"
+          set -ex
+          export GOTEST_SHORT='$env:GOTEST_SHORT'
+          export TESTARGS='$env:TESTARGS'
+          export MAKE_TARGET='$env:MAKE_TARGET'
+          export DDEV_EMBARGO_TESTS='$env:DDEV_EMBARGO_TESTS'
+          export DDEV_SKIP_NODEJS_TEST='$env:DDEV_SKIP_NODEJS_TEST'
+          cd ~/workspace/ddev
+          bash -e .github/workflows/wsl2-test.sh
+          "@ | wsl -u testuser -- bash
