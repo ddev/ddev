@@ -160,12 +160,21 @@ func CheckAvailableSpace() {
 
 // GetBuildxVersion returns the version of the Docker buildx plugin.
 func GetBuildxVersion() (string, error) {
-	v, err := GetCLIPluginVersion("buildx")
+	plugin, err := GetCLIPlugin("buildx")
 	if err != nil {
 		return "", err
 	}
 	// Strip leading "v" prefix if present for semver compatibility
-	return strings.TrimPrefix(v, "v"), nil
+	return strings.TrimPrefix(plugin.Version, "v"), nil
+}
+
+// GetBuildxLocation returns the path to the Docker buildx plugin.
+func GetBuildxLocation() (string, error) {
+	plugin, err := GetCLIPlugin("buildx")
+	if err != nil {
+		return "", err
+	}
+	return plugin.Path, nil
 }
 
 // CheckDockerBuildx checks that the Docker buildx plugin is installed
@@ -178,9 +187,14 @@ func CheckDockerBuildx(dockerVersionMatrix DockerVersionMatrix) error {
 		return fmt.Errorf("docker buildx plugin is required but not found: %v.\nPlease install buildx: https://github.com/docker/buildx#installing", err)
 	}
 
+	pluginPath, err := GetBuildxLocation()
+	if err != nil {
+		pluginPath = "unknown"
+	}
+
 	buildxVersion, err := semver.NewVersion(v)
 	if err != nil {
-		return fmt.Errorf("unable to parse buildx version %q: %v", v, err)
+		return fmt.Errorf("unable to parse buildx version %q (plugin path: %s): %v", v, pluginPath, err)
 	}
 
 	constraint, err := semver.NewConstraint(dockerVersionMatrix.BuildxVersionConstraint)
@@ -191,13 +205,13 @@ func CheckDockerBuildx(dockerVersionMatrix DockerVersionMatrix) error {
 	match, errs := constraint.Validate(buildxVersion)
 	if !match {
 		if len(errs) <= 1 {
-			return fmt.Errorf("docker buildx version %s does not meet the requirement %q: %v.\nPlease update buildx: https://github.com/docker/buildx#installing", v, dockerVersionMatrix.BuildxVersionConstraint, errs[0])
+			return fmt.Errorf("docker buildx version %s (plugin path: %s) does not meet the requirement %q: %v.\nPlease update buildx: https://github.com/docker/buildx#installing", v, pluginPath, dockerVersionMatrix.BuildxVersionConstraint, errs[0])
 		}
 		msgs := "\n"
 		for _, err := range errs {
 			msgs = fmt.Sprint(msgs, err, "\n")
 		}
-		return fmt.Errorf("docker buildx version %s does not meet the requirement %q: %s", v, dockerVersionMatrix.BuildxVersionConstraint, msgs)
+		return fmt.Errorf("docker buildx version %s (plugin path: %s) does not meet the requirement %q: %s", v, pluginPath, dockerVersionMatrix.BuildxVersionConstraint, msgs)
 	}
 
 	return nil

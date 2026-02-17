@@ -88,7 +88,12 @@ ddev ut dockercheck`,
 		if err != nil {
 			util.Failed("buildx is required and does not seem to be installed: %v\nPlease install with 'brew install docker-buildx' or see https://github.com/docker/buildx#installing", err)
 		} else {
-			util.Success("docker buildx version %s", buildxVersion)
+			buildxPath, err := dockerutil.GetBuildxLocation()
+			if err != nil {
+				util.Warning("docker buildx version %s (plugin path could not be determined: %v)", buildxVersion, err)
+			} else {
+				util.Success("docker buildx version %s (plugin path: %s)", buildxVersion, buildxPath)
+			}
 		}
 		err = dockerutil.CheckDockerBuildx(dockerutil.DockerRequirements)
 		if err != nil {
