@@ -66,19 +66,33 @@ func (vc *viperConfig) MergeConfig(path string) error {
 	return vc.v.MergeInConfig()
 }
 
-// NewCleanConfigProvider returns a new isolated ConfigProvider without any bindings.
-func NewCleanConfigProvider() ConfigProvider {
+// ViperFactory implements ProviderFactory using Viper.
+type ViperFactory struct{}
+
+// CreateCleanConfigProvider returns a new isolated ConfigProvider without any bindings.
+func (vf *ViperFactory) CreateCleanConfigProvider() ConfigProvider {
 	v := viper.New()
 	v.SetEnvPrefix("DDEV")
 	v.AutomaticEnv()
 	return &viperConfig{v: v}
 }
 
-// NewConfigProvider returns a new isolated ConfigProvider with standard DDEV environment bindings.
-func NewConfigProvider() ConfigProvider {
-	cp := NewCleanConfigProvider()
+// CreateConfigProvider returns a new isolated ConfigProvider with standard DDEV environment bindings.
+func (vf *ViperFactory) CreateConfigProvider() ConfigProvider {
+	cp := (&ViperFactory{}).CreateCleanConfigProvider()
 	bindStandardGlobalEnvs(cp)
 	return cp
+}
+
+// CreateProjectListConfigProvider returns a new isolated ConfigProvider with a custom key delimiter
+// to avoid splitting project names that contain dots.
+func (vf *ViperFactory) CreateProjectListConfigProvider() ConfigProvider {
+	// DDEV project names can contain dots, so we use a different delimiter
+	// to prevent Viper from interpreting them as nested keys.
+	v := viper.NewWithOptions(viper.KeyDelimiter("::"))
+	v.SetEnvPrefix("DDEV")
+	v.AutomaticEnv()
+	return &viperConfig{v: v}
 }
 
 // bindStandardGlobalEnvs binds all the standard environment variables that DDEV uses
