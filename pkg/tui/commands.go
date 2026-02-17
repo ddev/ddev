@@ -14,6 +14,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 )
 
 // operationAutoReturnDelay is the time to wait before auto-returning from a
@@ -30,6 +31,9 @@ func scheduleOperationAutoReturn() tea.Cmd {
 
 // loadProjects fetches the project list in the background.
 func loadProjects() tea.Msg {
+	// Re-read the global project list from disk so we pick up changes
+	// made by subprocesses (e.g. ddev config).
+	_ = globalconfig.ReadProjectList()
 	apps, err := ddevapp.GetProjects(false)
 	if err != nil {
 		return projectsLoadedMsg{err: err}

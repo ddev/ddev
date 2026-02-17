@@ -1088,6 +1088,32 @@ func TestProjectsLoadedErrorClearsOnSuccess(t *testing.T) {
 	require.NoError(t, model.err, "error should be cleared on success")
 }
 
+func TestRefreshStatusClearsOnProjectsLoaded(t *testing.T) {
+	m := NewAppModel()
+	m.loading = true
+	m.statusMsg = "Refreshing..."
+
+	updated, _ := m.Update(projectsLoadedMsg{
+		projects: []ProjectInfo{{Name: "a"}},
+	})
+	model := updated.(AppModel)
+
+	require.Empty(t, model.statusMsg, "Refreshing status should clear on success")
+}
+
+func TestRefreshStatusClearsOnDetailLoaded(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	m.detailLoading = true
+	m.statusMsg = "Refreshing..."
+	detail := sampleDetail()
+
+	updated, _ := m.Update(projectDetailLoadedMsg{detail: detail})
+	model := updated.(AppModel)
+
+	require.Empty(t, model.statusMsg, "Refreshing status should clear on detail success")
+}
+
 func TestErrorViewShowsRetryHint(t *testing.T) {
 	m := NewAppModel()
 	m.loading = false

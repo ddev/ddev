@@ -163,6 +163,9 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.err = nil
+		if m.statusMsg == "Refreshing..." {
+			m.statusMsg = ""
+		}
 		m.projects = msg.projects
 		// Keep cursor in bounds
 		filtered := m.filteredProjects()
@@ -177,6 +180,9 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.statusMsg = fmt.Sprintf("Error loading detail: %v", msg.err)
 			m.viewMode = viewDashboard
 			return m, nil
+		}
+		if m.statusMsg == "Refreshing..." {
+			m.statusMsg = ""
 		}
 		m.detail = &msg.detail
 		return m, nil
