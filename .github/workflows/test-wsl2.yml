@@ -50,26 +50,26 @@ jobs:
     timeout-minutes: 120
 
     steps:
-      - name: Setup tmate session
-        if: ${{ inputs.debug_enabled }}
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
-
       - name: Install WSL2 distribution
         shell: pwsh
         run: |
           Write-Host "Setting WSL default version to 2"
           wsl --set-default-version 2
-          Write-Host "Installing DDEV Ubuntu distro (no launch)"
+          Write-Host "Installing DDEV Ubuntu distro"
           wsl --install --name DDEV --no-launch
+          wsl -d DDEV --user root bash -c "useradd -m -s /bin/bash testbot && echo 'testbot:password' | chpasswd && usermod -aG sudo testbot && printf '[user]\ndefault=testbot\n' > /etc/wsl.conf"
+
           wsl --set-default DDEV
-          Write-Host "Setting up DDEV distro with root as initial user"
-          DDEV install --root
 
           Write-Host "Verifying WSL installation"
           wsl --list --verbose
-          wsl -- uname -a
+          wsl uname -a
+
+      - name: Setup tmate session
+        if: ${{ inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
 
       - name: Clone repo and run setup inside WSL2
         shell: pwsh
