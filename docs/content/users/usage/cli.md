@@ -25,6 +25,15 @@ Running `ddev` with no arguments launches an interactive terminal dashboard. The
 
 To disable the dashboard and show the classic help text instead, set [`no_tui: true`](../configuration/config.md) in your global configuration (`~/.ddev/global_config.yaml`), or set the environment variable `DDEV_NO_TUI=true`.
 
+### Terminal Compatibility
+
+The dashboard automatically detects your terminal's color capabilities and adapts its output. If colors or styling don't render correctly in your terminal, you have several options:
+
+* **Disable colors**: Run `NO_COLOR=1 ddev` or `export NO_COLOR=1` in your shell. This follows the [NO_COLOR](https://no-color.org/) standard and disables all color output while keeping the dashboard functional.
+* **Use simple formatting globally**: Run `ddev config global --simple-formatting=true` to disable colors and table formatting across all DDEV commands, including the dashboard. See [`simple_formatting`](../configuration/config.md#simple_formatting).
+* **Set `TERM` appropriately**: If your terminal supports color but DDEV doesn't detect it, make sure your `TERM` environment variable is set correctly (e.g., `xterm-256color`). Some SSH clients or multiplexers like `tmux` or `screen` may need explicit configuration.
+* **Disable the dashboard entirely**: If the interactive dashboard doesn't work well in your environment (e.g., a very limited terminal or CI), use `DDEV_NO_TUI=true` or set `no_tui: true` in `~/.ddev/global_config.yaml` to fall back to the classic help output.
+
 * [`ddev config`](../usage/commands.md#config) configures a project’s type and docroot, either interactively or with flags.
 * [`ddev start`](../usage/commands.md#start) starts up a project.
 * [`ddev launch`](../usage/commands.md#launch) opens a web browser showing the project.
