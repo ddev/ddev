@@ -52,11 +52,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        networking: [nat, mirrored]
+#        mirrored doesn't work (yet?) on Windows server 2025.  https://github.com/microsoft/WSL/issues/11154
+#        networking: [nat, mirrored]
+        networking: [nat]
 
     name: WSL2 (${{ matrix.networking }})
 
     steps:
+      # Can't work yet until enabled in Windows Server 2025
       - name: Configure mirrored networking
         if: matrix.networking == 'mirrored'
         shell: pwsh
