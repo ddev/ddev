@@ -49,7 +49,30 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 240
 
+    strategy:
+      fail-fast: false
+      matrix:
+        networking: [nat, mirrored]
+
+    name: WSL2 (${{ matrix.networking }})
+
     steps:
+      - name: Configure mirrored networking
+        if: matrix.networking == 'mirrored'
+        shell: pwsh
+        run: |
+          $wslconfig = @"
+          [wsl2]
+          networkingMode=mirrored
+
+          [experimental]
+          hostAddressLoopback=true
+          "@
+          Set-Content -Path "$env:USERPROFILE\.wslconfig" -Value $wslconfig
+          Write-Host "Created .wslconfig with mirrored networking:"
+          Get-Content "$env:USERPROFILE\.wslconfig"
+          wsl --shutdown
+
       - name: Install WSL2 distribution
         shell: pwsh
         run: |
