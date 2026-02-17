@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - v*
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
     paths:
       - ".github/workflows/**"

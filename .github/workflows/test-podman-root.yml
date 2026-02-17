@@ -10,7 +10,7 @@ on:
 #      - ".github/workflows/**"
 #      - "!.github/workflows/docs**"
 #  push:
-#    branches: [ main, master ]
+#    branches: [ main ]
   workflow_dispatch:
     inputs:
       debug_enabled:
