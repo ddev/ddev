@@ -611,7 +611,9 @@ func TestDetailActionStart(t *testing.T) {
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'s'}})
 	model := updated.(AppModel)
 
-	require.Contains(t, model.statusMsg, "Starting mysite")
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Contains(t, model.operationName, "Starting mysite")
+	require.Equal(t, viewDetail, model.operationReturnView)
 	require.NotNil(t, cmd)
 }
 
@@ -624,7 +626,9 @@ func TestDetailActionStop(t *testing.T) {
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'S'}})
 	model := updated.(AppModel)
 
-	require.Contains(t, model.statusMsg, "Stopping mysite")
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Contains(t, model.operationName, "Stopping mysite")
+	require.Equal(t, viewDetail, model.operationReturnView)
 	require.NotNil(t, cmd)
 }
 
@@ -658,7 +662,9 @@ func TestDetailActionRestart(t *testing.T) {
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'r'}})
 	model := updated.(AppModel)
 
-	require.Contains(t, model.statusMsg, "Restarting mysite")
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Contains(t, model.operationName, "Restarting mysite")
+	require.Equal(t, viewDetail, model.operationReturnView)
 	require.NotNil(t, cmd)
 }
 
@@ -965,8 +971,9 @@ func TestConfirmStartAll(t *testing.T) {
 
 	require.False(t, model.confirming, "should exit confirmation")
 	require.Empty(t, model.confirmAction)
-	require.Contains(t, model.statusMsg, "Starting all")
-	require.NotNil(t, cmd, "should return exec command")
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Contains(t, model.operationName, "Starting all")
+	require.NotNil(t, cmd, "should return stream command")
 }
 
 func TestConfirmStopAll(t *testing.T) {
@@ -981,7 +988,8 @@ func TestConfirmStopAll(t *testing.T) {
 	model := updated.(AppModel)
 
 	require.False(t, model.confirming)
-	require.Contains(t, model.statusMsg, "Stopping all")
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Contains(t, model.operationName, "Stopping all")
 	require.NotNil(t, cmd)
 }
 
@@ -1231,8 +1239,9 @@ func TestConfirmPoweroff(t *testing.T) {
 	model := updated.(AppModel)
 
 	require.False(t, model.confirming, "should exit confirmation")
-	require.Contains(t, model.statusMsg, "Powering off")
-	require.NotNil(t, cmd, "should return exec command")
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Contains(t, model.operationName, "Powering off")
+	require.NotNil(t, cmd, "should return stream command")
 }
 
 func TestPoweroffHintInDashboard(t *testing.T) {
@@ -1366,4 +1375,320 @@ func TestHelpViewNewEntries(t *testing.T) {
 	require.Contains(t, view, "Poweroff", "help should mention Poweroff")
 	require.Contains(t, view, "Xdebug", "help should mention Xdebug")
 	require.Contains(t, view, "clipboard", "help should mention clipboard/copy")
+}
+
+// --- Operation streaming view tests ---
+
+func TestDashboardStartEntersOperationView(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{
+		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", AppRoot: "/tmp/mysite"},
+	}
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'s'}})
+	model := updated.(AppModel)
+
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Contains(t, model.operationName, "Starting mysite")
+	require.Equal(t, viewDashboard, model.operationReturnView)
+	require.NotNil(t, cmd)
+}
+
+func TestDashboardStopEntersOperationView(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{
+		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", AppRoot: "/tmp/mysite"},
+	}
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'S'}})
+	model := updated.(AppModel)
+
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Contains(t, model.operationName, "Stopping mysite")
+	require.Equal(t, viewDashboard, model.operationReturnView)
+	require.NotNil(t, cmd)
+}
+
+func TestOperationStreamStartedMsg(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationName = "Starting mysite"
+
+	ch := make(chan string, 10)
+	errCh := make(chan error, 1)
+
+	updated, cmd := m.Update(operationStreamStartedMsg{lines: ch, errCh: errCh, process: nil})
+	model := updated.(AppModel)
+
+	require.NotNil(t, model.logSub, "should store line channel")
+	require.NotNil(t, model.operationErrCh, "should store error channel")
+	require.NotNil(t, cmd, "should return cmd to wait for lines")
+}
+
+func TestOperationStreamEndedMsgSuccess(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationName = "Starting mysite"
+	m.operationReturnView = viewDashboard
+
+	updated, cmd := m.Update(operationStreamEndedMsg{err: nil})
+	model := updated.(AppModel)
+
+	require.True(t, model.operationDone)
+	require.NoError(t, model.operationErr)
+	require.Nil(t, model.logProcess)
+	require.Nil(t, model.logSub)
+	require.Nil(t, model.operationErrCh)
+	require.NotNil(t, cmd, "should return reload commands")
+}
+
+func TestOperationStreamEndedMsgError(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationName = "Starting mysite"
+
+	updated, _ := m.Update(operationStreamEndedMsg{err: errTest})
+	model := updated.(AppModel)
+
+	require.True(t, model.operationDone)
+	require.Error(t, model.operationErr)
+}
+
+func TestOperationStreamEndedReturnsToDetail(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationReturnView = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+
+	updated, cmd := m.Update(operationStreamEndedMsg{err: nil})
+	model := updated.(AppModel)
+
+	require.True(t, model.operationDone)
+	require.NotNil(t, cmd, "should return reload commands including detail")
+}
+
+func TestLogLineMsgInOperationView(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationName = "Starting mysite"
+
+	ch := make(chan string, 10)
+	errCh := make(chan error, 1)
+	m.logSub = ch
+	m.operationErrCh = errCh
+
+	updated, cmd := m.Update(logLineMsg{line: "Building container..."})
+	model := updated.(AppModel)
+
+	require.Len(t, model.logLines, 1)
+	require.Equal(t, "Building container...", model.logLines[0])
+	require.NotNil(t, cmd, "should return cmd to wait for next line via operation channel")
+}
+
+func TestOperationViewRendering(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationName = "Starting mysite"
+	m.width = 80
+	m.height = 30
+	m.logLines = []string{"Building...", "Starting web container..."}
+
+	view := m.View()
+
+	require.Contains(t, view, "Starting mysite", "should contain operation title")
+	require.Contains(t, view, "Building...", "should contain output")
+	require.Contains(t, view, "Starting web container...", "should contain output")
+	require.Contains(t, view, "back", "should contain back hint")
+	require.Contains(t, view, "quit", "should contain quit hint")
+}
+
+func TestOperationViewDoneRendering(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationName = "Starting mysite"
+	m.operationDone = true
+	m.width = 80
+	m.height = 30
+	m.logLines = []string{"Done."}
+
+	// Success
+	view := m.View()
+	require.Contains(t, view, "Completed", "should show completed status")
+
+	// Failure
+	m.operationErr = errTest
+	view = m.View()
+	require.Contains(t, view, "Failed", "should show failed status")
+}
+
+func TestOperationViewRunningRendering(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationName = "Starting mysite"
+	m.width = 60
+
+	view := m.View()
+	require.Contains(t, view, "Running...", "should show running message when no output")
+}
+
+func TestOperationKeyEscBack(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationName = "Starting mysite"
+	m.operationReturnView = viewDashboard
+	m.logLines = []string{"some output"}
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	model := updated.(AppModel)
+
+	require.Equal(t, viewDashboard, model.viewMode, "esc should return to dashboard")
+	require.Nil(t, model.logLines)
+	require.Empty(t, model.operationName)
+	require.False(t, model.operationDone)
+	require.NotNil(t, cmd, "should return reload commands")
+}
+
+func TestOperationKeyEscBackToDetail(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationName = "Starting mysite"
+	m.operationReturnView = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	model := updated.(AppModel)
+
+	require.Equal(t, viewDetail, model.viewMode, "esc should return to detail")
+	require.True(t, model.detailLoading, "should reload detail")
+	require.NotNil(t, cmd)
+}
+
+func TestOperationKeyQuit(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewOperation
+	m.operationName = "Starting mysite"
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	require.NotNil(t, cmd)
+
+	msg := cmd()
+	_, ok := msg.(tea.QuitMsg)
+	require.True(t, ok, "q in operation view should quit")
+}
+
+func TestEnterOperationView(t *testing.T) {
+	m := NewAppModel()
+	m.logLines = []string{"old"}
+	m.statusMsg = "old status"
+	m.operationDone = true
+	m.operationErr = errTest
+
+	m = m.enterOperationView("Starting mysite", viewDetail)
+
+	require.Equal(t, viewOperation, m.viewMode)
+	require.Equal(t, "Starting mysite", m.operationName)
+	require.Equal(t, viewDetail, m.operationReturnView)
+	require.Nil(t, m.logLines)
+	require.Nil(t, m.logProcess)
+	require.Nil(t, m.logSub)
+	require.Nil(t, m.operationErrCh)
+	require.False(t, m.operationDone)
+	require.NoError(t, m.operationErr)
+	require.Empty(t, m.statusMsg)
+}
+
+func TestIsLoadingWithOperationView(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.viewMode = viewOperation
+	m.operationDone = false
+	require.True(t, m.isLoading(), "should be loading during active operation")
+
+	m.operationDone = true
+	require.False(t, m.isLoading(), "should not be loading after operation done")
+}
+
+func TestLogLineMsgCapInOperationView(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.viewMode = viewOperation
+
+	// Add 1001 lines to trigger the cap
+	for i := 0; i < 1001; i++ {
+		m.logLines = append(m.logLines, fmt.Sprintf("line %d", i))
+	}
+	require.Equal(t, 1001, len(m.logLines))
+
+	// Simulate receiving one more logLineMsg which triggers the cap logic
+	m.logLines = append(m.logLines, "one more line")
+	if len(m.logLines) > 1000 {
+		m.logLines = m.logLines[len(m.logLines)-500:]
+	}
+	require.Equal(t, 500, len(m.logLines))
+	require.Equal(t, "one more line", m.logLines[len(m.logLines)-1])
+}
+
+func TestOperationAutoReturnOnSuccess(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.viewMode = viewOperation
+	m.operationDone = true
+	m.operationErr = nil
+	m.operationName = "Starting mysite"
+	m.operationReturnView = viewDashboard
+	m.logLines = []string{"line1"}
+
+	updated, _ := m.Update(operationAutoReturnMsg{})
+	model := updated.(AppModel)
+
+	require.Equal(t, viewDashboard, model.viewMode, "should return to dashboard")
+	require.False(t, model.operationDone)
+	require.Empty(t, model.operationName)
+	require.Nil(t, model.logLines)
+	require.Equal(t, "Operation completed", model.statusMsg)
+}
+
+func TestOperationAutoReturnToDetail(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.viewMode = viewOperation
+	m.operationDone = true
+	m.operationErr = nil
+	m.operationReturnView = viewDetail
+
+	updated, _ := m.Update(operationAutoReturnMsg{})
+	model := updated.(AppModel)
+
+	require.Equal(t, viewDetail, model.viewMode, "should return to detail view")
+}
+
+func TestOperationAutoReturnSkippedOnError(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.viewMode = viewOperation
+	m.operationDone = true
+	m.operationErr = errTest
+	m.operationReturnView = viewDashboard
+
+	updated, _ := m.Update(operationAutoReturnMsg{})
+	model := updated.(AppModel)
+
+	require.Equal(t, viewOperation, model.viewMode, "should stay on operation view on error")
+	require.True(t, model.operationDone)
+}
+
+func TestOperationAutoReturnIgnoredIfAlreadyLeft(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.viewMode = viewDashboard // User already pressed esc
+	m.operationDone = false
+
+	updated, _ := m.Update(operationAutoReturnMsg{})
+	model := updated.(AppModel)
+
+	require.Equal(t, viewDashboard, model.viewMode, "should stay on dashboard")
 }

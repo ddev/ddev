@@ -9,10 +9,24 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"sync"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/ddev/ddev/pkg/ddevapp"
 )
+
+// operationAutoReturnDelay is the time to wait before auto-returning from a
+// successfully completed operation view.
+var operationAutoReturnDelay = 2 * time.Second
+
+// scheduleOperationAutoReturn returns a command that sends an
+// operationAutoReturnMsg after a short delay.
+func scheduleOperationAutoReturn() tea.Cmd {
+	return tea.Tick(operationAutoReturnDelay, func(time.Time) tea.Msg {
+		return operationAutoReturnMsg{}
+	})
+}
 
 // loadProjects fetches the project list in the background.
 func loadProjects() tea.Msg {
@@ -149,10 +163,81 @@ func waitForLogLineCmd(ch <-chan string) tea.Cmd {
 	}
 }
 
-// ddevExecCommand returns a tea.ExecCommand that runs a ddev subcommand
-// as a subprocess, suspending the TUI.
-func ddevExecCommand(args ...string) tea.Cmd {
-	return ddevExecCommandInDir("", args...)
+// startOperationStreamCmd starts a ddev subcommand as a background subprocess
+// and streams its output line-by-line into the TUI. Unlike startLogStreamCmd,
+// it captures the exit status via a separate error channel.
+// If dir is empty, no working directory is set on the command.
+func startOperationStreamCmd(dir string, args ...string) tea.Cmd {
+	return func() tea.Msg {
+		ddevBin, err := os.Executable()
+		if err != nil {
+			return operationStreamEndedMsg{err: err}
+		}
+
+		cmd := exec.Command(ddevBin, args...)
+		cmd.Env = append(os.Environ(), "DDEV_NO_TUI=true")
+		if dir != "" {
+			cmd.Dir = dir
+		}
+
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return operationStreamEndedMsg{err: err}
+		}
+		stderr, err := cmd.StderrPipe()
+		if err != nil {
+			return operationStreamEndedMsg{err: err}
+		}
+
+		if err := cmd.Start(); err != nil {
+			return operationStreamEndedMsg{err: err}
+		}
+
+		ch := make(chan string, 100)
+		errCh := make(chan error, 1)
+
+		var wg sync.WaitGroup
+		scan := func(r io.Reader) {
+			defer wg.Done()
+			scanner := bufio.NewScanner(r)
+			for scanner.Scan() {
+				ch <- scanner.Text()
+			}
+		}
+
+		wg.Add(2)
+		go scan(stdout)
+		go scan(stderr)
+
+		go func() {
+			wg.Wait()
+			cmdErr := cmd.Wait()
+			errCh <- cmdErr
+			close(ch)
+		}()
+
+		return operationStreamStartedMsg{lines: ch, errCh: errCh, process: cmd.Process}
+	}
+}
+
+// waitForOperationLineCmd reads the next line from the operation stream.
+// When the channel closes, it reads the error from errCh and returns
+// operationStreamEndedMsg.
+func waitForOperationLineCmd(lines <-chan string, errCh <-chan error) tea.Cmd {
+	if lines == nil {
+		return nil
+	}
+	return func() tea.Msg {
+		line, ok := <-lines
+		if !ok {
+			var cmdErr error
+			if errCh != nil {
+				cmdErr = <-errCh
+			}
+			return operationStreamEndedMsg{err: cmdErr}
+		}
+		return logLineMsg{line: line}
+	}
 }
 
 // ddevExecCommandInDir runs a ddev subcommand in the given directory.

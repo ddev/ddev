@@ -21,6 +21,7 @@ const (
 	viewDashboard = iota
 	viewDetail
 	viewLogs
+	viewOperation
 )
 
 // AppModel is the root Bubble Tea model.
@@ -50,6 +51,13 @@ type AppModel struct {
 	logLines   []string
 	logProcess *os.Process
 	logSub     <-chan string
+
+	// Operation streaming
+	operationName       string
+	operationDone       bool
+	operationErr        error
+	operationReturnView int
+	operationErrCh      <-chan error
 
 	// Spinner
 	spinner spinner.Model
@@ -124,6 +132,21 @@ func (m AppModel) selectedProject() *ProjectInfo {
 	return &filtered[m.cursor]
 }
 
+// enterOperationView sets up the model for the operation streaming view.
+func (m AppModel) enterOperationView(name string, returnView int) AppModel {
+	m.viewMode = viewOperation
+	m.logLines = nil
+	m.logProcess = nil
+	m.logSub = nil
+	m.operationName = name
+	m.operationDone = false
+	m.operationErr = nil
+	m.operationReturnView = returnView
+	m.operationErrCh = nil
+	m.statusMsg = ""
+	return m
+}
+
 // Update handles messages and key presses.
 func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -190,17 +213,55 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.logSub = msg.lines
 		return m, waitForLogLineCmd(m.logSub)
 
+	case operationStreamStartedMsg:
+		m.logProcess = msg.process
+		m.logSub = msg.lines
+		m.operationErrCh = msg.errCh
+		return m, waitForOperationLineCmd(m.logSub, m.operationErrCh)
+
 	case logLineMsg:
 		m.logLines = append(m.logLines, msg.line)
 		// Cap at 1000 lines to prevent unbounded growth
 		if len(m.logLines) > 1000 {
 			m.logLines = m.logLines[len(m.logLines)-500:]
 		}
+		if m.viewMode == viewOperation {
+			return m, waitForOperationLineCmd(m.logSub, m.operationErrCh)
+		}
 		return m, waitForLogLineCmd(m.logSub)
 
 	case logStreamEndedMsg:
 		m.logProcess = nil
 		m.logSub = nil
+		return m, nil
+
+	case operationStreamEndedMsg:
+		m.operationDone = true
+		m.operationErr = msg.err
+		m.logProcess = nil
+		m.logSub = nil
+		m.operationErrCh = nil
+		// Reload projects after operation
+		cmds := []tea.Cmd{loadProjects, loadRouterStatus, m.spinner.Tick}
+		if m.operationReturnView == viewDetail && m.detail != nil {
+			cmds = append(cmds, loadDetailCmd(m.detail.AppRoot))
+		}
+		// Auto-return on success after a short delay; stay on error so user can read output
+		if msg.err == nil {
+			cmds = append(cmds, scheduleOperationAutoReturn())
+		}
+		return m, tea.Batch(cmds...)
+
+	case operationAutoReturnMsg:
+		// Only act if still on the operation view and the operation succeeded
+		if m.viewMode == viewOperation && m.operationDone && m.operationErr == nil {
+			returnView := m.operationReturnView
+			m.logLines = nil
+			m.operationDone = false
+			m.operationName = ""
+			m.statusMsg = "Operation completed"
+			m.viewMode = returnView
+		}
 		return m, nil
 
 	case operationFinishedMsg:
@@ -235,8 +296,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), loadRouterStatus, tickCmd())
 			}
 			return m, tea.Batch(loadRouterStatus, tickCmd())
-		case viewLogs:
-			// No auto-refresh while streaming logs
+		case viewLogs, viewOperation:
+			// No auto-refresh while streaming logs or operations
 			return m, tickCmd()
 		case viewDashboard:
 			return m, tea.Batch(loadProjects, loadRouterStatus, tickCmd())
@@ -258,6 +319,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.handleDetailKey(msg)
 		case viewLogs:
 			return m.handleLogKey(msg)
+		case viewOperation:
+			return m.handleOperationKey(msg)
 		default:
 			return m.handleDashboardKey(msg)
 		}
@@ -268,7 +331,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // isLoading returns true if any loading state is active.
 func (m AppModel) isLoading() bool {
-	return m.loading || m.detailLoading
+	return m.loading || m.detailLoading || (m.viewMode == viewOperation && !m.operationDone)
 }
 
 func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -280,14 +343,14 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.confirmAction = ""
 			switch action {
 			case "start-all":
-				m.statusMsg = "Starting all projects..."
-				return m, ddevExecCommand("start", "--all")
+				m = m.enterOperationView("Starting all projects", viewDashboard)
+				return m, startOperationStreamCmd("", "start", "--all")
 			case "stop-all":
-				m.statusMsg = "Stopping all projects..."
-				return m, ddevExecCommand("stop", "--all")
+				m = m.enterOperationView("Stopping all projects", viewDashboard)
+				return m, startOperationStreamCmd("", "stop", "--all")
 			case "poweroff":
-				m.statusMsg = "Powering off all DDEV projects and containers..."
-				return m, ddevExecCommand("poweroff")
+				m = m.enterOperationView("Powering off DDEV", viewDashboard)
+				return m, startOperationStreamCmd("", "poweroff")
 			}
 		}
 		// Any other key cancels
@@ -365,20 +428,20 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case key.Matches(msg, m.keys.Start):
 		if p := m.selectedProject(); p != nil {
-			m.statusMsg = fmt.Sprintf("Starting %s...", p.Name)
-			return m, ddevExecCommand("start", p.Name)
+			m = m.enterOperationView(fmt.Sprintf("Starting %s", p.Name), viewDashboard)
+			return m, startOperationStreamCmd("", "start", p.Name)
 		}
 
 	case key.Matches(msg, m.keys.Stop):
 		if p := m.selectedProject(); p != nil {
-			m.statusMsg = fmt.Sprintf("Stopping %s...", p.Name)
-			return m, ddevExecCommand("stop", p.Name)
+			m = m.enterOperationView(fmt.Sprintf("Stopping %s", p.Name), viewDashboard)
+			return m, startOperationStreamCmd("", "stop", p.Name)
 		}
 
 	case key.Matches(msg, m.keys.Restart):
 		if p := m.selectedProject(); p != nil {
-			m.statusMsg = fmt.Sprintf("Restarting %s...", p.Name)
-			return m, ddevExecCommand("restart", p.Name)
+			m = m.enterOperationView(fmt.Sprintf("Restarting %s", p.Name), viewDashboard)
+			return m, startOperationStreamCmd("", "restart", p.Name)
 		}
 
 	case key.Matches(msg, m.keys.Launch):
@@ -458,20 +521,20 @@ func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case key.Matches(msg, m.keys.Start):
 		if m.detail != nil {
-			m.statusMsg = fmt.Sprintf("Starting %s...", m.detail.Name)
-			return m, ddevExecCommandDetail(m.detail.AppRoot, "start")
+			m = m.enterOperationView(fmt.Sprintf("Starting %s", m.detail.Name), viewDetail)
+			return m, startOperationStreamCmd(m.detail.AppRoot, "start")
 		}
 
 	case key.Matches(msg, m.keys.Stop):
 		if m.detail != nil {
-			m.statusMsg = fmt.Sprintf("Stopping %s...", m.detail.Name)
-			return m, ddevExecCommandDetail(m.detail.AppRoot, "stop")
+			m = m.enterOperationView(fmt.Sprintf("Stopping %s", m.detail.Name), viewDetail)
+			return m, startOperationStreamCmd(m.detail.AppRoot, "stop")
 		}
 
 	case key.Matches(msg, m.keys.Restart):
 		if m.detail != nil {
-			m.statusMsg = fmt.Sprintf("Restarting %s...", m.detail.Name)
-			return m, ddevExecCommandDetail(m.detail.AppRoot, "restart")
+			m = m.enterOperationView(fmt.Sprintf("Restarting %s", m.detail.Name), viewDetail)
+			return m, startOperationStreamCmd(m.detail.AppRoot, "restart")
 		}
 
 	case key.Matches(msg, m.keys.Launch):
@@ -542,6 +605,39 @@ func (m AppModel) handleLogKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m AppModel) handleOperationKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch {
+	case key.Matches(msg, m.keys.Back):
+		if m.logProcess != nil {
+			_ = m.logProcess.Kill()
+		}
+		m.logProcess = nil
+		m.logSub = nil
+		m.logLines = nil
+		m.operationErrCh = nil
+		m.operationDone = false
+		m.operationErr = nil
+		m.operationName = ""
+		returnView := m.operationReturnView
+		m.viewMode = returnView
+		// Reload projects on return
+		cmds := []tea.Cmd{loadProjects, loadRouterStatus, m.spinner.Tick}
+		if returnView == viewDetail && m.detail != nil {
+			m.detailLoading = true
+			cmds = append(cmds, loadDetailCmd(m.detail.AppRoot))
+		}
+		return m, tea.Batch(cmds...)
+
+	case key.Matches(msg, m.keys.Quit):
+		if m.logProcess != nil {
+			_ = m.logProcess.Kill()
+		}
+		return m, tea.Quit
+	}
+
+	return m, nil
+}
+
 // View renders the TUI.
 func (m AppModel) View() string {
 	if m.showHelp {
@@ -552,6 +648,8 @@ func (m AppModel) View() string {
 		return m.detailView()
 	case viewLogs:
 		return m.logView()
+	case viewOperation:
+		return m.operationView()
 	default:
 		return m.dashboardView()
 	}
@@ -841,6 +939,67 @@ func (m AppModel) logView() string {
 }
 
 func (m AppModel) logKeyHints() string {
+	hints := []struct {
+		key  string
+		desc string
+	}{
+		{"esc", "back"},
+		{"q", "quit"},
+	}
+	return m.renderHints(hints)
+}
+
+func (m AppModel) operationView() string {
+	var b strings.Builder
+
+	dividerWidth := m.width
+	if dividerWidth <= 0 {
+		dividerWidth = 60
+	}
+
+	// Title
+	titleText := m.operationName
+	if titleText == "" {
+		titleText = "Operation"
+	}
+	title := m.styles.Title.Render(titleText)
+	b.WriteString(title + "\n")
+	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
+
+	if len(m.logLines) == 0 && !m.operationDone {
+		fmt.Fprintf(&b, "\n  %s Running...\n", m.spinner.View())
+	} else {
+		// Show the last N lines that fit the terminal (auto-scroll to bottom)
+		viewHeight := m.height - 6 // title, divider, status line, bottom divider, hints, margin
+		if viewHeight < 5 {
+			viewHeight = 20
+		}
+		start := 0
+		if len(m.logLines) > viewHeight {
+			start = len(m.logLines) - viewHeight
+		}
+		for _, line := range m.logLines[start:] {
+			b.WriteString(line + "\n")
+		}
+	}
+
+	// Status line
+	if m.operationDone {
+		if m.operationErr != nil {
+			b.WriteString(m.styles.Stopped.Render(fmt.Sprintf("Failed: %v", m.operationErr)) + "\n")
+		} else {
+			b.WriteString(m.styles.Running.Render("Completed — returning shortly...") + "\n")
+		}
+	}
+
+	// Bottom divider
+	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
+	b.WriteString(m.operationKeyHints())
+
+	return b.String()
+}
+
+func (m AppModel) operationKeyHints() string {
 	hints := []struct {
 		key  string
 		desc string

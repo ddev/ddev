@@ -78,6 +78,21 @@ type logLineMsg struct {
 // logStreamEndedMsg is sent when the log stream closes.
 type logStreamEndedMsg struct{}
 
+// operationStreamStartedMsg is sent when an operation stream subprocess has started.
+type operationStreamStartedMsg struct {
+	lines   <-chan string
+	errCh   <-chan error
+	process *os.Process
+}
+
+// operationStreamEndedMsg is sent when the operation stream finishes.
+type operationStreamEndedMsg struct {
+	err error
+}
+
+// operationAutoReturnMsg is sent after a delay to auto-return from a completed operation.
+type operationAutoReturnMsg struct{}
+
 // routerStatusMsg carries the router health status.
 type routerStatusMsg struct {
 	status string
