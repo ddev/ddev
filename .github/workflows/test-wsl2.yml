@@ -102,6 +102,25 @@ jobs:
           wsl -- uname -a
           wsl -- systemctl is-system-running --wait
 
+      - name: Show test configuration
+        shell: pwsh
+        run: |
+          Write-Host "=== Test Configuration ==="
+          Write-Host "Networking mode: ${{ matrix.networking }}"
+          Write-Host "GOTEST_SHORT: ${{ env.GOTEST_SHORT }}"
+          Write-Host "TESTARGS: ${{ env.TESTARGS }}"
+          Write-Host "MAKE_TARGET: ${{ env.MAKE_TARGET }}"
+          Write-Host ""
+          Write-Host "=== Windows Host ==="
+          Write-Host "Architecture: $env:PROCESSOR_ARCHITECTURE"
+          Write-Host "OS: $((Get-CimInstance Win32_OperatingSystem).Caption)"
+          Write-Host "Runner: ${{ runner.os }} / ${{ runner.arch }}"
+          Write-Host "Networking: ${{ matrix.networking }}"
+          Write-Host ""
+          Write-Host "=== WSL Distro ==="
+          wsl --version
+          wsl -- bash -c "echo Architecture: $(uname -m) && echo Kernel: $(uname -r) && echo Distro: $(lsb_release -ds 2>/dev/null || cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2) && echo User: $(whoami) && echo Go: $(go version 2>/dev/null || echo not installed yet) && echo Docker: $(docker --version 2>/dev/null || echo not installed yet)"
+
       - name: Setup tmate session
         if: ${{ inputs.debug_enabled }}
         uses: mxschmitt/action-tmate@v3
