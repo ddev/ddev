@@ -7,7 +7,7 @@ set -eu -o pipefail
 set -x
 
 # Accept GO_VERSION from the environment, default to a known good version
-GO_VERSION="${GO_VERSION:-1.24.0}"
+GO_VERSION="${GO_VERSION:-1.26.0}"
 
 export DEBIAN_FRONTEND=noninteractive
 
