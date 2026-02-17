@@ -64,20 +64,12 @@ echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
 apt-get update -qq >/dev/null
 apt-get install -qq -y ngrok >/dev/null
 
-echo "=== Creating testuser ==="
-if ! id testuser >/dev/null 2>&1; then
-  useradd -m -s /bin/bash testuser
-fi
+echo "=== Configuring testuser ==="
+# testuser and /etc/wsl.conf are already created by the workflow install step
 usermod -aG docker testuser
 # Passwordless sudo for testuser
 echo "testuser ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/testuser
 chmod 440 /etc/sudoers.d/testuser
-
-echo "=== Configuring WSL default user ==="
-cat > /etc/wsl.conf <<'WSLCONF'
-[user]
-default=testuser
-WSLCONF
 
 echo "=== Configuring git safe directory ==="
 git config --global --add safe.directory '*'

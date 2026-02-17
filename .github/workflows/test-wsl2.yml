@@ -57,13 +57,27 @@ jobs:
           wsl --set-default-version 2
           Write-Host "Installing DDEV Ubuntu distro"
           wsl --install --name DDEV --no-launch
-          wsl -d DDEV --user root bash -c "useradd -m -s /bin/bash testuser && echo 'testuser:password' | chpasswd && usermod -aG sudo testuser && printf '[user]\ndefault=testuser\n' > /etc/wsl.conf"
-
+          # Create testuser, enable systemd, set default user
+          wsl -d DDEV --user root bash -c "useradd -m -s /bin/bash testuser && echo 'testuser:password' | chpasswd && usermod -aG sudo testuser && printf '[boot]\nsystemd=true\n\n[user]\ndefault=testuser\n' > /etc/wsl.conf"
           wsl --set-default DDEV
-
           Write-Host "Verifying WSL installation"
           wsl --list --verbose
-          wsl uname -a
+
+      - name: Restart WSL to enable systemd
+        shell: pwsh
+        run: |
+          Write-Host "Shutting down WSL so systemd and default user take effect"
+          wsl --shutdown
+          Start-Sleep -Seconds 5
+          Write-Host "Verifying WSL comes back with correct user"
+          $user = (wsl whoami).Trim()
+          Write-Host "Current WSL user: $user"
+          if ($user -ne "testuser") {
+            Write-Error "Expected testuser but got $user"
+            exit 1
+          }
+          wsl -- uname -a
+          wsl -- systemctl is-system-running --wait
 
       - name: Setup tmate session
         if: ${{ inputs.debug_enabled }}
@@ -78,20 +92,6 @@ jobs:
           $branchName = "${{ github.ref_name }}"
           # Shallow clone inside WSL2 as root just to get the setup scripts
           wsl -u root -- bash -exc "git clone --depth=1 --single-branch --branch '$branchName' '$repoUrl' /tmp/ddev-ci && cd /tmp/ddev-ci && bash -e .github/workflows/wsl2-setup.sh"
-
-      - name: Restart WSL to apply default user
-        shell: pwsh
-        run: |
-          Write-Host "Shutting down WSL to apply /etc/wsl.conf changes (default user=testuser)"
-          wsl --shutdown
-          Start-Sleep -Seconds 5
-          Write-Host "Verifying WSL comes back with correct user"
-          $user = (wsl whoami).Trim()
-          Write-Host "Current WSL user: $user"
-          if ($user -ne "testuser") {
-            Write-Error "Expected testuser but got $user"
-            exit 1
-          }
 
       - name: Clone repository for testuser
         shell: pwsh
