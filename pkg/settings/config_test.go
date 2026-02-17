@@ -118,15 +118,11 @@ func (m *MockConfigProvider) MergeConfig(path string) error           { return n
 // MockFactory is a mock implementation of ProviderFactory.
 type MockFactory struct{}
 
-func (f *MockFactory) CreateConfigProvider() ConfigProvider {
+func (f *MockFactory) CreateConfigProvider(delimiter string) ConfigProvider {
 	return &MockConfigProvider{data: make(map[string]any)}
 }
 
-func (f *MockFactory) CreateCleanConfigProvider() ConfigProvider {
-	return &MockConfigProvider{data: make(map[string]any)}
-}
-
-func (f *MockFactory) CreateProjectListConfigProvider() ConfigProvider {
+func (f *MockFactory) CreateCleanConfigProvider(delimiter string) ConfigProvider {
 	return &MockConfigProvider{data: make(map[string]any)}
 }
 
@@ -144,7 +140,7 @@ func TestAbstractFactorySwap(t *testing.T) {
 	// Inject MockFactory
 	factory = &MockFactory{}
 	// Re-init global config with the new factory
-	config = factory.CreateConfigProvider()
+	config = factory.CreateConfigProvider("")
 
 	// Verify that NewConfigProvider returns a MockConfigProvider
 	provider := NewConfigProvider()
