@@ -262,7 +262,7 @@ func ReadGlobalConfig() error {
 	}
 
 	// Load global config using unified settings loader.
-	err = settings.LoadGlobalConfigWithEnv(globalConfigFile, &DdevGlobalConfig)
+	err = settings.LoadGlobalConfig(globalConfigFile, &DdevGlobalConfig)
 	if err != nil {
 		return fmt.Errorf("unable to load DDEV global config file %s: %v", globalConfigFile, err)
 	}
