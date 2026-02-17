@@ -173,6 +173,7 @@ Symfony
 TablePlus
 Traefik
 TravisCI
+TUI
 UAC
 UDP
 UnoCSS

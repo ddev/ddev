@@ -42,7 +42,7 @@ If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating
 
 ## Listing Project Information
 
-!!!tip "TUI Alternative"
+!!!tip "TUI (Terminal UI) Alternative"
     You can also view and manage all your projects from the [interactive dashboard](../usage/cli.md#interactive-dashboard) by running `ddev` with no arguments.
 
 Run [`ddev list`](../usage/commands.md#list) or `ddev list --active-only` current projects.
