@@ -1091,3 +1091,218 @@ func TestErrorViewShowsRetryHint(t *testing.T) {
 	require.Contains(t, view, "Error", "should show error")
 	require.Contains(t, view, "Press R to retry", "should show retry hint")
 }
+
+// --- Router status tests ---
+
+func TestRouterStatusMsg(t *testing.T) {
+	m := NewAppModel()
+
+	updated, _ := m.Update(routerStatusMsg{status: "healthy"})
+	model := updated.(AppModel)
+
+	require.Equal(t, "healthy", model.routerStatus, "router status should be set")
+}
+
+func TestRouterStatusInDashboardView(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.width = 80
+	m.routerStatus = "healthy"
+	m.projects = []ProjectInfo{{Name: "a", Status: ddevapp.SiteRunning, Type: "php"}}
+
+	view := m.View()
+	require.Contains(t, view, "Router:", "dashboard should show router status label")
+	require.Contains(t, view, "healthy", "dashboard should show router status value")
+}
+
+func TestRouterStatusEmptyNotShown(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.width = 80
+	m.routerStatus = ""
+	m.projects = []ProjectInfo{{Name: "a", Status: ddevapp.SiteRunning, Type: "php"}}
+
+	view := m.View()
+	require.NotContains(t, view, "Router:", "should not show router label when empty")
+}
+
+// --- Xdebug toggle tests ---
+
+func TestXdebugToggleFromDetail(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	detail.Status = ddevapp.SiteRunning
+	m.detail = &detail
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'X'}})
+	model := updated.(AppModel)
+
+	require.Contains(t, model.statusMsg, "Toggling xdebug")
+	require.NotNil(t, cmd, "X should return a command to toggle xdebug")
+}
+
+func TestXdebugToggleIgnoredWhenStopped(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	detail.Status = ddevapp.SiteStopped
+	m.detail = &detail
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'X'}})
+	require.Nil(t, cmd, "X should be no-op when project is stopped")
+}
+
+func TestXdebugToggledMsgSuccess(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+
+	updated, cmd := m.Update(xdebugToggledMsg{err: nil})
+	model := updated.(AppModel)
+
+	require.Equal(t, "Xdebug toggled", model.statusMsg)
+	require.True(t, model.detailLoading, "should reload detail after xdebug toggle")
+	require.NotNil(t, cmd)
+}
+
+func TestXdebugToggledMsgError(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+
+	updated, _ := m.Update(xdebugToggledMsg{err: errTest})
+	model := updated.(AppModel)
+
+	require.Contains(t, model.statusMsg, "Xdebug toggle failed")
+}
+
+func TestXdebugHintInDetailView(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	m.width = 120
+	m.height = 30
+	detail := sampleDetail()
+	m.detail = &detail
+
+	view := m.View()
+	require.Contains(t, view, "xdebug", "detail view should show xdebug key hint")
+}
+
+// --- Poweroff tests ---
+
+func TestPoweroffConfirmation(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{{Name: "a"}}
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'P'}})
+	model := updated.(AppModel)
+
+	require.True(t, model.confirming, "should enter confirmation mode")
+	require.Equal(t, "poweroff", model.confirmAction)
+	require.Contains(t, model.statusMsg, "Poweroff")
+	require.Nil(t, cmd, "should not execute yet")
+}
+
+func TestConfirmPoweroff(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.confirming = true
+	m.confirmAction = "poweroff"
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming, "should exit confirmation")
+	require.Contains(t, model.statusMsg, "Powering off")
+	require.NotNil(t, cmd, "should return exec command")
+}
+
+func TestPoweroffHintInDashboard(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.width = 120
+	m.projects = []ProjectInfo{{Name: "a"}}
+
+	view := m.View()
+	require.Contains(t, view, "poweroff", "dashboard should show poweroff hint")
+}
+
+func TestPoweroffInHelpView(t *testing.T) {
+	m := NewAppModel()
+	m.showHelp = true
+
+	view := m.View()
+	require.Contains(t, view, "Poweroff", "help should mention Poweroff")
+}
+
+// --- Copy URL tests ---
+
+func TestCopyURLFromDetail(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+
+	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'c'}})
+	model := updated.(AppModel)
+
+	require.Contains(t, model.statusMsg, "Copying URL")
+	require.NotNil(t, cmd, "c should return a clipboard command")
+}
+
+func TestCopyURLNoURLsNoop(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	detail.URLs = nil
+	m.detail = &detail
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'c'}})
+	require.Nil(t, cmd, "c should be no-op when no URLs")
+}
+
+func TestClipboardMsgSuccess(t *testing.T) {
+	m := NewAppModel()
+
+	updated, _ := m.Update(clipboardMsg{err: nil})
+	model := updated.(AppModel)
+
+	require.Equal(t, "URL copied to clipboard", model.statusMsg)
+}
+
+func TestClipboardMsgError(t *testing.T) {
+	m := NewAppModel()
+
+	updated, _ := m.Update(clipboardMsg{err: errTest})
+	model := updated.(AppModel)
+
+	require.Contains(t, model.statusMsg, "Copy failed")
+}
+
+func TestCopyURLHintInDetailView(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	m.width = 120
+	m.height = 30
+	detail := sampleDetail()
+	m.detail = &detail
+
+	view := m.View()
+	require.Contains(t, view, "copy url", "detail view should show copy url hint")
+}
+
+// --- Help view updated content ---
+
+func TestHelpViewNewEntries(t *testing.T) {
+	m := NewAppModel()
+	m.showHelp = true
+
+	view := m.View()
+	require.Contains(t, view, "Poweroff", "help should mention Poweroff")
+	require.Contains(t, view, "Xdebug", "help should mention Xdebug")
+	require.Contains(t, view, "clipboard", "help should mention clipboard/copy")
+}

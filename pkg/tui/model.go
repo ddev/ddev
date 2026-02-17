@@ -56,7 +56,7 @@ type AppModel struct {
 
 	// Confirmation overlay
 	confirming    bool
-	confirmAction string // "start-all" or "stop-all"
+	confirmAction string // "start-all", "stop-all", or "poweroff"
 }
 
 // NewAppModel creates a new TUI model.
@@ -74,6 +74,7 @@ func NewAppModel() AppModel {
 func (m AppModel) Init() tea.Cmd {
 	return tea.Batch(
 		loadProjects,
+		loadRouterStatus,
 		tickCmd(),
 		m.spinner.Tick,
 	)
@@ -157,6 +158,31 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.detail = &msg.detail
 		return m, nil
 
+	case routerStatusMsg:
+		m.routerStatus = msg.status
+		return m, nil
+
+	case xdebugToggledMsg:
+		if msg.err != nil {
+			m.statusMsg = fmt.Sprintf("Xdebug toggle failed: %v", msg.err)
+		} else {
+			m.statusMsg = "Xdebug toggled"
+		}
+		// Reload detail to reflect new xdebug state
+		if m.detail != nil {
+			m.detailLoading = true
+			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), m.spinner.Tick)
+		}
+		return m, nil
+
+	case clipboardMsg:
+		if msg.err != nil {
+			m.statusMsg = fmt.Sprintf("Copy failed: %v", msg.err)
+		} else {
+			m.statusMsg = "URL copied to clipboard"
+		}
+		return m, nil
+
 	case logStreamStartedMsg:
 		m.logProcess = msg.process
 		m.logSub = msg.lines
@@ -183,7 +209,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		// Reload projects after an operation
 		m.loading = true
-		return m, tea.Batch(loadProjects, m.spinner.Tick)
+		return m, tea.Batch(loadProjects, loadRouterStatus, m.spinner.Tick)
 
 	case operationDetailFinishedMsg:
 		if msg.err != nil {
@@ -204,14 +230,14 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch m.viewMode {
 		case viewDetail:
 			if m.detail != nil {
-				return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), tickCmd())
+				return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), loadRouterStatus, tickCmd())
 			}
-			return m, tickCmd()
+			return m, tea.Batch(loadRouterStatus, tickCmd())
 		case viewLogs:
 			// No auto-refresh while streaming logs
 			return m, tickCmd()
 		case viewDashboard:
-			return m, tea.Batch(loadProjects, tickCmd())
+			return m, tea.Batch(loadProjects, loadRouterStatus, tickCmd())
 		default:
 			return m, tickCmd()
 		}
@@ -257,6 +283,9 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			case "stop-all":
 				m.statusMsg = "Stopping all projects..."
 				return m, ddevExecCommand("stop", "--all")
+			case "poweroff":
+				m.statusMsg = "Powering off all DDEV projects and containers..."
+				return m, ddevExecCommand("poweroff")
 			}
 		}
 		// Any other key cancels
@@ -365,6 +394,12 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, ddevExecCommandInDir(p.AppRoot, "xhgui")
 		}
 
+	case key.Matches(msg, m.keys.Poweroff):
+		m.confirming = true
+		m.confirmAction = "poweroff"
+		m.statusMsg = "Poweroff all DDEV projects and containers? (y to confirm, any key to cancel)"
+		return m, nil
+
 	case key.Matches(msg, m.keys.StartAll):
 		if len(m.projects) > 0 {
 			m.confirming = true
@@ -384,7 +419,7 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case key.Matches(msg, m.keys.Refresh):
 		m.loading = true
 		m.statusMsg = "Refreshing..."
-		return m, tea.Batch(loadProjects, m.spinner.Tick)
+		return m, tea.Batch(loadProjects, loadRouterStatus, m.spinner.Tick)
 
 	case key.Matches(msg, m.keys.Filter):
 		m.filtering = true
@@ -452,6 +487,18 @@ func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case key.Matches(msg, m.keys.SSH):
 		if m.detail != nil {
 			return m, ddevExecCommandDetail(m.detail.AppRoot, "ssh")
+		}
+
+	case key.Matches(msg, m.keys.Xdebug):
+		if m.detail != nil && m.detail.Status == ddevapp.SiteRunning {
+			m.statusMsg = "Toggling xdebug..."
+			return m, xdebugToggleCmd(m.detail.AppRoot)
+		}
+
+	case key.Matches(msg, m.keys.CopyURL):
+		if m.detail != nil && len(m.detail.URLs) > 0 {
+			m.statusMsg = "Copying URL..."
+			return m, copyToClipboard(m.detail.URLs[0])
 		}
 
 	case key.Matches(msg, m.keys.Refresh):
@@ -531,16 +578,16 @@ func (m AppModel) dashboardView() string {
 
 	// Filter indicator
 	if m.filtering {
-		b.WriteString(fmt.Sprintf("Filter: %s█\n\n", m.filterText))
+		fmt.Fprintf(&b, "Filter: %s█\n\n", m.filterText)
 	} else if m.filterText != "" {
-		b.WriteString(fmt.Sprintf("Filter: %s (press / to edit, esc to clear)\n\n", m.filterText))
+		fmt.Fprintf(&b, "Filter: %s (press / to edit, esc to clear)\n\n", m.filterText)
 	}
 
 	// Loading indicator
 	if m.loading && len(m.projects) == 0 {
-		b.WriteString(fmt.Sprintf("  %s Loading projects...\n", m.spinner.View()))
+		fmt.Fprintf(&b, "  %s Loading projects...\n", m.spinner.View())
 	} else if m.err != nil && len(m.projects) == 0 {
-		b.WriteString(fmt.Sprintf("  Error: %v\n", m.err))
+		fmt.Fprintf(&b, "  Error: %v\n", m.err)
 		b.WriteString("  Is Docker running? Press R to retry.\n")
 	} else {
 		filtered := m.filteredProjects()
@@ -595,7 +642,7 @@ func (m AppModel) dashboardView() string {
 					}
 				}
 
-				b.WriteString(fmt.Sprintf("%s%s %s  %s  %s\n", cursor, name, status, pType, url))
+				fmt.Fprintf(&b, "%s%s %s  %s  %s\n", cursor, name, status, pType, url)
 			}
 		}
 	}
@@ -609,7 +656,17 @@ func (m AppModel) dashboardView() string {
 
 	// Router status
 	if m.routerStatus != "" {
-		b.WriteString(fmt.Sprintf("Router: %s\n", m.routerStatus))
+		routerLabel := "Router: "
+		var rendered string
+		switch m.routerStatus {
+		case ddevapp.SiteRunning, "healthy":
+			rendered = routerLabel + m.styles.Running.Render(m.routerStatus)
+		case ddevapp.SiteStopped:
+			rendered = routerLabel + m.styles.Stopped.Render(m.routerStatus)
+		default:
+			rendered = routerLabel + m.styles.Paused.Render(m.routerStatus)
+		}
+		b.WriteString(rendered + "\n")
 	}
 
 	// Status message
@@ -637,7 +694,7 @@ func (m AppModel) detailView() string {
 	if m.detailLoading || m.detail == nil {
 		b.WriteString(m.styles.Title.Render("DDEV Project") + "\n")
 		b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-		b.WriteString(fmt.Sprintf("\n  %s Loading project detail...\n", m.spinner.View()))
+		fmt.Fprintf(&b, "\n  %s Loading project detail...\n", m.spinner.View())
 		return b.String()
 	}
 
@@ -677,10 +734,10 @@ func (m AppModel) detailView() string {
 		perfStr = "none"
 	}
 
-	b.WriteString(fmt.Sprintf(" %s %s    %s %s\n", label("Type:"), val(fmt.Sprintf("%-14s", d.Type)), label("PHP:"), val(d.PHPVersion)))
-	b.WriteString(fmt.Sprintf(" %s %s    %s %s\n", label("Webserver:"), val(fmt.Sprintf("%-14s", d.WebserverType)), label("Node.js:"), val(d.NodeJSVersion)))
-	b.WriteString(fmt.Sprintf(" %s %s    %s %s\n", label("Docroot:"), val(fmt.Sprintf("%-14s", d.Docroot)), label("Perf:"), val(perfStr)))
-	b.WriteString(fmt.Sprintf(" %s %s    %s %s\n", label("Database:"), val(fmt.Sprintf("%-14s", dbStr)), label("Xdebug:"), val(xdebugStr)))
+	fmt.Fprintf(&b, " %s %s    %s %s\n", label("Type:"), val(fmt.Sprintf("%-14s", d.Type)), label("PHP:"), val(d.PHPVersion))
+	fmt.Fprintf(&b, " %s %s    %s %s\n", label("Webserver:"), val(fmt.Sprintf("%-14s", d.WebserverType)), label("Node.js:"), val(d.NodeJSVersion))
+	fmt.Fprintf(&b, " %s %s    %s %s\n", label("Docroot:"), val(fmt.Sprintf("%-14s", d.Docroot)), label("Perf:"), val(perfStr))
+	fmt.Fprintf(&b, " %s %s    %s %s\n", label("Database:"), val(fmt.Sprintf("%-14s", dbStr)), label("Xdebug:"), val(xdebugStr))
 	b.WriteString("\n")
 
 	// URLs
@@ -694,15 +751,15 @@ func (m AppModel) detailView() string {
 
 	// Mailpit + DB port
 	if d.MailpitURL != "" {
-		b.WriteString(fmt.Sprintf(" %s %s\n", label("Mailpit:"), m.styles.URL.Render(d.MailpitURL)))
+		fmt.Fprintf(&b, " %s %s\n", label("Mailpit:"), m.styles.URL.Render(d.MailpitURL))
 	}
 	if d.DBPublishedPort != "" {
-		b.WriteString(fmt.Sprintf(" %s %s\n", label("DB Port:"), val(d.DBPublishedPort)))
+		fmt.Fprintf(&b, " %s %s\n", label("DB Port:"), val(d.DBPublishedPort))
 	}
 
 	// Add-ons
 	if len(d.Addons) > 0 {
-		b.WriteString(fmt.Sprintf(" %s %s\n", label("Add-ons:"), val(strings.Join(d.Addons, ", "))))
+		fmt.Fprintf(&b, " %s %s\n", label("Add-ons:"), val(strings.Join(d.Addons, ", ")))
 	}
 
 	b.WriteString("\n")
@@ -755,7 +812,7 @@ func (m AppModel) logView() string {
 	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
 
 	if len(m.logLines) == 0 {
-		b.WriteString(fmt.Sprintf("\n  %s Waiting for log output...\n", m.spinner.View()))
+		fmt.Fprintf(&b, "\n  %s Waiting for log output...\n", m.spinner.View())
 	} else {
 		// Show the last N lines that fit the terminal (auto-scroll to bottom)
 		viewHeight := m.height - 4 // title, divider, bottom divider, hints
@@ -846,6 +903,7 @@ func (m AppModel) dashboardKeyHints() string {
 		{"r", "restart"},
 		{"a", "start all"},
 		{"A", "stop all"},
+		{"P", "poweroff"},
 		{"l", "launch"},
 		{"m", "mailpit"},
 		{"x", "xhgui"},
@@ -868,6 +926,8 @@ func (m AppModel) detailKeyHints() string {
 		{"l", "launch"},
 		{"m", "mailpit"},
 		{"x", "xhgui"},
+		{"X", "xdebug"},
+		{"c", "copy url"},
 		{"e", "ssh"},
 		{"L", "logs"},
 		{"R", "refresh"},
@@ -909,9 +969,12 @@ Actions:
   r               Restart selected project
   a               Start all projects
   A               Stop all projects
+  P               Poweroff all DDEV projects and containers
   l               Launch project URL in browser
   m               Launch Mailpit in browser
   x               Launch XHGui (enable xhprof + open UI)
+  X               Toggle Xdebug on/off (from detail view)
+  c               Copy primary URL to clipboard (from detail view)
   e               SSH into web container (from detail view)
   L               Follow logs (from detail view)
   R               Refresh

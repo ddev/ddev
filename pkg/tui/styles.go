@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/muesli/termenv"
 )
 
 // Styles holds all the lipgloss styles used by the TUI.
@@ -28,7 +29,9 @@ type Styles struct {
 
 // NewStyles creates styles respecting SimpleFormatting and NO_COLOR.
 func NewStyles() Styles {
-	noColor := globalconfig.DdevGlobalConfig.SimpleFormatting || os.Getenv("NO_COLOR") != ""
+	noColor := globalconfig.DdevGlobalConfig.SimpleFormatting ||
+		os.Getenv("NO_COLOR") != "" ||
+		termenv.ColorProfile() == termenv.Ascii
 
 	if noColor {
 		return Styles{

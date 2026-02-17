@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -191,4 +192,69 @@ func ddevExecCommandDetail(dir string, args ...string) tea.Cmd {
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		return operationDetailFinishedMsg{err: err}
 	})
+}
+
+// loadRouterStatus fetches the router health status in the background.
+func loadRouterStatus() tea.Msg {
+	status, _ := ddevapp.GetRouterStatus()
+	return routerStatusMsg{status: status}
+}
+
+// xdebugToggleCmd runs `ddev xdebug toggle` in the project directory.
+func xdebugToggleCmd(appRoot string) tea.Cmd {
+	return func() tea.Msg {
+		ddevBin, err := os.Executable()
+		if err != nil {
+			return xdebugToggledMsg{err: err}
+		}
+
+		c := exec.Command(ddevBin, "xdebug", "toggle")
+		c.Env = append(os.Environ(), "DDEV_NO_TUI=true")
+		c.Dir = appRoot
+
+		err = c.Run()
+		return xdebugToggledMsg{err: err}
+	}
+}
+
+// copyToClipboard copies text to the system clipboard using platform-specific tools.
+func copyToClipboard(text string) tea.Cmd {
+	return func() tea.Msg {
+		var cmd *exec.Cmd
+
+		switch runtime.GOOS {
+		case "darwin":
+			cmd = exec.Command("pbcopy")
+		case "linux":
+			// Try wayland first, then X11
+			if _, err := exec.LookPath("wl-copy"); err == nil {
+				cmd = exec.Command("wl-copy")
+			} else if _, err := exec.LookPath("xclip"); err == nil {
+				cmd = exec.Command("xclip", "-selection", "clipboard")
+			} else if _, err := exec.LookPath("xsel"); err == nil {
+				cmd = exec.Command("xsel", "--clipboard", "--input")
+			} else {
+				return clipboardMsg{err: fmt.Errorf("no clipboard tool found (install xclip, xsel, or wl-copy)")}
+			}
+		default:
+			return clipboardMsg{err: fmt.Errorf("clipboard not supported on %s", runtime.GOOS)}
+		}
+
+		pipe, err := cmd.StdinPipe()
+		if err != nil {
+			return clipboardMsg{err: err}
+		}
+
+		if err := cmd.Start(); err != nil {
+			return clipboardMsg{err: err}
+		}
+
+		_, err = pipe.Write([]byte(text))
+		_ = pipe.Close()
+		if err != nil {
+			return clipboardMsg{err: err}
+		}
+
+		return clipboardMsg{err: cmd.Wait()}
+	}
 }

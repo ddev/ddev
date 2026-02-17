@@ -83,6 +83,16 @@ type routerStatusMsg struct {
 	status string
 }
 
+// xdebugToggledMsg is sent after xdebug toggle completes.
+type xdebugToggledMsg struct {
+	err error
+}
+
+// clipboardMsg is sent after a clipboard copy attempt.
+type clipboardMsg struct {
+	err error
+}
+
 // extractProjectInfo converts a DdevApp to our lightweight ProjectInfo.
 func extractProjectInfo(app *ddevapp.DdevApp) ProjectInfo {
 	status, _ := app.SiteStatus()

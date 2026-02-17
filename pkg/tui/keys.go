@@ -24,6 +24,9 @@ type KeyMap struct {
 	StartAll key.Binding
 	StopAll  key.Binding
 	Confirm  key.Binding
+	Xdebug   key.Binding
+	Poweroff key.Binding
+	CopyURL  key.Binding
 }
 
 // DefaultKeyMap returns the default key bindings.
@@ -108,6 +111,18 @@ func DefaultKeyMap() KeyMap {
 		Confirm: key.NewBinding(
 			key.WithKeys("y"),
 			key.WithHelp("y", "confirm"),
+		),
+		Xdebug: key.NewBinding(
+			key.WithKeys("X"),
+			key.WithHelp("X", "xdebug toggle"),
+		),
+		Poweroff: key.NewBinding(
+			key.WithKeys("P"),
+			key.WithHelp("P", "poweroff"),
+		),
+		CopyURL: key.NewBinding(
+			key.WithKeys("c"),
+			key.WithHelp("c", "copy url"),
 		),
 	}
 }
