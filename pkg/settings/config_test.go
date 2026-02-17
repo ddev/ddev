@@ -83,3 +83,75 @@ func TestNewConfigProviderIsolation(t *testing.T) {
 	assert.Equal(t, "value1", p1.GetString("key"))
 	assert.Equal(t, "value2", p2.GetString("key"))
 }
+
+// MockConfigProvider is a mock implementation of ConfigProvider for testing factory swaps.
+type MockConfigProvider struct {
+	data map[string]any
+}
+
+func (m *MockConfigProvider) GetString(key string) string {
+	if val, ok := m.data[key]; ok {
+		return val.(string)
+	}
+	return ""
+}
+func (m *MockConfigProvider) GetInt(key string) int {
+	if val, ok := m.data[key]; ok {
+		return val.(int)
+	}
+	return 0
+}
+func (m *MockConfigProvider) GetBool(key string) bool {
+	if val, ok := m.data[key]; ok {
+		return val.(bool)
+	}
+	return false
+}
+func (m *MockConfigProvider) SetDefault(key string, value any)        { m.data[key] = value }
+func (m *MockConfigProvider) BindEnv(key string, envVar string) error { return nil }
+func (m *MockConfigProvider) Set(key string, value any)               { m.data[key] = value }
+func (m *MockConfigProvider) Unmarshal(rawVal any) error              { return nil }
+func (m *MockConfigProvider) Unset(key string)                        { delete(m.data, key) }
+func (m *MockConfigProvider) ReadConfig(path string) error            { return nil }
+func (m *MockConfigProvider) MergeConfig(path string) error           { return nil }
+
+// MockFactory is a mock implementation of ProviderFactory.
+type MockFactory struct{}
+
+func (f *MockFactory) CreateConfigProvider() ConfigProvider {
+	return &MockConfigProvider{data: make(map[string]any)}
+}
+
+func (f *MockFactory) CreateCleanConfigProvider() ConfigProvider {
+	return &MockConfigProvider{data: make(map[string]any)}
+}
+
+func (f *MockFactory) CreateProjectListConfigProvider() ConfigProvider {
+	return &MockConfigProvider{data: make(map[string]any)}
+}
+
+// TestAbstractFactorySwap verifies that we can swap the underlying factory
+// and that the global functions delegate to it.
+func TestAbstractFactorySwap(t *testing.T) {
+	// Backup original factory and config
+	origFactory := factory
+	origConfig := config
+	defer func() {
+		factory = origFactory
+		config = origConfig
+	}()
+
+	// Inject MockFactory
+	factory = &MockFactory{}
+	// Re-init global config with the new factory
+	config = factory.CreateConfigProvider()
+
+	// Verify that NewConfigProvider returns a MockConfigProvider
+	provider := NewConfigProvider()
+	_, ok := provider.(*MockConfigProvider)
+	assert.True(t, ok, "NewConfigProvider should return a MockConfigProvider when MockFactory is injected")
+
+	// Verify that the global config is also using the mock
+	Set("mock_key", "mock_value")
+	assert.Equal(t, "mock_value", GetString("mock_key"))
+}

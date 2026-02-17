@@ -583,10 +583,12 @@ func ReadProjectList() error {
 	}
 
 	// Load project list using unified settings loader (clean to avoid poisoning).
-	err = settings.LoadCleanConfig(globalProjectsFile, &DdevProjectList)
+	err = settings.LoadProjectListConfig(globalProjectsFile, &DdevProjectList)
 	if err != nil {
 		return fmt.Errorf("unable to load DDEV global projects file %s: %v", globalProjectsFile, err)
 	}
+
+	// Sanitize the project list
 
 	// Sanitize the project list
 	for name, project := range DdevProjectList {
