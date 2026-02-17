@@ -416,6 +416,9 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
+	case key.Matches(msg, m.keys.Config):
+		return m, ddevConfigCommand()
+
 	case key.Matches(msg, m.keys.Refresh):
 		m.loading = true
 		m.statusMsg = "Refreshing..."
@@ -594,7 +597,7 @@ func (m AppModel) dashboardView() string {
 		if len(filtered) == 0 {
 			if len(m.projects) == 0 {
 				b.WriteString("  No DDEV projects found.\n")
-				b.WriteString("  Run 'ddev config' in a project directory to get started.\n")
+				b.WriteString("  Press 'C' to run ddev config, or run it manually in a project directory.\n")
 			} else {
 				b.WriteString("  No projects match the filter.\n")
 			}
@@ -907,6 +910,7 @@ func (m AppModel) dashboardKeyHints() string {
 		{"l", "launch"},
 		{"m", "mailpit"},
 		{"x", "xhgui"},
+		{"C", "config"},
 		{"enter", "detail"},
 		{"/", "filter"},
 		{"?", "help"},
@@ -970,6 +974,7 @@ Actions:
   a               Start all projects
   A               Stop all projects
   P               Poweroff all DDEV projects and containers
+  C               Run ddev config interactively
   l               Launch project URL in browser
   m               Launch Mailpit in browser
   x               Launch XHGui (enable xhprof + open UI)

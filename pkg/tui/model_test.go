@@ -1297,6 +1297,53 @@ func TestCopyURLHintInDetailView(t *testing.T) {
 
 // --- Help view updated content ---
 
+// --- Config key tests ---
+
+func TestConfigKeyReturnsCommand(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{{Name: "a"}}
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'C'}})
+	require.NotNil(t, cmd, "C should return a command to run ddev config")
+}
+
+func TestConfigKeyFromEmptyState(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	// No projects
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'C'}})
+	require.NotNil(t, cmd, "C should return a command even with no projects")
+}
+
+func TestEmptyStateShowsConfigHint(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.width = 80
+
+	view := m.View()
+	require.Contains(t, view, "Press 'C' to run ddev config", "empty state should mention C key")
+}
+
+func TestConfigHintInDashboard(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.width = 120
+	m.projects = []ProjectInfo{{Name: "a"}}
+
+	view := m.View()
+	require.Contains(t, view, "config", "dashboard hints should include config")
+}
+
+func TestConfigInHelpView(t *testing.T) {
+	m := NewAppModel()
+	m.showHelp = true
+
+	view := m.View()
+	require.Contains(t, view, "Run ddev config", "help should mention ddev config")
+}
+
 func TestHelpViewNewEntries(t *testing.T) {
 	m := NewAppModel()
 	m.showHelp = true

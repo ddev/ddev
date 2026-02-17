@@ -2,6 +2,29 @@
 
 Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [commands](../usage/commands.md). There are commands to configure a project, start, stop, describe, etc. Each command also has help using `ddev help <command>` or `ddev command -h`. For example, `ddev help snapshot` will show help and examples for the snapshot command.
 
+## Interactive Dashboard
+
+Running `ddev` with no arguments launches an interactive terminal dashboard. The dashboard shows all your DDEV projects, their status, and lets you manage them with keyboard shortcuts:
+
+| Key | Action |
+|-----|--------|
+| <kbd>s</kbd> / <kbd>S</kbd> | Start / Stop selected project |
+| <kbd>r</kbd> | Restart selected project |
+| <kbd>a</kbd> / <kbd>A</kbd> | Start all / Stop all projects |
+| <kbd>P</kbd> | Poweroff all DDEV projects and containers |
+| <kbd>l</kbd> | Launch project URL in browser |
+| <kbd>m</kbd> | Launch Mailpit in browser |
+| <kbd>Enter</kbd> or <kbd>d</kbd> | Open project detail view |
+| <kbd>e</kbd> | SSH into web container (from detail view) |
+| <kbd>L</kbd> | Follow logs (from detail view) |
+| <kbd>X</kbd> | Toggle Xdebug (from detail view) |
+| <kbd>C</kbd> | Run `ddev config` interactively |
+| <kbd>/</kbd> | Filter projects |
+| <kbd>?</kbd> | Show full help |
+| <kbd>q</kbd> | Quit |
+
+To disable the dashboard and show the classic help text instead, set [`no_tui: true`](../configuration/config.md) in your global configuration (`~/.ddev/global_config.yaml`), or set the environment variable `DDEV_NO_TUI=true`.
+
 * [`ddev config`](../usage/commands.md#config) configures a project’s type and docroot, either interactively or with flags.
 * [`ddev start`](../usage/commands.md#start) starts up a project.
 * [`ddev launch`](../usage/commands.md#launch) opens a web browser showing the project.

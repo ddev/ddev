@@ -7,6 +7,8 @@ Once [DDEV is installed](./install/ddev-installation.md), setting up a new proje
 3. Run [`ddev start`](./usage/commands.md#start) to spin up the project.
 4. Run [`ddev launch`](./usage/commands.md#launch) to open your project in a browser.
 
+You can also type `ddev` to manage your projects from an [interactive dashboard](./usage/cli.md#interactive-dashboard).
+
 DDEV can automatically detect your project type and docroot. If it guessed wrong or there’s something else you want to change, use the [`ddev config`](./usage/commands.md#config) command or update [project options](./configuration/config.md) by editing `.ddev/config.yaml`. You can see the result by running [`ddev describe`](./usage/commands.md#describe).
 
 !!!tip "What is the `php` project type?"

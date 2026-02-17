@@ -5,6 +5,7 @@ This section covers day-to-day DDEV usage, reference material, and common suppor
 ## Common Tasks
 
 - [Using the `ddev` Command](cli.md)
+- [Interactive Dashboard](cli.md#interactive-dashboard)
 - [Database Management](database-management.md)
 - [Managing CMS Settings](cms-settings.md)
 - [Managing Projects](managing-projects.md)

@@ -2,11 +2,13 @@ package tui
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -191,6 +193,35 @@ func ddevExecCommandDetail(dir string, args ...string) tea.Cmd {
 
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		return operationDetailFinishedMsg{err: err}
+	})
+}
+
+// ddevConfigCommand runs `ddev config` interactively, capturing stderr
+// so the actual error message can be shown in the TUI status bar.
+func ddevConfigCommand() tea.Cmd {
+	ddevBin, err := os.Executable()
+	if err != nil {
+		return func() tea.Msg {
+			return operationFinishedMsg{err: err}
+		}
+	}
+
+	var stderrBuf bytes.Buffer
+	c := exec.Command(ddevBin, "config")
+	c.Env = append(os.Environ(), "DDEV_NO_TUI=true")
+	// Tee stderr to both the terminal (so user sees it) and a buffer (for status bar)
+	c.Stderr = io.MultiWriter(os.Stderr, &stderrBuf)
+
+	return tea.ExecProcess(c, func(err error) tea.Msg {
+		if err != nil && stderrBuf.Len() > 0 {
+			// Extract the last non-empty line from stderr for a meaningful message
+			lines := strings.Split(strings.TrimSpace(stderrBuf.String()), "\n")
+			lastLine := strings.TrimSpace(lines[len(lines)-1])
+			if lastLine != "" {
+				return operationFinishedMsg{err: fmt.Errorf("%s", lastLine)}
+			}
+		}
+		return operationFinishedMsg{err: err}
 	})
 }
 

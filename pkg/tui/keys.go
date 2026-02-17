@@ -27,6 +27,7 @@ type KeyMap struct {
 	Xdebug   key.Binding
 	Poweroff key.Binding
 	CopyURL  key.Binding
+	Config   key.Binding
 }
 
 // DefaultKeyMap returns the default key bindings.
@@ -123,6 +124,10 @@ func DefaultKeyMap() KeyMap {
 		CopyURL: key.NewBinding(
 			key.WithKeys("c"),
 			key.WithHelp("c", "copy url"),
+		),
+		Config: key.NewBinding(
+			key.WithKeys("C"),
+			key.WithHelp("C", "config"),
 		),
 	}
 }
