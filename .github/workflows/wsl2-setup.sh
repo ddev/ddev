@@ -19,12 +19,15 @@ apt-get install -qq -y \
   build-essential \
   ca-certificates \
   curl \
+  expect \
   git \
   gnupg \
   jq \
+  libcurl4-gnutls-dev \
   libnss3-tools \
   lsb-release \
   make \
+  mariadb-client \
   postgresql-client \
   software-properties-common \
   unzip \
@@ -63,6 +66,15 @@ echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
   | tee /etc/apt/sources.list.d/ngrok.list >/dev/null
 apt-get update -qq >/dev/null
 apt-get install -qq -y ngrok >/dev/null
+
+echo "=== Installing cloudflared ==="
+mkdir -p --mode=0755 /usr/share/keyrings
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg \
+  | tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' \
+  | tee /etc/apt/sources.list.d/cloudflared.list >/dev/null
+apt-get update -qq >/dev/null
+apt-get install -qq -y cloudflared >/dev/null
 
 echo "=== Configuring testuser ==="
 # testuser and /etc/wsl.conf are already created by the workflow install step
