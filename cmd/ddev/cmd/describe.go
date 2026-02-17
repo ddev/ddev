@@ -254,10 +254,10 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		}
 	}
 	bindInfo := []string{}
-	if app.BindAllInterfaces {
+	if app.BindAllInterfaces || dockerutil.IsRemoteDockerHost() {
 		bindInfo = append(bindInfo, "bind-all-interfaces ENABLED")
 	}
-	if globalconfig.DdevGlobalConfig.RouterBindAllInterfaces && !ddevapp.IsRouterDisabled(app) {
+	if (globalconfig.DdevGlobalConfig.RouterBindAllInterfaces || dockerutil.IsRemoteDockerHost()) && !ddevapp.IsRouterDisabled(app) {
 		bindInfo = append(bindInfo, "router-bind-all-interfaces ENABLED")
 	}
 	if len(bindInfo) > 0 {

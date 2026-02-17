@@ -215,7 +215,7 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 		"GID":                        gid,
 		"router_image":               ddevImages.GetRouterImage(),
 		"ports":                      exposedPorts,
-		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
+		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces || dockerutil.IsRemoteDockerHost(),
 		"dockerIP":                   dockerIP,
 		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
