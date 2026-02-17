@@ -15,9 +15,8 @@ type ConfigProvider interface {
 
 // ProviderFactory defines the interface for creating ConfigProviders.
 type ProviderFactory interface {
-	CreateConfigProvider() ConfigProvider
-	CreateCleanConfigProvider() ConfigProvider
-	CreateProjectListConfigProvider() ConfigProvider
+	CreateConfigProvider(delimiter string) ConfigProvider
+	CreateCleanConfigProvider(delimiter string) ConfigProvider
 }
 
 var (
@@ -33,7 +32,7 @@ func init() {
 // Init initializes the settings system. Call this early in main() if you need to re-init.
 func Init() error {
 	factory = &ViperFactory{}
-	config = factory.CreateConfigProvider()
+	config = factory.CreateConfigProvider("")
 	return nil
 }
 
@@ -60,13 +59,6 @@ func LoadProjectConfig(mainPath string, overridePaths []string, target any) erro
 	}
 
 	return cfg.Unmarshal(target)
-}
-
-// LoadGlobalConfigWithEnv loads a global configuration file into the target struct,
-// also enabling environment variable overrides for standard DDEV settings.
-// Deprecated: Use LoadGlobalConfig instead, which now handles environment variables.
-func LoadGlobalConfigWithEnv(path string, target any) error {
-	return LoadGlobalConfig(path, target)
 }
 
 // LoadCleanConfig loads a configuration file into the target struct without any environment variable bindings.
@@ -112,17 +104,17 @@ func Unset(key string) {
 
 // NewConfigProvider returns a new ConfigProvider from the configured factory.
 func NewConfigProvider() ConfigProvider {
-	return factory.CreateConfigProvider()
+	return factory.CreateConfigProvider("")
 }
 
 // NewCleanConfigProvider returns a new CleanConfigProvider from the configured factory.
 func NewCleanConfigProvider() ConfigProvider {
-	return factory.CreateCleanConfigProvider()
+	return factory.CreateCleanConfigProvider("")
 }
 
 // NewProjectListConfigProvider returns a new ProjectListConfigProvider from the configured factory.
 func NewProjectListConfigProvider() ConfigProvider {
-	return factory.CreateProjectListConfigProvider()
+	return factory.CreateCleanConfigProvider("::")
 }
 
 // LoadProjectListConfig loads a configuration file into the target struct using a custom key delimiter.
