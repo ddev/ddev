@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"net/url"
@@ -10,7 +9,6 @@ import (
 	"os/exec"
 	"os/signal"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -91,12 +89,6 @@ ddev share myproject`,
 			util.Failed("Failed to create stdout pipe: %v", err)
 		}
 
-		// Create pipe to capture stderr (to filter shutdown errors)
-		stderrReader, stderrWriter, err := os.Pipe()
-		if err != nil {
-			util.Failed("Failed to create stderr pipe: %v", err)
-		}
-
 		// Show what script is being run
 		util.Success("Using share provider script: %s", scriptPath)
 
@@ -123,7 +115,7 @@ ddev share myproject`,
 		providerCmd := exec.Command(bashPath, scriptPath)
 		providerCmd.Env = env
 		providerCmd.Stdout = stdoutWriter
-		providerCmd.Stderr = stderrWriter
+		providerCmd.Stderr = os.Stderr
 
 		// Set up signal handling for SIGINT/SIGTERM
 		sigChan := make(chan os.Signal, 1)
@@ -135,10 +127,9 @@ ddev share myproject`,
 			util.Failed("Failed to start share provider '%s': %v", providerName, err)
 		}
 
-		// Close write ends immediately after Start - child has its own copy
-		// This ensures readers see EOF when child exits (fixes hang on provider failure)
+		// Close write end immediately after Start - child has its own copy
+		// This ensures reader sees EOF when child exits (fixes hang on provider failure)
 		_ = stdoutWriter.Close()
-		_ = stderrWriter.Close()
 
 		// Capture URL from first line of stdout
 		urlChan := make(chan string, 1)
@@ -149,28 +140,8 @@ ddev share myproject`,
 			} else {
 				urlChan <- ""
 			}
-			// In verbose mode, pass through remaining stdout; otherwise discard
-			if globalconfig.DdevVerbose {
-				_, _ = io.Copy(os.Stdout, stdoutReader)
-			} else {
-				// Keep reading to prevent provider from blocking on stdout
-				for scanner.Scan() {
-					// Discard additional stdout
-				}
-			}
-		}()
-
-		// Capture stderr in buffer to display on failure
-		var stderrBuf bytes.Buffer
-		var stderrMu sync.Mutex
-		go func() {
-			scanner := bufio.NewScanner(stderrReader)
-			for scanner.Scan() {
-				line := scanner.Text()
-				stderrMu.Lock()
-				stderrBuf.WriteString(line + "\n")
-				stderrMu.Unlock()
-			}
+			// Drain remaining stdout to prevent provider from blocking
+			_, _ = io.Copy(io.Discard, stdoutReader)
 		}()
 
 		// Wait for URL with timeout
@@ -179,14 +150,6 @@ ddev share myproject`,
 		case shareURL = <-urlChan:
 			if shareURL == "" {
 				_ = providerCmd.Process.Kill()
-				// Give stderr goroutine time to capture any error output
-				time.Sleep(100 * time.Millisecond)
-				stderrMu.Lock()
-				stderrOutput := stderrBuf.String()
-				stderrMu.Unlock()
-				if stderrOutput != "" {
-					util.Error("Provider stderr output:\n%s", stderrOutput)
-				}
 				util.Failed("Provider '%s' did not output a URL", providerName)
 			}
 		case <-sigChan:
@@ -195,6 +158,9 @@ ddev share myproject`,
 				_ = providerCmd.Process.Kill()
 			}
 			util.Failed("Interrupted before tunnel URL was established")
+		case <-time.After(60 * time.Second):
+			_ = providerCmd.Process.Kill()
+			util.Failed("Provider '%s' did not output a URL within 60 seconds", providerName)
 		}
 
 		// Validate URL
@@ -202,14 +168,6 @@ ddev share myproject`,
 		parsedURL, err := url.Parse(shareURL)
 		if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
 			_ = providerCmd.Process.Kill()
-			// Give stderr goroutine time to capture any error output
-			time.Sleep(100 * time.Millisecond)
-			stderrMu.Lock()
-			stderrOutput := stderrBuf.String()
-			stderrMu.Unlock()
-			if stderrOutput != "" {
-				util.Error("Provider stderr output:\n%s", stderrOutput)
-			}
 			util.Failed("Provider '%s' output invalid URL: %s", providerName, shareURL)
 		}
 
@@ -253,14 +211,8 @@ ddev share myproject`,
 			if exitErr, ok := err.(*exec.ExitError); ok {
 				// Don't warn about exit code -1 which is from Kill()
 				if exitErr.ExitCode() != -1 {
-					util.Warning("Provider '%s' exited with code %d", providerName, exitErr.ExitCode())
-					// Always show stderr output on error, not just with DDEV_DEBUG
-					stderrMu.Lock()
-					stderrOutput := stderrBuf.String()
-					stderrMu.Unlock()
-					if stderrOutput != "" {
-						util.Error("Provider stderr output:\n%s", stderrOutput)
-					}
+					util.Error("Provider '%s' exited with code %d", providerName, exitErr.ExitCode())
+					os.Exit(exitErr.ExitCode())
 				}
 			}
 		}

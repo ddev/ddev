@@ -9,8 +9,19 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 )
 
+// PopulateShareProviders copies bundled share-provider scripts to the project's
+// .ddev/share-providers/ directory, respecting #ddev-generated signatures.
+func (app *DdevApp) PopulateShareProviders() error {
+	return fileutil.CopyEmbedAssets(bundledAssets, "dotddev_assets/share-providers", app.GetConfigPath("share-providers"), nil)
+}
+
 // GetShareProviderScript returns the absolute path to a share provider script
 func (app *DdevApp) GetShareProviderScript(providerName string) (string, error) {
+	// Ensure bundled share-provider scripts are up to date
+	if err := app.PopulateShareProviders(); err != nil {
+		return "", fmt.Errorf("failed to populate share providers: %v", err)
+	}
+
 	scriptPath := app.GetConfigPath(filepath.Join("share-providers", providerName+".sh"))
 
 	if !fileutil.FileExists(scriptPath) {
