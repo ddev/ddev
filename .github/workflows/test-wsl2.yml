@@ -53,10 +53,10 @@ env:
   MAKE_TARGET: ${{ inputs.make_target || 'test' }}
   DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
   DDEV_SKIP_NODEJS_TEST: 'true'
-  # For pull_request events, clone from the fork's repo and use the PR source branch.
-  # For push/workflow_dispatch, clone from the current repo and use ref_name.
-  GITHUB_CLONE_URL: ${{ github.event.pull_request.head.repo.clone_url || format('https://github.com/{0}', github.repository) }}
-  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+  # Always clone from base repository to get upstream tags
+  GITHUB_CLONE_URL: https://github.com/${{ github.repository }}
+  # For PRs, use the PR ref; otherwise use the branch name
+  GIT_REF: ${{ github.event.pull_request.number && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref_name }}
 
 jobs:
   test-wsl2:
@@ -142,20 +142,18 @@ jobs:
         shell: pwsh
         run: |
           $repoUrl = "${{ env.GITHUB_CLONE_URL }}"
-          $branchName = "${{ env.BRANCH_NAME }}"
+          $gitRef = "${{ env.GIT_REF }}"
           # Shallow clone inside WSL2 as root just to get the setup scripts
-          wsl -u root -- bash -exc "git clone --depth=1 --single-branch --branch '$branchName' '$repoUrl' /tmp/ddev-ci && cd /tmp/ddev-ci && bash -e .github/workflows/wsl2-setup.sh"
+          wsl -u root -- bash -exc "git clone --depth=1 --no-single-branch '$repoUrl' /tmp/ddev-ci && cd /tmp/ddev-ci && git fetch origin '$gitRef' && git checkout FETCH_HEAD && bash -e .github/workflows/wsl2-setup.sh"
 
       - name: Clone repository for testuser
         shell: pwsh
         run: |
           $repoUrl = "${{ env.GITHUB_CLONE_URL }}"
-          $branchName = "${{ env.BRANCH_NAME }}"
-          $upstreamUrl = "https://github.com/${{ github.repository }}"
-          # Full clone with tags so git describe works for version info
-          # For PRs from forks, we need to fetch tags from upstream (ddev/ddev) to get correct version
-          # Use --force to overwrite any conflicting tags from the fork
-          wsl -u testuser -- bash -exc "mkdir -p ~/workspace && cd ~/workspace && git clone --single-branch --branch '$branchName' '$repoUrl' ddev && cd ddev && git remote add upstream '$upstreamUrl' && git fetch upstream --tags --force && echo 'Checked out:' && git log -1 --oneline && git describe --tags --always"
+          $gitRef = "${{ env.GIT_REF }}"
+          # Clone from base repository (ddev/ddev) and fetch PR ref or branch
+          # This ensures we always have upstream tags for correct git describe output
+          wsl -u testuser -- bash -exc "mkdir -p ~/workspace && cd ~/workspace && git clone --no-single-branch '$repoUrl' ddev && cd ddev && git fetch origin '$gitRef' && git checkout FETCH_HEAD && echo 'Checked out:' && git log -1 --oneline && git describe --tags --always"
 
       - name: Setup tmate session
         if: ${{ inputs.debug_enabled }}
