@@ -10,7 +10,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/moby/moby/client"
@@ -140,17 +139,43 @@ func TestNetworkAmbiguity(t *testing.T) {
 }
 
 // TestNetworkAliases tests inter-project connectivity using ddev_default network aliases
+// when both projects use the same ports (80/443). This validates the fix for #8110:
+// the router must be recreated when network aliases change even if ports are identical.
 // See pkg/ddevapp/router_compose_template.yaml
 // This verifies the functionality of https://docs.docker.com/reference/compose-file/services/#aliases
-// where projects can communicate with each other via hostnames without external_links
 // Related test: TestInternalAndExternalAccessToURL
 func TestNetworkAliases(t *testing.T) {
+	runNetworkAliasesTest(t, "80", "443", "80", "443")
+}
+
+// TestNetworkAliasesDifferentPorts tests inter-project connectivity using ddev_default
+// network aliases when the two projects use different HTTP/HTTPS ports.
+// app1 uses ports 8080/8443 and app2 uses the default 80/443.
+func TestNetworkAliasesDifferentPorts(t *testing.T) {
+	runNetworkAliasesTest(t, "8080", "8443", "80", "443")
+}
+
+// runNetworkAliasesTest is the shared implementation for TestNetworkAliases and
+// TestNetworkAliasesDifferentPorts. app1HTTPPort/app1HTTPSPort are the router ports
+// for app1; app2HTTPPort/app2HTTPSPort are for app2.
+func runNetworkAliasesTest(t *testing.T, app1HTTPPort, app1HTTPSPort, app2HTTPPort, app2HTTPSPort string) {
+	t.Helper()
 	origDir, _ := os.Getwd()
 
 	// Create two temporary projects
 	projects := map[string]string{
 		t.Name() + "-app1": testcommon.CreateTmpDir(t.Name() + "-app1"),
 		t.Name() + "-app2": testcommon.CreateTmpDir(t.Name() + "-app2"),
+	}
+
+	// Skip early if HTTPS is not available; this test requires it for network alias connectivity
+	for _, projDir := range projects {
+		checkApp, err := ddevapp.NewApp(projDir, false)
+		require.NoError(t, err)
+		if checkApp.CanUseHTTPOnly() {
+			t.Skip("Skipping: HTTPS not available")
+		}
+		break
 	}
 
 	t.Cleanup(func() {
@@ -190,19 +215,17 @@ func TestNetworkAliases(t *testing.T) {
 			app.Type = nodeps.AppTypePHP
 			app.Name = projName
 
-			// Add different hostnames and FQDNs for each project
-			// Both projects use the SAME ports to test issue #8110:
-			// when ports match but hostnames differ, router should be recreated
 			if strings.Contains(projName, "app1") {
 				app.AdditionalHostnames = []string{"api", "admin"}
 				app.AdditionalFQDNs = []string{"test1.example.com"}
+				app.RouterHTTPPort = app1HTTPPort
+				app.RouterHTTPSPort = app1HTTPSPort
 			} else {
 				app.AdditionalHostnames = []string{"backend", "service"}
 				app.AdditionalFQDNs = []string{"test2.example.com"}
+				app.RouterHTTPPort = app2HTTPPort
+				app.RouterHTTPSPort = app2HTTPSPort
 			}
-			// Use the same ports for both projects (default 80/443)
-			app.RouterHTTPPort = "80"
-			app.RouterHTTPSPort = "443"
 
 			err = app.WriteConfig()
 			require.NoError(t, err)
@@ -267,8 +290,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app1_to_app2_backend",
 				fromApp:     app1,
 				toApp:       app2,
-				httpURL:     "http://backend.ddev.site",
-				httpsURL:    "https://backend.ddev.site",
+				httpURL:     strings.Replace(app2.GetHTTPURL(), app2.GetHostname(), "backend.ddev.site", 1),
+				httpsURL:    strings.Replace(app2.GetHTTPSURL(), app2.GetHostname(), "backend.ddev.site", 1),
 				description: "app1 should be able to reach app2 backend hostname",
 			},
 			{
@@ -276,8 +299,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app1_to_app2_service",
 				fromApp:     app1,
 				toApp:       app2,
-				httpURL:     "http://service.ddev.site",
-				httpsURL:    "https://service.ddev.site",
+				httpURL:     strings.Replace(app2.GetHTTPURL(), app2.GetHostname(), "service.ddev.site", 1),
+				httpsURL:    strings.Replace(app2.GetHTTPSURL(), app2.GetHostname(), "service.ddev.site", 1),
 				description: "app1 should be able to reach app2 service hostname",
 			},
 			{
@@ -285,8 +308,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1_api",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://api.ddev.site",
-				httpsURL:    "https://api.ddev.site",
+				httpURL:     strings.Replace(app1.GetHTTPURL(), app1.GetHostname(), "api.ddev.site", 1),
+				httpsURL:    strings.Replace(app1.GetHTTPSURL(), app1.GetHostname(), "api.ddev.site", 1),
 				description: "app2 should be able to reach app1 api hostname",
 			},
 			{
@@ -294,8 +317,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1_admin",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://admin.ddev.site",
-				httpsURL:    "https://admin.ddev.site",
+				httpURL:     strings.Replace(app1.GetHTTPURL(), app1.GetHostname(), "admin.ddev.site", 1),
+				httpsURL:    strings.Replace(app1.GetHTTPSURL(), app1.GetHostname(), "admin.ddev.site", 1),
 				description: "app2 should be able to reach app1 admin hostname",
 			},
 			// Additional FQDNs tests
@@ -304,8 +327,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app1_to_app2",
 				fromApp:     app1,
 				toApp:       app2,
-				httpURL:     "http://test2.example.com",
-				httpsURL:    "https://test2.example.com",
+				httpURL:     strings.Replace(app2.GetHTTPURL(), app2.GetHostname(), "test2.example.com", 1),
+				httpsURL:    strings.Replace(app2.GetHTTPSURL(), app2.GetHostname(), "test2.example.com", 1),
 				description: "app1 should be able to reach app2 additional FQDNs",
 			},
 			{
@@ -313,8 +336,8 @@ func TestNetworkAliases(t *testing.T) {
 				name:        "app2_to_app1",
 				fromApp:     app2,
 				toApp:       app1,
-				httpURL:     "http://test1.example.com",
-				httpsURL:    "https://test1.example.com",
+				httpURL:     strings.Replace(app1.GetHTTPURL(), app1.GetHostname(), "test1.example.com", 1),
+				httpsURL:    strings.Replace(app1.GetHTTPSURL(), app1.GetHostname(), "test1.example.com", 1),
 				description: "app2 should be able to reach app1 additional FQDNs",
 			},
 		}
@@ -331,10 +354,8 @@ func TestNetworkAliases(t *testing.T) {
 				}
 				// Test both HTTP and HTTPS URLs
 				urls := map[string]string{
-					"http": tc.httpURL,
-				}
-				if globalconfig.GetCAROOT() != "" {
-					urls["https"] = tc.httpsURL
+					"http":  tc.httpURL,
+					"https": tc.httpsURL,
 				}
 
 				for protocol, url := range urls {
