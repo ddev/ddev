@@ -26,6 +26,17 @@ define( 'NONCE_SALT', '{{ $config.NonceSalt }}' );
 /* Add any custom values between this line and the "stop editing" line. */
 
 
+/**
+ * WordPress 6.9.1 enables debug mode by default.
+ * This configuration explicitly disables debugging
+ * to prevent debug output in DDEV environments.
+ *
+ * Remove or modify these lines if debugging is required.
+ */
+define( 'WP_DEBUG_DISPLAY', false );
+@ini_set( 'display_errors', 0 );
+define( 'WP_DEBUG', false );
+define( 'WP_DEBUG_LOG', false );
 
 /* That's all, stop editing! Happy publishing. */
 
