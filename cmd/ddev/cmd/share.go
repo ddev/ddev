@@ -116,6 +116,7 @@ ddev share myproject`,
 		providerCmd.Env = env
 		providerCmd.Stdout = stdoutWriter
 		providerCmd.Stderr = os.Stderr
+		providerCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 		// Set up signal handling for SIGINT/SIGTERM
 		sigChan := make(chan os.Signal, 1)
@@ -125,6 +126,13 @@ ddev share myproject`,
 		err = providerCmd.Start()
 		if err != nil {
 			util.Failed("Failed to start share provider '%s': %v", providerName, err)
+		}
+
+		// killProcessGroup kills the provider and all its children (tunnel process, pipe readers)
+		killProcessGroup := func() {
+			if providerCmd.Process != nil {
+				_ = syscall.Kill(-providerCmd.Process.Pid, syscall.SIGKILL)
+			}
 		}
 
 		// Close write end immediately after Start - child has its own copy
@@ -149,17 +157,15 @@ ddev share myproject`,
 		select {
 		case shareURL = <-urlChan:
 			if shareURL == "" {
-				_ = providerCmd.Process.Kill()
+				killProcessGroup()
 				util.Failed("Provider '%s' did not output a URL", providerName)
 			}
 		case <-sigChan:
 			// Signal received before URL captured
-			if providerCmd.Process != nil {
-				_ = providerCmd.Process.Kill()
-			}
+			killProcessGroup()
 			util.Failed("Interrupted before tunnel URL was established")
 		case <-time.After(60 * time.Second):
-			_ = providerCmd.Process.Kill()
+			killProcessGroup()
 			util.Failed("Provider '%s' did not output a URL within 60 seconds", providerName)
 		}
 
@@ -167,7 +173,7 @@ ddev share myproject`,
 		shareURL = strings.TrimSpace(shareURL)
 		parsedURL, err := url.Parse(shareURL)
 		if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
-			_ = providerCmd.Process.Kill()
+			killProcessGroup()
 			util.Failed("Provider '%s' output invalid URL: %s", providerName, shareURL)
 		}
 
@@ -193,10 +199,8 @@ ddev share myproject`,
 		case err = <-done:
 			// Provider exited on its own
 		case <-sigChan:
-			// Signal received, kill provider process
-			if providerCmd.Process != nil {
-				_ = providerCmd.Process.Kill()
-			}
+			// Signal received, kill provider process group
+			killProcessGroup()
 			err = <-done
 		}
 
