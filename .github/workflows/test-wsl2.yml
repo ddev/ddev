@@ -154,7 +154,8 @@ jobs:
           $upstreamUrl = "https://github.com/${{ github.repository }}"
           # Full clone with tags so git describe works for version info
           # For PRs from forks, we need to fetch tags from upstream (ddev/ddev) to get correct version
-          wsl -u testuser -- bash -exc "mkdir -p ~/workspace && cd ~/workspace && git clone --single-branch --branch '$branchName' '$repoUrl' ddev && cd ddev && git remote add upstream '$upstreamUrl' && git fetch upstream --tags && echo 'Checked out:' && git log -1 --oneline && git describe --tags --always"
+          # Use --force to overwrite any conflicting tags from the fork
+          wsl -u testuser -- bash -exc "mkdir -p ~/workspace && cd ~/workspace && git clone --single-branch --branch '$branchName' '$repoUrl' ddev && cd ddev && git remote add upstream '$upstreamUrl' && git fetch upstream --tags --force && echo 'Checked out:' && git log -1 --oneline && git describe --tags --always"
 
       - name: Setup tmate session
         if: ${{ inputs.debug_enabled }}
