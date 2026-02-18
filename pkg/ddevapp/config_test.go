@@ -77,7 +77,7 @@ web_environment:
 	// But we need a dummy app to call Init() on if we want to follow that pattern,
 	// or just call NewApp. Init() is method on DdevApp.
 	app := &ddevapp.DdevApp{}
-	
+
 	// Helper to init the app structure
 	err = app.Init(testDir)
 	assert.NoError(err)
@@ -87,7 +87,7 @@ web_environment:
 	// However, LoadConfigYamlFile is specifically for overrides or reloading.
 	// Let's verify LoadConfigYamlFile works even if Init loaded it (it should reload/override).
 	// Also app.ConfigPath is set by Init to .ddev/config.yaml
-	
+
 	err = app.LoadConfigYamlFile(app.ConfigPath)
 	assert.NoError(err)
 

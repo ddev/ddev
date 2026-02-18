@@ -14,7 +14,8 @@ import (
 // regarding precedence rules (Env > Config > Defaults).
 func TestViperConfiguration(t *testing.T) {
 	// Initialize the settings system
-	Init()
+	err := Init()
+	assert.NoError(t, err)
 
 	// 1. Test Default Values
 	SetDefault("test_key", "default_value")
@@ -131,7 +132,8 @@ type ReproAppConfig struct {
 }
 
 func TestReproUnmarshaling(t *testing.T) {
-	Init()
+	err := Init()
+	assert.NoError(t, err)
 
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
@@ -142,7 +144,7 @@ database:
   type: postgres
   version: 17
 `
-	err := os.WriteFile(configPath, []byte(content), 0644)
+	err = os.WriteFile(configPath, []byte(content), 0644)
 	assert.NoError(t, err)
 
 	// Defaults similar to NewApp
