@@ -67,7 +67,7 @@ func TestGetGitHubToken(t *testing.T) {
 	// Test precedence: DDEV_GITHUB_TOKEN > GH_TOKEN > GITHUB_TOKEN
 	t.Run("Precedence", func(t *testing.T) {
 		// Clean environment
-		settings.Set("GITHUB_TOKEN", "")
+		settings.Unset("GITHUB_TOKEN")
 		t.Setenv("GH_TOKEN", "")
 		t.Setenv("GITHUB_TOKEN", "")
 

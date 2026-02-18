@@ -137,11 +137,15 @@ func GetGitHubToken() (string, string) {
 	if token := settings.GetString("GITHUB_TOKEN"); token != "" {
 		return token, "DDEV_GITHUB_TOKEN"
 	}
-	for _, token := range []string{"GH_TOKEN", "GITHUB_TOKEN"} {
-		if githubToken := settings.GetString(token); githubToken != "" {
-			return githubToken, token
-		}
+
+	if token := settings.GetString("GH_TOKEN"); token != "" {
+		return token, "GH_TOKEN"
 	}
+
+	if token := settings.GetString("bare_github_token"); token != "" {
+		return token, "GITHUB_TOKEN"
+	}
+
 	return "", ""
 }
 

@@ -123,7 +123,7 @@ func bindStandardGlobalEnvs(v ConfigProvider) {
 		"GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN": "GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN",
 		"MUTAGEN_DATA_DIRECTORY":                   "MUTAGEN_DATA_DIRECTORY",
 		"VERSION":                                  "VERSION",
-		"GITHUB_TOKEN":                             "GITHUB_TOKEN",
+		"bare_github_token":                        "GITHUB_TOKEN",
 		"GH_TOKEN":                                 "GH_TOKEN",
 		"HOME":                                     "HOME",
 		"PWD":                                      "PWD",
