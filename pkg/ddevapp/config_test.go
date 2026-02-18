@@ -52,6 +52,10 @@ func TestLoadConfigYamlFile(t *testing.T) {
 		_ = os.RemoveAll(testDir)
 	})
 
+	// Ensure no environment variables interfere with the test
+	t.Setenv("DDEV_PHP_VERSION", "")
+	t.Setenv("DDEV_SITES_PHP_VERSION", "")
+
 	// Create a main config.yaml within .ddev directory
 	ddevDir := filepath.Join(testDir, ".ddev")
 	err = os.MkdirAll(ddevDir, 0755)
