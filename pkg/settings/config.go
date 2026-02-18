@@ -89,7 +89,7 @@ func SetDefault(key string, value interface{}) {
 	config.SetDefault(key, value)
 }
 
-func Set(key string, value interface{}) {
+func Set(key string, value any) {
 	config.Set(key, value)
 }
 
