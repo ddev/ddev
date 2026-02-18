@@ -145,7 +145,9 @@ func Execute() {
 }
 
 func init() {
-	settings.Init()
+	if err := settings.Init(); err != nil {
+		util.Failed("Failed to initialize settings: %v", err)
+	}
 
 	// This flag represents the output.JSONOutput variable, and parsed very early in pkg/output/output_setup.go
 	RootCmd.PersistentFlags().BoolP("json-output", "j", false, "If true, user-oriented output will be in JSON format.")

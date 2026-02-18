@@ -91,7 +91,7 @@ func SetDefault(key string, value any) {
 }
 
 func BindEnv(key string, envVar string) {
-	config.BindEnv(key, envVar)
+	_ = config.BindEnv(key, envVar)
 }
 
 func Set(key string, value any) {

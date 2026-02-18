@@ -129,7 +129,7 @@ func (c *remoteConfig) ShowTicker() {
 		messageOffset = rand.Intn(messageCount)
 	}
 
-	for _ = range tickerData.Messages {
+	for range tickerData.Messages {
 		messageOffset++
 		if messageOffset > messageCount {
 			messageOffset = 1

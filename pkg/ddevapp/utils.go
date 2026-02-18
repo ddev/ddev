@@ -176,7 +176,7 @@ func getTemplateFuncMap() map[string]interface{} {
 	// so that env variable overrides are respected in templates.
 	m["env"] = func(key string) string {
 		// Use settings package for all environment variables.
-		// settings is configured to automatically handle DDEV_ prefix 
+		// settings is configured to automatically handle DDEV_ prefix
 		// and explicitly bound standard variables.
 		if strings.HasPrefix(key, "DDEV_") {
 			return settings.GetString(key[5:])
