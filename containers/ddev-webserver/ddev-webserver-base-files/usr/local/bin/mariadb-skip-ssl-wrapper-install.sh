@@ -14,8 +14,14 @@ set -eu -o pipefail
 DDEV_DATABASE_FAMILY=${DDEV_DATABASE%:*}
 ADD_WRAPPER=true
 
-# Don't add wrappers if using MySQL (optional - remove if you want to support MySQL too)
-if [ "${DDEV_DATABASE_FAMILY}" = "mysql" ]; then
+# Don't add wrappers if not using MariaDB
+if [ "${DDEV_DATABASE_FAMILY}" != "mariadb" ]; then
+  ADD_WRAPPER=false
+fi
+
+# Don't add wrappers if using MariaDB below 11.x (10.11 client is installed instead, which doesn't enforce SSL)
+MARIADB_VERSION=${DDEV_DATABASE#*:}
+if [ "${MARIADB_VERSION%%.*}" -lt 11 ]; then
   ADD_WRAPPER=false
 fi
 

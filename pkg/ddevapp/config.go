@@ -1224,7 +1224,7 @@ stopasgroup=true
 	if app.Database.Type == nodeps.MariaDB {
 		// Some MariaDB versions may have their own client in the ddev-webserver
 		// Search for CHANGE_MARIADB_CLIENT to update related code
-		if slices.Contains([]string{nodeps.MariaDB1011, nodeps.MariaDB114}, app.Database.Version) {
+		if app.Database.Version != nodeps.MariaDBDefaultVersion {
 			extraWebContent = extraWebContent + "\nRUN log-stderr.sh mariadb-client-install.sh || true\n"
 		}
 	}

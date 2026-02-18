@@ -15,6 +15,12 @@ if [ "${DDEV_DATABASE_FAMILY}" != "mariadb" ]; then
 fi
 MARIADB_VERSION=${DDEV_DATABASE#*:}
 
+# Use MariaDB 10.11 client for server versions below 11.x, because 11.4+ clients
+# enforce SSL verification that older servers don't support, causing connection failures.
+if [ "${MARIADB_VERSION%%.*}" -lt 11 ]; then
+  MARIADB_VERSION="10.11"
+fi
+
 sed -i "s|^URIs:.*|URIs: https://archive.mariadb.org/mariadb-${MARIADB_VERSION}/repo/debian|" /etc/apt/sources.list.d/mariadb-archive.sources
 
 # Select the appropriate Debian suite based on MariaDB version availability.
