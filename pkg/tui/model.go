@@ -1111,12 +1111,33 @@ func (m AppModel) renderHints(hints []struct {
 	key  string
 	desc string
 }) string {
-	var parts []string
+	const sep = "  "
+	const sepLen = 2
+
+	var lines []string
+	var currentParts []string
+	currentLen := 0
+
 	for _, h := range hints {
-		parts = append(parts,
-			m.styles.HelpKey.Render(h.key)+" "+m.styles.HelpDesc.Render(h.desc))
+		rendered := m.styles.HelpKey.Render(h.key) + " " + m.styles.HelpDesc.Render(h.desc)
+		hintLen := len(h.key) + 1 + len(h.desc)
+
+		if len(currentParts) == 0 {
+			currentParts = append(currentParts, rendered)
+			currentLen = hintLen
+		} else if m.width > 0 && currentLen+sepLen+hintLen > m.width {
+			lines = append(lines, strings.Join(currentParts, sep))
+			currentParts = []string{rendered}
+			currentLen = hintLen
+		} else {
+			currentParts = append(currentParts, rendered)
+			currentLen += sepLen + hintLen
+		}
 	}
-	return strings.Join(parts, "  ")
+	if len(currentParts) > 0 {
+		lines = append(lines, strings.Join(currentParts, sep))
+	}
+	return strings.Join(lines, "\n")
 }
 
 // keyHintsView returns the dashboard key hints (kept for backward compatibility).
