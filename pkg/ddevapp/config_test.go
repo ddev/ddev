@@ -568,6 +568,10 @@ func TestReadConfig(t *testing.T) {
 		Name:       "TestRead",
 	}
 
+	// Unset environment variables to ensure config file values are used
+	t.Setenv("DDEV_WEBIMAGE", "")
+	t.Setenv("DDEV_DBIMAGE", "")
+
 	_, err := app.ReadConfig(false)
 	d, _ := os.Getwd()
 	require.NoError(t, err, "Unable to c.ReadConfig() in %s, err: %v", d, err)

@@ -47,8 +47,8 @@ func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 	})
 
 	// Unset DDEV_NONINTERACTIVE to allow hostname manipulation
-	settings.Set("NONINTERACTIVE", "")
-	t.Setenv("DDEV_NONINTERACTIVE", "")
+	settings.Set("NONINTERACTIVE", "false")
+	t.Setenv("DDEV_NONINTERACTIVE", "false")
 
 	// Use a unique hostname for testing
 	testHostname := "test-ddev-hostname.local"
@@ -131,7 +131,8 @@ func TestElevateToAddRemoveHostEntry(t *testing.T) {
 	})
 
 	// Unset DDEV_NONINTERACTIVE to allow hostname manipulation
-	settings.Set("NONINTERACTIVE", "")
+	settings.Set("NONINTERACTIVE", "false")
+	t.Setenv("DDEV_NONINTERACTIVE", "false")
 
 	// Use a unique hostname for testing
 	testHostname := "test-elevate-hostname.local"
