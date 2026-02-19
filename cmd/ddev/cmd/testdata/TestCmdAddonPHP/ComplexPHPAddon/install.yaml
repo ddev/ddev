@@ -2,9 +2,6 @@
 name: complex-php-test
 
 
-yaml_read_files:
-  test_config: "test-config.yaml"
-
 pre_install_actions:
   - |
     <?php

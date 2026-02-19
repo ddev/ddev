@@ -416,6 +416,10 @@ services:
 	t.Run("EnvironmentVariablesAddon", func(t *testing.T) {
 		envVarsAddonDir := filepath.Join(origDir, "testdata", t.Name())
 
+		t.Cleanup(func() {
+			_ = os.Remove(app.GetConfigPath(".env.env-vars-test"))
+		})
+
 		// Set some custom environment variables to test
 		out, err := exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.env-vars-test", "--custom-variable", "show $ sign", "--extra-var", "One more extra variable")
 		require.NoError(t, err, "failed to set custom variable in .ddev/.env.env-vars-test file: %v, output: %s", err, out)

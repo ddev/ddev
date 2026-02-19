@@ -64,3 +64,18 @@ post_install_actions:
     ?>
 
 project_files: []
+
+removal_actions:
+  - |
+    <?php
+    #ddev-description: Clean up repository test files
+    $filesToRemove = [
+        '/var/www/html/php-addon-test.txt',
+        '/var/www/html/web/sites/default/addon-settings.php',
+    ];
+    foreach ($filesToRemove as $file) {
+        if (file_exists($file)) {
+            unlink($file);
+            echo "PHP: Removed $file\n";
+        }
+    }
