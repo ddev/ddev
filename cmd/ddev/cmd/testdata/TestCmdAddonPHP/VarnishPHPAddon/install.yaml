@@ -23,7 +23,7 @@ pre_install_actions:
     echo "PHP: Installing Varnish for project: $projectName\n";
     
     // Clean up old files
-    $oldFile = '/mnt/ddev_config/docker-compose.varnish-extras.yaml';
+    $oldFile = 'docker-compose.varnish_extras.yaml';
     if (file_exists($oldFile)) {
         $content = file_get_contents($oldFile);
         if (strpos($content, '#ddev-generated') !== false) {
