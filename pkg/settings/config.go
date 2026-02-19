@@ -1,5 +1,7 @@
 package settings
 
+import "os"
+
 // ConfigProvider defines the interface for configuration providers.
 type ConfigProvider interface {
 	GetString(key string) string
@@ -18,6 +20,7 @@ type ConfigProvider interface {
 type ProviderFactory interface {
 	CreateConfigProvider(delimiter string) ConfigProvider
 	CreateCleanConfigProvider(delimiter string) ConfigProvider
+	LoadProjectConfig(mainPath string, overridePaths []string, target any) error
 }
 
 var (
@@ -34,6 +37,16 @@ func init() {
 func Init() error {
 	factory = &ViperFactory{}
 	config = factory.CreateConfigProvider("")
+
+	// Explicitly sync essential Docker environment variables to the process environment
+	// so that the Docker client and other libraries can use them.
+	// This ensures consistency when these are set via config files rather than env.
+	for _, env := range []string{"DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CERT_PATH", "DOCKER_TLS_VERIFY"} {
+		if val := config.GetString(env); val != "" {
+			_ = os.Setenv(env, val)
+		}
+	}
+
 	return nil
 }
 
@@ -48,18 +61,7 @@ func LoadGlobalConfig(path string, target any) error {
 
 // LoadProjectConfig loads a main project config and merges optional overrides into the target struct.
 func LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
-	cfg := NewConfigProvider()
-	if err := cfg.ReadConfig(mainPath); err != nil {
-		return err
-	}
-
-	for _, path := range overridePaths {
-		if err := cfg.MergeConfig(path); err != nil {
-			return err
-		}
-	}
-
-	return cfg.Unmarshal(target)
+	return factory.LoadProjectConfig(mainPath, overridePaths, target)
 }
 
 // LoadCleanConfig loads a configuration file into the target struct without any environment variable bindings.

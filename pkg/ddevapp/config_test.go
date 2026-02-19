@@ -100,8 +100,8 @@ web_environment:
 	assert.Equal(nodeps.AppTypeDrupal10, app.Type)
 	// Check override behavior (php_version should be 8.2)
 	assert.Equal("8.2", app.PHPVersion)
-	// Viper replaces lists, it doesn't merge them. So we expect only the override value.
-	assert.NotContains(app.WebEnvironment, "MAIN_VAR=main")
+	// DDEV merges lists (appends). So we expect both the main and override values.
+	assert.Contains(app.WebEnvironment, "MAIN_VAR=main")
 	assert.Contains(app.WebEnvironment, "OVERRIDE_VAR=override")
 }
 

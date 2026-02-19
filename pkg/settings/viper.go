@@ -44,6 +44,8 @@ func (vc *viperConfig) Set(key string, value any) {
 func (vc *viperConfig) Unset(key string) {
 	// Viper doesn't have a direct Unset, so we set to nil.
 	vc.v.Set(key, nil)
+	// Also unset in environment to prevent leakage
+	_ = os.Unsetenv(key)
 }
 
 func (vc *viperConfig) Unmarshal(rawVal any) error {
@@ -75,7 +77,6 @@ func (vf *ViperFactory) CreateCleanConfigProvider(delimiter string) ConfigProvid
 	}
 	v := viper.NewWithOptions(viper.KeyDelimiter(delimiter))
 	v.SetEnvPrefix("DDEV")
-	v.AutomaticEnv()
 	return &viperConfig{v: v}
 }
 
@@ -157,4 +158,76 @@ func bindStandardGlobalEnvs(v ConfigProvider) {
 	for key, env := range boolBinds {
 		_ = v.BindEnv(key, env)
 	}
+}
+
+// LoadProjectConfig loads a main project config and merges optional overrides into the target struct.
+func (vf *ViperFactory) LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
+	// First load the main config into a map
+	mainMap := make(map[string]any)
+	cfg := vf.CreateConfigProvider("")
+	if err := cfg.ReadConfig(mainPath); err != nil {
+		return err
+	}
+	if err := cfg.Unmarshal(&mainMap); err != nil {
+		return err
+	}
+
+	// Now load and merge each override
+	for _, path := range overridePaths {
+		overrideCfg := vf.CreateConfigProvider("")
+		if err := overrideCfg.ReadConfig(path); err != nil {
+			return err
+		}
+
+		overrideMap := make(map[string]any)
+		if err := overrideCfg.Unmarshal(&overrideMap); err != nil {
+			return err
+		}
+
+		// Merge the override map into the main map using custom logic
+		if err := RecursiveMerge(mainMap, overrideMap); err != nil {
+			return err
+		}
+	}
+
+	// Decode the merged map into the target struct
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		TagName:          "yaml",
+		WeaklyTypedInput: true,
+		Result:           target,
+	})
+	if err != nil {
+		return err
+	}
+
+	return decoder.Decode(mainMap)
+}
+
+// RecursiveMerge merges src into dst.
+// Maps are merged recursively. Slices are appended. Values are overridden.
+func RecursiveMerge(dst, src map[string]any) error {
+	for key, srcVal := range src {
+		if dstVal, ok := dst[key]; ok {
+			// If both are maps, recurse
+			srcMap, srcIsMap := srcVal.(map[string]any)
+			dstMap, dstIsMap := dstVal.(map[string]any)
+			if srcIsMap && dstIsMap {
+				if err := RecursiveMerge(dstMap, srcMap); err != nil {
+					return err
+				}
+				continue
+			}
+
+			// If both are slices, append
+			srcSlice, srcIsSlice := srcVal.([]any)
+			dstSlice, dstIsSlice := dstVal.([]any)
+			if srcIsSlice && dstIsSlice {
+				dst[key] = append(dstSlice, srcSlice...)
+				continue
+			}
+		}
+		// Otherwise overwrite (including false booleans, empty strings, etc.)
+		dst[key] = srcVal
+	}
+	return nil
 }
