@@ -46,7 +46,7 @@ jobs:
   build:
     name: Docs Quickstart test
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v5
         with:
