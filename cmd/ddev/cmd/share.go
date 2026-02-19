@@ -115,8 +115,12 @@ ddev share myproject`,
 			util.Success("Sharing %s", localURL)
 		}
 
-		// Execute provider script
-		providerCmd := exec.Command(scriptPath)
+		// Execute provider script via bash
+		bashPath := util.FindBashPath()
+		if bashPath == "" {
+			util.Failed("Unable to find bash to run share provider script. Please install bash.")
+		}
+		providerCmd := exec.Command(bashPath, scriptPath)
 		providerCmd.Env = env
 		providerCmd.Stdout = stdoutWriter
 		providerCmd.Stderr = stderrWriter

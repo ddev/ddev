@@ -17,15 +17,6 @@ func (app *DdevApp) GetShareProviderScript(providerName string) (string, error) 
 		return "", fmt.Errorf("share provider '%s' not found at %s", providerName, scriptPath)
 	}
 
-	// Check if executable
-	info, err := os.Stat(scriptPath)
-	if err != nil {
-		return "", err
-	}
-	if info.Mode()&0111 == 0 {
-		return "", fmt.Errorf("share provider '%s' is not executable (chmod +x %s)", providerName, scriptPath)
-	}
-
 	return scriptPath, nil
 }
 
