@@ -3,7 +3,7 @@
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
 ARG DOCKER_ORG=ddev
-FROM ${DOCKER_ORG}/ddev-php-base:v1.25.0 AS ddev-webserver-base
+FROM ${DOCKER_ORG}/ddev-php-base:v1.25.1 AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
