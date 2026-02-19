@@ -4,7 +4,7 @@ image: php:8.3
 pre_install_actions:
   - |
     <?php
-    #ddev-description: Test configuration file access and data validation (PHP)
+    #ddev-description: Test yaml_parse_file fails without yaml extension
     // This script uses yaml_parse_file which requires the yaml extension
     // php:8.3 does not have the yaml extension, so this should fail
     $result = yaml_parse_file('nonexistent.yaml');
