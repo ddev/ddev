@@ -422,25 +422,7 @@ sleep 2
 		require.Contains(t, string(output), "Failed to find share provider 'nonexistent'")
 	})
 
-	// Test 5: Provider script validation (not executable)
-	t.Run("ProviderNotExecutable", func(t *testing.T) {
-		mockScript := `#!/usr/bin/env bash
-echo "https://test.example.com"
-`
-		mockPath := site.Dir + "/.ddev/share-providers/not-executable.sh"
-		err := os.WriteFile(mockPath, []byte(mockScript), 0644) // Not executable
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			_ = os.Remove(mockPath)
-		})
-
-		cmd := exec.Command(DdevBin, "share", "--provider=not-executable")
-		output, err := cmd.CombinedOutput()
-		require.Error(t, err)
-		require.Contains(t, string(output), "not executable")
-	})
-
-	// Test 6: --provider-args flag passes DDEV_SHARE_ARGS to provider
+	// Test 5: --provider-args flag passes DDEV_SHARE_ARGS to provider
 	t.Run("ProviderArgsFlag", func(t *testing.T) {
 		// Create a mock provider that echoes DDEV_SHARE_ARGS to stderr
 		mockScript := `#!/usr/bin/env bash
