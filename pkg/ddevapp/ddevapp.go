@@ -1496,10 +1496,6 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("bind mounts can't be used with Docker Rootless.\nRun `ddev config global --no-bind-mounts` and try again")
 	}
 
-	if dockerutil.IsRemoteDockerHost() && !globalconfig.DdevGlobalConfig.NoBindMounts {
-		return fmt.Errorf("bind mounts can't be used with a remote Docker host.\nRun `ddev config global --no-bind-mounts` and try again")
-	}
-
 	if err := globalconfig.CheckForMultipleGlobalDdevDirs(); err != nil {
 		util.WarningOnce("Warning: %v", err)
 	}
