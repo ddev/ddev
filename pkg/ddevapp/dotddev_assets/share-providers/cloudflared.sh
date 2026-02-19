@@ -26,7 +26,7 @@ fi
 # Validate cloudflared is installed
 if ! command -v cloudflared >/dev/null 2>&1; then
   echo "Error: cloudflared not found in PATH." >&2
-  echo "Install from https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation" >&2
+  echo "Install from https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/" >&2
   exit 1
 fi
 
@@ -40,19 +40,27 @@ fi
 echo "Starting cloudflared tunnel..." >&2
 
 # Parse args to determine tunnel mode
+# --tunnel and --hostname are DDEV-specific and stripped before passing to cloudflared
 ARGS="${DDEV_SHARE_ARGS:-}"
 TUNNEL_NAME=""
 HOSTNAME=""
 
 # Check for named tunnel mode (--tunnel flag present)
-if [[ "$ARGS" =~ --tunnel[[:space:]]+([^[:space:]]+) ]]; then
-  TUNNEL_NAME="${BASH_REMATCH[1]}"
+# Supports both --tunnel my-tunnel and --tunnel=my-tunnel
+if [[ "$ARGS" =~ --tunnel([[:space:]]+|=)([^[:space:]]+) ]]; then
+  TUNNEL_NAME="${BASH_REMATCH[2]}"
+  ARGS=$(echo "$ARGS" | sed -E 's/--tunnel([[:space:]]+|=)[^[:space:]]+//')
 fi
 
 # Extract hostname if present (for URL output only - not passed to cloudflared)
-if [[ "$ARGS" =~ --hostname[[:space:]]+([^[:space:]]+) ]]; then
-  HOSTNAME="${BASH_REMATCH[1]}"
+# Supports both --hostname mysite.example.com and --hostname=mysite.example.com
+if [[ "$ARGS" =~ --hostname([[:space:]]+|=)([^[:space:]]+) ]]; then
+  HOSTNAME="${BASH_REMATCH[2]}"
+  ARGS=$(echo "$ARGS" | sed -E 's/--hostname([[:space:]]+|=)[^[:space:]]+//')
 fi
+
+# Normalize whitespace left over from stripping flags
+ARGS=$(echo "$ARGS" | sed -E 's/[[:space:]]+/ /g;s/^ //;s/ $//')
 
 # For named tunnels with known hostname, output URL immediately
 URL_FOUND=""
@@ -66,9 +74,9 @@ fi
 if [[ -n "$TUNNEL_NAME" ]]; then
   echo "Using named tunnel: $TUNNEL_NAME" >&2
   echo >&2
-  echo "Running command: cloudflared --url $DDEV_LOCAL_URL --protocol http2 tunnel run $TUNNEL_NAME" >&2
+  echo "Running command: cloudflared --url $DDEV_LOCAL_URL --protocol http2${ARGS:+ $ARGS} tunnel run $TUNNEL_NAME" >&2
   echo >&2
-  cloudflared --url "$DDEV_LOCAL_URL" --protocol http2 tunnel run "$TUNNEL_NAME" 2>&1
+  cloudflared --url "$DDEV_LOCAL_URL" --protocol http2 $ARGS tunnel run "$TUNNEL_NAME" 2>&1
 else
   echo >&2
   echo "Running command: cloudflared tunnel --url $DDEV_LOCAL_URL --protocol http2 $ARGS" >&2
