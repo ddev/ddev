@@ -1,0 +1,5 @@
+#ddev-generated
+# DDEV already sets max_allowed_packet to 256M by default.
+# Raise this only if you need to work with unusually large BLOBs.
+[mysqld]
+max_allowed_packet = 512M

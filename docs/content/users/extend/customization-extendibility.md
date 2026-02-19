@@ -342,13 +342,23 @@ max_execution_time = 240;
 
 You can provide additional MySQL/MariaDB configuration for a project by creating a directory called `.ddev/mysql/` and adding any number of `*.cnf` MySQL configuration files. These files will be automatically included when MySQL is started. Make sure that the section header is included in the file.
 
-An example file in `.ddev/mysql/no_utf8mb4.cnf` might be:
+A common use case is setting the server's default character set and collation. DDEV automatically replaces modern collations like `utf8mb4_0900_ai_ci` (MySQL 8.0+) and `utf8mb4_uca1400_ai_ci` (MariaDB 11.x) with the server's `collation-server` value during `ddev import-db`. Setting this explicitly ensures the substitution lands on the collation you expect:
+
+An example file in `.ddev/mysql/utf8mb4.cnf`:
 
 ```ini
 [mysqld]
-server-id = 2
-collation-server = utf8_general_ci
-character-set-server = utf8
+collation-server = utf8mb4_unicode_ci
+character-set-server = utf8mb4
+```
+
+DDEV already sets `max_allowed_packet` to 256M (268435456 bytes) by default, which covers most cases. If your project works with unusually large BLOBs you can raise it further, though this is rarely needed:
+
+An example file in `.ddev/mysql/max-packet.cnf`:
+
+```ini
+[mysqld]
+max_allowed_packet = 512M
 ```
 
 To load the new configuration, run [`ddev restart`](../usage/commands.md#restart).
