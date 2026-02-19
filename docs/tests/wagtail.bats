@@ -81,18 +81,26 @@ EOF
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
   assert_success
 
+  # Wait for gunicorn (web_extra_daemon) to be ready - DDEV doesn't poll extra daemons for readiness
+  for i in $(seq 1 15); do
+    if ddev exec curl -sf --max-time 3 http://localhost:8000 >/dev/null 2>&1; then
+      break
+    fi
+    sleep 2
+  done
+
   # validate running project - check if Wagtail is responding
-  run curl -sfI https://${PROJNAME}.ddev.site
+  run curl -sfI --max-time 30 https://${PROJNAME}.ddev.site
   assert_output --partial "server: gunicorn"
   assert_success
 
   # Verify main site is running
-  run curl -sf https://${PROJNAME}.ddev.site
+  run curl -sf --max-time 30 https://${PROJNAME}.ddev.site
   assert_output --partial "Welcome to your new Wagtail site"
   assert_success
 
   # Check if we can access the admin page (should redirect to login)
-  run curl -sfL https://${PROJNAME}.ddev.site/admin
+  run curl -sfL --max-time 30 https://${PROJNAME}.ddev.site/admin
   assert_output --partial "Sign in - Wagtail"
   assert_success
 }
