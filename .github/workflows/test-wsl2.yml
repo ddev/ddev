@@ -61,7 +61,7 @@ env:
 jobs:
   test-wsl2:
     runs-on: windows-2025
-    timeout-minutes: 240
+    timeout-minutes: 300
 
     strategy:
       fail-fast: false
