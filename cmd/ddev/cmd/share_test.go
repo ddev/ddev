@@ -23,7 +23,7 @@ func TestShareCmdNgrok(t *testing.T) {
 	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
 		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
 	}
-	if nodeps.IsWindows() {
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsWindows() {
 		t.Skip("Skipping because unreliable on Windows due to DNS lookup failure")
 	}
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
@@ -154,7 +154,7 @@ func TestShareCmdCloudflared(t *testing.T) {
 	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
 		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
 	}
-	if nodeps.IsWindows() {
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsWindows() {
 		t.Skip("Skipping because unreliable on Windows")
 	}
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
@@ -232,8 +232,8 @@ func TestShareCmdCloudflared(t *testing.T) {
 
 // TestShareCmdProviderSystem tests the script-based provider system
 func TestShareCmdProviderSystem(t *testing.T) {
-	if nodeps.IsWindows() {
-		t.Skip("Skipping: Test cannot work on traditional windows (pkill, etc). ddev share may not work on traditional windows at all")
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsWindows() {
+		t.Skip("Skipping: Test cannot work yet on traditional windows (pkill, etc)")
 	}
 	t.Setenv(`DDEV_GOROUTINES`, "")
 
