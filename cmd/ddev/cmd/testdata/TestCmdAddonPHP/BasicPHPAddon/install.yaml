@@ -56,6 +56,4 @@ removal_actions:
         echo "PHP: Removed test file during addon removal\n";
     }
     
-    // Create a removal confirmation file to verify removal actions work
-    file_put_contents('php-removal-executed.txt', "PHP removal action executed at " . date('Y-m-d H:i:s') . "\n");
     echo "PHP: Removal action executed successfully\n";
