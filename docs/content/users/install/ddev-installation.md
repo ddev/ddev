@@ -120,7 +120,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
 
-    ### Homebrew (AMD64 only)
+    ### Homebrew
 
     ```bash
     # Install DDEV using Homebrew
