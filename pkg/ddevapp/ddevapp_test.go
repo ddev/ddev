@@ -1518,7 +1518,7 @@ func TestDdevImportDB(t *testing.T) {
 	})
 	assert.NoError(err, "Failed to check modern_mariadb collation, stderr=%s", stderr)
 	assert.NotContains(out, "utf8mb4_uca1400_ai_ci", "Modern MariaDB collation should have been replaced")
-	assert.Contains(out, "utf8mb4_unicode_ci", "Modern MariaDB collation should be replaced with utf8mb4_unicode_ci")
+	assert.Contains(out, "utf8mb4_unicode_520_ci", "Modern MariaDB collation should be replaced with utf8mb4_unicode_520_ci")
 
 	// Verify modern MySQL 8.0+ collation was replaced
 	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
@@ -1527,7 +1527,7 @@ func TestDdevImportDB(t *testing.T) {
 	})
 	assert.NoError(err, "Failed to check modern_mysql collation, stderr=%s", stderr)
 	assert.NotContains(out, "utf8mb4_0900_ai_ci", "Modern MySQL collation should have been replaced")
-	assert.Contains(out, "utf8mb4_unicode_ci", "Modern MySQL collation should be replaced with utf8mb4_unicode_ci")
+	assert.Contains(out, "utf8mb4_unicode_520_ci", "Modern MySQL collation should be replaced with utf8mb4_unicode_520_ci")
 
 	// Test legacy collations (should be preserved as-is)
 	legacyCollationsFile := filepath.Join(origDir, "testdata", t.Name(), dbType, "legacy_collations.sql")
