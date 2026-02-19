@@ -1257,6 +1257,9 @@ func TestTimezoneConfig(t *testing.T) {
 
 	err := app.Init(site.Dir)
 	require.NoError(t, err)
+	app.Name = strings.ReplaceAll(strings.ToLower(t.Name()), "_", "-") + "-" + util.RandString(4)
+	err = app.WriteConfig()
+	require.NoError(t, err)
 	err = app.Stop(true, false)
 	require.NoError(t, err)
 

@@ -448,8 +448,11 @@ func GetTimezone(path string) (string, error) {
 // GetLocalTimezone tries to find local timezone from $TZ or /etc/localtime symlink
 func GetLocalTimezone() (string, error) {
 	timezone := ""
-	if settings.GetString("TZ") != "" {
-		timezone = settings.GetString("TZ")
+	tzEnv := settings.GetString("TZ")
+	// If TZ is set in the environment (even to empty string), use it.
+	// This matches Go runtime behavior where TZ="" means UTC.
+	if _, ok := os.LookupEnv("TZ"); ok {
+		timezone = tzEnv
 	} else {
 		localtimeFile := filepath.Join("/etc", "localtime")
 		var err error
