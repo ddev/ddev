@@ -92,8 +92,8 @@ fi | while IFS= read -r line; do
       echo "$URL_FOUND" # Output to stdout - CRITICAL: This is captured by DDEV
     fi
   fi
-  # Show non-info output to user (warnings, errors, etc.)
-  if [[ ! "$line" =~ " INF " ]]; then
+  # Show non-info output to user (warnings, errors, etc.); show all in verbose mode
+  if [[ "${DDEV_VERBOSE:-}" == "true" ]] || [[ ! "$line" =~ " INF " ]]; then
     echo "$line" >&2
   fi
 done

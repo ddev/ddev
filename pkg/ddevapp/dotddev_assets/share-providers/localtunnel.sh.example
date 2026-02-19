@@ -23,8 +23,7 @@ fi
 # Validate localtunnel is installed
 if ! command -v lt >/dev/null 2>&1; then
   echo "Error: localtunnel (lt) not found in PATH." >&2
-  echo "Install with: npm install -g localtunnel" >&2
-  echo "Or run with npx: npx localtunnel" >&2
+  echo "Install from https://github.com/localtunnel/localtunnel#installation" >&2
   exit 1
 fi
 

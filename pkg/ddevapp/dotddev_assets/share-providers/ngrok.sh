@@ -42,8 +42,8 @@ ngrok http "$DDEV_LOCAL_URL" --log=stdout $ARGS 2>&1 | while IFS= read -r line; 
     URL_FOUND="${BASH_REMATCH[1]}"
     echo "$URL_FOUND" # Output to stdout - CRITICAL: This is captured by DDEV
   fi
-  # Show non-info output to user (warnings, errors, etc.)
-  if [[ ! "$line" =~ " lvl=info " ]]; then
+  # Show non-info output to user (warnings, errors, etc.); show all in verbose mode
+  if [[ "${DDEV_VERBOSE:-}" == "true" ]] || [[ ! "$line" =~ " lvl=info " ]]; then
     echo "$line" >&2
   fi
 done
