@@ -1453,7 +1453,7 @@ A collection of utility and debugging commands, often useful for [troubleshootin
 
 Uses shell built-in `cd` to change to a project directory. For example, `ddevcd some-project` will change directories to the project root of the project named `some-project`.
 
-Note that this command can't work until you make a small addition to your `.bashrc`, `.zshrc`, or `config.fish` (type: `ddev debug cd`).
+Note that this command can't work until you make a small addition to your `.bashrc`, `.zshrc`, or `config.fish` (type: `ddev utility cd`).
 
 ```shell
 # To see the explanation of what you need to do
