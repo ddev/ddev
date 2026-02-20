@@ -352,7 +352,7 @@ collation-server = utf8mb4_unicode_ci
 character-set-server = utf8mb4
 ```
 
-DDEV already sets `max_allowed_packet` to 256M (268435456 bytes) by default, which covers most cases. If your project works with unusually large BLOBs you can raise it further, though this is rarely needed:
+DDEV already sets `max_allowed_packet` to 256M by default, which covers most cases. If your project works with unusually large BLOBs you can raise it further, though this is rarely needed:
 
 An example file in `.ddev/mysql/max-packet.cnf`:
 
