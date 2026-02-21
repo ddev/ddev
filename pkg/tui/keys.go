@@ -28,6 +28,8 @@ type KeyMap struct {
 	Poweroff key.Binding
 	CopyURL  key.Binding
 	Config   key.Binding
+	PageUp   key.Binding
+	PageDown key.Binding
 }
 
 // DefaultKeyMap returns the default key bindings.
@@ -128,6 +130,14 @@ func DefaultKeyMap() KeyMap {
 		Config: key.NewBinding(
 			key.WithKeys("C"),
 			key.WithHelp("C", "config"),
+		),
+		PageUp: key.NewBinding(
+			key.WithKeys("pgup"),
+			key.WithHelp("pgup", "page up"),
+		),
+		PageDown: key.NewBinding(
+			key.WithKeys("pgdown"),
+			key.WithHelp("pgdown", "page down"),
 		),
 	}
 }

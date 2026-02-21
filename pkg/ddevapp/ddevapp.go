@@ -3516,10 +3516,7 @@ func (app *DdevApp) GetPrimaryURL() string {
 // GetWebContainerDirectHTTPURL returns the URL that can be used without the router to get to web container.
 func (app *DdevApp) GetWebContainerDirectHTTPURL() string {
 	// Get direct address of web container
-	dockerIP, err := dockerutil.GetDockerIP()
-	if err != nil {
-		util.Warning("Unable to get Docker IP: %v", err)
-	}
+	dockerIP, _ := dockerutil.GetDockerIP()
 
 	port, err := app.GetWebContainerDirectHTTPPort()
 
@@ -3533,10 +3530,7 @@ func (app *DdevApp) GetWebContainerDirectHTTPURL() string {
 // GetWebContainerDirectHTTPSURL returns the URL that can be used without the router to get to web container via https.
 func (app *DdevApp) GetWebContainerDirectHTTPSURL() string {
 	// Get direct address of web container
-	dockerIP, err := dockerutil.GetDockerIP()
-	if err != nil {
-		util.Warning("Unable to get Docker IP: %v", err)
-	}
+	dockerIP, _ := dockerutil.GetDockerIP()
 
 	port, err := app.GetWebContainerDirectHTTPSPort()
 

@@ -229,13 +229,19 @@ func TestQuit(t *testing.T) {
 
 func TestDashboardView(t *testing.T) {
 	m := NewAppModel()
-	m.width = 60
-	m.height = 24
+	// Initialize viewport first
+	updated, _ := m.Update(tea.WindowSizeMsg{Width: 60, Height: 24})
+	m = updated.(AppModel)
+
+	// Then load projects
 	m.loading = false
-	m.projects = []ProjectInfo{
-		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site"},
-		{Name: "other", Status: ddevapp.SiteStopped, Type: "wordpress"},
-	}
+	updated, _ = m.Update(projectsLoadedMsg{
+		projects: []ProjectInfo{
+			{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site"},
+			{Name: "other", Status: ddevapp.SiteStopped, Type: "wordpress"},
+		},
+	})
+	m = updated.(AppModel)
 
 	view := m.View()
 
@@ -260,8 +266,14 @@ func TestHelpView(t *testing.T) {
 
 func TestEmptyProjectsView(t *testing.T) {
 	m := NewAppModel()
+	// Initialize viewport first
+	updated, _ := m.Update(tea.WindowSizeMsg{Width: 60, Height: 24})
+	m = updated.(AppModel)
+
+	// Then load empty projects
 	m.loading = false
-	m.width = 60
+	updated, _ = m.Update(projectsLoadedMsg{projects: []ProjectInfo{}})
+	m = updated.(AppModel)
 
 	view := m.View()
 	require.True(t, strings.Contains(view, "No DDEV projects found"), "should show empty message")
@@ -565,10 +577,14 @@ func TestProjectDetailLoadedError(t *testing.T) {
 func TestDetailViewRendering(t *testing.T) {
 	m := NewAppModel()
 	m.viewMode = viewDetail
-	m.width = 80
-	m.height = 30
+	// Initialize viewport first
+	updated, _ := m.Update(tea.WindowSizeMsg{Width: 80, Height: 30})
+	m = updated.(AppModel)
+
+	// Then load detail
 	detail := sampleDetail()
-	m.detail = &detail
+	updated, _ = m.Update(projectDetailLoadedMsg{detail: detail})
+	m = updated.(AppModel)
 
 	view := m.View()
 
@@ -869,12 +885,18 @@ func TestTruncate(t *testing.T) {
 
 func TestNarrowTerminalDashboard(t *testing.T) {
 	m := NewAppModel()
-	m.width = 40
-	m.height = 24
+	// Initialize viewport first
+	updated, _ := m.Update(tea.WindowSizeMsg{Width: 40, Height: 24})
+	m = updated.(AppModel)
+
+	// Then load projects
 	m.loading = false
-	m.projects = []ProjectInfo{
-		{Name: "very-long-project-name", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://very-long-project-name.ddev.site"},
-	}
+	updated, _ = m.Update(projectsLoadedMsg{
+		projects: []ProjectInfo{
+			{Name: "very-long-project-name", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://very-long-project-name.ddev.site"},
+		},
+	})
+	m = updated.(AppModel)
 
 	view := m.View()
 
@@ -885,12 +907,18 @@ func TestNarrowTerminalDashboard(t *testing.T) {
 
 func TestWideTerminalDashboard(t *testing.T) {
 	m := NewAppModel()
-	m.width = 120
-	m.height = 24
+	// Initialize viewport first
+	updated, _ := m.Update(tea.WindowSizeMsg{Width: 120, Height: 24})
+	m = updated.(AppModel)
+
+	// Then load projects
 	m.loading = false
-	m.projects = []ProjectInfo{
-		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site"},
-	}
+	updated, _ = m.Update(projectsLoadedMsg{
+		projects: []ProjectInfo{
+			{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site"},
+		},
+	})
+	m = updated.(AppModel)
 
 	view := m.View()
 
@@ -1044,8 +1072,8 @@ func TestAllStoppedHint(t *testing.T) {
 	}
 
 	view := m.View()
-	require.Contains(t, view, "All projects are stopped", "should show all-stopped hint")
-	require.Contains(t, view, "start selected project", "should show start hint")
+	require.Contains(t, view, "All projects stopped", "should show all-stopped hint")
+	require.Contains(t, view, "to start selected", "should show start hint")
 }
 
 func TestAllStoppedHintHiddenWhenRunning(t *testing.T) {
@@ -1368,8 +1396,14 @@ func TestConfigKeyFromEmptyState(t *testing.T) {
 
 func TestEmptyStateShowsConfigHint(t *testing.T) {
 	m := NewAppModel()
+	// Initialize viewport first
+	updated, _ := m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	m = updated.(AppModel)
+
+	// Then load empty projects
 	m.loading = false
-	m.width = 80
+	updated, _ = m.Update(projectsLoadedMsg{projects: []ProjectInfo{}})
+	m = updated.(AppModel)
 
 	view := m.View()
 	require.Contains(t, view, "Press 'C' to run ddev config", "empty state should mention C key")

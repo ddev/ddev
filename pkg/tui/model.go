@@ -9,7 +9,9 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
@@ -65,6 +67,11 @@ type AppModel struct {
 	// Confirmation overlay
 	confirming    bool
 	confirmAction string // "start-all", "stop-all", or "poweroff"
+
+	// Viewports for scrolling
+	dashboardViewport viewport.Model
+	detailViewport    viewport.Model
+	viewportReady     bool
 }
 
 // NewAppModel creates a new TUI model.
@@ -153,6 +160,16 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		if !m.viewportReady {
+			m.dashboardViewport = viewport.New(msg.Width, msg.Height-10)
+			m.detailViewport = viewport.New(msg.Width, msg.Height-6)
+			m.viewportReady = true
+		} else {
+			m.dashboardViewport.Width = msg.Width
+			m.dashboardViewport.Height = msg.Height - 10
+			m.detailViewport.Width = msg.Width
+			m.detailViewport.Height = msg.Height - 6
+		}
 		return m, nil
 
 	case projectsLoadedMsg:
@@ -172,6 +189,10 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.cursor >= len(filtered) {
 			m.cursor = max(0, len(filtered)-1)
 		}
+		// Update viewport with dashboard content only if we're in dashboard view and viewport is ready
+		if m.viewMode == viewDashboard && m.viewportReady {
+			m.updateDashboardViewport()
+		}
 		return m, nil
 
 	case projectDetailLoadedMsg:
@@ -185,6 +206,10 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.statusMsg = ""
 		}
 		m.detail = &msg.detail
+		// Update viewport with detail content
+		if m.viewportReady {
+			m.detailViewport.SetContent(m.buildDetailContent())
+		}
 		return m, nil
 
 	case routerStatusMsg:
@@ -373,20 +398,27 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.filtering = false
 			m.filterText = ""
 			m.cursor = 0
+			m.updateDashboardViewport()
+			m.dashboardViewport.GotoTop()
 			return m, nil
 		case key.Matches(msg, key.NewBinding(key.WithKeys("enter"))):
 			m.filtering = false
+			m.updateDashboardViewport()
 			return m, nil
 		case key.Matches(msg, key.NewBinding(key.WithKeys("backspace"))):
 			if len(m.filterText) > 0 {
 				m.filterText = m.filterText[:len(m.filterText)-1]
 				m.cursor = 0
+				m.updateDashboardViewport()
+				m.dashboardViewport.GotoTop()
 			}
 			return m, nil
 		default:
 			if len(msg.String()) == 1 {
 				m.filterText += msg.String()
 				m.cursor = 0
+				m.updateDashboardViewport()
+				m.dashboardViewport.GotoTop()
 			}
 			return m, nil
 		}
@@ -403,6 +435,8 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.filterText != "" {
 			m.filterText = ""
 			m.cursor = 0
+			m.updateDashboardViewport()
+			m.dashboardViewport.GotoTop()
 			return m, nil
 		}
 
@@ -412,6 +446,7 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case key.Matches(msg, m.keys.Up):
 		if m.cursor > 0 {
 			m.cursor--
+			m.updateDashboardViewport()
 		}
 		return m, nil
 
@@ -419,7 +454,27 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		filtered := m.filteredProjects()
 		if m.cursor < len(filtered)-1 {
 			m.cursor++
+			m.updateDashboardViewport()
 		}
+		return m, nil
+
+	case key.Matches(msg, m.keys.PageUp):
+		pageSize := m.dashboardViewport.Height
+		if pageSize < 1 {
+			pageSize = 10
+		}
+		m.cursor = max(0, m.cursor-pageSize)
+		m.updateDashboardViewport()
+		return m, nil
+
+	case key.Matches(msg, m.keys.PageDown):
+		filtered := m.filteredProjects()
+		pageSize := m.dashboardViewport.Height
+		if pageSize < 1 {
+			pageSize = 10
+		}
+		m.cursor = min(m.cursor+pageSize, len(filtered)-1)
+		m.updateDashboardViewport()
 		return m, nil
 
 	case key.Matches(msg, m.keys.Detail):
@@ -427,6 +482,7 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.viewMode = viewDetail
 			m.detail = nil
 			m.detailLoading = true
+			m.detailViewport.GotoTop()
 			m.statusMsg = ""
 			return m, tea.Batch(loadDetailCmd(p.AppRoot), m.spinner.Tick)
 		}
@@ -499,6 +555,8 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.filtering = true
 		m.filterText = ""
 		m.cursor = 0
+		m.updateDashboardViewport()
+		m.dashboardViewport.GotoTop()
 		return m, nil
 
 	case key.Matches(msg, m.keys.Help):
@@ -510,11 +568,23 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch {
+	case key.Matches(msg, m.keys.PageUp), key.Matches(msg, m.keys.Up):
+		m.detailViewport, cmd = m.detailViewport.Update(msg)
+		return m, cmd
+
+	case key.Matches(msg, m.keys.PageDown), key.Matches(msg, m.keys.Down):
+		m.detailViewport, cmd = m.detailViewport.Update(msg)
+		return m, cmd
+
 	case key.Matches(msg, m.keys.Back):
 		m.viewMode = viewDashboard
 		m.detail = nil
 		m.statusMsg = ""
+		// Update dashboard viewport when returning
+		m.updateDashboardViewport()
 		return m, nil
 
 	case key.Matches(msg, m.keys.Logs):
@@ -661,6 +731,100 @@ func (m AppModel) View() string {
 	}
 }
 
+// updateDashboardViewport rebuilds dashboard content and adjusts scroll to keep cursor visible.
+func (m *AppModel) updateDashboardViewport() {
+	if !m.viewportReady {
+		return
+	}
+
+	// Save current scroll position
+	oldOffset := m.dashboardViewport.YOffset
+
+	// Rebuild content with current cursor position
+	m.dashboardViewport.SetContent(m.buildDashboardContent())
+
+	// Adjust scroll to keep cursor visible
+	viewportHeight := m.dashboardViewport.Height
+	if viewportHeight < 1 {
+		viewportHeight = 10
+	}
+
+	// If cursor is below visible area, scroll down
+	if m.cursor >= oldOffset+viewportHeight {
+		m.dashboardViewport.YOffset = m.cursor - viewportHeight + 1
+	} else if m.cursor < oldOffset {
+		// If cursor is above visible area, scroll up
+		m.dashboardViewport.YOffset = m.cursor
+	} else {
+		// Cursor is visible, keep current scroll position
+		m.dashboardViewport.YOffset = oldOffset
+	}
+}
+
+// buildDashboardContent builds the scrollable project list for dashboard view.
+func (m AppModel) buildDashboardContent() string {
+	var b strings.Builder
+
+	filtered := m.filteredProjects()
+	if len(filtered) == 0 {
+		if len(m.projects) == 0 {
+			b.WriteString("  No DDEV projects found.\n")
+			b.WriteString("  Press 'C' to run ddev config, or run it manually in a project directory.\n")
+		} else {
+			b.WriteString("  No projects match the filter.\n")
+		}
+		return b.String()
+	}
+
+	// Calculate name width: fit the longest project name, with limits
+	nameWidth := 16
+	for _, fp := range filtered {
+		if len(fp.Name) > nameWidth {
+			nameWidth = len(fp.Name)
+		}
+	}
+	// Cap: leave room for cursor(2) + status(12) + type(12) + spacing(7) + URL
+	maxNameWidth := 30
+	if m.width > 0 {
+		maxNameWidth = max(16, m.width/3)
+	}
+	if nameWidth > maxNameWidth {
+		nameWidth = maxNameWidth
+	}
+	typeWidth := 12
+	narrow := m.width > 0 && m.width < 60
+	if narrow {
+		nameWidth = min(nameWidth, max(8, m.width/4))
+	}
+
+	for i, p := range filtered {
+		cursor := "  "
+		if i == m.cursor {
+			cursor = m.styles.Cursor.Render("> ")
+		}
+
+		displayName := truncate(p.Name, nameWidth)
+		name := m.styles.ProjectName.Render(fmt.Sprintf("%-*s", nameWidth, displayName))
+		status := m.renderStatus(p.Status)
+		pType := m.styles.ProjectType.Render(fmt.Sprintf("%-*s", typeWidth, p.Type))
+
+		url := ""
+		if !narrow && p.URL != "" && p.Status == ddevapp.SiteRunning {
+			// Truncate URL if it would overflow
+			maxURL := m.width - nameWidth - 10 - typeWidth - 8
+			if m.width > 0 && maxURL > 10 {
+				url = m.styles.URL.Render(truncate(p.URL, maxURL))
+			} else if m.width <= 0 {
+				url = m.styles.URL.Render(p.URL)
+			}
+		}
+
+		fmt.Fprintf(&b, "%s%s %s  %s  %s\n", cursor, name, status, pType, url)
+	}
+
+	return b.String()
+}
+
 func (m AppModel) dashboardView() string {
 	var b strings.Builder
 
@@ -692,76 +856,38 @@ func (m AppModel) dashboardView() string {
 		fmt.Fprintf(&b, "Filter: %s (press / to edit, esc to clear)\n\n", m.filterText)
 	}
 
-	// Loading indicator
+	// Loading/error indicator
 	if m.loading && len(m.projects) == 0 {
 		fmt.Fprintf(&b, "  %s Loading projects...\n", m.spinner.View())
 	} else if m.err != nil && len(m.projects) == 0 {
 		fmt.Fprintf(&b, "  Error: %v\n", m.err)
 		b.WriteString("  Is Docker running? Press R to retry.\n")
 	} else {
-		filtered := m.filteredProjects()
-		if len(filtered) == 0 {
-			if len(m.projects) == 0 {
-				b.WriteString("  No DDEV projects found.\n")
-				b.WriteString("  Press 'C' to run ddev config, or run it manually in a project directory.\n")
-			} else {
-				b.WriteString("  No projects match the filter.\n")
-			}
-		} else {
-			// Calculate name width: fit the longest project name, with limits
-			nameWidth := 16
-			for _, fp := range filtered {
-				if len(fp.Name) > nameWidth {
-					nameWidth = len(fp.Name)
-				}
-			}
-			// Cap: leave room for cursor(2) + status(12) + type(12) + spacing(7) + URL
-			maxNameWidth := 30
-			if m.width > 0 {
-				maxNameWidth = max(16, m.width/3)
-			}
-			if nameWidth > maxNameWidth {
-				nameWidth = maxNameWidth
-			}
-			typeWidth := 12
-			narrow := m.width > 0 && m.width < 60
-			if narrow {
-				nameWidth = min(nameWidth, max(8, m.width/4))
-			}
+		// Use viewport for scrollable project list
+		b.WriteString(m.dashboardViewport.View())
+	}
 
-			for i, p := range filtered {
-				cursor := "  "
-				if i == m.cursor {
-					cursor = m.styles.Cursor.Render("> ")
-				}
+	b.WriteString("\n\n")
 
-				displayName := truncate(p.Name, nameWidth)
-				name := m.styles.ProjectName.Render(fmt.Sprintf("%-*s", nameWidth, displayName))
-				status := m.renderStatus(p.Status)
-				pType := m.styles.ProjectType.Render(fmt.Sprintf("%-*s", typeWidth, p.Type))
-
-				url := ""
-				if !narrow && p.URL != "" && p.Status == ddevapp.SiteRunning {
-					// Truncate URL if it would overflow
-					maxURL := m.width - nameWidth - 10 - typeWidth - 8
-					if m.width > 0 && maxURL > 10 {
-						url = m.styles.URL.Render(truncate(p.URL, maxURL))
-					} else if m.width <= 0 {
-						url = m.styles.URL.Render(p.URL)
-					}
-				}
-
-				fmt.Fprintf(&b, "%s%s %s  %s  %s\n", cursor, name, status, pType, url)
-			}
+	// Status message (confirmations, errors) OR hint when all stopped
+	// These appear in the same place - status messages take priority
+	if m.statusMsg != "" {
+		msg := m.statusMsg
+		if m.width > 0 {
+			msg = ansi.Wrap(msg, m.width, "")
 		}
+		b.WriteString(msg + "\n")
+	} else if len(m.projects) > 0 && m.allStopped() {
+		msg := fmt.Sprintf("All projects stopped. Press '%s' to start selected, '%s' to start all.",
+			m.keys.Start.Help().Key, m.keys.StartAll.Help().Key)
+		if m.width > 0 {
+			msg = ansi.Wrap(msg, m.width, "")
+		}
+		b.WriteString(m.styles.StatusBar.Render(msg) + "\n")
 	}
 
-	b.WriteString("\n")
-
-	// Hint when all projects are stopped
-	if len(m.projects) > 0 && m.allStopped() {
-		b.WriteString(m.styles.StatusBar.Render("  All projects are stopped. Press 's' to start selected project, or 'S' to start all.") + "\n")
-	}
+	// Divider
+	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
 
 	// Router status
 	if m.routerStatus != "" {
@@ -778,18 +904,166 @@ func (m AppModel) dashboardView() string {
 		b.WriteString(rendered + "\n")
 	}
 
-	// Status message
-	if m.statusMsg != "" {
-		b.WriteString(m.statusMsg + "\n")
-	}
-
-	// Bottom divider
+	// Divider
 	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
 
-	// Key hints
+	// Key hints (always at bottom)
 	b.WriteString(m.dashboardKeyHints())
 
 	return b.String()
+}
+
+// buildDetailContent builds the scrollable content for detail view.
+func (m AppModel) buildDetailContent() string {
+	if m.detail == nil {
+		return ""
+	}
+
+	d := m.detail
+	var content strings.Builder
+
+	// Info grid
+	label := func(l string) string { return m.styles.DetailLabel.Render(l) }
+	val := func(v string) string { return m.styles.DetailValue.Render(v) }
+
+	dbStr := d.DatabaseType
+	if d.DatabaseVersion != "" {
+		dbStr += ":" + d.DatabaseVersion
+	}
+
+	xdebugStr := "off"
+	if d.XdebugEnabled {
+		xdebugStr = "on"
+	}
+
+	perfStr := d.PerformanceMode
+	if perfStr == "" {
+		perfStr = "none"
+	}
+
+	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Type:"), val(fmt.Sprintf("%-14s", d.Type)), label("PHP:"), val(d.PHPVersion))
+	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Webserver:"), val(fmt.Sprintf("%-14s", d.WebserverType)), label("Node.js:"), val(d.NodeJSVersion))
+	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Docroot:"), val(fmt.Sprintf("%-14s", d.Docroot)), label("Perf:"), val(perfStr))
+	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Database:"), val(fmt.Sprintf("%-14s", dbStr)), label("Xdebug:"), val(xdebugStr))
+	content.WriteString("\n")
+
+	// URLs
+	if len(d.URLs) > 0 {
+		content.WriteString(" " + label("URLs:") + "\n")
+		// Calculate max URL width (leave room for indent and ellipsis)
+		maxURLWidth := m.width - 5 // 3 spaces indent + margin
+		if maxURLWidth < 20 {
+			maxURLWidth = 60 // Default for unknown width
+		}
+		for _, u := range d.URLs {
+			displayURL := truncate(u, maxURLWidth)
+			content.WriteString("   " + m.styles.URL.Render(displayURL) + "\n")
+		}
+		content.WriteString("\n")
+	}
+
+	// Mailpit + DB port
+	if d.MailpitURL != "" {
+		maxURLWidth := m.width - 12 // "Mailpit: " length
+		if maxURLWidth < 20 {
+			maxURLWidth = 60
+		}
+		displayMailpit := truncate(d.MailpitURL, maxURLWidth)
+		fmt.Fprintf(&content, " %s %s\n", label("Mailpit:"), m.styles.URL.Render(displayMailpit))
+	}
+	if d.DBPublishedPort != "" {
+		fmt.Fprintf(&content, " %s %s\n", label("DB Port:"), val(d.DBPublishedPort))
+	}
+
+	// Add-ons
+	if len(d.Addons) > 0 {
+		addonsStr := strings.Join(d.Addons, ", ")
+		// Wrap add-ons if too long
+		maxAddonsWidth := m.width - 12 // "Add-ons: " length
+		if maxAddonsWidth < 20 {
+			maxAddonsWidth = 60
+		}
+		addonsStr = ansi.Wrap(addonsStr, maxAddonsWidth, "")
+		// Add proper indentation for wrapped lines
+		lines := strings.Split(addonsStr, "\n")
+		fmt.Fprintf(&content, " %s %s\n", label("Add-ons:"), val(lines[0]))
+		for i := 1; i < len(lines); i++ {
+			fmt.Fprintf(&content, "           %s\n", val(lines[i]))
+		}
+	}
+
+	content.WriteString("\n")
+
+	// Services (sorted: web first, db second, rest alphabetical)
+	if len(d.Services) > 0 {
+		sorted := sortServices(d.Services)
+		content.WriteString(" " + label("Services:") + "\n")
+
+		// Build list of services with compact status (no padding)
+		maxLineWidth := m.width - 3 // indent
+		if maxLineWidth < 20 {
+			maxLineWidth = 60
+		}
+
+		var currentLine strings.Builder
+		currentLine.WriteString("   ")
+		lineLen := 0
+
+		for i, svc := range sorted {
+			// Render service without padded status
+			var statusRendered string
+			switch svc.Status {
+			case ddevapp.SiteRunning:
+				statusRendered = m.styles.Running.Render(svc.Status)
+			case ddevapp.SiteStopped:
+				statusRendered = m.styles.Stopped.Render(svc.Status)
+			case ddevapp.SitePaused:
+				statusRendered = m.styles.Paused.Render(svc.Status)
+			default:
+				statusRendered = m.styles.Stopped.Render(svc.Status)
+			}
+
+			svcText := fmt.Sprintf("%s %s", m.styles.ProjectName.Render(svc.Name), statusRendered)
+			svcLen := len(svc.Name) + 1 + len(svc.Status)
+
+			// Add comma and space for all but first item on a line
+			if lineLen > 0 {
+				svcText = ", " + svcText
+				svcLen += 2
+			}
+
+			// Check if adding this service would exceed line width
+			if lineLen > 0 && lineLen+svcLen > maxLineWidth {
+				// Add comma before line break if not last service
+				if i < len(sorted)-1 {
+					currentLine.WriteString(",")
+				}
+				// Start new line
+				content.WriteString(currentLine.String() + "\n")
+				currentLine.Reset()
+				currentLine.WriteString("   ")
+				// Don't add comma at start of new line
+				svcText = fmt.Sprintf("%s %s", m.styles.ProjectName.Render(svc.Name), statusRendered)
+				lineLen = len(svc.Name) + 1 + len(svc.Status)
+			} else {
+				lineLen += svcLen
+			}
+
+			currentLine.WriteString(svcText)
+		}
+
+		// Write final line
+		if currentLine.Len() > 3 {
+			content.WriteString(currentLine.String() + "\n")
+		}
+	}
+
+	// Status message
+	if m.statusMsg != "" {
+		content.WriteString("\n" + m.statusMsg)
+	}
+
+	return content.String()
 }
 
 func (m AppModel) detailView() string {
@@ -824,76 +1098,11 @@ func (m AppModel) detailView() string {
 	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
 	b.WriteString("\n")
 
-	// Info grid
-	label := func(l string) string { return m.styles.DetailLabel.Render(l) }
-	val := func(v string) string { return m.styles.DetailValue.Render(v) }
-
-	dbStr := d.DatabaseType
-	if d.DatabaseVersion != "" {
-		dbStr += ":" + d.DatabaseVersion
-	}
-
-	xdebugStr := "off"
-	if d.XdebugEnabled {
-		xdebugStr = "on"
-	}
-
-	perfStr := d.PerformanceMode
-	if perfStr == "" {
-		perfStr = "none"
-	}
-
-	fmt.Fprintf(&b, " %s %s    %s %s\n", label("Type:"), val(fmt.Sprintf("%-14s", d.Type)), label("PHP:"), val(d.PHPVersion))
-	fmt.Fprintf(&b, " %s %s    %s %s\n", label("Webserver:"), val(fmt.Sprintf("%-14s", d.WebserverType)), label("Node.js:"), val(d.NodeJSVersion))
-	fmt.Fprintf(&b, " %s %s    %s %s\n", label("Docroot:"), val(fmt.Sprintf("%-14s", d.Docroot)), label("Perf:"), val(perfStr))
-	fmt.Fprintf(&b, " %s %s    %s %s\n", label("Database:"), val(fmt.Sprintf("%-14s", dbStr)), label("Xdebug:"), val(xdebugStr))
-	b.WriteString("\n")
-
-	// URLs
-	if len(d.URLs) > 0 {
-		b.WriteString(" " + label("URLs:") + "\n")
-		for _, u := range d.URLs {
-			b.WriteString("   " + m.styles.URL.Render(u) + "\n")
-		}
-		b.WriteString("\n")
-	}
-
-	// Mailpit + DB port
-	if d.MailpitURL != "" {
-		fmt.Fprintf(&b, " %s %s\n", label("Mailpit:"), m.styles.URL.Render(d.MailpitURL))
-	}
-	if d.DBPublishedPort != "" {
-		fmt.Fprintf(&b, " %s %s\n", label("DB Port:"), val(d.DBPublishedPort))
-	}
-
-	// Add-ons
-	if len(d.Addons) > 0 {
-		fmt.Fprintf(&b, " %s %s\n", label("Add-ons:"), val(strings.Join(d.Addons, ", ")))
-	}
-
-	b.WriteString("\n")
-
-	// Services (sorted: web first, db second, rest alphabetical)
-	if len(d.Services) > 0 {
-		sorted := sortServices(d.Services)
-		b.WriteString(" " + label("Services:") + "\n   ")
-		var svcParts []string
-		for _, svc := range sorted {
-			svcParts = append(svcParts, fmt.Sprintf("%s %s", m.styles.ProjectName.Render(svc.Name), m.renderStatus(svc.Status)))
-		}
-		b.WriteString(strings.Join(svcParts, "  "))
-		b.WriteString("\n")
-	}
-
-	b.WriteString("\n")
-
-	// Status message
-	if m.statusMsg != "" {
-		b.WriteString(m.statusMsg + "\n")
-	}
+	// Use viewport for scrollable content
+	b.WriteString(m.detailViewport.View())
 
 	// Bottom divider
-	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
+	b.WriteString("\n" + m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
 
 	// Key hints
 	b.WriteString(m.detailKeyHints())
