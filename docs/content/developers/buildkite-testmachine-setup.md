@@ -43,22 +43,16 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 1. The Ubuntu distro should be set up with the user `buildkite-agent` and the password used for `ddevtestbot@gmail.com`.
 2. Stop Docker Desktop if it is running.
-3. (Optionally if hostname is not same as appropriate hostname for WSL2) set the hostname in `/etc/wsl.conf` in the network section, for example:
+3. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
+4. Windows Terminal should be installed. Set "Ubuntu" (or this distro) as the default and have it start on Windows startup. Enable "copy on select" in behaviors.
+5. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
+6. For Mirrored Mode (normal for these) edit the `~/.wslconfig` on Windows to add appropriate WSL2 settings:
 
     ```
-    [network]
-    hostname=tb-wsl-16-dockerce
-    ```
-
-4. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
-5. Windows Terminal should be installed. Set "Ubuntu" (or this distro) as the default and have it start on Windows startup. Enable "copy on select" in behaviors.
-6. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
-7. Optionally edit the `~/.wslconfig` on Windows to add appropriate WSL2 memory allocation and `autoMemoryReclaim`
-
-    ```
-    memory=12GB
+    [wsl2]
+    networkingMode=Mirrored
     [experimental]
-    autoMemoryReclaim=dropcache
+    hostAddressLoopback=true
     ```
 
 8. In the Ubuntu distro:
