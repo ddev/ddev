@@ -55,21 +55,84 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     hostAddressLoopback=true
     ```
 
-8. In the Ubuntu distro:
+7. In the Ubuntu distro:
     1. `export BUILDKITE_AGENT_TOKEN=<token>` with the token from 1Password `BUILDKITE_AGENT_TOKEN`.
     2. `export BUILDKITE_DOCKER_TYPE=dockerforwindows` or `export BUILDKITE_DOCKER_TYPE=wsl2`
     3. Optionally `export NGROK_TOKEN=<token>` with the `NGROK_TOKEN` from 1Password ngrok.com `nopaid` account.
     4. Run the script [wsl2-test-runner-setup.sh](scripts/wsl2-test-runner-setup.sh) in the Ubuntu distro.
-9. Restart the distro with `wsl.exe -t Ubuntu` and then restart it by opening the Ubuntu window.
-10. If using Docker Desktop, start Docker Desktop.
-11. In `~/workspace/ddev/.buildkite`, run `./testbot_maintenance.sh`.
-12. In `~/workspace/ddev/.buildkite`, run `./sanetestbot.sh` to check your work.
+8. Restart the distro with `wsl.exe -t Ubuntu` and then restart it by opening the Ubuntu window.
+9. If using Docker Desktop, start Docker Desktop.
+10. In `~/workspace/ddev/.buildkite`, run `./testbot_maintenance.sh`.
+11. In `~/workspace/ddev/.buildkite`, run `./sanetestbot.sh` to check your work.
 
 ## Icinga2 monitoring setup for WSL2 instances
 
 1. Icinga Director web UI, configure the host on `monitor.ddev.com`, normally making a copy of an existing identical item.
 2. Deploy the new host using Icinga Director.
-3. `sudo icinga2 node wizard` to configure the agent, see [docs](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#agentsatellite-setup-on-linux)
+3. `sudo icinga2 node wizard` to configure the agent, see [docs](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#agentsatellite-setup-on-linux).
+
+    ```
+    buildkite-agent@tb-wsldd-16:~$ sudo icinga2 node wizard
+    Welcome to the Icinga 2 Setup Wizard!
+
+    We will guide you through all required configuration details.
+
+    Please specify if this is an agent/satellite setup ('n' installs a master setup) [Y/n]:
+
+    Starting the Agent/Satellite setup routine...
+
+    Please specify the common name (CN) [tb-wsldd-16.localdomain]: tb-wsldd-16
+
+    Please specify the parent endpoint(s) (master or satellite) where this node should connect to:
+    Master/Satellite Common Name (CN from your master/satellite node): monitor.ddev.com
+
+    Do you want to establish a connection to the parent node from this node? [Y/n]: y
+    Please specify the master/satellite connection information:
+    Master/Satellite endpoint host (IP address or FQDN): monitor.ddev.com
+    Master/Satellite endpoint port [5665]:
+
+    Add more master/satellite endpoints? [y/N]:
+    Parent certificate information:
+
+    Version:             3
+    Subject:             CN = monitor.ddev.com
+    Issuer:              CN = Icinga CA
+    Valid From:          Feb 22 22:34:09 2026 GMT
+    Valid Until:         Mar 26 22:34:09 2027 GMT
+    Serial:              02:0e:20:7e:a1:a9:f0:b4:8d:07:63:49:46:fb:d7:90:29:fd:c4:bc
+
+    Signature Algorithm: sha256WithRSAEncryption
+    Subject Alt Names:   monitor.ddev.com
+    Fingerprint:         4A 99 90 F6 F4 F7 F9 20 1B DD 9D 51 EE 86 50 C7 BB 38 09 9B B0 40 4A E0 52 C9 52 2D A1 B8 72 D5
+
+    Is this information correct? [y/N]: y
+
+    Please specify the request ticket generated on your Icinga 2 master (optional).
+    (Hint: # icinga2 pki ticket --cn 'tb-wsldd-16'): c5b9fa649792abcde3941862a664be0fe8d126
+    Please specify the API bind host/port (optional):
+    Bind Host []:
+    Bind Port []:
+
+    Accept config from parent node? [y/N]: y
+    Accept commands from parent node? [y/N]: y
+
+    Reconfiguring Icinga...
+
+    Local zone name [tb-wsldd-16]:
+    Parent zone name [master]:
+
+    Default global zones: global-templates director-global
+    Do you want to specify additional global zones? [y/N]:
+
+    Do you want to disable the inclusion of the conf.d directory [Y/n]:
+    Disabling the inclusion of the conf.d directory...
+
+    Done.
+
+    Now restart your Icinga 2 daemon to finish the installation!
+    buildkite-agent@tb-wsldd-16:~$ sudo systemctl restart icinga2
+    ```
+
 4. Restart `sudo systemctl restart icinga2`
 5. On `monitor.ddev.com` edit `/usr/local/bin/check_buildkite_agents.sh` to include the hostname of the new instance.
 
