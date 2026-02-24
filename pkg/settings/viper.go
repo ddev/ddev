@@ -77,6 +77,7 @@ func (vf *ViperFactory) CreateCleanConfigProvider(delimiter string) ConfigProvid
 	}
 	v := viper.NewWithOptions(viper.KeyDelimiter(delimiter))
 	v.SetEnvPrefix("DDEV")
+	v.AutomaticEnv()
 	return &viperConfig{v: v}
 }
 
