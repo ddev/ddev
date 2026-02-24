@@ -320,6 +320,7 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 		RemovalActions:     desc.RemovalActions,
 		PreInstallActions:  desc.PreInstallActions,
 		PostInstallActions: desc.PostInstallActions,
+		YamlReadFiles:      desc.YamlReadFiles,
 		Image:              desc.Image,
 	}
 	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", ddevapp.AddonMetadataDir, addonName))

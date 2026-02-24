@@ -99,10 +99,11 @@ type AddonManifest struct {
 	InstallDate        string   `yaml:"install_date"`
 	ProjectFiles       []string `yaml:"project_files"`
 	GlobalFiles        []string `yaml:"global_files"`
-	RemovalActions     []string `yaml:"removal_actions"`
-	PreInstallActions  []string `yaml:"pre_install_actions,omitempty"`
-	PostInstallActions []string `yaml:"post_install_actions,omitempty"`
-	Image              string   `yaml:"image,omitempty"`
+	RemovalActions     []string          `yaml:"removal_actions"`
+	PreInstallActions  []string          `yaml:"pre_install_actions,omitempty"`
+	PostInstallActions []string          `yaml:"post_install_actions,omitempty"`
+	YamlReadFiles      map[string]string `yaml:"yaml_read_files,omitempty"`
+	Image              string            `yaml:"image,omitempty"`
 }
 
 // GetInstalledAddons returns a list of the installed add-ons
