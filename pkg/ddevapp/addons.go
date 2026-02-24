@@ -92,13 +92,13 @@ type InstallDesc struct {
 
 // format of the add-on manifest file
 type AddonManifest struct {
-	Name               string   `yaml:"name"`
-	Repository         string   `yaml:"repository"`
-	Version            string   `yaml:"version"`
-	Dependencies       []string `yaml:"dependencies,omitempty"`
-	InstallDate        string   `yaml:"install_date"`
-	ProjectFiles       []string `yaml:"project_files"`
-	GlobalFiles        []string `yaml:"global_files"`
+	Name               string            `yaml:"name"`
+	Repository         string            `yaml:"repository"`
+	Version            string            `yaml:"version"`
+	Dependencies       []string          `yaml:"dependencies,omitempty"`
+	InstallDate        string            `yaml:"install_date"`
+	ProjectFiles       []string          `yaml:"project_files"`
+	GlobalFiles        []string          `yaml:"global_files"`
 	RemovalActions     []string          `yaml:"removal_actions"`
 	PreInstallActions  []string          `yaml:"pre_install_actions,omitempty"`
 	PostInstallActions []string          `yaml:"post_install_actions,omitempty"`
