@@ -1,6 +1,10 @@
 package settings
 
 import (
+	"fmt"
+	"math"
+	"reflect"
+
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 )
@@ -39,6 +43,8 @@ func (vc *viperConfig) Unmarshal(rawVal any) error {
 	return vc.v.Unmarshal(rawVal, func(dc *mapstructure.DecoderConfig) {
 		dc.TagName = "yaml"
 		dc.WeaklyTypedInput = true
+		// Preserve float-to-string precision (e.g. YAML 8.0 → "8.0", not "8")
+		dc.DecodeHook = floatToStringHook()
 	})
 }
 
@@ -52,6 +58,28 @@ func (vc *viperConfig) MergeConfig(path string) error {
 	vc.v.SetConfigFile(path)
 	vc.v.SetConfigType("yaml")
 	return vc.v.MergeInConfig()
+}
+
+// floatToStringHook returns a mapstructure DecodeHookFunc that preserves
+// decimal representation when converting floats to strings.
+// YAML parses unquoted values like `8.0` as float64(8), but when that value
+// targets a string field (e.g. database version), mapstructure's weak typing
+// would format it as "8". This hook ensures "8.0" is preserved by detecting
+// whole-number floats and appending ".0".
+func floatToStringHook() mapstructure.DecodeHookFunc {
+	return func(from reflect.Type, to reflect.Type, data any) (any, error) {
+		if from.Kind() == reflect.Float64 && to.Kind() == reflect.String {
+			f := data.(float64)
+			// If the float is a whole number (e.g. 8.0), format with one decimal
+			// place to preserve the ".0" that was in the original YAML.
+			// Non-whole floats (e.g. 10.11) are formatted normally.
+			if f == math.Trunc(f) {
+				return fmt.Sprintf("%.1f", f), nil
+			}
+			return fmt.Sprintf("%g", f), nil
+		}
+		return data, nil
+	}
 }
 
 // ViperFactory implements ProviderFactory using Viper.
@@ -102,10 +130,12 @@ func (vf *ViperFactory) LoadProjectConfig(mainPath string, overridePaths []strin
 		}
 	}
 
-	// Decode the merged map into the target struct
+	// Decode the merged map into the target struct, using the float-to-string
+	// hook to preserve decimal representations (e.g. database version "8.0").
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		TagName:          "yaml",
 		WeaklyTypedInput: true,
+		DecodeHook:       floatToStringHook(),
 		Result:           target,
 	})
 	if err != nil {

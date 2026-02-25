@@ -80,6 +80,58 @@ func TestViperUnmarshalDoesNotPickUpEnv(t *testing.T) {
 	assert.Equal(t, "", p.GetString("test_port"), "GetString should NOT pick up environment variables without AutomaticEnv")
 }
 
+// TestFloatToStringPreservation verifies that YAML float values like `8.0` are
+// correctly preserved as "8.0" when unmarshaled into string struct fields.
+// YAML parses unquoted `8.0` as float64(8), and without the floatToStringHook,
+// mapstructure's weak typing would format it as "8", losing the ".0".
+// This is critical for database version strings (e.g. mysql:8.0, mariadb:10.11).
+func TestFloatToStringPreservation(t *testing.T) {
+	testCases := []struct {
+		name            string
+		yamlContent     string
+		expectedVersion string
+	}{
+		{
+			name:            "whole number float 8.0 preserved",
+			yamlContent:     "database:\n  type: mysql\n  version: 8.0",
+			expectedVersion: "8.0",
+		},
+		{
+			name:            "non-whole float 10.11 preserved",
+			yamlContent:     "database:\n  type: mariadb\n  version: 10.11",
+			expectedVersion: "10.11",
+		},
+		{
+			name:            "integer 17 formatted as string",
+			yamlContent:     "database:\n  type: postgres\n  version: 17",
+			expectedVersion: "17",
+		},
+		{
+			name:            "quoted string 8.0 stays as-is",
+			yamlContent:     "database:\n  type: mysql\n  version: \"8.0\"",
+			expectedVersion: "8.0",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tempDir := t.TempDir()
+			configPath := filepath.Join(tempDir, "config.yaml")
+
+			err := os.WriteFile(configPath, []byte(tc.yamlContent), 0644)
+			assert.NoError(t, err)
+
+			app := &ReproAppConfig{}
+			err = LoadProjectConfig(configPath, []string{}, app)
+			assert.NoError(t, err)
+
+			assert.Equal(t, tc.expectedVersion, app.Database.Version,
+				"Database version should be preserved exactly as written in YAML",
+			)
+		})
+	}
+}
+
 type ReproDatabaseDesc struct {
 	Type    string `yaml:"type"`
 	Version string `yaml:"version"`
