@@ -1,8 +1,6 @@
 package settings
 
 import (
-	"os"
-
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 )
@@ -28,17 +26,8 @@ func (vc *viperConfig) SetDefault(key string, value any) {
 	vc.v.SetDefault(key, value)
 }
 
-func (vc *viperConfig) BindEnv(key string, envVar string) error {
-	return vc.v.BindEnv(key, envVar)
-}
-
 func (vc *viperConfig) Set(key string, value any) {
 	vc.v.Set(key, value)
-	// If it's a string, also set it in the environment
-	// This is important for child processes like docker-compose
-	if s, ok := value.(string); ok {
-		_ = os.Setenv(key, s)
-	}
 }
 
 func (vc *viperConfig) Unset(key string) {
@@ -74,7 +63,6 @@ func (vf *ViperFactory) CreateCleanConfigProvider(delimiter string) ConfigProvid
 		delimiter = "."
 	}
 	v := viper.NewWithOptions(viper.KeyDelimiter(delimiter))
-	v.SetEnvPrefix("DDEV")
 	return &viperConfig{v: v}
 }
 
