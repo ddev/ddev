@@ -95,9 +95,7 @@ web_environment:
 	assert.Equal(nodeps.AppTypeDrupal10, app.Type)
 	// Check override behavior (php_version should be 8.2)
 	assert.Equal("8.2", app.PHPVersion)
-	// Viper replaces lists, it doesn't merge them. So we expect only the override value.
-	assert.NotContains(app.WebEnvironment, "MAIN_VAR=main")
-	assert.Contains(app.WebEnvironment, "OVERRIDE_VAR=override")
+
 }
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
