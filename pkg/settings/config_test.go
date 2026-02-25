@@ -126,6 +126,10 @@ func (f *MockFactory) CreateCleanConfigProvider(delimiter string) ConfigProvider
 	return &MockConfigProvider{data: make(map[string]any)}
 }
 
+func (f *MockFactory) LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
+	return nil
+}
+
 // TestAbstractFactorySwap verifies that we can swap the underlying factory
 // and that the global functions delegate to it.
 func TestAbstractFactorySwap(t *testing.T) {
