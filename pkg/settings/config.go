@@ -69,26 +69,46 @@ func (vc *viperConfig) MergeConfig(path string) error {
 
 var config ConfigProvider
 
-// Init initializes the settings system. Call this early in main().
-func Init() {
-	v := viper.New()
-
-	// Example: set config file name and path
-	// v.SetConfigName("config")
-	// v.AddConfigPath(".")
-
-	// Optionally, read a config file
-	// err := v.ReadInConfig()
-	// if err != nil {
-	// 	// log warning or handle error
-	// }
-
-	config = &viperConfig{v: v}
+func init() {
+	// Initialize with a default provider so we never have nil panics
+	_ = Init()
 }
 
-// NewConfigProvider returns a new isolated ConfigProvider.
+// NewCleanConfigProvider returns a new isolated ConfigProvider without any bindings.
+func NewCleanConfigProvider() ConfigProvider {
+	v := viper.New()
+	return &viperConfig{v: v}
+}
+
+// NewConfigProvider returns a new isolated ConfigProvider with standard DDEV environment bindings.
 func NewConfigProvider() ConfigProvider {
-	return &viperConfig{v: viper.New()}
+	cp := NewCleanConfigProvider()
+	return cp
+}
+
+// LoadGlobalConfigWithEnv loads a global configuration file into the target struct,
+// also enabling environment variable overrides for standard DDEV settings.
+// Deprecated: Use LoadGlobalConfig instead, which now handles environment variables.
+func LoadGlobalConfigWithEnv(path string, target interface{}) error {
+	return LoadGlobalConfig(path, target)
+}
+
+// LoadCleanConfig loads a configuration file into the target struct without any environment variable bindings.
+// This is useful for loading map-based configs like project_list.yaml where environment bindings
+// can cause type conflicts (poisoning).
+func LoadCleanConfig(path string, target interface{}) error {
+	cfg := NewCleanConfigProvider()
+	if err := cfg.ReadConfig(path); err != nil {
+		return err
+	}
+	return cfg.Unmarshal(target)
+}
+
+// Init initializes the settings system. Call this early in main() if you need to re-init.
+func Init() error {
+	v := NewConfigProvider()
+	config = v
+	return nil
 }
 
 // LoadGlobalConfig loads a global configuration file into the target struct.
