@@ -338,6 +338,7 @@ func ClearDockerEnv() {
 	envVars := []string{
 		"COMPOSE_PROJECT_NAME",
 		"DDEV_SITENAME",
+		"DDEV_NAME",
 		"DDEV_DBIMAGE",
 		"DDEV_WEBIMAGE",
 		"DDEV_APPROOT",
@@ -349,6 +350,7 @@ func ClearDockerEnv() {
 		"DDEV_PHP_VERSION",
 		"DDEV_WEBSERVER_TYPE",
 		"DDEV_PROJECT_TYPE",
+		"DDEV_TYPE",
 		"DDEV_ROUTER_HTTP_PORT",
 		"DDEV_ROUTER_HTTPS_PORT",
 		"DDEV_HOST_DB_PORT",

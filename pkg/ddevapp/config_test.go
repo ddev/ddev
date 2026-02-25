@@ -571,6 +571,9 @@ func TestReadConfig(t *testing.T) {
 	// Unset environment variables to ensure config file values are used
 	t.Setenv("DDEV_WEBIMAGE", "")
 	t.Setenv("DDEV_DBIMAGE", "")
+	t.Setenv("DDEV_DOCROOT", "")
+	t.Setenv("DDEV_TYPE", "")
+	t.Setenv("DDEV_NAME", "")
 
 	_, err := app.ReadConfig(false)
 	d, _ := os.Getwd()
@@ -614,6 +617,10 @@ func TestConfigValidate(t *testing.T) {
 	if !settings.GetBool("RUN_TEST_ANYWAY") && (nodeps.IsMacOS() || nodeps.IsWindows()) {
 		t.Skip("Skipping on macOS/Windows")
 	}
+
+	t.Setenv("DDEV_NAME", "")
+	t.Setenv("DDEV_DOCROOT", "")
+	t.Setenv("DDEV_TYPE", "")
 
 	site := TestSites[0]
 	app, err := ddevapp.NewApp(site.Dir, false)
@@ -1248,6 +1255,10 @@ func TestExtraPackages(t *testing.T) {
 // TestTimezoneConfig tests to make sure setting timezone config takes effect in the container.
 func TestTimezoneConfig(t *testing.T) {
 	app := &ddevapp.DdevApp{}
+
+	t.Setenv("DDEV_NAME", "")
+	t.Setenv("DDEV_DOCROOT", "")
+	t.Setenv("DDEV_TYPE", "")
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
