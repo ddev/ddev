@@ -9,7 +9,8 @@ type ConfigProvider interface {
 	GetString(key string) string
 	GetInt(key string) int
 	GetBool(key string) bool
-	// Add more methods as needed
+	SetDefault(key string, value interface{})
+	Set(key string, value interface{})
 }
 
 // viperConfig implements ConfigProvider using Viper.
@@ -29,15 +30,23 @@ func (vc *viperConfig) GetBool(key string) bool {
 	return vc.v.GetBool(key)
 }
 
+func (vc *viperConfig) SetDefault(key string, value interface{}) {
+	vc.v.SetDefault(key, value)
+}
+
+func (vc *viperConfig) Set(key string, value interface{}) {
+	vc.v.Set(key, value)
+}
+
 var config ConfigProvider
 
 // Init initializes the settings system. Call this early in main().
 func Init() {
 	v := viper.New()
+
 	// Example: set config file name and path
 	// v.SetConfigName("config")
 	// v.AddConfigPath(".")
-	// v.AutomaticEnv() // read in environment variables that match
 
 	// Optionally, read a config file
 	// err := v.ReadInConfig()
@@ -61,4 +70,10 @@ func GetBool(key string) bool {
 	return config.GetBool(key)
 }
 
-// Optionally, add Set, Unmarshal, etc. as needed
+func SetDefault(key string, value interface{}) {
+	config.SetDefault(key, value)
+}
+
+func Set(key string, value interface{}) {
+	config.Set(key, value)
+}
