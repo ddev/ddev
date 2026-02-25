@@ -406,6 +406,13 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		return []string{}, fmt.Errorf("failed to load project config: %v", err)
 	}
 
+	// Normalize the project name after loading from config.
+	// The project list uses lowercased names, but config.yaml may contain
+	// mixed-case values. This ensures consistency with the project list.
+	if app.Name != "" {
+		app.Name = NormalizeProjectName(app.Name)
+	}
+
 	return append([]string{app.ConfigPath}, filteredOverrides...), nil
 }
 
@@ -422,6 +429,13 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	err = settings.LoadProjectConfig(filePath, configOverrides, app)
 	if err != nil {
 		return fmt.Errorf("unable to load config: %v", err)
+	}
+
+	// Normalize the project name after loading from config.
+	// The project list uses lowercased names, but config.yaml may contain
+	// mixed-case values. This ensures consistency with the project list.
+	if app.Name != "" {
+		app.Name = NormalizeProjectName(app.Name)
 	}
 
 	// Sort WebExtraExposedPorts so the entry matching configured router ports comes first
