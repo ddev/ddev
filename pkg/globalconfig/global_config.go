@@ -588,8 +588,6 @@ func ReadProjectList() error {
 	}
 
 	// Sanitize the project list
-
-	// Sanitize the project list
 	for name, project := range DdevProjectList {
 		if project == nil || project.AppRoot == "" {
 			output.UserErr.Warningf("Project '%s' in global project list has incomplete configuration and has been ignored.", name)

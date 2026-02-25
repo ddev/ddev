@@ -108,7 +108,6 @@ func (m *MockConfigProvider) GetBool(key string) bool {
 	return false
 }
 func (m *MockConfigProvider) SetDefault(key string, value any)        { m.data[key] = value }
-func (m *MockConfigProvider) BindEnv(key string, envVar string) error { return nil }
 func (m *MockConfigProvider) Set(key string, value any)               { m.data[key] = value }
 func (m *MockConfigProvider) Unmarshal(rawVal any) error              { return nil }
 func (m *MockConfigProvider) Unset(key string)                        { delete(m.data, key) }

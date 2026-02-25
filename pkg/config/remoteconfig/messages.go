@@ -136,7 +136,7 @@ func (c *remoteConfig) ShowTicker() {
 			messageOffset = 1
 		}
 
-		message := &tickerData.Messages[i+messageOffset-1]
+		message := &tickerData.Messages[messageOffset-1]
 
 		if c.checkConditions(message.Conditions) && c.checkVersions(message.Versions) {
 			t := table.NewWriter()
