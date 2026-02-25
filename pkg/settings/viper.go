@@ -50,6 +50,7 @@ func (vc *viperConfig) Unset(key string) {
 func (vc *viperConfig) Unmarshal(rawVal any) error {
 	return vc.v.Unmarshal(rawVal, func(dc *mapstructure.DecoderConfig) {
 		dc.TagName = "yaml"
+		dc.WeaklyTypedInput = true
 	})
 }
 

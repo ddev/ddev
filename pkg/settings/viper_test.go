@@ -2,6 +2,7 @@ package settings
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -117,4 +118,46 @@ func TestViperUnmarshalEnvStandardDDEV(t *testing.T) {
 
 	// This should now be "9999" because it's bound in NewConfigProvider
 	assert.Equal(t, "9999", cfg.RouterHTTPPort)
+}
+
+type ReproDatabaseDesc struct {
+	Type    string `yaml:"type"`
+	Version string `yaml:"version"`
+}
+
+type ReproAppConfig struct {
+	Database ReproDatabaseDesc `yaml:"database"`
+	Name     string            `yaml:"name"`
+}
+
+func TestReproUnmarshaling(t *testing.T) {
+	Init()
+
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "config.yaml")
+
+	content := `
+name: my-app
+database:
+  type: postgres
+  version: 17
+`
+	err := os.WriteFile(configPath, []byte(content), 0644)
+	assert.NoError(t, err)
+
+	// Defaults similar to NewApp
+	app := &ReproAppConfig{
+		Name: "default-name",
+		Database: ReproDatabaseDesc{
+			Type:    "mariadb",
+			Version: "10.11",
+		},
+	}
+
+	err = LoadProjectConfig(configPath, []string{}, app)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "my-app", app.Name)
+	assert.Equal(t, "postgres", app.Database.Type)
+	assert.Equal(t, "17", app.Database.Version)
 }
