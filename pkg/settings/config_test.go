@@ -106,3 +106,17 @@ func TestUnmarshalYamlTags(t *testing.T) {
 	assert.Equal(t, "test-app", cfg.Name)
 	assert.Equal(t, "8.2", cfg.PHPVersion)
 }
+
+// TestUnmarshalExistingValues verifies that Unmarshal does not zero out existing fields if not in config.
+func TestUnmarshalExistingValues(t *testing.T) {
+	p := NewConfigProvider()
+	// No "name" set in provider
+
+	cfg := TestConfig{
+		Name: "existing-name",
+	}
+	err := p.Unmarshal(&cfg)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "existing-name", cfg.Name, "Existing name should be preserved if not in config")
+}
