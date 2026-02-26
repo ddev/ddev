@@ -584,8 +584,13 @@ func ReadProjectList() error {
 		return err
 	}
 
-	// Load project list using unified settings loader (clean to avoid poisoning).
-	err = settings.LoadProjectListConfig(globalProjectsFile, &DdevProjectList)
+	source, err := os.ReadFile(globalProjectsFile)
+	if err != nil {
+		return fmt.Errorf("could not read global projects file %s: %v", globalProjectsFile, err)
+	}
+
+	// Read config file
+	err = yaml.Unmarshal(source, &DdevProjectList)
 	if err != nil {
 		return fmt.Errorf("unable to load DDEV global projects file %s: %v", globalProjectsFile, err)
 	}

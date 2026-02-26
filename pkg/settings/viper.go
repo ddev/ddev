@@ -86,17 +86,14 @@ func floatToStringHook() mapstructure.DecodeHookFunc {
 type ViperFactory struct{}
 
 // CreateCleanConfigProvider returns a new isolated ConfigProvider without any bindings.
-func (vf *ViperFactory) CreateCleanConfigProvider(delimiter string) ConfigProvider {
-	if delimiter == "" {
-		delimiter = "."
-	}
-	v := viper.NewWithOptions(viper.KeyDelimiter(delimiter))
+func (vf *ViperFactory) CreateCleanConfigProvider() ConfigProvider {
+	v := viper.NewWithOptions(viper.KeyDelimiter("."))
 	return &viperConfig{v: v}
 }
 
 // CreateConfigProvider returns a new isolated ConfigProvider with standard DDEV environment bindings.
-func (vf *ViperFactory) CreateConfigProvider(delimiter string) ConfigProvider {
-	cp := vf.CreateCleanConfigProvider(delimiter)
+func (vf *ViperFactory) CreateConfigProvider() ConfigProvider {
+	cp := vf.CreateCleanConfigProvider()
 	return cp
 }
 
@@ -104,7 +101,7 @@ func (vf *ViperFactory) CreateConfigProvider(delimiter string) ConfigProvider {
 func (vf *ViperFactory) LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
 	// First load the main config into a map
 	mainMap := make(map[string]any)
-	cfg := vf.CreateConfigProvider("")
+	cfg := vf.CreateConfigProvider()
 	if err := cfg.ReadConfig(mainPath); err != nil {
 		return err
 	}
@@ -114,7 +111,7 @@ func (vf *ViperFactory) LoadProjectConfig(mainPath string, overridePaths []strin
 
 	// Now load and merge each override
 	for _, path := range overridePaths {
-		overrideCfg := vf.CreateConfigProvider("")
+		overrideCfg := vf.CreateConfigProvider()
 		if err := overrideCfg.ReadConfig(path); err != nil {
 			return err
 		}

@@ -107,21 +107,21 @@ func (m *MockConfigProvider) GetBool(key string) bool {
 	}
 	return false
 }
-func (m *MockConfigProvider) SetDefault(key string, value any)        { m.data[key] = value }
-func (m *MockConfigProvider) Set(key string, value any)               { m.data[key] = value }
-func (m *MockConfigProvider) Unmarshal(rawVal any) error              { return nil }
-func (m *MockConfigProvider) Unset(key string)                        { delete(m.data, key) }
-func (m *MockConfigProvider) ReadConfig(path string) error            { return nil }
-func (m *MockConfigProvider) MergeConfig(path string) error           { return nil }
+func (m *MockConfigProvider) SetDefault(key string, value any) { m.data[key] = value }
+func (m *MockConfigProvider) Set(key string, value any)        { m.data[key] = value }
+func (m *MockConfigProvider) Unmarshal(rawVal any) error       { return nil }
+func (m *MockConfigProvider) Unset(key string)                 { delete(m.data, key) }
+func (m *MockConfigProvider) ReadConfig(path string) error     { return nil }
+func (m *MockConfigProvider) MergeConfig(path string) error    { return nil }
 
 // MockFactory is a mock implementation of ProviderFactory.
 type MockFactory struct{}
 
-func (f *MockFactory) CreateConfigProvider(delimiter string) ConfigProvider {
+func (f *MockFactory) CreateConfigProvider() ConfigProvider {
 	return &MockConfigProvider{data: make(map[string]any)}
 }
 
-func (f *MockFactory) CreateCleanConfigProvider(delimiter string) ConfigProvider {
+func (f *MockFactory) CreateCleanConfigProvider() ConfigProvider {
 	return &MockConfigProvider{data: make(map[string]any)}
 }
 
@@ -143,7 +143,7 @@ func TestAbstractFactorySwap(t *testing.T) {
 	// Inject MockFactory
 	factory = &MockFactory{}
 	// Re-init global config with the new factory
-	config = factory.CreateConfigProvider("")
+	config = factory.CreateConfigProvider()
 
 	// Verify that NewConfigProvider returns a MockConfigProvider
 	provider := NewConfigProvider()
