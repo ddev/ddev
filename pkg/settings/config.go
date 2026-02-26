@@ -15,8 +15,8 @@ type ConfigProvider interface {
 
 // ProviderFactory defines the interface for creating ConfigProviders.
 type ProviderFactory interface {
-	CreateConfigProvider(delimiter string) ConfigProvider
-	CreateCleanConfigProvider(delimiter string) ConfigProvider
+	CreateConfigProvider() ConfigProvider
+	CreateCleanConfigProvider() ConfigProvider
 	LoadProjectConfig(mainPath string, overridePaths []string, target any) error
 }
 
@@ -33,7 +33,7 @@ func init() {
 // Init initializes the settings system. Call this early in main() if you need to re-init.
 func Init() error {
 	factory = &ViperFactory{}
-	config = factory.CreateConfigProvider("")
+	config = factory.CreateConfigProvider()
 
 	return nil
 }
@@ -95,25 +95,10 @@ func Unset(key string) {
 
 // NewConfigProvider returns a new ConfigProvider from the configured factory.
 func NewConfigProvider() ConfigProvider {
-	return factory.CreateConfigProvider("")
+	return factory.CreateConfigProvider()
 }
 
 // NewCleanConfigProvider returns a new CleanConfigProvider from the configured factory.
 func NewCleanConfigProvider() ConfigProvider {
-	return factory.CreateCleanConfigProvider("")
-}
-
-// NewProjectListConfigProvider returns a new ProjectListConfigProvider from the configured factory.
-func NewProjectListConfigProvider() ConfigProvider {
-	return factory.CreateCleanConfigProvider("::")
-}
-
-// LoadProjectListConfig loads a configuration file into the target struct using a custom key delimiter.
-// This is specifically for project_list.yaml where project names (keys) can contain dots.
-func LoadProjectListConfig(path string, target any) error {
-	cfg := NewProjectListConfigProvider()
-	if err := cfg.ReadConfig(path); err != nil {
-		return err
-	}
-	return cfg.Unmarshal(target)
+	return factory.CreateCleanConfigProvider()
 }

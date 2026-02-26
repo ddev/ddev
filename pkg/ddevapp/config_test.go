@@ -95,7 +95,6 @@ web_environment:
 	assert.Equal(nodeps.AppTypeDrupal10, app.Type)
 	// Check override behavior (php_version should be 8.2)
 	assert.Equal("8.2", app.PHPVersion)
-
 }
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
