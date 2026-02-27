@@ -74,6 +74,7 @@ type GlobalConfig struct {
 	UseDockerComposeFromPath bool                    `yaml:"use_docker_compose_from_path,omitempty"`
 	UseHardenedImages        bool                    `yaml:"use_hardened_images"`
 	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
+	VolumeCloneStrategy      string                  `yaml:"volume_clone_strategy,omitempty"`
 	WSL2NoWindowsHostsMgt    bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	WebEnvironment           []string                `yaml:"web_environment"`
 	XdebugIDELocation        string                  `yaml:"xdebug_ide_location"`
