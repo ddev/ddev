@@ -16,7 +16,6 @@ type ConfigProvider interface {
 // ProviderFactory defines the interface for creating ConfigProviders.
 type ProviderFactory interface {
 	CreateConfigProvider() ConfigProvider
-	CreateCleanConfigProvider() ConfigProvider
 	LoadProjectConfig(mainPath string, overridePaths []string, target any) error
 }
 
@@ -38,7 +37,10 @@ func Init() error {
 	return nil
 }
 
-// LoadGlobalConfig loads a global configuration file into the target struct.
+// LoadGlobalConfig loads a single global configuration file into the target struct.
+// It is intentionally kept separate from LoadProjectConfig to remain fast and lightweight,
+// as it does not need to support the heavy lifting of RecursiveMerge that project configurations
+// require for deep map and slice overrides.
 func LoadGlobalConfig(path string, target any) error {
 	cfg := NewConfigProvider()
 	if err := cfg.ReadConfig(path); err != nil {
@@ -50,17 +52,6 @@ func LoadGlobalConfig(path string, target any) error {
 // LoadProjectConfig loads a main project config and merges optional overrides into the target struct.
 func LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
 	return factory.LoadProjectConfig(mainPath, overridePaths, target)
-}
-
-// LoadCleanConfig loads a configuration file into the target struct without any environment variable bindings.
-// This is useful for loading map-based configs like project_list.yaml where environment bindings
-// can cause type conflicts (poisoning).
-func LoadCleanConfig(path string, target any) error {
-	cfg := NewCleanConfigProvider()
-	if err := cfg.ReadConfig(path); err != nil {
-		return err
-	}
-	return cfg.Unmarshal(target)
 }
 
 // GetString returns the string value for a key using the current config provider.
@@ -96,9 +87,4 @@ func Unset(key string) {
 // NewConfigProvider returns a new ConfigProvider from the configured factory.
 func NewConfigProvider() ConfigProvider {
 	return factory.CreateConfigProvider()
-}
-
-// NewCleanConfigProvider returns a new CleanConfigProvider from the configured factory.
-func NewCleanConfigProvider() ConfigProvider {
-	return factory.CreateCleanConfigProvider()
 }
