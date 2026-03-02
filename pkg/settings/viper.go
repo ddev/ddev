@@ -85,16 +85,10 @@ func floatToStringHook() mapstructure.DecodeHookFunc {
 // ViperFactory implements ProviderFactory using Viper.
 type ViperFactory struct{}
 
-// CreateCleanConfigProvider returns a new isolated ConfigProvider without any bindings.
-func (vf *ViperFactory) CreateCleanConfigProvider() ConfigProvider {
+// CreateConfigProvider returns a new isolated ConfigProvider.
+func (vf *ViperFactory) CreateConfigProvider() ConfigProvider {
 	v := viper.NewWithOptions(viper.KeyDelimiter("."))
 	return &viperConfig{v: v}
-}
-
-// CreateConfigProvider returns a new isolated ConfigProvider with standard DDEV environment bindings.
-func (vf *ViperFactory) CreateConfigProvider() ConfigProvider {
-	cp := vf.CreateCleanConfigProvider()
-	return cp
 }
 
 // LoadProjectConfig loads a main project config and merges optional overrides into the target struct.

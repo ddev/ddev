@@ -8,12 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestConfig is a dummy struct for testing unmarshaling.
 type TestConfig struct {
-	Name       string `yaml:"name"`
-	Type       string `yaml:"type"`
-	PHPVersion string `yaml:"php_version"`
-	Webserver  string `yaml:"webserver_type"`
+	Name       string            `yaml:"name"`
+	Type       string            `yaml:"type"`
+	PHPVersion string            `yaml:"php_version"`
+	Webserver  string            `yaml:"webserver_type"`
+	Hooks      []string          `yaml:"hooks"`
+	WebEnv     map[string]string `yaml:"web_environment"`
 }
 
 // TestLoadGlobalConfig verifies that a single YAML file is correctly loaded
@@ -39,7 +40,8 @@ type: php
 
 // TestLoadProjectConfig verifies that main config and overrides are merged correctly.
 // It ensures that specific project configurations can be overridden by local files,
-// which is a key feature for DDEV's per-project extensibility.
+// which is a key feature for DDEV's per-project extensibility. It also checks
+// that slices are appended and maps are deep-merged.
 func TestLoadProjectConfig(t *testing.T) {
 	tempDir := t.TempDir()
 	mainPath := filepath.Join(tempDir, "config.yaml")
@@ -50,10 +52,20 @@ name: project-name
 type: drupal10
 php_version: "8.1"
 webserver_type: nginx-fpm
+hooks:
+  - "echo original-hook"
+web_environment:
+  KEY1: "value1"
+  KEY2: "value2"
 `
 	overrideContent := `
 php_version: "8.3"
 webserver_type: apache-fpm
+hooks:
+  - "echo override-hook"
+web_environment:
+  KEY2: "overridden-value2"
+  KEY3: "value3"
 `
 	err := os.WriteFile(mainPath, []byte(mainContent), 0644)
 	assert.NoError(t, err)
@@ -68,6 +80,17 @@ webserver_type: apache-fpm
 	assert.Equal(t, "drupal10", cfg.Type)        // From main
 	assert.Equal(t, "8.3", cfg.PHPVersion)       // Overridden
 	assert.Equal(t, "apache-fpm", cfg.Webserver) // Overridden
+
+	// Map keys are merged and overridden correctly. Note that Viper lowercases map keys.
+	expectedEnv := map[string]string{
+		"key1": "value1",
+		"key2": "overridden-value2",
+		"key3": "value3",
+	}
+	assert.Equal(t, expectedEnv, cfg.WebEnv)
+
+	// Slices should be appended together
+	assert.Equal(t, []string{"echo original-hook", "echo override-hook"}, cfg.Hooks)
 }
 
 // TestNewConfigProviderIsolation ensures that separate providers do not share state.
@@ -118,10 +141,6 @@ func (m *MockConfigProvider) MergeConfig(path string) error    { return nil }
 type MockFactory struct{}
 
 func (f *MockFactory) CreateConfigProvider() ConfigProvider {
-	return &MockConfigProvider{data: make(map[string]any)}
-}
-
-func (f *MockFactory) CreateCleanConfigProvider() ConfigProvider {
 	return &MockConfigProvider{data: make(map[string]any)}
 }
 
