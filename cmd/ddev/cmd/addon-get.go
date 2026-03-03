@@ -310,14 +310,18 @@ ddev add-on get /path/to/tarball.tar.gz
 func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc ddevapp.InstallDesc) (ddevapp.AddonManifest, error) {
 	// Create a manifest file
 	manifest := ddevapp.AddonManifest{
-		Name:           addonName,
-		Repository:     repository,
-		Version:        downloadedRelease,
-		Dependencies:   desc.Dependencies,
-		InstallDate:    time.Now().Format(time.RFC3339),
-		ProjectFiles:   desc.ProjectFiles,
-		GlobalFiles:    desc.GlobalFiles,
-		RemovalActions: desc.RemovalActions,
+		Name:               addonName,
+		Repository:         repository,
+		Version:            downloadedRelease,
+		Dependencies:       desc.Dependencies,
+		InstallDate:        time.Now().Format(time.RFC3339),
+		ProjectFiles:       desc.ProjectFiles,
+		GlobalFiles:        desc.GlobalFiles,
+		RemovalActions:     desc.RemovalActions,
+		PreInstallActions:  desc.PreInstallActions,
+		PostInstallActions: desc.PostInstallActions,
+		YamlReadFiles:      desc.YamlReadFiles,
+		Image:              desc.Image,
 	}
 	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", ddevapp.AddonMetadataDir, addonName))
 	if fileutil.FileExists(manifestFile) {

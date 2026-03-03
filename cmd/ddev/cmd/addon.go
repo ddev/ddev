@@ -14,6 +14,8 @@ ddev add-on remove someaddonname
 ddev add-on list
 ddev add-on list --installed
 ddev add-on search redis
+ddev add-on reapply someaddonname
+ddev add-on reapply --all
 `,
 }
 
