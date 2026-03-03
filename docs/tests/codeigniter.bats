@@ -14,7 +14,7 @@ teardown() {
 @test "CodeIgniter composer based quickstart with $(ddev --version)" {
   _skip_if_embargoed "codeigniter-composer"
 
-  run mkdir my-codeigniter-site && cd my-codeigniter-site
+  run mkdir -p my-codeigniter-site && cd my-codeigniter-site
   assert_success
 
   run ddev config --project-type=codeigniter --docroot=public

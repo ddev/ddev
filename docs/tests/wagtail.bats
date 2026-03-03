@@ -15,7 +15,7 @@ teardown() {
   _skip_if_embargoed "wagtail-gunicorn"
 
   WAGTAIL_SITENAME=${PROJNAME}
-  run mkdir ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
+  run mkdir -p ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
   assert_success
 
   run ddev config --project-type=generic --webserver-type=generic \

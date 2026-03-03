@@ -15,7 +15,7 @@ teardown() {
   _skip_if_embargoed "sveltekit-demo"
 
   SVELTEKIT_SITENAME=${PROJNAME}
-  run mkdir ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}
+  run mkdir -p ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}
   assert_success
 
   run ddev config --project-type=generic --webserver-type=generic

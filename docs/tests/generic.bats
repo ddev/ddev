@@ -15,7 +15,7 @@ teardown() {
   _skip_if_embargoed "generic-php"
 
   GENERIC_SITENAME=${PROJNAME}
-  run mkdir ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
+  run mkdir -p ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
   assert_success
 
   run ddev config --project-type=php

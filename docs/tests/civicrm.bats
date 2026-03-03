@@ -14,7 +14,7 @@ teardown() {
 @test "CiviCRM quickstart with $(ddev --version)" {
   _skip_if_embargoed "civicrm-standalone"
 
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
   run ddev config --project-type=php --composer-root=core --upload-dirs=public/media

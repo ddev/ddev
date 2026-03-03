@@ -13,8 +13,9 @@ teardown() {
 
 @test "Symfony Composer quickstart with $(ddev --version)" {
   _skip_if_embargoed "symfony-composer"
+  PROJNAME=my-symfony-composer-site
 
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
   run ddev config --project-type=symfony --docroot=public --php-version=8.3
@@ -47,8 +48,9 @@ teardown() {
 
 @test "Symfony CLI quickstart with $(ddev --version)" {
   _skip_if_embargoed "symfony-cli"
+  PROJNAME=my-symfony-cli-site
 
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
   run ddev config --project-type=symfony --docroot=public

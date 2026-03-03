@@ -192,7 +192,7 @@ teardown() {
 @test "TYPO3 XHGui composer test with $(ddev --version)" {
   _skip_if_embargoed "typo3-xhgui"
 
-  run mkdir my-typo3-site && cd my-typo3-site
+  run mkdir -p my-typo3-site && cd my-typo3-site
   assert_success
 
   run ddev config --project-type=typo3 --docroot=public --xhprof-mode=xhgui
