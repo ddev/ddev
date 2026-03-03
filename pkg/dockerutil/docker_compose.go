@@ -22,6 +22,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/docker/compose/v5/cmd/display"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/compose"
 	"github.com/joho/godotenv"
@@ -207,11 +208,28 @@ func parseExecSubArgs(args []string) execSubArgs {
 }
 
 // getComposeService returns a compose.api.Compose instance backed by the existing dockerCli.
-func getComposeService(opts ...compose.Option) (api.Compose, error) {
+// When cmd is non-nil and cmd.Progress is true, attaches a display.EventProcessor using
+// the same TTY detection logic as the compose CLI: Full for terminal stdout, Plain otherwise.
+func getComposeService(cmd *ComposeCmdOpts, stdout, stderr io.Writer, extraOpts ...compose.Option) (api.Compose, error) {
 	dm, err := getDockerManagerInstance()
 	if err != nil {
 		return nil, err
 	}
+	opts := []compose.Option{
+		compose.WithOutputStream(stdout),
+		compose.WithErrorStream(stderr),
+	}
+	if cmd != nil && cmd.Progress {
+		var ep api.EventProcessor
+		// Check actual stdout terminal, not dm.cli.Out() which is io.Discard
+		if isatty.IsTerminal(os.Stdout.Fd()) {
+			ep = display.Full(os.Stderr, os.Stderr, false)
+		} else {
+			ep = display.Plain(os.Stderr)
+		}
+		opts = append(opts, compose.WithEventProcessor(ep))
+	}
+	opts = append(opts, extraOpts...)
 	return compose.NewComposeService(dm.cli, opts...)
 }
 
@@ -228,14 +246,11 @@ func ComposeWithStreams(cmd *ComposeCmdOpts, stdin io.Reader, stdout io.Writer, 
 
 	ctx := context.Background()
 
-	svcOpts := []compose.Option{
-		compose.WithOutputStream(stdout),
-		compose.WithErrorStream(stderr),
-	}
+	var stdinOpt []compose.Option
 	if stdin != nil {
-		svcOpts = append(svcOpts, compose.WithInputStream(stdin))
+		stdinOpt = []compose.Option{compose.WithInputStream(stdin)}
 	}
-	svc, err := getComposeService(svcOpts...)
+	svc, err := getComposeService(cmd, stdout, stderr, stdinOpt...)
 	if err != nil {
 		return err
 	}
@@ -326,10 +341,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
-		svc, err := getComposeService(
-			compose.WithOutputStream(&stdoutBuf),
-			compose.WithErrorStream(&stderrBuf),
-		)
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
 		if err != nil {
 			return "", "", err
 		}
@@ -349,10 +361,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
-		svc, err := getComposeService(
-			compose.WithOutputStream(&stdoutBuf),
-			compose.WithErrorStream(&stderrBuf),
-		)
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
 		if err != nil {
 			return "", "", err
 		}
@@ -367,10 +376,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
-		svc, err := getComposeService(
-			compose.WithOutputStream(&stdoutBuf),
-			compose.WithErrorStream(&stderrBuf),
-		)
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
 		if err != nil {
 			return "", "", err
 		}
@@ -385,10 +391,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
-		svc, err := getComposeService(
-			compose.WithOutputStream(&stdoutBuf),
-			compose.WithErrorStream(&stderrBuf),
-		)
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
 		if err != nil {
 			return "", "", err
 		}
@@ -403,24 +406,14 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
-		svc, err := getComposeService(
-			compose.WithOutputStream(&stdoutBuf),
-			compose.WithErrorStream(&stderrBuf),
-		)
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
 		if err != nil {
 			return "", "", err
-		}
-		var done chan bool
-		if cmd.Progress {
-			done = util.ShowDots()
 		}
 		err = svc.Build(ctx, project, api.BuildOptions{
 			Progress: parsed.progress,
 			NoCache:  containsFlag(parsed.subArgs, "--no-cache"),
 		})
-		if cmd.Progress {
-			done <- true
-		}
 		if ctx.Err() != nil {
 			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
 		}
@@ -432,10 +425,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
-		svc, err := getComposeService(
-			compose.WithOutputStream(&stdoutBuf),
-			compose.WithErrorStream(&stderrBuf),
-		)
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
 		if err != nil {
 			return "", "", err
 		}
@@ -667,12 +657,14 @@ func PullImages(images []string, pullAlways bool) error {
 		err = ComposeWithStreams(&ComposeCmdOpts{
 			ComposeYaml: composeYamlPull,
 			Action:      []string{"pull"},
+			Progress:    true,
 			Env:         []string{"COMPOSE_DISABLE_ENV_FILE=1"},
 		}, nil, os.Stdout, os.Stderr)
 	} else {
 		_, _, err = ComposeCmd(&ComposeCmdOpts{
 			ComposeYaml: composeYamlPull,
 			Action:      []string{"pull"},
+			Progress:    true,
 			Env:         []string{"COMPOSE_DISABLE_ENV_FILE=1"},
 		})
 	}

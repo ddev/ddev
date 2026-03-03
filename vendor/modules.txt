@@ -277,6 +277,7 @@ github.com/docker/cli/pkg/kvfile
 github.com/docker/cli/templates
 # github.com/docker/compose/v5 v5.1.0
 ## explicit; go 1.25.0
+github.com/docker/compose/v5/cmd/display
 github.com/docker/compose/v5/cmd/formatter
 github.com/docker/compose/v5/internal
 github.com/docker/compose/v5/internal/memnet
