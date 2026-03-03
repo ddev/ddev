@@ -49,7 +49,7 @@ curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
 sudo rm -f /etc/apt/keyrings/ddev.gpg
 sudo bash -c "rm -f /etc/apt/keyrings/ddev.gpg && curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"
 sudo bash -c 'echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ \* \* > /etc/apt/sources.list.d/ddev.list'
-sudo apt-get -qq update >/dev/null && sudo apt-get install -qq -y ddev >/dev/null
+sudo apt-get -qq update >/dev/null && sudo apt-get install -qq -y ddev ddev-wsl2 >/dev/null
 
 # Buildkite-agent
 curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg
