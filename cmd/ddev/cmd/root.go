@@ -72,12 +72,19 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 			amplitude.TrackCommand(&cmdCopy, argsCopy)
 		}
 
+		imagePrefixVar, err := cmd.Flags().GetString("image-prefix-env")
+		if err != nil {
+			util.Warning("Failed parsing image-prefix-env flag")
+		} else {
+			versionconstants.SetImagePrefixVar(imagePrefixVar)
+		}
+
 		// Skip Docker and other validation for most commands
 		if command != "start" && command != "restart" {
 			return
 		}
 
-		err := dockerutil.CheckDockerVersion(dockerutil.DockerRequirements)
+		err = dockerutil.CheckDockerVersion(dockerutil.DockerRequirements)
 		if err != nil {
 			if err.Error() == "no docker" {
 				util.Failed("Could not connect to Docker. Please ensure Docker is installed and running.")
@@ -147,6 +154,7 @@ func init() {
 	// This flag represents the output.JSONOutput variable, and parsed very early in pkg/output/output_setup.go
 	RootCmd.PersistentFlags().BoolP("json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 	RootCmd.PersistentFlags().BoolVarP(&ddevapp.SkipHooks, "skip-hooks", "", false, "If true, any hook normally run by the command will be skipped.")
+	RootCmd.PersistentFlags().String("image-prefix-env", "CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX", "Environment variable which contains the docker image prefix.")
 
 	// Override Cobra version template for JSON output
 	if output.JSONOutput {

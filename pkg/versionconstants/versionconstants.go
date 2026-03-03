@@ -1,6 +1,7 @@
 package versionconstants
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime/debug"
@@ -86,6 +87,20 @@ func init() {
 		}
 		// 4) Last resort - use build info without VCS or unknown version
 		DdevVersion = "v0.0.0-overridden-by-make"
+	}
+}
+
+func SetImagePrefixVar(imagePrefixVar string) {
+	// use gitlab dependency proxy if available; this helps to avoid docker hub ratelimt issues in ci
+	// https://docs.gitlab.com/user/packages/dependency_proxy/
+	dependencyProxy := os.Getenv(imagePrefixVar)
+	if dependencyProxy != "" {
+		WebImg = fmt.Sprintf("%s/%s", dependencyProxy, WebImg)
+		DBImg = fmt.Sprintf("%s/%s", dependencyProxy, DBImg)
+		TraefikRouterImage = fmt.Sprintf("%s/%s", dependencyProxy, TraefikRouterImage)
+		SSHAuthImage = fmt.Sprintf("%s/%s", dependencyProxy, SSHAuthImage)
+		XhguiImage = fmt.Sprintf("%s/%s", dependencyProxy, XhguiImage)
+		UtilitiesImage = fmt.Sprintf("%s/%s", dependencyProxy, UtilitiesImage)
 	}
 }
 
