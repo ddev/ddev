@@ -17,14 +17,14 @@ import (
 func TestCheckCompose(t *testing.T) {
 	assert := asrt.New(t)
 
-	globalconfig.DockerComposeVersion = ""
-	composeErr := dockerutil.CheckDockerCompose()
+	globalconfig.DockerBuildxVersion = ""
+	composeErr := dockerutil.CheckDockerBuildxVersion(dockerutil.DockerRequirements)
 	if composeErr != nil {
 		out, err := exec.RunHostCommand(DdevBin, "config", "global")
 		require.NoError(t, err)
 		ddevVersion, err := exec.RunHostCommand(DdevBin, "version")
 		require.NoError(t, err)
-		assert.NoError(composeErr, "RequiredDockerComposeVersion=%s global config=%s ddevVersion=%s", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion, out, ddevVersion)
+		assert.NoError(composeErr, "RequiredDockerBuildxVersion=%s global config=%s ddevVersion=%s", globalconfig.DdevGlobalConfig.RequiredDockerBuildxVersion, out, ddevVersion)
 	}
 }
 

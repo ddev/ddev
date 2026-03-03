@@ -1,3 +1,4 @@
+name: ddev-router
 services:
   ddev-router:
     image: {{ .router_image }}

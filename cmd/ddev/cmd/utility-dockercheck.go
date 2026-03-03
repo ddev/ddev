@@ -29,7 +29,7 @@ ddev ut dockercheck`,
 		hasWarnings := false
 
 		// Ensure docker-compose is available before getting version info
-		_, dockerComposeErr := dockerutil.DownloadDockerComposeIfNeeded()
+		_, dockerComposeErr := dockerutil.DownloadDockerBuildxIfNeeded()
 
 		versionInfo := version.GetVersionInfo()
 		bashPath := util.FindBashPath()
@@ -89,7 +89,8 @@ ddev ut dockercheck`,
 			hasWarnings = true
 		} else {
 			buildxVersion, _ := dockerutil.GetBuildxVersion()
-			util.Success("docker buildx version %s meets requirements for minimum %s", buildxVersion, dockerutil.DockerRequirements.BuildxVersion)
+			buildxLocation, _ := dockerutil.GetBuildxLocation()
+			util.Success("docker buildx version %s (%s) meets requirements for minimum %s", buildxVersion, buildxLocation, dockerutil.DockerRequirements.BuildxVersion)
 		}
 
 		dockerContextName, dockerHost, err := dockerutil.GetDockerContextNameAndHost()
@@ -177,11 +178,18 @@ ddev ut dockercheck`,
 
 		// Test buildx with a trivial build on the host
 		if buildxErr == nil {
-			out, err = exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("echo 'FROM %s' | docker buildx build --quiet -f- -t ddev-buildx-test:latest . && docker rmi -f ddev-buildx-test:latest", versionconstants.UtilitiesImage))
+			// Use RunCLIPluginCommand to execute buildx build via Docker CLI plugin infrastructure
+			stdin := strings.NewReader(fmt.Sprintf("FROM %s", versionconstants.UtilitiesImage))
+			out, err = dockerutil.RunCLIPluginCommand("buildx", stdin, "build", "--quiet", "-f-", "-t", "ddev-buildx-test:latest", ".")
 			if err != nil {
 				util.Warning("Unable to perform trivial build with buildx: %v; output=%s", err, out)
 				hasWarnings = true
 			} else {
+				// Clean up the test image using Docker API
+				cleanupErr := dockerutil.RemoveImage("ddev-buildx-test:latest")
+				if cleanupErr != nil {
+					util.Debug("Failed to clean up test image: %v", cleanupErr)
+				}
 				util.Success("docker buildx is working correctly (trivial build succeeded)")
 			}
 		} else {
