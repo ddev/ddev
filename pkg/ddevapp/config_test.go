@@ -36,6 +36,67 @@ func isSemver(s string) bool {
 	return err == nil
 }
 
+// TestLoadConfigYamlFile verifies that LoadConfigYamlFile correctly loads config and overrides.
+func TestLoadConfigYamlFile(t *testing.T) {
+	assert := asrt.New(t)
+	testDir := testcommon.CreateTmpDir(t.Name())
+	origDir, _ := os.Getwd()
+
+	err := os.Chdir(testDir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
+
+	// Create a main config.yaml within .ddev directory
+	ddevDir := filepath.Join(testDir, ".ddev")
+	err = os.MkdirAll(ddevDir, 0755)
+	assert.NoError(err)
+
+	mainConfig := `name: mainproject
+type: drupal10
+php_version: "8.1"
+web_environment:
+  - MAIN_VAR=main
+`
+	err = os.WriteFile(filepath.Join(ddevDir, "config.yaml"), []byte(mainConfig), 0644)
+	assert.NoError(err)
+
+	// Create an override config.mac.yaml
+	overrideConfig := `php_version: "8.2"
+web_environment:
+  - OVERRIDE_VAR=override
+`
+	err = os.WriteFile(filepath.Join(ddevDir, "config.mac.yaml"), []byte(overrideConfig), 0644)
+	assert.NoError(err)
+
+	// We don't need to manually construct app, Init() will do it.
+	// But we need a dummy app to call Init() on if we want to follow that pattern,
+	// or just call NewApp. Init() is method on DdevApp.
+	app := &ddevapp.DdevApp{}
+
+	// Helper to init the app structure
+	err = app.Init(testDir)
+	assert.NoError(err)
+
+	// We MUST manually load config if we want to test LoadConfigYamlFile specifically,
+	// BUT Init() -> NewApp() -> ReadConfig() should have ALREADY loaded it if ReadConfig works!
+	// However, LoadConfigYamlFile is specifically for overrides or reloading.
+	// Let's verify LoadConfigYamlFile works even if Init loaded it (it should reload/override).
+	// Also app.ConfigPath is set by Init to .ddev/config.yaml
+
+	err = app.LoadConfigYamlFile(app.ConfigPath)
+	assert.NoError(err)
+
+	assert.Equal("mainproject", app.Name)
+	assert.Equal(nodeps.AppTypeDrupal10, app.Type)
+	// Check override behavior (php_version should be 8.2)
+	assert.Equal("8.2", app.PHPVersion)
+}
+
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
 func TestNewConfig(t *testing.T) {
 	assert := asrt.New(t)
@@ -1649,7 +1710,7 @@ func TestPkgConfigDatabaseDBVersion(t *testing.T) {
 		err = os.RemoveAll(configFile)
 		assert.NoError(err)
 		err = fileutil.AppendStringToFile(configFile, fmt.Sprintf("database:\n  type: %s\n  version: %s ", parts[0], parts[1]))
-		err = app.LoadConfigYamlFile(configFile)
+		_, err = app.ReadConfig(false)
 		assert.NoError(err)
 		assert.Equal(parts[0], app.Database.Type)
 		assert.Equal(parts[1], app.Database.Version)

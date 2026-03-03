@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"go.yaml.in/yaml/v4"
 )
@@ -238,9 +239,10 @@ func ValidateGlobalConfig() error {
 // Or creates the file
 func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
+	var err error
 
 	// Can't use fileutil.FileExists() here because of import cycle.
-	if _, err := os.Stat(globalConfigFile); err != nil {
+	if _, err = os.Stat(globalConfigFile); err != nil {
 		// ~/.ddev doesn't exist and running as root (only ddev hostname could do this)
 		// Then create global config.
 		if os.Geteuid() == 0 {
@@ -249,7 +251,7 @@ func ReadGlobalConfig() error {
 		}
 		if os.IsNotExist(err) {
 			DdevGlobalConfig = New()
-			err := WriteGlobalConfig(DdevGlobalConfig)
+			err = WriteGlobalConfig(DdevGlobalConfig)
 			if err != nil {
 				return err
 			}
@@ -258,15 +260,10 @@ func ReadGlobalConfig() error {
 		}
 	}
 
-	source, err := os.ReadFile(globalConfigFile)
+	// Load global config using unified settings loader.
+	err = settings.LoadGlobalConfig(globalConfigFile, &DdevGlobalConfig)
 	if err != nil {
-		return fmt.Errorf("unable to read DDEV global config file %s: %v", source, err)
-	}
-
-	// ReadConfig config values from file.
-	err = yaml.Unmarshal(source, &DdevGlobalConfig)
-	if err != nil {
-		return err
+		return fmt.Errorf("unable to load DDEV global config file %s: %v", globalConfigFile, err)
 	}
 
 	caRootEnv := os.Getenv("CAROOT")
@@ -551,9 +548,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 // Or creates the file
 func ReadProjectList() error {
 	globalProjectsFile := GetProjectListPath()
+	var err error
 
 	// Can't use fileutil.FileExists() here because of import cycle.
-	if _, err := os.Stat(globalProjectsFile); err != nil {
+	if _, err = os.Stat(globalProjectsFile); err != nil {
 		// ~/.ddev doesn't exist and running as root (only ddev hostname could do this)
 		// Then create global projects list.
 		if os.Geteuid() == 0 {
@@ -564,7 +562,7 @@ func ReadProjectList() error {
 			// If someone upgrades from an earlier version, the global config may hold the project list.
 			if len(DdevGlobalConfig.ProjectList) > 0 {
 				DdevProjectList = DdevGlobalConfig.ProjectList
-				err := WriteProjectList(DdevProjectList)
+				err = WriteProjectList(DdevProjectList)
 				if err != nil {
 					return err
 				}
@@ -585,13 +583,13 @@ func ReadProjectList() error {
 
 	source, err := os.ReadFile(globalProjectsFile)
 	if err != nil {
-		return fmt.Errorf("unable to read DDEV global projects file %s: %v", source, err)
+		return fmt.Errorf("could not read global projects file %s: %v", globalProjectsFile, err)
 	}
 
-	// ReadConfig config values from file.
+	// Read config file
 	err = yaml.Unmarshal(source, &DdevProjectList)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to load DDEV global projects file %s: %v", globalProjectsFile, err)
 	}
 
 	// Sanitize the project list
