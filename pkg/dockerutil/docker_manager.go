@@ -1,13 +1,16 @@
 package dockerutil
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"net"
 	"net/url"
+	"path/filepath"
 	"sync"
 
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/docker/cli/cli-plugins/manager"
@@ -68,6 +71,10 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		if sDockerManagerErr != nil {
 			return
 		}
+		// Prepend global ddev bin directory to CLI plugin search path so it takes
+		// priority over any user-configured extra dirs and ~/.docker/cli-plugins.
+		// Must be done after Initialize(), which reloads configFile from disk.
+		sDockerManager.cli.ConfigFile().CLIPluginsExtraDirs = append([]string{filepath.Join(globalconfig.GetGlobalDdevDir(), "bin")}, sDockerManager.cli.ConfigFile().CLIPluginsExtraDirs...)
 		sDockerManager.dockerContextName = sDockerManager.cli.CurrentContext()
 		sDockerManager.host = sDockerManager.cli.DockerEndpoint().Host
 		util.Verbose("getDockerManagerInstance(): dockerContextName=%s, host=%s", sDockerManager.dockerContextName, sDockerManager.host)
@@ -94,10 +101,7 @@ func getDockerManagerInstance() (*dockerManager, error) {
 			return
 		}
 		sDockerManager.info = info.Info
-		// A minimal cobra.Command is sufficient since we only need plugin
-		// metadata, not builtin-command conflict detection.
-		rootCmd := &cobra.Command{Use: "ddev"}
-		sDockerManager.cliPlugins, sDockerManager.cliPluginsErr = manager.ListPlugins(sDockerManager.cli, rootCmd)
+		sDockerManager.cliPlugins, sDockerManager.cliPluginsErr = manager.ListPlugins(sDockerManager.cli, &cobra.Command{})
 	})
 	return sDockerManager, sDockerManagerErr
 }
@@ -201,6 +205,16 @@ func ResetDockerHost(host string) error {
 	return nil
 }
 
+// ResetCLIPlugins resets the cached list of Docker CLI plugins in the singleton.
+func ResetCLIPlugins() error {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return err
+	}
+	dm.cliPlugins, dm.cliPluginsErr = manager.ListPlugins(dm.cli, &cobra.Command{})
+	return dm.cliPluginsErr
+}
+
 // GetServerVersion gets the cached versions of Docker provider engine
 // This is a struct which has all info from "docker version" command
 func GetServerVersion() (client.ServerVersionResult, error) {
@@ -255,4 +269,51 @@ func GetCLIPlugin(name string) (manager.Plugin, error) {
 		}
 	}
 	return manager.Plugin{}, fmt.Errorf("docker CLI plugin %q not found", name)
+}
+
+// RunCLIPluginCommand runs a Docker CLI plugin command with the specified arguments and optional stdin.
+// If stdin is not nil, it will be passed to the command's stdin.
+// Returns the combined stdout and stderr output, and any error.
+func RunCLIPluginCommand(pluginName string, stdin io.Reader, args ...string) (string, error) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return "", err
+	}
+
+	// Verify plugin exists
+	_, err = GetCLIPlugin(pluginName)
+	if err != nil {
+		return "", err
+	}
+
+	// Create a minimal cobra command for manager.PluginRunCommand
+	// It needs this to check for command conflicts
+	rootCmd := &cobra.Command{}
+
+	// Build the command arguments: docker <plugin> <args...>
+	// manager.PluginRunCommand expects os.Args to be set, but we can create a command directly
+	cmd, err := manager.PluginRunCommand(dm.cli, pluginName, rootCmd)
+	if err != nil {
+		return "", fmt.Errorf("failed to create plugin command for %q: %w", pluginName, err)
+	}
+
+	// Override the args if provided
+	if len(args) > 0 {
+		cmd.Args = append([]string{cmd.Path, pluginName}, args...)
+	}
+
+	// manager.PluginRunCommand sets Stdout/Stderr to os.Stdout/os.Stderr
+	// We need to override them to capture output
+	var outBuf, errBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = &errBuf
+
+	// Set stdin if provided
+	if stdin != nil {
+		cmd.Stdin = stdin
+	}
+
+	err = cmd.Run()
+	output := outBuf.String() + errBuf.String()
+	return output, err
 }

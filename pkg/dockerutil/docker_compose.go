@@ -1,16 +1,16 @@
 package dockerutil
 
 import (
-	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 
@@ -21,6 +21,11 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/docker/compose/v5/cmd/display"
+	"github.com/docker/compose/v5/pkg/api"
+	"github.com/docker/compose/v5/pkg/compose"
+	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
 )
 
@@ -35,90 +40,273 @@ type ComposeCmdOpts struct {
 	Env          []string
 }
 
-// ComposeWithStreams executes a docker-compose command but allows the caller to specify
-// stdin/stdout/stderr
+// parsedAction holds the result of parsing a ComposeCmdOpts.Action array.
+type parsedAction struct {
+	projectName string
+	progress    string
+	envFiles    []string
+	subcommand  string
+	subArgs     []string
+}
+
+// parseComposeAction extracts global flags and the subcommand from an action array.
+// Global flags handled: -p <name>, --progress=<val>, --env-file <file>.
+func parseComposeAction(action []string) parsedAction {
+	var result parsedAction
+	i := 0
+	for i < len(action) {
+		switch {
+		case action[i] == "-p" && i+1 < len(action):
+			result.projectName = action[i+1]
+			i += 2
+		case strings.HasPrefix(action[i], "--progress="):
+			result.progress = strings.TrimPrefix(action[i], "--progress=")
+			i++
+		case action[i] == "--env-file" && i+1 < len(action):
+			result.envFiles = append(result.envFiles, action[i+1])
+			i += 2
+		case strings.HasPrefix(action[i], "--env-file="):
+			result.envFiles = append(result.envFiles, strings.TrimPrefix(action[i], "--env-file="))
+			i++
+		case !strings.HasPrefix(action[i], "-"):
+			result.subcommand = action[i]
+			result.subArgs = action[i+1:]
+			return result
+		default:
+			i++ // skip unknown global flags
+		}
+	}
+	return result
+}
+
+// setCustomLabels sets the docker compose custom labels on each service in the project.
+// These labels are required for containers to be discoverable by the SDK after creation,
+// since the SDK's ContainerList queries filter by the project label.
+func setCustomLabels(project *types.Project) {
+	for name, s := range project.Services {
+		s.CustomLabels = types.Labels{
+			api.ProjectLabel:     project.Name,
+			api.ServiceLabel:     name,
+			api.VersionLabel:     api.ComposeVersion,
+			api.WorkingDirLabel:  project.WorkingDir,
+			api.ConfigFilesLabel: strings.Join(project.ComposeFiles, ","),
+			api.OneoffLabel:      "False",
+		}
+		project.Services[name] = s
+	}
+}
+
+// loadProjectFromCmd loads (or returns) the compose project described by cmd.
+// projectName is the effective project name (from -p flag or cmd.ProjectName).
+// envFiles are additional .env files used for variable interpolation.
+func loadProjectFromCmd(ctx context.Context, cmd *ComposeCmdOpts, projectName string, envFiles []string) (*types.Project, error) {
+	if cmd.ComposeYaml != nil {
+		project := cmd.ComposeYaml
+		if projectName != "" {
+			project.Name = projectName
+		}
+		setCustomLabels(project)
+		return project, nil
+	}
+
+	// Build environment for interpolation: OS env + any --env-file contents
+	environment := make(types.Mapping)
+	for _, e := range os.Environ() {
+		if k, v, ok := strings.Cut(e, "="); ok {
+			environment[k] = v
+		}
+	}
+	for _, envFile := range envFiles {
+		envMap, err := godotenv.Read(envFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load env file %s: %v", envFile, err)
+		}
+		for k, v := range envMap {
+			environment[k] = v
+		}
+	}
+
+	configFiles := make([]types.ConfigFile, 0, len(cmd.ComposeFiles))
+	for _, f := range cmd.ComposeFiles {
+		configFiles = append(configFiles, types.ConfigFile{Filename: f})
+	}
+
+	// Set WorkingDir from the first compose file so relative paths resolve correctly
+	workingDir := ""
+	if len(cmd.ComposeFiles) > 0 {
+		workingDir = filepath.Dir(cmd.ComposeFiles[0])
+	}
+
+	var loaderOpts []func(*loader.Options)
+	if len(cmd.Profiles) > 0 {
+		loaderOpts = append(loaderOpts, loader.WithProfiles(cmd.Profiles))
+	}
+	if projectName != "" {
+		pn := projectName
+		loaderOpts = append(loaderOpts, func(opts *loader.Options) {
+			opts.SetProjectName(pn, true)
+		})
+	}
+
+	project, err := loader.LoadWithContext(ctx, types.ConfigDetails{
+		ConfigFiles: configFiles,
+		Environment: environment,
+		WorkingDir:  workingDir,
+	}, loaderOpts...)
+	if err != nil {
+		return nil, err
+	}
+	setCustomLabels(project)
+	return project, nil
+}
+
+// execSubArgs holds parsed options from a compose exec subcommand argument list.
+type execSubArgs struct {
+	service string
+	command []string
+	tty     bool
+	detach  bool
+	workDir string
+	user    string
+	env     []string
+}
+
+// parseExecSubArgs parses exec subcommand args into an execSubArgs struct.
+// Handled flags: -T, -it/-ti, -d/--detach, -w/--workdir, -u/--user, -e/--env.
+func parseExecSubArgs(args []string) execSubArgs {
+	var result execSubArgs
+	i := 0
+	for i < len(args) {
+		arg := args[i]
+		switch {
+		case arg == "-T":
+			i++
+		case arg == "-it" || arg == "-ti":
+			result.tty = true
+			i++
+		case arg == "-d" || arg == "--detach":
+			result.detach = true
+			i++
+		case (arg == "-w" || arg == "--workdir") && i+1 < len(args):
+			result.workDir = args[i+1]
+			i += 2
+		case (arg == "-u" || arg == "--user") && i+1 < len(args):
+			result.user = args[i+1]
+			i += 2
+		case (arg == "-e" || arg == "--env") && i+1 < len(args):
+			result.env = append(result.env, args[i+1])
+			i += 2
+		case strings.HasPrefix(arg, "-"):
+			i++ // skip unknown flags
+		default:
+			result.service = arg
+			result.command = args[i+1:]
+			return result
+		}
+	}
+	return result
+}
+
+// getComposeService returns a compose.api.Compose instance backed by the existing dockerCli.
+// When cmd is non-nil and cmd.Progress is true, attaches a display.EventProcessor using
+// the same TTY detection logic as the compose CLI: Full for terminal stdout, Plain otherwise.
+func getComposeService(cmd *ComposeCmdOpts, stdout, stderr io.Writer, extraOpts ...compose.Option) (api.Compose, error) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return nil, err
+	}
+	opts := []compose.Option{
+		compose.WithOutputStream(stdout),
+		compose.WithErrorStream(stderr),
+	}
+	if cmd != nil && cmd.Progress {
+		var ep api.EventProcessor
+		// Check actual stdout terminal, not dm.cli.Out() which is io.Discard
+		if isatty.IsTerminal(os.Stdout.Fd()) {
+			ep = display.Full(os.Stderr, os.Stderr, false)
+		} else {
+			ep = display.Plain(os.Stderr)
+		}
+		opts = append(opts, compose.WithEventProcessor(ep))
+	}
+	opts = append(opts, extraOpts...)
+	return compose.NewComposeService(dm.cli, opts...)
+}
+
+// ComposeWithStreams executes a compose operation using the Docker Compose SDK,
+// routing output to the provided stdin/stdout/stderr streams.
 func ComposeWithStreams(cmd *ComposeCmdOpts, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
 	defer util.TimeTrack()()
 
-	var arg []string
+	parsed := parseComposeAction(cmd.Action)
+	projectName := cmd.ProjectName
+	if parsed.projectName != "" {
+		projectName = parsed.projectName
+	}
 
-	_, err := DownloadDockerComposeIfNeeded()
+	ctx := context.Background()
+
+	var stdinOpt []compose.Option
+	if stdin != nil {
+		stdinOpt = []compose.Option{compose.WithInputStream(stdin)}
+	}
+	svc, err := getComposeService(cmd, stdout, stderr, stdinOpt...)
 	if err != nil {
 		return err
 	}
 
-	if cmd.ProjectName != "" {
-		arg = append(arg, "-p", cmd.ProjectName)
-	}
-
-	if cmd.ComposeYaml != nil {
-		// Read from stdin
-		arg = append(arg, "-f", "-")
-	} else {
-		for _, file := range cmd.ComposeFiles {
-			arg = append(arg, "-f", file)
-		}
-	}
-
-	arg = append(arg, cmd.Action...)
-
-	path, err := globalconfig.GetDockerComposePath()
-	if err != nil {
-		return err
-	}
-	proc := exec.Command(path, arg...)
-	proc.Stdout = stdout
-	proc.Stderr = stderr
-	if cmd.ComposeYaml != nil {
-		yamlBytes, err := cmd.ComposeYaml.MarshalYAML()
+	switch parsed.subcommand {
+	case "up":
+		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
 		if err != nil {
 			return err
 		}
-		yamlBytes = util.EscapeDollarSign(yamlBytes)
-		proc.Stdin = strings.NewReader(string(yamlBytes))
-	} else {
-		proc.Stdin = stdin
-	}
-	proc.Env = append(os.Environ(), cmd.Env...)
+		var createOpts api.CreateOptions
+		if containsFlag(parsed.subArgs, "--build") {
+			buildOpts := api.BuildOptions{Progress: parsed.progress}
+			createOpts.Build = &buildOpts
+		}
+		return svc.Up(ctx, project, api.UpOptions{Create: createOpts, Start: api.StartOptions{Project: project}})
 
-	err = proc.Run()
-	return err
+	case "pull":
+		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
+		if err != nil {
+			return err
+		}
+		return svc.Pull(ctx, project, api.PullOptions{})
+
+	case "exec":
+		ea := parseExecSubArgs(parsed.subArgs)
+		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
+		if err != nil {
+			return err
+		}
+		_, err = svc.Exec(ctx, project.Name, api.RunOptions{
+			Service:     ea.service,
+			Command:     ea.command,
+			Tty:         ea.tty,
+			Interactive: ea.tty,
+			Detach:      ea.detach,
+			WorkingDir:  ea.workDir,
+			User:        ea.user,
+			Environment: ea.env,
+		})
+		return err
+
+	default:
+		return fmt.Errorf("ComposeWithStreams: unsupported compose action %q in %v", parsed.subcommand, cmd.Action)
+	}
 }
 
-// ComposeCmd executes docker-compose commands via shell.
-// returns stdout, stderr, error/nil
+// ComposeCmd executes a compose operation using the Docker Compose SDK.
+// Returns stdout output, stderr output, and any error.
 func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
-	var arg []string
-	var stdout bytes.Buffer
-	var stderr string
+	var stdoutBuf, stderrBuf bytes.Buffer
 
-	_, err := DownloadDockerComposeIfNeeded()
-	if err != nil {
-		return "", "", err
-	}
-
-	if cmd.ProjectName != "" {
-		arg = append(arg, "-p", cmd.ProjectName)
-	}
-
-	if cmd.ComposeYaml != nil {
-		// Read from stdin
-		arg = append(arg, "-f", "-")
-	} else {
-		for _, file := range cmd.ComposeFiles {
-			arg = append(arg, "-f", file)
-		}
-	}
-
-	for _, profile := range cmd.Profiles {
-		arg = append(arg, "--profile", profile)
-	}
-
-	arg = append(arg, cmd.Action...)
-
-	path, err := globalconfig.GetDockerComposePath()
-	if err != nil {
-		return "", "", err
+	parsed := parseComposeAction(cmd.Action)
+	projectName := cmd.ProjectName
+	if parsed.projectName != "" {
+		projectName = parsed.projectName
 	}
 
 	ctx := context.Background()
@@ -127,99 +315,166 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		ctx, cancel = context.WithTimeout(ctx, cmd.Timeout)
 		defer cancel()
 	}
-	proc := exec.CommandContext(ctx, path, arg...)
-	proc.Stdout = &stdout
-	if cmd.ComposeYaml != nil {
-		yamlBytes, err := cmd.ComposeYaml.MarshalYAML()
+
+	switch parsed.subcommand {
+	case "config":
+		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
 		if err != nil {
 			return "", "", err
 		}
-		yamlBytes = util.EscapeDollarSign(yamlBytes)
-		proc.Stdin = strings.NewReader(string(yamlBytes))
-	} else {
-		proc.Stdin = os.Stdin
-	}
-	proc.Env = append(os.Environ(), cmd.Env...)
-
-	stderrPipe, err := proc.StderrPipe()
-	if err != nil {
-		return "", "", fmt.Errorf("failed to proc.StderrPipe(): %v", err)
-	}
-
-	if err = proc.Start(); err != nil {
-		return "", "", fmt.Errorf("failed to exec docker-compose: %v", err)
-	}
-
-	stderrOutput := bufio.NewScanner(stderrPipe)
-
-	// Ignore chatty things from docker-compose like:
-	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
-	// Container Stopped or Created
-	// No resource found to remove (when doing a stop and no project exists)
-	ignoreRegex := "(^ *(Network|Container|Image|Volume|Service) .* (Creat|Start|Stopp|Remov|Build|Buil|Runn)(ing|t) $|.* Built$|^ *Container .*(Build|Stopp|Recreat|Creat)(ed|ing) *$|No services to build|Warning: No resource found to remove|Warning: Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
-	downRE, err := regexp.Compile(ignoreRegex)
-	if err != nil {
-		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
-	}
-
-	var done chan bool
-	if cmd.Progress {
-		done = util.ShowDots()
-	}
-	for stderrOutput.Scan() {
-		line := stderrOutput.Text()
-		if len(stderr) > 0 {
-			stderr = stderr + "\n"
+		if containsFlag(parsed.subArgs, "--services") {
+			services := make([]string, 0, len(project.Services))
+			for name := range project.Services {
+				services = append(services, name)
+			}
+			sort.Strings(services)
+			return strings.Join(services, "\n") + "\n", "", nil
 		}
-		stderr = stderr + line
-		line = strings.Trim(line, "\n\r")
-		switch {
-		case downRE.MatchString(line):
-			break
-		default:
-			output.UserOut.Println(line)
+		yamlBytes, err := project.MarshalYAML()
+		if err != nil {
+			return "", "", err
 		}
-	}
+		return string(yamlBytes), "", nil
 
-	err = proc.Wait()
-	if cmd.Progress {
-		done <- true
-	}
+	case "up":
+		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
+		if err != nil {
+			return "", "", err
+		}
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
+		if err != nil {
+			return "", "", err
+		}
+		var createOpts api.CreateOptions
+		if containsFlag(parsed.subArgs, "--build") {
+			buildOpts := api.BuildOptions{Progress: parsed.progress}
+			createOpts.Build = &buildOpts
+		}
+		err = svc.Up(ctx, project, api.UpOptions{Create: createOpts, Start: api.StartOptions{Project: project}})
+		if ctx.Err() != nil {
+			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
+		}
+		return stdoutBuf.String(), stderrBuf.String(), err
 
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return stdout.String(), stderr, fmt.Errorf("composeCmd timed out after %v and failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", cmd.Timeout, os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
+	case "down":
+		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
+		if err != nil {
+			return "", "", err
+		}
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
+		if err != nil {
+			return "", "", err
+		}
+		err = svc.Down(ctx, project.Name, api.DownOptions{RemoveOrphans: true, Project: project})
+		if ctx.Err() != nil {
+			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
+		}
+		return stdoutBuf.String(), stderrBuf.String(), err
+
+	case "stop":
+		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
+		if err != nil {
+			return "", "", err
+		}
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
+		if err != nil {
+			return "", "", err
+		}
+		err = svc.Stop(ctx, project.Name, api.StopOptions{Project: project})
+		if ctx.Err() != nil {
+			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
+		}
+		return stdoutBuf.String(), stderrBuf.String(), err
+
+	case "pull":
+		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
+		if err != nil {
+			return "", "", err
+		}
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
+		if err != nil {
+			return "", "", err
+		}
+		err = svc.Pull(ctx, project, api.PullOptions{})
+		if ctx.Err() != nil {
+			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
+		}
+		return stdoutBuf.String(), stderrBuf.String(), err
+
+	case "build":
+		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
+		if err != nil {
+			return "", "", err
+		}
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
+		if err != nil {
+			return "", "", err
+		}
+		err = svc.Build(ctx, project, api.BuildOptions{
+			Progress: parsed.progress,
+			NoCache:  containsFlag(parsed.subArgs, "--no-cache"),
+		})
+		if ctx.Err() != nil {
+			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
+		}
+		return stdoutBuf.String(), stderrBuf.String(), err
+
+	case "exec":
+		ea := parseExecSubArgs(parsed.subArgs)
+		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
+		if err != nil {
+			return "", "", err
+		}
+		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
+		if err != nil {
+			return "", "", err
+		}
+		_, err = svc.Exec(ctx, project.Name, api.RunOptions{
+			Service:     ea.service,
+			Command:     ea.command,
+			Tty:         ea.tty,
+			Interactive: ea.tty,
+			Detach:      ea.detach,
+			WorkingDir:  ea.workDir,
+			User:        ea.user,
+			Environment: ea.env,
+		})
+		if ctx.Err() != nil {
+			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
+		}
+		return stdoutBuf.String(), stderrBuf.String(), err
+
+	default:
+		return "", "", fmt.Errorf("ComposeCmd: unsupported compose action %q in %v", parsed.subcommand, cmd.Action)
 	}
-	if err != nil {
-		return stdout.String(), stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
-	}
-	return stdout.String(), stderr, nil
 }
 
-// GetDockerComposeVersion runs docker-compose -v to get the current version
-func GetDockerComposeVersion() (string, error) {
-	if globalconfig.DockerComposeVersion != "" {
-		return globalconfig.DockerComposeVersion, nil
+// containsFlag reports whether flag appears in args.
+func containsFlag(args []string, flag string) bool {
+	for _, a := range args {
+		if a == flag {
+			return true
+		}
 	}
-
-	return GetLiveDockerComposeVersion()
+	return false
 }
 
-// GetLiveDockerComposeVersion runs `docker-compose --version` and caches result
-func GetLiveDockerComposeVersion() (string, error) {
-	if globalconfig.DockerComposeVersion != "" {
-		return globalconfig.DockerComposeVersion, nil
+// GetLiveDockerBuildxVersion runs `docker-compose --version` and caches result
+func GetLiveDockerBuildxVersion() (string, error) {
+	if globalconfig.DockerBuildxVersion != "" {
+		return globalconfig.DockerBuildxVersion, nil
 	}
 
-	composePath, err := globalconfig.GetDockerComposePath()
+	composePath, err := globalconfig.GetDockerBuildxPath()
 	if err != nil {
 		return "", err
 	}
 
 	if !fileutil.FileExists(composePath) {
-		globalconfig.DockerComposeVersion = ""
-		return globalconfig.DockerComposeVersion, fmt.Errorf("docker-compose does not exist at %s", composePath)
+		globalconfig.DockerBuildxVersion = ""
+		return globalconfig.DockerBuildxVersion, fmt.Errorf("docker-buildx does not exist at %s", composePath)
 	}
-	out, err := exec.Command(composePath, "version", "--short").Output()
+	out, err := exec.Command(composePath, "version").Output()
 	if err != nil {
 		return "", err
 	}
@@ -230,37 +485,42 @@ func GetLiveDockerComposeVersion() (string, error) {
 		v = "v" + v
 	}
 
-	globalconfig.DockerComposeVersion = v
-	return globalconfig.DockerComposeVersion, nil
+	globalconfig.DockerBuildxVersion = v
+	return globalconfig.DockerBuildxVersion, nil
 }
 
-// DownloadDockerComposeIfNeeded downloads the proper version of docker-compose
-// if it's either not yet installed or has the wrong version.
+// DownloadDockerBuildxIfNeeded downloads the proper version of docker-buildx
+// if it's either not yet installed or doesn't meet the minimum version requirement.
 // Returns downloaded bool (true if it did the download) and err
-func DownloadDockerComposeIfNeeded() (bool, error) {
-	requiredVersion := globalconfig.GetRequiredDockerComposeVersion()
-	var err error
-	if requiredVersion == "" {
-		util.Debug("globalconfig use_docker_compose_from_path is set, so not downloading")
-		return false, nil
+func DownloadDockerBuildxIfNeeded() (bool, error) {
+	needDownload := false
+	requiredVersion := globalconfig.GetRequiredDockerBuildxVersion()
+	curVersion, err := GetBuildxVersion()
+	if err != nil {
+		needDownload = true
+	} else if requiredVersion != "" && curVersion != strings.TrimPrefix(requiredVersion, "v") {
+		needDownload = true
 	}
-	curVersion, err := GetLiveDockerComposeVersion()
-	if err != nil || curVersion != requiredVersion {
-		err = DownloadDockerCompose()
+	if err = CheckDockerBuildxVersion(DockerRequirements); err != nil {
+		needDownload = true
+	}
+	if needDownload {
+		err = DownloadDockerBuildx()
 		if err == nil {
+			_ = ResetCLIPlugins()
 			return true, err
 		}
 	}
 	return false, err
 }
 
-// DownloadDockerCompose gets the docker-compose binary and puts it into
-// ~/.ddev/.bin
-func DownloadDockerCompose() error {
+// DownloadDockerBuildx gets the docker-compose binary and puts it into
+// ~/.ddev/bin
+func DownloadDockerBuildx() error {
 	globalBinDir := globalconfig.GetDDEVBinDir()
-	destFile, _ := globalconfig.GetDockerComposePath()
+	destFile, _ := globalconfig.GetDockerBuildxPath()
 
-	composeURL, shasumURL, err := dockerComposeDownloadLink()
+	composeURL, shasumURL, err := dockerBuildxDownloadLink()
 	if err != nil {
 		return err
 	}
@@ -276,8 +536,8 @@ func DownloadDockerCompose() error {
 	}
 	output.UserErr.Printf("Download complete.")
 
-	// Remove the cached DockerComposeVersion
-	globalconfig.DockerComposeVersion = ""
+	// Remove the cached DockerBuildxVersion
+	globalconfig.DockerBuildxVersion = ""
 
 	err = util.Chmod(destFile, 0755)
 	if err != nil {
@@ -287,24 +547,28 @@ func DownloadDockerCompose() error {
 	return nil
 }
 
-// dockerComposeDownloadLink returns the URL and SHASUM-file link for docker-compose
-func dockerComposeDownloadLink() (composeURL string, shasumURL string, err error) {
+// dockerBuildxDownloadLink returns the URL and SHASUM-file link for docker-compose
+func dockerBuildxDownloadLink() (composeURL string, shasumURL string, err error) {
 	arch := runtime.GOARCH
 
 	switch arch {
 	case "arm64":
-		arch = "aarch64"
+		arch = "arm64"
 	case "amd64":
-		arch = "x86_64"
+		arch = "amd64"
 	default:
-		return "", "", fmt.Errorf("only ARM64 and AMD64 architectures are supported for docker-compose, not %s", arch)
+		return "", "", fmt.Errorf("only ARM64 and AMD64 architectures are supported for docker-buildx, not %s", arch)
 	}
 	flavor := runtime.GOOS + "-" + arch
-	composerURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", globalconfig.GetRequiredDockerComposeVersion(), flavor)
+	version := globalconfig.GetRequiredDockerBuildxVersion()
+	if version == "" {
+		version = versionconstants.RequiredDockerBuildxVersionDefault
+	}
+	composerURL := fmt.Sprintf("https://github.com/docker/buildx/releases/download/%[1]s/buildx-%[1]s.%[2]s", version, flavor)
 	if nodeps.IsWindows() {
 		composerURL = composerURL + ".exe"
 	}
-	shasumURL = fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/checksums.txt", globalconfig.GetRequiredDockerComposeVersion())
+	shasumURL = fmt.Sprintf("https://github.com/docker/buildx/releases/download/%s/checksums.txt", version)
 
 	return composerURL, shasumURL, nil
 }
@@ -393,12 +657,14 @@ func PullImages(images []string, pullAlways bool) error {
 		err = ComposeWithStreams(&ComposeCmdOpts{
 			ComposeYaml: composeYamlPull,
 			Action:      []string{"pull"},
+			Progress:    true,
 			Env:         []string{"COMPOSE_DISABLE_ENV_FILE=1"},
 		}, nil, os.Stdout, os.Stderr)
 	} else {
 		_, _, err = ComposeCmd(&ComposeCmdOpts{
 			ComposeYaml: composeYamlPull,
 			Action:      []string{"pull"},
+			Progress:    true,
 			Env:         []string{"COMPOSE_DISABLE_ENV_FILE=1"},
 		})
 	}

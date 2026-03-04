@@ -1453,6 +1453,7 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 
 		out, stderr, lastErr = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+			ProjectName:  app.GetComposeProjectName(),
 			Action:       action,
 			Progress:     true,
 			Timeout:      time.Hour * 1,
@@ -1498,6 +1499,11 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("bind mounts can't be used with Docker Rootless.\nRun `ddev config global --no-bind-mounts` and try again")
 	}
 
+	// Ensure docker-compose is available before getting version info
+	if _, err := dockerutil.DownloadDockerBuildxIfNeeded(); err != nil {
+		return fmt.Errorf("failed to ensure docker-buildx is available: %v", err)
+	}
+
 	if err := globalconfig.CheckForMultipleGlobalDdevDirs(); err != nil {
 		util.WarningOnce("Warning: %v", err)
 	}
@@ -1531,16 +1537,16 @@ func (app *DdevApp) Start() error {
 	// See https://github.com/ddev/ddev/pull/5508
 	dockerutil.RemoveNetworkDuplicates(app.GetDefaultNetworkName())
 
-	if err = dockerutil.CheckDockerCompose(); err != nil {
+	if err = dockerutil.CheckDockerBuildxVersion(dockerutil.DockerRequirements); err != nil {
 		if os.IsTimeout(err) || strings.Contains(err.Error(), "timeout") {
-			util.Failed(`Failed to download updated docker-compose binary.
+			util.Failed(`Failed to download updated docker-buildx binary.
 This might be due to network issues or a slow response.
 Please ensure your network is stable and try again:
 %v`, err)
 		} else {
-			util.Failed(`DDEV's private docker-compose binary does not exist or is set to an invalid version.
-Please use DDEV's' built-in docker-compose.
-Fix with 'ddev config global --required-docker-compose-version="" --use-docker-compose-from-path=false': %v`, err)
+			util.Failed(`DDEV's private docker-buildx binary does not exist or is set to an invalid version.
+Please use DDEV's' built-in docker-buildx.
+Fix with 'ddev config global --required-docker-buildx-version=""': %v`, err)
 		}
 	}
 

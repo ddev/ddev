@@ -27,9 +27,9 @@ var versionCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		_, err := dockerutil.DownloadDockerComposeIfNeeded()
+		_, err := dockerutil.DownloadDockerBuildxIfNeeded()
 		if err != nil {
-			util.Failed("Failed to check for and download docker-compose: %v", err)
+			util.Failed("Failed to check for and download docker-buildx: %v", err)
 		}
 
 		v := version.GetVersionInfo()

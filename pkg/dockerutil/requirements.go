@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Masterminds/semver/v3"
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -75,47 +74,6 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 	if !versions.GreaterThanOrEqualTo(currentAPIVersion, dockerVersionMatrix.APIVersion) {
 		return fmt.Errorf("installed Docker version %s is not supported, please update to version %s or newer", currentVersion, dockerVersionMatrix.Version)
 	}
-	return nil
-}
-
-// CheckDockerCompose determines if docker-compose is present and executable on the host system. This
-// relies on docker-compose being somewhere in the user's $PATH.
-func CheckDockerCompose() error {
-	defer util.TimeTrack()()
-
-	_, err := DownloadDockerComposeIfNeeded()
-	if err != nil {
-		return err
-	}
-	versionConstraint := DockerRequirements.ComposeVersionConstraint
-
-	v, err := GetDockerComposeVersion()
-	if err != nil {
-		return err
-	}
-	dockerComposeVersion, err := semver.NewVersion(v)
-	if err != nil {
-		return err
-	}
-
-	constraint, err := semver.NewConstraint(versionConstraint)
-	if err != nil {
-		return err
-	}
-
-	match, errs := constraint.Validate(dockerComposeVersion)
-	if !match {
-		if len(errs) <= 1 {
-			return errs[0]
-		}
-
-		msgs := "\n"
-		for _, err := range errs {
-			msgs = fmt.Sprint(msgs, err, "\n")
-		}
-		return fmt.Errorf("%s", msgs)
-	}
-
 	return nil
 }
 

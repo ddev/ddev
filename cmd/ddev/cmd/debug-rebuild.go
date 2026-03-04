@@ -38,14 +38,14 @@ var DebugRebuildCmd = &cobra.Command{
 			util.Failed("--all flag cannot be used with --service flag")
 		}
 
-		_, err := dockerutil.DownloadDockerComposeIfNeeded()
+		_, err := dockerutil.DownloadDockerBuildxIfNeeded()
 		if err != nil {
 			util.Failed("could not download docker-compose: %v", err)
 		}
 
-		composeBinaryPath, err := globalconfig.GetDockerComposePath()
+		composeBinaryPath, err := globalconfig.GetDockerBuildxPath()
 		if err != nil {
-			util.Failed("could not GetDockerComposePath(): %v", err)
+			util.Failed("could not GetDockerBuildxPath(): %v", err)
 		}
 
 		app, err := ddevapp.GetActiveApp(projectName)

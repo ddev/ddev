@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -189,20 +190,18 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("required-docker-compose-version").Changed {
-		val, _ := cmd.Flags().GetString("required-docker-compose-version")
-		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = val
+	if cmd.Flag("required-docker-buildx-version").Changed {
+		val, _ := cmd.Flags().GetString("required-docker-buildx-version")
+		globalconfig.DdevGlobalConfig.RequiredDockerBuildxVersion = val
 		dirty = true
+		if globalconfig.DdevGlobalConfig.RequiredDockerBuildxVersion == "" {
+			previousDockerBuildx, _ := globalconfig.GetDockerBuildxPath()
+			_ = os.RemoveAll(previousDockerBuildx)
+		}
 	}
 	if cmd.Flag("project-tld").Changed {
 		val, _ := cmd.Flags().GetString("project-tld")
 		globalconfig.DdevGlobalConfig.ProjectTldGlobal = val
-		dirty = true
-	}
-
-	if cmd.Flag("use-docker-compose-from-path").Changed {
-		val, _ := cmd.Flags().GetBool("use-docker-compose-from-path")
-		globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = val
 		dirty = true
 	}
 
@@ -339,11 +338,15 @@ func init() {
 
 	configGlobalCommand.Flags().String("table-style", "default", fmt.Sprintf(`Table style for "ddev list" and "ddev describe", possible values are "%s"`, strings.Join(globalconfig.ValidTableStyleList(), `", "`)))
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("table-style", configCompletionFunc(globalconfig.ValidTableStyleList()))
+	configGlobalCommand.Flags().String("required-docker-buildx-version", "", "Override default docker-buildx version (used only in development testing)")
+	_ = configGlobalCommand.Flags().MarkHidden("required-docker-buildx-version")
 	configGlobalCommand.Flags().String("required-docker-compose-version", "", "Override default docker-compose version (used only in development testing)")
+	_ = configGlobalCommand.Flags().MarkDeprecated("required-docker-compose-version", "Docker Compose is now used without a binary, so this option is no longer needed and has no effect")
 	_ = configGlobalCommand.Flags().MarkHidden("required-docker-compose-version")
 	configGlobalCommand.Flags().String("project-tld", nodeps.DdevDefaultTLD, "Set the default top-level domain to be used for all projects, can be overridden by project configuration")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("project-tld", configCompletionFunc([]string{nodeps.DdevDefaultTLD}))
 	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", false, fmt.Sprintf("If true, use docker-compose from path instead of private %s (used only in development testing)", fileutil.ShortHomeJoin(globalconfig.GetDDEVBinDir(), "docker-compose")))
+	_ = configGlobalCommand.Flags().MarkDeprecated("use-docker-compose-from-path", "Docker Compose is now used without a binary, so this option is no longer needed and has no effect")
 	_ = configGlobalCommand.Flags().MarkHidden("use-docker-compose-from-path")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", false, "If true, don't use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("no-bind-mounts", configCompletionFunc([]string{"true", "false"}))

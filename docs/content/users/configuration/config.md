@@ -490,15 +490,15 @@ Default Top-Level-Domain (`TLD`) to be used for a project’s domains, or global
 
 See [Hostnames and Wildcards and DDEV, Oh My!](https://ddev.com/blog/ddev-name-resolution-wildcards/) for more information on DDEV hostname resolution.
 
-## `required_docker_compose_version`
+## `required_docker_buildx_version`
 
-Specific docker-compose version for download.
+Specific docker-buildx version for download.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-globe-16: global | &zwnj; | &zwnj;
 
-If set to `v2.8.3`, for example, it will download and use that version instead of the expected version for docker-compose.
+If set to `v0.31.1`, for example, it will download and use that version instead of the expected version for docker-buildx.
 
 !!!warning "Troubleshooting Only!"
     This should only be used in specific cases like troubleshooting. Please don't experiment with it unless directed to do so.
@@ -633,18 +633,18 @@ When `false`, DDEV will always update the `/etc/hosts` file with the project hos
 
 See [Using DDEV Offline](../usage/offline.md).
 
-## `use_docker_compose_from_path`
+## `use_docker_buildx_from_path`
 
-Whether to use the system-installed docker-compose. You can otherwise use [`required_docker_compose_version`](#required_docker_compose_version) to specify a version for download.
+Whether to use the system-installed docker-buildx. You can otherwise use [`required_docker_buildx_version`](#required_docker_buildx_version) to specify a version for download.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
-When `true`, DDEV will use the docker-compose found in on your system’s path instead of using its private, known-good, docker-compose version.
+When `true`, DDEV will use the docker-buildx found in on your system’s path instead of using its private, known-good, docker-buildx version.
 
 !!!warning "Troubleshooting Only!"
-    This should only be used in specific cases like troubleshooting. (It is used in the Docker Compose automated tests.)
+    This should only be used in specific cases like troubleshooting. (It is used in the Docker Buildx automated tests.)
 
 ## `use_hardened_images`
 

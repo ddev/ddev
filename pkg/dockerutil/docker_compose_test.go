@@ -36,7 +36,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	assert := asrt.New(t)
 	var err error
 
-	_, err = dockerutil.DownloadDockerComposeIfNeeded()
+	_, err = dockerutil.DownloadDockerBuildxIfNeeded()
 	require.NoError(t, err)
 
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
@@ -46,36 +46,36 @@ func TestDockerComposeDownload(t *testing.T) {
 	})
 
 	// Remove previous binary
-	previousDockerCompose, _ := globalconfig.GetDockerComposePath()
-	_ = os.RemoveAll(previousDockerCompose)
+	previousDockerBuildx, _ := globalconfig.GetDockerBuildxPath()
+	_ = os.RemoveAll(previousDockerBuildx)
 
 	// Download the normal required version specified in code
-	globalconfig.DockerComposeVersion = ""
+	globalconfig.DockerBuildxVersion = ""
 
-	downloaded, err := dockerutil.DownloadDockerComposeIfNeeded()
+	downloaded, err := dockerutil.DownloadDockerBuildxIfNeeded()
 	require.NoError(t, err)
 	require.True(t, downloaded)
-	v, err := dockerutil.GetLiveDockerComposeVersion()
+	v, err := dockerutil.GetLiveDockerBuildxVersion()
 	assert.NoError(err)
-	assert.Equal(globalconfig.GetRequiredDockerComposeVersion(), v)
+	assert.Equal(globalconfig.GetRequiredDockerBuildxVersion(), v)
 
 	// Make sure it doesn't download a second time
-	downloaded, err = dockerutil.DownloadDockerComposeIfNeeded()
+	downloaded, err = dockerutil.DownloadDockerBuildxIfNeeded()
 	assert.NoError(err)
 	assert.False(downloaded)
 
 	for _, v := range []string{"v2.32.4"} {
-		globalconfig.DockerComposeVersion = ""
-		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = v
-		downloaded, err = dockerutil.DownloadDockerComposeIfNeeded()
+		globalconfig.DockerBuildxVersion = ""
+		globalconfig.DdevGlobalConfig.RequiredDockerBuildxVersion = v
+		downloaded, err = dockerutil.DownloadDockerBuildxIfNeeded()
 		require.NoError(t, err)
 		assert.True(downloaded)
-		// We have to reset version.DockerComposeVersion so it will actually check
+		// We have to reset version.DockerBuildxVersion so it will actually check
 		// instead of using cached value.
-		globalconfig.DockerComposeVersion = ""
-		activeVersion, err := dockerutil.GetLiveDockerComposeVersion()
+		globalconfig.DockerBuildxVersion = ""
+		activeVersion, err := dockerutil.GetLiveDockerBuildxVersion()
 		assert.NoError(err)
-		assert.Equal(globalconfig.GetRequiredDockerComposeVersion(), activeVersion)
+		assert.Equal(globalconfig.GetRequiredDockerBuildxVersion(), activeVersion)
 	}
 }
 
