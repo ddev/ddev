@@ -469,14 +469,14 @@ func (p *Provider) GetInfo() string {
 	cmd := p.injectedEnvironment() + "; " + p.InfoCommand.Command
 	service := p.InfoCommand.Service
 
-	var output string
+	var out string
 	var err error
 
 	// Note: We use exec.RunCommand and app.Exec directly instead of
 	// ExecOnHostOrService because ExecOnHostOrService only returns an error,
 	// not the command output that we need for the warning message.
 	if service == "host" {
-		output, err = exec.RunCommand("bash", []string{"-c", cmd})
+		out, err = exec.RunCommand("bash", []string{"-c", cmd})
 	} else {
 		if service == "" {
 			service = "web"
@@ -486,11 +486,11 @@ func (p *Provider) GetInfo() string {
 			Service: service,
 			Cmd:     cmd,
 		})
-		output = stdout + stderr
+		out = stdout + stderr
 	}
 
 	if err != nil {
 		return ""
 	}
-	return strings.TrimSpace(output)
+	return strings.TrimSpace(out)
 }
