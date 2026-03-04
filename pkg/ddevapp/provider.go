@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -22,6 +23,7 @@ type ProviderCommand struct {
 // ProviderInfo defines the provider
 type ProviderInfo struct {
 	EnvironmentVariables map[string]string `yaml:"environment_variables"`
+	InfoCommand          ProviderCommand   `yaml:"info_command,omitempty"`
 	AuthCommand          ProviderCommand   `yaml:"auth_command"`
 	DBPullCommand        ProviderCommand   `yaml:"db_pull_command"`
 	DBImportCommand      ProviderCommand   `yaml:"db_import_command"`
@@ -454,4 +456,41 @@ func (p *Provider) injectedEnvironment() string {
 		}
 	}
 	return s
+}
+
+// GetInfo returns a human-readable description of the provider's target environment.
+// It executes the info_command defined in the provider YAML if available,
+// otherwise returns an empty string (which triggers the default warning message).
+func (p *Provider) GetInfo() string {
+	if p.InfoCommand.Command == "" {
+		return ""
+	}
+
+	cmd := p.injectedEnvironment() + "; " + p.InfoCommand.Command
+	service := p.InfoCommand.Service
+
+	var output string
+	var err error
+
+	// Note: We use exec.RunCommand and app.Exec directly instead of
+	// ExecOnHostOrService because ExecOnHostOrService only returns an error,
+	// not the command output that we need for the warning message.
+	if service == "host" {
+		output, err = exec.RunCommand("bash", []string{"-c", cmd})
+	} else {
+		if service == "" {
+			service = "web"
+		}
+		var stdout, stderr string
+		stdout, stderr, err = p.app.Exec(&ExecOpts{
+			Service: service,
+			Cmd:     cmd,
+		})
+		output = stdout + stderr
+	}
+
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(output)
 }

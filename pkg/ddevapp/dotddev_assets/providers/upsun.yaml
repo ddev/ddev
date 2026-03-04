@@ -60,6 +60,10 @@
 # Debugging: Use `ddev exec upsun` to see what Upsun knows about
 # your configuration and whether it's working correctly.
 
+info_command:
+  command: |
+    echo "${PLATFORM_PROJECT}.${PLATFORM_ENVIRONMENT}"
+
 auth_command:
   command: |
     set -eu -o pipefail
