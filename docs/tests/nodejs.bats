@@ -15,7 +15,7 @@ teardown() {
   _skip_if_embargoed "nodejs-express"
 
   NODEJS_SITENAME=${PROJNAME}
-  run mkdir ${NODEJS_SITENAME} && cd ${NODEJS_SITENAME}
+  run mkdir -p ${NODEJS_SITENAME} && cd ${NODEJS_SITENAME}
   assert_success
 
   run ddev config --project-type=generic --webserver-type=generic
@@ -49,13 +49,12 @@ EOF
   assert_success
 
   # Diagnostic: show traefik config files in volume
-  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
-  echo "# Traefik config files: $output"
+#  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
+#  echo "# Traefik config files: $output"
   # Diagnostic: show traefik router API response (just router names)
-  run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
-  echo "# Traefik routers: $output"
+#  run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
+#  echo "# Traefik routers: $output"
 
-  # ddev launch
   DDEV_DEBUG=true run ddev launch
   assert_success
   assert_output "FULLURL https://${PROJNAME}.ddev.site"
@@ -72,11 +71,11 @@ EOF
   echo "# Existing containers: $output" >&3
 
   # Diagnostic: show traefik config files in volume
-  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
-  echo "# Traefik config files: $output" >&3
+#  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
+#  echo "# Traefik config files: $output" >&3
   # Diagnostic: show traefik router API response (just router names)
-  run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
-  echo "# Traefik routers: $output"
+#  run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
+#  echo "# Traefik routers: $output"
 
   # validate running project
   run curl -sfv https://${PROJNAME}.ddev.site

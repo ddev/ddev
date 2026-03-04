@@ -13,8 +13,9 @@ teardown() {
 
 @test "Drupal 12 quickstart with $(ddev --version)" {
   _skip_if_embargoed "drupal12-composer"
+  PROJNAME=my-drupal12-site
 
-  run mkdir my-drupal-site && cd my-drupal-site
+  run mkdir -p my-drupal12-site && cd my-drupal12-site
   assert_success
 
   run ddev config --project-type=drupal12 --docroot=web
@@ -45,8 +46,9 @@ teardown() {
 
 @test "Drupal 11 quickstart with $(ddev --version)" {
   _skip_if_embargoed "drupal11-composer"
+  PROJNAME=my-drupal11-site
 
-  run mkdir my-drupal-site && cd my-drupal-site
+  run mkdir -p my-drupal11-site && cd my-drupal11-site
   assert_success
 
   run ddev config --project-type=drupal11 --docroot=web
@@ -77,8 +79,9 @@ teardown() {
 
 @test "Drupal 10 quickstart with $(ddev --version)" {
   _skip_if_embargoed "drupal10-composer"
+  PROJNAME=my-drupal10-site
 
-  run mkdir my-drupal-site && cd my-drupal-site
+  run mkdir -p my-drupal10-site && cd my-drupal10-site
   assert_success
 
   run ddev config --project-type=drupal10 --docroot=web
@@ -109,6 +112,7 @@ teardown() {
 
 @test "Drupal 11 git based quickstart with $(ddev --version)" {
   _skip_if_embargoed "drupal11-git"
+  PROJNAME=my-drupal11-site
 
   PROJECT_GIT_URL=https://github.com/ddev/test-drupal11.git
   run git clone ${PROJECT_GIT_URL} ${PROJNAME}
@@ -142,8 +146,9 @@ teardown() {
 
 @test "Drupal CMS composer quickstart with $(ddev --version)" {
   _skip_if_embargoed "drupal-cms-composer"
+  PROJNAME=my-drupalcms-site
 
-  run mkdir my-drupal-site && cd my-drupal-site
+  run mkdir -p my-drupalcms-site && cd my-drupalcms-site
   assert_success
 
   run ddev config --project-type=drupal11 --docroot=web

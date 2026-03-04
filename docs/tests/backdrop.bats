@@ -14,7 +14,7 @@ teardown() {
 @test "backdrop new-project quickstart with $(ddev --version)" {
   _skip_if_embargoed "backdrop-new"
 
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
   run ddev config --project-type=backdrop
@@ -63,7 +63,7 @@ teardown() {
 @test "backdrop existing project with $(ddev --version)" {
   _skip_if_embargoed "backdrop-existing"
 
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
   run git clone https://github.com/ddev/test-backdrop.git .

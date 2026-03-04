@@ -13,16 +13,14 @@ teardown() {
 
 @test "Statamic Composer quickstart with $(ddev --version)" {
   _skip_if_embargoed "statamic-composer"
+  PROJNAME=my-statamic-composer-site
 
-  # mkdir ${PROJNAME} && cd ${PROJNAME}
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # ddev config --project-type=laravel --docroot=public
   run ddev config --project-type=laravel --docroot=public
   assert_success
 
-  # ddev composer create-project --prefer-dist statamic/statamic
   run ddev composer create-project --prefer-dist statamic/statamic
   assert_success
 

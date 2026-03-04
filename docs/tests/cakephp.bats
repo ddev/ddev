@@ -13,20 +13,17 @@ teardown() {
 
 @test "CakePHP Composer quickstart with $(ddev --version)" {
   _skip_if_embargoed "cakephp-composer"
+  PROJNAME=my-cakephp-composer-site
 
-  # mkdir ${PROJNAME} && cd ${PROJNAME}
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # ddev config --project-type=cakephp --docroot=webroot
   run ddev config --project-type=cakephp --docroot=webroot
   assert_success
 
-  # ddev start -y
   run ddev start -y
   assert_success
 
-  # ddev composer create-project --prefer-dist --no-interaction cakephp/app:~5.0
   run ddev composer create-project --prefer-dist --no-interaction cakephp/app:~5.0
   assert_success
 

@@ -13,8 +13,9 @@ teardown() {
 
 @test "Silverstripe CMS Composer quickstart with $(ddev --version)" {
   _skip_if_embargoed "silverstripe-composer"
+  PROJNAME=my-silverstripe-composer-site
 
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
   run ddev config --project-type=silverstripe --docroot=public

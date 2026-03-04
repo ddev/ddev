@@ -14,41 +14,30 @@ teardown() {
 @test "Sulu quickstart with $(ddev --version)" {
   _skip_if_embargoed "sulu-composer"
 
-  # mkdir ${PROJNAME} && cd ${PROJNAME}
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  # ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
   run ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0
   assert_success
   # ddev start -y
   run ddev start -y
   assert_success
-  # ddev composer create-project sulu/skeleton
   run ddev composer create-project sulu/skeleton
   assert_success
-  # export SULU_PROJECT_NAME="My Sulu Site"
   export SULU_PROJECT_NAME="My Sulu Site"
   assert_success
-  # export SULU_PROJECT_KEY="${PROJNAME}"
   export SULU_PROJECT_KEY="${PROJNAME}"
   assert_success
-  # export SULU_PROJECT_CONFIG_FILE="config/webspaces/my-sulu-site.xml"
   export SULU_PROJECT_CONFIG_FILE="config/webspaces/${PROJNAME}.xml"
   assert_success
-  # ddev exec "mv config/webspaces/website.xml ${SULU_PROJECT_CONFIG_FILE}"
   run ddev exec "mv config/webspaces/website.xml ${SULU_PROJECT_CONFIG_FILE}"
   assert_success
-  # ddev exec "sed -i -e 's|<name>.*</name>|<name>${SULU_PROJECT_NAME}</name>|g' -e 's|<key>.*</key>|<key>${SULU_PROJECT_KEY}</key>|g' ${SULU_PROJECT_CONFIG_FILE}"
   run ddev exec "sed -i -e 's|<name>.*</name>|<name>${SULU_PROJECT_NAME}</name>|g' -e 's|<key>.*</key>|<key>${SULU_PROJECT_KEY}</key>|g' ${SULU_PROJECT_CONFIG_FILE}"
   assert_success
   # Set APP_ENV and DATABASE_URL in .env.local
-  # ddev dotenv set .env.local --app-env=dev --database-url="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
   run ddev dotenv set .env.local --app-env=dev --database-url="mysql://db:db@db:3306/db?serverVersion=8.0&charset=utf8mb4"
   assert_success
-  # ddev exec bin/adminconsole sulu:build dev --no-interaction
   run ddev exec bin/adminconsole sulu:build dev --no-interaction
   assert_success
-  # ddev launch
   DDEV_DEBUG=true run ddev launch /admin
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
   assert_success

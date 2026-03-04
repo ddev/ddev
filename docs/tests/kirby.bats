@@ -14,19 +14,15 @@ teardown() {
 @test "Kirby new project quickstart with $(ddev --version)" {
   _skip_if_embargoed "kirby-composer"
 
-  # mkdir ${PROJNAME} && cd ${PROJNAME}
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  # ddev config --omit-containers=db --webserver-type=apache-fpm
   run ddev config --omit-containers=db --webserver-type=apache-fpm
   assert_success
 
-  # ddev start -y
   run ddev start -y
   assert_success
 
-  # ddev composer create-project getkirby/starterkit
   run ddev composer create-project getkirby/starterkit
   assert_success
 

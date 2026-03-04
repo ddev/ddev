@@ -13,7 +13,7 @@ teardown() {
 @test "Craft CMS New Projects quickstart with $(ddev --version)" {
   _skip_if_embargoed "craftcms-new"
 
-  run mkdir ${PROJNAME} && cd ${PROJNAME}
+  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
   run ddev config --project-type=craftcms --docroot=web
