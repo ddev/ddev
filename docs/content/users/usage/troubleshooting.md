@@ -7,6 +7,7 @@ Things might go wrong! In addition to this page, consider checking [the DDEV iss
 * Please use the [current stable version of DDEV](../install/ddev-upgrade.md) and of your Docker provider before going too far or asking for support.
 * Run [`ddev utility diagnose`](commands.md#utility-diagnose) to get a quick assessment of your DDEV installation and current project. This provides concise, actionable diagnostics for common issues.
 * Start by running [`ddev poweroff`](commands.md#poweroff) to make sure all containers can start fresh.
+* Try a trivial project to see if the problem is something about your project or if it's something about DDEV and your environment. See the simple instructions at [ddev/trivial-project](https://github.com/ddev/trivial-project).
 * Temporarily disable firewalls, VPNs, tunnels, network proxies, and virus checkers while you’re troubleshooting.
 * Temporarily disable any proxies you’ve established in Docker’s settings.
 * Check to see if you're out of disk space. On macOS, make sure that your Docker provider has adequate disk space allocated. (DDEV will normally warn you about problems in this situation.)
