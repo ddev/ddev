@@ -93,6 +93,10 @@
       "description": "Whether to not use Docker bind mounts.",
       "type": "boolean"
     },
+    "no_tui": {
+      "description": "Whether to disable the TUI (terminal user interface) when running the \"ddev\" command without arguments.",
+      "type": "boolean"
+    },
     "omit_containers": {
       "description": "List of container types that should not be started when the project is started.",
       "type": "array",

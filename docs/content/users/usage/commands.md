@@ -2,10 +2,15 @@
 
 You can tell DDEV what to do by running its commands. This page details each of the available commands and their options, or flags.
 
-Run DDEV without any commands or flags to see this list in your terminal:
+!!!tip "Using TUI (Terminal UI)"
+    Running `ddev` without any arguments will launch the [interactive dashboard](../usage/cli.md#interactive-dashboard) in your terminal.
+
+    To disable the dashboard and show the classic help text instead, set [`no_tui: true`](../configuration/config.md#no_tui) in your global configuration (`$HOME/.ddev/global_config.yaml`), or set the environment variable `DDEV_NO_TUI=true`.
+
+Type `ddev help` or `ddev --help` or `ddev -h` to see this list in your terminal:
 
 ```
-→  ddev
+→  ddev help
 Create and maintain a local web development environment.
 Docs: https://docs.ddev.com
 Support: https://docs.ddev.com/en/stable/users/support
@@ -1432,6 +1437,17 @@ Example:
 ```shell
 # Open the current project’s database in TablePlus
 ddev tableplus
+```
+
+## `tui`
+
+Launch the [interactive TUI dashboard](../usage/cli.md#interactive-dashboard).
+
+Example:
+
+```shell
+# Launch DDEV TUI
+ddev tui
 ```
 
 ## `typo3`
