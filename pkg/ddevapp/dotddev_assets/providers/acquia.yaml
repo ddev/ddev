@@ -42,6 +42,10 @@
 # Instead of setting the environment variables in configuration files, you can use
 # `ddev pull acquia --environment=ACQUIA_ENVIRONMENT_ID=yourproject.dev` for example
 
+info_command:
+  command: |
+    echo "${ACQUIA_ENVIRONMENT_ID}"
+
 auth_command:
   command: |
     set -eu -o pipefail

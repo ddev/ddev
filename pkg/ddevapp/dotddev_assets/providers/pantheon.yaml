@@ -59,6 +59,10 @@
 # Debugging: Use `ddev exec terminus auth:whoami` to see what terminus knows about
 # `ddev exec terminus site:list` will show available sites
 
+info_command:
+  command: |
+    echo "${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}"
+
 auth_command:
   command: |
     set -eu -o pipefail

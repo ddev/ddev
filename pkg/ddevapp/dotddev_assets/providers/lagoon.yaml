@@ -20,6 +20,10 @@
 # 8. Optionally `ddev push lagoon` to push local files and database to Lagoon. This must be done with great care
 #    if you're pushing to a production environment, but is great for pushing to branch environments.
 
+info_command:
+  command: |
+    echo "${LAGOON_PROJECT}.${LAGOON_ENVIRONMENT}"
+
 auth_command:
   command: |
     set -eu -o pipefail
