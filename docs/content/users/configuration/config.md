@@ -387,6 +387,14 @@ Whether to skip mounting project into web container.
 !!!warning "Advanced users only!"
     When `true`, project will not be mounted by DDEV into the web container. Enables experimentation with alternate file mounting strategies.
 
+## `no_tui`
+
+Whether to disable the TUI (terminal user interface) when running the `ddev` command without any arguments.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `false` | Can be `true` or `false`.
+
 ## `nodejs_version`
 
 Node.js version for the web container’s “system” version. [`n`](https://www.npmjs.com/package/n) tool is under the hood.
