@@ -42,10 +42,11 @@ CMSes like WordPress and Magento 2 make this a little harder by only responding 
 
 <a name="setting-up-a-stable-ngrok-domain"></a>
 
-### Setting up a Stable ngrok Domain (optional)
+### Using your stable ngrok domain 
 
-1. [Get a free static domain](https://ngrok.com/blog-post/free-static-domains-ngrok-users) from ngrok. Let's say we got `wp23.ngrok-free.app`.
-2. Pass the domain to the ngrok args:
+1. All accounts ngrok come with a free dev domain that is automatically chosen when you [start an endpoint](https://ngrok.com/docs/getting-started). Once you have that endpoint live, copy your ngrok domain. 
+2. This set of steps assumes an ngrok domain of `wp23.ngrok-free.app` 
+3. Pass the domain to the ngrok args:
     * In `.ddev/config.yaml`, `share_provider_args: --domain wp23.ngrok-free.app` will result in ngrok always using `wp23.ngrok-free.app` as the URL, so it's not changing on you all the time.
     * Alternatively you can pass the domain directly to `ddev share --provider-args="--domain wp23.ngrok-free.app"`
 
