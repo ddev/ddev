@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -113,7 +114,8 @@ func (m AppModel) filteredProjects() []ProjectInfo {
 	for _, p := range m.projects {
 		if strings.Contains(strings.ToLower(p.Name), filter) ||
 			strings.Contains(strings.ToLower(p.Type), filter) ||
-			strings.Contains(strings.ToLower(p.Status), filter) {
+			strings.Contains(strings.ToLower(p.Status), filter) ||
+			strings.Contains(strings.ToLower(p.AppRoot), filter) {
 			result = append(result, p)
 		}
 	}
@@ -778,9 +780,17 @@ func (m AppModel) buildDashboardContent() string {
 
 	// Calculate name width: fit the longest project name, with limits
 	nameWidth := 16
+	pathWidth := 24
+	pathDisplay := make([]string, len(filtered))
 	for _, fp := range filtered {
 		if len(fp.Name) > nameWidth {
 			nameWidth = len(fp.Name)
+		}
+	}
+	for i, fp := range filtered {
+		pathDisplay[i] = formatProjectPath(fp.AppRoot)
+		if len(pathDisplay[i]) > pathWidth {
+			pathWidth = len(pathDisplay[i])
 		}
 	}
 	// Cap: leave room for cursor(2) + status(12) + type(12) + spacing(7) + URL
@@ -793,8 +803,16 @@ func (m AppModel) buildDashboardContent() string {
 	}
 	typeWidth := 12
 	narrow := m.width > 0 && m.width < 60
+	maxPathWidth := 40
+	if m.width > 0 {
+		maxPathWidth = max(18, m.width/2)
+	}
+	if pathWidth > maxPathWidth {
+		pathWidth = maxPathWidth
+	}
 	if narrow {
 		nameWidth = min(nameWidth, max(8, m.width/4))
+		pathWidth = min(pathWidth, max(10, m.width/2))
 	}
 
 	for i, p := range filtered {
@@ -807,11 +825,12 @@ func (m AppModel) buildDashboardContent() string {
 		name := m.styles.ProjectName.Render(fmt.Sprintf("%-*s", nameWidth, displayName))
 		status := m.renderStatus(p.Status)
 		pType := m.styles.ProjectType.Render(fmt.Sprintf("%-*s", typeWidth, p.Type))
+		path := m.styles.URL.Render(fmt.Sprintf("%-*s", pathWidth, truncate(pathDisplay[i], pathWidth)))
 
 		url := ""
 		if !narrow && p.URL != "" && p.Status == ddevapp.SiteRunning {
 			// Truncate URL if it would overflow
-			maxURL := m.width - nameWidth - 10 - typeWidth - 8
+			maxURL := m.width - nameWidth - 10 - typeWidth - pathWidth - 10
 			if m.width > 0 && maxURL > 10 {
 				url = m.styles.URL.Render(truncate(p.URL, maxURL))
 			} else if m.width <= 0 {
@@ -819,7 +838,7 @@ func (m AppModel) buildDashboardContent() string {
 			}
 		}
 
-		fmt.Fprintf(&b, "%s%s %s  %s  %s\n", cursor, name, status, pType, url)
+		fmt.Fprintf(&b, "%s%s %s  %s  %s  %s\n", cursor, name, status, pType, path, url)
 	}
 
 	return b.String()
@@ -1256,6 +1275,28 @@ func truncate(s string, maxLen int) string {
 		return s[:maxLen]
 	}
 	return s[:maxLen-3] + "..."
+}
+
+func formatProjectPath(path string) string {
+	if path == "" {
+		return ""
+	}
+
+	formatted := filepath.ToSlash(path)
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return formatted
+	}
+
+	home = filepath.ToSlash(home)
+	if formatted == home {
+		return "~"
+	}
+	if strings.HasPrefix(formatted, home+"/") {
+		return "~" + strings.TrimPrefix(formatted, home)
+	}
+
+	return formatted
 }
 
 func (m AppModel) renderStatus(status string) string {

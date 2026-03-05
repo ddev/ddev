@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -129,6 +131,15 @@ func TestFilteredProjects(t *testing.T) {
 	m.filterText = "DRUPAL"
 	filtered = m.filteredProjects()
 	require.Len(t, filtered, 1)
+
+	// Filter by project path
+	m.projects[0].AppRoot = "/tmp/drupal-site"
+	m.projects[1].AppRoot = "/tmp/wp-blog"
+	m.projects[2].AppRoot = "/tmp/laravel-app"
+	m.filterText = "wp-blog"
+	filtered = m.filteredProjects()
+	require.Len(t, filtered, 1)
+	require.Equal(t, "wp-blog", filtered[0].Name)
 }
 
 func TestSelectedProject(t *testing.T) {
@@ -915,7 +926,7 @@ func TestWideTerminalDashboard(t *testing.T) {
 	m.loading = false
 	updated, _ = m.Update(projectsLoadedMsg{
 		projects: []ProjectInfo{
-			{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site"},
+			{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site", AppRoot: "/tmp/mysite"},
 		},
 	})
 	m = updated.(AppModel)
@@ -923,6 +934,16 @@ func TestWideTerminalDashboard(t *testing.T) {
 	view := m.View()
 
 	require.Contains(t, view, "https://mysite.ddev.site", "URL should be visible in wide terminal")
+	require.Contains(t, view, "/tmp/mysite", "project path should be visible in wide terminal")
+}
+
+func TestFormatProjectPath(t *testing.T) {
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+
+	homePath := filepath.Join(home, "workspace", "site")
+	require.Equal(t, "~/workspace/site", formatProjectPath(homePath))
+	require.Equal(t, "/tmp/site", formatProjectPath("/tmp/site"))
 }
 
 func TestSpinnerInLoadingView(t *testing.T) {
