@@ -15,7 +15,7 @@ require (
 	github.com/compose-spec/compose-go/v2 v2.10.1
 	github.com/containerd/errdefs v1.0.0
 	github.com/denisbrodbeck/machineid v1.0.1
-	github.com/docker/cli v29.1.5+incompatible
+	github.com/docker/cli v29.2.0+incompatible
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/goodhosts/hostsfile v0.1.7
 	github.com/google/go-github/v81 v81.0.0
