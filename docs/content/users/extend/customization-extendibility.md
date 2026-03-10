@@ -89,6 +89,13 @@ You can set custom environment variables in several places:
         - MY_OTHER_ENV_VAR=someotherval
     ```
 
+    You can also pass through a variable from the host environment by listing just the variable name without a value. DDEV passes the bare name to docker-compose, which resolves it from the host at container start time:
+
+    ```yaml
+    web_environment:
+        - MY_HOST_VAR
+    ```
+
 If you’d rather use the CLI to set the project or global `web_environment` value, you can use the [`ddev config`](../usage/commands.md#config) command:
 
 ```sh
