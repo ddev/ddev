@@ -584,3 +584,79 @@ func TestCmdAddonSearch(t *testing.T) {
 	assert.NoError(err, "failed ddev add-on search redis: %v (%s)", err, out)
 	assert.Contains(out, "add-ons found matching 'redis'")
 }
+
+// TestCmdAddonReapply tests `ddev add-on reapply`
+func TestCmdAddonReapply(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "example")
+		err = os.Chdir(origDir)
+		require.NoError(t, err)
+		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt"))
+		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "globalextras"))
+	})
+
+	exampleDir := filepath.Join(origDir, "testdata", "TestCmdAddon", "example-repo")
+
+	// Install the example add-on
+	out, err := exec.RunHostCommand(DdevBin, "add-on", "get", exampleDir)
+	require.NoError(t, err, "failed to install example add-on: %v, output=%s", err, out)
+
+	// Verify the manifest now contains pre/post install actions
+	manifestFile := app.GetConfigPath(filepath.Join(ddevapp.AddonMetadataDir, "example", "manifest.yaml"))
+	require.FileExists(t, manifestFile)
+	manifestContent, err := os.ReadFile(manifestFile)
+	require.NoError(t, err)
+	require.Contains(t, string(manifestContent), "pre_install_actions")
+	require.Contains(t, string(manifestContent), "post_install_actions")
+
+	// Remove the artifacts created by install actions
+	_ = os.Remove(app.GetConfigPath("i-have-been-touched"))
+	_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+	require.NoFileExists(t, app.GetConfigPath("i-have-been-touched"))
+	require.NoFileExists(t, filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+
+	// Test reapply by name
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "reapply", "example")
+	require.NoError(t, err, "failed to reapply example add-on: %v, output=%s", err, out)
+	require.FileExists(t, app.GetConfigPath("i-have-been-touched"))
+	require.FileExists(t, filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+
+	// Remove artifacts again and test --all
+	_ = os.Remove(app.GetConfigPath("i-have-been-touched"))
+	_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "reapply", "--all")
+	require.NoError(t, err, "failed to reapply --all: %v, output=%s", err, out)
+	require.FileExists(t, app.GetConfigPath("i-have-been-touched"))
+	require.FileExists(t, filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+
+	// Test error: reapply non-existent add-on
+	_, err = exec.RunHostCommand(DdevBin, "add-on", "reapply", "nonexistent-addon")
+	require.Error(t, err)
+
+	// Test graceful handling: manifest with no actions
+	manifestData, err := os.ReadFile(manifestFile)
+	require.NoError(t, err)
+	strippedManifest := strings.ReplaceAll(string(manifestData), "pre_install_actions:", "x_pre_install_actions:")
+	strippedManifest = strings.ReplaceAll(strippedManifest, "post_install_actions:", "x_post_install_actions:")
+	err = os.WriteFile(manifestFile, []byte(strippedManifest), 0644)
+	require.NoError(t, err)
+
+	// Remove artifacts
+	_ = os.Remove(app.GetConfigPath("i-have-been-touched"))
+	_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "reapply", "example")
+	require.NoError(t, err, "reapply with no actions should not error: %v, output=%s", err, out)
+	require.Contains(t, out, "no actions found")
+	// Artifacts should NOT be recreated since actions were stripped
+	require.NoFileExists(t, app.GetConfigPath("i-have-been-touched"))
+}
