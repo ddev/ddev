@@ -1478,6 +1478,20 @@ ddev utility cd
 ddevcd some-project
 ```
 
+### `utility check-custom-config`
+
+Display all configuration in the project's `.ddev` directory, including custom files, add-on files, and silenced files.
+
+Files are marked with:
+
+* `(#ddev-generated)` for files from add-ons
+* `(#ddev-silent-no-warn)` for silenced files
+
+```shell
+# Check the project's .ddev directory custom configuration
+ddev utility check-custom-config
+```
+
 ### `utility check-db-match`
 
 Verify that the database in the db server matches the configured [type and version](../extend/database-types.md).

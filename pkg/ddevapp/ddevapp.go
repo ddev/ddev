@@ -1766,7 +1766,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// Warn the user if there is any custom configuration in use.
-	app.CheckCustomConfig()
+	app.CheckCustomConfig(false)
 
 	// Warn user if there are deprecated items used in the config
 	app.CheckDeprecations()
