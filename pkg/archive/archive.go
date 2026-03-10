@@ -234,6 +234,11 @@ func Untar(source string, dest string, extractionDir string) error {
 
 		fullPath := filepath.Join(dest, file.Name)
 
+		// Prevent path traversal (ZipSlip): ensure fullPath stays within dest
+		if !strings.HasPrefix(filepath.Clean(fullPath)+string(os.PathSeparator), filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("archive entry %q escapes destination directory", file.Name)
+		}
+
 		// Handle directories, regular files, and symlinks
 		switch file.Typeflag {
 		case tar.TypeDir:
@@ -282,6 +287,20 @@ func Untar(source string, dest string, extractionDir string) error {
 			err = os.MkdirAll(fullPathDir, 0755)
 			if err != nil {
 				return fmt.Errorf("failed to create the directory %s, err: %v", fullPathDir, err)
+			}
+
+			// Validate symlink target doesn't escape dest.
+			// Absolute targets are rebased against dest (treating dest as root),
+			// so container paths like /var/www/html/... are accepted.
+			// Relative targets are resolved against the symlink's parent directory.
+			var resolvedTarget string
+			if filepath.IsAbs(file.Linkname) {
+				resolvedTarget = filepath.Join(dest, file.Linkname)
+			} else {
+				resolvedTarget = filepath.Join(fullPathDir, file.Linkname)
+			}
+			if !strings.HasPrefix(filepath.Clean(resolvedTarget)+string(os.PathSeparator), filepath.Clean(dest)+string(os.PathSeparator)) {
+				return fmt.Errorf("symlink target %q in archive entry %q escapes destination directory", file.Linkname, file.Name)
 			}
 
 			// Remove any existing file/symlink at this path
@@ -340,6 +359,11 @@ func Unzip(source string, dest string, extractionDir string) error {
 		}
 
 		fullPath := filepath.Join(dest, file.Name)
+
+		// Prevent path traversal (ZipSlip): ensure fullPath stays within dest
+		if !strings.HasPrefix(filepath.Clean(fullPath)+string(os.PathSeparator), filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("archive entry %q escapes destination directory", file.Name)
+		}
 
 		if strings.HasSuffix(file.Name, "/") {
 			err = os.MkdirAll(fullPath, 0777)
