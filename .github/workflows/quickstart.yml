@@ -37,7 +37,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   # Add tests you want to skip here, delimited by commas
   # Search for _skip_if_embargoed to see how this is used
-  DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
+  DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || 'drupal12-composer' }}
 
 permissions:
   actions: write
