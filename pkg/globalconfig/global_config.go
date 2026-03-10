@@ -395,6 +395,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # no_bind_mounts: false
 # Whether to disable Docker bind mounts
 
+# no_tui: false
+# Whether to disable the TUI (terminal user interface) when running the 'ddev' command without arguments
+
 # omit_project_name_by_default: false
 # If true, 'ddev config' will not write a 'name'' field
 # in '.ddev/config.yaml' unless you use --name=NAME.
