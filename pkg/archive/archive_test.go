@@ -2,6 +2,7 @@ package archive_test
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"compress/gzip"
 	"io"
 	"io/fs"
@@ -172,6 +173,93 @@ func TestDownloadAndExtractTarball(t *testing.T) {
 	require.FileExists(t, path.Join(dir, "install.yaml"))
 	cleanup()
 	require.NoDirExists(t, dir)
+}
+
+// TestUntarPathTraversal verifies that path traversal attempts in tar archives are rejected
+func TestUntarPathTraversal(t *testing.T) {
+	destDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() { _ = os.RemoveAll(destDir) })
+
+	buildTar := func(entryName string, linkname string, typeflag byte) string {
+		f, err := os.CreateTemp("", t.Name()+"_*.tar.gz")
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = os.Remove(f.Name()) })
+
+		gw := gzip.NewWriter(f)
+		tw := tar.NewWriter(gw)
+
+		hdr := &tar.Header{
+			Name:     entryName,
+			Typeflag: typeflag,
+			Linkname: linkname,
+			Mode:     0644,
+			Size:     0,
+		}
+		if typeflag == tar.TypeReg {
+			hdr.Size = 5
+		}
+		require.NoError(t, tw.WriteHeader(hdr))
+		if typeflag == tar.TypeReg {
+			_, err = tw.Write([]byte("hello"))
+			require.NoError(t, err)
+		}
+		require.NoError(t, tw.Close())
+		require.NoError(t, gw.Close())
+		require.NoError(t, f.Close())
+		return f.Name()
+	}
+
+	t.Run("traversal_in_file_path", func(t *testing.T) {
+		tarball := buildTar("../../traversal_file.txt", "", tar.TypeReg)
+		err := archive.Untar(tarball, destDir, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "escapes destination directory")
+	})
+
+	t.Run("traversal_in_symlink_target", func(t *testing.T) {
+		tarball := buildTar("link.txt", "../../outside.txt", tar.TypeSymlink)
+		err := archive.Untar(tarball, destDir, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "escapes destination directory")
+	})
+
+	t.Run("absolute_symlink_target_with_traversal", func(t *testing.T) {
+		// Absolute path with .. traversal that escapes dest even when rebased
+		tarball := buildTar("link.txt", "/../../../etc/passwd", tar.TypeSymlink)
+		err := archive.Untar(tarball, destDir, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "escapes destination directory")
+	})
+
+	t.Run("absolute_symlink_container_path_allowed", func(t *testing.T) {
+		// Absolute container paths like /var/www/html/... should be allowed
+		tarball := buildTar("link.txt", "/var/www/html/lib/web/underscore.js", tar.TypeSymlink)
+		err := archive.Untar(tarball, destDir, "")
+		require.NoError(t, err)
+	})
+}
+
+// TestUnzipPathTraversal verifies that path traversal attempts in zip archives are rejected
+func TestUnzipPathTraversal(t *testing.T) {
+	destDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() { _ = os.RemoveAll(destDir) })
+
+	// Build a zip with a traversal entry
+	zipFile, err := os.CreateTemp("", t.Name()+"_*.zip")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.Remove(zipFile.Name()) })
+
+	zw := zip.NewWriter(zipFile)
+	w, err := zw.Create("../../traversal_file.txt")
+	require.NoError(t, err)
+	_, err = w.Write([]byte("pwned"))
+	require.NoError(t, err)
+	require.NoError(t, zw.Close())
+	require.NoError(t, zipFile.Close())
+
+	err = archive.Unzip(zipFile.Name(), destDir, "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "escapes destination directory")
 }
 
 // TestUntarSymlinks tests that symlinks are properly extracted from tarballs
