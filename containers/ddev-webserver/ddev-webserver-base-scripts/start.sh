@@ -25,11 +25,11 @@ DDEV_PHP_VERSION="${DDEV_PHP_VERSION:-$PHP_DEFAULT_VERSION}"
 # If DDEV_WEBSERVER_TYPE isn't set, use a reasonable default
 DDEV_WEBSERVER_TYPE="${DDEV_WEBSERVER_TYPE:-nginx-fpm}"
 
-# Update the default PHP and FPM versions a DDEV_PHP_VERSION like '5.6' or '7.0' is provided
+# Update the default PHP and FPM versions when DDEV_PHP_VERSION is provided
 # Otherwise it will use the default version configured in the Dockerfile
 if [ -n "$DDEV_PHP_VERSION" ] ; then
   update-alternatives --set php /usr/bin/php${DDEV_PHP_VERSION}
-  ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
+  update-alternatives --set php-fpm /usr/sbin/php-fpm${DDEV_PHP_VERSION}
   export PHP_INI=/etc/php/${DDEV_PHP_VERSION}/fpm/php.ini
 fi
 
