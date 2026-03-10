@@ -35,7 +35,7 @@ concurrency:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  # Add tests you want to skip here, delimited by commas
+  # Add tests you want to skip here, delimited by pipe (e.g., symfony-composer|symfony-cli)
   # Search for _skip_if_embargoed to see how this is used
   DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || 'drupal12-composer' }}
 
