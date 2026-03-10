@@ -2,11 +2,8 @@ package ddevapp
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"embed"
 	"fmt"
-	"io"
-	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -1493,28 +1490,16 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 // (.webimageBuild, .dbimageBuild) and base image names. This is used to detect
 // when docker-compose build can be skipped because nothing has changed.
 func (app *DdevApp) buildContextFingerprint() string {
-	h := sha256.New()
-	// Include base image names so version upgrades trigger a rebuild
-	h.Write([]byte(ddevImages.GetWebImage()))
-	h.Write([]byte(app.GetDBImage()))
-	for _, dir := range []string{".webimageBuild", ".dbimageBuild"} {
-		fullDir := app.GetConfigPath(dir)
-		_ = filepath.WalkDir(fullDir, func(path string, d fs.DirEntry, err error) error {
-			if err != nil || d.IsDir() {
-				return nil
-			}
-			rel, _ := filepath.Rel(fullDir, path)
-			h.Write([]byte(rel))
-			f, fErr := os.Open(path)
-			if fErr != nil {
-				return nil
-			}
-			defer f.Close()
-			_, _ = io.Copy(h, f)
-			return nil
-		})
+	dirs := []string{
+		app.GetConfigPath(".webimageBuild"),
+		app.GetConfigPath(".dbimageBuild"),
 	}
-	return fmt.Sprintf("%x", h.Sum(nil))
+	hash, err := fileutil.HashDirs(dirs, ddevImages.GetWebImage(), app.GetDBImage())
+	if err != nil {
+		util.Warning("unable to hash build context directories: %v", err)
+		return ""
+	}
+	return hash
 }
 
 // Start initiates docker-compose up
