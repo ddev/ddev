@@ -45,3 +45,8 @@ $config['symfony_mailer.mailer_transport.sendmail']['configuration']['port'] = '
 // Enable verbose logging for errors.
 // https://www.drupal.org/forum/support/post-installation/2018-07-18/enable-drupal-8-backend-errorlogdebugging-mode
 $config['system.logging']['error_level'] = 'verbose';
+
+// Omit to retain asset aggregates
+// https://www.drupal.org/project/drupal/issues/3505776
+
+$settings['aggregate_gc_threshold'] = 0;
