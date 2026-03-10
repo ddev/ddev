@@ -1,0 +1,88 @@
+/*
+   Copyright 2020 Docker Compose CLI authors
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+package compose
+
+import (
+	"context"
+	"strings"
+
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/client"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/docker/compose/v5/pkg/api"
+)
+
+func (s *composeService) Pause(ctx context.Context, projectName string, options api.PauseOptions) error {
+	return Run(ctx, func(ctx context.Context) error {
+		return s.pause(ctx, strings.ToLower(projectName), options)
+	}, "pause", s.events)
+}
+
+func (s *composeService) pause(ctx context.Context, projectName string, options api.PauseOptions) error {
+	containers, err := s.getContainers(ctx, projectName, oneOffExclude, false, options.Services...)
+	if err != nil {
+		return err
+	}
+
+	if options.Project != nil {
+		containers = containers.filter(isService(options.Project.ServiceNames()...))
+	}
+
+	eg, ctx := errgroup.WithContext(ctx)
+	containers.forEach(func(container container.Summary) {
+		eg.Go(func() error {
+			_, err := s.apiClient().ContainerPause(ctx, container.ID, client.ContainerPauseOptions{})
+			if err == nil {
+				eventName := getContainerProgressName(container)
+				s.events.On(newEvent(eventName, api.Done, "Paused"))
+			}
+			return err
+		})
+	})
+	return eg.Wait()
+}
+
+func (s *composeService) UnPause(ctx context.Context, projectName string, options api.PauseOptions) error {
+	return Run(ctx, func(ctx context.Context) error {
+		return s.unPause(ctx, strings.ToLower(projectName), options)
+	}, "unpause", s.events)
+}
+
+func (s *composeService) unPause(ctx context.Context, projectName string, options api.PauseOptions) error {
+	containers, err := s.getContainers(ctx, projectName, oneOffExclude, false, options.Services...)
+	if err != nil {
+		return err
+	}
+
+	if options.Project != nil {
+		containers = containers.filter(isService(options.Project.ServiceNames()...))
+	}
+
+	eg, ctx := errgroup.WithContext(ctx)
+	containers.forEach(func(ctr container.Summary) {
+		eg.Go(func() error {
+			_, err = s.apiClient().ContainerUnpause(ctx, ctr.ID, client.ContainerUnpauseOptions{})
+			if err == nil {
+				eventName := getContainerProgressName(ctr)
+				s.events.On(newEvent(eventName, api.Done, "Unpaused"))
+			}
+			return err
+		})
+	})
+	return eg.Wait()
+}
