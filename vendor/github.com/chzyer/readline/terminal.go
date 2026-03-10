@@ -125,7 +125,6 @@ func (t *Terminal) ioloop() {
 	var (
 		isEscape       bool
 		isEscapeEx     bool
-		isEscapeSS3    bool
 		expectNextChar bool
 	)
 
@@ -153,14 +152,8 @@ func (t *Terminal) ioloop() {
 		if isEscape {
 			isEscape = false
 			if r == CharEscapeEx {
-				// ^][
 				expectNextChar = true
 				isEscapeEx = true
-				continue
-			} else if r == CharO {
-				// ^]O
-				expectNextChar = true
-				isEscapeSS3 = true
 				continue
 			}
 			r = escapeKey(r, buf)
@@ -179,15 +172,6 @@ func (t *Terminal) ioloop() {
 					expectNextChar = true
 					continue
 				}
-			}
-			if r == 0 {
-				expectNextChar = true
-				continue
-			}
-		} else if isEscapeSS3 {
-			isEscapeSS3 = false
-			if key := readEscKey(r, buf); key != nil {
-				r = escapeSS3Key(key)
 			}
 			if r == 0 {
 				expectNextChar = true
