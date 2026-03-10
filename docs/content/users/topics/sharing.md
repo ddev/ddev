@@ -139,9 +139,9 @@ If you have a domain managed by Cloudflare, you can use a named tunnel for a sta
 
     Your project will be available at `https://mysite.example.com`.
 
-## Special Handling for Complex CMSs
+## Special Handling for Complex CMSes
 
-Some CMSs like WordPress and Magento require special handling because they don't automatically handle the URL routed to them. For more extensive instructions and possibilities, read the [DDEV Share Blog](https://ddev.com/blog/share-providers/).
+Some CMSes like WordPress and Magento require special handling because they don't automatically handle the URL routed to them. For more extensive instructions and possibilities, read the [DDEV Share Blog](https://ddev.com/blog/share-providers/).
 
 ### WordPress special handling: Change the URL using `wp search-replace`
 
