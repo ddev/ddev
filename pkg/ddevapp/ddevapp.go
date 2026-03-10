@@ -1438,6 +1438,11 @@ func (app *DdevApp) GetDBImage() string {
 // Returns the stdout output on success, or an error if all retries are exhausted.
 func (app *DdevApp) composeBuild(args ...string) (string, error) {
 	progress := "plain"
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		// Use "quiet" - suppress buildkit's verbose output
+		// The compose EventProcessor (display.Full) shows the summary
+		progress = "quiet"
+	}
 
 	action := []string{"--progress=" + progress, "build"}
 	if app.NoCache {
@@ -1451,16 +1456,27 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 	for attempt := 1; attempt <= composeBuildMaxRetries; attempt++ {
 		util.Debug("Executing docker-compose -f %s %s (attempt %d/%d)", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "), attempt, composeBuildMaxRetries)
 
-		out, stderr, lastErr = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		opts := &dockerutil.ComposeCmdOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+			ProjectName:  app.GetComposeProjectName(),
 			Action:       action,
 			Progress:     true,
 			Timeout:      time.Hour * 1,
-		})
+		}
+
+		// For TTY progress (quiet), stream directly to terminal for real-time updates
+		// For plain progress, capture to buffers for error handling
+		if progress == "quiet" {
+			lastErr = dockerutil.ComposeWithStreams(opts, nil, os.Stdout, os.Stderr)
+			out = "" // can't capture with streaming
+			stderr = ""
+		} else {
+			out, stderr, lastErr = dockerutil.ComposeCmd(opts)
+		}
 
 		if lastErr == nil {
 			// Success
-			if globalconfig.DdevVerbose {
+			if globalconfig.DdevVerbose && out != "" {
 				util.Debug("docker-compose build output:\n%s\n\n", out)
 			}
 			return out, nil
@@ -1472,6 +1488,9 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 
 		if !isSnapshotRace {
 			// Not a snapshot race error, fail immediately without retry
+			if progress == "quiet" {
+				return out, fmt.Errorf("docker-compose build failed: %v", lastErr)
+			}
 			return out, fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", lastErr, out, stderr)
 		}
 
@@ -1482,6 +1501,9 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 	}
 
 	// All retries exhausted
+	if progress == "quiet" {
+		return out, fmt.Errorf("docker-compose build failed after %d attempts: %v", composeBuildMaxRetries, lastErr)
+	}
 	return out, fmt.Errorf("docker-compose build failed after %d attempts: %v, output='%s', stderr='%s'", composeBuildMaxRetries, lastErr, out, stderr)
 }
 
@@ -1496,6 +1518,10 @@ func (app *DdevApp) Start() error {
 		// See https://github.com/moby/moby/issues/45919
 		// See https://github.com/moby/moby/issues/2259
 		return fmt.Errorf("bind mounts can't be used with Docker Rootless.\nRun `ddev config global --no-bind-mounts` and try again")
+	}
+
+	if _, err := dockerutil.DownloadDockerBuildxIfNeeded(); err != nil {
+		return err
 	}
 
 	if err := globalconfig.CheckForMultipleGlobalDdevDirs(); err != nil {
@@ -1530,19 +1556,6 @@ func (app *DdevApp) Start() error {
 	// The project network may have duplicates, we can remove them here.
 	// See https://github.com/ddev/ddev/pull/5508
 	dockerutil.RemoveNetworkDuplicates(app.GetDefaultNetworkName())
-
-	if err = dockerutil.CheckDockerCompose(); err != nil {
-		if os.IsTimeout(err) || strings.Contains(err.Error(), "timeout") {
-			util.Failed(`Failed to download updated docker-compose binary.
-This might be due to network issues or a slow response.
-Please ensure your network is stable and try again:
-%v`, err)
-		} else {
-			util.Failed(`DDEV's private docker-compose binary does not exist or is set to an invalid version.
-Please use DDEV's' built-in docker-compose.
-Fix with 'ddev config global --required-docker-compose-version="" --use-docker-compose-from-path=false': %v`, err)
-		}
-	}
 
 	if nodeps.IsMacOS() {
 		failOnRosetta()

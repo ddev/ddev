@@ -31,12 +31,12 @@ func init() {
 	globalconfig.EnsureGlobalConfig()
 }
 
-// TestDockerComposeDownload verifies that we can download a particular docker-compose version
-func TestDockerComposeDownload(t *testing.T) {
+// TestDockerBuildxDownload verifies that we can download a particular docker-buildx version
+func TestDockerBuildxDownload(t *testing.T) {
 	assert := asrt.New(t)
 	var err error
 
-	_, err = dockerutil.DownloadDockerComposeIfNeeded()
+	_, err = dockerutil.DownloadDockerBuildxIfNeeded()
 	require.NoError(t, err)
 
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
@@ -46,36 +46,29 @@ func TestDockerComposeDownload(t *testing.T) {
 	})
 
 	// Remove previous binary
-	previousDockerCompose, _ := globalconfig.GetDockerComposePath()
-	_ = os.RemoveAll(previousDockerCompose)
+	previousDockerBuildx, _ := globalconfig.GetDockerBuildxPath()
+	_ = os.RemoveAll(previousDockerBuildx)
 
-	// Download the normal required version specified in code
-	globalconfig.DockerComposeVersion = ""
-
-	downloaded, err := dockerutil.DownloadDockerComposeIfNeeded()
+	downloaded, err := dockerutil.DownloadDockerBuildxIfNeeded()
 	require.NoError(t, err)
 	require.True(t, downloaded)
-	v, err := dockerutil.GetLiveDockerComposeVersion()
+	v, err := dockerutil.GetDockerBuildxVersion()
 	assert.NoError(err)
-	assert.Equal(globalconfig.GetRequiredDockerComposeVersion(), v)
+	assert.Equal(globalconfig.GetRequiredDockerBuildxVersion(), v)
 
 	// Make sure it doesn't download a second time
-	downloaded, err = dockerutil.DownloadDockerComposeIfNeeded()
+	downloaded, err = dockerutil.DownloadDockerBuildxIfNeeded()
 	assert.NoError(err)
 	assert.False(downloaded)
 
-	for _, v := range []string{"v2.32.4"} {
-		globalconfig.DockerComposeVersion = ""
-		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = v
-		downloaded, err = dockerutil.DownloadDockerComposeIfNeeded()
+	for _, v := range []string{"0.32.0"} {
+		globalconfig.DdevGlobalConfig.RequiredDockerBuildxVersion = v
+		downloaded, err = dockerutil.DownloadDockerBuildxIfNeeded()
 		require.NoError(t, err)
 		assert.True(downloaded)
-		// We have to reset version.DockerComposeVersion so it will actually check
-		// instead of using cached value.
-		globalconfig.DockerComposeVersion = ""
-		activeVersion, err := dockerutil.GetLiveDockerComposeVersion()
+		activeVersion, err := dockerutil.GetDockerBuildxVersion()
 		assert.NoError(err)
-		assert.Equal(globalconfig.GetRequiredDockerComposeVersion(), activeVersion)
+		assert.Equal(globalconfig.GetRequiredDockerBuildxVersion(), activeVersion)
 	}
 }
 

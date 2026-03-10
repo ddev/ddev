@@ -40,7 +40,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// nolint: errcheck
 	t.Cleanup(func() {
 		// Even though the global config is going to be deleted, make sure it's sane before leaving
-		args := []string{"config", "global", "--omit-containers", "", "--performance-mode-reset", "--simple-formatting=false", "--table-style=default", `--required-docker-compose-version=""`, `--use-docker-compose-from-path=false`, `--xdebug-ide-location`, "", `--traefik-monitor-port=10999`}
+		args := []string{"config", "global", "--omit-containers", "", "--performance-mode-reset", "--simple-formatting=false", "--table-style=default", `--required-docker-buildx-version=""`, `--use-docker-buildx-from-system=false`, `--xdebug-ide-location`, "", `--traefik-monitor-port=10999`}
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
 		out, err := exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "error running ddev config global; output=%s", out)
@@ -77,8 +77,8 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "simple-formatting=false")
 	assert.Contains(out, "use-hardened-images=false")
 	assert.Contains(out, "fail-on-hook-fail=false")
-	assert.Contains(out, fmt.Sprintf("required-docker-compose-version=%s", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
-	assert.Contains(out, "use-docker-compose-from-path=false")
+	assert.Contains(out, fmt.Sprintf("required-docker-buildx-version=%s", globalconfig.DdevGlobalConfig.RequiredDockerBuildxVersion))
+	assert.Contains(out, "use-docker-buildx-from-system=false")
 	assert.Contains(out, "project-tld="+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 	assert.Contains(out, "xdebug-ide-location=")
 	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
@@ -108,8 +108,8 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "simple-formatting=true")
 	assert.Contains(out, "use-hardened-images=true")
 	assert.Contains(out, "fail-on-hook-fail=true")
-	assert.Contains(out, fmt.Sprintf("required-docker-compose-version=%s", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
-	assert.Contains(out, "use-docker-compose-from-path=false")
+	assert.Contains(out, fmt.Sprintf("required-docker-buildx-version=%s", globalconfig.DdevGlobalConfig.RequiredDockerBuildxVersion))
+	assert.Contains(out, "use-docker-buildx-from-system=false")
 	assert.Contains(out, "project-tld=")
 	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
 
