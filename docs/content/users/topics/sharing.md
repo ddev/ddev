@@ -42,34 +42,9 @@ CMSes like WordPress and Magento 2 make this a little harder by only responding 
 
 <a name="setting-up-a-stable-ngrok-domain"></a>
 
-### Setting up a Stable ngrok Domain (optional)
+### Using your stable ngrok domain
 
-1. [Get a free static domain](https://ngrok.com/blog-post/free-static-domains-ngrok-users) from ngrok. Let's say we got `wp23.ngrok-free.app`.
-2. Pass the domain to the ngrok args:
-    * In `.ddev/config.yaml`, `share_provider_args: --domain wp23.ngrok-free.app` will result in ngrok always using `wp23.ngrok-free.app` as the URL, so it's not changing on you all the time.
-    * Alternatively you can pass the domain directly to `ddev share --provider-args="--domain wp23.ngrok-free.app"`
-
-### WordPress special handling: Change the URL with `wp search-replace`
-
-WordPress only has the one base URL, but the `wp` command is built into DDEV’s web container.
-
-This set of steps assumes an ngrok domain of `wp23.ngrok-free.app` and a starting URL of `https://wordpress.ddev.site`.
-
-* Configure `.ddev/config.yaml` to use a custom domain: `share_provider_args: --domain wp23.ngrok-free.app`.
-* Make a backup of your database with [`ddev export-db`](../usage/commands.md#export-db) or [`ddev snapshot`](../usage/commands.md#snapshot).
-* Edit `wp-config-ddev.php` (or whatever your config is) to change `WP_HOME`, for example, `define('WP_HOME', 'https://wp23.ngrok-free.app');`
-* `ddev wp search-replace https://wordpress.ddev.site https://wp23.ngrok-free.app`, assuming your project is configured for `https://wordpress.ddev.site` and your `share_provider_args` are configured for the `wp23.ngrok-free.app` domain.
-* Now run [`ddev share`](../usage/commands.md#share).
-
-### Magento2 special handling: Change the URL with Magento Tool
-
-This set of steps assumes an ngrok domain `mg2.ngrok-free.app`:
-
-* Configure `.ddev/config.yaml` to use a custom domain with `share_provider_args: --domain mg2.ngrok-free.app`.
-* Make a backup of your database.
-* Run [`ddev ssh`](../usage/commands.md#ssh).
-* Run `bin/magento setup:store-config:set --base-url="https://mg2.ngrok-free.app/"`.
-* Run [`ddev share`](../usage/commands.md#share) and you'll see your project at `mg2.ngrok-free.app`.
+All ngrok accounts come with a free stable domain that is automatically chosen when you use ngrok via `ddev share` or otherwise. You'll see it the first time you use `ddev share`. No configuration is necessary.
 
 ## Using Cloudflared
 
@@ -163,6 +138,36 @@ If you have a domain managed by Cloudflare, you can use a named tunnel for a sta
     ```
 
     Your project will be available at `https://mysite.example.com`.
+
+## Special Handling for Complex CMSes
+
+Some CMSes like WordPress and Magento require special handling because they don't automatically handle the URL routed to them. For more extensive instructions and possibilities, read the [DDEV Share Blog](https://ddev.com/blog/share-providers/).
+
+### WordPress special handling: Change the URL using `wp search-replace`
+
+WordPress only has the one base URL, but the `wp` command is built into DDEV’s web container.
+
+This set of steps assumes an ngrok domain of `nonportentously-caulicolous-cedrick.ngrok-free.dev` and a starting URL of `https://wordpress.ddev.site`.
+
+* Configure `.ddev/config.yaml` to use a custom domain: `share_provider_args: --domain nonportentously-caulicolous-cedrick.ngrok-free.dev`.
+* Make a backup of your database with [`ddev export-db`](../usage/commands.md#export-db) or [`ddev snapshot`](../usage/commands.md#snapshot).
+* Edit `wp-config-ddev.php` (or whatever your config is) to change `WP_HOME`, for example, `define('WP_HOME', 'https://nonportentously-caulicolous-cedrick.ngrok-free.dev');`
+* `ddev wp search-replace https://wordpress.ddev.site https://nonportentously-caulicolous-cedrick.ngrok-free.dev`, assuming your project is configured for `https://wordpress.ddev.site` and your `share_provider_args` are configured for the `nonportentously-caulicolous-cedrick.ngrok-free.dev` domain.
+* Now run [`ddev share`](../usage/commands.md#share).
+
+(This can also be done with `pre-share` and `post-share` hooks, see the [DDEV Share Blog](https://ddev.com/blog/share-providers/).)
+
+### Magento2 special handling: Change the URL with Magento Tool
+
+This set of steps assumes an ngrok domain `nonportentously-caulicolous-cedrick.ngrok-free.dev`:
+
+* Configure `.ddev/config.yaml` to use a custom domain with `share_provider_args: --domain nonportentously-caulicolous-cedrick.ngrok-free.dev`.
+* Make a backup of your database.
+* Run [`ddev ssh`](../usage/commands.md#ssh).
+* Run `bin/magento setup:store-config:set --base-url="https://nonportentously-caulicolous-cedrick.ngrok-free.dev/"`.
+* Run [`ddev share`](../usage/commands.md#share) and you'll see your project at `nonportentously-caulicolous-cedrick.ngrok-free.dev`.
+
+(This can also be done with `pre-share` and `post-share` hooks, see the [DDEV Share Blog](https://ddev.com/blog/share-providers/).)
 
 ## Using Custom Share Providers
 
