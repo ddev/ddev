@@ -2912,28 +2912,18 @@ There are several easy ways to use DDEV with WordPress:
 
     ```bash
     mkdir -p my-wp-bedrock-site && cd my-wp-bedrock-site
-    ddev config --project-type=wordpress --docroot=web
+    ddev config --project-type=bedrock
     ddev start
     ddev composer create-project roots/bedrock
     ```
 
-    Rename the file `.env.example` to `.env` in the project root and make the following adjustments:
+    DDEV automatically manages the `.env` file with the correct database credentials and `WP_HOME` URL. No manual `.env` configuration is needed.
 
-    ```
-    DB_NAME=db
-    DB_USER=db
-    DB_PASSWORD=db
-    DB_HOST=db
-    WP_HOME=${DDEV_PRIMARY_URL}
-    WP_SITEURL=${WP_HOME}/wp
-    WP_ENV=development
-    ```
-
-    You can then install the site with WP-CLI and log into the admin interface:
+    You can then run:
 
     ```bash
-    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
-    ddev launch wp-admin/
+    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My Bedrock Site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+    ddev launch
     ```
 
     For more details, see [Bedrock installation](https://docs.roots.io/bedrock/master/installation/).
