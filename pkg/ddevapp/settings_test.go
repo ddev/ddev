@@ -81,6 +81,18 @@ func TestWriteSettings(t *testing.T) {
 		signatureFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, nodeps.DdevFileSignature)
 		assert.NoError(err)
 		assert.True(signatureFound, "Failed to find %s in %s", nodeps.DdevFileSignature, expectedSettingsFile)
+
+		// For WordPress, verify WP_HOME uses runtime env vars instead of hardcoded URL
+		if apptype == nodeps.AppTypeWordPress {
+			envVarFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, "getenv('DDEV_PRIMARY_URL')")
+			assert.NoError(err)
+			assert.True(envVarFound, "Expected getenv('DDEV_PRIMARY_URL') in %s for dynamic WP_HOME", expectedSettingsFile)
+
+			shareURLFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, "getenv('DDEV_SHARE_URL')")
+			assert.NoError(err)
+			assert.True(shareURLFound, "Expected getenv('DDEV_SHARE_URL') in %s for share URL fallback", expectedSettingsFile)
+		}
+
 		_ = os.Remove(expectedSettingsFile)
 	}
 
