@@ -10,16 +10,16 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
-// isBedrockApp returns true if the app is a Roots Bedrock project.
+// isWPBedrockApp returns true if the app is a Roots Bedrock project.
 // It checks for config/application.php, which is Bedrock's main
 // configuration file and is not present in standard WordPress.
-func isBedrockApp(app *DdevApp) bool {
+func isWPBedrockApp(app *DdevApp) bool {
 	return fileutil.FileExists(filepath.Join(app.AppRoot, app.ComposerRoot, "config", "application.php"))
 }
 
-// bedrockPostStartAction manages the .env file for Bedrock projects,
+// wpBedrockPostStartAction manages the .env file for Bedrock projects,
 // setting database credentials and URLs for the DDEV environment.
-func bedrockPostStartAction(app *DdevApp) error {
+func wpBedrockPostStartAction(app *DdevApp) error {
 	if app.DisableSettingsManagement {
 		return nil
 	}
@@ -61,17 +61,17 @@ func bedrockPostStartAction(app *DdevApp) error {
 	return nil
 }
 
-// bedrockConfigOverrideAction sets Bedrock-specific defaults.
+// wpBedrockConfigOverrideAction sets Bedrock-specific defaults.
 // Bedrock always uses "web" as its docroot.
-func bedrockConfigOverrideAction(app *DdevApp) error {
+func wpBedrockConfigOverrideAction(app *DdevApp) error {
 	if app.Docroot == "" {
 		app.Docroot = "web"
 	}
 	return nil
 }
 
-// getBedrockUploadDirs returns the upload directories for Bedrock.
+// getWPBedrockUploadDirs returns the upload directories for Bedrock.
 // Bedrock moves wp-content to app/ inside the docroot.
-func getBedrockUploadDirs(_ *DdevApp) []string {
+func getWPBedrockUploadDirs(_ *DdevApp) []string {
 	return []string{"app/uploads"}
 }

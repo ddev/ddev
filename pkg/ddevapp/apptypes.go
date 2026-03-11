@@ -92,10 +92,10 @@ func init() {
 		},
 
 		nodeps.AppTypeWPBedrock: {
-			appTypeDetect:        isBedrockApp,
-			postStartAction:      bedrockPostStartAction,
-			configOverrideAction: bedrockConfigOverrideAction,
-			uploadDirs:           getBedrockUploadDirs,
+			appTypeDetect:        isWPBedrockApp,
+			postStartAction:      wpBedrockPostStartAction,
+			configOverrideAction: wpBedrockConfigOverrideAction,
+			uploadDirs:           getWPBedrockUploadDirs,
 			importFilesAction:    wordpressImportFilesAction,
 		},
 
