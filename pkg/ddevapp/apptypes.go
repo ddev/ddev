@@ -91,7 +91,7 @@ func init() {
 			composerCreateAllowedPaths: getBackdropComposerCreateAllowedPaths,
 		},
 
-		nodeps.AppTypeBedrock: {
+		nodeps.AppTypeWPBedrock: {
 			appTypeDetect:        isBedrockApp,
 			postStartAction:      bedrockPostStartAction,
 			configOverrideAction: bedrockConfigOverrideAction,

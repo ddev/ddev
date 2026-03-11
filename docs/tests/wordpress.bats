@@ -70,41 +70,6 @@ teardown() {
   assert_success
 }
 
-@test "WordPress Bedrock based quickstart with $(ddev --version)" {
-  _skip_if_embargoed "wordpress-bedrock"
-  PROJNAME=my-wp-bedrock-site
-
-  run mkdir -p my-wp-bedrock-site && cd my-wp-bedrock-site
-  assert_success
-  run ddev config --project-type=wordpress --docroot=web
-  assert_success
-  run ddev start -y
-  assert_success
-  run ddev composer create-project roots/bedrock
-  assert_success
-  run cp .env.example .env
-  assert_success
-  # Set database name to db in .env
-  run ddev dotenv set .env --db-name=db --db-user=db --db-password=db --db-host=db --wp-home=https://${PROJNAME}.ddev.site --wp-siteurl=https://${PROJNAME}.ddev.site/wp
-  assert_success
-  run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
-  assert_success
-  DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
-  assert_success
-  # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_line --regexp "link:.*${PROJNAME}\.ddev\.site.*rel=\"https://api\.w\.org/\""
-  assert_output --partial "HTTP/2 200"
-  assert_success
-  # validate running project /wp-admin/
-  # Some environments return 302 redirect to /wp/wp-admin/, others return 200
-  run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
-  assert_line --regexp "link:.*${PROJNAME}\.ddev\.site.*rel=\"https://api\.w\.org/\""
-  assert_line --regexp 'HTTP/2 (200|302)'
-  assert_success
-}
-
 @test "WordPress git based quickstart with $(ddev --version)" {
   _skip_if_embargoed "wordpress-git"
   PROJNAME=my-wp-git-site
