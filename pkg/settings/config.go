@@ -10,6 +10,7 @@ type ConfigProvider interface {
 	Unmarshal(rawVal any) error
 	Unset(key string)
 	ReadConfig(path string) error
+	ReadConfigFromBytes(data []byte) error
 	MergeConfig(path string) error
 }
 
@@ -17,6 +18,7 @@ type ConfigProvider interface {
 type ProviderFactory interface {
 	CreateConfigProvider() ConfigProvider
 	LoadProjectConfig(mainPath string, overridePaths []string, target any) error
+	LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides map[string][]byte, target any) error
 }
 
 var (
@@ -52,6 +54,11 @@ func LoadGlobalConfig(path string, target any) error {
 // LoadProjectConfig loads a main project config and merges optional overrides into the target struct.
 func LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
 	return factory.LoadProjectConfig(mainPath, overridePaths, target)
+}
+
+// LoadProjectConfigFromContents loads a main project config and merges optional overrides from pre-read bytes.
+func LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides map[string][]byte, target any) error {
+	return factory.LoadProjectConfigFromContents(mainPath, mainContent, overrides, target)
 }
 
 // GetString returns the string value for a key using the current config provider.

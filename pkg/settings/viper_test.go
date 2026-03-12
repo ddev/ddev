@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestViperConfiguration verifies that the Viper wrapper correctly handles
@@ -13,19 +13,19 @@ import (
 func TestViperConfiguration(t *testing.T) {
 	// Initialize the settings system
 	err := Init()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// 1. Test Default Values
 	SetDefault("test_key", "default_value")
-	assert.Equal(t, "default_value", GetString("test_key"))
+	require.Equal(t, "default_value", GetString("test_key"))
 
 	// 2. Test Set/override
 	Set("some_key", "manual_value")
-	assert.Equal(t, "manual_value", GetString("some_key"))
+	require.Equal(t, "manual_value", GetString("some_key"))
 
 	// 3. Test Unset
 	Unset("some_key")
-	assert.Equal(t, "", GetString("some_key"), "Unset should remove the key's value")
+	require.Equal(t, "", GetString("some_key"), "Unset should remove the key's value")
 }
 
 // TestUnmarshalYamlTags verifies that the Unmarshal method correctly respects 'yaml' tags.
@@ -38,10 +38,10 @@ func TestUnmarshalYamlTags(t *testing.T) {
 
 	var cfg TestConfig
 	err := p.Unmarshal(&cfg)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, "test-app", cfg.Name)
-	assert.Equal(t, "8.2", cfg.PHPVersion)
+	require.Equal(t, "test-app", cfg.Name)
+	require.Equal(t, "8.2", cfg.PHPVersion)
 }
 
 // TestUnmarshalExistingValues verifies that Unmarshal does not zero out existing fields if not in config.
@@ -55,9 +55,9 @@ func TestUnmarshalExistingValues(t *testing.T) {
 		Name: "existing-name",
 	}
 	err := p.Unmarshal(&cfg)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, "existing-name", cfg.Name, "Existing name should be preserved if not in config")
+	require.Equal(t, "existing-name", cfg.Name, "Existing name should be preserved if not in config")
 }
 
 // TestViperUnmarshalDoesNotPickUpEnv verifies that Unmarshal does NOT pick up arbitrary
@@ -74,10 +74,10 @@ func TestViperUnmarshalDoesNotPickUpEnv(t *testing.T) {
 
 	var cfg Config
 	err := p.Unmarshal(&cfg)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, "", cfg.TestPort, "Unmarshal should NOT pick up environment variables")
-	assert.Equal(t, "", p.GetString("test_port"), "GetString should NOT pick up environment variables without AutomaticEnv")
+	require.Equal(t, "", cfg.TestPort, "Unmarshal should NOT pick up environment variables")
+	require.Equal(t, "", p.GetString("test_port"), "GetString should NOT pick up environment variables without AutomaticEnv")
 }
 
 // TestFloatToStringPreservation verifies that YAML float values like `8.0` are
@@ -119,13 +119,13 @@ func TestFloatToStringPreservation(t *testing.T) {
 			configPath := filepath.Join(tempDir, "config.yaml")
 
 			err := os.WriteFile(configPath, []byte(tc.yamlContent), 0644)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			app := &ReproAppConfig{}
 			err = LoadProjectConfig(configPath, []string{}, app)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
-			assert.Equal(t, tc.expectedVersion, app.Database.Version,
+			require.Equal(t, tc.expectedVersion, app.Database.Version,
 				"Database version should be preserved exactly as written in YAML",
 			)
 		})
@@ -144,7 +144,7 @@ type ReproAppConfig struct {
 
 func TestReproUnmarshaling(t *testing.T) {
 	err := Init()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
@@ -156,7 +156,7 @@ database:
   version: 17
 `
 	err = os.WriteFile(configPath, []byte(content), 0644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Defaults similar to NewApp
 	app := &ReproAppConfig{
@@ -168,9 +168,9 @@ database:
 	}
 
 	err = LoadProjectConfig(configPath, []string{}, app)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, "my-app", app.Name)
-	assert.Equal(t, "postgres", app.Database.Type)
-	assert.Equal(t, "17", app.Database.Version)
+	require.Equal(t, "my-app", app.Name)
+	require.Equal(t, "postgres", app.Database.Type)
+	require.Equal(t, "17", app.Database.Version)
 }

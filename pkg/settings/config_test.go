@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type TestConfig struct {
@@ -29,13 +29,13 @@ name: global-config
 type: php
 `
 	err := os.WriteFile(configPath, []byte(content), 0644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var cfg TestConfig
 	err = LoadGlobalConfig(configPath, &cfg)
-	assert.NoError(t, err)
-	assert.Equal(t, "global-config", cfg.Name)
-	assert.Equal(t, "php", cfg.Type)
+	require.NoError(t, err)
+	require.Equal(t, "global-config", cfg.Name)
+	require.Equal(t, "php", cfg.Type)
 }
 
 // TestLoadProjectConfig verifies that main config and overrides are merged correctly.
@@ -68,18 +68,18 @@ web_environment:
   KEY3: "value3"
 `
 	err := os.WriteFile(mainPath, []byte(mainContent), 0644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = os.WriteFile(overridePath, []byte(overrideContent), 0644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var cfg TestConfig
 	err = LoadProjectConfig(mainPath, []string{overridePath}, &cfg)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, "project-name", cfg.Name)    // From main
-	assert.Equal(t, "drupal10", cfg.Type)        // From main
-	assert.Equal(t, "8.3", cfg.PHPVersion)       // Overridden
-	assert.Equal(t, "apache-fpm", cfg.Webserver) // Overridden
+	require.Equal(t, "project-name", cfg.Name)    // From main
+	require.Equal(t, "drupal10", cfg.Type)        // From main
+	require.Equal(t, "8.3", cfg.PHPVersion)       // Overridden
+	require.Equal(t, "apache-fpm", cfg.Webserver) // Overridden
 
 	// Map keys are merged and overridden correctly. Note that Viper lowercases map keys.
 	expectedEnv := map[string]string{
@@ -87,10 +87,10 @@ web_environment:
 		"key2": "overridden-value2",
 		"key3": "value3",
 	}
-	assert.Equal(t, expectedEnv, cfg.WebEnv)
+	require.Equal(t, expectedEnv, cfg.WebEnv)
 
 	// Slices should be appended together
-	assert.Equal(t, []string{"echo original-hook", "echo override-hook"}, cfg.Hooks)
+	require.Equal(t, []string{"echo original-hook", "echo override-hook"}, cfg.Hooks)
 }
 
 // TestNewConfigProviderIsolation ensures that separate providers do not share state.
@@ -103,8 +103,8 @@ func TestNewConfigProviderIsolation(t *testing.T) {
 	p1.Set("key", "value1")
 	p2.Set("key", "value2")
 
-	assert.Equal(t, "value1", p1.GetString("key"))
-	assert.Equal(t, "value2", p2.GetString("key"))
+	require.Equal(t, "value1", p1.GetString("key"))
+	require.Equal(t, "value2", p2.GetString("key"))
 }
 
 // MockConfigProvider is a mock implementation of ConfigProvider for testing factory swaps.
@@ -130,12 +130,13 @@ func (m *MockConfigProvider) GetBool(key string) bool {
 	}
 	return false
 }
-func (m *MockConfigProvider) SetDefault(key string, value any) { m.data[key] = value }
-func (m *MockConfigProvider) Set(key string, value any)        { m.data[key] = value }
-func (m *MockConfigProvider) Unmarshal(rawVal any) error       { return nil }
-func (m *MockConfigProvider) Unset(key string)                 { delete(m.data, key) }
-func (m *MockConfigProvider) ReadConfig(path string) error     { return nil }
-func (m *MockConfigProvider) MergeConfig(path string) error    { return nil }
+func (m *MockConfigProvider) SetDefault(key string, value any)      { m.data[key] = value }
+func (m *MockConfigProvider) Set(key string, value any)             { m.data[key] = value }
+func (m *MockConfigProvider) Unmarshal(rawVal any) error            { return nil }
+func (m *MockConfigProvider) Unset(key string)                      { delete(m.data, key) }
+func (m *MockConfigProvider) ReadConfig(path string) error          { return nil }
+func (m *MockConfigProvider) ReadConfigFromBytes(data []byte) error { return nil }
+func (m *MockConfigProvider) MergeConfig(path string) error         { return nil }
 
 // MockFactory is a mock implementation of ProviderFactory.
 type MockFactory struct{}
@@ -145,6 +146,10 @@ func (f *MockFactory) CreateConfigProvider() ConfigProvider {
 }
 
 func (f *MockFactory) LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
+	return nil
+}
+
+func (f *MockFactory) LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides map[string][]byte, target any) error {
 	return nil
 }
 
@@ -167,9 +172,9 @@ func TestAbstractFactorySwap(t *testing.T) {
 	// Verify that NewConfigProvider returns a MockConfigProvider
 	provider := NewConfigProvider()
 	_, ok := provider.(*MockConfigProvider)
-	assert.True(t, ok, "NewConfigProvider should return a MockConfigProvider when MockFactory is injected")
+	require.True(t, ok, "NewConfigProvider should return a MockConfigProvider when MockFactory is injected")
 
 	// Verify that the global config is also using the mock
 	Set("mock_key", "mock_value")
-	assert.Equal(t, "mock_value", GetString("mock_key"))
+	require.Equal(t, "mock_value", GetString("mock_key"))
 }

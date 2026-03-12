@@ -376,6 +376,7 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 	}
 
 	allFiles := append([]string{app.ConfigPath}, configOverrides...)
+	fileContents := make(map[string][]byte)
 
 	// Add Pre-Load Validation (Hook Checks)
 	for _, file := range allFiles {
@@ -387,28 +388,30 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		if err != nil {
 			return []string{}, fmt.Errorf("invalid configuration in %s: %v", file, err)
 		}
+		fileContents[file] = source
 	}
 
 	// Sort WebExtraExposedPorts so the entry matching configured router ports comes first
 	SortWebExtraExposedPorts(app)
 
-	// Determine overrides from the glob, filtering out the main config file if present
-	// to avoid duplicate merging.
-	filteredOverrides := []string{}
+	// Determine overrides and their contents
+	overrides := make(map[string][]byte)
+	var overrideKeys []string
 	for _, f := range configOverrides {
 		if f != app.ConfigPath {
-			filteredOverrides = append(filteredOverrides, f)
+			overrides[f] = fileContents[f]
+			overrideKeys = append(overrideKeys, f)
 		}
 	}
 
-	err = settings.LoadProjectConfig(app.ConfigPath, filteredOverrides, app)
+	err = settings.LoadProjectConfigFromContents(app.ConfigPath, fileContents[app.ConfigPath], overrides, app)
 	if err != nil {
 		return []string{}, fmt.Errorf("failed to load project config: %v", err)
 	}
 
 	app.ConfigPostLoadCleanup()
 
-	return append([]string{app.ConfigPath}, filteredOverrides...), nil
+	return append([]string{app.ConfigPath}, overrideKeys...), nil
 }
 
 // LoadConfigYamlFile loads one config.yaml into app, overriding what might be there.

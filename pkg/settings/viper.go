@@ -1,8 +1,10 @@
 package settings
 
 import (
+	"bytes"
 	"fmt"
 	"math"
+	"os"
 	"reflect"
 
 	"github.com/go-viper/mapstructure/v2"
@@ -54,6 +56,11 @@ func (vc *viperConfig) ReadConfig(path string) error {
 	return vc.v.ReadInConfig()
 }
 
+func (vc *viperConfig) ReadConfigFromBytes(data []byte) error {
+	vc.v.SetConfigType("yaml")
+	return vc.v.ReadConfig(bytes.NewReader(data))
+}
+
 func (vc *viperConfig) MergeConfig(path string) error {
 	vc.v.SetConfigFile(path)
 	vc.v.SetConfigType("yaml")
@@ -93,10 +100,29 @@ func (vf *ViperFactory) CreateConfigProvider() ConfigProvider {
 
 // LoadProjectConfig loads a main project config and merges optional overrides into the target struct.
 func (vf *ViperFactory) LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
+	mainContent, err := os.ReadFile(mainPath)
+	if err != nil {
+		return fmt.Errorf("unable to read config file %s: %v", mainPath, err)
+	}
+
+	overrides := make(map[string][]byte)
+	for _, path := range overridePaths {
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("unable to read config file %s: %v", path, err)
+		}
+		overrides[path] = content
+	}
+
+	return vf.LoadProjectConfigFromContents(mainPath, mainContent, overrides, target)
+}
+
+// LoadProjectConfigFromContents loads a main project config and merges optional overrides from pre-read bytes.
+func (vf *ViperFactory) LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides map[string][]byte, target any) error {
 	// First load the main config into a map
 	mainMap := make(map[string]any)
 	cfg := vf.CreateConfigProvider()
-	if err := cfg.ReadConfig(mainPath); err != nil {
+	if err := cfg.ReadConfigFromBytes(mainContent); err != nil {
 		return err
 	}
 	if err := cfg.Unmarshal(&mainMap); err != nil {
@@ -104,9 +130,11 @@ func (vf *ViperFactory) LoadProjectConfig(mainPath string, overridePaths []strin
 	}
 
 	// Now load and merge each override
-	for _, path := range overridePaths {
+	// Sort keys to ensure deterministic merge order if needed,
+	// though the caller usually provides them in order.
+	for _, content := range overrides {
 		overrideCfg := vf.CreateConfigProvider()
-		if err := overrideCfg.ReadConfig(path); err != nil {
+		if err := overrideCfg.ReadConfigFromBytes(content); err != nil {
 			return err
 		}
 
