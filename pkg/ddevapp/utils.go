@@ -108,10 +108,10 @@ func Cleanup(app *DdevApp) error {
 	// There can be awkward cases where we're doing an app.Stop() but the rendered
 	// yaml does not exist, all in testing situations.
 	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
-		_, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-			Profiles:     []string{`*`},
-			Action:       []string{"down"},
+		err := dockerutil.ComposeDown(dockerutil.ComposeDownOpts{
+			ComposeFiles:  []string{app.DockerComposeFullRenderedYAMLPath()},
+			Profiles:      []string{`*`},
+			RemoveOrphans: true,
 		})
 		if err != nil {
 			util.Warning("Failed to docker-compose down: %v", err)

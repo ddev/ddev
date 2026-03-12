@@ -68,20 +68,16 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
-	var action []string
-	for _, envFile := range envFiles {
-		action = append(action, "--env-file", envFile)
-	}
-	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	project, err := dockerutil.ComposeConfig(dockerutil.ComposeConfigOpts{
 		ComposeFiles: files,
 		Profiles:     []string{`*`},
-		Action:       append(action, "config"),
+		EnvFiles:     envFiles,
 	})
 	if err != nil {
 		return err
 	}
 
-	app.ComposeYaml, err = fixupComposeYaml(fullContents, app)
+	app.ComposeYaml, err = fixupComposeYaml(project, app)
 	if err != nil {
 		return err
 	}
@@ -178,12 +174,7 @@ func (app *DdevApp) GetXDdevExtension(serviceName string) XDdevExtension {
 
 // fixupComposeYaml makes minor changes to the `docker-compose config` output
 // to make sure extra services are always compatible with ddev.
-func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, error) {
-	project, err := dockerutil.CreateComposeProject(yamlStr)
-	if err != nil {
-		return project, err
-	}
-
+func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeTypes.Project, error) {
 	envFiles, err := app.EnvFiles()
 	if err != nil {
 		return project, err

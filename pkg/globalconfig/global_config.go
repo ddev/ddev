@@ -187,10 +187,9 @@ func GetMutagenDataDirectory() string {
 	return mutagenDataDirectory
 }
 
-// GetDockerBuildxPath gets the full path to the docker-buildx binary
-// Normally this is the one that has been downloaded to ~/.ddev/bin, but if
-// UseDockerBuildxFromPath, then it will be whatever if found in $PATH
-func GetDockerBuildxPath() (string, error) {
+// GetDockerBuildxDestination gets the full path to the docker-buildx binary
+// which is going to be downloaded in ~/.ddev/bin
+func GetDockerBuildxDestination() (string, error) {
 	buildxBinary := "docker-buildx"
 	if nodeps.IsWindows() {
 		buildxBinary = buildxBinary + ".exe"

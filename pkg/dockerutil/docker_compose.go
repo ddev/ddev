@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"sort"
 	"strings"
 	"time"
 
@@ -25,81 +24,317 @@ import (
 	"github.com/docker/compose/v5/pkg/compose"
 	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
+	"github.com/sirupsen/logrus"
 )
 
-type ComposeCmdOpts struct {
+// ComposeUpOpts holds options for ComposeUp.
+type ComposeUpOpts struct {
 	ComposeFiles []string
-	ComposeYaml  *types.Project
+	Project      *types.Project // Preloaded project; if set, ComposeFiles is ignored
+	ProjectName  string
 	Profiles     []string
-	Action       []string
-	Progress     bool // Add dots every second while the compose command is running
+	Build        bool // Build images before starting
+	Progress     string
+}
+
+// ComposeDownOpts holds options for ComposeDown.
+type ComposeDownOpts struct {
+	ComposeFiles  []string
+	Project       *types.Project
+	ProjectName   string
+	Profiles      []string
+	RemoveOrphans bool
+	Progress      string
+}
+
+// ComposeStopOpts holds options for ComposeStop.
+type ComposeStopOpts struct {
+	ComposeFiles []string
+	Project      *types.Project
+	ProjectName  string
+	Profiles     []string
+	Progress     string
+}
+
+// ComposeBuildOpts holds options for ComposeBuild.
+type ComposeBuildOpts struct {
+	ComposeFiles []string
+	ProjectName  string
+	Services     []string // Specific services to build; nil means all
+	NoCache      bool
+	Progress     string
+	ShowDots     bool // Show dots on stderr while building
 	Timeout      time.Duration
-	ProjectName  string // Optional project name to set via -p flag
+	Stdout       io.Writer // If set, stream output here; nil means capture
+	Stderr       io.Writer
+}
+
+// ComposeExecOpts holds options for ComposeExec.
+type ComposeExecOpts struct {
+	ComposeFiles []string
+	ProjectName  string
+	Service      string
+	Command      []string
+	Tty          bool
+	Interactive  bool
+	Detach       bool
+	User         string
+	WorkDir      string
 	Env          []string
+	Stdin        io.Reader // If set, use for streaming input
+	Stdout       io.Writer // If set, stream output here; nil means capture
+	Stderr       io.Writer
 }
 
-// parsedAction holds the result of parsing a ComposeCmdOpts.Action array.
-type parsedAction struct {
-	projectName string
-	progress    string
-	envFiles    []string
-	subcommand  string
-	subArgs     []string
+// ComposeConfigOpts holds options for ComposeConfig.
+type ComposeConfigOpts struct {
+	ComposeFiles []string
+	ProjectName  string
+	Profiles     []string
+	EnvFiles     []string
 }
 
-// parseComposeAction extracts global flags and the subcommand from an action array.
-// Global flags handled: -p <name>, --progress=<val>, --env-file <file>.
-func parseComposeAction(action []string) parsedAction {
-	var result parsedAction
-	i := 0
-	for i < len(action) {
-		switch {
-		case action[i] == "-p" && i+1 < len(action):
-			result.projectName = action[i+1]
-			i += 2
-		case strings.HasPrefix(action[i], "--progress="):
-			result.progress = strings.TrimPrefix(action[i], "--progress=")
-			i++
-		case action[i] == "--env-file" && i+1 < len(action):
-			result.envFiles = append(result.envFiles, action[i+1])
-			i += 2
-		case strings.HasPrefix(action[i], "--env-file="):
-			result.envFiles = append(result.envFiles, strings.TrimPrefix(action[i], "--env-file="))
-			i++
-		case !strings.HasPrefix(action[i], "-"):
-			result.subcommand = action[i]
-			result.subArgs = action[i+1:]
-			return result
-		default:
-			i++ // skip unknown global flags
-		}
+// ComposePullOpts holds options for ComposePull.
+type ComposePullOpts struct {
+	ComposeFiles []string
+	Project      *types.Project // Preloaded project; if set, ComposeFiles is ignored
+	ProjectName  string
+	Progress     string
+	Stdout       io.Writer // If nil, output is discarded
+	Stderr       io.Writer
+}
+
+// ComposeUp starts compose services in detached mode.
+func ComposeUp(opts ComposeUpOpts) error {
+	ctx := context.Background()
+
+	project, err := loadProject(ctx, opts.ComposeFiles, opts.Project, opts.ProjectName, opts.Profiles, nil)
+	if err != nil {
+		return err
 	}
-	return result
-}
 
-// setCustomLabels sets the docker compose custom labels on each service in the project.
-// These labels are required for containers to be discoverable by the SDK after creation,
-// since the SDK's ContainerList queries filter by the project label.
-func setCustomLabels(project *types.Project) {
-	for name, s := range project.Services {
-		s.CustomLabels = types.Labels{
-			api.ProjectLabel:     project.Name,
-			api.ServiceLabel:     name,
-			api.VersionLabel:     api.ComposeVersion,
-			api.WorkingDirLabel:  project.WorkingDir,
-			api.ConfigFilesLabel: strings.Join(project.ComposeFiles, ","),
-			api.OneoffLabel:      "False",
-		}
-		project.Services[name] = s
+	svc, err := newComposeService(io.Discard, io.Discard, progressOpts(opts.Progress)...)
+	if err != nil {
+		return err
 	}
+
+	var createOpts api.CreateOptions
+	if opts.Build {
+		buildOpts := api.BuildOptions{}
+		createOpts.Build = &buildOpts
+	}
+	return svc.Up(ctx, project, api.UpOptions{
+		Create: createOpts,
+		Start:  api.StartOptions{Project: project},
+	})
 }
 
-// loadProjectFromCmd loads (or returns) the compose project described by cmd.
-// projectName is the effective project name (from -p flag or cmd.ProjectName).
-// envFiles are additional .env files used for variable interpolation.
-func loadProjectFromCmd(ctx context.Context, cmd *ComposeCmdOpts, projectName string, envFiles []string) (*types.Project, error) {
-	if cmd.ComposeYaml != nil {
-		project := cmd.ComposeYaml
+// ComposeDown stops and removes containers and networks for a compose project.
+func ComposeDown(opts ComposeDownOpts) error {
+	ctx := context.Background()
+
+	project, err := loadProject(ctx, opts.ComposeFiles, opts.Project, opts.ProjectName, opts.Profiles, nil)
+	if err != nil {
+		return err
+	}
+
+	// Temporarily suppress logrus warnings (e.g., "No resource found to remove")
+	// since these are expected when resources don't exist
+	originalLevel := logrus.GetLevel()
+	logrus.SetLevel(logrus.ErrorLevel)
+	defer logrus.SetLevel(originalLevel)
+
+	svc, err := newComposeService(io.Discard, io.Discard, progressOpts(opts.Progress)...)
+	if err != nil {
+		return err
+	}
+	return svc.Down(ctx, project.Name, api.DownOptions{
+		RemoveOrphans: opts.RemoveOrphans,
+		Project:       project,
+	})
+}
+
+// ComposeStop stops services without removing them.
+func ComposeStop(opts ComposeStopOpts) error {
+	ctx := context.Background()
+
+	project, err := loadProject(ctx, opts.ComposeFiles, opts.Project, opts.ProjectName, opts.Profiles, nil)
+	if err != nil {
+		return err
+	}
+
+	svc, err := newComposeService(io.Discard, io.Discard, progressOpts(opts.Progress)...)
+	if err != nil {
+		return err
+	}
+	return svc.Stop(ctx, project.Name, api.StopOptions{Project: project})
+}
+
+// ComposeRestartOpts holds options for ComposeRestart.
+type ComposeRestartOpts struct {
+	ComposeFiles []string
+	Project      *types.Project
+	ProjectName  string
+	Profiles     []string
+	Services     []string      // Specific services to restart; nil means all
+	Timeout      time.Duration // Timeout for graceful shutdown
+	Progress     string        // Progress mode
+}
+
+// ComposeRestart restarts services.
+func ComposeRestart(opts ComposeRestartOpts) error {
+	ctx := context.Background()
+
+	project, err := loadProject(ctx, opts.ComposeFiles, opts.Project, opts.ProjectName, opts.Profiles, nil)
+	if err != nil {
+		return err
+	}
+
+	svc, err := newComposeService(io.Discard, io.Discard, progressOpts(opts.Progress)...)
+	if err != nil {
+		return err
+	}
+
+	var timeout *time.Duration
+	if opts.Timeout > 0 {
+		timeout = &opts.Timeout
+	}
+
+	return svc.Restart(ctx, project.Name, api.RestartOptions{
+		Project:  project,
+		Services: opts.Services,
+		Timeout:  timeout,
+	})
+}
+
+// ComposeBuild builds service images.
+// When opts.Stdout is set, output streams there; otherwise stdout and stderr are captured and returned.
+func ComposeBuild(opts ComposeBuildOpts) (string, string, error) {
+	ctx := context.Background()
+	if opts.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, opts.Timeout)
+		defer cancel()
+	}
+
+	project, err := loadProject(ctx, opts.ComposeFiles, nil, opts.ProjectName, nil, nil)
+	if err != nil {
+		return "", "", err
+	}
+
+	var stdoutW, stderrW io.Writer
+	var stdoutBuf, stderrBuf bytes.Buffer
+	if opts.Stdout != nil {
+		stdoutW = opts.Stdout
+		stderrW = opts.Stderr
+	} else {
+		stdoutW = &stdoutBuf
+		stderrW = &stderrBuf
+	}
+
+	svc, err := newComposeService(stdoutW, stderrW, progressOpts(opts.Progress)...)
+	if err != nil {
+		return "", "", err
+	}
+
+	var dotsDone chan bool
+	if opts.ShowDots {
+		dotsDone = util.ShowDots()
+	}
+	err = svc.Build(ctx, project, api.BuildOptions{
+		Progress: opts.Progress,
+		NoCache:  opts.NoCache,
+		Services: opts.Services,
+	})
+	if opts.ShowDots {
+		dotsDone <- true
+	}
+	if ctx.Err() != nil {
+		return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeBuild timed out after %v: %v", opts.Timeout, err)
+	}
+	return stdoutBuf.String(), stderrBuf.String(), err
+}
+
+// ComposeExec runs a command in a running service container.
+// When opts.Stdout is set, output streams there and empty strings are returned.
+// Otherwise stdout and stderr are captured and returned.
+func ComposeExec(opts ComposeExecOpts) (string, string, error) {
+	ctx := context.Background()
+
+	project, err := loadProject(ctx, opts.ComposeFiles, nil, opts.ProjectName, nil, nil)
+	if err != nil {
+		return "", "", err
+	}
+
+	var stdoutW, stderrW io.Writer
+	var stdoutBuf, stderrBuf bytes.Buffer
+	if opts.Stdout != nil {
+		stdoutW = opts.Stdout
+		stderrW = opts.Stderr
+	} else {
+		stdoutW = &stdoutBuf
+		stderrW = &stderrBuf
+	}
+
+	var extraOpts []compose.Option
+	if opts.Stdin != nil {
+		extraOpts = append(extraOpts, compose.WithInputStream(opts.Stdin))
+	}
+	svc, err := newComposeService(stdoutW, stderrW, extraOpts...)
+	if err != nil {
+		return "", "", err
+	}
+
+	_, err = svc.Exec(ctx, project.Name, api.RunOptions{
+		Service:     opts.Service,
+		Command:     opts.Command,
+		Tty:         opts.Tty,
+		Interactive: opts.Interactive,
+		Detach:      opts.Detach,
+		WorkingDir:  opts.WorkDir,
+		User:        opts.User,
+		Environment: opts.Env,
+	})
+	return stdoutBuf.String(), stderrBuf.String(), err
+}
+
+// ComposeConfig loads and merges compose files and returns the project.
+func ComposeConfig(opts ComposeConfigOpts) (*types.Project, error) {
+	ctx := context.Background()
+
+	project, err := loadProject(ctx, opts.ComposeFiles, nil, opts.ProjectName, opts.Profiles, opts.EnvFiles)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check container name consistency
+	err = project.CheckContainerNameUnicity()
+	if err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
+// ComposePull pulls service images.
+func ComposePull(opts ComposePullOpts) error {
+	ctx := context.Background()
+
+	project, err := loadProject(ctx, opts.ComposeFiles, opts.Project, opts.ProjectName, nil, nil)
+	if err != nil {
+		return err
+	}
+
+	svc, err := newComposeService(os.Stdout, os.Stderr, progressOpts(opts.Progress)...)
+	if err != nil {
+		return err
+	}
+	return svc.Pull(ctx, project, api.PullOptions{})
+}
+
+// loadProject returns a compose project, either the preloaded one or loaded from files.
+func loadProject(ctx context.Context, composeFiles []string, project *types.Project, projectName string, profiles []string, envFiles []string) (*types.Project, error) {
+	if project != nil {
 		if projectName != "" {
 			project.Name = projectName
 		}
@@ -107,7 +342,6 @@ func loadProjectFromCmd(ctx context.Context, cmd *ComposeCmdOpts, projectName st
 		return project, nil
 	}
 
-	// Build environment for interpolation: OS env + any --env-file contents
 	environment := make(types.Mapping)
 	for _, e := range os.Environ() {
 		if k, v, ok := strings.Cut(e, "="); ok {
@@ -124,20 +358,19 @@ func loadProjectFromCmd(ctx context.Context, cmd *ComposeCmdOpts, projectName st
 		}
 	}
 
-	configFiles := make([]types.ConfigFile, 0, len(cmd.ComposeFiles))
-	for _, f := range cmd.ComposeFiles {
+	configFiles := make([]types.ConfigFile, 0, len(composeFiles))
+	for _, f := range composeFiles {
 		configFiles = append(configFiles, types.ConfigFile{Filename: f})
 	}
 
-	// Set WorkingDir from the first compose file so relative paths resolve correctly
 	workingDir := ""
-	if len(cmd.ComposeFiles) > 0 {
-		workingDir = filepath.Dir(cmd.ComposeFiles[0])
+	if len(composeFiles) > 0 {
+		workingDir = filepath.Dir(composeFiles[0])
 	}
 
 	var loaderOpts []func(*loader.Options)
-	if len(cmd.Profiles) > 0 {
-		loaderOpts = append(loaderOpts, loader.WithProfiles(cmd.Profiles))
+	if len(profiles) > 0 {
+		loaderOpts = append(loaderOpts, loader.WithProfiles(profiles))
 	}
 	if projectName != "" {
 		pn := projectName
@@ -146,7 +379,7 @@ func loadProjectFromCmd(ctx context.Context, cmd *ComposeCmdOpts, projectName st
 		})
 	}
 
-	project, err := loader.LoadWithContext(ctx, types.ConfigDetails{
+	p, err := loader.LoadWithContext(ctx, types.ConfigDetails{
 		ConfigFiles: configFiles,
 		Environment: environment,
 		WorkingDir:  workingDir,
@@ -154,317 +387,63 @@ func loadProjectFromCmd(ctx context.Context, cmd *ComposeCmdOpts, projectName st
 	if err != nil {
 		return nil, err
 	}
-	setCustomLabels(project)
-	return project, nil
+	setCustomLabels(p)
+	return p, nil
 }
 
-// execSubArgs holds parsed options from a compose exec subcommand argument list.
-type execSubArgs struct {
-	service string
-	command []string
-	tty     bool
-	detach  bool
-	workDir string
-	user    string
-	env     []string
-}
-
-// parseExecSubArgs parses exec subcommand args into an execSubArgs struct.
-// Handled flags: -T, -it/-ti, -d/--detach, -w/--workdir, -u/--user, -e/--env.
-func parseExecSubArgs(args []string) execSubArgs {
-	var result execSubArgs
-	i := 0
-	for i < len(args) {
-		arg := args[i]
-		switch {
-		case arg == "-T":
-			i++
-		case arg == "-it" || arg == "-ti":
-			result.tty = true
-			i++
-		case arg == "-d" || arg == "--detach":
-			result.detach = true
-			i++
-		case (arg == "-w" || arg == "--workdir") && i+1 < len(args):
-			result.workDir = args[i+1]
-			i += 2
-		case (arg == "-u" || arg == "--user") && i+1 < len(args):
-			result.user = args[i+1]
-			i += 2
-		case (arg == "-e" || arg == "--env") && i+1 < len(args):
-			result.env = append(result.env, args[i+1])
-			i += 2
-		case strings.HasPrefix(arg, "-"):
-			i++ // skip unknown flags
-		default:
-			result.service = arg
-			result.command = args[i+1:]
-			return result
+// setCustomLabels sets the docker compose custom labels on each service in the project.
+// These labels are required for containers to be discoverable by the SDK after creation.
+func setCustomLabels(project *types.Project) {
+	for name, s := range project.Services {
+		s.CustomLabels = types.Labels{
+			api.ProjectLabel:     project.Name,
+			api.ServiceLabel:     name,
+			api.VersionLabel:     api.ComposeVersion,
+			api.WorkingDirLabel:  project.WorkingDir,
+			api.ConfigFilesLabel: strings.Join(project.ComposeFiles, ","),
+			api.OneoffLabel:      "False",
 		}
+		project.Services[name] = s
 	}
-	return result
 }
 
-// getComposeService returns a compose.api.Compose instance backed by the existing dockerCli.
-// When cmd is non-nil and cmd.Progress is true, attaches a display.EventProcessor using
-// the same TTY detection logic as the compose CLI: Full for terminal stdout, Plain otherwise.
-func getComposeService(cmd *ComposeCmdOpts, stdout, stderr io.Writer, extraOpts ...compose.Option) (api.Compose, error) {
+// newComposeService creates a compose service backed by the singleton Docker CLI.
+func newComposeService(stdout, stderr io.Writer, opts ...compose.Option) (api.Compose, error) {
 	dm, err := getDockerManagerInstance()
 	if err != nil {
 		return nil, err
 	}
-	opts := []compose.Option{
+	baseOpts := []compose.Option{
 		compose.WithOutputStream(stdout),
 		compose.WithErrorStream(stderr),
 	}
-	if cmd != nil && cmd.Progress {
-		var ep api.EventProcessor
-		// Check actual stdout terminal, not dm.cli.Out() which is io.Discard
-		if isatty.IsTerminal(os.Stdout.Fd()) {
+	return compose.NewComposeService(dm.cli, append(baseOpts, opts...)...)
+}
+
+// progressOpts returns compose.Option slice for progress display.
+// mode uses display mode constants: ModeAuto, ModePlain, ModeQuiet, ModeTTY
+func progressOpts(mode string) []compose.Option {
+	if mode == "" {
+		mode = display.ModeAuto
+	}
+
+	var ep api.EventProcessor
+	switch mode {
+	case display.ModeQuiet:
+		// No event processor
+		return nil
+	case display.ModePlain:
+		ep = display.Plain(output.UserErr.Writer())
+	case display.ModeTTY:
+		ep = display.Full(os.Stderr, os.Stderr, false)
+	case display.ModeAuto:
+		if !output.JSONOutput && isatty.IsTerminal(os.Stdout.Fd()) {
 			ep = display.Full(os.Stderr, os.Stderr, false)
 		} else {
-			ep = display.Plain(os.Stderr)
-		}
-		opts = append(opts, compose.WithEventProcessor(ep))
-	}
-	opts = append(opts, extraOpts...)
-	return compose.NewComposeService(dm.cli, opts...)
-}
-
-// ComposeWithStreams executes a compose operation using the Docker Compose SDK,
-// routing output to the provided stdin/stdout/stderr streams.
-func ComposeWithStreams(cmd *ComposeCmdOpts, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
-	defer util.TimeTrack()()
-
-	parsed := parseComposeAction(cmd.Action)
-	projectName := cmd.ProjectName
-	if parsed.projectName != "" {
-		projectName = parsed.projectName
-	}
-
-	ctx := context.Background()
-
-	var stdinOpt []compose.Option
-	if stdin != nil {
-		stdinOpt = []compose.Option{compose.WithInputStream(stdin)}
-	}
-	svc, err := getComposeService(cmd, stdout, stderr, stdinOpt...)
-	if err != nil {
-		return err
-	}
-
-	switch parsed.subcommand {
-	case "up":
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return err
-		}
-		var createOpts api.CreateOptions
-		if containsFlag(parsed.subArgs, "--build") {
-			buildOpts := api.BuildOptions{Progress: parsed.progress}
-			createOpts.Build = &buildOpts
-		}
-		return svc.Up(ctx, project, api.UpOptions{Create: createOpts, Start: api.StartOptions{Project: project}})
-
-	case "pull":
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return err
-		}
-		return svc.Pull(ctx, project, api.PullOptions{})
-
-	case "build":
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return err
-		}
-		return svc.Build(ctx, project, api.BuildOptions{
-			Progress: parsed.progress,
-			NoCache:  containsFlag(parsed.subArgs, "--no-cache"),
-		})
-
-	case "exec":
-		ea := parseExecSubArgs(parsed.subArgs)
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return err
-		}
-		_, err = svc.Exec(ctx, project.Name, api.RunOptions{
-			Service:     ea.service,
-			Command:     ea.command,
-			Tty:         ea.tty,
-			Interactive: ea.tty,
-			Detach:      ea.detach,
-			WorkingDir:  ea.workDir,
-			User:        ea.user,
-			Environment: ea.env,
-		})
-		return err
-
-	default:
-		return fmt.Errorf("ComposeWithStreams: unsupported compose action %q in %v", parsed.subcommand, cmd.Action)
-	}
-}
-
-// ComposeCmd executes a compose operation using the Docker Compose SDK.
-// Returns stdout output, stderr output, and any error.
-func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
-	var stdoutBuf, stderrBuf bytes.Buffer
-
-	parsed := parseComposeAction(cmd.Action)
-	projectName := cmd.ProjectName
-	if parsed.projectName != "" {
-		projectName = parsed.projectName
-	}
-
-	ctx := context.Background()
-	if cmd.Timeout > 0 {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, cmd.Timeout)
-		defer cancel()
-	}
-
-	switch parsed.subcommand {
-	case "config":
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return "", "", err
-		}
-		if containsFlag(parsed.subArgs, "--services") {
-			services := make([]string, 0, len(project.Services))
-			for name := range project.Services {
-				services = append(services, name)
-			}
-			sort.Strings(services)
-			return strings.Join(services, "\n") + "\n", "", nil
-		}
-		yamlBytes, err := project.MarshalYAML()
-		if err != nil {
-			return "", "", err
-		}
-		return string(yamlBytes), "", nil
-
-	case "up":
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return "", "", err
-		}
-		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
-		if err != nil {
-			return "", "", err
-		}
-		var createOpts api.CreateOptions
-		if containsFlag(parsed.subArgs, "--build") {
-			buildOpts := api.BuildOptions{Progress: parsed.progress}
-			createOpts.Build = &buildOpts
-		}
-		err = svc.Up(ctx, project, api.UpOptions{Create: createOpts, Start: api.StartOptions{Project: project}})
-		if ctx.Err() != nil {
-			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
-		}
-		return stdoutBuf.String(), stderrBuf.String(), err
-
-	case "down":
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return "", "", err
-		}
-		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
-		if err != nil {
-			return "", "", err
-		}
-		err = svc.Down(ctx, project.Name, api.DownOptions{RemoveOrphans: true, Project: project})
-		if ctx.Err() != nil {
-			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
-		}
-		return stdoutBuf.String(), stderrBuf.String(), err
-
-	case "stop":
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return "", "", err
-		}
-		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
-		if err != nil {
-			return "", "", err
-		}
-		err = svc.Stop(ctx, project.Name, api.StopOptions{Project: project})
-		if ctx.Err() != nil {
-			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
-		}
-		return stdoutBuf.String(), stderrBuf.String(), err
-
-	case "pull":
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return "", "", err
-		}
-		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
-		if err != nil {
-			return "", "", err
-		}
-		err = svc.Pull(ctx, project, api.PullOptions{})
-		if ctx.Err() != nil {
-			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
-		}
-		return stdoutBuf.String(), stderrBuf.String(), err
-
-	case "build":
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return "", "", err
-		}
-		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
-		if err != nil {
-			return "", "", err
-		}
-		err = svc.Build(ctx, project, api.BuildOptions{
-			Progress: parsed.progress,
-			NoCache:  containsFlag(parsed.subArgs, "--no-cache"),
-		})
-		if ctx.Err() != nil {
-			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
-		}
-		return stdoutBuf.String(), stderrBuf.String(), err
-
-	case "exec":
-		ea := parseExecSubArgs(parsed.subArgs)
-		project, err := loadProjectFromCmd(ctx, cmd, projectName, parsed.envFiles)
-		if err != nil {
-			return "", "", err
-		}
-		svc, err := getComposeService(cmd, &stdoutBuf, &stderrBuf)
-		if err != nil {
-			return "", "", err
-		}
-		_, err = svc.Exec(ctx, project.Name, api.RunOptions{
-			Service:     ea.service,
-			Command:     ea.command,
-			Tty:         ea.tty,
-			Interactive: ea.tty,
-			Detach:      ea.detach,
-			WorkingDir:  ea.workDir,
-			User:        ea.user,
-			Environment: ea.env,
-		})
-		if ctx.Err() != nil {
-			return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("ComposeCmd timed out after %v: %v", cmd.Timeout, err)
-		}
-		return stdoutBuf.String(), stderrBuf.String(), err
-
-	default:
-		return "", "", fmt.Errorf("ComposeCmd: unsupported compose action %q in %v", parsed.subcommand, cmd.Action)
-	}
-}
-
-// containsFlag reports whether flag appears in args.
-func containsFlag(args []string, flag string) bool {
-	for _, a := range args {
-		if a == flag {
-			return true
+			ep = display.Plain(output.UserErr.Writer())
 		}
 	}
-	return false
+	return []compose.Option{compose.WithEventProcessor(ep)}
 }
 
 // DownloadDockerBuildxIfNeeded downloads the proper version of docker-buildx
@@ -512,7 +491,7 @@ Download timed out, check your network connection and try again`, err, requiredV
 // ~/.ddev/bin
 func DownloadDockerBuildx() error {
 	globalBinDir := globalconfig.GetDDEVBinDir()
-	destFile, _ := globalconfig.GetDockerBuildxPath()
+	destFile, _ := globalconfig.GetDockerBuildxDestination()
 
 	buildxURL, shasumURL, err := dockerBuildxDownloadLink()
 	if err != nil {
@@ -602,9 +581,8 @@ func CreateComposeProject(yamlStr string) (*types.Project, error) {
 	return project, nil
 }
 
-// PullImages pulls images in parallel if they don't exist locally
-// If pullAlways is true, it will always pull
-// Otherwise, it will only pull if the image doesn't exist
+// PullImages pulls images in parallel if they don't exist locally.
+// If pullAlways is true, it will always pull.
 func PullImages(images []string, pullAlways bool) error {
 	if len(images) == 0 {
 		return nil
@@ -639,21 +617,9 @@ func PullImages(images []string, pullAlways bool) error {
 		return nil
 	}
 
-	if !output.JSONOutput && isatty.IsTerminal(os.Stdin.Fd()) {
-		err = ComposeWithStreams(&ComposeCmdOpts{
-			ComposeYaml: composeYamlPull,
-			Action:      []string{"pull"},
-			Progress:    true,
-		}, nil, os.Stdout, os.Stderr)
-	} else {
-		_, _, err = ComposeCmd(&ComposeCmdOpts{
-			ComposeYaml: composeYamlPull,
-			Action:      []string{"pull"},
-			Progress:    true,
-		})
-	}
-
-	return err
+	return ComposePull(ComposePullOpts{
+		Project: composeYamlPull,
+	})
 }
 
 // Pull pulls image if it doesn't exist locally

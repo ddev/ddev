@@ -1,15 +1,15 @@
 package cmd
 
 import (
+	"os"
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
-	exec2 "github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/docker/compose/v5/cmd/display"
 	"github.com/spf13/cobra"
 )
 
@@ -43,11 +43,6 @@ var DebugRebuildCmd = &cobra.Command{
 			util.Failed("could not download docker-buildx: %v", err)
 		}
 
-		composeBinaryPath, err := globalconfig.GetDockerBuildxPath()
-		if err != nil {
-			util.Failed("could not GetDockerBuildxPath(): %v", err)
-		}
-
 		app, err := ddevapp.GetActiveApp(projectName)
 		if err != nil {
 			util.Failed("Failed to get project: %v", err)
@@ -63,23 +58,28 @@ var DebugRebuildCmd = &cobra.Command{
 		composeRenderedPath := app.DockerComposeFullRenderedYAMLPath()
 		withoutCache := !cmd.Flags().Changed("cache")
 
-		buildArgs := []string{"-f", composeRenderedPath, "--progress", "plain", "build"}
-
+		var services []string
 		if !buildAll {
-			buildArgs = append(buildArgs, service)
+			services = []string{service}
 		}
 
 		if withoutCache {
-			buildArgs = append(buildArgs, "--no-cache")
 			output.UserOut.Printf("Rebuilding project images without Docker cache...")
 		} else {
 			output.UserOut.Printf("Rebuilding project images using Docker cache...")
 		}
 
-		output.UserOut.Printf("Executing `%s %v`", composeBinaryPath, prettyCmd(buildArgs))
-		err = exec2.RunInteractiveCommand(composeBinaryPath, buildArgs)
+		_, _, err = dockerutil.ComposeBuild(dockerutil.ComposeBuildOpts{
+			ComposeFiles: []string{composeRenderedPath},
+			ProjectName:  app.Name,
+			Services:     services,
+			NoCache:      withoutCache,
+			Progress:     display.ModePlain,
+			Stdout:       os.Stdout,
+			Stderr:       os.Stderr,
+		})
 		if err != nil {
-			util.Failed("Failed to execute `%s %v`: %v", composeBinaryPath, prettyCmd(buildArgs), err)
+			util.Failed("Failed to build project: %v", err)
 		}
 
 		buildDuration := util.FormatDuration(buildDurationStart())
@@ -107,14 +107,21 @@ var DebugRebuildCmd = &cobra.Command{
 			"com.docker.compose.service": service,
 		}
 
-		// Restart the specified service using docker-compose, if it is running
+		// Restart the specified service using compose, if it is running
 		if container, err := dockerutil.FindContainerByLabels(labels); err == nil && container != nil {
-			restartArgs := []string{"-f", composeRenderedPath, "--progress", "plain", "restart", service}
-			output.UserOut.Printf("Executing `%s %v`", composeBinaryPath, prettyCmd(restartArgs))
-			err = exec2.RunInteractiveCommand(composeBinaryPath, restartArgs)
+			output.UserOut.Printf("Restarting service %s...", service)
+
+			// Restart the specific service via compose
+			err = dockerutil.ComposeRestart(dockerutil.ComposeRestartOpts{
+				ComposeFiles: []string{composeRenderedPath},
+				ProjectName:  app.Name,
+				Services:     []string{service},
+				Timeout:      60 * time.Second,
+			})
 			if err != nil {
-				util.Failed("Failed to execute `%s %v`: %v", composeBinaryPath, prettyCmd(restartArgs), err)
+				util.Failed("Failed to restart service %s: %v", service, err)
 			}
+
 			output.UserOut.Printf("Waiting for project container [%v] to become ready...", service)
 			err = app.WaitByLabels(labels)
 			if err != nil {
