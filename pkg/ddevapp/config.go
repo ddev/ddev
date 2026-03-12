@@ -413,15 +413,8 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 
 // LoadConfigYamlFile loads one config.yaml into app, overriding what might be there.
 func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
-	// Determine overrides relative to the provided filePath
-	glob := filepath.Join(filepath.Dir(filePath), "config.*.y*ml")
-	configOverrides, err := filepath.Glob(glob)
-	if err != nil {
-		return err
-	}
-
-	// Implement Single-Step Loading
-	err = settings.LoadProjectConfig(filePath, configOverrides, app)
+	// Implement Single-Step Loading for a single file ONLY
+	err := settings.LoadProjectConfig(filePath, []string{}, app)
 	if err != nil {
 		return fmt.Errorf("unable to load config: %v", err)
 	}

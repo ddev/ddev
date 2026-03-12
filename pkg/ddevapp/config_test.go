@@ -93,7 +93,12 @@ web_environment:
 
 	assert.Equal("mainproject", app.Name)
 	assert.Equal(nodeps.AppTypeDrupal10, app.Type)
-	// Check override behavior (php_version should be 8.2)
+	// Check single-file behavior (php_version should STILL be 8.1 because LoadConfigYamlFile doesn't load overrides)
+	assert.Equal("8.1", app.PHPVersion)
+
+	// Now check that ReadConfig(true) DOES load the override
+	_, err = app.ReadConfig(true)
+	assert.NoError(err)
 	assert.Equal("8.2", app.PHPVersion)
 }
 
@@ -1710,7 +1715,7 @@ func TestPkgConfigDatabaseDBVersion(t *testing.T) {
 		err = os.RemoveAll(configFile)
 		assert.NoError(err)
 		err = fileutil.AppendStringToFile(configFile, fmt.Sprintf("database:\n  type: %s\n  version: %s ", parts[0], parts[1]))
-		_, err = app.ReadConfig(false)
+		err = app.LoadConfigYamlFile(configFile)
 		assert.NoError(err)
 		assert.Equal(parts[0], app.Database.Type)
 		assert.Equal(parts[1], app.Database.Version)
