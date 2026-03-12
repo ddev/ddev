@@ -406,6 +406,8 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		return []string{}, fmt.Errorf("failed to load project config: %v", err)
 	}
 
+	app.ConfigPostLoadCleanup()
+
 	return append([]string{app.ConfigPath}, filteredOverrides...), nil
 }
 
@@ -427,6 +429,8 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	// Sort WebExtraExposedPorts so the entry matching configured router ports comes first
 	SortWebExtraExposedPorts(app)
 
+	app.ConfigPostLoadCleanup()
+
 	// Add Post-Load Validation (Upload Dirs)
 	err = app.validateUploadDirs()
 	if err != nil {
@@ -434,6 +438,20 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	}
 
 	return nil
+}
+
+// ConfigPostLoadCleanup performs cleanup of configuration after loading/merging.
+// This ensures parity with the removed mergeAdditionalConfigIntoApp function.
+func (app *DdevApp) ConfigPostLoadCleanup() {
+	// Make sure we don't have absolutely identical items in our resultant arrays
+	for _, arr := range []*[]string{&app.WebImageExtraPackages, &app.DBImageExtraPackages, &app.AdditionalHostnames, &app.AdditionalFQDNs, &app.OmitContainers} {
+		if arr != nil && *arr != nil {
+			*arr = util.SliceToUniqueSlice(arr)
+		}
+	}
+
+	// WebEnvironment needs special handling via EnvToUniqueEnv
+	app.WebEnvironment = EnvToUniqueEnv(&app.WebEnvironment)
 }
 
 // WarnIfConfigReplace messages user about whether config is being replaced or created

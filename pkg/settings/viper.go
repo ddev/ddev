@@ -115,11 +115,24 @@ func (vf *ViperFactory) LoadProjectConfig(mainPath string, overridePaths []strin
 			return err
 		}
 
+		// Detect if we should replace slices instead of appending
+		// This is controlled by the 'override_config' key in the YAML
+		replaceSlices := false
+		if val, ok := overrideMap["override_config"]; ok {
+			if b, ok := val.(bool); ok {
+				replaceSlices = b
+			}
+		}
+
 		// Merge the override map into the main map using custom logic
-		if err := RecursiveMerge(mainMap, overrideMap); err != nil {
+		if err := RecursiveMerge(mainMap, overrideMap, replaceSlices); err != nil {
 			return err
 		}
 	}
+
+	// We don't need this set in the target; it's only a flag to determine behavior above.
+	// Historically DDEV sets this to false after merging.
+	mainMap["override_config"] = false
 
 	// Decode the merged map into the target struct, using the float-to-string
 	// hook to preserve decimal representations (e.g. database version "8.0").
@@ -137,25 +150,30 @@ func (vf *ViperFactory) LoadProjectConfig(mainPath string, overridePaths []strin
 }
 
 // RecursiveMerge merges src into dst.
-// Maps are merged recursively. Slices are appended. Values are overridden.
-func RecursiveMerge(dst, src map[string]any) error {
+// Maps are merged recursively. Slices are appended by default, but replaced if replaceSlices is true.
+// Values are overridden.
+func RecursiveMerge(dst, src map[string]any, replaceSlices bool) error {
 	for key, srcVal := range src {
 		if dstVal, ok := dst[key]; ok {
 			// If both are maps, recurse
 			srcMap, srcIsMap := srcVal.(map[string]any)
 			dstMap, dstIsMap := dstVal.(map[string]any)
 			if srcIsMap && dstIsMap {
-				if err := RecursiveMerge(dstMap, srcMap); err != nil {
+				if err := RecursiveMerge(dstMap, srcMap, replaceSlices); err != nil {
 					return err
 				}
 				continue
 			}
 
-			// If both are slices, append
+			// If both are slices, append unless replaceSlices is true
 			srcSlice, srcIsSlice := srcVal.([]any)
 			dstSlice, dstIsSlice := dstVal.([]any)
 			if srcIsSlice && dstIsSlice {
-				dst[key] = append(dstSlice, srcSlice...)
+				if replaceSlices {
+					dst[key] = srcSlice
+				} else {
+					dst[key] = append(dstSlice, srcSlice...)
+				}
 				continue
 			}
 		}
