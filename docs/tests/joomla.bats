@@ -17,12 +17,15 @@ teardown() {
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
   # Download the latest version of Joomla
-  run _github_release_download "joomla/joomla-cms" "^Joomla.*Stable-Full_Package\\.zip$" "joomla.zip"
+  run curl -o joomla.zip -L "https://www.joomla.org/latest"
   assert_success
   # unzip joomla.zip && rm -f joomla.zip
   run unzip joomla.zip && rm -f joomla.zip
   assert_success
-  run ddev config --project-type=php --webserver-type=apache-fpm --upload-dirs=images
+  run ddev config --project-type=joomla --upload-dirs=images
+  assert_success
+  run echo "display_errors = off" > .ddev/php/joomla.ini
+  run echo "output_buffering = off" >> .ddev/php/joomla.ini
   assert_success
   run ddev start -y
   assert_success
