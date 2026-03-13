@@ -204,6 +204,10 @@ func init() {
 			postStartAction: nil,
 		},
 
+		nodeps.AppTypeJoomla: {
+			appTypeDetect: isJoomlaApp,
+		},
+
 		nodeps.AppTypeLaravel: {
 			appTypeDetect:   isLaravelApp,
 			postStartAction: laravelPostStartAction,
