@@ -448,41 +448,50 @@ func progressOpts(mode string) []compose.Option {
 
 // DownloadDockerBuildxIfNeeded downloads the proper version of docker-buildx
 // if it's either not yet installed or doesn't meet the minimum version requirement.
-// Returns downloaded bool (true if it did the download) and err
-func DownloadDockerBuildxIfNeeded() (bool, error) {
+// Returns downloaded bool (true if it did the download) and err.
+// Pass force=true (tests only) to download when DDEV's binary is absent even if
+// a system binary already satisfies the version requirement.
+func DownloadDockerBuildxIfNeeded(force ...bool) (bool, error) {
+	forceDownload := len(force) > 0 && force[0]
 	dockerBuildxResetMsg := `To reset to DDEV's default built-in docker-buildx:
   ddev config global --required-docker-buildx-version="" --use-docker-buildx-from-system=false`
 
 	requiredVersion := globalconfig.GetRequiredDockerBuildxVersion()
 	err := CheckDockerBuildxVersion(DockerRequirements)
+	if err != nil {
+		err = fmt.Errorf("%w\n%s", err, dockerBuildxResetMsg)
+	}
+	// If no required version is set, then we don't need to download
+	// but if there was an error checking the version, report it
 	if requiredVersion == "" {
-		if err != nil {
-			err = fmt.Errorf("%w\n%s", err, dockerBuildxResetMsg)
-		}
 		return false, err
 	}
 	currentVersion, _ := GetDockerBuildxVersion()
-	if currentVersion != requiredVersion {
-		downloadErr := DownloadDockerBuildx()
-		if downloadErr == nil {
-			_ = ResetCLIPlugins()
-			err = CheckDockerBuildxVersion(DockerRequirements)
-			if err != nil {
-				err = fmt.Errorf("%w\n%s", err, dockerBuildxResetMsg)
-			}
-			return true, err
-		}
-		if os.IsTimeout(downloadErr) || strings.Contains(downloadErr.Error(), "timeout") {
-			err = fmt.Errorf(`%v
-Unable to download required docker-buildx version %q: %w
-Download timed out, check your network connection and try again`, err, requiredVersion, downloadErr)
-		} else {
-			err = fmt.Errorf("%v\nUnable to download required docker-buildx version %q: %w\n%s", err, requiredVersion, downloadErr, dockerBuildxResetMsg)
-		}
+	// If the current version meets the requirement, skip the download to avoid
+	// unnecessary network traffic. forceDownload (used in tests only) overrides
+	// this only when DDEV's own binary is absent at the destination — it does not
+	// force a download when the binary already exists there.
+	destinationPath, _ := globalconfig.GetDockerBuildxDestination()
+	_, destStatErr := os.Stat(destinationPath)
+	if currentVersion == requiredVersion && (!forceDownload || destStatErr == nil) {
 		return false, err
 	}
+	// If we get here, we need to download the required version.
+	// If that fails, report the error but also include any error
+	// from the version check (e.g., if docker-buildx isn't found at all)
+	downloadErr := DownloadDockerBuildx()
+	if downloadErr == nil {
+		// Reset the plugins to pick up the new binary
+		_ = ResetCLIPlugins()
+		if err = CheckDockerBuildxVersion(DockerRequirements); err != nil {
+			return false, fmt.Errorf("%w\n%s", err, dockerBuildxResetMsg)
+		}
+		return true, nil
+	}
 	if err != nil {
-		err = fmt.Errorf("%w\n%s", err, dockerBuildxResetMsg)
+		err = fmt.Errorf("%v\nUnable to download required docker-buildx version %q: %w", err, requiredVersion, downloadErr)
+	} else {
+		err = fmt.Errorf("unable to download required docker-buildx version %q: %w\n%s", requiredVersion, downloadErr, dockerBuildxResetMsg)
 	}
 	return false, err
 }

@@ -26,17 +26,18 @@ import (
 // dockerManager manages Docker client configuration and connection state
 // Some of these values are set on demand when first requested
 type dockerManager struct {
-	goContext         context.Context            // Go context for Docker API calls
-	apiClient         client.APIClient           // Docker API for making calls to Docker daemon
-	cli               *command.DockerCli         // Docker CLI for getting dockerContextName and host
-	dockerContextName string                     // Current Docker context name (e.g., "default", "desktop-linux")
-	host              string                     // Docker daemon URL (e.g., "unix:///var/run/docker.sock")
-	hostIP            string                     // IP address of Docker host
-	hostIPErr         error                      // Error from Docker host IP lookup, if any
-	info              system.Info                // Docker system information from daemon (version, OS, etc.)
-	serverVersion     client.ServerVersionResult // Docker server version information
-	cliPlugins        []manager.Plugin           // Lazily discovered CLI plugins
-	cliPluginsErr     error                      // Error from CLI plugin discovery, if any
+	goContext                  context.Context            // Go context for Docker API calls
+	apiClient                  client.APIClient           // Docker API for making calls to Docker daemon
+	cli                        *command.DockerCli         // Docker CLI for getting dockerContextName and host
+	dockerContextName          string                     // Current Docker context name (e.g., "default", "desktop-linux")
+	host                       string                     // Docker daemon URL (e.g., "unix:///var/run/docker.sock")
+	hostIP                     string                     // IP address of Docker host
+	hostIPErr                  error                      // Error from Docker host IP lookup, if any
+	info                       system.Info                // Docker system information from daemon (version, OS, etc.)
+	serverVersion              client.ServerVersionResult // Docker server version information
+	cliPlugins                 []manager.Plugin           // Lazily discovered CLI plugins
+	cliPluginsErr              error                      // Error from CLI plugin discovery, if any
+	cliPluginsExtraDirsDefault []string                   // Extra directories to search for CLI plugins
 }
 
 var (
@@ -71,11 +72,12 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		if sDockerManagerErr != nil {
 			return
 		}
+		sDockerManager.cliPluginsExtraDirsDefault = sDockerManager.cli.ConfigFile().CLIPluginsExtraDirs
 		if !globalconfig.DdevGlobalConfig.UseDockerBuildxFromSystem {
 			// Prepend global ddev bin directory to CLI plugin search path so it takes
 			// priority over any user-configured extra dirs and ~/.docker/cli-plugins.
 			// Must be done after Initialize(), which reloads configFile from disk.
-			sDockerManager.cli.ConfigFile().CLIPluginsExtraDirs = append([]string{filepath.Join(globalconfig.GetGlobalDdevDir(), "bin")}, sDockerManager.cli.ConfigFile().CLIPluginsExtraDirs...)
+			sDockerManager.cli.ConfigFile().CLIPluginsExtraDirs = append([]string{filepath.Join(globalconfig.GetGlobalDdevDir(), "bin")}, sDockerManager.cliPluginsExtraDirsDefault...)
 		}
 		sDockerManager.dockerContextName = sDockerManager.cli.CurrentContext()
 		sDockerManager.host = sDockerManager.cli.DockerEndpoint().Host
@@ -212,6 +214,10 @@ func ResetCLIPlugins() error {
 	dm, err := getDockerManagerInstance()
 	if err != nil {
 		return err
+	}
+	if !globalconfig.DdevGlobalConfig.UseDockerBuildxFromSystem {
+		// Reset CLIPluginsExtraDirs, because globalconfig.GetGlobalDdevDir() may have been modified by tests
+		dm.cli.ConfigFile().CLIPluginsExtraDirs = append([]string{filepath.Join(globalconfig.GetGlobalDdevDir(), "bin")}, dm.cliPluginsExtraDirsDefault...)
 	}
 	dm.cliPlugins, dm.cliPluginsErr = manager.ListPlugins(dm.cli, &cobra.Command{})
 	return dm.cliPluginsErr

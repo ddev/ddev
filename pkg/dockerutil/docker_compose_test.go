@@ -35,10 +35,7 @@ func init() {
 
 // TestDockerBuildxDownload verifies that we can download a particular docker-buildx version
 func TestDockerBuildxDownload(t *testing.T) {
-	assert := asrt.New(t)
-	var err error
-
-	_, err = dockerutil.DownloadDockerBuildxIfNeeded()
+	_, err := dockerutil.DownloadDockerBuildxIfNeeded()
 	require.NoError(t, err)
 
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
@@ -51,26 +48,26 @@ func TestDockerBuildxDownload(t *testing.T) {
 	previousDockerBuildx, _ := globalconfig.GetDockerBuildxDestination()
 	_ = os.RemoveAll(previousDockerBuildx)
 
-	downloaded, err := dockerutil.DownloadDockerBuildxIfNeeded()
+	downloaded, err := dockerutil.DownloadDockerBuildxIfNeeded(true)
 	require.NoError(t, err)
 	require.True(t, downloaded)
 	v, err := dockerutil.GetDockerBuildxVersion()
-	assert.NoError(err)
-	assert.Equal(globalconfig.GetRequiredDockerBuildxVersion(), v)
+	require.NoError(t, err)
+	require.Equal(t, globalconfig.GetRequiredDockerBuildxVersion(), v)
 
 	// Make sure it doesn't download a second time
-	downloaded, err = dockerutil.DownloadDockerBuildxIfNeeded()
-	assert.NoError(err)
-	assert.False(downloaded)
+	downloaded, err = dockerutil.DownloadDockerBuildxIfNeeded(true)
+	require.NoError(t, err)
+	require.False(t, downloaded)
 
 	for _, v := range []string{"0.32.0"} {
 		globalconfig.DdevGlobalConfig.RequiredDockerBuildxVersion = v
-		downloaded, err = dockerutil.DownloadDockerBuildxIfNeeded()
+		downloaded, err = dockerutil.DownloadDockerBuildxIfNeeded(true)
 		require.NoError(t, err)
-		assert.True(downloaded)
+		require.True(t, downloaded)
 		activeVersion, err := dockerutil.GetDockerBuildxVersion()
-		assert.NoError(err)
-		assert.Equal(globalconfig.GetRequiredDockerBuildxVersion(), activeVersion)
+		require.NoError(t, err)
+		require.Equal(t, globalconfig.GetRequiredDockerBuildxVersion(), activeVersion)
 	}
 }
 
