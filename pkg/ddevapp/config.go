@@ -394,12 +394,15 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 	// Sort WebExtraExposedPorts so the entry matching configured router ports comes first
 	SortWebExtraExposedPorts(app)
 
-	// Determine overrides and their contents
-	overrides := make(map[string][]byte)
+	// Determine overrides and their contents in correct order
+	var overrides []settings.OverrideConfig
 	var overrideKeys []string
 	for _, f := range configOverrides {
 		if f != app.ConfigPath {
-			overrides[f] = fileContents[f]
+			overrides = append(overrides, settings.OverrideConfig{
+				Path:    f,
+				Content: fileContents[f],
+			})
 			overrideKeys = append(overrideKeys, f)
 		}
 	}

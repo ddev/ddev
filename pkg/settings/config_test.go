@@ -149,7 +149,7 @@ func (f *MockFactory) LoadProjectConfig(mainPath string, overridePaths []string,
 	return nil
 }
 
-func (f *MockFactory) LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides map[string][]byte, target any) error {
+func (f *MockFactory) LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides []OverrideConfig, target any) error {
 	return nil
 }
 

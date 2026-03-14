@@ -105,20 +105,23 @@ func (vf *ViperFactory) LoadProjectConfig(mainPath string, overridePaths []strin
 		return fmt.Errorf("unable to read config file %s: %v", mainPath, err)
 	}
 
-	overrides := make(map[string][]byte)
+	var overrides []OverrideConfig
 	for _, path := range overridePaths {
 		content, err := os.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("unable to read config file %s: %v", path, err)
 		}
-		overrides[path] = content
+		overrides = append(overrides, OverrideConfig{
+			Path:    path,
+			Content: content,
+		})
 	}
 
 	return vf.LoadProjectConfigFromContents(mainPath, mainContent, overrides, target)
 }
 
 // LoadProjectConfigFromContents loads a main project config and merges optional overrides from pre-read bytes.
-func (vf *ViperFactory) LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides map[string][]byte, target any) error {
+func (vf *ViperFactory) LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides []OverrideConfig, target any) error {
 	// First load the main config into a map
 	mainMap := make(map[string]any)
 	cfg := vf.CreateConfigProvider()
@@ -129,12 +132,10 @@ func (vf *ViperFactory) LoadProjectConfigFromContents(mainPath string, mainConte
 		return err
 	}
 
-	// Now load and merge each override
-	// Sort keys to ensure deterministic merge order if needed,
-	// though the caller usually provides them in order.
-	for _, content := range overrides {
+	// Now load and merge each override in the order provided
+	for _, override := range overrides {
 		overrideCfg := vf.CreateConfigProvider()
-		if err := overrideCfg.ReadConfigFromBytes(content); err != nil {
+		if err := overrideCfg.ReadConfigFromBytes(override.Content); err != nil {
 			return err
 		}
 
