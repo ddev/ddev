@@ -19,7 +19,6 @@ type TestConfig struct {
 
 // TestLoadGlobalConfig verifies that a single YAML file is correctly loaded
 // into a struct using the high-level LoadGlobalConfig function.
-// It tests the happy path of configuration loading from a file.
 func TestLoadGlobalConfig(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "global_config.yaml")
@@ -39,9 +38,6 @@ type: php
 }
 
 // TestLoadProjectConfig verifies that main config and overrides are merged correctly.
-// It ensures that specific project configurations can be overridden by local files,
-// which is a key feature for DDEV's per-project extensibility. It also checks
-// that slices are appended and maps are deep-merged.
 func TestLoadProjectConfig(t *testing.T) {
 	tempDir := t.TempDir()
 	mainPath := filepath.Join(tempDir, "config.yaml")
@@ -81,7 +77,7 @@ web_environment:
 	require.Equal(t, "8.3", cfg.PHPVersion)       // Overridden
 	require.Equal(t, "apache-fpm", cfg.Webserver) // Overridden
 
-	// Map keys are merged and overridden correctly. Note that Viper lowercases map keys.
+	// Map keys are merged and overridden correctly.
 	expectedEnv := map[string]string{
 		"key1": "value1",
 		"key2": "overridden-value2",
@@ -94,8 +90,6 @@ web_environment:
 }
 
 // TestNewConfigProviderIsolation ensures that separate providers do not share state.
-// This confirms that our factory functions (NewConfigProvider) return truly independent
-// instances, preventing crosstalk between different configuration loads.
 func TestNewConfigProviderIsolation(t *testing.T) {
 	p1 := NewConfigProvider()
 	p2 := NewConfigProvider()
@@ -107,74 +101,152 @@ func TestNewConfigProviderIsolation(t *testing.T) {
 	require.Equal(t, "value2", p2.GetString("key"))
 }
 
-// MockConfigProvider is a mock implementation of ConfigProvider for testing factory swaps.
-type MockConfigProvider struct {
-	data map[string]any
+// TestViperConfiguration verifies that the Viper wrapper correctly handles
+// configuration defaults and set/unset operations.
+func TestViperConfiguration(t *testing.T) {
+	p := NewConfigProvider()
+
+	// 1. Test Default Values
+	p.SetDefault("test_key", "default_value")
+	require.Equal(t, "default_value", p.GetString("test_key"))
+
+	// 2. Test Set/override
+	p.Set("some_key", "manual_value")
+	require.Equal(t, "manual_value", p.GetString("some_key"))
+
+	// 3. Test Unset
+	p.Unset("some_key")
+	require.Equal(t, "", p.GetString("some_key"), "Unset should remove the key's value")
 }
 
-func (m *MockConfigProvider) GetString(key string) string {
-	if val, ok := m.data[key]; ok {
-		return val.(string)
+// TestUnmarshalYamlTags verifies that the Unmarshal method correctly respects 'yaml' tags.
+func TestUnmarshalYamlTags(t *testing.T) {
+	p := NewConfigProvider()
+	p.Set("php_version", "8.2")
+	p.Set("name", "test-app")
+
+	var cfg TestConfig
+	err := p.Unmarshal(&cfg)
+	require.NoError(t, err)
+
+	require.Equal(t, "test-app", cfg.Name)
+	require.Equal(t, "8.2", cfg.PHPVersion)
+}
+
+// TestUnmarshalExistingValues verifies that Unmarshal does not zero out existing fields if not in config.
+func TestUnmarshalExistingValues(t *testing.T) {
+	p := NewConfigProvider()
+
+	cfg := TestConfig{
+		Name: "existing-name",
 	}
-	return ""
+	err := p.Unmarshal(&cfg)
+	require.NoError(t, err)
+
+	require.Equal(t, "existing-name", cfg.Name, "Existing name should be preserved if not in config")
 }
-func (m *MockConfigProvider) GetInt(key string) int {
-	if val, ok := m.data[key]; ok {
-		return val.(int)
+
+// TestViperUnmarshalDoesNotPickUpEnv verifies that Unmarshal does NOT pick up arbitrary
+// environment variables.
+func TestViperUnmarshalDoesNotPickUpEnv(t *testing.T) {
+	t.Setenv("DDEV_TEST_PORT", "8888")
+
+	type Config struct {
+		TestPort string `yaml:"test_port"`
 	}
-	return 0
+
+	p := NewConfigProvider()
+
+	var cfg Config
+	err := p.Unmarshal(&cfg)
+	require.NoError(t, err)
+
+	require.Equal(t, "", cfg.TestPort, "Unmarshal should NOT pick up environment variables")
+	require.Equal(t, "", p.GetString("test_port"), "GetString should NOT pick up environment variables without AutomaticEnv")
 }
-func (m *MockConfigProvider) GetBool(key string) bool {
-	if val, ok := m.data[key]; ok {
-		return val.(bool)
+
+// TestFloatToStringPreservation verifies that YAML float values like `8.0` are
+// correctly preserved as "8.0" when unmarshaled into string struct fields.
+func TestFloatToStringPreservation(t *testing.T) {
+	testCases := []struct {
+		name            string
+		yamlContent     string
+		expectedVersion string
+	}{
+		{
+			name:            "whole number float 8.0 preserved",
+			yamlContent:     "database:\n  type: mysql\n  version: 8.0",
+			expectedVersion: "8.0",
+		},
+		{
+			name:            "non-whole float 10.11 preserved",
+			yamlContent:     "database:\n  type: mariadb\n  version: 10.11",
+			expectedVersion: "10.11",
+		},
+		{
+			name:            "integer 17 formatted as string",
+			yamlContent:     "database:\n  type: postgres\n  version: 17",
+			expectedVersion: "17",
+		},
+		{
+			name:            "quoted string 8.0 stays as-is",
+			yamlContent:     "database:\n  type: mysql\n  version: \"8.0\"",
+			expectedVersion: "8.0",
+		},
 	}
-	return false
-}
-func (m *MockConfigProvider) SetDefault(key string, value any)      { m.data[key] = value }
-func (m *MockConfigProvider) Set(key string, value any)             { m.data[key] = value }
-func (m *MockConfigProvider) Unmarshal(rawVal any) error            { return nil }
-func (m *MockConfigProvider) Unset(key string)                      { delete(m.data, key) }
-func (m *MockConfigProvider) ReadConfig(path string) error          { return nil }
-func (m *MockConfigProvider) ReadConfigFromBytes(data []byte) error { return nil }
-func (m *MockConfigProvider) MergeConfig(path string) error         { return nil }
 
-// MockFactory is a mock implementation of ProviderFactory.
-type MockFactory struct{}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tempDir := t.TempDir()
+			configPath := filepath.Join(tempDir, "config.yaml")
 
-func (f *MockFactory) CreateConfigProvider() ConfigProvider {
-	return &MockConfigProvider{data: make(map[string]any)}
-}
+			err := os.WriteFile(configPath, []byte(tc.yamlContent), 0644)
+			require.NoError(t, err)
 
-func (f *MockFactory) LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
-	return nil
+			app := &ReproAppConfig{}
+			err = LoadProjectConfig(configPath, []string{}, app)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expectedVersion, app.Database.Version)
+		})
+	}
 }
 
-func (f *MockFactory) LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides []OverrideConfig, target any) error {
-	return nil
+type ReproDatabaseDesc struct {
+	Type    string `yaml:"type"`
+	Version string `yaml:"version"`
 }
 
-// TestAbstractFactorySwap verifies that we can swap the underlying factory
-// and that the global functions delegate to it.
-func TestAbstractFactorySwap(t *testing.T) {
-	// Backup original factory and config
-	origFactory := factory
-	origConfig := config
-	defer func() {
-		factory = origFactory
-		config = origConfig
-	}()
+type ReproAppConfig struct {
+	Database ReproDatabaseDesc `yaml:"database"`
+	Name     string            `yaml:"name"`
+}
 
-	// Inject MockFactory
-	factory = &MockFactory{}
-	// Re-init global config with the new factory
-	config = factory.CreateConfigProvider()
+func TestReproUnmarshaling(t *testing.T) {
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "config.yaml")
 
-	// Verify that NewConfigProvider returns a MockConfigProvider
-	provider := NewConfigProvider()
-	_, ok := provider.(*MockConfigProvider)
-	require.True(t, ok, "NewConfigProvider should return a MockConfigProvider when MockFactory is injected")
+	content := `
+name: my-app
+database:
+  type: postgres
+  version: 17
+`
+	err := os.WriteFile(configPath, []byte(content), 0644)
+	require.NoError(t, err)
 
-	// Verify that the global config is also using the mock
-	Set("mock_key", "mock_value")
-	require.Equal(t, "mock_value", GetString("mock_key"))
+	app := &ReproAppConfig{
+		Name: "default-name",
+		Database: ReproDatabaseDesc{
+			Type:    "mariadb",
+			Version: "10.11",
+		},
+	}
+
+	err = LoadProjectConfig(configPath, []string{}, app)
+	require.NoError(t, err)
+
+	require.Equal(t, "my-app", app.Name)
+	require.Equal(t, "postgres", app.Database.Type)
+	require.Equal(t, "17", app.Database.Version)
 }

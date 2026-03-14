@@ -10,7 +10,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
-	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/tui"
 	"github.com/ddev/ddev/pkg/updatecheck"
 	"github.com/ddev/ddev/pkg/util"
@@ -145,10 +144,6 @@ func Execute() {
 }
 
 func init() {
-	if err := settings.Init(); err != nil {
-		util.Failed("Failed to initialize settings: %v", err)
-	}
-
 	// This flag represents the output.JSONOutput variable, and parsed very early in pkg/output/output_setup.go
 	RootCmd.PersistentFlags().BoolP("json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 	RootCmd.PersistentFlags().BoolVarP(&ddevapp.SkipHooks, "skip-hooks", "", false, "If true, any hook normally run by the command will be skipped.")
