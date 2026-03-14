@@ -4,4 +4,5 @@ database:
 php_version: 5.6
 webserver_type: apache-fpm
 use_dns_when_possible: false
+override_config: false
 additional_hostnames: [overrideone, overridetwo, z-one]
