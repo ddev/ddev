@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -1826,9 +1827,11 @@ func TestConfigFunctionality(t *testing.T) {
 		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 	}
 
-	// Make sure that the db port is configured
-	out, err = exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
-	require.NoError(t, err, "failed host-side mysql command, output='%v'", out)
+	// Make sure that the db port is configured and accessible from host.
+	// We don't want to require mysql client on host, so just check the port
+	conn, err := net.DialTimeout("tcp", "127.0.0.1:"+hostDBPort, 2*time.Second)
+	require.NoError(t, err, "failed to connect to host-side mysql port %s", hostDBPort)
+	_ = conn.Close()
 }
 
 // TestConfigDefaultContainerTimeout verifies that `default_container_timeout` works
