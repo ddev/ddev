@@ -32,7 +32,7 @@ type OverrideConfig struct {
 // as it does not need to support the heavy lifting of RecursiveMerge that project configurations
 // require for deep map and slice overrides.
 func LoadGlobalConfig(path string, target any) error {
-	factory := &ViperFactory{}
+	factory := getDefaultFactory()
 	cfg := factory.CreateConfigProvider()
 	if err := cfg.ReadConfig(path); err != nil {
 		return err
@@ -42,18 +42,24 @@ func LoadGlobalConfig(path string, target any) error {
 
 // LoadProjectConfig loads a main project config and merges optional overrides into the target struct.
 func LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
-	factory := &ViperFactory{}
+	factory := getDefaultFactory()
 	return factory.LoadProjectConfig(mainPath, overridePaths, target)
 }
 
 // LoadProjectConfigFromContents loads a main project config and merges optional overrides from pre-read bytes.
 func LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides []OverrideConfig, target any) error {
-	factory := &ViperFactory{}
+	factory := getDefaultFactory()
 	return factory.LoadProjectConfigFromContents(mainPath, mainContent, overrides, target)
 }
 
 // NewConfigProvider returns a new ConfigProvider from the default factory.
 func NewConfigProvider() ConfigProvider {
-	factory := &ViperFactory{}
+	factory := getDefaultFactory()
 	return factory.CreateConfigProvider()
+}
+
+// getDefaultFactory returns the default ProviderFactory implementation.
+// This centralizes the choice of the underlying provider (currently Viper).
+func getDefaultFactory() ProviderFactory {
+	return &ViperFactory{}
 }
