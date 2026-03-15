@@ -19,6 +19,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/docker/cli/cli/streams"
 	"github.com/docker/compose/v5/cmd/display"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/compose"
@@ -276,8 +277,21 @@ func ComposeExec(opts ComposeExecOpts) (string, string, error) {
 		stderrW = &stderrBuf
 	}
 
+	if opts.Tty {
+		// For TTY exec, set the DockerCli stdin directly instead of using
+		// compose.WithInputStream, which wraps stdin in a readCloserAdapter
+		// that hides the file descriptor from TTY detection (term.GetFdInfo
+		// only recognizes *os.File, not the adapter).
+		dm, err2 := getDockerManagerInstance()
+		if err2 != nil {
+			return "", "", err2
+		}
+		if stdin, ok := opts.Stdin.(io.ReadCloser); ok {
+			dm.cli.SetIn(streams.NewIn(stdin))
+		}
+	}
 	var extraOpts []compose.Option
-	if opts.Stdin != nil {
+	if !opts.Tty && opts.Stdin != nil {
 		extraOpts = append(extraOpts, compose.WithInputStream(opts.Stdin))
 	}
 	svc, err := newComposeService(stdoutW, stderrW, extraOpts...)
