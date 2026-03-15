@@ -9,22 +9,17 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestCheckCompose tests detection of docker-compose.
-func TestCheckCompose(t *testing.T) {
-	assert := asrt.New(t)
-
-	globalconfig.DockerComposeVersion = ""
-	composeErr := dockerutil.CheckDockerCompose()
-	if composeErr != nil {
+// TestCheckDockerBuildx tests detection of docker-buildx.
+func TestCheckDockerBuildx(t *testing.T) {
+	if buildxErr := dockerutil.CheckDockerBuildxVersion(dockerutil.DockerRequirements); buildxErr != nil {
 		out, err := exec.RunHostCommand(DdevBin, "config", "global")
 		require.NoError(t, err)
 		ddevVersion, err := exec.RunHostCommand(DdevBin, "version")
 		require.NoError(t, err)
-		assert.NoError(composeErr, "RequiredDockerComposeVersion=%s global config=%s ddevVersion=%s", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion, out, ddevVersion)
+		require.NoError(t, buildxErr, "RequiredDockerBuildxVersion=%s global config=%s ddevVersion=%s", globalconfig.DdevGlobalConfig.RequiredDockerBuildxVersion, out, ddevVersion)
 	}
 }
 
@@ -47,7 +42,7 @@ func TestGetCLIPlugins(t *testing.T) {
 
 // TestGetBuildxVersion tests that the buildx version can be retrieved.
 func TestGetBuildxVersion(t *testing.T) {
-	v, err := dockerutil.GetBuildxVersion()
+	v, err := dockerutil.GetDockerBuildxVersion()
 	require.NoError(t, err)
 	require.NotEmpty(t, v, "expected non-empty buildx version")
 	// Version should not have a v prefix (we strip it)
@@ -56,7 +51,7 @@ func TestGetBuildxVersion(t *testing.T) {
 
 // TestGetBuildxLocation tests that the buildx plugin path can be retrieved.
 func TestGetBuildxLocation(t *testing.T) {
-	pluginPath, err := dockerutil.GetBuildxLocation()
+	pluginPath, err := dockerutil.GetDockerBuildxLocation()
 	require.NoError(t, err)
 	require.NotEmpty(t, pluginPath, "expected non-empty buildx plugin path")
 }

@@ -54,9 +54,8 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	_ = app.DockerEnv()
 
-	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	err = dockerutil.ComposeDown(dockerutil.ComposeDownOpts{
 		ComposeFiles: []string{composeFile},
-		Action:       []string{"down"},
 	})
 	if err != nil {
 		util.Warning("failed to docker-compose down on %s: %v", composeFile, err)
@@ -68,9 +67,10 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	}
 
 	// Now restart ddev-ssh-agent
-	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	err = dockerutil.ComposeUp(dockerutil.ComposeUpOpts{
 		ComposeFiles: []string{composeFile},
-		Action:       []string{"-p", SSHAuthName, "up", "--build", "-d"},
+		ProjectName:  SSHAuthName,
+		Build:        true,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
@@ -154,14 +154,18 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		return "", err
 	}
 	files := append([]string{SSHAuthComposeYAMLPath()}, userFiles...)
-	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	project, err := dockerutil.ComposeConfig(dockerutil.ComposeConfigOpts{
 		ComposeFiles: files,
-		Action:       []string{"config"},
 	})
 	if err != nil {
 		return "", err
 	}
-	_, err = fullHandle.WriteString(fullContents)
+	yamlBytes, err := project.MarshalYAML()
+	if err != nil {
+		return "", err
+	}
+	yamlBytes = util.EscapeDollarSign(yamlBytes)
+	_, err = fullHandle.Write(yamlBytes)
 	if err != nil {
 		return "", err
 	}

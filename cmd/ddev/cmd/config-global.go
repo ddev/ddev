@@ -189,9 +189,9 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("required-docker-compose-version").Changed {
-		val, _ := cmd.Flags().GetString("required-docker-compose-version")
-		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = val
+	if cmd.Flag("required-docker-buildx-version").Changed {
+		val, _ := cmd.Flags().GetString("required-docker-buildx-version")
+		globalconfig.DdevGlobalConfig.RequiredDockerBuildxVersion = val
 		dirty = true
 	}
 	if cmd.Flag("project-tld").Changed {
@@ -200,9 +200,9 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("use-docker-compose-from-path").Changed {
-		val, _ := cmd.Flags().GetBool("use-docker-compose-from-path")
-		globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = val
+	if cmd.Flag("use-docker-buildx-from-system").Changed {
+		val, _ := cmd.Flags().GetBool("use-docker-buildx-from-system")
+		globalconfig.DdevGlobalConfig.UseDockerBuildxFromSystem = val
 		dirty = true
 	}
 
@@ -339,12 +339,12 @@ func init() {
 
 	configGlobalCommand.Flags().String("table-style", "default", fmt.Sprintf(`Table style for "ddev list" and "ddev describe", possible values are "%s"`, strings.Join(globalconfig.ValidTableStyleList(), `", "`)))
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("table-style", configCompletionFunc(globalconfig.ValidTableStyleList()))
-	configGlobalCommand.Flags().String("required-docker-compose-version", "", "Override default docker-compose version (used only in development testing)")
-	_ = configGlobalCommand.Flags().MarkHidden("required-docker-compose-version")
+	configGlobalCommand.Flags().String("required-docker-buildx-version", "", "Override default docker-buildx version (used only in development testing)")
+	_ = configGlobalCommand.Flags().MarkHidden("required-docker-buildx-version")
 	configGlobalCommand.Flags().String("project-tld", nodeps.DdevDefaultTLD, "Set the default top-level domain to be used for all projects, can be overridden by project configuration")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("project-tld", configCompletionFunc([]string{nodeps.DdevDefaultTLD}))
-	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", false, fmt.Sprintf("If true, use docker-compose from path instead of private %s (used only in development testing)", fileutil.ShortHomeJoin(globalconfig.GetDDEVBinDir(), "docker-compose")))
-	_ = configGlobalCommand.Flags().MarkHidden("use-docker-compose-from-path")
+	configGlobalCommand.Flags().Bool("use-docker-buildx-from-system", false, fmt.Sprintf("If true, use docker-buildx from system instead of private %s (used only in development testing)", fileutil.ShortHomeJoin(globalconfig.GetDDEVBinDir(), "docker-buildx")))
+	_ = configGlobalCommand.Flags().MarkHidden("use-docker-buildx-from-system")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", false, "If true, don't use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("no-bind-mounts", configCompletionFunc([]string{"true", "false"}))
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it (for advanced use only)")
@@ -357,14 +357,20 @@ func init() {
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("mailpit-http-port", configCompletionFunc([]string{nodeps.DdevDefaultMailpitHTTPPort}))
 	configGlobalCommand.Flags().String("mailpit-https-port", nodeps.DdevDefaultMailpitHTTPSPort, "The default Mailpit HTTPS port for all projects, can be overridden by project configuration")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("mailpit-https-port", configCompletionFunc([]string{nodeps.DdevDefaultMailpitHTTPSPort}))
-	configGlobalCommand.Flags().String("router", globalconfigTypes.RouterTypeTraefik, fmt.Sprintf("The only valid router types are %s", strings.Join(globalconfigTypes.GetValidRouterTypes(), ", ")))
-	_ = configGlobalCommand.Flags().MarkDeprecated("router", "\nThe only router used now is traefik, so --router is no longer needed")
-	_ = configGlobalCommand.Flags().MarkHidden("router")
 	configGlobalCommand.Flags().String("traefik-monitor-port", nodeps.TraefikMonitorPortDefault, `Can be used to change the Traefik monitor port in case of port conflicts, for example "ddev config global --traefik-monitor-port=11999"`)
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("traefik-monitor-port", configCompletionFunc([]string{nodeps.TraefikMonitorPortDefault}))
 	configGlobalCommand.Flags().String("share-default-provider", "", `The default share provider for all projects (ngrok, cloudflared, or custom), can be overridden by project configuration`)
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("share-default-provider", configCompletionFunc([]string{"ngrok", "cloudflared"}))
 	configGlobalCommand.Flags().Bool("no-tui", false, "If true, disable the interactive TUI dashboard when running bare 'ddev'")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("no-tui", configCompletionFunc([]string{"true", "false"}))
+
+	// Deprecated flags
+	configGlobalCommand.Flags().String("required-docker-compose-version", "", "")
+	_ = configGlobalCommand.Flags().MarkDeprecated("required-docker-compose-version", "docker-compose is now embedded")
+	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", false, "")
+	_ = configGlobalCommand.Flags().MarkDeprecated("use-docker-compose-from-path", "docker-compose is now embedded")
+	configGlobalCommand.Flags().String("router", globalconfigTypes.RouterTypeTraefik, "")
+	_ = configGlobalCommand.Flags().MarkDeprecated("router", "traefik is the only router")
+
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

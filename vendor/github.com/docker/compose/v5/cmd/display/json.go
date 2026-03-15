@@ -1,0 +1,81 @@
+/*
+   Copyright 2024 Docker Compose CLI authors
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+package display
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+
+	"github.com/docker/compose/v5/pkg/api"
+)
+
+func JSON(out io.Writer) api.EventProcessor {
+	return &jsonWriter{
+		out: out,
+	}
+}
+
+type jsonWriter struct {
+	out    io.Writer
+	dryRun bool
+}
+
+type jsonMessage struct {
+	DryRun   bool   `json:"dry-run,omitempty"`
+	Tail     bool   `json:"tail,omitempty"`
+	ID       string `json:"id,omitempty"`
+	ParentID string `json:"parent_id,omitempty"`
+	Status   string `json:"status,omitempty"`
+	Text     string `json:"text,omitempty"`
+	Details  string `json:"details,omitempty"`
+	Current  int64  `json:"current,omitempty"`
+	Total    int64  `json:"total,omitempty"`
+	Percent  int    `json:"percent,omitempty"`
+}
+
+func (p *jsonWriter) Start(ctx context.Context, operation string) {
+}
+
+func (p *jsonWriter) Event(e api.Resource) {
+	message := &jsonMessage{
+		DryRun:   p.dryRun,
+		Tail:     false,
+		ID:       e.ID,
+		Status:   e.StatusText(),
+		Text:     e.Text,
+		Details:  e.Details,
+		ParentID: e.ParentID,
+		Current:  e.Current,
+		Total:    e.Total,
+		Percent:  e.Percent,
+	}
+	marshal, err := json.Marshal(message)
+	if err == nil {
+		_, _ = fmt.Fprintln(p.out, string(marshal))
+	}
+}
+
+func (p *jsonWriter) On(events ...api.Resource) {
+	for _, e := range events {
+		p.Event(e)
+	}
+}
+
+func (p *jsonWriter) Done(_ string, _ bool) {
+}

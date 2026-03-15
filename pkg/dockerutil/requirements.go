@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Masterminds/semver/v3"
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -78,47 +77,6 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 	return nil
 }
 
-// CheckDockerCompose determines if docker-compose is present and executable on the host system. This
-// relies on docker-compose being somewhere in the user's $PATH.
-func CheckDockerCompose() error {
-	defer util.TimeTrack()()
-
-	_, err := DownloadDockerComposeIfNeeded()
-	if err != nil {
-		return err
-	}
-	versionConstraint := DockerRequirements.ComposeVersionConstraint
-
-	v, err := GetDockerComposeVersion()
-	if err != nil {
-		return err
-	}
-	dockerComposeVersion, err := semver.NewVersion(v)
-	if err != nil {
-		return err
-	}
-
-	constraint, err := semver.NewConstraint(versionConstraint)
-	if err != nil {
-		return err
-	}
-
-	match, errs := constraint.Validate(dockerComposeVersion)
-	if !match {
-		if len(errs) <= 1 {
-			return errs[0]
-		}
-
-		msgs := "\n"
-		for _, err := range errs {
-			msgs = fmt.Sprint(msgs, err, "\n")
-		}
-		return fmt.Errorf("%s", msgs)
-	}
-
-	return nil
-}
-
 // CanRunWithoutDocker returns true if the command or flag can run without Docker.
 func CanRunWithoutDocker() bool {
 	if len(os.Args) < 2 {
@@ -158,8 +116,8 @@ func CheckAvailableSpace() {
 	}
 }
 
-// GetBuildxVersion returns the version of the Docker buildx plugin.
-func GetBuildxVersion() (string, error) {
+// GetDockerBuildxVersion returns the version of the Docker buildx plugin.
+func GetDockerBuildxVersion() (string, error) {
 	plugin, err := GetCLIPlugin("buildx")
 	if err != nil {
 		return "", err
@@ -168,8 +126,8 @@ func GetBuildxVersion() (string, error) {
 	return strings.TrimPrefix(plugin.Version, "v"), nil
 }
 
-// GetBuildxLocation returns the path to the Docker buildx plugin.
-func GetBuildxLocation() (string, error) {
+// GetDockerBuildxLocation returns the path to the Docker buildx plugin.
+func GetDockerBuildxLocation() (string, error) {
 	plugin, err := GetCLIPlugin("buildx")
 	if err != nil {
 		return "", err
@@ -182,18 +140,15 @@ func GetBuildxLocation() (string, error) {
 func CheckDockerBuildxVersion(dockerVersionMatrix DockerVersionMatrix) error {
 	defer util.TimeTrack()()
 
-	v, err := GetBuildxVersion()
+	v, err := GetDockerBuildxVersion()
 	if err != nil {
-		return fmt.Errorf("compose build requires buildx %s or later: %v.\nPlease install buildx: https://github.com/docker/buildx#installing", dockerVersionMatrix.BuildxVersion, err)
+		return fmt.Errorf("compose build requires buildx %s or later: %v", dockerVersionMatrix.BuildxVersion, err)
 	}
 
-	pluginPath, err := GetBuildxLocation()
-	if err != nil {
-		pluginPath = "unknown"
-	}
+	pluginPath, _ := GetDockerBuildxLocation()
 
 	if versions.LessThan(v, dockerVersionMatrix.BuildxVersion) {
-		return fmt.Errorf("compose build requires buildx %s or later.\nInstalled docker buildx: %s (plugin path: %s)\nPlease update buildx: https://github.com/docker/buildx#installing", dockerVersionMatrix.BuildxVersion, v, pluginPath)
+		return fmt.Errorf("compose build requires buildx %s or later.\nInstalled docker-buildx: %s (plugin path: %q)", dockerVersionMatrix.BuildxVersion, v, pluginPath)
 	}
 
 	return nil
