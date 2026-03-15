@@ -2530,6 +2530,9 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		execOpts.Stdin = os.Stdin
 		execOpts.Stdout = stdout
 		execOpts.Stderr = stderr
+	} else if !isatty.IsTerminal(os.Stdin.Fd()) {
+		// Forward piped stdin so exec commands can read it even without Tty.
+		execOpts.Stdin = os.Stdin
 	}
 	var stdoutResult, stderrResult string
 	stdoutResult, stderrResult, err = dockerutil.ComposeExec(execOpts)

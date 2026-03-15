@@ -83,7 +83,7 @@ type ComposeExecOpts struct {
 	User         string
 	WorkDir      string
 	Env          []string
-	Stdin        io.Reader // If set, use for streaming input
+	Stdin        io.ReadCloser // If set, use for streaming input
 	Stdout       io.Writer // If set, stream output here; nil means capture
 	Stderr       io.Writer
 }
@@ -278,24 +278,28 @@ func ComposeExec(opts ComposeExecOpts) (string, string, error) {
 		stderrW = &stderrBuf
 	}
 
-	if opts.Tty {
-		// For TTY exec, set the DockerCli stdin directly instead of using
+	if opts.Stdin != nil {
+		// Set stdin on the DockerCli singleton directly rather than using
 		// compose.WithInputStream, which wraps stdin in a readCloserAdapter
-		// that hides the file descriptor from TTY detection (term.GetFdInfo
-		// only recognizes *os.File, not the adapter).
+		// that hides *os.File from TTY detection (term.GetFdInfo only
+		// recognizes *os.File, not wrappers).
 		dm, err2 := getDockerManagerInstance()
 		if err2 != nil {
 			return "", "", err2
 		}
-		if stdin, ok := opts.Stdin.(io.ReadCloser); ok {
-			dm.cli.SetIn(streams.NewIn(stdin))
+		in := opts.Stdin
+		if opts.Tty {
+			if f, ok := opts.Stdin.(*os.File); ok {
+				// Dup the fd so restoreTerminal (on Linux) closes only the dup,
+				// leaving the original os.Stdin open for subsequent TTY execs.
+				if dup, err3 := dupStdin(f); err3 == nil {
+					in = dup
+				}
+			}
 		}
+		dm.cli.SetIn(streams.NewIn(in))
 	}
-	var extraOpts []compose.Option
-	if !opts.Tty && opts.Stdin != nil {
-		extraOpts = append(extraOpts, compose.WithInputStream(opts.Stdin))
-	}
-	svc, err := newComposeService(stdoutW, stderrW, extraOpts...)
+	svc, err := newComposeService(stdoutW, stderrW)
 	if err != nil {
 		return "", "", err
 	}
