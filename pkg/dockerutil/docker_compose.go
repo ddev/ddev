@@ -19,6 +19,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/streams"
 	"github.com/docker/compose/v5/cmd/display"
 	"github.com/docker/compose/v5/pkg/api"
@@ -299,7 +300,7 @@ func ComposeExec(opts ComposeExecOpts) (string, string, error) {
 		return "", "", err
 	}
 
-	_, err = svc.Exec(ctx, project.Name, api.RunOptions{
+	exitCode, err := svc.Exec(ctx, project.Name, api.RunOptions{
 		Service:     opts.Service,
 		Command:     opts.Command,
 		Tty:         opts.Tty,
@@ -309,6 +310,13 @@ func ComposeExec(opts ComposeExecOpts) (string, string, error) {
 		User:        opts.User,
 		Environment: opts.Env,
 	})
+	if exitCode != 0 {
+		errMsg := fmt.Sprintf("exit status %d", exitCode)
+		if err != nil && err.Error() != "" {
+			errMsg = err.Error()
+		}
+		err = cli.StatusError{StatusCode: exitCode, Status: errMsg}
+	}
 	return stdoutBuf.String(), stderrBuf.String(), err
 }
 
