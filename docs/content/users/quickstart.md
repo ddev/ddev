@@ -2748,7 +2748,7 @@ Create a Python virtual environment and install Wagtail:
 
 ```bash
 ddev exec python -m venv env
-ddev exec pip install wagtail gunicorn
+ddev exec pip install wagtail
 ```
 
 Initialize the Wagtail project:
@@ -2777,7 +2777,7 @@ Configure DDEV to run the Wagtail development server:
 cat <<'EOF' > .ddev/config.wagtail.yaml
 web_extra_daemons:
     - name: "wagtail"
-      command: "gunicorn mysite.wsgi:application -b 0.0.0.0:8000"
+      command: "python manage.py runserver 0.0.0.0:8000"
       directory: /var/www/html
 web_extra_exposed_ports:
     - name: "wagtail"
@@ -2819,7 +2819,7 @@ ddev launch /admin
     INNEREOF
     ddev start -y
     ddev exec python -m venv env
-    ddev exec pip install wagtail gunicorn
+    ddev exec pip install wagtail
     ddev exec wagtail start mysite .
     ddev exec pip install -r requirements.txt
     ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
@@ -2828,7 +2828,7 @@ ddev launch /admin
     cat <<'INNEREOF' > .ddev/config.wagtail.yaml
     web_extra_daemons:
         - name: "wagtail"
-          command: "gunicorn mysite.wsgi:application -b 0.0.0.0:8000"
+          command: "python manage.py runserver 0.0.0.0:8000"
           directory: /var/www/html
     web_extra_exposed_ports:
         - name: "wagtail"
