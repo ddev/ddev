@@ -98,8 +98,6 @@ extra:
     link: https://stackoverflow.com/tags/ddev
 
   generator: false
-  analytics:
-    provider: plausible
   version: !ENV [READTHEDOCS_VERSION_NAME, 'stable']
 
 # Extensions
