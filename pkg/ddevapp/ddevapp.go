@@ -1434,33 +1434,45 @@ func (app *DdevApp) GetDBImage() string {
 // The race condition causes intermittent failures with "parent snapshot ... does not exist: not found"
 // when multiple services share base layers and build in parallel.
 //
-// args are optional extra arguments to pass to the build command (e.g., service name, "--no-cache")
+// args are optional: service names or "--no-cache"
 // Returns the stdout output on success, or an error if all retries are exhausted.
 func (app *DdevApp) composeBuild(args ...string) (string, error) {
-	progress := "plain"
-
-	action := []string{"--progress=" + progress, "build"}
-	if app.NoCache {
-		action = append(action, "--no-cache")
+	progress := "quiet"
+	if globalconfig.DdevVerbose {
+		progress = "plain"
 	}
-	action = append(action, args...)
+
+	noCache := app.NoCache
+	var services []string
+	for _, arg := range args {
+		if arg == "--no-cache" {
+			noCache = true
+		} else if !strings.HasPrefix(arg, "-") {
+			services = append(services, arg)
+		}
+	}
 
 	var lastErr error
 	var out, stderr string
 
 	for attempt := 1; attempt <= composeBuildMaxRetries; attempt++ {
-		util.Debug("Executing docker-compose -f %s %s (attempt %d/%d)", app.DockerComposeFullRenderedYAMLPath(), strings.Join(action, " "), attempt, composeBuildMaxRetries)
+		util.Debug("Executing docker-compose build -f %s (attempt %d/%d)", app.DockerComposeFullRenderedYAMLPath(), attempt, composeBuildMaxRetries)
 
-		out, stderr, lastErr = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		buildOpts := dockerutil.ComposeBuildOpts{
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-			Action:       action,
-			Progress:     true,
+			ProjectName:  app.GetComposeProjectName(),
+			Services:     services,
+			NoCache:      noCache,
+			Progress:     progress,
+			ShowDots:     progress == "quiet",
 			Timeout:      time.Hour * 1,
-		})
+		}
+
+		out, stderr, lastErr = dockerutil.ComposeBuild(buildOpts)
 
 		if lastErr == nil {
 			// Success
-			if globalconfig.DdevVerbose {
+			if globalconfig.DdevVerbose && out != "" {
 				util.Debug("docker-compose build output:\n%s\n\n", out)
 			}
 			return out, nil
@@ -1472,6 +1484,9 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 
 		if !isSnapshotRace {
 			// Not a snapshot race error, fail immediately without retry
+			if progress == "quiet" {
+				return out, fmt.Errorf("docker-compose build failed: %v", lastErr)
+			}
 			return out, fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", lastErr, out, stderr)
 		}
 
@@ -1482,6 +1497,9 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 	}
 
 	// All retries exhausted
+	if progress == "quiet" {
+		return out, fmt.Errorf("docker-compose build failed after %d attempts: %v", composeBuildMaxRetries, lastErr)
+	}
 	return out, fmt.Errorf("docker-compose build failed after %d attempts: %v, output='%s', stderr='%s'", composeBuildMaxRetries, lastErr, out, stderr)
 }
 
@@ -1496,6 +1514,10 @@ func (app *DdevApp) Start() error {
 		// See https://github.com/moby/moby/issues/45919
 		// See https://github.com/moby/moby/issues/2259
 		return fmt.Errorf("bind mounts can't be used with Docker Rootless.\nRun `ddev config global --no-bind-mounts` and try again")
+	}
+
+	if _, err := dockerutil.DownloadDockerBuildxIfNeeded(); err != nil {
+		return err
 	}
 
 	if err := globalconfig.CheckForMultipleGlobalDdevDirs(); err != nil {
@@ -1530,19 +1552,6 @@ func (app *DdevApp) Start() error {
 	// The project network may have duplicates, we can remove them here.
 	// See https://github.com/ddev/ddev/pull/5508
 	dockerutil.RemoveNetworkDuplicates(app.GetDefaultNetworkName())
-
-	if err = dockerutil.CheckDockerCompose(); err != nil {
-		if os.IsTimeout(err) || strings.Contains(err.Error(), "timeout") {
-			util.Failed(`Failed to download updated docker-compose binary.
-This might be due to network issues or a slow response.
-Please ensure your network is stable and try again:
-%v`, err)
-		} else {
-			util.Failed(`DDEV's private docker-compose binary does not exist or is set to an invalid version.
-Please use DDEV's' built-in docker-compose.
-Fix with 'ddev config global --required-docker-compose-version="" --use-docker-compose-from-path=false': %v`, err)
-		}
-	}
 
 	if nodeps.IsMacOS() {
 		failOnRosetta()
@@ -1845,9 +1854,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
-	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	err = dockerutil.ComposeUp(dockerutil.ComposeUpOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-		Action:       []string{"up", "-d"},
+		ProjectName:  app.GetComposeProjectName(),
 	})
 	if err != nil {
 		return err
@@ -2145,14 +2154,14 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 		}
 	}
 
-	_, stderr, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	err = dockerutil.ComposeUp(dockerutil.ComposeUpOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		ProjectName:  app.GetComposeProjectName(),
 		Profiles:     profiles,
-		Action:       []string{"up", "-d"},
 	})
 
 	if err != nil {
-		util.Warning("Failed to start optional compose profiles '%s': %v, stderr='%s'", profiles, err, stderr)
+		util.Warning("Failed to start optional compose profiles '%s': %v", profiles, err)
 		return err
 	}
 
@@ -2450,7 +2459,7 @@ type ExecOpts struct {
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
-// Returns ComposeCmd results of stdout, stderr, err
+// Returns stdout, stderr, err
 // If Nocapture arg is true, stdout/stderr will be empty and output directly to stdout/stderr
 func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	_ = app.DockerEnv()
@@ -2482,31 +2491,6 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		return "", "", fmt.Errorf("failed to process pre-exec hooks: %v", err)
 	}
 
-	baseComposeExecCmd := []string{"exec"}
-	if opts.Dir != "" {
-		baseComposeExecCmd = append(baseComposeExecCmd, "-w", opts.Dir)
-	}
-
-	if !isatty.IsTerminal(os.Stdin.Fd()) || !opts.Tty {
-		baseComposeExecCmd = append(baseComposeExecCmd, "-T")
-	}
-
-	if opts.Detach {
-		baseComposeExecCmd = append(baseComposeExecCmd, "--detach")
-	}
-
-	if opts.User != "" {
-		baseComposeExecCmd = append(baseComposeExecCmd, "-u", opts.User)
-	}
-
-	if len(opts.Env) > 0 {
-		for _, envVar := range opts.Env {
-			baseComposeExecCmd = append(baseComposeExecCmd, "-e", envVar)
-		}
-	}
-
-	baseComposeExecCmd = append(baseComposeExecCmd, opts.Service)
-
 	// Cases to handle
 	// - Free form, all unquoted. Like `ls -l -a`
 	// - Quoted to delay pipes and other features to container, like `"ls -l -a | grep junk"`
@@ -2532,22 +2516,28 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		stderr = opts.Stderr
 	}
 
-	var stdoutResult, stderrResult string
-	var outRes, errRes string
-	r := append(baseComposeExecCmd, opts.RawCmd...)
-	if opts.NoCapture || opts.Tty {
-		err = dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
-			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-			Action:       r,
-		}, os.Stdin, stdout, stderr)
-	} else {
-		outRes, errRes, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-			Action:       r,
-		})
-		stdoutResult = outRes
-		stderrResult = errRes
+	execOpts := dockerutil.ComposeExecOpts{
+		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		ProjectName:  app.GetComposeProjectName(),
+		Service:      opts.Service,
+		Command:      opts.RawCmd,
+		Tty:          opts.Tty && isatty.IsTerminal(os.Stdin.Fd()),
+		Interactive:  true,
+		Detach:       opts.Detach,
+		User:         opts.User,
+		WorkDir:      opts.Dir,
+		Env:          opts.Env,
 	}
+	if opts.NoCapture || opts.Tty {
+		execOpts.Stdin = os.Stdin
+		execOpts.Stdout = stdout
+		execOpts.Stderr = stderr
+	} else if !isatty.IsTerminal(os.Stdin.Fd()) {
+		// Forward piped stdin so exec commands can read it even without Tty.
+		execOpts.Stdin = os.Stdin
+	}
+	var stdoutResult, stderrResult string
+	stdoutResult, stderrResult, err = dockerutil.ComposeExec(execOpts)
 	if err != nil {
 		return stdoutResult, stderrResult, err
 	}
@@ -2572,25 +2562,6 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 		return fmt.Errorf("service %s is not running in project %s (state=%s)", opts.Service, app.Name, state)
 	}
 
-	args := []string{"exec"}
-
-	// In the case where this is being used without an available tty,
-	// make sure we use the -T to turn off tty to avoid panic in docker-compose v2.2.3
-	// see https://stackoverflow.com/questions/70855915/fix-panic-provided-file-is-not-a-console-from-docker-compose-in-github-action
-	if !term.IsTerminal(int(os.Stdin.Fd())) {
-		args = append(args, "-T")
-	}
-
-	if opts.Dir != "" {
-		args = append(args, "-w", opts.Dir)
-	}
-
-	if opts.User != "" {
-		args = append(args, "-u", opts.User)
-	}
-
-	args = append(args, opts.Service)
-
 	if opts.Cmd == "" {
 		return fmt.Errorf("no command provided")
 	}
@@ -2607,12 +2578,20 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 		shell = "sh"
 	}
 
-	args = append(args, shell, "-c", opts.Cmd)
-
-	return dockerutil.ComposeWithStreams(&dockerutil.ComposeCmdOpts{
+	_, _, err = dockerutil.ComposeExec(dockerutil.ComposeExecOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-		Action:       args,
-	}, os.Stdin, os.Stdout, os.Stderr)
+		ProjectName:  app.GetComposeProjectName(),
+		Service:      opts.Service,
+		Command:      []string{shell, "-c", opts.Cmd},
+		Tty:          term.IsTerminal(int(os.Stdin.Fd())),
+		Interactive:  true,
+		User:         opts.User,
+		WorkDir:      opts.Dir,
+		Stdin:        os.Stdin,
+		Stdout:       os.Stdout,
+		Stderr:       os.Stderr,
+	})
+	return err
 }
 
 func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
@@ -2949,10 +2928,10 @@ func (app *DdevApp) Pause() error {
 
 	_ = SyncAndPauseMutagenSession(app)
 
-	if _, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+	if err := dockerutil.ComposeStop(dockerutil.ComposeStopOpts{
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
+		ProjectName:  app.GetComposeProjectName(),
 		Profiles:     []string{`*`},
-		Action:       []string{"stop"},
 	}); err != nil {
 		return err
 	}

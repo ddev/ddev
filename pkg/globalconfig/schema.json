@@ -136,8 +136,8 @@
         }
       ]
     },
-    "required_docker_compose_version": {
-      "description": "Specific docker-compose version for download.",
+    "required_docker_buildx_version": {
+      "description": "Specific docker-buildx version for download.",
       "type": "string"
     },
     "router_bind_all_interfaces": {
@@ -218,8 +218,8 @@
         }
       ]
     },
-    "use_docker_compose_from_path": {
-      "description": "Whether to use the system-installed docker-compose. You can otherwise use required_docker_compose_version to specify a version for download.",
+    "use_docker_buildx_from_system": {
+      "description": "Whether to use the system-installed docker-buildx. You can otherwise use required_docker_buildx_version to specify a version for download.",
       "type": "boolean"
     },
     "use_hardened_images": {

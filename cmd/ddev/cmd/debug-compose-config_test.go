@@ -18,7 +18,7 @@ services:
 `
 
 // TestComposeConfigCmd ensures the compose-config command behaves
-// as expected with a with a basic docker-compose.override.yaml.
+// as expected with a basic docker-compose.override.yaml.
 func TestComposeConfigCmd(t *testing.T) {
 	// Create a temporary directory and switch to it.
 	tmpdir := testcommon.CreateTmpDir(t.Name())
