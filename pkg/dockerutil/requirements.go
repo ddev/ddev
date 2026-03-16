@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -19,32 +18,18 @@ import (
 )
 
 type DockerVersionMatrix struct {
-	APIVersion               string
-	Version                  string
-	BuildxVersion            string
-	PodmanVersion            string
-	ComposeVersionConstraint string
+	APIVersion    string
+	Version       string
+	PodmanVersion string
 }
 
-// DockerRequirements defines the minimum Docker version required by DDEV.
+// DockerRequirements defines the minimum Docker version recommended by DDEV.
 // We compare using the APIVersion because it's a consistent and reliable value.
 // The Version is displayed to users as it's more readable and user-friendly.
-// The values correspond to the API version matrix found here:
-// https://docs.docker.com/reference/api/engine/#api-version-matrix
-// List of supported Docker versions: https://endoflife.date/docker-engine
-//
-// PodmanVersion is the minimum Podman version supported. If it's empty, Podman is not supported.
-// Podman 4.x doesn't run properly on GitHub runners, so we require Podman 5.0+
-//
-// ComposeVersionConstraint is in sync with https://docs.docker.com/desktop/release-notes/
-// The constraint MUST HAVE a -pre of some kind on it for successful comparison.
-// See https://github.com/ddev/ddev/pull/738 and regression https://github.com/ddev/ddev/issues/1431
 var DockerRequirements = DockerVersionMatrix{
-	APIVersion:               "1.44",
-	Version:                  "25.0",
-	BuildxVersion:            "0.17.0",
-	PodmanVersion:            "5.0",
-	ComposeVersionConstraint: ">= 2.24.3",
+	APIVersion:    versionconstants.DockerMinAPIVersion,
+	Version:       versionconstants.DockerMinVersion,
+	PodmanVersion: versionconstants.PodmanMinVersion,
 }
 
 // CheckDockerVersion determines if the Docker version of the host system meets the provided
@@ -78,47 +63,6 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 	return nil
 }
 
-// CheckDockerCompose determines if docker-compose is present and executable on the host system. This
-// relies on docker-compose being somewhere in the user's $PATH.
-func CheckDockerCompose() error {
-	defer util.TimeTrack()()
-
-	_, err := DownloadDockerComposeIfNeeded()
-	if err != nil {
-		return err
-	}
-	versionConstraint := DockerRequirements.ComposeVersionConstraint
-
-	v, err := GetDockerComposeVersion()
-	if err != nil {
-		return err
-	}
-	dockerComposeVersion, err := semver.NewVersion(v)
-	if err != nil {
-		return err
-	}
-
-	constraint, err := semver.NewConstraint(versionConstraint)
-	if err != nil {
-		return err
-	}
-
-	match, errs := constraint.Validate(dockerComposeVersion)
-	if !match {
-		if len(errs) <= 1 {
-			return errs[0]
-		}
-
-		msgs := "\n"
-		for _, err := range errs {
-			msgs = fmt.Sprint(msgs, err, "\n")
-		}
-		return fmt.Errorf("%s", msgs)
-	}
-
-	return nil
-}
-
 // CanRunWithoutDocker returns true if the command or flag can run without Docker.
 func CanRunWithoutDocker() bool {
 	if len(os.Args) < 2 {
@@ -134,8 +78,8 @@ func CanRunWithoutDocker() bool {
 	if len(os.Args) == 2 && output.ParseBoolFlag("json-output", "j") {
 		return true
 	}
-	// help and hostname should not require docker
-	if slices.Contains([]string{"help", "hostname"}, os.Args[1]) {
+	// Some commands don't require docker
+	if slices.Contains([]string{"config", "help", "hostname", "version"}, os.Args[1]) {
 		return true
 	}
 	return false
@@ -156,47 +100,6 @@ func CheckAvailableSpace() {
 	if spaceAbsolute < nodeps.MinimumDockerSpaceWarning {
 		util.Error("Your Docker install has only %d available disk space, less than %d warning level (%d%% used). Please increase disk image size. More info at %s", spaceAbsolute, nodeps.MinimumDockerSpaceWarning, spacePercent, "https://docs.ddev.com/en/stable/users/usage/troubleshooting/#out-of-disk-space")
 	}
-}
-
-// GetBuildxVersion returns the version of the Docker buildx plugin.
-func GetBuildxVersion() (string, error) {
-	plugin, err := GetCLIPlugin("buildx")
-	if err != nil {
-		return "", err
-	}
-	// Strip leading "v" prefix if present for semver compatibility
-	return strings.TrimPrefix(plugin.Version, "v"), nil
-}
-
-// GetBuildxLocation returns the path to the Docker buildx plugin.
-func GetBuildxLocation() (string, error) {
-	plugin, err := GetCLIPlugin("buildx")
-	if err != nil {
-		return "", err
-	}
-	return plugin.Path, nil
-}
-
-// CheckDockerBuildxVersion checks that the Docker buildx plugin is installed
-// and meets the minimum version requirement.
-func CheckDockerBuildxVersion(dockerVersionMatrix DockerVersionMatrix) error {
-	defer util.TimeTrack()()
-
-	v, err := GetBuildxVersion()
-	if err != nil {
-		return fmt.Errorf("compose build requires buildx %s or later: %v.\nPlease install buildx: https://github.com/docker/buildx#installing\nMore details: https://ddev.com/blog/docker-buildx-requirement-v1-25-1/", dockerVersionMatrix.BuildxVersion, err)
-	}
-
-	pluginPath, err := GetBuildxLocation()
-	if err != nil {
-		pluginPath = "unknown"
-	}
-
-	if versions.LessThan(v, dockerVersionMatrix.BuildxVersion) {
-		return fmt.Errorf("compose build requires buildx %s or later.\nInstalled docker buildx: %s (plugin path: %s)\nPlease update buildx: https://github.com/docker/buildx#installing\nMore details: https://ddev.com/blog/docker-buildx-requirement-v1-25-1/", dockerVersionMatrix.BuildxVersion, v, pluginPath)
-	}
-
-	return nil
 }
 
 // CheckDockerAuth checks if Docker authentication is properly configured

@@ -1,315 +1,170 @@
 package dockerutil
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
-	"time"
 
 	"github.com/compose-spec/compose-go/v2/loader"
 	"github.com/compose-spec/compose-go/v2/types"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/docker/cli/cli"
+	"github.com/docker/cli/cli/streams"
+	"github.com/docker/compose/v5/cmd/display"
+	"github.com/docker/compose/v5/pkg/api"
+	"github.com/docker/compose/v5/pkg/compose"
 	"github.com/mattn/go-isatty"
+	"github.com/sirupsen/logrus"
 )
 
-type ComposeCmdOpts struct {
-	ComposeFiles []string
-	ComposeYaml  *types.Project
-	Profiles     []string
-	Action       []string
-	Progress     bool // Add dots every second while the compose command is running
-	Timeout      time.Duration
-	ProjectName  string // Optional project name to set via -p flag
-	Env          []string
+// LoadComposeProject loads a compose project from files using the upstream compose library.
+// opts.ConfigPaths is set from files; opts.WorkingDir defaults to filepath.Dir(files[0]) if empty.
+// Uses the cached singleton compose service (no stream/progress output) and its background context.
+func LoadComposeProject(files []string, opts api.ProjectLoadOptions) (*types.Project, error) {
+	if opts.ProjectName == "" {
+		return nil, errors.New("LoadComposeProject: ProjectName must not be empty")
+	}
+	if opts.WorkingDir == "" && len(files) > 0 {
+		opts.WorkingDir = filepath.Dir(files[0])
+	}
+	opts.ConfigPaths = files
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return nil, err
+	}
+	return dm.composeForLoad.LoadProject(dm.goContext, opts)
 }
 
-// ComposeWithStreams executes a docker-compose command but allows the caller to specify
-// stdin/stdout/stderr
-func ComposeWithStreams(cmd *ComposeCmdOpts, stdin io.Reader, stdout io.Writer, stderr io.Writer) error {
-	defer util.TimeTrack()()
-
-	var arg []string
-
-	_, err := DownloadDockerComposeIfNeeded()
-	if err != nil {
-		return err
-	}
-
-	if cmd.ProjectName != "" {
-		arg = append(arg, "-p", cmd.ProjectName)
-	}
-
-	if cmd.ComposeYaml != nil {
-		// Read from stdin
-		arg = append(arg, "-f", "-")
-	} else {
-		for _, file := range cmd.ComposeFiles {
-			arg = append(arg, "-f", file)
-		}
-	}
-
-	arg = append(arg, cmd.Action...)
-
-	path, err := globalconfig.GetDockerComposePath()
-	if err != nil {
-		return err
-	}
-	proc := exec.Command(path, arg...)
-	proc.Stdout = stdout
-	proc.Stderr = stderr
-	if cmd.ComposeYaml != nil {
-		yamlBytes, err := cmd.ComposeYaml.MarshalYAML()
-		if err != nil {
-			return err
-		}
-		yamlBytes = util.EscapeDollarSign(yamlBytes)
-		proc.Stdin = strings.NewReader(string(yamlBytes))
-	} else {
-		proc.Stdin = stdin
-	}
-	proc.Env = append(os.Environ(), cmd.Env...)
-
-	err = proc.Run()
-	return err
+// NewComposeService creates a compose service backed by the singleton Docker CLI.
+func NewComposeService() (context.Context, api.Compose, error) {
+	return NewComposeServiceWithStreams(output.UserErr.Out, output.UserErr.Out)
 }
 
-// ComposeCmd executes docker-compose commands via shell.
-// returns stdout, stderr, error/nil
-func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
-	var arg []string
-	var stdout bytes.Buffer
-	var stderr string
+// NewComposeServiceWithStreams creates a compose service backed by the singleton Docker CLI.
+func NewComposeServiceWithStreams(stdout, stderr io.Writer) (context.Context, api.Compose, error) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return nil, nil, err
+	}
+	var ep api.EventProcessor
+	if !output.JSONOutput && isatty.IsTerminal(os.Stdout.Fd()) {
+		ep = display.Full(stdout, stderr, false)
+	} else {
+		progressOut := output.UserErr.Out
+		if output.JSONOutput {
+			progressOut = &output.JSONProgressWriter{}
+		}
+		ep = display.Plain(progressOut)
+	}
+	opts := []compose.Option{
+		compose.WithOutputStream(stdout),
+		compose.WithErrorStream(stderr),
+		compose.WithEventProcessor(ep),
+	}
+	svc, err := compose.NewComposeService(dm.cli, opts...)
+	return dm.goContext, svc, err
+}
 
-	_, err := DownloadDockerComposeIfNeeded()
+// ExitCodeToError converts the (exitCode, err) return of api.Compose.Exec /
+// RunOneOffContainer into a single error usable with errors.As(&cli.StatusError{}).
+//
+// docker/cli's container.RunExec returns cli.StatusError with StatusCode set
+// but an empty Status field
+// (vendor/github.com/docker/cli/cli/command/container/exec.go:215),
+// so callers that print err.Error() see an empty string. This helper attaches
+// a default "exit status N" message in that case while preserving any non-empty
+// Status the upstream layer already provided.
+func ExitCodeToError(exitCode int, err error) error {
+	if exitCode == 0 {
+		return err
+	}
+	msg := fmt.Sprintf("exit status %d", exitCode)
+	if err != nil && err.Error() != "" {
+		msg = err.Error()
+	}
+	return cli.StatusError{StatusCode: exitCode, Status: msg}
+}
+
+// CaptureOutput runs fn against a compose service whose stdout/stderr are buffered,
+// returning the captured strings. Use only when output text is genuinely needed (e.g. build retry detection).
+func CaptureOutput(fn func(svc api.Compose) error) (string, string, error) {
+	var stdoutBuf, stderrBuf bytes.Buffer
+	_, svc, err := NewComposeServiceWithStreams(&stdoutBuf, &stderrBuf)
 	if err != nil {
 		return "", "", err
 	}
+	err = fn(svc)
+	return cleanOutput(stdoutBuf.String()), cleanOutput(stderrBuf.String()), err
+}
 
-	if cmd.ProjectName != "" {
-		arg = append(arg, "-p", cmd.ProjectName)
+// cleanOutput strips ANSI escape codes and carriage-return overwrite sequences so
+// captured compose output is safe to embed in log messages and errors.
+func cleanOutput(s string) string {
+	s = regexp.MustCompile(`\x1b[^a-zA-Z]*[a-zA-Z]`).ReplaceAllString(s, "")
+	s = strings.ReplaceAll(s, "\r", "")
+	return s
+}
+
+// SetExecStdin installs `in` as the stdin of the singleton DockerCli for the
+// duration of one compose Exec/Run call, returning a restore closure the
+// caller MUST defer.
+//
+// Why mutate the singleton instead of using compose.WithInputStream:
+// vendor/github.com/docker/compose/v5/pkg/compose/compose.go wraps any
+// caller-supplied input through a readCloserAdapter inside wrapDockerCliWithStreams
+// (https://github.com/docker/compose/blob/v5.1.3/pkg/compose/compose.go#L283-L301).
+// That adapter drops the underlying *os.File, so streams.In.SetRawTerminal()
+// — which docker/cli's hijack setupInput needs for TTY exec — fails. The only
+// way to give compose a *os.File-backed streams.In today is to set it on the
+// shared DockerCli before the call. ddev's CLI is single-threaded for exec, so
+// the singleton mutation is safe in practice; this function is NOT safe for
+// concurrent use.
+//
+// On TTY paths we also hand compose a dup of the file descriptor so the
+// restoreTerminal->in.Close() call in
+// vendor/github.com/docker/cli/cli/command/container/hijack.go (line 211)
+// (https://github.com/docker/cli/blob/v29.4.0/cli/command/container/hijack.go#L211)
+// lands on the dup, not on the ddev process's real fd 0. The dup is closed
+// here on restore so it does not leak when compose declines to close it
+// (darwin, windows) or on non-TTY exec where setupInput returns a no-op
+// restore (line 96 in the same file).
+func SetExecStdin(in io.ReadCloser, tty bool) (restore func(), err error) {
+	dm, err := getDockerManagerInstance()
+	if err != nil {
+		return func() {}, err
 	}
-
-	if cmd.ComposeYaml != nil {
-		// Read from stdin
-		arg = append(arg, "-f", "-")
-	} else {
-		for _, file := range cmd.ComposeFiles {
-			arg = append(arg, "-f", file)
+	var dupFile *os.File
+	if tty {
+		if f, ok := in.(*os.File); ok {
+			if dup, dupErr := dupStdin(f); dupErr == nil && dup != f {
+				// dup != f filters out the windows pass-through, where dupStdin
+				// returns the original *os.File and we must not close it.
+				in = dup
+				dupFile = dup
+			}
 		}
 	}
-
-	for _, profile := range cmd.Profiles {
-		arg = append(arg, "--profile", profile)
-	}
-
-	arg = append(arg, cmd.Action...)
-
-	path, err := globalconfig.GetDockerComposePath()
-	if err != nil {
-		return "", "", err
-	}
-
-	ctx := context.Background()
-	if cmd.Timeout > 0 {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, cmd.Timeout)
-		defer cancel()
-	}
-	proc := exec.CommandContext(ctx, path, arg...)
-	proc.Stdout = &stdout
-	if cmd.ComposeYaml != nil {
-		yamlBytes, err := cmd.ComposeYaml.MarshalYAML()
-		if err != nil {
-			return "", "", err
+	prevIn := dm.cli.In()
+	dm.cli.SetIn(streams.NewIn(in))
+	return func() {
+		dm.cli.SetIn(prevIn)
+		if dupFile != nil {
+			// Compose's hijack may have already closed the underlying fd on
+			// linux TTY paths; *os.File.Close on an already-closed fd returns
+			// an error that is safe to discard.
+			_ = dupFile.Close()
 		}
-		yamlBytes = util.EscapeDollarSign(yamlBytes)
-		proc.Stdin = strings.NewReader(string(yamlBytes))
-	} else {
-		proc.Stdin = os.Stdin
-	}
-	proc.Env = append(os.Environ(), cmd.Env...)
-
-	stderrPipe, err := proc.StderrPipe()
-	if err != nil {
-		return "", "", fmt.Errorf("failed to proc.StderrPipe(): %v", err)
-	}
-
-	if err = proc.Start(); err != nil {
-		return "", "", fmt.Errorf("failed to exec docker-compose: %v", err)
-	}
-
-	stderrOutput := bufio.NewScanner(stderrPipe)
-
-	// Ignore chatty things from docker-compose like:
-	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
-	// Container Stopped or Created
-	// No resource found to remove (when doing a stop and no project exists)
-	ignoreRegex := "(^ *(Network|Container|Image|Volume|Service) .* (Creat|Start|Stopp|Remov|Build|Buil|Runn)(ing|t) $|.* Built$|^ *Container .*(Build|Stopp|Recreat|Creat)(ed|ing) *$|No services to build|Warning: No resource found to remove|Warning: Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
-	downRE, err := regexp.Compile(ignoreRegex)
-	if err != nil {
-		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
-	}
-
-	var done chan bool
-	if cmd.Progress {
-		done = util.ShowDots()
-	}
-	for stderrOutput.Scan() {
-		line := stderrOutput.Text()
-		if len(stderr) > 0 {
-			stderr = stderr + "\n"
-		}
-		stderr = stderr + line
-		line = strings.Trim(line, "\n\r")
-		switch {
-		case downRE.MatchString(line):
-			break
-		default:
-			output.UserOut.Println(line)
-		}
-	}
-
-	err = proc.Wait()
-	if cmd.Progress {
-		done <- true
-	}
-
-	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return stdout.String(), stderr, fmt.Errorf("composeCmd timed out after %v and failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", cmd.Timeout, os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
-	}
-	if err != nil {
-		return stdout.String(), stderr, fmt.Errorf("composeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), cmd.Action, err, stdout.String(), stderr)
-	}
-	return stdout.String(), stderr, nil
+	}, nil
 }
 
-// GetDockerComposeVersion runs docker-compose -v to get the current version
-func GetDockerComposeVersion() (string, error) {
-	if globalconfig.DockerComposeVersion != "" {
-		return globalconfig.DockerComposeVersion, nil
-	}
-
-	return GetLiveDockerComposeVersion()
-}
-
-// GetLiveDockerComposeVersion runs `docker-compose --version` and caches result
-func GetLiveDockerComposeVersion() (string, error) {
-	if globalconfig.DockerComposeVersion != "" {
-		return globalconfig.DockerComposeVersion, nil
-	}
-
-	composePath, err := globalconfig.GetDockerComposePath()
-	if err != nil {
-		return "", err
-	}
-
-	if !fileutil.FileExists(composePath) {
-		globalconfig.DockerComposeVersion = ""
-		return globalconfig.DockerComposeVersion, fmt.Errorf("docker-compose does not exist at %s", composePath)
-	}
-	out, err := exec.Command(composePath, "version", "--short").Output()
-	if err != nil {
-		return "", err
-	}
-	v := strings.Trim(string(out), "\r\n")
-
-	// docker-compose v1 and v2.3.3 return a version without the prefix "v", so add it.
-	if !strings.HasPrefix(v, "v") {
-		v = "v" + v
-	}
-
-	globalconfig.DockerComposeVersion = v
-	return globalconfig.DockerComposeVersion, nil
-}
-
-// DownloadDockerComposeIfNeeded downloads the proper version of docker-compose
-// if it's either not yet installed or has the wrong version.
-// Returns downloaded bool (true if it did the download) and err
-func DownloadDockerComposeIfNeeded() (bool, error) {
-	requiredVersion := globalconfig.GetRequiredDockerComposeVersion()
-	var err error
-	if requiredVersion == "" {
-		util.Debug("globalconfig use_docker_compose_from_path is set, so not downloading")
-		return false, nil
-	}
-	curVersion, err := GetLiveDockerComposeVersion()
-	if err != nil || curVersion != requiredVersion {
-		err = DownloadDockerCompose()
-		if err == nil {
-			return true, err
-		}
-	}
-	return false, err
-}
-
-// DownloadDockerCompose gets the docker-compose binary and puts it into
-// ~/.ddev/.bin
-func DownloadDockerCompose() error {
-	globalBinDir := globalconfig.GetDDEVBinDir()
-	destFile, _ := globalconfig.GetDockerComposePath()
-
-	composeURL, shasumURL, err := dockerComposeDownloadLink()
-	if err != nil {
-		return err
-	}
-	util.Debug("Downloading '%s' to '%s' ...", composeURL, destFile)
-
-	_ = os.Remove(destFile)
-
-	_ = os.MkdirAll(globalBinDir, 0777)
-	err = util.DownloadFile(destFile, composeURL, globalconfig.IsInteractive(), shasumURL)
-	if err != nil {
-		_ = os.Remove(destFile)
-		return err
-	}
-	output.UserErr.Printf("Download complete.")
-
-	// Remove the cached DockerComposeVersion
-	globalconfig.DockerComposeVersion = ""
-
-	err = util.Chmod(destFile, 0755)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// dockerComposeDownloadLink returns the URL and SHASUM-file link for docker-compose
-func dockerComposeDownloadLink() (composeURL string, shasumURL string, err error) {
-	arch := runtime.GOARCH
-
-	switch arch {
-	case "arm64":
-		arch = "aarch64"
-	case "amd64":
-		arch = "x86_64"
-	default:
-		return "", "", fmt.Errorf("only ARM64 and AMD64 architectures are supported for docker-compose, not %s", arch)
-	}
-	flavor := runtime.GOOS + "-" + arch
-	composerURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", globalconfig.GetRequiredDockerComposeVersion(), flavor)
-	if nodeps.IsWindows() {
-		composerURL = composerURL + ".exe"
-	}
-	shasumURL = fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/checksums.txt", globalconfig.GetRequiredDockerComposeVersion())
-
-	return composerURL, shasumURL, nil
-}
-
-// CreateComposeProject creates a compose project from a string
+// CreateComposeProject creates a compose project from a YAML string.
 func CreateComposeProject(yamlStr string) (*types.Project, error) {
 	project, err := loader.LoadWithContext(
 		context.Background(),
@@ -352,17 +207,17 @@ func CreateComposeProject(yamlStr string) (*types.Project, error) {
 	return project, nil
 }
 
-// PullImages pulls images in parallel if they don't exist locally
-// If pullAlways is true, it will always pull
-// Otherwise, it will only pull if the image doesn't exist
+// PullImages pulls images in parallel if they don't exist locally.
+// If pullAlways is true, it will always pull.
 func PullImages(images []string, pullAlways bool) error {
 	if len(images) == 0 {
 		return nil
 	}
 
-	composeYamlPull, err := CreateComposeProject("name: compose-yaml-pull")
-	if err != nil {
-		return err
+	// Build a minimal project directly without a YAML round-trip.
+	project := &types.Project{
+		Name:     "compose-yaml-pull",
+		Services: types.Services{},
 	}
 
 	for _, image := range images {
@@ -375,45 +230,35 @@ func PullImages(images []string, pullAlways bool) error {
 			}
 		}
 		service := sanitizeServiceName(image)
-		if _, exists := composeYamlPull.Services[service]; exists {
+		if _, exists := project.Services[service]; exists {
 			continue
 		}
-		composeYamlPull.Services[service] = types.ServiceConfig{
+		project.Services[service] = types.ServiceConfig{
 			Image: image,
 		}
 		util.Debug(`Pulling image for %s ("%s" service)`, image, service)
 	}
 
-	if len(composeYamlPull.Services) == 0 {
+	if len(project.Services) == 0 {
 		util.Debug("All images already exist locally, no pull needed")
 		return nil
 	}
 
-	if !output.JSONOutput && isatty.IsTerminal(os.Stdin.Fd()) {
-		err = ComposeWithStreams(&ComposeCmdOpts{
-			ComposeYaml: composeYamlPull,
-			Action:      []string{"pull"},
-			Env:         []string{"COMPOSE_DISABLE_ENV_FILE=1"},
-		}, nil, os.Stdout, os.Stderr)
-	} else {
-		_, _, err = ComposeCmd(&ComposeCmdOpts{
-			ComposeYaml: composeYamlPull,
-			Action:      []string{"pull"},
-			Env:         []string{"COMPOSE_DISABLE_ENV_FILE=1"},
-		})
+	pullCtx, pullSvc, pullErr := NewComposeService()
+	if pullErr != nil {
+		return pullErr
 	}
-
-	return err
+	return pullSvc.Pull(pullCtx, project, api.PullOptions{})
 }
 
-// Pull pulls image if it doesn't exist locally
+// Pull pulls image if it doesn't exist locally.
 func Pull(image string) error {
 	return PullImages([]string{image}, false)
 }
 
 // sanitizeServiceName sanitizes a string to be a valid Docker Compose service name
-// by replacing any characters that don't match [a-zA-Z0-9._-] with hyphens
-// See https://github.com/compose-spec/compose-go/blob/main/schema/compose-spec.json for allowed pattern
+// by replacing any characters that don't match [a-zA-Z0-9._-] with hyphens.
+// See https://github.com/compose-spec/compose-go/blob/main/schema/compose-spec.json for allowed pattern.
 func sanitizeServiceName(input string) string {
 	if input == "" {
 		return ""
@@ -428,4 +273,54 @@ func sanitizeServiceName(input string) string {
 	sanitized = strings.Trim(sanitized, "-")
 
 	return sanitized
+}
+
+// suppressedLogrusMessages are substrings that, when matched against a logrus
+// entry's Message, cause the entry to be silently dropped at format time. Used
+// to silence known-harmless compose noise (notably the project-level
+// "Warning: No resource found to remove" warning emitted by compose Down at
+// vendor/github.com/docker/compose/v5/pkg/compose/down.go:117).
+var suppressedLogrusMessages = []string{
+	"No resource found to remove",
+}
+
+// suppressLogrusFormatter wraps an underlying logrus.Formatter and returns
+// (nil, nil) for entries whose Message matches a suppressedLogrusMessages
+// substring. Returning empty bytes makes logrus's downstream Out.Write a
+// no-op, suppressing the entry without touching the output writer or the log
+// level. Non-matching entries are formatted by the underlying formatter.
+//
+// Installed once at package init via setupLogrusSuppression so we don't
+// mutate global state per call. Compose hardwires logrus.StandardLogger,
+// so a global filter is the only knob available; making it permanent
+// removes the per-call SetOutput race the previous implementation had.
+type suppressLogrusFormatter struct {
+	underlying logrus.Formatter
+	suppress   []string
+}
+
+func (f *suppressLogrusFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	for _, s := range f.suppress {
+		if strings.Contains(entry.Message, s) {
+			return nil, nil
+		}
+	}
+	return f.underlying.Format(entry)
+}
+
+// setupLogrusSuppression installs a suppressLogrusFormatter on the given
+// logger if one is not already installed. Idempotent; safe to call multiple
+// times.
+func setupLogrusSuppression(logger *logrus.Logger) {
+	if _, alreadyWrapped := logger.Formatter.(*suppressLogrusFormatter); alreadyWrapped {
+		return
+	}
+	logger.SetFormatter(&suppressLogrusFormatter{
+		underlying: logger.Formatter,
+		suppress:   suppressedLogrusMessages,
+	})
+}
+
+func init() {
+	setupLogrusSuppression(logrus.StandardLogger())
 }

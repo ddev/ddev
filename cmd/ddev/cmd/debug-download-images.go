@@ -5,7 +5,6 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
@@ -29,12 +28,8 @@ ddev utility download-images --all
 			util.Failed("Cannot specify project name with --all")
 		}
 
-		_, err := dockerutil.DownloadDockerComposeIfNeeded()
-		if err != nil {
-			util.Failed("Unable to download docker-compose: %v", err)
-		}
 		if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
-			err = ddevapp.DownloadMutagenIfNeeded()
+			err := ddevapp.DownloadMutagenIfNeeded()
 			if err != nil {
 				util.Warning("Unable to download Mutagen: %v", err)
 			}

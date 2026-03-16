@@ -28,12 +28,9 @@ var versionCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		_, err := dockerutil.DownloadDockerComposeIfNeeded()
-		if err != nil {
-			util.Failed("Failed to check for and download docker-compose: %v", err)
-		}
+		_, buildxErr := dockerutil.DownloadDockerBuildxIfNeeded()
 
-		v := version.GetVersionInfo()
+		v, dockerErr := version.GetVersionInfo()
 
 		// If in a project context, show the project's actual web image instead of the default.
 		if app, err := ddevapp.GetActiveApp(""); err == nil {
@@ -63,6 +60,12 @@ var versionCmd = &cobra.Command{
 		t.Render()
 		output.UserOut.WithField("raw", v).Println(out.String())
 		amplitude.CheckSetUp()
+
+		if dockerErr != nil {
+			util.Failed("Docker error: %v\nFor help go to: https://docs.ddev.com/en/stable/users/install/docker-installation/#troubleshooting-docker", dockerErr)
+		} else if buildxErr != nil {
+			util.Failed("Docker buildx error: %v", buildxErr)
+		}
 	},
 }
 

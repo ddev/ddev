@@ -19,6 +19,8 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/docker/compose/v5/cmd/display"
+	"github.com/docker/compose/v5/pkg/api"
 	"github.com/moby/moby/api/types/container"
 )
 
@@ -158,10 +160,23 @@ func StartDdevRouter() error {
 		}
 
 		// Run docker-compose up -d against the ddev-router full compose file
-		_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-			ProjectName:  RouterComposeProjectName,
-			ComposeFiles: []string{routerComposeFullPath},
-			Action:       []string{"up", "--build", "-d"},
+		routerProject, loadErr := dockerutil.LoadComposeProject([]string{routerComposeFullPath}, api.ProjectLoadOptions{
+			ProjectName: RouterComposeProjectName,
+		})
+		if loadErr != nil {
+			return fmt.Errorf("failed to start ddev-router: %v", loadErr)
+		}
+		upCtx, routerSvc, svcErr := dockerutil.NewComposeService()
+		if svcErr != nil {
+			return fmt.Errorf("failed to start ddev-router: %v", svcErr)
+		}
+		progress := display.ModeQuiet
+		if globalconfig.DdevVerbose {
+			progress = display.ModePlain
+		}
+		err = routerSvc.Up(upCtx, routerProject, api.UpOptions{
+			Create: api.CreateOptions{Build: &api.BuildOptions{Progress: progress}},
+			Start:  api.StartOptions{Project: routerProject},
 		})
 		if err != nil {
 			return fmt.Errorf("failed to start ddev-router: %v", err)
@@ -283,15 +298,13 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 		return "", err
 	}
 	files := append([]string{RouterComposeYAMLPath()}, userFiles...)
-	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: files,
-		Action:       []string{"config"},
+	project, err := dockerutil.LoadComposeProject(files, api.ProjectLoadOptions{
+		ProjectName: RouterComposeProjectName,
 	})
 	if err != nil {
 		return "", err
 	}
-	project, err := dockerutil.CreateComposeProject(fullContents)
-	if err != nil {
+	if err = project.CheckContainerNameUnicity(); err != nil {
 		return "", err
 	}
 	injectDdevLabels(project, nil)
@@ -299,6 +312,7 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	fullContentsBytes = util.EscapeDollarSign(fullContentsBytes)
 	_, err = fullHandle.Write(fullContentsBytes)
 	if err != nil {
 		return "", err

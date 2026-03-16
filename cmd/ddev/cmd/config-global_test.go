@@ -40,7 +40,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// nolint: errcheck
 	t.Cleanup(func() {
 		// Even though the global config is going to be deleted, make sure it's sane before leaving
-		args := []string{"config", "global", "--omit-containers", "", "--performance-mode-reset", "--simple-formatting=false", "--table-style=default", `--required-docker-compose-version=""`, `--use-docker-compose-from-path=false`, `--xdebug-ide-location`, "", `--traefik-monitor-port=10999`}
+		args := []string{"config", "global", "--omit-containers", "", "--performance-mode-reset", "--simple-formatting=false", "--table-style=default", `--xdebug-ide-location`, "", `--traefik-monitor-port=10999`, `--docker-buildx-version=system`}
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
 		out, err := exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "error running ddev config global; output=%s", out)
@@ -77,8 +77,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "simple-formatting=false")
 	assert.Contains(out, "use-hardened-images=false")
 	assert.Contains(out, "fail-on-hook-fail=false")
-	assert.Contains(out, fmt.Sprintf("required-docker-compose-version=%s", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
-	assert.Contains(out, "use-docker-compose-from-path=false")
 	assert.Contains(out, "project-tld="+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 	assert.Contains(out, "xdebug-ide-location=")
 	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
@@ -89,6 +87,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "traefik-monitor-port=10999")
 	assert.Contains(out, "omit-project-name-by-default=false")
 	assert.Contains(out, "omit-snapshot-on-delete=false")
+	assert.Contains(out, "docker-buildx-version=system")
 
 	// Update a config
 	// Don't include no-bind-mounts because global testing
@@ -110,11 +109,8 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "simple-formatting=true")
 	assert.Contains(out, "use-hardened-images=true")
 	assert.Contains(out, "fail-on-hook-fail=true")
-	assert.Contains(out, fmt.Sprintf("required-docker-compose-version=%s", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
-	assert.Contains(out, "use-docker-compose-from-path=false")
 	assert.Contains(out, "project-tld=")
 	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
-
 	assert.Contains(out, "xdebug-ide-location=container")
 	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
 	assert.Contains(out, "router-http-port=8081")
@@ -122,6 +118,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(out, "mailpit-http-port=18025")
 	assert.Contains(out, "mailpit-https-port=10826")
 	assert.Contains(out, "traefik-monitor-port=11999")
+	assert.Contains(out, "docker-buildx-version=system")
 
 	globalconfig.EnsureGlobalConfig()
 	assert.False(globalconfig.DdevGlobalConfig.InstrumentationOptIn)

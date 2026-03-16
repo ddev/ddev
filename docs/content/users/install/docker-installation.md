@@ -54,7 +54,6 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     Rancher Desktop is an easy-to-install free and open-source Docker provider. Install from [Rancher Desktop](https://rancherdesktop.io/). It has automated testing with DDEV. When installing, choose only the Docker option and turn off Kubernetes.
 
-
     ### Colima
 
     [Colima](https://github.com/abiosoft/colima) is a free and open-source project which bundles Lima.

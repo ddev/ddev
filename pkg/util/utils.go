@@ -143,10 +143,11 @@ func Verbose(format string, a ...any) {
 	output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
 }
 
-// ShowDots displays dots one per second until done gets true
-func ShowDots() chan bool {
-	done := make(chan bool)
-	go func() {
+// ShowDots displays dots one per second. Call the returned function to stop and flush the newline.
+func ShowDots() func() {
+	done := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Go(func() {
 		for {
 			select {
 			case <-done:
@@ -161,8 +162,11 @@ func ShowDots() chan bool {
 				time.Sleep(1 * time.Second)
 			}
 		}
-	}()
-	return done
+	})
+	return func() {
+		close(done)
+		wg.Wait()
+	}
 }
 
 // FormatPlural is a simple wrapper which returns different strings based on the count value.

@@ -14,6 +14,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/docker/compose/v5/pkg/api"
 )
 
 // WriteDockerComposeYAML writes a .ddev-docker-compose-base.yaml and related to the .ddev directory.
@@ -69,20 +70,19 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
-	var action []string
-	for _, envFile := range envFiles {
-		action = append(action, "--env-file", envFile)
-	}
-	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: files,
-		Profiles:     []string{`*`},
-		Action:       append(action, "config"),
+	project, err := dockerutil.LoadComposeProject(files, api.ProjectLoadOptions{
+		ProjectName: app.GetComposeProjectName(),
+		Profiles:    []string{`*`},
+		EnvFiles:    envFiles,
 	})
 	if err != nil {
 		return err
 	}
+	if err = project.CheckContainerNameUnicity(); err != nil {
+		return err
+	}
 
-	app.ComposeYaml, err = fixupComposeYaml(fullContents, app)
+	app.ComposeYaml, err = fixupComposeYaml(project, app)
 	if err != nil {
 		return err
 	}
@@ -225,12 +225,7 @@ func injectDdevLabels(project *composeTypes.Project, app *DdevApp) {
 
 // fixupComposeYaml makes minor changes to the `docker-compose config` output
 // to make sure extra services are always compatible with ddev.
-func fixupComposeYaml(yamlStr string, app *DdevApp) (*composeTypes.Project, error) {
-	project, err := dockerutil.CreateComposeProject(yamlStr)
-	if err != nil {
-		return project, err
-	}
-
+func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeTypes.Project, error) {
 	envFiles, err := app.EnvFiles()
 	if err != nil {
 		return project, err
