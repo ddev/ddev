@@ -12,7 +12,7 @@ teardown() {
 }
 
 @test "Wagtail quickstart with $(ddev --version)" {
-  _skip_if_embargoed "wagtail-gunicorn"
+  _skip_if_embargoed "wagtail-python"
 
   WAGTAIL_SITENAME=${PROJNAME}
   run mkdir -p ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
@@ -39,7 +39,7 @@ DOCKERFILEEND
   run ddev exec python -m venv env
   assert_success
 
-  run ddev exec pip install wagtail gunicorn
+  run ddev exec pip install wagtail
   assert_success
 
   run ddev exec wagtail start mysite .
@@ -61,7 +61,7 @@ DOCKERFILEEND
   cat <<'EOF' > .ddev/config.wagtail.yaml
 web_extra_daemons:
     - name: "wagtail"
-      command: "gunicorn mysite.wsgi:application -b 0.0.0.0:8000"
+      command: "python manage.py runserver 0.0.0.0:8000"
       directory: /var/www/html
 web_extra_exposed_ports:
     - name: "wagtail"
@@ -81,26 +81,18 @@ EOF
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
   assert_success
 
-  # Wait for gunicorn (web_extra_daemon) to be ready - DDEV doesn't poll extra daemons for readiness
-  for i in $(seq 1 15); do
-    if ddev exec curl -sf --max-time 3 http://localhost:8000 >/dev/null 2>&1; then
-      break
-    fi
-    sleep 2
-  done
-
   # validate running project - check if Wagtail is responding
-  run curl -sfI --max-time 30 https://${PROJNAME}.ddev.site
-  assert_output --partial "server: gunicorn"
+  run curl -sfI https://${PROJNAME}.ddev.site
+  assert_line --regexp 'server:.*WSGIServer.*CPython.*'
   assert_success
 
   # Verify main site is running
-  run curl -sf --max-time 30 https://${PROJNAME}.ddev.site
+  run curl -sf https://${PROJNAME}.ddev.site
   assert_output --partial "Welcome to your new Wagtail site"
   assert_success
 
   # Check if we can access the admin page (should redirect to login)
-  run curl -sfL --max-time 30 https://${PROJNAME}.ddev.site/admin
+  run curl -sfL https://${PROJNAME}.ddev.site/admin
   assert_output --partial "Sign in - Wagtail"
   assert_success
 }
