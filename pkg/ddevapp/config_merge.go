@@ -1,7 +1,6 @@
 package ddevapp
 
 import (
-	"fmt"
 	"strings"
 
 	"dario.cat/mergo"
@@ -46,24 +45,22 @@ func (app *DdevApp) mergeAdditionalConfigIntoApp(configPath string) error {
 	return nil
 }
 
-// EnvToUniqueEnv() makes sure that only the last occurrence of an env (NAME=val)
-// slice is actually retained.
+// EnvToUniqueEnv() makes sure that only the last occurrence of an env (NAME=val or bare NAME)
+// slice is actually retained. Bare variable names without a value (e.g. "MY_VAR") are passed
+// through as-is; docker-compose resolves them from the host environment at container start time.
 func EnvToUniqueEnv(inSlice *[]string) []string {
 	mapStore := map[string]string{}
-	newSlice := []string{}
 
 	for _, s := range *inSlice {
-		// config.yaml vars look like ENV1=val1 and ENV2=val2
-		// Split them and then make sure the last one wins
-		k, v, found := strings.Cut(s, "=")
-		// If we didn't find the "=" delimiter, it wasn't an env
-		if !found {
-			continue
-		}
-		mapStore[k] = v
+		// Both "KEY=value" and bare "KEY" are supported.
+		// strings.Cut returns the part before "=" as the key in both cases.
+		// Last entry for a given key wins.
+		k, _, _ := strings.Cut(s, "=")
+		mapStore[k] = s
 	}
-	for k, v := range mapStore {
-		newSlice = append(newSlice, fmt.Sprintf("%s=%v", k, v))
+	newSlice := make([]string, 0, len(mapStore))
+	for _, v := range mapStore {
+		newSlice = append(newSlice, v)
 	}
 	if len(newSlice) == 0 {
 		return nil
