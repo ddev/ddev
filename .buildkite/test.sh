@@ -3,8 +3,11 @@
 
 set -eu -o pipefail
 
+# Disable git pager
+export GIT_PAGER=""
+
 # We can skip builds with commit message of [skip buildkite] or [skip ci]
-DDEV_COMMIT_MESSAGE=$(GIT_PAGER="" git log -1 --pretty=%s 2>/dev/null || echo "")
+DDEV_COMMIT_MESSAGE=$(git log -1 --pretty=%s 2>/dev/null || echo "")
 if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAGE:-} == *"[skip ci]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip buildkite]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip ci]"* ]]; then
   echo "Skipping build because message has '[skip buildkite]' or '[skip ci]':"
   echo "BUILDKITE_MESSAGE=${BUILDKITE_MESSAGE:-}"
@@ -314,7 +317,7 @@ if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ]; then
   # Find the merge base between the PR branch and the base branch
   MERGE_BASE=$(git merge-base HEAD refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-})
   # Check if there are any changes in the specified directories or files since the merge base
-  if ! git diff --name-only "$MERGE_BASE" | egrep -q '^(?:\.buildkite/|Makefile$|pkg/|cmd/|vendor/|winpkg/|go\.)'; then
+  if ! git diff --name-only "$MERGE_BASE" | grep -E '^(\.buildkite/|Makefile$|pkg/|cmd/|vendor/|winpkg/|go\.)' >/dev/null; then
     echo "Skipping buildkite build since no code changes found"
     exit 0
   fi
