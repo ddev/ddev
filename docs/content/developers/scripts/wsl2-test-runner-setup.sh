@@ -28,8 +28,8 @@ sudo apt-get install -qq -y apt-transport-https autojump bats build-essential ca
 # docker-ce if required
 if [ "${BUILDKITE_DOCKER_TYPE:-}" = "wsl2" ]; then
   sudo mkdir -p /etc/apt/keyrings
-  sudo mkdir -p /etc/apt/keyrings && sudo rm -f /etc/apt/keyrings/docker.gpg && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc > /dev/null && sudo chmod a+r /etc/apt/keyrings/docker.asc
+  printf "Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n" "$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")" | sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null
   sudo apt-get -qq update >/dev/null && sudo apt-get install -qq -y docker-ce docker-ce-cli etckeeper containerd.io docker-compose-plugin >/dev/null
   sudo usermod -aG docker $USER
 fi
@@ -46,9 +46,9 @@ curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
   && sudo apt-get install -y ngrok >/dev/null
 
 # ddev
-sudo rm -f /etc/apt/keyrings/ddev.gpg
-sudo bash -c "rm -f /etc/apt/keyrings/ddev.gpg && curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"
-sudo bash -c 'echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ \* \* > /etc/apt/sources.list.d/ddev.list'
+sudo rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list
+sudo bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key | tee /etc/apt/keyrings/ddev.asc > /dev/null && chmod a+r /etc/apt/keyrings/ddev.asc"
+sudo bash -c "printf 'Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n' > /etc/apt/sources.list.d/ddev.sources"
 sudo apt-get -qq update >/dev/null && sudo apt-get install -qq -y ddev ddev-wsl2 >/dev/null
 
 # Buildkite-agent
