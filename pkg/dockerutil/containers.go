@@ -399,7 +399,19 @@ func ContainersWait(waittime int, labels map[string]string, filterServices ...st
 				}
 			}
 
-			if totalCount == 0 {
+			// Ensure every requested service has at least one container.
+			// Without this, we could return success before a service
+			// (e.g. db) has registered with the Docker API.
+			if len(filterServices) > 0 {
+				for _, svc := range filterServices {
+					if !slices.ContainsFunc(containers, func(c container.Summary) bool {
+						return c.Labels["com.docker.compose.service"] == svc
+					}) {
+						allHealthy = false
+						break
+					}
+				}
+			} else if totalCount == 0 {
 				allHealthy = false
 			}
 
