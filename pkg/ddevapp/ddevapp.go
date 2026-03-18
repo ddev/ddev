@@ -1583,10 +1583,15 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	err = PullBaseContainerImages(additionalImages, false)
-	if err != nil {
-		util.Warning("Unable to pull Docker images: %v", err)
-	}
+	// Pull images in background while config prep continues
+	var pullWg sync.WaitGroup
+	pullWg.Add(1)
+	go func() {
+		defer pullWg.Done()
+		if pullErr := PullBaseContainerImages(additionalImages, false); pullErr != nil {
+			util.Warning("Unable to pull Docker images: %v", pullErr)
+		}
+	}()
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		// OK to start if dbType is empty (nonexistent) or if it matches
@@ -1852,7 +1857,8 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	// Wait for chown + SSH to finish before proceeding
+	// Wait for background image pull and chown + SSH to finish before proceeding
+	pullWg.Wait()
 	chownWg.Wait()
 	if chownErr != nil {
 		return chownErr
