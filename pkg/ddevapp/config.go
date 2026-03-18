@@ -21,6 +21,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
 	"go.yaml.in/yaml/v4"
@@ -362,13 +363,9 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 	if app.ConfigPath == "" {
 		app.ConfigPath = app.GetConfigPath("config.yaml")
 	}
-	// Load base .ddev/config.yaml - original config
-	err := app.LoadConfigYamlFile(app.ConfigPath)
-	if err != nil {
-		return []string{}, fmt.Errorf("unable to load config file %s: %v", app.ConfigPath, err)
-	}
 
 	configOverrides := []string{}
+	var err error
 	// Load config.*.y*ml after in glob order
 	if includeOverrides {
 		glob := filepath.Join(filepath.Dir(app.ConfigPath), "config.*.y*ml")
@@ -376,48 +373,84 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		if err != nil {
 			return []string{}, err
 		}
+	}
 
-		for _, item := range configOverrides {
-			err = app.mergeAdditionalConfigIntoApp(item)
+	allFiles := append([]string{app.ConfigPath}, configOverrides...)
+	fileContents := make(map[string][]byte)
 
-			if err != nil {
-				return []string{}, fmt.Errorf("unable to load config file %s: %v", item, err)
-			}
+	// Add Pre-Load Validation (Hook Checks)
+	for _, file := range allFiles {
+		source, err := os.ReadFile(file)
+		if err != nil {
+			return []string{}, fmt.Errorf("unable to read config file %s: %v", file, err)
 		}
+		err = validateHookYAML(source)
+		if err != nil {
+			return []string{}, fmt.Errorf("invalid configuration in %s: %v", file, err)
+		}
+		fileContents[file] = source
 	}
 
 	// Sort WebExtraExposedPorts so the entry matching configured router ports comes first
 	SortWebExtraExposedPorts(app)
 
-	return append([]string{app.ConfigPath}, configOverrides...), nil
+	// Determine overrides and their contents in correct order
+	var overrides []settings.OverrideConfig
+	var overrideKeys []string
+	for _, f := range configOverrides {
+		if f != app.ConfigPath {
+			overrides = append(overrides, settings.OverrideConfig{
+				Path:    f,
+				Content: fileContents[f],
+			})
+			overrideKeys = append(overrideKeys, f)
+		}
+	}
+
+	err = settings.LoadProjectConfigFromContents(app.ConfigPath, fileContents[app.ConfigPath], overrides, app)
+	if err != nil {
+		return []string{}, fmt.Errorf("failed to load project config: %v", err)
+	}
+
+	app.ConfigPostLoadCleanup()
+
+	return append([]string{app.ConfigPath}, overrideKeys...), nil
 }
 
 // LoadConfigYamlFile loads one config.yaml into app, overriding what might be there.
 func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
-	source, err := os.ReadFile(filePath)
+	// Implement Single-Step Loading for a single file ONLY
+	err := settings.LoadProjectConfig(filePath, []string{}, app)
 	if err != nil {
-		return fmt.Errorf("could not find an active DDEV configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
+		return fmt.Errorf("unable to load config: %v", err)
 	}
 
-	// Validate extend command keys
-	err = validateHookYAML(source)
-	if err != nil {
-		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
-	}
+	// Sort WebExtraExposedPorts so the entry matching configured router ports comes first
+	SortWebExtraExposedPorts(app)
 
-	// ReadConfig config values from file.
-	err = yaml.Unmarshal(source, app)
-	if err != nil {
-		return err
-	}
+	app.ConfigPostLoadCleanup()
 
-	// Handle UploadDirs value which can take multiple types.
+	// Add Post-Load Validation (Upload Dirs)
 	err = app.validateUploadDirs()
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// ConfigPostLoadCleanup performs cleanup of configuration after loading/merging.
+// This ensures parity with the removed mergeAdditionalConfigIntoApp function.
+func (app *DdevApp) ConfigPostLoadCleanup() {
+	// Make sure we don't have absolutely identical items in our resultant arrays
+	for _, arr := range []*[]string{&app.WebImageExtraPackages, &app.DBImageExtraPackages, &app.AdditionalHostnames, &app.AdditionalFQDNs, &app.OmitContainers} {
+		if arr != nil && *arr != nil {
+			*arr = util.SliceToUniqueSlice(arr)
+		}
+	}
+
+	// WebEnvironment needs special handling via EnvToUniqueEnv
+	app.WebEnvironment = EnvToUniqueEnv(&app.WebEnvironment)
 }
 
 // WarnIfConfigReplace messages user about whether config is being replaced or created

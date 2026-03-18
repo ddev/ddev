@@ -25,8 +25,3 @@ import (
 	_ "github.com/docker/compose/v5/pkg/api"
 	_ "github.com/docker/compose/v5/pkg/compose"
 )
-
-// For Viper https://github.com/ddev/ddev/pull/8181
-import (
-	_ "github.com/spf13/viper"
-)
