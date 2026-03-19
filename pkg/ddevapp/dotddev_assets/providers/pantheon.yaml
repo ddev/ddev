@@ -98,12 +98,10 @@ db_pull_command:
       echo "Downloading latest database backup from Pantheon..."
       terminus backup:get ${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT} --element=database --to=db.sql.gz
     else
-      echo "Dumping and streaming fresh/current database dump (this may take several minutes)... (You can use DDEV_USE_PANTHEON_BACKUP=true to skip this step and use an existing backup)"
-      FRESH_DB_DUMP_STRING=$(terminus connection:info "${DDEV_PANTHEON_SITE}.${DDEV_PANTHEON_ENVIRONMENT}" --field=mysql_command | sed 's,^mysql,mysqldump --no-autocommit --single-transaction --opt -Q,')
-      if [ "${DDEV_DEBUG:-}" = "true" ]; then
-        echo "Debug: FRESH_DB_DUMP_STRING=$FRESH_DB_DUMP_STRING"
-      fi
-      eval "$FRESH_DB_DUMP_STRING | gzip" | dd bs=1M status=progress of=db.sql.gz
+      terminus ldb ${DDEV_PANTHEON_SITE} --overwrite --yes
+      # Gunzip works, but doesn't think it does, end silently.
+      gunzip -q $HOME/pantheon-local-copies/db/${DDEV_PANTHEON_SITE}-db.tgz | tar tvzf - &> /dev/null || true
+      mv $HOME/pantheon-local-copies/db/${DDEV_PANTHEON_SITE}-db.tar /var/www/html/.ddev/.downloads/db.sql
     fi
     echo "Database download complete"
 
