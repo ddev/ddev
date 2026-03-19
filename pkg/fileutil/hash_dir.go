@@ -16,12 +16,8 @@ import (
 func HashDir(dir string) (string, error) {
 	h := sha256.New()
 
-	type fileEntry struct {
-		rel     string
-		content []byte
-	}
-
-	var entries []fileEntry
+	// Collect relative paths first, then sort for deterministic order.
+	var files []string
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -33,25 +29,27 @@ func HashDir(dir string) (string, error) {
 		if err != nil {
 			return fmt.Errorf("failed to get relative path for %s: %w", path, err)
 		}
-		content, err := os.ReadFile(path)
-		if err != nil {
-			return fmt.Errorf("failed to read %s: %w", path, err)
-		}
-		entries = append(entries, fileEntry{rel: rel, content: content})
+		files = append(files, rel)
 		return nil
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to walk directory %s: %w", dir, err)
 	}
 
-	// Sort by relative path for deterministic ordering
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].rel < entries[j].rel
-	})
+	sort.Strings(files)
 
-	for _, e := range entries {
-		h.Write([]byte(e.rel))
-		h.Write(e.content)
+	// Stream each file into the hash to avoid holding all content in memory.
+	for _, rel := range files {
+		io.WriteString(h, rel)
+		f, err := os.Open(filepath.Join(dir, rel))
+		if err != nil {
+			return "", fmt.Errorf("failed to open %s: %w", rel, err)
+		}
+		_, err = io.Copy(h, f)
+		f.Close()
+		if err != nil {
+			return "", fmt.Errorf("failed to hash %s: %w", rel, err)
+		}
 	}
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
