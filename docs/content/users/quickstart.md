@@ -1432,7 +1432,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         mkdir -p my-laravel-sqlite-site && cd my-laravel-sqlite-site
         ddev config --project-type=laravel --docroot=public --omit-containers=db
         ddev start -y
-        ddev composer create-project "laravel/laravel:^13"
+        ddev composer create-project laravel/laravel
         ddev launch
         EOF
         chmod +x setup-laravel-sqlite.sh
