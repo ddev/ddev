@@ -1413,7 +1413,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Install Laravel via Composer:
 
     ```bash
-    ddev composer create-project "laravel/laravel:^13"
+    ddev composer create-project laravel/laravel
     ```
 
     Launch the site:
