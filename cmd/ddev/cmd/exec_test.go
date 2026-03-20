@@ -53,6 +53,11 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "/var/www/html")
 
+	// Test specifying project and service: instead of the current folder WordPress project, run this on our Drupal project.
+	out, err = exec.RunHostCommand(DdevBin, "-p", TestSites[1].Name, "-s", "web", "exec", "ls")
+	assert.NoError(err)
+	assert.Contains(out, "modules")
+
 	// Test specifying service
 	out, err = exec.RunHostCommand(DdevBin, "-s", "db", "exec", "pwd")
 	assert.NoError(err)
