@@ -153,7 +153,7 @@ type DdevApp struct {
 }
 
 // SkipHooks Global variable that's set from --skip-hooks global flag.
-// If true, all hooks would be skiped.
+// If true, all hooks would be skipped.
 var SkipHooks = false
 
 // GetType returns the application type as a (lowercase) string
