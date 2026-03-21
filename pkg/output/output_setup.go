@@ -146,8 +146,9 @@ func (w *WaitTimer) Complete(err error) time.Duration {
 }
 
 // isEnvTrue returns true if the given environment variable
-// is set to "true" or "1". This is a local copy to avoid an
-// import cycle with pkg/nodeps.
+// is set to "true" or "1". This duplicates nodeps.IsEnvTrue()
+// because pkg/nodeps imports pkg/output (via wsl.go), creating
+// an import cycle if we import nodeps here.
 func isEnvTrue(envVar string) bool {
 	val := os.Getenv(envVar)
 	return val == "true" || val == "1"
