@@ -502,6 +502,7 @@ func TestAutocompleteServiceForServiceFlag(t *testing.T) {
 		assert.NotContains(out, "xhgui")
 
 		// check with project argument
+		// Excluding exec because exec uses a flag, see TestProjectAutocompletionForExecCmd
 		if cmd != "exec" {
 			out, err := exec.RunHostCommand(DdevBin, "__complete", cmd, site.Name, "-s", "")
 			assert.NoError(err)
@@ -518,6 +519,45 @@ func TestAutocompleteServiceForServiceFlag(t *testing.T) {
 	assert.Contains(out, "web")
 	assert.Contains(out, "db")
 	assert.Contains(out, "xhgui")
+}
+
+// TestProjectAutocompletionForExecCmd checks autocompletion of project names for ddev exec
+func TestProjectAutocompletionForExecCmd(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Skip if we don't have enough tests.
+	if len(TestSites) < 2 {
+		t.Skip("Must have at least two test sites to test autocompletion")
+	}
+	origDir, _ := os.Getwd()
+
+	t.Cleanup(func() {
+		removeSites()
+		_ = os.Chdir(origDir)
+	})
+
+	// Make sure we have some sites.
+	err := addSites()
+	require.NoError(t, err)
+
+	var siteNames []string
+	for _, site := range TestSites {
+		siteNames = append(siteNames, site.Name)
+	}
+
+	// ddev exec completion should show all project names
+	out, err := exec.RunHostCommand(DdevBin, "__complete", "exec", "--project", "")
+	assert.NoError(err)
+	filteredOut := getTestingSitesFromOutput(out)
+	for _, name := range siteNames {
+		assert.Contains(filteredOut, name)
+	}
+
+	// If there's already a project, nothing more should be suggested
+	out, err = exec.RunHostCommand(DdevBin, "__complete", "exec", "--project", "anything", "")
+	assert.NoError(err)
+	filteredOut = getTestingSitesFromOutput(out)
+	assert.Empty(filteredOut)
 }
 
 // TestAutocompleteTermsForCustomCmds tests the AutocompleteTerms annotation for custom host and container commands
