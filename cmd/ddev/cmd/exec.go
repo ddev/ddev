@@ -129,6 +129,7 @@ func init() {
 	DdevExecCmd.Flags().BoolP("quiet", "q", false, "Suppress detailed error output")
 	DdevExecCmd.Flags().StringVarP(&serviceUser, "user", "u", "", "Defines the user to use within the container")
 	DdevExecCmd.Flags().StringP("project", "p", "", "Project to use, defaults to the one for the current directory")
+	_ = DdevExecCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
 	// This requires flags for exec to be specified prior to any arguments, allowing for
 	// flags to be ignored by cobra for commands that are to be executed in a container.
 	DdevExecCmd.Flags().SetInterspersed(false)
