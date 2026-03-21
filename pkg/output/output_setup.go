@@ -19,7 +19,7 @@ var (
 		l := log.New()
 		l.SetOutput(os.Stdout)
 		logLevel := log.InfoLevel
-		if os.Getenv("DDEV_DEBUG") == "true" || os.Getenv("DDEV_VERBOSE") == "true" {
+		if isEnvTrue("DDEV_DEBUG") || isEnvTrue("DDEV_VERBOSE") {
 			logLevel = log.DebugLevel
 		}
 		l.SetLevel(logLevel)
@@ -124,7 +124,7 @@ type WaitTimer struct {
 func StartWait(message string) *WaitTimer {
 	if !JSONOutput {
 		_, _ = fmt.Fprintf(os.Stdout, "%s...", message)
-		if os.Getenv("DDEV_DEBUG") == "true" || os.Getenv("DDEV_VERBOSE") == "true" {
+		if isEnvTrue("DDEV_DEBUG") || isEnvTrue("DDEV_VERBOSE") {
 			_, _ = fmt.Fprintln(os.Stdout)
 		}
 	}
@@ -143,4 +143,12 @@ func (w *WaitTimer) Complete(err error) time.Duration {
 		}
 	}
 	return elapsed
+}
+
+// isEnvTrue returns true if the given environment variable
+// is set to "true" or "1". This is a local copy to avoid an
+// import cycle with pkg/nodeps.
+func isEnvTrue(envVar string) bool {
+	val := os.Getenv(envVar)
+	return val == "true" || val == "1"
 }
