@@ -117,6 +117,7 @@ jobs:
     runs-on: ${{ inputs.runner }}
 
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
       BUILDKIT_PROGRESS: plain
       DOCKER_CLI_EXPERIMENTAL: enabled
       DDEV_DEBUG: true
