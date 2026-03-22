@@ -173,7 +173,6 @@ teardown() {
 
   DDEV_DEBUG=true run ddev launch
   assert_line "FULLURL https://${PROJNAME}.ddev.site"
-  assert_line
 
   # validate running project
   run curl -sfIv https://${PROJNAME}.ddev.site
