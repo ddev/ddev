@@ -243,7 +243,7 @@ services:
     - PGHOST=db
     - PGPASSWORD=db
     - PGUSER=db
-    - PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
+    - PHP_IDE_CONFIG=serverName={{ .Name | lower }}.${DDEV_TLD}
     - SSH_AUTH_SOCK=/home/.ssh-agent/socket
     - TZ={{ .Timezone }}
     - USER={{ .Username }}

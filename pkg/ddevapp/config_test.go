@@ -256,6 +256,44 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	assert.Contains(contentString, app.Type)
 }
 
+// TestPHPIDEConfigLowercase verifies that PHP_IDE_CONFIG uses a lowercase project name,
+// ensuring PhpStorm server name matching works for projects with uppercase names.
+// See https://github.com/ddev/ddev/issues/8225.
+func TestPHPIDEConfigLowercase(t *testing.T) {
+	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
+	testDir := testcommon.CreateTmpDir(t.Name())
+
+	app, err := ddevapp.NewApp(testDir, true)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
+
+	app.Name = "ISSUE-123"
+	app.Type = ddevapp.GetValidAppTypes()[0]
+
+	err = app.WriteConfig()
+	require.NoError(t, err)
+	_ = app.DockerEnv()
+	err = app.WriteDockerComposeYAML()
+	require.NoError(t, err)
+
+	composeBytes, err := os.ReadFile(app.DockerComposeYAMLPath())
+	require.NoError(t, err)
+	contentString := string(composeBytes)
+
+	// PHP_IDE_CONFIG serverName must be lowercase to match the server name nginx sends,
+	// so PhpStorm can match CLI and web-request debugging sessions to the same server.
+	assert.Contains(contentString, "PHP_IDE_CONFIG=serverName=issue-123.")
+	assert.NotContains(contentString, "PHP_IDE_CONFIG=serverName=ISSUE-123.")
+}
+
 // TestConfigCommand tests the interactive config options.
 func TestConfigCommand(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
