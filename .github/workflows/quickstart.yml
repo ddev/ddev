@@ -34,6 +34,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   # Add tests you want to skip here, delimited by pipe (e.g., symfony-composer|symfony-cli)
   # Search for _skip_if_embargoed to see how this is used

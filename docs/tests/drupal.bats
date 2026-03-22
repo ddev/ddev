@@ -34,7 +34,7 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_line "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
   # validate running project
@@ -67,7 +67,7 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_line "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
   # validate running project
@@ -100,7 +100,7 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_line "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
   # validate running project
@@ -134,7 +134,7 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_line "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
   # validate running project
@@ -172,8 +172,7 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
-  assert_success
+  assert_line "FULLURL https://${PROJNAME}.ddev.site"
 
   # validate running project
   run curl -sfIv https://${PROJNAME}.ddev.site

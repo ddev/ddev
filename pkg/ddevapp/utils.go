@@ -566,7 +566,7 @@ func CheckDdevVersionConstraint(constraint string, errorPrefix string, errorSuff
 		// Pre-releases need '-0' added for validation
 		normalizedConstraint = normalizeConstraint(constraint)
 	}
-	util.Debug("Comparing constraint '%s' against version '%s'", normalizedConstraint, versionconstants.DdevVersion)
+	util.Verbose("Comparing constraint '%s' against version '%s'", normalizedConstraint, versionconstants.DdevVersion)
 	if errorPrefix == "" {
 		errorPrefix = "error"
 	}
