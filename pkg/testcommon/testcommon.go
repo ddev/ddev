@@ -450,7 +450,7 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 // Parameters can be either:
 // - HTTPRequestOpts struct with TimeoutSeconds and MaxRetries fields
 // - int representing timeout seconds (for backward compatibility)
-func GetLocalHTTPResponse(t *testing.T, rawurl string, params ...interface{}) (string, *http.Response, error) {
+func GetLocalHTTPResponse(t *testing.T, rawurl string, params ...any) (string, *http.Response, error) {
 	options := parseHTTPRequestOpts(60, params...)
 
 	timeoutTime := time.Duration(options.TimeoutSeconds) * time.Second
@@ -543,7 +543,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, params ...interface{}) (s
 // duration. params follow the same conventions as GetLocalHTTPResponse
 // (HTTPRequestOpts or int timeout). The inner call has MaxRetries forced to 1
 // to avoid nested retries.
-func GetLocalHTTPResponseWithBackoff(t *testing.T, rawurl string, attempts int, initialDelay time.Duration, params ...interface{}) (string, *http.Response, error) {
+func GetLocalHTTPResponseWithBackoff(t *testing.T, rawurl string, attempts int, initialDelay time.Duration, params ...any) (string, *http.Response, error) {
 	if attempts < 1 {
 		attempts = 1
 	}
@@ -581,7 +581,7 @@ func GetLocalHTTPResponseWithBackoff(t *testing.T, rawurl string, attempts int, 
 // Parameters can be either:
 // - HTTPRequestOpts struct with TimeoutSeconds and MaxRetries fields
 // - int representing timeout seconds (for backward compatibility)
-func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, params ...interface{}) (*http.Response, error) {
+func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, params ...any) (*http.Response, error) {
 	options := parseHTTPRequestOpts(40, params...)
 	assert := asrt.New(t)
 
@@ -619,7 +619,7 @@ type PortPair struct {
 }
 
 // parseHTTPRequestOpts extracts HTTPRequestOpts from interface{} parameters with defaults
-func parseHTTPRequestOpts(defaultTimeout int, params ...interface{}) HTTPRequestOpts {
+func parseHTTPRequestOpts(defaultTimeout int, params ...any) HTTPRequestOpts {
 	var options HTTPRequestOpts
 
 	// Handle different parameter types for backward compatibility

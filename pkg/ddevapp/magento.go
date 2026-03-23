@@ -51,7 +51,7 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		templateVars := map[string]interface{}{"DBHostname": "db"}
+		templateVars := map[string]any{"DBHostname": "db"}
 		err = fileutil.TemplateStringToFile(string(content), templateVars, app.SiteSettingsPath)
 		if err != nil {
 			return "", err
@@ -142,7 +142,7 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 			return "", err
 		}
 
-		templateVars := map[string]interface{}{"DBHostname": "db"}
+		templateVars := map[string]any{"DBHostname": "db"}
 		err = fileutil.TemplateStringToFile(string(content), templateVars, app.SiteSettingsPath)
 		if err != nil {
 			return "", err

@@ -194,7 +194,7 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 		return fmt.Errorf("could not parse action '%s': %v", action, err)
 	}
 
-	yamlMap := make(map[string]interface{})
+	yamlMap := make(map[string]any)
 	yamlMap["DdevGlobalConfig"], err = util.YamlFileToMap(globalconfig.GetGlobalConfigPath())
 	if err != nil {
 		util.Warning("Unable to read file %s: %v", globalconfig.GetGlobalConfigPath(), err)
@@ -208,7 +208,7 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 		}
 	}
 	// Get project config with overrides
-	var projectConfigMap map[string]interface{}
+	var projectConfigMap map[string]any
 	if b, err := yaml.Marshal(app); err != nil {
 		util.Warning("Unable to marshal app: %v", err)
 	} else if err = yaml.Unmarshal(b, &projectConfigMap); err != nil {
@@ -1032,8 +1032,8 @@ func ParseRuntimeDependencies(runtimeDepsFile string) ([]string, error) {
 	}
 
 	var dependencies []string
-	lines := strings.Split(content, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(content, "\n")
+	for line := range lines {
 		line = strings.TrimSpace(line)
 		// Skip empty lines and comments
 		if line == "" || strings.HasPrefix(line, "#") {
@@ -1066,8 +1066,8 @@ func NormalizeAddonIdentifier(addonIdentifier string) string {
 	base := filepath.Base(addonIdentifier)
 	// Remove common archive extensions
 	for _, ext := range []string{".tar.gz", ".tgz", ".tar", ".zip"} {
-		if strings.HasSuffix(base, ext) {
-			base = strings.TrimSuffix(base, ext)
+		if before, ok := strings.CutSuffix(base, ext); ok {
+			base = before
 			break
 		}
 	}

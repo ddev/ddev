@@ -141,13 +141,13 @@ func TestCmdStartOptionalProfiles(t *testing.T) {
 
 // validateEntrypointForTraefikRouter validates a JSON response from ddev-router:10999/api/http/routers/routerName
 func validateEntrypointForTraefikRouter(t *testing.T, jsonResponse string, expectedEntryPoint string, routerType string) {
-	var router map[string]interface{}
+	var router map[string]any
 	err := json.Unmarshal([]byte(jsonResponse), &router)
 	require.NoError(t, err, "failed to parse JSON response for %s router: %s", routerType, jsonResponse)
 	require.Equal(t, "enabled", router["status"], "%s router status should be enabled: %s", routerType, jsonResponse)
 	_, hasError := router["error"]
 	require.False(t, hasError, "%s router should not have error field: %s", routerType, jsonResponse)
-	entryPoints, ok := router["entryPoints"].([]interface{})
+	entryPoints, ok := router["entryPoints"].([]any)
 	require.True(t, ok, "entryPoints should be an array: %s", jsonResponse)
 	require.Len(t, entryPoints, 1, "should have exactly one entryPoint: %s", jsonResponse)
 	require.Equal(t, expectedEntryPoint, entryPoints[0], "%s router should use entryPoint %s: %s", routerType, expectedEntryPoint, jsonResponse)

@@ -1040,7 +1040,7 @@ func TestOmitProjectNameByDefault(t *testing.T) {
 			require.NoError(t, err)
 
 			// Parse the YAML
-			var config map[string]interface{}
+			var config map[string]any
 			err = yaml.Unmarshal(configBytes, &config)
 			require.NoError(t, err)
 
@@ -1115,7 +1115,7 @@ func TestOmitProjectNameReconfig(t *testing.T) {
 	configBytes, err := os.ReadFile(configPath)
 	require.NoError(t, err)
 
-	var config map[string]interface{}
+	var config map[string]any
 	err = yaml.Unmarshal(configBytes, &config)
 	require.NoError(t, err)
 
@@ -1191,7 +1191,7 @@ func TestOmitProjectNameWithConfigOverride(t *testing.T) {
 	configBytes, err := os.ReadFile(configPath)
 	require.NoError(t, err)
 
-	var config map[string]interface{}
+	var config map[string]any
 	err = yaml.Unmarshal(configBytes, &config)
 	require.NoError(t, err)
 

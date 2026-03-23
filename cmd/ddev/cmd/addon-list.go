@@ -122,7 +122,7 @@ func renderRepositoryList(addons []types.Addon) string {
 		if addon.Type == "official" {
 			d = d + "*"
 		}
-		t.AppendRow([]interface{}{addon.Title, text.WrapSoft(d, 50)})
+		t.AppendRow([]any{addon.Title, text.WrapSoft(d, 50)})
 	}
 
 	t.Render()

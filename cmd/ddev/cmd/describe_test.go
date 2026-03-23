@@ -217,12 +217,12 @@ func TestCmdDescribe(t *testing.T) {
 
 				// The description log should be next last item; there may be a warning
 				// or other info before that.
-				var raw map[string]interface{}
+				var raw map[string]any
 				rawFound := false
-				var item map[string]interface{}
+				var item map[string]any
 				for _, item = range logItems {
 					if item["level"] == "info" {
-						if raw, rawFound = item["raw"].(map[string]interface{}); rawFound {
+						if raw, rawFound = item["raw"].(map[string]any); rawFound {
 							break
 						}
 					}
@@ -241,16 +241,16 @@ func TestCmdDescribe(t *testing.T) {
 
 				// exposed and host ports
 				require.Contains(t, raw, "services")
-				services := raw["services"].(map[string]interface{})
+				services := raw["services"].(map[string]any)
 				// web ports
 				require.Contains(t, services, "web")
-				web := services["web"].(map[string]interface{})
+				web := services["web"].(map[string]any)
 
 				require.Contains(t, web["exposed_ports"], "5492,")
 				require.Contains(t, web["exposed_ports"], ",57497")
 
 				var webExposedPortsInt []int
-				for _, p := range strings.Split(web["exposed_ports"].(string), ",") {
+				for p := range strings.SplitSeq(web["exposed_ports"].(string), ",") {
 					i, err := strconv.Atoi(p)
 					asrt.NoError(t, err)
 					webExposedPortsInt = append(webExposedPortsInt, i)
@@ -262,7 +262,7 @@ func TestCmdDescribe(t *testing.T) {
 					require.Contains(t, web["host_ports"], ",5555,")
 
 					var webHostPortsInt []int
-					for _, p := range strings.Split(web["host_ports"].(string), ",") {
+					for p := range strings.SplitSeq(web["host_ports"].(string), ",") {
 						i, err := strconv.Atoi(p)
 						asrt.NoError(t, err)
 						webHostPortsInt = append(webHostPortsInt, i)
@@ -273,16 +273,16 @@ func TestCmdDescribe(t *testing.T) {
 				}
 
 				require.Contains(t, web, "host_ports_mapping")
-				webPortMapping := web["host_ports_mapping"].([]interface{})
+				webPortMapping := web["host_ports_mapping"].([]any)
 				var webPortMappingTest = map[string]string{}
 				var webPortMappingReverseTest = map[string]string{}
 				var webPortMappingExposedPortInt []int
 				for _, portMapping := range webPortMapping {
-					i, err := strconv.Atoi(portMapping.(map[string]interface{})["exposed_port"].(string))
+					i, err := strconv.Atoi(portMapping.(map[string]any)["exposed_port"].(string))
 					asrt.NoError(t, err)
 					webPortMappingExposedPortInt = append(webPortMappingExposedPortInt, i)
-					webPortMappingTest[portMapping.(map[string]interface{})["host_port"].(string)] = portMapping.(map[string]interface{})["exposed_port"].(string)
-					webPortMappingReverseTest[portMapping.(map[string]interface{})["exposed_port"].(string)] = portMapping.(map[string]interface{})["host_port"].(string)
+					webPortMappingTest[portMapping.(map[string]any)["host_port"].(string)] = portMapping.(map[string]any)["exposed_port"].(string)
+					webPortMappingReverseTest[portMapping.(map[string]any)["exposed_port"].(string)] = portMapping.(map[string]any)["host_port"].(string)
 				}
 				require.True(t, slices.IsSorted(webPortMappingExposedPortInt))
 				if state.running {
@@ -297,13 +297,13 @@ func TestCmdDescribe(t *testing.T) {
 
 				// db ports
 				require.Contains(t, services, "db")
-				db := services["db"].(map[string]interface{})
+				db := services["db"].(map[string]any)
 
 				require.Contains(t, db["exposed_ports"], "4352,")
 				require.Contains(t, db["exposed_ports"], ",6594")
 
 				var dbExposedPortsInt []int
-				for _, p := range strings.Split(db["exposed_ports"].(string), ",") {
+				for p := range strings.SplitSeq(db["exposed_ports"].(string), ",") {
 					i, err := strconv.Atoi(p)
 					asrt.NoError(t, err)
 					dbExposedPortsInt = append(dbExposedPortsInt, i)
@@ -314,7 +314,7 @@ func TestCmdDescribe(t *testing.T) {
 					require.Contains(t, db["host_ports"], "12312,")
 
 					var dbbHostPortsInt []int
-					for _, p := range strings.Split(web["host_ports"].(string), ",") {
+					for p := range strings.SplitSeq(web["host_ports"].(string), ",") {
 						i, err := strconv.Atoi(p)
 						asrt.NoError(t, err)
 						dbbHostPortsInt = append(dbbHostPortsInt, i)
@@ -324,16 +324,16 @@ func TestCmdDescribe(t *testing.T) {
 					require.Equal(t, db["host_ports"], "")
 				}
 
-				dbPortMapping := db["host_ports_mapping"].([]interface{})
+				dbPortMapping := db["host_ports_mapping"].([]any)
 				var dbPortMappingTest = map[string]string{}
 				var dbPortMappingReverseTest = map[string]string{}
 				var dbPortMappingExposedPortInt []int
 				for _, portMapping := range dbPortMapping {
-					i, err := strconv.Atoi(portMapping.(map[string]interface{})["exposed_port"].(string))
+					i, err := strconv.Atoi(portMapping.(map[string]any)["exposed_port"].(string))
 					asrt.NoError(t, err)
 					dbPortMappingExposedPortInt = append(dbPortMappingExposedPortInt, i)
-					dbPortMappingTest[portMapping.(map[string]interface{})["host_port"].(string)] = portMapping.(map[string]interface{})["exposed_port"].(string)
-					dbPortMappingReverseTest[portMapping.(map[string]interface{})["exposed_port"].(string)] = portMapping.(map[string]interface{})["host_port"].(string)
+					dbPortMappingTest[portMapping.(map[string]any)["host_port"].(string)] = portMapping.(map[string]any)["exposed_port"].(string)
+					dbPortMappingReverseTest[portMapping.(map[string]any)["exposed_port"].(string)] = portMapping.(map[string]any)["host_port"].(string)
 				}
 				require.True(t, slices.IsSorted(dbPortMappingExposedPortInt))
 				if state.running {
@@ -347,17 +347,17 @@ func TestCmdDescribe(t *testing.T) {
 				}
 				// busybox1 for no exposed ports
 				require.Contains(t, services, "busybox1")
-				busybox1 := services["busybox1"].(map[string]interface{})
+				busybox1 := services["busybox1"].(map[string]any)
 				require.Equal(t, "", busybox1["exposed_ports"].(string))
 				require.Equal(t, "", busybox1["host_ports"].(string))
-				require.Equal(t, make([]interface{}, 0), busybox1["host_ports_mapping"])
+				require.Equal(t, make([]any, 0), busybox1["host_ports_mapping"])
 				require.Contains(t, busybox1, "host_ports_mapping")
 				// busybox2 for ONLY exposed ports (no host ports)
 				require.Contains(t, services, "busybox2")
-				busybox2 := services["busybox2"].(map[string]interface{})
+				busybox2 := services["busybox2"].(map[string]any)
 				require.Equal(t, "3333", busybox2["exposed_ports"].(string))
 				require.Equal(t, "", busybox2["host_ports"].(string))
-				require.Equal(t, make([]interface{}, 0), busybox2["host_ports_mapping"])
+				require.Equal(t, make([]any, 0), busybox2["host_ports_mapping"])
 				require.Contains(t, busybox2, "host_ports_mapping")
 				// busybox2 x-ddev.describe in JSON output
 				require.Contains(t, busybox2, "describe-url-port")
@@ -470,9 +470,9 @@ func TestCmdDescribeAppWithInvalidParams(t *testing.T) {
 // discards empty lines, and unmarshals into an array of logs
 func unmarshalJSONLogs(in string) ([]output.Fields, error) {
 	logData := make([]output.Fields, 0)
-	logStrings := strings.Split(in, "\n")
+	logStrings := strings.SplitSeq(in, "\n")
 
-	for _, logLine := range logStrings {
+	for logLine := range logStrings {
 		if logLine != "" {
 			data := make(output.Fields, 4)
 			err := json.Unmarshal([]byte(logLine), &data)

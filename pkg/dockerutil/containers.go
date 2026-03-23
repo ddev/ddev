@@ -8,7 +8,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -735,8 +734,8 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 				_, _ = buf.ReadFrom(hijackedResp.Reader)
 				text := strings.ReplaceAll(buf.String(), "\r\n", "\n")
 				text = strings.ReplaceAll(text, "\r", "\n")
-				lines := strings.Split(text, "\n")
-				for _, line := range lines {
+				lines := strings.SplitSeq(text, "\n")
+				for line := range lines {
 					if line != "" {
 						output.UserOut.Println(line)
 					}
@@ -874,9 +873,7 @@ func GetBoundHostPorts(containerID string) ([]string, error) {
 	for k := range portMap {
 		ports = append(ports, k)
 	}
-	sort.Slice(ports, func(i, j int) bool {
-		return ports[i] < ports[j]
-	})
+	slices.Sort(ports)
 	return ports, nil
 }
 
@@ -914,9 +911,7 @@ func GetRouterNetworkAliases(containerID string) ([]string, error) {
 	for k := range aliasMap {
 		aliases = append(aliases, k)
 	}
-	sort.Slice(aliases, func(i, j int) bool {
-		return aliases[i] < aliases[j]
-	})
+	slices.Sort(aliases)
 	return aliases, nil
 }
 
@@ -1116,7 +1111,7 @@ func GetContainerNames(containers []container.Summary, excludeContainerNames []s
 }
 
 // ValidatePort checks that the given port is valid (in range 1-65535)
-func ValidatePort(port interface{}) error {
+func ValidatePort(port any) error {
 	var dockerPort int
 	switch v := port.(type) {
 	case int:

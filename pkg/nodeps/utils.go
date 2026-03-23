@@ -163,7 +163,7 @@ func GrepStringInBuffer(buffer string, needle string) []string {
 func PathWithSlashesToArray(path string) []string {
 	var paths []string
 	var partial string
-	for _, p := range strings.Split(path, "/") {
+	for p := range strings.SplitSeq(path, "/") {
 		partial += p
 		if len(partial) > 0 {
 			paths = append(paths, partial)

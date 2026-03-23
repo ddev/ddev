@@ -95,10 +95,10 @@ ddev share myproject`,
 		// Extract key environment variables for display
 		var localURL, shareArgs string
 		for _, e := range env {
-			if strings.HasPrefix(e, "DDEV_LOCAL_URL=") {
-				localURL = strings.TrimPrefix(e, "DDEV_LOCAL_URL=")
-			} else if strings.HasPrefix(e, "DDEV_SHARE_ARGS=") {
-				shareArgs = strings.TrimPrefix(e, "DDEV_SHARE_ARGS=")
+			if after, ok := strings.CutPrefix(e, "DDEV_LOCAL_URL="); ok {
+				localURL = after
+			} else if after, ok := strings.CutPrefix(e, "DDEV_SHARE_ARGS="); ok {
+				shareArgs = after
 			}
 		}
 		if shareArgs != "" {

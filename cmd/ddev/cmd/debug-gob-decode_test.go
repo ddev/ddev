@@ -90,15 +90,15 @@ func TestDebugGobDecodeCmd(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify output contains valid JSON
-		var jsonData map[string]interface{}
+		var jsonData map[string]any
 		err = json.Unmarshal([]byte(out), &jsonData)
 		require.NoError(t, err, "output should contain valid JSON")
 
 		// Verify structure
 		require.Equal(t, float64(10), jsonData["update-interval"])
-		messages, ok := jsonData["messages"].(map[string]interface{})
+		messages, ok := jsonData["messages"].(map[string]any)
 		require.True(t, ok, "messages should be present")
-		ticker, ok := messages["ticker"].(map[string]interface{})
+		ticker, ok := messages["ticker"].(map[string]any)
 		require.True(t, ok, "ticker should be present")
 		require.Equal(t, float64(20), ticker["interval"])
 	})

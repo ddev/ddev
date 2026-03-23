@@ -130,9 +130,9 @@ func GetWSLConfigPath() string {
 // true if hostAddressLoopback=true is found under [experimental] section.
 func ParseWSLConfigHostAddressLoopback(content string) bool {
 	inExperimentalSection := false
-	lines := strings.Split(content, "\n")
+	lines := strings.SplitSeq(content, "\n")
 
-	for _, line := range lines {
+	for line := range lines {
 		line = strings.TrimSpace(line)
 		// Handle Windows CRLF
 		line = strings.TrimSuffix(line, "\r")

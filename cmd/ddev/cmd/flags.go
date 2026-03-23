@@ -132,7 +132,7 @@ type Flags struct {
 
 // formatErrorItem returns a formatted message indented by the number of
 // `level` and prefixed by a `prefix`.
-func formatErrorItem(level int, prefix string, format string, a ...interface{}) error {
+func formatErrorItem(level int, prefix string, format string, a ...any) error {
 	return fmt.Errorf("%s %s %s", strings.Repeat(" ", (level-1)*2), prefix, fmt.Sprintf(format, a...))
 }
 
@@ -285,7 +285,7 @@ func (f *Flags) Init(commandName, script string) {
 
 // validateFlags checks all Flags by calling the validateFlag method.
 func (f *Flags) validateFlags(flags *FlagsDefinition) error {
-	var errors string
+	var errors strings.Builder
 
 	// Temporary vars to precheck for duplicated flags. It's still possible
 	// other commands will introduce the same flags which is tested
@@ -300,12 +300,12 @@ func (f *Flags) validateFlags(flags *FlagsDefinition) error {
 		flagErrors := extractError(flag.validateFlag(&long, &short))
 
 		if flagErrors != "" {
-			errors += extractError(formatErrorItem(1, "*", "for flag '%s':%s", flag.Name, flagErrors))
+			errors.WriteString(extractError(formatErrorItem(1, "*", "for flag '%s':%s", flag.Name, flagErrors)))
 		}
 	}
 
-	if errors != "" {
-		return fmt.Errorf("the following problems were found in the flags definition of the command '%s' in '%s':%s", f.CommandName, f.Script, errors)
+	if errors.String() != "" {
+		return fmt.Errorf("the following problems were found in the flags definition of the command '%s' in '%s':%s", f.CommandName, f.Script, errors.String())
 	}
 
 	return nil
@@ -339,7 +339,7 @@ func (f *Flags) LoadFromJSON(data string) error {
 
 // AssignToCommand iterates the flags and assigns it to the provided command.
 func (f *Flags) AssignToCommand(command *cobra.Command) error {
-	var errors string
+	var errors strings.Builder
 
 	for _, flag := range f.Definition {
 		// Create the flag at the command
@@ -368,7 +368,7 @@ func (f *Flags) AssignToCommand(command *cobra.Command) error {
 			// Invalid default value was defined by the user, hide the flag
 			// and save the error
 			newFlag.Hidden = true
-			errors += extractError(formatErrorItem(1, "-", "error '%s' while set value of flag '%s'", err.Error(), flag.Name))
+			errors.WriteString(extractError(formatErrorItem(1, "-", "error '%s' while set value of flag '%s'", err.Error(), flag.Name)))
 		}
 
 		newFlag.DefValue = string(flag.DefValue)
@@ -376,8 +376,8 @@ func (f *Flags) AssignToCommand(command *cobra.Command) error {
 		newFlag.Annotations = flag.Annotations
 	}
 
-	if errors != "" {
-		return fmt.Errorf("the following problems were found while assigning the flags to the command '%s' in '%s':%s", f.CommandName, f.Script, errors)
+	if errors.String() != "" {
+		return fmt.Errorf("the following problems were found while assigning the flags to the command '%s' in '%s':%s", f.CommandName, f.Script, errors.String())
 	}
 
 	return nil

@@ -268,7 +268,7 @@ func ListFilesInVolume(volumeName string, subdir string) ([]string, error) {
 
 	// Parse the output into a slice of filenames
 	var files []string
-	for _, line := range strings.Split(stdout, "\n") {
+	for line := range strings.SplitSeq(stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line != "" {
 			files = append(files, line)

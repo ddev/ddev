@@ -81,7 +81,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 			conc := append(globalconfig.DdevGlobalConfig.WebEnvironment, envspl...)
 			// Convert to a hashmap to remove duplicate values.
 			hashmap := make(map[string]string)
-			for i := 0; i < len(conc); i++ {
+			for i := range conc {
 				hashmap[conc[i]] = conc[i]
 			}
 			keys := []string{}

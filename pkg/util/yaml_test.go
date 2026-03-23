@@ -25,15 +25,15 @@ func TestYamlFileToMap(t *testing.T) {
 	//runtime:
 	//  extensions:
 	//	  - redis
-	runtime, ok := m["runtime"].(map[string]interface{})
+	runtime, ok := m["runtime"].(map[string]any)
 	require.True(t, ok)
-	extensions, ok := runtime["extensions"].([]interface{})
+	extensions, ok := runtime["extensions"].([]any)
 	require.True(t, ok)
 	assert.Equal("redis", extensions[0])
 
 	//relationships:
 	//  database: 'db:mysql'
-	relationships, ok := m["relationships"].(map[string]interface{})
+	relationships, ok := m["relationships"].(map[string]any)
 	require.True(t, ok)
 	assert.Equal("db:mysql", relationships["database"])
 
@@ -41,11 +41,11 @@ func TestYamlFileToMap(t *testing.T) {
 	//  locations:
 	//	  '/':
 	//		root: 'web'
-	web, ok := m["web"].(map[string]interface{})
+	web, ok := m["web"].(map[string]any)
 	require.True(t, ok)
-	locations, ok := web["locations"].(map[string]interface{})
+	locations, ok := web["locations"].(map[string]any)
 	require.True(t, ok)
-	slashloc, ok := locations["/"].(map[string]interface{})
+	slashloc, ok := locations["/"].(map[string]any)
 	require.True(t, ok)
 	assert.Equal("web", slashloc["root"])
 }
@@ -57,12 +57,12 @@ func TestYamlToDict(t *testing.T) {
 	require.NoError(t, err)
 
 	// Start with a top level "base"
-	base := make(map[string]interface{})
+	base := make(map[string]any)
 	// Add dict into it as next layer
 	base["dict"], err = util.YamlToDict(m)
 	require.NoError(t, err)
 
-	d, ok := base["dict"].(map[string]interface{})
+	d, ok := base["dict"].(map[string]any)
 	require.True(t, ok)
 
 	name, ok := d["name"].(string)
@@ -99,7 +99,7 @@ func TestMergeYamlFiles(t *testing.T) {
 			expectedResultString, err := fileutil.ReadFileIntoString(expectedResultFile)
 			require.NoError(t, err)
 			// Unmarshall the loaded result expectation so it will look the same as merged (without comments, etc)
-			var tmpMap map[string]interface{}
+			var tmpMap map[string]any
 			err = yaml.Unmarshal([]byte(expectedResultString), &tmpMap)
 			require.NoError(t, err)
 			unmarshalledExpectationString, err := yaml.Marshal(tmpMap)

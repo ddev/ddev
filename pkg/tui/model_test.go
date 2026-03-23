@@ -505,7 +505,7 @@ func TestLogViewAutoScrollsToBottom(t *testing.T) {
 	m.detail = &detail
 
 	// Add more lines than fit
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		m.logLines = append(m.logLines, fmt.Sprintf("line %d", i))
 	}
 
@@ -1678,7 +1678,7 @@ func TestLogLineMsgCapInOperationView(t *testing.T) {
 	m.viewMode = viewOperation
 
 	// Add 1001 lines to trigger the cap
-	for i := 0; i < 1001; i++ {
+	for i := range 1001 {
 		m.logLines = append(m.logLines, fmt.Sprintf("line %d", i))
 	}
 	require.Equal(t, 1001, len(m.logLines))

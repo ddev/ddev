@@ -1,6 +1,6 @@
 package types
 
-type StateEntry = interface{}
+type StateEntry = any
 type StateEntryKey = string
 
 type State interface {

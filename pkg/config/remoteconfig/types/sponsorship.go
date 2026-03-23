@@ -14,7 +14,7 @@ type SponsorshipData struct {
 	CurrentGoal                 SponsorshipCurrentGoal             `json:"current_goal"`
 	AppreciationMessageTemplate string                             `json:"appreciation_message_template"`
 	AppreciationMessage         string                             `json:"appreciation_message"`
-	HistoricalData              map[string]interface{}             `json:"historical_data"`
+	HistoricalData              map[string]any                     `json:"historical_data"`
 	MonthlyHistoricalData       map[string]SponsorshipHistoryEntry `json:"monthly_historical_data"`
 	UpdatedDateTime             time.Time                          `json:"updated_datetime"`
 }

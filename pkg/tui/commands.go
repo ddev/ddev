@@ -88,7 +88,7 @@ func loadDetailCmd(appRoot string) tea.Cmd {
 			detail.MailpitURL, _ = desc["mailpit_url"].(string)
 		}
 
-		if dbInfo, ok := desc["dbinfo"].(map[string]interface{}); ok {
+		if dbInfo, ok := desc["dbinfo"].(map[string]any); ok {
 			if port, ok := dbInfo["published_port"].(int); ok {
 				detail.DBPublishedPort = fmt.Sprintf("127.0.0.1:%d", port)
 			}
@@ -96,7 +96,7 @@ func loadDetailCmd(appRoot string) tea.Cmd {
 
 		detail.Addons = ddevapp.GetInstalledAddonNames(app)
 
-		if services, ok := desc["services"].(map[string]map[string]interface{}); ok {
+		if services, ok := desc["services"].(map[string]map[string]any); ok {
 			for name, svc := range services {
 				status, _ := svc["status"].(string)
 				detail.Services = append(detail.Services, ServiceInfo{Name: name, Status: status})

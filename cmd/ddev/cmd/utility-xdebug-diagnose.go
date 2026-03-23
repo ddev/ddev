@@ -393,8 +393,8 @@ $listener.Stop()
 			if err != nil {
 				return
 			}
-			lines := strings.Split(string(buf[:n]), "\n")
-			for _, line := range lines {
+			lines := strings.SplitSeq(string(buf[:n]), "\n")
+			for line := range lines {
 				line = strings.TrimSpace(line)
 				// Handle Windows CRLF line endings
 				line = strings.TrimSuffix(line, "\r")
@@ -443,12 +443,12 @@ $listener.Stop()
 	// Check if PowerShell received the connection
 	select {
 	case line := <-outputLines:
-		if strings.HasPrefix(line, "RECEIVED:") {
-			message := strings.TrimPrefix(line, "RECEIVED:")
+		if after, ok := strings.CutPrefix(line, "RECEIVED:"); ok {
+			message := after
 			output.UserOut.Println("  ✓ Successfully connected from web container to Windows")
 			output.UserOut.Printf("  ✓ Received message: '%s'\n", message)
-		} else if strings.HasPrefix(line, "ERROR:") {
-			errMsg := strings.TrimPrefix(line, "ERROR:")
+		} else if after, ok := strings.CutPrefix(line, "ERROR:"); ok {
+			errMsg := after
 			output.UserOut.Printf("  ✗ PowerShell listener error: %s\n", errMsg)
 			hasIssues = true
 		} else {

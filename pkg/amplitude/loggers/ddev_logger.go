@@ -21,32 +21,32 @@ type ddevLogger struct {
 	verbose bool
 }
 
-func (l *ddevLogger) Debugf(message string, args ...interface{}) {
+func (l *ddevLogger) Debugf(message string, args ...any) {
 	if l.verbose {
 		output.UserErr.Print(filterMessage(message, args...))
 	}
 }
 
-func (l *ddevLogger) Infof(message string, args ...interface{}) {
+func (l *ddevLogger) Infof(message string, args ...any) {
 	if l.verbose || l.debug {
 		output.UserErr.Info(filterMessage(util.ColorizeText(message, "green"), args...))
 	}
 }
 
-func (l *ddevLogger) Warnf(message string, args ...interface{}) {
+func (l *ddevLogger) Warnf(message string, args ...any) {
 	if l.verbose || l.debug {
 		output.UserErr.Warn(filterMessage(util.ColorizeText(message, "yellow"), args...))
 	}
 }
 
-func (l *ddevLogger) Errorf(message string, args ...interface{}) {
+func (l *ddevLogger) Errorf(message string, args ...any) {
 	if l.verbose || l.debug {
 		output.UserErr.Error(filterMessage(util.ColorizeText(message, "red"), args...))
 	}
 }
 
 // filterMessage removes sensitive data from the message like the API key.
-func filterMessage(message string, args ...interface{}) string {
+func filterMessage(message string, args ...any) string {
 	re := regexp.MustCompile(`(?m)"api_key"\s*:\s*"[^"]*"`)
 	message = re.ReplaceAllString(fmt.Sprintf(message, args...), `"api_key":"***"`)
 

@@ -2401,10 +2401,7 @@ func readFileTail(fileName string, maxBytes int64) (string, error) {
 	}
 
 	// Read the last maxBytes or the entire file if it's smaller
-	bytesToRead := maxBytes
-	if stat.Size() < maxBytes {
-		bytesToRead = stat.Size()
-	}
+	bytesToRead := min(stat.Size(), maxBytes)
 
 	buf := make([]byte, bytesToRead)
 	start := stat.Size() - bytesToRead
@@ -2695,7 +2692,7 @@ func TestDdevImportFilesDir(t *testing.T) {
 	// Create a dummy directory to test non-archive imports
 	importDir := testcommon.CreateTmpDir(t.Name())
 	fileNames := make([]string, 0)
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		fileName := uuid.New().String()
 		fileNames = append(fileNames, fileName)
 
@@ -3405,7 +3402,7 @@ func TestDdevDescribe(t *testing.T) {
 			assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
 
 			// Verify x-ddev.describe functionality
-			services, ok := desc["services"].(map[string]map[string]interface{})
+			services, ok := desc["services"].(map[string]map[string]any)
 			require.True(t, ok, "services should be a map[string]map[string]interface{}")
 			testservice, ok := services["testservice"]
 			require.True(t, ok, "testservice should exist in services")
@@ -4260,7 +4257,7 @@ func TestHostDBPort(t *testing.T) {
 
 			dockerIP, err := dockerutil.GetDockerIP()
 			assert.NoError(err)
-			dbinfo := desc["dbinfo"].(map[string]interface{})
+			dbinfo := desc["dbinfo"].(map[string]any)
 			dbPort := dbinfo["published_port"].(int)
 			dbPortStr := strconv.Itoa(dbPort)
 

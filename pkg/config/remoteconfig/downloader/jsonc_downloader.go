@@ -10,7 +10,7 @@ import (
 
 // JSONCDownloader defines the interface for downloading and unmarshaling JSONC files
 type JSONCDownloader interface {
-	Download(ctx context.Context, target interface{}) error
+	Download(ctx context.Context, target any) error
 	GetURL() string
 }
 
@@ -27,7 +27,7 @@ func NewURLJSONCDownloader(url string) JSONCDownloader {
 }
 
 // Download downloads and unmarshals a JSONC file from a URL into the target interface
-func (d *URLJSONCDownloader) Download(ctx context.Context, target interface{}) error {
+func (d *URLJSONCDownloader) Download(ctx context.Context, target any) error {
 	req, err := http.NewRequestWithContext(ctx, "GET", d.URL, nil)
 	if err != nil {
 		return err

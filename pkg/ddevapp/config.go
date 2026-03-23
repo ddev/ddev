@@ -202,7 +202,7 @@ func (app *DdevApp) GetProcessedProjectConfigYAML(omitKeys ...string) ([]byte, e
 	}
 
 	// Parse YAML into a map to filter keys
-	var configMap map[string]interface{}
+	var configMap map[string]any
 	err = yaml.Unmarshal(configYAML, &configMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse YAML for filtering: %v", err)
@@ -1856,7 +1856,7 @@ func validateHookYAML(source []byte) error {
 	}
 
 	type Validate struct {
-		Commands map[string][]map[string]interface{} `yaml:"hooks,omitempty"`
+		Commands map[string][]map[string]any `yaml:"hooks,omitempty"`
 	}
 	val := &Validate{}
 

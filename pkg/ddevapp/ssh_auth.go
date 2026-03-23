@@ -125,7 +125,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 
 	_ = app.DockerEnv()
 
-	templateVars := map[string]interface{}{
+	templateVars := map[string]any{
 		"ssh_auth_image":   versionconstants.SSHAuthImage,
 		"ssh_auth_tag":     versionconstants.SSHAuthTag,
 		"Username":         username,

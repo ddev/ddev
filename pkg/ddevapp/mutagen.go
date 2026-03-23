@@ -355,14 +355,14 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 		}
 		return false, err
 	}
-	session := make(map[string]interface{})
+	session := make(map[string]any)
 	err = json.Unmarshal([]byte(res), &session)
 	if err != nil {
 		return false, fmt.Errorf("failed to unmarshal Mutagen sync list results '%v': %v", res, err)
 	}
 
 	// Find out if Mutagen session labels has label we found in Docker volume
-	if l, ok := session["labels"].(map[string]interface{}); ok {
+	if l, ok := session["labels"].(map[string]any); ok {
 		vLabel, vLabelErr := GetMutagenVolumeLabel(app)
 		if s, ok := l[mutagenSignatureLabelName]; ok && vLabelErr == nil && vLabel != "" && vLabel == s {
 			return true, nil
@@ -378,7 +378,7 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 // Note that the available statuses are at https://github.com/mutagen-io/mutagen/blob/master/pkg/synchronization/state.go#L9
 // in func (s Status) Description()
 // Can return any of those or "nosession" (with more info) if we didn't find a session at all
-func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResult map[string]interface{}, err error) {
+func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResult map[string]any, err error) {
 	syncName := MutagenSyncName(app.Name)
 
 	fullJSONResult, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
@@ -389,7 +389,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 		}
 		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenDataDirectory()), fullJSONResult, nil, fmt.Errorf("failed to Mutagen sync list %s: stderr='%s', err=%v", syncName, stderr, err)
 	}
-	session := make(map[string]interface{})
+	session := make(map[string]any)
 	err = json.Unmarshal([]byte(fullJSONResult), &session)
 	if err != nil {
 		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshal Mutagen sync list results '%v'", globalconfig.GetMutagenDataDirectory(), fullJSONResult), fullJSONResult, nil, err
@@ -415,7 +415,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	}
 
 	problems := false
-	if alpha, ok := session["alpha"].(map[string]interface{}); ok {
+	if alpha, ok := session["alpha"].(map[string]any); ok {
 		if _, ok = alpha["scanProblems"]; ok {
 			problems = true
 		}
@@ -423,7 +423,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 			problems = true
 		}
 	}
-	if beta, ok := session["beta"].(map[string]interface{}); ok {
+	if beta, ok := session["beta"].(map[string]any); ok {
 		if _, ok = beta["scanProblems"]; ok {
 			problems = true
 		}
@@ -720,7 +720,7 @@ func (app *DdevApp) GenerateMutagenYml() error {
 		return err
 	}
 
-	templateMap := map[string]interface{}{
+	templateMap := map[string]any{
 		"SymlinkMode": symlinkMode,
 		"UploadDirs":  app.getUploadDirsRelative(),
 	}
@@ -843,7 +843,7 @@ func GetMutagenSyncLabel(app *DdevApp) (string, error) {
 	if strings.HasPrefix(status, "nosession") || err != nil {
 		return "", fmt.Errorf("no session %s found: %v", MutagenSyncName(app.Name), status)
 	}
-	if labels, ok := mapResult["labels"].(map[string]interface{}); ok {
+	if labels, ok := mapResult["labels"].(map[string]any); ok {
 		if label, ok := labels[mutagenSignatureLabelName].(string); ok {
 			return label, nil
 		}
@@ -858,7 +858,7 @@ func GetMutagenConfigFileHashLabel(app *DdevApp) (string, error) {
 	if strings.HasPrefix(status, "nosession") || err != nil {
 		return "", fmt.Errorf("no session %s found: %v", MutagenSyncName(app.Name), status)
 	}
-	if labels, ok := mapResult["labels"].(map[string]interface{}); ok {
+	if labels, ok := mapResult["labels"].(map[string]any); ok {
 		if label, ok := labels[mutagenConfigFileHashLabelName].(string); ok {
 			return label, nil
 		}
@@ -925,9 +925,9 @@ func GetAllMutagenVolumes() ([]MutagenVolumeInfo, int64, error) {
 
 	// Look for volumes matching pattern *_project_mutagen
 	for volumeName, volSize := range volumeSizes {
-		if strings.HasSuffix(volumeName, "_project_mutagen") {
+		if before, ok := strings.CutSuffix(volumeName, "_project_mutagen"); ok {
 			// Extract project name from volume name
-			projectName := strings.TrimSuffix(volumeName, "_project_mutagen")
+			projectName := before
 
 			mutagenVolumes = append(mutagenVolumes, MutagenVolumeInfo{
 				Name:      volumeName,
@@ -1204,7 +1204,7 @@ type MutagenDiagnosticResult struct {
 
 // formatMutagenProblems parses and formats Mutagen problems for human readability
 // Mutagen problems are typically a slice of maps with "path" and "error" keys
-func formatMutagenProblems(problems interface{}, problemType string) []string {
+func formatMutagenProblems(problems any, problemType string) []string {
 	var formatted []string
 
 	// Translate technical terms to user-friendly descriptions
@@ -1222,9 +1222,9 @@ func formatMutagenProblems(problems interface{}, problemType string) []string {
 	}
 
 	// Problems can be a slice of maps
-	if problemSlice, ok := problems.([]interface{}); ok {
+	if problemSlice, ok := problems.([]any); ok {
 		for _, problem := range problemSlice {
-			if problemMap, ok := problem.(map[string]interface{}); ok {
+			if problemMap, ok := problem.(map[string]any); ok {
 				problemPath := ""
 				errorMsg := ""
 
@@ -1293,7 +1293,7 @@ func DiagnoseMutagenConfiguration(app *DdevApp) MutagenDiagnosticResult {
 
 		// Extract problem details from session map
 		if mapResult != nil {
-			if alpha, ok := mapResult["alpha"].(map[string]interface{}); ok {
+			if alpha, ok := mapResult["alpha"].(map[string]any); ok {
 				if scanProblems, ok := alpha["scanProblems"]; ok {
 					formatted := formatMutagenProblems(scanProblems, "Alpha")
 					result.Problems = append(result.Problems, formatted...)
@@ -1303,7 +1303,7 @@ func DiagnoseMutagenConfiguration(app *DdevApp) MutagenDiagnosticResult {
 					result.Problems = append(result.Problems, formatted...)
 				}
 			}
-			if beta, ok := mapResult["beta"].(map[string]interface{}); ok {
+			if beta, ok := mapResult["beta"].(map[string]any); ok {
 				if scanProblems, ok := beta["scanProblems"]; ok {
 					formatted := formatMutagenProblems(scanProblems, "Beta")
 					result.Problems = append(result.Problems, formatted...)

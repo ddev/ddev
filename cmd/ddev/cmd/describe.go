@@ -71,7 +71,7 @@ running 'ddev describe <projectname>'.`,
 }
 
 // renderAppDescribe takes the map describing the app and renders it for plain-text output
-func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (string, error) {
+func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error) {
 	dockerIP, _ := dockerutil.GetDockerIP()
 	if dockerIP == "" {
 		dockerIP = "127.0.0.1"
@@ -122,7 +122,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 	// Only show extended status for running sites.
 	serviceNames := []string{}
 	// Get a list of services in the order we want them, with web and db first
-	serviceMap := desc["services"].(map[string]map[string]interface{})
+	serviceMap := desc["services"].(map[string]map[string]any)
 	for k := range serviceMap {
 		if k != "web" && k != "db" {
 			serviceNames = append(serviceNames, k)
@@ -161,27 +161,28 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			}
 		}
 
-		portStr := "InDocker"
+		var portStr strings.Builder
+		portStr.WriteString("InDocker")
 		var portMappingDockerHost = map[string]string{}
 		if p, ok := v["host_ports_mapping"].([]map[string]string); ok && len(p) != 0 {
-			portStr += " -> Host"
+			portStr.WriteString(" -> Host")
 			for _, portMapping := range p {
 				portMappingDockerHost[portMapping["exposed_port"]] = portMapping["host_port"]
 			}
 		}
-		portStr += ":"
+		portStr.WriteString(":")
 
 		if p, ok := v["exposed_ports"].(string); ok {
 			if p != "" {
-				for _, exposedPort := range strings.Split(p, ",") {
-					portStr += "\n - " + v["short_name"].(string) + ":" + exposedPort
+				for exposedPort := range strings.SplitSeq(p, ",") {
+					portStr.WriteString("\n - " + v["short_name"].(string) + ":" + exposedPort)
 					if host, ok := portMappingDockerHost[exposedPort]; ok {
-						portStr += " -> " + dockerIP + ":" + host
+						portStr.WriteString(" -> " + dockerIP + ":" + host)
 					}
 				}
-				urlPortParts = append(urlPortParts, portStr)
+				urlPortParts = append(urlPortParts, portStr.String())
 			} else {
-				urlPortParts = append(urlPortParts, portStr+" "+v["short_name"].(string))
+				urlPortParts = append(urlPortParts, portStr.String()+" "+v["short_name"].(string))
 			}
 		}
 
