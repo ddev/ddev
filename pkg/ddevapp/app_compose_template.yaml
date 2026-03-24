@@ -232,7 +232,6 @@ services:
     - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILPIT_HTTPS_PORT}:{{ .MailpitPort }}{{ .WebExtraHTTPSPorts }}
     {{ end }}
     - IS_DDEV_PROJECT=true
-    - MP_TAGS_DISABLE=plus-addresses
     - LINES
     - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
     - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
