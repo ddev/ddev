@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -27,16 +28,17 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) {
 
 	// Gather expected add-on files from the manifest
 	// When showAll=false: use this to filter out add-on files (don't show them)
-	// When showAll=true: use this to mark add-on files with (#ddev-generated)
-	var expectedAddonFiles []string
+	// When showAll=true: use this to label add-on files with (addon <name>)
+	addonFileMap := make(map[string]string) // file path -> addon name
 	manifest, err := GatherAllManifests(app)
 	if err == nil {
 		for _, addon := range manifest {
 			for _, relPath := range addon.ProjectFiles {
-				expectedAddonFiles = append(expectedAddonFiles, app.GetConfigPath(relPath))
+				addonFileMap[app.GetConfigPath(relPath)] = addon.Name
 			}
 		}
 	}
+	addonFileSlice := slices.Collect(maps.Keys(addonFileMap))
 
 	// Define all configuration checks
 	checks := []customConfigCheck{
@@ -103,7 +105,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) {
 				if showAll {
 					return nil
 				}
-				return expectedAddonFiles
+				return addonFileSlice
 			},
 			displayName: "Database",
 		},
@@ -237,7 +239,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) {
 				if showAll {
 					return nil
 				}
-				return expectedAddonFiles
+				return addonFileSlice
 			},
 			displayName: "Web server",
 		},
@@ -255,7 +257,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) {
 				if showAll {
 					return nil
 				}
-				return expectedAddonFiles
+				return addonFileSlice
 			},
 			displayName: "Config",
 		},
@@ -267,7 +269,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) {
 				if showAll {
 					return nil
 				}
-				return expectedAddonFiles
+				return addonFileSlice
 			},
 			displayName: "Docker Compose",
 		},
@@ -308,7 +310,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) {
 		if check.expectedDdevFiles != nil {
 			expectedFiles = check.expectedDdevFiles()
 		}
-		customFiles := filterCustomConfigFiles(files, expectedFiles, expectedAddonFiles, showAll)
+		customFiles := filterCustomConfigFiles(files, expectedFiles, addonFileMap, showAll)
 
 		if len(customFiles) > 0 {
 			findings = append(findings, finding{
@@ -337,25 +339,11 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) {
 		for _, category := range categoryOrder {
 			files := categoryFiles[category]
 			if len(files) == 1 {
-				filePath := files[0].path
-				if files[0].ddevGenerated {
-					filePath += " (#ddev-generated)"
-				}
-				if files[0].silentNoWarn {
-					filePath += " (#ddev-silent-no-warn)"
-				}
-				_, _ = fmt.Fprintf(&message, "  • %s: %s\n", category, filePath)
+				_, _ = fmt.Fprintf(&message, "  • %s: %s\n", category, fileLabel(files[0]))
 			} else {
 				_, _ = fmt.Fprintf(&message, "  • %s:\n", category)
 				for _, file := range files {
-					filePath := file.path
-					if file.ddevGenerated {
-						filePath += " (#ddev-generated)"
-					}
-					if file.silentNoWarn {
-						filePath += " (#ddev-silent-no-warn)"
-					}
-					_, _ = fmt.Fprintf(&message, "    - %s\n", filePath)
+					_, _ = fmt.Fprintf(&message, "    - %s\n", fileLabel(file))
 				}
 			}
 		}
@@ -411,43 +399,46 @@ func isCustomConfigFile(filePath string, expectedDdevFiles []string, showAll boo
 
 // fileInfo represents a config file with metadata
 type fileInfo struct {
-	path          string
-	ddevGenerated bool
-	silentNoWarn  bool
+	path         string
+	addonName    string // non-empty if file belongs to an add-on
+	silentNoWarn bool
 }
 
 // filterCustomConfigFiles returns only files that qualify as custom config files.
 // expectedDdevFiles is an optional list of files that are expected to have DDEV markers (core DDEV files).
-// expectedAddonFiles is a list of addon-generated files that should be marked when showAll=true.
+// addonFileMap maps file paths to their add-on name for files managed by installed add-ons.
 // Files with DDEV markers that are NOT in expectedDdevFiles list are considered suspicious and flagged as custom.
-// If showAll is true, add-on files are shown with (#ddev-generated) marker and silenced files with (#ddev-silent-no-warn) marker.
-func filterCustomConfigFiles(files []string, expectedDdevFiles []string, expectedAddonFiles []string, showAll bool) []fileInfo {
+// If showAll is true, add-on files are shown with (addon <name>) and silenced files with (#ddev-silent-no-warn).
+func filterCustomConfigFiles(files []string, expectedDdevFiles []string, addonFileMap map[string]string, showAll bool) []fileInfo {
 	var out []fileInfo
 	for _, f := range files {
-		// Check if file is an add-on file
-		isAddonFile := slices.Contains(expectedAddonFiles, f)
+		addonName := addonFileMap[f] // empty string if not an add-on file
 
-		// Check if file has markers
 		isSilenced := false
-		isDdevGenerated := false
 		if showAll {
 			silentNoWarnFound, _ := fileutil.FgrepStringInFile(f, nodeps.DdevSilentNoWarn)
 			isSilenced = silentNoWarnFound
-
-			// Mark add-on files with #ddev-generated
-			if isAddonFile {
-				ddevGenFound, _ := fileutil.FgrepStringInFile(f, nodeps.DdevFileSignature)
-				isDdevGenerated = ddevGenFound
-			}
 		}
 
 		if isCustomConfigFile(f, expectedDdevFiles, showAll) {
 			out = append(out, fileInfo{
-				path:          f,
-				ddevGenerated: isDdevGenerated,
-				silentNoWarn:  isSilenced,
+				path:         f,
+				addonName:    addonName,
+				silentNoWarn: isSilenced,
 			})
 		}
 	}
 	return out
+}
+
+// fileLabel returns the display string for a file, appending annotation tags as needed.
+func fileLabel(f fileInfo) string {
+	label := f.path
+	if f.addonName != "" {
+		label += " (addon " + f.addonName + ")"
+	}
+	if f.silentNoWarn {
+		label += " (#ddev-silent-no-warn)"
+	}
+	return label
 }

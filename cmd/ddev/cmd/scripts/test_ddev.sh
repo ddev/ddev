@@ -110,7 +110,7 @@ if [ "${OSTYPE%-*}" = "linux" ]; then
 fi
 
 header "existing project customizations"
-ddev utility check-custom-config || true
+ddev utility check-custom-config --all || true
 
 header "installed DDEV add-ons"
 

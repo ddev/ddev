@@ -1480,16 +1480,20 @@ ddevcd some-project
 
 ### `utility check-custom-config`
 
-Display all configuration in the project's `.ddev` directory, including custom files, add-on files, and silenced files.
+Display custom configuration files in the current project's `.ddev` directory.
 
-Files are marked with:
+By default, shows only files that would warn on startup (user-created files without a `#ddev-generated` or `#ddev-silent-no-warn` marker). Use `--all` to also show add-on files and silenced files.
 
-* `(#ddev-generated)` for files from add-ons
+When `--all` is used, files are annotated with:
+
+* `(addon <name>)` for files from a named add-on
 * `(#ddev-silent-no-warn)` for silenced files
 
 ```shell
-# Check the project's .ddev directory custom configuration
+# Show only files that would warn on startup
 ddev utility check-custom-config
+# Show all files including add-on and silenced files
+ddev utility check-custom-config --all
 ```
 
 ### `utility check-db-match`
