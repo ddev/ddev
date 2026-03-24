@@ -34,6 +34,23 @@ ddev push platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=
 
 // appPush does the work of push
 func appPush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDBArg bool, skipFilesArg bool, env string) {
+	provider, err := app.GetProvider(providerType)
+	if err != nil {
+		util.Failed("Failed to get provider: %v", err)
+	}
+
+	if env != "" {
+		// Add or override the command-line provided environment variables
+		envVars := strings.Split(env, ",")
+		for _, v := range envVars {
+			split := strings.Split(v, "=")
+			if len(split) != 2 {
+				util.Failed("Unable to parse environment variable setting: %v", v)
+			}
+			provider.EnvironmentVariables[split[0]] = split[1]
+		}
+	}
+
 	// If we're not performing the import step, we won't be deleting the existing db or files.
 	if !skipConfirmation && !skipImportArg && globalconfig.IsInteractive() {
 		// Only warn the user about relevant risks.
@@ -49,26 +66,14 @@ func appPush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 			message = "database and files"
 		}
 
-		util.Warning("You're about to push your local %s to your upstream production\nand replace it with your local project's %s.\nThis is normally a very dangerous operation.", message, message)
+		targetInfo := provider.GetInfo()
+		if targetInfo != "" {
+			util.Warning("You're about to push your local %s to %s\nand replace it with your local project's %s.\nThis is normally a very dangerous operation.", message, targetInfo, message)
+		} else {
+			util.Warning("You're about to push your local %s to your upstream production\nand replace it with your local project's %s.\nThis is normally a very dangerous operation.", message, message)
+		}
 		if !util.ConfirmTo("Would you like to continue (not recommended)?", false) {
 			util.Failed("Push cancelled")
-		}
-	}
-
-	provider, err := app.GetProvider(providerType)
-	if err != nil {
-		util.Failed("Failed to get provider: %v", err)
-	}
-
-	if env != "" {
-		// Add or override the command-line provided environment variables
-		envVars := strings.Split(env, ",")
-		for _, v := range envVars {
-			split := strings.Split(v, "=")
-			if len(split) != 2 {
-				util.Failed("Unable to parse environment variable setting: %v", v)
-			}
-			provider.EnvironmentVariables[split[0]] = split[1]
 		}
 	}
 

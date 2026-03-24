@@ -36,6 +36,23 @@ ddev pull platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=
 
 // appPull() does the work of pull
 func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDBArg bool, skipFilesArg bool, env string) {
+	provider, err := app.GetProvider(providerType)
+	if err != nil {
+		util.Failed("Failed to get provider: %v", err)
+	}
+
+	// Add or override the command-line provided environment variables
+	if env != "" {
+		envVars := strings.Split(env, ",")
+		for _, v := range envVars {
+			split := strings.Split(v, "=")
+			if len(split) != 2 {
+				util.Failed("Unable to parse command-line environment variable setting: '%v'", v)
+			}
+			provider.EnvironmentVariables[split[0]] = split[1]
+		}
+	}
+
 	// If we're not performing the import step, we won't be deleting the existing db or files.
 	if !skipConfirmation && !skipImportArg && globalconfig.IsInteractive() {
 		// Only warn the user about relevant risks.
@@ -51,26 +68,14 @@ func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 			message = "database and files"
 		}
 
-		util.Warning("You're about to delete the current %s and replace with the results of a fresh pull.", message)
+		targetInfo := provider.GetInfo()
+		if targetInfo != "" {
+			util.Warning("You're about to delete the current %s and replace with the results of a fresh pull from %s.", message, targetInfo)
+		} else {
+			util.Warning("You're about to delete the current %s and replace with the results of a fresh pull.", message)
+		}
 		if !util.Confirm("Would you like to continue?") {
 			util.Failed("Pull cancelled")
-		}
-	}
-
-	provider, err := app.GetProvider(providerType)
-	if err != nil {
-		util.Failed("Failed to get provider: %v", err)
-	}
-
-	// Add or override the command-line provided environment variables
-	if env != "" {
-		envVars := strings.Split(env, ",")
-		for _, v := range envVars {
-			split := strings.Split(v, "=")
-			if len(split) != 2 {
-				util.Failed("Unable to parse command-line environment variable setting: '%v'", v)
-			}
-			provider.EnvironmentVariables[split[0]] = split[1]
 		}
 	}
 
