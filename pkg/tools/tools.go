@@ -16,12 +16,3 @@ package tools
 //	_ "github.com/some/new/library"
 //	_ "github.com/some/new/library/pkg/api"
 //)
-
-// For new Docker Compose SDK https://github.com/ddev/ddev/pull/8234
-import (
-	_ "github.com/docker/cli/cli"
-	_ "github.com/docker/cli/cli/streams"
-	_ "github.com/docker/compose/v5/cmd/display"
-	_ "github.com/docker/compose/v5/pkg/api"
-	_ "github.com/docker/compose/v5/pkg/compose"
-)
