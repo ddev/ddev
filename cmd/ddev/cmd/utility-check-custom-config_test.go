@@ -38,7 +38,13 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 
 	// Test with no custom config
 	t.Run("no custom config", func(t *testing.T) {
+		// Default mode: no output when nothing to warn about
 		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
+		require.NoError(t, err)
+		require.NotContains(t, out, "Custom configuration detected")
+
+		// --all mode: explicit success message
+		out, err = exec.RunCommand(DdevBin, []string{"utility", "check-custom-config", "--all"})
 		require.NoError(t, err)
 		require.Contains(t, out, "No custom configuration detected in project '"+projectName+"'.")
 	})
@@ -74,8 +80,13 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		err := os.WriteFile(silencedFile, []byte("#ddev-silent-no-warn\nmemory_limit = 256M\n"), 0644)
 		require.NoError(t, err)
 
-		// Run check-custom-config (should show all including silenced)
+		// Default mode: silenced file should not appear
 		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
+		require.NoError(t, err)
+		require.NotContains(t, out, "silenced.ini")
+
+		// --all mode: silenced file should appear with marker
+		out, err = exec.RunCommand(DdevBin, []string{"utility", "check-custom-config", "--all"})
 		require.NoError(t, err)
 		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
 		require.Contains(t, out, "PHP")
@@ -143,12 +154,16 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		_, err := exec.RunCommand(DdevBin, []string{"add-on", "get", "ddev/ddev-phpmyadmin"})
 		require.NoError(t, err)
 
-		// Run check-custom-config
+		// Default mode: addon files should not appear (they are not user custom files)
 		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
 		require.NoError(t, err)
+		require.NotContains(t, out, "docker-compose.phpmyadmin.yaml")
+
+		// --all mode: addon files should appear with (#ddev-generated) marker
+		out, err = exec.RunCommand(DdevBin, []string{"utility", "check-custom-config", "--all"})
+		require.NoError(t, err)
 		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
-		// Should show addon files with (#ddev-generated) marker
 		require.Contains(t, out, "docker-compose.phpmyadmin.yaml")
-		require.Contains(t, out, "(#ddev-generated)")
+		require.Contains(t, out, "(addon ddev-phpmyadmin)")
 	})
 }
