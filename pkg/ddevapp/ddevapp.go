@@ -216,7 +216,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*container.Summar
 
 // Describe returns a map which provides detailed information on services associated with the running site.
 // if short==true, then only the basic information is returned.
-func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
+func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 	_ = app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
@@ -224,7 +224,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	}
 
 	shortRoot := fileutil.ShortHomeJoin(app.GetAppRoot())
-	appDesc := make(map[string]interface{})
+	appDesc := make(map[string]any)
 	status, statusDesc := app.SiteStatus()
 
 	appDesc["name"] = app.GetName()
@@ -271,7 +271,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["database_version"] = app.Database.Version
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-		dbinfo := make(map[string]interface{})
+		dbinfo := make(map[string]any)
 		dbinfo["username"] = "db"
 		dbinfo["password"] = "db"
 		dbinfo["dbname"] = "db"
@@ -309,13 +309,13 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
-	appDesc["services"] = map[string]map[string]interface{}{}
+	appDesc["services"] = map[string]map[string]any{}
 
 	containers, err := dockerutil.GetAppContainers(app.Name)
 	if err != nil {
 		return nil, err
 	}
-	services := appDesc["services"].(map[string]map[string]interface{})
+	services := appDesc["services"].(map[string]map[string]any)
 	for _, k := range containers {
 		if len(k.Names) == 0 {
 			continue
@@ -329,7 +329,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			continue
 		}
 		fullName := strings.TrimPrefix(serviceName, "/")
-		services[shortName] = map[string]interface{}{}
+		services[shortName] = map[string]any{}
 		services[shortName]["status"] = string(c.State.Status)
 		services[shortName]["full_name"] = fullName
 		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
@@ -465,7 +465,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 				continue
 			}
 			// Initialize the service map with default values for stopped services
-			services[serviceName] = map[string]interface{}{}
+			services[serviceName] = map[string]any{}
 			services[serviceName]["status"] = SiteStopped
 			services[serviceName]["short_name"] = serviceName
 			services[serviceName]["full_name"] = fmt.Sprintf("ddev-%s-%s", app.Name, serviceName)
@@ -497,8 +497,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 					if envValue != nil && (envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
 						// Format is "routerPort:containerPort,routerPort2:containerPort2,..."
 						// Example: "9100:8080,8025:8025"
-						portMappings := strings.Split(*envValue, ",")
-						for _, mapping := range portMappings {
+						portMappings := strings.SplitSeq(*envValue, ",")
+						for mapping := range portMappings {
 							parts := strings.Split(mapping, ":")
 							if len(parts) == 2 {
 								// Extract the container port (second part)
@@ -753,8 +753,8 @@ func (app *DdevApp) TargetPortFromExposeVariable(exposeEnvVar string, targetPort
 	// split it via comma
 	// split it via colon into a map: rhs is the key, lhs is the value
 	portMap := make(map[string]string)
-	items := strings.Split(exposeEnvVar, ",")
-	for _, item := range items {
+	items := strings.SplitSeq(exposeEnvVar, ",")
+	for item := range items {
 		portPair := strings.Split(item, ":")
 		if len(portPair) == 2 {
 			portMap[portPair[1]] = portPair[0]
@@ -2226,10 +2226,10 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 		if image == "" {
 			continue
 		}
-		if strings.HasSuffix(image, "-built") {
-			image = strings.TrimSuffix(image, "-built")
-			if strings.HasSuffix(image, "-"+app.Name) {
-				image = strings.TrimSuffix(image, "-"+app.Name)
+		if before, ok := strings.CutSuffix(image, "-built"); ok {
+			image = before
+			if before, ok := strings.CutSuffix(image, "-"+app.Name); ok {
+				image = before
 			}
 		}
 		images = append(images, image)
@@ -2364,7 +2364,7 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 		}
 		content := string(c)
 		docroot := app.GetAbsDocroot(true)
-		err = fileutil.TemplateStringToFile(content, map[string]interface{}{"Docroot": docroot}, configPath)
+		err = fileutil.TemplateStringToFile(content, map[string]any{"Docroot": docroot}, configPath)
 		if err != nil {
 			return err
 		}
@@ -2962,7 +2962,7 @@ func (app *DdevApp) Pause() error {
 	// instead of "paused" when checked immediately after Pause() returns
 	// Poll for up to 5 seconds with 100ms intervals
 	maxAttempts := 50
-	for attempt := 0; attempt < maxAttempts; attempt++ {
+	for range maxAttempts {
 		containers, err := dockerutil.GetAppContainers(app.Name)
 		if err != nil {
 			// If we can't get containers, assume they're stopped

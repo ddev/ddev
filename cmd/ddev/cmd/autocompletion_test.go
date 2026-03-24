@@ -585,9 +585,9 @@ func TestAutocompleteTermsForCustomCmds(t *testing.T) {
 // have names starting with "Test" from a space separated list of project names.
 // This is useful when running the tests locally, to filter out projects that
 // aren't test-related.
-func getTestingSitesFromOutput(output string) []interface{} {
-	testSites := make([]interface{}, 0)
-	for _, siteName := range strings.Fields(output) {
+func getTestingSitesFromOutput(output string) []any {
+	testSites := make([]any, 0)
+	for siteName := range strings.FieldsSeq(output) {
 		if strings.HasPrefix(siteName, "Test") {
 			testSites = append(testSites, siteName)
 		}

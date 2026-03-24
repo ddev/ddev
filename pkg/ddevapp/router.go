@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"text/template"
@@ -236,7 +235,7 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 	uid, gid, username := dockerutil.GetContainerUser()
 	timezone, _ := util.GetLocalTimezone()
 
-	templateVars := map[string]interface{}{
+	templateVars := map[string]any{
 		"Username":                   username,
 		"UID":                        uid,
 		"GID":                        gid,
@@ -468,9 +467,7 @@ func determineRouterPorts(activeApps []*DdevApp) []string {
 		}
 	}
 
-	sort.Slice(uniquePorts, func(i, j int) bool {
-		return uniquePorts[i] < uniquePorts[j]
-	})
+	slices.Sort(uniquePorts)
 
 	return uniquePorts
 }

@@ -195,7 +195,7 @@ func TestSliceToUniqueSlice(t *testing.T) {
 		{"99", "98", "97", "1", "2", "3"},
 	}
 
-	for i := 0; i < len(testBedSources); i++ {
+	for i := range testBedSources {
 		res := util.SliceToUniqueSlice(&testBedSources[i])
 		assert.Equal(testBedExpectations[i], res)
 	}

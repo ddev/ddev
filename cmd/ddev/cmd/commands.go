@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -166,7 +167,7 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 
 		var aliases []string
 		if val, ok := directives["Aliases"]; ok {
-			for _, alias := range strings.Split(val, ",") {
+			for alias := range strings.SplitSeq(val, ",") {
 				alias = strings.TrimSpace(alias)
 				if foundCmd, _, err := rootCmd.Find([]string{alias}); err != nil {
 					aliases = append(aliases, alias)
@@ -253,11 +254,8 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 		if hostBinaryExists != "" {
 			binExists := false
 			bins := strings.Split(hostBinaryExists, ",")
-			for _, bin := range bins {
-				if fileutil.FileExists(bin) {
-					binExists = true
-					break
-				}
+			if slices.ContainsFunc(bins, fileutil.FileExists) {
+				binExists = true
 			}
 			if !binExists {
 				if isCustomCommandInArgs(commandName) {

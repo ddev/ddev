@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -18,10 +19,8 @@ func (app *DdevApp) addUploadDir(uploadDir string) {
 		util.Failed("Failed to validate upload_dirs: %v", err)
 	}
 
-	for _, existingUploadDir := range app.UploadDirs {
-		if uploadDir == existingUploadDir {
-			return
-		}
+	if slices.Contains(app.UploadDirs, uploadDir) {
+		return
 	}
 
 	app.UploadDirs = append(app.UploadDirs, uploadDir)

@@ -49,7 +49,7 @@ func List(settings ListCommandSettings) {
 			util.Failed("Failed getting GetProjects: %v", err)
 		}
 
-		appDescs := make([]map[string]interface{}, 0)
+		appDescs := make([]map[string]any, 0)
 
 		if len(apps) < 1 {
 			output.UserOut.WithField("raw", appDescs).Println("No DDEV projects were found.")

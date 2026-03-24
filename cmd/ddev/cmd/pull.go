@@ -64,8 +64,8 @@ func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 
 	// Add or override the command-line provided environment variables
 	if env != "" {
-		envVars := strings.Split(env, ",")
-		for _, v := range envVars {
+		envVars := strings.SplitSeq(env, ",")
+		for v := range envVars {
 			split := strings.Split(v, "=")
 			if len(split) != 2 {
 				util.Failed("Unable to parse command-line environment variable setting: '%v'", v)

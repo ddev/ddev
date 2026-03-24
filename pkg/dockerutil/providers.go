@@ -1,6 +1,7 @@
 package dockerutil
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -99,12 +100,7 @@ func IsRootless() bool {
 	if err != nil {
 		return false
 	}
-	for _, opt := range info.SecurityOptions {
-		if opt == "name=rootless" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(info.SecurityOptions, "name=rootless")
 }
 
 // IsPodmanRootless detects if Podman is running in rootless mode
@@ -124,10 +120,5 @@ func IsSELinux() bool {
 	if err != nil {
 		return false
 	}
-	for _, opt := range info.SecurityOptions {
-		if opt == "name=selinux" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(info.SecurityOptions, "name=selinux")
 }

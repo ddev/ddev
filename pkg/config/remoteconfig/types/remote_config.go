@@ -47,6 +47,6 @@ type Remote struct {
 // RemoteConfigData represents the remote config structure
 type RemoteConfigData struct {
 	UpdateInterval int      `json:"update-interval,omitempty"`
-	Remote         Remote   `json:"remote,omitempty"`
-	Messages       Messages `json:"messages,omitempty"`
+	Remote         Remote   `json:"remote"`
+	Messages       Messages `json:"messages"`
 }

@@ -27,7 +27,7 @@ var outputOnceCache = map[string]map[string]bool{}
 
 // outputOnce executes a function only once per unique message and function type.
 // It uses a SHA256 hash of the formatted message to detect duplicates.
-func outputOnce(format string, a []interface{}, fn func(string, ...interface{})) {
+func outputOnce(format string, a []any, fn func(string, ...any)) {
 	// Format the message first to create the cache key
 	var message string
 	if a != nil {
@@ -55,7 +55,7 @@ func outputOnce(format string, a []interface{}, fn func(string, ...interface{}))
 }
 
 // Failed will print a red error message and exit with failure.
-func Failed(format string, a ...interface{}) {
+func Failed(format string, a ...any) {
 	format = ColorizeText(format, "red")
 	if a != nil {
 		// output.UserOut.Fatalf(format, a...)
@@ -68,7 +68,7 @@ func Failed(format string, a ...interface{}) {
 }
 
 // Error will print a red error message but will not exit.
-func Error(format string, a ...interface{}) {
+func Error(format string, a ...any) {
 	format = ColorizeText(format, "red")
 	if a != nil {
 		output.UserErr.Errorf(format, a...)
@@ -78,7 +78,7 @@ func Error(format string, a ...interface{}) {
 }
 
 // Warning will present the user with warning text.
-func Warning(format string, a ...interface{}) {
+func Warning(format string, a ...any) {
 	format = ColorizeText(format, "yellow")
 	if a != nil {
 		output.UserErr.Warnf(format, a...)
@@ -88,13 +88,13 @@ func Warning(format string, a ...interface{}) {
 }
 
 // WarningOnce will present the user with warning text only once per message.
-func WarningOnce(format string, a ...interface{}) {
+func WarningOnce(format string, a ...any) {
 	defer TimeTrackC("WarningOnce(): " + fmt.Sprintf(format, a...))()
 	outputOnce(format, a, Warning)
 }
 
 // WarningWithColor allows specifying a color for the warning to make it more visible
-func WarningWithColor(color string, format string, a ...interface{}) {
+func WarningWithColor(color string, format string, a ...any) {
 	format = ColorizeText(format, color)
 	if a != nil {
 		output.UserErr.Warnf(format, a...)
@@ -104,7 +104,7 @@ func WarningWithColor(color string, format string, a ...interface{}) {
 }
 
 // Success will indicate an operation succeeded with colored confirmation text.
-func Success(format string, a ...interface{}) {
+func Success(format string, a ...any) {
 	format = ColorizeText(format, "green")
 	if a != nil {
 		output.UserOut.Infof(format, a...)
@@ -114,7 +114,7 @@ func Success(format string, a ...interface{}) {
 }
 
 // Debug Output controlled by DDEV_DEBUG environment variable
-func Debug(format string, a ...interface{}) {
+func Debug(format string, a ...any) {
 	if !globalconfig.DdevDebug || output.JSONOutput {
 		return
 	}
@@ -124,7 +124,7 @@ func Debug(format string, a ...interface{}) {
 }
 
 // Verbose Output controlled by DDEV_VERBOSE environment variable
-func Verbose(format string, a ...interface{}) {
+func Verbose(format string, a ...any) {
 	if !globalconfig.DdevVerbose || output.JSONOutput {
 		return
 	}
@@ -206,7 +206,7 @@ func AskForConfirmation() bool {
 }
 
 // MapKeysToArray takes the keys of the map and turns them into a string array
-func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
+func MapKeysToArray(mapWithKeys map[string]any) []string {
 	result := make([]string, 0, len(mapWithKeys))
 	for v := range mapWithKeys {
 		result = append(result, v)
@@ -337,9 +337,9 @@ func Killall(processName string) {
 }
 
 // InterfaceSliceToStringSlice converts a slice of interfaces to a slice of strings
-func InterfaceSliceToStringSlice(input interface{}) ([]string, error) {
+func InterfaceSliceToStringSlice(input any) ([]string, error) {
 	switch v := input.(type) {
-	case []interface{}:
+	case []any:
 		raw := make([]string, len(v))
 		for i := range v {
 			if s, ok := v[i].(string); ok {
@@ -546,8 +546,8 @@ const CurlDiagnosticSuffix = "\n_CURL_HTTP_CODE_:"
 //	var result map[string]interface{}
 //	json.Unmarshal([]byte(body), &result)
 func ExtractCurlBody(curlOutput string) string {
-	if idx := strings.Index(curlOutput, CurlDiagnosticSuffix); idx != -1 {
-		return curlOutput[:idx]
+	if before, _, ok := strings.Cut(curlOutput, CurlDiagnosticSuffix); ok {
+		return before
 	}
 	return curlOutput
 }
@@ -582,8 +582,8 @@ func IsTestEmbargoed(testName string) bool {
 		return false
 	}
 
-	tests := strings.Split(embargoList, "|")
-	for _, t := range tests {
+	tests := strings.SplitSeq(embargoList, "|")
+	for t := range tests {
 		if strings.TrimSpace(t) == testName {
 			return true
 		}
@@ -616,7 +616,7 @@ func IsTestEmbargoed(testName string) bool {
 //	DDEV_EMBARGO_TESTS="TestLagoonPull| TestAcquiaPull" make testpkg
 func SkipIfEmbargoed(t interface {
 	Name() string
-	Skipf(format string, args ...interface{})
+	Skipf(format string, args ...any)
 }) {
 	if IsTestEmbargoed(t.Name()) {
 		t.Skipf("Skipping %s because embargoed by DDEV_EMBARGO_TESTS=%s", t.Name(), os.Getenv("DDEV_EMBARGO_TESTS"))

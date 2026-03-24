@@ -64,7 +64,7 @@ func GetActiveProjects() []*DdevApp {
 }
 
 // RenderAppRow will add an application row to an existing table for describe and list output.
-func RenderAppRow(t table.Writer, row map[string]interface{}) {
+func RenderAppRow(t table.Writer, row map[string]any) {
 	status := fmt.Sprint(row["status_desc"])
 	urls := ""
 	mutagenStatus := ""
@@ -163,7 +163,7 @@ func CheckForConf(confPath string) (string, error) {
 }
 
 // getTemplateFuncMap will return a map of useful template functions.
-func getTemplateFuncMap() map[string]interface{} {
+func getTemplateFuncMap() map[string]any {
 	// Use sprig's template function map as a base
 	m := sprig.FuncMap()
 

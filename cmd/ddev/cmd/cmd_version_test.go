@@ -16,7 +16,7 @@ import (
 
 func TestCmdVersion(t *testing.T) {
 	assert := asrt.New(t)
-	versionData := make(map[string]interface{})
+	versionData := make(map[string]any)
 
 	args := []string{"version", "--json-output"}
 	out, err := exec.RunHostCommandSeparateStreams(DdevBin, args...)
@@ -24,7 +24,7 @@ func TestCmdVersion(t *testing.T) {
 	err = json.Unmarshal([]byte(out), &versionData)
 	require.NoError(t, err, "failed to unmarshal version output '%v'", out)
 
-	raw, ok := versionData["raw"].(map[string]interface{})
+	raw, ok := versionData["raw"].(map[string]any)
 	require.True(t, ok, "raw section wasn't found in versioninfo %v", out)
 
 	assert.Equal(versionconstants.DdevVersion, raw["DDEV version"])

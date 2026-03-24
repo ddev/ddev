@@ -202,7 +202,7 @@ func TestJSONValidation(t *testing.T) {
 		require.NoError(t, err, "Should successfully download remote config, output='%v'", out)
 
 		// Test that it's valid JSON by unmarshaling to interface{}
-		var jsonData interface{}
+		var jsonData any
 		err = json.Unmarshal([]byte(out), &jsonData)
 		require.NoError(t, err, "Output should be valid JSON")
 
@@ -216,7 +216,7 @@ func TestJSONValidation(t *testing.T) {
 		require.NoError(t, err, "Should successfully download sponsorship data, output='%v'", out)
 
 		// Test that it's valid JSON
-		var jsonData interface{}
+		var jsonData any
 		err = json.Unmarshal([]byte(out), &jsonData)
 		require.NoError(t, err, "Output should be valid JSON")
 
@@ -230,7 +230,7 @@ func TestJSONValidation(t *testing.T) {
 		require.NoError(t, err, "Should successfully download add-on data, output='%v'", out)
 
 		// Test that it's valid JSON
-		var jsonData interface{}
+		var jsonData any
 		err = json.Unmarshal([]byte(out), &jsonData)
 		require.NoError(t, err, "Output should be valid JSON")
 

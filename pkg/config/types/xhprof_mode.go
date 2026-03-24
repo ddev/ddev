@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -41,13 +42,7 @@ func IsValidXHProfMode(XHProfMode string, configType ConfigType) bool {
 		return true
 	}
 
-	for _, option := range ValidXHProfModeOptions(configType) {
-		if XHProfMode == option {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(ValidXHProfModeOptions(configType), XHProfMode)
 }
 
 // CheckValidXHProfMode checks to see if the given xhprof mode option

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -58,9 +59,7 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm`,
 
 		// Create a copy of the original envMap for comparison
 		originalEnvMap := make(map[string]string, len(envMap))
-		for k, v := range envMap {
-			originalEnvMap[k] = v
-		}
+		maps.Copy(originalEnvMap, envMap)
 
 		// Get unknown flags and convert them to env variables
 		envSlice, err := GetUnknownFlags(cmd)
@@ -70,8 +69,8 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm`,
 		hasUnknownFlags := false
 		changedEnvMap := make(map[string]string)
 		for flag, value := range envSlice {
-			if strings.HasPrefix(flag, "--") {
-				envName := strings.ToUpper(strings.ReplaceAll(strings.TrimPrefix(flag, "--"), "-", "_"))
+			if after, ok := strings.CutPrefix(flag, "--"); ok {
+				envName := strings.ToUpper(strings.ReplaceAll(after, "-", "_"))
 				envMap[envName] = value
 				changedEnvMap[envName] = value
 				hasUnknownFlags = true

@@ -81,8 +81,8 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, []string, error) {
 // environment variables
 func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, externalHostnames []string) ([]TraefikRouting, error) {
 	var routingTable []TraefikRouting
-	portPairs := strings.Split(httpExpose, ",")
-	for _, portPair := range portPairs {
+	portPairs := strings.SplitSeq(httpExpose, ",")
+	for portPair := range portPairs {
 		ports := strings.Split(portPair, ":")
 		if len(ports) == 0 || len(ports) > 2 {
 			util.Warning("Skipping bad HTTP_EXPOSE port pair spec %s for service %s", portPair, serviceName)

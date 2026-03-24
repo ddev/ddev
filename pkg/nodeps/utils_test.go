@@ -32,7 +32,7 @@ func TestPathWithSlashesToArray(t *testing.T) {
 		{".", "./sites", "./sites/default", "./sites/default/files"},
 	}
 
-	for i := 0; i < len(testSources); i++ {
+	for i := range testSources {
 		res := nodeps.PathWithSlashesToArray(testSources[i])
 		require.Equal(t, testExpectations[i], res)
 	}

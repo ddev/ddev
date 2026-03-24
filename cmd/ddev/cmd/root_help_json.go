@@ -127,7 +127,7 @@ func setHelpFunc(command *cobra.Command) {
 				fullUsage = fullUsage + "\n" + command.CommandPath() + " [command]"
 			}
 
-			rawResult := make(map[string]interface{})
+			rawResult := make(map[string]any)
 			rawResult["ShortDescription"] = command.Short
 			rawResult["LongDescription"] = command.Long
 			rawResult["Usage"] = fullUsage

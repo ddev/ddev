@@ -79,7 +79,7 @@ func ConfirmTo(prompt string, defaultTo bool) bool {
 		promptDefaultValue = "no"
 	}
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		resp := strings.ToLower(Prompt(fmt.Sprintf("%s [%s]", prompt, promptOptions), promptDefaultValue))
 
 		if resp == "yes" || resp == "y" {

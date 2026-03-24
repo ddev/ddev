@@ -120,7 +120,7 @@ func writeUpsunLocalConfig(t *testing.T, app *ddevapp.DdevApp, token string) err
 	err := os.MkdirAll(filepath.Join(app.AppRoot, ".upsun/local"), 0755)
 	require.NoError(t, err)
 	// Provide a project.yaml to
-	err = os.WriteFile(filepath.Join(app.AppRoot, ".upsun/local/project.yaml"), []byte(fmt.Sprintf("id: %s\nhost: api.upsun.com", upsunTestSiteID)), 0644)
+	err = os.WriteFile(filepath.Join(app.AppRoot, ".upsun/local/project.yaml"), fmt.Appendf(nil, "id: %s\nhost: api.upsun.com", upsunTestSiteID), 0644)
 	require.NoError(t, err)
 
 	app.WebEnvironment = append(app.WebEnvironment, "PLATFORM_PRIMARY_RELATIONSHIP="+upsunPrimaryRelationship, "PLATFORM_APP="+upsunAPP, "UPSUN_CLI_TOKEN="+token)

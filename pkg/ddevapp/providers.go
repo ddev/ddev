@@ -31,8 +31,8 @@ func (app *DdevApp) GetValidProviders() ([]string, error) {
 		return providers, err
 	}
 	for _, de := range dirEntrySlice {
-		if strings.HasSuffix(de.Name(), ".yaml") {
-			providers = append(providers, strings.TrimSuffix(de.Name(), ".yaml"))
+		if before, ok := strings.CutSuffix(de.Name(), ".yaml"); ok {
+			providers = append(providers, before)
 		}
 	}
 	return providers, nil

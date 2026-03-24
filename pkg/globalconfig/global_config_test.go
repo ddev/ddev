@@ -51,7 +51,7 @@ func TestGetFreePort(t *testing.T) {
 		_ = globalconfig.RemoveProjectInfo(t.Name())
 	})
 
-	for try := 0; try < 5; try++ {
+	for range 5 {
 		port, err := globalconfig.GetFreePort(dockerIP)
 		require.NoError(t, err)
 		require.NotContains(t, globalconfig.DdevProjectList["TestGetFreePort"].UsedHostPorts, port)

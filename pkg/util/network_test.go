@@ -213,7 +213,7 @@ func TestDownloadFileRetryLogic(t *testing.T) {
 				t.Fatal("ResponseWriter doesn't support flushing")
 			}
 
-			for i := 0; i < 1000; i++ {
+			for range 1000 {
 				select {
 				case <-r.Context().Done():
 					t.Log("client disconnected during slow transfer")

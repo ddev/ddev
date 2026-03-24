@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -41,13 +42,7 @@ func IsValidPerformanceMode(performanceMode string, configType ConfigType) bool 
 		return true
 	}
 
-	for _, o := range ValidPerformanceModeOptions(configType) {
-		if performanceMode == o {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(ValidPerformanceModeOptions(configType), performanceMode)
 }
 
 // CheckValidPerformanceMode checks to see if the given performance mode option

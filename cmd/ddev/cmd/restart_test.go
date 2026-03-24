@@ -70,7 +70,7 @@ func TestCmdRestartJSON(t *testing.T) {
 	// The key item should be the last item; there may be a warning
 	// or other info before that.
 
-	var item map[string]interface{}
+	var item map[string]any
 	for _, item = range logItems {
 		if item["level"] == "info" && item["msg"] != nil && strings.Contains(item["msg"].(string), "Your project can be reached at") {
 			break

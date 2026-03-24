@@ -108,7 +108,7 @@ func CaptureOutputToFile() (func() string, error) {
 		os.Stderr = oldStderr
 		out, err := os.ReadFile(f.Name())
 		if err != nil {
-			out = []byte(fmt.Sprintf("failed to read file: %v", err))
+			out = fmt.Appendf(nil, "failed to read file: %v", err)
 		}
 		defer func() {
 			_ = os.RemoveAll(f.Name())

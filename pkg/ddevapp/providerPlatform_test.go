@@ -117,7 +117,7 @@ func writePlatformLocalConfig(t *testing.T, app *ddevapp.DdevApp, token string) 
 	err := os.MkdirAll(filepath.Join(app.AppRoot, ".platform/local"), 0755)
 	require.NoError(t, err)
 	// Provide a project.yaml to
-	err = os.WriteFile(filepath.Join(app.AppRoot, ".platform/local/project.yaml"), []byte(fmt.Sprintf("id: %s\nhost: api.platform.sh", platformTestSiteID)), 0644)
+	err = os.WriteFile(filepath.Join(app.AppRoot, ".platform/local/project.yaml"), fmt.Appendf(nil, "id: %s\nhost: api.platform.sh", platformTestSiteID), 0644)
 	require.NoError(t, err)
 
 	app.ProviderInstance.EnvironmentVariables["PLATFORMSH_CLI_TOKEN"] = token

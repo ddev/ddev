@@ -85,14 +85,14 @@ type LoadOptions struct {
 
 type baseEvent struct {
 	eventType  string
-	properties map[string]interface{}
+	properties map[string]any
 }
 
 type Event interface {
 	ToAmplitudeEvent() amplitude.Event
 }
 
-func newBaseEvent(eventType string, properties map[string]interface{}) baseEvent {
+func newBaseEvent(eventType string, properties map[string]any) baseEvent {
 	return baseEvent{
 		eventType:  eventType,
 		properties: properties,
@@ -127,7 +127,7 @@ var Identify = struct {
 		}
 	} {
 		return &identifyBuilder{
-			properties: map[string]interface{}{},
+			properties: map[string]any{},
 		}
 	},
 }
@@ -151,7 +151,7 @@ type IdentifyBuilder interface {
 }
 
 type identifyBuilder struct {
-	properties map[string]interface{}
+	properties map[string]any
 }
 
 func (b *identifyBuilder) DdevEnvironment(ddevEnvironment string) interface {
@@ -241,7 +241,7 @@ var Command = struct {
 		}
 	} {
 		return &commandBuilder{
-			properties: map[string]interface{}{},
+			properties: map[string]any{},
 		}
 	},
 }
@@ -263,7 +263,7 @@ type CommandBuilder interface {
 }
 
 type commandBuilder struct {
-	properties map[string]interface{}
+	properties map[string]any
 }
 
 func (b *commandBuilder) Arguments(arguments []string) interface {
@@ -337,7 +337,7 @@ var Project = struct {
 		}
 	} {
 		return &projectBuilder{
-			properties: map[string]interface{}{},
+			properties: map[string]any{},
 		}
 	},
 }
@@ -380,7 +380,7 @@ type ProjectBuilder interface {
 }
 
 type projectBuilder struct {
-	properties map[string]interface{}
+	properties map[string]any
 }
 
 func (b *projectBuilder) Id(id string) interface {

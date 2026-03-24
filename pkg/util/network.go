@@ -50,10 +50,7 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 		// 1st attempt = clientTimeout * 2^0
 		// 2nd attempt = clientTimeout * 2^1
 		// 3rd attempt = clientTimeout * 2^2
-		clientTimeout = clientTimeout * time.Duration(1<<attempt)
-		if clientTimeout > timeoutMax {
-			clientTimeout = timeoutMax
-		}
+		clientTimeout = min(clientTimeout*time.Duration(1<<attempt), timeoutMax)
 		// Timeout for the entire request
 		client.HTTPClient.Timeout = clientTimeout
 		client.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
@@ -215,7 +212,7 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 	if expectedSHA != "" {
 		baseName := filepath.Base(fileURL)
 		var matchedSHA string
-		for _, line := range strings.Split(expectedSHA, "\n") {
+		for line := range strings.SplitSeq(expectedSHA, "\n") {
 			fields := strings.Fields(line)
 			if len(fields) != 2 {
 				continue

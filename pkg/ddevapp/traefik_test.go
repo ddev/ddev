@@ -221,7 +221,7 @@ func TestTraefikStaticConfig(t *testing.T) {
 			})
 
 			// Unmarshal the loaded result expectation so it will look the same as merged (without comments, etc)
-			var tmpMap map[string]interface{}
+			var tmpMap map[string]any
 			expectedResultString, err := fileutil.ReadFileIntoString(filepath.Join(testSourceDir, "expectation.yaml"))
 			require.NoError(t, err)
 			err = yaml.Unmarshal([]byte(expectedResultString), &tmpMap)

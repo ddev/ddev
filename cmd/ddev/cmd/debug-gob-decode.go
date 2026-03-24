@@ -30,12 +30,12 @@ type addonFileStorageData struct {
 
 // Amplitude event cache structures (not available in remoteconfig/types)
 type StorageEvent struct {
-	EventType  string                 `json:"event_type,omitempty"`
-	UserID     string                 `json:"user_id,omitempty"`
-	DeviceID   string                 `json:"device_id,omitempty"`
-	Time       int64                  `json:"time,omitempty"`
-	EventProps map[string]interface{} `json:"event_properties,omitempty"`
-	UserProps  map[string]interface{} `json:"user_properties,omitempty"`
+	EventType  string         `json:"event_type,omitempty"`
+	UserID     string         `json:"user_id,omitempty"`
+	DeviceID   string         `json:"device_id,omitempty"`
+	Time       int64          `json:"time,omitempty"`
+	EventProps map[string]any `json:"event_properties,omitempty"`
+	UserProps  map[string]any `json:"user_properties,omitempty"`
 }
 
 type eventCache struct {
@@ -130,7 +130,7 @@ func tryDecodeGeneric(filename string) error {
 	defer file.Close()
 
 	decoder := gob.NewDecoder(file)
-	var data interface{}
+	var data any
 	err = decoder.Decode(&data)
 	if err != nil {
 		// If we can't decode as interface{}, return the error

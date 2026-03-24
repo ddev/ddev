@@ -65,12 +65,12 @@ var DebugConfigYamlCmd = &cobra.Command{
 			output.UserOut.Printf("# Complete processed project configuration:\n%s", string(configYAML))
 		} else {
 			// strategy from https://stackoverflow.com/a/47457022/215713
-			fields := reflect.TypeOf(*app)
+			fields := reflect.TypeFor[ddevapp.DdevApp]()
 			values := reflect.ValueOf(*app)
 
 			num := fields.NumField()
 
-			for i := 0; i < num; i++ {
+			for i := range num {
 				field := fields.Field(i)
 				v := values.Field(i)
 

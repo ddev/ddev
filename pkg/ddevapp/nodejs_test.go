@@ -51,10 +51,10 @@ func TestNodeJSVersions(t *testing.T) {
 	require.NoError(t, err)
 	packageJSONFileContents, err := os.ReadFile(packageJSONFile)
 	require.NoError(t, err, "Unable to read %s: %v", packageJSONFile, err)
-	var packageJSON map[string]interface{}
+	var packageJSON map[string]any
 	err = json.Unmarshal(packageJSONFileContents, &packageJSON)
 	require.NoError(t, err, "Unable to unmarshal %s: %v", packageJSONFile, err)
-	engines := packageJSON["engines"].(map[string]interface{})
+	engines := packageJSON["engines"].(map[string]any)
 	packageJSONVersion := engines["node"].(string)
 
 	err = app.Start()

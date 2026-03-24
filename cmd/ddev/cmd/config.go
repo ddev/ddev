@@ -376,7 +376,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 
 		if activeApp != nil && activeApp.ConfigPath != "" && activeApp.ConfigExists() {
-			rawResult := make(map[string]interface{})
+			rawResult := make(map[string]any)
 			rawResult["configpath"] = activeApp.ConfigPath
 			rawResult["approot"] = activeApp.AppRoot
 
@@ -572,7 +572,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 			conc := append(app.WebEnvironment, envspl...)
 			// Convert to a hashmap to remove duplicate values.
 			hashmap := make(map[string]string)
-			for i := 0; i < len(conc); i++ {
+			for i := range conc {
 				hashmap[conc[i]] = conc[i]
 			}
 			keys := []string{}

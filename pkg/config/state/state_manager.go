@@ -65,7 +65,7 @@ func (m *stateManager) Changed() bool {
 func (m *stateManager) Get(key types.StateEntryKey, stateEntry types.StateEntry) (err error) {
 	// Check stateEntry is a pointer.
 	val := reflect.ValueOf(stateEntry)
-	if val.Kind() != reflect.Ptr {
+	if val.Kind() != reflect.Pointer {
 		return errors.New("stateEntry must be a pointer")
 	}
 
@@ -94,7 +94,7 @@ func (m *stateManager) Get(key types.StateEntryKey, stateEntry types.StateEntry)
 func (m *stateManager) Set(key types.StateEntryKey, stateEntry types.StateEntry) (err error) {
 	// Check stateEntry is not a pointer.
 	val := reflect.ValueOf(stateEntry)
-	if val.Kind() == reflect.Ptr {
+	if val.Kind() == reflect.Pointer {
 		return errors.New("stateEntry must not be a pointer")
 	}
 

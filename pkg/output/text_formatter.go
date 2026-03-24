@@ -165,7 +165,7 @@ func (f *TextFormatter) needsQuoting(text string) bool {
 	return false
 }
 
-func (f *TextFormatter) appendKeyValue(b *bytes.Buffer, key string, value interface{}) {
+func (f *TextFormatter) appendKeyValue(b *bytes.Buffer, key string, value any) {
 	if b.Len() > 0 {
 		b.WriteByte(' ')
 	}
@@ -174,7 +174,7 @@ func (f *TextFormatter) appendKeyValue(b *bytes.Buffer, key string, value interf
 	f.appendValue(b, value)
 }
 
-func (f *TextFormatter) appendValue(b *bytes.Buffer, value interface{}) {
+func (f *TextFormatter) appendValue(b *bytes.Buffer, value any) {
 	stringVal, ok := value.(string)
 	if !ok {
 		stringVal = fmt.Sprint(value)

@@ -9,7 +9,7 @@ import (
 
 type Manifest struct {
 	Filename    string
-	RootPackage map[string]interface{}
+	RootPackage map[string]any
 }
 
 func NewManifest(filename string) (*Manifest, error) {
@@ -38,7 +38,7 @@ func (m *Manifest) load() (err error) {
 }
 
 // keyExists traverses the given value until key is found or returns false.
-func keyExists(value *map[string]interface{}, key *string) bool {
+func keyExists(value *map[string]any, key *string) bool {
 	path := strings.SplitN(*key, ".", 2)
 
 	v, found := (*value)[path[0]]
@@ -50,7 +50,7 @@ func keyExists(value *map[string]interface{}, key *string) bool {
 		return true
 	}
 
-	childMap, ok := v.(map[string]interface{})
+	childMap, ok := v.(map[string]any)
 
 	if !ok {
 		return false
@@ -67,7 +67,7 @@ func (m *Manifest) keyExists(key string) bool {
 
 // getKeyValue traverses the given value until key is found or returns the
 // defaultValue.
-func getKeyValue(value *map[string]interface{}, key, defaultValue *string) string {
+func getKeyValue(value *map[string]any, key, defaultValue *string) string {
 	path := strings.SplitN(*key, ".", 2)
 
 	v, found := (*value)[path[0]]
@@ -79,7 +79,7 @@ func getKeyValue(value *map[string]interface{}, key, defaultValue *string) strin
 		return v.(string)
 	}
 
-	childMap, ok := v.(map[string]interface{})
+	childMap, ok := v.(map[string]any)
 
 	if !ok {
 		return *defaultValue

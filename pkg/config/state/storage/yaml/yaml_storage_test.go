@@ -46,7 +46,7 @@ func (yamlStorageTestSuite *YamlStorageTestSuite) TestReadProperlyLoadsState() {
 
 	for _, tt := range tests {
 		yamlStorageTestSuite.Run(tt.Key, func() {
-			yamlStorageTestSuite.EqualValues(tt.Value, data[tt.Key].(map[string]interface{})["value"])
+			yamlStorageTestSuite.EqualValues(tt.Value, data[tt.Key].(map[string]any)["value"])
 		})
 	}
 }

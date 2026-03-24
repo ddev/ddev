@@ -124,7 +124,7 @@ func getComposerCompletionFunc(isCreateCommand bool) func(*cobra.Command, []stri
 		// Exclude create-project, which will already be provided in completion by cobra
 		// and isn't supported by ddev anyway
 		completion := []string{}
-		for _, val := range strings.Split(stdout, "\n") {
+		for val := range strings.SplitSeq(stdout, "\n") {
 			val = strings.TrimSpace(val)
 			if val != "create-project" {
 				completion = append(completion, val)

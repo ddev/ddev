@@ -149,7 +149,7 @@ func TestCmdAddonInstalled(t *testing.T) {
 
 // getManifestFromLogs returns the manifest built from 'raw' section of
 // ddev add-on get <project> -j output
-func getManifestFromLogs(t *testing.T, jsonOut string) map[string]interface{} {
+func getManifestFromLogs(t *testing.T, jsonOut string) map[string]any {
 	assert := asrt.New(t)
 
 	logItems, err := unmarshalJSONLogs(jsonOut)
@@ -157,14 +157,14 @@ func getManifestFromLogs(t *testing.T, jsonOut string) map[string]interface{} {
 	data := logItems[len(logItems)-1]
 	assert.EqualValues(data["level"], "info")
 
-	m, ok := data["raw"].(map[string]interface{})
+	m, ok := data["raw"].(map[string]any)
 	require.True(t, ok)
 	return m
 }
 
 // getManifestMapFromLogs returns the manifest array built from 'raw' section of
 // ddev add-on list --installed -j output
-func getManifestMapFromLogs(t *testing.T, jsonOut string) map[string]map[string]interface{} {
+func getManifestMapFromLogs(t *testing.T, jsonOut string) map[string]map[string]any {
 	assert := asrt.New(t)
 
 	logItems, err := unmarshalJSONLogs(jsonOut)
@@ -172,11 +172,11 @@ func getManifestMapFromLogs(t *testing.T, jsonOut string) map[string]map[string]
 	data := logItems[len(logItems)-1]
 	assert.EqualValues(data["level"], "info")
 
-	m, ok := data["raw"].([]interface{})
+	m, ok := data["raw"].([]any)
 	require.True(t, ok)
-	masterMap := map[string]map[string]interface{}{}
+	masterMap := map[string]map[string]any{}
 	for _, item := range m {
-		itemMap := item.(map[string]interface{})
+		itemMap := item.(map[string]any)
 		masterMap[itemMap["Name"].(string)] = itemMap
 	}
 	return masterMap
@@ -195,8 +195,8 @@ func TestCmdAddonPHP(t *testing.T) {
 		addonList, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf("%s add-on list --installed -j | docker run -i --rm ddev/ddev-utilities jq -r .raw.[].Name", DdevBin))
 		require.NoError(t, err)
 		addonList = strings.TrimSpace(addonList)
-		addons := strings.Split(addonList, "\n")
-		for _, item := range addons {
+		addons := strings.SplitSeq(addonList, "\n")
+		for item := range addons {
 			_, err = exec.RunHostCommand(DdevBin, "add-on", "remove", item)
 			require.NoError(t, err)
 		}
@@ -431,7 +431,7 @@ services:
 		require.Contains(t, out, "PHP: Testing environment variables...")
 
 		// Define expected environment variables with their expected values or patterns
-		expectedEnvVars := map[string]interface{}{
+		expectedEnvVars := map[string]any{
 			"DDEV_SITENAME":        app.Name,
 			"DDEV_PROJECT":         app.Name,
 			"DDEV_PROJECT_TYPE":    app.Type,

@@ -492,7 +492,7 @@ func CopyFilesMatchingGlob(srcDir string, destDir string, globPattern string) ([
 }
 
 // TemplateStringToFile takes a template string, runs templ.Execute on it, and writes it out to file
-func TemplateStringToFile(content string, vars map[string]interface{}, targetFilePath string) error {
+func TemplateStringToFile(content string, vars map[string]any, targetFilePath string) error {
 	templ := template.New("templateStringToFile:" + targetFilePath)
 	templ, err := templ.Parse(content)
 	if err != nil {

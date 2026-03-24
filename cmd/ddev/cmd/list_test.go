@@ -83,7 +83,7 @@ func TestCmdList(t *testing.T) {
 		// Look through list results in json for this site.
 		found := false
 		for _, listitem := range siteList {
-			item, ok := listitem.(map[string]interface{})
+			item, ok := listitem.(map[string]any)
 			require.True(t, ok)
 			// Check to see that we can find our item
 			if item["name"] == v.Name {
@@ -138,7 +138,7 @@ func TestCmdList(t *testing.T) {
 // getSitesFromList takes the json output of ddev list -j
 // and returns the list of *test* sites ddev list returns as an array
 // of interface{}
-func getSitesFromList(t *testing.T, jsonOut string) []interface{} {
+func getSitesFromList(t *testing.T, jsonOut string) []any {
 	assert := asrt.New(t)
 
 	logItems, err := unmarshalJSONLogs(jsonOut)
@@ -146,20 +146,20 @@ func getSitesFromList(t *testing.T, jsonOut string) []interface{} {
 	data := logItems[len(logItems)-1]
 	assert.EqualValues(data["level"], "info")
 
-	raw, ok := data["raw"].([]interface{})
+	raw, ok := data["raw"].([]any)
 	require.True(t, ok)
 	return raw
 }
 
 // getTestingSitesFromList() finds only the ddev list items that
 // have names starting with "Test"
-func getTestingSitesFromList(t *testing.T, jsonOut string) []interface{} {
+func getTestingSitesFromList(t *testing.T, jsonOut string) []any {
 	assert := asrt.New(t)
 
 	baseRaw := getSitesFromList(t, jsonOut)
-	testSites := make([]interface{}, 0)
+	testSites := make([]any, 0)
 	for _, listItem := range baseRaw {
-		item, ok := listItem.(map[string]interface{})
+		item, ok := listItem.(map[string]any)
 		assert.True(ok)
 
 		if strings.HasPrefix(item["name"].(string), "Test") {

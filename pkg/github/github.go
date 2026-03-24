@@ -150,7 +150,7 @@ func HasGitHubToken() bool {
 
 // HasInvalidGitHubToken checks if the response indicates an invalid GitHub token.
 // This is possible if we get 401 or 404 response.
-func HasInvalidGitHubToken(response interface{}) error {
+func HasInvalidGitHubToken(response any) error {
 	var httpResp *http.Response
 	switch r := response.(type) {
 	case *github.Response:
