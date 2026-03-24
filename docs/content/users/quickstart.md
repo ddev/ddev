@@ -1367,7 +1367,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Install Laravel via Composer:
 
     ```bash
-    ddev composer create-project "laravel/laravel:^12"
+    ddev composer create-project laravel/laravel
     ```
 
     Launch the site:
@@ -1386,7 +1386,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         mkdir -p my-laravel-composer-site && cd my-laravel-composer-site
         ddev config --project-type=laravel --docroot=public
         ddev start -y
-        ddev composer create-project "laravel/laravel:^12"
+        ddev composer create-project laravel/laravel
         ddev launch
         EOF
         chmod +x setup-laravel.sh
@@ -1413,7 +1413,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
     Install Laravel via Composer:
 
     ```bash
-    ddev composer create-project "laravel/laravel:^12"
+    ddev composer create-project laravel/laravel
     ```
 
     Launch the site:
@@ -1432,7 +1432,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         mkdir -p my-laravel-sqlite-site && cd my-laravel-sqlite-site
         ddev config --project-type=laravel --docroot=public --omit-containers=db
         ddev start -y
-        ddev composer create-project "laravel/laravel:^12"
+        ddev composer create-project laravel/laravel
         ddev launch
         EOF
         chmod +x setup-laravel-sqlite.sh
@@ -2698,7 +2698,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
 
 === "Git Clone"
 
-    This example uses a clone of a test repository, `github.com/ddev/test-typo3.git`. 
+    This example uses a clone of a test repository, `github.com/ddev/test-typo3.git`.
     Replace that with your git repository.
 
     ```bash
