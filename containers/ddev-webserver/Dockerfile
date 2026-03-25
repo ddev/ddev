@@ -96,9 +96,9 @@ RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 
 # magerun and magerun2 for magento
-RUN curl --fail -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun && chmod 777 /usr/local/bin/magerun
+RUN curl --fail -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun && chmod 755 /usr/local/bin/magerun
 RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun/master/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/n98-magerun.phar
-RUN curl --fail -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2 && chmod 777 /usr/local/bin/magerun2
+RUN curl --fail -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2 && chmod 755 /usr/local/bin/magerun2
 RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/master/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar
 
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
@@ -121,6 +121,13 @@ RUN mkdir -p /usr/local/mariadb-old/bin && cp -ap /tmp/extracted/usr/bin/{mariad
 RUN DDEV_DATABASE="mariadb:11.8" mariadb-compat-install.sh
 # Install MariaDB SSL skip wrappers to disable one-way TLS verification (enabled by default in MariaDB 11.4+)
 RUN DDEV_DATABASE="mariadb:11.8" mariadb-skip-ssl-wrapper-install.sh
+
+# Register php-fpm as an alternative so versions can be switched at runtime
+RUN for v in /usr/sbin/php-fpm[0-9]*; do \
+      ver="${v#/usr/sbin/php-fpm}"; \
+      prio="${ver//./}"; \
+      update-alternatives --install /usr/sbin/php-fpm php-fpm "$v" "$prio"; \
+    done
 
 ### -------------------------END ddev-webserver-base------------------------------
 
@@ -164,9 +171,9 @@ RUN phpdismod xhprof
 
 RUN set -x && set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/axllent/mailpit/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/axllent/mailpit/releases/download/${tag}/mailpit-linux-${TARGETARCH}.tar.gz" -o /tmp/mailpit.tar.gz && tar -zx -C /usr/local/bin -f /tmp/mailpit.tar.gz mailpit && rm /tmp/mailpit.tar.gz
 
-RUN curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive
+RUN curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 755 /usr/local/bin/phive
 # Install terminus cli
-RUN set -o pipefail && curl --fail -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl -L --fail --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
+RUN set -o pipefail && curl --fail -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl -L --fail --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 755 /usr/local/bin/terminus
 # Install platform cli
 RUN set -o pipefail && curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | bash
 
@@ -182,14 +189,14 @@ RUN rm -f /etc/apt/sources.list.d/platformsh-upsun-cli.list && \
     printf "Types: deb deb-src\nURIs: https://dl.cloudsmith.io/public/platformsh/upsun-cli/deb/debian/\nSuites: trixie\nComponents: main\nSigned-By: /usr/share/keyrings/platformsh-upsun-cli-archive-keyring.gpg\n" > /etc/apt/sources.list.d/platformsh-upsun-cli.sources
 
 # Install lagoon cli
-RUN set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-cli/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-cli/releases/download/$tag/lagoon-cli-$tag-linux-${TARGETARCH}" --output /usr/local/bin/lagoon && chmod 777 /usr/local/bin/lagoon
+RUN set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-cli/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-cli/releases/download/$tag/lagoon-cli-$tag-linux-${TARGETARCH}" --output /usr/local/bin/lagoon && chmod 755 /usr/local/bin/lagoon
 # Install lagoon-sync
-RUN set -x && set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-sync/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-sync/releases/download/${tag}/lagoon-sync_${tag:1}_linux_${TARGETARCH}" --output /usr/local/bin/lagoon-sync && chmod 777 /usr/local/bin/lagoon-sync
+RUN set -x && set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/uselagoon/lagoon-sync/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/uselagoon/lagoon-sync/releases/download/${tag}/lagoon-sync_${tag:1}_linux_${TARGETARCH}" --output /usr/local/bin/lagoon-sync && chmod 755 /usr/local/bin/lagoon-sync
 
 RUN mkdir -p "/opt/phpstorm-coverage" && \
     chmod a+rw "/opt/phpstorm-coverage"
 
-RUN curl --fail -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod 777 /usr/local/bin/acli
+RUN curl --fail -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod 755 /usr/local/bin/acli
 
 RUN set -o pipefail && tag=$(curl -L --fail --silent "https://api.github.com/repos/backdrop-contrib/drush/releases/latest" | jq -r .tag_name) && curl --fail -sSL "https://github.com/backdrop-contrib/drush/releases/download/${tag}/backdrop-drush-extension.zip" -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands && chmod -R ugo+w /var/tmp/backdrop_drush_commands && rm /tmp/backdrop-drush-extension.zip
 
@@ -201,14 +208,14 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
     touch /var/log/nginx/error.log && \
     chmod -R ugo+rw /var/log/nginx/ && \
     chmod ugo+rwx /usr/local/bin/* && \
-    ln -sf /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
+    update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
 
 RUN chmod -R 777 /var/log
 
 # we need to create the /var/cache/linux and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
 RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/{php,blackfire} /var/cache/nginx /var/lib/nginx && chmod -R ugo+rw /mnt/ddev-global-cache/
 
-RUN chmod -fR ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/local/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
+RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /var/lib/dpkg/alternatives /usr/local/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
 RUN mkdir -p /var/xhprof && curl --fail  -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod 777 /var/xhprof/xhprof_html && rm /tmp/xhprof.tgz
 
@@ -303,14 +310,14 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
     touch /var/log/nginx/error.log && \
     chmod -R ugo+rw /var/log/nginx/ && \
     chmod ugo+rx /usr/local/bin/* && \
-    ln -sf /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
+    update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
 
 RUN chmod -R 777 /var/log
 
 # we need to create the /var/cache/linux and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
 RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/cache/nginx /var/lib/nginx && chmod -R ugo+rw /home /mnt/ddev-global-cache/
 
-RUN chmod -fR ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/local/lib/node_modules /etc/php /etc/apache2 /var/lock/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
+RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /var/lib/dpkg/alternatives /usr/local/lib/node_modules /etc/php /etc/apache2 /var/lock/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
     chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log

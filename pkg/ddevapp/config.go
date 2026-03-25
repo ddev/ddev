@@ -1485,11 +1485,12 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 			contents = contents + fmt.Sprintf(`
 ### DDEV-injected php default version setting
 RUN update-alternatives --set php /usr/bin/php%s
-RUN chmod ugo+rw /var/log/php-fpm.log && chmod ugo+rwx /var/run && ln -sf /usr/sbin/php-fpm%s /usr/sbin/php-fpm
+RUN update-alternatives --install /usr/sbin/php-fpm php-fpm /usr/sbin/php-fpm%s 99 && update-alternatives --set php-fpm /usr/sbin/php-fpm%s
+RUN chmod ugo+rw /var/log/php-fpm.log && chmod ugo+rwx /var/run
 RUN mkdir -p /tmp/xhprof
 RUN chmod -fR ugo+w /etc/php /var/lib/php/modules /tmp/xhprof
 RUN phpdismod blackfire xdebug xhprof
-`, app.PHPVersion, app.PHPVersion)
+`, app.PHPVersion, app.PHPVersion, app.PHPVersion)
 		}
 
 		// For Postgres, install the relevant PostgreSQL clients
