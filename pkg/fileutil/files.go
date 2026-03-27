@@ -158,15 +158,24 @@ func PurgeDirectory(path string) error {
 	}
 
 	for _, file := range files {
-		err = util.Chmod(filepath.Join(path, file), 0777)
+		fullPath := filepath.Join(path, file)
+		fi, err := os.Lstat(fullPath)
 		if err != nil {
 			return err
 		}
-		err = os.RemoveAll(filepath.Join(path, file))
+		// Symlinks must be removed directly without chmod (following a symlink
+		// to chmod it may fail if the target no longer exists).
+		if fi.Mode()&os.ModeSymlink == 0 {
+			err = util.Chmod(fullPath, 0777)
+			if err != nil {
+				return err
+			}
+		}
+		err = os.RemoveAll(fullPath)
 		if err != nil {
 			// On Traditional Windows tests tests fail cleaning up:
 			// config\default_config.yaml: The process cannot access the file because it is being used by another process
-			util.Warning("unable to fully purge '%s': %v", filepath.Join(path, file), err)
+			util.Warning("unable to fully purge '%s': %v", fullPath, err)
 		}
 	}
 	return nil
@@ -191,13 +200,20 @@ func PurgeDirectoryExcept(path string, except map[string]bool) error {
 		if except[file] {
 			continue
 		}
-		err = util.Chmod(filepath.Join(path, file), 0777)
+		fullPath := filepath.Join(path, file)
+		fi, err := os.Lstat(fullPath)
 		if err != nil {
 			return err
 		}
-		err = os.RemoveAll(filepath.Join(path, file))
+		if fi.Mode()&os.ModeSymlink == 0 {
+			err = util.Chmod(fullPath, 0777)
+			if err != nil {
+				return err
+			}
+		}
+		err = os.RemoveAll(fullPath)
 		if err != nil {
-			util.Warning("unable to remove '%s': %v", filepath.Join(path, file), err)
+			util.Warning("unable to remove '%s': %v", fullPath, err)
 		}
 	}
 	return nil
