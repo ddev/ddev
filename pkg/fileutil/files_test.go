@@ -431,3 +431,79 @@ func TestCheckSignatureOrNoFile(t *testing.T) {
 	err = fileutil.CheckSignatureOrNoFile(dirWithEmpty, signature)
 	assert.NoError(err, "directory with empty file should be safe to overwrite")
 }
+
+// TestListFilesWithDepth tests the ListFilesWithDepth function
+func TestListFilesWithDepth(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create test directory structure
+	// tmpDir/
+	//   file0.txt (depth 0)
+	//   dir1/
+	//     file1.txt (depth 1)
+	//     dir2/
+	//       file2.txt (depth 2)
+	//       dir3/
+	//         file3.txt (depth 3)
+
+	err := os.WriteFile(filepath.Join(tmpDir, "file0.txt"), []byte("depth 0"), 0644)
+	require.NoError(t, err)
+
+	dir1 := filepath.Join(tmpDir, "dir1")
+	err = os.MkdirAll(dir1, 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(dir1, "file1.txt"), []byte("depth 1"), 0644)
+	require.NoError(t, err)
+
+	dir2 := filepath.Join(dir1, "dir2")
+	err = os.MkdirAll(dir2, 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(dir2, "file2.txt"), []byte("depth 2"), 0644)
+	require.NoError(t, err)
+
+	dir3 := filepath.Join(dir2, "dir3")
+	err = os.MkdirAll(dir3, 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(dir3, "file3.txt"), []byte("depth 3"), 0644)
+	require.NoError(t, err)
+
+	t.Run("maxDepth=0", func(t *testing.T) {
+		files, err := fileutil.ListFilesWithDepth(tmpDir, 0)
+		require.NoError(t, err)
+		require.Len(t, files, 1)
+		require.Contains(t, files, filepath.Join(tmpDir, "file0.txt"))
+	})
+
+	t.Run("maxDepth=1", func(t *testing.T) {
+		files, err := fileutil.ListFilesWithDepth(tmpDir, 1)
+		require.NoError(t, err)
+		require.Len(t, files, 2)
+		require.Contains(t, files, filepath.Join(tmpDir, "file0.txt"))
+		require.Contains(t, files, filepath.Join(dir1, "file1.txt"))
+	})
+
+	t.Run("maxDepth=2", func(t *testing.T) {
+		files, err := fileutil.ListFilesWithDepth(tmpDir, 2)
+		require.NoError(t, err)
+		require.Len(t, files, 3)
+		require.Contains(t, files, filepath.Join(tmpDir, "file0.txt"))
+		require.Contains(t, files, filepath.Join(dir1, "file1.txt"))
+		require.Contains(t, files, filepath.Join(dir2, "file2.txt"))
+		require.NotContains(t, files, filepath.Join(dir3, "file3.txt"))
+	})
+
+	t.Run("maxDepth=3", func(t *testing.T) {
+		files, err := fileutil.ListFilesWithDepth(tmpDir, 3)
+		require.NoError(t, err)
+		require.Len(t, files, 4)
+		require.Contains(t, files, filepath.Join(tmpDir, "file0.txt"))
+		require.Contains(t, files, filepath.Join(dir1, "file1.txt"))
+		require.Contains(t, files, filepath.Join(dir2, "file2.txt"))
+		require.Contains(t, files, filepath.Join(dir3, "file3.txt"))
+	})
+
+	t.Run("nonexistent directory", func(t *testing.T) {
+		_, err := fileutil.ListFilesWithDepth(filepath.Join(tmpDir, "nonexistent"), 2)
+		require.Error(t, err)
+	})
+}
