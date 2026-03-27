@@ -148,6 +148,21 @@ MAIL_PASSWORD=null
 MAIL_ENCRYPTION=null
 ```
 
+!!!note "Mailpit auto-tagging behavior"
+    Mailpit automatically extracts [tags](https://mailpit.axllent.org/docs/usage/tagging/#disable-auto-tagging) from email addresses using *plus addressing*. For example, an email sent to `address+1@example.com` will be tagged with `1` (the part after `+`). This can be useful for filtering, but may be unexpected if you're not aware of it.
+
+    If this behavior is distracting, you can disable it by setting the following [environment variable](../extend/customization-extendibility.md#environment-variables-for-containers-and-services):
+
+    ```dotenv
+    MP_TAGS_DISABLE=plus-addresses
+    ```
+
+    The easiest way is to set it globally for all DDEV projects:
+
+    ```bash
+    ddev config global --web-environment-add=MP_TAGS_DISABLE=plus-addresses
+    ```
+
 ## Using Development Tools on the Host Machine
 
 It’s possible in many cases to use development tools installed on your host machine on a project provisioned by DDEV. Tools that interact with files and require no database connection, such as Git or Composer, can be run from the host machine against the codebase for a DDEV project with no additional configuration necessary.
