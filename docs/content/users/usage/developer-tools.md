@@ -149,7 +149,7 @@ MAIL_ENCRYPTION=null
 ```
 
 !!!note "Mailpit auto-tagging behavior"
-    Mailpit automatically extracts [tags](https://mailpit.axllent.org/docs/usage/tagging/#disable-auto-tagging) from email addresses using *plus addressing*. For example, an email sent to `example+1@mail.com` will be tagged with `1` (the part after `+`). This can be useful for filtering, but may be unexpected if you're not aware of it.
+    Mailpit automatically extracts [tags](https://mailpit.axllent.org/docs/usage/tagging/#disable-auto-tagging) from email addresses using *plus addressing*. For example, an email sent to `address+1@example.com` will be tagged with `1` (the part after `+`). This can be useful for filtering, but may be unexpected if you're not aware of it.
 
     If this behavior is distracting, you can disable it by setting the following [environment variable](../extend/customization-extendibility.md#environment-variables-for-containers-and-services):
 
