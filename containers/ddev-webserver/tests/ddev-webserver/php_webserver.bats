@@ -94,12 +94,8 @@
   7.4)
     extensions="$extensions json memcached redis xdebug"
     ;;
-  8.0|8.1|8.2|8.3|8.4)
+  8.0|8.1|8.2|8.3|8.4|8.5)
     extensions="$extensions memcached redis xdebug"
-    ;;
-  8.5)
-    # TODO: php8.5: memcached not yet available in Debian Trixie Sury arm64
-    extensions="$extensions redis xdebug"
     ;;
   *)
     # Default fallback for future PHP versions - assume redis available
