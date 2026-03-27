@@ -73,7 +73,7 @@ You can set custom environment variables in several places:
 
     If variables should be expanded only in `.ddev/docker-compose.*.yaml` files, use a different filename, for example, `.ddev/.env.redis-build`.
 
-3. The global `web_environment` setting in `.ddev/global_config.yaml`.
+3. The global `web_environment` setting in `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../usage/architecture.md#global-files)):
 
     ```yaml
     web_environment:

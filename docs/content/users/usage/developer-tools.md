@@ -149,21 +149,18 @@ MAIL_ENCRYPTION=null
 ```
 
 !!!note "Mailpit auto-tagging behavior"
-    Mailpit automatically extracts [**tags**](https://mailpit.axllent.org/docs/usage/tagging/#disable-auto-tagging) from email addresses using *plus addressing*. For example, an email sent to `example+1@mail.com` will be tagged with `1` (the part after `+`). This can be useful for filtering, but may be unexpected if you’re not aware of it.
+    Mailpit automatically extracts [tags](https://mailpit.axllent.org/docs/usage/tagging/#disable-auto-tagging) from email addresses using *plus addressing*. For example, an email sent to `example+1@mail.com` will be tagged with `1` (the part after `+`). This can be useful for filtering, but may be unexpected if you're not aware of it.
 
-    If this behavior is distracting, you can disable it by setting the `MP_TAGS_DISABLE=plus-addresses` environment variable.
+    If this behavior is distracting, you can disable it by setting the following [environment variable](../extend/customization-extendibility.md#environment-variables-for-containers-and-services):
 
-    To disable globally for all DDEV projects:
-
-    ```sh
-    ddev config global --web-environment-add=MP_TAGS_DISABLE=plus-addresses
+    ```dotenv
+    MP_TAGS_DISABLE=plus-addresses
     ```
 
-    Or per project in `.ddev/config.yaml`:
+    The easiest way is to set it globally for all DDEV projects:
 
-    ```yml
-    web_environment:
-      - MP_TAGS_DISABLE=plus-addresses
+    ```bash
+    ddev config global --web-environment-add=MP_TAGS_DISABLE=plus-addresses
     ```
 
 ## Using Development Tools on the Host Machine
