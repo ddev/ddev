@@ -24,7 +24,12 @@ files (labeled #ddev-silent-no-warn).`,
 		}
 
 		showAll, _ := cmd.Flags().GetBool("all")
-		app.CheckCustomConfig(showAll)
+		message, hasWarnings := app.CheckCustomConfig(showAll)
+		if hasWarnings {
+			util.Warning(message)
+		} else {
+			util.Success(message)
+		}
 	},
 }
 
