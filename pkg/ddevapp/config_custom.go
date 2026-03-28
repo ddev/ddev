@@ -417,8 +417,9 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 // the expectedDdevFiles list (indicating an unexpected DDEV-generated file).
 // Files with the #ddev-silent-no-warn marker are excluded unless showAll is true.
 func isCustomConfigFile(filePath string, expectedDdevFiles []string, hasDdevSig, hasSilentNoWarn bool, showAll bool) bool {
+	filename := filepath.Base(filePath)
 	// Exclude example files
-	if strings.HasSuffix(filePath, ".example") {
+	if strings.HasSuffix(filename, ".example") || filename == "README.txt" {
 		return false
 	}
 
