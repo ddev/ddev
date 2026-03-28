@@ -75,14 +75,39 @@ func runTLSDiagnose() int {
 		hasIssues = true
 	}
 
+	// WSLg detection: when Linux-side browsers are installed inside WSL2 the
+	// Windows certificate store is irrelevant — setup is the same as plain Linux.
+	// Ask interactively only when we actually find a Linux browser.
+	wslgMode := false
 	if nodeps.IsWSL2() {
-		wsl2Issues := checkWSL2Configuration(caRoot)
-		if wsl2Issues {
-			hasIssues = true
+		wslgBrowsers := detectWSLgBrowsers()
+		if len(wslgBrowsers) > 0 {
+			output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+			output.UserOut.Println("WSLg Browser Detection")
+			output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+			output.UserOut.Printf("  ℹ Linux-side browser(s) found in WSL2: %s\n", strings.Join(wslgBrowsers, ", "))
+			output.UserOut.Println("    These may be running via WSLg (Linux GUI app support).")
+			output.UserOut.Println("    For WSLg browsers, the Windows certificate store is irrelevant —")
+			output.UserOut.Println("    only the Linux-side trust store (already checked above) matters.")
+			output.UserOut.Println()
+			wslgMode = util.ConfirmTo("Are you troubleshooting a browser running inside WSL2 via WSLg (not a Windows browser)?", false)
+			output.UserOut.Println()
+			if wslgMode {
+				output.UserOut.Println("  ℹ WSLg mode selected — skipping Windows-side certificate checks.")
+				output.UserOut.Println("    The Linux trust store and mkcert -install inside WSL2 are all that is needed.")
+				output.UserOut.Println()
+			}
+		}
+
+		if !wslgMode {
+			wsl2Issues := checkWSL2Configuration(caRoot)
+			if wsl2Issues {
+				hasIssues = true
+			}
 		}
 	}
 
-	firefoxWarnings := checkFirefoxStatus()
+	firefoxWarnings := checkFirefoxStatus(wslgMode)
 	if firefoxWarnings {
 		hasIssues = true
 	}
@@ -401,15 +426,21 @@ if ($certs.Count -gt 0) {
 }
 
 // checkFirefoxStatus checks for Firefox installations and issues warnings.
-func checkFirefoxStatus() bool {
+func checkFirefoxStatus(wslgMode bool) bool {
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("Firefox")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	hasWarnings := false
 
-	if nodeps.IsWSL2() {
-		// Check for Firefox on Windows side via PowerShell registry query
+	switch {
+	case nodeps.IsWSL2() && wslgMode:
+		// WSLg mode: browser runs on Linux inside WSL2, same as plain Linux.
+		output.UserOut.Println("  ℹ WSLg mode: checking Linux-side Firefox (Windows Firefox is not relevant)")
+		hasWarnings = checkLinuxFirefox()
+
+	case nodeps.IsWSL2():
+		// Standard WSL2: browser runs on Windows side.
 		psScript := `
 $firefoxPaths = @(
     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\firefox.exe",
@@ -423,7 +454,6 @@ foreach ($path in $firefoxPaths) {
     }
 }
 if (-not $found) {
-    # Also check common install locations
     $commonPaths = @(
         "$env:ProgramFiles\Mozilla Firefox\firefox.exe",
         "$env:ProgramFiles(x86)\Mozilla Firefox\firefox.exe",
@@ -454,8 +484,38 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 		} else {
 			output.UserOut.Println("  ℹ Could not check for Firefox on Windows")
 		}
-	} else if nodeps.IsMacOS() {
-		// Check for Firefox variants on macOS
+
+	case nodeps.IsWindows():
+		// Traditional Windows (not WSL2). Firefox does not use the Windows system
+		// certificate store, so the mkcert CA must be imported manually.
+		firefoxPaths := []string{
+			filepath.Join(os.Getenv("ProgramFiles"), "Mozilla Firefox", "firefox.exe"),
+			filepath.Join(os.Getenv("ProgramFiles(x86)"), "Mozilla Firefox", "firefox.exe"),
+			filepath.Join(os.Getenv("LOCALAPPDATA"), "Mozilla Firefox", "firefox.exe"),
+		}
+		firefoxFound := false
+		for _, p := range firefoxPaths {
+			if _, err := os.Stat(p); err == nil {
+				firefoxFound = true
+				break
+			}
+		}
+		if firefoxFound {
+			output.UserOut.Println("  ⚠ Firefox detected on Windows — Firefox does not use the Windows system certificate store")
+			output.UserOut.Println("    → You must manually import the mkcert CA into Firefox:")
+			output.UserOut.Println("      Firefox Settings → Privacy & Security → View Certificates → Import")
+			caRoot := globalconfig.GetCAROOT()
+			if caRoot != "" {
+				output.UserOut.Printf("      CA file: %s\\rootCA.pem\n", caRoot)
+			}
+			output.UserOut.Println("    → Firefox Nightly, Developer Edition, and ESR each have separate trust stores")
+			output.UserOut.Println("    → See: https://docs.ddev.com/en/stable/users/install/configuring-browsers/")
+			hasWarnings = true
+		} else {
+			output.UserOut.Println("  ✓ Firefox not detected on Windows")
+		}
+
+	case nodeps.IsMacOS():
 		firefoxApps := []string{
 			"/Applications/Firefox.app",
 			"/Applications/Firefox Nightly.app",
@@ -463,8 +523,7 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 		}
 		for _, appPath := range firefoxApps {
 			if _, err := os.Stat(appPath); err == nil {
-				appName := filepath.Base(appPath)
-				appName = strings.TrimSuffix(appName, ".app")
+				appName := strings.TrimSuffix(filepath.Base(appPath), ".app")
 				if appName == "Firefox" {
 					output.UserOut.Printf("  ⚠ %s detected — may not use macOS Keychain for certificate trust\n", appName)
 				} else {
@@ -477,29 +536,54 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 		if !hasWarnings {
 			output.UserOut.Println("  ✓ No Firefox variants detected on macOS")
 		}
-	} else if nodeps.IsLinux() {
-		// Check for Firefox on Linux
-		firefoxVariants := []string{"firefox", "firefox-nightly", "firefox-developer-edition", "firefox-esr"}
-		foundAny := false
-		for _, variant := range firefoxVariants {
-			if _, err := exec.LookPath(variant); err == nil {
-				output.UserOut.Printf("  ℹ %s detected — uses certutil/NSS for certificate trust\n", variant)
-				foundAny = true
-			}
-		}
-		// Check snap Firefox
-		if snapOut, err := exec.Command("snap", "list", "firefox").Output(); err == nil && strings.Contains(string(snapOut), "firefox") {
-			output.UserOut.Println("  ⚠ Firefox (snap) detected — snap Firefox has its own NSS database")
-			output.UserOut.Println("    → Run: mkcert -install  (mkcert handles snap Firefox automatically on some systems)")
-			hasWarnings = true
-			foundAny = true
-		}
-		if !foundAny {
-			output.UserOut.Println("  ✓ No Firefox detected on Linux")
-		}
+
+	case nodeps.IsLinux():
+		hasWarnings = checkLinuxFirefox()
 	}
 
 	output.UserOut.Println()
+	return hasWarnings
+}
+
+// checkLinuxFirefox checks Firefox on Linux (also used for WSLg browsers inside WSL2).
+// Returns true if warnings were found.
+func checkLinuxFirefox() bool {
+	hasWarnings := false
+
+	// Whether Firefox trusts DDEV certificates depends on certutil (libnss3-tools).
+	// mkcert -install registers the CA into Firefox's NSS database only when certutil is present.
+	_, certutilErr := exec.LookPath("certutil")
+	certutilFound := certutilErr == nil
+
+	firefoxVariants := []string{"firefox", "firefox-nightly", "firefox-developer-edition", "firefox-esr"}
+	foundAny := false
+	for _, variant := range firefoxVariants {
+		if _, err := exec.LookPath(variant); err == nil {
+			foundAny = true
+			if certutilFound {
+				output.UserOut.Printf("  ✓ %s detected — certutil available, mkcert -install registers the CA via NSS\n", variant)
+				output.UserOut.Printf("    ⚠ Note: some %s builds (Flatpak, certain snap versions) maintain a separate NSS database\n", variant)
+				output.UserOut.Println("      and may still require manual CA import if HTTPS warnings appear")
+			} else {
+				output.UserOut.Printf("  ⚠ %s detected but certutil not found — Firefox may not trust DDEV certificates\n", variant)
+				output.UserOut.Println("    → Install certutil: sudo apt install libnss3-tools  OR  brew install nss")
+				output.UserOut.Println("    → Then run: mkcert -install")
+				output.UserOut.Println("    → Or manually import: Firefox Settings → Privacy & Security → View Certificates → Import")
+				hasWarnings = true
+			}
+		}
+	}
+	// Snap Firefox has its own NSS database separate from the system one.
+	if snapOut, err := exec.Command("snap", "list", "firefox").Output(); err == nil && strings.Contains(string(snapOut), "firefox") {
+		output.UserOut.Println("  ⚠ Firefox (snap) detected — snap Firefox uses its own NSS database")
+		output.UserOut.Println("    → mkcert -install may or may not reach the snap profile")
+		output.UserOut.Println("    → If HTTPS warnings appear, manually import the CA in Firefox")
+		hasWarnings = true
+		foundAny = true
+	}
+	if !foundAny {
+		output.UserOut.Println("  ✓ No Firefox detected on Linux")
+	}
 	return hasWarnings
 }
 
@@ -628,9 +712,9 @@ func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) bool {
 	output.UserOut.Printf("  ✓ Project '%s' is running\n", app.Name)
 
 	hostname := app.GetHostname()
-	httpsPort := globalconfig.DdevGlobalConfig.RouterHTTPSPort
+	httpsPort := app.GetPrimaryRouterHTTPSPort()
 	if httpsPort == "" {
-		httpsPort = nodeps.DdevDefaultRouterHTTPSPort
+		httpsPort = "443"
 	}
 
 	// Load CA cert pool for verification.
@@ -790,4 +874,28 @@ func tlsFail(format string, a ...any) {
 	mark := util.ColorizeText("✗", "red")
 	msg := fmt.Sprintf(format, a...)
 	output.UserOut.Println("  " + mark + " " + msg)
+}
+
+// detectWSLgBrowsers returns the names of Linux-side browsers found in PATH.
+// These browsers may be running via WSLg (Linux GUI app support), in which case
+// the Windows certificate store is irrelevant.
+func detectWSLgBrowsers() []string {
+	candidates := []string{
+		"google-chrome",
+		"google-chrome-stable",
+		"chromium",
+		"chromium-browser",
+		"firefox",
+		"microsoft-edge",
+		"microsoft-edge-stable",
+		"brave-browser",
+		"brave",
+	}
+	var found []string
+	for _, name := range candidates {
+		if _, err := exec.LookPath(name); err == nil {
+			found = append(found, name)
+		}
+	}
+	return found
 }
