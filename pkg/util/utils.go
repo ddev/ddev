@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ddev/ddev/pkg/exec"
@@ -22,8 +23,12 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-// outputOnceCache is a cache to keep track of messages that have already been shown
-var outputOnceCache = map[string]map[string]bool{}
+var (
+	// outputOnceCache is a cache to keep track of messages that have already been shown
+	outputOnceCache = map[string]map[string]bool{}
+	// outputOnceMutex is a mutex to protect outputOnceCache from data races
+	outputOnceMutex sync.Mutex
+)
 
 // outputOnce executes a function only once per unique message and function type.
 // It uses a SHA256 hash of the formatted message to detect duplicates.
@@ -40,6 +45,7 @@ func outputOnce(format string, a []any, fn func(string, ...any)) {
 	msgKey := HashSalt(message)
 	fnKey := fmt.Sprintf("%p", fn) // Use function pointer as key
 
+	outputOnceMutex.Lock()
 	// Initialize the function type cache if it doesn't exist
 	if outputOnceCache[fnKey] == nil {
 		outputOnceCache[fnKey] = map[string]bool{}
@@ -47,10 +53,14 @@ func outputOnce(format string, a []any, fn func(string, ...any)) {
 
 	// Check if we've already executed this message for this function type
 	if outputOnceCache[fnKey][msgKey] {
+		outputOnceMutex.Unlock()
 		return
 	}
-	// Mark as shown and execute the function
+	// Mark as shown
 	outputOnceCache[fnKey][msgKey] = true
+	outputOnceMutex.Unlock()
+
+	// execute the function
 	fn(format, a...)
 }
 

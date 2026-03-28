@@ -130,13 +130,13 @@ func (c *remoteConfig) ShowTicker() {
 		messageOffset = rand.Intn(messageCount)
 	}
 
-	for i := range tickerData.Messages {
+	for range tickerData.Messages {
 		messageOffset++
 		if messageOffset > messageCount {
 			messageOffset = 1
 		}
 
-		message := &tickerData.Messages[i+messageOffset-1]
+		message := &tickerData.Messages[messageOffset-1]
 
 		if c.checkConditions(message.Conditions) && c.checkVersions(message.Versions) {
 			t := table.NewWriter()
