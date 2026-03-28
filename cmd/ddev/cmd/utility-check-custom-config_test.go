@@ -350,9 +350,16 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 
 	// Test nginx config
 	t.Run("nginx config", func(t *testing.T) {
+		// Configure to use nginx webserver
+		_, err := exec.RunCommand(DdevBin, []string{"config", "--webserver-type=nginx-fpm"})
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			// Revert back to nginx
+			_, _ = exec.RunCommand(DdevBin, []string{"config", "--webserver-type=" + nodeps.WebserverDefault})
+		})
 		ddevDir := filepath.Join(tmpdir, ".ddev")
 		nginxDir := filepath.Join(ddevDir, "nginx")
-		err := os.MkdirAll(nginxDir, 0755)
+		err = os.MkdirAll(nginxDir, 0755)
 		require.NoError(t, err)
 
 		nginxFile := filepath.Join(nginxDir, "custom.conf")
@@ -371,9 +378,16 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 
 	// Test nginx_full config
 	t.Run("nginx_full config", func(t *testing.T) {
+		// Configure to use nginx webserver
+		_, err := exec.RunCommand(DdevBin, []string{"config", "--webserver-type=nginx-fpm"})
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			// Revert back to nginx
+			_, _ = exec.RunCommand(DdevBin, []string{"config", "--webserver-type=" + nodeps.WebserverDefault})
+		})
 		ddevDir := filepath.Join(tmpdir, ".ddev")
 		nginxFullDir := filepath.Join(ddevDir, "nginx_full")
-		err := os.MkdirAll(nginxFullDir, 0755)
+		err = os.MkdirAll(nginxFullDir, 0755)
 		require.NoError(t, err)
 
 		nginxFullFile := filepath.Join(nginxFullDir, "custom.conf")
