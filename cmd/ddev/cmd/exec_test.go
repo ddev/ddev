@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"os"
 	"path/filepath"
 	"strings"
@@ -37,11 +39,33 @@ func TestCmdExec(t *testing.T) {
 	_ = os.Unsetenv("DDEV_DEBUG")
 
 	site := TestSites[0]
+
+	// Configure and start a different project
+	projectFlagAppName := "TestCmdProjectFlag" + t.Name()
+	// If it already existed we need to delete it first from the global list.
+	_ = globalconfig.RemoveProjectInfo(projectFlagAppName)
+	testDir := testcommon.CreateTmpDir(projectFlagAppName)
+	projectFlagApp, err := ddevapp.NewApp(testDir, false)
+	require.NoError(t, err)
+	err = projectFlagApp.WriteConfig()
+	require.NoError(t, err)
+	_, err = os.Create(filepath.Join(testDir, "my-new-project-file.txt"))
+	require.NoError(t, err)
+	err = os.Chdir(testDir)
+	require.NoError(t, err)
+	out, err := exec.RunHostCommand(DdevBin, "start", "-y")
+	assert.NoError(err, "failed to start, out=%v, err=%v", out, err)
+
+	// Set current directory to the initial one.
 	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		err = projectFlagApp.Stop(true, false)
+		require.NoError(t, err)
 		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 		assert.NoError(err)
 		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
@@ -49,9 +73,15 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 
 	// Test default invocation
-	out, err := exec.RunHostCommand(DdevBin, "exec", "pwd")
+	out, err = exec.RunHostCommand(DdevBin, "exec", "pwd")
 	assert.NoError(err)
 	assert.Contains(out, "/var/www/html")
+
+	// Test specifying project and service: instead of the project in the
+	// current folder, run this on our newly created project.
+	out, err = exec.RunHostCommand(DdevBin, "-p", projectFlagApp.Name, "-s", "web", "exec", "ls")
+	assert.NoError(err)
+	assert.Contains(out, "my-new-project-file.txt")
 
 	// Test specifying service
 	out, err = exec.RunHostCommand(DdevBin, "-s", "db", "exec", "pwd")
