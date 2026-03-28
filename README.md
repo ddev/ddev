@@ -16,6 +16,7 @@
 [![Supported PHP 5.6 to 8.5](https://img.shields.io/badge/supported-PHP%208.5%20%7C%208.4%20%7C%208.3%20%7C%208.2%20%7C%208.1%20%7C%208.0%20%7C%207.4%20%7C%207.3%20%7C%207.2%20%7C%207.1%20%7C%207.0%20%7C%205.6-blue.svg)](https://docs.ddev.com/en/stable/users/configuration/config/#php_version)
 [![Supported nginx & apache](https://img.shields.io/badge/supported-Nginx%20%7C%20Apache-blue)](https://docs.ddev.com/en/stable/users/configuration/config/#webserver_type)
 [![Supported MariaDB, MySQL, PostgreSQL](https://img.shields.io/badge/supported-MariaDB%20%7C%20MySQL%20%7C%20PostgreSQL-blue)](https://docs.ddev.com/en/stable/users/extend/database-types/)
+[![gitcgr](https://gitcgr.com/badge/ddev/ddev.svg)](https://gitcgr.com/ddev/ddev)
 
 DDEV is an open-source tool for running local web development environments for PHP and Node.js, ready in minutes. Its powerful, flexible per-project environment configurations can be extended, version controlled, and shared. DDEV allows development teams to adopt a consistent Docker workflow without the complexities of bespoke configuration.
 
