@@ -175,30 +175,35 @@ func StartDdevRouter() error {
 		}
 
 		// Force the healthcheck to run and wait for Traefik to load the new config.
+		// If this succeeds, the router is already verified healthy with the new
+		// config, so we can skip the ContainerWait polling below.
 		err = ClearRouterHealthcheck()
 		if err != nil {
 			return err
 		}
 	}
 
-	// Ensure we have a happy router
-	label := map[string]string{
-		"com.docker.compose.service": nodeps.RouterContainer,
-		"com.docker.compose.oneoff":  "False",
-	}
-	// Normally the router comes right up, but when
-	// it has to do let's encrypt updates, it can take
-	// some time.
-	routerWaitTimeout := 60
-	if globalconfig.DdevGlobalConfig.UseLetsEncrypt {
-		routerWaitTimeout = 180
-	}
-	wait := output.StartWait(fmt.Sprintf("Waiting for %s to become ready", nodeps.RouterContainer))
-	util.Debug("Router wait: checking for container with labels %v, polling every 500ms for healthy status", label)
-	logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
-	elapsed := wait.Complete(err)
-	if err != nil {
-		return fmt.Errorf("ddev-router failed to become ready after %.1fs; log=%s, err=%v", elapsed.Seconds(), logOutput, err)
+	// When the router was freshly started, wait for Docker to report it healthy.
+	// Skip this when ClearRouterHealthcheck already verified health synchronously.
+	if needsRecreation {
+		label := map[string]string{
+			"com.docker.compose.service": nodeps.RouterContainer,
+			"com.docker.compose.oneoff":  "False",
+		}
+		// Normally the router comes right up, but when
+		// it has to do let's encrypt updates, it can take
+		// some time.
+		routerWaitTimeout := 60
+		if globalconfig.DdevGlobalConfig.UseLetsEncrypt {
+			routerWaitTimeout = 180
+		}
+		wait := output.StartWait(fmt.Sprintf("Waiting for %s to become ready", nodeps.RouterContainer))
+		util.Debug("Router wait: checking for container with labels %v, polling every 500ms for healthy status", label)
+		logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
+		elapsed := wait.Complete(err)
+		if err != nil {
+			return fmt.Errorf("ddev-router failed to become ready after %.1fs; log=%s, err=%v", elapsed.Seconds(), logOutput, err)
+		}
 	}
 
 	util.Debug("Getting traefik error output")

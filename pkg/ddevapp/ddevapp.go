@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
@@ -1485,6 +1486,22 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 	return out, fmt.Errorf("docker-compose build failed after %d attempts: %v, output='%s', stderr='%s'", composeBuildMaxRetries, lastErr, out, stderr)
 }
 
+// buildContextFingerprint returns a SHA-256 hash of the build context directories
+// (.webimageBuild, .dbimageBuild) and base image names. This is used to detect
+// when docker-compose build can be skipped because nothing has changed.
+func (app *DdevApp) buildContextFingerprint() string {
+	dirs := []string{
+		app.GetConfigPath(".webimageBuild"),
+		app.GetConfigPath(".dbimageBuild"),
+	}
+	hash, err := fileutil.HashDirs(dirs, ddevImages.GetWebImage(), app.GetDBImage())
+	if err != nil {
+		util.Warning("unable to hash build context directories: %v", err)
+		return ""
+	}
+	return hash
+}
+
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
@@ -1566,10 +1583,15 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	err = PullBaseContainerImages(additionalImages, false)
-	if err != nil {
-		util.Warning("Unable to pull Docker images: %v", err)
-	}
+	// Pull images in background while config prep continues
+	var pullWg sync.WaitGroup
+	pullWg.Add(1)
+	go func() {
+		defer pullWg.Done()
+		if pullErr := PullBaseContainerImages(additionalImages, false); pullErr != nil {
+			util.Warning("Unable to pull Docker images: %v", pullErr)
+		}
+	}()
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		// OK to start if dbType is empty (nonexistent) or if it matches
@@ -1751,20 +1773,28 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	util.Debug("Exec %s", chownCmd)
-	_, out, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, labels, nil, &dockerutil.NoHealthCheck)
-	if err != nil {
-		return fmt.Errorf("failed to '%s' inside volumes: %v, output=%s", chownCmd, err, out)
-	}
-	util.Debug("Done %s: output=%s", chownCmd, out)
-
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
-		err = app.EnsureSSHAgentContainer()
-		if err != nil {
-			return err
+	// Run chown + SSH agent concurrently with config/build steps below.
+	// chown operates on volumes, compose build operates on images — independent.
+	var chownErr error
+	var sshErr error
+	var chownWg sync.WaitGroup
+	chownWg.Add(1)
+	go func() {
+		defer chownWg.Done()
+		util.Debug("Exec %s", chownCmd)
+		_, chownOut, cErr := dockerutil.RunSimpleContainer(ddevImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, labels, nil, &dockerutil.NoHealthCheck)
+		if cErr != nil {
+			chownErr = fmt.Errorf("failed to '%s' inside volumes: %v, output=%s", chownCmd, cErr, chownOut)
+			return
 		}
-	}
+		util.Debug("Done %s: output=%s", chownCmd, chownOut)
 
+		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
+			sshErr = app.EnsureSSHAgentContainer()
+		}
+	}()
+
+	// While chown + SSH run in background, do config and compose build
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
@@ -1779,6 +1809,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// WriteConfig .ddev-docker-compose-*.yaml
+	// This must run after CheckDeprecations()/FixObsolete() so the
+	// rendered Dockerfile in .webimageBuild/ reflects corrected config
+	// values (e.g. ComposerVersion "1" → "2.2").
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
 		return err
@@ -1803,45 +1836,99 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	// Build extra layers on web and db images if necessary
-	if output.JSONOutput {
-		output.UserOut.Printf("Building project images...")
-	} else {
-		// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
-		// See https://github.com/sirupsen/logrus/issues/167
-		// We want the progress dots to appear on the same line.
-		fmt.Print("Building project images...")
-		// Print a newline before util.Debug below
-		if globalconfig.DdevDebug {
-			output.UserOut.Debugln()
+	// Build extra layers on web and db images if necessary.
+	// Skip the build entirely if the build context hasn't changed and built images exist.
+	buildHashFile := app.GetConfigPath(".build-hash")
+	currentBuildHash := nodeps.DdevFileSignature + "\n" + app.buildContextFingerprint()
+	savedBuildHash, _ := os.ReadFile(buildHashFile)
+	buildNeeded := app.NoCache || currentBuildHash != string(savedBuildHash)
+
+	if !buildNeeded {
+		// Verify the built images still exist locally
+		webBuilt := ddevImages.GetWebImage() + "-" + app.Name + "-built"
+		dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
+		webExists, _ := dockerutil.ImageExistsLocally(webBuilt)
+		dbExists := true
+		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+			dbExists, _ = dockerutil.ImageExistsLocally(dbBuilt)
+		}
+		if !webExists || !dbExists {
+			buildNeeded = true
 		}
 	}
-	buildDurationStart := util.ElapsedDuration(time.Now())
 
-	_, err = app.composeBuild()
-	if err != nil {
-		return err
+	// Wait for background image pull and chown + SSH to finish before proceeding
+	pullWg.Wait()
+	chownWg.Wait()
+	if chownErr != nil {
+		return chownErr
+	}
+	if sshErr != nil {
+		return sshErr
 	}
 
-	_, logStderrOutput, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
-	// If the web image is dirty, try to rebuild it immediately
-	if err == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
-		_, err = app.composeBuild("web", "--no-cache")
+	if buildNeeded {
+		if output.JSONOutput {
+			output.UserOut.Printf("Building project images...")
+		} else {
+			fmt.Print("Building project images...")
+			if globalconfig.DdevDebug {
+				output.UserOut.Debugln()
+			}
+		}
+		buildDurationStart := util.ElapsedDuration(time.Now())
+
+		_, err = app.composeBuild()
 		if err != nil {
 			return err
 		}
-	}
 
-	buildDuration := util.FormatDuration(buildDurationStart())
-	util.Success("Project images built in %s.", buildDuration)
+		// Run log-stderr check and dangling image cleanup concurrently
+		var logStderrOutput string
+		var logStderrErr error
+		var danglingErr error
+		var postBuildWg sync.WaitGroup
 
-	util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
-	danglingImages, err := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
-	if err != nil {
-		return fmt.Errorf("unable to get dangling images for the project %s: %v", app.GetComposeProjectName(), err)
-	}
-	for _, danglingImage := range danglingImages {
-		_ = dockerutil.RemoveImage(danglingImage.ID)
+		postBuildWg.Add(1)
+		go func() {
+			defer postBuildWg.Done()
+			_, logStderrOutput, logStderrErr = dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+		}()
+
+		postBuildWg.Add(1)
+		go func() {
+			defer postBuildWg.Done()
+			util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
+			danglingImages, dErr := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
+			if dErr != nil {
+				danglingErr = fmt.Errorf("unable to get dangling images for the project %s: %v", app.GetComposeProjectName(), dErr)
+				return
+			}
+			for _, danglingImage := range danglingImages {
+				_ = dockerutil.RemoveImage(danglingImage.ID)
+			}
+		}()
+
+		postBuildWg.Wait()
+		if danglingErr != nil {
+			return danglingErr
+		}
+
+		// If the web image is dirty, try to rebuild it immediately
+		if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
+			_, err = app.composeBuild("web", "--no-cache")
+			if err != nil {
+				return err
+			}
+		}
+
+		// Save build hash on successful build
+		_ = os.WriteFile(buildHashFile, []byte(currentBuildHash), 0644)
+
+		buildDuration := util.FormatDuration(buildDurationStart())
+		util.Success("Project images built in %s.", buildDuration)
+	} else {
+		util.Debug("Skipping docker-compose build, build context unchanged and images exist")
 	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
@@ -1956,7 +2043,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if err != nil {
 		util.Warning("Unable to run /start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 	}
-
 	// With NoBindMounts we have to symlink the copied xhprof_prepend.php into /usr/local/bin
 	// When in prepend mode, which will soon become fairly obsolete.
 	// Normally it's bind-mounted into there in prepend mode.
@@ -1998,17 +2084,12 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Debug(`mysql 8, php 5.6-7.3, set mysql_native_password`)
 	}
 
-	err = PopulateGlobalCustomCommandFiles()
-	if err != nil {
-		util.Warning("Failed to populate global custom command files: %v", err)
-	}
-
 	if globalconfig.DdevVerbose {
-		out, err = app.CaptureLogs("web", true, "200")
-		if err != nil {
-			util.Warning("Unable to capture logs from web container: %v", err)
+		logOut, logErr := app.CaptureLogs("web", true, "200")
+		if logErr != nil {
+			util.Warning("Unable to capture logs from web container: %v", logErr)
 		} else {
-			util.Debug("docker-compose up output:\n%s\n\n", out)
+			util.Debug("docker-compose up output:\n%s\n\n", logOut)
 		}
 	}
 
@@ -2028,51 +2109,90 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	util.Debug("Testing to see if /mnt/ddev_config is properly mounted")
-	_, _, err = app.Exec(&ExecOpts{
-		Cmd: `ls -l /mnt/ddev_config/nginx_full/nginx-site.conf >/dev/null`,
-	})
-	if err != nil {
+	// Run mount check, log-stderr, PopulateGlobalCustomCommandFiles, and
+	// router start concurrently. These are all independent operations:
+	// - Mount check and log-stderr only need the web container (already healthy)
+	// - PopulateGlobalCustomCommandFiles uses the web container or an anonymous container
+	// - Router start is completely independent
+	var logStderr string
+	type execResult struct {
+		mountErr    error
+		logStderr   string
+		commandsErr error
+		routerErr   error
+		waitErr2    error
+	}
+	result := execResult{}
+	var wg sync.WaitGroup
+
+	// Goroutine 1: mount check + log-stderr (sequential, both need web container)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		util.Debug("Testing to see if /mnt/ddev_config is properly mounted")
+		_, _, result.mountErr = app.Exec(&ExecOpts{
+			Cmd: `ls -l /mnt/ddev_config/nginx_full/nginx-site.conf >/dev/null`,
+		})
+
+		util.Debug("Getting stderr output from 'log-stderr.sh --show'")
+		stderr, _, _ := app.Exec(&ExecOpts{
+			Cmd: "log-stderr.sh --show 2>/dev/null || true",
+		})
+		result.logStderr = strings.TrimSpace(stderr)
+	}()
+
+	// Goroutine 2: PopulateGlobalCustomCommandFiles
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		result.commandsErr = PopulateGlobalCustomCommandFiles()
+	}()
+
+	// Goroutine 3: router start + additional containers wait
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if !IsRouterDisabled(app) {
+			result.routerErr = StartDdevRouter()
+		}
+
+		if result.routerErr != nil {
+			return
+		}
+
+		waitLabels := map[string]string{
+			"com.ddev.site-name":        app.GetName(),
+			"com.docker.compose.oneoff": "False",
+		}
+		containersAwaited, findErr := dockerutil.FindContainersByLabels(waitLabels)
+		if findErr != nil {
+			result.waitErr2 = findErr
+			return
+		}
+		containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")}, "ddev-"+app.Name+"-")
+		if len(containerNames) > 0 {
+			wait := output.StartWait(fmt.Sprintf("Waiting for additional project containers %v to become ready", containerNames))
+			result.waitErr2 = app.WaitByLabels(waitLabels)
+			wait.Complete(result.waitErr2)
+		} else {
+			result.waitErr2 = app.WaitByLabels(waitLabels)
+		}
+	}()
+
+	wg.Wait()
+
+	if result.mountErr != nil {
 		util.Warning("Something is wrong with your Docker provider and /mnt/ddev_config is not mounted from the project .ddev folder. Your project cannot normally function successfully with this situation. Is your project in your home directory?")
 	}
-
-	util.Debug("Getting stderr output from 'log-stderr.sh --show'")
-	logStderr, _, _ := app.Exec(&ExecOpts{
-		Cmd: "log-stderr.sh --show 2>/dev/null || true",
-	})
-	logStderr = strings.TrimSpace(logStderr)
-	if logStderr != "" {
-		util.Warning(logStderr)
+	if result.commandsErr != nil {
+		util.Warning("Failed to populate global custom command files: %v", result.commandsErr)
 	}
-
-	if !IsRouterDisabled(app) {
-		err = StartDdevRouter()
-		if err != nil {
-			return err
-		}
+	logStderr = result.logStderr
+	if result.routerErr != nil {
+		return result.routerErr
 	}
-
-	waitLabels := map[string]string{
-		"com.ddev.site-name":        app.GetName(),
-		"com.docker.compose.oneoff": "False",
-	}
-	containersAwaited, err := dockerutil.FindContainersByLabels(waitLabels)
-	if err != nil {
-		return err
-	}
-	containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")}, "ddev-"+app.Name+"-")
-	if len(containerNames) > 0 {
-		wait := output.StartWait(fmt.Sprintf("Waiting for additional project containers %v to become ready", containerNames))
-		err = app.WaitByLabels(waitLabels)
-		wait.Complete(err)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = app.WaitByLabels(waitLabels)
-		if err != nil {
-			return err
-		}
+	if result.waitErr2 != nil {
+		return result.waitErr2
 	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
@@ -3016,21 +3136,14 @@ func (app *DdevApp) WaitForServices() error {
 }
 
 // Wait ensures that the app service containers are healthy.
+// All requested containers are waited on in parallel using a single polling loop.
 func (app *DdevApp) Wait(requiredContainers []string) error {
-	for _, containerType := range requiredContainers {
-		labels := map[string]string{
-			"com.ddev.site-name":         app.GetName(),
-			"com.docker.compose.service": containerType,
-			"com.docker.compose.oneoff":  "False",
-		}
-		waitTime := app.GetMaxContainerWaitTime()
-		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
-		if err != nil {
-			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, logOutput, err)
-		}
+	labels := map[string]string{
+		"com.ddev.site-name":        app.GetName(),
+		"com.docker.compose.oneoff": "False",
 	}
-
-	return nil
+	waitTime := app.GetMaxContainerWaitTime()
+	return dockerutil.ContainersWait(waitTime, labels, requiredContainers...)
 }
 
 // WaitByLabels waits for containers found by list of labels to be

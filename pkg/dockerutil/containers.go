@@ -335,8 +335,11 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 
 // ContainersWait provides a wait loop to check for multiple containers in "healthy" status.
 // waittime is in seconds.
-// Returns logoutput, error, returns error if not "healthy"
-func ContainersWait(waittime int, labels map[string]string) error {
+// filterServices optionally limits which containers are checked by their
+// "com.docker.compose.service" label. When empty, all containers matching
+// labels are checked.
+// Returns error if not all containers become "healthy" before the timeout.
+func ContainersWait(waittime int, labels map[string]string, filterServices ...string) error {
 	timeoutChan := time.After(time.Duration(waittime) * time.Second)
 	tickChan := time.NewTicker(500 * time.Millisecond)
 	defer tickChan.Stop()
@@ -353,6 +356,9 @@ func ContainersWait(waittime int, labels map[string]string) error {
 			containers, err := FindContainersByLabels(labels)
 			if err == nil && containers != nil {
 				for _, c := range containers {
+					if len(filterServices) > 0 && !slices.Contains(filterServices, c.Labels["com.docker.compose.service"]) {
+						continue
+					}
 					health, _ := GetContainerHealth(&c)
 					if health != string(container.Healthy) {
 						name, suggestedCommand := getSuggestedCommandForContainerLog(&c, waittime)
@@ -369,8 +375,12 @@ func ContainersWait(waittime int, labels map[string]string) error {
 			}
 			allHealthy := true
 			healthyCount := 0
-			totalCount := len(containers)
+			totalCount := 0
 			for _, c := range containers {
+				if len(filterServices) > 0 && !slices.Contains(filterServices, c.Labels["com.docker.compose.service"]) {
+					continue
+				}
+				totalCount++
 				health, logOutput := GetContainerHealth(&c)
 
 				switch health {
@@ -386,6 +396,22 @@ func ContainersWait(waittime int, labels map[string]string) error {
 				default:
 					allHealthy = false
 				}
+			}
+
+			// Ensure every requested service has at least one container.
+			// Without this, we could return success before a service
+			// (e.g. db) has registered with the Docker API.
+			if len(filterServices) > 0 {
+				for _, svc := range filterServices {
+					if !slices.ContainsFunc(containers, func(c container.Summary) bool {
+						return c.Labels["com.docker.compose.service"] == svc
+					}) {
+						allHealthy = false
+						break
+					}
+				}
+			} else if totalCount == 0 {
+				allHealthy = false
 			}
 
 			// Log status changes and periodic updates under DDEV_DEBUG

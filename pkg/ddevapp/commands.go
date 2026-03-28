@@ -7,9 +7,15 @@ import (
 
 	dockerImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 )
+
+// globalCommandsHashFile is the name of the file that stores the fingerprint
+// of the global commands directory to avoid unnecessary re-copying.
+const globalCommandsHashFile = ".global-commands-hash"
 
 // PopulateGlobalCustomCommandFiles sets up the custom command files in the project
 // directories where they need to go.
@@ -20,16 +26,24 @@ func PopulateGlobalCustomCommandFiles() error {
 		return nil
 	}
 
-	// Remove contents of the directory, if the directory exists and has some contents
-	commandDirInVolume := "/mnt/ddev-global-cache/global-commands/"
-	_, _, err = performTaskInContainer([]string{"rm", "-rf", commandDirInVolume})
+	// Check if the source directory has changed since last copy.
+	// If not, skip the expensive container operations.
+	currentHash, err := fileutil.HashDir(sourceGlobalCommandPath)
 	if err != nil {
-		return fmt.Errorf("unable to rm %s: %v", commandDirInVolume, err)
+		util.Warning("unable to hash global commands directory: %v", err)
+	}
+	hashFilePath := filepath.Join(globalconfig.GetGlobalDdevDir(), globalCommandsHashFile)
+	if savedHash, err := os.ReadFile(hashFilePath); err == nil && string(savedHash) == currentHash {
+		util.Debug("PopulateGlobalCustomCommandFiles: skipping, global commands unchanged")
+		return nil
 	}
 
-	// Copy commands into container (this will create the directory if it's not there already)
+	commandDirInVolume := "/mnt/ddev-global-cache/global-commands/"
+
+	// Use CopyIntoVolume with destroyExisting=true to combine the rm + copy
+	// into a single container operation (previously these were separate).
 	uid, _, _ := dockerutil.GetContainerUser()
-	err = dockerutil.CopyIntoVolume(sourceGlobalCommandPath, "ddev-global-cache", "global-commands", uid, "host", false)
+	err = dockerutil.CopyIntoVolume(sourceGlobalCommandPath, "ddev-global-cache", "global-commands", uid, "host", true)
 	if err != nil {
 		return err
 	}
@@ -39,6 +53,9 @@ func PopulateGlobalCustomCommandFiles() error {
 	if err != nil {
 		return fmt.Errorf("unable to chmod %s: %v (stderr=%s)", commandDirInVolume, err, stderr)
 	}
+
+	// Save the fingerprint so we can skip next time if unchanged
+	_ = os.WriteFile(hashFilePath, []byte(currentHash), 0644)
 
 	return nil
 }
