@@ -58,12 +58,25 @@ type namedPort struct {
 // runPortDiagnose checks DDEV project ports (or defaults) and reports conflicts.
 // Returns 0 if all ports are available, 1 if any conflicts are found.
 func runPortDiagnose() int {
+	// Check for running DDEV projects first — they legitimately use ports.
+	activeProjects := ddevapp.GetActiveProjects()
+	if len(activeProjects) > 0 {
+		names := make([]string, 0, len(activeProjects))
+		for _, app := range activeProjects {
+			names = append(names, app.Name)
+		}
+		output.UserErr.Printf("DDEV projects currently running: %s\n", strings.Join(names, ", "))
+		output.UserErr.Println("Running projects use ports that will show as conflicts.")
+		output.UserErr.Println("Please run 'ddev poweroff' first, then re-run this command.")
+		return 2
+	}
+
 	app, err := ddevapp.GetActiveApp("")
 	var ports []namedPort
 	inProject := err == nil && app.AppRoot != ""
 
 	if inProject {
-		output.UserOut.Printf("Port diagnostics for project: %s\n\n", app.Name)
+		output.UserOut.Printf("Port diagnostics for project: %s\n", app.Name)
 		httpPort := app.GetPrimaryRouterHTTPPort()
 		httpsPort := app.GetPrimaryRouterHTTPSPort()
 		mailpitHTTP := app.GetMailpitHTTPPort()
@@ -94,8 +107,6 @@ func runPortDiagnose() int {
 	hasConflict := false
 
 	for _, np := range ports {
-		output.UserOut.Printf("Port %s (%s):\n", np.port, np.label)
-
 		active := netutil.IsPortActive(np.port)
 
 		// On WSL2, also check the Windows side even if the Linux side looks free.
@@ -105,37 +116,37 @@ func runPortDiagnose() int {
 		}
 
 		if !active && len(windowsProcs) == 0 {
-			output.UserOut.Printf("  ✓ Available\n\n")
+			output.UserOut.Printf("Port %s (%s): Available\n", np.port, np.label)
 			continue
 		}
 
 		hasConflict = true
 
-		// --- Linux/macOS side ---
+		// Collect all processes for this port.
+		var allProcs []portProcess
 		if active {
-			linuxProcs := findPortProcesses(np.port)
-			if len(linuxProcs) == 0 {
-				// IsPortActive says busy but we can't identify the process (e.g. Docker itself)
-				output.UserOut.Printf("  ✗ IN USE (process unidentifiable — may be Docker or a container)\n")
-			} else {
-				for _, p := range linuxProcs {
-					printProcess(p)
-					for _, hint := range portHints(p.Name, p.Side, p.PID) {
-						output.UserOut.Printf("    %s\n", hint)
-					}
+			allProcs = findPortProcesses(np.port)
+		}
+		allProcs = append(allProcs, windowsProcs...)
+
+		if len(allProcs) == 0 {
+			output.UserOut.Printf("Port %s (%s): IN USE (process unidentifiable — may be Docker or a container)\n", np.port, np.label)
+		} else {
+			for _, p := range allProcs {
+				side := ""
+				if p.Side != "" {
+					side = fmt.Sprintf(" [%s]", p.Side)
+				}
+				cmdInfo := ""
+				if p.CmdLine != "" && p.CmdLine != p.Name {
+					cmdInfo = fmt.Sprintf(", cmd=%s", p.CmdLine)
+				}
+				output.UserOut.Printf("Port %s (%s): IN USE by %s (PID %d%s)%s\n", np.port, np.label, p.Name, p.PID, cmdInfo, side)
+				for _, hint := range portHints(p.Name, p.Side, p.PID) {
+					output.UserOut.Printf("  %s\n", hint)
 				}
 			}
 		}
-
-		// --- Windows side (WSL2 only) ---
-		for _, p := range windowsProcs {
-			printProcess(p)
-			for _, hint := range portHints(p.Name, p.Side, p.PID) {
-				output.UserOut.Printf("    %s\n", hint)
-			}
-		}
-
-		output.UserOut.Println()
 	}
 
 	if !hasConflict {
@@ -148,38 +159,138 @@ func runPortDiagnose() int {
 	return 0
 }
 
-// printProcess prints one portProcess entry.
-func printProcess(p portProcess) {
-	side := ""
-	if p.Side != "" {
-		side = fmt.Sprintf(" [%s]", p.Side)
-	}
-	output.UserOut.Printf("  ✗ IN USE%s\n", side)
-	output.UserOut.Printf("    Process : %s (PID %d)\n", p.Name, p.PID)
-	if p.CmdLine != "" {
-		output.UserOut.Printf("    Command : %s\n", p.CmdLine)
-	}
-}
-
 // findPortProcesses returns processes listening on port on the local (Linux/macOS) side.
 // On Windows-native (not WSL2), delegates entirely to findWindowsPortProcesses.
+// It tries multiple detection methods: lsof, sudo lsof, ss, and /proc/net/tcp.
 func findPortProcesses(port string) []portProcess {
 	if nodeps.IsWindows() {
 		return findWindowsPortProcesses(port)
 	}
 
 	// Try lsof first (available on macOS and most Linux distros).
-	procs, err := findPortProcessesLsof(port)
-	if err == nil && len(procs) > 0 {
-		return procs
+	if hasCommand("lsof") {
+		procs, err := findPortProcessesLsof(port)
+		if err == nil && len(procs) > 0 {
+			return procs
+		}
+
+		// On Linux, lsof without root can't see processes owned by other users.
+		// Try sudo lsof (non-interactive) if regular lsof returned nothing.
+		if runtime.GOOS == "linux" && hasCommand("sudo") {
+			procs, err = findPortProcessesSudoLsof(port)
+			if err == nil && len(procs) > 0 {
+				return procs
+			}
+		}
 	}
 
 	// Fallback: ss (Linux only).
 	if runtime.GOOS == "linux" {
-		return findPortProcessesSS(port)
+		if procs := findPortProcessesSS(port); len(procs) > 0 {
+			return procs
+		}
+		// Last resort: parse /proc/net/tcp to find the inode, then match to a PID.
+		return findPortProcessesProcNet(port)
 	}
 
 	return nil
+}
+
+// findPortProcessesSudoLsof tries lsof with sudo to see processes owned by other users.
+func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
+	out, err := exec.Command("sudo", "-n", "lsof", "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcn").Output()
+	if err != nil {
+		return nil, err
+	}
+	return parseLsofOutput(out)
+}
+
+// findPortProcessesProcNet parses /proc/net/tcp to find the process using a port.
+// This works without elevated privileges to find the inode, then scans /proc/*/fd
+// to match the inode to a PID.
+func findPortProcessesProcNet(port string) []portProcess {
+	portNum, err := strconv.Atoi(port)
+	if err != nil {
+		return nil
+	}
+	hexPort := fmt.Sprintf("%04X", portNum)
+
+	// Read /proc/net/tcp and /proc/net/tcp6
+	var inodes []string
+	for _, path := range []string{"/proc/net/tcp", "/proc/net/tcp6"} {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		for rawLine := range strings.SplitSeq(string(raw), "\n") {
+			fields := strings.Fields(rawLine)
+			if len(fields) < 10 {
+				continue
+			}
+			// fields[1] = local_address (hex_ip:hex_port), fields[3] = state (0A = LISTEN)
+			if fields[3] != "0A" {
+				continue
+			}
+			addrParts := strings.Split(fields[1], ":")
+			if len(addrParts) == 2 && addrParts[1] == hexPort {
+				inodes = append(inodes, fields[9])
+			}
+		}
+	}
+
+	if len(inodes) == 0 {
+		return nil
+	}
+
+	// Scan /proc/*/fd to find which PID holds this socket inode
+	entries, err := os.ReadDir("/proc")
+	if err != nil {
+		return nil
+	}
+
+	var results []portProcess
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		pid, err := strconv.Atoi(entry.Name())
+		if err != nil {
+			continue
+		}
+		fdDir := fmt.Sprintf("/proc/%d/fd", pid)
+		fds, err := os.ReadDir(fdDir)
+		if err != nil {
+			continue
+		}
+		for _, fd := range fds {
+			link, err := os.Readlink(fmt.Sprintf("%s/%s", fdDir, fd.Name()))
+			if err != nil {
+				continue
+			}
+			for _, inode := range inodes {
+				if link == "socket:["+inode+"]" {
+					name := readProcComm(pid)
+					cmdLine := getCommandLine(pid)
+					results = appendUniquePID(results, portProcess{
+						PID:     pid,
+						Name:    name,
+						CmdLine: cmdLine,
+						Side:    getSide(),
+					})
+				}
+			}
+		}
+	}
+	return results
+}
+
+// readProcComm reads the process name from /proc/<pid>/comm.
+func readProcComm(pid int) string {
+	raw, err := os.ReadFile(fmt.Sprintf("/proc/%d/comm", pid))
+	if err != nil {
+		return "unknown"
+	}
+	return strings.TrimSpace(string(raw))
 }
 
 // findPortProcessesLsof uses lsof to identify listening processes.
@@ -188,11 +299,12 @@ func findPortProcessesLsof(port string) ([]portProcess, error) {
 	if err != nil {
 		return nil, err
 	}
+	return parseLsofOutput(out)
+}
 
-	// lsof -F output lines look like:
-	// p<pid>
-	// c<command>
-	// n<name>   (address:port)
+// parseLsofOutput parses lsof -F pcn output into portProcess entries.
+// lsof -F output lines: p<pid>, c<command>, n<name> (address:port)
+func parseLsofOutput(out []byte) ([]portProcess, error) {
 	type entry struct {
 		pid  int
 		name string
