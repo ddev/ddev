@@ -107,7 +107,8 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 						!strings.HasPrefix(base, "prepend.Dockerfile")
 				}), nil
 			},
-			displayName: "Database",
+			checkOnlyWhen: func() bool { return !slices.Contains(app.OmitContainers, "db") },
+			displayName:   "Database",
 		},
 		{
 			collectFiles: func() ([]string, error) {
@@ -201,7 +202,8 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 					filepath.Join(app.GetConfigPath("traefik/certs"), app.Name+".key"),
 				}
 			},
-			displayName: "Router",
+			checkOnlyWhen: routerEnabled,
+			displayName:   "Router",
 		},
 		{
 			collectFiles: func() ([]string, error) {
@@ -216,7 +218,8 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 				}
 				return append(crtFiles, keyFiles...), nil
 			},
-			displayName: "Router",
+			checkOnlyWhen: routerEnabled,
+			displayName:   "Router",
 		},
 		{
 			collectFiles: func() ([]string, error) {
@@ -225,7 +228,8 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			expectedDdevFiles: func() []string {
 				return []string{filepath.Join(app.GetConfigPath("traefik/config"), app.Name+".yaml")}
 			},
-			displayName: "Router",
+			checkOnlyWhen: routerEnabled,
+			displayName:   "Router",
 		},
 		{
 			collectFiles: func() ([]string, error) {
