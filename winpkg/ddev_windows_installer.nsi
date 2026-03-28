@@ -1245,10 +1245,17 @@ Function InstallWSL2CommonSetup
         Call ShowErrorAndAbort
     ${EndIf}
 
+    ; Clean up old Docker repository files if present
+    Push "WSL($SELECTED_DISTRO): Removing old Docker repository files if present..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list"'
+    Pop $1
+    Pop $0
+
     ; Add Docker GPG key
     Push "WSL($SELECTED_DISTRO): Adding Docker repository key..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1258,10 +1265,10 @@ Function InstallWSL2CommonSetup
         Call ShowErrorAndAbort
     ${EndIf}
 
-    ; Add Docker repository
+    ; Add Docker repository in deb822 format
     Push "WSL($SELECTED_DISTRO): Adding Docker apt repository..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root -e bash -c "echo deb [arch=$$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "printf \"Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: $$(. /etc/os-release && echo $${UBUNTU_CODENAME:-$$VERSION_CODENAME})\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n\" > /etc/apt/sources.list.d/docker.sources"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1271,10 +1278,17 @@ Function InstallWSL2CommonSetup
         Call ShowErrorAndAbort
     ${EndIf}
 
+    ; Clean up old DDEV repository files if present
+    Push "WSL($SELECTED_DISTRO): Removing old DDEV repository files if present..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list"'
+    Pop $1
+    Pop $0
+
     ; Add DDEV GPG key
     Push "WSL($SELECTED_DISTRO): Adding DDEV apt repository key..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key -o /etc/apt/keyrings/ddev.asc && chmod a+r /etc/apt/keyrings/ddev.asc"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1284,10 +1298,10 @@ Function InstallWSL2CommonSetup
         Call ShowErrorAndAbort
     ${EndIf}
 
-    ; Add DDEV repository
+    ; Add DDEV repository in deb822 format
     Push "WSL($SELECTED_DISTRO): Adding DDEV apt repository..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root -e bash -c "echo \"deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ * *\" > /etc/apt/sources.list.d/ddev.list"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "printf \"Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n\" > /etc/apt/sources.list.d/ddev.sources"'
     Pop $1
     Pop $0
     ${If} $1 != 0

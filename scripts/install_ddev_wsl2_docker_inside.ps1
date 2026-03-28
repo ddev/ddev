@@ -52,11 +52,11 @@ wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io contai
 wsl -u root apt-get update
 wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release
 wsl -u root install -m 0755 -d /etc/apt/keyrings
-wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"
-wsl -u root -e bash -c 'echo deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1'
+wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc"
+wsl -u root -e bash -c "printf 'Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n' \"\$(. /etc/os-release && echo \${UBUNTU_CODENAME:-\$VERSION_CODENAME})\" | tee /etc/apt/sources.list.d/docker.sources > /dev/null"
 
-wsl -u root -e bash -c "rm -f /etc/apt/keyrings/ddev.gpg && curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/keyrings/ddev.gpg > /dev/null"
-wsl -u root -e bash -c 'echo deb [signed-by=/etc/apt/keyrings/ddev.gpg] https://pkg.ddev.com/apt/ \* \* > /etc/apt/sources.list.d/ddev.list'
+wsl -u root -e bash -c "rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list && curl -fsSL https://pkg.ddev.com/apt/gpg.key | tee /etc/apt/keyrings/ddev.asc > /dev/null && chmod a+r /etc/apt/keyrings/ddev.asc"
+wsl -u root -e bash -c "printf 'Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n' > /etc/apt/sources.list.d/ddev.sources"
 wsl -u root -e bash -c "apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io wslu"
 wsl -u root -e bash -c "apt-get install -y --no-install-recommends ddev ddev-wsl2"
 wsl bash -c 'sudo usermod -aG docker $USER'
