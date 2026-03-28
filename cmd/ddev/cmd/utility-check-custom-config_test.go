@@ -775,12 +775,14 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
 		require.NoError(t, err)
 		require.NotContains(t, out, "docker-compose.phpmyadmin.yaml")
+		require.NotContains(t, out, "docker-compose.phpmyadmin_norouter.yaml")
 
 		// --all mode: addon files should appear with (add-on name) marker
 		out, err = exec.RunCommand(DdevBin, []string{"utility", "check-custom-config", "--all"})
 		require.NoError(t, err)
 		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
 		require.Contains(t, out, "docker-compose.phpmyadmin.yaml")
-		require.Contains(t, out, "(add-on ddev-phpmyadmin)")
+		require.Contains(t, out, "docker-compose.phpmyadmin_norouter.yaml")
+		require.Contains(t, out, "(add-on phpmyadmin) (#ddev-generated)")
 	})
 }
