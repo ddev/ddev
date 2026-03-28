@@ -420,6 +420,9 @@ func TestAddonGetWithDependencies(t *testing.T) {
 
 // TestAddonGetCircularDependencies tests circular dependency detection
 func TestAddonGetCircularDependencies(t *testing.T) {
+	if !github.HasGitHubToken() {
+		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
+	}
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
