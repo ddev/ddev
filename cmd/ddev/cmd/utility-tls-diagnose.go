@@ -561,17 +561,20 @@ func checkLinuxFirefox() bool {
 		if _, err := exec.LookPath(variant); err == nil {
 			foundAny = true
 			if certutilFound {
-				output.UserOut.Printf("  ✓ %s detected — certutil available, mkcert -install registers the CA via NSS\n", variant)
-				output.UserOut.Printf("    ⚠ Note: some %s builds (Flatpak, certain snap versions) maintain a separate NSS database\n", variant)
-				output.UserOut.Println("      and may still require manual CA import if HTTPS warnings appear")
+				output.UserOut.Printf("  ✓ %s detected — certutil available, CA should be registered via mkcert -install\n", variant)
 			} else {
-				output.UserOut.Printf("  ⚠ %s detected but certutil not found — Firefox may not trust DDEV certificates\n", variant)
+				output.UserOut.Printf("  ⚠ %s detected but certutil not found — Firefox will not trust DDEV certificates\n", variant)
 				output.UserOut.Println("    → Install certutil: sudo apt install libnss3-tools  OR  brew install nss")
 				output.UserOut.Println("    → Then run: mkcert -install")
-				output.UserOut.Println("    → Or manually import: Firefox Settings → Privacy & Security → View Certificates → Import")
 				hasWarnings = true
 			}
 		}
+	}
+	if foundAny {
+		output.UserOut.Println("  ⚠ Some Firefox builds (Flatpak, snap, Nightly, Developer Edition) maintain")
+		output.UserOut.Println("    a separate trust store and may require manual CA import:")
+		output.UserOut.Println("    Firefox Settings → Privacy & Security → View Certificates → Import")
+		hasWarnings = true
 	}
 	// Snap Firefox has its own NSS database separate from the system one.
 	if snapOut, err := exec.Command("snap", "list", "firefox").Output(); err == nil && strings.Contains(string(snapOut), "firefox") {
