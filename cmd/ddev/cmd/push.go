@@ -106,6 +106,9 @@ ddev push %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 				if err != nil {
 					util.Failed("push failed: %v", err)
 				}
+				if err = app.StartAppIfNotRunning(); err != nil {
+					util.Failed("Failed to start app %s: %v", app.Name, err)
+				}
 				providerName := subCommandName
 				p, err := app.GetProvider(subCommandName)
 				if err != nil {

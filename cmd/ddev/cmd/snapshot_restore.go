@@ -25,6 +25,10 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 			util.Failed("Snapshots are not available when database container is omitted")
 		}
 
+		if err = app.StartAppIfNotRunning(); err != nil {
+			util.Failed("Failed to start app %s: %v", app.GetName(), err)
+		}
+
 		if snapshotRestoreLatest {
 			if snapshotName, err = app.GetLatestSnapshot(); err != nil {
 				util.Failed("Failed to get latest snapshot of project %s: %v", app.GetName(), err)

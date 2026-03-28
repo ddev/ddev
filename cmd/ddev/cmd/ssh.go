@@ -32,6 +32,10 @@ ddev ssh -d /var/www/html`,
 		app := projects[0]
 		instrumentationApp = app
 
+		if err = app.StartAppIfNotRunning(); err != nil {
+			util.Failed("Failed to start app %s: %v", app.Name, err)
+		}
+
 		_ = app.DockerEnv()
 
 		// Use Bash for our containers, sh for 3rd-party containers

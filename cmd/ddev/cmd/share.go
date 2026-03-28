@@ -42,9 +42,8 @@ ddev share myproject`,
 		}
 		app := apps[0]
 
-		status, _ := app.SiteStatus()
-		if status != ddevapp.SiteRunning {
-			util.Failed("Project is not yet running. Use 'ddev start' first.")
+		if err = app.StartAppIfNotRunning(); err != nil {
+			util.Failed("Failed to start app %s: %v", app.Name, err)
 		}
 
 		// Determine which provider to use: flag > project config > global config > default

@@ -42,9 +42,8 @@ var DdevXHGuiCmd = &cobra.Command{
 			util.Failed("XHGui is not available with use-hardened-images.")
 		}
 
-		status, _ := app.SiteStatus()
-		if status != ddevapp.SiteRunning {
-			util.Failed("Project is not yet running. Use 'ddev start' first.")
+		if err = app.StartAppIfNotRunning(); err != nil {
+			return fmt.Errorf("failed to start app %s: %v", app.Name, err)
 		}
 
 		if app.GetXHProfMode() != types.XHProfModeXHGui {

@@ -39,6 +39,10 @@ ddev exec -s db -u root ls -la /root`,
 			util.Failed("Failed to exec command: %v", err)
 		}
 
+		if err = app.StartAppIfNotRunning(); err != nil {
+			util.Failed("Failed to start app %s: %v", app.Name, err)
+		}
+
 		container, err := app.FindContainerByType(serviceType)
 		if err != nil {
 			util.Failed("Failed to find container for service '%s' in '%s' project: %v", serviceType, app.Name, err)
