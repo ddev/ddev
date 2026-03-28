@@ -89,6 +89,7 @@ const AppTypeDrupalLatestStable = AppTypeDrupal11
 const (
 	AppTypeNone        = ""
 	AppTypeBackdrop    = "backdrop"
+	AppTypeWPBedrock   = "wp-bedrock"
 	AppTypeCakePHP     = "cakephp"
 	AppTypeCodeIgniter = "codeigniter"
 	AppTypeCraftCms    = "craftcms"

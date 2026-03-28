@@ -91,6 +91,14 @@ func init() {
 			composerCreateAllowedPaths: getBackdropComposerCreateAllowedPaths,
 		},
 
+		nodeps.AppTypeWPBedrock: {
+			appTypeDetect:        isWPBedrockApp,
+			postStartAction:      wpBedrockPostStartAction,
+			configOverrideAction: wpBedrockConfigOverrideAction,
+			uploadDirs:           getWPBedrockUploadDirs,
+			importFilesAction:    wordpressImportFilesAction,
+		},
+
 		nodeps.AppTypeCakePHP: {
 			appTypeDetect:        isCakephpApp,
 			configOverrideAction: cakephpConfigOverrideAction,
