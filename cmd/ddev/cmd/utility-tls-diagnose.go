@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"os"
@@ -15,6 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -100,7 +103,7 @@ func runTLSDiagnose() int {
 	output.UserOut.Println("Summary")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	if hasIssues {
-		output.UserOut.Println("  ✗ Issues found — see sections above for details and fixes")
+		tlsFail("Issues found — see sections above for details and fixes")
 		output.UserOut.Println()
 		output.UserOut.Println("  Nuclear option (when all else fails):")
 		output.UserOut.Println("    ddev poweroff && mkcert -uninstall && rm -rf \"$(mkcert -CAROOT)\" && mkcert -install && ddev start")
@@ -124,27 +127,40 @@ func checkMkcertInstallation() (string, bool) {
 
 	hasIssues := false
 
-	// Check mkcert in PATH
+	// Check mkcert in PATH (WSL2-side / Linux)
 	mkcertPath, err := exec.LookPath("mkcert")
 	if err != nil {
-		output.UserOut.Println("  ✗ mkcert not found in PATH")
+		tlsFail("mkcert not found in PATH")
 		output.UserOut.Println("    → Install: brew install mkcert / choco install -y mkcert / or use DDEV installer")
 		output.UserOut.Println()
 		return "", true
 	}
 	output.UserOut.Printf("  ✓ mkcert found: %s\n", mkcertPath)
 
+	// On WSL2 also confirm mkcert.exe is available on the Windows side
+	if nodeps.IsWSL2() {
+		winMkcertCheck, err := exec.Command("cmd.exe", "/c", "where mkcert").Output()
+		if err != nil {
+			tlsFail("Windows-side mkcert.exe not found in Windows PATH")
+			output.UserOut.Println("    → Install mkcert on Windows: choco install -y mkcert  OR  winget install mkcert")
+			hasIssues = true
+		} else {
+			winMkcertPath := strings.TrimSpace(strings.TrimSuffix(string(winMkcertCheck), "\r\n"))
+			output.UserOut.Printf("  ✓ Windows mkcert found: %s\n", winMkcertPath)
+		}
+	}
+
 	// Get CAROOT via mkcert -CAROOT
 	caRootOut, err := exec.Command("mkcert", "-CAROOT").Output()
 	if err != nil {
-		output.UserOut.Println("  ✗ mkcert -CAROOT failed — mkcert may be broken")
+		tlsFail("mkcert -CAROOT failed — mkcert may be broken")
 		output.UserOut.Println()
 		return "", true
 	}
 	caRoot := strings.TrimSpace(string(caRootOut))
 	output.UserOut.Printf("  ✓ CAROOT: %s\n", caRoot)
 
-	// Also show $CAROOT env var if set
+	// Also show $CAROOT env var if set and mismatched
 	caRootEnv := os.Getenv("CAROOT")
 	if caRootEnv != "" && caRootEnv != caRoot {
 		output.UserOut.Printf("  ⚠ $CAROOT env var (%s) differs from mkcert -CAROOT (%s)\n", caRootEnv, caRoot)
@@ -152,24 +168,34 @@ func checkMkcertInstallation() (string, bool) {
 		hasIssues = true
 	}
 
-	// Check rootCA.pem
+	// Check rootCA.pem — if it doesn't exist locally, clear caRoot so downstream
+	// checks don't try (and fail) to read from a path that isn't accessible on
+	// this OS (e.g. CAROOT pointing to a Windows path on macOS).
 	rootCAPEM := filepath.Join(caRoot, "rootCA.pem")
 	if _, err := os.Stat(rootCAPEM); err != nil {
-		output.UserOut.Println("  ✗ rootCA.pem not found in CAROOT")
-		output.UserOut.Println("    → Run: mkcert -install")
+		if !nodeps.IsPathOnWindowsFilesystem(caRoot) || nodeps.IsWSL2() {
+			tlsFail("rootCA.pem not found in CAROOT (%s)", caRoot)
+			output.UserOut.Println("    → Run: mkcert -install")
+		} else {
+			tlsFail("CAROOT (%s) points to a Windows path that is not accessible on this OS", caRoot)
+			output.UserOut.Println("    → Unset $CAROOT from your shell, or set it to the local mkcert CA directory")
+		}
 		hasIssues = true
+		caRoot = "" // clear so downstream checks skip CA-dependent work
 	} else {
 		output.UserOut.Println("  ✓ rootCA.pem found")
 	}
 
-	// Check rootCA-key.pem
-	rootCAKey := filepath.Join(caRoot, "rootCA-key.pem")
-	if _, err := os.Stat(rootCAKey); err != nil {
-		output.UserOut.Println("  ✗ rootCA-key.pem not found or not readable")
-		output.UserOut.Println("    → Run: mkcert -install")
-		hasIssues = true
-	} else {
-		output.UserOut.Println("  ✓ rootCA-key.pem readable")
+	// Check rootCA-key.pem (only when caRoot is still valid)
+	if caRoot != "" {
+		rootCAKey := filepath.Join(caRoot, "rootCA-key.pem")
+		if _, err := os.Stat(rootCAKey); err != nil {
+			tlsFail("rootCA-key.pem not found or not readable")
+			output.UserOut.Println("    → Run: mkcert -install")
+			hasIssues = true
+		} else {
+			output.UserOut.Println("  ✓ rootCA-key.pem readable")
+		}
 	}
 
 	// Cross-check with globalconfig
@@ -197,7 +223,7 @@ func checkOSTrustStore() bool {
 	installOutput := strings.TrimSpace(string(out))
 
 	if err != nil {
-		output.UserOut.Printf("  ✗ mkcert -install failed: %v\n", err)
+		tlsFail("mkcert -install failed: %v", err)
 		if installOutput != "" {
 			output.UserOut.Printf("    Output: %s\n", installOutput)
 		}
@@ -249,12 +275,12 @@ func checkWSL2Configuration(caRoot string) bool {
 	// Check CAROOT points to Windows filesystem
 	caRootEnv := os.Getenv("CAROOT")
 	if caRootEnv == "" {
-		output.UserOut.Println("  ✗ $CAROOT env var is not set in WSL2")
-		output.UserOut.Println("    → In Windows PowerShell/CMD, run:")
+		tlsFail("$CAROOT env var is not set in WSL2")
+		output.UserOut.Println("    → In Windows PowerShell, run:")
 		output.UserOut.Println("      $env:CAROOT = mkcert -CAROOT")
 		output.UserOut.Println("      setx CAROOT $env:CAROOT")
-		output.UserOut.Println("    → Then in WSL2, add to ~/.bashrc or ~/.zshrc:")
-		output.UserOut.Println("      export WSLENV=CAROOT/up")
+		output.UserOut.Println("      setx WSLENV \"CAROOT/up\"")
+		output.UserOut.Println("    → Then restart WSL2: wsl --shutdown")
 		hasIssues = true
 	} else if !nodeps.IsPathOnWindowsFilesystem(caRootEnv) {
 		output.UserOut.Printf("  ⚠ $CAROOT (%s) does not point to Windows filesystem (/mnt/...)\n", caRootEnv)
@@ -268,19 +294,19 @@ func checkWSL2Configuration(caRoot string) bool {
 	// Check WSLENV contains CAROOT/up
 	wslEnv := os.Getenv("WSLENV")
 	if !strings.Contains(wslEnv, "CAROOT") {
-		output.UserOut.Println("  ✗ WSLENV does not contain CAROOT — environment not propagated to Windows")
+		tlsFail("WSLENV does not contain CAROOT — environment not propagated to Windows")
 		output.UserOut.Println("    → In Windows PowerShell, run:")
 		output.UserOut.Println("      setx WSLENV \"CAROOT/up\"")
-		output.UserOut.Println("    → Then restart WSL2")
+		output.UserOut.Println("    → Then restart WSL2: wsl --shutdown")
 		hasIssues = true
 	} else {
 		output.UserOut.Printf("  ✓ WSLENV contains CAROOT (%s)\n", wslEnv)
 	}
 
-	// Check Windows-side mkcert via cmd.exe
+	// Check Windows-side mkcert CAROOT and compare paths
 	winMkcertOut, err := exec.Command("cmd.exe", "/c", "mkcert -CAROOT").Output()
 	if err != nil {
-		output.UserOut.Println("  ✗ Windows-side mkcert not found")
+		tlsFail("Windows-side mkcert CAROOT could not be determined")
 		output.UserOut.Println("    → Install mkcert on Windows: choco install -y mkcert  OR  winget install mkcert")
 		hasIssues = true
 	} else {
@@ -299,12 +325,22 @@ func checkWSL2Configuration(caRoot string) bool {
 		}
 	}
 
+	// Compute SHA1 thumbprint of the WSL2-side rootCA.pem for comparison
+	wslThumbprint := ""
+	if caRoot != "" {
+		wslThumbprint, err = certThumbprintFromFile(filepath.Join(caRoot, "rootCA.pem"))
+		if err != nil {
+			output.UserOut.Printf("  ⚠ Could not read WSL2 rootCA.pem for fingerprint: %v\n", err)
+		}
+	}
+
 	// Check Windows certificate store for mkcert CA via PowerShell (both LocalMachine and CurrentUser)
+	// Also retrieve the thumbprint to compare with the WSL2-side CA.
 	psScript := `
 $certs = @(Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $_.Subject -like "*mkcert*" }) +
          @(Get-ChildItem Cert:\CurrentUser\Root | Where-Object { $_.Subject -like "*mkcert*" })
 if ($certs.Count -gt 0) {
-    Write-Output "FOUND:$($certs[0].Subject)"
+    Write-Output "FOUND:$($certs[0].Thumbprint):$($certs[0].Subject)"
 } else {
     Write-Output "NOTFOUND"
 }
@@ -315,11 +351,30 @@ if ($certs.Count -gt 0) {
 	} else {
 		psResult := strings.TrimSpace(string(psOut))
 		psResult = strings.TrimSuffix(psResult, "\r")
-		if subject, found := strings.CutPrefix(psResult, "FOUND:"); found {
+		if after, found := strings.CutPrefix(psResult, "FOUND:"); found {
+			// Format: "thumbprint:subject"
+			parts := strings.SplitN(after, ":", 2)
+			winThumbprint := strings.ToUpper(strings.TrimSpace(parts[0]))
+			subject := ""
+			if len(parts) == 2 {
+				subject = strings.TrimSpace(parts[1])
+			}
 			output.UserOut.Printf("  ✓ mkcert CA found in Windows certificate store: %s\n", subject)
+
+			// Compare thumbprints to confirm WSL2 and Windows use the same CA
+			if wslThumbprint != "" && winThumbprint != "" {
+				if strings.EqualFold(wslThumbprint, winThumbprint) {
+					output.UserOut.Printf("  ✓ WSL2 and Windows CA fingerprints match (%s)\n", winThumbprint)
+				} else {
+					output.UserOut.Printf("  ⚠ CA fingerprint mismatch: WSL2=%s  Windows=%s\n", wslThumbprint, winThumbprint)
+					output.UserOut.Println("    → WSL2 is using a different CA than the one trusted by Windows")
+					output.UserOut.Println("    → Run mkcert -install in PowerShell, then restart WSL2")
+					hasIssues = true
+				}
+			}
 		} else {
-			output.UserOut.Println("  ✗ mkcert CA NOT found in Windows certificate store")
-			output.UserOut.Println("    → In Windows PowerShell (as Administrator), run: mkcert -install")
+			tlsFail("mkcert CA NOT found in Windows certificate store")
+			output.UserOut.Println("    → In Windows PowerShell (as yourself, not Administrator), run: mkcert -install")
 			hasIssues = true
 		}
 	}
@@ -432,7 +487,7 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 				foundAny = true
 			}
 		}
-		// Check snap and flatpak Firefox
+		// Check snap Firefox
 		if snapOut, err := exec.Command("snap", "list", "firefox").Output(); err == nil && strings.Contains(string(snapOut), "firefox") {
 			output.UserOut.Println("  ⚠ Firefox (snap) detected — snap Firefox has its own NSS database")
 			output.UserOut.Println("    → Run: mkcert -install  (mkcert handles snap Firefox automatically on some systems)")
@@ -457,7 +512,7 @@ func checkCertificateFiles(caRoot string, app *ddevapp.DdevApp) bool {
 	hasIssues := false
 
 	if caRoot == "" {
-		output.UserOut.Println("  ✗ Cannot check certificates — CAROOT not available")
+		tlsFail("Cannot check certificates — CAROOT not available")
 		output.UserOut.Println()
 		return true
 	}
@@ -465,7 +520,7 @@ func checkCertificateFiles(caRoot string, app *ddevapp.DdevApp) bool {
 	// Load the CA cert pool
 	caPool, err := loadCACertPool(caRoot)
 	if err != nil {
-		output.UserOut.Printf("  ✗ Failed to load CA certificate from CAROOT: %v\n", err)
+		tlsFail("Failed to load CA certificate from CAROOT: %v", err)
 		output.UserOut.Println("    → Run: mkcert -install")
 		output.UserOut.Println()
 		return true
@@ -504,27 +559,26 @@ func checkCertFile(certPath string, caPool *x509.CertPool, expectedHostnames []s
 
 	certPEM, err := os.ReadFile(certPath)
 	if err != nil {
-		output.UserOut.Printf("  ✗ %s not found: %s\n", label, certPath)
-		output.UserOut.Printf("    (path: %s)\n", certPath)
+		tlsFail("%s not found: %s", label, certPath)
 		return true
 	}
 
 	block, _ := pem.Decode(certPEM)
 	if block == nil {
-		output.UserOut.Printf("  ✗ %s: failed to decode PEM\n", label)
+		tlsFail("%s: failed to decode PEM", label)
 		return true
 	}
 
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		output.UserOut.Printf("  ✗ %s: failed to parse certificate: %v\n", label, err)
+		tlsFail("%s: failed to parse certificate: %v", label, err)
 		return true
 	}
 
 	// Check expiration
 	now := time.Now()
 	if now.After(cert.NotAfter) {
-		output.UserOut.Printf("  ✗ %s: EXPIRED (expired %s)\n", label, cert.NotAfter.Format("2006-01-02"))
+		tlsFail("%s: EXPIRED (expired %s)", label, cert.NotAfter.Format("2006-01-02"))
 		hasIssues = true
 	} else {
 		output.UserOut.Printf("  ✓ %s exists and is valid (expires %s)\n", label, cert.NotAfter.Format("2006-01-02"))
@@ -536,7 +590,7 @@ func checkCertFile(certPath string, caPool *x509.CertPool, expectedHostnames []s
 		CurrentTime: now,
 	})
 	if err != nil {
-		output.UserOut.Printf("  ✗ %s: NOT verified against current CAROOT: %v\n", label, err)
+		tlsFail("%s: NOT verified against current CAROOT: %v", label, err)
 		output.UserOut.Println("    → CA may have been rotated; regenerate certificates")
 		hasIssues = true
 	} else {
@@ -546,7 +600,7 @@ func checkCertFile(certPath string, caPool *x509.CertPool, expectedHostnames []s
 	// Check hostname coverage
 	for _, hostname := range expectedHostnames {
 		if err := cert.VerifyHostname(hostname); err != nil {
-			output.UserOut.Printf("  ✗ %s does not cover hostname %s\n", label, hostname)
+			tlsFail("%s does not cover hostname %s", label, hostname)
 			hasIssues = true
 		} else {
 			output.UserOut.Printf("  ✓ %s covers hostname %s\n", label, hostname)
@@ -579,13 +633,27 @@ func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) bool {
 		httpsPort = nodeps.DdevDefaultRouterHTTPSPort
 	}
 
-	// Load CA cert pool for verification
+	// Load CA cert pool for verification.
+	// Prefer an explicit pool from CAROOT so we test against the exact CA that signed
+	// the certs. Fall back to the system pool when CAROOT is unavailable locally
+	// (e.g. CAROOT points to a Windows path that doesn't exist on this OS), which
+	// works correctly on macOS/Linux after a successful mkcert -install.
 	caPool, err := loadCACertPool(caRoot)
+	var caPoolNote string
 	if err != nil {
-		output.UserOut.Printf("  ✗ Cannot load CA for live check: %v\n", err)
-		hasIssues = true
-	} else {
-		// Linux/WSL2-side TLS check via tls.Dial
+		sysPool, sysErr := x509.SystemCertPool()
+		if sysErr != nil {
+			tlsFail("Cannot load CA for live check: %v", err)
+			hasIssues = true
+			caPool = nil
+		} else {
+			caPool = sysPool
+			caPoolNote = " (using system CA pool — CAROOT not readable locally)"
+		}
+	}
+
+	if caPool != nil {
+		// Linux/WSL2/macOS-side TLS check via tls.Dial
 		addr := fmt.Sprintf("localhost:%s", httpsPort)
 		tlsConfig := &tls.Config{
 			ServerName: hostname,
@@ -593,12 +661,12 @@ func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) bool {
 		}
 		conn, err := tls.Dial("tcp", addr, tlsConfig)
 		if err != nil {
-			output.UserOut.Printf("  ✗ TLS connection to %s (SNI: %s) failed: %v\n", addr, hostname, err)
+			tlsFail("TLS connection to %s (SNI: %s) failed: %v", addr, hostname, err)
 			output.UserOut.Println("    → Router may not be running or certificate is not trusted")
 			hasIssues = true
 		} else {
 			conn.Close()
-			output.UserOut.Printf("  ✓ TLS verified: localhost:%s with SNI %s\n", httpsPort, hostname)
+			output.UserOut.Printf("  ✓ TLS verified: localhost:%s with SNI %s%s\n", httpsPort, hostname, caPoolNote)
 		}
 	}
 
@@ -610,16 +678,23 @@ func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) bool {
 		}
 		output.UserOut.Printf("  Checking Windows trust (Chrome/Edge test) via PowerShell: %s\n", projectURL)
 
+		// Use TrustFailure status to distinguish certificate errors from network errors.
+		// A certificate error means the CA is not trusted on the Windows side.
+		// A connect/DNS error means a network issue unrelated to certificates.
 		psScript := fmt.Sprintf(`
 try {
     $null = Invoke-WebRequest -Uri '%s' -UseBasicParsing -TimeoutSec 10
     Write-Output "TRUSTED"
 } catch [System.Net.WebException] {
+    $status = $_.Exception.Status
     $msg = $_.Exception.Message
-    if ($_.Exception.Response -ne $null) {
+    if ($status -eq [System.Net.WebExceptionStatus]::TrustFailure) {
         Write-Output "CERT_ERROR:$msg"
-    } else {
+    } elseif ($status -eq [System.Net.WebExceptionStatus]::ConnectFailure -or
+              $status -eq [System.Net.WebExceptionStatus]::NameResolutionFailure) {
         Write-Output "CONNECT_ERROR:$msg"
+    } else {
+        Write-Output "CERT_ERROR:$msg"
     }
 } catch {
     Write-Output "CONNECT_ERROR:$($_.Exception.Message)"
@@ -634,13 +709,13 @@ try {
 			if result == "TRUSTED" {
 				output.UserOut.Println("  ✓ Windows Invoke-WebRequest: TRUSTED (Chrome/Edge would trust this)")
 			} else if msg, ok := strings.CutPrefix(result, "CERT_ERROR:"); ok {
-				output.UserOut.Printf("  ✗ Windows CERT_ERROR: %s\n", msg)
+				tlsFail("Windows certificate not trusted: %s", msg)
 				output.UserOut.Println("    → Windows does not trust the mkcert CA")
-				output.UserOut.Println("    → In Windows PowerShell (as Administrator): mkcert -install")
+				output.UserOut.Println("    → In Windows PowerShell (as yourself, not Administrator): mkcert -install")
 				output.UserOut.Println("    → Make sure CAROOT points to the Windows mkcert directory")
 				hasIssues = true
 			} else if msg, ok := strings.CutPrefix(result, "CONNECT_ERROR:"); ok {
-				output.UserOut.Printf("  ⚠ Windows CONNECT_ERROR (DNS/network, not a cert issue): %s\n", msg)
+				output.UserOut.Printf("  ⚠ Windows connection error (DNS/network issue, not a certificate problem): %s\n", msg)
 			} else {
 				output.UserOut.Printf("  ⚠ Windows connectivity check returned: %s\n", result)
 			}
@@ -663,6 +738,22 @@ func loadCACertPool(caRoot string) (*x509.CertPool, error) {
 		return nil, fmt.Errorf("no valid certificates found in %s", rootCAPEM)
 	}
 	return pool, nil
+}
+
+// certThumbprintFromFile returns the uppercase SHA1 hex thumbprint of the first
+// certificate in the PEM file at path. This matches the Thumbprint shown by
+// Windows Get-ChildItem Cert:\.
+func certThumbprintFromFile(pemPath string) (string, error) {
+	data, err := os.ReadFile(pemPath)
+	if err != nil {
+		return "", err
+	}
+	block, _ := pem.Decode(data)
+	if block == nil {
+		return "", fmt.Errorf("no PEM block found in %s", pemPath)
+	}
+	sum := sha1.Sum(block.Bytes) //nolint:gosec // SHA1 used only for display/comparison, not security
+	return strings.ToUpper(hex.EncodeToString(sum[:])), nil
 }
 
 // windowsPathToWSL converts a Windows path (e.g. C:\Users\foo) to a WSL path (/mnt/c/Users/foo).
@@ -692,4 +783,11 @@ func windowsPathFromWSLCAROOT() string {
 		}
 	}
 	return caRootEnv
+}
+
+// tlsFail prints a red ✗ failure line to the diagnostic output.
+func tlsFail(format string, a ...any) {
+	mark := util.ColorizeText("✗", "red")
+	msg := fmt.Sprintf(format, a...)
+	output.UserOut.Println("  " + mark + " " + msg)
 }
