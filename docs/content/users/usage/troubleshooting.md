@@ -128,7 +128,20 @@ Most people will want to use ports 80 and 443, the default HTTP and HTTPS ports 
 * Lando: If you’ve previously used Lando, try running `lando poweroff`.
 * IIS on Windows (can affect WSL2). You’ll have to disable it in the Windows settings.
 
-To dig deeper, you can use a number of tools to find out what process is listening.
+To dig deeper, run `ddev utility port-diagnose` from inside your project directory. It checks every port your project needs, identifies the blocking process by name and PID (on both the Linux and Windows sides when running in WSL2), and prints kill/stop/disable/uninstall hints:
+
+```
+$ ddev utility port-diagnose
+Port 80 (router HTTP):
+  ✗ IN USE [Linux]
+    Process : apache2 (PID 1234)
+    Command : /usr/sbin/apache2 -k start
+    Fix     : sudo systemctl stop apache2
+    Disable : sudo systemctl disable apache2
+    Remove  : sudo apt-get remove apache2
+```
+
+You can also use a number of lower-level tools to find out what process is listening.
 
 On macOS and Linux, try the `lsof` tool on ports 80 or 443 or whatever port you’re having trouble with:
 
