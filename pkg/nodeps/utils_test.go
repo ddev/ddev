@@ -458,3 +458,51 @@ hostAddressLoopback=true`,
 		})
 	}
 }
+
+// TestIsEnvTrue tests IsEnvTrue with various env var values.
+// Accepted values match strconv.ParseBool: 1, t, T, TRUE, true, True,
+// 0, f, F, FALSE, false, False.
+func TestIsEnvTrue(t *testing.T) {
+	const testEnv = "DDEV_TEST_IS_ENV_TRUE"
+	origVal, origSet := os.LookupEnv(testEnv)
+	t.Cleanup(func() {
+		if origSet {
+			_ = os.Setenv(testEnv, origVal)
+		} else {
+			_ = os.Unsetenv(testEnv)
+		}
+	})
+
+	tests := map[string]struct {
+		value    string
+		expected bool
+	}{
+		"true":  {value: "true", expected: true},
+		"TRUE":  {value: "TRUE", expected: true},
+		"True":  {value: "True", expected: true},
+		"1":     {value: "1", expected: true},
+		"t":     {value: "t", expected: true},
+		"T":     {value: "T", expected: true},
+		"false": {value: "false", expected: false},
+		"FALSE": {value: "FALSE", expected: false},
+		"False": {value: "False", expected: false},
+		"0":     {value: "0", expected: false},
+		"f":     {value: "f", expected: false},
+		"F":     {value: "F", expected: false},
+		"yes":   {value: "yes", expected: false},
+		"empty": {value: "", expected: false},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_ = os.Setenv(testEnv, tc.value)
+			require.Equal(t, tc.expected, nodeps.IsEnvTrue(testEnv))
+		})
+	}
+
+	// Test with unset env var
+	t.Run("unset", func(t *testing.T) {
+		_ = os.Unsetenv(testEnv)
+		require.False(t, nodeps.IsEnvTrue(testEnv))
+	})
+}

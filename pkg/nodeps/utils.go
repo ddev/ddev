@@ -205,3 +205,10 @@ func ParseURL(rawURL string) (scheme string, urlWithoutPort string, port string)
 
 	return scheme, urlWithoutPort, port
 }
+
+// IsEnvTrue returns true if the given environment variable
+// has a value accepted by strconv.ParseBool.
+func IsEnvTrue(envVar string) bool {
+	val, _ := strconv.ParseBool(os.Getenv(envVar))
+	return val
+}
