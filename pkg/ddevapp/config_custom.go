@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -247,6 +248,16 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 				return filepath.Glob(filepath.Join(ddevDir, "web-entrypoint.d", "*.sh"))
 			},
 			displayName: "Web server",
+		},
+		{
+			collectFiles: func() ([]string, error) {
+				return []string{app.GetConfigPath("xhprof/xhprof_prepend.php")}, nil
+			},
+			expectedDdevFiles: func() []string {
+				return []string{app.GetConfigPath("xhprof/xhprof_prepend.php")}
+			},
+			checkOnlyWhen: func() bool { return app.GetXHProfMode() == types.XHProfModePrepend },
+			displayName:   "XHProf",
 		},
 		{
 			collectFiles: func() ([]string, error) {
