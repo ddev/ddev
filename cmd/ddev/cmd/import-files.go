@@ -88,6 +88,10 @@ func NewImportFileCmd() *cobra.Command {
 }
 
 func importFilesRun(app *ddevapp.DdevApp, uploadDir, sourcePath, extractPath string) error {
+	if err := app.StartAppIfNotRunning(); err != nil {
+		return fmt.Errorf("failed to start app %s: %v", app.GetName(), err)
+	}
+
 	var showExtPathPrompt bool
 	if sourcePath == "" {
 		// Ensure we prompt for extraction path if an archive is provided, while still allowing
