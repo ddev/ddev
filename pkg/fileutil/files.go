@@ -276,6 +276,34 @@ func ListFilesInDirFullPath(path string, excludeDirectories bool) ([]string, err
 	return fileList, nil
 }
 
+// ListFilesWithDepth returns an array of full path of files found in a directory, traversing up to maxDepth levels.
+// maxDepth=0 means only files directly in dir, maxDepth=1 means dir and one level of subdirectories, etc.
+func ListFilesWithDepth(dir string, maxDepth int) ([]string, error) {
+	var files []string
+	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			// Calculate depth and skip directories beyond maxDepth
+			relPath, _ := filepath.Rel(dir, path)
+			var depth int
+			if relPath == "." {
+				depth = 0
+			} else {
+				depth = strings.Count(relPath, string(filepath.Separator)) + 1
+			}
+			if depth > maxDepth {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		files = append(files, path)
+		return nil
+	})
+	return files, err
+}
+
 // RandomFilenameBase generates a temporary filename for use in testing or whatever.
 // From https://stackoverflow.com/a/28005931/215713
 func RandomFilenameBase() string {
