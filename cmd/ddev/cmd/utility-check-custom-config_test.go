@@ -591,6 +591,37 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		require.Contains(t, out, "custom.sh")
 	})
 
+	// Test xhprof_prepend.php
+	t.Run("xhprof config", func(t *testing.T) {
+		// Configure to use xhprof prepend mode
+		_, err := exec.RunCommand(DdevBin, []string{"config", "--xhprof-mode=prepend"})
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			// Revert back to default
+			_, _ = exec.RunCommand(DdevBin, []string{"config", "--xhprof-mode="})
+		})
+
+		ddevDir := filepath.Join(tmpdir, ".ddev")
+		xhprofDir := filepath.Join(ddevDir, "xhprof")
+		err = os.MkdirAll(xhprofDir, 0755)
+		require.NoError(t, err)
+
+		// Create a custom xhprof_prepend.php file
+		customXHProf := filepath.Join(xhprofDir, "xhprof_prepend.php")
+		err = os.WriteFile(customXHProf, []byte("<?php\n// Custom xhprof config\nxhprof_enable();\n"), 0644)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_ = os.Remove(customXHProf)
+		})
+
+		// Run check-custom-config
+		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
+		require.NoError(t, err)
+		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
+		require.Contains(t, out, "XHProf")
+		require.Contains(t, out, "xhprof_prepend.php")
+	})
+
 	// Test commands directory with 2-level depth
 	t.Run("project commands at 2-level depth", func(t *testing.T) {
 		ddevDir := filepath.Join(tmpdir, ".ddev")
