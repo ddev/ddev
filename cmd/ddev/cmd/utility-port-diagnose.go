@@ -167,6 +167,8 @@ func runPortDiagnose() int {
 	return 0
 }
 
+var sudoMessageShown bool
+
 // findPortProcesses returns processes listening on port on the local (Linux/macOS) side.
 // On Windows-native (not WSL2), delegates entirely to findWindowsPortProcesses.
 // It tries multiple detection methods: lsof, sudo lsof, ss, and /proc/net/tcp.
@@ -182,9 +184,14 @@ func findPortProcesses(port string) []portProcess {
 			return procs
 		}
 
-		// On Linux, lsof without root can't see processes owned by other users.
-		// Try sudo lsof (non-interactive) if regular lsof returned nothing.
-		if runtime.GOOS == "linux" && hasCommand("sudo") {
+		// lsof without root can't see processes owned by other users.
+		// Try sudo lsof if regular lsof returned nothing.
+		if hasCommand("sudo") {
+			if !sudoMessageShown {
+				output.UserOut.Println("Unable to identify the process without elevated privileges.")
+				output.UserOut.Println("Trying 'sudo lsof' — you may be prompted for your password.")
+				sudoMessageShown = true
+			}
 			procs, err = findPortProcessesSudoLsof(port)
 			if err == nil && len(procs) > 0 {
 				return procs
@@ -206,7 +213,10 @@ func findPortProcesses(port string) []portProcess {
 
 // findPortProcessesSudoLsof tries lsof with sudo to see processes owned by other users.
 func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
-	out, err := exec.Command("sudo", "-n", "lsof", "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcn").Output()
+	cmd := exec.Command("sudo", "lsof", "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcn")
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	out, err := cmd.Output()
 	if err != nil {
 		return nil, err
 	}
