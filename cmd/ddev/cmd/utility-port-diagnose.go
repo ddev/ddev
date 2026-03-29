@@ -115,47 +115,45 @@ func runPortDiagnose() int {
 	hasConflict := false
 
 	for _, np := range ports {
-		active := netutil.IsPortActive(np.port)
+		// Find processes first to avoid killing single-connection listeners
+		// (IsPortActive dials the port, which can cause them to exit).
+		allProcs := findPortProcesses(np.port)
 
-		// On WSL2, also check the Windows side even if the Linux side looks free.
-		var windowsProcs []portProcess
+		// On WSL2, also check the Windows side.
 		if nodeps.IsWSL2() {
-			windowsProcs = findWindowsPortProcesses(np.port)
+			allProcs = append(allProcs, findWindowsPortProcesses(np.port)...)
 		}
 
-		if !active && len(windowsProcs) == 0 {
-			output.UserOut.Printf("Port %s (%s): Available\n", np.port, np.label)
+		// If no processes found, fall back to IsPortActive as a connectivity check.
+		if len(allProcs) == 0 {
+			if !netutil.IsPortActive(np.port) {
+				output.UserOut.Printf("Port %s (%s): Available\n", np.port, np.label)
+				continue
+			}
+		}
+
+		if len(allProcs) == 0 {
+			// Port responds but we can't identify who owns it.
+			hasConflict = true
+			output.UserOut.Printf("Port %s (%s): IN USE (unable to identify process — try 'sudo lsof -i :%s -sTCP:LISTEN')\n", np.port, np.label, np.port)
 			continue
 		}
 
 		hasConflict = true
 
-		// Collect all processes for this port.
-		var allProcs []portProcess
-		if active {
-			allProcs = findPortProcesses(np.port)
-		}
-		allProcs = append(allProcs, windowsProcs...)
-
 		// Deduplicate by process name (e.g. apache2 parent + workers all listen on same port).
-		uniqueProcs := deduplicateByName(allProcs)
-
-		if len(uniqueProcs) == 0 {
-			output.UserOut.Printf("Port %s (%s): IN USE (process unidentifiable — may be Docker or a container)\n", np.port, np.label)
-		} else {
-			for _, p := range uniqueProcs {
-				side := ""
-				if p.Side != "" {
-					side = fmt.Sprintf(" [%s]", p.Side)
-				}
-				cmdInfo := ""
-				if p.CmdLine != "" && p.CmdLine != p.Name {
-					cmdInfo = fmt.Sprintf(", cmd=%s", p.CmdLine)
-				}
-				output.UserOut.Printf("Port %s (%s): IN USE by %s (PID %d%s)%s\n", np.port, np.label, p.Name, p.PID, cmdInfo, side)
-				for _, hint := range portHints(p.Name, p.Side, p.PID) {
-					output.UserOut.Printf("  %s\n", hint)
-				}
+		for _, p := range deduplicateByName(allProcs) {
+			side := ""
+			if p.Side != "" {
+				side = fmt.Sprintf(" [%s]", p.Side)
+			}
+			cmdInfo := ""
+			if p.CmdLine != "" && p.CmdLine != p.Name {
+				cmdInfo = fmt.Sprintf(", cmd=%s", p.CmdLine)
+			}
+			output.UserOut.Printf("Port %s (%s): IN USE by %s (PID %d%s)%s\n", np.port, np.label, p.Name, p.PID, cmdInfo, side)
+			for _, hint := range portHints(p.Name, p.Side, p.PID) {
+				output.UserOut.Printf("  %s\n", hint)
 			}
 		}
 	}
@@ -215,10 +213,12 @@ func findPortProcesses(port string) []portProcess {
 }
 
 // findPortProcessesSudoLsof tries lsof with sudo to see processes owned by other users.
+// Connects stdin so sudo can prompt for a password in interactive terminals.
 func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
 	cmd := exec.Command("sudo", lsofPath(), "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcn")
 	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
+	// Suppress sudo's own error messages (e.g. "a terminal is required")
+	// since we handle failure gracefully by falling through to other methods.
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, err
