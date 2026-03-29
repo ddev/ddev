@@ -73,6 +73,10 @@ func GetHostDockerInternal() *HostDockerInternal {
 		case nodeps.IsDevcontainer():
 			message = "IsDevcontainer uses 'host-gateway' in extra_hosts"
 
+		case nodeps.IsWSL2() && nodeps.IsWSL2NoneMode():
+			// WSL2 networking is disabled; no network path to Windows host
+			message = "IsWSL2 with networkingMode=none; no network path to Windows host for Xdebug"
+
 		case nodeps.IsWSL2() && IsDockerDesktop():
 			// If IDE is on Windows, return; we don't have to do anything.
 			message = "IsWSL2 and IsDockerDesktop"
@@ -82,6 +86,7 @@ func GetHostDockerInternal() *HostDockerInternal {
 			message = fmt.Sprintf("xdebug_ide_location=%s uses 'host-gateway' in extra_hosts, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", globalconfig.DdevGlobalConfig.XdebugIDELocation)
 
 		case nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode() && !IsDockerDesktop():
+			// Covers both "nat" and "virtioproxy" networking modes
 			// Microsoft instructions for finding Windows IP address at
 			// https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
 			// If IDE is on Windows, we have to parse /etc/resolv.conf

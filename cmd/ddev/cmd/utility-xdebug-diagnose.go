@@ -743,6 +743,14 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 			} else {
 				output.UserOut.Println("✗ hostAddressLoopback not set")
 			}
+		} else if nodeps.IsWSL2VirtioProxyMode() {
+			envType = "wsl2-virtioproxy"
+			output.UserOut.Println("Platform: WSL2 (virtioproxy)")
+		} else if nodeps.IsWSL2NoneMode() {
+			envType = "wsl2-none"
+			output.UserOut.Println("Platform: WSL2 (networking=none)")
+			output.UserOut.Println("  ⚠ WSL2 networking is disabled; Xdebug cannot reach a Windows-side IDE")
+			output.UserOut.Println("    Use a browser-based IDE inside WSL (via WSLg) or change networkingMode in .wslconfig")
 		} else {
 			envType = "wsl2-nat"
 			output.UserOut.Println("Platform: WSL2 (NAT)")

@@ -41,18 +41,50 @@ func IsWSL2MirroredMode() bool {
 	return mode == "mirrored"
 }
 
-// GetWSL2NetworkingMode returns the current WSL2 networking mode,
-// normally either "nat" or "mirrored".
+// GetWSL2NetworkingMode returns the current WSL2 networking mode.
+// Valid modes are "nat", "mirrored", "virtioproxy", "none", and "bridged".
+// See https://learn.microsoft.com/en-us/windows/wsl/wsl-config#configuration-settings-for-wslconfig
 func GetWSL2NetworkingMode() (string, error) {
 	out, err := exec.Command("wslinfo", "--networking-mode").Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to run wslinfo: %w", err)
 	}
 	mode := strings.TrimSpace(strings.ToLower(string(bytes.TrimSpace(out))))
-	if mode != "nat" && mode != "mirrored" {
+	validModes := map[string]bool{
+		"nat":         true,
+		"mirrored":    true,
+		"virtioproxy": true,
+		"none":        true,
+		"bridged":     true,
+	}
+	if !validModes[mode] {
 		return "", fmt.Errorf("unrecognized networking mode %q", mode)
 	}
 	return mode, nil
+}
+
+// IsWSL2VirtioProxyMode returns true if running WSL2 in virtioproxy mode.
+func IsWSL2VirtioProxyMode() bool {
+	if !IsWSL2() {
+		return false
+	}
+	mode, err := GetWSL2NetworkingMode()
+	if err != nil {
+		return false
+	}
+	return mode == "virtioproxy"
+}
+
+// IsWSL2NoneMode returns true if running WSL2 with networking disabled.
+func IsWSL2NoneMode() bool {
+	if !IsWSL2() {
+		return false
+	}
+	mode, err := GetWSL2NetworkingMode()
+	if err != nil {
+		return false
+	}
+	return mode == "none"
 }
 
 // IsPathOnWindowsFilesystem checks if the given path is on the Windows filesystem
