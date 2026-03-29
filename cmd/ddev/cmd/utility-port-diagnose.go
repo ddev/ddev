@@ -58,15 +58,23 @@ type namedPort struct {
 // runPortDiagnose checks DDEV project ports (or defaults) and reports conflicts.
 // Returns 0 if all ports are available, 1 if any conflicts are found.
 func runPortDiagnose() int {
-	// Check for running DDEV projects first — they legitimately use ports.
+	// Check for running DDEV projects or router first — they legitimately use ports.
 	activeProjects := ddevapp.GetActiveProjects()
-	if len(activeProjects) > 0 {
-		names := make([]string, 0, len(activeProjects))
-		for _, app := range activeProjects {
-			names = append(names, app.Name)
+	router, _ := ddevapp.FindDdevRouter()
+	if len(activeProjects) > 0 || router != nil {
+		var reasons []string
+		if len(activeProjects) > 0 {
+			names := make([]string, 0, len(activeProjects))
+			for _, app := range activeProjects {
+				names = append(names, app.Name)
+			}
+			reasons = append(reasons, fmt.Sprintf("running projects: %s", strings.Join(names, ", ")))
 		}
-		output.UserErr.Printf("DDEV projects currently running: %s\n", strings.Join(names, ", "))
-		output.UserErr.Println("Running projects use ports that will show as conflicts.")
+		if router != nil {
+			reasons = append(reasons, "ddev-router is running")
+		}
+		output.UserErr.Printf("DDEV is currently active (%s).\n", strings.Join(reasons, "; "))
+		output.UserErr.Println("Running DDEV services use ports that will show as false conflicts.")
 		output.UserErr.Println("Please run 'ddev poweroff' first, then re-run this command.")
 		return 2
 	}
