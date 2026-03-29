@@ -255,6 +255,20 @@ TST=ESTABLISHED
 	require.Equal(t, 26365, procs[0].PID)
 }
 
+// TestParseLsofOutputNoStateField verifies that entries without a TST= field
+// are accepted (some macOS lsof versions may not emit the T field).
+func TestParseLsofOutputNoStateField(t *testing.T) {
+	lsofOutput := []byte(`p12345
+cnc
+n*:8142
+`)
+	procs, err := parseLsofOutput(lsofOutput)
+	require.NoError(t, err)
+	require.Len(t, procs, 1, "entry without TST= should be accepted")
+	require.Equal(t, "nc", procs[0].Name)
+	require.Equal(t, 12345, procs[0].PID)
+}
+
 // TestDeduplicateByName verifies that multiple PIDs with the same name are collapsed.
 func TestDeduplicateByName(t *testing.T) {
 	procs := []portProcess{
