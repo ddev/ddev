@@ -337,13 +337,15 @@ func findPortProcessesLsof(port string) ([]portProcess, error) {
 // p<pid>, c<command>, n<address:port>, TST=<state>
 func parseLsofOutput(out []byte) ([]portProcess, error) {
 	type entry struct {
-		pid      int
-		name     string
-		isListen bool
+		pid           int
+		name          string
+		isListen      bool
+		hasStateField bool // true if we saw any T line for this entry
 	}
 
 	flushEntry := func(current entry) *portProcess {
-		if current.pid == 0 || !current.isListen {
+		// Accept if: explicitly LISTEN, or no state field seen (trust -sTCP:LISTEN filter).
+		if current.pid == 0 || (current.hasStateField && !current.isListen) {
 			return nil
 		}
 		cmdLine := getCommandLine(current.pid)
@@ -377,8 +379,11 @@ func parseLsofOutput(out []byte) ([]portProcess, error) {
 			current.name = line[1:]
 		case 'T':
 			// TCP state field: TST=LISTEN, TST=ESTABLISHED, etc.
-			if strings.Contains(line, "LISTEN") {
-				current.isListen = true
+			if strings.HasPrefix(line, "TST=") {
+				current.hasStateField = true
+				if strings.Contains(line, "LISTEN") {
+					current.isListen = true
+				}
 			}
 		}
 	}
