@@ -363,6 +363,7 @@ func TestPortHints(t *testing.T) {
 		{"w3wp", "Windows", 1, "W3SVC"},
 		{"com.docker.backend", "macOS", 1, "Docker Desktop"},
 		{"com.orbstack.backend", "macOS", 1, "OrbStack"},
+		{"wslrelay", "Windows", 1, "WSL2"},
 		{"lando", "Linux", 1, "lando poweroff"},
 		{"traefik", "Linux", 1, "lando poweroff"},
 		{"someunknown", "Linux", 42, "sudo kill 42"},

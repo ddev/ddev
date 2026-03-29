@@ -604,6 +604,9 @@ func portHints(name string, side string, pid int) []string {
 	case strings.HasPrefix(lower, "com.orbstack") || lower == "orbstack":
 		return []string{"Port used by OrbStack — restart OrbStack or check container port mappings"}
 
+	case lower == "wslrelay" || lower == "wslrelay.exe":
+		return []string{"This port is forwarded from WSL2. Run 'ddev poweroff' inside WSL2 and stop any services using this port there."}
+
 	case lower == "lando" || lower == "traefik":
 		return []string{"Lando's Traefik router — run: lando poweroff"}
 
