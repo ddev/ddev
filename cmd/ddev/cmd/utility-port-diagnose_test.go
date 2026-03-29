@@ -31,7 +31,13 @@ func startNCListener(t *testing.T, port string) func() {
 	if err != nil {
 		t.Skip("nc not available — skipping")
 	}
-	cmd := exec.Command(ncPath, "-l", "-k", "-p", port)
+	// macOS nc does not allow -p with -l (port is positional); Linux nc requires -p.
+	var cmd *exec.Cmd
+	if runtime.GOOS == "darwin" {
+		cmd = exec.Command(ncPath, "-l", "-k", port)
+	} else {
+		cmd = exec.Command(ncPath, "-l", "-k", "-p", port)
+	}
 	require.NoError(t, cmd.Start(), "failed to start nc on port %s", port)
 	return func() {
 		_ = cmd.Process.Kill()
