@@ -94,9 +94,11 @@ func TestOmitSnapshotOnDeleteGlobal(t *testing.T) {
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
-		_ = os.Chdir(origDir)
+		defer func() { _ = os.Chdir(origDir) }()
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
-		// Ensure the project is started again for other tests
+		// Ensure the project is started again for other tests from site.Dir,
+		// not origDir, to avoid creating a stray .ddev/config.yaml in the package directory
+		_ = os.Chdir(site.Dir)
 		out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
 		require.NoError(t, err, "output='%s'", out)
 		out, err = exec.RunHostCommand(DdevBin, "start", "-y")
