@@ -228,6 +228,33 @@ func TestFindWindowsPortProcesses(t *testing.T) {
 	}
 }
 
+// TestParseLsofOutputFiltersListen verifies that parseLsofOutput only includes
+// LISTEN-state connections and ignores ESTABLISHED/other states.
+func TestParseLsofOutputFiltersListen(t *testing.T) {
+	// Simulated lsof -F pcnT output with a mix of LISTEN and ESTABLISHED connections.
+	// This reproduces the macOS issue where Chrome/Discord outbound connections
+	// to remote port 443 were incorrectly reported as port conflicts.
+	lsofOutput := []byte(`p26365
+chttpd
+n*:443
+TST=LISTEN
+p1014
+cGoogle Chrome Helper
+n10.0.0.1:54321->142.250.80.46:443
+TST=ESTABLISHED
+p1861
+cDiscord Helper
+n10.0.0.1:54322->162.159.128.233:443
+TST=ESTABLISHED
+`)
+	procs, err := parseLsofOutput(lsofOutput)
+	require.NoError(t, err)
+	// Only httpd (LISTEN) should be included; Chrome and Discord (ESTABLISHED) should be filtered out.
+	require.Len(t, procs, 1, "should only include LISTEN connections")
+	require.Equal(t, "httpd", procs[0].Name)
+	require.Equal(t, 26365, procs[0].PID)
+}
+
 // TestDeduplicateByName verifies that multiple PIDs with the same name are collapsed.
 func TestDeduplicateByName(t *testing.T) {
 	procs := []portProcess{
