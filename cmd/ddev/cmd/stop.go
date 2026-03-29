@@ -18,8 +18,8 @@ var stopAll bool
 // Create a snapshot during remove (default to false with regular remove, default to true with rm --remove-data
 var createSnapshot bool
 
-// Force omission of snapshot during remove-data
-var omitSnapshot bool
+// stopOmitSnapshot forces omission of snapshot during stop --remove-data
+var stopOmitSnapshot bool
 
 // Stop the ddev-ssh-agent
 var stopSSHAgent bool
@@ -51,7 +51,7 @@ ddev stop --all
 ddev stop --all --stop-ssh-agent
 ddev stop --remove-data`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if createSnapshot && omitSnapshot {
+		if createSnapshot && stopOmitSnapshot {
 			util.Failed("Illegal option combination: --snapshot and --omit-snapshot:")
 		}
 
@@ -109,7 +109,7 @@ ddev stop --remove-data`,
 			}
 
 			// We do the snapshot if either --snapshot or --remove-data UNLESS omit-snapshot is set
-			doSnapshot := (createSnapshot || removeData) && !omitSnapshot
+			doSnapshot := (createSnapshot || removeData) && !stopOmitSnapshot
 			if err := project.Stop(removeData, doSnapshot); err != nil {
 				util.Failed("Failed to stop project %s: \n%v", project.GetName(), err)
 			}
@@ -141,7 +141,7 @@ ddev stop --remove-data`,
 func init() {
 	DdevStopCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored project data (MySQL, logs, etc.)")
 	DdevStopCmd.Flags().BoolVarP(&createSnapshot, "snapshot", "S", false, "Create database snapshot")
-	DdevStopCmd.Flags().BoolVarP(&omitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
+	DdevStopCmd.Flags().BoolVarP(&stopOmitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
 	DdevStopCmd.Flags().BoolP("select", "s", false, "Interactively select a project to stop")
 	err := StartCmd.Flags().MarkHidden("select")
 	if err != nil {
