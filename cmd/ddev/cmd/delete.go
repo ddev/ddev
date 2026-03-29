@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +27,11 @@ ddev delete --omit-snapshot proj1
 ddev delete --omit-snapshot --yes proj1 proj2
 ddev delete -Oy
 ddev delete --all`,
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
+		// If --omit-snapshot was not explicitly set, use the global config default
+		if !cmd.Flag("omit-snapshot").Changed && globalconfig.DdevGlobalConfig.OmitSnapshotOnDelete {
+			omitSnapshot = true
+		}
 		if noConfirm && deleteAll {
 			util.Failed("Sorry, it's not possible to use flags --all and --yes together")
 		}

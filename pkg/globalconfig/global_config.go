@@ -54,6 +54,7 @@ type GlobalConfig struct {
 	NoTUI                            bool                        `yaml:"no_tui,omitempty"`
 	OmitContainersGlobal             []string                    `yaml:"omit_containers,flow"`
 	OmitProjectNameByDefault         bool                        `yaml:"omit_project_name_by_default,omitempty"`
+	OmitSnapshotOnDelete             bool                        `yaml:"omit_snapshot_on_delete,omitempty"`
 	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
 	ProjectTldGlobal                 string                      `yaml:"project_tld"`
 	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
@@ -401,6 +402,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # omit_project_name_by_default: false
 # If true, 'ddev config' will not write a 'name'' field
 # in '.ddev/config.yaml' unless you use --name=NAME.
+
+# omit_snapshot_on_delete: false
+# If true, 'ddev delete' will omit the database snapshot by default.
+# This can still be overridden per-command with --omit-snapshot=false.
 
 # performance_mode: "<default for the OS>"
 # DDEV offers performance optimization strategies to improve the filesystem
