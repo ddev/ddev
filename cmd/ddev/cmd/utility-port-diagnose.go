@@ -452,11 +452,11 @@ func findWindowsPortProcesses(port string) []portProcess {
 	psScript := fmt.Sprintf(`
 Get-NetTCPConnection -LocalPort %s -State Listen -ErrorAction SilentlyContinue |
   ForEach-Object {
-    $pid = $_.OwningProcess
-    $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
+    $procId = $_.OwningProcess
+    $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
     $path = ""
     try { $path = $proc.MainModule.FileName } catch {}
-    "$pid|$($proc.ProcessName)|$path"
+    "$procId|$($proc.ProcessName)|$path"
   }
 `, port)
 
