@@ -113,6 +113,10 @@
       "description": "Whether to omit the project name from config.yaml and use directory name instead.",
       "type": "boolean"
     },
+    "omit_snapshot_on_delete": {
+      "description": "Whether to omit the database snapshot when running 'ddev delete' by default.",
+      "type": "boolean"
+    },
     "performance_mode": {
       "description": "Define the performance optimization mode to be used. Currently, Mutagen asynchronous caching is supported. Mutagen is enabled by default on Mac and Windows.",
       "type": "string",

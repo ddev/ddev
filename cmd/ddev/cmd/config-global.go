@@ -257,6 +257,12 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("omit-snapshot-on-delete").Changed {
+		val, _ := cmd.Flags().GetBool("omit-snapshot-on-delete")
+		globalconfig.DdevGlobalConfig.OmitSnapshotOnDelete = val
+		dirty = true
+	}
+
 	if dirty {
 		err = globalconfig.ValidateGlobalConfig()
 		if err != nil {
@@ -366,5 +372,7 @@ func init() {
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("share-default-provider", configCompletionFunc([]string{"ngrok", "cloudflared"}))
 	configGlobalCommand.Flags().Bool("no-tui", false, "If true, disable the interactive TUI dashboard when running bare 'ddev'")
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("no-tui", configCompletionFunc([]string{"true", "false"}))
+	configGlobalCommand.Flags().Bool("omit-snapshot-on-delete", false, "If true, omit the snapshot on 'ddev delete' by default")
+	_ = configGlobalCommand.RegisterFlagCompletionFunc("omit-snapshot-on-delete", configCompletionFunc([]string{"true", "false"}))
 	ConfigCommand.AddCommand(configGlobalCommand)
 }
