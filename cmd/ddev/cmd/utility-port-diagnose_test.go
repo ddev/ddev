@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"os/exec"
@@ -215,7 +216,8 @@ func TestFindPortProcessesProcNet(t *testing.T) {
 	require.True(t, found, "/proc/net/tcp should find PID %d on port %s", os.Getpid(), port)
 }
 
-// TestFindWindowsPortProcesses tests Windows-side detection (Windows or WSL2 only).
+// TestFindWindowsPortProcesses starts a TCP listener on the Windows side
+// via PowerShell and verifies that findWindowsPortProcesses detects it.
 func TestFindWindowsPortProcesses(t *testing.T) {
 	if !nodeps.IsWindows() && !nodeps.IsWSL2() {
 		t.Skip("Windows/WSL2-only test")
@@ -224,14 +226,43 @@ func TestFindWindowsPortProcesses(t *testing.T) {
 		t.Skip("powershell.exe not available")
 	}
 
-	// Port 445 (SMB) is almost always in use on Windows.
-	procs := findWindowsPortProcesses("445")
-	// We can't guarantee SMB is running, but if results come back, verify structure.
-	for _, p := range procs {
-		require.NotEmpty(t, p.Name, "Windows process name should not be empty")
-		require.NotZero(t, p.PID, "Windows process PID should not be zero")
-		require.Equal(t, "Windows", p.Side)
-	}
+	port := getFreePort(t)
+
+	// Start a .NET TCP listener on the Windows side. The script prints
+	// "LISTENING" once the socket is ready, then waits until stdin closes.
+	psScript := fmt.Sprintf(`
+$l = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, %s)
+$l.Start()
+Write-Output "LISTENING"
+[Console]::In.ReadLine() | Out-Null
+$l.Stop()
+`, port)
+
+	cmd := exec.Command("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", psScript)
+	// Provide a pipe for stdin so we can signal shutdown.
+	stdinPipe, err := cmd.StdinPipe()
+	require.NoError(t, err)
+	stdout, err := cmd.StdoutPipe()
+	require.NoError(t, err)
+	require.NoError(t, cmd.Start())
+
+	defer func() {
+		// Close stdin to let the PowerShell script exit, then wait.
+		_ = stdinPipe.Close()
+		_ = cmd.Wait()
+	}()
+
+	// Wait for "LISTENING" to confirm the socket is ready.
+	buf := make([]byte, 256)
+	n, err := stdout.Read(buf)
+	require.NoError(t, err)
+	require.Contains(t, string(buf[:n]), "LISTENING", "PowerShell listener should print LISTENING")
+
+	procs := findWindowsPortProcesses(port)
+	require.NotEmpty(t, procs, "expected to find Windows listener on port %s", port)
+	require.NotEmpty(t, procs[0].Name, "process name should not be empty")
+	require.NotZero(t, procs[0].PID, "process PID should not be zero")
+	require.Equal(t, "Windows", procs[0].Side)
 }
 
 // TestParseLsofOutputFiltersListen verifies that parseLsofOutput only includes
