@@ -137,10 +137,13 @@ func runPortDiagnose() int {
 		}
 		allProcs = append(allProcs, windowsProcs...)
 
-		if len(allProcs) == 0 {
+		// Deduplicate by process name (e.g. apache2 parent + workers all listen on same port).
+		uniqueProcs := deduplicateByName(allProcs)
+
+		if len(uniqueProcs) == 0 {
 			output.UserOut.Printf("Port %s (%s): IN USE (process unidentifiable — may be Docker or a container)\n", np.port, np.label)
 		} else {
-			for _, p := range allProcs {
+			for _, p := range uniqueProcs {
 				side := ""
 				if p.Side != "" {
 					side = fmt.Sprintf(" [%s]", p.Side)
@@ -523,6 +526,19 @@ func appendUniquePID(results []portProcess, p portProcess) []portProcess {
 		}
 	}
 	return append(results, p)
+}
+
+// deduplicateByName returns one entry per unique process name, keeping the first (lowest PID).
+func deduplicateByName(procs []portProcess) []portProcess {
+	seen := make(map[string]bool)
+	var result []portProcess
+	for _, p := range procs {
+		if !seen[p.Name] {
+			seen[p.Name] = true
+			result = append(result, p)
+		}
+	}
+	return result
 }
 
 // portHints returns actionable fix strings based on process name and side.
