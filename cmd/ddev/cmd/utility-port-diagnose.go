@@ -178,7 +178,7 @@ func findPortProcesses(port string) []portProcess {
 	}
 
 	// Try lsof first (available on macOS and most Linux distros).
-	if hasCommand("lsof") {
+	if hasCommand("lsof") || hasCommand("/usr/sbin/lsof") {
 		procs, err := findPortProcessesLsof(port)
 		if err == nil && len(procs) > 0 {
 			return procs
@@ -213,7 +213,7 @@ func findPortProcesses(port string) []portProcess {
 
 // findPortProcessesSudoLsof tries lsof with sudo to see processes owned by other users.
 func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
-	cmd := exec.Command("sudo", "lsof", "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcn")
+	cmd := exec.Command("sudo", lsofPath(), "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcn")
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	out, err := cmd.Output()
@@ -311,9 +311,17 @@ func readProcComm(pid int) string {
 	return strings.TrimSpace(string(raw))
 }
 
+// lsofPath returns the path to lsof, preferring /usr/sbin/lsof (macOS, some Linux).
+func lsofPath() string {
+	if hasCommand("/usr/sbin/lsof") {
+		return "/usr/sbin/lsof"
+	}
+	return "lsof"
+}
+
 // findPortProcessesLsof uses lsof to identify listening processes.
 func findPortProcessesLsof(port string) ([]portProcess, error) {
-	out, err := exec.Command("lsof", "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcn").Output()
+	out, err := exec.Command(lsofPath(), "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcn").Output()
 	if err != nil {
 		return nil, err
 	}
@@ -525,88 +533,56 @@ func portHints(name string, side string, pid int) []string {
 	switch {
 	case lower == "apache2" || lower == "apache" || lower == "httpd":
 		if isWindows {
-			return []string{
-				"Fix     : Stop-Service Apache2",
-				"Disable : Set-Service Apache2 -StartupType Disabled",
-			}
+			return []string{"Stop-Service Apache2; Set-Service Apache2 -StartupType Disabled"}
 		}
-		var hints []string
 		if hasCommand("systemctl") {
-			hints = append(hints,
-				"Fix     : sudo systemctl stop apache2",
-				"Disable : sudo systemctl disable apache2",
-			)
-		} else {
-			hints = append(hints, "Fix     : sudo apachectl stop")
+			hints := []string{"sudo systemctl stop apache2 && sudo systemctl disable apache2"}
+			if hasCommand("apt-get") {
+				hints = append(hints, "Remove: sudo apt-get remove apache2")
+			}
+			return hints
 		}
-		if hasCommand("apt-get") {
-			hints = append(hints, "Remove  : sudo apt-get remove apache2")
-		} else if hasCommand("brew") {
-			hints = append(hints, "Remove  : brew uninstall httpd")
-		}
-		return hints
+		return []string{"sudo apachectl stop"}
 
 	case lower == "nginx":
 		if isWindows {
-			return []string{
-				"Fix     : Stop-Service nginx  (or net stop nginx)",
-				"Disable : Set-Service nginx -StartupType Disabled",
-			}
+			return []string{"Stop-Service nginx; Set-Service nginx -StartupType Disabled"}
 		}
-		var hints []string
 		if hasCommand("systemctl") {
-			hints = append(hints,
-				"Fix     : sudo systemctl stop nginx",
-				"Disable : sudo systemctl disable nginx",
-			)
-		} else if hasCommand("brew") {
-			hints = append(hints, "Fix     : brew services stop nginx")
+			hints := []string{"sudo systemctl stop nginx && sudo systemctl disable nginx"}
+			if hasCommand("apt-get") {
+				hints = append(hints, "Remove: sudo apt-get remove nginx")
+			}
+			return hints
 		}
-		if hasCommand("apt-get") {
-			hints = append(hints, "Remove  : sudo apt-get remove nginx")
-		} else if hasCommand("brew") {
-			hints = append(hints, "Remove  : brew uninstall nginx")
+		if hasCommand("brew") {
+			return []string{"brew services stop nginx"}
 		}
-		return hints
+		return []string{fmt.Sprintf("sudo kill %d", pid)}
 
 	case lower == "caddy":
 		if hasCommand("systemctl") {
-			return []string{
-				"Fix     : sudo systemctl stop caddy",
-				"Disable : sudo systemctl disable caddy",
-			}
+			return []string{"sudo systemctl stop caddy && sudo systemctl disable caddy"}
 		}
-		return []string{"Fix     : sudo caddy stop"}
+		return []string{"sudo caddy stop"}
 
 	case lower == "w3wp" || lower == "iisexpress" || lower == "iis":
-		return []string{
-			"Fix     : Stop-Service W3SVC  (run in Windows PowerShell as Administrator)",
-			"Disable : Set-Service W3SVC -StartupType Disabled",
-		}
+		return []string{"Stop-Service W3SVC; Set-Service W3SVC -StartupType Disabled (PowerShell as Admin)"}
 
 	case strings.HasPrefix(lower, "com.docker") || lower == "docker desktop" || lower == "dockerd":
-		return []string{
-			"Note    : This port appears to be used by Docker Desktop itself.",
-			"Fix     : Restart Docker Desktop, or check your Docker Compose port mappings.",
-		}
+		return []string{"Port used by Docker Desktop — restart Docker Desktop or check port mappings"}
 
 	case strings.HasPrefix(lower, "com.orbstack") || lower == "orbstack":
-		return []string{
-			"Note    : This port appears to be used by OrbStack.",
-			"Fix     : Restart OrbStack, or check your container port mappings.",
-		}
+		return []string{"Port used by OrbStack — restart OrbStack or check container port mappings"}
 
 	case lower == "lando" || lower == "traefik":
-		return []string{
-			"Fix     : lando poweroff",
-			"Note    : Lando's Traefik router is occupying this port.",
-		}
+		return []string{"Lando's Traefik router — run: lando poweroff"}
 
 	default:
 		if isWindows {
-			return []string{fmt.Sprintf("Fix     : Stop-Process -Id %d  (run in Windows PowerShell as Administrator)", pid)}
+			return []string{fmt.Sprintf("Stop-Process -Id %d (PowerShell as Admin)", pid)}
 		}
-		return []string{fmt.Sprintf("Fix     : sudo kill %d", pid)}
+		return []string{fmt.Sprintf("sudo kill %d", pid)}
 	}
 }
 
