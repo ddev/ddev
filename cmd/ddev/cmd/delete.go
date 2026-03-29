@@ -15,6 +15,9 @@ var noConfirm bool
 // If deleteAll is true, we'll delete all projects
 var deleteAll bool
 
+// deleteOmitSnapshot forces omission of snapshot during delete
+var deleteOmitSnapshot bool
+
 // DeleteCmd provides the delete command
 var DeleteCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 0),
@@ -30,7 +33,7 @@ ddev delete --all`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// If --omit-snapshot was not explicitly set, use the global config default
 		if !cmd.Flag("omit-snapshot").Changed && globalconfig.DdevGlobalConfig.OmitSnapshotOnDelete {
-			omitSnapshot = true
+			deleteOmitSnapshot = true
 		}
 		if noConfirm && deleteAll {
 			util.Failed("Sorry, it's not possible to use flags --all and --yes together")
@@ -40,7 +43,7 @@ ddev delete --all`,
 		}
 		// Skip project validation if --omit-snapshot is provided
 		originalRunValidateConfig := ddevapp.RunValidateConfig
-		ddevapp.RunValidateConfig = !omitSnapshot
+		ddevapp.RunValidateConfig = !deleteOmitSnapshot
 		projects, err := getRequestedProjectsExtended(args, deleteAll, true)
 		ddevapp.RunValidateConfig = originalRunValidateConfig
 
@@ -58,7 +61,7 @@ ddev delete --all`,
 				if project.AppRoot == "" {
 					prompt = "OK to delete this project and its database?\n  %s in a non-existent directory %v\n"
 				}
-				if !omitSnapshot {
+				if !deleteOmitSnapshot {
 					prompt = prompt + "A database snapshot will be made before the database is deleted.\n"
 				}
 				if !util.Confirm(fmt.Sprintf(prompt+"OK to delete %s?", project.Name, project.AppRoot, project.Name)) {
@@ -73,14 +76,14 @@ ddev delete --all`,
 			// We do the snapshot UNLESS omit-snapshot is set; the project may have to be
 			// started to do the snapshot.
 			status, _ := project.SiteStatus()
-			if status != ddevapp.SiteRunning && !omitSnapshot {
+			if status != ddevapp.SiteRunning && !deleteOmitSnapshot {
 				util.Warning("project must be started to do the snapshot")
 				err = project.Start()
 				if err != nil {
 					util.Failed("Failed to start project %s: %v", project.Name, err)
 				}
 			}
-			if err := project.Stop(true, !omitSnapshot); err != nil {
+			if err := project.Stop(true, !deleteOmitSnapshot); err != nil {
 				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
 			}
 		}
@@ -90,7 +93,7 @@ ddev delete --all`,
 
 func init() {
 	DeleteCmd.Flags().Bool("clean-containers", true, "Clean up all DDEV Docker containers which are not required by this version of DDEV")
-	DeleteCmd.Flags().BoolVarP(&omitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
+	DeleteCmd.Flags().BoolVarP(&deleteOmitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
 	DeleteCmd.Flags().BoolVarP(&noConfirm, "yes", "y", false, "Yes - skip confirmation prompt")
 	DeleteCmd.Flags().BoolVarP(&deleteAll, "all", "a", false, "Delete all projects")
 

@@ -11,7 +11,9 @@ import (
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 )
 
@@ -77,4 +79,113 @@ func TestDeleteCmd(t *testing.T) {
 	images, err := dockerutil.FindImagesByLabels(labels, false)
 	require.NoError(t, err)
 	require.Len(t, images, 0)
+}
+
+// TestOmitSnapshotOnDeleteGlobal tests the omit_snapshot_on_delete global config option
+// and its interaction with the --omit-snapshot flag on 'ddev delete'.
+func TestOmitSnapshotOnDeleteGlobal(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	t.Setenv("NO_COLOR", "true")
+
+	// Create temporary XDG_CONFIG_HOME for isolated global config testing
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+		// Ensure the project is started again for other tests
+		out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
+		require.NoError(t, err, "output='%s'", out)
+		out, err = exec.RunHostCommand(DdevBin, "start", "-y")
+		require.NoError(t, err, "output='%s'", out)
+	})
+
+	tests := []struct {
+		name                 string
+		omitSnapshotOnDelete bool
+		omitSnapshotFlag     string // "", "true", or "false"
+		expectSnapshot       bool
+	}{
+		{
+			name:                 "global_false_no_flag",
+			omitSnapshotOnDelete: false,
+			omitSnapshotFlag:     "",
+			expectSnapshot:       true,
+		},
+		{
+			name:                 "global_false_flag_true",
+			omitSnapshotOnDelete: false,
+			omitSnapshotFlag:     "true",
+			expectSnapshot:       false,
+		},
+		{
+			name:                 "global_true_no_flag",
+			omitSnapshotOnDelete: true,
+			omitSnapshotFlag:     "",
+			expectSnapshot:       false,
+		},
+		{
+			name:                 "global_true_flag_false",
+			omitSnapshotOnDelete: true,
+			omitSnapshotFlag:     "false",
+			expectSnapshot:       true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Set up the global config for this test case
+			globalconfig.EnsureGlobalConfig()
+			globalconfig.DdevGlobalConfig.OmitSnapshotOnDelete = tc.omitSnapshotOnDelete
+			err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+			require.NoError(t, err)
+
+			// Ensure the project is started so snapshot can be taken if needed
+			out, err := exec.RunHostCommand(DdevBin, "start", "-y")
+			require.NoError(t, err, "failed to start, out=%s", out)
+
+			// Clean up any pre-existing snapshots so we can detect new ones
+			app, err := ddevapp.GetActiveApp("")
+			require.NoError(t, err)
+			snapshotsBefore, err := app.ListSnapshotNames()
+			require.NoError(t, err)
+
+			// Build the delete command
+			args := []string{"delete", "--yes"}
+			if tc.omitSnapshotFlag != "" {
+				args = append(args, "--omit-snapshot="+tc.omitSnapshotFlag)
+			}
+			args = append(args, site.Name)
+
+			out, err = exec.RunHostCommand(DdevBin, args...)
+			require.NoError(t, err, "failed to delete, out=%s", out)
+
+			if tc.expectSnapshot {
+				require.Contains(t, out, "Creating database snapshot")
+			} else {
+				require.NotContains(t, out, "Creating database snapshot")
+			}
+
+			// Verify by checking actual snapshot count
+			// Re-configure and start to check snapshots (project was deleted)
+			outConfig, err := exec.RunHostCommand(DdevBin, "config", "--auto")
+			require.NoError(t, err, "output='%s'", outConfig)
+			outStart, err := exec.RunHostCommand(DdevBin, "start", "-y")
+			require.NoError(t, err, "output='%s'", outStart)
+
+			app, err = ddevapp.GetActiveApp("")
+			require.NoError(t, err)
+			snapshotsAfter, err := app.ListSnapshotNames()
+			require.NoError(t, err)
+
+			if tc.expectSnapshot {
+				require.Greater(t, len(snapshotsAfter), len(snapshotsBefore), "expected a new snapshot to be created")
+			} else {
+				require.Equal(t, len(snapshotsBefore), len(snapshotsAfter), "expected no new snapshot to be created")
+			}
+		})
+	}
 }
