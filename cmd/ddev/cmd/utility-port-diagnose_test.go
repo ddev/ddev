@@ -56,10 +56,11 @@ func TestPortDiagnoseAvailablePort(t *testing.T) {
 }
 
 // TestFindPortProcessesOwnProcess verifies that we can find our own Go
-// test process when it holds a port. This works on all Unix platforms.
+// test process when it holds a port. Works on all Unix platforms.
+// On Windows, see TestFindPortProcessesOwnProcess_Windows.
 func TestFindPortProcessesOwnProcess(t *testing.T) {
 	if nodeps.IsWindows() {
-		t.Skip("uses Unix lsof/ss detection — see TestFindWindowsPortProcesses")
+		t.Skip("uses Unix lsof/ss detection — see TestFindPortProcessesOwnProcess_Windows")
 	}
 
 	l, err := net.Listen("tcp", "127.0.0.1:0")
@@ -77,6 +78,33 @@ func TestFindPortProcessesOwnProcess(t *testing.T) {
 		if p.PID == os.Getpid() {
 			found = true
 			require.NotEmpty(t, p.Name, "process name should not be empty")
+		}
+	}
+	require.True(t, found, "expected our own PID (%d) in results for port %s", os.Getpid(), port)
+}
+
+// TestFindPortProcessesOwnProcess_Windows verifies that findPortProcesses
+// (which delegates to findWindowsPortProcesses on native Windows) can find
+// the Go test process holding a port.
+func TestFindPortProcessesOwnProcess_Windows(t *testing.T) {
+	if !nodeps.IsWindows() {
+		t.Skip("Windows-native test")
+	}
+
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	defer l.Close()
+	port := strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+
+	procs := findPortProcesses(port)
+	require.NotEmpty(t, procs, "expected to find our own process on port %s", port)
+
+	found := false
+	for _, p := range procs {
+		if p.PID == os.Getpid() {
+			found = true
+			require.NotEmpty(t, p.Name, "process name should not be empty")
+			require.Equal(t, "Windows", p.Side)
 		}
 	}
 	require.True(t, found, "expected our own PID (%d) in results for port %s", os.Getpid(), port)
@@ -136,10 +164,6 @@ func TestFindPortProcessesNC_macOS(t *testing.T) {
 
 // TestFindPortProcessesFreePort verifies that a free port returns no processes.
 func TestFindPortProcessesFreePort(t *testing.T) {
-	if nodeps.IsWindows() {
-		t.Skip("uses Unix detection — see TestFindWindowsPortProcesses")
-	}
-
 	port := getFreePort(t)
 	procs := findPortProcesses(port)
 	require.Empty(t, procs, "expected no processes on free port %s", port)
@@ -373,6 +397,16 @@ func TestPortHintsPlatformSpecific(t *testing.T) {
 		// macOS should never suggest systemctl
 		require.NotContains(t, combined, "systemctl")
 		require.Contains(t, combined, "apachectl")
+	case "windows":
+		// Windows apache hints should use Stop-Service
+		hints := portHints("apache2", "Windows", 1)
+		combined := strings.Join(hints, " ")
+		require.Contains(t, combined, "Stop-Service")
+		// Unknown process should suggest Stop-Process
+		hints = portHints("someprocess", "Windows", 999)
+		combined = strings.Join(hints, " ")
+		require.Contains(t, combined, "Stop-Process")
+		require.Contains(t, combined, "999")
 	default:
 		t.Skip("platform-specific hint test not applicable")
 	}
