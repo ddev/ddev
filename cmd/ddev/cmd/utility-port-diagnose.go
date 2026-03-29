@@ -190,7 +190,8 @@ func findPortProcesses(port string) []portProcess {
 		if hasCommand("sudo") {
 			if !sudoMessageShown {
 				output.UserOut.Println("Unable to identify the process without elevated privileges.")
-				output.UserOut.Println("Trying 'sudo lsof' — you may be prompted for your password.")
+				output.UserOut.Printf("Running: sudo %s -i :%s -sTCP:LISTEN -n -P\n", lsofPath(), port)
+				output.UserOut.Println("You may be prompted for your password.")
 				sudoMessageShown = true
 			}
 			procs, err = findPortProcessesSudoLsof(port)
@@ -215,7 +216,7 @@ func findPortProcesses(port string) []portProcess {
 // findPortProcessesSudoLsof tries lsof with sudo to see processes owned by other users.
 // Connects stdin so sudo can prompt for a password in interactive terminals.
 func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
-	cmd := exec.Command("sudo", lsofPath(), "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcn")
+	cmd := exec.Command("sudo", lsofPath(), "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcnT")
 	cmd.Stdin = os.Stdin
 	// Suppress sudo's own error messages (e.g. "a terminal is required")
 	// since we handle failure gracefully by falling through to other methods.
@@ -324,19 +325,35 @@ func lsofPath() string {
 
 // findPortProcessesLsof uses lsof to identify listening processes.
 func findPortProcessesLsof(port string) ([]portProcess, error) {
-	out, err := exec.Command(lsofPath(), "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcn").Output()
+	out, err := exec.Command(lsofPath(), "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcnT").Output()
 	if err != nil {
 		return nil, err
 	}
 	return parseLsofOutput(out)
 }
 
-// parseLsofOutput parses lsof -F pcn output into portProcess entries.
-// lsof -F output lines: p<pid>, c<command>, n<name> (address:port)
+// parseLsofOutput parses lsof -F pcnT output into portProcess entries,
+// filtering to only LISTEN-state connections. lsof -F output lines:
+// p<pid>, c<command>, n<address:port>, TST=<state>
 func parseLsofOutput(out []byte) ([]portProcess, error) {
 	type entry struct {
-		pid  int
-		name string
+		pid      int
+		name     string
+		isListen bool
+	}
+
+	flushEntry := func(current entry) *portProcess {
+		if current.pid == 0 || !current.isListen {
+			return nil
+		}
+		cmdLine := getCommandLine(current.pid)
+		side := getSide()
+		return &portProcess{
+			PID:     current.pid,
+			Name:    current.name,
+			CmdLine: cmdLine,
+			Side:    side,
+		}
 	}
 
 	var (
@@ -351,32 +368,23 @@ func parseLsofOutput(out []byte) ([]portProcess, error) {
 		}
 		switch line[0] {
 		case 'p':
-			if current.pid != 0 {
-				cmdLine := getCommandLine(current.pid)
-				side := getSide()
-				results = appendUniquePID(results, portProcess{
-					PID:     current.pid,
-					Name:    current.name,
-					CmdLine: cmdLine,
-					Side:    side,
-				})
+			if p := flushEntry(current); p != nil {
+				results = appendUniquePID(results, *p)
 			}
 			pid, _ := strconv.Atoi(line[1:])
 			current = entry{pid: pid}
 		case 'c':
 			current.name = line[1:]
+		case 'T':
+			// TCP state field: TST=LISTEN, TST=ESTABLISHED, etc.
+			if strings.Contains(line, "LISTEN") {
+				current.isListen = true
+			}
 		}
 	}
 	// flush last entry
-	if current.pid != 0 {
-		cmdLine := getCommandLine(current.pid)
-		side := getSide()
-		results = appendUniquePID(results, portProcess{
-			PID:     current.pid,
-			Name:    current.name,
-			CmdLine: cmdLine,
-			Side:    side,
-		})
+	if p := flushEntry(current); p != nil {
+		results = appendUniquePID(results, *p)
 	}
 
 	return results, nil
