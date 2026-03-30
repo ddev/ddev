@@ -2,6 +2,7 @@ package dockerutil
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -754,19 +755,30 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		}()
 	}
 
-	if _, err := apiClient.ContainerStart(ctx, c.ID, client.ContainerStartOptions{}); err != nil {
-		return c.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
-	}
-
 	exitCode := 0
 
-	if !detach {
-		waitResult := apiClient.ContainerWait(ctx, c.ID, client.ContainerWaitOptions{Condition: container.WaitConditionNotRunning})
+	if detach {
+		if _, err := apiClient.ContainerStart(ctx, c.ID, client.ContainerStartOptions{}); err != nil {
+			return c.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
+		}
+	} else {
+		// Register wait before starting to avoid missing the exit event
+		// if the container exits before ContainerWait is called
+		waitCtx, waitCancel := context.WithTimeout(ctx, 1*time.Hour)
+		defer waitCancel()
+		waitResult := apiClient.ContainerWait(waitCtx, c.ID, client.ContainerWaitOptions{Condition: container.WaitConditionNextExit})
+
+		if _, err := apiClient.ContainerStart(ctx, c.ID, client.ContainerStartOptions{}); err != nil {
+			return c.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
+		}
+
 		select {
 		case status := <-waitResult.Result:
 			exitCode = int(status.StatusCode)
 		case err := <-waitResult.Error:
 			return c.ID, "", fmt.Errorf("failed to ContainerWait: %v", err)
+		case <-waitCtx.Done():
+			return c.ID, "", fmt.Errorf("timed out waiting for container %s to stop: %v", c.ID, waitCtx.Err())
 		}
 
 		// For interactive containers, wait for I/O forwarding to complete
