@@ -58,6 +58,8 @@ type namedPort struct {
 // runPortDiagnose checks DDEV project ports (or defaults) and reports conflicts.
 // Returns 0 if all ports are available, 1 if any conflicts are found.
 func runPortDiagnose() int {
+	sudoMessageShown = false
+
 	// Check for running DDEV projects or router first — they legitimately use ports.
 	activeProjects := ddevapp.GetActiveProjects()
 	router, _ := ddevapp.FindDdevRouter()
@@ -135,7 +137,11 @@ func runPortDiagnose() int {
 		if len(allProcs) == 0 {
 			// Port responds but we can't identify who owns it.
 			hasConflict = true
-			output.UserOut.Printf("Port %s (%s): IN USE (unable to identify process — try 'sudo lsof -i :%s -sTCP:LISTEN')\n", np.port, np.label, np.port)
+			hint := fmt.Sprintf("try 'sudo lsof -i :%s -sTCP:LISTEN'", np.port)
+			if nodeps.IsWindows() {
+				hint = fmt.Sprintf("try 'Get-NetTCPConnection -LocalPort %s -State Listen' in PowerShell", np.port)
+			}
+			output.UserOut.Printf("Port %s (%s): IN USE (unable to identify process — %s)\n", np.port, np.label, hint)
 			continue
 		}
 
@@ -284,7 +290,11 @@ func findPortProcessesProcNet(port string) []portProcess {
 		if err != nil {
 			continue
 		}
+		matched := false
 		for _, fd := range fds {
+			if matched {
+				break
+			}
 			link, err := os.Readlink(fmt.Sprintf("%s/%s", fdDir, fd.Name()))
 			if err != nil {
 				continue
@@ -299,6 +309,8 @@ func findPortProcessesProcNet(port string) []portProcess {
 						CmdLine: cmdLine,
 						Side:    getSide(),
 					})
+					matched = true
+					break
 				}
 			}
 		}
@@ -449,6 +461,10 @@ func findPortProcessesSS(port string) []portProcess {
 // findWindowsPortProcesses uses PowerShell Get-NetTCPConnection to identify
 // processes listening on port on the Windows side. Works from WSL2 or Windows.
 func findWindowsPortProcesses(port string) []portProcess {
+	// Validate port is numeric before interpolating into PowerShell script.
+	if _, err := strconv.Atoi(port); err != nil {
+		return nil
+	}
 	psScript := fmt.Sprintf(`
 Get-NetTCPConnection -LocalPort %s -State Listen -ErrorAction SilentlyContinue |
   ForEach-Object {
