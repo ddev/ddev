@@ -777,26 +777,25 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		defer waitCancel()
 		tickChan := time.NewTicker(500 * time.Millisecond)
 		defer tickChan.Stop()
-	waitLoop:
 		for {
+			info, err := apiClient.ContainerInspect(waitCtx, c.ID, client.ContainerInspectOptions{})
+			if err != nil {
+				if waitCtx.Err() != nil {
+					return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s to stop", timeout, c.ID)
+				}
+				return c.ID, "", fmt.Errorf("failed to inspect container: %v", err)
+			}
+			if info.Container.State == nil {
+				return c.ID, "", fmt.Errorf("container %s has nil state", c.ID)
+			}
+			if !info.Container.State.Running {
+				exitCode = info.Container.State.ExitCode
+				break
+			}
 			select {
 			case <-waitCtx.Done():
 				return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s to stop", timeout, c.ID)
 			case <-tickChan.C:
-				info, err := apiClient.ContainerInspect(waitCtx, c.ID, client.ContainerInspectOptions{})
-				if err != nil {
-					if waitCtx.Err() != nil {
-						return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s to stop", timeout, c.ID)
-					}
-					return c.ID, "", fmt.Errorf("failed to inspect container: %v", err)
-				}
-				if info.Container.State == nil {
-					return c.ID, "", fmt.Errorf("container %s has nil state", c.ID)
-				}
-				if !info.Container.State.Running {
-					exitCode = info.Container.State.ExitCode
-					break waitLoop
-				}
 			}
 		}
 

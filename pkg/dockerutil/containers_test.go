@@ -459,6 +459,8 @@ func TestRunSimpleContainerExtended(t *testing.T) {
 	basename := util.RandString(6)
 
 	// timeout=0 means detach: should return immediately without waiting for the container to finish.
+	err := dockerutil.Pull("busybox:latest")
+	require.NoError(t, err)
 	containerName := "TestRunSimpleContainerExtended-detach-" + basename
 	start := time.Now()
 	cID, _, err := dockerutil.RunSimpleContainerExtended(containerName, &container.Config{
