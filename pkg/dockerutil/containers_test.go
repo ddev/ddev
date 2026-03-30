@@ -20,6 +20,7 @@ import (
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/network"
 	"github.com/moby/moby/client"
 	asrt "github.com/stretchr/testify/assert"
@@ -451,6 +452,35 @@ func TestRunSimpleContainer(t *testing.T) {
 	if err != nil {
 		require.Contains(t, err.Error(), "malformed tag provided")
 	}
+}
+
+// TestRunSimpleContainerExtended tests the timeout and detach behavior of RunSimpleContainerExtended.
+func TestRunSimpleContainerExtended(t *testing.T) {
+	basename := util.RandString(6)
+
+	// timeout=0 means detach: should return immediately without waiting for the container to finish.
+	containerName := "TestRunSimpleContainerExtended-detach-" + basename
+	start := time.Now()
+	cID, _, err := dockerutil.RunSimpleContainerExtended(containerName, &container.Config{
+		Image: "busybox:latest",
+		Cmd:   []string{"sleep", "30"},
+	}, &container.HostConfig{}, false, 0)
+	require.NoError(t, err)
+	require.NotEmpty(t, cID)
+	t.Cleanup(func() { _ = dockerutil.RemoveContainer(cID) })
+	require.Less(t, time.Since(start), 10*time.Second, "detach should return immediately, not wait for container")
+	// Container should still be running since we didn't wait.
+	info, err := dockerutil.InspectContainer(containerName)
+	require.NoError(t, err)
+	require.True(t, info.State.Running)
+
+	// A short timeout should expire and return a timeout error for a container that sleeps longer.
+	_, _, err = dockerutil.RunSimpleContainerExtended("TestRunSimpleContainerExtended-timeout-"+basename, &container.Config{
+		Image: "busybox:latest",
+		Cmd:   []string{"sleep", "30"},
+	}, &container.HostConfig{}, true, 1*time.Second)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "timed out after")
 }
 
 // TestGetBoundHostPorts() checks to see that the ports expected

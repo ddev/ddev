@@ -2,6 +2,7 @@ package dockerutil
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -593,10 +594,10 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		PortBindings: portBindings,
 	}
 	// timeout=0 means detach (don't wait for container to finish).
-	// 10 minutes is generous for any simple container task (e.g. chown, rm).
+	// 30 minutes is generous for any simple container task (e.g. chown, rm).
 	var timeout time.Duration
 	if !detach {
-		timeout = 10 * time.Minute
+		timeout = 30 * time.Minute
 	}
 	return RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, timeout)
 }
@@ -768,19 +769,25 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 	exitCode := 0
 
 	if timeout > 0 {
-		// Poll container state
-		timeoutChan := time.NewTimer(timeout)
+		// Poll container state instead of using the streaming ContainerWait API,
+		// which hangs indefinitely on proxied Docker sockets (e.g. Colima).
+		// Use a context deadline so in-flight ContainerInspect calls are also
+		// canceled when the timeout expires, not just the select case.
+		waitCtx, waitCancel := context.WithTimeout(ctx, timeout)
+		defer waitCancel()
 		tickChan := time.NewTicker(500 * time.Millisecond)
-		defer timeoutChan.Stop()
 		defer tickChan.Stop()
 	waitLoop:
 		for {
 			select {
-			case <-timeoutChan.C:
+			case <-waitCtx.Done():
 				return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s to stop", timeout, c.ID)
 			case <-tickChan.C:
-				info, err := apiClient.ContainerInspect(ctx, c.ID, client.ContainerInspectOptions{})
+				info, err := apiClient.ContainerInspect(waitCtx, c.ID, client.ContainerInspectOptions{})
 				if err != nil {
+					if waitCtx.Err() != nil {
+						return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s to stop", timeout, c.ID)
+					}
 					return c.ID, "", fmt.Errorf("failed to inspect container: %v", err)
 				}
 				if info.Container.State == nil {
