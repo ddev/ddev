@@ -766,7 +766,7 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		// if the container exits before ContainerWait is called
 		waitCtx, waitCancel := context.WithTimeout(ctx, 1*time.Hour)
 		defer waitCancel()
-		waitResult := apiClient.ContainerWait(waitCtx, c.ID, client.ContainerWaitOptions{Condition: container.WaitConditionNotRunning})
+		waitResult := apiClient.ContainerWait(waitCtx, c.ID, client.ContainerWaitOptions{Condition: container.WaitConditionNextExit})
 
 		if _, err := apiClient.ContainerStart(ctx, c.ID, client.ContainerStartOptions{}); err != nil {
 			return c.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
