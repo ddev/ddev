@@ -590,6 +590,9 @@ func portHints(name string, side string, pid int) []string {
 		return []string{fmt.Sprintf("sudo kill %d", pid)}
 
 	case lower == "caddy":
+		if isWindows {
+			return []string{"Stop caddy or Stop-Service caddy (PowerShell as Admin)"}
+		}
 		if hasCommand("systemctl") {
 			return []string{"sudo systemctl stop caddy && sudo systemctl disable caddy"}
 		}

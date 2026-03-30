@@ -357,8 +357,10 @@ func TestPortHints(t *testing.T) {
 		// but always mention "apache" somewhere in the output.
 		{"apache2", "Linux", 1, "apache"},
 		{"httpd", "macOS", 1, "apache"},
-		{"nginx", "macOS", 1, "nginx"},
-		{"nginx", "Linux", 1, "nginx"},
+		// nginx/caddy non-Windows hints depend on hasCommand (systemctl/brew)
+		// at runtime, so test the Windows path here (deterministic) and test
+		// platform-native paths in TestPortHintsPlatformSpecific.
+		{"nginx", "Windows", 1, "nginx"},
 		{"caddy", "Linux", 1, "caddy"},
 		{"w3wp", "Windows", 1, "W3SVC"},
 		{"com.docker.backend", "macOS", 1, "Docker Desktop"},
@@ -392,12 +394,20 @@ func TestPortHintsPlatformSpecific(t *testing.T) {
 		} else {
 			require.Contains(t, combined, "apachectl")
 		}
+		// nginx on Linux
+		hints = portHints("nginx", "Linux", 1)
+		combined = strings.Join(hints, " ")
+		require.Contains(t, combined, "nginx")
 	case "darwin":
 		hints := portHints("apache2", "macOS", 1)
 		combined := strings.Join(hints, " ")
 		// macOS should never suggest systemctl
 		require.NotContains(t, combined, "systemctl")
 		require.Contains(t, combined, "apachectl")
+		// nginx on macOS
+		hints = portHints("nginx", "macOS", 1)
+		combined = strings.Join(hints, " ")
+		require.Contains(t, combined, "nginx")
 	case "windows":
 		// Windows apache hints should use Stop-Service
 		hints := portHints("apache2", "Windows", 1)
