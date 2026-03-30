@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
@@ -278,7 +279,7 @@ func runSSHAuthContainer(keys []string) (int, error) {
 	}
 
 	containerName := "ddev-ssh-auth-" + util.RandString(6)
-	_, _, err := dockerutil.RunSimpleContainerExtended(containerName, config, hostConfig, true, false)
+	_, _, err := dockerutil.RunSimpleContainerExtended(containerName, config, hostConfig, true, 60*time.Second)
 
 	exitCode := 0
 	if err != nil {

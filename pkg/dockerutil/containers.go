@@ -2,7 +2,6 @@ package dockerutil
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -593,12 +592,19 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		Binds:        binds,
 		PortBindings: portBindings,
 	}
-	return RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, detach)
+	// timeout=0 means detach (don't wait for container to finish).
+	// 10 minutes is generous for any simple container task (e.g. chown, rm).
+	var timeout time.Duration
+	if !detach {
+		timeout = 10 * time.Minute
+	}
+	return RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, timeout)
 }
 
-// RunSimpleContainerExtended runs a container (non-daemonized) and captures the stdout/stderr.
+// RunSimpleContainerExtended runs a container and captures the stdout/stderr.
 // Accepts any config and hostConfig. If stdin is provided, enables interactive mode with stdin forwarding.
-func RunSimpleContainerExtended(name string, config *container.Config, hostConfig *container.HostConfig, removeContainerAfterRun bool, detach bool) (containerID string, out string, returnErr error) {
+// timeout controls how long to wait for the container to finish; 0 means detach (don't wait).
+func RunSimpleContainerExtended(name string, config *container.Config, hostConfig *container.HostConfig, removeContainerAfterRun bool, timeout time.Duration) (containerID string, out string, returnErr error) {
 	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return "", "", err
@@ -755,30 +761,36 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		}()
 	}
 
+	if _, err := apiClient.ContainerStart(ctx, c.ID, client.ContainerStartOptions{}); err != nil {
+		return c.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
+	}
+
 	exitCode := 0
 
-	if detach {
-		if _, err := apiClient.ContainerStart(ctx, c.ID, client.ContainerStartOptions{}); err != nil {
-			return c.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
-		}
-	} else {
-		// Register wait before starting to avoid missing the exit event
-		// if the container exits before ContainerWait is called
-		waitCtx, waitCancel := context.WithTimeout(ctx, 1*time.Hour)
-		defer waitCancel()
-		waitResult := apiClient.ContainerWait(waitCtx, c.ID, client.ContainerWaitOptions{Condition: container.WaitConditionNextExit})
-
-		if _, err := apiClient.ContainerStart(ctx, c.ID, client.ContainerStartOptions{}); err != nil {
-			return c.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
-		}
-
-		select {
-		case status := <-waitResult.Result:
-			exitCode = int(status.StatusCode)
-		case err := <-waitResult.Error:
-			return c.ID, "", fmt.Errorf("failed to ContainerWait: %v", err)
-		case <-waitCtx.Done():
-			return c.ID, "", fmt.Errorf("timed out waiting for container %s to stop: %v", c.ID, waitCtx.Err())
+	if timeout > 0 {
+		// Poll container state
+		timeoutChan := time.NewTimer(timeout)
+		tickChan := time.NewTicker(500 * time.Millisecond)
+		defer timeoutChan.Stop()
+		defer tickChan.Stop()
+	waitLoop:
+		for {
+			select {
+			case <-timeoutChan.C:
+				return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s to stop", timeout, c.ID)
+			case <-tickChan.C:
+				info, err := apiClient.ContainerInspect(ctx, c.ID, client.ContainerInspectOptions{})
+				if err != nil {
+					return c.ID, "", fmt.Errorf("failed to inspect container: %v", err)
+				}
+				if info.Container.State == nil {
+					return c.ID, "", fmt.Errorf("container %s has nil state", c.ID)
+				}
+				if !info.Container.State.Running {
+					exitCode = info.Container.State.ExitCode
+					break waitLoop
+				}
+			}
 		}
 
 		// For interactive containers, wait for I/O forwarding to complete

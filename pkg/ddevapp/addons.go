@@ -353,7 +353,7 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 		},
 	}
 
-	_, out, err := dockerutil.RunSimpleContainerExtended("php-action-"+util.RandString(6), config, hostConfig, true, false)
+	_, out, err := dockerutil.RunSimpleContainerExtended("php-action-"+util.RandString(6), config, hostConfig, true, 10*time.Minute)
 	out = strings.TrimSpace(out)
 
 	if err != nil {
