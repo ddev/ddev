@@ -192,7 +192,7 @@ jobs:
 
       - name: Load 1password secret(s) for pull-push-providers
         if: ${{ inputs.pull_push_providers == 'true' && env.OP_SERVICE_ACCOUNT_TOKEN != '' }}
-        uses: 1password/load-secrets-action@v3
+        uses: 1password/load-secrets-action@v4
         with:
           export-env: true
         env:

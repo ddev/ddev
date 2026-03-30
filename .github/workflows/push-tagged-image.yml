@@ -53,7 +53,7 @@ jobs:
           # for now, all images are multi-arch
           echo "multi_arch=true" >> $GITHUB_OUTPUT
       - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v3
+        uses: 1password/load-secrets-action@v4
         if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
         with:
           export-env: true
@@ -139,7 +139,7 @@ jobs:
     if: ${{ needs.build-and-push.outputs.multi_arch == 'true' }}
     steps:
       - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v3
+        uses: 1password/load-secrets-action@v4
         with:
           export-env: true
         env:
