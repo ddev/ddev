@@ -13,6 +13,7 @@ setup() {
   run docker exec -t $CONTAINER_NAME magick /tmp/logo.png /tmp/logo_png.jpg
   assert_success
   run docker exec -t $CONTAINER_NAME bash -c "magick -list format | grep -i 'Portable Network Graphics'"
+  assert_success
   assert_output --partial "rw-"
 }
 
@@ -22,6 +23,7 @@ setup() {
   run docker exec -t $CONTAINER_NAME magick /tmp/logo.svg /tmp/logo_svg.png
   assert_success
   run docker exec -t $CONTAINER_NAME bash -c "magick -list format | grep -i 'Scalable Vector Graphics'"
+  assert_success
   assert_output --partial "rw+"
 }
 
@@ -31,6 +33,7 @@ setup() {
   run docker exec -t $CONTAINER_NAME magick /tmp/ddev.pdf /tmp/ddev_pdf.png
   assert_success
   run docker exec -t $CONTAINER_NAME bash -c "magick -list format | grep -i 'Portable Document Format'"
+  assert_success
   assert_output --partial "rw+"
 }
 
@@ -40,6 +43,7 @@ setup() {
   run docker exec -t $CONTAINER_NAME magick /tmp/logo.avif /tmp/logo_avif.png
   assert_success
   run docker exec -t $CONTAINER_NAME bash -c "magick -list format | grep -i 'AV1 Image File Format'"
+  assert_success
   assert_output --partial "rw+"
 }
 
@@ -49,5 +53,6 @@ setup() {
   run docker exec -t $CONTAINER_NAME magick /tmp/logo.heic /tmp/logo_heic.png
   assert_success
   run docker exec -t $CONTAINER_NAME bash -c "magick -list format | grep -i 'High Efficiency Image Format'"
+  assert_success
   assert_output --partial "rw+"
 }

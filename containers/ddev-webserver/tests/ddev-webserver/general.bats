@@ -27,16 +27,19 @@ setup() {
 
 @test "Verify /var/www/html/vendor/bin is in PATH on ddev/docker exec" {
   run docker exec "$CONTAINER_NAME" bash -c 'echo $PATH'
+  assert_success
   assert_output --partial "/var/www/html/vendor/bin"
 }
 
 @test "verify that xdebug is disabled by default when using start.sh to start" {
   run docker exec "$CONTAINER_NAME" php --version
+  assert_success
   refute_output --partial "with Xdebug"
 }
 
 @test "verify that xhprof is disabled by default when using start.sh to start" {
   run docker exec "$CONTAINER_NAME" php --modules
+  assert_success
   refute_output --partial "xhprof"
 }
 
@@ -48,16 +51,19 @@ setup() {
 
 @test "verify that PHP assertions are enabled by default" {
   run docker exec "$CONTAINER_NAME" php -r 'echo ini_get("zend.assertions");'
+  assert_success
   assert_output "1"
 }
 
 @test "verify there aren't \"closed keepalive connection\" complaints" {
   run docker logs "$CONTAINER_NAME"
+  assert_success
   refute_output --partial "closed keepalive connection"
 }
 
-@test "verify access to upstream error messages ($project_type)" {
+@test "verify access to upstream error messages" {
   run curl -s "127.0.0.1:$HOST_HTTP_PORT/test/upstream-error.php"
+  assert_success
   assert_output "Upstream error message"
 }
 
@@ -75,7 +81,6 @@ setup() {
   assert_success
   run docker exec -u root -e "DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION=${DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION:-90}" "${CONTAINER_NAME}" /tmp/check_key_expirations.sh
   assert_success
-  echo "$output" >&3
 }
 
 @test "verify python is installed" {

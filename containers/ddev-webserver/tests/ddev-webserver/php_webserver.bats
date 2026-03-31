@@ -26,18 +26,23 @@ setup() {
   assert_success
   if [[ ${PHP_VERSION} != 8.? ]] ; then
     run docker exec -t $CONTAINER_NAME php --re xdebug
+    assert_success
     assert_output --partial "xdebug.remote_enable"
   else
     run docker exec -t $CONTAINER_NAME php --re xdebug
+    assert_success
     assert_output --partial "xdebug.mode"
   fi
   run curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php
+  assert_success
   assert_output --partial "Xdebug is enabled"
   run docker exec -t $CONTAINER_NAME disable_xdebug
   assert_success
   run docker exec -t $CONTAINER_NAME php --re xdebug
+  assert_failure
   assert_output --regexp "xdebug.*does not exist"
   run curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php
+  assert_success
   assert_output --partial "Xdebug is disabled"
 }
 
@@ -45,20 +50,25 @@ setup() {
   run docker exec -t $CONTAINER_NAME enable_xhprof
   assert_success
   run docker exec -t $CONTAINER_NAME php --re xhprof
+  assert_success
   assert_output --partial "xhprof.output_dir"
   run curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php
+  assert_success
   assert_output --partial "XHProf is enabled"
   run docker exec -t $CONTAINER_NAME disable_xhprof
   assert_success
   run docker exec -t $CONTAINER_NAME php --re xhprof
+  assert_failure
   assert_output --partial "does not exist"
   run curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php
+  assert_success
   assert_output --partial "XHProf is disabled"
 }
 
 @test "verify mailpit for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   if [ ${IS_HARDENED} == "true" ]; then skip "Skipping because mailpit is not installed on hardened prod image"; fi
   run curl -s 127.0.0.1:$HOST_HTTP_PORT/test/test-email.php
+  assert_success
   assert_output --partial "Test email sent"
   run curl -s --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
   assert_success
@@ -68,31 +78,36 @@ setup() {
   # Default settings for assert.active should be 1
   if [[ ${PHP_VERSION} != 8.? ]]; then
     run docker exec -t $CONTAINER_NAME php -i
+    assert_success
     assert_output --regexp "assert.active.*=> 1 => 1"
   else
     run docker exec -t $CONTAINER_NAME php -i
+    assert_success
     assert_output --regexp "assert.active.*=> On => On"
   fi
 }
 
 @test "verify phpstatus endpoint for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   run curl -s 127.0.0.1:$HOST_HTTP_PORT/phpstatus
+  assert_success
   assert_output --regexp "idle processes|php is working"
 }
 
 @test "verify error conditions for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # These are just the standard nginx 403 and 404 pages
   run curl 127.0.0.1:$HOST_HTTP_PORT/asdf
+  assert_success
   assert_output --partial "404 Not Found"
   # We're just checking the error code here - there's not much more we can do in
   # this case because the container is *NOT* intercepting 50x errors.
   for item in 400 401 500; do
     run curl -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/${item}.php
+    assert_success
     assert_output --partial "$item"
   done
 }
 
-@test "verify that test/phptest.php is interpreted ($project_type)" {
+@test "verify that test/phptest.php is interpreted for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   run curl --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
   assert_success
 }
@@ -148,8 +163,10 @@ setup() {
 
 @test "verify that both nginx logs and fpm logs are being tailed (${WEBSERVER_TYPE})" {
   run curl -sSL http://127.0.0.1:$HOST_HTTP_PORT/test/fatal.php
+  assert_success
   # php-fpm message direct
   run bash -c "docker logs ${CONTAINER_NAME} 2>&1"
+  assert_success
   assert_output --partial "PHP Fatal error:  Fatal error in"
 }
 
@@ -174,6 +191,7 @@ setup() {
   assert_success
   assert_output "200"
   run curl --fail -s http://127.0.0.1:$HOST_HTTP_PORT/phpstatus
+  assert_success
   assert_output --regexp "idle processes|php is working"
   # Make sure the auth requirement is actually working
   run curl --fail -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
