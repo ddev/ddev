@@ -55,14 +55,12 @@ RUN apt-get -qq update
 
 ### ------------------------ddev-php-extension-build------------------------------
 ### Uncomment the lines below to enable custom PHP extension builds:
-FROM base AS ddev-php-extension-build
-SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
+#FROM base AS ddev-php-extension-build
+#SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 ### Use this section to add PHP extensions that need to be built manually.
 ### Example: The following line installs Xdebug version 3.2.2 for PHP 8.1:
 #RUN /usr/local/bin/build_php_extension.sh "php8.1" "xdebug" "3.2.2" "/usr/lib/php/20210902/xdebug.so"
-# TODO: php8.5: memcached not yet available in Debian Trixie Sury arm64, we build it manually with build_php_extension.sh
-RUN apt-get -qq update && apt-get -qq install --no-install-recommends --no-install-suggests -y libmemcached-dev zlib1g-dev && \
-    /usr/local/bin/build_php_extension.sh "php8.5" "memcached" "latest" "/usr/lib/php/20250925/memcached.so"
+### See more examples in the /usr/local/bin/build_php_extension.sh script
 ### -----------------------END ddev-php-extension-build---------------------------
 
 ### ---------------------------ddev-php-base--------------------------------------
@@ -124,16 +122,7 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
 ### Note: The dates in /usr/lib/php/YYYYMMDD/ represent PHP API versions.
 ### For more info, see: https://unix.stackexchange.com/a/591771
 #COPY --from=ddev-php-extension-build /usr/lib/php/20210902/xdebug.so /usr/lib/php/20210902/xdebug.so
-COPY --from=ddev-php-extension-build /usr/lib/php/20250925/memcached.so /usr/lib/php/20250925/memcached.so.bak
-RUN <<ENDMEMCACHED
-    set -eu -o pipefail
-    if [ ! -f /usr/lib/php/20250925/memcached.so ]; then
-        cp /usr/lib/php/20250925/memcached.so.bak /usr/lib/php/20250925/memcached.so
-        cp /etc/php/8.4/mods-available/memcached.ini /etc/php/8.5/mods-available/memcached.ini
-        phpenmod -v 8.5 memcached
-    fi
-    rm -f /usr/lib/php/20250925/memcached.so.bak
-ENDMEMCACHED
+### See more examples in the /usr/local/bin/build_php_extension.sh script
 ### -----------------------END ddev-php-extension-build---------------------------
 
 RUN phpdismod xhprof xdebug
