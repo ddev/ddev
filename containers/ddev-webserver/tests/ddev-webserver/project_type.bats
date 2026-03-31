@@ -11,10 +11,12 @@ setup() {
 }
 
 @test "verify that backdrop drush commands were added on backdrop and only backdrop ($project_type)" {
-	if [ "$project_type" = "backdrop" ] ; then
-	 	# The .drush/commands/backdrop directory should only exist for backdrop apptype
-		docker exec -t $CONTAINER_NAME bash -c 'if [ ! -d  ~/.drush/commands/backdrop ] ; then echo "Failed to find expected backdrop drush commands"; exit 106; fi'
-	else
-		docker exec -t $CONTAINER_NAME bash -c 'if [ -d  ~/.drush/commands/backdrop ] ; then echo "Found unexpected backdrop drush commands"; exit 107; fi'
+  if [ "$project_type" = "backdrop" ]; then
+    # The .drush/commands/backdrop directory should only exist for backdrop apptype
+    run docker exec -t $CONTAINER_NAME bash -c 'test -d ~/.drush/commands/backdrop'
+    assert_success
+  else
+    run docker exec -t $CONTAINER_NAME bash -c 'test -d ~/.drush/commands/backdrop'
+    assert_failure
   fi
 }
