@@ -137,11 +137,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     Log out and back in for the group change to take effect, then verify with `docker run hello-world`.
 
     ??? tip "Prefer to run as a script?"
-        To run the whole setup as a script, examine and run this script:
+        To run the whole setup as a script:
 
         ```bash
-        cat > /tmp/install-docker.sh << ‘SCRIPT’
-        #!/usr/bin/env bash
+        bash -c ‘
         set -euo pipefail
         sudo apt-get remove -y docker.io docker-doc docker-compose podman-docker containerd runc 2>/dev/null || true
         sudo apt-get update && sudo apt-get install -y ca-certificates curl
@@ -156,9 +155,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
         sudo systemctl enable --now docker
-        SCRIPT
-        chmod +x /tmp/install-docker.sh
-        /tmp/install-docker.sh
+        ‘
         ```
 
     See the full [Docker Engine installation docs for Ubuntu](https://docs.docker.com/engine/install/ubuntu/) or [Debian](https://docs.docker.com/engine/install/debian/) for more details.
@@ -278,11 +275,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     Log out of WSL2 and back in for the group change to take effect. On WSL2 systems without `systemd`, you may need to start Docker manually with `sudo service docker start`.
 
     ??? tip "Prefer to run as a script?"
-        To run the whole setup as a script, examine and run this script:
+        To run the whole setup as a script:
 
         ```bash
-        cat > /tmp/install-docker-wsl2.sh << 'SCRIPT'
-        #!/usr/bin/env bash
+        bash -c '
         set -euo pipefail
         sudo apt-get remove -y docker.io docker-doc docker-compose podman-docker containerd runc 2>/dev/null || true
         sudo apt-get update && sudo apt-get install -y ca-certificates curl
@@ -295,9 +291,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
           | sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null
         sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
-        SCRIPT
-        chmod +x /tmp/install-docker-wsl2.sh
-        /tmp/install-docker-wsl2.sh
+        '
         ```
 
     #### Docker Desktop for Windows

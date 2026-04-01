@@ -70,11 +70,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```
 
     ??? tip "Prefer to run as a script?"
-        To run the whole setup as a script, examine and run this script:
+        To run the whole setup as a script:
 
         ```bash
-        cat > /tmp/install-ddev.sh << ‘SCRIPT’
-        #!/usr/bin/env bash
+        bash -c ‘
         set -euo pipefail
         sudo apt-get update && sudo apt-get install -y curl
         sudo install -m 0755 -d /etc/apt/keyrings
@@ -84,9 +83,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         printf "Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
         sudo apt-get update && sudo apt-get install -y ddev
         mkcert -install
-        SCRIPT
-        chmod +x /tmp/install-ddev.sh
-        /tmp/install-ddev.sh
+        ‘
         ```
 
     For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
@@ -121,22 +118,15 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```
 
     ??? tip "Prefer to run as a script?"
-        To run the whole setup as a script, examine and run this script:
+        To run the whole setup as a script:
 
         ```bash
-        cat > /tmp/install-ddev.sh << 'SCRIPT'
-        #!/usr/bin/env bash
+        bash -c '
         set -euo pipefail
-        echo '[ddev]
-        name=ddev
-        baseurl=https://pkg.ddev.com/yum/
-        gpgcheck=0
-        enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
+        printf "[ddev]\nname=ddev\nbaseurl=https://pkg.ddev.com/yum/\ngpgcheck=0\nenabled=1\n" | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
         sudo dnf install --refresh -y ddev
         mkcert -install
-        SCRIPT
-        chmod +x /tmp/install-ddev.sh
-        /tmp/install-ddev.sh
+        '
         ```
 
     For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
