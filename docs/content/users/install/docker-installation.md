@@ -137,7 +137,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     sudo systemctl enable --now docker
     ```
 
-    Log out and back in for the group change to take effect, then verify with `docker run hello-world`.
+    Run `newgrp docker` to activate the group change in your current shell, then verify with `docker run hello-world`. (A full log out and back in also works.)
 
     ??? tip "Prefer to run as a script?"
         Create a script file, then run it:
@@ -182,7 +182,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     sudo systemctl enable --now docker
     ```
 
-    Log out and back in for the group change to take effect. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/) for more details.
+    Run `newgrp docker` to activate the group change in your current shell. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/) for more details.
 
     !!!warning "Don’t `sudo` with `docker` or `ddev`"
         Don’t use `sudo` with the `docker` command. If you find yourself needing it, you haven’t finished the installation. You also shouldn’t use `sudo` with `ddev` unless it’s specifically for the [`ddev hostname`](../usage/commands.md#hostname) command.
@@ -282,7 +282,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
     ```
 
-    Log out of WSL2 and back in for the group change to take effect. On WSL2 systems without `systemd`, you may need to start Docker manually with `sudo service docker start`.
+    Run `newgrp docker` to activate the group change in your current shell. On WSL2 systems without `systemd`, you may need to start Docker manually with `sudo service docker start`.
 
     ??? tip "Prefer to run as a script?"
         Create a script file, then run it:
