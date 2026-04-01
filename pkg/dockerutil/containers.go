@@ -777,8 +777,14 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		defer waitCancel()
 		tickChan := time.NewTicker(500 * time.Millisecond)
 		defer tickChan.Stop()
+		pollCount := 0
 		for {
+			pollCount++
+			inspectStart := time.Now()
+			util.Debug("RunSimpleContainer: ContainerInspect attempt #%d for %s (container=%s)", pollCount, config.Image, c.ID[:12])
 			info, err := apiClient.ContainerInspect(waitCtx, c.ID, client.ContainerInspectOptions{})
+			inspectElapsed := time.Since(inspectStart)
+			util.Debug("RunSimpleContainer: ContainerInspect #%d returned after %v for %s, err=%v", pollCount, inspectElapsed, c.ID[:12], err)
 			if err != nil {
 				if waitCtx.Err() != nil {
 					return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s to stop", timeout, c.ID)
@@ -788,6 +794,9 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 			if info.Container.State == nil {
 				return c.ID, "", fmt.Errorf("container %s has nil state", c.ID)
 			}
+			util.Debug("RunSimpleContainer: container %s state: Running=%v Status=%s ExitCode=%d StartedAt=%s",
+				c.ID[:12], info.Container.State.Running, info.Container.State.Status,
+				info.Container.State.ExitCode, info.Container.State.StartedAt)
 			if !info.Container.State.Running {
 				exitCode = info.Container.State.ExitCode
 				break
