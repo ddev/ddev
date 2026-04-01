@@ -38,3 +38,13 @@ func GetDDEVEnvironment() string {
 
 	return e
 }
+
+// IsWSL2Environment returns true for any DDEV environment string that represents a WSL2 mode.
+func IsWSL2Environment(envType string) bool {
+	switch envType {
+	case DDEVEnvironmentWSL2, DDEVEnvironmentWSL2Mirrored, DDEVEnvironmentWSL2VirtioProxy, DDEVEnvironmentWSL2None:
+		return true
+	default:
+		return false
+	}
+}

@@ -12,6 +12,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/environment"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -626,7 +627,7 @@ func runInteractiveXdebugDiagnose() int {
 
 	// Check xdebug_ide_location early - it being set is usually wrong (except WSL2 + VS Code)
 	xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
-	isWSL2Env := envType == "wsl2-nat" || envType == "wsl2-mirrored"
+	isWSL2Env := environment.IsWSL2Environment(envType)
 	if xdebugIDELocation != "" && !(isWSL2Env && xdebugIDELocation == "wsl2") {
 		output.UserOut.Printf("✗ xdebug_ide_location is set to '%s' (almost always should be empty)\n", xdebugIDELocation)
 		if util.Confirm("Clear it and restart project?") {
@@ -672,7 +673,7 @@ func runInteractiveXdebugDiagnose() int {
 	// Step 3.5: Validate xdebug_ide_location for WSL2 scenarios
 	needsWSL2Setting := false
 	var setupDescription string
-	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
+	if environment.IsWSL2Environment(envType) {
 		switch ideLocation {
 		case "windows":
 			if ideType == "vscode" {
@@ -779,12 +780,12 @@ func runConnectivityTest(app *ddevapp.DdevApp, envType string) bool {
 	// Determine which connection test to use based on IDE location
 	// If xdebug_ide_location=wsl2, the listener runs in WSL2, use simple connection test
 	// Otherwise in WSL2, the listener runs on Windows, use WSL2 NAT connection test
-	if (envType == "wsl2-nat" || envType == "wsl2-mirrored") && xdebugIDELocation != "wsl2" {
+	if environment.IsWSL2Environment(envType) && xdebugIDELocation != "wsl2" {
 		output.UserOut.Println("  Testing connection to Windows host...")
 		return !testWSL2NATConnection(app)
 	}
 
-	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
+	if environment.IsWSL2Environment(envType) {
 		output.UserOut.Println("  Testing connection to WSL2 host...")
 	} else {
 		output.UserOut.Println("  Testing connection to host...")
@@ -831,7 +832,7 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 		ideName = "your IDE"
 	}
 
-	if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
+	if environment.IsWSL2Environment(envType) {
 		if ideType == "vscode" {
 			locationItems = []string{
 				"VS Code on Windows using WSL extension (recommended)",
@@ -876,7 +877,7 @@ func promptIDEInfo(envType string) (ideType string, ideLocation string) {
 	if err != nil {
 		ideLocation = "local"
 	} else {
-		if envType == "wsl2-nat" || envType == "wsl2-mirrored" {
+		if environment.IsWSL2Environment(envType) {
 			if ideType == "vscode" {
 				// VS Code has 5 options
 				switch idx {
@@ -936,7 +937,7 @@ func promptEnableListening(projectName string, ideType string, ideLocation strin
 		output.UserOut.Println("PhpStorm: Run -> Start Listening for PHP Debug Connections")
 		output.UserOut.Println("Verify: Settings -> PHP -> Debug -> Port 9003, Accept external connections")
 	case "vscode":
-		isWSL2 := envType == "wsl2-nat" || envType == "wsl2-mirrored"
+		isWSL2 := environment.IsWSL2Environment(envType)
 		launchOK := checkVSCodeLaunchJSON(".vscode/launch.json")
 
 		if launchOK {
