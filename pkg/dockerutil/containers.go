@@ -594,10 +594,10 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		PortBindings: portBindings,
 	}
 	// timeout=0 means detach (don't wait for container to finish).
-	// 30 minutes is generous for any simple container task (e.g. chown, rm).
+	// 10 minutes is generous for any simple container task (e.g. chown, rm).
 	var timeout time.Duration
 	if !detach {
-		timeout = 30 * time.Minute
+		timeout = 10 * time.Minute
 	}
 	return RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, timeout)
 }
