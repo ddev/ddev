@@ -99,17 +99,86 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ### Docker for Linux
 
-    The best way to install Docker on Linux is to use your native package management tool (`apt`, `dnf`, etc.) with the official Docker repository. While many Linux distributions provide Docker packages in their own repositories, these are often outdated and may not include the latest features required for stability in a development environment like DDEV. To ensure you're using a supported version, install Docker directly from the official Docker repository. 
+    The best way to install Docker on Linux is to use your native package management tool (`apt`, `dnf`, etc.) with the official Docker repository. While many Linux distributions provide Docker packages in their own repositories, these are often outdated and may not include the latest features required for stability in a development environment like DDEV. To ensure you’re using a supported version, install Docker directly from the official Docker repository.
+
+    #### Debian/Ubuntu
+
+    ```bash
+    # Remove any old/conflicting Docker packages
+    sudo apt-get remove -y docker.io docker-doc docker-compose podman-docker containerd runc 2>/dev/null || true
+
+    # Install prerequisites
+    sudo apt-get update && sudo apt-get install -y ca-certificates curl
+    sudo install -m 0755 -d /etc/apt/keyrings
+
+    # Add Docker’s GPG key
+    sudo curl -fsSL https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+    # Remove old repository files if present
+    sudo rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list
+
+    # Add Docker repository in deb822 format
+    printf "Types: deb\nURIs: https://download.docker.com/linux/%s\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n" \
+      "$(. /etc/os-release && echo "$ID")" \
+      "$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")" \
+      | sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null
+
+    # Install Docker CE
+    sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+    # Add your user to the docker group (create group if it doesn’t exist)
+    sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
+
+    # Start and enable Docker
+    sudo systemctl enable --now docker
+    ```
+
+    Log out and back in for the group change to take effect, then verify with `docker run hello-world`.
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > /tmp/install-docker.sh << ‘SCRIPT’
+        #!/usr/bin/env bash
+        set -euo pipefail
+        sudo apt-get remove -y docker.io docker-doc docker-compose podman-docker containerd runc 2>/dev/null || true
+        sudo apt-get update && sudo apt-get install -y ca-certificates curl
+        sudo install -m 0755 -d /etc/apt/keyrings
+        sudo curl -fsSL "https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")/gpg" -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+        sudo rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list
+        printf "Types: deb\nURIs: https://download.docker.com/linux/%s\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n" \
+          "$(. /etc/os-release && echo "$ID")" \
+          "$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")" \
+          | sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null
+        sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
+        sudo systemctl enable --now docker
+        SCRIPT
+        chmod +x /tmp/install-docker.sh
+        /tmp/install-docker.sh
+        ```
+
+    See the full [Docker Engine installation docs for Ubuntu](https://docs.docker.com/engine/install/ubuntu/) or [Debian](https://docs.docker.com/engine/install/debian/) for more details.
+
+    #### Other Linux Distributions
 
     Follow these distribution-specific instructions to set up Docker Engine from the official Docker repository:
 
-    * [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
     * [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
-    * [Debian](https://docs.docker.com/install/linux/docker-ce/debian/)
     * [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/)
     * [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
 
-    Linux installation **absolutely** requires adding your Linux user to the `docker` group, and configuring the Docker daemon to start at boot. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
+    After installing Docker, add your user to the `docker` group and enable the Docker daemon to start at boot:
+
+    ```bash
+    sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
+    sudo systemctl enable --now docker
+    ```
+
+    Log out and back in for the group change to take effect. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/) for more details.
 
     !!!warning "Don’t `sudo` with `docker` or `ddev`"
         Don’t use `sudo` with the `docker` command. If you find yourself needing it, you haven’t finished the installation. You also shouldn’t use `sudo` with `ddev` unless it’s specifically for the [`ddev hostname`](../usage/commands.md#hostname) command.
@@ -177,10 +246,59 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     No additional software is required to run DDEV on Windows with Docker CE inside WSL2. The DDEV installer will install Docker CE for you. This is the most popular, performant, and best-supported way to run DDEV on Windows.
 
-    To install manually:
-    1. Install or update your Ubuntu-based WSL2 distro (Ubuntu, Ubuntu-20.04, Ubuntu-22.04, etc.)
-    2. Install DDEV inside your WSL2 environment using the Linux installation instructions
-    3. DDEV will automatically install Docker CE for you on first run
+    To install manually, open your WSL2 terminal (Ubuntu) and run:
+
+    ```bash
+    # Remove any old/conflicting Docker packages
+    sudo apt-get remove -y docker.io docker-doc docker-compose podman-docker containerd runc 2>/dev/null || true
+
+    # Install prerequisites
+    sudo apt-get update && sudo apt-get install -y ca-certificates curl
+    sudo install -m 0755 -d /etc/apt/keyrings
+
+    # Add Docker's GPG key
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+    # Remove old repository files if present
+    sudo rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list
+
+    # Add Docker repository in deb822 format
+    printf "Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n" \
+      "$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")" \
+      | sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null
+
+    # Install Docker CE
+    sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+    # Add your user to the docker group (create group if it doesn't exist)
+    sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
+    ```
+
+    Log out of WSL2 and back in for the group change to take effect. On WSL2 systems without `systemd`, you may need to start Docker manually with `sudo service docker start`.
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > /tmp/install-docker-wsl2.sh << 'SCRIPT'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        sudo apt-get remove -y docker.io docker-doc docker-compose podman-docker containerd runc 2>/dev/null || true
+        sudo apt-get update && sudo apt-get install -y ca-certificates curl
+        sudo install -m 0755 -d /etc/apt/keyrings
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+        sudo rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list
+        printf "Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n" \
+          "$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")" \
+          | sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null
+        sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
+        SCRIPT
+        chmod +x /tmp/install-docker-wsl2.sh
+        /tmp/install-docker-wsl2.sh
+        ```
 
     #### Docker Desktop for Windows
 

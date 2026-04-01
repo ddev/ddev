@@ -51,7 +51,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```bash
     # Add DDEV’s GPG key to your keyring
-    sudo sh -c 'echo ""'
     sudo apt-get update && sudo apt-get install -y curl
     sudo install -m 0755 -d /etc/apt/keyrings
     curl -fsSL https://pkg.ddev.com/apt/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
@@ -61,16 +60,34 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     sudo rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list
 
     # Add DDEV releases to your package repository
-    sudo sh -c 'echo ""'
     printf "Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
 
     # Update package information and install DDEV
-    sudo sh -c 'echo ""'
     sudo apt-get update && sudo apt-get install -y ddev
 
     # One-time initialization of mkcert
     mkcert -install
     ```
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > /tmp/install-ddev.sh << ‘SCRIPT’
+        #!/usr/bin/env bash
+        set -euo pipefail
+        sudo apt-get update && sudo apt-get install -y curl
+        sudo install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://pkg.ddev.com/apt/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
+        sudo chmod a+r /etc/apt/keyrings/ddev.asc
+        sudo rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list
+        printf "Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
+        sudo apt-get update && sudo apt-get install -y ddev
+        mkcert -install
+        SCRIPT
+        chmod +x /tmp/install-ddev.sh
+        /tmp/install-ddev.sh
+        ```
 
     For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
 
@@ -90,7 +107,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```bash
     # Add DDEV releases to your package repository
-    sudo sh -c 'echo ""'
     echo '[ddev]
     name=ddev
     baseurl=https://pkg.ddev.com/yum/
@@ -98,12 +114,30 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
 
     # Install DDEV
-    sudo sh -c 'echo ""'
     sudo dnf install --refresh ddev
 
     # One-time initialization of mkcert
     mkcert -install
     ```
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > /tmp/install-ddev.sh << 'SCRIPT'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        echo '[ddev]
+        name=ddev
+        baseurl=https://pkg.ddev.com/yum/
+        gpgcheck=0
+        enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
+        sudo dnf install --refresh -y ddev
+        mkcert -install
+        SCRIPT
+        chmod +x /tmp/install-ddev.sh
+        /tmp/install-ddev.sh
+        ```
 
     For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
 
