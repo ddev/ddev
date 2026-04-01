@@ -22,14 +22,12 @@ import (
  * These tests rely on an external test account.
  */
 
-const lagoonProjectName = "amazeeio-ddev"
+const lagoonProjectName = "test-amazeeio-lagoon"
 
-// TODO: Change to use the  "pull" environment when we have one
 const lagoonPullTestSiteEnvironment = "pull"
 const lagoonPushTestSiteEnvironment = "push"
 
-// TODO: Change this to the actual dedicated pull environment
-const lagoonPullSiteURL = "https://nginx.pull.amazeeio-ddev.us2.amazee.io/"
+const lagoonPullSiteURL = "https://nginx.pull.test-amazeeio-lagoon.us2.amazee.io/"
 const lagoonSiteExpectation = "Super easy vegetarian pasta"
 
 // These tests won't run with GitHub actions on a forked PR.
