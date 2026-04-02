@@ -736,25 +736,33 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 
 	var envType string
 	if nodeps.IsWSL2() {
-		if nodeps.IsWSL2MirroredMode() {
-			envType = "wsl2-mirrored"
+		mode, err := nodeps.GetWSL2NetworkingMode()
+		if err != nil {
+			envType = environment.DDEVEnvironmentWSL2
+			output.UserOut.Printf("Platform: WSL2 (unknown networking mode: %v)\n", err)
+		} else if mode == "mirrored" {
+			envType = environment.DDEVEnvironmentWSL2Mirrored
 			output.UserOut.Print("Platform: WSL2 (mirrored) ")
 			if nodeps.IsWSL2HostAddressLoopbackEnabled() {
 				output.UserOut.Println("✓")
 			} else {
 				output.UserOut.Println("✗ hostAddressLoopback not set")
 			}
-		} else if nodeps.IsWSL2VirtioProxyMode() {
-			envType = "wsl2-virtioproxy"
+		} else if mode == "virtioproxy" {
+			envType = environment.DDEVEnvironmentWSL2VirtioProxy
 			output.UserOut.Println("Platform: WSL2 (virtioproxy)")
-		} else if nodeps.IsWSL2NoneMode() {
-			envType = "wsl2-none"
+		} else if mode == "none" {
+			envType = environment.DDEVEnvironmentWSL2None
 			output.UserOut.Println("Platform: WSL2 (networking=none)")
 			output.UserOut.Println("  ⚠ WSL2 networking is disabled; Xdebug cannot reach a Windows-side IDE")
 			output.UserOut.Println("    Use a browser-based IDE inside WSL (via WSLg) or change networkingMode in .wslconfig")
-		} else {
-			envType = "wsl2-nat"
+		} else if mode == "nat" {
+			envType = environment.DDEVEnvironmentWSL2
 			output.UserOut.Println("Platform: WSL2 (NAT)")
+		} else {
+			envType = environment.DDEVEnvironmentWSL2
+			output.UserOut.Printf("Platform: WSL2 (%s)\n", mode)
+			output.UserOut.Println("  ⚠ This WSL2 networking mode is not explicitly handled by xdebug-diagnose yet")
 		}
 	} else if runtime.GOOS == "darwin" {
 		envType = "macos"
