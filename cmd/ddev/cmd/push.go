@@ -77,7 +77,7 @@ func appPush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 		}
 	}
 
-	provider, err := app.GetProvider(providerType)
+	provider, err = app.GetProvider(providerType)
 	if err != nil {
 		util.Failed("Failed to get provider: %v", err)
 	}
