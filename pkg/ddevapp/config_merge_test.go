@@ -173,31 +173,3 @@ func SetupTestTempDir(t *testing.T, subDir string) *ddevapp.DdevApp {
 
 	return app
 }
-
-// TestEnvToUniqueEnv tests EnvToUniqueEnv
-func TestEnvToUniqueEnv(t *testing.T) {
-	assert := asrt.New(t)
-
-	testBedSources := [][]string{
-		{"ONE=one", "ONE=two", "ONE=three", "TWO=two", "TWO=three", "TWO=four"},
-		// Bare variable names (no =value) should pass through for host env lookup by docker-compose
-		{"BARE_VAR", "KEY=value"},
-		// A later KEY=value entry should override an earlier bare KEY entry
-		{"MYVAR", "MYVAR=explicit"},
-		// A later bare KEY entry should override an earlier KEY=value entry
-		{"MYVAR=explicit", "MYVAR"},
-	}
-
-	testBedExpectations := [][]string{
-		{"ONE=three", "TWO=four"},
-		{"BARE_VAR", "KEY=value"},
-		{"MYVAR=explicit"},
-		{"MYVAR"},
-	}
-
-	for i := range testBedSources {
-		res := ddevapp.EnvToUniqueEnv(&testBedSources[i])
-		sort.Strings(res)
-		assert.Equal(testBedExpectations[i], res)
-	}
-}

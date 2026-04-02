@@ -450,7 +450,7 @@ func (app *DdevApp) ConfigPostLoadCleanup() {
 	}
 
 	// WebEnvironment needs special handling via EnvToUniqueEnv
-	app.WebEnvironment = EnvToUniqueEnv(&app.WebEnvironment)
+	app.WebEnvironment = util.EnvToUniqueEnv(&app.WebEnvironment)
 }
 
 // WarnIfConfigReplace messages user about whether config is being replaced or created
