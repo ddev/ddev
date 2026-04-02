@@ -159,6 +159,8 @@ setup() {
   assert_success
   run docker exec $CONTAINER_NAME disable_xdebug
   assert_success
+  # disable_xdebug triggers an FPM reload; wait for it to settle before the next test
+  sleep 2
 }
 
 @test "verify that both nginx logs and fpm logs are being tailed (${WEBSERVER_TYPE})" {
