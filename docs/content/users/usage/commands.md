@@ -613,12 +613,14 @@ ddev drush st
 
 [Execute a shell command in the container](../usage/cli.md#executing-commands-in-containers) for a service. Uses the web service by default.
 
+To run your command in a different project, run `ddev exec --project <project> <cmd>`
 To run your command in a different service container, run `ddev exec --service <service> <cmd>`. Use the `--raw` flag if you’d like to run a raw, uninterpreted command in a container.
 
 Flags:
 
 * `--dir`, `-d`: Define the execution directory within the container.
 * `--raw`: Use raw exec (do not interpret with Bash inside container). (default `true`)
+* `--project`, `-p`: Specify a project where to run the command. Defaults to the project in the current directory.
 * `--service`, `-s`: Define the service to connect to. (e.g. `web`, `db`) (default `"web"`)
 * `--quiet`, `-q`: Suppress detailed error message.
 * `--user`, `-u`: Defines the user to run shell as.
@@ -628,6 +630,9 @@ Example:
 ```shell
 # List the web container's docroot contents
 ddev exec ls /var/www/html
+
+# List the web container's docroot contents for a specific project
+ddev exec --project my-other-project ls /var/www/html
 
 # List the web container's vendor directory contents
 ddev exec --dir /var/www/html/vendor ls
