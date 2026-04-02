@@ -117,6 +117,9 @@ func TestAcquiaPull(t *testing.T) {
 
 	provider, err := app.GetProvider("acquia")
 	require.NoError(t, err)
+
+	require.Equal(t, acquiaPullTestEnvironment, provider.GetInfo())
+
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
@@ -235,6 +238,8 @@ func TestAcquiaPush(t *testing.T) {
 
 	provider, err := app.GetProvider("acquia")
 	require.NoError(t, err)
+
+	require.Equal(t, acquiaPushTestEnvironment, provider.GetInfo())
 
 	err = app.Push(provider, false, false)
 	require.NoError(t, err)

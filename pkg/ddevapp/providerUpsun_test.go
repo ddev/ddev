@@ -65,7 +65,7 @@ func TestUpsunPull(t *testing.T) {
 	t.Run("local-config", func(t *testing.T) {
 		err = writeUpsunLocalConfig(t, app, token)
 		require.NoError(t, err)
-		startAndCheckUpsunPull(t, app, provider)
+		startAndCheckUpsunPull(t, app, provider, "")
 	})
 
 	// variant using environment variables
@@ -74,7 +74,7 @@ func TestUpsunPull(t *testing.T) {
 		err = app.WriteConfig()
 		require.NoError(t, err)
 		_ = os.RemoveAll(filepath.Join(app.AppRoot, ".upsun/local/"))
-		startAndCheckUpsunPull(t, app, provider)
+		startAndCheckUpsunPull(t, app, provider, upsunTestSiteID+"."+upsunPullTestSiteEnvironment)
 	})
 }
 
@@ -101,7 +101,7 @@ func TestUpsunPush(t *testing.T) {
 	t.Run("local-config", func(t *testing.T) {
 		err = writeUpsunLocalConfig(t, app, token)
 		require.NoError(t, err)
-		startAndCheckUpsunPush(t, app, provider, token)
+		startAndCheckUpsunPush(t, app, provider, token, "")
 	})
 
 	t.Run("environment-based-config", func(t *testing.T) {
@@ -110,7 +110,7 @@ func TestUpsunPush(t *testing.T) {
 		require.NoError(t, err)
 
 		_ = os.RemoveAll(filepath.Join(app.AppRoot, ".upsun/local/"))
-		startAndCheckUpsunPush(t, app, provider, token)
+		startAndCheckUpsunPush(t, app, provider, token, upsunTestSiteID+"."+upsunPushTestSiteEnvironment)
 	})
 }
 
@@ -168,9 +168,12 @@ func setupUpsunProject(t *testing.T, environment string) (*ddevapp.DdevApp, *dde
 }
 
 // startAndCheckUpsunPull starts the app and does upsun pull, then checks for the expected file and database entry.
-func startAndCheckUpsunPull(t *testing.T, app *ddevapp.DdevApp, provider *ddevapp.Provider) {
+func startAndCheckUpsunPull(t *testing.T, app *ddevapp.DdevApp, provider *ddevapp.Provider, expectedInfo string) {
 	err := app.Start()
 	require.NoError(t, err)
+	if expectedInfo != "" {
+		require.Equal(t, expectedInfo, provider.GetInfo())
+	}
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
@@ -181,9 +184,12 @@ func startAndCheckUpsunPull(t *testing.T, app *ddevapp.DdevApp, provider *ddevap
 }
 
 // startAndCheckUpsunPush starts the app and does upsun push, then checks for the expected file and database entry.
-func startAndCheckUpsunPush(t *testing.T, app *ddevapp.DdevApp, provider *ddevapp.Provider, token string) {
+func startAndCheckUpsunPush(t *testing.T, app *ddevapp.DdevApp, provider *ddevapp.Provider, token string, expectedInfo string) {
 	err := app.Start()
 	require.NoError(t, err)
+	if expectedInfo != "" {
+		require.Equal(t, expectedInfo, provider.GetInfo())
+	}
 
 	testName := strings.Split(t.Name(), "/")[0]
 

@@ -104,6 +104,9 @@ func TestLagoonPull(t *testing.T) {
 
 	err = app.Start()
 	require.NoError(t, err)
+
+	require.Equal(t, lagoonProjectName+"."+lagoonPullTestSiteEnvironment, provider.GetInfo())
+
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
@@ -175,6 +178,8 @@ func TestLagoonPush(t *testing.T) {
 
 	err = app.Start()
 	require.NoError(t, err)
+
+	require.Equal(t, lagoonProjectName+"."+lagoonPushTestSiteEnvironment, provider.GetInfo())
 
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)

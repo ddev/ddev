@@ -103,6 +103,8 @@ func TestPantheonPull(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
+	require.Equal(t, pantheonPullTestSite+"."+pantheonPullTestEnvironment, provider.GetInfo())
+
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
@@ -207,6 +209,8 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
+
+	require.Equal(t, pantheonPushTestSite+"."+pantheonPushTestEnvironment, provider.GetInfo())
 
 	// Since allow-plugins isn't there and you can't even set it with Composer...
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
