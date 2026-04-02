@@ -547,7 +547,7 @@ func TestProjectAutocompletionForExecCmd(t *testing.T) {
 
 	// ddev exec completion should show all project names
 	out, err := exec.RunHostCommand(DdevBin, "__complete", "exec", "--project", "")
-	assert.NoError(err)
+	require.NoError(t, err)
 	filteredOut := getTestingSitesFromOutput(out)
 	for _, name := range siteNames {
 		assert.Contains(filteredOut, name)
@@ -555,7 +555,7 @@ func TestProjectAutocompletionForExecCmd(t *testing.T) {
 
 	// If there's already a project, nothing more should be suggested
 	out, err = exec.RunHostCommand(DdevBin, "__complete", "exec", "--project", "anything", "")
-	assert.NoError(err)
+	require.NoError(t, err)
 	filteredOut = getTestingSitesFromOutput(out)
 	assert.Empty(filteredOut)
 }

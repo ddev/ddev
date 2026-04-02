@@ -54,7 +54,7 @@ func TestCmdExec(t *testing.T) {
 	err = os.Chdir(testDir)
 	require.NoError(t, err)
 	out, err := exec.RunHostCommand(DdevBin, "start", "-y")
-	assert.NoError(err, "failed to start, out=%v, err=%v", out, err)
+	require.NoError(t, err, "failed to start, out=%v, err=%v", out, err)
 
 	// Set current directory to the initial one.
 	err = os.Chdir(site.Dir)
@@ -66,7 +66,6 @@ func TestCmdExec(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = os.RemoveAll(testDir)
-		assert.NoError(err)
 		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 	app, err := ddevapp.GetActiveApp(site.Name)
