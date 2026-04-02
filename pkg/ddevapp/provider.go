@@ -481,12 +481,12 @@ func (p *Provider) GetInfo() string {
 		if service == "" {
 			service = "web"
 		}
-		var stdout, stderr string
-		stdout, stderr, err = p.app.Exec(&ExecOpts{
+		var stdout string
+		stdout, _, err = p.app.Exec(&ExecOpts{
 			Service: service,
 			Cmd:     cmd,
 		})
-		out = stdout + stderr
+		out = stdout
 	}
 
 	if err != nil {
