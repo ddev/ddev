@@ -65,6 +65,18 @@ These environments can be extended, version controlled, and shared, so you can t
     hostAddressLoopback=true
     ```
 
+    **WSL2 in VirtioProxy Mode (Experimental)**
+
+    If you're using Windows WSL2 with ["VirtioProxy" networking mode](https://learn.microsoft.com/en-us/windows/wsl/networking), DDEV supports this mode experimentally. You must disable `localhostForwarding` in `C:\Users\<you>\.wslconfig` for VS Code and other tools to work correctly:
+
+    ```ini
+    [wsl2]
+    networkingMode=VirtioProxy
+    localhostForwarding=false
+    ```
+
+    Then restart WSL with `wsl --shutdown`.
+
 === "Traditional Windows"
 
     ### Traditional Windows

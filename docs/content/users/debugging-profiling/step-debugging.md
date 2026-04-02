@@ -186,6 +186,7 @@ Here are basic steps to take to sort out any difficulty:
 
 WSL2 is a complicated environment for Xdebug, especially if you're running your IDE on the Windows side, as most people do.
 
+* **WSL2 VirtioProxy mode (experimental):** If you're using `networkingMode=VirtioProxy` in your `.wslconfig`, DDEV supports Xdebug experimentally. You must set `localhostForwarding=false` in `.wslconfig` for VS Code and other tools to work. DDEV automatically discovers the Windows host IP via the Hyper-V virtual switch interface. If you have trouble, you can override the IP with `ddev config global --xdebug-ide-location=<ip>`.
 * With PhpStorm, consider using the "Remote Development" feature to connect to WSL. That runs an actual PhpStorm instance on WSL2 to reduce networking complexity.
 * When using an IDE inside WSL2—like you would when running PhpStorm or Visual Studio Code inside WSL2, or using PhpStorm's "Remote Development" feature—you may need to use the [`xdebug_ide_location`](../configuration/config.md#xdebug_ide_location) setting to tell Xdebug to expect the IDE under WSL2. You can do this by running `ddev config global --xdebug-ide-location=wsl2`.
 * `export DDEV_DEBUG=true && ddev start` will show you how DDEV is calculating the `host.docker.internal` IP address to be used when contacting the IDE, which may give a hint about problems you might discover in the general troubleshooting discussed above, when trying to connect to the listening IDE.

@@ -85,8 +85,19 @@ func GetHostDockerInternal() *HostDockerInternal {
 			// If IDE is inside WSL2 then the normal Linux processing should work
 			message = fmt.Sprintf("xdebug_ide_location=%s uses 'host-gateway' in extra_hosts, see https://docs.ddev.com/en/stable/users/configuration/config/#xdebug_ide_location", globalconfig.DdevGlobalConfig.XdebugIDELocation)
 
+		case nodeps.IsWSL2() && nodeps.IsWSL2VirtioProxyMode() && !IsDockerDesktop():
+			// In virtioproxy mode, the default gateway is the actual network router,
+			// not the Windows host. We need the Windows vEthernet (WSL) interface IP instead.
+			virtioProxyIP, err := getWSL2VirtioProxyWindowsIP()
+			if err != nil {
+				message = fmt.Sprintf("IsWSL2 virtioproxy and !IsDockerDesktop; unable to get IP from getWSL2VirtioProxyWindowsIP(): %v", err)
+			} else {
+				ipAddress = virtioProxyIP
+				message = "IsWSL2 virtioproxy and !IsDockerDesktop; received from Windows vEthernet (WSL) interface"
+			}
+
 		case nodeps.IsWSL2() && !nodeps.IsWSL2MirroredMode() && !IsDockerDesktop():
-			// Covers both "nat" and "virtioproxy" networking modes
+			// Covers "nat" networking mode
 			// Microsoft instructions for finding Windows IP address at
 			// https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
 			// If IDE is on Windows, we have to parse /etc/resolv.conf
@@ -184,6 +195,30 @@ $ip
 	ip := strings.TrimSpace(string(out))
 	if ip == "" {
 		return "", fmt.Errorf("no suitable Windows host IPv4 address found from default route")
+	}
+
+	return ip, nil
+}
+
+// getWSL2VirtioProxyWindowsIP uses PowerShell to get the Windows vEthernet (WSL) interface IP.
+// In virtioproxy mode, the default gateway is the network router (not Windows),
+// so we need the Hyper-V virtual switch IP that connects Windows to WSL2.
+func getWSL2VirtioProxyWindowsIP() (string, error) {
+	psScript := `Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { $_.InterfaceAlias -like 'vEthernet (WSL*' } | Select-Object -First 1 -ExpandProperty IPAddress`
+
+	cmd := exec.Command("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", psScript)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("powershell failed in getWSL2VirtioProxyWindowsIP: %w (output: %s)", err, string(out))
+	}
+
+	ip := strings.TrimSpace(string(out))
+	if ip == "" {
+		return "", fmt.Errorf("no vEthernet (WSL) IPv4 address found via PowerShell")
+	}
+
+	if parsedIP := net.ParseIP(ip); parsedIP == nil {
+		return "", fmt.Errorf("unable to parse IP address '%s' from vEthernet (WSL) interface", ip)
 	}
 
 	return ip, nil
