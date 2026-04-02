@@ -11,10 +11,10 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
-	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/moby/moby/client/pkg/versions"
 )
 
@@ -143,7 +143,7 @@ func CanRunWithoutDocker() bool {
 
 // CheckAvailableSpace outputs a warning if Docker space is low
 func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(ddevImages.GetWebImage(), "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+	_, out, _ := RunSimpleContainer(versionconstants.UtilitiesImage, "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	out = strings.Trim(out, "% \r\n")
 	parts := strings.Split(out, " ")
 	if len(parts) != 2 {

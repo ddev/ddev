@@ -8,6 +8,7 @@ import (
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/moby/moby/api/types/volume"
 	"github.com/moby/moby/client"
 )
@@ -232,7 +233,7 @@ func PurgeDirectoryContentsInVolume(volumeName string, subdirs []string, uid str
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
-	_, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
+	_, _, err := RunSimpleContainer(versionconstants.UtilitiesImage, containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -261,7 +262,7 @@ func ListFilesInVolume(volumeName string, subdir string) ([]string, error) {
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
-	_, stdout, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
+	_, stdout, err := RunSimpleContainer(versionconstants.UtilitiesImage, containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +307,7 @@ func RemoveFilesFromVolume(volumeName string, subdir string, files []string) err
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
-	_, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
+	_, _, err := RunSimpleContainer(versionconstants.UtilitiesImage, containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", true, false, labels, nil, nil)
 	if err != nil {
 		return err
 	}
