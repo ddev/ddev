@@ -117,11 +117,11 @@ func (vf *ViperFactory) LoadProjectConfig(mainPath string, overridePaths []strin
 		})
 	}
 
-	return vf.LoadProjectConfigFromContents(mainPath, mainContent, overrides, target)
+	return vf.LoadProjectConfigFromContents(mainContent, overrides, target)
 }
 
 // LoadProjectConfigFromContents loads a main project config and merges optional overrides from pre-read bytes.
-func (vf *ViperFactory) LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides []OverrideConfig, target any) error {
+func (vf *ViperFactory) LoadProjectConfigFromContents(mainContent []byte, overrides []OverrideConfig, target any) error {
 	// First load the main config into a map
 	mainMap := make(map[string]any)
 	cfg := vf.CreateConfigProvider()

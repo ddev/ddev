@@ -18,7 +18,7 @@ type ConfigProvider interface {
 type ProviderFactory interface {
 	CreateConfigProvider() ConfigProvider
 	LoadProjectConfig(mainPath string, overridePaths []string, target any) error
-	LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides []OverrideConfig, target any) error
+	LoadProjectConfigFromContents(mainContent []byte, overrides []OverrideConfig, target any) error
 }
 
 // OverrideConfig represents a configuration override with its source path and contents.
@@ -47,9 +47,9 @@ func LoadProjectConfig(mainPath string, overridePaths []string, target any) erro
 }
 
 // LoadProjectConfigFromContents loads a main project config and merges optional overrides from pre-read bytes.
-func LoadProjectConfigFromContents(mainPath string, mainContent []byte, overrides []OverrideConfig, target any) error {
+func LoadProjectConfigFromContents(mainContent []byte, overrides []OverrideConfig, target any) error {
 	factory := getDefaultFactory()
-	return factory.LoadProjectConfigFromContents(mainPath, mainContent, overrides, target)
+	return factory.LoadProjectConfigFromContents(mainContent, overrides, target)
 }
 
 // NewConfigProvider returns a new ConfigProvider from the default factory.

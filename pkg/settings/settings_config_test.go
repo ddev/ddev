@@ -89,6 +89,35 @@ web_environment:
 	require.Equal(t, []string{"echo original-hook", "echo override-hook"}, cfg.Hooks)
 }
 
+// TestLoadProjectConfigFromContents verifies that merging works correctly when loading from memory-based bytes.
+func TestLoadProjectConfigFromContents(t *testing.T) {
+	mainContent := `
+name: project-bytes
+type: php
+hooks:
+  - "echo byte-hook-main"
+`
+	overrideContent := `
+type: drupal11
+hooks:
+  - "echo byte-hook-override"
+`
+	overrides := []OverrideConfig{
+		{
+			Path:    "override.yaml",
+			Content: []byte(overrideContent),
+		},
+	}
+
+	var cfg TestConfig
+	err := LoadProjectConfigFromContents([]byte(mainContent), overrides, &cfg)
+	require.NoError(t, err)
+
+	require.Equal(t, "project-bytes", cfg.Name)
+	require.Equal(t, "drupal11", cfg.Type)
+	require.Equal(t, []string{"echo byte-hook-main", "echo byte-hook-override"}, cfg.Hooks)
+}
+
 // TestNewConfigProviderIsolation ensures that separate providers do not share state.
 func TestNewConfigProviderIsolation(t *testing.T) {
 	p1 := NewConfigProvider()

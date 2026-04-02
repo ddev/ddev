@@ -407,7 +407,7 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		}
 	}
 
-	err = settings.LoadProjectConfigFromContents(app.ConfigPath, fileContents[app.ConfigPath], overrides, app)
+	err = settings.LoadProjectConfigFromContents(fileContents[app.ConfigPath], overrides, app)
 	if err != nil {
 		return []string{}, fmt.Errorf("failed to load project config: %v", err)
 	}
