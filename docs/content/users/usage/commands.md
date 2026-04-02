@@ -613,7 +613,7 @@ ddev drush st
 
 [Execute a shell command in the container](../usage/cli.md#executing-commands-in-containers) for a service. Uses the web service by default.
 
-To run your command in a different project, run `ddev exec --project <project> <cmd>`
+To run your command in a different project, run `ddev exec --project <project> <cmd>`.
 To run your command in a different service container, run `ddev exec --service <service> <cmd>`. Use the `--raw` flag if you’d like to run a raw, uninterpreted command in a container.
 
 Flags:
