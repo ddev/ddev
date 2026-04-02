@@ -360,8 +360,8 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "bash", "-c", "if command -v mkcert >/dev/null 2>&1; then mkcert -uninstall; fi")
 		require.NoError(t, err)
 
-		// Now take away temp sudo
-		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "rm", "/etc/sudoers.d/temp-mkcert-install")
+		// Now take away temp sudo and remove ddev/docker apt sources leftovers (*.list and *.sources create conflicts in apt-get)
+		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "rm -f /etc/sudoers.d/temp-mkcert-install /etc/apt/sources.list.d/ddev.* /etc/apt/sources.list.d/docker.*")
 		require.NoError(t, err)
 
 		out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "(apt-get remove -y ddev ddev-wsl2 docker-ce-cli docker-ce 2>/dev/null)")
