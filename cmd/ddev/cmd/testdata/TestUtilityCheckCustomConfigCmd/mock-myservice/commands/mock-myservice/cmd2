@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#ddev-generated
+## Description: Mock myservice command 2
+## Usage: cmd2
+echo "cmd2"

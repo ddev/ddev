@@ -278,6 +278,7 @@ func ListFilesInDirFullPath(path string, excludeDirectories bool) ([]string, err
 
 // ListFilesWithDepth returns an array of full path of files found in a directory, traversing up to maxDepth levels.
 // maxDepth=0 means only files directly in dir, maxDepth=1 means dir and one level of subdirectories, etc.
+// maxDepth=-1 means unlimited depth (all files recursively).
 func ListFilesWithDepth(dir string, maxDepth int) ([]string, error) {
 	var files []string
 	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
@@ -285,6 +286,9 @@ func ListFilesWithDepth(dir string, maxDepth int) ([]string, error) {
 			return err
 		}
 		if d.IsDir() {
+			if maxDepth == -1 {
+				return nil
+			}
 			// Calculate depth and skip directories beyond maxDepth
 			relPath, _ := filepath.Rel(dir, path)
 			var depth int

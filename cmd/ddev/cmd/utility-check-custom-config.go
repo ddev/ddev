@@ -12,11 +12,15 @@ var UtilityCheckCustomConfig = &cobra.Command{
 	Short: "Display custom configuration files in the current project",
 	Long: `Display custom configuration files in the current project.
 
-By default, shows only files that would warn on startup (user-created files
-without a #ddev-generated or #ddev-silent-no-warn marker).
+By default, shows only files that would warn on startup: user-created files
+and files with an unexpected #ddev-generated marker. Recognized add-on files
+and files with #ddev-silent-no-warn are excluded.
 
-Use --all to also show add-on files (labeled "addon <name>") and silenced
-files (labeled #ddev-silent-no-warn).`,
+Use --all to show all custom configuration with annotations:
+  (add-on <name>) for add-on files
+  (#ddev-generated) for add-on files with a #ddev-generated marker
+  (unexpected #ddev-generated) for unrecognized #ddev-generated files
+  (#ddev-silent-no-warn) for silenced files`,
 	Run: func(cmd *cobra.Command, _ []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
@@ -34,6 +38,6 @@ files (labeled #ddev-silent-no-warn).`,
 }
 
 func init() {
-	UtilityCheckCustomConfig.Flags().Bool("all", false, `Include add-on files (labeled "addon <name>") and silenced files (#ddev-silent-no-warn)`)
+	UtilityCheckCustomConfig.Flags().Bool("all", false, `Show all custom configuration with annotations for add-on files, #ddev-generated, and #ddev-silent-no-warn`)
 	DebugCmd.AddCommand(UtilityCheckCustomConfig)
 }

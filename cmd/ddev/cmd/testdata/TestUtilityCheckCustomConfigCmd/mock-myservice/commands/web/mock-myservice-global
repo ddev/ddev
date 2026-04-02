@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#ddev-generated
+## Description: Mock myservice global command
+## Usage: mock-myservice-global
+echo "mock-myservice-global"

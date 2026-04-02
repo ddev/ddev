@@ -3,10 +3,10 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -773,30 +773,85 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		require.Contains(t, out, "unexpected.ini")
 		require.Contains(t, out, "(unexpected #ddev-generated)")
 		require.Contains(t, out, "Remove unexpected '#ddev-generated' comments")
+		require.Contains(t, out, "Custom configuration is updated on restart.")
+		require.Contains(t, out, "Add '#ddev-silent-no-warn' comment")
 	})
 
-	// Test with addon-generated files
+	// Test with addon-generated files (using a local mock add-on)
+	// This covers both direct project files and directory entries in the manifest,
+	// which are the cases where addon files could be incorrectly flagged as unexpected.
 	t.Run("addon-generated files", func(t *testing.T) {
-		if !github.HasGitHubToken() {
-			t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
-		}
-
-		// Install a simple addon to test addon file detection
-		_, err := exec.RunCommand(DdevBin, []string{"add-on", "get", "ddev/ddev-phpmyadmin"})
+		mockAddonPath := filepath.Join(origDir, "testdata", "TestUtilityCheckCustomConfigCmd", "mock-myservice")
+		_, err := exec.RunCommand(DdevBin, []string{"add-on", "get", mockAddonPath})
 		require.NoError(t, err)
+		t.Cleanup(func() {
+			_, _ = exec.RunCommand(DdevBin, []string{"add-on", "remove", "mock-myservice"})
+		})
 
-		// Default mode: addon files should not appear (they are not user custom files)
+		// Default mode: addon files must not appear (direct files, directory-entry files, and global files)
 		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
 		require.NoError(t, err)
-		require.NotContains(t, out, "docker-compose.phpmyadmin.yaml")
-		require.NotContains(t, out, "docker-compose.phpmyadmin_norouter.yaml")
+		// Project direct files
+		require.NotContains(t, out, "docker-compose.mock-myservice.yaml")
+		require.NotContains(t, out, "config.mock-myservice.yaml")
+		require.NotContains(t, out, "mock-myservice.ini")
+		// Project directory-entry files (the bug case: manifest stores dir, not individual files)
+		require.NotContains(t, out, "cmd1")
+		require.NotContains(t, out, "cmd2")
+		require.NotContains(t, out, "bashrc.mock-myservice")
+		require.NotContains(t, out, "traefik/config/mock-myservice.yaml")
+		// Global files
+		require.NotContains(t, out, "mock-myservice-global")
+		require.NotContains(t, out, "bashrc.mock-myservice-global")
+		require.NotContains(t, out, "static_config.mock-myservice.yaml")
+		require.NotContains(t, out, "custom-global-config/mock-myservice.yaml")
 
-		// --all mode: addon files should appear with (add-on name) marker
+		// --all mode: all add-on files must appear with (add-on mock-myservice) (#ddev-generated)
 		out, err = exec.RunCommand(DdevBin, []string{"utility", "check-custom-config", "--all"})
 		require.NoError(t, err)
 		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
-		require.Contains(t, out, "docker-compose.phpmyadmin.yaml")
-		require.Contains(t, out, "docker-compose.phpmyadmin_norouter.yaml")
-		require.Contains(t, out, "(add-on phpmyadmin) (#ddev-generated)")
+		// Project direct files
+		require.Contains(t, out, "docker-compose.mock-myservice.yaml (add-on mock-myservice) (#ddev-generated)")
+		require.Contains(t, out, "config.mock-myservice.yaml (add-on mock-myservice) (#ddev-generated)")
+		require.Contains(t, out, "mock-myservice.ini (add-on mock-myservice) (#ddev-generated)")
+		// Project directory-entry files
+		require.Contains(t, out, "cmd1 (add-on mock-myservice) (#ddev-generated)")
+		require.Contains(t, out, "cmd2 (add-on mock-myservice) (#ddev-generated)")
+		require.Contains(t, out, "bashrc.mock-myservice (add-on mock-myservice) (#ddev-generated)")
+		require.Contains(t, out, "traefik/config/mock-myservice.yaml (add-on mock-myservice) (#ddev-generated)")
+		// Global files
+		require.Contains(t, out, "mock-myservice-global (add-on mock-myservice) (#ddev-generated)")
+		require.Contains(t, out, "bashrc.mock-myservice-global (add-on mock-myservice) (#ddev-generated)")
+		require.Contains(t, out, "static_config.mock-myservice.yaml (add-on mock-myservice) (#ddev-generated)")
+		require.Contains(t, out, "custom-global-config/mock-myservice.yaml (add-on mock-myservice) (#ddev-generated)")
+		// Footer messages must NOT appear in --all mode
+		require.NotContains(t, out, "Custom configuration is updated on restart.")
+		require.NotContains(t, out, "Add '#ddev-silent-no-warn' comment")
+
+		// Strip #ddev-generated from one project file and one global file to simulate
+		// a user who has modified addon files. They must appear in default mode.
+		projectCmd1 := filepath.Join(tmpdir, ".ddev", "commands", "mock-myservice", "cmd1")
+		content, err := os.ReadFile(projectCmd1)
+		require.NoError(t, err)
+		err = os.WriteFile(projectCmd1, []byte(strings.ReplaceAll(string(content), nodeps.DdevFileSignature+"\n", "")), 0644)
+		require.NoError(t, err)
+
+		globalCmd := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands", "web", "mock-myservice-global")
+		content, err = os.ReadFile(globalCmd)
+		require.NoError(t, err)
+		err = os.WriteFile(globalCmd, []byte(strings.ReplaceAll(string(content), nodeps.DdevFileSignature+"\n", "")), 0644)
+		require.NoError(t, err)
+
+		// Default mode: modified files (marker removed) must now appear as warnings
+		out, err = exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
+		require.NoError(t, err)
+		require.Contains(t, out, "cmd1 (add-on mock-myservice)")
+		require.Contains(t, out, "mock-myservice-global (add-on mock-myservice)")
+		require.Contains(t, out, "Custom configuration is updated on restart.")
+		require.Contains(t, out, "Add '#ddev-silent-no-warn' comment")
+		// Other addon files still have the marker and must stay hidden
+		require.NotContains(t, out, "cmd2")
+		require.NotContains(t, out, "docker-compose.mock-myservice.yaml")
+		require.NotContains(t, out, "static_config.mock-myservice.yaml")
 	})
 }

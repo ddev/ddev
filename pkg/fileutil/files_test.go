@@ -502,6 +502,16 @@ func TestListFilesWithDepth(t *testing.T) {
 		require.Contains(t, files, filepath.Join(dir3, "file3.txt"))
 	})
 
+	t.Run("maxDepth=-1 (unlimited)", func(t *testing.T) {
+		files, err := fileutil.ListFilesWithDepth(tmpDir, -1)
+		require.NoError(t, err)
+		require.Len(t, files, 4)
+		require.Contains(t, files, filepath.Join(tmpDir, "file0.txt"))
+		require.Contains(t, files, filepath.Join(dir1, "file1.txt"))
+		require.Contains(t, files, filepath.Join(dir2, "file2.txt"))
+		require.Contains(t, files, filepath.Join(dir3, "file3.txt"))
+	})
+
 	t.Run("nonexistent directory", func(t *testing.T) {
 		_, err := fileutil.ListFilesWithDepth(filepath.Join(tmpDir, "nonexistent"), 2)
 		require.Error(t, err)

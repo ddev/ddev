@@ -18,9 +18,28 @@ import (
 // customConfigCheck defines a custom configuration check.
 type customConfigCheck struct {
 	collectFiles      func() ([]string, error) // returns candidate files before custom config filtering
-	expectedDdevFiles func() []string          // whitelisted DDEV-managed files (optional, returns nil to check all files)
+	expectedDdevFiles func() ([]string, error) // whitelisted DDEV-managed files (optional, returns nil to check all files)
 	checkOnlyWhen     func() bool              // when to run this check (optional, returns true if nil)
 	displayName       string                   // category name for grouped display (e.g., "Router (global)")
+}
+
+// addPathToAddonMap adds a file path (or all files under a directory) to the add-on map.
+// Manifest ProjectFiles/GlobalFiles may contain directory paths; this expands them.
+func addPathToAddonMap(fullPath string, addonName string, addonFileMap map[string]string) {
+	info, err := os.Stat(fullPath)
+	if err != nil {
+		return
+	}
+	if info.IsDir() {
+		files, err := fileutil.ListFilesWithDepth(fullPath, -1)
+		if err == nil {
+			for _, f := range files {
+				addonFileMap[f] = addonName
+			}
+		}
+		return
+	}
+	addonFileMap[fullPath] = addonName
 }
 
 // CheckCustomConfig checks for custom configuration files and returns a message.
@@ -52,7 +71,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return fileutil.ListFilesWithDepth(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands"), 2)
 			},
-			expectedDdevFiles: func() []string {
+			expectedDdevFiles: func() ([]string, error) {
 				return GetAssetFiles("global_dotddev_assets/commands", filepath.Join(globalconfig.GetGlobalDdevDir(), "commands"))
 			},
 			displayName: "Commands (global)",
@@ -61,7 +80,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return fileutil.ListFilesWithDepth(filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions"), 2)
 			},
-			expectedDdevFiles: func() []string {
+			expectedDdevFiles: func() ([]string, error) {
 				return GetAssetFiles("global_dotddev_assets/homeadditions", filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions"))
 			},
 			displayName: "Home additions (global)",
@@ -77,7 +96,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return fileutil.ListFilesInDirFullPath(filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik", "custom-global-config"), true)
 			},
-			expectedDdevFiles: func() []string {
+			expectedDdevFiles: func() ([]string, error) {
 				return GetAssetFiles("global_dotddev_assets/traefik/custom-global-config", filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik", "custom-global-config"))
 			},
 			checkOnlyWhen: routerEnabled,
@@ -87,8 +106,8 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return filepath.Glob(filepath.Join(ddevDir, "apache", "*.conf"))
 			},
-			expectedDdevFiles: func() []string {
-				return []string{app.GetConfigPath("apache/apache-site.conf")}
+			expectedDdevFiles: func() ([]string, error) {
+				return []string{app.GetConfigPath("apache/apache-site.conf")}, nil
 			},
 			checkOnlyWhen: func() bool { return app.WebserverType == nodeps.WebserverApacheFPM },
 			displayName:   "Web server",
@@ -114,8 +133,8 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return []string{app.GetConfigPath("mutagen/mutagen.yml")}, nil
 			},
-			expectedDdevFiles: func() []string {
-				return []string{app.GetConfigPath("mutagen/mutagen.yml")}
+			expectedDdevFiles: func() ([]string, error) {
+				return []string{app.GetConfigPath("mutagen/mutagen.yml")}, nil
 			},
 			checkOnlyWhen: func() bool { return app.IsMutagenEnabled() },
 			displayName:   "Mutagen",
@@ -141,8 +160,8 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return filepath.Glob(filepath.Join(ddevDir, "nginx_full", "*.conf"))
 			},
-			expectedDdevFiles: func() []string {
-				return []string{app.GetConfigPath("nginx_full/nginx-site.conf")}
+			expectedDdevFiles: func() ([]string, error) {
+				return []string{app.GetConfigPath("nginx_full/nginx-site.conf")}, nil
 			},
 			checkOnlyWhen: func() bool { return app.WebserverType == nodeps.WebserverNginxFPM },
 			displayName:   "Web server",
@@ -157,8 +176,8 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return filepath.Glob(filepath.Join(ddevDir, "postgres", "*.conf"))
 			},
-			expectedDdevFiles: func() []string {
-				return []string{app.GetConfigPath("postgres/postgresql.conf")}
+			expectedDdevFiles: func() ([]string, error) {
+				return []string{app.GetConfigPath("postgres/postgresql.conf")}, nil
 			},
 			checkOnlyWhen: func() bool {
 				return !slices.Contains(app.OmitContainers, "db") &&
@@ -170,7 +189,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return filepath.Glob(filepath.Join(ddevDir, "providers", "*.yaml"))
 			},
-			expectedDdevFiles: func() []string {
+			expectedDdevFiles: func() ([]string, error) {
 				return GetAssetFiles("dotddev_assets/providers", app.GetConfigPath("providers"))
 			},
 			displayName: "Hosting providers",
@@ -179,7 +198,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return filepath.Glob(filepath.Join(ddevDir, "share-providers", "*.sh"))
 			},
-			expectedDdevFiles: func() []string {
+			expectedDdevFiles: func() ([]string, error) {
 				return GetAssetFiles("dotddev_assets/share-providers", app.GetConfigPath("share-providers"))
 			},
 			displayName: "Share providers",
@@ -196,11 +215,11 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 				}
 				return append(crtFiles, keyFiles...), nil
 			},
-			expectedDdevFiles: func() []string {
+			expectedDdevFiles: func() ([]string, error) {
 				return []string{
 					filepath.Join(app.GetConfigPath("traefik/certs"), app.Name+".crt"),
 					filepath.Join(app.GetConfigPath("traefik/certs"), app.Name+".key"),
-				}
+				}, nil
 			},
 			checkOnlyWhen: routerEnabled,
 			displayName:   "Router",
@@ -225,8 +244,8 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return filepath.Glob(filepath.Join(app.GetConfigPath("traefik/config"), "*.yaml"))
 			},
-			expectedDdevFiles: func() []string {
-				return []string{filepath.Join(app.GetConfigPath("traefik/config"), app.Name+".yaml")}
+			expectedDdevFiles: func() ([]string, error) {
+				return []string{filepath.Join(app.GetConfigPath("traefik/config"), app.Name+".yaml")}, nil
 			},
 			checkOnlyWhen: routerEnabled,
 			displayName:   "Router",
@@ -257,36 +276,26 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return []string{app.GetConfigPath("xhprof/xhprof_prepend.php")}, nil
 			},
-			expectedDdevFiles: func() []string {
-				return []string{app.GetConfigPath("xhprof/xhprof_prepend.php")}
+			expectedDdevFiles: func() ([]string, error) {
+				return []string{app.GetConfigPath("xhprof/xhprof_prepend.php")}, nil
 			},
 			checkOnlyWhen: func() bool { return app.GetXHProfMode() == types.XHProfModePrepend },
 			displayName:   "XHProf",
 		},
 		{
 			collectFiles: func() ([]string, error) {
-				commandsDir := filepath.Join(ddevDir, "commands")
-				files, err := fileutil.ListFilesWithDepth(commandsDir, 2)
-				if err != nil {
-					return nil, nil
-				}
-				return files, nil
+				return fileutil.ListFilesWithDepth(filepath.Join(ddevDir, "commands"), 2)
 			},
-			expectedDdevFiles: func() []string {
+			expectedDdevFiles: func() ([]string, error) {
 				return GetAssetFiles("dotddev_assets/commands", app.GetConfigPath("commands"))
 			},
 			displayName: "Commands",
 		},
 		{
 			collectFiles: func() ([]string, error) {
-				homeadditionsDir := filepath.Join(ddevDir, "homeadditions")
-				files, err := fileutil.ListFilesWithDepth(homeadditionsDir, 2)
-				if err != nil {
-					return nil, nil
-				}
-				return files, nil
+				return fileutil.ListFilesWithDepth(filepath.Join(ddevDir, "homeadditions"), 2)
 			},
-			expectedDdevFiles: func() []string {
+			expectedDdevFiles: func() ([]string, error) {
 				return GetAssetFiles("dotddev_assets/homeadditions", app.GetConfigPath("homeadditions"))
 			},
 			displayName: "Home additions",
@@ -309,7 +318,11 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 				if err != nil {
 					return nil, err
 				}
-				return append([]string{filepath.Join(ddevDir, ".env")}, envDotFiles...), nil
+				envFile := filepath.Join(ddevDir, ".env")
+				if _, err := os.Stat(envFile); err == nil {
+					return append([]string{envFile}, envDotFiles...), nil
+				}
+				return envDotFiles, nil
 			},
 			displayName: "Environment",
 		},
@@ -323,10 +336,10 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 	if err == nil {
 		for _, addon := range manifest {
 			for _, relPath := range addon.ProjectFiles {
-				addonFileMap[app.GetConfigPath(relPath)] = addon.Name
+				addPathToAddonMap(app.GetConfigPath(relPath), addon.Name, addonFileMap)
 			}
 			for _, relPath := range addon.GlobalFiles {
-				addonFileMap[filepath.Join(globalconfig.GetGlobalDdevDir(), relPath)] = addon.Name
+				addPathToAddonMap(filepath.Join(globalconfig.GetGlobalDdevDir(), relPath), addon.Name, addonFileMap)
 			}
 		}
 	}
@@ -343,19 +356,26 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 		if check.checkOnlyWhen != nil && !check.checkOnlyWhen() {
 			continue
 		}
+		// Validate expectedDdevFiles even when no files were collected, to catch asset path typos.
+		var expectedFiles []string
+		if check.expectedDdevFiles != nil {
+			expectedFiles, err = check.expectedDdevFiles()
+			if err != nil {
+				util.WarningOnce("Unable to check for bundled assets: %v", err)
+				continue
+			}
+		}
+
 		files, err := check.collectFiles()
 		if err != nil {
-			util.WarningOnce("%v", err)
-			continue
-		}
-		if len(files) == 0 {
+			if !os.IsNotExist(err) {
+				util.WarningOnce("Unable to check custom files for '%s': %v", check.displayName, err)
+			}
 			continue
 		}
 
-		// Filter files to find custom config files
-		var expectedFiles []string
-		if check.expectedDdevFiles != nil {
-			expectedFiles = check.expectedDdevFiles()
+		if len(files) == 0 {
+			continue
 		}
 		// Add-on files are considered expected/standard for the purpose of filtering out from custom config.
 		// but only if showAll is false
@@ -406,11 +426,15 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 				}
 			}
 		}
-		msgBuilder.WriteString("\nCustom configuration is updated on restart. Run 'ddev restart' if changes don't take effect.")
+		if !showAll {
+			msgBuilder.WriteString("\nCustom configuration is updated on restart. Run 'ddev restart' if changes don't take effect.")
+		}
 		if hasUnexpectedFiles {
 			msgBuilder.WriteString("\nRemove unexpected '#ddev-generated' comments from files to avoid possible overrides.")
 		}
-		msgBuilder.WriteString("\nAdd '#ddev-silent-no-warn' comment to files if you don't want to see these warnings.")
+		if !showAll {
+			msgBuilder.WriteString("\nAdd '#ddev-silent-no-warn' comment to files if you don't want to see these warnings.")
+		}
 		return msgBuilder.String(), true
 	}
 	return fmt.Sprintf("No custom configuration detected in project '%s'.", app.Name), false
@@ -457,7 +481,7 @@ type fileInfo struct {
 // expectedDdevFiles is an optional list of files that are expected to have DDEV markers (core DDEV files).
 // addonFileMap maps file paths to their add-on name for files managed by installed add-ons.
 // Files with DDEV markers that are NOT in expectedDdevFiles list are considered unexpected and flagged as custom.
-// If showAll is true, add-on files are shown with (addon <name>) and silenced files with (#ddev-silent-no-warn).
+// If showAll is true, add-on files are shown with (add-on <name>) and silenced files with (#ddev-silent-no-warn).
 func filterCustomConfigFiles(files []string, expectedDdevFiles []string, addonFileMap map[string]string, showAll bool) []fileInfo {
 	var out []fileInfo
 	for _, f := range files {

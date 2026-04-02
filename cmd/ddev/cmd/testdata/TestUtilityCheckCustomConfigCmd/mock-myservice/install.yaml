@@ -1,0 +1,15 @@
+name: mock-myservice
+
+project_files:
+  - docker-compose.mock-myservice.yaml
+  - config.mock-myservice.yaml
+  - php/mock-myservice.ini
+  - commands/mock-myservice
+  - homeadditions/mock-myservice
+  - traefik/config/mock-myservice.yaml
+
+global_files:
+  - commands/web/mock-myservice-global
+  - homeadditions/mock-myservice-global
+  - traefik/static_config.mock-myservice.yaml
+  - traefik/custom-global-config/mock-myservice.yaml

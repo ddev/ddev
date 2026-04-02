@@ -1,0 +1,4 @@
+#ddev-generated
+services:
+  mock-myservice:
+    image: busybox
