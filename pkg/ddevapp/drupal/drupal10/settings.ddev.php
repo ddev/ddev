@@ -38,12 +38,20 @@ if (empty($settings['config_sync_directory'])) {
 }
 
 // Override drupal/symfony_mailer default config to use Mailpit.
+// Symfony Mailer 1.x
 $config['symfony_mailer.settings']['default_transport'] = 'sendmail';
 $config['symfony_mailer.mailer_transport.sendmail']['plugin'] = 'smtp';
 $config['symfony_mailer.mailer_transport.sendmail']['configuration']['user'] = '';
 $config['symfony_mailer.mailer_transport.sendmail']['configuration']['pass'] = '';
 $config['symfony_mailer.mailer_transport.sendmail']['configuration']['host'] = 'localhost';
 $config['symfony_mailer.mailer_transport.sendmail']['configuration']['port'] = '1025';
+// Symfony Mailer 2.x
+$config['mailer_transport.settings']['default_transport'] = 'sendmail';
+$config['mailer_transport.mailer_transport.sendmail']['plugin'] = 'smtp';
+$config['mailer_transport.mailer_transport.sendmail']['configuration']['user'] = '';
+$config['mailer_transport.mailer_transport.sendmail']['configuration']['pass'] = '';
+$config['mailer_transport.mailer_transport.sendmail']['configuration']['host'] = 'localhost';
+$config['mailer_transport.mailer_transport.sendmail']['configuration']['port'] = '1025';
 
 // Enable verbose logging for errors.
 // https://www.drupal.org/forum/support/post-installation/2018-07-18/enable-drupal-8-backend-errorlogdebugging-mode
