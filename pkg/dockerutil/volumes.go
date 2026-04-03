@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -121,7 +120,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	if IsPodmanRootless() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
-	containerID, _, err := RunSimpleContainer(ddevImages.GetWebImage(), containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, labels, nil, nil)
+	containerID, _, err := RunSimpleContainer(versionconstants.UtilitiesImage, containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, labels, nil, nil)
 	if err != nil {
 		return err
 	}
