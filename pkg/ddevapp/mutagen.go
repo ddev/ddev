@@ -40,10 +40,14 @@ func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// Make sure that if we have a volume mount it's got proper ownership
 	uidStr, gidStr, _ := dockerutil.GetContainerUser()
 	util.Verbose("Chowning Mutagen Docker volume for user %s", uidStr)
+	// Use -f to suppress errors from transient .mutagen-temporary-staging-* files
+	// that may appear/disappear during an active or resuming sync session.
+	// Use || true because the Exec wrapper adds set -eu which would exit on
+	// chown's non-zero exit code even with -f.
 	_, _, err := app.Exec(
 		&ExecOpts{
 			Dir: "/tmp",
-			Cmd: fmt.Sprintf("sudo chown -R %s:%s /tmp/project_mutagen", uidStr, gidStr),
+			Cmd: fmt.Sprintf("sudo chown -Rf %s:%s /tmp/project_mutagen || true", uidStr, gidStr),
 		})
 	if err != nil {
 		util.Warning("Failed to chown Mutagen volume: %v", err)
