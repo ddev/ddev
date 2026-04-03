@@ -211,6 +211,15 @@ This method:
 - Doesn't require syncing local main branch
 - Uses --no-track to avoid tracking upstream/main
 
+**Comparing Against Upstream:**
+
+When generating diffs or comparing branches for a PR, prefer `upstream/main` as the base if an `upstream` remote exists. Local `main` may be out of date. If there is no `upstream` remote, fall back to `origin/main`.
+
+```bash
+git fetch upstream 2>/dev/null || git fetch origin
+git diff upstream/main...HEAD 2>/dev/null || git diff origin/main...HEAD
+```
+
 ### Pull Request Creation
 
 When creating pull requests for DDEV, follow the PR template structure from `.github/PULL_REQUEST_TEMPLATE.md`:

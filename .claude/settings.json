@@ -1,4 +1,25 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(curl*github.com*)",
+      "Bash(curl*raw.githubusercontent.com*)",
+      "Bash(curl*buildkite.com*)",
+      "Bash(gh issue list*)",
+      "Bash(gh issue view*)",
+      "Bash(gh issue status*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr checks*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh pr status*)",
+      "Bash(gh run list*)",
+      "Bash(gh run view*)",
+      "Bash(make*)",
+      "Bash(go test*)",
+      "Bash(gofmt*)",
+      "Bash(ls*)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {

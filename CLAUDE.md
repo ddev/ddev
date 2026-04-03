@@ -121,6 +121,15 @@ Example: `20250108_rfay_fix_networking`
 git fetch upstream && git checkout -b <branch_name> upstream/main --no-track
 ```
 
+### Comparing Against Upstream
+
+When generating diffs or comparing branches for a PR, prefer `upstream/main` as the base if an `upstream` remote exists. Local `main` may be out of date. If there is no `upstream` remote, fall back to `origin/main`.
+
+```bash
+git fetch upstream 2>/dev/null || git fetch origin
+git diff upstream/main...HEAD 2>/dev/null || git diff origin/main...HEAD
+```
+
 ### Commit Message Format
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
