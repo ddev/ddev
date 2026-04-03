@@ -447,7 +447,7 @@ Further information on the DDEV procedure can also be found in the [Contao docum
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir -p my-contao-manager-site && cd my-contao-manager-site
-        ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
+        ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.4
         ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
         ddev start -y
         ddev exec "wget -O public/contao-manager.phar.php https://download.contao.org/contao-manager/stable/contao-manager.phar"
