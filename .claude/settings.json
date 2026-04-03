@@ -18,6 +18,9 @@
       "Bash(go test*)",
       "Bash(gofmt*)",
       "Bash(ls*)"
+    ],
+    "deny": [
+      "Bash(git push*)"
     ]
   },
   "hooks": {
