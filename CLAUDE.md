@@ -40,9 +40,9 @@ make quickstart-test                          # Run Bats docs tests
 
 ### Linting and Code Quality
 
-**IMPORTANT: Always run `make staticrequired` to validate changes, never use `go build` or individual linters directly.**
+**IMPORTANT: Always run `make staticrequired` before committing. A PreToolUse hook in `.claude/settings.json` runs it automatically before every `git commit` — do not bypass it.**
 
-Individual linters (`gofmt`, `markdownlint`) are implemented as PreToolUse and PostToolUse hooks, so should not be separately required:
+`gofmt` and `markdownlint --fix` run automatically via PostToolUse hooks after editing Go or Markdown files. Run them manually if needed:
 
 ```bash
 make staticrequired                           # Run all required static analysis
