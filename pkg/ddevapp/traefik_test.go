@@ -243,6 +243,9 @@ func TestTraefikStaticConfig(t *testing.T) {
 // TestCustomGlobalConfig tests that custom Traefik config from
 // ~/.ddev/traefik/custom-global-config/ is pushed to the router and loaded by Traefik
 func TestCustomGlobalConfig(t *testing.T) {
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && dockerutil.IsRancherDesktop() {
+		t.Skip("Skipping on Rancher Desktop because of intermittent fail missing `ddev-test-value`")
+	}
 	origDir, _ := os.Getwd()
 	testDataDir := filepath.Join(origDir, "testdata", t.Name())
 
