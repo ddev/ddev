@@ -76,6 +76,9 @@ These environments can be extended, version controlled, and shared, so you can t
 
     Then restart WSL with `wsl --shutdown`.
 
+    !!! note "VS Code with WSL extension"
+        If you use VS Code with the WSL extension in VirtioProxy mode, you may need to add `localhostForwarding=false` to your `.wslconfig`. However, this disables localhost forwarding from Windows to WSL2, which means you will not be able to access DDEV sites from a Windows browser using the default `127.0.0.1` address. Consider using PhpStorm or another IDE that does not require this workaround.
+
 === "Traditional Windows"
 
     ### Traditional Windows
