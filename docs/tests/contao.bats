@@ -18,13 +18,13 @@ teardown() {
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  run ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
+  run ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.4
   assert_success
 
   run ddev start -y
   assert_success
 
-  run ddev composer create-project contao/managed-edition:5.3
+  run ddev composer create-project contao/managed-edition:5.7
   assert_success
   # Set DATABASE_URL and MAILER_DSN in .env.local
   run ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
@@ -50,7 +50,7 @@ teardown() {
 
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  run ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
+  run ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.4
   assert_success
   # set DATABASE_URL and MAILER_DSN in .env.local
   run ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
