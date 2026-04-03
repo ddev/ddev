@@ -14,6 +14,7 @@ const (
 	DDEVEnvironmentWSL2Mirrored    = "wsl2-mirrored"
 	DDEVEnvironmentWSL2VirtioProxy = "wsl2-virtioproxy"
 	DDEVEnvironmentWSL2None        = "wsl2-none"
+	DDEVEnvironmentWSL2Bridged     = "wsl2-bridged"
 	DDEVEnvironmentCodespaces      = "codespaces"
 	DDEVEnvironmentDevcontainer    = "devcontainer"
 )
@@ -32,6 +33,8 @@ func GetDDEVEnvironment() string {
 		e = DDEVEnvironmentWSL2VirtioProxy
 	case nodeps.IsWSL2NoneMode():
 		e = DDEVEnvironmentWSL2None
+	case nodeps.IsWSL2BridgedMode():
+		e = DDEVEnvironmentWSL2Bridged
 	case nodeps.IsWSL2():
 		e = DDEVEnvironmentWSL2
 	}
@@ -42,7 +45,7 @@ func GetDDEVEnvironment() string {
 // IsWSL2Environment returns true for any DDEV environment string that represents a WSL2 mode.
 func IsWSL2Environment(envType string) bool {
 	switch envType {
-	case DDEVEnvironmentWSL2, DDEVEnvironmentWSL2Mirrored, DDEVEnvironmentWSL2VirtioProxy, DDEVEnvironmentWSL2None:
+	case DDEVEnvironmentWSL2, DDEVEnvironmentWSL2Mirrored, DDEVEnvironmentWSL2VirtioProxy, DDEVEnvironmentWSL2None, DDEVEnvironmentWSL2Bridged:
 		return true
 	default:
 		return false

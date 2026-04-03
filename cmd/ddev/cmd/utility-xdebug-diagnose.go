@@ -648,20 +648,31 @@ func runInteractiveXdebugDiagnose() int {
 	// Step 2: Connectivity test
 	output.UserOut.Println("[2/5] Connectivity Test")
 
-	// Check if port 9003 is in use from the container's perspective
-	portInUse, _ := testContainerToHostConnectivity(app, "host.docker.internal", 9003)
-	if portInUse {
-		output.UserOut.Println("Port 9003 is in use - stop your IDE listener temporarily for this test.")
-		if !util.Confirm("Press Enter when ready") {
+	var connectivityOK bool
+	if envType == environment.DDEVEnvironmentWSL2None {
+		// networking=none disables the WSL2/Windows network bridge entirely;
+		// a Windows-side IDE is unreachable regardless of firewall settings.
+		// Skip the connectivity test here and rely on the protocol test in Step 5
+		// once the user has chosen a WSL2-local IDE in Step 3.
+		output.UserOut.Println("  ⚠ WSL2 networking=none: host connectivity to Windows is not possible.")
+		output.UserOut.Println("    Skipping connectivity test; your IDE must run inside WSL2.")
+		connectivityOK = true
+	} else {
+		// Check if port 9003 is in use from the container's perspective
+		portInUse, _ := testContainerToHostConnectivity(app, "host.docker.internal", 9003)
+		if portInUse {
+			output.UserOut.Println("Port 9003 is in use - stop your IDE listener temporarily for this test.")
+			if !util.Confirm("Press Enter when ready") {
+				return 1
+			}
+		}
+
+		connectivityOK = runConnectivityTest(app, envType)
+		if !connectivityOK {
+			output.UserOut.Println("✗ Network connectivity failed")
+			output.UserOut.Println("  Check firewall settings for port 9003")
 			return 1
 		}
-	}
-
-	connectivityOK := runConnectivityTest(app, envType)
-	if !connectivityOK {
-		output.UserOut.Println("✗ Network connectivity failed")
-		output.UserOut.Println("  Check firewall settings for port 9003")
-		return 1
 	}
 	output.UserOut.Println()
 
@@ -755,7 +766,11 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 			envType = environment.DDEVEnvironmentWSL2None
 			output.UserOut.Println("Platform: WSL2 (networking=none)")
 			output.UserOut.Println("  ⚠ WSL2 networking is disabled; Xdebug cannot reach a Windows-side IDE")
-			output.UserOut.Println("    Use a browser-based IDE inside WSL (via WSLg) or change networkingMode in .wslconfig")
+			output.UserOut.Println("    Use an IDE inside WSL2 (via WSLg) or change networkingMode in .wslconfig")
+		} else if mode == "bridged" {
+			envType = environment.DDEVEnvironmentWSL2Bridged
+			output.UserOut.Println("Platform: WSL2 (bridged)")
+			output.UserOut.Println("  ⚠ WSL2 bridged networking is not fully tested; behavior may vary")
 		} else if mode == "nat" {
 			envType = environment.DDEVEnvironmentWSL2
 			output.UserOut.Println("Platform: WSL2 (NAT)")
@@ -785,20 +800,23 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 func runConnectivityTest(app *ddevapp.DdevApp, envType string) bool {
 	xdebugIDELocation := globalconfig.DdevGlobalConfig.XdebugIDELocation
 
-	// Determine which connection test to use based on IDE location
-	// If xdebug_ide_location=wsl2, the listener runs in WSL2, use simple connection test
-	// Otherwise in WSL2, the listener runs on Windows, use WSL2 NAT connection test
-	if environment.IsWSL2Environment(envType) && xdebugIDELocation != "wsl2" {
+	switch {
+	case envType == environment.DDEVEnvironmentWSL2None:
+		// Networking is disabled; no connectivity to Windows host is possible.
+		// Callers should skip this test for wsl2-none.
+		return false
+	case environment.IsWSL2Environment(envType) && xdebugIDELocation != "wsl2":
+		// WSL2 (NAT, mirrored, virtioproxy, bridged) with IDE on Windows side
 		output.UserOut.Println("  Testing connection to Windows host...")
 		return !testWSL2NATConnection(app)
-	}
-
-	if environment.IsWSL2Environment(envType) {
+	case environment.IsWSL2Environment(envType):
+		// xdebug_ide_location=wsl2: IDE is inside WSL2
 		output.UserOut.Println("  Testing connection to WSL2 host...")
-	} else {
+		return !testSimpleConnection(app)
+	default:
 		output.UserOut.Println("  Testing connection to host...")
+		return !testSimpleConnection(app)
 	}
-	return !testSimpleConnection(app)
 }
 
 // promptIDEInfo asks the user about their IDE setup

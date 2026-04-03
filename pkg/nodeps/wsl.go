@@ -87,6 +87,18 @@ func IsWSL2NoneMode() bool {
 	return mode == "none"
 }
 
+// IsWSL2BridgedMode returns true if running WSL2 in bridged networking mode.
+func IsWSL2BridgedMode() bool {
+	if !IsWSL2() {
+		return false
+	}
+	mode, err := GetWSL2NetworkingMode()
+	if err != nil {
+		return false
+	}
+	return mode == "bridged"
+}
+
 // IsPathOnWindowsFilesystem checks if the given path is on the Windows filesystem
 // when running in WSL2. The Windows filesystem is mounted under /mnt/ in WSL2.
 func IsPathOnWindowsFilesystem(path string) bool {
