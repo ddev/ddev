@@ -352,13 +352,13 @@ Further information on the DDEV procedure can also be found in the [Contao docum
 
     ```bash
     mkdir -p my-contao-composer-site && cd my-contao-composer-site
-    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
+    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.4
     ```
 
     Install Contao via Composer (this may take a minute):
 
     ```bash
-    ddev composer create-project contao/managed-edition:5.3
+    ddev composer create-project contao/managed-edition:5.7
     ```
 
     Configure database and mailer settings:
