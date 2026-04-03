@@ -311,17 +311,9 @@ if ddev describe >/dev/null 2>&1; then
 
   # Check for customizations
   if [ -d .ddev ]; then
-    custom_files=$(grep -rL "#ddev-generated" .ddev/docker-compose.*.yaml .ddev/php .ddev/nginx* .ddev/*-build .ddev/apache .ddev/mysql .ddev/postgres .ddev/.env 2>/dev/null | grep -v '\.example$')
-    if [ -n "$custom_files" ]; then
-      custom_count=$(echo "$custom_files" | wc -l | tr -d ' ')
-    else
-      custom_count=0
-    fi
-    if [ "$custom_count" -gt 0 ]; then
-      warn "Found ${custom_count} customized configuration file(s):"
-      while IFS= read -r file; do
-        [ -n "$file" ] && info "  - ${file#./}"
-      done <<< "$custom_files"
+    custom_config_warnings=$(ddev utility check-custom-config --all 2>&1 >/dev/null)
+    if [ -n "$custom_config_warnings" ]; then
+      warn "$custom_config_warnings"
       suggestion "Customizations can cause issues. Try temporarily removing them for testing."
     else
       success "No custom configurations detected"
@@ -335,6 +327,8 @@ if ddev describe >/dev/null 2>&1; then
       while IFS= read -r addon; do
         [ -n "$addon" ] && info "  - ${addon}"
       done <<< "$addons"
+    else
+      success "No add-ons installed"
     fi
   fi
 

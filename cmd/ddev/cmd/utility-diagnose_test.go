@@ -65,7 +65,7 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 
 		out, err := exec.RunHostCommand(DdevBin, "utility", "diagnose")
 		require.NoError(t, err)
-		require.Contains(t, out, "customized configuration file(s)")
+		require.Contains(t, out, "Custom configuration detected")
 		require.Contains(t, out, ".ddev/.env")
 	})
 
