@@ -393,8 +393,8 @@ Further information on the DDEV procedure can also be found in the [Contao docum
         #!/usr/bin/env bash
         set -euo pipefail
         mkdir -p my-contao-composer-site && cd my-contao-composer-site
-        ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
-        ddev composer create-project contao/managed-edition:5.3
+        ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.4
+        ddev composer create-project contao/managed-edition:5.7
         ddev dotenv set .env.local --database-url=mysql://db:db@db:3306/db --mailer-dsn=smtp://localhost:1025
         ddev exec contao-console contao:migrate --no-interaction
         ddev exec contao-console contao:user:create --username=admin --name=Administrator --email=admin@example.com --language=en --password=Password123 --admin
@@ -412,7 +412,7 @@ Further information on the DDEV procedure can also be found in the [Contao docum
 
     ```bash
     mkdir -p my-contao-manager-site && cd my-contao-manager-site
-    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.2
+    ddev config --project-type=php --docroot=public --webserver-type=apache-fpm --php-version=8.4
     ```
 
     Configure database and mailer settings:
