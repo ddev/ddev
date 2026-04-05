@@ -512,7 +512,7 @@ func filterCustomConfigFiles(files []string, expectedDdevFiles []string, addonFi
 
 // fileLabel returns the display string for a file, appending annotation tags as needed.
 func fileLabel(f fileInfo) string {
-	label := f.path
+	label := filepath.ToSlash(f.path)
 	if f.addonName != "" {
 		label += " (add-on " + f.addonName + ")"
 	}
