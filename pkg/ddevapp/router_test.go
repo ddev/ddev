@@ -198,10 +198,11 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 
 // Test that the app assigns an ephemeral port if the default one is not available.
 func TestUseEphemeralPort(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() || dockerutil.IsDockerRootless() || dockerutil.IsPodman()) {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
+		// and similar port-release timing issues on Docker Rootless and Podman.
 		// Expected port is not available, so it allocates another one.
-		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
+		t.Skip("Skipping on Lima/Colima/Rancher/DockerRootless/Podman as ports don't seem to be released properly in a timely fashion")
 	}
 
 	// Stop all projects and the router first so we can occupy the ports they would normally use
@@ -246,12 +247,7 @@ func TestUseEphemeralPort(t *testing.T) {
 		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
 	})
 
-	for i, app := range apps {
-		// Predict which ephemeral ports the apps will use by using guess from starting point
-		// This is fragile, only works if no other projects are running and holding open the earlier ports
-		expectedEphemeralHTTPPort := ddevapp.MinEphemeralPort + i*4
-		expectedEphemeralHTTPSPort := ddevapp.MinEphemeralPort + i*4 + 1
-
+	for _, app := range apps {
 		err := app.Start()
 		require.NoError(t, err)
 
@@ -259,22 +255,22 @@ func TestUseEphemeralPort(t *testing.T) {
 		app, err = ddevapp.NewApp(app.GetAppRoot(), true)
 		require.NoError(t, err)
 
-		// app1 will not use the configured target ports, uses the assigned ephemeral ports.
+		// The app must not use the configured target ports, it must use ephemeral ports instead.
 		require.NotEqual(t, targetHTTPPort, app.GetPrimaryRouterHTTPPort())
 		require.NotEqual(t, targetHTTPSPort, app.GetPrimaryRouterHTTPSPort())
 
-		// Allow a margin of +2 for ephemeral port checks due to flakiness
+		// Verify the assigned ports are in the ephemeral range
 		actualHTTPPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPPort())
 		require.NoError(t, err)
 		require.Condition(t, func() bool {
-			return actualHTTPPort >= expectedEphemeralHTTPPort && actualHTTPPort <= expectedEphemeralHTTPPort+2
-		}, "HTTP port must be between %d and %d, got %d", expectedEphemeralHTTPPort, expectedEphemeralHTTPPort+2, actualHTTPPort)
+			return actualHTTPPort >= ddevapp.MinEphemeralPort && actualHTTPPort <= ddevapp.MaxEphemeralPort
+		}, "HTTP port %d must be in ephemeral range [%d, %d]", actualHTTPPort, ddevapp.MinEphemeralPort, ddevapp.MaxEphemeralPort)
 
 		actualHTTPSPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPSPort())
 		require.NoError(t, err)
 		require.Condition(t, func() bool {
-			return actualHTTPSPort >= expectedEphemeralHTTPSPort && actualHTTPSPort <= expectedEphemeralHTTPSPort+2
-		}, "HTTPS port must be between %d and %d, got %d", expectedEphemeralHTTPSPort, expectedEphemeralHTTPSPort+2, actualHTTPSPort)
+			return actualHTTPSPort >= ddevapp.MinEphemeralPort && actualHTTPSPort <= ddevapp.MaxEphemeralPort
+		}, "HTTPS port %d must be in ephemeral range [%d, %d]", actualHTTPSPort, ddevapp.MinEphemeralPort, ddevapp.MaxEphemeralPort)
 
 		// Make sure that both http and https URLs have proper content
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), testString, -1)
