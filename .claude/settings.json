@@ -44,13 +44,18 @@
       "Bash(git branch*)",
       "Bash(git remote*)",
       "Bash(golangci-lint*)",
-      "Bash(markdownlint*)"
+      "Bash(markdownlint*)",
+      "WebFetch(domain:*)"
     ],
     "deny": [
       "Bash(git push*)",
       "Bash(sed*-i*)",
       "Bash(find*-delete*)",
-      "Bash(find*-exec rm*)"
+      "Bash(find*-exec rm*)",
+      "WebFetch(domain:localhost)",
+      "WebFetch(domain:127.0.0.1)",
+      "WebFetch(domain:0.0.0.0)",
+      "WebFetch(domain:169.254.169.254)"
     ]
   },
   "hooks": {
