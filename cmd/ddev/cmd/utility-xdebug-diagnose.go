@@ -751,33 +751,32 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 		if err != nil {
 			envType = environment.DDEVEnvironmentWSL2
 			output.UserOut.Printf("Platform: WSL2 (unknown networking mode: %v)\n", err)
-		} else if mode == "mirrored" {
-			envType = environment.DDEVEnvironmentWSL2Mirrored
-			output.UserOut.Print("Platform: WSL2 (mirrored) ")
-			if nodeps.IsWSL2HostAddressLoopbackEnabled() {
-				output.UserOut.Println("✓")
-			} else {
-				output.UserOut.Println("✗ hostAddressLoopback not set")
-			}
-		} else if mode == "virtioproxy" {
-			envType = environment.DDEVEnvironmentWSL2VirtioProxy
-			output.UserOut.Println("Platform: WSL2 (virtioproxy)")
-		} else if mode == "none" {
-			envType = environment.DDEVEnvironmentWSL2None
-			output.UserOut.Println("Platform: WSL2 (networking=none)")
-			output.UserOut.Println("  ⚠ WSL2 networking is disabled; Xdebug cannot reach a Windows-side IDE")
-			output.UserOut.Println("    Use an IDE inside WSL2 (via WSLg) or change networkingMode in .wslconfig")
-		} else if mode == "bridged" {
-			envType = environment.DDEVEnvironmentWSL2Bridged
-			output.UserOut.Println("Platform: WSL2 (bridged)")
-			output.UserOut.Println("  ⚠ WSL2 bridged networking is not fully tested; behavior may vary")
-		} else if mode == "nat" {
-			envType = environment.DDEVEnvironmentWSL2
-			output.UserOut.Println("Platform: WSL2 (NAT)")
 		} else {
-			envType = environment.DDEVEnvironmentWSL2
-			output.UserOut.Printf("Platform: WSL2 (%s)\n", mode)
-			output.UserOut.Println("  ⚠ This WSL2 networking mode is not explicitly handled by xdebug-diagnose yet")
+			switch mode {
+			case "mirrored":
+				envType = environment.DDEVEnvironmentWSL2Mirrored
+				output.UserOut.Print("Platform: WSL2 (mirrored) ")
+				if nodeps.IsWSL2HostAddressLoopbackEnabled() {
+					output.UserOut.Println("✓")
+				} else {
+					output.UserOut.Println("✗ hostAddressLoopback not set")
+				}
+			case "virtioproxy":
+				envType = environment.DDEVEnvironmentWSL2VirtioProxy
+				output.UserOut.Println("Platform: WSL2 (virtioproxy)")
+			case "none":
+				envType = environment.DDEVEnvironmentWSL2None
+				output.UserOut.Println("Platform: WSL2 (networking=none)")
+				output.UserOut.Println("  ⚠ WSL2 networking is disabled; Xdebug cannot reach a Windows-side IDE")
+				output.UserOut.Println("    Use an IDE inside WSL2 (via WSLg) or change networkingMode in .wslconfig")
+			case "bridged":
+				envType = environment.DDEVEnvironmentWSL2Bridged
+				output.UserOut.Println("Platform: WSL2 (bridged)")
+				output.UserOut.Println("  ⚠ WSL2 bridged networking is not fully tested; behavior may vary")
+			default: // "nat" is the normal case
+				envType = environment.DDEVEnvironmentWSL2
+				output.UserOut.Println("Platform: WSL2 (NAT)")
+			}
 		}
 	} else if runtime.GOOS == "darwin" {
 		envType = "macos"

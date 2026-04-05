@@ -14,6 +14,7 @@ func TestIsWSL2Environment(t *testing.T) {
 		DDEVEnvironmentWSL2Mirrored,
 		DDEVEnvironmentWSL2VirtioProxy,
 		DDEVEnvironmentWSL2None,
+		DDEVEnvironmentWSL2Bridged,
 	} {
 		require.True(t, IsWSL2Environment(envType), envType)
 	}

@@ -27,19 +27,32 @@ func GetDDEVEnvironment() string {
 		e = DDEVEnvironmentCodespaces
 	case nodeps.IsDevcontainer():
 		e = DDEVEnvironmentDevcontainer
-	case nodeps.IsWSL2MirroredMode():
-		e = DDEVEnvironmentWSL2Mirrored
-	case nodeps.IsWSL2VirtioProxyMode():
-		e = DDEVEnvironmentWSL2VirtioProxy
-	case nodeps.IsWSL2NoneMode():
-		e = DDEVEnvironmentWSL2None
-	case nodeps.IsWSL2BridgedMode():
-		e = DDEVEnvironmentWSL2Bridged
 	case nodeps.IsWSL2():
-		e = DDEVEnvironmentWSL2
+		e = wsl2Environment()
 	}
 
 	return e
+}
+
+// wsl2Environment returns the specific WSL2 environment type by calling
+// GetWSL2NetworkingMode once. nat is the common case; others are unusual.
+func wsl2Environment() string {
+	mode, err := nodeps.GetWSL2NetworkingMode()
+	if err != nil {
+		return DDEVEnvironmentWSL2
+	}
+	switch mode {
+	case "mirrored":
+		return DDEVEnvironmentWSL2Mirrored
+	case "virtioproxy":
+		return DDEVEnvironmentWSL2VirtioProxy
+	case "none":
+		return DDEVEnvironmentWSL2None
+	case "bridged":
+		return DDEVEnvironmentWSL2Bridged
+	default: // "nat" is the normal case
+		return DDEVEnvironmentWSL2
+	}
 }
 
 // IsWSL2Environment returns true for any DDEV environment string that represents a WSL2 mode.
