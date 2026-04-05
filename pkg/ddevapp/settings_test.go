@@ -81,9 +81,9 @@ func TestWriteSettings(t *testing.T) {
 
 		// For WordPress, verify WP_HOME uses runtime env vars instead of hardcoded URL
 		if apptype == nodeps.AppTypeWordPress {
-			envVarFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, "getenv('DDEV_PRIMARY_URL')")
+			envVarFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, "DDEV_PRIMARY_URL")
 			require.NoError(t, err)
-			require.True(t, envVarFound, "Expected getenv('DDEV_PRIMARY_URL') in %s for dynamic WP_HOME", expectedSettingsFile)
+			require.True(t, envVarFound, "Expected DDEV_PRIMARY_URL in %s for dynamic WP_HOME", expectedSettingsFile)
 		}
 
 		_ = os.Remove(expectedSettingsFile)

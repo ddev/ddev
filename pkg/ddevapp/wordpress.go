@@ -16,11 +16,6 @@ import (
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
 type WordpressConfig struct {
-	WPGeneric        bool
-	DatabaseName     string
-	DatabaseUsername string
-	DatabasePassword string
-	DatabaseHost     string
 	AuthKey          string
 	SecureAuthKey    string
 	LoggedInKey      string
@@ -29,9 +24,6 @@ type WordpressConfig struct {
 	SecureAuthSalt   string
 	LoggedInSalt     string
 	NonceSalt        string
-	Docroot          string
-	TablePrefix      string
-	Signature        string
 	SiteSettings     string
 	SiteSettingsDdev string
 	AbsPath          string
@@ -40,15 +32,8 @@ type WordpressConfig struct {
 }
 
 // NewWordpressConfig produces a WordpressConfig object with defaults.
-func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
+func NewWordpressConfig(absPath string) *WordpressConfig {
 	return &WordpressConfig{
-		WPGeneric:        false,
-		DatabaseName:     "db",
-		DatabaseUsername: "db",
-		DatabasePassword: "db",
-		DatabaseHost:     "ddev-" + app.Name + "-db",
-		Docroot:          "/var/www/html/docroot",
-		TablePrefix:      "wp_",
 		AuthKey:          util.RandString(64),
 		AuthSalt:         util.RandString(64),
 		LoggedInKey:      util.RandString(64),
@@ -57,7 +42,6 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 		NonceSalt:        util.RandString(64),
 		SecureAuthKey:    util.RandString(64),
 		SecureAuthSalt:   util.RandString(64),
-		Signature:        nodeps.DdevFileSignature,
 		SiteSettings:     "wp-config.php",
 		SiteSettingsDdev: "wp-config-ddev.php",
 		AbsPath:          absPath,
@@ -114,10 +98,10 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	config := NewWordpressConfig(app, absPath)
+	config := NewWordpressConfig(absPath)
 
 	// Write DDEV settings file
-	if err := writeWordpressDdevSettingsFile(config, app.SiteDdevSettingsFile); err != nil {
+	if err := writeWordpressDdevSettingsFile(app.SiteDdevSettingsFile); err != nil {
 		return "", err
 	}
 
@@ -191,7 +175,7 @@ func writeWordpressSettingsFile(wordpressConfig *WordpressConfig, filePath strin
 }
 
 // writeWordpressDdevSettingsFile unconditionally creates the file that contains ddev-specific settings.
-func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) error {
+func writeWordpressDdevSettingsFile(filePath string) error {
 	if fileutil.FileExists(filePath) {
 		// Check if the file is managed by ddev.
 		signatureFound, err := fileutil.FgrepStringInFile(filePath, nodeps.DdevFileSignature)
@@ -206,7 +190,7 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 		}
 	}
 
-	t, err := template.New("wp-config-ddev.php").ParseFS(bundledAssets, "wordpress/wp-config-ddev.php")
+	content, err := bundledAssets.ReadFile("wordpress/wp-config-ddev.php")
 	if err != nil {
 		return err
 	}
@@ -221,20 +205,13 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 		return err
 	}
 
-	file, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer util.CheckClose(file)
-
-	err = t.Execute(file, config)
-	return err
+	return os.WriteFile(filePath, content, 0644)
 }
 
 // setWordpressSiteSettingsPaths sets the expected settings files paths for
 // a WordPress site.
 func setWordpressSiteSettingsPaths(app *DdevApp) {
-	config := NewWordpressConfig(app, "")
+	config := NewWordpressConfig("")
 
 	settingsFileBasePath := app.GetAbsDocroot(false)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettings)
