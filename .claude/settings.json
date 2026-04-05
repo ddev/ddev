@@ -17,10 +17,40 @@
       "Bash(make*)",
       "Bash(go test*)",
       "Bash(gofmt*)",
-      "Bash(ls*)"
+      "Bash(ls*)",
+      "Bash(grep*)",
+      "Bash(sed*)",
+      "Bash(cat*)",
+      "Bash(head*)",
+      "Bash(tail*)",
+      "Bash(wc*)",
+      "Bash(sort*)",
+      "Bash(uniq*)",
+      "Bash(cut*)",
+      "Bash(tr*)",
+      "Bash(diff*)",
+      "Bash(find*)",
+      "Bash(which*)",
+      "Bash(type*)",
+      "Bash(echo*)",
+      "Bash(printf*)",
+      "Bash(jq*)",
+      "Bash(awk*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git status*)",
+      "Bash(git show*)",
+      "Bash(git blame*)",
+      "Bash(git branch*)",
+      "Bash(git remote*)",
+      "Bash(golangci-lint*)",
+      "Bash(markdownlint*)"
     ],
     "deny": [
-      "Bash(git push*)"
+      "Bash(git push*)",
+      "Bash(sed*-i*)",
+      "Bash(find*-delete*)",
+      "Bash(find*-exec rm*)"
     ]
   },
   "hooks": {
