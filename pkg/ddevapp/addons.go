@@ -318,6 +318,13 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 		return fmt.Errorf("failed to create configuration files for PHP action: %w", err)
 	}
 
+	// On Lima/Colima/Rancher Desktop, VirtioFS bind mounts can have a brief propagation
+	// delay for newly created files. Add-on installation is infrequent so a short sleep
+	// is acceptable to avoid an intermittent "file not found" race.
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
+		time.Sleep(500 * time.Millisecond)
+	}
+
 	// Create a shell script that validates original PHP syntax first, then executes with strict mode
 	shellScript := fmt.Sprintf(phpActionShellScriptTemplate, originalAction, action)
 
