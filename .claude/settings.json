@@ -51,11 +51,7 @@
       "Bash(git push*)",
       "Bash(sed*-i*)",
       "Bash(find*-delete*)",
-      "Bash(find*-exec rm*)",
-      "WebFetch(domain:localhost)",
-      "WebFetch(domain:127.0.0.1)",
-      "WebFetch(domain:0.0.0.0)",
-      "WebFetch(domain:169.254.169.254)"
+      "Bash(find*-exec rm*)"
     ]
   },
   "hooks": {
