@@ -1765,16 +1765,16 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	// Warn the user if there is any custom configuration in use.
-	if message, hasWarnings := app.CheckCustomConfig(false); hasWarnings {
-		util.Warning(message)
-	}
-
 	// Warn user if there are deprecated items used in the config
 	app.CheckDeprecations()
 
 	// Fix any obsolete things like old shell commands, etc.
 	app.FixObsolete()
+
+	// Warn the user if there is any custom configuration in use.
+	if message, hasWarnings := app.CheckCustomConfig(false); hasWarnings {
+		util.Warning(message)
+	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
 		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)

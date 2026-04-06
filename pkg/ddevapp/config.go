@@ -692,8 +692,8 @@ Run 'ddev config --auto' to remove this Composer warning.`, app.Name)
 
 // FixObsolete removes files that may be obsolete, etc.
 func (app *DdevApp) FixObsolete() {
-	// Remove old in-project commands (which have been moved to global)
-	for _, command := range []string{"db/mysql", "host/launch", "host/xhgui", "web/xdebug"} {
+	// Remove old in-project commands (which have been moved to global) and remove other leftovers
+	for _, command := range []string{"db/mysql", "host/launch", "host/xhgui", "web/xdebug", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example"} {
 		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
 		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
 		if err == nil && signatureFound {
@@ -714,7 +714,7 @@ func (app *DdevApp) FixObsolete() {
 	}
 
 	// Remove old global commands
-	for _, command := range []string{"host/yarn", "host/xhgui", "web/nvm", "web/autocomplete/nvm"} {
+	for _, command := range []string{"host/yarn", "host/xhgui", "web/nvm", "web/autocomplete/nvm", "web/python", "web/typo3cms"} {
 		cmdPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/", command)
 		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
 		if err == nil && signatureFound {
