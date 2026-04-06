@@ -282,6 +282,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ??? "Manual Installation"
 
+        ### Windows Manual Installation
+
         If you prefer to install DDEV manually on WSL2, these techniques can be used to install on a non-Ubuntu distro, and can be adapted for Yum-based or ArchLinux-based distros as well:
 
         1. In PowerShell, run `mkcert.exe -install` and follow the prompt to install the Certificate Authority.
