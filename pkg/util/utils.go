@@ -103,6 +103,28 @@ func WarningOnce(format string, a ...any) {
 	outputOnce(format, a, Warning)
 }
 
+// printlnOnceFn is a named function so HasPrintedOnce can use the same stable pointer.
+func printlnOnceFn(format string, _ ...any) {
+	output.UserOut.Println(format)
+}
+
+// PrintlnOnce prints a message to the user only once per unique message per process run.
+func PrintlnOnce(message string) {
+	outputOnce(message, nil, printlnOnceFn)
+}
+
+// HasPrintedOnce reports whether PrintlnOnce has already printed this message.
+func HasPrintedOnce(message string) bool {
+	msgKey := HashSalt(message)
+	fnKey := fmt.Sprintf("%p", printlnOnceFn)
+	outputOnceMutex.Lock()
+	defer outputOnceMutex.Unlock()
+	if outputOnceCache[fnKey] == nil {
+		return false
+	}
+	return outputOnceCache[fnKey][msgKey]
+}
+
 // WarningWithColor allows specifying a color for the warning to make it more visible
 func WarningWithColor(color string, format string, a ...any) {
 	format = ColorizeText(format, color)
@@ -143,26 +165,37 @@ func Verbose(format string, a ...any) {
 	output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.000"), s)
 }
 
-// ShowDots displays dots one per second until done gets true
-func ShowDots() chan bool {
-	done := make(chan bool)
+// ShowDots displays dots one per second and returns a stop function.
+// Calling stop() halts the goroutine and waits for it to finish so that any
+// trailing newline is written before the caller proceeds.
+// The first dot is delayed by one second, so callers that stop quickly
+// (e.g. between rapid lines of output) produce no spurious dot or newline.
+// The trailing newline is only printed if at least one dot was emitted.
+func ShowDots() func() {
+	quit := make(chan struct{})
+	finished := make(chan struct{})
 	go func() {
+		defer close(finished)
+		dotsPrinted := false
 		for {
 			select {
-			case <-done:
-				if !output.JSONOutput {
+			case <-quit:
+				if !output.JSONOutput && dotsPrinted {
 					_, _ = fmt.Fprintln(os.Stderr)
 				}
 				return
-			default:
+			case <-time.After(1 * time.Second):
 				if !output.JSONOutput {
 					_, _ = fmt.Fprintf(os.Stderr, ".")
+					dotsPrinted = true
 				}
-				time.Sleep(1 * time.Second)
 			}
 		}
 	}()
-	return done
+	return func() {
+		close(quit)
+		<-finished
+	}
 }
 
 // FormatPlural is a simple wrapper which returns different strings based on the count value.

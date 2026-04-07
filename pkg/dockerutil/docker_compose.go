@@ -163,9 +163,9 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
 	}
 
-	var done chan bool
+	var stopDots func()
 	if cmd.Progress {
-		done = util.ShowDots()
+		stopDots = util.ShowDots()
 	}
 	for stderrOutput.Scan() {
 		line := stderrOutput.Text()
@@ -177,20 +177,24 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		if downRE.MatchString(line) {
 			continue
 		}
-		// Stop dots (prints a newline) before showing the line, then restart.
-		if cmd.Progress && done != nil {
-			done <- true
-			done = nil
+		displayLine := strings.TrimSpace(line)
+		if util.HasPrintedOnce(displayLine) {
+			continue
 		}
-		output.UserOut.Println(strings.TrimSpace(line))
+		// Stop dots (waits for goroutine to finish, prints newline if dots were shown), then restart.
+		if stopDots != nil {
+			stopDots()
+			stopDots = nil
+		}
+		util.PrintlnOnce(displayLine)
 		if cmd.Progress {
-			done = util.ShowDots()
+			stopDots = util.ShowDots()
 		}
 	}
 
 	err = proc.Wait()
-	if cmd.Progress && done != nil {
-		done <- true
+	if stopDots != nil {
+		stopDots()
 	}
 
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
