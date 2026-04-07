@@ -157,7 +157,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 	// Running, Recreating) and pull/layer progress are suppressed; completion
 	// states like "Stopped" and "Removed" are intentionally NOT in the regex so
 	// they are shown to the user.
-	ignoreRegex := "(^ *(Network|Container|Image|Volume|Service) .* (Creat|Start|Stopp|Remov|Build|Buil|Runn)(ing|t) $|.* Built$|^ *Container .*(Build|Recreat|Creat)(ed|ing) *$|No services to build|Warning: No resource found to remove|Warning: Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
+	ignoreRegex := "(^ *(Network|Container|Image|Volume|Service) .* (Creat|Start|Stopp|Remov|Build|Buil|Runn)(ing|t) $|.* Built$|^ *Container .*(Build|Remov|Recreat|Creat)(ed|ing) *$|No services to build|Warning: No resource found to remove|Warning: Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
 	downRE, err := regexp.Compile(ignoreRegex)
 	if err != nil {
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
