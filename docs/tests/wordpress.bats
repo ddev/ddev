@@ -70,6 +70,57 @@ teardown() {
   assert_success
 }
 
+@test "WordPress wp-cli based quickstart (subdirectory URL change) with $(ddev --version)" {
+  _skip_if_embargoed "wordpress-cli-subdirectory"
+  PROJNAME=my-wp-subdir-site
+
+  run mkdir -p my-wp-subdir-site && cd my-wp-subdir-site
+  assert_success
+  run ddev config --project-type=wordpress
+  assert_success
+  run ddev start -y
+  assert_success
+  run ddev wp core download
+  assert_success
+  run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  assert_success
+
+  run bash -c "
+    mkdir wordpress &&
+    mv wp-admin wp-content wp-includes wordpress/ &&
+    mv index.php license.txt readme.html xmlrpc.php wordpress/ &&
+    for file in wp-*.php; do
+      case \"\$file\" in
+        wp-config.php|wp-config-ddev.php) ;;
+        *) mv \"\$file\" wordpress/ ;;
+      esac
+    done &&
+    cp wordpress/index.php ./index.php &&
+    perl -0pi -e 's|/wp-blog-header.php|/wordpress/wp-blog-header.php|' index.php
+  "
+  assert_success
+
+  # Restart so DDEV rescans for wp-settings.php and regenerates wp-config-ddev.php with AbsPath="wordpress"
+  run ddev restart
+  assert_success
+
+  run ddev exec php -r "define('ABSPATH', getcwd() . '/wordpress/'); require 'wp-config-ddev.php'; echo WP_SITEURL;"
+  assert_output "https://${PROJNAME}.ddev.site/wordpress"
+  assert_success
+
+  # validate running project from the root URL
+  run curl -sfI https://${PROJNAME}.ddev.site
+  assert_line --regexp "link:.*${PROJNAME}\.ddev\.site.*rel=\"https://api\.w\.org/\""
+  assert_output --partial "HTTP/2 200"
+  assert_success
+
+  # validate admin/login URLs stay under the WordPress subdirectory
+  run curl -sfI https://${PROJNAME}.ddev.site/wordpress/wp-admin/
+  assert_output --partial "location: https://${PROJNAME}.ddev.site/wordpress/wp-login.php"
+  assert_output --partial "HTTP/2 302"
+  assert_success
+}
+
 @test "WordPress Bedrock based quickstart with $(ddev --version)" {
   _skip_if_embargoed "wordpress-bedrock"
   PROJNAME=my-wp-bedrock-site
