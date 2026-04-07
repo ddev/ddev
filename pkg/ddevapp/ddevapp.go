@@ -2955,6 +2955,7 @@ func (app *DdevApp) Pause() error {
 		ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 		Profiles:     []string{`*`},
 		Action:       []string{"stop"},
+		Progress:     true,
 	}); err != nil {
 		return err
 	}

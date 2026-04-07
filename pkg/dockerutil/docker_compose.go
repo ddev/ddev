@@ -152,11 +152,12 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 
 	stderrOutput := bufio.NewScanner(stderrPipe)
 
-	// Ignore chatty things from docker-compose like:
-	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
-	// Container Stopped or Created
-	// No resource found to remove (when doing a stop and no project exists)
-	ignoreRegex := "(^ *(Network|Container|Image|Volume|Service) .* (Creat|Start|Stopp|Remov|Build|Buil|Runn)(ing|t) $|.* Built$|^ *Container .*(Build|Stopp|Recreat|Creat)(ed|ing) *$|No services to build|Warning: No resource found to remove|Warning: Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
+	// Suppress docker-compose progress noise from stderr while letting terminal
+	// states through. In-progress lines (Creating, Starting, Removing, Building,
+	// Running, Recreating) and pull/layer progress are suppressed; completion
+	// states like "Stopped" and "Removed" are intentionally NOT in the regex so
+	// they are shown to the user.
+	ignoreRegex := "(^ *(Network|Container|Image|Volume|Service) .* (Creat|Start|Stopp|Remov|Build|Buil|Runn)(ing|t) $|.* Built$|^ *Container .*(Build|Recreat|Creat)(ed|ing) *$|No services to build|Warning: No resource found to remove|Warning: Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
 	downRE, err := regexp.Compile(ignoreRegex)
 	if err != nil {
 		util.Warning("Failed to compile regex %v: %v", ignoreRegex, err)
@@ -173,16 +174,22 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 		}
 		stderr = stderr + line
 		line = strings.Trim(line, "\n\r")
-		switch {
-		case downRE.MatchString(line):
-			break
-		default:
-			output.UserOut.Println(line)
+		if downRE.MatchString(line) {
+			continue
+		}
+		// Stop dots (prints a newline) before showing the line, then restart.
+		if cmd.Progress && done != nil {
+			done <- true
+			done = nil
+		}
+		output.UserOut.Println(line)
+		if cmd.Progress {
+			done = util.ShowDots()
 		}
 	}
 
 	err = proc.Wait()
-	if cmd.Progress {
+	if cmd.Progress && done != nil {
 		done <- true
 	}
 

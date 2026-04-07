@@ -112,6 +112,7 @@ func Cleanup(app *DdevApp) error {
 			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
 			Profiles:     []string{`*`},
 			Action:       []string{"down"},
+			Progress:     true,
 		})
 		if err != nil {
 			util.Warning("Failed to docker-compose down: %v", err)
