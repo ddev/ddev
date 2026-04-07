@@ -8,10 +8,10 @@
  */
 
 /** Database charset to use in creating database tables. */
-define( 'DB_CHARSET', '{{ $config.DBCharset }}' );
+define( 'DB_CHARSET', getenv( 'DB_CHARSET' ) ?: '{{ $config.DBCharset }}' );
 
 /** The database collate type. Don't change this if in doubt. */
-define( 'DB_COLLATE', '{{ $config.DBCollate }}' );
+define( 'DB_COLLATE', getenv( 'DB_COLLATE' ) ?: '{{ $config.DBCollate }}' );
 
 /** Authentication Unique Keys and Salts. */
 define( 'AUTH_KEY', '{{ $config.AuthKey }}' );
@@ -30,11 +30,11 @@ define( 'NONCE_SALT', '{{ $config.NonceSalt }}' );
 /* That's all, stop editing! Happy publishing. */
 
 /** Absolute path to the WordPress directory. */
-defined( 'ABSPATH' ) || define( 'ABSPATH', dirname( __FILE__ ) . '/{{ $config.AbsPath }}' );
+defined( 'ABSPATH' ) || define( 'ABSPATH', __DIR__ . '/{{ $config.AbsPath }}' );
 
 // Include for settings managed by ddev.
 $ddev_settings = __DIR__ . '/wp-config-ddev.php';
-if ( ! defined( 'DB_USER' ) && getenv( 'IS_DDEV_PROJECT' ) == 'true' && is_readable( $ddev_settings ) ) {
+if ( ! defined( 'DB_USER' ) && getenv( 'IS_DDEV_PROJECT' ) === 'true' && is_readable( $ddev_settings ) ) {
 	require_once( $ddev_settings );
 }
 

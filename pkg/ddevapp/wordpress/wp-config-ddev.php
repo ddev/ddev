@@ -6,38 +6,38 @@
  * @package ddevapp
  */
 
-if ( getenv( 'IS_DDEV_PROJECT' ) == 'true' ) {
-	/** The name of the database for WordPress */
-	defined( 'DB_NAME' ) || define( 'DB_NAME', 'db' );
+if ( getenv( 'IS_DDEV_PROJECT' ) !== 'true' ) {
+	return;
+}
 
-	/** MySQL database username */
-	defined( 'DB_USER' ) || define( 'DB_USER', 'db' );
+/** The name of the database for WordPress */
+defined( 'DB_NAME' ) || define( 'DB_NAME', getenv( 'DB_NAME' ) ?: 'db' );
 
-	/** MySQL database password */
-	defined( 'DB_PASSWORD' ) || define( 'DB_PASSWORD', 'db' );
+/** MySQL database username */
+defined( 'DB_USER' ) || define( 'DB_USER', getenv( 'DB_USER' ) ?: 'db' );
 
-	/** MySQL hostname */
-	defined( 'DB_HOST' ) || define( 'DB_HOST', 'db' );
+/** MySQL database password */
+defined( 'DB_PASSWORD' ) || define( 'DB_PASSWORD', getenv( 'DB_PASSWORD' ) ?: 'db' );
 
-	/** WP_HOME URL comes from DDEV_PRIMARY_URL */
-	// Use a ddev-prefixed variable name to avoid conflicts with plugins or snippets that may define $wp_home.
-	$ddev_wp_home = getenv( 'DDEV_PRIMARY_URL' );
-	defined( 'WP_HOME' ) || define( 'WP_HOME', $ddev_wp_home );
+/** MySQL hostname */
+defined( 'DB_HOST' ) || define( 'DB_HOST', getenv( 'DB_HOST' ) ?: 'db' );
 
-	/** WP_SITEURL location */
-	defined( 'WP_SITEURL' ) || define( 'WP_SITEURL', WP_HOME );
+/** WP_HOME URL */
+defined( 'WP_HOME' ) || define( 'WP_HOME', getenv( 'DDEV_PRIMARY_URL' ) ?: 'http://localhost' );
 
-	/** Enable debug */
-	defined( 'WP_DEBUG' ) || define( 'WP_DEBUG', true );
+/** WP_SITEURL location */
+defined( 'WP_SITEURL' ) || define( 'WP_SITEURL', WP_HOME . '/' . rtrim( substr( ABSPATH, strlen( getenv( 'DDEV_APPROOT' ) . '/' . getenv( 'DDEV_DOCROOT' ) ) ), '/' ) );
 
-	/**
-	 * Set WordPress Database Table prefix if not already set.
-	 *
-	 * @global string $table_prefix
-	 */
-	if ( ! isset( $table_prefix ) || empty( $table_prefix ) ) {
-		// phpcs:disable WordPress.WP.GlobalVariablesOverride.Prohibited
-		$table_prefix = 'wp_';
-		// phpcs:enable
-	}
+/** Enable debug (can be disabled with `ddev config --web-environment-add=WP_DEBUG=false`) */
+defined( 'WP_DEBUG' ) || define( 'WP_DEBUG', getenv( 'WP_DEBUG' ) === false || getenv( 'WP_DEBUG' ) === 'true' );
+
+/**
+ * Set WordPress Database Table prefix if not already set.
+ *
+ * @global string $table_prefix
+ */
+if ( empty( $table_prefix ) ) {
+	// phpcs:disable WordPress.WP.GlobalVariablesOverride.Prohibited
+	$table_prefix = getenv('DB_PREFIX') ?: 'wp_';
+	// phpcs:enable
 }
