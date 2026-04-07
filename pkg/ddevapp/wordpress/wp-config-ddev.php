@@ -26,7 +26,17 @@ defined( 'DB_HOST' ) || define( 'DB_HOST', getenv( 'DB_HOST' ) ?: 'db' );
 defined( 'WP_HOME' ) || define( 'WP_HOME', getenv( 'DDEV_PRIMARY_URL' ) ?: 'http://localhost' );
 
 /** WP_SITEURL location */
-defined( 'WP_SITEURL' ) || define( 'WP_SITEURL', WP_HOME . '/' . rtrim( substr( ABSPATH, strlen( getenv( 'DDEV_APPROOT' ) . '/' . getenv( 'DDEV_DOCROOT' ) ) ), '/' ) );
+defined( 'WP_SITEURL' ) || define(
+	'WP_SITEURL',
+	WP_HOME . '/' . ltrim(
+		str_replace(
+			realpath( getenv( 'DDEV_APPROOT' ) . '/' . getenv( 'DDEV_DOCROOT' ) ),
+			'',
+			realpath( ABSPATH )
+		),
+		'/'
+	)
+);
 
 /** Enable debug (can be disabled with `ddev config --web-environment-add=WP_DEBUG=false`) */
 defined( 'WP_DEBUG' ) || define( 'WP_DEBUG', getenv( 'WP_DEBUG' ) === false || getenv( 'WP_DEBUG' ) === 'true' );
