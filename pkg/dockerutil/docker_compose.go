@@ -182,7 +182,7 @@ func ComposeCmd(cmd *ComposeCmdOpts) (string, string, error) {
 			done <- true
 			done = nil
 		}
-		output.UserOut.Println(line)
+		output.UserOut.Println(strings.TrimSpace(line))
 		if cmd.Progress {
 			done = util.ShowDots()
 		}
