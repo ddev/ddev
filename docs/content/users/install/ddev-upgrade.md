@@ -104,13 +104,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         winget upgrade DDEV --silent --override '/docker-ce /distro=DDEV'
         ```
 
-    ??? tip "Upgrade using Chocolatey"
+    ??? tip "Upgrade using Chocolatey (Traditional Windows AMD64 only)"
         ```powershell
-        # Traditional Windows
         choco upgrade ddev
-
-        # WSL2 with Docker CE (non-interactive, specify distro)
-        choco upgrade ddev --params "/docker-ce /distro=DDEV"
         ```
 
 === "Codespaces"

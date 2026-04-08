@@ -260,15 +260,11 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         winget uninstall ddev --all-versions
         ```
 
-    ??? tip "Install using Chocolatey"
-        [Chocolatey](https://chocolatey.org/) has had DDEV support for years and remains an option, although the installer's capabilities don't get properly used:
+    ??? tip "Install using Chocolatey (Traditional Windows AMD64 only)"
+        [Chocolatey](https://chocolatey.org/) has had DDEV support for years and remains an option for Traditional Windows on AMD64:
 
         ```powershell
-        # Traditional Windows
         choco install ddev
-
-        # WSL2 with Docker CE (non-interactive, specify distro)
-        choco install ddev --params "/docker-ce /distro=DDEV"
         ```
 
     !!!tip "Tips for using DDEV in WSL2"
