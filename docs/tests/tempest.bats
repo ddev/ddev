@@ -37,6 +37,7 @@ teardown() {
 
   run curl -sfv https://${PROJNAME}.ddev.site
   assert_output --partial "Tempest"
+  assert_output --partial "The PHP framework that gets out of your way."
   assert_success
 
   # check used database
