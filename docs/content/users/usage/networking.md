@@ -284,6 +284,22 @@ After configuration, restart the DDEV project if it is already running.
 - [Linux Docker Client Proxy Configuration](https://docs.docker.com/engine/cli/proxy/#configure-the-docker-client)
 - [Colima Proxy Configuration](https://gist.github.com/res0nat0r/e182f23272a331f20b83195156eef83f)
 
+## WSL2 VirtioProxy Mode (Netskope and Similar VPNs)
+
+Some corporate VPNs, notably **Netskope**, intercept network traffic in a way that is incompatible with the default WSL2 NAT networking mode. The WSL2 `VirtioProxy` networking mode can work around this, and is the primary reason users end up in VirtioProxy mode.
+
+VirtioProxy mode is experimental and poorly documented by Microsoft. On some machines it works well; on others, the WSL2 distro has no internet access at all, which means tools like Composer and npm will not function. DDEV treats this mode as best-effort.
+
+See the [WSL2 VirtioProxy system requirements](../../index.md#windows-wsl2) for setup instructions.
+
+**Known limitations of VirtioProxy mode:**
+
+- On some machines, the WSL2 distro has no internet access (Composer, npm, etc. will not work).
+- The WSL2 distro and Docker containers cannot make outgoing connections to the Windows host. This means a Windows-side IDE cannot receive Xdebug connections. Use an IDE inside WSL2 via WSLg and set `ddev config global --xdebug-ide-location=wsl2`.
+- Accessing DDEV sites from a Windows browser works normally.
+
+If you are not required to use VirtioProxy, the [Traditional Windows](../../index.md#traditional-windows) approach (Docker Desktop with WSL2 backend) avoids these limitations entirely.
+
 ## Restrictive DNS servers, especially Fritz!Box (FritzBox) routers
 
 The normal use of DDEV involves project URLs (and hostnames) like `*.ddev.site`. So a project with the name `mytypo3` will have the default hostname `mytypo3.ddev.site` and the default URL `https://mytypo3.ddev.site`. The way this works is that `*.ddev.site` is a Domain Name System (DNS) entry which always resolves to `127.0.0.1`, or `localhost`.

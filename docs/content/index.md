@@ -76,12 +76,16 @@ These environments can be extended, version controlled, and shared, so you can t
 
     Then restart WSL with `wsl --shutdown`.
 
-    !!! warning "Xdebug limitations in VirtioProxy mode"
-        Xdebug connectivity depends on whether Windows creates a Hyper-V virtual switch (`vEthernet (WSL)` adapter). On some systems (notably ARM64), this adapter is not created, and Docker containers have no network path to the Windows host. In that case, run your IDE inside WSL2 instead:
+    !!! warning "VirtioProxy mode is experimental with significant limitations"
+        VirtioProxy mode has known limitations and is poorly documented by Microsoft. On some machines it works well; on others, the WSL2 distro has no internet access at all, making tools like Composer and npm non-functional.
+
+        When it does work: the WSL2 distro and Docker containers cannot make outgoing connections to the Windows host, so a Windows-side IDE cannot receive Xdebug connections. Run your IDE inside WSL2 via WSLg instead:
 
             ddev config global --xdebug-ide-location=wsl2
 
-        Run `ddev utility xdebug-diagnose` to check your configuration.
+        Accessing DDEV sites from a Windows browser works normally. Run `ddev utility xdebug-diagnose` to check your Xdebug configuration.
+
+        If VirtioProxy is required due to a corporate VPN (such as Netskope), see [Special Network Configurations](users/usage/networking.md#wsl2-virtioproxy-mode-netskope-and-similar-vpns). Users who can choose their setup may prefer the [Traditional Windows](index.md#traditional-windows) approach instead.
 
 === "Traditional Windows"
 

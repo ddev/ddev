@@ -1548,6 +1548,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		failOnRosetta()
 	}
 	warnWSL2WindowsFilesystem(app)
+	warnWSL2NoneMode()
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
@@ -2122,6 +2123,14 @@ func warnMissingDocroot(app *DdevApp) {
 	}
 	if len(matches) == 0 {
 		util.WarningWithColor("magenta", "The index.php or index.html does not yet exist at this path:\n%s\nYou may get 403 errors 'permission denied' from the browser until it does.\nIgnore if a later action (like `ddev composer create-project`) will create it.\n", pattern)
+	}
+}
+
+// warnWSL2NoneMode warns users that WSL2 networkingMode=none disables internet access entirely,
+// not just connectivity to the Windows host.
+func warnWSL2NoneMode() {
+	if nodeps.IsWSL2NoneMode() {
+		util.Warning("WSL2 networkingMode=none is set: the WSL2 distro has no internet access.\nComposer, npm, and other network tools will not work.\nChange networkingMode in ~/.wslconfig and run 'wsl --shutdown' to restore networking.")
 	}
 }
 

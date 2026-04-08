@@ -766,11 +766,17 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 			case "virtioproxy":
 				envType = environment.DDEVEnvironmentWSL2VirtioProxy
 				output.UserOut.Println("Platform: WSL2 (virtioproxy)")
+				output.UserOut.Println("  ⚠ VirtioProxy mode: WSL2 distro and containers cannot contact the Windows host.")
+				output.UserOut.Println("    A Windows-side IDE is not reachable. Use an IDE inside WSL2 via WSLg:")
+				output.UserOut.Println("      ddev config global --xdebug-ide-location=wsl2")
+				output.UserOut.Println("    Accessing DDEV sites from a Windows browser works normally.")
 			case "none":
 				envType = environment.DDEVEnvironmentWSL2None
 				output.UserOut.Println("Platform: WSL2 (networking=none)")
-				output.UserOut.Println("  ⚠ WSL2 networking is disabled; Xdebug cannot reach a Windows-side IDE")
-				output.UserOut.Println("    Use an IDE inside WSL2 (via WSLg) or change networkingMode in .wslconfig")
+				output.UserOut.Println("  ⚠ WSL2 networking=none: the distro has no internet access.")
+				output.UserOut.Println("    Composer, npm, and other network tools will not work.")
+				output.UserOut.Println("    Xdebug cannot reach a Windows-side IDE.")
+				output.UserOut.Println("    Use an IDE inside WSL2 (via WSLg) or change networkingMode in .wslconfig.")
 			case "bridged":
 				envType = environment.DDEVEnvironmentWSL2Bridged
 				output.UserOut.Println("Platform: WSL2 (bridged)")

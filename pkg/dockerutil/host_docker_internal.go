@@ -75,8 +75,9 @@ func GetHostDockerInternal() *HostDockerInternal {
 			message = "IsDevcontainer uses 'host-gateway' in extra_hosts"
 
 		case nodeps.IsWSL2() && nodeps.IsWSL2NoneMode():
-			// WSL2 networking is disabled; no network path to Windows host
-			message = "IsWSL2 with networkingMode=none; no network path to Windows host for Xdebug"
+			// WSL2 networking=none disables the network bridge entirely; no internet
+			// access and no path to the Windows host from the distro or containers.
+			message = "IsWSL2 with networkingMode=none; no internet access and no network path to Windows host"
 
 		case nodeps.IsWSL2() && IsDockerDesktop():
 			// If IDE is on Windows, return; we don't have to do anything.
