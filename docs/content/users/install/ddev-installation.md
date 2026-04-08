@@ -257,7 +257,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         If WinGet picks up an old version (which can happen when DDEV was previously installed with the Windows installer), uninstall all versions first:
 
         ```powershell
-        winget uninstall ddev --all-versions
+        winget uninstall DDEV --all-versions
         ```
 
     ??? tip "Install using Chocolatey (Traditional Windows AMD64 only)"
