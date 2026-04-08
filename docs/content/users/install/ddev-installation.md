@@ -251,7 +251,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         ```powershell
         # WSL2 with Docker CE and specified distro, silently
-        winget install DDEV --silent --override "/docker-ce /distro=DDEV"
+        winget install DDEV --silent --override '/docker-ce /distro=DDEV'
         ```
 
         If WinGet picks up an old version (which can happen when DDEV was previously installed with the Windows installer), uninstall all versions first:

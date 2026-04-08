@@ -92,6 +92,27 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     Download and run the Windows installer (for your architecture, most often AMD64) for the latest [DDEV release](https://github.com/ddev/ddev/releases) (`ddev_windows_<architecture>_installer.<version>.exe`).
 
+    ??? tip "Upgrade using WinGet"
+        ```powershell
+        winget upgrade --interactive DDEV
+        ```
+
+        For silent/automated upgrade with specific options:
+
+        ```powershell
+        # WSL2 with Docker CE and specified distro, silently
+        winget upgrade DDEV --silent --override '/docker-ce /distro=DDEV'
+        ```
+
+    ??? tip "Upgrade using Chocolatey"
+        ```powershell
+        # Traditional Windows
+        choco upgrade ddev
+
+        # WSL2 with Docker CE (non-interactive, specify distro)
+        choco upgrade ddev --params "/docker-ce /distro=DDEV"
+        ```
+
 === "Codespaces"
 
     ## GitHub Codespaces
