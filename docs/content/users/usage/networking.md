@@ -294,7 +294,7 @@ See the [WSL2 VirtioProxy system requirements](../../index.md#windows-wsl2) for 
 
 **Known limitations of VirtioProxy mode:**
 
-- On some machines, the WSL2 distro has no internet access (Composer, npm, etc. will not work).
+- On some machines, the WSL2 distro has no internet access at all (Composer, npm, etc. will not work).
 - The WSL2 distro and Docker containers cannot make outgoing connections to the Windows host. This means a Windows-side IDE cannot receive Xdebug connections. Use an IDE inside WSL2 via WSLg and set `ddev config global --xdebug-ide-location=wsl2`.
 - Accessing DDEV sites from a Windows browser works normally.
 

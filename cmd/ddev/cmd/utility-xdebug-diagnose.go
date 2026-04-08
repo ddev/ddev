@@ -780,7 +780,7 @@ func detectAndDisplayEnvironment(app *ddevapp.DdevApp) string {
 			case "bridged":
 				envType = environment.DDEVEnvironmentWSL2Bridged
 				output.UserOut.Println("Platform: WSL2 (bridged)")
-				output.UserOut.Println("  ⚠ WSL2 bridged networking is not fully tested; behavior may vary")
+				output.UserOut.Println("  ⚠ WSL2 bridged networking (deprecated by Microsoft) has not been tested; behavior may vary")
 			default: // "nat" is the normal case
 				envType = environment.DDEVEnvironmentWSL2
 				output.UserOut.Println("Platform: WSL2 (NAT)")
