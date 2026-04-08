@@ -328,7 +328,8 @@ func testWSL2NATConnection(app *ddevapp.DdevApp) bool {
 	// PowerShell script to create a simple TCP listener on Windows port 9003
 	// This simulates what an IDE would do - listen for incoming Xdebug connections
 	psScript := `
-$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Any, 9003)
+$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::IPv6Any, 9003)
+$listener.Server.DualMode = $true
 try {
     $listener.Start()
 } catch {
@@ -526,7 +527,8 @@ func testSimpleConnectionQuiet(app *ddevapp.DdevApp) bool {
 // Returns true if connection failed, false if successful
 func testWSL2NATConnectionQuiet(app *ddevapp.DdevApp) bool {
 	psScript := `
-$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Any, 9003)
+$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::IPv6Any, 9003)
+$listener.Server.DualMode = $true
 try { $listener.Start() } catch { Write-Output "INUSE"; exit 0 }
 Write-Output "LISTENING"
 $listener.Server.ReceiveTimeout = 10000
