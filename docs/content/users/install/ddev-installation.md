@@ -205,7 +205,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     | Mode | Best for | Requires |
     |---|---|---|
     | **Docker CE inside WSL2** (recommended) | Most users, best performance | WSL2 |
-    | **Docker Desktop / Rancher Desktop** | Already have Docker Desktop or Rancher Desktop installed | WSL2 + Docker Desktop or Rancher Desktop |
+    | **Docker Desktop / Rancher Desktop with WSL2** | Already have Docker Desktop or Rancher Desktop installed | WSL2 + Docker Desktop or Rancher Desktop |
     | **Traditional Windows** | PowerShell/Git Bash workflow | Docker Desktop or Rancher Desktop (no separate WSL2 distro needed) |
 
     ### Step 1: Install WSL2 (Docker CE and Docker Desktop modes only)
@@ -225,13 +225,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Step 2: Install DDEV
 
-    The simplest option is `winget`, which downloads and launches the installer for you:
-
-    ```bash
-    winget install --interactive ddev
-    ```
-
-    Or download the installer directly — make sure to pick the right architecture:
+    Download the installer — make sure to pick the right architecture:
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; text-align: center;">
     [Download for AMD64 :material-microsoft-windows:<br>(Intel/AMD) :material-download:](https://ddev.com/download/ddev_windows_amd64_installer.exe "For computers with Intel or AMD processors (most common)"){ .md-button .md-button--primary }
@@ -245,6 +239,37 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         Not sure which architecture you have? Open PowerShell and run: `$env:PROCESSOR_ARCHITECTURE`. It will show `AMD64` or `ARM64`. Alternatively, in WSL2/Ubuntu run `uname -m` which shows `x86_64` for AMD64 or `aarch64` for ARM64.
 
     Run the installer and select your mode. For WSL2 modes, the installer will ask which distro to use — enter the name you chose in Step 1. The installer will automatically configure DDEV for your chosen Docker provider. If you run the wrong installer for your architecture, it will detect the mismatch and direct you to download the correct one.
+
+    ??? tip "Install using WinGet"
+        [WinGet](https://learn.microsoft.com/en-us/windows/package-manager/winget/) can download and launch the installer interactively:
+
+        ```powershell
+        winget install --interactive DDEV
+        ```
+
+        For silent/automated installation with specific options, use `--override` to pass installer flags:
+
+        ```powershell
+        # WSL2 with Docker CE and specified distro, silently
+        winget install DDEV --silent --override "/docker-ce /distro=DDEV"
+        ```
+
+        If WinGet picks up an old version (which can happen when DDEV was previously installed with the Windows installer), uninstall all versions first:
+
+        ```powershell
+        winget uninstall ddev --all-versions
+        ```
+
+    ??? tip "Install using Chocolatey"
+        [Chocolatey](https://chocolatey.org/) has had DDEV support for years and remains an option, although the installer's capabilities don't get properly used:
+
+        ```powershell
+        # Traditional Windows
+        choco install ddev
+
+        # WSL2 with Docker CE (non-interactive, specify distro)
+        choco install ddev --params "/docker-ce /distro=DDEV"
+        ```
 
     !!!tip "Tips for using DDEV in WSL2"
         - Run `ddev` commands **inside WSL2** (e.g. inside Ubuntu), never in PowerShell or Git Bash.

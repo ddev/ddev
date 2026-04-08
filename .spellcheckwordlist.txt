@@ -193,6 +193,7 @@ WAMP
 WP-CLI
 WSL
 WSL2
+WinGet
 WantedBy
 Webhosting
 WebSocket
