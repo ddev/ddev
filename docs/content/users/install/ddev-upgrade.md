@@ -82,7 +82,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     sudo apt-get update && sudo apt-get install --only-upgrade ddev ddev-wsl2
     ```
 
-    You can also download and run the DDEV Windows Installer again, and it will do the upgrade for you. Make sure to choose the type of installation you have (Docker CE or Docker/Rancher Desktop).
+    You can also download and run the DDEV Windows Installer again (see [Traditional Windows](#traditional-windows) below), and it will do the upgrade for you. Make sure to choose the type of installation you have (Docker CE or Docker/Rancher Desktop).
 
     ### Verify New Version
 
@@ -90,7 +90,20 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ### Traditional Windows
 
-    Download and run the Windows installer (for your architecture, most often AMD64) for the latest [DDEV release](https://github.com/ddev/ddev/releases) (`ddev_windows_<architecture>_installer.<version>.exe`).
+    Download the installer — make sure to pick the right architecture:
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; text-align: center;">
+    [Download for AMD64 :material-microsoft-windows:<br>(Intel/AMD) :material-download:](https://ddev.com/download/ddev_windows_amd64_installer.exe "For computers with Intel or AMD processors (most common)"){ .md-button .md-button--primary }
+    [Download for ARM64 :material-microsoft-windows:<br>(Snapdragon) :material-download:](https://ddev.com/download/ddev_windows_arm64_installer.exe "For computers with ARM processors like Qualcomm Snapdragon"){ .md-button .md-button--primary }
+    </div>
+
+    - **AMD64 (x86-64)**: Most traditional Windows PCs (Intel/AMD processors)
+    - **ARM64**: Windows on ARM devices like Microsoft Surface Pro X, Surface Pro 9 (5G), or other ARM-based Windows devices
+
+    !!!tip "Check your system architecture"
+        Not sure which architecture you have? Open PowerShell and run: `$env:PROCESSOR_ARCHITECTURE`. It will show `AMD64` or `ARM64`. Alternatively, in WSL2/Ubuntu run `uname -m` which shows `x86_64` for AMD64 or `aarch64` for ARM64.
+
+    Run the installer and follow the prompts to complete the upgrade.
 
     ??? tip "Upgrade using WinGet"
         ```powershell
