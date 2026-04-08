@@ -2732,6 +2732,54 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev exec symfony server:log
     ```
 
+## Tempest
+
+=== "Composer"
+
+    Create the project directory and configure DDEV:
+
+    ```bash
+    PROJECT_NAME=my-tempest-site
+    mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
+    ddev config --project-type=php --docroot=public --php-version=8.5 --omit-containers=db
+    ```
+
+    Start DDEV (this may take a minute):
+
+    ```bash
+    ddev start
+    ```
+
+    Install Tempest via Composer:
+
+    ```bash
+    ddev composer create-project tempest/app
+    ```
+
+    Launch the site:
+
+    ```bash
+    ddev launch
+    ```
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > setup-tempest.sh << 'EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        PROJECT_NAME=my-tempest-site
+        mkdir -p ${PROJECT_NAME} && cd ${PROJECT_NAME}
+        ddev config --project-type=php --docroot=public --php-version=8.5 --omit-containers=db
+        ddev start -y
+        ddev composer create-project tempest/app
+        ddev launch
+        EOF
+        chmod +x setup-tempest.sh
+        ./setup-tempest.sh
+        ```
+
 ## TYPO3
 
 === "Composer"
