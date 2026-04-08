@@ -105,7 +105,7 @@ EOF
   cat "$INSTALL_DIR/mkdocs-requirements.txt" >>"$INSTALL_DIR/python-requirements.txt"
 
   log_info "Installing Python packages (this may take a moment)..."
-  python3 -m pip install -q -r "$INSTALL_DIR/python-requirements.txt"
+  python3 -m pip install -r "$INSTALL_DIR/python-requirements.txt" >/dev/null
 }
 
 # Setup Node environment
@@ -126,14 +126,14 @@ install_node_tools() {
   export npm_config_update_notifier=false
   export npm_config_fund=false
 
-  npm install -g --silent \
+  npm install -g \
     markdownlint-cli \
     @umbrelladocs/linkspector \
-    textlint \
+    textlint@15.5.2 \
     textlint-filter-rule-comments \
     textlint-rule-no-todo \
     textlint-rule-stop-words \
-    textlint-rule-terminology
+    textlint-rule-terminology >/dev/null
 }
 
 # Verify installation
