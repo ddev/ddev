@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/ddev/ddev/pkg/amplitude"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
@@ -33,6 +34,11 @@ var versionCmd = &cobra.Command{
 		}
 
 		v := version.GetVersionInfo()
+
+		// If in a project context, show the project's actual web image instead of the default.
+		if app, err := ddevapp.GetActiveApp(""); err == nil {
+			v["web"] = app.WebImage
+		}
 
 		var out bytes.Buffer
 		t := table.NewWriter()
