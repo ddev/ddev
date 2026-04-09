@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ddev/ddev/pkg/nodeps"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -19,7 +20,7 @@ var (
 		l := log.New()
 		l.SetOutput(os.Stdout)
 		logLevel := log.InfoLevel
-		if isEnvTrue("DDEV_DEBUG") || isEnvTrue("DDEV_VERBOSE") {
+		if nodeps.IsEnvTrue("DDEV_DEBUG") || nodeps.IsEnvTrue("DDEV_VERBOSE") {
 			logLevel = log.DebugLevel
 		}
 		l.SetLevel(logLevel)
@@ -124,7 +125,7 @@ type WaitTimer struct {
 func StartWait(message string) *WaitTimer {
 	if !JSONOutput {
 		_, _ = fmt.Fprintf(os.Stdout, "%s...", message)
-		if isEnvTrue("DDEV_DEBUG") || isEnvTrue("DDEV_VERBOSE") {
+		if nodeps.IsEnvTrue("DDEV_DEBUG") || nodeps.IsEnvTrue("DDEV_VERBOSE") {
 			_, _ = fmt.Fprintln(os.Stdout)
 		}
 	}
@@ -143,13 +144,4 @@ func (w *WaitTimer) Complete(err error) time.Duration {
 		}
 	}
 	return elapsed
-}
-
-// isEnvTrue returns true if the given environment variable
-// has a value accepted by strconv.ParseBool.
-// This duplicates nodeps.IsEnvTrue() because pkg/nodeps imports pkg/output
-// (via wsl.go), creating an import cycle if we import nodeps here.
-func isEnvTrue(envVar string) bool {
-	val, _ := strconv.ParseBool(os.Getenv(envVar))
-	return val
 }
