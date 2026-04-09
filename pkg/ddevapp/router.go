@@ -74,10 +74,9 @@ func RemoveRouterContainer() error {
 
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
-	// If the router is not healthy/running, we'll kill it so it
-	// starts over again.
+	// Kill the router if not running or if its image is outdated, so it restarts fresh.
 	router, err := FindDdevRouter()
-	if router != nil && err == nil && router.State != "running" {
+	if router != nil && err == nil && (router.State != "running" || router.Image != ddevImages.GetRouterImage()) {
 		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
 		if err != nil {
 			return err
@@ -159,8 +158,9 @@ func StartDdevRouter() error {
 
 		// Run docker-compose up -d against the ddev-router full compose file
 		_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+			ProjectName:  RouterComposeProjectName,
 			ComposeFiles: []string{routerComposeFullPath},
-			Action:       []string{"-p", RouterComposeProjectName, "up", "--build", "-d"},
+			Action:       []string{"up", "--build", "-d"},
 		})
 		if err != nil {
 			return fmt.Errorf("failed to start ddev-router: %v", err)

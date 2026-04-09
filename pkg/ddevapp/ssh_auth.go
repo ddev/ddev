@@ -40,8 +40,10 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	if err != nil {
 		return err
 	}
-	// If we already have a running ssh container, there's nothing to do.
-	if sshContainer != nil && (sshContainer.State == "running" || sshContainer.State == "starting") {
+	// Nothing to do if the ssh container is running with the current image.
+	if sshContainer != nil &&
+		sshContainer.Image == ddevImages.GetSSHAuthImage()+"-built" &&
+		(sshContainer.State == "running" || sshContainer.State == "starting") {
 		return nil
 	}
 
@@ -55,6 +57,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	_ = app.DockerEnv()
 
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ProjectName:  SSHAuthName,
 		ComposeFiles: []string{composeFile},
 		Action:       []string{"down"},
 	})
@@ -69,8 +72,9 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	// Now restart ddev-ssh-agent
 	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
+		ProjectName:  SSHAuthName,
 		ComposeFiles: []string{composeFile},
-		Action:       []string{"-p", SSHAuthName, "up", "--build", "-d"},
+		Action:       []string{"up", "--build", "-d"},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
