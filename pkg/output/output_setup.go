@@ -111,7 +111,8 @@ func ParseBoolFlag(long string, short string) bool {
 // ColorsEnabled returns true if colored output is enabled
 // Implementation from https://no-color.org/
 func ColorsEnabled() bool {
-	return os.Getenv("NO_COLOR") == "" || os.Getenv("NO_COLOR") == "0"
+	noColor, set := os.LookupEnv("NO_COLOR")
+	return !set || noColor == ""
 }
 
 // WaitTimer tracks elapsed time for wait operations with inline output
