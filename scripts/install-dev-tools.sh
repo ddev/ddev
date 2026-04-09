@@ -129,7 +129,7 @@ install_node_tools() {
   npm install -g \
     markdownlint-cli \
     @umbrelladocs/linkspector \
-    textlint@15.5.2 \
+    textlint \
     textlint-filter-rule-comments \
     textlint-rule-no-todo \
     textlint-rule-stop-words \
