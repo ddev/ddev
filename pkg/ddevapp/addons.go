@@ -19,7 +19,6 @@ import (
 	"github.com/ddev/ddev/pkg/config/remoteconfig/downloader"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/storage"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
-	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -300,7 +299,7 @@ func processPHPAction(action string, installDesc InstallDesc, app *DdevApp, verb
 	image := installDesc.Image
 	// Use the default ddev-webserver as the image if none is specified
 	if image == "" {
-		image = docker.GetWebImage()
+		image = app.WebImage
 	}
 
 	// Validate included/required files on the host (since we need to read from filesystem)
@@ -493,10 +492,10 @@ func injectPHPStrictMode(action string) string {
 
 // validatePHPSyntax validates PHP syntax by running php -l in a container
 // This is used only for validating included/required files
-func validatePHPSyntax(phpCode string, image string) error {
+func validatePHPSyntax(phpCode string, app *DdevApp, image string) error {
 	// Use the provided image or default
 	if image == "" {
-		image = docker.GetWebImage()
+		image = app.WebImage
 	}
 
 	// Create a shell script that writes the PHP code and validates it
@@ -659,7 +658,7 @@ func validateIncludedFile(filePath string, app *DdevApp, image string) error {
 	// Only validate files that appear to contain PHP code
 	content := string(includedContent)
 	if strings.Contains(content, "<?php") || filepath.Ext(fullPath) == ".php" {
-		err = validatePHPSyntax(content, image)
+		err = validatePHPSyntax(content, app, image)
 		if err != nil {
 			return fmt.Errorf("PHP syntax error in included file: %w", err)
 		}

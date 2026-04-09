@@ -560,9 +560,12 @@ func TestDdevStart(t *testing.T) {
 	})
 
 	// Make sure the -built Docker image exists before stop
-	webBuilt := ddevImages.GetWebImage() + "-" + site.Name + "-built"
-	dbBuilt := ddevImages.GetWebImage() + "-" + site.Name + "-built"
+	webBuilt := app.WebImage + "-" + site.Name + "-built"
 	exists, err := dockerutil.ImageExistsLocally(webBuilt)
+	assert.NoError(err)
+	assert.True(exists)
+	dbBuilt := ddevImages.GetDBImage(app.Database.Type, app.Database.Version) + "-" + site.Name + "-built"
+	exists, err = dockerutil.ImageExistsLocally(dbBuilt)
 	assert.NoError(err)
 	assert.True(exists)
 

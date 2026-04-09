@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -65,7 +64,7 @@ func TestDeleteCmd(t *testing.T) {
 	imgs := []string{
 		"ddev-" + strings.ToLower(app.Name) + "-busybox:latest",
 		app.GetDBImage() + "-" + app.Name + "-built",
-		ddevImages.GetWebImage() + "-" + app.Name + "-built",
+		app.WebImage + "-" + app.Name + "-built",
 	}
 	for _, img := range imgs {
 		require.Contains(t, out, fmt.Sprintf("%s for project %s was deleted", img, app.Name))

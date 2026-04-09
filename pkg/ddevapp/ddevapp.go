@@ -1753,7 +1753,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	util.Debug("Exec %s", chownCmd)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, labels, nil, &dockerutil.NoHealthCheck)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "start-chown-"+util.RandString(6), []string{"sh", "-c", chownCmd}, []string{}, []string{}, volumeMounts, "", true, false, labels, nil, nil)
 	if err != nil {
 		return fmt.Errorf("failed to '%s' inside volumes: %v, output=%s", chownCmd, err, out)
 	}
@@ -1826,7 +1826,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	_, logStderrOutput, err := dockerutil.RunSimpleContainer(ddevImages.GetWebImage()+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
+	_, logStderrOutput, err := dockerutil.RunSimpleContainer(app.WebImage+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, map[string]string{"com.ddev.site-name": ""}, nil, nil)
 	// If the web image is dirty, try to rebuild it immediately
 	if err == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
 		_, err = app.composeBuild("web", "--no-cache")
@@ -2215,8 +2215,12 @@ func (app *DdevApp) Restart() error {
 // We always need web image, and ddev-utilities for housekeeping.
 func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
 	base := []string{
-		ddevImages.GetWebImage(),
 		versionconstants.UtilitiesImage,
+	}
+	// Only pull the default web image when no project-specific images are provided,
+	// otherwise the project's actual web image is already in additionalImages.
+	if len(additionalImages) == 0 {
+		base = append(base, ddevImages.GetWebImage())
 	}
 	if globalconfig.DdevGlobalConfig.XHProfMode == types.XHProfModeXHGui {
 		base = append(base, ddevImages.GetXhguiImage())
@@ -3296,7 +3300,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	// for stopped project
 	c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 	util.Debug("Removing merged config for project with command '%s'", c)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, &dockerutil.NoHealthCheck)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 	if err != nil {
 		util.Warning("Unable to remove project merged traefik yaml: %v, output='%s'", err, out)
 	}
@@ -3308,7 +3312,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		// This would not remove extra certs that they had put in certs directory.
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-{web,db} /mnt/ddev-global-cache/traefik/*/%[1]s.{crt,key} /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 		util.Debug("Cleaning ddev-global-cache with command '%s'", c)
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, &dockerutil.NoHealthCheck)
+		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)
 		}
@@ -3429,7 +3433,7 @@ func deleteImages(app *DdevApp) {
 	// These images should already be deleted, but just in case, delete these two by name
 	dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
 	_ = dockerutil.RemoveImage(dbBuilt)
-	webBuilt := ddevImages.GetWebImage() + "-" + app.Name + "-built"
+	webBuilt := app.WebImage + "-" + app.Name + "-built"
 	_ = dockerutil.RemoveImage(webBuilt)
 }
 
