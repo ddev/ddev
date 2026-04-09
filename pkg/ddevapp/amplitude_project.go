@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/amplitude"
@@ -75,7 +76,7 @@ func (app *DdevApp) TrackProject() {
 		CorepackEnable(app.CorepackEnable).
 		DdevVersionConstraint(app.DdevVersionConstraint).
 		DisableSettingsManagement(app.DisableSettingsManagement).
-		NoProjectMount(app.NoProjectMount).Ci(nodeps.IsEnvTrue("CI"))
+		NoProjectMount(app.NoProjectMount).Ci(os.Getenv("CI") == "true")
 
 	if !nodeps.ArrayContainsString(containersOmitted, "db") {
 		builder.
