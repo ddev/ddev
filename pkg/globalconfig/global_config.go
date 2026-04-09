@@ -185,7 +185,7 @@ func GetMutagenDataDirectory() string {
 		output.UserErr.Fatalf("Could not get home directory for current user. Is it set? err=%v", err)
 	}
 	mutagenDataDirectory := filepath.Join(home, ".ddev_mutagen_data_directory")
-	_ = os.Setenv(`MUTAGEN_DATA_DIRECTORY`, mutagenDataDirectory)
+	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", mutagenDataDirectory)
 	return mutagenDataDirectory
 }
 

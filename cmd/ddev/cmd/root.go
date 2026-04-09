@@ -9,6 +9,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/tui"
 	"github.com/ddev/ddev/pkg/updatecheck"
@@ -40,7 +41,7 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 		if isatty.IsTerminal(os.Stdin.Fd()) &&
 			!output.JSONOutput &&
 			!globalconfig.DdevGlobalConfig.NoTUI &&
-			os.Getenv("DDEV_NO_TUI") == "" {
+			nodeps.IsEnvFalse("DDEV_NO_TUI") {
 			if err := tui.Launch(); err != nil {
 				util.Failed("TUI failed: %v", err)
 			}

@@ -157,14 +157,12 @@ func TestComposerAutocomplete(t *testing.T) {
 	// We don't really care what the project is, they should
 	// all have composer installed in the web container.
 	origDir, _ := os.Getwd()
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Unsetenv("DDEV_DEBUG")
+	t.Setenv("DDEV_DEBUG", "")
 	err := os.Chdir(TestSites[0].Dir)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
-		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	// Make sure the sites exist and are running

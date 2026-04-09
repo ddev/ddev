@@ -7,6 +7,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 )
@@ -72,7 +73,7 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 	// Test outside home directory warning
 	t.Run("OutsideHomeDirectory", func(t *testing.T) {
 		// Only test on systems where we can easily test outside home
-		if os.Getenv("DDEV_TEST_OUTSIDE_HOME") != "true" {
+		if nodeps.IsEnvFalse("DDEV_TEST_OUTSIDE_HOME") {
 			t.Skip("Skipping outside home test - set DDEV_TEST_OUTSIDE_HOME=true to enable")
 		}
 

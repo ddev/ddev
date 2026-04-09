@@ -642,7 +642,7 @@ func TestReadConfigCRLF(t *testing.T) {
 
 // TestConfigValidate tests validation of configuration values.
 func TestConfigValidate(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (nodeps.IsMacOS() || nodeps.IsWindows()) {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (nodeps.IsMacOS() || nodeps.IsWindows()) {
 		t.Skip("Skipping on macOS/Windows")
 	}
 

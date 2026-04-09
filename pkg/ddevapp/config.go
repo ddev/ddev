@@ -46,10 +46,10 @@ func init() {
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		nodeps.WebserverDefault = testWebServerType
 	}
-	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
+	if nodeps.IsEnvTrue("DDEV_TEST_USE_MUTAGEN") {
 		nodeps.PerformanceModeDefault = types.PerformanceModeMutagen
 	}
-	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
+	if nodeps.IsEnvTrue("DDEV_TEST_NO_BIND_MOUNTS") {
 		nodeps.NoBindMountsDefault = true
 	}
 	if g := os.Getenv("DDEV_TEST_GOROUTINE_LIMIT"); g != "" {

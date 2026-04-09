@@ -2917,7 +2917,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 
 	// Set the DDEV_DB_CONTAINER_COMMAND command to empty to prevent docker-compose from complaining normally.
 	// It's used for special startup on restoring to a snapshot or for PostgreSQL.
-	if len(os.Getenv("DDEV_DB_CONTAINER_COMMAND")) == 0 {
+	if os.Getenv("DDEV_DB_CONTAINER_COMMAND") == "" {
 		v := ""
 		if app.Database.Type == nodeps.Postgres { // config_file spec for PostgreSQL
 			v = fmt.Sprintf("-c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf", nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)

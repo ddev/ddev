@@ -18,12 +18,11 @@ import (
 
 // TestCmdSSH runs `ddev ssh` on basic apps, including with a dot and a dash in them
 func TestCmdSSH(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsAppleSilicon() {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && nodeps.IsAppleSilicon() {
 		t.Skip("Skipping TestCmdSSH on Apple Silicon because of intermittent failures to connect")
 	}
 	assert := asrt.New(t)
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Unsetenv("DDEV_DEBUG")
+	t.Setenv("DDEV_DEBUG", "")
 
 	// Create a temporary directory and change to it for the duration of this test.
 	testDir := testcommon.CreateTmpDir(t.Name())
@@ -44,7 +43,6 @@ func TestCmdSSH(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		_ = os.RemoveAll(testDir)
-		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	err = fileutil.AppendStringToFile("index.php", `

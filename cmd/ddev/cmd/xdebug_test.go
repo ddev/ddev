@@ -12,7 +12,9 @@ import (
 
 // TestCmdXdebug tests the `ddev xdebug` command
 func TestCmdXdebug(t *testing.T) {
+	origVerbose := globalconfig.DdevVerbose
 	globalconfig.DdevVerbose = true
+	t.Setenv("DDEV_VERBOSE", "true")
 
 	// TestDdevXdebugEnabled has already tested enough versions, so limit it here.
 	// and this is a pretty limited test, doesn't do much but turn on and off
@@ -31,8 +33,7 @@ func TestCmdXdebug(t *testing.T) {
 		require.NoError(t, err)
 		err := os.Chdir(pwd)
 		require.NoError(t, err)
-		_ = os.Setenv("DDEV_VERBOSE", "")
-		globalconfig.DdevVerbose = false
+		globalconfig.DdevVerbose = origVerbose
 	})
 
 	// An odd bug in v1.16.2 popped up only when Composer version was set, might as well set it here

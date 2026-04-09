@@ -1,8 +1,6 @@
 package globalconfig
 
 import (
-	"os"
-
 	"github.com/ddev/ddev/pkg/nodeps"
 )
 
@@ -23,7 +21,7 @@ var ValidOmitContainers = map[string]bool{
 }
 
 // DdevNoInstrumentation is set to true if the env var is set
-var DdevNoInstrumentation = nodeps.IsEnvTrue("DDEV_NO_INSTRUMENTATION") || os.Getenv("CI") == "true"
+var DdevNoInstrumentation = nodeps.IsEnvTrue("DDEV_NO_INSTRUMENTATION") || nodeps.IsEnvTrue("CI")
 
 // DdevDebug is set to true if the env var is set
 // If DdevVerbose is true, DdevDebug is true
@@ -39,7 +37,7 @@ var GoroutineCount = 0
 
 // IsInteractive returns true if we are running in an interactive mode
 func IsInteractive() bool {
-	return os.Getenv("DDEV_NONINTERACTIVE") != "true"
+	return nodeps.IsEnvFalse("DDEV_NONINTERACTIVE")
 }
 
 // IsValidXdebugIDELocation limits the choices for XdebugIDELocation

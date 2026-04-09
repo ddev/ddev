@@ -2,7 +2,6 @@ package remoteconfig
 
 import (
 	"math/rand"
-	"os"
 	"strings"
 	"time"
 
@@ -221,7 +220,7 @@ func (c *remoteConfig) getTickerInterval() time.Duration {
 // interval has been elapsed.
 func (c *remoteConfig) showTickerMessage() bool {
 	return !output.JSONOutput &&
-		os.Getenv("CI") != "true" &&
+		nodeps.IsEnvFalse("CI") &&
 		!c.isTickerDisabled() &&
 		c.state.LastTickerAt.Add(c.getTickerInterval()).Before(time.Now())
 }
@@ -232,7 +231,7 @@ func (c *remoteConfig) showSponsorshipMessage() bool {
 	// Use the same interval as ticker for consistency (once per day)
 	sponsorshipInterval := c.getTickerInterval()
 	return !output.JSONOutput &&
-		os.Getenv("CI") != "true" &&
+		nodeps.IsEnvFalse("CI") &&
 		!c.isTickerDisabled() &&
 		c.state.LastSponsorshipAt.Add(sponsorshipInterval).Before(time.Now())
 }

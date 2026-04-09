@@ -20,16 +20,16 @@ import (
 
 // TestShareCmdNgrok tests `ddev share` with ngrok provider
 func TestShareCmdNgrok(t *testing.T) {
-	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
+	if nodeps.IsEnvFalse("DDEV_TEST_SHARE_CMD") {
 		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
 	}
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsWindows() {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && nodeps.IsWindows() {
 		t.Skip("Skipping because unreliable on Windows due to DNS lookup failure")
 	}
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		t.Skip("Skipping on GitHub actions because no auth can be provided")
 	}
-	t.Setenv(`DDEV_GOROUTINES`, "")
+	t.Setenv("DDEV_GOROUTINES", "")
 
 	// Check if ngrok is installed
 	_, err := exec.LookPath("ngrok")
@@ -38,7 +38,7 @@ func TestShareCmdNgrok(t *testing.T) {
 	}
 
 	// Disable DDEV_DEBUG to prevent non-JSON output in ngrok logs
-	t.Setenv("DDEV_DEBUG", "false")
+	t.Setenv("DDEV_DEBUG", "")
 
 	site := TestSites[0]
 	defer site.Chdir()()
@@ -151,16 +151,16 @@ func TestShareCmdNgrok(t *testing.T) {
 
 // TestShareCmdCloudflared tests `ddev share` with cloudflared
 func TestShareCmdCloudflared(t *testing.T) {
-	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
+	if nodeps.IsEnvFalse("DDEV_TEST_SHARE_CMD") {
 		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
 	}
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsWindows() {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && nodeps.IsWindows() {
 		t.Skip("Skipping because unreliable on Windows")
 	}
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		t.Skip("Skipping on GitHub actions")
 	}
-	t.Setenv(`DDEV_GOROUTINES`, "")
+	t.Setenv("DDEV_GOROUTINES", "")
 
 	// Check if cloudflared is installed
 	_, err := exec.LookPath("cloudflared")
@@ -232,10 +232,10 @@ func TestShareCmdCloudflared(t *testing.T) {
 
 // TestShareCmdProviderSystem tests the script-based provider system
 func TestShareCmdProviderSystem(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && nodeps.IsWindows() {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && nodeps.IsWindows() {
 		t.Skip("Skipping: Test cannot work yet on traditional windows (pkill, etc)")
 	}
-	t.Setenv(`DDEV_GOROUTINES`, "")
+	t.Setenv("DDEV_GOROUTINES", "")
 
 	site := TestSites[0]
 	defer site.Chdir()()

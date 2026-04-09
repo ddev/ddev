@@ -23,7 +23,7 @@ func TestDeleteCmd(t *testing.T) {
 	require.NoError(t, err)
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
-	t.Setenv("NO_COLOR", "true")
+	t.Setenv("NO_COLOR", "1")
 
 	t.Cleanup(func() {
 		_, _ = exec.RunHostCommand(DdevBin, "add-on", "remove", "busybox")

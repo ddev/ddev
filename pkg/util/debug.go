@@ -2,13 +2,13 @@ package util
 
 import (
 	"bytes"
-	"os"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
 	"time"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 )
 
@@ -80,12 +80,12 @@ func timeTrack(name *string) func() {
 	}
 }
 
-// CheckGoroutines() updates the number of goroutines
+// CheckGoroutines updates the number of goroutines
 // and optionally outputs the list of them on verbose.
 // Use with `defer util.CheckGoroutines()`
 func CheckGoroutines() {
 	globalconfig.GoroutineCount = runtime.NumGoroutine()
-	if os.Getenv("DDEV_GOROUTINES") != "" {
+	if nodeps.IsEnvTrue("DDEV_GOROUTINES") {
 		if globalconfig.DdevVerbose {
 			buf := new(bytes.Buffer)
 

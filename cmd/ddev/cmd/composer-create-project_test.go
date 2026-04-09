@@ -203,8 +203,7 @@ func TestComposerCreateProjectCmd(t *testing.T) {
 
 func TestComposerCreateAutocomplete(t *testing.T) {
 	// DDEV_DEBUG may result in extra output that we don't want
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Unsetenv("DDEV_DEBUG")
+	t.Setenv("DDEV_DEBUG", "")
 	// Change to the directory for the project to test.
 	// We don't really care what the project is, they should
 	// all have composer installed in the web container.
@@ -216,7 +215,6 @@ func TestComposerCreateAutocomplete(t *testing.T) {
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		require.NoError(t, err)
-		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	// Make sure the sites exist and are running

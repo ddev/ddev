@@ -8,7 +8,6 @@ package hostname
 // Related issue: https://github.com/ddev/ddev/issues/7790
 
 import (
-	"os"
 	"os/exec"
 	"testing"
 
@@ -23,7 +22,7 @@ import (
 // 2. Passwordless sudo is available
 func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 	// Skip if not in CI
-	if os.Getenv("CI") != "true" {
+	if nodeps.IsEnvFalse("CI") {
 		t.Skip("Skipping because not in CI (CI != true)")
 	}
 
@@ -34,15 +33,8 @@ func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 		t.Skip("Skipping because passwordless sudo is not available")
 	}
 
-	// Save and restore original DDEV_NONINTERACTIVE value
-	origNonInteractive := os.Getenv("DDEV_NONINTERACTIVE")
-	t.Cleanup(func() {
-		_ = os.Setenv("DDEV_NONINTERACTIVE", origNonInteractive)
-	})
-
 	// Unset DDEV_NONINTERACTIVE to allow hostname manipulation
-	err = os.Setenv("DDEV_NONINTERACTIVE", "")
-	require.NoError(t, err)
+	t.Setenv("DDEV_NONINTERACTIVE", "")
 
 	// Use a unique hostname for testing
 	testHostname := "test-ddev-hostname.local"
@@ -104,7 +96,7 @@ func TestDdevHostnameWithPasswordlessSudo(t *testing.T) {
 // 2. Passwordless sudo is available
 func TestElevateToAddRemoveHostEntry(t *testing.T) {
 	// Skip if not in CI
-	if os.Getenv("CI") != "true" {
+	if nodeps.IsEnvFalse("CI") {
 		t.Skip("Skipping because not in CI (CI != true)")
 	}
 	if nodeps.IsWSL2() || nodeps.IsWindows() {
@@ -118,15 +110,8 @@ func TestElevateToAddRemoveHostEntry(t *testing.T) {
 		t.Skip("Skipping because passwordless sudo is not available")
 	}
 
-	// Save and restore original DDEV_NONINTERACTIVE value
-	origNonInteractive := os.Getenv("DDEV_NONINTERACTIVE")
-	t.Cleanup(func() {
-		_ = os.Setenv("DDEV_NONINTERACTIVE", origNonInteractive)
-	})
-
 	// Unset DDEV_NONINTERACTIVE to allow hostname manipulation
-	err = os.Setenv("DDEV_NONINTERACTIVE", "")
-	require.NoError(t, err)
+	t.Setenv("DDEV_NONINTERACTIVE", "")
 
 	// Use a unique hostname for testing
 	testHostname := "test-elevate-hostname.local"

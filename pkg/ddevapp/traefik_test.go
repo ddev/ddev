@@ -12,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/globalconfig/types"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ import (
 
 // TestTraefikSimple tests basic Traefik router usage
 func TestTraefikSimple(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
 		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
@@ -166,7 +167,7 @@ func TestTraefikVirtualHost(t *testing.T) {
 
 // TestTraefikStaticConfig tests static config usage and merging
 func TestTraefikStaticConfig(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
 		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably release ports")
@@ -243,7 +244,7 @@ func TestTraefikStaticConfig(t *testing.T) {
 // TestCustomGlobalConfig tests that custom Traefik config from
 // ~/.ddev/traefik/custom-global-config/ is pushed to the router and loaded by Traefik
 func TestCustomGlobalConfig(t *testing.T) {
-	if os.Getenv("DDEV_RUN_TEST_ANYWAY") != "true" && dockerutil.IsRancherDesktop() {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && dockerutil.IsRancherDesktop() {
 		t.Skip("Skipping on Rancher Desktop because of intermittent fail missing `ddev-test-value`")
 	}
 	origDir, _ := os.Getwd()

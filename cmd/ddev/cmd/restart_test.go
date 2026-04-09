@@ -45,14 +45,12 @@ func TestCmdRestart(t *testing.T) {
 func TestCmdRestartJSON(t *testing.T) {
 	assert := asrt.New(t)
 	site := TestSites[0]
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Unsetenv("DDEV_DEBUG")
+	t.Setenv("DDEV_DEBUG", "")
 	origDir, _ := os.Getwd()
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
-		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	_, err = ddevapp.GetActiveApp("")

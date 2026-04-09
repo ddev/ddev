@@ -1,10 +1,9 @@
 package tui
 
 import (
-	"os"
-
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/muesli/termenv"
 )
 
@@ -30,7 +29,7 @@ type Styles struct {
 // NewStyles creates styles respecting SimpleFormatting and NO_COLOR.
 func NewStyles() Styles {
 	noColor := globalconfig.DdevGlobalConfig.SimpleFormatting ||
-		os.Getenv("NO_COLOR") != "" ||
+		!output.ColorsEnabled() ||
 		termenv.ColorProfile() == termenv.Ascii
 
 	if noColor {

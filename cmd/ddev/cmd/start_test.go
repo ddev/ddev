@@ -26,7 +26,7 @@ func TestCmdStart(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Gather reporting about goroutines at exit
-	_ = os.Setenv("DDEV_GOROUTINES", "true")
+	t.Setenv("DDEV_GOROUTINES", "true")
 	// Make sure we have running sites.
 	err := addSites()
 	require.NoError(t, err)

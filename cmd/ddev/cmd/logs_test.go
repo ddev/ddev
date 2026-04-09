@@ -30,7 +30,7 @@ func TestLogsNoConfig(t *testing.T) {
 // TestCmdLogs tests that the ddev logs functionality is working.
 func TestCmdLogs(t *testing.T) {
 	// Gather reporting about goroutines at exit
-	_ = os.Setenv("DDEV_GOROUTINES", "true")
+	t.Setenv("DDEV_GOROUTINES", "true")
 
 	assert := asrt.New(t)
 

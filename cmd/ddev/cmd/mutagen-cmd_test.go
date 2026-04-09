@@ -20,9 +20,8 @@ import (
 func TestCmdMutagen(t *testing.T) {
 	assert := asrt.New(t)
 	// Gather reporting about goroutines at exit
-	_ = os.Setenv("DDEV_GOROUTINES", "true")
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Unsetenv("DDEV_DEBUG")
+	t.Setenv("DDEV_GOROUTINES", "true")
+	t.Setenv("DDEV_DEBUG", "")
 
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because Mutagen on by default")
@@ -53,8 +52,6 @@ func TestCmdMutagen(t *testing.T) {
 		app, err = ddevapp.NewApp(site.Dir, true)
 		assert.NoError(err)
 
-		_ = os.Setenv(`DDEV_DEBUG`, origDdevDebug)
-
 		err = app.Start()
 		assert.NoError(err)
 
@@ -63,7 +60,6 @@ func TestCmdMutagen(t *testing.T) {
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	require.Equal(t, nodeps.IsMacOS() || nodeps.IsWindows(), globalconfig.DdevGlobalConfig.IsMutagenEnabled())
@@ -93,30 +89,30 @@ func TestCmdMutagen(t *testing.T) {
 	// Make sure it got turned on
 	assert.True(app.IsMutagenEnabled())
 
-	t.Logf("DDEV_GOROUTINES before app.StartAndWait()=%s", os.Getenv(`DDEV_GOROUTINES`))
+	t.Logf("DDEV_GOROUTINES before app.StartAndWait()=%s", os.Getenv("DDEV_GOROUTINES"))
 
 	// Now test subcommands. Wait a bit for Mutagen to get completely done, with transition problems sorted out
 	err = app.StartAndWait(10)
 	require.NoError(t, err)
-	t.Logf("DDEV_GOROUTINES before first mutagen status --verbose=%s", os.Getenv(`DDEV_GOROUTINES`))
+	t.Logf("DDEV_GOROUTINES before first mutagen status --verbose=%s", os.Getenv("DDEV_GOROUTINES"))
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	testcommon.CheckGoroutineOutput(t, out)
 
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "Mutagen: ok"), "expected Mutagen: ok. Full output: %s", out)
 	assert.Contains(out, "Mutagen: ok")
-	t.Logf("DDEV_GOROUTINES before second mutagen status --verbose=%s", os.Getenv(`DDEV_GOROUTINES`))
+	t.Logf("DDEV_GOROUTINES before second mutagen status --verbose=%s", os.Getenv("DDEV_GOROUTINES"))
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	assert.NoError(err)
 	assert.Contains(out, "Alpha:")
 	testcommon.CheckGoroutineOutput(t, out)
 
 	// This assertion requires DDEV_DEBUG
-	_ = os.Setenv("DDEV_DEBUG", "true")
+	t.Setenv("DDEV_DEBUG", "true")
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "reset")
 	assert.NoError(err)
 	assert.Contains(out, fmt.Sprintf("Removed Docker volume %s", ddevapp.GetMutagenVolumeName(app)))
-	_ = os.Unsetenv("DDEV_DEBUG")
+	t.Setenv("DDEV_DEBUG", "")
 	testcommon.CheckGoroutineOutput(t, out)
 
 	status, statusDesc := app.SiteStatus()

@@ -14,7 +14,7 @@ func IsWSL2() bool {
 		return false
 	}
 	// First, try checking env variable
-	if os.Getenv(`WSL_INTEROP`) != "" {
+	if os.Getenv("WSL_INTEROP") != "" {
 		return true
 	}
 	// But that doesn't always work, so check for existence of microsoft in /proc/version

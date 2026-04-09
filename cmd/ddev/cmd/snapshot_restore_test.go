@@ -15,7 +15,7 @@ import (
 func TestCmdSnapshotRestore(t *testing.T) {
 	assert := asrt.New(t)
 	// Gather reporting about goroutines at exit
-	_ = os.Setenv("DDEV_GOROUTINES", "true")
+	t.Setenv("DDEV_GOROUTINES", "true")
 
 	origDir, _ := os.Getwd()
 	site := TestSites[0]

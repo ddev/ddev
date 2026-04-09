@@ -54,12 +54,10 @@ func TestDescribeBadArgs(t *testing.T) {
 func TestCmdDescribe(t *testing.T) {
 	origDir, _ := os.Getwd()
 
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Unsetenv("DDEV_DEBUG")
+	t.Setenv("DDEV_DEBUG", "")
 	tmpDir := testcommon.CreateTmpDir("")
 
 	t.Cleanup(func() {
-		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 		_ = os.Chdir(origDir)
 		_ = os.RemoveAll(tmpDir)
 	})

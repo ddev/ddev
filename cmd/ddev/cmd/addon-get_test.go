@@ -564,8 +564,7 @@ func TestCmdAddonProjectFlag(t *testing.T) {
 	if !github.HasGitHubToken() {
 		t.Skip("Skipping because DDEV_GITHUB_TOKEN is not set")
 	}
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Unsetenv("DDEV_DEBUG")
+	t.Setenv("DDEV_DEBUG", "")
 	assert := asrt.New(t)
 
 	site := TestSites[0]
@@ -575,7 +574,6 @@ func TestCmdAddonProjectFlag(t *testing.T) {
 		_, err := exec.RunHostCommand(DdevBin, "add-on", "remove", "redis", "--project", site.Name)
 		assert.NoError(err)
 		_ = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
-		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	// Install the add-on using the `--project` flag

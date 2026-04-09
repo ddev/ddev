@@ -18,8 +18,8 @@ func TestCmdDebugTest(t *testing.T) {
 		_ = os.Chdir(origDir)
 	})
 
-	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
-	_ = os.Setenv("DDEV_DEBUG", "true")
+	t.Setenv("DDEV_NONINTERACTIVE", "true")
+	t.Setenv("DDEV_DEBUG", "true")
 
 	out, err := exec.RunHostCommand(DdevBin, "utility", "test")
 	require.NoError(t, err, "out=%s", out)

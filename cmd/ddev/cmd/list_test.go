@@ -21,8 +21,7 @@ import (
 // TestCmdList runs the binary with "ddev list" and checks the results
 func TestCmdList(t *testing.T) {
 	origDir, _ := os.Getwd()
-	origDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Unsetenv("DDEV_DEBUG")
+	t.Setenv("DDEV_DEBUG", "")
 
 	// Create temporary XDG_CONFIG_HOME for isolated testing
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
@@ -30,7 +29,6 @@ func TestCmdList(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
-		_ = os.Setenv("DDEV_DEBUG", origDdevDebug)
 	})
 
 	// Set SimpleFormatting in the isolated config

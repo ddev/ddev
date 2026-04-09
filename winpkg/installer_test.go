@@ -15,6 +15,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
 
@@ -72,7 +73,7 @@ func getInstallerDebugLogs(t *testing.T) string {
 
 // TestWindowsInstallerWSL2 tests WSL2 installation paths using a test matrix
 func TestWindowsInstallerWSL2(t *testing.T) {
-	if os.Getenv("DDEV_TEST_USE_REAL_INSTALLER") == "" {
+	if nodeps.IsEnvFalse("DDEV_TEST_USE_REAL_INSTALLER") {
 		t.Skip("Skipping installer test, set DDEV_TEST_USE_REAL_INSTALLER=true to run")
 	}
 
@@ -261,7 +262,7 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 
 // TestWindowsInstallerTraditional tests the Traditional Windows installation path
 func TestWindowsInstallerTraditional(t *testing.T) {
-	if os.Getenv("DDEV_TEST_USE_REAL_INSTALLER") == "" {
+	if nodeps.IsEnvFalse("DDEV_TEST_USE_REAL_INSTALLER") {
 		t.Skip("Skipping installer test, set DDEV_TEST_USE_REAL_INSTALLER=true to run")
 	}
 	// Check if Docker Desktop is working on Windows
