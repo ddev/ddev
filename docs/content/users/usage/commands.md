@@ -445,8 +445,10 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--mailpit-http-port`: The default Mailpit HTTP port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#mailpit_http_port)).
 * `--mailpit-https-port`: The default Mailpit HTTPS port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#mailpit_https_port)).
 * `--no-bind-mounts`: If `true`, don't use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible.
+* `--no-tui`: If `true`, disable the interactive dashboard and show the classic help text instead (see [default](../configuration/config.md#no_tui)).
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent` or `--omit-containers=""`.
 * `--omit-project-name-by-default`: If `true`, `ddev config` will not write the `name` field to `.ddev/config.yaml` unless explicitly set with `--project-name` (see [default](../configuration/config.md#omit_project_name_by_default)).
+* `--omit-snapshot-on-delete`: If `true`, `ddev delete` will not take a snapshot before deleting a project (see [default](../configuration/config.md#omit_snapshot_on_delete)).
 * `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`.
 * `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
 * `--project-tld`: Set the default top-level domain to be used for all projects, can be overridden by project configuration (see [default](../configuration/config.md#project_tld)).
