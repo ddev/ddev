@@ -75,8 +75,9 @@ func RemoveRouterContainer() error {
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
 	// Kill the router if not running or if its image is outdated, so it restarts fresh.
+	// Use HasSuffix to handle registry prefixes (e.g. docker.io/) that Podman includes in image names.
 	router, err := FindDdevRouter()
-	if router != nil && err == nil && (router.State != "running" || router.Image != ddevImages.GetRouterImage()) {
+	if router != nil && err == nil && (router.State != "running" || !strings.HasSuffix(router.Image, ddevImages.GetRouterImage())) {
 		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
 		if err != nil {
 			return err

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
@@ -41,8 +42,9 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 		return err
 	}
 	// Nothing to do if the ssh container is running with the current image.
+	// Use HasSuffix to handle registry prefixes (e.g. docker.io/) that Podman includes in image names.
 	if sshContainer != nil &&
-		sshContainer.Image == ddevImages.GetSSHAuthImage()+"-built" &&
+		strings.HasSuffix(sshContainer.Image, ddevImages.GetSSHAuthImage()+"-built") &&
 		(sshContainer.State == "running" || sshContainer.State == "starting") {
 		return nil
 	}

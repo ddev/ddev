@@ -113,7 +113,7 @@ func TestSSHAuth(t *testing.T) {
 		Cmd:     "rm -f /home/.ssh-agent/known_hosts; ssh root@test-ssh-server pwd",
 	})
 	stdout = strings.Trim(stdout, "\r\n")
-	assert.Equal(stdout, "/root")
+	assert.Equal("/root", stdout)
 	assert.NoError(err)
 
 	err = app.Stop(true, false)
@@ -129,7 +129,7 @@ func TestSSHAuth(t *testing.T) {
 		Cmd:     "rm -f /home/.ssh-agent/known_hosts; ssh root@test-ssh-server pwd",
 	})
 	stdout = strings.Trim(stdout, "\r\n")
-	assert.Equal(stdout, "/root")
+	assert.Equal("/root", stdout)
 	assert.NoError(err)
 
 	err = app.Stop(true, false)
