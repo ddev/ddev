@@ -429,7 +429,7 @@ func TestRunSimpleContainer(t *testing.T) {
 	_, _, err = dockerutil.RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true, false, nil, nil, nil)
 	require.Error(t, err)
 	if err != nil {
-		require.Contains(t, err.Error(), "failed to StartContainer")
+		require.Contains(t, err.Error(), "failed to start container")
 	}
 
 	// Try the case of running a script that fails
