@@ -35,17 +35,17 @@ fi
 
 # Set PHP timezone to configured $TZ if there is one
 if [ ! -z ${TZ} ]; then
-    perl -pi -e "s%date.timezone *=.*$%date.timezone = $TZ%g" $(find /etc/php -name php.ini)
+  perl -pi -e "s%date.timezone *=.*$%date.timezone = $TZ%g" $(find /etc/php -name php.ini)
 fi
 
 # If the user has provided custom PHP configuration, copy it into a directory
 # where PHP will automatically include it.
 if [ -d /mnt/ddev_config/php ] ; then
-    # If there are files in the mount
-    if [ -n "$(ls -A /mnt/ddev_config/php/*.ini 2>/dev/null)" ]; then
-        cp /mnt/ddev_config/php/*.ini /etc/php/${DDEV_PHP_VERSION}/cli/conf.d/
-        cp /mnt/ddev_config/php/*.ini /etc/php/${DDEV_PHP_VERSION}/fpm/conf.d/
-    fi
+  # If there are files in the mount
+  if [ -n "$(ls -A /mnt/ddev_config/php/*.ini 2>/dev/null)" ]; then
+    cp /mnt/ddev_config/php/*.ini /etc/php/${DDEV_PHP_VERSION}/cli/conf.d/
+    cp /mnt/ddev_config/php/*.ini /etc/php/${DDEV_PHP_VERSION}/fpm/conf.d/
+  fi
 fi
 
 if [ -d /mnt/ddev_config/nginx_full ]; then
@@ -58,8 +58,8 @@ if [ -d /mnt/ddev_config/apache ]; then
 fi
 
 if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
-    # Start can be executed when the container is already running.
-    mkdir -p ~/.drush/commands && ln -sf /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
+  # Start can be executed when the container is already running.
+  mkdir -p ~/.drush/commands && ln -sf /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
 fi
 
 if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] || [ "${DDEV_PROJECT_TYPE}" = "backdrop" ]; then
@@ -73,9 +73,9 @@ a2enmod access_compat alias auth_basic authn_core authn_file authz_core authz_ho
 a2enconf charset localized-error-pages other-vhosts-access-log security serve-cgi-bin
 
 if [ "$DDEV_WEBSERVER_TYPE" = "apache-fpm" ] ; then
-    a2enmod proxy_fcgi
-    a2enconf php${DDEV_PHP_VERSION}-fpm
-    a2dissite 000-default
+  a2enmod proxy_fcgi
+  a2enconf php${DDEV_PHP_VERSION}-fpm
+  a2dissite 000-default
 fi
 
 # Disable xdebug by default. Users can enable with /usr/local/bin/enable_xdebug
@@ -106,7 +106,7 @@ fi
 # enableGlobalCache configuration option. Assumes ~/.yarn/berry as the default
 # global folder.
 (if cd ~ || (echo "unable to cd to home directory"; exit 22); then
-  yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic >/dev/null || true
+  timeout 1 yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic >/dev/null || echo 'cache-folder "/mnt/ddev-global-cache/yarn/classic"' >> ~/.yarnrc || true
 fi)
 # ensure default yarn berry global folder is there to symlink cache afterwards
 mkdir -p ~/.yarn/berry
@@ -117,7 +117,7 @@ ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
 # should all be set up with both global and local
 # either way.
 if [ -d /mnt/ddev_config/.homeadditions ]; then
-    cp -r /mnt/ddev_config/.homeadditions/. ~/
+  cp -r /mnt/ddev_config/.homeadditions/. ~/
 fi
 
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)
@@ -141,8 +141,8 @@ ddev_custom_init_scripts
 # Make sure /var/tmp/logpipe gets logged; only for standalone non-ddev usages
 logpipe=/var/tmp/logpipe
 if [[ ! -p ${logpipe} ]]; then
-    mkfifo ${logpipe}
-    cat < ${logpipe} >/proc/1/fd/1 &
+  mkfifo ${logpipe}
+  cat < ${logpipe} >/proc/1/fd/1 &
 fi
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
