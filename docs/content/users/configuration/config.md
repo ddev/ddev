@@ -456,6 +456,16 @@ Determines whether `ddev config` updates the `name` field in the `.ddev/config.y
 
 When the `name` field is omitted in `.ddev/config.yaml`, DDEV gets the project name from the directory the project is in. If this option is set to `true`, `ddev config` will not update the `name` field unless you use `ddev config --project-name=<name>` to explicitly set the project name. People using `git worktree` often prefer to omit the project name so they can work on multiple projects at the same time in different worktrees.
 
+## `omit_snapshot_on_delete`
+
+Determines whether to omit the database snapshot when running `ddev delete` by default.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `false` | Can be `true` or `false`.
+
+Snapshots are taken by default when running `ddev delete` to allow recovery of data if the deletion was accidental. Setting this to `true` will turn off that safety feature. You can also override this behavior on a per-command basis with `ddev delete --omit-snapshot=false`.
+
 ## `override_config`
 
 Whether to override config values instead of merging.
