@@ -777,33 +777,34 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		defer waitCancel()
 		tickChan := time.NewTicker(500 * time.Millisecond)
 		defer tickChan.Stop()
-		pollCount := 0
 		for {
-			pollCount++
-			inspectStart := time.Now()
-			util.Debug("RunSimpleContainer: ContainerInspect attempt #%d for %s (container=%s)", pollCount, config.Image, c.ID[:12])
 			info, err := apiClient.ContainerInspect(waitCtx, c.ID, client.ContainerInspectOptions{})
-			inspectElapsed := time.Since(inspectStart)
-			util.Debug("RunSimpleContainer: ContainerInspect #%d returned after %v for %s, err=%v", pollCount, inspectElapsed, c.ID[:12], err)
 			if err != nil {
 				if waitCtx.Err() != nil {
-					return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s to stop", timeout, c.ID)
+					var health any = "none"
+					if s := info.Container.State; s != nil && s.Health != nil {
+						health = *s.Health
+					}
+					util.Debug("RunSimpleContainer: container %s (%s) state=%+v health=%+v, err=%v, waitErr=%v", name, TruncateID(c.ID), info.Container.State, health, err, waitCtx.Err())
+					return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s (%s) to stop", timeout, name, TruncateID(c.ID))
 				}
 				return c.ID, "", fmt.Errorf("failed to inspect container: %v", err)
 			}
 			if info.Container.State == nil {
 				return c.ID, "", fmt.Errorf("container %s has nil state", c.ID)
 			}
-			util.Debug("RunSimpleContainer: container %s state: Running=%v Status=%s ExitCode=%d StartedAt=%s",
-				c.ID[:12], info.Container.State.Running, info.Container.State.Status,
-				info.Container.State.ExitCode, info.Container.State.StartedAt)
 			if !info.Container.State.Running {
 				exitCode = info.Container.State.ExitCode
 				break
 			}
 			select {
 			case <-waitCtx.Done():
-				return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s to stop", timeout, c.ID)
+				var health any = "none"
+				if s := info.Container.State; s != nil && s.Health != nil {
+					health = *s.Health
+				}
+				util.Debug("RunSimpleContainer: container %s (%s) state=%+v health=%+v, err=%v", name, TruncateID(c.ID), info.Container.State, health, err)
+				return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s (%s) to stop", timeout, name, TruncateID(c.ID))
 			case <-tickChan.C:
 			}
 		}
