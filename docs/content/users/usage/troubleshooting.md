@@ -128,7 +128,7 @@ Most people will want to use ports 80 and 443, the default HTTP and HTTPS ports 
 * Lando: If you’ve previously used Lando, try running `lando poweroff`.
 * IIS on Windows (can affect WSL2). You’ll have to disable it in the Windows settings.
 
-To dig deeper, run `ddev utility port-diagnose` from inside your project directory. It checks every port your project needs, identifies the blocking process by name and PID, and suggests how to stop it:
+To dig deeper, run `ddev utility port-diagnose` from your project directory. It checks each port your project needs, identifies the blocking process by name and PID, and suggests how to stop it:
 
 ```
 $ ddev utility port-diagnose

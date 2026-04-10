@@ -117,8 +117,6 @@ func runPortDiagnose() int {
 	hasConflict := false
 
 	for _, np := range ports {
-		// Find processes first to avoid killing single-connection listeners
-		// (IsPortActive dials the port, which can cause them to exit).
 		allProcs := findPortProcesses(np.port)
 
 		// On WSL2, also check the Windows side.
@@ -126,18 +124,31 @@ func runPortDiagnose() int {
 			allProcs = append(allProcs, findWindowsPortProcesses(np.port)...)
 		}
 
-		// If no processes found, fall back to IsPortActive as a connectivity check.
 		if len(allProcs) == 0 {
+			// Nothing found without elevated privileges.
+			// Check connectivity first — if nothing is listening, the port is free.
 			if !netutil.IsPortActive(np.port) {
 				output.UserOut.Printf("Port %s (%s): Available\n", np.port, np.label)
 				continue
 			}
+			// Port is active. Try sudo lsof to identify the owner.
+			if !nodeps.IsWindows() && hasCommand("sudo") {
+				if !sudoMessageShown {
+					output.UserOut.Println("Unable to identify the process without elevated privileges.")
+					output.UserOut.Printf("Running: sudo %s -iTCP:%s -sTCP:LISTEN -n -P\n", lsofPath(), np.port)
+					if isTerminal(os.Stdin) {
+						output.UserOut.Println("You may be prompted for your password.")
+					}
+					sudoMessageShown = true
+				}
+				allProcs, _ = findPortProcessesSudoLsof(np.port)
+			}
 		}
 
 		if len(allProcs) == 0 {
-			// Port responds but we can't identify who owns it.
+			// Port responds but we still can't identify who owns it.
 			hasConflict = true
-			hint := fmt.Sprintf("try 'sudo lsof -i :%s -sTCP:LISTEN'", np.port)
+			hint := fmt.Sprintf("try 'sudo lsof -iTCP:%s -sTCP:LISTEN'", np.port)
 			if nodeps.IsWindows() {
 				hint = fmt.Sprintf("try 'Get-NetTCPConnection -LocalPort %s -State Listen' in PowerShell", np.port)
 			}
@@ -176,9 +187,10 @@ func runPortDiagnose() int {
 
 var sudoMessageShown bool
 
-// findPortProcesses returns processes listening on port on the local (Linux/macOS) side.
+// findPortProcesses returns processes listening on port without elevated privileges.
 // On Windows-native (not WSL2), delegates entirely to findWindowsPortProcesses.
-// It tries multiple detection methods: lsof, sudo lsof, ss, and /proc/net/tcp.
+// It tries lsof (macOS and most Linux distros), then ss and /proc/net/tcp (Linux only).
+// Elevated (sudo) detection is handled by the caller after an IsPortActive confirmation.
 func findPortProcesses(port string) []portProcess {
 	if nodeps.IsWindows() {
 		return findWindowsPortProcesses(port)
@@ -189,21 +201,6 @@ func findPortProcesses(port string) []portProcess {
 		procs, err := findPortProcessesLsof(port)
 		if err == nil && len(procs) > 0 {
 			return procs
-		}
-
-		// lsof without root can't see processes owned by other users.
-		// Try sudo lsof if regular lsof returned nothing.
-		if hasCommand("sudo") {
-			if !sudoMessageShown {
-				output.UserOut.Println("Unable to identify the process without elevated privileges.")
-				output.UserOut.Printf("Running: sudo %s -i :%s -sTCP:LISTEN -n -P\n", lsofPath(), port)
-				output.UserOut.Println("You may be prompted for your password.")
-				sudoMessageShown = true
-			}
-			procs, err = findPortProcessesSudoLsof(port)
-			if err == nil && len(procs) > 0 {
-				return procs
-			}
 		}
 	}
 
@@ -220,10 +217,14 @@ func findPortProcesses(port string) []portProcess {
 }
 
 // findPortProcessesSudoLsof tries lsof with sudo to see processes owned by other users.
-// Connects stdin so sudo can prompt for a password in interactive terminals.
+// Connects stdin only when running in an interactive terminal so sudo can prompt for a
+// password. In non-interactive contexts (CI, scripts) sudo fails immediately rather than
+// blocking indefinitely waiting for input.
 func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
-	cmd := exec.Command("sudo", lsofPath(), "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcnT")
-	cmd.Stdin = os.Stdin
+	cmd := exec.Command("sudo", lsofPath(), "-iTCP:"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcnT")
+	if isTerminal(os.Stdin) {
+		cmd.Stdin = os.Stdin
+	}
 	// Suppress sudo's own error messages (e.g. "a terminal is required")
 	// since we handle failure gracefully by falling through to other methods.
 	out, err := cmd.Output()
@@ -231,6 +232,15 @@ func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
 		return nil, err
 	}
 	return parseLsofOutput(out)
+}
+
+// isTerminal returns true if f is connected to an interactive terminal.
+func isTerminal(f *os.File) bool {
+	fi, err := f.Stat()
+	if err != nil {
+		return false
+	}
+	return (fi.Mode() & os.ModeCharDevice) != 0
 }
 
 // findPortProcessesProcNet parses /proc/net/tcp to find the process using a port.
@@ -337,7 +347,7 @@ func lsofPath() string {
 
 // findPortProcessesLsof uses lsof to identify listening processes.
 func findPortProcessesLsof(port string) ([]portProcess, error) {
-	out, err := exec.Command(lsofPath(), "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcnT").Output()
+	out, err := exec.Command(lsofPath(), "-iTCP:"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcnT").Output()
 	if err != nil {
 		return nil, err
 	}

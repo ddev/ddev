@@ -145,18 +145,27 @@ func TestFindPortProcessesNC_WSL2(t *testing.T) {
 	require.Contains(t, procs[0].Side, "WSL2")
 }
 
-// TestFindPortProcessesNC_macOS verifies detection of nc on macOS using lsof.
+// TestFindPortProcessesNC_macOS verifies detection of nc on macOS using non-sudo lsof.
+// It calls findPortProcessesLsof directly to avoid the sudo fallback, which would hang
+// in CI environments where sudo requires a password but a pseudo-terminal is attached.
+// The test skips gracefully if non-sudo lsof cannot see nc (macOS CI restriction).
 func TestFindPortProcessesNC_macOS(t *testing.T) {
 	if runtime.GOOS != "darwin" {
 		t.Skip("macOS-only test")
 	}
+	if !hasCommand("lsof") && !hasCommand("/usr/sbin/lsof") {
+		t.Skip("lsof not available")
+	}
 
 	port := getFreePort(t)
 	cleanup := startNCListener(t, port)
-	defer cleanup()
+	t.Cleanup(cleanup)
 
-	procs := findPortProcesses(port)
-	require.NotEmpty(t, procs, "expected to find nc on port %s", port)
+	procs, err := findPortProcessesLsof(port)
+	if err != nil || len(procs) == 0 {
+		t.Skip("non-sudo lsof cannot see nc on this system (elevated privileges required)")
+	}
+
 	require.Equal(t, "nc", procs[0].Name)
 	require.NotZero(t, procs[0].PID)
 	require.Equal(t, "macOS", procs[0].Side)
