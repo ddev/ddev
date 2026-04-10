@@ -23,6 +23,12 @@ services:
       VIRTUAL_HOST: junk.ddev.site
     image: TEST-COMPOSE-WITH-STREAMS-IMAGE
     user: "33:33"
+    labels:
+      com.ddev.app-type: php
+      com.ddev.app-url: http://test-compose-with-streams.ddev.site
+      com.ddev.approot: .
+      com.ddev.platform: ddev
+      com.ddev.site-name: TestComposeWithStreams
     restart: "no"
     healthcheck:
       test: "/healthcheck.sh"
