@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"net"
+	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -131,7 +132,7 @@ func runPortDiagnose() int {
 			// Try to bind the port — if it succeeds, the port is free.
 			// This is more reliable than IsPortActive (which checks the Docker IP,
 			// not 127.0.0.1) and correctly detects listeners on all interfaces.
-			if isPortBindable(np.port) {
+			if isPortFree(np.port) {
 				output.UserOut.Printf("Port %s (%s): Available\n", np.port, np.label)
 				continue
 			}
@@ -238,16 +239,28 @@ func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
 	return parseLsofOutput(out)
 }
 
-// isPortBindable returns true if nothing is currently listening on the port
-// on any local interface. It attempts to bind 0.0.0.0:<port> and immediately
-// releases it; success means the port is free.
-func isPortBindable(port string) bool {
+// isPortFree returns true if nothing is listening on the port.
+// It first tries to bind 0.0.0.0:<port>; if that succeeds it also dials
+// 127.0.0.1:<port> to catch providers (e.g. Rancher Desktop) that use
+// SO_REUSEPORT, which allows a second bind to succeed even when a listener
+// is already present.
+func isPortFree(port string) bool {
 	l, err := net.Listen("tcp", ":"+port)
 	if err != nil {
+		// Bind failed — something is definitely listening.
 		return false
 	}
 	l.Close()
-	return true
+
+	// Bind succeeded. Verify with a dial in case SO_REUSEPORT is in effect.
+	conn, err := net.DialTimeout("tcp", "127.0.0.1:"+port, 250*time.Millisecond)
+	if err != nil {
+		// Nothing answered — port is free.
+		return true
+	}
+	conn.Close()
+	// Something answered the dial even though we could bind — port is in use.
+	return false
 }
 
 // isTerminal returns true if f is connected to an interactive terminal.
@@ -648,6 +661,9 @@ func portHints(name string, cmdLine string, side string, pid int, port string) [
 
 	case (lower == "ssh" || lower == "limactl") && strings.Contains(cmdLine, ".colima"):
 		return dockerProviderHints("Colima", port)
+
+	case (lower == "ssh" || lower == "limactl") && strings.Contains(cmdLine, "rancher-desktop"):
+		return dockerProviderHints("Rancher Desktop", port)
 
 	case (lower == "ssh" || lower == "limactl") && strings.Contains(cmdLine, "/.lima/"):
 		return dockerProviderHints("Lima", port)
