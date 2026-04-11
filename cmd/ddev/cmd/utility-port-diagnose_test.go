@@ -375,9 +375,13 @@ func TestPortHints(t *testing.T) {
 		{"w3wp", "", "Windows", 1, "W3SVC"},
 		{"com.docker.backend", "", "macOS", 1, "Docker Desktop"},
 		{"com.orbstack.backend", "", "macOS", 1, "OrbStack"},
-		{"OrbStack Helper", "", "macOS", 1, "OrbStack"},
-		{"docker-proxy", "", "Linux", 1, "docker stop"},
-		{"ssh", "/Users/testbot/.colima/_lima/colima/ssh.sock", "macOS", 1, "docker stop"},
+		// Docker-provider hints are environment-dependent (output varies based on which
+		// provider is currently active), so just verify we don't fall through to the
+		// generic "kill" hint — all provider branches mention "port".
+		{"OrbStack Helper", "", "macOS", 1, "port"},
+		{"docker-proxy", "", "Linux", 1, "port"},
+		{"ssh", "/.colima/_lima/colima/ssh.sock", "macOS", 1, "port"},
+		{"limactl", "/.lima/default/ha.sock", "macOS", 1, "port"},
 		{"wslrelay", "", "Windows", 1, "WSL2"},
 		{"lando", "", "Linux", 1, "lando poweroff"},
 		{"traefik", "", "Linux", 1, "lando poweroff"},

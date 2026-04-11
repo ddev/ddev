@@ -649,6 +649,9 @@ func portHints(name string, cmdLine string, side string, pid int, port string) [
 	case (lower == "ssh" || lower == "limactl") && strings.Contains(cmdLine, ".colima"):
 		return dockerProviderHints("Colima", port)
 
+	case (lower == "ssh" || lower == "limactl") && strings.Contains(cmdLine, "/.lima/"):
+		return dockerProviderHints("Lima", port)
+
 	case strings.HasPrefix(lower, "com.docker") || lower == "docker desktop" || lower == "dockerd":
 		return dockerProviderHints("Docker Desktop", port)
 
@@ -750,6 +753,16 @@ func dockerProviderHints(provider string, port string) []string {
 		return []string{
 			"Docker Desktop is running and holding this port (but is not your active Docker provider).",
 			"Quit Docker Desktop from the menu bar or: killall 'Docker Desktop'",
+		}
+	case "Lima":
+		return []string{
+			"Lima is running and holding this port (but is not your active Docker provider).",
+			"Stop Lima: limactl stop default",
+		}
+	case "Rancher Desktop":
+		return []string{
+			"Rancher Desktop is running and holding this port (but is not your active Docker provider).",
+			"Quit Rancher Desktop from the menu bar.",
 		}
 	default:
 		return []string{
