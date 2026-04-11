@@ -389,7 +389,10 @@ func TestPortHints(t *testing.T) {
 		{"ssh", "/.colima/_lima/colima/ssh.sock", "macOS", 1, "port"},
 		{"ssh", "/rancher-desktop/lima/0/ssh.sock", "macOS", 1, "port"},
 		{"limactl", "/.lima/default/ha.sock", "macOS", 1, "port"},
+		// wslrelay: port="" so findContainerForPort("") returns "" → "no container" path.
+		// Both name variants (wslrelay and wslrelay.exe) must be handled.
 		{"wslrelay", "", "Windows", 1, "WSL2"},
+		{"wslrelay.exe", "", "Windows", 1, "WSL2"},
 		{"lando", "", "Linux", 1, "lando poweroff"},
 		{"traefik", "", "Linux", 1, "lando poweroff"},
 		{"someunknown", "", "Linux", 42, "kill 42"},

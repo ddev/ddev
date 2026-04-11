@@ -781,7 +781,21 @@ func portHints(name string, cmdLine string, side string, pid int, port string) [
 		return dockerProviderHints("OrbStack", port)
 
 	case lower == "wslrelay" || lower == "wslrelay.exe":
-		return []string{"This port is forwarded from WSL2. Run 'ddev poweroff' inside WSL2 and stop any services using this port there."}
+		// wslrelay forwards WSL2 ports to the Windows host.
+		// It may be a Docker/Rancher Desktop container, or a service in another WSL2 distro.
+		if container := findContainerForPort(port); container != "" {
+			return []string{
+				fmt.Sprintf("Container '%s' is forwarded to Windows via WSL2.", container),
+				fmt.Sprintf("Run: docker stop %s", container),
+			}
+		}
+		return []string{
+			"A WSL2 distro is forwarding this port to Windows.",
+			"If it is a DDEV container, run 'ddev poweroff' inside WSL2.",
+			"Otherwise check which distro holds it — in PowerShell:",
+			"  wsl --list",
+			"  wsl -d <distro> -- ss -tlnp",
+		}
 
 	case lower == "lando" || lower == "traefik":
 		return []string{"Lando's Traefik router — run: lando poweroff"}
@@ -868,6 +882,12 @@ func dockerProviderHints(provider string, port string) []string {
 	// A non-active provider is holding the port.
 	switch provider {
 	case "Docker":
+		// Rancher Desktop in dockerd mode uses docker-proxy internally, so when
+		// Rancher Desktop is the active provider and docker-proxy is seen, treat
+		// it as a Rancher Desktop container rather than a stray Docker CE instance.
+		if active == "Rancher Desktop" {
+			return dockerContainerHints(port)
+		}
 		return []string{
 			"Docker CE (rootful) has a container holding this port (but is not your active Docker provider).",
 			"Check: sudo docker ps",
