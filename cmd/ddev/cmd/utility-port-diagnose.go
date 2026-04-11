@@ -136,24 +136,32 @@ func runPortDiagnose() int {
 				output.UserOut.Printf("Port %s (%s): Available\n", np.port, np.label)
 				continue
 			}
-			// Port is active. Try sudo lsof to identify the owner.
+			// Port is active. Try elevated detection to identify the owner.
 			if !nodeps.IsWindows() && hasCommand("sudo") {
 				if !sudoMessageShown {
 					output.UserOut.Println("Unable to identify the process without elevated privileges.")
-					output.UserOut.Printf("Running: sudo %s -iTCP:%s -sTCP:LISTEN -n -P\n", lsofPath(), np.port)
 					if isTerminal(os.Stdin) {
 						output.UserOut.Println("You may be prompted for your password.")
 					}
 					sudoMessageShown = true
 				}
-				allProcs, _ = findPortProcessesSudoLsof(np.port)
+				if hasCommand("lsof") || hasCommand("/usr/sbin/lsof") {
+					output.UserOut.Printf("Running: sudo %s -iTCP:%s -sTCP:LISTEN -n -P\n", lsofPath(), np.port)
+					allProcs, _ = findPortProcessesSudoLsof(np.port)
+				} else if runtime.GOOS == "linux" && hasCommand("ss") {
+					// lsof not installed — fall back to sudo ss on Linux.
+					allProcs = findPortProcessesSudoSS(np.port)
+				}
 			}
 		}
 
 		if len(allProcs) == 0 {
 			// Port responds but we still can't identify who owns it.
 			hasConflict = true
-			hint := fmt.Sprintf("try 'sudo lsof -iTCP:%s -sTCP:LISTEN'", np.port)
+			hint := "try installing lsof: sudo apt-get install lsof"
+			if hasCommand("lsof") || hasCommand("/usr/sbin/lsof") {
+				hint = fmt.Sprintf("try 'sudo lsof -iTCP:%s -sTCP:LISTEN'", np.port)
+			}
 			if nodeps.IsWindows() {
 				hint = fmt.Sprintf("try 'Get-NetTCPConnection -LocalPort %s -State Listen' in PowerShell", np.port)
 			}
@@ -469,6 +477,57 @@ func findPortProcessesSS(port string) []portProcess {
 		usersSection := line[usersStart:]
 
 		// Parse entries like ("nginx",pid=1234,fd=6)
+		for part := range strings.SplitSeq(usersSection, "(") {
+			if !strings.Contains(part, "pid=") {
+				continue
+			}
+			name := ""
+			pid := 0
+			for field := range strings.SplitSeq(part, ",") {
+				field = strings.Trim(field, "\"()")
+				if pidStr, ok := strings.CutPrefix(field, "pid="); ok {
+					pid, _ = strconv.Atoi(pidStr)
+				} else if !strings.Contains(field, "=") && field != "" {
+					name = field
+				}
+			}
+			if pid != 0 && name != "" {
+				cmdLine := getCommandLine(pid)
+				results = appendUniquePID(results, portProcess{
+					PID:     pid,
+					Name:    name,
+					CmdLine: cmdLine,
+					Side:    getSide(),
+				})
+			}
+		}
+	}
+	return results
+}
+
+// findPortProcessesSudoSS runs ss with sudo to see root-owned listeners (e.g.
+// docker-proxy). Used as a fallback on Linux when lsof is not installed.
+func findPortProcessesSudoSS(port string) []portProcess {
+	cmd := exec.Command("sudo", "ss", "-tlnp", "sport", "=", ":"+port)
+	if isTerminal(os.Stdin) {
+		cmd.Stdin = os.Stdin
+	}
+	out, err := cmd.Output()
+	if err != nil {
+		return nil
+	}
+	// Reuse the same ss output parser.
+	var results []portProcess
+	for rawLine := range strings.SplitSeq(string(out), "\n") {
+		line := strings.TrimSpace(rawLine)
+		if !strings.Contains(line, "users:") {
+			continue
+		}
+		usersStart := strings.Index(line, "users:(")
+		if usersStart < 0 {
+			continue
+		}
+		usersSection := line[usersStart:]
 		for part := range strings.SplitSeq(usersSection, "(") {
 			if !strings.Contains(part, "pid=") {
 				continue
