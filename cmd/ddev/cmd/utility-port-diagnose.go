@@ -136,6 +136,14 @@ func runPortDiagnose() int {
 			allProcs = append(allProcs, findWindowsPortProcesses(np.port)...)
 		}
 
+		// On Windows, when PowerShell finds nothing, verify the port is actually
+		// free before reporting a conflict — PowerShell misses kernel-level
+		// listeners such as HTTP.sys.
+		if nodeps.IsWindows() && len(allProcs) == 0 && isPortFree(np.port) {
+			output.UserOut.Printf("Port %s (%s): Available\n", np.port, np.label)
+			continue
+		}
+
 		if len(linuxProcs) == 0 && !nodeps.IsWindows() {
 			// No Linux-side process found without elevated privileges.
 			// Call isPortFree once and use the result to decide what to do next:
