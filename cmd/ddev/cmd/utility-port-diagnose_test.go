@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"net"
+	"net/netip"
 	"os"
 	"os/exec"
 	"runtime"
@@ -11,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/moby/moby/api/types/container"
 	"github.com/stretchr/testify/require"
 )
 
@@ -384,6 +386,79 @@ func TestDeduplicateByName(t *testing.T) {
 	require.Equal(t, "apache2", result[0].Name)
 	require.Equal(t, 100, result[0].PID, "should keep the first PID")
 	require.Equal(t, "nginx", result[1].Name)
+}
+
+// TestContainerNameForPort verifies that containerNameForPort finds containers by
+// PublicPort regardless of whether the IP field is populated. This specifically
+// guards against a regression where Podman's container-list API (which omits the
+// IP field) caused the lookup to always return an empty string.
+func TestContainerNameForPort(t *testing.T) {
+	dockerIP := netip.MustParseAddr("0.0.0.0")
+
+	tests := []struct {
+		name       string
+		hostPort   int
+		containers []container.Summary
+		want       string
+	}{
+		{
+			name:     "docker-ce style with IP populated",
+			hostPort: 80,
+			containers: []container.Summary{
+				{Names: []string{"/my-container"}, Ports: []container.PortSummary{
+					{PublicPort: 80, PrivatePort: 80, Type: "tcp", IP: dockerIP},
+				}},
+			},
+			want: "my-container",
+		},
+		{
+			name:     "podman style with IP absent (zero netip.Addr)",
+			hostPort: 80,
+			containers: []container.Summary{
+				{Names: []string{"/podman-container"}, Ports: []container.PortSummary{
+					{PublicPort: 80, PrivatePort: 80, Type: "tcp"},
+				}},
+			},
+			want: "podman-container",
+		},
+		{
+			name:     "port not matched",
+			hostPort: 443,
+			containers: []container.Summary{
+				{Names: []string{"/other"}, Ports: []container.PortSummary{
+					{PublicPort: 80, PrivatePort: 80, Type: "tcp"},
+				}},
+			},
+			want: "",
+		},
+		{
+			name:     "unexposed port (PublicPort zero) does not match",
+			hostPort: 80,
+			containers: []container.Summary{
+				{Names: []string{"/no-publish"}, Ports: []container.PortSummary{
+					{PublicPort: 0, PrivatePort: 80, Type: "tcp"},
+				}},
+			},
+			want: "",
+		},
+		{
+			name:     "leading slash stripped from name",
+			hostPort: 8080,
+			containers: []container.Summary{
+				{Names: []string{"/ddev-myproject-web"}, Ports: []container.PortSummary{
+					{PublicPort: 8080, PrivatePort: 80, Type: "tcp"},
+				}},
+			},
+			want: "ddev-myproject-web",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := containerNameForPort(tt.hostPort, tt.containers)
+			require.Equal(t, tt.want, got)
+		})
+	}
 }
 
 // TestPortHints verifies hint generation for well-known process names.

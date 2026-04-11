@@ -16,6 +16,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/moby/moby/api/types/container"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/spf13/cobra"
 )
@@ -871,11 +872,17 @@ func findContainerForPort(port string) string {
 	if err != nil {
 		return ""
 	}
+	return containerNameForPort(portNum, containers)
+}
+
+// containerNameForPort searches a container list for the first container that
+// publishes hostPort and returns its name. Extracted for unit testing.
+// Podman's container list API omits the IP field from port entries, so we match
+// on PublicPort alone — a zero PublicPort (unexposed port) won't match a real port.
+func containerNameForPort(hostPort int, containers []container.Summary) string {
 	for _, c := range containers {
 		for _, p := range c.Ports {
-			// Podman's container list API omits the IP field, so check PublicPort only.
-			// A zero PublicPort (unexposed port) won't match a real port number.
-			if int(p.PublicPort) == portNum {
+			if int(p.PublicPort) == hostPort {
 				if len(c.Names) > 0 {
 					return strings.TrimPrefix(c.Names[0], "/")
 				}
