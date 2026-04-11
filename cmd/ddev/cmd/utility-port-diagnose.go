@@ -8,7 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"errors"
 	"net"
+	"syscall"
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -89,6 +91,9 @@ func runPortDiagnose() int {
 	inProject := err == nil && app.AppRoot != ""
 
 	if inProject {
+		// Clear the cached rendered compose YAML so GetPrimaryRouterHTTP*Port reads
+		// the current project config rather than stale values from a previous start.
+		app.ComposeYaml = nil
 		output.UserOut.Printf("Port diagnostics for project: %s\n", app.Name)
 		httpPort := app.GetPrimaryRouterHTTPPort()
 		httpsPort := app.GetPrimaryRouterHTTPSPort()
@@ -120,37 +125,51 @@ func runPortDiagnose() int {
 	hasConflict := false
 
 	for _, np := range ports {
-		allProcs := findPortProcesses(np.port)
+		// Collect Linux-side processes separately so that finding something on
+		// the Windows side (e.g. wslrelay) does not suppress the sudo escalation
+		// that is needed to identify a root-owned Linux listener.
+		linuxProcs := findPortProcesses(np.port)
+		allProcs := append([]portProcess(nil), linuxProcs...)
 
 		// On WSL2, also check the Windows side.
 		if nodeps.IsWSL2() {
 			allProcs = append(allProcs, findWindowsPortProcesses(np.port)...)
 		}
 
-		if len(allProcs) == 0 {
-			// Nothing found without elevated privileges.
-			// Try to bind the port — if it succeeds, the port is free.
-			// This is more reliable than IsPortActive (which checks the Docker IP,
-			// not 127.0.0.1) and correctly detects listeners on all interfaces.
-			if isPortFree(np.port) {
-				output.UserOut.Printf("Port %s (%s): Available\n", np.port, np.label)
-				continue
-			}
-			// Port is active. Try elevated detection to identify the owner.
-			if !nodeps.IsWindows() && hasCommand("sudo") {
-				if !sudoMessageShown {
+		if len(linuxProcs) == 0 && !nodeps.IsWindows() {
+			// No Linux-side process found without elevated privileges.
+			// Call isPortFree once and use the result to decide what to do next:
+			//   - free on Linux + nothing on Windows → port is available
+			//   - free on Linux + Windows found something → port held on Windows only; no sudo needed
+			//   - in use on Linux → a root-owned process holds it; try sudo to identify it
+			portFreeOnLinux := isPortFree(np.port)
+
+			if portFreeOnLinux {
+				if len(allProcs) == 0 {
+					output.UserOut.Printf("Port %s (%s): Available\n", np.port, np.label)
+					continue
+				}
+				// Port is free on Linux but Windows found something. Nothing to escalate.
+			} else if hasCommand("sudo") {
+				// Port is in use on Linux. Try elevated detection to identify the owner.
+				// Only show the "can't identify" message when we have found nothing at all yet.
+				if !sudoMessageShown && len(allProcs) == 0 {
 					output.UserOut.Println("Unable to identify the process without elevated privileges.")
 					if isTerminal(os.Stdin) {
 						output.UserOut.Println("You may be prompted for your password.")
 					}
 					sudoMessageShown = true
 				}
+				var elevatedProcs []portProcess
 				if hasCommand("lsof") || hasCommand("/usr/sbin/lsof") {
 					output.UserOut.Printf("Running: sudo %s -iTCP:%s -sTCP:LISTEN -n -P\n", lsofPath(), np.port)
-					allProcs, _ = findPortProcessesSudoLsof(np.port)
+					elevatedProcs, _ = findPortProcessesSudoLsof(np.port)
 				} else if runtime.GOOS == "linux" && hasCommand("ss") {
 					// lsof not installed — fall back to sudo ss on Linux.
-					allProcs = findPortProcessesSudoSS(np.port)
+					elevatedProcs = findPortProcessesSudoSS(np.port)
+				}
+				for _, p := range elevatedProcs {
+					allProcs = appendUniquePID(allProcs, p)
 				}
 			}
 		}
@@ -248,14 +267,31 @@ func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
 }
 
 // isPortFree returns true if nothing is listening on the port.
-// It first tries to bind 0.0.0.0:<port>; if that succeeds it also dials
-// 127.0.0.1:<port> to catch providers (e.g. Rancher Desktop) that use
-// SO_REUSEPORT, which allows a second bind to succeed even when a listener
-// is already present.
+// It first tries to bind 0.0.0.0:<port>. On Linux, ports below 1024 require
+// root; a bind returning EACCES means we lack permission, not that the port
+// is occupied. In that case we fall through to a dial-only check.
+// If the bind succeeds we also dial 127.0.0.1:<port> to catch providers
+// (e.g. Rancher Desktop) that use SO_REUSEPORT, which allows a second bind
+// to succeed even when a listener is already present.
 func isPortFree(port string) bool {
 	l, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		// Bind failed — something is definitely listening.
+		// EACCES means we can't bind due to permissions (e.g. port < 1024 on
+		// Linux without CAP_NET_BIND_SERVICE). Fall through to the dial check
+		// rather than assuming the port is occupied.
+		var syscallErr *net.OpError
+		if errors.As(err, &syscallErr) {
+			if errors.Is(syscallErr.Err, syscall.EACCES) {
+				// Dial to see if anything actually answers.
+				conn, dialErr := net.DialTimeout("tcp", "127.0.0.1:"+port, 250*time.Millisecond)
+				if dialErr != nil {
+					return true
+				}
+				conn.Close()
+				return false
+			}
+		}
+		// Any other bind error (EADDRINUSE, etc.) — port is in use.
 		return false
 	}
 	l.Close()
