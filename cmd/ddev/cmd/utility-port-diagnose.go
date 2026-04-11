@@ -11,6 +11,7 @@ import (
 	"net"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/spf13/cobra"
@@ -172,7 +173,7 @@ func runPortDiagnose() int {
 				cmdInfo = fmt.Sprintf(", cmd=%s", p.CmdLine)
 			}
 			output.UserOut.Printf("Port %s (%s): IN USE by %s (PID %d%s)%s\n", np.port, np.label, p.Name, p.PID, cmdInfo, side)
-			for _, hint := range portHints(p.Name, p.Side, p.PID) {
+			for _, hint := range portHints(p.Name, p.CmdLine, p.Side, p.PID, np.port) {
 				output.UserOut.Printf("  %s\n", hint)
 			}
 		}
@@ -595,8 +596,8 @@ func deduplicateByName(procs []portProcess) []portProcess {
 	return result
 }
 
-// portHints returns actionable fix strings based on process name and side.
-func portHints(name string, side string, pid int) []string {
+// portHints returns actionable fix strings based on process name, cmdline, side, and port.
+func portHints(name string, cmdLine string, side string, pid int, port string) []string {
 	lower := strings.ToLower(name)
 	isWindows := strings.Contains(side, "Windows")
 
@@ -643,19 +644,16 @@ func portHints(name string, side string, pid int) []string {
 		return []string{"Stop-Service W3SVC; Set-Service W3SVC -StartupType Disabled (PowerShell as Admin)"}
 
 	case lower == "docker-proxy":
-		return []string{
-			"A Docker container is holding this port.",
-			"Run 'docker ps' to find it and 'docker stop <name>' to free the port.",
-		}
+		return dockerContainerHints(port)
+
+	case (lower == "ssh" || lower == "limactl") && strings.Contains(cmdLine, ".colima"):
+		return dockerProviderHints("Colima", port)
 
 	case strings.HasPrefix(lower, "com.docker") || lower == "docker desktop" || lower == "dockerd":
-		return []string{"Port used by Docker Desktop — restart Docker Desktop or check port mappings"}
+		return dockerProviderHints("Docker Desktop", port)
 
-	case strings.HasPrefix(lower, "com.orbstack") || lower == "orbstack" || strings.HasPrefix(lower, "orbstack"):
-		return []string{
-			"Port used by OrbStack (likely a container port mapping).",
-			"Run 'docker ps' to find the container holding this port and 'docker stop <name>' to free it.",
-		}
+	case strings.HasPrefix(lower, "com.orbstack") || strings.HasPrefix(lower, "orbstack"):
+		return dockerProviderHints("OrbStack", port)
 
 	case lower == "wslrelay" || lower == "wslrelay.exe":
 		return []string{"This port is forwarded from WSL2. Run 'ddev poweroff' inside WSL2 and stop any services using this port there."}
@@ -668,6 +666,96 @@ func portHints(name string, side string, pid int) []string {
 			return []string{fmt.Sprintf("Stop-Process -Id %d (PowerShell as Admin)", pid)}
 		}
 		return []string{fmt.Sprintf("Consider stopping this process using OS tools, e.g. 'kill %d'", pid)}
+	}
+}
+
+// activeDockerProvider returns a human-readable name for the currently active Docker provider.
+func activeDockerProvider() string {
+	switch {
+	case dockerutil.IsColima():
+		return "Colima"
+	case dockerutil.IsOrbStack():
+		return "OrbStack"
+	case dockerutil.IsDockerDesktop():
+		return "Docker Desktop"
+	case dockerutil.IsRancherDesktop():
+		return "Rancher Desktop"
+	case dockerutil.IsLima():
+		return "Lima"
+	default:
+		return ""
+	}
+}
+
+// findContainerForPort uses the Docker API to find a running container publishing
+// the given host port. Returns the container name, or empty string if not found.
+func findContainerForPort(port string) string {
+	portNum, err := strconv.Atoi(port)
+	if err != nil {
+		return ""
+	}
+	containers, err := dockerutil.GetDockerContainers(false)
+	if err != nil {
+		return ""
+	}
+	for _, c := range containers {
+		for _, p := range c.Ports {
+			if int(p.PublicPort) == portNum && p.IP.IsValid() {
+				if len(c.Names) > 0 {
+					return strings.TrimPrefix(c.Names[0], "/")
+				}
+			}
+		}
+	}
+	return ""
+}
+
+// dockerContainerHints builds hints when a Docker-internal proxy process holds the port.
+// It tries to identify the specific container via docker ps.
+func dockerContainerHints(port string) []string {
+	if container := findContainerForPort(port); container != "" {
+		return []string{
+			fmt.Sprintf("Container '%s' is holding this port.", container),
+			fmt.Sprintf("Run: docker stop %s", container),
+		}
+	}
+	return []string{
+		"A Docker container is holding this port.",
+		"Run 'docker ps' to find it and 'docker stop <name>' to free the port.",
+	}
+}
+
+// dockerProviderHints builds hints when a known Docker provider process holds the port.
+// If the provider matches the active one, the port is held by a container — look it up.
+// If it's a different provider, suggest stopping that provider instead.
+func dockerProviderHints(provider string, port string) []string {
+	active := activeDockerProvider()
+	if active == provider {
+		// The active provider is forwarding this port — find the container responsible.
+		return dockerContainerHints(port)
+	}
+	// A non-active provider is holding the port.
+	switch provider {
+	case "Colima":
+		return []string{
+			"Colima is running and holding this port (but is not your active Docker provider).",
+			"Stop Colima: colima stop",
+		}
+	case "OrbStack":
+		return []string{
+			"OrbStack is running and holding this port (but is not your active Docker provider).",
+			"Stop OrbStack from the menu bar or: open -a OrbStack",
+		}
+	case "Docker Desktop":
+		return []string{
+			"Docker Desktop is running and holding this port (but is not your active Docker provider).",
+			"Quit Docker Desktop from the menu bar or: killall 'Docker Desktop'",
+		}
+	default:
+		return []string{
+			fmt.Sprintf("%s is running and holding this port.", provider),
+			"Stop it if you are not using it, or stop any containers it is running.",
+		}
 	}
 }
 

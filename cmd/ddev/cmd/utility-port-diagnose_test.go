@@ -358,34 +358,36 @@ func TestDeduplicateByName(t *testing.T) {
 func TestPortHints(t *testing.T) {
 	tests := []struct {
 		name     string
+		cmdLine  string
 		side     string
 		pid      int
 		contains string
 	}{
 		// Apache hints vary by platform (systemctl on Linux, apachectl on macOS),
 		// but always mention "apache" somewhere in the output.
-		{"apache2", "Linux", 1, "apache"},
-		{"httpd", "macOS", 1, "apache"},
+		{"apache2", "", "Linux", 1, "apache"},
+		{"httpd", "", "macOS", 1, "apache"},
 		// nginx/caddy non-Windows hints depend on hasCommand (systemctl/brew)
 		// at runtime, so test the Windows path here (deterministic) and test
 		// platform-native paths in TestPortHintsPlatformSpecific.
-		{"nginx", "Windows", 1, "nginx"},
-		{"caddy", "Linux", 1, "caddy"},
-		{"w3wp", "Windows", 1, "W3SVC"},
-		{"com.docker.backend", "macOS", 1, "Docker Desktop"},
-		{"com.orbstack.backend", "macOS", 1, "OrbStack"},
-		{"OrbStack Helper", "macOS", 1, "docker stop"},
-		{"docker-proxy", "Linux", 1, "docker stop"},
-		{"wslrelay", "Windows", 1, "WSL2"},
-		{"lando", "Linux", 1, "lando poweroff"},
-		{"traefik", "Linux", 1, "lando poweroff"},
-		{"someunknown", "Linux", 42, "kill 42"},
-		{"someunknown", "Windows", 42, "Stop-Process"},
+		{"nginx", "", "Windows", 1, "nginx"},
+		{"caddy", "", "Linux", 1, "caddy"},
+		{"w3wp", "", "Windows", 1, "W3SVC"},
+		{"com.docker.backend", "", "macOS", 1, "Docker Desktop"},
+		{"com.orbstack.backend", "", "macOS", 1, "OrbStack"},
+		{"OrbStack Helper", "", "macOS", 1, "OrbStack"},
+		{"docker-proxy", "", "Linux", 1, "docker stop"},
+		{"ssh", "/Users/testbot/.colima/_lima/colima/ssh.sock", "macOS", 1, "docker stop"},
+		{"wslrelay", "", "Windows", 1, "WSL2"},
+		{"lando", "", "Linux", 1, "lando poweroff"},
+		{"traefik", "", "Linux", 1, "lando poweroff"},
+		{"someunknown", "", "Linux", 42, "kill 42"},
+		{"someunknown", "", "Windows", 42, "Stop-Process"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name+"_"+tt.side, func(t *testing.T) {
-			hints := portHints(tt.name, tt.side, tt.pid)
+			hints := portHints(tt.name, tt.cmdLine, tt.side, tt.pid, "")
 			require.NotEmpty(t, hints, "hints should not be empty for process %q", tt.name)
 			combined := strings.Join(hints, " ")
 			require.Contains(t, combined, tt.contains, "hints for %q on %s should contain %q", tt.name, tt.side, tt.contains)
@@ -398,7 +400,7 @@ func TestPortHints(t *testing.T) {
 func TestPortHintsPlatformSpecific(t *testing.T) {
 	switch runtime.GOOS {
 	case "linux":
-		hints := portHints("apache2", "Linux", 1)
+		hints := portHints("apache2", "", "Linux", 1, "")
 		combined := strings.Join(hints, " ")
 		if hasCommand("systemctl") {
 			require.Contains(t, combined, "systemctl")
@@ -406,26 +408,26 @@ func TestPortHintsPlatformSpecific(t *testing.T) {
 			require.Contains(t, combined, "apachectl")
 		}
 		// nginx on Linux
-		hints = portHints("nginx", "Linux", 1)
+		hints = portHints("nginx", "", "Linux", 1, "")
 		combined = strings.Join(hints, " ")
 		require.Contains(t, combined, "nginx")
 	case "darwin":
-		hints := portHints("apache2", "macOS", 1)
+		hints := portHints("apache2", "", "macOS", 1, "")
 		combined := strings.Join(hints, " ")
 		// macOS should never suggest systemctl
 		require.NotContains(t, combined, "systemctl")
 		require.Contains(t, combined, "apachectl")
 		// nginx on macOS
-		hints = portHints("nginx", "macOS", 1)
+		hints = portHints("nginx", "", "macOS", 1, "")
 		combined = strings.Join(hints, " ")
 		require.Contains(t, combined, "nginx")
 	case "windows":
 		// Windows apache hints should use Stop-Service
-		hints := portHints("apache2", "Windows", 1)
+		hints := portHints("apache2", "", "Windows", 1, "")
 		combined := strings.Join(hints, " ")
 		require.Contains(t, combined, "Stop-Service")
 		// Unknown process should suggest Stop-Process
-		hints = portHints("someprocess", "Windows", 999)
+		hints = portHints("someprocess", "", "Windows", 999, "")
 		combined = strings.Join(hints, " ")
 		require.Contains(t, combined, "Stop-Process")
 		require.Contains(t, combined, "999")
