@@ -339,6 +339,38 @@ n*:8142
 	require.Equal(t, 12345, procs[0].PID)
 }
 
+// TestSuppressWSLRelayIfRedundant verifies that wslrelay is dropped when a more
+// specific Docker provider process is also present, but kept when it is the only entry.
+func TestSuppressWSLRelayIfRedundant(t *testing.T) {
+	relay := portProcess{PID: 10028, Name: "wslrelay", Side: "Windows"}
+	backend := portProcess{PID: 24204, Name: "com.docker.backend", Side: "Windows"}
+	other := portProcess{PID: 999, Name: "nginx", Side: "Windows"}
+
+	// wslrelay alone — must be kept.
+	result := suppressWSLRelayIfRedundant([]portProcess{relay})
+	require.Len(t, result, 1)
+	require.Equal(t, "wslrelay", result[0].Name)
+
+	// wslrelay.exe alone — must be kept.
+	relayExe := portProcess{PID: 10028, Name: "wslrelay.exe", Side: "Windows"}
+	result = suppressWSLRelayIfRedundant([]portProcess{relayExe})
+	require.Len(t, result, 1)
+
+	// wslrelay alongside com.docker.backend — wslrelay suppressed.
+	result = suppressWSLRelayIfRedundant([]portProcess{relay, backend})
+	require.Len(t, result, 1)
+	require.Equal(t, "com.docker.backend", result[0].Name)
+
+	// wslrelay alongside any other process — wslrelay suppressed.
+	result = suppressWSLRelayIfRedundant([]portProcess{relay, other})
+	require.Len(t, result, 1)
+	require.Equal(t, "nginx", result[0].Name)
+
+	// Non-wslrelay processes — returned unchanged.
+	result = suppressWSLRelayIfRedundant([]portProcess{backend, other})
+	require.Len(t, result, 2)
+}
+
 // TestDeduplicateByName verifies that multiple PIDs with the same name are collapsed.
 func TestDeduplicateByName(t *testing.T) {
 	procs := []portProcess{

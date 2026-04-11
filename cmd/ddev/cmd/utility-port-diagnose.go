@@ -198,8 +198,9 @@ func runPortDiagnose() int {
 
 		hasConflict = true
 
-		// Deduplicate by process name (e.g. apache2 parent + workers all listen on same port).
-		for _, p := range deduplicateByName(allProcs) {
+		// Deduplicate by process name (e.g. apache2 parent + workers all listen on same port),
+		// then drop wslrelay when a more specific Docker provider process is also present.
+		for _, p := range suppressWSLRelayIfRedundant(deduplicateByName(allProcs)) {
 			side := ""
 			if p.Side != "" {
 				side = fmt.Sprintf(" [%s]", p.Side)
@@ -708,6 +709,27 @@ func deduplicateByName(procs []portProcess) []portProcess {
 			seen[p.Name] = true
 			result = append(result, p)
 		}
+	}
+	return result
+}
+
+// suppressWSLRelayIfRedundant removes wslrelay entries when a more specific Docker
+// provider process (e.g. com.docker.backend) is also present. wslrelay is purely
+// a WSL2→Windows forwarding relay; the provider process carries the actionable hint.
+// When wslrelay is the only entry it is kept, since it is the only clue available.
+func suppressWSLRelayIfRedundant(procs []portProcess) []portProcess {
+	if len(procs) <= 1 {
+		return procs
+	}
+	var result []portProcess
+	for _, p := range procs {
+		if strings.ToLower(p.Name) == "wslrelay" || strings.ToLower(p.Name) == "wslrelay.exe" {
+			continue
+		}
+		result = append(result, p)
+	}
+	if len(result) == 0 {
+		return procs
 	}
 	return result
 }
