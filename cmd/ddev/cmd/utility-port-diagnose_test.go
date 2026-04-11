@@ -380,6 +380,12 @@ func TestPortHints(t *testing.T) {
 		// generic "kill" hint — all provider branches mention "port".
 		{"OrbStack Helper", "", "macOS", 1, "port"},
 		{"docker-proxy", "", "Linux", 1, "port"},
+		// Docker rootless and Podman process names — output varies based on active provider,
+		// but all branches mention "port" (container hints) or the provider name.
+		{"rootlesskit", "", "Linux", 1, "port"},
+		{"rootlessk", "", "Linux", 1, "port"},
+		{"rootlessport", "", "Linux", 1, "port"},
+		{"rootlessp", "", "Linux", 1, "port"},
 		{"ssh", "/.colima/_lima/colima/ssh.sock", "macOS", 1, "port"},
 		{"ssh", "/rancher-desktop/lima/0/ssh.sock", "macOS", 1, "port"},
 		{"limactl", "/.lima/default/ha.sock", "macOS", 1, "port"},

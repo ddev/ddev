@@ -715,8 +715,19 @@ func portHints(name string, cmdLine string, side string, pid int, port string) [
 	case lower == "w3wp" || lower == "iisexpress" || lower == "iis":
 		return []string{"Stop-Service W3SVC; Set-Service W3SVC -StartupType Disabled (PowerShell as Admin)"}
 
-	case lower == "docker-proxy":
-		return dockerContainerHints(port)
+	case lower == "docker-proxy" || lower == "docker-pr":
+		// docker-proxy is used by Docker CE (rootful). Route through dockerProviderHints
+		// so that cross-provider cases (e.g. active=Podman, port held by Docker CE) are
+		// explained instead of silently falling back to the generic container message.
+		return dockerProviderHints("Docker", port)
+
+	case lower == "rootlesskit" || lower == "rootlessk":
+		// rootlesskit is Docker rootless's port-forwarding process.
+		return dockerProviderHints("Docker (rootless)", port)
+
+	case lower == "rootlessport" || lower == "rootlessp":
+		// rootlessport is Podman rootless's port-forwarding process.
+		return dockerProviderHints("Podman", port)
 
 	case (lower == "ssh" || lower == "limactl") && strings.Contains(cmdLine, ".colima"):
 		return dockerProviderHints("Colima", port)
@@ -750,6 +761,10 @@ func portHints(name string, cmdLine string, side string, pid int, port string) [
 // activeDockerProvider returns a human-readable name for the currently active Docker provider.
 func activeDockerProvider() string {
 	switch {
+	case dockerutil.IsPodman():
+		return "Podman"
+	case dockerutil.IsDockerRootless():
+		return "Docker (rootless)"
 	case dockerutil.IsColima():
 		return "Colima"
 	case dockerutil.IsOrbStack():
@@ -761,7 +776,7 @@ func activeDockerProvider() string {
 	case dockerutil.IsLima():
 		return "Lima"
 	default:
-		return ""
+		return "Docker"
 	}
 }
 
@@ -778,7 +793,9 @@ func findContainerForPort(port string) string {
 	}
 	for _, c := range containers {
 		for _, p := range c.Ports {
-			if int(p.PublicPort) == portNum && p.IP.IsValid() {
+			// Podman's container list API omits the IP field, so check PublicPort only.
+			// A zero PublicPort (unexposed port) won't match a real port number.
+			if int(p.PublicPort) == portNum {
 				if len(c.Names) > 0 {
 					return strings.TrimPrefix(c.Names[0], "/")
 				}
@@ -814,6 +831,24 @@ func dockerProviderHints(provider string, port string) []string {
 	}
 	// A non-active provider is holding the port.
 	switch provider {
+	case "Docker":
+		return []string{
+			"Docker CE (rootful) has a container holding this port (but is not your active Docker provider).",
+			"Check: sudo docker ps",
+			"Stop the container: sudo docker stop <name>",
+		}
+	case "Docker (rootless)":
+		return []string{
+			"Docker rootless has a container holding this port (but is not your active Docker provider).",
+			fmt.Sprintf("Check: DOCKER_CONTEXT=rootless docker ps  (or DOCKER_HOST=unix:///run/user/%d/docker.sock docker ps)", os.Getuid()),
+			"Stop the container: docker stop <name>",
+		}
+	case "Podman":
+		return []string{
+			"Podman has a container holding this port (but is not your active Docker provider).",
+			"Check: podman ps",
+			"Stop the container: podman stop <name>",
+		}
 	case "Colima":
 		return []string{
 			"Colima is running and holding this port (but is not your active Docker provider).",
