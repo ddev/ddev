@@ -374,10 +374,12 @@ func TestPortHints(t *testing.T) {
 		{"w3wp", "Windows", 1, "W3SVC"},
 		{"com.docker.backend", "macOS", 1, "Docker Desktop"},
 		{"com.orbstack.backend", "macOS", 1, "OrbStack"},
+		{"OrbStack Helper", "macOS", 1, "docker stop"},
+		{"docker-proxy", "Linux", 1, "docker stop"},
 		{"wslrelay", "Windows", 1, "WSL2"},
 		{"lando", "Linux", 1, "lando poweroff"},
 		{"traefik", "Linux", 1, "lando poweroff"},
-		{"someunknown", "Linux", 42, "sudo kill 42"},
+		{"someunknown", "Linux", 42, "kill 42"},
 		{"someunknown", "Windows", 42, "Stop-Process"},
 	}
 

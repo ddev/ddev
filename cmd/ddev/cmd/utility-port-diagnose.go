@@ -8,8 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"net"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/spf13/cobra"
@@ -126,8 +127,10 @@ func runPortDiagnose() int {
 
 		if len(allProcs) == 0 {
 			// Nothing found without elevated privileges.
-			// Check connectivity first — if nothing is listening, the port is free.
-			if !netutil.IsPortActive(np.port) {
+			// Try to bind the port — if it succeeds, the port is free.
+			// This is more reliable than IsPortActive (which checks the Docker IP,
+			// not 127.0.0.1) and correctly detects listeners on all interfaces.
+			if isPortBindable(np.port) {
 				output.UserOut.Printf("Port %s (%s): Available\n", np.port, np.label)
 				continue
 			}
@@ -232,6 +235,18 @@ func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
 		return nil, err
 	}
 	return parseLsofOutput(out)
+}
+
+// isPortBindable returns true if nothing is currently listening on the port
+// on any local interface. It attempts to bind 0.0.0.0:<port> and immediately
+// releases it; success means the port is free.
+func isPortBindable(port string) bool {
+	l, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		return false
+	}
+	l.Close()
+	return true
 }
 
 // isTerminal returns true if f is connected to an interactive terminal.
@@ -613,7 +628,7 @@ func portHints(name string, side string, pid int) []string {
 		if hasCommand("brew") {
 			return []string{"brew services stop nginx"}
 		}
-		return []string{fmt.Sprintf("sudo kill %d", pid)}
+		return []string{fmt.Sprintf("Stop nginx, e.g. 'kill %d'", pid)}
 
 	case lower == "caddy":
 		if isWindows {
@@ -627,11 +642,20 @@ func portHints(name string, side string, pid int) []string {
 	case lower == "w3wp" || lower == "iisexpress" || lower == "iis":
 		return []string{"Stop-Service W3SVC; Set-Service W3SVC -StartupType Disabled (PowerShell as Admin)"}
 
+	case lower == "docker-proxy":
+		return []string{
+			"A Docker container is holding this port.",
+			"Run 'docker ps' to find it and 'docker stop <name>' to free the port.",
+		}
+
 	case strings.HasPrefix(lower, "com.docker") || lower == "docker desktop" || lower == "dockerd":
 		return []string{"Port used by Docker Desktop — restart Docker Desktop or check port mappings"}
 
-	case strings.HasPrefix(lower, "com.orbstack") || lower == "orbstack":
-		return []string{"Port used by OrbStack — restart OrbStack or check container port mappings"}
+	case strings.HasPrefix(lower, "com.orbstack") || lower == "orbstack" || strings.HasPrefix(lower, "orbstack"):
+		return []string{
+			"Port used by OrbStack (likely a container port mapping).",
+			"Run 'docker ps' to find the container holding this port and 'docker stop <name>' to free it.",
+		}
 
 	case lower == "wslrelay" || lower == "wslrelay.exe":
 		return []string{"This port is forwarded from WSL2. Run 'ddev poweroff' inside WSL2 and stop any services using this port there."}
@@ -643,7 +667,7 @@ func portHints(name string, side string, pid int) []string {
 		if isWindows {
 			return []string{fmt.Sprintf("Stop-Process -Id %d (PowerShell as Admin)", pid)}
 		}
-		return []string{fmt.Sprintf("sudo kill %d", pid)}
+		return []string{fmt.Sprintf("Consider stopping this process using OS tools, e.g. 'kill %d'", pid)}
 	}
 }
 
