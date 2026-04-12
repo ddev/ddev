@@ -15,6 +15,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -124,10 +125,12 @@ func runPortDiagnose() int {
 			}
 		}
 	} else {
-		output.UserOut.Println("Not in a DDEV project directory — checking default ports 80 and 443.")
+		httpPort := globalconfig.DdevGlobalConfig.RouterHTTPPort
+		httpsPort := globalconfig.DdevGlobalConfig.RouterHTTPSPort
+		output.UserOut.Printf("Not in a DDEV project directory — checking default ports %s and %s.\n", httpPort, httpsPort)
 		ports = []namedPort{
-			{"80", "HTTP"},
-			{"443", "HTTPS"},
+			{httpPort, "HTTP"},
+			{httpsPort, "HTTPS"},
 		}
 	}
 

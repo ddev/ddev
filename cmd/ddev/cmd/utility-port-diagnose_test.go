@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/moby/moby/api/types/container"
 	"github.com/stretchr/testify/require"
@@ -55,6 +57,63 @@ func TestPortDiagnoseAvailablePort(t *testing.T) {
 	// Exit code 0 = all clear, 1 = conflicts, 2 = DDEV running.
 	// We just verify it runs and returns a valid code.
 	require.Contains(t, []int{0, 1, 2}, exitCode)
+}
+
+// setGlobalRouterPorts temporarily sets the global router HTTP/HTTPS ports
+// and registers a t.Cleanup to restore the original values.
+func setGlobalRouterPorts(t *testing.T, httpPort, httpsPort string) {
+	t.Helper()
+	orig := globalconfig.DdevGlobalConfig
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.RouterHTTPPort = orig.RouterHTTPPort
+		globalconfig.DdevGlobalConfig.RouterHTTPSPort = orig.RouterHTTPSPort
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	})
+	globalconfig.DdevGlobalConfig.RouterHTTPPort = httpPort
+	globalconfig.DdevGlobalConfig.RouterHTTPSPort = httpsPort
+	require.NoError(t, globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig))
+}
+
+// TestPortDiagnoseConflict verifies that runPortDiagnose detects a conflict
+// and reports it. We configure global router ports to unprivileged test ports
+// so no root is needed, then bind a listener to force the conflict.
+func TestPortDiagnoseConflict(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("Windows port detection uses PowerShell; covered by TestFindPortProcessesOwnProcess_Windows")
+	}
+	if len(ddevapp.GetActiveProjects()) > 0 {
+		t.Skip("DDEV projects are running; run 'ddev poweroff' first")
+	}
+
+	httpPort := getFreePort(t)
+	httpsPort := getFreePort(t)
+	setGlobalRouterPorts(t, httpPort, httpsPort)
+
+	// Hold the HTTP port to trigger a conflict.
+	l, err := net.Listen("tcp", "127.0.0.1:"+httpPort)
+	require.NoError(t, err)
+	t.Cleanup(func() { l.Close() })
+
+	exitCode := runPortDiagnose()
+	require.Equal(t, 1, exitCode, "expected exit code 1 when a port is in use")
+}
+
+// TestPortDiagnoseAllFree verifies that runPortDiagnose returns 0 when both
+// configured ports are free.
+func TestPortDiagnoseAllFree(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("Windows port detection uses PowerShell; covered by TestFindPortProcessesOwnProcess_Windows")
+	}
+	if len(ddevapp.GetActiveProjects()) > 0 {
+		t.Skip("DDEV projects are running; run 'ddev poweroff' first")
+	}
+
+	httpPort := getFreePort(t)
+	httpsPort := getFreePort(t)
+	setGlobalRouterPorts(t, httpPort, httpsPort)
+
+	exitCode := runPortDiagnose()
+	require.Equal(t, 0, exitCode, "expected exit code 0 when both ports are free")
 }
 
 // TestFindPortProcessesOwnProcess verifies that we can find our own Go
