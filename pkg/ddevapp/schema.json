@@ -617,6 +617,7 @@
       "description": "Provide the project type.",
       "type": "string",
       "enum": [
+        "asterios",
         "backdrop",
         "cakephp",
         "codeigniter",

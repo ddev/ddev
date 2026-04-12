@@ -9,6 +9,7 @@ amazee.io
 amazeeio
 Autocompletion
 Available
+Asterios
 Bash
 Bluesky
 CakePHP

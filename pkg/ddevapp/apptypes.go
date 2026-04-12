@@ -78,6 +78,11 @@ var appTypeMatrix map[string]appTypeFuncs
 
 func init() {
 	appTypeMatrix = map[string]appTypeFuncs{
+		nodeps.AppTypeAsterios: {
+			appTypeDetect:   isAsteriosApp,
+			postStartAction: asteriosPostStartAction,
+		},
+
 		nodeps.AppTypeBackdrop: {
 			settingsCreator:            createBackdropSettingsFile,
 			uploadDirs:                 getBackdropUploadDirs,

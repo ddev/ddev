@@ -196,6 +196,17 @@ func TestCustomCommands(t *testing.T) {
 		assert.Error(err, "found command %s when it should not have been there (no error) app.Type=%s", c, app.Type)
 	}
 
+	// asterios commands should only be available for type asterios
+	app.Type = nodeps.AppTypeAsterios
+	_ = app.WriteConfig()
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+	for _, c := range []string{"asterios"} {
+		_, err = exec.RunHostCommand(DdevBin, "help", c)
+		assert.NoError(err)
+	}
+
 	// TYPO3 commands should only be available for type typo3
 	app.Type = nodeps.AppTypeTYPO3
 	_ = app.WriteConfig()

@@ -4,6 +4,56 @@ DDEV is [ready to go](./project.md) with generic project types for PHP framework
 
 Before proceeding, make sure your installation of DDEV is up to date. In a new and empty project folder, using your favorite shell, run the following commands:
 
+## Asterios
+
+Use a new or existing Composer project, or clone a Git repository.
+
+The Asterios project type can be used for [Scaffolding](https://github.com/asteriosframework/asterios-app) and others, as it is used with basic Asterios. DDEV automatically updates or creates the `.env` file with the database information.
+
+=== "Composer"
+
+    Create the project directory and configure DDEV:
+
+    ```bash
+    mkdir -p my-asterios-site && cd my-asterios-site
+    ddev config --project-type=asterios --docroot=public
+    ```
+
+    Start DDEV (this may take a minute):
+
+    ```bash
+    ddev start
+    ```
+
+    Install Asterios via Composer:
+
+    ```bash
+    ddev composer create-project asterios/app
+    ```
+
+    Launch the site:
+
+    ```bash
+    ddev launch
+    ```
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > setup-asterios.sh << 'EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        mkdir -p my-asterios-site && cd my-asterios-site
+        ddev config --project-type=asterios --docroot=public
+        ddev start -y
+        ddev composer create-project asterios/app
+        ddev launch
+        EOF
+        chmod +x setup-asterios.sh
+        ./setup-asterios.sh
+        ```
+
 ## Backdrop
 
 You can start a new [Backdrop](https://backdropcms.org) project or configure an existing one.

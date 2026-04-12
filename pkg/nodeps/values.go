@@ -88,6 +88,7 @@ const AppTypeDrupalLatestStable = AppTypeDrupal11
 // App types
 const (
 	AppTypeNone        = ""
+	AppTypeAsterios    = "asterios"
 	AppTypeBackdrop    = "backdrop"
 	AppTypeCakePHP     = "cakephp"
 	AppTypeCodeIgniter = "codeigniter"

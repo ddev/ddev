@@ -61,6 +61,7 @@ The dashboard automatically detects your terminal's color capabilities and adapt
 * [`ddev xhgui`](../usage/commands.md#xhgui) enables XHGui, `ddev xhgui off` disables it, and `ddev xhgui status` shows status.
 * [`ddev drush`](../usage/commands.md#drush) (Drupal and Backdrop only) gives direct access to the `drush` CLI.
 * [`ddev artisan`](../usage/commands.md#artisan) (Laravel only) gives direct access to the Laravel `artisan` CLI.
+* [`ddev asterios`](../usage/commands.md#asterios) (Asterios only) gives direct access to the Asterios `asterios` CLI.
 * [`ddev magento`](../usage/commands.md#magento) (Magento2 only) gives access to the `magento` CLI.
 * [`ddev console`](../usage/commands.md#console) (Symfony only) gives access to the `symfony console` CLI.
 * [`ddev craft`](../usage/commands.md#craft) (Craft CMS only) gives access to the `craft` CLI.

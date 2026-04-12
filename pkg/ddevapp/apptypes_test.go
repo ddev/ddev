@@ -64,6 +64,7 @@ func TestConfigOverrideAction(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	appTypes := map[string]string{
+		nodeps.AppTypeAsterios:     nodeps.PHPDefault,
 		nodeps.AppTypeBackdrop:     nodeps.PHPDefault,
 		nodeps.AppTypeWPBedrock:    nodeps.PHPDefault,
 		nodeps.AppTypeCakePHP:      nodeps.PHPDefault,
