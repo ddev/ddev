@@ -597,6 +597,7 @@ resv
 retrans
 rfay
 roadmap
+rootful
 rmi
 rsync
 running
