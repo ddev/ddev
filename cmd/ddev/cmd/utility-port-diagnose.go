@@ -175,10 +175,10 @@ func runPortDiagnose() int {
 				// Port is free on Linux but Windows found something. Nothing to escalate.
 			} else if sudoPermitted {
 				var elevatedProcs []portProcess
-				if hasCommand("lsof") || hasCommand("/usr/sbin/lsof") {
+				if hasLsof() {
 					output.UserOut.Printf("Running: %s %s -iTCP:%s -sTCP:LISTEN -n -P\n", sudoFullPath(), lsofPath(), np.port)
 					elevatedProcs, _ = findPortProcessesSudoLsof(np.port)
-				} else if runtime.GOOS == "linux" && hasCommand("ss") {
+				} else if runtime.GOOS == "linux" && ssFullPath() != "" {
 					output.UserOut.Printf("Running: %s %s -tlnp sport = :%s\n", sudoFullPath(), ssFullPath(), np.port)
 					elevatedProcs = findPortProcessesSudoSS(np.port)
 				}
@@ -192,7 +192,7 @@ func runPortDiagnose() int {
 			// Port responds but we still can't identify who owns it.
 			hasConflict = true
 			hint := "try installing lsof: sudo apt-get install lsof"
-			if hasCommand("lsof") || hasCommand("/usr/sbin/lsof") {
+			if hasLsof() {
 				hint = fmt.Sprintf("try 'sudo lsof -iTCP:%s -sTCP:LISTEN'", np.port)
 			}
 			if nodeps.IsWindows() {
@@ -238,12 +238,12 @@ func runPortDiagnose() int {
 // the user declines. When not on an interactive terminal and --allow-sudo was
 // not passed, returns false without prompting.
 func askSudoPermission() bool {
-	if nodeps.IsWindows() || !hasCommand("sudo") {
+	if nodeps.IsWindows() || sudoFullPath() == "" {
 		return false
 	}
-	hasLsof := hasCommand("lsof") || hasCommand("/usr/sbin/lsof")
-	hasSS := runtime.GOOS == "linux" && hasCommand("ss")
-	if !hasLsof && !hasSS {
+	lsofAvail := hasLsof()
+	hasSS := runtime.GOOS == "linux" && ssFullPath() != ""
+	if !lsofAvail && !hasSS {
 		return false
 	}
 
@@ -253,7 +253,7 @@ func askSudoPermission() bool {
 
 	output.UserOut.Println("Some port conflicts are only visible with elevated privileges (e.g. root-owned docker-proxy).")
 	output.UserOut.Println("If needed, this tool will run one of:")
-	if hasLsof {
+	if lsofAvail {
 		output.UserOut.Printf("  %s %s -iTCP:<port> -sTCP:LISTEN -n -P\n", sudoFullPath(), lsofPath())
 	} else {
 		output.UserOut.Printf("  %s %s -tlnp sport = :<port>\n", sudoFullPath(), ssFullPath())
@@ -262,19 +262,26 @@ func askSudoPermission() bool {
 }
 
 // sudoFullPath returns the absolute path to sudo.
+// sudoFullPath returns the absolute path to sudo from a canonical location,
+// or empty string if not found. Only canonical paths are accepted.
 func sudoFullPath() string {
-	if p, err := exec.LookPath("sudo"); err == nil {
-		return p
+	for _, p := range []string{"/usr/bin/sudo", "/bin/sudo"} {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
 	}
-	return "sudo"
+	return ""
 }
 
-// ssFullPath returns the absolute path to ss.
+// ssFullPath returns the absolute path to ss from a canonical location,
+// or empty string if not found. Only canonical paths are accepted.
 func ssFullPath() string {
-	if p, err := exec.LookPath("ss"); err == nil {
-		return p
+	for _, p := range []string{"/usr/sbin/ss", "/sbin/ss", "/bin/ss"} {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
 	}
-	return "ss"
+	return ""
 }
 
 // findPortProcesses returns processes listening on port without elevated privileges.
@@ -287,7 +294,7 @@ func findPortProcesses(port string) []portProcess {
 	}
 
 	// Try lsof first (available on macOS and most Linux distros).
-	if hasCommand("lsof") || hasCommand("/usr/sbin/lsof") {
+	if hasLsof() {
 		procs, err := findPortProcessesLsof(port)
 		if err == nil && len(procs) > 0 {
 			return procs
@@ -468,16 +475,20 @@ func readProcComm(pid int) string {
 	return strings.TrimSpace(string(raw))
 }
 
-// lsofPath returns the absolute path to lsof, preferring /usr/sbin/lsof.
-// Using an absolute path prevents PATH-based substitution attacks.
+// lsofPath returns the absolute path to lsof from a canonical location,
+// or empty string if not found. Only canonical paths are accepted.
 func lsofPath() string {
-	if hasCommand("/usr/sbin/lsof") {
-		return "/usr/sbin/lsof"
+	for _, p := range []string{"/usr/sbin/lsof", "/usr/bin/lsof"} {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
 	}
-	if p, err := exec.LookPath("lsof"); err == nil {
-		return p
-	}
-	return "lsof"
+	return ""
+}
+
+// hasLsof returns true when lsof is available at a canonical path.
+func hasLsof() bool {
+	return lsofPath() != ""
 }
 
 // findPortProcessesLsof uses lsof to identify listening processes.
