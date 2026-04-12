@@ -16,8 +16,9 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/moby/moby/api/types/container"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/moby/moby/api/types/container"
 	"github.com/spf13/cobra"
 )
 
@@ -28,6 +29,9 @@ type portProcess struct {
 	CmdLine string
 	Side    string // "Linux", "macOS", "Windows"
 }
+
+// portDiagnoseAllowSudo holds the value of the --allow-sudo flag.
+var portDiagnoseAllowSudo bool
 
 // PortDiagnoseCmd implements the ddev utility port-diagnose command.
 var PortDiagnoseCmd = &cobra.Command{
@@ -42,8 +46,13 @@ default ports 80 and 443.
 
 On WSL2, both the Linux side and the Windows side are checked separately.
 
+Some port conflicts are only visible with elevated privileges (e.g. docker-proxy
+run by rootful Docker CE). Use --allow-sudo to permit sudo use without being
+asked interactively, or run in a terminal to be prompted.
+
 Use this command when DDEV reports port conflicts on startup.`,
 	Example: `ddev utility port-diagnose
+ddev utility port-diagnose --allow-sudo
 ddev ut port-diagnose`,
 	Run: func(cmd *cobra.Command, args []string) {
 		exitCode := runPortDiagnose()
@@ -52,6 +61,7 @@ ddev ut port-diagnose`,
 }
 
 func init() {
+	PortDiagnoseCmd.Flags().BoolVar(&portDiagnoseAllowSudo, "allow-sudo", false, "permit sudo use for elevated port detection without interactive prompt")
 	DebugCmd.AddCommand(PortDiagnoseCmd)
 }
 
@@ -64,8 +74,6 @@ type namedPort struct {
 // runPortDiagnose checks DDEV project ports (or defaults) and reports conflicts.
 // Returns 0 if all ports are available, 1 if any conflicts are found.
 func runPortDiagnose() int {
-	sudoMessageShown = false
-
 	// Check for running DDEV projects or router first — they legitimately use ports.
 	activeProjects := ddevapp.GetActiveProjects()
 	router, _ := ddevapp.FindDdevRouter()
@@ -123,6 +131,12 @@ func runPortDiagnose() int {
 		}
 	}
 
+	// On non-Windows systems, some listeners (e.g. docker-proxy under rootful
+	// Docker CE) are owned by root and invisible without elevated privileges.
+	// Ask the user once upfront whether we may use sudo, showing the exact
+	// commands we would run. We only ask when running on an interactive terminal.
+	sudoPermitted := askSudoPermission()
+
 	hasConflict := false
 
 	for _, np := range ports {
@@ -159,22 +173,13 @@ func runPortDiagnose() int {
 					continue
 				}
 				// Port is free on Linux but Windows found something. Nothing to escalate.
-			} else if hasCommand("sudo") {
-				// Port is in use on Linux. Try elevated detection to identify the owner.
-				// Only show the "can't identify" message when we have found nothing at all yet.
-				if !sudoMessageShown && len(allProcs) == 0 {
-					output.UserOut.Println("Unable to identify the process without elevated privileges.")
-					if isTerminal(os.Stdin) {
-						output.UserOut.Println("You may be prompted for your password.")
-					}
-					sudoMessageShown = true
-				}
+			} else if sudoPermitted {
 				var elevatedProcs []portProcess
 				if hasCommand("lsof") || hasCommand("/usr/sbin/lsof") {
-					output.UserOut.Printf("Running: sudo %s -iTCP:%s -sTCP:LISTEN -n -P\n", lsofPath(), np.port)
+					output.UserOut.Printf("Running: %s %s -iTCP:%s -sTCP:LISTEN -n -P\n", sudoFullPath(), lsofPath(), np.port)
 					elevatedProcs, _ = findPortProcessesSudoLsof(np.port)
 				} else if runtime.GOOS == "linux" && hasCommand("ss") {
-					// lsof not installed — fall back to sudo ss on Linux.
+					output.UserOut.Printf("Running: %s %s -tlnp sport = :%s\n", sudoFullPath(), ssFullPath(), np.port)
 					elevatedProcs = findPortProcessesSudoSS(np.port)
 				}
 				for _, p := range elevatedProcs {
@@ -227,7 +232,50 @@ func runPortDiagnose() int {
 	return 0
 }
 
-var sudoMessageShown bool
+// askSudoPermission explains the exact sudo commands that may be run and asks
+// the user whether to proceed. Returns true immediately if --allow-sudo was
+// passed. Returns false if sudo is unavailable, no elevation tool exists, or
+// the user declines. When not on an interactive terminal and --allow-sudo was
+// not passed, returns false without prompting.
+func askSudoPermission() bool {
+	if nodeps.IsWindows() || !hasCommand("sudo") {
+		return false
+	}
+	hasLsof := hasCommand("lsof") || hasCommand("/usr/sbin/lsof")
+	hasSS := runtime.GOOS == "linux" && hasCommand("ss")
+	if !hasLsof && !hasSS {
+		return false
+	}
+
+	if portDiagnoseAllowSudo {
+		return true
+	}
+
+	output.UserOut.Println("Some port conflicts are only visible with elevated privileges (e.g. root-owned docker-proxy).")
+	output.UserOut.Println("If needed, this tool will run one of:")
+	if hasLsof {
+		output.UserOut.Printf("  %s %s -iTCP:<port> -sTCP:LISTEN -n -P\n", sudoFullPath(), lsofPath())
+	} else {
+		output.UserOut.Printf("  %s %s -tlnp sport = :<port>\n", sudoFullPath(), ssFullPath())
+	}
+	return util.ConfirmTo("Allow sudo use?", false)
+}
+
+// sudoFullPath returns the absolute path to sudo.
+func sudoFullPath() string {
+	if p, err := exec.LookPath("sudo"); err == nil {
+		return p
+	}
+	return "sudo"
+}
+
+// ssFullPath returns the absolute path to ss.
+func ssFullPath() string {
+	if p, err := exec.LookPath("ss"); err == nil {
+		return p
+	}
+	return "ss"
+}
 
 // findPortProcesses returns processes listening on port without elevated privileges.
 // On Windows-native (not WSL2), delegates entirely to findWindowsPortProcesses.
@@ -263,7 +311,7 @@ func findPortProcesses(port string) []portProcess {
 // password. In non-interactive contexts (CI, scripts) sudo fails immediately rather than
 // blocking indefinitely waiting for input.
 func findPortProcessesSudoLsof(port string) ([]portProcess, error) {
-	cmd := exec.Command("sudo", lsofPath(), "-iTCP:"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcnT")
+	cmd := exec.Command(sudoFullPath(), lsofPath(), "-iTCP:"+port, "-sTCP:LISTEN", "-n", "-P", "-F", "pcnT")
 	if isTerminal(os.Stdin) {
 		cmd.Stdin = os.Stdin
 	}
@@ -554,7 +602,7 @@ func findPortProcessesSS(port string) []portProcess {
 // findPortProcessesSudoSS runs ss with sudo to see root-owned listeners (e.g.
 // docker-proxy). Used as a fallback on Linux when lsof is not installed.
 func findPortProcessesSudoSS(port string) []portProcess {
-	cmd := exec.Command("sudo", "ss", "-tlnp", "sport", "=", ":"+port)
+	cmd := exec.Command(sudoFullPath(), ssFullPath(), "-tlnp", "sport", "=", ":"+port)
 	if isTerminal(os.Stdin) {
 		cmd.Stdin = os.Stdin
 	}
@@ -814,10 +862,10 @@ func portHints(name string, cmdLine string, side string, pid int, port string) [
 	case lower == "wslrelay" || lower == "wslrelay.exe":
 		// wslrelay forwards WSL2 ports to the Windows host.
 		// It may be a Docker/Rancher Desktop container, or a service in another WSL2 distro.
-		if container := findContainerForPort(port); container != "" {
+		if cname := findContainerForPort(port); cname != "" {
 			return []string{
-				fmt.Sprintf("Container '%s' is forwarded to Windows via WSL2.", container),
-				fmt.Sprintf("Run: docker stop %s", container),
+				fmt.Sprintf("Container '%s' is forwarded to Windows via WSL2.", cname),
+				fmt.Sprintf("Run: docker stop %s", cname),
 			}
 		}
 		return []string{
@@ -895,10 +943,10 @@ func containerNameForPort(hostPort int, containers []container.Summary) string {
 // dockerContainerHints builds hints when a Docker-internal proxy process holds the port.
 // It tries to identify the specific container via docker ps.
 func dockerContainerHints(port string) []string {
-	if container := findContainerForPort(port); container != "" {
+	if cname := findContainerForPort(port); cname != "" {
 		return []string{
-			fmt.Sprintf("Container '%s' is holding this port.", container),
-			fmt.Sprintf("Run: docker stop %s", container),
+			fmt.Sprintf("Container '%s' is holding this port.", cname),
+			fmt.Sprintf("Run: docker stop %s", cname),
 		}
 	}
 	return []string{

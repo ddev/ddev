@@ -138,7 +138,13 @@ Port 80 (router HTTP): IN USE by apache2 (PID 1234, cmd=/usr/sbin/apache2 -k sta
 Port 443 (router HTTPS): Available
 ```
 
-On WSL2, it checks both the Linux and Windows sides. If it cannot identify the process, it may prompt for `sudo` to run `lsof` with elevated privileges.
+On WSL2, it checks both the Linux and Windows sides. If a port conflict is held by a root-owned process (such as `docker-proxy` under rootful Docker CE), the tool will ask for permission before running any `sudo` command, showing the exact command it intends to run. You can pre-approve this with `--allow-sudo`:
+
+```
+ddev utility port-diagnose --allow-sudo
+```
+
+The `--allow-sudo` flag is useful in scripts or when you know elevated detection will be needed and want to avoid the interactive prompt. When running non-interactively (CI, pipes) without `--allow-sudo`, sudo escalation is skipped.
 
 You can also use a number of lower-level tools to find out what process is listening.
 

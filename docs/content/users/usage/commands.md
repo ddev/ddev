@@ -1748,6 +1748,27 @@ ddev utility mutagen-diagnose --all
 
 See the [Mutagen troubleshooting documentation](../install/performance.md#mutagen-troubleshooting) for more details.
 
+### `utility port-diagnose`
+
+Identify processes occupying ports needed by DDEV. When run inside a project directory, checks that project's configured ports (HTTP, HTTPS, Mailpit, XHGui). When run outside a project, checks the default ports 80 and 443. On WSL2, both the Linux and Windows sides are checked.
+
+Some port conflicts are only visible with elevated privileges (e.g. `docker-proxy` under rootful Docker CE). The tool will ask for permission before running any `sudo` command, showing the exact command it intends to run. Use `--allow-sudo` to pre-approve this without an interactive prompt.
+
+Flags:
+
+* `--allow-sudo`: Permit `sudo` use for elevated port detection without an interactive prompt.
+
+Example:
+
+```shell
+# Check ports for the current project (or defaults 80/443 outside a project)
+ddev utility port-diagnose
+# Allow sudo for elevated detection without interactive prompt
+ddev utility port-diagnose --allow-sudo
+```
+
+See also: [Troubleshooting port conflicts](troubleshooting.md#web-server-ports-already-occupied).
+
 ### `utility rebuild`
 
 *Alias: `utility refresh`.*
