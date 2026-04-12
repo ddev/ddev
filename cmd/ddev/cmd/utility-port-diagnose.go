@@ -468,10 +468,14 @@ func readProcComm(pid int) string {
 	return strings.TrimSpace(string(raw))
 }
 
-// lsofPath returns the path to lsof, preferring /usr/sbin/lsof (macOS, some Linux).
+// lsofPath returns the absolute path to lsof, preferring /usr/sbin/lsof.
+// Using an absolute path prevents PATH-based substitution attacks.
 func lsofPath() string {
 	if hasCommand("/usr/sbin/lsof") {
 		return "/usr/sbin/lsof"
+	}
+	if p, err := exec.LookPath("lsof"); err == nil {
+		return p
 	}
 	return "lsof"
 }
