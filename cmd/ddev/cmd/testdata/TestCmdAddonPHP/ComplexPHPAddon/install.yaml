@@ -62,3 +62,15 @@ pre_install_actions:
 
 project_files:
   - config.complex-php-addon.yaml
+
+removal_actions:
+  - |
+    #ddev-description:Remove generated docker-compose.complex-php-addon.yaml
+    file="${DDEV_APPROOT}/.ddev/docker-compose.complex-php-addon.yaml"
+    if [ -f "$file" ]; then
+      if grep -q '#ddev-generated' "$file"; then
+        rm -f "$file"
+      else
+        echo "Unwilling to remove '$file' because it does not have #ddev-generated in it; you can manually delete it if it is safe to delete."
+      fi
+    fi
