@@ -310,15 +310,28 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	err = app.WriteDockerComposeYAML()
 	assert.NoError(err)
 
-	// Ensure we can read from the file and that it's a regular file with the expected name.
+	// Ensure we can read from the base file and that it's a regular file with the expected name.
 	fileinfo, err := os.Stat(app.DockerComposeYAMLPath())
 	assert.NoError(err)
 	assert.False(fileinfo.IsDir())
-	assert.Equal(fileinfo.Name(), filepath.Base(app.DockerComposeYAMLPath()))
+	assert.Equal(".ddev-docker-compose-base.yaml", fileinfo.Name())
 
 	composeBytes, err := os.ReadFile(app.DockerComposeYAMLPath())
 	assert.NoError(err)
 	contentString := string(composeBytes)
+	assert.Contains(contentString, "ddev_default")
+	assert.Contains(contentString, "IS_DDEV_PROJECT")
+
+	// Ensure we can read from the full file and that it's a regular file with the expected name.
+	fileinfo, err = os.Stat(app.DockerComposeFullRenderedYAMLPath())
+	assert.NoError(err)
+	assert.False(fileinfo.IsDir())
+	assert.Equal(".ddev-docker-compose-full.yaml", fileinfo.Name())
+
+	composeBytes, err = os.ReadFile(app.DockerComposeFullRenderedYAMLPath())
+	assert.NoError(err)
+	contentString = string(composeBytes)
+	assert.Contains(contentString, app.GetComposeProjectName())
 	assert.Contains(contentString, app.Type)
 }
 
