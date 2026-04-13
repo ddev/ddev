@@ -81,9 +81,9 @@ func TestPortDiagnoseConflict(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("Windows port detection uses PowerShell; covered by TestFindPortProcessesOwnProcess_Windows")
 	}
-	if len(ddevapp.GetActiveProjects()) > 0 {
-		t.Skip("DDEV projects are running; run 'ddev poweroff' first")
-	}
+	// PowerOff stops all projects and the router (which may hold ports on its own).
+	ddevapp.PowerOff()
+	t.Cleanup(func() { ddevapp.PowerOff() })
 
 	httpPort := getFreePort(t)
 	httpsPort := getFreePort(t)
@@ -104,9 +104,9 @@ func TestPortDiagnoseAllFree(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("Windows port detection uses PowerShell; covered by TestFindPortProcessesOwnProcess_Windows")
 	}
-	if len(ddevapp.GetActiveProjects()) > 0 {
-		t.Skip("DDEV projects are running; run 'ddev poweroff' first")
-	}
+	// PowerOff stops all projects and the router (which may hold ports on its own).
+	ddevapp.PowerOff()
+	t.Cleanup(func() { ddevapp.PowerOff() })
 
 	httpPort := getFreePort(t)
 	httpsPort := getFreePort(t)
