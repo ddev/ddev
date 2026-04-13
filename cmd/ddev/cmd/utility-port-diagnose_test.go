@@ -539,7 +539,10 @@ func TestPortHints(t *testing.T) {
 		{"nginx", "", "Windows", 1, "nginx"},
 		{"caddy", "", "Linux", 1, "caddy"},
 		{"w3wp", "", "Windows", 1, "W3SVC"},
-		{"com.docker.backend", "", "macOS", 1, "Docker Desktop"},
+		// com.docker.backend: when Docker Desktop is the active provider the hint
+		// describes the container; when it is not active it names Docker Desktop.
+		// Both paths mention "port".
+		{"com.docker.backend", "", "macOS", 1, "port"},
 		{"com.orbstack.backend", "", "macOS", 1, "port"},
 		// Docker-provider hints are environment-dependent (output varies based on which
 		// provider is currently active), so just verify we don't fall through to the
