@@ -65,7 +65,25 @@ Port 443 is busy, using 33001 instead, see https://ddev.com/s/port-conflict
 
 This means that DDEV has detected that it can't use the expected port (`443`) in this example, because another application is using it. If this is OK, you don't need to take any action. Most users want to use the default ports though (`80` and `443`) so you may want to figure out what the conflict is and solve it (usually by stopping the competing application).
 
-If you want to figure out what is using the default ports, use the techniques listed below to stop the competing application or to change the default ports.
+`ddev utility port-diagnose`, run from your project directory, can likely explain what's going on. It checks each port your project needs, identifies the blocking process by name and PID, and suggests how to stop it:
+
+```
+$ ddev utility port-diagnose
+Port diagnostics for project: my-project
+Port 80 (router HTTP): IN USE by apache2 (PID 1234, cmd=/usr/sbin/apache2 -k start) [Linux]
+  sudo systemctl stop apache2 && sudo systemctl disable apache2
+Port 443 (router HTTPS): Available
+```
+
+On WSL2, it checks both Linux/WSL2 and Windows. If a port conflict is held by a root-owned process (such as `docker-proxy` under rootful Docker CE), the tool will ask for permission before running any `sudo` command, showing the exact command it intends to run. You can pre-approve this with `--allow-sudo`:
+
+```
+ddev utility port-diagnose --allow-sudo
+```
+
+The `--allow-sudo` flag is useful in scripts or when you know elevated detection will be needed and want to avoid the interactive prompt. When running non-interactively (CI, pipes) without `--allow-sudo`, sudo escalation is skipped.
+
+If that isn't enough to figure out what is using the default ports, use the techniques listed below to stop the competing application or to change the default ports.
 
 If you do get messages like:
 
@@ -127,24 +145,6 @@ Most people will want to use ports 80 and 443, the default HTTP and HTTPS ports 
 * VPNKit (macOS): You likely have a Docker container bound to port 80. Do you have containers up for Lando or another Docker-based development environment? If so, stop the other environment.
 * Lando: If you’ve previously used Lando, try running `lando poweroff`.
 * IIS on Windows (can affect WSL2). You’ll have to disable it in the Windows settings.
-
-To dig deeper, run `ddev utility port-diagnose` from your project directory. It checks each port your project needs, identifies the blocking process by name and PID, and suggests how to stop it:
-
-```
-$ ddev utility port-diagnose
-Port diagnostics for project: my-project
-Port 80 (router HTTP): IN USE by apache2 (PID 1234, cmd=/usr/sbin/apache2 -k start) [Linux]
-  sudo systemctl stop apache2 && sudo systemctl disable apache2
-Port 443 (router HTTPS): Available
-```
-
-On WSL2, it checks both the Linux and Windows sides. If a port conflict is held by a root-owned process (such as `docker-proxy` under rootful Docker CE), the tool will ask for permission before running any `sudo` command, showing the exact command it intends to run. You can pre-approve this with `--allow-sudo`:
-
-```
-ddev utility port-diagnose --allow-sudo
-```
-
-The `--allow-sudo` flag is useful in scripts or when you know elevated detection will be needed and want to avoid the interactive prompt. When running non-interactively (CI, pipes) without `--allow-sudo`, sudo escalation is skipped.
 
 You can also use a number of lower-level tools to find out what process is listening.
 
