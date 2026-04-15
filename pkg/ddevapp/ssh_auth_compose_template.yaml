@@ -36,6 +36,7 @@ services:
       interval: 1s
       retries: 2
       start_period: 10s
+      start_interval: "500ms"
       timeout: 62s
 networks:
   ddev_default:
