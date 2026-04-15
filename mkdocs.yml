@@ -78,6 +78,11 @@ plugins:
 - git-revision-date-localized:
     fallback_to_build_date: true
 
+# Files in not_in_nav are part of the repo but intentionally excluded from the
+# docs navigation (e.g. temporary developer guides used by automation tools).
+not_in_nav: |
+  developers/tmp/*
+
 # Fail the entire build if the validation fails
 strict: true
 # Validation

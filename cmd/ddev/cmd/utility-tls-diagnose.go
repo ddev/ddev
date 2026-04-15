@@ -1,12 +1,18 @@
 package cmd
 
 import (
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/sha1"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"math/big"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -70,7 +76,7 @@ func runTLSDiagnose() int {
 		hasIssues = true
 	}
 
-	trustIssues := checkOSTrustStore()
+	trustIssues := checkOSTrustStore(caRoot)
 	if trustIssues {
 		hasIssues = true
 	}
@@ -234,8 +240,92 @@ func checkMkcertInstallation() (string, bool) {
 	return caRoot, hasIssues
 }
 
+// parseCertFromPEM decodes the first PEM block in pemBytes as an x509 certificate.
+func parseCertFromPEM(pemBytes []byte) (*x509.Certificate, error) {
+	block, _ := pem.Decode(pemBytes)
+	if block == nil {
+		return nil, fmt.Errorf("no PEM block found")
+	}
+	return x509.ParseCertificate(block.Bytes)
+}
+
+// parsePKCS8Key decodes a private key PEM block. Handles PKCS8 ("PRIVATE KEY"),
+// SEC1 ("EC PRIVATE KEY"), and PKCS1 ("RSA PRIVATE KEY") encodings, which covers
+// all key formats mkcert has historically used.
+func parsePKCS8Key(pemBytes []byte) (crypto.Signer, error) {
+	block, _ := pem.Decode(pemBytes)
+	if block == nil {
+		return nil, fmt.Errorf("no PEM block found in key file")
+	}
+	var key any
+	var err error
+	switch block.Type {
+	case "PRIVATE KEY":
+		key, err = x509.ParsePKCS8PrivateKey(block.Bytes)
+	case "EC PRIVATE KEY":
+		key, err = x509.ParseECPrivateKey(block.Bytes)
+	case "RSA PRIVATE KEY":
+		key, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+	default:
+		return nil, fmt.Errorf("unsupported key PEM type %q", block.Type)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse private key: %w", err)
+	}
+	signer, ok := key.(crypto.Signer)
+	if !ok {
+		return nil, fmt.Errorf("key type %T does not implement crypto.Signer", key)
+	}
+	return signer, nil
+}
+
+// verifyCATrustedByOS generates an ephemeral leaf cert signed by the given CA
+// and verifies it against x509.SystemCertPool(). This is the same chain walk a
+// browser performs, so it returns true only when the OS actually trusts the CA —
+// not merely when rootCA.pem exists in CAROOT.
+//
+// Returns (trusted, error). error is non-nil only when the check itself could
+// not run (e.g. SystemCertPool unavailable); trusted=false is the expected result
+// for a CA that has not been installed.
+func verifyCATrustedByOS(caCert *x509.Certificate, caKey crypto.Signer) (bool, error) {
+	sysPool, err := x509.SystemCertPool()
+	if err != nil {
+		return false, fmt.Errorf("cannot load system cert pool: %w", err)
+	}
+
+	// Ephemeral leaf cert — exists only in memory, never written to disk.
+	leafKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return false, fmt.Errorf("cannot generate ephemeral key: %w", err)
+	}
+	now := time.Now()
+	leafTemplate := &x509.Certificate{
+		SerialNumber: big.NewInt(0x7e57),
+		Subject:      pkix.Name{CommonName: "ddev-tls-diagnose-check.invalid"},
+		DNSNames:     []string{"ddev-tls-diagnose-check.invalid"},
+		NotBefore:    now.Add(-time.Minute),
+		NotAfter:     now.Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+	}
+	leafDER, err := x509.CreateCertificate(rand.Reader, leafTemplate, caCert, leafKey.Public(), caKey)
+	if err != nil {
+		return false, fmt.Errorf("cannot sign ephemeral certificate: %w", err)
+	}
+	leafCert, err := x509.ParseCertificate(leafDER)
+	if err != nil {
+		return false, fmt.Errorf("cannot parse ephemeral certificate: %w", err)
+	}
+
+	_, verifyErr := leafCert.Verify(x509.VerifyOptions{
+		Roots:   sysPool,
+		DNSName: "ddev-tls-diagnose-check.invalid",
+	})
+	return verifyErr == nil, nil
+}
+
 // checkOSTrustStore runs mkcert -install and checks the result.
-func checkOSTrustStore() bool {
+func checkOSTrustStore(caRoot string) bool {
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("OS Trust Store")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -281,6 +371,35 @@ func checkOSTrustStore() bool {
 			hasIssues = true
 		} else {
 			output.UserOut.Println("  ✓ certutil found (Firefox NSS support available)")
+		}
+	}
+
+	// Definitive OS trust check: generate an ephemeral leaf cert signed by our
+	// CA and verify it against the live system cert pool. This catches the gap
+	// where rootCA.pem exists in CAROOT but mkcert -install was never run (or
+	// ran on a different OS user / different machine).
+	if caRoot != "" {
+		caCertBytes, certReadErr := os.ReadFile(filepath.Join(caRoot, "rootCA.pem"))
+		caKeyBytes, keyReadErr := os.ReadFile(filepath.Join(caRoot, "rootCA-key.pem"))
+		if certReadErr != nil || keyReadErr != nil {
+			output.UserOut.Println("  ⚠ Cannot read CA files for trust verification — skipping")
+		} else {
+			caCert, certParseErr := parseCertFromPEM(caCertBytes)
+			caKey, keyParseErr := parsePKCS8Key(caKeyBytes)
+			if certParseErr != nil || keyParseErr != nil {
+				output.UserOut.Printf("  ⚠ Cannot parse CA files for trust verification — skipping\n")
+			} else {
+				trusted, checkErr := verifyCATrustedByOS(caCert, caKey)
+				if checkErr != nil {
+					output.UserOut.Printf("  ⚠ OS trust check could not run: %v\n", checkErr)
+				} else if trusted {
+					output.UserOut.Println("  ✓ CA verified as trusted by OS system cert pool")
+				} else {
+					tlsFail("CA is NOT trusted by OS — rootCA.pem exists but has not been installed")
+					output.UserOut.Println("    → Run: mkcert -install")
+					hasIssues = true
+				}
+			}
 		}
 	}
 

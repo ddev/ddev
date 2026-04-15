@@ -320,6 +320,35 @@ In this case, you can take any one of the following approaches:
 
 An extensive discussion of this class of problem is on [ddev.com](https://ddev.com/blog/ddev-name-resolution-wildcards).
 
+<a name="browser-certificate-error"></a>
+
+## Browser Shows Certificate Error for DDEV Sites
+
+If your browser shows a certificate warning such as `NET::ERR_CERT_AUTHORITY_INVALID`, `SEC_ERROR_UNKNOWN_ISSUER`, or "Your connection is not private" when visiting a DDEV HTTPS URL, the mkcert certificate authority (CA) is not trusted by your browser or OS.
+
+Run [`ddev utility tls-diagnose`](commands.md#utility-tls-diagnose) to identify the specific problem:
+
+```
+ddev utility tls-diagnose
+```
+
+The command checks mkcert installation, OS trust store, certificate files, and live HTTPS connectivity, and prints actionable fix instructions for each issue it finds.
+
+**Common causes and fixes:**
+
+* **mkcert CA not installed in OS trust store** — Run `mkcert -install` and restart your browser.
+* **Firefox on Windows** — Firefox on Windows does not use the Windows certificate store. You must import the mkcert CA manually: Firefox Settings → Privacy & Security → View Certificates → Authorities → Import. Select `rootCA.pem` from the path shown by `mkcert -CAROOT`. Firefox Nightly, Developer Edition, and ESR each maintain a separate trust store and need the same treatment. On macOS and Linux, standard Firefox works via the OS trust store after `mkcert -install`; only special builds (Flatpak, snap, Nightly, Developer Edition) may need a manual import.
+* **Linux: `certutil` not installed** — Firefox on Linux relies on `certutil` (from `libnss3-tools`) for `mkcert -install` to register the CA. Install it with `sudo apt install libnss3-tools` (or `brew install nss`), then run `mkcert -install` again.
+* **Expired or CA-rotated certificates** — Run `ddev poweroff && ddev start` to regenerate certificates, or the nuclear option: `ddev poweroff && mkcert -uninstall && rm -rf "$(mkcert -CAROOT)" && mkcert -install && ddev start`.
+
+**On WSL2:** The mkcert CA is installed on Windows using `mkcert -install` in PowerShell. WSL2 then points its `$CAROOT` at the Windows mkcert directory so both sides use the same CA. `ddev utility tls-diagnose` checks all the WSL2-specific requirements:
+
+* `$CAROOT` must point to the Windows mkcert directory (e.g. `/mnt/c/Users/<user>/AppData/Local/mkcert`)
+* `CAROOT` must be listed in `$WSLENV` so it propagates into WSL2 sessions
+* The mkcert CA must be installed in the Windows certificate store (via `mkcert -install` in PowerShell)
+
+If any of these are missing, follow the setup instructions in [WSL2 and Certificates](../install/ddev-installation.md).
+
 ## Windows WSL2 Network Issues
 
 * If you’re using a browser on Windows, accessing a project in WSL2, you can end up with confusing results when your project is listening on a port inside WSL2 while a Windows process is listening on that same port. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side by visiting it with a browser or using other tools as described above.
