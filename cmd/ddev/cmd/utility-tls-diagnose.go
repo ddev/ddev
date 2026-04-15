@@ -699,17 +699,27 @@ func checkLinuxFirefox() bool {
 		}
 	}
 	if foundAny {
-		output.UserOut.Println("  ⚠ Some Firefox builds (Flatpak, snap, Nightly, Developer Edition) maintain")
-		output.UserOut.Println("    a separate trust store and may require manual CA import:")
-		output.UserOut.Println("    Firefox Settings → Privacy & Security → View Certificates → Import")
-		hasWarnings = true
+		if certutilFound {
+			output.UserOut.Println("  ℹ Flatpak, Nightly, or Developer Edition Firefox (if present) may need manual CA import:")
+			output.UserOut.Println("    Firefox Settings → Privacy & Security → View Certificates → Import")
+		} else {
+			output.UserOut.Println("  ⚠ Some Firefox builds (Flatpak, snap, Nightly, Developer Edition) maintain")
+			output.UserOut.Println("    a separate trust store and may require manual CA import:")
+			output.UserOut.Println("    Firefox Settings → Privacy & Security → View Certificates → Import")
+			hasWarnings = true
+		}
 	}
-	// Snap Firefox has its own NSS database separate from the system one.
+	// Snap Firefox: mkcert -install registers the CA in the snap NSS profile when
+	// certutil is available, so this is only an issue when certutil is absent.
 	if snapOut, err := exec.Command("snap", "list", "firefox").Output(); err == nil && strings.Contains(string(snapOut), "firefox") {
-		output.UserOut.Println("  ⚠ Firefox (snap) detected — snap Firefox uses its own NSS database")
-		output.UserOut.Println("    → mkcert -install may or may not reach the snap profile")
-		output.UserOut.Println("    → If HTTPS warnings appear, manually import the CA in Firefox")
-		hasWarnings = true
+		if certutilFound {
+			output.UserOut.Println("  ✓ Firefox (snap) detected — certutil available, CA registered via mkcert -install")
+		} else {
+			output.UserOut.Println("  ⚠ Firefox (snap) detected — certutil not found, snap Firefox will not trust DDEV certificates")
+			output.UserOut.Println("    → Install: sudo apt install libnss3-tools  OR  brew install nss")
+			output.UserOut.Println("    → Then run: mkcert -install")
+			hasWarnings = true
+		}
 		foundAny = true
 	}
 	if !foundAny {
