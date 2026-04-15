@@ -3,6 +3,7 @@ package dockerutil
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -599,7 +600,16 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	if !detach {
 		timeout = 10 * time.Minute
 	}
-	return RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, timeout)
+	containerID, out, returnErr = RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, timeout)
+	// On Lima/Colima, ContainerInspect may report State.Running=true even after
+	// the container has exited, causing the polling loop to exhaust the deadline.
+	// Observed only in tests, not reported by users; possibly a Lima/Colima bug.
+	// Retry once on DeadlineExceeded to recover.
+	if returnErr != nil && removeContainerAfterRun && errors.Is(returnErr, context.DeadlineExceeded) && (IsLima() || IsColima()) {
+		util.Debug("RunSimpleContainer: attempt 1 timed out on Lima/Colima, retrying: %v", returnErr)
+		containerID, out, returnErr = RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, timeout)
+	}
+	return
 }
 
 // RunSimpleContainerExtended runs a container and captures the stdout/stderr.
@@ -772,43 +782,41 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 	exitCode := 0
 
 	if timeout > 0 {
-		// Poll container state instead of using the streaming ContainerWait API,
-		// which hangs indefinitely on proxied Docker sockets (e.g. Colima).
-		// Use a context deadline so in-flight ContainerInspect calls are also
-		// canceled when the timeout expires, not just the select case.
 		waitCtx, waitCancel := context.WithTimeout(ctx, timeout)
 		defer waitCancel()
 		tickChan := time.NewTicker(500 * time.Millisecond)
 		defer tickChan.Stop()
+		var lastKnownState *container.State
+		attempt := 0
 		for {
+			attempt++
+			inspectStartTime := time.Now()
 			info, err := apiClient.ContainerInspect(waitCtx, c.ID, client.ContainerInspectOptions{})
-			if err != nil {
-				if waitCtx.Err() != nil {
-					var health any = "none"
-					if s := info.Container.State; s != nil && s.Health != nil {
-						health = *s.Health
-					}
-					util.Debug("RunSimpleContainer: container %s (%s) state=%+v health=%+v, err=%v, waitErr=%v", name, TruncateID(c.ID), info.Container.State, health, err, waitCtx.Err())
-					return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s (%s) to stop", timeout, name, TruncateID(c.ID))
-				}
+			inspectElapsedTime := time.Since(inspectStartTime)
+			if err != nil && waitCtx.Err() == nil {
 				return c.ID, "", fmt.Errorf("failed to inspect container %s (%s): %v", name, TruncateID(c.ID), err)
 			}
-			if info.Container.State == nil {
-				return c.ID, "", fmt.Errorf("container %s (%s) has <nil> state", name, TruncateID(c.ID))
-			}
-			if !info.Container.State.Running {
-				exitCode = info.Container.State.ExitCode
-				break
+			if err == nil {
+				if info.Container.State == nil {
+					return c.ID, "", fmt.Errorf("container %s (%s) has <nil> state", name, TruncateID(c.ID))
+				}
+				lastKnownState = info.Container.State
+				if !info.Container.State.Running {
+					exitCode = info.Container.State.ExitCode
+					break
+				}
 			}
 			select {
 			case <-waitCtx.Done():
-				var health any = "none"
-				if s := info.Container.State; s != nil && s.Health != nil {
-					health = *s.Health
-				}
-				util.Debug("RunSimpleContainer: container %s (%s) state=%+v health=%+v, err=%v", name, TruncateID(c.ID), info.Container.State, health, err)
-				return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s (%s) to stop", timeout, name, TruncateID(c.ID))
 			case <-tickChan.C:
+			}
+			if waitCtx.Err() != nil {
+				var lastKnownHealth any = "<nil>"
+				if lastKnownState != nil && lastKnownState.Health != nil {
+					lastKnownHealth = *lastKnownState.Health
+				}
+				util.Debug("RunSimpleContainer: container %s (%s) attempt=%d inspectElapsedTime=%v inspectErr=%v lastKnownState=%+v lastKnownHealth=%+v", name, TruncateID(c.ID), attempt, inspectElapsedTime, err, lastKnownState, lastKnownHealth)
+				return c.ID, "", fmt.Errorf("timed out after %s waiting for container %s (%s) to stop: %w", timeout, name, TruncateID(c.ID), waitCtx.Err())
 			}
 		}
 
