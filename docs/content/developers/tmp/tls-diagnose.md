@@ -22,7 +22,7 @@ ddev utility tls-diagnose
 
 Expected:
 
-- `mkcert Installation`: mkcert found, CAROOT shown, `rootCA.pem` and `rootCA-key.pem` found
+- `mkcert Installation`: mkcert found, `CAROOT` shown, `rootCA.pem` and `rootCA-key.pem` found
 - `OS Trust Store`: "CA already installed in system trust store"
 - `Firefox`: No Firefox detected, or warning about Firefox requiring manual CA import if Firefox.app is present
 - `Certificate Files`: Default cert valid, project cert valid (if in a project directory)
@@ -79,7 +79,7 @@ ddev utility tls-diagnose
 mv "$CAROOT/rootCA.pem.bak" "$CAROOT/rootCA.pem"
 ```
 
-### Test: CAROOT env var mismatch
+### Test: `CAROOT` env var mismatch
 
 ```bash
 CAROOT=/tmp/wrong ddev utility tls-diagnose
@@ -188,7 +188,8 @@ This is the most complex environment. The goal of `tls-diagnose` is to diagnose 
 ### Baseline (fully configured WSL2)
 
 A healthy WSL2 setup has all of:
-- `$CAROOT` set to the Windows mkcert CAROOT path (e.g. `/mnt/c/Users/<user>/AppData/Local/mkcert`)
+
+- `$CAROOT` set to the Windows mkcert `CAROOT` path (e.g. `/mnt/c/Users/<user>/AppData/Local/mkcert`)
 - `CAROOT` listed in `$WSLENV`
 - `mkcert.exe` installed on Windows
 - mkcert CA in Windows certificate store (installed via `mkcert -install` in PowerShell)
@@ -200,7 +201,7 @@ ddev utility tls-diagnose
 # Expected: Live Connectivity checks both Linux-side tls.Dial AND PowerShell Invoke-WebRequest
 ```
 
-### Test: CAROOT not set
+### Test: `CAROOT` not set
 
 ```bash
 unset CAROOT
@@ -212,7 +213,7 @@ ddev utility tls-diagnose
 # Restore: open a new WSL2 terminal (WSLENV propagation restores it)
 ```
 
-### Test: CAROOT points to Linux path (not Windows filesystem)
+### Test: `CAROOT` points to Linux path (not Windows filesystem)
 
 ```bash
 export CAROOT=~/.local/share/mkcert
@@ -221,7 +222,7 @@ ddev utility tls-diagnose
 # Expected: exit code 1
 ```
 
-### Test: CAROOT not in WSLENV
+### Test: `CAROOT` not in `WSLENV`
 
 In Windows PowerShell:
 

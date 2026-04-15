@@ -1847,7 +1847,7 @@ ddev utility testcleanup
 
 ### `utility tls-diagnose`
 
-Diagnose TLS/HTTPS certificate trust issues. Checks mkcert installation and CAROOT configuration, OS trust store installation, certificate file validity, and live HTTPS connectivity when a project is running.
+Diagnose TLS/HTTPS certificate trust issues. Checks mkcert installation and `CAROOT` configuration, OS trust store installation, certificate file validity, and live HTTPS connectivity when a project is running.
 
 On WSL2, also checks WSL2-specific CA sharing requirements: whether `$CAROOT` points to the Windows filesystem, whether `CAROOT` is in `$WSLENV`, whether the Windows certificate store contains the mkcert CA, and whether Windows-side and WSL2-side CA fingerprints match.
 
