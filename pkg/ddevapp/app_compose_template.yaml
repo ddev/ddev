@@ -82,9 +82,7 @@ services:
       interval: "1s"
       retries: 70
       start_period: "{{ .DefaultContainerTimeout }}s"
-      {{ if templateCanUse "healthcheck.start_interval" -}}
       start_interval: "1s"
-      {{- end }}
       timeout: "70s"
   {{ end }} {{/* end if not .OmitDB */}}
 
@@ -255,9 +253,7 @@ services:
       interval: "1s"
       retries: 70
       start_period: "{{ .DefaultContainerTimeout }}s"
-      {{- if templateCanUse "healthcheck.start_interval" }}
       start_interval: "1s"
-      {{- end }}
       timeout: "70s"
   {{ if (not .OmitDB) }}
   xhgui:
@@ -287,9 +283,7 @@ services:
       interval: "1s"
       retries: 70
       start_period: "{{ .DefaultContainerTimeout }}s"
-      {{ if templateCanUse "healthcheck.start_interval" -}}
       start_interval: "1s"
-      {{- end }}
       timeout: "70s"
     x-ddev:
       describe-url-port: "Launch: ddev xhgui"
