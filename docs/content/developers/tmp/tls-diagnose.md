@@ -4,6 +4,40 @@ This guide is written for Claude running on each target OS. It covers what to ve
 
 The command is in PR ddev/ddev#8259, branch `20260328_rfay_tls_diagnose`.
 
+## Running with Claude Code (automated)
+
+Claude Code can execute most of the Linux and macOS tests without human intervention. Because the tests involve destructive operations (moving CA files, running `mkcert -uninstall`, manipulating PATH), you must run with `--dangerously-skip-permissions` so Claude does not prompt for approval on every shell command:
+
+```bash
+claude --dangerously-skip-permissions
+```
+
+Then give it a prompt like:
+
+```
+Run the manual tests for `ddev utility tls-diagnose` from docs/content/developers/tmp/tls-diagnose.md.
+Build the binary with `make`, then execute each test scenario for this platform using shell commands.
+After each test, restore any changed state (moved files, uninstalled CAs, etc.) before proceeding.
+Report which tests passed, which failed, and any unexpected behavior.
+```
+
+Claude can automate all of the following for Linux and macOS:
+
+- **Baseline**: run `ddev utility tls-diagnose` and check exit code and section headings
+- **CAROOT mismatch**: set `CAROOT=/tmp/wrong` and run; verify no new CA is created
+- **rootCA.pem deleted**: `mv` the file, run, restore it
+- **CA not in trust store**: `mkcert -uninstall`, run, `mkcert -install`
+- **certutil not in PATH** (Linux): strip `/usr/bin` and `/bin` from PATH, run, check certutil warning
+- **mkcert not in PATH**: strip all mkcert-containing dirs from PATH, run, check error message
+
+Tests that require human interaction or a specific environment:
+- **WSL2 tests**: must run inside an actual WSL2 instance with Windows visible
+- **Windows tests**: must run the Windows binary in PowerShell/cmd
+- **WSLg prompt**: interactive question cannot be automated in a non-TTY session
+- **Firefox on macOS**: requires Firefox.app to be installed
+- **Snap Firefox**: only present on systems with snap Firefox installed
+- **Live connectivity**: requires a running DDEV project (`ddev start` first)
+
 ## Prerequisites on All Platforms
 
 Build the branch binary first with `make`

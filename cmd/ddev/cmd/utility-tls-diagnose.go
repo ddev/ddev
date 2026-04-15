@@ -332,6 +332,15 @@ func checkOSTrustStore(caRoot string) bool {
 
 	hasIssues := false
 
+	// If caRoot is empty, the upstream CA check already failed — don't run
+	// mkcert -install, which would create a new CA under whatever CAROOT is
+	// set in the environment and install it in the system trust store.
+	if caRoot == "" {
+		output.UserOut.Println("  ⚠ Skipping OS trust store check — CA root unavailable (see mkcert section above)")
+		output.UserOut.Println()
+		return true
+	}
+
 	// Run mkcert -install to check/install the CA
 	cmd := exec.Command("mkcert", "-install")
 	out, err := cmd.CombinedOutput()
