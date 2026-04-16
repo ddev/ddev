@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 )
 

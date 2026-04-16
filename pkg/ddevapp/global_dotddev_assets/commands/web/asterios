@@ -9,10 +9,11 @@
 ## ExecRaw: true
 ## MutagenSync: true
 
-cd "${DDEV_COMPOSER_ROOT:-/var/www/html}" || exit 1
+# Ignore anything we find in the mounted global commands
+PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}
 
-if [ ! -x "./asterios" ]; then
-  echo "Error: ./asterios is not executable or missing"
+if ! command -v asterios >/dev/null; then
+  echo "asterios is not available. You may need to 'ddev composer require asterios/core'"
   exit 1
 fi
 

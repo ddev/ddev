@@ -242,6 +242,8 @@ ddev artisan list
 
 ## `asterios`
 
+*Alias: `ast`.*
+
 Run the `asterios` command; available only in projects of type `asterios`, and only available if `asterios` is in the project root.
 
 ```shell
