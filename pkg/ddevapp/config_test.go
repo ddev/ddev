@@ -1265,6 +1265,7 @@ func TestExtraPackages(t *testing.T) {
     sha256=$(sha256sum /var/local-apt-repo/fake-ddev-test-bind9-dnsutils.deb | awk '{print $1}') && \
     printf "Package: fake-ddev-test-bind9-dnsutils\nVersion: 1:9.18.0-1\nArchitecture: all\nFilename: fake-ddev-test-bind9-dnsutils.deb\nSize: ${size}\nMD5sum: ${md5}\nSHA256: ${sha256}\nDescription: fake\n\n" > /var/local-apt-repo/Packages && \
     gzip -c /var/local-apt-repo/Packages > /var/local-apt-repo/Packages.gz && \
+    rm -rf /etc/apt/sources.list /etc/apt/sources.list.d && mkdir -p /etc/apt/sources.list.d && \
     printf 'Types: deb\nURIs: file:///var/local-apt-repo\nSuites: ./\nTrusted: yes\n' > /etc/apt/sources.list.d/fake-ddev-test.sources
 `
 	err = os.WriteFile(filepath.Join(webBuildDir, "pre.Dockerfile.fake-ddev-test"), []byte(webPreDockerfile), 0644)
@@ -1280,6 +1281,7 @@ func TestExtraPackages(t *testing.T) {
     sha256=$(sha256sum /var/local-apt-repo/fake-ddev-test-sudo.deb | awk '{print $1}') && \
     printf "Package: fake-ddev-test-sudo\nVersion: 1.9.0-1\nArchitecture: all\nFilename: fake-ddev-test-sudo.deb\nSize: ${size}\nMD5sum: ${md5}\nSHA256: ${sha256}\nDescription: fake\n\n" > /var/local-apt-repo/Packages && \
     gzip -c /var/local-apt-repo/Packages > /var/local-apt-repo/Packages.gz && \
+    rm -rf /etc/apt/sources.list /etc/apt/sources.list.d && mkdir -p /etc/apt/sources.list.d && \
     printf 'Types: deb\nURIs: file:///var/local-apt-repo\nSuites: ./\nTrusted: yes\n' > /etc/apt/sources.list.d/fake-ddev-test.sources
 `
 	err = os.WriteFile(filepath.Join(dbBuildDir, "pre.Dockerfile.fake-ddev-test"), []byte(dbPreDockerfile), 0644)
