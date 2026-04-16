@@ -142,7 +142,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		"BuildContext":     context,
 		"IsPodmanRootless": dockerutil.IsPodmanRootless(),
 	}
-	t, err := template.New("ssh_auth_compose_template.yaml").ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
+	t, err := template.New("ssh_auth_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
 	if err != nil {
 		return "", err
 	}

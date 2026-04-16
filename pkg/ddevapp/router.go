@@ -254,7 +254,7 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 		"IsRootless":                 dockerutil.IsRootless(),
 	}
 
-	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
+	t, err := template.New("router_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "router_compose_template.yaml")
 	if err != nil {
 		return "", err
 	}

@@ -36,7 +36,9 @@ services:
       interval: 1s
       retries: 2
       start_period: 10s
+      {{ if templateCanUse "healthcheck.start_interval" -}}
       start_interval: "500ms"
+      {{- end }}
       timeout: 62s
 networks:
   ddev_default:
