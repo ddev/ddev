@@ -196,6 +196,20 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			userWslenvReg, userWslenvRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_CURRENT_USER\\Environment", "/v", "WSLENV")
 			t.Logf("Registry HKCU\\Environment WSLENV: %s (err: %v)", strings.TrimSpace(userWslenvReg), userWslenvRegErr)
 
+			// Assert CAROOT is set in registry
+			require.NoError(userCarootRegErr, "CAROOT should be set in registry after install")
+			caRootValue := parseRegQueryValue(userCarootReg)
+			require.NotEmpty(caRootValue, "CAROOT registry value should not be empty after install")
+			t.Logf("CAROOT registry value: %q", caRootValue)
+
+			// Assert WSLENV is set correctly: must contain CAROOT/up, must not contain semicolons
+			require.NoError(userWslenvRegErr, "WSLENV should be set in registry after WSL2 install")
+			wslenvValue := parseRegQueryValue(userWslenvReg)
+			require.NotEmpty(wslenvValue, "WSLENV registry value should not be empty after install")
+			require.Contains(wslenvValue, "CAROOT/up", "WSLENV should contain CAROOT/up after install")
+			require.NotContains(wslenvValue, ";", "WSLENV must not contain semicolons — they are not valid WSLENV separators and prevent CAROOT from propagating to WSL2")
+			t.Logf("WSLENV registry value: %q (valid)", wslenvValue)
+
 			// Check system environment variables in registry
 			systemCarootReg, systemCarootRegErr := exec.RunHostCommand("reg.exe", "query", "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", "/v", "CAROOT")
 			t.Logf("Registry HKLM\\System\\Environment CAROOT: %s (err: %v)", strings.TrimSpace(systemCarootReg), systemCarootRegErr)
@@ -324,6 +338,22 @@ func TestWindowsInstallerTraditional(t *testing.T) {
 
 	// Test basic ddev functionality on Windows
 	testBasicDdevTraditionalFunctionality(t)
+}
+
+// parseRegQueryValue parses the value from reg.exe query output.
+// reg.exe outputs lines like: "    VARNAME    REG_SZ    value"
+// Returns the value string or empty string if not found.
+func parseRegQueryValue(output string) string {
+	for line := range strings.SplitSeq(output, "\n") {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "REG_SZ") {
+			parts := strings.SplitN(line, "REG_SZ", 2)
+			if len(parts) == 2 {
+				return strings.TrimSpace(parts[1])
+			}
+		}
+	}
+	return ""
 }
 
 // Helper functions

@@ -14,6 +14,7 @@
 !insertmacro WordFind
 ${StrStr}
 ${StrRep}
+${UnStrRep}
 ${StrTrimNewLines}
 ${StrCase}
 ; Remove the Trim macro since we're using our own TrimWhitespace function
@@ -1847,44 +1848,32 @@ Function SetupWindowsCAROOT
             ; Store original value for debugging
             StrCpy $R4 $R2
 
-            ; Clean up any existing CAROOT/up entries first
+            ; Clean up any existing CAROOT/up entries first (handles both : and ; separators)
             StrCpy $R3 $R2  ; Copy to working variable
 
-            ; Remove all instances of CAROOT/up; (with semicolon)
-            ${Do}
-                ${StrStr} $R5 $R3 "CAROOT/up;"
-                ${If} $R5 == ""
-                    ${Break}
-                ${EndIf}
-                ${StrRep} $R3 $R3 "CAROOT/up;" ""
-            ${Loop}
+            ; Remove all instances of CAROOT/up with colon separator (correct WSLENV format)
+            ${StrRep} $R3 $R3 "CAROOT/up:" ""
+            ${StrRep} $R3 $R3 ":CAROOT/up" ""
 
-            ; Remove all instances of ;CAROOT/up (with leading semicolon)
-            ${Do}
-                ${StrStr} $R5 $R3 ";CAROOT/up"
-                ${If} $R5 == ""
-                    ${Break}
-                ${EndIf}
-                ${StrRep} $R3 $R3 ";CAROOT/up" ""
-            ${Loop}
+            ; Remove all instances of CAROOT/up with semicolon separator (legacy/incorrect format)
+            ${StrRep} $R3 $R3 "CAROOT/up;" ""
+            ${StrRep} $R3 $R3 ";CAROOT/up" ""
 
             ; Remove if it's exactly "CAROOT/up" by itself
             ${If} $R3 == "CAROOT/up"
                 StrCpy $R3 ""
             ${EndIf}
 
-            ; Clean up any double semicolons that might have been created
-            ${Do}
-                ${StrStr} $R5 $R3 ";;"
-                ${If} $R5 == ""
-                    ${Break}
-                ${EndIf}
-                ${StrRep} $R3 $R3 ";;" ";"
-            ${Loop}
+            ; Clean up any double separators that might have been created
+            ${StrRep} $R3 $R3 "::" ":"
+            ${StrRep} $R3 $R3 ";;" ";"
 
-            ; Remove leading or trailing semicolons
+            ; Remove leading or trailing separators (: or ;)
             ${If} $R3 != ""
                 StrCpy $R5 $R3 1  ; Get first character
+                ${If} $R5 == ":"
+                    StrCpy $R3 $R3 "" 1  ; Remove first character
+                ${EndIf}
                 ${If} $R5 == ";"
                     StrCpy $R3 $R3 "" 1  ; Remove first character
                 ${EndIf}
@@ -1892,15 +1881,18 @@ Function SetupWindowsCAROOT
                     StrLen $R6 $R3
                     IntOp $R6 $R6 - 1
                     StrCpy $R5 $R3 1 $R6  ; Get last character
+                    ${If} $R5 == ":"
+                        StrCpy $R3 $R3 $R6  ; Remove last character
+                    ${EndIf}
                     ${If} $R5 == ";"
                         StrCpy $R3 $R3 $R6  ; Remove last character
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
 
-            ; Now add CAROOT/up to the cleaned string
+            ; Now add CAROOT/up to the cleaned string using colon separator (WSLENV standard)
             ${If} $R3 != ""
-                StrCpy $R2 "CAROOT/up;$R3"
+                StrCpy $R2 "$R3:CAROOT/up"
             ${Else}
                 StrCpy $R2 "CAROOT/up"
             ${EndIf}
@@ -1915,8 +1907,39 @@ Function SetupWindowsCAROOT
             EnVar::AddValue "WSLENV" "$R2"
             Pop $0  ; Get error code from AddValue
 
-            ; Verify by reading from registry
+            ; Verify by reading back from registry and validate
             ReadRegStr $R5 HKCU "Environment" "WSLENV"
+
+            Push "WSLENV after update: [$R5]"
+            Call LogPrint
+
+            ; Validate: WSLENV must contain CAROOT and must not contain semicolons
+            ${StrStr} $R6 $R5 "CAROOT"
+            ${If} $R6 == ""
+                Push "WARNING: WSLENV does not contain CAROOT after update - WSL2 certificate sharing may not work"
+                Call LogPrint
+                ${IfNot} ${Silent}
+                    MessageBox MB_ICONEXCLAMATION|MB_OK "Warning: WSLENV was not set correctly. WSL2 certificate sharing may not work. Check WSLENV in HKCU\Environment."
+                ${EndIf}
+            ${EndIf}
+            ${StrStr} $R6 $R5 ";"
+            ${If} $R6 != ""
+                Push "WARNING: WSLENV contains semicolons which are not valid WSLENV separators: [$R5]"
+                Call LogPrint
+                ${IfNot} ${Silent}
+                    MessageBox MB_ICONEXCLAMATION|MB_OK "Warning: WSLENV contains invalid semicolons. CAROOT may not propagate to WSL2. Current value: $R5"
+                ${EndIf}
+            ${EndIf}
+
+            ; Validate: CAROOT must be non-empty
+            ReadRegStr $R6 HKCU "Environment" "CAROOT"
+            ${If} $R6 == ""
+                Push "WARNING: CAROOT is empty after update - WSL2 certificate sharing may not work"
+                Call LogPrint
+            ${Else}
+                Push "CAROOT validated: [$R6]"
+                Call LogPrint
+            ${EndIf}
 
             Push "mkcert certificate sharing with WSL2 configured successfully."
             Call LogPrint
@@ -2377,19 +2400,41 @@ Function un.CleanupMkcertEnvironment
 
         DetailPrint "Current WSLENV: $R0"
 
-        ; Remove CAROOT/up; from the beginning
-        ${WordFind} "$R0" "CAROOT/up;" "E+1{" $R1
-        ${If} $R1 != $R0
-            StrCpy $R0 $R1
-        ${Else}
-            ; Remove ;CAROOT/up from anywhere else
-            ${WordFind} "$R0" ";CAROOT/up" "E+1{" $R1
-            ${If} $R1 != $R0
-                StrCpy $R0 $R1
-            ${Else}
-                ; Check if it's just CAROOT/up by itself
-                ${If} $R0 == "CAROOT/up"
-                    StrCpy $R0 ""
+        ; Remove all instances of CAROOT/up with colon separator (correct WSLENV format)
+        ${UnStrRep} $R0 $R0 "CAROOT/up:" ""
+        ${UnStrRep} $R0 $R0 ":CAROOT/up" ""
+
+        ; Remove all instances of CAROOT/up with semicolon separator (legacy/incorrect format)
+        ${UnStrRep} $R0 $R0 "CAROOT/up;" ""
+        ${UnStrRep} $R0 $R0 ";CAROOT/up" ""
+
+        ; Remove if it's exactly "CAROOT/up" by itself
+        ${If} $R0 == "CAROOT/up"
+            StrCpy $R0 ""
+        ${EndIf}
+
+        ; Clean up any double separators that might have been created
+        ${UnStrRep} $R0 $R0 "::" ":"
+        ${UnStrRep} $R0 $R0 ";;" ";"
+
+        ; Remove leading or trailing separators (: or ;)
+        ${If} $R0 != ""
+            StrCpy $R1 $R0 1  ; Get first character
+            ${If} $R1 == ":"
+                StrCpy $R0 $R0 "" 1  ; Remove first character
+            ${EndIf}
+            ${If} $R1 == ";"
+                StrCpy $R0 $R0 "" 1  ; Remove first character
+            ${EndIf}
+            ${If} $R0 != ""
+                StrLen $R2 $R0
+                IntOp $R2 $R2 - 1
+                StrCpy $R1 $R0 1 $R2  ; Get last character
+                ${If} $R1 == ":"
+                    StrCpy $R0 $R0 $R2  ; Remove last character
+                ${EndIf}
+                ${If} $R1 == ";"
+                    StrCpy $R0 $R0 $R2  ; Remove last character
                 ${EndIf}
             ${EndIf}
         ${EndIf}
