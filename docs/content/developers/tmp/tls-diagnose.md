@@ -392,7 +392,7 @@ ddev utility tls-diagnose
 
 ## Windows (native, not WSL2)
 
-The binary for Windows is `.gotmp/bin/windows_amd64/ddev.exe`. Run in a standard Command Prompt or PowerShell (not as Administrator).
+The binary for Windows is `.gotmp/bin/windows_amd64/ddev.exe` (or `windows_arm64/ddev.exe` on ARM64). Run in a standard Command Prompt or PowerShell (not as Administrator).
 
 ### Baseline
 
@@ -404,23 +404,61 @@ Expected:
 
 - mkcert found (installed via `choco install mkcert` or `winget install mkcert`)
 - OS Trust Store: CA already installed
-- Firefox: detected or not detected; if detected, shows warning about manual CA import
+- Firefox: detected or not detected; if detected, shows ⚠ warning — see below
 - WSL2 Configuration: section absent
 - Certificate Files: default cert valid
-- Summary: No issues found, exit code 0
+- Summary: No issues found, exit code 0 (exit code 1 if Firefox is installed — Firefox warning counts as an issue)
+
+### Test: mkcert not in PATH
+
+```powershell
+# Rename mkcert temporarily (adjust path to match where mkcert.exe is installed)
+Rename-Item "$env:ProgramData\chocolatey\bin\mkcert.exe" "mkcert.exe.bak"
+# or for winget installs, find it with: where.exe mkcert
+
+ddev utility tls-diagnose
+# Expected: ✗ "mkcert not found in PATH" and install instructions
+# Expected: exit code 1
+
+# Restore
+Rename-Item "$env:ProgramData\chocolatey\bin\mkcert.exe.bak" "mkcert.exe"
+```
+
+### Test: rootCA.pem deleted
+
+```powershell
+$caroot = mkcert -CAROOT
+Rename-Item "$caroot\rootCA.pem" "rootCA.pem.bak"
+
+ddev utility tls-diagnose
+# Expected: ✗ "rootCA.pem not found in CAROOT"
+# Expected: OS Trust Store and Certificate Files sections skipped
+# Expected: exit code 1
+
+# Restore
+Rename-Item "$caroot\rootCA.pem.bak" "rootCA.pem"
+```
+
+### Test: CAROOT env var mismatch
+
+```powershell
+$env:CAROOT = "C:\wrong\path"
+ddev utility tls-diagnose
+# Expected: ✗ "rootCA.pem not found in CAROOT (C:\wrong\path)"
+# Expected: exit code 1
+
+Remove-Item Env:CAROOT
+```
 
 ### Test: mkcert CA not in Windows certificate store
 
 ```powershell
-# Remove from both stores
-Get-ChildItem Cert:\CurrentUser\Root | Where-Object { $_.Subject -like "*mkcert*" } | Remove-Item
-Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $_.Subject -like "*mkcert*" } | Remove-Item
+mkcert -uninstall
 
 ddev utility tls-diagnose
-# Expected: "mkcert -install failed" or warning that CA is not trusted
-# Expected: exit code 1
-
-mkcert -install
+# Expected: ✓ CA installed in system trust store (tool auto-reinstalls via mkcert -install)
+# Expected: exit code 0 (or 1 if Firefox is also installed)
+# Note: the tool runs mkcert -install as part of the OS Trust Store check and auto-fixes this
 ```
 
 ### Test: Firefox present on Windows
@@ -429,9 +467,11 @@ If Firefox is installed:
 
 ```
 ddev utility tls-diagnose
-# Expected: ⚠ "Firefox detected on Windows — Firefox does not use the Windows system certificate store"
+# Expected: ⚠ "Firefox detected on Windows — if you use Firefox (not Chrome/Edge), it does not
+#             use the Windows system certificate store and will show certificate errors"
 # Expected: Path to rootCA.pem for manual import
 # Expected: Link to configuring-browsers docs
+# Expected: exit code 1 (Firefox warning counts as an issue)
 ```
 
 ---
