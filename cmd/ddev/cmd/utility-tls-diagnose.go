@@ -616,10 +616,11 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 		if err == nil {
 			result := strings.TrimSpace(strings.TrimSuffix(string(psOut), "\r"))
 			if result == "FOUND" {
-				output.UserOut.Println("  ⚠ Firefox detected on Windows — if you use Firefox (not Chrome/Edge), it cannot")
-				output.UserOut.Println("    use the Windows system certificate store and will show certificate errors")
-				output.UserOut.Println("    → Manually import the mkcert CA into Firefox:")
-				output.UserOut.Println("      Firefox Settings → Privacy & Security → View Certificates → Import")
+				output.UserOut.Println("  ⚠ Firefox detected on Windows — Firefox may not trust DDEV certificates")
+				output.UserOut.Println("    → Check Firefox Settings → Privacy & Security →")
+				output.UserOut.Println("      'Allow Firefox to automatically trust third-party root certificates you install'")
+				output.UserOut.Println("    → If that setting is off and Firefox shows cert errors, import the CA manually:")
+				output.UserOut.Println("      Firefox Settings → Privacy & Security → Manage Certificates → Import")
 				winCARootDisplay := windowsPathFromWSLCAROOT()
 				if len(winCARootDisplay) >= 2 && winCARootDisplay[1] == ':' {
 					output.UserOut.Printf("      CA file: %s\\rootCA.pem\n", winCARootDisplay)
@@ -636,8 +637,6 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 		}
 
 	case nodeps.IsWindows():
-		// Traditional Windows (not WSL2). Firefox does not use the Windows system
-		// certificate store, so the mkcert CA must be imported manually.
 		firefoxPaths := []string{
 			filepath.Join(os.Getenv("ProgramFiles"), "Mozilla Firefox", "firefox.exe"),
 			filepath.Join(os.Getenv("ProgramFiles(x86)"), "Mozilla Firefox", "firefox.exe"),
@@ -651,17 +650,23 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 			}
 		}
 		if firefoxFound {
-			output.UserOut.Println("  ⚠ Firefox detected on Windows — if you use Firefox (not Chrome/Edge), it does not")
-			output.UserOut.Println("    use the Windows system certificate store and will show certificate errors")
-			output.UserOut.Println("    → Manually import the mkcert CA into Firefox:")
-			output.UserOut.Println("      Firefox Settings → Privacy & Security → View Certificates → Import")
-			caRoot := globalconfig.GetCAROOT()
-			if caRoot != "" {
-				output.UserOut.Printf("      CA file: %s\\rootCA.pem\n", caRoot)
+			if firefoxEnterpriseRootsEnabled() {
+				output.UserOut.Println("  ✓ Firefox detected — configured to use Windows certificate store")
+				output.UserOut.Println("    (security.enterprise_roots.enabled=true; no manual import needed)")
+			} else {
+				output.UserOut.Println("  ⚠ Firefox detected on Windows — Firefox may not trust DDEV certificates")
+				output.UserOut.Println("    → Check Firefox Settings → Privacy & Security →")
+				output.UserOut.Println("      'Allow Firefox to automatically trust third-party root certificates you install'")
+				output.UserOut.Println("    → If that setting is off and Firefox shows cert errors, import the CA manually:")
+				output.UserOut.Println("      Firefox Settings → Privacy & Security → Manage Certificates → Import")
+				caRoot := globalconfig.GetCAROOT()
+				if caRoot != "" {
+					output.UserOut.Printf("      CA file: %s\\rootCA.pem\n", caRoot)
+				}
+				output.UserOut.Println("    → Firefox Nightly, Developer Edition, and ESR each have separate trust stores")
+				output.UserOut.Println("    → See: https://docs.ddev.com/en/stable/users/install/configuring-browsers/")
+				hasWarnings = true
 			}
-			output.UserOut.Println("    → Firefox Nightly, Developer Edition, and ESR each have separate trust stores")
-			output.UserOut.Println("    → See: https://docs.ddev.com/en/stable/users/install/configuring-browsers/")
-			hasWarnings = true
 		} else {
 			output.UserOut.Println("  ✓ Firefox not detected on Windows")
 		}
@@ -694,6 +699,34 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 
 	output.UserOut.Println()
 	return hasWarnings
+}
+
+// firefoxEnterpriseRootsEnabled returns true if Firefox on Windows will use the
+// Windows system certificate store. Modern Firefox defaults this to true; we only
+// return false if a profile explicitly sets security.enterprise_roots.enabled=false.
+func firefoxEnterpriseRootsEnabled() bool {
+	appData := os.Getenv("APPDATA")
+	if appData == "" {
+		return true
+	}
+	profilesDir := filepath.Join(appData, "Mozilla", "Firefox", "Profiles")
+	entries, err := os.ReadDir(profilesDir)
+	if err != nil {
+		return true
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(profilesDir, entry.Name(), "prefs.js"))
+		if err != nil {
+			continue
+		}
+		if strings.Contains(string(data), `"security.enterprise_roots.enabled", false`) {
+			return false
+		}
+	}
+	return true
 }
 
 // checkLinuxFirefox checks Firefox on Linux (also used for WSLg browsers inside WSL2).
