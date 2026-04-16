@@ -3,7 +3,6 @@ package dockerutil
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -600,16 +599,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	if !detach {
 		timeout = 10 * time.Minute
 	}
-	containerID, out, returnErr = RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, timeout)
-	// On Lima/Colima, ContainerInspect may report State.Running=true even after
-	// the container has exited, causing the polling loop to exhaust the deadline.
-	// Observed only in tests, not reported by users; possibly a Lima/Colima bug.
-	// Retry once on DeadlineExceeded to recover.
-	if returnErr != nil && removeContainerAfterRun && errors.Is(returnErr, context.DeadlineExceeded) && (IsLima() || IsColima()) {
-		util.Debug("RunSimpleContainer: attempt 1 timed out on Lima/Colima, retrying: %v", returnErr)
-		containerID, out, returnErr = RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, timeout)
-	}
-	return
+	return RunSimpleContainerExtended(name, config, hostConfig, removeContainerAfterRun, timeout)
 }
 
 // RunSimpleContainerExtended runs a container and captures the stdout/stderr.
@@ -782,6 +772,9 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 	exitCode := 0
 
 	if timeout > 0 {
+		// On Lima/Colima, ContainerInspect may report State.Running=true even after
+		// the container has exited, causing the polling loop to exhaust the deadline.
+		// Observed only in tests, not reported by users; possibly a Lima/Colima bug.
 		waitCtx, waitCancel := context.WithTimeout(ctx, timeout)
 		defer waitCancel()
 		tickChan := time.NewTicker(500 * time.Millisecond)
