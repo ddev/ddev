@@ -1246,14 +1246,51 @@ func TestExtraPackages(t *testing.T) {
 		_, _ = exec.RunCommand("bash", []string{"-c", command})
 	})
 
+	// Set up local apt repositories with fake packages so the test does not depend on external repos.
+	// pre.Dockerfile.fake-ddev-test runs after FROM but before the extra_packages apt-get install.
+	// dpkg-deb is part of the dpkg package (always present in Debian images) so no network is needed.
+	webBuildDir := app.GetConfigPath("web-build")
+	dbBuildDir := app.GetConfigPath("db-build")
+	err = os.MkdirAll(webBuildDir, 0755)
+	require.NoError(t, err)
+	err = os.MkdirAll(dbBuildDir, 0755)
+	require.NoError(t, err)
+
+	// fake-ddev-test-bind9-dnsutils: only needs to appear in the dpkg status database (dpkg -s check), no real binary required.
+	webPreDockerfile := `RUN mkdir -p /var/local-apt-repo /tmp/fakepkg/DEBIAN && \
+    printf 'Package: fake-ddev-test-bind9-dnsutils\nVersion: 1:9.18.0-1\nArchitecture: all\nMaintainer: fake\nDescription: fake\n' > /tmp/fakepkg/DEBIAN/control && \
+    dpkg-deb --build /tmp/fakepkg /var/local-apt-repo/fake-ddev-test-bind9-dnsutils.deb && \
+    size=$(stat -c%s /var/local-apt-repo/fake-ddev-test-bind9-dnsutils.deb) && \
+    md5=$(md5sum /var/local-apt-repo/fake-ddev-test-bind9-dnsutils.deb | awk '{print $1}') && \
+    sha256=$(sha256sum /var/local-apt-repo/fake-ddev-test-bind9-dnsutils.deb | awk '{print $1}') && \
+    printf "Package: fake-ddev-test-bind9-dnsutils\nVersion: 1:9.18.0-1\nArchitecture: all\nFilename: fake-ddev-test-bind9-dnsutils.deb\nSize: ${size}\nMD5sum: ${md5}\nSHA256: ${sha256}\nDescription: fake\n\n" > /var/local-apt-repo/Packages && \
+    printf 'Types: deb\nURIs: file:///var/local-apt-repo\nSuites: ./\nTrusted: yes\n' > /etc/apt/sources.list.d/fake-ddev-test.sources
+`
+	err = os.WriteFile(filepath.Join(webBuildDir, "pre.Dockerfile.fake-ddev-test"), []byte(webPreDockerfile), 0644)
+	require.NoError(t, err)
+
+	// fake-ddev-test-sudo: needs an actual binary at /usr/bin/fake-ddev-test-sudo because the test runs "command -v <pkg>".
+	dbPreDockerfile := `RUN mkdir -p /var/local-apt-repo /tmp/fakepkg/DEBIAN /tmp/fakepkg/usr/bin && \
+    printf 'Package: fake-ddev-test-sudo\nVersion: 1.9.0-1\nArchitecture: all\nMaintainer: fake\nDescription: fake\n' > /tmp/fakepkg/DEBIAN/control && \
+    printf '#!/bin/sh\nexec "$@"\n' > /tmp/fakepkg/usr/bin/fake-ddev-test-sudo && chmod 755 /tmp/fakepkg/usr/bin/fake-ddev-test-sudo && \
+    dpkg-deb --build /tmp/fakepkg /var/local-apt-repo/fake-ddev-test-sudo.deb && \
+    size=$(stat -c%s /var/local-apt-repo/fake-ddev-test-sudo.deb) && \
+    md5=$(md5sum /var/local-apt-repo/fake-ddev-test-sudo.deb | awk '{print $1}') && \
+    sha256=$(sha256sum /var/local-apt-repo/fake-ddev-test-sudo.deb | awk '{print $1}') && \
+    printf "Package: fake-ddev-test-sudo\nVersion: 1.9.0-1\nArchitecture: all\nFilename: fake-ddev-test-sudo.deb\nSize: ${size}\nMD5sum: ${md5}\nSHA256: ${sha256}\nDescription: fake\n\n" > /var/local-apt-repo/Packages && \
+    printf 'Types: deb\nURIs: file:///var/local-apt-repo\nSuites: ./\nTrusted: yes\n' > /etc/apt/sources.list.d/fake-ddev-test.sources
+`
+	err = os.WriteFile(filepath.Join(dbBuildDir, "pre.Dockerfile.fake-ddev-test"), []byte(dbPreDockerfile), 0644)
+	require.NoError(t, err)
+
 	// Start and make sure that the packages don't exist already
 	err = app.Start()
 	require.NoError(t, err)
 
-	addedDBPackage := "sudo"
-	addedWebPackage := "bind9-dnsutils"
+	addedDBPackage := "fake-ddev-test-sudo"
+	addedWebPackage := "fake-ddev-test-bind9-dnsutils"
 
-	// Test db container to make sure no sudo in there at beginning
+	// Test db container to make sure the fake package is not in there at beginning
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     fmt.Sprintf("command -v %s 2>/dev/null", addedDBPackage),
@@ -1283,7 +1320,7 @@ func TestExtraPackages(t *testing.T) {
 
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     "command -v sudo",
+		Cmd:     "command -v " + addedDBPackage,
 	})
 	assert.NoError(err)
 	assert.Equal(fmt.Sprintf("/usr/bin/%s", addedDBPackage), strings.Trim(stdout, "\r\n"))
