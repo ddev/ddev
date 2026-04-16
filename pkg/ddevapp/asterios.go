@@ -47,6 +47,11 @@ func asteriosPostStartAction(app *DdevApp) error {
 	// Only set database configuration if db container is not omitted
 	shouldManageDB := !slices.Contains(app.OmitContainers, "db")
 
+	// PostgreSQL is not supported at the time
+	if app.Database.Type == nodeps.Postgres {
+		shouldManageDB = false
+	}
+
 	if shouldManageDB {
 		port := "3306"
 
