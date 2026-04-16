@@ -1759,16 +1759,14 @@ ddev magento setup:upgrade
     Run Moodle installation:
 
     ```bash
-    ddev exec 'php admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
+    ddev exec 'php admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminemail=admin@example.com --adminpass=password'
     ```
 
-    Launch Moodle:
+    Launch Moodle (login with `admin` and `password`)::
 
     ```bash
     ddev launch /login
     ```
-
-    In the web browser, log into your account using `admin` and `password`.
 
     Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
 
@@ -1786,7 +1784,7 @@ ddev magento setup:upgrade
         ddev config --docroot=public --webserver-type=apache-fpm
         ddev start -y
         ddev composer create-project moodle/moodle
-        ddev exec 'php admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
+        ddev exec 'php admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminemail=admin@example.com --adminpass=password'
         ddev launch /login
         EOF
         chmod +x setup-moodle.sh

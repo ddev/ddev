@@ -16,20 +16,34 @@ teardown() {
 
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
+
   run ddev config --docroot=public --webserver-type=apache-fpm
   assert_success
+
   run ddev start -y
   assert_success
+
   run ddev composer create-project moodle/moodle
   assert_success
-  run ddev exec 'php admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
+
+  run ddev exec 'php admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminemail=admin@example.com --adminpass=password'
   assert_success
+
   DDEV_DEBUG=true run ddev launch /login
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/login"
+  assert_line "FULLURL https://${PROJNAME}.ddev.site/login"
   assert_success
+
   # validate running project
   run curl -sfIv https://${PROJNAME}.ddev.site
+  assert_output --partial "HTTP/2 303"
+  assert_line --regexp "location: .*/login/index.php"
+  assert_output --partial "set-cookie: MoodleSession="
+  assert_output --partial "server: Apache"
+  assert_success
+
+  run curl -sfIv https://${PROJNAME}.ddev.site/login/index.php
   assert_output --partial "HTTP/2 200"
   assert_output --partial "set-cookie: MoodleSession="
+  assert_output --partial "server: Apache"
   assert_success
 }
