@@ -324,7 +324,9 @@ func verifyCATrustedByOS(caCert *x509.Certificate, caKey crypto.Signer) (bool, e
 	return verifyErr == nil, nil
 }
 
-// checkOSTrustStore runs mkcert -install and checks the result.
+// checkOSTrustStore checks whether the mkcert CA is trusted by the OS cert pool.
+// If the CA is not trusted, it warns about potential elevation and asks permission
+// before running mkcert -install.
 func checkOSTrustStore(caRoot string) bool {
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("OS Trust Store")
@@ -332,49 +334,13 @@ func checkOSTrustStore(caRoot string) bool {
 
 	hasIssues := false
 
-	// If caRoot is empty, the upstream CA check already failed — don't run
-	// mkcert -install, which would create a new CA under whatever CAROOT is
-	// set in the environment and install it in the system trust store.
 	if caRoot == "" {
 		output.UserOut.Println("  ⚠ Skipping OS trust store check — CA root unavailable (see mkcert section above)")
 		output.UserOut.Println()
 		return true
 	}
 
-	// Run mkcert -install to check/install the CA.
-	// Explicitly set CAROOT so mkcert uses the same CA root that was already
-	// verified above, rather than defaulting to a different path.
-	cmd := exec.Command("mkcert", "-install")
-	cmd.Env = append(os.Environ(), "CAROOT="+caRoot)
-	out, err := cmd.CombinedOutput()
-	installOutput := strings.TrimSpace(string(out))
-
-	if err != nil {
-		tlsFail("mkcert -install failed: %v", err)
-		if installOutput != "" {
-			output.UserOut.Printf("    Output: %s\n", installOutput)
-		}
-		hasIssues = true
-	} else {
-		if strings.Contains(installOutput, "already installed") {
-			output.UserOut.Println("  ✓ CA already installed in system trust store")
-		} else if strings.Contains(installOutput, "installed") {
-			output.UserOut.Println("  ✓ CA installed in system trust store")
-		} else {
-			output.UserOut.Println("  ✓ mkcert -install succeeded")
-		}
-		if installOutput != "" && !strings.Contains(installOutput, "already installed") {
-			// Show any extra output (e.g., warnings about certutil)
-			for line := range strings.SplitSeq(installOutput, "\n") {
-				line = strings.TrimSpace(line)
-				if line != "" {
-					output.UserOut.Printf("    ℹ %s\n", line)
-				}
-			}
-		}
-	}
-
-	// On Linux, check for certutil (needed for Firefox/NSS)
+	// On Linux, check for certutil (needed for Firefox/NSS trust registration).
 	if nodeps.IsLinux() && !nodeps.IsWSL2() {
 		_, err := exec.LookPath("certutil")
 		if err != nil {
@@ -386,33 +352,83 @@ func checkOSTrustStore(caRoot string) bool {
 		}
 	}
 
-	// Definitive OS trust check: generate an ephemeral leaf cert signed by our
-	// CA and verify it against the live system cert pool. This catches the gap
-	// where rootCA.pem exists in CAROOT but mkcert -install was never run (or
-	// ran on a different OS user / different machine).
-	if caRoot != "" {
-		caCertBytes, certReadErr := os.ReadFile(filepath.Join(caRoot, "rootCA.pem"))
-		caKeyBytes, keyReadErr := os.ReadFile(filepath.Join(caRoot, "rootCA-key.pem"))
-		if certReadErr != nil || keyReadErr != nil {
-			output.UserOut.Println("  ⚠ Cannot read CA files for trust verification — skipping")
+	// Check whether the OS actually trusts the CA: generate an ephemeral leaf
+	// cert signed by our CA and verify it against the live system cert pool.
+	// This is the definitive diagnostic — it matches the chain walk a browser
+	// performs and does not modify the system.
+	caCertBytes, certReadErr := os.ReadFile(filepath.Join(caRoot, "rootCA.pem"))
+	caKeyBytes, keyReadErr := os.ReadFile(filepath.Join(caRoot, "rootCA-key.pem"))
+	if certReadErr != nil || keyReadErr != nil {
+		output.UserOut.Println("  ⚠ Cannot read CA files for trust verification — skipping")
+		output.UserOut.Println()
+		return true
+	}
+
+	caCert, certParseErr := parseCertFromPEM(caCertBytes)
+	caKey, keyParseErr := parsePKCS8Key(caKeyBytes)
+	if certParseErr != nil || keyParseErr != nil {
+		output.UserOut.Println("  ⚠ Cannot parse CA files for trust verification — skipping")
+		output.UserOut.Println()
+		return true
+	}
+
+	trusted, checkErr := verifyCATrustedByOS(caCert, caKey)
+	if checkErr != nil {
+		output.UserOut.Printf("  ⚠ OS trust check could not run: %v\n", checkErr)
+		output.UserOut.Println()
+		return false
+	}
+
+	if trusted {
+		output.UserOut.Println("  ✓ CA verified as trusted by OS system cert pool")
+		output.UserOut.Println()
+		return hasIssues
+	}
+
+	// CA is not trusted. Explain the problem, warn about elevation, and offer
+	// to run mkcert -install only with explicit user consent.
+	tlsFail("CA is NOT trusted by OS — mkcert -install has not been run (or was run as a different user)")
+	output.UserOut.Println()
+	output.UserOut.Println("  mkcert -install adds the mkcert CA to your OS trust store so browsers")
+	output.UserOut.Println("  trust DDEV HTTPS certificates. It may require elevated privileges:")
+	switch {
+	case nodeps.IsWindows():
+		output.UserOut.Println("  ⚠ On Windows, mkcert -install triggers a UAC elevation dialog.")
+		output.UserOut.Println("    A Windows security prompt will appear asking for admin approval.")
+	case nodeps.IsMacOS():
+		output.UserOut.Println("  ⚠ On macOS, mkcert -install may prompt for your login/sudo password.")
+	default:
+		output.UserOut.Println("  ⚠ mkcert -install may require sudo or admin privileges on this system.")
+	}
+	output.UserOut.Println()
+
+	if util.ConfirmTo("Run 'mkcert -install' now to add the CA to the OS trust store?", false) {
+		// Set CAROOT explicitly so mkcert uses the verified CA root rather than
+		// defaulting to whatever CAROOT is set in the environment.
+		cmd := exec.Command("mkcert", "-install")
+		cmd.Env = append(os.Environ(), "CAROOT="+caRoot)
+		out, err := cmd.CombinedOutput()
+		installOutput := strings.TrimSpace(string(out))
+		if err != nil {
+			tlsFail("mkcert -install failed: %v", err)
+			if installOutput != "" {
+				output.UserOut.Printf("    Output: %s\n", installOutput)
+			}
+			hasIssues = true
 		} else {
-			caCert, certParseErr := parseCertFromPEM(caCertBytes)
-			caKey, keyParseErr := parsePKCS8Key(caKeyBytes)
-			if certParseErr != nil || keyParseErr != nil {
-				output.UserOut.Printf("  ⚠ Cannot parse CA files for trust verification — skipping\n")
-			} else {
-				trusted, checkErr := verifyCATrustedByOS(caCert, caKey)
-				if checkErr != nil {
-					output.UserOut.Printf("  ⚠ OS trust check could not run: %v\n", checkErr)
-				} else if trusted {
-					output.UserOut.Println("  ✓ CA verified as trusted by OS system cert pool")
-				} else {
-					tlsFail("CA is NOT trusted by OS — rootCA.pem exists but has not been installed")
-					output.UserOut.Println("    → Run: mkcert -install")
-					hasIssues = true
+			output.UserOut.Println("  ✓ mkcert -install succeeded")
+			if installOutput != "" && !strings.Contains(installOutput, "already installed") {
+				for line := range strings.SplitSeq(installOutput, "\n") {
+					line = strings.TrimSpace(line)
+					if line != "" {
+						output.UserOut.Printf("    ℹ %s\n", line)
+					}
 				}
 			}
 		}
+	} else {
+		output.UserOut.Println("    → Run manually: mkcert -install")
+		hasIssues = true
 	}
 
 	output.UserOut.Println()
