@@ -341,8 +341,11 @@ func checkOSTrustStore(caRoot string) bool {
 		return true
 	}
 
-	// Run mkcert -install to check/install the CA
+	// Run mkcert -install to check/install the CA.
+	// Explicitly set CAROOT so mkcert uses the same CA root that was already
+	// verified above, rather than defaulting to a different path.
 	cmd := exec.Command("mkcert", "-install")
+	cmd.Env = append(os.Environ(), "CAROOT="+caRoot)
 	out, err := cmd.CombinedOutput()
 	installOutput := strings.TrimSpace(string(out))
 
@@ -481,9 +484,12 @@ func checkWSL2Configuration(caRoot string) bool {
 		wslWinCARoot := windowsPathToWSL(winCARoot)
 		if caRoot != "" && wslWinCARoot != "" && !strings.EqualFold(wslWinCARoot, caRoot) {
 			output.UserOut.Printf("  ⚠ Windows CAROOT (%s) != WSL2 CAROOT (%s)\n", wslWinCARoot, caRoot)
-			output.UserOut.Println("    → Run the Windows PowerShell CAROOT setup again")
+			output.UserOut.Println("    → Reinstall DDEV on Windows to fix automatically, or run in Windows PowerShell:")
+			output.UserOut.Println(fmt.Sprintf("      setx CAROOT \"%s\"", winCARoot))
+			output.UserOut.Println("      setx WSLENV \"CAROOT/up\"")
+			output.UserOut.Println("    → Then restart WSL2: wsl --shutdown")
 			hasIssues = true
-		} else if wslWinCARoot != "" {
+		} else if wslWinCARoot != "" && caRoot != "" {
 			output.UserOut.Println("  ✓ Windows CAROOT matches WSL2 CAROOT")
 		}
 	}
@@ -610,10 +616,16 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 		if err == nil {
 			result := strings.TrimSpace(strings.TrimSuffix(string(psOut), "\r"))
 			if result == "FOUND" {
-				output.UserOut.Println("  ⚠ Firefox detected on Windows — Firefox cannot use the Windows system certificate store")
-				output.UserOut.Println("    → You must manually import the mkcert CA into Firefox:")
+				output.UserOut.Println("  ⚠ Firefox detected on Windows — if you use Firefox (not Chrome/Edge), it cannot")
+				output.UserOut.Println("    use the Windows system certificate store and will show certificate errors")
+				output.UserOut.Println("    → Manually import the mkcert CA into Firefox:")
 				output.UserOut.Println("      Firefox Settings → Privacy & Security → View Certificates → Import")
-				output.UserOut.Printf("      CA file: %s\\rootCA.pem\n", windowsPathFromWSLCAROOT())
+				winCARootDisplay := windowsPathFromWSLCAROOT()
+				if len(winCARootDisplay) >= 2 && winCARootDisplay[1] == ':' {
+					output.UserOut.Printf("      CA file: %s\\rootCA.pem\n", winCARootDisplay)
+				} else {
+					output.UserOut.Printf("      CA file: %s/rootCA.pem\n", winCARootDisplay)
+				}
 				output.UserOut.Println("    → See: https://docs.ddev.com/en/stable/users/install/configuring-browsers/")
 				hasWarnings = true
 			} else {
@@ -639,8 +651,9 @@ if ($found) { Write-Output "FOUND" } else { Write-Output "NOTFOUND" }
 			}
 		}
 		if firefoxFound {
-			output.UserOut.Println("  ⚠ Firefox detected on Windows — Firefox does not use the Windows system certificate store")
-			output.UserOut.Println("    → You must manually import the mkcert CA into Firefox:")
+			output.UserOut.Println("  ⚠ Firefox detected on Windows — if you use Firefox (not Chrome/Edge), it does not")
+			output.UserOut.Println("    use the Windows system certificate store and will show certificate errors")
+			output.UserOut.Println("    → Manually import the mkcert CA into Firefox:")
 			output.UserOut.Println("      Firefox Settings → Privacy & Security → View Certificates → Import")
 			caRoot := globalconfig.GetCAROOT()
 			if caRoot != "" {
