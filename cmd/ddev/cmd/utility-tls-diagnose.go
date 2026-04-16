@@ -124,8 +124,8 @@ func runTLSDiagnose() int {
 	}
 
 	if app != nil && app.AppRoot != "" {
-		connIssues := checkLiveConnectivity(caRoot, app)
-		if connIssues {
+		linuxConnIssues, windowsConnIssues := checkLiveConnectivity(caRoot, app)
+		if linuxConnIssues || windowsConnIssues {
 			hasIssues = true
 		}
 	}
@@ -836,19 +836,20 @@ func checkCertFile(certPath string, caPool *x509.CertPool, expectedHostnames []s
 }
 
 // checkLiveConnectivity checks HTTPS connectivity to a running project.
-func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) bool {
+// Returns (linuxIssues, windowsIssues) where linuxIssues covers the Linux/WSL2/macOS-side
+// tls.Dial check and windowsIssues covers the Windows-side PowerShell check (WSL2 only;
+// always false on non-WSL2 systems).
+func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) (linuxIssues bool, windowsIssues bool) {
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("Live Connectivity")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
-	hasIssues := false
 
 	status, _ := app.SiteStatus()
 	if status != ddevapp.SiteRunning {
 		output.UserOut.Printf("  ℹ Project '%s' is not running — skipping live connectivity check\n", app.Name)
 		output.UserOut.Println("    → Run: ddev start  then re-run tls-diagnose")
 		output.UserOut.Println()
-		return false
+		return false, false
 	}
 	output.UserOut.Printf("  ✓ Project '%s' is running\n", app.Name)
 
@@ -869,7 +870,7 @@ func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) bool {
 		sysPool, sysErr := x509.SystemCertPool()
 		if sysErr != nil {
 			tlsFail("Cannot load CA for live check: %v", err)
-			hasIssues = true
+			linuxIssues = true
 			caPool = nil
 		} else {
 			caPool = sysPool
@@ -888,7 +889,7 @@ func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) bool {
 		if err != nil {
 			tlsFail("TLS connection to %s (SNI: %s) failed: %v", addr, hostname, err)
 			output.UserOut.Println("    → Router may not be running or certificate is not trusted")
-			hasIssues = true
+			linuxIssues = true
 		} else {
 			conn.Close()
 			output.UserOut.Printf("  ✓ TLS verified: localhost:%s with SNI %s%s\n", httpsPort, hostname, caPoolNote)
@@ -938,7 +939,7 @@ try {
 				output.UserOut.Println("    → Windows does not trust the mkcert CA")
 				output.UserOut.Println("    → In Windows PowerShell (as yourself, not Administrator): mkcert -install")
 				output.UserOut.Println("    → Make sure CAROOT points to the Windows mkcert directory")
-				hasIssues = true
+				windowsIssues = true
 			} else if msg, ok := strings.CutPrefix(result, "CONNECT_ERROR:"); ok {
 				output.UserOut.Printf("  ⚠ Windows connection error (DNS/network issue, not a certificate problem): %s\n", msg)
 			} else {
@@ -948,7 +949,7 @@ try {
 	}
 
 	output.UserOut.Println()
-	return hasIssues
+	return linuxIssues, windowsIssues
 }
 
 // loadCACertPool loads the mkcert rootCA.pem into an x509.CertPool.

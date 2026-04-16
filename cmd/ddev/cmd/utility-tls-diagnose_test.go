@@ -339,6 +339,12 @@ func TestCheckCertificateFilesRotatedCA(t *testing.T) {
 // TestCheckLiveConnectivityWithProject starts TestSites[0], runs
 // checkLiveConnectivity against it, then stops it. This is the most realistic
 // integration test: it exercises tls.Dial against a real DDEV HTTPS endpoint.
+//
+// On WSL2, checkLiveConnectivity performs two independent checks:
+//   - Linux/WSL2-side: tls.Dial to localhost (what the DDEV process can reach)
+//   - Windows-side: PowerShell Invoke-WebRequest (what Chrome/Edge would see)
+//
+// Both are asserted separately so a failure on one side doesn't obscure the other.
 func TestCheckLiveConnectivityWithProject(t *testing.T) {
 	if len(TestSites) == 0 {
 		t.Skip("no TestSites configured")
@@ -355,11 +361,21 @@ func TestCheckLiveConnectivityWithProject(t *testing.T) {
 	require.NoError(t, app.Start(), "failed to start TestSites[0]")
 
 	restore := util.CaptureUserOut()
-	issues := checkLiveConnectivity(caRoot, app)
+	linuxIssues, windowsIssues := checkLiveConnectivity(caRoot, app)
 	out := restore()
 
-	require.False(t, issues, "live TLS connection to running project must succeed")
-	require.Contains(t, out, "TLS verified", "output must confirm TLS success")
+	// Linux/WSL2-side TLS must always succeed on a properly configured machine.
+	require.False(t, linuxIssues, "Linux/WSL2-side TLS connection to running project must succeed")
+	require.Contains(t, out, "TLS verified", "output must confirm Linux-side TLS success")
+
+	if nodeps.IsWSL2() {
+		// The Windows-side check must have run.
+		require.Contains(t, out, "Checking Windows trust", "Windows-side connectivity check must run on WSL2")
+		// Windows must also trust the certificate on a properly configured WSL2 machine
+		// (mkcert -install run on Windows, CAROOT shared via WSLENV).
+		require.False(t, windowsIssues, "Windows-side TLS connection to running project must succeed on WSL2")
+		require.Contains(t, out, "Windows Invoke-WebRequest: TRUSTED", "Windows must trust the DDEV certificate")
+	}
 }
 
 // TestCheckLiveConnectivityNotRunning verifies that checkLiveConnectivity
@@ -379,10 +395,11 @@ func TestCheckLiveConnectivityNotRunning(t *testing.T) {
 	_ = app.Stop(false, false)
 
 	restore := util.CaptureUserOut()
-	issues := checkLiveConnectivity(caRoot, app)
+	linuxIssues, windowsIssues := checkLiveConnectivity(caRoot, app)
 	out := restore()
 
-	require.False(t, issues, "a stopped project is not a TLS issue — should return no issues")
+	require.False(t, linuxIssues, "a stopped project is not a Linux-side TLS issue — should return no issues")
+	require.False(t, windowsIssues, "a stopped project is not a Windows-side TLS issue — should return no issues")
 	require.Contains(t, out, "not running", "output should explain why connectivity was skipped")
 }
 
