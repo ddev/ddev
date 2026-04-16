@@ -444,9 +444,19 @@ func checkWSL2Configuration(caRoot string) bool {
 		output.UserOut.Printf("  ✓ CAROOT points to Windows filesystem: %s\n", caRootEnv)
 	}
 
-	// Check WSLENV contains CAROOT/up
+	// Check WSLENV contains CAROOT/up and has no invalid syntax.
+	// Semicolons are not valid WSLENV separators (only ':' is); a value like
+	// "CAROOT/up;1" passes a naive Contains check but silently prevents CAROOT
+	// from being propagated into WSL2.
 	wslEnv := os.Getenv("WSLENV")
-	if !strings.Contains(wslEnv, "CAROOT") {
+	hasCARootEntry, wslenvMalformed := wslenvHasCARootEntry(wslEnv)
+	if wslenvMalformed {
+		tlsFail("WSLENV is malformed (semicolons are not valid — entries must be colon-separated): %s", wslEnv)
+		output.UserOut.Println("    → Fix by running in Windows PowerShell:")
+		output.UserOut.Println("      setx WSLENV \"CAROOT/up\"")
+		output.UserOut.Println("    → Then restart WSL2: wsl --shutdown")
+		hasIssues = true
+	} else if !hasCARootEntry {
 		tlsFail("WSLENV does not contain CAROOT — environment not propagated to Windows")
 		output.UserOut.Println("    → In Windows PowerShell, run:")
 		output.UserOut.Println("      setx WSLENV \"CAROOT/up\"")
@@ -980,6 +990,19 @@ func certThumbprintFromFile(pemPath string) (string, error) {
 	}
 	sum := sha1.Sum(block.Bytes) //nolint:gosec // SHA1 used only for display/comparison, not security
 	return strings.ToUpper(hex.EncodeToString(sum[:])), nil
+}
+
+// wslenvHasCARootEntry validates a WSLENV value and reports whether it contains
+// a CAROOT entry. Returns (hasCARootEntry, isMalformed) where isMalformed is
+// true when the value contains a semicolon — semicolons are not valid WSLENV
+// separators (only ':' is) and silently prevent variable propagation. For
+// example "CAROOT/up;1" passes a naive substring check but CAROOT never
+// reaches WSL2.
+func wslenvHasCARootEntry(wslenv string) (hasCARootEntry bool, isMalformed bool) {
+	if strings.Contains(wslenv, ";") {
+		return false, true
+	}
+	return strings.Contains(wslenv, "CAROOT"), false
 }
 
 // windowsPathToWSL converts a Windows path (e.g. C:\Users\foo) to a WSL path (/mnt/c/Users/foo).

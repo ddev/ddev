@@ -483,6 +483,37 @@ func TestParseCertFromPEM(t *testing.T) {
 // Pure-Go unit tests (no external tools, no Docker)
 // ---------------------------------------------------------------------------
 
+// TestWslenvHasCARootEntry verifies that wslenvHasCARootEntry correctly detects
+// a missing CAROOT entry and a malformed WSLENV value. The malformed case
+// reproduces the real-world failure where WSLENV="CAROOT/up;1" passes a naive
+// substring check but semicolons are not valid WSLENV separators and silently
+// prevent CAROOT from propagating into WSL2.
+func TestWslenvHasCARootEntry(t *testing.T) {
+	tests := []struct {
+		input         string
+		wantHasCARoot bool
+		wantMalformed bool
+	}{
+		// Happy paths
+		{"CAROOT/up", true, false},
+		{"WT_SESSION:WT_PROFILE_ID:CAROOT/up", true, false},
+		{"CAROOT", true, false},
+		// Missing CAROOT
+		{"", false, false},
+		{"WT_SESSION:WT_PROFILE_ID", false, false},
+		// Malformed: semicolons in the value (the exact case reported)
+		{"WT_SESSION:WT_PROFILE_ID:CAROOT/up;1", false, true},
+		{"CAROOT/up;", false, true},
+		{"CAROOT/up;extra", false, true},
+	}
+
+	for _, tc := range tests {
+		hasCARoot, malformed := wslenvHasCARootEntry(tc.input)
+		require.Equal(t, tc.wantHasCARoot, hasCARoot, "hasCARoot for input %q", tc.input)
+		require.Equal(t, tc.wantMalformed, malformed, "malformed for input %q", tc.input)
+	}
+}
+
 // TestWindowsPathToWSL verifies the Windows→WSL path conversion helper.
 func TestWindowsPathToWSL(t *testing.T) {
 	tests := []struct {
