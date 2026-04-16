@@ -147,18 +147,28 @@ func Cleanup(app *DdevApp) error {
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.
 func CheckForConf(confPath string) (string, error) {
+	var foundPath string
+
 	if fileutil.FileExists(filepath.Join(confPath, ".ddev", "config.yaml")) {
-		return confPath, nil
+		foundPath = confPath
 	}
 
 	// Keep going until we can't go any higher
 	for filepath.Dir(confPath) != confPath {
 		confPath = filepath.Dir(confPath)
 		if fileutil.FileExists(filepath.Join(confPath, ".ddev", "config.yaml")) {
-			return confPath, nil
+			if foundPath != "" {
+				// A nested .ddev was found first; warn that a parent project exists above it
+				util.WarningOnce("Nested project at %q overrides parent at %q\nIf this is not intended, run the command from the parent project root directory.", foundPath, confPath)
+				break
+			}
+			foundPath = confPath
 		}
 	}
 
+	if foundPath != "" {
+		return foundPath, nil
+	}
 	return "", fmt.Errorf("no %s file was found in this directory or any parent", filepath.Join(".ddev", "config.yaml"))
 }
 
