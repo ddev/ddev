@@ -1258,7 +1258,7 @@ unzip joomla.zip && rm -f joomla.zip
 Configure DDEV:
 
 ```bash
-ddev config --project-type=joomla --upload-dirs=images
+ddev config --project-type=joomla
 ```
 
 Adjust php.ini settings for Joomla:
@@ -1292,7 +1292,7 @@ ddev launch /administrator
     DOWNLOAD_URL=https://www.joomla.org/latest
     curl -o joomla.zip -L "${DOWNLOAD_URL}"
     unzip joomla.zip && rm -f joomla.zip
-    ddev config --project-type=joomla --upload-dirs=images
+    ddev config --project-type=joomla
     echo "display_errors = off" > .ddev/php/joomla.ini
     echo "output_buffering = off" >> .ddev/php/joomla.ini
     ddev start -y

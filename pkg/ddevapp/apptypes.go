@@ -211,6 +211,7 @@ func init() {
 
 		nodeps.AppTypeJoomla: {
 			appTypeDetect: isJoomlaApp,
+			uploadDirs:    getJoomlaUploadDirs,
 		},
 
 		nodeps.AppTypeLaravel: {

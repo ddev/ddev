@@ -73,6 +73,7 @@ func TestConfigOverrideAction(t *testing.T) {
 		nodeps.AppTypeDrupal7:      nodeps.PHP82,
 		nodeps.AppTypeDrupal11:     nodeps.PHPDefault,
 		nodeps.AppTypeDrupal12:     nodeps.PHP85,
+		nodeps.AppTypeJoomla:       nodeps.PHPDefault,
 		nodeps.AppTypeLaravel:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento2:     nodeps.PHPDefault,
