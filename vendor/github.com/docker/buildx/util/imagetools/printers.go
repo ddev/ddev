@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"text/tabwriter"
 	"text/template"
 
 	"github.com/containerd/containerd/v2/core/images"
 	"github.com/containerd/platforms"
-	"github.com/distribution/reference"
 	"github.com/opencontainers/go-digest"
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
@@ -27,7 +27,7 @@ type Printer struct {
 	format string
 
 	raw      []byte
-	ref      reference.Named
+	ref      *Location
 	manifest ocispecs.Descriptor
 	index    ocispecs.Index
 }
@@ -35,7 +35,7 @@ type Printer struct {
 func NewPrinter(ctx context.Context, opt Opt, name string, format string) (*Printer, error) {
 	resolver := New(opt)
 
-	ref, err := parseRef(name)
+	ref, err := ParseLocation(name)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (p *Printer) Print(raw bool, out io.Writer) error {
 		return nil
 	}
 
-	res, err := newLoader(p.resolver.resolver()).Load(p.ctx, p.name)
+	res, err := newLoader(p.resolver).Load(p.ctx, p.name)
 	if err != nil {
 		return err
 	}
@@ -125,11 +125,11 @@ func (p *Printer) Print(raw bool, out io.Writer) error {
 
 	switch {
 	// TODO: print formatted config
-	case strings.HasPrefix(format, "{{.Manifest"):
+	case isWholeManifestTemplate(format):
 		w := tabwriter.NewWriter(out, 0, 0, 1, ' ', 0)
 		_, _ = fmt.Fprintf(w, "Name:\t%s\n", p.ref.String())
 		switch {
-		case strings.HasPrefix(format, "{{.Manifest"):
+		case isWholeManifestTemplate(format):
 			_, _ = fmt.Fprintf(w, "MediaType:\t%s\n", p.manifest.MediaType)
 			_, _ = fmt.Fprintf(w, "Digest:\t%s\n", p.manifest.Digest)
 			_ = w.Flush()
@@ -162,6 +162,10 @@ func (p *Printer) Print(raw bool, out io.Writer) error {
 	return nil
 }
 
+func isWholeManifestTemplate(format string) bool {
+	return regexp.MustCompile(`^\{\{\s*\.Manifest\s*\}\}$`).MatchString(strings.TrimSpace(format))
+}
+
 func (p *Printer) printManifestList(out io.Writer) error {
 	w := tabwriter.NewWriter(out, 0, 0, 1, ' ', 0)
 	_, _ = fmt.Fprintf(w, "\t\n")
@@ -173,11 +177,11 @@ func (p *Printer) printManifestList(out io.Writer) error {
 		if i != 0 {
 			_, _ = fmt.Fprintf(w, "\t\n")
 		}
-		cr, err := reference.WithDigest(p.ref, m.Digest)
-		if err != nil {
-			return err
+		name := p.ref.String()
+		if ref, err := p.ref.WithDigest(m.Digest); err == nil {
+			name = ref.String()
 		}
-		_, _ = fmt.Fprintf(w, "%sName:\t%s\n", defaultPfx, cr.String())
+		_, _ = fmt.Fprintf(w, "%sName:\t%s\n", defaultPfx, name)
 		_, _ = fmt.Fprintf(w, "%sMediaType:\t%s\n", defaultPfx, m.MediaType)
 		if p := m.Platform; p != nil {
 			_, _ = fmt.Fprintf(w, "%sPlatform:\t%s\n", defaultPfx, platforms.Format(*p))

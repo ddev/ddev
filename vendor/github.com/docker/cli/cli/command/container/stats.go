@@ -1,5 +1,5 @@
 // FIXME(thaJeztah): remove once we are a module; the go:build directive prevents go from downgrading language version to go1.16:
-//go:build go1.24
+//go:build go1.25
 
 package container
 
@@ -7,9 +7,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
-	"strings"
 	"sync"
 	"time"
 
@@ -144,39 +142,32 @@ func RunStats(ctx context.Context, dockerCLI command.Cli, options *StatsOptions)
 		}
 
 		eh := newEventHandler()
+		addEvents := []events.Action{events.ActionStart}
 		if options.All {
-			eh.setHandler(events.ActionCreate, func(e events.Message) {
-				if s := NewStats(e.Actor.ID); cStats.add(s) {
-					waitFirst.Add(1)
-					log.G(ctx).WithFields(log.Fields{
-						"event":     e.Action,
-						"container": e.Actor.ID,
-					}).Debug("collecting stats for container")
-					go collect(ctx, s, apiClient, !options.NoStream, waitFirst)
-				}
-			})
+			addEvents = append(addEvents, events.ActionCreate)
 		}
-
-		eh.setHandler(events.ActionStart, func(e events.Message) {
+		eh.setHandler(addEvents, func(ctx context.Context, e events.Message) {
 			if s := NewStats(e.Actor.ID); cStats.add(s) {
 				waitFirst.Add(1)
-				log.G(ctx).WithFields(log.Fields{
-					"event":     e.Action,
-					"container": e.Actor.ID,
-				}).Debug("collecting stats for container")
+				log.G(ctx).Debug("collecting stats for container")
 				go collect(ctx, s, apiClient, !options.NoStream, waitFirst)
 			}
 		})
 
+		// Remove containers when they are removed ("destroyed"); containers
+		// do not emit [events.ActionRemove], only [events.ActionDestroy].
+		//
+		// When running with "--all" we don't remove containers when they die,
+		// because they may come back, but without "--all" we remove them
+		// on the first possible occasion (either "die" or "destroy").
+		rmEvents := []events.Action{events.ActionDestroy}
 		if !options.All {
-			eh.setHandler(events.ActionDie, func(e events.Message) {
-				log.G(ctx).WithFields(log.Fields{
-					"event":     e.Action,
-					"container": e.Actor.ID,
-				}).Debug("stop collecting stats for container")
-				cStats.remove(e.Actor.ID)
-			})
+			rmEvents = append(rmEvents, events.ActionDie)
 		}
+		eh.setHandler(rmEvents, func(ctx context.Context, e events.Message) {
+			log.G(ctx).Debug("stop collecting stats for container")
+			cStats.remove(e.Actor.ID)
+		})
 
 		// monitorContainerEvents watches for container creation and removal (only
 		// used when calling `docker stats` without arguments).
@@ -216,7 +207,7 @@ func RunStats(ctx context.Context, dockerCLI command.Cli, options *StatsOptions)
 		}
 
 		eventChan := make(chan events.Message)
-		go eh.watch(eventChan)
+		go eh.watch(ctx, eventChan)
 		stopped := make(chan struct{})
 		go monitorContainerEvents(started, eventChan, stopped)
 		defer close(stopped)
@@ -294,30 +285,32 @@ func RunStats(ctx context.Context, dockerCLI command.Cli, options *StatsOptions)
 		}
 	}
 
-	// Buffer to store formatted stats text.
-	// Once formatted, it will be printed in one write to avoid screen flickering.
-	var statsTextBuffer bytes.Buffer
+	// renderBuf holds the formatted stats output produced by statsFormatWrite.
+	// It does not include any terminal control sequences.
+	var renderBuf bytes.Buffer
+
+	// frameBuf holds the final terminal frame, including cursor movement and
+	// line-clearing escape sequences, written in a single pass to avoid flicker.
+	var frameBuf bytes.Buffer
 
 	statsCtx := formatter.Context{
-		Output: &statsTextBuffer,
+		Output: &renderBuf,
 		Format: NewStatsFormat(format, daemonOSType),
 	}
 
 	if options.NoStream {
-		cStats.mu.RLock()
-		ccStats := make([]StatsEntry, 0, len(cStats.cs))
-		for _, c := range cStats.cs {
-			ccStats = append(ccStats, c.GetStatistics())
-		}
-		cStats.mu.RUnlock()
-
-		if len(ccStats) == 0 {
+		statsList := cStats.snapshot()
+		if len(statsList) == 0 {
 			return nil
+		}
+		ccStats := make([]StatsEntry, 0, len(statsList))
+		for _, c := range statsList {
+			ccStats = append(ccStats, c.GetStatistics())
 		}
 		if err := statsFormatWrite(statsCtx, ccStats, daemonOSType, !options.NoTrunc); err != nil {
 			return err
 		}
-		_, _ = fmt.Fprint(dockerCLI.Out(), statsTextBuffer.String())
+		_, _ = dockerCLI.Out().Write(renderBuf.Bytes())
 		return nil
 	}
 
@@ -326,34 +319,38 @@ func RunStats(ctx context.Context, dockerCLI command.Cli, options *StatsOptions)
 	for {
 		select {
 		case <-ticker.C:
-			cStats.mu.RLock()
-			ccStats := make([]StatsEntry, 0, len(cStats.cs))
-			for _, c := range cStats.cs {
+			renderBuf.Reset()
+			frameBuf.Reset()
+			statsList := cStats.snapshot()
+			if len(statsList) == 0 && !showAll {
+				// Clear screen
+				_, _ = io.WriteString(dockerCLI.Out(), "\033[H\033[J")
+				return nil
+			}
+			ccStats := make([]StatsEntry, 0, len(statsList))
+			for _, c := range statsList {
 				ccStats = append(ccStats, c.GetStatistics())
 			}
-			cStats.mu.RUnlock()
-
-			// Start by moving the cursor to the top-left
-			_, _ = fmt.Fprint(&statsTextBuffer, "\033[H")
 
 			if err := statsFormatWrite(statsCtx, ccStats, daemonOSType, !options.NoTrunc); err != nil {
 				return err
 			}
 
-			for line := range strings.SplitSeq(statsTextBuffer.String(), "\n") {
+			// Start by moving the cursor to the top-left
+			_, _ = io.WriteString(&frameBuf, "\033[H")
+
+			// TODO(thaJeztah): consider wrapping the writer to inject ANSI (line-clearing) during formatting.
+			// instead of post-processing the results.
+			for line := range bytes.SplitSeq(renderBuf.Bytes(), []byte{'\n'}) {
 				// In case the new text is shorter than the one we are writing over,
 				// we'll append the "erase line" escape sequence to clear the remaining text.
-				_, _ = fmt.Fprintln(&statsTextBuffer, line, "\033[K")
+				_, _ = frameBuf.Write(line)
+				_, _ = io.WriteString(&frameBuf, "\033[K")
+				_ = frameBuf.WriteByte('\n')
 			}
 			// We might have fewer containers than before, so let's clear the remaining text
-			_, _ = fmt.Fprint(&statsTextBuffer, "\033[J")
-
-			_, _ = fmt.Fprint(dockerCLI.Out(), statsTextBuffer.String())
-			statsTextBuffer.Reset()
-
-			if len(ccStats) == 0 && !showAll {
-				return nil
-			}
+			_, _ = io.WriteString(&frameBuf, "\033[J")
+			_, _ = dockerCLI.Out().Write(frameBuf.Bytes())
 		case err, ok := <-closeChan:
 			if !ok || err == nil || errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
 				// Suppress "unexpected EOF" errors in the CLI so that
@@ -369,33 +366,38 @@ func RunStats(ctx context.Context, dockerCLI command.Cli, options *StatsOptions)
 
 // newEventHandler initializes and returns an eventHandler
 func newEventHandler() *eventHandler {
-	return &eventHandler{handlers: make(map[events.Action]func(events.Message))}
+	return &eventHandler{handlers: make(map[events.Action]func(context.Context, events.Message))}
 }
 
 // eventHandler allows for registering specific events to setHandler.
 type eventHandler struct {
-	handlers map[events.Action]func(events.Message)
+	handlers map[events.Action]func(context.Context, events.Message)
 }
 
-func (eh *eventHandler) setHandler(action events.Action, handler func(events.Message)) {
-	eh.handlers[action] = handler
+func (eh *eventHandler) setHandler(actions []events.Action, handler func(context.Context, events.Message)) {
+	for _, action := range actions {
+		eh.handlers[action] = handler
+	}
 }
 
 // watch ranges over the passed in event chan and processes the events based on the
 // handlers created for a given action.
 // To stop watching, close the event chan.
-func (eh *eventHandler) watch(c <-chan events.Message) {
+func (eh *eventHandler) watch(ctx context.Context, c <-chan events.Message) {
 	for e := range c {
 		h, exists := eh.handlers[e.Action]
 		if !exists {
 			continue
 		}
 		if e.Actor.ID == "" {
-			log.G(context.TODO()).WithField("event", e).Errorf("event handler: received %s event with empty ID", e.Action)
+			log.G(ctx).WithField("event", e).Errorf("event handler: received %s event with empty ID", e.Action)
 			continue
 		}
+		logger := log.G(ctx).WithFields(log.Fields{
+			"event":     e.Action,
+			"container": e.Actor.ID,
+		})
 
-		log.G(context.TODO()).WithField("event", e).Debugf("event handler: received %s event for: %s", e.Action, e.Actor.ID)
-		go h(e)
+		go h(log.WithLogger(ctx, logger), e)
 	}
 }

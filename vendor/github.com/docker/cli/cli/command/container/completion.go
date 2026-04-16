@@ -1,5 +1,5 @@
 // FIXME(thaJeztah): remove once we are a module; the go:build directive prevents go from downgrading language version to go1.16:
-//go:build go1.24
+//go:build go1.25
 
 package container
 
@@ -179,6 +179,35 @@ func completeIpc(dockerCLI completion.APIClientProvider) cobra.CompletionFunc {
 func completeLink(dockerCLI completion.APIClientProvider) cobra.CompletionFunc {
 	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return postfixWith(":", containerNames(dockerCLI, cmd, args, toComplete)), cobra.ShellCompDirectiveNoSpace
+	}
+}
+
+// completeLinks implements shell completion for the `--link` option  of `rm --link`.
+//
+// It contacts the API to get names of legacy links on containers.
+// In case of an error, an empty list is returned.
+func completeLinks(dockerCLI completion.APIClientProvider) cobra.CompletionFunc {
+	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		res, err := dockerCLI.Client().ContainerList(cmd.Context(), client.ContainerListOptions{
+			All: true,
+		})
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+		var names []string
+		for _, ctr := range res.Items {
+			if len(ctr.Names) <= 1 {
+				// Container has no links names.
+				continue
+			}
+			for _, n := range ctr.Names {
+				// Skip legacy link names: "/linked-container/link-name"
+				if len(n) > 1 && strings.IndexByte(n[1:], '/') != -1 {
+					names = append(names, strings.TrimPrefix(n, "/"))
+				}
+			}
+		}
+		return names, cobra.ShellCompDirectiveNoFileComp
 	}
 }
 
