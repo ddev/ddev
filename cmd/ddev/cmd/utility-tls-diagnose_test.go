@@ -173,6 +173,13 @@ func TestTLSDiagnoseCommandRegistered(t *testing.T) {
 // on a machine where mkcert is properly installed (i.e. every DDEV dev/CI
 // machine). Verifies the function finds the CA files and returns no issues.
 func TestCheckMkcertInstallationHealthy(t *testing.T) {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && nodeps.IsWSL2() {
+		// Especially on Buildkite runners, the CAROOT is not set
+		// to come through from Windows side (buildkite-agent does not inherit it)
+		// Unfortunately skip this, but it works on a properly configured Windows machine
+		t.Skip("mkcert installation checks are unreliable on WSL2 in CI — skip unless DDEV_RUN_TEST_ANYWAY=true")
+	}
+
 	caRoot := realCARoot(t)
 
 	// Verify the files mkcert -install creates actually exist before calling
