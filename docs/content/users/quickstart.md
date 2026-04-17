@@ -1248,10 +1248,7 @@ Create the project directory and download Joomla:
 
 ```bash
 mkdir -p my-joomla-site && cd my-joomla-site
-# Download the latest version of Joomla! and unzip it.
-# This can be manually downloaded from https://downloads.joomla.org/ or done using curl as here.
-DOWNLOAD_URL=https://www.joomla.org/latest
-curl -o joomla.zip -L "${DOWNLOAD_URL}"
+curl -o joomla.zip -L https://www.joomla.org/latest"
 unzip joomla.zip && rm -f joomla.zip
 ```
 
@@ -1274,10 +1271,15 @@ Start DDEV (this may take a minute):
 ddev start
 ```
 
-Install Joomla and launch:
+Install Joomla:
 
 ```bash
 ddev php installation/joomla.php install --site-name="My Joomla Site" --admin-user="Administrator" --admin-username=admin --admin-password=AdminAdmin1! --admin-email=admin@example.com --db-type=mysql --db-encryption=0 --db-host=db --db-user=db --db-pass="db" --db-name=db --db-prefix=ddev_ --public-folder=""
+```
+
+Launch the admin interface (login with `admin` and `AdminAdmin1!`):
+
+```bash
 ddev launch /administrator
 ```
 
@@ -1289,8 +1291,7 @@ ddev launch /administrator
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p my-joomla-site && cd my-joomla-site
-    DOWNLOAD_URL=https://www.joomla.org/latest
-    curl -o joomla.zip -L "${DOWNLOAD_URL}"
+    curl -o joomla.zip -L "https://www.joomla.org/latest"
     unzip joomla.zip && rm -f joomla.zip
     ddev config --project-type=joomla
     echo "display_errors = off" > .ddev/php/joomla.ini
