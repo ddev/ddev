@@ -247,8 +247,8 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	}
 
 	// Track expected files in the volume for later sync
-	expectedConfigs := map[string]bool{"default_config.yaml": true}
-	expectedCerts := map[string]bool{}
+	expectedConfigs := map[string]bool{"default_config.yaml": true, "README.txt": true}
+	expectedCerts := map[string]bool{"README.txt": true}
 
 	// Add default certs to expected list if not using Let's Encrypt
 	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.GetCAROOT() != "" {
