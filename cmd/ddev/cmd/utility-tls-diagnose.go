@@ -168,15 +168,19 @@ func checkMkcertInstallation() (string, bool) {
 	}
 	output.UserOut.Printf("  ✓ mkcert found: %s\n", mkcertPath)
 
-	// On WSL2 also confirm mkcert.exe is available on the Windows side
+	// On WSL2 also confirm mkcert.exe is available on the Windows side.
+	// Use powershell.exe rather than cmd.exe — some WSL2 setups have a Windows
+	// PATH that omits C:\Windows\System32, which leaves cmd.exe unresolvable
+	// from the Linux side while powershell.exe (listed separately under
+	// C:\Windows\System32\WindowsPowerShell\v1.0) still works.
 	if nodeps.IsWSL2() {
-		winMkcertCheck, err := exec.Command("cmd.exe", "/c", "where mkcert").Output()
-		if err != nil {
+		winMkcertCheck, err := exec.Command("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "(Get-Command mkcert -ErrorAction SilentlyContinue).Source").Output()
+		winMkcertPath := strings.TrimSpace(strings.TrimSuffix(string(winMkcertCheck), "\r\n"))
+		if err != nil || winMkcertPath == "" {
 			tlsFail("Windows-side mkcert.exe not found in Windows PATH")
 			output.UserOut.Println("    → Install mkcert on Windows: choco install -y mkcert  OR  winget install mkcert")
 			hasIssues = true
 		} else {
-			winMkcertPath := strings.TrimSpace(strings.TrimSuffix(string(winMkcertCheck), "\r\n"))
 			output.UserOut.Printf("  ✓ Windows mkcert found: %s\n", winMkcertPath)
 		}
 	}
@@ -485,8 +489,9 @@ func checkWSL2Configuration(caRoot string) bool {
 		output.UserOut.Printf("  ✓ WSLENV contains CAROOT (%s)\n", wslEnv)
 	}
 
-	// Check Windows-side mkcert CAROOT and compare paths
-	winMkcertOut, err := exec.Command("cmd.exe", "/c", "mkcert -CAROOT").Output()
+	// Check Windows-side mkcert CAROOT and compare paths.
+	// Use powershell.exe rather than cmd.exe — see note in checkMkcertInstallation.
+	winMkcertOut, err := exec.Command("powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "mkcert -CAROOT").Output()
 	if err != nil {
 		tlsFail("Windows-side mkcert CAROOT could not be determined")
 		output.UserOut.Println("    → Install mkcert on Windows: choco install -y mkcert  OR  winget install mkcert")
