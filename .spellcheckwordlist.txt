@@ -615,7 +615,6 @@ screencast
 screencasts
 sendmail
 sequelace
-sequelpro
 serverName
 service
 services
