@@ -1248,7 +1248,7 @@ Create the project directory and download Joomla:
 
 ```bash
 mkdir -p my-joomla-site && cd my-joomla-site
-curl -o joomla.zip -L https://www.joomla.org/latest"
+curl -o joomla.zip -L "https://www.joomla.org/latest"
 unzip joomla.zip && rm -f joomla.zip
 ```
 
