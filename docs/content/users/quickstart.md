@@ -1258,7 +1258,7 @@ Configure DDEV:
 ddev config --project-type=joomla
 ```
 
-Adjust php.ini settings for Joomla:
+Adjust `php.ini` settings for Joomla:
 
 ```bash
 echo "display_errors = off" > .ddev/php/joomla.ini
