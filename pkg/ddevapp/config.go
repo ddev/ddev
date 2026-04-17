@@ -714,7 +714,7 @@ func (app *DdevApp) FixObsolete() {
 	}
 
 	// Remove old global commands
-	for _, command := range []string{"host/yarn", "host/xhgui", "web/nvm", "web/autocomplete/nvm", "web/python", "web/typo3cms"} {
+	for _, command := range []string{"host/sequelpro", "host/yarn", "host/xhgui", "web/nvm", "web/autocomplete/nvm", "web/python", "web/typo3cms"} {
 		cmdPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/", command)
 		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
 		if err == nil && signatureFound {
