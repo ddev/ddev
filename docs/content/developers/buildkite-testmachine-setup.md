@@ -208,3 +208,28 @@ Then the Buildkite agent must be configured with tags `colima_vz=true`.
 3. `docker context use lima-lima-vz`
 
 Then the Buildkite agent must be configured with tags `lima=true`.
+
+## Running Targeted Builds on Specific Pipelines
+
+To test a branch against only selected pipelines (e.g. WSL2 only) or to run a subset of tests without waiting for the full matrix:
+
+1. Push your branch to upstream.
+2. In the [Buildkite dashboard](https://buildkite.com/ddev), open the pipeline you want (e.g. "wsl2-docker-inside").
+3. Click **New Build** and set the branch to your branch name.
+4. Expand **Environment Variables** and add:
+
+    ```
+    TESTARGS=-run TestCheck -failfast
+    ```
+
+    Adjust the `-run` pattern to match the tests you want. Use a common prefix where possible. If you need `|` for alternation, wrap the regex in single quotes so the shell does not interpret the pipe as a pipeline operator:
+
+    ```
+    TESTARGS=-run 'TestCheckLiveConnectivity|TestCheckMkcertInstallation' -failfast
+    ```
+
+    `TESTARGS` defaults to `-failfast` when not set, so include `-failfast` explicitly if you want it.
+
+5. Click **Create Build**.
+
+Use `[skip ci]` in your commit message to prevent all pipelines from triggering automatically when you push, then manually trigger only the pipelines you need.

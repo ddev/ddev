@@ -116,6 +116,7 @@ if command -v powershell.exe >/dev/null 2>&1 && [ -z "${CAROOT:-}" ]; then
   fi
 fi
 HOOKEOF
+sudo chown buildkite-agent:buildkite-agent /etc/buildkite-agent/hooks/environment
 sudo chmod +x /etc/buildkite-agent/hooks/environment
 
 echo "In the editor, change the home directory of buildkite-agent to /var/lib/buildkite-agent"
