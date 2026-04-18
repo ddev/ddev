@@ -173,14 +173,14 @@ func TestTLSDiagnoseCommandRegistered(t *testing.T) {
 // on a machine where mkcert is properly installed (i.e. every DDEV dev/CI
 // machine). Verifies the function finds the CA files and returns no issues.
 func TestCheckMkcertInstallationHealthy(t *testing.T) {
-	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && nodeps.IsWSL2() {
-		// Especially on Buildkite runners, the CAROOT is not set
-		// to come through from Windows side (buildkite-agent does not inherit it)
-		// Unfortunately skip this, but it works on a properly configured Windows machine
-		t.Skip("mkcert installation checks are unreliable on WSL2 in CI — skip unless DDEV_RUN_TEST_ANYWAY=true")
-	}
-
 	caRoot := realCARoot(t)
+
+	if nodeps.IsWSL2() && !strings.HasPrefix(caRoot, "/mnt/") && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		// buildkite-agent (systemd) doesn't inherit WSLENV, so CAROOT points to the
+		// Linux-local mkcert dir rather than the shared Windows one. Skip until the
+		// runner hooks/environment is configured to set CAROOT from the Windows registry.
+		t.Skipf("CAROOT (%s) doesn't point to Windows filesystem on WSL2 — hooks/environment not yet configured; skip unless DDEV_RUN_TEST_ANYWAY=true", caRoot)
+	}
 
 	// Verify the files mkcert -install creates actually exist before calling
 	// the function, so any failure is attributable to the function itself.
@@ -376,12 +376,16 @@ func TestCheckLiveConnectivityWithProject(t *testing.T) {
 	require.Contains(t, out, "TLS verified", "output must confirm Linux-side TLS success")
 
 	if nodeps.IsWSL2() {
-		// The Windows-side check must have run.
-		require.Contains(t, out, "Checking Windows trust", "Windows-side connectivity check must run on WSL2")
-		// Windows must also trust the certificate on a properly configured WSL2 machine
-		// (mkcert -install run on Windows, CAROOT shared via WSLENV).
-		require.False(t, windowsIssues, "Windows-side TLS connection to running project must succeed on WSL2")
-		require.Contains(t, out, "Windows Invoke-WebRequest: TRUSTED", "Windows must trust the DDEV certificate")
+		caRootIsWindowsMount := strings.HasPrefix(caRoot, "/mnt/")
+		if caRootIsWindowsMount || !nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+			// Windows-side check: only assert when CAROOT points to the shared Windows CA
+			// (buildkite-agent with hooks/environment configured) or forced via env var.
+			require.Contains(t, out, "Checking Windows trust", "Windows-side connectivity check must run on WSL2")
+			require.False(t, windowsIssues, "Windows-side TLS connection to running project must succeed on WSL2")
+			require.Contains(t, out, "Windows Invoke-WebRequest: TRUSTED", "Windows must trust the DDEV certificate")
+		} else {
+			t.Logf("Skipping Windows connectivity assertions: CAROOT=%s is not a Windows mount — buildkite-agent likely lacks WSLENV propagation", caRoot)
+		}
 	}
 }
 

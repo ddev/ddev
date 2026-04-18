@@ -55,15 +55,25 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     hostAddressLoopback=true
     ```
 
-7. In the Ubuntu distro:
+7. **Before running the setup script**, configure mkcert CAROOT on Windows (PowerShell as the testbot user). This must happen first so that `mkcert -install` in WSL2 installs the Windows CA (not a separate Linux-local one) into the Linux trust store:
+
+    ```powershell
+    choco install mkcert -y   # if not already installed
+    mkcert -install
+    setx CAROOT (mkcert -CAROOT)
+    setx WSLENV "CAROOT/up"
+    wsl --terminate Ubuntu    # restart distro so WSLENV takes effect
+    ```
+
+8. In the Ubuntu distro:
     1. `export BUILDKITE_AGENT_TOKEN=<token>` with the token from 1Password `BUILDKITE_AGENT_TOKEN`.
     2. `export BUILDKITE_DOCKER_TYPE=dockerforwindows` or `export BUILDKITE_DOCKER_TYPE=wsl2`
     3. Optionally `export NGROK_TOKEN=<token>` with the `NGROK_TOKEN` from 1Password ngrok.com `nopaid` account.
-    4. Run the script [wsl2-test-runner-setup.sh](scripts/wsl2-test-runner-setup.sh) in the Ubuntu distro.
-8. Restart the distro with `wsl.exe -t Ubuntu` and then restart it by opening the Ubuntu window.
-9. If using Docker Desktop, start Docker Desktop.
-10. In `~/workspace/ddev/.buildkite`, run `./testbot_maintenance.sh`.
-11. In `~/workspace/ddev/.buildkite`, run `./sanetestbot.sh` to check your work.
+    4. Run the script [wsl2-test-runner-setup.sh](scripts/wsl2-test-runner-setup.sh) in the Ubuntu distro. This script reads `CAROOT` from the Windows registry via `powershell.exe`, exports it before calling `mkcert -install`, and then creates `/etc/buildkite-agent/hooks/environment` to repeat this for every buildkite-agent job (since systemd does not propagate `WSLENV`).
+9. Restart the distro with `wsl.exe -t Ubuntu` and then restart it by opening the Ubuntu window.
+10. If using Docker Desktop, start Docker Desktop.
+11. In `~/workspace/ddev/.buildkite`, run `./testbot_maintenance.sh`.
+12. In `~/workspace/ddev/.buildkite`, run `./sanetestbot.sh` to check your work.
 
 ## Icinga2 monitoring setup for WSL2 instances
 

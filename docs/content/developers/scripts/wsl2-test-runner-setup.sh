@@ -78,7 +78,45 @@ else
   echo "NGROK_TOKEN not set so not doing ngrok authtoken"
 fi
 
+# Ensure Windows System32 is in PATH so powershell.exe is accessible from WSL2
+export PATH="$PATH:/mnt/c/Windows/System32:/mnt/c/Windows/System32/WindowsPowerShell/v1.0"
+
+# Resolve CAROOT from Windows User environment BEFORE mkcert -install.
+# mkcert -install must use the Windows CAROOT so it installs that CA (not a fresh
+# Linux-local one) into the Linux trust store. Without this, Windows and Linux end
+# up with different CAs and TLS verification fails cross-side.
+if command -v powershell.exe >/dev/null 2>&1; then
+  WIN_CAROOT=$(powershell.exe -NoProfile -NonInteractive -Command \
+    "[System.Environment]::GetEnvironmentVariable('CAROOT', 'User')" 2>/dev/null | tr -d '\r\n')
+  if [ -n "$WIN_CAROOT" ]; then
+    export CAROOT=$(wslpath "$WIN_CAROOT")
+    echo "Using Windows CAROOT: $CAROOT"
+  else
+    echo "WARNING: Could not read CAROOT from Windows environment. Ensure mkcert is installed on Windows and CAROOT/WSLENV are set before running this script." >&2
+  fi
+fi
+
 mkcert -install
+
+# Configure buildkite-agent hooks/environment so every CI job inherits CAROOT.
+# systemd does not propagate WSLENV, so the hook reads CAROOT directly from the
+# Windows User environment registry on each build.
+sudo mkdir -p /etc/buildkite-agent/hooks
+sudo tee /etc/buildkite-agent/hooks/environment > /dev/null <<'HOOKEOF'
+#!/bin/bash
+# Make Windows executables (powershell.exe, cmd.exe) accessible
+export PATH="$PATH:/mnt/c/Windows/System32:/mnt/c/Windows/System32/WindowsPowerShell/v1.0"
+
+# Propagate CAROOT from Windows registry — systemd does not inherit WSLENV.
+if command -v powershell.exe >/dev/null 2>&1 && [ -z "${CAROOT:-}" ]; then
+  WIN_CAROOT=$(powershell.exe -NoProfile -NonInteractive -Command \
+    "[System.Environment]::GetEnvironmentVariable('CAROOT', 'User')" 2>/dev/null | tr -d '\r\n')
+  if [ -n "$WIN_CAROOT" ]; then
+    export CAROOT=$(wslpath "$WIN_CAROOT")
+  fi
+fi
+HOOKEOF
+sudo chmod +x /etc/buildkite-agent/hooks/environment
 
 echo "In the editor, change the home directory of buildkite-agent to /var/lib/buildkite-agent"
 echo "Press any key to continue..."
