@@ -64,7 +64,7 @@ jobs:
             "TestPHPWebserverType"
             "TestWriteDrushConfig"
           )
-          TESTARGS="-failfast -run '($(IFS="|"; echo "${TP[*]}"))'"
+          TESTARGS="-run '($(IFS="|"; echo "${TP[*]}"))'"
           echo "testargs=${TESTARGS}"
           echo "testargs=${TESTARGS}" >> $GITHUB_OUTPUT
 

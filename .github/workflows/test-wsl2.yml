@@ -23,7 +23,7 @@ on:
         description: 'TESTARGS value'
         type: string
         required: false
-        default: '-failfast'
+        default: ''
       gotest_short:
         description: 'GOTEST_SHORT value (16=drupal11 only)'
         type: string
@@ -49,7 +49,7 @@ permissions:
 
 env:
   GOTEST_SHORT: ${{ inputs.gotest_short || '16' }}
-  TESTARGS: ${{ inputs.testargs || '-failfast' }}
+  TESTARGS: ${{ inputs.testargs || '' }}
   MAKE_TARGET: ${{ inputs.make_target || 'test' }}
   DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
   DDEV_SKIP_NODEJS_TEST: 'true'

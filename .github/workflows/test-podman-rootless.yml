@@ -37,7 +37,7 @@ jobs:
     secrets: inherit
     with:
       make_target: "testpkg"
-      testargs: "-failfast -run ^Test[A-G]"
+      testargs: "-run ^Test[A-G]"
       ddev_test_podman_rootless: "true"
       ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
@@ -47,7 +47,7 @@ jobs:
     secrets: inherit
     with:
       make_target: "testpkg"
-      testargs: "-failfast -run ^Test[H-Z]"
+      testargs: "-run ^Test[H-Z]"
       ddev_test_podman_rootless: "true"
       ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}

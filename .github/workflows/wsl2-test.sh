@@ -19,7 +19,7 @@ export DOCKER_SCAN_SUGGEST=false
 export DOCKER_SCOUT_SUGGEST=false
 export CGO_ENABLED="${CGO_ENABLED:-0}"
 export BUILDARGS="${BUILDARGS:-}"
-export TESTARGS="${TESTARGS:--failfast}"
+export TESTARGS="${TESTARGS:-}"
 export MAKE_TARGET="${MAKE_TARGET:-test}"
 export PATH="/usr/local/go/bin:$PATH"
 

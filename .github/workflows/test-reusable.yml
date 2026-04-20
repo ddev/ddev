@@ -52,7 +52,7 @@ on:
         description: 'TESTARGS value'
         required: false
         type: string
-        default: '-failfast'
+        default: ''
       gotest_short:
         description: 'GOTEST_SHORT value'
         required: false

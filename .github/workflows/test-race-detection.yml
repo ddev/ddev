@@ -38,7 +38,7 @@ jobs:
     with:
       cgo_enabled: "1"
       buildargs: "-race"
-      testargs: "-failfast -race"
+      testargs: "-race"
       ddev_test_use_mutagen: "true"
       ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
