@@ -222,7 +222,7 @@ To test a branch against only selected pipelines (e.g. WSL2 only) or to run a su
     TESTARGS=-run TestCheck -failfast
     ```
 
-    Adjust the `-run` pattern to match the tests you want. Use a common prefix where possible. If you need `|` for alternation, wrap the regex in single quotes so the shell does not interpret the pipe as a pipeline operator:
+    Adjust the `-run` pattern to match the tests you want. Use a common prefix where possible. If you need `|` for alternation, wrap the regular expression in single quotes so the shell does not interpret the pipe as a pipeline operator:
 
     ```
     TESTARGS=-run 'TestCheckLiveConnectivity|TestCheckMkcertInstallation' -failfast
