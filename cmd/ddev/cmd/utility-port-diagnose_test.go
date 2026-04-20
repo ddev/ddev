@@ -319,6 +319,12 @@ func TestFindWindowsPortProcesses(t *testing.T) {
 	if !hasCommand("powershell.exe") {
 		t.Skip("powershell.exe not available")
 	}
+	// In WSL2 mirrored networking mode, listeners created via WSL2 interop
+	// (exec.Command("powershell.exe")) are not visible to Get-NetTCPConnection.
+	// Native Windows applications are still detectable; this test setup is not.
+	if nodeps.IsWSL2MirroredMode() {
+		t.Skip("Get-NetTCPConnection cannot see WSL2-interop-created listeners in mirrored networking mode")
+	}
 
 	port := getFreePort(t)
 
