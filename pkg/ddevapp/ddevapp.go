@@ -3439,7 +3439,9 @@ func deleteImages(app *DdevApp) {
 
 // RemoveGlobalProjectInfo deletes the project from DdevProjectList
 func (app *DdevApp) RemoveGlobalProjectInfo() {
-	_ = globalconfig.RemoveProjectInfo(app.Name)
+	if err := globalconfig.RemoveProjectInfo(app.Name); err != nil {
+		util.Warning("Unable to remove project info for %s: %v", app.Name, err)
+	}
 }
 
 // GetHTTPURL returns the HTTP URL for an app.
