@@ -362,7 +362,7 @@ if [ "${os:-}" = "windows" ]; then
   echo "Windows installer tests completed successfully"
 fi
 
-make test TESTARGS="${TESTARGS:-}" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
+make ${MAKE_TARGET:-test} TESTARGS="${TESTARGS:-}" TESTPKG="${TESTPKG:-}" TESTFILE="${TESTFILE:-}" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true

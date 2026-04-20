@@ -281,6 +281,12 @@ Use `GOTEST_SHORT=true` to run one CMS in each test, or `GOTEST_SHORT=<integer>`
 
 To run a test (in the `cmd` package) against a individually-compiled DDEV binary, set the `DDEV_BINARY_FULLPATH` environment variable, for example `DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
 
+To run all tests in a specific package, use `make testonepkg TESTPKG=./pkg/dockerutil`. Combine with `TESTARGS` to filter further, for example `make testonepkg TESTPKG=./pkg/dockerutil TESTARGS="-run TestDockerUtils"`.
+
+To run all tests defined in a single `_test.go` file, use `make testonefile TESTFILE=./cmd/ddev/cmd/utility-tls-diagnose_test.go`. This automatically extracts the test function names from the file and builds the `-run` pattern.
+
+When triggering a custom Buildkite or GitHub Actions run, the same targets are available via environment variables: set `MAKE_TARGET=testonepkg` with `TESTPKG=./pkg/dockerutil`, or `MAKE_TARGET=testonefile` with `TESTFILE=./cmd/ddev/cmd/utility-tls-diagnose_test.go`.
+
 The easiest way to run tests is using GoLand (or VS Code) with their built-in test runners and debuggers. You can step through a specific test; you can stop at the point before the failure and experiment with the site that the test has set up.
 
 ## Automated Testing
