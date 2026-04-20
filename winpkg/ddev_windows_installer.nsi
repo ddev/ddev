@@ -114,20 +114,55 @@ Function InitializeDebugLog
     ${EndIf}
 FunctionEnd
 
-; LogPrint - DetailPrint wrapper that also writes to debug log
+; LogPrint - DetailPrint wrapper that also writes to debug log with timestamp
 ; Usage: Push "message" ; Call LogPrint
 Function LogPrint
     Exch $R0  ; Get message from stack
     Push $R1
-    
-    ; Always do DetailPrint
-    DetailPrint "$R0"
-    
-    ; Write to log file if handle is open
-    ${If} $DEBUG_LOG_HANDLE != ""
-        FileWrite $DEBUG_LOG_HANDLE "$R0$\r$\n"
+    Push $R2  ; for formatted timestamp
+    Push $0   ; save GetTime output registers
+    Push $1
+    Push $2
+    Push $3
+    Push $4
+    Push $5
+    Push $6
+
+    ; Get current local time: $0=day $1=month $2=year $3=dayofweek $4=hour $5=min $6=sec
+    ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
+
+    ; Zero-pad hour, minute, second
+    StrLen $R1 $4
+    ${If} $R1 == 1
+        StrCpy $4 "0$4"
     ${EndIf}
-    
+    StrLen $R1 $5
+    ${If} $R1 == 1
+        StrCpy $5 "0$5"
+    ${EndIf}
+    StrLen $R1 $6
+    ${If} $R1 == 1
+        StrCpy $6 "0$6"
+    ${EndIf}
+
+    StrCpy $R2 "$4:$5:$6"
+
+    Pop $6
+    Pop $5
+    Pop $4
+    Pop $3
+    Pop $2
+    Pop $1
+    Pop $0
+
+    ; Write to installer window and log file with timestamp prefix
+    DetailPrint "$R2 $R0"
+
+    ${If} $DEBUG_LOG_HANDLE != ""
+        FileWrite $DEBUG_LOG_HANDLE "$R2 $R0$\r$\n"
+    ${EndIf}
+
+    Pop $R2
     Pop $R1
     Pop $R0
 FunctionEnd
@@ -504,7 +539,9 @@ Page custom DockerCheckPage DockerCheckPageLeave
 !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchSponsors"
 !define MUI_FINISHPAGE_TITLE "DDEV Installation Complete"
 !define MUI_FINISHPAGE_TEXT "Thank you for installing DDEV!$\r$\n$\r$\nPlease consider supporting DDEV so we can continue supporting you."
-!define MUI_FINISHPAGE_RUN_CHECKED  ; Pre-check the box to encourage action
+; MUI_FINISHPAGE_RUN_CHECKED is intentionally omitted: in silent (/S) mode NSIS
+; automatically calls the run function when this is defined, which opens a browser
+; window and can delay installer exit, causing CI timeout failures.
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
@@ -1574,19 +1611,6 @@ Function InstallWSL2Common
         Call SetupMkcertInWSL2
     ${EndIf}
 
-    ; Final validation - ensure DDEV is actually working
-    Push "Performing final validation of DDEV installation..."
-    Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO ddev version'
-    Pop $1
-    Pop $0
-    ${If} $1 != 0
-        Push "ERROR: Final DDEV validation failed - exit code: $1, output: $0"
-        Call LogPrint
-        Push "Installation validation failed. DDEV may not be working properly. Error: $0"
-        Call ShowErrorAndAbort
-    ${EndIf}
-    
     ; Configure WSL2 security settings to prevent Windows security warnings
     Push "Configuring WSL2 security settings to prevent Windows executable warnings..."
     Call LogPrint

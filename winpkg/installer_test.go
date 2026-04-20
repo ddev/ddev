@@ -141,8 +141,10 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			out, _ := exec.RunHostCommand("tasklist.exe", "/FI", "IMAGENAME eq msiexec.exe")
 			t.Logf("MSI processes running: %s", out)
 
-			// Run installer with a 10-minute timeout to prevent infinite hangs
-			const installerTimeout = 10 * time.Minute
+			// Run installer with a 20-minute timeout to prevent infinite hangs.
+			// Fresh Docker CE apt-get installs + docker-compose download can
+			// legitimately take 10+ minutes on a loaded CI machine.
+			const installerTimeout = 20 * time.Minute
 			ctx, cancel := context.WithTimeout(context.Background(), installerTimeout)
 			defer cancel()
 
