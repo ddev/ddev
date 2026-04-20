@@ -147,29 +147,39 @@ func Cleanup(app *DdevApp) error {
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.
 func CheckForConf(confPath string) (string, error) {
-	var foundPath string
-
 	if fileutil.FileExists(filepath.Join(confPath, ".ddev", "config.yaml")) {
-		foundPath = confPath
+		return confPath, nil
 	}
 
 	// Keep going until we can't go any higher
 	for filepath.Dir(confPath) != confPath {
 		confPath = filepath.Dir(confPath)
 		if fileutil.FileExists(filepath.Join(confPath, ".ddev", "config.yaml")) {
-			if foundPath != "" {
-				// A nested .ddev was found first; warn that a parent project exists above it
-				util.WarningOnce("Nested project at %q overrides parent at %q\nIf this is not intended, run the command from the parent project root directory.", foundPath, confPath)
-				break
-			}
-			foundPath = confPath
+			return confPath, nil
 		}
 	}
 
-	if foundPath != "" {
-		return foundPath, nil
-	}
 	return "", fmt.Errorf("no %s file was found in this directory or any parent", filepath.Join(".ddev", "config.yaml"))
+}
+
+// DetectNestedProject walks up from cwd and returns (childRoot, parentRoot, true)
+// if a .ddev/config.yaml exists in cwd and also in one of its ancestors.
+// Used by root.go to warn once per invocation; not called from CheckForConf.
+func DetectNestedProject(cwd string) (child, parent string, nested bool) {
+	var first string
+	if fileutil.FileExists(filepath.Join(cwd, ".ddev", "config.yaml")) {
+		first = cwd
+	}
+	for filepath.Dir(cwd) != cwd {
+		cwd = filepath.Dir(cwd)
+		if fileutil.FileExists(filepath.Join(cwd, ".ddev", "config.yaml")) {
+			if first != "" {
+				return first, cwd, true
+			}
+			first = cwd
+		}
+	}
+	return "", "", false
 }
 
 // getTemplateFuncMap will return a map of useful template functions.
