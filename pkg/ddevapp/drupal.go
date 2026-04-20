@@ -581,6 +581,12 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 	// So we chmod +w the two files that a Drupal install may set read-only
 	// *inside* the container, allowing mutagen access to it again
 	if app.IsMutagenEnabled() && status == SiteRunning {
+		// Flush Mutagen so any host-side settings files are in the container
+		// before we attempt to chmod them. Without this, sites/default may not
+		// exist in the container yet (e.g. after an interrupted ddev start).
+		if err := app.MutagenSyncFlush(); err != nil {
+			util.Warning("Unable to flush Mutagen before setting permissions: %v", err)
+		}
 		settingsFiles := []string{
 			path.Join(app.GetAbsDocroot(true), `sites/default`),
 			path.Join(app.GetAbsDocroot(true), `sites/default/settings.php`),

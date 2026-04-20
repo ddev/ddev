@@ -358,15 +358,13 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 				util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
 			}
 		}
-		return settingsPath, nil
-	}
-
-	// If the project is not running, it makes no sense to sync it
-	if s, _ := app.SiteStatus(); s == SiteRunning {
-		err = app.MutagenSyncFlush()
-		if err != nil {
-			return "", err
+		// Sync any newly written settings files into the container.
+		if s, _ := app.SiteStatus(); s == SiteRunning {
+			if err = app.MutagenSyncFlush(); err != nil {
+				return "", err
+			}
 		}
+		return settingsPath, nil
 	}
 
 	return "", nil
