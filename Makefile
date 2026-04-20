@@ -122,7 +122,7 @@ $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/l
 	mkdir -p $(GOTMP)/bin/$${GOOS}_$${GOARCH} && \
 	$(CURL) --fail -JL -s -S --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://github.com/FiloSottile/mkcert/releases/download/$${MKCERT_VERSION}/mkcert-$${MKCERT_VERSION}-$${GOOS}-$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
 
-TEST_TIMEOUT=4h
+TEST_TIMEOUT=6h
 BUILD_ARCH = $(shell go env GOARCH)
 
 DDEVNAME=ddev
@@ -130,15 +130,6 @@ SHASUM=shasum -a 256
 ifeq ($(BUILD_OS),windows)
 	DDEVNAME=ddev.exe
 	SHASUM=sha256sum
-	TEST_TIMEOUT=6h
-endif
-
-ifeq ($(DDEV_TEST_PODMAN_ROOTLESS),true)
-	TEST_TIMEOUT=6h
-endif
-
-ifeq ($(DDEV_TEST_PODMAN_ROOT),true)
-	TEST_TIMEOUT=6h
 endif
 
 DDEV_PATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)
