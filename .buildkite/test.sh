@@ -354,7 +354,7 @@ echo "--- Running tests..."
 if [ "${os:-}" = "windows" ]; then
   echo "--- Running Windows installer tests first..."
   export DDEV_TEST_USE_REAL_INSTALLER=true
-  make testwininstaller TESTARGS="${TESTARGS:-}" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
+  make testwininstaller TESTARGS="${TESTARGS:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
   INSTALLER_RV=$?
   if [ $INSTALLER_RV -ne 0 ]; then
     echo "Windows installer tests failed with status=$INSTALLER_RV"
@@ -363,7 +363,7 @@ if [ "${os:-}" = "windows" ]; then
   echo "Windows installer tests completed successfully"
 fi
 
-make ${MAKE_TARGET:-test} TESTARGS="${TESTARGS:-}" TESTPKG="${TESTPKG:-}" TESTFILE="${TESTFILE:-}" | sed -u 's/^--- /=== /; /\//!s/^=== RUN /--- RUN /'
+make ${MAKE_TARGET:-test} TESTARGS="${TESTARGS:-}" TESTPKG="${TESTPKG:-}" TESTFILE="${TESTFILE:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
