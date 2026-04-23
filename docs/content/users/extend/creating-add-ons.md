@@ -569,7 +569,7 @@ echo "Requirements validated\n";
 
 Add `#ddev-generated` as a comment in any file your add-on creates or copies into a project. DDEV uses this marker to:
 
-1. **Track managed files** — on a subsequent `ddev add-on get`, DDEV replaces the file automatically if it hasn't been modified by the user
+1. **Track managed files** — on a subsequent `ddev add-on get`, DDEV replaces the file automatically if it contains `#ddev-generated`, even if the user has modified it. Files with `#ddev-generated` that are listed in the `project_files` or `global_files` will be automatically removed on `ddev add-on remove` if the `#ddev-generated` is found in the file.
 2. **Enable clean removal** — `ddev add-on remove` deletes all files that still contain `#ddev-generated`
 
 Files that do **not** contain this comment are left in place during removal (assumed to be user-modified). The [`removal_actions`](#core-sections) section is the place to clean up any such files.
