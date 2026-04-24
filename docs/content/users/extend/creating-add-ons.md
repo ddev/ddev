@@ -40,18 +40,18 @@ removal_actions: []
 - **`post_install_actions`**: Scripts executed after files are copied
 - **`removal_actions`**: Scripts executed when removing the add-on. Use these to clean up files that don't carry `#ddev-generated` (e.g. files placed outside `.ddev/`, or files the user may have modified).
 
-  ```yaml
-  removal_actions:
-    - |
-      #ddev-description: Remove generated settings file if unmodified
-      if [ -f "${DDEV_APPROOT}/${DDEV_DOCROOT}/sites/default/settings.ddev.myservice.php" ]; then
-        if grep -q '#ddev-generated' "${DDEV_APPROOT}/${DDEV_DOCROOT}/sites/default/settings.ddev.myservice.php"; then
-          rm -f "${DDEV_APPROOT}/${DDEV_DOCROOT}/sites/default/settings.ddev.myservice.php"
-        else
-          echo "Skipping removal: settings.ddev.myservice.php has been modified."
+    ```yaml
+    removal_actions:
+      - |
+        #ddev-description: Remove generated settings file if unmodified
+        if [ -f "${DDEV_APPROOT}/${DDEV_DOCROOT}/sites/default/settings.ddev.myservice.php" ]; then
+          if grep -q '#ddev-generated' "${DDEV_APPROOT}/${DDEV_DOCROOT}/sites/default/settings.ddev.myservice.php"; then
+            rm -f "${DDEV_APPROOT}/${DDEV_DOCROOT}/sites/default/settings.ddev.myservice.php"
+          else
+            echo "Skipping removal: settings.ddev.myservice.php has been modified."
+          fi
         fi
-      fi
-  ```
+    ```
 
 ### Advanced Sections
 
@@ -308,7 +308,7 @@ services:
   myservice:
     image: myimage:latest
     x-ddev:
-      describe-url: "https://${DDEV_HOSTNAME}:8080"
+      describe-url-port: "https://${DDEV_HOSTNAME}:8080"
       describe-info: "API key: ${MYSERVICE_API_KEY}"
 ```
 
