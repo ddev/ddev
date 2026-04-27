@@ -695,6 +695,6 @@ To become an officially supported add-on:
 - **Maintenance Guide**: [DDEV Add-on Maintenance Guide](https://ddev.com/blog/ddev-add-on-maintenance-guide/)
 - **DDEV Discord**: Join [DDEV Discord](https://ddev.com/s/discord) for development support
 - **GitHub Issues**: Use [DDEV Issues](https://github.com/ddev/ddev/issues) for problems and questions
-- **Add-on Trainings**: [DDEV Add-ons: Creating, maintaining, testing](https://www.youtube.com/watch?v=TmXqQe48iqE) (YouTube) and [Advanced Add-On Techniques](https://ddev.com/blog/advanced-add-on-contributor-training/)
+- **Add-on Trainings**: [DDEV Add-ons: Creating, maintaining, testing](https://www.youtube.com/watch?v=OtmVJtwsHMg) (YouTube) and [Advanced Add-On Techniques](https://ddev.com/blog/advanced-add-on-contributor-training/)
 
 Creating DDEV add-ons is a powerful way to contribute to the DDEV ecosystem. Whether you use traditional Bash actions or the new PHP-based actions, you can create sophisticated extensions that help developers worldwide.
