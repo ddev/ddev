@@ -78,6 +78,8 @@ RUN apt-get -qq update && \
     postgresql-client \
     pv \
     python-is-python3 \
+    # For QR codes in `ddev share` \
+    qrencode \
     rsync \
     sqlite3 \
     supervisor \
