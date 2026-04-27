@@ -54,6 +54,7 @@ EOF
 RUN apt-get -qq update && \
     DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests \
     bash-completion \
+    cron \
     gettext \
     git \
     gpgv \
