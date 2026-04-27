@@ -23,7 +23,7 @@ fi
 
 set -x
 sudo apt-get update -qq >/dev/null && sudo apt-get upgrade -qq -y >/dev/null
-sudo apt-get install -qq -y apt-transport-https autojump bats build-essential ca-certificates ccache clang curl dirmngr etckeeper expect git gnupg htop icinga2 jq libcurl4-gnutls-dev libnss3-tools lsb-release mariadb-client mkcert monitoring-plugins-contrib nagios-plugins postgresql-client unzip vim wslu xdg-utils zip >/dev/null
+sudo apt-get install -qq -y apt-transport-https autojump bats build-essential ca-certificates ccache clang curl dirmngr etckeeper expect git gnupg htop icinga2 jq libcurl4-gnutls-dev libnss3-tools lsb-release mariadb-client mkcert monitoring-plugins-contrib nagios-plugins postgresql-client unzip vim xdg-utils zip >/dev/null
 
 # docker-ce if required
 if [ "${BUILDKITE_DOCKER_TYPE:-}" = "wsl2" ]; then

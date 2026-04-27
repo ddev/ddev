@@ -54,8 +54,8 @@ if (Test-Path "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe") {
 wsl -u root -e bash -c "apt-get update && apt-get install -y curl"
 wsl -u root -e bash -c "rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list && curl -fsSL https://pkg.ddev.com/apt/gpg.key | tee /etc/apt/keyrings/ddev.asc > /dev/null && chmod a+r /etc/apt/keyrings/ddev.asc"
 wsl -u root -e bash -c "printf 'Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n' > /etc/apt/sources.list.d/ddev.sources"
-wsl -u root -e bash -c "apt-get update && apt-get install -y wslu"
-wsl -u root -e bash -c "apt-get install -y --no-install-recommends ddev ddev-wsl2"
+
+wsl -u root -e bash -c "apt-get update && apt-get install -y --no-install-recommends ddev ddev-wsl2"
 
 wsl mkcert.exe -install
 $env:CAROOT = & wsl mkcert.exe -CAROOT

@@ -1378,10 +1378,10 @@ Function InstallWSL2Common
 
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
         ; Install packages needed for Docker Desktop (including ddev)
-        StrCpy $0 "docker-ce-cli wslu ddev"
+        StrCpy $0 "docker-ce-cli ddev"
     ${Else}
         ; Install full Docker CE packages (including ddev)
-        StrCpy $0 "docker-ce docker-ce-cli containerd.io wslu ddev"
+        StrCpy $0 "docker-ce docker-ce-cli containerd.io ddev"
     ${EndIf}
     
     ; Update status
@@ -1390,7 +1390,7 @@ Function InstallWSL2Common
     Pop $2
 
     ; Install packages in multiple steps for better progress feedback
-    Push "WSL($SELECTED_DISTRO): Installing essential packages (1/4)..."
+    Push "WSL($SELECTED_DISTRO): Installing essential packages (1/3)..."
     Call LogPrint
     Push "Please be patient - installing essential packages..."
     Call LogPrint
@@ -1409,7 +1409,7 @@ Function InstallWSL2Common
     Pop $1
     Pop $2
 
-    Push "WSL($SELECTED_DISTRO): Installing Docker components (2/4)..."
+    Push "WSL($SELECTED_DISTRO): Installing Docker components (2/3)..."
     Call LogPrint
     Push "Please be patient - installing Docker components..."
     Call LogPrint
@@ -1427,26 +1427,12 @@ Function InstallWSL2Common
         Call ShowErrorAndAbort
     ${EndIf}
 
-    Push "WSL($SELECTED_DISTRO): Installing WSL utilities (3/4)..."
-    Call LogPrint
-    Push "Please be patient - installing WSL utilities..."
-    Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y wslu 2>&1"'
-    Pop $1
-    Pop $2
-    ${If} $1 != 0
-        Push "ERROR: Failed to install WSL utilities - exit code: $1, output: $2"
-        Call LogPrint
-        Push "Failed to install WSL utilities. Error: $2"
-        Call ShowErrorAndAbort
-    ${EndIf}
-    
     ; Update status
     nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"PROGRESS: Installing DDEV\" >> /tmp/ddev_installation_status.txt"'
     Pop $1
     Pop $2
 
-    Push "WSL($SELECTED_DISTRO): Installing DDEV (4/4)..."
+    Push "WSL($SELECTED_DISTRO): Installing DDEV (3/3)..."
     Call LogPrint
     Push "Please be patient - installing DDEV..."
     Call LogPrint
