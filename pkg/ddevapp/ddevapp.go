@@ -1486,15 +1486,17 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 	return out, fmt.Errorf("docker-compose build failed after %d attempts: %v, output='%s', stderr='%s'", composeBuildMaxRetries, lastErr, out, stderr)
 }
 
-// buildContextFingerprint returns a SHA-256 hash of the build context directories
-// (.webimageBuild, .dbimageBuild) and base image names. This is used to detect
+// buildContextFingerprint returns an SHA-256 hash of the build context directories
+// (.webimageBuild, .dbimageBuild) and base image IDs. This is used to detect
 // when docker-compose build can be skipped because nothing has changed.
+// Image IDs (sha256 digests) are used instead of tag names so that
+// rebuilt images with the same tag are still detected as changed.
 func (app *DdevApp) buildContextFingerprint() string {
 	dirs := []string{
 		app.GetConfigPath(".webimageBuild"),
 		app.GetConfigPath(".dbimageBuild"),
 	}
-	hash, err := fileutil.HashDirs(dirs, app.WebImage, app.GetDBImage())
+	hash, err := fileutil.HashDirs(dirs, dockerutil.ImageID(app.WebImage), dockerutil.ImageID(app.GetDBImage()))
 	if err != nil {
 		util.Warning("unable to hash build context directories: %v", err)
 		return ""
@@ -1772,10 +1774,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	// Run chown + SSH agent concurrently with config/build steps below.
+	// Run chown concurrently with config/build steps below.
 	// chown operates on volumes, compose build operates on images — independent.
 	var chownErr error
-	var sshErr error
 	var chownWg sync.WaitGroup
 	chownWg.Go(func() {
 		util.Debug("Exec %s", chownCmd)
@@ -1785,13 +1786,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			return
 		}
 		util.Debug("Done %s: output=%s", chownCmd, chownOut)
-
-		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
-			sshErr = app.EnsureSSHAgentContainer()
-		}
 	})
 
-	// While chown + SSH run in background, do config and compose build
+	// While chown runs in background, do config and compose build.
 	// Warn user if there are deprecated items used in the config
 	app.CheckDeprecations()
 
@@ -1835,6 +1832,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
+	// Wait for background image pull to finish before fingerprinting, so
+	// ImageID() reflects the freshly-pulled digest rather than a stale local one.
+	pullWg.Wait()
+
 	// Build extra layers on web and db images if necessary.
 	// Skip the build entirely if the build context hasn't changed and built images exist.
 	buildHashFile := app.GetConfigPath(".build-hash")
@@ -1856,14 +1857,17 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	// Wait for background image pull and chown + SSH to finish before proceeding
-	pullWg.Wait()
+	// Wait for background chown to finish before proceeding.
+	// SSH agent runs after chown (needs volumes ready) and after WriteDockerComposeYAML
+	// (reads app.ComposeYaml) — so it runs sequentially here to avoid a data race.
 	chownWg.Wait()
 	if chownErr != nil {
 		return chownErr
 	}
-	if sshErr != nil {
-		return sshErr
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
+		if err = app.EnsureSSHAgentContainer(); err != nil {
+			return err
+		}
 	}
 
 	if buildNeeded {

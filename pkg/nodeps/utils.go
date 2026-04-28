@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"time"
 	"unicode"
 
 	"golang.org/x/term"
@@ -50,18 +49,15 @@ func RemoveItemFromSlice(slice []string, item string) []string {
 	return slice
 }
 
-// From https://www.calhoun.io/creating-random-strings-in-go/
-// nolint: revive
-var seededRand *rand.Rand = rand.New(
-	rand.NewSource(time.Now().UnixNano()))
-
 // RandomString creates a random string with a set length
+// From https://www.calhoun.io/creating-random-strings-in-go/
+// We don't need rand.Rand here for seed, see https://pkg.go.dev/math/rand#Seed
 func RandomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyz"
 
 	b := make([]byte, length)
 	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
+		b[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(b)
 }

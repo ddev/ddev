@@ -57,6 +57,20 @@ func FindImagesByLabels(labels map[string]string, danglingOnly bool) ([]image.Su
 	return images.Items, nil
 }
 
+// ImageID returns the content-addressable ID (sha256:...) of a local image,
+// falling back to the tag name if the image is not found locally.
+func ImageID(imageName string) string {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return imageName
+	}
+	info, err := apiClient.ImageInspect(ctx, imageName)
+	if err != nil {
+		return imageName
+	}
+	return info.ID
+}
+
 // RemoveImage removes an image with force
 func RemoveImage(tag string) error {
 	ctx, apiClient, err := GetDockerClient()
