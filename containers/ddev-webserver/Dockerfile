@@ -224,8 +224,8 @@ RUN <<EOF
 
     # Install platform cli
     curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | bash
-    apt modernize-sources --assume-yes
-    rm -f /etc/apt/sources.list.d/*.list.bak
+    # Modernize only after installing upsun cli to avoid duplicate sources
+    #apt modernize-sources --assume-yes
 
     # Install upsun cli
     curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | VENDOR=upsun bash
