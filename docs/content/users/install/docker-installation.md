@@ -217,14 +217,18 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ### Install WSL2
 
-    WSL2 is required for Docker CE, and needed for Docker Desktop and Rancher Desktop when using WSL2 integration. If you're using **Traditional Windows** (Docker Desktop or Rancher Desktop without a WSL2 distro), skip this section.
-
     In PowerShell, run:
 
     ```powershell
+    # Install WSL2; reboot if prompted, then continue:
     wsl --install
-    # Reboot if prompted, then continue:
+    # Update WSL2 if previously installed:
     wsl --update
+    ```
+
+    For best performance, store your projects in WSL2's Linux filesystem (ext4) rather than the Windows filesystem (NTFS). Create a Ubuntu distro for this (skip if you're using Traditional Windows):
+
+    ```powershell
     wsl --install Ubuntu --name DDEV
     # "DDEV" is just a suggested name — use any name you like.
     # You'll be asked to set a username and password for the distro.

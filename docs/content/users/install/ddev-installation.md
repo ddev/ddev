@@ -208,16 +208,20 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     | **Docker Desktop / Rancher Desktop with WSL2** | Already have Docker Desktop or Rancher Desktop installed | WSL2 + Docker Desktop or Rancher Desktop |
     | **Traditional Windows** | PowerShell/Git Bash workflow | Docker Desktop or Rancher Desktop (no separate WSL2 distro needed) |
 
-    ### Step 1: Install WSL2 (Docker CE and Docker Desktop modes only)
-
-    If you’re using **Traditional Windows**, skip to [Step 2: Install DDEV](#step-2-install-ddev).
+    ### Step 1: Install WSL2
 
     In PowerShell, run:
 
     ```powershell
+    # Install WSL2; reboot if prompted, then continue:
     wsl --install
-    # Reboot if prompted, then continue:
+    # Update WSL2 if previously installed:
     wsl --update
+    ```
+
+    For best performance, store your projects in WSL2's Linux filesystem (ext4) rather than the Windows filesystem (NTFS). Create a Ubuntu distro for this (skip if you’re using Traditional Windows):
+
+    ```powershell
     wsl --install Ubuntu --name DDEV
     # "DDEV" is just a suggested name — use any name you like.
     # You’ll be asked to set a username and password for the distro.
