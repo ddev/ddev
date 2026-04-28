@@ -317,7 +317,7 @@ ddev launch
 ```
 
 ??? tip "Prefer to run as a script?"
-    To run the whole setup as a script, examine and run this script:
+To run the whole setup as a script, examine and run this script:
 
     ```bash
     cat > setup-civicrm.sh << 'EOF'
@@ -519,7 +519,7 @@ Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing on
 DDEV injects a number of special environment variables into the container (via `.ddev/.env.web`) that [automatically configure](https://craftcms.com/docs/5.x/configure.html#environment-overrides) Craft’s database connection and the project’s primary site URL. You may opt out of this behavior with the [`disable_settings_management`](./configuration/config.md#disable_settings_management) setting.
 
 !!!tip "Compatibility with Craft CMS 3"
-    The `craftcms` project works best with configuration features that became available in Craft CMS 4.x. If you are using Craft CMS 3.x or earlier, you may want to use the `php` project type and explicitly define [database connection details](./usage/database-management.md#database-backends-and-defaults) via [Craft’s `db.php`](https://craftcms.com/docs/3.x/config/db-settings.html).
+The `craftcms` project works best with configuration features that became available in Craft CMS 4.x. If you are using Craft CMS 3.x or earlier, you may want to use the `php` project type and explicitly define [database connection details](./usage/database-management.md#database-backends-and-defaults) via [Craft’s `db.php`](https://craftcms.com/docs/3.x/config/db-settings.html).
 
 === "New projects"
 
@@ -619,7 +619,7 @@ DDEV injects a number of special environment variables into the container (via `
 Set [`composer_root`](./configuration/config.md#composer_root) to the subdirectory where Craft is installed. For example, `ddev config --composer-root=app`.
 
 !!!tip "Installing Craft"
-    Read more about installing Craft in the [official documentation](https://craftcms.com/docs).
+Read more about installing Craft in the [official documentation](https://craftcms.com/docs).
 
 ## Drupal
 
@@ -872,6 +872,58 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         ./setup-drupal-git.sh
         ```
 
+=== "Drupal 12 (HEAD)"
+
+    Create the project directory and configure DDEV:
+
+    ```bash
+    mkdir -p my-drupal12-site && cd my-drupal12-site
+    ddev config --project-type=drupal12 --docroot=web
+    ```
+
+    Start DDEV (this may take a minute):
+
+    ```bash
+    ddev start
+    ```
+
+    Install Drupal via Composer:
+
+    ```bash
+    ddev composer create-project drupal/recommended-project:main-dev@dev
+    ddev composer require drush/drush
+    ```
+
+    Run Drupal installation and launch:
+
+    ```bash
+    ddev drush site:install --account-name=admin --account-pass=admin -y
+    ddev launch
+    # or automatically log in with:
+    ddev launch $(ddev drush uli)
+    ```
+
+    Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > setup-drupal12.sh << 'EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        mkdir -p my-drupal12-site && cd my-drupal12-site
+        ddev config --project-type=drupal12 --docroot=web
+        ddev start -y
+        ddev composer create-project drupal/recommended-project:main-dev@dev
+        ddev composer require drush/drush
+        ddev drush site:install --account-name=admin --account-pass=admin -y
+        ddev launch
+        EOF
+        chmod +x setup-drupal12.sh
+        ./setup-drupal12.sh
+        ```
+
 ## ExpressionEngine
 
 === "ExpressionEngine ZIP File Download"
@@ -985,7 +1037,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows you to define your own web server process(es) and exposed ports for projects that don't use the standard `nginx-fpm` or `apache-fpm` configurations.
 
 !!!tip "Looking for more advanced generic web server examples?"
-    Check out the [Node.js](#nodejs) and [Wagtail](#wagtail-python-generic) examples below.
+Check out the [Node.js](#nodejs) and [Wagtail](#wagtail-python-generic) examples below.
 
     See also the [ddev-frankenphp](https://github.com/ddev/ddev-frankenphp) add-on, which uses the `generic` webserver under the hood.
 
@@ -1170,7 +1222,7 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
         ```
 
 !!!tip "How to update?"
-    Upgrade Grav core:
+Upgrade Grav core:
 
     ```bash
     ddev exec gpm selfupgrade -f
@@ -1224,7 +1276,7 @@ In the web browser, log into your account using `admin` and `publish`.
 Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/install_with_ddev/) for more cases.
 
 ??? tip "Prefer to run as a script?"
-    To run the whole setup as a script, examine and run this script:
+To run the whole setup as a script, examine and run this script:
 
     ```bash
     cat > setup-ibexa.sh << 'EOF'
@@ -1284,7 +1336,7 @@ ddev launch /administrator
 ```
 
 ??? tip "Prefer to run as a script?"
-    To run the whole setup as a script, examine and run this script:
+To run the whole setup as a script, examine and run this script:
 
     ```bash
     cat > setup-joomla.sh << 'EOF'
@@ -1399,7 +1451,7 @@ Start a new [Kirby CMS](https://getkirby.com) project or use an existing one.
         ```
 
 !!!tip "Installing Kirby"
-    Read more about developing your Kirby project with DDEV in our [extensive DDEV guide](https://getkirby.com/docs/cookbook/setup/ddev).
+Read more about developing your Kirby project with DDEV in our [extensive DDEV guide](https://getkirby.com/docs/cookbook/setup/ddev).
 
 ## Laravel
 
@@ -1676,14 +1728,14 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
         ```
 
 !!!tip "Add Vite support?"
-    Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/vite). See the [Vite Integration](usage/vite.md#laravel) documentation for complete setup instructions.
+Since Laravel v9.19, Vite is included as the default [asset bundler](https://laravel.com/docs/vite). See the [Vite Integration](usage/vite.md#laravel) documentation for complete setup instructions.
 
 ## Magento 2
 
 Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create-project`, it’s asking for your public key as "username" and private key as "password".
 
 !!!tip "Store Adobe/Magento Composer credentials in the global DDEV config"
-    If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md):
+If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md):
 
     ```bash
     mkdir -p $HOME/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json $HOME/.ddev/homeadditions/.composer/auth.json
@@ -1756,7 +1808,7 @@ ddev launch /admin_ddev
 Change the admin name and related information as needed.
 
 ??? tip "Prefer to run as a script?"
-    To run the whole setup as a script, examine and run this script:
+To run the whole setup as a script, examine and run this script:
 
     ```bash
     cat > setup-magento.sh << 'EOF'
@@ -2178,7 +2230,7 @@ October CMS is built on Laravel, so it uses the `laravel` project type. DDEV aut
         ```
 
 !!!tip "Installing October CMS"
-    Read more about installing October CMS in the [official documentation](https://docs.octobercms.com/3.x/setup/installation.html).
+Read more about installing October CMS in the [official documentation](https://docs.octobercms.com/3.x/setup/installation.html).
 
 ## Pimcore
 
@@ -2652,7 +2704,7 @@ ddev exec "sed -i -e 's|<name>.*</name>|<name>${SULU_PROJECT_NAME}</name>|g' -e 
 ```
 
 !!!warning "Caution"
-    Changing the `<key>` for a webspace later on causes problems. It is recommended to decide on the value for the key before the database is build in the next step.
+Changing the `<key>` for a webspace later on causes problems. It is recommended to decide on the value for the key before the database is build in the next step.
 
 Build the database with the `dev` argument (adds user `admin` with password `admin`):
 
@@ -2668,14 +2720,14 @@ ddev launch /admin
 ```
 
 !!!tip
-    If you don't want to add an admin user use the `prod` argument instead
+If you don't want to add an admin user use the `prod` argument instead
 
     ```bash
     ddev execute bin/adminconsole sulu:build prod
     ```
 
 ??? tip "Prefer to run as a script?"
-    To run the whole setup as a script, examine and run this script:
+To run the whole setup as a script, examine and run this script:
 
     ```bash
     cat > setup-sulu.sh << 'EOF'
@@ -2784,7 +2836,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ```
 
 !!!tip "Consuming Messages (Running the Worker)"
-    Edit `.ddev/config.yaml` in your project directory and uncomment `post-start` hook to see `messenger:consume` command logs, and run:
+Edit `.ddev/config.yaml` in your project directory and uncomment `post-start` hook to see `messenger:consume` command logs, and run:
 
     ```bash
     ddev exec symfony server:log
@@ -3023,7 +3075,7 @@ ddev launch /admin
 ```
 
 ??? tip "Prefer to run as a script?"
-    To run the whole setup as a script, examine and run this script:
+To run the whole setup as a script, examine and run this script:
 
     ```bash
     cat > setup-wagtail.sh << 'EOF'
