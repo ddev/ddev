@@ -51,7 +51,8 @@ ddev utility download-images --all
 		if err != nil {
 			util.Success("Downloading basic images")
 			additionalImages = []string{
-				// Provide at least the default database image
+				// Pull the default web and db images
+				docker.GetWebImage(),
 				docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion),
 			}
 		} else {
