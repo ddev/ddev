@@ -72,6 +72,13 @@ var DebugRebuildCmd = &cobra.Command{
 		if withoutCache {
 			buildArgs = append(buildArgs, "--no-cache")
 			output.UserOut.Printf("Rebuilding project images without Docker cache...")
+			additionalImages, findErr := app.FindAllImages()
+			if findErr != nil {
+				util.Warning("Unable to find project images: %v", findErr)
+			}
+			if pullErr := ddevapp.PullBaseContainerImages(additionalImages, true); pullErr != nil {
+				util.Warning("Unable to pull Docker images: %v", pullErr)
+			}
 		} else {
 			output.UserOut.Printf("Rebuilding project images using Docker cache...")
 		}

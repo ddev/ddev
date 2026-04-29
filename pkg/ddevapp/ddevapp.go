@@ -1587,7 +1587,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Pull images in background while config prep continues
 	var pullWg sync.WaitGroup
 	pullWg.Go(func() {
-		if pullErr := PullBaseContainerImages(additionalImages, false); pullErr != nil {
+		if pullErr := PullBaseContainerImages(additionalImages, app.NoCache); pullErr != nil {
 			util.Warning("Unable to pull Docker images: %v", pullErr)
 		}
 	})
