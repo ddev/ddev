@@ -291,6 +291,55 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 	}
 }
 
+// TestDrupalSettingsVersionWithoutCode verifies that when no Drupal codebase is present
+// (e.g., before composer create-project), the settings files written match the configured
+// project type rather than the default fallback version.
+func TestDrupalSettingsVersionWithoutCode(t *testing.T) {
+	type versionStrings struct {
+		settingsPhp     string
+		settingsDdevPhp string
+	}
+	versionExpectations := map[string]versionStrings{
+		nodeps.AppTypeDrupal8:  {"DDEV-created Drupal 8 settings.php", "Drupal 8 settings.ddev.php"},
+		nodeps.AppTypeDrupal9:  {"DDEV-created Drupal 9 settings.php", "Drupal 9 settings.ddev.php"},
+		nodeps.AppTypeDrupal10: {"DDEV-created Drupal 10 settings.php", "Drupal 10 settings.ddev.php"},
+		nodeps.AppTypeDrupal11: {"DDEV-created Drupal 11 settings.php", "Drupal 11 settings.ddev.php"},
+		nodeps.AppTypeDrupal12: {"DDEV-created Drupal 12 settings.php", "Drupal 12 settings.ddev.php"},
+	}
+
+	dir := testcommon.CreateTmpDir(t.Name())
+	app, err := ddevapp.NewApp(dir, true)
+	require.NoError(t, err)
+
+	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+		_ = os.RemoveAll(dir)
+	})
+
+	for appType, expected := range versionExpectations {
+		app.Type = appType
+		settingsPath := filepath.Join(dir, app.Docroot, "sites", "default", "settings.php")
+		settingsDdevPath := filepath.Join(dir, app.Docroot, "sites", "default", "settings.ddev.php")
+		_ = os.Remove(settingsPath)
+		_ = os.Remove(settingsDdevPath)
+
+		_, err = app.CreateSettingsFile()
+		require.NoError(t, err, "appType=%s", appType)
+
+		found, err := fileutil.FgrepStringInFile(settingsPath, expected.settingsPhp)
+		require.NoError(t, err, "appType=%s", appType)
+		require.True(t, found, "Expected to find %q in settings.php for appType=%s but did not", expected.settingsPhp, appType)
+
+		found, err = fileutil.FgrepStringInFile(settingsDdevPath, expected.settingsDdevPhp)
+		require.NoError(t, err, "appType=%s", appType)
+		require.True(t, found, "Expected to find %q in settings.ddev.php for appType=%s but did not", expected.settingsDdevPhp, appType)
+	}
+}
+
 // TestDrupalBackdropConsistentHash makes sure that the hash_salt provided in
 // settings.ddev.php is consistent across multiple `ddev start` but
 // different between two project names
