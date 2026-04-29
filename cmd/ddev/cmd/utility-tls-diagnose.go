@@ -124,8 +124,8 @@ func runTLSDiagnose() int {
 	}
 
 	if app != nil && app.AppRoot != "" {
-		linuxConnIssues, windowsConnIssues := checkLiveConnectivity(caRoot, app)
-		if linuxConnIssues || windowsConnIssues {
+		hostConnIssues, windowsConnIssues := checkLiveConnectivity(caRoot, app)
+		if hostConnIssues || windowsConnIssues {
 			hasIssues = true
 		}
 	}
@@ -913,10 +913,10 @@ func checkCertFile(certPath string, caPool *x509.CertPool, expectedHostnames []s
 }
 
 // checkLiveConnectivity checks HTTPS connectivity to a running project.
-// Returns (linuxIssues, windowsIssues) where linuxIssues covers the Linux/WSL2/macOS-side
-// tls.Dial check and windowsIssues covers the Windows-side PowerShell check (WSL2 only;
-// always false on non-WSL2 systems).
-func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) (linuxIssues bool, windowsIssues bool) {
+// Returns (hostIssues, windowsIssues) where hostIssues covers the host-side
+// tls.Dial check (Linux/macOS/WSL2) and windowsIssues covers the Windows-side
+// PowerShell check (WSL2 only; always false on non-WSL2 systems).
+func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) (hostIssues bool, windowsIssues bool) {
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	output.UserOut.Println("Live Connectivity")
 	output.UserOut.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -947,7 +947,7 @@ func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) (linuxIssues boo
 		sysPool, sysErr := x509.SystemCertPool()
 		if sysErr != nil {
 			tlsFail("Cannot load CA for live check: %v", err)
-			linuxIssues = true
+			hostIssues = true
 			caPool = nil
 		} else {
 			caPool = sysPool
@@ -956,7 +956,7 @@ func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) (linuxIssues boo
 	}
 
 	if caPool != nil {
-		// Linux/WSL2/macOS-side TLS check via tls.Dial
+		// Host-side TLS check via tls.Dial (Linux/macOS/WSL2)
 		addr := fmt.Sprintf("localhost:%s", httpsPort)
 		tlsConfig := &tls.Config{
 			ServerName: hostname,
@@ -966,7 +966,7 @@ func checkLiveConnectivity(caRoot string, app *ddevapp.DdevApp) (linuxIssues boo
 		if err != nil {
 			tlsFail("TLS connection to %s (SNI: %s) failed: %v", addr, hostname, err)
 			output.UserOut.Println("    → Router may not be running or certificate is not trusted")
-			linuxIssues = true
+			hostIssues = true
 		} else {
 			conn.Close()
 			output.UserOut.Printf("  ✓ TLS verified: localhost:%s with SNI %s%s\n", httpsPort, hostname, caPoolNote)
@@ -1026,7 +1026,7 @@ try {
 	}
 
 	output.UserOut.Println()
-	return linuxIssues, windowsIssues
+	return hostIssues, windowsIssues
 }
 
 // loadCACertPool loads the mkcert rootCA.pem into an x509.CertPool.

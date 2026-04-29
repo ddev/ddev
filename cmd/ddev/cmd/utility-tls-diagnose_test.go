@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
@@ -347,16 +348,18 @@ func TestCheckCertificateFilesRotatedCA(t *testing.T) {
 // checkLiveConnectivity against it, then stops it. This is the most realistic
 // integration test: it exercises tls.Dial against a real DDEV HTTPS endpoint.
 //
-// On WSL2, checkLiveConnectivity performs two independent checks:
-//   - Linux/WSL2-side: tls.Dial to localhost (what the DDEV process can reach)
-//   - Windows-side: PowerShell Invoke-WebRequest (what Chrome/Edge would see)
-//
-// Both are asserted separately so a failure on one side doesn't obscure the other.
+// checkLiveConnectivity always performs a host-side check (tls.Dial to localhost).
+// On WSL2 it additionally runs a Windows-side check via PowerShell Invoke-WebRequest
+// to verify what Chrome/Edge would see. Both are asserted separately.
 func TestCheckLiveConnectivityWithProject(t *testing.T) {
 	if len(TestSites) == 0 {
 		t.Skip("no TestSites configured")
 	}
 	caRoot := realCARoot(t)
+
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+		t.Skip("skipping on Lima/Colima/Rancher Desktop: localhost port forwarding is unpredictable")
+	}
 
 	site := TestSites[0]
 	app, err := ddevapp.NewApp(site.Dir, false)
@@ -368,12 +371,12 @@ func TestCheckLiveConnectivityWithProject(t *testing.T) {
 	require.NoError(t, app.Start(), "failed to start TestSites[0]")
 
 	restore := util.CaptureUserOut()
-	linuxIssues, windowsIssues := checkLiveConnectivity(caRoot, app)
+	hostIssues, windowsIssues := checkLiveConnectivity(caRoot, app)
 	out := restore()
 
-	// Linux/WSL2-side TLS must always succeed on a properly configured machine.
-	require.False(t, linuxIssues, "Linux/WSL2-side TLS connection to running project must succeed")
-	require.Contains(t, out, "TLS verified", "output must confirm Linux-side TLS success")
+	// Host-side TLS must always succeed on a properly configured machine.
+	require.False(t, hostIssues, "Host-side TLS connection to running project must succeed")
+	require.Contains(t, out, "TLS verified", "output must confirm TLS success")
 
 	if nodeps.IsWSL2() {
 		caRootIsWindowsMount := strings.HasPrefix(caRoot, "/mnt/")
@@ -406,10 +409,10 @@ func TestCheckLiveConnectivityNotRunning(t *testing.T) {
 	_ = app.Stop(false, false)
 
 	restore := util.CaptureUserOut()
-	linuxIssues, windowsIssues := checkLiveConnectivity(caRoot, app)
+	hostIssues, windowsIssues := checkLiveConnectivity(caRoot, app)
 	out := restore()
 
-	require.False(t, linuxIssues, "a stopped project is not a Linux-side TLS issue — should return no issues")
+	require.False(t, hostIssues, "a stopped project is not a host-side TLS issue — should return no issues")
 	require.False(t, windowsIssues, "a stopped project is not a Windows-side TLS issue — should return no issues")
 	require.Contains(t, out, "not running", "output should explain why connectivity was skipped")
 }
