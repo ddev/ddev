@@ -221,7 +221,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ```powershell
     # Install WSL2; reboot if prompted, then continue:
-    wsl --install
+    wsl --install --no-distribution
     # Update WSL2 if previously installed:
     wsl --update
     ```

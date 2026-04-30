@@ -214,7 +214,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```powershell
     # Install WSL2; reboot if prompted, then continue:
-    wsl --install
+    wsl --install --no-distribution
     # Update WSL2 if previously installed:
     wsl --update
     ```
