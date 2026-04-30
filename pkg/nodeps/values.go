@@ -85,6 +85,10 @@ var ValidWebserverTypes = map[string]bool{
 
 const AppTypeDrupalLatestStable = AppTypeDrupal11
 
+// DefaultDrupalSettingsVersion is the version used for settings.php/settings.ddev.php
+// when using the generic "drupal" type and no Drupal version can be detected from the codebase
+const DefaultDrupalSettingsVersion = "11"
+
 // App types
 const (
 	AppTypeNone        = ""
