@@ -215,17 +215,26 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```powershell
     # Install WSL2; reboot if prompted, then continue:
     wsl --install --no-distribution
+
     # Update WSL2 if previously installed:
     wsl --update
     ```
 
-    For best performance, store your projects in WSL2's Linux filesystem (ext4) rather than the Windows filesystem (NTFS). Create a Ubuntu distro for this (skip if you’re using Traditional Windows):
+    Create an Ubuntu distro (skip if you're using Traditional Windows):
 
     ```powershell
+    # You'll be asked to set a username and password for the distro:
     wsl --install Ubuntu --name DDEV
-    # "DDEV" is just a suggested name — use any name you like.
-    # You’ll be asked to set a username and password for the distro.
     ```
+
+    !!!tip "\"DDEV\" is just a suggested name — use any name you like."
+        Verify the "DDEV" distro is set as default:
+
+        ```powershell { .no-copy }
+        > wsl -l -v
+          NAME                   STATE           VERSION
+        * DDEV                   Stopped         2
+        ```
 
     ### Step 2: Install DDEV
 
@@ -271,12 +280,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         choco install ddev
         ```
 
-    !!!tip "Tips for using DDEV in WSL2"
-        - Run `ddev` commands **inside WSL2** (e.g. inside Ubuntu), never in PowerShell or Git Bash.
-        - Keep your projects in the WSL2 filesystem (e.g. `/home/<your_username>/projects`), **not** in the Windows filesystem (`/mnt/c`). The Linux filesystem is faster and has proper permissions.
-        - You **must** use WSL2, not WSL version 1. Use `wsl.exe -l -v` to check — distros should show version 2.
-        - Custom hostnames (non `ddev.site`) are managed via the Windows hosts file at `C:\Windows\System32\drivers\etc\hosts`, not within WSL2.
-
     ??? tip "Installer in Silent Mode"
         The Windows installer supports silent mode for automated installations and testing:
 
@@ -295,15 +298,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         ```
 
         The `/S` flag makes the installation completely silent. Use `/distro=<name>` to specify your WSL2 distribution name (required for WSL2 options).
-
-    ??? "What if my browser (especially Firefox) doesn’t trust `https` URLs?"
-        DDEV uses [mkcert](https://github.com/FiloSottile/mkcert) to generate a local certificate authority (CA), and `mkcert -install` registers it with most browsers automatically. Firefox and some other browsers manage their own certificate stores and require a manual import.
-
-        To diagnose certificate trust issues, run `ddev utility tls-diagnose`.
-
-        To manually import the CA: run `mkcert.exe -CAROOT` to find the directory containing `rootCA.pem`, then import that file via your browser’s certificate manager (usually under Security settings → View Certificates → Authorities → Import).
-
-        See [Configuring Browsers](configuring-browsers.md) for full details.
 
     ??? "Manual Installation"
 
@@ -327,6 +321,28 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         !!!note "Path to certificates"
             If you get the prompt `Installing to the system store is not yet supported on this Linux`, you may need to add `/usr/sbin` to the `$PATH` so that `/usr/sbin/update-ca-certificates` can be found.
+
+    ### Step 3: Start working in WSL2
+
+    *(Skip if using Traditional Windows.)*
+
+    Open your distro from the Start menu (or run `wsl` in PowerShell) to get a Linux terminal. Run all `ddev` commands here — never in PowerShell or Git Bash.
+
+    **Store your [projects](../project.md) inside WSL2** (e.g. `/home/<username>/projects`), not on `C:\` drive (`/mnt/c` in WSL2) — faster and avoids permission issues.
+
+    From Windows Explorer: **Linux → DDEV → home → [username]**.
+
+    !!!note "Custom hostnames"
+        Custom hostnames with a non-default [TLD](../configuration/config.md#project_tld) (non `ddev.site`) are managed via the Windows hosts file at `C:\Windows\System32\drivers\etc\hosts`, not within WSL2.
+
+    ??? "What if my browser (especially Firefox) doesn’t trust `https` URLs?"
+        DDEV uses [mkcert](https://github.com/FiloSottile/mkcert) to generate a local certificate authority (CA), and `mkcert -install` registers it with most browsers automatically. Firefox and some other browsers manage their own certificate stores and require a manual import.
+
+        To diagnose certificate trust issues, run `ddev utility tls-diagnose`.
+
+        To manually import the CA: run `mkcert.exe -CAROOT` to find the directory containing `rootCA.pem`, then import that file via your browser’s certificate manager (usually under Security settings → View Certificates → Authorities → Import).
+
+        See [Configuring Browsers](configuring-browsers.md) for full details.
 
 === "Codespaces"
 

@@ -222,17 +222,26 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     ```powershell
     # Install WSL2; reboot if prompted, then continue:
     wsl --install --no-distribution
+
     # Update WSL2 if previously installed:
     wsl --update
     ```
 
-    For best performance, store your projects in WSL2's Linux filesystem (ext4) rather than the Windows filesystem (NTFS). Create a Ubuntu distro for this (skip if you're using Traditional Windows):
+    Create an Ubuntu distro (skip if you're using Traditional Windows):
 
     ```powershell
+    # You'll be asked to set a username and password for the distro:
     wsl --install Ubuntu --name DDEV
-    # "DDEV" is just a suggested name — use any name you like.
-    # You'll be asked to set a username and password for the distro.
     ```
+
+    !!!tip "\"DDEV\" is just a suggested name — use any name you like."
+        Verify the "DDEV" distro is set as default:
+
+        ```powershell { .no-copy }
+        > wsl -l -v
+          NAME                   STATE           VERSION
+        * DDEV                   Stopped         2
+        ```
 
     ### Docker CE inside WSL2
 
