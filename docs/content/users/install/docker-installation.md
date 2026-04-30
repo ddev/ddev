@@ -235,13 +235,14 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     ```
 
     !!!tip "\"DDEV\" is just a suggested name — use any name you like."
-        Verify the "DDEV" distro is set as default:
 
-        ```powershell { .no-copy }
-        > wsl -l -v
-          NAME                   STATE           VERSION
-        * DDEV                   Stopped         2
-        ```
+    Verify the "DDEV" distro is set as default:
+
+    ```powershell { .no-copy }
+    > wsl -l -v
+      NAME                   STATE           VERSION
+    * DDEV                   Stopped         2
+    ```
 
     ### Docker CE inside WSL2
 

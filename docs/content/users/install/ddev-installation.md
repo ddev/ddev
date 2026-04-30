@@ -228,13 +228,14 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```
 
     !!!tip "\"DDEV\" is just a suggested name — use any name you like."
-        Verify the "DDEV" distro is set as default:
 
-        ```powershell { .no-copy }
-        > wsl -l -v
-          NAME                   STATE           VERSION
-        * DDEV                   Stopped         2
-        ```
+    Verify the "DDEV" distro is set as default:
+
+    ```powershell { .no-copy }
+    > wsl -l -v
+      NAME                   STATE           VERSION
+    * DDEV                   Stopped         2
+    ```
 
     ### Step 2: Install DDEV
 
