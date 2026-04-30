@@ -6,7 +6,7 @@ This file provides guidance to AI agents when working with the DDEV core codebas
 
 DDEV is an open-source tool for running local web development environments for PHP and Node.js. It uses Docker containers to provide consistent, isolated development environments with minimal configuration.
 
-For comprehensive developer documentation, see:
+For developer documentation, see:
 
 - [Developer Documentation](https://docs.ddev.com/en/stable/developers/) - Complete developer guide
 - [Building and Contributing](docs/content/developers/building-contributing.md) - Local build setup and contribution workflow
@@ -14,6 +14,8 @@ For comprehensive developer documentation, see:
 ## Key Development Commands
 
 ### Building
+
+**IMPORTANT: Always use `make` to build the DDEV binary, never `go build` directly.**
 
 - `make` - Build for host OS/arch. Output: `.gotmp/bin/<os>_<arch>/ddev`
 - `make clean` - Remove build artifacts
@@ -35,10 +37,13 @@ For comprehensive developer documentation, see:
 
 - Set `DDEV_DEBUG=true` to see executed commands
 - Set `GOTEST_SHORT=true` to limit test matrix
+- Set `DDEV_NO_INSTRUMENTATION=true` to disable analytics (always use this during development)
 
 ### Linting and Code Quality
 
 - `make staticrequired` - Run all required static analysis (golangci-lint, markdownlint, mkdocs, pyspelling)
+
+IDE diagnostics (e.g. from gopls) can be stale. If `make` or `go test` is clean, ignore IDE diagnostics.
 
 ### Whitespace and Formatting
 
@@ -99,9 +104,9 @@ DDEV uses YAML configuration files:
 
 ### Go Environment
 
-- Language: Go (modules + vendored deps). Use Go 1.23+
+- Language: Go (modules + vendored deps). Use Go 1.24+
 - Uses Go modules (go.mod)
-- Requires Go 1.23.0+
+- Requires Go 1.24.0+
 - Uses vendored, checked-in dependencies
 - CGO is disabled by default
 
@@ -156,7 +161,7 @@ DDEV uses YAML configuration files:
 
 **Prerequisites:**
 
-- Go 1.25+ is required
+- Go 1.24+ is required
 - Docker must be installed and running
 - PATH management is critical - include both `ddev` and `ddev-hostname` in PATH for testing
 
@@ -370,11 +375,10 @@ For optimal performance with DDEV development, consider these configuration patt
 
 **Common DDEV Command Allowlist**:
 
-- `Bash(make:*)`
-- `Bash(go test:*)`
-- `Bash(ddev:*)`
-- `Bash(gofmt:*)`
-- `mcp__task-master-ai__*`
+- `Bash(make*)`
+- `Bash(go test*)`
+- `Bash(ddev*)`
+- `Bash(gofmt*)`
 
 **MCP Server Configuration** (in `.mcp.json`):
 

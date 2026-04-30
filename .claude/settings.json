@@ -73,7 +73,7 @@
           {
             "type": "command",
             "if": "Bash(git commit*)",
-            "command": "make staticrequired"
+            "command": "direnv exec \"$CLAUDE_PROJECT_DIR\" make -C \"$CLAUDE_PROJECT_DIR\" staticrequired"
           }
         ]
       }

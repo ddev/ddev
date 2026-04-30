@@ -15,7 +15,7 @@ For developer documentation, see:
 
 ### Building
 
-**IMPORTANT: Always use `make` to build, never `go build` directly.**
+**IMPORTANT: Always use `make` to build the DDEV binary, never `go build` directly.**
 
 ```bash
 make                    # Build for host OS/arch. Output: .gotmp/bin/<os>_<arch>/ddev
@@ -40,7 +40,9 @@ make quickstart-test                          # Run Bats docs tests
 
 ### Linting and Code Quality
 
-**IMPORTANT: Always run `make staticrequired` before committing. A PreToolUse hook in `.claude/settings.json` runs it automatically before every `git commit` — do not bypass it.**
+**IMPORTANT: Always run `make staticrequired` before committing. A PreToolUse hook in `.claude/settings.json` runs it automatically before every `git commit`.**
+
+**IDE diagnostics (from gopls via the VSCode extension) can be stale and should not be trusted over `make` or `go test`. If the build is clean, ignore IDE diagnostics.**
 
 `gofmt` and `markdownlint --fix` run automatically via PostToolUse hooks after editing Go or Markdown files. Run them manually if needed:
 
@@ -184,7 +186,7 @@ cat <<'EOF' | git commit -F -
 
 [Impact assessment]
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 EOF
 ```
 
