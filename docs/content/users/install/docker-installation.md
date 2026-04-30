@@ -245,7 +245,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ### Docker CE inside WSL2
 
-    The [DDEV Windows installer](ddev-installation.md#windows) automatically installs Docker CE in your WSL2 environment — no manual Docker installation is needed. After installing WSL2 above, proceed to [install DDEV](ddev-installation.md#windows).
+    The [DDEV Windows installer](ddev-installation.md#step-2-install-ddev) automatically installs Docker CE in your WSL2 environment — no manual Docker installation is needed. After installing WSL2 above, proceed to [install DDEV](ddev-installation.md#step-2-install-ddev).
 
     To install Docker CE manually instead, open your WSL2 terminal (Ubuntu) and run:
 
