@@ -17,6 +17,6 @@ jobs:
           python-version: 3.x
       - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       - run: pip install -r docs/mkdocs-pip-requirements
-      - run: mkdocs build
+      - run: properdocs build -f mkdocs.yml
       - run: ls -l .nojekyll || true
-      - run: mkdocs gh-deploy --force --no-history
+      - run: properdocs gh-deploy --force --no-history -f mkdocs.yml

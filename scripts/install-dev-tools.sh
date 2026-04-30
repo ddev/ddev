@@ -81,18 +81,7 @@ install_python_tools() {
 
   source "$PYTHON_ENV/bin/activate"
 
-  # Download mkdocs requirements from repository
-  log_info "Fetching mkdocs requirements from DDEV repository..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -fsSL https://github.com/ddev/ddev/raw/refs/heads/main/docs/mkdocs-pip-requirements \
-      -o "$INSTALL_DIR/mkdocs-requirements.txt"
-  elif command -v wget >/dev/null 2>&1; then
-    wget -q https://github.com/ddev/ddev/raw/refs/heads/main/docs/mkdocs-pip-requirements \
-      -O "$INSTALL_DIR/mkdocs-requirements.txt"
-  else
-    log_error "Neither curl nor wget found. Cannot download requirements."
-    exit 1
-  fi
+  cp "$(dirname "$0")/../docs/mkdocs-pip-requirements" "$INSTALL_DIR/mkdocs-requirements.txt"
 
   # Create combined requirements file
   cat >"$INSTALL_DIR/python-requirements.txt" <<'EOF'
@@ -143,7 +132,7 @@ verify_installation() {
   export PATH="$PYTHON_ENV/bin:$NODE_ENV/bin:$PATH"
 
   local tools=(
-    "mkdocs"
+    "properdocs"
     "pyspelling"
     "markdownlint"
     "textlint"

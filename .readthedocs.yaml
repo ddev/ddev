@@ -15,7 +15,7 @@ build:
   # build.commands is used to make !ENV syntax work in mkdocs.yml
   commands:
     - pip install -r docs/mkdocs-pip-requirements
-    - mkdocs build --site-dir $READTHEDOCS_OUTPUT/html
+    - properdocs build --site-dir $READTHEDOCS_OUTPUT/html -f mkdocs.yml
 
 python:
   install:
