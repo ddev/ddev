@@ -886,9 +886,9 @@ func GetAddonTarballURL(ownerRepo, gitRef string, defaultBranch bool, prNumber i
 func GetAddonNamesFunc(numArgs int) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
 	return func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 		// Don't provide completions if the user keeps hitting space after
-		// exhausting all of the valid arguments.
+		// exhausting all the valid arguments.
 		if numArgs > 0 && len(args)+1 > numArgs {
-			return nil, cobra.ShellCompDirectiveDefault
+			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 
 		addons, err := ListAvailableAddonsFromRegistry()
