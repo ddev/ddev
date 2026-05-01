@@ -676,7 +676,7 @@ To become an officially supported add-on:
 
 ### Keeping Your Add-on Up to Date
 
-The [ddev-addon-template](https://github.com/ddev/ddev-addon-template) evolves over time — workflows, test scripts, tooling, and other components get updated. Run the [`ddev utility addon-update-checker`](../usage/commands.md#utility-addon-update-checker) command regularly from your add-on directory (or a workspace containing multiple add-ons) to check whether your add-on is up to date with the template:
+The [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template) evolves over time — workflows, test scripts, tooling, and other components get updated. Run the [`ddev utility addon-update-checker`](../usage/commands.md#utility-addon-update-checker) command regularly from your add-on directory (or a workspace containing multiple add-ons) to check whether your add-on is up to date with the template:
 
 ```shell
 ddev utility addon-update-checker

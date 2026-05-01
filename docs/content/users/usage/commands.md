@@ -1471,7 +1471,7 @@ A collection of utility and debugging commands, often useful for [troubleshootin
 
 ### `utility addon-update-checker`
 
-Fetch and run the DDEV add-on update checker script from [https://ddev.com/s/addon-update-checker.sh](https://ddev.com/s/addon-update-checker.sh). This is a tool for add-on developers to verify their add-on's scripts and tooling are up to date with the [ddev-addon-template](https://github.com/ddev/ddev-addon-template).
+Fetch and run the DDEV add-on update checker script from [https://ddev.com/s/addon-update-checker.sh](https://ddev.com/s/addon-update-checker.sh). This is a tool for add-on developers to verify their add-on's scripts and tooling are up to date with the [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template).
 
 If the target directory contains `install.yaml`, the checker runs there. Otherwise, it scans immediate subdirectories for `install.yaml` and runs the checker in each one, which is useful when working in a workspace with multiple add-ons checked out alongside each other.
 
