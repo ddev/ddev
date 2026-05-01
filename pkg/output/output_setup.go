@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -80,8 +81,7 @@ func ParseBoolFlag(long string, short string) bool {
 	longPrefix := "--" + long + "="
 	shortPrefix := "-" + short + "="
 
-	for i := len(args) - 1; i >= 0; i-- {
-		arg := args[i]
+	for _, arg := range slices.Backward(args) {
 		switch {
 		case arg == "--"+long, arg == "-"+short:
 			return true
