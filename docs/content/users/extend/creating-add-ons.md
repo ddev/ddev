@@ -618,28 +618,60 @@ post_install_actions:
 
 ### Bats Testing Framework
 
-The add-on template includes a `tests.bats` file for testing:
+The add-on template includes a `tests/test.bats` file for testing:
 
 ```bash
 #!/usr/bin/env bats
 
-@test "install add-on" {
-  ddev add-on get . --project my-test
-  cd my-test
-  ddev restart
-  # Add your tests here
+setup() {
+  set -eu -o pipefail
+
+  # Override this variable for your add-on:
+  export GITHUB_REPO=owner/repo
+
+  # ...
 }
 
-@test "verify service is running" {
-  cd my-test
-  ddev exec "curl -s http://myservice:8080/health"
+health_checks() {
+  # Do something useful here that verifies the add-on
+
+  # You can check for specific information in headers:
+  run curl -sfI https://${PROJNAME}.ddev.site
+  assert_output --partial "HTTP/2 200"
+  assert_output --partial "test_header"
+
+  # Or check if some command gives expected output:
+  DDEV_DEBUG=true run ddev launch
+  assert_success
+  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+}
+
+@test "install from directory" {
+  set -eu -o pipefail
+  echo "# ddev add-on get ${DIR} with project ${PROJNAME} in $(pwd)" >&3
+  run ddev add-on get "${DIR}"
+  assert_success
+  run ddev restart -y
+  assert_success
+  health_checks
+}
+
+# bats test_tags=release
+@test "install from release" {
+  set -eu -o pipefail
+  echo "# ddev add-on get ${GITHUB_REPO} with project ${PROJNAME} in $(pwd)" >&3
+  run ddev add-on get "${GITHUB_REPO}"
+  assert_success
+  run ddev restart -y
+  assert_success
+  health_checks
 }
 ```
 
 Run tests with:
 
 ```bash
-bats tests.bats
+bats tests/test.bats
 ```
 
 ### Manual Testing
