@@ -2624,6 +2624,8 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		baseComposeExecCmd = append(baseComposeExecCmd, "-u", opts.User)
 	}
 
+	opts.Env = append(opts.Env, agentDetectionEnv(opts.Env)...)
+
 	if len(opts.Env) > 0 {
 		for _, envVar := range opts.Env {
 			baseComposeExecCmd = append(baseComposeExecCmd, "-e", envVar)
