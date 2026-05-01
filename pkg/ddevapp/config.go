@@ -1093,8 +1093,8 @@ RUN <<EOF
 set -eu -o pipefail
 chmod ugo+rx /healthcheck.sh
 mkdir -p /etc/postgresql/conf.d
-chmod 777 /etc/postgresql/conf.d
-chmod 777 /var/tmp
+chgrp "$username" /etc/postgresql/conf.d
+chmod g+rwx,o-w /etc/postgresql/conf.d
 ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql
 
 echo "# TYPE DATABASE USER CIDR-ADDRESS  METHOD
@@ -1309,7 +1309,7 @@ RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-updat
 ### DDEV-injected php default version setting
 RUN update-alternatives --set php /usr/bin/php%s
 RUN update-alternatives --install /usr/sbin/php-fpm php-fpm /usr/sbin/php-fpm%s 99 && update-alternatives --set php-fpm /usr/sbin/php-fpm%s
-RUN chmod ugo+rw /var/log/php-fpm.log && chmod ugo+rwx /var/run
+RUN chmod ugo+rw /var/log/php-fpm.log && mkdir -p /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && chown "$uid:$gid" /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && chmod 755 /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && if [ -d /run/blackfire ]; then chown "$uid:$gid" /run/blackfire && chmod 755 /run/blackfire; fi
 RUN mkdir -p /tmp/xhprof
 RUN chmod -fR ugo+w /etc/php /var/lib/php/modules /tmp/xhprof
 RUN phpdismod blackfire xdebug xhprof
@@ -1385,8 +1385,15 @@ EOF
 	if strings.Contains(fullpath, "webimageBuild") {
 		contents = contents + `
 ### DDEV-injected folders permission fix
-RUN chmod 777 /run/php /var/log && \
-    chmod -f ugo+rwx /usr/local/bin /usr/local/bin/* && \
+RUN mkdir -p /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && chown "$uid:$gid" /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && chmod 755 /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && if [ -d /run/blackfire ]; then chown "$uid:$gid" /run/blackfire && chmod 755 /run/blackfire; fi && \
+    mkdir -p /var/log/nginx /var/log/apache2 && \
+    touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log /var/log/supervisord.log && \
+    chmod ugo+rw /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log /var/log/supervisord.log && \
+    chmod ugo+rwX /var/log/nginx /var/log/apache2 && \
+    chgrp -R "$gid" /etc/alternatives /var/lib/dpkg/alternatives && \
+    chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives && \
+    chmod -f ugo+rx /usr/local/bin /usr/local/bin/* && \
+    chgrp "$gid" /usr/local/bin/composer && chmod g+rwx,o-w /usr/local/bin/composer && \
     mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof
 `
 		// Files from containers/ddev-webserver/ddev-webserver-base-files/var/www/html

@@ -27,10 +27,12 @@ if [ ! -d "/mnt/ddev-global-cache/n_prefix/${HOSTNAME}" ]; then
   exit 4
 fi
 
-system_node_dir="$(dirname "$(which node)")"
+user_bin_dir="$HOME/.local/bin"
 
-if [ ! -w "${system_node_dir}" ]; then
-  echo "This script cannot write to the directory ${system_node_dir}" >&2
+mkdir -p "${user_bin_dir}"
+
+if [ ! -w "${user_bin_dir}" ]; then
+  echo "This script cannot write to the directory ${user_bin_dir}" >&2
   exit 5
 fi
 
@@ -50,11 +52,11 @@ fi
 # create symlinks on success
 for node_binary in "${N_PREFIX}/bin/"*; do
   if [ -f "${node_binary}" ]; then
-    ln -sf "${node_binary}" "${system_node_dir}"
+    ln -sf "${node_binary}" "${user_bin_dir}"
   fi
 done
 
-ln -sf "${system_node_dir}/node" "${system_node_dir}/nodejs"
+ln -sf "${user_bin_dir}/node" "${user_bin_dir}/nodejs"
 
 # prune orphaned Node.js versions
 n prune
