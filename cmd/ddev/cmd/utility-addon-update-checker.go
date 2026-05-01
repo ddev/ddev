@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	osexec "os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -73,60 +72,18 @@ ddev ut addon-update-checker -d /path/to/my-addons-workspace
 			}
 		}
 
-		// Collect directories to run in: the root itself if it has install.yaml,
-		// otherwise any immediate subdirectory that has install.yaml.
-		var dirs []string
-		if _, err := os.Stat(filepath.Join(rootDir, "install.yaml")); err == nil {
-			dirs = []string{rootDir}
-		} else {
-			entries, err := os.ReadDir(rootDir)
-			if err != nil {
-				util.Failed("Unable to read directory %s: %v", rootDir, err)
+		hostCmd := exec.HostCommand(bashPath, "-s")
+		hostCmd.Stdin = strings.NewReader(script)
+		hostCmd.Stdout = os.Stdout
+		hostCmd.Stderr = os.Stderr
+		hostCmd.Dir = rootDir
+
+		if err := hostCmd.Run(); err != nil {
+			var exiterr *osexec.ExitError
+			if errors.As(err, &exiterr) {
+				output.UserErr.Exit(exiterr.ExitCode())
 			}
-			for _, e := range entries {
-				if !e.IsDir() {
-					continue
-				}
-				subdir := filepath.Join(rootDir, e.Name())
-				if _, err := os.Stat(filepath.Join(subdir, "install.yaml")); err == nil {
-					dirs = append(dirs, subdir)
-				}
-			}
-		}
-
-		if len(dirs) == 0 {
-			util.Failed("No install.yaml found in %s or its immediate subdirectories", rootDir)
-		}
-
-		hadError := false
-		for _, dir := range dirs {
-			util.Success("\nRunning add-on update checker in: %s", dir)
-
-			hostCmd := exec.HostCommand(bashPath, "-s")
-			hostCmd.Stdin = strings.NewReader(script)
-			hostCmd.Stdout = os.Stdout
-			hostCmd.Stderr = os.Stderr
-			hostCmd.Dir = dir
-
-			exitCode := 0
-			if err := hostCmd.Run(); err != nil {
-				var exiterr *osexec.ExitError
-				if errors.As(err, &exiterr) {
-					exitCode = exiterr.ExitCode()
-				} else {
-					exitCode = 1
-				}
-				hadError = true
-			}
-			if exitCode == 0 {
-				util.Success("Exit code: %d", exitCode)
-			} else {
-				util.Error("Exit code: %d", exitCode)
-			}
-		}
-
-		if hadError {
-			output.UserErr.Exit(1)
+			util.Failed("Unable to run update checker script: %v", err)
 		}
 	},
 }
