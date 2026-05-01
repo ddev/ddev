@@ -614,6 +614,23 @@ post_install_actions:
     some-command-that-might-fail
 ```
 
+### Interactive Actions
+
+Add `#ddev-interactive` to a Bash action that needs direct terminal input or live output. DDEV runs these actions
+interactively only when stdin is a terminal and JSON output is disabled. In non-interactive environments, such as CI,
+DDEV keeps the standard buffered action behavior.
+
+```yaml
+post_install_actions:
+  - |
+    #ddev-description: Configure API credentials
+    #ddev-interactive
+    if [ "$(ddev dotenv get .env.myaddon --api-token 2>/dev/null)" = "" ]; then
+      read -p "Enter your API token: " TOKEN
+      ddev dotenv set .env.myaddon --api-token="${TOKEN}"
+    fi
+```
+
 ## Testing Your Add-on
 
 ### Bats Testing Framework
