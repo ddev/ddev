@@ -674,12 +674,20 @@ To become an officially supported add-on:
 3. Commit to maintaining the add-on
 4. Subscribe to repository activity and be responsive
 
+### Keeping Your Add-on Up to Date
+
+The [ddev-addon-template](https://github.com/ddev/ddev-addon-template) evolves over time — workflows, test scripts, tooling, and other components get updated. Run the [`ddev utility addon-update-checker`](../usage/commands.md#utility-addon-update-checker) command regularly from your add-on directory (or a workspace containing multiple add-ons) to check whether your add-on is up to date with the template:
+
+```shell
+ddev utility addon-update-checker
+```
+
 ### Best Practices
 
 - **Follow semantic versioning** for releases
 - **Maintain backward compatibility** when possible
 - **Test with different DDEV versions**
-- **Update dependencies regularly**
+- **Update dependencies regularly** — use `ddev utility addon-update-checker` to keep scripts and tooling in sync with the template
 - **Respond to user issues promptly**
 - **Keep documentation up to date**
 - **Use namespaced directories** (e.g., `myservice/scripts/` not just `scripts/`)
