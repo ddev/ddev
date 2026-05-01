@@ -37,7 +37,7 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     To disable Mutagen on a single project, run `ddev config --performance-mode=none && ddev restart`.
 
-    To revert Mutagen back to default gloablly controlled mode on a single project run `ddev config --performance-mode="" && ddev restart`.
+    To revert Mutagen back to the default globally controlled mode for a single project, run `ddev config --performance-mode-reset && ddev restart`.
     
     (This removes the configuration line so global settings are used instead.)
     
