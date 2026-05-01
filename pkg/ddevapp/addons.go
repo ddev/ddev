@@ -888,13 +888,13 @@ func GetAddonNamesFunc(numArgs int) func(*cobra.Command, []string, string) ([]st
 		// Don't provide completions if the user keeps hitting space after
 		// exhausting all of the valid arguments.
 		if numArgs > 0 && len(args)+1 > numArgs {
-			return nil, cobra.ShellCompDirectiveNoFileComp
+			return nil, cobra.ShellCompDirectiveDefault
 		}
 
 		addons, err := ListAvailableAddonsFromRegistry()
 		if err != nil {
-			// If we can't get addons, return no completions
-			return nil, cobra.ShellCompDirectiveNoFileComp
+			// If we can't get add-ons, fall back to file completion
+			return nil, cobra.ShellCompDirectiveDefault
 		}
 
 		// Extract addon names in owner/repo format
@@ -907,7 +907,7 @@ func GetAddonNamesFunc(numArgs int) func(*cobra.Command, []string, string) ([]st
 			}
 		}
 
-		return addonNames, cobra.ShellCompDirectiveNoFileComp
+		return addonNames, cobra.ShellCompDirectiveDefault
 	}
 }
 
