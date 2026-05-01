@@ -108,7 +108,6 @@ RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
 RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
     touch /var/log/php-fpm.log && \
     chmod ugo+rw /var/log/php-fpm.log && \
-    chmod ugo+rwx /var/run && \
     touch /var/log/nginx/access.log && \
     touch /var/log/nginx/error.log && \
     chmod -R ugo+rw /var/log/nginx/ && \
@@ -142,7 +141,9 @@ RUN curl --fail -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.c
 ADD ddev-php-files /
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
-RUN mkdir -p /run/php && chown -R www-data:www-data /run
+RUN mkdir -p /run/php && \
+    chown www-data:www-data /run/php && chmod 755 /run/php && \
+    ln -sf /run/php/php-fpm.sock /run/php-fpm.sock
 RUN chmod 777 /var/lib/php/sessions
 ### -------------------------END ddev-php-base------------------------------------
 

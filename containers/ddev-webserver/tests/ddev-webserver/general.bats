@@ -31,6 +31,17 @@ setup() {
   assert_output --partial "/var/www/html/vendor/bin"
 }
 
+@test "Verify user-owned bin directories are in PATH on ddev/docker exec" {
+  run docker exec "$CONTAINER_NAME" bash -c 'case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) exit 1;; esac'
+  assert_success
+  run docker exec "$CONTAINER_NAME" bash -c 'case ":$PATH:" in *":$HOME/bin:"*) ;; *) exit 1;; esac'
+  assert_success
+  run docker exec "$CONTAINER_NAME" bash -ic 'case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) exit 1;; esac'
+  assert_success
+  run docker exec "$CONTAINER_NAME" bash -ic 'case ":$PATH:" in *":$HOME/bin:"*) ;; *) exit 1;; esac'
+  assert_success
+}
+
 @test "verify that xdebug is disabled by default when using start.sh to start" {
   run docker exec "$CONTAINER_NAME" php --version
   assert_success

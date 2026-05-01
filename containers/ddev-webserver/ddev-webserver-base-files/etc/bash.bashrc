@@ -18,6 +18,11 @@ export PATH
 # Hide vendor/bin/composer from $PATH.
 export EXECIGNORE="${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin/composer"
 
+for f in /etc/bashrc/*.bashrc; do
+    source $f;
+done
+unset f
+
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize

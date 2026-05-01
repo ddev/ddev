@@ -9,7 +9,7 @@ if pkill -0 supervisord; then
   supervisorctl stop all || true
   supervisorctl shutdown || true
 fi
-rm -f /var/run/supervisor.sock
+rm -f /var/run/supervisor/supervisor.sock
 
 export DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
 
@@ -63,7 +63,8 @@ if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
 fi
 
 if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] || [ "${DDEV_PROJECT_TYPE}" = "backdrop" ]; then
-  ln -sf /usr/local/bin/drush8 /usr/local/bin/drush
+  mkdir -p "$HOME/.local/bin"
+  ln -sf /usr/local/bin/drush8 "$HOME/.local/bin/drush"
 fi
 
 # Change the apache run user to current user/group

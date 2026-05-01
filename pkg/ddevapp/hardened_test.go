@@ -33,8 +33,8 @@ func TestHardenedStart(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	testSite := 0
-	// Prefer the drupal7 project, as it does ln -s into /usr/local/bin, possibly
-	// requiring sudo, which isn't installed
+	// Prefer the drupal7 project, as it exercises the legacy drush alias setup
+	// without relying on write access to system binary directories.
 	if len(TestSites) >= 3 {
 		testSite = 2
 	}
