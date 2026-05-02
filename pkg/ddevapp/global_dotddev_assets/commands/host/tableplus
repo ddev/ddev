@@ -29,7 +29,7 @@ fi
 query="${driver}://db:db@127.0.0.1:${DDEV_HOST_DB_PORT}/db?Enviroment=local&Name=ddev-${DDEV_SITENAME}"
 
 case $OSTYPE in
-  "linux-gnu")
+  "linux-gnu"|"linux")
     "/mnt/c/Program Files/TablePlus/TablePlus.exe" $query >/dev/null &
     ;;
   "darwin"*)
