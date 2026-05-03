@@ -40,4 +40,7 @@ case $OSTYPE in
         open "$query" -a "/Applications/TablePlus.app/Contents/MacOS/TablePlus"
     fi
     ;;
+  *)
+    echo "OS type '$OSTYPE' not identified, known types: linux-gnu, linux, darwin*, win*, msys*, cygwin."
+    ;;
 esac

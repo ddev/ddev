@@ -134,4 +134,7 @@ case $OSTYPE in
   "win"* | "msys"* | "cygwin")
     start ${FULLURL}
     ;;
+  *)
+    echo "OS type '$OSTYPE' not identified, known types: linux-gnu, linux, darwin*, win*, msys*, cygwin."
+    ;;
 esac

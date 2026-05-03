@@ -64,4 +64,7 @@ case $OSTYPE in
     open -a dbeaver.app --args -con "$CONNECTION" &
     echo "Attempted to launch DBeaver.app"
     ;;
+  *)
+    echo "OS type '$OSTYPE' not identified, known types: linux-gnu, linux, darwin*, win*, msys*, cygwin."
+    ;;
 esac
