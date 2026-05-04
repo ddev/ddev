@@ -108,6 +108,6 @@ case $OSTYPE in
   "${binary}" "${arguments[@]}" &>/dev/null & disown
   ;;
 *)
-  echo "OS type '$OSTYPE' not identified, known types: linux-gnu, linux, win*, msys*, cygwin."
+  echo "OS type '$OSTYPE' not identified, known types: linux*, win*, msys*, cygwin."
   ;;
 esac
