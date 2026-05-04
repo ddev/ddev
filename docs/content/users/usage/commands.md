@@ -1303,6 +1303,9 @@ ddev snapshot --name my_snapshot_name
 # Take a snapshot for the current project, cleaning up existing snapshots
 ddev snapshot --cleanup
 
+# Delete a single snapshot by name without deleting all snapshots
+ddev snapshot --cleanup --name my_snapshot_name
+
 # Take a snapshot for the current project, cleaning existing snapshots and skipping prompt
 ddev snapshot --cleanup -y
 
