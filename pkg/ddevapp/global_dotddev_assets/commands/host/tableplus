@@ -41,6 +41,6 @@ case $OSTYPE in
     fi
     ;;
   *)
-    echo "OS type '$OSTYPE' not identified, known types: linux-gnu, linux, darwin*, win*, msys*, cygwin."
+    echo "OS type '$OSTYPE' not identified, known types: linux*, darwin*, win*, msys*, cygwin."
     ;;
 esac
