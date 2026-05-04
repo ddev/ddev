@@ -20,7 +20,7 @@ case $OSTYPE in
 "win"* | "msys"* | "cygwin")
   binary="/c/Program Files/HeidiSQL/heidisql.exe"
   ;;
-"linux-gnu" | "linux")
+"linux"*)
   BINARIES=(
     "/usr/bin/heidisql"
     "/usr/local/bin/heidisql"
