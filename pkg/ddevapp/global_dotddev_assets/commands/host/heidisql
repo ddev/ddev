@@ -104,7 +104,7 @@ case $OSTYPE in
   start "" "${binary}" "${arguments[@]}" &
   ;;
 
-"linux-gnu" | "linux")
+"linux"*)
   "${binary}" "${arguments[@]}" &>/dev/null & disown
   ;;
 *)
