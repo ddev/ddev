@@ -498,7 +498,7 @@ The PHP version the project should use.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
 
-The PHP specific configuration files such as the [`php.ini`](../extend/customization-extendibility#custom-php-configuration-phpini) as also supported.
+See the [`Extending and Customizing Environments`](../extend/customization-extendibility.md) section for information on PHP specific configuration files such as the [`php.ini`](../extend/customization-extendibility.md#custom-php-configuration-phpini).
 
 ## `project_tld`
 
