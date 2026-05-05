@@ -498,6 +498,8 @@ The PHP version the project should use.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
 
+The PHP specific configuration files such as the [`php.ini`](../extend/customization-extendibility#custom-php-configuration-phpini) as also supported.
+
 ## `project_tld`
 
 Default Top-Level-Domain (`TLD`) to be used for a project’s domains, or globally for all project domains. This defaults to `ddev.site` and it's easiest to work with DDEV using the default setting.
