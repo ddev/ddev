@@ -109,5 +109,6 @@ case $OSTYPE in
   ;;
 *)
   echo "OS type '$OSTYPE' not identified, known types: linux*, win*, msys*, cygwin."
+  exit 1
   ;;
 esac
