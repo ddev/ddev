@@ -126,7 +126,9 @@ The type and version of the database engine the project should use.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | MariaDB 11.8 | Can be MariaDB 5.5–10.8, 10.11, 11.4, 11.8 and MySQL 5.5–8.0, 8.4, or PostgreSQL 9–18.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats. For very old database types see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/).
+| :octicons-file-directory-16: project | `mariadb:11.8` | Can be MariaDB 5.5–10.8, 10.11, 11.4, 11.8 and MySQL 5.5–8.0, 8.4, or PostgreSQL 9–18.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats. For very old database types see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/).
+
+Set with `ddev config --database=<database type>:<version>`, for example `mariadb:11.8`.
 
 ## `dbimage_extra_packages`
 
