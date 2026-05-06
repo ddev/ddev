@@ -33,6 +33,7 @@ var DdevSnapshotCommand = &cobra.Command{
 	Example: `ddev snapshot
 ddev snapshot --name some_descriptive_name
 ddev snapshot --cleanup
+ddev snapshot --cleanup --name my_snapshot_name
 ddev snapshot --cleanup -y
 ddev snapshot --list
 ddev snapshot --all`,
