@@ -30,6 +30,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Assign and check labels
-        uses: fuxingloh/multi-labeler@v4
+        uses: fuxingloh/multi-labeler@v5
         with:
           config-path: .github/pr-labeler.yml
