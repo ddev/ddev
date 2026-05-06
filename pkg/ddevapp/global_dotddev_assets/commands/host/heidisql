@@ -20,7 +20,7 @@ case $OSTYPE in
 "win"* | "msys"* | "cygwin")
   binary="/c/Program Files/HeidiSQL/heidisql.exe"
   ;;
-"linux-gnu")
+"linux"*)
   BINARIES=(
     "/usr/bin/heidisql"
     "/usr/local/bin/heidisql"
@@ -104,7 +104,11 @@ case $OSTYPE in
   start "" "${binary}" "${arguments[@]}" &
   ;;
 
-"linux-gnu")
+"linux"*)
   "${binary}" "${arguments[@]}" &>/dev/null & disown
+  ;;
+*)
+  echo "OS type '$OSTYPE' not identified, known types: linux*, win*, msys*, cygwin."
+  exit 1
   ;;
 esac

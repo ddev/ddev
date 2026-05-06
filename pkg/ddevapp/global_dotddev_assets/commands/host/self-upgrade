@@ -12,7 +12,7 @@ IFS=$'\n'
 for ddev_path in $(which -a ddev | uniq); do
   case $ddev_path in
     "/usr/bin/ddev")
-      if [[ ${OSTYPE} = "linux-gnu"* ]]; then
+      if [[ ${OSTYPE} = "linux"* ]]; then
         packages_to_upgrade="ddev"
         if [[ -f "/usr/bin/ddev-hostname.exe" ]]; then
           packages_to_upgrade="$packages_to_upgrade ddev-wsl2"

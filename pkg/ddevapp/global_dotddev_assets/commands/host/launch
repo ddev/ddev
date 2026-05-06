@@ -120,7 +120,7 @@ if [ "${DDEV_DEBUG:-}" = "true" ] || [ "${DDEV_VERBOSE:-}" = "true" ]; then
 fi
 
 case $OSTYPE in
-  "linux-gnu")
+  "linux"*)
     if command -v explorer.exe >/dev/null; then explorer.exe ${FULLURL} || true;
     elif command -v xdg-open >/dev/null; then xdg-open ${FULLURL};
     else
@@ -133,5 +133,9 @@ case $OSTYPE in
     ;;
   "win"* | "msys"* | "cygwin")
     start ${FULLURL}
+    ;;
+  *)
+    echo "OS type '$OSTYPE' not identified, known types: linux*, darwin*, win*, msys*, cygwin."
+    exit 1
     ;;
 esac
