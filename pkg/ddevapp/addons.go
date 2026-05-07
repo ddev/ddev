@@ -886,15 +886,15 @@ func GetAddonTarballURL(ownerRepo, gitRef string, defaultBranch bool, prNumber i
 func GetAddonNamesFunc(numArgs int) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
 	return func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 		// Don't provide completions if the user keeps hitting space after
-		// exhausting all of the valid arguments.
+		// exhausting all the valid arguments.
 		if numArgs > 0 && len(args)+1 > numArgs {
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 
 		addons, err := ListAvailableAddonsFromRegistry()
 		if err != nil {
-			// If we can't get addons, return no completions
-			return nil, cobra.ShellCompDirectiveNoFileComp
+			// If we can't get add-ons, fall back to file completion
+			return nil, cobra.ShellCompDirectiveDefault
 		}
 
 		// Extract addon names in owner/repo format
@@ -907,7 +907,7 @@ func GetAddonNamesFunc(numArgs int) func(*cobra.Command, []string, string) ([]st
 			}
 		}
 
-		return addonNames, cobra.ShellCompDirectiveNoFileComp
+		return addonNames, cobra.ShellCompDirectiveDefault
 	}
 }
 
