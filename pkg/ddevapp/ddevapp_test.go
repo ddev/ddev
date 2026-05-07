@@ -4282,7 +4282,11 @@ func TestHostDBPort(t *testing.T) {
 				out = strings.ReplaceAll(out, "\r", "")
 				out = strings.ReplaceAll(out, " ", "")
 				lines := strings.Split(out, "\n")
-				assert.Equal("1", lines[0])
+				// Newer mariadb clients may emit an unrelated stderr warning
+				// (e.g. about --ssl-verify-server-cert with a passwordless
+				// login) that gets mixed into CombinedOutput, so check for the
+				// SELECT result on any line rather than locking to lines[0].
+				assert.Contains(lines, "1", "expected '1' in output, got: %v", lines)
 			}
 
 			// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
