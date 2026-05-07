@@ -35,3 +35,14 @@ The steps to install the root CA depend on the browser, but they generally follo
 
 !!!note "Still having issues?"
     Check out [this specific mkcert thread](https://github.com/FiloSottile/mkcert/issues/370) for additional troubleshooting.
+
+## Xcode iOS Simulator
+
+Testing any DDEV site via Safari through the iOS simulator will lead to TLS errors due to the mkcert CA certificate not being trusted. You will need to manually install the CA certificate into the simulator device.
+
+1. Run `mkcert -CAROOT` and open that directory in Finder. On macOS, the default location is typically `~/Library/Application Support/mkcert`.
+2. Drag the `rootCA.pem` file from that directory onto the iOS simulator session.
+3. In the iOS simulator, open **Settings** and install the downloaded certificate profile. Depending on the iOS version, use **Profile Downloaded** or go to **General > VPN & Device Management** (or **Profiles**) and install the mkcert/root CA profile.
+4. After the profile is installed, go to **Settings > General > About > Certificate Trust Settings** and enable full trust for the mkcert certificate.
+
+This should now allow valid TLS connections to any DDEV domain/site.

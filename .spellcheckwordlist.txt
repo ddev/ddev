@@ -200,6 +200,7 @@ WantedBy
 Webhosting
 WebSocket
 WRN
+Xcode
 XDebug
 XDG
 Xhprof
