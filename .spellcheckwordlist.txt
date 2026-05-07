@@ -16,6 +16,7 @@ CakePHP
 Callgraph
 CER
 CGroups
+CI
 CIDR
 CIFS
 CiviCRM
@@ -118,6 +119,7 @@ MinIO
 Misconfigured
 Monorepo
 MUTAGEN_DATA_DIRECTORY
+Mutagen's
 MyDevSite
 MySQL
 MySite
@@ -365,6 +367,7 @@ export
 extensibility
 extradb
 facebook
+feature's
 fi
 file
 filepath
