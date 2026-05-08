@@ -17,4 +17,9 @@ fi
 # Kill process 1 + process group if this exist or fails
 trap "trap - SIGTERM && kill -- -1" SIGINT SIGTERM EXIT SIGHUP SIGQUIT
 
-cat < ${logpipe}
+# Run cat in background so bash can process signals during `wait`.
+# If cat runs in the foreground, bash defers SIGTERM until cat exits,
+# which never happens because nobody closes the write end of the pipe —
+# causing Docker to wait the full stop_grace_period before sending SIGKILL.
+cat < ${logpipe} &
+wait
