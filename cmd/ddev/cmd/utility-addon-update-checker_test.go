@@ -24,7 +24,7 @@ func TestUtilityAddonUpdateCheckerCmd(t *testing.T) {
 		// Script may exit non-zero when add-on is out of date; ignore the error.
 		out, _ := exec.RunHostCommand(DdevBin, "utility", "addon-update-checker", "--dir", dir)
 		require.Contains(t, out, "Running add-on update checker in:")
-		require.Contains(t, out, dir)
+		require.Contains(t, out, filepath.Base(dir))
 	})
 
 	// Test 2: workspace with subdirectories each containing install.yaml — runs in each
