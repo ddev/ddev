@@ -824,7 +824,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
     This example shows how to work on an existing Drupal project, using a clone of a test repository. Replace with your Git repository.
 
-    Clone your Drupal repository:
+    Clone your web project repository:
 
     ```bash
     PROJECT_GIT_URL=https://github.com/ddev/test-drupal11.git
