@@ -20,6 +20,7 @@ export DOCKER_SCOUT_SUGGEST=false
 export CGO_ENABLED="${CGO_ENABLED:-0}"
 export BUILDARGS="${BUILDARGS:-}"
 export TESTARGS="${TESTARGS:-}"
+export MAKEARGS="${MAKEARGS:-}"
 export MAKE_TARGET="${MAKE_TARGET:-test}"
 export PATH="/usr/local/go/bin:$PATH"
 
@@ -30,6 +31,7 @@ echo "DDEV_EMBARGO_TESTS=${DDEV_EMBARGO_TESTS}"
 echo "CGO_ENABLED=${CGO_ENABLED}"
 echo "BUILDARGS=${BUILDARGS}"
 echo "TESTARGS=${TESTARGS}"
+echo "MAKEARGS=${MAKEARGS}"
 echo "MAKE_TARGET=${MAKE_TARGET}"
 
 echo "=== Ensuring Docker is running ==="
@@ -55,4 +57,4 @@ echo "=== Building DDEV ==="
 make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}"
 
 echo "=== Running tests ==="
-make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET}
+make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET} ${MAKEARGS}

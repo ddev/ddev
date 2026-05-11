@@ -23,6 +23,35 @@ on:
         type: string
         required: false
         default: ''
+      testargs:
+        description: 'TESTARGS value'
+        type: string
+        required: false
+        default: ''
+      gotest_short:
+        description: 'GOTEST_SHORT value (16=drupal11 only)'
+        type: string
+        required: false
+        default: '16'
+      make_target:
+        description: 'Make target to run (custom job only)'
+        type: choice
+        required: false
+        default: 'test'
+        options:
+          - test
+          - testpkg
+          - testcmd
+          - testddevapp
+          - testnotddevapp
+          - testfullsitesetup
+          - testonepkg
+          - testonefile
+      makeargs:
+        description: 'Extra make arguments: TESTPKG=./pkg/dockerutil (for testonepkg) or TESTFILE=./pkg/ddevapp/ddevapp_test.go (for testonefile)'
+        type: string
+        required: false
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -33,9 +62,22 @@ permissions:
 
 jobs:
   no-bind-mounts:
+    if: github.event_name != 'workflow_dispatch'
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
       ddev_test_no_bind_mounts: "true"
       ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
+      debug_enabled: ${{ inputs.debug_enabled || false }}
+
+  no-bind-mounts-custom:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      make_target: ${{ inputs.make_target }}
+      makeargs: ${{ inputs.makeargs }}
+      testargs: ${{ inputs.testargs }}
+      gotest_short: ${{ inputs.gotest_short }}
+      ddev_test_no_bind_mounts: "true"
       debug_enabled: ${{ inputs.debug_enabled || false }}

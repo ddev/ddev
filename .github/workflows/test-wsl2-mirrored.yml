@@ -1,16 +1,19 @@
-name: Test Mutagen
+# mirrored doesn't work (yet?) on Windows server 2025
+# See https://github.com/microsoft/WSL/issues/11154
+name: Test WSL2 Mirrored (Docker CE)
+
 on:
-  pull_request:
-    paths:
-      - "go.*"
-      - "pkg/**"
-      - "cmd/**"
-      - "Makefile"
-      - "vendor/**"
-      - ".github/workflows/**"
-      - "!.github/workflows/docs**"
-  push:
-    branches: [ main ]
+#  pull_request:
+#    paths:
+#      - "go.*"
+#      - "pkg/**"
+#      - "cmd/**"
+#      - "Makefile"
+#      - "vendor/**"
+#      - ".github/workflows/**"
+#      - "!.github/workflows/docs**"
+#  push:
+#    branches: [ main ]
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -61,23 +64,31 @@ permissions:
   contents: read
 
 jobs:
-  mutagen:
+  wsl2-mirrored-testpkg:
     if: github.event_name != 'workflow_dispatch'
-    uses: ./.github/workflows/test-reusable.yml
-    secrets: inherit
+    uses: ./.github/workflows/test-wsl2-reusable.yml
     with:
-      ddev_test_use_mutagen: "true"
+      make_target: "testpkg"
+      networking: "mirrored"
       ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
-  mutagen-custom:
+  wsl2-mirrored-testcmd:
+    if: github.event_name != 'workflow_dispatch'
+    uses: ./.github/workflows/test-wsl2-reusable.yml
+    with:
+      make_target: "testcmd"
+      networking: "mirrored"
+      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
+      debug_enabled: ${{ inputs.debug_enabled || false }}
+
+  wsl2-mirrored-custom:
     if: github.event_name == 'workflow_dispatch'
-    uses: ./.github/workflows/test-reusable.yml
-    secrets: inherit
+    uses: ./.github/workflows/test-wsl2-reusable.yml
     with:
       make_target: ${{ inputs.make_target }}
       makeargs: ${{ inputs.makeargs }}
+      networking: "mirrored"
       testargs: ${{ inputs.testargs }}
       gotest_short: ${{ inputs.gotest_short }}
-      ddev_test_use_mutagen: "true"
       debug_enabled: ${{ inputs.debug_enabled || false }}

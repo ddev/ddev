@@ -1,62 +1,43 @@
-name: Test WSL2 (Docker CE)
+name: Reusable WSL2 Test
 
 on:
-  pull_request:
-    paths:
-      - "go.*"
-      - "pkg/**"
-      - "cmd/**"
-      - "Makefile"
-      - "vendor/**"
-      - ".github/workflows/**"
-      - "!.github/workflows/docs**"
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      debug_enabled:
-        description: 'Run the build with tmate set "debug_enabled"'
-        type: boolean
+      make_target:
+        description: 'MAKE_TARGET value'
         required: false
-        default: false
+        type: string
+        default: 'test'
+      makeargs:
+        description: 'Extra make arguments: TESTPKG=./pkg/dockerutil (for testonepkg) or TESTFILE=./pkg/ddevapp/ddevapp_test.go (for testonefile)'
+        required: false
+        type: string
+        default: ''
+      networking:
+        description: 'WSL2 networking mode (nat or mirrored)'
+        required: false
+        type: string
+        default: 'nat'
       testargs:
         description: 'TESTARGS value'
-        type: string
         required: false
+        type: string
         default: ''
       gotest_short:
         description: 'GOTEST_SHORT value (16=drupal11 only)'
-        type: string
         required: false
+        type: string
         default: '16'
       ddev_embargo_tests:
-        description: 'Pipe-separated list of test names to skip (e.g., TestName1|TestName2)'
-        type: string
+        description: 'DDEV_EMBARGO_TESTS value - pipe-separated list of test names to skip (e.g., TestName1|TestName2)'
         required: false
+        type: string
         default: ''
-      make_target:
-        description: 'Make target to run'
-        type: string
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
         required: false
-        default: 'test'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-
-env:
-  GOTEST_SHORT: ${{ inputs.gotest_short || '16' }}
-  TESTARGS: ${{ inputs.testargs || '' }}
-  MAKE_TARGET: ${{ inputs.make_target || 'test' }}
-  DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
-  DDEV_SKIP_NODEJS_TEST: 'true'
-  # Always clone from base repository to get upstream tags
-  GITHUB_CLONE_URL: https://github.com/${{ github.repository }}
-  # For PRs, use the PR ref; otherwise use the branch name
-  GIT_REF: ${{ github.event.pull_request.number && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref_name }}
+        type: boolean
+        default: false
 
 jobs:
   check-skip:
@@ -64,7 +45,7 @@ jobs:
     outputs:
       should_skip: ${{ steps.check.outputs.should_skip }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 1
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -84,19 +65,24 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 300
 
-    strategy:
-      fail-fast: false
-      matrix:
-#        mirrored doesn't work (yet?) on Windows server 2025.  https://github.com/microsoft/WSL/issues/11154
-#        networking: [nat, mirrored]
-        networking: [nat]
+    name: WSL2 (${{ inputs.networking }}, ${{ inputs.make_target }})
 
-    name: WSL2 (${{ matrix.networking }})
+    env:
+      GOTEST_SHORT: ${{ inputs.gotest_short }}
+      TESTARGS: ${{ inputs.testargs }}
+      MAKE_TARGET: ${{ inputs.make_target }}
+      MAKEARGS: ${{ inputs.makeargs }}
+      DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests }}
+      DDEV_SKIP_NODEJS_TEST: 'true'
+      # Always clone from base repository to get upstream tags
+      GITHUB_CLONE_URL: https://github.com/${{ github.repository }}
+      # For PRs, use the PR ref; otherwise use the branch name
+      GIT_REF: ${{ github.event.pull_request.number && format('refs/pull/{0}/head', github.event.pull_request.number) || github.ref_name }}
 
     steps:
       # Can't work yet until enabled in Windows Server 2025
       - name: Configure mirrored networking
-        if: matrix.networking == 'mirrored'
+        if: inputs.networking == 'mirrored'
         shell: pwsh
         run: |
           $wslconfig = @"
@@ -144,7 +130,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "=== Test Configuration ==="
-          Write-Host "Networking mode: ${{ matrix.networking }}"
+          Write-Host "Networking mode: ${{ inputs.networking }}"
           Write-Host "GOTEST_SHORT: ${{ env.GOTEST_SHORT }}"
           Write-Host "TESTARGS: ${{ env.TESTARGS }}"
           Write-Host "MAKE_TARGET: ${{ env.MAKE_TARGET }}"
@@ -153,7 +139,6 @@ jobs:
           Write-Host "Architecture: $env:PROCESSOR_ARCHITECTURE"
           Write-Host "OS: $((Get-CimInstance Win32_OperatingSystem).Caption)"
           Write-Host "Runner: ${{ runner.os }} / ${{ runner.arch }}"
-          Write-Host "Networking: ${{ matrix.networking }}"
           Write-Host ""
           Write-Host "=== WSL Distro ==="
           wsl --version
@@ -188,6 +173,7 @@ jobs:
           $gotest_short = "${{ env.GOTEST_SHORT }}"
           $testargs = "${{ env.TESTARGS }}"
           $make_target = "${{ env.MAKE_TARGET }}"
+          $makeargs = "${{ env.MAKEARGS }}"
           $embargo = "${{ env.DDEV_EMBARGO_TESTS }}"
           $skip_nodejs = "${{ env.DDEV_SKIP_NODEJS_TEST }}"
-          wsl -u testuser -- bash -exc "export GOTEST_SHORT='$gotest_short' TESTARGS='$testargs' MAKE_TARGET='$make_target' DDEV_EMBARGO_TESTS='$embargo' DDEV_SKIP_NODEJS_TEST='$skip_nodejs' && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"
+          wsl -u testuser -- bash -exc "export GOTEST_SHORT='$gotest_short' TESTARGS='$testargs' MAKE_TARGET='$make_target' MAKEARGS='$makeargs' DDEV_EMBARGO_TESTS='$embargo' DDEV_SKIP_NODEJS_TEST='$skip_nodejs' && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"
