@@ -76,7 +76,9 @@ If you use private, password-protected Composer repositories with [Satis](https:
 ```bash
 DDEV_DIR="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
 mkdir -p "$DDEV_DIR/homeadditions/.composer"
+# Find the correct location of the auth.json file if Composer is installed
 COMPOSER_AUTH_FILE="$(composer config --global home 2>/dev/null)/auth.json"
+# Otherwise default to the location on Debian
 if [ ! -f "$COMPOSER_AUTH_FILE" ]; then
   COMPOSER_AUTH_FILE="$HOME/.composer/auth.json"
 fi
