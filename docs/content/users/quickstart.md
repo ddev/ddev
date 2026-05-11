@@ -1737,11 +1737,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create-project`, it’s asking for your public key as "username" and private key as "password".
 
 !!!tip "Store Adobe/Magento Composer credentials in the global DDEV config"
-    If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md):
-
-    ```bash
-    mkdir -p $HOME/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json $HOME/.ddev/homeadditions/.composer/auth.json
-    ```
+    If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See the example in [Composer Authentication](extend/in-container-configuration.md#composer-authentication).
 
     Alternately, you can install the Adobe/Magento Composer credentials in your global `$HOME/.ddev/homeadditions/.composer/auth.json` and never have to enter them again (see below):
 

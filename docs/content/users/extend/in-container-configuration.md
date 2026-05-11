@@ -77,7 +77,11 @@ If you use private, password-protected Composer repositories with [Satis](https:
 
 ```bash
 mkdir -p $HOME/.ddev/homeadditions/.composer
-ln -s $(composer config --global home)/auth.json $HOME/.ddev/homeadditions/.composer/auth.json
+COMPOSER_AUTH_FILE="$(composer config --global home 2>/dev/null)/auth.json"
+if [ ! -f "$COMPOSER_AUTH_FILE" ]; then
+  COMPOSER_AUTH_FILE="$HOME/.composer/auth.json"
+fi
+ln -s "$COMPOSER_AUTH_FILE" $HOME/.ddev/homeadditions/.composer/auth.json
 ```
 
 ### Startup Scripts
