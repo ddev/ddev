@@ -114,6 +114,23 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 		},
 		{
 			collectFiles: func() ([]string, error) {
+				allFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "db-build", "*Dockerfile*"))
+				if err != nil {
+					return nil, err
+				}
+				// Filter to only valid Dockerfile patterns
+				return slices.DeleteFunc(allFiles, func(file string) bool {
+					base := filepath.Base(file)
+					return !strings.HasPrefix(base, "Dockerfile") &&
+						!strings.HasPrefix(base, "pre.Dockerfile") &&
+						!strings.HasPrefix(base, "prepend.Dockerfile")
+				}), nil
+			},
+			checkOnlyWhen: func() bool { return !slices.Contains(app.OmitContainers, "db") },
+			displayName:   "Database (global)",
+		},
+		{
+			collectFiles: func() ([]string, error) {
 				allFiles, err := filepath.Glob(filepath.Join(ddevDir, "db-build", "*Dockerfile*"))
 				if err != nil {
 					return nil, err
@@ -249,6 +266,22 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			},
 			checkOnlyWhen: routerEnabled,
 			displayName:   "Router",
+		},
+		{
+			collectFiles: func() ([]string, error) {
+				allFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "web-build", "*Dockerfile*"))
+				if err != nil {
+					return nil, err
+				}
+				// Filter to only valid Dockerfile patterns
+				return slices.DeleteFunc(allFiles, func(file string) bool {
+					base := filepath.Base(file)
+					return !strings.HasPrefix(base, "Dockerfile") &&
+						!strings.HasPrefix(base, "pre.Dockerfile") &&
+						!strings.HasPrefix(base, "prepend.Dockerfile")
+				}), nil
+			},
+			displayName: "Web server (global)",
 		},
 		{
 			collectFiles: func() ([]string, error) {
