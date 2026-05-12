@@ -1,3 +1,5 @@
+# mirrored doesn't work (yet?) on Windows server 2025
+# See https://github.com/microsoft/WSL/issues/11154
 name: Test WSL2 NAT (Docker CE)
 
 on:
