@@ -85,7 +85,7 @@ ddev pull pantheon --environment=DDEV_USE_PANTHEON_BACKUP=true
 
 ## Usage
 
-* `ddev pull pantheon` will connect to Pantheon to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+* [`ddev pull pantheon`](../usage/commands.md#pull) will connect to Pantheon to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
 * To pull from a specific environment without permanently changing your project config, pass environment variables using `--environment`:
 
     ```bash

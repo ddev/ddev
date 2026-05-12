@@ -28,7 +28,7 @@ DDEV provides integration with [Lagoon](https://lagoon.sh/), allowing users to q
 
 ## Usage
 
-* `ddev pull lagoon` will connect to the Lagoon environment to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+* [`ddev pull lagoon`](../usage/commands.md#pull) will connect to the Lagoon environment to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
 * To pull from a specific environment without permanently changing your project config, pass environment variables using `--environment`:
 
     ```bash
