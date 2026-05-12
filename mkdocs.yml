@@ -19,8 +19,9 @@ docs_dir: docs/content
 
 # Configuration
 theme:
-  name: material
+  name: materialx
   custom_dir: docs/overrides
+  topbar_style: primary
   icon:
     edit: material/pencil
   palette:

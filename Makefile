@@ -206,9 +206,9 @@ markdownlint:
 # Install mkdocs locally using
 # https://docs.ddev.com/en/stable/developers/testing-docs/
 mkdocs:
-	@echo "mkdocs: "
-	@CMD="mkdocs build -d /tmp/mkdocsbuild"; \
-	if command -v mkdocs >/dev/null 2>&1; then \
+	@echo "properdocs: "
+	@CMD="properdocs build -d /tmp/mkdocsbuild -f mkdocs.yml"; \
+	if command -v properdocs >/dev/null 2>&1; then \
 		$$CMD ; \
 	else \
 		echo "Not running mkdocs because it's not installed (see .envrc file)"; \
@@ -218,8 +218,8 @@ mkdocs:
 # It does require installing mkdocs and its requirements
 # See https://docs.ddev.com/en/stable/developers/testing-docs/
 mkdocs-serve:
-	@if command -v mkdocs >/dev/null ; then \
-		mkdocs serve; \
+	@if command -v properdocs >/dev/null ; then \
+		properdocs serve -f mkdocs.yml; \
 	else \
 		echo "mkdocs is not installed (see .envrc file)" && exit 2; \
 	fi; \

@@ -115,3 +115,53 @@ dt {
 img[alt="Figurative Mark"], img[alt="Word/Figurative Mark"] {
     height: 150px
 }
+
+/* materialx uses color-mix() on --mx-topbar-bg in modern browsers, washing out the header.
+   Higher specificity (2 attrs) overrides the @supports color-mix block (1 attr). */
+[data-md-color-scheme][data-mx-topbar=primary] {
+    --mx-topbar-bg: var(--md-primary-fg-color);
+}
+
+/* Keep the sponsor announce banner dark in both light and dark modes */
+[data-md-component="announce"] .md-banner {
+    background-color: #1e2127;
+}
+
+/* materialx (10.0.8) added hover/focus underlines to content links; revert to original */
+.md-typeset a:hover,
+.md-typeset a:focus {
+    text-decoration: none;
+}
+
+/* materialx (10.0.3) added indentation guides to TOC; revert to original */
+[dir=ltr] .md-nav--secondary .md-nav__item .md-nav__list,
+[dir=rtl] .md-nav--secondary .md-nav__item .md-nav__list {
+    border: none;
+}
+
+/* materialx (10.0.3) added zebra-striping to tables; revert to original */
+.md-typeset table:not([class]) tbody tr:nth-of-type(odd) {
+    background-color: transparent;
+}
+
+/* materialx glass sidebar effect (semi-transparent + blur + rounded); revert to original solid */
+.md-sidebar--primary,
+.md-sidebar--secondary {
+    background-color: var(--md-default-bg-color);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-radius: 0;
+}
+
+/* materialx active sidebar link uses --md-primary-fg-color (dark indigo) as text in dark mode,
+   giving near-zero contrast on the dark sidebar background */
+[data-md-color-scheme="slate"] .md-nav--primary .md-nav__item .md-nav__link--active {
+    color: var(--md-typeset-a-color);
+    background-color: var(--md-default-fg-color--lightest);
+}
+
+/* materialx sets primary nav link padding to .35rem (vs .2rem for secondary), making the left
+   sidebar items taller than the right TOC; match them */
+.md-nav--primary .md-nav__link {
+    padding: .2rem .6rem;
+}
