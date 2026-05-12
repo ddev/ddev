@@ -83,6 +83,11 @@ on:
         required: false
         type: string
         default: ''
+      ddev_embargo_php_versions:
+        description: 'DDEV_EMBARGO_PHP_VERSIONS value - comma-separated list of PHP versions to skip in TestPHPConfig (e.g., "8.4,8.3")'
+        required: false
+        type: string
+        default: ''
       debug_enabled:
         description: 'Run the build with tmate set "debug_enabled"'
         required: false
@@ -136,6 +141,7 @@ jobs:
       DDEV_NONINTERACTIVE: "true"
       DDEV_SKIP_NODEJS_TEST: ${{ inputs.ddev_skip_nodejs_test }}
       DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests }}
+      DDEV_EMBARGO_PHP_VERSIONS: ${{ inputs.ddev_embargo_php_versions }}
       GOTEST_SHORT: ${{ inputs.gotest_short }}
       MAKE_TARGET: ${{ inputs.make_target }}
       TESTARGS: ${{ inputs.testargs }}
@@ -225,6 +231,7 @@ jobs:
           echo "GOTEST_SHORT=${GOTEST_SHORT}"
           echo "DDEV_SKIP_NODEJS_TEST=${DDEV_SKIP_NODEJS_TEST}"
           echo "DDEV_EMBARGO_TESTS=${DDEV_EMBARGO_TESTS}"
+          echo "DDEV_EMBARGO_PHP_VERSIONS=${DDEV_EMBARGO_PHP_VERSIONS}"
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
           echo "DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE}"
           echo "DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
