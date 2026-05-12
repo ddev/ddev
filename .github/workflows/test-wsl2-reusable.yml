@@ -33,6 +33,11 @@ on:
         required: false
         type: string
         default: ''
+      ddev_embargo_php_versions:
+        description: 'DDEV_EMBARGO_PHP_VERSIONS value - comma-separated list of PHP versions to skip in TestPHPConfig (e.g., "8.4,8.3")'
+        required: false
+        type: string
+        default: ''
       debug_enabled:
         description: 'Run the build with tmate set "debug_enabled"'
         required: false
@@ -77,6 +82,7 @@ jobs:
       MAKE_TARGET: ${{ inputs.make_target }}
       MAKEARGS: ${{ inputs.makeargs }}
       DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests }}
+      DDEV_EMBARGO_PHP_VERSIONS: ${{ inputs.ddev_embargo_php_versions }}
       DDEV_SKIP_NODEJS_TEST: 'true'
       # Always clone from base repository to get upstream tags
       GITHUB_CLONE_URL: https://github.com/${{ github.repository }}
@@ -179,5 +185,6 @@ jobs:
           $make_target = "${{ env.MAKE_TARGET }}"
           $makeargs = "${{ env.MAKEARGS }}"
           $embargo = "${{ env.DDEV_EMBARGO_TESTS }}"
+          $embargo_php = "${{ env.DDEV_EMBARGO_PHP_VERSIONS }}"
           $skip_nodejs = "${{ env.DDEV_SKIP_NODEJS_TEST }}"
-          wsl -u testuser -- bash -exc "export GOTEST_SHORT='$gotest_short' TESTARGS='$testargs' MAKE_TARGET='$make_target' MAKEARGS='$makeargs' DDEV_EMBARGO_TESTS='$embargo' DDEV_SKIP_NODEJS_TEST='$skip_nodejs' && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"
+          wsl -u testuser -- bash -exc "export GOTEST_SHORT='$gotest_short' TESTARGS='$testargs' MAKE_TARGET='$make_target' MAKEARGS='$makeargs' DDEV_EMBARGO_TESTS='$embargo' DDEV_EMBARGO_PHP_VERSIONS='$embargo_php' DDEV_SKIP_NODEJS_TEST='$skip_nodejs' && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"

@@ -1111,6 +1111,18 @@ func TestPHPConfig(t *testing.T) {
 	// TODO: php8.5: Remove this exclusion when php85 has solr
 	phpKeys = util.SubtractSlices(phpKeys, []string{nodeps.PHP85})
 
+	// Skip any PHP versions embargoed via DDEV_EMBARGO_PHP_VERSIONS (comma-separated, e.g. "8.4,8.3")
+	var embargoedVersions []string
+	for _, v := range phpKeys {
+		if util.IsPHPVersionEmbargoed(v) {
+			embargoedVersions = append(embargoedVersions, v)
+		}
+	}
+	if len(embargoedVersions) > 0 {
+		t.Logf("Skipping PHP versions embargoed by DDEV_EMBARGO_PHP_VERSIONS=%s: %v", os.Getenv("DDEV_EMBARGO_PHP_VERSIONS"), embargoedVersions)
+		phpKeys = util.SubtractSlices(phpKeys, embargoedVersions)
+	}
+
 	sort.Strings(phpKeys)
 
 	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/.env"), filepath.Join(site.Dir, ".ddev/.env"))

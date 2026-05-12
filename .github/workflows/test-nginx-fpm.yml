@@ -23,6 +23,11 @@ on:
         type: string
         required: false
         default: ''
+      ddev_embargo_php_versions:
+        description: 'Comma-separated list of PHP versions to skip in TestPHPConfig (e.g., "8.4,8.3")'
+        type: string
+        required: false
+        default: ''
       testargs:
         description: 'TESTARGS value'
         type: string
@@ -70,6 +75,7 @@ jobs:
       ddev_skip_nodejs_test: "false"
       testargs: ""
       ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
+      ddev_embargo_php_versions: ${{ inputs.ddev_embargo_php_versions || vars.DDEV_EMBARGO_PHP_VERSIONS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   nginx-fpm-custom:
