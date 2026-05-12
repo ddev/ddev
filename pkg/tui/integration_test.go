@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -145,7 +145,7 @@ func TestTUIIntegrationDashboardRender(t *testing.T) {
 	model := updated.(AppModel)
 	require.False(t, model.loading)
 
-	view := model.View()
+	view := model.View().Content
 	require.Contains(t, view, "DDEV Projects", "dashboard should contain title")
 	require.Contains(t, view, testNames[0], "dashboard should contain first project name")
 	require.Contains(t, view, testNames[1], "dashboard should contain second project name")
@@ -205,7 +205,7 @@ func TestTUIIntegrationDetailViewRender(t *testing.T) {
 	require.False(t, model.detailLoading)
 	require.NotNil(t, model.detail)
 
-	view := model.View()
+	view := model.View().Content
 	require.Contains(t, view, "DDEV Project: "+testNames[0], "detail view should contain project name")
 	require.Contains(t, view, nodeps.AppTypePHP, "detail view should contain project type")
 	require.Contains(t, view, model.detail.PHPVersion, "detail view should contain PHP version")
@@ -236,25 +236,25 @@ func TestTUIIntegrationDashboardNavigation(t *testing.T) {
 	firstName := model.filteredProjects()[0].Name
 
 	// Move down
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	model = updated.(AppModel)
 	require.Equal(t, 1, model.cursor)
 	secondName := model.filteredProjects()[1].Name
 	require.NotEqual(t, firstName, secondName, "different cursor positions should select different projects")
 
 	// Move back up
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	model = updated.(AppModel)
 	require.Equal(t, 0, model.cursor)
 
 	// Enter filter mode and type a partial name to narrow results
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: '/', Text: "/"})
 	model = updated.(AppModel)
 	require.True(t, model.filtering)
 
 	// Type "alpha" (case-insensitive match against testNames[0])
 	for _, ch := range "alpha" {
-		updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{ch}})
+		updated, _ = model.Update(tea.KeyPressMsg{Code: ch, Text: string(ch)})
 		model = updated.(AppModel)
 	}
 
@@ -263,13 +263,13 @@ func TestTUIIntegrationDashboardNavigation(t *testing.T) {
 	require.Equal(t, testNames[0], filtered[0].Name)
 
 	// Press enter to confirm filter
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model = updated.(AppModel)
 	require.False(t, model.filtering)
 	require.Equal(t, "alpha", model.filterText)
 
 	// Esc clears the filter
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
 	model = updated.(AppModel)
 	require.Empty(t, model.filterText)
 	require.GreaterOrEqual(t, len(model.filteredProjects()), 2, "all projects should be visible again")

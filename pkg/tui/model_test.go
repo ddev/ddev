@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/stretchr/testify/require"
 )
@@ -64,32 +64,32 @@ func TestCursorNavigation(t *testing.T) {
 	}
 
 	// Move down
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	updated, _ := m.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	model := updated.(AppModel)
 	require.Equal(t, 1, model.cursor)
 
 	// Move down again
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	model = updated.(AppModel)
 	require.Equal(t, 2, model.cursor)
 
 	// Move down at bottom - should stay
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: 'j', Text: "j"})
 	model = updated.(AppModel)
 	require.Equal(t, 2, model.cursor)
 
 	// Move up
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	model = updated.(AppModel)
 	require.Equal(t, 1, model.cursor)
 
 	// Move up again
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	model = updated.(AppModel)
 	require.Equal(t, 0, model.cursor)
 
 	// Move up at top - should stay
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: 'k', Text: "k"})
 	model = updated.(AppModel)
 	require.Equal(t, 0, model.cursor)
 }
@@ -173,24 +173,24 @@ func TestFilterMode(t *testing.T) {
 	m.projects = []ProjectInfo{{Name: "a"}, {Name: "b"}}
 
 	// Enter filter mode
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}})
+	updated, _ := m.Update(tea.KeyPressMsg{Code: '/', Text: "/"})
 	model := updated.(AppModel)
 	require.True(t, model.filtering)
 
 	// Type a character
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: 'a', Text: "a"})
 	model = updated.(AppModel)
 	require.Equal(t, "a", model.filterText)
 
 	// Backspace
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyBackspace})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyBackspace})
 	model = updated.(AppModel)
 	require.Equal(t, "", model.filterText)
 
 	// Type and press enter to confirm
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'b'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: 'b', Text: "b"})
 	model = updated.(AppModel)
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model = updated.(AppModel)
 	require.False(t, model.filtering)
 	require.Equal(t, "b", model.filterText)
@@ -198,7 +198,7 @@ func TestFilterMode(t *testing.T) {
 	// Esc clears filter while in filtering mode
 	model.filtering = true
 	model.filterText = "test"
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
 	model = updated.(AppModel)
 	require.False(t, model.filtering)
 	require.Equal(t, "", model.filterText)
@@ -206,7 +206,7 @@ func TestFilterMode(t *testing.T) {
 	// Esc clears filter when NOT in filtering mode (after Enter confirmed)
 	model.filtering = false
 	model.filterText = "active-filter"
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
 	model = updated.(AppModel)
 	require.Equal(t, "", model.filterText, "esc should clear filter even outside filter mode")
 	require.Equal(t, 0, model.cursor)
@@ -216,12 +216,12 @@ func TestHelpToggle(t *testing.T) {
 	m := NewAppModel()
 
 	// Show help
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	updated, _ := m.Update(tea.KeyPressMsg{Code: '?', Text: "?"})
 	model := updated.(AppModel)
 	require.True(t, model.showHelp)
 
 	// Any key closes help
-	updated, _ = model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
+	updated, _ = model.Update(tea.KeyPressMsg{Code: 'x', Text: "x"})
 	model = updated.(AppModel)
 	require.False(t, model.showHelp)
 }
@@ -229,7 +229,7 @@ func TestHelpToggle(t *testing.T) {
 func TestQuit(t *testing.T) {
 	m := NewAppModel()
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'q', Text: "q"})
 	require.NotNil(t, cmd, "quit should return a command")
 
 	// The cmd should produce a QuitMsg
@@ -254,7 +254,7 @@ func TestDashboardView(t *testing.T) {
 	})
 	m = updated.(AppModel)
 
-	view := m.View()
+	view := m.View().Content
 
 	require.True(t, strings.Contains(view, "DDEV Projects"), "view should contain title")
 	require.True(t, strings.Contains(view, "mysite"), "view should contain project name")
@@ -268,7 +268,7 @@ func TestHelpView(t *testing.T) {
 	m := NewAppModel()
 	m.showHelp = true
 
-	view := m.View()
+	view := m.View().Content
 
 	require.True(t, strings.Contains(view, "Help"), "help view should contain Help title")
 	require.True(t, strings.Contains(view, "Navigation"), "help view should contain Navigation section")
@@ -286,7 +286,7 @@ func TestEmptyProjectsView(t *testing.T) {
 	updated, _ = m.Update(projectsLoadedMsg{projects: []ProjectInfo{}})
 	m = updated.(AppModel)
 
-	view := m.View()
+	view := m.View().Content
 	require.True(t, strings.Contains(view, "No DDEV projects found"), "should show empty message")
 }
 
@@ -392,7 +392,7 @@ func TestViewTransitionDashboardToDetail(t *testing.T) {
 	}
 
 	// Press Enter to open detail
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewDetail, model.viewMode, "should switch to detail view")
@@ -409,7 +409,7 @@ func TestViewTransitionDashboardToDetailWithD(t *testing.T) {
 	}
 
 	// Press 'd' to open detail
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'d'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'd', Text: "d"})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewDetail, model.viewMode, "'d' should switch to detail view")
@@ -424,7 +424,7 @@ func TestDetailActionLogs(t *testing.T) {
 	m.detail = &detail
 
 	// Press 'L' to open streaming log view
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'L'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'L', Text: "L"})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewLogs, model.viewMode, "should switch to log view")
@@ -469,7 +469,7 @@ func TestBackFromLogToDetail(t *testing.T) {
 	m.logLines = []string{"some log"}
 
 	// Press Esc to go back
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	updated, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewDetail, model.viewMode, "esc from logs should return to detail")
@@ -486,7 +486,7 @@ func TestLogViewRendering(t *testing.T) {
 	m.detail = &detail
 	m.logLines = []string{"log line 1", "log line 2", "log line 3"}
 
-	view := m.View()
+	view := m.View().Content
 
 	require.Contains(t, view, "DDEV Logs: mysite", "should contain log title")
 	require.Contains(t, view, "log line 1", "should contain log content")
@@ -501,7 +501,7 @@ func TestLogViewWaitingRendering(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	view := m.View()
+	view := m.View().Content
 
 	require.Contains(t, view, "Waiting for log output", "should show waiting message")
 }
@@ -520,7 +520,7 @@ func TestLogViewAutoScrollsToBottom(t *testing.T) {
 		m.logLines = append(m.logLines, fmt.Sprintf("line %d", i))
 	}
 
-	view := m.View()
+	view := m.View().Content
 
 	// Should show the last lines, not the first
 	require.Contains(t, view, "line 19", "should show last line")
@@ -534,7 +534,7 @@ func TestBackFromDetailToDashboard(t *testing.T) {
 	m.detail = &detail
 
 	// Press Esc to go back
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	updated, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewDashboard, model.viewMode, "esc should return to dashboard")
@@ -548,7 +548,7 @@ func TestBackFromDetailWithBackspace(t *testing.T) {
 	m.detail = &detail
 
 	// Press Backspace to go back
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyBackspace})
+	updated, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyBackspace})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewDashboard, model.viewMode, "backspace should return to dashboard")
@@ -597,7 +597,7 @@ func TestDetailViewRendering(t *testing.T) {
 	updated, _ = m.Update(projectDetailLoadedMsg{detail: detail})
 	m = updated.(AppModel)
 
-	view := m.View()
+	view := m.View().Content
 
 	require.Contains(t, view, "DDEV Project: mysite", "should contain project name")
 	require.Contains(t, view, "drupal", "should contain project type")
@@ -624,7 +624,7 @@ func TestDetailViewLoadingRendering(t *testing.T) {
 	m.detailLoading = true
 	m.width = 60
 
-	view := m.View()
+	view := m.View().Content
 
 	require.Contains(t, view, "Loading project detail", "should show loading message")
 }
@@ -635,7 +635,7 @@ func TestDetailActionStart(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'s'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewOperation, model.viewMode)
@@ -650,7 +650,7 @@ func TestDetailActionStop(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'S'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'S', Text: "S"})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewOperation, model.viewMode)
@@ -665,7 +665,7 @@ func TestDetailActionXHGui(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'x', Text: "x"})
 	require.NotNil(t, cmd, "x should return a command to launch xhgui")
 }
 
@@ -676,7 +676,7 @@ func TestDashboardActionXHGui(t *testing.T) {
 		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site", AppRoot: "/tmp/mysite"},
 	}
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'x', Text: "x"})
 	require.NotNil(t, cmd, "x should return a command to launch xhgui from dashboard")
 }
 
@@ -686,7 +686,7 @@ func TestDetailActionRestart(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'r'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'r', Text: "r"})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewOperation, model.viewMode)
@@ -701,7 +701,7 @@ func TestDetailActionLaunch(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'l', Text: "l"})
 	require.NotNil(t, cmd, "l should return a command to launch")
 }
 
@@ -711,7 +711,7 @@ func TestDetailActionMailpit(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'m'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'm', Text: "m"})
 	require.NotNil(t, cmd, "m should return a command to launch mailpit")
 }
 
@@ -722,7 +722,7 @@ func TestDetailActionMailpitNoURL(t *testing.T) {
 	detail.MailpitURL = ""
 	m.detail = &detail
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'m'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'm', Text: "m"})
 	require.Nil(t, cmd, "m should be no-op when no mailpit URL")
 }
 
@@ -733,7 +733,7 @@ func TestDashboardActionLaunch(t *testing.T) {
 		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site", AppRoot: "/tmp/mysite"},
 	}
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'l'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'l', Text: "l"})
 	require.NotNil(t, cmd, "l should return a command to launch from dashboard")
 }
 
@@ -744,7 +744,7 @@ func TestDashboardActionMailpit(t *testing.T) {
 		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", URL: "https://mysite.ddev.site", AppRoot: "/tmp/mysite"},
 	}
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'m'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'm', Text: "m"})
 	require.NotNil(t, cmd, "m should return a command to launch mailpit from dashboard")
 }
 
@@ -754,7 +754,7 @@ func TestDetailActionSSH(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'e'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'e', Text: "e"})
 	require.NotNil(t, cmd, "e should return a command to ssh")
 }
 
@@ -766,7 +766,7 @@ func TestDetailSSHHintVisible(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "ssh", "detail view should show ssh key hint")
 }
 
@@ -776,7 +776,7 @@ func TestDetailQuit(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'q', Text: "q"})
 	require.NotNil(t, cmd)
 
 	msg := cmd()
@@ -825,7 +825,7 @@ func TestDetailNoEntryWithNoProjects(t *testing.T) {
 	m.loading = false
 	// No projects
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewDashboard, model.viewMode, "should stay on dashboard with no projects")
@@ -844,7 +844,7 @@ func TestDetailRefresh(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'R'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'R', Text: "R"})
 	model := updated.(AppModel)
 
 	require.True(t, model.detailLoading, "should set loading on refresh")
@@ -909,7 +909,7 @@ func TestNarrowTerminalDashboard(t *testing.T) {
 	})
 	m = updated.(AppModel)
 
-	view := m.View()
+	view := m.View().Content
 
 	// Should still render without URL (narrow hides URLs)
 	require.Contains(t, view, "drupal")
@@ -931,7 +931,7 @@ func TestWideTerminalDashboard(t *testing.T) {
 	})
 	m = updated.(AppModel)
 
-	view := m.View()
+	view := m.View().Content
 
 	require.Contains(t, view, "https://mysite.ddev.site", "URL should be visible in wide terminal")
 	require.Contains(t, view, "/tmp/mysite", "project path should be visible in wide terminal")
@@ -951,7 +951,7 @@ func TestSpinnerInLoadingView(t *testing.T) {
 	m.loading = true
 	m.width = 60
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "Loading projects", "should show loading text")
 }
 
@@ -980,7 +980,7 @@ func TestStartAllConfirmation(t *testing.T) {
 	}
 
 	// Press 'a' to start all — should enter confirmation
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'a', Text: "a"})
 	model := updated.(AppModel)
 
 	require.True(t, model.confirming, "should enter confirmation mode")
@@ -998,7 +998,7 @@ func TestStopAllConfirmation(t *testing.T) {
 	}
 
 	// Press 'A' to stop all — should enter confirmation
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'A'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'A', Text: "A"})
 	model := updated.(AppModel)
 
 	require.True(t, model.confirming, "should enter confirmation mode")
@@ -1015,7 +1015,7 @@ func TestConfirmStartAll(t *testing.T) {
 	m.confirmAction = "start-all"
 
 	// Press y to confirm
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
 	model := updated.(AppModel)
 
 	require.False(t, model.confirming, "should exit confirmation")
@@ -1033,7 +1033,7 @@ func TestConfirmStopAll(t *testing.T) {
 	m.confirmAction = "stop-all"
 
 	// Press y to confirm
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
 	model := updated.(AppModel)
 
 	require.False(t, model.confirming)
@@ -1051,7 +1051,7 @@ func TestCancelConfirmation(t *testing.T) {
 	m.statusMsg = "Start all?"
 
 	// Press any non-y key to cancel
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'n'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'n', Text: "n"})
 	model := updated.(AppModel)
 
 	require.False(t, model.confirming, "should cancel confirmation")
@@ -1065,7 +1065,7 @@ func TestStartAllNoProjectsNoop(t *testing.T) {
 	m.loading = false
 	// No projects
 
-	updated, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'a'}})
+	updated, _ := m.Update(tea.KeyPressMsg{Code: 'a', Text: "a"})
 	model := updated.(AppModel)
 
 	require.False(t, model.confirming, "should not confirm with no projects")
@@ -1077,7 +1077,7 @@ func TestStartAllHintVisible(t *testing.T) {
 	m.width = 120
 	m.projects = []ProjectInfo{{Name: "a"}}
 
-	view := m.View()
+	view := m.View().Content
 
 	require.Contains(t, view, "start all", "should show start all hint")
 	require.Contains(t, view, "stop all", "should show stop all hint")
@@ -1092,7 +1092,7 @@ func TestAllStoppedHint(t *testing.T) {
 		{Name: "b", Status: ddevapp.SiteStopped},
 	}
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "All projects stopped", "should show all-stopped hint")
 	require.Contains(t, view, "to start selected", "should show start hint")
 }
@@ -1106,7 +1106,7 @@ func TestAllStoppedHintHiddenWhenRunning(t *testing.T) {
 		{Name: "b", Status: ddevapp.SiteStopped},
 	}
 
-	view := m.View()
+	view := m.View().Content
 	require.NotContains(t, view, "All projects are stopped", "should not show all-stopped hint when some are running")
 }
 
@@ -1169,7 +1169,7 @@ func TestErrorViewShowsRetryHint(t *testing.T) {
 	m.err = errTest
 	m.width = 60
 
-	view := m.View()
+	view := m.View().Content
 
 	require.Contains(t, view, "Error", "should show error")
 	require.Contains(t, view, "Press R to retry", "should show retry hint")
@@ -1193,7 +1193,7 @@ func TestRouterStatusInDashboardView(t *testing.T) {
 	m.routerStatus = "healthy"
 	m.projects = []ProjectInfo{{Name: "a", Status: ddevapp.SiteRunning, Type: "php"}}
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "Router:", "dashboard should show router status label")
 	require.Contains(t, view, "healthy", "dashboard should show router status value")
 }
@@ -1205,7 +1205,7 @@ func TestRouterStatusEmptyNotShown(t *testing.T) {
 	m.routerStatus = ""
 	m.projects = []ProjectInfo{{Name: "a", Status: ddevapp.SiteRunning, Type: "php"}}
 
-	view := m.View()
+	view := m.View().Content
 	require.NotContains(t, view, "Router:", "should not show router label when empty")
 }
 
@@ -1218,7 +1218,7 @@ func TestXdebugToggleFromDetail(t *testing.T) {
 	detail.Status = ddevapp.SiteRunning
 	m.detail = &detail
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'X'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'X', Text: "X"})
 	model := updated.(AppModel)
 
 	require.Contains(t, model.statusMsg, "Toggling xdebug")
@@ -1232,7 +1232,7 @@ func TestXdebugToggleIgnoredWhenStopped(t *testing.T) {
 	detail.Status = ddevapp.SiteStopped
 	m.detail = &detail
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'X'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'X', Text: "X"})
 	require.Nil(t, cmd, "X should be no-op when project is stopped")
 }
 
@@ -1284,7 +1284,7 @@ func TestXdebugHintInDetailView(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "xdebug", "detail view should show xdebug key hint")
 }
 
@@ -1295,7 +1295,7 @@ func TestPoweroffConfirmation(t *testing.T) {
 	m.loading = false
 	m.projects = []ProjectInfo{{Name: "a"}}
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'P'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'P', Text: "P"})
 	model := updated.(AppModel)
 
 	require.True(t, model.confirming, "should enter confirmation mode")
@@ -1310,7 +1310,7 @@ func TestConfirmPoweroff(t *testing.T) {
 	m.confirming = true
 	m.confirmAction = "poweroff"
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'y'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
 	model := updated.(AppModel)
 
 	require.False(t, model.confirming, "should exit confirmation")
@@ -1325,7 +1325,7 @@ func TestPoweroffHintInDashboard(t *testing.T) {
 	m.width = 120
 	m.projects = []ProjectInfo{{Name: "a"}}
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "poweroff", "dashboard should show poweroff hint")
 }
 
@@ -1333,7 +1333,7 @@ func TestPoweroffInHelpView(t *testing.T) {
 	m := NewAppModel()
 	m.showHelp = true
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "Poweroff", "help should mention Poweroff")
 }
 
@@ -1345,7 +1345,7 @@ func TestCopyURLFromDetail(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'c'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'c', Text: "c"})
 	model := updated.(AppModel)
 
 	require.Contains(t, model.statusMsg, "Copying URL")
@@ -1359,7 +1359,7 @@ func TestCopyURLNoURLsNoop(t *testing.T) {
 	detail.URLs = nil
 	m.detail = &detail
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'c'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'c', Text: "c"})
 	require.Nil(t, cmd, "c should be no-op when no URLs")
 }
 
@@ -1389,7 +1389,7 @@ func TestCopyURLHintInDetailView(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "copy url", "detail view should show copy url hint")
 }
 
@@ -1402,7 +1402,7 @@ func TestConfigKeyReturnsCommand(t *testing.T) {
 	m.loading = false
 	m.projects = []ProjectInfo{{Name: "a"}}
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'C'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'C', Text: "C"})
 	require.NotNil(t, cmd, "C should return a command to run ddev config")
 }
 
@@ -1411,7 +1411,7 @@ func TestConfigKeyFromEmptyState(t *testing.T) {
 	m.loading = false
 	// No projects
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'C'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'C', Text: "C"})
 	require.NotNil(t, cmd, "C should return a command even with no projects")
 }
 
@@ -1426,7 +1426,7 @@ func TestEmptyStateShowsConfigHint(t *testing.T) {
 	updated, _ = m.Update(projectsLoadedMsg{projects: []ProjectInfo{}})
 	m = updated.(AppModel)
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "Press 'C' to run ddev config", "empty state should mention C key")
 }
 
@@ -1436,7 +1436,7 @@ func TestConfigHintInDashboard(t *testing.T) {
 	m.width = 120
 	m.projects = []ProjectInfo{{Name: "a"}}
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "config", "dashboard hints should include config")
 }
 
@@ -1444,7 +1444,7 @@ func TestConfigInHelpView(t *testing.T) {
 	m := NewAppModel()
 	m.showHelp = true
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "Run ddev config", "help should mention ddev config")
 }
 
@@ -1452,7 +1452,7 @@ func TestHelpViewNewEntries(t *testing.T) {
 	m := NewAppModel()
 	m.showHelp = true
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "Poweroff", "help should mention Poweroff")
 	require.Contains(t, view, "Xdebug", "help should mention Xdebug")
 	require.Contains(t, view, "clipboard", "help should mention clipboard/copy")
@@ -1467,7 +1467,7 @@ func TestDashboardStartEntersOperationView(t *testing.T) {
 		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", AppRoot: "/tmp/mysite"},
 	}
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'s'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 's', Text: "s"})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewOperation, model.viewMode)
@@ -1483,7 +1483,7 @@ func TestDashboardStopEntersOperationView(t *testing.T) {
 		{Name: "mysite", Status: ddevapp.SiteRunning, Type: "drupal", AppRoot: "/tmp/mysite"},
 	}
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'S'}})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'S', Text: "S"})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewOperation, model.viewMode)
@@ -1577,7 +1577,7 @@ func TestOperationViewRendering(t *testing.T) {
 	m.height = 30
 	m.logLines = []string{"Building...", "Starting web container..."}
 
-	view := m.View()
+	view := m.View().Content
 
 	require.Contains(t, view, "Starting mysite", "should contain operation title")
 	require.Contains(t, view, "Building...", "should contain output")
@@ -1596,12 +1596,12 @@ func TestOperationViewDoneRendering(t *testing.T) {
 	m.logLines = []string{"Done."}
 
 	// Success
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "Completed", "should show completed status")
 
 	// Failure
 	m.operationErr = errTest
-	view = m.View()
+	view = m.View().Content
 	require.Contains(t, view, "Failed", "should show failed status")
 }
 
@@ -1611,7 +1611,7 @@ func TestOperationViewRunningRendering(t *testing.T) {
 	m.operationName = "Starting mysite"
 	m.width = 60
 
-	view := m.View()
+	view := m.View().Content
 	require.Contains(t, view, "Running...", "should show running message when no output")
 }
 
@@ -1622,7 +1622,7 @@ func TestOperationKeyEscBack(t *testing.T) {
 	m.operationReturnView = viewDashboard
 	m.logLines = []string{"some output"}
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewDashboard, model.viewMode, "esc should return to dashboard")
@@ -1640,7 +1640,7 @@ func TestOperationKeyEscBackToDetail(t *testing.T) {
 	detail := sampleDetail()
 	m.detail = &detail
 
-	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEscape})
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyEscape})
 	model := updated.(AppModel)
 
 	require.Equal(t, viewDetail, model.viewMode, "esc should return to detail")
@@ -1653,7 +1653,7 @@ func TestOperationKeyQuit(t *testing.T) {
 	m.viewMode = viewOperation
 	m.operationName = "Starting mysite"
 
-	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	_, cmd := m.Update(tea.KeyPressMsg{Code: 'q', Text: "q"})
 	require.NotNil(t, cmd)
 
 	msg := cmd()
