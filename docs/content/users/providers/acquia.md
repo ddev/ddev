@@ -51,4 +51,17 @@ DDEV’s Acquia integration pulls database and files from an existing project in
 
 ## Usage
 
-`ddev pull acquia` will connect to the Acquia Cloud Platform to download the database and files; note that it will download the latest available backup on the requested environment, rather than use a fresh copy of the database. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+* [`ddev pull acquia`](../usage/commands.md#pull) will connect to the Acquia Cloud Platform to download the database and files; note that it will download the latest available backup on the requested environment, rather than use a fresh copy of the database. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+* To pull from a specific environment without permanently changing your project config, pass environment variables using `--environment`:
+
+    ```bash
+    ddev pull acquia --environment="ACQUIA_ENVIRONMENT_ID=yoursite.dev"
+    ```
+
+    You can combine multiple variables:
+
+    ```bash
+    ddev pull acquia --environment="ACQUIA_ENVIRONMENT_ID=yoursite.dev,ACQUIA_API_KEY=xxxxxxxx,ACQUIA_API_SECRET=xxxxx"
+    ```
+
+* If you need to change the `acquia.yaml` recipe, you can change it to suit your needs, but remember to remove the `#ddev-generated` line from the top of the file.

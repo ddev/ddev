@@ -25,22 +25,22 @@
 # 5. Add the ACQUIA_ENVIRONMENT_ID environment variable to your project `.ddev/config.yaml`, for example:
 #    ```yaml
 #    web_environment:
-#        - ACQUIA_ENVIRONMENT_ID=project1.dev
+#        - ACQUIA_ENVIRONMENT_ID=yoursite.dev
 #    ```
-#    You can also do this with `ddev config --web-environment-add="ACQUIA_ENVIRONMENT_ID=project1.dev"`.
+#    You can also do this with `ddev config --web-environment-add="ACQUIA_ENVIRONMENT_ID=yoursite.dev"`.
 #
 #    On the Acquia Cloud Platform you can find this out by navigating to the environments page,
 #    clicking on the header and look for the "SSH URL" line.
-#    Eg. `project1.dev@cool-projects.acquia-sites.com` would have a project ID of `project1.dev`
+#    Eg. `yoursite.dev@cool-projects.acquia-sites.com` would have a project ID of `yoursite.dev`
 #
 # 6. `ddev restart`
 # 7. Use `ddev pull acquia` to pull the project database and files.
+#    To pull from a specific environment without permanently changing your project config, use `--environment`:
+#    `ddev pull acquia --environment="ACQUIA_ENVIRONMENT_ID=yoursite.dev"`
+#    or with multiple variables: `ddev pull acquia --environment="ACQUIA_ENVIRONMENT_ID=yoursite.dev,ACQUIA_API_KEY=xxxxxxxx,ACQUIA_API_SECRET=xxxxx"`
 # 8. Optionally use `ddev push acquia` to push local files and database to Acquia. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 
 # Debugging: Use `ddev exec acli command` and `ddev exec acli auth:login`
-
-# Instead of setting the environment variables in configuration files, you can use
-# `ddev pull acquia --environment=ACQUIA_ENVIRONMENT_ID=yourproject.dev` for example
 
 info_command:
   command: |

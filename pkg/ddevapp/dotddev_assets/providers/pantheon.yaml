@@ -22,10 +22,10 @@
 # 2. Add DDEV_PANTHEON_SITE and DDEV_PANTHEON_ENVIRONMENT variables to your project `.ddev/config.yaml`:
 #    ```yaml
 #    web_environment:
-#        - DDEV_PANTHEON_SITE=yourproject
+#        - DDEV_PANTHEON_SITE=your-project
 #        - DDEV_PANTHEON_ENVIRONMENT=dev
 #    ```
-#    You can also do this with `ddev config --web-environment-add="DDEV_PANTHEON_SITE=yourproject,DDEV_PANTHEON_ENVIRONMENT=dev"`.
+#    You can also do this with `ddev config --web-environment-add="DDEV_PANTHEON_SITE=your-project,DDEV_PANTHEON_ENVIRONMENT=dev"`.
 #
 #    You can usually use the site name, but in some environments you may need the site uuid,
 #    which is the long 3rd component of your site dashboard URL. So if the site dashboard is at
@@ -45,12 +45,11 @@
 # 6. `ddev restart`
 #
 # 7. Run `ddev pull pantheon`. The ddev environment will download the Pantheon database and files using terminus and will import the database and files into the ddev environment. You should now be able to access the project locally.
+#    To pull from a specific environment without permanently changing your project config, use `--environment`:
+#    `ddev pull pantheon --environment="DDEV_PANTHEON_ENVIRONMENT=dev"`
+#    or with multiple variables: `ddev pull pantheon --environment="DDEV_PANTHEON_SITE=your-project,DDEV_PANTHEON_ENVIRONMENT=dev,DDEV_USE_PANTHEON_BACKUP=true,TERMINUS_MACHINE_TOKEN=abcdeyourtoken"`
 #
 # 8. Optionally use `ddev push pantheon` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
-#
-
-# Instead of setting the environment variables in configuration files, you can use
-# `ddev pull pantheon --environment=DDEV_PANTHEON_SITE=yourproject,DDEV_PANTHEON_ENVIRONMENT=dev` for example
 #
 # To use existing backups instead of generating fresh database dumps (faster), add:
 # `DDEV_USE_PANTHEON_BACKUP=true` to your web_environment or use

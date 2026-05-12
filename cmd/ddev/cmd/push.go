@@ -19,12 +19,13 @@ var PushCmd = &cobra.Command{
 	Running push will connect to the configured provider and export and upload the
 	database and/or files. It is very useful for pushing to non-production
 	environments, but should rarely be used to push to production.`,
-	Example: `ddev push pantheon
-ddev push platform
+	Example: `ddev push upsun
 ddev push pantheon -y
-ddev push platform --skip-files -y
+ddev push upsun --skip-files -y
 ddev push acquia --skip-db -y
-ddev push platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=abcdef
+ddev push upsun --environment="PLATFORM_ENVIRONMENT=main,UPSUN_CLI_TOKEN=abcdeyourtoken"
+ddev push pantheon --environment="DDEV_PANTHEON_ENVIRONMENT=dev,TERMINUS_MACHINE_TOKEN=abcdeyourtoken"
+ddev push lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=main"
 `,
 	Args: cobra.ExactArgs(1),
 	PreRun: func(_ *cobra.Command, _ []string) {
@@ -145,6 +146,8 @@ ddev push %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 		subCommand.Flags().Bool("skip-db", false, "Skip pushing database archive")
 		subCommand.Flags().Bool("skip-files", false, "Skip pushing file archive")
 		subCommand.Flags().Bool("skip-import", false, "Downloads file and/or database archives, but does not import them")
+		// This flag is irrelevant for push
+		_ = subCommand.Flags().MarkHidden("skip-import")
 		subCommand.Flags().String("environment", "", "Add/override environment variables during pull. Commas and equals are not allowed in the names or values.")
 	}
 }

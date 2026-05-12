@@ -50,14 +50,14 @@ You need to obtain and configure an API token first. This only needs to be done 
 
             ```yaml
             web_environment:
-                - PLATFORM_PROJECT=nf4amudfn23biyourproject
+                - PLATFORM_PROJECT=abc12def34567
                 - PLATFORM_ENVIRONMENT=main
             ```
 
         * Or with a command from your terminal:
 
             ```bash
-            ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
+            ddev config --web-environment-add="PLATFORM_PROJECT=abc12def34567,PLATFORM_ENVIRONMENT=main"
             ```
 
     For more information about how to set environment variables for containers and services see [Environment Variables for Containers and Services](../extend/customization-extendibility.md#environment-variables-for-containers-and-services).
@@ -104,5 +104,17 @@ ddev pull upsun --environment="PLATFORM_PRIMARY_RELATIONSHIP=main"
 
 ## Usage
 
-* `ddev pull upsun` will connect to Upsun to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+* [`ddev pull upsun`](../usage/commands.md#pull) will connect to Upsun to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+* To pull from a specific environment without permanently changing your project config, pass environment variables using `--environment`:
+
+    ```bash
+    ddev pull upsun --environment="PLATFORM_ENVIRONMENT=main"
+    ```
+
+    You can combine multiple variables:
+
+    ```bash
+    ddev pull upsun --environment="PLATFORM_PROJECT=abc12def34567,PLATFORM_ENVIRONMENT=main,PLATFORM_APP=app,PLATFORM_PRIMARY_RELATIONSHIP=main,UPSUN_CLI_TOKEN=abcdeyourtoken"
+    ```
+
 * If you need to change the `upsun.yaml` recipe, you can change it to suit your needs, but remember to remove the `#ddev-generated` line from the top of the file.

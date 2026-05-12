@@ -40,14 +40,17 @@
 #    if your branch is the same as your environment and the project is specified in .upsun/local/project.yaml.
 #    ```yaml
 #    web_environment:
-#        - PLATFORM_PROJECT=nf4amudfn23biyourproject
+#        - PLATFORM_PROJECT=abc12def34567
 #        - PLATFORM_ENVIRONMENT=main
 #        - PLATFORM_APP=app
 #    ```
-#    You can also do this with `ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23biyourproject,PLATFORM_ENVIRONMENT=main,PLATFORM_APP=app"`.
+#    You can also do this with `ddev config --web-environment-add="PLATFORM_PROJECT=abc12def34567,PLATFORM_ENVIRONMENT=main,PLATFORM_APP=app"`.
 #
 # 4. `ddev restart`
-# 5. Run `ddev pull upsun`. After you agree to the prompt, the current upstream database and files will be downloaded.
+# 5. Run `ddev pull upsun`. After you agree to the prompt, the current upstream databases and files will be downloaded.
+#    To pull from a specific environment without permanently changing your project config, use `--environment`:
+#    `ddev pull upsun --environment="PLATFORM_ENVIRONMENT=main"`
+#    or with multiple variables: `ddev pull upsun --environment="PLATFORM_PROJECT=abc12def34567,PLATFORM_ENVIRONMENT=main,PLATFORM_APP=app,PLATFORM_PRIMARY_RELATIONSHIP=main,UPSUN_CLI_TOKEN=abcdeyourtoken"`
 # 6. Optionally use `ddev push upsun` to push local files and database to Upsun. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 
 # If you have more than one database on your Upsun project,
