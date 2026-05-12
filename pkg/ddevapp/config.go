@@ -1437,7 +1437,7 @@ EOF
 	}
 
 	// Global assets copied first so project-level files overwrite on name conflicts
-	if globalDockerfilePath != "" {
+	if globalDockerfilePath != "" && fileutil.IsDirectory(globalDockerfilePath) {
 		err = copy2.Copy(globalDockerfilePath, filepath.Dir(fullpath), copy2.Options{
 			Skip: func(_ os.FileInfo, src, _ string) (bool, error) {
 				// Do not copy file if it's not a context file
