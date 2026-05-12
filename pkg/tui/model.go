@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/spinner"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -163,14 +163,14 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		if !m.viewportReady {
-			m.dashboardViewport = viewport.New(msg.Width, msg.Height-10)
-			m.detailViewport = viewport.New(msg.Width, msg.Height-6)
+			m.dashboardViewport = viewport.New(viewport.WithWidth(msg.Width), viewport.WithHeight(msg.Height-10))
+			m.detailViewport = viewport.New(viewport.WithWidth(msg.Width), viewport.WithHeight(msg.Height-6))
 			m.viewportReady = true
 		} else {
-			m.dashboardViewport.Width = msg.Width
-			m.dashboardViewport.Height = msg.Height - 10
-			m.detailViewport.Width = msg.Width
-			m.detailViewport.Height = msg.Height - 6
+			m.dashboardViewport.SetWidth(msg.Width)
+			m.dashboardViewport.SetHeight(msg.Height - 10)
+			m.detailViewport.SetWidth(msg.Width)
+			m.detailViewport.SetHeight(msg.Height - 6)
 		}
 		return m, nil
 
@@ -346,7 +346,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch m.viewMode {
 		case viewDetail:
 			return m.handleDetailKey(msg)
@@ -367,7 +367,7 @@ func (m AppModel) isLoading() bool {
 	return m.loading || m.detailLoading || (m.viewMode == viewOperation && !m.operationDone)
 }
 
-func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// Confirmation overlay takes priority
 	if m.confirming {
 		if key.Matches(msg, m.keys.Confirm) {
@@ -461,7 +461,7 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case key.Matches(msg, m.keys.PageUp):
-		pageSize := m.dashboardViewport.Height
+		pageSize := m.dashboardViewport.Height()
 		if pageSize < 1 {
 			pageSize = 10
 		}
@@ -471,7 +471,7 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case key.Matches(msg, m.keys.PageDown):
 		filtered := m.filteredProjects()
-		pageSize := m.dashboardViewport.Height
+		pageSize := m.dashboardViewport.Height()
 		if pageSize < 1 {
 			pageSize = 10
 		}
@@ -569,7 +569,7 @@ func (m AppModel) handleDashboardKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch {
@@ -661,7 +661,7 @@ func (m AppModel) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m AppModel) handleLogKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m AppModel) handleLogKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch {
 	case key.Matches(msg, m.keys.Back):
 		if m.logProcess != nil {
@@ -683,7 +683,7 @@ func (m AppModel) handleLogKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m AppModel) handleOperationKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m AppModel) handleOperationKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch {
 	case key.Matches(msg, m.keys.Back):
 		if m.logProcess != nil {
@@ -716,21 +716,25 @@ func (m AppModel) handleOperationKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// View renders the TUI.
-func (m AppModel) View() string {
-	if m.showHelp {
-		return m.helpView()
-	}
-	switch m.viewMode {
-	case viewDetail:
-		return m.detailView()
-	case viewLogs:
-		return m.logView()
-	case viewOperation:
-		return m.operationView()
+// View renders the TUI. AltScreen is set declaratively so the TUI doesn't
+// pollute scroll-back.
+func (m AppModel) View() tea.View {
+	var content string
+	switch {
+	case m.showHelp:
+		content = m.helpView()
+	case m.viewMode == viewDetail:
+		content = m.detailView()
+	case m.viewMode == viewLogs:
+		content = m.logView()
+	case m.viewMode == viewOperation:
+		content = m.operationView()
 	default:
-		return m.dashboardView()
+		content = m.dashboardView()
 	}
+	v := tea.NewView(content)
+	v.AltScreen = true
+	return v
 }
 
 // updateDashboardViewport rebuilds dashboard content and adjusts scroll to keep cursor visible.
@@ -740,26 +744,26 @@ func (m *AppModel) updateDashboardViewport() {
 	}
 
 	// Save current scroll position
-	oldOffset := m.dashboardViewport.YOffset
+	oldOffset := m.dashboardViewport.YOffset()
 
 	// Rebuild content with current cursor position
 	m.dashboardViewport.SetContent(m.buildDashboardContent())
 
 	// Adjust scroll to keep cursor visible
-	viewportHeight := m.dashboardViewport.Height
+	viewportHeight := m.dashboardViewport.Height()
 	if viewportHeight < 1 {
 		viewportHeight = 10
 	}
 
 	// If cursor is below visible area, scroll down
 	if m.cursor >= oldOffset+viewportHeight {
-		m.dashboardViewport.YOffset = m.cursor - viewportHeight + 1
+		m.dashboardViewport.SetYOffset(m.cursor - viewportHeight + 1)
 	} else if m.cursor < oldOffset {
 		// If cursor is above visible area, scroll up
-		m.dashboardViewport.YOffset = m.cursor
+		m.dashboardViewport.SetYOffset(m.cursor)
 	} else {
 		// Cursor is visible, keep current scroll position
-		m.dashboardViewport.YOffset = oldOffset
+		m.dashboardViewport.SetYOffset(oldOffset)
 	}
 }
 
@@ -1388,11 +1392,6 @@ func (m AppModel) renderHints(hints []struct {
 		lines = append(lines, strings.Join(currentParts, sep))
 	}
 	return strings.Join(lines, "\n")
-}
-
-// keyHintsView returns the dashboard key hints (kept for backward compatibility).
-func (m AppModel) keyHintsView() string {
-	return m.dashboardKeyHints()
 }
 
 func (m AppModel) helpView() string {
