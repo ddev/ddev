@@ -115,6 +115,23 @@ Finally, to support [Multi-stage builds](https://docs.docker.com/build/building/
 
 Multi-stage builds are useful to anyone who has struggled to optimize Dockerfiles while keeping them easy to read and maintain.
 
+### Global Dockerfiles
+
+All of the above variants are also supported in `~/.ddev/web-build/` and `~/.ddev/db-build/`. Files placed there apply to every project on the machine and are useful for machine-specific customizations like corporate proxy certificates, private package registries, or developer tools you always want available.
+
+Global files are inserted *before* project-level files, so project-level files run after them. Context files (non-Dockerfiles) in the global directories are also available as `ADD`/`COPY` sources, with project-level files taking precedence on name conflicts.
+
+For example, to install a custom CA certificate on every project:
+
+```bash
+mkdir -p ~/.ddev/web-build
+cat > ~/.ddev/web-build/pre.Dockerfile << 'EOF'
+COPY my-ca.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+EOF
+cp /path/to/my-ca.crt ~/.ddev/web-build/my-ca.crt
+```
+
 Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev restart --no-cache`](../usage/commands.md#restart) or [`ddev utility rebuild`](../usage/commands.md#utility-rebuild). `ddev utility rebuild` is also great because it shows you the entire process of the build for debugging.
 
 Examples of possible Dockerfiles are `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example`, created in your project when you run [`ddev config`](../usage/commands.md#config).
