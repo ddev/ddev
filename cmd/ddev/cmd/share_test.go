@@ -196,9 +196,16 @@ func TestShareCmdCloudflared(t *testing.T) {
 		elapsed += pollInterval
 
 		stdoutOutput := stdoutBuf.String()
+		stderrOutput := stderrBuf.String()
+
 		if strings.Contains(stdoutOutput, "Tunnel URL:") && strings.Contains(stdoutOutput, "trycloudflare.com") {
 			t.Logf("Cloudflared tunnel established after %v", elapsed)
 			break
+		}
+		// Detect cloudflare quick-tunnel API errors early so we can log and fail with context.
+		if strings.Contains(stderrOutput, "Error unmarshaling QuickTunnel") || strings.Contains(stderrOutput, "failed to unmarshal quick Tunnel") {
+			t.Logf("Stdout so far:\n%s", stdoutOutput)
+			t.Fatalf("cloudflare quick-tunnel API returned an unmarshal error (possible transient 500):\n%s", stderrOutput)
 		}
 		t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
 	}
@@ -226,8 +233,10 @@ func TestShareCmdCloudflared(t *testing.T) {
 	t.Logf("Stderr output:\n%s", stderrOutput)
 
 	// Verify URL was displayed
-	require.Contains(t, stdoutOutput, "Tunnel URL:")
-	require.Contains(t, stdoutOutput, "trycloudflare.com")
+	require.Contains(t, stdoutOutput, "Tunnel URL:",
+		"cloudflared did not output a tunnel URL; stderr output:\n%s", stderrOutput)
+	require.Contains(t, stdoutOutput, "trycloudflare.com",
+		"tunnel URL does not contain trycloudflare.com; stderr output:\n%s", stderrOutput)
 }
 
 // TestShareCmdProviderSystem tests the script-based provider system

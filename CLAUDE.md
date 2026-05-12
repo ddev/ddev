@@ -194,10 +194,10 @@ EOF
 
 ### Creating PRs with `gh`
 
-When creating or editing PRs with `gh pr create` or `gh pr edit`, use the same template structure from `.github/PULL_REQUEST_TEMPLATE.md` for the `--body` argument. Use a HEREDOC for the body to preserve markdown formatting:
+When creating or editing PRs with `gh pr create` or `gh pr edit`, use the same template structure from `.github/PULL_REQUEST_TEMPLATE.md`. **Always write the body to a temporary file and use `--body-file`** — inline HEREDOCs inside `$(...)` are unreliable in bash and will fail when the body contains single quotes or special characters.
 
 ```bash
-gh pr create --title "<type>: <description>" --body "$(cat <<'EOF'
+cat > ~/tmp/pr_body.md <<'EOF'
 ## The Issue
 
 - Fixes #<issue_number>
@@ -220,7 +220,7 @@ gh pr create --title "<type>: <description>" --body "$(cat <<'EOF'
 
 [Impact assessment]
 EOF
-)"
+gh pr create --title "<type>: <description>" --body-file ~/tmp/pr_body.md
 ```
 
 ### Pre-Commit Checklist
