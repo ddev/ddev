@@ -121,6 +121,45 @@ func TestProcessAddonActionPHPDetection(t *testing.T) {
 	})
 }
 
+func TestGetAddonDdevInteractive(t *testing.T) {
+	tests := []struct {
+		name   string
+		action string
+		want   bool
+	}{
+		{
+			name: "interactive directive",
+			action: `
+#ddev-description: Configure credentials
+#ddev-interactive
+read -p "Enter token: " TOKEN
+`,
+			want: true,
+		},
+		{
+			name: "directive must be full line",
+			action: `
+echo "#ddev-interactive is only documentation here"
+`,
+			want: false,
+		},
+		{
+			name: "no interactive directive",
+			action: `
+#ddev-description: Configure credentials
+echo "done"
+`,
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, ddevapp.GetAddonDdevInteractive(tt.action))
+		})
+	}
+}
+
 func TestValidatePHPIncludesAndRequires(t *testing.T) {
 	tmpDir := testcommon.CreateTmpDir(t.Name())
 

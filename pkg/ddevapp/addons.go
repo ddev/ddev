@@ -27,6 +27,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/mattn/go-isatty"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/mount"
 	"github.com/otiai10/copy"
@@ -232,7 +233,18 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 	if verbose {
 		action = "set -x; " + action
 	}
-	out, err := exec.RunHostCommand(util.FindBashPath(), "-c", action)
+
+	out := ""
+	interactiveAction := GetAddonDdevInteractive(action)
+	interactiveTerminal := isatty.IsTerminal(os.Stdin.Fd()) && !output.JSONOutput
+	if interactiveAction && interactiveTerminal {
+		if desc != "" {
+			output.UserOut.Infof("%s  %s (bash)", "\u2699\ufe0f", desc)
+		}
+		err = exec.RunInteractiveCommand(util.FindBashPath(), []string{"-c", action})
+	} else {
+		out, err = exec.RunHostCommand(util.FindBashPath(), "-c", action)
+	}
 	if err != nil {
 		warningCode := GetAddonDdevWarningExitCode(action)
 		if warningCode > 0 {
@@ -677,6 +689,11 @@ func GetAddonDdevDescription(action string) string {
 		}
 	}
 	return ""
+}
+
+// GetAddonDdevInteractive returns whether the action is marked for interactive execution
+func GetAddonDdevInteractive(action string) bool {
+	return len(nodeps.GrepStringInBuffer(action, `[\r\n]*#ddev-interactive[\r\n]+`)) > 0
 }
 
 // GetAddonDdevWarningExitCode returns the integer following #ddev-warning-exit-code in the last match in action
