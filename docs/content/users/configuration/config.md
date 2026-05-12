@@ -188,6 +188,19 @@ Whether to disable the standard warning issued when a project is using `performa
 
 When `true`, DDEV will not issue the normal warning on `ddev start`: "You have Mutagen enabled and your 'php' project type doesn't have `upload_dirs` set". See [Mutagen and User-Generated Uploads](../install/performance.md#mutagen-and-user-generated-uploads) for context on why DDEV avoids doing the Mutagen sync on `upload_dirs`.
 
+## `docker_buildx_version`
+
+Controls which `docker-buildx` plugin DDEV uses.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `system` | `system` or a version string like `0.33.0`
+
+When set to `system` (the default), DDEV uses whatever `docker-buildx` is already installed on your system and never downloads anything.
+
+!!!warning "Troubleshooting Only!"
+    This should only be used in specific cases like troubleshooting. Please don't experiment with it unless directed to do so.
+
 ## `docroot`
 
 Relative path to the document root containing `index.php` or `index.html`.
@@ -510,19 +523,6 @@ Default Top-Level-Domain (`TLD`) to be used for a project’s domains, or global
 
 See [Hostnames and Wildcards and DDEV, Oh My!](https://ddev.com/blog/ddev-name-resolution-wildcards/) for more information on DDEV hostname resolution.
 
-## `required_docker_compose_version`
-
-Specific docker-compose version for download.
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-globe-16: global | &zwnj; | &zwnj;
-
-If set to `v2.8.3`, for example, it will download and use that version instead of the expected version for docker-compose.
-
-!!!warning "Troubleshooting Only!"
-    This should only be used in specific cases like troubleshooting. Please don't experiment with it unless directed to do so.
-
 ## `router_bind_all_interfaces`
 
 Whether to bind `ddev-router`'s ports on all network interfaces.
@@ -652,19 +652,6 @@ Whether to use DNS instead of editing `/etc/hosts`.
 When `false`, DDEV will always update the `/etc/hosts` file with the project hostname instead of using DNS for name resolution.
 
 See [Using DDEV Offline](../usage/offline.md).
-
-## `use_docker_compose_from_path`
-
-Whether to use the system-installed docker-compose. You can otherwise use [`required_docker_compose_version`](#required_docker_compose_version) to specify a version for download.
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-globe-16: global | `false` | Can `true` or `false`.
-
-When `true`, DDEV will use the docker-compose found in on your system’s path instead of using its private, known-good, docker-compose version.
-
-!!!warning "Troubleshooting Only!"
-    This should only be used in specific cases like troubleshooting. (It is used in the Docker Compose automated tests.)
 
 ## `use_hardened_images`
 

@@ -8,6 +8,8 @@ import (
 
 	"github.com/ddev/ddev/pkg/dockerutil"
 	exec2 "github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -27,10 +29,9 @@ ddev ut dockercheck`,
 
 		hasWarnings := false
 
-		// Ensure docker-compose is available before getting version info
-		_, dockerComposeErr := dockerutil.DownloadDockerComposeIfNeeded()
+		_, buildxErr := dockerutil.DownloadDockerBuildxIfNeeded()
 
-		versionInfo := version.GetVersionInfo()
+		versionInfo, _ := version.GetVersionInfo()
 		bashPath := util.FindBashPath()
 		util.Success("Docker platform: %v", versionInfo["docker-platform"])
 		switch versionInfo["docker-platform"] {
@@ -82,13 +83,17 @@ ddev ut dockercheck`,
 			}
 		}
 
-		buildxErr := dockerutil.CheckDockerBuildxVersion(dockerutil.DockerRequirements)
-		if buildxErr != nil {
-			util.Warning("Docker buildx version check: %v", buildxErr)
+		buildxCheckErr := dockerutil.CheckDockerBuildxVersion()
+		if buildxCheckErr != nil {
+			util.Warning("Docker buildx version check: %v", buildxCheckErr)
 			hasWarnings = true
 		} else {
-			buildxVersion, _ := dockerutil.GetBuildxVersion()
-			util.Success("docker buildx version %s meets requirements for minimum %s", buildxVersion, dockerutil.DockerRequirements.BuildxVersion)
+			buildxVersion, _ := dockerutil.GetDockerBuildxVersion()
+			buildxLocation, _ := dockerutil.GetDockerBuildxLocation()
+			util.Success("docker buildx version %s (%s) meets requirements for minimum %s", buildxVersion, buildxLocation, versionconstants.DockerBuildxMinVersion)
+			if globalconfig.GetRequiredDockerBuildxVersion() != "" {
+				util.Warning("Using a specific docker-buildx plugin as specified in %q", globalconfig.GetGlobalConfigPath())
+			}
 		}
 
 		dockerContextName, dockerHost, err := dockerutil.GetDockerContextNameAndHost()
@@ -122,13 +127,6 @@ ddev ut dockercheck`,
 		}
 		if dockerCertPath != "" {
 			util.Success("DOCKER_CERT_PATH=%s", dockerCertPath)
-		}
-
-		if dockerComposeErr != nil {
-			util.Warning("Docker compose check failed: %v", dockerComposeErr)
-			hasWarnings = true
-		} else {
-			util.Success("docker-compose: %s", versionInfo["docker-compose"])
 		}
 
 		dockerVersion, err := dockerutil.GetDockerVersion()
@@ -176,11 +174,18 @@ ddev ut dockercheck`,
 
 		// Test buildx with a trivial build on the host
 		if buildxErr == nil {
-			out, err = exec2.RunHostCommand(bashPath, "-c", fmt.Sprintf("echo 'FROM %s' | docker buildx build --quiet -f- -t ddev-buildx-test:latest . && docker rmi -f ddev-buildx-test:latest", versionconstants.UtilitiesImage))
+			// Use RunCLIPluginCommand to execute buildx build via Docker CLI plugin infrastructure
+			stdin := strings.NewReader(fmt.Sprintf("FROM %s", versionconstants.UtilitiesImage))
+			out, err = dockerutil.RunCLIPluginCommand("buildx", stdin, "build", "--no-cache", "-f-", "-t", "ddev-buildx-test:latest", ".")
 			if err != nil {
 				util.Warning("Unable to perform trivial build with buildx: %v; output=%s", err, out)
 				hasWarnings = true
 			} else {
+				// Clean up the test image using Docker API
+				cleanupErr := dockerutil.RemoveImage("ddev-buildx-test:latest")
+				if cleanupErr != nil {
+					util.Debug("Failed to clean up test image: %v", cleanupErr)
+				}
 				util.Success("docker buildx is working correctly (trivial build succeeded)")
 			}
 		} else {
@@ -198,7 +203,11 @@ ddev ut dockercheck`,
 		}
 
 		if hasWarnings {
-			util.Failed("Docker provider checks completed with warnings. Please address the issues above.")
+			util.Error("Docker provider checks completed with warnings. Please address the issues above.")
+			if buildxErr != nil {
+				util.Error("Docker buildx error: %v", buildxErr)
+			}
+			output.UserErr.Exit(1)
 		}
 	},
 }

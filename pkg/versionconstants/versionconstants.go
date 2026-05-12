@@ -56,12 +56,35 @@ var BUILDINFO = "BUILDINFO should have new info"
 var MutagenVersion = ""
 
 // RequiredMutagenVersion defines the required version of Mutagen
+// This value is a hard requirement
 const RequiredMutagenVersion = "0.18.1"
 
-// RequiredDockerComposeVersionDefault defines the required version of docker-compose
-// Keep this in sync with github.com/compose-spec/compose-go/v2 in go.mod,
-// matching the version used in https://github.com/docker/compose/blob/main/go.mod for the same tag
-const RequiredDockerComposeVersionDefault = "v5.1.3"
+// DockerBuildxMinVersion defines the minimum required version of buildx.
+// Must match buildxMinVersion in vendor/github.com/docker/compose/v5/pkg/compose/api_versions.go
+// Sync enforced by TestBuildxMinVersionInSync.
+// This value is a hard requirement
+const DockerBuildxMinVersion = "0.17.0"
+
+// DockerBuildxRecommendedVersion defines the recommended version of buildx
+// to use if the installed version doesn't match the minimum.
+// This value is a recommendation, not a hard requirement
+const DockerBuildxRecommendedVersion = "0.33.0"
+
+// DockerMinVersion defines the recommended minimum version of Docker Engine
+// List of supported Docker versions: https://endoflife.date/docker-engine
+// This value is a recommendation, not a hard requirement
+const DockerMinVersion = "25.0"
+
+// DockerMinAPIVersion defines the recommended minimum API version of Docker Engine
+// Should be in sync with DockerMinVersion
+// See https://docs.docker.com/reference/api/engine/#api-version-matrix
+// This value is a recommendation, not a hard requirement
+const DockerMinAPIVersion = "1.44"
+
+// PodmanMinVersion defines the recommended minimum version of Podman.
+// Podman 4.x doesn't run properly on GitHub runners, so we recommend Podman 5.0+
+// This value is a recommendation, not a hard requirement
+const PodmanMinVersion = "5.0"
 
 // ---
 // Fallback version derivation for developer builds not using the Makefile

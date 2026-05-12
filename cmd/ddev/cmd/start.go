@@ -170,7 +170,7 @@ func emitReachProjectMessage(project *ddevapp.DdevApp) {
 func init() {
 	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
 	StartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
-	StartCmd.Flags().BoolP("no-cache", "", false, "Build Docker images without using cache")
+	StartCmd.Flags().BoolP("no-cache", "", false, "Rebuild custom Docker image layers without cache")
 	StartCmd.Flags().String("profiles", "", "Start optional comma-separated docker compose profiles")
 	StartCmd.Flags().BoolP("select", "s", false, "Interactively select a project to start")
 	err := StartCmd.Flags().MarkHidden("select")

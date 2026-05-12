@@ -60,7 +60,7 @@ ddev restart --all`,
 
 func init() {
 	RestartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
-	RestartCmd.Flags().BoolP("no-cache", "", false, "Build Docker images without using cache")
+	RestartCmd.Flags().BoolP("no-cache", "", false, "Rebuild custom Docker image layers without cache")
 	RestartCmd.Flags().BoolVarP(&restartAll, "all", "a", false, "Restart all projects")
 	RootCmd.AddCommand(RestartCmd)
 }

@@ -108,6 +108,19 @@ func ParseBoolFlag(long string, short string) bool {
 	return false
 }
 
+// JSONProgressWriter is an io.Writer that routes each write through UserErr.Info
+// so compose progress lines are formatted by the active logrus formatter (e.g. JSON)
+// instead of being written as raw text.
+type JSONProgressWriter struct{}
+
+func (w *JSONProgressWriter) Write(p []byte) (int, error) {
+	msg := strings.TrimSpace(string(p))
+	if msg != "" {
+		UserErr.Info(msg)
+	}
+	return len(p), nil
+}
+
 // ColorsEnabled returns true if colored output is enabled
 // Implementation from https://no-color.org/
 func ColorsEnabled() bool {

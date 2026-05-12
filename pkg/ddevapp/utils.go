@@ -20,6 +20,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/docker/compose/v5/pkg/api"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/moby/moby/client"
 	"github.com/spf13/cobra"
@@ -108,13 +109,19 @@ func Cleanup(app *DdevApp) error {
 	// There can be awkward cases where we're doing an app.Stop() but the rendered
 	// yaml does not exist, all in testing situations.
 	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
-		_, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-			ComposeFiles: []string{app.DockerComposeFullRenderedYAMLPath()},
-			Profiles:     []string{`*`},
-			Action:       []string{"down"},
+		project, loadErr := dockerutil.LoadComposeProject([]string{app.DockerComposeFullRenderedYAMLPath()}, api.ProjectLoadOptions{
+			ProjectName: app.GetComposeProjectName(),
+			Profiles:    []string{`*`},
 		})
-		if err != nil {
-			util.Warning("Failed to docker-compose down: %v", err)
+		if loadErr != nil {
+			util.Warning("Failed to load compose project for down: %v", loadErr)
+		} else {
+			downCtx, svc, svcErr := dockerutil.NewComposeService()
+			if svcErr != nil {
+				util.Warning("Failed to create compose service: %v", svcErr)
+			} else if downErr := svc.Down(downCtx, project.Name, api.DownOptions{Project: project, RemoveOrphans: true}); downErr != nil {
+				util.Warning("Failed to docker-compose down: %v", downErr)
+			}
 		}
 	}
 

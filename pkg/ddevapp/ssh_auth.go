@@ -14,6 +14,8 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/docker/compose/v5/cmd/display"
+	"github.com/docker/compose/v5/pkg/api"
 	"github.com/moby/moby/api/types/container"
 )
 
@@ -59,13 +61,18 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	_ = app.DockerEnv()
 
-	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ProjectName:  SSHAuthName,
-		ComposeFiles: []string{composeFile},
-		Action:       []string{"down"},
+	downProject, loadErr := dockerutil.LoadComposeProject([]string{composeFile}, api.ProjectLoadOptions{
+		ProjectName: SSHAuthName,
 	})
-	if err != nil {
-		util.Warning("failed to docker-compose down on %s: %v", composeFile, err)
+	if loadErr != nil {
+		util.Warning("failed to load compose project for %s: %v", composeFile, loadErr)
+	} else {
+		downCtx, downSvc, svcErr := dockerutil.NewComposeService()
+		if svcErr != nil {
+			util.Warning("failed to create compose service: %v", svcErr)
+		} else if downErr := downSvc.Down(downCtx, downProject.Name, api.DownOptions{Project: downProject}); downErr != nil {
+			util.Warning("failed to docker-compose down on %s: %v", composeFile, downErr)
+		}
 	}
 
 	err = dockerutil.Pull(ddevImages.GetSSHAuthImage())
@@ -74,10 +81,23 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	}
 
 	// Now restart ddev-ssh-agent
-	_, _, err = dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ProjectName:  SSHAuthName,
-		ComposeFiles: []string{composeFile},
-		Action:       []string{"up", "--build", "-d"},
+	upProject, err := dockerutil.LoadComposeProject([]string{composeFile}, api.ProjectLoadOptions{
+		ProjectName: SSHAuthName,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
+	}
+	upCtx, upSvc, err := dockerutil.NewComposeService()
+	if err != nil {
+		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
+	}
+	progress := display.ModeQuiet
+	if globalconfig.DdevVerbose {
+		progress = display.ModePlain
+	}
+	err = upSvc.Up(upCtx, upProject, api.UpOptions{
+		Create: api.CreateOptions{Build: &api.BuildOptions{Progress: progress}},
+		Start:  api.StartOptions{Project: upProject},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
@@ -121,8 +141,8 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	}
 	defer util.CheckClose(f)
 
-	context := "./.sshimageBuild"
-	err := WriteBuildDockerfile(app, filepath.Join(globalconfig.GetGlobalDdevDir(), context, "Dockerfile"), "", nil, "", "")
+	buildContextDir := "./.sshimageBuild"
+	err := WriteBuildDockerfile(app, filepath.Join(globalconfig.GetGlobalDdevDir(), buildContextDir, "Dockerfile"), "", nil, "", "")
 	if err != nil {
 		return "", err
 	}
@@ -139,7 +159,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		"UID":              uid,
 		"GID":              gid,
 		"Timezone":         timezone,
-		"BuildContext":     context,
+		"BuildContext":     buildContextDir,
 		"IsPodmanRootless": dockerutil.IsPodmanRootless(),
 	}
 	t, err := template.New("ssh_auth_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
@@ -161,15 +181,13 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		return "", err
 	}
 	files := append([]string{SSHAuthComposeYAMLPath()}, userFiles...)
-	fullContents, _, err := dockerutil.ComposeCmd(&dockerutil.ComposeCmdOpts{
-		ComposeFiles: files,
-		Action:       []string{"config"},
+	project, err := dockerutil.LoadComposeProject(files, api.ProjectLoadOptions{
+		ProjectName: SSHAuthName,
 	})
 	if err != nil {
 		return "", err
 	}
-	project, err := dockerutil.CreateComposeProject(fullContents)
-	if err != nil {
+	if err = project.CheckContainerNameUnicity(); err != nil {
 		return "", err
 	}
 	injectDdevLabels(project, nil)
@@ -177,6 +195,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	fullContentsBytes = util.EscapeDollarSign(fullContentsBytes)
 	_, err = fullHandle.Write(fullContentsBytes)
 	if err != nil {
 		return "", err

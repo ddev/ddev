@@ -141,7 +141,7 @@ ddev version | grep global-ddev-dir
 : This YAML file defines your project list that lets DDEV keep track of the projects you’ve added.
 
 `bin` directory
-: This is where DDEV stores private executable binaries it needs, like `mutagen` and `docker-compose`.
+: This is where DDEV stores private executable binaries it needs, like [`mutagen`](../configuration/config.md#performance_mode) and [`docker-buildx`](../configuration/config.md#docker_buildx_version).
 
 `commands` directory
 : Directory for storing DDEV commands that should be available in containers, like `npm`, `artisan`, `cake` and `drush` for example. These are organized in subdirectories named for where they’ll be used: `db`, `host`, and `web`. You can add your own [custom commands](../extend/custom-commands.md) here.

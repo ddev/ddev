@@ -35,3 +35,20 @@ func TestGetDockerIP(t *testing.T) {
 		require.Equal(t, v, result, "for %s expected %s, got %s", k, v, result)
 	}
 }
+
+// TestGetCLIPlugins tests that Docker CLI plugins can be discovered.
+func TestGetCLIPlugins(t *testing.T) {
+	plugins, err := dockerutil.GetCLIPlugins()
+	require.NoError(t, err)
+	require.NotEmpty(t, plugins, "expected at least one CLI plugin to be installed")
+
+	// buildx should be among the discovered plugins
+	found := false
+	for _, p := range plugins {
+		if p.Name == "buildx" {
+			found = true
+			break
+		}
+	}
+	require.True(t, found, "expected 'buildx' to be among discovered CLI plugins")
+}

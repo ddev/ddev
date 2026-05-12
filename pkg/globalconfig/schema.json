@@ -10,6 +10,21 @@
       "description": "Not currently used.",
       "type": "boolean"
     },
+    "docker_buildx_version": {
+      "description": "docker-buildx version to use. \"system\" (default) uses the installed plugin without downloading. Set to a version like \"0.33.0\" to download it.",
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "system"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
     "fail_on_hook_fail": {
       "description": "Whether \"ddev start\" should be interrupted by a failing hook, on a single project or for all projects if used globally.",
       "type": "boolean"
@@ -140,10 +155,6 @@
         }
       ]
     },
-    "required_docker_compose_version": {
-      "description": "Specific docker-compose version for download.",
-      "type": "string"
-    },
     "router_bind_all_interfaces": {
       "description": "Whether to bind ddev-router's ports on all network interfaces.",
       "type": "boolean"
@@ -221,10 +232,6 @@
           "type": "string"
         }
       ]
-    },
-    "use_docker_compose_from_path": {
-      "description": "Whether to use the system-installed docker-compose. You can otherwise use required_docker_compose_version to specify a version for download.",
-      "type": "boolean"
     },
     "use_hardened_images": {
       "description": "Whether to use hardened images for internet deployment.",

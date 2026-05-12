@@ -16,7 +16,6 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/settings"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -41,6 +40,7 @@ type ProjectInfo struct {
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
 	DeveloperMode                    bool                        `yaml:"developer_mode,omitempty"`
+	DockerBuildxVersion              string                      `yaml:"docker_buildx_version,omitempty"`
 	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
 	InstrumentationOptIn             bool                        `yaml:"instrumentation_opt_in"`
 	InstrumentationQueueSize         int                         `yaml:"instrumentation_queue_size,omitempty"`
@@ -59,7 +59,6 @@ type GlobalConfig struct {
 	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
 	ProjectTldGlobal                 string                      `yaml:"project_tld"`
 	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
-	RequiredDockerComposeVersion     string                      `yaml:"required_docker_compose_version,omitempty"`
 	Router                           string                      `yaml:"router,omitempty"`
 	RouterBindAllInterfaces          bool                        `yaml:"router_bind_all_interfaces"`
 	RouterHTTPPort                   string                      `yaml:"router_http_port"`
@@ -72,35 +71,32 @@ type GlobalConfig struct {
 	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
 	TableStyle                       string                      `yaml:"table_style"`
 	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
-	// This may still be used in Docker Compose automated tests
-	UseDockerComposeFromPath bool                    `yaml:"use_docker_compose_from_path,omitempty"`
-	UseHardenedImages        bool                    `yaml:"use_hardened_images"`
-	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
-	WSL2NoWindowsHostsMgt    bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
-	WebEnvironment           []string                `yaml:"web_environment"`
-	XdebugIDELocation        string                  `yaml:"xdebug_ide_location"`
-	XHProfMode               configTypes.XHProfMode  `yaml:"xhprof_mode,omitempty"`
-	ProjectList              map[string]*ProjectInfo `yaml:"project_info,omitempty"`
+	UseHardenedImages                bool                        `yaml:"use_hardened_images"`
+	UseLetsEncrypt                   bool                        `yaml:"use_letsencrypt"`
+	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
+	WebEnvironment                   []string                    `yaml:"web_environment"`
+	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
+	XHProfMode                       configTypes.XHProfMode      `yaml:"xhprof_mode,omitempty"`
+	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info,omitempty"`
 }
 
 // New returns a default GlobalConfig
 func New() GlobalConfig {
 	cfg := GlobalConfig{
-		RequiredDockerComposeVersion: versionconstants.RequiredDockerComposeVersionDefault,
-		InternetDetectionTimeout:     nodeps.InternetDetectionTimeoutDefault,
-		TableStyle:                   "default",
-		RouterHTTPPort:               nodeps.DdevDefaultRouterHTTPPort,
-		RouterHTTPSPort:              nodeps.DdevDefaultRouterHTTPSPort,
-		RouterMailpitHTTPPort:        nodeps.DdevDefaultMailpitHTTPPort,
-		RouterMailpitHTTPSPort:       nodeps.DdevDefaultMailpitHTTPSPort,
-		RouterXHGuiHTTPPort:          nodeps.DdevDefaultXHGuiHTTPPort,
-		RouterXHGuiHTTPSPort:         nodeps.DdevDefaultXHGuiHTTPSPort,
-		LastStartedVersion:           "v0.0",
-		NoBindMounts:                 nodeps.NoBindMountsDefault,
-		Router:                       types.RouterTypeTraefik,
-		MkcertCARoot:                 readCAROOT(),
-		TraefikMonitorPort:           nodeps.TraefikMonitorPortDefault,
-		ProjectTldGlobal:             nodeps.DdevDefaultTLD,
+		InternetDetectionTimeout: nodeps.InternetDetectionTimeoutDefault,
+		TableStyle:               "default",
+		RouterHTTPPort:           nodeps.DdevDefaultRouterHTTPPort,
+		RouterHTTPSPort:          nodeps.DdevDefaultRouterHTTPSPort,
+		RouterMailpitHTTPPort:    nodeps.DdevDefaultMailpitHTTPPort,
+		RouterMailpitHTTPSPort:   nodeps.DdevDefaultMailpitHTTPSPort,
+		RouterXHGuiHTTPPort:      nodeps.DdevDefaultXHGuiHTTPPort,
+		RouterXHGuiHTTPSPort:     nodeps.DdevDefaultXHGuiHTTPSPort,
+		LastStartedVersion:       "v0.0",
+		NoBindMounts:             nodeps.NoBindMountsDefault,
+		Router:                   types.RouterTypeTraefik,
+		MkcertCARoot:             readCAROOT(),
+		TraefikMonitorPort:       nodeps.TraefikMonitorPortDefault,
+		ProjectTldGlobal:         nodeps.DdevDefaultTLD,
 		// RemoteConfig left empty by default, will use defaults when needed but won't show in config file
 	}
 
@@ -190,23 +186,14 @@ func GetMutagenDataDirectory() string {
 	return mutagenDataDirectory
 }
 
-// GetDockerComposePath gets the full path to the docker-compose binary
-// Normally this is the one that has been downloaded to ~/.ddev/bin, but if
-// UseDockerComposeFromPath, then it will be whatever if found in $PATH
-func GetDockerComposePath() (string, error) {
-	if DdevGlobalConfig.UseDockerComposeFromPath {
-		executableName := "docker-compose"
-		path, err := exec.LookPath(executableName)
-		if err != nil {
-			return "", fmt.Errorf("no docker-compose")
-		}
-		return path, nil
-	}
-	composeBinary := "docker-compose"
+// GetDockerBuildxDestination gets the full path to the docker-buildx binary
+// which is going to be downloaded in ~/.ddev/bin
+func GetDockerBuildxDestination() (string, error) {
+	buildxBinary := "docker-buildx"
 	if nodeps.IsWindows() {
-		composeBinary = composeBinary + ".exe"
+		buildxBinary = buildxBinary + ".exe"
 	}
-	return filepath.Join(GetDDEVBinDir(), composeBinary), nil
+	return filepath.Join(GetDDEVBinDir(), buildxBinary), nil
 }
 
 // GetTableStyle returns the configured (string) table style
@@ -272,6 +259,10 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.MkcertCARoot = readCAROOT()
 	}
 
+	if DdevGlobalConfig.DockerBuildxVersion == "" {
+		DdevGlobalConfig.DockerBuildxVersion = "system"
+	}
+
 	// If they set the internetdetectiontimeout below default, reset to default
 	// and ignore the setting.
 	if DdevGlobalConfig.InternetDetectionTimeout < nodeps.InternetDetectionTimeoutDefault {
@@ -333,9 +324,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	}
 
 	cfgCopy := config
+
 	// Remove some items that are defaults
-	if cfgCopy.RequiredDockerComposeVersion == versionconstants.RequiredDockerComposeVersionDefault {
-		cfgCopy.RequiredDockerComposeVersion = ""
+	if cfgCopy.DockerBuildxVersion == "system" {
+		cfgCopy.DockerBuildxVersion = ""
 	}
 
 	// Overwrite PerformanceMode with effective value if empty.
@@ -521,14 +513,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Windows side; you may not want this if you're running your browser in WSL2 or for
 # various other reasons.
 
-# required_docker_compose_version: ""
-# This should only be used in specific cases like troubleshooting.
-# This can be used to override the default required docker-compose version
-# It should normally be left alone, but can be set to, for example, "v2.1.1"
-
-# use_docker_compose_from_path: false
-# This should only be used in specific cases like troubleshooting.
-# Whether to use the system-installed docker-compose instead of downloading a specific version
+# docker_buildx_version: "system"
+# Controls docker-buildx usage and should only be used in specific cases like troubleshooting.
+# "system" (default) uses the docker-buildx already installed.
+# Can be to a specific version like "0.33.0".
 
 # messages:
 #   ticker_interval: 20 // Interval in hours to show ticker messages, -1 disables the ticker
@@ -971,21 +959,12 @@ func IsInternetActive() bool {
 	return active
 }
 
-// DockerComposeVersion is filled with the version we find for docker-compose
-var DockerComposeVersion = ""
-
-// GetRequiredDockerComposeVersion returns the version of docker-compose we need
-// based on the compiled version, or overrides in globalconfig, like
-// required_docker_compose_version and use_docker_compose_from_path
-// In the case of UseDockerComposeFromPath there is no required version, so this
-// will return empty string.
-func GetRequiredDockerComposeVersion() string {
-	v := DdevGlobalConfig.RequiredDockerComposeVersion
-	switch {
-	case DdevGlobalConfig.UseDockerComposeFromPath:
-		v = ""
-	case DdevGlobalConfig.RequiredDockerComposeVersion != "":
-		v = DdevGlobalConfig.RequiredDockerComposeVersion
+// GetRequiredDockerBuildxVersion returns the docker-buildx version DDEV should download,
+// or empty string when docker_buildx_version is "system" (the default), meaning no download.
+func GetRequiredDockerBuildxVersion() string {
+	v := strings.TrimPrefix(DdevGlobalConfig.DockerBuildxVersion, "v")
+	if v == "system" || v == "" {
+		return ""
 	}
 	return v
 }

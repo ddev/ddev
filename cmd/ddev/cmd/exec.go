@@ -3,12 +3,12 @@ package cmd
 import (
 	"errors"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/docker/cli/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -90,9 +90,9 @@ ddev exec -s db -u root ls -la /root`,
 
 		if err != nil {
 			exitCode := 1
-			var exiterr *exec.ExitError
-			if errors.As(err, &exiterr) {
-				exitCode = exiterr.ExitCode()
+			var statusErr cli.StatusError
+			if errors.As(err, &statusErr) {
+				exitCode = statusErr.StatusCode
 			}
 			if !quiet {
 				util.Error("Failed to execute command `%s`: %v", opts.Cmd, err)

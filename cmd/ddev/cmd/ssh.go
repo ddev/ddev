@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"errors"
 	"os"
-	"os/exec"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/docker/cli/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -49,8 +50,9 @@ ddev ssh -d /var/www/html`,
 			User:    serviceUser,
 		})
 		if err != nil {
-			if exiterr, ok := err.(*exec.ExitError); ok {
-				os.Exit(exiterr.ExitCode())
+			var statusErr cli.StatusError
+			if errors.As(err, &statusErr) {
+				os.Exit(statusErr.StatusCode)
 			}
 			util.Failed("ddev ssh failed: %v", err)
 		}

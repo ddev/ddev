@@ -398,6 +398,7 @@ Flags:
 * `--default-container-timeout`: Default time in seconds that DDEV waits for all containers to become ready on start (see [default](../configuration/config.md#default_container_timeout)).
 * `--disable-settings-management`: Prevent DDEV from creating or updating CMS settings files.
 * `--disable-upload-dirs-warning`: Disable warnings about `upload-dirs` not being set when using `--performance-mode=mutagen`.
+* `--docker-buildx-version`: Control which `docker-buildx` plugin to use (see [default](../configuration/config.md#docker_buildx_version)).
 * `--docroot`: Provide the relative docroot of the project, like `docroot` or `htdocs` or `web`, defaults to empty, the current directory.
 * `--fail-on-hook-fail`: Decide whether `ddev start` should be interrupted by a failing hook.
 * `--host-db-port`: The `db` container’s localhost-bound port.
@@ -1200,7 +1201,7 @@ Restart one or several projects.
 Flags:
 
 * `--all`, `-a`: Restart all projects.
-* `--no-cache`: Build Docker images without using cache.
+* `--no-cache`: Rebuild custom Docker image layers without cache.
 
 Example:
 
@@ -1400,7 +1401,7 @@ Start a DDEV project.
 Flags:
 
 * `--all`, `-a`: Start all projects.
-* `--no-cache`: Build Docker images without using cache.
+* `--no-cache`: Rebuild custom Docker image layers without cache.
 * `--profiles=<optional-compose-profile-list>`: Start services labeled with the Docker Compose profiles in comma-separated list of profiles.
 * `--skip-confirmation`, `-y`: Skip any confirmation steps.
 
