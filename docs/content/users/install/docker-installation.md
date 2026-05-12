@@ -82,6 +82,8 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     brew install docker-buildx
     ```
 
+    More information in [Docker buildx requirement](https://ddev.com/blog/docker-buildx-requirement-v1-25-1/).
+
     #### Migrating Projects Between Docker Providers
 
     * OrbStack has built-in migration of images and volumes from Docker Desktop.
@@ -191,6 +193,8 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     ### Docker Buildx
 
     DDEV requires the [Docker buildx plugin](https://github.com/docker/buildx). Docker CE installed from the official Docker repository includes it. If `docker buildx version` doesn't work, install the `docker-buildx-plugin` package from the Docker repository (e.g. `sudo apt-get install docker-buildx-plugin` on Debian/Ubuntu) or follow any of the installation instructions from [Docker buildx](https://github.com/docker/buildx#installing).
+
+    More information in [Docker buildx requirement](https://ddev.com/blog/docker-buildx-requirement-v1-25-1/).
 
     ### Docker Rootless
 
@@ -326,6 +330,8 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     ### Docker Buildx
 
     DDEV requires the [Docker buildx plugin](https://github.com/docker/buildx). Docker CE inside WSL2, Docker Desktop, and Rancher Desktop all include it. If `docker buildx version` doesn't work, install the `docker-buildx-plugin` package inside WSL2 (e.g. `sudo apt-get install docker-buildx-plugin` on Ubuntu).
+
+    More information in [Docker buildx requirement](https://ddev.com/blog/docker-buildx-requirement-v1-25-1/).
 
 === "Codespaces"
 
