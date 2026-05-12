@@ -40,14 +40,17 @@
 #    if your branch is the same as your environment and the project is specified in .platform/local/project.yaml.
 #    ```yaml
 #    web_environment:
-#        - PLATFORM_PROJECT=nf4amudfn23biyourproject
+#        - PLATFORM_PROJECT=abc12def34567
 #        - PLATFORM_ENVIRONMENT=main
 #        - PLATFORM_APP=app
 #    ```
-#    You can also do this with `ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23biyourproject,PLATFORM_ENVIRONMENT=main,PLATFORM_APP=app"`.
+#    You can also do this with `ddev config --web-environment-add="PLATFORM_PROJECT=abc12def34567,PLATFORM_ENVIRONMENT=main,PLATFORM_APP=app"`.
 #
 # 4. `ddev restart`
-# 5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
+# 5. Run `ddev pull platform`. After you agree to the prompt, the current upstream databases and files will be downloaded.
+#    To pull from a specific environment without permanently changing your project config, use `--environment`:
+#    `ddev pull platform --environment="PLATFORM_ENVIRONMENT=main"`
+#    or with multiple variables: `ddev pull platform --environment="PLATFORM_PROJECT=abc12def34567,PLATFORM_ENVIRONMENT=main,PLATFORM_APP=app,PLATFORM_PRIMARY_RELATIONSHIP=main,PLATFORMSH_CLI_TOKEN=abcdeyourtoken"`
 # 6. Optionally use `ddev push platform` to push local files and database to Upsun. Note that `ddev push` is a command that can potentially damage your production site, so use it against an environment you want to use it against.
 
 # If you have more than one database on your Upsun Fixed project,
@@ -56,8 +59,6 @@
 # Do this by setting PLATFORM_PRIMARY_RELATIONSHIP, for example, `ddev config --web-environment-add=PLATFORM_PRIMARY_RELATIONSHIP=main`
 # or run `ddev pull platform` with the environment variable, for example
 # `ddev pull platform -y --environment=PLATFORM_PRIMARY_RELATIONSHIP=main`
-# If you need to change this `platform.yaml` recipe, you can change it to suit your needs, but remember to remove the "ddev-generated" line from the top.
-
 # Debugging: Use `ddev exec platform` to use the `platform` CLI inside the web container to see what Upsun knows about
 # your configuration and whether it's working correctly.
 

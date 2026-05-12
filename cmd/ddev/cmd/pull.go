@@ -18,14 +18,14 @@ var PullCmd = &cobra.Command{
 	Long: `Pull files and database using a configured provider plugin.
 	Running pull will connect to the configured provider and download + import the
 	database and files.`,
-	Example: `ddev pull pantheon
-ddev pull platform
+	Example: `ddev pull upsun
 ddev pull pantheon -y
-ddev pull upsun -y
-ddev pull platform --skip-files -y
-ddev pull localfile --skip-db -y
-ddev pull lagoon --environment=LAGOON_PROJECT=amazeeio-ddev,LAGOON_ENVIRONMENT=pull
-ddev pull platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=abcdef
+ddev pull upsun --skip-files -y
+ddev pull acquia --skip-db -y
+ddev pull upsun --skip-import
+ddev pull upsun --environment="PLATFORM_ENVIRONMENT=main,UPSUN_CLI_TOKEN=abcdeyourtoken"
+ddev pull pantheon --environment="DDEV_PANTHEON_ENVIRONMENT=dev,TERMINUS_MACHINE_TOKEN=abcdeyourtoken"
+ddev pull lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=main"
 `,
 
 	Args: cobra.ExactArgs(1),

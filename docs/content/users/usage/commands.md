@@ -1116,44 +1116,54 @@ Flags:
 * `--skip-confirmation`, `-y`: Skip confirmation step.
 * `--skip-db`: Skip pulling database archive.
 * `--skip-files`: Skip pulling file archive.
-* `--skip-import`: Download archive(s) without importing than.
+* `--skip-import`: Download archive(s) without importing them.
 
 Example:
 
 ```shell
-# Pull a backup from the configured Pantheon project to use locally
-ddev pull pantheon
-
 # Pull a backup from the configured Upsun project to use locally
 ddev pull upsun
 
-# Pull a backup from the configured Pantheon project without confirming
+# Pull from Pantheon without confirming
 ddev pull pantheon -y
 
-# Pull the Upsun database *only* without confirming
+# Pull the Upsun database only without confirming
 ddev pull upsun --skip-files -y
 
-# Pull the localfile integration’s files *only* without confirming
-ddev pull localfile --skip-db -y
+# Pull the Acquia files only without confirming
+ddev pull acquia --skip-db -y
 
-# Pull from Upsun specifying the environment variables UPSUN_ENVIRONMENT and UPSUN_CLI_TOKEN on the command line
-ddev pull upsun --environment=UPSUN_ENVIRONMENT=main,UPSUN_CLI_TOKEN=abcdef
+# Download archives from Upsun without importing them
+ddev pull upsun --skip-import
+
+# Pull from Upsun overriding environment and token on the command line
+ddev pull upsun --environment="PLATFORM_ENVIRONMENT=main,UPSUN_CLI_TOKEN=abcdeyourtoken"
+
+# Pull from Pantheon overriding environment and token on the command line
+ddev pull pantheon --environment="DDEV_PANTHEON_ENVIRONMENT=dev,TERMINUS_MACHINE_TOKEN=abcdeyourtoken"
+
+# Pull from Lagoon overriding project and environment on the command line
+ddev pull lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=main"
 ```
 
 ## `push`
 
 Push files and database using a configured [provider plugin](./../providers/index.md).
 
+Flags:
+
+* `--environment=ENV1=val1,ENV2=val2`
+* `--skip-confirmation`, `-y`: Skip confirmation step.
+* `--skip-db`: Skip pushing database archive.
+* `--skip-files`: Skip pushing file archive.
+
 Example:
 
 ```shell
-# Push local files and database to the configured Pantheon project
-ddev push pantheon
-
 # Push local files and database to the configured Upsun project
 ddev push upsun
 
-# Push files and database to Pantheon without confirming
+# Push to Pantheon without confirming
 ddev push pantheon -y
 
 # Push database only to Upsun without confirming
@@ -1161,6 +1171,15 @@ ddev push upsun --skip-files -y
 
 # Push files only to Acquia without confirming
 ddev push acquia --skip-db -y
+
+# Push to Upsun overriding environment and token on the command line
+ddev push upsun --environment="PLATFORM_ENVIRONMENT=main,UPSUN_CLI_TOKEN=abcdeyourtoken"
+
+# Push to Pantheon overriding environment and token on the command line
+ddev push pantheon --environment="DDEV_PANTHEON_ENVIRONMENT=dev,TERMINUS_MACHINE_TOKEN=abcdeyourtoken"
+
+# Push to Lagoon overriding project and environment on the command line
+ddev push lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=main"
 ```
 
 ## `querious`

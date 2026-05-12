@@ -9,14 +9,14 @@ DDEV provides integration with [Lagoon](https://lagoon.sh/), allowing users to q
 
     ```yaml
     web_environment:
-        - LAGOON_PROJECT=<project-name>
-        - LAGOON_ENVIRONMENT=<environment-name>
+        - LAGOON_PROJECT=your-project
+        - LAGOON_ENVIRONMENT=main
     ```
 
     You can also do this with:
 
     ```bash
-    ddev config --web-environment-add="LAGOON_PROJECT=<project-name>,LAGOON_ENVIRONMENT=<environment-name>"
+    ddev config --web-environment-add="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=main"
     ```
 
 3. Syncing is done via [`lagoon-sync`](https://github.com/uselagoon/lagoon-sync) which must be configured in your `.lagoon.yml` or `.lagoon-sync.yml`, see the [DDEV example `.lagoon.yml`](https://github.com/ddev/test-amazeeio-lagoon/blob/main/.lagoon.yml#L27-L37).
@@ -24,9 +24,21 @@ DDEV provides integration with [Lagoon](https://lagoon.sh/), allowing users to q
 5. Run `ddev auth ssh` to make your SSH key available in the project’s web container.
 6. Run [`ddev restart`](../usage/commands.md#restart).
 7. Run `ddev pull lagoon`. After you agree to the prompt, the current upstream databases and files will be downloaded.
-8. Optionally run `ddev push lagoon` to push local files and database to Lagoon. The [`ddev push`](../usage/commands.md#push). This must be done with great care if you're pushing to a production environment, but is great for pushing to branch environments.
+8. Optionally use `ddev push lagoon` to push local files and database to Lagoon. The [`ddev push`](../usage/commands.md#push) command must be done with great care if you're pushing to a production environment, but is great for pushing to branch environments.
 
 ## Usage
 
-* `ddev pull lagoon` will connect to the Lagoon environment to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` or `--skip-db` flags.
-* If you need to change the `.ddev/providers/lagoon.yaml` recipe, you can change it to suit your needs, but remember to remove the `#ddev-generated` line from the top of the file.
+* `ddev pull lagoon` will connect to the Lagoon environment to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+* To pull from a specific environment without permanently changing your project config, pass environment variables using `--environment`:
+
+    ```bash
+    ddev pull lagoon --environment="LAGOON_ENVIRONMENT=main"
+    ```
+
+    You can combine multiple variables:
+
+    ```bash
+    ddev pull lagoon --environment="LAGOON_PROJECT=your-project,LAGOON_ENVIRONMENT=main"
+    ```
+
+* If you need to change the `lagoon.yaml` recipe, you can change it to suit your needs, but remember to remove the `#ddev-generated` line from the top of the file.
