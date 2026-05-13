@@ -170,7 +170,7 @@ DDEV_EMBARGO_TESTS="symfony-composer|symfony-cli|drupal10-composer"
 DDEV_EMBARGO_TESTS="TestLagoonPull|TestAcquiaPull|TestPantheonPush"
 
 # Skip specific PHP versions in TestPHPConfig
-DDEV_EMBARGO_PHP_VERSIONS="8.4,8.5"
+DDEV_EMBARGO_PHP_VERSIONS="7.0,7.1"
 ```
 
 Include `[skip ci]` in the commit message to avoid triggering test workflows.
