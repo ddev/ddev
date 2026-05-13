@@ -23,12 +23,6 @@ on:
         type: boolean
         required: false
         default: false
-      ddev_embargo_tests:
-        description: 'Pipe-separated list of test names to skip (e.g., symfony-composer|symfony-cli)'
-        type: string
-        required: false
-        default: ''
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -36,9 +30,6 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  # Add tests you want to skip here, delimited by pipe (e.g., symfony-composer|symfony-cli)
-  # Search for _skip_if_embargoed to see how this is used
-  DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
 
 permissions:
   actions: write
@@ -52,6 +43,18 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Load variables from public-variables branch
+        run: |
+          git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
+          while IFS= read -r varname; do
+            [[ "$varname" == "README.md" ]] && continue
+            value=$(git show "refs/public-variables-tmp:.github/public-variables/$varname")
+            echo "$varname=${value}"
+            echo "$varname=$value" >> $GITHUB_ENV
+          done < <(git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)
+          git update-ref -d refs/public-variables-tmp
+
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@main

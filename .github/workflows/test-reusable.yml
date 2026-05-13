@@ -78,16 +78,6 @@ on:
         required: false
         type: string
         default: 'true'
-      ddev_embargo_tests:
-        description: 'DDEV_EMBARGO_TESTS value - pipe-separated list of test names to skip (e.g., TestName1|TestName2)'
-        required: false
-        type: string
-        default: ''
-      ddev_embargo_php_versions:
-        description: 'DDEV_EMBARGO_PHP_VERSIONS value - comma-separated list of PHP versions to skip in TestPHPConfig (e.g., "8.4,8.3")'
-        required: false
-        type: string
-        default: ''
       debug_enabled:
         description: 'Run the build with tmate set "debug_enabled"'
         required: false
@@ -140,8 +130,6 @@ jobs:
       CGO_ENABLED: ${{ inputs.cgo_enabled }}
       DDEV_NONINTERACTIVE: "true"
       DDEV_SKIP_NODEJS_TEST: ${{ inputs.ddev_skip_nodejs_test }}
-      DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests }}
-      DDEV_EMBARGO_PHP_VERSIONS: ${{ inputs.ddev_embargo_php_versions }}
       GOTEST_SHORT: ${{ inputs.gotest_short }}
       MAKE_TARGET: ${{ inputs.make_target }}
       TESTARGS: ${{ inputs.testargs }}
@@ -159,6 +147,17 @@ jobs:
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
+
+      - name: Load variables from public-variables branch
+        run: |
+          git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
+          while IFS= read -r varname; do
+            [[ "$varname" == "README.md" ]] && continue
+            value=$(git show "refs/public-variables-tmp:.github/public-variables/$varname")
+            echo "$varname=${value}"
+            echo "$varname=$value" >> $GITHUB_ENV
+          done < <(git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)
+          git update-ref -d refs/public-variables-tmp
 
       - name: Get Date
         id: get-date

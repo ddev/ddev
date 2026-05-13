@@ -157,23 +157,21 @@ Include these keywords in your commit message or pull request title to skip CI r
 * `[skip github]` - Skip GitHub Actions tests only
 * `[skip ci]` - Skip all tests
 
-### Skipping Specific Tests via Repository Variables
+### Skipping Specific Tests via `public-variables` Branch
 
-For maintainers with access to [repository variables](https://github.com/ddev/ddev/settings/variables/actions), you can skip specific tests globally. Note: This does not work for pull requests from forks.
-
-Use pipe-separated test names (`|`) to skip multiple tests:
+To skip specific tests globally (including for fork PRs), edit the files directly on the
+[`public-variables` branch](https://github.com/ddev/ddev/tree/public-variables/.github/public-variables) - no PR required.
 
 ```bash
 # Skip quickstart tests
 DDEV_EMBARGO_TESTS="symfony-composer|symfony-cli|drupal10-composer"
 
-# Skip Go tests (e.g., provider tests)
+# Skip Go tests (e.g. provider tests)
 DDEV_EMBARGO_TESTS="TestLagoonPull|TestAcquiaPull|TestPantheonPush"
 
-# Or combine both
-DDEV_EMBARGO_TESTS="symfony-composer|TestLagoonPull|TestAcquiaPull"
+# Skip specific PHP versions in TestPHPConfig
+DDEV_EMBARGO_PHP_VERSIONS="7.0,7.1"
 ```
 
-### Skipping Tests via Workflow Dispatch
-
-When manually triggering workflows through GitHub's "Run workflow" button, you can provide a `ddev_embargo_tests` input with pipe-separated test names to skip specific tests for that run only.
+Include `[skip ci]` in the commit message to avoid triggering test workflows.
+To clear, empty the file. See [`.github/public-variables/README.md`](https://github.com/ddev/ddev/blob/main/.github/public-variables/README.md) for full details.

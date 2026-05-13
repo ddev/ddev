@@ -28,16 +28,6 @@ on:
         required: false
         type: string
         default: '16'
-      ddev_embargo_tests:
-        description: 'DDEV_EMBARGO_TESTS value - pipe-separated list of test names to skip (e.g., TestName1|TestName2)'
-        required: false
-        type: string
-        default: ''
-      ddev_embargo_php_versions:
-        description: 'DDEV_EMBARGO_PHP_VERSIONS value - comma-separated list of PHP versions to skip in TestPHPConfig (e.g., "8.4,8.3")'
-        required: false
-        type: string
-        default: ''
       debug_enabled:
         description: 'Run the build with tmate set "debug_enabled"'
         required: false
@@ -81,8 +71,6 @@ jobs:
       TESTARGS: ${{ inputs.testargs }}
       MAKE_TARGET: ${{ inputs.make_target }}
       MAKEARGS: ${{ inputs.makeargs }}
-      DDEV_EMBARGO_TESTS: ${{ inputs.ddev_embargo_tests }}
-      DDEV_EMBARGO_PHP_VERSIONS: ${{ inputs.ddev_embargo_php_versions }}
       DDEV_SKIP_NODEJS_TEST: 'true'
       # Always clone from base repository to get upstream tags
       GITHUB_CLONE_URL: https://github.com/${{ github.repository }}
@@ -135,6 +123,18 @@ jobs:
           }
           wsl -- uname -a
           wsl -- systemctl is-system-running --wait
+
+      - name: Load variables from public-variables branch
+        shell: bash
+        run: |
+          git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
+          while IFS= read -r varname; do
+            [[ "$varname" == "README.md" ]] && continue
+            value=$(git show "refs/public-variables-tmp:.github/public-variables/$varname")
+            echo "$varname=${value}"
+            echo "$varname=$value" >> $GITHUB_ENV
+          done < <(git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)
+          git update-ref -d refs/public-variables-tmp
 
       - name: Show test configuration
         shell: pwsh

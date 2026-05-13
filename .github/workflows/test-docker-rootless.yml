@@ -18,16 +18,6 @@ on:
         type: boolean
         required: false
         default: false
-      ddev_embargo_tests:
-        description: 'Pipe-separated list of test names to skip (e.g., TestName1|TestName2)'
-        type: string
-        required: false
-        default: ''
-      ddev_embargo_php_versions:
-        description: 'Comma-separated list of PHP versions to skip in TestPHPConfig (e.g., "8.4,8.3")'
-        type: string
-        required: false
-        default: ''
       testargs:
         description: 'TESTARGS value'
         type: string
@@ -73,8 +63,6 @@ jobs:
     with:
       ddev_test_docker_rootless: "true"
       ddev_test_no_bind_mounts: "true"
-      ddev_embargo_tests: ${{ inputs.ddev_embargo_tests || vars.DDEV_EMBARGO_TESTS || '' }}
-      ddev_embargo_php_versions: ${{ inputs.ddev_embargo_php_versions || vars.DDEV_EMBARGO_PHP_VERSIONS || '' }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   docker-rootless-custom:
