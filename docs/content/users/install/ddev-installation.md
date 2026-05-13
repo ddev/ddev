@@ -224,7 +224,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```powershell
     # You'll be asked to set a username and password for the distro:
-    wsl --install Ubuntu --name DDEV
+    wsl --install Ubuntu-24.04 --name DDEV
     ```
 
     !!!tip "\"DDEV\" is just a suggested name — use any name you like."

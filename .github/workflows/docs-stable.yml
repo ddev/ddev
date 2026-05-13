@@ -1,0 +1,50 @@
+name: Update stable docs branch
+
+# Approach based on https://til.simonwillison.net/readthedocs/stable-docs
+#
+# On release published: reset the stable branch to the tagged commit so
+# ReadTheDocs rebuilds /stable/ from the new release.
+# To push doc fixes without a release, commit directly to the stable branch.
+#
+# More details in https://docs.ddev.com/en/stable/developers/testing-docs/#updating-stable-docs-without-a-release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-stable-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create stable branch if it does not yet exist
+        run: |
+          if ! git ls-remote --heads origin stable | grep -q stable; then
+            git checkout -b stable
+            LATEST_RELEASE=$(git tag | sort -Vr | head -n1)
+            if [ -n "$LATEST_RELEASE" ]; then
+              rm -rf docs/
+              git checkout "$LATEST_RELEASE" -- docs/
+            fi
+            git commit -m "docs: populate from $LATEST_RELEASE" || echo "No changes"
+            git push -u origin stable
+          fi
+
+      - name: Reset stable to release tag
+        if: github.event_name == 'release' && !github.event.release.prerelease
+        run: |
+          git fetch --all
+          git checkout stable
+          git reset --hard "${GITHUB_REF#refs/tags/}"
+          git push origin stable --force

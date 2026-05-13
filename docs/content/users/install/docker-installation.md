@@ -234,7 +234,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ```powershell
     # You'll be asked to set a username and password for the distro:
-    wsl --install Ubuntu --name DDEV
+    wsl --install Ubuntu-24.04 --name DDEV
     ```
 
     !!!tip "\"DDEV\" is just a suggested name — use any name you like."
