@@ -126,9 +126,11 @@ The type and version of the database engine the project should use.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `mariadb:11.8` | Can be MariaDB 5.5–10.8, 10.11, 11.4, 11.8 and MySQL 5.5–8.0, 8.4, or PostgreSQL 9–18.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats. For very old database types see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/).
+| :octicons-file-directory-16: project | `mariadb:11.8` | The following database types are currently supported:<br>- MariaDB 5.5-10.8, 10.11, 11.4, 11.8<br>- MySQL 5.5-8.0, 8.4<br>- Postgres 9-18
 
-Set with `ddev config --database=<database type>:<version>`.
+See [Database Server Types](../extend/database-types.md) for examples (e.g. `ddev config --database=mariadb:11.8`) and caveats (e.g. how to migrate from one database version to another).
+
+!!!tip "For very old database types, see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/)."
 
 ## `dbimage_extra_packages`
 
@@ -190,6 +192,9 @@ When `true`, DDEV will not issue the normal warning on `ddev start`: "You have M
 
 ## `docker_buildx_version`
 
+!!!warning "Advanced Usage"
+    `docker_buildx_version` should only be changed for troubleshooting purposes or if you can't install `docker-buildx` on your system.
+
 Controls which `docker-buildx` plugin DDEV uses.
 
 | Type | Default | Usage
@@ -197,9 +202,6 @@ Controls which `docker-buildx` plugin DDEV uses.
 | :octicons-globe-16: global | `system` | `system` or a version string like `0.33.0`
 
 When set to `system` (the default), DDEV uses whatever `docker-buildx` is already installed on your system and never downloads anything.
-
-!!!warning "Troubleshooting Only!"
-    This should only be used in specific cases like troubleshooting. Please don't experiment with it unless directed to do so.
 
 ## `docroot`
 
