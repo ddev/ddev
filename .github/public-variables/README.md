@@ -1,9 +1,13 @@
 # Public Variables
 
-See also: <https://github.com/orgs/community/discussions/44322#discussioncomment-11801819>.
+GitHub repository variables are not available to pull requests from forks. This mechanism
+allows maintainers to set CI variables (e.g. to temporarily skip flaky tests) that apply
+to all CI runs, including fork PRs.
 
 Edit the files on the [`public-variables` branch](https://github.com/ddev/ddev/tree/public-variables/.github/public-variables)
-to set CI variables - works for both fork PRs and internal runs.
+to set CI variables.
+
+See also: <https://github.com/orgs/community/discussions/44322#discussioncomment-11801819>.
 
 ## Files
 
@@ -33,6 +37,9 @@ No workflow changes are needed - any file in this directory is picked up automat
 3. To clear a variable, empty the file
 
 ## How it works
+
+Used in `.buildkite/test.sh`, `.github/workflows/test-reusable.yml`,
+`.github/workflows/test-wsl2-reusable.yml`, and `.github/workflows/quickstart.yml`.
 
 Each CI run does `git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp`,
 reads all files via `git ls-tree` + `git show`, then deletes the temporary ref.
