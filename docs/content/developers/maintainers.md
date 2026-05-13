@@ -157,6 +157,21 @@ Include these keywords in your commit message or pull request title to skip CI r
 * `[skip github]` - Skip GitHub Actions tests only
 * `[skip ci]` - Skip all tests
 
-### Skipping Specific Tests via Public Variables Branch
+### Skipping Specific Tests via `public-variables` Branch
 
-To skip specific tests globally (including for fork PRs), see [`.github/public-variables/README.md`](https://github.com/ddev/ddev/blob/main/.github/public-variables/README.md).
+To skip specific tests globally (including for fork PRs), edit the files directly on the
+[`public-variables` branch](https://github.com/ddev/ddev/tree/public-variables/.github/public-variables) - no PR required.
+
+```bash
+# Skip quickstart tests
+DDEV_EMBARGO_TESTS="symfony-composer|symfony-cli|drupal10-composer"
+
+# Skip Go tests (e.g. provider tests)
+DDEV_EMBARGO_TESTS="TestLagoonPull|TestAcquiaPull|TestPantheonPush"
+
+# Skip specific PHP versions in TestPHPConfig
+DDEV_EMBARGO_PHP_VERSIONS="8.4,8.5"
+```
+
+Include `[skip ci]` in the commit message to avoid triggering test workflows.
+To clear, empty the file. See [`.github/public-variables/README.md`](https://github.com/ddev/ddev/blob/main/.github/public-variables/README.md) for full details.
