@@ -136,12 +136,12 @@ When you make a pull request, several tasks and test actions will be run. One of
 To push a doc fix to the stable docs without cutting a new release, commit directly to the `stable` branch:
 
 ```bash
-git fetch origin
-git checkout -b stable origin/stable
+git fetch upstream
+git checkout -b stable upstream/stable
 # make your doc changes
 git add docs/
 git commit -m "docs: fix typo in install guide [skip ci]"
-git push origin stable
+git push upstream stable
 ```
 
 !!!note
