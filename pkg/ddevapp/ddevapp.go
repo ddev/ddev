@@ -310,7 +310,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 
 	appDesc["router_http_port"] = app.GetPrimaryRouterHTTPPort()
 	appDesc["router_https_port"] = app.GetPrimaryRouterHTTPSPort()
-	appDesc["xdebug_enabled"] = app.XdebugEnabled
+	appDesc["xdebug_enabled"] = app.GetXdebugStatus()
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
 	appDesc["services"] = map[string]map[string]any{}
@@ -4057,4 +4057,38 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	}
 
 	return nil
+}
+
+// GetXdebugStatus returns whether xdebug is currently active.
+func (app *DdevApp) GetXdebugStatus() bool {
+	status, _ := app.SiteStatus()
+	if status != SiteRunning {
+		return app.XdebugEnabled
+	}
+
+	// Check for both extension presence and whether it's actually "active"
+	// following same logic as pkg/ddevapp/global_dotddev_assets/commands/web/xdebug
+	// v3: php -r 'echo ini_get("xdebug.mode");' contains "debug"
+	// v2: php -r 'echo ini_get("xdebug.remote_enable");' is "1"
+	out, _, err := app.Exec(&ExecOpts{
+		Cmd: `php -r '
+			if (!extension_loaded("xdebug")) {
+				echo "0";
+			} else {
+				$v = phpversion("xdebug");
+				if ($v[0] >= "3") {
+					echo strpos(ini_get("xdebug.mode"), "debug") !== false ? "1" : "0";
+				} else {
+					echo ini_get("xdebug.remote_enable") == "1" ? "1" : "0";
+				}
+			}
+		'`,
+	})
+	if err != nil {
+		return app.XdebugEnabled
+	}
+	if strings.HasPrefix(out, "1") {
+		return true
+	}
+	return false
 }

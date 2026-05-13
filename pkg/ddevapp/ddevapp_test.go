@@ -4737,3 +4737,66 @@ func constructContainerName(containerType string, app *ddevapp.DdevApp) (string,
 	name := dockerutil.ContainerName(c)
 	return name, nil
 }
+
+// TestGetXdebugStatus checks behavior of GetXdebugStatus,
+// both when the site is stopped and when it is running
+func TestGetXdebugStatus(t *testing.T) {
+	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
+		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
+	}
+	origDir, _ := os.Getwd()
+
+	testcommon.ClearDockerEnv()
+
+	projDir := testcommon.CreateTmpDir(t.Name())
+	defer os.RemoveAll(projDir)
+
+	app, err := ddevapp.NewApp(projDir, false)
+	require.NoError(t, err)
+
+	if app.GetWebserverType() == nodeps.AppTypeGeneric {
+		t.Skip("Xdebug is not tested on generic webserver")
+	}
+
+	app.Type = nodeps.AppTypePHP
+	app.XdebugEnabled = true
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	// Create a simple index.php so the web container has something to serve
+	err = fileutil.TemplateStringToFile("<?php\nphpinfo();\n", nil, filepath.Join(app.AppRoot, "index.php"))
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(projDir)
+	})
+
+	err = app.Init(app.AppRoot)
+	require.NoError(t, err)
+
+	// When site is not running, GetXdebugStatus should reflect the config setting
+	got := app.GetXdebugStatus()
+	require.True(t, got, "expected GetXdebugStatus to return true when xdebug_enabled=true and site not running")
+
+	app.XdebugEnabled = false
+	got = app.GetXdebugStatus()
+	require.False(t, got, "expected GetXdebugStatus to return false when xdebug_enabled=false and site not running")
+
+	// Now test with the site running
+	err = app.Restart()
+	require.NoError(t, err)
+
+	// Enable Xdebug and verify status
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "enable_xdebug"})
+	require.NoError(t, err)
+	got = app.GetXdebugStatus()
+	require.True(t, got, "expected GetXdebugStatus to return true after enable_xdebug")
+
+	// Disable Xdebug and verify status
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "disable_xdebug"})
+	require.NoError(t, err)
+	got = app.GetXdebugStatus()
+	require.False(t, got, "expected GetXdebugStatus to return false after disable_xdebug")
+}
