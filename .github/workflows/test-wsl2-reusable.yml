@@ -124,16 +124,21 @@ jobs:
           wsl -- uname -a
           wsl -- systemctl is-system-running --wait
 
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
       - name: Load variables from public-variables branch
-        shell: bash
+        shell: pwsh
         run: |
           git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
-          while IFS= read -r varname; do
-            [[ "$varname" == "README.md" ]] && continue
-            value=$(git show "refs/public-variables-tmp:.github/public-variables/$varname")
-            echo "$varname=${value}"
-            echo "$varname=$value" >> $GITHUB_ENV
-          done < <(git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)
+          $files = git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/
+          foreach ($varname in $files) {
+            if ($varname -eq "README.md") { continue }
+            $value = git show "refs/public-variables-tmp:.github/public-variables/$varname"
+            Write-Host "$varname=$value"
+            "$varname=$value" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          }
           git update-ref -d refs/public-variables-tmp
 
       - name: Show test configuration
