@@ -142,7 +142,7 @@ Examples:
 
 - `fix: handle container networking timeout, fixes #1234`
 - `feat(pantheon): use environment variables`
-- `docs: clarify mkdocs setup`
+- `docs: clarify zensical setup`
 
 ### Pull Request Template
 

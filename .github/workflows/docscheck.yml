@@ -81,8 +81,7 @@ jobs:
         run: |
           npm install -g markdownlint-cli
           make markdownlint
-      - name: Test mkdocs
+      - name: Test zensical
         run: |
-          sudo pip3 install setuptools
-          sudo pip3 install -r docs/mkdocs-pip-requirements
-          mkdocs build -d /tmp/mkdocsbuild
+          pip install -r docs/requirements.txt
+          zensical build --clean --strict

@@ -331,7 +331,9 @@ We have very precise rules over how our PR titles (and thus main-branch commits)
 
 The pull request title must follow this convention which is based on the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification:
 
-`<type>[optional scope][optional !]: <description>[, fixes #<issue>][, for #<issue>]`
+```
+<type>[optional scope][optional !]: <description>[, fixes #<issue>][, for #<issue>]
+```
 
 #### Examples
 

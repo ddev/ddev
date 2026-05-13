@@ -6,9 +6,12 @@ search:
 
 ## Logos
 
-| Figurative Mark                        | Word/Figurative Mark                               |
-|----------------------------------------|----------------------------------------------------|
-| ![Figurative Mark](logos/SVG/Logo.svg) | ![Word/Figurative Mark](logos/SVG/Logo_w_text.svg) |
+| Logo | Preview |
+|------|---------|
+| Figurative Mark | ![Figurative Mark](logos/SVG/Logo.svg){style="height:100px;padding:8px"} |
+| Word/Figurative Mark<br>for light backgrounds | ![Word/Figurative Mark (Light)](logos/SVG/Logo_w_text.svg){style="height:100px;padding:8px;background:#ffffff"} |
+| Word/Figurative Mark<br>for dark backgrounds | ![Word/Figurative Mark (Dark)](logos/SVG/Logo_w_text_dark.svg){style="height:100px;padding:8px;background:#1e2127"} |
+| Word/Figurative Mark<br>auto (system preference) | ![Word/Figurative Mark (Auto)](logos/SVG/Logo_w_text_auto.svg){style="height:100px;padding:8px"} |
 
 You can find a set of DDEV logos on [GitHub](https://github.com/ddev/ddev/tree/main/docs/content/developers/logos).
 

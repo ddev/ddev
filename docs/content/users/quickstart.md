@@ -654,7 +654,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     ddev launch $(ddev drush uli)
     ```
 
-    Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
+    Read more about [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs).
 
     ??? tip "Prefer to run as a script?"
         To run the whole setup as a script, examine and run this script:
@@ -704,7 +704,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     ddev launch
     ```
 
-    Read more about: [Drupal CMS](https://new.drupal.org/drupal-cms) & [Documentation](https://new.drupal.org/docs/drupal-cms)
+    Read more about [Drupal CMS](https://new.drupal.org/drupal-cms) & [Documentation](https://new.drupal.org/docs/drupal-cms).
 
     ??? tip "Prefer to run as a script?"
         To run the whole setup as a script, examine and run this script:
@@ -756,7 +756,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     ddev launch $(ddev drush uli)
     ```
 
-    Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
+    Read more about [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs).
 
     ??? tip "Prefer to run as a script?"
         To run the whole setup as a script, examine and run this script:
@@ -822,7 +822,9 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
 === "Git Clone"
 
-    Clone your Drupal repository:
+    This example shows how to work on an existing Drupal project, using a clone of a test repository. Replace with your Git repository.
+
+    Clone your web project repository:
 
     ```bash
     PROJECT_GIT_URL=https://github.com/ddev/test-drupal11.git
@@ -850,7 +852,7 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
     ddev launch
     ```
 
-    Read more about: [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs)
+    Read more about [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs).
 
     ??? tip "Prefer to run as a script?"
         To run the whole setup as a script, examine and run this script:
@@ -870,6 +872,58 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         EOF
         chmod +x setup-drupal-git.sh
         ./setup-drupal-git.sh
+        ```
+
+=== "Drupal 12 (HEAD)"
+
+    Those who want to try out the unreleased upcoming Drupal 12 can install it this way:
+
+    ```bash
+    mkdir -p my-drupal12-site && cd my-drupal12-site
+    ddev config --project-type=drupal12 --docroot=web
+    ```
+
+    Start DDEV (this may take a minute):
+
+    ```bash
+    ddev start
+    ```
+
+    Install Drupal via Composer:
+
+    ```bash
+    ddev composer create-project drupal/recommended-project:main-dev@dev
+    ddev composer require drush/drush
+    ```
+
+    Run Drupal installation and launch:
+
+    ```bash
+    ddev drush site:install --account-name=admin --account-pass=admin -y
+    ddev launch
+    # or automatically log in with:
+    ddev launch $(ddev drush uli)
+    ```
+
+    Read more about [Drupal Core](https://new.drupal.org/about/overview/technical) & [Documentation](https://www.drupal.org/docs).
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > setup-drupal12.sh << 'EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        mkdir -p my-drupal12-site && cd my-drupal12-site
+        ddev config --project-type=drupal12 --docroot=web
+        ddev start -y
+        ddev composer create-project drupal/recommended-project:main-dev@dev
+        ddev composer require drush/drush
+        ddev drush site:install --account-name=admin --account-pass=admin -y
+        ddev launch
+        EOF
+        chmod +x setup-drupal12.sh
+        ./setup-drupal12.sh
         ```
 
 ## ExpressionEngine
@@ -1683,11 +1737,7 @@ The Laravel project type can be used for [StarterKits](https://laravel.com/docs/
 Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create-project`, it’s asking for your public key as "username" and private key as "password".
 
 !!!tip "Store Adobe/Magento Composer credentials in the global DDEV config"
-    If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See [In-Container Home Directory and Shell Configuration](extend/in-container-configuration.md):
-
-    ```bash
-    mkdir -p $HOME/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json $HOME/.ddev/homeadditions/.composer/auth.json
-    ```
+    If you have Composer installed on your workstation and have an `auth.json` you can reuse the `auth.json` by making a symlink. See the example in [Composer Authentication](extend/in-container-configuration.md#composer-authentication).
 
     Alternately, you can install the Adobe/Magento Composer credentials in your global `$HOME/.ddev/homeadditions/.composer/auth.json` and never have to enter them again (see below):
 

@@ -27,7 +27,7 @@ echo ""
 echo "🔍 Development tools status:"
 echo "  golangci-lint: $(command -v golangci-lint &> /dev/null && echo '✅ installed' || echo '❌ not found')"
 echo "  markdownlint:  $(command -v markdownlint &> /dev/null && echo '✅ installed' || echo '❌ not found')"
-echo "  mkdocs:        $(command -v mkdocs &> /dev/null && echo '✅ installed' || echo '⚠️  not installed (optional, will be skipped)')"
+echo "  zensical:      $(command -v zensical &> /dev/null && echo '✅ installed' || echo '⚠️  not installed (optional, will be skipped)')"
 
 if [ "$DOCKER_AVAILABLE" = true ]; then
     echo "  Docker:        ✅ available"

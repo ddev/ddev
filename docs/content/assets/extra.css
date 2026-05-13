@@ -112,6 +112,7 @@ dt {
     -webkit-mask-position: center;
 }
 
-img[alt="Figurative Mark"], img[alt="Word/Figurative Mark"] {
-    height: 150px
+/* Keep the sponsor announce banner dark in both light and dark modes */
+[data-md-component="announce"] .md-banner {
+    background-color: #1e2127;
 }

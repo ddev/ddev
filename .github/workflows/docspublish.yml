@@ -1,22 +1,115 @@
 name: docspublish
 on:
   push:
-    branches: [ main ]
-env:
-  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    branches: [ main, stable ]
+
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   docs-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v6
+
+      - name: Checkout main branch
+        uses: actions/checkout@v6
         with:
+          ref: main
+          path: checkout-main
           fetch-depth: 0
-      - uses: actions/setup-python@v6.2.0
+
+      - name: Checkout stable branch
+        id: checkout-stable
+        continue-on-error: true
+        uses: actions/checkout@v6
+        with:
+          ref: stable
+          path: checkout-stable
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
           python-version: 3.x
-      - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
-      - run: pip install -r docs/mkdocs-pip-requirements
-      - run: mkdocs build
-      - run: ls -l .nojekyll || true
-      - run: mkdocs gh-deploy --force --no-history
+
+      - name: Setup tmate session
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+
+      - name: Install dependencies
+        run: |
+          pip install -r checkout-main/docs/requirements.txt
+          if [ -f checkout-stable/docs/requirements.txt ]; then
+            pip install -r checkout-stable/docs/requirements.txt
+          fi
+
+      - name: Build latest docs
+        working-directory: checkout-main
+        run: |
+          if [ "${{ steps.checkout-stable.outcome }}" = "success" ]; then
+            site_url="${{ steps.pages.outputs.base_url }}/en/latest/"
+          else
+            site_url="${{ steps.pages.outputs.base_url }}/"
+          fi
+          sed -i "s|site_url:.*|site_url: ${site_url}|" mkdocs.yml
+          grep site_url mkdocs.yml
+          if [ "${{ steps.checkout-stable.outcome }}" = "success" ]; then
+            READTHEDOCS_VERSION_NAME=latest zensical build --clean --strict
+          else
+            zensical build --clean --strict
+          fi
+
+      - name: Build stable docs
+        if: steps.checkout-stable.outcome == 'success'
+        working-directory: checkout-stable
+        run: |
+          sed -i "s|site_url:.*|site_url: ${{ steps.pages.outputs.base_url }}/en/stable/|" mkdocs.yml
+          grep site_url mkdocs.yml
+          zensical build --clean --strict
+
+      - name: Assemble combined site
+        run: |
+          if [ -d checkout-stable/site ]; then
+            mkdir -p combined-site/en
+            mv -v checkout-main/site combined-site/en/latest
+            mv -v checkout-stable/site combined-site/en/stable
+            cp -v combined-site/en/stable/404.html combined-site/404.html
+            cat > combined-site/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta http-equiv="refresh" content="0; url=en/stable/">
+            <link rel="canonical" href="en/stable/">
+          </head>
+          <body>
+            <a href="en/stable/">Redirecting to stable docs...</a>
+          </body>
+          </html>
+          EOF
+          else
+            mv -v checkout-main/site combined-site
+          fi
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: combined-site
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v5
+        id: deployment

@@ -38,7 +38,7 @@ For comprehensive developer documentation, see:
 
 ### Linting and Code Quality
 
-- `make staticrequired` - Run all required static analysis (golangci-lint, markdownlint, mkdocs, pyspelling)
+- `make staticrequired` - Run all required static analysis (golangci-lint, markdownlint, pyspelling, zensical)
 
 ### Whitespace and Formatting
 
@@ -82,7 +82,7 @@ The codebase follows standard Go project structure:
 - `cmd/` - CLI entrypoints (`ddev`, `ddev-hostname`)
 - `pkg/` - Go packages (core app logic, Docker integration, config, utilities)
 - `containers/` - Container images and Dockerfiles used by DDEV
-- `docs/` - MkDocs documentation source; `docs/tests` holds Bats tests
+- `docs/` - Zensical documentation source; `docs/tests` holds Bats tests
 - `scripts/` - Helper scripts (installers, tooling)
 - `testing/` - Performance/auxiliary test scripts
 - `vendor/` - Vendored Go dependencies
@@ -239,7 +239,7 @@ Follow Conventional Commits: `<type>[optional scope][optional !]: <description>[
 Examples:
 
 - `fix: handle container networking timeout, fixes #1234`
-- `docs: clarify mkdocs setup`
+- `docs: clarify zensical setup`
 - `feat: add new container type support`
 
 **For commits that will become PRs:** Include the complete PR template content in commit messages. This ensures GitHub PRs are pre-populated and don't require additional editing.
@@ -297,7 +297,7 @@ EOF
    make staticrequired
    ```
 
-   This command runs golangci-lint, markdownlint, and mkdocs. All must pass before committing.
+   This command runs golangci-lint, markdownlint, and zensical. All must pass before committing.
 
 **Complete Pre-Commit Checklist:**
 
@@ -443,7 +443,7 @@ A `.claude/hooks/session-start.sh` hook automatically configures the environment
 
 - ✅ `golangci-lint` - Pre-installed in both environments
 - ✅ `markdownlint` - Installed by SessionStart hook
-- ⚠️ `mkdocs` - Not available in web (gracefully skipped by Makefile)
+- ⚠️ `zensical` - Not available in web (gracefully skipped by Makefile)
 - ❌ `docker` - Not available in web environment
 - ✅ `docker` - Available in desktop environment
 

@@ -481,7 +481,6 @@ middlewares
 misconfigured
 mkcert
 mkdir
-mkdocs
 mnt
 modify
 mongo

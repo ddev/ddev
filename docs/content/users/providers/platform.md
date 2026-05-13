@@ -50,21 +50,21 @@ You need to obtain and configure an API token first. This is only needed once.
 
             ```yaml
             web_environment:
-                - PLATFORM_PROJECT=nf4amudfn23biyourproject
+                - PLATFORM_PROJECT=abc12def34567
                 - PLATFORM_ENVIRONMENT=main
             ```
 
         * Or with a command from your terminal:
 
             ```bash
-            ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
+            ddev config --web-environment-add="PLATFORM_PROJECT=abc12def34567,PLATFORM_ENVIRONMENT=main"
             ```
 
     For more information about how to set environment variables for containers and services see [Environment Variables for Containers and Services](../extend/customization-extendibility.md#environment-variables-for-containers-and-services).
 
 3. Run [`ddev restart`](../usage/commands.md#restart).
 4. Run `ddev pull platform`. After you agree to the prompt, the current upstream databases and files will be downloaded.
-5. Optionally use `ddev push platform` to push local files and database to Upsun. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so use it against a known environment and not against your production site..
+5. Optionally use `ddev push platform` to push local files and database to Upsun Fixed. The [`ddev push`](../usage/commands.md#push) command can potentially damage your production site, so we don't recommend using it.
 
 ### Managing Multiple Apps
 
@@ -104,5 +104,17 @@ ddev pull platform --environment="PLATFORM_PRIMARY_RELATIONSHIP=main"
 
 ## Usage
 
-* `ddev pull platform` will connect to Upsun to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+* [`ddev pull platform`](../usage/commands.md#pull) will connect to Upsun Fixed to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+* To pull from a specific environment without permanently changing your project config, pass environment variables using `--environment`:
+
+    ```bash
+    ddev pull platform --environment="PLATFORM_ENVIRONMENT=main"
+    ```
+
+    You can combine multiple variables:
+
+    ```bash
+    ddev pull platform --environment="PLATFORM_PROJECT=abc12def34567,PLATFORM_ENVIRONMENT=main,PLATFORM_APP=app,PLATFORM_PRIMARY_RELATIONSHIP=main,PLATFORMSH_CLI_TOKEN=abcdeyourtoken"
+    ```
+
 * If you need to change the `platform.yaml` recipe, you can change it or copy it to suit your needs, but remember to remove the `#ddev-generated` line from the top of the file.

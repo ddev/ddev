@@ -146,7 +146,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 4. Restart `sudo systemctl restart icinga2`
 5. On `monitor.ddev.com` edit `/usr/local/bin/check_buildkite_agents.sh` to include the hostname of the new instance.
 
-## macOS Docker Desktop Test Agent Setup (Intel and Apple Silicon)
+## macOS Docker Desktop Test Agent Setup (Apple Silicon)
 
 1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in 1Password.
 2. Change the name of the machine to something in keeping with current style, perhaps `testbot-macos-arm64-8`. This is done in **Settings** → **General** → **About** → **Name** and in **Sharing** → **Computer Name** and in **Sharing** → **Local Hostname**.

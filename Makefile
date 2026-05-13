@@ -189,7 +189,7 @@ setup:
 	@mkdir -p $(TESTTMP)
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
-staticrequired: setup golangci-lint markdownlint mkdocs
+staticrequired: setup golangci-lint markdownlint zensical
 
 # Best to install markdownlint-cli locally with "npm install -g markdownlint-cli"
 markdownlint:
@@ -199,29 +199,32 @@ markdownlint:
 	if command -v markdownlint >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "Skipping markdownlint as not installed (see .envrc file)"; \
+		echo "Skipping markdownlint as not installed (run scripts/install-dev-tools.sh)"; \
 	fi
 
-# Install mkdocs locally using
+# Install zensical locally using
 # https://docs.ddev.com/en/stable/developers/testing-docs/
-mkdocs:
-	@echo "mkdocs: "
-	@CMD="mkdocs build -d /tmp/mkdocsbuild"; \
-	if command -v mkdocs >/dev/null 2>&1; then \
+zensical:
+	@echo "zensical: "
+	@CMD="zensical build --strict"; \
+	if command -v zensical >/dev/null 2>&1; then \
 		$$CMD ; \
 	else \
-		echo "Not running mkdocs because it's not installed (see .envrc file)"; \
+		echo "Not running zensical because it's not installed (run scripts/install-dev-tools.sh)"; \
 	fi
 
-# To see what the docs will look like, you can use `make mkdocs-serve`
-# It does require installing mkdocs and its requirements
+# To see what the docs will look like, you can use `make zensical-serve`
+# It does require installing zensical: pip install zensical
 # See https://docs.ddev.com/en/stable/developers/testing-docs/
-mkdocs-serve:
-	@if command -v mkdocs >/dev/null ; then \
-		mkdocs serve; \
+zensical-serve:
+	@if command -v zensical >/dev/null ; then \
+		zensical serve; \
 	else \
-		echo "mkdocs is not installed (see .envrc file)" && exit 2; \
+		echo "zensical is not installed (run scripts/install-dev-tools.sh)" && exit 2; \
 	fi; \
+
+mkdocs: zensical
+mkdocs-serve: zensical-serve
 
 # Install linkspector locally with "sudo npm install -g @umbrelladocs/linkspector"
 linkspector:
@@ -229,7 +232,7 @@ linkspector:
 	@if command -v linkspector >/dev/null 2>&1; then \
 		linkspector check; \
 	else \
-		echo "Not running linkspector because it's not installed (see .envrc file)"; \
+		echo "Not running linkspector because it's not installed (run scripts/install-dev-tools.sh)"; \
 	fi
 
 
@@ -241,7 +244,7 @@ pyspelling:
 	if command -v pyspelling >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "Not running pyspelling because it's not installed (see scripts/install-dev-tools.sh)"; \
+		echo "Not running pyspelling because it's not installed (run scripts/install-dev-tools.sh)"; \
 	fi
 
 # Install textlint locally with `npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology`
@@ -252,7 +255,7 @@ textlint:
 	if command -v textlint >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "textlint is not installed (see scripts/install-dev-tools.sh)"; \
+		echo "textlint is not installed (run scripts/install-dev-tools.sh)"; \
 	fi
 
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-hostname
