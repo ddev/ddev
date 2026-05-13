@@ -5,31 +5,26 @@ Custom shell configuration (Bash or your preferred shell), your usual Git config
 ## Using `homeadditions` to Customize In-Container Home Directory
 
 !!!tip "Finding Your Global DDEV Directory"
-    The examples below use `$HOME/.ddev/homeadditions` which is the default location. If you have `$XDG_CONFIG_HOME` set, your global directory will be at `$XDG_CONFIG_HOME/ddev` instead. To find your actual location, run:
+    The examples below automatically detect the correct global DDEV directory (including when `$XDG_CONFIG_HOME` is set) using the `DDEV_DIR` variable. See [global configuration directory](../usage/architecture.md#global-files) for details.
 
-    ```bash
-    ddev version | grep global-ddev-dir
-    ```
-
-    Then use that path with `/homeadditions` appended. See [global configuration directory](../usage/architecture.md#global-files) for details.
-
-Place all your dotfiles in your global `$HOME/.ddev/homeadditions` or your project's `.ddev/homeadditions` directory and DDEV will use these in your project's `web` containers.
+Place all your dotfiles in your global `homeadditions` directory or your project's `.ddev/homeadditions` directory and DDEV will use these in your project's `web` containers.
 
 !!!tip "Ignore `.ddev/.homeadditions`!"
     A hidden/transient `.ddev/.homeadditions`—emphasis on the leading `.`—is used for processing global `homeadditions` and should be ignored.
 
 On [`ddev start`](../usage/commands.md#start), DDEV attempts to create a user inside the `web` and `db` containers with the same name and user ID as the one you have on the host machine.
 
-DDEV looks for the `homeadditions` directory both in the global `$HOME/.ddev/homeadditions` directory and the project-level `.ddev/homeadditions` directory, and will copy their contents recursively into the in-container home directory during `ddev start`. Project `homeadditions` contents override the global `homeadditions`.
+DDEV looks for the `homeadditions` directory both in the global `homeadditions` directory and the project-level `.ddev/homeadditions` directory, and will copy their contents recursively into the in-container home directory during `ddev start`. Project `homeadditions` contents override the global `homeadditions`.
 
 Usage examples:
 
 ### Git Configuration
 
-If you use Git inside the container, you may want to symlink your `$HOME/.gitconfig` into `$HOME/.ddev/homeadditions` or the project's `.ddev/homeadditions` so that in-container `git` commands use whatever username and email you've configured on your host machine.
+If you use Git inside the container, you may want to symlink your `$HOME/.gitconfig` into the global `homeadditions` directory or the project's `.ddev/homeadditions` so that in-container `git` commands use whatever username and email you've configured on your host machine.
 
 ```bash
-ln -s $HOME/.gitconfig $HOME/.ddev/homeadditions/.gitconfig
+DDEV_DIR="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
+ln -s $HOME/.gitconfig $DDEV_DIR/homeadditions/.gitconfig
 ```
 
 ### SSH Configuration
@@ -37,14 +32,16 @@ ln -s $HOME/.gitconfig $HOME/.ddev/homeadditions/.gitconfig
 If you use SSH inside the container and want to use your `.ssh/config`, you can symlink it into the homeadditions directory. Some people will be able to symlink their entire `.ssh` directory.
 
 ```bash
-mkdir -p $HOME/.ddev/homeadditions/.ssh
-ln -s $HOME/.ssh/config $HOME/.ddev/homeadditions/.ssh/config
+DDEV_DIR="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
+mkdir -p $DDEV_DIR/homeadditions/.ssh
+ln -s $HOME/.ssh/config $DDEV_DIR/homeadditions/.ssh/config
 ```
 
 Or symlink the entire directory:
 
 ```bash
-ln -s $HOME/.ssh $HOME/.ddev/homeadditions/.ssh
+DDEV_DIR="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
+ln -s $HOME/.ssh $DDEV_DIR/homeadditions/.ssh
 ```
 
 If you provide your own `.ssh/config` though, please make sure it includes these lines:
@@ -63,12 +60,13 @@ If you need to add a script or other executable component into the project (or g
 For example, to add a custom script:
 
 ```bash
+DDEV_DIR="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
 # Create the bin directory
-mkdir -p $HOME/.ddev/homeadditions/bin
+mkdir -p $DDEV_DIR/homeadditions/bin
 # Add your script
-echo '#!/usr/bin/env bash' > $HOME/.ddev/homeadditions/bin/myscript
-echo 'echo "Hello from custom script"' >> $HOME/.ddev/homeadditions/bin/myscript
-chmod +x $HOME/.ddev/homeadditions/bin/myscript
+echo '#!/usr/bin/env bash' > $DDEV_DIR/homeadditions/bin/myscript
+echo 'echo "Hello from custom script"' >> $DDEV_DIR/homeadditions/bin/myscript
+chmod +x $DDEV_DIR/homeadditions/bin/myscript
 ```
 
 ### Composer Authentication
@@ -76,8 +74,15 @@ chmod +x $HOME/.ddev/homeadditions/bin/myscript
 If you use private, password-protected Composer repositories with [Satis](https://composer.github.io/satis/), for example, and use a global `auth.json`, you can symlink it into `homeadditions`. Be careful to exclude it from getting checked in by using a `.gitignore` or equivalent.
 
 ```bash
-mkdir -p $HOME/.ddev/homeadditions/.composer
-ln -s $HOME/.composer/auth.json $HOME/.ddev/homeadditions/.composer/auth.json
+DDEV_DIR="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
+mkdir -p "$DDEV_DIR/homeadditions/.composer"
+# Find the correct location of the auth.json file if Composer is installed
+COMPOSER_AUTH_FILE="$(composer config --global home 2>/dev/null)/auth.json"
+# Otherwise default to the location on Debian
+if [ ! -f "$COMPOSER_AUTH_FILE" ]; then
+  COMPOSER_AUTH_FILE="$HOME/.composer/auth.json"
+fi
+ln -s "$COMPOSER_AUTH_FILE" $DDEV_DIR/homeadditions/.composer/auth.json
 ```
 
 ### Startup Scripts
@@ -87,11 +92,13 @@ You can add small scripts to the `.bashrc.d` directory, and they will be execute
 For example, create a script that shows which container you're in:
 
 ```bash
+DDEV_DIR="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
+
 # Create the .bashrc.d directory
-mkdir -p $HOME/.ddev/homeadditions/.bashrc.d
+mkdir -p $DDEV_DIR/homeadditions/.bashrc.d
 
 # Add a script that runs on ddev ssh
-echo 'echo "I am in the $(hostname) container"' > $HOME/.ddev/homeadditions/.bashrc.d/whereami
+echo 'echo "I am in the $(hostname) container"' > $DDEV_DIR/homeadditions/.bashrc.d/whereami
 ```
 
 After `ddev restart`, when you `ddev ssh` this script will be executed.
@@ -101,7 +108,8 @@ After `ddev restart`, when you `ddev ssh` this script will be executed.
 If you have a favorite `.bashrc`, copy it into either the global or project `homeadditions`:
 
 ```bash
-cp $HOME/.bashrc $HOME/.ddev/homeadditions/.bashrc
+DDEV_DIR="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
+cp $HOME/.bashrc $DDEV_DIR/homeadditions/.bashrc
 ```
 
 ### Bash Aliases
@@ -109,7 +117,8 @@ cp $HOME/.bashrc $HOME/.ddev/homeadditions/.bashrc
 If you like the traditional `ll` Bash alias for `ls -lhA`, add a `.bash_aliases` file to either the global or project `homeadditions`:
 
 ```bash
-echo 'alias ll="ls -lhA"' > $HOME/.ddev/homeadditions/.bash_aliases
+DDEV_DIR="$(ddev version -j | docker run -i --rm ddev/ddev-utilities jq -r ".raw.\"global-ddev-dir\" | select (.!=null) // \"$HOME/.ddev\"" 2>/dev/null)"
+echo 'alias ll="ls -lhA"' > $DDEV_DIR/homeadditions/.bash_aliases
 ```
 
 ## Changing `ddev ssh` Shell

@@ -17,7 +17,7 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
         ```yaml
         web_environment:
-            - TERMINUS_MACHINE_TOKEN=your_token
+            - TERMINUS_MACHINE_TOKEN=abcdeyourtoken
         ```
 
     !!!tip "What if I have more than one API token?"
@@ -25,7 +25,7 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
         ```yaml
         web_environment:
-            - TERMINUS_MACHINE_TOKEN=your_token
+            - TERMINUS_MACHINE_TOKEN=abcdeyourtoken
         ```
 
 2. Choose a Pantheon site and environment you want to use with DDEV. You can usually use the site name, but in some environments you may need the site ID, which is the long third component of your site dashboard URL. So if the site dashboard is at `https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/`, the site ID is `009a2cda-2c22-4eee-8f9d-96f017321555`.
@@ -40,16 +40,13 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
     ```yaml
     web_environment:
-        - DDEV_PANTHEON_SITE=yourprojectname
+        - DDEV_PANTHEON_SITE=your-project
         - DDEV_PANTHEON_ENVIRONMENT=dev
     ```
 
-    You can also do this with `ddev config --web-environment-add="DDEV_PANTHEON_SITE=yourprojectname,DDEV_PANTHEON_ENVIRONMENT=dev"`.
+    You can also do this with `ddev config --web-environment-add="DDEV_PANTHEON_SITE=your-project,DDEV_PANTHEON_ENVIRONMENT=dev"`.
 
     You can usually use the site name, but in some environments you may need the site ID, which is the long third component of your site dashboard URL. So if the site dashboard is at `https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/`, the site ID is `009a2cda-2c22-4eee-8f9d-96f017321555`.
-
-    Instead of setting the environment variables in configuration files, you can use
-    `ddev pull pantheon --environment=DDEV_PANTHEON_SITE=yourprojectname,DDEV_PANTHEON_ENVIRONMENT=dev` for example.
 
     !!!note "Legacy Variable Names"
         The old `PANTHEON_SITE` and `PANTHEON_ENVIRONMENT` variable names are still supported for backward compatibility but are deprecated. These names conflict with Pantheon's own environment variables, which can cause applications to misidentify their runtime environment. Using `DDEV_PANTHEON_SITE` and `DDEV_PANTHEON_ENVIRONMENT` is strongly recommended.
@@ -85,3 +82,20 @@ ddev pull pantheon --environment=DDEV_USE_PANTHEON_BACKUP=true
 
 !!!warning "Backup freshness"
     Existing backups may not include the very latest data. Check your Pantheon dashboard to see when the last backup was created. Fresh dumps are generated on-demand and reflect the current state of your database.
+
+## Usage
+
+* [`ddev pull pantheon`](../usage/commands.md#pull) will connect to Pantheon to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
+* To pull from a specific environment without permanently changing your project config, pass environment variables using `--environment`:
+
+    ```bash
+    ddev pull pantheon --environment="DDEV_PANTHEON_ENVIRONMENT=dev"
+    ```
+
+    You can combine multiple variables:
+
+    ```bash
+    ddev pull pantheon --environment="DDEV_PANTHEON_SITE=your-project,DDEV_PANTHEON_ENVIRONMENT=dev,DDEV_USE_PANTHEON_BACKUP=true,TERMINUS_MACHINE_TOKEN=abcdeyourtoken"
+    ```
+
+* If you need to change the `pantheon.yaml` recipe, you can change it to suit your needs, but remember to remove the `#ddev-generated` line from the top of the file.

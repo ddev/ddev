@@ -14,7 +14,7 @@ DDEV add-ons provide a powerful way to extend development environments. You can 
 3. Customize the `install.yaml` file
 4. Test with `tests.bats`
 5. Create a release when ready
-6. Add the `ddev-get` label to your GitHub repository
+6. If you expect the add-on to be maintained and useful to others, add the `ddev-get` [topic](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics) to your GitHub repository
 
 See this [screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) for a walkthrough.
 
@@ -38,7 +38,20 @@ removal_actions: []
 - **`project_files`**: Files copied to the project's `.ddev` directory
 - **`global_files`**: Files copied to the [global configuration directory](../usage/architecture.md#global-files)
 - **`post_install_actions`**: Scripts executed after files are copied
-- **`removal_actions`**: Scripts executed when removing the add-on
+- **`removal_actions`**: Scripts executed when removing the add-on. Use these to clean up files that don't carry `#ddev-generated` (e.g. files placed outside `.ddev/`, or files the user may have modified).
+
+    ```yaml
+    removal_actions:
+      - |
+        #ddev-description: Remove generated settings file if unmodified
+        if [ -f "${DDEV_APPROOT}/${DDEV_DOCROOT}/sites/default/settings.ddev.myservice.php" ]; then
+          if grep -q '#ddev-generated' "${DDEV_APPROOT}/${DDEV_DOCROOT}/sites/default/settings.ddev.myservice.php"; then
+            rm -f "${DDEV_APPROOT}/${DDEV_DOCROOT}/sites/default/settings.ddev.myservice.php"
+          else
+            echo "Skipping removal: settings.ddev.myservice.php has been modified."
+          fi
+        fi
+    ```
 
 ### Advanced Sections
 
@@ -144,6 +157,8 @@ $_ENV['DDEV_MUTAGEN_ENABLED'] // 'true' or 'false'
 ```
 
 #### PHP Action Execution Environment
+
+PHP actions run **inside a temporary container**, unlike Bash actions which run on the host.
 
 - **Working directory**: `/var/www/html/.ddev` (your project's .ddev directory)
 - **Project access**: Full read/write access to project repository at `/var/www/html/`
@@ -284,12 +299,41 @@ pre_install_actions:
 
 ## Advanced Features
 
+### Customizing `ddev describe` Output
+
+Add-ons can customize what appears in `ddev describe` using `x-ddev.describe-*` extensions in your docker-compose file (requires DDEV v1.24.10+):
+
+```yaml
+services:
+  myservice:
+    image: myimage:latest
+    x-ddev:
+      describe-url-port: "https://${DDEV_HOSTNAME}:8080"
+      describe-info: "API key: ${MYSERVICE_API_KEY}"
+```
+
+See [Customizing ddev describe output](custom-docker-services.md#customizing-ddev-describe-output) for full details.
+
+### Minor Docker Image Customization
+
+For small tweaks to an existing image, use `dockerfile_inline` instead of maintaining a separate `Dockerfile`:
+
+```yaml
+services:
+  myservice:
+    image: myimage:latest
+    build:
+      dockerfile_inline: |
+        FROM myimage:latest
+        RUN apt-get update && apt-get install -y mypackage
+```
+
 ### Version Constraints
 
 Specify minimum DDEV version requirements:
 
 ```yaml
-ddev_version_constraint: '>= v1.24.8'
+ddev_version_constraint: '>= v1.25.2'
 ```
 
 ### Dependencies
@@ -484,17 +528,21 @@ project_files:
 
 ### YAML File Processing
 
-Read project YAML files for advanced templating:
+(Using YAML file processing is very unusual.)
+
+`yaml_read_files` reads external YAML files and makes their contents available as Go template variables in **Bash actions**. This is a Go template feature and cannot be used inside PHP actions.
 
 ```yaml
 yaml_read_files:
-  config: "config.yaml"
+  platformapp: ".platform.app.yaml"
+  services: ".platform/services.yaml"
 
 post_install_actions:
   - |
-    <?php
-    // Access YAML data via templating: {{ .config.some_value }}
-    ?>
+    #ddev-description: Configure PHP version from platform config
+    cat <<EOF >${DDEV_APPROOT}/.ddev/config.platformsh.yaml
+    php_version: {{ trimPrefix "php:" .platformapp.type }}
+    EOF
 ```
 
 ### Error Handling
@@ -516,6 +564,29 @@ echo "Requirements validated\n";
 ```
 
 ## Special Directives
+
+### The `#ddev-generated` Comment
+
+Add `#ddev-generated` as a comment in any file your add-on creates or copies into a project. DDEV uses this marker to:
+
+1. **Track managed files** — on a subsequent `ddev add-on get`, DDEV replaces the file automatically if it contains `#ddev-generated`, even if the user has modified it. Files with `#ddev-generated` that are listed in the `project_files` or `global_files` will be automatically removed on `ddev add-on remove` if the `#ddev-generated` is found in the file.
+2. **Enable clean removal** — `ddev add-on remove` deletes all files that still contain `#ddev-generated`
+
+Files that do **not** contain this comment are left in place during removal (assumed to be user-modified). The [`removal_actions`](#core-sections) section is the place to clean up any such files.
+
+```yaml
+# docker-compose.myservice.yaml
+#ddev-generated
+services:
+  myservice:
+    image: myimage:latest
+```
+
+In PHP actions, include it as the first line of generated files:
+
+```php
+file_put_contents('docker-compose.myservice.yaml', "#ddev-generated\n" . yaml_emit($config));
+```
 
 ### Description Display
 
@@ -547,28 +618,60 @@ post_install_actions:
 
 ### Bats Testing Framework
 
-The add-on template includes a `tests.bats` file for testing:
+The add-on template includes a `tests/test.bats` file for testing:
 
 ```bash
 #!/usr/bin/env bats
 
-@test "install add-on" {
-  ddev add-on get . --project my-test
-  cd my-test
-  ddev restart
-  # Add your tests here
+setup() {
+  set -eu -o pipefail
+
+  # Override this variable for your add-on:
+  export GITHUB_REPO=owner/repo
+
+  # ...
 }
 
-@test "verify service is running" {
-  cd my-test
-  ddev exec "curl -s http://myservice:8080/health"
+health_checks() {
+  # Do something useful here that verifies the add-on
+
+  # You can check for specific information in headers:
+  run curl -sfI https://${PROJNAME}.ddev.site
+  assert_output --partial "HTTP/2 200"
+  assert_output --partial "test_header"
+
+  # Or check if some command gives expected output:
+  DDEV_DEBUG=true run ddev launch
+  assert_success
+  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+}
+
+@test "install from directory" {
+  set -eu -o pipefail
+  echo "# ddev add-on get ${DIR} with project ${PROJNAME} in $(pwd)" >&3
+  run ddev add-on get "${DIR}"
+  assert_success
+  run ddev restart -y
+  assert_success
+  health_checks
+}
+
+# bats test_tags=release
+@test "install from release" {
+  set -eu -o pipefail
+  echo "# ddev add-on get ${GITHUB_REPO} with project ${PROJNAME} in $(pwd)" >&3
+  run ddev add-on get "${GITHUB_REPO}"
+  assert_success
+  run ddev restart -y
+  assert_success
+  health_checks
 }
 ```
 
 Run tests with:
 
 ```bash
-bats tests.bats
+bats tests/test.bats
 ```
 
 ### Manual Testing
@@ -590,7 +693,7 @@ bats tests.bats
 
 1. **Test thoroughly** using the test framework
 2. **Create proper releases** with semantic versioning
-3. **Add the `ddev-get` label** to your GitHub repository
+3. If you expect the add-on to be maintained and useful to others, **add the `ddev-get` [topic](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics)** to your GitHub repository.
 4. **Write clear documentation** in your readme
 5. **Include examples** and configuration options
 
@@ -617,12 +720,13 @@ To become an officially supported add-on:
 
 - **Add-on Template**: [ddev-addon-template](https://github.com/ddev/ddev-addon-template)
 - **Official Add-ons**: Browse examples at [addons.ddev.com](https://addons.ddev.com/)
-- **Redis Add-on**: [ddev-redis](https://github.com/ddev/ddev-redis) - Good example of PHP actions with `redis/scripts/`
+- **Redis Add-on**: [ddev-redis](https://github.com/ddev/ddev-redis) - Example of add-on with `removal_actions` and namespaced scripts directory
 
 ## Getting Help
 
+- **Maintenance Guide**: [DDEV Add-on Maintenance Guide](https://ddev.com/blog/ddev-add-on-maintenance-guide/)
 - **DDEV Discord**: Join [DDEV Discord](https://ddev.com/s/discord) for development support
 - **GitHub Issues**: Use [DDEV Issues](https://github.com/ddev/ddev/issues) for problems and questions
-- **Add-on Trainings and Resources**: [ddev.com search](https://ddev.com/search/)
+- **Add-on Trainings**: [DDEV Add-ons: Creating, maintaining, testing](https://www.youtube.com/watch?v=OtmVJtwsHMg) (YouTube) and [Advanced Add-On Techniques](https://ddev.com/blog/advanced-add-on-contributor-training/)
 
 Creating DDEV add-ons is a powerful way to contribute to the DDEV ecosystem. Whether you use traditional Bash actions or the new PHP-based actions, you can create sophisticated extensions that help developers worldwide.

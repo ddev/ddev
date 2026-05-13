@@ -34,7 +34,7 @@ We have automated testing and support for a staggering range of Docker providers
 | Docker Provider            | Support Level                                                          |
 |----------------------------|------------------------------------------------------------------------|
 | OrbStack (macOS)           | officially tested and supported on macOS                               |
-| Docker Desktop for Mac     | officially tested and supported on both Intel and Apple Silicon        |
+| Docker Desktop for Mac     | officially tested and supported on Apple Silicon                       |
 | Docker Desktop for Windows | officially tested and supported on WSL2 and traditional Windows        |
 | Colima (macOS)             | officially tested and supported                                        |
 | Docker-ce (Linux/WSL2)     | officially supported with automated tests on WSL2/Ubuntu. Recommended. |
