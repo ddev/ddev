@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "Moodle quickstart with $(ddev --version)" {
-  _skip_if_embargoed "moodle-composer"
-
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 

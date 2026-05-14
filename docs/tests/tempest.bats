@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "Tempest composer based quickstart with $(ddev --version)" {
-  _skip_if_embargoed "tempest-composer"
-
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 

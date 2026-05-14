@@ -12,7 +12,6 @@ teardown() {
 }
 
 @test "OpenMage git based quickstart with $(ddev --version)" {
-  _skip_if_embargoed "openmage-git"
   PROJNAME=my-openmage-git-site
 
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
@@ -59,7 +58,6 @@ teardown() {
 }
 
 @test "OpenMage composer based quickstart with $(ddev --version)" {
-  _skip_if_embargoed "openmage-composer"
   PROJNAME=my-openmage-composer-site
 
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}

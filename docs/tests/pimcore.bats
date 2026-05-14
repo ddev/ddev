@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "Pimcore Composer quickstart with $(ddev --version)" {
-  _skip_if_embargoed "pimcore-composer"
-
   skip "Pimcore requires a license key"
 
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}

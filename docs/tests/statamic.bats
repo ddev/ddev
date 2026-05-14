@@ -12,7 +12,6 @@ teardown() {
 }
 
 @test "Statamic Composer quickstart with $(ddev --version)" {
-  _skip_if_embargoed "statamic-composer"
   PROJNAME=my-statamic-composer-site
 
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
@@ -60,7 +59,5 @@ teardown() {
 
 
 @test "Statamic Git Clone quickstart with $(ddev --version)" {
-  _skip_if_embargoed "statamic-git"
-
   skip "Does not have a test yet"
 }

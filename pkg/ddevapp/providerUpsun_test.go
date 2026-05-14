@@ -40,8 +40,6 @@ const upsunSiteExpectation = "Super easy vegetarian pasta"
 
 // TestUpsunPull ensures we can pull backups from Upsun for a configured environment.
 func TestUpsunPull(t *testing.T) {
-	util.SkipIfEmbargoed(t)
-
 	var token string
 	if token = os.Getenv("DDEV_UPSUN_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_UPSUN_API_TOKEN env var has been set. Skipping %v", t.Name())
@@ -80,8 +78,6 @@ func TestUpsunPull(t *testing.T) {
 
 // TestUpsunPush ensures we can push to Upsun for a configured environment.
 func TestUpsunPush(t *testing.T) {
-	util.SkipIfEmbargoed(t)
-
 	var token string
 	if token = os.Getenv("DDEV_UPSUN_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_UPSUN_API_TOKEN env var has been set. Skipping %v", t.Name())

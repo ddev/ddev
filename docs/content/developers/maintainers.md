@@ -162,16 +162,56 @@ Include these keywords in your commit message or pull request title to skip CI r
 To skip specific tests globally (including for fork PRs), edit the files directly on the
 [`public-variables` branch](https://github.com/ddev/ddev/tree/public-variables/.github/public-variables) - no PR required.
 
+#### Go tests
+
+Pass the full Go test function name. `DDEV_EMBARGO_TESTS` is forwarded to `go test -skip` by the Makefile, so any test whose name matches the pattern is skipped automatically — no per-test code needed.
+
 ```bash
-# Skip quickstart tests
-DDEV_EMBARGO_TESTS="symfony-composer|symfony-cli|drupal10-composer"
+# Skip one Go test
+DDEV_EMBARGO_TESTS="TestLagoonPull" make testddevapp
 
-# Skip Go tests (e.g. provider tests)
-DDEV_EMBARGO_TESTS="TestLagoonPull|TestAcquiaPull|TestPantheonPush"
+# Skip multiple Go tests (pipe-separated, treated as a regex alternation by go test -skip)
+DDEV_EMBARGO_TESTS="TestLagoonPull|TestAcquiaPull|TestPantheonPush" make testddevapp
 
-# Skip specific PHP versions in TestPHPConfig
-DDEV_EMBARGO_PHP_VERSIONS="7.0,7.1"
+# Run a single test file, skipping specific tests
+DDEV_EMBARGO_TESTS="TestRandString|TestFormatBytes/Large_volume" make testonefile TESTFILE=./pkg/util/utils_test.go
+
+# Run a single test package, skipping specific tests
+DDEV_EMBARGO_TESTS="TestRandString|TestDownloadFile" make testonepkg TESTPKG=./pkg/util
 ```
 
-Include `[skip ci]` in the commit message to avoid triggering test workflows.
-To clear, empty the file. See [`.github/public-variables/README.md`](https://github.com/ddev/ddev/blob/main/.github/public-variables/README.md) for full details.
+#### Bats (quickstart) tests
+
+Patterns are matched as **case-sensitive substrings** against:
+
+1. The bats **filename** (without `.bats`), e.g. `sveltekit` for `sveltekit.bats`
+2. The **`@test` description** string
+
+```bash
+# Run all bats tests, skipping drupal (matches drupal.bats by filename)
+DDEV_EMBARGO_TESTS="drupal" make quickstart-test
+
+# Skip only the Composer test inside symfony.bats (matches the description)
+DDEV_EMBARGO_TESTS="Symfony Composer" bats docs/tests/symfony.bats
+
+# Skip all drupal tests except "Drupal CMS" (list the descriptions to skip by name)
+DDEV_EMBARGO_TESTS="Drupal 12|Drupal 11 quickstart|Drupal 10|Drupal 11 git" bats docs/tests/drupal.bats
+
+# Mix Go and bats patterns — set in public-variables for CI; test locally with each runner separately
+DDEV_EMBARGO_TESTS="TestLagoonPull|sveltekit|Symfony Composer" make testddevapp
+DDEV_EMBARGO_TESTS="TestLagoonPull|sveltekit|Symfony Composer" bats docs/tests/sveltekit.bats docs/tests/symfony.bats
+```
+
+#### PHP version embargo
+
+```bash
+# Skip specific PHP versions in TestPHPConfig
+DDEV_EMBARGO_PHP_VERSIONS="7.0,7.1" make testddevapp
+```
+
+#### Notes
+
+* Manually triggered (`workflow_dispatch`) runs **skip loading the `public-variables` branch entirely** so you can verify a fix without first removing it from the embargo list. Scheduled and PR-triggered runs always load it.
+* Include `[skip ci]` in the commit message when updating the embargo to avoid triggering test workflows.
+* To clear an embargo, empty the file on the `public-variables` branch.
+* See [`.github/public-variables/README.md`](https://github.com/ddev/ddev/blob/main/.github/public-variables/README.md) for full details.

@@ -43,7 +43,7 @@ on:
           - testonepkg
           - testonefile
       makeargs:
-        description: 'Extra make arguments: TESTPKG=./pkg/dockerutil (for testonepkg) or TESTFILE=./pkg/ddevapp/ddevapp_test.go (for testonefile)'
+        description: 'Extra make arguments: TESTPKG=./pkg/util (for testonepkg) or TESTFILE=./pkg/util/utils_test.go (for testonefile)'
         type: string
         required: false
         default: ''

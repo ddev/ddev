@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "Asterios composer based quickstart with $(ddev --version)" {
-  _skip_if_embargoed "asterios-composer"
-
   run mkdir -p my-asterios-site && cd my-asterios-site
   assert_success
 

@@ -12,7 +12,6 @@ teardown() {
 }
 
 @test "WordPress Bedrock quickstart with $(ddev --version)" {
-  _skip_if_embargoed "wp-bedrock"
   PROJNAME=my-wp-bedrock-site
 
   run mkdir -p my-wp-bedrock-site && cd my-wp-bedrock-site

@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "CodeIgniter composer based quickstart with $(ddev --version)" {
-  _skip_if_embargoed "codeigniter-composer"
-
   run mkdir -p my-codeigniter-site && cd my-codeigniter-site
   assert_success
 

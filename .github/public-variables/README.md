@@ -15,7 +15,10 @@ Each file in this directory (except `README.md`) is exported as a CI environment
 
 Current variables:
 
-- `DDEV_EMBARGO_TESTS` - pipe-separated test names to skip, e.g. `TestFoo|TestBar` or `symfony-composer|symfony-cli`
+- `DDEV_EMBARGO_TESTS` - pipe-separated patterns to skip tests.
+  - **Go tests:** pass the full test function name(s); forwarded verbatim to `go test -skip`, so it's a regex alternation. E.g. `TestLagoonPull|TestAcquiaPull`.
+  - **Bats tests:** each pattern is matched as a case-sensitive substring against the bats filename (without `.bats`) or the `@test` description. E.g. `sveltekit` skips all tests in `sveltekit.bats`; `Symfony Composer` skips only the Composer-flavored test in `symfony.bats`. Go and bats patterns can be combined: `TestLagoonPull|sveltekit`.
+  - `workflow_dispatch` runs skip loading the `public-variables` branch entirely, so maintainers can verify fixes without removing them from the embargo list first.
 - `DDEV_EMBARGO_PHP_VERSIONS` - comma-separated PHP versions to skip in `TestPHPConfig`, e.g. `7.0,7.1`
 
 ## Adding a new variable
@@ -43,6 +46,9 @@ Used in `.buildkite/test.sh`, `.github/workflows/test-reusable.yml`,
 
 Each CI run does `git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp`,
 reads all files via `git ls-tree` + `git show`, then deletes the temporary ref.
+
+The load step is skipped for `workflow_dispatch` (manually triggered) runs so maintainers can verify
+a previously-embargoed test is fixed without first removing it from the embargo list.
 
 ## Branch protection
 

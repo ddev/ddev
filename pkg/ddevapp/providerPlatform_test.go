@@ -38,8 +38,6 @@ const platformSiteExpectation = "Super easy vegetarian pasta"
 
 // TestPlatformPull ensures we can pull database/files from Upsun Fixed for a configured environment.
 func TestPlatformPull(t *testing.T) {
-	util.SkipIfEmbargoed(t)
-
 	var token string
 	if token = os.Getenv("DDEV_PLATFORM_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PLATFORM_API_TOKEN env var has been set. Skipping %v", t.Name())
@@ -78,8 +76,6 @@ func TestPlatformPull(t *testing.T) {
 
 // TestPlatformPush ensures we can push to Upsun Fixed for a configured environment.
 func TestPlatformPush(t *testing.T) {
-	util.SkipIfEmbargoed(t)
-
 	var token string
 	if token = os.Getenv("DDEV_PLATFORM_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PLATFORM_API_TOKEN env var has been set. Skipping %v", t.Name())
