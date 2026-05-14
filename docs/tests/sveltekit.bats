@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "sveltekit quickstart with $(ddev --version)" {
-  _skip_if_embargoed "sveltekit-demo"
-
   SVELTEKIT_SITENAME=${PROJNAME}
   run mkdir -p ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}
   assert_success

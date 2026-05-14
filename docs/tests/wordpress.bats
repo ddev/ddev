@@ -12,7 +12,6 @@ teardown() {
 }
 
 @test "WordPress wp-cli based quickstart with $(ddev --version)" {
-  _skip_if_embargoed "wordpress-cli"
   PROJNAME=my-wp-cli-site
 
   run mkdir -p my-wp-cli-site && cd my-wp-cli-site
@@ -52,7 +51,6 @@ teardown() {
 }
 
 @test "WordPress wp-cli based quickstart (different docroot) with $(ddev --version)" {
-  _skip_if_embargoed "wordpress-cli-docroot"
   PROJNAME=my-wp-docroot-site
 
   run mkdir -p my-wp-docroot-site && cd my-wp-docroot-site
@@ -92,7 +90,6 @@ teardown() {
 }
 
 @test "WordPress wp-cli based quickstart (subdirectory URL change) with $(ddev --version)" {
-  _skip_if_embargoed "wordpress-cli-subdirectory"
   PROJNAME=my-wp-subdir-site
 
   run mkdir -p my-wp-subdir-site && cd my-wp-subdir-site
@@ -143,7 +140,6 @@ teardown() {
 }
 
 @test "WordPress git based quickstart with $(ddev --version)" {
-  _skip_if_embargoed "wordpress-git"
   PROJNAME=my-wp-git-site
 
   PROJECT_GIT_URL=https://github.com/ddev/test-wordpress.git

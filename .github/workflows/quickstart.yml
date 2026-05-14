@@ -45,6 +45,7 @@ jobs:
           fetch-depth: 0
 
       - name: Load variables from public-variables branch
+        if: github.event_name != 'workflow_dispatch'
         run: |
           git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
           while IFS= read -r varname; do

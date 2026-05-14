@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "Wagtail quickstart with $(ddev --version)" {
-  _skip_if_embargoed "wagtail-python"
-
   WAGTAIL_SITENAME=${PROJNAME}
   run mkdir -p ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
   assert_success

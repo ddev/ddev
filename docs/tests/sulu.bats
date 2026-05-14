@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "Sulu quickstart with $(ddev --version)" {
-  _skip_if_embargoed "sulu-composer"
-
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
   run ddev config --project-type=php --docroot=public --upload-dirs=uploads --database=mysql:8.0

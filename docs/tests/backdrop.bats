@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "backdrop new-project quickstart with $(ddev --version)" {
-  _skip_if_embargoed "backdrop-new"
-
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
@@ -61,8 +59,6 @@ teardown() {
 }
 
 @test "backdrop existing project with $(ddev --version)" {
-  _skip_if_embargoed "backdrop-existing"
-
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 

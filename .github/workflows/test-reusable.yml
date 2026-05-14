@@ -49,7 +49,7 @@ on:
         type: string
         default: ''
       makeargs:
-        description: 'Extra make arguments: TESTPKG=./pkg/dockerutil (for testonepkg) or TESTFILE=./pkg/ddevapp/ddevapp_test.go (for testonefile)'
+        description: 'Extra make arguments: TESTPKG=./pkg/util (for testonepkg) or TESTFILE=./pkg/util/utils_test.go (for testonefile)'
         required: false
         type: string
         default: ''
@@ -149,6 +149,7 @@ jobs:
           fetch-depth: 0
 
       - name: Load variables from public-variables branch
+        if: github.event_name != 'workflow_dispatch'
         run: |
           git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
           while IFS= read -r varname; do

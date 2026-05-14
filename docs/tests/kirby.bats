@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "Kirby new project quickstart with $(ddev --version)" {
-  _skip_if_embargoed "kirby-composer"
-
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 

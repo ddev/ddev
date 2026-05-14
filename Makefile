@@ -136,6 +136,10 @@ endif
 DDEV_PATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)
 DDEV_BINARY_FULLPATH=$(DDEV_PATH)/$(DDEVNAME)
 
+# When DDEV_EMBARGO_TESTS is set, pass a -skip flag to go test so embargoed
+# tests are skipped at the framework level without requiring per-test code.
+EMBARGO_SKIP_FLAG := $(if $(DDEV_EMBARGO_TESTS),-skip "$(DDEV_EMBARGO_TESTS)",)
+
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
@@ -144,46 +148,42 @@ testcmd: $(DEFAULT_BUILD) setup
 	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 testpkg: testnotddevapp testddevapp
 
 testddevapp: $(DEFAULT_BUILD) setup
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 testnotddevapp: $(DEFAULT_BUILD) setup
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 testfullsitesetup: $(DEFAULT_BUILD) setup
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp -run TestDdevFullSiteSetup $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp -run TestDdevFullSiteSetup $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 testonepkg: $(DEFAULT_BUILD) setup
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
-	@if [ -z "$(TESTPKG)" ]; then echo "ERROR: TESTPKG must be set, e.g., make testonepkg TESTPKG=./pkg/dockerutil"; exit 1; fi
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(TESTPKG) $(TESTARGS)
+	@if [ -z "$(TESTPKG)" ]; then echo "ERROR: TESTPKG must be set, e.g., make testonepkg TESTPKG=./pkg/util"; exit 1; fi
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(TESTPKG) $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 # testonefile runs all tests found in a single _test.go file.
 # Usage: make testonefile TESTFILE=./pkg/ddevapp/ddevapp_test.go [TESTARGS="-count=1"]
 testonefile: $(DEFAULT_BUILD) setup
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
-	@if [ -z "$(TESTFILE)" ]; then echo "ERROR: TESTFILE must be set, e.g., make testonefile TESTFILE=./cmd/ddev/cmd/utility-tls-diagnose_test.go"; exit 1; fi
-	@export TESTPKG_DIR=$$(dirname "$(TESTFILE)"); \
-	export TESTFUNCS=$$(grep -E '^func Test' "$(TESTFILE)" | sed 's/func \(Test[^(]*\).*/\1/' | tr '\n' '|' | sed 's/|$$//'); \
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); \
-	echo "Testing $$TESTPKG_DIR with -run $$TESTFUNCS"; \
-	go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $$TESTPKG_DIR -run "$$TESTFUNCS" $(TESTARGS)
+	@if [ -z "$(TESTFILE)" ]; then echo "ERROR: TESTFILE must be set, e.g., make testonefile TESTFILE=./pkg/util/utils_test.go"; exit 1; fi
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell dirname "$(TESTFILE)") -run "$(shell grep -oE '^func Test[[:alnum:]_]+' "$(TESTFILE)" | sed 's/^func //' | tr '\n' '|' | sed 's/|$$//')" $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 testwininstaller: windows_amd64_install
 	@echo "Running Windows installer tests..."
-	export DDEV_TEST_USE_REAL_INSTALLER=true; go test -p 1 -timeout 30m -v ./winpkg -run TestWindowsInstaller $(TESTARGS)
+	export DDEV_TEST_USE_REAL_INSTALLER=true; go test -p 1 -timeout 30m -v ./winpkg -run TestWindowsInstaller $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 setup:
 	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,bin/windows_arm64,src,pkg/mod/cache,.cache}

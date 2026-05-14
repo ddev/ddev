@@ -12,7 +12,6 @@ teardown() {
 }
 
 @test "CakePHP Composer quickstart with $(ddev --version)" {
-  _skip_if_embargoed "cakephp-composer"
   PROJNAME=my-cakephp-composer-site
 
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}

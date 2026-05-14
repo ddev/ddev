@@ -12,7 +12,6 @@ teardown() {
 }
 
 @test "Expression Engine Zip File Download quickstart with $(ddev --version)" {
-  _skip_if_embargoed "ee-zip"
   PROJNAME=my-ee-zip-site
 
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
@@ -61,7 +60,6 @@ teardown() {
 }
 
 @test "Expression Engine Git Clone quickstart with $(ddev --version)" {
-  _skip_if_embargoed "ee-git"
   PROJNAME=my-ee-git-site
 
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}

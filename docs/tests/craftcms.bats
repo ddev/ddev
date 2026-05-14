@@ -11,8 +11,6 @@ teardown() {
   _common_teardown
 }
 @test "Craft CMS New Projects quickstart with $(ddev --version)" {
-  _skip_if_embargoed "craftcms-new"
-
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
@@ -56,7 +54,5 @@ teardown() {
 }
 
 @test "Craft CMS Existing Projects quickstart with $(ddev --version)" {
-  _skip_if_embargoed "craftcms-existing"
-
   skip "Does not have a test yet"
 }

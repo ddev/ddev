@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "Joomla quickstart with $(ddev --version)" {
-  _skip_if_embargoed "joomla-zip"
-
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 

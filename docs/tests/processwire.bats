@@ -12,7 +12,6 @@ teardown() {
 }
 
 @test "processwire zipball with $(ddev --version)" {
-  _skip_if_embargoed "processwire-zip"
   PROJNAME=my-processwire-zip-site
 
   run mkdir -p my-processwire-zip-site && cd my-processwire-zip-site
@@ -53,7 +52,6 @@ teardown() {
 }
 
 @test "processwire composer with $(ddev --version)" {
-  _skip_if_embargoed "processwire-composer"
   PROJNAME=my-processwire-composer-site
 
   run mkdir -p my-processwire-composer-site && cd my-processwire-composer-site

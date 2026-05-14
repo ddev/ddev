@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "October CMS new project quickstart with $(ddev --version)" {
-  _skip_if_embargoed "octobercms-new"
-
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
@@ -61,7 +59,5 @@ teardown() {
 }
 
 @test "October CMS existing project quickstart with $(ddev --version)" {
-  _skip_if_embargoed "octobercms-existing"
-
   skip "Does not have a test yet"
 }

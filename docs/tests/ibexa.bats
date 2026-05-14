@@ -12,8 +12,6 @@ teardown() {
 }
 
 @test "Ibexa DXP quickstart with $(ddev --version)" {
-  _skip_if_embargoed "ibexa-composer"
-
   # mkdir -p ${PROJNAME} && cd ${PROJNAME}
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success

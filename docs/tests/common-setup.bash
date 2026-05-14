@@ -6,6 +6,23 @@ _common_setup() {
     bats_load_library bats-support
     bats_load_library bats-assert
     bats_load_library bats-file
+    # Auto-skip if the test matches DDEV_EMBARGO_TESTS.
+    # Each pipe-separated pattern is matched as a substring against:
+    #   1. The bats file basename (no .bats extension), e.g. "sveltekit"
+    #   2. $BATS_TEST_DESCRIPTION (the @test description string)
+    if [ -n "${DDEV_EMBARGO_TESTS:-}" ]; then
+        local _bats_basename _embargo_id
+        _bats_basename=$(basename "${BATS_TEST_FILENAME:-}" .bats)
+        IFS='|' read -ra _embargo_ids <<< "${DDEV_EMBARGO_TESTS}"
+        for _embargo_id in "${_embargo_ids[@]}"; do
+            _embargo_id=$(echo "$_embargo_id" | xargs)
+            [ -z "$_embargo_id" ] && continue
+            if [[ "$_bats_basename" == *"$_embargo_id"* ]] \
+              || [[ "${BATS_TEST_DESCRIPTION:-}" == *"$_embargo_id"* ]]; then
+                skip "Auto-skipped by DDEV_EMBARGO_TESTS match: ${_embargo_id}"
+            fi
+        done
+    fi
     mkdir -p ~/tmp
     tmpdir=$(mktemp -d ~/tmp/${PROJNAME}.XXXXXX)
     export DDEV_NO_INSTRUMENTATION=true
@@ -13,27 +30,6 @@ _common_setup() {
     mkdir -p ${tmpdir} && cd ${tmpdir} || exit 1
     ddev delete -Oy ${PROJNAME:-notset} >/dev/null
 #    echo "# Starting test at $(date)" >&3
-}
-
-# Check if a test should be skipped based on DDEV_EMBARGO_TESTS
-# Set DDEV_EMBARGO_TESTS to a pipe-separated list of test identifiers to skip
-# Examples:
-#   DDEV_EMBARGO_TESTS="symfony-composer" make quickstart-test
-#   DDEV_EMBARGO_TESTS="symfony-composer|symfony-cli|drupal10-composer" make quickstart-test
-# Usage in test files: _skip_if_embargoed "test-identifier"
-_skip_if_embargoed() {
-    local test_id="$1"
-    if [ -n "${DDEV_EMBARGO_TESTS:-}" ]; then
-        IFS='|' read -ra SKIP_TESTS <<< "${DDEV_EMBARGO_TESTS}"
-        local skip_id
-        for skip_id in "${SKIP_TESTS[@]}"; do
-            # Trim whitespace
-            skip_id=$(echo "$skip_id" | xargs)
-            if [ "$skip_id" = "$test_id" ]; then
-                skip "Test skipped via DDEV_EMBARGO_TESTS: ${test_id}"
-            fi
-        done
-    fi
 }
 
 _extra_info() {
