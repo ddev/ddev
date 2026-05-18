@@ -7,7 +7,6 @@ import (
 	osexec "os/exec"
 	"path/filepath"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -85,21 +84,25 @@ func CanRunWithoutDocker() bool {
 	return false
 }
 
-// CheckAvailableSpace outputs a warning if Docker space is low
-func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(versionconstants.UtilitiesImage, "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df -P / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil, nil, nil)
-	out = strings.Trim(out, "% \r\n")
-	parts := strings.Split(out, " ")
-	if len(parts) != 2 {
-		util.Warning("Unable to determine Docker space usage: %s", out)
-		return
+// CheckAvailableSpace returns an error if Docker space is low
+func CheckAvailableSpace() error {
+	// stat -f -c "%a %b %S" / outputs three space-separated values:
+	// %a = free blocks available to non-root, %b = total blocks, %S = block size in bytes
+	_, out, _ := RunSimpleContainer(versionconstants.UtilitiesImage, "check-available-space-"+util.RandString(6), []string{"stat", "-f", "-c", "%a %b %S", "/"}, []string{}, []string{}, []string{}, "", true, false, nil, nil, nil)
+	var availBlocks, totalBlocks, blockSize int64
+	if n, err := fmt.Sscanf(strings.TrimSpace(out), "%d %d %d", &availBlocks, &totalBlocks, &blockSize); n != 3 || err != nil {
+		return fmt.Errorf("unable to determine available disk space from %q: %v", out, err)
 	}
-	spacePercent, _ := strconv.Atoi(parts[1])
-	spaceAbsolute, _ := strconv.Atoi(parts[0]) // Note that this is in KB
-
-	if spaceAbsolute < nodeps.MinimumDockerSpaceWarning {
-		util.Error("Your Docker install has only %d available disk space, less than %d warning level (%d%% used). Please increase disk image size. More info at %s", spaceAbsolute, nodeps.MinimumDockerSpaceWarning, spacePercent, "https://docs.ddev.com/en/stable/users/usage/troubleshooting/#out-of-disk-space")
+	spaceAvail := availBlocks * blockSize
+	spaceTotal := totalBlocks * blockSize
+	if spaceTotal == 0 {
+		return fmt.Errorf("unable to determine available disk space: total space is zero")
 	}
+	if spaceAvail < nodeps.MinimumDockerSpaceWarning {
+		spacePercent := int((spaceTotal - spaceAvail) * 100 / spaceTotal)
+		return fmt.Errorf("your Docker install has only %s available disk space, less than %s warning level (%d%% used). Please increase disk image size. More info at %s", util.FormatBytes(spaceAvail), util.FormatBytes(nodeps.MinimumDockerSpaceWarning), spacePercent, "https://docs.ddev.com/en/stable/users/usage/troubleshooting/#out-of-disk-space")
+	}
+	return nil
 }
 
 // CheckDockerAuth checks if Docker authentication is properly configured
