@@ -591,6 +591,12 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 		}
 	}
 
+	if cwd, err := os.Getwd(); err == nil {
+		if _, parentRoot, nested := DetectNestedProject(cwd); nested {
+			appDesc["parent_approot"] = parentRoot
+		}
+	}
+
 	err = app.ProcessHooks("post-describe")
 	if err != nil {
 		return nil, fmt.Errorf("failed to process post-describe hooks: %v", err)

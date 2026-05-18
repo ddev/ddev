@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/ddev/ddev/pkg/amplitude"
@@ -54,7 +55,6 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 		if len(os.Args) < 2 {
 			return
 		}
-		command := os.Args[1]
 
 		// Anonymize user defined custom commands.
 		cmdCopy := *cmd
@@ -69,12 +69,12 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 		// ddev describe -j over and over again.
 		// And we don't want to send __complete commands,
 		// that are called each time you press <TAB>.
-		if !output.JSONOutput && cmdCopy.Name() != cobra.ShellCompRequestCmd {
+		if !output.JSONOutput && !isShellCompletionRun() {
 			amplitude.TrackCommand(&cmdCopy, argsCopy)
 		}
 
 		// Skip Docker and other validation for most commands
-		if command != "start" && command != "restart" {
+		if !slices.Contains([]string{"start", "restart"}, cmdCopy.Name()) {
 			return
 		}
 
@@ -131,10 +131,26 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 	},
 }
 
+// isShellCompletionRun reports whether the current invocation is a shell
+// completion request, which must not emit user-facing warnings.
+func isShellCompletionRun() bool {
+	return len(os.Args) >= 2 && slices.Contains([]string{cobra.ShellCompRequestCmd, cobra.ShellCompNoDescRequestCmd}, os.Args[1])
+}
+
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	if err := RootCmd.Execute(); err != nil {
+	err := RootCmd.Execute()
+	// Warn after execute rather than in PersistentPreRun/PostRun so that
+	// unknown commands still get the warning (cobra skips all hooks for them).
+	if !output.JSONOutput && !isShellCompletionRun() {
+		if cwd, cwdErr := os.Getwd(); cwdErr == nil {
+			if c, p, nested := ddevapp.DetectNestedProject(cwd); nested {
+				util.Warning("Nested project at %q overrides parent at %q\nIf this is not intended, run the command from the parent project root directory.", c, p)
+			}
+		}
+	}
+	if err != nil {
 		os.Exit(-1)
 	}
 }
