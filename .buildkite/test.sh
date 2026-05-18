@@ -15,15 +15,14 @@ if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAG
   exit 0
 fi
 
-# Prevent MSYS (Git for Windows bash) from converting git ref:path syntax to Windows paths
-export MSYS_NO_PATHCONV=1
 git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
 while IFS= read -r varname; do
   [[ "$varname" == "README.md" ]] && continue
-  value=$(git show "refs/public-variables-tmp:.github/public-variables/$varname")
+  # MSYS_NO_PATHCONV prevents Git for Windows bash from mangling the ref:path syntax
+  value=$(MSYS_NO_PATHCONV=1 git show "refs/public-variables-tmp:.github/public-variables/$varname")
   echo "$varname=${value}"
   export "$varname=$value"
-done < <(git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)
+done < <(MSYS_NO_PATHCONV=1 git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)
 git update-ref -d refs/public-variables-tmp
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
