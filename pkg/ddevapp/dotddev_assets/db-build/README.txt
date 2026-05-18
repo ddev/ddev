@@ -20,4 +20,6 @@ Examine the resultant generated Dockerfile (which you will never edit directly),
 
 You can use the `.ddev/db-build` directory as the Docker “context” directory as well. So for example, if a file named `file.txt` exists in `.ddev/db-build`, you can use `ADD file.txt /` in the Dockerfile.
 
+Global variants in `~/.ddev/db-build/` are also supported and apply to all projects on this machine. Global files are inserted *before* project-level files.
+
 See https://docs.ddev.com/en/stable/users/extend/customizing-images/ for advanced examples.
