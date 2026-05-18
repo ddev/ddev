@@ -3393,6 +3393,8 @@ func TestDdevDescribe(t *testing.T) {
 
 			desc, err := app.Describe(false)
 			assert.NoError(err)
+			_, hasXdebugInDescribe := desc["xdebug_enabled"]
+			assert.False(hasXdebugInDescribe, "describe JSON must not include config-derived xdebug_enabled (#8159)")
 			if state.running {
 				assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
 			} else {

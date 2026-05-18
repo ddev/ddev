@@ -559,6 +559,8 @@ ddev delete images --all
 
 Get a detailed description of a running DDEV project.
 
+`ddev describe -j` (machine-readable JSON) does not expose `xdebug_enabled`. That value is project configuration (`ddev config --xdebug-enabled`); runtime Xdebug state is shown by `ddev xdebug status`.
+
 Example:
 
 ```shell
