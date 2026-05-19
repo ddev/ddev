@@ -425,16 +425,16 @@ func TestFormatBytes(t *testing.T) {
 	}{
 		{"Zero bytes", 0, "0B"},
 		{"Small bytes", 512, "512B"},
-		{"Exactly 1KB", 1000, "1.0KB"},
-		{"Multiple KB", 2500, "2.5KB"},
-		{"Exactly 1MB", 1000 * 1000, "1.0MB"},
-		{"Fractional MB", 1000*1000 + 500*1000, "1.5MB"},
-		{"Large MB", 157300000, "157.3MB"},
-		{"Exactly 1GB", 1000 * 1000 * 1000, "1.0GB"},
-		{"Fractional GB", int64(1000*1000*1000) + int64(500*1000*1000), "1.5GB"},
-		{"Multiple GB", int64(5) * 1000 * 1000 * 1000, "5.0GB"},
-		{"Exactly 1TB", int64(1000) * 1000 * 1000 * 1000, "1.0TB"},
-		{"Large volume", 982700000, "982.7MB"}, // Approximate d11 volume size
+		{"Exactly 1KB", 1024, "1.0KB"},
+		{"Multiple KB", 2560, "2.5KB"},
+		{"Exactly 1MB", 1024 * 1024, "1.0MB"},
+		{"Fractional MB", 1024*1024 + 512*1024, "1.5MB"},
+		{"Large MB", 157286400, "150.0MB"},
+		{"Exactly 1GB", 1024 * 1024 * 1024, "1.0GB"},
+		{"Fractional GB", int64(1024*1024*1024) + int64(512*1024*1024), "1.5GB"},
+		{"Multiple GB", int64(5) * 1024 * 1024 * 1024, "5.0GB"},
+		{"Exactly 1TB", int64(1024) * 1024 * 1024 * 1024, "1.0TB"},
+		{"Large volume", 982700000, "937.2MB"}, // Approximate d11 volume size
 	}
 
 	for _, tt := range tests {
