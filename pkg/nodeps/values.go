@@ -137,7 +137,7 @@ const (
 	DefaultDefaultContainerTimeout  = "120"
 	InternetDetectionTimeoutDefault = 3000
 	TraefikMonitorPortDefault       = "10999"
-	MinimumDockerSpaceWarning       = 5 * 1000 * 1000 * 1000 // 5GB in bytes
+	MinimumDockerSpaceWarning       = 5 * 1024 * 1024 * 1024 // 5GiB in bytes
 )
 
 // IsValidPHPVersion is a helper function to determine if a PHP version is valid, returning
