@@ -2087,7 +2087,8 @@ func (app *DdevApp) Start() error {
 	// instead of bind-mount for the /usr/local/bin/xhprof directory anyway.
 	if app.GetXHProfMode() == types.XHProfModePrepend && globalconfig.DdevGlobalConfig.NoBindMounts {
 		stdout, stderr, err := app.Exec(&ExecOpts{
-			Cmd: `ln -sf /mnt/ddev_config/xhprof/xhprof_prepend.php /usr/local/bin/xhprof/xhprof_prepend.php`,
+			Cmd:  `ln -sf /mnt/ddev_config/xhprof/xhprof_prepend.php /usr/local/bin/xhprof/xhprof_prepend.php`,
+			User: "root",
 		})
 		if err != nil {
 			util.Warning("Unable to run ln -sf /mnt/ddev_config/xhprof/xhprof_prepend.php /usr/local/bin/xhprof/xhprof_prepend.php: %v, stdout=%s, stderr=%s", err, stdout, stderr)
