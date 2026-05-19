@@ -1,9 +1,15 @@
-# Add $HOME/bin as the first item to the $PATH.
+# Add user-owned command directories as the first items in the $PATH.
 case ":$PATH:" in
     # If the item is already in $PATH, don't add it again.
     *":$HOME/bin:"*) ;;
     # Otherwise, add it.
     *) PATH="$HOME/bin:$PATH" ;;
+esac
+case ":$PATH:" in
+    # If the item is already in $PATH, don't add it again.
+    *":$HOME/.local/bin:"*) ;;
+    # Otherwise, add it.
+    *) PATH="$HOME/.local/bin:$PATH" ;;
 esac
 # Add /var/www/html/bin as the next-to-last item to the $PATH.
 case ":$PATH:" in

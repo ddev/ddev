@@ -21,6 +21,25 @@ setup() {
   assert_success
 }
 
+@test "update-alternatives can switch PHP without world-writable alternatives directories for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  run docker exec -t "$CONTAINER_NAME" bash -c 'test "$(stat -c %A /etc/alternatives | cut -c9)" != "w" && test "$(stat -c %A /var/lib/dpkg/alternatives | cut -c9)" != "w"'
+  assert_success
+  run docker exec -t "$CONTAINER_NAME" update-alternatives --set php "/usr/bin/php${PHP_VERSION}"
+  assert_success
+  run docker exec -t "$CONTAINER_NAME" update-alternatives --set php-fpm "/usr/sbin/php-fpm${PHP_VERSION}"
+  assert_success
+}
+
+@test "service runtime and log paths are writable without broadening base runtime directories for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  run docker exec -t "$CONTAINER_NAME" bash -c 'test "$(stat -c %A /run | cut -c9)" != "w" && test -w /run/php && test -w /var/run/nginx && test -w /var/run/supervisor && test -w /var/run/apache2 && test -w /var/lock/apache2 && touch /var/log/apache2/ddev-runtime-write-test.log /var/log/nginx/ddev-runtime-write-test.log && printf test >> /var/log/php-fpm.log && printf test >> /var/log/supervisord.log'
+  assert_success
+}
+
+@test "legacy PHP-FPM socket paths remain available for custom webserver configs for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  run docker exec -t "$CONTAINER_NAME" bash -c 'test -L /run/php-fpm.sock && test "$(readlink /run/php-fpm.sock)" = "/run/php/php-fpm.sock" && test -S /run/php-fpm.sock && test -S /var/run/php-fpm.sock'
+  assert_success
+}
+
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   run docker exec -t $CONTAINER_NAME enable_xdebug
   assert_success
