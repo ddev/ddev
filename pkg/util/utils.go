@@ -591,6 +591,8 @@ func ExtractCurlBody(curlOutput string) string {
 
 // FormatBytes converts bytes to a human-readable string
 // Returns format like: "2.3GB", "156.7MB", "1.5KB", "0B"
+// SI (metric):  1 KB  = 1000 bytes (KB/MB/GB)    - used by macOS Finder and storage manufacturers.
+// IEC 80000-13: 1 KiB = 1024 bytes (KiB/MiB/GiB) - used by Linux tools and Windows (mislabeled as GB).
 func FormatBytes(bytes int64) string {
 	const unit = 1024
 	if bytes < unit {

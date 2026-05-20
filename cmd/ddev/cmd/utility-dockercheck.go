@@ -170,7 +170,10 @@ ddev ut dockercheck`,
 			util.Success("Able to use internet inside container.")
 		}
 
-		dockerutil.CheckAvailableSpace()
+		if err := dockerutil.CheckAvailableSpace(); err != nil {
+			util.Warning("Warning: %v", err)
+			hasWarnings = true
+		}
 
 		// Test buildx with a trivial build on the host
 		if buildxErr == nil {

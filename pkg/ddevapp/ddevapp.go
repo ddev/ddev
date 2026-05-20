@@ -884,7 +884,9 @@ func (app *DdevApp) GetDBDumpCommand() string {
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool, noDrop bool, targetDB string) error {
 	_ = app.DockerEnv()
-	dockerutil.CheckAvailableSpace()
+	if err := dockerutil.CheckAvailableSpace(); err != nil {
+		util.Warning("Warning: %v", err)
+	}
 
 	if targetDB == "" {
 		targetDB = "db"
@@ -1737,7 +1739,9 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	dockerutil.CheckAvailableSpace()
+	if err := dockerutil.CheckAvailableSpace(); err != nil {
+		util.Warning("Warning: %v", err)
+	}
 
 	// Copy any homeadditions content into .ddev/.homeadditions
 	tmpHomeadditionsPath := app.GetConfigPath(".homeadditions")
