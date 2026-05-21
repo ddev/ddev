@@ -81,28 +81,14 @@ install_python_tools() {
 
   source "$PYTHON_ENV/bin/activate"
 
-  # Download mkdocs requirements from repository
-  log_info "Fetching mkdocs requirements from DDEV repository..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -fsSL https://github.com/ddev/ddev/raw/refs/heads/main/docs/mkdocs-pip-requirements \
-      -o "$INSTALL_DIR/mkdocs-requirements.txt"
-  elif command -v wget >/dev/null 2>&1; then
-    wget -q https://github.com/ddev/ddev/raw/refs/heads/main/docs/mkdocs-pip-requirements \
-      -O "$INSTALL_DIR/mkdocs-requirements.txt"
-  else
-    log_error "Neither curl nor wget found. Cannot download requirements."
-    exit 1
-  fi
-
-  # Create combined requirements file
   cat >"$INSTALL_DIR/python-requirements.txt" <<'EOF'
 # Spell checking tools
 pyspelling
 pymdown-extensions
 EOF
 
-  # Append mkdocs requirements
-  cat "$INSTALL_DIR/mkdocs-requirements.txt" >>"$INSTALL_DIR/python-requirements.txt"
+  # Append docs requirements
+  cat "$(dirname "$0")/../docs/requirements.txt" >>"$INSTALL_DIR/python-requirements.txt"
 
   log_info "Installing Python packages (this may take a moment)..."
   python3 -m pip install -r "$INSTALL_DIR/python-requirements.txt" >/dev/null
@@ -143,7 +129,7 @@ verify_installation() {
   export PATH="$PYTHON_ENV/bin:$NODE_ENV/bin:$PATH"
 
   local tools=(
-    "mkdocs"
+    "zensical"
     "pyspelling"
     "markdownlint"
     "textlint"

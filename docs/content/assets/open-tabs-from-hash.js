@@ -1,4 +1,4 @@
-const fixTabs = () => {
+const openTabsFromHash = () => {
     // Get current hash
     let currentHash = window.location.href.split('#')[1];
     if (!currentHash) return
@@ -18,10 +18,10 @@ const fixTabs = () => {
     // get index of tab to click on
     let index = [...parentElement.parentNode.children].indexOf(parentElement)
 
-    // Simulate mouse click click on our tab label
+    // Simulate mouse click on our tab label
     allTabs[index].click();
 
-    // If our tab is nested within another tab, open parent tab..
+    // If our tab is nested within another tab, open parent tab.
     if (allTabs[0].getAttribute('for').startsWith('__tabbed_2')) {
         // Get outer tabs
         let outerTabs = document.querySelector('.tabbed-labels').children
@@ -37,7 +37,7 @@ const fixTabs = () => {
     }
 
     if (allTabs[0].getAttribute('for').startsWith('__tabbed_3')) {
-        console.log('While 1 nested tab is debatable 2 should be avoided as it is definitely not user friendly.')
+        console.log('While 1 nested tab is debatable 2 should be avoided as it is definitely not user-friendly.')
     }
 
     // scroll to hash
@@ -45,7 +45,7 @@ const fixTabs = () => {
 };
 
 // Fires after initial page load
-window.addEventListener('load', fixTabs, false);
+window.addEventListener('load', openTabsFromHash, false);
 
 // Fires whenever the hash changes
-window.addEventListener('hashchange', fixTabs, false);
+window.addEventListener('hashchange', openTabsFromHash, false);

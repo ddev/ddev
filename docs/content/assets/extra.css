@@ -111,7 +111,3 @@ dt {
     mask-position: center;
     -webkit-mask-position: center;
 }
-
-img[alt="Figurative Mark"], img[alt="Word/Figurative Mark"] {
-    height: 150px
-}

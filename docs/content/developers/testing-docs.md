@@ -28,11 +28,11 @@ After forking the repository, you can clone it to your local machine.
 
 Now that you’ve got a local copy, you can make your changes.
 
-| Action               | Path                                                                    |
-|----------------------|-------------------------------------------------------------------------|
-| Documentation        | `./docs/content/users/*` <br> `./docs/content/developers/*`             |
-| MkDocs configuration | `./mkdocs.yml`                                                          |
-| Front end            | `./docs/content/assets/extra.css` <br> `./docs/content/assets/extra.js` |
+| Action                 | Path                                                                    |
+|------------------------|-------------------------------------------------------------------------|
+| Documentation          | `./docs/content/users/*` <br> `./docs/content/developers/*`             |
+| Zensical configuration | `./mkdocs.yml`                                                          |
+| Front end              | `./docs/content/assets/extra.css` <br> `./docs/content/assets/extra.js` |
 
 ## Development Tools Installation
 
@@ -42,7 +42,7 @@ For documentation development and testing, install the required tools once using
 scripts/install-dev-tools.sh
 ```
 
-This installs `mkdocs`, `pyspelling`, `markdownlint`, `textlint`, `linkspector`, and `aspell` to `$HOME/.ddev-dev-tools/`.
+This installs `zensical`, `pyspelling`, `markdownlint`, `textlint`, `linkspector`, and `aspell` to `$HOME/.ddev-dev-tools/`.
 
 The project's `.envrc` automatically adds these tools to your PATH when you're in the DDEV directory. If you want the tools available globally, add this to your shell profile (`.bashrc`, `.bash_profile`, or `.zshrc`):
 
@@ -67,30 +67,9 @@ exact = ["~/workspace/ddev/.envrc"]
 
 ## Preview Changes
 
-Preview your changes locally by running `make mkdocs-serve`.
+Preview your changes locally by running `make zensical-serve`.
 
 This will launch a web server on port 8000 and automatically refresh pages as they’re edited.
-
-!!!tip "Installing mkdocs locally on macOS"
-    On macOS with recent versions of Homebrew use this technique (or `direnv` above) to install `mkdocs`:
-
-    ```bash
-    brew install pipx
-    export PIPX_BIN_DIR=/usr/local/bin
-    pipx install mkdocs
-    pipx runpip mkdocs install -r docs/mkdocs-pip-requirements
-    pipx ensurepath
-    ```
-
-!!!tip "Installing mkdocs locally on Debian/Ubuntu Linux or WSL2 with Ubuntu"
-    On Debian/Ubuntu Linux or WSL2 with Ubuntu, use this technique (or `direnv` above) to install `mkdocs`:
-
-    ```bash
-    sudo apt-get update && sudo apt-get install python3-full python-is-python3 pipx
-    export PIPX_BIN_DIR=/usr/local/bin
-    export PIPX_HOME=/usr/local/pipx
-    sudo --preserve-env pipx install mkdocs --pip-args "-r docs/mkdocs-pip-requirements"
-    ```
 
 ## Check Markdown for Errors
 

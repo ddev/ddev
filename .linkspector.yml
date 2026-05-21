@@ -1,7 +1,7 @@
 dirs:
   - docs/content
 ignorePatterns:
-  # Ignore internal anchors that are already handled by mkdocs
+  # Ignore internal anchors that are already handled by zensical
   - pattern: ".md#"
   - pattern: "https://www.drupal.org/project/"
   - pattern: "https://www.drupal.org/forum/"
