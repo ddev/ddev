@@ -11,9 +11,9 @@ DDEV add-ons provide a powerful way to extend development environments. You can 
 
 1. Use the [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template) repository
 2. Click "Use this template" to create your own repository
-3. Customize the `install.yaml` file
-4. Always add the [`#ddev-generated`](#the-ddev-generated-comment) comment to files installed by the add-on so ddev can update them
-5. Test with `tests.bats`
+3. Customize the `install.yaml` file - see the [example](https://github.com/ddev/ddev-addon-template/blob/main/install.yaml)
+4. Add the [`#ddev-generated`](#the-ddev-generated-comment) comment to all files installed by the add-on
+5. Test with [Bats](#bats-testing-framework)
 6. Create a release when ready
 7. If you expect the add-on to be maintained and useful to others, add the `ddev-get` [topic](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics) to your GitHub repository
 
@@ -570,8 +570,8 @@ echo "Requirements validated\n";
 
 Add `#ddev-generated` as a comment in any file your add-on creates or copies into a project. DDEV uses this marker to:
 
-1. **Track managed files** — on a subsequent `ddev add-on get`, DDEV replaces the file automatically if it contains `#ddev-generated`, even if the user has modified it. Files with `#ddev-generated` that are listed in the `project_files` or `global_files` will be automatically removed on `ddev add-on remove` if the `#ddev-generated` is found in the file.
-2. **Enable clean removal** — `ddev add-on remove` deletes all files that still contain `#ddev-generated`
+1. **Track managed files** - on a subsequent `ddev add-on get`, DDEV replaces the file automatically if it contains `#ddev-generated`, even if the user has modified it. Files with `#ddev-generated` that are listed in the `project_files` or `global_files` will be automatically removed on `ddev add-on remove` if the `#ddev-generated` is found in the file.
+2. **Enable clean removal** - `ddev add-on remove` deletes all files that still contain `#ddev-generated`
 
 Files that do **not** contain this comment are left in place during removal (assumed to be user-modified). The [`removal_actions`](#core-sections) section is the place to clean up any such files.
 
@@ -587,6 +587,14 @@ In PHP actions, include it as the first line of generated files:
 
 ```php
 file_put_contents('docker-compose.myservice.yaml', "#ddev-generated\n" . yaml_emit($config));
+```
+
+In JSON files, add it as a property:
+
+```json
+{
+    "#ddev-generated": true
+}
 ```
 
 ### Description Display
@@ -686,10 +694,10 @@ health_checks() {
 }
 ```
 
-Run tests with:
+Run tests in the add-on root directory:
 
 ```bash
-bats tests/test.bats
+bats ./tests/test.bats --filter-tags '!release'
 ```
 
 ### Manual Testing
@@ -726,7 +734,7 @@ To become an officially supported add-on:
 
 ### Keeping Your Add-on Up to Date
 
-The [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template) evolves over time — workflows, test scripts, tooling, and other components get updated. Run the [`ddev utility addon-update-checker`](../usage/commands.md#utility-addon-update-checker) command regularly from your add-on directory (or a workspace containing multiple add-ons) to check whether your add-on is up to date with the template:
+The [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template) evolves over time - workflows, test scripts, tooling, and other components get updated. Run the [`ddev utility addon-update-checker`](../usage/commands.md#utility-addon-update-checker) command regularly from your add-on directory (or a workspace containing multiple add-ons) to check whether your add-on is up to date with the template:
 
 ```shell
 ddev utility addon-update-checker
@@ -737,7 +745,7 @@ ddev utility addon-update-checker
 - **Follow semantic versioning** for releases
 - **Maintain backward compatibility** when possible
 - **Test with different DDEV versions**
-- **Update dependencies regularly** — use `ddev utility addon-update-checker` to keep scripts and tooling in sync with the template
+- **Update dependencies regularly** - use `ddev utility addon-update-checker` to keep scripts and tooling in sync with the template
 - **Respond to user issues promptly**
 - **Keep documentation up to date**
 - **Use namespaced directories** (e.g., `myservice/scripts/` not just `scripts/`)
