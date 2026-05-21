@@ -12,9 +12,10 @@ DDEV add-ons provide a powerful way to extend development environments. You can 
 1. Use the [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template) repository
 2. Click "Use this template" to create your own repository
 3. Customize the `install.yaml` file
-4. Test with `tests.bats`
-5. Create a release when ready
-6. If you expect the add-on to be maintained and useful to others, add the `ddev-get` [topic](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics) to your GitHub repository. Note ddev will only be able to update files which contain the `# ddev-generated` signature somewhere.
+4. Always add the [`#ddev-generated`](#the-ddev-generated-comment) comment to files installed by the add-on so ddev can update them
+5. Test with `tests.bats`
+6. Create a release when ready
+7. If you expect the add-on to be maintained and useful to others, add the `ddev-get` [topic](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics) to your GitHub repository
 
 See this [screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) for a walkthrough.
 
