@@ -96,12 +96,18 @@ validation:
 # Customization
 extra:
   social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/ddev/ddev
     - icon: fontawesome/brands/discord
       link: https://ddev.com/s/discord
-    - icon: fontawesome/brands/stack-overflow
-      link: https://stackoverflow.com/tags/ddev
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/@DDEVFoundation
+    - icon: fontawesome/brands/bluesky
+      link: https://bsky.app/profile/ddev.bsky.social
+    - icon: fontawesome/brands/mastodon
+      link: https://fosstodon.org/@ddev
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/ddev-foundation
+    - icon: fontawesome/brands/github
+      link: https://github.com/ddev/ddev
 
   generator: false
   version: !ENV [ READTHEDOCS_VERSION_NAME, 'stable' ]
