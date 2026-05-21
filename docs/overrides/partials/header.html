@@ -61,7 +61,14 @@
           <script>
             let url = new URL(window.location.href);
             url.pathname = url.pathname.replace(/\/en\/[^/]+/, '/en/stable');
-            {% if config.extra.canonical_url and 'docs.ddev.com' in config.extra.canonical_url %}
+            {# docs.ddev.com: RTD custom domain #}
+            {# ddev--: RTD PR preview, e.g. https://ddev--1234.org.readthedocs.build/ #}
+            {# ddev.readthedocs.io: RTD legacy domain, kept as fallback #}
+            {% if config.extra.canonical_url and (
+              'docs.ddev.com' in config.extra.canonical_url or
+              'ddev--' in config.extra.canonical_url or
+              'ddev.readthedocs.io' in config.extra.canonical_url
+            ) %}
             document.getElementById('stable-docs-link').href = 'https://docs.ddev.com' + url.pathname + url.search + url.hash;
             {% else %}
             document.getElementById('stable-docs-link').href = url.href;
