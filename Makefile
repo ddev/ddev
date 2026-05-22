@@ -211,7 +211,7 @@ zensical:
 	if command -v zensical >/dev/null 2>&1; then \
 		$$CMD ; \
 	else \
-		echo "Not running zensical because it's not installed (see scripts/install-dev-tools.sh)"; \
+		echo "Not running zensical because it's not installed (run scripts/install-dev-tools.sh)"; \
 	fi
 
 # To see what the docs will look like, you can use `make zensical-serve`
@@ -221,7 +221,7 @@ zensical-serve:
 	@if command -v zensical >/dev/null ; then \
 		zensical serve; \
 	else \
-		echo "zensical is not installed (see scripts/install-dev-tools.sh)" && exit 2; \
+		echo "zensical is not installed (run scripts/install-dev-tools.sh)" && exit 2; \
 	fi; \
 
 mkdocs: zensical
