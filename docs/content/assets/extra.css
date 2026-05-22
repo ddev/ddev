@@ -111,3 +111,8 @@ dt {
     mask-position: center;
     -webkit-mask-position: center;
 }
+
+/* Keep the sponsor announce banner dark in both light and dark modes */
+[data-md-component="announce"] .md-banner {
+    background-color: #1e2127;
+}
