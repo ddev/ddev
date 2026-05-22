@@ -195,8 +195,8 @@ func TestCmdAddonPHP(t *testing.T) {
 		addonList = strings.TrimSpace(addonList)
 		addons := strings.SplitSeq(addonList, "\n")
 		for item := range addons {
-			_, err = exec.RunHostCommand(DdevBin, "add-on", "remove", item)
-			require.NoError(t, err)
+			out, err := exec.RunHostCommand(DdevBin, "add-on", "remove", item)
+			asrt.NoError(t, err, "failed to remove add-on %q: output=%s", item, out)
 		}
 
 		_ = os.Chdir(origDir)
