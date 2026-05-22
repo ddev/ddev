@@ -15,7 +15,7 @@ DDEV add-ons provide a powerful way to extend development environments. You can 
 4. Add the [`#ddev-generated`](#the-ddev-generated-comment) comment to all files installed by the add-on
 5. Test with [Bats](#bats-testing-framework)
 6. Create a release when ready
-7. If you expect the add-on to be maintained and useful to others, add the `ddev-get` [topic](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics) to your GitHub repository
+7. If you expect to support and maintain the add-on, add the `ddev-get` [topic](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics) to the add-on's GitHub repository. This helps developers find the add-on and encourages reporting issues and feedback.
 
 See this [screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) for a walkthrough.
 
@@ -734,7 +734,7 @@ To become an officially supported add-on:
 
 ### Keeping Your Add-on Up to Date
 
-The [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template) evolves over time - workflows, test scripts, tooling, and other components get updated. Run the [`ddev utility addon-update-checker`](../usage/commands.md#utility-addon-update-checker) command regularly from your add-on directory (or a workspace containing multiple add-ons) to check whether your add-on is up to date with the template:
+The [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template) evolves over time - workflows, test scripts, tooling, and other components get updated. Run the [`ddev utility addon-update-checker`](../usage/commands.md#utility-addon-update-checker) command regularly from your add-on directory (or a workspace containing multiple add-ons) to check whether your add-on is up to date with the template and current best practises:
 
 ```shell
 ddev utility addon-update-checker
