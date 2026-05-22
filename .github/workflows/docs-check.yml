@@ -84,4 +84,4 @@ jobs:
       - name: Test zensical
         run: |
           pip install -r docs/requirements.txt
-          zensical build
+          zensical build --clean --strict
