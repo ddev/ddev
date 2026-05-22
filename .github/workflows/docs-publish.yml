@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Pages
+        id: pages
         uses: actions/configure-pages@v6
 
       - name: Checkout main branch
@@ -61,25 +62,25 @@ jobs:
         working-directory: checkout-main
         run: |
           if [ "${{ steps.checkout-stable.outcome }}" = "success" ]; then
-            site_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/en/latest/"
+            site_url="${{ steps.pages.outputs.base_url }}/en/latest/"
           else
-            site_url="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+            site_url="${{ steps.pages.outputs.base_url }}/"
           fi
           sed -i "s|site_url:.*|site_url: ${site_url}|" mkdocs.yml
           grep site_url mkdocs.yml
           if [ "${{ steps.checkout-stable.outcome }}" = "success" ]; then
-            READTHEDOCS_VERSION_NAME=latest zensical build --clean
+            READTHEDOCS_VERSION_NAME=latest zensical build --clean --strict
           else
-            zensical build --clean
+            zensical build --clean --strict
           fi
 
       - name: Build stable docs
         if: steps.checkout-stable.outcome == 'success'
         working-directory: checkout-stable
         run: |
-          sed -i "s|site_url:.*|site_url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/en/stable/|" mkdocs.yml
+          sed -i "s|site_url:.*|site_url: ${{ steps.pages.outputs.base_url }}/en/stable/|" mkdocs.yml
           grep site_url mkdocs.yml
-          zensical build --clean
+          zensical build --clean --strict
 
       - name: Assemble combined site
         run: |

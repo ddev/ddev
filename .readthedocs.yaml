@@ -16,7 +16,7 @@ build:
       - grep site_url mkdocs.yml
     build:
       html:
-        - zensical build --clean
+        - zensical build --clean --strict
     post_build:
       - mkdir -p $READTHEDOCS_OUTPUT/html/
       - cp -rv site/* $READTHEDOCS_OUTPUT/html/

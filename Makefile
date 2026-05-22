@@ -207,7 +207,7 @@ markdownlint:
 # https://docs.ddev.com/en/stable/developers/testing-docs/
 zensical:
 	@echo "zensical: "
-	@CMD="zensical build"; \
+	@CMD="zensical build --strict"; \
 	if command -v zensical >/dev/null 2>&1; then \
 		$$CMD ; \
 	else \
