@@ -331,7 +331,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     **Store your [projects](../project.md) inside WSL2** (e.g. `/home/<username>/projects`), not on `C:\` drive (`/mnt/c` in WSL2) — faster and avoids permission issues.
 
-    From Windows Explorer: **Linux → DDEV → home → [username]**.
+    From Windows Explorer: **Linux → DDEV → home → \[username\]**.
 
     !!!note "Custom hostnames"
         Custom hostnames with a non-default [TLD](../configuration/config.md#project_tld) (non `ddev.site`) are managed via the Windows hosts file at `C:\Windows\System32\drivers\etc\hosts`, not within WSL2.

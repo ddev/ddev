@@ -1,6 +1,10 @@
-<!-- This is a copy of https://github.com/squidfunk/mkdocs-material/blob/master/src/templates/partials/header.html with a warning banner added. -->
+<!-- This is a copy of https://github.com/zensical/ui/blob/master/src/partials/header.html with a warning banner added. -->
+
 <!--
-  Copyright (c) 2016-2024 Martin Donath <martin.donath@squidfunk.com>
+  Copyright (c) 2025 Zensical and contributors
+
+  SPDX-License-Identifier: MIT
+  Third-party contributions licensed under DCO
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to
@@ -55,7 +59,20 @@
             <strong>Click here to see the stable documentation.</strong>
           </a>
           <script>
-            document.getElementById('stable-docs-link').href = `https://docs.ddev.com/${new URL(window.location.href).pathname.replace(/\/en\/[^/]+/, 'en/stable')}${window.location.hash}`;
+            let url = new URL(window.location.href);
+            url.pathname = url.pathname.replace(/\/en\/[^/]+/, '/en/stable');
+            {# docs.ddev.com: RTD custom domain #}
+            {# ddev--: RTD PR preview, e.g. https://ddev--1234.org.readthedocs.build/ #}
+            {# ddev.readthedocs.io: RTD legacy domain, kept as fallback #}
+            {% if config.extra.canonical_url and (
+              'docs.ddev.com' in config.extra.canonical_url or
+              'ddev--' in config.extra.canonical_url or
+              'ddev.readthedocs.io' in config.extra.canonical_url
+            ) %}
+            document.getElementById('stable-docs-link').href = 'https://docs.ddev.com' + url.pathname + url.search + url.hash;
+            {% else %}
+            document.getElementById('stable-docs-link').href = url.href;
+            {% endif %}
           </script>
         </div>
       </aside>
@@ -79,7 +96,10 @@
     </a>
 
     <!-- Button to open drawer -->
-    <label class="md-header__button md-icon" for="__drawer">
+    <label
+      class="md-header__button md-icon" for="__drawer"
+      aria-label="{{ lang.t('nav') }}"
+    >
       {% set icon = config.theme.icon.menu or "material/menu" %}
       {% include ".icons/" ~ icon ~ ".svg" %}
     </label>
@@ -122,22 +142,30 @@
     {% endif %}
 
     <!-- Button to open search modal -->
-    {% if "material/search" in config.plugins %}
-      <label class="md-header__button md-icon" for="__search">
-        {% set icon = config.theme.icon.search or "material/magnify" %}
-        {% include ".icons/" ~ icon ~ ".svg" %}
-      </label>
+    {% if "search" in config.plugins %}
+      {% set search = config.plugins["search"] | attr("config") %}
 
-      <!-- Search interface -->
-      {% include "partials/search.html" %}
+      <!-- Check if search is actually enabled - see https://t.ly/DT_0V -->
+      {% if search.enabled %}
+        <label
+          class="md-header__button md-icon" for="__search"
+          aria-label="{{ lang.t('search') }}"
+        >
+          {% set icon = config.theme.icon.search or "material/magnify" %}
+          {% include ".icons/" ~ icon ~ ".svg" %}
+        </label>
+
+        <!-- Search interface -->
+        {% include "partials/search.html" %}
+      {% endif %}
     {% endif %}
 
     <!-- Repository information -->
-    {% if config.repo_url %}
-      <div class="md-header__source">
+    <div class="md-header__source">
+      {% if config.repo_url %}
         {% include "partials/source.html" %}
-      </div>
-    {% endif %}
+      {% endif %}
+    </div>
   </nav>
 
   <!-- Navigation tabs (sticky) -->

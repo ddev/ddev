@@ -65,7 +65,7 @@ The hook automatically detects your environment and adapts:
 
 **Environment-Specific:**
 - ✅ Docker - Available in desktop, not in web
-- ⚠️ mkdocs - Not in web (gracefully skipped by Makefile)
+- ⚠️ zensical - Not in web (gracefully skipped by Makefile)
 
 ### Recommended Development Workflow
 

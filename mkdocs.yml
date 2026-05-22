@@ -1,17 +1,16 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: DDEV Docs
-# todo: Make sure to set this to the correct one; otherwise it breaks 404 page
+# Override site url before docs build,
+# otherwise 404 page would be broken
 site_url: https://docs.ddev.com/en/stable/
 repo_url: https://github.com/ddev/ddev
 repo_name: ddev/ddev
 edit_uri: blob/main/docs/content
 copyright: DDEV Foundation
 extra_javascript:
-- 'assets/jquery-3.5.1.min.js'
-#- 'assets/extra.js'
-- 'assets/temp-fix-header-links-in-tabs.js'
+  - 'assets/open-tabs-from-hash.js'
 extra_css:
-- 'assets/extra.css'
+  - 'assets/extra.css'
 site_author: DDEV Foundation
 site_description: >-
   Do local website development on your computer or in the cloud with DDEV.
@@ -19,64 +18,65 @@ docs_dir: docs/content
 
 # Configuration
 theme:
-  name: material
+  variant: classic
   custom_dir: docs/overrides
   icon:
     edit: material/pencil
   palette:
-  # Palette toggle for automatic mode
-  - media: "(prefers-color-scheme)"
-    toggle:
-      icon: material/brightness-auto
-      name: Switch to light mode
-    primary: indigo
-    accent: indigo
-  # Palette toggle for light mode
-  - media: "(prefers-color-scheme: light)"
-    scheme: default
-    toggle:
-      icon: material/brightness-7
-      name: Switch to dark mode
-    primary: indigo
-    accent: indigo
-  # Palette toggle for dark mode
-  - media: "(prefers-color-scheme: dark)"
-    scheme: slate
-    toggle:
-      icon: material/brightness-4
-      name: Switch to system preference
-    primary: indigo
-    accent: indigo
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+      primary: indigo
+      accent: indigo
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+      primary: indigo
+      accent: indigo
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+      primary: indigo
+      accent: indigo
   features:
-  - content.action.edit
-  - content.code.copy
-#  - content.tabs.link
-  - navigation.expand
-  - navigation.indexes
-#  - navigation.instant
-  - navigation.sections
-  - navigation.tabs
-#  - navigation.tabs.sticky
-  - navigation.top
-  - navigation.tracking
-#  - toc.follow
-#  - toc.integrate
-  - navigation.footer
-  - search.suggest
+    - content.action.edit
+    - content.code.copy
+    #- content.tabs.link
+    - navigation.expand
+    - navigation.indexes
+    #- navigation.instant
+    - navigation.sections
+    - navigation.tabs
+    #- navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    #- toc.follow
+    #- toc.integrate
+    - navigation.footer
+    - search.suggest
   favicon: favicon.png
   logo: logo.svg
 
-# Plugins
+# Plugins https://zensical.org/compatibility/plugins/
+# 2026-05-21, the only supported plugin is search
 plugins:
-- search
-- privacy:
-    enabled: !ENV [READTHEDOCS, false]
-- redirects:
-    redirect_maps:
-- minify:
-    minify_html: true
-- git-revision-date-localized:
-    fallback_to_build_date: true
+  - search
+  - privacy:
+      enabled: !ENV [ READTHEDOCS, '' ]
+  - redirects:
+      redirect_maps:
+  - minify:
+      minify_html: true
+  - git-revision-date-localized:
+      fallback_to_build_date: true
 
 # Files in not_in_nav are part of the repo but intentionally excluded from the
 # docs navigation (e.g. temporary developer guides used by automation tools).
@@ -85,6 +85,7 @@ not_in_nav: |
 
 # Fail the entire build if the validation fails
 strict: true
+
 # Validation
 validation:
   omitted_files: warn
@@ -95,118 +96,125 @@ validation:
 # Customization
 extra:
   social:
-  - icon: fontawesome/brands/github
-    link: https://github.com/ddev/ddev
-  - icon: fontawesome/brands/discord
-    link: https://ddev.com/s/discord
-  - icon: fontawesome/brands/stack-overflow
-    link: https://stackoverflow.com/tags/ddev
+    - icon: fontawesome/brands/discord
+      link: https://ddev.com/s/discord
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/@DDEVFoundation
+    - icon: fontawesome/brands/bluesky
+      link: https://bsky.app/profile/ddev.bsky.social
+    - icon: fontawesome/brands/mastodon
+      link: https://fosstodon.org/@ddev
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/ddev-foundation
+    - icon: fontawesome/brands/github
+      link: https://github.com/ddev/ddev
 
   generator: false
-  version: !ENV [READTHEDOCS_VERSION_NAME, 'stable']
+  version: !ENV [ READTHEDOCS_VERSION_NAME, 'stable' ]
+  canonical_url: !ENV [ READTHEDOCS_CANONICAL_URL, '' ]
 
 # Extensions
 markdown_extensions:
-- abbr
-- admonition
-- attr_list
-- def_list
-- footnotes
-- meta
-- md_in_html
-- toc:
-    permalink: true
-    toc_depth: 2
-- pymdownx.arithmatex:
-    generic: true
-- pymdownx.betterem:
-    smart_enable: all
-- pymdownx.caret
-- pymdownx.details
-- pymdownx.emoji:
-    emoji_index: !!python/name:material.extensions.emoji.twemoji
-    emoji_generator: !!python/name:material.extensions.emoji.to_svg
-- pymdownx.highlight:
-    anchor_linenums: true
-    extend_pygments_lang:
-      - name: php
-        lang: php
-        options:
-          startinline: true
-- pymdownx.inlinehilite
-- pymdownx.keys
-- pymdownx.magiclink:
-    repo_url_shorthand: true
-    user: ddev
-    repo: ddev
-- pymdownx.mark
-- pymdownx.smartsymbols
-- pymdownx.superfences:
-- pymdownx.tabbed:
-    alternate_style: true
-    combine_header_slug: true
-    slugify: !!python/object/apply:pymdownx.slugs.slugify
-      kwds:
-        case: lower
-- pymdownx.tasklist:
-    custom_checkbox: true
-- pymdownx.tilde
-- smarty
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 2
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:zensical.extensions.emoji.twemoji
+      emoji_generator: !!python/name:zensical.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      extend_pygments_lang:
+        - name: php
+          lang: php
+          options:
+            startinline: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: ddev
+      repo: ddev
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - smarty
 
 nav:
   - 'Start!':
-    - index.md
-    - 'Installing':
-      - users/install/index.md
-      - users/install/docker-installation.md
-      - users/install/ddev-installation.md
-      - 'Configuring Browsers': users/install/configuring-browsers.md
-      - 'Upgrading': users/install/ddev-upgrade.md
-    - 'Getting Started':
-      - users/project.md
-      - users/quickstart.md
-      - users/install/performance.md
-      - users/install/shell-completion.md
-      - users/install/phpstorm.md
+      - index.md
+      - 'Installing':
+          - users/install/index.md
+          - users/install/docker-installation.md
+          - users/install/ddev-installation.md
+          - 'Configuring Browsers': users/install/configuring-browsers.md
+          - 'Upgrading': users/install/ddev-upgrade.md
+      - 'Getting Started':
+          - users/project.md
+          - users/quickstart.md
+          - users/install/performance.md
+          - users/install/shell-completion.md
+          - users/install/phpstorm.md
   - 'Usage':
-    - 'Common Tasks':
-      - users/usage/index.md
-      - users/usage/cli.md
-      - users/usage/database-management.md
-      - users/usage/cms-settings.md
-      - users/usage/vite.md
-      - users/usage/managing-projects.md
-      - users/usage/troubleshooting.md
-      - users/usage/offline.md
-    - 'Reference':
-      - users/usage/architecture.md
-      - users/usage/commands.md
-      - users/usage/developer-tools.md
-      - users/usage/diagnostics.md
-      - users/usage/networking.md
-      - 'Uninstalling': users/usage/uninstall.md
-    - 'Getting Help':
-      - users/usage/faq.md
-      - users/support.md
-      - users/code-of-conduct.md
+      - 'Common Tasks':
+          - users/usage/index.md
+          - users/usage/cli.md
+          - users/usage/database-management.md
+          - users/usage/cms-settings.md
+          - users/usage/vite.md
+          - users/usage/managing-projects.md
+          - users/usage/troubleshooting.md
+          - users/usage/offline.md
+      - 'Reference':
+          - users/usage/architecture.md
+          - users/usage/commands.md
+          - users/usage/developer-tools.md
+          - users/usage/diagnostics.md
+          - users/usage/networking.md
+          - 'Uninstalling': users/usage/uninstall.md
+      - 'Getting Help':
+          - users/usage/faq.md
+          - users/support.md
+          - users/code-of-conduct.md
   - 'Configuration':
-    - users/configuration/config.md
-    - users/extend/database-types.md
-    - users/configuration/hooks.md
-    - users/extend/additional-hostnames.md
+      - users/configuration/config.md
+      - users/extend/database-types.md
+      - users/configuration/hooks.md
+      - users/extend/additional-hostnames.md
   - 'Extending':
-    - users/extend/customization-extendibility.md
-    - users/extend/using-add-ons.md
-    - users/extend/creating-add-ons.md
-    - users/extend/custom-docker-services.md
-    - users/extend/additional-services.md
-    - users/extend/custom-compose-files.md
-    - users/extend/customizing-images.md
-    - users/extend/custom-commands.md
-    - users/extend/in-container-configuration.md
-    - users/extend/custom-tls-certificates.md
-    - users/extend/traefik-router.md
-    - users/extend/share-providers.md
+      - users/extend/customization-extendibility.md
+      - users/extend/using-add-ons.md
+      - users/extend/creating-add-ons.md
+      - users/extend/custom-docker-services.md
+      - users/extend/additional-services.md
+      - users/extend/custom-compose-files.md
+      - users/extend/customizing-images.md
+      - users/extend/custom-commands.md
+      - users/extend/in-container-configuration.md
+      - users/extend/custom-tls-certificates.md
+      - users/extend/traefik-router.md
+      - users/extend/share-providers.md
   - 'Debugging & Profiling':
       - users/debugging-profiling/step-debugging.md
       - 'Profiling':
@@ -214,33 +222,33 @@ nav:
           - users/debugging-profiling/xhprof-profiling.md
           - users/debugging-profiling/xdebug-profiling.md
   - 'Hosting & Deployment':
-    - users/topics/index.md
-    - users/topics/sharing.md
-    - users/topics/hosting.md
-    - users/topics/remote-docker.md
-    - 'Hosting Provider Integrations':
-      - users/providers/index.md
-      - 'Acquia': users/providers/acquia.md
-      - 'Lagoon': users/providers/lagoon.md
-      - 'Pantheon': users/providers/pantheon.md
-      - 'Upsun Fixed/Platform.sh': users/providers/platform.md
-      - 'Upsun Flex': users/providers/upsun.md
+      - users/topics/index.md
+      - users/topics/sharing.md
+      - users/topics/hosting.md
+      - users/topics/remote-docker.md
+      - 'Hosting Provider Integrations':
+          - users/providers/index.md
+          - 'Acquia': users/providers/acquia.md
+          - 'Lagoon': users/providers/lagoon.md
+          - 'Pantheon': users/providers/pantheon.md
+          - 'Upsun Fixed/Platform.sh': users/providers/platform.md
+          - 'Upsun Flex': users/providers/upsun.md
   - 'Development':
-    - developers/index.md
-    - developers/building-contributing.md
-    - developers/buildkite-testmachine-setup.md
-    - developers/github-selfhosted-setup.md
-    - developers/project-types.md
-    - developers/quickstart-maintenance.md
-    - developers/release-management.md
-    - developers/brand-guide.md
-    - developers/testing-docs.md
-    - developers/writing-style-guide.md
-    - developers/remote-config.md
-    - developers/maintainers.md
-    - developers/secret-management.md
-    - developers/http-proxy-test-environments.md
-    - developers/network-test-environments.md
-    - developers/network-bandwidth-testing.md
+      - developers/index.md
+      - developers/building-contributing.md
+      - developers/buildkite-testmachine-setup.md
+      - developers/github-selfhosted-setup.md
+      - developers/project-types.md
+      - developers/quickstart-maintenance.md
+      - developers/release-management.md
+      - developers/brand-guide.md
+      - developers/testing-docs.md
+      - developers/writing-style-guide.md
+      - developers/remote-config.md
+      - developers/maintainers.md
+      - developers/secret-management.md
+      - developers/http-proxy-test-environments.md
+      - developers/network-test-environments.md
+      - developers/network-bandwidth-testing.md
   - 'Blog': https://ddev.com/blog
   - 'Add-on Registry': https://addons.ddev.com

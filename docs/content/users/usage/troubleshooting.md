@@ -224,7 +224,7 @@ Don’t forget to check logs using `ddev logs` for the `web` container, and `dde
 
 For `ddev-router` and `ddev-ssh-agent`: `docker logs ddev-router` and `docker logs ddev-ssh-agent`.
 
-## `ddev start` Fails with "Failed to start [project name]: No such container: ddev-router"
+## `ddev start` Fails with "Failed to start \[project name\]: No such container: ddev-router"
 
 Deleting the images and re-pulling them generally solves this problem.
 
@@ -283,8 +283,8 @@ The Docker build environment (where all projects have a little bit happening) is
 You may see one of these messages in your browser:
 
 * `403` Forbidden
-* *[url] server IP address could not be found*
-* *We can’t connect to the server at [url]*
+* *\[url\] server IP address could not be found*
+* *We can’t connect to the server at \[url\]*
 
 If you get the `403 Forbidden` it's almost always because your [docroot is set wrong](faq.md#why-do-i-get-a-403-or-404-on-my-project-after-ddev-launch). You should have something like `docroot: web` or `docroot: ""` or `docroot: docroot` with the relative path to the directory where your `index.php` lives in the project.
 
