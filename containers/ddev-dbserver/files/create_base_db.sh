@@ -26,51 +26,68 @@ mysqld_version=${mysqld_version%.*}
 echo version=$mysqld_version
 # Oracle mysql 5.7+ deprecates mysql_install_db
 if [ "${mysqld_version}" = "5.7" ] || [[  "${mysqld_version%%%.*}" =~ ^8.[04]$ ]]; then
-    mysqld --defaults-file=/var/tmp/my.cnf --initialize-insecure --datadir=${DATADIR:-/var/lib/mysql} --server-id=0
+  mysqld --defaults-file=/var/tmp/my.cnf --initialize-insecure --datadir=${DATADIR:-/var/lib/mysql} --server-id=0
 else
-    # mysql 5.5 requires running mysql_install_db in /usr/local/mysql
-    if command -v mysqld | grep usr.local; then
-        cd /usr/local/mysql
-    fi
-    mysql_install_db --defaults-file=/var/tmp/my.cnf --force --datadir=${DATADIR:-/var/lib/mysql}
+  # mysql 5.5 requires running mysql_install_db in /usr/local/mysql
+  if command -v mysqld | grep usr.local; then
+    cd /usr/local/mysql
+  fi
+  mysql_install_db --defaults-file=/var/tmp/my.cnf --force --datadir=${DATADIR:-/var/lib/mysql}
 fi
+# Drop the runtime socket symlink the Dockerfile pre-creates, so mysqld can
+# bind its own socket here (recent MariaDB refuses to bind when the path
+# already exists).
+rm -f ${MYSQL_UNIX_PORT}
+
+# Route mysqld's error log to a known path and dump it on failure; otherwise
+# log_error from /etc/my.cnf hides the real reason mysqld died.
+ERRLOG=/var/tmp/mysqld-init.err
+: >${ERRLOG} && chmod ugo+rw ${ERRLOG}
 echo "Starting mysqld --skip-networking --socket=${MYSQL_UNIX_PORT}"
-mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --innodb_log_file_size=48M --skip-networking --datadir=${DATADIR:-/var/lib/mysql} --server-id=0 --skip-log-bin &
+mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --innodb_log_file_size=48M --log-error=${ERRLOG} --skip-networking --datadir=${DATADIR:-/var/lib/mysql} --server-id=0 --skip-log-bin &
 pid="$!"
+
+dump_errlog() {
+  echo "===== mysqld error log (${ERRLOG}) ====="
+  cat ${ERRLOG} 2>/dev/null || echo "(error log not readable)"
+  echo "===== end mysqld error log ====="
+}
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
 # or if the process dies.
 for i in {120..0}; do
-	if mysqladmin ping -uroot --socket=${MYSQL_UNIX_PORT} 2>/dev/null; then
-		break
-	fi
-	# Test to make sure we got it started in the first place. kill -s 0 just tests to see if process exists.
-	if ! kill -s 0 $pid 2>/dev/null; then
-		echo "mysqld initialization startup failed"
-		exit 3
-	fi
-	sleep 1
+  if mysqladmin ping -uroot --socket=${MYSQL_UNIX_PORT} 2>/dev/null; then
+    break
+  fi
+  # Test to make sure we got it started in the first place. kill -s 0 just tests to see if process exists.
+  if ! kill -s 0 $pid 2>/dev/null; then
+    echo "mysqld initialization startup failed"
+    dump_errlog
+    exit 3
+  fi
+  sleep 1
 done
 if [ "$i" -eq 0 ]; then
-	echo 'mysqld initialization startup process timed out.'
-	exit 4
+  echo 'mysqld initialization startup process timed out.'
+  dump_errlog
+  exit 4
 fi
 
 
 mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot  --socket=${MYSQL_UNIX_PORT} mysql
 
 mysql -uroot --socket=${MYSQL_UNIX_PORT} <<EOF
-	CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;
-	CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
-	CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';
+  CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;
+  CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
+  CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';
 
-	GRANT ALL ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'%';
-	GRANT ALL ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'localhost';
+  GRANT ALL ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'%';
+  GRANT ALL ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'localhost';
 
-	CREATE USER 'root'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
-	GRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION;
-	FLUSH PRIVILEGES;
-	FLUSH TABLES;
+  CREATE USER 'root'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
+  GRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION;
+  FLUSH PRIVILEGES;
+  FLUSH TABLES;
 EOF
 
 mysqladmin -uroot --socket=${MYSQL_UNIX_PORT} password root
@@ -97,8 +114,8 @@ ${backuptool} --backup --stream=${streamtool} --user=root --password=root --sock
 rm -f /tmp/raw_mysql_version.txt
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
-	echo >&2 'Database initialization process failed.'
-	exit 5
+  echo >&2 'Database initialization process failed.'
+  exit 5
 fi
 
 echo "The startup database files (in mariabackup/xtradb format) are now in $OUTDIR"

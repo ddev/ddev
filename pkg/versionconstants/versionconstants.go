@@ -26,7 +26,7 @@ var WebTag = "20260508_rfay_faster_poweroff" // Note that this can be overridden
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.25.2"
+var BaseDBTag = "20260522_stasadev_myqld_socket"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
