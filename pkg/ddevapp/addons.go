@@ -171,9 +171,6 @@ func ProcessAddonAction(action string, installDesc InstallDesc, app *DdevApp, ve
 	if app == nil {
 		return fmt.Errorf("app is required to ProcessAddonAction")
 	}
-	if err := app.MutagenSyncFlush(); err != nil {
-		return fmt.Errorf("unable to flush Mutagen: %v", err)
-	}
 	// Check if the action starts with <?php
 	if strings.HasPrefix(strings.TrimSpace(action), "<?php") {
 		return processPHPAction(action, installDesc, app, verbose)
