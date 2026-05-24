@@ -62,7 +62,6 @@ jobs:
     secrets: inherit
     with:
       ddev_test_docker_rootless: "true"
-      ddev_test_no_bind_mounts: "true"
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   docker-rootless-custom:
@@ -75,5 +74,4 @@ jobs:
       testargs: ${{ inputs.testargs }}
       gotest_short: ${{ inputs.gotest_short }}
       ddev_test_docker_rootless: "true"
-      ddev_test_no_bind_mounts: "true"
       debug_enabled: ${{ inputs.debug_enabled || false }}

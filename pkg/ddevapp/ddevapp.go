@@ -1547,10 +1547,13 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
 
-	if dockerutil.IsDockerRootless() && !globalconfig.DdevGlobalConfig.NoBindMounts {
-		// See https://github.com/moby/moby/issues/45919
-		// See https://github.com/moby/moby/issues/2259
-		return fmt.Errorf("bind mounts can't be used with Docker Rootless.\nRun `ddev config global --no-bind-mounts` and try again")
+	if app.WebserverType == nodeps.WebserverApacheFPM && dockerutil.IsDockerRootless() && !globalconfig.DdevGlobalConfig.NoBindMounts {
+		// See https://github.com/moby/moby/issues/45919 (rootless bind mount ownership)
+		// See https://github.com/moby/moby/issues/2259 (Apache refuses to run as root)
+		return fmt.Errorf(`%[1]s refuses to run as root (Docker rootless maps host user to container root).
+Run "ddev config global --no-bind-mounts=true" so Apache runs with the appropriate user, or
+run "ddev config --webserver-type=%[2]s" to switch to %[2]s`,
+			nodeps.WebserverApacheFPM, nodeps.WebserverNginxFPM)
 	}
 
 	if _, err := dockerutil.DownloadDockerBuildxIfNeeded(); err != nil {

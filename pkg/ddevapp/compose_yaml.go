@@ -12,6 +12,7 @@ import (
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/compose/v5/pkg/api"
@@ -263,6 +264,9 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 
 	isPodman := dockerutil.IsPodman()
 	isRootless := dockerutil.IsRootless()
+	isDockerRootless := dockerutil.IsDockerRootless()
+	isMutagenEnabled := app.IsMutagenEnabled()
+	isNoBindMounts := globalconfig.DdevGlobalConfig.NoBindMounts
 	isSELinux := dockerutil.IsSELinux()
 	uid, gid, _ := dockerutil.GetContainerUser()
 	userGroup := uid + ":" + gid
@@ -328,10 +332,18 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 			service.Ports[i] = port
 		}
 
-		// Podman: set the user namespace mode for the container
-		// https://docs.podman.io/en/v4.6.1/markdown/options/userns.container.html#userns-mode
-		if isPodman && isRootless && service.User == userGroup {
-			service.UserNSMode = "keep-id"
+		if isRootless && service.User == userGroup {
+			if isPodman {
+				// Podman: set the user namespace mode for the container
+				// https://docs.podman.io/en/v4.6.1/markdown/options/userns.container.html#userns-mode
+				service.UserNSMode = "keep-id"
+			} else if isDockerRootless {
+				// Docker rootless maps the host user to container UID 0, so
+				// bind-mounted files (including .git) appear root-owned. Run as root for consistency.
+				if name == "web" && !isNoBindMounts {
+					service.User = "0:0"
+				}
+			}
 		}
 
 		if isPodman {
@@ -359,10 +371,22 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 			}
 		}
 
+		// Mutagen uses `docker cp` to install its agent; under rootless Docker this triggers
+		// `remount-ro ... operation not permitted` when restoring RO bind mounts (user-namespace
+		// mount flags are locked by the kernel). Drop read_only on bind mounts to avoid this.
+		if isDockerRootless && isMutagenEnabled && name == "web" {
+			for i, vol := range service.Volumes {
+				if vol.Type == composeTypes.VolumeTypeBind && vol.ReadOnly {
+					vol.ReadOnly = false
+					service.Volumes[i] = vol
+				}
+			}
+		}
+
 		// Add SELinux labels to bind mounts when SELinux is enabled
 		if isSELinux {
 			for i, vol := range service.Volumes {
-				if vol.Type == "bind" {
+				if vol.Type == composeTypes.VolumeTypeBind {
 					// Initialize Bind struct if needed
 					if vol.Bind == nil {
 						vol.Bind = &composeTypes.ServiceVolumeBind{}

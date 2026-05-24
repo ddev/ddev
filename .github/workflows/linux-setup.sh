@@ -197,19 +197,29 @@ include if exists <local/${filename}>
 }
 EOF
   sudo systemctl restart apparmor.service
+  # Set the default network driver to "gvisor-tap-vsock" (see https://github.com/moby/moby/releases/tag/docker-v29.5.0)
   # Allow loopback https://github.com/moby/moby/issues/47684#issuecomment-2166149845
   mkdir -p ~/.config/systemd/user/docker.service.d
   cat << 'EOF' > ~/.config/systemd/user/docker.service.d/override.conf
 [Service]
+Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_NET=gvisor-tap-vsock"
 Environment="DOCKERD_ROOTLESS_ROOTLESSKIT_DISABLE_HOST_LOOPBACK=false"
 EOF
   # Install rootless docker
   # Download the rootless installer script
   curl -fsSL https://get.docker.com/rootless -o /tmp/docker-rootless-install.sh
-  # Get Docker version from docker --version (format: "Docker version 29.1.3, build f52814d454")
+
+  # Get Docker rootful version from docker --version (format: "Docker version 29.1.3, build f52814d454")
   DOCKER_VERSION=$(docker --version | sed -E 's/Docker version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-  # Replace STABLE_LATEST with the current Docker version to match rootful installation
-  sed -i "s/STABLE_LATEST=\"[0-9.]*\"/STABLE_LATEST=\"${DOCKER_VERSION}\"/" /tmp/docker-rootless-install.sh
+
+  # Install the latest Docker rootless for now (because of using gvisor-tap-vsock)
+  DOCKER_VERSION=""
+
+  if [ "${DOCKER_VERSION}" != "" ]; then
+    # Replace STABLE_LATEST with the current Docker version to match rootful installation
+    sed -i "s/STABLE_LATEST=\"[0-9.]*\"/STABLE_LATEST=\"${DOCKER_VERSION}\"/" /tmp/docker-rootless-install.sh
+  fi
+
   # Execute the modified script
   sh /tmp/docker-rootless-install.sh
   cat /etc/subuid
@@ -224,7 +234,7 @@ source ~/.bashrc
 brew tap bats-core/bats-core >/dev/null
 brew tap ddev/ddev >/dev/null
 for item in bats-core ddev docker-compose ghr golangci-lint bats-assert bats-file bats-support; do
-    brew install $item >/dev/null || brew upgrade $item >/dev/null
+  brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
 
 mkcert -install
