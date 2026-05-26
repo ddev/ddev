@@ -27,14 +27,16 @@ To check out live examples, docs, contributor live training, guides and more vis
 
 If you need help, our friendly community provides [great support](https://docs.ddev.com/en/stable/users/support/).
 
-## Wonderful Sponsors
+## Featured Sponsors
 
 DDEV is an Apache License 2.0 open-source project with its ongoing development made possible entirely by the support of these awesome backers. If you'd like to join them, please consider [sponsoring DDEV development](https://github.com/sponsors/ddev).
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/resources/featured-sponsors-darkmode.svg">
-  <img alt="DDEV Sponsor logos with light and dark mode variants" src="https://ddev.com/resources/featured-sponsors.svg">
-</picture>
+<a href="https://ddev.com/#supporters">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/resources/featured-sponsors-darkmode.svg">
+    <img alt="DDEV featured sponsors" src="https://ddev.com/resources/featured-sponsors.svg">
+  </picture>
+</a>
 
 ## Contributing
 
