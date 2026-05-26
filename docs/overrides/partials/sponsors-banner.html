@@ -197,7 +197,7 @@
     const CACHE_KEY = 'ddevSponsorshipData';
     const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
     const API_URL = 'https://ddev.com/s/sponsorship-data.json';
-    const FALLBACK_URL = 'https://ddev.github.io/sponsorship-data/data/all-sponsorships.json';
+    const FALLBACK_URL = 'https://ddev.github.io/sponsorship-data/api/all-sponsorships.json';
 
     function formatCurrency(value) {
       return new Intl.NumberFormat('en-US', {
@@ -211,7 +211,7 @@
     function updateBannerElements(data) {
       const income = data.total_monthly_average_income || 0;
       const goal = data.current_goal?.target_amount || 12000;
-      const percentage = Math.min((income / goal) * 100, 100).toFixed(0);
+      const percentage = Math.min(data.current_goal?.progress_percentage || (income / goal) * 100, 100).toFixed(1);
 
       // Update text elements
       const elements = {
