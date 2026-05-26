@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check Type
-        uses: gsactions/commit-message-checker@v2
+        uses: ddev/commit-message-checker@v3
         with:
           pattern: '^(build|chore|ci|docs|feat|fix|perf|refactor|style|test)(\([a-z][a-z0-9-]*\))?!?:\s(?!.*  )[A-Za-z''"`].*[A-Za-z0-9\]\)''"`](?:, (?:fixes|for) #\d+)*$'
           flags: ''
