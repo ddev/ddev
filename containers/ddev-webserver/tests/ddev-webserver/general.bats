@@ -31,15 +31,44 @@ setup() {
   assert_output --partial "/var/www/html/vendor/bin"
 }
 
-@test "Verify user-owned bin directories are in PATH on ddev/docker exec" {
-  run docker exec "$CONTAINER_NAME" bash -c 'case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) exit 1;; esac'
+@test "Verify PATH contains all expected directories in non-interactive, interactive, and login shells" {
+  local check='
+    for p in \
+      "$HOME/.local/bin" \
+      "$HOME/bin" \
+      "${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin" \
+      "/var/www/html/bin" \
+      "/mnt/ddev-global-cache/global-commands/web"; do
+      case ":$PATH:" in
+        *":$p:"*) ;;
+        *) echo "Missing from PATH: $p" >&2; exit 1 ;;
+      esac
+    done
+  '
+
+  run docker exec "$CONTAINER_NAME" bash -c "$check"
   assert_success
-  run docker exec "$CONTAINER_NAME" bash -c 'case ":$PATH:" in *":$HOME/bin:"*) ;; *) exit 1;; esac'
+
+  run docker exec -t "$CONTAINER_NAME" bash -ic "$check"
   assert_success
-  run docker exec "$CONTAINER_NAME" bash -ic 'case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) exit 1;; esac'
+
+  run docker exec "$CONTAINER_NAME" bash -lc "$check"
   assert_success
-  run docker exec "$CONTAINER_NAME" bash -ic 'case ":$PATH:" in *":$HOME/bin:"*) ;; *) exit 1;; esac'
+}
+
+@test "Verify PATH is identical across non-interactive, interactive, and login shells" {
+  run docker exec "$CONTAINER_NAME" bash -c 'echo $PATH'
   assert_success
+  local noninteractive_path="$output"
+
+  run docker exec -t "$CONTAINER_NAME" bash -ic 'echo $PATH'
+  assert_success
+  # -t allocates a pseudo-TTY which adds \r to output; strip it before comparing
+  assert_equal "${output//$'\r'/}" "$noninteractive_path"
+
+  run docker exec "$CONTAINER_NAME" bash -lc 'echo $PATH'
+  assert_success
+  assert_equal "${output}" "$noninteractive_path"
 }
 
 @test "verify that xdebug is disabled by default when using start.sh to start" {
