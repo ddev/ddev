@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -190,13 +189,12 @@ func TestCmdAddonPHP(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		addonList, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf("%s add-on list --installed -j | docker run -i --rm ddev/ddev-utilities jq -r .raw.[].Name", DdevBin))
+		installedOutput, err := exec.RunHostCommand(DdevBin, "add-on", "list", "--installed", "--json-output")
 		require.NoError(t, err)
-		addonList = strings.TrimSpace(addonList)
-		addons := strings.SplitSeq(addonList, "\n")
-		for item := range addons {
-			out, err := exec.RunHostCommand(DdevBin, "add-on", "remove", item)
-			asrt.NoError(t, err, "failed to remove add-on %q: output=%s", item, out)
+		installedManifests := getManifestMapFromLogs(t, installedOutput)
+		for name := range installedManifests {
+			out, err := exec.RunHostCommand(DdevBin, "add-on", "remove", name)
+			asrt.NoError(t, err, "failed to remove add-on %q: output=%s", name, out)
 		}
 
 		_ = os.Chdir(origDir)
