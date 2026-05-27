@@ -3,7 +3,7 @@
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
 ARG DOCKER_ORG=ddev
-FROM ${DOCKER_ORG}/ddev-php-base:v1.25.2 AS ddev-webserver-base
+FROM ${DOCKER_ORG}/ddev-php-base:20260502_akibaat_folder_permissions AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -102,10 +102,13 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 
 COPY ddev-webserver-base-files /
 COPY ddev-webserver-base-scripts /
+RUN sed -i 's#listen = /run/php-fpm.sock#listen = /run/php/php-fpm.sock#' /etc/php/*/fpm/pool.d/www.conf
 RUN locale-gen
 
-# /usr/local/bin may need to be updated by start.sh, etc
-RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
+# Composer may need to be updated by composer self-update
+RUN chmod -f ugo+rx /usr/local/bin && \
+    chgrp www-data /usr/local/bin/composer && \
+    chmod g+rwx,o-w /usr/local/bin/composer
 
 # Install older mariadb client and mariadb-dump into /usr/local/mariadb-old/bin
 # to solve variety of problems with newer mariadb-dump.
@@ -251,21 +254,28 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
     chmod a+rw /opt/phpstorm-coverage && \
     touch /var/log/php-fpm.log && \
     chmod ugo+rw /var/log/php-fpm.log && \
-    chmod ugo+rwx /var/run && \
+    touch /var/log/supervisord.log && \
+    chmod ugo+rw /var/log/supervisord.log && \
     touch /var/log/nginx/access.log && \
     touch /var/log/nginx/error.log && \
-    chmod -R ugo+rw /var/log/nginx/ && \
-    chmod ugo+rwx /usr/local/bin/* && \
+    chmod -R ugo+rwX /var/log/apache2 /var/log/nginx && \
+    chmod ugo+rx /usr/local/bin && \
+    chmod ugo+rx /usr/local/bin/* && \
     update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
 
-RUN chmod -R 777 /var/log
-
 # we need to create the /var/cache/nginx and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
-RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/{php,blackfire} /var/cache/nginx /var/lib/nginx && chmod -R ugo+rw /mnt/ddev-global-cache/
+RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
+    chown www-data:www-data /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
+    chmod 755 /run/php /run/blackfire /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
+    ln -sf /run/php/php-fpm.sock /run/php-fpm.sock && \
+    chmod -R ugo+rw /mnt/ddev-global-cache/
 
-RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /var/lib/dpkg/alternatives /usr/local/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
+RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
+    chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
 
-RUN mkdir -p /var/xhprof && curl --fail -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod 777 /var/xhprof/xhprof_html && rm /tmp/xhprof.tgz
+RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /usr/local/lib/node_modules /etc/php /etc/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
+
+RUN mkdir -p /var/xhprof && curl --fail -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod ugo+rwX /var/xhprof/xhprof_html && rm /tmp/xhprof.tgz
 
 # Install https://github.com/perftools/php-profiler for XHGui
 RUN COMPOSER_HOME=/tmp/composer composer global require perftools/php-profiler --dev && \
@@ -274,7 +284,8 @@ RUN COMPOSER_HOME=/tmp/composer composer global require perftools/php-profiler -
     chmod -R ugo+rw /usr/local/xhgui.collector
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
-    chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
+    chmod ugo+rw /var/log/php-fpm.log && \
+    chmod -R ugo+rwX /var/log/apache2 /var/log/nginx
 
 RUN a2dismod mpm_event && a2enmod ssl headers expires
 
@@ -283,7 +294,9 @@ COPY ddev-webserver-base-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
 
 # Composer, etc may need to be updated by composer self-update
-RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/*
+RUN chmod -f ugo+rx /usr/local/bin /usr/local/bin/* && \
+    chgrp www-data /usr/local/bin/composer && \
+    chmod g+rwx,o-w /usr/local/bin/composer
 
 RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
@@ -340,22 +353,29 @@ RUN phpdismod blackfire xhprof
 RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
     touch /var/log/php-fpm.log && \
     chmod ugo+rw /var/log/php-fpm.log && \
-    chmod ugo+rwx /var/run && \
+    touch /var/log/supervisord.log && \
+    chmod ugo+rw /var/log/supervisord.log && \
     touch /var/log/nginx/access.log && \
     touch /var/log/nginx/error.log && \
-    chmod -R ugo+rw /var/log/nginx/ && \
+    chmod -R ugo+rwX /var/log/apache2 /var/log/nginx && \
     chmod ugo+rx /usr/local/bin/* && \
     update-alternatives --set php-fpm /usr/sbin/php-fpm${PHP_DEFAULT_VERSION}
 
-RUN chmod -R 777 /var/log
-
 # we need to create the /var/cache/linux and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
-RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/cache/nginx /var/lib/nginx && chmod -R ugo+rw /home /mnt/ddev-global-cache/
+RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 /var/cache/nginx /var/lib/nginx && \
+    chown www-data:www-data /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
+    chmod 755 /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/lock/apache2 && \
+    ln -sf /run/php/php-fpm.sock /run/php-fpm.sock && \
+    chmod -R ugo+rw /home /mnt/ddev-global-cache/
 
-RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /var/lib/dpkg/alternatives /usr/local/lib/node_modules /etc/php /etc/apache2 /var/lock/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
+RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
+    chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
+
+RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /usr/local/lib/node_modules /etc/php /etc/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
-    chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
+    chmod ugo+rw /var/log/php-fpm.log && \
+    chmod -R ugo+rwX /var/log/apache2 /var/log/nginx
 
 RUN a2dismod mpm_event && a2enmod ssl headers expires
 
