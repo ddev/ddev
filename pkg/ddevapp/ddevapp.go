@@ -39,7 +39,6 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/otiai10/copy"
-	"golang.org/x/term"
 )
 
 const (
@@ -2692,7 +2691,8 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		return "", "", execLoadErr
 	}
 
-	tty := opts.Tty && isatty.IsTerminal(os.Stdin.Fd())
+	// Allocate a TTY only when both stdin and stdout are real terminals.
+	tty := opts.Tty && isatty.IsTerminal(os.Stdin.Fd()) && isatty.IsTerminal(stdout.Fd())
 	runOpts := api.RunOptions{
 		Service:     opts.Service,
 		Command:     opts.RawCmd,
@@ -2776,7 +2776,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	if loadErr != nil {
 		return loadErr
 	}
-	tty := term.IsTerminal(int(os.Stdin.Fd()))
+	tty := isatty.IsTerminal(os.Stdin.Fd())
 	restore, stdinErr := dockerutil.SetExecStdin(os.Stdin, tty)
 	if stdinErr != nil {
 		return stdinErr
