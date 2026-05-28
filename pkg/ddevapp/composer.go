@@ -53,6 +53,7 @@ func getComposerEnv() []string {
 	// List of Composer environment variables to pass through from host
 	// https://getcomposer.org/doc/03-cli.md#environment-variables
 	composerEnvVars := []string{
+		"COMPOSER_NO_BLOCKING",
 		"COMPOSER_NO_SECURITY_BLOCKING",
 	}
 
