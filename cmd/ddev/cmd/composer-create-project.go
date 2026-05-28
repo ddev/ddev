@@ -248,7 +248,7 @@ ddev composer create-project --prefer-dist --no-interaction --no-dev psr/log .
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 				// Disable security blocking to allow installing any packages,
 				// this is a new feature in Composer 2.9+
-				Env: []string{"XDEBUG_MODE=off", "COMPOSER_NO_SECURITY_BLOCKING=1"},
+				Env: []string{"XDEBUG_MODE=off", "COMPOSER_NO_BLOCKING=1", "COMPOSER_NO_SECURITY_BLOCKING=1"},
 			})
 
 			if err != nil {
