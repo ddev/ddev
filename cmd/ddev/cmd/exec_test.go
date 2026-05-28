@@ -207,6 +207,19 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal("This file was piped into ddev exec", string(content))
 
+	// Regression check for \r injection when stdin is a TTY but stdout is piped.
+	// script(1) supplies the TTY stdin that `go test` doesn't.
+	if !nodeps.IsLinux() {
+		t.Log("Skipping TTY regression check: requires Linux")
+	} else if !util.IsCommandAvailable("script") {
+		t.Log("Skipping TTY regression check: script(1) not found in PATH")
+	} else {
+		t.Log("Running TTY regression check via script(1)")
+		out, err := exec.RunHostCommand("script", "-qec", fmt.Sprintf("%s exec echo hello | cat -A", DdevBin), "/dev/null")
+		assert.NoError(err)
+		assert.NotContains(out, "^M", "ddev exec must not inject \\r when stdout is piped, even if stdin is a terminal")
+	}
+
 	// Make sure that redirection of output from ddev exec works
 	f, err := os.CreateTemp("", "")
 	err = f.Close()
