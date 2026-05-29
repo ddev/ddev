@@ -53,6 +53,17 @@ RUN rm -f /tmp/debsuryorg-archive-keyring.deb && \
 RUN apt-get -qq update
 ### -------------------------------END base---------------------------------------
 
+### --------------------------ddev-keep-root-build--------------------------------
+### Build the ddev-keep-root.so shim in a separate stage so gcc is not added to
+### the shipped images. The shim lets a process keep running as root; see
+### ddev-keep-root.c for details.
+FROM base AS ddev-keep-root-build
+SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
+RUN apt-get -qq update && \
+    apt-get -qq install --no-install-recommends --no-install-suggests -y gcc libc6-dev && \
+    gcc -shared -fPIC -O2 -Wall -o /ddev-keep-root.so /usr/local/src/ddev/ddev-keep-root.c -ldl
+### ------------------------END ddev-keep-root-build------------------------------
+
 ### ------------------------ddev-php-extension-build------------------------------
 ### Uncomment the lines below to enable custom PHP extension builds:
 #FROM base AS ddev-php-extension-build
@@ -94,6 +105,11 @@ RUN apt-get -qq update && apt-get -qq install --no-install-recommends --no-insta
     msmtp \
     nginx \
     sqlite3
+
+# Add the ddev-keep-root.so shim (see ddev-keep-root.c). It does nothing unless
+# DDEV_KEEP_ROOT is set, and DDEV deletes it from the web image unless it is
+# needed (apache-fpm on Docker rootless + bind mounts); see WriteBuildDockerfile.
+COPY --from=ddev-keep-root-build /ddev-keep-root.so /usr/local/lib/ddev/ddev-keep-root.so
 
 RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj/n/master/bin/n && chmod ugo+wx /usr/local/bin/n
 # Install node without cache, make a symlink for nodejs
