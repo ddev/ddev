@@ -8,6 +8,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
@@ -240,6 +241,23 @@ func TestFixupComposeYaml(t *testing.T) {
 	assert.Equal(1, webService.Networks["default"].Priority)
 	require.NotNil(t, webService.Networks["dummy"])
 	assert.Equal(2, webService.Networks["dummy"].Priority)
+
+	// Verify the rootless user handling added by fixupComposeYaml: Docker rootless
+	// runs the web service as 0:0 when bind mounts are active (the host user maps
+	// to container UID 0), Podman rootless uses userns keep-id, and every other
+	// case keeps the container user. Only the web service is ever forced to 0:0.
+	uid, gid, _ := dockerutil.GetContainerUser()
+	userGroup := uid + ":" + gid
+	switch {
+	case dockerutil.IsDockerRootless() && !globalconfig.DdevGlobalConfig.NoBindMounts:
+		require.Equal(t, "0:0", webService.User, "web should run as 0:0 on Docker rootless with bind mounts")
+	case dockerutil.IsPodmanRootless():
+		require.Equal(t, userGroup, webService.User)
+		require.Equal(t, "keep-id", webService.UserNSMode, "web should use userns keep-id on Podman rootless")
+	default:
+		require.Equal(t, userGroup, webService.User)
+	}
+	require.Equal(t, userGroup, app.ComposeYaml.Services["db"].User, "only the web service is set to 0:0; db keeps the container user")
 
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
 
