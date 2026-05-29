@@ -1547,12 +1547,6 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
 
-	if dockerutil.IsDockerRootless() && !globalconfig.DdevGlobalConfig.NoBindMounts {
-		// See https://github.com/moby/moby/issues/45919
-		// See https://github.com/moby/moby/issues/2259
-		return fmt.Errorf("bind mounts can't be used with Docker Rootless.\nRun `ddev config global --no-bind-mounts` and try again")
-	}
-
 	if _, err := dockerutil.DownloadDockerBuildxIfNeeded(); err != nil {
 		return err
 	}

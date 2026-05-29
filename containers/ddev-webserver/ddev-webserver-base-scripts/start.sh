@@ -67,8 +67,14 @@ if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7
   ln -sf /usr/local/bin/drush8 "$HOME/.local/bin/drush"
 fi
 
-# Change the apache run user to current user/group
-printf "\nexport APACHE_RUN_USER=$(id -un)\nexport APACHE_RUN_GROUP=$(id -gn)\n" >>/etc/apache2/envvars
+# Apache refuses to run as root, but Docker rootless runs the container as root
+# to reach root-owned bind mounts. When the ddev-keep-root shim is present (DDEV
+# adds it only for this case), LD_PRELOAD it so Apache can stay root.
+if [ "$(id -u)" = "0" ] && [ -f /usr/local/lib/ddev/ddev-keep-root.so ]; then
+  printf "\nexport LD_PRELOAD=/usr/local/lib/ddev/ddev-keep-root.so\nexport DDEV_KEEP_ROOT=true\n" >>/etc/apache2/envvars
+else
+  printf "\nexport APACHE_RUN_USER=$(id -un)\nexport APACHE_RUN_GROUP=$(id -gn)\n" >>/etc/apache2/envvars
+fi
 
 a2enmod access_compat alias auth_basic authn_core authn_file authz_core authz_host authz_user autoindex deflate dir env filter mime mpm_event negotiation reqtimeout rewrite setenvif status
 a2enconf charset localized-error-pages other-vhosts-access-log security serve-cgi-bin

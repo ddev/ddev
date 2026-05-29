@@ -1396,6 +1396,17 @@ RUN mkdir -p /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/l
     chgrp "$gid" /usr/local/bin/composer && chmod g+rwx,o-w /usr/local/bin/composer && \
     mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof
 `
+		// The ddev-keep-root.so shim is only used to run Apache as root, which
+		// happens with apache-fpm on Docker rootless + bind mounts (the web
+		// container runs as 0:0). In every other case delete it: it disables
+		// setuid/setgid for any process that loads it, so it should not be present.
+		if !dockerutil.IsDockerRootless() || globalconfig.DdevGlobalConfig.NoBindMounts || app.WebserverType != nodeps.WebserverApacheFPM {
+			contents = contents + `
+### DDEV-injected removal of the ddev-keep-root shim (only needed for apache-fpm on Docker rootless)
+RUN rm -f /usr/local/lib/ddev/ddev-keep-root.so
+`
+		}
+
 		// Files from containers/ddev-webserver/ddev-webserver-base-files/var/www/html
 		// are added to host on `ddev start` when using Podman with Mutagen enabled
 		if dockerutil.IsPodman() && app.IsMutagenEnabled() {

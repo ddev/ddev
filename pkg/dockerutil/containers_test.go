@@ -171,26 +171,33 @@ func TestGetContainerUser(t *testing.T) {
 	uid, gid, username := dockerutil.GetContainerUser()
 
 	for _, service := range []string{"web", "db"} {
+		expectedUID, expectedGID, expectedUsername := uid, gid, username
+		// Rootless Docker maps the host user to UID 0 inside the container's user namespace,
+		// so the web service is explicitly set to 0:0 when bind mounts are active (see compose_yaml.go).
+		if service == "web" && dockerutil.IsDockerRootless() && !globalconfig.DdevGlobalConfig.NoBindMounts {
+			expectedUID, expectedGID, expectedUsername = "0", "0", "root"
+		}
+
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: service,
 			Cmd:     "id -un",
 		})
 		require.NoError(t, err)
-		require.Equal(t, username, strings.Trim(out, "\r\n"))
+		require.Equal(t, expectedUsername, strings.Trim(out, "\r\n"))
 
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: service,
 			Cmd:     "id -u",
 		})
 		require.NoError(t, err)
-		require.Equal(t, uid, strings.Trim(out, "\r\n"))
+		require.Equal(t, expectedUID, strings.Trim(out, "\r\n"))
 
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: service,
 			Cmd:     "id -g",
 		})
 		require.NoError(t, err)
-		require.Equal(t, gid, strings.Trim(out, "\r\n"))
+		require.Equal(t, expectedGID, strings.Trim(out, "\r\n"))
 	}
 }
 

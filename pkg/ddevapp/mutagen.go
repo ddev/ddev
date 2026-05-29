@@ -39,6 +39,11 @@ const mutagenConfigFileHashLabelName = `com.ddev.config-hash`
 func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// Make sure that if we have a volume mount it's got proper ownership
 	uidStr, gidStr, _ := dockerutil.GetContainerUser()
+	// Docker rootless runs the web container as root (see fixupComposeYaml);
+	// chown to root so Mutagen-synced files and bind-mounted .git share the same owner.
+	if dockerutil.IsDockerRootless() && !globalconfig.DdevGlobalConfig.NoBindMounts {
+		uidStr, gidStr = "0", "0"
+	}
 	util.Verbose("Chowning Mutagen Docker volume for user %s", uidStr)
 	// Use -f to suppress errors from transient .mutagen-temporary-staging-* files
 	// that may appear/disappear during an active or resuming sync session.

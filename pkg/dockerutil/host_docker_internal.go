@@ -134,10 +134,13 @@ func GetHostDockerInternal() *HostDockerInternal {
 			message = "IsLinux uses 'host-gateway' in extra_hosts"
 
 			if IsDockerRootless() {
-				// Docker rootless doesn't update "host-gateway" value
-				// https://github.com/moby/moby/issues/47684#issuecomment-2166149845
-				ipAddress = "10.0.2.2"
-				message = "IsDockerRootless"
+				rootlessHostIP, netDriver, err := getDockerRootlessHostIP()
+				if err != nil {
+					message = fmt.Sprintf("IsDockerRootless; unable to determine host IP: %v", err)
+				} else {
+					ipAddress = rootlessHostIP
+					message = fmt.Sprintf("IsDockerRootless with RootlessKit net driver '%s'", netDriver)
+				}
 			}
 
 		default:
@@ -296,4 +299,31 @@ func getDockerLinuxBridgeIP() (string, error) {
 		}
 	}
 	return "", fmt.Errorf("no gateway found in Docker bridge network")
+}
+
+// getDockerRootlessHostIP returns the IP at which the host's loopback is reachable
+// from containers under Docker rootless, and the RootlessKit network driver name.
+// See https://github.com/moby/moby/issues/47684#issuecomment-2166149845
+// See https://github.com/moby/moby/blob/master/contrib/dockerd-rootless.sh
+// See https://github.com/rootless-containers/rootlesskit/blob/master/docs/network.md
+func getDockerRootlessHostIP() (string, string, error) {
+	serverVersion, err := GetServerVersion()
+	if err != nil {
+		return "", "", err
+	}
+	netDriver := ""
+	for _, component := range serverVersion.Components {
+		if strings.EqualFold(component.Name, "rootlesskit") {
+			netDriver = component.Details["NetworkDriver"]
+			break
+		}
+	}
+	switch netDriver {
+	case "":
+		return "", "", fmt.Errorf("unable to determine RootlessKit network driver from 'docker version'")
+	case "gvisor-tap-vsock":
+		return "10.0.2.1", netDriver, nil
+	default:
+		return "10.0.2.2", netDriver, nil
+	}
 }
