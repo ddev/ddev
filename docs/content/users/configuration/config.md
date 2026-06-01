@@ -414,15 +414,29 @@ Whether to disable the TUI (terminal user interface) when running the `ddev` com
 
 ## `nodejs_version`
 
-Node.js version for the web container’s “system” version. [`n`](https://www.npmjs.com/package/n) tool is under the hood.
-
-There is no need to reconfigure `nodejs_version` unless you want a version other than the version already specified, which will be the default version at the time the project was configured.
-
-Note that specifying any non-default Node.js version will cause DDEV to download and install that version when running `ddev start` the first time on a project. If optimizing first-time startup speed (as in Continuous Integration) is your biggest concern, consider using the default version of Node.js.
+Node.js version for the web container, managed by [`n`](https://www.npmjs.com/package/n). Non-default versions are baked into the web image at build time. If startup speed matters (e.g. CI), stick with the default.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `16`, `18.2`, `18.19.2`, etc.
+| :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `v22`, `20.2`, `18.19.2`, etc.<br>`auto`/`engine` (see below).
+
+!!!warning "Node.js version is baked into the image at build time"
+    Use a non-specific version like `v24` to always get the latest in a major line. To update to a newer matching version, rebuild:
+
+    ```bash
+    ddev restart --no-cache
+    # or
+    ddev utility rebuild
+    ```
+
+!!!tip "How to define the Node.js version using a file"
+    Set `nodejs_version: auto` to read the version from `.n-node-version`, `.node-version`, `.nvmrc`, or `package.json` engines in [`DDEV_APPROOT`](../extend/custom-commands.md#environment-variables-provided). Set `nodejs_version: engine` to use only `package.json` engines. See [n's documentation](https://www.npmjs.com/package/n#specifying-nodejs-versions) for details.
+
+    If your version file is not in `DDEV_APPROOT`, create a symlink pointing to it. For example, if you have `frontend/.nvmrc`:
+
+    ```bash
+    ln -sf frontend/.nvmrc .nvmrc
+    ```
 
 !!!tip "Installing additional Node.js versions"
     To have multiple Node.js versions available, install additional ones via a [`post-start` hook](hooks.md) using `n`:
@@ -433,33 +447,7 @@ Note that specifying any non-default Node.js version will cause DDEV to download
         - exec: "n install 18 && n install 20"
     ```
 
-    All installed versions are cached. The last `n install` in the hook becomes the active version. Switch between cached versions with `n <version>` inside the container.
-
-!!!tip "How to define the Node.js version using a file"
-    Your project team may specify the Node.js version in a more general way than in the `.ddev/config.yaml`. For example, you may use a `.nvmrc` file, the `package.json`, or a similar technique. In that case, DDEV can use the external configuration provided by that file.
-
-    There is an `auto` label (see [full documentation](https://www.npmjs.com/package/n#specifying-nodejs-versions)):
-
-    ```bash
-    ddev config --nodejs-version=auto
-    ```
-
-    It reads the target version from a file in the [DDEV_APPROOT](../extend/custom-commands.md#environment-variables-provided) directory, or any parent directory.
-
-    `n` looks for in order:
-
-    * `.n-node-version` : version on single line. Custom to `n`.
-    * `.node-version` : version on single line. Used by [multiple tools](https://github.com/shadowspawn/node-version-usage).
-    * `.nvmrc` : version on single line. Used by `nvm`.
-    * if no version file found, look for `engine` as below.
-
-    The `engine` label looks for a `package.json` file and reads the engines field to determine compatible Node.js.
-
-    If your version file is not in the `DDEV_APPROOT`, create a symlink pointing to it. For example, if you have `frontend/.nvmrc`:
-
-    ```bash
-    ln -sf frontend/.nvmrc .nvmrc
-    ```
+    All installed versions are cached; the last one becomes active. Switch with `ddev exec n <version>`, clean up with `ddev exec n prune`.
 
 ## `omit_containers`
 
