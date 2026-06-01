@@ -424,6 +424,17 @@ Note that specifying any non-default Node.js version will cause DDEV to download
 | -- | -- | --
 | :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `16`, `18.2`, `18.19.2`, etc.
 
+!!!tip "Installing additional Node.js versions"
+    To have multiple Node.js versions available, install additional ones via a [`post-start` hook](hooks.md) using `n`:
+
+    ```yaml
+    hooks:
+      post-start:
+        - exec: "n install 18 && n install 20"
+    ```
+
+    All installed versions are cached. The last `n install` in the hook becomes the active version. Switch between cached versions with `n <version>` inside the container.
+
 !!!tip "How to define the Node.js version using a file"
     Your project team may specify the Node.js version in a more general way than in the `.ddev/config.yaml`. For example, you may use a `.nvmrc` file, the `package.json`, or a similar technique. In that case, DDEV can use the external configuration provided by that file.
 
@@ -444,10 +455,10 @@ Note that specifying any non-default Node.js version will cause DDEV to download
 
     The `engine` label looks for a `package.json` file and reads the engines field to determine compatible Node.js.
 
-    If your file is not in the `DDEV_APPROOT` directory, you can create a link to the parent folder, so that `n` can find it. For example, if you have `frontend/.nvmrc`, create a `.ddev/web-build/Dockerfile.nvmrc` file:
+    If your version file is not in the `DDEV_APPROOT`, create a symlink pointing to it. For example, if you have `frontend/.nvmrc`:
 
-    ```dockerfile
-    RUN ln -sf /var/www/html/frontend/.nvmrc /var/www/.nvmrc
+    ```bash
+    ln -sf frontend/.nvmrc .nvmrc
     ```
 
 ## `omit_containers`

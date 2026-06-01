@@ -997,10 +997,30 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
-		extraWebContent = extraWebContent + fmt.Sprintf(`
-ENV N_PREFIX=/home/$username/.n
-ENV N_INSTALL_VERSION="%s"
+		if app.NodeJSVersion == "auto" || app.NodeJSVersion == "engine" {
+			destDir := app.GetConfigPath(filepath.Join(".webimageBuild", "n-version-files"))
+			if err = os.MkdirAll(destDir, 0755); err != nil {
+				return "", err
+			}
+			// These are the files `n` consults for `auto` (in order) and `engine`.
+			for _, f := range []string{".n-node-version", ".node-version", ".nvmrc", "package.json"} {
+				src := filepath.Join(app.AppRoot, f)
+				if fileutil.FileExists(src) {
+					if err = fileutil.CopyFile(src, filepath.Join(destDir, f)); err != nil {
+						return "", err
+					}
+				}
+			}
+			// cd so n resolves auto/engine from the version files copied above
+			extraWebContent += fmt.Sprintf(`
+COPY n-version-files/ /tmp/n-version-files/
+RUN cd /tmp/n-version-files && n install --cleanup "%s" && rm -rf /tmp/n-version-files
 `, app.NodeJSVersion)
+		} else {
+			extraWebContent += fmt.Sprintf(`
+RUN n install --cleanup "%s"
+`, app.NodeJSVersion)
+		}
 	}
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN corepack enable"
