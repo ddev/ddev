@@ -114,7 +114,7 @@ COPY --from=ddev-keep-root-build /ddev-keep-root.so /usr/local/lib/ddev/ddev-kee
 
 RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj/n/master/bin/n && chmod ugo+wx /usr/local/bin/n
 # Install node without cache, make a symlink for nodejs
-RUN n install --cleanup "${NODE_VERSION}" && ln -sf "$(which node)" "$(which node)js"
+RUN n install --cleanup "${NODE_VERSION}" && ln -sf node "$(dirname "$(which node)")/nodejs"
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
 
 # Loop through $PHP_VERSIONS, selecting packages for the target architecture.
