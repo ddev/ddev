@@ -112,9 +112,9 @@ RUN apt-get -qq update && apt-get -qq install --no-install-recommends --no-insta
 # needed (apache-fpm on Docker rootless + bind mounts); see WriteBuildDockerfile.
 COPY --from=ddev-keep-root-build /ddev-keep-root.so /usr/local/lib/ddev/ddev-keep-root.so
 
-RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj/n/master/bin/n && chmod ugo+wx /usr/local/bin/n
-# Install node without cache, make a symlink for nodejs
-RUN n install --cleanup "${NODE_VERSION}" && ln -sf node "$(dirname "$(which node)")/nodejs"
+RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj/n/master/bin/n && chmod +x /usr/local/bin/n
+# Install node without cache
+RUN n install --cleanup "${NODE_VERSION}"
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
 
 # Loop through $PHP_VERSIONS, selecting packages for the target architecture.
