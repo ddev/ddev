@@ -178,7 +178,7 @@ services:
     environment:
     - COLUMNS
     - COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-    - COREPACK_HOME=/mnt/ddev-global-cache/corepack
+    - COREPACK_HOME=/mnt/ddev-global-cache/corepack/${DDEV_SITENAME}-web
     - DOCROOT=${DDEV_DOCROOT}
     - DDEV_APPROOT=/var/www/html
     - DDEV_COMPOSER_ROOT

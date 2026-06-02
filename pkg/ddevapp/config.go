@@ -1014,11 +1014,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			// cd so n resolves auto/engine from the version files copied above
 			extraWebContent += fmt.Sprintf(`
 COPY n-version-files/ /tmp/n-version-files/
-RUN cd /tmp/n-version-files && n install --cleanup "%s" && rm -rf /tmp/n-version-files
+RUN cd /tmp/n-version-files && yes | n uninstall && n install --cleanup "%s" && rm -rf /tmp/n-version-files
 `, app.NodeJSVersion)
 		} else {
 			extraWebContent += fmt.Sprintf(`
-RUN n install --cleanup "%s"
+RUN yes | n uninstall && n install --cleanup "%s"
 `, app.NodeJSVersion)
 		}
 	}

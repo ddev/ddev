@@ -120,6 +120,27 @@ Whether to run `corepack enable` on Node.js configuration.
 
 When `true`, `corepack enable` will be executed, making latest `yarn` and `pnpm` package managers available.
 
+To set specific version of `pnpm` globally a project:
+
+```bash
+ddev config --corepack-enable && ddev restart
+
+# for Node.js 22+
+ddev exec corepack use pnpm@latest
+# for Node.js 18 and 20
+ddev exec corepack use pnpm@latest-10
+
+ddev exec pnpm --version
+```
+
+To set specific version of `yarn` globally a project:
+
+```bash
+ddev exec corepack use yarn@stable
+
+ddev yarn --version
+```
+
 ## `database`
 
 The type and version of the database engine the project should use.
