@@ -1012,7 +1012,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 				}
 			}
 			// cd so n resolves auto/engine from the version files copied above
-			extraWebContent += fmt.Sprintf(`
+			extraWebContent = extraWebContent + fmt.Sprintf(`
 ### DDEV-injected Node.js install via n (with version files from the project root)
 COPY n-version-files/ /tmp/n-version-files/
 ARG N_PREFIX=/usr/local
@@ -1025,10 +1025,10 @@ ARG N_PREFIX=/usr/local
 RUN n install --cleanup "%[1]s" || log-stderr.sh n install --cleanup "%[1]s" || true
 `, app.NodeJSVersion)
 		}
-		extraWebContent = extraWebContent + fmt.Sprintf(`
+		extraWebContent = extraWebContent + `
 ### DDEV-injected removal of dangling symlinks left by 'n install'
 RUN find /usr/local/bin -maxdepth 1 -xtype l -delete
-`)
+`
 	}
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN (command -v corepack >/dev/null 2>&1 || log-stderr.sh npm install -g corepack -f || true) && log-stderr.sh corepack enable || true"
