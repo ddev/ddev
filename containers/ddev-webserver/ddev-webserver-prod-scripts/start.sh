@@ -97,7 +97,7 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack/${HOSTNAME}}
+mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 
 # Remove ~/n/bin so the system Node.js is used by default; run `n install <version>` to switch
 ln -sf "${N_PREFIX}" ~/n && rm -rf ~/n/bin

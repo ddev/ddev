@@ -118,27 +118,32 @@ Whether to run `corepack enable` on Node.js configuration.
 | -- | -- | --
 | :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
 
-When `true`, `corepack enable` will be executed, making latest `yarn` and `pnpm` package managers available.
+When `true`, `corepack enable` will be executed, making latest `pnpm` and `yarn` package managers available.
 
-To set specific version of `pnpm` globally a project:
+To set a specific version of `pnpm` for a project:
 
 ```bash
 ddev config --corepack-enable && ddev restart
-
-# for Node.js 22+
+# pnpm@latest requires Node.js 22+
+# use pnpm@latest-10 for Node.js 18 or 20
 ddev exec corepack use pnpm@latest
-# for Node.js 18 and 20
-ddev exec corepack use pnpm@latest-10
-
 ddev exec pnpm --version
 ```
 
-To set specific version of `yarn` globally a project:
+To set a specific version of `yarn` for a project:
 
 ```bash
+ddev config --corepack-enable && ddev restart
+# yarn@stable is the latest stable release
+# use yarn@4.9.1 to pin exactly
 ddev exec corepack use yarn@stable
-
 ddev yarn --version
+```
+
+`corepack use` pins the version by setting the `packageManager` field in `package.json`. To clear the global cache, run:
+
+```bash
+ddev exec corepack cache clear
 ```
 
 ## `database`
