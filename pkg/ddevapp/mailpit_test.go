@@ -77,12 +77,16 @@ func TestMailpit(t *testing.T) {
 	require.NotNil(t, desc["mailpit_url"])
 	require.NotNil(t, desc["mailpit_https_url"])
 
-	resp, err := testcommon.EnsureLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation)
-	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
-	// Colima tests on github don't respect https
+	testcommon.RequireLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation,
+		testcommon.WithMessagef("Mailpit HTTP API should show the sent email (default ports)"),
+		testcommon.WithMaxAttempts(5),
+	)
+	// Colima tests on GitHub don't respect https
 	if !dockerutil.IsColima() && !dockerutil.IsLima() {
-		resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
-		require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
+		testcommon.RequireLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation,
+			testcommon.WithMessagef("Mailpit HTTPS API should show the sent email (default ports)"),
+			testcommon.WithMaxAttempts(5),
+		)
 	}
 	// Change the global ports to make sure that works
 	globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort = "28023"
@@ -108,17 +112,17 @@ func TestMailpit(t *testing.T) {
 	require.NotNil(t, desc["mailpit_url"])
 	require.NotNil(t, desc["mailpit_https_url"])
 
-	// The API may not be ready the first time we hit it, especially on Rancher Desktop
-	opts := testcommon.HTTPRequestOpts{
-		MaxRetries: 5,
-	}
-
-	resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation, opts)
-	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
+	// The API may not be ready at first (especially on Rancher Desktop); retry.
+	testcommon.RequireLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation,
+		testcommon.WithMessagef("Mailpit HTTP API should show the sent email after changing global ports"),
+		testcommon.WithMaxAttempts(5),
+	)
 	// Colima tests on GitHub don't respect https
 	if !dockerutil.IsColima() && !dockerutil.IsLima() {
-		resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
-		require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
+		testcommon.RequireLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation,
+			testcommon.WithMessagef("Mailpit HTTPS API should show the sent email after changing global ports"),
+			testcommon.WithMaxAttempts(5),
+		)
 	}
 
 	// Change the ports on the project to make sure that works
@@ -140,11 +144,16 @@ func TestMailpit(t *testing.T) {
 	require.NotNil(t, desc["mailpit_url"])
 	require.NotNil(t, desc["mailpit_https_url"])
 
-	resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation, opts)
-	require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
-	// Colima tests on github don't respect https
+	// The API may not be ready at first (especially on Rancher Desktop); retry.
+	testcommon.RequireLocalHTTPContent(t, desc["mailpit_url"].(string)+"/api/v1/messages", expectation,
+		testcommon.WithMessagef("Mailpit HTTP API should show the sent email after changing project ports"),
+		testcommon.WithMaxAttempts(5),
+	)
+	// Colima tests on GitHub don't respect https
 	if !dockerutil.IsColima() && !dockerutil.IsLima() {
-		resp, err = testcommon.EnsureLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation)
-		require.NoError(t, err, "Error getting mailpit_url: %v resp=%v", err, resp)
+		testcommon.RequireLocalHTTPContent(t, desc["mailpit_https_url"].(string)+"/api/v1/messages", expectation,
+			testcommon.WithMessagef("Mailpit HTTPS API should show the sent email after changing project ports"),
+			testcommon.WithMaxAttempts(5),
+		)
 	}
 }

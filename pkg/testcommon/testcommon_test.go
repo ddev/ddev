@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -104,83 +103,6 @@ func TestValidTestSite(t *testing.T) {
 	currentDir, _ := os.Getwd()
 
 	assert.Equal(currentDir, site.Dir)
-}
-
-// TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
-func TestGetLocalHTTPResponse(t *testing.T) {
-	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() || nodeps.IsWSL2MirroredMode()) {
-		t.Skip("Skipping on Windows/Colima/Lima/Rancher/WSL2-mirrored as it always seems to fail")
-	}
-	ensureDdevBin()
-
-	// We have to get globalconfig read so CA is known and installed.
-	err := globalconfig.ReadGlobalConfig()
-	require.NoError(t, err)
-
-	assert := asrt.New(t)
-
-	origDir, _ := os.Getwd()
-
-	dockerutil.EnsureDdevNetwork()
-
-	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
-	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
-	//not need to be updated over time.
-	site := TestSites[0]
-	site.Name = t.Name()
-
-	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
-
-	err = site.Prepare()
-	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
-
-	app := &ddevapp.DdevApp{}
-	err = app.Init(site.Dir)
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		_ = os.Chdir(origDir)
-		_ = app.Stop(true, false)
-
-		app.RouterHTTPSPort = ""
-		app.RouterHTTPPort = ""
-		_ = app.WriteConfig()
-
-		site.Cleanup()
-	})
-
-	for _, pair := range []PortPair{{"8000", "8043"}, {"8080", "8443"}} {
-		ClearDockerEnv()
-		app.RouterHTTPPort = pair.HTTPPort
-		app.RouterHTTPSPort = pair.HTTPSPort
-		err = app.WriteConfig()
-		assert.NoError(err)
-
-		startErr := app.StartAndWait(5)
-		assert.NoError(startErr, "app.StartAndWait failed for port pair %v", pair)
-		if startErr != nil {
-			logs, health, _ := ddevapp.GetErrLogsFromApp(app, startErr)
-			t.Fatalf("healthcheck:\n%s\n\nlogs from broken container:\n=======\n%s\n========\n", health, logs)
-		}
-
-		safeURL := app.GetHTTPURL() + site.Safe200URIWithExpectation.URI
-
-		// Extra dummy GetLocalHTTPResponse is for mac M1 to try to prime it.
-		_, _, _ = GetLocalHTTPResponse(t, safeURL, 60)
-		out, _, err := GetLocalHTTPResponse(t, safeURL, 60)
-		assert.NoError(err)
-		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
-
-		// Skip the https version if we don't have mkcert working
-		if globalconfig.GetCAROOT() != "" {
-			safeURL = app.GetHTTPSURL() + site.Safe200URIWithExpectation.URI
-			out, _, err = GetLocalHTTPResponse(t, safeURL, 60)
-			assert.NoError(err)
-			assert.Contains(out, site.Safe200URIWithExpectation.Expect)
-			// This does the same thing as previous, but worth exercising it here.
-			_, _ = EnsureLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect)
-		}
-	}
 }
 
 // TestGetCachedArchive tests download and extraction of archives for test sites

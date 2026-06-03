@@ -2,11 +2,7 @@ package testcommon
 
 import (
 	"crypto/sha256"
-	"crypto/tls"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -14,7 +10,6 @@ import (
 	"regexp"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -25,7 +20,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
-	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -82,14 +76,6 @@ type TestSite struct {
 	// FullSiteArchiveExtPath is the path that should be extracted from inside an archive when
 	// importing the files from a full site archive
 	FullSiteArchiveExtPath string
-}
-
-// HTTPRequestOpts contains options for HTTP requests
-type HTTPRequestOpts struct {
-	// TimeoutSeconds is the number of seconds to wait for a response before timing out
-	TimeoutSeconds int
-	// MaxRetries is the number of times to retry the request
-	MaxRetries int
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
@@ -444,161 +430,6 @@ func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, s
 	return extractPath, archiveFullPath, nil
 }
 
-// GetLocalHTTPResponse takes a URL and optional parameters,
-// hits the local Docker for it, returns result
-// Returns error (with the body) if not 200 status code.
-// Parameters can be either:
-// - HTTPRequestOpts struct with TimeoutSeconds and MaxRetries fields
-// - int representing timeout seconds (for backward compatibility)
-func GetLocalHTTPResponse(t *testing.T, rawurl string, params ...any) (string, *http.Response, error) {
-	options := parseHTTPRequestOpts(60, params...)
-
-	timeoutTime := time.Duration(options.TimeoutSeconds) * time.Second
-	assert := asrt.New(t)
-
-	u, err := url.Parse(rawurl)
-	if err != nil {
-		t.Fatalf("Failed to parse url %s: %v", rawurl, err)
-	}
-	port := u.Port()
-
-	dockerIP, err := dockerutil.GetDockerIP()
-	assert.NoError(err)
-
-	fakeHost := u.Hostname()
-	// Add the port if there is one.
-	u.Host = dockerIP
-	if port != "" {
-		u.Host = u.Host + ":" + port
-	}
-	localAddress := u.String()
-
-	// Use ServerName: fakeHost to verify basic usage of certificate.
-	// This technique is from https://stackoverflow.com/a/47169975/215713
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{ServerName: fakeHost},
-	}
-
-	// Do not follow redirects, https://stackoverflow.com/a/38150816/215713
-	client := &http.Client{
-		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-		Transport: transport,
-		Timeout:   timeoutTime,
-	}
-
-	var lastErr error
-	var resp *http.Response
-	var bodyString string
-
-	for attempt := 1; attempt <= options.MaxRetries; attempt++ {
-		req, err := http.NewRequest("GET", localAddress, nil)
-		if err != nil {
-			return "", nil, fmt.Errorf("failed to NewRequest GET %s: %v", localAddress, err)
-		}
-		req.Host = fakeHost
-
-		resp, err = client.Do(req)
-		if err != nil {
-			lastErr = err
-			if attempt < options.MaxRetries {
-				time.Sleep(time.Second)
-				continue
-			}
-			return "", resp, err
-		}
-
-		bodyBytes, err := io.ReadAll(resp.Body)
-		_ = resp.Body.Close()
-		if err != nil {
-			lastErr = fmt.Errorf("unable to ReadAll resp.body: %v", err)
-			if attempt < options.MaxRetries {
-				time.Sleep(time.Second)
-				continue
-			}
-			return "", resp, lastErr
-		}
-
-		bodyString = string(bodyBytes)
-		if resp.StatusCode != 200 {
-			lastErr = fmt.Errorf("http status code for '%s' was %d, not 200", localAddress, resp.StatusCode)
-			if attempt < options.MaxRetries {
-				time.Sleep(time.Second)
-				continue
-			}
-			return bodyString, resp, lastErr
-		}
-
-		// Success
-		return bodyString, resp, nil
-	}
-
-	// This should never be reached, but just in case
-	return bodyString, resp, lastErr
-}
-
-// GetLocalHTTPResponseWithBackoff calls GetLocalHTTPResponse with an external
-// retry/backoff strategy. It takes a number of attempts and an initialDelay
-// duration. params follow the same conventions as GetLocalHTTPResponse
-// (HTTPRequestOpts or int timeout). The inner call has MaxRetries forced to 1
-// to avoid nested retries.
-func GetLocalHTTPResponseWithBackoff(t *testing.T, rawurl string, attempts int, initialDelay time.Duration, params ...any) (string, *http.Response, error) {
-	if attempts < 1 {
-		attempts = 1
-	}
-	// Build options from params but force inner MaxRetries to 1 to avoid nested retries.
-	innerOpts := parseHTTPRequestOpts(60, params...)
-	innerOpts.MaxRetries = 1
-
-	var lastBody string
-	var lastResp *http.Response
-	var lastErr error
-	delay := initialDelay
-
-	for attempt := 1; attempt <= attempts; attempt++ {
-		body, resp, err := GetLocalHTTPResponse(t, rawurl, innerOpts)
-		if err == nil {
-			return body, resp, nil
-		}
-		lastBody = body
-		lastResp = resp
-		lastErr = err
-
-		if attempt < attempts {
-			// Log and sleep with exponential backoff
-			t.Logf("GetLocalHTTPResponseWithBackoff attempt %d/%d failed for %s: %v; retrying after %s", attempt, attempts, rawurl, err, delay)
-			time.Sleep(delay)
-			// Double the delay for next attempt
-			delay *= 2
-		}
-	}
-
-	return lastBody, lastResp, lastErr
-}
-
-// EnsureLocalHTTPContent will verify a URL responds with a 200, expected content string, and optional parameters.
-// Parameters can be either:
-// - HTTPRequestOpts struct with TimeoutSeconds and MaxRetries fields
-// - int representing timeout seconds (for backward compatibility)
-func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, params ...any) (*http.Response, error) {
-	options := parseHTTPRequestOpts(40, params...)
-	assert := asrt.New(t)
-
-	body, resp, err := GetLocalHTTPResponse(t, rawurl, options)
-	// We see intermittent php-fpm SIGBUS failures, only on macOS.
-	// That results in a 502/503. If we get a 502/503 on macOS, try again.
-	// It seems to be a 502 with nginx-fpm and a 503 with apache-fpm
-	if nodeps.IsMacOS() && resp != nil && (resp.StatusCode >= 500) {
-		t.Logf("Received %d error on macOS, retrying GetLocalHTTPResponse", resp.StatusCode)
-		time.Sleep(time.Second)
-		body, resp, err = GetLocalHTTPResponse(t, rawurl, options)
-	}
-	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=%v, body=%v: %v", rawurl, resp, body, err)
-	assert.Contains(body, expectedContent, "request %s got resp=%v, body:\n========\n%s\n==========\n", rawurl, resp, body)
-	return resp, err
-}
-
 // CheckGoroutineOutput makes sure that goroutines
 // aren't beyond specified level
 func CheckGoroutineOutput(t *testing.T, out string) {
@@ -616,35 +447,4 @@ func CheckGoroutineOutput(t *testing.T, out string) {
 type PortPair struct {
 	HTTPPort  string
 	HTTPSPort string
-}
-
-// parseHTTPRequestOpts extracts HTTPRequestOpts from interface{} parameters with defaults
-func parseHTTPRequestOpts(defaultTimeout int, params ...any) HTTPRequestOpts {
-	var options HTTPRequestOpts
-
-	// Handle different parameter types for backward compatibility
-	if len(params) > 0 {
-		switch param := params[0].(type) {
-		case HTTPRequestOpts:
-			options = param
-		case int:
-			// Backward compatibility: int parameter is timeout in seconds
-			options.TimeoutSeconds = param
-		default:
-			options.TimeoutSeconds = defaultTimeout // Default if invalid type
-		}
-	}
-	// Set defaults if not provided
-	if options.TimeoutSeconds == 0 {
-		options.TimeoutSeconds = defaultTimeout
-	}
-	// Negative timeout means no timeout
-	if options.TimeoutSeconds < 0 {
-		options.TimeoutSeconds = 0
-	}
-	if options.MaxRetries < 1 {
-		options.MaxRetries = 1
-	}
-
-	return options
 }

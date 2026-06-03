@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -790,7 +791,9 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		}
 		t.Logf("Testing these URLs: %v", urls)
 		for _, testURL := range urls {
-			_, _ = testcommon.EnsureLocalHTTPContent(t, testURL+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			testcommon.AssertLocalHTTPContent(t, testURL+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect,
+				testcommon.WithMessagef("each configured hostname should serve the static test content"),
+			)
 		}
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
@@ -1071,7 +1074,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			time.Sleep(time.Second)
 			t.Logf("Connecting to HTTP URL %s with Xdebug enabled, PHP version=%s time=%v", app.GetWebContainerDirectHTTPURL(), v, time.Now())
 			// Curl to the project's index.php or anything else
-			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL(), 12)
+			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL(),
+				testcommon.WithTimeout(12*time.Second),
+			)
 			if err != nil {
 				t.Logf("time=%v got resp %v output %s: %v", time.Now(), resp, out, err)
 				if resp != nil {
@@ -2468,7 +2473,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Validate Mailpit is working and "connected"
 		mailpitAPIURL := "http://" + app.GetHostname() + ":" + app.GetMailpitHTTPPort() + "/api/v1/messages"
-		_, _ = testcommon.EnsureLocalHTTPContent(t, mailpitAPIURL, `"total":0`)
+		testcommon.AssertLocalHTTPContent(t, mailpitAPIURL, `"total":0`,
+			testcommon.WithMessagef("Mailpit API should be connected and report zero messages initially"),
+		)
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
@@ -2498,14 +2505,13 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Test static content.
 		if site.Safe200URIWithExpectation.URI != "" {
-			_, err = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-			if err != nil {
-				util.Warning("err: %v", err)
-			}
+			testcommon.AssertLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect,
+				testcommon.WithMessagef("project should serve the static test content"),
+			)
 		}
 		// Test dynamic URL + database content.
 		rawurl := app.GetPrimaryURL() + site.DynamicURI.URI
-		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 120)
+		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, testcommon.WithTimeout(120*time.Second))
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
 		if err != nil && strings.Contains(err.Error(), "container ") {
 			logs, health, err := ddevapp.GetErrLogsFromApp(app, err)
@@ -2524,7 +2530,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Make sure we can do a simple hit against the host-mount of web container.
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetWebContainerDirectHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		testcommon.AssertLocalHTTPContent(t, app.GetWebContainerDirectHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect,
+			testcommon.WithMessagef("web container host-mount should serve the static test content directly"),
+		)
 
 		// Project type 'php' should fail ImportFiles if no upload_dirs is provided
 		if app.Type == nodeps.AppTypePHP {
@@ -3525,6 +3533,7 @@ type URLRedirectExpectations struct {
 	url                 string
 	uri                 string
 	expectedRedirectURI string
+	expectStatus        int
 }
 
 // TestAppdirAlreadyInUse tests trying to start a project in an already-used
@@ -3618,17 +3627,18 @@ func TestHttpsRedirection(t *testing.T) {
 		_ = os.RemoveAll(testDir)
 	})
 
+	// redir_*.php use a 302; the /subdir trailing-slash redirect is a 301.
 	expectations := []URLRedirectExpectations{
-		{app.GetHTTPSURL(), "/redir_relative.php", "/landed.php"},
-		{app.GetHTTPURL(), "/redir_relative.php", "/landed.php"},
+		{app.GetHTTPSURL(), "/redir_relative.php", "/landed.php", http.StatusFound},
+		{app.GetHTTPURL(), "/redir_relative.php", "/landed.php", http.StatusFound},
 	}
 
 	// The simple redirect logic in `landed.php` and /subdir can only handle default ports 80 and 443
 	if app.GetPrimaryRouterHTTPSPort() == "443" && app.GetPrimaryRouterHTTPPort() == "80" {
-		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/redir_abs.php", "/landed.php"})
-		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/redir_abs.php", "/landed.php"})
-		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/subdir", "/subdir/"})
-		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/subdir", "/subdir/"})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/redir_abs.php", "/landed.php", http.StatusFound})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/redir_abs.php", "/landed.php", http.StatusFound})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPSURL(), "/subdir", "/subdir/", http.StatusMovedPermanently})
+		expectations = append(expectations, URLRedirectExpectations{app.GetHTTPURL(), "/subdir", "/subdir/", http.StatusMovedPermanently})
 	}
 
 	projectTypes := ddevapp.GetValidAppTypes()
@@ -3664,8 +3674,10 @@ func TestHttpsRedirection(t *testing.T) {
 				reqURL := parts.url + parts.uri
 				// t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
 				// Add extra hit to avoid occasional nil result
-				_, _, _ = testcommon.GetLocalHTTPResponse(t, reqURL, 60)
-				out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL, 60)
+				out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL,
+					testcommon.WithExpectStatus(parts.expectStatus),
+					testcommon.WithMaxAttempts(2),
+				)
 
 				require.NotNil(t, resp, "resp was nil for projectType=%s webserver_type=%s url=%s, err=%v, out='%s'", projectType, webserverType, reqURL, err, out)
 				if resp != nil {
@@ -4147,10 +4159,11 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			// Make sure access from host is successful
 			// But "localhost" is only for inside container.
 			if parts.Host != "localhost" {
-				// Dummy attempt to get webserver "warmed up" before real try.
-				// Forced by M1 constant EOFs
-				_, _, _ = testcommon.GetLocalHTTPResponse(t, site.Safe200URIWithExpectation.URI, 60)
-				_, _ = testcommon.EnsureLocalHTTPContent(t, item+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect, 60)
+				// Retry to ride out the occasional M1 EOF on the first hit.
+				testcommon.AssertLocalHTTPContent(t, item+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect,
+					testcommon.WithMessagef("each external URL should be reachable from the host with expected content"),
+					testcommon.WithMaxAttempts(2),
+				)
 			}
 
 			if _, err := strconv.ParseInt(hostParts[0], 10, 64); err != nil {

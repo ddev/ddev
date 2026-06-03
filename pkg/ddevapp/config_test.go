@@ -1074,7 +1074,9 @@ func TestPHPOverrides(t *testing.T) {
 
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err, "failed to flush Mutagen sync")
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+"/phpinfo.php", `max_input_time</td><td class="v">999`, 60)
+	testcommon.AssertLocalHTTPContent(t, app.GetHTTPURL()+"/phpinfo.php", `max_input_time</td><td class="v">999`,
+		testcommon.WithMessagef("phpinfo should reflect the max_input_time=999 PHP override"),
+	)
 }
 
 // TestPHPConfig checks some key PHP configuration items
@@ -1917,21 +1919,21 @@ func TestConfigFunctionality(t *testing.T) {
 	require.Equal(t, hostHTTPSPort, app.HostHTTPSPort)
 
 	safeURL := "http://127.0.0.1:" + hostHTTPPort + site.Safe200URIWithExpectation.URI
-	out, _, err := testcommon.GetLocalHTTPResponse(t, safeURL, 60)
-	assert.NoError(err)
-	assert.Contains(out, site.Safe200URIWithExpectation.Expect)
+	testcommon.AssertLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect,
+		testcommon.WithMessagef("safe URL should serve the expected static content"),
+	)
 
 	// This isn't very important, and is unusual
 	// On some WSL2 systems (tb-wsldd-05) it works fine locally, can't work in buildkite.
 	if !dockerutil.IsColima() && !nodeps.IsWSL2() {
 		safeURL = "https://127.0.0.1:" + hostHTTPSPort + site.Safe200URIWithExpectation.URI
-		out, _, err = testcommon.GetLocalHTTPResponse(t, safeURL, 60)
-		assert.NoError(err)
-		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
+		testcommon.AssertLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect,
+			testcommon.WithMessagef("HTTPS safe URL should serve the expected static content"),
+		)
 	}
 
 	// Make sure that the db port is configured
-	out, err = exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
+	out, err := exec.RunHostCommand("mysql", "-uroot", "-proot", "--database=db", "--host=127.0.0.1", "--port="+hostDBPort, "-e", "SHOW TABLES;")
 	require.NoError(t, err, "failed host-side mysql command, output='%v'", out)
 }
 
