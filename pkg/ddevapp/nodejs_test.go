@@ -32,6 +32,7 @@ func TestNodeJSVersions(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true)
 	assert.NoError(err)
+	app.CorepackEnable = false
 	t.Cleanup(func() {
 		runTime()
 		err = os.Chdir(origDir)
@@ -92,9 +93,11 @@ func TestCorepackEnable(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true)
 	assert.NoError(err)
+	origCorepackEnable := app.CorepackEnable
 	t.Cleanup(func() {
 		runTime()
 		_ = os.Chdir(origDir)
+		app.CorepackEnable = origCorepackEnable
 		_ = app.Restart()
 	})
 

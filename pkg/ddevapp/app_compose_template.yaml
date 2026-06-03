@@ -229,6 +229,7 @@ services:
     - IS_DDEV_PROJECT=true
     - LINES
     - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
+    - N_PREFIX=/mnt/ddev-global-cache/n_prefix/${DDEV_SITENAME}-web
     - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
     - npm_config_cache=/mnt/ddev-global-cache/npm
     {{- if ne (env "DDEV_PAGER") "" }}
@@ -243,10 +244,6 @@ services:
     - TZ={{ .Timezone }}
     - USER={{ .Username }}
     - VIRTUAL_HOST=${DDEV_HOSTNAME}
-    # Web /start.sh timeout (default_container_timeout - 5s). Prevents startup scripts from
-    # hitting container timeout limit, which would cause "ddev start" to fail completely.
-    # For N uses: "div (sub .DefaultContainerTimeout 5) N". Currently: 1 use (n-install.sh)
-    - START_SCRIPT_TIMEOUT={{ sub .DefaultContainerTimeout 5 }}
     {{ range $env := .WebEnvironment }}- "{{ $env }}"
     {{ end }}
 

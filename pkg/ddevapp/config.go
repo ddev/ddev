@@ -997,13 +997,41 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
-		extraWebContent = extraWebContent + fmt.Sprintf(`
-ENV N_PREFIX=/home/$username/.n
-ENV N_INSTALL_VERSION="%s"
+		if app.NodeJSVersion == "auto" || app.NodeJSVersion == "engine" {
+			destDir := app.GetConfigPath(filepath.Join(".webimageBuild", "n-version-files"))
+			if err = os.MkdirAll(destDir, 0755); err != nil {
+				return "", err
+			}
+			// These are the files `n` consults for `auto` (in order) and `engine`.
+			for _, f := range []string{".n-node-version", ".node-version", ".nvmrc", "package.json"} {
+				src := filepath.Join(app.AppRoot, f)
+				if fileutil.FileExists(src) {
+					if err = fileutil.CopyFile(src, filepath.Join(destDir, f)); err != nil {
+						return "", err
+					}
+				}
+			}
+			// cd so n resolves auto/engine from the version files copied above
+			extraWebContent = extraWebContent + fmt.Sprintf(`
+### DDEV-injected Node.js install via n (with version files from the project root)
+COPY n-version-files/ /tmp/n-version-files/
+ARG N_PREFIX=/usr/local
+RUN cd /tmp/n-version-files && (n install --cleanup "%[1]s" || log-stderr.sh n install --cleanup "%[1]s" || true) && rm -rf /tmp/n-version-files
 `, app.NodeJSVersion)
+		} else {
+			extraWebContent = extraWebContent + fmt.Sprintf(`
+### DDEV-injected Node.js install via n
+ARG N_PREFIX=/usr/local
+RUN n install --cleanup "%[1]s" || log-stderr.sh n install --cleanup "%[1]s" || true
+`, app.NodeJSVersion)
+		}
+		extraWebContent = extraWebContent + `
+### DDEV-injected removal of dangling symlinks left by 'n install'
+RUN find /usr/local/bin -maxdepth 1 -xtype l -delete
+`
 	}
 	if app.CorepackEnable {
-		extraWebContent = extraWebContent + "\nRUN corepack enable"
+		extraWebContent = extraWebContent + "\nRUN (command -v corepack >/dev/null 2>&1 || log-stderr.sh npm install -g corepack -f || true) && log-stderr.sh corepack enable || true"
 	}
 	// Add supervisord config for WebExtraDaemons
 	var supervisorGroup []string

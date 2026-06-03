@@ -3,7 +3,7 @@
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
 ARG DOCKER_ORG=ddev
-FROM ${DOCKER_ORG}/ddev-php-base:20260531_stasadev_node_pin AS ddev-webserver-base
+FROM ${DOCKER_ORG}/ddev-php-base:20260601_stasadev_n_install AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
