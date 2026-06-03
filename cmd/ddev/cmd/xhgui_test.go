@@ -55,17 +55,14 @@ func TestCmdXHGui(t *testing.T) {
 	require.Contains(t, out, "XHProf is enabled and capturing")
 	require.Contains(t, out, fmt.Sprintf("XHGui service is running and you can access it at %s", app.GetXHGuiURL()))
 
-	// Use more retries as it may fail on macOS at first
-	opts := testcommon.HTTPRequestOpts{
-		TimeoutSeconds: 2,
-	}
-
 	// Test to see if xhgui UI is working
 	// Hit the site
-	_, _, err = testcommon.GetLocalHTTPResponseWithBackoff(t, app.GetPrimaryURL(), 5, 500*time.Millisecond, opts)
+	_, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(),
+		testcommon.WithTimeout(2*time.Second),
+		testcommon.WithMaxAttempts(5),
+		testcommon.WithBackoff(500*time.Millisecond),
+	)
 	require.NoError(t, err, "failed to get http response from %s", app.GetPrimaryURL())
-	// Give xhprof a moment to write the results; it may be asynchronous sometimes
-	time.Sleep(2 * time.Second)
 
 	// Now hit xhgui UI
 	desc, err := app.Describe(true)
@@ -74,11 +71,14 @@ func TestCmdXHGui(t *testing.T) {
 	require.NotNil(t, desc["xhgui_https_url"])
 	xhguiURL := desc["xhgui_https_url"].(string)
 
-	out, _, err = testcommon.GetLocalHTTPResponseWithBackoff(t, xhguiURL, 5, 500*time.Millisecond, opts)
-	require.NoError(t, err)
 	// Output should contain at least one run
-	require.Contains(t, out, strings.ToLower(app.GetHostname()))
-	require.Contains(t, out, "Recent runs")
+	testcommon.RequireLocalHTTPContent(t, xhguiURL, strings.ToLower(app.GetHostname()),
+		testcommon.WithAlsoContains("Recent runs"),
+		testcommon.WithMessagef("xhgui should list a profiling run for this project"),
+		testcommon.WithTimeout(2*time.Second),
+		testcommon.WithMaxAttempts(5),
+		testcommon.WithBackoff(500*time.Millisecond),
+	)
 
 	_, err = exec.RunHostCommand(DdevBin, "xhgui", "off")
 	require.NoError(t, err)

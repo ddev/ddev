@@ -67,8 +67,7 @@ func TestExtraPortExpose(t *testing.T) {
 	for i, p := range portsToTest {
 		baseURL := netutil.BaseURLFromFullURL(app.GetPrimaryURL())
 		url := fmt.Sprintf("%s:%s/testfile.html", baseURL, p)
-		out, resp, err := testcommon.GetLocalHTTPResponse(t, url)
-		require.NoError(t, err, "failed to get hit url %s, out=%s, resp=%v err=%v", url, out, resp, err)
-		require.Contains(t, out, fmt.Sprintf("this is test%d", i+1))
+		testcommon.RequireLocalHTTPContent(t, url, fmt.Sprintf("this is test%d", i+1),
+			testcommon.WithMessagef("exposed port %s should serve testfile.html", p))
 	}
 }

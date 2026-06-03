@@ -55,8 +55,9 @@ func TestCmdSSH(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	_, err = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "Success accessing database")
-	assert.NoError(err)
+	testcommon.AssertLocalHTTPContent(t, app.GetPrimaryURL(), "Success accessing database",
+		testcommon.WithMessagef("project web container should be able to reach the database"),
+	)
 
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: "pwd",

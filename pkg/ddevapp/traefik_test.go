@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -95,8 +96,9 @@ func TestTraefikSimple(t *testing.T) {
 	for _, u := range allURLs {
 		// Use something here for wildcard
 		u = strings.Replace(u, `*`, `somewildcard`, 1)
-		_, err = testcommon.EnsureLocalHTTPContent(t, u+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-		assert.NoError(err, "failed EnsureLocalHTTPContent() %s: %v", u+site.Safe200URIWithExpectation.URI, err)
+		testcommon.AssertLocalHTTPContent(t, u+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect,
+			testcommon.WithMessagef("Traefik should route each project hostname to the static test content"),
+		)
 	}
 }
 
@@ -154,14 +156,19 @@ func TestTraefikVirtualHost(t *testing.T) {
 	for _, u := range allURLs {
 		// Use something here for wildcard
 		u = strings.Replace(u, `*`, `somewildcard`, 1)
-		_, err = testcommon.EnsureLocalHTTPContent(t, u+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-		assert.NoError(err, "failed EnsureLocalHTTPContent() %s: %v", u+site.Safe200URIWithExpectation.URI, err)
+		testcommon.AssertLocalHTTPContent(t, u+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect,
+			testcommon.WithMessagef("Traefik virtual host should route each project hostname to the static test content"),
+		)
 	}
 
 	// Test Reachability to nginx special VIRTUAL_HOST
-	_, _ = testcommon.EnsureLocalHTTPContent(t, "http://extra.ddev.site", "Welcome to nginx")
+	testcommon.AssertLocalHTTPContent(t, "http://extra.ddev.site", "Welcome to nginx",
+		testcommon.WithMessagef("nginx VIRTUAL_HOST extra.ddev.site should be reachable over HTTP"),
+	)
 	if globalconfig.GetCAROOT() != "" {
-		_, _ = testcommon.EnsureLocalHTTPContent(t, "https://extra.ddev.site", "Welcome to nginx")
+		testcommon.AssertLocalHTTPContent(t, "https://extra.ddev.site", "Welcome to nginx",
+			testcommon.WithMessagef("nginx VIRTUAL_HOST extra.ddev.site should be reachable over HTTPS"),
+		)
 	}
 }
 
@@ -310,7 +317,9 @@ func TestCustomGlobalConfig(t *testing.T) {
 	middlewaresURL := "http://" + dockerIP + ":" + monitorPort + "/api/http/middlewares"
 
 	// Query Traefik API for middlewares - the custom middleware should be listed
-	body, resp, err := testcommon.GetLocalHTTPResponse(t, middlewaresURL, 30)
+	body, resp, err := testcommon.GetLocalHTTPResponse(t, middlewaresURL,
+		testcommon.WithTimeout(30*time.Second),
+	)
 	require.NoError(t, err, "Failed to query Traefik API for middlewares")
 	require.Equal(t, 200, resp.StatusCode, "Traefik API should return 200")
 	require.Contains(t, body, testMiddlewareName,
@@ -396,8 +405,9 @@ http:
 	require.Contains(t, mergedConfigContent, "middlewares:", "Merged config should contain middlewares section")
 
 	// Verify project still works correctly with custom config
-	_, err = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-	require.NoError(t, err, "Project should still be accessible with merged traefik config")
+	testcommon.RequireLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect,
+		testcommon.WithMessagef("Project should still be accessible with merged traefik config"),
+	)
 
 	// Test that HTTP to HTTPS redirect actually works
 	// Get the HTTP URLs

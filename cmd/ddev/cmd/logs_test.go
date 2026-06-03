@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -60,8 +61,10 @@ func TestCmdLogs(t *testing.T) {
 	assert.NoError(err)
 
 	url := app.GetPrimaryURL() + "/logtest.php"
-	_, err = testcommon.EnsureLocalHTTPContent(t, url, "Notice to demonstrate logging", 10)
-	assert.NoError(err)
+	testcommon.AssertLocalHTTPContent(t, url, "Notice to demonstrate logging",
+		testcommon.WithMessagef("logtest.php should emit the PHP notice that `ddev logs` surfaces"),
+		testcommon.WithTimeout(10*time.Second),
+	)
 
 	out, err := exec.RunHostCommand(DdevBin, "logs")
 	require.NoError(t, err)

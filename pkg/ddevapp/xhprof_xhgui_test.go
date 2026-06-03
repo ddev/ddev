@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -79,12 +80,6 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 		webserverKeys = []string{nodeps.WebserverDefault}
 	}
 
-	// Use more retries as it may fail on macOS at first
-	opts := testcommon.HTTPRequestOpts{
-		TimeoutSeconds: 2,
-		MaxRetries:     5,
-	}
-
 	for _, webserverKey := range webserverKeys {
 		app.WebserverType = webserverKey
 
@@ -116,14 +111,20 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 			require.NoError(t, err)
 			require.Contains(t, stdout, "xhprof.output_dir", "xhprof should be enabled but is not enabled for %s", v)
 
-			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), opts)
-			require.NoError(t, err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
-			require.Contains(t, out, "module_xhprof")
+			testcommon.RequireLocalHTTPContent(t, app.GetPrimaryURL(), "module_xhprof",
+				testcommon.WithMessagef("failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v),
+				testcommon.WithTimeout(2*time.Second),
+				testcommon.WithMaxAttempts(5),
+				testcommon.WithBackoff(500*time.Millisecond),
+			)
 
-			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/xhprof/", opts)
-			require.NoError(t, err)
 			// Output should contain at least one run
-			require.Contains(t, out, ".ddev.xhprof</a><small>")
+			testcommon.RequireLocalHTTPContent(t, app.GetPrimaryURL()+"/xhprof/", ".ddev.xhprof</a><small>",
+				testcommon.WithMessagef("xhprof output page should list a captured run for this project"),
+				testcommon.WithTimeout(2*time.Second),
+				testcommon.WithMaxAttempts(5),
+				testcommon.WithBackoff(500*time.Millisecond),
+			)
 
 			// Disable all to avoid confusion
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -192,12 +193,6 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 		webserverKeys = []string{nodeps.WebserverDefault}
 	}
 
-	// Use more retries as it may fail on macOS at first
-	opts := testcommon.HTTPRequestOpts{
-		TimeoutSeconds: 2,
-		MaxRetries:     5,
-	}
-
 	for _, webserverKey := range webserverKeys {
 		app.WebserverType = webserverKey
 
@@ -235,18 +230,21 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 			require.NoError(t, err)
 			assert.Contains(stdout, "xhprof.output_dir", "xhprof should be enabled but is not enabled for %s", v)
 
-			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), opts)
-			require.NoError(t, err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
-			require.Contains(t, out, "module_xhprof")
+			testcommon.RequireLocalHTTPContent(t, app.GetPrimaryURL(), "module_xhprof",
+				testcommon.WithMessagef("failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v),
+				testcommon.WithTimeout(2*time.Second),
+				testcommon.WithMaxAttempts(5),
+				testcommon.WithBackoff(500*time.Millisecond),
+			)
 
-			// NOW try using xhgui
-
-			xhguiURL := app.GetXHGuiURL()
-			out, _, err = testcommon.GetLocalHTTPResponse(t, xhguiURL, opts)
-			require.NoError(t, err)
 			// Output should contain at least one run
-			require.Contains(t, out, strings.ToLower(t.Name()+"."+nodeps.DdevDefaultTLD))
-			require.Contains(t, out, "Recent runs")
+			testcommon.RequireLocalHTTPContent(t, app.GetXHGuiURL(), strings.ToLower(t.Name()+"."+nodeps.DdevDefaultTLD),
+				testcommon.WithAlsoContains("Recent runs"),
+				testcommon.WithMessagef("xhgui should list a profiling run for this project"),
+				testcommon.WithTimeout(2*time.Second),
+				testcommon.WithMaxAttempts(5),
+				testcommon.WithBackoff(500*time.Millisecond),
+			)
 
 			// Disable all to avoid confusion
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
