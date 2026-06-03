@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -28,6 +29,23 @@ func getFreePort(t *testing.T) string {
 	return port
 }
 
+// waitForPortListening blocks until something has bound port (nc's listener is up)
+// or 2s elapses, closing the race against nc's asynchronous bind(). It probes by
+// binding rather than connecting: a TCP connection would consume nc's single
+// accepted connection on builds where -k is unsupported, freeing the port before
+// findPortProcesses runs.
+func waitForPortListening(t *testing.T, port string) {
+	t.Helper()
+	require.Eventually(t, func() bool {
+		l, err := net.Listen("tcp", "127.0.0.1:"+port)
+		if err != nil {
+			return true // bind failed → port already in use → nc is up
+		}
+		_ = l.Close()
+		return false
+	}, 2*time.Second, 10*time.Millisecond, "port %s never started listening", port)
+}
+
 // startNCListener starts nc listening on the given port and returns a cleanup function.
 // Skips the test if nc is not available.
 func startNCListener(t *testing.T, port string) func() {
@@ -44,6 +62,7 @@ func startNCListener(t *testing.T, port string) func() {
 		cmd = exec.Command(ncPath, "-l", "-k", "-p", port)
 	}
 	require.NoError(t, cmd.Start(), "failed to start nc on port %s", port)
+	waitForPortListening(t, port)
 	return func() {
 		_ = cmd.Process.Kill()
 		_ = cmd.Wait()
