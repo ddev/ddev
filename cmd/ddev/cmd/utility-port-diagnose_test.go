@@ -62,7 +62,10 @@ func startNCListener(t *testing.T, port string) func() {
 		cmd = exec.Command(ncPath, "-l", "-k", "-p", port)
 	}
 	require.NoError(t, cmd.Start(), "failed to start nc on port %s", port)
-	waitForPortListening(t, port)
+	// Wait for a busy port on Linux, nc may be flaky
+	if nodeps.IsLinux() {
+		waitForPortListening(t, port)
+	}
 	return func() {
 		_ = cmd.Process.Kill()
 		_ = cmd.Wait()
