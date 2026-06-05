@@ -207,12 +207,22 @@ markdownlint:
 # https://docs.ddev.com/en/stable/developers/testing-docs/
 zensical:
 	@echo "zensical: "
-	@CMD="zensical build --clean --strict"; \
-	if command -v zensical >/dev/null 2>&1; then \
-		$$CMD ; \
-	else \
+	@if ! command -v zensical >/dev/null 2>&1; then \
 		echo "Not running zensical because it's not installed (run scripts/install-dev-tools.sh)"; \
-	fi
+		exit 0; \
+	fi; \
+	for i in 1 2 3; do \
+		out=$$(zensical build --strict 2>&1); rc=$$?; \
+		echo "$$out"; \
+		if [ $$rc -eq 0 ]; then exit 0; fi; \
+		if ! echo "$$out" | grep -q "page does not exist"; then \
+			echo "zensical: failure is not the known cache race; not retrying."; \
+			exit $$rc; \
+		fi; \
+		echo "zensical: attempt $$i hit the known cache race (see https://github.com/zensical/zensical/issues/641), retrying..."; \
+	done; \
+	echo "zensical: fast attempts exhausted; running authoritative clean build..."; \
+	zensical build --clean --strict
 
 # To see what the docs will look like, you can use `make zensical-serve`
 # It does require installing zensical: pip install zensical
