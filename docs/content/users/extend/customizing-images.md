@@ -117,7 +117,7 @@ Multi-stage builds are useful to anyone who has struggled to optimize Dockerfile
 
 ### Global Dockerfiles
 
-All of the above variants are also supported in `~/.ddev/web-build/` and `~/.ddev/db-build/`. Files placed there apply to every project on the machine and are useful for machine-specific customizations like corporate proxy certificates, private package registries, or developer tools you always want available.
+DDEV supports global web-build files for the web container and database container. Files placed in `~/.ddev/web-build/` and `~/.ddev/db-build/` will be applied to all DDEV web containers and database containers respectively. Files placed there apply to every project on the workstation and are useful for machine-specific customizations like corporate proxy certificates, private package registries, or developer tools you always want available.
 
 Global files are inserted *before* project-level files, so project-level files run after them. Context files (non-Dockerfiles) in the global directories are also available as `ADD`/`COPY` sources, with project-level files taking precedence on name conflicts.
 
