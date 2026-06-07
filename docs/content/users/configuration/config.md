@@ -152,7 +152,7 @@ The type and version of the database engine the project should use.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `mariadb:11.8` | The following database types are currently supported:<br>- MariaDB 5.5-10.8, 10.11, 11.4, 11.8<br>- MySQL 5.5-8.0, 8.4<br>- Postgres 9-18
+| :octicons-file-directory-16: project | `mariadb:11.8` | The following database types are currently supported:<br>- MariaDB 5.5-10.8, 10.11, 11.4, 11.8, 12.3<br>- MySQL 5.5-8.0, 8.4<br>- Postgres 9-18
 
 See [Database Server Types](../extend/database-types.md) for examples (e.g. `ddev config --database=mariadb:11.8`) and caveats (e.g. how to migrate from one database version to another).
 

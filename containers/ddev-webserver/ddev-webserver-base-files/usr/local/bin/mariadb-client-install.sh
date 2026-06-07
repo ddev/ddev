@@ -28,7 +28,7 @@ sed -i "s|^URIs:.*|URIs: https://archive.mariadb.org/mariadb-${MARIADB_VERSION}/
 # without creating a FrankenDebian system (https://wiki.debian.org/DontBreakDebian).
 # The logic for these older versions is provided as-is for those who may need it.
 # Search for CHANGE_MARIADB_CLIENT to update related code.
-if [ "${MARIADB_VERSION}" = "11.8" ]; then
+if [ "${MARIADB_VERSION}" = "12.3" ] || [ "${MARIADB_VERSION}" = "11.8" ]; then
   sed -i "s/^Suites:.*/Suites: trixie/" /etc/apt/sources.list.d/mariadb-archive.sources
 elif [ "${MARIADB_VERSION}" = "10.11" ] || [ "${MARIADB_VERSION}" = "11.4" ]; then
   sed -i "s/^Suites:.*/Suites: bookworm/" /etc/apt/sources.list.d/mariadb-archive.sources
