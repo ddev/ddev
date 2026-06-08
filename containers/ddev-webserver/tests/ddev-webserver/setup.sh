@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# brew install bats-core bats-core/bats-core/bats-assert bats-core/bats-core/bats-file bats-core/bats-core/bats-support
+
 bats_require_minimum_version 1.11.0
 set -eu -o pipefail
 TEST_BREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
