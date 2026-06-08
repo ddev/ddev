@@ -36,5 +36,5 @@ teardown() {
   # validate running project - check content
   run curl -sf https://${PROJNAME}.ddev.site
   assert_success
-  assert_output --partial "AsteriosPHP Framework"
+  assert_output --partial "Build your next project with de.asteriosphp.app"
 }
