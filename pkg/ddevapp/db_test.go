@@ -51,6 +51,7 @@ func GetDBTypeVersionFromString(t *testing.T) {
 		"mariadb_10.11": "mariadb:10.11",
 		"mariadb_11.4":  "mariadb:11.4",
 		"mariadb_11.8":  "mariadb:11.8",
+		"mariadb_12.3":  "mariadb:12.3",
 		"mysql_5.7":     "mysql:5.7",
 		"mysql_8.0":     "mysql:8.0",
 		"mysql_8.4":     "mysql:8.4",

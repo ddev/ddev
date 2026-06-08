@@ -26,7 +26,7 @@ var WebTag = "20260601_stasadev_n_install" // Note that this can be overridden b
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20260522_stasadev_myqld_socket"
+var BaseDBTag = "20260607_mariadb_12_3"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
