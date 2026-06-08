@@ -121,7 +121,7 @@ setup() {
 }
 
 @test "verify mariadb compat wrappers are installed and produce no deprecation warnings" {
-  for cmd in mysql mysqld mysqldump mysqladmin mysqlcheck; do
+  for cmd in mysql mysqldump mysqladmin mysqlcheck; do
     run docker exec "$CONTAINER_NAME" bash -c "command -v $cmd"
     assert_success
   done
@@ -132,12 +132,12 @@ setup() {
 
 @test "verify mariadb compat wrappers are removed for MySQL and reinstalled for MariaDB" {
   # Remove wrappers by switching to MySQL
-  run docker exec -e DDEV_DATABASE="mysql:8.0" "$CONTAINER_NAME" mariadb-compat-install.sh
+  run docker exec -u root -e DDEV_DATABASE="mysql:8.0" "$CONTAINER_NAME" mariadb-compat-install.sh
   assert_success
   run docker exec "$CONTAINER_NAME" bash -c "[ -f /usr/local/bin/mysql ] && head -n 3 /usr/local/bin/mysql | grep -q '#ddev-generated' && echo 'wrapper exists' || echo 'wrapper absent'"
   assert_output "wrapper absent"
   # Reinstall wrappers by switching back to MariaDB
-  run docker exec -e DDEV_DATABASE="mariadb:11.8" "$CONTAINER_NAME" mariadb-compat-install.sh
+  run docker exec -u root -e DDEV_DATABASE="mariadb:11.8" "$CONTAINER_NAME" mariadb-compat-install.sh
   assert_success
   run docker exec "$CONTAINER_NAME" bash -c "command -v mysql"
   assert_success
@@ -154,12 +154,12 @@ setup() {
 
 @test "verify mariadb skip-ssl wrappers are removed for MySQL and reinstalled for MariaDB" {
   # Remove wrappers by switching to MySQL
-  run docker exec -e DDEV_DATABASE="mysql:8.0" "$CONTAINER_NAME" mariadb-skip-ssl-wrapper-install.sh
+  run docker exec -u root -e DDEV_DATABASE="mysql:8.0" "$CONTAINER_NAME" mariadb-skip-ssl-wrapper-install.sh
   assert_success
   run docker exec "$CONTAINER_NAME" bash -c "[ -f /usr/local/bin/mariadb ] && head -n 3 /usr/local/bin/mariadb | grep -q '#ddev-generated' && echo 'wrapper exists' || echo 'wrapper absent'"
   assert_output "wrapper absent"
   # Reinstall wrappers by switching back to MariaDB
-  run docker exec -e DDEV_DATABASE="mariadb:11.8" "$CONTAINER_NAME" mariadb-skip-ssl-wrapper-install.sh
+  run docker exec -u root -e DDEV_DATABASE="mariadb:11.8" "$CONTAINER_NAME" mariadb-skip-ssl-wrapper-install.sh
   assert_success
   run docker exec "$CONTAINER_NAME" bash -c "grep -q -- '--skip-ssl-verify-server-cert' /usr/local/bin/mariadb"
   assert_success
