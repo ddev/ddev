@@ -8,9 +8,4 @@
 ## DBTypes: mysql,mariadb
 ## ExecRaw: true
 
-# Prefer 'mariadb' instead of 'mysql' (older versions of MariaDB only have the 'mysql' binary)
-if [[ "${DDEV_DATABASE}" == "mariadb"* ]] && command -v mariadb >/dev/null 2>&1; then
-    mariadb "$@"
-else
-    mysql "$@"
-fi
+mysql "$@"

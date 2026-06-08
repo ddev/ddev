@@ -29,7 +29,7 @@ if [ "${mysqld_version}" = "5.7" ] || [[  "${mysqld_version%%%.*}" =~ ^8.[04]$ ]
   mysqld --defaults-file=/var/tmp/my.cnf --initialize-insecure --datadir=${DATADIR:-/var/lib/mysql} --server-id=0
 else
   # mysql 5.5 requires running mysql_install_db in /usr/local/mysql
-  if command -v mysqld | grep usr.local; then
+  if command -v mysqld | grep -q /usr/local/mysql; then
     cd /usr/local/mysql
   fi
   mysql_install_db --defaults-file=/var/tmp/my.cnf --force --datadir=${DATADIR:-/var/lib/mysql}

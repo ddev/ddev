@@ -14,8 +14,8 @@ set -eu -o pipefail
 DDEV_DATABASE_FAMILY=${DDEV_DATABASE%:*}
 ADD_WRAPPER=true
 
-# Don't add wrappers if not using MariaDB
-if [ "${DDEV_DATABASE_FAMILY}" != "mariadb" ]; then
+# Don't add wrappers if using MySQL
+if [ "${DDEV_DATABASE_FAMILY}" = "mysql" ]; then
   ADD_WRAPPER=false
 fi
 
@@ -65,8 +65,8 @@ add_or_remove_ssl_wrapper() {
     return
   fi
 
-  # Don't overwrite if executable file already exists and is not our wrapper
-  if [ -x "$script_path" ] && ! head -n 3 "$script_path" 2>/dev/null | grep -q "#ddev-generated"; then
+  # Don't overwrite if executable file already exists
+  if [ -x "$script_path" ]; then
     return
   fi
 
@@ -77,8 +77,10 @@ exec -a $mariadb_binary "$real_binary_path" "\$@" --skip-ssl-verify-server-cert
 EOF
 
   chmod +x "$script_path"
-  echo "Created SSL wrapper for $mariadb_binary at $script_path"
+  INSTALLED_WRAPPERS+=("$mariadb_binary")
 }
+
+INSTALLED_WRAPPERS=()
 
 # MariaDB client commands that typically connect to databases and may support SSL options
 add_or_remove_ssl_wrapper mariadb
@@ -94,8 +96,10 @@ add_or_remove_ssl_wrapper mariadb-show
 add_or_remove_ssl_wrapper mariadb-slap
 add_or_remove_ssl_wrapper mariadbcheck
 
-if [ "${ADD_WRAPPER}" = "true" ]; then
-  echo "MariaDB skip SSL verification wrappers installed for ${DDEV_DATABASE}"
-else
+if [ "${ADD_WRAPPER}" = "false" ]; then
   echo "MariaDB skip SSL verification wrappers removed for ${DDEV_DATABASE}"
+elif [ ${#INSTALLED_WRAPPERS[@]} -gt 0 ]; then
+  echo "MariaDB skip SSL verification wrappers installed for ${DDEV_DATABASE}: ${INSTALLED_WRAPPERS[*]}"
+else
+  echo "MariaDB skip SSL verification wrappers already present for ${DDEV_DATABASE}"
 fi

@@ -12,6 +12,25 @@ function setup {
   containercheck
 }
 
+@test "verify mariadb compat wrappers exist for ${DB_TYPE} ${DB_VERSION}" {
+  if [ "${DB_TYPE}" != "mariadb" ]; then
+    skip "MariaDB compat wrappers only apply to MariaDB"
+  fi
+  # Wrappers are only installed for MariaDB 11.x+ (where mariadbd exists but mysqld does not natively)
+  if ! docker exec ${CONTAINER_NAME} bash -c "command -v mariadbd >/dev/null 2>&1"; then
+    skip "mariadbd not present, wrappers not applicable for ${DB_TYPE} ${DB_VERSION}"
+  fi
+  for cmd in mysql mysqld mysqldump mysqladmin mysqlcheck; do
+    run docker exec ${CONTAINER_NAME} bash -c "command -v ${cmd} >/dev/null 2>&1"
+    [ "$status" -eq 0 ]
+  done
+  # Verify no deprecation warning from mysqld
+  run docker exec ${CONTAINER_NAME} bash -c "mysqld --version 2>&1"
+  [ "$status" -eq 0 ]
+  echo "# mysqld output: $output" >&3
+  [[ "$output" != *"Deprecated program name"* ]]
+}
+
 @test "verify apt keys are not expiring within ${DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION:-90} days" {
   if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
     skip "Skipping because DDEV_IGNORE_EXPIRING_KEYS is set"
