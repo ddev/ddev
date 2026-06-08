@@ -3,9 +3,6 @@
 # Run these tests from the repo root directory, for example
 # bats tests
 
-# Requires bats-assert and bats-support
-# brew tap bats-core/bats-core &&
-# brew install bats-core bats-assert bats-support jq mkcert yq
 setup() {
   load setup.sh
 }
