@@ -189,11 +189,15 @@ For Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt-get up
 
 #### Homebrew
 
-If you’re using Homebrew, first run `brew unlink ddev` to get rid of the version you have there. Then use one of these options:
+Homebrew itself abandoned the ability to specify versions a few years ago, so the Homebrew install must be removed first: run `brew unlink ddev` to get rid of the version you have there. Then use one of these options:
 
 1. Download the version you want from the [releases page](https://github.com/ddev/ddev/releases) and place it in your `$PATH`.
 2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev.sh) script with the version number argument. For example, if you want `v1.23.5`, run `curl -fsSL https://ddev.com/install.sh | bash -s v1.23.5`.
 3. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
+
+To go back to using homebrew, delete the installed `ddev` with `rm -f $(which ddev)`, and then install `ddev` from scratch with Homebrew.
+
+Your projects are not affected by these changes.
 
 ### Why do I have an old DDEV?
 
