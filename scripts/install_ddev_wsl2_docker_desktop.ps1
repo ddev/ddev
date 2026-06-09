@@ -1,13 +1,13 @@
 # This PowerShell script tries to do almost all the things required to set up
-# an Ubuntu WSL2 instance for use with DDEV and Docker Desktop.
+# a Debian-based WSL2 instance for use with DDEV and Docker Desktop.
 #
 # **DDEV now ships with a GUI installer for Windows/WSL2 which is usually easier.**
 # See https://ddev.com/download
 #
 # Prerequisites:
-# - An Ubuntu-based WSL2 distro installed (preferably with `wsl --install`)
+# - A Debian-based WSL2 distro installed, e.g. Ubuntu or Debian (preferably with `wsl --install`)
 # - The distro you want must be set as the default WSL2 distro
-# - Docker Desktop installed, running, and with WSL2 integration enabled for Ubuntu
+# - Docker Desktop installed, running, and with WSL2 integration enabled for your distro
 #
 # Quick install - run this one-liner in PowerShell:
 #   iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1'))
@@ -20,9 +20,10 @@
 if (-not(wsl -l -v)) {
     throw "WSL2 does not seem to be installed yet; please install it with 'wsl --install'"
 }
-# Make sure default distro an ubuntu release
-if (-not( wsl -e grep ^NAME=.Ubuntu //etc/os-release)) {
-    throw "Your installed WSL2 distro does not seem to be Ubuntu. You can certainly use DDEV with WSL2 in another distro, but this script is oriented to Ubuntu."
+# Make sure default distro is a Debian-based release
+$osRelease = wsl -e cat //etc/os-release
+if (-not ($osRelease -match 'ID(_LIKE)?=.*ubuntu' -or $osRelease -match 'ID(_LIKE)?=.*debian')) {
+    throw "Your installed WSL2 distro does not appear to be Debian-based (Ubuntu, Debian, etc.). You can certainly use DDEV with WSL2 in another distro, but this script is oriented to Debian-based distros."
 }
 # Make sure using WSL2
 if (-not (wsl -e bash -c "env | grep WSL_INTEROP=")) {

@@ -46,6 +46,7 @@ Var /GLOBAL DEBUG_LOG_PATH
 Var /GLOBAL WSL_WINDOWS_TEMP
 Var /GLOBAL WINDOWS_TEMP
 Var /GLOBAL MKCERT_UNINSTALL_APPROVED  ; Track if user approved mkcert removal during uninstall
+Var /GLOBAL DOCKER_DISTRO_FAMILY       ; "ubuntu" or "debian" for Docker CE repo selection
 
 !define REG_INSTDIR_ROOT "HKCU"
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
@@ -259,22 +260,22 @@ Function DistroSelectionPage
         Abort
     ${EndIf}
 
-    ; Get Ubuntu distros before creating any controls
-    Call GetUbuntuDistros
+    ; Get Debian-based distros before creating any controls
+    Call GetDebianBasedDistros
     Pop $R0
     Push "Got distros: [$R0]"
     Call LogPrint
     ${If} $R0 == ""
-        Push "ERROR: No Ubuntu-based WSL2 distributions found"
+        Push "ERROR: No Debian-based WSL2 distributions found"
         Call LogPrint
-        MessageBox MB_ICONSTOP|MB_OK "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first.$\n$\nDebug information has been written to: $DEBUG_LOG_PATH (please include with any error report)$\n$\nYou can check this file to see what distributions were detected."
-        Push "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first."
+        MessageBox MB_ICONSTOP|MB_OK "No Debian-based WSL2 distributions found. Please install Ubuntu or Debian for WSL2 first.$\n$\nDebug information has been written to: $DEBUG_LOG_PATH (please include with any error report)$\n$\nYou can check this file to see what distributions were detected."
+        Push "No Debian-based WSL2 distributions found. Please install Ubuntu or Debian for WSL2 first."
         Call ShowErrorAndAbort
     ${EndIf}
 
     Push "Creating label..."
     Call LogPrint
-    ${NSD_CreateLabel} 0 0 100% 24u "Select your Ubuntu-based WSL2 distribution:"
+    ${NSD_CreateLabel} 0 0 100% 24u "Select your Debian-based WSL2 distribution:"
     Pop $1
 
     Push "Creating radio buttons..."
@@ -1046,10 +1047,10 @@ Section Uninstall
     ${EndIf}
 SectionEnd
 
-Function GetUbuntuDistros
+Function GetDebianBasedDistros
     StrCpy $R0 ""  ; Result string
 
-    Push "=== Starting GetUbuntuDistros ==="
+    Push "=== Starting GetDebianBasedDistros ==="
     Call LogPrint
 
     Push "Checking registry key HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss..."
@@ -1115,30 +1116,33 @@ Function GetUbuntuDistros
             Push "First 6 chars of '$R3': '$R4'"
             Call LogPrint
             ${If} $R4 == "Ubuntu"
-                Push "Found Ubuntu distribution (name-based): $R3"
+            ${OrIf} $R4 == "Debian"
+                Push "Found Debian-based distribution (name-based): $R3"
                 Call LogPrint
                 ${If} $R0 != ""
                     StrCpy $R0 "$R0|"
                 ${EndIf}
                 StrCpy $R0 "$R0$R3"
             ${Else}
-                Push "Distribution '$R3' does not start with 'Ubuntu' (starts with '$R4')"
+                Push "Distribution '$R3' does not start with 'Ubuntu' or 'Debian' (starts with '$R4')"
                 Call LogPrint
             ${EndIf}
         ${Else}
             Push "Found Flavor field for $R3: '$R4'"
             Call LogPrint
-            ; Check if Flavor is "ubuntu" (case-insensitive)
+            ; Check if Flavor is "ubuntu" or "debian" (case-insensitive)
             ${StrStr} $R6 $R4 "ubuntu"
+            ${StrStr} $R7 $R4 "debian"
             ${If} $R6 != ""
-                Push "Found Ubuntu distribution (Flavor-based): $R3"
+            ${OrIf} $R7 != ""
+                Push "Found Debian-based distribution (Flavor-based): $R3"
                 Call LogPrint
                 ${If} $R0 != ""
                     StrCpy $R0 "$R0|"
                 ${EndIf}
                 StrCpy $R0 "$R0$R3"
             ${Else}
-                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu'"
+                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu' or 'debian'"
                 Call LogPrint
             ${EndIf}
         ${EndIf}
@@ -1154,7 +1158,7 @@ FunctionEnd
 
 Function InstallWSL2CommonSetup
     ; Note: WSL distros have already been enumerated from the registry and selected by the user.
-    ; The distro type (Ubuntu) has been verified from the registry Flavor field.
+    ; The distro type (Debian-based) has been verified from the registry Flavor field.
     ; Docker connectivity has already been validated with 'docker ps'.
 
     ; List WSL distros and versions (helpful for troubleshooting)
@@ -1283,6 +1287,18 @@ Function InstallWSL2CommonSetup
         Call ShowErrorAndAbort
     ${EndIf}
 
+    ; Detect distro family for Docker repository selection (ubuntu vs debian)
+    Push "WSL($SELECTED_DISTRO): Detecting distro family for Docker repository..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c ". /etc/os-release; if echo \"$${ID_LIKE:-$$ID}\" | grep -qi ubuntu; then echo ubuntu; else echo debian; fi"'
+    Pop $1
+    Pop $DOCKER_DISTRO_FAMILY
+    ${If} $DOCKER_DISTRO_FAMILY == ""
+        StrCpy $DOCKER_DISTRO_FAMILY "debian"
+    ${EndIf}
+    Push "WSL($SELECTED_DISTRO): Using Docker repository for distro family: $DOCKER_DISTRO_FAMILY"
+    Call LogPrint
+
     ; Clean up old Docker repository files if present
     Push "WSL($SELECTED_DISTRO): Removing old Docker repository files if present..."
     Call LogPrint
@@ -1293,7 +1309,7 @@ Function InstallWSL2CommonSetup
     ; Add Docker GPG key
     Push "WSL($SELECTED_DISTRO): Adding Docker repository key..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "curl -fsSL https://download.docker.com/linux/$DOCKER_DISTRO_FAMILY/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1306,7 +1322,7 @@ Function InstallWSL2CommonSetup
     ; Add Docker repository in deb822 format
     Push "WSL($SELECTED_DISTRO): Adding Docker apt repository..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "printf \"Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: $$(. /etc/os-release && echo $${UBUNTU_CODENAME:-$$VERSION_CODENAME})\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n\" > /etc/apt/sources.list.d/docker.sources"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "printf \"Types: deb\nURIs: https://download.docker.com/linux/$DOCKER_DISTRO_FAMILY\nSuites: $$(. /etc/os-release && echo $${UBUNTU_CODENAME:-$$VERSION_CODENAME})\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n\" > /etc/apt/sources.list.d/docker.sources"'
     Pop $1
     Pop $0
     ${If} $1 != 0

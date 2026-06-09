@@ -1,11 +1,11 @@
 # This PowerShell script tries to do almost all the things required to set up
-# an Ubuntu WSL2 instance for use with DDEV and docker-ce installed inside WSL2.
+# a Debian-based WSL2 instance for use with DDEV and docker-ce installed inside WSL2.
 #
 # **DDEV now ships with a GUI installer for Windows/WSL2 which is usually easier.**
 # See https://ddev.com/download
 #
 # Prerequisites:
-# - An Ubuntu-based WSL2 distro installed (preferably with `wsl --install`)
+# - A Debian-based WSL2 distro installed, e.g. Ubuntu or Debian (preferably with `wsl --install`)
 # - The distro you want must be set as the default WSL2 distro
 # - Docker Desktop must NOT be installed, or WSL2 integration must be disabled
 #
@@ -20,9 +20,10 @@
 if (-not(wsl -l -v)) {
     throw "WSL2 does not seem to be installed yet; please install it with 'wsl --install'"
 }
-# Make sure default distro an ubuntu release
-if (-not( wsl -e grep ^NAME=.Ubuntu //etc/os-release)) {
-    throw "Your installed WSL2 distro does not seem to be Ubuntu. You can certainly use DDEV with WSL2 in another distro, but this script is oriented to Ubuntu."
+# Make sure default distro is a Debian-based release
+$osRelease = wsl -e cat //etc/os-release
+if (-not ($osRelease -match 'ID(_LIKE)?=.*ubuntu' -or $osRelease -match 'ID(_LIKE)?=.*debian')) {
+    throw "Your installed WSL2 distro does not appear to be Debian-based (Ubuntu, Debian, etc.). You can certainly use DDEV with WSL2 in another distro, but this script is oriented to Debian-based distros."
 }
 # Make sure using WSL2
 if (-not (wsl -e bash -c "env | grep WSL_INTEROP=")) {
@@ -52,8 +53,10 @@ wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io contai
 wsl -u root apt-get update
 wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release
 wsl -u root install -m 0755 -d /etc/apt/keyrings
-wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list && curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc"
-wsl -u root -e bash -c "printf 'Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n' \"\$(. /etc/os-release && echo \${UBUNTU_CODENAME:-\$VERSION_CODENAME})\" | tee /etc/apt/sources.list.d/docker.sources > /dev/null"
+$dockerDistroFamily = (wsl -u root bash -c ". /etc/os-release; if echo `"${ID_LIKE:-$ID}`" | grep -qi ubuntu; then echo ubuntu; else echo debian; fi").Trim()
+if (-not $dockerDistroFamily) { $dockerDistroFamily = "debian" }
+wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list && curl -fsSL https://download.docker.com/linux/$dockerDistroFamily/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc"
+wsl -u root -e bash -c "printf 'Types: deb\nURIs: https://download.docker.com/linux/$dockerDistroFamily\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n' \"\$(. /etc/os-release && echo \${UBUNTU_CODENAME:-\$VERSION_CODENAME})\" | tee /etc/apt/sources.list.d/docker.sources > /dev/null"
 
 wsl -u root -e bash -c "rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list && curl -fsSL https://pkg.ddev.com/apt/gpg.key | tee /etc/apt/keyrings/ddev.asc > /dev/null && chmod a+r /etc/apt/keyrings/ddev.asc"
 wsl -u root -e bash -c "printf 'Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n' > /etc/apt/sources.list.d/ddev.sources"
