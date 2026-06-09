@@ -2618,6 +2618,8 @@ type ExecOpts struct {
 	Env []string
 	// User is the user to run as inside the container
 	User string
+	// SkipHooks skips pre-exec and post-exec hook processing.
+	SkipHooks bool
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
@@ -2648,9 +2650,11 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		}
 	}
 
-	err = app.ProcessHooks("pre-exec")
-	if err != nil {
-		return "", "", fmt.Errorf("failed to process pre-exec hooks: %v", err)
+	if !opts.SkipHooks {
+		err = app.ProcessHooks("pre-exec")
+		if err != nil {
+			return "", "", fmt.Errorf("failed to process pre-exec hooks: %v", err)
+		}
 	}
 
 	// Cases to handle
@@ -2727,67 +2731,13 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if err != nil {
 		return stdoutResult, stderrResult, err
 	}
-	hookErr := app.ProcessHooks("post-exec")
-	if hookErr != nil {
-		return stdoutResult, stderrResult, fmt.Errorf("failed to process post-exec hooks: %v", hookErr)
+	if !opts.SkipHooks {
+		hookErr := app.ProcessHooks("post-exec")
+		if hookErr != nil {
+			return stdoutResult, stderrResult, fmt.Errorf("failed to process post-exec hooks: %v", hookErr)
+		}
 	}
 	return stdoutResult, stderrResult, err
-}
-
-// ExecWithTty executes a given command in the container of given type.
-// It allocates a pty for interactive work.
-func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
-	_ = app.DockerEnv()
-
-	if opts.Service == "" {
-		opts.Service = "web"
-	}
-
-	state, err := dockerutil.GetContainerStateByName(fmt.Sprintf("ddev-%s-%s", app.Name, opts.Service))
-	if err != nil || state != "running" {
-		return fmt.Errorf("service %s is not running in project %s (state=%s)", opts.Service, app.Name, state)
-	}
-
-	if opts.Cmd == "" {
-		return fmt.Errorf("no command provided")
-	}
-
-	// Cases to handle
-	// - Free form, all unquoted. Like `ls -l -a`
-	// - Quoted to delay pipes and other features to container, like `"ls -l -a | grep junk"`
-	// Note that a set quoted on the host in ddev exec will come through as a single arg
-
-	// Use Bash for our containers, sh for 3rd-party containers
-	// that may not have Bash.
-	shell := "bash"
-	if !nodeps.ArrayContainsString([]string{"web", "db"}, opts.Service) {
-		shell = "sh"
-	}
-
-	withTtyProject, loadErr := dockerutil.LoadComposeProject([]string{app.DockerComposeFullRenderedYAMLPath()}, api.ProjectLoadOptions{
-		ProjectName: app.GetComposeProjectName(),
-	})
-	if loadErr != nil {
-		return loadErr
-	}
-	tty := isatty.IsTerminal(os.Stdin.Fd())
-	restore, stdinErr := dockerutil.SetExecStdin(os.Stdin, tty)
-	if stdinErr != nil {
-		return stdinErr
-	}
-	defer restore()
-	withTtyCtx, withTtySvc, svcErr := dockerutil.NewComposeService()
-	if svcErr != nil {
-		return svcErr
-	}
-	return dockerutil.ExitCodeToError(withTtySvc.Exec(withTtyCtx, withTtyProject.Name, api.RunOptions{
-		Service:     opts.Service,
-		Command:     []string{shell, "-c", opts.Cmd},
-		Tty:         tty,
-		Interactive: true,
-		User:        opts.User,
-		WorkingDir:  opts.Dir,
-	}))
 }
 
 func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
@@ -3894,7 +3844,7 @@ func (app *DdevApp) GetProvider(providerName string) (*Provider, error) {
 	return app.ProviderInstance, err
 }
 
-// GetWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command
+// GetWorkingDir will determine the appropriate working directory for an Exec command
 // by consulting with the project configuration. If no dir is specified for the service, an
 // empty string will be returned.
 func (app *DdevApp) GetWorkingDir(service string, dir string) string {
