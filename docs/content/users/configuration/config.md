@@ -440,11 +440,11 @@ Whether to disable the TUI (terminal user interface) when running the `ddev` com
 
 ## `nodejs_version`
 
-Node.js version for the web container, managed by [`n`](https://www.npmjs.com/package/n). Non-default versions are baked into the web image at build time. If startup speed matters (e.g. CI), stick with the default.
+Node.js version for the web container, managed by [`n`](https://www.npmjs.com/package/n). Non-default versions are baked into the web image at build time. If startup speed matters (e.g. CI), stick with an empty value (`""`) to avoid pinning a specific version.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `v22`, `20.2`, `18.19.2`, etc.<br>`auto`/`engine` (see below).
+| :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `v22`, `20.2`, `18.19.2`, etc.,<br>an empty value (`""`) uses the DDEV default,<br>`auto`/`engine` (see below).
 
 !!!warning "Node.js version is baked into the image at build time"
     Use a non-specific version like `v24` to always get the latest in a major line. To update to a newer matching version, rebuild:

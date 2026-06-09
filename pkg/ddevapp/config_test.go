@@ -765,6 +765,17 @@ func TestConfigValidate(t *testing.T) {
 	require.Contains(t, err.Error(), "unsupported webserver type")
 
 	app.WebserverType = nodeps.WebserverDefault
+	// nodejs_version must not contain whitespace
+	app.NodeJSVersion = "  "
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid nodejs_version")
+	// An empty nodejs_version is allowed and means "use the DDEV default"
+	app.NodeJSVersion = ""
+	err = app.ValidateConfig()
+	require.NoError(t, err)
+
+	app.NodeJSVersion = nodeps.NodeJSDefault
 	app.AdditionalHostnames = []string{"good", "b@d"}
 	err = app.ValidateConfig()
 	require.Error(t, err)
