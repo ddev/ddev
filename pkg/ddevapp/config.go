@@ -13,6 +13,7 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	"unicode"
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/docker"
@@ -546,7 +547,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	// Validate Node.js version
-	if strings.ContainsAny(app.NodeJSVersion, " \t\r\n") {
+	if strings.ContainsFunc(app.NodeJSVersion, unicode.IsSpace) {
 		return fmt.Errorf("the %s project has an invalid nodejs_version: %q, Node.js versions cannot contain whitespace; leave it empty to use the DDEV default", app.Name, app.NodeJSVersion)
 	}
 
