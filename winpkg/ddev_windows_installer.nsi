@@ -343,52 +343,12 @@ Function DistroSelectionPageLeave
     Push "Getting selected distro..."
     Call LogPrint
 
-    ; Get the index of the selected item in the listbox
-    ${NSD_LB_GetSelection} $DISTRO_LISTBOX_HANDLE $R0
-    Push "ListBox selection index: $R0"
+    ; NSD_LB_GetSelection returns the text of the selected item directly
+    ${NSD_LB_GetSelection} $DISTRO_LISTBOX_HANDLE $SELECTED_DISTRO
+    Push "Selected distro: $SELECTED_DISTRO"
     Call LogPrint
 
-    ${If} $R0 == -1
-        StrCpy $R0 0
-        Push "No selection made, defaulting to index 0"
-        Call LogPrint
-    ${EndIf}
-
-    ; Extract the distro name at the selected index from DISTRO_LIST
-    StrCpy $SELECTED_DISTRO ""
-    StrCpy $R1 $DISTRO_LIST
-    StrCpy $R2 0
-
-    ${Do}
-        StrCpy $R5 0
-        ${Do}
-            StrCpy $R6 $R1 1 $R5
-            ${If} $R6 == "|"
-            ${OrIf} $R6 == ""
-                ${Break}
-            ${EndIf}
-            IntOp $R5 $R5 + 1
-        ${Loop}
-        StrCpy $R7 $R1 $R5
-
-        ${If} $R2 == $R0
-            StrCpy $SELECTED_DISTRO $R7
-            Push "Selected distro: $SELECTED_DISTRO"
-            Call LogPrint
-            ${Break}
-        ${EndIf}
-
-        IntOp $R2 $R2 + 1
-        IntOp $R5 $R5 + 1
-        StrCpy $R1 $R1 "" $R5
-
-        ${If} $R1 == ""
-            StrCpy $SELECTED_DISTRO $R7
-            ${Break}
-        ${EndIf}
-    ${Loop}
-
-    ; Fallback
+    ; Fallback if nothing selected
     ${If} $SELECTED_DISTRO == ""
         Push "No distro selected - using first available"
         Call LogPrint
