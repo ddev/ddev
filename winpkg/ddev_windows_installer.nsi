@@ -332,7 +332,7 @@ Function DistroSelectionPage
 
     Push "Added $R2 items to listbox, selecting index $R3"
     Call LogPrint
-    ${NSD_LB_SetSelection} $DISTRO_LISTBOX_HANDLE $R3
+    SendMessage $DISTRO_LISTBOX_HANDLE ${LB_SETCURSEL} $R3 0
 
     Push "About to show dialog..."
     Call LogPrint
