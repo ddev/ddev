@@ -47,6 +47,7 @@ Var /GLOBAL WSL_WINDOWS_TEMP
 Var /GLOBAL WINDOWS_TEMP
 Var /GLOBAL MKCERT_UNINSTALL_APPROVED  ; Track if user approved mkcert removal during uninstall
 Var /GLOBAL DOCKER_DISTRO_FAMILY       ; "ubuntu" or "debian" for Docker CE repo selection
+Var /GLOBAL DOCKER_SUITE               ; Debian/Ubuntu codename for Docker CE repo (e.g. bookworm, trixie, noble)
 
 !define REG_INSTDIR_ROOT "HKCU"
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
@@ -453,6 +454,7 @@ Function DistroSelectionPageLeave
     File /oname=check_root_user.sh "scripts\check_root_user.sh"
     File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
     File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
+    File /oname=detect_docker_suite.sh "scripts\detect_docker_suite.sh"
     Push "All scripts copied to temp directory"
     Call LogPrint
     
@@ -1301,6 +1303,23 @@ Function InstallWSL2CommonSetup
     Push "WSL($SELECTED_DISTRO): Using Docker repository for distro family: $DOCKER_DISTRO_FAMILY"
     Call LogPrint
 
+    ; Detect Docker suite codename - handles Kali and other derivatives
+    ; whose VERSION_CODENAME is not a valid Docker repo suite
+    Push "WSL($SELECTED_DISTRO): Detecting Docker suite codename..."
+    Call LogPrint
+    Push $SELECTED_DISTRO
+    Push "detect_docker_suite.sh"
+    Call InstallScriptToDistro
+    Pop $R0
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/detect_docker_suite.sh'
+    Pop $1
+    Pop $DOCKER_SUITE
+    ${If} $DOCKER_SUITE == ""
+        StrCpy $DOCKER_SUITE "bookworm"
+    ${EndIf}
+    Push "WSL($SELECTED_DISTRO): Using Docker suite: $DOCKER_SUITE"
+    Call LogPrint
+
     ; Clean up old Docker repository files if present
     Push "WSL($SELECTED_DISTRO): Removing old Docker repository files if present..."
     Call LogPrint
@@ -1324,7 +1343,7 @@ Function InstallWSL2CommonSetup
     ; Add Docker repository in deb822 format
     Push "WSL($SELECTED_DISTRO): Adding Docker apt repository..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "printf \"Types: deb\nURIs: https://download.docker.com/linux/$DOCKER_DISTRO_FAMILY\nSuites: $$(. /etc/os-release && echo $${UBUNTU_CODENAME:-$$VERSION_CODENAME})\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n\" > /etc/apt/sources.list.d/docker.sources"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "printf \"Types: deb\nURIs: https://download.docker.com/linux/$DOCKER_DISTRO_FAMILY\nSuites: $DOCKER_SUITE\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n\" > /etc/apt/sources.list.d/docker.sources"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1666,6 +1685,7 @@ Function InstallWSL2Common
     Delete "$WINDOWS_TEMP\ddev_installer\check_root_user.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\install_temp_sudoers.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert_install.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\detect_docker_suite.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert_linux"
