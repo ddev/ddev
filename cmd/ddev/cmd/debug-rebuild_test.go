@@ -114,24 +114,21 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	_, err = exec.RunHostCommand(DdevBin, "utility", "rebuild", "--service", "db")
 	require.NoError(t, err)
 
-	// It should remain the same for web
-	err = app.Restart()
-	require.NoError(t, err)
-	freshRandomWebNew, _, err := app.Exec(&ddevapp.ExecOpts{
-		Cmd: "cat /random-web.txt",
-	})
-	require.NoError(t, err)
-	assert.Equal(freshRandomWeb, freshRandomWebNew)
-
-	// And we should see a new value for db
-	err = app.Restart()
-	require.NoError(t, err)
+	// rebuild --service recreates the container with the freshly-built image,
+	// so the new value must be visible immediately, without an extra restart.
 	freshRandomDBNew, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd:     "cat /random-db.txt",
 		Service: "db",
 	})
 	require.NoError(t, err)
 	assert.NotEqual(freshRandomDB, freshRandomDBNew)
+
+	// web was not rebuilt, so it must remain unchanged and untouched by the db rebuild.
+	freshRandomWebNew, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "cat /random-web.txt",
+	})
+	require.NoError(t, err)
+	assert.Equal(freshRandomWeb, freshRandomWebNew)
 
 	// Repeat the same with all services, but use cache
 	_, err = exec.RunHostCommand(DdevBin, "utility", "rebuild", "--all", "--cache")
@@ -155,4 +152,13 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	})
 	require.NoError(t, err)
 	assert.Equal(cachedRandomDB, freshRandomDBNew)
+
+	// Rebuilding an optional, profile-gated service (xhgui) must work too. This
+	// exercises the profile-aware project load; without it the recreation step
+	// fails with "no such service: xhgui".
+	out, err := exec.RunHostCommand(DdevBin, "xhgui", "on")
+	require.NoError(t, err, "xhgui on failed: %s", out)
+	out, err = exec.RunHostCommand(DdevBin, "utility", "rebuild", "--service", "xhgui")
+	require.NoError(t, err, "rebuild --service xhgui failed: %s", out)
+	require.Contains(t, out, "Recreated xhgui service")
 }
