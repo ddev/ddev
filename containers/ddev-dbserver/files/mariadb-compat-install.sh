@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
 # This script installs MySQL compatibility wrappers for MariaDB commands.
-# Two packages provide these commands:
-# - mariadb-server-compat: server commands (mysqld, mysqld_multi, etc.)
-# - mariadb-client-compat: client commands (mysql, mysqladmin, etc.)
-# These packages show deprecation warnings.
+# It detects whether wrappers are needed by checking for the mariadbd binary
+# (present in MariaDB 11.x+ where MySQL symlinks were moved to separate packages).
 #
 # The script creates wrappers for all MariaDB commands and points them to the
 # correct binaries, avoiding deprecation warnings such as:
@@ -12,12 +10,25 @@
 
 set -eu -o pipefail
 
-DDEV_DATABASE_FAMILY=${DDEV_DATABASE%:*}
-ADD_WRAPPER=true
-# Don't add wrappers if using MySQL
-if [ "${DDEV_DATABASE_FAMILY}" = "mysql" ]; then
-  ADD_WRAPPER=false
+# Nothing to do if mariadbd doesn't exist (not MariaDB 11.x+)
+if ! command -v mariadbd >/dev/null 2>&1; then
+  echo "MariaDB compatibility wrappers: not applicable for this database"
+  exit 0
 fi
+
+# mysqld already exists natively, no wrappers needed
+if command -v mysqld >/dev/null 2>&1; then
+  echo "MariaDB compatibility wrappers: not needed (mysqld already present)"
+  exit 0
+fi
+
+if [[ ":${PATH}:" != *":/usr/local/bin:"* ]]; then
+  echo "ERROR: /usr/local/bin is not in PATH; wrappers installed there would not be accessible" >&2
+  exit 1
+fi
+mkdir -p /usr/local/bin
+
+ADD_WRAPPER=true
 
 add_or_remove_mariadb_wrapper() {
   local mysql_binary="$1"
@@ -26,18 +37,14 @@ add_or_remove_mariadb_wrapper() {
 
   # Remove mode: delete wrapper if it exists and is our script
   if [ "${ADD_WRAPPER}" = "false" ]; then
-    # Check if it's our wrapper by looking for #ddev-generated marker
     if [ -x "$script_path" ] && head -n 3 "$script_path" 2>/dev/null | grep -q "#ddev-generated"; then
       rm -f "$script_path"
     fi
     return
   fi
 
-  # Install mode: create wrapper if needed
-
   # Only proceed if target command exists (e.g., mariadb, mariadbd)
   if ! command -v "$mariadb_binary" >/dev/null 2>&1; then
-    # If target doesn't exist, remove our wrapper if it exists
     if [ -x "$script_path" ] && head -n 3 "$script_path" 2>/dev/null | grep -q "#ddev-generated"; then
       rm -f "$script_path"
     fi
@@ -99,10 +106,8 @@ add_or_remove_mariadb_wrapper mysqlrepair mariadb-check
 add_or_remove_mariadb_wrapper mysqlshow mariadb-show
 add_or_remove_mariadb_wrapper mysqlslap mariadb-slap
 
-if [ "${ADD_WRAPPER}" = "false" ]; then
-  echo "MariaDB compatibility wrappers removed for ${DDEV_DATABASE}"
-elif [ ${#INSTALLED_WRAPPERS[@]} -gt 0 ]; then
-  echo "MariaDB compatibility wrappers installed for ${DDEV_DATABASE}: ${INSTALLED_WRAPPERS[*]}"
+if [ ${#INSTALLED_WRAPPERS[@]} -gt 0 ]; then
+  echo "MariaDB compatibility wrappers installed: ${INSTALLED_WRAPPERS[*]}"
 else
-  echo "MariaDB compatibility wrappers already present for ${DDEV_DATABASE}"
+  echo "MariaDB compatibility wrappers: none needed (already present)"
 fi

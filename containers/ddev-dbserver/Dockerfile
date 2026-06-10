@@ -34,11 +34,6 @@ RUN <<EOF
     fi
 EOF
 
-# MariaDB 11.x moved MySQL symlinks into separate packages
-RUN set -x; if ( command -v mariadbd && ! command -v mysqld ); then \
-    apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" mariadb-server-compat mariadb-client-compat; \
-    fi
-
 # Older versions of mariadb have been removed from
 # the mariadb apt repository, so we don't want to
 # look there when doing apt-get update. And we don't use new packages from there.
@@ -115,6 +110,9 @@ ARG MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN  ln -sf /tmp/mysqlx.sock ${MYSQL_UNIX_PORT}
 RUN if ! id mysql &>/dev/null ; then useradd -u 112 mysql; fi
+
+# Install MySQL compatibility wrappers for MariaDB 11.x+ (needed by create_base_db.sh and at runtime)
+RUN /mariadb-compat-install.sh
 
 # Build a starter base db
 RUN /create_base_db.sh

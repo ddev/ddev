@@ -20,13 +20,13 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20260601_stasadev_n_install" // Note that this can be overridden by make
+var WebTag = "20260608_stasadev_mariadb_compat" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20260607_mariadb_12_3"
+var BaseDBTag = "20260608_stasadev_mariadb_compat"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
