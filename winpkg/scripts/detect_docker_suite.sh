@@ -14,7 +14,9 @@ CODENAME="${UBUNTU_CODENAME:-$VERSION_CODENAME}"
 # For Ubuntu and Ubuntu-based distros, trust the codename from os-release.
 # Docker publishes ubuntu-family packages for every Ubuntu release, so any
 # codename present in os-release is valid.
-if echo "${ID_LIKE:-$ID}" | grep -qi ubuntu; then
+# Check both ID and ID_LIKE: Ubuntu itself has ID=ubuntu but ID_LIKE=debian,
+# so checking only ID_LIKE would miss it.
+if echo "$ID $ID_LIKE" | grep -qi ubuntu; then
     printf '%s' "$CODENAME"
     exit 0
 fi
