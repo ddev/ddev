@@ -48,6 +48,8 @@ Var /GLOBAL WINDOWS_TEMP
 Var /GLOBAL MKCERT_UNINSTALL_APPROVED  ; Track if user approved mkcert removal during uninstall
 Var /GLOBAL DOCKER_DISTRO_FAMILY       ; "ubuntu" or "debian" for Docker CE repo selection
 Var /GLOBAL DOCKER_SUITE               ; Debian/Ubuntu codename for Docker CE repo (e.g. bookworm, trixie, noble)
+Var /GLOBAL DISTRO_LISTBOX_HANDLE      ; Handle for distro selection ListBox
+Var /GLOBAL DISTRO_LIST                ; Pipe-separated list of detected distros
 
 !define REG_INSTDIR_ROOT "HKCU"
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
@@ -263,10 +265,10 @@ Function DistroSelectionPage
 
     ; Get Debian-based distros before creating any controls
     Call GetDebianBasedDistros
-    Pop $R0
-    Push "Got distros: [$R0]"
+    Pop $DISTRO_LIST
+    Push "Got distros: [$DISTRO_LIST]"
     Call LogPrint
-    ${If} $R0 == ""
+    ${If} $DISTRO_LIST == ""
         Push "ERROR: No Debian-based WSL2 distributions found"
         Call LogPrint
         MessageBox MB_ICONSTOP|MB_OK "No Debian-based WSL2 distributions found. Please install Ubuntu or Debian for WSL2 first.$\n$\nDebug information has been written to: $DEBUG_LOG_PATH (please include with any error report)$\n$\nYou can check this file to see what distributions were detected."
@@ -279,35 +281,25 @@ Function DistroSelectionPage
     ${NSD_CreateLabel} 0 0 100% 24u "Select your Debian-based WSL2 distribution:"
     Pop $1
 
-    Push "Creating radio buttons..."
+    Push "Creating listbox..."
     Call LogPrint
+    ${NSD_CreateListBox} 10 30u 280u 130u ""
+    Pop $DISTRO_LISTBOX_HANDLE
 
     ; Get previously selected distro
     ReadRegStr $R8 ${REG_SETTINGS_ROOT} "${REG_SETTINGS_KEY}" "SelectedDistro"
     Push "Previously selected distro: $R8"
     Call LogPrint
 
-    ; Initialize variables for dynamic radio button creation
-    Var /GLOBAL RADIO_BUTTON_COUNT
-    Var /GLOBAL RADIO_BUTTON_HANDLES    ; Will store pipe-separated list of handles
-    Var /GLOBAL RADIO_BUTTON_LABELS     ; Will store pipe-separated list of labels
-    Var /GLOBAL SELECTED_RADIO_INDEX    ; Index of selected radio button
-    
-    StrCpy $RADIO_BUTTON_COUNT 0
-    StrCpy $RADIO_BUTTON_HANDLES ""
-    StrCpy $RADIO_BUTTON_LABELS ""
-    StrCpy $SELECTED_RADIO_INDEX 0
-
-    ; Process the pipe-separated list and create radio buttons
-    StrCpy $R1 $R0    ; Working copy of the list
-    StrCpy $R2 0      ; Current item index
-    StrCpy $R3 0      ; Y position counter
+    ; Populate the listbox and determine default selection index
+    StrCpy $R1 $DISTRO_LIST   ; Working copy
+    StrCpy $R2 0              ; Current item index
+    StrCpy $R3 0              ; Default selection index
 
     ${Do}
-        ; Find position of next pipe or end
-        StrCpy $R5 0   ; Position
+        StrCpy $R5 0
         ${Do}
-            StrCpy $R6 $R1 1 $R5  ; Get character at position
+            StrCpy $R6 $R1 1 $R5
             ${If} $R6 == "|"
             ${OrIf} $R6 == ""
                 ${Break}
@@ -315,67 +307,32 @@ Function DistroSelectionPage
             IntOp $R5 $R5 + 1
         ${Loop}
 
-        ; Extract the item
         ${If} $R5 > 0
-            StrCpy $R7 $R1 $R5    ; Extract item
-            Push "Adding radio button: [$R7]"
+            StrCpy $R7 $R1 $R5
+            Push "Adding listbox item: [$R7]"
             Call LogPrint
-            
-            ; Calculate Y position for radio button
-            IntOp $R9 $R3 * 24
-            IntOp $R9 $R9 + 30
-            
-            ; Create radio button
-            ${NSD_CreateRadioButton} 10 $R9u 280u 16u "$R7"
-            Pop $9
-            
-            ; Store handle and label in our lists
-            ${If} $RADIO_BUTTON_HANDLES == ""
-                StrCpy $RADIO_BUTTON_HANDLES "$9"
-                StrCpy $RADIO_BUTTON_LABELS "$R7"
-            ${Else}
-                StrCpy $RADIO_BUTTON_HANDLES "$RADIO_BUTTON_HANDLES|$9"
-                StrCpy $RADIO_BUTTON_LABELS "$RADIO_BUTTON_LABELS|$R7"
-            ${EndIf}
-            
-            ; Check if this matches the previously selected distro
+            ${NSD_LB_AddString} $DISTRO_LISTBOX_HANDLE "$R7"
+
             ${If} $R7 == $R8
-                StrCpy $SELECTED_RADIO_INDEX $R2
-                ${NSD_SetState} $9 ${BST_CHECKED}
-                Push "Selected distro: $R7 (previous choice)"
-                Call LogPrint
-            ${ElseIf} $R2 == 0
-            ${AndIf} $R8 == ""
-                ${NSD_SetState} $9 ${BST_CHECKED}
-                Push "Selected distro: $R7 (default)"
+                StrCpy $R3 $R2
+                Push "Will select: $R7 (index $R2, previous choice)"
                 Call LogPrint
             ${EndIf}
-            
+
             IntOp $R2 $R2 + 1
-            IntOp $R3 $R3 + 1
         ${EndIf}
 
-        ; Move past the separator
         IntOp $R5 $R5 + 1
         StrCpy $R1 $R1 "" $R5
 
-        ; Check if we're done
         ${If} $R1 == ""
             ${Break}
         ${EndIf}
     ${Loop}
 
-    StrCpy $RADIO_BUTTON_COUNT $R2
-    Push "Added $RADIO_BUTTON_COUNT radio buttons"
+    Push "Added $R2 items to listbox, selecting index $R3"
     Call LogPrint
-    
-    ; Ensure at least one radio button is selected (fallback to first one if no previous selection)
-    ${If} $R8 == ""
-        ${WordFind} "$RADIO_BUTTON_HANDLES" "|" "+1{" $R4
-        ${NSD_SetState} $R4 ${BST_CHECKED}
-        Push "No previous distro selection, defaulting to first distro"
-        Call LogPrint
-    ${EndIf}
+    ${NSD_LB_SetSelection} $DISTRO_LISTBOX_HANDLE $R3
 
     Push "About to show dialog..."
     Call LogPrint
@@ -385,60 +342,57 @@ FunctionEnd
 Function DistroSelectionPageLeave
     Push "Getting selected distro..."
     Call LogPrint
-    
-    ; Find which radio button is selected by iterating through all handles
-    StrCpy $R1 $RADIO_BUTTON_HANDLES  ; Working copy of handles
-    StrCpy $R2 $RADIO_BUTTON_LABELS   ; Working copy of labels
-    StrCpy $R3 0                      ; Current index
-    StrCpy $SELECTED_DISTRO ""        ; Clear selection
-    
+
+    ; Get the index of the selected item in the listbox
+    ${NSD_LB_GetSelection} $DISTRO_LISTBOX_HANDLE $R0
+    Push "ListBox selection index: $R0"
+    Call LogPrint
+
+    ${If} $R0 == -1
+        StrCpy $R0 0
+        Push "No selection made, defaulting to index 0"
+        Call LogPrint
+    ${EndIf}
+
+    ; Extract the distro name at the selected index from DISTRO_LIST
+    StrCpy $SELECTED_DISTRO ""
+    StrCpy $R1 $DISTRO_LIST
+    StrCpy $R2 0
+
     ${Do}
-        ; Extract current handle
-        ${WordFind} "$R1" "|" "+1{" $R4  ; Get first handle
-        ${If} $R4 == $R1
-            ; Last item (no more separators)
-            StrCpy $R5 $R1
-            StrCpy $R1 ""
-        ${Else}
-            ; More items remain
-            StrCpy $R5 $R4
-            ${WordFind} "$R1" "|" "+1}" $R1  ; Remove first item
-        ${EndIf}
-        
-        ; Extract corresponding label
-        ${WordFind} "$R2" "|" "+1{" $R6  ; Get first label
-        ${If} $R6 == $R2
-            ; Last item (no more separators)
-            StrCpy $R7 $R2
-            StrCpy $R2 ""
-        ${Else}
-            ; More items remain
-            StrCpy $R7 $R6
-            ${WordFind} "$R2" "|" "+1}" $R2  ; Remove first item
-        ${EndIf}
-        
-        ; Check if this radio button is selected
-        ${NSD_GetState} $R5 $R0
-        ${If} $R0 == ${BST_CHECKED}
+        StrCpy $R5 0
+        ${Do}
+            StrCpy $R6 $R1 1 $R5
+            ${If} $R6 == "|"
+            ${OrIf} $R6 == ""
+                ${Break}
+            ${EndIf}
+            IntOp $R5 $R5 + 1
+        ${Loop}
+        StrCpy $R7 $R1 $R5
+
+        ${If} $R2 == $R0
             StrCpy $SELECTED_DISTRO $R7
             Push "Selected distro: $SELECTED_DISTRO"
             Call LogPrint
             ${Break}
         ${EndIf}
-        
-        IntOp $R3 $R3 + 1
-        
-        ; Check if we're done
+
+        IntOp $R2 $R2 + 1
+        IntOp $R5 $R5 + 1
+        StrCpy $R1 $R1 "" $R5
+
         ${If} $R1 == ""
+            StrCpy $SELECTED_DISTRO $R7
             ${Break}
         ${EndIf}
     ${Loop}
-    
-    ; Fallback - should not happen if we have proper radio button logic
+
+    ; Fallback
     ${If} $SELECTED_DISTRO == ""
         Push "No distro selected - using first available"
         Call LogPrint
-        ${WordFind} "$RADIO_BUTTON_LABELS" "|" "+1{" $SELECTED_DISTRO
+        ${WordFind} "$DISTRO_LIST" "|" "+1{" $SELECTED_DISTRO
     ${EndIf}
     
     ; Store the selected distro for next time
@@ -1297,7 +1251,7 @@ Function InstallWSL2CommonSetup
     ; Detect distro family for Docker repository selection (ubuntu vs debian)
     Push "WSL($SELECTED_DISTRO): Detecting distro family for Docker repository..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c ". /etc/os-release; if echo \"$${ID_LIKE:-$$ID}\" | grep -qi ubuntu; then printf ubuntu; else printf debian; fi"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c ". /etc/os-release; if echo \"$$ID $$ID_LIKE\" | grep -qi ubuntu; then printf ubuntu; else printf debian; fi"'
     Pop $1
     Pop $DOCKER_DISTRO_FAMILY
     ${If} $DOCKER_DISTRO_FAMILY == ""
