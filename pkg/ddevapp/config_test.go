@@ -876,7 +876,6 @@ func TestConfigValidate(t *testing.T) {
 	require.NoError(t, err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
-	app.AdditionalHostnames = []string{}
 	// This seems to completely fail on git-bash/Windows/mutagen (which don't run by default here)
 	// This apparently started failing with Docker Desktop 4.19.0
 	// rfay 2023-05-02
