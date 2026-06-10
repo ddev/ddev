@@ -921,6 +921,7 @@ SectionGroup /e "${PRODUCT_NAME}"
             File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
             File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
             File /oname=check_root_user.sh "scripts\check_root_user.sh"
+            File /oname=detect_docker_suite.sh "scripts\detect_docker_suite.sh"
         ${EndIf}
 
         ; Install icons
