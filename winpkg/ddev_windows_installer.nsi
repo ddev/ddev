@@ -1132,13 +1132,15 @@ Function GetDebianBasedDistros
         ${Else}
             Push "Found Flavor field for $R3: '$R4'"
             Call LogPrint
-            ; Check if Flavor is "ubuntu", "debian", or "kali" (case-insensitive)
+            ; Check if Flavor is "ubuntu", "debian", "kali", or "parrot" (case-insensitive)
             ${StrStr} $R6 $R4 "ubuntu"
             ${StrStr} $R7 $R4 "debian"
             ${StrStr} $R8 $R4 "kali"
+            ${StrStr} $R9 $R4 "parrot"
             ${If} $R6 != ""
             ${OrIf} $R7 != ""
             ${OrIf} $R8 != ""
+            ${OrIf} $R9 != ""
                 Push "Found Debian-based distribution (Flavor-based): $R3"
                 Call LogPrint
                 ${If} $R0 != ""
@@ -1146,7 +1148,7 @@ Function GetDebianBasedDistros
                 ${EndIf}
                 StrCpy $R0 "$R0$R3"
             ${Else}
-                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu', 'debian', or 'kali'"
+                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu', 'debian', 'kali', or 'parrot'"
                 Call LogPrint
             ${EndIf}
         ${EndIf}
