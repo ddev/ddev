@@ -86,7 +86,8 @@ ARG PHP_VERSIONS="php8.2 php8.3 php8.4 php8.5"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ARG DRUSH_VERSION=8.5.0
 # TODO: remove this Node.js pin once https://github.com/nodejs/node/issues/63487 is resolved
-ENV NODE_VERSION=24.15.0
+ARG NODE_VERSION=24.15.0
+ENV PATH=/usr/local/n/bin:$PATH
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_PROCESS_TIMEOUT=2000
@@ -114,8 +115,7 @@ COPY --from=ddev-keep-root-build /ddev-keep-root.so /usr/local/lib/ddev/ddev-kee
 
 RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj/n/master/bin/n && chmod +x /usr/local/bin/n
 # Install system Node.js, `--cleanup` is important, it removes downloaded files.
-ARG N_PREFIX=/usr/local
-RUN n install --cleanup "${NODE_VERSION}"
+RUN N_PREFIX=/usr/local/n n install --cleanup "${NODE_VERSION}"
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
 
 # Loop through $PHP_VERSIONS, selecting packages for the target architecture.
@@ -170,6 +170,7 @@ RUN chmod 777 /var/lib/php/sessions
 ### There aren't any differences
 FROM scratch AS ddev-php-prod
 ARG XDEBUG_MODE=off
+ENV PATH=/usr/local/n/bin:$PATH
 SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 COPY --from=ddev-php-base / /
 EXPOSE 8080 8585

@@ -34,6 +34,7 @@ setup() {
       "$HOME/.local/bin" \
       "$HOME/bin" \
       "${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin" \
+      "/usr/local/n/bin" \
       "/var/www/html/bin" \
       "/mnt/ddev-global-cache/global-commands/web"; do
       case ":$PATH:" in

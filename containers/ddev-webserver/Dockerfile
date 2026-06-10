@@ -3,7 +3,7 @@
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV local Usage)
 ARG DOCKER_ORG=ddev
-FROM ${DOCKER_ORG}/ddev-php-base:20260601_stasadev_n_install AS ddev-webserver-base
+FROM ${DOCKER_ORG}/ddev-php-base:20260610_stasadev_n_install AS ddev-webserver-base
 SHELL ["/bin/bash", "-eu","-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -273,7 +273,7 @@ RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /run/blackfire /var/run/ngin
 RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
     chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
 
-RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /usr/local/lib/node_modules /etc/php /etc/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
+RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/php /etc/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
 RUN mkdir -p /var/xhprof && curl --fail -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod ugo+rwX /var/xhprof/xhprof_html && rm /tmp/xhprof.tgz
 
@@ -328,6 +328,7 @@ ENV BASH_ENV=/etc/bash.nointeractive.bashrc
 ENV LANG=C.UTF-8
 ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
 ENV PLATFORMSH_CLI_UPDATES_CHECK=0
+ENV PATH=/usr/local/n/bin:$PATH
 
 COPY --from=ddev-webserver-dev-base / /
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
@@ -371,7 +372,7 @@ RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/run/nginx /var/run/supe
 RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
     chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
 
-RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /usr/local/lib/node_modules /etc/php /etc/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
+RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/php /etc/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
     chmod ugo+rw /var/log/php-fpm.log && \
@@ -412,6 +413,7 @@ ENV LANG=C.UTF-8
 ENV TERM=xterm
 ENV BASH_ENV=/etc/bash.nointeractive.bashrc
 ENV PLATFORMSH_CLI_UPDATES_CHECK=0
+ENV PATH=/usr/local/n/bin:$PATH
 
 COPY --from=ddev-webserver-prod-base / /
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]

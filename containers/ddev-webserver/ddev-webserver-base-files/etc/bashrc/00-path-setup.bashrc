@@ -13,7 +13,7 @@ path_append() {
 }
 
 # If people want to install several Node.js versions, they can use `n install <version>`
-path_prepend "$HOME/n/bin"
+path_prepend "/usr/local/n/bin"
 
 # Add vendor/bin, then user-owned dirs in front of it (prepend order is last-wins)
 path_prepend "${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin"
