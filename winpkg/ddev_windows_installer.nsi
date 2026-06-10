@@ -1290,7 +1290,7 @@ Function InstallWSL2CommonSetup
     ; Detect distro family for Docker repository selection (ubuntu vs debian)
     Push "WSL($SELECTED_DISTRO): Detecting distro family for Docker repository..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c ". /etc/os-release; if echo \"$${ID_LIKE:-$$ID}\" | grep -qi ubuntu; then echo ubuntu; else echo debian; fi"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c ". /etc/os-release; if echo \"$${ID_LIKE:-$$ID}\" | grep -qi ubuntu; then printf ubuntu; else printf debian; fi"'
     Pop $1
     Pop $DOCKER_DISTRO_FAMILY
     ${If} $DOCKER_DISTRO_FAMILY == ""
