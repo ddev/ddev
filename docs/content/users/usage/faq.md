@@ -195,7 +195,7 @@ Homebrew itself abandoned the ability to specify versions a few years ago, so th
 2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev.sh) script with the version number argument. For example, if you want `v1.23.5`, run `curl -fsSL https://ddev.com/install.sh | bash -s v1.23.5`.
 3. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
 
-To go back to using Homebrew, delete the installed `ddev` with `rm -f $(which ddev)`, and then install `ddev` from scratch with Homebrew.
+To go back to using Homebrew, first delete the installed `ddev` with `rm -f $(which ddev) $(which ddev-hostname)`, and then install `ddev` from scratch with Homebrew.
 
 Your projects are not affected by these changes.
 
