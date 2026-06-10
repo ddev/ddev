@@ -369,6 +369,7 @@ Function DistroSelectionPageLeave
     File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
     File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
     File /oname=detect_docker_suite.sh "scripts\detect_docker_suite.sh"
+    File /oname=detect_docker_family.sh "scripts\detect_docker_family.sh"
     Push "All scripts copied to temp directory"
     Call LogPrint
     
@@ -836,6 +837,7 @@ SectionGroup /e "${PRODUCT_NAME}"
             File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
             File /oname=check_root_user.sh "scripts\check_root_user.sh"
             File /oname=detect_docker_suite.sh "scripts\detect_docker_suite.sh"
+            File /oname=detect_docker_family.sh "scripts\detect_docker_family.sh"
         ${EndIf}
 
         ; Install icons
@@ -1211,7 +1213,11 @@ Function InstallWSL2CommonSetup
     ; Detect distro family for Docker repository selection (ubuntu vs debian)
     Push "WSL($SELECTED_DISTRO): Detecting distro family for Docker repository..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c ". /etc/os-release; if echo \"$$ID $$ID_LIKE\" | grep -qi ubuntu; then printf ubuntu; else printf debian; fi"'
+    Push $SELECTED_DISTRO
+    Push "detect_docker_family.sh"
+    Call InstallScriptToDistro
+    Pop $R0
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/detect_docker_family.sh'
     Pop $1
     Pop $DOCKER_DISTRO_FAMILY
     ${If} $DOCKER_DISTRO_FAMILY == ""
@@ -1603,6 +1609,7 @@ Function InstallWSL2Common
     Delete "$WINDOWS_TEMP\ddev_installer\install_temp_sudoers.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert_install.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\detect_docker_suite.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\detect_docker_family.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert_linux"
