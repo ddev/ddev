@@ -71,10 +71,7 @@ func getInstallerDebugLogs(t *testing.T) string {
 	return fmt.Sprintf("=== Installer Debug Log: %s ===\n%s", logPath, string(content))
 }
 
-// TestWindowsInstallerWSL2 tests WSL2 installation paths using a test matrix.
-// The DockerCE test uses Ubuntu-24.04; configureTestWSL2Distro will install it
-// automatically if not already present on the test machine.
-// TODO: update to Ubuntu-26.04 once Buildkite CI agents have it available.
+// TestWindowsInstallerWSL2 tests WSL2 installation paths using a test matrix
 func TestWindowsInstallerWSL2(t *testing.T) {
 	if nodeps.IsEnvFalse("DDEV_TEST_USE_REAL_INSTALLER") {
 		t.Skip("Skipping installer test, set DDEV_TEST_USE_REAL_INSTALLER=true to run")
@@ -88,8 +85,8 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 	}{
 		{
 			name:          "DockerCE",
-			distro:        "Ubuntu-24.04",
-			installerArgs: []string{"/docker-ce", "/distro=Ubuntu-24.04", "/S"},
+			distro:        "TestDockerCE",
+			installerArgs: []string{"/docker-ce", "/distro=TestDockerCE", "/S"},
 			skipCondition: func() bool { return false }, // always run
 		},
 		{
