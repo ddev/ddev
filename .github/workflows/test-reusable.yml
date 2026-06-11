@@ -141,6 +141,7 @@ jobs:
       DDEV_TEST_PODMAN_ROOTLESS: ${{ inputs.ddev_test_podman_rootless }}
       DDEV_TEST_PODMAN_ROOT: ${{ inputs.ddev_test_podman_root }}
       DDEV_TEST_DOCKER_ROOTLESS: ${{ inputs.ddev_test_docker_rootless }}
+      HOMEBREW_NO_SANDBOX_LINUX: 1
 
     steps:
       - uses: actions/checkout@v6
