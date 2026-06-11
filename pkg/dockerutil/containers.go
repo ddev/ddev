@@ -801,11 +801,19 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 		// On Lima/Colima, ContainerInspect may report State.Running=true even after
 		// the container has exited, causing the polling loop to exhaust the deadline.
 		// Observed only in tests, not reported by users; possibly a Lima/Colima bug.
+		// As a tie-breaker, once Running=true has persisted longer than any realistic
+		// RunSimpleContainer workload, cross-check with ContainerTop: if the daemon
+		// reports no processes (or errors) while State still claims Running, the
+		// container is really gone and the daemon's state is stale.
+		const topCheckThreshold = 30 * time.Second
+		const topDisagreementsToFail = 2
 		waitCtx, waitCancel := context.WithTimeout(ctx, timeout)
 		defer waitCancel()
 		tickChan := time.NewTicker(500 * time.Millisecond)
 		defer tickChan.Stop()
 		var lastKnownState *container.State
+		var runningSince time.Time
+		topDisagreements := 0
 		attempt := 0
 		for {
 			attempt++
@@ -823,6 +831,21 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 				if !info.Container.State.Running {
 					exitCode = info.Container.State.ExitCode
 					break
+				}
+				if runningSince.IsZero() {
+					runningSince = time.Now()
+				}
+				if time.Since(runningSince) > topCheckThreshold {
+					topResult, topErr := apiClient.ContainerTop(waitCtx, c.ID, client.ContainerTopOptions{})
+					if topErr != nil || len(topResult.Processes) == 0 {
+						topDisagreements++
+						util.Debug("RunSimpleContainer: container %s (%s) Inspect reports Running=true but ContainerTop disagrees (topErr=%v processes=%d consecutiveDisagreements=%d)", name, TruncateID(c.ID), topErr, len(topResult.Processes), topDisagreements)
+						if topDisagreements >= topDisagreementsToFail {
+							return c.ID, "", fmt.Errorf("container %s (%s) has stale Docker daemon state: ContainerTop reports no processes (topErr=%v) after %v but Inspect still claims Running=true (lastKnownState=%+v)", name, TruncateID(c.ID), topErr, time.Since(runningSince), lastKnownState)
+						}
+					} else {
+						topDisagreements = 0
+					}
 				}
 			}
 			select {
