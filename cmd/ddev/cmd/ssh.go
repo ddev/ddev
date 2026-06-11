@@ -43,11 +43,14 @@ ddev ssh -d /var/www/html`,
 		// that may not have Bash.
 		shell := app.GetXDdevExtension(serviceType).SSHShell
 
-		err = app.ExecWithTty(&ddevapp.ExecOpts{
-			Service: serviceType,
-			Cmd:     shell + " -l",
-			Dir:     sshDirArg,
-			User:    serviceUser,
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service:   serviceType,
+			RawCmd:    []string{shell, "-l"},
+			Dir:       sshDirArg,
+			User:      serviceUser,
+			Tty:       true,
+			NoCapture: true,
+			SkipHooks: true,
 		})
 		if err != nil {
 			var statusErr cli.StatusError
