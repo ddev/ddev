@@ -169,6 +169,26 @@ func CheckForConf(confPath string) (string, error) {
 	return "", fmt.Errorf("no %s file was found in this directory or any parent", filepath.Join(".ddev", "config.yaml"))
 }
 
+// DetectNestedProject walks up from cwd and returns (childRoot, parentRoot, true)
+// if a .ddev/config.yaml exists in cwd and also in one of its ancestors.
+// Used by root.go to warn once per invocation; not called from CheckForConf.
+func DetectNestedProject(cwd string) (child, parent string, nested bool) {
+	var first string
+	if fileutil.FileExists(filepath.Join(cwd, ".ddev", "config.yaml")) {
+		first = cwd
+	}
+	for filepath.Dir(cwd) != cwd {
+		cwd = filepath.Dir(cwd)
+		if fileutil.FileExists(filepath.Join(cwd, ".ddev", "config.yaml")) {
+			if first != "" {
+				return first, cwd, true
+			}
+			first = cwd
+		}
+	}
+	return "", "", false
+}
+
 // getTemplateFuncMap will return a map of useful template functions.
 func getTemplateFuncMap() map[string]any {
 	// Use sprig's template function map as a base

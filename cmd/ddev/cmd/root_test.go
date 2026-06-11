@@ -340,6 +340,96 @@ func TestGetGlobalDdevDirLocation(t *testing.T) {
 	require.Equal(t, ddevDir, originalGlobalDdevDir)
 }
 
+// TestNestedProjectWarning verifies that the nested project warning is emitted
+// after output for all commands, and suppressed with --json-output.
+func TestNestedProjectWarning(t *testing.T) {
+	parentDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		_ = os.RemoveAll(parentDir)
+	})
+	childDir := filepath.Join(parentDir, "child")
+	require.NoError(t, os.MkdirAll(filepath.Join(childDir, ".ddev"), 0755))
+	require.NoError(t, os.MkdirAll(filepath.Join(parentDir, ".ddev"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(parentDir, ".ddev", "config.yaml"), []byte(""), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(childDir, ".ddev", "config.yaml"), []byte(""), 0644))
+
+	origDir, _ := os.Getwd()
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+	})
+	require.NoError(t, os.Chdir(childDir))
+
+	const warnFragment = "Nested project"
+
+	// any command: warning should appear exactly once (after output)
+	out, err := exec.RunHostCommand(DdevBin, "list")
+	require.NoError(t, err, "ddev list failed: %v, output=%s", err, out)
+	count := strings.Count(out, warnFragment)
+	require.Equal(t, 1, count, "expected warning once for 'ddev list', got %d occurrences in:\n%s", count, out)
+
+	out, err = exec.RunHostCommand(DdevBin, "--version")
+	require.NoError(t, err, "ddev --version failed: %v, output=%s", err, out)
+	count = strings.Count(out, warnFragment)
+	require.Equal(t, 1, count, "expected warning once for 'ddev --version', got %d occurrences in:\n%s", count, out)
+
+	// unknown command: cobra rejects it before PreRun, warning must still appear once
+	out, _ = exec.RunHostCommand(DdevBin, "foobar-"+util.RandString(6))
+	count = strings.Count(out, warnFragment)
+	require.Equal(t, 1, count, "expected warning once for unknown command, got %d occurrences in:\n%s", count, out)
+
+	// --json-output: no warning
+	out, err = exec.RunHostCommand(DdevBin, "list", "--json-output")
+	require.NoError(t, err, "ddev list --json-output failed: %v, output=%s", err, out)
+	require.NotContains(t, out, warnFragment, "expected no warning with --json-output, got:\n%s", out)
+
+	// ddev describe -j from child: parent_approot set to parent dir
+	out, err = exec.RunHostCommand(DdevBin, "config", "--auto")
+	require.NoError(t, err, "ddev config --auto in child failed: output=%s", out)
+	t.Cleanup(func() {
+		_ = os.Chdir(childDir)
+		_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy")
+	})
+	out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
+	require.NoError(t, err, "output=%s", out)
+	logItems, err := unmarshalJSONLogs(out)
+	require.NoError(t, err, "Unable to unmarshal ===\n%s\n===\n", out)
+	var raw map[string]any
+	for _, item := range logItems {
+		if item["level"] == "info" {
+			if r, ok := item["raw"].(map[string]any); ok {
+				raw = r
+				break
+			}
+		}
+	}
+	require.NotNil(t, raw, "did not find 'raw' in logItems ===\n%s\n===\n", out)
+	require.Equal(t, parentDir, raw["parent_approot"], "expected parent_approot=%q in describe JSON: %s", parentDir, out)
+
+	// ddev describe -j from parent: parent_approot is empty
+	require.NoError(t, os.Chdir(parentDir))
+	out, err = exec.RunHostCommand(DdevBin, "config", "--auto")
+	require.NoError(t, err, "ddev config --auto in parent failed: output=%s", out)
+	t.Cleanup(func() {
+		_ = os.Chdir(parentDir)
+		_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy")
+	})
+	out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
+	require.NoError(t, err, "output=%s", out)
+	logItems, err = unmarshalJSONLogs(out)
+	require.NoError(t, err, "Unable to unmarshal ===\n%s\n===\n", out)
+	raw = nil
+	for _, item := range logItems {
+		if item["level"] == "info" {
+			if r, ok := item["raw"].(map[string]any); ok {
+				raw = r
+				break
+			}
+		}
+	}
+	require.NotNil(t, raw, "did not find 'raw' in logItems ===\n%s\n===\n", out)
+	require.NotContains(t, raw, "parent_approot", "expected no parent_approot key in parent describe JSON: %s", out)
+}
+
 // TestPoweroffOnNewVersion checks that a poweroff happens when a new DDEV version is deployed
 func TestPoweroffOnNewVersion(t *testing.T) {
 	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
