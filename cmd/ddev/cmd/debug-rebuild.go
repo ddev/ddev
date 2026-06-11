@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -65,12 +68,23 @@ var DebugRebuildCmd = &cobra.Command{
 
 		if withoutCache {
 			output.UserOut.Printf("Rebuilding project images without Docker cache...")
-			additionalImages, findErr := app.FindAllImages()
-			if findErr != nil {
-				util.Warning("Unable to find project images: %v", findErr)
-			}
-			if pullErr := ddevapp.PullBaseContainerImages(additionalImages, true); pullErr != nil {
-				util.Warning("Unable to pull Docker images: %v", pullErr)
+			if buildAll {
+				additionalImages, findErr := app.FindAllImages()
+				if findErr != nil {
+					util.Warning("Unable to find project images: %v", findErr)
+				}
+				if pullErr := ddevapp.PullBaseContainerImages(additionalImages, true); pullErr != nil {
+					util.Warning("Unable to pull Docker images: %v", pullErr)
+				}
+			} else {
+				// Only pull the base image for the service being rebuilt, not the whole project.
+				serviceImages, findErr := app.FindServiceImages(services)
+				if findErr != nil {
+					util.Warning("Unable to find images for service %s: %v", service, findErr)
+				}
+				if pullErr := dockerutil.PullImages(serviceImages, true); pullErr != nil {
+					util.Warning("Unable to pull Docker images: %v", pullErr)
+				}
 			}
 		} else {
 			output.UserOut.Printf("Rebuilding project images using Docker cache...")
@@ -78,15 +92,16 @@ var DebugRebuildCmd = &cobra.Command{
 
 		buildProject, loadErr := dockerutil.LoadComposeProject([]string{composeRenderedPath}, api.ProjectLoadOptions{
 			ProjectName: app.GetComposeProjectName(),
+			Profiles:    []string{`*`},
 		})
 		if loadErr != nil {
 			util.Failed("Failed to load compose project: %v", loadErr)
 		}
-		buildCtx, buildSvc, svcErr := dockerutil.NewComposeService()
+		composeCtx, composeSvc, svcErr := dockerutil.NewComposeService()
 		if svcErr != nil {
 			util.Failed("Failed to create compose service: %v", svcErr)
 		}
-		err = buildSvc.Build(buildCtx, buildProject, api.BuildOptions{
+		err = composeSvc.Build(composeCtx, buildProject, api.BuildOptions{
 			Progress: display.ModePlain,
 			NoCache:  withoutCache,
 			Services: services,
@@ -120,27 +135,43 @@ var DebugRebuildCmd = &cobra.Command{
 			"com.docker.compose.service": service,
 		}
 
-		// Restart the specified service using compose, if it is running
+		// Recreate the specified service using compose, if it is running
 		if container, err := dockerutil.FindContainerByLabels(labels); err == nil && container != nil {
-			output.UserOut.Printf("Restarting service %s...", service)
+			output.UserOut.Printf("Recreating service %s...", service)
 
-			// Restart the specific service via compose
-			restartCtx, restartSvc, restartErr := dockerutil.NewComposeService()
-			if restartErr != nil {
-				util.Failed("Failed to create compose service: %v", restartErr)
+			// Narrow to the target service and drop its dependency edges so we don't disturb other services.
+			recreateProject, selErr := buildProject.WithSelectedServices([]string{service}, types.IgnoreDependencies)
+			if selErr != nil {
+				util.Failed("Failed to select service %s: %v", service, selErr)
 			}
-			restartTimeout := 60 * time.Second
-			err = restartSvc.Restart(restartCtx, buildProject.Name, api.RestartOptions{
-				Project:  buildProject,
-				Services: []string{service},
-				Timeout:  &restartTimeout,
+
+			// Recreate rather than restart: a plain restart keeps the old container and image,
+			// so the rebuilt image would never be applied, and a fresh container avoids
+			// startup-delay healthchecks triggered by restarting a previously-healthy container.
+			progress := display.ModeQuiet
+			if globalconfig.DdevVerbose {
+				progress = display.ModePlain
+			}
+			recreateTimeout := time.Duration(app.GetMaxContainerWaitTime()) * time.Second
+			err = composeSvc.Up(composeCtx, recreateProject, api.UpOptions{
+				Create: api.CreateOptions{
+					Services: []string{service},
+					Recreate: api.RecreateForce,
+					Timeout:  &recreateTimeout,
+					Build:    &api.BuildOptions{Progress: progress},
+				},
+				Start: api.StartOptions{
+					Project:  recreateProject,
+					Services: []string{service},
+				},
 			})
 			if err != nil {
-				util.Failed("Failed to restart service %s: %v", service, err)
+				util.Failed("Failed to recreate service %s: %v", service, err)
 			}
 
-			output.UserOut.Printf("Waiting for project container [%v] to become ready...", service)
-			err = app.WaitByLabels(labels)
+			wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", []string{service}))
+			err = app.Wait([]string{service})
+			wait.Complete(err)
 			if err != nil {
 				util.Failed("Failed to wait for project container [%v] to become ready: %v", service, err)
 			}
@@ -151,7 +182,7 @@ var DebugRebuildCmd = &cobra.Command{
 					util.Failed("Failed to start %s: %v", nodeps.RouterContainer, err)
 				}
 			}
-			util.Success("Restarted %s service for %s", service, app.GetName())
+			util.Success("Recreated %s service for %s", service, app.GetName())
 		}
 	},
 }

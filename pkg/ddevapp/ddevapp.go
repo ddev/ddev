@@ -2388,11 +2388,20 @@ func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
 
 // FindAllImages returns an array of image tags for all containers in the compose file
 func (app *DdevApp) FindAllImages() ([]string, error) {
+	return app.FindServiceImages(nil)
+}
+
+// FindServiceImages returns an array of image tags for the named services in the
+// compose file. A nil/empty serviceNames returns images for all services.
+func (app *DdevApp) FindServiceImages(serviceNames []string) ([]string, error) {
 	var images []string
 	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
 		return images, nil
 	}
-	for _, service := range app.ComposeYaml.Services {
+	for name, service := range app.ComposeYaml.Services {
+		if len(serviceNames) > 0 && !slices.Contains(serviceNames, name) {
+			continue
+		}
 		image := service.Image
 		if image == "" {
 			continue
