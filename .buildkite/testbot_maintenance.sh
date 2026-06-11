@@ -31,7 +31,7 @@ fi
 case $os in
 darwin)
     brew pin buildkite-agent
-    brew upgrade
+    brew upgrade -y
     brew uninstall -f mysql-client || true
     for item in coreutils curl ddev/ddev/ddev golang golangci-lint libpq mkcert mysql-client@8.0; do
         brew install $item || true
