@@ -22,8 +22,8 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    for item in golang golangci-lint ddev; do
-        brew upgrade $item || brew install $item || true
+    for item in golang golangci-lint ddev/ddev/ddev; do
+        brew upgrade -y $item || brew install $item || true
     done
     ;;
 windows)
