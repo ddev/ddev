@@ -220,7 +220,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     wsl --update
     ```
 
-    Create a Debian-based WSL2 distro (skip if you're using Traditional Windows). Ubuntu is recommended:
+    Create an Ubuntu or other Debian-based WSL2 distro (skip if you're using Traditional Windows). Ubuntu is recommended:
 
     ```powershell
     # You'll be asked to set a username and password for the distro:
@@ -230,7 +230,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     !!!tip "\"DDEV\" is just a suggested name — use any name you like."
 
     !!!tip "Other Debian-based distros also work"
-        The DDEV installer supports Ubuntu, Debian, Kali Linux, Parrot OS, and eLxr. If you prefer one of those, substitute its name, e.g. `wsl --install Debian --name DDEV`.
+        The DDEV installer supports Ubuntu and Debian and has been tested with Kali Linux, Parrot OS, and eLxr. If you prefer one of those, substitute its name, for example `wsl --install Debian --name DDEV`.
 
     Verify the "DDEV" distro is set as default:
 

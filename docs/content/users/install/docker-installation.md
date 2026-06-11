@@ -240,7 +240,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     !!!tip "\"DDEV\" is just a suggested name — use any name you like."
 
     !!!tip "Other Debian-based distros also work"
-        The DDEV installer supports Ubuntu, Debian, Kali Linux, Parrot OS, and eLxr. If you prefer one of those, substitute its name, e.g. `wsl --install Debian --name DDEV`.
+        The DDEV installer supports Ubuntu and Debian and has been tested on Kali Linux, Parrot OS, and eLxr. If you prefer one of those, substitute its name, for example `wsl --install Debian --name DDEV`.
 
     Verify the "DDEV" distro is set as default:
 
