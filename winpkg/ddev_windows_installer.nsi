@@ -370,6 +370,9 @@ Function DistroSelectionPageLeave
     File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
     File /oname=detect_docker_suite.sh "scripts\detect_docker_suite.sh"
     File /oname=detect_docker_family.sh "scripts\detect_docker_family.sh"
+    File /oname=apt_install_with_log.sh "scripts\apt_install_with_log.sh"
+    File /oname=ensure_systemd_enabled.sh "scripts\ensure_systemd_enabled.sh"
+    File /oname=wait_for_systemd.sh "scripts\wait_for_systemd.sh"
     Push "All scripts copied to temp directory"
     Call LogPrint
     
@@ -838,6 +841,9 @@ SectionGroup /e "${PRODUCT_NAME}"
             File /oname=check_root_user.sh "scripts\check_root_user.sh"
             File /oname=detect_docker_suite.sh "scripts\detect_docker_suite.sh"
             File /oname=detect_docker_family.sh "scripts\detect_docker_family.sh"
+            File /oname=apt_install_with_log.sh "scripts\apt_install_with_log.sh"
+            File /oname=ensure_systemd_enabled.sh "scripts\ensure_systemd_enabled.sh"
+            File /oname=wait_for_systemd.sh "scripts\wait_for_systemd.sh"
         ${EndIf}
 
         ; Install icons
@@ -1049,15 +1055,32 @@ Function GetDebianBasedDistros
         ${Else}
             Push "Found Flavor field for $R3: '$R4'"
             Call LogPrint
-            ; Check if Flavor is "ubuntu", "debian", "kali", or "parrot" (case-insensitive)
-            ${StrStr} $R6 $R4 "ubuntu"
+            ; Check if Flavor is a known Debian-based distro identifier
+            ; (ubuntu, debian, kali, parrot, elxr — case-insensitive substring match).
+            ; Note: $R5 holds the total distro count (loop bound), do not clobber.
+            ; Use $R6 as a "matched" flag and $R7 as the per-test StrStr result.
+            StrCpy $R6 ""
+            ${StrStr} $R7 $R4 "ubuntu"
+            ${If} $R7 != ""
+                StrCpy $R6 "yes"
+            ${EndIf}
             ${StrStr} $R7 $R4 "debian"
-            ${StrStr} $R8 $R4 "kali"
-            ${StrStr} $R9 $R4 "parrot"
-            ${If} $R6 != ""
-            ${OrIf} $R7 != ""
-            ${OrIf} $R8 != ""
-            ${OrIf} $R9 != ""
+            ${If} $R7 != ""
+                StrCpy $R6 "yes"
+            ${EndIf}
+            ${StrStr} $R7 $R4 "kali"
+            ${If} $R7 != ""
+                StrCpy $R6 "yes"
+            ${EndIf}
+            ${StrStr} $R7 $R4 "parrot"
+            ${If} $R7 != ""
+                StrCpy $R6 "yes"
+            ${EndIf}
+            ${StrStr} $R7 $R4 "elxr"
+            ${If} $R7 != ""
+                StrCpy $R6 "yes"
+            ${EndIf}
+            ${If} $R6 == "yes"
                 Push "Found Debian-based distribution (Flavor-based): $R3"
                 Call LogPrint
                 ${If} $R0 != ""
@@ -1065,7 +1088,7 @@ Function GetDebianBasedDistros
                 ${EndIf}
                 StrCpy $R0 "$R0$R3"
             ${Else}
-                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu', 'debian', 'kali', or 'parrot'"
+                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu', 'debian', 'kali', 'parrot', or 'elxr'"
                 Call LogPrint
             ${EndIf}
         ${EndIf}
@@ -1145,6 +1168,74 @@ Function InstallWSL2CommonSetup
     Push "Root user check passed"
     Call LogPrint
 
+    ; Install apt_install_with_log.sh helper into the distro once so the
+    ; later apt-get install steps can surface the tail of apt's output
+    ; (the NSIS output buffer truncates long apt traces mid-stream).
+    Push "Installing apt_install_with_log.sh helper into $SELECTED_DISTRO..."
+    Call LogPrint
+    Push $SELECTED_DISTRO
+    Push "apt_install_with_log.sh"
+    Call InstallScriptToDistro
+    Pop $R0
+
+    ; Ensure systemd is enabled in this distro's /etc/wsl.conf so dockerd
+    ; auto-starts and D-Bus is available (D-Bus is needed by
+    ; docker-credential-secretservice and many other tools). Distros that
+    ; ship with [boot] systemd=false (e.g. Parrot) cause Docker to fail
+    ; silently and credential helpers to error with "Could not connect".
+    Push "Ensuring systemd is enabled in $SELECTED_DISTRO's /etc/wsl.conf..."
+    Call LogPrint
+    Push $SELECTED_DISTRO
+    Push "ensure_systemd_enabled.sh"
+    Call InstallScriptToDistro
+    Pop $R0
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/ensure_systemd_enabled.sh'
+    Pop $R1
+    Pop $R2
+    Push "ensure_systemd_enabled.sh exit=$R1: $R2"
+    Call LogPrint
+    ${If} $R1 == 2
+        Push "ERROR: could not write /etc/wsl.conf in $SELECTED_DISTRO: $R2"
+        Call LogPrint
+        Push "Could not enable systemd in /etc/wsl.conf in $SELECTED_DISTRO. Output: $R2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+    ${If} $R1 == 1
+        ; systemd was just enabled — terminate the distro so it boots
+        ; with systemd as PID 1, then bring it back up.
+        Push "systemd was newly enabled; terminating $SELECTED_DISTRO so the change takes effect..."
+        Call LogPrint
+        nsExec::ExecToStack 'wsl.exe --terminate $SELECTED_DISTRO'
+        Pop $R1
+        Pop $R2
+        Push "wsl --terminate exit=$R1: $R2"
+        Call LogPrint
+        ; Bring it back up. systemd takes a few seconds to settle. Use a
+        ; helper script so we don't fight NSIS's $(...) language-string
+        ; quoting rules. After --terminate, /tmp/* on parrot/eLxr is on
+        ; the ext4 rootfs so previously-installed helpers persist, but
+        ; reinstall to be safe.
+        Push "Restarting $SELECTED_DISTRO with systemd..."
+        Call LogPrint
+        Push $SELECTED_DISTRO
+        Push "apt_install_with_log.sh"
+        Call InstallScriptToDistro
+        Pop $R0
+        Push $SELECTED_DISTRO
+        Push "wait_for_systemd.sh"
+        Call InstallScriptToDistro
+        Pop $R0
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/wait_for_systemd.sh 20'
+        Pop $R1
+        Pop $R2
+        Push "systemd readiness check exit=$R1: $R2"
+        Call LogPrint
+        ${If} $R1 != 0
+            Push "WARNING: systemd did not report ready within 20s; continuing anyway. Output: $R2"
+            Call LogPrint
+        ${EndIf}
+    ${EndIf}
+
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
         ; Make sure we're not running docker-ce or docker.io daemon (conflicts with Docker Desktop)
         Push "Verifying Docker installation type..."
@@ -1187,9 +1278,21 @@ Function InstallWSL2CommonSetup
     Call LogPrint
     Push "Please be patient - installing required linux packages..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh prereq ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release'
     Pop $1
     Pop $0
+    ; Optionally try to install 'pass' (used by docker-credential-pass);
+    ; not all minimal Debian derivatives (e.g. eLxr) carry it. A failure
+    ; here is a warning, not fatal.
+    Push "WSL($SELECTED_DISTRO): Trying optional package 'pass'..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh prereq-optional pass'
+    Pop $R1
+    Pop $R2
+    ${If} $R1 != 0
+        Push "WARNING: optional package 'pass' not installed (exit=$R1): $R2"
+        Call LogPrint
+    ${EndIf}
     ${If} $1 != 0
         Push "ERROR: Failed to apt-get install - exit code: $1, output: $0"
         Call LogPrint
@@ -1354,7 +1457,7 @@ Function InstallWSL2Common
     Call LogPrint
     Push "Please be patient - installing essential packages..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh essential ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release'
     Pop $1
     Pop $2
     ${If} $1 != 0
@@ -1362,6 +1465,14 @@ Function InstallWSL2Common
         Call LogPrint
         Push "Failed to install essential packages. Error: $2"
         Call ShowErrorAndAbort
+    ${EndIf}
+    ; Optionally retry 'pass' here too (idempotent if already installed).
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh essential-optional pass'
+    Pop $R1
+    Pop $R2
+    ${If} $R1 != 0
+        Push "WARNING: optional package 'pass' not installed (exit=$R1): $R2"
+        Call LogPrint
     ${EndIf}
     
     ; Update status
@@ -1374,9 +1485,9 @@ Function InstallWSL2Common
     Push "Please be patient - installing Docker components..."
     Call LogPrint
     ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io 2>&1"'
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh docker docker-ce docker-ce-cli containerd.io'
     ${Else}
-        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce-cli 2>&1"'
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh docker-cli docker-ce-cli'
     ${EndIf}
     Pop $1
     Pop $2
@@ -1396,7 +1507,7 @@ Function InstallWSL2Common
     Call LogPrint
     Push "Please be patient - installing DDEV..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ddev ddev-wsl2 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root env APT_EXTRA_ARGS=--no-install-recommends bash /tmp/apt_install_with_log.sh ddev ddev ddev-wsl2'
     Pop $1
     Pop $2
     ${If} $1 != 0
@@ -1538,6 +1649,31 @@ Function InstallWSL2Common
         ${EndIf}
     ${EndIf}
 
+    ; Verify the Docker daemon is running. We earlier ensured systemd is
+    ; enabled in /etc/wsl.conf (and restarted the distro if it wasn't),
+    ; so dockerd should already be running via the docker.service unit
+    ; that docker-ce's postinst enabled. If it isn't yet (race with the
+    ; service starting), nudge it via systemctl and poll docker info.
+    ${If} $INSTALL_OPTION == "wsl2-docker-ce"
+        Push "WSL($SELECTED_DISTRO): Verifying Docker daemon via systemd..."
+        Call LogPrint
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root systemctl start docker.service'
+        Pop $1
+        Pop $0
+        Push "systemctl start docker.service exit=$1: $0"
+        Call LogPrint
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root sh -c "for i in 1 2 3 4 5 6 7 8 9 10; do docker info >/dev/null 2>&1 && exit 0; sleep 1; done; exit 1"'
+        Pop $1
+        Pop $0
+        ${If} $1 != 0
+            Push "WARNING: Docker daemon did not become ready within 10s. Output: $0"
+            Call LogPrint
+        ${Else}
+            Push "Docker daemon is ready."
+            Call LogPrint
+        ${EndIf}
+    ${EndIf}
+
     ; Show DDEV version
     Push "Verifying DDEV installation with 'ddev version'..."
     Call LogPrint
@@ -1610,6 +1746,9 @@ Function InstallWSL2Common
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert_install.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\detect_docker_suite.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\detect_docker_family.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\apt_install_with_log.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\ensure_systemd_enabled.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\wait_for_systemd.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert_linux"
@@ -2255,16 +2394,30 @@ Function ShowErrorAndAbort
     Exch $R0  ; Get error message from stack
     Push "INSTALLATION ERROR: $R0"
     Call LogPrint
-    
+
     ; Write error status to WSL2 distro if available
     ${If} $SELECTED_DISTRO != ""
         nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"ERROR: $R0\" >> /tmp/ddev_installation_status.txt"'
         Pop $1
         Pop $2
     ${EndIf}
-    
+
     ${IfNot} ${Silent}
-        MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nDebug information has been written to: $DEBUG_LOG_PATH (please include with any error report)$\n$\nPlease fix the issue and retry the installer."
+        ; Lead with the log path so it stays visible even if the error
+        ; body is long enough to scroll off-screen in the MessageBox.
+        ; Truncate the error body to keep the dialog compact; the full
+        ; error is always available in the debug log.
+        StrLen $R1 $R0
+        ${If} $R1 > 600
+            StrCpy $R2 $R0 600
+            StrCpy $R2 "$R2...$\n[truncated — see debug log for full output]"
+        ${Else}
+            StrCpy $R2 $R0
+        ${EndIf}
+        MessageBox MB_ICONSTOP|MB_OKCANCEL "DDEV installation failed.$\n$\nFull debug log (please include with any error report):$\n$DEBUG_LOG_PATH$\n$\n----- Error -----$\n$R2$\n$\nClick OK to open the debug log in Notepad, or Cancel to exit." IDOK open_log IDCANCEL skip_log
+        open_log:
+            ExecShell "open" "notepad.exe" "$DEBUG_LOG_PATH"
+        skip_log:
     ${EndIf}
     Push "Exiting installer due to error. Debug log: $DEBUG_LOG_PATH (please include with any error report)"
     Call LogPrint
