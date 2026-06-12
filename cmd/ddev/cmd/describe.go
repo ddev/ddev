@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"os"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -19,6 +21,7 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -90,7 +93,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		urlPortWidth = float64(tWidth) / urlPortWidthFactor
 		infoWidth = tWidth / 4
 	}
-	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
+	if !globalconfig.DdevGlobalConfig.SimpleFormatting && isatty.IsTerminal(os.Stdout.Fd()) {
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
 				Name:     "Service",
