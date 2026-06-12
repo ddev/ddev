@@ -1012,23 +1012,23 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 				}
 			}
 			// cd so n resolves auto/engine from the version files copied above
-			extraWebContent = extraWebContent + fmt.Sprintf(`
-### DDEV-injected Node.js install via n (with version files from the project root)
+			extraWebContent = extraWebContent + `
+### DDEV-injected Node.js version files from the project root
 COPY n-version-files/ /tmp/n-version-files/
-ARG N_PREFIX=/usr/local
-RUN cd /tmp/n-version-files && (n install --cleanup "%[1]s" || log-stderr.sh n install --cleanup "%[1]s" || true) && rm -rf /tmp/n-version-files
-`, app.NodeJSVersion)
-		} else {
-			extraWebContent = extraWebContent + fmt.Sprintf(`
-### DDEV-injected Node.js install via n
-ARG N_PREFIX=/usr/local
-RUN n install --cleanup "%[1]s" || log-stderr.sh n install --cleanup "%[1]s" || true
-`, app.NodeJSVersion)
-		}
-		extraWebContent = extraWebContent + `
-### DDEV-injected removal of dangling symlinks left by 'n install'
-RUN find /usr/local/bin -maxdepth 1 -xtype l -delete
 `
+		}
+		extraWebContent = extraWebContent + fmt.Sprintf(`
+### DDEV-injected Node.js install via n
+RUN <<EOF
+set -eu -o pipefail
+cd /tmp/n-version-files || true
+export N_PREFIX=/usr/local/n-new
+if n install --cleanup "%[1]s" || log-stderr.sh n install --cleanup "%[1]s"; then
+  rm -rf /usr/local/n && mv /usr/local/n-new /usr/local/n
+fi
+cd /tmp && rm -rf /tmp/n-version-files
+EOF
+`, app.NodeJSVersion)
 	}
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN (command -v corepack >/dev/null 2>&1 || log-stderr.sh npm install -g corepack -f || true) && log-stderr.sh corepack enable || true"
@@ -1102,14 +1102,14 @@ RUN <<EOF
 set -eu -o pipefail
 source /etc/os-release || true
 if [ "${VERSION_CODENAME:-}" = "stretch" ] || [ "${VERSION_CODENAME:-}" = "buster" ]; then
-    rm -f /etc/apt/sources.list.d/pgdg.list
-    echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
-    echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
-    timeout %[1]d apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
-        -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true \
-        debian-archive-keyring apt-transport-https ca-certificates
-    echo "deb http://apt-archive.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg-archive main" >/etc/apt/sources.list.d/pgdg.list
+  rm -f /etc/apt/sources.list.d/pgdg.list
+  echo "deb http://archive.debian.org/debian/ ${VERSION_CODENAME} main contrib non-free" >/etc/apt/sources.list
+  echo "deb http://archive.debian.org/debian-security/ ${VERSION_CODENAME}/updates main contrib non-free" >>/etc/apt/sources.list
+  timeout %[1]d apt-get -qq update -o Acquire::AllowInsecureRepositories=true \
+    -o Acquire::AllowDowngradeToInsecureRepositories=true -o APT::Get::AllowUnauthenticated=true || true
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests -o APT::Get::AllowUnauthenticated=true \
+    debian-archive-keyring apt-transport-https ca-certificates
+  echo "deb http://apt-archive.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg-archive main" >/etc/apt/sources.list.d/pgdg.list
 fi
 EOF
 
@@ -1418,8 +1418,8 @@ RUN mkdir -p /run/php /var/run/nginx /var/run/supervisor /var/run/apache2 /var/l
     touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log /var/log/supervisord.log && \
     chmod ugo+rw /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log /var/log/supervisord.log && \
     chmod ugo+rwX /var/log/nginx /var/log/apache2 && \
-    chgrp -R "$gid" /etc/alternatives /var/lib/dpkg/alternatives && \
-    chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives && \
+    chgrp -R "$gid" /etc/alternatives /var/lib/dpkg/alternatives /usr/local/n && \
+    chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives /usr/local/n && \
     chmod -f ugo+rx /usr/local/bin /usr/local/bin/* && \
     chgrp "$gid" /usr/local/bin/composer && chmod g+rwx,o-w /usr/local/bin/composer && \
     mkdir -p /tmp/xhprof && chmod -R ugo+w /etc/php /var/lib/php /tmp/xhprof

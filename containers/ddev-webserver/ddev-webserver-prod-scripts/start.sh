@@ -99,9 +99,6 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 
 mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
 
-# Remove ~/n/bin so the system Node.js is used by default; run `n install <version>` to switch
-ln -sf "${N_PREFIX}" ~/n && rm -rf ~/n/bin
-
 # The following ensures a persistent and shared "global" cache for
 # yarn classic (frozen v1) and yarn berry (active). In the case of berry, the global cache
 # will only be used if the project is configured to use it through it's own
