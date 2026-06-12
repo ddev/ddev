@@ -19,33 +19,47 @@ import (
 // FORCE_HYPERLINK=1/0 overrides detection, following the convention used
 // by eza, lsd, and the chalk/supports-hyperlinks ecosystem.
 var HasTermHyperlinks = sync.OnceValue(func() bool {
-	if v := os.Getenv("FORCE_HYPERLINK"); v != "" {
-		enabled, err := strconv.ParseBool(v)
+	return detectHyperlinks(
+		os.Getenv("FORCE_HYPERLINK"),
+		!JSONOutput && isatty.IsTerminal(os.Stdout.Fd()),
+		os.Getenv("TERM_PROGRAM"),
+		os.Getenv("VTE_VERSION"),
+		os.Getenv("WT_SESSION"),
+		os.Getenv("KONSOLE_VERSION"),
+		os.Getenv("TERM"),
+	)
+})
+
+// detectHyperlinks contains the detection logic for HasTermHyperlinks.
+// It accepts the relevant environment values so it can be tested without
+// relying on the singleton cache.
+func detectHyperlinks(forceEnv string, isTTY bool, termProgram, vteVersion, wtSession, konsoleVersion, termEnv string) bool {
+	if forceEnv != "" {
+		enabled, err := strconv.ParseBool(forceEnv)
 		return err == nil && enabled
 	}
-	if JSONOutput || !isatty.IsTerminal(os.Stdout.Fd()) {
+	if !isTTY {
 		return false
 	}
-	switch os.Getenv("TERM_PROGRAM") {
+	switch termProgram {
 	case "Hyper", "ghostty", "iTerm.app", "mintty", "rio", "Tabby", "vscode", "WezTerm":
 		return true
 	}
 	// VTE-based terminals (GNOME Terminal, Tilix, etc.) support OSC 8 since 0.50
-	if v, err := strconv.Atoi(os.Getenv("VTE_VERSION")); err == nil && v >= 5000 {
+	if v, err := strconv.Atoi(vteVersion); err == nil && v >= 5000 {
 		return true
 	}
 	// Windows Terminal and Konsole don't set TERM_PROGRAM
-	if os.Getenv("WT_SESSION") != "" || os.Getenv("KONSOLE_VERSION") != "" {
+	if wtSession != "" || konsoleVersion != "" {
 		return true
 	}
-	term := os.Getenv("TERM")
 	for _, t := range []string{"alacritty", "contour", "foot", "ghostty", "kitty", "wezterm"} {
-		if strings.Contains(term, t) {
+		if strings.Contains(termEnv, t) {
 			return true
 		}
 	}
 	return false
-})
+}
 
 // Hyperlink returns linkText wrapped in an OSC 8 terminal hyperlink pointing
 // at targetURL when the terminal supports it; otherwise it returns linkText
