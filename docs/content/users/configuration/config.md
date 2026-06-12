@@ -440,14 +440,24 @@ Whether to disable the TUI (terminal user interface) when running the `ddev` com
 
 ## `nodejs_version`
 
-Node.js version for the web container, managed by [`n`](https://www.npmjs.com/package/n). Non-default versions are baked into the web image at build time. If startup speed matters (e.g. CI), stick with an empty value (`""`) to avoid pinning a specific version.
+Node.js version for the web container, managed by [`n`](https://www.npmjs.com/package/n).
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | current LTS version | any [node version](https://www.npmjs.com/package/n#specifying-nodejs-versions), like `v22`, `20.2`, `18.19.2`, etc.,<br>an empty value (`""`) uses the DDEV default,<br>`auto`/`engine` (see below).
+| :octicons-file-directory-16: project | current LTS version | Any [Node.js version](https://www.npmjs.com/package/n#specifying-nodejs-versions); see the table below for what each value does.
 
-!!!warning "Node.js version is baked into the image at build time"
-    Use a non-specific version like `v24` to always get the latest in a major line. To update to a newer matching version, rebuild:
+What DDEV does depends on the value:
+
+| Value | Result
+| -- | --
+| `24` | Default version preinstalled in DDEV.
+| `""` (empty) | Uses the version already included in the image, with no download step (fastest for CI). Follows DDEV default behavior over time.
+| `v24` | Installs the newest `24.x` release when the image is built. Use the `v` prefix only to get the latest of the current default major.
+| any other version (`22`, `20.2`, `18.19.2`, etc.) | Installs that version when the image is built. A bare major like `22` already installs the newest `22.x`.
+| `auto`, `engine` | Reads the version from a file in your project (see below).
+
+!!!warning "The Node.js version changes only when the image is rebuilt"
+    A version installed by `n` is fixed at build time. It changes only when the `ddev-webserver` image is rebuilt, for example when you upgrade DDEV. You can also trigger a rebuild manually:
 
     ```bash
     ddev restart --no-cache
@@ -455,10 +465,12 @@ Node.js version for the web container, managed by [`n`](https://www.npmjs.com/pa
     ddev utility rebuild
     ```
 
-!!!tip "How to define the Node.js version using a file"
-    Set `nodejs_version: auto` to read the version from `.n-node-version`, `.node-version`, `.nvmrc`, or `package.json` engines in [`DDEV_APPROOT`](../extend/custom-commands.md#environment-variables-provided). Set `nodejs_version: engine` to use only `package.json` engines. See [n's documentation](https://www.npmjs.com/package/n#specifying-nodejs-versions) for details.
+    Example: you set `22`, and `n` installs the newest `22.x` available at build time, for example `22.14.0`. If `22.14.1` is released before the next rebuild, your project stays on `22.14.0` until then.
 
-    If your version file is not in `DDEV_APPROOT`, create a symlink pointing to it. For example, if you have `frontend/.nvmrc`:
+!!!tip "How to define the Node.js version using a file"
+    Set `nodejs_version: auto` to read the version from a file in your project root ([`DDEV_APPROOT`](../extend/custom-commands.md#environment-variables-provided)). `n` checks these in order: `.n-node-version`, `.node-version`, `.nvmrc`, then the `engines.node` field in `package.json`. Set `nodejs_version: engine` to use only `engines.node`. See [n's documentation](https://www.npmjs.com/package/n#specifying-nodejs-versions) for details.
+
+    If your version file is not in your project root, create a symlink pointing to it. For example, if you have `frontend/.nvmrc`:
 
     ```bash
     ln -sf frontend/.nvmrc .nvmrc
