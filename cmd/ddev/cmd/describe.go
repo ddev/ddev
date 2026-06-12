@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"os"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -19,6 +21,7 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -90,15 +93,32 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		urlPortWidth = float64(tWidth) / urlPortWidthFactor
 		infoWidth = tWidth / 4
 	}
-	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
+	if !globalconfig.DdevGlobalConfig.SimpleFormatting && isatty.IsTerminal(os.Stdout.Fd()) {
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
 				Name:     "Service",
 				WidthMax: 12,
 			},
 			{
-				Name: "URL/Port",
-				//WidthMax: int(urlPortWidth),
+				Name:     "URL/Port",
+				WidthMax: int(urlPortWidth),
+				// Wrap each embedded line individually to preserve intentional line breaks
+				WidthMaxEnforcer: func(col string, maxLen int) string {
+					wrapped := []string{}
+					for line := range strings.SplitSeq(col, "\n") {
+						switch {
+						case text.RuneWidthWithoutEscSequences(line) <= maxLen:
+							wrapped = append(wrapped, line)
+						case strings.Contains(line, "\x1b]8;"):
+							// WrapSoft corrupts OSC 8 hyperlinks when splitting, so
+							// truncate those lines; the full link target stays clickable
+							wrapped = append(wrapped, text.Snip(line, maxLen, "…"))
+						default:
+							wrapped = append(wrapped, strings.Split(text.WrapSoft(line, maxLen), "\n")...)
+						}
+					}
+					return strings.Join(wrapped, "\n")
+				},
 			},
 			{
 				Name:     "Info",
@@ -116,7 +136,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		router = "disabled"
 	}
 
-	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s\nDDEV version: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerPlatform, router, versionconstants.DdevVersion))
+	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker platform: %s\nRouter: %s\nDDEV version: %s", app.Name, output.Hyperlink(output.FileURL(app.GetAppRoot()), desc["shortroot"].(string)), output.Hyperlink(app.GetPrimaryURL(), app.GetPrimaryURL()), dockerPlatform, router, versionconstants.DdevVersion))
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 
 	// Only show extended status for running sites.
@@ -145,19 +165,22 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		// Normal case, using ddev-router based URLs
 		case !ddevapp.IsRouterDisabled(app):
 			if httpsURL, ok := v["https_url"].(string); ok && !app.CanUseHTTPOnly() {
-				urlPortParts = append(urlPortParts, netutil.NormalizeURL(httpsURL))
+				u := netutil.NormalizeURL(httpsURL)
+				urlPortParts = append(urlPortParts, output.Hyperlink(u, u))
 			} else if httpURL, ok = v["http_url"].(string); ok {
-				urlPortParts = append(urlPortParts, netutil.NormalizeURL(httpURL))
+				u := netutil.NormalizeURL(httpURL)
+				urlPortParts = append(urlPortParts, output.Hyperlink(u, u))
 			}
 
 		// Codespaces, web container only, using port proxied by Codespaces/Devcontainer
 		case nodeps.IsDevcontainer() && k == "web":
-			urlPortParts = append(urlPortParts, app.GetPrimaryURL())
+			urlPortParts = append(urlPortParts, output.Hyperlink(app.GetPrimaryURL(), app.GetPrimaryURL()))
 
 		// Router disabled, but not because of Codespaces, use direct http url
 		case ddevapp.IsRouterDisabled(app):
 			if httpURL, ok := v["host_http_url"].(string); ok && httpURL != "" {
-				urlPortParts = append(urlPortParts, netutil.NormalizeURL(httpURL))
+				u := netutil.NormalizeURL(httpURL)
+				urlPortParts = append(urlPortParts, output.Hyperlink(u, u))
 			}
 		}
 
@@ -231,27 +254,28 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 		if _, ok := desc["mailpit_https_url"]; ok && !app.CanUseHTTPOnly() {
 			mailpitURL = desc["mailpit_https_url"].(string)
 		}
-		t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\nLaunch: ddev mailpit", mailpitURL)})
+		t.AppendRow(table.Row{"Mailpit", "", fmt.Sprintf("Mailpit: %s\nLaunch: ddev mailpit", output.Hyperlink(mailpitURL, mailpitURL))})
 
 		ddevapp.SyncGenericWebserverPortsWithRouterPorts(app)
 
 		//WebExtraExposedPorts stanza
 		for _, extraPort := range app.WebExtraExposedPorts {
+			scheme, port := "https", extraPort.HTTPSPort
 			if app.CanUseHTTPOnly() {
-				url := netutil.NormalizeURL(fmt.Sprintf("http://%s:%d", app.GetHostname(), extraPort.HTTPPort))
-				t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("%s\nInDocker: web:%d", url, extraPort.WebContainerPort)})
-			} else {
-				url := netutil.NormalizeURL(fmt.Sprintf("https://%s:%d", app.GetHostname(), extraPort.HTTPSPort))
-				t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("%s\nInDocker: web:%d", url, extraPort.WebContainerPort)})
+				scheme, port = "http", extraPort.HTTPPort
 			}
+			url := netutil.NormalizeURL(fmt.Sprintf("%s://%s:%d", scheme, app.GetHostname(), port))
+			t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("%s\nInDocker: web:%d", output.Hyperlink(url, url), extraPort.WebContainerPort)})
 		}
 
-		// All URLs stanza
+		// All URLs stanza, one per line so each stays an intact clickable link
 		_, _, urls := app.GetAllURLs()
 		if len(urls) > 0 {
-			s := strings.Join(urls, ", ")
-			urlString := text.WrapSoft(s, int(urlPortWidth))
-			t.AppendRow(table.Row{"Project URLs", "", urlString})
+			linkedURLs := make([]string, len(urls))
+			for i, u := range urls {
+				linkedURLs[i] = output.Hyperlink(u, u)
+			}
+			t.AppendRow(table.Row{"Project URLs", "", strings.Join(linkedURLs, "\n")})
 		}
 	}
 	bindInfo := []string{}
