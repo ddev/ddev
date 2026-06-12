@@ -97,8 +97,18 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 				WidthMax: 12,
 			},
 			{
-				Name: "URL/Port",
-				//WidthMax: int(urlPortWidth),
+				Name:     "URL/Port",
+				WidthMax: int(urlPortWidth),
+				// Wrap each embedded line individually to preserve intentional line breaks
+				WidthMaxEnforcer: func(col string, maxLen int) string {
+					lines := strings.Split(col, "\n")
+					for i, line := range lines {
+						if text.RuneWidthWithoutEscSequences(line) > maxLen {
+							lines[i] = text.WrapSoft(line, maxLen)
+						}
+					}
+					return strings.Join(lines, "\n")
+				},
 			},
 			{
 				Name:     "Info",
