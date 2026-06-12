@@ -422,7 +422,7 @@ github.com/inconshreveable/mousetrap
 # github.com/inhies/go-bytesize v0.0.0-20220417184213-4913239db9cf
 ## explicit; go 1.12
 github.com/inhies/go-bytesize
-# github.com/jedib0t/go-pretty/v6 v6.7.9
+# github.com/jedib0t/go-pretty/v6 v6.8.1
 ## explicit; go 1.18
 github.com/jedib0t/go-pretty/v6/table
 github.com/jedib0t/go-pretty/v6/text
