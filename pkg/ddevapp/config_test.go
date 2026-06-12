@@ -745,32 +745,43 @@ func TestConfigValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "not a valid project name")
-
 	app.Name = appName
+
 	app.Type = "potato"
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid app type")
-
 	app.Type = appType
+
 	app.PHPVersion = "1.1"
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported PHP")
-
 	app.PHPVersion = nodeps.PHPDefault
+
 	app.WebserverType = "server"
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unsupported webserver type")
-
 	app.WebserverType = nodeps.WebserverDefault
+
+	app.NodeJSVersion = "  "
+	err = app.ValidateConfig()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid nodejs_version")
+	app.NodeJSVersion = nodeps.NodeJSDefault
+
+	app.NodeJSVersion = ""
+	err = app.ValidateConfig()
+	require.NoError(t, err)
+	app.NodeJSVersion = nodeps.NodeJSDefault
+
 	app.AdditionalHostnames = []string{"good", "b@d"}
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid hostname")
-
 	app.AdditionalHostnames = []string{}
+
 	// web_extra_exposed_ports shouldn't allow duplicate names for different config items
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "foo", WebContainerPort: 3000, HTTPPort: 3000, HTTPSPort: 3001},
@@ -840,14 +851,14 @@ func TestConfigValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "duplicate 'https_port: 3000'")
-
 	app.WebExtraExposedPorts = nil
+
 	app.AdditionalFQDNs = []string{"good.com", "b@d.com"}
 	err = app.ValidateConfig()
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid hostname")
-
 	app.AdditionalFQDNs = []string{}
+
 	// Timezone validation isn't possible on Windows.
 	if !nodeps.IsWindows() {
 		app.Timezone = "xxx"
@@ -856,6 +867,7 @@ func TestConfigValidate(t *testing.T) {
 		app.Timezone = "America/Chicago"
 		err = app.ValidateConfig()
 		require.NoError(t, err)
+		app.Timezone = ""
 	}
 
 	// Make sure that wildcards work
@@ -890,6 +902,7 @@ func TestConfigValidate(t *testing.T) {
 	app.AdditionalHostnames = []string{"x", "*"}
 	err = app.ValidateConfig()
 	require.Error(t, err)
+	app.AdditionalHostnames = []string{}
 }
 
 // TestWriteConfig tests writing config values to file

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	"unicode"
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/docker"
@@ -255,10 +256,6 @@ func (app *DdevApp) WriteConfig() error {
 	}
 	if appcopy.DefaultContainerTimeout == nodeps.DefaultDefaultContainerTimeout {
 		appcopy.DefaultContainerTimeout = ""
-	}
-
-	if appcopy.NodeJSVersion == nodeps.NodeJSDefault {
-		appcopy.NodeJSVersion = ""
 	}
 
 	// Ensure valid type
@@ -547,6 +544,11 @@ func (app *DdevApp) ValidateConfig() error {
 	// Validate PHP version
 	if !nodeps.IsValidPHPVersion(app.PHPVersion) {
 		return fmt.Errorf("the %s project has an unsupported PHP version: %s, DDEV only supports the following versions: %v", app.Name, app.PHPVersion, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
+	}
+
+	// Validate Node.js version
+	if strings.ContainsFunc(app.NodeJSVersion, unicode.IsSpace) {
+		return fmt.Errorf("the %s project has an invalid nodejs_version: %q, Node.js versions cannot contain whitespace; leave it empty to use the DDEV default", app.Name, app.NodeJSVersion)
 	}
 
 	// Validate webserver type
@@ -996,7 +998,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
-	if app.NodeJSVersion != nodeps.NodeJSDefault {
+	if app.NodeJSVersion != nodeps.NodeJSDefault && app.NodeJSVersion != "" {
 		if app.NodeJSVersion == "auto" || app.NodeJSVersion == "engine" {
 			destDir := app.GetConfigPath(filepath.Join(".webimageBuild", "n-version-files"))
 			if err = os.MkdirAll(destDir, 0755); err != nil {
