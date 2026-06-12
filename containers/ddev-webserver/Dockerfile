@@ -328,7 +328,7 @@ ENV BASH_ENV=/etc/bash.nointeractive.bashrc
 ENV LANG=C.UTF-8
 ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
 ENV PLATFORMSH_CLI_UPDATES_CHECK=0
-ENV PATH=/usr/local/n/bin:$PATH
+ENV PATH=$PATH:/usr/local/n/bin
 
 COPY --from=ddev-webserver-dev-base / /
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
@@ -413,7 +413,7 @@ ENV LANG=C.UTF-8
 ENV TERM=xterm
 ENV BASH_ENV=/etc/bash.nointeractive.bashrc
 ENV PLATFORMSH_CLI_UPDATES_CHECK=0
-ENV PATH=/usr/local/n/bin:$PATH
+ENV PATH=$PATH:/usr/local/n/bin
 
 COPY --from=ddev-webserver-prod-base / /
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]

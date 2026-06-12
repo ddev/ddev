@@ -87,7 +87,7 @@ ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ARG DRUSH_VERSION=8.5.0
 # TODO: remove this Node.js pin once https://github.com/nodejs/node/issues/63487 is resolved
 ARG NODE_VERSION=24.15.0
-ENV PATH=/usr/local/n/bin:$PATH
+ENV PATH=$PATH:/usr/local/n/bin
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_PROCESS_TIMEOUT=2000
@@ -170,7 +170,7 @@ RUN chmod 777 /var/lib/php/sessions
 ### There aren't any differences
 FROM scratch AS ddev-php-prod
 ARG XDEBUG_MODE=off
-ENV PATH=/usr/local/n/bin:$PATH
+ENV PATH=$PATH:/usr/local/n/bin
 SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 COPY --from=ddev-php-base / /
 EXPOSE 8080 8585
