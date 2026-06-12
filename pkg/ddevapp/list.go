@@ -103,49 +103,46 @@ func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 	t := table.NewWriter()
 	t.AppendHeader(table.Row{"Name", "Status", "Location", "URL", "Type"})
 	termWidth, _ := nodeps.GetTerminalWidthHeight()
-	usableWidth := termWidth - 15
-	statusWidth := 7 // Maybe just "running"
-	nameWidth := 10
-	typeWidth := 9 // drupal7, magento2 or wordpress
-	locationWidth := 20
-	urlWidth := 20
-	if termWidth > 80 {
-		urlWidth = urlWidth + (termWidth-80)/2
-		locationWidth = locationWidth + (termWidth-80)/2
-		statusWidth = statusWidth + (termWidth-80)/3
-	}
-	totUsedWidth := nameWidth + statusWidth + locationWidth + urlWidth + typeWidth
-	if !wrapTableText {
-		t.SetAllowedRowLength(termWidth)
+	if termWidth == 0 {
+		termWidth = 80
 	}
 
-	util.Debug("Detected terminal width=%v usableWidth=%d statusWidth=%d nameWidth=%d locationWidth=%d urlWidth=%d typeWidth=%d totUsedWidth=%d", termWidth, usableWidth, statusWidth, nameWidth, locationWidth, urlWidth, typeWidth, totUsedWidth)
+	// Table border/padding overhead for 5 columns (borders + 1-space padding each side)
+	const tableOverhead = 17
+	usableWidth := termWidth - tableOverhead
+
+	// Fixed column widths: status wraps "running\n(ok)" naturally at 7
+	statusWidth := 7
+	typeWidth := 9 // "wordpress" is the longest common type
+	nameWidth := 10
+
+	// Distribute remaining width: location 40%, URL 60%
+	remaining := max(usableWidth-nameWidth-statusWidth-typeWidth, 25)
+	locationWidth := remaining * 2 / 5
+	urlWidth := remaining - locationWidth
+
+	util.Debug("termWidth=%v usableWidth=%d statusWidth=%d nameWidth=%d locationWidth=%d urlWidth=%d typeWidth=%d", termWidth, usableWidth, statusWidth, nameWidth, locationWidth, urlWidth, typeWidth)
 	t.SortBy([]table.SortBy{{Name: "Name"}})
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
+		snip := func(col string, maxLen int) string { return text.Snip(col, maxLen, "…") }
+		locationConfig := table.ColumnConfig{Name: "Location", WidthMax: locationWidth, WidthMaxEnforcer: snip}
+		urlConfig := table.ColumnConfig{Name: "URL", WidthMax: urlWidth, WidthMaxEnforcer: snip}
+		if wrapTableText {
+			// In wrap mode, show full paths and URLs on one unbroken line so they are selectable
+			locationConfig = table.ColumnConfig{Name: "Location"}
+			urlConfig = table.ColumnConfig{Name: "URL"}
+		}
 		t.SetColumnConfigs([]table.ColumnConfig{
-			{
-				Name: "Name",
-				//WidthMax: nameWidth,
-			},
-			{
-				Name:     "Status",
-				WidthMax: statusWidth,
-			},
-			{
-				Name: "Location",
-				//WidthMax: locationWidth,
-			},
-			{
-				Name: "URL",
-				//WidthMax: urlWidth,
-			},
-			{
-				Name:             "Type",
-				WidthMax:         int(typeWidth),
-				WidthMaxEnforcer: text.WrapText,
-			},
+			{Name: "Name", WidthMax: nameWidth},
+			{Name: "Status", WidthMax: statusWidth},
+			locationConfig,
+			urlConfig,
+			{Name: "Type", WidthMax: typeWidth, WidthMaxEnforcer: text.WrapText},
 		})
+	}
+	if !wrapTableText {
+		t.SetAllowedRowLength(termWidth)
 	}
 	styles.SetGlobalTableStyle(t, false)
 	t.SetOutputMirror(out)
