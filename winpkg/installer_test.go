@@ -106,32 +106,33 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 		name          string
 		distro        string
 		installerArgs []string
-		skipCondition func() bool
 	}
 	testCases := make([]testCase, 0, len(matrix))
 	for _, m := range matrix {
-		tc := testCase{
+		testCases = append(testCases, testCase{
 			name:          m.instance,
 			distro:        m.instance,
 			installerArgs: []string{providerArg[m.provider], "/distro=" + m.instance, "/S"},
-		}
-		if m.provider == "docker-desktop" {
-			// docker-desktop requires Docker Desktop WSL integration enabled for
-			// this instance; skip gracefully when it isn't.
-			tc.skipCondition = func() bool { return !isDockerProviderAvailable(m.instance) }
-		} else {
-			tc.skipCondition = func() bool { return false } // docker-ce always runs
-		}
-		testCases = append(testCases, tc)
+		})
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.skipCondition() {
-				t.Skipf("Skipping %s test - Desktop distro must have integration with Rancher/Docker Desktop", tc.name)
-			}
-
 			require := require.New(t)
+
+			// For docker-desktop cases verify integration is active before running
+			// the installer. Docker Desktop frequently loses WSL2 integration; this
+			// produces an actionable message instead of a cryptic installer error.
+			if strings.HasSuffix(tc.name, "-desktop") {
+				out, dockerErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "docker", "ps")
+				if dockerErr != nil {
+					t.Fatalf("Docker Desktop WSL2 integration is not active for %s (docker ps failed: %v, output: %s).\n"+
+						"Re-enable it: Docker Desktop → Settings → Resources → WSL Integration → enable %s → Apply & Restart.\n"+
+						"Then verify with: wsl -d %s docker ps",
+						tc.distro, dockerErr, out, tc.distro, tc.distro)
+				}
+				t.Logf("Docker Desktop WSL2 integration confirmed for %s", tc.distro)
+			}
 
 			// Dump installer debug logs on test failure (registered first, runs last)
 			t.Cleanup(func() {
