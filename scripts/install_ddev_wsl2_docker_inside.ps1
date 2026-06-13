@@ -53,10 +53,12 @@ wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io contai
 wsl -u root apt-get update
 wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release
 wsl -u root install -m 0755 -d /etc/apt/keyrings
-$dockerDistroFamily = (wsl -u root bash -c ". /etc/os-release; if echo `"${ID_LIKE:-$ID}`" | grep -qi ubuntu; then echo ubuntu; else echo debian; fi").Trim()
-if (-not $dockerDistroFamily) { $dockerDistroFamily = "debian" }
-wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list && curl -fsSL https://download.docker.com/linux/$dockerDistroFamily/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc"
-wsl -u root -e bash -c "printf 'Types: deb\nURIs: https://download.docker.com/linux/$dockerDistroFamily\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n' \"\$(. /etc/os-release && echo \${UBUNTU_CODENAME:-\$VERSION_CODENAME})\" | tee /etc/apt/sources.list.d/docker.sources > /dev/null"
+# Configure the Docker apt repo. Use a single-quoted PowerShell string so the
+# whole command is passed to bash verbatim; bash (not PowerShell) handles $, "",
+# && and $(), which avoids PowerShell-vs-bash escaping bugs. The Docker repo
+# family (ubuntu vs debian) and the suite (codename) are both detected inside
+# the distro.
+wsl -u root -e bash -c 'rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list; . /etc/os-release; if echo "$ID $ID_LIKE" | grep -qi ubuntu; then FAMILY=ubuntu; else FAMILY=debian; fi; curl -fsSL "https://download.docker.com/linux/$FAMILY/gpg" -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc && printf "Types: deb\nURIs: https://download.docker.com/linux/%s\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n" "$FAMILY" "${UBUNTU_CODENAME:-$VERSION_CODENAME}" | tee /etc/apt/sources.list.d/docker.sources > /dev/null'
 
 wsl -u root -e bash -c "rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list && curl -fsSL https://pkg.ddev.com/apt/gpg.key | tee /etc/apt/keyrings/ddev.asc > /dev/null && chmod a+r /etc/apt/keyrings/ddev.asc"
 wsl -u root -e bash -c "printf 'Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n' > /etc/apt/sources.list.d/ddev.sources"
