@@ -90,7 +90,12 @@ Write-Host "Terminating default WSL2 distro: $defaultDistro"
 wsl --terminate $defaultDistro
 
 wsl bash -c 'echo CAROOT=$CAROOT'
-wsl mkcert -install
+wsl -u root bash -c 'echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/temp-mkcert-install && chmod 440 /etc/sudoers.d/temp-mkcert-install'
+try {
+    wsl mkcert -install
+} finally {
+    wsl -u root rm -f /etc/sudoers.d/temp-mkcert-install
+}
 if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet. "
 }
