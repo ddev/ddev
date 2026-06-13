@@ -58,31 +58,24 @@ func TestWSL2InstallScripts(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name          string
-		script        string
-		distro        string
-		skipCondition func() bool
+		name   string
+		script string
+		distro string
 	}{
 		{
-			name:          "docker-inside",
-			script:        "../scripts/install_ddev_wsl2_docker_inside.ps1",
-			distro:        "ddev-test-ubuntu-ce",
-			skipCondition: func() bool { return false }, // always run
+			name:   "docker-inside",
+			script: "../scripts/install_ddev_wsl2_docker_inside.ps1",
+			distro: "ddev-test-ubuntu-ce",
 		},
 		{
-			name:          "docker-desktop",
-			script:        "../scripts/install_ddev_wsl2_docker_desktop.ps1",
-			distro:        "ddev-test-ubuntu-desktop",
-			skipCondition: func() bool { return !isDockerProviderAvailable("ddev-test-ubuntu-desktop") },
+			name:   "docker-desktop",
+			script: "../scripts/install_ddev_wsl2_docker_desktop.ps1",
+			distro: "ddev-test-ubuntu-desktop",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.skipCondition() {
-				t.Skipf("Skipping %s test - distro %s must have a working Docker provider", tc.name, tc.distro)
-			}
-
 			require := require.New(t)
 
 			// Verify the pre-provisioned distro exists (fails fast with guidance).

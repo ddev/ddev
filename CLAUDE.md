@@ -20,6 +20,7 @@ For developer documentation, see:
 ```bash
 make                    # Build for host OS/arch. Output: .gotmp/bin/<os>_<arch>/ddev
 make linux_amd64        # Cross-compile for specific platform
+make windows_amd64      # Cross-compile + build Windows installer .exe (use this to validate Windows changes)
 ```
 
 ### Testing
