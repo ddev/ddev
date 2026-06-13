@@ -90,8 +90,9 @@ Write-Host "Terminating default WSL2 distro: $defaultDistro"
 wsl --terminate $defaultDistro
 
 wsl bash -c 'echo CAROOT=$CAROOT'
-wsl -u root bash -c 'echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/temp-mkcert-install && chmod 440 /etc/sudoers.d/temp-mkcert-install'
 try {
+    wsl -u root -e bash -c "echo 'ALL ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/temp-mkcert-install && chmod 440 /etc/sudoers.d/temp-mkcert-install"
+    if ($LASTEXITCODE -ne 0) { throw "Failed to create temporary sudoers entry (exit $LASTEXITCODE)" }
     wsl mkcert -install
 } finally {
     wsl -u root rm -f /etc/sudoers.d/temp-mkcert-install
