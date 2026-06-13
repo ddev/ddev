@@ -2,7 +2,7 @@
 # Outputs the correct Docker APT suite (codename) for this distro.
 # For Ubuntu and Ubuntu-based distros, trusts UBUNTU_CODENAME/VERSION_CODENAME
 # directly — Docker maintains packages for all Ubuntu releases.
-# For Debian-based distros (Kali, Parrot, eLxr, etc.) whose VERSION_CODENAME
+# For Debian-based distros (Kali, eLxr, etc.) whose VERSION_CODENAME
 # is not a valid Docker suite, derives the suite from /etc/debian_version
 # (the Debian base release the distro tracks), then falls back to
 # /usr/share/distro-info/debian.csv, then to bookworm.
@@ -22,7 +22,7 @@ if echo "$ID $ID_LIKE" | grep -qi ubuntu; then
     exit 0
 fi
 
-# For pure Debian derivatives (Kali, Parrot, eLxr, etc.) check if the codename
+# For pure Debian derivatives (Kali, eLxr, etc.) check if the codename
 # is already a valid Docker Debian suite.
 case "$CODENAME" in
     bookworm|bullseye|buster|trixie|stretch|jessie)
@@ -31,7 +31,7 @@ case "$CODENAME" in
         ;;
 esac
 
-# Not a recognized Debian Docker suite (e.g. Parrot's "echo", eLxr's "aria",
+# Not a recognized Debian Docker suite (e.g. eLxr's "aria",
 # Kali's "kali-rolling"). Try /etc/debian_version, which on most Debian
 # derivatives contains the Debian base release the distro tracks.
 if [ -f /etc/debian_version ]; then

@@ -230,7 +230,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     !!!tip "\"DDEV\" is just a suggested name — use any name you like."
 
     !!!tip "Other Debian-based distros also work"
-        The DDEV installer supports Ubuntu and Debian and has been tested with Kali Linux, Parrot OS, and eLxr. If you prefer one of those, substitute its name, for example `wsl --install Debian --name DDEV`.
+        The DDEV installer supports Ubuntu and Debian and has been tested with Kali Linux and eLxr. If you prefer one of those, substitute its name, for example `wsl --install Debian --name DDEV`.
 
     Verify the "DDEV" distro is set as default:
 
@@ -255,7 +255,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     !!!tip "Check your system architecture"
         Not sure which architecture you have? Open PowerShell and run: `$env:PROCESSOR_ARCHITECTURE`. It will show `AMD64` or `ARM64`. Alternatively, in WSL2/Ubuntu run `uname -m` which shows `x86_64` for AMD64 or `aarch64` for ARM64.
 
-    Run the installer and select your mode. For WSL2 modes, the installer will display all detected Debian-based WSL2 distros (Ubuntu, Debian, Kali, Parrot, eLxr, etc.) and prompt you to select one. The installer will automatically configure DDEV for your chosen Docker provider. If you run the wrong installer for your architecture, it will detect the mismatch and direct you to download the correct one.
+    Run the installer and select your mode. For WSL2 modes, the installer will display all detected Debian-based WSL2 distros (Ubuntu, Debian, Kali, eLxr, etc.) and prompt you to select one. The installer will automatically configure DDEV for your chosen Docker provider. If you run the wrong installer for your architecture, it will detect the mismatch and direct you to download the correct one.
 
     ??? tip "Install using WinGet"
         [WinGet](https://learn.microsoft.com/en-us/windows/package-manager/winget/) can download and launch the installer interactively:

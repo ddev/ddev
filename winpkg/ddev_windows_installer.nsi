@@ -1056,7 +1056,7 @@ Function GetDebianBasedDistros
             Push "Found Flavor field for $R3: '$R4'"
             Call LogPrint
             ; Check if Flavor is a known Debian-based distro identifier
-            ; (ubuntu, debian, kali, parrot, elxr — case-insensitive substring match).
+            ; (ubuntu, debian, kali, elxr — case-insensitive substring match).
             ; Note: $R5 holds the total distro count (loop bound), do not clobber.
             ; Use $R6 as a "matched" flag and $R7 as the per-test StrStr result.
             StrCpy $R6 ""
@@ -1072,10 +1072,6 @@ Function GetDebianBasedDistros
             ${If} $R7 != ""
                 StrCpy $R6 "yes"
             ${EndIf}
-            ${StrStr} $R7 $R4 "parrot"
-            ${If} $R7 != ""
-                StrCpy $R6 "yes"
-            ${EndIf}
             ${StrStr} $R7 $R4 "elxr"
             ${If} $R7 != ""
                 StrCpy $R6 "yes"
@@ -1088,7 +1084,7 @@ Function GetDebianBasedDistros
                 ${EndIf}
                 StrCpy $R0 "$R0$R3"
             ${Else}
-                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu', 'debian', 'kali', 'parrot', or 'elxr'"
+                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu', 'debian', 'kali', or 'elxr'"
                 Call LogPrint
             ${EndIf}
         ${EndIf}
@@ -1181,7 +1177,7 @@ Function InstallWSL2CommonSetup
     ; Ensure systemd is enabled in this distro's /etc/wsl.conf so dockerd
     ; auto-starts and D-Bus is available (D-Bus is needed by
     ; docker-credential-secretservice and many other tools). Distros that
-    ; ship with [boot] systemd=false (e.g. Parrot) cause Docker to fail
+    ; ship with [boot] systemd=false cause Docker to fail
     ; silently and credential helpers to error with "Could not connect".
     Push "Ensuring systemd is enabled in $SELECTED_DISTRO's /etc/wsl.conf..."
     Call LogPrint
@@ -1212,7 +1208,7 @@ Function InstallWSL2CommonSetup
         Call LogPrint
         ; Bring it back up. systemd takes a few seconds to settle. Use a
         ; helper script so we don't fight NSIS's $(...) language-string
-        ; quoting rules. After --terminate, /tmp/* on parrot/eLxr is on
+        ; quoting rules. After --terminate, /tmp/* on Kali/eLxr is on
         ; the ext4 rootfs so previously-installed helpers persist, but
         ; reinstall to be safe.
         Push "Restarting $SELECTED_DISTRO with systemd..."

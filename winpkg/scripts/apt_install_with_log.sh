@@ -7,8 +7,8 @@
 #
 # Acquire::Retries=5 retries each fetch up to 5 times within a single
 # apt-get invocation. Empirically required for upstream mirrors that
-# intermittently return 502 (e.g. Parrot's deb.parrot.sh CDN) — without
-# it, a single transient HTTP failure aborts the whole install.
+# intermittently return 502 — without it, a single transient HTTP
+# failure aborts the whole install.
 #
 # Usage: apt_install_with_log.sh <stage_name> <package> [package ...]
 #   stage_name: short tag used in the log file path, e.g. "essential",
