@@ -37,6 +37,12 @@ if (wsl bash -c "test -d /mnt/wsl/docker-desktop >/dev/null 2>&1" ) {
     throw "Docker Desktop integration is enabled with the default distro and it must be turned off."
 }
 $ErrorActionPreference = "Stop"
+# On PowerShell 7.4+, $PSNativeCommandUseErrorActionPreference defaults to $true,
+# which would make a non-zero exit from a native command (wsl/curl/docker) a
+# terminating error and bypass the explicit "if (-not(...)) { throw ... }" guards
+# below. Set it to $false so behavior matches Windows PowerShell 5.1 (on 5.1 this
+# is just an unused variable). Native-command results are checked explicitly.
+$PSNativeCommandUseErrorActionPreference = $false
 
 # Remove old Windows ddev.exe if it exists using uninstaller
 # Check both old system-wide location and new per-user location
