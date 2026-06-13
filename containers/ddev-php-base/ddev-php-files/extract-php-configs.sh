@@ -78,7 +78,7 @@ extract_php_configs() {
 
         # Install prerequisites
         apt-get update -qq
-        apt-get install -y -qq lsb-release ca-certificates curl wget gnupg2
+        apt-get install -y -qq lsb-release ca-certificates curl wget gnupg
 
         # Add deb.sury.org repository
         curl -sSLo /tmp/debsuryorg-archive-keyring.deb https://packages.sury.org/debsuryorg-archive-keyring.deb
