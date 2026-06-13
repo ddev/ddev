@@ -3,11 +3,15 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"io"
 	"os"
 	osexec "os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -116,20 +120,50 @@ func TestWSL2InstallScripts(t *testing.T) {
 
 			// Run the PowerShell script with a 15-minute timeout. Docker CE
 			// installs + image pulls can legitimately take several minutes.
+			// Stream stdout/stderr line-by-line so progress is visible in the
+			// test log in real time (not only on failure after a silent hang).
 			t.Logf("Running install script: %s (default distro=%s)", scriptFullPath, tc.distro)
 			const scriptTimeout = 15 * time.Minute
 			ctx, cancel := context.WithTimeout(context.Background(), scriptTimeout)
 			defer cancel()
 
 			cmd := osexec.CommandContext(ctx, "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptFullPath)
-			scriptOutput, err := cmd.CombinedOutput()
-			out := string(scriptOutput)
+			stdoutPipe, pipeErr := cmd.StdoutPipe()
+			require.NoError(pipeErr)
+			stderrPipe, pipeErr := cmd.StderrPipe()
+			require.NoError(pipeErr)
+
+			require.NoError(cmd.Start(), "Failed to start install script %s", tc.script)
+
+			var (
+				outputBuf bytes.Buffer
+				mu        sync.Mutex
+				wg        sync.WaitGroup
+			)
+			for _, pipe := range []io.Reader{stdoutPipe, stderrPipe} {
+				wg.Add(1)
+				go func(r io.Reader) {
+					defer wg.Done()
+					sc := bufio.NewScanner(r)
+					for sc.Scan() {
+						line := sc.Text()
+						mu.Lock()
+						outputBuf.WriteString(line + "\n")
+						mu.Unlock()
+						t.Logf("[script] %s", line)
+					}
+				}(pipe)
+			}
+
+			runErr := cmd.Wait()
+			wg.Wait()
+			out := outputBuf.String()
 
 			if ctx.Err() == context.DeadlineExceeded {
 				require.Fail("Script timeout", "%s did not complete within %v, output: %s", tc.script, scriptTimeout, out)
 			}
-			require.NoError(err, "Install script %s failed: %v, output: %s", tc.script, err, out)
-			t.Logf("Install script completed, output: %s", out)
+			require.NoError(runErr, "Install script %s failed: %v, output: %s", tc.script, runErr, out)
+			t.Logf("Install script completed successfully")
 
 			// The scripts set CAROOT and WSLENV in the Windows user environment
 			// via setx; assert they landed in the registry.

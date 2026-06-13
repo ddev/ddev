@@ -48,11 +48,19 @@ $PSNativeCommandUseErrorActionPreference = $false
 # Check both old system-wide location and new per-user location
 if (Test-Path "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe") {
     Write-Host "Removing old Windows ddev.exe installation (system-wide)"
-    Start-Process "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe" -ArgumentList "/SILENT" -Wait
+    $proc = Start-Process "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe" -ArgumentList "/S" -PassThru
+    if (-not $proc.WaitForExit(120000)) {
+        Write-Warning "DDEV uninstaller did not complete within 2 minutes; killing it"
+        $proc.Kill()
+    }
 }
 if (Test-Path "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe") {
     Write-Host "Removing old Windows ddev.exe installation (per-user)"
-    Start-Process "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe" -ArgumentList "/SILENT" -Wait
+    $proc = Start-Process "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe" -ArgumentList "/S" -PassThru
+    if (-not $proc.WaitForExit(120000)) {
+        Write-Warning "DDEV uninstaller did not complete within 2 minutes; killing it"
+        $proc.Kill()
+    }
 }
 
 wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"
