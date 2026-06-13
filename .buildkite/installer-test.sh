@@ -13,14 +13,10 @@ set -eu -o pipefail
 # Disable git pager
 export GIT_PAGER=""
 
-# We can skip builds with commit message of [skip buildkite] or [skip ci]
-DDEV_COMMIT_MESSAGE=$(git log -1 --pretty=%s 2>/dev/null || echo "")
-if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAGE:-} == *"[skip ci]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip buildkite]"* ]] || [[ ${DDEV_COMMIT_MESSAGE} == *"[skip ci]"* ]]; then
-  echo "+++ SKIP: Build skipped due to commit message"
-  echo "BUILDKITE_MESSAGE=${BUILDKITE_MESSAGE:-}"
-  echo "DDEV_COMMIT_MESSAGE=${DDEV_COMMIT_MESSAGE}"
-  exit 0
-fi
+# Note: [skip ci]/[skip buildkite] gating is handled by the step `if` in
+# .buildkite/windows-installer.yml, which still lets manual (UI) builds run.
+# Don't re-check the commit message here, or manual triggers of a [skip ci]
+# commit would self-skip.
 
 # Load public variables (e.g. signing-related vars used by the installer build)
 git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp

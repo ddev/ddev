@@ -17,8 +17,12 @@
 
   - command: ".buildkite/installer-test.cmd"
     label: ":windows: installer {{matrix}}"
+    # Skip on [skip ci]/[skip buildkite] for webhook (push) builds, but always
+    # run when triggered manually from the Buildkite UI. This lets you push with
+    # [skip ci] to keep the other heavy pipelines quiet, then trigger just this
+    # pipeline by hand.
     if: |
-      build.message !~ /\[(skip ci|skip buildkite)\]/
+      build.message !~ /\[(skip ci|skip buildkite)\]/ || build.source == "ui"
     agents:
       - "os=windows"
       - "architecture=amd64"
