@@ -114,10 +114,10 @@ func TestWSL2InstallScripts(t *testing.T) {
 			scriptFullPath := filepath.Join(wd, tc.script)
 			require.True(fileutil.FileExists(scriptFullPath), "Install script not found at %s", scriptFullPath)
 
-			// Run the PowerShell script with a 10-minute timeout. Docker CE
+			// Run the PowerShell script with a 15-minute timeout. Docker CE
 			// installs + image pulls can legitimately take several minutes.
 			t.Logf("Running install script: %s (default distro=%s)", scriptFullPath, tc.distro)
-			const scriptTimeout = 10 * time.Minute
+			const scriptTimeout = 15 * time.Minute
 			ctx, cancel := context.WithTimeout(context.Background(), scriptTimeout)
 			defer cancel()
 
