@@ -18,6 +18,19 @@ export GIT_PAGER=""
 # Don't re-check the commit message here, or manual triggers of a [skip ci]
 # commit would self-skip.
 
+# Only run the installer matrix when installer-relevant files changed. Automatic
+# (webhook) builds on a non-main branch skip unless their diff touches winpkg/ or
+# the installer pipeline files. Pushes to main and manual (UI/API) builds always
+# run. Mirrors the diff-gating in test.sh, scoped to the installer sources.
+if [ "${BUILDKITE_SOURCE:-}" = "webhook" ] && [ "${BUILDKITE_BRANCH:-}" != "main" ]; then
+  BASE_BRANCH="${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-main}"
+  MERGE_BASE=$(git merge-base HEAD "refs/remotes/origin/${BASE_BRANCH}" 2>/dev/null || true)
+  if [ -n "${MERGE_BASE}" ] && ! git diff --name-only "${MERGE_BASE}" | grep -E '^(winpkg/|\.buildkite/installer-test\.(sh|cmd)$|\.buildkite/windows-installer\.yml$)' >/dev/null; then
+    echo "+++ SKIP: No installer-relevant changes (winpkg/ or installer pipeline files)"
+    exit 0
+  fi
+fi
+
 # Load public variables (e.g. signing-related vars used by the installer build)
 git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
 while IFS= read -r varname; do
