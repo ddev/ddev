@@ -18,15 +18,24 @@ export GIT_PAGER=""
 # Don't re-check the commit message here, or manual triggers of a [skip ci]
 # commit would self-skip.
 
-# Only run the installer matrix when installer-relevant files changed. Automatic
-# (webhook) builds on a non-main branch skip unless their diff touches winpkg/ or
-# the installer pipeline files. Pushes to main and manual (UI/API) builds always
-# run. Mirrors the diff-gating in test.sh, scoped to the installer sources.
+# Only run when relevant files changed. The relevant-paths set is per-case: the
+# ps1 script cases run only when a ps1 script (or its test/plumbing) changes; the
+# installer cases run on winpkg/ changes. Automatic (webhook) builds on a non-main
+# branch skip unless their diff matches; pushes to main and manual (UI/API) builds
+# always run. Mirrors the diff-gating in test.sh.
+case "${INSTALLER_CASE:-}" in
+  ps1-*)
+    RELEVANT='^(scripts/install_ddev_wsl2_.*\.ps1$|winpkg/wsl2_install_scripts_test\.go$|\.buildkite/installer-test\.(sh|cmd)$|\.buildkite/windows-installer\.yml$)'
+    ;;
+  *)
+    RELEVANT='^(winpkg/|\.buildkite/installer-test\.(sh|cmd)$|\.buildkite/windows-installer\.yml$)'
+    ;;
+esac
 if [ "${BUILDKITE_SOURCE:-}" = "webhook" ] && [ "${BUILDKITE_BRANCH:-}" != "main" ]; then
   BASE_BRANCH="${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-main}"
   MERGE_BASE=$(git merge-base HEAD "refs/remotes/origin/${BASE_BRANCH}" 2>/dev/null || true)
-  if [ -n "${MERGE_BASE}" ] && ! git diff --name-only "${MERGE_BASE}" | grep -E '^(winpkg/|\.buildkite/installer-test\.(sh|cmd)$|\.buildkite/windows-installer\.yml$)' >/dev/null; then
-    echo "+++ SKIP: No installer-relevant changes (winpkg/ or installer pipeline files)"
+  if [ -n "${MERGE_BASE}" ] && ! git diff --name-only "${MERGE_BASE}" | grep -E "${RELEVANT}" >/dev/null; then
+    echo "+++ SKIP: No relevant changes for INSTALLER_CASE=${INSTALLER_CASE:-<all>}"
     exit 0
   fi
 fi
@@ -68,18 +77,31 @@ ${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh"
 echo "--- running sanetestbot.sh"
 ${TIMEOUT} 60s bash "$(dirname "$0")/sanetestbot.sh"
 
-echo "~~~ Setup complete, starting installer test"
+echo "~~~ Setup complete, starting test"
 
-# Select a single matrix case when INSTALLER_CASE is set (one Buildkite job per
-# case). When unset, all cases run (useful for local/manual invocation).
+# Dispatch on INSTALLER_CASE (one Buildkite job per matrix case):
+#   ps1-<subtest>   -> the WSL2 install-script test (no installer .exe build)
+#   ddev-test-<...> -> the GUI installer test for that instance
+#   <empty>         -> all installer cases (local/manual invocation)
 export DDEV_TEST_USE_REAL_INSTALLER=true
-RUN_FILTER="TestWindowsInstaller"
-if [ -n "${INSTALLER_CASE:-}" ]; then
-  RUN_FILTER="TestWindowsInstallerWSL2/${INSTALLER_CASE}"
-fi
-
-echo "--- Running Windows installer test: ${RUN_FILTER}"
-make testwininstaller TESTARGS="-run ${RUN_FILTER} ${TESTARGS:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
+case "${INSTALLER_CASE:-}" in
+  ps1-*)
+    echo "--- Running WSL2 install-script test: ${INSTALLER_CASE#ps1-}"
+    make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/${INSTALLER_CASE#ps1-} ${TESTARGS:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
+    ;;
+  ddev-test-*)
+    echo "--- Running Windows installer test: ${INSTALLER_CASE}"
+    make testwininstaller TESTARGS="-run TestWindowsInstallerWSL2/${INSTALLER_CASE} ${TESTARGS:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
+    ;;
+  "")
+    echo "--- Running all Windows installer tests"
+    make testwininstaller TESTARGS="-run TestWindowsInstaller ${TESTARGS:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
+    ;;
+  *)
+    echo "Unknown INSTALLER_CASE=${INSTALLER_CASE}" >&2
+    exit 1
+    ;;
+esac
 RV=$?
 echo "installer-test.sh completed with status=$RV"
 exit $RV

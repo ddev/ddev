@@ -185,6 +185,13 @@ testwininstaller: windows_amd64_install
 	@echo "Running Windows installer tests..."
 	export DDEV_TEST_USE_REAL_INSTALLER=true; go test -p 1 -timeout 15m -v ./winpkg -run TestWindowsInstaller $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
+# testwsl2scripts tests the manual WSL2 install PowerShell scripts. Unlike
+# testwininstaller it does not build the installer .exe (the scripts install
+# ddev from the apt repo and use mkcert.exe from PATH).
+testwsl2scripts:
+	@echo "Running WSL2 install-script tests..."
+	export DDEV_TEST_USE_REAL_INSTALLER=true; go test -p 1 -timeout 15m -v ./winpkg -run TestWSL2InstallScripts $(EMBARGO_SKIP_FLAG) $(TESTARGS)
+
 setup:
 	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,bin/windows_arm64,src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)

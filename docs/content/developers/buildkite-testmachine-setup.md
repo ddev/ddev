@@ -122,6 +122,31 @@ which is also the Go subtest name:
 make testwininstaller TESTARGS="-run TestWindowsInstallerWSL2/ddev-test-debian-ce"
 ```
 
+### WSL2 install-script tests
+
+The `ddev-windows-installer` pipeline also tests the manual WSL2 install
+PowerShell scripts (`scripts/install_ddev_wsl2_docker_inside.ps1` and
+`scripts/install_ddev_wsl2_docker_desktop.ps1`) against current Ubuntu, as the
+`ps1-docker-inside` and `ps1-docker-desktop` matrix cases. These run only when a
+ps1 script (or its test/plumbing) changes, plus on `main` and manual builds.
+
+They **reuse the two Ubuntu instances** above — no extra provisioning — but the
+scripts operate on the *default* WSL2 distro, so each test temporarily
+`wsl --set-default`s its instance and restores the prior default afterward:
+
+* `ps1-docker-inside` → `ddev-test-ubuntu-ce`, which must have Docker Desktop WSL
+  integration **disabled** (the script aborts if `/mnt/wsl/docker-desktop`
+  exists). This is the same state the docker-ce installer case wants.
+* `ps1-docker-desktop` → `ddev-test-ubuntu-desktop`, which must have Docker
+  Desktop running with WSL integration **enabled**.
+* `mkcert.exe` must be on the Windows PATH (already installed via choco above).
+
+Run one manually with:
+
+```bash
+make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
+```
+
 ## Icinga2 monitoring setup for WSL2 instances
 
 1. Icinga Director web UI, configure the host on `monitor.ddev.com`, normally making a copy of an existing identical item.

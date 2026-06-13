@@ -3,20 +3,21 @@
 # See https://buildkite.com/ddev/ddev-windows-installer/settings/repository
 # Runs on main and PRs, not including forked PRs.
 #
-# Each matrix entry is one (distro × Docker provider) case and runs as its own
-# parallel job. The matrix value is INSTALLER_CASE, which is also the WSL
-# instance name and the Go subtest name (-run TestWindowsInstallerWSL2/<case>).
+# Each matrix entry runs as its own parallel job. The matrix value is
+# INSTALLER_CASE; installer-test.sh dispatches on it:
+#   ddev-test-<distro>-<provider> -> GUI installer test (one WSL instance/case)
+#   ps1-<subtest>                 -> manual WSL2 install-script test (Ubuntu only)
 #
 # Requires Windows-native (os=windows) agents that already have the named test
 # distros provisioned (docs/content/developers/buildkite-testmachine-setup.md).
-# Run only ONE os=windows agent per physical machine: installer runs mutate
-# global Windows state (registry CAROOT/WSLENV, machine-wide mkcert CA), so two
-# installer jobs must never run on the same machine at the same time. A single
-# agent per machine guarantees that (an agent runs one job at a time), so the
-# jobs only ever overlap across separate machines.
+# Run only ONE os=windows agent per physical machine: these runs mutate global
+# Windows state (registry CAROOT/WSLENV, machine-wide mkcert CA), so two must
+# never run on the same machine at the same time. A single agent per machine
+# guarantees that (an agent runs one job at a time), so the jobs only ever
+# overlap across separate machines.
 
   - command: ".buildkite/installer-test.cmd"
-    label: ":windows: installer {{matrix}}"
+    label: ":windows: {{matrix}}"
     # Skip on [skip ci]/[skip buildkite] for webhook (push) builds, but always
     # run when triggered manually from the Buildkite UI. This lets you push with
     # [skip ci] to keep the other heavy pipelines quiet, then trigger just this
@@ -40,3 +41,6 @@
       - "ddev-test-ubuntu2404-desktop"
       - "ddev-test-debian-ce"
       - "ddev-test-debian-desktop"
+      # Manual WSL2 install-script tests (Ubuntu only), gated to ps1 changes:
+      - "ps1-docker-inside"
+      - "ps1-docker-desktop"
