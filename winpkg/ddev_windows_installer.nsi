@@ -1278,7 +1278,7 @@ Function InstallWSL2CommonSetup
     Call LogPrint
     Push "Please be patient - installing required linux packages..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh prereq ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh prereq ca-certificates curl gnupg libsecret-1-0 lsb-release'
     Pop $1
     Pop $0
     ; Optionally try to install 'pass' (used by docker-credential-pass);
@@ -1457,7 +1457,7 @@ Function InstallWSL2Common
     Call LogPrint
     Push "Please be patient - installing essential packages..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh essential ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh essential ca-certificates curl gnupg libsecret-1-0 lsb-release'
     Pop $1
     Pop $2
     ${If} $1 != 0
