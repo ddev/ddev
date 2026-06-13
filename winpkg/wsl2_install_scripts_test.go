@@ -58,9 +58,10 @@ func TestWSL2InstallScripts(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name   string
-		script string
-		distro string
+		name                 string
+		script               string
+		distro               string
+		requireDockerDesktop bool
 	}{
 		{
 			name:   "docker-inside",
@@ -68,9 +69,10 @@ func TestWSL2InstallScripts(t *testing.T) {
 			distro: "ddev-test-ubuntu-ce",
 		},
 		{
-			name:   "docker-desktop",
-			script: "../scripts/install_ddev_wsl2_docker_desktop.ps1",
-			distro: "ddev-test-ubuntu-desktop",
+			name:                 "docker-desktop",
+			script:               "../scripts/install_ddev_wsl2_docker_desktop.ps1",
+			distro:               "ddev-test-ubuntu-desktop",
+			requireDockerDesktop: true,
 		},
 	}
 
@@ -80,6 +82,21 @@ func TestWSL2InstallScripts(t *testing.T) {
 
 			// Verify the pre-provisioned distro exists (fails fast with guidance).
 			configureTestWSL2Distro(t, tc.distro)
+
+			// For Docker Desktop cases verify integration is active before
+			// doing anything else. Docker Desktop frequently loses WSL2
+			// integration silently; catching it here produces an actionable
+			// message rather than a cryptic script error later.
+			if tc.requireDockerDesktop {
+				out, dockerErr := exec.RunHostCommand("wsl.exe", "-d", tc.distro, "docker", "ps")
+				if dockerErr != nil {
+					t.Fatalf("Docker Desktop WSL2 integration is not active for %s (docker ps failed: %v, output: %s).\n"+
+						"Re-enable it: Docker Desktop → Settings → Resources → WSL Integration → enable %s → Apply & Restart.\n"+
+						"Then verify with: wsl -d %s docker ps",
+						tc.distro, dockerErr, out, tc.distro, tc.distro)
+				}
+				t.Logf("Docker Desktop WSL2 integration confirmed for %s", tc.distro)
+			}
 
 			// The scripts act on the default distro; set ours as default and
 			// restore the prior default afterward.
