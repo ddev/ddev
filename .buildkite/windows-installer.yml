@@ -15,7 +15,7 @@
 # agent per machine guarantees that (an agent runs one job at a time), so the
 # jobs only ever overlap across separate machines.
 
-  - command: ".buildkite/installer-test.sh"
+  - command: ".buildkite/installer-test.cmd"
     label: ":windows: installer {{matrix}}"
     if: |
       build.message !~ /\[(skip ci|skip buildkite)\]/
