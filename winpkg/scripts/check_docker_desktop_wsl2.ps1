@@ -15,7 +15,7 @@ $failed = @()
 $ok = @()
 
 foreach ($distro in $distros) {
-    $out = wsl.exe -d $distro -- docker ps 2>&1
+    $out = & "$env:SystemRoot\System32\wsl.exe" -d $distro -- docker ps 2>&1
     if ($LASTEXITCODE -ne 0) {
         $failed += $distro
     } else {
