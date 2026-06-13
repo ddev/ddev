@@ -77,24 +77,52 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 		t.Skip("Skipping installer test, set DDEV_TEST_USE_REAL_INSTALLER=true to run")
 	}
 
-	testCases := []struct {
+	// The test matrix is one entry per (base distro × Docker provider). The
+	// instance name is also the subtest name, so `-run` filters read identically
+	// to the WSL distro name, e.g. `-run TestWindowsInstallerWSL2/ddev-test-debian-ce`.
+	// The named instances are provisioned out-of-band on each runner (see
+	// docs/content/developers/buildkite-testmachine-setup.md); the test only
+	// resets and reuses them. baseDistro is documentation of the provisioning
+	// source and is not used at test runtime.
+	matrix := []struct {
+		instance   string // WSL instance name == subtest name
+		baseDistro string // WSL catalog distro the instance is provisioned from
+		provider   string // "docker-ce" or "docker-desktop"
+	}{
+		{instance: "ddev-test-ubuntu-ce", baseDistro: "Ubuntu", provider: "docker-ce"},
+		{instance: "ddev-test-ubuntu-desktop", baseDistro: "Ubuntu", provider: "docker-desktop"},
+		{instance: "ddev-test-ubuntu2404-ce", baseDistro: "Ubuntu-24.04", provider: "docker-ce"},
+		{instance: "ddev-test-ubuntu2404-desktop", baseDistro: "Ubuntu-24.04", provider: "docker-desktop"},
+		{instance: "ddev-test-debian-ce", baseDistro: "Debian", provider: "docker-ce"},
+		{instance: "ddev-test-debian-desktop", baseDistro: "Debian", provider: "docker-desktop"},
+	}
+
+	providerArg := map[string]string{
+		"docker-ce":      "/docker-ce",
+		"docker-desktop": "/docker-desktop",
+	}
+
+	type testCase struct {
 		name          string
 		distro        string
 		installerArgs []string
 		skipCondition func() bool
-	}{
-		{
-			name:          "DockerCE",
-			distro:        "TestDockerCE",
-			installerArgs: []string{"/docker-ce", "/distro=TestDockerCE", "/S"},
-			skipCondition: func() bool { return false }, // always run
-		},
-		{
-			name:          "DockerDesktop",
-			distro:        "TestDesktop",
-			installerArgs: []string{"/docker-desktop", "/distro=TestDesktop", "/S"},
-			skipCondition: func() bool { return !isDockerProviderAvailable("TestDesktop") },
-		},
+	}
+	testCases := make([]testCase, 0, len(matrix))
+	for _, m := range matrix {
+		tc := testCase{
+			name:          m.instance,
+			distro:        m.instance,
+			installerArgs: []string{providerArg[m.provider], "/distro=" + m.instance, "/S"},
+		}
+		if m.provider == "docker-desktop" {
+			// docker-desktop requires Docker Desktop WSL integration enabled for
+			// this instance; skip gracefully when it isn't.
+			tc.skipCondition = func() bool { return !isDockerProviderAvailable(m.instance) }
+		} else {
+			tc.skipCondition = func() bool { return false } // docker-ce always runs
+		}
+		testCases = append(testCases, tc)
 	}
 
 	for _, tc := range testCases {
@@ -141,10 +169,11 @@ func TestWindowsInstallerWSL2(t *testing.T) {
 			out, _ := exec.RunHostCommand("tasklist.exe", "/FI", "IMAGENAME eq msiexec.exe")
 			t.Logf("MSI processes running: %s", out)
 
-			// Run installer with a 20-minute timeout to prevent infinite hangs.
-			// Fresh Docker CE apt-get installs + docker-compose download can
-			// legitimately take 10+ minutes on a loaded CI machine.
-			const installerTimeout = 20 * time.Minute
+			// Run installer with a 10-minute timeout to prevent infinite hangs.
+			// Each case runs as its own decoupled Buildkite job, so an install
+			// that exceeds 10 minutes is treated as a real failure (the test then
+			// dumps the installer debug log rather than letting the job hang).
+			const installerTimeout = 10 * time.Minute
 			ctx, cancel := context.WithTimeout(context.Background(), installerTimeout)
 			defer cancel()
 
@@ -402,51 +431,28 @@ func cleanupTestEnv(t *testing.T, distroName string) {
 	}
 }
 
-// configureTestWSL2Distro configures an existing Ubuntu WSL2 distro for testing
+// configureTestWSL2Distro verifies that the pre-provisioned test WSL2 distro
+// exists. Test distros are provisioned out-of-band, once per runner (see
+// docs/content/developers/buildkite-testmachine-setup.md). The test does not
+// create them — it only resets and reuses them (see cleanupTestEnv). This
+// function fails fast with a clear message if the instance is missing.
 func configureTestWSL2Distro(t *testing.T, distroName string) {
 	require := require.New(t)
-	t.Logf("Configuring test distro: %s", distroName)
+	t.Logf("Verifying pre-provisioned test distro: %s", distroName)
 
-	// Check if distro exists, if not install it
 	out, err := exec.RunHostCommand("wsl.exe", "-l", "-q")
-	if err != nil {
-		t.Logf("Failed to list WSL distros: %v", err)
-		require.NoError(err, "Failed to list WSL distros")
-	}
+	require.NoError(err, "Failed to list WSL distros")
 
 	// Convert UTF-16 output to UTF-8 by removing null bytes
 	cleanOut := strings.ReplaceAll(out, "\x00", "")
 	if !strings.Contains(cleanOut, distroName) {
-		// Install the WSL distro without launching
-		t.Logf("Installing WSL distro %s", distroName)
-		out, err := exec.RunHostCommand("wsl.exe", "--install", distroName, "--no-launch")
-		require.NoError(err, "Failed to install WSL distro: %v, output: %s", err, out)
-
-		// Complete distro setup with root user (avoids interactive user setup)
-		t.Logf("Completing distro setup with root user only")
-		userProfile := os.Getenv("USERPROFILE")
-		// Convert Ubuntu-22.04 to ubuntu2204.exe
-		exeName := strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(distroName, "-", ""), ".", "")) + ".exe"
-		ubuntuExePath := filepath.Join(userProfile, "AppData", "Local", "Microsoft", "WindowsApps", exeName)
-		out, err = exec.RunHostCommand(ubuntuExePath, "install", "--root")
-		// Note: distro.exe install --root is undocumented but works, though it returns non-zero exit code
-		t.Logf("Distro setup output: %s, error: %v", out, err)
-
-		// Wait a moment for the distro to be fully registered
-		time.Sleep(1 * time.Second)
+		t.Fatalf("Test distro %q is not registered on this runner. Provision it once "+
+			"(wsl --install <base> --name %s) per "+
+			"docs/content/developers/buildkite-testmachine-setup.md before running installer tests.",
+			distroName, distroName)
 	}
 
-	// Create an unprivileged default user if it doesn't exist
-	t.Logf("Ensuring unprivileged default user exists")
-	out, err = exec.RunHostCommand("wsl.exe", "-d", distroName, "-u", "root", "bash", "-c", "if ! id -u testuser; then useradd -m -s /bin/bash testuser && echo 'testuser:testpass' | chpasswd && usermod -aG sudo testuser; fi")
-	require.NoError(err, "Failed to create test user: %v, output=%v", err, out)
-
-	// Set testuser as the default user using wsl --manage
-	t.Logf("Setting testuser as default user")
-	_, err = exec.RunHostCommand("wsl.exe", "--manage", distroName, "--set-default-user", "testuser")
-	require.NoError(err, "Failed to set default user: %v", err)
-
-	t.Logf("Test WSL2 distro %s configured successfully", distroName)
+	t.Logf("Test WSL2 distro %s present", distroName)
 }
 
 // testDdevInstallation verifies that ddev is properly installed in WSL2

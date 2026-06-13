@@ -1,0 +1,38 @@
+# Windows GUI installer tests, decoupled from the traditional Windows suite.
+# Used by the ddev-windows-installer pipeline.
+# See https://buildkite.com/ddev/ddev-windows-installer/settings/repository
+# Runs on main and PRs, not including forked PRs.
+#
+# Each matrix entry is one (distro × Docker provider) case and runs as its own
+# parallel job. The matrix value is INSTALLER_CASE, which is also the WSL
+# instance name and the Go subtest name (-run TestWindowsInstallerWSL2/<case>).
+#
+# Requires Windows-native (os=windows) agents that already have the named test
+# distros provisioned (docs/content/developers/buildkite-testmachine-setup.md).
+# Run only ONE os=windows agent per physical machine: installer runs mutate
+# global Windows state (registry CAROOT/WSLENV, machine-wide mkcert CA), so two
+# installer jobs must never run on the same machine at the same time. A single
+# agent per machine guarantees that (an agent runs one job at a time), so the
+# jobs only ever overlap across separate machines.
+
+  - command: ".buildkite/installer-test.sh"
+    label: ":windows: installer {{matrix}}"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+    agents:
+      - "os=windows"
+      - "architecture=amd64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      DDEV_TEST_USE_REAL_INSTALLER: "true"
+      INSTALLER_CASE: "{{matrix}}"
+      # C:\buildkite-agent\hooks\environment
+      # DOCKERHUB_PULL_USERNAME
+      # DOCKERHUB_PULL_PASSWORD
+    matrix:
+      - "ddev-test-ubuntu-ce"
+      - "ddev-test-ubuntu-desktop"
+      - "ddev-test-ubuntu2404-ce"
+      - "ddev-test-ubuntu2404-desktop"
+      - "ddev-test-debian-ce"
+      - "ddev-test-debian-desktop"

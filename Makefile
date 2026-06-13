@@ -183,7 +183,7 @@ testonefile: $(DEFAULT_BUILD) setup
 
 testwininstaller: windows_amd64_install
 	@echo "Running Windows installer tests..."
-	export DDEV_TEST_USE_REAL_INSTALLER=true; go test -p 1 -timeout 30m -v ./winpkg -run TestWindowsInstaller $(EMBARGO_SKIP_FLAG) $(TESTARGS)
+	export DDEV_TEST_USE_REAL_INSTALLER=true; go test -p 1 -timeout 15m -v ./winpkg -run TestWindowsInstaller $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 setup:
 	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,bin/windows_arm64,src,pkg/mod/cache,.cache}
