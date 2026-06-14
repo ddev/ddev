@@ -360,18 +360,10 @@ fi
 
 echo "--- Running tests..."
 
-# Run installer tests first on Windows
-if [ "${os:-}" = "windows" ]; then
-  echo "--- Running Windows installer tests first..."
-  export DDEV_TEST_USE_REAL_INSTALLER=true
-  make testwininstaller TESTARGS="${TESTARGS:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
-  INSTALLER_RV=$?
-  if [ $INSTALLER_RV -ne 0 ]; then
-    echo "Windows installer tests failed with status=$INSTALLER_RV"
-    exit $INSTALLER_RV
-  fi
-  echo "Windows installer tests completed successfully"
-fi
+# Note: Windows installer tests are no longer run here. They run in their own
+# dedicated Buildkite pipeline (.buildkite/installer-test.sh +
+# .buildkite/windows-installer.yml), decoupled from this suite so they can fan
+# out across runners.
 
 make ${MAKE_TARGET:-test} TESTARGS="${TESTARGS:-}" TESTPKG="${TESTPKG:-}" TESTFILE="${TESTFILE:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
 RV=$?

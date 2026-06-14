@@ -1,13 +1,13 @@
 # This PowerShell script tries to do almost all the things required to set up
-# an Ubuntu WSL2 instance for use with DDEV and Docker Desktop.
+# a Debian-based WSL2 instance for use with DDEV and Docker Desktop.
 #
 # **DDEV now ships with a GUI installer for Windows/WSL2 which is usually easier.**
 # See https://ddev.com/download
 #
 # Prerequisites:
-# - An Ubuntu-based WSL2 distro installed (preferably with `wsl --install`)
+# - A Debian-based WSL2 distro installed, e.g. Ubuntu or Debian (preferably with `wsl --install`)
 # - The distro you want must be set as the default WSL2 distro
-# - Docker Desktop installed, running, and with WSL2 integration enabled for Ubuntu
+# - Docker Desktop installed, running, and with WSL2 integration enabled for your distro
 #
 # Quick install - run this one-liner in PowerShell:
 #   iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_wsl2_docker_desktop.ps1'))
@@ -20,9 +20,10 @@
 if (-not(wsl -l -v)) {
     throw "WSL2 does not seem to be installed yet; please install it with 'wsl --install'"
 }
-# Make sure default distro an ubuntu release
-if (-not( wsl -e grep ^NAME=.Ubuntu //etc/os-release)) {
-    throw "Your installed WSL2 distro does not seem to be Ubuntu. You can certainly use DDEV with WSL2 in another distro, but this script is oriented to Ubuntu."
+# Make sure default distro is a Debian-based release
+$osRelease = wsl -e cat //etc/os-release
+if (-not ($osRelease -match 'ID(_LIKE)?=.*ubuntu' -or $osRelease -match 'ID(_LIKE)?=.*debian')) {
+    throw "Your installed WSL2 distro does not appear to be Debian-based (Ubuntu, Debian, etc.). You can certainly use DDEV with WSL2 in another distro, but this script is oriented to Debian-based distros."
 }
 # Make sure using WSL2
 if (-not (wsl -e bash -c "env | grep WSL_INTEROP=")) {
@@ -39,16 +40,30 @@ if (-not(wsl -e docker ps) ) {
     throw "Docker Desktop integration with the default distro does not seem to be enabled yet."
 }
 $ErrorActionPreference = "Stop"
+# On PowerShell 7.4+, $PSNativeCommandUseErrorActionPreference defaults to $true,
+# which would make a non-zero exit from a native command (wsl/curl/docker) a
+# terminating error and bypass the explicit "if (-not(...)) { throw ... }" guards
+# below. Set it to $false so behavior matches Windows PowerShell 5.1 (on 5.1 this
+# is just an unused variable). Native-command results are checked explicitly.
+$PSNativeCommandUseErrorActionPreference = $false
 
 # Remove old Windows ddev.exe if it exists using uninstaller
 # Check both old system-wide location and new per-user location
 if (Test-Path "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe") {
     Write-Host "Removing old Windows ddev.exe installation (system-wide)"
-    Start-Process "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe" -ArgumentList "/SILENT" -Wait
+    $proc = Start-Process "$env:PROGRAMFILES\DDEV\ddev_uninstall.exe" -ArgumentList "/S" -PassThru
+    if (-not $proc.WaitForExit(120000)) {
+        Write-Warning "DDEV uninstaller did not complete within 2 minutes; killing it"
+        $proc.Kill()
+    }
 }
 if (Test-Path "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe") {
     Write-Host "Removing old Windows ddev.exe installation (per-user)"
-    Start-Process "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe" -ArgumentList "/SILENT" -Wait
+    $proc = Start-Process "$env:LOCALAPPDATA\Programs\DDEV\ddev_uninstall.exe" -ArgumentList "/S" -PassThru
+    if (-not $proc.WaitForExit(120000)) {
+        Write-Warning "DDEV uninstaller did not complete within 2 minutes; killing it"
+        $proc.Kill()
+    }
 }
 
 wsl -u root -e bash -c "apt-get update && apt-get install -y curl"
@@ -61,12 +76,17 @@ wsl mkcert.exe -install
 $env:CAROOT = & wsl mkcert.exe -CAROOT
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
-$defaultDistro = (wsl --list --quiet | Select-Object -First 1) -replace '[\r\n\x00-\x1F\x7F-\x9F]', '' -replace '^\s+|\s+$', ''
-Write-Host "Terminating default WSL2 distro: $defaultDistro"
-wsl --terminate $defaultDistro
-
-wsl bash -c 'echo CAROOT=$CAROOT'
-wsl mkcert -install
+# Convert the Windows CAROOT path to a Linux path and pass it directly to mkcert,
+# avoiding a wsl --terminate which breaks Docker Desktop integration.
+$linuxCaRoot = (& wsl wslpath -u ($env:CAROOT -replace '\\', '/')).Trim()
+Write-Host "Linux CAROOT: $linuxCaRoot"
+try {
+    wsl -u root -e bash -c "echo 'ALL ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/temp-mkcert-install && chmod 440 /etc/sudoers.d/temp-mkcert-install"
+    if ($LASTEXITCODE -ne 0) { throw "Failed to create temporary sudoers entry (exit $LASTEXITCODE)" }
+    wsl bash -c "CAROOT='$linuxCaRoot' mkcert -install"
+} finally {
+    wsl -u root rm -f /etc/sudoers.d/temp-mkcert-install
+}
 if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet. Check Resources->WSL Integration in Docker Desktop"
 }

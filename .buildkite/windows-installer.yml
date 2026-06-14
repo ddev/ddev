@@ -1,0 +1,48 @@
+# Windows GUI installer tests, decoupled from the traditional Windows suite.
+# Used by the ddev-windows-installer pipeline.
+# See https://buildkite.com/ddev/ddev-windows-installer/settings/repository
+# Runs on main and PRs, not including forked PRs.
+#
+# Each matrix entry runs as its own parallel job. The matrix value is
+# INSTALLER_CASE; installer-test.sh dispatches on it:
+#   ddev-test-<distro>-<provider> -> GUI installer test (one WSL instance/case)
+#   ps1-<subtest>                 -> manual WSL2 install-script test (Ubuntu only)
+#
+# Requires Windows-native (os=windows) agents that already have the named test
+# distros provisioned (docs/content/developers/buildkite-testmachine-setup.md).
+# Run only ONE os=windows agent per physical machine: these runs mutate global
+# Windows state (registry CAROOT/WSLENV, machine-wide mkcert CA), so two must
+# never run on the same machine at the same time. A single agent per machine
+# guarantees that (an agent runs one job at a time), so the jobs only ever
+# overlap across separate machines.
+
+  - command: ".buildkite/installer-test.cmd"
+    label: ":windows: {{matrix}}"
+    # Skip on [skip ci]/[skip buildkite] for webhook (push) builds, but always
+    # run when triggered manually from the Buildkite UI. This lets you push with
+    # [skip ci] to keep the other heavy pipelines quiet, then trigger just this
+    # pipeline by hand.
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/ || build.source == "ui"
+    agents:
+      - "os=windows"
+      - "architecture=amd64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      DDEV_TEST_USE_REAL_INSTALLER: "true"
+      INSTALLER_CASE: "{{matrix}}"
+      # C:\buildkite-agent\hooks\environment
+      # DOCKERHUB_PULL_USERNAME
+      # DOCKERHUB_PULL_PASSWORD
+    matrix:
+      # Manual WSL2 install-script tests (Ubuntu only), gated to ps1 changes:
+      - "ps1-docker-inside"
+      - "ps1-docker-desktop"
+
+      - "ddev-test-ubuntu-ce"
+      - "ddev-test-ubuntu-desktop"
+      - "ddev-test-ubuntu2404-ce"
+      - "ddev-test-ubuntu2404-desktop"
+      - "ddev-test-debian-ce"
+      - "ddev-test-debian-desktop"
+      

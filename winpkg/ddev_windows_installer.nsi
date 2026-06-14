@@ -46,6 +46,10 @@ Var /GLOBAL DEBUG_LOG_PATH
 Var /GLOBAL WSL_WINDOWS_TEMP
 Var /GLOBAL WINDOWS_TEMP
 Var /GLOBAL MKCERT_UNINSTALL_APPROVED  ; Track if user approved mkcert removal during uninstall
+Var /GLOBAL DOCKER_DISTRO_FAMILY       ; "ubuntu" or "debian" for Docker CE repo selection
+Var /GLOBAL DOCKER_SUITE               ; Debian/Ubuntu codename for Docker CE repo (e.g. bookworm, trixie, noble)
+Var /GLOBAL DISTRO_LISTBOX_HANDLE      ; Handle for distro selection ListBox
+Var /GLOBAL DISTRO_LIST                ; Pipe-separated list of detected distros
 
 !define REG_INSTDIR_ROOT "HKCU"
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
@@ -259,53 +263,43 @@ Function DistroSelectionPage
         Abort
     ${EndIf}
 
-    ; Get Ubuntu distros before creating any controls
-    Call GetUbuntuDistros
-    Pop $R0
-    Push "Got distros: [$R0]"
+    ; Get Debian-based distros before creating any controls
+    Call GetDebianBasedDistros
+    Pop $DISTRO_LIST
+    Push "Got distros: [$DISTRO_LIST]"
     Call LogPrint
-    ${If} $R0 == ""
-        Push "ERROR: No Ubuntu-based WSL2 distributions found"
+    ${If} $DISTRO_LIST == ""
+        Push "ERROR: No Debian-based WSL2 distributions found"
         Call LogPrint
-        MessageBox MB_ICONSTOP|MB_OK "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first.$\n$\nDebug information has been written to: $DEBUG_LOG_PATH (please include with any error report)$\n$\nYou can check this file to see what distributions were detected."
-        Push "No Ubuntu-based WSL2 distributions found. Please install Ubuntu for WSL2 first."
+        MessageBox MB_ICONSTOP|MB_OK "No Debian-based WSL2 distributions found. Please install Ubuntu or Debian for WSL2 first.$\n$\nDebug information has been written to: $DEBUG_LOG_PATH (please include with any error report)$\n$\nYou can check this file to see what distributions were detected."
+        Push "No Debian-based WSL2 distributions found. Please install Ubuntu or Debian for WSL2 first."
         Call ShowErrorAndAbort
     ${EndIf}
 
     Push "Creating label..."
     Call LogPrint
-    ${NSD_CreateLabel} 0 0 100% 24u "Select your Ubuntu-based WSL2 distribution:"
+    ${NSD_CreateLabel} 0 0 100% 24u "Select your Debian-based WSL2 distribution:"
     Pop $1
 
-    Push "Creating radio buttons..."
+    Push "Creating listbox..."
     Call LogPrint
+    ${NSD_CreateListBox} 10 30u 280u 130u ""
+    Pop $DISTRO_LISTBOX_HANDLE
 
     ; Get previously selected distro
     ReadRegStr $R8 ${REG_SETTINGS_ROOT} "${REG_SETTINGS_KEY}" "SelectedDistro"
     Push "Previously selected distro: $R8"
     Call LogPrint
 
-    ; Initialize variables for dynamic radio button creation
-    Var /GLOBAL RADIO_BUTTON_COUNT
-    Var /GLOBAL RADIO_BUTTON_HANDLES    ; Will store pipe-separated list of handles
-    Var /GLOBAL RADIO_BUTTON_LABELS     ; Will store pipe-separated list of labels
-    Var /GLOBAL SELECTED_RADIO_INDEX    ; Index of selected radio button
-    
-    StrCpy $RADIO_BUTTON_COUNT 0
-    StrCpy $RADIO_BUTTON_HANDLES ""
-    StrCpy $RADIO_BUTTON_LABELS ""
-    StrCpy $SELECTED_RADIO_INDEX 0
-
-    ; Process the pipe-separated list and create radio buttons
-    StrCpy $R1 $R0    ; Working copy of the list
-    StrCpy $R2 0      ; Current item index
-    StrCpy $R3 0      ; Y position counter
+    ; Populate the listbox and determine default selection index
+    StrCpy $R1 $DISTRO_LIST   ; Working copy
+    StrCpy $R2 0              ; Current item index
+    StrCpy $R3 0              ; Default selection index
 
     ${Do}
-        ; Find position of next pipe or end
-        StrCpy $R5 0   ; Position
+        StrCpy $R5 0
         ${Do}
-            StrCpy $R6 $R1 1 $R5  ; Get character at position
+            StrCpy $R6 $R1 1 $R5
             ${If} $R6 == "|"
             ${OrIf} $R6 == ""
                 ${Break}
@@ -313,67 +307,32 @@ Function DistroSelectionPage
             IntOp $R5 $R5 + 1
         ${Loop}
 
-        ; Extract the item
         ${If} $R5 > 0
-            StrCpy $R7 $R1 $R5    ; Extract item
-            Push "Adding radio button: [$R7]"
+            StrCpy $R7 $R1 $R5
+            Push "Adding listbox item: [$R7]"
             Call LogPrint
-            
-            ; Calculate Y position for radio button
-            IntOp $R9 $R3 * 24
-            IntOp $R9 $R9 + 30
-            
-            ; Create radio button
-            ${NSD_CreateRadioButton} 10 $R9u 280u 16u "$R7"
-            Pop $9
-            
-            ; Store handle and label in our lists
-            ${If} $RADIO_BUTTON_HANDLES == ""
-                StrCpy $RADIO_BUTTON_HANDLES "$9"
-                StrCpy $RADIO_BUTTON_LABELS "$R7"
-            ${Else}
-                StrCpy $RADIO_BUTTON_HANDLES "$RADIO_BUTTON_HANDLES|$9"
-                StrCpy $RADIO_BUTTON_LABELS "$RADIO_BUTTON_LABELS|$R7"
-            ${EndIf}
-            
-            ; Check if this matches the previously selected distro
+            ${NSD_LB_AddString} $DISTRO_LISTBOX_HANDLE "$R7"
+
             ${If} $R7 == $R8
-                StrCpy $SELECTED_RADIO_INDEX $R2
-                ${NSD_SetState} $9 ${BST_CHECKED}
-                Push "Selected distro: $R7 (previous choice)"
-                Call LogPrint
-            ${ElseIf} $R2 == 0
-            ${AndIf} $R8 == ""
-                ${NSD_SetState} $9 ${BST_CHECKED}
-                Push "Selected distro: $R7 (default)"
+                StrCpy $R3 $R2
+                Push "Will select: $R7 (index $R2, previous choice)"
                 Call LogPrint
             ${EndIf}
-            
+
             IntOp $R2 $R2 + 1
-            IntOp $R3 $R3 + 1
         ${EndIf}
 
-        ; Move past the separator
         IntOp $R5 $R5 + 1
         StrCpy $R1 $R1 "" $R5
 
-        ; Check if we're done
         ${If} $R1 == ""
             ${Break}
         ${EndIf}
     ${Loop}
 
-    StrCpy $RADIO_BUTTON_COUNT $R2
-    Push "Added $RADIO_BUTTON_COUNT radio buttons"
+    Push "Added $R2 items to listbox, selecting index $R3"
     Call LogPrint
-    
-    ; Ensure at least one radio button is selected (fallback to first one if no previous selection)
-    ${If} $R8 == ""
-        ${WordFind} "$RADIO_BUTTON_HANDLES" "|" "+1{" $R4
-        ${NSD_SetState} $R4 ${BST_CHECKED}
-        Push "No previous distro selection, defaulting to first distro"
-        Call LogPrint
-    ${EndIf}
+    SendMessage $DISTRO_LISTBOX_HANDLE ${LB_SETCURSEL} $R3 0
 
     Push "About to show dialog..."
     Call LogPrint
@@ -383,60 +342,17 @@ FunctionEnd
 Function DistroSelectionPageLeave
     Push "Getting selected distro..."
     Call LogPrint
-    
-    ; Find which radio button is selected by iterating through all handles
-    StrCpy $R1 $RADIO_BUTTON_HANDLES  ; Working copy of handles
-    StrCpy $R2 $RADIO_BUTTON_LABELS   ; Working copy of labels
-    StrCpy $R3 0                      ; Current index
-    StrCpy $SELECTED_DISTRO ""        ; Clear selection
-    
-    ${Do}
-        ; Extract current handle
-        ${WordFind} "$R1" "|" "+1{" $R4  ; Get first handle
-        ${If} $R4 == $R1
-            ; Last item (no more separators)
-            StrCpy $R5 $R1
-            StrCpy $R1 ""
-        ${Else}
-            ; More items remain
-            StrCpy $R5 $R4
-            ${WordFind} "$R1" "|" "+1}" $R1  ; Remove first item
-        ${EndIf}
-        
-        ; Extract corresponding label
-        ${WordFind} "$R2" "|" "+1{" $R6  ; Get first label
-        ${If} $R6 == $R2
-            ; Last item (no more separators)
-            StrCpy $R7 $R2
-            StrCpy $R2 ""
-        ${Else}
-            ; More items remain
-            StrCpy $R7 $R6
-            ${WordFind} "$R2" "|" "+1}" $R2  ; Remove first item
-        ${EndIf}
-        
-        ; Check if this radio button is selected
-        ${NSD_GetState} $R5 $R0
-        ${If} $R0 == ${BST_CHECKED}
-            StrCpy $SELECTED_DISTRO $R7
-            Push "Selected distro: $SELECTED_DISTRO"
-            Call LogPrint
-            ${Break}
-        ${EndIf}
-        
-        IntOp $R3 $R3 + 1
-        
-        ; Check if we're done
-        ${If} $R1 == ""
-            ${Break}
-        ${EndIf}
-    ${Loop}
-    
-    ; Fallback - should not happen if we have proper radio button logic
+
+    ; NSD_LB_GetSelection returns the text of the selected item directly
+    ${NSD_LB_GetSelection} $DISTRO_LISTBOX_HANDLE $SELECTED_DISTRO
+    Push "Selected distro: $SELECTED_DISTRO"
+    Call LogPrint
+
+    ; Fallback if nothing selected
     ${If} $SELECTED_DISTRO == ""
         Push "No distro selected - using first available"
         Call LogPrint
-        ${WordFind} "$RADIO_BUTTON_LABELS" "|" "+1{" $SELECTED_DISTRO
+        ${WordFind} "$DISTRO_LIST" "|" "+1{" $SELECTED_DISTRO
     ${EndIf}
     
     ; Store the selected distro for next time
@@ -452,6 +368,11 @@ Function DistroSelectionPageLeave
     File /oname=check_root_user.sh "scripts\check_root_user.sh"
     File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
     File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
+    File /oname=detect_docker_suite.sh "scripts\detect_docker_suite.sh"
+    File /oname=detect_docker_family.sh "scripts\detect_docker_family.sh"
+    File /oname=apt_install_with_log.sh "scripts\apt_install_with_log.sh"
+    File /oname=ensure_systemd_enabled.sh "scripts\ensure_systemd_enabled.sh"
+    File /oname=wait_for_systemd.sh "scripts\wait_for_systemd.sh"
     Push "All scripts copied to temp directory"
     Call LogPrint
     
@@ -918,6 +839,11 @@ SectionGroup /e "${PRODUCT_NAME}"
             File /oname=mkcert_install.sh "scripts\mkcert_install.sh"
             File /oname=install_temp_sudoers.sh "scripts\install_temp_sudoers.sh"
             File /oname=check_root_user.sh "scripts\check_root_user.sh"
+            File /oname=detect_docker_suite.sh "scripts\detect_docker_suite.sh"
+            File /oname=detect_docker_family.sh "scripts\detect_docker_family.sh"
+            File /oname=apt_install_with_log.sh "scripts\apt_install_with_log.sh"
+            File /oname=ensure_systemd_enabled.sh "scripts\ensure_systemd_enabled.sh"
+            File /oname=wait_for_systemd.sh "scripts\wait_for_systemd.sh"
         ${EndIf}
 
         ; Install icons
@@ -1046,10 +972,10 @@ Section Uninstall
     ${EndIf}
 SectionEnd
 
-Function GetUbuntuDistros
+Function GetDebianBasedDistros
     StrCpy $R0 ""  ; Result string
 
-    Push "=== Starting GetUbuntuDistros ==="
+    Push "=== Starting GetDebianBasedDistros ==="
     Call LogPrint
 
     Push "Checking registry key HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss..."
@@ -1115,30 +1041,50 @@ Function GetUbuntuDistros
             Push "First 6 chars of '$R3': '$R4'"
             Call LogPrint
             ${If} $R4 == "Ubuntu"
-                Push "Found Ubuntu distribution (name-based): $R3"
+            ${OrIf} $R4 == "Debian"
+                Push "Found Debian-based distribution (name-based): $R3"
                 Call LogPrint
                 ${If} $R0 != ""
                     StrCpy $R0 "$R0|"
                 ${EndIf}
                 StrCpy $R0 "$R0$R3"
             ${Else}
-                Push "Distribution '$R3' does not start with 'Ubuntu' (starts with '$R4')"
+                Push "Distribution '$R3' does not start with 'Ubuntu' or 'Debian' (starts with '$R4')"
                 Call LogPrint
             ${EndIf}
         ${Else}
             Push "Found Flavor field for $R3: '$R4'"
             Call LogPrint
-            ; Check if Flavor is "ubuntu" (case-insensitive)
-            ${StrStr} $R6 $R4 "ubuntu"
-            ${If} $R6 != ""
-                Push "Found Ubuntu distribution (Flavor-based): $R3"
+            ; Check if Flavor is a known Debian-based distro identifier
+            ; (ubuntu, debian, kali, elxr — case-insensitive substring match).
+            ; Note: $R5 holds the total distro count (loop bound), do not clobber.
+            ; Use $R6 as a "matched" flag and $R7 as the per-test StrStr result.
+            StrCpy $R6 ""
+            ${StrStr} $R7 $R4 "ubuntu"
+            ${If} $R7 != ""
+                StrCpy $R6 "yes"
+            ${EndIf}
+            ${StrStr} $R7 $R4 "debian"
+            ${If} $R7 != ""
+                StrCpy $R6 "yes"
+            ${EndIf}
+            ${StrStr} $R7 $R4 "kali"
+            ${If} $R7 != ""
+                StrCpy $R6 "yes"
+            ${EndIf}
+            ${StrStr} $R7 $R4 "elxr"
+            ${If} $R7 != ""
+                StrCpy $R6 "yes"
+            ${EndIf}
+            ${If} $R6 == "yes"
+                Push "Found Debian-based distribution (Flavor-based): $R3"
                 Call LogPrint
                 ${If} $R0 != ""
                     StrCpy $R0 "$R0|"
                 ${EndIf}
                 StrCpy $R0 "$R0$R3"
             ${Else}
-                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu'"
+                Push "Distribution '$R3' has Flavor '$R4' but does not contain 'ubuntu', 'debian', 'kali', or 'elxr'"
                 Call LogPrint
             ${EndIf}
         ${EndIf}
@@ -1154,7 +1100,7 @@ FunctionEnd
 
 Function InstallWSL2CommonSetup
     ; Note: WSL distros have already been enumerated from the registry and selected by the user.
-    ; The distro type (Ubuntu) has been verified from the registry Flavor field.
+    ; The distro type (Debian-based) has been verified from the registry Flavor field.
     ; Docker connectivity has already been validated with 'docker ps'.
 
     ; List WSL distros and versions (helpful for troubleshooting)
@@ -1218,6 +1164,74 @@ Function InstallWSL2CommonSetup
     Push "Root user check passed"
     Call LogPrint
 
+    ; Install apt_install_with_log.sh helper into the distro once so the
+    ; later apt-get install steps can surface the tail of apt's output
+    ; (the NSIS output buffer truncates long apt traces mid-stream).
+    Push "Installing apt_install_with_log.sh helper into $SELECTED_DISTRO..."
+    Call LogPrint
+    Push $SELECTED_DISTRO
+    Push "apt_install_with_log.sh"
+    Call InstallScriptToDistro
+    Pop $R0
+
+    ; Ensure systemd is enabled in this distro's /etc/wsl.conf so dockerd
+    ; auto-starts and D-Bus is available (D-Bus is needed by
+    ; docker-credential-secretservice and many other tools). Distros that
+    ; ship with [boot] systemd=false cause Docker to fail
+    ; silently and credential helpers to error with "Could not connect".
+    Push "Ensuring systemd is enabled in $SELECTED_DISTRO's /etc/wsl.conf..."
+    Call LogPrint
+    Push $SELECTED_DISTRO
+    Push "ensure_systemd_enabled.sh"
+    Call InstallScriptToDistro
+    Pop $R0
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/ensure_systemd_enabled.sh'
+    Pop $R1
+    Pop $R2
+    Push "ensure_systemd_enabled.sh exit=$R1: $R2"
+    Call LogPrint
+    ${If} $R1 == 2
+        Push "ERROR: could not write /etc/wsl.conf in $SELECTED_DISTRO: $R2"
+        Call LogPrint
+        Push "Could not enable systemd in /etc/wsl.conf in $SELECTED_DISTRO. Output: $R2"
+        Call ShowErrorAndAbort
+    ${EndIf}
+    ${If} $R1 == 1
+        ; systemd was just enabled — terminate the distro so it boots
+        ; with systemd as PID 1, then bring it back up.
+        Push "systemd was newly enabled; terminating $SELECTED_DISTRO so the change takes effect..."
+        Call LogPrint
+        nsExec::ExecToStack 'wsl.exe --terminate $SELECTED_DISTRO'
+        Pop $R1
+        Pop $R2
+        Push "wsl --terminate exit=$R1: $R2"
+        Call LogPrint
+        ; Bring it back up. systemd takes a few seconds to settle. Use a
+        ; helper script so we don't fight NSIS's $(...) language-string
+        ; quoting rules. After --terminate, /tmp/* on Kali/eLxr is on
+        ; the ext4 rootfs so previously-installed helpers persist, but
+        ; reinstall to be safe.
+        Push "Restarting $SELECTED_DISTRO with systemd..."
+        Call LogPrint
+        Push $SELECTED_DISTRO
+        Push "apt_install_with_log.sh"
+        Call InstallScriptToDistro
+        Pop $R0
+        Push $SELECTED_DISTRO
+        Push "wait_for_systemd.sh"
+        Call InstallScriptToDistro
+        Pop $R0
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/wait_for_systemd.sh 20'
+        Pop $R1
+        Pop $R2
+        Push "systemd readiness check exit=$R1: $R2"
+        Call LogPrint
+        ${If} $R1 != 0
+            Push "WARNING: systemd did not report ready within 20s; continuing anyway. Output: $R2"
+            Call LogPrint
+        ${EndIf}
+    ${EndIf}
+
     ${If} $INSTALL_OPTION == "wsl2-docker-desktop"
         ; Make sure we're not running docker-ce or docker.io daemon (conflicts with Docker Desktop)
         Push "Verifying Docker installation type..."
@@ -1260,9 +1274,21 @@ Function InstallWSL2CommonSetup
     Call LogPrint
     Push "Please be patient - installing required linux packages..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh prereq ca-certificates curl gnupg libsecret-1-0 lsb-release'
     Pop $1
     Pop $0
+    ; Optionally try to install 'pass' (used by docker-credential-pass);
+    ; not all minimal Debian derivatives (e.g. eLxr) carry it. A failure
+    ; here is a warning, not fatal.
+    Push "WSL($SELECTED_DISTRO): Trying optional package 'pass'..."
+    Call LogPrint
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh prereq-optional pass'
+    Pop $R1
+    Pop $R2
+    ${If} $R1 != 0
+        Push "WARNING: optional package 'pass' not installed (exit=$R1): $R2"
+        Call LogPrint
+    ${EndIf}
     ${If} $1 != 0
         Push "ERROR: Failed to apt-get install - exit code: $1, output: $0"
         Call LogPrint
@@ -1283,6 +1309,39 @@ Function InstallWSL2CommonSetup
         Call ShowErrorAndAbort
     ${EndIf}
 
+    ; Detect distro family for Docker repository selection (ubuntu vs debian)
+    Push "WSL($SELECTED_DISTRO): Detecting distro family for Docker repository..."
+    Call LogPrint
+    Push $SELECTED_DISTRO
+    Push "detect_docker_family.sh"
+    Call InstallScriptToDistro
+    Pop $R0
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/detect_docker_family.sh'
+    Pop $1
+    Pop $DOCKER_DISTRO_FAMILY
+    ${If} $DOCKER_DISTRO_FAMILY == ""
+        StrCpy $DOCKER_DISTRO_FAMILY "debian"
+    ${EndIf}
+    Push "WSL($SELECTED_DISTRO): Using Docker repository for distro family: $DOCKER_DISTRO_FAMILY"
+    Call LogPrint
+
+    ; Detect Docker suite codename - handles Kali and other derivatives
+    ; whose VERSION_CODENAME is not a valid Docker repo suite
+    Push "WSL($SELECTED_DISTRO): Detecting Docker suite codename..."
+    Call LogPrint
+    Push $SELECTED_DISTRO
+    Push "detect_docker_suite.sh"
+    Call InstallScriptToDistro
+    Pop $R0
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/detect_docker_suite.sh'
+    Pop $1
+    Pop $DOCKER_SUITE
+    ${If} $DOCKER_SUITE == ""
+        StrCpy $DOCKER_SUITE "bookworm"
+    ${EndIf}
+    Push "WSL($SELECTED_DISTRO): Using Docker suite: $DOCKER_SUITE"
+    Call LogPrint
+
     ; Clean up old Docker repository files if present
     Push "WSL($SELECTED_DISTRO): Removing old Docker repository files if present..."
     Call LogPrint
@@ -1293,7 +1352,7 @@ Function InstallWSL2CommonSetup
     ; Add Docker GPG key
     Push "WSL($SELECTED_DISTRO): Adding Docker repository key..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "curl -fsSL https://download.docker.com/linux/$DOCKER_DISTRO_FAMILY/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1306,7 +1365,7 @@ Function InstallWSL2CommonSetup
     ; Add Docker repository in deb822 format
     Push "WSL($SELECTED_DISTRO): Adding Docker apt repository..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "printf \"Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: $$(. /etc/os-release && echo $${UBUNTU_CODENAME:-$$VERSION_CODENAME})\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n\" > /etc/apt/sources.list.d/docker.sources"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "printf \"Types: deb\nURIs: https://download.docker.com/linux/$DOCKER_DISTRO_FAMILY\nSuites: $DOCKER_SUITE\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n\" > /etc/apt/sources.list.d/docker.sources"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1394,7 +1453,7 @@ Function InstallWSL2Common
     Call LogPrint
     Push "Please be patient - installing essential packages..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl gnupg gnupg2 libsecret-1-0 lsb-release pass 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh essential ca-certificates curl gnupg libsecret-1-0 lsb-release'
     Pop $1
     Pop $2
     ${If} $1 != 0
@@ -1402,6 +1461,14 @@ Function InstallWSL2Common
         Call LogPrint
         Push "Failed to install essential packages. Error: $2"
         Call ShowErrorAndAbort
+    ${EndIf}
+    ; Optionally retry 'pass' here too (idempotent if already installed).
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh essential-optional pass'
+    Pop $R1
+    Pop $R2
+    ${If} $R1 != 0
+        Push "WARNING: optional package 'pass' not installed (exit=$R1): $R2"
+        Call LogPrint
     ${EndIf}
     
     ; Update status
@@ -1414,9 +1481,9 @@ Function InstallWSL2Common
     Push "Please be patient - installing Docker components..."
     Call LogPrint
     ${If} $INSTALL_OPTION == "wsl2-docker-ce"
-        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io 2>&1"'
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh docker docker-ce docker-ce-cli containerd.io'
     ${Else}
-        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce-cli 2>&1"'
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash /tmp/apt_install_with_log.sh docker-cli docker-ce-cli'
     ${EndIf}
     Pop $1
     Pop $2
@@ -1436,7 +1503,7 @@ Function InstallWSL2Common
     Call LogPrint
     Push "Please be patient - installing DDEV..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ddev ddev-wsl2 2>&1"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root env APT_EXTRA_ARGS=--no-install-recommends bash /tmp/apt_install_with_log.sh ddev ddev ddev-wsl2'
     Pop $1
     Pop $2
     ${If} $1 != 0
@@ -1578,6 +1645,31 @@ Function InstallWSL2Common
         ${EndIf}
     ${EndIf}
 
+    ; Verify the Docker daemon is running. We earlier ensured systemd is
+    ; enabled in /etc/wsl.conf (and restarted the distro if it wasn't),
+    ; so dockerd should already be running via the docker.service unit
+    ; that docker-ce's postinst enabled. If it isn't yet (race with the
+    ; service starting), nudge it via systemctl and poll docker info.
+    ${If} $INSTALL_OPTION == "wsl2-docker-ce"
+        Push "WSL($SELECTED_DISTRO): Verifying Docker daemon via systemd..."
+        Call LogPrint
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root systemctl start docker.service'
+        Pop $1
+        Pop $0
+        Push "systemctl start docker.service exit=$1: $0"
+        Call LogPrint
+        nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root sh -c "for i in 1 2 3 4 5 6 7 8 9 10; do docker info >/dev/null 2>&1 && exit 0; sleep 1; done; exit 1"'
+        Pop $1
+        Pop $0
+        ${If} $1 != 0
+            Push "WARNING: Docker daemon did not become ready within 10s. Output: $0"
+            Call LogPrint
+        ${Else}
+            Push "Docker daemon is ready."
+            Call LogPrint
+        ${EndIf}
+    ${EndIf}
+
     ; Show DDEV version
     Push "Verifying DDEV installation with 'ddev version'..."
     Call LogPrint
@@ -1648,6 +1740,11 @@ Function InstallWSL2Common
     Delete "$WINDOWS_TEMP\ddev_installer\check_root_user.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\install_temp_sudoers.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert_install.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\detect_docker_suite.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\detect_docker_family.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\apt_install_with_log.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\ensure_systemd_enabled.sh"
+    Delete "$WINDOWS_TEMP\ddev_installer\wait_for_systemd.sh"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\ddev-hostname_linux"
     Delete "$WINDOWS_TEMP\ddev_installer\mkcert_linux"
@@ -2293,16 +2390,30 @@ Function ShowErrorAndAbort
     Exch $R0  ; Get error message from stack
     Push "INSTALLATION ERROR: $R0"
     Call LogPrint
-    
+
     ; Write error status to WSL2 distro if available
     ${If} $SELECTED_DISTRO != ""
         nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO bash -c "echo \"ERROR: $R0\" >> /tmp/ddev_installation_status.txt"'
         Pop $1
         Pop $2
     ${EndIf}
-    
+
     ${IfNot} ${Silent}
-        MessageBox MB_ICONSTOP|MB_OK "$R0$\n$\nDebug information has been written to: $DEBUG_LOG_PATH (please include with any error report)$\n$\nPlease fix the issue and retry the installer."
+        ; Lead with the log path so it stays visible even if the error
+        ; body is long enough to scroll off-screen in the MessageBox.
+        ; Truncate the error body to keep the dialog compact; the full
+        ; error is always available in the debug log.
+        StrLen $R1 $R0
+        ${If} $R1 > 600
+            StrCpy $R2 $R0 600
+            StrCpy $R2 "$R2...$\n[truncated — see debug log for full output]"
+        ${Else}
+            StrCpy $R2 $R0
+        ${EndIf}
+        MessageBox MB_ICONSTOP|MB_OKCANCEL "DDEV installation failed.$\n$\nFull debug log (please include with any error report):$\n$DEBUG_LOG_PATH$\n$\n----- Error -----$\n$R2$\n$\nClick OK to open the debug log in Notepad, or Cancel to exit." IDOK open_log IDCANCEL skip_log
+        open_log:
+            ExecShell "open" "notepad.exe" "$DEBUG_LOG_PATH"
+        skip_log:
     ${EndIf}
     Push "Exiting installer due to error. Debug log: $DEBUG_LOG_PATH (please include with any error report)"
     Call LogPrint

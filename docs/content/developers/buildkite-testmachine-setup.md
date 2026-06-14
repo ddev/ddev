@@ -75,6 +75,78 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 11. In `~/workspace/ddev/.buildkite`, run `./testbot_maintenance.sh`.
 12. In `~/workspace/ddev/.buildkite`, run `./sanetestbot.sh` to check your work.
 
+## Windows Installer Test Distros
+
+The Windows GUI installer tests run in their own dedicated Buildkite pipeline
+(`windows-installer`, driven by `.buildkite/windows-installer.yml` +
+`.buildkite/installer-test.sh`), separate from the traditional Windows suite.
+Each matrix case is a parallel job that installs DDEV into a dedicated WSL2
+distro using a specific Docker provider.
+
+These tests need a **Windows-native** (`os=windows`) `buildkite-agent` — the same
+kind of agent as the traditional Windows runner — because they drive `wsl.exe`,
+`reg.exe`, and the installer `.exe`. The matrix spreads its jobs across all
+available `os=windows` agents, so adding more such machines increases parallelism.
+
+!!!warning "One `os=windows` agent per machine"
+    An installer run mutates global Windows state (registry `CAROOT`/`WSLENV` and
+    the machine-wide `mkcert` CA root). Two installer jobs must never run on the
+    same machine at the same time. A Buildkite agent runs one job at a time, so
+    running exactly **one** `os=windows` agent per physical machine guarantees
+    this; the jobs then only overlap across separate machines.
+
+The test does **not** create distros — it resets and reuses them. Provision the
+six named instances **once per runner** (the normal install handles user
+creation; complete first-run with the `testbot` user, which is the default user
+the test harness expects):
+
+```powershell
+wsl --install Ubuntu       --name ddev-test-ubuntu-ce
+wsl --install Ubuntu       --name ddev-test-ubuntu-desktop
+wsl --install Ubuntu-24.04 --name ddev-test-ubuntu2404-ce
+wsl --install Ubuntu-24.04 --name ddev-test-ubuntu2404-desktop
+wsl --install Debian       --name ddev-test-debian-ce
+wsl --install Debian       --name ddev-test-debian-desktop
+```
+
+For the `*-desktop` instances only, enable Docker Desktop's WSL integration for
+that instance (Docker Desktop → Settings → Resources → WSL integration).
+Otherwise the `docker-desktop` cases skip gracefully. The base distro names
+above (`Ubuntu`, `Ubuntu-24.04`, `Debian`) must be available in the WSL catalog;
+verify with `wsl -l -o`.
+
+To run a single case manually (e.g. for debugging), select it by instance name,
+which is also the Go subtest name:
+
+```bash
+make testwininstaller TESTARGS="-run TestWindowsInstallerWSL2/ddev-test-debian-ce"
+```
+
+### WSL2 install-script tests
+
+The `ddev-windows-installer` pipeline also tests the manual WSL2 install
+PowerShell scripts (`scripts/install_ddev_wsl2_docker_inside.ps1` and
+`scripts/install_ddev_wsl2_docker_desktop.ps1`) against current Ubuntu, as the
+`ps1-docker-inside` and `ps1-docker-desktop` matrix cases. These run only when a
+ps1 script (or its test/plumbing) changes, plus on `main` and manual builds.
+
+They **reuse the two Ubuntu instances** above — no extra provisioning — but the
+scripts operate on the *default* WSL2 distro, so each test temporarily
+`wsl --set-default`s its instance and restores the prior default afterward:
+
+* `ps1-docker-inside` → `ddev-test-ubuntu-ce`, which must have Docker Desktop WSL
+  integration **disabled** (the script aborts if `/mnt/wsl/docker-desktop`
+  exists). This is the same state the docker-ce installer case wants.
+* `ps1-docker-desktop` → `ddev-test-ubuntu-desktop`, which must have Docker
+  Desktop running with WSL integration **enabled**.
+* `mkcert.exe` must be on the Windows PATH (already installed via choco above).
+
+Run one manually with:
+
+```bash
+make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
+```
+
 ## Icinga2 monitoring setup for WSL2 instances
 
 1. Icinga Director web UI, configure the host on `monitor.ddev.com`, normally making a copy of an existing identical item.

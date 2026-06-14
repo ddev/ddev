@@ -58,6 +58,7 @@ DrupalEasy
 DrupalEasy's
 Dump
 DXP
+eLxr
 Enable
 EndeavourOS
 EOL
