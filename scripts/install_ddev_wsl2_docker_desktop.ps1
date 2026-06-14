@@ -78,7 +78,7 @@ setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV=
 
 # Convert the Windows CAROOT path to a Linux path and pass it directly to mkcert,
 # avoiding a wsl --terminate which breaks Docker Desktop integration.
-$linuxCaRoot = (& wsl wslpath -u "$env:CAROOT").Trim()
+$linuxCaRoot = (& wsl wslpath -u ($env:CAROOT -replace '\\', '/')).Trim()
 Write-Host "Linux CAROOT: $linuxCaRoot"
 try {
     wsl -u root -e bash -c "echo 'ALL ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/temp-mkcert-install && chmod 440 /etc/sudoers.d/temp-mkcert-install"
