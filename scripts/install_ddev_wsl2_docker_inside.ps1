@@ -85,15 +85,15 @@ wsl -u root usermod -aG docker $wslUser
 wsl mkcert.exe -install
 $env:CAROOT = & wsl mkcert.exe -CAROOT
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
-$defaultDistro = (wsl --list --quiet | Select-Object -First 1) -replace '[\r\n\x00-\x1F\x7F-\x9F]', '' -replace '^\s+|\s+$', ''
-Write-Host "Terminating default WSL2 distro: $defaultDistro"
-wsl --terminate $defaultDistro
 
-wsl bash -c 'echo CAROOT=$CAROOT'
+# Convert the Windows CAROOT path to a Linux path and pass it directly to mkcert,
+# avoiding a wsl --terminate which breaks Docker Desktop integration.
+$linuxCaRoot = (& wsl wslpath -u "$env:CAROOT").Trim()
+Write-Host "Linux CAROOT: $linuxCaRoot"
 try {
     wsl -u root -e bash -c "echo 'ALL ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/temp-mkcert-install && chmod 440 /etc/sudoers.d/temp-mkcert-install"
     if ($LASTEXITCODE -ne 0) { throw "Failed to create temporary sudoers entry (exit $LASTEXITCODE)" }
-    wsl mkcert -install
+    wsl bash -c "CAROOT='$linuxCaRoot' mkcert -install"
 } finally {
     wsl -u root rm -f /etc/sudoers.d/temp-mkcert-install
 }
