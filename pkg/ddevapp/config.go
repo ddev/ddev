@@ -1678,7 +1678,13 @@ func PrepDdevDirectory(app *DdevApp) error {
 
 	// Some of the listed items are wildcards or directories, and if they are, there's an error
 	// opening them and they innately get added to the .gitignore.
-	err = CreateGitIgnore(dir, "**/*.example", ".build-hash", ".dbimageBuild", ".ddev-docker-*.yaml", ".*downloads", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", "apache/apache-site.conf", "commands/.gitattributes", "config.local.y*ml", "config.*.local.y*ml", "db_snapshots", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/pantheon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "share-providers/cloudflared.sh", "share-providers/ngrok.sh", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
+	// osGeneratedFiles are prefixed with "**/" so they are ignored at any depth inside .ddev/.
+	ignores := make([]string, 0, len(osGeneratedFiles)+30)
+	for _, f := range osGeneratedFiles {
+		ignores = append(ignores, "**/"+f)
+	}
+	ignores = append(ignores, "**/*.example", ".build-hash", ".dbimageBuild", ".ddev-docker-*.yaml", ".*downloads", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", "apache/apache-site.conf", "commands/.gitattributes", "config.local.y*ml", "config.*.local.y*ml", "db_snapshots", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/acquia.yaml", "providers/lagoon.yaml", "providers/pantheon.yaml", "providers/platform.yaml", "providers/upsun.yaml", "share-providers/cloudflared.sh", "share-providers/ngrok.sh", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
+	err = CreateGitIgnore(dir, ignores...)
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

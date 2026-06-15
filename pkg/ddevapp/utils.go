@@ -194,6 +194,11 @@ func templateCanUse(feature string) bool {
 	return false
 }
 
+// osGeneratedFiles are OS-generated metadata files that should neither be tracked in git
+// nor trigger custom-config warnings. The list is used both when creating .ddev/.gitignore
+// and when detecting custom configuration.
+var osGeneratedFiles = []string{".DS_Store", "Thumbs.db", "desktop.ini"}
+
 // gitIgnoreTemplate will write a .gitignore file.
 // This template expects string slice to be provided, with each string corresponding to
 // a line in the resulting .gitignore.

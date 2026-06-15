@@ -446,6 +446,10 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 // Files with the #ddev-silent-no-warn marker are excluded unless showAll is true.
 func isCustomConfigFile(filePath string, expectedDdevFiles []string, hasDdevSig, hasSilentNoWarn bool, showAll bool) bool {
 	filename := filepath.Base(filePath)
+	// Ignore OS-generated metadata files (same list used when creating .ddev/.gitignore).
+	if slices.Contains(osGeneratedFiles, filename) {
+		return false
+	}
 	// Exclude example files
 	if strings.HasSuffix(filename, ".example") || filename == "README.txt" {
 		return false
