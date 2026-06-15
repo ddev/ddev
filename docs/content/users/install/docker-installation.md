@@ -131,6 +131,9 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     # Install Docker CE
     sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
+    # Install util-linux-extra to ensure newgrp is available (Ubuntu 26.04+/Debian sid)
+    sudo apt-get install -y util-linux-extra 2>/dev/null || true
+
     # Add your user to the docker group (create group if it doesn’t exist)
     sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
 
@@ -159,6 +162,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
           "$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")" \
           | sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null
         sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        sudo apt-get install -y util-linux-extra 2>/dev/null || true
         sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
         sudo systemctl enable --now docker
         SCRIPT
@@ -279,6 +283,9 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     # Install Docker CE
     sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
+    # Install util-linux-extra to ensure newgrp is available (Ubuntu 26.04+/Debian sid)
+    sudo apt-get install -y util-linux-extra 2>/dev/null || true
+
     # Add your user to the docker group (create group if it doesn't exist)
     sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
     ```
@@ -303,6 +310,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
           "$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")" \
           | sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null
         sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        sudo apt-get install -y util-linux-extra 2>/dev/null || true
         sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
         SCRIPT
         ```
