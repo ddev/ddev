@@ -23,6 +23,8 @@ type customConfigCheck struct {
 	displayName       string                   // category name for grouped display (e.g., "Router (global)")
 }
 
+var allowedHiddenConfigFiles = []string{".env"}
+
 // addPathToAddonMap adds a file path (or all files under a directory) to the add-on map.
 // Manifest ProjectFiles/GlobalFiles may contain directory paths; this expands them.
 func addPathToAddonMap(fullPath string, addonName string, addonFileMap map[string]string) {
@@ -447,7 +449,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 func isCustomConfigFile(filePath string, expectedDdevFiles []string, hasDdevSig, hasSilentNoWarn bool, showAll bool) bool {
 	filename := filepath.Base(filePath)
 	// Ignore hidden files like .DS_Store, but keep environment files.
-	if strings.HasPrefix(filename, ".") && filename != ".env" && !strings.HasPrefix(filename, ".env.") {
+	if strings.HasPrefix(filename, ".") && !slices.Contains(allowedHiddenConfigFiles, filename) && !strings.HasPrefix(filename, ".env.") {
 		return false
 	}
 	// Exclude example files

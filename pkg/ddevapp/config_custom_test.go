@@ -23,13 +23,13 @@ func TestFilterCustomConfigFilesIgnoresHiddenFiles(t *testing.T) {
 	err = os.WriteFile(envLocalFile, []byte("LOCAL_VAR=value\n"), 0644)
 	require.NoError(t, err)
 
-	homeadditionsFile := filepath.Join(tmpDir, ".bashrc.d", "custom.sh")
-	err = os.MkdirAll(filepath.Dir(homeadditionsFile), 0755)
+	homeAdditionsFile := filepath.Join(tmpDir, ".bashrc.d", "custom.sh")
+	err = os.MkdirAll(filepath.Dir(homeAdditionsFile), 0755)
 	require.NoError(t, err)
-	err = os.WriteFile(homeadditionsFile, []byte("alias ll='ls -la'\n"), 0644)
+	err = os.WriteFile(homeAdditionsFile, []byte("alias ll='ls -la'\n"), 0644)
 	require.NoError(t, err)
 
-	files := []string{hiddenFile, envFile, envLocalFile, homeadditionsFile}
+	files := []string{hiddenFile, envFile, envLocalFile, homeAdditionsFile}
 	customFiles := filterCustomConfigFiles(files, nil, map[string]string{}, false)
 
 	require.Len(t, customFiles, 3)
@@ -38,5 +38,5 @@ func TestFilterCustomConfigFilesIgnoresHiddenFiles(t *testing.T) {
 	customPaths := []string{customFiles[0].path, customFiles[1].path, customFiles[2].path}
 	require.Contains(t, customPaths, envFile)
 	require.Contains(t, customPaths, envLocalFile)
-	require.Contains(t, customPaths, homeadditionsFile)
+	require.Contains(t, customPaths, homeAdditionsFile)
 }
