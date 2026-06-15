@@ -2000,6 +2000,9 @@ func (app *DdevApp) Start() error {
 	}
 
 	if app.IsMutagenEnabled() {
+		if cliErr := dockerutil.CheckDockerCLI(); cliErr != nil {
+			return fmt.Errorf("mutagen requires a working docker CLI to connect to containers, but: %v\nInstall docker CLI and ensure it is in PATH, then retry", cliErr)
+		}
 		app.checkMutagenUploadDirs()
 
 		mounted, err := IsMutagenVolumeMounted(app)

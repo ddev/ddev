@@ -217,6 +217,11 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		if len(container.Names) > 0 {
 			containerRef = container.Names[0]
 		}
+		// Mutagen uses the docker CLI (not the API) to connect to containers, so
+		// verify it's available before attempting the sync create.
+		if cliErr := dockerutil.CheckDockerCLI(); cliErr != nil {
+			return fmt.Errorf("mutagen requires a working docker CLI to connect to containers, but: %v\nInstall docker CLI and ensure it is in PATH, then retry", cliErr)
+		}
 		// TODO: Consider using a function to specify the Docker beta
 		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", containerRef), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel, "--label", mutagenConfigFileHashLabelName + "=" + hLabel}
 		if configFile != "" {
