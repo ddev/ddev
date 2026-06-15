@@ -71,13 +71,14 @@ ddev add-on search "redis insight"`,
 			return
 		}
 
-		out := renderSearchResults(filteredAddons, searchTerms)
+		wrapTable, _ := cmd.Flags().GetBool("wrap-table")
+		out := renderSearchResults(filteredAddons, searchTerms, wrapTable)
 		output.UserOut.WithField("raw", filteredAddons).Print(out)
 	},
 }
 
 // renderSearchResults renders the filtered list of addons from the registry
-func renderSearchResults(addons []types.Addon, searchTerm string) string {
+func renderSearchResults(addons []types.Addon, searchTerm string, wrapTable bool) string {
 	var out bytes.Buffer
 
 	t := table.NewWriter()
@@ -91,14 +92,21 @@ func renderSearchResults(addons []types.Addon, searchTerm string) string {
 	// Table overhead for 2 columns: | col | col |
 	const tableOverhead = 7
 	usableWidth := termWidth - tableOverhead
-	addonWidth := max(20, usableWidth*3/10)
+	addonWidth := max(30, usableWidth*3/10)
 	descWidth := max(30, usableWidth-addonWidth)
 
 	snip := func(col string, maxLen int) string { return text.Snip(col, maxLen, "…") }
-	t.SetColumnConfigs([]table.ColumnConfig{
-		{Name: "Add-on", WidthMax: addonWidth, WidthMaxEnforcer: snip},
-		{Name: "Description", WidthMax: descWidth},
-	})
+	if wrapTable {
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{Name: "Add-on"},
+			{Name: "Description"},
+		})
+	} else {
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{Name: "Add-on", WidthMax: addonWidth, WidthMaxEnforcer: snip},
+			{Name: "Description", WidthMax: descWidth},
+		})
+	}
 
 	sort.Slice(addons, func(i, j int) bool {
 		return strings.Compare(strings.ToLower(addons[i].Title), strings.ToLower(addons[j].Title)) == -1
@@ -111,7 +119,11 @@ func renderSearchResults(addons []types.Addon, searchTerm string) string {
 			d = d + "*"
 		}
 		title := output.Hyperlink(addon.GitHubURL, addon.Title)
-		t.AppendRow([]any{title, text.WrapSoft(d, descWidth)})
+		if wrapTable {
+			t.AppendRow([]any{title, d})
+		} else {
+			t.AppendRow([]any{title, text.WrapSoft(d, descWidth)})
+		}
 	}
 
 	t.Render()
@@ -120,5 +132,6 @@ func renderSearchResults(addons []types.Addon, searchTerm string) string {
 }
 
 func init() {
+	AddonSearchCmd.Flags().BoolP("wrap-table", "W", false, "Display table with wrapped text instead of truncating.")
 	AddonCmd.AddCommand(AddonSearchCmd)
 }

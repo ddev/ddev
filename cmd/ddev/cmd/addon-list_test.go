@@ -30,7 +30,7 @@ func sampleAddons() []types.Addon {
 // appear in the rendered output, that official addons get a "*" suffix on their
 // description, and that the footer contains the correct count.
 func TestRenderRepositoryListContent(t *testing.T) {
-	out := renderRepositoryList(sampleAddons())
+	out := renderRepositoryList(sampleAddons(), false)
 
 	require.Contains(t, out, "ddev-redis")
 	require.Contains(t, out, "ddev-memcached")
@@ -50,7 +50,7 @@ func TestRenderRepositoryListSorted(t *testing.T) {
 		{Title: "zzz-addon", Description: "Last"},
 		{Title: "aaa-addon", Description: "First"},
 	}
-	out := renderRepositoryList(addons)
+	out := renderRepositoryList(addons, false)
 
 	posFirst := strings.Index(out, "aaa-addon")
 	posLast := strings.Index(out, "zzz-addon")
@@ -62,30 +62,43 @@ func TestRenderRepositoryListSorted(t *testing.T) {
 // TestRenderRepositoryListSnipsLongTitle verifies that a title exceeding the
 // calculated column width is truncated with "…" rather than overflowing.
 // In the test process GetTerminalWidthHeight returns 0, so the code falls back
-// to 80 columns → addonWidth = max(20, (80-7)*3/10) = 21.
+// to 80 columns → addonWidth = max(30, (80-7)*3/10) = 30.
 func TestRenderRepositoryListSnipsLongTitle(t *testing.T) {
 	longTitle := strings.Repeat("x", 50)
 	addons := []types.Addon{
 		{Title: longTitle, Description: "Short description"},
 	}
-	out := renderRepositoryList(addons)
+	out := renderRepositoryList(addons, false)
 
 	require.NotContains(t, out, longTitle, "full long title should not appear untruncated")
 	require.Contains(t, out, "…", "truncated title should end with ellipsis")
+}
+
+// TestRenderRepositoryListWrapTable verifies that --wrap-table shows the full title
+// without truncation.
+func TestRenderRepositoryListWrapTable(t *testing.T) {
+	longTitle := strings.Repeat("x", 50)
+	addons := []types.Addon{
+		{Title: longTitle, Description: "Short description"},
+	}
+	out := renderRepositoryList(addons, true)
+
+	require.Contains(t, out, longTitle, "full title should appear when wrap-table is set")
+	require.NotContains(t, out, "…")
 }
 
 // TestRenderRepositoryListEmpty verifies the footer still renders for a single addon.
 func TestRenderRepositoryListEmpty(t *testing.T) {
 	out := renderRepositoryList([]types.Addon{
 		{Title: "only-addon", Description: "Sole entry"},
-	})
+	}, false)
 	require.Contains(t, out, "1 add-ons found")
 }
 
 // TestRenderSearchResultsContent verifies that matching addon titles, descriptions,
 // and the search term appear in the rendered search output.
 func TestRenderSearchResultsContent(t *testing.T) {
-	out := renderSearchResults(sampleAddons(), "redis")
+	out := renderSearchResults(sampleAddons(), "redis", false)
 
 	require.Contains(t, out, "ddev-redis")
 	require.Contains(t, out, "ddev-memcached")
@@ -102,7 +115,7 @@ func TestRenderSearchResultsSorted(t *testing.T) {
 		{Title: "zzz-addon", Description: "Last"},
 		{Title: "aaa-addon", Description: "First"},
 	}
-	out := renderSearchResults(addons, "addon")
+	out := renderSearchResults(addons, "addon", false)
 
 	posFirst := strings.Index(out, "aaa-addon")
 	posLast := strings.Index(out, "zzz-addon")
@@ -118,8 +131,21 @@ func TestRenderSearchResultsSnipsLongTitle(t *testing.T) {
 	addons := []types.Addon{
 		{Title: longTitle, Description: "Short description"},
 	}
-	out := renderSearchResults(addons, "y")
+	out := renderSearchResults(addons, "y", false)
 
 	require.NotContains(t, out, longTitle)
 	require.Contains(t, out, "…")
+}
+
+// TestRenderSearchResultsWrapTable verifies that --wrap-table shows the full title
+// without truncation.
+func TestRenderSearchResultsWrapTable(t *testing.T) {
+	longTitle := strings.Repeat("y", 50)
+	addons := []types.Addon{
+		{Title: longTitle, Description: "Short description"},
+	}
+	out := renderSearchResults(addons, "y", true)
+
+	require.Contains(t, out, longTitle, "full title should appear when wrap-table is set")
+	require.NotContains(t, out, "…")
 }

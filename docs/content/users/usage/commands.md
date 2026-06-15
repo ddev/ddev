@@ -186,6 +186,7 @@ Flags:
 
 * `--installed`: List installed add-ons
 * `--project <projectName>`: Specify the project for which to list add-ons. Can only be used with the `--installed` flag. Defaults to checking for a project in the current directory.
+* `--wrap-table`, `-W`: Display table with wrapped text instead of truncating.
 
 Example:
 
@@ -198,11 +199,18 @@ ddev add-on list --installed
 
 # List installed add-ons for a specific project
 ddev add-on list --installed --project my-project
+
+# List with full untruncated add-on names and descriptions
+ddev add-on list --wrap-table
 ```
 
 ### `add-on search`
 
 Search available DDEV add-ons by name or description.
+
+Flags:
+
+* `--wrap-table`, `-W`: Display table with wrapped text instead of truncating.
 
 Example:
 
@@ -218,6 +226,9 @@ ddev add-on search redis web
 
 # Search with multiple terms using quotes (currently same behavior)
 ddev add-on search "redis insight"
+
+# Search with full untruncated output
+ddev add-on search redis --wrap-table
 ```
 
 ## `aliases`

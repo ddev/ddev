@@ -54,7 +54,8 @@ ddev add-on list --installed --project my-project
 			util.Warning("No DDEV add-ons found in registry.")
 			return
 		}
-		out := renderRepositoryList(addons)
+		wrapTable, _ := cmd.Flags().GetBool("wrap-table")
+		out := renderRepositoryList(addons, wrapTable)
 		output.UserOut.WithField("raw", addons).Print(out)
 	},
 }
@@ -109,7 +110,7 @@ func ListInstalledAddons(app *ddevapp.DdevApp) {
 }
 
 // renderRepositoryList renders the found list of addons from the registry
-func renderRepositoryList(addons []types.Addon) string {
+func renderRepositoryList(addons []types.Addon, wrapTable bool) string {
 	var out bytes.Buffer
 
 	t := table.NewWriter()
@@ -123,14 +124,21 @@ func renderRepositoryList(addons []types.Addon) string {
 	// Table overhead for 2 columns: | col | col |
 	const tableOverhead = 7
 	usableWidth := termWidth - tableOverhead
-	addonWidth := max(20, usableWidth*3/10)
+	addonWidth := max(30, usableWidth*3/10)
 	descWidth := max(30, usableWidth-addonWidth)
 
 	snip := func(col string, maxLen int) string { return text.Snip(col, maxLen, "…") }
-	t.SetColumnConfigs([]table.ColumnConfig{
-		{Name: "Add-on", WidthMax: addonWidth, WidthMaxEnforcer: snip},
-		{Name: "Description", WidthMax: descWidth},
-	})
+	if wrapTable {
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{Name: "Add-on"},
+			{Name: "Description"},
+		})
+	} else {
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{Name: "Add-on", WidthMax: addonWidth, WidthMaxEnforcer: snip},
+			{Name: "Description", WidthMax: descWidth},
+		})
+	}
 
 	sort.Slice(addons, func(i, j int) bool {
 		return strings.Compare(strings.ToLower(addons[i].Title), strings.ToLower(addons[j].Title)) == -1
@@ -143,7 +151,11 @@ func renderRepositoryList(addons []types.Addon) string {
 			d = d + "*"
 		}
 		title := output.Hyperlink(addon.GitHubURL, addon.Title)
-		t.AppendRow([]any{title, text.WrapSoft(d, descWidth)})
+		if wrapTable {
+			t.AppendRow([]any{title, d})
+		} else {
+			t.AppendRow([]any{title, text.WrapSoft(d, descWidth)})
+		}
 	}
 
 	t.Render()
@@ -157,6 +169,7 @@ func init() {
 	AddonListCmd.Flags().Bool("installed", false, `Show installed DDEV add-ons`)
 	AddonListCmd.Flags().String("project", "", "Name of the project to list the add-ons for. Can only be used with `--installed`")
 	_ = AddonListCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
+	AddonListCmd.Flags().BoolP("wrap-table", "W", false, "Display table with wrapped text instead of truncating.")
 
 	AddonCmd.AddCommand(AddonListCmd)
 }
