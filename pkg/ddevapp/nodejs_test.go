@@ -114,7 +114,7 @@ func TestCorepackEnable(t *testing.T) {
 		Cmd: `command -v yarn && ls -l "$(command -v yarn)"`,
 	})
 	require.NoError(t, err)
-	require.Contains(t, out, "/usr/local/bin/yarn")
+	require.Contains(t, out, "/usr/local/n/bin/yarn")
 	require.NotContains(t, out, "corepack")
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: `yarn --version`,
@@ -129,7 +129,7 @@ func TestCorepackEnable(t *testing.T) {
 		Cmd: `command -v yarn && ls -l "$(command -v yarn)"`,
 	})
 	require.NoError(t, err)
-	require.Contains(t, out, "/usr/local/bin/yarn")
+	require.Contains(t, out, "/usr/local/n/bin/yarn")
 	require.Contains(t, out, "corepack")
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: `yarn set version stable`,
