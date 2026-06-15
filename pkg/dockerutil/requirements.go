@@ -105,6 +105,42 @@ func CheckAvailableSpace() error {
 	return nil
 }
 
+// CheckDockerCLI verifies that the docker CLI binary exists and can run basic
+// commands. Some tools (e.g. Mutagen) shell out to the docker CLI rather than
+// using the Docker API, so a working daemon alone is not sufficient.
+//
+// The lookup order mirrors Mutagen's own docker binary resolution
+// (pkg/docker/docker.go): MUTAGEN_DOCKER_PATH env var takes priority over PATH.
+func CheckDockerCLI() error {
+	dockerPath, err := findDockerCLI()
+	if err != nil {
+		return err
+	}
+	cmd := osexec.Command(dockerPath, "ps")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("docker CLI found at %s but 'docker ps' failed: %v (output: %s)", dockerPath, err, strings.TrimSpace(string(out)))
+	}
+	return nil
+}
+
+// findDockerCLI resolves the docker binary path using the same priority order
+// as Mutagen: MUTAGEN_DOCKER_PATH env var first, then PATH.
+func findDockerCLI() (string, error) {
+	if searchPath := os.Getenv("MUTAGEN_DOCKER_PATH"); searchPath != "" {
+		p := filepath.Join(searchPath, "docker")
+		if _, err := os.Stat(p); err == nil {
+			return p, nil
+		}
+		return "", fmt.Errorf("MUTAGEN_DOCKER_PATH is set to %q but no docker binary found there", searchPath)
+	}
+	p, err := osexec.LookPath("docker")
+	if err != nil {
+		return "", fmt.Errorf("docker CLI not found in PATH: %v", err)
+	}
+	return p, nil
+}
+
 // CheckDockerAuth checks if Docker authentication is properly configured
 func CheckDockerAuth() error {
 	homeDir, err := os.UserHomeDir()

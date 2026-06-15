@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
@@ -32,6 +33,10 @@ ddev utility mutagen-diagnose --all  # Show all Mutagen volumes`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")
+		}
+
+		if err := dockerutil.CheckDockerCLI(); err != nil {
+			util.Failed("docker CLI is not available: %v\nMutagen requires a working docker CLI to connect to containers.", err)
 		}
 
 		showAll, _ := cmd.Flags().GetBool("all")
