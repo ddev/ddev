@@ -3236,9 +3236,14 @@ func TestDdevExec(t *testing.T) {
 	_, stderr, err = app.Exec(errorOpts)
 	assert.Error(err)
 	assert.Contains(stderr, "this: not found")
-	err = app.ExecWithTty(errorOpts)
+	// The Tty/NoCapture interactive path (used by `ddev ssh`) should also surface errors.
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service:   "busybox",
+		Cmd:       "this is an error;",
+		Tty:       true,
+		NoCapture: true,
+	})
 	assert.Error(err)
-	assert.Contains(stderr, "this: not found")
 
 	// Now kill the busybox service and make sure that responses to app.Exec are correct
 	ctx, apiClient, err := dockerutil.GetDockerClient()
