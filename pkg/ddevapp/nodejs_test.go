@@ -62,13 +62,16 @@ func TestNodeJSVersions(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Testing some random versions, complete, incomplete, and labels
-	for _, v := range []string{"6", "auto", "engine", "16.0.0", "20"} {
+	// Testing some random versions, complete, incomplete, and labels.
+	// An empty value must fall back to the default Node.js version DDEV provides.
+	for _, v := range []string{"6", "auto", "engine", "16.0.0", "20", ""} {
 		app.NodeJSVersion = v
 		if app.NodeJSVersion == "auto" {
 			v = nvmrcVersion
 		} else if app.NodeJSVersion == "engine" {
 			v = packageJSONVersion
+		} else if app.NodeJSVersion == "" {
+			v = nodeps.NodeJSDefault
 		}
 		err = app.Restart()
 		assert.NoError(err)
