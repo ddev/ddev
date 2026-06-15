@@ -143,6 +143,9 @@ func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 		})
 	}
 	if !wrapTableText {
+		// Backstop: cell-level WidthMax enforcers above should prevent overflow,
+		// but SetAllowedRowLength catches any remainder (e.g. the Name column,
+		// which has no WidthMaxEnforcer).
 		t.SetAllowedRowLength(termWidth)
 	}
 	styles.SetGlobalTableStyle(t, false)

@@ -104,7 +104,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 				WidthMax: int(urlPortWidth),
 				// Wrap each embedded line individually to preserve intentional line breaks
 				WidthMaxEnforcer: func(col string, maxLen int) string {
-					wrapped := []string{}
+					wrapped := make([]string, 0, strings.Count(col, "\n")+1)
 					for line := range strings.SplitSeq(col, "\n") {
 						switch {
 						case text.RuneWidthWithoutEscSequences(line) <= maxLen:

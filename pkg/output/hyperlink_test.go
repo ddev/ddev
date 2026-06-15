@@ -62,6 +62,9 @@ func TestFileURL(t *testing.T) {
 		{name: "unix absolute path", path: "/Users/rfay/workspace/ddev", want: "file:///Users/rfay/workspace/ddev"},
 		{name: "path with spaces", path: "/home/user/my project", want: "file:///home/user/my%20project"},
 		{name: "nested path", path: "/var/www/html", want: "file:///var/www/html"},
+		// Windows: filepath.ToSlash gives "C:/Users/...", leading "/" is prepended
+		// so url.URL produces file:///C:/Users/... which is the correct file URI form.
+		{name: "windows path", path: "C:/Users/rfay/workspace", want: "file:///C:/Users/rfay/workspace"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
