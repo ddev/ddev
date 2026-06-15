@@ -86,8 +86,13 @@ func RenderAppRow(t table.Writer, row map[string]any) {
 
 	status = FormatSiteStatus(status)
 
+	// Hyperlink targets are invisible to the table's width calculation, so
+	// even when the visible text is truncated the full URL/path is clickable.
+	urls = output.Hyperlink(urls, urls)
+	location := output.Hyperlink(output.FileURL(fmt.Sprint(row["approot"])), fmt.Sprint(row["shortroot"]))
+
 	t.AppendRow(table.Row{
-		row["name"], status, row["shortroot"], urls, row["type"],
+		row["name"], status, location, urls, row["type"],
 	})
 }
 
