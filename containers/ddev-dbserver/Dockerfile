@@ -45,7 +45,7 @@ RUN mkdir -p /var/lib/apt/lists/partial
 RUN <<EOF
     set -eu -o pipefail
     apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg2 gpgv less lsb-release pv tzdata vim-tiny wget
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg gpgv less lsb-release pv tzdata vim-tiny wget
     update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
     # Install tzdata-legacy to avoid issues with deprecated timezones
