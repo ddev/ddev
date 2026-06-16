@@ -21,9 +21,11 @@ teardown() {
   run ddev start -y
   assert_success
 
-  # Do you want to include Docker configuration from recipes?
-  # [x] No permanently, never ask again for this project
-  run bats_pipe echo x \| ddev composer create-project shopware/production
+  # 1. Do you trust "php-http/discovery" to execute code and wish to enable it now?
+  #    (writes "allow-plugins" to composer.json) [y,n,d,?]
+  # 2. Do you want to include Docker configuration from recipes?
+  #    [x] No permanently, never ask again for this project
+  run bats_pipe printf "y\nx\n" \| ddev composer create-project shopware/production
   assert_success
   assert_output --partial "Do you want to include Docker configuration from recipes?"
   assert_file_not_exist compose.yaml
