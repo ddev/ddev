@@ -141,7 +141,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     sudo systemctl enable --now docker
     ```
 
-    Run `newgrp docker` to activate the group change in your current shell, then verify with `docker run hello-world`. (A full log out and back in also works.)
+    Run `newgrp docker` to open a new subshell with the `docker` group active, then verify with `docker run hello-world`. (A full log out and back in applies the change to your whole session.)
 
     ??? tip "Prefer to run as a script?"
         Create a script file, then run it:
@@ -187,7 +187,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     sudo systemctl enable --now docker
     ```
 
-    Run `newgrp docker` to activate the group change in your current shell. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/) for more details.
+    Run `newgrp docker` to open a new subshell with the `docker` group active, or log out and back in to apply the change to your whole session. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/) for more details.
 
     !!!warning "Don’t `sudo` with `docker` or `ddev`"
         Don’t use `sudo` with the `docker` command. If you find yourself needing it, you haven’t finished the installation. You also shouldn’t use `sudo` with `ddev` unless it’s specifically for the [`ddev hostname`](../usage/commands.md#hostname) command.
@@ -290,7 +290,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
     ```
 
-    Run `newgrp docker` to activate the group change in your current shell. On WSL2 systems without `systemd`, you may need to start Docker manually with `sudo service docker start`.
+    Run `newgrp docker` to open a new subshell with the `docker` group active, or log out and back in to apply the change to your whole session. On WSL2 systems without `systemd`, you may need to start Docker manually with `sudo service docker start`.
 
     ??? tip "Prefer to run as a script?"
         Create a script file, then run it:
@@ -361,6 +361,21 @@ But this error often indicates that either Docker is not installed or the Docker
 
 - **macOS/Traditional Windows:** Start your Docker provider (e.g., OrbStack, Docker Desktop, Rancher Desktop) from your applications menu
 - **Linux/WSL2:** Run `sudo systemctl enable --now docker` to start and enable it to start automatically on boot
+
+---
+
+> `permission denied while trying to connect to the docker API at unix:///var/run/docker.sock`
+
+A message like this means that your user is not in the `docker` group:
+
+```bash
+sudo groupadd -f docker && sudo usermod -aG docker ${SUDO_USER:-$USER}
+# newgrp opens a new subshell with the `docker` group active;
+# log out and back in to apply the change to your full session
+newgrp docker
+```
+
+---
 
 > `error during connect: Get "http://host:2375/v1.51/version": dial tcp: lookup host on 127.0.0.53:53: server misbehaving`
 
