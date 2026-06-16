@@ -27,6 +27,7 @@ teardown() {
   #    [x] No permanently, never ask again for this project
   run bats_pipe printf "y\nx\n" \| ddev composer create-project shopware/production
   assert_success
+  assert_output --partial "execute code and wish to enable it now?"
   assert_output --partial "Do you want to include Docker configuration from recipes?"
   assert_file_not_exist compose.yaml
   assert_file_not_exist compose.override.yaml
