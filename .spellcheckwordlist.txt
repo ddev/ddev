@@ -656,6 +656,7 @@ subdirectory
 subdirectories
 subfield
 subnet
+subshell
 sudo
 superglobal
 supervisord
