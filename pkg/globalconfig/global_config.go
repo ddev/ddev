@@ -882,12 +882,6 @@ func readCAROOT() string {
 	}
 	root := strings.Trim(string(out), "\r\n")
 	if !fileIsReadable(filepath.Join(root, "rootCA-key.pem")) || !fileExists(filepath.Join(root, "rootCA.pem")) {
-		if caRootEnv := os.Getenv("CAROOT"); caRootEnv != "" {
-			// CAROOT is explicitly set but CA files are not accessible at the path
-			// mkcert returned. Warn loudly so operators can diagnose the real cause
-			// (broken WSL2 interop, unmounted filesystem, etc.) rather than chasing cryptic TLS errors.
-			output.UserErr.Warnf("CAROOT is set to %q but mkcert CA files (rootCA.pem, rootCA-key.pem) are not readable at that location. DDEV cannot set up trusted HTTPS. On WSL2, check that Windows interop is working (wsl --shutdown, then restart).", root)
-		}
 		return ""
 	}
 

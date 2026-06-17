@@ -1972,7 +1972,14 @@ func (app *DdevApp) Start() error {
 	if !IsRouterDisabled(app) {
 		caRoot := globalconfig.GetCAROOT()
 		if caRoot == "" {
-			util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
+			if caRootEnv := os.Getenv("CAROOT"); caRootEnv != "" {
+				// CAROOT is explicitly set but mkcert CA files are not accessible.
+				// Warn loudly so operators can diagnose the real cause (broken WSL2
+				// interop, unmounted filesystem, etc.) rather than chasing cryptic TLS errors.
+				util.Warning("CAROOT is set to %q but mkcert CA files (rootCA.pem, rootCA-key.pem) are not readable at that location. DDEV cannot set up trusted HTTPS. On WSL2, check that Windows interop is working (wsl --shutdown, then restart).", caRootEnv)
+			} else {
+				util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
+			}
 		}
 		router, _ := FindDdevRouter()
 
