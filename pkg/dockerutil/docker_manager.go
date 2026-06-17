@@ -56,9 +56,13 @@ var (
 func getDockerManagerInstance() (*dockerManager, error) {
 	sDockerManagerOnce.Do(func() {
 		sDockerManager = &dockerManager{}
-		// Suppress any output (stdout, stderr) from docker/cli
 		sDockerManager.cli, sDockerManagerErr = command.NewDockerCli(
+			// Suppress any output (stdout, stderr) from docker/cli.
 			command.WithCombinedStreams(io.Discard),
+			// Detach stdin (an empty io.ReadCloser, not os.Stdin) so an in-process
+			// compose exec doesn't compete with the bubbletea TUI for keystrokes;
+			// interactive/piped execs set real stdin via SetExecStdin.
+			command.WithInputStream(io.NopCloser(bytes.NewReader(nil))),
 		)
 		if sDockerManagerErr != nil {
 			return
