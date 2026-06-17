@@ -1904,6 +1904,14 @@ func (app *DdevApp) Start() error {
 		_, logStderrOutput, logStderrErr := dockerutil.RunSimpleContainer(app.WebImage+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, nil, nil, nil)
 		// If the web image is dirty, try to rebuild it immediately
 		if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
+			if output.JSONOutput {
+				output.UserOut.Printf("Rebuilding web image without cache...")
+			} else {
+				fmt.Print("Rebuilding web image without cache...")
+				if globalconfig.DdevDebug {
+					output.UserOut.Debugln()
+				}
+			}
 			_, err = app.composeBuild("web", "--no-cache")
 			if err != nil {
 				return err
@@ -2153,9 +2161,8 @@ func (app *DdevApp) Start() error {
 		Cmd: "log-stderr.sh --show 2>/dev/null || true",
 	})
 	logStderr = strings.TrimSpace(logStderr)
+	// Reset the build hash when errors occur
 	if logStderr != "" {
-		util.Warning(logStderr)
-		// Reset the build hash when errors occur
 		_ = os.WriteFile(buildHashFile, []byte(nodeps.DdevFileSignature), 0644)
 	}
 
@@ -2202,11 +2209,12 @@ func (app *DdevApp) Start() error {
 	}
 
 	if logStderr != "" {
-		util.Warning(`Some components of the project %s were not installed properly.
+		util.Warning(`%s
+Some components of the project %s were not installed properly.
 The project is running anyway, but see the warnings above for details.
 If offline, run 'ddev restart' once you are back online.
 If online, check your connection and run 'ddev restart' later.
-If this seems to be a config issue, update it accordingly.`, app.Name)
+If this seems to be a config issue, update it accordingly.`, fmt.Sprintf("%s\n", logStderr), app.Name)
 	}
 
 	return nil
