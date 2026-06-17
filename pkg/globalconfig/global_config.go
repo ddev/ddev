@@ -878,11 +878,17 @@ func readCAROOT() string {
 func ReadCAROOTDetails() (string, error) {
 	_, err := exec.LookPath("mkcert")
 	if err != nil {
-		return "", fmt.Errorf("mkcert not found. Install for trusted HTTPS: `brew install mkcert nss`, `choco install -y mkcert`, etc., then run `mkcert -install`")
+		recommendedCommand := "with your OS package manager"
+		if nodeps.IsMacOS() {
+			recommendedCommand = "with `brew install mkcert nss`"
+		} else if nodeps.IsWindows() {
+			recommendedCommand = "with `choco install -y mkcert`"
+		}
+		return "", fmt.Errorf("mkcert not found. Install it %s to trust HTTPS, then run `mkcert -install`", recommendedCommand)
 	}
 	out, err := exec.Command("mkcert", "-CAROOT").Output()
 	if err != nil {
-		return "", fmt.Errorf("error running `mkcert -CAROOT`: %v; troubleshoot with `ddev utility tls-diagnose`", err)
+		return "", fmt.Errorf("error running `mkcert -CAROOT`: %v; use `ddev utility tls-diagnose` for troubleshooting", err)
 	}
 	caRoot := strings.TrimSpace(string(out))
 	if !fileIsReadable(filepath.Join(caRoot, "rootCA-key.pem")) || !fileExists(filepath.Join(caRoot, "rootCA.pem")) {
@@ -890,13 +896,13 @@ func ReadCAROOTDetails() (string, error) {
 		if caRootEnv := os.Getenv("CAROOT"); caRootEnv != "" {
 			caRootFrom = fmt.Sprintf("CAROOT=%q", caRootEnv)
 		} else if caRoot != "" {
-			caRootFrom = fmt.Sprintf("`mkcert -CAROOT` output %q", caRoot)
+			caRootFrom = fmt.Sprintf("`mkcert -CAROOT` at %q", caRoot)
 		}
 		wsl2Hint := ""
 		if nodeps.IsWSL2() {
-			wsl2Hint = ", check Windows interop is working (`wsl --shutdown`, then restart)"
+			wsl2Hint = ", verify Windows interop is working: run `wsl --shutdown`, then restart WSL"
 		}
-		return "", fmt.Errorf("mkcert CA files not readable from %s; run `mkcert -install` for trusted HTTPS%s; troubleshoot with `ddev utility tls-diagnose`", caRootFrom, wsl2Hint)
+		return "", fmt.Errorf("mkcert CA files are not readable from %s; run `mkcert -install` to trust HTTPS%s; use `ddev utility tls-diagnose` for troubleshooting", caRootFrom, wsl2Hint)
 	}
 	return caRoot, nil
 }
