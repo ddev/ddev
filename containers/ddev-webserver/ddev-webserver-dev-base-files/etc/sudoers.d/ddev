@@ -1,2 +1,3 @@
 ALL ALL=NOPASSWD: ALL
 Defaults env_keep += "*_proxy *_PROXY DDEV_* IS_DDEV_PROJECT PHP_DEFAULT_VERSION"
+Defaults secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/n/bin"

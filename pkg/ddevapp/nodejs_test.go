@@ -80,6 +80,14 @@ func TestNodeJSVersions(t *testing.T) {
 		})
 		assert.NoError(err)
 		assert.True(strings.HasPrefix(out, "v"+v), "Expected node version to start with '%s', but got %s", v, out)
+
+		// Verify node is reachable via sudo (secure_path must include /usr/local/n/bin)
+		out, _, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd:  `sudo -u "$DDEV_USER" node --version`,
+			User: "root",
+		})
+		assert.NoError(err)
+		assert.True(strings.HasPrefix(out, "v"+v), "Expected sudo node version to start with '%s', but got %s", v, out)
 	}
 }
 
