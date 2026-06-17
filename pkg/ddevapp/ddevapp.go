@@ -1976,18 +1976,16 @@ func (app *DdevApp) Start() error {
 		// interop, unmounted filesystem, etc.) rather than chasing cryptic TLS errors.
 		if _, err := osexec.LookPath("mkcert"); err != nil {
 			util.Warning("mkcert not found. Install for trusted HTTPS: `brew install mkcert nss`, `choco install -y mkcert`, etc., then run `mkcert -install`.")
-		} else {
-			if !fileutil.FileIsReadable(filepath.Join(caRoot, "rootCA-key.pem")) || !fileutil.FileExists(filepath.Join(caRoot, "rootCA.pem")) {
-				caRootFrom := "`mkcert -CAROOT`"
-				if caRootEnv := os.Getenv("CAROOT"); caRootEnv != "" {
-					caRootFrom = "CAROOT=" + caRootEnv
-				}
-				wsl2Hint := ""
-				if nodeps.IsWSL2() {
-					wsl2Hint = " On WSL2, check Windows interop is working (`wsl --shutdown`, then restart)."
-				}
-				util.Warning("mkcert CA files not readable from %s; run `mkcert -install` for trusted HTTPS.%s", caRootFrom, wsl2Hint)
+		} else if !fileutil.FileIsReadable(filepath.Join(caRoot, "rootCA-key.pem")) || !fileutil.FileExists(filepath.Join(caRoot, "rootCA.pem")) {
+			caRootFrom := "`mkcert -CAROOT`"
+			if caRootEnv := os.Getenv("CAROOT"); caRootEnv != "" {
+				caRootFrom = "CAROOT=" + caRootEnv
 			}
+			wsl2Hint := ""
+			if nodeps.IsWSL2() {
+				wsl2Hint = " On WSL2, check Windows interop is working (`wsl --shutdown`, then restart)."
+			}
+			util.Warning("mkcert CA files not readable from %s; run `mkcert -install` for trusted HTTPS.%s", caRootFrom, wsl2Hint)
 		}
 		router, _ := FindDdevRouter()
 
