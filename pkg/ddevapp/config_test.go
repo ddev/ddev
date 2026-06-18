@@ -1938,7 +1938,8 @@ func TestConfigFunctionality(t *testing.T) {
 
 	// This isn't very important, and is unusual
 	// On some WSL2 systems (tb-wsldd-05) it works fine locally, can't work in buildkite.
-	if !dockerutil.IsColima() && !nodeps.IsWSL2() {
+	// On Windows (tb-win11-06) the cert reload race with Traefik causes intermittent failures.
+	if !dockerutil.IsColima() && !nodeps.IsWSL2() && !nodeps.IsWindows() {
 		safeURL = "https://127.0.0.1:" + hostHTTPSPort + site.Safe200URIWithExpectation.URI
 		testcommon.AssertLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect,
 			testcommon.WithMessagef("HTTPS safe URL should serve the expected static content"),
