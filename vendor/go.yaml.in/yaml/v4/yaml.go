@@ -9,12 +9,15 @@
 //	https://github.com/yaml/go-yaml
 //
 // This file contains:
-// - Version preset functions (WithV2Defaults, WithV3Defaults, WithV4Defaults)
+// - Version presets (V2, V3, V4)
 // - Options API (WithIndent, WithKnownFields, etc.)
 // - Type and constant re-exports from internal/libyaml
 // - Helper functions for struct field handling
-// - Load/Dump API (Load, Dump, Loader, Dumper)
 // - Classic APIs (Decoder, Encoder, Unmarshal, Marshal)
+//
+// For the main API, see:
+// - loader.go: Load, Loader
+// - dumper.go: Dump, Dumper
 
 package yaml
 
@@ -22,9 +25,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
+	"strings"
+	"sync"
 
 	"go.yaml.in/yaml/v4/internal/libyaml"
-	"go.yaml.in/yaml/v4/plugin/limit"
 )
 
 //-----------------------------------------------------------------------------
@@ -32,218 +37,92 @@ import (
 //-----------------------------------------------------------------------------
 
 // Usage:
-//	yaml.Dump(&data, yaml.WithV3Defaults())
-//	yaml.Dump(&data, yaml.WithV3Defaults(), yaml.WithIndent(2), yaml.WithCompactSeqIndent())
+//	yaml.Dump(&data, yaml.V3)
+//	yaml.Dump(&data, yaml.V3, yaml.WithIndent(2), yaml.WithCompactSeqIndent())
 
-// WithV2Defaults returns V2-compatible default options.
-func WithV2Defaults() Option {
-	return Options(
-		WithIndent(2),
-		WithCompactSeqIndent(false),
-		WithLineWidth(80),
-		WithUnicode(true),
-		WithUniqueKeys(true),
-		WithQuotePreference(QuoteLegacy),
-		WithPlugin(limit.New()),
-	)
-}
+// V2 defaults:
+var V2 = Options(
+	WithIndent(2),
+	WithCompactSeqIndent(false),
+	WithLineWidth(80),
+	WithUnicode(true),
+	WithUniqueKeys(true),
+	WithQuotePreference(QuoteLegacy),
+)
 
-// WithV3Defaults returns V3-compatible default options.
-func WithV3Defaults() Option {
-	return Options(
-		WithIndent(4),
-		WithCompactSeqIndent(false),
-		WithLineWidth(80),
-		WithUnicode(true),
-		WithUniqueKeys(true),
-		WithQuotePreference(QuoteLegacy),
-		WithPlugin(limit.New()),
-	)
-}
+// V3 defaults:
+var V3 = Options(
+	WithIndent(4),
+	WithCompactSeqIndent(false),
+	WithLineWidth(80),
+	WithUnicode(true),
+	WithUniqueKeys(true),
+	WithQuotePreference(QuoteLegacy),
+)
 
-// WithV4Defaults returns the current V4 default options.
-func WithV4Defaults() Option {
-	return Options(
-		WithIndent(2),
-		WithCompactSeqIndent(true),
-		WithLineWidth(80),
-		WithUnicode(true),
-		WithUniqueKeys(true),
-		WithQuotePreference(QuoteSingle),
-		WithPlugin(limit.New()),
-	)
-}
+// V4 defaults:
+var V4 = Options(
+	WithIndent(2),
+	WithCompactSeqIndent(true),
+	WithLineWidth(80),
+	WithUnicode(true),
+	WithUniqueKeys(true),
+	WithQuotePreference(QuoteSingle),
+)
 
 //-----------------------------------------------------------------------------
 // Options
 //-----------------------------------------------------------------------------
 
 // Option allows configuring YAML loading and dumping operations.
+// Re-exported from internal/libyaml.
 type Option = libyaml.Option
 
-// Option configuration functions
 var (
-	// WithIndent sets the number of spaces to use for indentation when
-	// dumping YAML content.
-	//
-	// Valid values are 2-9. Common choices: 2 (compact), 4 (readable).
+	// WithIndent sets indentation spaces (2-9).
+	// See internal/libyaml.WithIndent.
 	WithIndent = libyaml.WithIndent
-
-	// WithCompactSeqIndent configures whether the sequence indicator '- ' is
-	// considered part of the indentation when dumping YAML content.
-	//
-	// If compact is true, '- ' is treated as part of the indentation.
-	// If compact is false, '- ' is not treated as part of the indentation.
-	// When called without arguments, defaults to true.
+	// WithCompactSeqIndent configures '- ' as part of indentation.
+	// See internal/libyaml.WithCompactSeqIndent.
 	WithCompactSeqIndent = libyaml.WithCompactSeqIndent
-
-	// WithKnownFields enables or disables strict field checking during YAML
-	// loading.
-	//
-	// When enabled, loading will return an error if the YAML input contains
-	// fields that do not correspond to any fields in the target struct.
-	// When called without arguments, defaults to true.
+	// WithKnownFields enables strict field checking during loading.
+	// See internal/libyaml.WithKnownFields.
 	WithKnownFields = libyaml.WithKnownFields
-
-	// WithSingleDocument configures the Loader to only process the first
-	// document in a YAML stream. After the first document is loaded,
-	// subsequent calls to Load will return [io.EOF].
-	//
-	// When called without arguments, defaults to true.
-	//
-	// This is useful when you expect exactly one document and want behavior
-	// similar to Unmarshal.
+	// WithSingleDocument only processes first document in stream.
+	// See internal/libyaml.WithSingleDocument.
 	WithSingleDocument = libyaml.WithSingleDocument
-
-	// WithStreamNodes enables returning stream boundary nodes when loading
-	// YAML.
-	//
-	// When enabled, Loader.Load returns an interleaved sequence of
-	// StreamNode and DocumentNode values:
-	//
-	//	[StreamNode, DocNode, StreamNode, DocNode, ..., StreamNode]
-	//
-	// StreamNodes contain metadata about the stream including:
-	//   - Encoding (UTF-8, UTF-16LE, UTF-16BE)
-	//   - YAML version directive (%YAML)
-	//   - Tag directives (%TAG)
-	//   - Position information (Line, Column)
-	//
-	// An empty YAML stream returns a single StreamNode.
-	// When called without arguments, defaults to true.
-	//
-	// The default is false.
+	// WithStreamNodes enables stream boundary nodes when loading.
+	// See internal/libyaml.WithStreamNodes.
 	WithStreamNodes = libyaml.WithStreamNodes
-
-	// WithAllDocuments enables multi-document mode for Load and Dump
-	// operations.
-	//
-	// When used with Load, the target must be a pointer to a slice.
-	// All documents in the YAML stream will be decoded into the slice.
-	// Zero documents results in an empty slice (no error).
-	//
-	// When used with Dump, the input must be a slice.
-	// Each element will be encoded as a separate YAML document
-	// with "---" separators.
-	//
-	// When called without arguments, defaults to true.
-	//
-	// The default is false (single-document mode).
+	// WithAllDocuments enables multi-document mode for Load and Dump.
+	// See internal/libyaml.WithAllDocuments.
 	WithAllDocuments = libyaml.WithAllDocuments
-
-	// WithLineWidth sets the preferred line width for YAML output.
-	//
-	// When encoding long strings, the encoder will attempt to wrap them at
-	// this width using literal block style (|). Set to -1 or 0 for unlimited
-	// width.
-	//
-	// The default is 80 characters.
+	// WithLineWidth sets preferred line width for output.
+	// See internal/libyaml.WithLineWidth.
 	WithLineWidth = libyaml.WithLineWidth
-
-	// WithUnicode controls whether non-ASCII characters are allowed in YAML
-	// output.
-	//
-	// When true, non-ASCII characters appear as-is (e.g., "café").
-	// When false, non-ASCII characters are escaped (e.g., "caf\u00e9").
-	// When called without arguments, defaults to true.
-	//
-	// The default is true.
+	// WithUnicode controls non-ASCII characters in output.
+	// See internal/libyaml.WithUnicode.
 	WithUnicode = libyaml.WithUnicode
-
-	// WithUniqueKeys enables or disables duplicate key detection during YAML
-	// loading.
-	//
-	// When enabled, loading will return an error if the YAML input contains
-	// duplicate keys in any mapping. This is a security feature that prevents
-	// key override attacks.
-	// When called without arguments, defaults to true.
-	//
-	// The default is true.
+	// WithUniqueKeys enables duplicate key detection.
+	// See internal/libyaml.WithUniqueKeys.
 	WithUniqueKeys = libyaml.WithUniqueKeys
-
 	// WithCanonical forces canonical YAML output format.
-	//
-	// When enabled, the encoder outputs strictly canonical YAML with explicit
-	// tags for all values. This produces verbose output primarily useful for
-	// debugging and YAML spec compliance testing.
-	// When called without arguments, defaults to true.
-	//
-	// The default is false.
+	// See internal/libyaml.WithCanonical.
 	WithCanonical = libyaml.WithCanonical
-
-	// WithLineBreak sets the line ending style for YAML output.
-	//
-	// Available options:
-	//   - LineBreakLN: Unix-style \n (default)
-	//   - LineBreakCR: Old Mac-style \r
-	//   - LineBreakCRLN: Windows-style \r\n
-	//
-	// The default is LineBreakLN.
+	// WithLineBreak sets line ending style for output.
+	// See internal/libyaml.WithLineBreak.
 	WithLineBreak = libyaml.WithLineBreak
-
-	// WithExplicitStart controls whether document start markers (---) are
-	// always emitted.
-	//
-	// When true, every document begins with an explicit "---" marker.
-	// When false (default), the marker is omitted for the first document.
-	// When called without arguments, defaults to true.
+	// WithExplicitStart controls document start markers (---).
+	// See internal/libyaml.WithExplicitStart.
 	WithExplicitStart = libyaml.WithExplicitStart
-
-	// WithExplicitEnd controls whether document end markers (...) are always
-	// emitted.
-	//
-	// When true, every document ends with an explicit "..." marker.
-	// When false (default), the marker is omitted.
-	// When called without arguments, defaults to true.
+	// WithExplicitEnd controls document end markers (...).
+	// See internal/libyaml.WithExplicitEnd.
 	WithExplicitEnd = libyaml.WithExplicitEnd
-
-	// WithFlowSimpleCollections controls whether simple collections use flow
-	// style.
-	//
-	// When true, sequences and mappings containing only scalar values (no
-	// nested collections) are rendered in flow style if they fit within the
-	// line width.
-	// Example: {name: test, count: 42} or [a, b, c]
-	// When called without arguments, defaults to true.
-	//
-	// When false (default), all collections use block style.
+	// WithFlowSimpleCollections controls flow style for simple collections.
+	// See internal/libyaml.WithFlowSimpleCollections.
 	WithFlowSimpleCollections = libyaml.WithFlowSimpleCollections
-
-	// WithQuotePreference sets the preferred quote style for strings that
-	// require quoting.
-	//
-	// This option only affects strings that require quoting per the YAML spec.
-	// Plain strings that don't need quoting remain unquoted regardless of this
-	// setting. Quoting is required for:
-	//   - Strings that look like other YAML types (true, false, null, 123, etc.)
-	//   - Strings with leading/trailing whitespace
-	//   - Strings containing special YAML syntax characters
-	//   - Empty strings in certain contexts
-	//
-	// Quote styles:
-	//   - QuoteSingle: Use single quotes (v4 default)
-	//   - QuoteDouble: Use double quotes
-	//   - QuoteLegacy: Legacy v2/v3 behavior (mixed quoting)
+	// WithQuotePreference sets preferred quote style when quoting is required.
+	// See internal/libyaml.WithQuotePreference.
 	WithQuotePreference = libyaml.WithQuotePreference
 )
 
@@ -253,53 +132,10 @@ var (
 //
 // Example:
 //
-//	opts := yaml.Options(yaml.WithV4Defaults(), yaml.WithIndent(3))
+//	opts := yaml.Options(yaml.V4, yaml.WithIndent(3))
 //	yaml.Dump(&data, opts)
 func Options(opts ...Option) Option {
 	return libyaml.CombineOptions(opts...)
-}
-
-// DepthKind represents the type of nesting (flow or block).
-type DepthKind = libyaml.DepthKind
-
-// DepthKind constants for nesting depth checks.
-const (
-	DepthKindFlow  = libyaml.DepthKindFlow
-	DepthKindBlock = libyaml.DepthKindBlock
-)
-
-// DepthContext holds context about a nesting depth check.
-type DepthContext = libyaml.DepthContext
-
-// WithPlugin registers one or more plugins for YAML processing.
-//
-// Plugins extend the YAML library with custom processing logic.
-// Each plugin implements one or more plugin interfaces.
-// Currently supported plugin types:
-//   - LimitPlugin: Controls depth and alias expansion limits
-//
-// Example:
-//
-//	import "go.yaml.in/yaml/v4/plugin/limit"
-//	loader := yaml.NewLoader(data, yaml.WithPlugin(limit.New(limit.AliasNone())))
-//
-// Plugins use public types and can be implemented by external packages.
-func WithPlugin(plugins ...any) Option {
-	return func(o *libyaml.Options) error {
-		for _, p := range plugins {
-			registered := false
-			if lp, ok := p.(LimitPlugin); ok {
-				o.DepthCheck = lp.CheckDepth
-				o.AliasCheck = lp.CheckAlias
-				registered = true
-			}
-			// Future plugin types add cases here (non-exclusive if)
-			if !registered {
-				return fmt.Errorf("yaml: unsupported plugin type: %T", p)
-			}
-		}
-		return nil
-	}
 }
 
 // OptsYAML parses a YAML string containing option settings and returns
@@ -318,12 +154,6 @@ func WithPlugin(plugins ...any) Option {
 // - known-fields (bool)
 // - single-document (bool)
 // - unique-keys (bool)
-// - plugin (map of plugin name to config)
-//
-// The plugin field configures plugins by name. Each key is a plugin
-// name and the value is its configuration map (or null for defaults).
-// Currently supported: "limit" with keys "depth" and "alias" (int
-// or null to disable).
 //
 // Only fields specified in the YAML will override other options when
 // combined. Unspecified fields won't affect other options.
@@ -333,26 +163,22 @@ func WithPlugin(plugins ...any) Option {
 //	opts, err := yaml.OptsYAML(`
 //	  indent: 3
 //	  known-fields: true
-//	  plugin:
-//	    limit:
-//	      depth: 50
 //	`)
 //	yaml.Dump(&data, yaml.Options(V4, opts))
 func OptsYAML(yamlStr string) (Option, error) {
 	var cfg struct {
-		Indent                *int           `yaml:"indent"`
-		CompactSeqIndent      *bool          `yaml:"compact-seq-indent"`
-		LineWidth             *int           `yaml:"line-width"`
-		Unicode               *bool          `yaml:"unicode"`
-		Canonical             *bool          `yaml:"canonical"`
-		LineBreak             *string        `yaml:"line-break"`
-		ExplicitStart         *bool          `yaml:"explicit-start"`
-		ExplicitEnd           *bool          `yaml:"explicit-end"`
-		FlowSimpleCollections *bool          `yaml:"flow-simple-coll"`
-		KnownFields           *bool          `yaml:"known-fields"`
-		SingleDocument        *bool          `yaml:"single-document"`
-		UniqueKeys            *bool          `yaml:"unique-keys"`
-		Plugin                map[string]any `yaml:"plugin"`
+		Indent                *int    `yaml:"indent"`
+		CompactSeqIndent      *bool   `yaml:"compact-seq-indent"`
+		LineWidth             *int    `yaml:"line-width"`
+		Unicode               *bool   `yaml:"unicode"`
+		Canonical             *bool   `yaml:"canonical"`
+		LineBreak             *string `yaml:"line-break"`
+		ExplicitStart         *bool   `yaml:"explicit-start"`
+		ExplicitEnd           *bool   `yaml:"explicit-end"`
+		FlowSimpleCollections *bool   `yaml:"flow-simple-coll"`
+		KnownFields           *bool   `yaml:"known-fields"`
+		SingleDocument        *bool   `yaml:"single-document"`
+		UniqueKeys            *bool   `yaml:"unique-keys"`
 	}
 	if err := Load([]byte(yamlStr), &cfg, WithKnownFields()); err != nil {
 		return nil, err
@@ -406,28 +232,6 @@ func OptsYAML(yamlStr string) (Option, error) {
 		}
 	}
 
-	for name, val := range cfg.Plugin {
-		switch name {
-		case "limit":
-			var cfgMap map[string]any
-			switch v := val.(type) {
-			case nil:
-				cfgMap = map[string]any{}
-			case map[string]any:
-				cfgMap = v
-			default:
-				return nil, fmt.Errorf("yaml: plugin %q value must be a mapping or null", name)
-			}
-			p, err := limit.NewFromYAML(cfgMap)
-			if err != nil {
-				return nil, err
-			}
-			optList = append(optList, WithPlugin(p))
-		default:
-			return nil, fmt.Errorf("yaml: unknown plugin %q", name)
-		}
-	}
-
 	return Options(optList...), nil
 }
 
@@ -435,77 +239,60 @@ func OptsYAML(yamlStr string) (Option, error) {
 // Type and constant re-exports
 //-----------------------------------------------------------------------------
 
-// Re-export stream-related types
 type (
-	Stream           = libyaml.Stream
-	VersionDirective = libyaml.StreamVersionDirective
-
-	// TagDirective represents a YAML %TAG directive for stream nodes.
-	TagDirective = libyaml.StreamTagDirective
-
-	// Encoding represents the character encoding of a YAML stream.
-	Encoding = libyaml.Encoding
+	// Node represents a YAML node in the document tree.
+	// See internal/libyaml.Node.
+	Node = libyaml.Node
+	// Kind identifies the type of a YAML node.
+	// See internal/libyaml.Kind.
+	Kind = libyaml.Kind
+	// Style controls the presentation of a YAML node.
+	// See internal/libyaml.Style.
+	Style = libyaml.Style
+	// Marshaler is implemented by types with custom YAML marshaling.
+	// See internal/libyaml.Marshaler.
+	Marshaler = libyaml.Marshaler
+	// IsZeroer is implemented by types that can report if they're zero.
+	// See internal/libyaml.IsZeroer.
+	IsZeroer = libyaml.IsZeroer
 )
 
-// Encoding constants for YAML stream encoding
+// Unmarshaler is the interface implemented by types
+// that can unmarshal a YAML description of themselves.
+type Unmarshaler interface {
+	UnmarshalYAML(node *Node) error
+}
+
+// Re-export stream-related types
+type (
+	VersionDirective = libyaml.StreamVersionDirective
+	TagDirective     = libyaml.StreamTagDirective
+	Encoding         = libyaml.Encoding
+)
+
+// Re-export encoding constants
 const (
-	// EncodingAny lets the parser choose the encoding.
-	EncodingAny = libyaml.ANY_ENCODING
-
-	// EncodingUTF8 is the default UTF-8 encoding.
-	EncodingUTF8 = libyaml.UTF8_ENCODING
-
-	// EncodingUTF16LE is UTF-16-LE encoding with BOM.
+	EncodingAny     = libyaml.ANY_ENCODING
+	EncodingUTF8    = libyaml.UTF8_ENCODING
 	EncodingUTF16LE = libyaml.UTF16LE_ENCODING
-
-	// EncodingUTF16BE is UTF-16-BE encoding with BOM.
 	EncodingUTF16BE = libyaml.UTF16BE_ENCODING
 )
 
-// Stage identifies the processing stage where an error occurred during YAML
-// loading or dumping.
-type Stage = libyaml.Stage
-
-// Stage constants for YAML processing pipeline.
-const (
-	// Load stages
-	ReaderStage      = libyaml.ReaderStage      // Input reading and encoding
-	ScannerStage     = libyaml.ScannerStage     // Tokenization
-	ParserStage      = libyaml.ParserStage      // Event stream parsing
-	ComposerStage    = libyaml.ComposerStage    // Node tree construction
-	ResolverStage    = libyaml.ResolverStage    // Tag resolution
-	ConstructorStage = libyaml.ConstructorStage // Go value construction
-
-	// Dump stages
-	RepresenterStage = libyaml.RepresenterStage // Go value to Node tree
-	SerializerStage  = libyaml.SerializerStage  // Node tree to events
-	EmitterStage     = libyaml.EmitterStage     // Events to YAML bytes
-	WriterStage      = libyaml.WriterStage      // Output writing
-)
-
-// Mark represents a position in the YAML document.
-type Mark = libyaml.Mark
-
-// Error types for YAML loading and dumping
+// Re-export error types
 type (
+
 	// LoadError represents an error encountered while decoding a YAML document.
 	//
 	// It contains details about the location in the document where the error
-	// occurred, as well as the processing stage that generated it.
-	LoadError = libyaml.LoadError
+	// occurred, as well as a descriptive message.
+	LoadError = libyaml.ConstructError
 
 	// LoadErrors is returned when one or more fields cannot be properly decoded.
 	//
 	// It contains multiple *[LoadError] instances with details about each error.
 	LoadErrors = libyaml.LoadErrors
 
-	// DumpError represents an error that occurred while dumping a YAML document.
-	//
-	// It identifies the processing stage where the error occurred and provides
-	// an optional underlying cause via Unwrap.
-	DumpError = libyaml.DumpError
-
-	// TypeError is a legacy error type retained for compatibility.
+	// TypeError is an obsolete error type retained for compatibility.
 	//
 	// Deprecated: Use [LoadErrors] instead.
 	//
@@ -513,13 +300,25 @@ type (
 	TypeError = libyaml.TypeError
 )
 
-// NewLoadError creates a LoadError with an underlying cause error.
-// The cause is accessible via Unwrap for use with [errors.Is] and [errors.As].
-var NewLoadError = libyaml.NewLoadError
+// Re-export Kind constants
+const (
+	DocumentNode = libyaml.DocumentNode
+	SequenceNode = libyaml.SequenceNode
+	MappingNode  = libyaml.MappingNode
+	ScalarNode   = libyaml.ScalarNode
+	AliasNode    = libyaml.AliasNode
+	StreamNode   = libyaml.StreamNode
+)
 
-// NewDumpError creates a DumpError with an underlying cause error.
-// The cause is accessible via Unwrap for use with [errors.Is] and [errors.As].
-var NewDumpError = libyaml.NewDumpError
+// Re-export Style constants
+const (
+	TaggedStyle       = libyaml.TaggedStyle
+	DoubleQuotedStyle = libyaml.DoubleQuotedStyle
+	SingleQuotedStyle = libyaml.SingleQuotedStyle
+	LiteralStyle      = libyaml.LiteralStyle
+	FoldedStyle       = libyaml.FoldedStyle
+	FlowStyle         = libyaml.FlowStyle
+)
 
 // LineBreak represents the line ending style for YAML output.
 type LineBreak = libyaml.LineBreak
@@ -542,37 +341,180 @@ const (
 )
 
 //-----------------------------------------------------------------------------
-// Load/Dump API
+// Helper functions
 //-----------------------------------------------------------------------------
 
-// Advanced streaming API types
-type (
-	// Loader reads and loads YAML values from an input stream with
-	// configurable options.
-	Loader = libyaml.Loader
+// The code in this section was copied from mgo/bson.
 
-	// Dumper writes YAML values to an output stream with configurable options.
-	Dumper = libyaml.Dumper
+var (
+	structMap       = make(map[reflect.Type]*structInfo)
+	fieldMapMutex   sync.RWMutex
+	unmarshalerType reflect.Type
 )
 
-// NewLoader returns a new Loader that reads from r with the given options.
-func NewLoader(r io.Reader, opts ...Option) (*Loader, error) {
-	return libyaml.NewLoader(r, opts...)
+// structInfo holds details for the serialization of fields of
+// a given struct.
+type structInfo struct {
+	FieldsMap  map[string]fieldInfo
+	FieldsList []fieldInfo
+
+	// InlineMap is the number of the field in the struct that
+	// contains an ,inline map, or -1 if there's none.
+	InlineMap int
+
+	// InlineUnmarshalers holds indexes to inlined fields that
+	// contain unmarshaler values.
+	InlineUnmarshalers [][]int
 }
 
-// NewDumper returns a new Dumper that writes to w with the given options.
-func NewDumper(w io.Writer, opts ...Option) (*Dumper, error) {
-	return libyaml.NewDumper(w, opts...)
+type fieldInfo struct {
+	Key       string
+	Num       int
+	OmitEmpty bool
+	Flow      bool
+	// Id holds the unique field identifier, so we can cheaply
+	// check for field duplicates without maintaining an extra map.
+	Id int
+
+	// Inline holds the field index if the field is part of an inlined struct.
+	Inline []int
 }
 
-// Load loads YAML document(s) with the given options.
-func Load(in []byte, out any, opts ...Option) error {
-	return libyaml.Load(in, out, opts...)
+func getStructInfo(st reflect.Type) (*structInfo, error) {
+	fieldMapMutex.RLock()
+	sinfo, found := structMap[st]
+	fieldMapMutex.RUnlock()
+	if found {
+		return sinfo, nil
+	}
+
+	n := st.NumField()
+	fieldsMap := make(map[string]fieldInfo)
+	fieldsList := make([]fieldInfo, 0, n)
+	inlineMap := -1
+	inlineUnmarshalers := [][]int(nil)
+	for i := 0; i != n; i++ {
+		field := st.Field(i)
+		if field.PkgPath != "" && !field.Anonymous {
+			continue // Private field
+		}
+
+		info := fieldInfo{Num: i}
+
+		tag := field.Tag.Get("yaml")
+		if tag == "" && !strings.Contains(string(field.Tag), ":") {
+			tag = string(field.Tag)
+		}
+		if tag == "-" {
+			continue
+		}
+
+		inline := false
+		fields := strings.Split(tag, ",")
+		if len(fields) > 1 {
+			for _, flag := range fields[1:] {
+				switch flag {
+				case "omitempty":
+					info.OmitEmpty = true
+				case "flow":
+					info.Flow = true
+				case "inline":
+					inline = true
+				default:
+					return nil, fmt.Errorf("unsupported flag %q in tag %q of type %s", flag, tag, st)
+				}
+			}
+			tag = fields[0]
+		}
+
+		if inline {
+			switch field.Type.Kind() {
+			case reflect.Map:
+				if inlineMap >= 0 {
+					return nil, errors.New("multiple ,inline maps in struct " + st.String())
+				}
+				if field.Type.Key() != reflect.TypeOf("") {
+					return nil, errors.New("option ,inline needs a map with string keys in struct " + st.String())
+				}
+				inlineMap = info.Num
+			case reflect.Struct, reflect.Pointer:
+				ftype := field.Type
+				for ftype.Kind() == reflect.Pointer {
+					ftype = ftype.Elem()
+				}
+				if ftype.Kind() != reflect.Struct {
+					return nil, errors.New("option ,inline may only be used on a struct or map field")
+				}
+				if reflect.PointerTo(ftype).Implements(unmarshalerType) {
+					inlineUnmarshalers = append(inlineUnmarshalers, []int{i})
+				} else {
+					sinfo, err := getStructInfo(ftype)
+					if err != nil {
+						return nil, err
+					}
+					for _, index := range sinfo.InlineUnmarshalers {
+						inlineUnmarshalers = append(inlineUnmarshalers, append([]int{i}, index...))
+					}
+					for _, finfo := range sinfo.FieldsList {
+						if _, found := fieldsMap[finfo.Key]; found {
+							msg := "duplicated key '" + finfo.Key + "' in struct " + st.String()
+							return nil, errors.New(msg)
+						}
+						if finfo.Inline == nil {
+							finfo.Inline = []int{i, finfo.Num}
+						} else {
+							finfo.Inline = append([]int{i}, finfo.Inline...)
+						}
+						finfo.Id = len(fieldsList)
+						fieldsMap[finfo.Key] = finfo
+						fieldsList = append(fieldsList, finfo)
+					}
+				}
+			default:
+				return nil, errors.New("option ,inline may only be used on a struct or map field")
+			}
+			continue
+		}
+
+		if tag != "" {
+			info.Key = tag
+		} else {
+			info.Key = strings.ToLower(field.Name)
+		}
+
+		if _, found = fieldsMap[info.Key]; found {
+			msg := "duplicated key '" + info.Key + "' in struct " + st.String()
+			return nil, errors.New(msg)
+		}
+
+		info.Id = len(fieldsList)
+		fieldsList = append(fieldsList, info)
+		fieldsMap[info.Key] = info
+	}
+
+	sinfo = &structInfo{
+		FieldsMap:          fieldsMap,
+		FieldsList:         fieldsList,
+		InlineMap:          inlineMap,
+		InlineUnmarshalers: inlineUnmarshalers,
+	}
+
+	fieldMapMutex.Lock()
+	structMap[st] = sinfo
+	fieldMapMutex.Unlock()
+	return sinfo, nil
 }
 
-// Dump encodes a value to YAML with the given options.
-func Dump(in any, opts ...Option) (out []byte, err error) {
-	return libyaml.Dump(in, opts...)
+var noWriter io.Writer
+
+func handleErr(err *error) {
+	if v := recover(); v != nil {
+		if e, ok := v.(*libyaml.YAMLError); ok {
+			*err = e.Err
+		} else {
+			panic(v)
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -581,7 +523,8 @@ func Dump(in any, opts ...Option) (out []byte, err error) {
 
 // A Decoder reads and decodes YAML values from an input stream.
 type Decoder struct {
-	loader *Loader
+	composer    *libyaml.Composer
+	knownFields bool
 }
 
 // NewDecoder returns a new decoder that reads from r.
@@ -589,15 +532,15 @@ type Decoder struct {
 // The decoder introduces its own buffering and may read
 // data from r beyond the YAML values requested.
 func NewDecoder(r io.Reader) *Decoder {
-	// NewLoader won't return error with WithV3Defaults() and withFromLegacy
-	loader, _ := NewLoader(r, WithV3Defaults(), withFromLegacy())
-	return &Decoder{loader: loader}
+	return &Decoder{
+		composer: libyaml.NewComposerFromReader(r),
+	}
 }
 
 // KnownFields ensures that the keys in decoded mappings to
 // exist as fields in the struct being decoded into.
 func (dec *Decoder) KnownFields(enable bool) {
-	dec.loader.SetKnownFields(enable)
+	dec.knownFields = enable
 }
 
 // Decode reads the next YAML-encoded value from its input
@@ -605,22 +548,37 @@ func (dec *Decoder) KnownFields(enable bool) {
 //
 // See the documentation for Unmarshal for details about the
 // conversion of YAML into a Go value.
-func (dec *Decoder) Decode(v any) error {
-	return dec.loader.Load(v)
+func (dec *Decoder) Decode(v any) (err error) {
+	d := libyaml.NewConstructor(libyaml.DefaultOptions)
+	d.KnownFields = dec.knownFields
+	defer handleErr(&err)
+	node := dec.composer.Parse()
+	if node == nil {
+		return io.EOF
+	}
+	out := reflect.ValueOf(v)
+	if out.Kind() == reflect.Pointer && !out.IsNil() {
+		out = out.Elem()
+	}
+	d.Construct(node, out)
+	if len(d.TypeErrors) > 0 {
+		return &LoadErrors{Errors: d.TypeErrors}
+	}
+	return nil
 }
 
 // An Encoder writes YAML values to an output stream.
 type Encoder struct {
-	dumper *Dumper
+	encoder *libyaml.Representer
 }
 
 // NewEncoder returns a new encoder that writes to w.
 // The Encoder should be closed after use to flush all data
 // to w.
 func NewEncoder(w io.Writer) *Encoder {
-	// NewDumper won't return an error when using WithV3Defaults()
-	dumper, _ := NewDumper(w, WithV3Defaults())
-	return &Encoder{dumper: dumper}
+	return &Encoder{
+		encoder: libyaml.NewRepresenter(w, libyaml.DefaultOptions),
+	}
 }
 
 // Encode writes the YAML encoding of v to the stream.
@@ -630,29 +588,36 @@ func NewEncoder(w io.Writer) *Encoder {
 //
 // See the documentation for Marshal for details about the conversion of Go
 // values to YAML.
-func (e *Encoder) Encode(v any) error {
-	return e.dumper.Dump(v)
+func (e *Encoder) Encode(v any) (err error) {
+	defer handleErr(&err)
+	e.encoder.MarshalDoc("", reflect.ValueOf(v))
+	return nil
 }
 
 // SetIndent changes the used indentation used when encoding.
 func (e *Encoder) SetIndent(spaces int) {
-	e.dumper.SetIndent(spaces)
+	if spaces < 0 {
+		panic("yaml: cannot indent to a negative number of spaces")
+	}
+	e.encoder.Indent = spaces
 }
 
 // CompactSeqIndent makes it so that '- ' is considered part of the indentation.
 func (e *Encoder) CompactSeqIndent() {
-	e.dumper.SetCompactSeqIndent(true)
+	e.encoder.Emitter.CompactSequenceIndent = true
 }
 
 // DefaultSeqIndent makes it so that '- ' is not considered part of the indentation.
 func (e *Encoder) DefaultSeqIndent() {
-	e.dumper.SetCompactSeqIndent(false)
+	e.encoder.Emitter.CompactSequenceIndent = false
 }
 
 // Close closes the encoder by writing any remaining data.
 // It does not write a stream terminating string "...".
-func (e *Encoder) Close() error {
-	return e.dumper.Close()
+func (e *Encoder) Close() (err error) {
+	defer handleErr(&err)
+	e.encoder.Finish()
+	return nil
 }
 
 // Unmarshal decodes the first document found within the in byte slice
@@ -689,17 +654,28 @@ func (e *Encoder) Close() error {
 // See the documentation of Marshal for the format of tags and a list of
 // supported tag options.
 func Unmarshal(in []byte, out any) (err error) {
-	return Load(in, out, WithV3Defaults(), withFromLegacy())
+	return unmarshal(in, out, V3)
 }
 
-// withFromLegacy is a private option that indicates this call is from
-// a legacy API (Unmarshal/Decoder). It enables Unmarshaler interface
-// checking and allows trailing content for backward compatibility.
-func withFromLegacy() Option {
-	return func(o *libyaml.Options) error {
-		o.FromLegacy = true
+func unmarshal(in []byte, out any, opts ...Option) (err error) {
+	defer handleErr(&err)
+	o, err := libyaml.ApplyOptions(opts...)
+	if err != nil {
+		return err
+	}
+
+	// Check if out implements yaml.Unmarshaler
+	if u, ok := out.(Unmarshaler); ok {
+		p := libyaml.NewComposer(in)
+		defer p.Destroy()
+		node := p.Parse()
+		if node != nil {
+			return u.UnmarshalYAML(node)
+		}
 		return nil
 	}
+
+	return libyaml.Construct(in, out, o)
 }
 
 // Marshal serializes the value provided into a YAML document. The structure
@@ -746,6 +722,11 @@ func withFromLegacy() Option {
 //	yaml.Marshal(&T{B: 2}) // Returns "b: 2\n"
 //	yaml.Marshal(&T{F: 1}} // Returns "a: 1\nb: 0\n"
 func Marshal(in any) (out []byte, err error) {
-	// Use WithV3Defaults() with unlimited line width to match legacy DefaultOptions
-	return Dump(in, WithV3Defaults(), WithLineWidth(-1))
+	defer handleErr(&err)
+	e := libyaml.NewRepresenter(noWriter, libyaml.DefaultOptions)
+	defer e.Destroy()
+	e.MarshalDoc("", reflect.ValueOf(in))
+	e.Finish()
+	out = e.Out
+	return out, err
 }

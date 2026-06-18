@@ -6,14 +6,13 @@ version: '2'
 linters:
   enable:
   - dupword
-  - godoclint
   - govet
   - mirror
   - misspell
-  - modernize
-  - nilnesserr
   - nolintlint
   - staticcheck
+  - modernize
+  - nilnesserr
   - thelper
   - unconvert
   disable:
@@ -26,21 +25,17 @@ linters:
       - 'NULL'
       - DOCUMENT-START
       - BLOCK-END
-    godoclint:
-      default: none
-      enable:
-      - require-stdlib-doclink
-    govet:
-      enable-all: true
-      disable:
-      - fieldalignment
-      - shadow
     misspell:
       locale: US
     nolintlint:
       allow-unused: false
       require-specific: true
       require-explanation: true
+    govet:
+      enable-all: true
+      disable:
+      - fieldalignment
+      - shadow
     staticcheck:
       checks:
       # enable all rules

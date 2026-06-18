@@ -1,5 +1,7 @@
-// Copyright 2025 The go-yaml Project Contributors
+//
+// Copyright (c) 2025 The go-yaml Project Contributors
 // SPDX-License-Identifier: Apache-2.0
+//
 
 // Package yaml implements YAML 1.1/1.2 encoding and decoding for Go programs.
 //
@@ -79,14 +81,14 @@
 //
 // Or use version-specific option presets for consistent formatting:
 //
-//	yaml.NewDumper(w, yaml.WithV3Defaults())
+//	yaml.NewDumper(w, yaml.V3)
 //
 // Options can be combined and later options override earlier ones:
 //
 //	// Start with v3 defaults, then override indent
 //	yaml.NewDumper(w,
-//	    yaml.WithV3Defaults(),
-//	    yaml.WithIndent(2),
+//	    yaml.V3,
+//	    yaml.WithIndent(4),
 //	)
 //
 // Load options from YAML configuration files:
