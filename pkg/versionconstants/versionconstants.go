@@ -67,6 +67,7 @@ const DockerBuildxMinVersion = "0.17.0"
 
 // DockerBuildxRecommendedVersion defines the recommended version of buildx
 // to use if the installed version doesn't match the minimum.
+// Should match github.com/docker/buildx in go.mod
 // This value is a recommendation, not a hard requirement
 const DockerBuildxRecommendedVersion = "0.33.0"
 

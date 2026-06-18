@@ -13,12 +13,18 @@ import (
 // AvailableUpdates returns true (along with a release URL) if there is an update available in the specified repo which is newer than the currentVersion string.
 func AvailableUpdates(repoOrg string, repoName string, currentVersion string) (avail bool, newVersion string, releaseURL string, err error) {
 	newVersion = ""
-	ctx, client := github.GetGitHubClient(true)
+	ctx, client, clientErr := github.GetGitHubClient(true)
+	if clientErr != nil {
+		return false, newVersion, "", clientErr
+	}
 	opt := &github.ListOptions{Page: 1}
 	releases, resp, err := client.Repositories.ListReleases(ctx, repoOrg, repoName, opt)
 	if err != nil {
 		if tokenErr := github.HasInvalidGitHubToken(resp); tokenErr != nil {
-			ctx, client = github.GetGitHubClient(false)
+			ctx, client, clientErr = github.GetGitHubClient(false)
+			if clientErr != nil {
+				return false, newVersion, "", clientErr
+			}
 			releasesNoAuth, _, errNoAuth := client.Repositories.ListReleases(ctx, repoOrg, repoName, opt)
 			if errNoAuth == nil {
 				releases = releasesNoAuth

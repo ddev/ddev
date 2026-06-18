@@ -13,6 +13,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const maxMessages = 10
+
 func ParseTemplate(hookTemplate string, cmd *cobra.Command) ([]string, error) {
 	out := hookTemplate
 	if strings.Contains(hookTemplate, "{{") {
@@ -38,7 +40,10 @@ func ParseTemplate(hookTemplate string, cmd *cobra.Command) ([]string, error) {
 		}
 		out = b.String()
 	}
-	return strings.Split(out, "\n"), nil
+	if n := strings.Count(out, "\n"); n > maxMessages {
+		return nil, fmt.Errorf("hook template contains too many messages (%d): maximum is %d", n, maxMessages)
+	}
+	return strings.SplitN(out, "\n", maxMessages), nil
 }
 
 var ErrHookTemplateParse = errors.New("failed to parse hook template")

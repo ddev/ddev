@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v81/github"
+	"github.com/google/go-github/v88/github"
 )
 
 // Aliases to avoid direct imports
@@ -25,39 +25,52 @@ var (
 	githubContext context.Context
 	// githubClient is the singleton instance of Client
 	githubClient *Client
+	// githubClientErr holds any error from initializing githubClient
+	githubClientErr error
 	// githubClientNoAuth is the singleton instance of Client without authentication
 	githubClientNoAuth *Client
+	// githubClientNoAuthErr holds any error from initializing githubClientNoAuth
+	githubClientNoAuthErr error
 	// githubClientOnce ensures githubClient is initialized only once
 	githubClientOnce sync.Once
 )
 
-// GetGitHubClient returns a singleton GitHub client and context, initializing it if necessary.
-func GetGitHubClient(withAuth bool) (context.Context, *Client) {
+// GetGitHubClient returns a context and a singleton GitHub client, initializing it once.
+// With withAuth, it returns the token-authenticated client; otherwise the no-auth client.
+// The returned error is non-nil if the requested client failed to initialize.
+func GetGitHubClient(withAuth bool) (context.Context, *Client, error) {
 	githubClientOnce.Do(func() {
 		githubContext = context.Background()
-		// Respect proxies set in the environment
-		githubClientNoAuth = github.NewClientWithEnvProxy()
-		githubClient = githubClientNoAuth
-		githubToken, _ := GetGitHubToken()
-		if githubToken != "" {
-			githubClient = githubClient.WithAuthToken(githubToken)
+		// Build the no-auth client, respecting any proxy set in the environment
+		githubClientNoAuth, githubClientNoAuthErr = github.NewClient(github.WithEnvProxy())
+		// Clone with an auth token if one is set, otherwise reuse the no-auth client
+		if githubToken, _ := GetGitHubToken(); githubClientNoAuthErr == nil && githubToken != "" {
+			githubClient, githubClientErr = githubClientNoAuth.Clone(github.WithAuthToken(githubToken))
+		} else {
+			githubClient, githubClientErr = githubClientNoAuth, githubClientNoAuthErr
 		}
 	})
 	if withAuth {
-		return githubContext, githubClient
+		return githubContext, githubClient, githubClientErr
 	}
-	return githubContext, githubClientNoAuth
+	return githubContext, githubClientNoAuth, githubClientNoAuthErr
 }
 
 // GetGitHubRelease gets the tarball URL and version for a GitHub repository release
 func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloadedRelease string, err error) {
-	ctx, client := GetGitHubClient(true)
+	ctx, client, clientErr := GetGitHubClient(true)
+	if clientErr != nil {
+		return "", "", clientErr
+	}
 
 	releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
 	var tokenErr error
 	if err != nil {
 		if tokenErr = HasInvalidGitHubToken(resp); tokenErr != nil {
-			ctx, client = GetGitHubClient(false)
+			ctx, client, clientErr = GetGitHubClient(false)
+			if clientErr != nil {
+				return "", "", clientErr
+			}
 			releasesNoAuth, respNoAuth, errNoAuth := client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
 			if errNoAuth == nil {
 				releases = releasesNoAuth
@@ -113,7 +126,7 @@ func GetGitHubHeaders(requestURL string) map[string]string {
 	}
 	if githubToken, _ := GetGitHubToken(); githubToken != "" {
 		headers["Authorization"] = "Bearer " + githubToken
-		// Use the same header as in vendor/github.com/google/go-github/v81/github/github.go
+		// Use the same header as in vendor/github.com/google/go-github/v88/github/github.go
 		headers["X-Github-Api-Version"] = "2022-11-28"
 	}
 	return headers

@@ -6,7 +6,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/asaskevich/govalidator"
+	"github.com/asaskevich/govalidator/v12"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/hostname"
