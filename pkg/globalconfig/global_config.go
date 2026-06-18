@@ -865,27 +865,46 @@ func GetCAROOT() string {
 	return DdevGlobalConfig.MkcertCARoot
 }
 
-// readCAROOT() verifies that the mkcert command is available and its CA keys readable.
+// readCAROOT returns fresh CAROOT without checking for errors
+func readCAROOT() string {
+	caRoot, _ := ReadCAROOTDetails()
+	return caRoot
+}
+
+// ReadCAROOTDetails verifies that the mkcert command is available and its CA keys readable.
 // 1. Find out CAROOT
 // 2. Look there to see if key/crt are readable
 // 3. If not, see if mkcert is even available, return empty
-
-func readCAROOT() string {
+func ReadCAROOTDetails() (string, error) {
 	_, err := exec.LookPath("mkcert")
 	if err != nil {
-		return ""
+		recommendedCommand := "with your OS package manager"
+		if nodeps.IsMacOS() {
+			recommendedCommand = "with `brew install mkcert nss`"
+		} else if nodeps.IsWindows() {
+			recommendedCommand = "with `choco install -y mkcert`"
+		}
+		return "", fmt.Errorf("mkcert not found. Install it %s to trust HTTPS, then run `mkcert -install`", recommendedCommand)
 	}
-
 	out, err := exec.Command("mkcert", "-CAROOT").Output()
 	if err != nil {
-		return ""
+		return "", fmt.Errorf("error running `mkcert -CAROOT`: %v; use `ddev utility tls-diagnose` for troubleshooting", err)
 	}
-	root := strings.Trim(string(out), "\r\n")
-	if !fileIsReadable(filepath.Join(root, "rootCA-key.pem")) || !fileExists(filepath.Join(root, "rootCA.pem")) {
-		return ""
+	caRoot := strings.TrimSpace(string(out))
+	if !fileIsReadable(filepath.Join(caRoot, "rootCA-key.pem")) || !fileExists(filepath.Join(caRoot, "rootCA.pem")) {
+		caRootFrom := `mkcert -CAROOT`
+		if caRootEnv := os.Getenv("CAROOT"); caRootEnv != "" {
+			caRootFrom = fmt.Sprintf("CAROOT=%q", caRootEnv)
+		} else if caRoot != "" {
+			caRootFrom = fmt.Sprintf("`mkcert -CAROOT` at %q", caRoot)
+		}
+		wsl2Hint := ""
+		if nodeps.IsWSL2() {
+			wsl2Hint = ", verify Windows interop is working: run `wsl --shutdown`, then restart WSL"
+		}
+		return "", fmt.Errorf("mkcert CA files are not readable from %s; run `mkcert -install` to trust HTTPS%s; use `ddev utility tls-diagnose` for troubleshooting", caRootFrom, wsl2Hint)
 	}
-
-	return root
+	return caRoot, nil
 }
 
 // fileIsReadable checks to make sure a file exists and is readable

@@ -1970,15 +1970,15 @@ func (app *DdevApp) Start() error {
 	}
 
 	if !IsRouterDisabled(app) {
-		caRoot := globalconfig.GetCAROOT()
-		if caRoot == "" {
-			util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
+		if _, caRootErr := globalconfig.ReadCAROOTDetails(); caRootErr != nil {
+			util.Warning("%v", caRootErr)
 		}
 		router, _ := FindDdevRouter()
 
 		// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
 		// This will often be redundant
 		if router == nil {
+			caRoot := globalconfig.GetCAROOT()
 			// Copy ca certs into ddev-global-cache/mkcert
 			if caRoot != "" {
 				uid, _, _ := dockerutil.GetContainerUser()
