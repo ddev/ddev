@@ -2045,3 +2045,49 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 		require.Equal(t, expectedWaitTime, int(c.Config.Healthcheck.StartPeriod.Seconds()), "db container healthcheck should have been %v with default_container_timeout set to %v", maxWaitTime, app.DefaultContainerTimeout)
 	}
 }
+
+// TestLogStderrShownOnStart verifies that warnings captured by log-stderr.sh during
+// the image build are shown to the user on `ddev start`, and that the build-hash file
+// is reset to only the signature (no fingerprint) so the next start rebuilds.
+func TestLogStderrShownOnStart(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+
+	webBuildDir := app.GetConfigPath("web-build")
+	dockerfileFoobar := filepath.Join(webBuildDir, "Dockerfile.foobar")
+
+	t.Cleanup(func() {
+		_ = os.RemoveAll(dockerfileFoobar)
+		_ = app.Stop(true, false)
+		_ = os.Chdir(origDir)
+	})
+
+	// A failing command run through log-stderr.sh produces a build warning.
+	// `|| true` keeps the build itself successful.
+	err = os.MkdirAll(webBuildDir, 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(dockerfileFoobar, []byte("RUN log-stderr.sh foobar || true\n"), 0644)
+	require.NoError(t, err)
+
+	captureErr := util.CaptureUserErr()
+	startErr := app.Start()
+	warnings := captureErr()
+	require.NoError(t, startErr)
+
+	// The warning from the failed `foobar` command must be shown to the user,
+	// along with the trailing "not installed properly" summary.
+	require.Contains(t, warnings, "foobar", "expected the failed 'foobar' command warning")
+	require.Contains(t, warnings, "failed with exit code", "expected the log-stderr.sh failure header")
+	require.Contains(t, warnings, "were not installed properly", "expected the trailing summary warning")
+
+	// When there are build warnings, the build hash is reset to only the
+	// signature (no fingerprint) to trigger a rebuild on the next `ddev start`.
+	hashContent, err := os.ReadFile(app.GetConfigPath(".build-hash"))
+	require.NoError(t, err)
+	require.Equal(t, nodeps.DdevFileSignature, string(hashContent), "build hash should be reset to only the signature when build warnings exist")
+}
