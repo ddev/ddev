@@ -1554,6 +1554,7 @@ func (app *DdevApp) Start() error {
 	if err := globalconfig.CheckForMultipleGlobalDdevDirs(); err != nil {
 		util.WarningOnce("Warning: %v", err)
 	}
+	globalconfig.WarnIfXDGIgnoredOnNonLinux()
 
 	if !globalconfig.IsInternetActive() && globalconfig.DdevDebug {
 		util.WarningOnce("Internet connection not detected, DNS may not work.\nWarning: %v\nSee https://docs.ddev.com/en/stable/users/usage/offline/ for info.", globalconfig.IsInternetActiveErr)

@@ -226,7 +226,8 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	t.Setenv("USERPROFILE", tmpHomeDir)
 	// Set DOCKER_HOST to the same value as before, otherwise wrong Docker context may be used
 	t.Setenv("DOCKER_HOST", dockerHost)
-	// Set $XDG_CONFIG_HOME to empty string, otherwise it will take precedence over $HOME
+	// Set $DDEV_XDG_CONFIG_HOME to empty string, otherwise it will take precedence over $HOME
+	t.Setenv("DDEV_XDG_CONFIG_HOME", "")
 	t.Setenv("XDG_CONFIG_HOME", "")
 
 	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
@@ -302,11 +303,13 @@ func TestCopyGlobalDdevDir(t *testing.T) {
 
 // TestGetGlobalDdevDirLocation checks to make sure that DDEV will use the
 // correct location for its global config. The correct location is:
-// ${XDG_CONFIG_HOME}/ddev if XDG_CONFIG_HOME is set or
+// ${DDEV_XDG_CONFIG_HOME}/ddev if DDEV_XDG_CONFIG_HOME is set (all platforms), or
+// ${XDG_CONFIG_HOME}/ddev if XDG_CONFIG_HOME is set on Linux only, or
 // ~/.ddev if it exists or
-// ~/.config/ddev if it exists
+// ~/.config/ddev if it exists on Linux/WSL2
 func TestGetGlobalDdevDirLocation(t *testing.T) {
-	// Test when $XDG_CONFIG_HOME is not set
+	// Test when neither DDEV_XDG_CONFIG_HOME nor XDG_CONFIG_HOME is set
+	t.Setenv("DDEV_XDG_CONFIG_HOME", "")
 	t.Setenv("XDG_CONFIG_HOME", "")
 	ddevDir := globalconfig.GetGlobalDdevDirLocation()
 	// Original ~/.ddev dir location
@@ -320,12 +323,12 @@ func TestGetGlobalDdevDirLocation(t *testing.T) {
 		}
 	}
 	require.Equal(t, ddevDir, originalGlobalDdevDir)
-	// Test when $XDG_CONFIG_HOME is set
+	// Test when $DDEV_XDG_CONFIG_HOME is set (works on all platforms)
 	tmpDir := testcommon.CreateTmpDir(t.Name())
 	t.Cleanup(func() {
 		_ = os.RemoveAll(tmpDir)
 	})
-	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+	t.Setenv("DDEV_XDG_CONFIG_HOME", tmpDir)
 	// Make sure that the tmpDir/ddev doesn't exist.
 	_, err := os.Stat(filepath.Join(tmpDir, "ddev"))
 	require.Error(t, err)
@@ -333,9 +336,9 @@ func TestGetGlobalDdevDirLocation(t *testing.T) {
 	// Check that we can get the correct location
 	ddevDir = globalconfig.GetGlobalDdevDirLocation()
 	require.Equal(t, ddevDir, filepath.Join(tmpDir, "ddev"))
-	// When $XDG_CONFIG_HOME is not set,
+	// When $DDEV_XDG_CONFIG_HOME is not set,
 	// it should use the default location
-	t.Setenv("XDG_CONFIG_HOME", "")
+	t.Setenv("DDEV_XDG_CONFIG_HOME", "")
 	ddevDir = globalconfig.GetGlobalDdevDirLocation()
 	require.Equal(t, ddevDir, originalGlobalDdevDir)
 }
