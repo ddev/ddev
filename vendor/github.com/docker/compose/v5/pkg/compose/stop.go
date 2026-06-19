@@ -53,6 +53,9 @@ func (s *composeService) stop(ctx context.Context, projectName string, options a
 			return nil
 		}
 		serv := project.Services[service]
+		if serv.Provider != nil {
+			return s.runPlugin(ctx, project, serv, "stop")
+		}
 		return s.stopContainers(ctx, &serv, containers.filter(isService(service)).filter(isNotOneOff), options.Timeout, event)
 	})
 }

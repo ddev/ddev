@@ -102,8 +102,8 @@ func isZero(v reflect.Value) bool {
 		return z
 	case reflect.Struct:
 		z := true
-		for i := 0; i < v.NumField(); i++ {
-			z = z && isZero(v.Field(i))
+		for _, field := range v.Fields() {
+			z = z && isZero(field)
 		}
 		return z
 	}

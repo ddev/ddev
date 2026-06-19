@@ -23,9 +23,12 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"path/filepath"
+	"net/url"
 	"strings"
 
+	"github.com/docker/cli/cli/command"
+	cliflags "github.com/docker/cli/cli/flags"
+	"github.com/moby/moby/client"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/docker/compose/v5/internal"
@@ -39,6 +42,31 @@ const EngineLabel = "com.docker.desktop.address"
 
 // FeatureLogsTab is the feature flag name for the Docker Desktop Logs view.
 const FeatureLogsTab = "LogsTab"
+
+const logsDeepLink = "docker-desktop://dashboard/logs"
+
+// LogsAppIDMaxLen mirrors the byte-length cap Docker Desktop's URL handler
+// applies to the appId query parameter; values longer than this are
+// truncated by the receiver, so we trim ahead of time to avoid emitting
+// hyperlinks that will be silently shortened. The slice in BuildLogsURL is
+// a byte slice — Compose project names are restricted to the ASCII set
+// `[a-z0-9_-]` by loader.NormalizeProjectName, so a byte cap and a rune
+// cap coincide for any value that could legitimately reach this builder.
+const LogsAppIDMaxLen = 256
+
+// BuildLogsURL returns the deep link that opens Docker Desktop's Logs view,
+// optionally pre-filtered to a Compose project. An empty appID yields the
+// unfiltered URL.
+func BuildLogsURL(appID string) string {
+	if appID == "" {
+		return logsDeepLink
+	}
+	if len(appID) > LogsAppIDMaxLen {
+		appID = appID[:LogsAppIDMaxLen]
+	}
+	q := url.Values{"appId": []string{appID}}
+	return logsDeepLink + "?" + q.Encode()
+}
 
 // identify this client in the logs
 var userAgent = "compose/" + internal.Version
@@ -137,102 +165,51 @@ func (c *Client) FeatureFlags(ctx context.Context) (FeatureFlagResponse, error) 
 	return ret, nil
 }
 
-// SettingValue represents a Docker Desktop setting with a locked flag and a value.
-type SettingValue struct {
-	Locked bool `json:"locked"`
-	Value  bool `json:"value"`
-}
-
-// DesktopSettings represents the "desktop" section of Docker Desktop settings.
-type DesktopSettings struct {
-	EnableLogsTab SettingValue `json:"enableLogsTab"`
-}
-
-// SettingsResponse represents the Docker Desktop settings response.
-type SettingsResponse struct {
-	Desktop DesktopSettings `json:"desktop"`
-}
-
-// Settings fetches the Docker Desktop application settings.
-func (c *Client) Settings(ctx context.Context) (*SettingsResponse, error) {
-	req, err := c.newRequest(ctx, http.MethodGet, "/app/settings", http.NoBody)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	var ret SettingsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&ret); err != nil {
-		return nil, err
-	}
-	return &ret, nil
-}
-
-// IsFeatureEnabled checks both the feature flag (GET /features) and the user
-// setting (GET /app/settings) for a given feature. Returns true only when the
-// feature is both rolled out and enabled by the user. Features without a
-// corresponding setting entry are considered enabled if the flag is set.
+// IsFeatureEnabled checks the feature flag (GET /features) for a given
+// feature. Returns true when the feature is rolled out.
 func (c *Client) IsFeatureEnabled(ctx context.Context, feature string) (bool, error) {
 	flags, err := c.FeatureFlags(ctx)
 	if err != nil {
 		return false, err
 	}
-	if !flags[feature].Enabled {
-		return false, nil
+	return flags[feature].Enabled, nil
+}
+
+// IsFeatureActive reports whether Docker Desktop is the active engine and the
+// given feature flag is enabled. Returns false silently on any failure — the
+// engine being unreachable, Desktop not being the active engine, or the flag
+// being off — so callers can use this as a single gating check.
+func IsFeatureActive(ctx context.Context, apiClient client.APIClient, feature string) bool {
+	endpoint, err := Endpoint(ctx, apiClient)
+	if err != nil || endpoint == "" {
+		return false
 	}
 
-	check, hasCheck := featureSettingChecks[feature]
-	if !hasCheck {
-		// No setting to verify — feature flag alone is sufficient
-		return true, nil
-	}
+	c := NewClient(endpoint)
+	defer c.Close() //nolint:errcheck
 
-	// The /app/settings endpoint is served by the backend socket, not the
-	// docker-cli socket. Derive the backend socket path from the current
-	// endpoint.
-	backendEndpoint := backendSocketEndpoint(c.apiEndpoint)
-	backendCli := NewClient(backendEndpoint)
-	defer backendCli.Close() //nolint:errcheck
-
-	settings, err := backendCli.Settings(ctx)
+	enabled, err := c.IsFeatureEnabled(ctx, feature)
 	if err != nil {
-		return false, err
+		return false
 	}
-	return check(settings), nil
+	return enabled
 }
 
-// backendSocketEndpoint derives the Docker Desktop backend socket endpoint
-// from any socket endpoint in the same directory.
-//
-// On macOS/Linux: unix:///path/to/Data/docker-cli.sock → unix:///path/to/Data/backend.sock
-// On Windows:     npipe://./pipe/dockerDesktopLinuxEngine → npipe://./pipe/dockerBackendApiServer
-func backendSocketEndpoint(endpoint string) string {
-	if sockPath, ok := strings.CutPrefix(endpoint, "unix://"); ok {
-		return "unix://" + filepath.Join(filepath.Dir(sockPath), "backend.sock")
+// IsFeatureActiveStandalone is the convenience form of IsFeatureActive for
+// callers without an existing engine API client (e.g. the compose plugin hook
+// subprocess). It builds a Docker CLI using the ambient environment to
+// resolve the active context, then delegates to IsFeatureActive.
+func IsFeatureActiveStandalone(ctx context.Context, feature string) bool {
+	dockerCli, err := command.NewDockerCli(command.WithCombinedStreams(io.Discard))
+	if err != nil {
+		return false
 	}
-	if _, ok := strings.CutPrefix(endpoint, "npipe://"); ok {
-		return "npipe://./pipe/dockerBackendApiServer"
+	if err := dockerCli.Initialize(cliflags.NewClientOptions()); err != nil {
+		return false
 	}
-	return endpoint
-}
+	defer dockerCli.Client().Close() //nolint:errcheck
 
-// featureSettingChecks maps feature flag names to their corresponding
-// Docker Desktop setting check functions.
-var featureSettingChecks = map[string]func(*SettingsResponse) bool{
-	FeatureLogsTab: func(s *SettingsResponse) bool {
-		return s.Desktop.EnableLogsTab.Value
-	},
+	return IsFeatureActive(ctx, dockerCli.Client(), feature)
 }
 
 func (c *Client) newRequest(ctx context.Context, method, path string, body io.Reader) (*http.Request, error) {

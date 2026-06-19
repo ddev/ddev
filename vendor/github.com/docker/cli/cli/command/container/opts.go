@@ -371,7 +371,7 @@ func parse(flags *pflag.FlagSet, copts *containerOptions, serverOS string) (*con
 	var binds []string
 	volumes := copts.volumes.GetMap()
 	// add any bind targets to the list of container volumes
-	for bind := range copts.volumes.GetMap() {
+	for bind := range volumes {
 		parsed, err := volumespec.Parse(bind)
 		if err != nil {
 			return nil, err
@@ -506,13 +506,13 @@ func parse(flags *pflag.FlagSet, copts *containerOptions, serverOS string) (*con
 	// collect all the environment variables for the container
 	envVariables, err := opts.ReadKVEnvStrings(copts.envFile.GetSlice(), copts.env.GetSlice())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("--env-file: %w", err)
 	}
 
 	// collect all the labels for the container
 	labels, err := opts.ReadKVStrings(copts.labelsFile.GetSlice(), copts.labels.GetSlice())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("--label-file: %w", err)
 	}
 
 	pidMode := container.PidMode(copts.pidMode)
