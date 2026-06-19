@@ -45,7 +45,8 @@ EOF
   run ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/main/vite.config.ts
   assert_success
 
-  run ddev npm install @sveltejs/adapter-node
+  # TODO: see https://github.com/sveltejs/kit/issues/16087
+  run ddev npm install @sveltejs/adapter-node@5.5.4
   assert_success
   run ddev npm install
   assert_success

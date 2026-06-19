@@ -101,3 +101,7 @@ jobs:
           # Use mutagen by default as it may cause different behaviors
           $(make DDEV_BINARY_FULLPATH) config global --performance-mode=mutagen
           make quickstart-test
+
+      - name: Fail on timeout
+        if: cancelled()
+        run: exit 1
