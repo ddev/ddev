@@ -103,5 +103,5 @@ jobs:
           make quickstart-test
 
       - name: Fail on timeout
-        if: cancelled()
+        if: ${{ cancelled() }}
         run: exit 1
