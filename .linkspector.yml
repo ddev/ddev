@@ -30,6 +30,10 @@ ignorePatterns:
   - pattern: "https://specifications.freedesktop.org"
   - pattern: "https://mutagen.io"
   - pattern: "https://www.npmjs.com"
+  # mailpit.axllent.org blocks linkspector's headless browser with a 403 (spam check, blocking IP)
+  - pattern: "https://mailpit.axllent.org"
+  # fixed.docs.upsun.com resets the connection to linkspector's headless browser
+  - pattern: "https://fixed.docs.upsun.com"
 aliveStatusCodes:
   - 200
   - 206
