@@ -9,9 +9,6 @@
 ## ExecRaw: true
 ## MutagenSync: true
 
-# Ignore anything we find in the mounted global commands
-PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}
-
 if ! command -v asterios >/dev/null; then
   echo "asterios is not available. You may need to 'ddev composer require asterios/core'"
   exit 1
