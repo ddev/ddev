@@ -1522,24 +1522,6 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 	return out, fmt.Errorf("docker-compose build failed after %d attempts: %v, output='%s', stderr='%s'", composeBuildMaxRetries, lastErr, out, stderr)
 }
 
-// buildContextFingerprint returns an SHA-256 hash of the build context directories
-// (.webimageBuild, .dbimageBuild) and base image IDs. This is used to detect
-// when docker-compose build can be skipped because nothing has changed.
-// Image IDs (sha256 digests) are used instead of tag names so that
-// rebuilt images with the same tag are still detected as changed.
-func (app *DdevApp) buildContextFingerprint() string {
-	dirs := []string{
-		app.GetConfigPath(".webimageBuild"),
-		app.GetConfigPath(".dbimageBuild"),
-	}
-	hash, err := fileutil.HashDirs(dirs, dockerutil.ImageID(app.WebImage), dockerutil.ImageID(app.GetDBImage()))
-	if err != nil {
-		util.Warning("unable to hash build context directories: %v", err)
-		return ""
-	}
-	return hash
-}
-
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
@@ -1852,27 +1834,6 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	// Build extra layers on web and db images if necessary.
-	// Skip the build entirely if the build context hasn't changed and built images exist.
-	buildHashFile := app.GetConfigPath(".build-hash")
-	currentBuildHash := nodeps.DdevFileSignature + "\n" + app.buildContextFingerprint()
-	savedBuildHash, _ := os.ReadFile(buildHashFile)
-	buildNeeded := app.NoCache || currentBuildHash != string(savedBuildHash)
-
-	if !buildNeeded {
-		// Verify the built images still exist locally
-		webBuilt := app.WebImage + "-" + app.Name + "-built"
-		dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
-		webExists, _ := dockerutil.ImageExistsLocally(webBuilt)
-		dbExists := true
-		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-			dbExists, _ = dockerutil.ImageExistsLocally(dbBuilt)
-		}
-		if !webExists || !dbExists {
-			buildNeeded = true
-		}
-	}
-
 	// Wait for background chown to finish before proceeding.
 	// SSH agent runs after chown (needs volumes ready) and after WriteDockerComposeYAML
 	// (reads app.ComposeYaml) — so it runs sequentially here to avoid a data race.
@@ -1886,55 +1847,52 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	if buildNeeded {
+	if output.JSONOutput {
+		output.UserOut.Printf("Building project images...")
+	} else {
+		// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
+		// See https://github.com/sirupsen/logrus/issues/167
+		// We want the progress dots to appear on the same line.
+		fmt.Print("Building project images...")
+		// Print a newline before util.Debug below
+		if globalconfig.DdevDebug {
+			output.UserOut.Debugln()
+		}
+	}
+	buildDurationStart := util.ElapsedDuration(time.Now())
+
+	_, err = app.composeBuild()
+	if err != nil {
+		return err
+	}
+
+	_, logStderrOutput, logStderrErr := dockerutil.RunSimpleContainer(app.WebImage+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, nil, nil, nil)
+	// If the web image is dirty, try to rebuild it immediately
+	if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
 		if output.JSONOutput {
-			output.UserOut.Printf("Building project images...")
+			output.UserOut.Printf("Rebuilding web image without cache...")
 		} else {
-			fmt.Print("Building project images...")
+			fmt.Print("Rebuilding web image without cache...")
 			if globalconfig.DdevDebug {
 				output.UserOut.Debugln()
 			}
 		}
-		buildDurationStart := util.ElapsedDuration(time.Now())
-
-		_, err = app.composeBuild()
+		_, err = app.composeBuild("web", "--no-cache")
 		if err != nil {
 			return err
 		}
+	}
 
-		_, logStderrOutput, logStderrErr := dockerutil.RunSimpleContainer(app.WebImage+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, nil, nil, nil)
-		// If the web image is dirty, try to rebuild it immediately
-		if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
-			if output.JSONOutput {
-				output.UserOut.Printf("Rebuilding web image without cache...")
-			} else {
-				fmt.Print("Rebuilding web image without cache...")
-				if globalconfig.DdevDebug {
-					output.UserOut.Debugln()
-				}
-			}
-			_, err = app.composeBuild("web", "--no-cache")
-			if err != nil {
-				return err
-			}
-		}
+	buildDuration := util.FormatDuration(buildDurationStart())
+	util.Success("Project images built in %s.", buildDuration)
 
-		// Save build hash on successful build
-		_ = os.WriteFile(buildHashFile, []byte(currentBuildHash), 0644)
-
-		buildDuration := util.FormatDuration(buildDurationStart())
-		util.Success("Project images built in %s.", buildDuration)
-
-		util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
-		danglingImages, dErr := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
-		if dErr != nil {
-			return fmt.Errorf("unable to get dangling images for the project %s: %v", app.GetComposeProjectName(), dErr)
-		}
-		for _, danglingImage := range danglingImages {
-			_ = dockerutil.RemoveImage(danglingImage.ID)
-		}
-	} else {
-		util.Debug("Skipping docker-compose build, build context unchanged and images exist")
+	util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
+	danglingImages, dErr := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
+	if dErr != nil {
+		return fmt.Errorf("unable to get dangling images for the project %s: %v", app.GetComposeProjectName(), dErr)
+	}
+	for _, danglingImage := range danglingImages {
+		_ = dockerutil.RemoveImage(danglingImage.ID)
 	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
@@ -2067,6 +2025,7 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		util.Warning("Unable to run /start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 	}
+
 	// With NoBindMounts we have to symlink the copied xhprof_prepend.php into /usr/local/bin
 	// When in prepend mode, which will soon become fairly obsolete.
 	// Normally it's bind-mounted into there in prepend mode.
@@ -2162,10 +2121,6 @@ func (app *DdevApp) Start() error {
 		Cmd: "log-stderr.sh --show 2>/dev/null || true",
 	})
 	logStderr = strings.TrimSpace(logStderr)
-	// Reset the build hash when errors occur
-	if logStderr != "" {
-		_ = os.WriteFile(buildHashFile, []byte(nodeps.DdevFileSignature), 0644)
-	}
 
 	routerWg.Wait()
 	if routerErr != nil {
