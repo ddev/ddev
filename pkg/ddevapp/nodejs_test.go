@@ -88,6 +88,12 @@ func TestNodeJSVersions(t *testing.T) {
 		})
 		assert.NoError(err)
 		assert.True(strings.HasPrefix(out, "v"+v), "Expected sudo node version to start with '%s', but got %s", v, out)
+
+		// Verify that globally installed npm packages are present and working
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: `gulp --version && yarn --version`,
+		})
+		assert.NoError(err)
 	}
 }
 

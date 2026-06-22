@@ -1024,9 +1024,19 @@ COPY n-version-files/ /tmp/n-version-files/
 RUN <<EOF
 set -eu -o pipefail
 cd /tmp/n-version-files || true
-export N_PREFIX=/usr/local/n-new
-if n install --cleanup "%[1]s" || log-stderr.sh n install --cleanup "%[1]s"; then
-  rm -rf /usr/local/n && mv /usr/local/n-new /usr/local/n
+export N_PREFIX=/usr/local/n
+n install --cleanup "%[1]s" || log-stderr.sh n install --cleanup "%[1]s" || true
+NODE_VERSION=$(node -v)
+IFS=. read -r NODE_MAJOR NODE_MINOR _ <<< "${NODE_VERSION#v}"
+INSTALL_PKGS=""
+if [ "$NODE_MAJOR" -lt 10 ] || { [ "$NODE_MAJOR" -eq 10 ] && [ "$NODE_MINOR" -lt 13 ]; }; then
+  INSTALL_PKGS="$INSTALL_PKGS gulp-cli@2" # for Node.js <10.13
+fi
+if [ "$NODE_MAJOR" -lt 6 ]; then
+  INSTALL_PKGS="$INSTALL_PKGS yarn@1.11.1" # for Node.js <6
+fi
+if [ -n "$INSTALL_PKGS" ]; then
+  log-stderr.sh npm install --unsafe-perm=true --global $INSTALL_PKGS -f || true
 fi
 cd /tmp && rm -rf /tmp/n-version-files
 EOF
