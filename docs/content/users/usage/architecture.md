@@ -125,7 +125,7 @@ ddev version | grep global-ddev-dir
     mv $HOME/.ddev ${DDEV_XDG_CONFIG_HOME}/ddev
     ```
 
-    On Linux/WSL2, you can also use `$XDG_CONFIG_HOME` from the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) instead of `$DDEV_XDG_CONFIG_HOME`. Or move the directory to `$HOME/.config/ddev` without setting any variable:
+    On Linux/WSL2, you can also use `$XDG_CONFIG_HOME` from the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/) instead of `$DDEV_XDG_CONFIG_HOME`. Or move the directory to `$HOME/.config/ddev` without setting any variable:
 
     ```bash
     mv $HOME/.ddev $HOME/.config/ddev
