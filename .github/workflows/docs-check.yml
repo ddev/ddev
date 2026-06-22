@@ -44,7 +44,7 @@ jobs:
     # linkspector seems to fail with "No usable sandbox"
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 

@@ -97,7 +97,7 @@ jobs:
     outputs:
       should_skip: ${{ steps.check.outputs.should_skip }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -144,7 +144,7 @@ jobs:
       HOMEBREW_NO_SANDBOX_LINUX: 1
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
