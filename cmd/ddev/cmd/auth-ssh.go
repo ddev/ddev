@@ -192,7 +192,7 @@ func getCertificateForPrivateKey(path string, name string) (string, string) {
 // sets ownership and permissions, and filters the private keys from provided files.
 // We have:
 // "ssh-add" - adds all found private keys to ssh-agent
-// "//test.expect.passphrase" - used for testing, adds a single key with passphrase
+// any other command - run as-is; tests pass an inline `expect` script here
 func GetAuthSSHCmd(command string) string {
 	uid, gid, _ := dockerutil.GetContainerUser()
 
@@ -214,11 +214,12 @@ done`, util.ColorizeText("Adding key %s", "yellow"), commandToRun)
 
 	return fmt.Sprintf(`
 # Copy SSH files and set proper ownership and permissions
-mkdir -p /tmp/ssh-home
-cp -r /tmp/sshtmp /tmp/ssh-home/.ssh && \
-chown -R %[1]s:%[2]s /tmp/ssh-home/.ssh && \
-chmod -R go-rwx /tmp/ssh-home/.ssh && \
-cd /tmp/ssh-home/.ssh && \
+export HOME=/tmp/ssh-home && \
+mkdir -p $HOME && \
+cp -r /tmp/sshtmp $HOME/.ssh && \
+chown -R %[1]s:%[2]s $HOME/.ssh && \
+chmod -R go-rwx $HOME/.ssh && \
+cd $HOME/.ssh && \
 # Find all private key files
 mapfile -t keys < <(grep -l '^-----BEGIN .*PRIVATE KEY-----' *) && \
 # Verify at least one key exists

@@ -22,7 +22,6 @@ services:
       - "dot_ssh:/tmp/.ssh"
       - "socket_dir:/tmp/.ssh-agent"
     environment:
-      - HOME=/tmp/ssh-home
       - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
       - TZ={{ .Timezone }}
     healthcheck:
