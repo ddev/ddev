@@ -256,6 +256,12 @@ else
   exit 1
 fi
 
+# On Windows, start Docker Desktop if this job uses it, before waiting on docker.
+# This is the Windows analogue of the lima/colima/orbstack provider startup above;
+# it is provider setup, separate from the sanetestbot.sh sanity check. No-op on
+# non-Windows and on docker-ce-inside cases.
+bash "$(dirname "$0")/start-docker-desktop.sh" || true
+
 # Make sure docker is working
 echo "Waiting for docker provider to come up: $(date)"
 date && ${TIMEOUT} 3m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
@@ -360,18 +366,10 @@ fi
 
 echo "--- Running tests..."
 
-# Run installer tests first on Windows
-if [ "${os:-}" = "windows" ]; then
-  echo "--- Running Windows installer tests first..."
-  export DDEV_TEST_USE_REAL_INSTALLER=true
-  make testwininstaller TESTARGS="${TESTARGS:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
-  INSTALLER_RV=$?
-  if [ $INSTALLER_RV -ne 0 ]; then
-    echo "Windows installer tests failed with status=$INSTALLER_RV"
-    exit $INSTALLER_RV
-  fi
-  echo "Windows installer tests completed successfully"
-fi
+# Note: Windows installer tests are no longer run here. They run in their own
+# dedicated Buildkite pipeline (.buildkite/installer-test.sh +
+# .buildkite/windows-installer.yml), decoupled from this suite so they can fan
+# out across runners.
 
 make ${MAKE_TARGET:-test} TESTARGS="${TESTARGS:-}" TESTPKG="${TESTPKG:-}" TESTFILE="${TESTFILE:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
 RV=$?

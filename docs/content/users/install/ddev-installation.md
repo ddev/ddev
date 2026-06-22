@@ -220,7 +220,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     wsl --update
     ```
 
-    Create an Ubuntu distro (skip if you're using Traditional Windows):
+    Create an Ubuntu or other Debian-based WSL2 distro (skip if you're using Traditional Windows). Ubuntu is recommended:
 
     ```powershell
     # You'll be asked to set a username and password for the distro:
@@ -228,6 +228,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```
 
     !!!tip "\"DDEV\" is just a suggested name — use any name you like."
+
+    !!!tip "Other Debian-based distros also work"
+        The DDEV installer supports Ubuntu and Debian and has been tested with Kali Linux and eLxr. If you prefer one of those, substitute its name, for example `wsl --install Debian --name DDEV`.
 
     Verify the "DDEV" distro is set as default:
 
@@ -252,7 +255,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     !!!tip "Check your system architecture"
         Not sure which architecture you have? Open PowerShell and run: `$env:PROCESSOR_ARCHITECTURE`. It will show `AMD64` or `ARM64`. Alternatively, in WSL2/Ubuntu run `uname -m` which shows `x86_64` for AMD64 or `aarch64` for ARM64.
 
-    Run the installer and select your mode. For WSL2 modes, the installer will ask which distro to use — enter the name you chose in Step 1. The installer will automatically configure DDEV for your chosen Docker provider. If you run the wrong installer for your architecture, it will detect the mismatch and direct you to download the correct one.
+    Run the installer and select your mode. For WSL2 modes, the installer will display all detected Debian-based WSL2 distros (Ubuntu, Debian, Kali, eLxr, etc.) and prompt you to select one. The installer will automatically configure DDEV for your chosen Docker provider. If you run the wrong installer for your architecture, it will detect the mismatch and direct you to download the correct one.
 
     ??? tip "Install using WinGet"
         [WinGet](https://learn.microsoft.com/en-us/windows/package-manager/winget/) can download and launch the installer interactively:
@@ -318,7 +321,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         8. Check that Docker is working inside Ubuntu (or your distro) by running `docker ps` in the distro.
         9. Open the WSL2 terminal, for example `Debian` from the Windows start menu.
         10. In WSL2, run `mkcert -install`.
-        11. Note that the older manual [PowerShell script](https://github.com/ddev/ddev/blob/main/scripts/install_ddev_wsl2_docker_inside.ps1) may be instructional if you’re setting up a non-Ubuntu distro. It has been replaced by the Windows installer, but could be adapted for other distros.
+        11. Note that the older manual [PowerShell script](https://github.com/ddev/ddev/blob/main/scripts/install_ddev_wsl2_docker_inside.ps1) may be instructional if you’re setting up a non-Ubuntu distro. It has been replaced by the Windows installer, but could be adapted for other distros. Pass `-Distro <name>` when running it.
 
         !!!note "Path to certificates"
             If you get the prompt `Installing to the system store is not yet supported on this Linux`, you may need to add `/usr/sbin` to the `$PATH` so that `/usr/sbin/update-ca-certificates` can be found.
