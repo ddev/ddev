@@ -25,7 +25,7 @@ jobs:
         uses: actions/configure-pages@v6
 
       - name: Checkout main branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: main
           path: checkout-main
@@ -34,7 +34,7 @@ jobs:
       - name: Checkout stable branch
         id: checkout-stable
         continue-on-error: true
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: stable
           path: checkout-stable
