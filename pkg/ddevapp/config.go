@@ -1029,8 +1029,8 @@ n install --cleanup "%[1]s" || log-stderr.sh n install --cleanup "%[1]s" || true
 NODE_VERSION=$(node -v)
 IFS=. read -r NODE_MAJOR NODE_MINOR _ <<< "${NODE_VERSION#v}"
 INSTALL_PKGS=""
-if [ "$NODE_MAJOR" -lt 10 ] || { [ "$NODE_MAJOR" -eq 10 ] && [ "$NODE_MINOR" -lt 10 ]; }; then
-  INSTALL_PKGS="$INSTALL_PKGS gulp-cli@2" # for Node.js <10.10
+if [ "$NODE_MAJOR" -lt 10 ] || { [ "$NODE_MAJOR" -eq 10 ] && [ "$NODE_MINOR" -lt 13 ]; }; then
+  INSTALL_PKGS="$INSTALL_PKGS gulp-cli@2" # for Node.js <10.13
 fi
 if [ "$NODE_MAJOR" -lt 6 ]; then
   INSTALL_PKGS="$INSTALL_PKGS yarn@1.11.1" # for Node.js <6
