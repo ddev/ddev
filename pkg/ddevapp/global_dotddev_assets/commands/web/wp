@@ -7,9 +7,6 @@
 ## ExecRaw: true
 ## MutagenSync: true
 
-# Ignore anything we find in the mounted global commands
-PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}
-
 # Add --path if not already set and $DDEV_DOCROOT is defined
 if [[ ! " $* " =~ (--path(=|\s)) ]] && [[ -n "$DDEV_DOCROOT" ]]; then
   # Get the configured path from wp-cli.yml or other config file

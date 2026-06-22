@@ -11,6 +11,13 @@ path_append() {
     *) PATH="$PATH:$1" ;;
   esac
 }
+path_remove() {
+  local p result= IFS=:
+  for p in $PATH; do
+    [ "$p" = "$1" ] || result="${result:+$result:}$p"
+  done
+  PATH="$result"
+}
 
 # Add vendor/bin, then user-owned dirs in front of it (prepend order is last-wins)
 path_prepend "${DDEV_COMPOSER_ROOT:-/var/www/html}/vendor/bin"
@@ -23,11 +30,18 @@ path_append "/usr/local/n/bin"
 # Add /var/www/html/bin as the next-to-last item to the $PATH.
 path_append "/var/www/html/bin"
 
-# Add /mnt/ddev-global-cache/global-commands/web as the last item to the $PATH.
-# This allows commands that weren't found elsewhere to be executed. For example, `xdebug on`
-# can be used inside web container
-path_append "/mnt/ddev-global-cache/global-commands/web"
+# Add /mnt/ddev-global-cache/global-commands/web as a fallback for commands like `xdebug on`,
+# but drop it when this shell is running a script from that dir, so a wrapper calling a
+# same-named binary (e.g. yarn -> `yarn "$@"`) doesn't recurse into itself.
+case "$0" in
+  /mnt/ddev-global-cache/global-commands/web/*)
+    path_remove "/mnt/ddev-global-cache/global-commands/web"
+    ;;
+  *)
+    path_append "/mnt/ddev-global-cache/global-commands/web"
+    ;;
+esac
 
-unset -f path_prepend path_append
+unset -f path_prepend path_append path_remove
 
 export PATH

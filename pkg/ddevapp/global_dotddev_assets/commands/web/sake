@@ -8,7 +8,4 @@
 ## ExecRaw: true
 ## MutagenSync: true
 
-# Ignore anything we find in the mounted global commands
-PATH=${PATH//\/mnt\/ddev-global-cache\/global-commands\/web/}
-
 sake "$@"
