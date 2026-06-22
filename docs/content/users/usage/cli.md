@@ -59,6 +59,7 @@ The dashboard automatically detects your terminal's color capabilities and adapt
 * [`ddev xdebug`](../usage/commands.md#xdebug) enables Xdebug, `ddev xdebug off` disables it, and `ddev xdebug status` shows status. You can toggle Xdebug on and off easily using `ddev xdebug toggle`.
 * [`ddev xhprof`](../usage/commands.md#xhprof) enables xhprof, `ddev xhprof off` disables it, and `ddev xhprof status` shows status.
 * [`ddev xhgui`](../usage/commands.md#xhgui) enables XHGui, `ddev xhgui off` disables it, and `ddev xhgui status` shows status.
+* [`ddev dr`](../usage/commands.md#dr) (Drupal 11.4+ only) gives direct access to the `dr` CLI, the next-generation Drupal CLI available in Drupal 11.4+.
 * [`ddev drush`](../usage/commands.md#drush) (Drupal and Backdrop only) gives direct access to the `drush` CLI.
 * [`ddev artisan`](../usage/commands.md#artisan) (Laravel only) gives direct access to the Laravel `artisan` CLI.
 * [`ddev asterios`](../usage/commands.md#asterios) (Asterios only) gives direct access to the Asterios `asterios` CLI.
