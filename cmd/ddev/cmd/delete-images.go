@@ -195,7 +195,6 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 					(strings.HasPrefix(tag, "postgres:") && strings.HasSuffix(tag, "-built")) ||
 					tag == routerImage ||
 					tag == sshImage ||
-					(strings.HasPrefix(tag, sshImage) && strings.HasSuffix(tag, "-built")) ||
 					tag == xhguiImage ||
 					strings.HasPrefix(tag, utilitiesImage) {
 					skip = true

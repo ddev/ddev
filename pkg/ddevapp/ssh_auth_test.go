@@ -102,7 +102,7 @@ func TestSSHAuth(t *testing.T) {
 		containerCmd = "podman"
 		args = append(args, "--userns=keep-id")
 	}
-	args = append(args, "--entrypoint", "bash", ddevImages.GetSSHAuthImage()+"-built", "-c", cmd.GetAuthSSHCmd("//test.expect.passphrase"))
+	args = append(args, "--entrypoint", "bash", ddevImages.GetSSHAuthImage(), "-c", cmd.GetAuthSSHCmd("//test.expect.passphrase"))
 
 	err = exec.RunInteractiveCommand(containerCmd, args)
 	require.NoError(t, err)
