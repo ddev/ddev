@@ -7,10 +7,12 @@ import (
 	"io"
 	"net"
 	"net/url"
+	"os/exec"
 	"path/filepath"
 	"sync"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/docker/cli/cli-plugins/manager"
@@ -80,12 +82,8 @@ func getDockerManagerInstance() (*dockerManager, error) {
 			return
 		}
 		sDockerManager.cliPluginsExtraDirsDefault = sDockerManager.cli.ConfigFile().CLIPluginsExtraDirs
-		if globalconfig.GetRequiredDockerBuildxVersion() != "" {
-			// Prepend global ddev bin directory to CLI plugin search path so it takes
-			// priority over any user-configured extra dirs and ~/.docker/cli-plugins.
-			// Must be done after Initialize(), which reloads configFile from disk.
-			sDockerManager.cli.ConfigFile().CLIPluginsExtraDirs = append([]string{filepath.Join(globalconfig.GetGlobalDdevDir(), "bin")}, sDockerManager.cliPluginsExtraDirsDefault...)
-		}
+		// Must be done after Initialize(), which reloads configFile from disk.
+		sDockerManager.updateCLIPluginsExtraDirs()
 		sDockerManager.dockerContextName = sDockerManager.cli.CurrentContext()
 		sDockerManager.host = sDockerManager.cli.DockerEndpoint().Host
 		util.Verbose("getDockerManagerInstance(): dockerContextName=%s, host=%s", sDockerManager.dockerContextName, sDockerManager.host)
@@ -232,16 +230,33 @@ func ResetDockerHost(host string) error {
 	return nil
 }
 
+// updateCLIPluginsExtraDirs updates CLIPluginsExtraDirs by prepending any
+// platform-specific plugin directories ahead of the saved defaults.
+// DDEV's global bin dir takes highest priority (prepended last), so its
+// buildx overrides both the snap path and any user-configured dirs.
+func (dm *dockerManager) updateCLIPluginsExtraDirs() {
+	dirs := dm.cliPluginsExtraDirsDefault
+	if nodeps.IsLinux() {
+		// Respect docker-buildx bundled with Docker snap on Linux https://snapcraft.io/docker
+		if dockerPath, err := exec.LookPath("docker"); err == nil && dockerPath == "/snap/bin/docker" {
+			dirs = append([]string{"/snap/docker/current/usr/libexec/docker/cli-plugins"}, dirs...)
+		}
+	}
+	if globalconfig.GetRequiredDockerBuildxVersion() != "" {
+		// Prepend global ddev bin directory so it takes priority over snap and
+		// any user-configured extra dirs and ~/.docker/cli-plugins.
+		dirs = append([]string{filepath.Join(globalconfig.GetGlobalDdevDir(), "bin")}, dirs...)
+	}
+	dm.cli.ConfigFile().CLIPluginsExtraDirs = dirs
+}
+
 // ResetCLIPlugins resets the cached list of Docker CLI plugins in the singleton.
 func ResetCLIPlugins() error {
 	dm, err := getDockerManagerInstance()
 	if err != nil {
 		return err
 	}
-	if globalconfig.GetRequiredDockerBuildxVersion() != "" {
-		// Reset CLIPluginsExtraDirs, because globalconfig.GetGlobalDdevDir() may have been modified by tests
-		dm.cli.ConfigFile().CLIPluginsExtraDirs = append([]string{filepath.Join(globalconfig.GetGlobalDdevDir(), "bin")}, dm.cliPluginsExtraDirsDefault...)
-	}
+	dm.updateCLIPluginsExtraDirs()
 	dm.cliPlugins, dm.cliPluginsErr = manager.ListPlugins(dm.cli, &cobra.Command{})
 	return dm.cliPluginsErr
 }
