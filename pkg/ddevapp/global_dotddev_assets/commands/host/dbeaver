@@ -37,6 +37,7 @@ case $OSTYPE in
     BINARIES=(
       /usr/bin/dbeaver{,-ce,-le,-ue,-ee}
       /var/lib/flatpak/exports/bin/io.dbeaver.DBeaverCommunity
+      ~/.local/share/flatpak/exports/bin/io.dbeaver.DBeaverCommunity
       /snap/bin/dbeaver-ce
       '/mnt/c/Program Files/DBeaver'{,Lite,Ultimate,EE}'/dbeaver.exe'
     )
