@@ -2048,8 +2048,7 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 }
 
 // TestLogStderrShownOnStart verifies that warnings captured by log-stderr.sh during
-// the image build are shown to the user on `ddev start`, and that the build-hash file
-// is reset to only the signature (no fingerprint) so the next start rebuilds.
+// the image build are shown to the user on `ddev start`
 func TestLogStderrShownOnStart(t *testing.T) {
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
