@@ -234,7 +234,7 @@ func TestCustomCommands(t *testing.T) {
 	}
 
 	// New Drupal commands in drupal11/12+
-	for _, drupalType := range []string{nodeps.AppTypeDrupal11, nodeps.AppTypeDrupal12} {
+	for _, drupalType := range []string{nodeps.AppTypeDrupal, nodeps.AppTypeDrupal12, nodeps.AppTypeDrupal11} {
 		app.Type = drupalType
 		_ = app.WriteConfig()
 		_, _ = exec.RunHostCommand(DdevBin)
