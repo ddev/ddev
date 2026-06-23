@@ -1245,10 +1245,12 @@ SHELL ["/bin/bash", "-c"]
 `
 	// bitnami/mysql inappropriately sets ENV HOME=/, see https://github.com/bitnami/containers/issues/75578
 	// Setting HOME="" allows it to have its normal behavior for the added user.
-	if app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) {
-		contents = contents + `
+	if strings.Contains(fullpath, "dbimageBuild") {
+		if app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) {
+			contents = contents + `
 ENV HOME=""
 `
+		}
 	}
 
 	//  The ENV HOME="" is added for bitnami/mysql habit of overriding ENV HOME=/
