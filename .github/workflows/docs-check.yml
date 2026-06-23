@@ -29,12 +29,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  HOMEBREW_NO_SANDBOX_LINUX: 1
-
 permissions:
   actions: write
 
@@ -47,10 +41,6 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@main
 
       - name: Spellcheck
         uses: rojopolis/spellcheck-github-actions@v0
@@ -70,7 +60,7 @@ jobs:
         with:
           limit-access-to-actor: true
       - name: Run linkspector to check external links
-        uses: umbrelladocs/action-linkspector@v1.4.0
+        uses: umbrelladocs/action-linkspector@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check

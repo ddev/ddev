@@ -231,6 +231,8 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 source ~/.bashrc
 
+brew trust bats-core/bats-core
+
 for item in bats-core bats-core/bats-core/bats-assert bats-core/bats-core/bats-file bats-core/bats-core/bats-support ddev/ddev/ddev golangci-lint; do
   brew install $item >/dev/null || brew upgrade -y $item >/dev/null
 done

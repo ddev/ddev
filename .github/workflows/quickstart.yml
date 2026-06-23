@@ -27,11 +27,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  HOMEBREW_NO_SANDBOX_LINUX: 1
-
 permissions:
   actions: write
 
@@ -60,6 +55,9 @@ jobs:
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@main
+        with:
+          brew-gh-api-token: ${{ secrets.GITHUB_TOKEN }}
+          setup-sandbox: true
 
       - name: Remove unnecessary items on disk
         uses: jlumbroso/free-disk-space@main
@@ -93,6 +91,8 @@ jobs:
           limit-access-to-actor: true
 
       - name: Run quickstart test
+        env:
+          DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           brew unlink ddev || true
           rm -f ~/.config/ddev
