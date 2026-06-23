@@ -24,7 +24,6 @@ on:
 #  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
@@ -34,7 +33,6 @@ env:
   HOMEBREW_STABLE_REPOSITORY: ${{ vars.HOMEBREW_STABLE_REPOSITORY }}
   REPOSITORY_OWNER: ${{ github.repository_owner }}
   DOCKER_ORG: ${{ vars.DOCKER_ORG }}
-  HOMEBREW_NO_SANDBOX_LINUX: 1
 
 permissions:
   packages: write
@@ -53,6 +51,9 @@ jobs:
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@main
+        with:
+          brew-gh-api-token: ${{ secrets.GITHUB_TOKEN }}
+          setup-sandbox: true
 
       - name: Install Docker and deps
         run: ./.github/workflows/linux-setup.sh
