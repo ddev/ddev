@@ -1243,9 +1243,10 @@ ARG BASE_IMAGE="scratch"
 FROM $BASE_IMAGE
 SHELL ["/bin/bash", "-c"]
 `
-	// bitnami/mysql inappropriately sets ENV HOME=/, see https://github.com/bitnami/containers/issues/75578
-	// Setting HOME="" allows it to have its normal behavior for the added user.
+
 	if strings.Contains(fullpath, "dbimageBuild") {
+		// bitnami/mysql sets ENV HOME=/, breaking root-based tooling; see https://github.com/bitnami/containers/issues/75578
+		// Setting HOME="" resets it to the default (/root). Must be injected here, not in extraDBContent - that runs after user-defined Dockerfiles.
 		if app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) {
 			contents = contents + `
 ENV HOME=""
