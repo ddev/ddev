@@ -13,7 +13,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/compose/v5/pkg/api"
@@ -334,8 +333,7 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 		}
 
 		if isRootless && service.User == userGroup {
-			if isPodman && nodeps.IsLinux() {
-				// macOS Podman VM lacks subgid mappings for macOS host GIDs (e.g. GID 20/staff)
+			if dockerutil.UseKeepID() {
 				// Podman: set the user namespace mode for the container
 				// https://docs.podman.io/en/v4.6.1/markdown/options/userns.container.html#userns-mode
 				service.UserNSMode = "keep-id"

@@ -108,6 +108,21 @@ func IsPodmanRootless() bool {
 	return IsRootless() && IsPodman()
 }
 
+// UseKeepID reports whether containers and volume operations should use Podman's
+// "keep-id" user-namespace mode. This is the single source of truth for the
+// decision: every container we create and every volume copy/chown must agree,
+// because they share volumes (notably ddev-global-cache) and a uid written
+// under one userns mapping is unreadable under another.
+//
+// keep-id is correct only on Linux rootless Podman, where it maps the host
+// uid/gid into the container so bind-mounted files have the host's ownership.
+// On macOS/Windows, Podman runs in a Linux VM whose subuid/subgid range cannot
+// map host GIDs (e.g. macOS GID 20/staff), so keep-id must not be used; all
+// containers run under Podman's default rootless userns instead.
+func UseKeepID() bool {
+	return IsPodmanRootless() && nodeps.IsLinux()
+}
+
 // IsDockerRootless detects if Docker is running in rootless mode on Linux
 // It must not be Podman or Lima, which can be rootless as well.
 func IsDockerRootless() bool {
