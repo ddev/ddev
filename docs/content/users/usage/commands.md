@@ -1255,7 +1255,7 @@ curl -fsSL https://ddev.com/install.sh | bash
 
 ## `sequelace`
 
-Open [SequelAce](https://sequel-ace.com/) with the current project’s database (global shell host container command). This command is only available if `Sequel Ace.app` is installed as `/Applications/Sequel ace.app`, and only for projects with `mysql` or `mariadb` databases.
+Open [SequelAce](https://sequel-ace.com/) with the current project’s database (global shell host container command). This command is only available if `Sequel Ace.app` is installed as `/Applications/Sequel Ace.app`, and only for projects with `mysql` or `mariadb` databases.
 
 Example:
 
