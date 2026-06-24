@@ -191,7 +191,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err, "Failed to run ddev %s --version", c)
 	}
 	// The various CMS commands should not be available here
-	for _, c := range []string{"artisan", "art", "cake", "drush", "magento", "typo3", "wp"} {
+	for _, c := range []string{"artisan", "art", "cake", "dr", "drush", "magento", "typo3", "wp"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.Error(err, "found command %s when it should not have been there (no error) app.Type=%s", c, app.Type)
 	}
@@ -228,6 +228,20 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 
 		for _, c := range []string{"drush"} {
+			_, err = exec.RunHostCommand(DdevBin, "help", c)
+			assert.NoError(err)
+		}
+	}
+
+	// New Drupal commands in drupal11/12+
+	for _, drupalType := range []string{nodeps.AppTypeDrupal, nodeps.AppTypeDrupal12, nodeps.AppTypeDrupal11} {
+		app.Type = drupalType
+		_ = app.WriteConfig()
+		_, _ = exec.RunHostCommand(DdevBin)
+		err = app.MutagenSyncFlush()
+		assert.NoError(err)
+
+		for _, c := range []string{"dr"} {
 			_, err = exec.RunHostCommand(DdevBin, "help", c)
 			assert.NoError(err)
 		}

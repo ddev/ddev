@@ -621,11 +621,18 @@ ddev dotenv set .ddev/.env --extra value --another-key "extra value"
 ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm
 ```
 
+## `dr`
+
+Run the Drupal `dr` CLI; available only in projects of type `drupal11` and `drupal12`, and only if `dr` is available in the project (Drupal 11.4+).
+
+```shell
+# Show dr status
+ddev dr system:status
+```
+
 ## `drush`
 
-*Alias: `dr`.*
-
-Run the `drush` command; available only in projects of type `drupal*`, and only available if `drush` is in the project. On projects of type `drupal`, `drush` should be installed in the project itself, (`ddev composer require drush/drush`). On projects of type `drupal7` `drush` 8 is provided by DDEV.
+Run the `drush` command; available only in projects of type `drupal*` and `backdrop`, and only available if `drush` is in the project. On projects of type `drupal`, `drush` should be installed in the project itself, (`ddev composer require drush/drush`). On projects of type `drupal7` `drush` 8 is provided by DDEV.
 
 ```shell
 # Show drush status/configuration

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run dr CLI (Drupal 11.4+) inside the web container
+## Usage: dr [flags] [args]
+## Example: "ddev dr cr" or "ddev dr list" or "ddev dr system:status"
+## ProjectTypes: drupal,drupal11,drupal12
+## ExecRaw: true
+## MutagenSync: true
+
+if ! command -v dr >/dev/null; then
+  echo "dr is not available. It should be available in composer-installed Drupal 11.4+ projects."
+  exit 1
+fi
+dr "$@"
