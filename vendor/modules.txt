@@ -101,7 +101,7 @@ github.com/cespare/xxhash/v2
 # github.com/charmbracelet/colorprofile v0.4.3
 ## explicit; go 1.25.0
 github.com/charmbracelet/colorprofile
-# github.com/charmbracelet/ultraviolet v0.0.0-20260615092913-2399af76d5b1
+# github.com/charmbracelet/ultraviolet v0.0.0-20260622092850-f39628c8a989
 ## explicit; go 1.25.0
 github.com/charmbracelet/ultraviolet
 # github.com/charmbracelet/x/ansi v0.11.7
@@ -131,7 +131,7 @@ github.com/clipperhouse/displaywidth
 # github.com/clipperhouse/uax29/v2 v2.7.0
 ## explicit; go 1.18
 github.com/clipperhouse/uax29/v2/graphemes
-# github.com/compose-spec/compose-go/v2 v2.11.0
+# github.com/compose-spec/compose-go/v2 v2.12.1
 ## explicit; go 1.24
 github.com/compose-spec/compose-go/v2/cli
 github.com/compose-spec/compose-go/v2/consts
@@ -156,7 +156,7 @@ github.com/containerd/console
 # github.com/containerd/containerd/api v1.11.1
 ## explicit; go 1.24.0
 github.com/containerd/containerd/api/services/content/v1
-# github.com/containerd/containerd/v2 v2.3.1
+# github.com/containerd/containerd/v2 v2.3.2
 ## explicit; go 1.26.3
 github.com/containerd/containerd/v2/core/content
 github.com/containerd/containerd/v2/core/content/proxy
@@ -222,8 +222,8 @@ github.com/dimchansky/utfbom
 # github.com/distribution/reference v0.6.0
 ## explicit; go 1.20
 github.com/distribution/reference
-# github.com/docker/buildx v0.33.0
-## explicit; go 1.25.5
+# github.com/docker/buildx v0.35.0
+## explicit; go 1.25.9
 github.com/docker/buildx/builder
 github.com/docker/buildx/driver
 github.com/docker/buildx/driver/kubernetes/util
@@ -243,7 +243,7 @@ github.com/docker/buildx/util/progress
 github.com/docker/buildx/util/resolver
 github.com/docker/buildx/util/resolver/auth
 github.com/docker/buildx/version
-# github.com/docker/cli v29.5.3+incompatible
+# github.com/docker/cli v29.6.0+incompatible
 ## explicit
 github.com/docker/cli/cli
 github.com/docker/cli/cli-plugins/hooks
@@ -285,8 +285,8 @@ github.com/docker/cli/internal/volumespec
 github.com/docker/cli/opts
 github.com/docker/cli/pkg/kvfile
 github.com/docker/cli/templates
-# github.com/docker/compose/v5 v5.1.4
-## explicit; go 1.25.5
+# github.com/docker/compose/v5 v5.2.0
+## explicit; go 1.25.9
 github.com/docker/compose/v5/cmd/display
 github.com/docker/compose/v5/cmd/formatter
 github.com/docker/compose/v5/internal
@@ -355,10 +355,6 @@ github.com/gofrs/flock
 # github.com/golang-jwt/jwt/v5 v5.3.1
 ## explicit; go 1.21
 github.com/golang-jwt/jwt/v5
-# github.com/golang/protobuf v1.5.4
-## explicit; go 1.17
-github.com/golang/protobuf/ptypes/any
-github.com/golang/protobuf/ptypes/timestamp
 # github.com/goodhosts/hostsfile v0.1.7
 ## explicit; go 1.21
 github.com/goodhosts/hostsfile
@@ -478,8 +474,8 @@ github.com/mitchellh/hashstructure/v2
 # github.com/mitchellh/reflectwalk v1.0.2
 ## explicit
 github.com/mitchellh/reflectwalk
-# github.com/moby/buildkit v0.29.0
-## explicit; go 1.25.5
+# github.com/moby/buildkit v0.31.0
+## explicit; go 1.25.9
 github.com/moby/buildkit/api/services/control
 github.com/moby/buildkit/api/types
 github.com/moby/buildkit/cache/remotecache/gha/ghatypes
@@ -534,9 +530,9 @@ github.com/moby/buildkit/util/sshutil
 github.com/moby/buildkit/util/stack
 github.com/moby/buildkit/util/system
 github.com/moby/buildkit/util/tracing
+github.com/moby/buildkit/util/tracing/childprocess
 github.com/moby/buildkit/util/tracing/delegated
 github.com/moby/buildkit/util/tracing/detect
-github.com/moby/buildkit/util/tracing/env
 github.com/moby/buildkit/util/tracing/otlptracegrpc
 github.com/moby/buildkit/version
 # github.com/moby/docker-image-spec v1.3.1
@@ -550,7 +546,7 @@ github.com/moby/go-archive/tarheader
 # github.com/moby/locker v1.0.1
 ## explicit; go 1.13
 github.com/moby/locker
-# github.com/moby/moby/api v1.54.2
+# github.com/moby/moby/api v1.55.0
 ## explicit; go 1.24
 github.com/moby/moby/api/pkg/authconfig
 github.com/moby/moby/api/pkg/stdcopy
@@ -571,7 +567,7 @@ github.com/moby/moby/api/types/storage
 github.com/moby/moby/api/types/swarm
 github.com/moby/moby/api/types/system
 github.com/moby/moby/api/types/volume
-# github.com/moby/moby/client v0.4.1
+# github.com/moby/moby/client v0.5.0
 ## explicit; go 1.24
 github.com/moby/moby/client
 github.com/moby/moby/client/internal
@@ -634,7 +630,7 @@ github.com/otiai10/copy
 ## explicit; go 1.18
 github.com/otiai10/mint
 github.com/otiai10/mint/mquery
-# github.com/pelletier/go-toml/v2 v2.4.0
+# github.com/pelletier/go-toml/v2 v2.4.2
 ## explicit; go 1.21.0
 github.com/pelletier/go-toml/v2
 github.com/pelletier/go-toml/v2/internal/parserbridge
@@ -881,10 +877,11 @@ go.opentelemetry.io/proto/otlp/trace/v1
 # go.yaml.in/yaml/v3 v3.0.4
 ## explicit; go 1.16
 go.yaml.in/yaml/v3
-# go.yaml.in/yaml/v4 v4.0.0-rc.4
+# go.yaml.in/yaml/v4 v4.0.0-rc.6
 ## explicit; go 1.18
 go.yaml.in/yaml/v4
 go.yaml.in/yaml/v4/internal/libyaml
+go.yaml.in/yaml/v4/plugin/limit
 # golang.org/x/crypto v0.53.0
 ## explicit; go 1.25.0
 golang.org/x/crypto/bcrypt
@@ -958,10 +955,10 @@ golang.org/x/text/width
 # golang.org/x/time v0.15.0
 ## explicit; go 1.25.0
 golang.org/x/time/rate
-# google.golang.org/genproto/googleapis/api v0.0.0-20260618152121-87f3d3e198d3
+# google.golang.org/genproto/googleapis/api v0.0.0-20260622175928-b703f567277d
 ## explicit; go 1.25.0
 google.golang.org/genproto/googleapis/api/httpbody
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d
 ## explicit; go 1.25.0
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status

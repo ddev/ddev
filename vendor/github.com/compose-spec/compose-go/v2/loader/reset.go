@@ -190,7 +190,12 @@ func (p *ResetProcessor) resolveContainer(node *yaml.Node, path tree.Path) (*yam
 				if resolved == nil {
 					continue
 				}
-				if v.Kind == yaml.AliasNode {
+				// Under the merge key `<<`, the YAML library only accepts an
+				// AliasNode value when its target is a MappingNode. An alias to a
+				// SequenceNode (the spec-allowed "sequence of mappings" form via an
+				// anchor) is rejected. Substitute the resolved target so the YAML
+				// library sees the underlying node directly for merge keys.
+				if v.Kind == yaml.AliasNode && key != "<<" {
 					nodes = append(nodes, node.Content[idx-1], v)
 				} else {
 					nodes = append(nodes, node.Content[idx-1], resolved)
