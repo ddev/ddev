@@ -8,7 +8,7 @@ volumes:
 
 services:
   ddev-ssh-agent:
-    {{ if .IsPodmanRootless .IsLinux }}
+    {{ if and .IsPodmanRootless .IsLinux }}
     userns_mode: keep-id
     {{ end }}
     container_name: ddev-ssh-agent
