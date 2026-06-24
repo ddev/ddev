@@ -1548,6 +1548,10 @@ func TestCustomBuildDockerfiles(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
+	// Create temporary XDG_CONFIG_HOME for isolated testing
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+	defer testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+
 	runTime := util.TimeTrackC(fmt.Sprintf("%s TestCustomBuildDockerfiles", site.Name))
 
 	err := app.Init(site.Dir)
@@ -1617,6 +1621,16 @@ FROM $BASE_IMAGE AS test5
 		err = ddevapp.WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test5"), []byte(`
 COPY --from=stage /tmp/`+"added-by-busybox-"+item+"-stage.txt /var/tmp/"+"added-by-busybox-"+item+"-stage.txt"+`
 COPY --from=test5 /var/tmp/`+"added-by-"+item+"-test5.txt /var/tmp/"+"added-by-"+item+"-test5.txt"))
+		assert.NoError(err)
+
+		// Testing global ~/.ddev/<service>-build/pre.Dockerfile support,
+		// including a context file added via COPY from the global build directory.
+		// WriteImageDockerfile is called first so it creates the directory.
+		err = ddevapp.WriteImageDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), item+"-build", "pre.Dockerfile.global"), []byte(`
+COPY global-junkfile /var/tmp/global-junkfile-`+item+`
+RUN touch /var/tmp/`+"added-by-"+item+"-global-pre.txt"))
+		assert.NoError(err)
+		err = fileutil.TemplateStringToFile("global-context-file", nil, filepath.Join(globalconfig.GetGlobalDdevDir(), item+"-build", "global-junkfile"))
 		assert.NoError(err)
 	}
 
@@ -1721,6 +1735,18 @@ RUN mkdir -p "/var/tmp/my-arch-info-is-${TARGETOS}-${TARGETARCH}-${TARGETPLATFOR
 			Cmd:     "ls /tmp/added-by-busybox-" + item + "-stage-other.txt 2>/dev/null",
 		})
 		assert.Error(err)
+
+		// Global pre.Dockerfile and its context file should have been applied
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: item,
+			Cmd:     "ls /var/tmp/added-by-" + item + "-global-pre.txt >/dev/null",
+		})
+		assert.NoError(err)
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: item,
+			Cmd:     "ls /var/tmp/global-junkfile-" + item + " >/dev/null",
+		})
+		assert.NoError(err)
 	}
 
 	// Dockerfiles should not be copied
