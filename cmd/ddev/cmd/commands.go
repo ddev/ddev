@@ -252,11 +252,14 @@ func addCustomCommandsFromDir(rootCmd *cobra.Command, app *ddevapp.DdevApp, serv
 
 		// If hostBinaryExists is specified it doesn't exist here, skip
 		if hostBinaryExists != "" {
-			binExists := false
 			bins := strings.Split(hostBinaryExists, ",")
-			if slices.ContainsFunc(bins, fileutil.FileExists) {
-				binExists = true
-			}
+			binExists := slices.ContainsFunc(bins, func(p string) bool {
+				expanded, err := util.ExpandHomedir(strings.TrimSpace(p))
+				if err != nil {
+					expanded = p
+				}
+				return fileutil.FileExists(expanded)
+			})
 			if !binExists {
 				if isCustomCommandInArgs(commandName) {
 					suggestedBinaries, _ := util.ArrayToReadableOutput(bins)
