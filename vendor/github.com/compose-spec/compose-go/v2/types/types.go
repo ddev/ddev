@@ -753,6 +753,7 @@ type NetworkConfig struct {
 type IPAMConfig struct {
 	Driver     string      `yaml:"driver,omitempty" json:"driver,omitempty"`
 	Config     []*IPAMPool `yaml:"config,omitempty" json:"config,omitempty"`
+	Options    Options     `yaml:"options,omitempty" json:"options,omitempty"`
 	Extensions Extensions  `yaml:"#extensions,inline,omitempty" json:"-"`
 }
 

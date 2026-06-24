@@ -103,3 +103,20 @@ func TestBuildxMinVersionInSync(t *testing.T) {
 		"versionconstants.DockerBuildxMinVersion (%q) is out of sync with compose's buildxMinVersion (%q); update pkg/versionconstants/versionconstants.go",
 		versionconstants.DockerBuildxMinVersion, composeMin)
 }
+
+// TestBuildxRecommendedVersionInSync ensures that versionconstants.DockerBuildxRecommendedVersion
+// stays in sync with the github.com/docker/buildx version in go.mod.
+// Run this test whenever docker/buildx is bumped in go.mod or versionconstants is updated.
+func TestBuildxRecommendedVersionInSync(t *testing.T) {
+	data, err := os.ReadFile("../../go.mod")
+	require.NoError(t, err, "could not read go.mod")
+
+	re := regexp.MustCompile(`(?m)^\s*github\.com/docker/buildx\s+v([^\s]+)`)
+	matches := re.FindSubmatch(data)
+	require.Len(t, matches, 2, "github.com/docker/buildx require directive not found in go.mod")
+
+	goModVersion := string(matches[1])
+	require.Equal(t, goModVersion, versionconstants.DockerBuildxRecommendedVersion,
+		"versionconstants.DockerBuildxRecommendedVersion (%q) is out of sync with go.mod's github.com/docker/buildx (%q); update pkg/versionconstants/versionconstants.go",
+		versionconstants.DockerBuildxRecommendedVersion, goModVersion)
+}

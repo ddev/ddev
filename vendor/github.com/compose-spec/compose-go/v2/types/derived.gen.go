@@ -2139,6 +2139,12 @@ func deriveDeepCopy_50(dst, src *IPAMConfig) {
 		}
 		deriveDeepCopy_60(dst.Config, src.Config)
 	}
+	if src.Options != nil {
+		dst.Options = make(map[string]string, len(src.Options))
+		deriveDeepCopy_5(dst.Options, src.Options)
+	} else {
+		dst.Options = nil
+	}
 	if src.Extensions != nil {
 		dst.Extensions = make(map[string]any, len(src.Extensions))
 		src.Extensions.DeepCopy(dst.Extensions)

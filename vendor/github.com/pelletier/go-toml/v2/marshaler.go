@@ -164,8 +164,10 @@ func (enc *Encoder) SetMarshalJSONNumbers(indent bool) *Encoder {
 // may be empty in order to provide options without overriding the default
 // name.
 //
-// The "multiline" option emits strings as quoted multi-line TOML strings. It
-// has no effect on fields that would not be encoded as strings.
+// The "multiline" option emits strings as quoted multi-line TOML strings, and
+// arrays with one element per line. For strings, it only takes effect when the
+// value contains a newline; single-line values are emitted as regular strings.
+// It has no effect on fields that would not be encoded as strings or arrays.
 //
 // The "inline" option turns fields that would be emitted as tables into
 // inline tables instead. It has no effect on other fields.
@@ -533,8 +535,18 @@ func (e *encoderState) encodeKeyValue(ent entry, commented bool, indent int) err
 	e.buf = e.appendKey(e.buf, ent.key)
 	e.buf = append(e.buf, " = "...)
 
+	// When tables are not indented, the key is emitted at column zero
+	// regardless of its nesting depth. Value continuation lines (most
+	// notably the elements of a multiline array) must line up with that key,
+	// so the value indentation starts from zero as well rather than from the
+	// table nesting depth.
+	valueIndent := indent
+	if !e.indentTables {
+		valueIndent = 0
+	}
+
 	var err error
-	e.buf, err = e.appendValue(e.buf, ent.value, ent.options, indent)
+	e.buf, err = e.appendValue(e.buf, ent.value, ent.options, valueIndent)
 	if err != nil {
 		return err
 	}
@@ -856,10 +868,41 @@ func isEmptyValue(v reflect.Value) bool {
 	case reflect.Ptr, reflect.Interface:
 		return v.IsNil()
 	case reflect.Struct:
-		return v.IsZero()
+		// Structs that encode as a scalar value (time.Time, the local
+		// date/time types, or any TextMarshaler) are empty only when they
+		// equal their zero value; their fields are typically unexported, so
+		// recursing into them would be meaningless.
+		if encPropsForType(v.Type()).isValue {
+			return v.IsZero()
+		}
+		// Plain structs encode as tables and are empty when every field that
+		// would be encoded is itself empty. This matches the recursive rule
+		// used before the encoder rewrite and, in particular, treats a
+		// non-nil but empty map or slice as empty (reflect.Value.IsZero does
+		// not, which would otherwise emit an empty table header).
+		return isEmptyStruct(v)
 	default:
 		return false
 	}
+}
+
+// isEmptyStruct reports whether all of a table-valued struct's encodable
+// fields are empty per isEmptyValue. It mirrors the field selection done by
+// collectStructEntries (embedded flattening, shadowing, and "-" skips) so the
+// emptiness decision matches what would actually be encoded.
+func isEmptyStruct(v reflect.Value) bool {
+	plan := encPlanForType(v.Type())
+	for i := range plan.fields {
+		fv, ok := fieldByIndexSkipNil(v, plan.fields[i].index)
+		if !ok {
+			// A nil embedded pointer along the path contributes nothing.
+			continue
+		}
+		if !isEmptyValue(fv) {
+			return false
+		}
+	}
+	return true
 }
 
 // isZeroValue implements the omitzero rules: the type's own IsZero() when
@@ -951,10 +994,15 @@ func (e *encoderState) appendValue(b []byte, v reflect.Value, opts valueOptions,
 		}
 		return e.appendValue(b, v.Elem(), opts, indent)
 	case reflect.String:
-		if opts.multiline {
-			return e.appendMultilineString(b, v.String()), nil
+		s := v.String()
+		// The "multiline" option only takes effect when the string actually
+		// contains a newline. Wrapping a single-line value such as "2" in a
+		// """...""" block adds noise without improving readability, so it is
+		// emitted as a regular single-line string instead.
+		if opts.multiline && strings.IndexByte(s, '\n') >= 0 {
+			return e.appendMultilineString(b, s), nil
 		}
-		return e.appendString(b, v.String()), nil
+		return e.appendString(b, s), nil
 	case reflect.Bool:
 		if v.Bool() {
 			return append(b, "true"...), nil

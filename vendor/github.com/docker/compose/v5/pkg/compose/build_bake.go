@@ -197,7 +197,9 @@ func (s *composeService) doBuildBake(ctx context.Context, project *types.Project
 			}
 		}
 
-		read = append(read, buildConfig.Context)
+		if _, _, err := gitutil.ParseGitRef(buildConfig.Context); !strings.Contains(buildConfig.Context, "://") && err != nil {
+			read = append(read, buildConfig.Context)
+		}
 		for _, path := range buildConfig.AdditionalContexts {
 			_, _, err := gitutil.ParseGitRef(path)
 			if !strings.Contains(path, "://") && err != nil {
@@ -206,9 +208,14 @@ func (s *composeService) doBuildBake(ctx context.Context, project *types.Project
 		}
 
 		image := api.GetImageNameOrDefault(service, project.Name)
-		s.events.On(buildingEvent(image))
-
-		expectedImages[serviceName] = image
+		// project.Services lists every service (we still need their bake
+		// targets defined so additional_contexts: service:xxx references can
+		// resolve), but only emit "Building" progress and track expected
+		// images for services we actually plan to build.
+		if _, ok := serviceToBeBuild[serviceName]; ok {
+			s.events.On(buildingEvent(image))
+			expectedImages[serviceName] = image
+		}
 
 		pull := service.Build.Pull || options.Pull
 		noCache := service.Build.NoCache || options.NoCache
