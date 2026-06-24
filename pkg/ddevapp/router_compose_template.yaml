@@ -10,7 +10,7 @@ services:
     init: true
     user: {{ .UID }}:{{ .GID }}
 
-    {{ if and .IsPodman .IsRootless }}
+    {{ if and .IsPodman .IsRootless .IsLinux }}
     userns_mode: keep-id
     {{ end }}
 

@@ -12,6 +12,7 @@ import (
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/compose/v5/cmd/display"
 	"github.com/docker/compose/v5/pkg/api"
@@ -151,6 +152,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		"GID":              gid,
 		"Timezone":         timezone,
 		"IsPodmanRootless": dockerutil.IsPodmanRootless(),
+		"IsLinux":          nodeps.IsLinux(),
 	}
 	t, err := template.New("ssh_auth_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
 	if err != nil {

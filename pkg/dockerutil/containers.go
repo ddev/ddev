@@ -693,8 +693,8 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 			if usernsMode, exists := config.Labels["com.ddev.userns"]; exists {
 				hostConfig.UsernsMode = container.UsernsMode(usernsMode)
 			}
-		} else {
-			// Always use "keep-id" for non-root users
+		} else if nodeps.IsLinux() {
+			// Always use "keep-id" for non-root users on Linux
 			hostConfig.UsernsMode = "keep-id"
 		}
 	}
