@@ -54,29 +54,3 @@ func HashDir(dir string) (string, error) {
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
-
-// HashDirs returns a SHA-256 hash of multiple directories' contents combined.
-// Additional strings (e.g., image names) can be included via extraStrings
-// to ensure changes to those values also produce a different hash.
-func HashDirs(dirs []string, extraStrings ...string) (string, error) {
-	h := sha256.New()
-
-	for _, s := range extraStrings {
-		_, _ = io.WriteString(h, s)
-	}
-
-	for _, dir := range dirs {
-		// Skip non-existent directories with an empty marker
-		if _, statErr := os.Stat(dir); os.IsNotExist(statErr) {
-			_, _ = io.WriteString(h, dir+":empty")
-			continue
-		}
-		dirHash, err := HashDir(dir)
-		if err != nil {
-			return "", err
-		}
-		_, _ = io.WriteString(h, dirHash)
-	}
-
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
-}

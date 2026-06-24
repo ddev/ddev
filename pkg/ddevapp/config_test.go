@@ -2048,8 +2048,7 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 }
 
 // TestLogStderrShownOnStart verifies that warnings captured by log-stderr.sh during
-// the image build are shown to the user on `ddev start`, and that the build-hash file
-// is reset to only the signature (no fingerprint) so the next start rebuilds.
+// the image build are shown to the user on `ddev start`
 func TestLogStderrShownOnStart(t *testing.T) {
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
@@ -2085,10 +2084,4 @@ func TestLogStderrShownOnStart(t *testing.T) {
 	require.Contains(t, warnings, "foobar", "expected the failed 'foobar' command warning")
 	require.Contains(t, warnings, "failed with exit code", "expected the log-stderr.sh failure header")
 	require.Contains(t, warnings, "were not installed properly", "expected the trailing summary warning")
-
-	// When there are build warnings, the build hash is reset to only the
-	// signature (no fingerprint) to trigger a rebuild on the next `ddev start`.
-	hashContent, err := os.ReadFile(app.GetConfigPath(".build-hash"))
-	require.NoError(t, err)
-	require.Equal(t, nodeps.DdevFileSignature, string(hashContent), "build hash should be reset to only the signature when build warnings exist")
 }

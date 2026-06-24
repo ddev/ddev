@@ -36,25 +36,3 @@ func TestHashDir(t *testing.T) {
 	_, err = fileutil.HashDir(filepath.Join(dir, "nonexistent"))
 	require.Error(t, err)
 }
-
-func TestHashDirs(t *testing.T) {
-	dir1 := t.TempDir()
-	dir2 := t.TempDir()
-
-	require.NoError(t, os.WriteFile(filepath.Join(dir1, "a.txt"), []byte("aaa"), 0644))
-	require.NoError(t, os.WriteFile(filepath.Join(dir2, "b.txt"), []byte("bbb"), 0644))
-
-	hash1, err := fileutil.HashDirs([]string{dir1, dir2})
-	require.NoError(t, err)
-	require.NotEmpty(t, hash1)
-
-	// Changing extraStrings should change the hash
-	hash2, err := fileutil.HashDirs([]string{dir1, dir2}, "image:v1")
-	require.NoError(t, err)
-	require.NotEqual(t, hash1, hash2)
-
-	// Non-existent directory should be handled gracefully
-	hash3, err := fileutil.HashDirs([]string{dir1, filepath.Join(dir1, "missing")})
-	require.NoError(t, err)
-	require.NotEmpty(t, hash3)
-}
