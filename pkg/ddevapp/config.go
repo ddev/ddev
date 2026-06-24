@@ -715,6 +715,18 @@ func (app *DdevApp) FixObsolete() {
 		}
 	}
 
+	// Remove old .build-hash file which is no longer used
+	for _, file := range []string{".build-hash"} {
+		filePath := app.GetConfigPath(file)
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, nodeps.DdevFileSignature)
+		if err == nil && signatureFound {
+			err = os.Remove(filePath)
+			if err != nil {
+				util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", filePath, err)
+			}
+		}
+	}
+
 	// Remove old global commands
 	for _, command := range []string{"host/sequelpro", "host/yarn", "host/xhgui", "web/nvm", "web/autocomplete/nvm", "web/python", "web/typo3cms"} {
 		cmdPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/", command)
@@ -1700,7 +1712,6 @@ func PrepDdevDirectory(app *DdevApp) error {
 	}
 	ignores = append(ignores,
 		"**/*.example",
-		".build-hash",
 		".dbimageBuild",
 		".ddev-docker-*.yaml",
 		".*downloads",
