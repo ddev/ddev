@@ -1525,9 +1525,6 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
-	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
-		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
-	}
 
 	if _, err := dockerutil.DownloadDockerBuildxIfNeeded(); err != nil {
 		return err

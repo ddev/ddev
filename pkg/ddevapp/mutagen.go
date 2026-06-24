@@ -51,8 +51,9 @@ func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// chown's non-zero exit code even with -f.
 	_, _, err := app.Exec(
 		&ExecOpts{
-			Dir: "/tmp",
-			Cmd: fmt.Sprintf("sudo chown -Rf %s:%s /tmp/project_mutagen || true", uidStr, gidStr),
+			Dir:  "/tmp",
+			Cmd:  fmt.Sprintf("chown -Rf %s:%s /tmp/project_mutagen || true", uidStr, gidStr),
+			User: "root",
 		})
 	if err != nil {
 		util.Warning("Failed to chown Mutagen volume: %v", err)
