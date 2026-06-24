@@ -39,26 +39,26 @@ case "$1" in
   # Start ssh-agent
   ssh-agent)
 
-  # Create proxy-socket for ssh-agent (to give everyone acceess to the ssh-agent socket)
-  echo "Creating a proxy socket..."
-  rm -f ${SSH_AUTH_SOCK} ${SSH_AUTH_PROXY_SOCK}
-  echo "Running socat UNIX-LISTEN:${SSH_AUTH_PROXY_SOCK},perm=0666,fork UNIX-CONNECT:${SSH_AUTH_SOCK}"
-  socat UNIX-LISTEN:${SSH_AUTH_PROXY_SOCK},perm=0666,fork UNIX-CONNECT:${SSH_AUTH_SOCK} &
+    # Create proxy-socket for ssh-agent (to give everyone acceess to the ssh-agent socket)
+    echo "Creating a proxy socket..."
+    rm -f ${SSH_AUTH_SOCK} ${SSH_AUTH_PROXY_SOCK}
+    echo "Running socat UNIX-LISTEN:${SSH_AUTH_PROXY_SOCK},perm=0666,fork UNIX-CONNECT:${SSH_AUTH_SOCK}"
+    socat UNIX-LISTEN:${SSH_AUTH_PROXY_SOCK},perm=0666,fork UNIX-CONNECT:${SSH_AUTH_SOCK} &
 
-  echo "Launching ssh-agent..."
-  exec /usr/bin/ssh-agent -a ${SSH_AUTH_SOCK} -d
-  ;;
+    echo "Launching ssh-agent..."
+    exec /usr/bin/ssh-agent -a ${SSH_AUTH_SOCK} -d
+    ;;
 
-	# Manage SSH identities
+  # Manage SSH identities
   ssh-add)
-  shift # remove argument from array
+    shift # remove argument from array
 
-  # Add keys id_rsa and id_dsa from /root/.ssh using cat so it will work regardless of permissions
-  # docker toolbox mounts files as 0777, which ruins the normal technique.
-  set +o errexit
-  keyfiles=$(file ~/.ssh/* | awk -F: '/private key/ {  print $1 }')
-  set -o errexit
-  if [ ! -z "$keyfiles" ] ; then
+    # Add keys id_rsa and id_dsa from /root/.ssh using cat so it will work regardless of permissions
+    # docker toolbox mounts files as 0777, which ruins the normal technique.
+    set +o errexit
+    keyfiles=$(file ~/.ssh/* | awk -F: '/private key/ {  print $1 }')
+    set -o errexit
+    if [ ! -z "$keyfiles" ] ; then
       for key in $keyfiles; do
         perm=$(stat -c %a "$key")
         if [ $perm = "777" ] ; then
@@ -68,14 +68,14 @@ case "$1" in
             ssh-add $key
         fi
       done
-  else
-    echo "No private keys were found in the directory."
-  fi
+    else
+      echo "No private keys were found in the directory."
+    fi
 
-  # Return first command exit code
-  exit ${PIPESTATUS[0]}
-  ;;
-	*)
-  exec $@
-  ;;
+    # Return first command exit code
+    exit ${PIPESTATUS[0]}
+    ;;
+  *)
+    exec $@
+    ;;
 esac

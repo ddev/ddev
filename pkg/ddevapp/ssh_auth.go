@@ -13,7 +13,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/docker/compose/v5/cmd/display"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/moby/moby/api/types/container"
@@ -47,7 +46,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	// Nothing to do if the ssh container is running with the current image.
 	// Use HasSuffix to handle registry prefixes (e.g. docker.io/) that Podman includes in image names.
 	if sshContainer != nil &&
-		strings.HasSuffix(sshContainer.Image, ddevImages.GetSSHAuthImage()+"-built") &&
+		strings.HasSuffix(sshContainer.Image, ddevImages.GetSSHAuthImage()) &&
 		(sshContainer.State == "running" || sshContainer.State == "starting") {
 		return nil
 	}
@@ -141,25 +140,16 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	}
 	defer util.CheckClose(f)
 
-	buildContextDir := "./.sshimageBuild"
-	err := WriteBuildDockerfile(app, filepath.Join(globalconfig.GetGlobalDdevDir(), buildContextDir, "Dockerfile"), "", nil, "", "")
-	if err != nil {
-		return "", err
-	}
-
-	uid, gid, username := dockerutil.GetContainerUser()
+	uid, gid, _ := dockerutil.GetContainerUser()
 	timezone, _ := util.GetLocalTimezone()
 
 	_ = app.DockerEnv()
 
 	templateVars := map[string]any{
-		"ssh_auth_image":   versionconstants.SSHAuthImage,
-		"ssh_auth_tag":     versionconstants.SSHAuthTag,
-		"Username":         username,
+		"SSHAuthImage":     ddevImages.GetSSHAuthImage(),
 		"UID":              uid,
 		"GID":              gid,
 		"Timezone":         timezone,
-		"BuildContext":     buildContextDir,
 		"IsPodmanRootless": dockerutil.IsPodmanRootless(),
 	}
 	t, err := template.New("ssh_auth_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")

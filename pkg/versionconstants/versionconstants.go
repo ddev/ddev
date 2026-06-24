@@ -38,7 +38,7 @@ var TraefikRouterTag = "v1.25.2"
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.25.2"
+var SSHAuthTag = "20260622_stasadev_auth_ssh"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"

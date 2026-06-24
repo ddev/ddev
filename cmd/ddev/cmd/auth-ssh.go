@@ -192,14 +192,14 @@ func getCertificateForPrivateKey(path string, name string) (string, string) {
 // sets ownership and permissions, and filters the private keys from provided files.
 // We have:
 // "ssh-add" - adds all found private keys to ssh-agent
-// "//test.expect.passphrase" - used for testing, adds a single key with passphrase
+// any other command - run as-is; tests pass an inline `expect` script here
 func GetAuthSSHCmd(command string) string {
-	uid, gid, username := dockerutil.GetContainerUser()
+	uid, gid, _ := dockerutil.GetContainerUser()
 
 	commandToRun := command
 	if dockerutil.IsDockerRootless() {
 		// Run command as container user, not root
-		commandToRun = fmt.Sprintf("setpriv --reuid=%s --regid=%s --init-groups -- %s", uid, gid, command)
+		commandToRun = fmt.Sprintf("setpriv --reuid=%s --regid=%s --clear-groups -- %s", uid, gid, command)
 	}
 
 	if command == "ssh-add" {
@@ -214,31 +214,33 @@ done`, util.ColorizeText("Adding key %s", "yellow"), commandToRun)
 
 	return fmt.Sprintf(`
 # Copy SSH files and set proper ownership and permissions
-cp -r /tmp/sshtmp /home/%[1]s/.ssh && \
-chown -R %[2]s:%[3]s /home/%[1]s/.ssh && \
-chmod -R go-rwx /home/%[1]s/.ssh && \
-cd /home/%[1]s/.ssh && \
+export HOME=/tmp/ssh-home && \
+mkdir -p $HOME && \
+cp -r /tmp/sshtmp $HOME/.ssh && \
+chown -R %[1]s:%[2]s $HOME/.ssh && \
+chmod -R go-rwx $HOME/.ssh && \
+cd $HOME/.ssh && \
 # Find all private key files
 mapfile -t keys < <(grep -l '^-----BEGIN .*PRIVATE KEY-----' *) && \
 # Verify at least one key exists
 ((${#keys[@]})) || { echo "No SSH private keys found." >&2; exit 1; } && \
-%[4]s`, username, uid, gid, commandToRun)
+%[3]s`, uid, gid, commandToRun)
 }
 
 // runSSHAuthContainer runs the SSH auth container using Docker client API
 func runSSHAuthContainer(keys []string) (int, error) {
-	uid, _, _ := dockerutil.GetContainerUser()
+	uid, gid, _ := dockerutil.GetContainerUser()
 	// Run container as root to be able to change ownership of files
 	if dockerutil.IsDockerRootless() {
-		uid = "0"
+		uid, gid = "0", "0"
 	}
 
 	config := &container.Config{
-		Image:       docker.GetSSHAuthImage() + "-built",
+		Image:       docker.GetSSHAuthImage(),
 		Cmd:         []string{"bash", "-c", GetAuthSSHCmd("ssh-add")},
 		Entrypoint:  []string{},
 		AttachStdin: true,
-		User:        uid,
+		User:        uid + ":" + gid,
 	}
 
 	// Prepare mounts for Docker API

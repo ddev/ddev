@@ -87,25 +87,45 @@ func TestSSHAuth(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(stderr, "Permission denied")
 
-	// Add password/key to auth. This is an unfortunate perversion of using docker run directly, copied from
-	// ddev auth ssh command, and with an expect script to provide the passphrase.
-	uid, _, _ := dockerutil.GetContainerUser()
+	// Add the passphrase-protected key the same way `ddev auth ssh` does, driving the
+	// prompt with expect. The key is added by explicit path because bare `ssh-add` would
+	// abort with "No user found with uid" - the host user has no account in the image.
+	expectScript := `
+set timeout 10
+spawn ssh-add id_rsa
+expect {
+    "Enter passphrase" { send "testkey\n" }
+    eof { puts "FAIL: ssh-add exited before prompting for a passphrase"; exit 2 }
+    timeout { puts "FAIL: timed out waiting for passphrase prompt"; exit 2 }
+}
+expect {
+    "Identity added" {}
+    eof { puts "FAIL: ssh-add exited without adding the key"; exit 3 }
+    timeout { puts "FAIL: timed out waiting for the key to be added"; exit 3 }
+}
+expect eof
+`
+	expectCmd := "expect -c '" + expectScript + "'"
+	uid, gid, _ := dockerutil.GetContainerUser()
 	if dockerutil.IsDockerRootless() {
-		uid = "0"
+		uid, gid = "0", "0"
 	}
 	sshKeyPath := app.GetConfigPath(".ssh")
 
-	args := []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/tmp/sshtmp", "-u", uid}
+	// No `-t`: expect drives the passphrase prompt over its own pty, so we don't need
+	// a TTY on the container and can capture the output to assert on it.
+	args := []string{"run", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/tmp/sshtmp", "-u", uid + ":" + gid}
 	containerCmd := "docker"
 	// Add --userns=keep-id for Podman rootless to maintain user namespace mapping
 	if dockerutil.IsPodmanRootless() {
 		containerCmd = "podman"
 		args = append(args, "--userns=keep-id")
 	}
-	args = append(args, "--entrypoint", "bash", ddevImages.GetSSHAuthImage()+"-built", "-c", cmd.GetAuthSSHCmd("//test.expect.passphrase"))
+	args = append(args, "--entrypoint", "bash", ddevImages.GetSSHAuthImage(), "-c", cmd.GetAuthSSHCmd(expectCmd))
 
-	err = exec.RunInteractiveCommand(containerCmd, args)
-	require.NoError(t, err)
+	out, err := exec.RunHostCommand(containerCmd, args...)
+	require.NoError(t, err, "ssh-add via expect failed; output:\n%s", out)
+	require.Contains(t, out, "Identity added", "ssh-add did not report success; output:\n%s", out)
 
 	// Try SSH, should succeed
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{

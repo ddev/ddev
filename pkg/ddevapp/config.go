@@ -753,7 +753,16 @@ func (app *DdevApp) FixObsolete() {
 		}
 	}
 
-	// Remove old global traefik configuuration.
+	// Remove old ~/.ddev/.sshimageBuild directory
+	legacySSHImageBuildDir := filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild")
+	if fileutil.IsDirectory(legacySSHImageBuildDir) {
+		err := os.RemoveAll(legacySSHImageBuildDir)
+		if err != nil {
+			util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", legacySSHImageBuildDir, err)
+		}
+	}
+
+	// Remove old global traefik configuration.
 	for _, f := range []string{"static_config.yaml"} {
 		traefikGlobalConfigPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 
@@ -813,7 +822,6 @@ type composeYAMLVars struct {
 	DBBuildContext            string
 	WebBuildDockerfile        string
 	DBBuildDockerfile         string
-	SSHAgentBuildContext      string
 	OmitDB                    bool
 	OmitDBA                   bool
 	OmitRouter                bool
@@ -1187,12 +1195,6 @@ EOF
 		}
 	}
 
-	if err != nil {
-		return "", err
-	}
-
-	// SSH agent needs extra to add the official related user, nothing else
-	err = WriteBuildDockerfile(app, filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "", "")
 	if err != nil {
 		return "", err
 	}
@@ -1717,7 +1719,6 @@ func PrepDdevDirectory(app *DdevApp) error {
 		".*downloads",
 		".homeadditions",
 		".importdb*",
-		".sshimageBuild",
 		".webimageBuild",
 		"apache/apache-site.conf",
 		"commands/.gitattributes",
