@@ -753,17 +753,12 @@ func (app *DdevApp) FixObsolete() {
 		}
 	}
 
-	// Remove old ssh-build Dockerfile.
-	for _, f := range []string{"Dockerfile"} {
-		sshBuildPath := filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild")
-
-		item := filepath.Join(sshBuildPath, f)
-		signatureFound, err := fileutil.FgrepStringInFile(item, nodeps.DdevFileSignature)
-		if err == nil && signatureFound {
-			err = os.Remove(item)
-			if err != nil {
-				util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", item, err)
-			}
+	// Remove old ~/.ddev/.sshimageBuild directory
+	legacySSHImageBuildDir := filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild")
+	if fileutil.IsDirectory(legacySSHImageBuildDir) {
+		err := os.RemoveAll(legacySSHImageBuildDir)
+		if err != nil {
+			util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", legacySSHImageBuildDir, err)
 		}
 	}
 
