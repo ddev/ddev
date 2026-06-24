@@ -20,9 +20,6 @@ import (
 
 // TestHardenedStart makes sure we can do a start and basic use with hardened images
 func TestHardenedStart(t *testing.T) {
-	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		t.Skip("Skipping TestHardenedStart because NoBindMounts is true and Mutagen is incompatible with hardened images")
-	}
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (nodeps.IsAppleSilicon() || nodeps.IsWSL2() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping TestHardenedStart because of useless failures to connect on some platforms, no need to test hardened on arm64")
 	}
