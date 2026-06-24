@@ -285,7 +285,7 @@ If your host command should only run if a particular file exists, add the `HostB
 
 Usage: `## HostBinaryExists: <path/to/file>`
 
-Example: `## HostBinaryExists: /Applications/Sequel ace.app`
+Example: `## HostBinaryExists: /Applications/Sequel Ace.app`
 
 ### `DBTypes` Annotation
 

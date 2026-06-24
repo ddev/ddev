@@ -5,7 +5,7 @@
 ## Usage: sequelace
 ## Example: "ddev sequelace" or "ddev sequelace database2" to open a database named "database2".
 ## OSTypes: darwin
-## HostBinaryExists: /Applications/Sequel ace.app
+## HostBinaryExists: /Applications/Sequel Ace.app
 ## DBTypes: mysql,mariadb
 
 DATABASE="${1:-db}"
