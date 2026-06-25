@@ -85,8 +85,7 @@ ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
 ARG PHP_VERSIONS="php8.2 php8.3 php8.4 php8.5"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ARG DRUSH_VERSION=8.5.0
-# TODO: remove this Node.js pin once https://github.com/nodejs/node/issues/63487 is resolved
-ARG NODE_VERSION=24.15.0
+ARG NODE_VERSION=24
 ENV PATH=$PATH:/usr/local/n/bin
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER=1
