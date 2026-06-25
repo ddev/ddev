@@ -3,10 +3,12 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -196,6 +198,12 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			// Check if any containers are running before prompting for poweroff
 			activeProjects := ddevapp.GetActiveProjects()
 			sshAgent, _ := dockerutil.FindContainerByName("ddev-ssh-agent")
+			// skip check for sshAgent if it's already new
+			if sshAgent != nil &&
+				strings.HasSuffix(sshAgent.Image, ddevImages.GetSSHAuthImage()) &&
+				(sshAgent.State == "running" || sshAgent.State == "starting") {
+				sshAgent = nil
+			}
 			router, _ := dockerutil.FindContainerByName("ddev-router")
 
 			// Only prompt for poweroff if there are active containers
