@@ -34,6 +34,8 @@ ignorePatterns:
   - pattern: "https://mailpit.axllent.org"
   # fixed.docs.upsun.com resets the connection to linkspector's headless browser
   - pattern: "https://fixed.docs.upsun.com"
+  # codeberg 403
+  - pattern: "https://codeberg.org/oerdnj/deb.sury.org"
 aliveStatusCodes:
   - 200
   - 206
