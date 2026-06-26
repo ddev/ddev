@@ -2469,8 +2469,6 @@ If you get a warning about "Apache mod_rewrite" during the compatibility check, 
 ddev config --upload-dirs=sites/assets/files && ddev restart
 ```
 
-If you have any questions there is lots of help in the [DDEV thread in the ProcessWire forum](https://processwire.com/talk/topic/27433-using-ddev-for-local-processwire-development-tips-tricks/).
-
 ## Shopware
 
 === "Composer"
