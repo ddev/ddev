@@ -64,7 +64,7 @@ function try_cleanup_containers_native {
   local ids
   ids=$(docker ps -aq || true)
   if [ -n "$ids" ]; then
-    docker rm -f "$ids" >/dev/null 2>&1 || true
+    echo "$ids" | xargs docker rm -f >/dev/null 2>&1 || true
   fi
   local remaining
   remaining=$(docker ps -aq || true)
