@@ -396,7 +396,7 @@ func TestLaunchCommand(t *testing.T) {
 	}
 }
 
-// TestMysqlCommand tests `ddev mysql“
+// TestMysqlCommand tests `ddev mysql`
 func TestMysqlCommand(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -419,28 +419,52 @@ func TestMysqlCommand(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	err = app.WriteConfig()
-	require.NoError(t, err)
-
 	// This populates the project's
 	// /mnt/ddev-global-cache/global-commands/ which otherwise doesn't get done until ddev start
 	// This matters when --no-bind-mount=true
 	_, err = exec.RunHostCommand("ddev")
 	assert.NoError(err)
 
-	err = app.Start()
-	require.NoError(t, err)
+	dbVersionsToTest := []ddevapp.DatabaseDesc{
+		{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion},
+	}
+	if os.Getenv("GOTEST_SHORT") == "" {
+		dbVersionsToTest = append(dbVersionsToTest,
+			ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL80},
+			ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL84},
+		)
+	}
 
-	// Test ddev mysql -uroot -proot mysql
-	command := osexec.Command("bash", "-c", "echo 'SHOW TABLES;' | "+DdevBin+" mysql --user=root --password=root --database=mysql")
-	byteOut, err := command.CombinedOutput()
-	assert.NoError(err, "byteOut=%v", string(byteOut))
-	assert.Contains(string(byteOut), `Tables_in_mysql
-column_stats
-columns_priv`)
+	for i, dbDesc := range dbVersionsToTest {
+		desc := fmt.Sprintf("%s:%s", dbDesc.Type, dbDesc.Version)
+		t.Logf("Testing ddev mysql with %s", desc)
+
+		if i > 0 {
+			err = app.Stop(true, false)
+			require.NoError(t, err)
+		}
+		app.Database = dbDesc
+		err = app.WriteConfig()
+		require.NoError(t, err)
+		err = app.Start()
+		require.NoError(t, err, "app.Start() failed for %s", desc)
+
+		// Test ddev mysql with explicit credentials
+		command := osexec.Command("bash", "-c", "echo 'SHOW TABLES;' | "+DdevBin+" mysql --user=root --password=root --database=mysql")
+		byteOut, err := command.CombinedOutput()
+		require.NoError(t, err, "ddev mysql with explicit credentials failed for %s: %s", desc, string(byteOut))
+		assert.Contains(string(byteOut), "columns_priv", "unexpected output for %s: %s", desc, string(byteOut))
+
+		// Test ddev mysql without explicit credentials; relies on ~/.my.cnf being found via HOME.
+		// This is a regression test for https://github.com/ddev/ddev/issues/8529 where
+		// HOME="" on Podman/macOS prevented mysql from reading ~/.my.cnf.
+		command = osexec.Command("bash", "-c", "echo 'SELECT 1;' | "+DdevBin+" mysql")
+		byteOut, err = command.CombinedOutput()
+		require.NoError(t, err, "ddev mysql without credentials failed for %s: %s", desc, string(byteOut))
+	}
 }
 
-// TestPsqlCommand tests `ddev psql“
+// TestPsqlCommand tests `ddev psql"
 func TestPsqlCommand(t *testing.T) {
 	assert := asrt.New(t)
 
