@@ -336,7 +336,7 @@ Podman rootless on macOS runs containers in a lightweight VM managed by `podman 
 6. Stop the machine when done with initial setup: `podman machine stop`
 
 !!!note
-    Rootless containers cannot bind to ports below 1024, so DDEV's global router ports 80/443 need to be changed for this provider. This is a known issue to be resolved.
+    Rootless containers cannot bind to ports below 1024. `test.sh` handles this automatically by setting `DDEV_XDG_CONFIG_HOME` to an isolated config directory and configuring `router-http-port=8080` and `router-https-port=8443` via `ddev config global`.
 
 Then configure the Buildkite agent with tag `podman-rootless=true` in addition to the standard macOS tags:
 
