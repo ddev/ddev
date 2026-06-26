@@ -77,11 +77,15 @@ function try_cleanup_containers_native {
   return 0
 }
 
+# Reset global config to defaults so no stale settings survive across runs.
+# Provider-specific setup below can layer overrides on top (e.g. non-privileged ports for podman-rootless).
+rm -f ~/.ddev/global_config.yaml
+ddev config global >/dev/null
+
 # On macOS, we can have several different docker providers, allow testing all
 # In cleanup, stop everything we know of but leave either Orbstack or Docker Desktop running
 if [ "${os:-}" = "darwin" ]; then
   function cleanup {
-    unset DDEV_XDG_CONFIG_HOME
     command -v orb 2>/dev/null && echo "Stopping orbstack" && (nohup orb stop &)
     sleep 3 # Since we backgrounded orb stop, make sure it completes
     if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
@@ -194,9 +198,7 @@ if [ "${os:-}" = "darwin" ]; then
       podman machine start
       docker context use podman-rootless
 
-      # Rootless podman cannot bind privileged ports (<1024).
-      # Use an isolated DDEV global config with non-privileged router ports.
-      export DDEV_XDG_CONFIG_HOME=~/tmp/ddev-config-podman-rootless
+      # Rootless podman cannot bind privileged ports (<1024); override the defaults.
       ddev config global --router-http-port=8080 --router-https-port=8443
 
       if ! try_cleanup_containers_native; then
