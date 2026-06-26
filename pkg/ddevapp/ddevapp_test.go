@@ -3856,6 +3856,9 @@ func TestGetWebContainerDirectURLsErrorHandling(t *testing.T) {
 // TestGetWebContainerDirectURLsWithGenericWebserver tests the behavior of GetWebContainerDirectHTTPURL and GetWebContainerDirectHTTPSURL
 // with a generic webserver type and web_extra_exposed_ports
 func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
+	if dockerutil.IsPodmanRootless() {
+		t.Skip("Skipping: podman rootless cannot bind privileged ports 80/443")
+	}
 	assert := asrt.New(t)
 
 	// Create a temporary directory for a new app
