@@ -1,0 +1,22 @@
+# Podman rootless on macOS arm64
+# See https://buildkite.com/ddev/macos-podman-rootless/settings/repository
+# Runs on main only, not on PRs
+
+  - command: ".buildkite/test.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+#    branches: "main"
+    agents:
+      - "os=macos"
+      - "podman-rootless=true"
+      - "architecture=arm64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DDEV_TEST_SHARE_CMD: "false"
+      DOCKER_TYPE: "podman-rootless"
+      # /opt/homebrew/etc/buildkite-agent/hooks/environment
+      # DOCKERHUB_PULL_USERNAME
+      # DOCKERHUB_PULL_PASSWORD
+    parallelism: 1
