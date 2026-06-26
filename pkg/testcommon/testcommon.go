@@ -250,6 +250,13 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	globalconfig.DdevGlobalConfig.PerformanceMode = originalGlobalConfig.PerformanceMode
 	globalconfig.DdevGlobalConfig.NoBindMounts = originalGlobalConfig.NoBindMounts
 	globalconfig.DdevGlobalConfig.LastStartedVersion = originalGlobalConfig.LastStartedVersion
+	globalconfig.DdevGlobalConfig.RouterHTTPPort = originalGlobalConfig.RouterHTTPPort
+	globalconfig.DdevGlobalConfig.RouterHTTPSPort = originalGlobalConfig.RouterHTTPSPort
+	globalconfig.DdevGlobalConfig.RouterMailpitHTTPPort = originalGlobalConfig.RouterMailpitHTTPPort
+	globalconfig.DdevGlobalConfig.RouterMailpitHTTPSPort = originalGlobalConfig.RouterMailpitHTTPSPort
+	globalconfig.DdevGlobalConfig.RouterXHGuiHTTPPort = originalGlobalConfig.RouterXHGuiHTTPPort
+	globalconfig.DdevGlobalConfig.RouterXHGuiHTTPSPort = originalGlobalConfig.RouterXHGuiHTTPSPort
+	globalconfig.DdevGlobalConfig.TraefikMonitorPort = originalGlobalConfig.TraefikMonitorPort
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 	// Make sure we have the .ddev/bin dir we need for docker-compose and Mutagen
