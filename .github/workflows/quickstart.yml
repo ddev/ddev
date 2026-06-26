@@ -95,9 +95,7 @@ jobs:
           DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           brew unlink ddev || true
-          rm -f ~/.config/ddev
           make
-          unset XDG_CONFIG_HOME
           # Use mutagen by default as it may cause different behaviors
           $(make DDEV_BINARY_FULLPATH) config global --performance-mode=mutagen
           make quickstart-test

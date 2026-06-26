@@ -89,7 +89,6 @@ func TestOmitSnapshotOnDeleteGlobal(t *testing.T) {
 	require.NoError(t, err)
 	t.Setenv("NO_COLOR", "true")
 
-	// Create temporary XDG_CONFIG_HOME for isolated global config testing
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {

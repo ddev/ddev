@@ -168,7 +168,6 @@ func TestCmdStartShowsMessages(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"stop", site.Name})
 	require.NoError(t, err)
 
-	// Create temporary XDG_CONFIG_HOME for isolated testing
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 	tmpGlobalDdevDir := globalconfig.GetGlobalDdevDir()
 
@@ -244,7 +243,6 @@ func TestCmdStartShowsSponsorshipData(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"stop", site.Name})
 	require.NoError(t, err)
 
-	// Create temporary XDG_CONFIG_HOME for isolated testing
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 	tmpGlobalDdevDir := globalconfig.GetGlobalDdevDir()
 

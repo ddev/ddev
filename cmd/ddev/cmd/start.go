@@ -157,6 +157,7 @@ ddev start --all`,
 			util.Success("Successfully started %s", project.GetName())
 			emitReachProjectMessage(project)
 		}
+		util.WarnAboutMultipleGlobalDdevDirs()
 		amplitude.CheckSetUp()
 	},
 }

@@ -637,3 +637,13 @@ func IsPHPVersionEmbargoed(phpVersion string) bool {
 	}
 	return false
 }
+
+// WarnAboutMultipleGlobalDdevDirs warns once if a global DDEV config exists in a
+// location other than the one DDEV actually uses. It is a no-op in JSON output mode.
+func WarnAboutMultipleGlobalDdevDirs() {
+	if !output.JSONOutput {
+		if err := globalconfig.CheckForMultipleGlobalDdevDirs(); err != nil {
+			WarningWithColor("magenta", "Warning: %v", err)
+		}
+	}
+}

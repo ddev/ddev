@@ -953,7 +953,6 @@ func TestHasConfigNameOverride(t *testing.T) {
 func TestOmitProjectNameByDefault(t *testing.T) {
 	origDir, _ := os.Getwd()
 
-	// Create temporary XDG_CONFIG_HOME for isolated testing
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
@@ -1081,7 +1080,6 @@ func TestOmitProjectNameReconfig(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
-	// Create temporary XDG_CONFIG_HOME for isolated testing
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
@@ -1142,7 +1140,6 @@ func TestOmitProjectNameWithConfigOverride(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
-	// Create temporary XDG_CONFIG_HOME for isolated testing
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {
@@ -1203,7 +1200,6 @@ func TestOmitProjectNameWithConfigOverride(t *testing.T) {
 func TestGlobalConfigOmitProjectNameDefault(t *testing.T) {
 	assert := asrt.New(t)
 
-	// Create temporary XDG_CONFIG_HOME for isolated testing
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {

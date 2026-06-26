@@ -216,11 +216,11 @@ func CreateTmpDir(prefix string) string {
 }
 
 // CopyGlobalDdevDir creates a temporary global config directory for DDEV
-// using a temporary directory which is set to $XDG_CONFIG_HOME/ddev
+// using a temporary directory which is set to $DDEV_XDG_CONFIG_HOME/ddev
 // Don't forget to run ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 // in the test's cleanup function.
 func CopyGlobalDdevDir(t *testing.T) string {
-	// Create $XDG_CONFIG_HOME
+	// Create $DDEV_XDG_CONFIG_HOME
 	tmpXdgConfigHomeDir := CreateTmpDir("Home_" + util.RandString(5))
 	// Global DDEV config directory should be named "ddev"
 	tmpGlobalDdevDir := filepath.Join(tmpXdgConfigHomeDir, "ddev")
@@ -244,9 +244,9 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	require.Equal(t, tmpGlobalDdevDir, globalconfig.GetGlobalDdevDir())
 	// And it should be created by now
 	require.DirExists(t, tmpGlobalDdevDir)
-	// Create the global config in $XDG_CONFIG_HOME/ddev
+	// Create the global config in $DDEV_XDG_CONFIG_HOME/ddev
 	globalconfig.EnsureGlobalConfig()
-	// Copy some settings from ~/.ddev to $XDG_CONFIG_HOME/ddev
+	// Copy some settings from ~/.ddev to $DDEV_XDG_CONFIG_HOME/ddev
 	globalconfig.DdevGlobalConfig.PerformanceMode = originalGlobalConfig.PerformanceMode
 	globalconfig.DdevGlobalConfig.NoBindMounts = originalGlobalConfig.NoBindMounts
 	globalconfig.DdevGlobalConfig.LastStartedVersion = originalGlobalConfig.LastStartedVersion
@@ -263,7 +263,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	sourceBinDir := filepath.Join(originalGlobalDdevDir, "bin")
 	_, err = os.Stat(sourceBinDir)
 	if !os.IsNotExist(err) {
-		// Copy ~/.ddev/bin to $XDG_CONFIG_HOME/ddev/bin
+		// Copy ~/.ddev/bin to $DDEV_XDG_CONFIG_HOME/ddev/bin
 		err = copy2.Copy(sourceBinDir, filepath.Join(tmpGlobalDdevDir, "bin"))
 		require.NoError(t, err)
 	}
@@ -280,9 +280,9 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	return tmpXdgConfigHomeDir
 }
 
-// ResetGlobalDdevDir removes temporary $XDG_CONFIG_HOME directory
+// ResetGlobalDdevDir removes temporary $DDEV_XDG_CONFIG_HOME directory
 func ResetGlobalDdevDir(t *testing.T, tmpXdgConfigHomeDir string) {
-	// Stop the Mutagen daemon running in the $XDG_CONFIG_HOME/ddev
+	// Stop the Mutagen daemon running
 	ddevapp.StopMutagenDaemon("")
 	t.Logf("stopped mutagen daemon '%s' with MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
 	// After the $DDEV_XDG_CONFIG_HOME directory is removed,
