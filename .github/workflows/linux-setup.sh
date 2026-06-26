@@ -77,6 +77,10 @@ ExecStart=/home/linuxbrew/.linuxbrew/bin/podman $LOGGING system service
 [Install]
 WantedBy=default.target
 EOF
+  # Fix for Podman 6: "registries.conf must be in v2 format but is in v1"
+  sudo tee /etc/containers/registries.conf > /dev/null <<EOF
+unqualified-search-registries = ["docker.io"]
+EOF
   # Reload systemd
   systemctl --user daemon-reload
   # Set DNS
@@ -159,6 +163,10 @@ EOF
 SocketMode=0660
 SocketUser=root
 SocketGroup=docker
+EOF
+  # Fix for Podman 6: "registries.conf must be in v2 format but is in v1"
+  sudo tee /etc/containers/registries.conf > /dev/null <<EOF
+unqualified-search-registries = ["docker.io"]
 EOF
   # Reload systemd
   sudo systemctl daemon-reload
