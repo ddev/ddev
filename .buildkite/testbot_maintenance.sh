@@ -64,8 +64,8 @@ if [ "$(docker ps -aq | wc -l )" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 fi
 
-docker system prune --volumes --force
-docker volume prune -a -f
+docker system prune --volumes --force || true
+docker volume prune -a -f || true
 
 # Update all images that could have changed
 ( docker images | awk '/ddev|traefik|postgres/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
