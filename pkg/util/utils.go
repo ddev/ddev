@@ -643,7 +643,7 @@ func IsPHPVersionEmbargoed(phpVersion string) bool {
 func WarnAboutMultipleGlobalDdevDirs() {
 	if !output.JSONOutput {
 		if err := globalconfig.CheckForMultipleGlobalDdevDirs(); err != nil {
-			WarningWithColor("magenta", "Warning: %v", err)
+			WarningWithColor("magenta", "Warning: %v.", err)
 		}
 	}
 }
