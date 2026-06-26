@@ -200,19 +200,9 @@ if [ "${os:-}" = "darwin" ]; then
       ddev config global --router-http-port=8080 --router-https-port=8443
 
       if ! try_cleanup_containers_native; then
-        echo "Performing deep cleanup: stopping and restarting podman machine"
-        podman machine stop
-        podman machine start
-        docker context use podman-rootless
-
-        # Verify cleanup was successful
-        remaining_after_cleanup=$(docker ps -aq || true)
-        if [ -n "$remaining_after_cleanup" ]; then
-          echo "ERROR: Cleanup failed, containers still remain after deep cleanup:" >&2
-          docker ps -a >&2 || true
-          exit 1
-        fi
-        echo "Deep cleanup succeeded: all containers removed"
+        echo "ERROR: Containers remain after podman machine start; aborting" >&2
+        docker ps -a >&2 || true
+        exit 1
       fi
       ;;
 
