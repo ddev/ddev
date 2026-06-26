@@ -74,6 +74,7 @@ services:
       {{- if ne (env "DDEV_PAGER") "" }}
       - PAGER=${DDEV_PAGER}
       {{- end }}
+      - HOME=/home/{{ .Username }}
       - TZ={{ .Timezone }}
       - USER={{ .Username }}
     command: ${DDEV_DB_CONTAINER_COMMAND}

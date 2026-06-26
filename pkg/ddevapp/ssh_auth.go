@@ -146,11 +146,11 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	_ = app.DockerEnv()
 
 	templateVars := map[string]any{
-		"SSHAuthImage":     ddevImages.GetSSHAuthImage(),
-		"UID":              uid,
-		"GID":              gid,
-		"Timezone":         timezone,
-		"IsPodmanRootless": dockerutil.IsPodmanRootless(),
+		"SSHAuthImage": ddevImages.GetSSHAuthImage(),
+		"UID":          uid,
+		"GID":          gid,
+		"Timezone":     timezone,
+		"UseKeepID":    dockerutil.UseKeepID(),
 	}
 	t, err := template.New("ssh_auth_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
 	if err != nil {

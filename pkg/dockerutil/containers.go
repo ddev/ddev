@@ -693,8 +693,8 @@ func RunSimpleContainerExtended(name string, config *container.Config, hostConfi
 			if usernsMode, exists := config.Labels["com.ddev.userns"]; exists {
 				hostConfig.UsernsMode = container.UsernsMode(usernsMode)
 			}
-		} else {
-			// Always use "keep-id" for non-root users
+		} else if UseKeepID() {
+			// Use "keep-id" for non-root users (Linux rootless Podman only)
 			hostConfig.UsernsMode = "keep-id"
 		}
 	}

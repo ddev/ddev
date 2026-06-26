@@ -333,7 +333,7 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 		}
 
 		if isRootless && service.User == userGroup {
-			if isPodman {
+			if dockerutil.UseKeepID() {
 				// Podman: set the user namespace mode for the container
 				// https://docs.podman.io/en/v4.6.1/markdown/options/userns.container.html#userns-mode
 				service.UserNSMode = "keep-id"

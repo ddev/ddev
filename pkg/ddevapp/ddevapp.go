@@ -1758,7 +1758,7 @@ func (app *DdevApp) Start() error {
 	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
 	chownCmd := fmt.Sprintf("chown -R %s:%s /mnt/ddev-global-cache", uid, gid)
 	labels := map[string]string{}
-	if dockerutil.IsPodmanRootless() {
+	if dockerutil.UseKeepID() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
 
