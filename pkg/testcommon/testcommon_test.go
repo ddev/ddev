@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -135,6 +136,9 @@ func TestGetCachedArchive(t *testing.T) {
 
 // TestPretestAndEnv tests that the testsite PretestCmd works along with WebEvironment
 func TestPretestAndEnv(t *testing.T) {
+	if dockerutil.IsPodmanRootless() {
+		t.Skip("Skipping: podman rootless cannot bind privileged ports 80/443")
+	}
 	assert := asrt.New(t)
 	ensureDdevBin()
 
