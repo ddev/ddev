@@ -228,13 +228,16 @@ func TestTraefikStaticConfig(t *testing.T) {
 				require.NoError(t, err)
 			})
 
-			// Unmarshal the loaded result expectation so it will look the same as merged (without comments, etc)
-			var tmpMap map[string]any
+			// Unmarshal the loaded result expectation so it will look the same as merged (without comments, etc).
+			// entryPoints are excluded from comparison because they contain port numbers that vary
+			// by environment (e.g. Podman rootless macOS is globally configured with 8080/8443 instead of 80/443).
+			var expectedMap map[string]any
 			expectedResultString, err := fileutil.ReadFileIntoString(filepath.Join(testSourceDir, "expectation.yaml"))
 			require.NoError(t, err)
-			err = yaml.Unmarshal([]byte(expectedResultString), &tmpMap)
+			err = yaml.Unmarshal([]byte(expectedResultString), &expectedMap)
 			require.NoError(t, err)
-			unmarshalledExpectationString, err := yaml.Marshal(tmpMap)
+			delete(expectedMap, "entryPoints")
+			unmarshalledExpectationString, err := yaml.Marshal(expectedMap)
 			require.NoError(t, err)
 
 			// Generate and push config
@@ -243,7 +246,15 @@ func TestTraefikStaticConfig(t *testing.T) {
 			// Now read result config and compare
 			renderedStaticConfig, err := fileutil.ReadFileIntoString(staticConfigFinalPath)
 			require.NoError(t, err)
-			require.Equal(t, string(unmarshalledExpectationString), renderedStaticConfig)
+			var renderedMap map[string]any
+			err = yaml.Unmarshal([]byte(renderedStaticConfig), &renderedMap)
+			require.NoError(t, err)
+			// Verify entryPoints is present with at least one entry before removing it
+			require.NotEmpty(t, renderedMap["entryPoints"], "rendered static config should have entryPoints")
+			delete(renderedMap, "entryPoints")
+			renderedWithoutEntryPoints, err := yaml.Marshal(renderedMap)
+			require.NoError(t, err)
+			require.Equal(t, string(unmarshalledExpectationString), string(renderedWithoutEntryPoints))
 		})
 	}
 }
