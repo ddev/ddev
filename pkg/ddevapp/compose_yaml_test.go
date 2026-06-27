@@ -244,18 +244,20 @@ func TestFixupComposeYaml(t *testing.T) {
 
 	// Verify the rootless user handling added by fixupComposeYaml: Docker rootless
 	// runs the web service as 0:0 when bind mounts are active (the host user maps
-	// to container UID 0), Podman rootless uses userns keep-id, and every other
+	// to container UID 0), Linux Podman rootless uses userns keep-id (macOS/Windows
+	// Podman must not use keep-id due to GID mapping limitations), and every other
 	// case keeps the container user. Only the web service is ever forced to 0:0.
 	uid, gid, _ := dockerutil.GetContainerUser()
 	userGroup := uid + ":" + gid
 	switch {
 	case dockerutil.IsDockerRootless() && !globalconfig.DdevGlobalConfig.NoBindMounts:
 		require.Equal(t, "0:0", webService.User, "web should run as 0:0 on Docker rootless with bind mounts")
-	case dockerutil.IsPodmanRootless():
+	case dockerutil.UseKeepID():
 		require.Equal(t, userGroup, webService.User)
-		require.Equal(t, "keep-id", webService.UserNSMode, "web should use userns keep-id on Podman rootless")
+		require.Equal(t, "keep-id", webService.UserNSMode, "web should use userns keep-id on Linux Podman rootless")
 	default:
 		require.Equal(t, userGroup, webService.User)
+		require.Empty(t, webService.UserNSMode, "UserNSMode should not be set outside Linux Podman rootless")
 	}
 	require.Equal(t, userGroup, app.ComposeYaml.Services["db"].User, "only the web service is set to 0:0; db keeps the container user")
 
