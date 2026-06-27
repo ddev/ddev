@@ -7,5 +7,5 @@ services:
       - 80
     environment:
       - VIRTUAL_HOST=extra.ddev.site
-      - HTTP_EXPOSE=80:80
-      - HTTPS_EXPOSE=443:80
+      - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT:-80}:80
+      - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT:-443}:80

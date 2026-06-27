@@ -162,11 +162,21 @@ func TestTraefikVirtualHost(t *testing.T) {
 	}
 
 	// Test Reachability to nginx special VIRTUAL_HOST
-	testcommon.AssertLocalHTTPContent(t, "http://extra.ddev.site", "Welcome to nginx",
+	httpPort := app.GetPrimaryRouterHTTPPort()
+	extraHTTPURL := "http://extra.ddev.site"
+	if httpPort != "80" {
+		extraHTTPURL = "http://extra.ddev.site:" + httpPort
+	}
+	testcommon.AssertLocalHTTPContent(t, extraHTTPURL, "Welcome to nginx",
 		testcommon.WithMessagef("nginx VIRTUAL_HOST extra.ddev.site should be reachable over HTTP"),
 	)
 	if globalconfig.GetCAROOT() != "" {
-		testcommon.AssertLocalHTTPContent(t, "https://extra.ddev.site", "Welcome to nginx",
+		httpsPort := app.GetPrimaryRouterHTTPSPort()
+		extraHTTPSURL := "https://extra.ddev.site"
+		if httpsPort != "443" {
+			extraHTTPSURL = "https://extra.ddev.site:" + httpsPort
+		}
+		testcommon.AssertLocalHTTPContent(t, extraHTTPSURL, "Welcome to nginx",
 			testcommon.WithMessagef("nginx VIRTUAL_HOST extra.ddev.site should be reachable over HTTPS"),
 		)
 	}
