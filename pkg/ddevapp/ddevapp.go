@@ -2457,9 +2457,9 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 			if err != nil {
 				return err
 			}
-			// If the signature doesn't exist, they have taken over the file, so return
+			// If the signature doesn't exist, they have taken over the file, so skip it
 			if !sigExists {
-				return nil
+				continue
 			}
 		}
 
@@ -2510,9 +2510,9 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 			if err != nil {
 				return err
 			}
-			// If the signature doesn't exist, they have taken over the file, so return
+			// If the signature doesn't exist, they have taken over the file, so skip it
 			if !sigExists {
-				return nil
+				continue
 			}
 		}
 
