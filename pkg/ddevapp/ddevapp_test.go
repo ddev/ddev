@@ -2646,12 +2646,8 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	require.NoError(t, err)
 
 	// 2024-11-27: It seems that Lima the bind mount isn't exactly synchronous.
-	if dockerutil.IsLima() {
+	if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() || dockerutil.IsPodmanRootless() {
 		time.Sleep(time.Second * 1)
-	}
-	// Rancher Desktop uses sshfs, which is the slowest possible
-	if dockerutil.IsRancherDesktop() {
-		time.Sleep(time.Second * 20)
 	}
 
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
