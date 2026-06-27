@@ -77,11 +77,6 @@ function try_cleanup_containers_native {
   return 0
 }
 
-# Reset global config to defaults so no stale settings survive across runs.
-# Provider-specific setup below can layer overrides on top (e.g. non-privileged ports for podman-rootless).
-rm -f ~/.ddev/global_config.yaml
-ddev config global >/dev/null
-
 # On macOS, we can have several different docker providers, allow testing all
 # In cleanup, stop everything we know of but leave either Orbstack or Docker Desktop running
 if [ "${os:-}" = "darwin" ]; then
@@ -198,8 +193,9 @@ if [ "${os:-}" = "darwin" ]; then
       podman machine start
       docker context use podman-rootless
 
-      # Rootless podman cannot bind privileged ports (<1024); override the defaults.
-      ddev config global --router-http-port=8080 --router-https-port=8443
+      # Rootless podman cannot bind privileged ports (<1024). The non-privileged
+      # router port override is applied after testbot_maintenance.sh runs, because
+      # that script deletes ~/.ddev/global_config.yaml (see below, before tests).
 
       if ! try_cleanup_containers_native; then
         echo "ERROR: Containers remain after podman machine start; aborting" >&2
@@ -347,6 +343,14 @@ ${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh"
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"
 ${TIMEOUT} 60s bash "$(dirname "$0")/sanetestbot.sh"
+
+# Rootless podman cannot bind privileged ports (<1024), so the DDEV router must
+# use non-privileged ports. This must run AFTER testbot_maintenance.sh, which
+# deletes ~/.ddev/global_config.yaml; otherwise the override is wiped and the
+# config regenerates with the default 80/443 (which rootless podman can't bind).
+if [ "${DOCKER_TYPE:-}" = "podman-rootless" ]; then
+  ddev config global --router-http-port=8080 --router-https-port=8443
+fi
 
 # Close the setup sections before starting tests
 echo "~~~ Setup complete, starting tests"
