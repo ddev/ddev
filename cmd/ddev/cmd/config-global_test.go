@@ -47,17 +47,18 @@ func TestCmdGlobalConfig(t *testing.T) {
 		globalconfig.DdevGlobalConfig = backupConfig
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
 
-		err = os.Remove(configFile)
+		// Restore the original global config to disk rather than removing it and
+		// regenerating defaults. Otherwise settings applied before this test (for
+		// example the rootless-podman router-http-port=8080 override from
+		// .buildkite/test.sh) are lost, and later tests that start projects fail
+		// trying to bind privileged port 80.
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		if err != nil {
-			t.Logf("Unable to remove %v: %v", configFile, err)
+			t.Logf("Unable to WriteGlobalConfig: %v", err)
 		}
 		err = os.Remove(projectsFile)
 		if err != nil {
-			t.Logf("Unable to remove %v: %v", configFile, err)
-		}
-		err = globalconfig.ReadGlobalConfig()
-		if err != nil {
-			t.Logf("Unable to ReadGlobalConfig: %v", err)
+			t.Logf("Unable to remove %v: %v", projectsFile, err)
 		}
 	})
 
