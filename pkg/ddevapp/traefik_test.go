@@ -304,11 +304,17 @@ func TestCustomGlobalConfig(t *testing.T) {
 	require.NoError(t, err)
 	projectTraefikConfigFile := filepath.Join(projectTraefikConfigDir, app.Name+".yaml")
 
-	// Read the template and replace APPNAME_LOWERCASE and APPNAME_ORIGCASE with actual app name
+	// Read the template and replace placeholders with actual values.
+	// Entry point names are port-based (http-<port>), so replace with the
+	// actual configured ports rather than assuming 80/443.
 	projectConfigTemplate, err := fileutil.ReadFileIntoString(filepath.Join(testDataDir, "project-traefik-config.yaml"))
 	require.NoError(t, err)
 	projectTraefikConfig := strings.ReplaceAll(projectConfigTemplate, "APPNAME_LOWERCASE", strings.ToLower(app.Name))
 	projectTraefikConfig = strings.ReplaceAll(projectTraefikConfig, "APPNAME_ORIGCASE", app.Name)
+	httpPort := app.GetPrimaryRouterHTTPPort()
+	httpsPort := app.GetPrimaryRouterHTTPSPort()
+	projectTraefikConfig = strings.ReplaceAll(projectTraefikConfig, "http-80", "http-"+httpPort)
+	projectTraefikConfig = strings.ReplaceAll(projectTraefikConfig, "http-443", "http-"+httpsPort)
 
 	err = os.WriteFile(projectTraefikConfigFile, []byte(projectTraefikConfig), 0644)
 	require.NoError(t, err)
