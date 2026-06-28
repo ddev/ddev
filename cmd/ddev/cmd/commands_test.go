@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	osexec "os/exec"
 	"path"
@@ -345,9 +346,14 @@ func TestLaunchCommand(t *testing.T) {
 		_ = os.RemoveAll(testDir)
 	})
 
-	primaryURLWithoutPort := app.GetPrimaryURL()
-	app.RouterHTTPPort = "8080"
-	app.RouterHTTPSPort = "8443"
+	// primaryURLWithoutPort is the primary URL with any router port stripped off,
+	// since GetPrimaryURL() includes the port when it's non-default (for example
+	// when global router-https-port is set to something other than 443).
+	parsedPrimaryURL, err := url.Parse(app.GetPrimaryURL())
+	require.NoError(t, err)
+	primaryURLWithoutPort := parsedPrimaryURL.Scheme + "://" + parsedPrimaryURL.Hostname()
+	app.RouterHTTPPort = "8088"
+	app.RouterHTTPSPort = "8448"
 	app.MailpitHTTPPort = "18025"
 	app.MailpitHTTPSPort = "18026"
 	err = app.WriteConfig()
@@ -366,10 +372,10 @@ func TestLaunchCommand(t *testing.T) {
 		app.GetPrimaryURL() + "/full-path": app.GetPrimaryURL() + "/full-path",
 		"http://example.com":               "http://example.com",
 		"https://example.com:443/test":     "https://example.com:443/test",
-		":8080":                            desc["httpurl"].(string),
-		":8080/http-port-path":             desc["httpurl"].(string) + "/http-port-path",
-		":8443":                            desc["httpsurl"].(string),
-		":8443/https-port-path":            desc["httpsurl"].(string) + "/https-port-path",
+		":8088":                            desc["httpurl"].(string),
+		":8088/http-port-path":             desc["httpurl"].(string) + "/http-port-path",
+		":8448":                            desc["httpsurl"].(string),
+		":8448/https-port-path":            desc["httpsurl"].(string) + "/https-port-path",
 		":18025":                           "http://" + app.GetHostname() + ":18025",
 		":18026":                           "https://" + app.GetHostname() + ":18026",
 		// if it is impossible to determine the http/https scheme, the default site protocol should be used
