@@ -78,7 +78,7 @@ func TestHardenedStart(t *testing.T) {
 	// After PowerOff, ports may not be released yet on Lima-based systems or
 	// rootless Podman (rootlessport releases host ports asynchronously), so a
 	// subsequent Start can fail with "address already in use".
-	if dockerutil.IsRancherDesktop() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsPodmanRootless() {
+	if dockerutil.IsRancherDesktop() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsPodmanRootlessmacOS() {
 		time.Sleep(time.Second * 2)
 	}
 

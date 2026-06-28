@@ -136,8 +136,8 @@ func TestGetCachedArchive(t *testing.T) {
 
 // TestPretestAndEnv tests that the testsite PretestCmd works along with WebEvironment
 func TestPretestAndEnv(t *testing.T) {
-	if dockerutil.IsPodmanRootless() {
-		t.Skip("Skipping: podman rootless cannot bind privileged ports 80/443")
+	if dockerutil.IsPodmanRootlessmacOS() {
+		t.Skip("Skipping: macOS podman rootless cannot bind privileged ports 80/443")
 	}
 	assert := asrt.New(t)
 	ensureDdevBin()

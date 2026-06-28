@@ -2646,7 +2646,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	require.NoError(t, err)
 
 	// 2024-11-27: It seems that Lima the bind mount isn't exactly synchronous.
-	if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() || dockerutil.IsPodmanRootless() {
+	if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() || dockerutil.IsPodmanRootlessmacOS() {
 		time.Sleep(time.Second * 1)
 	}
 
@@ -3852,8 +3852,8 @@ func TestGetWebContainerDirectURLsErrorHandling(t *testing.T) {
 // TestGetWebContainerDirectURLsWithGenericWebserver tests the behavior of GetWebContainerDirectHTTPURL and GetWebContainerDirectHTTPSURL
 // with a generic webserver type and web_extra_exposed_ports
 func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
-	if dockerutil.IsPodmanRootless() {
-		t.Skip("Skipping: podman rootless cannot bind privileged ports 80/443")
+	if dockerutil.IsPodmanRootlessmacOS() {
+		t.Skip("Skipping: podman rootless on macOS cannot bind privileged ports 80/443")
 	}
 	assert := asrt.New(t)
 

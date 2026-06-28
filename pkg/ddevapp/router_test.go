@@ -23,10 +23,10 @@ import (
 
 // TestGlobalPortOverride tests global router_http_port and router_https_port
 func TestGlobalPortOverride(t *testing.T) {
-	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() || dockerutil.IsPodmanRootless()) {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() || dockerutil.IsPodmanRootlessmacOS()) {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
-		t.Skip("Lima and Colima often allocate another port, so skip")
+		t.Skip("Lima/Colima/Rancher/Podman-rootless-macOS often allocate another port, so skip")
 	}
 	assert := asrt.New(t)
 
