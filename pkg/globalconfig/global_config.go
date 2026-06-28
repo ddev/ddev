@@ -706,15 +706,14 @@ func CheckForMultipleGlobalDdevDirs() error {
 	userHomeDotDdev := filepath.Join(userHome, ".ddev")
 	linuxConfigDdevDir := filepath.Clean(filepath.Join(userHome, ".config", "ddev"))
 
-	// $XDG_CONFIG_HOME/ddev is no longer honored, except on Linux where it coincides
-	// with the ~/.config/ddev fallback (handled below). DDEV_XDG_CONFIG_HOME takes
-	// precedence, so skip this when it is set.
+	// Show a warning about leftover config at $XDG_CONFIG_HOME/ddev if DDEV_XDG_CONFIG_HOME is not set
 	if os.Getenv("DDEV_XDG_CONFIG_HOME") == "" {
 		if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
 			if strings.HasPrefix(xdgConfigHome, `~`) {
 				xdgConfigHome = userHome + xdgConfigHome[1:]
 			}
 			xdgDdevDir := filepath.Clean(filepath.Join(xdgConfigHome, "ddev"))
+			// On Linux, we don't want to warn about existing ~/.config/ddev
 			recognizedOnLinux := nodeps.IsLinux() && xdgDdevDir == linuxConfigDdevDir
 			if xdgDdevDir != actualDdevDir && !recognizedOnLinux {
 				if _, err := os.Stat(xdgDdevDir); err == nil {

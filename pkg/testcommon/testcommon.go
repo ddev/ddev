@@ -238,7 +238,7 @@ func CopyGlobalDdevDir(t *testing.T) string {
 	// Stop the Mutagen daemon running in the ~/.ddev
 	ddevapp.StopMutagenDaemon("")
 	t.Logf("stopped mutagen daemon %s in MUTAGEN_DATA_DIRECTORY=%s", globalconfig.GetMutagenPath(), globalconfig.GetMutagenDataDirectory())
-	// Set $DDEV_XDG_CONFIG_HOME for tests (works on all platforms; XDG_CONFIG_HOME is Linux-only)
+	// Set $DDEV_XDG_CONFIG_HOME for tests (works on all platforms)
 	t.Setenv("DDEV_XDG_CONFIG_HOME", tmpXdgConfigHomeDir)
 	// Make sure that the global config directory is set to $DDEV_XDG_CONFIG_HOME/ddev
 	require.Equal(t, tmpGlobalDdevDir, globalconfig.GetGlobalDdevDir())
