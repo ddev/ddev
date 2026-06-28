@@ -214,7 +214,6 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 
 		t.Setenv("HOME", tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
-		t.Setenv("XDG_CONFIG_HOME", "")
 
 		defaultDir := tmpHome + "/.ddev"
 		err := os.MkdirAll(defaultDir, 0755)
@@ -231,7 +230,6 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 
 		t.Setenv("HOME", tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
-		t.Setenv("XDG_CONFIG_HOME", "")
 
 		xdgDir := tmpHome + "/.config/ddev"
 		err := os.MkdirAll(xdgDir, 0755)
@@ -241,8 +239,8 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// XDG_CONFIG_HOME pointing at the conventional ~/.config on Linux is the
-	// recognized fallback, not a leftover, so it must stay silent.
+	// XDG_CONFIG_HOME pointing at ~/.config on Linux
+	// doesn't trigger a warning because we recognize ~/.config/ddev
 	t.Run("XDGConfigHomeIsConventionalDefault", func(t *testing.T) {
 		if !nodeps.IsLinux() {
 			t.Skip("~/.config/ddev fallback only applies on Linux")
@@ -322,7 +320,6 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 
 		t.Setenv("HOME", tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
-		t.Setenv("XDG_CONFIG_HOME", "")
 
 		defaultDir := tmpHome + "/.ddev"
 		err := os.MkdirAll(defaultDir, 0755)
@@ -349,7 +346,6 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 
 		t.Setenv("HOME", tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", tmpXdg)
-		t.Setenv("XDG_CONFIG_HOME", "")
 
 		defaultDir := tmpHome + "/.ddev"
 		err := os.MkdirAll(defaultDir, 0755)
