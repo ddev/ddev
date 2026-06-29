@@ -108,6 +108,10 @@ func IsPodmanRootless() bool {
 	return IsRootless() && IsPodman()
 }
 
+func IsPodmanRootlessmacOS() bool {
+	return nodeps.IsMacOS() && IsRootless() && IsPodman()
+}
+
 // UseKeepID reports whether containers and volume operations should use Podman's
 // "keep-id" user-namespace mode. This is the single source of truth for the
 // decision: every container we create and every volume copy/chown must agree,

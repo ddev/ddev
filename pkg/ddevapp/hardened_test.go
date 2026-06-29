@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -73,6 +74,13 @@ func TestHardenedStart(t *testing.T) {
 	require.NoError(t, err)
 
 	app.PerformanceMode = types.PerformanceModeNone
+
+	// After PowerOff, ports may not be released yet on Lima-based systems or
+	// rootless Podman (rootlessport releases host ports asynchronously), so a
+	// subsequent Start can fail with "address already in use".
+	if dockerutil.IsRancherDesktop() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsPodmanRootlessmacOS() {
+		time.Sleep(time.Second * 2)
+	}
 
 	err = app.Start()
 	require.NoError(t, err)

@@ -80,11 +80,17 @@ if [ "$USES_HOST_DOCKER" = "true" ]; then
         sleep 60
     done
 
-    # Test that docker can allocate 80 and 443, get ddev/ddev-utilities
+    # Test that docker can pull images and mount volumes, get ddev/ddev-utilities
     docker pull ddev/ddev-utilities >/dev/null
-    # Try the docker run command twice because of the really annoying mkdir /c: file exists bug
-    # Apparently https://github.com/docker/for-win/issues/1560
-    (sleep 1 && (docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null) || (sleep 1 && docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null ))
+    # Rootless podman cannot bind privileged ports (<1024), so skip the port binding
+    # test for that provider; a plain volume+exec check is sufficient.
+    if [ "${DOCKER_TYPE:-}" = "podman-rootless" ]; then
+        docker run --rm -t -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null
+    else
+        # Try the docker run command twice because of the really annoying mkdir /c: file exists bug
+        # Apparently https://github.com/docker/for-win/issues/1560
+        (sleep 1 && (docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null) || (sleep 1 && docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 ddev/ddev-utilities ls //tmp/junker99 >/dev/null ))
+    fi
 else
     echo "Skipping host Docker Desktop checks for INSTALLER_CASE=${INSTALLER_CASE:-} (uses Docker CE inside WSL2, not the host Docker Desktop)"
 fi

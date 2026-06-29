@@ -146,6 +146,9 @@ func TestNetworkAmbiguity(t *testing.T) {
 // This verifies the functionality of https://docs.docker.com/reference/compose-file/services/#aliases
 // Related test: TestInternalAndExternalAccessToURL
 func TestNetworkAliases(t *testing.T) {
+	if dockerutil.IsPodmanRootless() {
+		t.Skip("Skipping: podman rootless cannot bind privileged ports 80/443")
+	}
 	runNetworkAliasesTest(t, "80", "443", "80", "443")
 }
 
@@ -153,6 +156,9 @@ func TestNetworkAliases(t *testing.T) {
 // network aliases when the two projects use different HTTP/HTTPS ports.
 // app1 uses ports 8080/8443 and app2 uses the default 80/443.
 func TestNetworkAliasesDifferentPorts(t *testing.T) {
+	if dockerutil.IsPodmanRootless() {
+		t.Skip("Skipping: podman rootless cannot bind privileged ports 80/443")
+	}
 	runNetworkAliasesTest(t, "8080", "8443", "80", "443")
 }
 
@@ -250,6 +256,9 @@ func runNetworkAliasesTest(t *testing.T, app1HTTPPort, app1HTTPSPort, app2HTTPPo
 		} else {
 			app2 = app
 		}
+	}
+	if app1 == nil || app2 == nil {
+		t.Skip("setup_projects failed, skipping remaining subtests")
 	}
 
 	// Define test case structure

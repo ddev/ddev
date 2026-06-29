@@ -162,11 +162,21 @@ func TestTraefikVirtualHost(t *testing.T) {
 	}
 
 	// Test Reachability to nginx special VIRTUAL_HOST
-	testcommon.AssertLocalHTTPContent(t, "http://extra.ddev.site", "Welcome to nginx",
+	httpPort := app.GetPrimaryRouterHTTPPort()
+	extraHTTPURL := "http://extra.ddev.site"
+	if httpPort != "80" {
+		extraHTTPURL = "http://extra.ddev.site:" + httpPort
+	}
+	testcommon.AssertLocalHTTPContent(t, extraHTTPURL, "Welcome to nginx",
 		testcommon.WithMessagef("nginx VIRTUAL_HOST extra.ddev.site should be reachable over HTTP"),
 	)
 	if globalconfig.GetCAROOT() != "" {
-		testcommon.AssertLocalHTTPContent(t, "https://extra.ddev.site", "Welcome to nginx",
+		httpsPort := app.GetPrimaryRouterHTTPSPort()
+		extraHTTPSURL := "https://extra.ddev.site"
+		if httpsPort != "443" {
+			extraHTTPSURL = "https://extra.ddev.site:" + httpsPort
+		}
+		testcommon.AssertLocalHTTPContent(t, extraHTTPSURL, "Welcome to nginx",
 			testcommon.WithMessagef("nginx VIRTUAL_HOST extra.ddev.site should be reachable over HTTPS"),
 		)
 	}
@@ -228,13 +238,16 @@ func TestTraefikStaticConfig(t *testing.T) {
 				require.NoError(t, err)
 			})
 
-			// Unmarshal the loaded result expectation so it will look the same as merged (without comments, etc)
-			var tmpMap map[string]any
+			// Unmarshal the loaded result expectation so it will look the same as merged (without comments, etc).
+			// entryPoints are excluded from comparison because they contain port numbers that vary
+			// by environment (e.g. Podman rootless macOS is globally configured with 8080/8443 instead of 80/443).
+			var expectedMap map[string]any
 			expectedResultString, err := fileutil.ReadFileIntoString(filepath.Join(testSourceDir, "expectation.yaml"))
 			require.NoError(t, err)
-			err = yaml.Unmarshal([]byte(expectedResultString), &tmpMap)
+			err = yaml.Unmarshal([]byte(expectedResultString), &expectedMap)
 			require.NoError(t, err)
-			unmarshalledExpectationString, err := yaml.Marshal(tmpMap)
+			delete(expectedMap, "entryPoints")
+			unmarshalledExpectationString, err := yaml.Marshal(expectedMap)
 			require.NoError(t, err)
 
 			// Generate and push config
@@ -243,7 +256,15 @@ func TestTraefikStaticConfig(t *testing.T) {
 			// Now read result config and compare
 			renderedStaticConfig, err := fileutil.ReadFileIntoString(staticConfigFinalPath)
 			require.NoError(t, err)
-			require.Equal(t, string(unmarshalledExpectationString), renderedStaticConfig)
+			var renderedMap map[string]any
+			err = yaml.Unmarshal([]byte(renderedStaticConfig), &renderedMap)
+			require.NoError(t, err)
+			// Verify entryPoints is present with at least one entry before removing it
+			require.NotEmpty(t, renderedMap["entryPoints"], "rendered static config should have entryPoints")
+			delete(renderedMap, "entryPoints")
+			renderedWithoutEntryPoints, err := yaml.Marshal(renderedMap)
+			require.NoError(t, err)
+			require.Equal(t, string(unmarshalledExpectationString), string(renderedWithoutEntryPoints))
 		})
 	}
 }
@@ -283,11 +304,17 @@ func TestCustomGlobalConfig(t *testing.T) {
 	require.NoError(t, err)
 	projectTraefikConfigFile := filepath.Join(projectTraefikConfigDir, app.Name+".yaml")
 
-	// Read the template and replace APPNAME_LOWERCASE and APPNAME_ORIGCASE with actual app name
+	// Read the template and replace placeholders with actual values.
+	// Entry point names are port-based (http-<port>), so replace with the
+	// actual configured ports rather than assuming 80/443.
 	projectConfigTemplate, err := fileutil.ReadFileIntoString(filepath.Join(testDataDir, "project-traefik-config.yaml"))
 	require.NoError(t, err)
 	projectTraefikConfig := strings.ReplaceAll(projectConfigTemplate, "APPNAME_LOWERCASE", strings.ToLower(app.Name))
 	projectTraefikConfig = strings.ReplaceAll(projectTraefikConfig, "APPNAME_ORIGCASE", app.Name)
+	httpPort := app.GetPrimaryRouterHTTPPort()
+	httpsPort := app.GetPrimaryRouterHTTPSPort()
+	projectTraefikConfig = strings.ReplaceAll(projectTraefikConfig, "http-80", "http-"+httpPort)
+	projectTraefikConfig = strings.ReplaceAll(projectTraefikConfig, "http-443", "http-"+httpsPort)
 
 	err = os.WriteFile(projectTraefikConfigFile, []byte(projectTraefikConfig), 0644)
 	require.NoError(t, err)

@@ -316,6 +316,36 @@ Then the Buildkite agent must be configured with tags `colima_vz=true`.
 
 Then the Buildkite agent must be configured with tags `lima=true`.
 
+## Additional Podman Rootless macOS Setup
+
+Podman rootless on macOS runs containers in a lightweight VM managed by `podman machine`. See [Installing Podman on macOS](https://ddev.com/blog/podman-and-docker-rootless/#installing-podman-1) for background.
+
+1. `brew install podman`
+2. `podman machine init --provider applehv` (uses the Apple Hypervisor Framework; rootless is the default)
+3. `podman machine start`
+4. Create a Docker context pointing at the podman socket (the path varies per machine — read it from `podman machine inspect`):
+
+    ```bash
+    SOCKET=$(podman machine inspect | jq -r '.[0].ConnectionInfo.PodmanSocket.Path')
+    docker context create podman-rootless \
+        --description "Podman (rootless)" \
+        --docker "host=unix://${SOCKET}"
+    ```
+
+5. Verify connectivity: `docker context use podman-rootless && docker ps` should return an empty container list.
+6. Stop the machine when done with initial setup: `podman machine stop`
+
+!!!note
+    Rootless containers cannot bind to ports below 1024. `test.sh` handles this automatically by setting `DDEV_XDG_CONFIG_HOME` to an isolated config directory and configuring `router-http-port=8080` and `router-https-port=8443` via `ddev config global`.
+
+Then configure the Buildkite agent with tag `podman-rootless=true` in addition to the standard macOS tags:
+
+```
+tags="os=macos,architecture=arm64,osvariant=sonoma,...,podman-rootless=true"
+```
+
+The `test.sh` script uses `podman machine start` and `docker context use podman-rootless` to activate the provider, then stops the machine in the cleanup trap on exit.
+
 ## Running Targeted Builds on Specific Pipelines
 
 To test a branch against only selected pipelines (e.g. WSL2 only) or to run a subset of tests without waiting for the full matrix:

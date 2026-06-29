@@ -138,8 +138,23 @@ func TestMain(m *testing.M) {
 func TestGetActiveAppRoot(t *testing.T) {
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
+
+	// Move to a directory that is not inside any project so that
+	// GetActiveAppRoot("") has no active project to discover. Earlier tests in
+	// this package may have left the working directory inside a project.
+	noProjectDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(noProjectDir)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(noProjectDir)
+	})
+
 	// Looking for active approot here should fail, because there is none
-	_, err := ddevapp.GetActiveAppRoot("")
+	_, err = ddevapp.GetActiveAppRoot("")
+	require.Error(t, err)
 	assert.Contains(err.Error(), "Please specify a project name or change directories")
 
 	// There is also no project named "potato"
@@ -151,7 +166,6 @@ func TestGetActiveAppRoot(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(TestSites[0].Dir, appRoot)
 
-	origDir, _ := os.Getwd()
 	err = os.Chdir(TestSites[0].Dir)
 	require.NoError(t, err)
 

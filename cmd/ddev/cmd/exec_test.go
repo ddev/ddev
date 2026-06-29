@@ -126,10 +126,12 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "root")
 
-	// Test that an nonexistent working directory generates an error
+	// Test that an nonexistent working directory generates an error.
+	// runc (Docker) emits "no such file or directory" while crun (Podman)
+	// emits "No such file or directory", so compare case-insensitively.
 	out, err = exec.RunHostCommand(DdevBin, "exec", "-d", "/does/not/exist", "pwd")
 	assert.Error(err)
-	assert.Contains(out, "no such file or directory")
+	assert.Contains(strings.ToLower(out), "no such file or directory")
 
 	_, err = exec.RunHostCommand(DdevBin, "exec", "ls >/var/www/html/TestCmdExec-${OSTYPE}.txt")
 	assert.NoError(err)

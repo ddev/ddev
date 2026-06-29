@@ -116,9 +116,14 @@ expect eof
 	// a TTY on the container and can capture the output to assert on it.
 	args := []string{"run", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/tmp/sshtmp", "-u", uid + ":" + gid}
 	containerCmd := "docker"
-	// Add --userns=keep-id for Podman rootless to maintain user namespace mapping
 	if dockerutil.IsPodmanRootless() {
 		containerCmd = "podman"
+	}
+	// keep-id is only correct on Linux Podman rootless; on macOS the VM's
+	// subuid/subgid range cannot map host GIDs so keep-id must not be used.
+	// Using it here would mismatch the userns of the ddev-ssh-agent container
+	// (which also omits keep-id on macOS), causing "Permission denied" on the socket.
+	if dockerutil.UseKeepID() {
 		args = append(args, "--userns=keep-id")
 	}
 	args = append(args, "--entrypoint", "bash", ddevImages.GetSSHAuthImage(), "-c", cmd.GetAuthSSHCmd(expectCmd))
