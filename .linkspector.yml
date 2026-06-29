@@ -36,6 +36,8 @@ ignorePatterns:
   - pattern: "https://fixed.docs.upsun.com"
   # codeberg 403
   - pattern: "https://codeberg.org/oerdnj/deb.sury.org"
+  - pattern: "https://winaero.com"
+  
 aliveStatusCodes:
   - 200
   - 206
