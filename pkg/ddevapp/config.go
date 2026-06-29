@@ -855,7 +855,6 @@ type composeYAMLVars struct {
 	WebExtraHTTPPorts         string
 	WebExtraHTTPSPorts        string
 	WebExtraExposedPorts      string
-	BitnamiVolumeDir          string
 	UseHardenedImages         bool
 	XHGuiHTTPPort             string
 	XHGuiHTTPSPort            string
@@ -950,7 +949,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		HostXHGuiPort:           app.HostXHGuiPort,
 		XhguiImage:              docker.GetXhguiImage(),
 		XHProfMode:              app.GetXHProfMode(),
-		BitnamiVolumeDir:        "",
 		UseHardenedImages:       globalconfig.DdevGlobalConfig.UseHardenedImages,
 	}
 	// We don't want to bind-mount Git directory if it doesn't exist
@@ -980,12 +978,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		templateVars.DBMountDir = app.GetPostgresDataDir()
 		templateVars.DBDataPath = app.GetPostgresDataPath()
 	}
-	// TODO: Determine if mount to /bitnami is for all mysql/bitnami or just newest
-	// If we expand to using bitnami for mariadb this will change.
-	if app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) {
-		templateVars.BitnamiVolumeDir = "/bitnami/mysql"
-	}
-
 	if app.IsMutagenEnabled() {
 		templateVars.MutagenVolumeName = GetMutagenVolumeName(app)
 	}
@@ -1258,19 +1250,6 @@ FROM $BASE_IMAGE
 SHELL ["/bin/bash", "-c"]
 `
 
-	if strings.Contains(fullpath, "dbimageBuild") {
-		// bitnami/mysql sets ENV HOME=/, breaking root-based tooling; see https://github.com/bitnami/containers/issues/75578
-		// ENV HOME="" overrides bitnami's HOME=/ during the image build phase (RUN commands).
-		// Runtime HOME is set correctly via the compose environment (HOME=/home/<username>).
-		// Must be injected here, not in extraDBContent - that runs after user-defined Dockerfiles.
-		if app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) {
-			contents = contents + `
-ENV HOME=""
-`
-		}
-	}
-
-	//  The ENV HOME="" above guards against bitnami/mysql's ENV HOME=/ during image build
 	contents = contents + `
 ARG TARGETPLATFORM
 ARG TARGETARCH
