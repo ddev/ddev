@@ -5,7 +5,7 @@
   - command: ".buildkite/test.sh"
     if: |
       build.message !~ /\[(skip ci|skip buildkite)\]/
-    branches: "main"
+#    branches: "main"
     agents:
       - "os=macos"
       - "podman-rootless=true"
