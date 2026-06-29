@@ -3,6 +3,13 @@
 set ddevpath [lindex $argv 0];
 set keypath [lindex $argv 1];
 
+# Key has no passphrase, so this adds it without prompting.
+set timeout 30
 spawn "$ddevpath" auth ssh -d "$keypath"
-expect "Identity added"
-interact
+expect {
+    "Identity added"   { }
+    "Enter passphrase" { puts "FAIL: unexpected passphrase prompt"; exit 4 }
+    timeout            { puts "FAIL: timed out waiting for 'Identity added'"; exit 2 }
+    eof                { puts "FAIL: eof before 'Identity added'"; exit 3 }
+}
+expect eof
