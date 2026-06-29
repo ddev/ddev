@@ -46,9 +46,9 @@ RUN <<EOF
     set -eu -o pipefail
     apt-get update
     # gzip, passwd, and procps are explicitly listed because the DHI (Docker
-    # Hardened Image) base used for mysql 8.0/8.4 does not preinstall them: the
-    # runtime scripts use gunzip, creating the www-data user below needs useradd,
-    # and procps provides `ps`.
+    # Hardened Image) base used for mysql 8.0/8.4 does not preinstall them, while
+    # the previous (bitnami) base did: the runtime scripts use gunzip, creating
+    # the www-data user below needs useradd, and procps provides `ps`.
     DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg gpgv gzip less lsb-release passwd procps pv tzdata vim-tiny wget
     update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
@@ -57,9 +57,9 @@ RUN <<EOF
         DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" tzdata-legacy
     fi
 
-    # The DHI hardened base ships sudo and the PAM modules but not the generated
-    # common-* PAM files, so sudo aborts with "unable to initialize PAM". Generate
-    # them with pam-auth-update. No-op on bases that already have common-auth.
+    # The minimal DHI base provides the PAM modules but not the generated common-*
+    # PAM files that the previous base had (used by su and other PAM stacks).
+    # Regenerate them with pam-auth-update. No-op on bases that already have them.
     if command -v pam-auth-update >/dev/null 2>&1 && [ ! -f /etc/pam.d/common-auth ]; then
         DEBIAN_FRONTEND=noninteractive pam-auth-update --force
     fi
