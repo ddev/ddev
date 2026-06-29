@@ -67,6 +67,14 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
+      # MySQL 8.0/8.4 build FROM dhi.io/mysql (Docker Hardened Images), which
+      # requires authentication. Docker Hub credentials are used. See ddev/ddev#7962.
+      - name: Login to dhi.io (Docker Hardened Images)
+        uses: docker/login-action@v4
+        with:
+          registry: dhi.io
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
       - name: Clean up stale arch tag before push
         run: |
           TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username":"${{ vars.DOCKERHUB_USERNAME }}","password":"${{ env.DOCKERHUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)

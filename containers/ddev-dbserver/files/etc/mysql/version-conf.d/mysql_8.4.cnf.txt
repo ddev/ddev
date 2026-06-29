@@ -14,3 +14,9 @@ mysql-native-password=2
 
 # In mysql 8+ this replaces innodb-log-file-size etc
 innodb-redo-log-capacity=100663296
+
+# Pin buffer pool instances to 1 so innodb-buffer-pool-size is honored exactly.
+# MySQL 8.4 derives the default instance count from the CPU count, and the
+# buffer pool size is rounded up to a multiple of (chunk_size * instances),
+# which would otherwise make the effective size machine-dependent.
+innodb-buffer-pool-instances=1

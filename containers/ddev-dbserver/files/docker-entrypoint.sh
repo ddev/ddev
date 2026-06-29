@@ -4,10 +4,8 @@ set -eu
 set -o pipefail
 
 export DATADIR=/var/lib/mysql
-echo BITNAMI_VOLUME_DIR=${BITNAMI_VOLUME_DIR:-notset}
 
 SOCKET=/var/tmp/mysql.sock
-if [ "${BITNAMI_APP_NAME:-}" = "mysql" ]; then ln -sf /opt/bitnami/mysql/tmp/mysql.sock ${SOCKET}; fi
 rm -f /tmp/healthy
 
 # We can't just switch on database type here, because early versions

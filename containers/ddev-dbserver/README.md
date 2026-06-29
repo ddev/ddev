@@ -20,6 +20,8 @@ Use [DDEV](https://docs.ddev.com)
 
 See [DDEV docs](https://docs.ddev.com/en/stable/developers/release-management/#pushing-docker-images-with-the-github-actions-workflow)
 
+The MySQL 8.0 and 8.4 images build `FROM dhi.io/mysql` (Docker Hardened Images), which requires authentication. Before building those locally, run `docker login dhi.io` (Docker Hub credentials work).
+
 ### Running
 To run the container by itself:
 

@@ -45,7 +45,10 @@ RUN mkdir -p /var/lib/apt/lists/partial
 RUN <<EOF
     set -eu -o pipefail
     apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg gpgv less lsb-release pv tzdata vim-tiny wget
+    # gzip and passwd are explicitly listed because the DHI (Docker Hardened
+    # Image) base used for mysql 8.0/8.4 does not preinstall them: the runtime
+    # scripts use gunzip, and creating the www-data user below needs useradd.
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg gpgv gzip less lsb-release passwd pv tzdata vim-tiny wget
     update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
     # Install tzdata-legacy to avoid issues with deprecated timezones
@@ -103,7 +106,8 @@ RUN mkdir -p /var/lib/mysql
 
 ADD files /
 
-# On bitnami-derived images, remove their default config so we get ours
+# Legacy bitnami mysql bases kept their default config under /opt/bitnami;
+# remove it so we get ours. Harmless no-op on the DHI and other bases.
 RUN rm -rf /opt/bitnami/mysql/conf
 
 ARG MYSQL_UNIX_PORT=/var/tmp/mysql.sock
@@ -129,11 +133,15 @@ RUN chmod ugo+w /etc/mysql/version-conf.d && chmod -R ugo-w /etc/mysql/version-c
 
 RUN mkdir -p /var/run/mysqld && chmod 755 /var/run/mysqld
 
+# The DHI base used for mysql 8.0/8.4 does not include the www-data user that
+# mkhomedir_helper expects, so create it if it's missing.
+RUN if ! id www-data &>/dev/null; then useradd -u 33 -d /var/www www-data || useradd www-data; fi
 RUN /sbin/mkhomedir_helper www-data
 
 # Normal upstream image doesn't actually have /home/mysql created
 # Make sure it's there in case user 999 (mysql) is using this image.
-RUN mkdir /home/mysql && chown mysql:mysql /home/mysql
+# (The DHI mysql base already creates it, so use mkdir -p.)
+RUN mkdir -p /home/mysql && chown mysql:mysql /home/mysql
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
