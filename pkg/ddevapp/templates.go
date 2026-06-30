@@ -18,7 +18,7 @@ const ConfigInstructions = `
 # php_version: "8.4"  # PHP version to use, "5.6" through "8.5"
 
 # You can explicitly specify the webimage but this
-# is not recommended, as the images are often closely tied to DDEV's' behavior,
+# is not recommended, as the images are often closely tied to DDEV's behavior,
 # so this can break upgrades.
 
 # webimage: <docker_image>
@@ -71,7 +71,7 @@ const ConfigInstructions = `
 # composer_version: "2"
 # You can set it to "" or "2" (default) for Composer v2
 # to use the latest major version available at the time your container is built.
-# It is also possible to use each other Composer version channel. This includes:
+# It is also possible to use any other Composer version channel. This includes:
 #   - 2.2 (latest Composer LTS version)
 #   - stable
 #   - preview
@@ -257,7 +257,7 @@ const ConfigInstructions = `
 # override_config: false
 # By default, config.*.yaml files are *merged* into the configuration
 # But this means that some things can't be overridden
-# For example, if you have 'use_dns_when_possible: true'' you can't override it with a merge
+# For example, if you have 'use_dns_when_possible: true' you can't override it with a merge
 # and you can't erase existing hooks or all environment variables.
 # However, with "override_config: true" in a particular config.*.yaml file,
 # 'use_dns_when_possible: false' can override the existing values, and
@@ -267,7 +267,7 @@ const ConfigInstructions = `
 # web_environment: []
 # or
 # additional_hostnames: []
-# can have their intended affect. 'override_config' affects only behavior of the
+# can have their intended effect. 'override_config' affects only behavior of the
 # config.*.yaml file it exists in.
 
 # Many DDEV commands can be extended to run tasks before or after the

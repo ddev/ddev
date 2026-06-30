@@ -363,18 +363,21 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	instructions := `
 # You can turn off usage of the
 # ddev-ssh-agent and ddev-router containers with
-# omit_containers["ddev-ssh-agent", "ddev-router"]
+# omit_containers: [ddev-ssh-agent, ddev-router]
 
 # You can opt in or out of sending instrumentation to the DDEV developers with
 # instrumentation_opt_in: true # or false
-#
+
 # Maximum number of collected events in the local queue. If reached, collected
 # data is sent.
 # instrumentation_queue_size: 100
-#
+
 # Reporting interval in hours. If the last report was longer ago, collected
 # data is sent.
 # instrumentation_reporting_interval: 24
+
+# Can be used to give DDEV specific info about who you are
+# instrumentation_user: <your_username> 
 
 # last_started_version: ""
 # The last DDEV version that was started (informational only)
@@ -389,7 +392,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Whether to disable the TUI (terminal user interface) when running the 'ddev' command without arguments
 
 # omit_project_name_by_default: false
-# If true, 'ddev config' will not write a 'name'' field
+# If true, 'ddev config' will not write a 'name' field
 # in '.ddev/config.yaml' unless you use --name=NAME.
 
 # omit_snapshot_on_delete: false
@@ -407,14 +410,14 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #
 # See https://docs.ddev.com/en/stable/users/install/performance/#mutagen
 
-# You can set the global project_tld. This way any project will use this tld. If not
-# set the local project_tld is used, or the default of DDEV.
+# You can set the global project_tld. This way any project will use this TLD.
+# If not set, the local project_tld is used, or the default of DDEV.
 # project_tld: ""
-#
+
 # You can inject environment variables into the web container with:
 # web_environment:
-#     - SOMEENV=somevalue
-#     - SOMEOTHERENV=someothervalue
+#   - SOMEENV=somevalue
+#   - SOMEOTHERENV=someothervalue
 
 # Adjust the default table style used in ddev list and describe
 # table_style: default
@@ -426,7 +429,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that DDEV will declare internet
-# unavailable, but DDEV may wait longer on some commands. This should not be set below the default 3000
+# unavailable, but DDEV may wait longer on some commands. This should not be set below the default of 3000 ms
 # DDEV will ignore low values, as they're not useful
 # internet_detection_timeout_ms: 3000
 
@@ -448,33 +451,33 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # xhprof_mode: [prepend|xhgui]
 # Default is "xhgui"
 
-# instrumentation_user: <your_username> # can be used to give DDEV specific info about who you are
-# developer_mode: true # (defaults to false) is not used widely at this time.
+# developer_mode: true # (defaults to false) is not used at this time
+
 # router_bind_all_interfaces: false  # (defaults to false)
-#    If true, ddev-router will bind http/s and Mailpit ports on all
+#    If true, ddev-router will bind HTTP/S and Mailpit ports on all
 #    network interfaces instead of localhost, so others on your local network can
 #    access those ports. Note that this exposes the Mailpit ports as well, which
 #    can be a major security issue, so choose wisely.
 
 # use_hardened_images: false
-# With hardened images a container that is exposed to the internet is
+# With hardened images, a container that is exposed to the internet is
 # a harder target, although not as hard as a fully-secured host.
-# sudo and mailpit are removed, and since the web container
+# sudo and Mailpit are removed, and since the web container
 # is run only as the owning user, only project files might be changed
 # if a CMS or PHP bug allowed creating or altering files, and
 # permissions should not allow escalation.
 
 # xdebug_ide_location: ""
-# It's unusual to change this option, and we don’t recommend it.
+# It's unusual to change this option, and we don't recommend it.
 # Ask for help in one of our support channels before changing it unless you understand its use completely.
-# In some cases, especially WSL2, the IDE may be set up different ways
+# In some cases, especially WSL2, the IDE may be set up in different ways
 # For example, if in WSL2 PhpStorm is running the Linux version inside WSL2
 # or if using JetBrains Gateway
 # then set xdebug_ide_location: "wsl2"
-# If using vscode language server, which listens inside the container
+# If using VS Code Language Server, which listens inside the container
 # then set xdebug_ide_location: "container"
 
-# Lets Encrypt:
+# Let's Encrypt:
 # This integration is entirely experimental; your mileage may vary.
 # * Your host must be directly internet-connected.
 # * DNS for the hostname must be set to point to the host in question
@@ -506,9 +509,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Router port used for XHGui HTTPS, can be overridden in project config
 
 # wsl2_no_windows_hosts_mgt: false
-# It’s unusual to change this option, and we don’t recommend it.
+# It's unusual to change this option, and we don't recommend it.
 # On Windows, it may prevent site access when using a custom project_tld or working offline.
-# On WSL2 by default the Windows-side hosts file (normally C:\Windows\system32\drivers\etc\hosts)
+# On WSL2, by default the Windows-side hosts file (normally C:\Windows\system32\drivers\etc\hosts)
 # is used for hosts file management, but doing that requires running sudo and ddev.exe on
 # Windows side; you may not want this if you're running your browser in WSL2 or for
 # various other reasons.
@@ -516,7 +519,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # docker_buildx_version: "system"
 # Controls docker-buildx usage and should only be used in specific cases like troubleshooting.
 # "system" (default) uses the docker-buildx already installed.
-# Can be to a specific version like "0.33.0".
+# Can be set to a specific version like "0.33.0".
 
 # messages:
 #   ticker_interval: 20 // Interval in hours to show ticker messages, -1 disables the ticker
