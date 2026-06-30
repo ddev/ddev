@@ -2565,7 +2565,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 // and files created in container are correct user on host.
 func TestWriteableFilesDirectory(t *testing.T) {
 	if dockerutil.IsRancherDesktop() {
-		t.Skip("Skipping on Rancher Desktop, sshfs is too slow")
+		t.Skip("Skipping on Rancher Desktop, it's just too slow")
 	}
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
@@ -2645,8 +2645,8 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
 
-	// 2024-11-27: It seems that Lima the bind mount isn't exactly synchronous.
-	if dockerutil.IsLima() || dockerutil.IsColima() || dockerutil.IsRancherDesktop() || dockerutil.IsPodmanRootlessmacOS() {
+	// Lima-based docker providers are not completely synchronous on bind mount, wait for them
+	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
 		time.Sleep(time.Second * 1)
 	}
 
