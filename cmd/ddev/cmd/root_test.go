@@ -242,7 +242,6 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	t.Setenv("DOCKER_HOST", dockerHost)
 	// Set $DDEV_XDG_CONFIG_HOME to empty string, otherwise it will take precedence over $HOME
 	t.Setenv("DDEV_XDG_CONFIG_HOME", "")
-	t.Setenv("XDG_CONFIG_HOME", "")
 
 	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
 	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
@@ -275,7 +274,7 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 }
 
 // TestCopyGlobalDdevDir checks to make sure that DDEV will use
-// ddev folder in user's custom dir $XDG_CONFIG_HOME/ddev instead of ~/.ddev
+// ddev folder in user's custom dir $DDEV_XDG_CONFIG_HOME/ddev instead of ~/.ddev
 func TestCopyGlobalDdevDir(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
@@ -301,7 +300,7 @@ func TestCopyGlobalDdevDir(t *testing.T) {
 	out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
 	require.NoError(t, err, "failed to ddev config --auto, out=%v, err=%v", out, err)
 
-	// Make sure that $XDG_CONFIG_HOME/ddev/.update don't exist before we run ddev start
+	// Make sure that $DDEV_XDG_CONFIG_HOME/ddev/.update don't exist before we run ddev start
 	tmpUpdateFilePath := filepath.Join(globalconfig.GetGlobalDdevDir(), ".update")
 	_, err = os.Stat(tmpUpdateFilePath)
 	require.Error(t, err)
@@ -318,13 +317,11 @@ func TestCopyGlobalDdevDir(t *testing.T) {
 // TestGetGlobalDdevDirLocation checks to make sure that DDEV will use the
 // correct location for its global config. The correct location is:
 // ${DDEV_XDG_CONFIG_HOME}/ddev if DDEV_XDG_CONFIG_HOME is set (all platforms), or
-// ${XDG_CONFIG_HOME}/ddev if XDG_CONFIG_HOME is set on Linux only, or
 // ~/.ddev if it exists or
 // ~/.config/ddev if it exists on Linux/WSL2
 func TestGetGlobalDdevDirLocation(t *testing.T) {
-	// Test when neither DDEV_XDG_CONFIG_HOME nor XDG_CONFIG_HOME is set
+	// Test when DDEV_XDG_CONFIG_HOME is not set
 	t.Setenv("DDEV_XDG_CONFIG_HOME", "")
-	t.Setenv("XDG_CONFIG_HOME", "")
 	ddevDir := globalconfig.GetGlobalDdevDirLocation()
 	// Original ~/.ddev dir location
 	originalGlobalDdevDir := filepath.Join(util.GetHomeDir(), ".ddev")

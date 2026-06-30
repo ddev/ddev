@@ -5,7 +5,7 @@ Custom shell configuration (Bash or your preferred shell), your usual Git config
 ## Using `homeadditions` to Customize In-Container Home Directory
 
 !!!tip "Finding Your Global DDEV Directory"
-    The examples below automatically detect the correct global DDEV directory (including when `$XDG_CONFIG_HOME` is set) using the `DDEV_DIR` variable. See [global configuration directory](../usage/architecture.md#global-files) for details.
+    The examples below automatically detect the correct global DDEV directory (including when `$DDEV_XDG_CONFIG_HOME` is set) using the `DDEV_DIR` variable. See [global configuration directory](../usage/architecture.md#global-files) for details.
 
 Place all your dotfiles in your global `homeadditions` directory or your project's `.ddev/homeadditions` directory and DDEV will use these in your project's `web` containers.
 

@@ -95,8 +95,8 @@ header "project configuration via ddev utility configyaml"
 ddev utility configyaml --full-yaml --omit-keys=web_environment 2>/dev/null || { ddev utility configyaml | (grep -v "^web_environment" || true); }
 
 header "DDEV Global Information"
-if [ "$XDG_CONFIG_HOME" != "" ]; then
-  echo "XDG_CONFIG_HOME is set to non-default value: '${XDG_CONFIG_HOME}'"
+if [ "$DDEV_XDG_CONFIG_HOME" != "" ]; then
+  echo "DDEV_XDG_CONFIG_HOME is set to non-default value: '${DDEV_XDG_CONFIG_HOME}'"
 fi
 echo "Global DDEV dir is $(get_global_ddev_dir)"
 echo ""

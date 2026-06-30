@@ -24,7 +24,7 @@
 
     // A set of name-value pairs that sets or overrides environment variables for the container.
     "containerEnv": {
-        "XDG_CONFIG_HOME": "/workspaces/.config",
+        "DDEV_XDG_CONFIG_HOME": "/workspaces/.config",
         "IN_DEVCONTAINER": "true"
     },
 

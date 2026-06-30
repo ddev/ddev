@@ -59,6 +59,8 @@ var versionCmd = &cobra.Command{
 		}
 		t.Render()
 		output.UserOut.WithField("raw", v).Println(out.String())
+
+		util.WarnAboutMultipleGlobalDdevDirs()
 		amplitude.CheckSetUp()
 
 		if dockerErr != nil {

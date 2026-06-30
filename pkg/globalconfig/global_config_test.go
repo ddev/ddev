@@ -205,26 +205,111 @@ func TestIsInternetActive(t *testing.T) {
 
 // TestCheckForMultipleGlobalDdevDirs tests CheckForMultipleGlobalDdevDirs behavior
 func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
-	// Test 1: No conflict - only one directory exists
-	t.Run("NoConflict", func(t *testing.T) {
+	// ===== Happy path: a single recognized location is in use, no warning =====
+
+	// Only the default ~/.ddev exists.
+	t.Run("OnlyDefaultExists", func(t *testing.T) {
+		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_Default")
+		defer os.RemoveAll(tmpHome)
+
+		t.Setenv("HOME", tmpHome)
+		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
+
+		defaultDir := tmpHome + "/.ddev"
+		err := os.MkdirAll(defaultDir, 0755)
+		require.NoError(t, err)
+
+		err = globalconfig.CheckForMultipleGlobalDdevDirs()
+		require.NoError(t, err)
+	})
+
+	// Only ~/.config/ddev exists (the Linux fallback), ~/.ddev does not.
+	t.Run("OnlyConfigDdevExists", func(t *testing.T) {
 		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_NoConflict")
 		defer os.RemoveAll(tmpHome)
 
 		t.Setenv("HOME", tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
-		t.Setenv("XDG_CONFIG_HOME", "")
 
-		// Create only XDG directory
 		xdgDir := tmpHome + "/.config/ddev"
 		err := os.MkdirAll(xdgDir, 0755)
 		require.NoError(t, err)
 
-		// Should not return error as ~/.ddev doesn't exist
 		err = globalconfig.CheckForMultipleGlobalDdevDirs()
 		require.NoError(t, err)
 	})
 
-	// Test 2: Conflict - both directories exist (Linux only)
+	// XDG_CONFIG_HOME pointing at ~/.config on Linux
+	// doesn't trigger a warning because we recognize ~/.config/ddev
+	t.Run("XDGConfigHomeIsConventionalDefault", func(t *testing.T) {
+		if !nodeps.IsLinux() {
+			t.Skip("~/.config/ddev fallback only applies on Linux")
+		}
+
+		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_XDGDefault")
+		defer os.RemoveAll(tmpHome)
+
+		t.Setenv("HOME", tmpHome)
+		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
+		t.Setenv("XDG_CONFIG_HOME", tmpHome+"/.config")
+
+		xdgDir := tmpHome + "/.config/ddev"
+		err := os.MkdirAll(xdgDir, 0755)
+		require.NoError(t, err)
+
+		err = globalconfig.CheckForMultipleGlobalDdevDirs()
+		require.NoError(t, err)
+	})
+
+	// DDEV_XDG_CONFIG_HOME takes precedence over XDG_CONFIG_HOME, so a leftover
+	// XDG_CONFIG_HOME/ddev must not be reported when both are set.
+	t.Run("DDEVXDGConfigHomeSuppressesXDGLeftover", func(t *testing.T) {
+		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_BothHome")
+		defer os.RemoveAll(tmpHome)
+
+		tmpDdevXdg := testcommon.CreateTmpDir("TestCheckMultipleDirs_BothDDEVXDG")
+		defer os.RemoveAll(tmpDdevXdg)
+
+		tmpXdg := testcommon.CreateTmpDir("TestCheckMultipleDirs_BothXDG")
+		defer os.RemoveAll(tmpXdg)
+
+		t.Setenv("HOME", tmpHome)
+		t.Setenv("DDEV_XDG_CONFIG_HOME", tmpDdevXdg)
+		t.Setenv("XDG_CONFIG_HOME", tmpXdg)
+
+		xdgDir := tmpXdg + "/ddev"
+		err := os.MkdirAll(xdgDir, 0755)
+		require.NoError(t, err)
+
+		err = globalconfig.CheckForMultipleGlobalDdevDirs()
+		require.NoError(t, err)
+	})
+
+	// XDG_CONFIG_HOME is set but has no ddev directory under it, so there is
+	// nothing to recover and no warning.
+	t.Run("XDGConfigHomeWithoutDdevDir", func(t *testing.T) {
+		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_XDGEmpty")
+		defer os.RemoveAll(tmpHome)
+
+		tmpXdg := testcommon.CreateTmpDir("TestCheckMultipleDirs_XDGNoDdev")
+		defer os.RemoveAll(tmpXdg)
+
+		t.Setenv("HOME", tmpHome)
+		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
+		t.Setenv("XDG_CONFIG_HOME", tmpXdg)
+
+		defaultDir := tmpHome + "/.ddev"
+		err := os.MkdirAll(defaultDir, 0755)
+		require.NoError(t, err)
+
+		err = globalconfig.CheckForMultipleGlobalDdevDirs()
+		require.NoError(t, err)
+	})
+
+	// ===== Error path: config exists in a location other than the one in use =====
+
+	// Both Linux standard locations exist; ~/.ddev wins by precedence and the
+	// message must explain that either can be removed, not name only one.
 	t.Run("ConflictBothExist", func(t *testing.T) {
 		if !nodeps.IsLinux() {
 			t.Skip("This test only runs on Linux")
@@ -235,9 +320,7 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 
 		t.Setenv("HOME", tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
-		t.Setenv("XDG_CONFIG_HOME", "")
 
-		// Create both directories
 		defaultDir := tmpHome + "/.ddev"
 		err := os.MkdirAll(defaultDir, 0755)
 		require.NoError(t, err)
@@ -246,13 +329,14 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		err = os.MkdirAll(xdgDir, 0755)
 		require.NoError(t, err)
 
-		// Should detect conflict
 		err = globalconfig.CheckForMultipleGlobalDdevDirs()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "multiple global DDEV configurations found")
+		require.Contains(t, err.Error(), "takes precedence")
+		require.Contains(t, err.Error(), "To use "+strconv.Quote(xdgDir)+" instead, remove "+strconv.Quote(defaultDir))
 	})
 
-	// Test 3: DDEV_XDG_CONFIG_HOME set - should detect conflict (all platforms)
+	// DDEV_XDG_CONFIG_HOME is in use while a stale ~/.ddev exists (all platforms).
 	t.Run("DDEVXDGConfigHomeSet", func(t *testing.T) {
 		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_DDEVXDGHome")
 		defer os.RemoveAll(tmpHome)
@@ -262,9 +346,7 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 
 		t.Setenv("HOME", tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", tmpXdg)
-		t.Setenv("XDG_CONFIG_HOME", "")
 
-		// Create both directories
 		defaultDir := tmpHome + "/.ddev"
 		err := os.MkdirAll(defaultDir, 0755)
 		require.NoError(t, err)
@@ -273,18 +355,15 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		err = os.MkdirAll(ddevXdgDir, 0755)
 		require.NoError(t, err)
 
-		// Should detect conflict between DDEV_XDG_CONFIG_HOME/ddev and default
 		err = globalconfig.CheckForMultipleGlobalDdevDirs()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "multiple global DDEV configurations found")
 	})
 
-	// Test 4: XDG_CONFIG_HOME set on Linux - should detect conflict
-	t.Run("XDGConfigHomeSetOnLinux", func(t *testing.T) {
-		if !nodeps.IsLinux() {
-			t.Skip("XDG_CONFIG_HOME is only respected on Linux")
-		}
-
+	// Leftover XDG_CONFIG_HOME/ddev that DDEV no longer honors (any platform, when
+	// it is not the ~/.config/ddev fallback on Linux). The warning must tell the
+	// user to set DDEV_XDG_CONFIG_HOME or remove it.
+	t.Run("XDGConfigHomeLeftover", func(t *testing.T) {
 		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_XDGHome")
 		defer os.RemoveAll(tmpHome)
 
@@ -295,7 +374,6 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
 		t.Setenv("XDG_CONFIG_HOME", tmpXdg)
 
-		// Create both directories
 		defaultDir := tmpHome + "/.ddev"
 		err := os.MkdirAll(defaultDir, 0755)
 		require.NoError(t, err)
@@ -304,28 +382,9 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		err = os.MkdirAll(xdgDir, 0755)
 		require.NoError(t, err)
 
-		// Should detect conflict between XDG and default on Linux
 		err = globalconfig.CheckForMultipleGlobalDdevDirs()
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "multiple global DDEV configurations found")
-	})
-
-	// Test 5: Only default directory exists
-	t.Run("OnlyDefaultExists", func(t *testing.T) {
-		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_Default")
-		defer os.RemoveAll(tmpHome)
-
-		t.Setenv("HOME", tmpHome)
-		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
-		t.Setenv("XDG_CONFIG_HOME", "")
-
-		// Create only default directory
-		defaultDir := tmpHome + "/.ddev"
-		err := os.MkdirAll(defaultDir, 0755)
-		require.NoError(t, err)
-
-		// Should not return error
-		err = globalconfig.CheckForMultipleGlobalDdevDirs()
-		require.NoError(t, err)
+		require.Contains(t, err.Error(), "DDEV no longer honors XDG_CONFIG_HOME")
+		require.Contains(t, err.Error(), "DDEV_XDG_CONFIG_HOME="+strconv.Quote(tmpXdg))
 	})
 }

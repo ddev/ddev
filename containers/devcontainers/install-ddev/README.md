@@ -20,7 +20,7 @@ Add the feature to your `.devcontainer/devcontainer.json`:
 
 The feature automatically:
 - Installs DDEV from the apt repository
-- Configures environment variables (`XDG_CONFIG_HOME`, `IN_DEVCONTAINER`)
+- Configures environment variables (`DDEV_XDG_CONFIG_HOME`, `IN_DEVCONTAINER`)
 - Installs mkcert binary (DDEV will generate certificates as needed)
 - Fixes `/workspaces` permissions for config storage
 - Verifies installation with `ddev version`

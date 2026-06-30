@@ -169,7 +169,7 @@ func checkMutagenSocketPathLength() {
 		limit = 108
 	}
 	if socketPathLength >= limit {
-		output.UserErr.Warning(fmt.Sprintf("Path to DDEV Mutagen socket is %d characters long.\nMutagen may fail, socket path must contain less than %d characters.\nConsider using a shorter path to DDEV global config with DDEV_XDG_CONFIG_HOME env (or XDG_CONFIG_HOME on Linux).", limit, socketPathLength))
+		output.UserErr.Warning(fmt.Sprintf("Path to DDEV Mutagen socket is %d characters long.\nMutagen may fail, socket path must contain less than %d characters.", limit, socketPathLength))
 	}
 	checkedMutagenSocketPathLength = true
 }
@@ -652,7 +652,6 @@ func GetGlobalDdevDir() string {
 
 // GetGlobalDdevDirLocation returns the global config directory location to be used by DDEV:
 // $DDEV_XDG_CONFIG_HOME/ddev if $DDEV_XDG_CONFIG_HOME is set (all platforms),
-// $XDG_CONFIG_HOME/ddev if $XDG_CONFIG_HOME is set on Linux only,
 // ~/.config/ddev if this directory exists on Linux/WSL2 only,
 // ~/.ddev otherwise.
 func GetGlobalDdevDirLocation() string {
@@ -672,32 +671,18 @@ func GetGlobalDdevDirLocation() string {
 		return filepath.Join(ddevXdgConfigHome, "ddev")
 	}
 
-	// If $XDG_CONFIG_HOME is set and we're on Linux, use $XDG_CONFIG_HOME/ddev.
-	// XDG_CONFIG_HOME is a Linux/freedesktop.org standard. On macOS and Windows it is
-	// not honored, to avoid silent config misplacement for users who have it set globally
-	// for other tools. Use DDEV_XDG_CONFIG_HOME for a cross-platform override.
-	if nodeps.IsLinux() {
-		xdgConfigHomeDir := os.Getenv("XDG_CONFIG_HOME")
-		if strings.HasPrefix(xdgConfigHomeDir, `~`) {
-			xdgConfigHomeDir = userHome + xdgConfigHomeDir[1:]
-		}
-		if xdgConfigHomeDir != "" {
-			return filepath.Join(xdgConfigHomeDir, "ddev")
-		}
-	}
-
 	// If Linux and ~/.ddev doesn't exist and
 	// ~/.config/ddev exists, use it,
 	// we don't create this directory.
 	stat, userHomeDotDdevErr := os.Stat(userHomeDotDdev)
 	userHomeDotDdevIsDir := userHomeDotDdevErr == nil && stat.IsDir()
 	if nodeps.IsLinux() && !userHomeDotDdevIsDir {
-		userConfigDir, err := os.UserConfigDir()
-		if err == nil {
-			linuxDir := filepath.Join(userConfigDir, "ddev")
-			if _, err := os.Stat(linuxDir); err == nil {
-				return linuxDir
-			}
+		// Use the standard ~/.config/ddev location on Linux/WSL2.
+		// We intentionally use ~/.config rather than using os.UserConfigDir(),
+		// which would honor $XDG_CONFIG_HOME. Use DDEV_XDG_CONFIG_HOME to relocate.
+		linuxDir := filepath.Join(userHome, ".config", "ddev")
+		if _, err := os.Stat(linuxDir); err == nil {
+			return linuxDir
 		}
 	}
 	// Otherwise, use ~/.ddev
@@ -706,56 +691,58 @@ func GetGlobalDdevDirLocation() string {
 	return userHomeDotDdev
 }
 
-// WarnIfXDGIgnoredOnNonLinux emits a one-time warning on macOS/Windows when
-// XDG_CONFIG_HOME is set and $XDG_CONFIG_HOME/ddev exists. DDEV no longer
-// respects XDG_CONFIG_HOME on non-Linux platforms. Use DDEV_XDG_CONFIG_HOME instead.
-func WarnIfXDGIgnoredOnNonLinux() {
-	if nodeps.IsLinux() {
-		return
-	}
-	xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
-	if xdgConfigHome == "" {
-		return
-	}
-	userHome, err := os.UserHomeDir()
-	if err != nil {
-		return
-	}
-	if strings.HasPrefix(xdgConfigHome, `~`) {
-		xdgConfigHome = userHome + xdgConfigHome[1:]
-	}
-	oldDir := filepath.Join(xdgConfigHome, "ddev")
-	if _, err := os.Stat(oldDir); err != nil {
-		return
-	}
-	output.UserErr.Warningf("XDG_CONFIG_HOME is set but is only respected on Linux. Your previous DDEV config at %s is not being used.\nTo continue using it, set DDEV_XDG_CONFIG_HOME=%s\nOr move it to the default location: mv %s %s", oldDir, xdgConfigHome, oldDir, filepath.Join(userHome, ".ddev"))
-}
-
-// CheckForMultipleGlobalDdevDirs checks for multiple global DDEV directories
-// and returns an error if multiple are found.
+// CheckForMultipleGlobalDdevDirs returns an error if a global DDEV config exists in a
+// location other than the one DDEV uses, so the user can remove or relocate it.
+// Leftover config at a no-longer-honored $XDG_CONFIG_HOME/ddev is reported with
+// instructions to set DDEV_XDG_CONFIG_HOME or remove it. A stale ~/.ddev or, on Linux,
+// ~/.config/ddev is also reported; when both Linux standard locations exist, ~/.ddev
+// wins by precedence but either is valid.
 func CheckForMultipleGlobalDdevDirs() error {
 	userHome, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
-	userHomeDotDdev := filepath.Clean(filepath.Join(userHome, ".ddev"))
-	// On Linux, also check for $HOME/.config/ddev if neither XDG_CONFIG_HOME nor DDEV_XDG_CONFIG_HOME is set
-	if nodeps.IsLinux() && os.Getenv("XDG_CONFIG_HOME") == "" && os.Getenv("DDEV_XDG_CONFIG_HOME") == "" {
-		userConfigDir, err := os.UserConfigDir()
-		if err == nil {
-			linuxDir := filepath.Join(userConfigDir, "ddev")
-			if _, err := os.Stat(linuxDir); err == nil {
-				userHomeDotDdev = filepath.Clean(linuxDir)
+	actualDdevDir := filepath.Clean(GetGlobalDdevDirLocation())
+	userHomeDotDdev := filepath.Join(userHome, ".ddev")
+	linuxConfigDdevDir := filepath.Clean(filepath.Join(userHome, ".config", "ddev"))
+
+	// Show a warning about leftover config at $XDG_CONFIG_HOME/ddev if DDEV_XDG_CONFIG_HOME is not set
+	if os.Getenv("DDEV_XDG_CONFIG_HOME") == "" {
+		if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
+			if strings.HasPrefix(xdgConfigHome, `~`) {
+				xdgConfigHome = userHome + xdgConfigHome[1:]
+			}
+			xdgDdevDir := filepath.Clean(filepath.Join(xdgConfigHome, "ddev"))
+			// On Linux, we don't want to warn about existing ~/.config/ddev
+			recognizedOnLinux := nodeps.IsLinux() && xdgDdevDir == linuxConfigDdevDir
+			if xdgDdevDir != actualDdevDir && !recognizedOnLinux {
+				if _, err := os.Stat(xdgDdevDir); err == nil {
+					return fmt.Errorf("found a leftover DDEV global config at %q; DDEV no longer honors XDG_CONFIG_HOME, so it is not being used. To keep using it, set DDEV_XDG_CONFIG_HOME=%q; otherwise remove %q", xdgDdevDir, xdgConfigHome, xdgDdevDir)
+				}
 			}
 		}
 	}
-	actualDdevDir := filepath.Clean(GetGlobalDdevDirLocation())
-	// If the actual location is not the default $HOME/.ddev (or $HOME/.config/ddev on Linux),
-	// and the default location exists, warn the user
-	if actualDdevDir != userHomeDotDdev {
-		if _, err := os.Stat(userHomeDotDdev); err == nil {
-			return fmt.Errorf("multiple global DDEV configurations found, %s is used, %s is not used, delete one of them to avoid confusion", actualDdevDir, userHomeDotDdev)
+
+	// ~/.ddev and, on Linux, ~/.config/ddev are both recognized locations. If a
+	// recognized location other than the active one holds config, point it out.
+	cleanUserHomeDotDdev := filepath.Clean(userHomeDotDdev)
+	candidates := []string{cleanUserHomeDotDdev}
+	if nodeps.IsLinux() {
+		candidates = append(candidates, linuxConfigDdevDir)
+	}
+	for _, candidate := range candidates {
+		if candidate == actualDdevDir {
+			continue
 		}
+		if _, err := os.Stat(candidate); err != nil {
+			continue
+		}
+		// On Linux both locations are standard, so explain that either can be
+		// removed rather than naming only one.
+		if actualDdevDir == cleanUserHomeDotDdev && candidate == linuxConfigDdevDir {
+			return fmt.Errorf("multiple global DDEV configurations found, both %q and %q exist; %q is in use because it takes precedence. To use %q instead, remove %q; otherwise remove %q to avoid confusion", actualDdevDir, candidate, actualDdevDir, candidate, actualDdevDir, candidate)
+		}
+		return fmt.Errorf("multiple global DDEV configurations found, %q is in use; %q is not used and can be removed to avoid confusion", actualDdevDir, candidate)
 	}
 
 	return nil

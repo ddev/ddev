@@ -23,7 +23,6 @@ func TestCmdList(t *testing.T) {
 	origDir, _ := os.Getwd()
 	t.Setenv("DDEV_DEBUG", "")
 
-	// Create temporary XDG_CONFIG_HOME for isolated testing
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 
 	t.Cleanup(func() {

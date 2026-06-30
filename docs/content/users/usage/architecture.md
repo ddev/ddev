@@ -103,12 +103,11 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 There’s only one global `.ddev` directory, which normally lives in your home directory: `$HOME/.ddev`, but can be overwritten (first match wins):
 
 1. `$DDEV_XDG_CONFIG_HOME/ddev` if `$DDEV_XDG_CONFIG_HOME` is set (all platforms)
-2. `$XDG_CONFIG_HOME/ddev` if `$XDG_CONFIG_HOME` is set on Linux/WSL2 only
-3. `$HOME/.ddev`, which means:
+2. `$HOME/.ddev`, which means:
     - `/Users/<username>/.ddev` on macOS
     - `/home/<username>/.ddev` on Linux/WSL2
     - `C:\Users\<username>\.ddev` on Windows
-4. `$HOME/.config/ddev` on Linux/WSL2 only, if `$HOME/.ddev` doesn’t exist
+3. `$HOME/.config/ddev` on Linux/WSL2 only, if `$HOME/.ddev` doesn’t exist
 
 To find your actual location, run:
 
@@ -125,7 +124,7 @@ ddev version | grep global-ddev-dir
     mv $HOME/.ddev ${DDEV_XDG_CONFIG_HOME}/ddev
     ```
 
-    On Linux/WSL2, you can also use `$XDG_CONFIG_HOME` from the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/) instead of `$DDEV_XDG_CONFIG_HOME`. Or move the directory to `$HOME/.config/ddev` without setting any variable:
+    On Linux/WSL2, you can also move the directory to `$HOME/.config/ddev` without setting the variable:
 
     ```bash
     mv $HOME/.ddev $HOME/.config/ddev
