@@ -1,0 +1,6 @@
+services:
+  dummy3:
+    build:
+      context: .
+    x-ddev:
+      omit-ddev-labels: true

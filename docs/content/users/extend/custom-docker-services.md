@@ -120,6 +120,17 @@ volumes:
   - "../:/var/www/html:cached"
 ```
 
+## `x-ddev` Extension
+
+The `x-ddev` extension field lets you customize DDEV behavior per service in your `.ddev/docker-compose.*.yaml` files.
+
+| Key | Description |
+|-----|-------------|
+| [`describe-url-port`](#customizing-ddev-describe-output) | Text shown in the `URL/PORT` column of `ddev describe` |
+| [`describe-info`](#customizing-ddev-describe-output) | Text shown in the `INFO` column of `ddev describe` |
+| [`ssh-shell`](../extend/in-container-configuration.md#changing-ddev-ssh-shell) | Shell used by `ddev ssh` for this service |
+| [`omit-ddev-labels`](#omitting-comddev-labels-from-a-service) | Skip injecting `com.ddev.*` labels onto this service |
+
 ### Customizing `ddev describe` Output
 
 You can use the `x-ddev` extension field in your `.ddev/docker-compose.*.yaml` configuration to customize the output of [`ddev describe`](../usage/commands.md#describe).
@@ -158,6 +169,38 @@ services:
 
 !!!tip
     See related `x-ddev.ssh-shell` configuration for [Changing `ddev ssh` Shell](../extend/in-container-configuration.md#changing-ddev-ssh-shell).
+
+### Omitting `com.ddev.*` Labels from a Service
+
+Setting `x-ddev.omit-ddev-labels: true` stops DDEV from injecting `com.ddev.*` labels onto a service.
+
+DDEV normally stamps these labels (like `com.ddev.site-name`) on every service and has `ddev start` wait for the matching containers. That makes `ddev start` fail when a one-shot container exits before the wait completes. Omitting the labels drops the service from that wait, while leaving it in the compose file so `ddev stop`, `ddev poweroff`, and `ddev delete` still tear it down.
+
+```yaml
+services:
+  # One-shot container: prepares the shared volume, then exits
+  init:
+    container_name: "ddev-${DDEV_SITENAME}-init"
+    image: busybox:stable
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /assets/cache &&
+        chown -R ${DDEV_UID}:${DDEV_GID} /assets
+    volumes:
+      - "assets:/assets"
+    x-ddev:
+      omit-ddev-labels: true
+
+  # web mounts the same volume
+  web:
+    volumes:
+      - "assets:/mnt/assets"
+
+volumes:
+  assets:
+```
 
 ## Advanced Service Examples
 
