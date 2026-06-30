@@ -186,10 +186,10 @@ services:
       - sh
       - -c
       - |
-        mkdir -p /assets/cache &&
-        chown -R ${DDEV_UID}:${DDEV_GID} /assets
+        mkdir -p /mnt/assets/cache &&
+        chown -R ${DDEV_UID}:${DDEV_GID} /mnt/assets
     volumes:
-      - "assets:/assets"
+      - "assets:/mnt/assets"
     x-ddev:
       omit-ddev-labels: true
 
@@ -197,6 +197,9 @@ services:
   web:
     volumes:
       - "assets:/mnt/assets"
+    depends_on:
+      init:
+        condition: service_completed_successfully
 
 volumes:
   assets:
