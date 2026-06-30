@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"testing"
 
@@ -198,6 +199,17 @@ func OsTempDir() (string, error) {
 	}
 	tmpDir = filepath.Clean(tmpDir)
 	return tmpDir, nil
+}
+
+// SetTestHome sets HOME (and USERPROFILE on Windows) to the given directory.
+// On Windows, os.UserHomeDir() reads USERPROFILE, not HOME, so both must be
+// set for tests that need to isolate the home directory.
+func SetTestHome(t *testing.T, home string) {
+	t.Helper()
+	t.Setenv("HOME", home)
+	if runtime.GOOS == "windows" {
+		t.Setenv("USERPROFILE", home)
+	}
 }
 
 // CreateTmpDir creates a temporary directory in the homedir
