@@ -338,6 +338,12 @@ This allows you to have multiple check-outs of the same project, each with diffe
 
 It can also allow team members to have the same project run using different hostnames and URLs.
 
+### What happens when one DDEV project is nested inside another?
+
+Avoid nesting one DDEV project inside another; it only causes confusion. It usually happens by accident, with a Git submodule or dependency that ships its own `.ddev/config.yaml`.
+
+DDEV only uses a project that shows up in `ddev list`, so inside an unregistered nested project it warns and uses the registered project around it instead. To use the nested project, run `ddev start` in its directory and confirm the prompt, which adds it to `ddev list`.
+
 ## Getting Involved
 
 ### How do I get support?
