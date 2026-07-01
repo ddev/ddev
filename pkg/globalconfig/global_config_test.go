@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
@@ -212,10 +213,10 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_Default")
 		defer os.RemoveAll(tmpHome)
 
-		t.Setenv("HOME", tmpHome)
+		testcommon.SetTestHome(t, tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
 
-		defaultDir := tmpHome + "/.ddev"
+		defaultDir := filepath.Join(tmpHome, ".ddev")
 		err := os.MkdirAll(defaultDir, 0755)
 		require.NoError(t, err)
 
@@ -228,10 +229,10 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_NoConflict")
 		defer os.RemoveAll(tmpHome)
 
-		t.Setenv("HOME", tmpHome)
+		testcommon.SetTestHome(t, tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
 
-		xdgDir := tmpHome + "/.config/ddev"
+		xdgDir := filepath.Join(tmpHome, ".config", "ddev")
 		err := os.MkdirAll(xdgDir, 0755)
 		require.NoError(t, err)
 
@@ -249,11 +250,11 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_XDGDefault")
 		defer os.RemoveAll(tmpHome)
 
-		t.Setenv("HOME", tmpHome)
+		testcommon.SetTestHome(t, tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
-		t.Setenv("XDG_CONFIG_HOME", tmpHome+"/.config")
+		t.Setenv("XDG_CONFIG_HOME", filepath.Join(tmpHome, ".config"))
 
-		xdgDir := tmpHome + "/.config/ddev"
+		xdgDir := filepath.Join(tmpHome, ".config", "ddev")
 		err := os.MkdirAll(xdgDir, 0755)
 		require.NoError(t, err)
 
@@ -273,11 +274,11 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		tmpXdg := testcommon.CreateTmpDir("TestCheckMultipleDirs_BothXDG")
 		defer os.RemoveAll(tmpXdg)
 
-		t.Setenv("HOME", tmpHome)
+		testcommon.SetTestHome(t, tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", tmpDdevXdg)
 		t.Setenv("XDG_CONFIG_HOME", tmpXdg)
 
-		xdgDir := tmpXdg + "/ddev"
+		xdgDir := filepath.Join(tmpXdg, "ddev")
 		err := os.MkdirAll(xdgDir, 0755)
 		require.NoError(t, err)
 
@@ -294,11 +295,11 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		tmpXdg := testcommon.CreateTmpDir("TestCheckMultipleDirs_XDGNoDdev")
 		defer os.RemoveAll(tmpXdg)
 
-		t.Setenv("HOME", tmpHome)
+		testcommon.SetTestHome(t, tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
 		t.Setenv("XDG_CONFIG_HOME", tmpXdg)
 
-		defaultDir := tmpHome + "/.ddev"
+		defaultDir := filepath.Join(tmpHome, ".ddev")
 		err := os.MkdirAll(defaultDir, 0755)
 		require.NoError(t, err)
 
@@ -318,14 +319,14 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		tmpHome := testcommon.CreateTmpDir("TestCheckMultipleDirs_Conflict")
 		defer os.RemoveAll(tmpHome)
 
-		t.Setenv("HOME", tmpHome)
+		testcommon.SetTestHome(t, tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
 
-		defaultDir := tmpHome + "/.ddev"
+		defaultDir := filepath.Join(tmpHome, ".ddev")
 		err := os.MkdirAll(defaultDir, 0755)
 		require.NoError(t, err)
 
-		xdgDir := tmpHome + "/.config/ddev"
+		xdgDir := filepath.Join(tmpHome, ".config", "ddev")
 		err = os.MkdirAll(xdgDir, 0755)
 		require.NoError(t, err)
 
@@ -344,14 +345,14 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		tmpXdg := testcommon.CreateTmpDir("TestCheckMultipleDirs_DDEVXDG")
 		defer os.RemoveAll(tmpXdg)
 
-		t.Setenv("HOME", tmpHome)
+		testcommon.SetTestHome(t, tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", tmpXdg)
 
-		defaultDir := tmpHome + "/.ddev"
+		defaultDir := filepath.Join(tmpHome, ".ddev")
 		err := os.MkdirAll(defaultDir, 0755)
 		require.NoError(t, err)
 
-		ddevXdgDir := tmpXdg + "/ddev"
+		ddevXdgDir := filepath.Join(tmpXdg, "ddev")
 		err = os.MkdirAll(ddevXdgDir, 0755)
 		require.NoError(t, err)
 
@@ -370,15 +371,15 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		tmpXdg := testcommon.CreateTmpDir("TestCheckMultipleDirs_XDG")
 		defer os.RemoveAll(tmpXdg)
 
-		t.Setenv("HOME", tmpHome)
+		testcommon.SetTestHome(t, tmpHome)
 		t.Setenv("DDEV_XDG_CONFIG_HOME", "")
 		t.Setenv("XDG_CONFIG_HOME", tmpXdg)
 
-		defaultDir := tmpHome + "/.ddev"
+		defaultDir := filepath.Join(tmpHome, ".ddev")
 		err := os.MkdirAll(defaultDir, 0755)
 		require.NoError(t, err)
 
-		xdgDir := tmpXdg + "/ddev"
+		xdgDir := filepath.Join(tmpXdg, "ddev")
 		err = os.MkdirAll(xdgDir, 0755)
 		require.NoError(t, err)
 
