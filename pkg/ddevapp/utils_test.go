@@ -119,14 +119,27 @@ func TestFindActiveProjectRoot(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, top, got)
 
-	// Only the top is registered: the stray leaf and middle are skipped for the top,
-	// and DDEV warns about the nearest one.
+	// Only the top is registered: the stray leaf and middle are skipped for the top.
 	mkDdevConfig(t, middle)
 	mkDdevConfig(t, leaf)
 	registerProject(t, top)
+
+	// `ddev config` registers the nested project, so it doesn't warn. Check this before
+	// the message below is emitted, since WarningOnce dedupes by message.
+	origArgs := os.Args
+	os.Args = []string{"ddev", "config"}
 	getWarning := util.CaptureUserErr()
 	got, err = ddevapp.FindActiveProjectRoot(workDir)
 	warning := getWarning()
+	os.Args = origArgs
+	require.NoError(t, err)
+	require.Equal(t, top, got)
+	require.NotContains(t, warning, "nested project")
+
+	// Any other command warns about the nearest one.
+	getWarning = util.CaptureUserErr()
+	got, err = ddevapp.FindActiveProjectRoot(workDir)
+	warning = getWarning()
 	require.NoError(t, err)
 	require.Equal(t, top, got)
 	require.Contains(t, warning, "nested project")

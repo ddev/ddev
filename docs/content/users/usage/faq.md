@@ -310,13 +310,11 @@ It can also allow team members to have the same project run using different host
 
 ### What happens when one DDEV project is nested inside another?
 
-We discourage nesting one DDEV project inside another, as it only causes confusion.
+Avoid nesting one DDEV project inside another; it only causes confusion. It usually happens by accident — a Git submodule or dependency that ships its own `.ddev/config.yaml`, or one you created yourself.
 
-When you run `ddev` from inside a nested project, DDEV ignores any nested `.ddev/config.yaml` it doesn't know about and uses the nearest project it already knows. This stops a stray `.ddev/` directory from taking over the commands of the project you actually work on.
+A project must be *registered* before DDEV will use it, and `ddev config` is what registers it. When you run `ddev` inside a nested directory whose `.ddev/config.yaml` is not registered, DDEV ignores it, uses the nearest registered project instead (usually the parent), and warns you. This keeps a stray `.ddev/` directory from taking over the commands of the project you actually work on.
 
-Nesting usually happens by accident — for example a Git submodule or a dependency that ships its own `.ddev/config.yaml`, or a `.ddev/config.yaml` you created yourself. Running `ddev config` in a subdirectory of a project never creates a new project; it finds and uses the project above it.
-
-If you really do want to use a nested project, run `ddev config` in its own directory to register it. After that, DDEV uses it whenever you are inside it. Running `ddev start` is not enough on its own: until the nested project is registered, `ddev start` uses the parent.
+To use the nested project, run `ddev config` in its directory to register it; from then on DDEV uses it whenever you are inside. `ddev start` does not register it — until you run `ddev config`, `ddev start` acts on the parent.
 
 ## Getting Involved
 

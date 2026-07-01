@@ -194,8 +194,9 @@ func FindActiveProjectRoot(confPath string) (string, error) {
 		active = parent
 	}
 
-	if active != nearest && !output.JSONOutput {
-		util.WarningOnce("Ignoring nested project %[1]q; using %[2]q instead.\nIf intended, run `ddev config` in %[1]q to use it.", nearest, active)
+	// Don't warn during `ddev config`, which registers this nested project.
+	if active != nearest && !output.JSONOutput && !(len(os.Args) >= 2 && os.Args[1] == "config") {
+		util.WarningOnce("Ignoring nested project %[1]q; using %[2]q instead.\nNesting isn't recommended; to use %[1]q anyway, register it with `ddev config` there.", nearest, active)
 	}
 	return active, nil
 }
