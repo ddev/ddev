@@ -128,7 +128,7 @@ The `x-ddev` extension field lets you customize DDEV behavior per service in you
 |-----|-------------|
 | [`describe-url-port`](#customizing-ddev-describe-output) | Text shown in the `URL/PORT` column of `ddev describe` |
 | [`describe-info`](#customizing-ddev-describe-output) | Text shown in the `INFO` column of `ddev describe` |
-| [`ssh-shell`](../extend/in-container-configuration.md#changing-ddev-ssh-shell) | Shell used by `ddev ssh` for this service |
+| [`ssh-shell`](../extend/in-container-configuration.md#changing-ddev-ssh-shell) | Shell used by `ddev ssh -s <service>` for this service |
 | [`omit-ddev-labels`](#omitting-comddev-labels-from-a-service) | Skip injecting `com.ddev.*` labels onto this service |
 
 ### Customizing `ddev describe` Output
