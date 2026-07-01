@@ -39,7 +39,6 @@ services:
       - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:{{ .DBPort }}"
     environment:
       - COLUMNS
-      - BITNAMI_VOLUME_DIR={{ .BitnamiVolumeDir }}
       - DDEV_DATABASE
       - DDEV_DATABASE_FAMILY
       - DDEV_GID
