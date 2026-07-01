@@ -21,11 +21,12 @@ teardown() {
   assert_success
   run ddev composer create-project "typo3/cms-base-distribution:^14" >/dev/null
   assert_success
+  run ddev composer req typo3/theme-camino >/dev/null
+  assert_success
 
   run ddev typo3 setup \
     --admin-user-password="Demo123*" \
     --driver=mysqli \
-    --create-site=https://${PROJNAME}.ddev.site \
     --server-type=other \
     --dbname=db \
     --username=db \
@@ -42,11 +43,11 @@ teardown() {
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
   assert_success
 
-  run curl -sfIv "https://${PROJNAME}.ddev.site/"
+  run curl -sfIv "https://${PROJNAME}.ddev.site/camino/"
   assert_output --partial "HTTP/2 200"
   assert_success
-  run curl -sfLv "https://${PROJNAME}.ddev.site/"
-  assert_output --partial "Welcome to your default website"
+  run curl -sfLv "https://${PROJNAME}.ddev.site/camino/"
+  assert_output --partial "Camino de Compostela"
   assert_success
   run curl -sfLv "https://${PROJNAME}.ddev.site/typo3/"
   assert_output --partial "TYPO3 CMS Login:"
