@@ -41,12 +41,20 @@ services:
     image: ddev/ddev-utilities
     x-ddev:
       ssh-shell: fish
-  noshell:
+  no-shell:
     image: ddev/ddev-utilities
     x-ddev:
       describe-info: "has info but no shell"
-  noextension:
+  no-extension:
     image: ddev/ddev-utilities
+  omit-ddev-labels:
+    image: ddev/ddev-utilities
+    x-ddev:
+      omit-ddev-labels: true
+  with-others:
+    image: ddev/ddev-utilities
+    x-ddev:
+      describe-info: "has other fields"
 `
 
 	project, err := dockerutil.CreateComposeProject(composeYAML)
@@ -79,7 +87,7 @@ services:
 
 	// Test service with no shell - should default to sh
 	t.Run("service without shell defaults to sh", func(t *testing.T) {
-		xDdev := app.GetXDdevExtension("noshell")
+		xDdev := app.GetXDdevExtension("no-shell")
 		assert.Equal("has info but no shell", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
 		assert.Equal("sh", xDdev.SSHShell)
@@ -87,10 +95,23 @@ services:
 
 	// Test service with no x-ddev extension - should default to sh
 	t.Run("service without x-ddev extension", func(t *testing.T) {
-		xDdev := app.GetXDdevExtension("noextension")
+		xDdev := app.GetXDdevExtension("no-extension")
 		assert.Equal("", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
 		assert.Equal("sh", xDdev.SSHShell)
+		assert.False(xDdev.OmitDdevLabels)
+	})
+
+	// Test service with omit-ddev-labels: true
+	t.Run("service with omit-ddev-labels true", func(t *testing.T) {
+		xDdev := app.GetXDdevExtension("omit-ddev-labels")
+		assert.True(xDdev.OmitDdevLabels)
+	})
+
+	// Test service with other x-ddev fields but no omit-ddev-labels
+	t.Run("service without omit-ddev-labels defaults to false", func(t *testing.T) {
+		xDdev := app.GetXDdevExtension("with-others")
+		assert.False(xDdev.OmitDdevLabels)
 	})
 
 	// Test non-existent service
@@ -229,7 +250,7 @@ func TestFixupComposeYaml(t *testing.T) {
 	require.NotEmpty(t, app.ComposeYaml)
 	require.NotEmpty(t, app.ComposeYaml.Services)
 
-	expectedServices := []string{"web", "db", "dummy1", "dummy2"}
+	expectedServices := []string{"web", "db", "dummy1", "dummy2", "dummy3"}
 	for _, serviceName := range expectedServices {
 		_, ok := app.ComposeYaml.Services[serviceName]
 		require.True(t, ok, "%s service not found in app.ComposeYaml.Services", serviceName)
@@ -265,6 +286,7 @@ func TestFixupComposeYaml(t *testing.T) {
 
 	totalPortsChecked := 0
 	buildServicesChecked := 0
+	omitLabelServicesChecked := 0
 	for serviceName, service := range app.ComposeYaml.Services {
 		t.Run("service_"+serviceName, func(t *testing.T) {
 			require.Contains(t, service.Networks, "ddev_default", "service %s missing ddev_default network", serviceName)
@@ -284,6 +306,19 @@ func TestFixupComposeYaml(t *testing.T) {
 				require.Equal(t, "127.0.0.1", port.HostIP, "service %s port %d should have HostIP set to 127.0.0.1", serviceName, portIndex)
 			}
 
+			if serviceName == "dummy3" {
+				omitLabelServicesChecked++
+				for k := range ddevapp.GetDdevLabels(app) {
+					require.NotContains(t, service.Labels, k, "service %s should not have label %s", serviceName, k)
+				}
+				if service.Build != nil {
+					for k := range ddevapp.GetDdevLabels(app) {
+						require.NotContains(t, service.Build.Labels, k, "service %s build should not have label %s", serviceName, k)
+					}
+				}
+				return
+			}
+
 			for k, v := range ddevapp.GetDdevLabels(app) {
 				require.Contains(t, service.Labels, k, "service %s missing label %s", serviceName, k)
 				require.Equal(t, v, service.Labels[k], "service %s label %s value incorrect", serviceName, k)
@@ -300,6 +335,7 @@ func TestFixupComposeYaml(t *testing.T) {
 	}
 	require.Positive(t, buildServicesChecked, "build label check never ran")
 	require.Positive(t, totalPortsChecked, "port HostIP check never ran")
+	require.Positive(t, omitLabelServicesChecked, "omit-ddev-labels check never ran")
 
 	hasPort12345 := false
 	for _, port := range webService.Ports {

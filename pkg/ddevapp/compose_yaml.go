@@ -141,6 +141,7 @@ type XDdevExtension struct {
 	DescribeURLPort string `mapstructure:"describe-url-port"`
 	DescribeInfo    string `mapstructure:"describe-info"`
 	SSHShell        string `mapstructure:"ssh-shell"`
+	OmitDdevLabels  bool   `mapstructure:"omit-ddev-labels"`
 }
 
 // GetXDdevExtension retrieves the x-ddev extension for a given service from the ComposeYaml
@@ -200,6 +201,10 @@ func GetDdevLabels(app *DdevApp) map[string]string {
 func injectDdevLabels(project *composeTypes.Project, app *DdevApp) {
 	labels := GetDdevLabels(app)
 	for name, service := range project.Services {
+		var x XDdevExtension
+		if found, err := service.Extensions.Get("x-ddev", &x); err == nil && found && x.OmitDdevLabels {
+			continue // user opted this service out of DDEV labels
+		}
 		if service.Labels == nil {
 			service.Labels = composeTypes.Labels{}
 		}

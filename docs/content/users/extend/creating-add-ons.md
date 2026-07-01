@@ -313,7 +313,7 @@ services:
       describe-info: "API key: ${MYSERVICE_API_KEY}"
 ```
 
-See [Customizing ddev describe output](custom-docker-services.md#customizing-ddev-describe-output) for full details.
+See [Customizing ddev describe output](custom-docker-services.md#customizing-ddev-describe-output) for full details, and the [`x-ddev` Extension](custom-docker-services.md#x-ddev-extension) for all supported keys.
 
 ### Minor Docker Image Customization
 

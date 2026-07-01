@@ -149,7 +149,7 @@ services:
 To change the shell for a custom service, add the `x-ddev.ssh-shell` field to that service's configuration and ensure the desired shell is [installed in the image](./customizing-images.md).
 
 !!!tip
-    See related `x-ddev.describe-*` configuration for [Customizing `ddev describe` Output](../extend/custom-docker-services.md#customizing-ddev-describe-output).
+    See the [`x-ddev` Extension](../extend/custom-docker-services.md#x-ddev-extension) for all supported keys, including `describe-*` and `omit-ddev-labels`.
 
 ## Using `NO_COLOR` Inside Containers
 
