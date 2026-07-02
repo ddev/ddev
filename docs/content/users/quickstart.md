@@ -2913,7 +2913,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     Install the Camino default theme [recommended for TYPO3 Core](https://docs.typo3.org/m/typo3/tutorial-getting-started/main/en-us/Installation/Install.html):
 
     ```bash
-    ddev composer req typo3/theme-camino
+    ddev composer require typo3/theme-camino
     ```
 
     Run the TYPO3 setup:
@@ -2952,7 +2952,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         ddev config --project-type=typo3 --docroot=public
         ddev start -y
         ddev composer create-project "typo3/cms-base-distribution:^14"
-        ddev composer req typo3/theme-camino
+        ddev composer require typo3/theme-camino
         ddev typo3 setup \
             --admin-user-password="Demo123*" \
             --driver=mysqli \

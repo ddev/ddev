@@ -21,7 +21,7 @@ teardown() {
   assert_success
   run ddev composer create-project "typo3/cms-base-distribution:^14" >/dev/null
   assert_success
-  run ddev composer req typo3/theme-camino >/dev/null
+  run ddev composer require typo3/theme-camino >/dev/null
   assert_success
 
   run ddev typo3 setup \
