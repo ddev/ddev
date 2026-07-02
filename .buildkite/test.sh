@@ -81,6 +81,12 @@ function try_cleanup_containers_native {
 # In cleanup, stop everything we know of but leave either Orbstack or Docker Desktop running
 if [ "${os:-}" = "darwin" ]; then
   function cleanup {
+    # Post-test maintenance, while the provider is still up and before we stop it.
+    # Guarded so it doesn't run on the initial cleanup call at startup.
+    if [ "${RAN_TESTS:-false}" = "true" ]; then
+      echo "--- running testbot_maintenance.sh (post-test)"
+      ${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh" || true
+    fi
     command -v orb 2>/dev/null && echo "Stopping orbstack" && (nohup orb stop &)
     sleep 3 # Since we backgrounded orb stop, make sure it completes
     if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
@@ -197,11 +203,12 @@ if [ "${os:-}" = "darwin" ]; then
       # router port override is applied after testbot_maintenance.sh runs, because
       # that script deletes ~/.ddev/global_config.yaml (see below, before tests).
 
-      if ! try_cleanup_containers_native; then
+      if ! try_cleanup_containers_via_ssh podman machine ssh; then
         echo "ERROR: Containers remain after podman machine start; aborting" >&2
         docker ps -a >&2 || true
         exit 1
       fi
+      podman machine ssh 'sudo fstrim -av'
       ;;
 
     *)
@@ -373,6 +380,8 @@ echo "--- Running tests..."
 # .buildkite/windows-installer.yml), decoupled from this suite so they can fan
 # out across runners.
 
+# From here on, cleanup (the EXIT trap) runs testbot_maintenance.sh post-test.
+RAN_TESTS=true
 make ${MAKE_TARGET:-test} TESTARGS="${TESTARGS:-}" TESTPKG="${TESTPKG:-}" TESTFILE="${TESTFILE:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
 RV=$?
 echo "test.sh completed with status=$RV"
