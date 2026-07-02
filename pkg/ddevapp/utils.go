@@ -174,6 +174,33 @@ func CheckForConf(confPath string) (string, error) {
 	return "", fmt.Errorf("no %s file was found in this directory or any parent", filepath.Join(".ddev", "config.yaml"))
 }
 
+// FindActiveProjectRoot returns the project root for confPath. It starts at the nearest
+// .ddev/config.yaml and climbs to the closest ancestor that is a registered project, so a
+// stray nested config DDEV doesn't know about is skipped for the real project above it.
+func FindActiveProjectRoot(confPath string) (string, error) {
+	nearest, err := CheckForConf(confPath)
+	if err != nil {
+		return "", err
+	}
+
+	// Climb to the closest registered ancestor; if none, keep the nearest config.
+	active := nearest
+	for !globalconfig.ProjectExistsAtRoot(active) {
+		parent, err := CheckForConf(filepath.Dir(active))
+		if err != nil {
+			active = nearest
+			break
+		}
+		active = parent
+	}
+
+	// Don't warn during `ddev config`, which registers this nested project.
+	if active != nearest && !output.JSONOutput && !(len(os.Args) >= 2 && os.Args[1] == "config") {
+		util.WarningOnce("Ignoring nested project %[1]q; using %[2]q instead.\nNesting isn't recommended; to use %[1]q anyway, register it with `ddev config` there.", nearest, active)
+	}
+	return active, nil
+}
+
 // getTemplateFuncMap will return a map of useful template functions.
 func getTemplateFuncMap() map[string]any {
 	// Use sprig's template function map as a base
