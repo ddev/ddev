@@ -2,6 +2,7 @@
 search:
   boost: .2
 ---
+
 # Buildkite Test Agent Setup
 
 We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testing. The build machines and `buildkite-agent` must be set up before use.
@@ -318,22 +319,11 @@ Then the Buildkite agent must be configured with tags `lima=true`.
 
 ## Additional Podman Rootless macOS Setup
 
-Podman rootless on macOS runs containers in a lightweight VM managed by `podman machine`. See [Installing Podman on macOS](https://ddev.com/blog/podman-and-docker-rootless/#installing-podman-1) for background.
+Podman rootless on macOS runs containers in a lightweight VM managed by `podman machine`.
 
-1. `brew install podman`
-2. `podman machine init --provider applehv` (uses the Apple Hypervisor Framework; rootless is the default)
-3. `podman machine start`
-4. Create a Docker context pointing at the podman socket (the path varies per machine — read it from `podman machine inspect`):
-
-    ```bash
-    SOCKET=$(podman machine inspect | jq -r '.[0].ConnectionInfo.PodmanSocket.Path')
-    docker context create podman-rootless \
-        --description "Podman (rootless)" \
-        --docker "host=unix://${SOCKET}"
-    ```
-
-5. Verify connectivity: `docker context use podman-rootless && docker ps` should return an empty container list.
-6. Stop the machine when done with initial setup: `podman machine stop`
+1. Follow the instructions for [Podman on macOS](../users/install/docker-installation.md#macos-podman-rootless) to install Podman and set up a rootless Podman machine.
+2. Verify connectivity: `docker context use podman-rootless && docker ps` should return an empty container list.
+3. Stop the machine when done with initial setup: `podman machine stop`
 
 !!!note
     Rootless containers cannot bind to ports below 1024. `test.sh` handles this automatically by setting `DDEV_XDG_CONFIG_HOME` to an isolated config directory and configuring `router-http-port=8080` and `router-https-port=8443` via `ddev config global`.
