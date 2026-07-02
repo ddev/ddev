@@ -2933,8 +2933,13 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         --project-name="My TYPO3 site" \
         --force
     ```
+    Launch the site content:
 
-    Launch the site:
+    ```bash
+    ddev launch /camino
+    ```
+
+    Launch the backend:
 
     ```bash
     ddev launch /typo3/
@@ -2966,6 +2971,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
             --admin-email=admin@example.com \
             --project-name="My TYPO3 site" \
             --force
+        ddev launch /camino
         ddev launch /typo3/
         EOF
         chmod +x setup-typo3.sh
