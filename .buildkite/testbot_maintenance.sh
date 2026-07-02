@@ -67,6 +67,10 @@ fi
 docker system prune --volumes --force || true
 docker volume prune -a -f || true
 
+if [ "${DOCKER_TYPE:-}" = "podman-rootless" ] && command -v podman >/dev/null; then
+    podman machine ssh 'sudo fstrim -av' || true
+fi
+
 # Update all images that could have changed
 ( docker images | awk '/ddev|traefik|postgres/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
 
