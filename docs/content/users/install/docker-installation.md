@@ -266,6 +266,8 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         !!!tip "`no_bind_mounts` is no longer required"
             Earlier DDEV versions (v1.25.0-v1.25.2) required [`no_bind_mounts`](../configuration/config.md#no_bind_mounts) with Docker rootless. That is no longer necessary—Docker rootless now works with bind mounts.
 
+            With bind mounts under Docker rootless, you appear as `root` inside the web container (for example, in [`ddev ssh`](../usage/commands.md#ssh)). This is expected: rootless maps container `root` to your regular host user, so it has no special privileges on the host. If you prefer not to work as `root` in the container, run `ddev config global --no-bind-mounts=true`. This enables [`no_bind_mounts`](../configuration/config.md#no_bind_mounts), which relies on [Mutagen](performance.md#mutagen) to sync files rather than mounting them directly.
+
         ### Install Docker rootless
 
         Follow the official [Docker rootless installation guide](https://docs.docker.com/engine/security/rootless/).
