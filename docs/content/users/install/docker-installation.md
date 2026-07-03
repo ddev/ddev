@@ -598,13 +598,14 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
 ## Docker Buildx
 
-DDEV requires the [Docker buildx plugin](https://github.com/docker/buildx). Most Docker providers (OrbStack, Docker Desktop, Rancher Desktop, Colima, Lima) and Docker CE installed from the official Docker repository already include it. If `docker buildx version` doesn't work, install it:
+DDEV requires the [Docker buildx plugin](https://github.com/docker/buildx). GUI-based providers (OrbStack, Docker Desktop, Rancher Desktop) bundle it. If `docker buildx version` doesn't work, install it:
 
 - **macOS (Homebrew):** `brew install docker-buildx`
-- **Linux/WSL2 (Debian/Ubuntu):** `sudo apt-get install docker-buildx-plugin`
-- **Other:** follow the installation instructions from [Docker buildx](https://github.com/docker/buildx#installing).
+- **Linux/WSL2 (Debian/Ubuntu):** `sudo apt-get install docker-buildx-plugin` (requires the [official Docker repository](https://docs.docker.com/engine/install/) to be configured)
+- **Other:** see [Docker buildx requirement](https://ddev.com/blog/docker-buildx-requirement-v1-25-1/) for installation instructions across platforms.
 
-More information in [Docker buildx requirement](https://ddev.com/blog/docker-buildx-requirement-v1-25-1/).
+!!!tip "Can't install the plugin?"
+    As a fallback, DDEV can manage its own copy via [`docker_buildx_version`](../configuration/config.md#docker_buildx_version).
 
 ## Running Multiple Container Runtimes
 
