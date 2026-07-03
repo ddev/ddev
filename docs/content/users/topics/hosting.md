@@ -119,8 +119,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 
 ## Troubleshooting
 
-* `docker logs -f ddev-router` is a great way to see what's going on with the router, including all requests and attempts at getting certificates from LetsEncrypt.
-
+* `docker logs -f ddev-router` is a great way to see what's going on with the router, including all requests and attempts at getting certificates from Let's Encrypt.
 * You may want to see more than just error output. You can enable debug output with the command below (see [global configuration directory](../usage/architecture.md#global-files)). You can make additional changes to the logging level as needed.
 
     ```bash
@@ -130,19 +129,20 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 
 * Do not rename projects without going through the proper process in the [FAQ](../usage/faq.md#how-can-i-change-a-projects-name), and make sure you don't have conflicting `additional_hostnames` or `additional_fqdns` between projects.
 * If you're having trouble with a particular project's Traefik configuration, try `docker exec -it ddev-router bash -c "rm -f config/<projectname>.yaml"` and `rm -rf .ddev/traefik` in the project, then `ddev poweroff && ddev start`. This deletes all existing Traefik configuration for that project and it will be regenerated.
- 
-### LetsEncrypt
 
-* If there are problems getting valid certificates, check the router logs with `Check your logs with `docker logs -f ddev-router`.
-* If your DNS is wrong, you will see a message like:
+### Let's Encrypt Errors
 
-  > ERR Unable to obtain ACME certificate for domains error="unable to generate a certificate for the domains [project.ddev.tld livedomain.com]: error: one or more domains had a problem:\n[livedomain.com]
+These show up in the router logs (`docker logs -f ddev-router`).
 
-* With LetsEncrypt enabled, DDEV tries to create certificates for ALL of your sites on the server. Make sure that every domain for every site on your server resolves, because DDEV will keep trying, and you may hit LetsEncrypt's rate limiting.
-* If your sites certificates fail, even if DNS resolves, even after `ddev restart`, it may be because you have been rate limited. for messages like:
+> `ERR Unable to obtain ACME certificate for domains error="unable to generate a certificate for the domains [project.ddev.tld livedomain.com]: error: one or more domains had a problem:\n[livedomain.com]`
 
-  > ERR Unable to obtain ACME certificate for domains error="unable to generate a certificate for the domains [project.ddev.live]: acme: error: 429 :: POST :: https://acme-v02.api.letsencrypt.org/acme/new-order :: urn:ietf:params:acme:error:<strong>rateLimited :: too many failed authorizations</strong> (5) for \"project.ddev.live\" in the last 1h0m0s, retry after 2026-07-01 12:19:07 UTC: see https://letsencrypt.org/docs/rate-limits/#authorization-failures-per-identifier-per-account"
+A message like this means your DNS is wrong. Make sure the domain resolves to your server.
 
+---
+
+> `ERR Unable to obtain ACME certificate for domains error="unable to generate a certificate for the domains [project.ddev.live]: acme: error: 429 :: POST :: https://acme-v02.api.letsencrypt.org/acme/new-order :: urn:ietf:params:acme:error:<strong>rateLimited :: too many failed authorizations</strong> (5) for \"project.ddev.live\" in the last 1h0m0s, retry after 2026-07-01 12:19:07 UTC: see https://letsencrypt.org/docs/rate-limits/#authorization-failures-per-identifier-per-account"`
+
+A message like this means you've been rate-limited. Let's Encrypt tries to create certificates for _all_ of your sites on the server, so make sure every domain for every site resolves — otherwise DDEV will keep retrying and you risk hitting the rate limit, even if DNS resolves and you've tried `ddev restart`.
 
 ## Caveats
 
@@ -151,7 +151,6 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 * You may need an external cron trigger for some CMSes.
 * Debugging Let’s Encrypt failures requires viewing the `ddev-router` logs with `docker logs ddev-router`.
 * A malicious attack on a website hosted with `use_hardened_images` will likely not be able to do anything significant to the host, but it can certainly change your code, which is mounted on the host.
-
 
 When `use_hardened_images` is enabled, Docker runs the web image as an unprivileged user, and the container does not have sudo. However, any Docker server hosted on the internet is a potential vulnerability. Keep your packages up to date and make sure your firewall does not allow access to ports other than (normally) 22, 80, and 443.
 
