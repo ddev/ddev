@@ -103,11 +103,19 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 COPY ddev-webserver-base-files /
 COPY ddev-webserver-base-scripts /
 RUN sed -i 's#listen = /run/php-fpm.sock#listen = /run/php/php-fpm.sock#' /etc/php/*/fpm/pool.d/www.conf
-# Debian's nginx-common (security workaround for Debian bug #1126960, seen in 1.26.3-3+deb13u7)
-# overrides HTTP_HOST with port-stripped $host in fastcgi_params, which breaks
-# app-generated absolute URLs when router_http(s)_port is not 80/443.
-# Restore the client's Host header (including port) for FastCGI.
-RUN sed -i 's#^\(fastcgi_param\s\+HTTP_HOST\s\+\)$host;#\1$http_host;#' /etc/nginx/fastcgi_params
+# Debian's nginx (since 1.26.3-3+deb13u4, a workaround for Debian bug #1126960)
+# passes the host to backends as the port-stripped $host nginx variable instead of
+# the client's Host header, so PHP sees HTTP_HOST without the port and apps
+# build wrong absolute URLs whenever router_http(s)_port is not 80/443.
+# Rewrite the *_params files to use $http_host (the Host header as sent by the
+# client, port included):
+#   fastcgi_param HTTP_HOST $host;  -> fastcgi_param HTTP_HOST $http_host;
+#     (same for scgi_param and uwsgi_param, matched by \w+_param)
+#   proxy_set_header Host $host;    -> proxy_set_header Host $http_host;
+# If Debian ever drops these lines, the seds are no-ops and nginx's default
+# pass-through of the Host header is correct again.
+RUN sed -i 's#^\(\w\+_param\s\+HTTP_HOST\s\+\)$host;#\1$http_host;#' /etc/nginx/fastcgi_params /etc/nginx/scgi_params /etc/nginx/uwsgi_params && \
+    sed -i 's#^\(proxy_set_header\s\+Host\s\+\)$host;#\1$http_host;#' /etc/nginx/proxy_params
 RUN locale-gen
 
 # Composer may need to be updated by composer self-update
