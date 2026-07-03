@@ -4118,6 +4118,17 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}
 	app.AdditionalFQDNs = []string{"junker99.example.com"}
 
+	// Probe used to verify that the HTTP_HOST seen by PHP retains the
+	// nonstandard router port; the port has been lost in the past when
+	// Debian's nginx-common overrode HTTP_HOST with the port-stripped
+	// $host in /etc/nginx/fastcgi_params (Debian bug #1126960).
+	hostProbe := filepath.Join(app.AppRoot, app.Docroot, "hosttest-probe.php")
+	err = os.WriteFile(hostProbe, []byte(`<?php echo "HTTP_HOST=" . ($_SERVER['HTTP_HOST'] ?? '(unset)');`), 0644)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = os.Remove(hostProbe)
+	})
+
 	for _, pair := range []testcommon.PortPair{{HTTPPort: "8000", HTTPSPort: "8143"}, {HTTPPort: "8080", HTTPSPort: "8443"}} {
 		testcommon.ClearDockerEnv()
 		app.RouterHTTPPort = pair.HTTPPort
@@ -4168,6 +4179,12 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 				// Retry to ride out the occasional M1 EOF on the first hit.
 				testcommon.AssertLocalHTTPContent(t, item+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect,
 					testcommon.WithMessagef("each external URL should be reachable from the host with expected content"),
+					testcommon.WithMaxAttempts(2),
+				)
+				// PHP must see the full Host header including the nonstandard
+				// router port, or apps will build absolute URLs without it.
+				testcommon.AssertLocalHTTPContent(t, item+"/hosttest-probe.php", "HTTP_HOST="+parts.Host,
+					testcommon.WithMessagef("HTTP_HOST seen by PHP should retain the nonstandard port for %s", item),
 					testcommon.WithMaxAttempts(2),
 				)
 			}

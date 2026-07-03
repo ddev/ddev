@@ -103,6 +103,11 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 COPY ddev-webserver-base-files /
 COPY ddev-webserver-base-scripts /
 RUN sed -i 's#listen = /run/php-fpm.sock#listen = /run/php/php-fpm.sock#' /etc/php/*/fpm/pool.d/www.conf
+# Debian's nginx-common (security workaround for Debian bug #1126960, seen in 1.26.3-3+deb13u7)
+# overrides HTTP_HOST with port-stripped $host in fastcgi_params, which breaks
+# app-generated absolute URLs when router_http(s)_port is not 80/443.
+# Restore the client's Host header (including port) for FastCGI.
+RUN sed -i 's#^\(fastcgi_param\s\+HTTP_HOST\s\+\)$host;#\1$http_host;#' /etc/nginx/fastcgi_params
 RUN locale-gen
 
 # Composer may need to be updated by composer self-update
