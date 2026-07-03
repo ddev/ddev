@@ -158,6 +158,7 @@ ReactPHP
 RemainAfterExit
 Remove
 Run
+Runtimes
 SELinux
 SMTP
 SendGrid
@@ -192,6 +193,7 @@ Uz
 VCS
 Vitest
 VM
+VM's
 VNC
 VPN
 VPNs
@@ -608,6 +610,7 @@ rmi
 rsync
 running
 runtime
+runtimes
 rw
 s
 sdk
