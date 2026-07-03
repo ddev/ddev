@@ -2204,7 +2204,7 @@ Function ParseCommandLine
             /help or /?                  - Show this help message$\n$\n\
             Examples:$\n\
             installer.exe /docker-ce /distro=Ubuntu$\n\
-            installer.exe /docker-desktop /distro=Ubuntu-24.04$\n\
+            installer.exe /docker-desktop /distro=Ubuntu-26.04$\n\
             installer.exe /traditional$\n\
             installer.exe /traditional /S"
         Abort
@@ -2222,7 +2222,7 @@ Function ParseCommandLine
             /help or /?                  - Show this help message$\n$\n\
             Examples:$\n\
             installer.exe /docker-ce /distro=Ubuntu$\n\
-            installer.exe /docker-desktop /distro=Ubuntu-24.04$\n\
+            installer.exe /docker-desktop /distro=Ubuntu-26.04$\n\
             installer.exe /traditional$\n\
             installer.exe /traditional /S"
         Abort
