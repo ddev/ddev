@@ -2910,13 +2910,18 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev composer create-project "typo3/cms-base-distribution:^14"
     ```
 
+    Install the Camino default theme [recommended for TYPO3 Core](https://docs.typo3.org/m/typo3/tutorial-getting-started/main/en-us/Installation/Install.html):
+
+    ```bash
+    ddev composer require typo3/theme-camino
+    ```
+
     Run the TYPO3 setup:
 
     ```bash
     ddev typo3 setup \
         --admin-user-password="Demo123*" \
         --driver=mysqli \
-        --create-site=https://${PROJECT_NAME}.ddev.site \
         --server-type=other \
         --dbname=db \
         --username=db \
@@ -2928,8 +2933,13 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         --project-name="My TYPO3 site" \
         --force
     ```
+    Launch the site content:
 
-    Launch the site:
+    ```bash
+    ddev launch /camino
+    ```
+
+    Launch the backend:
 
     ```bash
     ddev launch /typo3/
@@ -2947,10 +2957,10 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         ddev config --project-type=typo3 --docroot=public
         ddev start -y
         ddev composer create-project "typo3/cms-base-distribution:^14"
+        ddev composer require typo3/theme-camino
         ddev typo3 setup \
             --admin-user-password="Demo123*" \
             --driver=mysqli \
-            --create-site=https://${PROJECT_NAME}.ddev.site \
             --server-type=other \
             --dbname=db \
             --username=db \
@@ -2961,6 +2971,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
             --admin-email=admin@example.com \
             --project-name="My TYPO3 site" \
             --force
+        ddev launch /camino
         ddev launch /typo3/
         EOF
         chmod +x setup-typo3.sh
