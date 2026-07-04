@@ -58,35 +58,47 @@ func TestNewRequestConfig(t *testing.T) {
 }
 
 // TestLocalDockerAddress checks that localDockerAddress points the URL at the
-// Docker IP while keeping the original port and path, and returns the original
-// hostname (used for the Host header and TLS server name).
+// Docker IP while keeping the original port and path, and returns the Host
+// header (with any nonstandard port, as a real client sends it) and the bare
+// hostname for the TLS server name.
 func TestLocalDockerAddress(t *testing.T) {
-	// A URL with a port keeps it.
-	addr, host, err := localDockerAddress("https://example.ddev.site:8142/run")
+	// A URL with a nonstandard port keeps it, in both the address and the Host header.
+	addr, hostHeader, serverName, err := localDockerAddress("https://example.ddev.site:8142/run")
 	require.NoError(t, err)
-	require.Equal(t, "example.ddev.site", host)
+	require.Equal(t, "example.ddev.site:8142", hostHeader, "Host header must include a nonstandard port, like a real client")
+	require.Equal(t, "example.ddev.site", serverName, "TLS server name must never include a port")
 	require.True(t, strings.HasPrefix(addr, "https://"), "scheme must be preserved, got %s", addr)
 	require.Contains(t, addr, ":8142", "port must be preserved, got %s", addr)
 	require.True(t, strings.HasSuffix(addr, "/run"), "path must be preserved, got %s", addr)
 	require.NotContains(t, addr, "example.ddev.site", "host should be replaced by the Docker IP, got %s", addr)
 
 	// A URL without a port must not gain one.
-	addr, host, err = localDockerAddress("http://example.ddev.site/")
+	addr, hostHeader, serverName, err = localDockerAddress("http://example.ddev.site/")
 	require.NoError(t, err)
-	require.Equal(t, "example.ddev.site", host)
+	require.Equal(t, "example.ddev.site", hostHeader)
+	require.Equal(t, "example.ddev.site", serverName)
 	require.True(t, strings.HasPrefix(addr, "http://"), "scheme must be preserved, got %s", addr)
 	require.True(t, strings.HasSuffix(addr, "/"), "path must be preserved, got %s", addr)
 	require.NotContains(t, addr, "example.ddev.site", "host should be replaced by the Docker IP, got %s", addr)
 	u, err := url.Parse(addr)
 	require.NoError(t, err)
 	require.Empty(t, u.Port(), "no port should be added, got %s", addr)
+
+	// A default port for the scheme is omitted from the Host header, like a
+	// real client, but still used to dial.
+	addr, hostHeader, serverName, err = localDockerAddress("https://example.ddev.site:443/")
+	require.NoError(t, err)
+	require.Equal(t, "example.ddev.site", hostHeader, "default port must be omitted from the Host header")
+	require.Equal(t, "example.ddev.site", serverName)
+	require.Contains(t, addr, ":443", "explicit port must still be dialed, got %s", addr)
 }
 
 // TestDescribeHTTPFailure verifies the failure message layout. No Docker needed.
 func TestDescribeHTTPFailure(t *testing.T) {
 	resp := &LocalHTTPResponse{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": {"text/html"}}}
 	msg := describeHTTPFailure("https://x.ddev.site:8142", resp, "the body", nil, []string{"Recent runs"}, "want a run")
-	require.Contains(t, msg, "Fail: want a run")
+	require.Contains(t, msg, "Check failed - want a run")
+	require.NotContains(t, msg, "Fail:", "failure output must not mimic go's own test-failure markers")
 	require.Contains(t, msg, "GET: https://x.ddev.site:8142")
 	require.Contains(t, msg, "Status: 200")
 	require.Contains(t, msg, `Error: body does not contain ["Recent runs"]`)
@@ -95,7 +107,7 @@ func TestDescribeHTTPFailure(t *testing.T) {
 
 	// A transport error and an empty caller message fall back sensibly.
 	msg = describeHTTPFailure("https://x.ddev.site", nil, "", fmt.Errorf("dial tcp: boom"), nil, "")
-	require.Contains(t, msg, "Fail: HTTP request failed")
+	require.Contains(t, msg, "Check failed - HTTP request failed")
 	require.Contains(t, msg, "Status: 0")
 	require.Contains(t, msg, "Error: dial tcp: boom")
 }
