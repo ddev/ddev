@@ -2496,6 +2496,13 @@ ddev config --upload-dirs=sites/assets/files && ddev restart
     # answer `x`, as we're using DDEV for this rather than its recipes.
     ```
 
+    !!!warning "Temporary Twig pin"
+        Twig 3.28.0 changed `include()` to return a `Twig\Markup` object instead of a string, which breaks Shopware 6.7's admin (HTTP 500 on `/admin`). Until [shopware/conflicts#36](https://github.com/shopware/conflicts/pull/36) is released to block Twig 3.28, pin Twig to an earlier version:
+
+        ```bash
+        ddev composer require "twig/twig:<3.28"
+        ```
+
     Run Shopware installation and launch:
 
     ```bash
@@ -2519,6 +2526,9 @@ ddev config --upload-dirs=sites/assets/files && ddev restart
         ddev config --project-type=shopware6 --docroot=public
         ddev start -y
         ddev composer create-project shopware/production
+        # TEMPORARY: pin Twig <3.28 until shopware/conflicts#36 is released;
+        # Twig 3.28 breaks Shopware 6.7's admin with an HTTP 500 on /admin.
+        ddev composer require "twig/twig:<3.28"
         ddev exec console system:install --basic-setup
         ddev launch /admin
         EOF
