@@ -167,14 +167,13 @@ hooks:
           [ -z "$newbase" ] && newbase="/"
           yq -i ".base = \"$newbase\"" "$f"
         done
-        vendor/bin/typo3 cache:flush
+        typo3 cache:flush
   post-share:
     - exec: |
         for f in config/sites/*/config.yaml.pre-share-backup; do
           mv "$f" "${f%.pre-share-backup}"
         done
-        vendor/bin/typo3 cache:flush
-        ddev mutagen sync
+        typo3 cache:flush
 ```
 
 This doesn't handle `baseVariants` entries or per-language `base` overrides, which are more advanced, less common setups. (See the [DDEV Share Blog](https://ddev.com/blog/share-providers/) for more on writing `pre-share`/`post-share` hooks.)
