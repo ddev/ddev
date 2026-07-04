@@ -113,9 +113,42 @@ RUN sed -i 's#listen = /run/php-fpm.sock#listen = /run/php/php-fpm.sock#' /etc/p
 #     (same for scgi_param and uwsgi_param, matched by \w+_param)
 #   proxy_set_header Host $host;    -> proxy_set_header Host $http_host;
 # If Debian ever drops these lines, the seds are no-ops and nginx's default
-# pass-through of the Host header is correct again.
+# pass-through of the Host header is correct again. Debian's own comment says
+# nginx 1.30.0+ will preserve the port via $host$is_request_port$request_port;
+# once that lands, our "$host;" match no longer fires and we inherit the correct
+# upstream behavior automatically (see ddev/ddev#8555).
+# The last two seds rewrite Debian's now-contradictory "Do not use $http_host"
+# comment so `cat`ing the file in the container is not misleading.
 RUN sed -i 's#^\(\w\+_param\s\+HTTP_HOST\s\+\)$host;#\1$http_host;#' /etc/nginx/fastcgi_params /etc/nginx/scgi_params /etc/nginx/uwsgi_params && \
-    sed -i 's#^\(proxy_set_header\s\+Host\s\+\)$host;#\1$http_host;#' /etc/nginx/proxy_params
+    sed -i 's#^\(proxy_set_header\s\+Host\s\+\)$host;#\1$http_host;#' /etc/nginx/proxy_params && \
+    sed -i 's@^# Do not use HTTP_HOST as "$http_host"\.@# DDEV: the HTTP_HOST line below intentionally uses $http_host to preserve a nonstandard router port (ddev/ddev#8555); Debian set $host as a workaround for bug #1126960, which strips the port.@' /etc/nginx/fastcgi_params /etc/nginx/scgi_params /etc/nginx/uwsgi_params && \
+    sed -i 's@^# Do not set the `Host` header as "$http_host"\.@# DDEV: the Host line below intentionally uses $http_host to preserve a nonstandard router port (ddev/ddev#8555); Debian set $host as a workaround for bug #1126960, which strips the port.@' /etc/nginx/proxy_params
+# Guard: fail the build if the HTTP_HOST/Host rewrite above did not land as
+# $http_host. This deliberately breaks the build in two cases, both of which a
+# maintainer must look at:
+#   - the sed silently failed to match because Debian reformatted its $host
+#     workaround while still stripping the port -> our fix has regressed; or
+#   - Debian shipped the proper fix (nginx 1.30.0+ builds HTTP_HOST from
+#     $host$is_request_port$request_port) -> our workaround is now dead code and
+#     should be removed.
+# Without this guard the second case is invisible: the functional test stays
+# green because the port is preserved upstream, and the dead seds linger. See
+# ddev/ddev#8555.
+RUN <<'EOF'
+set -eu -o pipefail
+for f in /etc/nginx/fastcgi_params /etc/nginx/scgi_params /etc/nginx/uwsgi_params; do
+  if ! grep -Eq '^[a-z]+_param[[:space:]]+HTTP_HOST[[:space:]]+\$http_host;' "$f"; then
+    echo "ERROR: ${f}: HTTP_HOST is not set to \$http_host after the rewrite." >&2
+    echo "Debian's nginx-common line changed (bug #1126960 / ddev/ddev#8555)." >&2
+    echo "If upstream now preserves the port (nginx 1.30.0 \$host\$is_request_port\$request_port), remove this workaround; otherwise fix the seds above." >&2
+    exit 1
+  fi
+done
+if ! grep -Eq '^proxy_set_header[[:space:]]+Host[[:space:]]+\$http_host;' /etc/nginx/proxy_params; then
+  echo "ERROR: /etc/nginx/proxy_params: Host is not set to \$http_host after the rewrite (bug #1126960 / ddev/ddev#8555)." >&2
+  exit 1
+fi
+EOF
 RUN locale-gen
 
 # Composer may need to be updated by composer self-update
