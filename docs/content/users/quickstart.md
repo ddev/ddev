@@ -1886,7 +1886,7 @@ ddev launch /manager/
 ```
 
 !!! note "Web installer and the DDEV-managed config"
-    You can also install through the web wizard with `ddev launch /setup/`. Because DDEV has already written a valid `core/config/config.inc.php`, MODX opens the web wizard in *upgrade* mode; for a brand-new site use the CLI installer above (or remove `core/config/config.inc.php` before opening `/setup/`). When you import an existing MODX site and its database (for example with [`ddev import-db`](../usage/commands.md#import-db)), the DDEV-generated `config.inc.php` connects it straight away with no installer step.
+    You can also install through the web wizard with `ddev launch /setup/`. Because DDEV has already written a valid `core/config/config.inc.php`, MODX opens the web wizard in *upgrade* mode; for a brand-new site use the CLI installer above (or remove `core/config/config.inc.php` before opening `/setup/`). When you import an existing MODX site and its database (for example with [`ddev import-db`](./usage/commands.md#import-db)), the DDEV-generated `config.inc.php` connects it straight away with no installer step.
 
 ??? tip "Prefer to run as a script?"
     To run the whole setup as a script, examine and run this script:
