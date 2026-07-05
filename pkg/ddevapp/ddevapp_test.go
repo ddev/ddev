@@ -392,6 +392,25 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/recipes/super-easy-vegetarian-pasta-bake", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
 			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
+		// 23: modx (MODX Revolution 3.2.1)
+		// Fixture: MODX Revolution 3.2.1-pl (code with core/vendor/ committed, plus
+		// db.sql.tar.gz and files.tgz built by its build-fixtures.sh), hosted at
+		// https://github.com/HRBL-Networks/test-modx (ddev-automated-test branch,
+		// release v3.2.1). Validated end-to-end with TestDdevFullSiteSetup.
+		// A MODX Revolution 2.x fixture can be added the same way.
+		{
+			Name:                          "TestPkgModx",
+			SourceURL:                     "https://github.com/HRBL-Networks/test-modx/archive/refs/tags/v3.2.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-modx-3.2.1/",
+			DBTarURL:                      "https://github.com/HRBL-Networks/test-modx/releases/download/v3.2.1/db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/HRBL-Networks/test-modx/releases/download/v3.2.1/files.tgz",
+			FullSiteTarballURL:            "",
+			Docroot:                       "",
+			Type:                          nodeps.AppTypeMODX,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "MODX"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "MODX Revolution"},
+			FilesImageURI:                 "/assets/uploads/ddev.png",
+		},
 	}
 
 	FullTestSites = TestSites
