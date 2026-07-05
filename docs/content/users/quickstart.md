@@ -1845,13 +1845,27 @@ ddev magento setup:upgrade
 
 ## MODX Revolution
 
-DDEV supports both MODX Revolution 2.x and 3.x. Create the project directory and download MODX:
+DDEV supports both [MODX](https://modx.com/) Revolution 2.x and 3.x.
 
 === "Composer (MODX 3.x)"
 
+    Create the project directory and configure DDEV:
+
     ```bash
-    composer create-project modx/revolution my-modx-site
-    cd my-modx-site
+    mkdir -p my-modx-site && cd my-modx-site
+    ddev config --project-type=modx
+    ```
+
+    Start DDEV (this may take a minute):
+
+    ```bash
+    ddev start
+    ```
+
+    Install MODX Revolution via Composer:
+
+    ```bash
+    ddev composer create-project modx/revolution
     ```
 
 === "ZIP Download"
@@ -1863,12 +1877,12 @@ DDEV supports both MODX Revolution 2.x and 3.x. Create the project directory and
     unzip ~/Downloads/modx-*.zip && mv modx-*/* modx-*/.[!.]* . && rmdir modx-*
     ```
 
-Configure and start DDEV:
+    Configure and start DDEV:
 
-```bash
-ddev config --project-type=modx
-ddev start
-```
+    ```bash
+    ddev config --project-type=modx
+    ddev start
+    ```
 
 DDEV generates a `#ddev-generated` `core/config/config.inc.php` with the DDEV database credentials (database name, user, and password are all `db`; host is `db`). Install MODX with the CLI installer, which performs a fresh install using those credentials:
 
@@ -1895,10 +1909,10 @@ ddev launch /manager/
     cat > setup-modx.sh << 'EOF'
     #!/usr/bin/env bash
     set -euo pipefail
-    composer create-project modx/revolution my-modx-site
-    cd my-modx-site
+    mkdir -p my-modx-site && cd my-modx-site
     ddev config --project-type=modx
     ddev start -y
+    ddev composer create-project modx/revolution
     ddev exec php setup/cli-install.php \
       --database_server=db --database=db --database_user=db --database_password=db \
       --table_prefix=modx_ --http_host=my-modx-site.ddev.site \
