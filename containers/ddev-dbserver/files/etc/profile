@@ -2,9 +2,9 @@
 # and Bourne compatible shells (bash(1), ksh(1), ash(1), ...).
 
 # /opt/mysql/bin is where the DHI (Docker Hardened Image) mysql 8.0/8.4 ships its
-# binaries; /opt/bitnami/mysql/bin and /usr/local/mysql/bin are legacy locations
+# binaries; /usr/local/mysql/bin is legacy location
 # kept for older bases. Missing dirs are harmless in PATH.
-PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/mysql/bin:/opt/bitnami/mysql/bin:/usr/local/mysql/bin"
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/mysql/bin:/usr/local/mysql/bin"
 
 export PATH
 

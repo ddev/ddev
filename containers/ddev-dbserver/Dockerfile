@@ -114,10 +114,6 @@ RUN mkdir -p /var/lib/mysql
 
 ADD files /
 
-# Legacy bitnami mysql bases kept their default config under /opt/bitnami;
-# remove it so we get ours. Harmless no-op on the DHI and other bases.
-RUN rm -rf /opt/bitnami/mysql/conf
-
 ARG MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN  ln -sf /tmp/mysqlx.sock ${MYSQL_UNIX_PORT}
