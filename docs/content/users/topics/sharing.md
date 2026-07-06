@@ -143,6 +143,41 @@ If you have a domain managed by Cloudflare, you can use a named tunnel for a sta
 
 Some CMSes like WordPress and Magento require special handling because they don't automatically handle the URL routed to them. For more extensive instructions and possibilities, read the [DDEV Share Blog](https://ddev.com/blog/share-providers/).
 
+### TYPO3 special handling: Strip the host from `base`
+
+TYPO3's site configuration (`config/sites/<identifier>/config.yaml`) stores an absolute `base` URL for each site, for example:
+
+```yaml
+base: 'https://typo3.ddev.site/'
+```
+
+TYPO3 only routes requests whose Host header exactly matches `base`, so an ngrok or cloudflared tunnel hostname will 404 until `base` is adjusted.
+
+**Simplest fix (permanent):** Set `base: /` (or `/your-path/` if the site normally lives under a subpath) by hand, then run `ddev typo3 cache:flush` to clear the derived routing caches. This works indefinitely for local development and needs no further changes.
+
+**Automatic fix (reversible, multi-site-safe):** Use `pre-share`/`post-share` hooks to strip only the scheme and host from `base`, preserving any existing path. This matters for multi-site projects — commenting out or blanking every `base` collapses all sites to the same host-less `/` route and only one wins; stripping just the host keeps each site's own path distinct:
+
+```yaml
+hooks:
+  pre-share:
+    - exec: |
+        for f in config/sites/*/config.yaml; do
+          cp "$f" "$f.pre-share-backup"
+          newbase=$(yq '.base' "$f" | sed -E 's#^https?://[^/]+##')
+          [ -z "$newbase" ] && newbase="/"
+          yq -i ".base = \"$newbase\"" "$f"
+        done
+        typo3 cache:flush
+  post-share:
+    - exec: |
+        for f in config/sites/*/config.yaml.pre-share-backup; do
+          mv "$f" "${f%.pre-share-backup}"
+        done
+        typo3 cache:flush
+```
+
+This doesn't handle `baseVariants` entries or per-language `base` overrides, which are more advanced, less common setups. (See the [DDEV Share Blog](https://ddev.com/blog/share-providers/) for more on writing `pre-share`/`post-share` hooks.)
+
 ### WordPress special handling: Change the URL using `wp search-replace`
 
 WordPress only has the one base URL, but the `wp` command is built into DDEV’s web container.
