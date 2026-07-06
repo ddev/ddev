@@ -163,6 +163,9 @@ jobs:
 
       - name: "setup macOS"
         run: |
+          # The macos-latest runner image pre-taps aws/tap, which Homebrew 6.0+
+          # flags as untrusted on every invocation. We don't use it, so remove it.
+          brew untap aws/tap || true
           brew install coreutils gnu-getopt jq
       - uses: actions/checkout@v7
         with:
