@@ -32,10 +32,7 @@ teardown() {
   assert_file_not_exist compose.yaml
   assert_file_not_exist compose.override.yaml
 
-  # TEMPORARY WORKAROUND: Twig 3.28.0 made include() return Twig\Markup instead
-  # of string, which breaks Shopware 6.7's TwigFeaturesWithInheritanceExtension
-  # and yields an HTTP 500 on /admin. Remove this pin once shopware/conflicts
-  # blocks Twig 3.28 (https://github.com/shopware/conflicts/pull/36).
+  # TODO: Remove this after upstream makes a new release, see https://github.com/ddev/ddev/pull/8557
   run ddev composer require "twig/twig:<3.28"
   assert_success
 
