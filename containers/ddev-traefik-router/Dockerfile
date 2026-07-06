@@ -1,4 +1,4 @@
-FROM traefik:3 AS ddev-traefik-router
+FROM traefik:3.6.13 AS ddev-traefik-router
 
 ENV TRAEFIK_MONITOR_PORT=10999
 RUN apk add --no-cache bash curl file htop jq openssl vim yq
