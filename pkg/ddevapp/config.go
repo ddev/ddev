@@ -1248,9 +1248,6 @@ ARG BASE_IMAGE="scratch"
 ### DDEV-injected base Dockerfile contents
 FROM $BASE_IMAGE
 SHELL ["/bin/bash", "-c"]
-`
-
-	contents = contents + `
 ARG TARGETPLATFORM
 ARG TARGETARCH
 ARG TARGETOS
