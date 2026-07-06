@@ -32,6 +32,10 @@ teardown() {
   assert_file_not_exist compose.yaml
   assert_file_not_exist compose.override.yaml
 
+  # TODO: Remove this after upstream makes a new release, see https://github.com/ddev/ddev/pull/8557
+  run ddev composer require "twig/twig:<3.28"
+  assert_success
+
   run ddev exec console system:install --basic-setup
   assert_success
 
