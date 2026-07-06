@@ -211,7 +211,7 @@ func checkLocalHTTPContent(t *testing.T, fatal bool, rawURL string, wantContent 
 // expected content, not just a working request. Each retry is logged via t.Logf.
 func getLocalHTTPResponse(t *testing.T, rawURL string, cfg requestConfig, contentOK func(body string) bool) (string, *LocalHTTPResponse, error) {
 	t.Helper()
-	address, host, err := localDockerAddress(rawURL)
+	address, hostHeader, serverName, err := localDockerAddress(rawURL)
 	if err != nil {
 		return "", nil, err
 	}
@@ -220,7 +220,7 @@ func getLocalHTTPResponse(t *testing.T, rawURL string, cfg requestConfig, conten
 	var resp *LocalHTTPResponse
 	delay := cfg.tick
 	for attempt := 1; ; attempt++ {
-		body, resp, err = httpGetLocal(address, host, cfg)
+		body, resp, err = httpGetLocal(address, hostHeader, serverName, cfg)
 		success := err == nil && (contentOK == nil || contentOK(body))
 		limit := cfg.maxAttempts
 		// macOS php-fpm sometimes crashes (SIGBUS) and returns a brief 502/503;
@@ -246,20 +246,21 @@ func getLocalHTTPResponse(t *testing.T, rawURL string, cfg requestConfig, conten
 	}
 }
 
-// httpGetLocal makes a single GET to address, sending host as the Host header and
-// TLS server name, and does not follow redirects. A status other than expectStatus
-// is returned as an error, with the body still returned. The response body is read
-// and closed here, so the caller gets a plain string and nothing to close.
-func httpGetLocal(address, host string, cfg requestConfig) (string, *LocalHTTPResponse, error) {
-	// ServerName makes TLS verify the cert for host; ErrUseLastResponse stops the
-	// client from following redirects. Refs:
+// httpGetLocal makes a single GET to address, sending hostHeader as the Host
+// header and serverName as the TLS server name, and does not follow redirects. A
+// status other than expectStatus is returned as an error, with the body still
+// returned. The response body is read and closed here, so the caller gets a plain
+// string and nothing to close.
+func httpGetLocal(address, hostHeader, serverName string, cfg requestConfig) (string, *LocalHTTPResponse, error) {
+	// ServerName makes TLS verify the cert for the hostname; ErrUseLastResponse
+	// stops the client from following redirects. Refs:
 	// https://stackoverflow.com/a/47169975/215713 and
 	// https://stackoverflow.com/a/38150816/215713
 	client := &http.Client{
 		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
-		Transport: &http.Transport{TLSClientConfig: &tls.Config{ServerName: host}},
+		Transport: &http.Transport{TLSClientConfig: &tls.Config{ServerName: serverName}},
 		Timeout:   cfg.timeout,
 	}
 
@@ -267,7 +268,7 @@ func httpGetLocal(address, host string, cfg requestConfig) (string, *LocalHTTPRe
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to create GET request for %s: %w", address, err)
 	}
-	req.Host = host
+	req.Host = hostHeader
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -288,29 +289,38 @@ func httpGetLocal(address, host string, cfg requestConfig) (string, *LocalHTTPRe
 }
 
 // localDockerAddress points rawURL at the local Docker IP but keeps the original
-// hostname for the Host header and TLS server name.
-func localDockerAddress(rawURL string) (address, host string, err error) {
+// hostname for the Host header and TLS server name. Like a real client (browser,
+// curl), the Host header includes the port when it is not the default for the
+// scheme — apps depend on that to build absolute URLs when router_http(s)_port
+// is not 80/443. The TLS server name is always the bare hostname.
+func localDockerAddress(rawURL string) (address, hostHeader, serverName string, err error) {
 	u, err := url.Parse(rawURL)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to parse URL %s: %w", rawURL, err)
+		return "", "", "", fmt.Errorf("failed to parse URL %s: %w", rawURL, err)
 	}
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
-		return "", "", fmt.Errorf("failed to get Docker IP: %w", err)
+		return "", "", "", fmt.Errorf("failed to get Docker IP: %w", err)
 	}
-	host = u.Hostname()
+	serverName = u.Hostname()
 	// Read the port before overwriting u.Host, because u.Port() reads it from there.
 	port := u.Port()
+	hostHeader = serverName
+	if port != "" && !(u.Scheme == "http" && port == "80") && !(u.Scheme == "https" && port == "443") {
+		hostHeader = serverName + ":" + port
+	}
 	u.Host = dockerIP
 	if port != "" {
 		u.Host = dockerIP + ":" + port
 	}
-	return u.String(), host, nil
+	return u.String(), hostHeader, serverName, nil
 }
 
-// describeHTTPFailure builds the failure message: a Fail line with the caller's
-// message, then the request, status, headers, body, and the reason(s) it failed
-// (missing substrings and/or a request error).
+// describeHTTPFailure builds the failure message: a "Check failed" line with the
+// caller's message, then the request, status, headers, body, and the reason(s) it
+// failed (missing substrings and/or a request error). The first line deliberately
+// avoids the pattern "Fail:" so searching test output for go's own failure
+// markers doesn't turn up these detail blocks.
 func describeHTTPFailure(rawURL string, resp *LocalHTTPResponse, body string, err error, missing []string, userMsg string) string {
 	status := 0
 	var header http.Header
@@ -332,7 +342,7 @@ func describeHTTPFailure(rawURL string, resp *LocalHTTPResponse, body string, er
 		userMsg = "HTTP request failed"
 	}
 	parts := []string{
-		fmt.Sprintf("Fail: %s", userMsg),
+		fmt.Sprintf("Check failed - %s", userMsg),
 		fmt.Sprintf("GET: %s", rawURL),
 		fmt.Sprintf("Status: %d", status),
 		fmt.Sprintf("Error: %s", strings.Join(reasons, "; ")),

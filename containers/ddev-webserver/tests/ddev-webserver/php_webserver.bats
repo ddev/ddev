@@ -7,6 +7,20 @@ setup() {
   load setup.sh
 }
 
+@test "HTTP_HOST passed to PHP preserves nonstandard port for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  # Debian's nginx-common overrides HTTP_HOST with port-stripped $host in
+  # /etc/nginx/fastcgi_params (Debian bug #1126960 security workaround),
+  # which breaks app-generated absolute URLs when router_http(s)_port
+  # is not 80/443. Make sure the client's Host header, including any
+  # nonstandard port, reaches PHP unchanged.
+  run curl -s --fail -H "Host: hosttest.ddev.site:8443" http://127.0.0.1:$HOST_HTTP_PORT/test/hosttest.php
+  assert_success
+  assert_output --partial "HTTP_HOST=hosttest.ddev.site:8443"
+  run curl -sk --fail -H "Host: hosttest.ddev.site:8443" https://127.0.0.1:$HOST_HTTPS_PORT/test/hosttest.php
+  assert_success
+  assert_output --partial "HTTP_HOST=hosttest.ddev.site:8443"
+}
+
 @test "http and https phpstatus access work inside and outside container for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   run curl -sSL --fail http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
   assert_success
