@@ -4512,20 +4512,26 @@ func TestCustomCerts(t *testing.T) {
 	})
 	require.NoError(t, err, "failed to run openssl command '%s' against router, stdout='%s', stderr='%s'", c, stdout, stderr)
 	stdout = strings.Trim(stdout, "\r\n")
-	// This should be our default wildcard cert
-	require.Contains(t, stdout, "*.ddev.site")
+	// The per-project cert now carries only this project's own hostnames; the
+	// shared *.ddev.site wildcard moved to the default cert.
+	// See https://github.com/ddev/ddev/issues/8562
+	require.Contains(t, stdout, app.GetHostname(), "per-project cert should contain the project hostname, stdout='%s'", stdout)
+	require.NotContains(t, stdout, "*.ddev.site", "per-project cert should no longer carry the shared *.ddev.site wildcard, stdout='%s'", stdout)
 
 	// Now stop it so we can install new custom cert.
 	err = app.Stop(true, false)
 	require.NoError(t, err)
 
-	// Generate a certfile/key in .ddev/custom_certs with one DNS name in it
+	// Generate a cert/key in .ddev/custom_certs carrying the project hostname
+	// plus a marker SAN a ddev-generated cert would never have, so we can prove
+	// the custom cert (not the generated one) is served.
 	// mkcert --cert-file d9composer.ddev.site.crt --key-file d9composer.ddev.site.key d9composer.ddev.site
 	// For Traefik generation, it's app.Name,
 	// mkcert --cert-file d9.crt --key-file d9.key d9.ddev.site
 	baseCertName := app.Name
+	customCertMarker := "custom-cert-marker.example.com"
 
-	stdout, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname())
+	stdout, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname(), customCertMarker)
 	require.NoError(t, err, "mkcert command failed, stdout=%s", stdout)
 
 	err = app.Start()
@@ -4537,9 +4543,11 @@ func TestCustomCerts(t *testing.T) {
 	})
 	require.NoError(t, err, "openssl command failed, stdout='%s', stderr='%s'", stdout, stderr)
 	stdout = strings.Trim(stdout, "\r\n")
-	// If we had the regular cert, there would be several things here including *.ddev.site
-	// But we should only see the hostname listed.
-	require.Equal(t, app.GetHostname(), stdout, "stdout does not contain hostname, stdout='%s', stderr='%s'", stdout, stderr)
+	// The served cert must be the custom one: it has the marker SAN and lacks
+	// the shared *.ddev.site wildcard.
+	require.Contains(t, stdout, customCertMarker, "served cert should be the custom cert containing the marker SAN, stdout='%s', stderr='%s'", stdout, stderr)
+	require.Contains(t, stdout, app.GetHostname(), "served custom cert should contain the project hostname, stdout='%s', stderr='%s'", stdout, stderr)
+	require.NotContains(t, stdout, "*.ddev.site", "custom cert should not contain the shared *.ddev.site wildcard, stdout='%s', stderr='%s'", stdout, stderr)
 }
 
 // TestEnvironmentVariables tests to make sure that documented environment variables appear
