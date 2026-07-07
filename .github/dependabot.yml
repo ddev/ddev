@@ -13,11 +13,14 @@ updates:
     # Let new releases settle before opening a PR
     cooldown:
       default-days: 14
-    # Open a single combined PR for all action updates
+    # Group updates by vendor; any action not matched gets its own PR.
     groups:
-      github-actions:
+      actions:
         patterns:
-          - "*"
+          - "actions/*"
+      docker:
+        patterns:
+          - "docker/*"
     # Floating major tags (@v4) auto-track minor/patch, so bump only on major.
     ignore:
       - dependency-name: "*"
