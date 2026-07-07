@@ -1,5 +1,5 @@
 # Basic dependabot.yml file
-# REF: https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/auto-update-actions
+# REF: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
 updates:
@@ -10,6 +10,17 @@ updates:
     # Check for updates once a week
     schedule:
       interval: "weekly"
-    # Don't respond to updates right away
+    # Let new releases settle before opening a PR
     cooldown:
-      default-days: 30
+      default-days: 14
+    # Open a single combined PR for all action updates
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    # Floating major tags (@v4) auto-track minor/patch, so bump only on major.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
