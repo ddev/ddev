@@ -1,5 +1,5 @@
 # Basic dependabot.yml file
-# REF: https://docs.github.com/en/code-security/supply-chain-security/keeping-your-actions-up-to-date-with-dependabot
+# REF: https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/auto-update-actions
 
 version: 2
 updates:
@@ -12,4 +12,4 @@ updates:
       interval: "weekly"
     # Don't respond to updates right away
     cooldown:
-      - default-days: 30
+      default-days: 30
