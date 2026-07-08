@@ -3765,7 +3765,7 @@ func (app *DdevApp) GetProvider(providerName string) (*Provider, error) {
 	var p Provider
 	var err error
 
-	if providerName != "" && providerName != nodeps.ProviderDefault {
+	if providerName != "" {
 		p = Provider{
 			ProviderType: providerName,
 			app:          app,

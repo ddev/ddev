@@ -8,13 +8,6 @@ import (
 	"github.com/maruel/natural"
 )
 
-// Providers
-// TODO: This should be removed as many providers will now be valid
-const (
-	// ProviderDefault contains the name of the default provider which will be used if one is not otherwise specified.
-	ProviderDefault = "default"
-)
-
 // Database Types
 const (
 	MariaDB  = "mariadb"
