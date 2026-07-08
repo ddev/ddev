@@ -124,11 +124,6 @@ var (
 	ddevVersionConstraint string
 )
 
-var providerName = nodeps.ProviderDefault
-
-// extraFlagsHandlingFunc does specific handling for additional flags, and is different per provider.
-var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
-
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
 	Use:     "config [global]",
@@ -140,7 +135,7 @@ var ConfigCommand = &cobra.Command{
 
 // handleConfigRun handles all the flag processing for any provider
 func handleConfigRun(cmd *cobra.Command, args []string) {
-	app := getConfigApp(providerName)
+	app := getConfigApp()
 
 	err := ddevapp.HasAllowedLocation(app)
 	if err != nil {
@@ -198,12 +193,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		err = handleMainConfigArgs(cmd, args, app)
 		if err != nil {
 			util.Failed(err.Error())
-		}
-		if extraFlagsHandlingFunc != nil {
-			err = extraFlagsHandlingFunc(cmd, args, app)
-			if err != nil {
-				util.Failed("failed to handle per-provider extra flags: %v", err)
-			}
 		}
 	}
 
@@ -334,8 +323,8 @@ func init() {
 	RootCmd.AddCommand(ConfigCommand)
 }
 
-// getConfigApp() does the basic setup of the app (with provider) and returns it.
-func getConfigApp(_ string) *ddevapp.DdevApp {
+// getConfigApp does the basic setup of the app (with provider) and returns it.
+func getConfigApp() *ddevapp.DdevApp {
 	appRoot, err := os.Getwd()
 	if err != nil {
 		util.Failed("Could not determine the current working directory: %v", err)
