@@ -114,7 +114,15 @@ if [ ${DB_TYPE} = "mysql" ]; then
     if [ ${DB_MAJOR_VERSION} = "5.7" ]; then
       BASE_IMAGE=ddev/mysql
     elif [ "${DB_MAJOR_VERSION:-}" = "8.0" ] || [ "${DB_MAJOR_VERSION}" = "8.4" ]; then
-      BASE_IMAGE=bitnamilegacy/mysql
+      # MySQL 8.0/8.4 use Docker Hardened Images (dhi.io/mysql), since bitnami
+      # abandoned its mysql images. We build FROM the `-dev` variant because it
+      # is Debian-based, runs as root, and includes apt + bash, all of which the
+      # build and the bash-based runtime scripts require. See ddev/ddev#7962.
+      BASE_IMAGE=dhi.io/mysql
+      case "${DB_PINNED_VERSION}" in
+        *-dev) ;;
+        *) DB_PINNED_VERSION="${DB_PINNED_VERSION}-dev" ;;
+      esac
     fi
 fi
 printf "\n\n========== Building ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} from ${BASE_IMAGE} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"

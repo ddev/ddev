@@ -1,7 +1,10 @@
 # /etc/profile: system-wide .profile file for the Bourne shell (sh(1))
 # and Bourne compatible shells (bash(1), ksh(1), ash(1), ...).
 
-PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bitnami/mysql/bin:/usr/local/mysql/bin"
+# /opt/mysql/bin is where the DHI (Docker Hardened Image) mysql 8.0/8.4 ships its
+# binaries; /usr/local/mysql/bin is legacy location
+# kept for older bases. Missing dirs are harmless in PATH.
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/mysql/bin:/usr/local/mysql/bin"
 
 export PATH
 

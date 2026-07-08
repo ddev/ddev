@@ -39,7 +39,6 @@ services:
       - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:{{ .DBPort }}"
     environment:
       - COLUMNS
-      - BITNAMI_VOLUME_DIR={{ .BitnamiVolumeDir }}
       - DDEV_DATABASE
       - DDEV_DATABASE_FAMILY
       - DDEV_GID
@@ -74,7 +73,6 @@ services:
       {{- if ne (env "DDEV_PAGER") "" }}
       - PAGER=${DDEV_PAGER}
       {{- end }}
-      - HOME=/home/{{ .Username }}
       - TZ={{ .Timezone }}
       - USER={{ .Username }}
     command: ${DDEV_DB_CONTAINER_COMMAND}

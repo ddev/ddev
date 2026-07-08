@@ -45,12 +45,23 @@ RUN mkdir -p /var/lib/apt/lists/partial
 RUN <<EOF
     set -eu -o pipefail
     apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg gpgv less lsb-release pv tzdata vim-tiny wget
+    # gzip, passwd, and procps are explicitly listed because the DHI (Docker
+    # Hardened Image) base used for mysql 8.0/8.4 does not preinstall them, while
+    # the previous (bitnami) base did: the runtime scripts use gunzip, creating
+    # the www-data user below needs useradd, and procps provides `ps`.
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" bzip2 curl gnupg gpgv gzip less lsb-release passwd procps pv tzdata vim-tiny wget
     update-alternatives --install /usr/bin/vim vim /usr/bin/vim.tiny 10
 
     # Install tzdata-legacy to avoid issues with deprecated timezones
     if apt-cache show tzdata-legacy >/dev/null 2>&1; then
         DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" tzdata-legacy
+    fi
+
+    # The minimal DHI base provides the PAM modules but not the generated common-*
+    # PAM files that the previous base had (used by su and other PAM stacks).
+    # Regenerate them with pam-auth-update. No-op on bases that already have them.
+    if command -v pam-auth-update >/dev/null 2>&1 && [ ! -f /etc/pam.d/common-auth ]; then
+        DEBIAN_FRONTEND=noninteractive pam-auth-update --force
     fi
 EOF
 
@@ -103,9 +114,6 @@ RUN mkdir -p /var/lib/mysql
 
 ADD files /
 
-# On bitnami-derived images, remove their default config so we get ours
-RUN rm -rf /opt/bitnami/mysql/conf
-
 ARG MYSQL_UNIX_PORT=/var/tmp/mysql.sock
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN  ln -sf /tmp/mysqlx.sock ${MYSQL_UNIX_PORT}
@@ -129,11 +137,15 @@ RUN chmod ugo+w /etc/mysql/version-conf.d && chmod -R ugo-w /etc/mysql/version-c
 
 RUN mkdir -p /var/run/mysqld && chmod 755 /var/run/mysqld
 
+# The DHI base used for mysql 8.0/8.4 does not include the www-data user that
+# mkhomedir_helper expects, so create it if it's missing.
+RUN if ! id www-data &>/dev/null; then useradd -u 33 -d /var/www www-data || useradd www-data; fi
 RUN /sbin/mkhomedir_helper www-data
 
 # Normal upstream image doesn't actually have /home/mysql created
 # Make sure it's there in case user 999 (mysql) is using this image.
-RUN mkdir /home/mysql && chown mysql:mysql /home/mysql
+# (The DHI mysql base already creates it, so use mkdir -p.)
+RUN mkdir -p /home/mysql && chown mysql:mysql /home/mysql
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
