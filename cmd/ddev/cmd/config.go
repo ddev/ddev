@@ -124,9 +124,6 @@ var (
 	ddevVersionConstraint string
 )
 
-// extraFlagsHandlingFunc does specific handling for additional flags, and is different per provider.
-var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
-
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
 	Use:     "config [global]",
@@ -196,12 +193,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		err = handleMainConfigArgs(cmd, args, app)
 		if err != nil {
 			util.Failed(err.Error())
-		}
-		if extraFlagsHandlingFunc != nil {
-			err = extraFlagsHandlingFunc(cmd, args, app)
-			if err != nil {
-				util.Failed("failed to handle per-provider extra flags: %v", err)
-			}
 		}
 	}
 
