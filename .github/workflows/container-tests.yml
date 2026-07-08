@@ -78,14 +78,6 @@ jobs:
       # MySQL 8.0/8.4 images build FROM dhi.io/mysql (Docker Hardened Images),
       # which requires authentication. Only available when org secrets are
       # present (not on fork PRs). See ddev/ddev#7962.
-      - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v4
-        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
-        with:
-          export-env: true
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
-          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
       # Github seems already to be logged in with user `githubactions`, which makes this unnecessary.
       # - name: Login to dhi.io (Docker Hardened Images)
       #   if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
