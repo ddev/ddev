@@ -3,9 +3,12 @@ package ddevapp_test
 import (
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/stretchr/testify/require"
 )
@@ -55,4 +58,42 @@ func TestDdevApp_StartOptionalProfiles(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, container)
 	}
+}
+
+// TestPlatformOverride makes sure that a project which overrides the web
+// service platform (e.g. `platform: linux/amd64` on an arm64 host) actually
+// builds and runs the web image for the requested architecture.
+// See https://github.com/ddev/ddev/issues/8578.
+// It only runs on macOS arm64 + OrbStack, where cross-platform emulation is
+// available and exercised in CI (Buildkite).
+func TestPlatformOverride(t *testing.T) {
+	if runtime.GOOS != "darwin" || runtime.GOARCH != "arm64" || !dockerutil.IsOrbStack() {
+		t.Skip("Skipping TestPlatformOverride; only runs on macOS arm64 with OrbStack")
+	}
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	overridePath := app.GetConfigPath("docker-compose.amd64.yaml")
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(overridePath)
+	})
+
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.amd64.yaml"), overridePath)
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	// The web container must be the amd64 (x86_64) architecture requested by the override,
+	// not the arm64 host architecture.
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "uname -m",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "x86_64", strings.TrimSpace(out))
 }

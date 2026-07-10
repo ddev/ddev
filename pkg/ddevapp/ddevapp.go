@@ -1460,6 +1460,19 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 		return "", fmt.Errorf("docker-compose build failed: %v", err)
 	}
 
+	// Propagate each service's `platform` into `build.platforms` so the built
+	// image is produced for the requested architecture. The compose-go library
+	// does not derive `build.platforms` from the service-level `platform`, so
+	// without this the build would target the host platform. That built image
+	// would then fail the platform match at `up` time when a project overrides
+	// `platform:` (e.g. linux/amd64 on an arm64 host).
+	for name, service := range project.Services {
+		if service.Build != nil && service.Platform != "" && len(service.Build.Platforms) == 0 {
+			service.Build.Platforms = []string{service.Platform}
+			project.Services[name] = service
+		}
+	}
+
 	goCtx, _, err := dockerutil.GetDockerClient()
 	if err != nil {
 		return "", fmt.Errorf("docker-compose build failed: %v", err)
