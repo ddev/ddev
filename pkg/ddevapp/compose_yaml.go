@@ -388,6 +388,19 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 			}
 		}
 
+		// Propagate the service's `platform` into `build.platforms` so a built
+		// image matches the requested architecture. The compose-go library
+		// doesn't derive `build.platforms` from the service-level `platform`,
+		// so without this a build would target the host platform, which then
+		// fails the platform match at `up` time when a project overrides
+		// `platform:` (e.g. linux/amd64 on an arm64 host). Fixed up here,
+		// rather than only where DDEV explicitly builds, so every build
+		// triggered from the rendered compose file picks it up.
+		// See https://github.com/ddev/ddev/issues/8578.
+		if service.Build != nil && service.Platform != "" && len(service.Build.Platforms) == 0 {
+			service.Build.Platforms = []string{service.Platform}
+		}
+
 		// Add SELinux labels to bind mounts when SELinux is enabled
 		if isSELinux {
 			for i, vol := range service.Volumes {
