@@ -175,7 +175,7 @@ Each project’s database port is unique, and randomly chosen from available por
 
 You can force this port to be the same on every [`ddev start`](../usage/commands.md#start) by setting [`host_db_port`](../configuration/config.md#host_db_port) in the project’s `.ddev/config.yaml`. For example, `host_db_port: "49156"` or `ddev config --host-db-port=49156`. This value needs to be different on each running DDEV project, and unless it is set, the database port will change on every `ddev start`.
 
-You can use this port with various tools that need a direct port, like `mysql` or `psql` clients, but it’s usually easiest to use [`ddev mysql`](../usage/commands.md#mysql), `ddev psql`, `ddev sequelace`, [`ddev tableplus`](../usage/commands.md#tableplus), etc, which set everything up for you.
+You can use this port with various tools that need a direct port, like `mysql` or `psql` clients, but it’s usually easiest to use [`ddev mysql`](../usage/commands.md#mysql), `ddev psql`, `ddev sequelace`, [`ddev tableplus`](../usage/commands.md#tableplus), [`ddev tablepro`](../usage/commands.md#tablepro), etc, which set everything up for you.
 
 (If you use PhpStorm and its integrated database browser, use the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) to manage all of this for you.)
 
