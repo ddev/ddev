@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/semver/v3"
@@ -79,7 +80,18 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	if app.Database.Type == nodeps.Postgres {
 		dbDriver = "pdo_pgsql"
 	}
-	settings := map[string]any{"DBHostname": "db", "DBDriver": dbDriver, "DBPort": GetInternalPort(app, "db")}
+
+	// Skip the DB connection block entirely if there's no db container
+	// to connect to, or if TYPO3 has already been configured for SQLite
+	// via the installer - don't let this file override that on restart.
+	skipDatabaseConfig := nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") || isTypo3ConfiguredForSqlite(app)
+
+	settings := map[string]any{
+		"DBHostname":         "db",
+		"DBDriver":           dbDriver,
+		"DBPort":             GetInternalPort(app, "db"),
+		"SkipDatabaseConfig": skipDatabaseConfig,
+	}
 
 	// Ensure target directory exists and is writable
 	if err := util.Chmod(dir, 0755); os.IsNotExist(err) {
@@ -330,4 +342,14 @@ func typo3ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string)
 	}
 
 	return nil
+}
+
+func isTypo3ConfiguredForSqlite(app *DdevApp) bool {
+	content, err := os.ReadFile(app.SiteSettingsPath)
+
+	if err != nil {
+		return false
+	}
+
+	return strings.Contains(string(content), "'driver' => 'pdo_sqlite'") || strings.Contains(string(content), `"driver" => "pdo_sqlite"`)
 }
