@@ -89,58 +89,23 @@ func StartDdevRouter() error {
 
 	activeApps := GetActiveProjects()
 
-	// Check if router needs to be recreated due to port or hostname changes
-	needsRecreation := false
-	if router != nil && err == nil && router.State == "running" {
-		// Router is running, check if ports or hostnames have changed
-		var portsChanged, hostnamesChanged bool
-
-		// Check ports
-		existingPorts, err := dockerutil.GetBoundHostPorts(router.ID)
-		if err != nil {
-			util.Debug("Error getting bound ports, will recreate router: %v", err)
+	// Port changes require a full recreation (published ports can't change on a
+	// live container); hostname changes only need the network aliases refreshed.
+	needsRecreation := router == nil || err != nil || router.State != "running"
+	hostnamesChanged := false
+	if !needsRecreation {
+		existingPorts, portErr := dockerutil.GetBoundHostPorts(router.ID)
+		existingHostnames, aliasErr := dockerutil.GetRouterNetworkAliases(router.ID)
+		// TraefikMonitorPort is bound by the router but omitted by determineRouterPorts.
+		neededPorts := append(determineRouterPorts(activeApps), globalconfig.DdevGlobalConfig.TraefikMonitorPort)
+		switch {
+		case portErr != nil || aliasErr != nil:
 			needsRecreation = true
-		} else {
-			neededPorts := determineRouterPorts(activeApps)
-			// Add the Traefik monitor port to the needed list for comparison
-			// (it's always bound by the router but not returned by determineRouterPorts
-			// since it's added separately in the static config template)
-			neededPorts = append(neededPorts, globalconfig.DdevGlobalConfig.TraefikMonitorPort)
-			portsChanged = !PortsMatch(existingPorts, neededPorts)
-			util.Debug("Router port comparison: existing=%v needed=%v changed=%v", existingPorts, neededPorts, portsChanged)
+		case !PortsMatch(existingPorts, neededPorts):
+			needsRecreation = true
+		default:
+			hostnamesChanged = !HostnamesMatch(existingHostnames, determineRouterHostnames(activeApps))
 		}
-
-		// Check hostnames (network aliases)
-		if !needsRecreation {
-			existingHostnames, err := dockerutil.GetRouterNetworkAliases(router.ID)
-			if err != nil {
-				util.Debug("Error getting network aliases, will recreate router: %v", err)
-				needsRecreation = true
-			} else {
-				neededHostnames := determineRouterHostnames(activeApps)
-				hostnamesChanged = !HostnamesMatch(existingHostnames, neededHostnames)
-				util.Debug("Router hostname comparison: existing=%v needed=%v changed=%v", existingHostnames, neededHostnames, hostnamesChanged)
-			}
-		}
-
-		// Determine if recreation is needed
-		if !needsRecreation {
-			if portsChanged || hostnamesChanged {
-				if portsChanged && hostnamesChanged {
-					util.Debug("Router ports and hostnames have changed, will recreate router")
-				} else if portsChanged {
-					util.Debug("Router ports have changed, will recreate router")
-				} else {
-					util.Debug("Router hostnames have changed, will recreate router")
-				}
-				needsRecreation = true
-			} else {
-				util.Debug("Router ports and hostnames have not changed, skipping recreation")
-			}
-		}
-	} else {
-		// Router is not running, needs to be started
-		needsRecreation = true
 	}
 
 	if needsRecreation {
@@ -183,6 +148,17 @@ func StartDdevRouter() error {
 		}
 	} else {
 		output.UserOut.Printf("%s already running, pushing new config...", nodeps.RouterContainer)
+
+		// Update network aliases in place rather than recreating the container.
+		// Starting any project with a new hostname changes the router's aliases,
+		// so without this every additional project start would recreate the router.
+		if hostnamesChanged {
+			neededHostnames := determineRouterHostnames(activeApps)
+			util.Debug("Updating router network aliases in place to %v", neededHostnames)
+			if err = dockerutil.UpdateContainerNetworkAliases(router.ID, dockerutil.NetName, neededHostnames); err != nil {
+				return fmt.Errorf("failed to update router network aliases: %v", err)
+			}
+		}
 
 		// Even if we don't recreate, update the Traefik config for the new project
 		err = PushGlobalTraefikConfig(activeApps)

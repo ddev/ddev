@@ -986,6 +986,34 @@ func GetRouterNetworkAliases(containerID string) ([]string, error) {
 	return aliases, nil
 }
 
+// UpdateContainerNetworkAliases sets the container's network aliases on the
+// given network. Docker only allows aliases to be set at connect time, so this
+// disconnects and reconnects the container with the new alias set, which avoids
+// recreating the container.
+func UpdateContainerNetworkAliases(containerID, networkName string, aliases []string) error {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return err
+	}
+
+	if _, err = apiClient.NetworkDisconnect(ctx, networkName, client.NetworkDisconnectOptions{
+		Container: containerID,
+	}); err != nil {
+		return fmt.Errorf("failed to disconnect container %s from network %s: %v", containerID, networkName, err)
+	}
+
+	if _, err = apiClient.NetworkConnect(ctx, networkName, client.NetworkConnectOptions{
+		Container: containerID,
+		EndpointConfig: &network.EndpointSettings{
+			Aliases: aliases,
+		},
+	}); err != nil {
+		return fmt.Errorf("failed to reconnect container %s to network %s: %v", containerID, networkName, err)
+	}
+
+	return nil
+}
+
 // Exec does a simple docker exec, no frills, it executes the command
 // with the specified uid (or defaults to root=0 if empty uid)
 // Returns stdout, stderr, error
