@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DDEV router: no matching project</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 3rem auto; max-width: 40rem; line-height: 1.5; color: #222; padding: 0 1rem; }
+  h1 { font-size: 1.4rem; }
+  code { background: #f0f0f0; padding: 0.1rem 0.3rem; border-radius: 3px; }
+  ul { padding-left: 1.2rem; }
+</style>
+</head>
+<body>
+<h1>DDEV router received this request, but has nowhere to send it</h1>
+<p>
+  This page is served directly by <code>ddev-router</code> (Traefik). It means the request
+  reached the router, but the router has no project configured to handle this hostname/port.
+  This is <strong>not</strong> a 404 from your project's web application.
+</p>
+<p>A few things to check:</p>
+<ul>
+  <li>Is the project started? Run <code>ddev start</code> in the project directory.</li>
+  <li>Does the hostname you used match the project's configured hostnames? Run <code>ddev describe</code> in the project directory to see the URLs it responds to.</li>
+  <li>Is there a typo in the URL you used?</li>
+</ul>
+<p>
+  If none of that helps, see the
+  <a href="https://docs.ddev.com/">DDEV documentation</a> or ask in the
+  <a href="https://ddev.com/s/discord">DDEV Discord</a>.
+</p>
+</body>
+</html>

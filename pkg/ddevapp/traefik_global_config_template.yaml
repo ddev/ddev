@@ -1,5 +1,40 @@
 #ddev-generated
 
+# Catch-all fallback: any request that doesn't match a real project's router
+# falls through to here instead of Traefik's bare "404 page not found".
+# It's served by a small responder (socat) running inside the ddev-router
+# container itself that answers with an actual 404 status and an
+# informative body, see docker-entrypoint.sh and unmatched-route.html in
+# containers/ddev-traefik-router/.
+# The low `priority` ensures real project routers, whose rules are always
+# more specific, are matched first.
+http:
+  routers:
+    ddev-router-fallback-http:
+      rule: "PathPrefix(`/`)"
+      priority: 1
+      entrypoints:
+        {{ range $port := .RouterPorts }}
+        - http-{{$port}}
+        {{ end }}
+      service: ddev-router-fallback
+      tls: false
+    ddev-router-fallback-https:
+      rule: "PathPrefix(`/`)"
+      priority: 1
+      entrypoints:
+        {{ range $port := .RouterPorts }}
+        - http-{{$port}}
+        {{ end }}
+      service: ddev-router-fallback
+      tls: {}
+
+  services:
+    ddev-router-fallback:
+      loadbalancer:
+        servers:
+          - url: "http://127.0.0.1:8999"
+
 tls:
   stores:
   {{ if and (not .UseLetsEncrypt) .HasCAROOT }}
