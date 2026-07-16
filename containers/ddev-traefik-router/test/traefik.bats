@@ -116,6 +116,15 @@ EOF"
   assert_output "404"
 }
 
+@test "verify unmatched hostname response includes X-Ddev-404-Source header" {
+  # Lets curl -I/HEAD and monitoring tools identify the source of this 404
+  # without parsing the body, matching the header ddev-webserver's own
+  # 404 explanation (fixes #8588) adds for its own layer.
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -s -D - -o /dev/null -H "Host: nonexistent.ddev.site" http://127.0.0.1:80/'
+  assert_success
+  assert_output --partial "X-Ddev-404-Source: ddev-router (traefik)"
+}
+
 @test "verify a real project router still takes priority over the catch-all fallback" {
   # d11.ddev.site is configured in testdata/config/d11.yaml with a specific Host()
   # rule, so it should be matched instead of the low-priority catch-all fallback.
