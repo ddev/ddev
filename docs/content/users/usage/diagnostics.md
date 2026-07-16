@@ -1,18 +1,22 @@
+---
+search:
+  boost: 2
+---
+
 <a name="opt-in-usage-information"></a>
 
 # Opt-In Usage Information
 
 When you start DDEV for the first time or install a new release, you’ll be asked whether to send usage and error information to DDEV’s developers.
 
+!!!tip "See [DDEV Live Usage Statistics](https://ddev.com/usage-stats/)"
+
 Regardless of your choice, you can change this at any time using one of these approaches:
 
-- `ddev config global --instrumentation-opt-in=false` (or `=true`), which sets `instrumentation_opt_in` in `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../usage/architecture.md#global-files))
+- `ddev config global --instrumentation-opt-in=false` (or `=true`), which sets [`instrumentation_opt_in`](../configuration/config.md#instrumentation_opt_in) in `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../usage/architecture.md#global-files))
 - `export DDEV_NO_INSTRUMENTATION=true` to disable it regardless of the config file setting
 
 Usage information is also never collected in automated workflows where `CI=true` is set in the environment.
-
-!!!tip "See the aggregated stats"
-    The anonymized, aggregated usage statistics gathered from opted-in users are published at [DDEV Live Usage Statistics](https://ddev.com/usage-stats/).
 
 If you choose to share diagnostics, it helps us tremendously in our effort to improve the tool. DDEV tracks three kinds of events: `Identify` (about your machine), `Command` (which command you ran), and `Project` (your project's configuration). Here’s an example of what we might see:
 
