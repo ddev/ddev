@@ -30,6 +30,7 @@ type BackdropSettings struct {
 	SiteSettingsDdev string
 	DockerIP         string
 	DBPublishedPort  int
+	HasDBContainer   bool
 }
 
 // NewBackdropSettings produces a BackdropSettings object with default values.
@@ -50,6 +51,7 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 		SiteSettingsDdev: "settings.ddev.php",
 		DockerIP:         dockerIP,
 		DBPublishedPort:  dbPublishedPort,
+		HasDBContainer:   !app.IsDBOmitted(),
 	}
 }
 

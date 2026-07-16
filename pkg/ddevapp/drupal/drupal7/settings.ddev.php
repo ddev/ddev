@@ -9,6 +9,7 @@
  * comment is removed.
  */
 
+{{ if $config.HasDBContainer -}}
 $host = "{{ $config.DatabaseHost }}";
 $port = {{ $config.DatabasePort }};
 $driver = "{{ $config.DatabaseDriver }}";
@@ -27,6 +28,7 @@ $databases['default']['default']['host'] = $host;
 $databases['default']['default']['driver'] = $driver;
 $databases['default']['default']['port'] = $port;
 
+{{ end -}}
 $drupal_hash_salt = '{{ $config.HashSalt }}';
 
 // This will prevent Drupal from setting read-only permissions on sites/default.
