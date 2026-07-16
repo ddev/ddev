@@ -34,7 +34,7 @@ downloads=(drupal-7.54 commerce_kickstart-7.x-2.45 drupal-8.3.2)
 
 for ((i=0; i<${#sites[@]}; ++i)); do
 	site=${sites[$i]}
-	base_url=http://$site.ddev.local
+	base_url=http://$site.ddev.site
 
 
 	if [ ! -d "$site" ] ; then
@@ -86,7 +86,7 @@ END
     elapsed=$($CURLIT -fL $base_url)
     echo "${BLUE}$site: anon curl ($?) again after site install: $elapsed ${RESET}"
 
-	$TIMEIT ddev exec drush uli -l $site.ddev.local >$site.uli.txt 2>&1 || (echo "Failed drush uli" && continue)
+	$TIMEIT ddev exec drush uli -l $site.ddev.site >$site.uli.txt 2>&1 || (echo "Failed drush uli" && continue)
 	echo "${BLUE}$site: ddev uli: $(cat time.out) ${RESET}"
 
 	# This technique doesn't work on d8 due to some new form fields on the uli page.
