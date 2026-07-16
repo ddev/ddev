@@ -5,9 +5,7 @@ ENV TRAEFIK_MONITOR_PORT=10999
 # actual HTTP 404 response, see docker-entrypoint.sh and unmatched-route.html
 RUN apk add --no-cache bash curl file htop jq openssl socat vim yq
 WORKDIR /mnt/ddev-global-cache/traefik
-ADD monitor-traefik-stderr.sh docker-entrypoint.sh ddev-router-fallback-responder.sh /usr/local/bin/
-ADD unmatched-route.html /var/www/ddev-router-fallback/unmatched-route.html
-COPY /traefik_healthcheck.sh /healthcheck.sh
+COPY files /
 RUN chmod ugo+rx /usr/local/bin/monitor-traefik-stderr.sh /usr/local/bin/docker-entrypoint.sh /usr/local/bin/ddev-router-fallback-responder.sh /healthcheck.sh
 # Make Traefik commands work without --configFile by using default location
 # https://doc.traefik.io/traefik/getting-started/configuration-overview/#configuration-file

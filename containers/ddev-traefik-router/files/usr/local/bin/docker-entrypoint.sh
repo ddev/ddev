@@ -21,9 +21,9 @@ set -eu -o pipefail
 
 # A container restart reuses the writable layer, so a /tmp/healthy marker
 # from before the restart would otherwise survive and trigger
-# traefik_healthcheck.sh's steady-state "already healthy, sleep before
-# rechecking" fast path on the very first check of the new boot - needlessly
-# delaying detection of readiness right when it matters most.
+# healthcheck.sh's steady-state "already healthy, sleep before rechecking"
+# fast path on the very first check of the new boot - needlessly delaying
+# detection of readiness right when it matters most.
 rm -f /tmp/healthy
 
 DDEV_ROUTER_FALLBACK_PORT="${DDEV_ROUTER_FALLBACK_PORT:-8999}"
