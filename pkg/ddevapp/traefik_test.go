@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -100,6 +101,90 @@ func TestTraefikSimple(t *testing.T) {
 			testcommon.WithMessagef("Traefik should route each project hostname to the static test content"),
 		)
 	}
+}
+
+// TestTraefikSharedTLDCerts verifies that when several projects share one
+// custom (per-project) TLD, each hostname is served its own certificate. It
+// guards the overlapping-SAN regression where every per-project cert carried a
+// shared `*.<TLD>` wildcard, so Traefik 3.7.6+ (which no longer prefers an
+// exact SAN over a wildcard-only match) served one "winner" cert for the whole
+// TLD. See https://github.com/ddev/ddev/issues/8562
+func TestTraefikSharedTLDCerts(t *testing.T) {
+	if globalconfig.GetCAROOT() == "" {
+		t.Skip("Skipping because mkcert/HTTPS is not available (no CAROOT)")
+	}
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+		// These providers don't predictably publish 443, which the in-container
+		// openssl below needs.
+		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
+	}
+
+	origDir, _ := os.Getwd()
+
+	ddevapp.PowerOff()
+	origRouter := globalconfig.DdevGlobalConfig.Router
+	globalconfig.DdevGlobalConfig.Router = types.RouterTypeTraefik
+	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	// A dotless single-label TLD, so a wrongly-served wildcard cert fails
+	// visibly and this doesn't collide with real .test/.ddev.site projects.
+	const sharedTLD = "ddevt8562"
+
+	// Two projects on the same TLD with distinct names, so a single "winner"
+	// cert would fail one of them.
+	projectNames := []string{"ddevt8562-a", "ddevt8562-b"}
+	var apps []*ddevapp.DdevApp
+	for _, name := range projectNames {
+		dir := testcommon.CreateTmpDir(name)
+		app, err := ddevapp.NewApp(dir, true)
+		require.NoError(t, err)
+		app.Name = name
+		app.Type = nodeps.AppTypePHP
+		app.ProjectTLD = sharedTLD
+		err = os.WriteFile(filepath.Join(dir, "index.php"), []byte("<?php print '"+name+"';"), 0644)
+		require.NoError(t, err)
+		err = app.WriteConfig()
+		require.NoError(t, err)
+		apps = append(apps, app)
+	}
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		for _, app := range apps {
+			_ = app.Stop(true, false)
+			_ = os.RemoveAll(app.AppRoot)
+		}
+		ddevapp.PowerOff()
+		globalconfig.DdevGlobalConfig.Router = origRouter
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	})
+
+	for _, app := range apps {
+		err = app.StartAndWait(5)
+		require.NoError(t, err)
+	}
+
+	// For each project, ask the router (via SNI) for its own hostname and
+	// confirm the served cert carries that hostname. openssl runs inside the
+	// project's web container, whose hostname resolves to the router.
+	for _, app := range apps {
+		host := app.GetHostname()
+		httpsPort := app.GetPrimaryRouterHTTPSPort()
+		c := fmt.Sprintf("openssl s_client -connect %s:%s -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", host, httpsPort, host)
+		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{Cmd: c})
+		require.NoError(t, err, "openssl command failed for %s, stdout='%s', stderr='%s'", host, stdout, stderr)
+		stdout = strings.Trim(stdout, "\r\n")
+		require.Contains(t, stdout, host, "SNI %s must be served a certificate carrying its own hostname, got SANs='%s'", host, stdout)
+		// The shared wildcard must no longer live on the per-project cert.
+		require.NotContains(t, stdout, "*."+sharedTLD, "per-project cert must not carry the shared *.%s wildcard, got SANs='%s'", sharedTLD, stdout)
+	}
+
+	// The wildcard fallback now lives on the default cert instead, so it still
+	// covers per-project TLD overrides.
+	defaultCertText, _, err := dockerutil.Exec("ddev-router", "openssl x509 -in /mnt/ddev-global-cache/traefik/certs/default_cert.crt -noout -text", "")
+	require.NoError(t, err)
+	require.Contains(t, defaultCertText, "*."+sharedTLD, "default certificate should carry the *.%s wildcard fallback", sharedTLD)
 }
 
 // TestTraefikVirtualHost tests Traefik with an extra VIRTUAL_HOST

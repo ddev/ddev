@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -149,9 +150,27 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	// Install default certs, except when using Let's Encrypt (when they would
 	// get used instead of Let's Encrypt certs)
 	if !globalconfig.DdevGlobalConfig.UseLetsEncrypt && globalconfig.GetCAROOT() != "" {
-		c := []string{"--cert-file", filepath.Join(globalSourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(globalSourceCertsPath, "default_key.key"), "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default", "*.ddev.site"}
+		c := []string{"--cert-file", filepath.Join(globalSourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(globalSourceCertsPath, "default_key.key"), "127.0.0.1", "localhost", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default", "*.ddev.site"}
+		// Add a `*.<TLD>` wildcard for every TLD in use (global plus each active
+		// project's). This is the fallback for hosts that no per-project cert
+		// matches.
+		wildcardTLDs := map[string]bool{}
 		if globalconfig.DdevGlobalConfig.ProjectTldGlobal != "" {
-			c = append(c, "*."+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
+			wildcardTLDs[globalconfig.DdevGlobalConfig.ProjectTldGlobal] = true
+		}
+		for _, activeApp := range activeApps {
+			if activeApp.ProjectTLD != "" {
+				wildcardTLDs[activeApp.ProjectTLD] = true
+			}
+		}
+		delete(wildcardTLDs, nodeps.DdevDefaultTLD)
+		sortedTLDs := make([]string, 0, len(wildcardTLDs))
+		for tld := range wildcardTLDs {
+			sortedTLDs = append(sortedTLDs, tld)
+		}
+		sort.Strings(sortedTLDs)
+		for _, tld := range sortedTLDs {
+			c = append(c, "*."+tld)
 		}
 
 		out, err := exec2.RunHostCommand("mkcert", c...)
@@ -496,12 +515,13 @@ func configureTraefikForApp(app *DdevApp) error {
 
 	// Assuming the certs don't exist, or they have #ddev-generated so can be replaced, create them
 	// But not if we don't have mkcert already set up.
-	if sigExists && globalconfig.GetCAROOT() != "" {
-		c := []string{"--cert-file", baseName + ".crt", "--key-file", baseName + ".key", "*.ddev.site", "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default"}
+	if sigExists && globalconfig.GetCAROOT() != "" && len(hostnames) > 0 {
+		// Stamp only this project's own hostnames onto its cert; shared
+		// wildcards and internal names live on the default cert. Putting them on
+		// every per-project cert created overlapping SANs that made Traefik
+		// serve the wrong project's cert on a shared TLD.
+		c := []string{"--cert-file", baseName + ".crt", "--key-file", baseName + ".key"}
 		c = append(c, hostnames...)
-		if app.ProjectTLD != nodeps.DdevDefaultTLD {
-			c = append(c, "*."+app.ProjectTLD)
-		}
 		out, err := exec2.RunHostCommand("mkcert", c...)
 		if err != nil {
 			util.Failed("Failed to create certificates for project, check mkcert operation: %v; err=%v", out, err)
