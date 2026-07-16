@@ -11,6 +11,9 @@ Regardless of your choice, you can change this at any time using one of these ap
 
 Usage information is also never collected in automated workflows where `CI=true` is set in the environment.
 
+!!!tip "See the aggregated stats"
+    The anonymized, aggregated usage statistics gathered from opted-in users are published at [DDEV Live Usage Statistics](https://ddev.com/usage-stats/).
+
 If you choose to share diagnostics, it helps us tremendously in our effort to improve the tool. DDEV tracks three kinds of events: `Identify` (about your machine), `Command` (which command you ran), and `Project` (your project's configuration). Here’s an example of what we might see:
 
 ```go
