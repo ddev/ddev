@@ -269,6 +269,7 @@ func init() {
 			appTypeDetect:        isShopware6App,
 			appTypeSettingsPaths: setShopware6SiteSettingsPaths,
 			uploadDirs:           getShopwareUploadDirs,
+			configOverrideAction: shopware6ConfigOverrideAction,
 			postStartAction:      shopware6PostStartAction,
 			importFilesAction:    shopware6ImportFilesAction,
 		},
