@@ -26,6 +26,42 @@ func setShopware6SiteSettingsPaths(app *DdevApp) {
 	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.ComposerRoot, ".env.local")
 }
 
+// shopware6ConfigOverrideAction exposes the ports needed by the shopware-cli
+// watchers (admin-watch/storefront-watch), so a shopware6 project can run them
+// without installing a separate add-on. Ports are only added when not already
+// present, so it is safe to re-run and it never clobbers a user's own settings.
+// The watcher environment (PROXY_URL etc.) is intentionally NOT set here: it is
+// set at runtime inside the watcher commands, where ${DDEV_PRIMARY_URL} is a live
+// variable. Putting it in web_environment is fragile (it can be replaced by a
+// later `ddev config`, and ${DDEV_PRIMARY_URL} is not expanded there).
+// Targets Shopware 6.7.4.2+ (Vite admin on 5173); see the bundled commands/web
+// watchers.
+func shopware6ConfigOverrideAction(app *DdevApp) error {
+	watcherPorts := []WebExposedPort{
+		{Name: "shopware-vite-admin", WebContainerPort: 5173, HTTPPort: 5172, HTTPSPort: 5173},
+		{Name: "shopware-storefront-proxy", WebContainerPort: 9998, HTTPPort: 8888, HTTPSPort: 9998},
+		{Name: "shopware-storefront-assets", WebContainerPort: 9999, HTTPPort: 8889, HTTPSPort: 9999},
+	}
+	for _, p := range watcherPorts {
+		if !hasWebExposedPort(app.WebExtraExposedPorts, p.WebContainerPort) {
+			app.WebExtraExposedPorts = append(app.WebExtraExposedPorts, p)
+		}
+	}
+
+	return nil
+}
+
+// hasWebExposedPort reports whether a port with the given container port is
+// already exposed, so shopware6ConfigOverrideAction does not add duplicates.
+func hasWebExposedPort(ports []WebExposedPort, containerPort int) bool {
+	for _, p := range ports {
+		if p.WebContainerPort == containerPort {
+			return true
+		}
+	}
+	return false
+}
+
 // shopware6ImportFilesAction defines the shopware6 workflow for importing user-generated files.
 func shopware6ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
 	destPath := app.calculateHostUploadDirFullPath(uploadDir)
