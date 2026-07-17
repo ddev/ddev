@@ -24,6 +24,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/settings"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	copy2 "github.com/otiai10/copy"
 	"go.yaml.in/yaml/v4"
 )
@@ -1104,6 +1105,14 @@ stopasgroup=true
 	extraWebContent = extraWebContent + "\nRUN log-stderr.sh mariadb-compat-install.sh || true\n"
 	// MariaDB 11.4+ has enabled SSL verification by default, which can cause issues.
 	extraWebContent = extraWebContent + "\nRUN log-stderr.sh mariadb-skip-ssl-wrapper-install.sh || true\n"
+
+	// For Shopware projects, bake the shopware-cli binary into the web image so
+	// the bundled shopware-cli/admin-watch/storefront-watch commands work without
+	// a separate add-on. It is pulled from the official scratch-based bin image,
+	// so nothing is compiled and no extra runtime deps land in the container.
+	if app.Type == nodeps.AppTypeShopware6 {
+		extraWebContent = extraWebContent + fmt.Sprintf("\nCOPY --from=%s /shopware-cli /usr/local/bin/shopware-cli\n", versionconstants.ShopwareCLIImage)
+	}
 
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {

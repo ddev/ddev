@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run the Shopware storefront watcher via shopware-cli
+## Usage: storefront-watch
+## Example: "ddev storefront-watch"
+## ProjectTypes: shopware6
+## MutagenSync: true
+
+# Hot-reloads the storefront through the proxy on port 9998, exposed by the
+# shopware6 project type (see shopware6ConfigOverrideAction). Targets
+# Shopware 6.7.4.2+.
+
+# The proxy/asset URLs must point at the project's DDEV URL, not localhost.
+# We set these here (not in web_environment) because DDEV_PRIMARY_URL is a live
+# variable in the container and expands correctly at runtime, and because
+# web_environment can be replaced by a later `ddev config`.
+export HOST=0.0.0.0
+export STOREFRONT_SKIP_SSL_CERT=true
+export PROXY_URL="${DDEV_PRIMARY_URL}:9998"
+
+# Absolute path so this wrapper never recurses into itself via $PATH.
+exec /usr/local/bin/shopware-cli project storefront-watch "$@"

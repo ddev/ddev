@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run shopware-cli inside the web container
+## Usage: shopware-cli [flags] [args]
+## Example: "ddev shopware-cli --version" or "ddev shopware-cli project ci"
+## ProjectTypes: shopware6
+## ExecRaw: true
+## MutagenSync: true
+
+# Call the binary by absolute path so this wrapper (which shares the name
+# "shopware-cli") can never resolve back to itself and recurse.
+if [ ! -x /usr/local/bin/shopware-cli ]; then
+  echo 'shopware-cli is not yet present in the web container.' >&2
+  echo 'It is baked into the web image for shopware6 projects; run' >&2
+  echo '"ddev restart" to rebuild the image and pick it up.' >&2
+  exit 1
+fi
+
+exec /usr/local/bin/shopware-cli "$@"
