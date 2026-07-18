@@ -388,6 +388,13 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 			}
 		}
 
+		// compose-go doesn't derive `build.platforms` from the service-level
+		// `platform`, so add it here to build an image matching the requested
+		// architecture. See https://github.com/ddev/ddev/issues/8578.
+		if service.Platform != "" && service.Build != nil && !slices.Contains(service.Build.Platforms, service.Platform) {
+			service.Build.Platforms = append(service.Build.Platforms, service.Platform)
+		}
+
 		// Add SELinux labels to bind mounts when SELinux is enabled
 		if isSELinux {
 			for i, vol := range service.Volumes {
