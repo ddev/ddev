@@ -178,6 +178,7 @@ Svelte
 SvelteKit
 Symfony
 TablePlus
+TablePro
 Traefik
 TravisCI
 TUI
@@ -678,6 +679,7 @@ system32
 systemctl
 systemd
 tableplus
+tablepro
 tar
 tasklist
 tcp

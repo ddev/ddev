@@ -1485,6 +1485,17 @@ Example:
 ddev tableplus
 ```
 
+## `tablepro`
+
+Open [TablePro](https://tablepro.app) with the current project’s database (global shell host container command). This command is only available if `TablePro.app` is installed as `/Applications/TablePro.app`.
+
+Example:
+
+```shell
+# Open the current project’s database in TablePro
+ddev tablepro
+```
+
 ## `tui`
 
 Launch the [interactive TUI dashboard](../usage/cli.md#interactive-dashboard).

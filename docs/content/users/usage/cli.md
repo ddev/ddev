@@ -49,7 +49,7 @@ The dashboard automatically detects your terminal's color capabilities and adapt
 ## Lots of Other Commands
 
 * [`ddev mysql`](../usage/commands.md#mysql) gives direct access to the MySQL client and [`ddev psql`](../usage/commands.md#psql) to the PostgreSQL `psql` client.
-* [`ddev sequelace`](../usage/commands.md#sequelace), [`ddev tableplus`](../usage/commands.md#tableplus), and [`ddev querious`](../usage/commands.md#querious) (macOS only, if the app is installed) give access to the Sequel Ace, TablePlus or Querious database browser GUIs.
+* [`ddev sequelace`](../usage/commands.md#sequelace), [`ddev tableplus`](../usage/commands.md#tableplus), [`ddev tablepro`](../usage/commands.md#tablepro), and [`ddev querious`](../usage/commands.md#querious) (macOS only, if the app is installed) give access to the Sequel Ace, TablePlus, TablePro or Querious database browser GUIs.
 * [`ddev dbeaver`](../usage/commands.md#dbeaver) (if installed) gives access to the DBeaver database browser GUI.
 * [`ddev heidisql`](../usage/commands.md#heidisql) (Windows/WSL2/Linux, if installed) gives access to the HeidiSQL database browser GUI.
 * [`ddev import-db`](../usage/commands.md#import-db) and [`ddev export-db`](../usage/commands.md#export-db) import or export SQL or compressed SQL files.
