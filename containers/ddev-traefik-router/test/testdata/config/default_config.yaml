@@ -1,0 +1,39 @@
+# This mirrors the catch-all fallback block that
+# pkg/ddevapp/traefik_global_config_template.yaml renders into
+# ~/.ddev/traefik/config/default_config.yaml, so the test container can
+# exercise the same "no matching project router" fallback behavior as a
+# real DDEV install. See containers/ddev-traefik-router/docker-entrypoint.sh
+# and unmatched-route.html for the socat responder this points to.
+
+http:
+  routers:
+    ddev-router-fallback-http:
+      rule: "PathPrefix(`/`)"
+      priority: 1
+      entrypoints:
+        - http-443
+        - http-80
+        - http-8025
+        - http-8026
+      service: ddev-router-fallback
+      tls: false
+    ddev-router-fallback-https:
+      rule: "PathPrefix(`/`)"
+      priority: 1
+      entrypoints:
+        - http-443
+        - http-80
+        - http-8025
+        - http-8026
+      service: ddev-router-fallback
+      tls: {}
+
+  services:
+    ddev-router-fallback:
+      loadbalancer:
+        servers:
+          - url: "http://127.0.0.1:8999"
+
+tls:
+  stores:
+    default: { }

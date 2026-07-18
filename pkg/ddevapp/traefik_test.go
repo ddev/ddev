@@ -103,6 +103,62 @@ func TestTraefikSimple(t *testing.T) {
 	}
 }
 
+// TestTraefikUnmatchedHostnameFallback verifies that a hostname not matched
+// by any project's router gets ddev-router's own informative 404 (see
+// containers/ddev-traefik-router/unmatched-route.html and
+// docker-entrypoint.sh), including the X-DDEV-404-Source header, instead of
+// Traefik's bare "404 page not found" - and that a real project's own
+// hostname is unaffected. Fixes #8587.
+func TestTraefikUnmatchedHostnameFallback(t *testing.T) {
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
+	}
+
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0] // 0 == wordpress
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+
+	ddevapp.PowerOff()
+	origRouter := globalconfig.DdevGlobalConfig.Router
+	globalconfig.DdevGlobalConfig.Router = types.RouterTypeTraefik
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		require.NoError(t, err)
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+		ddevapp.PowerOff()
+		globalconfig.DdevGlobalConfig.Router = origRouter
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		require.NoError(t, err)
+	})
+
+	err = app.StartAndWait(5)
+	require.NoError(t, err)
+
+	httpPort := app.GetPrimaryRouterHTTPPort()
+	bogusURL := "http://totally-bogus-nonexistent-project.ddev.site"
+	if httpPort != "80" {
+		bogusURL += ":" + httpPort
+	}
+
+	out, resp, err := testcommon.GetLocalHTTPResponse(t, bogusURL, testcommon.WithExpectStatus(http.StatusNotFound))
+	require.NoError(t, err)
+	require.Contains(t, out, "ddev-router", "expected ddev-router's own 404 explanation for an unmatched hostname")
+	require.Contains(t, out, "ddev start")
+	require.NotContains(t, out, "404 page not found", "should not be Traefik's bare default 404")
+	require.NotEmpty(t, resp.Header.Get("X-DDEV-404-Source"), "expected X-DDEV-404-Source header on the router's fallback 404")
+
+	// The project's own hostname must still work normally.
+	testcommon.AssertLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect,
+		testcommon.WithMessagef("the project's own hostname should still be routed normally, not caught by the fallback"),
+	)
+}
+
 // TestTraefikSharedTLDCerts verifies that when several projects share one
 // custom (per-project) TLD, each hostname is served its own certificate. It
 // guards the overlapping-SAN regression where every per-project cert carried a

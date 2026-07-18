@@ -99,6 +99,57 @@ EOF"
   docker exec ${CONTAINER_NAME} rm -f "${config_file}"
 }
 
+@test "verify unmatched hostname gets the informative fallback message instead of Traefik's bare 404" {
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -s -H "Host: nonexistent.ddev.site" http://127.0.0.1:80/'
+  assert_success
+  assert_output --partial "ddev-router"
+  assert_output --partial "ddev start"
+  assert_output --partial "ddev describe"
+  refute_output --partial "404 page not found"
+}
+
+@test "verify unmatched hostname returns a real HTTP 404, not 200" {
+  # The fallback body is informative, but it must still read as "not found"
+  # to browsers/scripts/monitoring, not a 200 success.
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -s -o /dev/null -w "%{http_code}" -H "Host: nonexistent.ddev.site" http://127.0.0.1:80/'
+  assert_success
+  assert_output "404"
+}
+
+@test "verify unmatched hostname response includes X-Ddev-404-Source header" {
+  # Lets curl -I/HEAD and monitoring tools identify the source of this 404
+  # without parsing the body, matching the header ddev-webserver's own
+  # 404 explanation (fixes #8588) adds for its own layer.
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -s -D - -o /dev/null -H "Host: nonexistent.ddev.site" http://127.0.0.1:80/'
+  assert_success
+  assert_output --partial "X-Ddev-404-Source: ddev-router (traefik)"
+}
+
+@test "verify a real project router still takes priority over the catch-all fallback" {
+  # d11.ddev.site is configured in testdata/config/d11.yaml with a specific Host()
+  # rule, so it should be matched instead of the low-priority catch-all fallback.
+  # Its backend container isn't actually running in this test, so Traefik
+  # returns a Bad Gateway (502) rather than the fallback's 404 - proving the
+  # specific router, not the catch-all, handled the request.
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -s -o /dev/null -w "%{http_code}" -H "Host: d11.ddev.site" http://127.0.0.1:80/'
+  assert_success
+  assert_output "502"
+}
+
+@test "verify the catch-all fallback survives a container restart" {
+  # The fallback responder must not rely on state that goes stale across a
+  # restart (an earlier darkhttpd-based implementation broke here: a leftover
+  # pidfile from the previous boot made darkhttpd refuse to start, which
+  # killed the entrypoint before Traefik itself ever started).
+  docker restart ${CONTAINER_NAME} >/dev/null
+  run containercheck
+  assert_success
+
+  run docker exec ${CONTAINER_NAME} bash -c 'curl -s -o /dev/null -w "%{http_code}" -H "Host: nonexistent.ddev.site" http://127.0.0.1:80/'
+  assert_success
+  assert_output "404"
+}
+
 @test "verify healthcheck clears warnings when issue resolved" {
   # Create an issue, capture warning, then resolve and verify warning is cleared
   # All within a single fresh container to avoid volume state issues
