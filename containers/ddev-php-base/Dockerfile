@@ -117,6 +117,16 @@ RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj
 RUN N_PREFIX=/usr/local/n n install --cleanup "${NODE_VERSION}"
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
 
+# Make /usr/local/n writable here, once, for any container user, instead of
+# recursively chgrp/chmod'ing it on every project's web image build (which was
+# slow, see https://github.com/ddev/ddev/issues/8600): use the "arbitrary UID"
+# technique of owning it by the root group (gid 0) and making it group-writable,
+# so any per-project user just needs to be a member of group 0 (added in
+# WriteBuildDockerfile in pkg/ddevapp/config.go) to get write access, with no
+# per-project recursive walk of this directory needed. See
+# https://developers.redhat.com/blog/2020/10/26/adapting-docker-and-kubernetes-containers-to-run-on-red-hat-openshift-container-platform
+RUN chgrp -R 0 /usr/local/n && chmod -R g+rwX,o-w /usr/local/n
+
 # Loop through $PHP_VERSIONS, selecting packages for the target architecture.
 RUN for v in ${PHP_VERSIONS}; do \
     /usr/local/bin/install_php_extensions.sh "$v" "${TARGETPLATFORM#linux/}"; \
