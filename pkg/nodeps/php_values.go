@@ -36,7 +36,7 @@ var ValidPHPVersions = map[string]bool{
 	PHP85: true,
 }
 
-// PreinstalledPHPVersions is list of preinstalled versions (already in ddev-php-base and ddev-webserver
+// PreinstalledPHPVersions is list of preinstalled versions (already in ddev-webserver)
 var PreinstalledPHPVersions = map[string]bool{
 	PHP82: true,
 	PHP83: true,
