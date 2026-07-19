@@ -12,7 +12,6 @@ on:
         default: ddev-webserver
         type: choice
         options:
-          - ddev-php-base
           - ddev-webserver
           - ddev-ssh-agent
           - ddev-traefik-router
@@ -101,9 +100,7 @@ jobs:
             IMAGES_TO_INSPECT=${IMAGES_TO_INSPECT}-${{ matrix.arch }}
           fi
 
-          if [ "${{ matrix.image }}" = "ddev-php-base" ]; then
-            IMAGES_TO_INSPECT="${IMAGES_TO_INSPECT} ${DOCKER_ORG}/ddev-php-prod:${TAG}-${{ matrix.arch }}"
-          elif [ "${{ matrix.image }}" = "ddev-webserver" ]; then
+          if [ "${{ matrix.image }}" = "ddev-webserver" ]; then
             IMAGES_TO_INSPECT="${IMAGES_TO_INSPECT} ${DOCKER_ORG}/ddev-webserver-prod:${TAG}-${{ matrix.arch }}"
           fi
 
@@ -158,9 +155,7 @@ jobs:
 
           MULTI_ARCH_IMAGES="${DOCKER_ORG}/${{ github.event.inputs.image }}"
 
-          if [ "${{ github.event.inputs.image }}" = "ddev-php-base" ]; then
-            MULTI_ARCH_IMAGES="${MULTI_ARCH_IMAGES} ${DOCKER_ORG}/ddev-php-prod"
-          elif [ "${{ github.event.inputs.image }}" = "ddev-webserver" ]; then
+          if [ "${{ github.event.inputs.image }}" = "ddev-webserver" ]; then
             MULTI_ARCH_IMAGES="${MULTI_ARCH_IMAGES} ${DOCKER_ORG}/ddev-webserver-prod"
           fi
 
