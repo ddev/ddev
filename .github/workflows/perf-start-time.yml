@@ -1,0 +1,113 @@
+name: Start-time performance check
+defaults:
+  run:
+    shell: bash
+
+# This checks the performance of the Dockerfile/docker-compose layers DDEV
+# generates and builds at project-build/start time (WriteBuildDockerfile,
+# app_compose_template.yaml, and the base images they build from) - not
+# container correctness, which is covered by container-tests.yml. See
+# https://github.com/ddev/ddev/issues/8600, where a change to those layers
+# regressed `ddev utility rebuild` from ~10s to 27s+ (and much worse on
+# some filesystems) without failing any existing test.
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "pkg/ddevapp/config.go"
+      - "pkg/ddevapp/app_compose_template.yaml"
+      - "containers/ddev-php-base/Dockerfile"
+      - "containers/ddev-webserver/Dockerfile"
+      - "scripts/compare-start-perf.sh"
+      - ".github/workflows/perf-start-time.yml"
+  push:
+    branches: [ main ]
+    paths:
+      - "pkg/ddevapp/config.go"
+      - "pkg/ddevapp/app_compose_template.yaml"
+      - "containers/ddev-php-base/Dockerfile"
+      - "containers/ddev-webserver/Dockerfile"
+      - "scripts/compare-start-perf.sh"
+  schedule:
+    # Nightly trend check against the latest release, regardless of what
+    # changed - catches drift from base-image updates on Docker Hub, etc.
+    - cron: '17 00 * * *'
+  workflow_dispatch:
+    inputs:
+      baseline:
+        description: 'Baseline ref to compare against (default: latest release tag on schedule/push, PR base commit on pull_request)'
+        required: false
+        default: ''
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  start-perf-regression:
+    name: ddev start / ddev utility rebuild performance
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Need history for both the current commit and the baseline ref.
+          fetch-depth: 0
+
+      - name: Install test dependencies (linux-setup.sh)
+        run: ./.github/workflows/linux-setup.sh
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+      - name: Determine baseline ref
+        id: baseline
+        run: |
+          if [ -n "${{ inputs.baseline }}" ]; then
+            ref="${{ inputs.baseline }}"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            ref="${{ github.event.pull_request.base.sha }}"
+          else
+            ref=$(git describe --tags --abbrev=0)
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      # Comparing two refs on the same runner in the same job cancels out
+      # most of the noise inherent to shared GitHub-hosted runners, but
+      # some run-to-run jitter is unavoidable. This is informational only
+      # (not a required check) until we've watched it for stability.
+      - name: Compare ddev start / ddev utility rebuild performance
+        env:
+          DDEV_NO_INSTRUMENTATION: "true"
+        run: |
+          set -eu -o pipefail
+          scripts/compare-start-perf.sh -n 3 -b 3 -m off -P \
+            "${{ steps.baseline.outputs.ref }}" "${{ github.sha }}" \
+            2>&1 | tee /tmp/perf-compare.log
+
+      - name: Post summary
+        if: always()
+        run: |
+          {
+            echo "### Start/rebuild performance: baseline (\`${{ steps.baseline.outputs.ref }}\`) vs this commit"
+            echo '```'
+            cat /tmp/perf-compare.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
