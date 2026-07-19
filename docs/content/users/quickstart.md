@@ -2506,7 +2506,11 @@ ddev config --upload-dirs=sites/assets/files && ddev restart
 
     Log into the admin site (`/admin`) using the web browser. The default credentials are username `admin` and password `shopware`. You can use the web UI to install sample data or accomplish many other tasks.
 
-    For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
+    For more advanced tasks such as
+    - using shopware-cli,
+    - running the Storefront and Admin Watchers or
+    - mirroring production media
+    see [notebook.vanwittlaer.de](https://notebook.vanwittlaer.de/ddev-for-shopware/).
 
     ??? tip "Prefer to run as a script?"
         To run the whole setup as a script, examine and run this script:
