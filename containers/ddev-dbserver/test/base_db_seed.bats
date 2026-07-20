@@ -58,7 +58,13 @@ function make_seed {
   [ "${health}" = "healthy" ]
 
   docker exec "${name}" mysql -udb -pdb --database=db -e "CREATE TABLE ${marker_table} (id INT);"
-  docker exec "${name}" bash -c "mariabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/seed.log | ${SEED_COMPRESS}" >"${outfile}"
+  # mariabackup/mbstream on MariaDB, xtrabackup/xbstream on MySQL (and some
+  # older MariaDB) -- same detection docker-entrypoint.sh itself uses.
+  docker exec "${name}" bash -c "
+    backuptool=mariabackup; streamtool=mbstream
+    if command -v xtrabackup >/dev/null 2>&1; then backuptool=xtrabackup; streamtool=xbstream; fi
+    \${backuptool} --backup --stream=\${streamtool} --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/seed.log | ${SEED_COMPRESS}
+  " >"${outfile}"
 
   docker rm -f "${name}" >/dev/null
   docker volume rm "${vol}" >/dev/null
