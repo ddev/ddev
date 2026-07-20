@@ -137,8 +137,8 @@ fi
 # chmod -f ugo-w /etc/mysql/version-conf.d/*.cnf
 
 
-# If mariadb has not been initialized, copy in the base image from either the default starter image (/mysqlbase/base_db.gz)
-# or from a provided $snapshot_dir.
+# If mariadb has not been initialized, copy in the base image from either the default starter image
+# (/mysqlbase/base_db.zst if present, otherwise /mysqlbase/base_db.gz) or from a provided $snapshot_dir.
 if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
     # If snapshot_dir is not set, this is a normal startup, so
     # tell healthcheck to wait by touching /tmp/initializing
@@ -148,8 +148,16 @@ if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
     if [ "${target:-}" = "" ]; then
       target=${snapshot:-/var/tmp/base_db}
       mkdir -p ${target} && cd ${target}
-      snapshot=/mysqlbase/base_db.gz
-      gunzip -c ${snapshot} | ${STREAMTOOL} -x
+      # Prefer a zstd-compressed base database if present; zstdmt decompresses
+      # in parallel and is much faster than single-threaded gunzip.
+      if [ -f /mysqlbase/base_db.zst ]; then
+        snapshot=/mysqlbase/base_db.zst
+        # Only use zstdmt if multithreading is supported (zstd 1.2.0+).
+        "$(command -v zstdmt 2>/dev/null || echo zstd)" -dc --quiet ${snapshot} | ${STREAMTOOL} -x
+      else
+        snapshot=/mysqlbase/base_db.gz
+        gunzip -c ${snapshot} | ${STREAMTOOL} -x
+      fi
     fi
     name=$(basename $target)
 
