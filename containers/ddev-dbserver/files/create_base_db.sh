@@ -110,7 +110,13 @@ PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null  
 # mysql-8.0 or mariadb-10.5.
 server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mysql"; if ($2 ~ /^MariaDB/) { server_type="mariadb" }; print server_type "_" $1 }' /tmp/raw_mysql_version.txt)
 echo ${server_db_version} >${DATADIR:-/var/lib/mysql}/db_mariadb_version.txt
-${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=${MYSQL_UNIX_PORT}  | gzip >${OUTDIR}/base_db.gz
+# Prefer zstd (parallel decompression, smaller archive); fall back to gzip
+# for base images that lack zstd (e.g. MariaDB 5.5 on Ubuntu 14.04).
+if command -v zstdmt >/dev/null 2>&1 || command -v zstd >/dev/null 2>&1; then
+  ${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=${MYSQL_UNIX_PORT} | "$(command -v zstdmt 2>/dev/null || echo zstd)" --quiet >${OUTDIR}/base_db.zst
+else
+  ${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=${MYSQL_UNIX_PORT} | gzip >${OUTDIR}/base_db.gz
+fi
 rm -f /tmp/raw_mysql_version.txt
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
