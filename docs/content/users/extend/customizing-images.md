@@ -223,6 +223,16 @@ An example of using `$TARGETARCH` would be:
 RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/${TARGETARCH}"
 ```
 
+## Seeding a Custom Starter Database in `dbimage`
+
+If you publish a derived `dbimage` (for example a CI-built image with your production dataset baked in, so teammates or preview environments get a ready-to-use database with no import step), bake it in as `/mysqlbase/custom/base_db.zst` using a `.ddev/db-build/Dockerfile`:
+
+```dockerfile
+COPY base_db.zst /mysqlbase/custom/base_db.zst
+```
+
+The database container uses this seed the first time its data volume is created (a brand-new project, or after `ddev delete` and `ddev start`), instead of the stock DDEV starter database. It's checked ahead of the stock seed but *after* any project-level [`initializer` snapshot](../usage/database-management.md#snapshots) — so a teammate can still override your baked-in seed for their own project just by dropping an `initializer` snapshot into `.ddev/db_snapshots`, without rebuilding the image.
+
 ## Adding EOL Versions of PHP
 
 If your project requires multiple versions of PHP—such as using PHP 8.3 but also needing an older, unsupported, unmaintained version like PHP 7.4 for specific scripts—and you don’t want to fully switch to PHP 7.4 with `ddev config --php-version=7.4`, you can install it using the `pre.Dockerfile.*` technique from the previous section.
