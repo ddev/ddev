@@ -4143,6 +4143,66 @@ func TestWebserverMissingIndexExplanation(t *testing.T) {
 	}
 }
 
+// TestWebserverPhpstatusUnderMutagen checks that /phpstatus (the container's
+// php-fpm healthcheck endpoint, aliased to /var/www/phpstatus.php outside the
+// docroot) still works under Mutagen on both webservers.
+//
+// Mutagen mounts a nocopy Docker volume at /var/www (see the "project_mutagen"
+// volume in app_compose_template.yaml), which shadows /var/www/phpstatus.php
+// baked into the image. On apache, the php*-fpm.conf FilesMatch handler's
+// `-f %{REQUEST_FILENAME}` guard would then block the proxy to php-fpm since
+// the file doesn't exist on disk -- this is why apache-site.conf has an
+// explicit <Location "/phpstatus"> that unconditionally sets the proxy
+// handler, bypassing that guard for this one virtual endpoint.
+func TestWebserverPhpstatusUnderMutagen(t *testing.T) {
+	if nodeps.IsWindows() {
+		t.Skip("Skipping TestWebserverPhpstatusUnderMutagen on Windows, Mutagen setup takes too long")
+	}
+	assert := asrt.New(t)
+	packageDir, _ := os.Getwd()
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+	appDir := filepath.Join(testDir, t.Name())
+	err := os.MkdirAll(appDir, 0755)
+	require.NoError(t, err)
+	err = os.Chdir(appDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(appDir, true)
+	require.NoError(t, err)
+	app.Type = nodeps.AppTypePHP
+	app.PerformanceMode = types.PerformanceModeMutagen
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(packageDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
+
+	for _, webserverType := range []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM} {
+		app.WebserverType = webserverType
+		err = app.WriteConfig()
+		require.NoError(t, err)
+
+		testcommon.ClearDockerEnv()
+		startErr := app.Start()
+		if startErr != nil {
+			appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+			assert.NoError(getLogsErr)
+			t.Fatalf("app.Start() failure for WebserverType=%s: err=%v, health:\n%s\n\nlogs:\n=====\n%s\n=====\n", webserverType, startErr, health, appLogs)
+		}
+
+		out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/phpstatus")
+		require.NoError(t, err, "for WebserverType=%s expected /phpstatus to succeed under Mutagen, got body:\n%s", webserverType, out)
+		require.Regexp(t, "idle processes|php is working", out, "for WebserverType=%s expected /phpstatus content", webserverType)
+
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+	}
+}
+
 // TestInternalAndExternalAccessToURL checks we can access content
 // from host and from inside container by URL (with port)
 // Related test: TestNetworkAliases
