@@ -35,6 +35,30 @@ teardown() {
   run ddev exec console system:install --basic-setup
   assert_success
 
+  # --- shopware-cli watcher tooling bundled with the shopware6 project type ---
+
+  # The shopware-cli binary is baked into the web image, and the wrapper execs it
+  # by absolute path so it can't recurse into itself via $PATH. A working
+  # --version proves both the COPY --from image build and the wrapper, and pins
+  # the baked-in binary to the version in ShopwareCLIImage.
+  # Keep in sync with ShopwareCLIImage in pkg/versionconstants/versionconstants.go.
+  run ddev shopware-cli --version
+  assert_success
+  assert_output --partial "0.16.7"
+
+  # The watcher commands are bundled and gated to shopware6: `ddev help` only
+  # resolves them if ProjectTypes let them register for this project type.
+  run ddev help admin-watch
+  assert_success
+  run ddev help storefront-watch
+  assert_success
+
+  # admin-watch validates its args (and thus actually runs in-container) without
+  # starting the long-running Vite server.
+  run ddev admin-watch
+  assert_failure
+  assert_output --partial "Usage: ddev admin-watch"
+
   DDEV_DEBUG=true run ddev launch /admin
   assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
   assert_success
