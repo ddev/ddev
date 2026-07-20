@@ -15,6 +15,13 @@
 load functions.sh
 
 function setup_file {
+  # base_db seed overrides aren't supported on these very old, EOL database
+  # versions. (The stock, unmounted base_db path for them is still covered
+  # by basic_database.bats.)
+  if [ "${DB_TYPE}:${DB_VERSION}" = "mysql:5.5" ] || [ "${DB_TYPE}:${DB_VERSION}" = "mariadb:5.5" ]; then
+    skip "base_db seed overrides are not supported on ${DB_TYPE} ${DB_VERSION}"
+  fi
+
   export SEED_DIR="${BATS_FILE_TMPDIR}/base_db_seeds"
   mkdir -p "${SEED_DIR}"
 

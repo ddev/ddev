@@ -1938,7 +1938,9 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		// base_db "initializer" seeding is only wired up for MariaDB/MySQL
 		// (containers/ddev-dbserver); PostgreSQL uses a different image/entrypoint.
-		if dbType == nodeps.MariaDB || dbType == nodeps.MySQL {
+		// Not supported on the very old, EOL 5.5 versions of either.
+		isVeryOldDB := dbVersion == "5.5"
+		if (dbType == nodeps.MariaDB || dbType == nodeps.MySQL) && !isVeryOldDB {
 			// db currently has the 2-row "users" table from the snapshot restore above.
 			// Snapshotting it as "initializer" and then wiping the db volume and
 			// restarting should restore this same data automatically, ahead of the
