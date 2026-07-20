@@ -26,7 +26,7 @@ var WebTag = "20260709_mysql_client" // Note that this can be overridden by make
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20260628_rfay_mysql_hardened"
+var BaseDBTag = "20260720_weitzman_zstd_base_db"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
