@@ -331,7 +331,7 @@ func TestShopware6WebImageDockerfile(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			testDir := testcommon.CreateTmpDir(t.Name())
+			testDir := testcommon.CreateTmpDir(tc.name)
 			t.Cleanup(func() {
 				_ = os.Chdir(origDir)
 				_ = os.RemoveAll(testDir)
