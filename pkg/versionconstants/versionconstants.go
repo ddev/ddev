@@ -49,11 +49,6 @@ var XhguiTag = "v1.25.3"
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"
 
-// ShopwareCLIImage is the image whose statically-linked shopware-cli binary is
-// baked into the web image for shopware6 projects. Pinned to a specific version
-// (rather than the floating ":bin" tag) for reproducible builds.
-var ShopwareCLIImage = "shopware/shopware-cli:bin-0.16.7"
-
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
 

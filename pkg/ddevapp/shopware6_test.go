@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,7 +9,6 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -308,54 +306,6 @@ func TestShopware6ConfigOverrideAction(t *testing.T) {
 		require.NotNil(t, findWebExposedPort(app.WebExtraExposedPorts, 5173))
 		require.NotNil(t, findWebExposedPort(app.WebExtraExposedPorts, 9999))
 	})
-}
-
-// TestShopware6WebImageDockerfile verifies that the shopware-cli binary is baked
-// into the generated web image Dockerfile for shopware6 projects (via the COPY
-// --from=shopware/shopware-cli:bin line), and that no other project type gets it.
-// This exercises the real RenderComposeYAML path, so it requires Docker.
-func TestShopware6WebImageDockerfile(t *testing.T) {
-	origDir, err := os.Getwd()
-	require.NoError(t, err)
-
-	copyLine := fmt.Sprintf("COPY --from=%s /shopware-cli /usr/local/bin/shopware-cli", versionconstants.ShopwareCLIImage)
-
-	cases := []struct {
-		name       string
-		appType    string
-		expectCopy bool
-	}{
-		{"shopware6-gets-binary", nodeps.AppTypeShopware6, true},
-		{"php-does-not", nodeps.AppTypePHP, false},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			testDir := testcommon.CreateTmpDir(tc.name)
-			t.Cleanup(func() {
-				_ = os.Chdir(origDir)
-				_ = os.RemoveAll(testDir)
-			})
-
-			app, err := ddevapp.NewApp(testDir, false)
-			require.NoError(t, err)
-			app.Type = tc.appType
-			require.NoError(t, app.WriteConfig())
-
-			// RenderComposeYAML writes .webimageBuild/Dockerfile as a side effect.
-			_, err = app.RenderComposeYAML()
-			require.NoError(t, err)
-
-			dockerfile, err := fileutil.ReadFileIntoString(app.GetConfigPath(".webimageBuild/Dockerfile"))
-			require.NoError(t, err)
-
-			if tc.expectCopy {
-				require.Contains(t, dockerfile, copyLine, "shopware6 web image Dockerfile should copy in shopware-cli")
-			} else {
-				require.NotContains(t, dockerfile, copyLine, "%s web image Dockerfile should not copy in shopware-cli", tc.appType)
-			}
-		})
-	}
 }
 
 // countWebExposedPort returns the number of ports with the given container port.

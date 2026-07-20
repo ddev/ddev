@@ -37,14 +37,14 @@ teardown() {
 
   # --- shopware-cli watcher tooling bundled with the shopware6 project type ---
 
-  # The shopware-cli binary is baked into the web image, and the wrapper execs it
-  # by absolute path so it can't recurse into itself via $PATH. A working
-  # --version proves both the COPY --from image build and the wrapper, and pins
-  # the baked-in binary to the version in ShopwareCLIImage.
-  # Keep in sync with ShopwareCLIImage in pkg/versionconstants/versionconstants.go.
+  # The shopware-cli binary is baked into the web image (downloaded from its
+  # GitHub release), and the wrapper execs it by absolute path so it can't recurse
+  # into itself via $PATH. A working --version proves both the image build and the
+  # wrapper. The version floats with the "latest" release, so we don't assert a
+  # literal; we just require a version-shaped string.
   run ddev shopware-cli --version
   assert_success
-  assert_output --partial "0.16.7"
+  assert_output --regexp '[0-9]+\.[0-9]+\.[0-9]+'
 
   # The watcher commands are bundled and gated to shopware6: `ddev help` only
   # resolves them if ProjectTypes let them register for this project type.
