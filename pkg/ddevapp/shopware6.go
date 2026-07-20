@@ -12,6 +12,30 @@ import (
 	copy2 "github.com/otiai10/copy"
 )
 
+// shopwareCLIInstallDockerfile is the Dockerfile fragment that installs the
+// shopware-cli binary into the web image for shopware6 projects. It downloads
+// the official GitHub release rather than pulling the DockerHub image, and uses
+// the version-less "latest" asset so there is no pinned version to keep in sync.
+// TARGETARCH (amd64/arm64) is provided by the DDEV-injected build Dockerfile and
+// mapped to shopware-cli's release naming (x86_64/arm64).
+// tar --no-same-owner is required: the release tarball records the goreleaser
+// build user (uid/gid 1001), and tar-as-root would otherwise preserve it, leaving
+// the binary owned by 1001:1001 (and writable by the container's runtime user)
+// instead of root:root like every other tool in /usr/local/bin.
+const shopwareCLIInstallDockerfile = `
+### DDEV-injected shopware-cli install for shopware6 projects
+RUN case "${TARGETARCH}" in \
+      amd64) sw_arch=x86_64 ;; \
+      arm64) sw_arch=arm64 ;; \
+      *) echo "shopware-cli: unsupported TARGETARCH=${TARGETARCH}" >&2; exit 1 ;; \
+    esac && \
+    curl --fail -sSL "https://github.com/shopware/shopware-cli/releases/latest/download/shopware-cli_Linux_${sw_arch}.tar.gz" -o /tmp/shopware-cli.tar.gz && \
+    tar --no-same-owner -xzf /tmp/shopware-cli.tar.gz -C /usr/local/bin shopware-cli && \
+    chmod 0755 /usr/local/bin/shopware-cli && \
+    rm -f /tmp/shopware-cli.tar.gz && \
+    /usr/local/bin/shopware-cli --version
+`
+
 // isShopware6App returns true if the app is of type shopware6
 func isShopware6App(app *DdevApp) bool {
 	isShopware6, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json"), `"name": "shopware/production"`)
