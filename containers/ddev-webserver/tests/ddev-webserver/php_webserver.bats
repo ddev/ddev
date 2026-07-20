@@ -150,6 +150,30 @@ setup() {
   done
 }
 
+@test "verify a directly-requested nonexistent .php file for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  # A URL for a .php file that doesn't exist on disk is handled differently
+  # by each webserver's PHP handler:
+  #   - nginx: `try_files $uri =404;` in the `\.php$` location block rejects
+  #     it before the request ever reaches php-fpm, so nginx's own
+  #     error_page fires and ddev-webserver's explanatory 404 is shown.
+  #   - apache: the FilesMatch handler for *.php/.phar/.phtml proxies to
+  #     php-fpm unconditionally (no `-f %{REQUEST_FILENAME}` existence
+  #     check), so php-fpm itself returns its own "No input file specified"
+  #     404 with a body, which Apache passes through unchanged
+  #     (ProxyErrorOverride is off) -- ddev-webserver's message never
+  #     appears for this case.
+  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/this-does-not-exist.php
+  assert_success
+  assert_output --partial "404"
+  run curl -sI 127.0.0.1:$HOST_HTTP_PORT/this-does-not-exist.php
+  assert_success
+  if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then
+    refute_output --partial "X-Ddev-404-Source"
+  else
+    assert_output --partial "X-Ddev-404-Source"
+  fi
+}
+
 @test "verify webserver 404s do not shadow app-generated 404 bodies for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # An existing PHP script that itself sends a 404 status with its own body
   # (as a framework's own "not found" route would) must be passed through
