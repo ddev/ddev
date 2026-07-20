@@ -21,9 +21,14 @@ function setup_file {
   # Match whatever compressor create_base_db.sh actually used to build this
   # image's stock seed, so the override seeds we build here use the same
   # extension the entrypoint expects for this ${DB_TYPE} ${DB_VERSION}.
-  if docker run --rm --entrypoint bash "${IMAGE}" -c 'command -v zstdmt || command -v zstd' >/dev/null 2>&1; then
+  # zstdmt isn't available on every image that has zstd, so check (and use)
+  # each individually rather than assuming zstdmt if either is present.
+  if docker run --rm --entrypoint bash "${IMAGE}" -c 'command -v zstdmt' >/dev/null 2>&1; then
     export SEED_EXT="zst"
     export SEED_COMPRESS="zstdmt --quiet"
+  elif docker run --rm --entrypoint bash "${IMAGE}" -c 'command -v zstd' >/dev/null 2>&1; then
+    export SEED_EXT="zst"
+    export SEED_COMPRESS="zstd --quiet"
   else
     export SEED_EXT="gz"
     export SEED_COMPRESS="gzip"
