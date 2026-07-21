@@ -18,7 +18,7 @@
 set -eu -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
 HASH_LEN="${HASH_LEN:-10}"
 VERSIONCONSTANTS_FILE="${VERSIONCONSTANTS_FILE:-$REPO_ROOT/pkg/versionconstants/versionconstants.go}"
 
