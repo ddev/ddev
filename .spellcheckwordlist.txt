@@ -118,6 +118,7 @@ Manage
 MariaDB
 Matthias
 MinIO
+MODX
 Misconfigured
 Monorepo
 MUTAGEN_DATA_DIRECTORY
@@ -493,6 +494,7 @@ mkcert
 mkdir
 mnt
 modify
+modx
 mongo
 moodle
 mongodb

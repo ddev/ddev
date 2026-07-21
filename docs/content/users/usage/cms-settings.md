@@ -116,6 +116,16 @@ As per [Drush docs](https://www.drush.org/13.x/commands/#xdebug) you can:
             - DRUSH_SHELL_PID=PERMANENT
         ```
 
+### MODX Specifics
+
+#### MODX Settings File
+
+On [`ddev start`](../usage/commands.md#start), DDEV manages MODX Revolution's main configuration file, `core/config/config.inc.php`, for both MODX 2.x and 3.x. It writes the DDEV database credentials (database name, user, and password are all `db`; host is `db`) along with the MODX path and URL constants, so a project whose database has been imported or seeded connects and boots straight away, including the `/manager/` backend.
+
+The generated file carries the `#ddev-generated` signature. If you want to take over the file and manage it yourself, remove that signature line and DDEV will respect your version and won't overwrite it. DDEV also leaves a config file that was written by the MODX installer (which has no signature) alone.
+
+The `config.core.php` stub files (at the web root and in `core/`, `manager/`, and `connectors/`) only define `MODX_CORE_PATH` and `MODX_CONFIG_KEY`; DDEV does not touch them.
+
 ### TYPO3 Specifics
 
 #### Settings Files
