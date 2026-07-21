@@ -243,6 +243,14 @@ func init() {
 			importFilesAction:    magentoImportFilesAction,
 		},
 
+		nodeps.AppTypeMaho: {
+			settingsCreator:      createMahoSettingsFile,
+			uploadDirs:           getMahoUploadDirs,
+			appTypeSettingsPaths: setMahoSiteSettingsPaths,
+			appTypeDetect:        isMahoApp,
+			importFilesAction:    magentoImportFilesAction,
+		},
+
 		nodeps.AppTypePHP: {
 			postStartAction: nil,
 		},

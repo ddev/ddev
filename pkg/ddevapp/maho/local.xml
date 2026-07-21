@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+#ddev-generated: Automatically generated ddev local.xml
+Remove the line above or this whole comment if you want
+ddev to ignore this file and not regenerate it.
+-->
+<config>
+    <global>
+        <install>
+            <date><![CDATA[Thu, 09 Jan 2020 18:37:54 +0000]]></date>
+        </install>
+        <crypt>
+            <key><![CDATA[35e56e486261e071f3a5a93e49d07985]]></key>
+        </crypt>
+        <resources>
+            <db>
+                <table_prefix><![CDATA[]]></table_prefix>
+            </db>
+            <default_setup>
+                <connection>
+                    <host><![CDATA[{{ .DBHostname }}]]></host>
+                    <username><![CDATA[db]]></username>
+                    <password><![CDATA[db]]></password>
+                    <dbname><![CDATA[db]]></dbname>
+                    <initStatements><![CDATA[SET NAMES utf8]]></initStatements>
+                    <engine><![CDATA[mysql]]></engine>
+                    <active>1</active>
+                </connection>
+            </default_setup>
+        </resources>
+        <session_save><![CDATA[files]]></session_save>
+    </global>
+    <admin>
+        <base_path><![CDATA[admin]]></base_path>
+    </admin>
+</config>
