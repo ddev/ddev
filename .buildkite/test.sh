@@ -37,6 +37,34 @@ export DDEV_SKIP_NODEJS_TEST=true
 export DOCKER_SCAN_SUGGEST=false
 export DOCKER_SCOUT_SUGGEST=false
 
+# Find a suitable timeout command for reliability and readability
+if command -v gtimeout >/dev/null 2>&1; then
+  TIMEOUT="gtimeout"
+elif command -v timeout >/dev/null 2>&1; then
+  TIMEOUT="timeout"
+else
+  echo "Error: Neither 'gtimeout' nor 'timeout' found in PATH." >&2
+  exit 1
+fi
+
+# Helper: stop orbstack synchronously, bounded by TIMEOUT so a hang can't wedge the job.
+function stop_orbstack {
+  command -v orb >/dev/null 2>&1 || return 0
+  echo "Stopping orbstack"
+  ${TIMEOUT} 60s orb stop || true
+}
+
+# Helper: start orbstack synchronously, bounded by TIMEOUT, then switch to its docker
+# context. orb start is run in the foreground (not backgrounded) so the caller knows
+# it has actually run to completion or timed out before moving on; a backgrounded
+# orb start can be killed by CI job-cleanup before the VM finishes coming up, leaving
+# the docker context set to orbstack but the daemon not running.
+function start_orbstack {
+  echo "Starting orbstack"
+  ${TIMEOUT} 60s orb start || true
+  docker context use orbstack || true
+}
+
 # Helper: try to remove all containers via an SSH-style shell command.
 # Usage: try_cleanup_containers_via_ssh <cmd> [<args>...]
 # Returns 0 if containers are clean, 1 if containers remain (deep cleanup needed).
@@ -87,23 +115,21 @@ if [ "${os:-}" = "darwin" ]; then
       echo "--- running testbot_maintenance.sh (post-test)"
       ${TIMEOUT} 10m bash "$(dirname "$0")/testbot_maintenance.sh" || true
     fi
-    command -v orb 2>/dev/null && echo "Stopping orbstack" && (nohup orb stop &)
-    sleep 3 # Since we backgrounded orb stop, make sure it completes
+    stop_orbstack
     if [ -f /Applications/Docker.app ]; then echo "Stopping Docker Desktop" && (killall com.docker.backend || true); fi
     command -v colima 2>/dev/null && echo "Stopping colima_vz" && (colima stop -f vz || true)
     command -v limactl 2>/dev/null && echo "Stopping lima" && (limactl stop -f lima-vz || true)
     if [ -f ~/.rd/bin/rdctl ]; then echo "Stopping Rancher Desktop" && (~/.rd/bin/rdctl shutdown || true); fi
     command -v podman 2>/dev/null && echo "Stopping podman machine" && (podman machine stop || true)
-    docker context use default
-    # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop
+    docker context use default || true
+    # Leave orbstack running as the most likely to be reliable, otherwise Docker Desktop.
     if command -v orb 2>/dev/null ; then
-      docker context use orbstack
-      echo "Starting orbstack" && (nohup orb start &)
+      start_orbstack
     else
-      docker context use desktop-linux
-      open -a Docker
+      docker context use desktop-linux || true
+      open -a Docker || true
+      sleep 5
     fi
-    sleep 5
   }
   trap cleanup EXIT
 
@@ -115,8 +141,7 @@ if [ "${os:-}" = "darwin" ]; then
 
   # For Lima and Colima, as of Lima 1.0.4, having orbstack running
   # makes lima fail, see https://github.com/lima-vm/lima/issues/3145#issuecomment-2613728408
-  command -v orb 2>/dev/null && echo "Stopping orbstack" && (nohup orb stop &)
-  sleep 3 # Since we backgrounded orb stop, make sure it completes
+  stop_orbstack
 
   # Now start the docker provider we want
   case ${DOCKER_TYPE:=none} in
@@ -178,9 +203,7 @@ if [ "${os:-}" = "darwin" ]; then
       ;;
 
     "orbstack")
-      nohup orb start &
-      sleep 3
-      docker context use orbstack
+      start_orbstack
       ;;
 
     "rancher-desktop")
@@ -242,16 +265,6 @@ if [ "${DOCKER_TYPE:-}" = "docker-ce" ] || [ "${DOCKER_TYPE:-}" = "wsl2dockerins
     fi
     echo "Deep cleanup succeeded: all containers removed"
   fi
-fi
-
-# Find a suitable timeout command for reliability and readability
-if command -v gtimeout >/dev/null 2>&1; then
-  TIMEOUT="gtimeout"
-elif command -v timeout >/dev/null 2>&1; then
-  TIMEOUT="timeout"
-else
-  echo "Error: Neither 'gtimeout' nor 'timeout' found in PATH." >&2
-  exit 1
 fi
 
 # On Windows, start Docker Desktop if this job uses it, before waiting on docker.
