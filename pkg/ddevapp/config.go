@@ -1105,7 +1105,7 @@ stopasgroup=true
 	// MariaDB 11.4+ has enabled SSL verification by default, which can cause issues.
 	extraWebContent = extraWebContent + "\nRUN log-stderr.sh mariadb-skip-ssl-wrapper-install.sh || true\n"
 
-	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
+	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), filepath.Join(globalconfig.GetGlobalDdevDir(), "web-build"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
 		return "", err
 	}
@@ -1176,7 +1176,7 @@ EOF
 `, app.GetMaxContainerWaitTime(), uid, gid)
 	}
 
-	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
+	err = WriteBuildDockerfile(app, app.GetConfigPath(".dbimageBuild/Dockerfile"), filepath.Join(globalconfig.GetGlobalDdevDir(), "db-build"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
 
 	// CopyEmbedAssets of postgres healthcheck has to be done after we WriteBuildDockerfile
 	// because that deletes the .dbimageBuild directory
@@ -1210,8 +1210,8 @@ EOF
 
 // WriteBuildDockerfile writes a Dockerfile to be used in the
 // docker-compose 'build'
-// It may include the contents of .ddev/<container>-build
-func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath string, extraPackages []string, composerVersion string, extraContent string) error {
+// It may include the contents of ~/.ddev/<container>-build and .ddev/<container>-build
+func WriteBuildDockerfile(app *DdevApp, fullpath string, globalDockerfilePath string, userDockerfilePath string, extraPackages []string, composerVersion string, extraContent string) error {
 	// Start with user-built dockerfile if there is one.
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
@@ -1223,6 +1223,27 @@ func WriteBuildDockerfile(app *DdevApp, fullpath string, userDockerfilePath stri
 #ddev-generated - Do not modify this file; your modifications will be overwritten.
 ARG BASE_IMAGE="scratch"
 `
+	// If there are global prepend.Dockerfile* files, insert their contents
+	if globalDockerfilePath != "" {
+		files, err := filepath.Glob(filepath.Join(globalDockerfilePath, "prepend.Dockerfile*"))
+		if err != nil {
+			return err
+		}
+
+		for _, file := range files {
+			// Skip example files
+			if strings.HasSuffix(file, ".example") {
+				continue
+			}
+			globalContents, err := fileutil.ReadFileIntoString(file)
+			if err != nil {
+				return err
+			}
+
+			contents = contents + "\n\n### From global Dockerfile " + file + ":\n" + globalContents
+		}
+	}
+
 	// If there are user prepend.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
 		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "prepend.Dockerfile*"))
@@ -1263,6 +1284,27 @@ RUN (groupadd --gid "$gid" "$username" || groupadd "$username" || true) && \
     useradd -G tty -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || \
     useradd -G tty -l -m -s "/bin/bash" --comment '' "$username")
 `
+
+	// If there are global pre.Dockerfile* files, insert their contents
+	if globalDockerfilePath != "" {
+		files, err := filepath.Glob(filepath.Join(globalDockerfilePath, "pre.Dockerfile*"))
+		if err != nil {
+			return err
+		}
+
+		for _, file := range files {
+			// Skip example files
+			if strings.HasSuffix(file, ".example") {
+				continue
+			}
+			globalContents, err := fileutil.ReadFileIntoString(file)
+			if err != nil {
+				return err
+			}
+
+			contents = contents + "\n\n### From global Dockerfile " + file + ":\n" + globalContents
+		}
+	}
 
 	// If there are user pre.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
@@ -1371,6 +1413,35 @@ EOF
 		}
 	}
 
+	// If there are global Dockerfile* files, append their contents
+	if globalDockerfilePath != "" {
+		files, err := filepath.Glob(filepath.Join(globalDockerfilePath, "Dockerfile*"))
+		if err != nil {
+			return err
+		}
+
+		for _, file := range files {
+			// Skip example files
+			if strings.HasSuffix(file, ".example") {
+				continue
+			}
+
+			globalContents, err := fileutil.ReadFileIntoString(file)
+			if err != nil {
+				return err
+			}
+
+			// Backward compatible fix, remove unnecessary BASE_IMAGE references
+			re, err := regexp.Compile(`ARG BASE_IMAGE.*\n|FROM \$BASE_IMAGE.*\n`)
+			if err != nil {
+				return err
+			}
+
+			globalContents = re.ReplaceAllString(globalContents, "")
+			contents = contents + "\n\n### From global Dockerfile " + file + ":\n" + globalContents
+		}
+	}
+
 	// If there are user dockerfiles, appends their contents
 	if userDockerfilePath != "" {
 		files, err := filepath.Glob(filepath.Join(userDockerfilePath, "Dockerfile*"))
@@ -1397,6 +1468,19 @@ EOF
 
 			userContents = re.ReplaceAllString(userContents, "")
 			contents = contents + "\n\n### From user Dockerfile " + file + ":\n" + userContents
+		}
+	}
+
+	// Global assets copied first so project-level files overwrite on name conflicts
+	if globalDockerfilePath != "" && fileutil.IsDirectory(globalDockerfilePath) {
+		err = copy2.Copy(globalDockerfilePath, filepath.Dir(fullpath), copy2.Options{
+			Skip: func(_ os.FileInfo, src, _ string) (bool, error) {
+				// Do not copy file if it's not a context file
+				return isNotDockerfileContextFile(globalDockerfilePath, src)
+			},
+		})
+		if err != nil {
+			return err
 		}
 	}
 
