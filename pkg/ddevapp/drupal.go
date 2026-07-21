@@ -36,6 +36,7 @@ type DrupalSettings struct {
 	SyncDir          string
 	DockerIP         string
 	DBPublishedPort  int
+	HasDBContainer   bool
 }
 
 // NewDrupalSettings produces a DrupalSettings object with default.
@@ -58,6 +59,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 		SyncDir:          path.Join("files", "sync"),
 		DockerIP:         dockerIP,
 		DBPublishedPort:  dbPublishedPort,
+		HasDBContainer:   !app.IsDBOmitted(),
 	}
 	if app.Type == "drupal6" {
 		settings.DatabaseDriver = "mysqli"
@@ -457,7 +459,7 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 	}
 	// If there is no database, update it to the default one,
 	// otherwise show a warning to the user.
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+	if !app.IsDBOmitted() {
 		if dbType, err := app.GetExistingDBType(); err == nil && dbType == "" {
 			app.Database = DatabaseDefault
 		} else if app.Database.Type == DatabaseDefault.Type && app.Database != DatabaseDefault && drupalVersion >= 8 {
@@ -470,7 +472,7 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 }
 
 func drupalPostStartAction(app *DdevApp) error {
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") && (isDrupalApp(app)) {
+	if !app.IsDBOmitted() && (isDrupalApp(app)) {
 		err := app.Wait([]string{nodeps.DBContainer})
 		if err != nil {
 			return err

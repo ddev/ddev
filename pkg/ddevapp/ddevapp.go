@@ -274,7 +274,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 	appDesc["database_type"] = app.Database.Type
 	appDesc["database_version"] = app.Database.Version
 
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+	if !app.IsDBOmitted() {
 		dbinfo := make(map[string]any)
 		dbinfo["username"] = "db"
 		dbinfo["password"] = "db"
@@ -623,6 +623,12 @@ func (app *DdevApp) GetOmittedContainers() []string {
 	omitted := app.OmitContainersGlobal
 	omitted = append(omitted, app.OmitContainers...)
 	return omitted
+}
+
+// IsDBOmitted returns true if the db container is omitted
+// via project or global omit_containers
+func (app *DdevApp) IsDBOmitted() bool {
+	return nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer)
 }
 
 // GetAppRoot return the full path from root to the app directory
@@ -1199,7 +1205,7 @@ func (app *DdevApp) SiteStatus() (string, string) {
 	}
 
 	statuses := map[string]string{"web": ""}
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+	if !app.IsDBOmitted() {
 		statuses["db"] = ""
 	}
 
@@ -1586,7 +1592,7 @@ func (app *DdevApp) Start() error {
 		util.Warning("Unable to pull Docker images: %v", pullErr)
 	}
 
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+	if !app.IsDBOmitted() {
 		// OK to start if dbType is empty (nonexistent) or if it matches
 		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
 			return fmt.Errorf("unable to start project %s because the configured database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s' and then you might want to try 'ddev utility migrate-database %s', see docs at %s", app.Name, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://docs.ddev.com/en/stable/users/extend/database-types/")
@@ -1647,7 +1653,7 @@ func (app *DdevApp) Start() error {
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		volumesNeeded = append(volumesNeeded, app.Name+"-ddev-config")
 	}
-	if !slices.Contains(app.GetOmittedContainers(), "db") {
+	if !app.IsDBOmitted() {
 		volumesNeeded = append(volumesNeeded, "ddev-"+app.Name+"-snapshots")
 		if app.Database.Type == nodeps.Postgres {
 			volumesNeeded = append(volumesNeeded, app.GetPostgresVolumeName())
@@ -1757,7 +1763,7 @@ func (app *DdevApp) Start() error {
 		labels["com.ddev.userns"] = "keep-id"
 	}
 
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+	if !app.IsDBOmitted() {
 		if app.Database.Type == nodeps.Postgres {
 			postgresDataDir := app.GetPostgresDataDir()
 			volumeMounts = append(volumeMounts, app.GetPostgresVolumeName()+":"+postgresDataDir)
@@ -2036,7 +2042,7 @@ func (app *DdevApp) Start() error {
 
 	// Wait for web/db containers to become healthy
 	dependers := []string{"web"}
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+	if !app.IsDBOmitted() {
 		dependers = append(dependers, "db")
 	}
 	wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", dependers))
