@@ -38,6 +38,11 @@ on:
         required: false
         type: string
         default: 'false'
+      ddev_run_download_ddev_test:
+        description: 'DDEV_RUN_DOWNLOAD_DDEV_TEST value (run the download-ddev live download test)'
+        required: false
+        type: string
+        default: 'false'
       cgo_enabled:
         description: 'CGO_ENABLED value'
         required: false
@@ -139,6 +144,7 @@ jobs:
       DDEV_TEST_PODMAN_ROOTLESS: ${{ inputs.ddev_test_podman_rootless }}
       DDEV_TEST_PODMAN_ROOT: ${{ inputs.ddev_test_podman_root }}
       DDEV_TEST_DOCKER_ROOTLESS: ${{ inputs.ddev_test_docker_rootless }}
+      DDEV_RUN_DOWNLOAD_DDEV_TEST: ${{ inputs.ddev_run_download_ddev_test }}
 
     steps:
       - uses: actions/checkout@v7

@@ -195,6 +195,10 @@ If you’re using Homebrew, first run `brew unlink ddev` to get rid of the versi
 2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev.sh) script with the version number argument. For example, if you want `v1.23.5`, run `curl -fsSL https://ddev.com/install.sh | bash -s v1.23.5`.
 3. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
 
+#### Any platform
+
+On any platform you can download the binaries for a specific release with [`ddev utility download-ddev`](../usage/commands.md#utility-download-ddev), for example `ddev utility download-ddev --tag v1.25.3`. It prints the exact commands to move `ddev` and `ddev-hostname` into your `$PATH`.
+
 ### Why do I have an old DDEV?
 
 You may have installed DDEV several times using different techniques. Use `which -a ddev` to find all installed binaries. For example, you could install a DDEV in WSL2 with Homebrew, forget about it for a while, install it manually, and then install it again with `apt`:
