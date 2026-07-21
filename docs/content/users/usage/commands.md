@@ -570,7 +570,6 @@ ddev delete images --all
 
 Get a detailed description of a running DDEV project.
 
-
 Example:
 
 ```shell

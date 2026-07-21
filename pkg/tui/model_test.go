@@ -370,7 +370,6 @@ func sampleDetail() ProjectDetail {
 		Docroot:         "web",
 		DatabaseType:    "mariadb",
 		DatabaseVersion: "10.11",
-		XdebugEnabled:   false,
 		PerformanceMode: "mutagen",
 		URLs:            []string{"https://mysite.ddev.site"},
 		MailpitURL:      "https://mysite.ddev.site:8026",
@@ -606,7 +605,6 @@ func TestDetailViewRendering(t *testing.T) {
 	require.Contains(t, view, "20", "should contain Node.js version")
 	require.Contains(t, view, "web", "should contain docroot")
 	require.Contains(t, view, "mariadb:10.11", "should contain database info")
-	require.Contains(t, view, "off", "should contain xdebug status")
 	require.Contains(t, view, "mutagen", "should contain performance mode")
 	require.Contains(t, view, "https://mysite.ddev.site", "should contain URL")
 	require.Contains(t, view, "8026", "should contain mailpit URL")

@@ -48,7 +48,6 @@ type ProjectDetail struct {
 	Docroot         string
 	DatabaseType    string
 	DatabaseVersion string
-	XdebugEnabled   bool
 	PerformanceMode string
 	URLs            []string
 	MailpitURL      string

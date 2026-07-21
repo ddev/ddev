@@ -76,7 +76,6 @@ func loadDetailCmd(appRoot string) tea.Cmd {
 		detail.Docroot, _ = desc["docroot"].(string)
 		detail.DatabaseType, _ = desc["database_type"].(string)
 		detail.DatabaseVersion, _ = desc["database_version"].(string)
-		detail.XdebugEnabled = app.XdebugEnabled
 		detail.PerformanceMode, _ = desc["performance_mode"].(string)
 
 		if urls, ok := desc["urls"].([]string); ok {
