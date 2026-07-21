@@ -1675,6 +1675,47 @@ Example:
 ddev utility dockercheck
 ```
 
+### `utility download-ddev`
+
+Download the `ddev` and `ddev-hostname` binaries built by CI or a release, for testing a specific build without replacing your installed DDEV. It only downloads the binaries into a directory (the current directory by default) and prints how to use them in the current shell or install them permanently; it does not modify your installed DDEV.
+
+Flags:
+
+* `--pr <number>`: Download the build from a pull request number
+* `--branch <name>`: Download the build from a branch name
+* `--commit <sha>`: Download the build from a commit SHA
+* `--tag <tag>`: Download a release tag, for example `v1.24.5`
+* `--stable`: Download the latest stable release (default `false`)
+* `--head`: Download the latest main build (default `false`)
+* `--output <dir>`, `-o <dir>`: Output directory (default: current directory)
+* `--os <os>`: OS override: `macos`, `linux`, or `windows` (default: current OS)
+* `--arch <arch>`: Architecture override: `amd64` or `arm64` (default: current architecture)
+* `--owner <owner>`: GitHub owner/org (default `ddev`; for PR builds this is the base repository, not a fork)
+* `--repo <repo>`: GitHub repository (default `ddev`)
+
+Note: Exactly one source flag (`--pr`, `--branch`, `--commit`, `--tag`, `--stable`, or `--head`) is required, and they are mutually exclusive.
+
+`--tag`, `--stable`, and `--head` download signed binaries and need no GitHub token. `--pr`, `--branch`, and `--commit` download unsigned GitHub Actions artifacts and use a [GitHub token](#add-on) if one is set, which avoids the low anonymous rate limit; without a token, `--pr` still works by falling back to the build links posted on the pull request.
+
+Examples:
+
+```shell
+# Download this PR's build for your current OS and architecture into the current directory
+ddev utility download-ddev --pr 1234
+
+# Download the latest main build into ~/tmp/head
+ddev utility download-ddev --head --output ~/tmp/head
+
+# Download a specific released version
+ddev utility download-ddev --tag v1.24.5
+
+# Download the latest stable release
+ddev utility download-ddev --stable
+
+# Cross-download a macOS arm64 build of a branch
+ddev utility download-ddev --branch 20250101_feature --os macos --arch arm64 --output ./out
+```
+
 ### `utility download-images`
 
 Download the basic Docker images required by DDEV. This can be useful on a new machine to prevent `ddev start` or other commands having to download the various images.
