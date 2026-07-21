@@ -176,6 +176,7 @@ func TestConfigSetValues(t *testing.T) {
 	uploadDirsSlice := []string{"custom", "config", "path"}
 	webserverType := nodeps.WebserverApacheFPM
 	webImage := "custom-web-image"
+	dbImage := "custom-db-image"
 	webWorkingDir := "/custom/web/dir"
 	dbWorkingDir := "/custom/db/dir"
 	mailpitHTTPPort := "5001"
@@ -203,6 +204,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--upload-dirs=" + strings.Join(uploadDirsSlice, ","),
 		"--webserver-type", webserverType,
 		"--web-image", webImage,
+		"--db-image", dbImage,
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
 		"--omit-containers", omitContainers,
@@ -254,6 +256,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(uploadDirsSlice, app.GetUploadDirs())
 	assert.Equal(webserverType, app.WebserverType)
 	assert.Equal(webImage, app.WebImage)
+	assert.Equal(dbImage, app.DBImage)
 	assert.Equal(webWorkingDir, app.WorkingDir["web"])
 	assert.Equal(dbWorkingDir, app.WorkingDir["db"])
 	assert.Equal(webimageExtraPackagesSlice, app.WebImageExtraPackages)
@@ -273,6 +276,7 @@ func TestConfigSetValues(t *testing.T) {
 		"config",
 		"--composer-root-default",
 		"--web-image-default",
+		"--db-image-default",
 		"--web-working-dir-default",
 		"--db-working-dir-default",
 		`--omit-containers=""`,
@@ -296,6 +300,7 @@ func TestConfigSetValues(t *testing.T) {
 
 	assert.Equal(app.ComposerRoot, "")
 	assert.Equal(app.WebImage, "")
+	assert.Equal(app.DBImage, "")
 	assert.Equal(len(app.WorkingDir), 0)
 	assert.Empty(app.AdditionalHostnames)
 	assert.Empty(app.AdditionalFQDNs)
@@ -309,6 +314,7 @@ func TestConfigSetValues(t *testing.T) {
 	args = []string{
 		"config",
 		"--web-image", webImage,
+		"--db-image", dbImage,
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
 	}
@@ -320,6 +326,7 @@ func TestConfigSetValues(t *testing.T) {
 		"config",
 		"--working-dir-defaults",
 		"--web-image-default",
+		"--db-image-default",
 	}
 
 	out, err = exec.RunHostCommand(DdevBin, args...)
@@ -333,6 +340,7 @@ func TestConfigSetValues(t *testing.T) {
 	require.NoError(t, err, "Could not unmarshal %s: %v", configFile, err)
 
 	assert.Equal(app.WebImage, "")
+	assert.Equal(app.DBImage, "")
 	assert.Equal(len(app.WorkingDir), 0)
 
 	// Test that variables can be appended to the web environment

@@ -32,6 +32,14 @@ const ConfigInstructions = `
 #   MySQL versions can be 5.5-8.0, 8.4
 #   PostgreSQL versions can be 9-18
 
+# You can explicitly specify the dbimage but this
+# is not recommended, as the images are often closely tied to DDEV's behavior,
+# so this can break upgrades.
+
+# dbimage: <docker_image>
+# It’s unusual to change this option, and we don’t recommend it without Docker experience and a good reason.
+# Typically, this means additions to the existing db image using a .ddev/db-build/Dockerfile.*
+
 # router_http_port: <port>  # Port to be used for http (defaults to global configuration, usually 80)
 # router_https_port: <port> # Port for https (defaults to global configuration, usually 443)
 

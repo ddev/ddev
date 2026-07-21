@@ -97,6 +97,7 @@ type DdevApp struct {
 	PHPVersion                string                `yaml:"php_version"`
 	WebserverType             string                `yaml:"webserver_type"`
 	WebImage                  string                `yaml:"webimage,omitempty"`
+	DBImage                   string                `yaml:"dbimage,omitempty"`
 	RouterHTTPPort            string                `yaml:"router_http_port,omitempty"`
 	RouterHTTPSPort           string                `yaml:"router_https_port,omitempty"`
 	XdebugEnabled             bool                  `yaml:"xdebug_enabled"`
@@ -1429,10 +1430,13 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 	return nil
 }
 
-// GetDBImage uses the available version info
+// GetDBImage returns the db image to use, preferring an explicitly configured
+// DBImage over the default computed from the database type and version.
 func (app *DdevApp) GetDBImage() string {
-	dbImage := ddevImages.GetDBImage(app.Database.Type, app.Database.Version)
-	return dbImage
+	if app.DBImage != "" {
+		return app.DBImage
+	}
+	return ddevImages.GetDBImage(app.Database.Type, app.Database.Version)
 }
 
 // composeBuild executes docker-compose build with retry logic for BuildKit snapshot race conditions.

@@ -402,6 +402,8 @@ Flags:
 * `--composer-version`: Specify override for Composer version in the web container. This may be `""`, `"2"`, `"2.2"`, `"stable"`, `"preview"`, `"snapshot"`, or a specific version.
 * `--corepack-enable`: Whether to run `corepack enable` on Node.js configuration.
 * `--database`: Specify the database `type:version` to use (see [default](../configuration/config.md#database)).
+* `--db-image`: Set the `db` container image ([for advanced use only](../configuration/config.md#dbimage)).
+* `--db-image-default`: Set the default `db` container image, the same as `--db-image=""`.
 * `--db-working-dir`: Override the default working directory for the `db` service.
 * `--db-working-dir-default`: Unset a `db` service working directory override, the same as `--db-working-dir=""`.
 * `--dbimage-extra-packages`: Comma-delimited list of Debian packages that should be added to `db` container when the project is started or `--dbimage-extra-packages=""` to remove previously configured packages.
