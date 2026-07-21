@@ -1843,6 +1843,165 @@ ddev magento sampledata:deploy
 ddev magento setup:upgrade
 ```
 
+## Maho
+
+You can start a new [Maho](https://mahocommerce.com) project or configure an existing one. Maho is an e-commerce platform derived from Magento 1, with modern PHP support and no external service requirements: it needs only a web server, PHP and a database.
+
+DDEV automatically creates `app/etc/local.xml` with the database connection details, so importing an existing site is just `ddev import-db` and `ddev import-files` away. For a fresh installation the Maho installer needs `--force` to take over that pre-created file.
+
+=== "Composer"
+
+    Create the project directory and configure DDEV:
+
+    ```bash
+    mkdir -p my-maho-site && cd my-maho-site
+    ddev config --project-type=maho --docroot=public
+    ```
+
+    Start DDEV (this may take a minute):
+
+    ```bash
+    ddev start
+    ```
+
+    Install Maho via Composer:
+
+    ```bash
+    ddev composer create-project mahocommerce/maho-starter
+    ```
+
+    Run the Maho installer with sample data:
+
+    ```bash
+    ddev maho install --force \
+      --license_agreement_accepted yes \
+      --locale en_US --timezone UTC --default_currency USD \
+      --db_host db --db_name db --db_user db --db_pass db \
+      --url "https://my-maho-site.ddev.site/" \
+      --use_secure 1 --secure_base_url "https://my-maho-site.ddev.site/" --use_secure_admin 1 \
+      --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
+      --admin_username admin --admin_password veryl0ngpassw0rd \
+      --sample_data 1
+    ```
+
+    Re-index and flush the cache:
+
+    ```bash
+    ddev maho index:reindex:all && ddev maho cache:flush
+    ```
+
+    Launch the admin interface (login with `admin` and `veryl0ngpassw0rd`):
+
+    ```bash
+    ddev launch /admin
+    ```
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > setup-maho.sh << 'EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        mkdir -p my-maho-site && cd my-maho-site
+        ddev config --project-type=maho --docroot=public
+        ddev start -y
+        ddev composer create-project mahocommerce/maho-starter
+        ddev maho install --force \
+          --license_agreement_accepted yes \
+          --locale en_US --timezone UTC --default_currency USD \
+          --db_host db --db_name db --db_user db --db_pass db \
+          --url "https://my-maho-site.ddev.site/" \
+          --use_secure 1 --secure_base_url "https://my-maho-site.ddev.site/" --use_secure_admin 1 \
+          --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
+          --admin_username admin --admin_password veryl0ngpassw0rd \
+          --sample_data 1
+        ddev maho index:reindex:all && ddev maho cache:flush
+        ddev launch /admin
+        EOF
+        chmod +x setup-maho.sh
+        ./setup-maho.sh
+        ```
+
+=== "Git Clone (for contributors)"
+
+    !!!warning "For contributing to Maho core only"
+        This setup is only for contributing to Maho itself. Never build a store on a clone of the core repository — use the Composer setup instead.
+
+    Create the project directory and clone the repository:
+
+    ```bash
+    mkdir -p maho && cd maho
+    git clone https://github.com/MahoCommerce/maho .
+    ```
+
+    Configure and start DDEV:
+
+    ```bash
+    ddev config --project-type=maho --docroot=public
+    ddev start
+    ```
+
+    Install Composer dependencies:
+
+    ```bash
+    ddev composer install
+    ```
+
+    Run the Maho installer with sample data:
+
+    ```bash
+    ddev maho install --force \
+      --license_agreement_accepted yes \
+      --locale en_US --timezone UTC --default_currency USD \
+      --db_host db --db_name db --db_user db --db_pass db \
+      --url "https://maho.ddev.site/" \
+      --use_secure 1 --secure_base_url "https://maho.ddev.site/" --use_secure_admin 1 \
+      --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
+      --admin_username admin --admin_password veryl0ngpassw0rd \
+      --sample_data 1
+    ```
+
+    Re-index and flush the cache:
+
+    ```bash
+    ddev maho index:reindex:all && ddev maho cache:flush
+    ```
+
+    Launch the admin interface (login with `admin` and `veryl0ngpassw0rd`):
+
+    ```bash
+    ddev launch /admin
+    ```
+
+    ??? tip "Prefer to run as a script?"
+        To run the whole setup as a script, examine and run this script:
+
+        ```bash
+        cat > setup-maho-git.sh << 'EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        mkdir -p maho && cd maho
+        git clone https://github.com/MahoCommerce/maho .
+        ddev config --project-type=maho --docroot=public
+        ddev start -y
+        ddev composer install
+        ddev maho install --force \
+          --license_agreement_accepted yes \
+          --locale en_US --timezone UTC --default_currency USD \
+          --db_host db --db_name db --db_user db --db_pass db \
+          --url "https://maho.ddev.site/" \
+          --use_secure 1 --secure_base_url "https://maho.ddev.site/" --use_secure_admin 1 \
+          --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
+          --admin_username admin --admin_password veryl0ngpassw0rd \
+          --sample_data 1
+        ddev maho index:reindex:all && ddev maho cache:flush
+        ddev launch /admin
+        EOF
+        chmod +x setup-maho-git.sh
+        ./setup-maho-git.sh
+        ```
+
 ## Moodle
 
 === "Composer"

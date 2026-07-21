@@ -77,6 +77,7 @@ func TestConfigOverrideAction(t *testing.T) {
 		nodeps.AppTypeLaravel:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento:      nodeps.PHPDefault,
 		nodeps.AppTypeMagento2:     nodeps.PHPDefault,
+		nodeps.AppTypeMaho:         nodeps.PHPDefault,
 		nodeps.AppTypeSilverstripe: nodeps.PHPDefault,
 		nodeps.AppTypeSymfony:      nodeps.PHPDefault,
 		nodeps.AppTypeWordPress:    nodeps.PHPDefault,

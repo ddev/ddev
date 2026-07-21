@@ -917,6 +917,18 @@ Run the `magento` command; available only in projects of type `magento2`, and on
 ddev magento list
 ```
 
+## `maho`
+
+Run the `maho` command; available only in projects of type `maho`, and only works if the `maho` script is in the project root (it is copied there by Composer on install).
+
+```shell
+# Show all maho subcommands
+ddev maho list
+
+# Flush the cache
+ddev maho cache:flush
+```
+
 ## `mailpit`
 
 Launch a browser with mailpit for the current project (global shell host container command).

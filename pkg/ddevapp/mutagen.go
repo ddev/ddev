@@ -1425,6 +1425,7 @@ func getCMSDefaultUploadDirsSuggestion(projectType string) string {
 		"typo3":        "fileadmin",
 		"magento":      "media",
 		"magento2":     "media",
+		"maho":         "media",
 		"shopware6":    "media",
 		"silverstripe": "assets",
 		"craftcms":     "files",
