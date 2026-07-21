@@ -56,42 +56,59 @@ func GetGitHubClient(withAuth bool) (context.Context, *Client, error) {
 	return githubContext, githubClientNoAuth, githubClientNoAuthErr
 }
 
-// GetGitHubRelease gets the tarball URL and version for a GitHub repository release
-func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloadedRelease string, err error) {
+// withAuthFallback runs fn with the authenticated GitHub client and, if that
+// call fails because the configured token is invalid, retries once with the
+// no-auth client. Errors are annotated with GitHub rate-limit details, plus the
+// invalid-token hint when a bad token triggered the fallback.
+func withAuthFallback[T any](fn func(ctx context.Context, client *Client) (T, *github.Response, error)) (T, error) {
+	var zero T
 	ctx, client, clientErr := GetGitHubClient(true)
 	if clientErr != nil {
-		return "", "", clientErr
+		return zero, clientErr
 	}
-
-	releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
+	result, resp, err := fn(ctx, client)
 	var tokenErr error
 	if err != nil {
 		if tokenErr = HasInvalidGitHubToken(resp); tokenErr != nil {
-			ctx, client, clientErr = GetGitHubClient(false)
-			if clientErr != nil {
-				return "", "", clientErr
+			if ctx, client, clientErr = GetGitHubClient(false); clientErr != nil {
+				return zero, clientErr
 			}
-			releasesNoAuth, respNoAuth, errNoAuth := client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
-			if errNoAuth == nil {
-				releases = releasesNoAuth
-				resp = respNoAuth
-				err = errNoAuth
-			}
+			result, resp, err = fn(ctx, client)
 		}
 	}
 	if err != nil {
-		errorDetail := ""
-		if resp != nil {
-			rate := resp.Rate
-			if rate.Limit != 0 {
-				resetIn := time.Until(rate.Reset.Time).Round(time.Second)
-				errorDetail += fmt.Sprintf("\nGitHub API Rate Limit: %d/%d remaining (resets in %s)", rate.Remaining, rate.Limit, resetIn)
-			}
-			if tokenErr != nil {
-				errorDetail += "\nError: " + tokenErr.Error()
-			}
+		detail := rateLimitDetail(resp)
+		if tokenErr != nil {
+			detail += "\nError: " + tokenErr.Error()
 		}
-		return "", "", fmt.Errorf("unable to get releases for %v: %w%s", repo, err, errorDetail)
+		return zero, fmt.Errorf("%w%s", err, detail)
+	}
+	return result, nil
+}
+
+// rateLimitDetail returns a human-readable GitHub rate-limit suffix for error
+// messages, or an empty string when no rate information is available. When no
+// token is set it appends a hint, since authenticated requests get a much
+// higher rate limit than anonymous ones.
+func rateLimitDetail(resp *github.Response) string {
+	if resp == nil || resp.Rate.Limit == 0 {
+		return ""
+	}
+	resetIn := time.Until(resp.Rate.Reset.Time).Round(time.Second)
+	detail := fmt.Sprintf("\nGitHub API Rate Limit: %d/%d remaining (resets in %s)", resp.Rate.Remaining, resp.Rate.Limit, resetIn)
+	if !HasGitHubToken() {
+		detail += "\nSet DDEV_GITHUB_TOKEN, GH_TOKEN, or GITHUB_TOKEN to raise the rate limit."
+	}
+	return detail
+}
+
+// GetGitHubRelease gets the tarball URL and version for a GitHub repository release
+func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloadedRelease string, err error) {
+	releases, err := withAuthFallback(func(ctx context.Context, client *Client) ([]*github.RepositoryRelease, *github.Response, error) {
+		return client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
+	})
+	if err != nil {
+		return "", "", fmt.Errorf("unable to get releases for %v: %w", repo, err)
 	}
 	if len(releases) == 0 {
 		return "", "", fmt.Errorf("no releases found for %v", repo)
