@@ -1936,6 +1936,37 @@ func TestDdevAllDatabases(t *testing.T) {
 		out = strings.Trim(out, "\n\r ")
 		assert.Equal("2", out)
 
+		// base_db "initializer" seeding is only wired up for MariaDB/MySQL
+		// (containers/ddev-dbserver); PostgreSQL uses a different image/entrypoint.
+		// Not supported on the very old, EOL 5.5 versions of either.
+		isVeryOldDB := dbVersion == "5.5"
+		if (dbType == nodeps.MariaDB || dbType == nodeps.MySQL) && !isVeryOldDB {
+			// db currently has the 2-row "users" table from the snapshot restore above.
+			// Snapshotting it as "initializer" and then wiping the db volume and
+			// restarting should restore this same data automatically, ahead of the
+			// normal empty starter database.
+			_, err = app.Snapshot("initializer")
+			require.NoError(t, err, "could not create initializer snapshot for %s", dbTypeVersion)
+
+			err = app.Stop(true, false)
+			require.NoError(t, err)
+			err = app.Start()
+			require.NoError(t, err, "failed to start %s after seeding from initializer snapshot", dbTypeVersion)
+
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     c[dbType],
+			})
+			assert.NoError(err)
+			out = strings.Trim(out, "\n\r ")
+			assert.Equal("2", out, "initializer snapshot did not seed a fresh db volume for %s", dbTypeVersion)
+
+			// "initializer" is a reserved name; clear it so the next dbTypeVersion
+			// iteration can create its own.
+			err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+			assert.NoError(err)
+		}
+
 		err = app.Stop(true, false)
 		assert.NoError(err)
 	}

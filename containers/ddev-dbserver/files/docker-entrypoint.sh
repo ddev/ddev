@@ -137,8 +137,15 @@ fi
 # chmod -f ugo-w /etc/mysql/version-conf.d/*.cnf
 
 
-# If mariadb has not been initialized, copy in the base image from either the default starter image (/mysqlbase/base_db.gz)
-# or from a provided $snapshot_dir.
+# If mariadb has not been initialized, copy in the base image from a base_db
+# seed or from a provided $snapshot_dir. The base_db seed is looked up in
+# priority order:
+#   1. /mnt/snapshots/initializer-<db_type>_<db_version>.*  - project-supplied,
+#      living alongside regular snapshots in .ddev/db_snapshots
+#   2. /mysqlbase/custom/base_db.*                          - baked into a derived image
+#   3. /mysqlbase/base_db.*                                 - the stock DDEV starter database
+# At each location, a .zst seed is preferred over .gz; .gz only exists at all
+# for db versions (e.g. MariaDB 5.5) whose base image lacks zstd.
 if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
     # If snapshot_dir is not set, this is a normal startup, so
     # tell healthcheck to wait by touching /tmp/initializing
@@ -148,8 +155,34 @@ if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
     if [ "${target:-}" = "" ]; then
       target=${snapshot:-/var/tmp/base_db}
       mkdir -p ${target} && cd ${target}
-      snapshot=/mysqlbase/base_db.gz
-      gunzip -c ${snapshot} | ${STREAMTOOL} -x
+
+      snapshot=""
+      for candidate in \
+        "/mnt/snapshots/initializer-${server_db_version}.zst" \
+        "/mnt/snapshots/initializer-${server_db_version}.gz" \
+        "/mysqlbase/custom/base_db.zst" \
+        "/mysqlbase/custom/base_db.gz" \
+        "/mysqlbase/base_db.zst" \
+        "/mysqlbase/base_db.gz" \
+      ; do
+        if [ -f "${candidate}" ]; then
+          snapshot="${candidate}"
+          break
+        fi
+      done
+      if [ -z "${snapshot}" ]; then
+        echo "No base_db seed found in /mnt/snapshots, /mysqlbase/custom, or /mysqlbase"
+        exit 102
+      fi
+      case "${snapshot}" in
+        *.zst)
+          # Only use zstdmt if multithreading is supported (zstd 1.2.0+).
+          "$(command -v zstdmt 2>/dev/null || echo zstd)" -dc --quiet "${snapshot}" | ${STREAMTOOL} -x
+          ;;
+        *.gz)
+          gunzip -c "${snapshot}" | ${STREAMTOOL} -x
+          ;;
+      esac
     fi
     name=$(basename $target)
 

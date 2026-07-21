@@ -26,7 +26,7 @@ var WebTag = "20260715_rfay_webserver_404_message" // Note that this can be over
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20260628_rfay_mysql_hardened"
+var BaseDBTag = "20260720_weitzman_zstd_base_db"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
