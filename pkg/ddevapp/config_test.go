@@ -627,6 +627,7 @@ func TestReadConfig(t *testing.T) {
 	assert.Equal(app.Type, nodeps.AppTypeDrupal8)
 	assert.Equal(app.Docroot, "test")
 	assert.Equal(app.WebImage, "test/testimage:latest")
+	assert.Equal(app.DBImage, "test/testdbimage:latest")
 }
 
 // TestReadConfigCRLF tests reading config values from a file with Windows

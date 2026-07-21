@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ddev/ddev/pkg/config/types"
+	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -390,6 +391,21 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 				files:    customFiles,
 			})
 		}
+	}
+
+	// Non-default webimage/dbimage are custom configuration even though they're
+	// config.yaml values rather than files.
+	if app.WebImage != "" && app.WebImage != docker.GetWebImage() {
+		findings = append(findings, finding{
+			category: "Web server",
+			files:    []fileInfo{{path: fmt.Sprintf("webimage: %s (non-default)", app.WebImage)}},
+		})
+	}
+	if app.DBImage != "" && app.DBImage != docker.GetDBImage(app.Database.Type, app.Database.Version) {
+		findings = append(findings, finding{
+			category: "Database",
+			files:    []fileInfo{{path: fmt.Sprintf("dbimage: %s (non-default)", app.DBImage)}},
+		})
 	}
 
 	// Build message for all findings
