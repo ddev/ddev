@@ -310,7 +310,6 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 
 	appDesc["router_http_port"] = app.GetPrimaryRouterHTTPPort()
 	appDesc["router_https_port"] = app.GetPrimaryRouterHTTPSPort()
-	appDesc["xdebug_enabled"] = app.XdebugEnabled
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
 	appDesc["services"] = map[string]map[string]any{}
