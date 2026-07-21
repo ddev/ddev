@@ -117,19 +117,19 @@ Multi-stage builds are useful to anyone who has struggled to optimize Dockerfile
 
 ### Global Dockerfiles
 
-DDEV supports global web-build files for the web container and database container. Files placed in `~/.ddev/web-build/` and `~/.ddev/db-build/` will be applied to all DDEV web containers and database containers respectively. Files placed there apply to every project on the workstation and are useful for machine-specific customizations like corporate proxy certificates, private package registries, or developer tools you always want available.
+DDEV supports global web-build files for the web container and database container. Files placed in `$HOME/.ddev/web-build/` and `$HOME/.ddev/db-build/` will be applied to all DDEV web containers and database containers respectively. Files placed there apply to every project on the workstation and are useful for machine-specific customizations like corporate proxy certificates, private package registries, or developer tools you always want available. See [Global Files](../usage/architecture.md#global-files) to find out where this directory actually lives on your system, since it isn’t always `$HOME/.ddev`.
 
 Global files are inserted *before* project-level files, so project-level files run after them. Context files (non-Dockerfiles) in the global directories are also available as `ADD`/`COPY` sources, with project-level files taking precedence on name conflicts.
 
 For example, to install a custom CA certificate on every project:
 
 ```bash
-mkdir -p ~/.ddev/web-build
-cat > ~/.ddev/web-build/pre.Dockerfile << 'EOF'
+mkdir -p $HOME/.ddev/web-build
+cat > $HOME/.ddev/web-build/pre.Dockerfile << 'EOF'
 COPY my-ca.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates
 EOF
-cp /path/to/my-ca.crt ~/.ddev/web-build/my-ca.crt
+cp /path/to/my-ca.crt $HOME/.ddev/web-build/my-ca.crt
 ```
 
 Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev restart --no-cache`](../usage/commands.md#restart) or [`ddev utility rebuild`](../usage/commands.md#utility-rebuild). `ddev utility rebuild` is also great because it shows you the entire process of the build for debugging.

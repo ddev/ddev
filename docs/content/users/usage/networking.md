@@ -96,7 +96,7 @@ The standard approach:
     ```
 
     !!!tip "Apply to all projects"
-        Place your Dockerfiles in `~/.ddev/web-build/` and `~/.ddev/db-build/` to apply them to every project on your machine. See [Global Dockerfiles](../extend/customizing-images.md#global-dockerfiles) for details.
+        Place your Dockerfiles in `$HOME/.ddev/web-build/` and `$HOME/.ddev/db-build/` to apply them to every project on your machine. See [Global Dockerfiles](../extend/customizing-images.md#global-dockerfiles) and [Global Files](architecture.md#global-files) for details.
 
 4. If you're using Node.js/npm make it trust both the DDEV `mkcert` CA and your corporate CA by combining the two into a single file and then making the environment variable `NODE_EXTRA_CA_CERTS` point to that file. Add a post-start hook to concatenate the required files into the needed `/usr/local/share/ca-certificates/node_ca_certs.pem`. For example, in a `.ddev/config.vpn.yaml` add `post-start` hook:
 
