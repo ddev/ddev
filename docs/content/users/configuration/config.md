@@ -158,6 +158,17 @@ See [Database Server Types](../extend/database-types.md) for examples (e.g. `dde
 
 !!!tip "For very old database types, see [Using DDEV to spin up a legacy PHP application](https://ddev.com/blog/legacy-projects-with-unsupported-php-and-mysql-using-ddev/)."
 
+## `dbimage`
+
+!!!warning "Proceed with caution"
+    It's unusual to change this option, and we don't recommend it without Docker experience and a good reason. Typically, this means additions to the existing db image using a `.ddev/db-build/Dockerfile.*`.
+
+The Docker image to use for the database server.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | [`ddev/ddev-dbserver`](https://hub.docker.com/u/ddev) | Specify your own image based on the [ddev-dbserver](https://github.com/ddev/ddev/tree/main/containers/ddev-dbserver) image matching your project's `database` type and version.
+
 ## `dbimage_extra_packages`
 
 Extra Debian packages for the project’s database container. (This is rarely used.)

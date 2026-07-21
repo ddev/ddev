@@ -67,6 +67,12 @@ var (
 	// webImageDefaultArg allows a user to unset the specific web server container image
 	webImageDefaultArg bool
 
+	// dbImageArg allows a user to set the project's db server container image
+	dbImageArg string
+
+	// dbImageDefaultArg allows a user to unset the specific db server container image
+	dbImageDefaultArg bool
+
 	// webWorkingDirArg allows a user to define the working directory for the web service
 	webWorkingDirArg string
 
@@ -242,6 +248,8 @@ func init() {
 	_ = ConfigCommand.RegisterFlagCompletionFunc("webserver-type", configCompletionFunc(nodeps.GetValidWebserverTypes()))
 	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Set the web container image (for advanced use only)")
 	ConfigCommand.Flags().BoolVar(&webImageDefaultArg, "web-image-default", false, `Sets the default web container image, the same as --web-image=""`)
+	ConfigCommand.Flags().StringVar(&dbImageArg, "db-image", "", "Set the db container image (for advanced use only)")
+	ConfigCommand.Flags().BoolVar(&dbImageDefaultArg, "db-image-default", false, `Sets the default db container image, the same as --db-image=""`)
 	ConfigCommand.Flags().StringVar(&webWorkingDirArg, "web-working-dir", "", "Override the default working directory for the web service")
 	ConfigCommand.Flags().StringVar(&dbWorkingDirArg, "db-working-dir", "", "Override the default working directory for the db service")
 	ConfigCommand.Flags().BoolVar(&webWorkingDirDefaultArg, "web-working-dir-default", false, `Unset a web service working directory override, the same as --web-working-dir=""`)
@@ -683,6 +691,14 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if webImageDefaultArg {
 		app.WebImage = ""
+	}
+
+	if cmd.Flag("db-image").Changed {
+		app.DBImage = dbImageArg
+	}
+
+	if dbImageDefaultArg {
+		app.DBImage = ""
 	}
 
 	if app.WorkingDir == nil {

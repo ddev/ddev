@@ -267,6 +267,10 @@
         }
       }
     },
+    "dbimage": {
+      "description": "Set the db container image.",
+      "type": "string"
+    },
     "dbimage_extra_packages": {
       "description": "List of Debian packages that should be added to db container when the project is started.",
       "type": "array",
