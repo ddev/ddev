@@ -940,6 +940,93 @@ func TestRouterNotRebuiltWithExtraPorts(t *testing.T) {
 		"Router ports should be unchanged after starting simple project - router should not have been recreated")
 }
 
+// TestRouterNotRebuiltOnHostnameChange verifies that starting an additional
+// project (which introduces a new network alias/hostname) and restarting a
+// project update the router's network aliases in place rather than recreating
+// the router container.
+func TestRouterNotRebuiltOnHostnameChange(t *testing.T) {
+	// Start clean.
+	ddevapp.PowerOff()
+
+	project1Dir := testcommon.CreateTmpDir(t.Name() + "_project1")
+	project2Dir := testcommon.CreateTmpDir(t.Name() + "_project2")
+
+	app1, err := ddevapp.NewApp(project1Dir, true)
+	require.NoError(t, err)
+	app1.Name = t.Name() + "-project1"
+	app1.Type = nodeps.AppTypePHP
+	require.NoError(t, app1.WriteConfig())
+
+	app2, err := ddevapp.NewApp(project2Dir, true)
+	require.NoError(t, err)
+	app2.Name = t.Name() + "-project2"
+	app2.Type = nodeps.AppTypePHP
+	require.NoError(t, app2.WriteConfig())
+
+	t.Cleanup(func() {
+		_ = app1.Stop(true, false)
+		_ = app2.Stop(true, false)
+		_ = os.RemoveAll(project1Dir)
+		_ = os.RemoveAll(project2Dir)
+		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
+	})
+
+	// The message the router prints when it reuses the running container versus
+	// the message it prints when it (re)creates the container.
+	reuseMessage := nodeps.RouterContainer + " already running, pushing new config"
+	recreateMessage := "Starting " + nodeps.RouterContainer + ", pushing config"
+
+	// First project start creates the router from scratch.
+	require.NoError(t, app1.Start())
+
+	router, err := ddevapp.FindDdevRouter()
+	require.NoError(t, err)
+	require.NotNil(t, router)
+	originalRouterID := router.ID
+
+	// Starting the second project adds a new hostname (network alias). The router
+	// should be updated in place, not recreated.
+	getOutput := util.CaptureUserOut()
+	err = app2.Start()
+	startOutput := getOutput()
+	require.NoError(t, err)
+
+	require.Contains(t, startOutput, reuseMessage,
+		"second project start should reuse the running router, output: %s", startOutput)
+	require.NotContains(t, startOutput, recreateMessage,
+		"second project start should NOT recreate the router, output: %s", startOutput)
+
+	router, err = ddevapp.FindDdevRouter()
+	require.NoError(t, err)
+	require.Equal(t, originalRouterID, router.ID,
+		"router should not be recreated when a second project adds a new hostname")
+
+	// The router's network aliases should now include both projects' hostnames,
+	// proving the aliases were updated in place.
+	aliases, err := dockerutil.GetRouterNetworkAliases(router.ID)
+	require.NoError(t, err)
+	require.Contains(t, aliases, app1.GetHostname(),
+		"router aliases should include the first project hostname")
+	require.Contains(t, aliases, app2.GetHostname(),
+		"router aliases should include the second project hostname after in-place update")
+
+	// Restarting a project must also reuse the running router.
+	getOutput = util.CaptureUserOut()
+	err = app2.Restart()
+	restartOutput := getOutput()
+	require.NoError(t, err)
+
+	require.Contains(t, restartOutput, reuseMessage,
+		"restart should reuse the running router, output: %s", restartOutput)
+	require.NotContains(t, restartOutput, recreateMessage,
+		"restart should NOT recreate the router, output: %s", restartOutput)
+
+	router, err = ddevapp.FindDdevRouter()
+	require.NoError(t, err)
+	require.Equal(t, originalRouterID, router.ID,
+		"router should not be recreated when a project restarts")
+}
+
 // TestPausedProjectsExcludedFromRouter verifies that when a project is paused,
 // its Traefik configuration is removed from the router when another project starts.
 // This simulates the scenario where Docker restarts and projects end up paused,
