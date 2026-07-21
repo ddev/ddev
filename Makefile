@@ -30,10 +30,6 @@ VERSION_VARIABLES ?= DdevVersion AmplitudeAPIKey
 
 # These variables will be used as the default unless overridden by the make
 DdevVersion ?= $(VERSION)
-# WebTag ?= $(VERSION)  # WebTag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
-# DBTag ?=  $(VERSION)  # DBTag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
-# RouterTag ?= $(VERSION) #RouterTag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
-# DBATag ?= $(VERSION) #DBATag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
 
 # VERSION can be set by
   # Default: git tag
@@ -57,7 +53,32 @@ VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/versionconstants
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS) -s -w
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
-build: $(DEFAULT_BUILD)
+build: autotag-images $(DEFAULT_BUILD)
+
+# autotag-images detects, per container image, whether the image's own content
+# (see containers/hash-paths.sh) has changed since the tag committed in
+# pkg/versionconstants/versionconstants.go. Unchanged images are a fast no-op
+# (no Docker, no network). A changed image is built locally (host arch only)
+# and its tag in versionconstants.go is rewritten automatically - see
+# containers/autotag.sh and docs/content/developers/building-contributing.md.
+.PHONY: autotag-images
+autotag-images:
+	@containers/autotag.sh WebTag ddev/ddev-webserver containers/ddev-webserver containers/containers_shared.mk -- $(MAKE) -C containers/ddev-webserver images
+	@containers/autotag.sh TraefikRouterTag ddev/ddev-traefik-router containers/ddev-traefik-router containers/containers_shared.mk -- $(MAKE) -C containers/ddev-traefik-router container
+	@containers/autotag.sh SSHAuthTag ddev/ddev-ssh-agent containers/ddev-ssh-agent containers/containers_shared.mk -- $(MAKE) -C containers/ddev-ssh-agent container
+	@containers/autotag.sh XhguiTag ddev/ddev-xhgui containers/ddev-xhgui containers/containers_shared.mk -- $(MAKE) -C containers/ddev-xhgui container
+	@containers/autotag.sh BaseDBTag ddev/ddev-dbserver-mariadb-11.8 containers/ddev-dbserver containers/get_arch.sh -- $(MAKE) -C containers/ddev-dbserver mariadb_11.8_$(shell go env GOHOSTARCH)
+
+# print-image-tags prints the tag each image would use right now (computed,
+# not necessarily built or pushed) - use this to find the value to pass to
+# the push-tagged-image.yml / push-tagged-dbimage.yml tag input.
+.PHONY: print-image-tags
+print-image-tags:
+	@echo "WebTag:            $$(containers/autotag.sh --print-only WebTag ddev/ddev-webserver containers/ddev-webserver containers/containers_shared.mk)"
+	@echo "TraefikRouterTag:  $$(containers/autotag.sh --print-only TraefikRouterTag ddev/ddev-traefik-router containers/ddev-traefik-router containers/containers_shared.mk)"
+	@echo "SSHAuthTag:        $$(containers/autotag.sh --print-only SSHAuthTag ddev/ddev-ssh-agent containers/ddev-ssh-agent containers/containers_shared.mk)"
+	@echo "XhguiTag:          $$(containers/autotag.sh --print-only XhguiTag ddev/ddev-xhgui containers/ddev-xhgui containers/containers_shared.mk)"
+	@echo "BaseDBTag:         $$(containers/autotag.sh --print-only BaseDBTag ddev/ddev-dbserver-mariadb-11.8 containers/ddev-dbserver containers/get_arch.sh)"
 
 
 # Provide shorthand targets
