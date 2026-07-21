@@ -9,9 +9,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT_DIR="${OUTPUT_DIR:-${SCRIPT_DIR}/php-configs}"
 OLD_VERSION="${OLD_VERSION:-8.4}"
 NEW_VERSION="${NEW_VERSION:-8.5}"
-# Auto-detect DDEV root from script location (script is in ddev-php-base/ddev-php-files/)
+# Auto-detect DDEV root from script location (script is in ddev-webserver/ddev-php-files/)
 DDEV_ROOT="${DDEV_ROOT:-$(cd "${SCRIPT_DIR}/../../.." && pwd)}"
-PHP_PACKAGES_YAML="${PHP_PACKAGES_YAML:-${DDEV_ROOT}/containers/ddev-php-base/generic-files/etc/php-packages.yaml}"
+PHP_PACKAGES_YAML="${PHP_PACKAGES_YAML:-${DDEV_ROOT}/containers/ddev-webserver/generic-files/etc/php-packages.yaml}"
 
 echo "=== PHP Configuration Extractor ==="
 echo "Old PHP Version: ${OLD_VERSION}"
@@ -358,7 +358,7 @@ main() {
     echo "Next steps:"
     echo "1. Review the report: ${OUTPUT_DIR}/RECONCILIATION_REPORT.txt"
     echo "2. Check the diffs in: ${OUTPUT_DIR}/diffs/"
-    echo "3. Apply necessary changes to: containers/ddev-php-base/ddev-php-files/etc/php/${NEW_VERSION}/"
+    echo "3. Apply necessary changes to: containers/ddev-webserver/ddev-php-files/etc/php/${NEW_VERSION}/"
     echo ""
 }
 

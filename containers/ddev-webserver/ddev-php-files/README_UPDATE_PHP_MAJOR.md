@@ -32,7 +32,7 @@ Use the provided extraction script to get pristine configuration files:
 
 ```bash
 # From the DDEV repository root
-cd containers/ddev-php-base/ddev-php-files
+cd containers/ddev-webserver/ddev-php-files
 
 # Set the PHP versions (adjust as needed)
 export OLD_VERSION=8.4
@@ -172,15 +172,11 @@ less etc/php/8.5/fpm/php-fpm.conf
 
 ### 7. Update Container Build Files
 
-Update `containers/ddev-php-base/Dockerfile`:
+Update `containers/ddev-webserver/Dockerfile`:
 ```dockerfile
 # Add the new PHP version to the build logic
 # Update version constraints
 # Add any new extension installations needed
-```
-
-Update `containers/ddev-webserver/Dockerfile`:
-```dockerfile
 # Add apache2 configuration for the new PHP version if needed
 ```
 
@@ -189,8 +185,8 @@ Update `containers/ddev-webserver/Dockerfile`:
 **Build and test:**
 ```bash
 # Build the new image
-cd containers/ddev-php-base
-docker build -t test-php8.5 .
+cd containers/ddev-webserver
+docker build --target=ddev-php-base -t test-php8.5 .
 
 # Run a test container
 docker run --rm -it test-php8.5 bash
@@ -300,7 +296,7 @@ When adding a new PHP version, ensure you:
 - [ ] Review all PHP upstream changes between versions
 - [ ] Create new version config files with both DDEV and PHP changes
 - [ ] Copy and verify extension configs (assert, blackfire, xdebug, xhprof)
-- [ ] Update Dockerfiles for both ddev-php-base and ddev-webserver
+- [ ] Update the ddev-webserver Dockerfile
 - [ ] Test configuration loading in container
 - [ ] Test with actual DDEV project
 - [ ] Update tests and documentation
