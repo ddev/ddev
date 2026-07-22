@@ -97,7 +97,7 @@ If you need to push from a forked PR, you’ll have to do this from your fork (f
 * Click the “Run workflow” button in the blue section above the workflow runs.
 * Choose the branch to build from (usually `main`).
 * Enter the image (`ddev-webserver`, `ddev-php-base`, etc.).
-* Enter the tag that will be used in `pkg/version/version.go`.
+* Enter the tag that will be used in `pkg/versionconstants/versionconstants.go`. For a normal (non-release) dev change, running `make` at the repository root already builds the image locally and computes/writes this tag automatically — run `make print-image-tags` to read the exact value to enter here.
 
 ## Pushing Docker Images Manually
 

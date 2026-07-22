@@ -98,33 +98,34 @@ rm ~/bin/ddev
 
 ## Making Changes to DDEV Images
 
-If you need to make a change to one of the DDEV images, it will need to be built with a specific tag that’s updated in `pkg/versionconstants/versionconstants.go`.
-
-For example, make a change to `containers/ddev-webserver/Dockerfile`, then build it:
+If you need to make a change to one of the DDEV images, just edit the files under that image's directory (for example `containers/ddev-webserver/Dockerfile`), then build from the repository root:
 
 ```bash
-cd containers/ddev-webserver
-make VERSION=20210424_fix_dockerfile
-```
-
-Then edit `pkg/versionconstants/versionconstants.go` to set `var WebTag = "20210424_fix_dockerfile"` and
-
-```bash
-cd /workspace/ddev
 make
 ```
 
-`ddev version` should show you that you are using the correct webtag, and [`ddev start`](../users/usage/commands.md#start) will show it.
+`make` detects that the image's own content changed, builds it locally for your host architecture, and automatically rewrites the matching tag (like `WebTag`) in `pkg/versionconstants/versionconstants.go` — there's no tag to invent and no file to hand-edit. If nothing under `containers/` changed, `make` does nothing extra: no Docker calls, no network access.
+
+`ddev version` should show you that you are using the freshly built tag, and [`ddev start`](../users/usage/commands.md#start) will use the local image without pulling.
+
+Run `make print-image-tags` at any time to see the tag each image would currently use, whether or not it's actually been built yet — this is the value to use with the GitHub Actions push workflows described below if you need the image pushed to the registry.
+
+`containers/ddev-dbserver` is a special case: one tag (`BaseDBTag`) covers many db type/version combinations, so `make` only builds the default variant (currently `mariadb_11.8`) locally. To build a different db type/version after changing `containers/ddev-dbserver`, build it manually using the tag `make print-image-tags` reports:
+
+```bash
+cd containers/ddev-dbserver
+make mysql_8.0_amd64 VERSION=<tag-from-print-image-tags>
+```
 
 ## Docker Image Changes
 
-If you make changes to a Docker image (like `ddev-webserver`), it won’t have any effect unless you:
+Running `make` at the repository root (above) already builds a changed image locally and updates `pkg/versionconstants/versionconstants.go` for you. To make that same build available to CI or other developers, it also needs to be pushed to the registry:
 
-* Push an image with a specific tag by navigating to the image directory (like `containers/ddev-webserver`), and running `make push DOCKER_REPO=youruser/yourimage VERSION=<branchname>`.
+* Get the exact tag `make` used, with `make print-image-tags` (or read it straight out of `pkg/versionconstants/versionconstants.go` after running `make`).
+* Push an image with that tag by navigating to the image directory (like `containers/ddev-webserver`), and running `make push DOCKER_REPO=youruser/yourimage VERSION=<tag>`.
 * Multi-arch images require you to have a Buildx builder, so `docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use`.
 * You can’t push until you `docker login`.
-* Push a container to hub.docker.com. Push with the tag that matches your branch. Push to `<yourorg>/ddev-webserver` repository with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repository.
-* Update `pkg/versionconstants/versionconstants.go` with the `WebImg` and `WebTag` that relate to the Docker image you pushed.
+* Push a container to hub.docker.com with that same tag. Push to `<yourorg>/ddev-webserver` repository with `make push DOCKER_ORG=<yourorg> VERSION=<tag>` **in the container directory**. You might have to use other techniques to push to another repository.
 
 ### Local Builds and Pushes
 
@@ -132,8 +133,8 @@ To use `buildx` successfully you have to have the [`buildx` Docker plugin](https
 
 To build multi-platform images you must `docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use` as a one-time initialization.
 
-* If you want to work locally with a quick build for your architecture, you can:
-    * `make VERSION=<version>`
+* Running `make` from the repository root already does a quick local build of any changed image for your host architecture (see [Making Changes to DDEV Images](#making-changes-to-ddev-images) above). To build a specific image or db type/version directly instead, you can still:
+    * `cd containers/<image>` then `make VERSION=<version>`
     * for `ddev-dbserver`: `make mariadb_10.3 VERSION=<version>` etc.
 
 * To push manually:
@@ -306,7 +307,7 @@ The Docker images that DDEV uses are included in the `containers/` directory:
 * `containers/ddev-traefik-router` is the current Traefik-based router image.
 * `containers/ddev-xhgui` provides a web interface to analyze performance profiles generated by xhprof.
 
-When changes are made to an image, they have to be temporarily pushed to a tag—ideally with the same as the branch name of the PR—and the tag updated in `pkg/versionconstants/versionconstants.go`. Please ask if you need a container pushed to support a pull request.
+When you change an image, running `make` from the repository root builds it locally and computes/updates its tag in `pkg/versionconstants/versionconstants.go` automatically — no manual tag-inventing or file-editing needed, and this works for any contributor, including from a fork. Getting that image into CI (a multi-arch push to the registry) still requires registry credentials that forks don't have, so please ask a maintainer if you need a container pushed to support a pull request.
 
 ## Pull Requests
 
