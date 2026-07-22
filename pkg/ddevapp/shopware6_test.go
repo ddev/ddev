@@ -214,6 +214,111 @@ DATABASE_URL=mysql://old:old@oldhost:3306/olddb
 	assert.Contains(updatedContent, "smtp://127.0.0.1:1025")
 }
 
+// findWebExposedPort returns the WebExposedPort with the given container port,
+// or nil if none is present. Used to assert on the watcher ports added by the
+// shopware6 configOverrideAction.
+func findWebExposedPort(ports []ddevapp.WebExposedPort, containerPort int) *ddevapp.WebExposedPort {
+	for i := range ports {
+		if ports[i].WebContainerPort == containerPort {
+			return &ports[i]
+		}
+	}
+	return nil
+}
+
+// TestShopware6ConfigOverrideAction verifies that the shopware6 project type
+// exposes the shopware-cli watcher ports through the real app-type matrix
+// (ConfigFileOverrideAction), that it is idempotent, and that it never clobbers
+// a user's own port settings. The watcher environment is deliberately NOT set
+// here (it is set at runtime in the watcher commands), so this only asserts on
+// ports. This does not require Docker.
+func TestShopware6ConfigOverrideAction(t *testing.T) {
+	testDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		_ = os.RemoveAll(testDir)
+	})
+
+	// AddsWatcherPorts: a fresh shopware6 project gets the three watcher ports.
+	t.Run("AddsWatcherPorts", func(t *testing.T) {
+		app, err := ddevapp.NewApp(testDir, false)
+		require.NoError(t, err)
+		app.Type = nodeps.AppTypeShopware6
+
+		require.NoError(t, app.ConfigFileOverrideAction(true))
+
+		// Vite admin watcher on 5173.
+		vite := findWebExposedPort(app.WebExtraExposedPorts, 5173)
+		require.NotNil(t, vite, "expected vite admin port 5173 to be exposed")
+		require.Equal(t, 5172, vite.HTTPPort)
+		require.Equal(t, 5173, vite.HTTPSPort)
+
+		// Storefront proxy on 9998.
+		proxy := findWebExposedPort(app.WebExtraExposedPorts, 9998)
+		require.NotNil(t, proxy, "expected storefront proxy port 9998 to be exposed")
+		require.Equal(t, 8888, proxy.HTTPPort)
+		require.Equal(t, 9998, proxy.HTTPSPort)
+
+		// Storefront assets on 9999.
+		assets := findWebExposedPort(app.WebExtraExposedPorts, 9999)
+		require.NotNil(t, assets, "expected storefront assets port 9999 to be exposed")
+		require.Equal(t, 8889, assets.HTTPPort)
+		require.Equal(t, 9999, assets.HTTPSPort)
+
+		// The watcher env must NOT be injected into web_environment; it is set at
+		// runtime in the commands instead.
+		require.NotContains(t, app.WebEnvironment, "PROXY_URL=${DDEV_PRIMARY_URL}:9998")
+	})
+
+	// Idempotent: running the override twice must not duplicate ports.
+	t.Run("Idempotent", func(t *testing.T) {
+		app, err := ddevapp.NewApp(testDir, false)
+		require.NoError(t, err)
+		app.Type = nodeps.AppTypeShopware6
+
+		require.NoError(t, app.ConfigFileOverrideAction(true))
+		portsAfterFirst := len(app.WebExtraExposedPorts)
+		require.NoError(t, app.ConfigFileOverrideAction(true))
+
+		require.Len(t, app.WebExtraExposedPorts, portsAfterFirst, "ports should not be duplicated on re-run")
+	})
+
+	// PreservesUserValues: a user's own value for a conflicting container port
+	// must be left untouched.
+	t.Run("PreservesUserValues", func(t *testing.T) {
+		app, err := ddevapp.NewApp(testDir, false)
+		require.NoError(t, err)
+		app.Type = nodeps.AppTypeShopware6
+
+		// User has already mapped container port 9998 to different host ports.
+		app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
+			{Name: "user-proxy", WebContainerPort: 9998, HTTPPort: 7777, HTTPSPort: 7778},
+		}
+
+		require.NoError(t, app.ConfigFileOverrideAction(true))
+
+		// The user's 9998 mapping is preserved, not overwritten or duplicated.
+		proxy := findWebExposedPort(app.WebExtraExposedPorts, 9998)
+		require.NotNil(t, proxy)
+		require.Equal(t, 7777, proxy.HTTPPort, "user's port mapping must be preserved")
+		require.Equal(t, 1, countWebExposedPort(app.WebExtraExposedPorts, 9998))
+
+		// The non-conflicting watcher ports are still added.
+		require.NotNil(t, findWebExposedPort(app.WebExtraExposedPorts, 5173))
+		require.NotNil(t, findWebExposedPort(app.WebExtraExposedPorts, 9999))
+	})
+}
+
+// countWebExposedPort returns the number of ports with the given container port.
+func countWebExposedPort(ports []ddevapp.WebExposedPort, containerPort int) int {
+	count := 0
+	for _, p := range ports {
+		if p.WebContainerPort == containerPort {
+			count++
+		}
+	}
+	return count
+}
+
 // Helper functions to access the unexported functions from shopware6.go
 // These would normally be in the same package, but since we're in _test package,
 // we need to access them through the app type system or create wrapper functions.

@@ -2530,6 +2530,19 @@ ddev config --upload-dirs=sites/assets/files && ddev restart
         ./setup-shopware.sh
         ```
 
+### shopware-cli and hot-reload watchers
+
+For `shopware6` projects, DDEV bundles the [`shopware-cli`](https://github.com/shopware/shopware-cli) tool and hot-reload watcher commands automatically, with no add-on required. The `shopware-cli` binary is baked into the web image, and these commands become available:
+
+- `ddev shopware-cli` — run `shopware-cli` inside the web container
+- `ddev storefront-watch` — hot-reload the storefront (proxy on port 9998)
+- `ddev admin-watch <plugin-dir>` — hot-reload a plugin's administration (Vite, port 5173)
+
+Reach the watchers through your project's primary URL with the relevant port, for example `https://my-shopware-site.ddev.site:9998` for the storefront, not `localhost`.
+
+!!! note "Requires Shopware 6.7.4.2 or newer"
+    The bundled watchers target the Vite-based administration (port 5173) introduced in Shopware 6.7.4.2. Older Shopware versions use a different watcher setup.
+
 ## Silverstripe CMS
 
 Use a new or existing Composer project, or clone a Git repository.

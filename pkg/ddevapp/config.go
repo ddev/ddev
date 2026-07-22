@@ -1105,6 +1105,15 @@ stopasgroup=true
 	// MariaDB 11.4+ has enabled SSL verification by default, which can cause issues.
 	extraWebContent = extraWebContent + "\nRUN log-stderr.sh mariadb-skip-ssl-wrapper-install.sh || true\n"
 
+	// For Shopware projects, bake the shopware-cli binary into the web image so
+	// the bundled shopware-cli/admin-watch/storefront-watch commands work without
+	// a separate add-on. It is downloaded from the official GitHub release (the
+	// version-less "latest" asset, so there's no fragile pinned version to bump),
+	// so nothing is compiled and no extra runtime deps land in the container.
+	if app.Type == nodeps.AppTypeShopware6 {
+		extraWebContent = extraWebContent + shopwareCLIInstallDockerfile
+	}
+
 	err = WriteBuildDockerfile(app, app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
 		return "", err
