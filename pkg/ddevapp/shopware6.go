@@ -61,10 +61,17 @@ func setShopware6SiteSettingsPaths(app *DdevApp) {
 // Targets Shopware 6.7.4.2+ (Vite admin on 5173); see the bundled commands/web
 // watchers.
 func shopware6ConfigOverrideAction(app *DdevApp) error {
+	// The watchers are reached over HTTPS only (the commands advertise
+	// https://... URLs), so WebContainerPort and HTTPSPort carry the real,
+	// coupled values (5173 for Vite, 9998/9999 for shopware-cli's storefront
+	// proxy/assets defaults). HTTPPort is never referenced at runtime; it exists
+	// only because WebExposedPort validation requires an http_port distinct from
+	// https_port. It is therefore parked in an uncommon high band to avoid
+	// colliding with commonly used host ports.
 	watcherPorts := []WebExposedPort{
-		{Name: "shopware-vite-admin", WebContainerPort: 5173, HTTPPort: 5172, HTTPSPort: 5173},
-		{Name: "shopware-storefront-proxy", WebContainerPort: 9998, HTTPPort: 8888, HTTPSPort: 9998},
-		{Name: "shopware-storefront-assets", WebContainerPort: 9999, HTTPPort: 8889, HTTPSPort: 9999},
+		{Name: "shopware-vite-admin", WebContainerPort: 5173, HTTPPort: 19172, HTTPSPort: 5173},
+		{Name: "shopware-storefront-proxy", WebContainerPort: 9998, HTTPPort: 19998, HTTPSPort: 9998},
+		{Name: "shopware-storefront-assets", WebContainerPort: 9999, HTTPPort: 19999, HTTPSPort: 9999},
 	}
 	for _, p := range watcherPorts {
 		if !hasWebExposedPort(app.WebExtraExposedPorts, p.WebContainerPort) {
