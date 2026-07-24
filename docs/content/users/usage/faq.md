@@ -321,9 +321,9 @@ We love and welcome contributions of knowledge, support, docs, and code:
 * Submit an issue or pull request to the [main repository](https://github.com/ddev/ddev).
 * Add your external resource to [awesome-ddev](https://github.com/ddev/awesome-ddev).
 * Help others in [Discord](https://ddev.com/s/discord).
-* Contribute financially via [GitHub Sponsors](https://github.com/sponsors/rfay).
+* Contribute financially by [sponsoring DDEV](https://ddev.com/sponsor).
 * Get involved with DDEV governance and the [Advisory Group](https://github.com/ddev/ddev/discussions/categories/ddev-advisory-group).
 
 ### How do financial contributions support DDEV?
 
-Thanks for asking! Contributions made via [GitHub Sponsors](https://github.com/sponsors/ddev) go to the [DDEV Foundation](https://ddev.com/foundation) and are used for infrastructure and supporting development.
+Thanks for asking! Contributions made by [sponsoring DDEV](https://ddev.com/sponsor) go to the [DDEV Foundation](https://ddev.com/foundation) and are used for infrastructure and supporting development.

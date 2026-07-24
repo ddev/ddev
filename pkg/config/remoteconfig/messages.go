@@ -299,7 +299,7 @@ func (c *remoteConfig) ShowSponsorshipAppreciation() {
 	message := sponsorshipData.AppreciationMessage
 	if message == "" {
 		// Fallback if not present
-		message = "💚 DDEV's community sponsorship makes it go! Consider becoming a sponsor at github.com/sponsors/ddev 🤝"
+		message = "💚 DDEV's community sponsorship makes it go! Consider becoming a sponsor at ddev.com/sponsor 🤝"
 	}
 
 	t := table.NewWriter()
