@@ -21,13 +21,14 @@ teardown() {
   run ddev start -y
   assert_success
 
-  # 1. Do you trust "php-http/discovery" to execute code and wish to enable it now?
-  #    (writes "allow-plugins" to composer.json) [y,n,d,?]
-  # 2. Do you want to include Docker configuration from recipes?
-  #    [x] No permanently, never ask again for this project
-  run bats_pipe printf "y\nx\n" \| ddev composer create-project shopware/production
+  # shopware/production's composer.json now sets "php-http/discovery": false in
+  # allow-plugins, so Composer no longer prompts to trust that plugin. The only
+  # remaining interactive prompt is:
+  #   Do you want to include Docker configuration from recipes?
+  #   [x] No permanently, never ask again for this project
+  # Answer `x`: DDEV provides the environment, not the recipe's Docker config.
+  run bats_pipe printf "x\n" \| ddev composer create-project shopware/production
   assert_success
-  assert_output --partial "execute code and wish to enable it now?"
   assert_output --partial "Do you want to include Docker configuration from recipes?"
   assert_file_not_exist compose.yaml
   assert_file_not_exist compose.override.yaml
