@@ -2528,7 +2528,9 @@ ddev config --upload-dirs=sites/assets/files && ddev restart
         mkdir -p my-shopware-site && cd my-shopware-site
         ddev config --project-type=shopware6 --docroot=public
         ddev start -y
-        ddev composer create-project shopware/production
+        # Answer `x` to "Do you want to include Docker configuration from recipes?"
+        # so Shopware's Docker recipe is not added (DDEV provides the environment).
+        printf "x\n" | ddev composer create-project shopware/production
         ddev exec console system:install --basic-setup
         ddev launch /admin
         EOF
