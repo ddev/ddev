@@ -29,7 +29,7 @@ If you need help, our friendly community provides [great support](https://docs.d
 
 ## Featured Sponsors
 
-DDEV is an Apache License 2.0 open-source project with its ongoing development made possible entirely by the support of these awesome backers. If you'd like to join them, please consider [sponsoring DDEV development](https://github.com/sponsors/ddev).
+DDEV is an Apache License 2.0 open-source project with its ongoing development made possible entirely by the support of these awesome backers. If you'd like to join them, please consider [sponsoring DDEV development](https://ddev.com/sponsor).
 
 <a href="https://ddev.com/#supporters">
   <picture>
