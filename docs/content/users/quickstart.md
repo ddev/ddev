@@ -891,9 +891,12 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
 
     Install Drupal via Composer:
 
+    !!!warning "Temporary Drush workaround"
+        Drupal 12 requires `guzzlehttp/guzzle` `^8.0`, but every current Drush release still requires `^7.0`, so a plain `ddev composer require drush/drush` cannot be resolved. Guzzle 8 works with Drush at runtime, so the command below installs Drush with an inline alias that presents the installed Guzzle 8 as a 7.x version. Once [drush-ops/drush#6602](https://github.com/drush-ops/drush/pull/6602) is released, use `ddev composer require drush/drush` instead.
+
     ```bash
     ddev composer create-project drupal/recommended-project:main-dev@dev
-    ddev composer require drush/drush
+    ddev composer require "guzzlehttp/guzzle:8.0.0 as 7.99.0" drush/drush -W
     ```
 
     Run Drupal installation and launch:
@@ -918,7 +921,10 @@ Set [`composer_root`](./configuration/config.md#composer_root) to the subdirecto
         ddev config --project-type=drupal12 --docroot=web
         ddev start -y
         ddev composer create-project drupal/recommended-project:main-dev@dev
-        ddev composer require drush/drush
+        # Temporary: Drupal 12 requires guzzlehttp/guzzle ^8.0 while Drush still requires
+        # ^7.0, so Drush is installed with an inline alias of the installed Guzzle 8.
+        # Use `ddev composer require drush/drush` once drush-ops/drush#6602 is released.
+        ddev composer require "guzzlehttp/guzzle:8.0.0 as 7.99.0" drush/drush -W
         ddev drush site:install --account-name=admin --account-pass=admin -y
         ddev launch
         EOF

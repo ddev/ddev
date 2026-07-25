@@ -26,7 +26,15 @@ teardown() {
   run ddev composer create-project drupal/recommended-project:main-dev@dev
   assert_success
 
-  run ddev composer require drush/drush
+  # Temporary: Drupal 12 requires guzzlehttp/guzzle ^8.0 while every Drush release
+  # still requires ^7.0, so `ddev composer require drush/drush` cannot resolve.
+  # Guzzle 8 works with Drush at runtime, so alias the installed Guzzle 8 as a 7.x
+  # version. Composer only accepts an exact version as an alias source, so this
+  # matches the version documented in quickstart.md — keep the two in sync, so
+  # this test fails if the documented command stops resolving. Revert to a plain
+  # `ddev composer require drush/drush` once
+  # https://github.com/drush-ops/drush/pull/6602 is released.
+  run ddev composer require "guzzlehttp/guzzle:8.0.0 as 7.99.0" drush/drush -W
   assert_success
 
   run ddev drush site:install --account-name=admin --account-pass=admin -y
