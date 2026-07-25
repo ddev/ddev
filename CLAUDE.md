@@ -140,8 +140,20 @@ files); a project that already took ownership of the file (removed the
 
 ### English Language Usage
 
+These rules apply everywhere: conversation, commit messages, PR text, code, and comments.
+
 - Never use the words `comprehensive` or `seamless`
-- Avoid flowery or flattering usage in conversation, code, or comments
+- Avoid credibility-filler that asserts sincerity: `honest`, `honestly`, `genuine`,
+  `genuinely`, `truly`, `really` (as an intensifier), `to be honest`, `in all honesty`,
+  `for real`. State the claim directly instead.
+- Avoid empty intensifiers and hype: `perfect`/`perfectly`, `works perfectly`,
+  `production-ready`, `robust`, `powerful`, `effortless`, `delve`, `elevate`, `unleash`.
+- Do not compliment, flatter, or validate the user (`You're absolutely right`,
+  `Great question`, `Perfect`, `Excellent`). Skip the preamble and answer.
+- Do not open a reply by praising the request or restating how good the idea is.
+  Lead with the substance.
+- Report results plainly. If something failed, was skipped, or is unverified, say so;
+  do not paper over it with confident-sounding language.
 
 ### Testing Philosophy
 
