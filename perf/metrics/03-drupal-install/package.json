@@ -1,0 +1,13 @@
+{
+  "name": "ddev-perf-drupal-install",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Puppeteer-driven timer for a Drupal demo_umami web install; part of ddev/ddev's perf benchmark harness (perf/).",
+  "main": "install-timer.js",
+  "scripts": {
+    "start": "node install-timer.js"
+  },
+  "dependencies": {
+    "puppeteer": "^24.11.2"
+  }
+}

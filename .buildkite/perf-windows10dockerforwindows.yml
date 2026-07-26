@@ -1,0 +1,17 @@
+# Nightly performance benchmark: Windows native with Docker Desktop
+#
+# Configure in the Buildkite dashboard as its own pipeline pointed at this
+# file, with a Scheduled Build (nightly cron) rather than a push/PR trigger.
+# See perf/README.md.
+
+  - command: ".buildkite/perf.cmd"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+    agents:
+      - "os=windows"
+      - "docker-desktop=true"
+      - "architecture=amd64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      DOCKER_TYPE: dockerforwindows
+    parallelism: 1

@@ -1,0 +1,80 @@
+name: Nightly Linux performance benchmark
+
+on:
+  schedule:
+    # 03:00 UTC nightly. Deliberately not on push/PR -- see perf/README.md.
+    - cron: '0 3 * * *'
+  workflow_dispatch: {}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+  DDEV_DEBUG: true
+  DDEV_NONINTERACTIVE: "true"
+  DOCKER_TYPE: "docker-ce"
+
+jobs:
+  perf:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+        with:
+          brew-gh-api-token: ${{ secrets.GITHUB_TOKEN }}
+          setup-sandbox: true
+
+      - name: Install Docker and deps (Linux)
+        run: ./.github/workflows/linux-setup.sh
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Build ddev
+        run: |
+          make build
+          echo "$PWD/.gotmp/bin/$(go env GOOS)_$(go env GOARCH)" >> "$GITHUB_PATH"
+
+      - name: Provision benchmark project
+        run: |
+          ddev version
+          # Reused across nightly runs rather than recreated every time -- see
+          # perf/README.md and .buildkite/perf.sh for why.
+          PERF_PROJECT_DIR="$HOME/tmp/ddev-perf-drupal11"
+          mkdir -p "$PERF_PROJECT_DIR"
+          if [ ! -d "$PERF_PROJECT_DIR/web/core" ]; then
+            cd "$PERF_PROJECT_DIR"
+            ddev config --project-type=drupal11 --docroot=web --project-name=ddev-perf-drupal11
+            ddev start -y
+            ddev composer create-project drupal/recommended-project
+          else
+            cd "$PERF_PROJECT_DIR"
+            ddev start -y
+          fi
+          {
+            echo "DDEV_PERF_PROJECT_DIR=$PERF_PROJECT_DIR"
+            echo "DDEV_PERF_SITE_URL=$(ddev describe -j | jq -r '.raw.primary_url')"
+          } >> "$GITHUB_ENV"
+
+      - name: Run benchmark battery
+        run: ./perf/run-benchmark.sh | tee perf-result.json
+
+      - name: Upload result artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-result-linux-docker-ce
+          path: perf-result.json
+          retention-days: 400
