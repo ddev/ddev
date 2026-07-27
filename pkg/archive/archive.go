@@ -306,8 +306,15 @@ func Untar(source string, dest string, extractionDir string) error {
 			// Remove any existing file/symlink at this path
 			_ = os.Remove(fullPath)
 
-			// Create the symlink
-			err = os.Symlink(file.Linkname, fullPath)
+			// Create the symlink using the same target that was validated above.
+			// For absolute targets this is resolvedTarget (rebased under dest), not the
+			// raw file.Linkname, otherwise the symlink would point outside dest on disk
+			// even though the check above validated the rebased path.
+			linkTarget := file.Linkname
+			if filepath.IsAbs(file.Linkname) {
+				linkTarget = resolvedTarget
+			}
+			err = os.Symlink(linkTarget, fullPath)
 			if err != nil {
 				return fmt.Errorf("failed to create symlink %v -> %v, err: %v", fullPath, file.Linkname, err)
 			}
