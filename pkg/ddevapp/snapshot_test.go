@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"fmt"
 	"os"
+	osexec "os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -154,6 +155,69 @@ func TestGetLatestSnapshot(t *testing.T) {
 }
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
+func TestListSnapshotRestoreTargetsIncludesOtherWorktrees(t *testing.T) {
+	tmpDir := t.TempDir()
+	repoRoot := filepath.Join(tmpDir, "repo")
+	worktreeRoot := filepath.Join(tmpDir, "repo-worktree")
+	projectRoot := filepath.Join(repoRoot, "work", "site")
+	projectWorktreeRoot := filepath.Join(worktreeRoot, "work", "site")
+
+	require.NoError(t, os.MkdirAll(filepath.Join(projectRoot, ".ddev", "db_snapshots"), 0o755))
+	require.NoError(t, os.MkdirAll(filepath.Join(projectWorktreeRoot, ".ddev", "db_snapshots"), 0o755))
+
+	_, err := osexec.Command("git", "init", repoRoot).CombinedOutput()
+	require.NoError(t, err)
+	_, err = osexec.Command("git", "-C", repoRoot, "config", "user.name", "Test User").CombinedOutput()
+	require.NoError(t, err)
+	_, err = osexec.Command("git", "-C", repoRoot, "config", "user.email", "test@example.com").CombinedOutput()
+	require.NoError(t, err)
+
+	require.NoError(t, os.WriteFile(filepath.Join(projectRoot, ".ddev", "db_snapshots", "snapshot-current-mariadb_10.11.1.zst"), []byte("current"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(projectWorktreeRoot, ".ddev", "db_snapshots", "snapshot-other-mariadb_10.11.1.zst"), []byte("other"), 0o644))
+
+	currentFile := filepath.Join(projectRoot, ".ddev", "db_snapshots", "snapshot-current-mariadb_10.11.1.zst")
+	otherFile := filepath.Join(projectWorktreeRoot, ".ddev", "db_snapshots", "snapshot-other-mariadb_10.11.1.zst")
+	olderTime := time.Now().Add(-2 * time.Hour)
+	newerTime := time.Now().Add(-1 * time.Hour)
+	require.NoError(t, os.Chtimes(currentFile, olderTime, olderTime))
+	require.NoError(t, os.Chtimes(otherFile, newerTime, newerTime))
+
+	_, err = osexec.Command("git", "-C", repoRoot, "add", ".").CombinedOutput()
+	require.NoError(t, err)
+	_, err = osexec.Command("git", "-C", repoRoot, "commit", "-m", "initial").CombinedOutput()
+	require.NoError(t, err)
+	_, err = osexec.Command("git", "-C", repoRoot, "worktree", "add", "--detach", worktreeRoot, "HEAD").CombinedOutput()
+	require.NoError(t, err)
+
+	app := &ddevapp.DdevApp{AppRoot: projectRoot}
+
+	targets, err := app.ListSnapshotRestoreTargets()
+	require.NoError(t, err)
+	require.Len(t, targets, 2)
+
+	foundCurrent := false
+	foundOther := false
+	for _, target := range targets {
+		switch target.Name {
+		case "snapshot-current":
+			foundCurrent = true
+			require.Equal(t, projectRoot, target.SourceRoot)
+		case "snapshot-other":
+			foundOther = true
+			require.Equal(t, projectWorktreeRoot, target.SourceRoot)
+			require.Equal(t, "snapshot-other (repo-worktree)", target.Label)
+		}
+	}
+
+	require.True(t, foundCurrent)
+	require.True(t, foundOther)
+
+	latest, err := app.GetLatestSnapshotRestoreTarget()
+	require.NoError(t, err)
+	require.Equal(t, "snapshot-other", latest.Name)
+	require.Equal(t, projectWorktreeRoot, latest.SourceRoot)
+}
+
 func TestDdevRestoreSnapshot(t *testing.T) {
 	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
 	if os.Getenv("GOTEST_SHORT") != "" {

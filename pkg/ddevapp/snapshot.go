@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -23,6 +24,14 @@ import (
 type Snapshot struct {
 	Name    string
 	Created time.Time
+}
+
+// SnapshotRestoreTarget represents a snapshot that can be restored from a project path.
+type SnapshotRestoreTarget struct {
+	Name       string
+	Created    time.Time
+	SourceRoot string
+	Label      string
 }
 
 // SnapshotRestoreDefaultWaitTime is the max time we'll wait for snapshot restore.
@@ -77,6 +86,144 @@ func (app *DdevApp) GetLatestSnapshot() (string, error) {
 	return snapshots[0], nil
 }
 
+// ListSnapshotRestoreTargets returns restore targets for the current project and any matching
+// project paths in git worktrees.
+func (app *DdevApp) ListSnapshotRestoreTargets() ([]SnapshotRestoreTarget, error) {
+	targets, err := app.getSnapshotRestoreTargetsForRoot(app.AppRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	worktreeRoots, err := app.getGitWorktreePaths()
+	if err != nil {
+		return nil, err
+	}
+	for _, worktreeRoot := range worktreeRoots {
+		if samePath(worktreeRoot, app.AppRoot) {
+			continue
+		}
+		projectRoot, err := app.getProjectRootForWorktree(worktreeRoot)
+		if err != nil || projectRoot == "" {
+			continue
+		}
+		if samePath(projectRoot, app.AppRoot) {
+			continue
+		}
+		otherTargets, err := app.getSnapshotRestoreTargetsForRoot(projectRoot)
+		if err != nil {
+			continue
+		}
+		targets = append(targets, otherTargets...)
+	}
+
+	sort.Slice(targets, func(i, j int) bool {
+		return targets[i].Created.After(targets[j].Created)
+	})
+
+	return targets, nil
+}
+
+// GetLatestSnapshotRestoreTarget returns the latest snapshot restore target available for the current project's worktree context.
+func (app *DdevApp) GetLatestSnapshotRestoreTarget() (*SnapshotRestoreTarget, error) {
+	targets, err := app.ListSnapshotRestoreTargets()
+	if err != nil {
+		return nil, err
+	}
+	if len(targets) == 0 {
+		return nil, fmt.Errorf("no snapshots found")
+	}
+	return &targets[0], nil
+}
+
+func (app *DdevApp) getSnapshotRestoreTargetsForRoot(root string) ([]SnapshotRestoreTarget, error) {
+	var targets []SnapshotRestoreTarget
+	if root == "" {
+		return targets, nil
+	}
+
+	snapshots, err := listSnapshotsInDir(filepath.Join(root, ".ddev", "db_snapshots"))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, snapshot := range snapshots {
+		label := snapshot.Name
+		if !samePath(root, app.AppRoot) {
+			label = fmt.Sprintf("%s (%s)", snapshot.Name, filepath.Base(root))
+		}
+		targets = append(targets, SnapshotRestoreTarget{
+			Name:       snapshot.Name,
+			Created:    snapshot.Created,
+			SourceRoot: root,
+			Label:      label,
+		})
+	}
+
+	return targets, nil
+}
+
+func (app *DdevApp) getGitWorktreePaths() ([]string, error) {
+	repoRootOutput, err := exec.RunHostCommand("git", "-C", app.AppRoot, "rev-parse", "--show-toplevel")
+	if err != nil {
+		return nil, nil
+	}
+	repoRoot := strings.TrimSpace(repoRootOutput)
+	if repoRoot == "" {
+		return nil, nil
+	}
+
+	worktreeOutput, err := exec.RunHostCommand("git", "-C", repoRoot, "worktree", "list", "--porcelain")
+	if err != nil {
+		return nil, err
+	}
+
+	var worktreePaths []string
+	for _, line := range strings.Split(strings.TrimSpace(worktreeOutput), "\n") {
+		if strings.HasPrefix(line, "worktree ") {
+			worktreePath := strings.TrimSpace(strings.TrimPrefix(line, "worktree "))
+			absPath, err := filepath.Abs(worktreePath)
+			if err != nil {
+				continue
+			}
+			worktreePaths = append(worktreePaths, absPath)
+		}
+	}
+
+	return worktreePaths, nil
+}
+
+func (app *DdevApp) getProjectRootForWorktree(worktreeRoot string) (string, error) {
+	repoRootOutput, err := exec.RunHostCommand("git", "-C", app.AppRoot, "rev-parse", "--show-toplevel")
+	if err != nil {
+		return "", nil
+	}
+	repoRoot := strings.TrimSpace(repoRootOutput)
+	if repoRoot == "" {
+		return "", nil
+	}
+
+	relPath, err := filepath.Rel(repoRoot, app.AppRoot)
+	if err != nil {
+		return "", err
+	}
+	if relPath == "." {
+		return worktreeRoot, nil
+	}
+	return filepath.Join(worktreeRoot, relPath), nil
+}
+
+func samePath(path1, path2 string) bool {
+	absPath1, err := filepath.Abs(path1)
+	if err != nil {
+		return false
+	}
+	absPath2, err := filepath.Abs(path2)
+	if err != nil {
+		return false
+	}
+	return filepath.Clean(absPath1) == filepath.Clean(absPath2)
+}
+
 // ListSnapshots returns a list of the names of all project snapshots
 func (app *DdevApp) ListSnapshotNames() ([]string, error) {
 	var names []string
@@ -89,12 +236,8 @@ func (app *DdevApp) ListSnapshotNames() ([]string, error) {
 	return names, err
 }
 
-// ListSnapshots returns a list of all project snapshots
-func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
-	var err error
+func listSnapshotsInDir(snapshotDir string) ([]Snapshot, error) {
 	var snapshots []Snapshot
-
-	snapshotDir := app.GetConfigPath("db_snapshots")
 
 	if !fileutil.FileExists(snapshotDir) {
 		return snapshots, nil
@@ -138,9 +281,24 @@ func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
 	return snapshots, nil
 }
 
+// ListSnapshots returns a list of all project snapshots
+func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
+	snapshotDir := app.GetConfigPath("db_snapshots")
+	return listSnapshotsInDir(snapshotDir)
+}
+
 // RestoreSnapshot restores a MariaDB snapshot of the db to be loaded
 // The project must be stopped and Docker volume removed and recreated for this to work.
 func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
+	return app.restoreSnapshot(snapshotName, app.AppRoot)
+}
+
+// RestoreSnapshotFromWorktree restores a snapshot from the specified project root, which may live in another git worktree.
+func (app *DdevApp) RestoreSnapshotFromWorktree(snapshotName, sourceRoot string) error {
+	return app.restoreSnapshot(snapshotName, sourceRoot)
+}
+
+func (app *DdevApp) restoreSnapshot(snapshotName, sourceRoot string) error {
 	var err error
 	err = app.ProcessHooks("pre-restore-snapshot")
 	if err != nil {
@@ -149,13 +307,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 
 	currentDBVersion := app.Database.Type + "_" + app.Database.Version
 
-	snapshotFile, err := GetSnapshotFileFromName(snapshotName, app)
+	snapshotFile, err := getSnapshotFileFromNameFromRoot(snapshotName, sourceRoot)
 	if err != nil {
 		return fmt.Errorf("no snapshot found for name %s: %v", snapshotName, err)
 	}
-	snapshotFileOrDir := filepath.Join("db_snapshots", snapshotFile)
-
-	hostSnapshotFileOrDir := app.GetConfigPath(snapshotFileOrDir)
+	snapshotDir := filepath.Join(sourceRoot, ".ddev", "db_snapshots")
+	hostSnapshotFileOrDir := filepath.Join(snapshotDir, snapshotFile)
 
 	if !fileutil.FileExists(hostSnapshotFileOrDir) {
 		return fmt.Errorf("failed to find a snapshot at %s", hostSnapshotFileOrDir)
@@ -194,7 +351,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	if snapshotDBVersion != currentDBVersion {
-		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured DDEV DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the DDEV DB version", snapshotName, snapshotDBVersion, currentDBVersion)
+		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured DDEV DB server version (%s). Please restore it using the DB version it was created with, and then you can try upgrading the DDEV DB version", snapshotName, snapshotDBVersion, currentDBVersion)
 	}
 
 	status, _ := app.SiteStatus()
@@ -215,8 +372,10 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 	}
 
-	// If we have no bind mounts, we need to copy our snapshot into the snapshots volme
-	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
+	// If we have no bind mounts, we need to copy our snapshot into the snapshots volume
+	// With bind mounts, the snapshot must exist under the current project's .ddev/db_snapshots
+	// If the snapshot comes from a different worktree (sourceRoot != app.AppRoot) and
+	// bind mounts are used, copy the snapshot into the current project's .ddev/db_snapshots
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		uid, _, _ := dockerutil.GetContainerUser()
 
@@ -227,9 +386,35 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			subdir = snapshotName
 		}
 
-		err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotFile), "ddev-"+app.Name+"-snapshots", subdir, uid, "", true)
+		err = dockerutil.CopyIntoVolume(filepath.Join(snapshotDir, snapshotFile), "ddev-"+app.Name+"-snapshots", subdir, uid, "", true)
 		if err != nil {
 			return err
+		}
+	} else if !samePath(sourceRoot, app.AppRoot) {
+		// Bind mounts are used but the snapshot is in another worktree; copy it into
+		// this project's .ddev/db_snapshots so the bind mount will expose it to the container.
+		destSnapshotsDir := filepath.Join(app.AppRoot, ".ddev", "db_snapshots")
+		if !fileutil.FileExists(destSnapshotsDir) {
+			if err := os.MkdirAll(destSnapshotsDir, 0o755); err != nil {
+				return fmt.Errorf("failed to create snapshots dir %s: %v", destSnapshotsDir, err)
+			}
+		}
+		srcPath := filepath.Join(snapshotDir, snapshotFile)
+		destPath := filepath.Join(destSnapshotsDir, filepath.Base(srcPath))
+		// Remove any existing destination before copying
+		if fileutil.FileExists(destPath) {
+			if err := os.RemoveAll(destPath); err != nil {
+				return fmt.Errorf("failed to remove existing snapshot at %s: %v", destPath, err)
+			}
+		}
+		if fileutil.IsDirectory(srcPath) {
+			if err := fileutil.CopyDir(srcPath, destPath); err != nil {
+				return fmt.Errorf("failed to copy snapshot directory from %s to %s: %v", srcPath, destPath, err)
+			}
+		} else {
+			if err := fileutil.CopyFile(srcPath, destPath); err != nil {
+				return fmt.Errorf("failed to copy snapshot file from %s to %s: %v", srcPath, destPath, err)
+			}
 		}
 	}
 
@@ -315,9 +500,8 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	return nil
 }
 
-// GetSnapshotFileFromName returns the filename corresponding to the snapshot name
-func GetSnapshotFileFromName(name string, app *DdevApp) (string, error) {
-	snapshotsDir := app.GetConfigPath("db_snapshots")
+func getSnapshotFileFromNameFromRoot(name, sourceRoot string) (string, error) {
+	snapshotsDir := filepath.Join(sourceRoot, ".ddev", "db_snapshots")
 	snapshotFullPath := filepath.Join(snapshotsDir, name)
 
 	// If old-style directory-based snapshot, then use the name, no massaging required
@@ -340,4 +524,9 @@ func GetSnapshotFileFromName(name string, app *DdevApp) (string, error) {
 	}
 
 	return "", fmt.Errorf("snapshot %s not found in %s", name, snapshotsDir)
+}
+
+// GetSnapshotFileFromName returns the filename corresponding to the snapshot name
+func GetSnapshotFileFromName(name string, app *DdevApp) (string, error) {
+	return getSnapshotFileFromNameFromRoot(name, app.AppRoot)
 }
