@@ -178,9 +178,9 @@ func (app *DdevApp) getGitWorktreePaths() ([]string, error) {
 	}
 
 	var worktreePaths []string
-	for _, line := range strings.Split(strings.TrimSpace(worktreeOutput), "\n") {
-		if strings.HasPrefix(line, "worktree ") {
-			worktreePath := strings.TrimSpace(strings.TrimPrefix(line, "worktree "))
+	for line := range strings.SplitSeq(strings.TrimSpace(worktreeOutput), "\n") {
+		if worktreePath, ok := strings.CutPrefix(line, "worktree "); ok {
+			worktreePath = strings.TrimSpace(worktreePath)
 			absPath, err := filepath.Abs(worktreePath)
 			if err != nil {
 				continue

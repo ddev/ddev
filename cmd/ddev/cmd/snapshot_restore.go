@@ -40,37 +40,37 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 			if len(args) != 1 { // If the name of the snapshot isn't provided, do prompted restore
 				targets, err := app.ListSnapshotRestoreTargets()
 				if err != nil {
-				util.Failed("Cannot list snapshots of project %s: %v", app.GetName(), err)
+					util.Failed("Cannot list snapshots of project %s: %v", app.GetName(), err)
 				}
 
 				if len(targets) == 0 {
-				util.Failed("No snapshots found for project %s", app.GetName())
+					util.Failed("No snapshots found for project %s", app.GetName())
 				}
 
 				snapshotLabels := make([]string, len(targets))
 				for i, target := range targets {
-				snapshotLabels[i] = target.Label
+					snapshotLabels[i] = target.Label
 				}
 
 				templates := &promptui.SelectTemplates{
-				Label: "{{ . | cyan }}:",
+					Label: "{{ . | cyan }}:",
 				}
 
 				prompt := promptui.Select{
-				Label:     "Snapshot",
-				Items:     snapshotLabels,
-				Templates: templates,
+					Label:     "Snapshot",
+					Items:     snapshotLabels,
+					Templates: templates,
 				}
 
 				selectedIndex, _, err := prompt.Run()
 				if err != nil {
-				util.Failed("Prompt failed %v", err)
+					util.Failed("Prompt failed %v", err)
 				}
 				restoreTarget = &targets[selectedIndex]
 			} else { // Snapshot name was given on command-line, use it.
 				targets, err := app.ListSnapshotRestoreTargets()
 				if err != nil {
-				util.Failed("Cannot list snapshots of project %s: %v", app.GetName(), err)
+					util.Failed("Cannot list snapshots of project %s: %v", app.GetName(), err)
 				}
 				for i := range targets {
 					if targets[i].Name == args[0] {
