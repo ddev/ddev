@@ -2029,12 +2029,22 @@ DDEV supports both [MODX](https://modx.com/) Revolution 2.x and 3.x.
 
 === "ZIP Download"
 
-    Download the latest MODX Revolution release from [modx.com](https://modx.com/download) or the [GitHub releases](https://github.com/modxcms/revolution/releases), then extract it into your project directory (MODX archives extract into a versioned subdirectory, so move its contents up to the project root):
+    Create the project directory:
 
     ```bash
     mkdir -p my-modx-site && cd my-modx-site
-    unzip ~/Downloads/modx-*.zip && mv modx-*/* modx-*/.[!.]* . && rmdir modx-*
     ```
+
+    Download the latest MODX Revolution release and extract it. The archive extracts into a versioned subdirectory, so move its contents up to the project root:
+
+    ```bash
+    MODX_VERSION=$(curl -fsSL https://api.github.com/repos/modxcms/revolution/tags | sed -n 's/.*"name": *"v\([0-9][0-9.]*\)-pl".*/\1/p' | head -1)
+    curl -fLo modx.zip "https://modx.s3.amazonaws.com/releases/${MODX_VERSION}/modx-${MODX_VERSION}-pl.zip"
+    unzip -q modx.zip && rm -f modx.zip
+    (shopt -s dotglob && mv "modx-${MODX_VERSION}-pl"/* .) && rmdir "modx-${MODX_VERSION}-pl"
+    ```
+
+    Set `MODX_VERSION` yourself to install a specific release, for example `MODX_VERSION=2.8.9` for MODX Revolution 2.x. Releases are also listed on [modx.com](https://modx.com/download).
 
     Configure and start DDEV:
 
@@ -2049,8 +2059,12 @@ DDEV generates a `#ddev-generated` `core/config/config.inc.php` with the DDEV da
 ddev exec php setup/cli-install.php \
   --database_server=db --database=db --database_user=db --database_password=db \
   --table_prefix=modx_ --http_host=my-modx-site.ddev.site \
-  --cmsadmin=admin --cmspassword=Admin123! --cmsadminemail=admin@example.com --language=en
+  --cmsadmin=admin --cmspassword=Admin123! --cmsadminemail=admin@example.com --language=en \
+  --context_mgr_path=/var/www/html/manager/ --context_mgr_url=/manager/ \
+  --context_connectors_path=/var/www/html/connectors/ --context_connectors_url=/connectors/
 ```
+
+The four `--context_*` arguments are the installer's own defaults. Passing them explicitly keeps the install non-interactive; leave them out and the installer stops to ask for each one.
 
 Launch the manager (log in with `admin` / `Admin123!`):
 
@@ -2075,7 +2089,9 @@ ddev launch /manager/
     ddev exec php setup/cli-install.php \
       --database_server=db --database=db --database_user=db --database_password=db \
       --table_prefix=modx_ --http_host=my-modx-site.ddev.site \
-      --cmsadmin=admin --cmspassword=Admin123! --cmsadminemail=admin@example.com --language=en
+      --cmsadmin=admin --cmspassword=Admin123! --cmsadminemail=admin@example.com --language=en \
+      --context_mgr_path=/var/www/html/manager/ --context_mgr_url=/manager/ \
+      --context_connectors_path=/var/www/html/connectors/ --context_connectors_url=/connectors/
     ddev launch /manager/
     EOF
     chmod +x setup-modx.sh

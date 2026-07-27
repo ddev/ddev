@@ -37,6 +37,8 @@ ignorePatterns:
   # codeberg 403
   - pattern: "https://codeberg.org/oerdnj/deb.sury.org"
   - pattern: "https://winaero.com"
+  # modx.com returns 403 to linkspector's headless browser
+  - pattern: "https://modx.com"
   
 aliveStatusCodes:
   - 200
