@@ -472,7 +472,7 @@ func drupalConfigOverrideAction(app *DdevApp) error {
 }
 
 func drupalPostStartAction(app *DdevApp) error {
-	if !app.IsDBOmitted() && (isDrupalApp(app)) {
+	if !app.IsDBOmitted() && isDrupalApp(app) {
 		err := app.Wait([]string{nodeps.DBContainer})
 		if err != nil {
 			return err
