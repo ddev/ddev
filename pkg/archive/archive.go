@@ -155,10 +155,14 @@ func UnXz(source string, destDirectory string) error {
 }
 
 // isArchiveAbsolutePath reports whether a tar entry's Linkname is an absolute
-// path. Tar Linkname strings are POSIX-style regardless of host OS, so
-// filepath.IsAbs alone is not enough: on Windows it returns false for a
-// leading "/" with no drive letter, even though that is rooted and must be
-// rejected the same as any other absolute form.
+// path, in any spelling. Linkname comes from the archive being extracted, so
+// it cannot be trusted to follow tar's usual POSIX-style ("/") convention;
+// filepath.IsAbs alone is not enough to catch every case, since its notion
+// of "absolute" is host-OS-dependent: on Windows it returns false for a
+// leading "/" or "\" with no drive letter, even though the resulting symlink
+// still resolves rooted (to the current drive) rather than confined under
+// dest. Checking all three forms explicitly catches an absolute target
+// regardless of which spelling the archive uses or which OS is running.
 func isArchiveAbsolutePath(p string) bool {
 	return strings.HasPrefix(p, "/") || strings.HasPrefix(p, `\`) || filepath.IsAbs(p)
 }
