@@ -154,6 +154,28 @@ func UnXz(source string, destDirectory string) error {
 	return nil
 }
 
+// isArchiveAbsolutePath reports whether a tar entry's Linkname should be
+// treated as an absolute path to rebase under dest. Tar Linkname strings are
+// POSIX-style regardless of host OS, so filepath.IsAbs alone is not enough:
+// on Windows it returns false for a leading "/" with no drive letter, even
+// though that is meant to be treated as absolute (rooted) here.
+func isArchiveAbsolutePath(p string) bool {
+	return strings.HasPrefix(p, "/") || strings.HasPrefix(p, `\`) || filepath.IsAbs(p)
+}
+
+// rebaseUnderDest rebases an absolute path (POSIX-style or native, e.g. a
+// Windows drive-lettered path) under dest, treating dest as the new root.
+// It strips any volume name and leading slashes from p before joining, so
+// two absolute paths are never naively concatenated (which on Windows would
+// produce an invalid path with an embedded drive letter/colon).
+func rebaseUnderDest(dest string, p string) string {
+	if v := filepath.VolumeName(p); v != "" {
+		p = p[len(v):]
+	}
+	p = strings.TrimLeft(p, `/\`)
+	return filepath.Join(dest, filepath.FromSlash(p))
+}
+
 // Untar accepts a tar, tar.gz, tar.bz2, tar.xz file and extracts the contents to the provided destination path.
 // extractionDir is the path at which extraction should start; nothing will be extracted except the contents of
 // extractionDir. If extranctionDir is empty, the entire tarball is extracted.
@@ -293,9 +315,17 @@ func Untar(source string, dest string, extractionDir string) error {
 			// Absolute targets are rebased against dest (treating dest as root),
 			// so container paths like /var/www/html/... are accepted.
 			// Relative targets are resolved against the symlink's parent directory.
+			//
+			// Tar Linkname strings are POSIX-style regardless of host OS, so
+			// filepath.IsAbs (which is host-OS-dependent) cannot be used to
+			// detect "absolute": on Windows it returns false for a leading
+			// "/" with no drive letter, which would skip rebasing entirely.
+			// isArchiveAbsolutePath/rebaseUnderDest handle both POSIX-style
+			// and native-Windows absolute forms explicitly and portably.
 			var resolvedTarget string
-			if filepath.IsAbs(file.Linkname) {
-				resolvedTarget = filepath.Join(dest, file.Linkname)
+			absoluteLinkTarget := isArchiveAbsolutePath(file.Linkname)
+			if absoluteLinkTarget {
+				resolvedTarget = rebaseUnderDest(dest, file.Linkname)
 			} else {
 				resolvedTarget = filepath.Join(fullPathDir, file.Linkname)
 			}
@@ -311,7 +341,7 @@ func Untar(source string, dest string, extractionDir string) error {
 			// raw file.Linkname, otherwise the symlink would point outside dest on disk
 			// even though the check above validated the rebased path.
 			linkTarget := file.Linkname
-			if filepath.IsAbs(file.Linkname) {
+			if absoluteLinkTarget {
 				linkTarget = resolvedTarget
 			}
 			err = os.Symlink(linkTarget, fullPath)
