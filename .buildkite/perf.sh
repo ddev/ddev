@@ -31,6 +31,12 @@ fi
 
 provider_bringup
 
+# Rootless podman cannot bind privileged ports (<1024), so the DDEV router must
+# use non-privileged ports -- same override test.sh applies for this DOCKER_TYPE.
+if [ "${DOCKER_TYPE:-}" = "podman-rootless" ]; then
+  ddev config global --router-http-port=8080 --router-https-port=8443
+fi
+
 echo
 echo "buildkite perf run ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER:-unknown} for OS=${os:-} DOCKER_TYPE=${DOCKER_TYPE:-notset}"
 echo

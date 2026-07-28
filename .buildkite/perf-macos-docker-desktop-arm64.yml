@@ -1,5 +1,10 @@
 # Nightly performance benchmark: Docker Desktop on macOS arm64
 #
+# Docker Desktop has its own dedicated machines (macstadium-m1,
+# tb-macos-arm64-4), unlike the other five macOS providers, which share a
+# single 3-machine pool -- see perf-macos-shared-providers.yml for why those
+# are combined into one sequential pipeline instead of one each.
+#
 # Configure in the Buildkite dashboard as its own pipeline pointed at this
 # file, with a Scheduled Build (nightly cron) rather than a push/PR trigger.
 # See perf/README.md.

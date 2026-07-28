@@ -1,0 +1,114 @@
+# Nightly performance benchmark: the macOS Docker providers that share the
+# tb-macos-arm64-5/6/7 agent pool (colima, lima, orbstack, podman-rootless,
+# rancher-desktop). Docker Desktop is NOT included here -- it has its own
+# dedicated machines (macstadium-m1, tb-macos-arm64-4), so it stays a
+# separate pipeline: perf-macos-docker-desktop-arm64.yml.
+#
+# These five providers are only three physical machines deep. If each were
+# its own independently scheduled pipeline (as they used to be), a nightly
+# run could start up to three of the five at once, saturating the whole
+# pool for however long the benchmark battery takes -- starving the
+# correctness-test pipelines that depend on the same three machines
+# (macos-colima_vz.yml, macos-lima.yml, macos-orbstack.yml,
+# macos-podman-rootless.yml, macos-rancher-desktop.yml) for that entire
+# window, not just delaying one queue slot.
+#
+# Running all five as sequential steps in ONE pipeline instead -- with a
+# `wait` between each -- guarantees only one of them is ever active against
+# the pool at a time, regardless of which of the three agents happens to
+# pick up a given step. Order doesn't matter; `continue_on_failure: true`
+# on each `wait` means one provider failing doesn't skip the rest.
+#
+# Configure this in the Buildkite dashboard as its own pipeline pointed at
+# this file, with a single nightly Scheduled Build (not a push/PR trigger).
+# See perf/README.md.
+
+  - label: "perf: colima (vz)"
+    command: ".buildkite/perf.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+    agents:
+      - "os=macos"
+      - "colima=true"
+      - "colima_vz=true"
+      - "architecture=arm64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DOCKER_TYPE: "colima_vz"
+      LIMA_SSH_PORT_FORWARDER: "true"
+    parallelism: 1
+
+  - wait: ~
+    continue_on_failure: true
+
+  - label: "perf: lima"
+    command: ".buildkite/perf.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+    agents:
+      - "os=macos"
+      - "lima=true"
+      - "architecture=arm64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DOCKER_TYPE: "lima"
+      LIMA_SSH_PORT_FORWARDER: "true"
+    parallelism: 1
+
+  - wait: ~
+    continue_on_failure: true
+
+  - label: "perf: orbstack"
+    command: ".buildkite/perf.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+    agents:
+      - "os=macos"
+      - "orbstack=true"
+      - "architecture=arm64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DOCKER_TYPE: "orbstack"
+    parallelism: 1
+
+  - wait: ~
+    continue_on_failure: true
+
+  - label: "perf: podman rootless"
+    command: ".buildkite/perf.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+    agents:
+      - "os=macos"
+      - "podman-rootless=true"
+      - "architecture=arm64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DOCKER_TYPE: "podman-rootless"
+    parallelism: 1
+
+  - wait: ~
+    continue_on_failure: true
+
+  - label: "perf: rancher desktop"
+    command: ".buildkite/perf.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+    agents:
+      - "os=macos"
+      - "rancher-desktop=true"
+      - "architecture=arm64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DOCKER_TYPE: "rancher-desktop"
+    parallelism: 1
