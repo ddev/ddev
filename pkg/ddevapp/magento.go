@@ -165,9 +165,9 @@ func setMagento2SiteSettingsPaths(app *DdevApp) {
 //	return nil
 //}
 
-// Magento2 2.4.7 requires php8.2/3 and MariaDB 10.6
+// Magento2 2.4.9 requires PHP 8.4/8.5 and MariaDB 12.3 (recommended) or 11.8
 // https://experienceleague.adobe.com/docs/commerce-operations/installation-guide/system-requirements.html
 func magento2ConfigOverrideAction(app *DdevApp) error {
-	app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB106}
+	app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDB123}
 	return nil
 }
