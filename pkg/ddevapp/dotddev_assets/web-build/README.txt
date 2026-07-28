@@ -18,8 +18,8 @@ See https://docs.docker.com/build/building/multi-stage/
 
 Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with `ddev utility rebuild -s web`.
 
-You can use the `.ddev/web-build` directory as the Docker “context” directory as well. So for example, if a file named `file.txt` exists in `.ddev/web-build`, you can use `ADD file.txt /` in the Dockerfile.
+You can use the `.ddev/web-build` directory as the Docker “context” directory as well. So for example, if a file named `file.txt` exists in `.ddev/web-build`, you can use `COPY file.txt /` in the Dockerfile.
 
-Global variants in `$HOME/.ddev/web-build/` are also supported and apply to all projects on this machine. Global files are inserted *before* project-level files. See https://docs.ddev.com/en/stable/users/usage/architecture/#global-files to find out where this directory actually lives on your system, since it isn't always `$HOME/.ddev`.
+Global variants in `$HOME/.ddev/web-build/` are also supported and apply to all projects on this machine. Global files are inserted *before* these project-level files. See https://docs.ddev.com/en/stable/users/extend/customizing-images/#global-dockerfiles
 
 See https://docs.ddev.com/en/stable/users/extend/customizing-images/ for advanced examples.

@@ -142,8 +142,14 @@ ddev version | grep global-ddev-dir
 `commands` directory
 : Directory for storing DDEV commands that should be available in containers, like `npm`, `artisan`, `cake` and `drush` for example. These are organized in subdirectories named for where they’ll be used: `db`, `host`, and `web`. You can add your own [custom commands](../extend/custom-commands.md) here.
 
+`db-build` directory
+: Like the per-project `db-build` directory, can be used to provide a [custom Dockerfile](../extend/customizing-images.md#global-dockerfiles) for the database container, applied to **every** project on this machine.
+
 `homeadditions` directory
 : Like the per-project `homeadditions` directory, files you add here will automatically be copied into the web container’s home directory. Files from the _global_ homeadditions directory will be copied into **every** web container’s home directory.
+
+`web-build` directory
+: Like the per-project `web-build` directory, can be used to provide a [custom Dockerfile](../extend/customizing-images.md#global-dockerfiles) for the web container, applied to **every** project on this machine.
 
 #### Hidden Global Files
 
