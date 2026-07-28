@@ -189,7 +189,7 @@ For Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt-get up
 
 #### Homebrew
 
-Homebrew itself abandoned the ability to specify versions a few years ago, but you can still install an older release by checking out its formula from the tap's own git history, then pinning it so `brew upgrade` doesn't move it:
+Homebrew itself abandoned the ability to specify versions a few years ago, but you can still install an older release by checking out its formula from the tap's own Git history, then pinning it so `brew upgrade` doesn't move it:
 
 ```bash
 # downgrade to v1.23.5
