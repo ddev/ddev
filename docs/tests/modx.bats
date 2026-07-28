@@ -71,7 +71,7 @@ teardown() {
 
   # MODX has no GitHub releases, so derive the latest production release ("-pl")
   # from the tags and download the traditional distribution zip.
-  MODX_VERSION=$(_curl_github -fsSL https://api.github.com/repos/modxcms/revolution/tags | sed -n 's/.*"name": *"v\([0-9][0-9.]*\)-pl".*/\1/p' | head -1)
+  MODX_VERSION=$(_curl_github -fsSL https://api.github.com/repos/modxcms/revolution/tags | grep -o '"v[0-9][0-9.]*-pl"' | head -1 | tr -dc '0-9.')
   echo "# MODX_VERSION=${MODX_VERSION}" >&3
   [ -n "${MODX_VERSION}" ]
 

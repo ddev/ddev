@@ -2038,7 +2038,7 @@ DDEV supports both [MODX](https://modx.com/) Revolution 2.x and 3.x.
     Download the latest MODX Revolution release and extract it. The archive extracts into a versioned subdirectory, so move its contents up to the project root:
 
     ```bash
-    MODX_VERSION=$(curl -fsSL https://api.github.com/repos/modxcms/revolution/tags | sed -n 's/.*"name": *"v\([0-9][0-9.]*\)-pl".*/\1/p' | head -1)
+    MODX_VERSION=$(curl -fsSL https://api.github.com/repos/modxcms/revolution/tags | grep -o '"v[0-9][0-9.]*-pl"' | head -1 | tr -dc '0-9.')
     curl -fLo modx.zip "https://modx.s3.amazonaws.com/releases/${MODX_VERSION}/modx-${MODX_VERSION}-pl.zip"
     unzip -q modx.zip && rm -f modx.zip
     (shopt -s dotglob && mv "modx-${MODX_VERSION}-pl"/* .) && rmdir "modx-${MODX_VERSION}-pl"
