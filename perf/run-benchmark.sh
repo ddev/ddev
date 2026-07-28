@@ -29,6 +29,9 @@ add_metric() {
 echo "--- Generating sync-settle fixture tree (if needed)" >&2
 bash "$DIR/fixtures/generate-large-tree.sh" >&2
 
+echo "--- ddev utility rebuild (no-cache image build)" >&2
+add_metric "$(bash "$DIR/metrics/00-ddev-rebuild.sh")"
+
 echo "--- ddev start (cold)" >&2
 add_metric "$(bash "$DIR/metrics/01-ddev-start.sh")"
 

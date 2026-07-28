@@ -21,6 +21,7 @@ One JSON result object per run per leg (platform + Docker provider combination):
   "arch": "arm64",
   "docker_provider": "colima_vz",
   "metrics": {
+    "ddev_rebuild_ms": 33812,
     "ddev_start_cold_ms": 8342,
     "mutagen_settle_ms": 4110,
     "drupal_install_ms": 41203,
@@ -32,6 +33,7 @@ One JSON result object per run per leg (platform + Docker provider combination):
 
 | Metric | What it measures | Why it's here |
 |---|---|---|
+| `ddev_rebuild_ms` | `ddev utility rebuild` (forced no-cache image build + restart) | Image-build-layer cost -- catches regressions like #8600, where a recursive chgrp/chmod added 90s+ to every project build without any existing metric noticing. `ddev_start_cold_ms` below starts from an already-built image, so it can't see this class of regression |
 | `ddev_start_cold_ms` | `ddev poweroff` + prune, then `ddev start` to ready | Docker-provider/container startup cost, independent of any CMS |
 | `mutagen_settle_ms` | Copy a ~5000-file tree in, time `ddev mutagen sync` (blocking flush) to settle | Isolates file-sync mechanics (bind mount vs. Mutagen vs. NFS) from any app's install logic. `null` when Mutagen isn't enabled on the project |
 | `drupal_install_ms` | Puppeteer drives the Drupal `demo_umami` web install wizard end-to-end | The flagship "realistic app" metric — parallels normal browser-based DDEV usage, exercising the DDEV router, webserver, and PHP-FPM on every step |
