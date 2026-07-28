@@ -90,36 +90,38 @@ webimage_extra_packages: [locales-all]
 
 ## Adding Extra Dockerfiles for `webimage` and `dbimage`
 
-For more complex requirements, you can add:
+For more complex requirements, add your own Dockerfile content to `.ddev/web-build` (for `webimage`) or `.ddev/db-build` (for `dbimage`). DDEV merges those files with its own build steps into one generated Dockerfile per image, at `.ddev/.webimageBuild/Dockerfile` and `.ddev/.dbimageBuild/Dockerfile`, which you never edit directly.
 
-* `.ddev/web-build/Dockerfile`
-* `.ddev/web-build/Dockerfile.*`
-* `.ddev/db-build/Dockerfile`
-* `.ddev/db-build/Dockerfile.*`
+DDEV writes example files for you to copy and rename:
 
-These files’ content will be inserted into the constructed Dockerfile for each image. They are inserted *after* most of the rest of the things that are done to build the image, and are done in alphabetical order, so `Dockerfile` is inserted first, followed by `Dockerfile.*` in alphabetical order.
+* `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example` in the project, when you run [`ddev config`](../usage/commands.md#config)
+* `$HOME/.ddev/web-build/pre.Dockerfile.example` and `$HOME/.ddev/db-build/pre.Dockerfile.example` for [global Dockerfiles](#global-dockerfiles)
 
-For certain use cases, you might need to add directives very early on the Dockerfile like proxy settings or SSL termination. You can use `pre.` variants for this that are inserted *before* what DDEV adds to build the image:
+!!!warning "The Dockerfile builds an image, it doesn’t run in your project"
+    While the Dockerfile is executing, your code is not mounted and the container is not running, the image is being built. So for example, an `npm install` in `/var/www/html` will not do anything to your project because the code is not there at image building time.
 
-* `.ddev/web-build/pre.Dockerfile.*`
-* `.ddev/web-build/pre.Dockerfile`
-* `.ddev/db-build/pre.Dockerfile.*`
-* `.ddev/db-build/pre.Dockerfile`
+### Insertion Order
 
-Finally, to support [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/) and other more complex use cases, you can use `prepend.` variants that are inserted *before* everything else, *on top* of the generated Dockerfile.
+The file name decides where its content lands in the generated Dockerfile, and [global files](#global-dockerfiles) in `$HOME/.ddev/*-build` are always inserted before the project’s files in `.ddev/*-build`:
 
-* `.ddev/web-build/prepend.Dockerfile.*`
-* `.ddev/web-build/prepend.Dockerfile`
-* `.ddev/db-build/prepend.Dockerfile.*`
-* `.ddev/db-build/prepend.Dockerfile`
+| # | Content                                                                                       | Notes                                                                                                                                                                                    |
+|---|-----------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | `prepend.Dockerfile`, `prepend.Dockerfile.*`<br>([global](#global-dockerfiles), then project) | Above DDEV’s `FROM` line, for [multi-stage builds](#multi-stage-builds). Only `$BASE_IMAGE` is declared this early, see [Build Time Environment Variables](#build-time-environment-variables) |
+| 2 | DDEV’s `FROM $BASE_IMAGE`, build arguments, and user creation                                  | The in-image user mirrors your host user, using `$username`, `$uid`, and `$gid`                                                                                                                                                                                        |
+| 3 | `pre.Dockerfile`, `pre.Dockerfile.*`<br>([global](#global-dockerfiles), then project)         | For directives that have to come early, like proxy settings, SSL termination, [CA certificates](#global-dockerfiles), or [EOL PHP versions](#adding-eol-versions-of-php)                 |
+| 4 | DDEV’s own build steps                                                                        | PHP version, `webimage_extra_packages` or `dbimage_extra_packages`, Composer update, database clients                                                                                     |
+| 5 | `Dockerfile`, `Dockerfile.*`<br>([global](#global-dockerfiles), then project)                 | The usual choice for most customizations                                                                                                                                                 |
+| 6 | DDEV’s finishing steps                                                                        | Permission fixes on the web image, which have to run after everything else                                                                                                               |
 
-Multi-stage builds are useful to anyone who has struggled to optimize Dockerfiles while keeping them easy to read and maintain.
+Within each group, files are inserted in alphabetical order, so `Dockerfile` comes first, then `Dockerfile.*` alphabetically.
 
-Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev restart --no-cache`](../usage/commands.md#restart) or [`ddev utility rebuild`](../usage/commands.md#utility-rebuild). `ddev utility rebuild` is also great because it shows you the entire process of the build for debugging.
+To see the result, read the generated Dockerfile, or force a rebuild with [`ddev restart --no-cache`](../usage/commands.md#restart) or [`ddev utility rebuild`](../usage/commands.md#utility-rebuild), which shows the whole build output for debugging.
 
-Examples of possible Dockerfiles are `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example`, created in your project when you run [`ddev config`](../usage/commands.md#config).
+### Copying Files into the Image
 
-You can use the `.ddev/*-build` directory as the Docker “context” directory as well. So for example, if a file named `file.txt` exists in `.ddev/web-build`, you can use `ADD file.txt /` in the Dockerfile.
+The `.ddev/*-build` directory is the Docker "context", so if a file named `file.txt` exists in `.ddev/web-build`, you can use `COPY file.txt /` in the Dockerfile.
+
+### Examples
 
 An example web image `.ddev/web-build/Dockerfile` might be:
 
@@ -151,18 +153,20 @@ RUN chmod -R ugo+rw $COMPOSER_HOME
 ENV COMPOSER_HOME=""
 ```
 
-An example [Multi-stage](https://docs.docker.com/build/building/multi-stage/) web image could have a  `.ddev/web-build/prepend.Dockerfile`:
+### Multi-Stage Builds
+
+[Multi-stage builds](https://docs.docker.com/build/building/multi-stage/) help keep a Dockerfile optimized without making it hard to read and maintain. They need a `prepend.` file, because the extra `FROM` statement has to be on top of the generated Dockerfile. An example web image could have a `.ddev/web-build/prepend.Dockerfile`:
 
 ```dockerfile
 # If we want to use any of the build time environment variables injected by ddev
 # on the prepend.Dockerfile* variants we need to manually declare them to make
 # them available using the ARG instruction.
-# Only $BASE_IMAGE is already added as it must be global to be used on FROM 
-# statements. 
+# Only $BASE_IMAGE is already added as it must be global to be used on FROM
+# statements.
 FROM $BASE_IMAGE AS build-stage-go
 
 # While we are not using $uid and $gid in the code below, this serves as an example
-# of how any of the other DDEV's build variables must be defined. 
+# of how any of the other DDEV's build variables must be defined.
 ARG uid
 ARG gid
 
@@ -182,7 +186,26 @@ And then a `Dockerfile`:
 COPY --from=build-stage-go /usr/local/go /usr/local
 ```
 
-**Remember that the Dockerfile is building a Docker image that will be used later with DDEV.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, the image is being built. So for example, an `npm install` in `/var/www/html` will not do anything to your project because the code is not there at image building time.
+### Global Dockerfiles
+
+The same files work in `$HOME/.ddev/web-build/` and `$HOME/.ddev/db-build/`, where they apply to every project on the machine, which is handy for things like corporate certificates or private package registries. Global files are inserted _before_ the project’s own files, and the global directory is a Docker “context” too, where a project file of the same name wins.
+
+!!!tip "Your global directory may live elsewhere"
+    See [Global Files](../usage/architecture.md#global-files), it isn’t always `$HOME/.ddev`.
+
+For example, to install a custom CA certificate in every project’s web image:
+
+```bash
+cat > $HOME/.ddev/web-build/pre.Dockerfile.vpn << 'EOF'
+COPY my-ca.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+EOF
+# The COPY source has to be in the same directory, it's the Docker "context"
+cp /path/to/my-ca.crt $HOME/.ddev/web-build/my-ca.crt
+ddev restart
+```
+
+A `pre.` file is used here so the certificate is in place before DDEV’s own build steps run.
 
 ### Build Time Environment Variables
 

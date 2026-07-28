@@ -1,0 +1,8 @@
+## #ddev-generated
+## Copy this pre.Dockerfile.example to pre.Dockerfile to customize the webimage
+## of every project on this machine.
+## `pre.` files are inserted before DDEV's own build steps; name it Dockerfile
+## instead to append after them. Project `.ddev/web-build` files are applied last.
+## Files you COPY have to be in this directory, it's the Docker "context".
+# COPY my-ca.crt /usr/local/share/ca-certificates/
+# RUN update-ca-certificates
