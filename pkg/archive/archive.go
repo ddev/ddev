@@ -154,26 +154,13 @@ func UnXz(source string, destDirectory string) error {
 	return nil
 }
 
-// isArchiveAbsolutePath reports whether a tar entry's Linkname should be
-// treated as an absolute path to rebase under dest. Tar Linkname strings are
-// POSIX-style regardless of host OS, so filepath.IsAbs alone is not enough:
-// on Windows it returns false for a leading "/" with no drive letter, even
-// though that is meant to be treated as absolute (rooted) here.
+// isArchiveAbsolutePath reports whether a tar entry's Linkname is an absolute
+// path. Tar Linkname strings are POSIX-style regardless of host OS, so
+// filepath.IsAbs alone is not enough: on Windows it returns false for a
+// leading "/" with no drive letter, even though that is rooted and must be
+// rejected the same as any other absolute form.
 func isArchiveAbsolutePath(p string) bool {
 	return strings.HasPrefix(p, "/") || strings.HasPrefix(p, `\`) || filepath.IsAbs(p)
-}
-
-// rebaseUnderDest rebases an absolute path (POSIX-style or native, e.g. a
-// Windows drive-lettered path) under dest, treating dest as the new root.
-// It strips any volume name and leading slashes from p before joining, so
-// two absolute paths are never naively concatenated (which on Windows would
-// produce an invalid path with an embedded drive letter/colon).
-func rebaseUnderDest(dest string, p string) string {
-	if v := filepath.VolumeName(p); v != "" {
-		p = p[len(v):]
-	}
-	p = strings.TrimLeft(p, `/\`)
-	return filepath.Join(dest, filepath.FromSlash(p))
 }
 
 // Untar accepts a tar, tar.gz, tar.bz2, tar.xz file and extracts the contents to the provided destination path.
@@ -311,24 +298,17 @@ func Untar(source string, dest string, extractionDir string) error {
 				return fmt.Errorf("failed to create the directory %s, err: %v", fullPathDir, err)
 			}
 
-			// Validate symlink target doesn't escape dest.
-			// Absolute targets are rebased against dest (treating dest as root),
-			// so container paths like /var/www/html/... are accepted.
-			// Relative targets are resolved against the symlink's parent directory.
-			//
-			// Tar Linkname strings are POSIX-style regardless of host OS, so
-			// filepath.IsAbs (which is host-OS-dependent) cannot be used to
-			// detect "absolute": on Windows it returns false for a leading
-			// "/" with no drive letter, which would skip rebasing entirely.
-			// isArchiveAbsolutePath/rebaseUnderDest handle both POSIX-style
-			// and native-Windows absolute forms explicitly and portably.
-			var resolvedTarget string
-			absoluteLinkTarget := isArchiveAbsolutePath(file.Linkname)
-			if absoluteLinkTarget {
-				resolvedTarget = rebaseUnderDest(dest, file.Linkname)
-			} else {
-				resolvedTarget = filepath.Join(fullPathDir, file.Linkname)
+			// A dev-environment archive has no legitimate need to plant an
+			// absolute symlink target, and there's no safe general way to
+			// let one through: rebasing it under dest is what caused this
+			// function's history of escape bugs (see GHSA-9hq4-hm3j-jmph).
+			// Reject absolute targets outright; only relative targets,
+			// resolved against and confined to the symlink's parent
+			// directory, are allowed.
+			if isArchiveAbsolutePath(file.Linkname) {
+				return fmt.Errorf("symlink target %q in archive entry %q is absolute, which is not allowed", file.Linkname, file.Name)
 			}
+			resolvedTarget := filepath.Join(fullPathDir, file.Linkname)
 			if !strings.HasPrefix(filepath.Clean(resolvedTarget)+string(os.PathSeparator), filepath.Clean(dest)+string(os.PathSeparator)) {
 				return fmt.Errorf("symlink target %q in archive entry %q escapes destination directory", file.Linkname, file.Name)
 			}
@@ -336,15 +316,7 @@ func Untar(source string, dest string, extractionDir string) error {
 			// Remove any existing file/symlink at this path
 			_ = os.Remove(fullPath)
 
-			// Create the symlink using the same target that was validated above.
-			// For absolute targets this is resolvedTarget (rebased under dest), not the
-			// raw file.Linkname, otherwise the symlink would point outside dest on disk
-			// even though the check above validated the rebased path.
-			linkTarget := file.Linkname
-			if absoluteLinkTarget {
-				linkTarget = resolvedTarget
-			}
-			err = os.Symlink(linkTarget, fullPath)
+			err = os.Symlink(file.Linkname, fullPath)
 			if err != nil {
 				return fmt.Errorf("failed to create symlink %v -> %v, err: %v", fullPath, file.Linkname, err)
 			}

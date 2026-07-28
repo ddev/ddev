@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/archive"
@@ -225,33 +224,27 @@ func TestUntarPathTraversal(t *testing.T) {
 	})
 
 	t.Run("absolute_symlink_target_with_traversal", func(t *testing.T) {
-		// Absolute path with .. traversal that escapes dest even when rebased
 		tarball := buildTar("link.txt", "/../../../etc/passwd", tar.TypeSymlink)
 		err := archive.Untar(tarball, destDir, "")
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "escapes destination directory")
+		require.Contains(t, err.Error(), "is absolute, which is not allowed")
 	})
 
-	t.Run("absolute_symlink_container_path_allowed", func(t *testing.T) {
-		// Absolute container paths like /var/www/html/... should be allowed,
-		// but the symlink actually created on disk must be rebased under dest,
-		// not point at the raw absolute path (which would land outside dest).
+	t.Run("absolute_symlink_target_rejected", func(t *testing.T) {
+		// Absolute symlink targets are rejected outright, even ones shaped
+		// like container paths (e.g. /var/www/html/...). There is no safe
+		// general way to let one through: rebasing it under dest is what
+		// caused this function's history of escape bugs, see GHSA-9hq4-hm3j-jmph.
 		tarball := buildTar("link.txt", "/var/www/html/lib/web/underscore.js", tar.TypeSymlink)
 		err := archive.Untar(tarball, destDir, "")
-		require.NoError(t, err)
-
-		linkPath := filepath.Join(destDir, "link.txt")
-		linkTarget, err := os.Readlink(linkPath)
-		require.NoError(t, err)
-		require.True(t, strings.HasPrefix(filepath.Clean(linkTarget), filepath.Clean(destDir)),
-			"symlink target %q must be rebased under dest %q, not point at the raw absolute path", linkTarget, destDir)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "is absolute, which is not allowed")
 	})
 
 	t.Run("absolute_symlink_write_through_escape", func(t *testing.T) {
 		// Regression test for GHSA-9hq4-hm3j-jmph: an absolute symlink target
-		// passed the (rebased) escape check but was created on disk pointing
-		// at the raw absolute target, so a follow-up regular-file entry that
-		// traversed the symlink could write outside dest.
+		// must be rejected outright, since a follow-up regular-file entry
+		// that traverses it could otherwise write outside dest.
 		victimDir := t.TempDir()
 		victimFile := filepath.Join(victimDir, "pwned.txt")
 		require.NoError(t, os.WriteFile(victimFile, []byte("original"), 0644))
@@ -281,7 +274,9 @@ func TestUntarPathTraversal(t *testing.T) {
 
 		writeThroughDest := testcommon.CreateTmpDir("absolute_symlink_write_through_escape")
 		t.Cleanup(func() { _ = os.RemoveAll(writeThroughDest) })
-		_ = archive.Untar(f.Name(), writeThroughDest, "")
+		err = archive.Untar(f.Name(), writeThroughDest, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "is absolute, which is not allowed")
 
 		data, err := os.ReadFile(victimFile)
 		require.NoError(t, err)
