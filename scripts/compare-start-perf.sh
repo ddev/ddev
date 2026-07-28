@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # compare-start-perf.sh
 #
-# Compare `ddev start` performance between any two DDEV commits.
+# Compare `ddev start` and `ddev utility rebuild` performance between any two
+# DDEV commits.
 #
 # It builds each commit in an isolated git worktree (your working tree is left
 # untouched), creates a throwaway project for each, and times repeated
-# `ddev start` runs. Results are printed as plain text.
+# `ddev start` and `ddev utility rebuild` runs. Results are printed as plain
+# text.
 #
 # Works on macOS (bash 3.2 / BSD date) and Linux. It has no hard dependency on
 # Mutagen and runs whether or not Mutagen is installed. By default it uses your
@@ -24,7 +26,9 @@
 # projects you have running. Use -P to skip it.
 #
 # Options:
-#   -n NUM     number of timed (warm) start runs per commit   (default: 5)
+#   -n NUM     number of timed (warm) start runs per commit     (default: 5)
+#   -b NUM     number of timed 'ddev utility rebuild' runs      (default: 3)
+#              per commit; 0 disables the rebuild comparison
 #   -t TYPE    ddev project type for the test project          (default: php)
 #   -m MODE    Mutagen: on | off | default (global config)     (default: default)
 #   -P         do NOT run 'ddev poweroff' before each commit   (default: do it)
@@ -35,23 +39,26 @@
 #   scripts/compare-start-perf.sh upstream/main HEAD
 #   scripts/compare-start-perf.sh -n 10 -m off v1.25.0 HEAD
 #   scripts/compare-start-perf.sh -m on upstream/main HEAD
+#   scripts/compare-start-perf.sh -b 5 upstream/main HEAD
 
 set -u
 
 RUNS=5
+REBUILD_RUNS=3
 PROJECT_TYPE=php
 KEEP=0
 MUTAGEN_MODE=default
 POWEROFF=1
 
 usage() {
-  sed -n '2,37p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,42p' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
 }
 
-while getopts ":n:t:m:Pkh" opt; do
+while getopts ":n:b:t:m:Pkh" opt; do
   case "$opt" in
     n) RUNS=$OPTARG ;;
+    b) REBUILD_RUNS=$OPTARG ;;
     t) PROJECT_TYPE=$OPTARG ;;
     m) MUTAGEN_MODE=$OPTARG ;;
     P) POWEROFF=0 ;;
@@ -74,6 +81,10 @@ case "$RUNS" in
   ''|*[!0-9]*) echo "Error: -n must be a positive integer" >&2; exit 1 ;;
 esac
 [ "$RUNS" -ge 1 ] || { echo "Error: -n must be >= 1" >&2; exit 1; }
+
+case "$REBUILD_RUNS" in
+  ''|*[!0-9]*) echo "Error: -b must be a non-negative integer" >&2; exit 1 ;;
+esac
 
 # Map Mutagen mode to the config flag value and the config.yaml key fallback.
 case "$MUTAGEN_MODE" in
@@ -159,17 +170,18 @@ outlier_runs() {
     fi
   done
 }
-# report_warm <label> <values...> : per-commit warm-start lines, with outlier note.
-report_warm() {
-  label=$1; shift
+# report_stats <name> <values...> : per-commit stats line for a named metric
+# (e.g. "start", "rebuild"), with an outlier note when a run looks anomalous.
+report_stats() {
+  name=$1; shift
   med=$(median "$@")
-  echo "  start: $(stats "$@")"
+  echo "  $name: $(stats "$@")"
   outs=$(outlier_runs "$med" "$@")
   if [ -n "$outs" ]; then
     echo "  NOTE: anomalous run(s) excluded from trimmed mean: $outs"
     echo "        (a one-time 'docker build --no-cache' rebuild or a Docker/network stall"
     echo "         can cause this; median and trimmed mean are the reliable numbers)"
-    echo "  start (trimmed): median=${med}s  mean=$(trimmed_mean "$med" "$@")s"
+    echo "  $name (trimmed): median=${med}s  mean=$(trimmed_mean "$med" "$@")s"
   fi
 }
 
@@ -231,16 +243,24 @@ build_commit() {
   git -C "$REPO_ROOT" worktree remove --force "$wt" >/dev/null 2>&1
   ver=$("$bindir/ddev" --version 2>/dev/null)
   eval "RESULT_VERSION_$label=\$ver"
+  # `ddev debug` was renamed to `ddev utility` (with `debug` kept as an alias),
+  # so this only matters for commits that predate the rename.
+  if "$bindir/ddev" utility --help >/dev/null 2>&1; then
+    eval "REBUILD_CMD_$label=utility"
+  else
+    eval "REBUILD_CMD_$label=debug"
+  fi
 }
 
 # --- benchmark one binary ----------------------------------------------------
-# Sets globals: RESULT_VERSION, RESULT_COLD, and fills the named array via eval.
+# Sets globals: RESULT_VERSION, RESULT_COLD, and fills the named arrays via eval.
 benchmark() {
-  label=$1; proj=$2; arrname=$3
+  label=$1; proj=$2; warm_arrname=$3; rebuild_arrname=$4
   bindir="$WORKDIR/bin-$label"
   projdir="$PROJ_BASE/proj-$label"
   log="$WORKDIR/run-$label.log"
   REF_VAL=$(eval "echo \$RESULT_VERSION_$label")
+  rebuild_cmd=$(eval "echo \$REBUILD_CMD_$label")
   export PATH="$bindir:$PATH_ORIG"
   : >"$log"
 
@@ -307,14 +327,17 @@ benchmark() {
       || echo "  Warning: image pre-download failed for $label (continuing anyway)" >&2
   fi
 
-  # Cold start (first build is uncached for this project).
-  echo "  cold start (build + up; may take a few minutes) ..."
+  # Prime the project: the very first build for this project is always
+  # uncached, so use `ddev utility rebuild` (build the web image + restart)
+  # rather than `ddev start`. This also means the warm-start runs below never
+  # need to build anything, since nothing changes between them.
+  echo "  cold build (ddev $rebuild_cmd rebuild; may take a few minutes) ..."
   t0=$(now)
-  run_ddev "cold 'ddev start' failed" start -y
+  run_ddev "cold 'ddev $rebuild_cmd rebuild' failed" "$rebuild_cmd" rebuild
   t1=$(now)
   cold=$(elapsed "$t0" "$t1")
   eval "RESULT_COLD_$label=\$cold"
-  echo "    cold start: ${cold}s"
+  echo "    cold build: ${cold}s"
 
   # Each timed run measures `ddev start` from a STOPPED state: an untimed
   # `ddev stop` first, then time `ddev start`. This is the representative
@@ -326,7 +349,7 @@ benchmark() {
   run_ddev "warmup 'ddev start' failed" start -y
 
   echo "  timed starts from stopped state ($RUNS):"
-  eval "$arrname=()"
+  eval "$warm_arrname=()"
   i=1
   while [ "$i" -le "$RUNS" ]; do
     run_ddev "'ddev stop' before run $i failed" stop
@@ -334,10 +357,30 @@ benchmark() {
     run_ddev "'ddev start' run $i failed" start -y
     t1=$(now)
     e=$(elapsed "$t0" "$t1")
-    eval "$arrname+=(\"\$e\")"
+    eval "$warm_arrname+=(\"\$e\")"
     printf "    run %d: %ss\n" "$i" "$e"
     i=$((i + 1))
   done
+
+  # Timed `ddev utility rebuild` runs: this is a full `docker build --no-cache`
+  # of the web image followed by a project restart, and is the operation that
+  # regressed in https://github.com/ddev/ddev/issues/8600 (a slow `chmod -R` in
+  # the webimage Dockerfile). `ddev start` alone does not exercise this once the
+  # image is cached, so it is timed separately here.
+  eval "$rebuild_arrname=()"
+  if [ "$REBUILD_RUNS" -gt 0 ]; then
+    echo "  timed '$rebuild_cmd rebuild' runs ($REBUILD_RUNS; may take a few minutes) ..."
+    i=1
+    while [ "$i" -le "$REBUILD_RUNS" ]; do
+      t0=$(now)
+      run_ddev "'ddev $rebuild_cmd rebuild' run $i failed" "$rebuild_cmd" rebuild
+      t1=$(now)
+      e=$(elapsed "$t0" "$t1")
+      eval "$rebuild_arrname+=(\"\$e\")"
+      printf "    run %d: %ss\n" "$i" "$e"
+      i=$((i + 1))
+    done
+  fi
 }
 
 # --- run ---------------------------------------------------------------------
@@ -346,12 +389,12 @@ SHA_A=$(git -C "$REPO_ROOT" rev-parse --short "$REF_A")
 SHA_B=$(git -C "$REPO_ROOT" rev-parse --short "$REF_B")
 
 echo "==================================================================="
-echo "DDEV  ddev start  performance comparison"
+echo "DDEV  ddev start / ddev utility rebuild  performance comparison"
 echo "==================================================================="
-echo "Commit A : $REF_A ($SHA_A)"
-echo "Commit B : $REF_B ($SHA_B)"
-echo "Warm runs: $RUNS    Project type: $PROJECT_TYPE    Timer: $TIMER"
-echo "Mutagen  : $MUTAGEN_MODE (start time includes Mutagen sync when enabled)"
+echo "Commit A    : $REF_A ($SHA_A)"
+echo "Commit B    : $REF_B ($SHA_B)"
+echo "Warm runs   : $RUNS    Rebuild runs: $REBUILD_RUNS    Project type: $PROJECT_TYPE    Timer: $TIMER"
+echo "Mutagen     : $MUTAGEN_MODE (start time includes Mutagen sync when enabled)"
 echo
 
 build_commit "$REF_A" a
@@ -359,27 +402,42 @@ build_commit "$REF_B" b
 echo
 
 echo "Commit A  $REF_A ($SHA_A)  $(eval echo \$RESULT_VERSION_a 2>/dev/null)"
-benchmark a "$PROJ_A" WARM_A
-report_warm a "${WARM_A[@]}"
+benchmark a "$PROJ_A" WARM_A REBUILD_A
+report_stats start "${WARM_A[@]}"
+[ "$REBUILD_RUNS" -gt 0 ] && report_stats rebuild "${REBUILD_A[@]}"
 echo
 
 echo "Commit B  $REF_B ($SHA_B)  $(eval echo \$RESULT_VERSION_b 2>/dev/null)"
-benchmark b "$PROJ_B" WARM_B
-report_warm b "${WARM_B[@]}"
+benchmark b "$PROJ_B" WARM_B REBUILD_B
+report_stats start "${WARM_B[@]}"
+[ "$REBUILD_RUNS" -gt 0 ] && report_stats rebuild "${REBUILD_B[@]}"
 echo
 
-MED_A=$(median "${WARM_A[@]}"); TM_A=$(trimmed_mean "$MED_A" "${WARM_A[@]}")
-MED_B=$(median "${WARM_B[@]}"); TM_B=$(trimmed_mean "$MED_B" "${WARM_B[@]}")
+# print_summary <title> <arrname-a> <arrname-b> : median/trimmed-mean comparison
+# for one metric. Arrays are passed by name (not value) for bash 3.2 compatibility.
+print_summary() {
+  title=$1; an=$2; bn=$3
+  eval "aset=(\"\${$an[@]}\")"
+  eval "bset=(\"\${$bn[@]}\")"
+  med_a=$(median "${aset[@]}"); tm_a=$(trimmed_mean "$med_a" "${aset[@]}")
+  med_b=$(median "${bset[@]}"); tm_b=$(trimmed_mean "$med_b" "${bset[@]}")
+  echo "Summary ($title)"
+  echo "-------------------------------------------------------------------"
+  printf "  A (%s): median=%ss  trimmed-mean=%ss\n" "$SHA_A" "$med_a" "$tm_a"
+  printf "  B (%s): median=%ss  trimmed-mean=%ss\n" "$SHA_B" "$med_b" "$tm_b"
+  awk -v a="$med_a" -v b="$med_b" 'BEGIN {
+    d = b - a
+    pct = (a != 0) ? d / a * 100 : 0
+    if (d > 0)      printf "  B is SLOWER than A by %.2fs (%+.1f%%) on median\n", d, pct
+    else if (d < 0) printf "  B is FASTER than A by %.2fs (%+.1f%%) on median\n", -d, pct
+    else            printf "  No median difference\n"
+  }'
+}
+
 echo "==================================================================="
-echo "Summary (ddev start from stopped state)"
-echo "-------------------------------------------------------------------"
-printf "  A (%s): median=%ss  trimmed-mean=%ss\n" "$SHA_A" "$MED_A" "$TM_A"
-printf "  B (%s): median=%ss  trimmed-mean=%ss\n" "$SHA_B" "$MED_B" "$TM_B"
-awk -v a="$MED_A" -v b="$MED_B" 'BEGIN {
-  d = b - a
-  pct = (a != 0) ? d / a * 100 : 0
-  if (d > 0)      printf "  B is SLOWER than A by %.2fs (%+.1f%%) on median\n", d, pct
-  else if (d < 0) printf "  B is FASTER than A by %.2fs (%+.1f%%) on median\n", -d, pct
-  else            printf "  No median difference\n"
-}'
+print_summary "ddev start from stopped state" WARM_A WARM_B
+if [ "$REBUILD_RUNS" -gt 0 ]; then
+  echo
+  print_summary "ddev utility rebuild" REBUILD_A REBUILD_B
+fi
 echo "==================================================================="

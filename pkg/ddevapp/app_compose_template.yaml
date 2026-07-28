@@ -160,6 +160,16 @@ services:
 
     restart: "no"
     user: '$DDEV_UID:$DDEV_GID'
+    # Group 0 (root) is added here because Docker does not derive supplementary
+    # groups from /etc/group when both uid and gid are given explicitly (as
+    # above); it must be requested with group_add. This lets the container user
+    # read/write directories baked group-writable-by-root in the image (e.g.
+    # /usr/local/n, see containers/ddev-php-base/Dockerfile and the useradd
+    # command in WriteBuildDockerfile), instead of DDEV chgrp/chmod'ing them
+    # for every project. See
+    # https://developers.redhat.com/blog/2020/10/26/adapting-docker-and-kubernetes-containers-to-run-on-red-hat-openshift-container-platform
+    group_add:
+      - "0"
     hostname: {{ .Name }}-web
 
     ports:
