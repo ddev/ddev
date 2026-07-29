@@ -224,18 +224,64 @@ func TestUntarPathTraversal(t *testing.T) {
 	})
 
 	t.Run("absolute_symlink_target_with_traversal", func(t *testing.T) {
-		// Absolute path with .. traversal that escapes dest even when rebased
 		tarball := buildTar("link.txt", "/../../../etc/passwd", tar.TypeSymlink)
 		err := archive.Untar(tarball, destDir, "")
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "escapes destination directory")
+		require.Contains(t, err.Error(), "is absolute, which is not allowed")
 	})
 
-	t.Run("absolute_symlink_container_path_allowed", func(t *testing.T) {
-		// Absolute container paths like /var/www/html/... should be allowed
+	t.Run("absolute_symlink_target_rejected", func(t *testing.T) {
+		// Absolute symlink targets are rejected outright, even ones shaped
+		// like container paths (e.g. /var/www/html/...). There is no safe
+		// general way to let one through: rebasing it under dest is what
+		// caused this function's history of escape bugs, see GHSA-9hq4-hm3j-jmph.
 		tarball := buildTar("link.txt", "/var/www/html/lib/web/underscore.js", tar.TypeSymlink)
 		err := archive.Untar(tarball, destDir, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "is absolute, which is not allowed")
+	})
+
+	t.Run("absolute_symlink_write_through_escape", func(t *testing.T) {
+		// Regression test for GHSA-9hq4-hm3j-jmph: an absolute symlink target
+		// must be rejected outright, since a follow-up regular-file entry
+		// that traverses it could otherwise write outside dest.
+		victimDir := t.TempDir()
+		victimFile := filepath.Join(victimDir, "pwned.txt")
+		require.NoError(t, os.WriteFile(victimFile, []byte("original"), 0644))
+
+		f, err := os.CreateTemp("", "absolute_symlink_write_through_escape_*.tar")
 		require.NoError(t, err)
+		t.Cleanup(func() { _ = os.Remove(f.Name()) })
+
+		tw := tar.NewWriter(f)
+		require.NoError(t, tw.WriteHeader(&tar.Header{
+			Name:     "link",
+			Typeflag: tar.TypeSymlink,
+			Linkname: victimDir,
+			Mode:     0777,
+		}))
+		content := []byte("OWNED-BY-ARCHIVE")
+		require.NoError(t, tw.WriteHeader(&tar.Header{
+			Name:     "link/pwned.txt",
+			Typeflag: tar.TypeReg,
+			Size:     int64(len(content)),
+			Mode:     0644,
+		}))
+		_, err = tw.Write(content)
+		require.NoError(t, err)
+		require.NoError(t, tw.Close())
+		require.NoError(t, f.Close())
+
+		writeThroughDest := testcommon.CreateTmpDir("absolute_symlink_write_through_escape")
+		t.Cleanup(func() { _ = os.RemoveAll(writeThroughDest) })
+		err = archive.Untar(f.Name(), writeThroughDest, "")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "is absolute, which is not allowed")
+
+		data, err := os.ReadFile(victimFile)
+		require.NoError(t, err)
+		require.Equal(t, "original", string(data),
+			"host file outside dest must not be overwritten via a planted symlink")
 	})
 }
 

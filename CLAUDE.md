@@ -198,6 +198,14 @@ Examples:
 - `feat(pantheon): use environment variables`
 - `docs: clarify zensical setup`
 
+**ALWAYS write the commit message to a file first and commit with `git commit -F <file>`.**
+This applies to every commit, not just PR-initial commits. Never use
+`git commit -m "$(cat <<'EOF' ... EOF)"` or any other inline-heredoc-in-`$(...)`
+construct — it is unreliable in bash and silently fails or mangles the message
+(missing EOF, stray quotes, chained `&&` breaking mid-heredoc). Write the message
+with the Write tool (or `cat > /tmp/msg.txt <<'EOF' ... EOF` as its own command),
+then run `git commit -F /tmp/msg.txt` as a separate command.
+
 ### Pull Request Template
 
 In the initial commit for a PR, use the format in  `.github/PULL_REQUEST_TEMPLATE.md` with these required sections:

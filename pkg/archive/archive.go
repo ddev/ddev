@@ -154,6 +154,19 @@ func UnXz(source string, destDirectory string) error {
 	return nil
 }
 
+// isArchiveAbsolutePath reports whether a tar entry's Linkname is an absolute
+// path, in any spelling. Linkname comes from the archive being extracted, so
+// it cannot be trusted to follow tar's usual POSIX-style ("/") convention;
+// filepath.IsAbs alone is not enough to catch every case, since its notion
+// of "absolute" is host-OS-dependent: on Windows it returns false for a
+// leading "/" or "\" with no drive letter, even though the resulting symlink
+// still resolves rooted (to the current drive) rather than confined under
+// dest. Checking all three forms explicitly catches an absolute target
+// regardless of which spelling the archive uses or which OS is running.
+func isArchiveAbsolutePath(p string) bool {
+	return strings.HasPrefix(p, "/") || strings.HasPrefix(p, `\`) || filepath.IsAbs(p)
+}
+
 // Untar accepts a tar, tar.gz, tar.bz2, tar.xz file and extracts the contents to the provided destination path.
 // extractionDir is the path at which extraction should start; nothing will be extracted except the contents of
 // extractionDir. If extranctionDir is empty, the entire tarball is extracted.
@@ -289,16 +302,17 @@ func Untar(source string, dest string, extractionDir string) error {
 				return fmt.Errorf("failed to create the directory %s, err: %v", fullPathDir, err)
 			}
 
-			// Validate symlink target doesn't escape dest.
-			// Absolute targets are rebased against dest (treating dest as root),
-			// so container paths like /var/www/html/... are accepted.
-			// Relative targets are resolved against the symlink's parent directory.
-			var resolvedTarget string
-			if filepath.IsAbs(file.Linkname) {
-				resolvedTarget = filepath.Join(dest, file.Linkname)
-			} else {
-				resolvedTarget = filepath.Join(fullPathDir, file.Linkname)
+			// A dev-environment archive has no legitimate need to plant an
+			// absolute symlink target, and there's no safe general way to
+			// let one through: rebasing it under dest is what caused this
+			// function's history of escape bugs (see GHSA-9hq4-hm3j-jmph).
+			// Reject absolute targets outright; only relative targets,
+			// resolved against and confined to the symlink's parent
+			// directory, are allowed.
+			if isArchiveAbsolutePath(file.Linkname) {
+				return fmt.Errorf("symlink target %q in archive entry %q is absolute, which is not allowed", file.Linkname, file.Name)
 			}
+			resolvedTarget := filepath.Join(fullPathDir, file.Linkname)
 			if !strings.HasPrefix(filepath.Clean(resolvedTarget)+string(os.PathSeparator), filepath.Clean(dest)+string(os.PathSeparator)) {
 				return fmt.Errorf("symlink target %q in archive entry %q escapes destination directory", file.Linkname, file.Name)
 			}
@@ -306,7 +320,6 @@ func Untar(source string, dest string, extractionDir string) error {
 			// Remove any existing file/symlink at this path
 			_ = os.Remove(fullPath)
 
-			// Create the symlink
 			err = os.Symlink(file.Linkname, fullPath)
 			if err != nil {
 				return fmt.Errorf("failed to create symlink %v -> %v, err: %v", fullPath, file.Linkname, err)

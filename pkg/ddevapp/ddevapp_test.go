@@ -155,13 +155,13 @@ var (
 		// Full docs and management/upgrade at https://github.com/ddev/test-magento2
 		{
 			Name: "testpkgmagento2",
-			// echo "This is a junk" >pub/junk.txt && tar -czf .tarballs/testpkgmagento2_code_no_media.magento2.4.6-p4.tgz --exclude=.ddev --exclude=var --exclude=pub/media --exclude=.tarballs --exclude=app/etc/env.php .
-			SourceURL:                     "https://github.com/ddev/test-magento2/releases/download/2.4.6-p4/testpkgmagento2_code_no_media.magento2.4.6-p4.tgz",
+			// echo "This is a junk" >pub/junk.txt && tar -czf .tarballs/testpkgmagento2_code_no_media.magento2.4.9.tgz --exclude=.ddev --exclude=var --exclude=pub/media --exclude=.tarballs --exclude=app/etc/env.php .
+			SourceURL:                     "https://github.com/ddev/test-magento2/releases/download/2.4.9/testpkgmagento2_code_no_media.magento2.4.9.tgz",
 			ArchiveInternalExtractionPath: "",
-			// ddev export-db --gzip=false --file=.tarballs/db.sql && tar -czf .tarballs/testpkgmagento2.magento2.4.6-p4.db.tgz -C .tarballs db.sql
-			DBTarURL: "https://github.com/ddev/test-magento2/releases/download/2.4.6-p4/testpkgmagento2.magento2.4.6-p4.db.tgz",
-			// tar -czf .tarballs/testpkgmagento2_files.magento2.4.6-p4.tgz -C pub/media .
-			FilesTarballURL:           "https://github.com/ddev/test-magento2/releases/download/2.4.6-p4/testpkgmagento2_files.magento2.4.6-p4.tgz",
+			// ddev export-db --gzip=false --file=.tarballs/db.sql && tar -czf .tarballs/testpkgmagento2.magento2.4.9.db.tgz -C .tarballs db.sql
+			DBTarURL: "https://github.com/ddev/test-magento2/releases/download/2.4.9/testpkgmagento2.magento2.4.9.db.tgz",
+			// tar -czf .tarballs/testpkgmagento2_files.magento2.4.9.tgz -C pub/media .
+			FilesTarballURL:           "https://github.com/ddev/test-magento2/releases/download/2.4.9/testpkgmagento2_files.magento2.4.9.tgz",
 			FullSiteTarballURL:        "",
 			Docroot:                   "pub",
 			Type:                      nodeps.AppTypeMagento2,
