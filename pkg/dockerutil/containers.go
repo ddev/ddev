@@ -996,10 +996,22 @@ func UpdateContainerNetworkAliases(containerID, networkName string, aliases []st
 		return err
 	}
 
-	if _, err = apiClient.NetworkDisconnect(ctx, networkName, client.NetworkDisconnectOptions{
-		Container: containerID,
-	}); err != nil {
-		return fmt.Errorf("failed to disconnect container %s from network %s: %v", containerID, networkName, err)
+	// Only disconnect when connected, so an earlier failed reconnect can be repaired.
+	inspectInfo, err := apiClient.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
+	if err != nil {
+		return err
+	}
+	connected := false
+	if inspectInfo.Container.NetworkSettings != nil {
+		_, connected = inspectInfo.Container.NetworkSettings.Networks[networkName]
+	}
+
+	if connected {
+		if _, err = apiClient.NetworkDisconnect(ctx, networkName, client.NetworkDisconnectOptions{
+			Container: containerID,
+		}); err != nil {
+			return fmt.Errorf("failed to disconnect container %s from network %s: %v", containerID, networkName, err)
+		}
 	}
 
 	if _, err = apiClient.NetworkConnect(ctx, networkName, client.NetworkConnectOptions{
