@@ -189,11 +189,37 @@ For Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt-get up
 
 #### Homebrew
 
-If you’re using Homebrew, first run `brew unlink ddev` to get rid of the version you have there. Then use one of these options:
+Homebrew itself abandoned the ability to specify versions a few years ago, but you can still install an older release by checking out its formula from the tap's own Git history, then pinning it so `brew upgrade` doesn't move it:
 
-1. Download the version you want from the [releases page](https://github.com/ddev/ddev/releases) and place it in your `$PATH`.
-2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev.sh) script with the version number argument. For example, if you want `v1.23.5`, run `curl -fsSL https://ddev.com/install.sh | bash -s v1.23.5`.
-3. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
+```bash
+# downgrade to v1.23.5
+cd "$(brew --repository ddev/ddev)"
+git checkout "$(git rev-list -n 1 --grep='v1.23.5' HEAD)"
+HOMEBREW_NO_AUTO_UPDATE=1 brew reinstall ddev/ddev/ddev
+brew pin ddev/ddev/ddev
+git switch master
+```
+
+To go back to the latest release:
+
+```bash
+brew unpin ddev/ddev/ddev
+brew update && brew upgrade ddev/ddev/ddev
+```
+
+If you want the very latest, unreleased version of DDEV instead, install from `HEAD`:
+
+```bash
+# switch to HEAD
+brew uninstall --force ddev
+brew install ddev/ddev/ddev --HEAD
+
+# go back to the latest release
+brew uninstall --force ddev
+brew install ddev/ddev/ddev
+```
+
+Your projects are not affected by these changes.
 
 ### Why do I have an old DDEV?
 
@@ -321,9 +347,9 @@ We love and welcome contributions of knowledge, support, docs, and code:
 * Submit an issue or pull request to the [main repository](https://github.com/ddev/ddev).
 * Add your external resource to [awesome-ddev](https://github.com/ddev/awesome-ddev).
 * Help others in [Discord](https://ddev.com/s/discord).
-* Contribute financially via [GitHub Sponsors](https://github.com/sponsors/rfay).
+* Contribute financially by [sponsoring DDEV](https://ddev.com/sponsor).
 * Get involved with DDEV governance and the [Advisory Group](https://github.com/ddev/ddev/discussions/categories/ddev-advisory-group).
 
 ### How do financial contributions support DDEV?
 
-Thanks for asking! Contributions made via [GitHub Sponsors](https://github.com/sponsors/ddev) go to the [DDEV Foundation](https://ddev.com/foundation) and are used for infrastructure and supporting development.
+Thanks for asking! Contributions made by [sponsoring DDEV](https://ddev.com/sponsor) go to the [DDEV Foundation](https://ddev.com/foundation) and are used for infrastructure and supporting development.

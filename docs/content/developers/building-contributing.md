@@ -168,7 +168,7 @@ To manually push using GitHub Actions,
 
 ## Instrumentation
 
-The instrumentation implementation is generated using the [Ampli Codegen](https://www.docs.developers.amplitude.com/data/sdks/go/ampli/).
+The [instrumentation](../users/usage/diagnostics.md) implementation is generated using the [Ampli Codegen](https://www.docs.developers.amplitude.com/data/sdks/go/ampli/).
 
 To synchronize the implementation with the latest changes at Amplitude, the CLI
 tool has to be installed locally:

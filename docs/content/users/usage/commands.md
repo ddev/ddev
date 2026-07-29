@@ -821,7 +821,8 @@ ddev import-files -s=.tarballs/files.tar.gz -t=sites/default/files
 
 ## `launch`
 
-Launch a browser with the current site (global shell host container command).
+Launch a browser with the current site (global shell host container command). If the current project is not running,
+it will be started first.
 
 Flags:
 
