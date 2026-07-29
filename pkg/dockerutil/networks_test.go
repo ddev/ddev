@@ -140,8 +140,7 @@ func TestNetworkAmbiguity(t *testing.T) {
 }
 
 // TestNetworkAliases tests inter-project connectivity using ddev_default network aliases
-// when both projects use the same ports (80/443). This validates the fix for #8110:
-// the router must be recreated when network aliases change even if ports are identical.
+// when both projects use the same ports (80/443). This validates the fix for #8110.
 // See pkg/ddevapp/router_compose_template.yaml
 // This verifies the functionality of https://docs.docker.com/reference/compose-file/services/#aliases
 // Related test: TestInternalAndExternalAccessToURL
