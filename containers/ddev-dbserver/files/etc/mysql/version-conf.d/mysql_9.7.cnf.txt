@@ -1,0 +1,21 @@
+[mysqld]
+
+# Use more widely accepted collations by default
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_520_ci
+
+# caching_sha2_password is the default for mysql 9.7
+# This config is removed in MySQL 8.4
+# default-authentication-plugin=caching_sha2_password
+
+# mysql-native-password is removed entirely in MySQL 9, unlike 8.x where it
+# could be loaded (but not made default) for php 7.3 and below compatibility.
+
+# In mysql 8+ this replaces innodb-log-file-size etc
+innodb-redo-log-capacity=100663296
+
+# Pin buffer pool instances to 1 so innodb-buffer-pool-size is honored exactly.
+# MySQL derives the default instance count from the CPU count, and the
+# buffer pool size is rounded up to a multiple of (chunk_size * instances),
+# which would otherwise make the effective size machine-dependent.
+innodb-buffer-pool-instances=1

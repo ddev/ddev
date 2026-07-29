@@ -26,7 +26,7 @@ var WebTag = "20260719_rfay_dockerfile_consolidate" // Note that this can be ove
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20260628_rfay_mysql_hardened"
+var BaseDBTag = "20260729_rfay_mysql_97"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"

@@ -55,6 +55,7 @@ func GetDBTypeVersionFromString(t *testing.T) {
 		"mysql_5.7":     "mysql:5.7",
 		"mysql_8.0":     "mysql:8.0",
 		"mysql_8.4":     "mysql:8.4",
+		"mysql_9.7":     "mysql:9.7",
 	}
 
 	for input, expectation := range expectations {

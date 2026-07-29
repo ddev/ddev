@@ -113,8 +113,8 @@ if [ ${DB_TYPE} = "mysql" ]; then
     # For mysql 5.7, we have to use our own base images at ddev/mysql (due to arm64)
     if [ ${DB_MAJOR_VERSION} = "5.7" ]; then
       BASE_IMAGE=ddev/mysql
-    elif [ "${DB_MAJOR_VERSION:-}" = "8.0" ] || [ "${DB_MAJOR_VERSION}" = "8.4" ]; then
-      # MySQL 8.0/8.4 use Docker Hardened Images (dhi.io/mysql), since bitnami
+    elif [ "${DB_MAJOR_VERSION:-}" = "8.0" ] || [ "${DB_MAJOR_VERSION}" = "8.4" ] || [ "${DB_MAJOR_VERSION}" = "9.7" ]; then
+      # MySQL 8.0/8.4/9.7 use Docker Hardened Images (dhi.io/mysql), since bitnami
       # abandoned its mysql images. We build FROM the `-dev` variant because it
       # is Debian-based, runs as root, and includes apt + bash, all of which the
       # build and the bash-based runtime scripts require. See ddev/ddev#7962.

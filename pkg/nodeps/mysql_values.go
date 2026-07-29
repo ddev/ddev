@@ -9,6 +9,7 @@ var ValidMySQLVersions = map[string]bool{
 	MySQL57: true,
 	MySQL80: true,
 	MySQL84: true,
+	MySQL97: true,
 }
 
 // Oracle MySQL versions
@@ -18,4 +19,5 @@ const (
 	MySQL57 = "5.7"
 	MySQL80 = "8.0"
 	MySQL84 = "8.4"
+	MySQL97 = "9.7"
 )
