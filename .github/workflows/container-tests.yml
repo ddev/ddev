@@ -75,7 +75,7 @@ jobs:
           go-version: '>=1.23'
           check-latest: true
 
-      # MySQL 8.0/8.4 images build FROM dhi.io/mysql (Docker Hardened Images),
+      # MySQL 8.0/8.4/9.7 images build FROM dhi.io/mysql (Docker Hardened Images),
       # which requires authentication. Only available when org secrets are
       # present (not on fork PRs). See ddev/ddev#7962.
       # Github seems already to be logged in with user `githubactions`, which makes this unnecessary.
