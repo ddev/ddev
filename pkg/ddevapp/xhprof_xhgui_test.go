@@ -11,6 +11,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -23,6 +24,10 @@ import (
 
 // TestDdevXhprofPrependEnabled tests running with xhprof_mode=prepend
 func TestDdevXhprofPrependEnabled(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
+
 	origDir, _ := os.Getwd()
 
 	testcommon.ClearDockerEnv()
@@ -138,6 +143,10 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 
 // TestDdevXhprofXhguiEnabled tests running with xhprof_mode=xhgui
 func TestDdevXhprofXhguiEnabled(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
+
 	assert := assert2.New(t)
 	origDir, _ := os.Getwd()
 

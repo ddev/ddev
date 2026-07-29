@@ -245,6 +245,10 @@ func TestTraefikSharedTLDCerts(t *testing.T) {
 
 // TestTraefikVirtualHost tests Traefik with an extra VIRTUAL_HOST
 func TestTraefikVirtualHost(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
+
 	assert := asrt.New(t)
 
 	// Make sure this leaves us in the original test directory
@@ -608,6 +612,9 @@ http:
 // TestCustomProjectTraefikConfig tests that custom project-level Traefik configuration
 // (after removing #ddev-generated) is properly deployed and affects behavior
 func TestCustomProjectTraefikConfig(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	//if dockerutil.IsRancherDesktop() {
 	//	t.Skip("Skipping on Rancher Desktop because it seems to be too slow to pick up fsnotify on changed traefik config files")
 	//}

@@ -1098,6 +1098,9 @@ func TestPHPConfig(t *testing.T) {
 	if dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop() {
 		t.Skip("skipping on Lima/Colima/Rancher because of unpredictable behavior, unable to connect")
 	}
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
