@@ -84,10 +84,20 @@ EOF
   # Reload systemd
   systemctl --user daemon-reload
   # Set DNS
+  # Force k8s-file logging instead of the default journald: Homebrew's conmon
+  # bottle is built without journald support, so when podman picks journald
+  # (its default whenever the systemd journal is readable/writable) conmon
+  # fails with "Include journald in compilation path to log to systemd
+  # journal" (containers/conmon#348). Also force the file events logger for
+  # the same reason.
   mkdir -p ~/.config/containers/containers.conf.d
   cat << 'EOF' > ~/.config/containers/containers.conf.d/dns.conf
 [containers]
 dns_servers = ["1.1.1.1", "1.0.0.1"]
+log_driver = "k8s-file"
+
+[engine]
+events_logger = "file"
 EOF
   # https://github.com/containers/podman/blob/main/docs/tutorials/performance.md#choosing-a-storage-driver
   cat << 'EOF' > ~/.config/containers/storage.conf
@@ -167,6 +177,20 @@ EOF
   # Fix for Podman 6: "registries.conf must be in v2 format but is in v1"
   sudo tee /etc/containers/registries.conf > /dev/null <<EOF
 unqualified-search-registries = ["docker.io"]
+EOF
+  # Force k8s-file logging instead of the default journald: Homebrew's conmon
+  # bottle is built without journald support, so when podman picks journald
+  # (its default whenever the systemd journal is readable/writable) conmon
+  # fails with "Include journald in compilation path to log to systemd
+  # journal" (containers/conmon#348). Also force the file events logger for
+  # the same reason.
+  sudo mkdir -p /etc/containers/containers.conf.d
+  sudo tee /etc/containers/containers.conf.d/logging.conf > /dev/null <<EOF
+[containers]
+log_driver = "k8s-file"
+
+[engine]
+events_logger = "file"
 EOF
   # Reload systemd
   sudo systemctl daemon-reload
