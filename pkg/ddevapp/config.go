@@ -912,7 +912,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBPort:                    GetInternalPort(app, "db"),
 		DdevGenerated:             nodeps.DdevFileSignature,
 		DisableSettingsManagement: app.DisableSettingsManagement,
-		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
+		OmitDB:                    app.IsDBOmitted(),
 		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
 		BindAllInterfaces:         app.BindAllInterfaces,

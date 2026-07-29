@@ -6,6 +6,7 @@
  * DDEV manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
+{{ if $config.HasDBContainer -}}
 $host = "{{ $config.DatabaseHost }}";
 $port = {{ $config.DatabasePort }};
 $driver = "{{ $config.DatabaseDriver }}";
@@ -19,4 +20,5 @@ if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == "true")) {
 
 $database = "$driver://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@$host:$port/{{ $config.DatabaseName }}";
 
+{{ end -}}
 $settings['hash_salt'] = '{{ $config.HashSalt }}';

@@ -9,6 +9,7 @@
  * that you leave this file alone.
  */
 
+{{ if $config.HasDBContainer -}}
 $host = "{{ $config.DatabaseHost }}";
 $port = {{ $config.DatabasePort }};
 $driver = "{{ $config.DatabaseDriver }}";
@@ -27,6 +28,7 @@ $databases['default']['default']['host'] = $host;
 $databases['default']['default']['port'] = $port;
 $databases['default']['default']['driver'] = $driver;
 
+{{ end -}}
 $settings['hash_salt'] = '{{ $config.HashSalt }}';
 
 // This will prevent Drupal from setting read-only permissions on sites/default.
