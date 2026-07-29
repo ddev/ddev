@@ -20,7 +20,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20260719_rfay_dockerfile_consolidate" // Note that this can be overridden by make
+var WebTag = "20260729_rfay_mysql_97" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
