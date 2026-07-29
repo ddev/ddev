@@ -1,0 +1,7 @@
+{
+    "name": "mahocommerce/maho-starter",
+    "type": "project",
+    "require": {
+        "mahocommerce/maho": "*"
+    }
+}

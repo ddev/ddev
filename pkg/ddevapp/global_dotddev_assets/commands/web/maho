@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run Maho CLI inside the web container
+## Usage: maho [command] [flags] [args]
+## Example: "ddev maho install --help" or "ddev maho cache:flush" or "ddev maho cron:run default"
+## ProjectTypes: maho
+## ExecRaw: true
+## MutagenSync: true
+
+cd "${DDEV_COMPOSER_ROOT:-/var/www/html}" || exit 1
+if [ ! -f ./maho ]; then
+  echo "The './maho' script does not exist, run 'ddev composer install' first" && exit 1
+fi
+php ./maho "$@"

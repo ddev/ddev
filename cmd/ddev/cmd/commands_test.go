@@ -192,7 +192,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err, "Failed to run ddev %s --version", c)
 	}
 	// The various CMS commands should not be available here
-	for _, c := range []string{"artisan", "art", "cake", "dr", "drush", "magento", "typo3", "wp"} {
+	for _, c := range []string{"artisan", "art", "cake", "dr", "drush", "magento", "maho", "typo3", "wp"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.Error(err, "found command %s when it should not have been there (no error) app.Type=%s", c, app.Type)
 	}
@@ -299,6 +299,17 @@ func TestCustomCommands(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 	for _, c := range []string{"spark"} {
+		_, err = exec.RunHostCommand(DdevBin, "help", c)
+		assert.NoError(err)
+	}
+
+	// Maho commands should only be available for type maho
+	app.Type = nodeps.AppTypeMaho
+	_ = app.WriteConfig()
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+	for _, c := range []string{"maho"} {
 		_, err = exec.RunHostCommand(DdevBin, "help", c)
 		assert.NoError(err)
 	}

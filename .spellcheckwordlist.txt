@@ -110,6 +110,7 @@ Livewire
 MAMP
 Magento
 Magento's
+Maho
 Mailpit
 Mailpit's
 Mailgun
@@ -475,6 +476,8 @@ lts
 macOS
 macos
 magento
+maho
+mahocommerce
 mailgun
 mailhandling
 mailhog

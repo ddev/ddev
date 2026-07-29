@@ -64,6 +64,7 @@ The dashboard automatically detects your terminal's color capabilities and adapt
 * [`ddev artisan`](../usage/commands.md#artisan) (Laravel only) gives direct access to the Laravel `artisan` CLI.
 * [`ddev asterios`](../usage/commands.md#asterios) (Asterios only) gives direct access to the Asterios `asterios` CLI.
 * [`ddev magento`](../usage/commands.md#magento) (Magento2 only) gives access to the `magento` CLI.
+* [`ddev maho`](../usage/commands.md#maho) (Maho only) gives direct access to the `maho` CLI.
 * [`ddev console`](../usage/commands.md#console) (Symfony only) gives access to the `symfony console` CLI.
 * [`ddev craft`](../usage/commands.md#craft) (Craft CMS only) gives access to the `craft` CLI.
 * [`ddev npm`](../usage/commands.md#npm) gives direct access to the `npm` CLI.
