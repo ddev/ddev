@@ -17,13 +17,16 @@ teardown() {
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
 
-  run ddev config --project-type=symfony --docroot=public --php-version=8.3
+  run ddev config --project-type=symfony --docroot=public
   assert_success
 
   run ddev start -y
   assert_success
 
-  run ddev composer create-project symfony/skeleton
+  # Composer has no movable "lts" alias (unlike symfony-cli's --version=lts
+  # below), so this pins to the current LTS branch explicitly. See
+  # https://symfony.com/releases for the current LTS when this needs bumping.
+  run ddev composer create-project symfony/skeleton:"7.4.*"
   assert_success
 
   run bash -c 'printf "x\n" | ddev composer require webapp'
@@ -60,7 +63,9 @@ teardown() {
   run ddev exec symfony check:requirements
   assert_success
 
-  run ddev exec symfony new temp --webapp
+  # --version=lts always resolves to the current long-term support release,
+  # see https://symfony.com/doc/current/setup.html#symfony-lts-versions.
+  run ddev exec symfony new temp --webapp --version=lts
   assert_success
 
   run ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
