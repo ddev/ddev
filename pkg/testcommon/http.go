@@ -142,9 +142,10 @@ const (
 	defaultHTTPAttempts = 1                // total attempts; see WithMaxAttempts
 	defaultHTTPStatus   = http.StatusOK    // status treated as success; see WithExpectStatus
 
-	// macOSMinAttempts is the attempt floor getLocalHTTPResponse applies on a
-	// brief 5xx on macOS (php-fpm SIGBUS), so even a single-shot request retries
-	// once.
+	// macOSMinAttempts is the attempt floor getLocalHTTPResponse applies on any
+	// request failure on macOS (a transient connection reset/refusal from
+	// Docker's port forwarding, or a brief 5xx from php-fpm SIGBUS), so even a
+	// single-shot request retries once.
 	macOSMinAttempts = 2
 )
 
@@ -223,9 +224,14 @@ func getLocalHTTPResponse(t *testing.T, rawURL string, cfg requestConfig, conten
 		body, resp, err = httpGetLocal(address, hostHeader, serverName, cfg)
 		success := err == nil && (contentOK == nil || contentOK(body))
 		limit := cfg.maxAttempts
-		// macOS php-fpm sometimes crashes (SIGBUS) and returns a brief 502/503;
-		// give it one extra try even for a single-shot request.
-		if nodeps.IsMacOS() && resp != nil && resp.StatusCode >= 500 && limit < macOSMinAttempts {
+		// macOS Docker (Docker Desktop, Lima, Colima, Rancher) intermittently
+		// resets or refuses the very first connection to a freshly-healthy
+		// container's forwarded port (e.g. https://github.com/docker/for-mac/issues/5407),
+		// and macOS php-fpm sometimes crashes (SIGBUS) and returns a brief
+		// 502/503. Both surface as a request error here (network-level or a
+		// bad status), so give any such failure one extra try even for a
+		// single-shot request.
+		if nodeps.IsMacOS() && err != nil && limit < macOSMinAttempts {
 			limit = macOSMinAttempts
 		}
 		if success || attempt >= limit {
