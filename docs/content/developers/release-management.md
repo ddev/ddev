@@ -65,8 +65,6 @@ The following “Repository secret” environment variables must be configured i
 
 * Create and execute a test plan.
 * Make sure [`version-history.md`](https://github.com/ddev/ddev/blob/main/version-history.md) is up to date.
-* Push the new version of `ddev/ddev-php-base`.
-* Update `ddev/ddev-webserver` to use the new version of `ddev/ddev-php-base` and push it with the proper tag.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/main/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
 
@@ -96,7 +94,7 @@ If you need to push from a forked PR, you’ll have to do this from your fork (f
 * Click the “Push tagged image” workflow on the left side of the page.
 * Click the “Run workflow” button in the blue section above the workflow runs.
 * Choose the branch to build from (usually `main`).
-* Enter the image (`ddev-webserver`, `ddev-php-base`, etc.).
+* Enter the image (`ddev-webserver`, etc.).
 * Enter the tag that will be used in `pkg/version/version.go`.
 
 ## Pushing Docker Images Manually
@@ -106,9 +104,8 @@ While it’s more error-prone, images can be pushed from the command line:
 1. `docker login` with a user that has push privileges.
 2. `docker buildx use multi-arch-builder || docker buildx create --name multi-arch-builder --use`.
 3. `cd containers/<image>`.
-4. Before pushing `ddev-webserver`, make sure you’ve pushed a version of `ddev-php-base` and updated `ddev-webserver`’s Dockerfile to use that as a base.
-5. `make push VERSION=<release_version> DOCKER_ARGS=--no-cache` for most of the images. For `ddev-dbserver` it’s `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache`. There’s a [push-all.sh](https://github.com/ddev/ddev/blob/main/containers/push-all.sh) script to update all of them, but it takes forever.
-6. `ddev-dbserver` images can be pushed with `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache` from the `containers/ddev-dbserver` directory.
+4. `make push VERSION=<release_version> DOCKER_ARGS=--no-cache` for most of the images. For `ddev-dbserver` it’s `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache`. There’s a [push-all.sh](https://github.com/ddev/ddev/blob/main/containers/push-all.sh) script to update all of them, but it takes forever.
+5. `ddev-dbserver` images can be pushed with `make PUSH=true VERSION=<release_version> DOCKER_ARGS=--no-cache` from the `containers/ddev-dbserver` directory.
 
 ## Maintaining `ddev-dbserver` MySQL 5.7 ARM64 Images
 
@@ -123,10 +120,8 @@ We may not build every image for every point release. If there have been no chan
 
 But here are the steps for building:
 
-1. The `ddev/ddev-php-base` image must be updated as necessary with a new tag before pushing `ddev-webserver`. You can do this using the [process above](#pushing-docker-images-with-the-github-actions-workflow).
-2. The `ddev/ddev-webserver` Dockerfile must `FROM ddev/ddev-php-base:<tag>` before building/pushing `ddev-webserver`. But then it can be pushed using either the GitHub Actions or the manual technique.
-3. If you’re bumping `ddev-dbserver` 8.0 minor release, follow the upstream [Maintaining ddev-dbserver MySQL 5.7](#maintaining-ddev-dbserver-mysql-57-arm64-images) instructions.
-4. Update `pkg/version/version.go` with the correct versions for the new images, and run all the tests.
+1. If you’re bumping `ddev-dbserver` 8.0 minor release, follow the upstream [Maintaining ddev-dbserver MySQL 5.7](#maintaining-ddev-dbserver-mysql-57-arm64-images) instructions.
+2. Update `pkg/version/version.go` with the correct versions for the new images, and run all the tests.
 
 ## Manually Updating Homebrew Formulas
 
