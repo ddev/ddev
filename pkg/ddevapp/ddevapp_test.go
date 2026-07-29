@@ -274,14 +274,14 @@ var (
 		// 14: Silverstripe
 		{
 			Name:                          "TestPkgSilverstripe",
-			SourceURL:                     "https://github.com/ddev/test-silverstripe/releases/download/1.0.0/silverstripe-base.tar.gz",
-			DBTarURL:                      "https://github.com/ddev/test-silverstripe/releases/download/1.0.0/db.tar.gz",
+			SourceURL:                     "https://github.com/ddev/test-silverstripe/releases/download/6.2.2/silverstripe-base.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/test-silverstripe/releases/download/6.2.2/db.tar.gz",
 			ArchiveInternalExtractionPath: "",
 			FullSiteTarballURL:            "",
 			FilesTarballURL:               "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeSilverstripe,
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "<meta name=\"generator\" content=\"Silverstripe CMS 5.0\">"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "<meta name=\"generator\" content=\"Silverstripe CMS 6.2\">"},
 		},
 		// 15: CakePHP
 		{
