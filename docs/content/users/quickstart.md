@@ -2932,10 +2932,10 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev start
     ```
 
-    Install Symfony via Composer:
+    Install Symfony via Composer, pinned to the current [long-term support (LTS) release](https://symfony.com/doc/current/setup.html#symfony-lts-versions):
 
     ```bash
-    ddev composer create-project symfony/skeleton
+    ddev composer create-project symfony/skeleton:"7.4.*"
     ddev composer require webapp
     # When it asks if you want to include docker configuration, say "no" with "x"
     ```
@@ -2956,7 +2956,7 @@ DDEV automatically updates or creates the `.env.local` file with the database in
         mkdir -p my-symfony-composer-site && cd my-symfony-composer-site
         ddev config --project-type=symfony --docroot=public
         ddev start -y
-        ddev composer create-project symfony/skeleton
+        ddev composer create-project symfony/skeleton:"7.4.*"
         ddev composer require webapp
         ddev launch
         EOF
@@ -2971,7 +2971,8 @@ DDEV automatically updates or creates the `.env.local` file with the database in
     ddev config --project-type=symfony --docroot=public
     ddev start
     ddev exec symfony check:requirements
-    ddev exec symfony new temp --webapp
+    # --version=lts always resolves to the current long-term support release
+    ddev exec symfony new temp --webapp --version=lts
     # 'symfony new' can't install in the current directory right away,
     # so we use 'rsync' to move the installed files one level up
     ddev exec 'rsync -rltgopD temp/ ./ && rm -rf temp'
