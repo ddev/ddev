@@ -954,11 +954,6 @@ func (m AppModel) buildDetailContent() string {
 		dbStr += ":" + d.DatabaseVersion
 	}
 
-	xdebugStr := "off"
-	if d.XdebugEnabled {
-		xdebugStr = "on"
-	}
-
 	perfStr := d.PerformanceMode
 	if perfStr == "" {
 		perfStr = "none"
@@ -967,7 +962,7 @@ func (m AppModel) buildDetailContent() string {
 	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Type:"), val(fmt.Sprintf("%-14s", d.Type)), label("PHP:"), val(d.PHPVersion))
 	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Webserver:"), val(fmt.Sprintf("%-14s", d.WebserverType)), label("Node.js:"), val(d.NodeJSVersion))
 	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Docroot:"), val(fmt.Sprintf("%-14s", d.Docroot)), label("Perf:"), val(perfStr))
-	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Database:"), val(fmt.Sprintf("%-14s", dbStr)), label("Xdebug:"), val(xdebugStr))
+	fmt.Fprintf(&content, " %s %s\n", label("Database:"), val(dbStr))
 	content.WriteString("\n")
 
 	// URLs
