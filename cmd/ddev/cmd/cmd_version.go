@@ -34,7 +34,12 @@ var versionCmd = &cobra.Command{
 
 		// If in a project context, show the project's actual web image instead of the default.
 		if app, err := ddevapp.GetActiveApp(""); err == nil {
-			v["web"] = app.WebImage
+			if app.WebImage != "" {
+				v["web"] = app.WebImage
+			}
+			if app.DBImage != "" {
+				v["db"] = app.DBImage
+			}
 		}
 
 		var out bytes.Buffer
