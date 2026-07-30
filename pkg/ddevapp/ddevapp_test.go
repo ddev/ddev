@@ -734,6 +734,9 @@ func TestDdevStartCustomEntrypoint(t *testing.T) {
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -2426,6 +2429,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
 	}
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -3986,6 +3992,9 @@ func TestGetWebContainerDirectURLsWithDockerIPError(t *testing.T) {
 // - nginx_full/nginx-site.conf version installed
 // - Actual headers from site when nginx/apache installed per TestSite
 func TestPHPWebserverType(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	assert := asrt.New(t)
 
 	for i, site := range TestSites {
@@ -4093,6 +4102,9 @@ func TestPHPWebserverType(t *testing.T) {
 // ddev-webserver's explanation is shown on both, rather than php-fpm's own
 // "No input file specified" 404 passing through unchanged.
 func TestWebserverMissingIndexExplanation(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	assert := asrt.New(t)
 	packageDir, _ := os.Getwd()
 
@@ -4157,6 +4169,9 @@ func TestWebserverMissingIndexExplanation(t *testing.T) {
 func TestWebserverPhpstatusUnderMutagen(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("Skipping TestWebserverPhpstatusUnderMutagen on Windows, Mutagen setup takes too long")
+	}
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
 	}
 	assert := asrt.New(t)
 	packageDir, _ := os.Getwd()

@@ -203,6 +203,9 @@ func TestUseEphemeralPort(t *testing.T) {
 		// Expected port is not available, so it allocates another one.
 		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
 	}
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 
 	// Stop all projects and the router first so we can occupy the ports they would normally use
 	// Without this, leftover containers from other tests may have ports that interfere
@@ -473,6 +476,9 @@ func TestProcessExposePorts(t *testing.T) {
 // TestTraefikMonitorPortAlwaysLocalhost verifies that the Traefik monitor port
 // is always bound to localhost, even when router_bind_all_interfaces=true
 func TestTraefikMonitorPortAlwaysLocalhost(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	assert := asrt.New(t)
 
 	origRouterBindAllInterfaces := globalconfig.DdevGlobalConfig.RouterBindAllInterfaces

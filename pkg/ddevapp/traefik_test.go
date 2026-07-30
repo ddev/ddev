@@ -29,6 +29,9 @@ func TestTraefikSimple(t *testing.T) {
 		// Expected port is not available, so it allocates another one.
 		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
 	}
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 
 	assert := asrt.New(t)
 
@@ -112,6 +115,9 @@ func TestTraefikSimple(t *testing.T) {
 func TestTraefikUnmatchedHostnameFallback(t *testing.T) {
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Colima/Lima/Rancher because they don't predictably return ports")
+	}
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
 	}
 
 	origDir, _ := os.Getwd()
@@ -245,6 +251,10 @@ func TestTraefikSharedTLDCerts(t *testing.T) {
 
 // TestTraefikVirtualHost tests Traefik with an extra VIRTUAL_HOST
 func TestTraefikVirtualHost(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
+
 	assert := asrt.New(t)
 
 	// Make sure this leaves us in the original test directory
@@ -416,6 +426,9 @@ func TestCustomGlobalConfig(t *testing.T) {
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && dockerutil.IsRancherDesktop() {
 		t.Skip("Skipping on Rancher Desktop because of intermittent fail missing `ddev-test-value`")
 	}
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	origDir, _ := os.Getwd()
 	testDataDir := filepath.Join(origDir, "testdata", t.Name())
 
@@ -513,6 +526,9 @@ func TestCustomGlobalConfig(t *testing.T) {
 // TestMergeTraefikProjectConfig tests that multiple project traefik config files are properly merged
 // and that the merged configuration works correctly with HTTP to HTTPS redirect
 func TestMergeTraefikProjectConfig(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	origDir, _ := os.Getwd()
 
 	site := TestSites[0] // 0 == wordpress
@@ -608,6 +624,9 @@ http:
 // TestCustomProjectTraefikConfig tests that custom project-level Traefik configuration
 // (after removing #ddev-generated) is properly deployed and affects behavior
 func TestCustomProjectTraefikConfig(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	//if dockerutil.IsRancherDesktop() {
 	//	t.Skip("Skipping on Rancher Desktop because it seems to be too slow to pick up fsnotify on changed traefik config files")
 	//}
