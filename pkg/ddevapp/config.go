@@ -564,6 +564,16 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("the %s project has an unsupported database type/version: '%s:%s', DDEV %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Name, app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
 	}
 
+	// MySQL 9+ removed the mysql_native_password plugin entirely. PHP <= 7.3's mysqlnd
+	// can only authenticate via mysql_native_password (no caching_sha2_password support),
+	// so it cannot connect to MySQL 9+ at all, and there is no workaround like the one used
+	// for PHP 5.6-7.3 with MySQL 8.0/8.4, see the mysql_native_password handling in Start().
+	if app.Database.Type == nodeps.MySQL && slices.Contains([]string{nodeps.PHP73, nodeps.PHP72, nodeps.PHP71, nodeps.PHP70, nodeps.PHP56}, app.PHPVersion) {
+		if majorVersion, err := strconv.Atoi(strings.SplitN(app.Database.Version, ".", 2)[0]); err == nil && majorVersion >= 9 {
+			return fmt.Errorf("the %s project uses php_version: %s with database version mysql:%s, but MySQL 9+ removed the mysql_native_password plugin that PHP %s's mysqlnd requires; use php_version: 7.4 or later, or use mysql:8.0/mysql:8.4/mariadb instead", app.Name, app.PHPVersion, app.Database.Version, app.PHPVersion)
+		}
+	}
+
 	// This check is too intensive for app.Init() and ddevapp.GetActiveApp(), slows things down dramatically
 	// If the database already exists in volume and is not of this type, then throw an error
 	// if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
