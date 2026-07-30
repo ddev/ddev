@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"math/rand"
 	"net"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -196,6 +198,50 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 	require.Equal(t, startPort+3, port)
 }
 
+// isDockerHostPortRaceError detects a Docker-level host port bind collision.
+//
+// The db and web services publish some ports with no fixed host port
+// (for example "127.0.0.1::3306"), so Docker picks a host port from the kernel's
+// local port range (32768-60999 on Linux). Docker does not reserve that port, and
+// under rootless Docker the bind happens later still, in RootlessKit's port
+// manager. So the chosen port can be taken by an unrelated socket, or not yet
+// released by a container that was just removed, by the time the bind runs.
+//
+// This is unrelated to DDEV's own ephemeral router port allocation; it is a
+// property of the environment, so retrying is the appropriate response.
+func isDockerHostPortRaceError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	// rootless Docker/Podman via RootlessKit, and rootful Docker, word this differently.
+	return strings.Contains(msg, "address already in use") ||
+		strings.Contains(msg, "port is already allocated")
+}
+
+// startRetryingHostPortRace calls app.Start(), retrying with a short backoff if it
+// hits isDockerHostPortRaceError, since the port holder normally releases within a
+// second or two and the next attempt draws a different random host port.
+//
+// It deliberately does not call app.Stop() between attempts: Stop() clears
+// ddevapp.EphemeralRouterPortsAssigned, which would let a later project be handed
+// an ephemeral router port already bound by the router for an earlier project.
+func startRetryingHostPortRace(t *testing.T, app *ddevapp.DdevApp) error {
+	const attempts = 3
+	var err error
+	for attempt := 1; attempt <= attempts; attempt++ {
+		err = app.Start()
+		if err == nil || !isDockerHostPortRaceError(err) {
+			return err
+		}
+		if attempt < attempts {
+			t.Logf("app.Start() attempt %d/%d hit a Docker host port collision, retrying: %v", attempt, attempts, err)
+			time.Sleep(2 * time.Second)
+		}
+	}
+	return err
+}
+
 // Test that the app assigns an ephemeral port if the default one is not available.
 func TestUseEphemeralPort(t *testing.T) {
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
@@ -249,35 +295,42 @@ func TestUseEphemeralPort(t *testing.T) {
 		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
 	})
 
-	for i, app := range apps {
-		// Predict which ephemeral ports the apps will use by using guess from starting point
-		// This is fragile, only works if no other projects are running and holding open the earlier ports
-		expectedEphemeralHTTPPort := ddevapp.MinEphemeralPort + i*4
-		expectedEphemeralHTTPSPort := ddevapp.MinEphemeralPort + i*4 + 1
+	// Tracks ephemeral ports already handed out, so we can verify each project gets
+	// its own. Maps port number to a description of what claimed it.
+	assignedPorts := map[int]string{}
 
-		err := app.Start()
+	for i, app := range apps {
+		err := startRetryingHostPortRace(t, app)
 		require.NoError(t, err)
 
 		// Get a new copy of the app to make sure we have up-to-date port information
 		app, err = ddevapp.NewApp(app.GetAppRoot(), true)
 		require.NoError(t, err)
 
-		// app1 will not use the configured target ports, uses the assigned ephemeral ports.
+		// The project must not use the configured target ports, since those are occupied.
 		require.NotEqual(t, targetHTTPPort, app.GetPrimaryRouterHTTPPort())
 		require.NotEqual(t, targetHTTPSPort, app.GetPrimaryRouterHTTPSPort())
 
-		// Allow a margin of +2 for ephemeral port checks due to flakiness
-		actualHTTPPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPPort())
-		require.NoError(t, err)
-		require.Condition(t, func() bool {
-			return actualHTTPPort >= expectedEphemeralHTTPPort && actualHTTPPort <= expectedEphemeralHTTPPort+2
-		}, "HTTP port must be between %d and %d, got %d", expectedEphemeralHTTPPort, expectedEphemeralHTTPPort+2, actualHTTPPort)
-
-		actualHTTPSPort, err := strconv.Atoi(app.GetPrimaryRouterHTTPSPort())
-		require.NoError(t, err)
-		require.Condition(t, func() bool {
-			return actualHTTPSPort >= expectedEphemeralHTTPSPort && actualHTTPSPort <= expectedEphemeralHTTPSPort+2
-		}, "HTTPS port must be between %d and %d, got %d", expectedEphemeralHTTPSPort, expectedEphemeralHTTPSPort+2, actualHTTPSPort)
+		// Don't predict the exact port numbers. Which ephemeral port a project lands on
+		// depends on what else on the machine happens to hold ports in the range at that
+		// moment, so all that matters is that each replacement port is in the ephemeral
+		// range and is not one already given to another project. That the port actually
+		// works is proven by the content checks below.
+		for _, p := range []struct{ scheme, port string }{
+			{"HTTP", app.GetPrimaryRouterHTTPPort()},
+			{"HTTPS", app.GetPrimaryRouterHTTPSPort()},
+		} {
+			portNum, err := strconv.Atoi(p.port)
+			require.NoError(t, err)
+			require.GreaterOrEqual(t, portNum, ddevapp.MinEphemeralPort,
+				"app %d (%s) %s port %d is below the ephemeral range", i, app.Name, p.scheme, portNum)
+			require.LessOrEqual(t, portNum, ddevapp.MaxEphemeralPort,
+				"app %d (%s) %s port %d is above the ephemeral range", i, app.Name, p.scheme, portNum)
+			claimant := fmt.Sprintf("app %d (%s) %s", i, app.Name, p.scheme)
+			require.NotContains(t, assignedPorts, portNum,
+				"%s got port %d, which was already assigned to %s", claimant, portNum, assignedPorts[portNum])
+			assignedPorts[portNum] = claimant
+		}
 
 		// Make sure that both http and https URLs have proper content
 		testcommon.AssertLocalHTTPContent(t, app.GetHTTPURL(), testString,
