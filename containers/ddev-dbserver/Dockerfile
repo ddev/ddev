@@ -90,6 +90,15 @@ RUN <<EOF
                 percona-release setup pxb84lts
                 apt-get update && apt-get -qq install -y percona-xtrabackup-84
                 ;;
+
+            "9.7")
+                # Unlike pxb80/pxb84lts/pxb24 above, "percona-release setup" does
+                # not yet recognize a 9.7 alias (its alias table has no pxb97lts
+                # entry, so it mis-derives the repo name). "enable" with the full
+                # repo name works and matches Percona's own install docs.
+                percona-release enable pxb-97-lts
+                apt-get update && apt-get -qq install -y percona-xtrabackup-97
+                ;;
             # Older versions of mysql and a few mariadb use pxb24
             *)
                 percona-release setup pxb24

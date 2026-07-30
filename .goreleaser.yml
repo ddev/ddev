@@ -541,6 +541,7 @@ dockerhub:
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-5.7'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-8.0'
       - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-8.4'
+      - '{{ .Env.DOCKER_ORG }}/ddev-dbserver-mysql-9.7'
 
     disable: '{{ contains .Env.DOCKERHUB_USERNAME "NOPUSH" }}'
     username: '{{ .Env.DOCKERHUB_USERNAME }}'

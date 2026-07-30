@@ -25,7 +25,7 @@ mysqld_version=${mysqld_version%%-*}
 mysqld_version=${mysqld_version%.*}
 echo version=$mysqld_version
 # Oracle mysql 5.7+ deprecates mysql_install_db
-if [ "${mysqld_version}" = "5.7" ] || [[  "${mysqld_version%%%.*}" =~ ^8.[04]$ ]]; then
+if [ "${mysqld_version}" = "5.7" ] || [[  "${mysqld_version%%%.*}" =~ ^8.[04]$ ]] || [[ "${mysqld_version}" = "9.7" ]]; then
   mysqld --defaults-file=/var/tmp/my.cnf --initialize-insecure --datadir=${DATADIR:-/var/lib/mysql} --server-id=0
 else
   # mysql 5.5 requires running mysql_install_db in /usr/local/mysql
@@ -44,7 +44,7 @@ rm -f ${MYSQL_UNIX_PORT}
 ERRLOG=/var/tmp/mysqld-init.err
 : >${ERRLOG} && chmod ugo+rw ${ERRLOG}
 echo "Starting mysqld --skip-networking --socket=${MYSQL_UNIX_PORT}"
-mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --innodb_log_file_size=48M --log-error=${ERRLOG} --skip-networking --datadir=${DATADIR:-/var/lib/mysql} --server-id=0 --skip-log-bin &
+mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --loose-innodb_log_file_size=48M --log-error=${ERRLOG} --skip-networking --datadir=${DATADIR:-/var/lib/mysql} --server-id=0 --skip-log-bin &
 pid="$!"
 
 dump_errlog() {

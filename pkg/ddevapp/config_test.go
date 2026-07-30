@@ -766,6 +766,26 @@ func TestConfigValidate(t *testing.T) {
 	require.Contains(t, err.Error(), "unsupported webserver type")
 	app.WebserverType = nodeps.WebserverDefault
 
+	// PHP <= 7.3 can't authenticate against MySQL 9+, which removed the
+	// mysql_native_password plugin that those old PHP mysqlnd builds require.
+	appDatabase := app.Database
+	app.Database = ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL97}
+	for _, phpVersion := range []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73} {
+		app.PHPVersion = phpVersion
+		err = app.ValidateConfig()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "mysql_native_password")
+	}
+	app.PHPVersion = nodeps.PHP74
+	err = app.ValidateConfig()
+	require.NoError(t, err)
+	app.Database = ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL84}
+	app.PHPVersion = nodeps.PHP73
+	err = app.ValidateConfig()
+	require.NoError(t, err)
+	app.Database = appDatabase
+	app.PHPVersion = nodeps.PHPDefault
+
 	app.NodeJSVersion = "  "
 	err = app.ValidateConfig()
 	require.Error(t, err)

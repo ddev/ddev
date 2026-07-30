@@ -1706,7 +1706,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:12.3", "mariadb:11.8", "mariadb:11.4", "mariadb:10.11", "mariadb:10.6", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
+		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:12.3", "mariadb:11.8", "mariadb:11.4", "mariadb:10.11", "mariadb:10.6", "mysql:9.7", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -2132,7 +2132,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 
 	assert := asrt.New(t)
 
-	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mariadb:10.11", "mariadb:10.6", "mariadb:11.4", "mariadb:11.8", "mariadb:12.3"}
+	serverVersions := []string{"mysql:5.7", "mysql:8.0", "mysql:8.4", "mysql:9.7", "mariadb:10.11", "mariadb:10.6", "mariadb:11.4", "mariadb:11.8", "mariadb:12.3"}
 
 	if dockerutil.IsPodman() || dockerutil.IsDockerRootless() {
 		// Works locally but fails in CI.

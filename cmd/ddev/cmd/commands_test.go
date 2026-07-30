@@ -449,6 +449,7 @@ func TestMysqlCommand(t *testing.T) {
 		dbVersionsToTest = append(dbVersionsToTest,
 			ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL80},
 			ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL84},
+			ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL97},
 		)
 	}
 
