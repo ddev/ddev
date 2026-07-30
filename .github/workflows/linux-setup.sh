@@ -98,6 +98,14 @@ log_driver = "k8s-file"
 
 [engine]
 events_logger = "file"
+
+[network]
+# Homebrew's netavark has dropped the "iptables" backend (upstream removed
+# it), but podman's own default still requests "iptables" in some
+# version combinations, causing an intermittent
+# "Must provide a valid firewall backend, got iptables" failure. Force
+# nftables explicitly instead of relying on that mismatched default.
+firewall_driver = "nftables"
 EOF
   # https://github.com/containers/podman/blob/main/docs/tutorials/performance.md#choosing-a-storage-driver
   cat << 'EOF' > ~/.config/containers/storage.conf
@@ -191,6 +199,14 @@ log_driver = "k8s-file"
 
 [engine]
 events_logger = "file"
+
+[network]
+# Homebrew's netavark has dropped the "iptables" backend (upstream removed
+# it), but podman's own default still requests "iptables" in some
+# version combinations, causing an intermittent
+# "Must provide a valid firewall backend, got iptables" failure. Force
+# nftables explicitly instead of relying on that mismatched default.
+firewall_driver = "nftables"
 EOF
   # Reload systemd
   sudo systemctl daemon-reload
