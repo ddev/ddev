@@ -1921,6 +1921,9 @@ func TestConfigFunctionality(t *testing.T) {
 	if dockerutil.IsRancherDesktop() {
 		t.Skip("Skipping on Rancher Desktop, host ports fail sometimes. On Windows 'Get \"http://127.0.0.1:19998/readme.html\": read tcp 127.0.0.1:59065->127.0.0.1:19998: wsarecv: An existing connection was forcibly closed by the remote host.'")
 	}
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
 	origDir, _ := os.Getwd()
 
 	site := TestSites[0]
