@@ -43,6 +43,20 @@ if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
   sudo mkdir -p /etc/sysctl.d
   echo 'net.ipv4.ip_unprivileged_port_start=0' | sudo tee -a /etc/sysctl.d/60-rootless.conf
   sudo sysctl -p /etc/sysctl.d/60-rootless.conf
+  # Without a genuine lingering session, systemd --user has no D-Bus session
+  # bus to manage cgroups through, so podman silently falls back to
+  # --cgroup-manager=cgroupfs. buildx then pins its buildkit container to the
+  # "/docker/buildx" cgroup parent whenever podman reports "cgroupfs" as its
+  # driver, which a rootless user can't create outside its own delegated
+  # subtree, and every docker-compose build fails with:
+  #   crun: create `/sys/fs/cgroup/docker`: Permission denied: OCI permission denied
+  # See https://github.com/containers/podman/issues/5443 and
+  # https://github.com/containers/podman/pull/29303.
+  sudo loginctl enable-linger "$(whoami)"
+  for _ in $(seq 1 10); do
+    [ -S "/run/user/$(id -u)/bus" ] && break
+    sleep 1
+  done
   # Create systemd unit files
   mkdir -p ~/.config/systemd/user
   # Create podman.socket
