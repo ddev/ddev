@@ -60,10 +60,6 @@ const (
 
 	// SiteUnhealthy is the status for a project whose services are not all reporting healthy yet
 	SiteUnhealthy = "unhealthy"
-
-	// composeBuildMaxRetries is the maximum number of attempts for docker-compose build
-	// when encountering BuildKit snapshot race conditions
-	composeBuildMaxRetries = 3
 )
 
 // DatabaseDefault is the default database/version
@@ -1440,13 +1436,10 @@ func (app *DdevApp) GetDBImage() string {
 	return dbImage
 }
 
-// composeBuild executes docker-compose build with retry logic for BuildKit snapshot race conditions.
-// This is an experimental workaround for moby/buildkit#6521 (Docker 29+ with containerd image store).
-// The race condition causes intermittent failures with "parent snapshot ... does not exist: not found"
-// when multiple services share base layers and build in parallel.
+// composeBuild executes docker-compose build.
 //
 // args are optional: service names or "--no-cache"
-// Returns the stdout output on success, or an error if all retries are exhausted.
+// Returns the stdout output on success, or an error on failure.
 func (app *DdevApp) composeBuild(args ...string) (string, error) {
 	noCache := app.NoCache
 	var services []string
@@ -1470,61 +1463,39 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 		return "", fmt.Errorf("docker-compose build failed: %v", err)
 	}
 
-	var lastErr error
-	var out, stderr string
+	util.Debug("Executing docker-compose build -f %s", app.DockerComposeFullRenderedYAMLPath())
 
-	for attempt := 1; attempt <= composeBuildMaxRetries; attempt++ {
-		util.Debug("Executing docker-compose build -f %s (attempt %d/%d)", app.DockerComposeFullRenderedYAMLPath(), attempt, composeBuildMaxRetries)
+	ctx, cancel := context.WithTimeout(goCtx, time.Hour)
+	defer cancel()
 
-		ctx, cancel := context.WithTimeout(goCtx, time.Hour)
-		defer cancel()
+	stopDots := util.ShowDots()
 
-		stopDots := util.ShowDots()
-
-		out, stderr, lastErr = dockerutil.CaptureOutput(func(svc api.Compose) error {
-			return svc.Build(ctx, project, api.BuildOptions{
-				Progress: display.ModePlain,
-				NoCache:  noCache,
-				Services: services,
-			})
+	out, stderr, err := dockerutil.CaptureOutput(func(svc api.Compose) error {
+		return svc.Build(ctx, project, api.BuildOptions{
+			Progress: display.ModePlain,
+			NoCache:  noCache,
+			Services: services,
 		})
+	})
 
-		stopDots()
+	stopDots()
 
-		timedOut := errors.Is(ctx.Err(), context.DeadlineExceeded)
-		cancel()
+	timedOut := errors.Is(ctx.Err(), context.DeadlineExceeded)
+	cancel()
 
-		if timedOut {
-			return out, fmt.Errorf("docker-compose build timed out after 1 hour: %v", lastErr)
-		}
-
-		if lastErr == nil {
-			// Success
-			if globalconfig.DdevVerbose && out != "" {
-				util.Debug("docker-compose build output:\n%s\n\n", out)
-			}
-			return out, nil
-		}
-
-		// Check if this is the known BuildKit snapshot race condition.
-		// BuildKit progress (and its error lines) is written to the compose service stdout,
-		// not stderr — see compose/pkg/compose/build_bake.go and build_classic.go which both
-		// fall back to s.stdout(). Match against lastErr, out, and stderr so the trigger
-		// fires regardless of where the snapshot text surfaces.
-		errorText := fmt.Sprintf("%v %s %s", lastErr, out, stderr)
-		isSnapshotRace := strings.Contains(errorText, "parent snapshot") && strings.Contains(errorText, "does not exist")
-
-		if !isSnapshotRace {
-			return out, fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", lastErr, out, stderr)
-		}
-
-		// This is a snapshot race error - retry if we have attempts remaining
-		if attempt < composeBuildMaxRetries {
-			util.Warning("BuildKit snapshot race condition detected (moby/buildkit#6521). Retrying build (attempt %d/%d)...", attempt+1, composeBuildMaxRetries)
-		}
+	if timedOut {
+		return out, fmt.Errorf("docker-compose build timed out after 1 hour: %v", err)
 	}
 
-	return out, fmt.Errorf("docker-compose build failed after %d attempts: %v, output='%s', stderr='%s'", composeBuildMaxRetries, lastErr, out, stderr)
+	if err != nil {
+		return out, fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
+	}
+
+	if globalconfig.DdevVerbose && out != "" {
+		util.Debug("docker-compose build output:\n%s\n\n", out)
+	}
+
+	return out, nil
 }
 
 // Start initiates docker-compose up
