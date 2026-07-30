@@ -101,6 +101,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	if err != nil {
 		return err
 	}
+	defer util.CheckClose(f)
 
 	t, err := template.New("AdditionalConfiguration.php").ParseFS(bundledAssets, "typo3/AdditionalConfiguration.php")
 	if err != nil {

@@ -209,11 +209,11 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *
 	if err != nil {
 		return err
 	}
+	defer util.CheckClose(file)
 	err = t.Execute(file, settings)
 	if err != nil {
 		return err
 	}
-	util.CheckClose(file)
 	return nil
 }
 
