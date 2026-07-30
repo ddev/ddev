@@ -239,6 +239,9 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == docker.GetWebImage() {
 		appcopy.WebImage = ""
 	}
+	if appcopy.DBImage == docker.GetDBImage(appcopy.Database.Type, appcopy.Database.Version) {
+		appcopy.DBImage = ""
+	}
 	if appcopy.RouterHTTPPort == nodeps.DdevDefaultRouterHTTPPort {
 		appcopy.RouterHTTPPort = ""
 	}

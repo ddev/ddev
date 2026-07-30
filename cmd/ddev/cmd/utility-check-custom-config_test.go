@@ -59,6 +59,23 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		require.Contains(t, out, "No custom configuration detected in project '"+projectName+"'.")
 	})
 
+	// Test webimage/dbimage overrides (config.yaml values, not files)
+	t.Run("webimage and dbimage overrides", func(t *testing.T) {
+		_, err := exec.RunCommand(DdevBin, []string{"config", "--web-image=custom-web-image:latest", "--db-image=custom-db-image:latest"})
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_, _ = exec.RunCommand(DdevBin, []string{"config", "--web-image-default", "--db-image-default"})
+		})
+
+		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
+		require.NoError(t, err)
+		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
+		require.Contains(t, out, "Web server")
+		require.Contains(t, out, "webimage: custom-web-image:latest")
+		require.Contains(t, out, "Database")
+		require.Contains(t, out, "dbimage: custom-db-image:latest")
+	})
+
 	// GLOBAL CHECKS (matching order in CheckCustomConfig)
 
 	// Test global router-compose
