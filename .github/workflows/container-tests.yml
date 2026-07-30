@@ -40,6 +40,14 @@ permissions:
   contents: read
 
 jobs:
+  autotag-unit-tests:
+    name: Unit tests for containers/autotag.sh and hash-paths.sh
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run containers/autotag_test.sh
+        run: containers/autotag_test.sh
+
   container-build-and-test:
     name: ${{ matrix.os }} - Test container ${{ matrix.containers }}
     runs-on: ${{ matrix.os }}
