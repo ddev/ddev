@@ -121,7 +121,7 @@ func TestAcquiaPull(t *testing.T) {
 	require.NoError(t, err)
 
 	require.FileExists(t, filepath.Join(app.GetHostUploadDirFullPath(), "chocolate-brownie-umami.jpg"))
-	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -B --skip-column-names `, DdevBin)})
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where name="admin";' | %s mysql -B --skip-column-names `, DdevBin)})
 	require.NoError(t, err)
 	out = strings.Trim(out, " \n")
 	require.Equal(t, "1", out)
