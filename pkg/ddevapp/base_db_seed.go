@@ -152,7 +152,7 @@ func (app *DdevApp) BaseDBSeedDescription() string {
 	}
 
 	if initializer := app.GetInitializerSnapshotFile(); initializer != "" {
-		return fmt.Sprintf("the '%s' snapshot %s%s", InitializerSnapshotName, filepath.ToSlash(initializer), fileSizeSuffix(initializer))
+		return fmt.Sprintf("the '%s' snapshot\n%s%s", InitializerSnapshotName, fileutil.ShortHomeJoin(initializer), fileSizeSuffix(initializer))
 	}
 	if app.mayHaveDerivedDBImageSeed() {
 		if seed, size := app.getDerivedDBImageSeed(); seed != "" {
