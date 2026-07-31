@@ -11,7 +11,8 @@ set -eu -o pipefail
 
 logpipe=/var/tmp/logpipe
 if [[ ! -p ${logpipe} ]]; then
-    mkfifo ${logpipe}
+    rm -f "${logpipe}"
+    mkfifo "${logpipe}"
 fi
 
 # Kill process 1 + process group if this exist or fails

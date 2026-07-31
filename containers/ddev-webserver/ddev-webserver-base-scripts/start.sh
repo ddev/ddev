@@ -144,7 +144,8 @@ ddev_custom_init_scripts
 # Make sure /var/tmp/logpipe gets logged; only for standalone non-ddev usages
 logpipe=/var/tmp/logpipe
 if [[ ! -p ${logpipe} ]]; then
-  mkfifo ${logpipe}
+  rm -f "${logpipe}"
+  mkfifo "${logpipe}"
   cat < ${logpipe} >/proc/1/fd/1 &
 fi
 
