@@ -1564,11 +1564,18 @@ func (app *DdevApp) Start() error {
 		util.Warning("Unable to pull Docker images: %v", pullErr)
 	}
 
+	// dbNeedsInitialization means the database volume has no database in it yet,
+	// so the db container will seed it from a base_db seed during this start.
+	dbNeedsInitialization := false
 	if !app.IsDBOmitted() {
 		// OK to start if dbType is empty (nonexistent) or if it matches
-		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
+		dbType, err := app.GetExistingDBType()
+		if err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
 			return fmt.Errorf("unable to start project %s because the configured database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s' and then you might want to try 'ddev utility migrate-database %s', see docs at %s", app.Name, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://docs.ddev.com/en/stable/users/extend/database-types/")
 		}
+		// A snapshot restore hands the db container its own restore target, so it
+		// never consults a base_db seed even with an empty volume.
+		dbNeedsInitialization = dbType == "" && !strings.HasPrefix(os.Getenv("DDEV_DB_CONTAINER_COMMAND"), RestoreSnapshotCommand)
 	}
 
 	app.CreateUploadDirsIfNecessary()
@@ -1804,6 +1811,18 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	// With no_bind_mounts the db container sees /mnt/snapshots as a Docker volume
+	// instead of .ddev/db_snapshots, so an `initializer` snapshot has to be copied
+	// in for the db container to find it when it seeds a fresh database volume.
+	if globalconfig.DdevGlobalConfig.NoBindMounts && dbNeedsInitialization {
+		if initializer := app.GetInitializerSnapshotFile(); initializer != "" {
+			err = dockerutil.CopyIntoVolume(initializer, "ddev-"+app.Name+"-snapshots", "", uid, "", false)
+			if err != nil {
+				return fmt.Errorf("failed to copy %s into the snapshots volume: %v", initializer, err)
+			}
+		}
+	}
+
 	// Wait for background chown to finish before proceeding.
 	// SSH agent runs after chown (needs volumes ready) and after WriteDockerComposeYAML
 	// (reads app.ComposeYaml) — so it runs sequentially here to avoid a data race.
@@ -1863,6 +1882,13 @@ func (app *DdevApp) Start() error {
 	}
 	for _, danglingImage := range danglingImages {
 		_ = dockerutil.RemoveImage(danglingImage.ID)
+	}
+
+	// Say what a brand-new database volume is about to be seeded from, before the
+	// (possibly long) wait for the db container to become healthy. The dbimage is
+	// built by now, so a seed baked into a derived image can be seen.
+	if dbNeedsInitialization {
+		app.announceBaseDBSeed()
 	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())

@@ -63,6 +63,13 @@ ddev snapshot --name=initializer
 
 Unlike other snapshots, `initializer` isn't meant to be restored with `ddev snapshot restore` — it's only consulted for an uninitialized database. Commit the resulting `initializer-*` file in `.ddev/db_snapshots` to your repository if you want teammates and CI to get the same starting dataset on their first `ddev start`.
 
+An `initializer` snapshot is listed as [custom configuration](../extend/customization-extendibility.md), so `ddev start` and [`ddev utility check-custom-config`](../usage/commands.md#utility-check-custom-config) both show it. When `ddev start` actually seeds a fresh database volume from it, it says so, naming the snapshot and its size and warning that a large one may take a while:
+
+```
+Initializing new database volume from the 'initializer' snapshot /path/to/project/.ddev/db_snapshots/initializer-mariadb_11.8.zst (2.2 GiB)...
+With a large database this may take a long time.
+```
+
 !!!note
     Not supported on the very old, EOL `mysql:5.5` and `mariadb:5.5` database types.
 

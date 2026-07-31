@@ -24,6 +24,26 @@ type customConfigCheck struct {
 	displayName       string                   // category name for grouped display (e.g., "Router (global)")
 }
 
+// getBuildDockerfilesInDir returns the Dockerfile*, pre.Dockerfile* and
+// prepend.Dockerfile* files in dir, i.e. only the ones WriteBuildDockerfile()
+// actually incorporates into a derived image. Like WriteBuildDockerfile(), the
+// bundled Dockerfile.example is not one of them.
+func getBuildDockerfilesInDir(dir string) ([]string, error) {
+	allFiles, err := filepath.Glob(filepath.Join(dir, "*Dockerfile*"))
+	if err != nil {
+		return nil, err
+	}
+	return slices.DeleteFunc(allFiles, func(file string) bool {
+		base := filepath.Base(file)
+		if strings.HasSuffix(base, ".example") {
+			return true
+		}
+		return !strings.HasPrefix(base, "Dockerfile") &&
+			!strings.HasPrefix(base, "pre.Dockerfile") &&
+			!strings.HasPrefix(base, "prepend.Dockerfile")
+	}), nil
+}
+
 // addPathToAddonMap adds a file path (or all files under a directory) to the add-on map.
 // Manifest ProjectFiles/GlobalFiles may contain directory paths; this expands them.
 func addPathToAddonMap(fullPath string, addonName string, addonFileMap map[string]string) {
@@ -115,34 +135,14 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 		},
 		{
 			collectFiles: func() ([]string, error) {
-				allFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "db-build", "*Dockerfile*"))
-				if err != nil {
-					return nil, err
-				}
-				// Filter to only valid Dockerfile patterns
-				return slices.DeleteFunc(allFiles, func(file string) bool {
-					base := filepath.Base(file)
-					return !strings.HasPrefix(base, "Dockerfile") &&
-						!strings.HasPrefix(base, "pre.Dockerfile") &&
-						!strings.HasPrefix(base, "prepend.Dockerfile")
-				}), nil
+				return getBuildDockerfilesInDir(filepath.Join(globalconfig.GetGlobalDdevDir(), "db-build"))
 			},
 			checkOnlyWhen: func() bool { return !slices.Contains(app.OmitContainers, "db") },
 			displayName:   "Database (global)",
 		},
 		{
 			collectFiles: func() ([]string, error) {
-				allFiles, err := filepath.Glob(filepath.Join(ddevDir, "db-build", "*Dockerfile*"))
-				if err != nil {
-					return nil, err
-				}
-				// Filter to only valid Dockerfile patterns
-				return slices.DeleteFunc(allFiles, func(file string) bool {
-					base := filepath.Base(file)
-					return !strings.HasPrefix(base, "Dockerfile") &&
-						!strings.HasPrefix(base, "pre.Dockerfile") &&
-						!strings.HasPrefix(base, "prepend.Dockerfile")
-				}), nil
+				return getBuildDockerfilesInDir(filepath.Join(ddevDir, "db-build"))
 			},
 			checkOnlyWhen: func() bool { return !slices.Contains(app.OmitContainers, "db") },
 			displayName:   "Database",
@@ -270,33 +270,13 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 		},
 		{
 			collectFiles: func() ([]string, error) {
-				allFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "web-build", "*Dockerfile*"))
-				if err != nil {
-					return nil, err
-				}
-				// Filter to only valid Dockerfile patterns
-				return slices.DeleteFunc(allFiles, func(file string) bool {
-					base := filepath.Base(file)
-					return !strings.HasPrefix(base, "Dockerfile") &&
-						!strings.HasPrefix(base, "pre.Dockerfile") &&
-						!strings.HasPrefix(base, "prepend.Dockerfile")
-				}), nil
+				return getBuildDockerfilesInDir(filepath.Join(globalconfig.GetGlobalDdevDir(), "web-build"))
 			},
 			displayName: "Web server (global)",
 		},
 		{
 			collectFiles: func() ([]string, error) {
-				allFiles, err := filepath.Glob(filepath.Join(ddevDir, "web-build", "*Dockerfile*"))
-				if err != nil {
-					return nil, err
-				}
-				// Filter to only valid Dockerfile patterns
-				return slices.DeleteFunc(allFiles, func(file string) bool {
-					base := filepath.Base(file)
-					return !strings.HasPrefix(base, "Dockerfile") &&
-						!strings.HasPrefix(base, "pre.Dockerfile") &&
-						!strings.HasPrefix(base, "prepend.Dockerfile")
-				}), nil
+				return getBuildDockerfilesInDir(filepath.Join(ddevDir, "web-build"))
 			},
 			displayName: "Web server",
 		},
@@ -438,6 +418,24 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 		findings = append(findings, finding{
 			category: "Database",
 			files:    []fileInfo{{path: fmt.Sprintf("dbimage: %s (non-default)", app.DBImage)}},
+		})
+	}
+
+	// An `initializer` snapshot or a base_db seed baked into a derived dbimage
+	// replaces the stock starter database when a fresh database volume is created,
+	// so report them even though neither is an ordinary config file.
+	if initializer := app.GetInitializerSnapshotFile(); initializer != "" {
+		findings = append(findings, finding{
+			category: "Database",
+			files:    []fileInfo{{path: fmt.Sprintf("%s (seeds a new database volume)", initializer)}},
+		})
+	}
+	// The db-build Dockerfile itself is already listed by the check above, so
+	// name the seed rather than repeating the path.
+	if len(app.GetDBBuildSeedDockerfiles()) > 0 {
+		findings = append(findings, finding{
+			category: "Database",
+			files:    []fileInfo{{path: fmt.Sprintf("%s.* baked into dbimage (seeds a new database volume)", CustomBaseDBSeedPathPrefix)}},
 		})
 	}
 

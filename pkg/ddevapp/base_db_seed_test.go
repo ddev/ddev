@@ -1,0 +1,131 @@
+package ddevapp
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/stretchr/testify/require"
+)
+
+// newBaseDBSeedTestApp returns an unstarted app rooted in a temp directory with
+// a .ddev directory, enough for the host-side base_db seed lookups.
+func newBaseDBSeedTestApp(t *testing.T, dbType, dbVersion string) *DdevApp {
+	t.Helper()
+	tmpDir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpDir, ".ddev"), 0755))
+	app := &DdevApp{
+		Name:       "base-db-seed-test",
+		AppRoot:    tmpDir,
+		ConfigPath: filepath.Join(tmpDir, ".ddev", "config.yaml"),
+	}
+	app.Database.Type = dbType
+	app.Database.Version = dbVersion
+	return app
+}
+
+// writeBaseDBSeedTestFile writes content to a path under the project's .ddev directory.
+func writeBaseDBSeedTestFile(t *testing.T, app *DdevApp, relPath, content string) string {
+	t.Helper()
+	fullPath := app.GetConfigPath(relPath)
+	require.NoError(t, os.MkdirAll(filepath.Dir(fullPath), 0755))
+	require.NoError(t, os.WriteFile(fullPath, []byte(content), 0644))
+	return fullPath
+}
+
+// TestGetInitializerSnapshotFile verifies the host-side lookup of the reserved
+// `initializer` snapshot, which must match ddev-dbserver's docker-entrypoint.sh:
+// named for the exact db type/version, preferring .zst over .gz.
+func TestGetInitializerSnapshotFile(t *testing.T) {
+	app := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
+	require.Empty(t, app.GetInitializerSnapshotFile())
+
+	gz := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "initializer-mariadb_10.11.gz"), "seed")
+	require.Equal(t, gz, app.GetInitializerSnapshotFile())
+
+	// .zst wins over .gz when both are present.
+	zst := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "initializer-mariadb_10.11.zst"), "seed")
+	require.Equal(t, zst, app.GetInitializerSnapshotFile())
+
+	// A snapshot for a different db version is not this project's initializer.
+	other := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB106)
+	writeBaseDBSeedTestFile(t, other, filepath.Join("db_snapshots", "initializer-mariadb_10.11.zst"), "seed")
+	require.Empty(t, other.GetInitializerSnapshotFile())
+
+	// PostgreSQL doesn't use base_db seeding at all.
+	pg := newBaseDBSeedTestApp(t, nodeps.Postgres, nodeps.Postgres17)
+	writeBaseDBSeedTestFile(t, pg, filepath.Join("db_snapshots", "initializer-postgres_17.zst"), "seed")
+	require.Empty(t, pg.GetInitializerSnapshotFile())
+
+	// Neither does a project with no db container.
+	omitted := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
+	omitted.OmitContainers = []string{"db"}
+	writeBaseDBSeedTestFile(t, omitted, filepath.Join("db_snapshots", "initializer-mariadb_10.11.zst"), "seed")
+	require.Empty(t, omitted.GetInitializerSnapshotFile())
+}
+
+// TestGetDBBuildSeedDockerfiles verifies that only db-build Dockerfiles that
+// actually bake a base_db seed into the dbimage are reported, and that the
+// bundled Dockerfile.example is ignored.
+func TestGetDBBuildSeedDockerfiles(t *testing.T) {
+	app := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
+
+	writeBaseDBSeedTestFile(t, app, filepath.Join("db-build", "Dockerfile"), "RUN echo hi\n")
+	require.Empty(t, app.GetDBBuildSeedDockerfiles())
+	require.True(t, app.mayHaveDerivedDBImageSeed(), "a db-build Dockerfile makes a derived-image seed possible")
+
+	seed := writeBaseDBSeedTestFile(t, app, filepath.Join("db-build", "Dockerfile.seed"), "COPY base_db.zst /mysqlbase/custom/base_db.zst\n")
+	require.Equal(t, []string{seed}, app.GetDBBuildSeedDockerfiles())
+
+	// Dockerfile.example ships in every project and is never built, so it must
+	// not make us think a derived image (or a seed) is in play.
+	clean := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
+	writeBaseDBSeedTestFile(t, clean, filepath.Join("db-build", "Dockerfile.example"), "COPY base_db.zst /mysqlbase/custom/base_db.zst\n")
+	require.Empty(t, clean.GetDBBuildSeedDockerfiles())
+	require.False(t, clean.mayHaveDerivedDBImageSeed())
+}
+
+// TestAnnounceBaseDBSeed verifies that seeding a fresh database volume from a
+// project `initializer` snapshot is announced with what it's doing, which
+// snapshot, and that it may take a while — and that the stock starter database
+// (no initializer, no derived image) stays quiet.
+func TestAnnounceBaseDBSeed(t *testing.T) {
+	app := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
+	app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+
+	outFunc := util.CaptureUserOut()
+	app.announceBaseDBSeed()
+	require.Empty(t, strings.TrimSpace(outFunc()), "stock starter database should not be announced")
+
+	initializer := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "initializer-mariadb_10.11.zst"), strings.Repeat("x", 2048))
+	outFunc = util.CaptureUserOut()
+	app.announceBaseDBSeed()
+	out := outFunc()
+
+	require.Contains(t, out, "Initializing new database volume from the 'initializer' snapshot")
+	require.Contains(t, out, filepath.ToSlash(initializer))
+	require.Contains(t, out, "(2.0 KiB)")
+	require.Contains(t, out, "this may take a long time")
+	require.Contains(t, out, "default_container_timeout")
+	require.Contains(t, out, "ddev logs -s db -f "+app.Name)
+}
+
+// TestFileSizeSuffix verifies the human-readable size suffix used when
+// announcing an `initializer` snapshot restore.
+func TestFileSizeSuffix(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	small := filepath.Join(tmpDir, "small")
+	require.NoError(t, os.WriteFile(small, make([]byte, 512), 0644))
+	require.Equal(t, " (512 bytes)", fileSizeSuffix(small))
+
+	large := filepath.Join(tmpDir, "large")
+	require.NoError(t, os.WriteFile(large, make([]byte, 3*1024*1024), 0644))
+	require.Equal(t, " (3.0 MiB)", fileSizeSuffix(large))
+
+	require.Empty(t, fileSizeSuffix(filepath.Join(tmpDir, "nonexistent")))
+	require.Empty(t, fileSizeSuffix(tmpDir))
+}

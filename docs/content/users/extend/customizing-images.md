@@ -256,6 +256,13 @@ COPY base_db.zst /mysqlbase/custom/base_db.zst
 
 The database container uses this seed the first time its data volume is created (a brand-new project, or after `ddev delete` and `ddev start`), instead of the stock DDEV starter database. It's checked ahead of the stock seed but _after_ any project-level [`initializer` snapshot](../usage/database-management.md#snapshots) — so a teammate can still override your baked-in seed for their own project just by dropping an `initializer` snapshot into `.ddev/db_snapshots`, without rebuilding the image.
 
+When `ddev start` seeds a fresh database volume from a baked-in seed, it says so and warns that a large one may take a while:
+
+```
+Initializing new database volume from /mysqlbase/custom/base_db.zst baked into dbimage ddev/ddev-dbserver-mariadb-11.8:v1.25.0...
+With a large database this may take a long time.
+```
+
 !!!note
     Not supported on the very old, EOL `mysql:5.5` and `mariadb:5.5` database types.
 
