@@ -12,6 +12,10 @@
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       DOCKER_TYPE: dockerforwindows
+      # Normal passing runs finish in ~160-220m; cap well below the default
+      # 6h TEST_TIMEOUT so a hung test fails fast instead of occupying the
+      # runner for the full 6h + cleanup overhead.
+      TEST_TIMEOUT: 4h
       # C:\buildkite-agent\hooks\environment
       # DOCKERHUB_PULL_USERNAME
       # DOCKERHUB_PULL_PASSWORD

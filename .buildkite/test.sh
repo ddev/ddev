@@ -395,7 +395,7 @@ echo "--- Running tests..."
 
 # From here on, cleanup (the EXIT trap) runs testbot_maintenance.sh post-test.
 RAN_TESTS=true
-make ${MAKE_TARGET:-test} TESTARGS="${TESTARGS:-}" TESTPKG="${TESTPKG:-}" TESTFILE="${TESTFILE:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
+make ${MAKE_TARGET:-test} TESTARGS="${TESTARGS:-}" TESTPKG="${TESTPKG:-}" TESTFILE="${TESTFILE:-}" TEST_TIMEOUT="${TEST_TIMEOUT:-6h}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
