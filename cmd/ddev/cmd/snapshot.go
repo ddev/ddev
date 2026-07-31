@@ -72,7 +72,7 @@ func listSnapshots(apps []*ddevapp.DdevApp) {
 	if len(apps) > 1 {
 		columns = append(columns, "Project")
 	}
-	columns = append(columns, "Snapshot", "Created", "Size")
+	columns = append(columns, "Snapshot", "Created", "Size", "DB Version")
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
 		var colConfig []table.ColumnConfig
@@ -94,16 +94,16 @@ func listSnapshots(apps []*ddevapp.DdevApp) {
 			if len(snapshots) > 0 {
 				for _, snapshot := range snapshots {
 					if len(apps) > 1 {
-						t.AppendRow(table.Row{app.GetName(), snapshot.Name, snapshot.Created.Format("2006-01-02"), util.FormatBytes(snapshot.Size)})
+						t.AppendRow(table.Row{app.GetName(), snapshot.Name, snapshot.Created.Format("2006-01-02"), util.FormatBytes(snapshot.Size), snapshot.DBVersion})
 					} else {
-						t.AppendRow(table.Row{snapshot.Name, snapshot.Created.Format("2006-01-02"), util.FormatBytes(snapshot.Size)})
+						t.AppendRow(table.Row{snapshot.Name, snapshot.Created.Format("2006-01-02"), util.FormatBytes(snapshot.Size), snapshot.DBVersion})
 					}
 				}
 			} else {
 				if len(apps) > 1 {
-					t.AppendRow(table.Row{app.GetName(), text.Italic.Sprint("No snapshots"), "", ""})
+					t.AppendRow(table.Row{app.GetName(), text.Italic.Sprint("No snapshots"), "", "", ""})
 				} else {
-					t.AppendRow(table.Row{text.Italic.Sprint("No snapshots"), "", ""})
+					t.AppendRow(table.Row{text.Italic.Sprint("No snapshots"), "", "", ""})
 				}
 			}
 		}
