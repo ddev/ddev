@@ -427,7 +427,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 	if initializer := app.GetInitializerSnapshotFile(); initializer != "" {
 		findings = append(findings, finding{
 			category: "Database",
-			files:    []fileInfo{{path: fmt.Sprintf("%s (seeds a new database volume)", initializer)}},
+			files:    []fileInfo{{path: fmt.Sprintf("%s (seeds a new database volume)", fileutil.ShortHomeJoin(initializer))}},
 		})
 	}
 	// The db-build Dockerfile itself is already listed by the check above, so
