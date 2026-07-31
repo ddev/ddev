@@ -57,13 +57,10 @@ auth_command:
 db_pull_command:
   command: |
     set -eu -o pipefail
-    # xargs here just trims whitespace
-    # We could use an easier technique when https://github.com/acquia/cli/issues/1629 is resolved
-    # just using `acli pull:db ${ACQUIA_ENVIRONMENT_ID}`
     echo "Using ACQUIA_ENVIRONMENT_ID=${ACQUIA_ENVIRONMENT_ID}"
+    export ACLI_DB_HOST=db ACLI_DB_NAME=db ACLI_DB_USER=root ACLI_DB_PASSWORD=root
     set -x   # You can enable bash debugging output by uncommenting
-    db_dump=$(acli pull:db ${ACQUIA_ENVIRONMENT_ID} default --no-interaction --no-import | tail -2l | xargs |  sed 's/^.* //')
-    cp ${db_dump} /var/www/html/.ddev/.downloads/db.sql.gz
+    acli pull:db ${ACQUIA_ENVIRONMENT_ID} default --no-interaction
 
 files_import_command:
   command: |
