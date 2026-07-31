@@ -254,7 +254,7 @@ If you publish a derived `dbimage` (for example a CI-built image with your produ
 COPY base_db.zst /mysqlbase/custom/base_db.zst
 ```
 
-The database container uses this seed the first time its data volume is created (a brand-new project, or after `ddev delete` and `ddev start`), instead of the stock DDEV starter database. It's checked ahead of the stock seed but *after* any project-level [`initializer` snapshot](../usage/database-management.md#snapshots) — so a teammate can still override your baked-in seed for their own project just by dropping an `initializer` snapshot into `.ddev/db_snapshots`, without rebuilding the image.
+The database container uses this seed the first time its data volume is created (a brand-new project, or after `ddev delete` and `ddev start`), instead of the stock DDEV starter database. It's checked ahead of the stock seed but _after_ any project-level [`initializer` snapshot](../usage/database-management.md#snapshots) — so a teammate can still override your baked-in seed for their own project just by dropping an `initializer` snapshot into `.ddev/db_snapshots`, without rebuilding the image.
 
 !!!note
     Not supported on the very old, EOL `mysql:5.5` and `mariadb:5.5` database types.
