@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/docker"
@@ -92,15 +93,16 @@ func (app *DdevApp) mayHaveDerivedDBImageSeed() bool {
 	return len(app.GetDBBuildDockerfiles()) > 0
 }
 
-// getDerivedDBImageSeed returns the in-image path of a base_db seed baked into
-// the built dbimage, or an empty string if there is none. This runs a container
-// against the image, so callers gate it on mayHaveDerivedDBImageSeed().
-func (app *DdevApp) getDerivedDBImageSeed() string {
+// getDerivedDBImageSeed returns the in-image path and byte size of a base_db
+// seed baked into the built dbimage. path is empty if there is none; size is
+// -1 if it could not be determined. This runs a container against the image,
+// so callers gate it on mayHaveDerivedDBImageSeed().
+func (app *DdevApp) getDerivedDBImageSeed() (path string, size int64) {
 	var candidates []string
 	for _, ext := range baseDBSeedExtensions {
 		candidates = append(candidates, CustomBaseDBSeedPathPrefix+"."+ext)
 	}
-	script := fmt.Sprintf(`for f in %s; do if [ -f "$f" ]; then echo "$f"; break; fi; done`, strings.Join(candidates, " "))
+	script := fmt.Sprintf(`for f in %s; do if [ -f "$f" ]; then printf '%%s %%s\n' "$f" "$(wc -c <"$f")"; break; fi; done`, strings.Join(candidates, " "))
 
 	_, out, err := dockerutil.RunSimpleContainer(
 		app.GetDBImage()+"-"+app.Name+"-built",
@@ -118,17 +120,24 @@ func (app *DdevApp) getDerivedDBImageSeed() string {
 	)
 	if err != nil {
 		util.Debug("Unable to check dbimage for a baked-in base_db seed: %v, output=%s", err, out)
-		return ""
+		return "", -1
 	}
 	// The container's output can carry unrelated noise, so only accept a line
-	// that actually names one of the seed paths we asked about.
+	// whose first field actually names one of the seed paths we asked about.
 	for line := range strings.SplitSeq(out, "\n") {
-		line = strings.TrimSpace(line)
-		if slices.Contains(candidates, line) {
-			return line
+		fields := strings.Fields(line)
+		if len(fields) == 0 || !slices.Contains(candidates, fields[0]) {
+			continue
 		}
+		size = -1
+		if len(fields) > 1 {
+			if n, convErr := strconv.ParseInt(fields[1], 10, 64); convErr == nil {
+				size = n
+			}
+		}
+		return fields[0], size
 	}
-	return ""
+	return "", -1
 }
 
 // BaseDBSeedDescription returns a human-readable description of what a
@@ -146,8 +155,8 @@ func (app *DdevApp) BaseDBSeedDescription() string {
 		return fmt.Sprintf("the '%s' snapshot %s%s", InitializerSnapshotName, filepath.ToSlash(initializer), fileSizeSuffix(initializer))
 	}
 	if app.mayHaveDerivedDBImageSeed() {
-		if seed := app.getDerivedDBImageSeed(); seed != "" {
-			return fmt.Sprintf("%s baked into dbimage %s", seed, app.GetDBImage())
+		if seed, size := app.getDerivedDBImageSeed(); seed != "" {
+			return fmt.Sprintf("%s%s baked into dbimage %s", seed, byteSizeSuffix(size), app.GetDBImage())
 		}
 	}
 	return ""
@@ -171,5 +180,14 @@ func fileSizeSuffix(path string) string {
 	if err != nil || fi.IsDir() {
 		return ""
 	}
-	return fmt.Sprintf(" (%s)", util.FormatBytes(fi.Size()))
+	return byteSizeSuffix(fi.Size())
+}
+
+// byteSizeSuffix returns a " (2.3GB)" style suffix for a byte count, or an
+// empty string if size is negative (unknown).
+func byteSizeSuffix(size int64) string {
+	if size < 0 {
+		return ""
+	}
+	return fmt.Sprintf(" (%s)", util.FormatBytes(size))
 }
