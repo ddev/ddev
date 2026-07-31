@@ -20,7 +20,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20260801_rfay_global_npm" // Note that this can be overridden by make
+var WebTag = "20260716_stasadev_webserver_403_message" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
@@ -32,7 +32,7 @@ var BaseDBTag = "20260729_rfay_mysql_97"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "20260715_rfay_traefik_404_message"
+var TraefikRouterTag = "20260716_stasadev_webserver_403_message"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"

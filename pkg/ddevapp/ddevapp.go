@@ -1549,8 +1549,6 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	warnMissingDocroot(app)
-
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
@@ -2146,29 +2144,6 @@ If this seems to be a config issue, update it accordingly.`, fmt.Sprintf("%s\n",
 	}
 
 	return nil
-}
-
-// Warn if docroot or docroot/index.* is missing
-func warnMissingDocroot(app *DdevApp) {
-	// No need to warn on generic webserver type; that's the implementor's job
-	if app.WebserverType == nodeps.WebserverGeneric {
-		return
-	}
-	docroot := app.GetAbsDocroot(false)
-	if !fileutil.FileExists(docroot) {
-		util.WarningWithColor("magenta", "The project docroot does not yet exist or is misconfigured at this path:\n%s\nYou may get 403 errors 'permission denied' from the browser until it does.\n", docroot)
-		return
-	}
-
-	pattern := filepath.Join(docroot, "index.*")
-	matches, err := filepath.Glob(pattern)
-	if err != nil {
-		util.Warning("unable to filepath.Glob(%s)", pattern)
-		return
-	}
-	if len(matches) == 0 {
-		util.WarningWithColor("magenta", "The index.php or index.html does not yet exist at this path:\n%s\nYou may get 403 errors 'permission denied' from the browser until it does.\nIgnore if a later action (like `ddev composer create-project`) will create it.\n", pattern)
-	}
 }
 
 // warnWSL2NoneMode warns users that WSL2 networkingMode=none disables internet access entirely,
