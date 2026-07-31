@@ -23,6 +23,7 @@ import (
 type Snapshot struct {
 	Name    string
 	Created time.Time
+	Size    int64
 }
 
 // SnapshotRestoreDefaultWaitTime is the max time we'll wait for snapshot restore.
@@ -132,9 +133,18 @@ func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
 	for _, f := range files {
 		if f.IsDir() || strings.HasSuffix(f.Name(), ".gz") || strings.HasSuffix(f.Name(), ".zst") {
 			n := m.ReplaceAll([]byte(f.Name()), []byte(""))
+			size := f.Size()
+			if f.IsDir() {
+				var err error
+				size, err = fileutil.DirSize(filepath.Join(snapshotDir, f.Name()))
+				if err != nil {
+					return snapshots, err
+				}
+			}
 			snapshot := Snapshot{
 				Name:    string(n),
 				Created: f.ModTime(),
+				Size:    size,
 			}
 			snapshots = append(snapshots, snapshot)
 		}
