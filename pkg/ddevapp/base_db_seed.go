@@ -131,48 +131,45 @@ func (app *DdevApp) getDerivedDBImageSeed() string {
 	return ""
 }
 
-// announceBaseDBSeed tells the user what a brand-new database volume is about to
-// be seeded from, in the same spirit as RestoreSnapshot: what it's doing, which
-// seed it's using, and that it may take a while. It stays quiet for the stock
-// starter database, which is small and fast.
-func (app *DdevApp) announceBaseDBSeed() {
+// BaseDBSeedDescription returns a human-readable description of what a
+// brand-new database volume will be seeded from (an initializer snapshot, or
+// a seed baked into a derived dbimage), or an empty string if it'll just be
+// the stock starter database. Callers use this to decide whether to warn
+// about a long first-boot restore and extend the container-ready timeout
+// accordingly.
+func (app *DdevApp) BaseDBSeedDescription() string {
 	if !app.UsesBaseDBSeed() {
-		return
+		return ""
 	}
 
-	var description string
 	if initializer := app.GetInitializerSnapshotFile(); initializer != "" {
-		description = fmt.Sprintf("the '%s' snapshot %s%s", InitializerSnapshotName, filepath.ToSlash(initializer), fileSizeSuffix(initializer))
-	} else if app.mayHaveDerivedDBImageSeed() {
+		return fmt.Sprintf("the '%s' snapshot %s%s", InitializerSnapshotName, filepath.ToSlash(initializer), fileSizeSuffix(initializer))
+	}
+	if app.mayHaveDerivedDBImageSeed() {
 		if seed := app.getDerivedDBImageSeed(); seed != "" {
-			description = fmt.Sprintf("%s baked into dbimage %s", seed, app.GetDBImage())
+			return fmt.Sprintf("%s baked into dbimage %s", seed, app.GetDBImage())
 		}
 	}
-	if description == "" {
-		return
-	}
+	return ""
+}
 
+// announceBaseDBSeed tells the user what a brand-new database volume is about to
+// be seeded from, in the same spirit as RestoreSnapshot: what it's doing, which
+// seed it's using, and that it may take a while. maxWaitTime is the
+// container-ready timeout that will actually be in effect, so the message
+// matches reality.
+func (app *DdevApp) announceBaseDBSeed(description string, maxWaitTime int) {
 	util.Success("Initializing new database volume from %s...", description)
-	util.Success("With a large database this may take a long time.\nThis may time out after %d seconds \nbut you can increase it by changing default_container_timeout.", app.GetMaxContainerWaitTime())
+	util.Success("With a large database this may take a long time.\nThis may time out after %d seconds \nbut you can increase it by changing default_container_timeout.", maxWaitTime)
 	output.UserOut.Printf("You can follow the progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
 }
 
-// fileSizeSuffix returns a " (2.2 GiB)" style suffix for a file, or an empty
+// fileSizeSuffix returns a " (2.3GB)" style suffix for a file, or an empty
 // string if the size can't be determined.
 func fileSizeSuffix(path string) string {
 	fi, err := os.Stat(path)
 	if err != nil || fi.IsDir() {
 		return ""
 	}
-	units := []string{"bytes", "KiB", "MiB", "GiB", "TiB"}
-	size := float64(fi.Size())
-	i := 0
-	for size >= 1024 && i < len(units)-1 {
-		size /= 1024
-		i++
-	}
-	if i == 0 {
-		return fmt.Sprintf(" (%d %s)", fi.Size(), units[0])
-	}
-	return fmt.Sprintf(" (%.1f %s)", size, units[i])
+	return fmt.Sprintf(" (%s)", util.FormatBytes(fi.Size()))
 }

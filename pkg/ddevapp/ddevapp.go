@@ -1885,10 +1885,17 @@ func (app *DdevApp) Start() error {
 	}
 
 	// Say what a brand-new database volume is about to be seeded from, before the
-	// (possibly long) wait for the db container to become healthy. The dbimage is
-	// built by now, so a seed baked into a derived image can be seen.
+	// (possibly long) wait for the db container to become healthy, and extend that
+	// wait's timeout to accommodate a large seed. The dbimage is built by now, so a
+	// seed baked into a derived image can be seen.
+	origDefaultContainerTimeout := app.DefaultContainerTimeout
 	if dbNeedsInitialization {
-		app.announceBaseDBSeed()
+		if description := app.BaseDBSeedDescription(); description != "" {
+			if t, _ := strconv.Atoi(app.DefaultContainerTimeout); t <= SnapshotRestoreDefaultWaitTime {
+				app.DefaultContainerTimeout = strconv.Itoa(SnapshotRestoreDefaultWaitTime)
+			}
+			app.announceBaseDBSeed(description, app.GetMaxContainerWaitTime())
+		}
 	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
@@ -2046,6 +2053,7 @@ func (app *DdevApp) Start() error {
 	wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", dependers))
 	waitErr := app.Wait(dependers)
 	wait.Complete(waitErr)
+	app.DefaultContainerTimeout = origDefaultContainerTimeout
 
 	if !slices.Contains(app.OmitContainers, "db") && app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) && slices.Contains([]string{nodeps.PHP73, nodeps.PHP72, nodeps.PHP71, nodeps.PHP70, nodeps.PHP56}, app.PHPVersion) {
 		alterString := `ALTER USER 'db'@'%' IDENTIFIED WITH mysql_native_password BY 'db';

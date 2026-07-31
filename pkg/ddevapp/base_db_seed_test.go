@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -96,21 +97,23 @@ func TestAnnounceBaseDBSeed(t *testing.T) {
 	app := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
 	app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
 
-	outFunc := util.CaptureUserOut()
-	app.announceBaseDBSeed()
-	require.Empty(t, strings.TrimSpace(outFunc()), "stock starter database should not be announced")
+	require.Empty(t, app.BaseDBSeedDescription(), "stock starter database should not be announced")
 
 	initializer := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "initializer-mariadb_10.11.zst"), strings.Repeat("x", 2048))
-	outFunc = util.CaptureUserOut()
-	app.announceBaseDBSeed()
+	description := app.BaseDBSeedDescription()
+	require.NotEmpty(t, description)
+
+	outFunc := util.CaptureUserOut()
+	app.announceBaseDBSeed(description, SnapshotRestoreDefaultWaitTime)
 	out := outFunc()
 
 	require.Contains(t, out, "Initializing new database volume from the 'initializer' snapshot")
 	require.Contains(t, out, filepath.ToSlash(initializer))
-	require.Contains(t, out, "(2.0 KiB)")
+	require.Contains(t, out, "(2.0KB)")
 	require.Contains(t, out, "this may take a long time")
 	require.Contains(t, out, "default_container_timeout")
 	require.Contains(t, out, "ddev logs -s db -f "+app.Name)
+	require.Contains(t, out, strconv.Itoa(SnapshotRestoreDefaultWaitTime))
 }
 
 // TestFileSizeSuffix verifies the human-readable size suffix used when
@@ -120,11 +123,11 @@ func TestFileSizeSuffix(t *testing.T) {
 
 	small := filepath.Join(tmpDir, "small")
 	require.NoError(t, os.WriteFile(small, make([]byte, 512), 0644))
-	require.Equal(t, " (512 bytes)", fileSizeSuffix(small))
+	require.Equal(t, " (512B)", fileSizeSuffix(small))
 
 	large := filepath.Join(tmpDir, "large")
 	require.NoError(t, os.WriteFile(large, make([]byte, 3*1024*1024), 0644))
-	require.Equal(t, " (3.0 MiB)", fileSizeSuffix(large))
+	require.Equal(t, " (3.0MB)", fileSizeSuffix(large))
 
 	require.Empty(t, fileSizeSuffix(filepath.Join(tmpDir, "nonexistent")))
 	require.Empty(t, fileSizeSuffix(tmpDir))
