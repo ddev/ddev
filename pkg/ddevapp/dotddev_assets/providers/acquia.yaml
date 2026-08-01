@@ -54,7 +54,7 @@ auth_command:
     ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
     acli -n auth:login -n --key="${ACQUIA_API_KEY}" --secret="${ACQUIA_API_SECRET}"
 
-db_pull_command:
+db_import_command:
   command: |
     set -eu -o pipefail
     echo "Using ACQUIA_ENVIRONMENT_ID=${ACQUIA_ENVIRONMENT_ID}"
