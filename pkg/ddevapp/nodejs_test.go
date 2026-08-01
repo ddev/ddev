@@ -156,3 +156,39 @@ func TestCorepackEnable(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, strings.HasPrefix(out, "4."))
 }
+
+// TestNpmGlobalInstall tests that `npm install -g` works for the project
+// user, who is not the file owner of /usr/local/n but a member of its
+// group (0/root) - regression test for
+// https://github.com/ddev/ddev/issues/8640
+func TestNpmGlobalInstall(t *testing.T) {
+	site := TestSites[0]
+	origDir, _ := os.Getwd()
+	_ = os.Chdir(site.Dir)
+
+	runTime := util.TimeTrackC(t.Name())
+
+	testcommon.ClearDockerEnv()
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		runTime()
+		_ = os.Chdir(origDir)
+		_ = app.Stop(true, false)
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: `npm install -g npm@latest`,
+	})
+	require.NoError(t, err, "npm install -g failed, output: %s", out)
+	require.NotContains(t, out, "EACCES")
+
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: `npm --version`,
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, strings.TrimSpace(out))
+}

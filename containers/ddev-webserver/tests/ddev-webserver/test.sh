@@ -24,8 +24,8 @@ export CONTAINER_NAME=webserver-test
 export PHP_VERSION=8.4
 export WEBSERVER_TYPE=nginx-fpm
 
-MOUNTUID=33
-MOUNTGID=33
+export MOUNTUID=33
+export MOUNTGID=33
 # /usr/local/bin is added for git-bash, where it may not be in the $PATH.
 export PATH="/usr/local/bin:$PATH"
 
