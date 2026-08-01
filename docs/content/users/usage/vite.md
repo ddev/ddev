@@ -188,7 +188,6 @@ This approach supports various architectures:
 
 Additional resources:
 
-- **[Node.js Development with DDEV](https://www.lullabot.com/articles/nodejs-development-ddev)** - Comprehensive guide to Node.js project configuration
 - **[How to Run Headless Drupal and Next.js on DDEV](https://www.velir.com/ideas/2024/05/13/how-to-run-headless-drupal-and-nextjs-on-ddev)** - Headless CMS implementation guide
 - **[ddev-laravel-breeze-sveltekit](https://github.com/mandrasch/ddev-laravel-breeze-sveltekit)** - Monorepo example with Laravel and SvelteKit
 
