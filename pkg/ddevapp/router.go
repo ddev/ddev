@@ -649,9 +649,14 @@ func CheckRouterPorts(activeApps []*DdevApp) error {
 // Returns the port found, and a boolean that determines if the
 // port is valid (true) or not (false), and the port is marked as allocated
 func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
-	// Get ports already bound by the router - these can be reused
+	// Get ports already bound by the router - these can be reused.
+	// Only trust these bindings when the router is actually running: a
+	// container that failed to start (for example one that lost a port-bind
+	// race) still reports the port it tried to bind in its HostConfig, and
+	// treating that as a legitimate binding would keep reoffering the same
+	// never-actually-bound port on every subsequent call.
 	var routerBoundPorts []string
-	if router, err := FindDdevRouter(); err == nil && router != nil {
+	if router, err := FindDdevRouter(); err == nil && router != nil && router.State == "running" {
 		routerBoundPorts, _ = dockerutil.GetBoundHostPorts(router.ID)
 	}
 
@@ -691,11 +696,15 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	if proposedPort == "" {
 		return proposedPort, "", false
 	}
-	// If the router exists, check if it's already handling the proposedPort
+	// If the router is running, check if it's already handling the proposedPort
 	// regardless of its health status. This prevents allocating ephemeral ports
 	// when the router is running but unhealthy (e.g., broken Traefik config).
+	// A router container that exists but isn't running (for example one that
+	// failed to start because it lost a port-bind race) still reports the
+	// port it tried to bind in its HostConfig, so its bindings are only
+	// trustworthy while it's actually running.
 	r, err := FindDdevRouter()
-	if r != nil && err == nil {
+	if r != nil && err == nil && r.State == "running" {
 		util.Debug("GetAvailableRouterPort(): Router exists, checking bound ports")
 		// Check if the proposedPort is already being handled by the router.
 		routerPortsAlreadyBound, err := dockerutil.GetBoundHostPorts(r.ID)
