@@ -117,11 +117,36 @@ RUN curl -L --fail -o /usr/local/bin/n -sSL https://raw.githubusercontent.com/tj
 RUN N_PREFIX=/usr/local/n n install --cleanup "${NODE_VERSION}"
 RUN npm install --unsafe-perm=true --global gulp-cli yarn
 
+# Make /usr/local/n writable here, once, for any container user, instead of
+# recursively chgrp/chmod'ing it on every project's web image build (which was
+# slow, see https://github.com/ddev/ddev/issues/8600): use the "arbitrary UID"
+# technique of owning it by the root group (gid 0) and making it group-writable,
+# so any per-project user just needs to be a member of group 0 (added in
+# WriteBuildDockerfile in pkg/ddevapp/config.go) to get write access, with no
+# per-project recursive walk of this directory needed. See
+# https://developers.redhat.com/blog/2020/10/26/adapting-docker-and-kubernetes-containers-to-run-on-red-hat-openshift-container-platform
+RUN chgrp -R 0 /usr/local/n && chmod -R g+rwX,o-w /usr/local/n
+
 # Loop through $PHP_VERSIONS, selecting packages for the target architecture.
 RUN for v in ${PHP_VERSIONS}; do \
     /usr/local/bin/install_php_extensions.sh "$v" "${TARGETPLATFORM#linux/}"; \
 done
 RUN update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION}
+
+# Same "arbitrary UID" technique for /var/log itself: some setups (custom
+# supervisord daemons, app loggers) write files directly into /var/log, which
+# relied on /var/log being world-writable before #8379 hardened it. Rather
+# than reverting to world-writable, make the top-level directory group-0
+# writable so any per-project user (a group-0 member) can create files there,
+# without loosening perms on subdirectories that already have narrower,
+# explicit permissions (e.g. /var/log/nginx, /var/log/apache2 below).
+# This must run after the PHP-FPM installs above: installing php-fpm pulls in
+# the `systemd` package for the first time, and systemd's postinst runs a
+# global `systemd-tmpfiles --create`, which resets /var/log back to its
+# packaged 0755 root:root default (see /usr/lib/tmpfiles.d/var.conf) and
+# would silently undo this fix if applied any earlier.
+# See https://github.com/ddev/ddev/issues/8574
+RUN chgrp 0 /var/log && chmod g+rwX,o-w /var/log
 RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
     touch /var/log/php-fpm.log && \
     chmod ugo+rw /var/log/php-fpm.log && \
@@ -482,6 +507,11 @@ RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /run/blackfire /var/run/ngin
 RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
     chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
 
+# Reapply the /var/log group-0-writable fix (see the comment near its first
+# application in the ddev-php-base stage above): further package installs in
+# this stage may pull in `systemd` for the first time and reset it again.
+RUN chgrp 0 /var/log && chmod g+rwX,o-w /var/log
+
 RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/php /etc/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
 RUN mkdir -p /var/xhprof && curl --fail -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod ugo+rwX /var/xhprof/xhprof_html && rm /tmp/xhprof.tgz
@@ -580,6 +610,11 @@ RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/run/nginx /var/run/supe
 
 RUN chgrp -R www-data /etc/alternatives /var/lib/dpkg/alternatives && \
     chmod -R g+rwX,o-w /etc/alternatives /var/lib/dpkg/alternatives
+
+# Reapply the /var/log group-0-writable fix (see the comment near its first
+# application in the ddev-php-base stage above): further package installs in
+# this stage may pull in `systemd` for the first time and reset it again.
+RUN chgrp 0 /var/log && chmod g+rwX,o-w /var/log
 
 RUN chmod -fR ugo+w /etc/nginx /var/cache/nginx /var/lib/nginx /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/php /etc/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
