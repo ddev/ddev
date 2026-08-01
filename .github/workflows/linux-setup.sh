@@ -6,6 +6,8 @@ set -o errexit
 
 set -x
 
+DDEV_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
 if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set +x
   echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
@@ -33,108 +35,15 @@ curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg \
 
 if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
   echo "Setting up podman-rootless"
-  sudo systemctl disable --now docker.service docker.socket
-  sudo rm -f /var/run/docker.sock
-  sudo apt-get remove -y podman crun
-  sudo apt-get install -y fuse-overlayfs
-  brew install podman >/dev/null
+  # All rootless-Podman setup lives in scripts/linux-homebrew-podman-rootless.sh
+  # so CI and the user-facing docs configure Podman exactly the same way.
+  # CI keeps the historical choices: explicit DNS (runners need it) and
+  # fuse-overlayfs. Users get native overlay, which is the script's default.
+  PODMAN_DNS_SERVERS="1.1.1.1,1.0.0.1" \
+  PODMAN_USE_FUSE_OVERLAYFS=true \
+    "${DDEV_REPO_ROOT}/scripts/linux-homebrew-podman-rootless.sh"
+  # brew put podman at a new path; refresh this shell's command hash table.
   hash -r
-  # Enable ports below 1024
-  sudo mkdir -p /etc/sysctl.d
-  echo 'net.ipv4.ip_unprivileged_port_start=0' | sudo tee -a /etc/sysctl.d/60-rootless.conf
-  sudo sysctl -p /etc/sysctl.d/60-rootless.conf
-  # Without a genuine lingering session, systemd --user has no D-Bus session
-  # bus to manage cgroups through, so podman silently falls back to
-  # --cgroup-manager=cgroupfs. buildx then pins its buildkit container to the
-  # "/docker/buildx" cgroup parent whenever podman reports "cgroupfs" as its
-  # driver, which a rootless user can't create outside its own delegated
-  # subtree, and every docker-compose build fails with:
-  #   crun: create `/sys/fs/cgroup/docker`: Permission denied: OCI permission denied
-  # See https://github.com/containers/podman/issues/5443 and
-  # https://github.com/containers/podman/pull/29303.
-  sudo loginctl enable-linger "$(whoami)"
-  for _ in $(seq 1 10); do
-    [ -S "/run/user/$(id -u)/bus" ] && break
-    sleep 1
-  done
-  # Create systemd unit files
-  mkdir -p ~/.config/systemd/user
-  # Create podman.socket
-  cat > ~/.config/systemd/user/podman.socket <<'EOF'
-[Unit]
-Description=Podman API Socket
-Documentation=man:podman-system-service(1)
-
-[Socket]
-ListenStream=%t/podman/podman.sock
-SocketMode=0660
-
-[Install]
-WantedBy=sockets.target
-EOF
-  # Create podman.service (adapted for Homebrew path)
-  cat > ~/.config/systemd/user/podman.service <<'EOF'
-[Unit]
-Description=Podman API Service
-Requires=podman.socket
-After=podman.socket
-Documentation=man:podman-system-service(1)
-StartLimitIntervalSec=0
-
-[Service]
-Delegate=true
-Type=exec
-KillMode=process
-Environment=LOGGING="--log-level=info"
-ExecStart=/home/linuxbrew/.linuxbrew/bin/podman $LOGGING system service
-
-[Install]
-WantedBy=default.target
-EOF
-  # Fix for Podman 6: "registries.conf must be in v2 format but is in v1"
-  sudo tee /etc/containers/registries.conf > /dev/null <<EOF
-unqualified-search-registries = ["docker.io"]
-EOF
-  # Reload systemd
-  systemctl --user daemon-reload
-  # Set DNS
-  # Force k8s-file logging instead of the default journald: Homebrew's conmon
-  # bottle is built without journald support, so when podman picks journald
-  # (its default whenever the systemd journal is readable/writable) conmon
-  # fails with "Include journald in compilation path to log to systemd
-  # journal" (containers/conmon#348). Also force the file events logger for
-  # the same reason.
-  mkdir -p ~/.config/containers/containers.conf.d
-  cat << 'EOF' > ~/.config/containers/containers.conf.d/dns.conf
-[containers]
-dns_servers = ["1.1.1.1", "1.0.0.1"]
-log_driver = "k8s-file"
-
-[engine]
-events_logger = "file"
-
-[network]
-# Homebrew's netavark has dropped the "iptables" backend (upstream removed
-# it), but podman's own default still requests "iptables" in some
-# version combinations, causing an intermittent
-# "Must provide a valid firewall backend, got iptables" failure. Force
-# nftables explicitly instead of relying on that mismatched default.
-firewall_driver = "nftables"
-EOF
-  # https://github.com/containers/podman/blob/main/docs/tutorials/performance.md#choosing-a-storage-driver
-  cat << 'EOF' > ~/.config/containers/storage.conf
-[storage]
-driver = "overlay"
-[storage.options.overlay]
-mount_program = "/usr/bin/fuse-overlayfs"
-EOF
-  # Enable and start the socket
-  systemctl --user enable --now podman.socket
-  # Try several times, it can return "failed to reexec: Permission denied"
-  podman info --format '{{.Host.RemoteSocket.Path}}' || podman info --format '{{.Host.RemoteSocket.Path}}' || true
-  # Switch to the podman context
-  docker context create podman-rootless --docker host="unix://$(podman info --format '{{.Host.RemoteSocket.Path}}')"
-  docker context use podman-rootless
   echo "Verifying podman-rootless setup"
   cat /etc/subuid
   cat /etc/subgid
@@ -145,7 +54,10 @@ elif [[ "${DDEV_TEST_PODMAN_ROOT:-}" == "true" ]]; then
   echo "Setting up podman-root"
   sudo systemctl disable --now docker.service docker.socket
   sudo rm -f /var/run/docker.sock
-  sudo apt-get remove -y podman crun
+  # netavark and aardvark-dns must go too: apt leaves them behind when podman
+  # is removed, and a stale /usr/lib/podman/netavark of the wrong major version
+  # breaks every container start under the newer Homebrew podman.
+  sudo apt-get remove -y podman crun netavark aardvark-dns
   brew install podman >/dev/null
   hash -r
   # Configure podman to run in root mode
