@@ -54,6 +54,7 @@ warnings=0
 # the (slow) check.
 DOCKERCHECK_STATUS="not run"
 DOCKERCHECK_BUILD="not run"
+IMAGELOAD_STATUS="not run"
 
 if [ -t 1 ]; then
   red=$'\033[31m'; yellow=$'\033[33m'; green=$'\033[32m'; reset=$'\033[0m'
@@ -83,6 +84,44 @@ containers_conf_files() {
     [ -f "${f}" ] && printf '%s\n' "${f}"
   done
   return 0
+}
+
+# The policy.json podman will actually apply. A user-level file overrides the
+# system one entirely rather than merging with it.
+active_policy_file() {
+  local f
+  for f in "${HOME}/.config/containers/policy.json" /etc/containers/policy.json; do
+    [ -f "${f}" ] && { printf '%s\n' "${f}"; return 0; }
+  done
+  return 1
+}
+
+# Name the archive transports a policy will reject, or print nothing.
+#
+# buildx --load hands the built image over as a docker-archive. A policy whose
+# default is "reject" only accepts what it lists, so if it lists neither
+# docker-archive nor oci-archive, that handover is refused -- while registry
+# pulls keep working, because those go through the "docker" transport. The
+# result is a machine that pulls, runs and builds, then fails on the last step
+# of every build.
+policy_archive_gap() {
+  local f
+  f="$(active_policy_file)" || return 0
+  command -v python3 >/dev/null 2>&1 || return 0
+  python3 - "${f}" <<'PYEOF'
+import json, sys
+try:
+    with open(sys.argv[1]) as fh:
+        policy = json.load(fh)
+except Exception:
+    sys.exit(0)
+if any(r.get("type") == "insecureAcceptAnything" for r in policy.get("default", [])):
+    sys.exit(0)  # a permissive default already covers every transport
+transports = policy.get("transports", {})
+missing = [t for t in ("docker-archive", "oci-archive") if t not in transports]
+if missing:
+    print(" and ".join(missing))
+PYEOF
 }
 
 # Resolve the netavark/aardvark-dns that ship alongside the podman binary.
@@ -605,6 +644,7 @@ check_storage() {
 check_smoke_test() {
   heading "Smoke test"
   if [ "${PODMAN_SKIP_SMOKE_TEST}" = "true" ]; then
+    IMAGELOAD_STATUS="skipped"
     ok "skipped (PODMAN_SKIP_SMOKE_TEST=true)"
     return 0
   fi
@@ -660,16 +700,28 @@ check_image_load() {
   _probe_failed() {
     local step="$1" msg="$2"
     if printf '%s' "${msg}" | grep -q 'rejected by policy'; then
+      IMAGELOAD_STATUS="FAIL (rejected by policy)"
       fail "the image signature policy rejects images (at ${step})"
       hint "This is what makes 'ddev start' fail at the very end, after the"
       hint "build has already succeeded, with:"
       hint "  failed to load image: ... Source image rejected: ... rejected by policy"
-      hint "Check the default in whichever of these exists:"
-      hint "  ${HOME}/.config/containers/policy.json   (takes precedence)"
-      hint "  /etc/containers/policy.json"
-      hint "DDEV needs a permissive default:"
-      hint '  {"default": [{"type": "insecureAcceptAnything"}]}'
+      local gap; gap="$(policy_archive_gap)"
+      if [ -n "${gap}" ]; then
+        # A deliberate allowlist policy: name the gap and keep the rest intact,
+        # rather than telling someone to throw their whole policy away.
+        hint "$(active_policy_file) rejects by default and allows no ${gap}."
+        hint "Add just the transports buildx --load needs, leaving the rest as-is:"
+        hint '  "docker-archive": { "": [{ "type": "insecureAcceptAnything" }] },'
+        hint '  "oci-archive":    { "": [{ "type": "insecureAcceptAnything" }] }'
+      else
+        hint "Check the default in whichever of these exists:"
+        hint "  ${HOME}/.config/containers/policy.json   (takes precedence)"
+        hint "  /etc/containers/policy.json"
+        hint "A permissive default accepts every transport:"
+        hint '  {"default": [{"type": "insecureAcceptAnything"}]}'
+      fi
     else
+      IMAGELOAD_STATUS="FAIL (at ${step})"
       fail "a built image could not be loaded into the engine (at ${step})"
       hint "$(printf '%s' "${msg}" | tail -3)"
     fi
@@ -677,6 +729,7 @@ check_image_load() {
 
   if command -v docker >/dev/null 2>&1 && docker buildx version >/dev/null 2>&1; then
     if out="$(printf 'FROM scratch\n' | docker buildx build --load -f - -t "${tag}" "${ctx}" 2>&1)"; then
+      IMAGELOAD_STATUS="ok"
       ok "buildx can build an image and load it into the engine"
     else
       _probe_failed "buildx --load" "${out}"
@@ -689,6 +742,7 @@ check_image_load() {
   elif ! out="$(podman load -i "${tar}" 2>&1)"; then
     _probe_failed "load" "${out}"
   else
+    IMAGELOAD_STATUS="ok"
     ok "a built image can be saved and loaded back into podman"
     podman rmi -f "${tag}" >/dev/null 2>&1 || true
   fi
@@ -810,6 +864,11 @@ do_report() {
     fi
   fi
 
+  # Exercise the load path, not just record configuration. The report used to
+  # print policy.json and leave a human to notice the consequence.
+  sec "image load probe"
+  check_image_load
+
   report_summary
   printf '\n===== end of report =====\n'
 }
@@ -877,6 +936,8 @@ report_summary() {
   kv "userns"        "apparmor_restrict_unprivileged_userns=${userns}"
   kv "docker ctx"    "${ctx:-?} (buildx ${bx:-none})"
   kv "dockercheck"   "${DOCKERCHECK_STATUS} (trivial build: ${DOCKERCHECK_BUILD})"
+  kv "image load"    "${IMAGELOAD_STATUS}"
+  kv "policy.json"   "$(active_policy_file 2>/dev/null || echo 'none (podman default)')"
 
   # Anything worth looking at, most likely to be the cause first.
   local pmaj nmaj f
@@ -918,6 +979,12 @@ report_summary() {
   systemctl --user is-active docker.service >/dev/null 2>&1 &&
     notable+=("rootless docker.service running alongside podman")
   [ -z "${bx}" ] && notable+=("no docker buildx plugin; ddev start will fail at the build step")
+  local polgap; polgap="$(policy_archive_gap 2>/dev/null || true)"
+  [ -n "${polgap}" ] &&
+    notable+=("$(active_policy_file) rejects by default and allows no ${polgap}, so buildx --load is refused: builds succeed and then fail at the final image-load step")
+  case "${IMAGELOAD_STATUS}" in
+    FAIL*) notable+=("a built image cannot be loaded into the engine: ${IMAGELOAD_STATUS}") ;;
+  esac
   [ "${DOCKERCHECK_STATUS}" = "FAIL" ] &&
     notable+=("ddev debug dockercheck failed -- its output above is the most direct evidence")
 
