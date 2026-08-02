@@ -1691,7 +1691,7 @@ ddev utility dockercheck
 
 ### `utility download-ddev`
 
-Download the `ddev` and `ddev-hostname` binaries built by CI or a release, for testing a specific build without replacing your installed DDEV. It only downloads the binaries into a directory (the current directory by default) and prints how to use them in the current shell or install them permanently; it does not modify your installed DDEV.
+Download the `ddev` and `ddev-hostname` binaries built by CI or a release, for testing a specific build without replacing your installed DDEV. It only downloads the binaries into a directory (`~/tmp/ddev-download-ddev` by default, so a download can't accidentally end up on `$PATH` or as a stray file in a git checkout) and prints how to use them in the current shell or install them permanently; it does not modify your installed DDEV.
 
 Flags:
 
@@ -1701,7 +1701,7 @@ Flags:
 * `--tag <tag>`: Download a release tag, for example `v1.24.5`
 * `--stable`: Download the latest stable release (default `false`)
 * `--head`: Download the latest main build (default `false`)
-* `--output <dir>`, `-o <dir>`: Output directory (default: current directory)
+* `--output <dir>`, `-o <dir>`: Output directory (default: `~/tmp/ddev-download-ddev`)
 * `--os <os>`: OS override: `macos`, `linux`, or `windows` (default: current OS)
 * `--arch <arch>`: Architecture override: `amd64` or `arm64` (default: current architecture)
 * `--owner <owner>`: GitHub owner/org (default `ddev`; for PR builds this is the base repository, not a fork)
@@ -1714,7 +1714,7 @@ Note: Exactly one source flag (`--pr`, `--branch`, `--commit`, `--tag`, `--stabl
 Examples:
 
 ```shell
-# Download this PR's build for your current OS and architecture into the current directory
+# Download this PR's build for your current OS and architecture into ~/tmp/ddev-download-ddev
 ddev utility download-ddev --pr 1234
 
 # Download the latest main build into ~/tmp/head
@@ -1727,7 +1727,7 @@ ddev utility download-ddev --tag v1.24.5
 ddev utility download-ddev --stable
 
 # Cross-download a macOS arm64 build of a branch
-ddev utility download-ddev --branch 20250101_feature --os macos --arch arm64 --output ./out
+ddev utility download-ddev --branch 20250101_feature --os macos --arch arm64 --output ~/tmp/ddev-macos-arm64
 ```
 
 ### `utility download-images`

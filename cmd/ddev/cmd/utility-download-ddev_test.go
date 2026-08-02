@@ -12,9 +12,48 @@ import (
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
+
+// TestDownloadDdevDefaultOutputDir verifies the default download destination
+// is a fixed directory under the user's home, not the current directory.
+func TestDownloadDdevDefaultOutputDir(t *testing.T) {
+	require.Equal(t, filepath.Join(util.GetHomeDir(), "tmp", "ddev-download-ddev"), defaultOutputDir())
+}
+
+// TestDownloadDdevPSQuote verifies PowerShell single-quote escaping.
+func TestDownloadDdevPSQuote(t *testing.T) {
+	require.Equal(t, `'C:\Users\test'`, psQuote(`C:\Users\test`))
+	require.Equal(t, `'it''s a test'`, psQuote("it's a test"))
+}
+
+// TestDownloadDdevClearMacQuarantine verifies the auto-unblock is attempted
+// only when the xattr tool is available (i.e. on macOS), and never panics.
+func TestDownloadDdevClearMacQuarantine(t *testing.T) {
+	tmp := t.TempDir()
+	f := filepath.Join(tmp, "somefile")
+	require.NoError(t, os.WriteFile(f, []byte("x"), 0644))
+
+	attempted := clearMacQuarantine([]string{f})
+	if runtime.GOOS == "darwin" {
+		require.True(t, attempted, "xattr should be available on macOS")
+	}
+}
+
+// TestDownloadDdevClearWindowsBlock verifies the auto-unblock is attempted
+// only when PowerShell is available (i.e. on Windows), and never panics.
+func TestDownloadDdevClearWindowsBlock(t *testing.T) {
+	tmp := t.TempDir()
+	f := filepath.Join(tmp, "somefile")
+	require.NoError(t, os.WriteFile(f, []byte("x"), 0644))
+
+	attempted := clearWindowsBlock([]string{f})
+	if runtime.GOOS == "windows" {
+		require.True(t, attempted, "PowerShell should be available on Windows")
+	}
+}
 
 // TestDownloadDdevResolveTarget verifies OS/arch mapping, .exe suffix, native
 // detection, and rejection of unsupported values.
