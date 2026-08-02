@@ -164,6 +164,22 @@ These rules apply everywhere: conversation, commit messages, PR text, code, and 
 
 ## Git Workflow
 
+### Commit Locally, Never Push
+
+Committing locally is fine and expected — commit whenever asked, without
+hesitation. Creating branches and amending local commits is fine too.
+
+**What is forbidden is publishing: never run `git push` or `docker push`, under
+any circumstances.** This holds even when a PR is already open and waiting on
+the commits, and even when something downstream (a CI run, a
+`raw.githubusercontent.com` URL someone else needs) depends on the push.
+Pushing is always the maintainer's action.
+
+Do not offer to push either. Finish at the commit, report the branch state and
+which commits are unpushed, and stop. If a next step genuinely requires a push,
+say plainly that it will not work until the maintainer pushes, rather than
+asking whether to push.
+
 ### Branch Naming
 
 Format: `YYYYMMDD_<username>_<short_description>`
