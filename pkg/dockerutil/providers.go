@@ -163,13 +163,14 @@ func IsSocktainer() bool {
 	return false
 }
 
-// UseBindGlobalCache is true when /mnt/ddev-global-cache should come from a host
-// bind mount instead of the ddev-global-cache Docker volume.
+// UseBindGlobalCache is true when /mnt/ddev-global-cache should be a bind mount of a
+// host directory instead of the ddev-global-cache Docker volume. It says nothing about
+// the project bind mounts controlled by the no_bind_mounts global config setting.
 //
 // Apple Container backs each named volume with an ext4 block image that only one
 // running container can attach read-write, so a volume mounted at the same time by
-// web, db and the router cannot work there. Bind mounts are virtiofs-backed and can
-// be shared. This turns on automatically on socktainer; DDEV_BIND_GLOBAL_CACHE
+// web, db and the router cannot work there. Host bind mounts are virtiofs-backed and
+// can be shared. This turns on automatically on socktainer; DDEV_BIND_GLOBAL_CACHE
 // forces it on or off for testing against other providers.
 func UseBindGlobalCache() bool {
 	if v := os.Getenv("DDEV_BIND_GLOBAL_CACHE"); v != "" {

@@ -1,8 +1,9 @@
 # DDEV on Apple Container + socktainer — investigation notes (2026-08-02)
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372). This documents an
-exploratory session, not a finished feature: the code changes here are experiments behind an
-environment variable, and this file is expected to be deleted before any of it merges.
+exploratory session, not a finished feature: the code changes here are experiments that only
+take effect when the Docker provider is socktainer, and this file is expected to be deleted
+before any of it merges.
 
 Environment: Apple `container` 1.2.0, `socktainer` 1.2.1 (Homebrew bottle), docker CLI 29.4.0,
 docker context `socktainer`, macOS 27, `ddev` built from
@@ -47,9 +48,10 @@ docker run --rm ddev/ddev-utilities:latest nslookup registry-1.docker.io
 ```
 
 The project also needs `router_http_port`/`router_https_port` above 1024 (blocker 4b) and the
-healthcheck overrides (blocker 5). Bind mode needs no environment variable — it detects
-socktainer on its own. A `ddev start` against an *already running* project always fails on
-the db volume (blocker 1), so remove `ddev-appletest-web` / `ddev-appletest-db` first.
+healthcheck overrides (blocker 5). The global-cache bind mount needs no environment
+variable — it detects socktainer on its own. A `ddev start` against an *already running*
+project always fails on the db volume (blocker 1), so remove `ddev-appletest-web` and
+`ddev-appletest-db` first.
 
 ---
 
@@ -79,7 +81,7 @@ of them:
 That leaves a usable pattern: seed a volume from a short-lived read-write container while
 nothing else holds it, then have every consumer mount it `:ro`. See design option 7 below.
 
-Bind mounts (virtiofs) are shareable read-write. `docker volume create --driver local
+Host bind mounts (virtiofs) are shareable read-write. `docker volume create --driver local
 -o type=none -o device=... -o o=bind` is ignored by socktainer — it still makes a block
 volume.
 
@@ -258,7 +260,7 @@ once a container is running on `default`.
 
 ## Experimental DDEV changes (branch `20260802_rfay_apple_container_experiment`)
 
-Bind mode turns on **automatically when the provider is socktainer**, so it cannot be
+The global-cache bind mount turns on **automatically when the provider is socktainer**, so it cannot be
 forgotten in a terminal that lacks an environment variable. `DDEV_BIND_GLOBAL_CACHE=true` or
 `=false` forces it either way for testing against other providers. On every other provider,
 and whenever the provider cannot be reached, detection returns false and behavior is
@@ -266,19 +268,20 @@ byte-identical to before.
 
 - `pkg/dockerutil/providers.go` — `IsSocktainer()` (matches `Server.Platform.Name`, following
   the existing `IsPodman()` pattern), plus `UseBindGlobalCache()`, `GlobalCacheSource()` and
-  `GlobalCacheMount()`. In bind mode the global cache is `~/.ddev/global-cache-bind` on the
-  host instead of the `ddev-global-cache` volume. These live in `dockerutil` rather than
+  `GlobalCacheMount()`. When it is on, the global cache is the host directory
+  `~/.ddev/global-cache-bind` bind-mounted at `/mnt/ddev-global-cache`, rather than the
+  `ddev-global-cache` volume. These live in `dockerutil` rather than
   `globalconfig` because detection needs a Docker call and `dockerutil` already imports
   `globalconfig`, not the other way round.
 - `pkg/ddevapp/ddevapp.go` — use the helper for all `/mnt/ddev-global-cache` mounts; skip
   creating the volume and `MkdirAll` the host dir instead; new `copyIntoGlobalCache()` that
-  copies on the host in bind mode (avoids the directory-copy gap).
+  copies on the host when the global cache is bind-mounted (avoids the directory-copy gap).
 - `pkg/ddevapp/commands.go`, `pkg/ddevapp/traefik.go` — route their copies through
   `copyIntoGlobalCache()`.
 - `pkg/ddevapp/app_compose_template.yaml`, `router_compose_template.yaml`,
   `config.go`, `router.go` — `GlobalCacheMount` / `BindGlobalCache` template vars; omit the
   `volumes:` section when it would be empty; put project services on `ddev_default` only
-  in bind mode.
+  when the global cache is bind-mounted.
 
 Project-side settings still needed by hand:
 
@@ -397,8 +400,8 @@ is what makes every other option tractable:
 
 Items 2, 5 and 6 are provider-independent improvements that happen to unblock this path, and
 could go in as a normal PR ahead of anything Apple-Container-specific. Option 7 is the most
-promising Apple-Container-specific direction, and unlike the bind-mount approach currently
-implemented for socktainer, it does not trade away volume performance.
+promising Apple-Container-specific direction, and unlike the global-cache bind mount
+currently implemented for socktainer, it does not trade away volume performance.
 Options 7 and 8 compose: seed-then-`:ro` for the read-only content, a proxy for the download
 caches, small per-project volumes for writable state.
 
