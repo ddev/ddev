@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -44,8 +45,12 @@ and --commit download unsigned GitHub Actions artifacts and use a GitHub token
 anonymous rate limit; without a token, --pr falls back to the build links
 posted on the pull request.
 
+By default the binaries are written to ~/tmp/ddev-download-ddev rather than
+the current directory, so a download can't accidentally end up on PATH or as
+a stray file in a git checkout.
+
 This command only downloads the binaries; it does not modify your installed ddev.`,
-	Example: `# Download the current platform's build from PR 1234 into the current directory
+	Example: `# Download the current platform's build from PR 1234 into ~/tmp/ddev-download-ddev
 ddev utility download-ddev --pr 1234
 
 # Download the latest main build into ~/tmp/head
@@ -58,7 +63,7 @@ ddev utility download-ddev --tag v1.24.5
 ddev utility download-ddev --stable
 
 # Cross-download a macOS arm64 build of a branch
-ddev utility download-ddev --branch 20250101_feature --os macos --arch arm64 --output ./out`,
+ddev utility download-ddev --branch 20250101_feature --os macos --arch arm64 --output ~/tmp/ddev-macos-arm64`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, _ []string) {
 		if err := runDownloadDdev(cmd); err != nil {
@@ -85,7 +90,7 @@ func registerDownloadDdevFlags(cmd *cobra.Command) {
 	f.BoolVar(&downloadDdevHead, "head", false, "Download the latest main build")
 	f.StringVar(&downloadDdevOwner, "owner", "ddev", "GitHub owner/org (for PR builds this is the base repo, not a fork)")
 	f.StringVar(&downloadDdevRepo, "repo", "ddev", "GitHub repo")
-	f.StringVarP(&downloadDdevOutput, "output", "o", "", "Output directory (default: current directory)")
+	f.StringVarP(&downloadDdevOutput, "output", "o", "", "Output directory (default: ~/tmp/ddev-download-ddev)")
 	f.StringVar(&downloadDdevOS, "os", "", "OS override: macos, linux, or windows (default: current OS)")
 	f.StringVar(&downloadDdevArch, "arch", "", "Architecture override: amd64 or arm64 (default: current architecture)")
 
@@ -180,9 +185,7 @@ func runDownloadDdev(cmd *cobra.Command) error {
 
 	outputDir := downloadDdevOutput
 	if outputDir == "" {
-		if outputDir, err = os.Getwd(); err != nil {
-			return err
-		}
+		outputDir = defaultOutputDir()
 	}
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return err
@@ -203,8 +206,67 @@ func runDownloadDdev(cmd *cobra.Command) error {
 		}
 	}
 
-	printResult(ddevDest, hostnameDest, target, spec.signed)
+	paths := []string{ddevDest}
+	if hostnameDest != "" {
+		paths = append(paths, hostnameDest)
+	}
+	autoUnblocked := false
+	if !spec.signed {
+		switch target.goos {
+		case "darwin":
+			autoUnblocked = clearMacQuarantine(paths)
+		case "windows":
+			autoUnblocked = clearWindowsBlock(paths)
+		}
+	}
+
+	printResult(ddevDest, hostnameDest, target, spec.signed, autoUnblocked)
 	return nil
+}
+
+// clearMacQuarantine best-effort clears the macOS "com.apple.quarantine" xattr
+// from freshly downloaded files, so Gatekeeper doesn't refuse to run them.
+// Returns whether it attempted the clear (the xattr tool was found); a missing
+// or absent attribute is not treated as a failure, since the file may not
+// have been quarantined in the first place.
+func clearMacQuarantine(paths []string) bool {
+	if _, err := exec.LookPath("xattr"); err != nil {
+		return false
+	}
+	for _, p := range paths {
+		_ = exec.Command("xattr", "-d", "com.apple.quarantine", p).Run()
+	}
+	return true
+}
+
+// clearWindowsBlock best-effort clears the Windows "mark of the web" (the
+// Zone.Identifier alternate data stream) from freshly downloaded files via
+// PowerShell's Unblock-File, so SmartScreen doesn't refuse to run them.
+// Returns whether it attempted the clear (PowerShell was found); an absent
+// mark is not treated as a failure.
+func clearWindowsBlock(paths []string) bool {
+	if _, err := exec.LookPath("powershell"); err != nil {
+		return false
+	}
+	for _, p := range paths {
+		cmd := fmt.Sprintf("Unblock-File -LiteralPath %s", psQuote(p))
+		_ = exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", cmd).Run()
+	}
+	return true
+}
+
+// psQuote single-quotes a string for use in a PowerShell command, doubling
+// any embedded single quotes per PowerShell's escaping rule.
+func psQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", "''") + "'"
+}
+
+// defaultOutputDir returns the default download destination used when --output
+// is not given: a fixed, out-of-the-way directory rather than the current
+// directory, so a download can't accidentally end up on PATH or as a stray
+// file in a git checkout.
+func defaultOutputDir() string {
+	return filepath.Join(util.GetHomeDir(), "tmp", "ddev-download-ddev")
 }
 
 // resolveTarget maps --os/--arch overrides (or the current machine) to a buildTarget.
@@ -397,22 +459,43 @@ func copyExecutable(src, dest string) error {
 
 // printResult reports where the binaries landed and how to use or install them.
 // UserOut appends a newline per call, so blank separator lines use Println("").
-func printResult(ddevDest, hostnameDest string, t buildTarget, signed bool) {
+func printResult(ddevDest, hostnameDest string, t buildTarget, signed, autoUnblocked bool) {
 	util.Success("Downloaded ddev to %s", ddevDest)
 	if hostnameDest != "" {
 		util.Success("Downloaded ddev-hostname to %s", hostnameDest)
 	}
 
-	// macOS Gatekeeper refuses to run downloaded binaries it considers
-	// quarantined or unsigned. main-branch and released builds are signed, but
-	// PR/branch/commit builds are not, so tell macOS users how to clear the
-	// quarantine if the binary won't start.
-	if t.goos == "darwin" && !signed {
-		output.UserOut.Println("")
-		output.UserOut.Println("On macOS, if the binary is blocked (\"cannot be opened\" or \"killed\"), remove the quarantine attribute:")
-		output.UserOut.Printf("  xattr -r -d com.apple.quarantine %q", ddevDest)
-		if hostnameDest != "" {
-			output.UserOut.Printf("  xattr -r -d com.apple.quarantine %q", hostnameDest)
+	// macOS Gatekeeper and Windows SmartScreen can refuse to run downloaded
+	// binaries they consider quarantined/unsigned. main-branch and released
+	// builds are signed, but PR/branch/commit builds are not. runDownloadDdev
+	// already tried to clear the quarantine/block automatically; fall back to
+	// printing the manual command only if that tool wasn't available.
+	if !signed {
+		switch t.goos {
+		case "darwin":
+			if autoUnblocked {
+				output.UserOut.Println("")
+				output.UserOut.Println("Cleared the macOS quarantine attribute automatically.")
+			} else {
+				output.UserOut.Println("")
+				output.UserOut.Println("On macOS, if the binary is blocked (\"cannot be opened\" or \"killed\"), remove the quarantine attribute:")
+				output.UserOut.Printf("  xattr -d com.apple.quarantine %q", ddevDest)
+				if hostnameDest != "" {
+					output.UserOut.Printf("  xattr -d com.apple.quarantine %q", hostnameDest)
+				}
+			}
+		case "windows":
+			if autoUnblocked {
+				output.UserOut.Println("")
+				output.UserOut.Println("Unblocked the downloaded files automatically (cleared the Windows \"mark of the web\").")
+			} else {
+				output.UserOut.Println("")
+				output.UserOut.Println("On Windows, if the binary is blocked by SmartScreen, unblock it:")
+				output.UserOut.Printf("  Unblock-File -LiteralPath %q", ddevDest)
+				if hostnameDest != "" {
+					output.UserOut.Printf("  Unblock-File -LiteralPath %q", hostnameDest)
+				}
+			}
 		}
 	}
 
@@ -463,7 +546,7 @@ func printResult(ddevDest, hostnameDest string, t buildTarget, signed bool) {
 	}
 
 	output.UserOut.Println("")
-	output.UserOut.Println("To install this build permanently, back up your current binary and replace it:")
+	output.UserOut.Println("Prefer the temporary use above. If you still want to replace your installed ddev with this build, back up your current binary first:")
 	for _, r := range replacements {
 		output.UserOut.Printf("  %scp %q %q", sudo, r.cur, r.cur+".bak")
 		output.UserOut.Printf("  %scp %q %q", sudo, r.src, r.cur)
