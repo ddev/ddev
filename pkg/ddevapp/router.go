@@ -54,11 +54,12 @@ var EphemeralRouterPortsAssigned = make(map[int]bool)
 // See GetAvailableRouterPort().
 const RouterPortSubstitutionsLabel = "com.ddev.router-port-substitutions"
 
-// routerPortEphemeralSubstitutions remembers substitutions decided by this
+// RouterPortEphemeralSubstitutions remembers substitutions decided by this
 // process that may not yet have been written to the router's
 // RouterPortSubstitutionsLabel; the label is only written when the router
-// container is created or recreated.
-var routerPortEphemeralSubstitutions = make(map[string]string)
+// container is created or recreated. Exported so tests can reset it to
+// simulate a fresh ddev process, the same way EphemeralRouterPortsAssigned is.
+var RouterPortEphemeralSubstitutions = make(map[string]string)
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
@@ -746,7 +747,7 @@ func knownRouterPortSubstitutions(router *container.Summary) map[string]string {
 	if router != nil {
 		subs = parseRouterPortSubstitutions(router.Labels[RouterPortSubstitutionsLabel])
 	}
-	maps.Copy(subs, routerPortEphemeralSubstitutions)
+	maps.Copy(subs, RouterPortEphemeralSubstitutions)
 	return subs
 }
 
@@ -814,7 +815,7 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	ephemeralPortStr := strconv.Itoa(ephemeralPort)
 	// Remember the substitution so it can be written to the router's
 	// RouterPortSubstitutionsLabel when the router is (re)created.
-	routerPortEphemeralSubstitutions[proposedPort] = ephemeralPortStr
+	RouterPortEphemeralSubstitutions[proposedPort] = ephemeralPortStr
 
 	return proposedPort, ephemeralPortStr, true
 }
