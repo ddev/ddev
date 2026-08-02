@@ -6,7 +6,14 @@
 # Usage:
 #   linux-homebrew-podman-rootless.sh           Install, configure, then validate
 #   linux-homebrew-podman-rootless.sh --check   Validate only; change nothing
+#   linux-homebrew-podman-rootless.sh --report  Dump full environment for a bug report
 #   linux-homebrew-podman-rootless.sh --help    Show this help
+#
+# `--report` changes nothing either. Use it when --check flags something whose
+# cause is not obvious: it dumps the whole environment (distro, podman
+# provenance, every containers.conf, cgroup and systemd state, userns sysctls)
+# in one paste-able block, so a maintainer does not have to ask twenty
+# questions. It reads no secrets.
 #
 # `--check` changes nothing and is the fastest way to diagnose a rootless
 # Podman setup that has stopped working. It exits nonzero if it finds a
@@ -55,8 +62,9 @@ fail()    { printf '%s FAIL %s %s\n' "${red}" "${reset}" "$*"; problems=$((probl
 hint()    { printf '        %s\n' "$*"; }
 heading() { printf '\n== %s ==\n' "$*"; }
 
+# Print the header comment block, so help never drifts from the file.
 usage() {
-  sed -n '3,29p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  awk 'NR < 3 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
 }
 
 # Resolve the netavark/aardvark-dns that ship alongside the podman binary.
@@ -427,21 +435,24 @@ check_cgroups() {
     return 0
   fi
 
-  # 2. Ask podman whether it is *able* to use the systemd manager. This
-  #    separates "configured off" from "this build/environment cannot".
-  local probe
-  if probe="$(podman --cgroup-manager=systemd info --format '{{.Host.CgroupManager}}' 2>&1)" &&
-     [ "${probe}" = "systemd" ]; then
-    hint "podman accepts --cgroup-manager=systemd, so it is capable here and"
-    hint "something is merely defaulting to cgroupfs. Check the service too:"
-    hint "  systemctl --user show podman.service -p Environment"
-  else
-    hint "podman cannot use the systemd cgroup manager at all:"
-    hint "  ${probe}"
-    hint "The usual cause is a podman built without systemd support, which is"
-    hint "common for static or hand-installed builds under /usr/local."
-    hint "Distribution and Homebrew podman packages are built with it."
-    hint "Check where this podman came from: $(command -v podman)"
+  # 2. Find out whether podman is *able* to use the systemd manager. Asking
+  #    `podman --cgroup-manager=systemd info` proves nothing: info just echoes
+  #    the flag back, and only rejects an invalid value. Actually running a
+  #    container under that manager is the only honest test.
+  if [ "${PODMAN_SKIP_SMOKE_TEST}" != "true" ]; then
+    local probe
+    if probe="$(podman --cgroup-manager=systemd run --rm "${SMOKE_TEST_IMAGE}" true 2>&1)"; then
+      hint "podman CAN run under the systemd manager here, so nothing is stopping"
+      hint "it -- podman's own default just selected cgroupfs, which normally"
+      hint "means it saw no usable systemd user session when it started."
+      hint "Compare the CLI with the service, which is what builds actually use:"
+      hint "  podman info --format '{{.Host.CgroupManager}}'"
+      hint "  docker info --format '{{.CgroupDriver}}'"
+      hint "If they differ, restart the service: systemctl --user restart podman.socket"
+    else
+      hint "podman fails to run a container under the systemd manager:"
+      hint "  $(printf '%s' "${probe}" | tail -1)"
+    fi
   fi
 
   # 3. Environment prerequisites, mentioned only when actually wrong.
@@ -606,6 +617,91 @@ check_smoke_test() {
   fi
 }
 
+# ---------------------------------------------------------------------------
+# Report
+# ---------------------------------------------------------------------------
+
+# Dump everything needed to diagnose someone else's machine in one paste.
+# Deliberately gathers facts rather than judging them: --check says what looks
+# wrong, --report says what is actually there. Reads nothing secret (auth.json
+# and ssh keys are never touched).
+do_report() {
+  # A dump must never abort partway: a command that fails (a missing path, a
+  # tool that isn't installed) is itself a useful datum, not a reason to stop.
+  set +o errexit
+  set +o pipefail
+
+  local u; u="$(id -un)"
+  sec() { printf '\n----- %s -----\n' "$*"; }
+  run() {
+    printf '$ %s\n' "$*"
+    eval "$*" 2>&1 | sed 's/^/  /'
+    local rc=${PIPESTATUS[0]}
+    [ "${rc}" -ne 0 ] && printf '  [exit %s]\n' "${rc}"
+    return 0
+  }
+
+  printf '===== rootless podman report for DDEV =====\n'
+
+  sec "host"
+  run "grep -E '^(NAME|VERSION|VERSION_ID|ID|ID_LIKE|VARIANT)=' /etc/os-release"
+  run "uname -srmo"
+  run "systemctl --version | head -1"
+
+  sec "podman binary and provenance"
+  run "command -v podman"
+  run "readlink -f \$(command -v podman)"
+  run "podman version --format '{{.Client.Version}} BuildOrigin={{.Client.BuildOrigin}} go={{.Client.GoVersion}}'"
+  # How it was installed decides who owns the config defaults under /usr/share.
+  run "dpkg -S \$(readlink -f \$(command -v podman)) 2>/dev/null || rpm -qf \$(readlink -f \$(command -v podman)) 2>/dev/null || echo 'not owned by dpkg/rpm (manual, static, or brew install)'"
+  run "file -b \$(readlink -f \$(command -v podman)) | cut -c1-80"
+
+  sec "network helpers"
+  run "podman info --format 'netavark: {{.Host.NetworkBackendInfo.Path}} {{.Host.NetworkBackendInfo.Version}}'"
+  run "podman info --format 'aardvark: {{.Host.NetworkBackendInfo.DNS.Path}} {{.Host.NetworkBackendInfo.DNS.Version}}'"
+  run "ls -la /usr/lib/podman /usr/local/libexec/podman 2>/dev/null"
+
+  sec "containers.conf / storage.conf (full contents)"
+  local f
+  while read -r f; do
+    printf '\n--- %s ---\n' "${f}"
+    grep -vE '^[[:space:]]*(#|$)' "${f}" | sed 's/^/  /'
+  done < <(containers_conf_files)
+  for f in /etc/containers/storage.conf "${HOME}/.config/containers/storage.conf"; do
+    [ -f "${f}" ] || continue
+    printf '\n--- %s ---\n' "${f}"
+    grep -vE '^[[:space:]]*(#|$)' "${f}" | sed 's/^/  /'
+  done
+
+  sec "cgroups"
+  run "podman info --format 'cgroupManager={{.Host.CgroupManager}} version={{.Host.CgroupsVersion}}'"
+  run "docker info --format 'service cgroupDriver={{.CgroupDriver}}' 2>/dev/null || echo 'docker CLI not usable'"
+  run "cat /proc/self/cgroup"
+  run "cat /sys/fs/cgroup/user.slice/user-\$(id -u).slice/user@\$(id -u).service/cgroup.controllers"
+
+  sec "systemd user session"
+  run "loginctl show-user ${u} --property=Linger --property=State"
+  run "ls -la /run/user/\$(id -u)/bus"
+  run "systemctl --user is-active podman.socket podman.service"
+  run "systemctl --user show podman.service -p Environment -p ExecStart"
+  run "journalctl --user -u podman.service --no-pager --since '-30min' | tail -25"
+
+  sec "security / userns (Ubuntu 24.04+ restricts these)"
+  run "sysctl kernel.apparmor_restrict_unprivileged_userns kernel.unprivileged_userns_clone user.max_user_namespaces net.ipv4.ip_unprivileged_port_start 2>/dev/null"
+  run "ls /etc/apparmor.d/ 2>/dev/null | grep -iE 'podman|netavark|crun|rootlesskit|unshare' || echo '(no container apparmor profiles)'"
+  run "grep -E \"^(${u}|root):\" /etc/subuid /etc/subgid"
+
+  sec "docker front end"
+  run "docker context ls"
+  run "docker buildx version"
+  run "systemctl is-active docker.service; systemctl --user is-active docker.service"
+
+  sec "storage"
+  run "podman info --format 'driver={{.Store.GraphDriverName}} nativeOverlayDiff={{index .Store.GraphStatus \"Native Overlay Diff\"}}'"
+
+  printf '\n===== end of report =====\n'
+}
+
 run_checks() {
   # Checks must all run; do not abort on the first failure.
   set +o errexit
@@ -644,6 +740,9 @@ main() {
   case "${1:-}" in
     --check|-c)
       run_checks
+      ;;
+    --report|-r)
+      do_report
       ;;
     --help|-h)
       usage
