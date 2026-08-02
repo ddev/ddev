@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%231d293d'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='system-ui,sans-serif' font-size='28' font-weight='700' fill='white'%3E404%3C/text%3E%3C/svg%3E">
-  <title>404: No Route Found</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%231d293d'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='system-ui,sans-serif' font-size='28' font-weight='700' fill='white'%3E403%3C/text%3E%3C/svg%3E">
+  <title>403: Forbidden</title>
   <style>
   :root {
     --text: #222;
@@ -75,16 +75,17 @@
 </head>
 <body>
   <main>
-    <h1>404: No Route Found</h1>
+    <h1>403: Forbidden</h1>
     <div class="callout">
-      This page comes directly from <code>ddev-router</code> (Traefik). The request reached the
-      router, but no running DDEV project is configured for this hostname or port.
-      <strong>This is not your project's 404 page.</strong>
+      This page comes directly from <code>ddev-webserver</code> (nginx or Apache). The request
+      reached the webserver, but the requested directory has no index file
+      (<code>index.php</code>, <code>index.html</code>, …) and directory listing is disabled.
+      <strong>This is not your project's 403 page.</strong>
     </div>
     <ol>
-      <li>Start the project with <code>ddev start</code>.</li>
-      <li>Verify the URL with <code>ddev describe</code>.</li>
-      <li>Check for typos in the hostname or port.</li>
+      <li>Confirm <code>docroot</code> in <code>.ddev/config.yaml</code> matches where your project's <code>index.php</code> actually lives.</li>
+      <li>Confirm an <code>index.php</code> or <code>index.html</code> exists there — the project may not be installed yet.</li>
+      <li>Run <code>ddev logs</code> to check for webserver errors.</li>
     </ol>
     <p class="footer">
       Still stuck? See the
