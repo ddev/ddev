@@ -4090,17 +4090,11 @@ func TestPHPWebserverType(t *testing.T) {
 // .../apache2/conf-enabled/404.conf), including the X-Ddev-404-Source
 // header, on both nginx-fpm and apache-fpm.
 //
-// A deliberately empty docroot (no index file, no .htaccess) is used rather
-// than one of the TestSites: a working CMS front controller would route the
-// request to the app itself via try_files/mod_rewrite, so the app's own
-// (not ddev-webserver's) 404 would be tested instead.
-//
-// It also checks a directly-requested nonexistent .php file. Both
-// webservers reject it before ever reaching php-fpm: nginx via
-// `try_files $uri =404;` in the `\.php$` location block, apache via the
-// `-f %{REQUEST_FILENAME}` guard on its FilesMatch handler -- so
-// ddev-webserver's explanation is shown on both, rather than php-fpm's own
-// "No input file specified" 404 passing through unchanged.
+// An empty docroot is used rather than a TestSite, whose front controller would
+// route the request to the app and return the app's own 404. A nonexistent .php
+// file is checked too: both webservers reject it before php-fpm (nginx
+// `try_files $uri =404`, apache `-f %{REQUEST_FILENAME}`), so ddev-webserver's
+// explanation is shown instead of php-fpm's "No input file specified".
 func TestWebserverMissingIndexExplanation(t *testing.T) {
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
 		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
@@ -4155,17 +4149,11 @@ func TestWebserverMissingIndexExplanation(t *testing.T) {
 	}
 }
 
-// TestWebserverPhpstatusUnderMutagen checks that /phpstatus (the container's
-// php-fpm healthcheck endpoint, aliased to /var/www/phpstatus.php outside the
-// docroot) still works under Mutagen on both webservers.
-//
-// Mutagen mounts a nocopy Docker volume at /var/www (see the "project_mutagen"
-// volume in app_compose_template.yaml), which shadows /var/www/phpstatus.php
-// baked into the image. On apache, the php*-fpm.conf FilesMatch handler's
-// `-f %{REQUEST_FILENAME}` guard would then block the proxy to php-fpm since
-// the file doesn't exist on disk -- this is why apache-site.conf has an
-// explicit <Location "/phpstatus"> that unconditionally sets the proxy
-// handler, bypassing that guard for this one virtual endpoint.
+// TestWebserverPhpstatusUnderMutagen checks /phpstatus (aliased to
+// /var/www/phpstatus.php, outside the docroot) on both webservers under Mutagen,
+// whose nocopy volume at /var/www shadows that file. On apache the
+// `-f %{REQUEST_FILENAME}` guard would then block the proxy to php-fpm, which is
+// why apache-site.conf gives /phpstatus its own unconditional proxy handler.
 func TestWebserverPhpstatusUnderMutagen(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("Skipping TestWebserverPhpstatusUnderMutagen on Windows, Mutagen setup takes too long")
