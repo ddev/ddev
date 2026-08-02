@@ -48,7 +48,7 @@ func PopulateGlobalCustomCommandFiles() error {
 	// Use CopyIntoVolume with destroyExisting=true to combine the rm + copy
 	// into a single container operation (previously these were separate).
 	uid, _, _ := dockerutil.GetContainerUser()
-	err = dockerutil.CopyIntoVolume(sourceGlobalCommandPath, "ddev-global-cache", "global-commands", uid, "host", true)
+	err = copyIntoGlobalCache(sourceGlobalCommandPath, "global-commands", uid, "host", true)
 	if err != nil {
 		return err
 	}
@@ -85,5 +85,5 @@ func performTaskInContainer(command []string) (string, string, error) {
 	// If there is no running active site, use an anonymous container instead.
 	containerName := "performTaskInContainer" + nodeps.RandomString(12)
 	uid, _, _ := dockerutil.GetContainerUser()
-	return dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, containerName, command, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false, nil, nil, nil)
+	return dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, containerName, command, nil, nil, []string{globalconfig.GlobalCacheMount()}, uid, true, false, nil, nil, nil)
 }

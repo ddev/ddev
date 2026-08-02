@@ -1629,6 +1629,13 @@ func (app *DdevApp) Start() error {
 	}
 
 	volumesNeeded := []string{"ddev-global-cache"}
+	if globalconfig.UseBindGlobalCache() {
+		// The global cache is a host directory instead of a volume, so make sure it exists.
+		volumesNeeded = []string{}
+		if err = os.MkdirAll(globalconfig.GlobalCacheSource(), 0755); err != nil {
+			return fmt.Errorf("unable to create global cache directory %s: %v", globalconfig.GlobalCacheSource(), err)
+		}
+	}
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		volumesNeeded = append(volumesNeeded, app.Name+"-ddev-config")
 	}
@@ -1735,7 +1742,7 @@ func (app *DdevApp) Start() error {
 	}
 
 	// Build list of volume mounts and their target paths for chown
-	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
+	volumeMounts := []string{globalconfig.GlobalCacheMount()}
 	chownCmd := fmt.Sprintf("chown -R %s:%s /mnt/ddev-global-cache", uid, gid)
 	labels := map[string]string{}
 	if dockerutil.UseKeepID() {
@@ -1935,7 +1942,7 @@ func (app *DdevApp) Start() error {
 			// Copy ca certs into ddev-global-cache/mkcert
 			if caRoot != "" {
 				uid, _, _ := dockerutil.GetContainerUser()
-				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
+				err = copyIntoGlobalCache(caRoot, "mkcert", uid, "", false)
 				if err != nil {
 					util.Warning("Failed to copy root CA into Docker volume ddev-global-cache/mkcert: %v", err)
 				} else {
@@ -3334,7 +3341,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	// for stopped project
 	c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 	util.Debug("Removing merged config for project with command '%s'", c)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{globalconfig.GlobalCacheMount()}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 	if err != nil {
 		util.Warning("Unable to remove project merged traefik yaml: %v, output='%s'", err, out)
 	}
@@ -3346,7 +3353,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		// This would not remove extra certs that they had put in certs directory.
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-{web,db} /mnt/ddev-global-cache/traefik/*/%[1]s.{crt,key} /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 		util.Debug("Cleaning ddev-global-cache with command '%s'", c)
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{globalconfig.GlobalCacheMount()}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)
 		}
@@ -3928,5 +3935,48 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 		return err
 	}
 
+	return nil
+}
+
+// copyIntoGlobalCache copies sourcePath into the global cache under targetSubdir.
+// When the global cache is a host bind mount (UseBindGlobalCache), the copy is
+// done on the host, which avoids CopyIntoVolume entirely. That matters on Apple
+// Container/socktainer, where copying a directory into a container is not
+// supported.
+func copyIntoGlobalCache(sourcePath string, targetSubdir string, uid string, exclusion string, destroyExisting bool) error {
+	if !globalconfig.UseBindGlobalCache() {
+		return dockerutil.CopyIntoVolume(sourcePath, globalconfig.GlobalCacheSource(), targetSubdir, uid, exclusion, destroyExisting)
+	}
+	target := filepath.Join(globalconfig.GlobalCacheSource(), targetSubdir)
+	if destroyExisting {
+		if err := os.RemoveAll(target); err != nil {
+			return err
+		}
+	}
+	if err := os.MkdirAll(target, 0755); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(sourcePath)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if exclusion != "" && entry.Name() == exclusion {
+			continue
+		}
+		src := filepath.Join(sourcePath, entry.Name())
+		dst := filepath.Join(target, entry.Name())
+		if err = os.RemoveAll(dst); err != nil {
+			return err
+		}
+		if entry.IsDir() {
+			err = fileutil.CopyDir(src, dst)
+		} else {
+			err = fileutil.CopyFile(src, dst)
+		}
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
