@@ -50,6 +50,11 @@ DOCKER_CONTEXT_NAME="podman-rootless"
 problems=0
 warnings=0
 
+# Filled in by do_report so report_summary can mention them without re-running
+# the (slow) check.
+DOCKERCHECK_STATUS="not run"
+DOCKERCHECK_BUILD="not run"
+
 if [ -t 1 ]; then
   red=$'\033[31m'; yellow=$'\033[33m'; green=$'\033[32m'; reset=$'\033[0m'
 else
@@ -415,8 +420,12 @@ check_cgroups() {
   fi
 
   fail "cgroup manager is '${mgr}', expected 'systemd'"
-  hint "docker-compose builds fail with:"
+  hint "This can break docker-compose builds with:"
   hint "  crun: create \`/sys/fs/cgroup/docker\`: Permission denied"
+  hint "It does not always: forcing cgroupfs on podman 6.0.2 still built fine."
+  hint "Confirm whether that is really happening to you before chasing this:"
+  hint "  ddev debug dockercheck    # runs a trivial buildx build"
+  hint "If that build succeeds, cgroupfs is not what is blocking you."
 
   # Work out *why* rather than guessing. Lingering is only one of several
   # causes, and blaming it when it is already enabled sends people in circles.
@@ -699,6 +708,36 @@ do_report() {
   sec "storage"
   run "podman info --format 'driver={{.Store.GraphDriverName}} nativeOverlayDiff={{index .Store.GraphStatus \"Native Overlay Diff\"}}'"
 
+  # DDEV's own provider check. Worth having in full because it exercises the
+  # paths this script only infers about -- in particular it runs a trivial
+  # buildx build, which is the operation a cgroupfs cgroup manager actually
+  # breaks. If that build succeeds, a cgroupfs finding is not the blocker.
+  sec "ddev debug dockercheck"
+  if ! command -v ddev >/dev/null 2>&1; then
+    printf '  ddev is not on PATH; skipped\n'
+    DOCKERCHECK_STATUS="ddev not installed"
+    DOCKERCHECK_BUILD="unknown"
+  elif [ "${PODMAN_SKIP_SMOKE_TEST}" = "true" ]; then
+    printf '  skipped (PODMAN_SKIP_SMOKE_TEST=true)\n'
+    DOCKERCHECK_STATUS="skipped"
+    DOCKERCHECK_BUILD="skipped"
+  else
+    printf '  (starts containers and runs a trivial build; may take a minute)\n'
+    printf '$ ddev debug dockercheck\n'
+    local dc_out dc_rc esc
+    esc=$'\033'
+    dc_out="$(ddev debug dockercheck 2>&1)"; dc_rc=$?
+    # Strip colour so the report pastes cleanly into an issue.
+    printf '%s\n' "${dc_out}" | sed -e "s/${esc}\[[0-9;]*m//g" -e 's/^/  /'
+    printf '  [exit %s]\n' "${dc_rc}"
+    [ "${dc_rc}" -eq 0 ] && DOCKERCHECK_STATUS="pass" || DOCKERCHECK_STATUS="FAIL"
+    if printf '%s' "${dc_out}" | grep -qi 'buildx is working correctly'; then
+      DOCKERCHECK_BUILD="ok"
+    else
+      DOCKERCHECK_BUILD="did NOT confirm a working buildx build"
+    fi
+  fi
+
   report_summary
   printf '\n===== end of report =====\n'
 }
@@ -765,6 +804,7 @@ report_summary() {
   kv "low ports"     "ip_unprivileged_port_start=${ports:-?}"
   kv "userns"        "apparmor_restrict_unprivileged_userns=${userns}"
   kv "docker ctx"    "${ctx:-?} (buildx ${bx:-none})"
+  kv "dockercheck"   "${DOCKERCHECK_STATUS} (trivial build: ${DOCKERCHECK_BUILD})"
 
   # Anything worth looking at, most likely to be the cause first.
   local pmaj nmaj f
@@ -781,8 +821,13 @@ report_summary() {
   [ "${info_ok}" -eq 1 ] && [ -n "${bundled}" ] && [ -x "${bundled}" ] && [ -n "${nvpath}" ] &&
     [ "$(readlink -f "${bundled}")" != "$(readlink -f "${nvpath}")" ] &&
     notable+=("netavark in use is not the one podman shipped with (${nvpath})")
-  [ "${info_ok}" -eq 1 ] && [ "${cli_cg}" != "systemd" ] &&
-    notable+=("cgroup manager is ${cli_cg}, not systemd -- compose builds fail")
+  if [ "${info_ok}" -eq 1 ] && [ "${cli_cg}" != "systemd" ]; then
+    if [ "${DOCKERCHECK_BUILD}" = "ok" ]; then
+      notable+=("cgroup manager is ${cli_cg} rather than systemd, but buildx built successfully anyway, so this is probably NOT the blocker")
+    else
+      notable+=("cgroup manager is ${cli_cg}, not systemd -- this can break compose builds")
+    fi
+  fi
   [ "${info_ok}" -eq 1 ] && [ "${cli_cg}" != "${svc_cg}" ] && [ "${svc_cg}" != "?" ] &&
     notable+=("cli and service disagree on cgroup manager (${cli_cg} vs ${svc_cg}); builds follow the service")
   while read -r f; do
@@ -801,6 +846,8 @@ report_summary() {
   systemctl --user is-active docker.service >/dev/null 2>&1 &&
     notable+=("rootless docker.service running alongside podman")
   [ -z "${bx}" ] && notable+=("no docker buildx plugin; ddev start will fail at the build step")
+  [ "${DOCKERCHECK_STATUS}" = "FAIL" ] &&
+    notable+=("ddev debug dockercheck failed -- its output above is the most direct evidence")
 
   printf '\n  notable:\n'
   if [ "${#notable[@]}" -eq 0 ]; then
