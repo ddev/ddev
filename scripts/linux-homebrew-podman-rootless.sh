@@ -626,16 +626,24 @@ check_smoke_test() {
   fi
 }
 
-# buildx builds an image and then hands the result back to the container engine
-# to load. That final load is a separate operation with its own failure mode:
-# containers/image applies the signature policy to it, and a policy that does
-# not accept the docker-archive transport rejects it. The build succeeds in
-# full and only the last step fails, with:
+# The last thing `ddev start` does when building a project image is hand the
+# result back to the engine to load, and that load is a separate operation with
+# its own failure mode: containers/image applies the signature policy to it, so
+# a policy that does not accept the docker-archive transport rejects it. The
+# build succeeds in full and only the final step fails:
 #   failed to load image: payload does not match any of the supported image
 #   formats: ... Source image rejected: ... is rejected by policy.
-# Nothing else in this script exercises that path, and a plain `podman run`
-# never touches it, so a machine can pull, run and build yet still be unable
-# to finish `ddev start`. Probe it with an empty image: no network, ~4KB.
+#
+# Nothing else here reaches that path. `podman run` never loads an archive, and
+# `ddev debug dockercheck` builds without --load, so with the docker-container
+# driver its result stays in the build cache and is never handed to the engine
+# ("WARNING: No output specified with docker-container driver"). A machine can
+# therefore pull, run, build and pass dockercheck and still not finish
+# `ddev start`.
+#
+# So probe the real path: buildx with --load, from an empty image. No base
+# image to pull, about a second. Fall back to podman save/load when buildx is
+# unavailable, which covers the same policy but via the CLI rather than the API.
 check_image_load() {
   heading "Image load (the step after a build)"
   if [ "${PODMAN_SKIP_SMOKE_TEST}" = "true" ]; then
@@ -643,12 +651,12 @@ check_image_load() {
     return 0
   fi
 
-  local tag="ddev-policy-probe" ctx tar out
+  local tag="ddev-load-probe" ctx tar out
   ctx="$(mktemp -d)"
   tar="$(mktemp -u)".tar
 
-  # A signature policy can reject at any of build, save or load, so treat a
-  # rejection anywhere as the same finding rather than skipping the check.
+  # A signature policy can reject at build, save or load, so treat a rejection
+  # anywhere as the same finding rather than skipping the check.
   _probe_failed() {
     local step="$1" msg="$2"
     if printf '%s' "${msg}" | grep -q 'rejected by policy'; then
@@ -662,12 +670,19 @@ check_image_load() {
       hint "DDEV needs a permissive default:"
       hint '  {"default": [{"type": "insecureAcceptAnything"}]}'
     else
-      warn "could not ${step} the probe image; skipping the load check"
-      hint "$(printf '%s' "${msg}" | tail -2)"
+      fail "a built image could not be loaded into the engine (at ${step})"
+      hint "$(printf '%s' "${msg}" | tail -3)"
     fi
   }
 
-  if ! out="$(printf 'FROM scratch\n' | podman build -q -t "${tag}" -f - "${ctx}" 2>&1)"; then
+  if command -v docker >/dev/null 2>&1 && docker buildx version >/dev/null 2>&1; then
+    if out="$(printf 'FROM scratch\n' | docker buildx build --load -f - -t "${tag}" "${ctx}" 2>&1)"; then
+      ok "buildx can build an image and load it into the engine"
+    else
+      _probe_failed "buildx --load" "${out}"
+    fi
+    docker rmi -f "${tag}" >/dev/null 2>&1 || true
+  elif ! out="$(printf 'FROM scratch\n' | podman build -q -t "${tag}" -f - "${ctx}" 2>&1)"; then
     _probe_failed "build" "${out}"
   elif ! out="$(podman save -o "${tar}" "${tag}" 2>&1)"; then
     _probe_failed "save" "${out}"
@@ -675,9 +690,9 @@ check_image_load() {
     _probe_failed "load" "${out}"
   else
     ok "a built image can be saved and loaded back into podman"
+    podman rmi -f "${tag}" >/dev/null 2>&1 || true
   fi
 
-  podman rmi -f "${tag}" >/dev/null 2>&1 || true
   rm -rf "${ctx}" "${tar}"
   unset -f _probe_failed
 }
