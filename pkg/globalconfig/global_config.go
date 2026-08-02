@@ -1037,28 +1037,3 @@ func GetGlobalConfigYAML() ([]byte, error) {
 
 	return globalConfigYAML, nil
 }
-
-// UseBindGlobalCache is true when DDEV_BIND_GLOBAL_CACHE=true. It makes DDEV
-// use a host bind mount for /mnt/ddev-global-cache instead of a Docker volume.
-// Apple Container (via socktainer) backs each named volume with an ext4 block
-// image that can only be attached to one running VM at a time, so the
-// ddev-global-cache volume, which web, db and the router all mount at once,
-// cannot be used there. Bind mounts are virtiofs-backed and can be shared.
-func UseBindGlobalCache() bool {
-	return os.Getenv("DDEV_BIND_GLOBAL_CACHE") == "true"
-}
-
-// GlobalCacheSource returns what should be used as the source of the
-// /mnt/ddev-global-cache mount: either the Docker volume name or, when
-// UseBindGlobalCache() is set, a host directory path.
-func GlobalCacheSource() string {
-	if UseBindGlobalCache() {
-		return filepath.Join(GetGlobalDdevDir(), "global-cache-bind")
-	}
-	return "ddev-global-cache"
-}
-
-// GlobalCacheMount returns the full mount spec for /mnt/ddev-global-cache.
-func GlobalCacheMount() string {
-	return GlobalCacheSource() + ":/mnt/ddev-global-cache"
-}

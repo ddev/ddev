@@ -1629,11 +1629,11 @@ func (app *DdevApp) Start() error {
 	}
 
 	volumesNeeded := []string{"ddev-global-cache"}
-	if globalconfig.UseBindGlobalCache() {
+	if dockerutil.UseBindGlobalCache() {
 		// The global cache is a host directory instead of a volume, so make sure it exists.
 		volumesNeeded = []string{}
-		if err = os.MkdirAll(globalconfig.GlobalCacheSource(), 0755); err != nil {
-			return fmt.Errorf("unable to create global cache directory %s: %v", globalconfig.GlobalCacheSource(), err)
+		if err = os.MkdirAll(dockerutil.GlobalCacheSource(), 0755); err != nil {
+			return fmt.Errorf("unable to create global cache directory %s: %v", dockerutil.GlobalCacheSource(), err)
 		}
 	}
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
@@ -1742,7 +1742,7 @@ func (app *DdevApp) Start() error {
 	}
 
 	// Build list of volume mounts and their target paths for chown
-	volumeMounts := []string{globalconfig.GlobalCacheMount()}
+	volumeMounts := []string{dockerutil.GlobalCacheMount()}
 	chownCmd := fmt.Sprintf("chown -R %s:%s /mnt/ddev-global-cache", uid, gid)
 	labels := map[string]string{}
 	if dockerutil.UseKeepID() {
@@ -3341,7 +3341,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	// for stopped project
 	c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 	util.Debug("Removing merged config for project with command '%s'", c)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{globalconfig.GlobalCacheMount()}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{dockerutil.GlobalCacheMount()}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 	if err != nil {
 		util.Warning("Unable to remove project merged traefik yaml: %v, output='%s'", err, out)
 	}
@@ -3353,7 +3353,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		// This would not remove extra certs that they had put in certs directory.
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-{web,db} /mnt/ddev-global-cache/traefik/*/%[1]s.{crt,key} /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 		util.Debug("Cleaning ddev-global-cache with command '%s'", c)
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{globalconfig.GlobalCacheMount()}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{dockerutil.GlobalCacheMount()}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)
 		}
@@ -3944,10 +3944,10 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 // Container/socktainer, where copying a directory into a container is not
 // supported.
 func copyIntoGlobalCache(sourcePath string, targetSubdir string, uid string, exclusion string, destroyExisting bool) error {
-	if !globalconfig.UseBindGlobalCache() {
-		return dockerutil.CopyIntoVolume(sourcePath, globalconfig.GlobalCacheSource(), targetSubdir, uid, exclusion, destroyExisting)
+	if !dockerutil.UseBindGlobalCache() {
+		return dockerutil.CopyIntoVolume(sourcePath, dockerutil.GlobalCacheSource(), targetSubdir, uid, exclusion, destroyExisting)
 	}
-	target := filepath.Join(globalconfig.GlobalCacheSource(), targetSubdir)
+	target := filepath.Join(dockerutil.GlobalCacheSource(), targetSubdir)
 	if destroyExisting {
 		if err := os.RemoveAll(target); err != nil {
 			return err

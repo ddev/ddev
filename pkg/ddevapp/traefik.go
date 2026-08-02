@@ -385,11 +385,11 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	// Copy to router container if running, otherwise copy to volume
 	// Copying directly to the router ensures Traefik's fsnotify detects changes reliably
 	router, err := FindDdevRouter()
-	if globalconfig.UseBindGlobalCache() {
+	if dockerutil.UseBindGlobalCache() {
 		// Global cache is a host directory; copy on the host. Copying a directory
 		// into a container is not supported on Apple Container/socktainer.
 		if err = copyIntoGlobalCache(globalTraefikDir, "traefik", uid, "custom-global-config", false); err != nil {
-			return fmt.Errorf("failed to copy global Traefik config into %s: %v", globalconfig.GlobalCacheSource(), err)
+			return fmt.Errorf("failed to copy global Traefik config into %s: %v", dockerutil.GlobalCacheSource(), err)
 		}
 	} else if err == nil && router != nil {
 		// Router is running - copy directly to it using container name without leading slash

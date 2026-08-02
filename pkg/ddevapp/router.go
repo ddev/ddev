@@ -249,8 +249,8 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 		"IsPodman":                   dockerutil.IsPodman(),
 		"IsRootless":                 dockerutil.IsRootless(),
 		"UseKeepID":                  dockerutil.UseKeepID(),
-		"GlobalCacheMount":           globalconfig.GlobalCacheMount(),
-		"BindGlobalCache":            globalconfig.UseBindGlobalCache(),
+		"GlobalCacheMount":           dockerutil.GlobalCacheMount(),
+		"BindGlobalCache":            dockerutil.UseBindGlobalCache(),
 	}
 
 	t, err := template.New("router_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "router_compose_template.yaml")

@@ -46,10 +46,10 @@ docker run -d --name buildx_buildkit_default --cap-add ALL \
 docker run --rm ddev/ddev-utilities:latest nslookup registry-1.docker.io
 ```
 
-The project also needs `router_http_port`/`router_https_port` above 1024 (blocker 4b), the
-healthcheck overrides (blocker 5), and `DDEV_BIND_GLOBAL_CACHE=true`. A `ddev start` against
-an *already running* project always fails on the db volume (blocker 1), so remove
-`ddev-appletest-web` / `ddev-appletest-db` first.
+The project also needs `router_http_port`/`router_https_port` above 1024 (blocker 4b) and the
+healthcheck overrides (blocker 5). Bind mode needs no environment variable — it detects
+socktainer on its own. A `ddev start` against an *already running* project always fails on
+the db volume (blocker 1), so remove `ddev-appletest-web` / `ddev-appletest-db` first.
 
 ---
 
@@ -147,9 +147,21 @@ docker run -d -p 127.0.0.1:8443:80 ddev/ddev-utilities sleep 60   # works
 ```
 
 This only shows up when 80/443 are actually free — with another router (OrbStack's) holding
-them, DDEV picks ephemeral high ports and sidesteps it by accident. Workaround for testing:
-`ddev config --router-http-port=8080 --router-https-port=8443`. A real Apple Container mode
-would need non-privileged defaults, or to skip publishing and use the router's container IP.
+them, DDEV picks ephemeral high ports and sidesteps it by accident. Fix:
+`ddev config --router-http-port=8080 --router-https-port=8443`.
+
+**This is not a new class of problem for DDEV.** Rootless Podman is already a supported
+provider with the same restriction, and the docs already say so: *"Podman rootless — Rootless
+by default … Can't use the default ports 80/443, so DDEV must be configured to use
+unprivileged ports"* (`docs/content/users/install/docker-installation.md`), and the Buildkite
+test machine setup configures `router-http-port=8080` / `router-https-port=8443` for exactly
+this reason. So the handling is a documented configuration requirement, not new machinery.
+
+The one macOS-specific wrinkle is that Linux offers an escape hatch —
+`net.ipv4.ip_unprivileged_port_start=0`, which the DDEV docs recommend for rootless — and
+macOS has no equivalent. On Apple Container, unprivileged router ports are mandatory rather
+than merely recommended. Using the router's container IP instead of published ports (see
+blocker 4) would avoid the question entirely.
 
 ### 5. Healthchecks never report with DDEV's timings
 
@@ -246,11 +258,18 @@ once a container is running on `default`.
 
 ## Experimental DDEV changes (branch `20260802_rfay_apple_container_experiment`)
 
-All gated on `DDEV_BIND_GLOBAL_CACHE=true`; default behavior is unchanged.
+Bind mode turns on **automatically when the provider is socktainer**, so it cannot be
+forgotten in a terminal that lacks an environment variable. `DDEV_BIND_GLOBAL_CACHE=true` or
+`=false` forces it either way for testing against other providers. On every other provider,
+and whenever the provider cannot be reached, detection returns false and behavior is
+byte-identical to before.
 
-- `pkg/globalconfig/global_config.go` — `UseBindGlobalCache()`, `GlobalCacheSource()`,
-  `GlobalCacheMount()`. In bind mode the global cache is `~/.ddev/global-cache-bind`
-  on the host instead of the `ddev-global-cache` volume.
+- `pkg/dockerutil/providers.go` — `IsSocktainer()` (matches `Server.Platform.Name`, following
+  the existing `IsPodman()` pattern), plus `UseBindGlobalCache()`, `GlobalCacheSource()` and
+  `GlobalCacheMount()`. In bind mode the global cache is `~/.ddev/global-cache-bind` on the
+  host instead of the `ddev-global-cache` volume. These live in `dockerutil` rather than
+  `globalconfig` because detection needs a Docker call and `dockerutil` already imports
+  `globalconfig`, not the other way round.
 - `pkg/ddevapp/ddevapp.go` — use the helper for all `/mnt/ddev-global-cache` mounts; skip
   creating the volume and `MkdirAll` the host dir instead; new `copyIntoGlobalCache()` that
   copies on the host in bind mode (avoids the directory-copy gap).
@@ -379,7 +398,7 @@ is what makes every other option tractable:
 Items 2, 5 and 6 are provider-independent improvements that happen to unblock this path, and
 could go in as a normal PR ahead of anything Apple-Container-specific. Option 7 is the most
 promising Apple-Container-specific direction, and unlike the bind-mount approach currently
-implemented behind `DDEV_BIND_GLOBAL_CACHE`, it does not trade away volume performance.
+implemented for socktainer, it does not trade away volume performance.
 Options 7 and 8 compose: seed-then-`:ro` for the read-only content, a proxy for the download
 caches, small per-project volumes for writable state.
 

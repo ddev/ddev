@@ -85,5 +85,5 @@ func performTaskInContainer(command []string) (string, string, error) {
 	// If there is no running active site, use an anonymous container instead.
 	containerName := "performTaskInContainer" + nodeps.RandomString(12)
 	uid, _, _ := dockerutil.GetContainerUser()
-	return dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, containerName, command, nil, nil, []string{globalconfig.GlobalCacheMount()}, uid, true, false, nil, nil, nil)
+	return dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, containerName, command, nil, nil, []string{dockerutil.GlobalCacheMount()}, uid, true, false, nil, nil, nil)
 }
