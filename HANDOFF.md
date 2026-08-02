@@ -23,7 +23,7 @@ So: not working end-to-end yet, but much further than "impossible".
 
 ## Blockers that need upstream fixes (socktainer / Apple Container)
 
-### 1. Named volumes cannot be shared between running containers — *the* structural blocker
+### 1. Named volumes cannot be shared read-write — *the* structural blocker
 
 Apple Container backs each named volume with an ext4 block image attached to one VM:
 
@@ -34,8 +34,22 @@ docker run --rm -v voltest1:/data alpine ls /data
 # Error Domain=VZErrorDomain Code=2 "The storage device attachment is invalid."
 ```
 
-Bind mounts (virtiofs) **are** shareable. `docker volume create --driver local -o type=none
--o device=... -o o=bind` is ignored by socktainer — it still creates a block volume.
+**Read-only attach is not exclusive, and this is the important nuance.** The rule is that a
+volume is either attached read-write by exactly one container, *or* read-only by any number
+of them:
+
+| Held by | New `:ro` attach | New rw attach |
+|---|---|---|
+| nothing | works | works |
+| one rw container | **fails** | **fails** |
+| one or more `:ro` containers | **works** (tested with 3) | **fails** |
+
+That leaves a usable pattern: seed a volume from a short-lived read-write container while
+nothing else holds it, then have every consumer mount it `:ro`. See design option 7 below.
+
+Bind mounts (virtiofs) are shareable read-write. `docker volume create --driver local
+-o type=none -o device=... -o o=bind` is ignored by socktainer — it still makes a block
+volume.
 
 Where this hits DDEV:
 
@@ -247,8 +261,65 @@ is what makes every other option tractable:
    it does, since DDEV runs as the host uid. Belongs in
    `containers/ddev-webserver/ddev-webserver-base-scripts/start.sh`.
 
+7. **Seed with a transient writer, then mount read-only.** Because N containers can hold the
+   same volume `:ro` at once (blocker 1), the read-mostly part of the cache needs no bind
+   mount and no upstream change. A short-lived writer attaches read-write, seeds the content,
+   and exits; the project containers then all mount `:ro`. Verified end to end:
+
+   ```text
+   1. transient writer seeds, exits          v1
+   2. two long-lived :ro readers see it      v1
+   3. re-seed WHILE readers are up           500  (blocked)
+   4. write from inside a :ro reader         Read-only file system
+   5. re-seed after readers are gone         v2
+   ```
+
+   Step 3 is the only real constraint, and it lines up with DDEV's lifecycle: re-seeding
+   requires every reader to be down, which is exactly what `ddev start` / `ddev restart`
+   already does, since the project containers are recreated at that point anyway. Nothing
+   needs to write to this content mid-session.
+
+   Step 4 is what decides the split. Anything written *continuously* by a running container —
+   the npm/Composer caches, `n_prefix`, `corepack`, shell and mysql history — cannot live in
+   the read-only volume and has to move out. Note this is not only a DDEV-side change:
+   `ddev-webserver`'s `start.sh` currently does `mkdir -p` and `chown -R` under
+   `/mnt/ddev-global-cache/`, which fails on a read-only mount.
+
+   `traefik/` does not need to be in the shared volume at all — the router is its only
+   consumer, so it can hold a router-exclusive read-write volume, with DDEV pushing updates
+   the way it already does, by copying single files into the running router.
+
+8. **A cache service container — but it has to serve a protocol, not a filesystem.** A
+   long-lived writer container that owns the volume while others mount it `:ro` **does not
+   work**; the exclusivity is on the block device, and `:ro` readers coexist only with each
+   other:
+
+   ```text
+   writer holds RW, is it alive?         seed
+   reader :ro  while writer holds RW ->  500
+   reader rw   while writer holds RW ->  500
+   after writer removed, :ro         ->  seed
+   ```
+
+   The idea does work if the owner exposes the cache over the *network* instead of the
+   filesystem: one container attaches the volume read-write exclusively, and everything else
+   talks to it over HTTP. A single caching forward proxy (squid, or nginx `proxy_cache`)
+   pointed at by `HTTP_PROXY`/`HTTPS_PROXY` would cover npm, Composer, apt and pip at once,
+   and DDEV already installs a trusted mkcert root CA in its containers, which is what HTTPS
+   interception needs. Per-ecosystem alternatives (Verdaccio for npm, a Composer mirror) are
+   narrower but avoid interception.
+
+   The limit is that this only covers *downloads*. `n_prefix` and `corepack` are install
+   prefixes read at runtime, not download caches, and shell/mysql history is small writable
+   state — neither can be proxied, so both still need a real filesystem (small per-project
+   volumes, or the host).
+
 Items 2, 5 and 6 are provider-independent improvements that happen to unblock this path, and
-could go in as a normal PR ahead of anything Apple-Container-specific.
+could go in as a normal PR ahead of anything Apple-Container-specific. Option 7 is the most
+promising Apple-Container-specific direction, and unlike the bind-mount approach currently
+implemented behind `DDEV_BIND_GLOBAL_CACHE`, it does not trade away volume performance.
+Options 7 and 8 compose: seed-then-`:ro` for the read-only content, a proxy for the download
+caches, small per-project volumes for writable state.
 
 The ssh-agent socket directory is the one case not to bind-mount — unix sockets over virtiofs
 are unreliable. Omitting `ddev-ssh-agent` or using the host's own agent are the realistic
