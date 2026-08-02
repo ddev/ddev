@@ -447,6 +447,15 @@ func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
 	}
+	// util.CaptureUserOut() below redirects output to an os.Pipe() that isn't
+	// drained until getOutput() is called, i.e. only after app2.Start()
+	// returns. With DDEV_DEBUG=true a full Start() can emit enough debug
+	// output to fill that pipe before it returns, deadlocking the write on
+	// Windows. Same root cause as the TestDdevLogs and
+	// TestRouterNotRebuiltOnHostnameChange Windows skips.
+	if nodeps.IsWindows() {
+		t.Skip("Skipping on Windows because CaptureUserOut() can hang around a full app.Start()")
+	}
 
 	// Stop all projects and the router first so we can occupy the ports they would normally use
 	ddevapp.PowerOff()
