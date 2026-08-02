@@ -68,6 +68,19 @@ usage() {
 #   IO error: invalid type: sequence, expected a map
 # which the Docker CLI in turn reports only as:
 #   unable to upgrade to tcp, received 500
+# Every containers.conf podman reads, in precedence order.
+containers_conf_files() {
+  local f
+  for f in /usr/share/containers/containers.conf \
+           /etc/containers/containers.conf \
+           /etc/containers/containers.conf.d/*.conf \
+           "${HOME}/.config/containers/containers.conf" \
+           "${HOME}/.config/containers/containers.conf.d"/*.conf; do
+    [ -f "${f}" ] && printf '%s\n' "${f}"
+  done
+  return 0
+}
+
 bundled_helper_path() {
   local helper="$1" podman_bin
   podman_bin="$(command -v podman 2>/dev/null)" || return 1
@@ -388,13 +401,55 @@ check_cgroups() {
   heading "cgroups"
   local mgr
   mgr="$(podman info --format '{{.Host.CgroupManager}}' 2>/dev/null || echo unknown)"
-  if [ "${mgr}" != "systemd" ]; then
-    fail "cgroup manager is '${mgr}', expected 'systemd'"
-    hint "docker-compose builds will fail with:"
-    hint "  crun: create \`/sys/fs/cgroup/docker\`: Permission denied"
-    hint "Enable lingering: sudo loginctl enable-linger $(whoami)"
-  else
+  if [ "${mgr}" = "systemd" ]; then
     ok "cgroup manager is systemd"
+    return 0
+  fi
+
+  fail "cgroup manager is '${mgr}', expected 'systemd'"
+  hint "docker-compose builds fail with:"
+  hint "  crun: create \`/sys/fs/cgroup/docker\`: Permission denied"
+
+  # Work out *why* rather than guessing. Lingering is only one of several
+  # causes, and blaming it when it is already enabled sends people in circles.
+
+  # 1. Explicitly configured. This wins over everything, so report it first.
+  local f line found=0
+  while read -r f; do
+    line="$(grep -nE '^[[:space:]]*cgroup_manager[[:space:]]*=' "${f}" 2>/dev/null || true)"
+    if [ -n "${line}" ]; then
+      found=1
+      hint "set explicitly in ${f}: ${line}"
+    fi
+  done < <(containers_conf_files)
+  if [ "${found}" -eq 1 ]; then
+    hint "Remove that setting; podman picks systemd on its own when it can."
+    return 0
+  fi
+
+  # 2. Ask podman whether it is *able* to use the systemd manager. This
+  #    separates "configured off" from "this build/environment cannot".
+  local probe
+  if probe="$(podman --cgroup-manager=systemd info --format '{{.Host.CgroupManager}}' 2>&1)" &&
+     [ "${probe}" = "systemd" ]; then
+    hint "podman accepts --cgroup-manager=systemd, so it is capable here and"
+    hint "something is merely defaulting to cgroupfs. Check the service too:"
+    hint "  systemctl --user show podman.service -p Environment"
+  else
+    hint "podman cannot use the systemd cgroup manager at all:"
+    hint "  ${probe}"
+    hint "The usual cause is a podman built without systemd support, which is"
+    hint "common for static or hand-installed builds under /usr/local."
+    hint "Distribution and Homebrew podman packages are built with it."
+    hint "Check where this podman came from: $(command -v podman)"
+  fi
+
+  # 3. Environment prerequisites, mentioned only when actually wrong.
+  if [ ! -S "/run/user/$(id -u)/bus" ]; then
+    hint "No session bus at /run/user/$(id -u)/bus; systemd --user is not usable."
+  fi
+  if ! loginctl show-user "$(whoami)" --property=Linger 2>/dev/null | grep -q 'Linger=yes'; then
+    hint "Lingering is off: sudo loginctl enable-linger $(whoami)"
   fi
 }
 
@@ -402,7 +457,9 @@ check_ports() {
   heading "Privileged ports"
   local start
   start="$(sysctl -n net.ipv4.ip_unprivileged_port_start 2>/dev/null || echo unknown)"
-  if [ "${start}" != "0" ]; then
+  # The sysctl is the *lowest* port an unprivileged process may bind, so any
+  # value <= 80 leaves both 80 and 443 usable. Only a higher value is a problem.
+  if ! [ "${start}" -le 80 ] 2>/dev/null; then
     warn "net.ipv4.ip_unprivileged_port_start is ${start}, so ports 80/443 are unavailable"
     hint "Either allow low ports:"
     hint "  echo 'net.ipv4.ip_unprivileged_port_start=0' | sudo tee /etc/sysctl.d/60-rootless.conf"
