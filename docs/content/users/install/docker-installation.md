@@ -327,7 +327,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
             Some distributions ship outdated Podman. Ubuntu 24.04, for example, has Podman 4.9.3. DDEV works best with Podman 5.0 or newer; with Podman 4.x you can proceed by ignoring the warning on `ddev start`.
 
         !!!warning "Don't mix Podman stacks"
-            Podman is versioned together with its `netavark` and `aardvark-dns` network helpers: Podman 6.x needs netavark 2.x, and Podman 4.x/5.x need netavark 1.x. Either stack works on its own — all-distribution or all-Homebrew — but *mixing* them makes **every** container fail to start. The usual way to get mixed is to install a newer Podman while your distribution's older `netavark` is still installed. See [Podman rootless troubleshooting](#podman-rootless-troubleshooting).
+            Podman is versioned together with its `netavark` and `aardvark-dns` network helpers: Podman 6.x needs `netavark` 2.x, and Podman 4.x/5.x need `netavark` 1.x. Either stack works on its own — all-distribution or all-Homebrew — but *mixing* them makes **every** container fail to start. The usual way to get mixed is to install a newer Podman while your distribution's older `netavark` is still installed. See [Podman rootless troubleshooting](#podman-rootless-troubleshooting).
 
         ### Install Podman
 
@@ -416,7 +416,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         ```
 
         !!!warning "Lingering is not optional"
-            Without a lingering session, `systemd --user` has no D-Bus session bus to manage cgroups through, so Podman quietly falls back to the `cgroupfs` cgroup manager. Buildx then pins its BuildKit container to a cgroup that a rootless user cannot create, and every Compose build fails with `crun: create /sys/fs/cgroup/docker: Permission denied`. Verify with `podman info --format '{{.Host.CgroupManager}}'`, which must print `systemd`.
+            Without a lingering session, `systemd --user` has no D-Bus session bus to manage `cgroup`s through, so Podman quietly falls back to the `cgroupfs` `cgroup` manager. Buildx then pins its BuildKit container to a `cgroup` that a rootless user cannot create, and every Compose build fails with `crun: create /sys/fs/cgroup/docker: Permission denied`. Verify with `podman info --format '{{.Host.CgroupManager}}'`, which must print `systemd`.
 
         Enable the Podman socket and verify it's running (see the [Podman socket activation documentation](https://github.com/containers/podman/blob/main/docs/tutorials/socket_activation.md)):
 
@@ -457,7 +457,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         bash /tmp/podman-rootless.sh --check
         ```
 
-        It verifies the Podman/netavark version pairing, the socket, cgroup manager, `subuid`/`subgid` ranges, privileged ports, the Docker context, buildx, and finally starts a real container. Run it without arguments to perform the Homebrew-based setup described above.
+        It verifies the Podman and `netavark` version pairing, the socket, `cgroup` manager, `subuid`/`subgid` ranges, privileged ports, the Docker context, buildx, and finally starts a real container. Run it without arguments to perform the Homebrew-based setup described above.
 
         ### Podman rootless performance optimization
 
@@ -505,12 +505,12 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         | ------- | ----- | --- |
         | `unable to upgrade to tcp, received 500` from `docker run`, and containers stuck in `Created` | Your `netavark` major version doesn't match Podman's. The Podman log shows `failed to load network options: invalid type: sequence, expected a map`. | Remove the distribution's `netavark`/`aardvark-dns` so Podman uses its own, or install a Podman matching them. Don't mix stacks. |
         | `could not find "netavark" in one of [...]` | `engine.helper_binaries_dir` is set and doesn't include the directory holding `netavark`. | Remove the `helper_binaries_dir` setting from your `containers.conf` files. |
-        | `Cannot connect to the Docker daemon`, and `systemctl --user is-active podman.socket` says `failed` | Repeated activation failures tripped systemd's start limit. Fixing the underlying config doesn't clear this on its own. | `systemctl --user reset-failed podman.socket podman.service`, then `systemctl --user start podman.socket`. |
-        | `crun: create /sys/fs/cgroup/docker: Permission denied` during a build | Podman is using the `cgroupfs` cgroup manager because there's no lingering user session. | `sudo loginctl enable-linger $(whoami)`, then confirm `podman info --format '{{.Host.CgroupManager}}'` prints `systemd`. |
+        | `Cannot connect to the Docker daemon`, and `systemctl --user is-active podman.socket` says `failed` | Repeated activation failures tripped `systemd`'s start limit. Fixing the underlying config doesn't clear this on its own. | `systemctl --user reset-failed podman.socket podman.service`, then `systemctl --user start podman.socket`. |
+        | `crun: create /sys/fs/cgroup/docker: Permission denied` during a build | Podman is using the `cgroupfs` `cgroup` manager because there's no lingering user session. | `sudo loginctl enable-linger $(whoami)`, then confirm `podman info --format '{{.Host.CgroupManager}}'` prints `systemd`. |
         | `compose build requires buildx 0.17.0 or later` | The buildx plugin isn't installed. | `sudo apt-get install docker-buildx-plugin` |
-        | `Must provide a valid firewall backend, got iptables` | Newer netavark dropped the `iptables` backend, but Podman still requests it. | Add `firewall_driver = "nftables"` under `[network]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`. |
+        | `Must provide a valid firewall backend, got iptables` | Newer `netavark` dropped the `iptables` backend, but Podman still requests it. | Add `firewall_driver = "nftables"` under `[network]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`. |
         | `registries.conf must be in v2 format but is in v1` | Podman 6 rejects the old registries format. | Replace `/etc/containers/registries.conf` with `unqualified-search-registries = ["docker.io"]`. |
-        | `Include journald in compilation path to log to systemd journal` | Homebrew's `conmon` is built without journald support, but Podman defaults to journald logging. | Set `log_driver = "k8s-file"` under `[containers]` and `events_logger = "file"` under `[engine]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`. |
+        | `Include journald in compilation path to log to systemd journal` | Homebrew's `conmon` is built without `journald` support, but Podman defaults to `journald` logging. | Set `log_driver = "k8s-file"` under `[containers]` and `events_logger = "file"` under `[engine]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`. |
 
 === "Windows"
 

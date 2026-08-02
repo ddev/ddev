@@ -90,6 +90,7 @@ HMR
 HOWTO
 HeidiSQL
 Homebrew
+Homebrew's
 HSTS
 Ibexa
 IDE
@@ -151,6 +152,7 @@ PathMaps
 PhpStorm
 PhpStorm's
 Podman
+Podman's
 PowerShell
 ProcessWire
 Pull

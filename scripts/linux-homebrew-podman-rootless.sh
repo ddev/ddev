@@ -129,7 +129,7 @@ do_install() {
   echo 'net.ipv4.ip_unprivileged_port_start=0' | sudo tee /etc/sysctl.d/60-rootless.conf >/dev/null
   sudo sysctl -p /etc/sysctl.d/60-rootless.conf
 
-  # Without a genuine lingering session, systemd --user has no D-Bus session
+  # Without a lingering session, systemd --user has no D-Bus session
   # bus to manage cgroups through, so podman silently falls back to
   # --cgroup-manager=cgroupfs. buildx then pins its buildkit container to the
   # "/docker/buildx" cgroup parent whenever podman reports "cgroupfs" as its
