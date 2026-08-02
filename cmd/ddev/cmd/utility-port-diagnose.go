@@ -921,6 +921,8 @@ func activeDockerProvider() string {
 		return "Rancher Desktop"
 	case dockerutil.IsLima():
 		return "Lima"
+	case dockerutil.IsAppleContainer():
+		return "apple container"
 	default:
 		return "Docker"
 	}
