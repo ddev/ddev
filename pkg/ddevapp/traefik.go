@@ -386,8 +386,13 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	// Copying directly to the router ensures Traefik's fsnotify detects changes reliably
 	const inContainerTraefikDir = "/mnt/ddev-global-cache/traefik"
 	router, err := FindDdevRouter()
-	routerRunning := err == nil && router != nil && router.State == "running"
-	if routerRunning {
+	if dockerutil.UseBindGlobalCache() {
+		// Global cache is a host directory; copy on the host. Copying a directory
+		// into a container is not supported on apple container/socktainer.
+		if err = copyIntoGlobalCache(globalTraefikDir, "traefik", uid, "custom-global-config", false); err != nil {
+			return fmt.Errorf("failed to copy global Traefik config into %s: %v", dockerutil.GlobalCacheSource(), err)
+		}
+	} else if err == nil && router != nil {
 		// Router is running - copy directly to it using container name without leading slash
 		// This triggers fsnotify reliably because changes happen inside the container that's watching
 		containerName := strings.TrimPrefix(router.Names[0], "/")
@@ -407,7 +412,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		util.Verbose("Copied global Traefik config in %s directly to router container %s", globalTraefikDir, containerName)
 	} else {
 		// Router not running yet - copy to volume as fallback
-		err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "custom-global-config", false)
+		err = copyIntoGlobalCache(globalTraefikDir, "traefik", uid, "custom-global-config", false)
 		if err != nil {
 			return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
 		}
