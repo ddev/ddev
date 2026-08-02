@@ -434,6 +434,129 @@ func TestEphemeralPortsReusedOnRestart(t *testing.T) {
 	require.Equal(t, originalRouterID, router.ID, "Router should not be recreated when ephemeral ports are reused")
 }
 
+// TestRouterPortSubstitutionPersistsAcrossProjects tests that when a router port
+// is substituted with an ephemeral port because the standard port was busy when
+// the router was created, a later, different project still adopts the same
+// substitute after the original conflict clears - recovered from the router's
+// RouterPortSubstitutionsLabel - instead of expecting the router to bind the
+// now-free standard port and forcing an unnecessary router recreation.
+func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
+	if os.Getenv("GOTEST_SHORT") != "" {
+		t.Skip("Skipping because GOTEST_SHORT is set")
+	}
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
+		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
+	}
+
+	// Stop all projects and the router first so we can occupy the ports they would normally use
+	ddevapp.PowerOff()
+	ddevapp.EphemeralRouterPortsAssigned = make(map[int]bool)
+	ddevapp.RouterPortEphemeralSubstitutions = make(map[string]string)
+
+	targetHTTPPort, targetHTTPSPort := "39080", "39443"
+
+	site1 := filepath.Join(testcommon.CreateTmpDir(t.Name() + "-project1"))
+	_ = os.MkdirAll(site1, 0755)
+	err := fileutil.TemplateStringToFile("Hello from project1", nil, filepath.Join(site1, "index.html"))
+	require.NoError(t, err)
+	app1, err := ddevapp.NewApp(site1, false)
+	require.NoError(t, err)
+	app1.Name = t.Name() + "-project1"
+	app1.RouterHTTPPort, app1.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
+	require.NoError(t, app1.WriteConfig())
+
+	site2 := filepath.Join(testcommon.CreateTmpDir(t.Name() + "-project2"))
+	_ = os.MkdirAll(site2, 0755)
+	err = fileutil.TemplateStringToFile("Hello from project2", nil, filepath.Join(site2, "index.html"))
+	require.NoError(t, err)
+	app2, err := ddevapp.NewApp(site2, false)
+	require.NoError(t, err)
+	app2.Name = t.Name() + "-project2"
+	app2.RouterHTTPPort, app2.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
+	require.NoError(t, app2.WriteConfig())
+
+	// Occupy the target ports so project1 is forced onto ephemeral substitutes
+	var listeners []net.Listener
+	for _, p := range []string{targetHTTPPort, targetHTTPSPort} {
+		listener, err := net.Listen("tcp", "127.0.0.1:"+p)
+		require.NoError(t, err)
+		listeners = append(listeners, listener)
+	}
+	listenersClosed := false
+	closeListeners := func() {
+		if listenersClosed {
+			return
+		}
+		for _, l := range listeners {
+			_ = l.Close()
+		}
+		listenersClosed = true
+	}
+
+	t.Cleanup(func() {
+		closeListeners()
+		_ = app1.Stop(true, false)
+		_ = app2.Stop(true, false)
+		_ = os.RemoveAll(site1)
+		_ = os.RemoveAll(site2)
+		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
+	})
+
+	// Start project1 while the target ports are busy - it should be forced onto
+	// ephemeral substitutes, and the router should record the substitution.
+	require.NoError(t, app1.Start())
+
+	app1, err = ddevapp.NewApp(app1.GetAppRoot(), true)
+	require.NoError(t, err)
+	substituteHTTPPort := app1.GetPrimaryRouterHTTPPort()
+	substituteHTTPSPort := app1.GetPrimaryRouterHTTPSPort()
+	require.NotEqual(t, targetHTTPPort, substituteHTTPPort, "HTTP port should be ephemeral")
+	require.NotEqual(t, targetHTTPSPort, substituteHTTPSPort, "HTTPS port should be ephemeral")
+
+	router, err := ddevapp.FindDdevRouter()
+	require.NoError(t, err)
+	originalRouterID := router.ID
+
+	labelValue := router.Labels[ddevapp.RouterPortSubstitutionsLabel]
+	require.Contains(t, labelValue, targetHTTPPort+"="+substituteHTTPPort,
+		"router label should record the HTTP port substitution, got %q", labelValue)
+	require.Contains(t, labelValue, targetHTTPSPort+"="+substituteHTTPSPort,
+		"router label should record the HTTPS port substitution, got %q", labelValue)
+
+	// Release the target ports: whatever was occupying them is gone now, so a
+	// fresh negotiation would see them as free.
+	closeListeners()
+
+	// Simulate project2 starting from a brand-new ddev process: clear the
+	// in-process substitution cache so the router's label is the only place
+	// left the substitution could be recovered from.
+	ddevapp.RouterPortEphemeralSubstitutions = make(map[string]string)
+
+	reuseMessage := nodeps.RouterContainer + " already running, pushing new config"
+	recreateMessage := "Starting " + nodeps.RouterContainer + ", pushing config"
+
+	getOutput := util.CaptureUserOut()
+	err = app2.Start()
+	startOutput := getOutput()
+	require.NoError(t, err)
+
+	require.Contains(t, startOutput, reuseMessage,
+		"project2 should reuse the running router, output: %s", startOutput)
+	require.NotContains(t, startOutput, recreateMessage,
+		"project2 should NOT recreate the router just because the standard port freed up, output: %s", startOutput)
+
+	app2, err = ddevapp.NewApp(app2.GetAppRoot(), true)
+	require.NoError(t, err)
+	require.Equal(t, substituteHTTPPort, app2.GetPrimaryRouterHTTPPort(),
+		"project2 should adopt the same ephemeral substitute recorded on the router, not the now-free standard port")
+	require.Equal(t, substituteHTTPSPort, app2.GetPrimaryRouterHTTPSPort())
+
+	router, err = ddevapp.FindDdevRouter()
+	require.NoError(t, err)
+	require.Equal(t, originalRouterID, router.ID,
+		"router should not be recreated when a later project's proposed port frees up but was previously substituted")
+}
+
 // TestProcessExposePorts tests the ProcessExposePorts function for various input scenarios
 func TestProcessExposePorts(t *testing.T) {
 	type testCase struct {
