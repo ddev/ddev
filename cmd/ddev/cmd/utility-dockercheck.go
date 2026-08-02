@@ -175,13 +175,23 @@ ddev ut dockercheck`,
 			hasWarnings = true
 		}
 
-		// Test buildx with a trivial build on the host
+		// Test buildx with a trivial build on the host, and --load the result.
+		//
+		// --load is essential, not incidental. Under the docker-container
+		// driver the build result otherwise stays in the build cache and is
+		// never handed to the engine ("WARNING: No output specified with
+		// docker-container driver"), so without it this check passes on a
+		// machine where every real project build fails at its final step. That
+		// happens, for example, when an image signature policy in policy.json
+		// rejects the docker-archive transport: the build succeeds in full and
+		// only the load is rejected. Loading is also what makes the cleanup
+		// below meaningful; before --load there was never an image to remove.
 		if buildxErr == nil {
 			// Use RunCLIPluginCommand to execute buildx build via Docker CLI plugin infrastructure
 			stdin := strings.NewReader(fmt.Sprintf("FROM %s", versionconstants.UtilitiesImage))
-			out, err = dockerutil.RunCLIPluginCommand("buildx", stdin, "build", "--no-cache", "-f-", "-t", "ddev-buildx-test:latest", ".")
+			out, err = dockerutil.RunCLIPluginCommand("buildx", stdin, "build", "--no-cache", "--load", "-f-", "-t", "ddev-buildx-test:latest", ".")
 			if err != nil {
-				util.Warning("Unable to perform trivial build with buildx: %v; output=%s", err, out)
+				util.Warning("Unable to perform trivial build and load with buildx: %v; output=%s", err, out)
 				hasWarnings = true
 			} else {
 				// Clean up the test image using Docker API
@@ -189,7 +199,7 @@ ddev ut dockercheck`,
 				if cleanupErr != nil {
 					util.Debug("Failed to clean up test image: %v", cleanupErr)
 				}
-				util.Success("docker buildx is working correctly (trivial build succeeded)")
+				util.Success("docker buildx is working correctly (trivial build and load succeeded)")
 			}
 		} else {
 			util.Warning("Skipping buildx test due to earlier buildx version check error.")
