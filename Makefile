@@ -2,7 +2,16 @@
 
 # Circleci doesn't seem to provide a decent way to add to path, just adding here, for case where
 # linux build and linuxbrew is installed.
-export PATH := $(EXTRA_PATH):$(PATH)
+#
+# scripts/install-dev-tools.sh puts the docs tooling in its own venv and npm
+# prefix, and until now only .envrc added those to PATH. direnv covers
+# interactive shells that have it hooked in and nothing else, so a make target
+# could resolve some other copy of a tool instead: a Homebrew pyspelling, for
+# instance, whose Python prefix has no pymdown-extensions and so cannot read
+# .spellcheck.yml at all. Prepend the dev-tools directories here so make always
+# gets the ones we installed. Missing directories on PATH are harmless.
+DEV_TOOLS_DIR ?= $(HOME)/.ddev-dev-tools
+export PATH := $(DEV_TOOLS_DIR)/python/bin:$(DEV_TOOLS_DIR)/node/bin:$(EXTRA_PATH):$(PATH)
 
 BUILD_BASE_DIR ?= $(PWD)
 
@@ -196,29 +205,36 @@ setup:
 	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,bin/windows_arm64,src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)
 
-# Required static analysis targets used in circleci - these cause fail if they don't work
-staticrequired: setup golangci-lint markdownlint zensical
+# Required static analysis targets used in circleci - these cause fail if they don't work.
+# pyspelling is included because .github/workflows/docs-check.yml enforces it:
+# leaving it out meant the documented pre-commit check could not catch a
+# spelling failure that CI would then reject.
+staticrequired: setup golangci-lint markdownlint pyspelling zensical
+
+# Fail rather than skip when a required tool is absent. These targets used to
+# print a note and exit 0, so `make staticrequired` reported success while
+# silently running nothing -- the worst of both worlds, since it looks checked.
+define require_tool
+	@command -v $(1) >/dev/null 2>&1 || { \
+		echo "$(1) is required but was not found on PATH."; \
+		echo "Install the development tools with: scripts/install-dev-tools.sh"; \
+		echo "Expected location: $(DEV_TOOLS_DIR)"; \
+		exit 1; \
+	}
+endef
 
 # Best to install markdownlint-cli locally with "npm install -g markdownlint-cli"
 markdownlint:
 	@echo "markdownlint: "
-	@CMD="markdownlint *.md docs/content 2>&1"; \
-	set -eu -o pipefail; \
-	if command -v markdownlint >/dev/null 2>&1 ; then \
-		$$CMD; \
-	else \
-		echo "Skipping markdownlint as not installed (run scripts/install-dev-tools.sh)"; \
-	fi
+	$(call require_tool,markdownlint)
+	@markdownlint *.md docs/content 2>&1
 
 # Install zensical locally using
 # https://docs.ddev.com/en/stable/developers/testing-docs/
 zensical:
 	@echo "zensical: "
-	@if ! command -v zensical >/dev/null 2>&1; then \
-		echo "Not running zensical because it's not installed (run scripts/install-dev-tools.sh)"; \
-		exit 0; \
-	fi; \
-	for i in 1 2 3; do \
+	$(call require_tool,zensical)
+	@for i in 1 2 3; do \
 		out=$$(zensical build --strict 2>&1); rc=$$?; \
 		echo "$$out"; \
 		if [ $$rc -eq 0 ]; then exit 0; fi; \
@@ -257,13 +273,8 @@ linkspector:
 # Best to install pyspelling locally with "sudo -H pip3 install pyspelling pymdown-extensions". Also requires aspell, `sudo apt-get install aspell"
 pyspelling:
 	@echo "pyspelling: "
-	@CMD="pyspelling --config .spellcheck.yml"; \
-	set -eu -o pipefail; \
-	if command -v pyspelling >/dev/null 2>&1 ; then \
-		$$CMD; \
-	else \
-		echo "Not running pyspelling because it's not installed (run scripts/install-dev-tools.sh)"; \
-	fi
+	$(call require_tool,pyspelling)
+	@pyspelling --config .spellcheck.yml
 
 # Install textlint locally with `npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology`
 textlint:
