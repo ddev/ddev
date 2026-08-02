@@ -30,7 +30,10 @@ services:
       - .:/mnt/ddev_config
       - ./db_snapshots:/mnt/snapshots
       {{ end }} {{/* end if .NoBindMounts */}}
-      - ddev-global-cache:/mnt/ddev-global-cache
+      - {{ .GlobalCacheMount }}
+    {{ if .BindGlobalCache }}
+    networks: ["ddev_default"]
+    {{ end }}{{/* end if .BindGlobalCache */}}
     restart: "no"
 
     user: '$DDEV_UID:$DDEV_GID'
@@ -101,7 +104,7 @@ services:
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     command: /pre-start.sh
 
-    networks: ["default", "ddev_default"]
+    networks: [{{ if .BindGlobalCache }}"ddev_default"{{ else }}"default", "ddev_default"{{ end }}]
     cap_add:
       - SYS_PTRACE
     working_dir: "{{ .WebWorkingDir }}"
@@ -153,7 +156,7 @@ services:
           {{- end }} {{- /* end if .GitDirMount */}}
         {{- end }} {{- /* end if .MutagenEnabled */}}
       {{- end }} {{- /* end else of if .NoBindMounts */}}
-      - ddev-global-cache:/mnt/ddev-global-cache
+      - {{ .GlobalCacheMount }}
       {{- if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{- end }}
@@ -319,9 +322,11 @@ volumes:
   ddev-ssh-agent_socket_dir:
     external: true
   {{ end }}{{/* end if not .OmitSSHAgent */}}
+  {{ if not .BindGlobalCache }}
   ddev-global-cache:
     name: ddev-global-cache
     external: true
+  {{ end }}{{/* end if not .BindGlobalCache */}}
   {{ if .NoBindMounts }}
   ddev-config:
     name: ${DDEV_SITENAME}-ddev-config

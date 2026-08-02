@@ -858,6 +858,8 @@ type composeYAMLVars struct {
 	DBAWorkingDir             string
 	WebEnvironment            []string
 	NoBindMounts              bool
+	GlobalCacheMount          string
+	BindGlobalCache           bool
 	Docroot                   string
 	UploadDirsMap             []string
 	GitDirMount               bool
@@ -949,6 +951,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		MariaDBVolumeName:  app.GetMariaDBVolumeName(),
 		PostgresVolumeName: app.GetPostgresVolumeName(),
 		NoBindMounts:       globalconfig.DdevGlobalConfig.NoBindMounts,
+		GlobalCacheMount:   dockerutil.GlobalCacheMount(),
+		BindGlobalCache:    dockerutil.UseBindGlobalCache(),
 		Docroot:            app.GetDocroot(),
 		UploadDirsMap:      app.getUploadDirsHostContainerMapping(),
 		GitDirMount:        false,

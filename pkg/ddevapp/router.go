@@ -281,6 +281,8 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 		"UseKeepID":                  dockerutil.UseKeepID(),
 		"PortSubstitutionsLabel":     RouterPortSubstitutionsLabel,
 		"PortSubstitutions":          formatRouterPortSubstitutions(portSubstitutions),
+		"GlobalCacheMount":           dockerutil.GlobalCacheMount(),
+		"BindGlobalCache":            dockerutil.UseBindGlobalCache(),
 	}
 
 	t, err := template.New("router_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "router_compose_template.yaml")
