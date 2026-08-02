@@ -67,15 +67,6 @@ usage() {
   awk 'NR < 3 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
 }
 
-# Resolve the netavark/aardvark-dns that ship alongside the podman binary.
-# Podman and its network helpers are versioned together: podman 6.x speaks the
-# netavark 2.x network-options schema, podman 5.x speaks netavark 1.x. Feeding
-# podman 6.x an older distro netavark fails every container start with the
-# thoroughly unhelpful:
-#   netavark (exit code 1): failed to load network options:
-#   IO error: invalid type: sequence, expected a map
-# which the Docker CLI in turn reports only as:
-#   unable to upgrade to tcp, received 500
 # Every containers.conf podman reads, in precedence order.
 containers_conf_files() {
   local f
@@ -89,6 +80,15 @@ containers_conf_files() {
   return 0
 }
 
+# Resolve the netavark/aardvark-dns that ship alongside the podman binary.
+# Podman and its network helpers are versioned together: podman 6.x speaks the
+# netavark 2.x network-options schema, podman 5.x speaks netavark 1.x. Feeding
+# podman 6.x an older distro netavark fails every container start with the
+# thoroughly unhelpful:
+#   netavark (exit code 1): failed to load network options:
+#   IO error: invalid type: sequence, expected a map
+# which the Docker CLI in turn reports only as:
+#   unable to upgrade to tcp, received 500
 bundled_helper_path() {
   local helper="$1" podman_bin
   podman_bin="$(command -v podman 2>/dev/null)" || return 1
@@ -699,7 +699,115 @@ do_report() {
   sec "storage"
   run "podman info --format 'driver={{.Store.GraphDriverName}} nativeOverlayDiff={{index .Store.GraphStatus \"Native Overlay Diff\"}}'"
 
+  report_summary
   printf '\n===== end of report =====\n'
+}
+
+# The dump above is a wall of text. Distil it into the handful of facts a
+# maintainer scans first, then call out anything that looks wrong, so the
+# report can be triaged without reading all of it.
+report_summary() {
+  local kv notable=()
+  kv() { printf '  %-18s %s\n' "$1" "$2"; }
+
+  local distro kernel ppath pver porigin ppkg
+  distro="$( . /etc/os-release 2>/dev/null && printf '%s %s (%s%s)' \
+            "${NAME:-?}" "${VERSION_ID:-?}" "${ID:-?}" \
+            "${ID_LIKE:+, like ${ID_LIKE}}" )"
+  kernel="$(uname -srm)"
+  ppath="$(command -v podman 2>/dev/null || echo '<none>')"
+  pver="$(podman version --format '{{.Client.Version}}' 2>/dev/null || echo '?')"
+  porigin="$(podman version --format '{{.Client.BuildOrigin}}' 2>/dev/null)"
+  if dpkg -S "$(readlink -f "${ppath}")" >/dev/null 2>&1 ||
+     rpm -qf "$(readlink -f "${ppath}")" >/dev/null 2>&1; then
+    ppkg="distro-packaged"
+  else
+    ppkg="not distro-packaged"
+  fi
+
+  local nv nvpath av bundled cli_cg svc_cg linger bus store native ports userns ctx bx
+  # One podman call for everything. If podman itself is broken, the error text
+  # is the single most useful thing in the report, so keep it and skip the
+  # derived checks rather than printing a screenful of "?" and false findings.
+  local info_ok=1 info_err="" infoline
+  if infoline="$(podman info --format \
+      '{{.Host.NetworkBackendInfo.Version}}|{{.Host.NetworkBackendInfo.Path}}|{{.Host.NetworkBackendInfo.DNS.Version}}|{{.Host.CgroupManager}}|{{.Store.GraphDriverName}}|{{index .Store.GraphStatus "Native Overlay Diff"}}' 2>&1)"; then
+    IFS='|' read -r nv nvpath av cli_cg store native <<< "${infoline}"
+    nv="${nv##* }"; av="${av##* }"
+  else
+    info_ok=0
+    info_err="$(printf '%s' "${infoline}" | tail -1)"
+    nv="unavailable"; av="unavailable"; cli_cg="unavailable"
+    store="unavailable"; native="unavailable"; nvpath=""
+  fi
+  bundled="$(bundled_helper_path netavark 2>/dev/null || true)"
+  # Must collapse to one line: a failing docker info can emit blank lines,
+  # which would otherwise wrap the summary and fake a cli/service mismatch.
+  svc_cg="$(docker info --format '{{.CgroupDriver}}' 2>/dev/null | tr -d '\r' | grep -v '^$' | tail -1)"
+  [ -z "${svc_cg}" ] && svc_cg="?"
+  linger="$(loginctl show-user "$(id -un)" --property=Linger 2>/dev/null | cut -d= -f2)"
+  [ -S "/run/user/$(id -u)/bus" ] && bus=present || bus=MISSING
+  store="$(podman info --format '{{.Store.GraphDriverName}}' 2>/dev/null)"
+  native="$(podman info --format '{{index .Store.GraphStatus "Native Overlay Diff"}}' 2>/dev/null)"
+  ports="$(sysctl -n net.ipv4.ip_unprivileged_port_start 2>/dev/null)"
+  userns="$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null || echo 'n/a')"
+  ctx="$(docker context show 2>/dev/null)"
+  bx="$(docker buildx version 2>/dev/null | awk '{print $2}')"
+
+  sec "summary"
+  kv "distro"        "${distro}"
+  kv "kernel"        "${kernel}"
+  kv "podman"        "${pver}${porigin:+ origin=${porigin}} (${ppkg}) ${ppath}"
+  kv "netavark"      "${nv:-?} / aardvark ${av:-?}"
+  kv "cgroup mgr"    "cli=${cli_cg} service=${svc_cg}"
+  kv "linger / bus"  "${linger:-?} / ${bus}"
+  kv "storage"       "${store:-?} (native overlay diff: ${native:-?})"
+  kv "low ports"     "ip_unprivileged_port_start=${ports:-?}"
+  kv "userns"        "apparmor_restrict_unprivileged_userns=${userns}"
+  kv "docker ctx"    "${ctx:-?} (buildx ${bx:-none})"
+
+  # Anything worth looking at, most likely to be the cause first.
+  local pmaj nmaj f
+  pmaj="${pver%%.*}"; nmaj="${nv%%.*}"
+  if [ "${info_ok}" -eq 0 ]; then
+    notable+=("podman info FAILS, so podman is unusable: ${info_err}")
+  fi
+  if [ "${info_ok}" -eq 1 ] && [ -n "${pmaj}" ] && [ -n "${nmaj}" ] 2>/dev/null; then
+    { [ "${pmaj}" -ge 6 ] && [ "${nmaj}" -lt 2 ]; } 2>/dev/null &&
+      notable+=("podman ${pmaj}.x with netavark ${nmaj}.x -- version skew, no container will start")
+    { [ "${pmaj}" -le 5 ] && [ "${nmaj}" -ge 2 ]; } 2>/dev/null &&
+      notable+=("podman ${pmaj}.x with netavark ${nmaj}.x -- version skew")
+  fi
+  [ "${info_ok}" -eq 1 ] && [ -n "${bundled}" ] && [ -x "${bundled}" ] && [ -n "${nvpath}" ] &&
+    [ "$(readlink -f "${bundled}")" != "$(readlink -f "${nvpath}")" ] &&
+    notable+=("netavark in use is not the one podman shipped with (${nvpath})")
+  [ "${info_ok}" -eq 1 ] && [ "${cli_cg}" != "systemd" ] &&
+    notable+=("cgroup manager is ${cli_cg}, not systemd -- compose builds fail")
+  [ "${info_ok}" -eq 1 ] && [ "${cli_cg}" != "${svc_cg}" ] && [ "${svc_cg}" != "?" ] &&
+    notable+=("cli and service disagree on cgroup manager (${cli_cg} vs ${svc_cg}); builds follow the service")
+  while read -r f; do
+    grep -qE '^[[:space:]]*helper_binaries_dir[[:space:]]*=' "${f}" 2>/dev/null &&
+      notable+=("helper_binaries_dir set in ${f}")
+    grep -qE '^[[:space:]]*cgroup_manager[[:space:]]*=' "${f}" 2>/dev/null &&
+      notable+=("cgroup_manager set explicitly in ${f}")
+  done < <(containers_conf_files)
+  [ "${linger}" != "yes" ] && notable+=("systemd lingering is off")
+  [ "${bus}" = "MISSING" ] && notable+=("no systemd user session bus")
+  ! [ "${ports:-99999}" -le 80 ] 2>/dev/null &&
+    notable+=("ports 80/443 not bindable (ip_unprivileged_port_start=${ports})")
+  [ "${native}" = "false" ] && notable+=("native overlay diff off (fuse-overlayfs); slower than necessary")
+  systemctl is-active docker.service >/dev/null 2>&1 &&
+    notable+=("rootful docker.service running alongside podman")
+  systemctl --user is-active docker.service >/dev/null 2>&1 &&
+    notable+=("rootless docker.service running alongside podman")
+  [ -z "${bx}" ] && notable+=("no docker buildx plugin; ddev start will fail at the build step")
+
+  printf '\n  notable:\n'
+  if [ "${#notable[@]}" -eq 0 ]; then
+    printf '    nothing obviously wrong\n'
+  else
+    printf '    - %s\n' "${notable[@]}"
+  fi
 }
 
 run_checks() {
