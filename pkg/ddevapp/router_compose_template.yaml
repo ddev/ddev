@@ -10,6 +10,13 @@ services:
     init: true
     user: {{ .UID }}:{{ .GID }}
 
+    {{ if .PortSubstitutions }}
+    labels:
+      # Which ephemeral host port stands in for each standard router port,
+      # see RouterPortSubstitutionsLabel in pkg/ddevapp/router.go
+      {{ .PortSubstitutionsLabel }}: "{{ .PortSubstitutions }}"
+    {{ end }}
+
     {{ if .UseKeepID }}
     userns_mode: keep-id
     {{ end }}
