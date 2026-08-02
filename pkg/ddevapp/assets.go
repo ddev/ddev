@@ -28,6 +28,7 @@ import (
 //go:embed drupal/*
 //go:embed magento/*
 //go:embed maho/*
+//go:embed modx/*
 //go:embed wordpress/*
 //go:embed typo3/*
 //go:embed postgres/*
