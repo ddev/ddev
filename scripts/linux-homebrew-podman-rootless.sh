@@ -626,6 +626,62 @@ check_smoke_test() {
   fi
 }
 
+# buildx builds an image and then hands the result back to the container engine
+# to load. That final load is a separate operation with its own failure mode:
+# containers/image applies the signature policy to it, and a policy that does
+# not accept the docker-archive transport rejects it. The build succeeds in
+# full and only the last step fails, with:
+#   failed to load image: payload does not match any of the supported image
+#   formats: ... Source image rejected: ... is rejected by policy.
+# Nothing else in this script exercises that path, and a plain `podman run`
+# never touches it, so a machine can pull, run and build yet still be unable
+# to finish `ddev start`. Probe it with an empty image: no network, ~4KB.
+check_image_load() {
+  heading "Image load (the step after a build)"
+  if [ "${PODMAN_SKIP_SMOKE_TEST}" = "true" ]; then
+    ok "skipped (PODMAN_SKIP_SMOKE_TEST=true)"
+    return 0
+  fi
+
+  local tag="ddev-policy-probe" ctx tar out
+  ctx="$(mktemp -d)"
+  tar="$(mktemp -u)".tar
+
+  # A signature policy can reject at any of build, save or load, so treat a
+  # rejection anywhere as the same finding rather than skipping the check.
+  _probe_failed() {
+    local step="$1" msg="$2"
+    if printf '%s' "${msg}" | grep -q 'rejected by policy'; then
+      fail "the image signature policy rejects images (at ${step})"
+      hint "This is what makes 'ddev start' fail at the very end, after the"
+      hint "build has already succeeded, with:"
+      hint "  failed to load image: ... Source image rejected: ... rejected by policy"
+      hint "Check the default in whichever of these exists:"
+      hint "  ${HOME}/.config/containers/policy.json   (takes precedence)"
+      hint "  /etc/containers/policy.json"
+      hint "DDEV needs a permissive default:"
+      hint '  {"default": [{"type": "insecureAcceptAnything"}]}'
+    else
+      warn "could not ${step} the probe image; skipping the load check"
+      hint "$(printf '%s' "${msg}" | tail -2)"
+    fi
+  }
+
+  if ! out="$(printf 'FROM scratch\n' | podman build -q -t "${tag}" -f - "${ctx}" 2>&1)"; then
+    _probe_failed "build" "${out}"
+  elif ! out="$(podman save -o "${tar}" "${tag}" 2>&1)"; then
+    _probe_failed "save" "${out}"
+  elif ! out="$(podman load -i "${tar}" 2>&1)"; then
+    _probe_failed "load" "${out}"
+  else
+    ok "a built image can be saved and loaded back into podman"
+  fi
+
+  podman rmi -f "${tag}" >/dev/null 2>&1 || true
+  rm -rf "${ctx}" "${tar}"
+  unset -f _probe_failed
+}
+
 # ---------------------------------------------------------------------------
 # Report
 # ---------------------------------------------------------------------------
@@ -670,13 +726,14 @@ do_report() {
   run "podman info --format 'aardvark: {{.Host.NetworkBackendInfo.DNS.Path}} {{.Host.NetworkBackendInfo.DNS.Version}}'"
   run "ls -la /usr/lib/podman /usr/local/libexec/podman 2>/dev/null"
 
-  sec "containers.conf / storage.conf (full contents)"
+  sec "containers.conf / storage.conf / policy.json (full contents)"
   local f
   while read -r f; do
     printf '\n--- %s ---\n' "${f}"
     grep -vE '^[[:space:]]*(#|$)' "${f}" | sed 's/^/  /'
   done < <(containers_conf_files)
-  for f in /etc/containers/storage.conf "${HOME}/.config/containers/storage.conf"; do
+  for f in /etc/containers/storage.conf "${HOME}/.config/containers/storage.conf" \
+           /etc/containers/policy.json "${HOME}/.config/containers/policy.json"; do
     [ -f "${f}" ] || continue
     printf '\n--- %s ---\n' "${f}"
     grep -vE '^[[:space:]]*(#|$)' "${f}" | sed 's/^/  /'
@@ -874,6 +931,7 @@ run_checks() {
   check_docker_cli
   check_buildx
   check_smoke_test
+  check_image_load
   set -o errexit
 
   printf '\n'
