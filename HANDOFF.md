@@ -19,6 +19,38 @@ musl/Go clients (see "DNS returns unusable AAAA" below).
 
 So: not working end-to-end yet, but much further than "impossible".
 
+## Cold-start recipe
+
+The environment does not survive idling — the `default` network's host bridge is torn down
+once nothing is running on it, which kills DNS (blocker 10), and the buildkit node exits and
+then cannot be restarted (blocker 6). Run these in order before trying `ddev start`, and
+expect to repeat them after any `container system` restart:
+
+```bash
+# 1. keep the default network (and therefore 192.168.64.1) alive
+docker run -d --name keepalive ddev/ddev-utilities:latest sleep 100000
+
+# 2. resolver on the gateway, forwarding to socktainer's DNS. Must come AFTER step 1;
+#    it fails with "Can't assign requested address" if the bridge does not exist yet.
+sudo pkill -f "listen-address=192.168.64.1"
+sudo /opt/homebrew/sbin/dnsmasq --keep-in-foreground \
+  --listen-address=192.168.64.1 --bind-interfaces --port=53 \
+  --no-resolv --server=127.0.0.1#2054 &
+
+# 3. buildkit node — RECREATE, never restart (see blocker 6)
+docker rm -f buildx_buildkit_default
+docker run -d --name buildx_buildkit_default --cap-add ALL \
+  moby/buildkit:buildx-stable-1 --allow-insecure-entitlement=network.host
+
+# 4. sanity check
+docker run --rm ddev/ddev-utilities:latest nslookup registry-1.docker.io
+```
+
+The project also needs `router_http_port`/`router_https_port` above 1024 (blocker 4b), the
+healthcheck overrides (blocker 5), and `DDEV_BIND_GLOBAL_CACHE=true`. A `ddev start` against
+an *already running* project always fails on the db volume (blocker 1), so remove
+`ddev-appletest-web` / `ddev-appletest-db` first.
+
 ---
 
 ## Blockers that need upstream fixes (socktainer / Apple Container)
@@ -99,6 +131,26 @@ Silver lining: Apple Container makes container IPs routable from the host, so a 
 "Apple Container mode" could skip port publishing entirely and point hostnames at the
 router's container IP.
 
+### 4b. Ports below 1024 cannot be published at all
+
+Apple Container's port forwarder runs unprivileged, so DDEV's *default* configuration is
+rejected outright:
+
+```text
+Failed to start container: ... invalidArgument: "Permission denied while binding to
+host port 443. Binding to ports below 1024 requires root privileges."
+```
+
+```bash
+docker run -d -p 127.0.0.1:443:80  ddev/ddev-utilities sleep 60   # error
+docker run -d -p 127.0.0.1:8443:80 ddev/ddev-utilities sleep 60   # works
+```
+
+This only shows up when 80/443 are actually free — with another router (OrbStack's) holding
+them, DDEV picks ephemeral high ports and sidesteps it by accident. Workaround for testing:
+`ddev config --router-http-port=8080 --router-https-port=8443`. A real Apple Container mode
+would need non-privileged defaults, or to skip publishing and use the router's container IP.
+
 ### 5. Healthchecks never report with DDEV's timings
 
 DDEV uses `interval 1s / timeout 70s / start_period 120s`. With those, socktainer reports
@@ -124,6 +176,16 @@ name), with `--cap-add ALL` and on the `default` network so its DNS address is s
 docker run -d --name buildx_buildkit_default --cap-add ALL \
   moby/buildkit:buildx-stable-1 --allow-insecure-entitlement=network.host
 ```
+
+**The node must be recreated, never restarted.** Once it has exited, buildx will happily
+restart it (`#2 starting container buildx_buildkit_default`) and every build then fails with
+the same `rbind ... operation not permitted` as an uncapped node. `docker rm -f` plus a fresh
+`docker run` of the identical command fixes it immediately — the very next build succeeded in
+52s. The obvious explanation does not hold: capabilities survive a restart
+(`CapEff: 000001ffffffffff` before and after, measured on an exec'd process, so not
+necessarily the init process's set). Cause unidentified. This is the single most likely thing
+to bite when picking the work back up, since the node exits on its own whenever
+`container system` is restarted.
 
 ### 7. Copying a directory into a container is unsupported
 
