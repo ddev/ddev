@@ -101,7 +101,14 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},n_prefix/${HOSTNAME},npm,yarn/classic,yarn/berry,corepack}
-sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
+sudo chown -R "$(id -u):$(id -g)" /var/lib/php
+
+# The global cache is already chowned by a privileged utility container in
+# app.Start() before this container ever starts (see chownCmd in ddevapp.go),
+# so this is normally a no-op. On some bind-mounted filesystems (e.g. virtiofs
+# on Apple Container/socktainer) chown fails even when ownership already
+# matches, which would otherwise kill this container outright under `set -e`.
+sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ || true
 
 # The following ensures a persistent and shared "global" cache for
 # yarn classic (frozen v1) and yarn berry (active). In the case of berry, the global cache
