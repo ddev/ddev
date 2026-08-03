@@ -20,6 +20,37 @@ musl/Go clients (see "DNS returns unusable AAAA" below).
 
 So: not working end-to-end yet, but much further than "impossible".
 
+## Upstream engagement status (2026-08-03)
+
+Fixes for seven of the eleven blockers below are written, tested, and DCO-signed-off
+against socktainer, tracked in the
+[`rfay/socktainer` fork's rollout plan](https://github.com/rfay/socktainer/blob/fix/exec-hijack-close/UPSTREAM_ROLLOUT.md),
+ranked by DDEV relevance vs. diff risk. Submitting upstream one at a time rather than
+bundling. Status so far:
+
+- **Filed upstream:** [socktainer/socktainer#346](https://github.com/socktainer/socktainer/issues/346)
+  (exec-hijack hang, blocker 9) / [socktainer/socktainer#347](https://github.com/socktainer/socktainer/pull/347)
+  (fix, open, DCO passing, awaiting review)
+- **Already filed by someone else, corroborated independently:**
+  [socktainer/socktainer#329](https://github.com/socktainer/socktainer/issues/329)
+  (malformed EDNS0, blocker 3)
+- **Fix ready, queued to submit next in rollout order:** DNS wrong-network-address
+  (blocker 3's second bug), version reporting (blocker 11), archive-on-unstarted-container
+  (blocker 6), healthcheck timing (blocker 5), `--filter name=` (blocker 11), `docker cp`
+  directory hang (blocker 7)
+- **Investigated, could not reproduce:** underscore container names skipped for DNS
+  (blocker 11) — worth closing as not-reproducible upstream, or asking the original
+  reporter for a sharper repro
+
+Independently, four DDEV-side hardenings came out of this investigation and are open as
+their own draft PRs, unrelated to any socktainer fix landing:
+[#8657](https://github.com/ddev/ddev/pull/8657) (bound host ports fallback),
+[#8658](https://github.com/ddev/ddev/pull/8658) (`GetExistingDBType` via exec — design
+option 5 below), [#8659](https://github.com/ddev/ddev/pull/8659) (non-fatal global-cache
+chown — design option 6 below), [#8660](https://github.com/ddev/ddev/pull/8660) (stop
+hijacking the exec stream in `dockerutil.Exec()` — the DDEV-side counterpart to #347, so
+`GetRouterConfigErrors()` stops hanging even before the socktainer fix merges).
+
 ## Cold-start recipe
 
 The environment does not survive idling — the `default` network's host bridge is torn down
@@ -123,6 +154,13 @@ curl: (6) Could not resolve host: ddev-appletest-web (DNS server returned answer
 Result: traefik logs `502 ... "http://ddev-appletest-web:80"`, while `curl http://<web-ip>/`
 from the same container returns 200.
 
+**Status:** root cause is a malformed EDNS0 response, filed upstream (not by us) as
+[socktainer/socktainer#329](https://github.com/socktainer/socktainer/issues/329) — the
+highest-impact fix on this list, since it breaks any Go/musl client's resolution on a
+socktainer network, not just DDEV's. A second, distinct DNS bug turned up investigating
+this one: multi-homed hostnames get an arbitrary network's address instead of the
+querying client's — fix ready (`fix/dns-wrong-network-address`), not yet submitted.
+
 ### 4. Published ports are accepted but reset
 
 `docker run -d -p 127.0.0.1:38080:80 nginx:alpine` → the `container` helper listens on
@@ -174,6 +212,9 @@ DDEV uses `interval 1s / timeout 70s / start_period 120s`. With those, socktaine
 DDEV containers healthy in ~10s. Health also **regressed from `healthy` back to `starting`**
 on long-running containers, so the status is not stable.
 
+**Status:** fix ready (`fix/healthcheck-timing`, fixes both the regression and the
+stalled-probe freeze), not yet submitted upstream.
+
 ### 6. buildx cannot bootstrap its buildkit container
 
 Two gaps:
@@ -201,12 +242,20 @@ necessarily the init process's set). Cause unidentified. This is the single most
 to bite when picking the work back up, since the node exits on its own whenever
 `container system` is restarted.
 
+**Status:** fix for the archive-404 half ready (`fix/archive-404-prestart`), not yet
+submitted upstream. The `--privileged` gap is documented, intentional behavior in
+socktainer's README (Virtualization.framework has no capability model to honor it,
+hence the `--cap-add ALL` workaround above) — not something to file upstream.
+
 ### 7. Copying a directory into a container is unsupported
 
 `docker cp <dir>/. c:/path` → `Error response from daemon: Something went wrong.`
 `docker cp <dir> c:/path/` → `cannot copy directory`. Single files work.
 DDEV's `CopyIntoVolume` (mkcert CA, global commands, traefik config) is exactly this, and
 it *hangs* rather than erroring when driven through the API.
+
+**Status:** fix ready (`fix/cp-directory-hang`, bounds the guest-preparation exec so a
+wedged guest shell can't hang the request forever), not yet submitted upstream.
 
 ### 8. vmnet attachments go dark when idle
 
@@ -230,7 +279,17 @@ sleeping with **no child processes** and makes **no further Docker API requests*
 logs nothing after it). The three `exec` sequences it issues against `ddev-router` all show
 `POST /exec/<id>/start` followed by `GET /exec/<id>/json`, so those reads completed — the
 blocked call is not one of them. It is not a sudo/`/etc/hosts` prompt: `appletest.ddev.site`
-resolves publicly to 127.0.0.1, so no hostname edit is needed. **Cause not identified.**
+resolves publicly to 127.0.0.1, so no hostname edit is needed.
+
+**Status: root cause identified and fixed, both sides.** `GetRouterConfigErrors()` calls
+`dockerutil.Exec()`, which hangs because it waits for EOF on a hijacked exec-start
+connection that socktainer never closes after the process exits — confirmed at the raw
+HTTP level (output arrives correctly, the connection just never tears down). Filed as
+[socktainer/socktainer#346](https://github.com/socktainer/socktainer/issues/346), fixed
+by [socktainer/socktainer#347](https://github.com/socktainer/socktainer/pull/347) (open).
+DDEV also doesn't need the hijacked stream at all —
+[ddev/ddev#8660](https://github.com/ddev/ddev/pull/8660) stops requesting it, so this
+stops hanging regardless of which side merges first.
 
 ### 10. vmnet degrades until the `default` network's host bridge disappears
 
@@ -247,14 +306,25 @@ once a container is running on `default`.
 
 - `docker ps -a --filter name=<x>` **ignores the filter** — `docker rm -f $(docker ps -aq
   --filter name=ddev-appletest)` removed *every container on the machine*.
+  **Status:** fix ready (`fix/filter-name-ignored`, matches by substring like real Docker),
+  not yet submitted upstream.
 - Only one network per container: `docker network connect` is a documented no-op, so DDEV's
-  web container (`["default", "ddev_default"]`) actually lands on one of them.
+  web container (`["default", "ddev_default"]`) actually lands on one of them. Documented,
+  intentional limitation in socktainer's README (Virtualization.framework has no NIC
+  hotplug) — no rollout fix.
 - Engine version is reported as `v1.51` (the API version), so DDEV warns
   "installed Docker version v1.51 is not supported, please update to version 25.0 or newer".
+  **Status:** fix ready (`fix/version-engine-version`), not yet submitted upstream.
 - `chown -R` on a virtiofs bind mount fails with `Operation not permitted`; DDEV's
   `start.sh` runs `sudo chown -R … /mnt/ddev-global-cache/` under `set -e`, which kills the
-  web container.
-- Container names with underscores are silently skipped for DNS registration.
+  web container. **Status:** fixed DDEV-side, open as
+  [ddev/ddev#8659](https://github.com/ddev/ddev/pull/8659) (the chown is redundant in the
+  common case anyway, since a privileged utility container already did it) — no socktainer
+  change needed.
+- Container names with underscores are silently skipped for DNS registration. **Status:**
+  investigated further (live daemon + variants) and could not reproduce; not part of the
+  rollout submissions. Worth closing `rfay/socktainer#14` as not-reproducible, or asking
+  for a sharper repro.
 
 ---
 
@@ -339,11 +409,13 @@ is what makes every other option tractable:
 5. **Fix `GetExistingDBType` regardless of provider.** It mounts the db volume only to read a
    version file, which is why `ddev start` fails against an already-running project. Reading
    it via `exec` when the db container is up, or from a container label written at creation,
-   is faster everywhere and removes one concurrent-attach case.
+   is faster everywhere and removes one concurrent-attach case. **Shipped:**
+   [ddev/ddev#8658](https://github.com/ddev/ddev/pull/8658).
 6. **Make the global-cache `chown` non-fatal in `start.sh`.** On virtiofs it always fails and
    `set -e` kills the web container. It is a no-op whenever ownership already matches, which
    it does, since DDEV runs as the host uid. Belongs in
-   `containers/ddev-webserver/ddev-webserver-base-scripts/start.sh`.
+   `containers/ddev-webserver/ddev-webserver-base-scripts/start.sh`. **Shipped:**
+   [ddev/ddev#8659](https://github.com/ddev/ddev/pull/8659).
 
 7. **Seed with a transient writer, then mount read-only.** Because N containers can hold the
    same volume `:ro` at once (blocker 1), the read-mostly part of the cache needs no bind
