@@ -293,6 +293,14 @@ EOF
 gh pr create --title "<type>: <description>" --body-file ~/tmp/pr_body.md
 ```
 
+### Avoiding Hard Line Breaks in Issue/PR/Comment Bodies
+
+GitHub renders issue, PR, and comment bodies (`gh issue create`, `gh pr create`, `gh pr comment`, `gh issue comment`, etc.) with GFM's hard-line-break behavior: a single `\n` inside a paragraph becomes an actual `<br>`. This is different from how GitHub renders committed Markdown files (this file, docs, READMEs), which follow standard CommonMark, where a lone `\n` is just whitespace and the paragraph reflows to the container width.
+
+Hand-wrapping prose to a fixed column width — normal, good practice for a text file or commit message body — produces a ragged, too-short-lined paragraph when posted as an issue/PR/comment body, because each wrapped line becomes its own forced line instead of reflowing.
+
+When writing a `--body-file` for any of these commands, write each paragraph as one continuous line with no embedded newlines. Only use actual blank lines to separate paragraphs, headings, and list items. This does not apply to code blocks, tables, or files meant to be read as source.
+
 ### Pre-Commit Checklist
 
 1. Run appropriate tests: `go test -v -run TestName ./pkg/...`
