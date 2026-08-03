@@ -116,6 +116,23 @@ func TestAnnounceBaseDBSeed(t *testing.T) {
 	require.Contains(t, out, strconv.Itoa(SnapshotRestoreDefaultWaitTime))
 }
 
+// TestDerivedBuiltImageRef verifies the "-<project>-built" image reference
+// getDerivedDBImageSeed() checks always carries an explicit tag, since
+// dockerutil.RunSimpleContainer rejects a bare repo with no ":tag" outright.
+// A `dbimage:` set without an explicit tag (e.g. "randyfay/dbserver-2m") is a
+// common way to configure it, and previously produced an untagged
+// "repo-project-built" reference that RunSimpleContainer flatly rejected,
+// silently swallowed by util.Debug -- see base_db_seed.go.
+func TestDerivedBuiltImageRef(t *testing.T) {
+	// No tag on the base image: matches what `docker compose build` actually
+	// tags it as, since Docker itself defaults a tag-less repo to ":latest".
+	require.Equal(t, "randyfay/dbserver-2m-myproject-built:latest", derivedBuiltImageRef("randyfay/dbserver-2m", "myproject"))
+
+	// An explicit tag already present: the suffix lands in the tag portion,
+	// same convention used for app.WebImage elsewhere in this package.
+	require.Equal(t, "ddev/ddev-dbserver-mariadb-11.8:v1.25.3-myproject-built", derivedBuiltImageRef("ddev/ddev-dbserver-mariadb-11.8:v1.25.3", "myproject"))
+}
+
 // TestFileSizeSuffix verifies the human-readable size suffix used when
 // announcing an `initializer` snapshot restore.
 func TestFileSizeSuffix(t *testing.T) {

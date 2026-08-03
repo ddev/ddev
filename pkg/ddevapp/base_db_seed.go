@@ -93,6 +93,21 @@ func (app *DdevApp) mayHaveDerivedDBImageSeed() bool {
 	return len(app.GetDBBuildDockerfiles()) > 0
 }
 
+// derivedBuiltImageRef returns the tag of the project's built "-<project>-built"
+// image for a given base image, matching what `docker compose build` actually
+// tags it as: the image string is used as-is as the new tag, and Docker
+// defaults a tag-less repo to ":latest". dockerutil.RunSimpleContainer
+// requires an explicit tag on its input, so a bare repo (e.g. `dbimage:
+// randyfay/dbserver-2m` with no ":tag") needs ":latest" appended here too, or
+// it's rejected before ever reaching Docker.
+func derivedBuiltImageRef(baseImage, appName string) string {
+	image := baseImage + "-" + appName + "-built"
+	if !strings.Contains(image, ":") {
+		image += ":latest"
+	}
+	return image
+}
+
 // getDerivedDBImageSeed returns the in-image path and byte size of a base_db
 // seed baked into the built dbimage. path is empty if there is none; size is
 // -1 if it could not be determined. This runs a container against the image,
@@ -105,7 +120,7 @@ func (app *DdevApp) getDerivedDBImageSeed() (path string, size int64) {
 	script := fmt.Sprintf(`for f in %s; do if [ -f "$f" ]; then printf '%%s %%s\n' "$f" "$(wc -c <"$f")"; break; fi; done`, strings.Join(candidates, " "))
 
 	_, out, err := dockerutil.RunSimpleContainer(
-		app.GetDBImage()+"-"+app.Name+"-built",
+		derivedBuiltImageRef(app.GetDBImage(), app.Name),
 		"db-seed-check-"+app.Name+"-"+util.RandString(6),
 		[]string{"-c", script},
 		[]string{"/bin/sh"},
