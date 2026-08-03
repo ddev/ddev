@@ -3,7 +3,9 @@ package dockerutil
 import (
 	"testing"
 
+	"github.com/moby/moby/api/types/network"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestSanitizeUsername tests the username sanitization logic
@@ -109,6 +111,64 @@ func TestSanitizeUsername(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := sanitizeUsername(tt.input)
 			assert.Equal(t, tt.expected, result, "sanitizeUsername(%q) should return %q, got %q", tt.input, tt.expected, result)
+		})
+	}
+}
+
+// TestAddBoundHostPorts verifies that addBoundHostPorts extracts every non-empty
+// HostPort from a network.PortMap, which is the logic GetBoundHostPorts relies on
+// to fall back from HostConfig.PortBindings to NetworkSettings.Ports. Some
+// providers (e.g. socktainer/Apple Container) report an empty HostConfig on
+// inspect even though the container has ports bound, per NetworkSettings.
+func TestAddBoundHostPorts(t *testing.T) {
+	tests := []struct {
+		name     string
+		portMaps []network.PortMap
+		expected map[string]bool
+	}{
+		{
+			name:     "nil PortMap",
+			portMaps: []network.PortMap{nil},
+			expected: map[string]bool{},
+		},
+		{
+			name: "single PortMap with bound ports",
+			portMaps: []network.PortMap{
+				{
+					network.MustParsePort("80/tcp"): []network.PortBinding{{HostPort: "8080"}},
+				},
+			},
+			expected: map[string]bool{"8080": true},
+		},
+		{
+			name: "PortBinding with empty HostPort is excluded",
+			portMaps: []network.PortMap{
+				{
+					network.MustParsePort("80/tcp"): []network.PortBinding{{HostPort: ""}},
+				},
+			},
+			expected: map[string]bool{},
+		},
+		{
+			name: "merging two PortMaps, as when falling back from HostConfig to NetworkSettings",
+			portMaps: []network.PortMap{
+				{},
+				{
+					network.MustParsePort("80/tcp"):  []network.PortBinding{{HostPort: "8080"}},
+					network.MustParsePort("443/tcp"): []network.PortBinding{{HostPort: "8443"}},
+				},
+			},
+			expected: map[string]bool{"8080": true, "8443": true},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			portMap := map[string]bool{}
+			for _, m := range tt.portMaps {
+				addBoundHostPorts(portMap, m)
+			}
+			require.Equal(t, tt.expected, portMap)
 		})
 	}
 }
