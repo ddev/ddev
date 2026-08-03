@@ -1110,13 +1110,17 @@ func execStartAndCapture(ctx context.Context, apiClient client.APIClient, execID
 	req.Header.Set("Content-Type", "application/json")
 
 	dial := cli.Dialer()
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
-				return dial(ctx)
-			},
+	transport := &http.Transport{
+		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+			return dial(ctx)
 		},
+		// A new Transport is created per call and never reused, so keeping its
+		// connection alive in an idle pool only leaks the readLoop/writeLoop
+		// goroutines net/http spawns per connection - nothing will ever reuse
+		// them. Close the connection once this response is done instead.
+		DisableKeepAlives: true,
 	}
+	httpClient := &http.Client{Transport: transport}
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return "", "", err
