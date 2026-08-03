@@ -17,7 +17,9 @@
 # web_environment can be replaced by a later `ddev config`.
 export HOST=0.0.0.0
 export STOREFRONT_SKIP_SSL_CERT=true
-export PROXY_URL="${DDEV_PRIMARY_URL}:9998"
+# DDEV_PRIMARY_URL_WITHOUT_PORT drops any port from the primary URL, so the
+# ":9998" we append here is never doubled (e.g. https://site.ddev.site:443:9998).
+export PROXY_URL="${DDEV_PRIMARY_URL_WITHOUT_PORT}:9998"
 
 # Absolute path so this wrapper never recurses into itself via $PATH.
 exec /usr/local/bin/shopware-cli project storefront-watch "$@"

@@ -31,7 +31,10 @@ fi
 export HOST=0.0.0.0
 
 # Absolute path so this wrapper never recurses into itself via $PATH.
+# DDEV_PRIMARY_URL_WITHOUT_PORT is the canonical single project URL (scheme
+# included); prefer it over https://${DDEV_HOSTNAME}, which can be a
+# comma-separated list when additional_hostnames are configured.
 exec /usr/local/bin/shopware-cli extension admin-watch "${PLUGIN_DIR}/" \
-  "https://${DDEV_HOSTNAME}" \
+  "${DDEV_PRIMARY_URL_WITHOUT_PORT}" \
   --listen :5173 \
-  --external-url "https://${DDEV_HOSTNAME}:5173"
+  --external-url "${DDEV_PRIMARY_URL_WITHOUT_PORT}:5173"
