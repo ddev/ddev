@@ -412,6 +412,7 @@ gzipped
 h
 harm
 healthcheck
+healthchecks
 help
 homeadditions
 homebrew

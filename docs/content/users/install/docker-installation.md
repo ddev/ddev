@@ -352,6 +352,9 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         hash -r
         ```
 
+        !!!warning "If you build Podman from source, don't set `BUILDTAGS`"
+            Podman's `Makefile` computes its build tags by probing the build host, and one of them, `systemd`, decides whether container healthchecks work. `make BUILDTAGS="..."` *replaces* that computed list rather than adding to it, so a hand-written list almost certainly drops `systemd`. Podman then compiles its healthcheck timer functions as no-ops: containers run fine, but none of them ever reports `healthy`, and since `ddev start` waits on exactly that, every project start hangs until it times out. Nothing warns you at runtime, and the only warning at build time describes the consequence as losing "journald support". Use plain `make PREFIX=/usr/local` and add your own tags with `EXTRA_BUILDTAGS=` instead. Check an installed binary with `go version -m $(command -v podman) | grep -- -tags=`.
+
         !!!warning "Don't set `helper_binaries_dir`"
             Setting `engine.helper_binaries_dir` in a `containers.conf` *replaces* Podman's helper search path rather than extending it. If your list omits the `libexec/podman` directory next to your `podman` binary, Podman either uses a wrong-version `netavark` or fails with `could not find "netavark"`. Leave it unset unless you are certain you need it.
 
@@ -457,7 +460,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         bash /tmp/podman-rootless.sh --check
         ```
 
-        It verifies the Podman and `netavark` version pairing, the socket, `cgroup` manager, `subuid`/`subgid` ranges, privileged ports, the Docker context, buildx, and finally starts a real container. Run it without arguments to perform the Homebrew-based setup described above.
+        It verifies the Podman and `netavark` version pairing, the socket, `cgroup` manager, `subuid`/`subgid` ranges, privileged ports, the Docker context, and buildx. It then stops inferring and starts testing: it runs a real container, builds an image and loads it back into the engine, and watches a container healthcheck report `healthy`. Those last three are the steps `ddev start` fails at on a machine where everything else looks correct. Run the script without arguments to perform the Homebrew-based setup described above.
 
         ### Podman rootless performance optimization
 
@@ -512,6 +515,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         | `Must provide a valid firewall backend, got iptables` | Newer `netavark` dropped the `iptables` backend, but Podman still requests it. | Add `firewall_driver = "nftables"` under `[network]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`. |
         | `registries.conf must be in v2 format but is in v1` | Podman 6 rejects the old registries format. | Replace `/etc/containers/registries.conf` with `unqualified-search-registries = ["docker.io"]`. |
         | `Include journald in compilation path to log to systemd journal` | Homebrew's `conmon` is built without `journald` support, but Podman defaults to `journald` logging. | Set `log_driver = "k8s-file"` under `[containers]` and `events_logger = "file"` under `[engine]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`. |
+        | `failed to become ready ... timed out without becoming healthy` for every container, with an empty health log (`{"Status":"starting","FailingStreak":0,"Log":null}`) | Podman schedules each container's healthcheck as a transient `systemd` **user** timer. Either your Podman was built without its `systemd` build tag, which makes the timer functions silent no-ops, or your user session cannot create transient units. The healthcheck script itself is fine — running it with `podman exec` succeeds, which is why this is easy to misdiagnose. | Check the tags with `go version -m $(command -v podman) \| grep -- -tags=`. If `systemd` is missing, rebuild Podman without overriding `BUILDTAGS`. Otherwise check `sudo loginctl enable-linger $(whoami)` and that `systemd-run --user --quiet /bin/true` succeeds. |
 
 === "Windows"
 

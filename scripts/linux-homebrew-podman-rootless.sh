@@ -33,7 +33,12 @@
 #                                use native rootless overlay. Native overlay
 #                                is available on kernel 5.13+ and is faster;
 #                                fuse-overlayfs disables native overlay diff.
-#   PODMAN_SKIP_SMOKE_TEST       "true" to skip the run-a-real-container check.
+#   PODMAN_SKIP_SMOKE_TEST       "true" to skip the checks that run a real
+#                                container: the smoke test, the image-load
+#                                probe and the healthcheck probe. Those are the
+#                                slow ones, and also the only ones that test
+#                                whether the setup works rather than whether it
+#                                looks right, so skip them only in a hurry.
 
 set -o errexit
 set -o pipefail
@@ -55,6 +60,7 @@ warnings=0
 DOCKERCHECK_STATUS="not run"
 DOCKERCHECK_BUILD="not run"
 IMAGELOAD_STATUS="not run"
+HEALTHCHECK_STATUS="not run"
 
 if [ -t 1 ]; then
   red=$'\033[31m'; yellow=$'\033[33m'; green=$'\033[32m'; reset=$'\033[0m'
@@ -138,6 +144,26 @@ bundled_helper_path() {
   podman_bin="$(command -v podman 2>/dev/null)" || return 1
   podman_bin="$(readlink -f "${podman_bin}")"
   printf '%s/libexec/podman/%s' "$(dirname "$(dirname "${podman_bin}")")" "${helper}"
+}
+
+# The Go build tags podman was compiled with, read back out of the binary.
+#
+# Worth knowing because one of them, `systemd`, silently decides whether
+# container healthchecks work at all (see check_healthcheck). `podman version`
+# does not report tags, but the Go toolchain embeds them, so ask it.
+#
+# Returns nonzero when the answer is unknown rather than guessing: no Go
+# toolchain to ask with, a binary whose build info was stripped (Homebrew's is),
+# or a build that passed no -tags at all.
+podman_build_tags() {
+  local podman_bin
+  command -v go >/dev/null 2>&1 || return 1
+  podman_bin="$(command -v podman 2>/dev/null)" || return 1
+  go version -m "$(readlink -f "${podman_bin}")" 2>/dev/null |
+    awk '$1 == "build" && $2 ~ /^-tags=/ {
+           sub(/^-tags=/, "", $2); print $2; found = 1
+         }
+         END { exit !found }'
 }
 
 # ---------------------------------------------------------------------------
@@ -751,6 +777,143 @@ check_image_load() {
   unset -f _probe_failed
 }
 
+# `ddev start` does not poll a container's port to decide it is up; it waits for
+# the container's own HEALTHCHECK to report healthy. So a healthcheck that never
+# runs stalls every start until the timeout, and does it without producing an
+# error to work from:
+#   ddev-<project>-web failed to become ready ... timed out without becoming healthy
+# with a health log that is empty rather than failing:
+#   {"Status":"starting","FailingStreak":0,"Log":null}
+#
+# Podman does not run healthchecks in-process. For each container it registers a
+# transient systemd *user* timer, `<container-id>-<hash>.timer`, which fires
+# `podman healthcheck run <id>` on an interval. Two things therefore have to hold
+# beyond the healthcheck command itself working:
+#
+#   1. podman must have been compiled with its `systemd` build tag. Without it,
+#      libpod compiles healthcheck_nosystemd_linux.go, whose createTimer() and
+#      startTimer() `return nil` and do nothing at all. Podman still records the
+#      HealthConfig, so the container reports "starting" forever and never logs
+#      an attempt. Nothing warns at runtime.
+#   2. the systemd user session must accept transient units (lingering on, user
+#      bus present, `systemd-run --user` working).
+#
+# The build-tag case is easy to hit when building podman from source, because
+# `make BUILDTAGS="..."` *replaces* the tags podman's Makefile computes rather
+# than adding to them, and the only warning it prints frames the consequence as
+# losing "journald support".
+#
+# Running the healthcheck script by hand proves nothing about any of this: it
+# passes on a machine where healthchecks never run. Only watching a real
+# container reach `healthy` tests it, so that is what this does.
+check_healthcheck() {
+  heading "Container healthchecks (what 'ddev start' waits for)"
+  if [ "${PODMAN_SKIP_SMOKE_TEST}" = "true" ]; then
+    HEALTHCHECK_STATUS="skipped"
+    ok "skipped (PODMAN_SKIP_SMOKE_TEST=true)"
+    return 0
+  fi
+  if ! command -v docker >/dev/null 2>&1; then
+    HEALTHCHECK_STATUS="skipped (no docker CLI)"
+    warn "skipped, no docker CLI"
+    return 0
+  fi
+
+  local name="ddev-healthcheck-probe" cid status="" log tags waited=0
+  docker rm -f "${name}" >/dev/null 2>&1 || true
+  # Go through the Docker CLI, because that is the API DDEV uses to create
+  # containers; a healthcheck registered over the compat API is the case that
+  # matters here.
+  if ! cid="$(docker run -d --name "${name}" \
+      --health-cmd 'true' --health-interval 2s --health-retries 1 \
+      "${SMOKE_TEST_IMAGE}" sleep 60 2>&1)"; then
+    HEALTHCHECK_STATUS="FAIL (probe container would not start)"
+    fail "could not start a container to test healthchecks with"
+    hint "$(printf '%s' "${cid}" | tail -2)"
+    return 0
+  fi
+
+  while [ "${waited}" -lt 20 ]; do
+    status="$(docker inspect --format '{{.State.Health.Status}}' "${name}" 2>/dev/null || true)"
+    [ "${status}" = "healthy" ] && break
+    sleep 1
+    waited=$((waited + 1))
+  done
+
+  if [ "${status}" = "healthy" ]; then
+    HEALTHCHECK_STATUS="ok"
+    ok "a container healthcheck ran and reported healthy (${waited}s)"
+  else
+    HEALTHCHECK_STATUS="FAIL (stuck at '${status:-unknown}')"
+    fail "healthchecks do not run: after ${waited}s the container is still '${status:-unknown}'"
+    hint "Every 'ddev start' will time out waiting for web and db to become"
+    hint "healthy, however well the containers themselves are running."
+
+    # Whether podman scheduled a timer at all separates the two failure shapes,
+    # so establish that before saying what an empty log means.
+    local timer=no
+    systemctl --user list-units --all --no-pager "${cid:0:32}*" 2>/dev/null |
+      grep -q '\.timer' && timer=yes
+
+    log="$(docker inspect --format '{{json .State.Health.Log}}' "${name}" 2>/dev/null || true)"
+    if [ "${log}" = "null" ] || [ "${log}" = "[]" ] || [ -z "${log}" ]; then
+      if [ "${timer}" = "yes" ]; then
+        hint "The health log is empty even though a timer exists, so a run was"
+        hint "scheduled and has not returned: it is hanging, not failing."
+      else
+        hint "The health log is empty, so nothing ever executed the healthcheck;"
+        hint "the healthcheck command itself is not the problem."
+      fi
+    else
+      hint "The healthcheck did run and failed. Its output:"
+      hint "${log}"
+    fi
+
+    # Cause order. A missing build tag makes this unconditional and silent, so
+    # rule it in or out before looking at the systemd session.
+    if [ "${timer}" = "no" ]; then
+      hint "No healthcheck timer unit exists for the probe container, so podman"
+      hint "never even tried to schedule one."
+      if tags="$(podman_build_tags)"; then
+        if printf '%s' "${tags}" | tr ',' '\n' | grep -qx systemd; then
+          hint "podman does have its 'systemd' build tag, so look at the session:"
+        else
+          HEALTHCHECK_STATUS="FAIL (podman built without its systemd build tag)"
+          hint "podman was compiled WITHOUT its 'systemd' build tag:"
+          hint "  -tags=${tags}"
+          hint "That is the cause: podman's healthcheck timer functions are"
+          hint "compiled as no-ops, so no container can ever become healthy."
+          hint "Rebuild podman and let its Makefile choose the tags:"
+          hint "  make PREFIX=/usr/local                     # detects systemd"
+          hint "  make PREFIX=/usr/local EXTRA_BUILDTAGS=... # to add your own"
+          hint "'make BUILDTAGS=...' REPLACES the computed defaults and drops"
+          hint "systemd along with them. libsystemd-dev (Debian/Ubuntu) or"
+          hint "systemd-devel (RPM) must be installed for it to be detected."
+        fi
+      else
+        hint "Could not read podman's build tags. If podman was built from"
+        hint "source, check that 'systemd' is among them: a build without it"
+        hint "makes healthchecks silent no-ops. Check with:"
+        hint "  go version -m \$(command -v podman) | grep -- -tags="
+      fi
+      if ! command -v systemd-run >/dev/null 2>&1; then
+        hint "systemd-run is not on PATH; podman needs it to create the timer."
+      elif ! systemd-run --user --quiet --collect --unit="ddev-hc-probe-$$" \
+             /bin/true >/dev/null 2>&1; then
+        hint "This session cannot create transient systemd user units at all"
+        hint "('systemd-run --user' failed), which podman needs for the timer."
+      fi
+    else
+      hint "A timer unit exists, so podman's scheduling side works and the"
+      hint "problem is in the run it triggers. Inspect both with:"
+      hint "  systemctl --user list-timers --all | grep ${cid:0:12}"
+      hint "  journalctl --user --since '-5min' | grep ${cid:0:12}"
+    fi
+  fi
+
+  docker rm -f "${name}" >/dev/null 2>&1 || true
+}
+
 # ---------------------------------------------------------------------------
 # Report
 # ---------------------------------------------------------------------------
@@ -789,6 +952,10 @@ do_report() {
   # How it was installed decides who owns the config defaults under /usr/share.
   run "dpkg -S \$(readlink -f \$(command -v podman)) 2>/dev/null || rpm -qf \$(readlink -f \$(command -v podman)) 2>/dev/null || echo 'not owned by dpkg/rpm (manual, static, or brew install)'"
   run "file -b \$(readlink -f \$(command -v podman)) | cut -c1-80"
+  # Build tags, because a source build missing the `systemd` tag disables
+  # container healthchecks outright and reports nothing at runtime.
+  printf '$ go version -m $(command -v podman) | grep -- -tags=\n'
+  printf '  %s\n' "$(podman_build_tags || echo '(unknown: no Go toolchain, stripped binary, or no -tags used)')"
 
   sec "network helpers"
   run "podman info --format 'netavark: {{.Host.NetworkBackendInfo.Path}} {{.Host.NetworkBackendInfo.Version}}'"
@@ -869,6 +1036,13 @@ do_report() {
   sec "image load probe"
   check_image_load
 
+  # Same reason as the load probe: watch a healthcheck actually run rather than
+  # recording that one is configured. This is the check that a build missing
+  # podman's systemd tag fails, and nothing else here notices that.
+  sec "healthcheck probe"
+  check_healthcheck
+  run "systemctl --user list-timers --all --no-pager | tail -5"
+
   report_summary
   printf '\n===== end of report =====\n'
 }
@@ -937,6 +1111,8 @@ report_summary() {
   kv "docker ctx"    "${ctx:-?} (buildx ${bx:-none})"
   kv "dockercheck"   "${DOCKERCHECK_STATUS} (trivial build: ${DOCKERCHECK_BUILD})"
   kv "image load"    "${IMAGELOAD_STATUS}"
+  kv "healthchecks"  "${HEALTHCHECK_STATUS}"
+  kv "podman -tags"  "$(podman_build_tags || echo 'unknown')"
   kv "policy.json"   "$(active_policy_file 2>/dev/null || echo 'none (podman default)')"
 
   # Anything worth looking at, most likely to be the cause first.
@@ -985,6 +1161,15 @@ report_summary() {
   case "${IMAGELOAD_STATUS}" in
     FAIL*) notable+=("a built image cannot be loaded into the engine: ${IMAGELOAD_STATUS}") ;;
   esac
+  case "${HEALTHCHECK_STATUS}" in
+    *"systemd build tag"*)
+      notable+=("podman was built without its 'systemd' build tag, so healthcheck timers are compiled as no-ops: no container can ever report healthy and every 'ddev start' times out") ;;
+    FAIL*)
+      notable+=("container healthchecks never report healthy (${HEALTHCHECK_STATUS}), so 'ddev start' cannot finish") ;;
+  esac
+  local btags; btags="$(podman_build_tags 2>/dev/null || true)"
+  [ -n "${btags}" ] && ! printf '%s' "${btags}" | tr ',' '\n' | grep -qx systemd &&
+    notable+=("podman build tags do not include 'systemd' (-tags=${btags})")
   [ "${DOCKERCHECK_STATUS}" = "FAIL" ] &&
     notable+=("ddev debug dockercheck failed -- its output above is the most direct evidence")
 
@@ -1014,6 +1199,7 @@ run_checks() {
   check_buildx
   check_smoke_test
   check_image_load
+  check_healthcheck
   set -o errexit
 
   printf '\n'
