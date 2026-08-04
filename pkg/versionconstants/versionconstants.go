@@ -20,7 +20,7 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20260716_stasadev_webserver_403_message" // Note that this can be overridden by make
+var WebTag = "20260802_rfay_global_cache_chown_non_fatal" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
