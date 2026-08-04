@@ -29,6 +29,11 @@ type Snapshot struct {
 // If default_container_timeout is set higher than that it can be more
 const SnapshotRestoreDefaultWaitTime = 600
 
+// RestoreSnapshotCommand is the ddev-dbserver entrypoint argument that makes it
+// restore a snapshot instead of looking for a base_db seed.
+// See containers/ddev-dbserver/files/docker-entrypoint.sh
+const RestoreSnapshotCommand = "restore_snapshot"
+
 // DeleteSnapshot removes the snapshot tarball or directory inside a project
 func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	var err error
@@ -233,7 +238,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 	}
 
-	restoreCmd := "restore_snapshot " + snapshotFile
+	restoreCmd := RestoreSnapshotCommand + " " + snapshotFile
 	// Determine compression type for potential conditional restore handling
 	isGzip := strings.HasSuffix(snapshotFile, ".gz")
 	isZstd := strings.HasSuffix(snapshotFile, ".zst")

@@ -51,6 +51,28 @@ Use the [`ddev snapshot restore`](../usage/commands.md#snapshot-restore) command
 
 Snapshots are stored as simple gzipped files in the project's `.ddev/db_snapshots` directory, and any or all snapshots can be removed with the `ddev snapshot --cleanup` command or by manually deleting the files when you want to save disk space or have no further use for them.
 
+### Seeding a Fresh Database with an `initializer` Snapshot
+
+`initializer` is a reserved snapshot name. If a snapshot named `initializer` exists in `.ddev/db_snapshots`, it's used automatically the first time a project's database volume is created — a brand-new project, or after `ddev delete` and [`ddev start`](../usage/commands.md#start) — instead of DDEV's normal empty starter database. This is a fast, direct restore of the database files, much quicker than importing a SQL dump on every fresh start.
+
+Create one from a running project's current database with:
+
+```bash
+ddev snapshot --name=initializer
+```
+
+Unlike other snapshots, `initializer` isn't meant to be restored with `ddev snapshot restore` — it's only consulted for an uninitialized database. You can choose to commit the resulting `initializer-*` file in `.ddev/db_snapshots` to your repository if you want teammates and CI to get the same starting dataset on their first `ddev start`, but it may be large and you may want to use another distribution technique.
+
+An `initializer` snapshot is listed as [custom configuration](../extend/customization-extendibility.md), so `ddev start` and [`ddev utility check-custom-config`](../usage/commands.md#utility-check-custom-config) both show it. When `ddev start` actually seeds a fresh database volume from it, it says so, naming the snapshot and its size and warning that a large one may take a while:
+
+```
+Initializing new database volume from the 'initializer' snapshot /path/to/project/.ddev/db_snapshots/initializer-mariadb_11.8.zst (2.2 GiB)...
+With a large database this may take a long time.
+```
+
+!!!note
+    Not supported on the very old, EOL `mysql:5.5` and `mariadb:5.5` database types.
+
 ## Database Clients
 
 The `ddev mysql` and `ddev psql` commands give you direct access to the `mysql` and `psql` clients in the database container, which can be useful for quickly running commands while you work. You might run `ddev mysql` to use interactive commands like `DROP DATABASE backend;` or `SHOW TABLES;`, or do things like `echo "SHOW TABLES;" | ddev mysql` or `ddev mysql -udb -pdb` to run with `db` user privileges.

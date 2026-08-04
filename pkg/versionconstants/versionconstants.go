@@ -26,7 +26,7 @@ var WebTag = "20260802_rfay_global_cache_chown_non_fatal" // Note that this can 
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20260729_rfay_mysql_97"
+var BaseDBTag = "20260720_weitzman_zstd_base_db"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
