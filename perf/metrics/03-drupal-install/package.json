@@ -9,5 +9,8 @@
   },
   "dependencies": {
     "puppeteer": "^24.11.2"
+  },
+  "allowScripts": {
+    "puppeteer@24.43.1": true
   }
 }
