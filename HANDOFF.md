@@ -35,11 +35,134 @@ Getting there took three socktainer fixes beyond the seven already queued (one o
 supersedes what blockers 3, 4 and 9 said before.
 
 Still required by hand: unprivileged router ports,
-`omit_containers: [ddev-ssh-agent]`, a non-colliding `traefik_monitor_port`, removing
-project containers before `ddev start`, and the cold-start recipe. Mutagen no longer needs
-a per-project setting — it is forced off automatically when the provider is socktainer (see
-below). `ddev restart` and `ddev debug rebuild` still exit 1 on the router hostname
-collision (blocker 12). So: a working proof of concept, not a supported provider.
+`omit_containers: [ddev-ssh-agent]`, a non-colliding `traefik_monitor_port`, and the
+cold-start recipe. Mutagen no longer needs a per-project setting — it is forced off
+automatically when the provider is socktainer (see below). Use **`ddev restart`**, which
+works repeatably as of 2026-08-04; only `ddev start` over an already-running project still
+hits the hostname collision (blocker 12). So: a working proof of concept, not a supported
+provider.
+
+## Two projects at once, no per-project workarounds (2026-08-04)
+
+Two DDEV projects now run simultaneously, which was previously impossible — the second
+project could never get a router:
+
+```text
+https://appletest.ddev.site:8443/  → 200      http://appletest.ddev.site:8080/ → 200
+https://x.ddev.site:33001/         → 200
+ddev exec (PHP 8.4.24) / ddev mysql (11.8.8-MariaDB) → work
+router + 4 project containers → all healthy, and *stay* healthy
+```
+
+Both projects run with **no per-project workaround files at all**. `appletest`'s
+`docker-compose.healthcheck.yaml`, its `web-build/Dockerfile` chown patch, its
+`performance_mode: none`, and the global `~/.ddev/router-compose.healthcheck.yaml` were all
+deleted, and `ddev start` still takes ~28s. Four more fixes got there — two in socktainer,
+two in DDEV.
+
+### The healthcheck override was itself causing the "unhealthy" containers
+
+The containers reported `unhealthy` with a `FailingStreak` in the hundreds while serving 200
+the whole time. Cause was the override, not the provider: `healthcheck.sh` deliberately
+sleeps 59s once `/tmp/healthy` exists (to save CPU and battery), and the script says so —
+"This requires the timeout to be set higher than the sleeptime used here." The override set
+`timeout: 10s`. So every probe after the first success was killed at 10s and counted as a
+failure, forever. DDEV's own default is `timeout: 1m10s`, comfortably above 59s. Any future
+override must keep timeout > 59s; better, don't override.
+
+### socktainer slept out start_period instead of probing during it — the reason DDEV timed out
+
+`HealthCheckManager.runLoop` did `Task.sleep(nanoseconds: startPeriodNs)` before its first
+probe. Docker does the opposite: it probes from the start and merely declines to *count*
+failures during start_period. This is structurally fatal for DDEV, because DDEV derives
+`start_period` from `default_container_timeout` and then waits exactly that long:
+
+```text
+appletest: default_container_timeout: "300"  →  start_period: 5m0s
+container started 15:20:04.374Z
+first health probe 15:25:04.411Z   (+300.04s, passed in 0.7s)
+DDEV gave up at    +300s
+```
+
+Health always landed a fraction of a second after DDEV stopped waiting. Fixed by probing
+immediately and treating a pre-deadline failure as "still starting" without consuming
+retries. `ddev start` went from **5m18s failure to 28s success**, containers "ready in 2.5s".
+
+This also retires blocker 5 and the whole idea of shipping a router healthcheck override in
+DDEV: with the fix, DDEV's stock timings work and the global override is not needed at all
+(router "ready in 1.5s" with it deleted).
+
+### socktainer returned `HostConfig.PortBindings: null`, so no second project could start
+
+The second project died with `unable to listen on required ports, port 33000 is already in
+use` — port 33000 being one the *running ddev-router itself* published.
+`CheckRouterPorts()` does exclude ports the current router holds, but it learns them from
+`GetBoundHostPorts()`, which reads **only** `HostConfig.PortBindings`
+([pkg/dockerutil/containers.go:931](pkg/dockerutil/containers.go#L931)). socktainer
+populated `NetworkSettings.Ports` correctly but left `HostConfig.PortBindings` nil, so DDEV
+saw an empty exclusion list and flagged the router's own ports as a foreign conflict. Fixed
+in `ContainerInspectRoute` by filling both from the same `publishedPorts` data.
+
+### Two DDEV code paths mounted the database volume a second time
+
+Both were fatal on apple container, and both are avoidable. Retesting confirmed blocker 1's
+table exactly: with one read-write holder, even a `:ro` second attach fails.
+
+- `getDBVersionFromVolume()` starts a throwaway `GetExistingDBType-*` container that mounts
+  the db volume, and `util.Failed()` makes any error kill the command. It fired on
+  `ddev start` *and* `ddev config` for any project whose db container was already running.
+- the `start-chown-*` container mounts the db volume to fix ownership, failing the same way.
+
+Fixed by not contending for a volume whose owner is already running: read the version file
+with `dockerutil.Exec` into the running db container, and drop the db volume from the chown
+when that container is up (its ownership was set on an earlier start). Both are cheaper on
+every provider — the version read no longer starts a container at all.
+
+### socktainer ran health probes as root, breaking `ddev restart`
+
+`ddev restart` is the documented, recommended way to bring a project back up, and it failed
+at the very last step:
+
+```text
+Failed to restart appletest: router healthcheck failed:
+command 'rm -f /tmp/healthy /tmp/ddev-traefik-errors.txt && /healthcheck.sh' returned exit code 1
+```
+
+`HealthCheckManager.execProbe` forced `processConfig.user = .id(uid: 0, gid: 0)`, commented as
+avoiding permission issues. Docker instead runs healthchecks as the container's configured
+user. ddev-router's `Config.User` is `501:20` and its pid 1 runs as 501, so the root-forced
+probe created `/tmp/healthy` owned by root inside a container owned by 501, and DDEV's reset
+— correctly running as 501 — could not remove it.
+
+Widening the file's mode would not have fixed it: `/tmp` is `drwxrwxrwt`, and with the sticky
+bit only the owner may unlink, whatever the file mode says. Fixed by dropping the override and
+using the user `initProcess` already carries.
+
+**`ddev restart` now works, repeatably**, on both projects and in the steady-state case where
+the existing router is reused rather than recreated (~27s).
+
+### Remaining blocker: hostname uniqueness, and it is upstream of socktainer
+
+This affects `ddev start` over an already-running project. **`ddev restart` is unaffected** and
+is the way through — it stops the project first, which frees the hostnames. The failure below
+is also clean, not destructive: the running project keeps serving.
+
+```text
+Container ddev-appletest-db Error response from daemon: Failed to create container:
+exists: "hostname(s) already exist: ["appletest-db", "appletest-db"]"
+```
+
+The check is in apple container itself, not socktainer —
+`ContainerAPIService/Server/Containers/ContainersService.swift:310`. It walks **every**
+container irrespective of state and rejects any create whose attachment hostname is already
+claimed, so a merely-existing container holds its hostname hostage. Compose recreates by
+creating the new container before removing the old, and socktainer's
+`POST /containers/{id}/rename` is `NotImplemented`, so the old one cannot be moved aside
+either. The name appears twice in the error because the container has two network
+attachments sharing one hostname. Workaround remains `docker rm -f` on the project
+containers first. A real fix needs either apple container to scope uniqueness to running
+containers, or socktainer to stop using the container name as the attachment hostname and
+answer those names from its own DNS server instead.
 
 ## Verification run against a merged local build (2026-08-03, later)
 
@@ -280,6 +403,8 @@ Where this hits DDEV:
   `/tmp/project_mutagen`) — fails even within a single container.
 - `GetExistingDBType` and snapshot helpers mount the db volume while `ddev-<p>-db` runs, so
   **`ddev start` on an already-running project always fails**; containers must be removed first.
+  Fixed for `GetExistingDBType` and `start-chown` on 2026-08-04 — see the two-projects
+  section above. Snapshot helpers are untouched and presumably still fail this way.
 
 ### 2. No DNS on the built-in `default` network
 
@@ -387,17 +512,22 @@ macOS has no equivalent. On Apple Container, unprivileged router ports are manda
 than merely recommended. Using the router's container IP instead of published ports (see
 blocker 4) would avoid the question entirely.
 
-### 5. Healthchecks never report with DDEV's timings
+### 5. Healthchecks never report with DDEV's timings — SOLVED 2026-08-04
 
-DDEV uses `interval 1s / timeout 70s / start_period 120s`. With those, socktainer reports
-`starting` forever and `State.Health.Log` stays empty (verified past 4 minutes).
-`--health-start-period 15s` works fine (`healthy`, log populated). Shortening to
-`interval 2s / timeout 10s / start_period 10s` via a compose override made all three
-DDEV containers healthy in ~10s. Health also **regressed from `healthy` back to `starting`**
-on long-running containers, so the status is not stable.
+DDEV uses `interval 1s / timeout 70s / start_period` = `default_container_timeout`. With
+those, socktainer reported `starting` for the entire duration and `State.Health.Log` stayed
+empty; shorter values worked. That looked like a timing sensitivity but was one bug: the
+health loop slept out the whole start_period before its first probe, so the first result
+always arrived just *after* DDEV's identical wait budget expired. Docker probes during
+start_period and only declines to count failures.
 
-**Status:** fix ready (`fix/healthcheck-timing`, fixes both the regression and the
-stalled-probe freeze), not yet submitted upstream.
+Nothing about it was DDEV-specific and no DDEV-side timing override is warranted; the
+overrides that were tried made things worse, because `timeout: 10s` is below the 59s
+CPU/battery-saving sleep in `healthcheck.sh` and turns every later probe into a failure.
+
+**Status:** two fixes, neither submitted upstream. `fix/healthcheck-timing` (status
+regression + stalled-probe freeze) and an uncommitted change to
+`HealthCheckManager.runLoop` for the start_period behavior.
 
 ### 6. buildx cannot bootstrap its buildkit container
 
@@ -505,9 +635,17 @@ running and the site keeps serving, but the command fails.
 
 Same shape as blocker 1: any DDEV path that goes through compose's recreate rather than
 removing the container first will hit it. `ddev restart` is unaffected because it removes
-containers first. Fixing it socktainer-side means having rename move the hostname
-registration (or having create ignore a hostname held by a container that no longer
-carries that name).
+containers first — confirmed working repeatably on 2026-08-04, so it is the recommended path.
+`ddev start` over an already-running project is the case that still fails.
+
+The enforcement is in apple container, not socktainer:
+`ContainerAPIService/Server/Containers/ContainersService.swift:310` walks **every** container
+irrespective of state and rejects a create whose attachment hostname is already claimed, so
+even a stopped container holds its hostname. socktainer cannot route around it via rename
+either — `POST /containers/{id}/rename` is `NotImplemented`. The hostname appears twice in the
+error when the container has two network attachments sharing one hostname. A real fix needs
+apple container to scope uniqueness to running containers, or socktainer to stop using the
+container name as the attachment hostname and answer those names from its own DNS server.
 
 ### 11. Smaller compatibility gaps
 
@@ -590,24 +728,20 @@ Project-side settings still needed by hand:
 omit_containers: [ddev-ssh-agent]   # its socket volume is shared
 ```
 
-`performance_mode: none` is no longer needed — it is applied automatically on socktainer.
+Plus non-privileged `router_http_port` / `router_https_port` (blocker 4b), and distinct ones
+per project — a project left on the global 80/443 falls into DDEV's ephemeral-port fallback
+and can collide with the ports the running router already publishes.
 
-```yaml
-# .ddev/docker-compose.healthcheck.yaml and ~/.ddev/router-compose.healthcheck.yaml
-services:
-  web:   # and db: / ddev-router:
-    healthcheck:
-      test: ["CMD-SHELL", "/healthcheck.sh"]
-      interval: 2s
-      timeout: 10s
-      retries: 60
-      start_period: 10s
-```
+Everything else that used to be listed here is gone as of 2026-08-04, and re-adding any of it
+would now cause harm rather than help:
 
-```dockerfile
-# .ddev/web-build/Dockerfile — chown of a bind mount fails on every provider, not just this one
-RUN sed -i 's|^sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php$|sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php \|\| true|' /start.sh
-```
+- `performance_mode: none` — applied automatically on socktainer.
+- the healthcheck overrides, project and global — the start_period fix makes DDEV's stock
+  timings work, and `timeout: 10s` actively breaks health by undercutting the 59s sleep in
+  `healthcheck.sh`.
+- the `web-build/Dockerfile` chown patch — upstream in
+  [#8659](https://github.com/ddev/ddev/pull/8659); `start.sh` now ends that chown with
+  `|| true`.
 
 ## Design options for the shared-volume problem
 
@@ -716,15 +850,21 @@ options there.
 
 ## State this session left behind
 
-- The three new socktainer fixes live **uncommitted** in the working tree of
+- The six new socktainer fixes live **uncommitted** in the working tree of
   `~/workspace/socktainer` on branch `tmp/rollout-verify` (the seven queued fixes merged
   on top of `main`). Files touched:
   `Sources/socktainer/Routes/Containers/ExecRoutes.swift` (close-on-EOF correction to
   #347, plus the `shouldUpgrade` gating fix),
   `Sources/socktainer/DNS/SocktainerDNSServer.swift` (EDNS0 response truncation),
   `Sources/socktainer/Utilities/DockerFilterUtility.swift` (dict-form filter parsing),
+  `Sources/socktainer/Utilities/HealthCheckManager.swift` (probe during start_period; probe
+  as the container's user, not root),
+  `Sources/socktainer/Routes/Containers/ContainerInspectRoute.swift` +
+  `Sources/socktainer/Models/RESTConfig.swift` (populate `HostConfig.PortBindings`),
   and new tests in `Tests/socktainerTests/{DNS,Utilities}/`. Rebuild with
-  `make release`; run with `~/workspace/socktainer/.build/release/socktainer`.
+  `swift build -c release`; run with `~/workspace/socktainer/.build/release/socktainer`.
+  **None of the seven branches nor these five changes has an open PR** — the only PR ever
+  opened was #347, which is closed.
 - **The patched local build is running** (`~/tmp/socktainer.log`), the appletest project is
   up and healthy, and the site serves 200 at the router's container IP. The global docker
   context is still `orbstack` — the verification above ran with `DOCKER_CONTEXT=socktainer`
@@ -738,8 +878,11 @@ options there.
   `sudo pkill -f "listen-address=192.168.64.1"`. Without it, no container has DNS.
 - `traefik_monitor_port` is set to **11999** (10999 is OrbStack's). Revert it to 10999 when
   done with socktainer if that matters for other projects.
-- The global `~/.ddev/router-compose.healthcheck.yaml` override is **in place** (it is
-  needed for ddev-router to report healthy); a copy of the pre-session state is at
-  `~/tmp/router-compose.healthcheck.yaml.bak`. It also affects OrbStack projects.
-- Test project at `~/tmp/appletest`, left started; `keepalive` and
-  `buildx_buildkit_default` left running.
+- The global `~/.ddev/router-compose.healthcheck.yaml` override has been **removed** — it is
+  no longer needed and was harmful. It now sits at
+  `~/tmp/router-compose.healthcheck.yaml.bak`; do not restore it.
+- Test projects at `~/tmp/appletest` and `~/tmp/x`, both left started and serving, with no
+  per-project workaround files. `~/tmp/x` has no explicit router ports, so it lands on
+  ephemeral ones (33000/33001).
+- `keepalive` and `buildx_buildkit_default` left running, plus two `porttest*` containers
+  from the published-port investigation.
