@@ -18,7 +18,7 @@ for _ in $(seq 1 "$REPEAT"); do
   docker system prune -f >/dev/null 2>&1 || true
 
   start=$(now_ms)
-  ddev start -y >/dev/null
+  ddev start -y >/dev/null 2>&1
   end=$(now_ms)
 
   samples+=("$(( end - start ))")

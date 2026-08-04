@@ -18,7 +18,7 @@ bash "$DIR/../lib/reset-drupal.sh"
 cd "$DDEV_PERF_PROJECT_DIR"
 
 start=$(now_ms)
-ddev drush si demo_umami -y >/dev/null
+ddev drush si demo_umami -y >/dev/null 2>&1
 end=$(now_ms)
 
 emit_metric "drush_install_ms" "$(( end - start ))"

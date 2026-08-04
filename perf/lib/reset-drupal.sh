@@ -15,10 +15,10 @@ set -euo pipefail
 : "${DDEV_PERF_PROJECT_DIR:?DDEV_PERF_PROJECT_DIR must be set}"
 cd "$DDEV_PERF_PROJECT_DIR"
 
-ddev mysql -e "DROP DATABASE IF EXISTS db; CREATE DATABASE db;" >/dev/null
+ddev mysql -e "DROP DATABASE IF EXISTS db; CREATE DATABASE db;" >/dev/null 2>&1
 rm -rf web/sites/default/files/* 2>/dev/null || true
 ddev exec "killall -USR2 php-fpm" >/dev/null 2>&1 || true
 
 if ddev mutagen status >/dev/null 2>&1; then
-  ddev mutagen sync >/dev/null
+  ddev mutagen sync >/dev/null 2>&1
 fi

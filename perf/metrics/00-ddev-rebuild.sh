@@ -21,7 +21,7 @@ cd "$DDEV_PERF_PROJECT_DIR"
 samples=()
 for _ in $(seq 1 "$REPEAT"); do
   start=$(now_ms)
-  ddev utility rebuild >/dev/null
+  ddev utility rebuild >/dev/null 2>&1
   end=$(now_ms)
 
   samples+=("$(( end - start ))")
