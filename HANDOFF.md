@@ -401,10 +401,13 @@ Where this hits DDEV:
 - `ddev-ssh-agent_socket_dir` — shared by ssh-agent and web.
 - With mutagen on, web mounts `project_mutagen` **twice** (`/var/www` and
   `/tmp/project_mutagen`) — fails even within a single container.
-- `GetExistingDBType` and snapshot helpers mount the db volume while `ddev-<p>-db` runs, so
-  **`ddev start` on an already-running project always fails**; containers must be removed first.
-  Fixed for `GetExistingDBType` and `start-chown` on 2026-08-04 — see the two-projects
-  section above. Snapshot helpers are untouched and presumably still fail this way.
+- `GetExistingDBType` mounted the db volume while `ddev-<p>-db` runs, so **`ddev start` on an
+  already-running project always failed**; containers had to be removed first. Fixed for
+  `GetExistingDBType` and `start-chown` on 2026-08-04 — see the two-projects section above.
+  `RestoreSnapshot` was checked and does not have this problem: it always removes the db
+  container before touching the volume, so it never contends with a running one. Every
+  `RunSimpleContainer` call site was swept for others that mount `GetMariaDBVolumeName()` /
+  `GetPostgresVolumeName()`; `db.go` and the `start-chown` site were the only two.
 
 ### 2. No DNS on the built-in `default` network
 

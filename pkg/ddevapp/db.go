@@ -75,7 +75,7 @@ func (app *DdevApp) getDBVersionFromVolume() (string, error) {
 	// If the project's own db container already has the volume mounted, read it from
 	// there instead of mounting it a second time. Cheaper than starting a container,
 	// and required on providers that allow a volume only one writer at a time: on
-	// Apple Container the second attachment aborts the probe container's boot with
+	// apple container the second attachment aborts the probe container's boot with
 	// VZErrorDomain Code=2 "The storage device attachment is invalid.", which
 	// util.Failed() below turns into a fatal error for the whole command.
 	if v, ok := app.dbVersionFromRunningContainer(); ok {
@@ -106,7 +106,7 @@ func (app *DdevApp) getDBVersionFromVolume() (string, error) {
 
 // runningDBContainer returns the project's db container if it is running, else nil.
 // Callers use it to avoid mounting the database volume a second time: providers that
-// back volumes with a block device (Apple Container) permit either one writer or any
+// back volumes with a block device (apple container) permit either one writer or any
 // number of readers, never a mix, so a second attachment fails while the db runs.
 func (app *DdevApp) runningDBContainer() *container.Summary {
 	c, err := app.FindContainerByType("db")

@@ -1751,7 +1751,7 @@ func (app *DdevApp) Start() error {
 
 	// Skip the database volume if its container is already running: the ownership was
 	// set on an earlier start, and mounting it here as well is a second writer, which
-	// Apple Container refuses outright.
+	// apple container refuses outright.
 	if !app.IsDBOmitted() && app.runningDBContainer() == nil {
 		if app.Database.Type == nodeps.Postgres {
 			postgresDataDir := app.GetPostgresDataDir()

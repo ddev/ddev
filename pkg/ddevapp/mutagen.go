@@ -780,12 +780,12 @@ func (app *DdevApp) IsMutagenEnabled() bool {
 		return true
 	}
 	// no_bind_mounts normally forces Mutagen on as the only way to get code into the
-	// container, but Mutagen cannot run on Apple Container at all (see
+	// container, but Mutagen cannot run on apple container at all (see
 	// GetPerformanceMode), so honoring it here would just move the failure. Warn
 	// rather than fail silently: this combination has no working configuration.
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		if dockerutil.IsSocktainer() {
-			util.WarningOnce("no_bind_mounts is not supported on the socktainer/Apple Container provider, because it depends on Mutagen, which cannot run there. Expect the project not to have its code mounted.")
+		if dockerutil.IsAppleContainer() {
+			util.WarningOnce("no_bind_mounts is not supported on apple container, because it depends on Mutagen, which cannot run there. Expect the project not to have its code mounted.")
 			return false
 		}
 		return true

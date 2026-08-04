@@ -145,8 +145,20 @@ func IsSELinux() bool {
 	return slices.Contains(info.SecurityOptions, "name=selinux")
 }
 
+// IsAppleContainer reports whether containers are being run by apple container
+// (github.com/apple/container). Prefer this over IsSocktainer() wherever the reason
+// is something the runtime does — single-writer volumes, hostname uniqueness, virtiofs
+// bind mounts — rather than something the API shim does.
+//
+// socktainer is currently the only Docker-compatible API in front of apple container,
+// so this is detected through it; the two are separate questions and may not stay 1:1.
+func IsAppleContainer() bool {
+	return IsSocktainer()
+}
+
 // IsSocktainer detects if the Docker provider is socktainer, the
-// Docker-compatible API that fronts Apple Container.
+// Docker-compatible API that fronts apple container. This is a statement about the
+// API being spoken, not about the runtime behind it — see IsAppleContainer().
 func IsSocktainer() bool {
 	serverVersion, err := GetServerVersion()
 	if err != nil {
@@ -167,16 +179,16 @@ func IsSocktainer() bool {
 // host directory instead of the ddev-global-cache Docker volume. It says nothing about
 // the project bind mounts controlled by the no_bind_mounts global config setting.
 //
-// Apple Container backs each named volume with an ext4 block image that only one
-// running container can attach read-write, so a volume mounted at the same time by
-// web, db and the router cannot work there. Host bind mounts are virtiofs-backed and
-// can be shared. This turns on automatically on socktainer; DDEV_BIND_GLOBAL_CACHE
-// forces it on or off for testing against other providers.
+// apple container backs each named volume with an ext4 block image that takes either one
+// read-write attachment or any number of read-only ones, never a mix, so a volume mounted
+// at the same time by web, db and the router cannot work there. Host bind mounts are
+// virtiofs-backed and can be shared read-write. This turns on automatically on apple
+// container; DDEV_BIND_GLOBAL_CACHE forces it on or off for testing against other providers.
 func UseBindGlobalCache() bool {
 	if v := os.Getenv("DDEV_BIND_GLOBAL_CACHE"); v != "" {
 		return v == "true"
 	}
-	return IsSocktainer()
+	return IsAppleContainer()
 }
 
 // GlobalCacheSource returns what to use as the source of the
