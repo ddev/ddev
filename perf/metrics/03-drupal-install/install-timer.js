@@ -23,7 +23,16 @@ function sleep(ms) {
     process.exit(1);
   }
 
-  const browser = await puppeteer.launch({ headless: true });
+  // --no-sandbox: Chrome's user-namespace sandbox needs a kernel/AppArmor config
+  // that's commonly locked down on Ubuntu 23.10+ and in containers.
+  // --ignore-certificate-errors: the bundled Puppeteer Chrome doesn't share the
+  // system/NSS trust store mkcert -install populates, so it won't trust DDEV's
+  // local cert on every environment. Both are fine since this only ever
+  // navigates to the project's own core/install.php on localhost.
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--ignore-certificate-errors'],
+  });
   try {
     const page = await browser.newPage();
     page.setDefaultTimeout(0);
@@ -43,9 +52,18 @@ function sleep(ms) {
     await page.click('#edit-profile-demo-umami');
     await page.click('#edit-submit');
 
-    // Requirements/verify step: "Save and continue" kicks off the install batch.
-    await page.waitForSelector('#edit-save');
-    await page.click('#edit-save');
+    // Requirements/verify step only appears if Drupal has a warning to acknowledge
+    // (e.g. a missing recommended PHP extension); on a clean environment it's
+    // skipped straight through to the configure-site form, so don't wait on
+    // #edit-save unconditionally.
+    await Promise.race([
+      page.waitForSelector('#edit-save'),
+      page.waitForSelector('#edit-site-name'),
+    ]);
+    const requirementsPage = await page.$('#edit-save');
+    if (requirementsPage) {
+      await requirementsPage.click();
+    }
 
     // Final "configure site" form, shown once the install batch finishes.
     await page.waitForSelector('#edit-site-name');
