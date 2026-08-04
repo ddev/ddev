@@ -23,6 +23,10 @@ export DDEV_PERF_REPEAT="${DDEV_PERF_REPEAT:-3}"
 metrics_json='{}'
 add_metric() {
   local line="$1"
+  if ! jq -e . >/dev/null 2>&1 <<<"$line"; then
+    echo "FATAL: expected a JSON metric line but got: '$line'" >&2
+    exit 1
+  fi
   metrics_json=$(jq --argjson m "$line" '. + {($m.metric): $m.value_ms}' <<<"$metrics_json")
 }
 

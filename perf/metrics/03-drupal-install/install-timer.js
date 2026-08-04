@@ -29,9 +29,14 @@ function sleep(ms) {
   // system/NSS trust store mkcert -install populates, so it won't trust DDEV's
   // local cert on every environment. Both are fine since this only ever
   // navigates to the project's own core/install.php on localhost.
+  // protocolTimeout: Puppeteer's own CDP round-trip timeout defaults to 180s,
+  // independent of the page.setDefaultTimeout(0) below -- a slow cold-start
+  // install (exactly what this metric measures) can exceed that on a loaded
+  // CI runner, so give it plenty of headroom instead of a silent kill.
   const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--ignore-certificate-errors'],
+    protocolTimeout: 600000,
   });
   try {
     const page = await browser.newPage();
