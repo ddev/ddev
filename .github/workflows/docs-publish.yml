@@ -40,6 +40,16 @@ jobs:
           path: checkout-stable
           fetch-depth: 0
 
+      # Perf dashboard data, updated nightly by perf-collect.yml. continue-on-error
+      # because the branch doesn't exist until perf-collect.yml has run once.
+      - name: Checkout performance-data branch
+        continue-on-error: true
+        uses: actions/checkout@v7
+        with:
+          ref: performance-data
+          path: checkout-perf-data
+          fetch-depth: 1
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -103,6 +113,15 @@ jobs:
           EOF
           else
             mv -v checkout-main/site combined-site
+          fi
+
+          # Perf dashboard, one repo-relative Pages site can only have one deploy
+          # per push, so it rides along under /perf/ instead of its own deploy --
+          # see perf-collect.yml.
+          if [ -d checkout-perf-data ]; then
+            mkdir -p combined-site/perf
+            cp -v checkout-perf-data/index.html combined-site/perf/index.html
+            cp -v checkout-perf-data/history.ndjson combined-site/perf/history.ndjson
           fi
 
       - name: Upload pages artifact

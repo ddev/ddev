@@ -97,9 +97,11 @@ under `perf/fixtures/large-tree/` (gitignored) and reused on subsequent runs.
   `workflow_dispatch:` (manual runs).
 - Each leg uploads its JSON result as a build artifact named `perf-result-<DOCKER_TYPE>.json`
   (`perf-macos-shared-providers.yml` uploads several, one per job, within a single build).
-  `perf/collector/collect.js` (run by a separate scheduled workflow) pulls every matching artifact
-  and appends one line per leg to a versioned `history.ndjson` dataset. `perf/collector/dashboard.html`
-  renders trend lines from that dataset — see `perf/collector/README.md`.
+  `perf/collector/collect.js` (run by `.github/workflows/perf-collect.yml` on a schedule) pulls
+  every matching artifact and appends one line per leg to a versioned `history.ndjson` dataset on
+  the `performance-data` branch. `perf/collector/dashboard.html` renders trend lines from that
+  dataset, and is published under `/perf/` on the docs site by `.github/workflows/docs-publish.yml`
+  — see `perf/collector/README.md`.
 
 ## Retiring `ddev-puppeteer`
 

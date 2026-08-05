@@ -12,18 +12,24 @@ should have finished.
   `performance-data` branch.
 - `dashboard.html` is a dependency-free static page: it `fetch()`es
   `history.ndjson` client-side and renders per-metric trend lines, filterable
-  by metric and by leg (platform/arch/docker provider). Published as
-  `index.html` on the `performance-data` branch via GitHub Pages.
+  by metric and by leg (platform/arch/docker provider).
+
+Neither step deploys to GitHub Pages directly. A repo has only one Pages site,
+and `.github/workflows/docs-publish.yml` already deploys the docs there on
+every push to `main`/`stable` -- deploying the dashboard separately would race
+it and the two would overwrite each other. Instead, `perf-collect.yml` commits
+`history.ndjson` and a rendered `index.html` to the `performance-data` branch,
+and (if anything changed) triggers `docs-publish.yml`, which checks out that
+branch and folds the dashboard into the site under `/perf/`.
 
 ## One-time manual setup
 
 These can't be done from the repo itself:
 
-1. Create a `BUILDKITE_API_TOKEN` repository secret with read access to builds
-   and artifacts (Buildkite dashboard → your user → API Access Tokens).
-2. Enable GitHub Pages for `ddev/ddev` with source **GitHub Actions**
-   (repo Settings → Pages).
-3. Once the `.buildkite/perf-*.yml` pipelines exist in the Buildkite dashboard
+1. Add a `BUILDKITE_API_TOKEN` item (read access to builds and artifacts;
+   Buildkite dashboard → your user → API Access Tokens) to the `test-secrets`
+   1Password vault used by the `TESTS_SERVICE_ACCOUNT_TOKEN` repo secret.
+2. Once the `.buildkite/perf-*.yml` pipelines exist in the Buildkite dashboard
    (see `perf/README.md`), update `pipelines.json` with their real slugs —
    the ones checked in are suggested names, not guaranteed to match what
    was actually created.

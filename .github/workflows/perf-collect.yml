@@ -1,13 +1,18 @@
 name: Collect and publish nightly performance results
 
 # Runs after the nightly perf-*.yml (Buildkite) and perf-linux.yml (GitHub
-# Actions) benchmark jobs should have finished, pulls each leg's latest
-# result, appends to the versioned history.ndjson dataset, and publishes the
-# dashboard via GitHub Pages. See perf/README.md.
+# Actions) benchmark jobs should have finished. Pulls each leg's latest
+# result(s), appends them to the versioned history.ndjson dataset on the
+# performance-data branch, and (if anything changed) triggers docs-publish.yml
+# to redeploy Pages. docs-publish.yml owns the actual Pages deployment and
+# folds the dashboard in under /perf/ -- a repo has only one Pages site, and
+# docs-publish.yml already deploys the docs there on every push to
+# main/stable, so this workflow deploying to the same site directly would
+# race it and overwrite the docs (or vice versa). See perf/README.md.
 #
 # One-time manual setup required (can't be done from this repo):
-#   - Create a BUILDKITE_API_TOKEN repo secret (read access to builds/artifacts).
-#   - Enable GitHub Pages for this repo with source "GitHub Actions".
+#   - Add a BUILDKITE_API_TOKEN item (read access to builds/artifacts) to the
+#     test-secrets 1Password vault used by TESTS_SERVICE_ACCOUNT_TOKEN.
 #   - Update perf/collector/pipelines.json with the actual Buildkite pipeline
 #     slugs once the perf-*.yml pipelines are created in the Buildkite dashboard.
 
@@ -18,8 +23,7 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
+  actions: write
 
 concurrency:
   group: perf-collect
@@ -29,6 +33,14 @@ jobs:
   collect:
     runs-on: ubuntu-latest
     steps:
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v4
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.TESTS_SERVICE_ACCOUNT_TOKEN }}"
+          BUILDKITE_API_TOKEN: "op://test-secrets/BUILDKITE_API_TOKEN/credential"
+
       - uses: actions/checkout@v7
         with:
           fetch-depth: 1
@@ -48,7 +60,6 @@ jobs:
 
       - name: Collect results
         env:
-          BUILDKITE_API_TOKEN: ${{ secrets.BUILDKITE_API_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           touch ../performance-data/history.ndjson
@@ -56,26 +67,23 @@ jobs:
           cp perf/collector/dashboard.html ../performance-data/index.html
 
       - name: Commit and push results
+        id: commit
         run: |
           cd ../performance-data
           git config user.name "ddev-perf-bot"
           git config user.email "actions@github.com"
           git add history.ndjson index.html
-          git diff --cached --quiet || git commit -m "Add nightly performance results $(date -u +%F)"
+          if git diff --cached --quiet; then
+            echo "No new results to commit"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Add nightly performance results $(date -u +%F)"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
           git push origin performance-data
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ../performance-data
-
-  deploy:
-    needs: collect
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Trigger docs-publish rebuild
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run docs-publish.yml --repo "$GITHUB_REPOSITORY" --ref main
