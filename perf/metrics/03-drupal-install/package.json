@@ -8,9 +8,9 @@
     "start": "node install-timer.js"
   },
   "dependencies": {
-    "puppeteer": "^24.11.2"
+    "puppeteer": "^25.5.0"
   },
   "allowScripts": {
-    "puppeteer@24.43.1": true
+    "puppeteer@25.5.0": true
   }
 }

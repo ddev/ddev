@@ -43,6 +43,13 @@ architecture; this file is just "where are we right now."
 - `docs/content/developers/buildkite-testmachine-setup.md` documents the
   Node.js + Chrome-runtime-shared-lib apt packages WSL2/Linux testbots need
   (committed `2c63f3ae2`).
+- **Just fixed, not yet committed**: bumped `puppeteer` in
+  `perf/metrics/03-drupal-install/package.json` from `^24.11.2` to `^25.5.0`
+  and regenerated `package-lock.json` — root-causes the macOS Puppeteer
+  blocker below (upstream bug
+  [#14957](https://github.com/puppeteer/puppeteer/issues/14957): unmaintained
+  `extract-zip@2.0.1` silently truncates browser extraction on Node.js 26).
+  See "The macOS blocker in detail" for the full writeup.
 
 ## Buildkite side: 6 pipelines created, all currently red
 
@@ -59,13 +66,21 @@ they don't fire on every push while this is still on a feature branch.
 | `ddev-perf-wsl2-docker-inside`          | shares the `wsl2-mirrored` pool tags                                 | Was stuck "scheduled" waiting for an agent — not a bug, just no free agent yet |
 | `ddev-perf-wsl2-mirrored`               | `tb-wsl-12`, `tb-wsl-14`                                              | Got past the earlier missing-`libasound.so.2` issue; then hit the now-fixed silent-failure bug in `05-drush-install.sh`. Should retry now that `run_quiet` is in. |
 
-### The macOS blocker in detail
+### The macOS blocker in detail — root-caused and fixed (2026-08-05)
 
-Puppeteer's Chrome-for-Testing installer only checks whether
-`~/.cache/puppeteer/<browser>/<version>/` **exists** before skipping a
-re-download — it never verifies the executable inside is actually present.
-Something (unknown — predates this work) left incomplete downloads sitting
-in that cache on multiple machines. Symptom is one of:
+Reproduced locally on a macOS arm64 checkout: `rm -rf ~/.cache/puppeteer` +
+`npm ci` alone does NOT fix this — cache-cleared and re-downloaded from
+scratch, the exact same broken state came back immediately. This is a known
+upstream bug, not stale/leftover machine state:
+[puppeteer/puppeteer#14957](https://github.com/puppeteer/puppeteer/issues/14957) —
+`@puppeteer/browsers`'s (at the version we had pinned) transitive dependency
+`extract-zip@2.0.1` (unmaintained since 2020) silently aborts mid-extraction
+on Node.js 26 without raising an error. The zip downloads fine (verified with
+`unzip -l` — all entries present, valid archive); only the small metadata
+files (`ABOUT`, `LICENSE.*`) get extracted, the large binaries
+(`chrome-headless-shell`, and `Google Chrome for Testing Framework` inside
+the full Chrome bundle) are silently dropped, and `npm ci` exits 0. Symptom
+is one of:
 
 ```
 dlopen ... Google Chrome for Testing Framework ... (no such file)
@@ -80,20 +95,30 @@ npm error     - DefaultProvider: The browser folder (...) exists but the
 npm error       executable (...) is missing
 ```
 
-**Fix, per machine, as the `testbot` user:**
+**Fix (already applied, commit pending): bump the `puppeteer` dependency.**
+Puppeteer's own fix for #14957 was to drop `extract-zip` entirely and shell
+out to the system `unzip` — that landed in `@puppeteer/browsers@3.0.2`, first
+pulled in by `puppeteer@25.0.2`. `perf/metrics/03-drupal-install/package.json`
+was pinned to `puppeteer: "^24.11.2"`, stuck on the broken `2.13.x`
+`@puppeteer/browsers` line. Bumped to `^25.5.0` (latest at the time) and
+regenerated `package-lock.json`. `install-timer.js`'s `require('puppeteer')`
+still works unchanged against Puppeteer 25's ESM-only package, since Node
+22+ natively supports `require(esm)` for synchronous ESM modules — no code
+changes needed there.
 
-```bash
-rm -rf ~/.cache/puppeteer
-```
+Verified locally, 3x from a fully clean `~/.cache/puppeteer` + fresh
+`node_modules` (matching exactly what CI does): `npm ci` now extracts both
+`chrome` and `chrome-headless-shell` completely every time, and the full
+`drupal_install_s` metric runs clean end-to-end. **No manual `unzip` repair,
+no maintenance-script changes, no per-machine SSH work needed** — this was a
+plain outdated-dependency bug, already fixed upstream.
 
-Then a plain `npm ci` in any checkout's `perf/metrics/03-drupal-install/`
-re-downloads cleanly (the cache is shared per-user across all checkouts on
-that machine, so it doesn't matter which checkout triggers it).
-
-Confirmed broken and **not yet fixed**: `macstadium-m1-1.local`,
-`tb-macos-arm64-6`. Untested: `tb-macos-arm64-5`, `tb-macos-arm64-7`. Fixed:
-`tb-macos-arm64-4`. Given 3 of 5 machines checked so far were bad, assume all
-5 need it rather than discovering each one by triggering another build.
+Given the version bump is the real fix, the 5 macOS machines almost certainly
+don't need individual repair once this branch's `package-lock.json` update is
+in place — the next `npm ci` on each will just pull the fixed
+`@puppeteer/browsers`. `tb-macos-arm64-4`, previously marked "fixed" via a
+cache-clear that (per this finding) shouldn't have worked, is worth a retry
+to confirm, but no special-casing should be needed.
 
 Since two pipelines (`docker-desktop-arm64`'s 2-machine pool,
 `shared-providers`' 3-machine pool) round-robin across machines, a pipeline
@@ -154,11 +179,12 @@ Gotchas hit while doing this work:
 
 ## To resume
 
-1. On each of `macstadium-m1-1.local`, `tb-macos-arm64-5`, `-6`, `-7`: SSH in
-   as `testbot` and `rm -rf ~/.cache/puppeteer`, then do a clean `npm ci` in
-   `perf/metrics/03-drupal-install/` (any checkout — see above) to confirm
-   both `chrome` and `chrome-headless-shell` download and launch cleanly
-   before trusting a real Buildkite retry.
+1. The `puppeteer` version bump (see "The macOS blocker in detail") should
+   make this self-healing on retry — no per-machine SSH/repair work expected.
+   Retrigger a build on each of `macstadium-m1-1.local`, `tb-macos-arm64-4`,
+   `-5`, `-6`, `-7` (via the round-robin pools) and confirm `npm ci` extracts
+   both `chrome` and `chrome-headless-shell` cleanly; only fall back to
+   investigating a specific machine if one still fails after this fix.
 2. Once all 5 macOS machines are clean, retrigger
    `ddev-perf-macos-docker-desktop-arm64` and `ddev-perf-macos-shared-providers`
    (see `bk build create` above) and watch for a clean pass all the way
@@ -169,9 +195,11 @@ Gotchas hit while doing this work:
    `ddev-perf-wsl2-docker-inside` ever picked up an agent.
 4. Separately (the real open question): on `tb-win11-10`, run
    `npx puppeteer browsers install chrome` by hand to see why the Buildkite
-   job's Chrome download produced no output/error at all. That's the actual
-   test of whether headless Chrome can run under Buildkite's Windows service
-   context — nothing else here answers it yet.
+   job's Chrome download produced no output/error at all. The `puppeteer`
+   version bump may already fix this too if it was the same
+   extract-zip-on-Node-26 bug, but confirm directly rather than assuming —
+   that's the actual test of whether headless Chrome can run under
+   Buildkite's Windows service context at all.
 5. Once at least one pipeline is fully green, exercise the real end-to-end
    dashboard deploy before merging: `gh workflow run perf-linux.yml|perf-collect.yml|docs-publish.yml --ref 20260726_rfay_perf_testing`
    (all three already support `workflow_dispatch`).
