@@ -15,6 +15,7 @@ env:
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
   DDEV_NONINTERACTIVE: "true"
+  DDEV_NO_INSTRUMENTATION: "true"
   DOCKER_TYPE: "docker-ce"
 
 jobs:
@@ -51,8 +52,13 @@ jobs:
       - name: Provision benchmark project
         run: |
           ddev version
-          # Reused across nightly runs rather than recreated every time -- see
-          # perf/README.md and .buildkite/perf.sh for why.
+          # Unlike the Buildkite legs, which reuse a persistent codebase across
+          # nightly runs (see .buildkite/perf.sh), this runner is ephemeral: the
+          # else-branch below never fires and every run provisions from scratch.
+          # The structure is kept identical to perf.sh's on purpose, so the two
+          # can't drift if this ever moves to a self-hosted runner. Consequence
+          # for reading the numbers: this leg's caches are always cold where the
+          # Buildkite legs' are warm -- see perf/README.md.
           PERF_PROJECT_DIR="$HOME/tmp/ddev-perf-drupal11"
           mkdir -p "$PERF_PROJECT_DIR"
           if [ ! -d "$PERF_PROJECT_DIR/web/core" ]; then

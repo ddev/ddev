@@ -103,6 +103,43 @@ under `perf/fixtures/large-tree/` (gitignored) and reused on subsequent runs.
   dataset, and is published under `/perf/` on the docs site by `.github/workflows/docs-publish.yml`
   — see `perf/collector/README.md`.
 
+## Reading the numbers: what is and isn't comparable
+
+- **Across legs, for the same metric**: this is the intended comparison, and the "Compare
+  environments" view exists for it. It deliberately doesn't normalize for the fact that legs run on
+  different machines — Docker-provider/platform overhead *is* the thing being measured.
+- **The Linux leg is not directly comparable to the Buildkite legs.** GitHub-hosted runners are
+  ephemeral, so `perf-linux.yml` provisions the Drupal codebase from scratch every night and starts
+  with cold image, Composer, and OS page caches. Every Buildkite leg reuses a persistent codebase
+  and warm caches. Trends *within* the Linux leg are meaningful; a Linux-vs-macOS bar comparison
+  mostly measures that difference.
+- **Over time, within one leg**: meaningful, with the caveat that the round-robin pools
+  (`tb-macos-arm64-5/6/7`) can land a given provider on a different physical machine each night.
+
+## Relationship to `perf-start-time.yml`
+
+`.github/workflows/perf-start-time.yml` predates this harness and overlaps it: it also measures
+`ddev start` and `ddev utility rebuild` on Linux nightly, and exists for the same regression
+(#8600) that `ddev_rebuild_s` cites. The two are kept separate on purpose and are not redundant:
+
+- `perf-start-time.yml` is a **gate**: it also runs on PRs touching the build-layer files, compares
+  against a baseline ref in the same job on the same machine, and is meant to fail.
+- This harness is a **trend record**: nightly, cross-provider, absolute numbers, no pass/fail.
+
+Neither supersedes the other. If `ddev_rebuild_s`/`ddev_start_cold_s` here ever become a CI gate,
+revisit — at that point one of them should go.
+
+## Assumption: one Buildkite agent per testbot
+
+The `perf-*.yml` pipelines reuse the same `agents:` tags as the correctness pipelines, and
+`01-ddev-start.sh` runs `ddev poweroff` + `docker system prune -f` before each timed sample. That
+is only safe because each testbot machine runs a single `buildkite-agent` slot, so a perf job and a
+test job are never in flight on the same machine at once. `.buildkite/test.sh` already relies on
+the same exclusivity (it does `ddev poweroff` and `docker rm -f` against every container on the
+machine), so this adds no new assumption — but if a testbot is ever given more than one agent slot,
+both suites break, not just this one. `perf-macos-shared-providers.yml` handles the related but
+distinct problem of one nightly run monopolizing a shared *pool*; see the comment at its top.
+
 ## Retiring `ddev-puppeteer`
 
 Once this harness is validated in CI, the [ddev-puppeteer](https://github.com/ddev/ddev-puppeteer)

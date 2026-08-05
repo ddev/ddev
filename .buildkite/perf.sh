@@ -9,6 +9,11 @@ set -eu -o pipefail
 
 export GIT_PAGER=""
 
+export DDEV_NONINTERACTIVE=true
+# Seven-plus legs run this nightly; without this they'd report as real user
+# activity in analytics.
+export DDEV_NO_INSTRUMENTATION=true
+
 if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAGE:-} == *"[skip ci]"* ]]; then
   echo "+++ SKIP: Build skipped due to commit message"
   exit 0
@@ -73,7 +78,17 @@ if [ ! -d "$PERF_PROJECT_DIR/web/core" ]; then
   )
 else
   echo "Reusing existing Drupal11 codebase at $PERF_PROJECT_DIR"
-  ( cd "$PERF_PROJECT_DIR" && ddev start -y )
+  (
+    cd "$PERF_PROJECT_DIR"
+    # Re-assert the performance mode on every run, not just at first provision:
+    # it lives in the project's own .ddev/config.yaml, which outlives the run, so
+    # a leg whose PERF_PERFORMANCE_MODE changed (or whose project predates it)
+    # would otherwise keep benchmarking under the old mode indefinitely.
+    if [ -n "${PERF_PERFORMANCE_MODE:-}" ]; then
+      ddev config --performance-mode="$PERF_PERFORMANCE_MODE"
+    fi
+    ddev start -y
+  )
 fi
 
 # drupal/recommended-project doesn't include drush/drush, which 05-drush-install.sh

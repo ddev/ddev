@@ -90,6 +90,29 @@ function latestLinuxResult() {
   return JSON.parse(fs.readFileSync(path.join(tmpDir, 'perf-result.json'), 'utf8'));
 }
 
+// Identity of one data point, matching dashboard.html's legKey() plus the run's
+// timestamp. Used to dedup: each source below hands back the latest *passed*
+// build, so a leg that failed (or didn't run) tonight yields last night's record
+// again, unchanged. Appending it blind would double-count that measurement in
+// the trend line, the trailing median, and the regression flag.
+function pointKey(row) {
+  return `${row.timestamp}|${row.os}/${row.arch}/${row.docker_provider}`;
+}
+
+function existingPointKeys(historyPath) {
+  if (!fs.existsSync(historyPath)) return new Set();
+  const keys = new Set();
+  for (const line of fs.readFileSync(historyPath, 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      keys.add(pointKey(JSON.parse(line)));
+    } catch (err) {
+      console.warn(`Ignoring unparseable history line: ${err.message}`);
+    }
+  }
+  return keys;
+}
+
 async function main() {
   const results = [];
 
@@ -113,9 +136,26 @@ async function main() {
     return;
   }
 
-  const lines = results.map((r) => JSON.stringify(r));
+  const seen = existingPointKeys(HISTORY_PATH);
+  const fresh = [];
+  for (const row of results) {
+    const key = pointKey(row);
+    if (seen.has(key)) {
+      console.log(`Skipping already-recorded result: ${key}`);
+      continue;
+    }
+    seen.add(key);
+    fresh.push(row);
+  }
+
+  if (!fresh.length) {
+    console.warn('All collected results were already recorded; leaving history.ndjson unchanged');
+    return;
+  }
+
+  const lines = fresh.map((r) => JSON.stringify(r));
   fs.appendFileSync(HISTORY_PATH, lines.join('\n') + '\n');
-  console.log(`Appended ${lines.length} result(s) to ${HISTORY_PATH}`);
+  console.log(`Appended ${lines.length} new result(s) of ${results.length} collected to ${HISTORY_PATH}`);
 }
 
 main().catch((err) => {

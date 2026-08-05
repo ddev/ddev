@@ -118,10 +118,19 @@ jobs:
           # Perf dashboard, one repo-relative Pages site can only have one deploy
           # per push, so it rides along under /perf/ instead of its own deploy --
           # see perf-collect.yml.
-          if [ -d checkout-perf-data ]; then
+          #
+          # Guarded per file, not on the directory: actions/checkout creates its
+          # `path:` directory before it fails on a missing ref, so an empty
+          # checkout-perf-data/ exists whenever the performance-data branch
+          # doesn't. Testing the directory would let `cp` fail and take the whole
+          # docs deploy with it. Same reason the checkout-stable guards above test
+          # inner paths rather than the checkout dir.
+          if [ -f checkout-perf-data/index.html ]; then
             mkdir -p combined-site/perf
             cp -v checkout-perf-data/index.html combined-site/perf/index.html
-            cp -v checkout-perf-data/history.ndjson combined-site/perf/history.ndjson
+            if [ -f checkout-perf-data/history.ndjson ]; then
+              cp -v checkout-perf-data/history.ndjson combined-site/perf/history.ndjson
+            fi
           fi
 
       - name: Upload pages artifact

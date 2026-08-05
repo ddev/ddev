@@ -33,7 +33,12 @@ jobs:
   collect:
     runs-on: ubuntu-latest
     steps:
+      # continue-on-error so a missing BUILDKITE_API_TOKEN vault item doesn't turn
+      # every nightly run red before the one-time setup below is done. collect.js
+      # already degrades per-source: without the token it warns and skips the
+      # Buildkite pipelines, still collecting the GitHub Actions Linux leg.
       - name: Load 1password secret(s)
+        continue-on-error: true
         uses: 1password/load-secrets-action@v4
         with:
           export-env: true
@@ -45,14 +50,24 @@ jobs:
         with:
           fetch-depth: 1
 
+      # performance-data is a data-only orphan branch: it holds history.ndjson and
+      # index.html and nothing else. Branching it off main's HEAD instead would
+      # give it a copy of the whole repo tree plus the two data files, and leave a
+      # branch that diverges from main forever.
       - name: Check out or create performance-data branch
         run: |
           if git ls-remote --exit-code --heads origin performance-data >/dev/null 2>&1; then
             git fetch origin performance-data:performance-data
+            git worktree add ../performance-data performance-data
           else
-            git branch performance-data
+            echo "No performance-data branch yet; creating it as an orphan."
+            git worktree add --detach ../performance-data HEAD
+            git -C ../performance-data checkout --orphan performance-data
+            # checkout --orphan keeps the working tree and index; empty both so the
+            # first commit contains only the data files added below.
+            git -C ../performance-data rm -rq --cached .
+            git -C ../performance-data clean -qfdx
           fi
-          git worktree add ../performance-data performance-data
 
       - uses: actions/setup-node@v5
         with:
@@ -79,9 +94,13 @@ jobs:
           else
             git commit -m "Add nightly performance results $(date -u +%F)"
             echo "changed=true" >> "$GITHUB_OUTPUT"
+            git push origin performance-data
           fi
-          git push origin performance-data
 
+      # workflow_dispatch and repository_dispatch are the two documented exceptions
+      # to the rule that events raised with GITHUB_TOKEN don't start a new workflow
+      # run, so this dispatch does fire docs-publish.yml. Only on an actual change,
+      # so a no-result night doesn't redeploy the docs site for nothing.
       - name: Trigger docs-publish rebuild
         if: steps.commit.outputs.changed == 'true'
         env:
