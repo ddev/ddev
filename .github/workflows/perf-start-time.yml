@@ -64,10 +64,9 @@ jobs:
 
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@main
+        uses: Homebrew/actions/setup-homebrew@2026.08.03.2
         with:
           brew-gh-api-token: ${{ secrets.GITHUB_TOKEN }}
-          setup-sandbox: true
 
       - name: Remove unnecessary items on disk
         uses: jlumbroso/free-disk-space@main
@@ -83,7 +82,7 @@ jobs:
       - name: Install test dependencies (linux-setup.sh)
         run: ./.github/workflows/linux-setup.sh
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version: '>=1.23'
           check-latest: true

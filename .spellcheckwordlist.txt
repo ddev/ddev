@@ -12,6 +12,7 @@ Available
 Asterios
 Bash
 Bluesky
+BuildKit
 CakePHP
 Callgraph
 Camino
@@ -90,6 +91,7 @@ HMR
 HOWTO
 HeidiSQL
 Homebrew
+Homebrew's
 HSTS
 Ibexa
 IDE
@@ -119,6 +121,7 @@ Manage
 MariaDB
 Matthias
 MinIO
+MODX
 Misconfigured
 Monorepo
 MUTAGEN_DATA_DIRECTORY
@@ -150,6 +153,7 @@ PathMaps
 PhpStorm
 PhpStorm's
 Podman
+Podman's
 PowerShell
 ProcessWire
 Pull
@@ -408,6 +412,7 @@ gzipped
 h
 harm
 healthcheck
+healthchecks
 help
 homeadditions
 homebrew
@@ -496,6 +501,7 @@ mkcert
 mkdir
 mnt
 modify
+modx
 mongo
 moodle
 mongodb

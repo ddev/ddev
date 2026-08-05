@@ -392,6 +392,25 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/recipes/super-easy-vegetarian-pasta-bake", Expect: "Super easy vegetarian pasta bake TEST PROJECT"},
 			FilesImageURI:                 "/sites/default/files/Logo.png",
 		},
+		// 23: modx (MODX Revolution 3.2.1)
+		// Fixture: MODX Revolution 3.2.1-pl (code with core/vendor/ committed, plus
+		// db.sql.tar.gz and files.tgz built by its build-fixtures.sh), hosted at
+		// https://github.com/ddev/test-modx (ddev-automated-test branch,
+		// release v3.2.1). Validated end-to-end with TestDdevFullSiteSetup.
+		// A MODX Revolution 2.x fixture can be added the same way.
+		{
+			Name:                          "TestPkgModx",
+			SourceURL:                     "https://github.com/ddev/test-modx/archive/refs/tags/v3.2.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-modx-3.2.1/",
+			DBTarURL:                      "https://github.com/ddev/test-modx/releases/download/v3.2.1/db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/test-modx/releases/download/v3.2.1/files.tgz",
+			FullSiteTarballURL:            "",
+			Docroot:                       "",
+			Type:                          nodeps.AppTypeMODX,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "MODX"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "MODX Revolution"},
+			FilesImageURI:                 "/assets/uploads/ddev.png",
+		},
 	}
 
 	FullTestSites = TestSites
@@ -1938,6 +1957,37 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 		out = strings.Trim(out, "\n\r ")
 		assert.Equal("2", out)
+
+		// base_db "initializer" seeding is only wired up for MariaDB/MySQL
+		// (containers/ddev-dbserver); PostgreSQL uses a different image/entrypoint.
+		// Not supported on the very old, EOL 5.5 versions of either.
+		isVeryOldDB := dbVersion == "5.5"
+		if (dbType == nodeps.MariaDB || dbType == nodeps.MySQL) && !isVeryOldDB {
+			// db currently has the 2-row "users" table from the snapshot restore above.
+			// Snapshotting it as "initializer" and then wiping the db volume and
+			// restarting should restore this same data automatically, ahead of the
+			// normal empty starter database.
+			_, err = app.Snapshot("initializer")
+			require.NoError(t, err, "could not create initializer snapshot for %s", dbTypeVersion)
+
+			err = app.Stop(true, false)
+			require.NoError(t, err)
+			err = app.Start()
+			require.NoError(t, err, "failed to start %s after seeding from initializer snapshot", dbTypeVersion)
+
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     c[dbType],
+			})
+			assert.NoError(err)
+			out = strings.Trim(out, "\n\r ")
+			assert.Equal("2", out, "initializer snapshot did not seed a fresh db volume for %s", dbTypeVersion)
+
+			// "initializer" is a reserved name; clear it so the next dbTypeVersion
+			// iteration can create its own.
+			err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+			assert.NoError(err)
+		}
 
 		err = app.Stop(true, false)
 		assert.NoError(err)
@@ -4084,23 +4134,18 @@ func TestPHPWebserverType(t *testing.T) {
 	}
 }
 
-// TestWebserverMissingIndexExplanation checks that a request against a
-// docroot with no index.php/index.html gets ddev-webserver's own explanatory
-// 404 (see containers/ddev-webserver/.../common.d/404.conf and
-// .../apache2/conf-enabled/404.conf), including the X-Ddev-404-Source
-// header, on both nginx-fpm and apache-fpm.
+// TestWebserverMissingIndexExplanation checks that a docroot with no
+// index.php/index.html gets ddev-webserver's own explanations on both
+// nginx-fpm and apache-fpm (see the 404.conf and 403.conf files under
+// containers/ddev-webserver): an explanatory 404 with the X-Ddev-404-Source
+// header for a nonexistent file, and an explanatory 403 with the
+// X-Ddev-403-Source header for the docroot directory itself.
 //
-// A deliberately empty docroot (no index file, no .htaccess) is used rather
-// than one of the TestSites: a working CMS front controller would route the
-// request to the app itself via try_files/mod_rewrite, so the app's own
-// (not ddev-webserver's) 404 would be tested instead.
-//
-// It also checks a directly-requested nonexistent .php file. Both
-// webservers reject it before ever reaching php-fpm: nginx via
-// `try_files $uri =404;` in the `\.php$` location block, apache via the
-// `-f %{REQUEST_FILENAME}` guard on its FilesMatch handler -- so
-// ddev-webserver's explanation is shown on both, rather than php-fpm's own
-// "No input file specified" 404 passing through unchanged.
+// An empty docroot is used rather than a TestSite, whose front controller would
+// route the request to the app and return the app's own 404. A nonexistent .php
+// file is checked too: both webservers reject it before php-fpm (nginx
+// `try_files $uri =404`, apache `-f %{REQUEST_FILENAME}`), so ddev-webserver's
+// explanation is shown instead of php-fpm's "No input file specified".
 func TestWebserverMissingIndexExplanation(t *testing.T) {
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
 		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
@@ -4142,30 +4187,30 @@ func TestWebserverMissingIndexExplanation(t *testing.T) {
 
 		out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/this-does-not-exist.html", testcommon.WithExpectStatus(http.StatusNotFound))
 		require.NoError(t, err)
-		require.Contains(t, out, "generated by the ddev-webserver container", "for WebserverType=%s expected ddev-webserver's own 404 explanation with no docroot index file present", webserverType)
+		require.Contains(t, out, "ddev-webserver", "for WebserverType=%s expected ddev-webserver's own 404 explanation with no docroot index file present", webserverType)
 		require.NotEmpty(t, resp.Header.Get("X-Ddev-404-Source"), "for WebserverType=%s expected X-Ddev-404-Source header on a webserver-generated 404", webserverType)
 
 		phpOut, phpResp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/this-does-not-exist.php", testcommon.WithExpectStatus(http.StatusNotFound))
 		require.NoError(t, err)
-		require.Contains(t, phpOut, "generated by the ddev-webserver container", "for WebserverType=%s expected ddev-webserver's own 404 explanation for a nonexistent .php file", webserverType)
+		require.Contains(t, phpOut, "ddev-webserver", "for WebserverType=%s expected ddev-webserver's own 404 explanation for a nonexistent .php file", webserverType)
 		require.NotEmpty(t, phpResp.Header.Get("X-Ddev-404-Source"), "for WebserverType=%s expected X-Ddev-404-Source header on a webserver-generated 404", webserverType)
+
+		// The docroot exists but has no index file, so it must produce the 403.
+		out403, resp403, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/", testcommon.WithExpectStatus(http.StatusForbidden))
+		require.NoError(t, err)
+		require.Contains(t, out403, "ddev-webserver", "for WebserverType=%s expected ddev-webserver's own 403 explanation for a docroot with no index file", webserverType)
+		require.NotEmpty(t, resp403.Header.Get("X-Ddev-403-Source"), "for WebserverType=%s expected X-Ddev-403-Source header on a webserver-generated 403", webserverType)
 
 		err = app.Stop(true, false)
 		require.NoError(t, err)
 	}
 }
 
-// TestWebserverPhpstatusUnderMutagen checks that /phpstatus (the container's
-// php-fpm healthcheck endpoint, aliased to /var/www/phpstatus.php outside the
-// docroot) still works under Mutagen on both webservers.
-//
-// Mutagen mounts a nocopy Docker volume at /var/www (see the "project_mutagen"
-// volume in app_compose_template.yaml), which shadows /var/www/phpstatus.php
-// baked into the image. On apache, the php*-fpm.conf FilesMatch handler's
-// `-f %{REQUEST_FILENAME}` guard would then block the proxy to php-fpm since
-// the file doesn't exist on disk -- this is why apache-site.conf has an
-// explicit <Location "/phpstatus"> that unconditionally sets the proxy
-// handler, bypassing that guard for this one virtual endpoint.
+// TestWebserverPhpstatusUnderMutagen checks /phpstatus (aliased to
+// /var/www/phpstatus.php, outside the docroot) on both webservers under Mutagen,
+// whose nocopy volume at /var/www shadows that file. On apache the
+// `-f %{REQUEST_FILENAME}` guard would then block the proxy to php-fpm, which is
+// why apache-site.conf gives /phpstatus its own unconditional proxy handler.
 func TestWebserverPhpstatusUnderMutagen(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("Skipping TestWebserverPhpstatusUnderMutagen on Windows, Mutagen setup takes too long")

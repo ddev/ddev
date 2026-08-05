@@ -251,6 +251,16 @@ func init() {
 			importFilesAction:    magentoImportFilesAction,
 		},
 
+		nodeps.AppTypeMODX: {
+			appTypeDetect:        isModxApp,
+			settingsCreator:      createModxSettingsFile,
+			uploadDirs:           getModxUploadDirs,
+			appTypeSettingsPaths: setModxSiteSettingsPaths,
+			importFilesAction:    modxImportFilesAction,
+			hookDefaultComments:  getModxHooks,
+			defaultWorkingDirMap: docrootWorkingDir,
+		},
+
 		nodeps.AppTypePHP: {
 			postStartAction: nil,
 		},

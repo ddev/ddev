@@ -1004,6 +1004,11 @@ func TestRouterNotRebuiltWithExtraPorts(t *testing.T) {
 // project update the router's network aliases in place rather than recreating
 // the router container.
 func TestRouterNotRebuiltOnHostnameChange(t *testing.T) {
+	// Windows can't handle this test, util.CaptureUserOut() can deadlock around a full app.Start()/Restart(), see #8644
+	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && nodeps.IsWindows() {
+		t.Skip("Skipping TestRouterNotRebuiltOnHostnameChange on Windows")
+	}
+
 	// Start clean.
 	ddevapp.PowerOff()
 

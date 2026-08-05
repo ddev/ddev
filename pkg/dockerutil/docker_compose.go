@@ -10,9 +10,11 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/compose-spec/compose-go/v2/loader"
 	"github.com/compose-spec/compose-go/v2/types"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/cli/cli"
@@ -54,14 +56,20 @@ func NewComposeServiceWithStreams(stdout, stderr io.Writer) (context.Context, ap
 		return nil, nil, err
 	}
 	var ep api.EventProcessor
-	if !output.JSONOutput && isatty.IsTerminal(os.Stdout.Fd()) {
+	switch {
+	case !output.JSONOutput && isatty.IsTerminal(os.Stdout.Fd()):
 		ep = display.Full(stdout, stderr, false)
-	} else {
-		progressOut := output.UserErr.Out
-		if output.JSONOutput {
-			progressOut = &output.JSONProgressWriter{}
-		}
-		ep = display.Plain(progressOut)
+	case output.JSONOutput:
+		ep = display.Plain(&output.JSONProgressWriter{})
+	case globalconfig.DdevDebug:
+		// Explicit opt-in to full per-layer progress verbosity even without a terminal.
+		ep = display.Plain(output.UserErr.Out)
+	default:
+		// Non-interactive output (CI, coder.ddev.com, piped output) with display.Plain
+		// echoes every layer download/extract progress tick, flooding logs with
+		// hundreds of lines per image. Report only the final status of each
+		// top-level resource instead.
+		ep = newQuietEventProcessor(output.UserErr.Out)
 	}
 	opts := []compose.Option{
 		compose.WithOutputStream(stdout),
@@ -71,6 +79,42 @@ func NewComposeServiceWithStreams(stdout, stderr io.Writer) (context.Context, ap
 	svc, err := compose.NewComposeService(dm.cli, opts...)
 	return dm.goContext, svc, err
 }
+
+// quietEventProcessor implements api.EventProcessor, reporting only the final
+// Done/Error/Warning status of each top-level resource (an image pull, a
+// container, ...) and suppressing the per-layer sub-events (ParentID set)
+// that account for most of display.Plain's output volume.
+type quietEventProcessor struct {
+	out      io.Writer
+	mu       sync.Mutex
+	reported map[string]bool
+}
+
+func newQuietEventProcessor(out io.Writer) *quietEventProcessor {
+	return &quietEventProcessor{out: out, reported: map[string]bool{}}
+}
+
+func (q *quietEventProcessor) Start(_ context.Context, _ string) {}
+
+func (q *quietEventProcessor) On(events ...api.Resource) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	for _, e := range events {
+		if e.ParentID != "" {
+			continue
+		}
+		switch e.Status {
+		case api.Done, api.Error, api.Warning:
+			if q.reported[e.ID] {
+				continue
+			}
+			q.reported[e.ID] = true
+			_, _ = fmt.Fprintln(q.out, e.ID, e.Text, e.Details)
+		}
+	}
+}
+
+func (q *quietEventProcessor) Done(_ string, _ bool) {}
 
 // ExitCodeToError converts the (exitCode, err) return of api.Compose.Exec /
 // RunOneOffContainer into a single error usable with errors.As(&cli.StatusError{}).

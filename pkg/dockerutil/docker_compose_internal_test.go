@@ -2,6 +2,7 @@ package dockerutil
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 	"time"
 
@@ -93,6 +94,36 @@ func TestProgressOptsPlainWriterRouting(t *testing.T) {
 
 	require.Contains(t, buf.String(), "routing-check",
 		"display.Plain must write events to the writer it was constructed with")
+}
+
+// TestQuietEventProcessorSuppressesSubEvents verifies that quietEventProcessor
+// drops per-layer sub-events (ParentID set) and in-progress top-level events,
+// only reporting a resource's final Done/Error/Warning status once.
+func TestQuietEventProcessorSuppressesSubEvents(t *testing.T) {
+	var buf bytes.Buffer
+	ep := newQuietEventProcessor(&buf)
+
+	ep.On(
+		// Sub-event (layer download progress) must be dropped entirely.
+		api.Resource{ID: "sha256:layer", ParentID: "ddev/ddev-webserver:latest", Status: api.Working, Text: "Downloading", Details: "45%"},
+		// In-progress top-level event must be dropped.
+		api.Resource{ID: "ddev/ddev-webserver:latest", Status: api.Working, Text: "Pulling"},
+		// Final top-level event must be reported.
+		api.Resource{ID: "ddev/ddev-webserver:latest", Status: api.Done, Text: "Pulled"},
+		// A repeat of the same final event must not be reported twice.
+		api.Resource{ID: "ddev/ddev-webserver:latest", Status: api.Done, Text: "Pulled"},
+		// A different top-level resource erroring out must be reported.
+		api.Resource{ID: "ddev/ddev-dbserver:latest", Status: api.Error, Text: "Error", Details: "pull access denied"},
+	)
+
+	out := buf.String()
+	require.NotContains(t, out, "Downloading", "layer sub-events must be suppressed")
+	require.NotContains(t, out, "Pulling", "in-progress top-level events must be suppressed")
+	require.Equal(t, 1, strings.Count(out, "ddev/ddev-webserver:latest"),
+		"expected exactly one reported line for the webserver image")
+	require.Contains(t, out, "ddev/ddev-webserver:latest Pulled")
+	require.Contains(t, out, "ddev/ddev-dbserver:latest Error")
+	require.Contains(t, out, "pull access denied")
 }
 
 // TestSuppressLogrusFormatterDirect exercises the formatter installed at

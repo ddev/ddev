@@ -326,6 +326,9 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         !!!warning "Podman versions"
             Some distributions ship outdated Podman. Ubuntu 24.04, for example, has Podman 4.9.3. DDEV works best with Podman 5.0 or newer; with Podman 4.x you can proceed by ignoring the warning on `ddev start`.
 
+        !!!warning "Don't mix Podman stacks"
+            Podman is versioned together with its `netavark` and `aardvark-dns` network helpers: Podman 6.x needs `netavark` 2.x, and Podman 4.x/5.x need `netavark` 1.x. Either stack works on its own — all-distribution or all-Homebrew — but *mixing* them makes **every** container fail to start. The usual way to get mixed is to install a newer Podman while your distribution's older `netavark` is still installed. See [Podman rootless troubleshooting](#podman-rootless-troubleshooting).
+
         ### Install Podman
 
         Install Podman with your distribution's package manager (see the [official Podman installation guide for Linux](https://podman.io/docs/installation#installing-on-linux)):
@@ -337,21 +340,42 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         sudo dnf install --refresh podman
         ```
 
+        If your distribution's Podman is too old, [Homebrew](https://brew.sh/) packages a current one. Homebrew's Podman brings its own matching `netavark` and `aardvark-dns`, so remove the distro copies first — otherwise Podman may find the older ones and no container will start:
+
+        ```bash
+        # Ubuntu/Debian
+        sudo apt-get remove -y podman crun netavark aardvark-dns
+        # Fedora
+        sudo dnf remove -y podman crun netavark aardvark-dns
+
+        brew install podman
+        hash -r
+        ```
+
+        !!!warning "If you build Podman from source, don't set `BUILDTAGS`"
+            Podman's `Makefile` computes its build tags by probing the build host, and one of them, `systemd`, decides whether container healthchecks work. `make BUILDTAGS="..."` *replaces* that computed list rather than adding to it, so a hand-written list almost certainly drops `systemd`. Podman then compiles its healthcheck timer functions as no-ops: containers run fine, but none of them ever reports `healthy`, and since `ddev start` waits on exactly that, every project start hangs until it times out. Nothing warns you at runtime, and the only warning at build time describes the consequence as losing "journald support". Use plain `make PREFIX=/usr/local` and add your own tags with `EXTRA_BUILDTAGS=` instead. Check an installed binary with `go version -m $(command -v podman) | grep -- -tags=`.
+
+        !!!warning "Don't set `helper_binaries_dir`"
+            Setting `engine.helper_binaries_dir` in a `containers.conf` *replaces* Podman's helper search path rather than extending it. If your list omits the `libexec/podman` directory next to your `podman` binary, Podman either uses a wrong-version `netavark` or fails with `could not find "netavark"`. Leave it unset unless you are certain you need it.
+
         You can also install [Podman Desktop](https://podman-desktop.io/docs/installation/linux-install) if you prefer a GUI. For more information, see the [Podman tutorials](https://github.com/containers/podman/tree/main/docs/tutorials#readme).
 
-        ### Install the Docker CLI
+        ### Install the Docker CLI and buildx
 
         Podman provides a Docker-compatible API, so you can use the Docker CLI as a front-end for Podman. This lets you use familiar `docker` commands, switch between runtimes with Docker contexts, and keep compatibility with tools that expect the `docker` command.
 
         1. [Set up Docker's repository](https://docs.docker.com/engine/install/).
-        2. Install only the CLI (you don't need `docker-ce`, the Docker engine):
+        2. Install the CLI and the buildx plugin (you don't need `docker-ce`, the Docker engine):
 
             ```bash
             # Ubuntu/Debian
-            sudo apt-get update && sudo apt-get install docker-ce-cli
+            sudo apt-get update && sudo apt-get install docker-ce-cli docker-buildx-plugin
             # Fedora
-            sudo dnf install --refresh docker-ce-cli
+            sudo dnf install --refresh docker-ce-cli docker-buildx-plugin
             ```
+
+        !!!warning "buildx is required, and DDEV won't install it for you"
+            DDEV builds its project images with `docker buildx`, and its default setting (`docker_buildx_version: "system"`) uses whatever buildx is already installed rather than downloading one. Installing only `docker-ce-cli` leaves buildx missing, and `ddev start` then fails at the build step. Check with `docker buildx version`; DDEV requires 0.17.0 or newer.
 
         ### Configure Podman rootless
 
@@ -388,6 +412,15 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         fi
         ```
 
+        Enable lingering for your user, so `systemd --user` keeps a session bus available:
+
+        ```bash
+        sudo loginctl enable-linger $(whoami)
+        ```
+
+        !!!warning "Lingering is not optional"
+            Without a lingering session, `systemd --user` has no D-Bus session bus to manage `cgroup`s through, so Podman quietly falls back to the `cgroupfs` `cgroup` manager. Buildx then pins its BuildKit container to a `cgroup` that a rootless user cannot create, and every Compose build fails with `crun: create /sys/fs/cgroup/docker: Permission denied`. Verify with `podman info --format '{{.Host.CgroupManager}}'`, which must print `systemd`.
+
         Enable the Podman socket and verify it's running (see the [Podman socket activation documentation](https://github.com/containers/podman/blob/main/docs/tutorials/socket_activation.md)):
 
         ```bash
@@ -418,9 +451,30 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         docker ps
         ```
 
+        ### Validate the setup
+
+        DDEV ships a script that checks everything on this page and explains anything it finds. It works with any Podman install, not just Homebrew's, and `--check` changes nothing:
+
+        ```bash
+        curl -fsSL https://raw.githubusercontent.com/ddev/ddev/main/scripts/linux-homebrew-podman-rootless.sh -o /tmp/podman-rootless.sh
+        bash /tmp/podman-rootless.sh --check
+        ```
+
+        It verifies the Podman and `netavark` version pairing, the socket, `cgroup` manager, `subuid`/`subgid` ranges, privileged ports, the Docker context, and buildx. It then stops inferring and starts testing: it runs a real container, builds an image and loads it back into the engine, and watches a container healthcheck report `healthy`. Those last three are the steps `ddev start` fails at on a machine where everything else looks correct. Run the script without arguments to perform the Homebrew-based setup described above.
+
         ### Podman rootless performance optimization
 
-        Podman rootless is slower than Docker (see [Podman run/build performance issues](https://github.com/containers/podman/issues/13226) and the [Podman performance documentation](https://github.com/containers/podman/blob/main/docs/tutorials/performance.md)). To improve performance, install `fuse-overlayfs` and configure the overlay storage driver:
+        Podman rootless is slower than Docker (see [Podman run/build performance issues](https://github.com/containers/podman/issues/13226) and the [Podman performance documentation](https://github.com/containers/podman/blob/main/docs/tutorials/performance.md)). The storage driver is the biggest lever.
+
+        On Linux kernel 5.13 and newer, Podman uses native rootless `overlay`, which is the fastest option and needs no configuration at all. Check what you're getting:
+
+        ```bash
+        podman info --format '{{.Store.GraphDriverName}} {{index .Store.GraphStatus "Native Overlay Diff"}}'
+        ```
+
+        `overlay true` means you're already on the fast path — do nothing. If it prints `overlay false`, something has configured the `fuse-overlayfs` mount program, which *disables* native overlay diff; remove `mount_program` from `~/.config/containers/storage.conf` to get the faster native path back.
+
+        Only on older kernels that lack native rootless overlay should you install `fuse-overlayfs` and point Podman at it:
 
         ```bash
         # Ubuntu/Debian
@@ -441,6 +495,27 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
         !!!warning "Existing containers require a reset"
             If you already have Podman containers, images, or volumes, you'll need to reset Podman for the storage change to take effect: `podman system reset`. This removes all existing containers, images, and volumes (similar to `docker system prune -a`).
+
+        ### Podman rootless troubleshooting
+
+        The Docker CLI hides most Podman-side errors behind a generic message. When something fails, read the real error from the Podman service:
+
+        ```bash
+        journalctl --user -u podman.service --since '-5min'
+        ```
+
+        | Symptom | Cause | Fix |
+        | ------- | ----- | --- |
+        | `unable to upgrade to tcp, received 500` from `docker run`, and containers stuck in `Created` | Your `netavark` major version doesn't match Podman's. The Podman log shows `failed to load network options: invalid type: sequence, expected a map`. | Remove the distribution's `netavark`/`aardvark-dns` so Podman uses its own, or install a Podman matching them. Don't mix stacks. |
+        | `could not find "netavark" in one of [...]` | `engine.helper_binaries_dir` is set and doesn't include the directory holding `netavark`. | Remove the `helper_binaries_dir` setting from your `containers.conf` files. |
+        | `failed to load image: ... Source image rejected: ... is rejected by policy`, after a build that ran to completion | Your `policy.json` rejects by default and doesn't allow the `docker-archive` and `oci-archive` transports that `buildx --load` uses to hand the built image back. Registry pulls go through a different transport and keep working, so pulling, running and building all look healthy. | In the `policy.json` that applies (`~/.config/containers/policy.json` overrides `/etc/containers/policy.json`), add `"docker-archive"` and `"oci-archive"` entries set to `insecureAcceptAnything` under `transports`. That leaves the rest of the policy intact. |
+        | `Cannot connect to the Docker daemon`, and `systemctl --user is-active podman.socket` says `failed` | Repeated activation failures tripped `systemd`'s start limit. Fixing the underlying config doesn't clear this on its own. | `systemctl --user reset-failed podman.socket podman.service`, then `systemctl --user start podman.socket`. |
+        | `crun: create /sys/fs/cgroup/docker: Permission denied` during a build | Podman is using the `cgroupfs` `cgroup` manager because there's no lingering user session. | `sudo loginctl enable-linger $(whoami)`, then confirm `podman info --format '{{.Host.CgroupManager}}'` prints `systemd`. |
+        | `compose build requires buildx 0.17.0 or later` | The buildx plugin isn't installed. | `sudo apt-get install docker-buildx-plugin` |
+        | `Must provide a valid firewall backend, got iptables` | Newer `netavark` dropped the `iptables` backend, but Podman still requests it. | Add `firewall_driver = "nftables"` under `[network]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`. |
+        | `registries.conf must be in v2 format but is in v1` | Podman 6 rejects the old registries format. | Replace `/etc/containers/registries.conf` with `unqualified-search-registries = ["docker.io"]`. |
+        | `Include journald in compilation path to log to systemd journal` | Homebrew's `conmon` is built without `journald` support, but Podman defaults to `journald` logging. | Set `log_driver = "k8s-file"` under `[containers]` and `events_logger = "file"` under `[engine]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`. |
+        | `failed to become ready ... timed out without becoming healthy` for every container, with an empty health log (`{"Status":"starting","FailingStreak":0,"Log":null}`) | Podman schedules each container's healthcheck as a transient `systemd` **user** timer. Either your Podman was built without its `systemd` build tag, which makes the timer functions silent no-ops, or your user session cannot create transient units. The healthcheck script itself is fine — running it with `podman exec` succeeds, which is why this is easy to misdiagnose. | Check the tags with `go version -m $(command -v podman) \| grep -- -tags=`. If `systemd` is missing, rebuild Podman without overriding `BUILDTAGS`. Otherwise check `sudo loginctl enable-linger $(whoami)` and that `systemd-run --user --quiet /bin/true` succeeds. |
 
 === "Windows"
 

@@ -69,6 +69,29 @@ setup() {
   assert_equal "${output}" "$noninteractive_path"
 }
 
+@test "Verify /usr/local/n and /var/log are baked group-0-writable but not world-writable" {
+  # Regression guard for https://github.com/ddev/ddev/issues/8640: these
+  # directories must be owned by group 0 (root) and group-writable, so a
+  # per-project user (added to group 0 by WriteBuildDockerfile) can write
+  # into them (e.g. `npm install -g`, or an app logging to /var/log)
+  # without either directory being world-writable (see #8379).
+  for dir in /usr/local/n /var/log; do
+    run docker exec "$CONTAINER_NAME" stat -c '%g %A' "$dir"
+    assert_success
+    assert_output --regexp "^0 .{5}w.{2}[^w].\$"
+  done
+}
+
+@test "Verify a group-0 member (not the file owner) can write into /usr/local/n and /var/log" {
+  # Simulates the supplementary-group-0 membership that WriteBuildDockerfile
+  # adds for every project user (useradd -G tty,0), which is how a non-root,
+  # non-www-data user gets write access to these directories.
+  for dir in /usr/local/n /var/log; do
+    run docker run --rm -u "$MOUNTUID:$MOUNTGID" --group-add 0 "$DOCKER_IMAGE" bash -c "touch '$dir/ddev-group0-write-test' && rm -f '$dir/ddev-group0-write-test'"
+    assert_success
+  done
+}
+
 @test "verify that xdebug is disabled by default when using start.sh to start" {
   run docker exec "$CONTAINER_NAME" php --version
   assert_success

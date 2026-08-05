@@ -1549,8 +1549,6 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	warnMissingDocroot(app)
-
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
@@ -1566,11 +1564,18 @@ func (app *DdevApp) Start() error {
 		util.Warning("Unable to pull Docker images: %v", pullErr)
 	}
 
+	// dbNeedsInitialization means the database volume has no database in it yet,
+	// so the db container will seed it from a base_db seed during this start.
+	dbNeedsInitialization := false
 	if !app.IsDBOmitted() {
 		// OK to start if dbType is empty (nonexistent) or if it matches
-		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
+		dbType, err := app.GetExistingDBType()
+		if err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
 			return fmt.Errorf("unable to start project %s because the configured database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s' and then you might want to try 'ddev utility migrate-database %s', see docs at %s", app.Name, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://docs.ddev.com/en/stable/users/extend/database-types/")
 		}
+		// A snapshot restore hands the db container its own restore target, so it
+		// never consults a base_db seed even with an empty volume.
+		dbNeedsInitialization = dbType == "" && !strings.HasPrefix(os.Getenv("DDEV_DB_CONTAINER_COMMAND"), RestoreSnapshotCommand)
 	}
 
 	app.CreateUploadDirsIfNecessary()
@@ -1806,6 +1811,18 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	// With no_bind_mounts the db container sees /mnt/snapshots as a Docker volume
+	// instead of .ddev/db_snapshots, so an `initializer` snapshot has to be copied
+	// in for the db container to find it when it seeds a fresh database volume.
+	if globalconfig.DdevGlobalConfig.NoBindMounts && dbNeedsInitialization {
+		if initializer := app.GetInitializerSnapshotFile(); initializer != "" {
+			err = dockerutil.CopyIntoVolume(initializer, "ddev-"+app.Name+"-snapshots", "", uid, "", false)
+			if err != nil {
+				return fmt.Errorf("failed to copy %s into the snapshots volume: %v", initializer, err)
+			}
+		}
+	}
+
 	// Wait for background chown to finish before proceeding.
 	// SSH agent runs after chown (needs volumes ready) and after WriteDockerComposeYAML
 	// (reads app.ComposeYaml) — so it runs sequentially here to avoid a data race.
@@ -1865,6 +1882,20 @@ func (app *DdevApp) Start() error {
 	}
 	for _, danglingImage := range danglingImages {
 		_ = dockerutil.RemoveImage(danglingImage.ID)
+	}
+
+	// Say what a brand-new database volume is about to be seeded from, before the
+	// (possibly long) wait for the db container to become healthy, and extend that
+	// wait's timeout to accommodate a large seed. The dbimage is built by now, so a
+	// seed baked into a derived image can be seen.
+	origDefaultContainerTimeout := app.DefaultContainerTimeout
+	if dbNeedsInitialization {
+		if description := app.BaseDBSeedDescription(); description != "" {
+			if t, _ := strconv.Atoi(app.DefaultContainerTimeout); t <= SnapshotRestoreDefaultWaitTime {
+				app.DefaultContainerTimeout = strconv.Itoa(SnapshotRestoreDefaultWaitTime)
+			}
+			app.announceBaseDBSeed(description, app.GetMaxContainerWaitTime())
+		}
 	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
@@ -2022,6 +2053,7 @@ func (app *DdevApp) Start() error {
 	wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", dependers))
 	waitErr := app.Wait(dependers)
 	wait.Complete(waitErr)
+	app.DefaultContainerTimeout = origDefaultContainerTimeout
 
 	if !slices.Contains(app.OmitContainers, "db") && app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) && slices.Contains([]string{nodeps.PHP73, nodeps.PHP72, nodeps.PHP71, nodeps.PHP70, nodeps.PHP56}, app.PHPVersion) {
 		alterString := `ALTER USER 'db'@'%' IDENTIFIED WITH mysql_native_password BY 'db';
@@ -2146,29 +2178,6 @@ If this seems to be a config issue, update it accordingly.`, fmt.Sprintf("%s\n",
 	}
 
 	return nil
-}
-
-// Warn if docroot or docroot/index.* is missing
-func warnMissingDocroot(app *DdevApp) {
-	// No need to warn on generic webserver type; that's the implementor's job
-	if app.WebserverType == nodeps.WebserverGeneric {
-		return
-	}
-	docroot := app.GetAbsDocroot(false)
-	if !fileutil.FileExists(docroot) {
-		util.WarningWithColor("magenta", "The project docroot does not yet exist or is misconfigured at this path:\n%s\nYou may get 403 errors 'permission denied' from the browser until it does.\n", docroot)
-		return
-	}
-
-	pattern := filepath.Join(docroot, "index.*")
-	matches, err := filepath.Glob(pattern)
-	if err != nil {
-		util.Warning("unable to filepath.Glob(%s)", pattern)
-		return
-	}
-	if len(matches) == 0 {
-		util.WarningWithColor("magenta", "The index.php or index.html does not yet exist at this path:\n%s\nYou may get 403 errors 'permission denied' from the browser until it does.\nIgnore if a later action (like `ddev composer create-project`) will create it.\n", pattern)
-	}
 }
 
 // warnWSL2NoneMode warns users that WSL2 networkingMode=none disables internet access entirely,
