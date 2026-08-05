@@ -3,21 +3,100 @@
 # DDEV project and prints one JSON result line to stdout. See perf/README.md for
 # the full schema and how to run this locally.
 #
-# Required env:
-#   DDEV_PERF_PROJECT_DIR - path to the DDEV project to benchmark against
-#   DDEV_PERF_SITE_URL    - the project's URL, e.g. https://d11.ddev.site/
-#                           (used for the Puppeteer-driven Drupal install metric)
+# Required (flag or env):
+#   -d, --project-dir DIR / DDEV_PERF_PROJECT_DIR - path to the DDEV project to benchmark against
+#   -u, --site-url URL    / DDEV_PERF_SITE_URL    - the project's URL, e.g. https://d11.ddev.site/
+#                                                    (used for the Puppeteer-driven Drupal install metric)
 # Optional env:
 #   DDEV_PERF_REPEAT      - repeat count for noisy metrics, median is reported (default 3)
 #   DOCKER_TYPE           - docker provider label; set by CI, e.g. "colima_vz" (default "unknown")
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+  cat <<EOF
+Usage: $(basename "${BASH_SOURCE[0]}") [options]
+
+Orchestrates the DDEV performance benchmark battery against an already-running
+DDEV project and prints one JSON result line to stdout. See perf/README.md for
+the full schema.
+
+Options:
+  -d, --project-dir DIR  Path to the DDEV project to benchmark against
+                         (or set DDEV_PERF_PROJECT_DIR)
+  -u, --site-url URL     The project's URL, e.g. https://d11.ddev.site/, used
+                         for the Puppeteer-driven Drupal install metric
+                         (or set DDEV_PERF_SITE_URL)
+  -h, --help             Show this help and exit
+
+Optional env:
+  DDEV_PERF_REPEAT   Repeat count for noisy metrics, median is reported (default 3)
+  DOCKER_TYPE        Docker provider label; set by CI, e.g. "colima_vz" (default "unknown")
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -d|--project-dir)
+      if [ $# -lt 2 ]; then
+        echo "FATAL: $1 requires a value" >&2
+        exit 1
+      fi
+      DDEV_PERF_PROJECT_DIR="$2"
+      shift 2
+      ;;
+    --project-dir=*)
+      DDEV_PERF_PROJECT_DIR="${1#*=}"
+      shift
+      ;;
+    -u|--site-url)
+      if [ $# -lt 2 ]; then
+        echo "FATAL: $1 requires a value" >&2
+        exit 1
+      fi
+      DDEV_PERF_SITE_URL="$2"
+      shift 2
+      ;;
+    --site-url=*)
+      DDEV_PERF_SITE_URL="${1#*=}"
+      shift
+      ;;
+    *)
+      echo "FATAL: unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
+missing=()
+if [ -z "${DDEV_PERF_PROJECT_DIR:-}" ]; then
+  missing+=("DDEV_PERF_PROJECT_DIR (or --project-dir/-d)")
+fi
+if [ -z "${DDEV_PERF_SITE_URL:-}" ]; then
+  missing+=("DDEV_PERF_SITE_URL (or --site-url/-u)")
+fi
+if [ "${#missing[@]}" -gt 0 ]; then
+  {
+    echo "FATAL: missing required value(s):"
+    for m in "${missing[@]}"; do
+      echo "  - $m"
+    done
+    echo
+    usage
+  } >&2
+  exit 1
+fi
+
 # shellcheck source=lib/common.sh
 source "$DIR/lib/common.sh"
 
-: "${DDEV_PERF_PROJECT_DIR:?DDEV_PERF_PROJECT_DIR must be set}"
-: "${DDEV_PERF_SITE_URL:?DDEV_PERF_SITE_URL must be set}"
+export DDEV_PERF_PROJECT_DIR DDEV_PERF_SITE_URL
 export DDEV_PERF_REPEAT="${DDEV_PERF_REPEAT:-3}"
 
 metrics_json='{}'

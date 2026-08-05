@@ -64,10 +64,15 @@ router/webserver overhead as the real differentiator.
 ## Running locally
 
 ```sh
-export DDEV_PERF_PROJECT_DIR=~/workspace/d11   # a standard DDEV Drupal 11 project, already `ddev start`-ed once
-export DDEV_PERF_SITE_URL=https://d11.ddev.site/
-./perf/run-benchmark.sh > result.json
+./perf/run-benchmark.sh \
+  --project-dir ~/workspace/d11 \
+  --site-url https://d11.ddev.site/ \
+  > result.json
 ```
+
+`~/workspace/d11` is a standard DDEV Drupal 11 project, already `ddev start`-ed once.
+`--project-dir`/`-d` and `--site-url`/`-u` can also be set via the `DDEV_PERF_PROJECT_DIR` and
+`DDEV_PERF_SITE_URL` env vars instead; run `./perf/run-benchmark.sh --help` for all options.
 
 Requires `jq` and Node.js (for the Puppeteer step) on `PATH`, in addition to the usual DDEV/Docker
 prerequisites. The large-file fixture tree used by `mutagen_settle_s` is generated on first use
