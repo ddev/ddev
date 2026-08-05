@@ -61,7 +61,18 @@ async function latestBuildkiteResults(pipeline) {
   for (const artifact of matches) {
     const res = await fetch(artifact.download_url, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`Failed to download artifact ${artifact.filename} for ${pipeline}: ${res.status}`);
-    results.push(JSON.parse(await res.text()));
+    const text = await res.text();
+    try {
+      results.push(JSON.parse(text));
+    } catch (err) {
+      // Bare JSON.parse errors don't say which artifact failed or what it
+      // actually contained -- both are needed to tell "wrong scope/HTML
+      // error page" apart from "a script wrote non-JSON to stdout ahead of
+      // the result line" (the actual cause the one time this fired).
+      throw new Error(
+        `${pipeline}'s ${artifact.filename} is not valid JSON: ${err.message}\nFirst 200 chars: ${text.slice(0, 200)}`
+      );
+    }
   }
   return results;
 }
