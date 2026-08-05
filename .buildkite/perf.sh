@@ -67,6 +67,14 @@ else
   ( cd "$PERF_PROJECT_DIR" && ddev start -y )
 fi
 
+# drupal/recommended-project doesn't include drush/drush, which 05-drush-install.sh
+# needs -- add it once if missing, whether this is a fresh provision or a project
+# from before this check existed.
+if ! ( cd "$PERF_PROJECT_DIR" && ddev drush --version >/dev/null 2>&1 ); then
+  echo "drush not available in $PERF_PROJECT_DIR; adding it once."
+  ( cd "$PERF_PROJECT_DIR" && ddev composer require drush/drush )
+fi
+
 PROJECT_URL=$(cd "$PERF_PROJECT_DIR" && ddev describe -j | jq -r '.raw.primary_url')
 
 echo "~~~ Setup complete, starting benchmark battery"
