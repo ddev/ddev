@@ -27,7 +27,7 @@ add_metric() {
     echo "FATAL: expected a JSON metric line but got: '$line'" >&2
     exit 1
   fi
-  metrics_json=$(jq --argjson m "$line" '. + {($m.metric): $m.value_ms}' <<<"$metrics_json")
+  metrics_json=$(jq --argjson m "$line" '. + {($m.metric): $m.value_s}' <<<"$metrics_json")
 }
 
 echo "--- Generating sync-settle fixture tree (if needed)" >&2

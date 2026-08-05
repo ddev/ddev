@@ -21,28 +21,28 @@ One JSON result object per run per leg (platform + Docker provider combination):
   "arch": "arm64",
   "docker_provider": "colima_vz",
   "metrics": {
-    "ddev_rebuild_ms": 33812,
-    "ddev_start_cold_ms": 8342,
-    "mutagen_settle_ms": 4110,
-    "drupal_install_ms": 41203,
-    "drush_install_ms": 22877,
-    "ddev_stop_ms": 2011
+    "ddev_rebuild_s": 33.8,
+    "ddev_start_cold_s": 8.3,
+    "mutagen_settle_s": 4.1,
+    "drupal_install_s": 41.2,
+    "drush_install_s": 22.9,
+    "ddev_stop_s": 2.0
   }
 }
 ```
 
 | Metric | What it measures | Why it's here |
 |---|---|---|
-| `ddev_rebuild_ms` | `ddev utility rebuild` (forced no-cache image build + restart) | Image-build-layer cost -- catches regressions like #8600, where a recursive chgrp/chmod added 90s+ to every project build without any existing metric noticing. `ddev_start_cold_ms` below starts from an already-built image, so it can't see this class of regression |
-| `ddev_start_cold_ms` | `ddev poweroff` + prune, then `ddev start` to ready | Docker-provider/container startup cost, independent of any CMS |
-| `mutagen_settle_ms` | Copy a ~5000-file tree in, time `ddev mutagen sync` (blocking flush) to settle | Isolates file-sync mechanics (bind mount vs. Mutagen vs. NFS) from any app's install logic. `null` when Mutagen isn't enabled on the project |
-| `drupal_install_ms` | Puppeteer drives the Drupal `demo_umami` web install wizard end-to-end | The flagship "realistic app" metric — parallels normal browser-based DDEV usage, exercising the DDEV router, webserver, and PHP-FPM on every step |
-| `drush_install_ms` | `ddev drush si demo_umami -y` (CLI, non-interactive) | Cheap diagnostic, not a replacement for `drupal_install_ms` — see below |
-| `ddev_stop_ms` | `ddev poweroff` | Teardown cost |
+| `ddev_rebuild_s` | `ddev utility rebuild` (forced no-cache image build + restart) | Image-build-layer cost -- catches regressions like #8600, where a recursive chgrp/chmod added 90s+ to every project build without any existing metric noticing. `ddev_start_cold_s` below starts from an already-built image, so it can't see this class of regression |
+| `ddev_start_cold_s` | `ddev poweroff` + prune, then `ddev start` to ready | Docker-provider/container startup cost, independent of any CMS |
+| `mutagen_settle_s` | Copy a ~5000-file tree in, time `ddev mutagen sync` (blocking flush) to settle | Isolates file-sync mechanics (bind mount vs. Mutagen vs. NFS) from any app's install logic. `null` when Mutagen isn't enabled on the project |
+| `drupal_install_s` | Puppeteer drives the Drupal `demo_umami` web install wizard end-to-end | The flagship "realistic app" metric — parallels normal browser-based DDEV usage, exercising the DDEV router, webserver, and PHP-FPM on every step |
+| `drush_install_s` | `ddev drush si demo_umami -y` (CLI, non-interactive) | Cheap diagnostic, not a replacement for `drupal_install_s` — see below |
+| `ddev_stop_s` | `ddev poweroff` | Teardown cost |
 
-Each metric script repeats noisy operations `DDEV_PERF_REPEAT` times (default 3) and reports the median.
+Each metric script repeats noisy operations `DDEV_PERF_REPEAT` times (default 3) and reports the median, in seconds to one decimal place.
 
-### Why both `drupal_install_ms` and `drush_install_ms`?
+### Why both `drupal_install_s` and `drush_install_s`?
 
 Investigated directly in Drupal core (`web/core/includes/install.core.inc`) rather than assumed
 equivalent. `ddev drush si` passes settings, so Drupal's installer runs non-interactively:
@@ -56,7 +56,7 @@ the webserver, PHP-FPM, and a fresh Drupal bootstrap — exactly the layer where
 differences (bind mount vs. Mutagen vs. NFS, gRPC-FUSE vs. virtiofs, etc.) most plausibly show
 up, and exactly what normal browser-based DDEV usage exercises on every page load.
 
-So `drush_install_ms` isolates pure PHP-execution + filesystem-I/O time, while `drupal_install_ms`
+So `drush_install_s` isolates pure PHP-execution + filesystem-I/O time, while `drupal_install_s`
 additionally captures router/webserver/PHP-FPM overhead. Keep both: if they track together across
 providers, that confirms filesystem I/O dominates; if they diverge, the gap itself isolates
 router/webserver overhead as the real differentiator.
@@ -70,7 +70,7 @@ export DDEV_PERF_SITE_URL=https://d11.ddev.site/
 ```
 
 Requires `jq` and Node.js (for the Puppeteer step) on `PATH`, in addition to the usual DDEV/Docker
-prerequisites. The large-file fixture tree used by `mutagen_settle_ms` is generated on first use
+prerequisites. The large-file fixture tree used by `mutagen_settle_s` is generated on first use
 under `perf/fixtures/large-tree/` (gitignored) and reused on subsequent runs.
 
 ## CI wiring

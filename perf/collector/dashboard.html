@@ -186,8 +186,8 @@
 
     ctx.fillStyle = muted;
     ctx.font = '11px sans-serif';
-    ctx.fillText(Math.round(vMax).toLocaleString() + ' ms', 4, pad.t + 8);
-    ctx.fillText('0 ms', 4, pad.t + h);
+    ctx.fillText(vMax.toFixed(1) + ' s', 4, pad.t + 8);
+    ctx.fillText('0 s', 4, pad.t + h);
     ctx.fillText(new Date(tMin).toISOString().slice(0, 10), pad.l, pad.t + h + 16);
     const lastLabel = new Date(tMax).toISOString().slice(0, 10);
     ctx.fillText(lastLabel, pad.l + w - ctx.measureText(lastLabel).width, pad.t + h + 16);

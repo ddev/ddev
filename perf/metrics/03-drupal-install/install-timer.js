@@ -8,7 +8,7 @@
 // perf/lib/reset-drupal.sh) and that DDEV_PERF_SITE_URL is set, e.g.
 // https://d11.ddev.site/
 //
-// Prints one JSON metric line: {"metric":"drupal_install_ms","value_ms":N}
+// Prints one JSON metric line: {"metric":"drupal_install_s","value_s":N}
 
 const puppeteer = require('puppeteer');
 
@@ -80,8 +80,8 @@ function sleep(ms) {
 
     await page.waitForSelector('#block-umami-account-menu');
 
-    const durationMs = Date.now() - start;
-    console.log(JSON.stringify({ metric: 'drupal_install_ms', value_ms: durationMs }));
+    const durationS = Math.round((Date.now() - start) / 100) / 10;
+    console.log(JSON.stringify({ metric: 'drupal_install_s', value_s: durationS }));
   } finally {
     await browser.close();
   }

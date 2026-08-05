@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Times a cold `ddev start`: power off, prune, then start-to-ready.
-# Prints one JSON metric line: {"metric":"ddev_start_cold_ms","value_ms":N}
+# Prints one JSON metric line: {"metric":"ddev_start_cold_s","value_s":N}
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,4 +25,4 @@ for _ in $(seq 1 "$REPEAT"); do
 done
 
 value=$(printf '%s\n' "${samples[@]}" | median)
-emit_metric "ddev_start_cold_ms" "$value"
+emit_metric "ddev_start_cold_s" "$value"

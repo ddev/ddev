@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Times `ddev poweroff`. Prints one JSON metric line:
-# {"metric":"ddev_stop_ms","value_ms":N}
+# {"metric":"ddev_stop_s","value_s":N}
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,4 +14,4 @@ start=$(now_ms)
 ddev poweroff >/dev/null 2>&1
 end=$(now_ms)
 
-emit_metric "ddev_stop_ms" "$(( end - start ))"
+emit_metric "ddev_stop_s" "$(( end - start ))"

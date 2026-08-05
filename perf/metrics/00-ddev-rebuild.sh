@@ -2,11 +2,11 @@
 # Times `ddev utility rebuild`: a forced, no-cache rebuild of the project's
 # web image (plus restart). This isolates image-build-layer regressions --
 # a change to WriteBuildDockerfile, app_compose_template.yaml, or a base
-# Dockerfile -- from ddev_start_cold_ms, which starts from an already-built
+# Dockerfile -- from ddev_start_cold_s, which starts from an already-built
 # image and would not notice a build-time regression. See #8600, where a
 # recursive chgrp/chmod added 90s+ to every project build without any
 # existing metric or test noticing.
-# Prints one JSON metric line: {"metric":"ddev_rebuild_ms","value_ms":N}
+# Prints one JSON metric line: {"metric":"ddev_rebuild_s","value_s":N}
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,4 +28,4 @@ for _ in $(seq 1 "$REPEAT"); do
 done
 
 value=$(printf '%s\n' "${samples[@]}" | median)
-emit_metric "ddev_rebuild_ms" "$value"
+emit_metric "ddev_rebuild_s" "$value"

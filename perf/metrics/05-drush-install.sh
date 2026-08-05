@@ -4,7 +4,7 @@
 # single non-interactive PHP CLI process inside the web container and never
 # touches the DDEV router, webserver, or PHP-FPM, so it isolates PHP-execution +
 # filesystem-I/O time from the router/webserver overhead the web install adds.
-# Prints one JSON metric line: {"metric":"drush_install_ms","value_ms":N}
+# Prints one JSON metric line: {"metric":"drush_install_s","value_s":N}
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,4 +21,4 @@ start=$(now_ms)
 ddev drush si demo_umami -y >/dev/null 2>&1
 end=$(now_ms)
 
-emit_metric "drush_install_ms" "$(( end - start ))"
+emit_metric "drush_install_s" "$(( end - start ))"
