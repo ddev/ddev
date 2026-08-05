@@ -2671,6 +2671,9 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 		if err != nil {
 			return fmt.Errorf("unable to GetAppRoot: %v", err)
 		}
+		defer func() {
+			_ = os.Chdir(cwd)
+		}()
 		bashPath := "bash"
 		if nodeps.IsWindows() {
 			bashPath = util.FindBashPath()
@@ -2685,15 +2688,20 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 		}
 
 		_ = app.DockerEnv()
-		err = exec.RunInteractiveCommand(bashPath, args)
-		_ = os.Chdir(cwd)
+		out, err := exec.RunCommand(bashPath, args)
+		if err != nil {
+			return fmt.Errorf("failed to execute host command: %v\noutput: %s", err, strings.TrimSpace(out))
+		}
 	} else { // handle case in container
-		_, _, err = app.Exec(
+		stdout, stderr, err := app.Exec(
 			&ExecOpts{
 				Service: service,
 				Cmd:     cmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
+		if err != nil {
+			return fmt.Errorf("failed to execute command in service %s: %v\nstdout: %s\nstderr: %s", service, err, strings.TrimSpace(stdout), strings.TrimSpace(stderr))
+		}
 	}
 	return err
 }
