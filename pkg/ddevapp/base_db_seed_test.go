@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
@@ -108,7 +109,7 @@ func TestAnnounceBaseDBSeed(t *testing.T) {
 	out := outFunc()
 
 	require.Contains(t, out, "Initializing new database volume from the 'initializer' snapshot")
-	require.Contains(t, out, filepath.ToSlash(initializer))
+	require.Contains(t, out, fileutil.ShortHomeJoin(filepath.ToSlash(initializer)))
 	require.Contains(t, out, "(2.0KB)")
 	require.Contains(t, out, "this may take a long time")
 	require.Contains(t, out, "default_container_timeout")
