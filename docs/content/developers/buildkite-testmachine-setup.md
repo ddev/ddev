@@ -336,6 +336,59 @@ tags="os=macos,architecture=arm64,osvariant=sonoma,...,podman-rootless=true"
 
 The `test.sh` script uses `podman machine start` and `docker context use podman-rootless` to activate the provider, then stops the machine in the cleanup trap on exit.
 
+## Performance Benchmark Harness Prerequisites
+
+The nightly performance benchmark harness (`perf/`, see
+[perf/README.md](https://github.com/ddev/ddev/tree/main/perf)) needs Node.js on
+every testbot, for the Puppeteer-driven Drupal install metric
+(`perf/metrics/03-drupal-install/`). On Linux, Puppeteer's downloaded Chrome
+build also needs a handful of OS shared libraries a bare testbot image doesn't
+ship with.
+
+### WSL2 / Linux testbots (docker-ce or Docker Desktop's WSL2 backend)
+
+1. Install Node.js 22, matching the version `perf-linux.yml` uses:
+
+    ```bash
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    ```
+
+2. Install Chrome's runtime shared library dependencies. A bare Ubuntu 24.04
+   image is missing all of these; without them Puppeteer fails the first time
+   it tries to launch Chrome, with an error like `error while loading shared
+   libraries: libatk-1.0.so.0` (or any of the others below, one at a time as
+   each is fixed):
+
+    ```bash
+    sudo apt-get install -y \
+      libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libasound2t64 \
+      libxkbcommon0 libgbm1 libx11-6 libxext6 libxcb1 libcairo2 \
+      libpango-1.0-0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+      libatspi2.0-0
+    ```
+
+    The `t64` suffix on some of these is Ubuntu 24.04-specific: it renamed
+    several packages during the 64-bit `time_t` ABI transition (`libatk1.0-0`
+    → `libatk1.0-0t64`, etc.). Older or non-Ubuntu distros use the
+    un-suffixed names. This list was derived by running `ldd` against the
+    actual downloaded Chrome binary
+    (`~/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome`); if a future
+    Chrome version needs more, `ldd <path-to-chrome> | grep "not found"` shows
+    what's still missing.
+
+### macOS testbots
+
+Add `node` to the `brew install` list in step 13 of the macOS setup above.
+
+### Traditional (native) Windows testbots
+
+Not yet verified. `buildkite-agent` on these machines runs as an
+NSSM-installed Windows service (see `windows_buildkite_setup.sh`), and it's
+untested whether headless Chrome launches cleanly from that non-interactive
+service context, as opposed to the interactive desktop session the testbot
+user auto-logs into. Update this section once that's confirmed either way.
+
 ## Running Targeted Builds on Specific Pipelines
 
 To test a branch against only selected pipelines (e.g. WSL2 only) or to run a subset of tests without waiting for the full matrix:
