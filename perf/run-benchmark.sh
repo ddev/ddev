@@ -9,7 +9,8 @@
 #                                                    (used for the Puppeteer-driven Drupal install metric)
 # Optional env:
 #   DDEV_PERF_REPEAT      - repeat count for noisy metrics, median is reported (default 3)
-#   DOCKER_TYPE           - docker provider label; set by CI, e.g. "colima_vz" (default "unknown")
+#   DOCKER_TYPE           - docker provider label; set by CI, e.g. "colima_vz" (default: ddev's own
+#                                                    "docker-platform", e.g. "orbstack", "docker-desktop")
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,7 +33,8 @@ Options:
 
 Optional env:
   DDEV_PERF_REPEAT   Repeat count for noisy metrics, median is reported (default 3)
-  DOCKER_TYPE        Docker provider label; set by CI, e.g. "colima_vz" (default "unknown")
+  DOCKER_TYPE        Docker provider label; set by CI, e.g. "colima_vz" (default: ddev's own
+                     "docker-platform", e.g. "orbstack", "docker-desktop")
 EOF
 }
 
@@ -140,7 +142,11 @@ arch_name=$(jq -r '.raw.architecture // "unknown"' <<<"$version_json")
 
 commit_sha="${BUILDKITE_COMMIT:-${GITHUB_SHA:-$(git -C "$DIR" rev-parse HEAD 2>/dev/null || echo unknown)}}"
 branch="${BUILDKITE_BRANCH:-${GITHUB_REF_NAME:-$(git -C "$DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)}}"
-docker_provider="${DOCKER_TYPE:-unknown}"
+# DOCKER_TYPE (CI) carries more detail than ddev can see for itself, e.g.
+# "colima_vz" vs "colima_qemu" or "podman-rootless" -- prefer it when set.
+# Falling back to ddev's own "docker-platform" (e.g. "orbstack", "docker-desktop")
+# instead of a bare "unknown" lets local runs report a real provider too.
+docker_provider="${DOCKER_TYPE:-$(jq -r '.raw["docker-platform"] // "unknown"' <<<"$version_json")}"
 
 jq -n \
   --argjson metrics "$metrics_json" \
