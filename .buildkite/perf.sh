@@ -52,13 +52,22 @@ echo "--- Provisioning benchmark project"
 # unrelated to what we're actually trying to measure. Each metric script
 # resets the db/files/opcache it needs before timing itself (see
 # perf/lib/reset-drupal.sh), so reusing the codebase is safe.
-PERF_PROJECT_DIR="${PERF_PROJECT_DIR:-$HOME/tmp/ddev-perf-drupal11}"
+# PERF_PROJECT_DIR_SUFFIX (not a full path override) lets a leg get its own
+# isolated project dir without baking a `~`/$HOME-relative path into YAML,
+# where it wouldn't actually expand (env: values are literal strings, not
+# passed through the shell) -- appending here, where $HOME is real, does.
+PERF_PROJECT_DIR="${PERF_PROJECT_DIR:-$HOME/tmp/ddev-perf-drupal11${PERF_PROJECT_DIR_SUFFIX:-}}"
 if [ ! -d "$PERF_PROJECT_DIR/web/core" ]; then
   echo "No existing Drupal11 codebase found at $PERF_PROJECT_DIR; provisioning it once."
   mkdir -p "$PERF_PROJECT_DIR"
   (
     cd "$PERF_PROJECT_DIR"
-    ddev config --project-type=drupal11 --docroot=web --project-name=ddev-perf-drupal11
+    # Project name is derived from the directory, not a fixed literal: a leg that
+    # sets PERF_PROJECT_DIR to get its own isolated project (e.g. a Mutagen-off
+    # variant, see perf-macos-shared-providers.yml) needs its own ddev project
+    # name too, or its registration collides with the default project's.
+    ddev config --project-type=drupal11 --docroot=web --project-name="$(basename "$PERF_PROJECT_DIR")" \
+      ${PERF_PERFORMANCE_MODE:+--performance-mode="$PERF_PERFORMANCE_MODE"}
     ddev start -y
     ddev composer create-project drupal/recommended-project
   )
@@ -80,12 +89,16 @@ PROJECT_URL=$(cd "$PERF_PROJECT_DIR" && ddev describe -j | jq -r '.raw.primary_u
 echo "~~~ Setup complete, starting benchmark battery"
 export DDEV_PERF_PROJECT_DIR="$PERF_PROJECT_DIR"
 export DDEV_PERF_SITE_URL="$PROJECT_URL"
-# Named per DOCKER_TYPE, not a fixed "perf-result.json": perf-macos-shared-providers.yml
-# runs several providers as separate jobs within ONE build, and Buildkite artifacts are
-# only unique per job, not per build -- a fixed name would make five same-named artifacts
-# indistinguishable in the Buildkite UI. collect.js collects every perf-result*.json
-# artifact from a build, so this doesn't need to match anything on that end.
-RESULT_FILE="perf-result-${DOCKER_TYPE:-unknown}.json"
+# Named per DOCKER_PROVIDER_LABEL/DOCKER_TYPE, not a fixed "perf-result.json":
+# perf-macos-shared-providers.yml runs several providers as separate jobs within
+# ONE build, and Buildkite artifacts are only unique per job, not per build -- a
+# fixed name would make several same-named artifacts indistinguishable in the
+# Buildkite UI. DOCKER_PROVIDER_LABEL (when set) takes priority over DOCKER_TYPE
+# so two legs sharing a DOCKER_TYPE for provider bring-up (e.g. two orbstack
+# variants) still upload distinctly-named artifacts. collect.js collects every
+# perf-result*.json artifact from a build, so this doesn't need to match
+# anything on that end.
+RESULT_FILE="perf-result-${DOCKER_PROVIDER_LABEL:-${DOCKER_TYPE:-unknown}}.json"
 "$(dirname "$0")/../perf/run-benchmark.sh" | tee "$RESULT_FILE"
 
 echo "--- Uploading result artifact"

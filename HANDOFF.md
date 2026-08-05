@@ -15,78 +15,45 @@ workflows, and publishes results to a dashboard under `/perf/` on the docs
 site. See `perf/README.md` and `perf/collector/README.md` for the
 architecture; this file is just "where are we right now."
 
-## Status as of 2026-08-05: 4 of 6 pipelines fully passing
+## Status as of 2026-08-05: 5 of 6 pipelines fully passing
 
 | Pipeline slug                          | Status |
 |-----------------------------------------|--------|
-| `ddev-perf-macos-docker-desktop-arm64`  | **Passing** (build #7, `macstadium-m1-1.local`) |
-| `ddev-perf-macos-shared-providers`      | **Passing, all 5 legs** (`colima_vz`, `lima`, `orbstack`, `podman-rootless`, `rancher-desktop`, build #4, `tb-macos-arm64-5`) |
-| `ddev-perf-wsl2-docker-desktop`         | **Passing** (build #6, `tb-wsldd-16`) |
-| `ddev-perf-wsl2-mirrored`               | **Passing** (build #7, `tb-wsl-14`) |
-| `ddev-perf-windows10-docker-desktop`    | Retrying (build #5) against the Windows `rm`-busy fix below; queued behind an unrelated job on the single `tb-win11-10` agent |
-| `ddev-perf-wsl2-docker-inside`          | **Deprioritized** — no connected agent has ever matched its required tags (`os=wsl2` + `dockertype=wsl2`); `tb-wsl-12`/`-14` are tagged `os=wsl2-mirrored`, `tb-wsldd-16` is tagged `dockertype=dockerforwindows`. `wsl2-mirrored` is the canonical pipeline for "docker native inside WSL2" — stop retriggering this one. |
+| `ddev-perf-macos-docker-desktop-arm64`  | **Passing** |
+| `ddev-perf-macos-shared-providers`      | **Passing, all 5 legs** (`colima_vz`, `lima`, `orbstack`, `podman-rootless`, `rancher-desktop`) |
+| `ddev-perf-wsl2-docker-desktop`         | **Passing** |
+| `ddev-perf-wsl2-mirrored`               | **Passing** |
+| `ddev-perf-windows10-docker-desktop`    | **Passing** |
+| `ddev-perf-wsl2-docker-inside`          | **Deprioritized** — no connected agent has ever matched its required tags (`os=wsl2` + `dockertype=wsl2`); `wsl2-mirrored` is the canonical pipeline for "docker native inside WSL2" instead. Stop retriggering this one. |
 
-Getting here took 5 separate real bugs, each confirmed against a real
-Buildkite run (not just guessed at):
-
-1. **Puppeteer/Chrome silently failed to install** on Node.js 26 (macOS,
-   confirmed also would have hit Windows). Root cause:
-   [puppeteer/puppeteer#14957](https://github.com/puppeteer/puppeteer/issues/14957) —
-   `@puppeteer/browsers`' pinned `extract-zip@2.0.1` dependency silently
-   truncates zip extraction on Node 26 without raising an error (`npm ci`
-   exits 0, but the browser executable is missing). **Not** a stale-cache
-   problem — a clean `rm -rf ~/.cache/puppeteer` + fresh `npm ci` reproduces
-   it every time. Fix: bumped `puppeteer` from `^24.11.2` to `^25.5.0`
-   (commit `824261ab9`) — Puppeteer's own fix for #14957 dropped
-   `extract-zip` for shelling out to system `unzip`, landing in
-   `@puppeteer/browsers@3.0.2`. This also answered the long-standing "does
-   headless Chrome even run under Buildkite's Windows service context"
-   question: yes, once this bug is out of the way.
-2. **Puppeteer 25 requires Node >=22 and dropped CommonJS support**, so
-   `require('puppeteer')` threw `ERR_REQUIRE_ESM` on the WSL2/Linux testbots,
-   which were still on Node.js v18.19.1. Not a code fix — genuinely needed
-   Node upgraded on `tb-wsldd-16`/`tb-wsl-14`/`tb-wsl-12`. Done: upgraded to
-   Node 22+ via the `nodesource` apt method already documented in
-   `docs/content/developers/buildkite-testmachine-setup.md` (not the `n`
-   version manager — that installs under a user's home dir, invisible to
-   `buildkite-agent`'s systemd service since it never sources `.bashrc`; see
-   `/etc/buildkite-agent/hooks/environment`, the same mechanism already used
-   for `CAROOT`/`WSLENV`, if a similar problem shows up again).
-3. **`docker_provider` reported `"unknown"`** for any run without `DOCKER_TYPE`
-   set (i.e. every local run). Fix (commit `860b44190`): fall back to `ddev
-   version -j`'s own `docker-platform` field instead of a hardcoded string.
-4. **`drush` missing on the reused benchmark project** — `perf.sh` provisions
-   `$PERF_PROJECT_DIR` once via `ddev composer create-project
-   drupal/recommended-project`, which doesn't include `drush/drush`, so
-   `05-drush-install.sh` could never succeed. Fix (commit `815b33501`): added
-   a check-and-add step (`ddev drush --version` fails → `ddev composer
-   require drush/drush`) that self-heals both fresh and already-provisioned
-   projects.
-5. **Windows `rm -rf` on the mutagen sync fixture failed with "Device or
-   resource busy"** — a file just touched by Mutagen/Docker Desktop can
-   still be briefly held open on Windows. Fix (commit `8e2466b5e`): tolerate
-   it with `|| true`, same pattern `reset-drupal.sh` already used for this
-   exact reason — it's a throwaway fixture dir recreated every run.
-
-Also added along the way: `run-benchmark.sh` now prints a readable results
-table (metric name + value + unit) to stderr, not just the raw JSON (commit
-`dfbe46615`); `perf/collector/dashboard.html` got a "Compare environments"
-bar-chart view alongside the existing trend lines (commit `dcb667851`).
+The bugs that got in the way (Puppeteer/Node version mismatches, a missing
+`drush` dependency, a Windows file-lock race) are captured in their own
+commit messages on this branch — no need to duplicate that history here.
 
 ## To resume
 
-1. Check `ddev-perf-windows10-docker-desktop` build #5 — still in flight as
-   of this update, queued on the single `tb-win11-10` agent. If it passes,
-   that's 5/6 — `ddev-perf-wsl2-docker-inside` is the only one intentionally
-   not being chased (see status table above).
-2. Once everything passing is confirmed stable across a couple of retries,
-   exercise the real end-to-end dashboard deploy before merging: `gh workflow
+1. Added an "orbstack, no Mutagen" leg to `ddev-perf-macos-shared-providers`
+   (its own isolated project dir via `PERF_PROJECT_DIR_SUFFIX`, `DOCKER_TYPE`
+   stays `orbstack` for provider bring-up, `DOCKER_PROVIDER_LABEL` gives it a
+   distinct reported name) — not yet exercised against a real Buildkite run.
+   Along the way, fixed a real bug this would have hit immediately:
+   `ddev mutagen status`/`sync` both exit 0 even when Mutagen is disabled, so
+   `02-mutagen-sync-settle.sh`/`reset-drupal.sh`'s guards never actually
+   detected "disabled" correctly — now check `ddev describe -j`'s
+   `mutagen_enabled` field instead (`mutagen_enabled_for_project` in
+   `perf/lib/common.sh`).
+2. Worth one or two more retriggers of each pipeline to confirm the current
+   green state isn't a lucky run (especially the two round-robin pools,
+   which can land on a different machine each time).
+3. Update `perf/collector/pipelines.json` with the real pipeline slugs for
+   all 6 pipelines, if not already done — needed for `collect.js` to find
+   these pipelines' artifacts.
+4. Exercise the real end-to-end dashboard deploy before merging: `gh workflow
    run perf-linux.yml|perf-collect.yml|docs-publish.yml --ref
    20260726_rfay_perf_testing` (all three already support
-   `workflow_dispatch`).
-3. Update `perf/collector/pipelines.json` with the real pipeline slugs
-   created below, if not already done — needed for `collect.js` to find
-   these pipelines' artifacts.
+   `workflow_dispatch`). Nothing so far has actually exercised `collect.js`
+   pulling real artifacts, `history.ndjson` accumulating, or the dashboard
+   rendering real data.
 
 ## `bk` CLI cheat sheet
 

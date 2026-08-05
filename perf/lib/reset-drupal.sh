@@ -23,6 +23,6 @@ run_quiet "ddev mysql reset" ddev mysql -e "DROP DATABASE IF EXISTS db; CREATE D
 rm -rf web/sites/default/files/* 2>/dev/null || true
 ddev exec "killall -USR2 php-fpm" >/dev/null 2>&1 || true
 
-if ddev mutagen status >/dev/null 2>&1; then
+if mutagen_enabled_for_project; then
   run_quiet "ddev mutagen sync (reset)" ddev mutagen sync
 fi

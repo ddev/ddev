@@ -18,6 +18,15 @@ now_ms() {
   fi
 }
 
+# mutagen_enabled_for_project checks (from the CWD's ddev project) whether
+# Mutagen is actually active. `ddev mutagen status`/`sync` both exit 0 even
+# when Mutagen is disabled (they just print a warning and no-op), so exit
+# code can't be used to detect this -- read the real flag from `ddev
+# describe -j` instead.
+mutagen_enabled_for_project() {
+  ddev describe -j 2>/dev/null | jq -e '.raw.mutagen_enabled == true' >/dev/null 2>&1
+}
+
 # run_quiet <description> <command...> discards the command's combined
 # stdout/stderr on success, but prints it (prefixed with <description>) on
 # failure -- silencing noisy ddev output must not also erase the reason a

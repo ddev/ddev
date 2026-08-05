@@ -17,7 +17,7 @@ TARGET_SUBDIR=".perf-fixture"
 
 cd "$DDEV_PERF_PROJECT_DIR"
 
-if ! ddev mutagen status >/dev/null 2>&1; then
+if ! mutagen_enabled_for_project; then
   echo "Mutagen is not enabled on this project; skipping mutagen_settle_s" >&2
   emit_metric "mutagen_settle_s" "null"
   exit 0

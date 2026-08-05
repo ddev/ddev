@@ -11,6 +11,9 @@
 #   DDEV_PERF_REPEAT      - repeat count for noisy metrics, median is reported (default 3)
 #   DOCKER_TYPE           - docker provider label; set by CI, e.g. "colima_vz" (default: ddev's own
 #                                                    "docker-platform", e.g. "orbstack", "docker-desktop")
+#   DOCKER_PROVIDER_LABEL - overrides the reported docker_provider outright, for a leg that shares a
+#                                                    DOCKER_TYPE with another leg (e.g. two orbstack legs, one
+#                                                    with Mutagen disabled) but needs a distinct reported label
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -35,6 +38,8 @@ Optional env:
   DDEV_PERF_REPEAT   Repeat count for noisy metrics, median is reported (default 3)
   DOCKER_TYPE        Docker provider label; set by CI, e.g. "colima_vz" (default: ddev's own
                      "docker-platform", e.g. "orbstack", "docker-desktop")
+  DOCKER_PROVIDER_LABEL  Overrides the reported docker_provider outright, for a leg that shares
+                     a DOCKER_TYPE with another leg but needs a distinct reported label
 EOF
 }
 
@@ -142,11 +147,16 @@ arch_name=$(jq -r '.raw.architecture // "unknown"' <<<"$version_json")
 
 commit_sha="${BUILDKITE_COMMIT:-${GITHUB_SHA:-$(git -C "$DIR" rev-parse HEAD 2>/dev/null || echo unknown)}}"
 branch="${BUILDKITE_BRANCH:-${GITHUB_REF_NAME:-$(git -C "$DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)}}"
-# DOCKER_TYPE (CI) carries more detail than ddev can see for itself, e.g.
-# "colima_vz" vs "colima_qemu" or "podman-rootless" -- prefer it when set.
-# Falling back to ddev's own "docker-platform" (e.g. "orbstack", "docker-desktop")
-# instead of a bare "unknown" lets local runs report a real provider too.
-docker_provider="${DOCKER_TYPE:-$(jq -r '.raw["docker-platform"] // "unknown"' <<<"$version_json")}"
+# DOCKER_PROVIDER_LABEL is an optional override for legs that need a distinct
+# reported label but share a DOCKER_TYPE with another leg for provider bring-up
+# (e.g. two orbstack legs, one with Mutagen disabled -- DOCKER_TYPE must stay
+# "orbstack" for lib-provider.sh's bring-up logic, but the dashboard needs to
+# tell them apart). DOCKER_TYPE (CI) itself carries more detail than ddev can
+# see for itself, e.g. "colima_vz" vs "colima_qemu" or "podman-rootless" --
+# prefer it when set. Falling back to ddev's own "docker-platform" (e.g.
+# "orbstack", "docker-desktop") instead of a bare "unknown" lets local runs
+# report a real provider too.
+docker_provider="${DOCKER_PROVIDER_LABEL:-${DOCKER_TYPE:-$(jq -r '.raw["docker-platform"] // "unknown"' <<<"$version_json")}}"
 
 result_json=$(jq -n \
   --argjson metrics "$metrics_json" \

@@ -112,3 +112,32 @@
       BUILDKIT_PROGRESS: plain
       DOCKER_TYPE: "rancher-desktop"
     parallelism: 1
+
+  - wait: ~
+    continue_on_failure: true
+
+  # Same orbstack provider as above, but with Mutagen disabled (bind mount
+  # instead) -- isolates how much of orbstack's speed is the provider itself
+  # vs. Mutagen on top of it. DOCKER_TYPE stays "orbstack" (lib-provider.sh's
+  # bring-up logic only recognizes that literal value); DOCKER_PROVIDER_LABEL
+  # gives it a distinct reported name instead. PERF_PROJECT_DIR_SUFFIX/PERF_PERFORMANCE_MODE
+  # give it its own project, provisioned once with Mutagen off -- it must NOT
+  # reuse the regular orbstack leg's project dir, or disabling Mutagen there
+  # would persist on disk and silently affect that leg's future runs too.
+  - label: "perf: orbstack (no mutagen)"
+    command: ".buildkite/perf.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+    agents:
+      - "os=macos"
+      - "orbstack=true"
+      - "architecture=arm64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DOCKER_TYPE: "orbstack"
+      DOCKER_PROVIDER_LABEL: "orbstack-no-mutagen"
+      PERF_PROJECT_DIR_SUFFIX: "-orbstack-no-mutagen"
+      PERF_PERFORMANCE_MODE: "none"
+    parallelism: 1
