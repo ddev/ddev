@@ -23,7 +23,12 @@ if ! ddev mutagen status >/dev/null 2>&1; then
   exit 0
 fi
 
-rm -rf "./$TARGET_SUBDIR"
+# On Windows, a file just touched by Mutagen/Docker Desktop can still be briefly
+# held open, so `rm -rf` here can fail with "Device or resource busy" -- tolerate
+# it, same as reset-drupal.sh does for the same reason: this is a throwaway
+# fixture dir recreated (or re-cleaned) every run, so a leftover file or two
+# doesn't affect correctness, only next run's `cp -R`/cleanup working a bit harder.
+rm -rf "./$TARGET_SUBDIR" || true
 mkdir -p "./$TARGET_SUBDIR"
 
 start=$(now_ms)
@@ -32,7 +37,7 @@ run_quiet "ddev mutagen sync" ddev mutagen sync
 end=$(now_ms)
 
 # Clean up and flush the deletion too, so the project is clean for the next metric.
-rm -rf "./$TARGET_SUBDIR"
+rm -rf "./$TARGET_SUBDIR" || true
 run_quiet "ddev mutagen sync (cleanup)" ddev mutagen sync
 
 emit_metric "mutagen_settle_s" "$(( end - start ))"
