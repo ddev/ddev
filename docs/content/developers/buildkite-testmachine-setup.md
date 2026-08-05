@@ -338,9 +338,8 @@ The `test.sh` script uses `podman machine start` and `docker context use podman-
 
 ## Performance Benchmark Harness Prerequisites
 
-The nightly performance benchmark harness (`perf/`, see
-[perf/README.md](https://github.com/ddev/ddev/tree/main/perf)) needs Node.js on
-every testbot, for the Puppeteer-driven Drupal install metric
+The nightly performance benchmark harness (`perf/`, see `perf/README.md`)
+needs Node.js on every testbot, for the Puppeteer-driven Drupal install metric
 (`perf/metrics/03-drupal-install/`). On Linux, Puppeteer's downloaded Chrome
 build also needs a handful of OS shared libraries a bare testbot image doesn't
 ship with.
