@@ -14,7 +14,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 3. (WSL2/Docker Desktop and traditional Windows only): Install either [Docker Desktop for Windows](https://docs.docker.com/desktop/release-notes/) (from the release notes page, which is best maintained) or [Rancher Desktop](https://rancherdesktop.io/). With Rancher Desktop, turn off Kubernetes. (Rancher Desktop on Windows appears to be too unreliable to use at this point in its history.)
 4. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "Unrestricted"`.
 5. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) with `curl <url> -O windows_buildkite_start.ps1`.
-6. Install items as needed; `git`, `jq`, `mysql-cli`, `golang`, `make` are only required for a traditional Windows test machine. `choco install -y git jq  mysql-cli golang make mkcert netcat zip`.
+6. Install items as needed; `git`, `jq`, `mysql-cli`, `golang`, `make`, `nodejs-lts` are only required for a traditional Windows test machine. `choco install -y git jq mysql-cli golang make mkcert netcat zip nodejs-lts`.
 7. After restart, in **administrative** Git Bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`.
 8. (Traditional Windows test runner only): Download and run [windows_buildkite_setup.sh](scripts/windows_buildkite_setup.sh).
 9. If using Rancher Desktop, adjust the /c/buildkite-agent/buildkite-agent.cfg file to set `rancher-desktop=true` in the tags instead of `docker-desktop`. If using Docker Desktop, set `docker-desktop=true`.
@@ -335,6 +335,56 @@ tags="os=macos,architecture=arm64,osvariant=sonoma,...,podman-rootless=true"
 ```
 
 The `test.sh` script uses `podman machine start` and `docker context use podman-rootless` to activate the provider, then stops the machine in the cleanup trap on exit.
+
+## Performance Benchmark Harness Prerequisites
+
+The nightly performance benchmark harness (`perf/`, see `perf/README.md`)
+needs Node.js on every testbot, for the Puppeteer-driven Drupal install metric
+(`perf/metrics/03-drupal-install/`). On Linux, Puppeteer's downloaded Chrome
+build also needs a handful of OS shared libraries a bare testbot image doesn't
+ship with.
+
+### WSL2 / Linux testbots (docker-ce or Docker Desktop's WSL2 backend)
+
+1. Install Node.js 22, matching the version `perf-linux.yml` uses:
+
+    ```bash
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+    ```
+
+2. Install Chrome's runtime shared library dependencies. A bare Ubuntu 24.04
+   image is missing all of these; without them Puppeteer fails the first time
+   it tries to launch Chrome, with an error like `error while loading shared
+   libraries: libatk-1.0.so.0` (or any of the others below, one at a time as
+   each is fixed):
+
+    ```bash
+    sudo apt-get install -y \
+      libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libasound2t64 \
+      libxkbcommon0 libgbm1 libx11-6 libxext6 libxcb1 libcairo2 \
+      libpango-1.0-0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+      libatspi2.0-0
+    ```
+
+    The `t64` suffix on some of these is Ubuntu 24.04-specific: it renamed
+    several packages during the 64-bit `time_t` ABI transition (`libatk1.0-0`
+    → `libatk1.0-0t64`, etc.). Older or non-Ubuntu distros use the
+    un-suffixed names. This list was derived by running `ldd` against the
+    actual downloaded Chrome binary
+    (`~/.cache/puppeteer/chrome/linux-*/chrome-linux64/chrome`); if a future
+    Chrome version needs more, `ldd <path-to-chrome> | grep "not found"` shows
+    what's still missing.
+
+### macOS testbots
+
+Add `node` to the `brew install` list in step 13 of the macOS setup above.
+
+### Traditional (native) Windows testbots
+
+Install Node.js via `choco install -y nodejs-lts` (see step 6 of Windows Test
+Agent Setup above). Confirmed working, including headless Chrome launching
+from the NSSM-installed `buildkite-agent` service context.
 
 ## Running Targeted Builds on Specific Pipelines
 

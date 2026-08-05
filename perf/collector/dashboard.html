@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DDEV performance history</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #666666;
+    --border: #dddddd;
+    --accent: #cc3333;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1a1a1a; --fg: #eeeeee; --muted: #aaaaaa; --border: #444444; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 1.5rem;
+  }
+  h1 { font-size: 1.25rem; margin: 0 0 0.25rem; }
+  p.sub { color: var(--muted); margin: 0 0 1.5rem; font-size: 0.9rem; }
+  .controls { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1rem; }
+  .controls label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
+  select { font-size: 0.95rem; padding: 0.25rem; }
+  .legs { display: flex; flex-wrap: wrap; gap: 0.5rem; max-width: 40rem; }
+  .legs label { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--fg); }
+  .chart-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; }
+  canvas { display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem; font-size: 0.8rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+  .swatch { width: 0.75rem; height: 0.75rem; border-radius: 2px; display: inline-block; }
+  .note { color: var(--muted); font-size: 0.8rem; margin-top: 1rem; }
+  .empty { color: var(--muted); padding: 2rem 0; text-align: center; }
+</style>
+</head>
+<body>
+  <h1>DDEV performance history</h1>
+  <p class="sub">Nightly benchmark results across platforms and Docker providers. See <a href="https://github.com/ddev/ddev/tree/main/perf">perf/README.md</a> for what each metric measures. Points more than 20% above the trailing 10-run median for their leg are marked red.</p>
+
+  <div class="controls">
+    <div>
+      <label for="view-select">View</label>
+      <select id="view-select">
+        <option value="trend">Trend over time</option>
+        <option value="compare">Compare environments (latest)</option>
+      </select>
+    </div>
+    <div>
+      <label for="metric-select">Metric</label>
+      <select id="metric-select"></select>
+    </div>
+    <div>
+      <label>Legs (platform / arch / docker provider)</label>
+      <div class="legs" id="legs-container"></div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas id="chart" width="1000" height="420"></canvas>
+    <div class="empty" id="empty-message" hidden>No data yet — check back after the first nightly run.</div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <p class="note" id="note">Data source: <code>history.ndjson</code>, one line per (commit, leg) benchmark run.</p>
+  <p><a id="csv-link" download="ddev-perf-compare.csv">Download CSV</a> — the same rows behind whichever chart is currently shown.</p>
+
+<script>
+(function () {
+  const COLORS = ['#4c78a8', '#f58518', '#54a24b', '#e45756', '#72b7b2', '#ff9da6', '#9d755d', '#bab0ac', '#b279a2', '#eeca3b'];
+  // Median of the last N nightly runs, not the single latest one -- smooths
+  // over a one-off noisy run (a slow VM boot, a network hiccup) while still
+  // reflecting how an environment is doing right now. Different legs run on
+  // different machines with different raw capability, so this is a
+  // comparison of Docker-provider/platform overhead, not a hardware benchmark.
+  const COMPARE_TRAILING_N = 7;
+  const TREND_NOTE = 'Data source: <code>history.ndjson</code>, one line per (commit, leg) benchmark run.';
+  const COMPARE_NOTE = `Each bar is the median of that environment's last ${COMPARE_TRAILING_N} nightly runs (not just the latest one) for the selected metric, sorted fastest to slowest. Data source: <code>history.ndjson</code>.`;
+
+  const state = { rows: [], metric: null, view: 'trend', legs: [], enabledLegs: new Set() };
+
+  function legKey(row) {
+    return `${row.os}/${row.arch}/${row.docker_provider}`;
+  }
+
+  function median(values) {
+    const sorted = [...values].sort((a, b) => a - b);
+    const n = sorted.length;
+    if (n === 0) return null;
+    return n % 2 === 1 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+  }
+
+  async function loadData() {
+    const res = await fetch('history.ndjson', { cache: 'no-store' });
+    if (!res.ok) return [];
+    const text = await res.text();
+    return text
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => {
+        try { return JSON.parse(l); } catch (e) { return null; }
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  }
+
+  function populateControls() {
+    const viewSelect = document.getElementById('view-select');
+    viewSelect.value = state.view;
+    viewSelect.addEventListener('change', () => {
+      state.view = viewSelect.value;
+      document.getElementById('note').innerHTML = state.view === 'compare' ? COMPARE_NOTE : TREND_NOTE;
+      render();
+    });
+
+    const metricSet = new Set();
+    const legSet = new Set();
+    for (const row of state.rows) {
+      legSet.add(legKey(row));
+      for (const m of Object.keys(row.metrics || {})) metricSet.add(m);
+    }
+    state.legs = [...legSet].sort();
+    state.enabledLegs = new Set(state.legs);
+
+    const metricSelect = document.getElementById('metric-select');
+    metricSelect.innerHTML = '';
+    for (const m of [...metricSet].sort()) {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      metricSelect.appendChild(opt);
+    }
+    state.metric = metricSelect.value;
+    metricSelect.addEventListener('change', () => {
+      state.metric = metricSelect.value;
+      render();
+    });
+
+    const legsContainer = document.getElementById('legs-container');
+    legsContainer.innerHTML = '';
+    for (const leg of state.legs) {
+      const label = document.createElement('label');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = true;
+      cb.addEventListener('change', () => {
+        if (cb.checked) state.enabledLegs.add(leg);
+        else state.enabledLegs.delete(leg);
+        render();
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(leg));
+      legsContainer.appendChild(label);
+    }
+  }
+
+  function render() {
+    const result = state.view === 'compare' ? renderCompare() : renderTrend();
+    updateCsvLink(result);
+  }
+
+  // Builds the CSV from the same array the chart just drew from, rather than
+  // re-deriving it, so the download can never drift out of sync with what's
+  // on screen.
+  function updateCsvLink(result) {
+    const link = document.getElementById('csv-link');
+    let csv;
+    if (state.view === 'compare') {
+      csv = ['leg,metric,median_s,n_runs']
+        .concat(result.map((b) => `${b.leg},${state.metric},${b.value},${b.n}`))
+        .join('\n');
+      link.download = `ddev-perf-compare-${state.metric}.csv`;
+    } else {
+      csv = ['timestamp,leg,metric,value_s']
+        .concat(result.flatMap((s) => s.points.map((p) => `${new Date(p.t).toISOString()},${s.leg},${state.metric},${p.v}`)))
+        .join('\n');
+      link.download = `ddev-perf-trend-${state.metric}.csv`;
+    }
+    if (state.csvUrl) URL.revokeObjectURL(state.csvUrl);
+    state.csvUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    link.href = state.csvUrl;
+  }
+
+  function renderTrend() {
+    const canvas = document.getElementById('chart');
+    canvas.height = 420;
+    const ctx = canvas.getContext('2d');
+    const emptyMsg = document.getElementById('empty-message');
+    const legend = document.getElementById('legend');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    legend.innerHTML = '';
+
+    const series = state.legs
+      .filter((leg) => state.enabledLegs.has(leg))
+      .map((leg, i) => {
+        const points = state.rows
+          .filter((r) => legKey(r) === leg && r.metrics && r.metrics[state.metric] != null)
+          .map((r) => ({ t: new Date(r.timestamp).getTime(), v: r.metrics[state.metric] }));
+        return { leg, color: COLORS[i % COLORS.length], points };
+      })
+      .filter((s) => s.points.length > 0);
+
+    if (!series.length) {
+      emptyMsg.hidden = false;
+      return series;
+    }
+    emptyMsg.hidden = true;
+
+    const pad = { l: 60, r: 20, t: 20, b: 30 };
+    const w = canvas.width - pad.l - pad.r;
+    const h = canvas.height - pad.t - pad.b;
+
+    const allT = series.flatMap((s) => s.points.map((p) => p.t));
+    const allV = series.flatMap((s) => s.points.map((p) => p.v));
+    const tMin = Math.min(...allT), tMax = Math.max(...allT);
+    const vMin = 0, vMax = Math.max(...allV) * 1.1;
+
+    const x = (t) => pad.l + (tMax === tMin ? w / 2 : ((t - tMin) / (tMax - tMin)) * w);
+    const y = (v) => pad.t + h - ((v - vMin) / (vMax - vMin || 1)) * h;
+
+    const fg = getComputedStyle(document.body).getPropertyValue('--fg') || '#333';
+    const muted = getComputedStyle(document.body).getPropertyValue('--muted') || '#888';
+
+    // Axes
+    ctx.strokeStyle = muted;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t);
+    ctx.lineTo(pad.l, pad.t + h);
+    ctx.lineTo(pad.l + w, pad.t + h);
+    ctx.stroke();
+
+    ctx.fillStyle = muted;
+    ctx.font = '11px sans-serif';
+    ctx.fillText(vMax.toFixed(1) + ' s', 4, pad.t + 8);
+    ctx.fillText('0 s', 4, pad.t + h);
+    ctx.fillText(new Date(tMin).toISOString().slice(0, 10), pad.l, pad.t + h + 16);
+    const lastLabel = new Date(tMax).toISOString().slice(0, 10);
+    ctx.fillText(lastLabel, pad.l + w - ctx.measureText(lastLabel).width, pad.t + h + 16);
+
+    for (const s of series) {
+      const trailing = [];
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      s.points.forEach((p, i) => {
+        const px = x(p.t), py = y(p.v);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      });
+      ctx.stroke();
+
+      s.points.forEach((p) => {
+        const baseline = median(trailing.slice(-10));
+        const isRegression = baseline != null && p.v > baseline * 1.2;
+        ctx.beginPath();
+        ctx.fillStyle = isRegression ? '#e45756' : s.color;
+        ctx.arc(x(p.t), y(p.v), isRegression ? 4 : 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        trailing.push(p.v);
+      });
+
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      const swatch = document.createElement('span');
+      swatch.className = 'swatch';
+      swatch.style.background = s.color;
+      item.appendChild(swatch);
+      item.appendChild(document.createTextNode(s.leg));
+      legend.appendChild(item);
+    }
+
+    return series;
+  }
+
+  function renderCompare() {
+    const canvas = document.getElementById('chart');
+    const ctx = canvas.getContext('2d');
+    const emptyMsg = document.getElementById('empty-message');
+    const legend = document.getElementById('legend');
+    legend.innerHTML = '';
+
+    const bars = state.legs
+      .filter((leg) => state.enabledLegs.has(leg))
+      .map((leg, i) => {
+        const points = state.rows
+          .filter((r) => legKey(r) === leg && r.metrics && r.metrics[state.metric] != null)
+          .map((r) => r.metrics[state.metric]);
+        const value = median(points.slice(-COMPARE_TRAILING_N));
+        return { leg, color: COLORS[i % COLORS.length], value, n: Math.min(points.length, COMPARE_TRAILING_N) };
+      })
+      .filter((b) => b.value != null)
+      .sort((a, b) => a.value - b.value);
+
+    if (!bars.length) {
+      canvas.height = 420;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      emptyMsg.hidden = false;
+      return bars;
+    }
+    emptyMsg.hidden = true;
+
+    const rowH = 34;
+    const pad = { l: 230, r: 70, t: 20, b: 10 };
+    canvas.height = pad.t + pad.b + bars.length * rowH;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const w = canvas.width - pad.l - pad.r;
+    const vMax = Math.max(...bars.map((b) => b.value)) * 1.15;
+    const barX = (v) => (v / vMax) * w;
+
+    const fg = getComputedStyle(document.body).getPropertyValue('--fg') || '#333';
+    const muted = getComputedStyle(document.body).getPropertyValue('--muted') || '#888';
+
+    ctx.font = '12px sans-serif';
+    bars.forEach((b, i) => {
+      const rowY = pad.t + i * rowH;
+      const barH = rowH * 0.55;
+      const barY = rowY + (rowH - barH) / 2;
+
+      ctx.fillStyle = fg;
+      ctx.textAlign = 'right';
+      ctx.fillText(b.leg, pad.l - 10, rowY + rowH / 2 + 4);
+
+      ctx.fillStyle = b.color;
+      ctx.fillRect(pad.l, barY, Math.max(barX(b.value), 1), barH);
+
+      ctx.fillStyle = muted;
+      ctx.textAlign = 'left';
+      ctx.fillText(`${b.value.toFixed(1)} s (n=${b.n})`, pad.l + barX(b.value) + 8, rowY + rowH / 2 + 4);
+    });
+    ctx.textAlign = 'left';
+
+    return bars;
+  }
+
+  loadData().then((rows) => {
+    state.rows = rows;
+    populateControls();
+    render();
+  });
+})();
+</script>
+</body>
+</html>

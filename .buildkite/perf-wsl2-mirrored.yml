@@ -1,0 +1,25 @@
+# Nightly performance benchmark: WSL2 Mirrored Mode networking with docker-ce
+#
+# Configure in the Buildkite dashboard as its own pipeline pointed at this
+# file, with a Scheduled Build (nightly cron) rather than a push/PR trigger.
+# See perf/README.md.
+
+  - command: ".buildkite/perf.sh"
+    if: |
+      build.message !~ /\[(skip ci|skip buildkite)\]/
+    agents:
+      - "os=wsl2-mirrored"
+      - "architecture=amd64"
+      - "dockertype=wsl2"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      DOCKER_TYPE: "wsl2dockerinside"
+      # Same DOCKER_TYPE as perf-wsl2-docker-inside.yml, since provider bring-up is
+      # identical; only the WSL2 networking mode differs. Without a distinct
+      # reported label both legs key as linux/amd64/wsl2dockerinside and the
+      # dashboard silently merges them into one series -- mirrored vs. NAT
+      # networking is exactly the comparison this leg exists to make.
+      DOCKER_PROVIDER_LABEL: "wsl2-mirrored-dockerinside"
+    parallelism: 1
