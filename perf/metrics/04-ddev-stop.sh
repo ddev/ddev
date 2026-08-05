@@ -11,7 +11,7 @@ source "$DIR/../lib/common.sh"
 cd "$DDEV_PERF_PROJECT_DIR"
 
 start=$(now_ms)
-ddev poweroff >/dev/null 2>&1
+run_quiet "ddev poweroff" ddev poweroff
 end=$(now_ms)
 
 emit_metric "ddev_stop_s" "$(( end - start ))"

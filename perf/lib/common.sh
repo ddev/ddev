@@ -18,6 +18,22 @@ now_ms() {
   fi
 }
 
+# run_quiet <description> <command...> discards the command's combined
+# stdout/stderr on success, but prints it (prefixed with <description>) on
+# failure -- silencing noisy ddev output must not also erase the reason a
+# metric run failed.
+run_quiet() {
+  local desc="$1" status
+  shift
+  local output
+  output=$("$@" 2>&1) && status=0 || status=$?
+  if [[ "$status" -ne 0 ]]; then
+    echo "--- $desc failed (exit $status):" >&2
+    echo "$output" >&2
+  fi
+  return "$status"
+}
+
 # median reads newline-separated integers on stdin and prints their median.
 median() {
   sort -n | awk '{a[NR]=$1} END{n=NR; if(n==0){print 0; exit} if(n%2==1){print a[(n+1)/2]}else{print int((a[n/2]+a[n/2+1])/2)}}'

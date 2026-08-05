@@ -28,11 +28,11 @@ mkdir -p "./$TARGET_SUBDIR"
 
 start=$(now_ms)
 cp -R "$FIXTURE_DIR/." "./$TARGET_SUBDIR/"
-ddev mutagen sync >/dev/null 2>&1
+run_quiet "ddev mutagen sync" ddev mutagen sync
 end=$(now_ms)
 
 # Clean up and flush the deletion too, so the project is clean for the next metric.
 rm -rf "./$TARGET_SUBDIR"
-ddev mutagen sync >/dev/null 2>&1
+run_quiet "ddev mutagen sync (cleanup)" ddev mutagen sync
 
 emit_metric "mutagen_settle_s" "$(( end - start ))"

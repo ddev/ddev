@@ -12,13 +12,17 @@
 # ddev-puppeteer.js, which only ever dropped the db and cleared files.
 set -euo pipefail
 
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./common.sh
+source "$DIR/common.sh"
+
 : "${DDEV_PERF_PROJECT_DIR:?DDEV_PERF_PROJECT_DIR must be set}"
 cd "$DDEV_PERF_PROJECT_DIR"
 
-ddev mysql -e "DROP DATABASE IF EXISTS db; CREATE DATABASE db;" >/dev/null 2>&1
+run_quiet "ddev mysql reset" ddev mysql -e "DROP DATABASE IF EXISTS db; CREATE DATABASE db;"
 rm -rf web/sites/default/files/* 2>/dev/null || true
 ddev exec "killall -USR2 php-fpm" >/dev/null 2>&1 || true
 
 if ddev mutagen status >/dev/null 2>&1; then
-  ddev mutagen sync >/dev/null 2>&1
+  run_quiet "ddev mutagen sync (reset)" ddev mutagen sync
 fi
