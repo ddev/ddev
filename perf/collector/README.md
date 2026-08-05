@@ -11,8 +11,14 @@ should have finished.
   run's artifact, and appends one line per leg to `history.ndjson` on the
   `performance-data` branch.
 - `dashboard.html` is a dependency-free static page: it `fetch()`es
-  `history.ndjson` client-side and renders per-metric trend lines, filterable
-  by metric and by leg (platform/arch/docker provider).
+  `history.ndjson` client-side, filterable by metric and by leg
+  (platform/arch/docker provider). Two views: a per-metric trend line over
+  time (the default), and a "Compare environments" bar chart -- one bar per
+  leg, the median of its last 7 nightly runs for the selected metric, sorted
+  fastest to slowest. The bar chart deliberately doesn't normalize for the
+  fact that legs run on different physical/virtual machines -- it's comparing
+  Docker-provider/platform overhead, which is the point, not controlling for
+  hardware.
 
 Neither step deploys to GitHub Pages directly. A repo has only one Pages site,
 and `.github/workflows/docs-publish.yml` already deploys the docs there on

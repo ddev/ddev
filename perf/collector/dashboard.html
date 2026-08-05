@@ -46,6 +46,13 @@
 
   <div class="controls">
     <div>
+      <label for="view-select">View</label>
+      <select id="view-select">
+        <option value="trend">Trend over time</option>
+        <option value="compare">Compare environments (latest)</option>
+      </select>
+    </div>
+    <div>
       <label for="metric-select">Metric</label>
       <select id="metric-select"></select>
     </div>
@@ -60,13 +67,21 @@
     <div class="empty" id="empty-message" hidden>No data yet — check back after the first nightly run.</div>
   </div>
   <div class="legend" id="legend"></div>
-  <p class="note">Data source: <code>history.ndjson</code>, one line per (commit, leg) benchmark run.</p>
+  <p class="note" id="note">Data source: <code>history.ndjson</code>, one line per (commit, leg) benchmark run.</p>
 
 <script>
 (function () {
   const COLORS = ['#4c78a8', '#f58518', '#54a24b', '#e45756', '#72b7b2', '#ff9da6', '#9d755d', '#bab0ac', '#b279a2', '#eeca3b'];
+  // Median of the last N nightly runs, not the single latest one -- smooths
+  // over a one-off noisy run (a slow VM boot, a network hiccup) while still
+  // reflecting how an environment is doing right now. Different legs run on
+  // different machines with different raw capability, so this is a
+  // comparison of Docker-provider/platform overhead, not a hardware benchmark.
+  const COMPARE_TRAILING_N = 7;
+  const TREND_NOTE = 'Data source: <code>history.ndjson</code>, one line per (commit, leg) benchmark run.';
+  const COMPARE_NOTE = `Each bar is the median of that environment's last ${COMPARE_TRAILING_N} nightly runs (not just the latest one) for the selected metric, sorted fastest to slowest. Data source: <code>history.ndjson</code>.`;
 
-  const state = { rows: [], metric: null, legs: [], enabledLegs: new Set() };
+  const state = { rows: [], metric: null, view: 'trend', legs: [], enabledLegs: new Set() };
 
   function legKey(row) {
     return `${row.os}/${row.arch}/${row.docker_provider}`;
@@ -95,6 +110,14 @@
   }
 
   function populateControls() {
+    const viewSelect = document.getElementById('view-select');
+    viewSelect.value = state.view;
+    viewSelect.addEventListener('change', () => {
+      state.view = viewSelect.value;
+      document.getElementById('note').innerHTML = state.view === 'compare' ? COMPARE_NOTE : TREND_NOTE;
+      render();
+    });
+
     const metricSet = new Set();
     const legSet = new Set();
     for (const row of state.rows) {
@@ -137,7 +160,13 @@
   }
 
   function render() {
+    if (state.view === 'compare') renderCompare();
+    else renderTrend();
+  }
+
+  function renderTrend() {
     const canvas = document.getElementById('chart');
+    canvas.height = 420;
     const ctx = canvas.getContext('2d');
     const emptyMsg = document.getElementById('empty-message');
     const legend = document.getElementById('legend');
@@ -222,6 +251,65 @@
       item.appendChild(document.createTextNode(s.leg));
       legend.appendChild(item);
     }
+  }
+
+  function renderCompare() {
+    const canvas = document.getElementById('chart');
+    const ctx = canvas.getContext('2d');
+    const emptyMsg = document.getElementById('empty-message');
+    const legend = document.getElementById('legend');
+    legend.innerHTML = '';
+
+    const bars = state.legs
+      .filter((leg) => state.enabledLegs.has(leg))
+      .map((leg, i) => {
+        const points = state.rows
+          .filter((r) => legKey(r) === leg && r.metrics && r.metrics[state.metric] != null)
+          .map((r) => r.metrics[state.metric]);
+        const value = median(points.slice(-COMPARE_TRAILING_N));
+        return { leg, color: COLORS[i % COLORS.length], value, n: Math.min(points.length, COMPARE_TRAILING_N) };
+      })
+      .filter((b) => b.value != null)
+      .sort((a, b) => a.value - b.value);
+
+    if (!bars.length) {
+      canvas.height = 420;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      emptyMsg.hidden = false;
+      return;
+    }
+    emptyMsg.hidden = true;
+
+    const rowH = 34;
+    const pad = { l: 230, r: 70, t: 20, b: 10 };
+    canvas.height = pad.t + pad.b + bars.length * rowH;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const w = canvas.width - pad.l - pad.r;
+    const vMax = Math.max(...bars.map((b) => b.value)) * 1.15;
+    const barX = (v) => (v / vMax) * w;
+
+    const fg = getComputedStyle(document.body).getPropertyValue('--fg') || '#333';
+    const muted = getComputedStyle(document.body).getPropertyValue('--muted') || '#888';
+
+    ctx.font = '12px sans-serif';
+    bars.forEach((b, i) => {
+      const rowY = pad.t + i * rowH;
+      const barH = rowH * 0.55;
+      const barY = rowY + (rowH - barH) / 2;
+
+      ctx.fillStyle = fg;
+      ctx.textAlign = 'right';
+      ctx.fillText(b.leg, pad.l - 10, rowY + rowH / 2 + 4);
+
+      ctx.fillStyle = b.color;
+      ctx.fillRect(pad.l, barY, Math.max(barX(b.value), 1), barH);
+
+      ctx.fillStyle = muted;
+      ctx.textAlign = 'left';
+      ctx.fillText(`${b.value.toFixed(1)} s (n=${b.n})`, pad.l + barX(b.value) + 8, rowY + rowH / 2 + 4);
+    });
+    ctx.textAlign = 'left';
   }
 
   loadData().then((rows) => {
