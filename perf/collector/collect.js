@@ -116,11 +116,18 @@ function existingPointKeys(historyPath) {
 async function main() {
   const results = [];
 
-  for (const pipeline of CONFIG.pipelines) {
-    try {
+  // A missing token is the expected, tolerated state before the one-time
+  // BUILDKITE_API_TOKEN vault setup (see this file's header comment) --
+  // skip Buildkite entirely and still collect the Linux leg below. Once a
+  // token is present, though, any request failure (wrong scope, revoked,
+  // rate-limited) means the setup is broken, not "not done yet": let it
+  // throw and abort the whole run instead of quietly committing an
+  // empty/partial dataset that overwrites the live dashboard with nothing.
+  if (!process.env.BUILDKITE_API_TOKEN) {
+    console.warn('BUILDKITE_API_TOKEN not set; skipping Buildkite pipelines');
+  } else {
+    for (const pipeline of CONFIG.pipelines) {
       results.push(...(await latestBuildkiteResults(pipeline)));
-    } catch (err) {
-      console.warn(`Skipping ${pipeline}: ${err.message}`);
     }
   }
 
