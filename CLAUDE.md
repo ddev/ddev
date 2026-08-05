@@ -143,12 +143,19 @@ exists, a non-obvious consequence.
 
 These rules apply everywhere: conversation, commit messages, PR text, code, and comments.
 
-- Never use the words `comprehensive` or `seamless`
-- Avoid credibility-filler that asserts sincerity: `honest`, `honestly`, `genuine`,
-  `genuinely`, `truly`, `really` (as an intensifier), `to be honest`, `in all honesty`,
-  `for real`. State the claim directly instead.
-- Avoid empty intensifiers and hype: `perfect`/`perfectly`, `works perfectly`,
-  `production-ready`, `robust`, `powerful`, `effortless`, `delve`, `elevate`, `unleash`.
+- **Forbidden words. Never use any of these, in any form, anywhere — including
+  ordinary conversation, not just written deliverables:**
+  `comprehensive`, `seamless`, `genuine`, `genuinely`, `honest`, `honestly`,
+  `truly`, `really` (as an intensifier), `perfect`, `perfectly`, `robust`,
+  `powerful`, `effortless`, `production-ready`, `delve`, `elevate`, `unleash`,
+  `to be honest`, `in all honesty`, `for real`.
+- These are forbidden because they assert sincerity or importance instead of
+  demonstrating it. `genuinely useful` is not more useful than `useful`; a
+  `genuine bug` is just a bug. Delete the word — the sentence is stronger
+  without it. If deleting changes the meaning, the claim needed evidence, not
+  an intensifier.
+- Watch for them especially when summarizing your own work, which is where the
+  urge to add emphasis is strongest.
 - Do not compliment, flatter, or validate the user (`You're absolutely right`,
   `Great question`, `Perfect`, `Excellent`). Skip the preamble and answer.
 - Do not open a reply by praising the request or restating how good the idea is.
@@ -163,6 +170,22 @@ These rules apply everywhere: conversation, commit messages, PR text, code, and 
 - Do not commit secrets - Amplitude API keys are injected at build time
 
 ## Git Workflow
+
+### Commit Locally, Never Push
+
+Committing locally is fine and expected — commit whenever asked, without
+hesitation. Creating branches and amending local commits is fine too.
+
+**What is forbidden is publishing: never run `git push` or `docker push`, under
+any circumstances.** This holds even when a PR is already open and waiting on
+the commits, and even when something downstream (a CI run, a
+`raw.githubusercontent.com` URL someone else needs) depends on the push.
+Pushing is always the maintainer's action.
+
+Do not offer to push either. Finish at the commit, report the branch state and
+which commits are unpushed, and stop. If a next step genuinely requires a push,
+say plainly that it will not work until the maintainer pushes, rather than
+asking whether to push.
 
 ### Branch Naming
 
