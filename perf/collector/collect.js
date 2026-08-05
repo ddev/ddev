@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Pulls the latest perf-result.json artifact from each Buildkite pipeline in
-// pipelines.json, plus the latest successful Linux GH Actions perf run, and
-// appends one line per leg to history.ndjson. Run by
+// Pulls every perf-result*.json artifact from the latest passed build of each
+// Buildkite pipeline in pipelines.json, plus the latest successful Linux GH
+// Actions perf run, and appends one line per leg to history.ndjson. Run by
 // .github/workflows/perf-collect.yml on a schedule, offset later than the
 // perf-* jobs so they've had time to finish. See perf/README.md.
 //
@@ -32,30 +32,38 @@ async function buildkiteApi(url) {
   return res.json();
 }
 
-async function latestBuildkiteResult(pipeline) {
+async function latestBuildkiteResults(pipeline) {
   const org = CONFIG.buildkiteOrg;
   const builds = await buildkiteApi(
     `https://api.buildkite.com/v2/organizations/${org}/pipelines/${pipeline}/builds?per_page=1&state=passed`
   );
   if (!builds.length) {
     console.warn(`No passed builds found for pipeline ${pipeline}`);
-    return null;
+    return [];
   }
   const build = builds[0];
 
   const artifacts = await buildkiteApi(
     `https://api.buildkite.com/v2/organizations/${org}/pipelines/${pipeline}/builds/${build.number}/artifacts`
   );
-  const artifact = artifacts.find((a) => a.filename === 'perf-result.json');
-  if (!artifact) {
-    console.warn(`No perf-result.json artifact found on latest passed build of ${pipeline}`);
-    return null;
+  // A build can hold more than one perf-result*.json artifact -- e.g.
+  // perf-macos-shared-providers.yml runs five Docker providers as separate
+  // jobs within the same build, each uploading its own result. Collect every
+  // match, not just the first, or four of the five legs get silently dropped.
+  const matches = artifacts.filter((a) => /^perf-result.*\.json$/.test(a.filename));
+  if (!matches.length) {
+    console.warn(`No perf-result*.json artifact found on latest passed build of ${pipeline}`);
+    return [];
   }
 
   const token = process.env.BUILDKITE_API_TOKEN;
-  const res = await fetch(artifact.download_url, { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) throw new Error(`Failed to download artifact for ${pipeline}: ${res.status}`);
-  return JSON.parse(await res.text());
+  const results = [];
+  for (const artifact of matches) {
+    const res = await fetch(artifact.download_url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error(`Failed to download artifact ${artifact.filename} for ${pipeline}: ${res.status}`);
+    results.push(JSON.parse(await res.text()));
+  }
+  return results;
 }
 
 function latestLinuxResult() {
@@ -87,8 +95,7 @@ async function main() {
 
   for (const pipeline of CONFIG.pipelines) {
     try {
-      const result = await latestBuildkiteResult(pipeline);
-      if (result) results.push(result);
+      results.push(...(await latestBuildkiteResults(pipeline)));
     } catch (err) {
       console.warn(`Skipping ${pipeline}: ${err.message}`);
     }

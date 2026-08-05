@@ -4,10 +4,12 @@ Run by `.github/workflows/perf-collect.yml` on a schedule, after the nightly
 `perf-*.yml` (Buildkite) and `perf-linux.yml` (GitHub Actions) benchmark jobs
 should have finished.
 
-- `collect.js` pulls the latest passed build's `perf-result.json` artifact from
-  each Buildkite pipeline listed in `pipelines.json`, plus the latest
-  successful `perf-linux.yml` run's artifact, and appends one line per leg to
-  `history.ndjson` on the `performance-data` branch.
+- `collect.js` pulls every `perf-result*.json` artifact from the latest passed
+  build of each Buildkite pipeline listed in `pipelines.json` (a build can hold
+  more than one -- `perf-macos-shared-providers.yml` runs five providers as
+  separate jobs in the same build), plus the latest successful `perf-linux.yml`
+  run's artifact, and appends one line per leg to `history.ndjson` on the
+  `performance-data` branch.
 - `dashboard.html` is a dependency-free static page: it `fetch()`es
   `history.ndjson` client-side and renders per-metric trend lines, filterable
   by metric and by leg (platform/arch/docker provider). Published as

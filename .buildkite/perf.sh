@@ -72,7 +72,13 @@ PROJECT_URL=$(cd "$PERF_PROJECT_DIR" && ddev describe -j | jq -r '.raw.primary_u
 echo "~~~ Setup complete, starting benchmark battery"
 export DDEV_PERF_PROJECT_DIR="$PERF_PROJECT_DIR"
 export DDEV_PERF_SITE_URL="$PROJECT_URL"
-"$(dirname "$0")/../perf/run-benchmark.sh" | tee perf-result.json
+# Named per DOCKER_TYPE, not a fixed "perf-result.json": perf-macos-shared-providers.yml
+# runs several providers as separate jobs within ONE build, and Buildkite artifacts are
+# only unique per job, not per build -- a fixed name would make five same-named artifacts
+# indistinguishable in the Buildkite UI. collect.js collects every perf-result*.json
+# artifact from a build, so this doesn't need to match anything on that end.
+RESULT_FILE="perf-result-${DOCKER_TYPE:-unknown}.json"
+"$(dirname "$0")/../perf/run-benchmark.sh" | tee "$RESULT_FILE"
 
 echo "--- Uploading result artifact"
-buildkite-agent artifact upload perf-result.json
+buildkite-agent artifact upload "$RESULT_FILE"

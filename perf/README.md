@@ -95,10 +95,11 @@ under `perf/fixtures/large-tree/` (gitignored) and reused on subsequent runs.
   comment at the top of each `perf-*.yml` file.
 - **Linux**: `.github/workflows/perf-linux.yml`, triggered by `schedule:` (nightly cron) and
   `workflow_dispatch:` (manual runs).
-- Each leg uploads its single JSON result as a build artifact. `perf/collector/collect.sh`
-  (run by a separate scheduled workflow) pulls all of a run's artifacts and appends one line per
-  leg to a versioned `history.ndjson` dataset. `perf/collector/dashboard.html` renders trend lines
-  from that dataset — see `perf/collector/README.md`.
+- Each leg uploads its JSON result as a build artifact named `perf-result-<DOCKER_TYPE>.json`
+  (`perf-macos-shared-providers.yml` uploads several, one per job, within a single build).
+  `perf/collector/collect.js` (run by a separate scheduled workflow) pulls every matching artifact
+  and appends one line per leg to a versioned `history.ndjson` dataset. `perf/collector/dashboard.html`
+  renders trend lines from that dataset — see `perf/collector/README.md`.
 
 ## Retiring `ddev-puppeteer`
 

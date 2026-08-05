@@ -2,12 +2,8 @@
   "_comment": "Buildkite pipeline slugs the collector polls for perf results, one per .buildkite/perf-*.yml file. Update these once the corresponding pipelines exist in the Buildkite dashboard (see perf/README.md) -- the slugs below are the suggested names, not guaranteed to match what was actually created.",
   "buildkiteOrg": "ddev",
   "pipelines": [
-    "ddev-perf-macos-colima-vz",
     "ddev-perf-macos-docker-desktop-arm64",
-    "ddev-perf-macos-lima",
-    "ddev-perf-macos-orbstack",
-    "ddev-perf-macos-podman-rootless",
-    "ddev-perf-macos-rancher-desktop",
+    "ddev-perf-macos-shared-providers",
     "ddev-perf-windows10-docker-desktop",
     "ddev-perf-wsl2-docker-desktop",
     "ddev-perf-wsl2-docker-inside",
