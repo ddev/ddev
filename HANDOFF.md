@@ -249,7 +249,7 @@ for `label`, so `--filter name=`, `status=`, `id=` were dropped before matching 
 Fixed by accepting the dict form for all keys. Note DDEV itself was never exposed to
 this: `FindContainerByName` re-checks `Names[0]` against the exact name.
 
-### Version reporting now trips DDEV's minimum-version check
+### Version reporting now trips DDEV's minimum-version check — root-caused and fixed 2026-08-05
 
 With `fix/version-engine-version` in place, `ddev version` reports `docker 0.0.0-dev`
 and `ddev start` prints:
@@ -259,10 +259,21 @@ Problem with your Docker provider: installed Docker version 0.0.0-dev is not sup
 please update to version 25.0 or newer.
 ```
 
-A tagged socktainer release would report `1.2.1` and fail the same `>= 25.0` check, so
-the fix trades a wrong version string for a wrong warning. DDEV needs a
-socktainer-aware branch in that check (as it presumably has for other providers) —
-a DDEV-side follow-up, not a socktainer one.
+This looked like it needed a DDEV-side special case (any low-looking version string
+would trip a `>= 25.0` check), but `CheckDockerVersion()` (`pkg/dockerutil/requirements.go:60`)
+doesn't actually gate on the displayed version string — it gates on
+`GetDockerAPIVersion()` vs `versionconstants.DockerMinAPIVersion` ("1.44"); the "0.0.0-dev"/
+`25.0` text in the error is purely cosmetic. socktainer's `/version` response was
+reporting `ApiVersion`/`MinAPIVersion` as `"v1.51"`/`"v1.32"` — a "v"-prefixed label meant
+for human-readable build info (`make version`), reused as the wire value. Confirmed with a
+throwaway Go program: `versions.GreaterThanOrEqualTo("v1.51", "1.44")` is `false`, but
+`GreaterThanOrEqualTo("1.51", "1.44")` is `true` — the leading "v" alone was enough to fail
+the check regardless of the actual numeric value. Fixed on the socktainer side
+(`fix/version-engine-version`, commit `f4d022c`) by stripping the "v" prefix at the
+`VersionRoute` call site; the build-info getters that still supply the "v"-prefixed
+label elsewhere (`make version`, `BuildInfoApiVersionTests`) are untouched. Verified live:
+after rebuilding and restarting the daemon, `ddev start` against socktainer no longer
+prints the warning at all. No DDEV-side change was needed.
 
 ### Not retested
 
@@ -305,6 +316,52 @@ option 5 below), [#8659](https://github.com/ddev/ddev/pull/8659) (non-fatal glob
 chown — design option 6 below), [#8660](https://github.com/ddev/ddev/pull/8660) (stop
 hijacking the exec stream in `dockerutil.Exec()` — the DDEV-side counterpart to #347, so
 `GetRouterConfigErrors()` stops hanging even before the socktainer fix merges).
+
+## Full teardown-and-rebuild recipe (verified reproducible 2026-08-05)
+
+The recipe below is one level underneath the "Cold-start recipe" further down — it rebuilds
+apple container, socktainer, and the docker context themselves from nothing. Run this once
+after the two systems have gotten into a state you don't trust, then follow "Cold-start
+recipe" for the DDEV-project-level workarounds that still apply on top. Verified by tearing
+the whole stack down and rebuilding it end-to-end on 2026-08-05; a full `ddev start` /
+`restart` / `describe` / `stop` cycle came back up clean afterward.
+
+```bash
+# 1. tear everything down
+ddev poweroff
+container rm -f $(container ls -aq)              # every apple-container instance, not just DDEV's
+pkill -f "\.build/release/socktainer$"
+container system stop
+docker context rm socktainer                     # recreated fresh in step 3
+rm -f ~/.socktainer/container.sock               # stale socket from the killed daemon
+
+# 2. clean-room build from the branch under test (swap the checkout/branch as needed)
+cd ~/workspace/socktainer
+git checkout tmp/combined-verify-2               # or whichever branch you're validating
+rm -rf .build
+swift build -c release                           # ~450s from empty .build; confirm exit 0
+
+# 3. bring both systems back up
+container system start
+cd ~/workspace/socktainer
+nohup ./.build/release/socktainer >> ~/tmp/socktainer.log 2>&1 &
+disown
+docker context create socktainer \
+  --docker "host=unix:///Users/$(whoami)/.socktainer/container.sock" \
+  --description "Socktainer — Docker API over Apple Container"
+docker context use socktainer
+
+# 4. confirm the signed installer is what's actually running, not the shadowed Homebrew copy
+container system status | grep installRoot        # expect /usr/local/
+```
+
+`docker context create` may print `context "socktainer" already exists` even right after
+the `rm` in step 1 — a harmless CLI quirk in this environment; `docker context inspect
+socktainer` confirms it points at the freshly recreated socket either way (metadata file's
+mtime matches the `create` call, not the pre-teardown context). Everything non-DDEV that
+`container ls -a` reports before step 1 (stray test containers, an old `buildx_buildkit_
+default`) is safe to remove in bulk — none of it is meant to survive a rebuild; the
+project-level recipe below recreates what's actually needed.
 
 ## Cold-start recipe
 
@@ -641,6 +698,21 @@ removing the container first will hit it. `ddev restart` is unaffected because i
 containers first — confirmed working repeatably on 2026-08-04, so it is the recommended path.
 `ddev start` over an already-running project is the case that still fails.
 
+**Investigated 2026-08-05: why `ddev restart` recreates the db/web containers every time,
+and whether that's a bug.** It isn't. `Restart()` is `Stop()` + `Start()`
+(`pkg/ddevapp/ddevapp.go:2284`); `Stop()` unconditionally runs `compose down`
+(`pkg/ddevapp/utils.go:127`), so by the time `Start()`'s `compose up` runs, the db/web
+containers from the prior run are already gone — there's nothing for compose-go's
+config-hash convergence check to compare against, so it must call `createMobyContainer`
+regardless of provider. Docker Desktop/OrbStack do the identical dance on every
+`ddev restart`; it's just cheap there. The ~3x wall-clock gap measured against OrbStack
+(restart-timing section below) is best explained by apple container's volume model: a
+named volume is a real ext4 block image attached to the VM (blocker 1), so every freshly
+created db container pays a hypervisor-level block-attach cost that OrbStack's volume
+implementation doesn't. A phase-by-phase timing breakdown (down/build/up/healthcheck-wait
+on both providers) would confirm exactly where the delta falls, but isn't done as of this
+writing.
+
 The enforcement is in apple container, not socktainer:
 `ContainerAPIService/Server/Containers/ContainersService.swift:310` walks **every** container
 irrespective of state and rejects a create whose attachment hostname is already claimed, so
@@ -853,39 +925,50 @@ options there.
 
 ## State this session left behind
 
-- The six new socktainer fixes live **uncommitted** in the working tree of
-  `~/workspace/socktainer` on branch `tmp/rollout-verify` (the seven queued fixes merged
-  on top of `main`). Files touched:
-  `Sources/socktainer/Routes/Containers/ExecRoutes.swift` (close-on-EOF correction to
-  #347, plus the `shouldUpgrade` gating fix),
-  `Sources/socktainer/DNS/SocktainerDNSServer.swift` (EDNS0 response truncation),
-  `Sources/socktainer/Utilities/DockerFilterUtility.swift` (dict-form filter parsing),
-  `Sources/socktainer/Utilities/HealthCheckManager.swift` (probe during start_period; probe
-  as the container's user, not root),
-  `Sources/socktainer/Routes/Containers/ContainerInspectRoute.swift` +
-  `Sources/socktainer/Models/RESTConfig.swift` (populate `HostConfig.PortBindings`),
-  and new tests in `Tests/socktainerTests/{DNS,Utilities}/`. Rebuild with
-  `swift build -c release`; run with `~/workspace/socktainer/.build/release/socktainer`.
-  **None of the seven branches nor these five changes has an open PR** — the only PR ever
-  opened was #347, which is closed.
-- **The patched local build is running** (`~/tmp/socktainer.log`), the appletest project is
-  up and healthy, and the site serves 200 at the router's container IP. The global docker
-  context is still `orbstack` — the verification above ran with `DOCKER_CONTEXT=socktainer`
-  in the environment, which both `docker` and `ddev` honor, so nothing global was switched.
+- **Superseded 2026-08-05.** `tmp/rollout-verify` and its uncommitted six-fix working tree
+  are gone. All twelve fixes (the original six plus five more branches created the same
+  session, plus the `f4d022c` ApiVersion "v"-prefix fix below) now live as individual
+  committed branches under `~/workspace/socktainer-worktrees/*` (pushed to the `rfay` remote)
+  and as one combined, committed branch `tmp/combined-verify-2` in `~/workspace/socktainer`
+  itself (also pushed). **None has an open PR** — the only PR ever opened was #347, closed.
+  See `~/workspace/socktainer/UPSTREAM_ROLLOUT.md` for the submission plan/ranking.
+- **Full teardown-and-rebuild reproducibility check, 2026-08-05:** to make sure the whole
+  stack (not just the socktainer binary) is reproducible from nothing, this session tore
+  down and recreated every layer — `ddev poweroff`, removed every `container` instance,
+  killed the socktainer daemon, ran `container system stop`, removed the `socktainer` docker
+  context, deleted `~/workspace/socktainer/.build` and did a from-scratch `swift build -c
+  release` (451s) from `tmp/combined-verify-2`, `container system start`, started the fresh
+  daemon, recreated the docker context, and ran a full `ddev start`/`restart`/`describe`/
+  `stop` cycle against it. All of it came back up clean and reproducibly. The `container`
+  CLI in use throughout is the signed installer at `/usr/local/bin/container` (confirmed via
+  `container system status` → `installRoot: /usr/local/`), not the Homebrew formula (present
+  as a shadowed, unused dependency — `brew info container` shows "Installed (as dependency)",
+  shadowed per its own caveat text).
+- This same rebuild surfaced and fixed a new bug: socktainer's `/version` response reported
+  `ApiVersion`/`MinAPIVersion` as `"v1.51"`/`"v1.32"` (a "v"-prefixed build-info label reused
+  as the wire value), which silently failed DDEV's own `>= 1.44` API-version check regardless
+  of the actual version number — see the "Version reporting" entry above. Fixed in
+  `fix/version-engine-version` (`f4d022c`) and merged into `tmp/combined-verify-2`; verified
+  live that the warning is gone.
+- All test projects (`appletest`, `d11`, `d12`, `ddev-test-site-do-not-delete`, `ddev.com`,
+  `x`) are **stopped**, confirmed via `ddev list`. `ddev-router` and the `ddev_default`
+  network's DNS sidecar are still running (shared, harmless to leave up). `buildx_buildkit_
+  default` was recreated automatically by `ddev start`'s image build step; the `keepalive`
+  and `porttest*` containers from earlier sessions were removed during the teardown above
+  and were not recreated.
+- Docker context is `socktainer`, recreated fresh during today's teardown (same name,
+  same socket path `~/.socktainer/container.sock`) — not a leftover from before.
 - Note `brew services start socktainer` is *not* a usable "restore the normal daemon" step:
   the service runs with `HOME=/opt/homebrew/var/run/socktainer`, so it binds
   `/opt/homebrew/var/run/socktainer/.socktainer/container.sock` and leaves the
   `socktainer` docker context (which points at `~/.socktainer/container.sock`) talking to
-  a dead socket. Run the daemon by hand, as this and the previous session did.
-- A root `dnsmasq` is bound to `192.168.64.1:53` (item 2). Stop it with
+  a dead socket. Run the daemon by hand, as every session so far has.
+- A root `dnsmasq` is still bound to `192.168.64.1:53` (item 2), untouched by today's
+  teardown since it's independent of the socktainer daemon/containers. Stop it with
   `sudo pkill -f "listen-address=192.168.64.1"`. Without it, no container has DNS.
-- `traefik_monitor_port` is set to **11999** (10999 is OrbStack's). Revert it to 10999 when
-  done with socktainer if that matters for other projects.
-- The global `~/.ddev/router-compose.healthcheck.yaml` override has been **removed** — it is
-  no longer needed and was harmful. It now sits at
-  `~/tmp/router-compose.healthcheck.yaml.bak`; do not restore it.
-- Test projects at `~/tmp/appletest` and `~/tmp/x`, both left started and serving, with no
-  per-project workaround files. `~/tmp/x` has no explicit router ports, so it lands on
-  ephemeral ones (33000/33001).
-- `keepalive` and `buildx_buildkit_default` left running, plus two `porttest*` containers
-  from the published-port investigation.
+- `traefik_monitor_port` is still set to **11999** (10999 is OrbStack's) in
+  `~/.ddev/global_config.yaml`. Revert it to 10999 when done with socktainer if that matters
+  for other projects.
+- The global `~/.ddev/router-compose.healthcheck.yaml` override remains **removed** (it sits
+  at `~/tmp/router-compose.healthcheck.yaml.bak`; do not restore it) — confirmed absent as
+  of today's rebuild too.
