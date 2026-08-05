@@ -68,6 +68,7 @@
   </div>
   <div class="legend" id="legend"></div>
   <p class="note" id="note">Data source: <code>history.ndjson</code>, one line per (commit, leg) benchmark run.</p>
+  <p><a id="csv-link" download="ddev-perf-compare.csv">Download CSV</a> — the same rows behind whichever chart is currently shown.</p>
 
 <script>
 (function () {
@@ -160,8 +161,30 @@
   }
 
   function render() {
-    if (state.view === 'compare') renderCompare();
-    else renderTrend();
+    const result = state.view === 'compare' ? renderCompare() : renderTrend();
+    updateCsvLink(result);
+  }
+
+  // Builds the CSV from the same array the chart just drew from, rather than
+  // re-deriving it, so the download can never drift out of sync with what's
+  // on screen.
+  function updateCsvLink(result) {
+    const link = document.getElementById('csv-link');
+    let csv;
+    if (state.view === 'compare') {
+      csv = ['leg,metric,median_s,n_runs']
+        .concat(result.map((b) => `${b.leg},${state.metric},${b.value},${b.n}`))
+        .join('\n');
+      link.download = `ddev-perf-compare-${state.metric}.csv`;
+    } else {
+      csv = ['timestamp,leg,metric,value_s']
+        .concat(result.flatMap((s) => s.points.map((p) => `${new Date(p.t).toISOString()},${s.leg},${state.metric},${p.v}`)))
+        .join('\n');
+      link.download = `ddev-perf-trend-${state.metric}.csv`;
+    }
+    if (state.csvUrl) URL.revokeObjectURL(state.csvUrl);
+    state.csvUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    link.href = state.csvUrl;
   }
 
   function renderTrend() {
@@ -185,7 +208,7 @@
 
     if (!series.length) {
       emptyMsg.hidden = false;
-      return;
+      return series;
     }
     emptyMsg.hidden = true;
 
@@ -251,6 +274,8 @@
       item.appendChild(document.createTextNode(s.leg));
       legend.appendChild(item);
     }
+
+    return series;
   }
 
   function renderCompare() {
@@ -276,7 +301,7 @@
       canvas.height = 420;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       emptyMsg.hidden = false;
-      return;
+      return bars;
     }
     emptyMsg.hidden = true;
 
@@ -310,6 +335,8 @@
       ctx.fillText(`${b.value.toFixed(1)} s (n=${b.n})`, pad.l + barX(b.value) + 8, rowY + rowH / 2 + 4);
     });
     ctx.textAlign = 'left';
+
+    return bars;
   }
 
   loadData().then((rows) => {

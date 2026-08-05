@@ -18,7 +18,9 @@ should have finished.
   fastest to slowest. The bar chart deliberately doesn't normalize for the
   fact that legs run on different physical/virtual machines -- it's comparing
   Docker-provider/platform overhead, which is the point, not controlling for
-  hardware.
+  hardware. A "Download CSV" link exports the rows behind whichever chart and
+  filters are currently on screen -- for slide decks or spreadsheets, so
+  numbers quoted from a presentation match what the dashboard shows.
 
 Neither step deploys to GitHub Pages directly. A repo has only one Pages site,
 and `.github/workflows/docs-publish.yml` already deploys the docs there on
