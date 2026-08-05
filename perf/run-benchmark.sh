@@ -148,7 +148,7 @@ branch="${BUILDKITE_BRANCH:-${GITHUB_REF_NAME:-$(git -C "$DIR" rev-parse --abbre
 # instead of a bare "unknown" lets local runs report a real provider too.
 docker_provider="${DOCKER_TYPE:-$(jq -r '.raw["docker-platform"] // "unknown"' <<<"$version_json")}"
 
-jq -n \
+result_json=$(jq -n \
   --argjson metrics "$metrics_json" \
   --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   --arg commit_sha "$commit_sha" \
@@ -166,4 +166,28 @@ jq -n \
     arch: $arch,
     docker_provider: $docker_provider,
     metrics: $metrics
-  }'
+  }')
+
+echo "$result_json"
+
+# Human-readable echo of the same data, to stderr so it doesn't corrupt the
+# JSON on stdout (this is what a `> result.json` redirect, or perf.sh's
+# `tee`, actually captures).
+{
+  echo
+  echo "--- Benchmark results (${os_name}/${arch_name}, ${docker_provider}) ---"
+  printf '  %-11s %s\n' "commit:" "${commit_sha:0:9}"
+  printf '  %-11s %s\n' "branch:" "$branch"
+  printf '  %-11s %s\n' "ddev:" "$ddev_version"
+  echo
+  jq -r '.metrics | to_entries[] | "\(.key)\t\(.value)"' <<<"$result_json" |
+    while IFS=$'\t' read -r key value; do
+      label="${key%_s}"
+      label="${label//_/ }"
+      if [ "$value" = "null" ]; then
+        printf '  %-20s %s\n' "$label" "n/a"
+      else
+        printf '  %-20s %s s\n' "$label" "$value"
+      fi
+    done
+} >&2
