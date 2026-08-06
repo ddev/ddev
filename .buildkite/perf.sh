@@ -114,7 +114,25 @@ export DDEV_PERF_SITE_URL="$PROJECT_URL"
 # perf-result*.json artifact from a build, so this doesn't need to match
 # anything on that end.
 RESULT_FILE="perf-result-${DOCKER_PROVIDER_LABEL:-${DOCKER_TYPE:-unknown}}.json"
-"$(dirname "$0")/../perf/run-benchmark.sh" | tee "$RESULT_FILE"
+# run-benchmark.sh's contract is "one JSON result line on stdout" (see its own
+# header comment), and everything else it prints is explicitly redirected to
+# stderr for exactly this reason -- but that contract has already been broken
+# once by a step that forgot to redirect (npm ci's own output). Rather than
+# trust every current and future step in that chain to honor the contract,
+# capture the full output for the Buildkite log (tee, as before) but only
+# take the LAST line for the artifact: the JSON echo is always the final
+# stdout write, so this is safe regardless of what anything upstream prints.
+RAW_OUTPUT="$(mktemp)"
+"$(dirname "$0")/../perf/run-benchmark.sh" | tee "$RAW_OUTPUT"
+tail -n1 "$RAW_OUTPUT" > "$RESULT_FILE"
+
+echo "--- Validating result JSON"
+if ! jq -e . "$RESULT_FILE" >/dev/null 2>&1; then
+  echo "FATAL: $RESULT_FILE is not valid JSON -- failing here instead of" >&2
+  echo "uploading something collect.js can't parse. Full run-benchmark.sh output:" >&2
+  cat "$RAW_OUTPUT" >&2
+  exit 1
+fi
 
 echo "--- Uploading result artifact"
 buildkite-agent artifact upload "$RESULT_FILE"
