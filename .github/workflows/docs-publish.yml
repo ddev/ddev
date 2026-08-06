@@ -141,3 +141,11 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v5
         id: deployment
+
+      - name: Report deployed URLs
+        run: |
+          {
+            echo "### Deployed"
+            echo "- Docs: ${{ steps.deployment.outputs.page_url }}"
+            echo "- Perf dashboard: ${{ steps.deployment.outputs.page_url }}perf/"
+          } | tee -a "$GITHUB_STEP_SUMMARY"

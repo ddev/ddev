@@ -14,7 +14,11 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$DIR/../lib/common.sh"
 
 : "${DDEV_PERF_PROJECT_DIR:?DDEV_PERF_PROJECT_DIR must be set}"
-REPEAT="${DDEV_PERF_REPEAT:-3}"
+# Deliberately not DDEV_PERF_REPEAT (3): a no-cache rebuild is expensive and
+# each repeat busts its own image-layer cache, so repeating it doesn't average
+# out noise the way repeating a plain start/install does -- it just triples
+# the cost for no real benefit.
+REPEAT=1
 
 cd "$DDEV_PERF_PROJECT_DIR"
 

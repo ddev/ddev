@@ -130,7 +130,10 @@ add_metric "$(bash "$DIR/metrics/02-mutagen-sync-settle.sh")"
 
 echo "--- Drupal demo_umami web install (Puppeteer)" >&2
 bash "$DIR/lib/reset-drupal.sh"
-( cd "$DIR/metrics/03-drupal-install" && npm ci --no-progress )
+# Redirected to stderr: this script's stdout contract is "one JSON result
+# line," and npm's own chatter here would otherwise land in perf.sh's
+# perf-result*.json artifact ahead of that line, breaking collect.js's parse.
+( cd "$DIR/metrics/03-drupal-install" && npm ci --no-progress ) >&2
 add_metric "$(cd "$DIR/metrics/03-drupal-install" && DDEV_PERF_SITE_URL="$DDEV_PERF_SITE_URL" node install-timer.js)"
 
 echo "--- drush si demo_umami (CLI diagnostic)" >&2

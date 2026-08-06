@@ -61,7 +61,18 @@ async function latestBuildkiteResults(pipeline) {
   for (const artifact of matches) {
     const res = await fetch(artifact.download_url, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`Failed to download artifact ${artifact.filename} for ${pipeline}: ${res.status}`);
-    results.push(JSON.parse(await res.text()));
+    const text = await res.text();
+    try {
+      results.push(JSON.parse(text));
+    } catch (err) {
+      // Bare JSON.parse errors don't say which artifact failed or what it
+      // actually contained -- both are needed to tell "wrong scope/HTML
+      // error page" apart from "a script wrote non-JSON to stdout ahead of
+      // the result line" (the actual cause the one time this fired).
+      throw new Error(
+        `${pipeline}'s ${artifact.filename} is not valid JSON: ${err.message}\nFirst 200 chars: ${text.slice(0, 200)}`
+      );
+    }
   }
   return results;
 }
@@ -116,11 +127,18 @@ function existingPointKeys(historyPath) {
 async function main() {
   const results = [];
 
-  for (const pipeline of CONFIG.pipelines) {
-    try {
+  // A missing token is the expected, tolerated state before the one-time
+  // BUILDKITE_API_TOKEN vault setup (see this file's header comment) --
+  // skip Buildkite entirely and still collect the Linux leg below. Once a
+  // token is present, though, any request failure (wrong scope, revoked,
+  // rate-limited) means the setup is broken, not "not done yet": let it
+  // throw and abort the whole run instead of quietly committing an
+  // empty/partial dataset that overwrites the live dashboard with nothing.
+  if (!process.env.BUILDKITE_API_TOKEN) {
+    console.warn('BUILDKITE_API_TOKEN not set; skipping Buildkite pipelines');
+  } else {
+    for (const pipeline of CONFIG.pipelines) {
       results.push(...(await latestBuildkiteResults(pipeline)));
-    } catch (err) {
-      console.warn(`Skipping ${pipeline}: ${err.message}`);
     }
   }
 

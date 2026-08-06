@@ -42,6 +42,39 @@ function sleep(ms) {
     const page = await browser.newPage();
     page.setDefaultTimeout(0);
 
+    // waitForSelector/goto have no per-call timeout (see setDefaultTimeout(0)
+    // above), so the only backstop against a genuine hang is protocolTimeout,
+    // 10 minutes. Stage markers on stderr mean a hung run says where it's
+    // stuck immediately instead of going silent for the full 10 minutes.
+    const stage = (s) => console.error(`[install-timer] ${s}`);
+
+    // Every step below clicks a submit-like control that triggers a full page
+    // navigation (not just a DOM update), and each one of those has now been
+    // caught -- on different runs -- with Puppeteer's navigation tracking
+    // desynced afterward: the wait never resolves even though the site has
+    // actually moved on (confirmed twice by checking the site directly while a
+    // wait was stuck). A reload against the current URL re-fetches whatever
+    // page is actually live now, sidestepping the stuck navigation state
+    // instead of waiting on it indefinitely. Applied to every post-click wait
+    // in this script, not just the ones that have hung so far.
+    const waitForSelectorWithReload = async (selector, { attempts = 5, timeoutMs = 60000 } = {}) => {
+      for (let i = 1; i <= attempts; i++) {
+        try {
+          await page.waitForSelector(selector, { timeout: timeoutMs });
+          return;
+        } catch (err) {
+          if (i === attempts) throw err;
+          stage(`${selector} not found after ${timeoutMs}ms (attempt ${i}/${attempts}), reloading`);
+          await page.reload({ waitUntil: 'domcontentloaded' }).catch((reloadErr) => {
+            stage(`reload failed, will retry anyway: ${reloadErr.message}`);
+          });
+        }
+      }
+    };
+    page.on('console', (msg) => console.error(`[install-timer] page console: ${msg.text()}`));
+    page.on('pageerror', (err) => console.error(`[install-timer] page error: ${err}`));
+    browser.on('disconnected', () => console.error('[install-timer] browser disconnected'));
+
     // Give any post-reset background work (php-fpm restart, Mutagen settle) a moment.
     await sleep(2000);
 
@@ -49,11 +82,14 @@ function sleep(ms) {
 
     const start = Date.now();
 
+    stage(`navigating to ${installUrl}`);
     await page.goto(installUrl);
+    stage('waiting for langcode selector');
     await page.waitForSelector('#edit-langcode');
     await page.click('#edit-submit');
 
-    await page.waitForSelector('#edit-profile-demo-umami');
+    stage('waiting for profile-demo-umami selector');
+    await waitForSelectorWithReload('#edit-profile-demo-umami');
     await page.click('#edit-profile-demo-umami');
     await page.click('#edit-submit');
 
@@ -61,24 +97,34 @@ function sleep(ms) {
     // (e.g. a missing recommended PHP extension); on a clean environment it's
     // skipped straight through to the configure-site form, so don't wait on
     // #edit-save unconditionally.
+    // Plain waitForSelector, not the reload-retry helper: whichever of these
+    // two loses the race is left pending in the background (harmless -- it
+    // never resolves, nothing awaits it) once the other wins. A reload from
+    // the loser would yank the page out from under whichever form the winner
+    // is about to type into.
+    stage('waiting for requirements or configure-site form');
     await Promise.race([
       page.waitForSelector('#edit-save'),
       page.waitForSelector('#edit-site-name'),
     ]);
     const requirementsPage = await page.$('#edit-save');
     if (requirementsPage) {
+      stage('acknowledging requirements warning');
       await requirementsPage.click();
     }
 
     // Final "configure site" form, shown once the install batch finishes.
-    await page.waitForSelector('#edit-site-name');
+    stage('waiting for configure-site form');
+    await waitForSelectorWithReload('#edit-site-name');
     await page.type('#edit-site-mail', 'admin@example.com');
     await page.type('#edit-account-name', 'admin');
     await page.type('#edit-account-pass-pass1', 'admin');
     await page.type('#edit-account-pass-pass2', 'admin');
     await page.click('#edit-submit');
 
-    await page.waitForSelector('#block-umami-account-menu');
+    stage('waiting for post-install account menu');
+    await waitForSelectorWithReload('#block-umami-account-menu');
+    stage('done');
 
     const durationS = Math.round((Date.now() - start) / 100) / 10;
     console.log(JSON.stringify({ metric: 'drupal_install_s', value_s: durationS }));
