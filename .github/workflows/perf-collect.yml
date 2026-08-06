@@ -74,6 +74,7 @@ jobs:
           node-version: '22'
 
       - name: Collect results
+        id: collect
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -106,3 +107,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run docs-publish.yml --repo "$GITHUB_REPOSITORY" --ref main
+
+      # Deliberately last: collect.js exits 0 even when a source failed, so
+      # the commit/push and docs-publish steps above still run and publish
+      # whatever clean results came through. This step turns the run red
+      # anyway, but only after that publishing has already happened -- a
+      # broken source should be visible, not silently swallowed, but it also
+      # shouldn't block the legs that worked.
+      - name: Fail if any source had a collection error
+        if: steps.collect.outputs.had_errors == 'true'
+        run: |
+          echo "One or more sources failed to collect this run -- see the 'Collect results' step's ERROR lines above."
+          exit 1
