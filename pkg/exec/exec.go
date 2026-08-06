@@ -93,8 +93,27 @@ func RunInteractiveCommand(command string, args []string) error {
 	return err
 }
 
-// RunInteractiveCommandWithOutput writes to the host and
-// also to the passed io.Writer
+// RunInteractiveCommandWithCapture runs a command interactively like
+// RunInteractiveCommand(), but also returns a copy of what it printed, so a
+// failure can be reported with its output attached. stdout and stderr are
+// combined and share one writer, so os/exec copies them from a single
+// goroutine and the capture stays race-free.
+func RunInteractiveCommandWithCapture(command string, args []string) (string, error) {
+	var captured bytes.Buffer
+	cmd := HostCommand(command, args...)
+	cmd.Stdin = os.Stdin
+	// Byte-for-byte tee, unlike RunInteractiveCommandWithOutput(), so progress
+	// output and colors reach the terminal unchanged.
+	tee := io.MultiWriter(os.Stdout, &captured)
+	cmd.Stdout = tee
+	cmd.Stderr = tee
+	err := cmd.Run()
+	return captured.String(), err
+}
+
+// RunInteractiveCommandWithOutput connects stdin and writes the command's
+// combined output to the passed io.Writer, line by line with ANSI color
+// codes removed. Nothing goes to the terminal unless out writes there.
 func RunInteractiveCommandWithOutput(command string, args []string, out io.Writer) error {
 	cmd := HostCommand(command, args...)
 	cmd.Stdin = os.Stdin
