@@ -33,14 +33,17 @@ One JSON result object per run per leg (platform + Docker provider combination):
 
 | Metric | What it measures | Why it's here |
 |---|---|---|
-| `ddev_rebuild_s` | `ddev utility rebuild` (forced no-cache image build + restart) | Image-build-layer cost -- catches regressions like #8600, where a recursive chgrp/chmod added 90s+ to every project build without any existing metric noticing. `ddev_start_cold_s` below starts from an already-built image, so it can't see this class of regression |
-| `ddev_start_cold_s` | `ddev poweroff` + prune, then `ddev start` to ready | Docker-provider/container startup cost, independent of any CMS |
+| `ddev_rebuild_s` | `ddev utility rebuild` (forced no-cache image build + restart), single sample | Image-build-layer cost -- catches regressions like #8600, where a recursive chgrp/chmod added 90s+ to every project build without any existing metric noticing. `ddev_start_cold_s` below starts from an already-built image, so it can't see this class of regression |
+| `ddev_start_cold_s` | `ddev poweroff`, then `ddev start` to ready | Docker-provider/container startup cost, independent of any CMS |
 | `mutagen_settle_s` | Copy a ~5000-file tree in, time `ddev mutagen sync` (blocking flush) to settle | Isolates file-sync mechanics (bind mount vs. Mutagen vs. NFS) from any app's install logic. `null` when Mutagen isn't enabled on the project |
 | `drupal_install_s` | Puppeteer drives the Drupal `demo_umami` web install wizard end-to-end | The flagship "realistic app" metric — parallels normal browser-based DDEV usage, exercising the DDEV router, webserver, and PHP-FPM on every step |
 | `drush_install_s` | `ddev drush si demo_umami -y` (CLI, non-interactive) | Cheap diagnostic, not a replacement for `drupal_install_s` — see below |
 | `ddev_stop_s` | `ddev poweroff` | Teardown cost |
 
-Each metric script repeats noisy operations `DDEV_PERF_REPEAT` times (default 3) and reports the median, in seconds to one decimal place.
+Each metric script repeats noisy operations `DDEV_PERF_REPEAT` times (default 3) and reports the
+median, in seconds to one decimal place. `ddev_rebuild_s` is the exception: it always runs once --
+a no-cache rebuild is expensive, and each repeat busts its own image-layer cache, so repeating it
+doesn't average out noise the way repeating a plain start or install does.
 
 ### Why both `drupal_install_s` and `drush_install_s`?
 
@@ -132,9 +135,9 @@ revisit — at that point one of them should go.
 ## Assumption: one Buildkite agent per testbot
 
 The `perf-*.yml` pipelines reuse the same `agents:` tags as the correctness pipelines, and
-`01-ddev-start.sh` runs `ddev poweroff` + `docker system prune -f` before each timed sample. That
-is only safe because each testbot machine runs a single `buildkite-agent` slot, so a perf job and a
-test job are never in flight on the same machine at once. `.buildkite/test.sh` already relies on
+`01-ddev-start.sh` runs `ddev poweroff` before each timed sample -- which stops every DDEV project
+on the machine, not just this one. That is only safe because each testbot machine runs a single
+`buildkite-agent` slot, so a perf job and a test job are never in flight on the same machine at once. `.buildkite/test.sh` already relies on
 the same exclusivity (it does `ddev poweroff` and `docker rm -f` against every container on the
 machine), so this adds no new assumption — but if a testbot is ever given more than one agent slot,
 both suites break, not just this one. `perf-macos-shared-providers.yml` handles the related but

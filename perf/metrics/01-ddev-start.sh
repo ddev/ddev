@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Times a cold `ddev start`: power off, prune, then start-to-ready.
+# Times a cold `ddev start`: power off, then start-to-ready.
 # Prints one JSON metric line: {"metric":"ddev_start_cold_s","value_s":N}
 set -euo pipefail
 
@@ -15,7 +15,6 @@ cd "$DDEV_PERF_PROJECT_DIR"
 samples=()
 for _ in $(seq 1 "$REPEAT"); do
   ddev poweroff >/dev/null 2>&1 || true
-  docker system prune -f >/dev/null 2>&1 || true
 
   start=$(now_ms)
   run_quiet "ddev start" ddev start -y
