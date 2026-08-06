@@ -107,7 +107,11 @@ func (app *DdevApp) Pull(provider *Provider, skipDBArg bool, skipFilesArg bool, 
 			if err != nil {
 				return err
 			}
-			output.UserOut.Printf("Importing databases %v", fileLocation)
+			// With a db_import_command and no db_pull_command there's nothing downloaded to name here,
+			// and importDatabaseBackup() announces itself.
+			if len(fileLocation) > 0 {
+				output.UserOut.Printf("Importing databases %v", fileLocation)
+			}
 			err = provider.importDatabaseBackup(fileLocation, importPath)
 			if err != nil {
 				return err
@@ -347,7 +351,10 @@ func (p *Provider) getDatabaseBackups() ([]string, error) {
 	}
 
 	if p.DBPullCommand.Command == "" {
-		util.Warning("No db_pull_command provided, so skipping database pull")
+		// A db_import_command may do the downloading itself, so there's nothing to warn about.
+		if p.DBImportCommand.Command == "" {
+			util.Warning("No db_pull_command provided, so skipping database pull")
+		}
 		return nil, nil
 	}
 
@@ -396,7 +403,17 @@ func (p *Provider) importDatabaseBackup(fileLocation []string, importPath []stri
 			s = "web"
 		}
 		output.UserOut.Printf("Importing database via custom db_import_command")
+		// app.ImportDB() runs these itself, so the custom command has to do it here.
+		if err := p.app.ProcessHooks("pre-import-db"); err != nil {
+			return err
+		}
 		err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBImportCommand.Command)
+		if err != nil {
+			return err
+		}
+		if err := p.app.ProcessHooks("post-import-db"); err != nil {
+			return err
+		}
 	}
 	return err
 }
@@ -418,7 +435,17 @@ func (p *Provider) doFilesImport(fileLocation string, importPath string) error {
 			s = "web"
 		}
 		output.UserOut.Printf("Importing files via custom files_import_command...")
+		// See the db_import_command note in importDatabaseBackup().
+		if err := p.app.ProcessHooks("pre-import-files"); err != nil {
+			return err
+		}
 		err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesImportCommand.Command)
+		if err != nil {
+			return err
+		}
+		if err := p.app.ProcessHooks("post-import-files"); err != nil {
+			return err
+		}
 	}
 	return err
 }

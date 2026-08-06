@@ -30,11 +30,16 @@ db_import_command:
   command: |
     set -eu -o pipefail
     # set -x
-    ddev import-db --file="${checkout_dir}/db.sql.gz"
+    # Import directly rather than via `ddev import-db`, which fires pre/post-import-db
+    # hooks itself and would run them twice alongside this command's own hooks.
+    gzip -dc ${checkout_dir}/db.sql.gz | ddev mysql db
 
 files_import_command:
   service: host
   command: |
     set -eu -o pipefail
     # set -x
-    ddev import-files --source="${checkout_dir}/files"
+    # Import directly rather than via `ddev import-files`, for the same reason as
+    # db_import_command above.
+    mkdir -p web/sites/default/files
+    cp -r ${checkout_dir}/files/. web/sites/default/files/
