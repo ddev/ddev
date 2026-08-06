@@ -48,14 +48,15 @@ function sleep(ms) {
     // stuck immediately instead of going silent for the full 10 minutes.
     const stage = (s) => console.error(`[install-timer] ${s}`);
 
-    // The final submit triggers Drupal's install batch, which redirects through
-    // one or more intermediate progress pages before landing on the site
-    // homepage. Seen in the field: Puppeteer's navigation tracking occasionally
-    // desyncs partway through that redirect chain and never notices the final
-    // page actually loaded (confirmed once by checking the site directly -- the
-    // install itself had finished, only this wait was stuck). A reload against
-    // the current URL re-fetches whatever page is actually live now, sidestepping
-    // the stuck navigation state instead of waiting on it indefinitely.
+    // Every step below clicks a submit-like control that triggers a full page
+    // navigation (not just a DOM update), and each one of those has now been
+    // caught -- on different runs -- with Puppeteer's navigation tracking
+    // desynced afterward: the wait never resolves even though the site has
+    // actually moved on (confirmed twice by checking the site directly while a
+    // wait was stuck). A reload against the current URL re-fetches whatever
+    // page is actually live now, sidestepping the stuck navigation state
+    // instead of waiting on it indefinitely. Applied to every post-click wait
+    // in this script, not just the ones that have hung so far.
     const waitForSelectorWithReload = async (selector, { attempts = 5, timeoutMs = 60000 } = {}) => {
       for (let i = 1; i <= attempts; i++) {
         try {
@@ -88,7 +89,7 @@ function sleep(ms) {
     await page.click('#edit-submit');
 
     stage('waiting for profile-demo-umami selector');
-    await page.waitForSelector('#edit-profile-demo-umami');
+    await waitForSelectorWithReload('#edit-profile-demo-umami');
     await page.click('#edit-profile-demo-umami');
     await page.click('#edit-submit');
 
@@ -96,6 +97,11 @@ function sleep(ms) {
     // (e.g. a missing recommended PHP extension); on a clean environment it's
     // skipped straight through to the configure-site form, so don't wait on
     // #edit-save unconditionally.
+    // Plain waitForSelector, not the reload-retry helper: whichever of these
+    // two loses the race is left pending in the background (harmless -- it
+    // never resolves, nothing awaits it) once the other wins. A reload from
+    // the loser would yank the page out from under whichever form the winner
+    // is about to type into.
     stage('waiting for requirements or configure-site form');
     await Promise.race([
       page.waitForSelector('#edit-save'),
@@ -109,7 +115,7 @@ function sleep(ms) {
 
     // Final "configure site" form, shown once the install batch finishes.
     stage('waiting for configure-site form');
-    await page.waitForSelector('#edit-site-name');
+    await waitForSelectorWithReload('#edit-site-name');
     await page.type('#edit-site-mail', 'admin@example.com');
     await page.type('#edit-account-name', 'admin');
     await page.type('#edit-account-pass-pass1', 'admin');
