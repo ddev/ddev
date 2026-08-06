@@ -161,7 +161,7 @@ branch="${BUILDKITE_BRANCH:-${GITHUB_REF_NAME:-$(git -C "$DIR" rev-parse --abbre
 # report a real provider too.
 docker_provider="${DOCKER_PROVIDER_LABEL:-${DOCKER_TYPE:-$(jq -r '.raw["docker-platform"] // "unknown"' <<<"$version_json")}}"
 
-result_json=$(jq -n \
+result_json=$(jq -nc \
   --argjson metrics "$metrics_json" \
   --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   --arg commit_sha "$commit_sha" \
