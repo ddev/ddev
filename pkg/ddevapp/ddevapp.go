@@ -2673,15 +2673,20 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	return stdoutResult, stderrResult, err
 }
 
+// ExecOnHostOrService runs cmd on the host or in the named service.
+// A failure carries the command's output, which is otherwise lost in logs
+// far from the error that mentions it.
 func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
-	var err error
 	// Handle case on host
 	if service == "host" {
 		cwd, _ := os.Getwd()
-		err = os.Chdir(app.GetAppRoot())
-		if err != nil {
-			return fmt.Errorf("unable to GetAppRoot: %v", err)
+		appRoot := app.GetAppRoot()
+		if err := os.Chdir(appRoot); err != nil {
+			return fmt.Errorf("unable to chdir to %s: %v", appRoot, err)
 		}
+		defer func() {
+			_ = os.Chdir(cwd)
+		}()
 		bashPath := "bash"
 		if nodeps.IsWindows() {
 			bashPath = util.FindBashPath()
@@ -2696,17 +2701,35 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 		}
 
 		_ = app.DockerEnv()
-		err = exec.RunInteractiveCommand(bashPath, args)
-		_ = os.Chdir(cwd)
-	} else { // handle case in container
-		_, _, err = app.Exec(
-			&ExecOpts{
-				Service: service,
-				Cmd:     cmd,
-				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
-			})
+		// Interactive: these commands prompt for ssh passphrases and print
+		// transfer progress, so they keep stdin and a live terminal.
+		out, err := exec.RunInteractiveCommandWithCapture(bashPath, args)
+		if err != nil {
+			return errorWithOutput(err, out)
+		}
+		return nil
 	}
-	return err
+	// handle case in container
+	stdout, stderr, err := app.Exec(
+		&ExecOpts{
+			Service: service,
+			Cmd:     cmd,
+			Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+		})
+	if err != nil {
+		return errorWithOutput(err, stdout+"\n"+stderr)
+	}
+	return nil
+}
+
+// errorWithOutput attaches command output to err, skipping it when there is
+// none to attach or when the user has already watched it go by on a terminal.
+func errorWithOutput(err error, out string) error {
+	out = strings.TrimSpace(out)
+	if out == "" || isatty.IsTerminal(os.Stdout.Fd()) {
+		return err
+	}
+	return fmt.Errorf("%v\noutput: %s", err, out)
 }
 
 // Logs returns logs for a site's given container.

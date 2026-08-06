@@ -104,3 +104,38 @@ func TestRunHostCommandWithOptions(t *testing.T) {
 		assert.Equal(t, "", output)
 	})
 }
+
+// TestRunInteractiveCommandWithCapture verifies that the command's output both
+// reaches the terminal and comes back to the caller, unmodified.
+func TestRunInteractiveCommandWithCapture(t *testing.T) {
+	bashPath := util.FindBashPath()
+
+	t.Run("captures stdout and stderr", func(t *testing.T) {
+		restoreOutput := util.CaptureStdOut()
+		captured, err := exec.RunInteractiveCommandWithCapture(bashPath, []string{"-c", `echo to-stdout; echo to-stderr >&2`})
+		printed := restoreOutput()
+		require.NoError(t, err)
+		require.Contains(t, captured, "to-stdout")
+		require.Contains(t, captured, "to-stderr")
+		// The user still sees it happen; capturing is not a substitute for that.
+		require.Contains(t, printed, "to-stdout")
+		require.Contains(t, printed, "to-stderr")
+	})
+
+	t.Run("returns output along with the error", func(t *testing.T) {
+		restoreOutput := util.CaptureStdOut()
+		captured, err := exec.RunInteractiveCommandWithCapture(bashPath, []string{"-c", `echo why-it-failed >&2; exit 3`})
+		_ = restoreOutput()
+		require.Error(t, err)
+		require.Contains(t, captured, "why-it-failed")
+	})
+
+	t.Run("passes bytes through unchanged", func(t *testing.T) {
+		restoreOutput := util.CaptureStdOut()
+		captured, err := exec.RunInteractiveCommandWithCapture(bashPath, []string{"-c", `printf '\033[31mred\033[0m\rprogress'`})
+		_ = restoreOutput()
+		require.NoError(t, err)
+		// Unlike RunInteractiveCommandWithOutput(), colors and carriage returns survive.
+		require.Equal(t, "\x1b[31mred\x1b[0m\rprogress", captured)
+	})
+}
