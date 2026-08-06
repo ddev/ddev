@@ -47,6 +47,29 @@ function sleep(ms) {
     // 10 minutes. Stage markers on stderr mean a hung run says where it's
     // stuck immediately instead of going silent for the full 10 minutes.
     const stage = (s) => console.error(`[install-timer] ${s}`);
+
+    // The final submit triggers Drupal's install batch, which redirects through
+    // one or more intermediate progress pages before landing on the site
+    // homepage. Seen in the field: Puppeteer's navigation tracking occasionally
+    // desyncs partway through that redirect chain and never notices the final
+    // page actually loaded (confirmed once by checking the site directly -- the
+    // install itself had finished, only this wait was stuck). A reload against
+    // the current URL re-fetches whatever page is actually live now, sidestepping
+    // the stuck navigation state instead of waiting on it indefinitely.
+    const waitForSelectorWithReload = async (selector, { attempts = 5, timeoutMs = 60000 } = {}) => {
+      for (let i = 1; i <= attempts; i++) {
+        try {
+          await page.waitForSelector(selector, { timeout: timeoutMs });
+          return;
+        } catch (err) {
+          if (i === attempts) throw err;
+          stage(`${selector} not found after ${timeoutMs}ms (attempt ${i}/${attempts}), reloading`);
+          await page.reload({ waitUntil: 'domcontentloaded' }).catch((reloadErr) => {
+            stage(`reload failed, will retry anyway: ${reloadErr.message}`);
+          });
+        }
+      }
+    };
     page.on('console', (msg) => console.error(`[install-timer] page console: ${msg.text()}`));
     page.on('pageerror', (err) => console.error(`[install-timer] page error: ${err}`));
     browser.on('disconnected', () => console.error('[install-timer] browser disconnected'));
@@ -94,7 +117,7 @@ function sleep(ms) {
     await page.click('#edit-submit');
 
     stage('waiting for post-install account menu');
-    await page.waitForSelector('#block-umami-account-menu');
+    await waitForSelectorWithReload('#block-umami-account-menu');
     stage('done');
 
     const durationS = Math.round((Date.now() - start) / 100) / 10;
