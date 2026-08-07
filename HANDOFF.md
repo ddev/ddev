@@ -12,23 +12,20 @@ Mutagen was off throughout (`performance_mode: none`).
 
 ## Fix branches at a glance
 
-Twelve socktainer fixes came out of this investigation — eleven committed, each on its own
-branch in the [`rfay/socktainer`](https://github.com/rfay/socktainer) fork and combined and
-verified together on
-[`tmp/combined-verify-2`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-2), plus
-one identified but not yet branched. None is merged upstream yet.
+Eleven socktainer fixes came out of this investigation, each on its own branch in the
+[`rfay/socktainer`](https://github.com/rfay/socktainer) fork and combined and verified together
+on [`tmp/combined-verify-2`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-2).
+None is merged upstream yet.
 
 Ordered below by **actual impact on DDEV**, not diff risk — this is a different axis from the
 fork's [rollout plan](https://github.com/rfay/socktainer/blob/fix/exec-hijack-close/UPSTREAM_ROLLOUT.md),
-which orders the same branches by submission risk/reviewability instead. A few branches that
-plan ranked highly (`fix/exec-hijack-close`) turned out, on closer investigation, not to be
-what's actually blocking DDEV — see the per-item notes.
+which orders the same branches by submission risk/reviewability instead.
 
 ### Blocks `ddev start` from working at all
 
 | Fix | Branch | Status |
 |---|---|---|
-| socktainer only upgrades an exec connection when stdin is attached; `dockerutil.Exec` doesn't attach it, so the reply never closes and `ddev start` hangs forever at "Getting traefik error output" | *(no branch yet — one-line fix identified: drop `&& config.attachStdin` from `shouldUpgrade`)* | **Not yet filed or branched anywhere.** This is the actual cause of the `ddev start` hang once misattributed to the exec-hijack-close bug below — see *"The real cause of the `ddev start` hang was upgrade gating, not the hijack close"* |
+| socktainer only upgraded an exec connection when stdin was attached, so `dockerutil.Exec` (stdout/stderr only) never got a reply that closed, hanging `ddev start` forever at "Getting traefik error output" — see *"The real cause of the `ddev start` hang was upgrade gating, not the hijack close"* below | [`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close) | **Fixed, local-only, not yet pushed** (commit `53cc0f3`, 2026-08-05) — rewritten to fix this together with the EOF-close bug below, superseding the closed [socktainer#347](https://github.com/socktainer/socktainer/pull/347) approach |
 | `/version` reports the Docker API version instead of socktainer's own, tripping DDEV's minimum-version check and refusing to start at all | [`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version) | Fixed and verified live; not yet submitted ([rfay/socktainer#13](https://github.com/rfay/socktainer/issues/13)) |
 | Malformed EDNS0 responses break Go/musl DNS clients — this was the actual cause of the router's 502s, i.e. the site never serving anything | [`fix/dns-edns0-truncation`](https://github.com/rfay/socktainer/tree/fix/dns-edns0-truncation) | Already filed upstream by someone else as [socktainer#329](https://github.com/socktainer/socktainer/issues/329) (still open); this fix not yet offered there |
 
@@ -45,7 +42,6 @@ what's actually blocking DDEV — see the per-item notes.
 
 | Fix | Branch | Status |
 |---|---|---|
-| Exec hijack never closes if Apple Container's XPC `wait()` stalls | [`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close) | Closed as [socktainer#347](https://github.com/socktainer/socktainer/pull/347) — wrong diagnosis for the `ddev start` hang (see row 1 above); the fix is still valid on its own merits (protects buildx builds and `ddev ssh`, which do attach stdin), corrected version on this branch, not resubmitted |
 | `HostConfig.Privileged` doesn't grant capabilities — DDEV's cold-start recipe already works around this with `--cap-add ALL` | [`fix/privileged-cap-all`](https://github.com/rfay/socktainer/tree/fix/privileged-cap-all) | Ready, not yet submitted ([rfay/socktainer#1](https://github.com/rfay/socktainer/issues/1)) |
 | Healthcheck status regression + stalled-probe freeze — not hit by DDEV's own container/timeout configuration | [`fix/healthcheck-timing`](https://github.com/rfay/socktainer/tree/fix/healthcheck-timing) | Ready, not yet submitted ([rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12)) |
 | `--filter name=`/`status=`/`id=` matching semantics wrong — DDEV never hits this, `FindContainerByName` re-checks the exact name itself | [`fix/filter-name-ignored`](https://github.com/rfay/socktainer/tree/fix/filter-name-ignored) | Ready, not yet submitted ([rfay/socktainer#9](https://github.com/rfay/socktainer/issues/9)) — pairs with the parsing fix below |
@@ -278,10 +274,14 @@ returns in 0.12 s against all three containers, and `docker exec` with no flags,
 `-t` and a non-zero exit code all still behave.
 
 This is what [socktainer#346](https://github.com/socktainer/socktainer/issues/346) was
-originally filed to be about, but the fix for *this* bug has no upstream issue or branch of
-its own yet — #346 and the corresponding PR #347 were closed 2026-08-04 by the reporter as an
-incomplete diagnosis (see "Upstream engagement status" below). The hijack-close bug fixed by
-`fix/exec-hijack-close` is real too, but it is not what DDEV hit here.
+originally filed to be about, but #346 and the corresponding PR #347 were closed 2026-08-04 by
+the reporter as an incomplete diagnosis (see "Upstream engagement status" below) — the
+attachStdin bug above is a different one from the hijack-close bug #347 addressed. **Both are
+now fixed together**, one day later, on the rewritten
+[`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close)
+(commit `53cc0f3`, 2026-08-05, local-only, not yet pushed): `shouldUpgrade` no longer checks
+`attachStdin` at all, and the channel close logic is the EOF-based fix described above. See
+the fix-branches table at the top of this document.
 
 ### DNS/AAAA bug root-caused and fixed: the response echoed the query's OPT record
 
@@ -355,10 +355,11 @@ overlays ship with Command Line Tools; running them needs full Xcode).
   [socktainer/socktainer#347](https://github.com/socktainer/socktainer/pull/347), both closed
   2026-08-04 by the reporter — the diagnosis was incomplete: the actual hang is the
   upgrade-gating bug described in *"The real cause of the `ddev start` hang was upgrade
-  gating, not the hijack close"* above, which has no upstream issue of its own yet. The
-  exec-hijack-close fix on
-  [`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close) is
-  still a real bug worth landing on its own merits.
+  gating, not the hijack close"* above. **Fixed the next day** on the rewritten
+  [`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close)
+  (commit `53cc0f3`, 2026-08-05, local-only, not yet pushed or resubmitted), which now fixes
+  the upgrade-gating bug and the original hijack-close bug together, superseding #347's
+  approach for both.
 - **Already filed upstream by someone else, corroborated independently and root-caused:**
   [socktainer/socktainer#329](https://github.com/socktainer/socktainer/issues/329) (malformed
   EDNS0) — fix written on
@@ -814,17 +815,18 @@ logs nothing after it). The three `exec` sequences it issues against `ddev-route
 blocked call is not one of them. It is not a sudo/`/etc/hosts` prompt: `appletest.ddev.site`
 resolves publicly to 127.0.0.1, so no hostname edit is needed.
 
-**Fixed, and the earlier diagnosis here was wrong.** `GetRouterConfigErrors()` calls
-`dockerutil.Exec()`, which attaches stdout/stderr but not stdin. socktainer refuses to
-upgrade such a request (`shouldUpgrade` requires `attachStdin`) and answers with a chunked
+**Fixed, and the earlier diagnosis here was wrong at first.** `GetRouterConfigErrors()` calls
+`dockerutil.Exec()`, which attaches stdout/stderr but not stdin. socktainer refused to
+upgrade such a request (`shouldUpgrade` required `attachStdin`) and answered with a chunked
 body on a keep-alive connection, while the Go client — having asked to upgrade — reads the
-socket until it closes. Nothing closes it. The hijacked-path close bug that
+socket until it closes. Nothing closed it. The original hijacked-path close bug that PR #347
+addressed was real too, but was *not* on DDEV's path; that fix alone left this hanging
+(measured). See the verification-run section above. `dockerutil.Exec` hung against every
+container under released socktainer, not only ddev-router. Both bugs are now fixed together
+on the rewritten
 [`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close)
-addresses is real but is *not* on DDEV's path; that fix alone leaves this hanging (measured).
-See the verification-run section above. `dockerutil.Exec` hangs against every container
-under released socktainer, not only ddev-router.
-[ddev/ddev#8660](https://github.com/ddev/ddev/pull/8660) (stop requesting the hijacked
-stream) is still worth having as the DDEV-side belt-and-braces.
+(commit `53cc0f3`, 2026-08-05). [ddev/ddev#8660](https://github.com/ddev/ddev/pull/8660) (stop
+requesting the hijacked stream) is still worth having as the DDEV-side belt-and-braces.
 
 ---
 
