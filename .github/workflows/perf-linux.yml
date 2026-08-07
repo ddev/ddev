@@ -70,6 +70,11 @@ jobs:
             cd "$PERF_PROJECT_DIR"
             ddev start -y
           fi
+          # drupal/recommended-project doesn't include drush/drush, which
+          # 05-drush-install.sh needs -- same guard perf.sh applies.
+          if ! ddev drush --version >/dev/null 2>&1; then
+            ddev composer require drush/drush
+          fi
           {
             echo "DDEV_PERF_PROJECT_DIR=$PERF_PROJECT_DIR"
             echo "DDEV_PERF_SITE_URL=$(ddev describe -j | jq -r '.raw.primary_url')"
