@@ -205,7 +205,7 @@ Not currently used.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can `true` or `false`.
+| :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
 ## `disable_settings_management`
 
