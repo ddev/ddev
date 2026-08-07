@@ -1,4 +1,4 @@
-# DDEV on Apple Container + socktainer — investigation notes (2026-08-02)
+# DDEV on Apple Container + socktainer — investigation notes (started 2026-08-02, reorganized 2026-08-07)
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372). This documents an
 exploratory session, not a finished feature: the code changes here are experiments that only
@@ -6,15 +6,63 @@ take effect when the Docker provider is socktainer, and this file is expected to
 before any of it merges.
 
 Environment: Apple `container` 1.2.0, `socktainer` 1.2.1 (Homebrew bottle), docker CLI 29.4.0,
-docker context `socktainer`, macOS 27, `ddev` built from
-branch `20260802_rfay_apple_container_experiment`. Mutagen was off throughout
-(`performance_mode: none`).
+docker context `socktainer`, macOS 27, `ddev` built from branch
+[`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment).
+Mutagen was off throughout (`performance_mode: none`).
+
+## Fix branches at a glance
+
+Twelve socktainer fixes came out of this investigation — eleven committed, each on its own
+branch in the [`rfay/socktainer`](https://github.com/rfay/socktainer) fork and combined and
+verified together on
+[`tmp/combined-verify-2`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-2), plus
+one identified but not yet branched. None is merged upstream yet.
+
+Ordered below by **actual impact on DDEV**, not diff risk — this is a different axis from the
+fork's [rollout plan](https://github.com/rfay/socktainer/blob/fix/exec-hijack-close/UPSTREAM_ROLLOUT.md),
+which orders the same branches by submission risk/reviewability instead. A few branches that
+plan ranked highly (`fix/exec-hijack-close`) turned out, on closer investigation, not to be
+what's actually blocking DDEV — see the per-item notes.
+
+### Blocks `ddev start` from working at all
+
+| Fix | Branch | Status |
+|---|---|---|
+| socktainer only upgrades an exec connection when stdin is attached; `dockerutil.Exec` doesn't attach it, so the reply never closes and `ddev start` hangs forever at "Getting traefik error output" | *(no branch yet — one-line fix identified: drop `&& config.attachStdin` from `shouldUpgrade`)* | **Not yet filed or branched anywhere.** This is the actual cause of the `ddev start` hang once misattributed to the exec-hijack-close bug below — see *"The real cause of the `ddev start` hang was upgrade gating, not the hijack close"* |
+| `/version` reports the Docker API version instead of socktainer's own, tripping DDEV's minimum-version check and refusing to start at all | [`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version) | Fixed and verified live; not yet submitted ([rfay/socktainer#13](https://github.com/rfay/socktainer/issues/13)) |
+| Malformed EDNS0 responses break Go/musl DNS clients — this was the actual cause of the router's 502s, i.e. the site never serving anything | [`fix/dns-edns0-truncation`](https://github.com/rfay/socktainer/tree/fix/dns-edns0-truncation) | Already filed upstream by someone else as [socktainer#329](https://github.com/socktainer/socktainer/issues/329) (still open); this fix not yet offered there |
+
+### Blocks specific DDEV scenarios (multi-project, builds, global cache)
+
+| Fix | Branch | Status |
+|---|---|---|
+| `HostConfig.PortBindings` always nil on inspect, so a second DDEV project can never start | [`fix/port-bindings-inspect`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect) | Ready, not yet submitted (found this session; no upstream issue filed yet) |
+| `docker cp` of a directory hangs forever — this is exactly what DDEV's `CopyIntoVolume` does (mkcert CA, global commands, traefik config); currently side-stepped only for the global-cache paths via the bind-mount workaround below, not fixed | [`fix/cp-directory-hang`](https://github.com/rfay/socktainer/tree/fix/cp-directory-hang) | Ready, not yet submitted ([rfay/socktainer#11](https://github.com/rfay/socktainer/issues/11)) |
+| `PUT /containers/<id>/archive` 404s on a created-but-not-started container, blocking buildx's bootstrap — requires the buildkit node to be hand-recreated after every `container system` restart | [`fix/archive-404-prestart`](https://github.com/rfay/socktainer/tree/fix/archive-404-prestart) | Ready, not yet submitted ([rfay/socktainer#10](https://github.com/rfay/socktainer/issues/10)) |
+| DNS gives multi-homed hostnames the wrong network's address — plausible impact on `ddev-router`, which is itself multi-homed, but not yet confirmed to actually break a DDEV scenario | [`fix/dns-wrong-network-address`](https://github.com/rfay/socktainer/tree/fix/dns-wrong-network-address) | Ready, not yet submitted ([rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7)) |
+
+### Real bugs, not currently blocking DDEV
+
+| Fix | Branch | Status |
+|---|---|---|
+| Exec hijack never closes if Apple Container's XPC `wait()` stalls | [`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close) | Closed as [socktainer#347](https://github.com/socktainer/socktainer/pull/347) — wrong diagnosis for the `ddev start` hang (see row 1 above); the fix is still valid on its own merits (protects buildx builds and `ddev ssh`, which do attach stdin), corrected version on this branch, not resubmitted |
+| `HostConfig.Privileged` doesn't grant capabilities — DDEV's cold-start recipe already works around this with `--cap-add ALL` | [`fix/privileged-cap-all`](https://github.com/rfay/socktainer/tree/fix/privileged-cap-all) | Ready, not yet submitted ([rfay/socktainer#1](https://github.com/rfay/socktainer/issues/1)) |
+| Healthcheck status regression + stalled-probe freeze — not hit by DDEV's own container/timeout configuration | [`fix/healthcheck-timing`](https://github.com/rfay/socktainer/tree/fix/healthcheck-timing) | Ready, not yet submitted ([rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12)) |
+| `--filter name=`/`status=`/`id=` matching semantics wrong — DDEV never hits this, `FindContainerByName` re-checks the exact name itself | [`fix/filter-name-ignored`](https://github.com/rfay/socktainer/tree/fix/filter-name-ignored) | Ready, not yet submitted ([rfay/socktainer#9](https://github.com/rfay/socktainer/issues/9)) — pairs with the parsing fix below |
+| Dict-form filter values dropped for every key but `label` | [`fix/dict-filter-parsing`](https://github.com/rfay/socktainer/tree/fix/dict-filter-parsing) | Ready, not yet submitted — other half of the fix above |
+
+Four DDEV-side hardenings are open as their own draft PRs, independent of any socktainer fix
+landing: [#8657](https://github.com/ddev/ddev/pull/8657) (bound host ports fallback),
+[#8658](https://github.com/ddev/ddev/pull/8658) (`GetExistingDBType` via exec),
+[#8659](https://github.com/ddev/ddev/pull/8659) (non-fatal global-cache chown),
+[#8660](https://github.com/ddev/ddev/pull/8660) (stop hijacking the exec stream in
+`dockerutil.Exec()`).
 
 ## How far it got
 
 **It works end to end**, with `container` installed from the **signed installer** (not
-Homebrew — see blocker 4, which turned out to be Local Network authorization scoped to a
-binary path):
+Homebrew — see *"Published ports were accepted but reset"* below, which turned out to be Local
+Network authorization scoped to a binary path):
 
 ```text
 http://appletest.ddev.site:8080/    → 200
@@ -32,15 +80,16 @@ Getting there took three socktainer fixes beyond the seven already queued (one o
 **correction to what was open upstream as
 [socktainer#347](https://github.com/socktainer/socktainer/pull/347)**), plus switching
 `container` from Homebrew to the signed installer. See the verification-run section, which
-supersedes what blockers 3, 4 and 9 said before.
+supersedes what *"DNS returned unusable AAAA answers"*, *"Published ports were accepted but
+reset"*, and *"`ddev start` never returns, even once everything is healthy"* said before.
 
 Still required by hand: unprivileged router ports,
 `omit_containers: [ddev-ssh-agent]`, a non-colliding `traefik_monitor_port`, and the
 cold-start recipe. Mutagen no longer needs a per-project setting — it is forced off
 automatically when the provider is socktainer (see below). Use **`ddev restart`**, which
 works repeatably as of 2026-08-04; only `ddev start` over an already-running project still
-hits the hostname collision (blocker 12). So: a working proof of concept, not a supported
-provider.
+hits the hostname collision (see *"Hostname uniqueness collides with compose's
+recreate-by-rename"*). So: a working proof of concept, not a supported provider.
 
 ## Two projects at once, no per-project workarounds (2026-08-04)
 
@@ -88,9 +137,10 @@ Health always landed a fraction of a second after DDEV stopped waiting. Fixed by
 immediately and treating a pre-deadline failure as "still starting" without consuming
 retries. `ddev start` went from **5m18s failure to 28s success**, containers "ready in 2.5s".
 
-This also retires blocker 5 and the whole idea of shipping a router healthcheck override in
-DDEV: with the fix, DDEV's stock timings work and the global override is not needed at all
-(router "ready in 1.5s" with it deleted).
+This also retires the healthcheck-timing issue (*"Healthchecks never reported with DDEV's
+timings"* below) and the whole idea of shipping a router healthcheck override in DDEV: with
+the fix, DDEV's stock timings work and the global override is not needed at all (router
+"ready in 1.5s" with it deleted).
 
 ### socktainer returned `HostConfig.PortBindings: null`, so no second project could start
 
@@ -101,12 +151,14 @@ use` — port 33000 being one the *running ddev-router itself* published.
 ([pkg/dockerutil/containers.go:931](pkg/dockerutil/containers.go#L931)). socktainer
 populated `NetworkSettings.Ports` correctly but left `HostConfig.PortBindings` nil, so DDEV
 saw an empty exclusion list and flagged the router's own ports as a foreign conflict. Fixed
-in `ContainerInspectRoute` by filling both from the same `publishedPorts` data.
+in `ContainerInspectRoute` by filling both from the same `publishedPorts` data — see
+[`fix/port-bindings-inspect`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect).
 
 ### Two DDEV code paths mounted the database volume a second time
 
-Both were fatal on apple container, and both are avoidable. Retesting confirmed blocker 1's
-table exactly: with one read-write holder, even a `:ro` second attach fails.
+Both were fatal on apple container, and both are avoidable. Retesting confirmed the
+volume-sharing table exactly (see *"Named volumes cannot be shared read-write"* below): with
+one read-write holder, even a `:ro` second attach fails.
 
 - `getDBVersionFromVolume()` starts a throwaway `GetExistingDBType-*` container that mounts
   the db volume, and `util.Failed()` makes any error kill the command. It fired on
@@ -166,17 +218,19 @@ answer those names from its own DNS server instead.
 
 ## Verification run against a merged local build (2026-08-03, later)
 
-All seven queued fixes were merged onto a scratch branch (`tmp/rollout-verify` in the
-fork) and built with `make release`, following the recipe in
+All seven queued fixes were merged onto a scratch branch (`tmp/rollout-verify` — no longer
+exists, superseded, see "State this session left behind" below) in the fork and built with
+`make release`, following the recipe in
 [the PR comment](https://github.com/ddev/ddev/pull/8656#issuecomment-5167598650).
 Three things turned up that the individually-tested branches had not.
 
 ### #347 as written breaks all image builds — must be corrected before merge
 
-`fix/exec-hijack-close` bounds the hijacked exec-start channel at 10 s and closes it
-whether or not the process has exited. Any exec that legitimately runs longer is
-truncated, and buildx's build driver *is* such an exec (`buildctl dial-stdio` lives for
-the whole build), so every `ddev start` failed in image build with:
+[`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close)
+bounds the hijacked exec-start channel at 10 s and closes it whether or not the process has
+exited. Any exec that legitimately runs longer is truncated, and buildx's build driver *is*
+such an exec (`buildctl dial-stdio` lives for the whole build), so every `ddev start` failed
+in image build with:
 
 ```text
 target db: failed to receive status: rpc error: code = Unavailable desc = error reading from server: EOF
@@ -193,13 +247,15 @@ The bound is the wrong mechanism: `process.wait()` stalling in XPC cannot be tol
 apart from a process that is simply still running. Output-pipe EOF *can* — Apple
 Container closes the container-side write ends when the exec process exits, so EOF is
 the exit signal and it arrives whether or not XPC acknowledges anything. The corrected
-shape (now in `tmp/rollout-verify`) closes the channel when every attached output pipe
-has hit EOF, and starts the 10 s bound *there*, only to collect the numeric exit code.
-The chunked-stream path in the same file already worked this way — #347 should have
-copied it rather than introducing a bound. After the correction: 30 s exec returns at
-30.1 s with exit 0, a 15 s `exit 7` reports 7, and builds succeed (1m16s).
+shape (now in `tmp/rollout-verify`, since folded into `fix/exec-hijack-close` and
+[`tmp/combined-verify-2`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-2))
+closes the channel when every attached output pipe has hit EOF, and starts the 10 s bound
+*there*, only to collect the numeric exit code. The chunked-stream path in the same file
+already worked this way — #347 should have copied it rather than introducing a bound. After
+the correction: 30 s exec returns at 30.1 s with exit 0, a 15 s `exit 7` reports 7, and
+builds succeed (1m16s).
 
-### The real cause of blocker 9 was upgrade gating, not the hijack close
+### The real cause of the `ddev start` hang was upgrade gating, not the hijack close
 
 Even with the corrected close, `ddev start` still hung at
 `Getting traefik error output`. `dockerutil.Exec` hangs against socktainer on **every**
@@ -221,38 +277,45 @@ asked, regardless of stdin. Dropping `&& config.attachStdin` fixes it: `dockerut
 returns in 0.12 s against all three containers, and `docker exec` with no flags, `-i`,
 `-t` and a non-zero exit code all still behave.
 
-This is what [socktainer#346](https://github.com/socktainer/socktainer/issues/346)
-should be about. The hijack-close bug is real too, but it is not what DDEV hit.
+This is what [socktainer#346](https://github.com/socktainer/socktainer/issues/346) was
+originally filed to be about, but the fix for *this* bug has no upstream issue or branch of
+its own yet — #346 and the corresponding PR #347 were closed 2026-08-04 by the reporter as an
+incomplete diagnosis (see "Upstream engagement status" below). The hijack-close bug fixed by
+`fix/exec-hijack-close` is real too, but it is not what DDEV hit here.
 
-### Blocker 3 root-caused and fixed: the response echoed the query's OPT record
+### DNS/AAAA bug root-caused and fixed: the response echoed the query's OPT record
 
 The 502 was not the multi-homed-address bug. `buildAResponse`/`buildNodataResponse`
 built each reply by copying the whole query — including any EDNS0 OPT record in its
 additional section — then set ARCOUNT to 0 and appended the answer RR *after* those
 leftover OPT bytes. A strict parser reads the answer section where ARCOUNT/ANCOUNT say
 it should be, lands on the OPT bytes, and reports no usable data, which is exactly the
-`curl: (6) ... DNS server returned answer with no data` in blocker 3, and matches
-[socktainer#329](https://github.com/socktainer/socktainer/issues/329)'s
-"malformed EDNS0". `getent` worked throughout because it does not send EDNS0.
+`curl: (6) ... DNS server returned answer with no data` in the DNS/AAAA bug below, and
+matches [socktainer#329](https://github.com/socktainer/socktainer/issues/329)'s "malformed
+EDNS0". `getent` worked throughout because it does not send EDNS0.
 
-Fix: truncate the reply at the end of the question before appending answers, and claim
-no OPT (omitting OPT is legal — the responder is just treated as not supporting EDNS0).
-With it, `curl http://ddev-appletest-web/` from inside ddev-router returns 200 and
-traefik stops 502ing.
+Fix ([`fix/dns-edns0-truncation`](https://github.com/rfay/socktainer/tree/fix/dns-edns0-truncation)):
+truncate the reply at the end of the question before appending answers, and claim no OPT
+(omitting OPT is legal — the responder is just treated as not supporting EDNS0). With it,
+`curl http://ddev-appletest-web/` from inside ddev-router returns 200 and traefik stops
+502ing.
 
 ### `fix/filter-name-ignored` only fixed half the bug
 
-The branch corrected the *matching* semantics but not the *parsing*:
-`parseContainerFilters` accepted the Docker CLI's `{"key":{"value":true}}` encoding only
-for `label`, so `--filter name=`, `status=`, `id=` were dropped before matching ran.
+[`fix/filter-name-ignored`](https://github.com/rfay/socktainer/tree/fix/filter-name-ignored)
+corrected the *matching* semantics but not the *parsing*: `parseContainerFilters` accepted
+the Docker CLI's `{"key":{"value":true}}` encoding only for `label`, so `--filter name=`,
+`status=`, `id=` were dropped before matching ran.
 `docker ps -a --filter name=doesnotexist` still listed every container after the merge.
-Fixed by accepting the dict form for all keys. Note DDEV itself was never exposed to
-this: `FindContainerByName` re-checks `Names[0]` against the exact name.
+Fixed by accepting the dict form for all keys, on
+[`fix/dict-filter-parsing`](https://github.com/rfay/socktainer/tree/fix/dict-filter-parsing).
+Note DDEV itself was never exposed to this: `FindContainerByName` re-checks `Names[0]`
+against the exact name.
 
 ### Version reporting now trips DDEV's minimum-version check — root-caused and fixed 2026-08-05
 
-With `fix/version-engine-version` in place, `ddev version` reports `docker 0.0.0-dev`
-and `ddev start` prints:
+With [`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version)
+in place, `ddev version` reports `docker 0.0.0-dev` and `ddev start` prints:
 
 ```text
 Problem with your Docker provider: installed Docker version 0.0.0-dev is not supported,
@@ -269,11 +332,12 @@ for human-readable build info (`make version`), reused as the wire value. Confir
 throwaway Go program: `versions.GreaterThanOrEqualTo("v1.51", "1.44")` is `false`, but
 `GreaterThanOrEqualTo("1.51", "1.44")` is `true` — the leading "v" alone was enough to fail
 the check regardless of the actual numeric value. Fixed on the socktainer side
-(`fix/version-engine-version`, commit `f4d022c`) by stripping the "v" prefix at the
-`VersionRoute` call site; the build-info getters that still supply the "v"-prefixed
-label elsewhere (`make version`, `BuildInfoApiVersionTests`) are untouched. Verified live:
-after rebuilding and restarting the daemon, `ddev start` against socktainer no longer
-prints the warning at all. No DDEV-side change was needed.
+([`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version),
+commit `f4d022c`) by stripping the "v" prefix at the `VersionRoute` call site; the build-info
+getters that still supply the "v"-prefixed label elsewhere (`make version`,
+`BuildInfoApiVersionTests`) are untouched. Verified live: after rebuilding and restarting the
+daemon, `ddev start` against socktainer no longer prints the warning at all. No DDEV-side
+change was needed.
 
 ### Not retested
 
@@ -284,38 +348,28 @@ The socktainer unit suite could not be run at all in this environment: the tests
 compile, but `swift test` cannot load `Testing.framework` (only the `_Testing_*`
 overlays ship with Command Line Tools; running them needs full Xcode).
 
-## Upstream engagement status (2026-08-03)
+## Upstream engagement status (2026-08-03, updated 2026-08-07)
 
-Fixes for seven of the eleven blockers below are written, tested, and DCO-signed-off
-against socktainer, tracked in the
-[`rfay/socktainer` fork's rollout plan](https://github.com/rfay/socktainer/blob/fix/exec-hijack-close/UPSTREAM_ROLLOUT.md),
-ranked by DDEV relevance vs. diff risk. Submitting upstream one at a time rather than
-bundling. Status so far:
-
-- **Filed upstream:** [socktainer/socktainer#346](https://github.com/socktainer/socktainer/issues/346)
-  (exec-hijack hang, blocker 9) / [socktainer/socktainer#347](https://github.com/socktainer/socktainer/pull/347)
-  (fix, open, DCO passing, awaiting review) — **needs correcting before it merges: as
-  written it truncates every exec longer than 10 s and breaks all image builds.** See the
-  verification-run section above.
-- **Already filed by someone else, corroborated independently and now root-caused:**
-  [socktainer/socktainer#329](https://github.com/socktainer/socktainer/issues/329)
-  (malformed EDNS0, blocker 3) — fix written, worth offering on that issue.
-- **Fix ready, queued to submit next in rollout order:** DNS wrong-network-address
-  (blocker 3's second bug), version reporting (blocker 11), archive-on-unstarted-container
-  (blocker 6), healthcheck timing (blocker 5), `--filter name=` (blocker 11), `docker cp`
-  directory hang (blocker 7)
+- **Exec hijack (the original `ddev start` hang theory):** filed as
+  [socktainer/socktainer#346](https://github.com/socktainer/socktainer/issues/346) /
+  [socktainer/socktainer#347](https://github.com/socktainer/socktainer/pull/347), both closed
+  2026-08-04 by the reporter — the diagnosis was incomplete: the actual hang is the
+  upgrade-gating bug described in *"The real cause of the `ddev start` hang was upgrade
+  gating, not the hijack close"* above, which has no upstream issue of its own yet. The
+  exec-hijack-close fix on
+  [`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close) is
+  still a real bug worth landing on its own merits.
+- **Already filed upstream by someone else, corroborated independently and root-caused:**
+  [socktainer/socktainer#329](https://github.com/socktainer/socktainer/issues/329) (malformed
+  EDNS0) — fix written on
+  [`fix/dns-edns0-truncation`](https://github.com/rfay/socktainer/tree/fix/dns-edns0-truncation),
+  worth offering on that issue.
+- **Everything else** is ready to submit but not yet filed upstream — see the table at the top
+  of this document for the full list of branches, ranked by DDEV relevance vs. diff risk in the
+  fork's [rollout plan](https://github.com/rfay/socktainer/blob/fix/exec-hijack-close/UPSTREAM_ROLLOUT.md).
 - **Investigated, could not reproduce:** underscore container names skipped for DNS
-  (blocker 11) — worth closing as not-reproducible upstream, or asking the original
-  reporter for a sharper repro
-
-Independently, four DDEV-side hardenings came out of this investigation and are open as
-their own draft PRs, unrelated to any socktainer fix landing:
-[#8657](https://github.com/ddev/ddev/pull/8657) (bound host ports fallback),
-[#8658](https://github.com/ddev/ddev/pull/8658) (`GetExistingDBType` via exec — design
-option 5 below), [#8659](https://github.com/ddev/ddev/pull/8659) (non-fatal global-cache
-chown — design option 6 below), [#8660](https://github.com/ddev/ddev/pull/8660) (stop
-hijacking the exec stream in `dockerutil.Exec()` — the DDEV-side counterpart to #347, so
-`GetRouterConfigErrors()` stops hanging even before the socktainer fix merges).
+  ([rfay/socktainer#14](https://github.com/rfay/socktainer/issues/14)) — worth closing as
+  not-reproducible upstream, or asking the original reporter for a sharper repro.
 
 ## Full teardown-and-rebuild recipe (verified reproducible 2026-08-05)
 
@@ -366,9 +420,10 @@ project-level recipe below recreates what's actually needed.
 ## Cold-start recipe
 
 The environment does not survive idling — the `default` network's host bridge is torn down
-once nothing is running on it, which kills DNS (blocker 10), and the buildkit node exits and
-then cannot be restarted (blocker 6). Run these in order before trying `ddev start`, and
-expect to repeat them after any `container system` restart:
+once nothing is running on it, which kills DNS (see *"vmnet degrades until the `default`
+network's host bridge disappears"* below), and the buildkit node exits and then cannot be
+restarted (see *"buildx cannot bootstrap its buildkit container"* below). Run these in order
+before trying `ddev start`, and expect to repeat them after any `container system` restart:
 
 ```bash
 # 1. keep the default network (and therefore 192.168.64.1) alive
@@ -381,7 +436,7 @@ sudo /opt/homebrew/sbin/dnsmasq --keep-in-foreground \
   --listen-address=192.168.64.1 --bind-interfaces --port=53 \
   --no-resolv --server=127.0.0.1#2054 &
 
-# 3. buildkit node — RECREATE, never restart (see blocker 6)
+# 3. buildkit node — RECREATE, never restart (see "buildx cannot bootstrap its buildkit container" below)
 docker rm -f buildx_buildkit_default
 docker run -d --name buildx_buildkit_default --cap-add ALL \
   moby/buildkit:buildx-stable-1 --allow-insecure-entitlement=network.host
@@ -390,11 +445,12 @@ docker run -d --name buildx_buildkit_default --cap-add ALL \
 docker run --rm ddev/ddev-utilities:latest nslookup registry-1.docker.io
 ```
 
-The project also needs `router_http_port`/`router_https_port` above 1024 (blocker 4b) and the
-healthcheck overrides (blocker 5). The global-cache bind mount needs no environment
+The project also needs `router_http_port`/`router_https_port` above 1024 (see *"Ports below
+1024 cannot be published at all"* below) and the healthcheck overrides (see *"Healthchecks
+never reported with DDEV's timings"* below). The global-cache bind mount needs no environment
 variable — it detects socktainer on its own. A `ddev start` against an *already running*
-project always fails on the db volume (blocker 1), so remove `ddev-appletest-web` and
-`ddev-appletest-db` first.
+project always fails on the db volume (see *"Named volumes cannot be shared read-write"*
+below), so remove `ddev-appletest-web` and `ddev-appletest-db` first.
 
 Two more things the 2026-08-03 run needed:
 
@@ -409,7 +465,8 @@ Two more things the 2026-08-03 run needed:
   all three back to `healthy` in ~35s.
 - A **surviving buildkit node does not need recreating** after a socktainer restart:
   `ddev debug rebuild` built both images in 9s against the node that predated the restart.
-  Recreation is only needed once the node itself has exited (blocker 6).
+  Recreation is only needed once the node itself has exited (see *"buildx cannot bootstrap
+  its buildkit container"* below).
 
 Once started, reach the site at the router's container IP, not the published port:
 
@@ -421,9 +478,9 @@ curl -sS -k -o /dev/null -w '%{http_code}\n' --resolve appletest.ddev.site:8443:
 
 ---
 
-## Blockers that need upstream fixes (socktainer / Apple Container)
+## Open blockers (socktainer / Apple Container), ordered by impact on DDEV
 
-### 1. Named volumes cannot be shared read-write — *the* structural blocker
+### Named volumes cannot be shared read-write — the structural blocker
 
 Apple Container backs each named volume with an ext4 block image attached to one VM:
 
@@ -466,7 +523,96 @@ Where this hits DDEV:
   `RunSimpleContainer` call site was swept for others that mount `GetMariaDBVolumeName()` /
   `GetPostgresVolumeName()`; `db.go` and the `start-chown` site were the only two.
 
-### 2. No DNS on the built-in `default` network
+### Hostname uniqueness collides with compose's recreate-by-rename
+
+`ddev debug rebuild` builds fine but fails at the router:
+
+```text
+Container ddev-router Error response from daemon: Failed to create container:
+exists: "hostname(s) already exist: ["ddev-router"]"
+```
+
+Compose recreates a container by renaming the old one out of the way
+(`POST /containers/create?name=5b86b57d76cd_ddev-router`) and creating a new one under the
+original name. Renaming does not move the container's *hostname*, and Apple Container
+enforces hostname uniqueness globally, so the create is rejected. The old router keeps
+running and the site keeps serving, but the command fails.
+
+Same shape as the volume-sharing issue above: any DDEV path that goes through compose's
+recreate rather than removing the container first will hit it. `ddev restart` is unaffected
+because it removes containers first — confirmed working repeatably on 2026-08-04, so it is
+the recommended path. `ddev start` over an already-running project is the case that still
+fails.
+
+**Investigated 2026-08-05: why `ddev restart` recreates the db/web containers every time,
+and whether that's a bug.** It isn't. `Restart()` is `Stop()` + `Start()`
+(`pkg/ddevapp/ddevapp.go:2284`); `Stop()` unconditionally runs `compose down`
+(`pkg/ddevapp/utils.go:127`), so by the time `Start()`'s `compose up` runs, the db/web
+containers from the prior run are already gone — there's nothing for compose-go's
+config-hash convergence check to compare against, so it must call `createMobyContainer`
+regardless of provider. Docker Desktop/OrbStack do the identical dance on every
+`ddev restart`; it's just cheap there. The ~3x wall-clock gap measured against OrbStack
+(restart-timing section below) is best explained by apple container's volume model: a
+named volume is a real ext4 block image attached to the VM (see *"Named volumes cannot be
+shared read-write"* above), so every freshly created db container pays a hypervisor-level
+block-attach cost that OrbStack's volume implementation doesn't. A phase-by-phase timing
+breakdown (down/build/up/healthcheck-wait on both providers) would confirm exactly where the
+delta falls, but isn't done as of this writing.
+
+The enforcement is in apple container, not socktainer:
+`ContainerAPIService/Server/Containers/ContainersService.swift:310` walks **every** container
+irrespective of state and rejects a create whose attachment hostname is already claimed, so
+even a stopped container holds its hostname. socktainer cannot route around it via rename
+either — `POST /containers/{id}/rename` is `NotImplemented`. The hostname appears twice in the
+error when the container has two network attachments sharing one hostname. A real fix needs
+apple container to scope uniqueness to running containers, or socktainer to stop using the
+container name as the attachment hostname and answer those names from its own DNS server.
+
+### DNS gives multi-homed hostnames the wrong network's address
+
+A second, distinct bug from the AAAA/EDNS0 issue below, and *not* what caused the 502:
+multi-homed hostnames (a container attached to more than one network) can get back an
+arbitrary network's address instead of the one that shares a subnet with the querying
+client. Fix ready
+([`fix/dns-wrong-network-address`](https://github.com/rfay/socktainer/tree/fix/dns-wrong-network-address),
+[rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7)), not yet submitted.
+
+### buildx cannot bootstrap its buildkit container
+
+Two gaps:
+
+- buildx creates the container, then `PUT /containers/<id>/archive` into it. Socktainer
+  answers `404 Rootfs not found` for a *created but not started* container.
+- `--privileged` is ignored (documented), so buildkit's `rbind` fails with
+  `operation not permitted`.
+
+Workaround — pre-create the node by hand (buildx adopts a running container with the right
+name), with `--cap-add ALL` and on the `default` network so its DNS address is stable:
+
+```bash
+docker run -d --name buildx_buildkit_default --cap-add ALL \
+  moby/buildkit:buildx-stable-1 --allow-insecure-entitlement=network.host
+```
+
+**The node must be recreated, never restarted.** Once it has exited, buildx will happily
+restart it (`#2 starting container buildx_buildkit_default`) and every build then fails with
+the same `rbind ... operation not permitted` as an uncapped node. `docker rm -f` plus a fresh
+`docker run` of the identical command fixes it immediately — the very next build succeeded in
+52s. The obvious explanation does not hold: capabilities survive a restart
+(`CapEff: 000001ffffffffff` before and after, measured on an exec'd process, so not
+necessarily the init process's set). Cause unidentified. This is the single most likely thing
+to bite when picking the work back up, since the node exits on its own whenever
+`container system` is restarted.
+
+**Status:** fix for the archive-404 half ready
+([`fix/archive-404-prestart`](https://github.com/rfay/socktainer/tree/fix/archive-404-prestart)),
+not yet submitted upstream. The `--privileged` gap is documented, intentional behavior in
+socktainer's README (Virtualization.framework has no capability model to honor it,
+hence the `--cap-add ALL` workaround above) — not something to file upstream on its own, though
+[`fix/privileged-cap-all`](https://github.com/rfay/socktainer/tree/fix/privileged-cap-all)
+makes plain `--privileged` grant the same capabilities automatically.
+
+### No DNS on the built-in `default` network
 
 Containers get `nameserver 192.168.64.1` (the vmnet gateway) but nothing listens there —
 every lookup is `connection refused`. This breaks anything on `default`, including Apple's
@@ -481,29 +627,123 @@ sudo /opt/homebrew/sbin/dnsmasq --keep-in-foreground \
   --no-resolv --server=127.0.0.1#2054      # 2054 = socktainer's DNS port
 ```
 
-### 3. DNS returns unusable AAAA answers — currently the last blocker
+### vmnet attachments go dark when idle
+
+On socktainer-created networks the DNS sidecar becomes unreachable (100% packet loss) after
+a few minutes of no traffic, while still `running`. Containers created afterwards reach each
+other fine. Restarting the sidecar fixes it but gives it a **new IP**, and already-running
+containers keep the stale `nameserver` in `/etc/resolv.conf`. A container receiving traffic
+every 30s stayed reachable for 14/14 probes, so this reads as an idle timeout.
+
+### vmnet degrades until the `default` network's host bridge disappears
+
+After about an hour of moderate churn, `192.168.64.1` was gone from every host interface
+while `container network inspect default` still reported it as the gateway and containers
+still got `192.168.64.x` addresses. Consequences: the dnsmasq workaround above dies with
+`Can't assign requested address` and cannot be restarted, and containers on `default` have a
+gateway that does not exist. `container system stop && container system start` (the remedy
+the socktainer README gives for vmnet degradation) restored it; socktainer, dnsmasq and the
+buildkit node all have to be restarted afterwards, in that order, and dnsmasq only binds
+once a container is running on `default`.
+
+### Ports below 1024 cannot be published at all
+
+Apple Container's port forwarder runs unprivileged, so DDEV's *default* configuration is
+rejected outright:
+
+```text
+Failed to start container: ... invalidArgument: "Permission denied while binding to
+host port 443. Binding to ports below 1024 requires root privileges."
+```
+
+```bash
+docker run -d -p 127.0.0.1:443:80  ddev/ddev-utilities sleep 60   # error
+docker run -d -p 127.0.0.1:8443:80 ddev/ddev-utilities sleep 60   # works
+```
+
+This only shows up when 80/443 are actually free — with another router (OrbStack's) holding
+them, DDEV picks ephemeral high ports and sidesteps it by accident. Fix:
+`ddev config --router-http-port=8080 --router-https-port=8443`.
+
+**This is not a new class of problem for DDEV.** Rootless Podman is already a supported
+provider with the same restriction, and the docs already say so: *"Podman rootless — Rootless
+by default … Can't use the default ports 80/443, so DDEV must be configured to use
+unprivileged ports"* (`docs/content/users/install/docker-installation.md`), and the Buildkite
+test machine setup configures `router-http-port=8080` / `router-https-port=8443` for exactly
+this reason. So the handling is a documented configuration requirement, not new machinery.
+
+The one macOS-specific wrinkle is that Linux offers an escape hatch —
+`net.ipv4.ip_unprivileged_port_start=0`, which the DDEV docs recommend for rootless — and
+macOS has no equivalent. On Apple Container, unprivileged router ports are mandatory rather
+than merely recommended. Using the router's container IP instead of published ports (see
+*"Published ports were accepted but reset"* below) would avoid the question entirely.
+
+### Smaller compatibility gaps
+
+- `docker ps -a --filter name=<x>` **ignores the filter** — `docker rm -f $(docker ps -aq
+  --filter name=ddev-appletest)` removed *every container on the machine*.
+  **Status:** two bugs, both now fixed locally.
+  [`fix/filter-name-ignored`](https://github.com/rfay/socktainer/tree/fix/filter-name-ignored)
+  corrected the matching (substring, like real Docker) but the filter never reached it: the
+  parser accepted the CLI's `{"key":{"value":true}}` encoding only for `label`, silently
+  dropping `name`, `status` and `id` —
+  [`fix/dict-filter-parsing`](https://github.com/rfay/socktainer/tree/fix/dict-filter-parsing)
+  covers that half. Both halves are needed; neither submitted upstream.
+- ~~Only one network per container~~ **— this was wrong.** Multi-homing at *create* time
+  works: `docker inspect ddev-appletest-web` reports
+  `ddev-appletest_default=192.168.253.7 ddev_default=192.168.254.11`, two networks on one
+  container. What is unsupported is *hot-attach* — `docker network connect` after creation
+  is a documented no-op (Virtualization.framework has no NIC hotplug). Compose-time
+  multi-homing is fine, which is also why the multi-homed DNS bug
+  ([rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7)) can exist at all.
+- Engine version is reported as `v1.51` (the API version), so DDEV warns
+  "installed Docker version v1.51 is not supported, please update to version 25.0 or newer".
+  **Status:** fix ready
+  ([`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version)),
+  not yet submitted upstream — but it does not silence the warning, since socktainer's own
+  version (`1.2.x`, or `0.0.0-dev` for a local build) also fails DDEV's `>= 25.0` check. DDEV
+  needs a socktainer-aware version check; that is the actual fix for the warning.
+- **Not an Apple Container issue at all — listed here by mistake.** `chown -R` failing with
+  `Operation not permitted` on a bind-mounted host directory is ordinary bind-mount
+  behavior on macOS across every Docker provider. It only showed up because the
+  experimental branch swaps the `ddev-global-cache` *volume* for a *bind mount*; a named
+  volume never hits it. DDEV's `start.sh` runs `sudo chown -R … /mnt/ddev-global-cache/`
+  under `set -e`, which then kills the web container.
+  [ddev/ddev#8659](https://github.com/ddev/ddev/pull/8659) is still worth having — the chown
+  is redundant in the common case, since a privileged utility container already did it — but
+  it is a consequence of the workaround, not a provider gap. The same applies to any future
+  move toward bind-mounting parts of the global cache (design option 2 below): anything that
+  chowns inside a bind mount will fail on every provider, not just this one.
+- Container names with underscores are silently skipped for DNS registration. **Status:**
+  investigated further (live daemon + variants) and could not reproduce; not part of the
+  rollout submissions. Worth closing
+  [rfay/socktainer#14](https://github.com/rfay/socktainer/issues/14) as not-reproducible, or
+  asking for a sharper repro.
+
+## Blockers that have been fixed
+
+### DNS returned unusable AAAA answers (fixed)
 
 On a socktainer network, `getent hosts ddev-appletest-web` and `nslookup -type=A` both
 return the right address, but `nslookup -type=AAAA` returns an empty answer and
 **curl (musl) and traefik (Go) both fail to resolve the name**:
 
-```
+```text
 curl: (6) Could not resolve host: ddev-appletest-web (DNS server returned answer with no data)
 ```
 
 Result: traefik logs `502 ... "http://ddev-appletest-web:80"`, while `curl http://<web-ip>/`
 from the same container returns 200.
 
-**Status: root-caused and fixed.** The malformed EDNS0 response
+**Root-caused and fixed.** The malformed EDNS0 response
 ([socktainer/socktainer#329](https://github.com/socktainer/socktainer/issues/329), filed
 by someone else) is `buildAResponse`/`buildNodataResponse` echoing the query's OPT
 record and appending the answer after it — see the verification-run section above for
-the mechanism and the fix. This was the actual 502, and fixing it is what got the site
-serving. A second, distinct DNS bug also exists: multi-homed hostnames get an arbitrary
-network's address instead of the querying client's — fix ready
-(`fix/dns-wrong-network-address`), not yet submitted, and *not* what caused the 502.
+the mechanism and the fix
+([`fix/dns-edns0-truncation`](https://github.com/rfay/socktainer/tree/fix/dns-edns0-truncation)).
+This was the actual 502, and fixing it is what got the site serving.
 
-### 4. Published ports are accepted but reset — SOLVED: use the signed installer
+### Published ports were accepted but reset (fixed — use the signed installer)
 
 `docker run -d -p 127.0.0.1:38080:80 nginx:alpine` → the `container` helper listens on
 127.0.0.1:38080, but connections get `Recv failure: Connection reset by peer`. The same
@@ -540,39 +780,7 @@ Also still true: Apple Container makes container IPs routable from the host, so 
 but it is no longer *necessary*, so it should be weighed on its merits rather than as a
 workaround.
 
-### 4b. Ports below 1024 cannot be published at all
-
-Apple Container's port forwarder runs unprivileged, so DDEV's *default* configuration is
-rejected outright:
-
-```text
-Failed to start container: ... invalidArgument: "Permission denied while binding to
-host port 443. Binding to ports below 1024 requires root privileges."
-```
-
-```bash
-docker run -d -p 127.0.0.1:443:80  ddev/ddev-utilities sleep 60   # error
-docker run -d -p 127.0.0.1:8443:80 ddev/ddev-utilities sleep 60   # works
-```
-
-This only shows up when 80/443 are actually free — with another router (OrbStack's) holding
-them, DDEV picks ephemeral high ports and sidesteps it by accident. Fix:
-`ddev config --router-http-port=8080 --router-https-port=8443`.
-
-**This is not a new class of problem for DDEV.** Rootless Podman is already a supported
-provider with the same restriction, and the docs already say so: *"Podman rootless — Rootless
-by default … Can't use the default ports 80/443, so DDEV must be configured to use
-unprivileged ports"* (`docs/content/users/install/docker-installation.md`), and the Buildkite
-test machine setup configures `router-http-port=8080` / `router-https-port=8443` for exactly
-this reason. So the handling is a documented configuration requirement, not new machinery.
-
-The one macOS-specific wrinkle is that Linux offers an escape hatch —
-`net.ipv4.ip_unprivileged_port_start=0`, which the DDEV docs recommend for rootless — and
-macOS has no equivalent. On Apple Container, unprivileged router ports are mandatory rather
-than merely recommended. Using the router's container IP instead of published ports (see
-blocker 4) would avoid the question entirely.
-
-### 5. Healthchecks never report with DDEV's timings — SOLVED 2026-08-04
+### Healthchecks never reported with DDEV's timings (fixed 2026-08-04)
 
 DDEV uses `interval 1s / timeout 70s / start_period` = `default_container_timeout`. With
 those, socktainer reported `starting` for the entire duration and `State.Health.Log` stayed
@@ -585,66 +793,17 @@ Nothing about it was DDEV-specific and no DDEV-side timing override is warranted
 overrides that were tried made things worse, because `timeout: 10s` is below the 59s
 CPU/battery-saving sleep in `healthcheck.sh` and turns every later probe into a failure.
 
-**Status:** two fixes, neither submitted upstream. `fix/healthcheck-timing` (status
-regression + stalled-probe freeze) and an uncommitted change to
+**Status:** two fixes, neither submitted upstream.
+[`fix/healthcheck-timing`](https://github.com/rfay/socktainer/tree/fix/healthcheck-timing)
+(status regression + stalled-probe freeze) and an uncommitted change to
 `HealthCheckManager.runLoop` for the start_period behavior.
 
-### 6. buildx cannot bootstrap its buildkit container
-
-Two gaps:
-
-- buildx creates the container, then `PUT /containers/<id>/archive` into it. Socktainer
-  answers `404 Rootfs not found` for a *created but not started* container.
-- `--privileged` is ignored (documented), so buildkit's `rbind` fails with
-  `operation not permitted`.
-
-Workaround — pre-create the node by hand (buildx adopts a running container with the right
-name), with `--cap-add ALL` and on the `default` network so its DNS address is stable:
-
-```bash
-docker run -d --name buildx_buildkit_default --cap-add ALL \
-  moby/buildkit:buildx-stable-1 --allow-insecure-entitlement=network.host
-```
-
-**The node must be recreated, never restarted.** Once it has exited, buildx will happily
-restart it (`#2 starting container buildx_buildkit_default`) and every build then fails with
-the same `rbind ... operation not permitted` as an uncapped node. `docker rm -f` plus a fresh
-`docker run` of the identical command fixes it immediately — the very next build succeeded in
-52s. The obvious explanation does not hold: capabilities survive a restart
-(`CapEff: 000001ffffffffff` before and after, measured on an exec'd process, so not
-necessarily the init process's set). Cause unidentified. This is the single most likely thing
-to bite when picking the work back up, since the node exits on its own whenever
-`container system` is restarted.
-
-**Status:** fix for the archive-404 half ready (`fix/archive-404-prestart`), not yet
-submitted upstream. The `--privileged` gap is documented, intentional behavior in
-socktainer's README (Virtualization.framework has no capability model to honor it,
-hence the `--cap-add ALL` workaround above) — not something to file upstream.
-
-### 7. Copying a directory into a container is unsupported
-
-`docker cp <dir>/. c:/path` → `Error response from daemon: Something went wrong.`
-`docker cp <dir> c:/path/` → `cannot copy directory`. Single files work.
-DDEV's `CopyIntoVolume` (mkcert CA, global commands, traefik config) is exactly this, and
-it *hangs* rather than erroring when driven through the API.
-
-**Status:** fix ready (`fix/cp-directory-hang`, bounds the guest-preparation exec so a
-wedged guest shell can't hang the request forever), not yet submitted upstream.
-
-### 8. vmnet attachments go dark when idle
-
-On socktainer-created networks the DNS sidecar becomes unreachable (100% packet loss) after
-a few minutes of no traffic, while still `running`. Containers created afterwards reach each
-other fine. Restarting the sidecar fixes it but gives it a **new IP**, and already-running
-containers keep the stale `nameserver` in `/etc/resolv.conf`. A container receiving traffic
-every 30s stayed reachable for 14/14 probes, so this reads as an idle timeout.
-
-### 9. `ddev start` never returns, even once everything is healthy — fixed
+### `ddev start` never returns, even once everything is healthy (fixed)
 
 With all three containers healthy, `ddev start` does not exit. Two runs were killed at 400s
 and 200s. The last debug line is always:
 
-```
+```text
 2026-08-02T13:23:04.240 Getting traefik error output
 ```
 
@@ -655,113 +814,21 @@ logs nothing after it). The three `exec` sequences it issues against `ddev-route
 blocked call is not one of them. It is not a sudo/`/etc/hosts` prompt: `appletest.ddev.site`
 resolves publicly to 127.0.0.1, so no hostname edit is needed.
 
-**Status: fixed, and the earlier diagnosis here was wrong.** `GetRouterConfigErrors()`
-calls `dockerutil.Exec()`, which attaches stdout/stderr but not stdin. socktainer
-refuses to upgrade such a request (`shouldUpgrade` requires `attachStdin`) and answers
-with a chunked body on a keep-alive connection, while the Go client — having asked to
-upgrade — reads the socket until it closes. Nothing closes it. The hijacked-path
-close bug that [socktainer#347](https://github.com/socktainer/socktainer/pull/347)
-addresses is real but is *not* on DDEV's path; #347 alone leaves this hanging (measured).
+**Fixed, and the earlier diagnosis here was wrong.** `GetRouterConfigErrors()` calls
+`dockerutil.Exec()`, which attaches stdout/stderr but not stdin. socktainer refuses to
+upgrade such a request (`shouldUpgrade` requires `attachStdin`) and answers with a chunked
+body on a keep-alive connection, while the Go client — having asked to upgrade — reads the
+socket until it closes. Nothing closes it. The hijacked-path close bug that
+[`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close)
+addresses is real but is *not* on DDEV's path; that fix alone leaves this hanging (measured).
 See the verification-run section above. `dockerutil.Exec` hangs against every container
 under released socktainer, not only ddev-router.
 [ddev/ddev#8660](https://github.com/ddev/ddev/pull/8660) (stop requesting the hijacked
 stream) is still worth having as the DDEV-side belt-and-braces.
 
-### 10. vmnet degrades until the `default` network's host bridge disappears
-
-After about an hour of moderate churn, `192.168.64.1` was gone from every host interface
-while `container network inspect default` still reported it as the gateway and containers
-still got `192.168.64.x` addresses. Consequences: the dnsmasq workaround (item 2) dies with
-`Can't assign requested address` and cannot be restarted, and containers on `default` have a
-gateway that does not exist. `container system stop && container system start` (the remedy
-the socktainer README gives for vmnet degradation) restored it; socktainer, dnsmasq and the
-buildkit node all have to be restarted afterwards, in that order, and dnsmasq only binds
-once a container is running on `default`.
-
-### 12. Compose's recreate-by-rename collides with the hostname registry
-
-`ddev debug rebuild` builds fine but fails at the router:
-
-```text
-Container ddev-router Error response from daemon: Failed to create container:
-exists: "hostname(s) already exist: ["ddev-router"]"
-```
-
-Compose recreates a container by renaming the old one out of the way
-(`POST /containers/create?name=5b86b57d76cd_ddev-router`) and creating a new one under the
-original name. Renaming does not move the container's *hostname*, and Apple Container
-enforces hostname uniqueness globally, so the create is rejected. The old router keeps
-running and the site keeps serving, but the command fails.
-
-Same shape as blocker 1: any DDEV path that goes through compose's recreate rather than
-removing the container first will hit it. `ddev restart` is unaffected because it removes
-containers first — confirmed working repeatably on 2026-08-04, so it is the recommended path.
-`ddev start` over an already-running project is the case that still fails.
-
-**Investigated 2026-08-05: why `ddev restart` recreates the db/web containers every time,
-and whether that's a bug.** It isn't. `Restart()` is `Stop()` + `Start()`
-(`pkg/ddevapp/ddevapp.go:2284`); `Stop()` unconditionally runs `compose down`
-(`pkg/ddevapp/utils.go:127`), so by the time `Start()`'s `compose up` runs, the db/web
-containers from the prior run are already gone — there's nothing for compose-go's
-config-hash convergence check to compare against, so it must call `createMobyContainer`
-regardless of provider. Docker Desktop/OrbStack do the identical dance on every
-`ddev restart`; it's just cheap there. The ~3x wall-clock gap measured against OrbStack
-(restart-timing section below) is best explained by apple container's volume model: a
-named volume is a real ext4 block image attached to the VM (blocker 1), so every freshly
-created db container pays a hypervisor-level block-attach cost that OrbStack's volume
-implementation doesn't. A phase-by-phase timing breakdown (down/build/up/healthcheck-wait
-on both providers) would confirm exactly where the delta falls, but isn't done as of this
-writing.
-
-The enforcement is in apple container, not socktainer:
-`ContainerAPIService/Server/Containers/ContainersService.swift:310` walks **every** container
-irrespective of state and rejects a create whose attachment hostname is already claimed, so
-even a stopped container holds its hostname. socktainer cannot route around it via rename
-either — `POST /containers/{id}/rename` is `NotImplemented`. The hostname appears twice in the
-error when the container has two network attachments sharing one hostname. A real fix needs
-apple container to scope uniqueness to running containers, or socktainer to stop using the
-container name as the attachment hostname and answer those names from its own DNS server.
-
-### 11. Smaller compatibility gaps
-
-- `docker ps -a --filter name=<x>` **ignores the filter** — `docker rm -f $(docker ps -aq
-  --filter name=ddev-appletest)` removed *every container on the machine*.
-  **Status:** two bugs, both now fixed locally. `fix/filter-name-ignored` corrected the
-  matching (substring, like real Docker) but the filter never reached it: the parser
-  accepted the CLI's `{"key":{"value":true}}` encoding only for `label`, silently
-  dropping `name`, `status` and `id`. Both halves are needed; neither submitted upstream.
-- ~~Only one network per container~~ **— this was wrong.** Multi-homing at *create* time
-  works: `docker inspect ddev-appletest-web` reports
-  `ddev-appletest_default=192.168.253.7 ddev_default=192.168.254.11`, two networks on one
-  container. What is unsupported is *hot-attach* — `docker network connect` after creation
-  is a documented no-op (Virtualization.framework has no NIC hotplug). Compose-time
-  multi-homing is fine, which is also why the multi-homed DNS bug
-  ([rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7)) can exist at all.
-- Engine version is reported as `v1.51` (the API version), so DDEV warns
-  "installed Docker version v1.51 is not supported, please update to version 25.0 or newer".
-  **Status:** fix ready (`fix/version-engine-version`), not yet submitted upstream — but it
-  does not silence the warning, since socktainer's own version (`1.2.x`, or `0.0.0-dev`
-  for a local build) also fails DDEV's `>= 25.0` check. DDEV needs a socktainer-aware
-  version check; that is the actual fix for the warning.
-- **Not an Apple Container issue at all — listed here by mistake.** `chown -R` failing with
-  `Operation not permitted` on a bind-mounted host directory is ordinary bind-mount
-  behavior on macOS across every Docker provider. It only showed up because the
-  experimental branch swaps the `ddev-global-cache` *volume* for a *bind mount*; a named
-  volume never hits it. DDEV's `start.sh` runs `sudo chown -R … /mnt/ddev-global-cache/`
-  under `set -e`, which then kills the web container.
-  [ddev/ddev#8659](https://github.com/ddev/ddev/pull/8659) is still worth having — the chown
-  is redundant in the common case, since a privileged utility container already did it — but
-  it is a consequence of the workaround, not a provider gap. The same applies to any future
-  move toward bind-mounting parts of the global cache (design option 2 below): anything that
-  chowns inside a bind mount will fail on every provider, not just this one.
-- Container names with underscores are silently skipped for DNS registration. **Status:**
-  investigated further (live daemon + variants) and could not reproduce; not part of the
-  rollout submissions. Worth closing `rfay/socktainer#14` as not-reproducible, or asking
-  for a sharper repro.
-
 ---
 
-## Experimental DDEV changes (branch `20260802_rfay_apple_container_experiment`)
+## Experimental DDEV changes (branch [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment))
 
 The global-cache bind mount turns on **automatically when the provider is socktainer**, so it cannot be
 forgotten in a terminal that lacks an environment variable. `DDEV_BIND_GLOBAL_CACHE=true` or
@@ -803,9 +870,10 @@ Project-side settings still needed by hand:
 omit_containers: [ddev-ssh-agent]   # its socket volume is shared
 ```
 
-Plus non-privileged `router_http_port` / `router_https_port` (blocker 4b), and distinct ones
-per project — a project left on the global 80/443 falls into DDEV's ephemeral-port fallback
-and can collide with the ports the running router already publishes.
+Plus non-privileged `router_http_port` / `router_https_port` (see *"Ports below 1024 cannot
+be published at all"* above), and distinct ones per project — a project left on the global
+80/443 falls into DDEV's ephemeral-port fallback and can collide with the ports the running
+router already publishes.
 
 Everything else that used to be listed here is gone as of 2026-08-04, and re-adding any of it
 would now cause harm rather than help:
@@ -838,7 +906,7 @@ is what makes every other option tractable:
 2. **Bind-mount the read-only content instead of copying it in.** `mkcert/` and
    `global-commands/` already exist as host files under `~/.ddev`. Mounting
    `~/.ddev/commands:/mnt/ddev-global-cache/global-commands:ro` deletes two `CopyIntoVolume`
-   calls, sidesteps the directory-copy gap (#7), and is faster on *every* provider.
+   calls, sidesteps the directory-copy gap, and is faster on *every* provider.
 3. **Give the router its own volume for `traefik/`.** It is the only consumer. Single-file
    `docker cp` works on socktainer, so per-file pushes also avoid the directory-copy hang.
 4. **For the package caches, choose per-project or per-host.** A per-project cache volume
@@ -860,9 +928,10 @@ is what makes every other option tractable:
    bind-mount-based approach to the global cache, not a socktainer-specific patch.
 
 7. **Seed with a transient writer, then mount read-only.** Because N containers can hold the
-   same volume `:ro` at once (blocker 1), the read-mostly part of the cache needs no bind
-   mount and no upstream change. A short-lived writer attaches read-write, seeds the content,
-   and exits; the project containers then all mount `:ro`. Verified end to end:
+   same volume `:ro` at once (see *"Named volumes cannot be shared read-write"* above), the
+   read-mostly part of the cache needs no bind mount and no upstream change. A short-lived
+   writer attaches read-write, seeds the content, and exits; the project containers then all
+   mount `:ro`. Verified end to end:
 
    ```text
    1. transient writer seeds, exits          v1
@@ -925,13 +994,18 @@ options there.
 
 ## State this session left behind
 
-- **Superseded 2026-08-05.** `tmp/rollout-verify` and its uncommitted six-fix working tree
-  are gone. All twelve fixes (the original six plus five more branches created the same
-  session, plus the `f4d022c` ApiVersion "v"-prefix fix below) now live as individual
-  committed branches under `~/workspace/socktainer-worktrees/*` (pushed to the `rfay` remote)
-  and as one combined, committed branch `tmp/combined-verify-2` in `~/workspace/socktainer`
-  itself (also pushed). **None has an open PR** — the only PR ever opened was #347, closed.
-  See `~/workspace/socktainer/UPSTREAM_ROLLOUT.md` for the submission plan/ranking.
+- **Superseded 2026-08-05.** `tmp/rollout-verify` (branch no longer exists) and its
+  uncommitted six-fix working tree are gone. All twelve fixes (the original six plus five
+  more branches created the same session, plus the `f4d022c` ApiVersion "v"-prefix fix below)
+  now live as individual committed branches under `~/workspace/socktainer-worktrees/*`
+  (pushed to the `rfay` remote — see the table at the top of this document) and as one
+  combined, committed branch
+  [`tmp/combined-verify-2`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-2) in
+  `~/workspace/socktainer` itself (also pushed). None has an open PR — the only PR ever
+  opened was [socktainer/socktainer#347](https://github.com/socktainer/socktainer/pull/347),
+  closed. See
+  [`UPSTREAM_ROLLOUT.md`](https://github.com/rfay/socktainer/blob/fix/exec-hijack-close/UPSTREAM_ROLLOUT.md)
+  for the submission plan/ranking.
 - **Full teardown-and-rebuild reproducibility check, 2026-08-05:** to make sure the whole
   stack (not just the socktainer binary) is reproducible from nothing, this session tore
   down and recreated every layer — `ddev poweroff`, removed every `container` instance,
@@ -948,8 +1022,10 @@ options there.
   `ApiVersion`/`MinAPIVersion` as `"v1.51"`/`"v1.32"` (a "v"-prefixed build-info label reused
   as the wire value), which silently failed DDEV's own `>= 1.44` API-version check regardless
   of the actual version number — see the "Version reporting" entry above. Fixed in
-  `fix/version-engine-version` (`f4d022c`) and merged into `tmp/combined-verify-2`; verified
-  live that the warning is gone.
+  [`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version)
+  (`f4d022c`) and merged into
+  [`tmp/combined-verify-2`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-2);
+  verified live that the warning is gone.
 - All test projects (`appletest`, `d11`, `d12`, `ddev-test-site-do-not-delete`, `ddev.com`,
   `x`) are **stopped**, confirmed via `ddev list`. `ddev-router` and the `ddev_default`
   network's DNS sidecar are still running (shared, harmless to leave up). `buildx_buildkit_
@@ -963,9 +1039,10 @@ options there.
   `/opt/homebrew/var/run/socktainer/.socktainer/container.sock` and leaves the
   `socktainer` docker context (which points at `~/.socktainer/container.sock`) talking to
   a dead socket. Run the daemon by hand, as every session so far has.
-- A root `dnsmasq` is still bound to `192.168.64.1:53` (item 2), untouched by today's
-  teardown since it's independent of the socktainer daemon/containers. Stop it with
-  `sudo pkill -f "listen-address=192.168.64.1"`. Without it, no container has DNS.
+- A root `dnsmasq` is still bound to `192.168.64.1:53` (see *"No DNS on the built-in
+  `default` network"* above), untouched by today's teardown since it's independent of the
+  socktainer daemon/containers. Stop it with `sudo pkill -f "listen-address=192.168.64.1"`.
+  Without it, no container has DNS.
 - `traefik_monitor_port` is still set to **11999** (10999 is OrbStack's) in
   `~/.ddev/global_config.yaml`. Revert it to 10999 when done with socktainer if that matters
   for other projects.
