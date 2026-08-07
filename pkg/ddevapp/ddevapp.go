@@ -2579,6 +2579,8 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		}
 	}
 
+	opts.Env = append(opts.Env, agentDetectionEnv(opts.Env)...)
+
 	// Cases to handle
 	// - Free form, all unquoted. Like `ls -l -a`
 	// - Quoted to delay pipes and other features to container, like `"ls -l -a | grep junk"`
