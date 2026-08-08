@@ -10,10 +10,12 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/docker"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 )
 
 // customConfigCheck defines a custom configuration check.
@@ -61,6 +63,22 @@ func addPathToAddonMap(fullPath string, addonName string, addonFileMap map[strin
 		return
 	}
 	addonFileMap[fullPath] = addonName
+}
+
+// imageVersionMismatch returns a parenthetical note when a pinned image was
+// built as a different DDEV image generation than this DDEV expects, which is
+// the way a pinned webimage/dbimage goes stale: it keeps working until DDEV
+// changes something the image is expected to provide.
+//
+// It returns an empty string when the image can't be inspected (not pulled
+// yet, no Docker) or carries no com.ddev.version label, so images built before
+// the label existed never produce a false alarm.
+func imageVersionMismatch(imageName string, expectedTag string) string {
+	builtTag, err := dockerutil.ImageLabel(imageName, docker.DdevVersionLabel)
+	if err != nil || builtTag == "" || builtTag == expectedTag {
+		return ""
+	}
+	return fmt.Sprintf(", built for DDEV images %s but this DDEV expects %s", builtTag, expectedTag)
 }
 
 // CheckCustomConfig checks for custom configuration files and returns a message.
@@ -411,13 +429,15 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 	if app.WebImage != "" && app.WebImage != docker.GetWebImage() {
 		findings = append(findings, finding{
 			category: "Web server",
-			files:    []fileInfo{{path: fmt.Sprintf("webimage: %s (non-default)", app.WebImage)}},
+			files: []fileInfo{{path: fmt.Sprintf("webimage: %s (non-default%s)",
+				app.WebImage, imageVersionMismatch(app.WebImage, versionconstants.WebTag))}},
 		})
 	}
 	if app.DBImage != "" && app.DBImage != docker.GetDBImage(app.Database.Type, app.Database.Version) {
 		findings = append(findings, finding{
 			category: "Database",
-			files:    []fileInfo{{path: fmt.Sprintf("dbimage: %s (non-default)", app.DBImage)}},
+			files: []fileInfo{{path: fmt.Sprintf("dbimage: %s (non-default%s)",
+				app.DBImage, imageVersionMismatch(app.DBImage, versionconstants.BaseDBTag))}},
 		})
 	}
 

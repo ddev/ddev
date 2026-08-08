@@ -8,6 +8,11 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
 
+// DdevVersionLabel is the image label recording the tag an image was built as.
+// The tag is otherwise lost in a derived image, so this is what lets DDEV tell
+// which of its image generations a pinned webimage/dbimage came from.
+const DdevVersionLabel = "com.ddev.version"
+
 // GetWebImage returns the correctly formatted web image:tag reference
 func GetWebImage() string {
 	fullWebImg := versionconstants.WebImg

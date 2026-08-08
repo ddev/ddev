@@ -135,7 +135,7 @@ fi
 if [ ! -z ${PUSH:-} ]; then
   echo "building/pushing ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
   set -x
-  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" ${tag_directive}  .
+  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="DDEV_IMAGE_TAG=${IMAGE_TAG}" ${tag_directive}  .
   set +x
 fi
 
@@ -143,5 +143,5 @@ fi
 set -x
 if [ -z "${PUSH:-}" ]; then
     echo "Loading to local docker ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
-    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" ${tag_directive} .
+    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DDEV_IMAGE_TAG=${IMAGE_TAG}" ${tag_directive} .
 fi

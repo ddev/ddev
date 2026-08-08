@@ -156,6 +156,12 @@ RUN /sbin/mkhomedir_helper www-data
 # (The DHI mysql base already creates it, so use mkdir -p.)
 RUN mkdir -p /home/mysql && chown mysql:mysql /home/mysql
 
+# Records the image tag this image was built as, so DDEV can tell which of its
+# image generations an image belongs to even after the tag is lost - for
+# example in a derived image built FROM this one and pinned via `dbimage`.
+ARG DDEV_IMAGE_TAG="unknown"
+LABEL com.ddev.version="${DDEV_IMAGE_TAG}"
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 3306
