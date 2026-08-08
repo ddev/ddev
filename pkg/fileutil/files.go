@@ -123,6 +123,21 @@ func CopyDir(src string, dst string) error {
 	return nil
 }
 
+// DirSize returns the total size in bytes of all files within a directory tree
+func DirSize(path string) (int64, error) {
+	var size int64
+	err := filepath.Walk(path, func(_ string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return nil
+	})
+	return size, err
+}
+
 // IsDirectory returns true if path is a dir, false on error or not directory
 func IsDirectory(path string) bool {
 	fileInfo, err := os.Stat(path)
