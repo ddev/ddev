@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"fmt"
 	"regexp"
 	"slices"
 	"strconv"
@@ -27,28 +28,34 @@ func (app *DdevApp) GetExistingDBType() (string, error) {
 	return GetDBTypeVersionFromString(dbVersionInfo), nil
 }
 
-// getDBVersionFromVolume inspects the database volume to determine version info
-// Returns the raw version string found in the volume, or empty string if none found
-func (app *DdevApp) getDBVersionFromVolume() (string, error) {
-	// Command to check for database version files:
-	// 1. MySQL/MariaDB: /var/tmp/mysql/db_mariadb_version.txt
-	// 2. PostgreSQL <=17: /var/tmp/postgres/PG_VERSION
-	// 3. PostgreSQL 18+: /var/tmp/postgres/[version]/docker/PG_VERSION (check common versions)
-	cmd := []string{"sh", "-c", `
+// getDBVersionFromVolumeScript returns a shell script that finds and prints
+// whichever known database version file exists:
+//   - mariadbVersionFile: MySQL/MariaDB's db_mariadb_version.txt
+//   - postgresVersionFile: PostgreSQL <=17's PG_VERSION, sitting directly at the
+//     volume root
+//   - postgresVersionGlob: PostgreSQL 18+'s PG_VERSION, one level down in a
+//     version-specific directory (e.g. .../18/docker/PG_VERSION) - see
+//     GetPostgresDataDir/GetPostgresDataPath, since 18+ mounts the volume one
+//     level higher than earlier versions did
+//
+// Callers pass either the utility-container mount points below, or the real
+// in-container paths used when reading directly from a running db container.
+func getDBVersionFromVolumeScript(mariadbVersionFile, postgresVersionFile, postgresVersionGlob string) string {
+	return fmt.Sprintf(`
 		# Check MySQL/MariaDB version file
-		if [ -f /var/tmp/mysql/db_mariadb_version.txt ]; then
-			cat /var/tmp/mysql/db_mariadb_version.txt
+		if [ -f %[1]s ]; then
+			cat %[1]s
 			exit 0
 		fi
 
 		# Check PostgreSQL version file (pre-18 location)
-		if [ -f /var/tmp/postgres/PG_VERSION ]; then
-			cat /var/tmp/postgres/PG_VERSION
+		if [ -f %[2]s ]; then
+			cat %[2]s
 			exit 0
 		fi
 
 		# Check PostgreSQL 18+ version files in version-specific directories
-		for version_file in /var/tmp/postgres/*/docker/PG_VERSION; do
+		for version_file in %[3]s; do
 			if [ -f "$version_file" ]; then
 				cat "$version_file"
 				exit 0
@@ -57,7 +64,42 @@ func (app *DdevApp) getDBVersionFromVolume() (string, error) {
 
 		# No version file found
 		exit 0
-	`}
+	`, mariadbVersionFile, postgresVersionFile, postgresVersionGlob)
+}
+
+// getDBVersionFromVolume inspects the database volume to determine version info
+// Returns the raw version string found in the volume, or empty string if none found
+func (app *DdevApp) getDBVersionFromVolume() (string, error) {
+	// If the db service is already running, read its version file directly via
+	// exec instead of mounting the db volume into a separate utility container.
+	// This is both cheaper (no extra container to create/pull/remove) and, on
+	// providers where a volume can only be attached read-write by one container
+	// at a time (Apple Container/socktainer), the only way this can succeed at
+	// all: the running db container already holds the volume read-write, so a
+	// second attach - read-only or not - fails outright. See #7372.
+	dbContainerName := GetContainerName(app, "db")
+	if state, err := dockerutil.GetContainerStateByName(dbContainerName); err == nil && state == "running" {
+		script := getDBVersionFromVolumeScript(
+			"/var/lib/mysql/db_mariadb_version.txt",
+			"/var/lib/postgresql/data/PG_VERSION",
+			"/var/lib/postgresql/*/docker/PG_VERSION",
+		)
+		out, stderr, err := dockerutil.Exec(dbContainerName, script, "")
+		if err != nil {
+			return "", fmt.Errorf("unable to inspect database version/type on running container %s: %v, stderr=%s", dbContainerName, err, stderr)
+		}
+		return strings.TrimSpace(out), nil
+	}
+
+	// Command to check for database version files:
+	// 1. MySQL/MariaDB: /var/tmp/mysql/db_mariadb_version.txt
+	// 2. PostgreSQL <=17: /var/tmp/postgres/PG_VERSION
+	// 3. PostgreSQL 18+: /var/tmp/postgres/[version]/docker/PG_VERSION (check common versions)
+	cmd := []string{"sh", "-c", getDBVersionFromVolumeScript(
+		"/var/tmp/mysql/db_mariadb_version.txt",
+		"/var/tmp/postgres/PG_VERSION",
+		"/var/tmp/postgres/*/docker/PG_VERSION",
+	)}
 
 	var volumesNeeded []string
 	if dockerutil.VolumeExists(app.GetMariaDBVolumeName()) {
