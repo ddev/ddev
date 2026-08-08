@@ -23,6 +23,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project --prefer-dist silverstripe/installer
   assert_success
 
@@ -30,18 +32,18 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch /admin
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/admin"
+  assert_output "FULLURL ${PRIMARY_URL}/admin"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site/Security/login
+  run curl -sfIv ${PRIMARY_URL}/Security/login
   assert_output --partial "server: Apache"
   assert_output --partial "HTTP/2 200"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "Welcome to Silverstripe"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site/Security/login
+  run curl -sfv ${PRIMARY_URL}/Security/login
   assert_output --partial "<title>Your Site Name: Log in</title>"
   assert_output --partial "id=\"MemberLoginForm_LoginForm\""
   assert_success

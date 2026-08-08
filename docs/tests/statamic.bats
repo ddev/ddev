@@ -23,6 +23,8 @@ teardown() {
   run ddev composer create-project --prefer-dist statamic/statamic
   assert_success
 
+  _extra_info
+
   # fill out the interactive form
   run ddev php please make:user admin@example.com --password=admin1234 --super --no-interaction
   ddev mutagen sync
@@ -31,28 +33,28 @@ teardown() {
 
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
   DDEV_DEBUG=true run ddev launch /cp
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/cp"
+  assert_output "FULLURL ${PRIMARY_URL}/cp"
   assert_success
 
     # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "x-powered-by: Statamic"
   assert_success
-  run curl -sfIv https://${PROJNAME}.ddev.site/cp/auth/login
+  run curl -sfIv ${PRIMARY_URL}/cp/auth/login
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "x-powered-by: Statamic"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "<title>Home</title>"
   assert_output --partial "Welcome to your new Statamic site"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site/cp/auth/login
+  run curl -sfv ${PRIMARY_URL}/cp/auth/login
   assert_output --regexp 'component.*auth.*Login'
   assert_success
 }

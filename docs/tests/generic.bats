@@ -43,9 +43,11 @@ EOF
   run ddev start -y
   assert_success
 
+  _extra_info
+
   # ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   #echo "#" >&3
@@ -66,11 +68,11 @@ EOF
   # printf '%s\n' "$(echo "$output" | jq -r)" | sed 's/^/# /' >&3
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
+  run curl -sfI ${PRIMARY_URL}
   assert_line --partial "x-powered-by: PHP"
   assert_success
 
-  run curl -sf https://${PROJNAME}.ddev.site
+  run curl -sf ${PRIMARY_URL}
   assert_line --partial "Built-in HTTP server"
   assert_success
 }

@@ -23,6 +23,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project getgrav/grav
   assert_success
 
@@ -30,11 +32,11 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "set-cookie: grav-site-"
   assert_output --partial "location: /admin"
   assert_output --partial "HTTP/2 302"
@@ -57,6 +59,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer install
   assert_success
 
@@ -67,11 +71,11 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "set-cookie: grav-site-"
   assert_output --partial "location: /admin"
   assert_output --partial "HTTP/2 302"

@@ -21,19 +21,21 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project tempest/app
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "HTTP/2 200"
   assert_success
 
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "Tempest"
   assert_output --partial "The PHP framework that gets out of your way."
   assert_success

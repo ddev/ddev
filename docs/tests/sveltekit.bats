@@ -54,12 +54,17 @@ EOF
   DDEV_DEBUG=true run ddev restart -y
   assert_success
 
+  # web_extra_exposed_ports only takes effect after this restart, so the
+  # generic webserver has no primary URL to report until now (see
+  # GetPrimaryRouterHTTP(S)Port in pkg/ddevapp/ddevapp.go).
+  _extra_info
+
   # ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
   # validate running project
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "to your new"
   assert_success
 }

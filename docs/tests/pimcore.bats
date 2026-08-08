@@ -20,6 +20,9 @@ teardown() {
   assert_success
   run ddev start -y
   assert_success
+
+  _extra_info
+
   run ddev composer create-project pimcore/skeleton
   assert_success
   run ddev exec pimcore-install --mysql-username=db --mysql-password=db --mysql-host-socket=db --mysql-database=db --admin-password=admin --admin-username=admin
@@ -36,10 +39,10 @@ teardown() {
   run ddev restart -y
   assert_success
   DDEV_DEBUG=true run ddev launch /admin
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/admin"
+  assert_output "FULLURL ${PRIMARY_URL}/admin"
   assert_success
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "HTTP/2 200"
   assert_output --partial "x-powered-by: pimcore"
   assert_output --partial "x-pimcore-output-cache-disable-reason:"

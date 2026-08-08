@@ -23,6 +23,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   # Composer has no movable "lts" alias (unlike symfony-cli's --version=lts
   # below), so this pins to the current LTS branch explicitly. See
   # https://symfony.com/releases for the current LTS when this needs bumping.
@@ -34,14 +36,14 @@ teardown() {
 
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 404"
-  run curl https://${PROJNAME}.ddev.site
+  run curl ${PRIMARY_URL}
   assert_output --partial "<title>Welcome to Symfony!</title>"
   assert_output --partial "You are seeing this page because the homepage URL is not configured and"
   assert_output --partial "<a target=\"_blank\" href=\"https://symfony.com/community#interact\">Follow Symfony</a>"
@@ -60,6 +62,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev exec symfony check:requirements
   assert_success
 
@@ -73,14 +77,14 @@ teardown() {
 
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 404"
-  run curl https://${PROJNAME}.ddev.site
+  run curl ${PRIMARY_URL}
   assert_output --partial "<title>Welcome to Symfony!</title>"
   assert_output --partial "You are seeing this page because the homepage URL is not configured and"
   assert_output --partial "<a target=\"_blank\" href=\"https://symfony.com/community#interact\">Follow Symfony</a>"
