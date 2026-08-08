@@ -123,31 +123,91 @@ install_node_tools() {
 }
 
 # Verify installation
+#
+# This deliberately does NOT prepend the install directories to PATH. The
+# previous version did, then looked for the tools it had just installed, so it
+# always succeeded while saying nothing about what the user's shell will run.
+# On a machine with a Homebrew pyspelling ahead of ours on PATH it reported a
+# clean install, and `pyspelling --config .spellcheck.yml` then failed with
+# ModuleNotFoundError: No module named 'pymdownx'.
+#
+# So check two things the old version could not: which copy of each tool the
+# current PATH resolves, and whether that copy actually runs.
 verify_installation() {
   log_info "Verifying installation..."
 
-  export PATH="$PYTHON_ENV/bin:$NODE_ENV/bin:$PATH"
+  local failures=0 shadowed=0
 
-  local tools=(
-    "zensical"
-    "pyspelling"
-    "markdownlint"
-    "textlint"
-    "linkspector"
-    "aspell"
-  )
+  check_tool() {
+    local tool="$1" expected_dir="$2"
+    shift 2
+    local resolved
+    resolved="$(command -v "${tool}" 2>/dev/null || true)"
 
-  local missing=()
-  for tool in "${tools[@]}"; do
-    if command -v "$tool" >/dev/null 2>&1; then
-      log_info "✓ $tool"
-    else
-      missing+=("$tool")
+    if [[ -z "${resolved}" ]]; then
+      if [[ -x "${expected_dir}/${tool}" ]]; then
+        log_warn "${tool} is installed but not on your PATH (${expected_dir}/${tool})"
+      else
+        log_error "${tool} was not installed and is not on your PATH"
+        failures=$((failures + 1))
+      fi
+      return
     fi
-  done
 
-  if [[ ${#missing[@]} -gt 0 ]]; then
-    log_error "Missing tools: ${missing[*]}"
+    if [[ "${resolved}" != "${expected_dir}/"* && "${expected_dir}" != "system" ]]; then
+      log_warn "${tool} resolves to ${resolved}"
+      log_warn "  not the copy installed here (${expected_dir}/${tool})"
+      shadowed=$((shadowed + 1))
+    fi
+
+    # Presence is not enough: a tool can be on PATH and still be unusable.
+    if ! "$@" >/dev/null 2>&1; then
+      log_error "${tool} (${resolved}) is on PATH but failed to run: $*"
+      failures=$((failures + 1))
+      return
+    fi
+
+    log_info "✓ ${tool} (${resolved})"
+  }
+
+  # pyspelling only breaks when it loads a config that uses pymdown-extensions,
+  # so --version would not catch the failure this is here to detect. Run it
+  # against a throwaway config instead of the repo's, which would spellcheck
+  # every document and could fail for reasons unrelated to the install.
+  local probe; probe="$(mktemp -d)"
+  printf 'hello\n' > "${probe}/probe.md"
+  cat > "${probe}/probe.yml" <<EOF
+matrix:
+- name: probe
+  aspell:
+    lang: en
+  pipeline:
+  - pyspelling.filters.markdown:
+      markdown_extensions:
+      - pymdownx.superfences:
+  sources:
+  - '${probe}/probe.md'
+EOF
+
+  check_tool pyspelling   "$PYTHON_ENV/bin" pyspelling --config "${probe}/probe.yml"
+  check_tool zensical     "$PYTHON_ENV/bin" zensical --version
+  check_tool markdownlint "$NODE_ENV/bin"   markdownlint --version
+  check_tool textlint     "$NODE_ENV/bin"   textlint --version
+  check_tool linkspector  "$NODE_ENV/bin"   linkspector --version
+  check_tool aspell       system            aspell --version
+  rm -rf "${probe}"
+
+  if [[ ${shadowed} -gt 0 ]]; then
+    echo
+    log_warn "${shadowed} tool(s) resolve to a different copy than the one installed here."
+    log_warn "That copy may not have the dependencies these checks need."
+    log_warn "make targets are unaffected: the Makefile puts ${INSTALL_DIR} first itself."
+    log_warn "For your shell, put it first too:"
+    log_warn "  export PATH=\"$PYTHON_ENV/bin:$NODE_ENV/bin:\$PATH\""
+  fi
+
+  if [[ ${failures} -gt 0 ]]; then
+    log_error "${failures} tool(s) missing or not working"
     return 1
   fi
 }
@@ -168,8 +228,9 @@ main() {
   log_info "Installation complete!"
   echo
   echo "The tools are now available:"
-  echo "• In DDEV projects: Automatically added to PATH via .envrc"
-  echo "• Globally: Add to your shell profile (.bashrc/.bash_profile/.zshrc):"
+  echo "• To make: always, the Makefile puts these directories on PATH itself"
+  echo "• In DDEV projects: added to PATH via .envrc, if you use direnv"
+  echo "• In your shell: add to your profile (.bashrc/.bash_profile/.zshrc):"
   echo "  export PATH=\"$PYTHON_ENV/bin:$NODE_ENV/bin:\$PATH\""
 }
 
