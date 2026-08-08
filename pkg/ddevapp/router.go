@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -35,6 +36,30 @@ const (
 // but it may not yet be occupied. A map is used just to make it easy
 // to detect if it's there, the value in the map is not used.
 var EphemeralRouterPortsAssigned = make(map[int]bool)
+
+// RouterPortSubstitutionsLabel is the name of a Docker label set on the
+// ddev-router container recording which ephemeral host port was substituted
+// for each standard (proposed) router port, in the form "80=33000,443=33001".
+// The router binds ephemeral substitutes as <port>:<port>, so without this
+// label the container carries no trace of which standard port an ephemeral
+// port stands in for. Storing the record on the router container gives it
+// exactly the router's lifetime: it survives across ddev invocations and
+// disappears when the router is recreated or removed.
+//
+// It closes a race: when a standard port (say 80) is busy at router creation
+// time, the router is created bound to an ephemeral substitute. If the
+// original occupant of port 80 then goes away, a later project would see
+// port 80 as free and expect the router to bind it directly - a port the
+// running router does not have - forcing an unnecessary router recreation.
+// See GetAvailableRouterPort().
+const RouterPortSubstitutionsLabel = "com.ddev.router-port-substitutions"
+
+// RouterPortEphemeralSubstitutions remembers substitutions decided by this
+// process that may not yet have been written to the router's
+// RouterPortSubstitutionsLabel; the label is only written when the router
+// container is created or recreated. Exported so tests can reset it to
+// simulate a fresh ddev process, the same way EphemeralRouterPortsAssigned is.
+var RouterPortEphemeralSubstitutions = make(map[string]string)
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
@@ -232,6 +257,18 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 	uid, gid, username := dockerutil.GetContainerUser()
 	timezone, _ := util.GetLocalTimezone()
 
+	// Carry forward the port substitutions recorded on the existing router
+	// (if any) plus those decided by this process, dropping entries whose
+	// ephemeral port the new router will no longer bind because no active
+	// project uses it anymore.
+	oldRouter, _ := FindDdevRouter()
+	portSubstitutions := knownRouterPortSubstitutions(oldRouter)
+	for proposed, ephemeral := range portSubstitutions {
+		if !nodeps.ArrayContainsString(exposedPorts, ephemeral) {
+			delete(portSubstitutions, proposed)
+		}
+	}
+
 	templateVars := map[string]any{
 		"Username":                   username,
 		"UID":                        uid,
@@ -249,6 +286,8 @@ func generateRouterCompose(activeApps []*DdevApp) (string, error) {
 		"IsPodman":                   dockerutil.IsPodman(),
 		"IsRootless":                 dockerutil.IsRootless(),
 		"UseKeepID":                  dockerutil.UseKeepID(),
+		"PortSubstitutionsLabel":     RouterPortSubstitutionsLabel,
+		"PortSubstitutions":          formatRouterPortSubstitutions(portSubstitutions),
 	}
 
 	t, err := template.New("router_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "router_compose_template.yaml")
@@ -649,9 +688,14 @@ func CheckRouterPorts(activeApps []*DdevApp) error {
 // Returns the port found, and a boolean that determines if the
 // port is valid (true) or not (false), and the port is marked as allocated
 func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
-	// Get ports already bound by the router - these can be reused
+	// Get ports already bound by the router - these can be reused.
+	// Only trust these bindings when the router is actually running: a
+	// container that failed to start (for example one that lost a port-bind
+	// race) still reports the port it tried to bind in its HostConfig, and
+	// treating that as a legitimate binding would keep reoffering the same
+	// never-actually-bound port on every subsequent call.
 	var routerBoundPorts []string
-	if router, err := FindDdevRouter(); err == nil && router != nil {
+	if router, err := FindDdevRouter(); err == nil && router != nil && router.State == "running" {
 		routerBoundPorts, _ = dockerutil.GetBoundHostPorts(router.ID)
 	}
 
@@ -677,6 +721,41 @@ func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
 	return 0, false
 }
 
+// parseRouterPortSubstitutions parses a RouterPortSubstitutionsLabel value of
+// the form "80=33000,443=33001" into a proposedPort → ephemeralPort map.
+func parseRouterPortSubstitutions(labelValue string) map[string]string {
+	subs := make(map[string]string)
+	for pair := range strings.SplitSeq(labelValue, ",") {
+		if proposed, ephemeral, found := strings.Cut(pair, "="); found && proposed != "" && ephemeral != "" {
+			subs[proposed] = ephemeral
+		}
+	}
+	return subs
+}
+
+// formatRouterPortSubstitutions is the inverse of parseRouterPortSubstitutions,
+// producing a deterministic (sorted) label value.
+func formatRouterPortSubstitutions(subs map[string]string) string {
+	pairs := make([]string, 0, len(subs))
+	for proposed, ephemeral := range subs {
+		pairs = append(pairs, proposed+"="+ephemeral)
+	}
+	slices.Sort(pairs)
+	return strings.Join(pairs, ",")
+}
+
+// knownRouterPortSubstitutions returns the substitutions recorded on the
+// given router container's RouterPortSubstitutionsLabel, overlaid with any
+// made by this process that the label may not have yet.
+func knownRouterPortSubstitutions(router *container.Summary) map[string]string {
+	subs := make(map[string]string)
+	if router != nil {
+		subs = parseRouterPortSubstitutions(router.Labels[RouterPortSubstitutionsLabel])
+	}
+	maps.Copy(subs, RouterPortEphemeralSubstitutions)
+	return subs
+}
+
 // GetAvailableRouterPort gets an ephemeral replacement port when the
 // proposedPort is not available.
 //
@@ -691,14 +770,20 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	if proposedPort == "" {
 		return proposedPort, "", false
 	}
-	// If the router exists, check if it's already handling the proposedPort
+	// If the router is running, check if it's already handling the proposedPort
 	// regardless of its health status. This prevents allocating ephemeral ports
 	// when the router is running but unhealthy (e.g., broken Traefik config).
+	// A router container that exists but isn't running (for example one that
+	// failed to start because it lost a port-bind race) still reports the
+	// port it tried to bind in its HostConfig, so its bindings - and the
+	// substitutions recorded on its RouterPortSubstitutionsLabel, checked
+	// below - are only trustworthy while it's actually running.
+	var routerPortsAlreadyBound []string
 	r, err := FindDdevRouter()
-	if r != nil && err == nil {
+	if r != nil && err == nil && r.State == "running" {
 		util.Debug("GetAvailableRouterPort(): Router exists, checking bound ports")
 		// Check if the proposedPort is already being handled by the router.
-		routerPortsAlreadyBound, err := dockerutil.GetBoundHostPorts(r.ID)
+		routerPortsAlreadyBound, err = dockerutil.GetBoundHostPorts(r.ID)
 		if err != nil {
 			util.Debug("GetAvailableRouterPort(): Error getting bound ports: %v", err)
 			// Continue to port availability check below
@@ -713,6 +798,16 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 	// At this point, the router may or may not be running, but we
 	// have not found it already having the proposedPort bound
 	if !netutil.IsPortActive(proposedPort) {
+		// The proposedPort looks free on the host, but if it was previously
+		// substituted with an ephemeral port that the running router still has
+		// bound, keep the substitution. Whatever occupied the proposedPort at
+		// substitution time may simply have gone away since; handing out the
+		// now-free proposedPort would expect a port the running router does not
+		// actually have bound, forcing an unnecessary router recreation.
+		if ephemeralPort, ok := knownRouterPortSubstitutions(r)[proposedPort]; ok && nodeps.ArrayContainsString(routerPortsAlreadyBound, ephemeralPort) {
+			util.Debug("GetAvailableRouterPort(): proposedPort %s is available, but was previously substituted with ephemeralPort=%s, which ddev-router still has bound, keep using it", proposedPort, ephemeralPort)
+			return proposedPort, ephemeralPort, true
+		}
 		// If the proposedPort is available (not active) for use, just have the router use it
 		util.Debug("GetAvailableRouterPort(): proposedPort %s is available, use proposedPort=%s", proposedPort, proposedPort)
 		return proposedPort, "", false
@@ -727,7 +822,12 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 
 	util.Debug("GetAvailableRouterPort(): proposedPort %s is not available, ephemeralPort=%d is available, use it", proposedPort, ephemeralPort)
 
-	return proposedPort, strconv.Itoa(ephemeralPort), true
+	ephemeralPortStr := strconv.Itoa(ephemeralPort)
+	// Remember the substitution so it can be written to the router's
+	// RouterPortSubstitutionsLabel when the router is (re)created.
+	RouterPortEphemeralSubstitutions[proposedPort] = ephemeralPortStr
+
+	return proposedPort, ephemeralPortStr, true
 }
 
 // GetEphemeralPortsIfNeeded replaces the provided ports with an ephemeral version if they need it.
@@ -737,7 +837,7 @@ func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
 		if portChangeRequired {
 			*port = replacementPort
 			if verbose {
-				output.UserOut.Printf("Port %s is busy, using %s instead, see %s", proposedPort, replacementPort, "https://ddev.com/s/port-conflict")
+				output.UserOut.Printf("Port %s is not available, using %s instead, see %s", proposedPort, replacementPort, "https://ddev.com/s/port-conflict")
 			}
 		}
 	}
