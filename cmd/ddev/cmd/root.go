@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -28,6 +29,8 @@ var (
 	serviceUser        string
 	updateDocURL       = "https://docs.ddev.com/en/stable/users/install/ddev-upgrade/"
 	instrumentationApp *ddevapp.DdevApp
+	// skipConfirmation is the value of the running command's `-y` flag, if it has one.
+	skipConfirmation bool
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -53,6 +56,17 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 		_ = cmd.Help()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Most commands that can start containers offer `-y`, spelled either
+		// `--skip-confirmation` or `--yes`; honor it for the upgrade prompt
+		// regardless of which command we ended up in.
+		for _, name := range []string{"skip-confirmation", "yes"} {
+			if f := cmd.Flags().Lookup(name); f != nil {
+				if v, err := strconv.ParseBool(f.Value.String()); err == nil && v {
+					skipConfirmation = true
+				}
+			}
+		}
+
 		if len(os.Args) < 2 {
 			return
 		}
@@ -142,6 +156,14 @@ func Execute() {
 }
 
 func init() {
+	// Run the upgrade check from anything that starts containers, not just
+	// `ddev start`. ddevapp calls this at most once per command.
+	ddevapp.UpgradeCheck = func() {
+		if err := checkDdevVersionAndOptInInstrumentation(skipConfirmation); err != nil {
+			util.Warning("Unable to write global config: %v", err)
+		}
+	}
+
 	// This flag represents the output.JSONOutput variable, and parsed very early in pkg/output/output_setup.go
 	RootCmd.PersistentFlags().BoolP("json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 	RootCmd.PersistentFlags().BoolVarP(&ddevapp.SkipHooks, "skip-hooks", "", false, "If true, any hook normally run by the command will be skipped.")
@@ -185,14 +207,18 @@ func init() {
 // from the last saved version. If it is, prompt to request anon DDEV usage stats
 // and update the info.
 func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
-	if !output.JSONOutput && semver.Compare(versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && !globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation && !skipConfirmation {
-		allowStats := util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\nhttps://docs.ddev.com/en/stable/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
-		if allowStats {
-			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
-		}
+	if globalconfig.DdevGlobalConfig.LastStartedVersion == versionconstants.DdevVersion {
+		return nil
 	}
 
-	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
+	if !skipConfirmation {
+		if !output.JSONOutput && semver.Compare(versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && !globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation {
+			allowStats := util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\nhttps://docs.ddev.com/en/stable/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
+			if allowStats {
+				globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
+			}
+		}
+
 		// If they have a new version (but not first-timer) then prompt to poweroff
 		if globalconfig.DdevGlobalConfig.LastStartedVersion != "v0.0" {
 			// Check if any containers are running before prompting for poweroff
@@ -216,18 +242,13 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 				}
 			}
 		}
-
-		// If they have a new version write the new version into last-started
-		globalconfig.DdevGlobalConfig.LastStartedVersion = versionconstants.DdevVersion
-		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		if err != nil {
-			return err
-		}
-
-		return nil
 	}
 
-	return nil
+	// Record the new version even when confirmation was skipped; otherwise `-y`
+	// users are asked about the same upgrade by every later command.
+	globalconfig.DdevGlobalConfig.LastStartedVersion = versionconstants.DdevVersion
+
+	return globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 }
 
 // addCommandIfNotExists adds cmdToAdd to rootCmd if a command with the same name does not already exist.

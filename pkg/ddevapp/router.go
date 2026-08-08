@@ -76,6 +76,8 @@ func RemoveRouterContainer() error {
 
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
+	RunUpgradeCheck()
+
 	// Kill the router if not running or if its image is outdated, so it restarts fresh.
 	// Use HasSuffix to handle registry prefixes (e.g. docker.io/) that Podman includes in image names.
 	router, err := FindDdevRouter()

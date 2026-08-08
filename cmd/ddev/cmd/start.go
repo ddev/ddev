@@ -72,16 +72,10 @@ ddev start --all`,
 			rc.ShowSponsorshipAppreciation()
 		}
 
-		skip, err := cmd.Flags().GetBool("skip-confirmation")
-		if err != nil {
-			util.Failed(err.Error())
-		}
-
 		// Look for version change and opt-in to instrumentation if it has changed.
-		err = checkDdevVersionAndOptInInstrumentation(skip)
-		if err != nil {
-			util.Failed(err.Error())
-		}
+		// Do it here rather than waiting for app.Start() so the poweroff prompt
+		// comes before any of the start output.
+		ddevapp.RunUpgradeCheck()
 
 		selectFlag, err := cmd.Flags().GetBool("select")
 

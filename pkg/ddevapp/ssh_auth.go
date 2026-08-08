@@ -38,6 +38,8 @@ func FullRenderedSSHAuthComposeYAMLPath() string {
 
 // EnsureSSHAgentContainer ensures the ssh-auth container is running.
 func (app *DdevApp) EnsureSSHAgentContainer() error {
+	RunUpgradeCheck()
+
 	util.Debug("Ensuring ddev-ssh-agent container is running with the current image")
 	sshContainer, err := findDdevSSHAuth()
 	if err != nil {
