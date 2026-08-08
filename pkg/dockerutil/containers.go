@@ -3,8 +3,11 @@ package dockerutil
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"net"
+	"net/http"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -1048,28 +1051,91 @@ func Exec(containerID string, command string, uid string) (string, string, error
 		return "", "", err
 	}
 
-	var stdout, stderr bytes.Buffer
-	execAttach, err := apiClient.ExecAttach(ctx, execCreate.ID, client.ExecAttachOptions{})
-	if err != nil {
-		return "", "", err
-	}
-	defer execAttach.Close()
-
-	_, err = stdcopy.StdCopy(&stdout, &stderr, execAttach.Reader)
+	stdout, stderr, err := execStartAndCapture(ctx, apiClient, execCreate.ID)
 	if err != nil {
 		return "", "", err
 	}
 
 	info, err := apiClient.ExecInspect(ctx, execCreate.ID, client.ExecInspectOptions{})
 	if err != nil {
-		return stdout.String(), stderr.String(), err
+		return stdout, stderr, err
 	}
 	var execErr error
 	if info.ExitCode != 0 {
 		execErr = fmt.Errorf("command '%s' returned exit code %v", command, info.ExitCode)
 	}
 
-	return stdout.String(), stderr.String(), execErr
+	return stdout, stderr, execErr
+}
+
+// execStartAndCapture starts an already-created exec and returns its
+// demultiplexed stdout/stderr.
+//
+// This deliberately does not use client.Client.ExecAttach(), which always
+// upgrades the connection to a raw hijacked stream (see its doc comment) and
+// relies on the daemon closing that connection once the exec process exits
+// to signal EOF to stdcopy.StdCopy. Real dockerd does this; socktainer (the
+// Docker-compatible API in front of Apple Container, see #7372) does not -
+// confirmed directly against the API: the hijacked connection still delivers
+// the command's output correctly, but then sits open indefinitely, so
+// ExecAttach+stdcopy.StdCopy hangs forever after the command has already
+// finished and its output has already arrived.
+//
+// POSTing to /exec/{id}/start without asking for the hijack upgrade avoids
+// this: dockerd (and socktainer) then respond with a normal chunked HTTP
+// response carrying the same multiplexed stream format, which every tested
+// provider (real Docker, OrbStack, socktainer) terminates correctly, since
+// this is the same request/response shape used whenever a client doesn't
+// need to attach stdin - which is always true here, as dockerutil.Exec never
+// sends stdin.
+//
+// apiClient is documented as implemented only by *client.Client (its
+// interface embeds unexported methods, so no other type can satisfy it);
+// the type assertion is not expected to fail in practice.
+func execStartAndCapture(ctx context.Context, apiClient client.APIClient, execID string) (stdout, stderr string, err error) {
+	cli, ok := apiClient.(*client.Client)
+	if !ok {
+		return "", "", fmt.Errorf("dockerutil.Exec: unsupported APIClient implementation %T", apiClient)
+	}
+
+	body, err := json.Marshal(container.ExecStartRequest{Detach: false, Tty: false})
+	if err != nil {
+		return "", "", err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://docker/v"+cli.ClientVersion()+"/exec/"+execID+"/start", bytes.NewReader(body))
+	if err != nil {
+		return "", "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	dial := cli.Dialer()
+	transport := &http.Transport{
+		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+			return dial(ctx)
+		},
+		// A new Transport is created per call and never reused, so keeping its
+		// connection alive in an idle pool only leaks the readLoop/writeLoop
+		// goroutines net/http spawns per connection - nothing will ever reuse
+		// them. Close the connection once this response is done instead.
+		DisableKeepAlives: true,
+	}
+	httpClient := &http.Client{Transport: transport}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		errBody, _ := io.ReadAll(resp.Body)
+		return "", "", fmt.Errorf("exec start on %s failed: status=%d body=%s", execID, resp.StatusCode, errBody)
+	}
+
+	var stdoutBuf, stderrBuf bytes.Buffer
+	if _, err = stdcopy.StdCopy(&stdoutBuf, &stderrBuf, resp.Body); err != nil {
+		return "", "", err
+	}
+	return stdoutBuf.String(), stderrBuf.String(), nil
 }
 
 // CopyIntoContainer copies a path (file or directory) into a specified container and location
