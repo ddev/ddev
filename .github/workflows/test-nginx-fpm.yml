@@ -63,6 +63,7 @@ jobs:
     with:
       ddev_test_webserver_type: "nginx-fpm"
       ddev_skip_nodejs_test: "false"
+      ddev_run_download_ddev_test: "true"
       testargs: ""
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
@@ -77,4 +78,5 @@ jobs:
       gotest_short: ${{ inputs.gotest_short }}
       ddev_test_webserver_type: "nginx-fpm"
       ddev_skip_nodejs_test: "false"
+      ddev_run_download_ddev_test: "true"
       debug_enabled: ${{ inputs.debug_enabled || false }}

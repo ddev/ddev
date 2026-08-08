@@ -144,6 +144,7 @@ jobs:
               return acc;
             }, 'Download the artifacts for this pull request:\n');
 
+            body += `\n\nOr, if you already have DDEV installed, download this PR's build for your OS and architecture with:\n\n\`\`\`bash\nddev utility download-ddev --pr ${prNumber}\n\`\`\``;
             body += `\n\nSee [Testing a PR](https://docs.ddev.com/en/stable/developers/building-contributing/#testing-a-pr).`;
             const codespacesLink = prRef && prRepoId
               ? `https://github.com/codespaces/new?ref=${prRef}&repo=${prRepoId}`

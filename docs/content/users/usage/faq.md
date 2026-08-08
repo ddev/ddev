@@ -221,6 +221,10 @@ brew install ddev/ddev/ddev
 
 Your projects are not affected by these changes.
 
+#### Any platform
+
+On any platform you can download the binaries for a specific release with [`ddev utility download-ddev`](../usage/commands.md#utility-download-ddev), for example `ddev utility download-ddev --tag v1.25.3`. It prints the exact commands to move `ddev` and `ddev-hostname` into your `$PATH`.
+
 ### Why do I have an old DDEV?
 
 You may have installed DDEV several times using different techniques. Use `which -a ddev` to find all installed binaries. For example, you could install a DDEV in WSL2 with Homebrew, forget about it for a while, install it manually, and then install it again with `apt`:
