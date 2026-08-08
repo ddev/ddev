@@ -32,11 +32,18 @@ _common_setup() {
 #    echo "# Starting test at $(date)" >&3
 }
 
+# Populates URL variables from `ddev describe -j`, so tests don't have to
+# hand-build URLs and can stay correct under a custom router_http(s)_port or TLD.
 _extra_info() {
-  HOST_HTTP_URL=$(ddev describe -j ${PROJNAME} | jq -r .raw.services.web.host_http_url)
-  HOST_HTTPS_URL=$(ddev describe -j ${PROJNAME} | jq -r .raw.services.web.host_https_url)
-  PRIMARY_HTTP_URL=$(ddev describe -j ${PROJNAME} | jq -r .raw.httpurl)
-  PRIMARY_HTTPS_URL=$(ddev describe -j ${PROJNAME} | jq -r .raw.httpsurl)
+  local json
+  json=$(ddev describe -j ${PROJNAME})
+  HOST_HTTP_URL=$(echo "${json}" | jq -r .raw.services.web.host_http_url)
+  HOST_HTTPS_URL=$(echo "${json}" | jq -r .raw.services.web.host_https_url)
+  PRIMARY_HTTP_URL=$(echo "${json}" | jq -r .raw.httpurl)
+  PRIMARY_HTTPS_URL=$(echo "${json}" | jq -r .raw.httpsurl)
+  PRIMARY_URL=$(echo "${json}" | jq -r .raw.primary_url)
+  DDEV_HOSTNAME=$(echo "${json}" | jq -r .raw.hostname)
+  PRIMARY_URL_ENCODED=$(printf '%s' "${PRIMARY_URL}" | jq -sRr '@uri')
 }
 
 _common_teardown() {

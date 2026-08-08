@@ -23,6 +23,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   # Install MODX Revolution via Composer (resolves to the latest stable release)
   run ddev composer create-project modx/revolution
   assert_success
@@ -32,7 +34,7 @@ teardown() {
   # explicitly keeps the install non-interactive.
   run ddev exec php setup/cli-install.php \
     --database_server=db --database=db --database_user=db --database_password=db \
-    --table_prefix=modx_ --http_host=${PROJNAME}.ddev.site \
+    --table_prefix=modx_ --http_host=${DDEV_HOSTNAME} \
     --cmsadmin=admin --cmspassword=Admin123! --cmsadminemail=admin@example.com --language=en \
     --context_mgr_path=/var/www/html/manager/ --context_mgr_url=/manager/ \
     --context_connectors_path=/var/www/html/connectors/ --context_connectors_url=/connectors/
@@ -40,23 +42,23 @@ teardown() {
 
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch /manager/
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/manager/"
+  assert_output "FULLURL ${PRIMARY_URL}/manager/"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_success
 
   # Check the frontend renders the default MODX resource
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "<title>Home - MODX Revolution</title>"
   assert_output --partial "You have successfully installed MODX Revolution"
   assert_success
 
   # Check the MODX manager (backend) login page is working
-  run curl -sfv https://${PROJNAME}.ddev.site/manager/
+  run curl -sfv ${PRIMARY_URL}/manager/
   assert_output --partial "<body id=\"login\">"
   assert_output --partial "alt=\"MODX CMS/CMF\""
   assert_output --partial "id=\"modx-login-form\""
@@ -93,12 +95,14 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   # Perform a fresh install using the DDEV database credentials. The four
   # --context_* arguments are the installer's own defaults; passing them
   # explicitly keeps the install non-interactive.
   run ddev exec php setup/cli-install.php \
     --database_server=db --database=db --database_user=db --database_password=db \
-    --table_prefix=modx_ --http_host=${PROJNAME}.ddev.site \
+    --table_prefix=modx_ --http_host=${DDEV_HOSTNAME} \
     --cmsadmin=admin --cmspassword=Admin123! --cmsadminemail=admin@example.com --language=en \
     --context_mgr_path=/var/www/html/manager/ --context_mgr_url=/manager/ \
     --context_connectors_path=/var/www/html/connectors/ --context_connectors_url=/connectors/
@@ -106,23 +110,23 @@ teardown() {
 
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch /manager/
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/manager/"
+  assert_output "FULLURL ${PRIMARY_URL}/manager/"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_success
 
   # Check the frontend renders the default MODX resource
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "<title>Home - MODX Revolution</title>"
   assert_output --partial "You have successfully installed MODX Revolution"
   assert_success
 
   # Check the MODX manager (backend) login page is working
-  run curl -sfv https://${PROJNAME}.ddev.site/manager/
+  run curl -sfv ${PRIMARY_URL}/manager/
   assert_output --partial "<body id=\"login\">"
   assert_output --partial "alt=\"MODX CMS/CMF\""
   assert_output --partial "id=\"modx-login-form\""

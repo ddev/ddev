@@ -21,6 +21,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   # shopware/production's composer.json now sets "php-http/discovery": false in
   # allow-plugins, so Composer no longer prompts to trust that plugin. The only
   # remaining interactive prompt is:
@@ -37,11 +39,11 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch /admin
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
+  assert_output --partial "FULLURL ${PRIMARY_URL}/admin"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site/admin
+  run curl -sfIv ${PRIMARY_URL}/admin
   assert_output --partial "sw-context-token,sw-access-key,sw-language-id,sw-version-id,sw-inheritance"
   assert_output --partial "HTTP/2 200"
   assert_success

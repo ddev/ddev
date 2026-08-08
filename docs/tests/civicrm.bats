@@ -31,6 +31,8 @@ EOF
   run ddev start
   assert_success
 
+  _extra_info
+
   run ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
   assert_success
 
@@ -51,11 +53,11 @@ EOF
 
   # ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "location: /civicrm/home"
   assert_output --partial "HTTP/2 302"
   assert_success

@@ -23,6 +23,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project mahocommerce/maho-starter
   assert_success
 
@@ -32,8 +34,8 @@ teardown() {
     --license_agreement_accepted yes \
     --locale en_US --timezone UTC --default_currency USD \
     --db_host db --db_name db --db_user db --db_pass db \
-    --url "https://${PROJNAME}.ddev.site/" \
-    --use_secure 1 --secure_base_url "https://${PROJNAME}.ddev.site/" --use_secure_admin 1 \
+    --url "${PRIMARY_URL}/" \
+    --use_secure 1 --secure_base_url "${PRIMARY_URL}/" --use_secure_admin 1 \
     --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
     --admin_username admin --admin_password veryl0ngpassw0rd \
     --sample_data 1
@@ -47,17 +49,17 @@ teardown() {
 
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_success
 
   # Check if the admin is working
-  run curl -sfvL https://${PROJNAME}.ddev.site/admin
+  run curl -sfvL ${PRIMARY_URL}/admin
   assert_output --partial "Log in to Admin Panel"
   assert_success
 }

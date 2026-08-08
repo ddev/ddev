@@ -26,16 +26,18 @@ teardown() {
   run ddev composer create-project --prefer-dist --no-interaction cakephp/app:~5.0
   assert_success
 
+  _extra_info
+
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "CakePHP: the rapid development PHP framework:"
   assert_output --partial "Welcome to CakePHP"
   assert_success

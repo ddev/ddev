@@ -21,6 +21,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project october/october
   assert_success
 
@@ -29,26 +31,26 @@ teardown() {
 
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "HTTP/2 200"
   assert_success
 
   # check October CMS is serving pages
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "Welcome to October CMS!"
   assert_success
 
   # check admin is accessible (follows redirect to login page)
-  run curl -sfv -L https://${PROJNAME}.ddev.site/admin
+  run curl -sfv -L ${PRIMARY_URL}/admin
   assert_output --partial "Administration Area | October CMS"
   assert_success
 
   # check admin setup page is accessible
-  run curl -sfIv -L https://${PROJNAME}.ddev.site/admin/backend/auth/setup
+  run curl -sfIv -L ${PRIMARY_URL}/admin/backend/auth/setup
   assert_output --partial "HTTP/2 200"
   assert_success
 

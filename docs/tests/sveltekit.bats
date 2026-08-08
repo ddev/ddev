@@ -21,6 +21,8 @@ teardown() {
   DDEV_DEBUG=true run ddev start -y
   assert_success
 
+  _extra_info
+
   cat <<EOF > .ddev/config.sveltekit.yaml
 web_extra_exposed_ports:
     - name: svelte
@@ -56,10 +58,10 @@ EOF
 
   # ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
   # validate running project
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "to your new"
   assert_success
 }

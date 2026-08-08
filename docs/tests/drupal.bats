@@ -23,6 +23,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project drupal/recommended-project:main-dev@dev
   assert_success
 
@@ -33,11 +35,11 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_line "FULLURL https://${PROJNAME}.ddev.site"
+  assert_line "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "x-generator: Drupal 12 (https://www.drupal.org)"
   assert_output --partial "HTTP/2 200"
   assert_success
@@ -55,6 +57,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project "drupal/recommended-project"
   assert_success
 
@@ -65,11 +69,11 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_line "FULLURL https://${PROJNAME}.ddev.site"
+  assert_line "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
   assert_output --partial "HTTP/2 200"
   assert_success
@@ -87,6 +91,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project "drupal/recommended-project:^10"
   assert_success
 
@@ -97,11 +103,11 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_line "FULLURL https://${PROJNAME}.ddev.site"
+  assert_line "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "x-generator: Drupal 10 (https://www.drupal.org)"
   assert_output --partial "HTTP/2 200"
   assert_success
@@ -123,6 +129,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer install
   assert_success
 
@@ -130,11 +138,11 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_line "FULLURL https://${PROJNAME}.ddev.site"
+  assert_line "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
   assert_output --partial "HTTP/2 200"
   assert_success
@@ -152,6 +160,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project drupal/cms
   assert_success
   # This check shows that post-create-project-cmd event ran successfully
@@ -167,15 +177,15 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_line "FULLURL https://${PROJNAME}.ddev.site"
+  assert_line "FULLURL ${PRIMARY_URL}"
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "HTTP/2 200"
   assert_output --partial "expires: Sun, 19 Nov 1978 05:00:00 GMT"
   assert_output --partial "x-generator: Drupal 11 (https://www.drupal.org)"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_success
   assert_output --partial "Home | Drush Site-Install"
   assert_output --partial "Bring your site to life, starting here."

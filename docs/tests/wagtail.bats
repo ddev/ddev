@@ -34,6 +34,8 @@ DOCKERFILEEND
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev exec python -m venv env
   assert_success
 
@@ -76,21 +78,21 @@ EOF
 
   # ddev launch /admin
   DDEV_DEBUG=true run ddev launch /admin
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
+  assert_output --partial "FULLURL ${PRIMARY_URL}/admin"
   assert_success
 
   # validate running project - check if Wagtail is responding
-  run curl -sfI https://${PROJNAME}.ddev.site
+  run curl -sfI ${PRIMARY_URL}
   assert_line --regexp 'server:.*WSGIServer.*CPython.*'
   assert_success
 
   # Verify main site is running
-  run curl -sf https://${PROJNAME}.ddev.site
+  run curl -sf ${PRIMARY_URL}
   assert_output --partial "Welcome to your new Wagtail site"
   assert_success
 
   # Check if we can access the admin page (should redirect to login)
-  run curl -sfL https://${PROJNAME}.ddev.site/admin
+  run curl -sfL ${PRIMARY_URL}/admin
   assert_output --partial "Sign in - Wagtail"
   assert_success
 }

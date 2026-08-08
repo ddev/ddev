@@ -23,29 +23,31 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev wp core download
   assert_success
 
-  run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url="${PRIMARY_URL}" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   run ddev wp config get WP_SITEURL
-  assert_output "https://${PROJNAME}.ddev.site/"
+  assert_output "${PRIMARY_URL}/"
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_line --regexp "link:.*${PROJNAME}\.ddev\.site.*rel=\"https://api\.w\.org/\""
+  run curl -sfI ${PRIMARY_URL}
+  assert_line --regexp "link:.*${DDEV_HOSTNAME}.*rel=\"https://api\.w\.org/\""
   assert_output --partial "HTTP/2 200"
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
-  assert_output --partial "location: https://${PROJNAME}.ddev.site/wp-login.php"
+  run curl -sfI ${PRIMARY_URL}/wp-admin/
+  assert_output --partial "location: ${PRIMARY_URL}/wp-login.php"
   assert_output --partial "HTTP/2 302"
   assert_success
 }
@@ -62,29 +64,31 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev wp core download
   assert_success
 
-  run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url="${PRIMARY_URL}" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
 
   run ddev wp config get WP_SITEURL
-  assert_output "https://${PROJNAME}.ddev.site/"
+  assert_output "${PRIMARY_URL}/"
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_line --regexp "link:.*${PROJNAME}\.ddev\.site.*rel=\"https://api\.w\.org/\""
+  run curl -sfI ${PRIMARY_URL}
+  assert_line --regexp "link:.*${DDEV_HOSTNAME}.*rel=\"https://api\.w\.org/\""
   assert_output --partial "HTTP/2 200"
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
-  assert_output --partial "location: https://${PROJNAME}.ddev.site/wp-login.php"
+  run curl -sfI ${PRIMARY_URL}/wp-admin/
+  assert_output --partial "location: ${PRIMARY_URL}/wp-login.php"
   assert_output --partial "HTTP/2 302"
   assert_success
 }
@@ -98,9 +102,12 @@ teardown() {
   assert_success
   run ddev start -y
   assert_success
+
+  _extra_info
+
   run ddev wp core download
   assert_success
-  run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url="${PRIMARY_URL}" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
 
   run bash -c "
@@ -123,18 +130,18 @@ teardown() {
   assert_success
 
   run ddev wp config get WP_SITEURL
-  assert_output "https://${PROJNAME}.ddev.site/wordpress"
+  assert_output "${PRIMARY_URL}/wordpress"
   assert_success
 
   # validate running project from the root URL
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_line --regexp "link:.*${PROJNAME}\.ddev\.site.*rel=\"https://api\.w\.org/\""
+  run curl -sfI ${PRIMARY_URL}
+  assert_line --regexp "link:.*${DDEV_HOSTNAME}.*rel=\"https://api\.w\.org/\""
   assert_output --partial "HTTP/2 200"
   assert_success
 
   # validate admin/login URLs stay under the WordPress subdirectory
-  run curl -sfI https://${PROJNAME}.ddev.site/wordpress/wp-admin/
-  assert_output --partial "location: https://${PROJNAME}.ddev.site/wordpress/wp-login.php"
+  run curl -sfI ${PRIMARY_URL}/wordpress/wp-admin/
+  assert_output --partial "location: ${PRIMARY_URL}/wordpress/wp-login.php"
   assert_output --partial "HTTP/2 302"
   assert_success
 }
@@ -155,26 +162,28 @@ teardown() {
   run ddev start -y
   assert_success
 
-  run ddev wp core install --url='https://${PROJNAME}.ddev.site' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  _extra_info
+
+  run ddev wp core install --url="${PRIMARY_URL}" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   run ddev wp config get WP_SITEURL
-  assert_output "https://${PROJNAME}.ddev.site/"
+  assert_output "${PRIMARY_URL}/"
   assert_success
 
   # validate running project
-  run curl -sfI https://${PROJNAME}.ddev.site
-  assert_line --regexp "link:.*${PROJNAME}\.ddev\.site.*rel=\"https://api\.w\.org/\""
+  run curl -sfI ${PRIMARY_URL}
+  assert_line --regexp "link:.*${DDEV_HOSTNAME}.*rel=\"https://api\.w\.org/\""
   assert_output --partial "HTTP/2 200"
   assert_success
 
   # validate running project /wp-admin
-  run curl -sfI https://${PROJNAME}.ddev.site/wp-admin/
-  assert_output --partial "location: https://${PROJNAME}.ddev.site/wp-login.php?redirect_to=https%3A%2F%2F${PROJNAME}.ddev.site%2Fwp-admin%2F&reauth=1"
+  run curl -sfI ${PRIMARY_URL}/wp-admin/
+  assert_output --partial "location: ${PRIMARY_URL}/wp-login.php?redirect_to=${PRIMARY_URL_ENCODED}%2Fwp-admin%2F&reauth=1"
   assert_output --partial "HTTP/2 302"
   assert_success
 }

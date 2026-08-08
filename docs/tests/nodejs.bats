@@ -21,6 +21,8 @@ teardown() {
   DDEV_DEBUG=true run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev npm install express
   assert_success
 
@@ -55,7 +57,7 @@ EOF
 
   DDEV_DEBUG=true run ddev launch
   assert_success
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
 
   # Diagnostic: show traefik config files in volume
 #  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
@@ -65,7 +67,7 @@ EOF
 #  echo "# Traefik routers: $output"
 
   # validate running project
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "DDEV experimental Node.js"
   assert_success
 }

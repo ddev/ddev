@@ -21,20 +21,22 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project asterios/app
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project - check status code
-  run curl -sf -o /dev/null -w "%{http_code}" https://${PROJNAME}.ddev.site
+  run curl -sf -o /dev/null -w "%{http_code}" ${PRIMARY_URL}
   assert_success
   assert_output "200"
 
   # validate running project - check content
-  run curl -sf https://${PROJNAME}.ddev.site
+  run curl -sf ${PRIMARY_URL}
   assert_success
   assert_output --partial "Build your next project with de.asteriosphp.app"
 }

@@ -23,6 +23,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project contao/managed-edition:5.7
   assert_success
   # Set DATABASE_URL and MAILER_DSN in .env.local
@@ -35,10 +37,10 @@ teardown() {
   run ddev exec contao-console contao:user:create --username=admin --name=Administrator --email=admin@example.com --language=en --password=Password123 --admin
   assert_success
   DDEV_DEBUG=true run ddev launch contao
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/contao"
+  assert_output "FULLURL ${PRIMARY_URL}/contao"
   assert_success
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site/contao/login
+  run curl -sfIv ${PRIMARY_URL}/contao/login
   assert_output --partial "HTTP/2 200"
   assert_success
 }
@@ -55,13 +57,16 @@ teardown() {
   assert_success
   run ddev start -y
   assert_success
+
+  _extra_info
+
   run ddev exec "wget -O public/contao-manager.phar.php https://download.contao.org/contao-manager/stable/contao-manager.phar"
   assert_success
   DDEV_DEBUG=true run ddev launch contao-manager.phar.php
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/contao-manager.phar.php"
+  assert_output "FULLURL ${PRIMARY_URL}/contao-manager.phar.php"
   assert_success
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site/contao-manager.phar.php
+  run curl -sfIv ${PRIMARY_URL}/contao-manager.phar.php
   assert_output --partial "HTTP/2 302"
   assert_output --partial "location: /contao-manager.phar.php/"
   assert_success

@@ -42,6 +42,8 @@ EOF
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project --repository https://repo.magento.com/ magento/project-community-edition
   assert_success
 
@@ -53,7 +55,7 @@ EOF
   assert_success
   assert_file_not_exist app/etc/env.php
 
-  run ddev magento setup:install --base-url="https://${PROJNAME}.ddev.site/" \
+  run ddev magento setup:install --base-url="${PRIMARY_URL}/" \
       --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db \
       --opensearch-host=opensearch --search-engine=opensearch --opensearch-port=9200 \
       --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
@@ -82,26 +84,27 @@ EOF
 
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch /admin_ddev
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/admin_ddev"
+  assert_output "FULLURL ${PRIMARY_URL}/admin_ddev"
   assert_success
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "Copyright © 2013-present Magento, Inc. All rights reserved."
   assert_output --partial "Here is what\`s trending on Luma right now"
   assert_output --partial "title=\"Argus All-Weather Tank\""
   assert_success
-  run curl -sfIv https://${PROJNAME}.ddev.site/index.php/admin_ddev/
+  run curl -sfIv ${PRIMARY_URL}/index.php/admin_ddev/
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site/index.php/admin_ddev/
+  run curl -sfv ${PRIMARY_URL}/index.php/admin_ddev/
   assert_output --partial "Copyright &copy; $(date +%Y) Magento Commerce Inc. All rights reserved."
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site:5602/app/home#/
+  # OpenSearch Dashboards is exposed on its own port, independent of router_https_port
+  run curl -sfv https://${DDEV_HOSTNAME}:5602/app/home#/
   assert_output --partial "<title>OpenSearch Dashboards</title>"
   assert_success
 }

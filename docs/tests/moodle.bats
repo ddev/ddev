@@ -21,6 +21,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer create-project moodle/moodle
   assert_success
 
@@ -28,18 +30,18 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch /login
-  assert_line "FULLURL https://${PROJNAME}.ddev.site/login"
+  assert_line "FULLURL ${PRIMARY_URL}/login"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "HTTP/2 303"
   assert_line --regexp "location: .*/login/index.php"
   assert_output --partial "set-cookie: MoodleSession="
   assert_output --partial "server: Apache"
   assert_success
 
-  run curl -sfIv https://${PROJNAME}.ddev.site/login/index.php
+  run curl -sfIv ${PRIMARY_URL}/login/index.php
   assert_output --partial "HTTP/2 200"
   assert_output --partial "set-cookie: MoodleSession="
   assert_output --partial "server: Apache"
