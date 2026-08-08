@@ -34,8 +34,6 @@ DOCKERFILEEND
   run ddev start -y
   assert_success
 
-  _extra_info
-
   run ddev exec python -m venv env
   assert_success
 
@@ -75,6 +73,11 @@ EOF
 
   run ddev restart
   assert_success
+
+  # web_extra_exposed_ports only takes effect after this restart, so the
+  # generic webserver has no primary URL to report until now (see
+  # GetPrimaryRouterHTTP(S)Port in pkg/ddevapp/ddevapp.go).
+  _extra_info
 
   # ddev launch /admin
   DDEV_DEBUG=true run ddev launch /admin

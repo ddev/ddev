@@ -21,8 +21,6 @@ teardown() {
   DDEV_DEBUG=true run ddev start -y
   assert_success
 
-  _extra_info
-
   run ddev npm install express
   assert_success
 
@@ -47,6 +45,11 @@ EOF
 
   DDEV_DEBUG=true run ddev restart -y
   assert_success
+
+  # web_extra_exposed_ports only takes effect after this restart, so the
+  # generic webserver has no primary URL to report until now (see
+  # GetPrimaryRouterHTTP(S)Port in pkg/ddevapp/ddevapp.go).
+  _extra_info
 
   # Diagnostic: show traefik config files in volume
 #  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
