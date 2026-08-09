@@ -5,6 +5,12 @@ SHELL = /bin/bash
 
 SANITIZED_DOCKER_REPO = $(subst /,_,$(DOCKER_REPO))
 
+# Value for the com.ddev.version label. Separate from VERSION because a
+# multi-arch push builds each arch under an intermediate `<tag>-<arch>` tag that
+# is combined into the manifest and then deleted; the label has to record the
+# tag people actually pull.
+DDEV_IMAGE_TAG ?= $(VERSION)
+
 DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
 
 .PHONY: container push
@@ -29,6 +35,6 @@ push:
 			$${tags} \
 			--label "build-info=$(DOCKER_ORG)/$${item}:$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" \
 			--label "maintainer=DDEV <support@ddev.com>" \
-			--label "com.ddev.version=$(VERSION)" \
+			--label "com.ddev.version=$(DDEV_IMAGE_TAG)" \
 			$(DOCKER_ARGS) . ; \
 	done
