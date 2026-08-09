@@ -253,7 +253,7 @@ A DDEV image can carry two labels that look similar and mean different things. `
 | Label | Set by | Means |
 | -- | -- | -- |
 | `com.ddev.image-tag` | baked in when the image is built | The tag this image was published as. Inherited through `FROM`, so a derived image keeps the tag of the DDEV image it descends from, even after it is given its own name and tag. |
-| `com.ddev.webtag` | the running DDEV CLI, at build/run time | Which DDEV built or started this resource. Applied to containers, networks, and the build sections DDEV generates, so it always reflects the DDEV you are running rather than the image's origin. |
+| `com.ddev.webtag` | the running DDEV CLI | Which DDEV built or started this resource. Applied to containers, networks, and the build sections DDEV generates, so it always reflects the DDEV you are running rather than the image's origin. |
 
 So a project's own web image, built from `.ddev/web-build`, inherits `com.ddev.image-tag` from the `ddev-webserver` base it was built on, and gets `com.ddev.webtag` from whichever DDEV built it. When you pin a [`webimage`](../configuration/config.md#webimage) or [`dbimage`](../configuration/config.md#dbimage), only `com.ddev.image-tag` tells you which generation of DDEV images it came from, which is what DDEV checks to warn you that a pinned image has gone stale.
 
