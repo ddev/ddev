@@ -16,7 +16,7 @@ DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
 .PHONY: container push
 
 container: container-name
-	docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)" .
+	docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)" --label "com.ddev.version=$(DDEV_IMAGE_TAG)" .
 
 container-name:
 	@echo "container: $(DOCKER_REPO):$(VERSION)"
