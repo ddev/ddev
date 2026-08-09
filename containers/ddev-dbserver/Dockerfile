@@ -160,7 +160,7 @@ RUN mkdir -p /home/mysql && chown mysql:mysql /home/mysql
 # image generations an image belongs to even after the tag is lost - for
 # example in a derived image built FROM this one and pinned via `dbimage`.
 ARG DDEV_IMAGE_TAG="unknown"
-LABEL com.ddev.version="${DDEV_IMAGE_TAG}"
+LABEL com.ddev.image-tag="${DDEV_IMAGE_TAG}"
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

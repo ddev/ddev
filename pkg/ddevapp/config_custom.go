@@ -71,10 +71,10 @@ func addPathToAddonMap(fullPath string, addonName string, addonFileMap map[strin
 // changes something the image is expected to provide.
 //
 // It returns an empty string when the image can't be inspected (not pulled
-// yet, no Docker) or carries no com.ddev.version label, so images built before
+// yet, no Docker) or carries no com.ddev.image-tag label, so images built before
 // the label existed never produce a false alarm.
 func imageVersionMismatch(imageName string, expectedTag string) string {
-	builtTag, err := dockerutil.ImageLabel(imageName, docker.DdevVersionLabel)
+	builtTag, err := dockerutil.ImageLabel(imageName, docker.DdevImageTagLabel)
 	if err != nil || builtTag == "" || builtTag == expectedTag {
 		return ""
 	}

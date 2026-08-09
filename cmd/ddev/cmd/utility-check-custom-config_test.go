@@ -75,19 +75,20 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		require.Contains(t, out, "webimage: custom-web-image:latest")
 		require.Contains(t, out, "Database")
 		require.Contains(t, out, "dbimage: custom-db-image:latest")
-		// These images don't exist locally, so there is no com.ddev.version
+		// These images don't exist locally, so there is no com.ddev.image-tag
 		// label to read and no staleness note should be invented.
 		require.NotContains(t, out, "but this DDEV expects")
 	})
 
-	// A pinned image carrying a com.ddev.version label from a different DDEV
+	// A pinned image carrying a com.ddev.image-tag label from a different DDEV
 	// image generation is reported as stale.
 	t.Run("dbimage built for a different DDEV version", func(t *testing.T) {
 		staleImage := "ddev-test-stale-dbimage:latest"
-		buildDir := testcommon.CreateTmpDir(t.Name())
+		// t.Name() in a subtest contains a "/", which os.MkdirTemp rejects.
+		buildDir := testcommon.CreateTmpDir(strings.ReplaceAll(t.Name(), "/", "_"))
 		t.Cleanup(func() { testcommon.CleanupDir(buildDir) })
 		err := os.WriteFile(filepath.Join(buildDir, "Dockerfile"),
-			[]byte("FROM busybox\nLABEL com.ddev.version=some-older-ddev-tag\n"), 0644)
+			[]byte("FROM busybox\nLABEL com.ddev.image-tag=some-older-ddev-tag\n"), 0644)
 		require.NoError(t, err)
 		_, err = exec.RunHostCommand("docker", "build", "-t", staleImage, buildDir)
 		require.NoError(t, err)

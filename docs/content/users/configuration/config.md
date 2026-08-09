@@ -169,7 +169,7 @@ The Docker image to use for the database server.
 | -- | -- | --
 | :octicons-file-directory-16: project | [`ddev/ddev-dbserver`](https://hub.docker.com/u/ddev) | Specify your own image based on the [ddev-dbserver](https://github.com/ddev/ddev/tree/main/containers/ddev-dbserver) image matching your project's `database` type and version.
 
-DDEV images carry a `com.ddev.version` label recording the image tag they were built as, and a derived image inherits it. When a pinned image was built from a different generation of DDEV images than the running DDEV expects, `ddev start` reports it as custom configuration, along with a note showing both tags. That's the signal to rebuild your derived image against the current DDEV images. Images built before the label existed are not reported.
+DDEV images carry a `com.ddev.image-tag` label recording the image tag they were built as, and a derived image inherits it. When a pinned image was built from a different generation of DDEV images than the running DDEV expects, `ddev start` reports it as custom configuration, along with a note showing both tags. That's the signal to rebuild your derived image against the current DDEV images. Images built before the label existed are not reported. See [DDEV Labels on Images](../extend/customizing-images.md#ddev-labels-on-images) for how this differs from `com.ddev.webtag`.
 
 ## `dbimage_extra_packages`
 

@@ -5,7 +5,7 @@ export DOCKER_REPO
 
 VERSION := $(shell git describe --tags --always --dirty)
 
-# Value for the com.ddev.version label. Separate from VERSION because a
+# Value for the com.ddev.image-tag label. Separate from VERSION because a
 # multi-arch push builds each arch under an intermediate `<tag>-<arch>` tag that
 # is combined into the manifest and then deleted; the label has to record the
 # tag people actually pull.

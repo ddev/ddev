@@ -13,5 +13,5 @@ test: container
 	test/test.sh $(DOCKER_REPO):$(VERSION)
 
 multi-arch:
-	docker buildx build --platform $(BUILD_ARCHS) -t $(DOCKER_REPO):$(VERSION) --label "com.ddev.version=$(DDEV_IMAGE_TAG)" $(DOCKER_ARGS) .; \
+	docker buildx build --platform $(BUILD_ARCHS) -t $(DOCKER_REPO):$(VERSION) --label "com.ddev.image-tag=$(DDEV_IMAGE_TAG)" $(DOCKER_ARGS) .; \
 	echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_REPO)";

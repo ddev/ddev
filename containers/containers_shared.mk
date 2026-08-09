@@ -5,7 +5,7 @@ SHELL = /bin/bash
 
 SANITIZED_DOCKER_REPO = $(subst /,_,$(DOCKER_REPO))
 
-# Value for the com.ddev.version label. Separate from VERSION because a
+# Value for the com.ddev.image-tag label. Separate from VERSION because a
 # multi-arch push builds each arch under an intermediate `<tag>-<arch>` tag that
 # is combined into the manifest and then deleted; the label has to record the
 # tag people actually pull.
@@ -16,7 +16,7 @@ DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
 .PHONY: container push
 
 container: container-name
-	docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)" --label "com.ddev.version=$(DDEV_IMAGE_TAG)" .
+	docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)" --label "com.ddev.image-tag=$(DDEV_IMAGE_TAG)" .
 
 container-name:
 	@echo "container: $(DOCKER_REPO):$(VERSION)"
@@ -35,6 +35,6 @@ push:
 			$${tags} \
 			--label "build-info=$(DOCKER_ORG)/$${item}:$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" \
 			--label "maintainer=DDEV <support@ddev.com>" \
-			--label "com.ddev.version=$(DDEV_IMAGE_TAG)" \
+			--label "com.ddev.image-tag=$(DDEV_IMAGE_TAG)" \
 			$(DOCKER_ARGS) . ; \
 	done
