@@ -30,7 +30,7 @@ teardown() {
   # Perform a fresh install using the DDEV database credentials. The four
   # --context_* arguments are the installer's own defaults; passing them
   # explicitly keeps the install non-interactive.
-  run ddev exec php setup/cli-install.php \
+  run ddev php setup/cli-install.php \
     --database_server=db --database=db --database_user=db --database_password=db \
     --table_prefix=modx_ --http_host=${PROJNAME}.ddev.site \
     --cmsadmin=admin --cmspassword=Admin123! --cmsadminemail=admin@example.com --language=en \
@@ -96,7 +96,7 @@ teardown() {
   # Perform a fresh install using the DDEV database credentials. The four
   # --context_* arguments are the installer's own defaults; passing them
   # explicitly keeps the install non-interactive.
-  run ddev exec php setup/cli-install.php \
+  run ddev php setup/cli-install.php \
     --database_server=db --database=db --database_user=db --database_password=db \
     --table_prefix=modx_ --http_host=${PROJNAME}.ddev.site \
     --cmsadmin=admin --cmspassword=Admin123! --cmsadminemail=admin@example.com --language=en \
