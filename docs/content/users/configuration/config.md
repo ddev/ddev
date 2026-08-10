@@ -426,7 +426,7 @@ Whether to not use Docker bind mounts.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can `true` or `false`.
+| :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
 Some Docker environments (like remote Docker) do not allow bind mounts, so when `true` this turns those off, turns on Mutagen, and uses volume copies to do what bind mounts would otherwise do.
 
@@ -709,7 +709,7 @@ Whether to use hardened images for internet deployment.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can `true` or `false`.
+| :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
 When `true`, more secure hardened images are used for an internet deployment. These do not include sudo in the web container, and the container is run without elevated privileges. Generally used with the [hosting](../topics/hosting.md) feature.
 
@@ -719,7 +719,7 @@ Whether to enable Let’s Encrypt integration. (Works in conjunction with [`lets
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can `true` or `false`.
+| :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
 May also be set via `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [hosting](../topics/hosting.md) feature.
 
@@ -812,7 +812,7 @@ Example: `working_dir: { web: "/var/www", db: "/etc" }` sets the working directo
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can `true` or `false`.
+| :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
 May also be set via `ddev config global --wsl2-no-windows-hosts-mgt` or `ddev config global --wsl2-no-windows-hosts-mgt=false`.
 
