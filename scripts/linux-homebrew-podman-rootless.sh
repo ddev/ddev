@@ -185,8 +185,11 @@ do_install() {
 
   # newuidmap/newgidmap, which Podman needs to set up the rootless user
   # namespace. Not a Homebrew package: it installs setuid helpers, which have
-  # to come from the distro.
-  sudo apt-get install -y uidmap
+  # to come from the distro. Check first so a machine that already has them
+  # (Fedora ships them by default) doesn't get an unnecessary sudo prompt.
+  if ! command -v newuidmap >/dev/null 2>&1 || ! command -v newgidmap >/dev/null 2>&1; then
+    sudo apt-get install -y uidmap
+  fi
 
   if [ "${PODMAN_USE_FUSE_OVERLAYFS}" = "true" ]; then
     sudo apt-get install -y fuse-overlayfs
