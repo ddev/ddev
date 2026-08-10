@@ -2056,7 +2056,7 @@ DDEV supports both [MODX](https://modx.com/) Revolution 2.x and 3.x.
 DDEV generates a `#ddev-generated` `core/config/config.inc.php` with the DDEV database credentials (database name, user, and password are all `db`; host is `db`). Install MODX with the CLI installer, which performs a fresh install using those credentials:
 
 ```bash
-ddev exec php setup/cli-install.php \
+ddev php setup/cli-install.php \
   --database_server=db --database=db --database_user=db --database_password=db \
   --table_prefix=modx_ --http_host=my-modx-site.ddev.site \
   --cmsadmin=admin --cmspassword=Admin123! --cmsadminemail=admin@example.com --language=en \
@@ -2086,7 +2086,7 @@ ddev launch /manager/
     ddev config --project-type=modx
     ddev start -y
     ddev composer create-project modx/revolution
-    ddev exec php setup/cli-install.php \
+    ddev php setup/cli-install.php \
       --database_server=db --database=db --database_user=db --database_password=db \
       --table_prefix=modx_ --http_host=my-modx-site.ddev.site \
       --cmsadmin=admin --cmspassword=Admin123! --cmsadminemail=admin@example.com --language=en \
