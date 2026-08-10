@@ -73,6 +73,9 @@ warn()    { printf '%s warn %s %s\n' "${yellow}" "${reset}" "$*"; warnings=$((wa
 fail()    { printf '%s FAIL %s %s\n' "${red}" "${reset}" "$*"; problems=$((problems + 1)); }
 hint()    { printf '        %s\n' "$*"; }
 heading() { printf '\n== %s ==\n' "$*"; }
+# do_install only: say what a command is about to do, right before running it,
+# so a sudo password prompt never appears out of nowhere.
+step()    { printf '  -> %s\n' "$*"; }
 
 # Print the header comment block, so help never drifts from the file.
 usage() {
@@ -175,12 +178,14 @@ do_install() {
   heading "Installing rootless Podman (Homebrew)"
 
   # Stop any rootful Docker so it cannot compete for the socket or for ports.
+  step "Stopping any rootful Docker so it can't compete for the socket or ports (sudo)"
   sudo systemctl disable --now docker.service docker.socket 2>/dev/null || true
   sudo rm -f /var/run/docker.sock
 
   # Remove the distro container stack. netavark and aardvark-dns MUST go too:
   # apt leaves them behind when podman is removed, and a stale
   # /usr/lib/podman/netavark is exactly what breaks a newer Homebrew podman.
+  step "Removing the distro's podman/crun/netavark/aardvark-dns, if present (sudo)"
   sudo apt-get remove -y podman crun netavark aardvark-dns 2>/dev/null || true
 
   # newuidmap/newgidmap, which Podman needs to set up the rootless user
@@ -188,10 +193,12 @@ do_install() {
   # to come from the distro. Check first so a machine that already has them
   # (Fedora ships them by default) doesn't get an unnecessary sudo prompt.
   if ! command -v newuidmap >/dev/null 2>&1 || ! command -v newgidmap >/dev/null 2>&1; then
+    step "Installing uidmap for newuidmap/newgidmap (sudo)"
     sudo apt-get install -y uidmap
   fi
 
   if [ "${PODMAN_USE_FUSE_OVERLAYFS}" = "true" ]; then
+    step "Installing fuse-overlayfs (sudo)"
     sudo apt-get install -y fuse-overlayfs
   fi
 
@@ -218,10 +225,12 @@ do_install() {
   # the root filesystem isn't a shared mount" doc warning for how to persist
   # it via /etc/wsl.conf.
   if grep -qi microsoft /proc/version 2>/dev/null; then
+    step "Making the WSL2 root filesystem a shared mount (sudo)"
     sudo mount --make-rshared /
   fi
 
   # Allow binding ports below 1024 so the DDEV router can use 80/443.
+  step "Allowing unprivileged processes to bind ports 80/443 (sudo)"
   sudo mkdir -p /etc/sysctl.d
   echo 'net.ipv4.ip_unprivileged_port_start=0' | sudo tee /etc/sysctl.d/60-rootless.conf >/dev/null
   sudo sysctl -p /etc/sysctl.d/60-rootless.conf
@@ -235,6 +244,7 @@ do_install() {
   #   crun: create `/sys/fs/cgroup/docker`: Permission denied: OCI permission denied
   # See https://github.com/containers/podman/issues/5443 and
   # https://github.com/containers/podman/pull/29303.
+  step "Enabling systemd lingering so podman keeps a session bus (sudo)"
   sudo loginctl enable-linger "$(whoami)"
   for _ in $(seq 1 10); do
     [ -S "/run/user/$(id -u)/bus" ] && break
@@ -288,6 +298,7 @@ WantedBy=default.target
 EOF
 
   # Fix for Podman 6: "registries.conf must be in v2 format but is in v1"
+  step "Writing /etc/containers/registries.conf in the v2 format Podman 6 needs (sudo)"
   sudo mkdir -p /etc/containers
   sudo tee /etc/containers/registries.conf >/dev/null <<'EOF'
 unqualified-search-registries = ["docker.io"]
