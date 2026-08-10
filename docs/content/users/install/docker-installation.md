@@ -389,6 +389,13 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         # Fedora ships shadow-utils, which provides these, by default
         ```
 
+        !!!warning "A later `apt-get autoremove` can silently break Podman"
+            On Ubuntu/Debian, `uidmap` is normally already installed as an automatic dependency of the distro `podman` package removed above, so apt still marks it "no longer needed" rather than as something you asked for. A later `sudo apt-get autoremove`, run for unrelated cleanup, then removes it and breaks rootless Podman. Mark it manual so it survives:
+
+            ```bash
+            sudo apt-mark manual uidmap
+            ```
+
         Prepare the system by configuring `subuid`/`subgid` ranges and enabling `userns` options (see the [Arch Linux Wiki](https://wiki.archlinux.org/title/Podman#Rootless_Podman) for details):
 
         ```bash

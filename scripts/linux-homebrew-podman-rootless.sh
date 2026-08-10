@@ -185,6 +185,10 @@ do_install() {
   # Remove the distro container stack. netavark and aardvark-dns MUST go too:
   # apt leaves them behind when podman is removed, and a stale
   # /usr/lib/podman/netavark is exactly what breaks a newer Homebrew podman.
+  #
+  # Deliberately not `apt-get purge podman --auto-remove`: that cascades to
+  # every package podman pulled in, including uidmap and fuse-overlayfs,
+  # which this rootless setup still needs from the distro.
   step "Removing the distro's podman/crun/netavark/aardvark-dns, if present (sudo)"
   sudo apt-get remove -y podman crun netavark aardvark-dns 2>/dev/null || true
 
@@ -196,6 +200,15 @@ do_install() {
     step "Installing uidmap for newuidmap/newgidmap (sudo)"
     sudo apt-get install -y uidmap
   fi
+
+  # uidmap is normally pulled in as an automatic dependency of the distro
+  # podman package removed above, so apt still marks it "auto" even though
+  # this setup now needs it directly. Left alone, a later
+  # `apt-get autoremove` -- run for unrelated cleanup -- silently removes it
+  # and breaks rootless Podman. Mark it manual whether it was just installed
+  # above or was already present.
+  step "Protecting uidmap from a future 'apt-get autoremove' (sudo)"
+  sudo apt-mark manual uidmap 2>/dev/null || true
 
   if [ "${PODMAN_USE_FUSE_OVERLAYFS}" = "true" ]; then
     step "Installing fuse-overlayfs (sudo)"
@@ -764,6 +777,15 @@ check_subuid() {
     hint "sudo apt-get install -y uidmap   # Fedora: shadow-utils (usually already installed)"
   else
     ok "newuidmap/newgidmap present"
+    # apt marks a package "auto" once nothing manually-installed depends on
+    # it -- typical after removing a distro podman that pulled uidmap in.
+    # A later `apt-get autoremove`, run for unrelated cleanup, then removes it
+    # and breaks rootless Podman.
+    if command -v apt-mark >/dev/null 2>&1 && apt-mark showauto uidmap 2>/dev/null | grep -qx uidmap; then
+      warn "uidmap is marked auto-installed"
+      hint "a future 'apt-get autoremove' could remove it and break rootless Podman"
+      hint "fix: sudo apt-mark manual uidmap"
+    fi
   fi
 
   for f in /etc/subuid /etc/subgid; do
