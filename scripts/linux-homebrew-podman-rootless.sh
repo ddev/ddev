@@ -96,7 +96,8 @@ containers_conf_files() {
 # system one entirely rather than merging with it.
 active_policy_file() {
   local f
-  for f in "${HOME}/.config/containers/policy.json" /etc/containers/policy.json; do
+  for f in "${HOME}/.config/containers/policy.json" /etc/containers/policy.json \
+           /usr/share/containers/policy.json; do
     [ -f "${f}" ] && { printf '%s\n' "${f}"; return 0; }
   done
   return 1
@@ -182,12 +183,40 @@ do_install() {
   # /usr/lib/podman/netavark is exactly what breaks a newer Homebrew podman.
   sudo apt-get remove -y podman crun netavark aardvark-dns 2>/dev/null || true
 
+  # newuidmap/newgidmap, which Podman needs to set up the rootless user
+  # namespace. Not a Homebrew package: it installs setuid helpers, which have
+  # to come from the distro.
+  sudo apt-get install -y uidmap
+
   if [ "${PODMAN_USE_FUSE_OVERLAYFS}" = "true" ]; then
     sudo apt-get install -y fuse-overlayfs
   fi
 
   brew install podman >/dev/null
   hash -r
+
+  # Homebrew's Linux bottles use their own dynamic linker, which does not
+  # search the host's /usr/lib/<arch>-linux-gnu paths. netavark and
+  # aardvark-dns are Rust binaries that need libgcc_s.so.1 at runtime, and
+  # nothing in podman's Homebrew dependency list provides it, so without `gcc`
+  # every container start fails with:
+  #   error while loading shared libraries: libgcc_s.so.1: cannot open shared object file
+  local netavark_bin
+  netavark_bin="$(bundled_helper_path netavark || true)"
+  if [ -n "${netavark_bin}" ] && [ -x "${netavark_bin}" ] && ! "${netavark_bin}" --version >/dev/null 2>&1; then
+    brew install gcc >/dev/null
+    hash -r
+  fi
+
+  # WSL2 mounts its root filesystem privately: its own boot process mounts it
+  # before systemd starts and never marks it shared, unlike a natively booted
+  # Linux. Podman then warns on every container start, and nested mounts can
+  # go missing. This only lasts for the current WSL2 instance; see the "WSL2:
+  # the root filesystem isn't a shared mount" doc warning for how to persist
+  # it via /etc/wsl.conf.
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    sudo mount --make-rshared /
+  fi
 
   # Allow binding ports below 1024 so the DDEV router can use 80/443.
   sudo mkdir -p /etc/sysctl.d
@@ -236,6 +265,12 @@ Delegate=true
 Type=exec
 KillMode=process
 Environment=LOGGING="--log-level=info"
+# systemd --user services start with a minimal PATH that excludes Homebrew's
+# bin, even though it's on PATH in an interactive shell. Without this, podman
+# execs conmon/crun by searching PATH and a hardcoded list of distro paths,
+# neither of which includes Homebrew's, so every container create fails with:
+#   could not find a working conmon binary
+Environment=PATH=${BREW_PREFIX}/bin:${BREW_PREFIX}/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=${BREW_PREFIX}/bin/podman \$LOGGING system service
 
 [Install]
@@ -302,6 +337,14 @@ driver = "overlay"
 EOF
   fi
 
+  # Homebrew ships a permissive default policy.json under its own prefix, but
+  # nothing links it into any path podman actually searches (~/.config/containers,
+  # /etc/containers, /usr/share/containers), so a pull fails outright with
+  # "no policy.json file found" until one exists.
+  if ! active_policy_file >/dev/null && [ -f "${BREW_PREFIX}/etc/containers/policy.json" ]; then
+    cp "${BREW_PREFIX}/etc/containers/policy.json" ~/.config/containers/policy.json
+  fi
+
   systemctl --user enable --now podman.socket
 
   # Try several times, it can return "failed to reexec: Permission denied"
@@ -345,12 +388,24 @@ check_socket() {
   heading "Podman API socket"
   if ! systemctl --user is-active podman.socket >/dev/null 2>&1; then
     fail "podman.socket (user) is not active"
+    # A `podman` installed by hand via `brew install podman` (rather than this
+    # script) leaves its systemd user units under $(brew --prefix)/lib/systemd/user/,
+    # which is not one of systemctl --user's search paths, so the unit is
+    # simply unknown rather than failed.
+    if systemctl --user status podman.socket 2>&1 | grep -q 'could not be found'; then
+      hint "systemctl --user does not know a podman.socket unit at all."
+      hint "On a Homebrew install, its units live under \$(brew --prefix)/lib/systemd/user/,"
+      hint "which is not one of systemctl --user's search paths. Link them in:"
+      hint "  mkdir -p ~/.config/systemd/user"
+      hint "  ln -s \"\$(brew --prefix)\"/lib/systemd/user/podman.{socket,service} ~/.config/systemd/user/"
+      hint "  systemctl --user daemon-reload"
+      hint "  systemctl --user enable --now podman.socket"
     # A run of failed activations (a broken netavark makes podman exit 125 on
     # every connection) trips the systemd start limit and leaves both units in
     # "failed". Fixing the underlying config does NOT clear that by itself:
     # without reset-failed, `start` refuses and the stale socket file makes the
     # Docker CLI report "Cannot connect to the Docker daemon".
-    if systemctl --user is-failed podman.socket >/dev/null 2>&1 ||
+    elif systemctl --user is-failed podman.socket >/dev/null 2>&1 ||
        systemctl --user is-failed podman.service >/dev/null 2>&1; then
       hint "The unit is in 'failed' state, so it must be reset before it will start:"
       hint "  systemctl --user reset-failed podman.socket podman.service"
@@ -385,6 +440,32 @@ check_socket() {
 # helper of a different major version than the one it shipped with.
 check_helper_versions() {
   heading "Network helpers (netavark / aardvark-dns)"
+
+  # Run the bundled binaries directly, before asking podman about them. On a
+  # Homebrew install, they can fail to execute at all -- Homebrew's Linux
+  # dynamic linker doesn't search the host's system library paths, and these
+  # Rust binaries need libgcc_s.so.1 at runtime, which nothing in podman's
+  # Homebrew dependency list provides. podman info's NetworkBackendInfo fields
+  # come back empty in that case, which is a far less direct diagnostic than
+  # the loader's own error.
+  local helper bundled errmsg helper_broken=0
+  for helper in netavark aardvark-dns; do
+    bundled="$(bundled_helper_path "${helper}" || true)"
+    [ -n "${bundled}" ] && [ -x "${bundled}" ] || continue
+    if ! errmsg="$("${bundled}" --version 2>&1)"; then
+      helper_broken=1
+      fail "${bundled} fails to run: $(printf '%s' "${errmsg}" | tail -1)"
+      if printf '%s' "${errmsg}" | grep -q 'libgcc_s'; then
+        hint "Homebrew's own dynamic linker does not search the host's system"
+        hint "library paths, and nothing in podman's Homebrew dependency list"
+        hint "provides libgcc_s.so.1, which ${helper} needs at runtime."
+        hint "Fix: brew install gcc"
+      fi
+    fi
+  done
+  if [ "${helper_broken}" -eq 1 ]; then
+    return 0
+  fi
 
   local info resolved_netavark netavark_ver resolved_dns dns_ver
   info="$(podman info \
@@ -475,6 +556,69 @@ check_helper_binaries_dir() {
   return 0
 }
 
+# The Docker CLI and an interactive shell both find conmon/crun via PATH, but
+# `systemd --user` services start with a minimal PATH that excludes wherever a
+# non-distro podman's helpers live (Homebrew's bin, an unpackaged install,
+# etc.). podman.service then execs them by searching PATH plus a fixed list of
+# distro paths, finds neither, and every container create fails with:
+#   could not find a working conmon binary
+# `podman info` still reports the right conmon path, because that comes from
+# the CLI's own PATH, not the service's -- which is exactly what makes this
+# confusing to diagnose from the client side.
+check_service_path() {
+  heading "podman.service PATH (conmon lookup)"
+  local conmon_path conmon_dir unit_path svc_path
+  conmon_path="$(command -v conmon 2>/dev/null || true)"
+  if [ -z "${conmon_path}" ]; then
+    warn "conmon not found on PATH; skipped"
+    return 0
+  fi
+  conmon_dir="$(dirname "${conmon_path}")"
+
+  # podman's own fixed fallback list, mirrored from libpod's default config.
+  case ":/usr/libexec/podman:/usr/local/libexec/podman:/usr/local/lib/podman:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/run/current-system/sw/bin:" in
+    *":${conmon_dir}:"*)
+      ok "conmon (${conmon_dir}) is in podman's built-in search list"
+      return 0
+      ;;
+  esac
+
+  unit_path="$(systemctl --user show podman.service --property=Environment 2>/dev/null)"
+  svc_path="$(systemctl --user show-environment 2>/dev/null | grep '^PATH=' || true)"
+  if printf '%s\n%s' "${unit_path}" "${svc_path}" | grep -q "${conmon_dir}"; then
+    ok "conmon (${conmon_dir}) is reachable via podman.service's PATH"
+  else
+    fail "conmon lives at ${conmon_dir}, which is in neither podman's built-in"
+    hint "search list nor podman.service's PATH (or its own Environment=)."
+    hint "Add it to the service unit: systemctl --user edit podman.service, then"
+    hint "under [Service]: Environment=PATH=${conmon_dir}:/usr/bin:/bin"
+    hint "systemctl --user daemon-reload && systemctl --user restart podman.socket"
+  fi
+}
+
+# Without one, a pull fails outright rather than falling back to any default:
+#   config file not found: no policy.json file found; searched paths: [...]
+# A Homebrew install ships a permissive default under its own prefix, but
+# nothing links it into any of the paths podman actually searches.
+check_policy() {
+  heading "Image signature policy"
+  local f
+  if f="$(active_policy_file)"; then
+    ok "policy.json at ${f}"
+    return 0
+  fi
+  fail "no policy.json found in any path podman searches"
+  hint "~/.config/containers/policy.json, /etc/containers/policy.json, /usr/share/containers/policy.json"
+  if [ -f "${BREW_PREFIX}/etc/containers/policy.json" ]; then
+    hint "Homebrew's podman ships a default one; use it:"
+    hint "  mkdir -p ~/.config/containers"
+    hint "  cp ${BREW_PREFIX}/etc/containers/policy.json ~/.config/containers/policy.json"
+  else
+    hint "A permissive default accepts every transport:"
+    hint '  {"default": [{"type": "insecureAcceptAnything"}]}'
+  fi
+}
+
 check_cgroups() {
   heading "cgroups"
   local mgr
@@ -556,10 +700,51 @@ check_ports() {
   fi
 }
 
+# WSL2-specific: its own boot process mounts the root filesystem before
+# systemd starts and never marks it shared, unlike a natively booted Linux
+# where it's shared from boot. podman then warns on every container start
+# ("/" is not a shared mount...) and nested mounts can go missing. Not known
+# to break typical DDEV usage, but cheap to flag and fix.
+check_mount_propagation() {
+  heading "Root mount propagation"
+  local prop
+  prop="$(findmnt -no PROPAGATION / 2>/dev/null || true)"
+  if [ -z "${prop}" ]; then
+    warn "could not determine mount propagation of /"
+    return 0
+  fi
+  if printf '%s' "${prop}" | grep -q shared; then
+    ok "/ is a shared mount"
+    return 0
+  fi
+  warn "/ is a '${prop}' mount, not shared"
+  hint "podman warns: \"/\" is not a shared mount, this could cause issues or"
+  hint "missing mounts with rootless containers"
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    hint "Expected on WSL2. Fix for the current instance: sudo mount --make-rshared /"
+    hint "That reverts on every 'wsl --shutdown'. To persist it, add to /etc/wsl.conf:"
+    hint "  [boot]"
+    hint "  command = mount --make-rshared /"
+  else
+    hint "Fix: sudo mount --make-rshared /"
+  fi
+}
+
 check_subuid() {
   heading "subuid / subgid"
   local user f
   user="$(id -un)"
+
+  # newuidmap/newgidmap come from the uidmap package on Debian/Ubuntu (Fedora
+  # ships them by default via shadow-utils). Without them podman cannot set up
+  # the rootless user namespace at all.
+  if ! command -v newuidmap >/dev/null 2>&1 || ! command -v newgidmap >/dev/null 2>&1; then
+    fail "newuidmap/newgidmap not found"
+    hint "sudo apt-get install -y uidmap   # Fedora: shadow-utils (usually already installed)"
+  else
+    ok "newuidmap/newgidmap present"
+  fi
+
   for f in /etc/subuid /etc/subgid; do
     if ! grep -q "^${user}:" "${f}" 2>/dev/null; then
       fail "no entry for ${user} in ${f}"
@@ -687,8 +872,13 @@ check_smoke_test() {
   else
     fail "could not run a container"
     hint "${out}"
-    hint "The Docker CLI hides the real error. See the server side with:"
-    hint "  journalctl --user -u podman.service --since '-5min'"
+    if printf '%s' "${out}" | grep -qi 'unauthorized\|incorrect username or password'; then
+      hint "Stale or invalid Docker Hub credentials interfere even with pulling"
+      hint "public images. Fix: docker logout"
+    else
+      hint "The Docker CLI hides the real error. See the server side with:"
+      hint "  journalctl --user -u podman.service --since '-5min'"
+    fi
   fi
 }
 
@@ -969,7 +1159,8 @@ do_report() {
     grep -vE '^[[:space:]]*(#|$)' "${f}" | sed 's/^/  /'
   done < <(containers_conf_files)
   for f in /etc/containers/storage.conf "${HOME}/.config/containers/storage.conf" \
-           /etc/containers/policy.json "${HOME}/.config/containers/policy.json"; do
+           /etc/containers/policy.json "${HOME}/.config/containers/policy.json" \
+           /usr/share/containers/policy.json; do
     [ -f "${f}" ] || continue
     printf '\n--- %s ---\n' "${f}"
     grep -vE '^[[:space:]]*(#|$)' "${f}" | sed 's/^/  /'
@@ -992,6 +1183,9 @@ do_report() {
   run "sysctl kernel.apparmor_restrict_unprivileged_userns kernel.unprivileged_userns_clone user.max_user_namespaces net.ipv4.ip_unprivileged_port_start 2>/dev/null"
   run "ls /etc/apparmor.d/ 2>/dev/null | grep -iE 'podman|netavark|crun|rootlesskit|unshare' || echo '(no container apparmor profiles)'"
   run "grep -E \"^(${u}|root):\" /etc/subuid /etc/subgid"
+  run "command -v newuidmap newgidmap || echo 'MISSING: install the uidmap package'"
+  run "findmnt -no PROPAGATION /"
+  run "grep -i microsoft /proc/version || echo '(not WSL)'"
 
   sec "docker front end"
   run "docker context ls"
@@ -1113,7 +1307,7 @@ report_summary() {
   kv "image load"    "${IMAGELOAD_STATUS}"
   kv "healthchecks"  "${HEALTHCHECK_STATUS}"
   kv "podman -tags"  "$(podman_build_tags || echo 'unknown')"
-  kv "policy.json"   "$(active_policy_file 2>/dev/null || echo 'none (podman default)')"
+  kv "policy.json"   "$(active_policy_file 2>/dev/null || echo 'none -- pulls will fail with "no policy.json file found"')"
 
   # Anything worth looking at, most likely to be the cause first.
   local pmaj nmaj f
@@ -1155,6 +1349,8 @@ report_summary() {
   systemctl --user is-active docker.service >/dev/null 2>&1 &&
     notable+=("rootless docker.service running alongside podman")
   [ -z "${bx}" ] && notable+=("no docker buildx plugin; ddev start will fail at the build step")
+  active_policy_file >/dev/null 2>&1 ||
+    notable+=("no policy.json anywhere podman searches; pulls fail with \"no policy.json file found\"")
   local polgap; polgap="$(policy_archive_gap 2>/dev/null || true)"
   [ -n "${polgap}" ] &&
     notable+=("$(active_policy_file) rejects by default and allows no ${polgap}, so buildx --load is refused: builds succeed and then fail at the final image-load step")
@@ -1188,12 +1384,15 @@ run_checks() {
 
   if check_podman_present; then
     check_socket
+    check_service_path
     check_helper_versions
     check_helper_binaries_dir
+    check_policy
     check_cgroups
     check_storage
   fi
   check_ports
+  check_mount_propagation
   check_subuid
   check_docker_cli
   check_buildx

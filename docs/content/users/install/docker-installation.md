@@ -381,6 +381,14 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
         This is the recommended configuration for most users.
 
+        Install `uidmap`, which provides the `newuidmap`/`newgidmap` helpers Podman needs to set up the user namespace for rootless containers. Without it, rootless containers fail to start with a `newuidmap: could not set uid map` or similar user-namespace error, on both native Linux and WSL2:
+
+        ```bash
+        # Ubuntu/Debian
+        sudo apt-get install -y uidmap
+        # Fedora ships shadow-utils, which provides these, by default
+        ```
+
         Prepare the system by configuring `subuid`/`subgid` ranges and enabling `userns` options (see the [Arch Linux Wiki](https://wiki.archlinux.org/title/Podman#Rootless_Podman) for details):
 
         ```bash
@@ -451,6 +459,20 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         docker ps
         ```
 
+        !!!warning "WSL2: the root filesystem isn't a shared mount"
+            On WSL2, `podman info` and container starts may warn `"/" is not a shared mount, this could cause issues or missing mounts with rootless containers`. This is specific to WSL2: its own boot process mounts the root filesystem before `systemd` starts and never marks it shared, unlike a natively booted Linux, where it's shared from boot. It hasn't caused failures in DDEV's own testing, but to fix it for the current session:
+
+            ```bash
+            sudo mount --make-rshared /
+            ```
+
+            That reverts on every `wsl --shutdown` or instance restart. To make it permanent, add to `/etc/wsl.conf`:
+
+            ```
+            [boot]
+            command = mount --make-rshared /
+            ```
+
         ### Validate the setup
 
         DDEV ships a script that checks everything on this page and explains anything it finds. It works with any Podman install, not just Homebrew's, and `--check` changes nothing:
@@ -516,6 +538,11 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         | `registries.conf must be in v2 format but is in v1` | Podman 6 rejects the old registries format. | Replace `/etc/containers/registries.conf` with `unqualified-search-registries = ["docker.io"]`. |
         | `Include journald in compilation path to log to systemd journal` | Homebrew's `conmon` is built without `journald` support, but Podman defaults to `journald` logging. | Set `log_driver = "k8s-file"` under `[containers]` and `events_logger = "file"` under `[engine]` in `~/.config/containers/containers.conf.d/ddev-podman.conf`. |
         | `failed to become ready ... timed out without becoming healthy` for every container, with an empty health log (`{"Status":"starting","FailingStreak":0,"Log":null}`) | Podman schedules each container's healthcheck as a transient `systemd` **user** timer. Either your Podman was built without its `systemd` build tag, which makes the timer functions silent no-ops, or your user session cannot create transient units. The healthcheck script itself is fine — running it with `podman exec` succeeds, which is why this is easy to misdiagnose. | Check the tags with `go version -m $(command -v podman) \| grep -- -tags=`. If `systemd` is missing, rebuild Podman without overriding `BUILDTAGS`. Otherwise check `sudo loginctl enable-linger $(whoami)` and that `systemd-run --user --quiet /bin/true` succeeds. |
+        | `Unit podman.socket could not be found` from `systemctl --user status podman.socket`, on a Homebrew install | Homebrew's systemd user units live under `$(brew --prefix)/lib/systemd/user/`, which isn't one of `systemctl --user`'s search paths (`~/.config/systemd/user/` is). | `mkdir -p ~/.config/systemd/user && ln -s "$(brew --prefix)"/lib/systemd/user/podman.{socket,service} ~/.config/systemd/user/`, then `systemctl --user daemon-reload`. Or run `scripts/linux-homebrew-podman-rootless.sh`, which writes these units for you. |
+        | `could not find a working conmon binary`, even though `conmon --version` works in your shell | `systemd --user` services start with a minimal `PATH` that excludes Homebrew's `bin`, so `podman.service` can't find `conmon`, `crun`, or other helpers even though your interactive shell can. | Add Homebrew's `bin` to the service's `PATH`: `systemctl --user edit podman.service`, add `Environment=PATH=/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin` under `[Service]`, then `systemctl --user daemon-reload && systemctl --user restart podman.socket`. |
+        | `netavark (exit code 127): ... libgcc_s.so.1: cannot open shared object file`, or containers silently get no networking | Homebrew's Linux dynamic linker doesn't search the host's system library paths, and `gcc` — which provides `libgcc_s.so.1` — isn't installed via Homebrew even though `netavark`/`aardvark-dns` (Rust binaries) need it at runtime. | `brew install gcc` |
+        | `config file not found: no policy.json file found; searched paths: [...]` on a Homebrew install | Homebrew's Podman ships a default `policy.json` under its own prefix, but nothing links it into a path Podman actually searches (`~/.config/containers/`, `/etc/containers/`, `/usr/share/containers/`). | `mkdir -p ~/.config/containers && cp "$(brew --prefix podman)"/etc/containers/policy.json ~/.config/containers/policy.json` |
+        | `unable to retrieve auth token: invalid username/password: unauthorized: incorrect username or password` pulling a public image | Stale or invalid Docker Hub credentials in `~/.docker/config.json` interfere with anonymous pulls, the same underlying cause as [`403 authentication required`](#troubleshooting) below. | `docker logout` |
 
 === "Windows"
 
