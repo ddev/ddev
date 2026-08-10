@@ -239,6 +239,13 @@ do_install() {
   done
 
   mkdir -p ~/.config/systemd/user
+  # If either path is already a symlink -- e.g. from following the
+  # "Unit podman.socket could not be found" troubleshooting entry, which
+  # points these at Homebrew's own (read-only) shipped units -- `cat >`
+  # follows it and tries to overwrite that read-only Cellar file, failing
+  # with a permission denied that has nothing to do with file ownership here.
+  # Remove whatever is there first so this is idempotent regardless.
+  rm -f ~/.config/systemd/user/podman.socket ~/.config/systemd/user/podman.service
   cat > ~/.config/systemd/user/podman.socket <<'EOF'
 [Unit]
 Description=Podman API Socket
