@@ -212,7 +212,7 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 	}
 
 	if !skipConfirmation {
-		if !output.JSONOutput && semver.Compare(versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && !globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation {
+		if !output.JSONOutput && semver.Compare(versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) != 0 && !globalconfig.DdevGlobalConfig.InstrumentationOptIn && !globalconfig.DdevNoInstrumentation {
 			allowStats := util.Confirm("It looks like you have a new DDEV release.\nMay we send anonymous DDEV usage statistics and errors?\nTo know what we will see please take a look at\nhttps://docs.ddev.com/en/stable/users/usage/diagnostics/#opt-in-usage-information\nPermission to beam up?")
 			if allowStats {
 				globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
