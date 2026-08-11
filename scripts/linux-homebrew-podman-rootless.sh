@@ -170,6 +170,18 @@ podman_build_tags() {
          END { exit !found }'
 }
 
+# True when podman would pick the systemd cgroup manager by itself: unified
+# cgroup v2, a running systemd, and a user D-Bus to reach it through.
+#
+# Worth gating on, because asking for systemd where any of the three is missing
+# (cgroup v1 host, WSL2 started without systemd) is worse than the cgroupfs
+# fallback it replaces: podman refuses to create containers at all.
+systemd_cgroups_available() {
+  [ -f /sys/fs/cgroup/cgroup.controllers ] &&
+    [ -d /run/systemd/system ] &&
+    [ -S "/run/user/$(id -u)/bus" ]
+}
+
 # ---------------------------------------------------------------------------
 # Install / configure
 # ---------------------------------------------------------------------------
@@ -217,6 +229,15 @@ do_install() {
 
   brew install podman >/dev/null
   hash -r
+
+  # Everything below configures the Homebrew podman, so say so loudly when a
+  # different one runs instead. GitHub Actions' runner image unpacks a static
+  # podman 5.x into /usr/local/bin, and whichever directory comes first in PATH
+  # wins -- silently, because that stack is self-consistent and passes --check.
+  case "$(command -v podman 2>/dev/null)" in
+    "${BREW_PREFIX}"/*) ;;
+    *) warn "podman resolves to $(command -v podman), not ${BREW_PREFIX}/bin/podman" ;;
+  esac
 
   # Homebrew's Linux bottles use their own dynamic linker, which does not
   # search the host's /usr/lib/<arch>-linux-gnu paths. netavark and
@@ -337,6 +358,22 @@ EOF
     echo
     echo '[engine]'
     echo 'events_logger = "file"'
+    # GitHub Actions' Ubuntu runner image installs podman from the
+    # mgoltzsche/podman-static bundle and unpacks the bundle's /etc along with
+    # it, so /etc/containers/containers.conf now carries
+    # cgroup_manager = "cgroupfs". That outranks podman's own detection, and
+    # only a user drop-in outranks /etc, so say systemd explicitly.
+    if systemd_cgroups_available; then
+      echo 'cgroup_manager = "systemd"'
+    fi
+    # Same bundle, same problem: its containers.conf.d drop-in pins crun to the
+    # statically built /usr/local/bin/crun that ships with podman 5.x. Point
+    # back at the crun this podman was built against.
+    if [ -x "${BREW_PREFIX}/bin/crun" ]; then
+      echo
+      echo '[engine.runtimes]'
+      printf 'crun = ["%s/bin/crun"]\n' "${BREW_PREFIX}"
+    fi
     echo
     echo '[network]'
     # Homebrew's netavark has dropped the "iptables" backend (upstream removed
@@ -561,13 +598,48 @@ check_helper_versions() {
     fi
   fi
 
-  # The loaded gun: a distro netavark sitting where a newer podman can find it.
-  if [ -e /usr/lib/podman/netavark ] &&
-     [ "$(readlink -f "${resolved_netavark}")" != "$(readlink -f /usr/lib/podman/netavark)" ]; then
-    warn "an unused distro netavark remains at /usr/lib/podman/netavark"
+  # The loaded gun: a foreign netavark sitting where podman can find it.
+  # /usr/lib/podman belongs to the distro package; /usr/local/lib/podman is
+  # where GitHub Actions' runner image unpacks the podman-static bundle. Both
+  # are on podman's default helper search path.
+  local stale
+  for stale in /usr/lib/podman/netavark /usr/local/lib/podman/netavark; do
+    [ -e "${stale}" ] || continue
+    [ "$(readlink -f "${resolved_netavark}")" = "$(readlink -f "${stale}")" ] && continue
+    warn "an unused netavark remains at ${stale}"
+    hint "$("${stale}" --version 2>/dev/null || echo 'version unknown')"
     hint "Not currently in use, but any helper_binaries_dir change can select it."
-    hint "sudo apt-get purge netavark aardvark-dns"
+  done
+}
+
+# The OCI runtime has the same failure mode as the network helpers -- podman and
+# crun are released as a pair -- but a different resolution path, so a pin in
+# someone else's containers.conf is easy to miss.
+check_oci_runtime() {
+  heading "OCI runtime"
+
+  local resolved expected podman_bin
+  resolved="$(podman info --format '{{.Host.OCIRuntime.Path}}' 2>/dev/null || true)"
+  if [ -z "${resolved}" ]; then
+    warn "podman did not report an OCI runtime path"
+    return 0
   fi
+
+  # Same reasoning as bundled_helper_path: what shipped with this podman sits
+  # under the same prefix as the podman binary.
+  podman_bin="$(readlink -f "$(command -v podman)")"
+  expected="$(dirname "${podman_bin}")/$(basename "${resolved}")"
+
+  if [ -x "${expected}" ] &&
+     [ "$(readlink -f "${expected}")" != "$(readlink -f "${resolved}")" ]; then
+    warn "podman is using ${resolved}"
+    hint "but ${expected} ships with this podman"
+    hint "Something pins it, usually [engine.runtimes] in a containers.conf under"
+    hint "/etc. Override it in ~/.config/containers/containers.conf.d/ddev-podman.conf."
+    return 0
+  fi
+
+  ok "$(basename "${resolved}") at ${resolved}"
 }
 
 check_helper_binaries_dir() {
@@ -683,7 +755,11 @@ check_cgroups() {
     fi
   done < <(containers_conf_files)
   if [ "${found}" -eq 1 ]; then
-    hint "Remove that setting; podman picks systemd on its own when it can."
+    hint "Remove that setting, or -- when the file belongs to the system, as on"
+    hint "a GitHub Actions runner -- override it with cgroup_manager = \"systemd\""
+    hint "under [engine] in ~/.config/containers/containers.conf.d/ddev-podman.conf,"
+    hint "which outranks everything in /etc. Running this script without --check"
+    hint "writes that for you."
     return 0
   fi
 
@@ -1307,19 +1383,21 @@ report_summary() {
   fi
 
   local nv nvpath av bundled cli_cg svc_cg linger bus store native ports userns ctx bx
+  local ocirt ocipath
   # One podman call for everything. If podman itself is broken, the error text
   # is the single most useful thing in the report, so keep it and skip the
   # derived checks rather than printing a screenful of "?" and false findings.
   local info_ok=1 info_err="" infoline
   if infoline="$(podman info --format \
-      '{{.Host.NetworkBackendInfo.Version}}|{{.Host.NetworkBackendInfo.Path}}|{{.Host.NetworkBackendInfo.DNS.Version}}|{{.Host.CgroupManager}}|{{.Store.GraphDriverName}}|{{index .Store.GraphStatus "Native Overlay Diff"}}' 2>&1)"; then
-    IFS='|' read -r nv nvpath av cli_cg store native <<< "${infoline}"
+      '{{.Host.NetworkBackendInfo.Version}}|{{.Host.NetworkBackendInfo.Path}}|{{.Host.NetworkBackendInfo.DNS.Version}}|{{.Host.CgroupManager}}|{{.Store.GraphDriverName}}|{{index .Store.GraphStatus "Native Overlay Diff"}}|{{.Host.OCIRuntime.Name}}|{{.Host.OCIRuntime.Path}}' 2>&1)"; then
+    IFS='|' read -r nv nvpath av cli_cg store native ocirt ocipath <<< "${infoline}"
     nv="${nv##* }"; av="${av##* }"
   else
     info_ok=0
     info_err="$(printf '%s' "${infoline}" | tail -1)"
     nv="unavailable"; av="unavailable"; cli_cg="unavailable"
     store="unavailable"; native="unavailable"; nvpath=""
+    ocirt="unavailable"; ocipath=""
   fi
   bundled="$(bundled_helper_path netavark 2>/dev/null || true)"
   # Must collapse to one line: a failing docker info can emit blank lines,
@@ -1340,6 +1418,7 @@ report_summary() {
   kv "kernel"        "${kernel}"
   kv "podman"        "${pver}${porigin:+ origin=${porigin}} (${ppkg}) ${ppath}"
   kv "netavark"      "${nv:-?} / aardvark ${av:-?}"
+  kv "oci runtime"   "${ocirt:-?} ${ocipath}"
   kv "cgroup mgr"    "cli=${cli_cg} service=${svc_cg}"
   kv "linger / bus"  "${linger:-?} / ${bus}"
   kv "storage"       "${store:-?} (native overlay diff: ${native:-?})"
@@ -1429,6 +1508,7 @@ run_checks() {
     check_socket
     check_service_path
     check_helper_versions
+    check_oci_runtime
     check_helper_binaries_dir
     check_policy
     check_cgroups
