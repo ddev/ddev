@@ -118,6 +118,9 @@ EOF
   # fails with "Include journald in compilation path to log to systemd
   # journal" (containers/conmon#348). Also force the file events logger for
   # the same reason.
+  # This file loads after the runner image's own 00-/99- drop-ins (drop-ins are
+  # read in lexical order, and digits sort before letters), so what it sets here
+  # wins over them.
   sudo mkdir -p /etc/containers/containers.conf.d
   sudo tee /etc/containers/containers.conf.d/logging.conf > /dev/null <<EOF
 [containers]
@@ -125,6 +128,15 @@ log_driver = "k8s-file"
 
 [engine]
 events_logger = "file"
+# The runner image installs podman from the mgoltzsche/podman-static bundle and
+# unpacks the bundle's /etc with it, so /etc/containers/containers.conf now sets
+# cgroup_manager = "cgroupfs" for every podman on the machine.
+cgroup_manager = "systemd"
+
+[engine.runtimes]
+# Same bundle: the image pins crun to the static /usr/local/bin/crun built for
+# podman 5.x. Use the one Homebrew's podman was built against.
+crun = ["/home/linuxbrew/.linuxbrew/bin/crun"]
 
 [network]
 # Homebrew's netavark has dropped the "iptables" backend (upstream removed
