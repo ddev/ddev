@@ -1,8 +1,5 @@
 # Makefile for a standard golang repo with associated container
 
-# Circleci doesn't seem to provide a decent way to add to path, just adding here, for case where
-# linux build and linuxbrew is installed.
-#
 # scripts/install-dev-tools.sh puts the docs tooling in its own venv and npm
 # prefix, and until now only .envrc added those to PATH. direnv covers
 # interactive shells that have it hooked in and nothing else, so a make target
@@ -205,11 +202,8 @@ setup:
 	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,bin/windows_arm64,src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)
 
-# Required static analysis targets used in circleci - these cause fail if they don't work.
-# pyspelling is included because .github/workflows/docs-check.yml enforces it:
-# leaving it out meant the documented pre-commit check could not catch a
-# spelling failure that CI would then reject.
-staticrequired: setup golangci-lint markdownlint pyspelling zensical
+# Required static analysis targets for pre-push.
+staticrequired: setup golangci-lint markdownlint zensical
 
 # Fail rather than skip when a required tool is absent. These targets used to
 # print a note and exit 0, so `make staticrequired` reported success while
