@@ -19,6 +19,9 @@ teardown() {
   assert_success
   run ddev start -y >/dev/null
   assert_success
+
+  _extra_info
+
   run ddev composer create-project "typo3/cms-base-distribution:^14" >/dev/null
   assert_success
   run ddev composer require typo3/theme-camino >/dev/null
@@ -40,16 +43,16 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL ${PRIMARY_URL}"
   assert_success
 
-  run curl -sfIv "https://${PROJNAME}.ddev.site/camino/"
+  run curl -sfIv "${PRIMARY_URL}/camino/"
   assert_output --partial "HTTP/2 200"
   assert_success
-  run curl -sfLv "https://${PROJNAME}.ddev.site/camino/"
+  run curl -sfLv "${PRIMARY_URL}/camino/"
   assert_output --partial "Camino de Compostela"
   assert_success
-  run curl -sfLv "https://${PROJNAME}.ddev.site/typo3/"
+  run curl -sfLv "${PRIMARY_URL}/typo3/"
   assert_output --partial "TYPO3 CMS Login:"
   assert_success
 }
@@ -62,13 +65,15 @@ teardown() {
   assert_success
   run ddev start -y >/dev/null
   assert_success
+  _extra_info
+
   run ddev composer create-project "typo3/cms-base-distribution:^13" >/dev/null
   assert_success
 
   run ddev typo3 setup \
     --admin-user-password="Demo123*" \
     --driver=mysqli \
-    --create-site=https://${PROJNAME}.ddev.site \
+    --create-site=${PRIMARY_URL} \
     --server-type=other \
     --dbname=db \
     --username=db \
@@ -82,14 +87,14 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL ${PRIMARY_URL}"
   assert_success
 
-  run bats_pipe curl -sfIv https://${PROJNAME}.ddev.site/ \| grep "HTTP/2 200"
+  run bats_pipe curl -sfIv ${PRIMARY_URL}/ \| grep "HTTP/2 200"
   assert_success
-  run bats_pipe curl -sfLv https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with <a href=\"https://typo3.org\">TYPO3</a>"
+  run bats_pipe curl -sfLv ${PRIMARY_URL}/ \| grep "Welcome to a default website made with <a href=\"https://typo3.org\">TYPO3</a>"
   assert_success
-  run bats_pipe curl -sfLv https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
+  run bats_pipe curl -sfLv ${PRIMARY_URL}/typo3/ \| grep "TYPO3 CMS Login:"
   assert_success
 }
 
@@ -101,13 +106,15 @@ teardown() {
   assert_success
   run ddev start -y >/dev/null
   assert_success
+  _extra_info
+
   run ddev composer create-project "typo3/cms-base-distribution:^12" >/dev/null
   assert_success
 
   run ddev typo3 setup \
     --admin-user-password="Demo123*" \
     --driver=mysqli \
-    --create-site=https://${PROJNAME}.ddev.site \
+    --create-site=${PRIMARY_URL} \
     --server-type=other \
     --dbname=db \
     --username=db \
@@ -121,14 +128,14 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL ${PRIMARY_URL}"
   assert_success
 
-  run bats_pipe curl -sfIv https://${PROJNAME}.ddev.site/ \| grep "HTTP/2 200"
+  run bats_pipe curl -sfIv ${PRIMARY_URL}/ \| grep "HTTP/2 200"
   assert_success
-  run bats_pipe curl -sfLv https://${PROJNAME}.ddev.site/ \| grep "Welcome to a default website made with <a href=\"https://typo3.org\">TYPO3</a>"
+  run bats_pipe curl -sfLv ${PRIMARY_URL}/ \| grep "Welcome to a default website made with <a href=\"https://typo3.org\">TYPO3</a>"
   assert_success
-  run bats_pipe curl -sfLv https://${PROJNAME}.ddev.site/typo3/ \| grep "TYPO3 CMS Login:"
+  run bats_pipe curl -sfLv ${PRIMARY_URL}/typo3/ \| grep "TYPO3 CMS Login:"
   assert_success
 }
 
@@ -140,18 +147,20 @@ teardown() {
   assert_success
   run ddev start -y >/dev/null
   assert_success
+  _extra_info
+
   run ddev composer create-project "typo3/cms-base-distribution:^11" >/dev/null
   assert_success
   run ddev exec touch public/FIRST_INSTALL
   assert_success
 
   DDEV_DEBUG=true run ddev launch /typo3/install.php
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/typo3/install.php"
+  assert_output --partial "FULLURL ${PRIMARY_URL}/typo3/install.php"
   assert_success
 
-  run bats_pipe curl -sfIv https://${PROJNAME}.ddev.site/typo3/install.php \| grep "HTTP/2 200"
+  run bats_pipe curl -sfIv ${PRIMARY_URL}/typo3/install.php \| grep "HTTP/2 200"
   assert_success
-  run bats_pipe curl -sfLv https://${PROJNAME}.ddev.site/typo3/install.php \| grep "data-init=\"TYPO3/CMS/Install/Installer\""
+  run bats_pipe curl -sfLv ${PRIMARY_URL}/typo3/install.php \| grep "data-init=\"TYPO3/CMS/Install/Installer\""
   assert_success
 }
 
@@ -166,15 +175,18 @@ teardown() {
   assert_success
   run ddev start -y >/dev/null
   assert_success
+
+  _extra_info
+
   run ddev composer install >/dev/null
   assert_success
   run ddev exec touch public/FIRST_INSTALL
   assert_success
   DDEV_DEBUG=true run ddev launch
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL ${PRIMARY_URL}"
   assert_success
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site/typo3/install.php
+  run curl -sfIv ${PRIMARY_URL}/typo3/install.php
   assert_output --partial "content-security-policy: default-src 'self'; script-src 'self'"
   assert_output --partial "HTTP/2 200"
   assert_success
@@ -190,6 +202,8 @@ teardown() {
   run ddev start -y >/dev/null
   assert_success
 
+  _extra_info
+
   run ddev composer create-project typo3/cms-base-distribution:^13 >/dev/null
   assert_success
 
@@ -202,15 +216,15 @@ teardown() {
   assert_output --partial "xhgui"
 
   # Ensure there's no profiling data link
-  run ddev exec "curl -s xhgui:80 | grep -q '<a href=\"/?server_name=${PROJNAME}.ddev.site\">'"
+  run ddev exec "curl -s xhgui:80 | grep -q '<a href=\"/?server_name=${DDEV_HOSTNAME}\">'"
   assert_failure
 
   # Profile site
-  run curl -sfIv https://${PROJNAME}.ddev.site/typo3/install.php
+  run curl -sfIv ${PRIMARY_URL}/typo3/install.php
   assert_output --partial "HTTP/2 200"
   assert_success
 
-  run curl -sfv https://${PROJNAME}.ddev.site/typo3/install.php
+  run curl -sfv ${PRIMARY_URL}/typo3/install.php
   assert_output --partial "Installing TYPO3 CMS"
   assert_success
 
@@ -218,6 +232,6 @@ teardown() {
   sleep 5
 
   # Ensure there a profiling data link
-  run ddev exec "curl -s xhgui:80 | grep -q '<a href=\"/?server_name=${PROJNAME}.ddev.site\">'"
+  run ddev exec "curl -s xhgui:80 | grep -q '<a href=\"/?server_name=${DDEV_HOSTNAME}\">'"
   assert_success
 }

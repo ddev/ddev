@@ -30,9 +30,11 @@ teardown() {
   DDEV_DEBUG=true run ddev start -y
   assert_success
 
+  _extra_info
+
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch /admin.php
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/admin.php"
+  assert_output "FULLURL ${PRIMARY_URL}/admin.php"
   assert_success
 
   # Diagnostic: show traefik config files in volume
@@ -50,11 +52,11 @@ teardown() {
   # echo "# Traefik routers: \n $(echo $output | jq -r)" >&3
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site/admin.php
+  run curl -sfIv ${PRIMARY_URL}/admin.php
   assert_line --partial "server: nginx"
   assert_line --partial "HTTP/2 200"
   assert_success
-  run curl -sf https://${PROJNAME}.ddev.site/admin.php
+  run curl -sf ${PRIMARY_URL}/admin.php
   assert_output --partial "<title>Install ExpressionEngine"
   assert_success
 }
@@ -74,6 +76,8 @@ teardown() {
   DDEV_DEBUG=true run ddev start -y
   assert_success
 
+  _extra_info
+
   run ddev composer install
   assert_success
 
@@ -87,7 +91,7 @@ teardown() {
 
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch /admin.php
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/admin.php"
+  assert_output "FULLURL ${PRIMARY_URL}/admin.php"
   assert_success
 
   # Diagnostic: show traefik config files in volume
@@ -101,11 +105,11 @@ teardown() {
   # printf '%s\n' "$(echo "$output" | jq -r)" | sed 's/^/# /' >&3
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site/admin.php
+  run curl -sfIv ${PRIMARY_URL}/admin.php
   assert_line --partial "server: nginx"
   assert_line --partial "HTTP/2 200"
   assert_success
-  run curl -sf https://${PROJNAME}.ddev.site/admin.php
+  run curl -sf ${PRIMARY_URL}/admin.php
   assert_output --partial "<title>Install ExpressionEngine"
   assert_success
 }

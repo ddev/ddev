@@ -46,6 +46,11 @@ EOF
   DDEV_DEBUG=true run ddev restart -y
   assert_success
 
+  # web_extra_exposed_ports only takes effect after this restart, so the
+  # generic webserver has no primary URL to report until now (see
+  # GetPrimaryRouterHTTP(S)Port in pkg/ddevapp/ddevapp.go).
+  _extra_info
+
   # Diagnostic: show traefik config files in volume
 #  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
 #  echo "# Traefik config files: $output"
@@ -55,7 +60,7 @@ EOF
 
   DDEV_DEBUG=true run ddev launch
   assert_success
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
 
   # Diagnostic: show traefik config files in volume
 #  run docker exec ddev-router ls -la /mnt/ddev-global-cache/traefik/config/
@@ -65,7 +70,7 @@ EOF
 #  echo "# Traefik routers: $output"
 
   # validate running project
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "DDEV experimental Node.js"
   assert_success
 }

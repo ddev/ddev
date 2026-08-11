@@ -24,8 +24,11 @@ teardown() {
   assert_success
   DDEV_DEBUG=true run ddev start -y
   assert_success
+
+  _extra_info
+
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # Diagnostic: show traefik config files in volume
@@ -43,10 +46,10 @@ teardown() {
   #echo "# Traefik routers: $output"
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: Apache"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "This tool will guide you through the installation process."
   assert_success
 }
@@ -60,9 +63,12 @@ teardown() {
   assert_success
   DDEV_DEBUG=true run ddev start -y
   assert_success
+
+  _extra_info
+
   run ddev composer create-project "processwire/processwire:^3"
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # Diagnostic: show traefik config files in volume
@@ -73,11 +79,11 @@ teardown() {
 #  echo "# Traefik routers: $output"
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: Apache"
   assert_output --partial "HTTP/2 200"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "This tool will guide you through the installation process."
   assert_success
 }

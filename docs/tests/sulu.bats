@@ -19,6 +19,9 @@ teardown() {
   # ddev start -y
   run ddev start -y
   assert_success
+
+  _extra_info
+
   run ddev composer create-project sulu/skeleton
   assert_success
   export SULU_PROJECT_NAME="My Sulu Site"
@@ -37,10 +40,10 @@ teardown() {
   run ddev exec bin/adminconsole sulu:build dev --no-interaction
   assert_success
   DDEV_DEBUG=true run ddev launch /admin
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site/admin"
+  assert_output --partial "FULLURL ${PRIMARY_URL}/admin"
   assert_success
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "x-generator: Sulu"
   assert_output --partial "HTTP/2 200"
   assert_success

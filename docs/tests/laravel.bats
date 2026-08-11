@@ -26,16 +26,18 @@ teardown() {
   run ddev composer create-project laravel/laravel
   assert_success
 
+  _extra_info
+
   DDEV_DEBUG=true run ddev launch
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "HTTP/2 200"
   assert_success
 
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "Laravel"
   assert_success
 
@@ -60,16 +62,18 @@ teardown() {
   run ddev composer create-project laravel/laravel
   assert_success
 
+  _extra_info
+
   DDEV_DEBUG=true run ddev launch
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "HTTP/2 200"
   assert_success
 
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "Laravel"
   assert_success
 
@@ -121,16 +125,18 @@ DOCKERFILEEND
   run ddev composer run-script post-create-project-cmd
   assert_success
 
+  _extra_info
+
   DDEV_DEBUG=true run ddev launch
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output --partial "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "HTTP/2 200"
   assert_success
 
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "Laravel"
   assert_success
 

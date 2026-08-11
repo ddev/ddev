@@ -33,11 +33,11 @@ teardown() {
   run ddev bee si --username=admin --password=Password123 --db-name=db --db-user=db --db-pass=db --db-host=db --auto
   assert_success
 
-  DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
-  assert_success
-
   _extra_info
+
+  DDEV_DEBUG=true run ddev launch
+  assert_output "FULLURL ${PRIMARY_URL}"
+  assert_success
   # Check direct http/https URLs
   run curl -sfIv ${HOST_HTTP_URL}
   assert_output --partial "HTTP/1.1 200"
@@ -105,7 +105,7 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project

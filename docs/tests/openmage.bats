@@ -26,6 +26,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   # Use --no-security-blocking for now, 2026-02-02
   run ddev composer install --no-security-blocking
   assert_success
@@ -35,24 +37,24 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "set-cookie: om_frontend"
   assert_success
 
   # Check if the frontend is working
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "<title>Madison Island</title>"
   assert_output --partial "<meta name=\"keywords\" content=\"Magento, Varien, E-commerce\" />"
   assert_success
 
   # Check if the admin is working
-  run curl -sfv https://${PROJNAME}.ddev.site/index.php/admin/
+  run curl -sfv ${PRIMARY_URL}/index.php/admin/
   assert_output --partial "Log into OpenMage Admin Page"
   assert_success
 }
@@ -68,6 +70,8 @@ teardown() {
 
   run ddev start -y
   assert_success
+
+  _extra_info
 
   # init project
   run ddev composer init --name "openmage/composer-test" --description "OpenMage starter project" --type "project" -l "OSL-3.0" -s "dev" -q
@@ -117,24 +121,24 @@ teardown() {
   assert_success
 
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
 
   # validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "set-cookie: om_frontend"
   assert_success
 
   # Check if the frontend is working
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "<title>Madison Island</title>"
   assert_output --partial "<meta name=\"keywords\" content=\"Magento, Varien, E-commerce\" />"
   assert_success
 
   # Check if the admin is working
-  run curl -sfv https://${PROJNAME}.ddev.site/index.php/admin/
+  run curl -sfv ${PRIMARY_URL}/index.php/admin/
   assert_output --partial "Log into OpenMage Admin Page"
   assert_success
 }

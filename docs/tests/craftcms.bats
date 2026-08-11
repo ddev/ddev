@@ -20,6 +20,8 @@ teardown() {
   run ddev start -y
   assert_success
 
+  _extra_info
+
   # Username: [admin] admin
   # Email: admin@example.com
   # Password: Password123
@@ -32,23 +34,23 @@ teardown() {
 
   # validate ddev launch
   DDEV_DEBUG=true run ddev launch
-  assert_output "FULLURL https://${PROJNAME}.ddev.site"
+  assert_output "FULLURL ${PRIMARY_URL}"
   assert_success
   DDEV_DEBUG=true run ddev launch /admin/login
-  assert_output "FULLURL https://${PROJNAME}.ddev.site/admin/login"
+  assert_output "FULLURL ${PRIMARY_URL}/admin/login"
   assert_success
 
   ## validate running project
-  run curl -sfIv https://${PROJNAME}.ddev.site
+  run curl -sfIv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_output --partial "x-powered-by: Craft CMS"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site
+  run curl -sfv ${PRIMARY_URL}
   assert_output --partial "<title>Welcome to Craft CMS</title>"
   assert_output --partial "<h2>Popular Resources</h2>"
   assert_success
-  run curl -sfv https://${PROJNAME}.ddev.site/admin/login
+  run curl -sfv ${PRIMARY_URL}/admin/login
   assert_success
   assert_output --partial "<title>Sign In - CraftCMS</title>"
 }
