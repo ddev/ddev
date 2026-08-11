@@ -344,6 +344,7 @@ dir
 directory
 disable
 disallowal
+distribution's
 distro
 distros
 dns
@@ -435,6 +436,7 @@ information
 ini
 inotify
 inside
+installer's
 integrations
 internet
 into
