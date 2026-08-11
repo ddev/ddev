@@ -167,6 +167,37 @@ func TestProcessHooks(t *testing.T) {
 		})
 	})
 
+	// A failing exec/exec-host hook's output is teed live (unchanged) and
+	// also attached to the logged failure, the same way ExecOnHostOrService
+	// attaches output for a failing provider command.
+	t.Run("failing hook output is attached to the error", func(t *testing.T) {
+		t.Run("exec", func(t *testing.T) {
+			app.Hooks = map[string][]ddevapp.YAMLTask{
+				"hook-test": {
+					{"exec": `echo "boom-output-marker-web" >&2; exit 7`},
+				},
+			}
+			getUserOut := util.CaptureUserOut()
+			err = app.ProcessHooks("hook-test")
+			userOut := getUserOut()
+			require.NoError(t, err)
+			require.Contains(t, userOut, "boom-output-marker-web")
+		})
+
+		t.Run("exec-host", func(t *testing.T) {
+			app.Hooks = map[string][]ddevapp.YAMLTask{
+				"hook-test": {
+					{"exec-host": `echo "boom-output-marker-host" >&2; exit 7`},
+				},
+			}
+			getUserOut := util.CaptureUserOut()
+			err = app.ProcessHooks("hook-test")
+			userOut := getUserOut()
+			require.NoError(t, err)
+			require.Contains(t, userOut, "boom-output-marker-host")
+		})
+	})
+
 	t.Run("pre-share and post-share hooks", func(t *testing.T) {
 		app.Hooks = map[string][]ddevapp.YAMLTask{
 			"pre-share": {

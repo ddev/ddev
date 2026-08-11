@@ -1,11 +1,12 @@
 package ddevapp
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
@@ -44,8 +45,11 @@ type ComposerTask struct {
 	app     *DdevApp
 }
 
-// Execute executes an ExecTask
+// Execute executes an ExecTask. Output is teed to a buffer so a failure's
+// error can carry it, the same way ExecOnHostOrService's does for providers;
+// the command still streams live exactly as before.
 func (c ExecTask) Execute() error {
+	var captured bytes.Buffer
 	opts := &ExecOpts{
 		Service:   c.service,
 		User:      c.user,
@@ -53,10 +57,14 @@ func (c ExecTask) Execute() error {
 		RawCmd:    c.execRaw,
 		Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 		NoCapture: true,
+		Stdout:    io.MultiWriter(os.Stdout, &captured),
+		Stderr:    io.MultiWriter(os.Stderr, &captured),
 	}
 	_, _, err := c.app.Exec(opts)
-
-	return err
+	if err != nil {
+		return errorWithOutput(err, captured.String())
+	}
+	return nil
 }
 
 // GetDescription returns a human-readable description of the task
@@ -75,30 +83,11 @@ func (c ExecHostTask) GetDescription() string {
 	return fmt.Sprintf("Exec command '%s' on the host (%s)", c.exec, hostname)
 }
 
-// Execute (HostTask) executes a command in a container, by default the web container,
-// and returns stdout, stderr, err
+// Execute (HostTask) executes a command on the host, keeping stdin and the
+// terminal connected, and attaches captured output to a failure the same
+// way ExecOnHostOrService's host branch does for providers.
 func (c ExecHostTask) Execute() error {
-	cwd, _ := os.Getwd()
-	err := os.Chdir(c.app.GetAppRoot())
-	if err != nil {
-		return err
-	}
-
-	bashPath := "bash"
-	if nodeps.IsWindows() {
-		bashPath = util.FindBashPath()
-	}
-
-	args := []string{
-		"-c",
-		c.exec,
-	}
-
-	err = exec.RunInteractiveCommand(bashPath, args)
-
-	_ = os.Chdir(cwd)
-
-	return err
+	return runHostCommandWithCapturedOutput(c.app, c.exec)
 }
 
 // Execute (ComposerTask) runs a Composer command in the web container

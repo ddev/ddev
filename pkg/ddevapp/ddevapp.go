@@ -6,6 +6,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -2532,10 +2533,11 @@ type ExecOpts struct {
 	NoCapture bool
 	// Tty if true causes a tty to be allocated
 	Tty bool
-	// Stdout can be overridden with a File
-	Stdout *os.File
-	// Stderr can be overridden with a File
-	Stderr *os.File
+	// Stdout can be overridden with a Writer; a caller that also wants a
+	// captured copy (see errorWithOutput) can pass an io.MultiWriter.
+	Stdout io.Writer
+	// Stderr can be overridden with a Writer; see Stdout.
+	Stderr io.Writer
 	// Detach does docker-compose detach
 	Detach bool
 	// Env is the array of environment variables
@@ -2597,8 +2599,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		opts.RawCmd = []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`}
 	}
 
-	stdout := os.Stdout
-	stderr := os.Stderr
+	var stdout, stderr io.Writer = os.Stdout, os.Stderr
 	if opts.Stdout != nil {
 		stdout = opts.Stdout
 	}
@@ -2614,7 +2615,13 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	// Allocate a TTY only when both stdin and stdout are real terminals.
-	tty := opts.Tty && isatty.IsTerminal(os.Stdin.Fd()) && isatty.IsTerminal(stdout.Fd())
+	// A non-*os.File stdout (e.g. an io.MultiWriter teeing to a capture
+	// buffer) is never a terminal.
+	stdoutIsTerminal := false
+	if f, ok := stdout.(*os.File); ok {
+		stdoutIsTerminal = isatty.IsTerminal(f.Fd())
+	}
+	tty := opts.Tty && isatty.IsTerminal(os.Stdin.Fd()) && stdoutIsTerminal
 
 	// A session with a TTY gets the terminal of the host, so programs in the
 	// container know how many colors they can use. Without a TTY there is no
@@ -2673,41 +2680,45 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	return stdoutResult, stderrResult, err
 }
 
+// runHostCommandWithCapturedOutput runs cmd via bash in app's root, keeping
+// stdin and the terminal connected, and attaches captured output to a
+// failure the same way errorWithOutput does elsewhere. Shared by
+// ExecOnHostOrService's host branch and the exec-host hook task, which need
+// identical behavior on the host.
+func runHostCommandWithCapturedOutput(app *DdevApp, cmd string) error {
+	cwd, _ := os.Getwd()
+	appRoot := app.GetAppRoot()
+	if err := os.Chdir(appRoot); err != nil {
+		return fmt.Errorf("unable to chdir to %s: %v", appRoot, err)
+	}
+	defer func() {
+		_ = os.Chdir(cwd)
+	}()
+	bashPath := "bash"
+	if nodeps.IsWindows() {
+		bashPath = util.FindBashPath()
+		if bashPath == "" {
+			return fmt.Errorf("unable to find bash.exe on Windows")
+		}
+	}
+
+	_ = app.DockerEnv()
+	// Interactive: these commands prompt for ssh passphrases and print
+	// transfer progress, so they keep stdin and a live terminal.
+	out, err := exec.RunInteractiveCommandWithCapture(bashPath, []string{"-c", cmd})
+	if err != nil {
+		return errorWithOutput(err, out)
+	}
+	return nil
+}
+
 // ExecOnHostOrService runs cmd on the host or in the named service.
 // A failure carries the command's output, which is otherwise lost in logs
 // far from the error that mentions it.
 func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 	// Handle case on host
 	if service == "host" {
-		cwd, _ := os.Getwd()
-		appRoot := app.GetAppRoot()
-		if err := os.Chdir(appRoot); err != nil {
-			return fmt.Errorf("unable to chdir to %s: %v", appRoot, err)
-		}
-		defer func() {
-			_ = os.Chdir(cwd)
-		}()
-		bashPath := "bash"
-		if nodeps.IsWindows() {
-			bashPath = util.FindBashPath()
-			if bashPath == "" {
-				return fmt.Errorf("unable to find bash.exe on Windows")
-			}
-		}
-
-		args := []string{
-			"-c",
-			cmd,
-		}
-
-		_ = app.DockerEnv()
-		// Interactive: these commands prompt for ssh passphrases and print
-		// transfer progress, so they keep stdin and a live terminal.
-		out, err := exec.RunInteractiveCommandWithCapture(bashPath, args)
-		if err != nil {
-			return errorWithOutput(err, out)
-		}
-		return nil
+		return runHostCommandWithCapturedOutput(app, cmd)
 	}
 	// handle case in container
 	// Tty must require stdout too, not just stdin: app.Exec() skips capture
