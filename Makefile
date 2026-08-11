@@ -8,7 +8,8 @@
 # .spellcheck.yml at all. Prepend the dev-tools directories here so make always
 # gets the ones we installed. Missing directories on PATH are harmless.
 DEV_TOOLS_DIR ?= $(HOME)/.ddev-dev-tools
-export PATH := $(DEV_TOOLS_DIR)/python/bin:$(DEV_TOOLS_DIR)/node/bin:$(EXTRA_PATH):$(PATH)
+DEV_TOOLS_PATH = $(DEV_TOOLS_DIR)/python/bin:$(DEV_TOOLS_DIR)/node/bin
+export PATH := $(DEV_TOOLS_PATH):$(EXTRA_PATH):$(PATH)
 
 BUILD_BASE_DIR ?= $(PWD)
 
@@ -217,11 +218,23 @@ define require_tool
 	}
 endef
 
+# Check for a tool, then run it. The PATH= prefix is not redundant with the
+# export at the top of this file: GNU make 3.81, still /usr/bin/make on macOS,
+# execs a recipe line with no shell metacharacters itself and looks the command
+# up in make's own PATH rather than the exported one, so a bare
+# `pyspelling --config ...` dies with "No such file or directory" even though
+# the `command -v pyspelling` on the line before it just succeeded. The prefix
+# forces the line through $(SHELL), which does have the exported PATH.
+# $(2) must not contain commas; $(call) would split them into further arguments.
+define run_tool
+	$(call require_tool,$(1))
+	@PATH="$(PATH)" $(1) $(2)
+endef
+
 # Best to install markdownlint-cli locally with "npm install -g markdownlint-cli"
 markdownlint:
 	@echo "markdownlint: "
-	$(call require_tool,markdownlint)
-	@markdownlint *.md docs/content 2>&1
+	$(call run_tool,markdownlint,*.md docs/content 2>&1)
 
 # Install zensical locally using
 # https://docs.ddev.com/en/stable/developers/testing-docs/
@@ -245,11 +258,7 @@ zensical:
 # It does require installing zensical: pip install zensical
 # See https://docs.ddev.com/en/stable/developers/testing-docs/
 zensical-serve:
-	@if command -v zensical >/dev/null ; then \
-		zensical serve; \
-	else \
-		echo "zensical is not installed (run scripts/install-dev-tools.sh)" && exit 2; \
-	fi; \
+	$(call run_tool,zensical,serve)
 
 mkdocs: zensical
 mkdocs-serve: zensical-serve
@@ -257,29 +266,20 @@ mkdocs-serve: zensical-serve
 # Install linkspector locally with "sudo npm install -g @umbrelladocs/linkspector"
 linkspector:
 	@echo "linkspector: "
-	@if command -v linkspector >/dev/null 2>&1; then \
-		linkspector check; \
-	else \
-		echo "Not running linkspector because it's not installed (run scripts/install-dev-tools.sh)"; \
-	fi
+	$(call run_tool,linkspector,check)
 
 
 # Best to install pyspelling locally with "sudo -H pip3 install pyspelling pymdown-extensions". Also requires aspell, `sudo apt-get install aspell"
 pyspelling:
 	@echo "pyspelling: "
-	$(call require_tool,pyspelling)
-	@pyspelling --config .spellcheck.yml
+	$(call run_tool,pyspelling,--config .spellcheck.yml)
 
 # Install textlint locally with `npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology`
 textlint:
 	@echo "textlint: "
-	@CMD="textlint {README.md,version-history.md,docs/**}"; \
-	set -eu -o pipefail; \
-	if command -v textlint >/dev/null 2>&1 ; then \
-		$$CMD; \
-	else \
-		echo "textlint is not installed (run scripts/install-dev-tools.sh)"; \
-	fi
+	$(call require_tool,textlint)
+	@set -eu -o pipefail; \
+	textlint {README.md,version-history.md,docs/**}
 
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-hostname
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ]; then \
