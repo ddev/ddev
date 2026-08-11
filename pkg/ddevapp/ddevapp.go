@@ -2710,11 +2710,14 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 		return nil
 	}
 	// handle case in container
+	// Tty must require stdout too, not just stdin: app.Exec() skips capture
+	// whenever Tty is true, so gating on stdin alone left errorWithOutput()
+	// below with nothing to attach whenever only stdout was redirected.
 	stdout, stderr, err := app.Exec(
 		&ExecOpts{
 			Service: service,
 			Cmd:     cmd,
-			Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+			Tty:     isatty.IsTerminal(os.Stdin.Fd()) && isatty.IsTerminal(os.Stdout.Fd()),
 		})
 	if err != nil {
 		return errorWithOutput(err, stdout+"\n"+stderr)
