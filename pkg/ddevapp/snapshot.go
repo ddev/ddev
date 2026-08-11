@@ -21,8 +21,10 @@ import (
 )
 
 type Snapshot struct {
-	Name    string
-	Created time.Time
+	Name      string
+	Created   time.Time
+	Size      int64
+	DBVersion string
 }
 
 // SnapshotRestoreDefaultWaitTime is the max time we'll wait for snapshot restore.
@@ -127,14 +129,35 @@ func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
 	})
 
 	// Match snapshot files created with gzip (.gz) or zstd (.zst)
-	m := regexp.MustCompile(`-(mariadb|mysql|postgres)_[0-9.]*\.(gz|zst)$`)
+	m := regexp.MustCompile(`-(mariadb|mysql|postgres)_([0-9.]*)\.(gz|zst)$`)
 
 	for _, f := range files {
 		if f.IsDir() || strings.HasSuffix(f.Name(), ".gz") || strings.HasSuffix(f.Name(), ".zst") {
 			n := m.ReplaceAll([]byte(f.Name()), []byte(""))
+			size := f.Size()
+			dbVersion := "unknown"
+			if f.IsDir() {
+				var err error
+				size, err = fileutil.DirSize(filepath.Join(snapshotDir, f.Name()))
+				if err != nil {
+					return snapshots, err
+				}
+				versionFile := filepath.Join(snapshotDir, f.Name(), "db_mariadb_version.txt")
+				if fileutil.FileExists(versionFile) {
+					if v, err := fileutil.ReadFileIntoString(versionFile); err == nil {
+						if full := fullDBFromVersion(strings.Trim(v, "\r\n\t ")); full != "" {
+							dbVersion = full
+						}
+					}
+				}
+			} else if matches := m.FindStringSubmatch(f.Name()); len(matches) > 2 {
+				dbVersion = matches[1] + "_" + matches[2]
+			}
 			snapshot := Snapshot{
-				Name:    string(n),
-				Created: f.ModTime(),
+				Name:      string(n),
+				Created:   f.ModTime(),
+				Size:      size,
+				DBVersion: dbVersion,
 			}
 			snapshots = append(snapshots, snapshot)
 		}

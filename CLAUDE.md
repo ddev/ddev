@@ -38,6 +38,7 @@ make quickstart-test                          # Run Bats docs tests
 - Set `DDEV_DEBUG=true` to see executed commands
 - Set `GOTEST_SHORT=true` to limit test matrix
 - `DDEV_NO_INSTRUMENTATION=true` should always be set to disable analytics
+- **When verifying a change locally, run only the tests relevant to it** (e.g. `go test -run TestName ./pkg/[package]`). Do not run the full suite (`go test ./...` or `make test`) — it is slow and broad; let CI cover the rest.
 
 ### Linting and Code Quality
 
