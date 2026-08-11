@@ -71,7 +71,7 @@ With a large database this may take a long time.
 ```
 
 !!!note
-    Not supported on the very old, EOL `mysql:5.5` and `mariadb:5.5` database types.
+    Only supported for `mysql` and `mariadb` database types (excluding the very old, EOL `mysql:5.5` and `mariadb:5.5`). PostgreSQL projects use the stock upstream `postgres` image and its own startup process, which this seeding mechanism doesn't hook into, so an `initializer` snapshot is silently ignored.
 
 ## Database Clients
 
