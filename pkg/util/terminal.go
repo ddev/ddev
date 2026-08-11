@@ -1,12 +1,9 @@
-package nodeps
+package util
 
 import (
+	"os"
 	"slices"
-	"strings"
 )
-
-// fallbackTerm is used when the host TERM is not in ContainerTerminfoEntries.
-const fallbackTerm = "xterm-256color"
 
 // ContainerTerminfoEntries is the terminfo database that ncurses-base installs
 // in the DDEV images. TestContainerTerminfo checks it against the real images.
@@ -26,32 +23,19 @@ var ContainerTerminfoEntries = []string{
 // existingEnv, for an interactive container session. Variables already in
 // existingEnv win. A TERM the container has no terminfo entry for is replaced,
 // because forwarding it would leave the shell with a TERM it cannot resolve.
-func TerminalExecEnv(existingEnv []string, hostTerm string, hostColorterm string) []string {
+func TerminalExecEnv(existingEnv []string) []string {
+	hostTerm := os.Getenv("TERM")
 	if hostTerm == "" {
 		return existingEnv
 	}
-	execEnv := slices.Clone(existingEnv)
-	if !envHasKey(existingEnv, "TERM") {
-		containerTerm := hostTerm
-		if !ArrayContainsString(ContainerTerminfoEntries, hostTerm) {
-			containerTerm = fallbackTerm
-		}
-		execEnv = append(execEnv, "TERM="+containerTerm)
+	if !slices.Contains(ContainerTerminfoEntries, hostTerm) {
+		hostTerm = "xterm-256color"
 	}
-	if hostColorterm != "" && !envHasKey(existingEnv, "COLORTERM") {
+	execEnv := []string{"TERM=" + hostTerm}
+	if hostColorterm := os.Getenv("COLORTERM"); hostColorterm != "" {
 		execEnv = append(execEnv, "COLORTERM="+hostColorterm)
 	}
-	return execEnv
-}
-
-// envHasKey reports whether env contains an entry for key, either as
-// "key=value" or as bare "key".
-func envHasKey(env []string, key string) bool {
-	for _, entry := range env {
-		entryKey, _, _ := strings.Cut(entry, "=")
-		if entryKey == key {
-			return true
-		}
-	}
-	return false
+	// existingEnv comes last, so that EnvToUniqueEnv keeps it over the host.
+	execEnv = append(execEnv, existingEnv...)
+	return EnvToUniqueEnv(&execEnv)
 }

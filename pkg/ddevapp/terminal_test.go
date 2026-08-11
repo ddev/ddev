@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -14,7 +13,7 @@ import (
 )
 
 // TestContainerTerminfo checks that the containers you can ssh into resolve
-// every TERM in nodeps.ContainerTerminfoEntries. TerminalExecEnv forwards those
+// every TERM in util.ContainerTerminfoEntries. util.TerminalExecEnv forwards those
 // unchanged, so an entry missing from an image would give the shell an unusable
 // TERM.
 func TestContainerTerminfo(t *testing.T) {
@@ -39,7 +38,7 @@ func TestContainerTerminfo(t *testing.T) {
 		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: service,
 			Cmd: fmt.Sprintf(`for terminal in %s; do infocmp -- "$terminal" >/dev/null 2>&1 || echo "$terminal"; done`,
-				strings.Join(nodeps.ContainerTerminfoEntries, " ")),
+				strings.Join(util.ContainerTerminfoEntries, " ")),
 		})
 		require.NoError(t, err)
 		require.Empty(t, strings.TrimSpace(stdout), "%s container has no terminfo entry for: %s", service, stdout)

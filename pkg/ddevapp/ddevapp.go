@@ -2619,7 +2619,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	// terminal to describe, and programs write plain text anyway.
 	execEnv := opts.Env
 	if tty {
-		execEnv = nodeps.TerminalExecEnv(opts.Env, os.Getenv("TERM"), os.Getenv("COLORTERM"))
+		execEnv = util.TerminalExecEnv(opts.Env)
 	}
 
 	runOpts := api.RunOptions{
