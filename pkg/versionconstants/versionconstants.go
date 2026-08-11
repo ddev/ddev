@@ -20,19 +20,19 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20260721_rfay_content_addressed_image_tags-d15999faa9" // Note that this can be overridden by make
+var WebTag = "20260721_rfay_content_addressed_image_tags-741eba4613" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20260721_rfay_content_addressed_image_tags-d361a2704e"
+var BaseDBTag = "20260721_rfay_content_addressed_image_tags-edc90b5e63"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "20260721_rfay_content_addressed_image_tags-17656b7e16"
+var TraefikRouterTag = "20260721_rfay_content_addressed_image_tags-cd42eed0be"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
