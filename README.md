@@ -25,7 +25,7 @@
 
 ## Get started
 
-1. 💻 **Check that DDEV runs where you work:** macOS, Windows 11, WSL2, Linux, and [GitHub Codespaces](https://github.com/codespaces). See the [system requirements](https://docs.ddev.com/en/stable/users/install/ddev-installation/).
+1. 💻 **Check that DDEV runs where you work:** macOS, Windows 11, WSL2, Linux, and [GitHub Codespaces](https://github.com/codespaces). See the [system requirements](https://docs.ddev.com/en/stable/#system-requirements).
 2. 📥 **[Install a Docker provider and DDEV](https://docs.ddev.com/en/stable/users/install/).**
 3. 🏁 **Follow a [quickstart guide](https://docs.ddev.com/en/stable/users/quickstart/)** for your CMS or framework, then run `ddev start`.
 
@@ -37,7 +37,7 @@ DDEV takes care of Docker for you, so you and your team can focus on your work. 
 
 - 🚀 **Ready in minutes:** good defaults and little setup. Just run `ddev start`.
 - 📦 **One setup per project:** keep it in Git and share the same environment with your whole team.
-- 🔧 **Your stack, your choice:** PHP [5.6 through 8.5](https://docs.ddev.com/en/stable/users/configuration/config/#php_version), [Nginx or Apache](https://docs.ddev.com/en/stable/users/configuration/config/#webserver_type), and [MariaDB, MySQL, or PostgreSQL](https://docs.ddev.com/en/stable/users/extend/database-types/), per project.
+- 🔧 **Your stack, your choice:** PHP [5.6 through 8.5](https://docs.ddev.com/en/stable/users/configuration/config/#php_version), [Nginx or Apache](https://docs.ddev.com/en/stable/users/configuration/config/#webserver_type), and [MariaDB, MySQL, or PostgreSQL](https://docs.ddev.com/en/stable/users/extend/database-types/), per project. And any version of Node.js you need.
 - 🧩 **Easy to extend:** a growing set of [add-ons](https://addons.ddev.com) for extra services and integrations, and custom commands are ordinary shell scripts.
 - 🖥️ **Runs everywhere:** macOS, Windows, WSL2, Linux, and GitHub Codespaces, on both ARM64 and AMD64.
 - 🔒 **Included out of the box:** trusted HTTPS, Xdebug, database snapshots, and hosting integrations with [Upsun (formerly Platform.sh)](https://upsun.com), [Pantheon](https://pantheon.io), [Acquia](https://www.acquia.com), and others.
