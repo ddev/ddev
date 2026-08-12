@@ -2613,6 +2613,15 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	// Allocate a TTY only when both stdin and stdout are real terminals.
 	tty := opts.Tty && isatty.IsTerminal(os.Stdin.Fd()) && isatty.IsTerminal(stdout.Fd())
+
+	// A session with a TTY gets the terminal of the host, so programs in the
+	// container know how many colors they can use. Without a TTY there is no
+	// terminal to describe, and programs write plain text anyway.
+	execEnv := opts.Env
+	if tty {
+		execEnv = util.TerminalExecEnv(opts.Env)
+	}
+
 	runOpts := api.RunOptions{
 		Service:     opts.Service,
 		Command:     opts.RawCmd,
@@ -2621,7 +2630,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		Detach:      opts.Detach,
 		WorkingDir:  opts.Dir,
 		User:        opts.User,
-		Environment: opts.Env,
+		Environment: execEnv,
 	}
 
 	var stdoutResult, stderrResult string
