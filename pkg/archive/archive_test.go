@@ -3,12 +3,14 @@ package archive_test
 import (
 	"archive/tar"
 	"archive/zip"
+	"bytes"
 	"compress/gzip"
 	"io"
 	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/archive"
@@ -415,4 +417,151 @@ func TestUntarSymlinks(t *testing.T) {
 	require.NoError(t, err)
 	linkTarget2 = filepath.ToSlash(linkTarget2)
 	assert.Equal("../target.txt", linkTarget2)
+}
+
+// makeTestArchive writes members to a tar and a zip file in the same
+// directory and returns their paths.
+func makeTestArchive(t *testing.T, members map[string]string) (string, string) {
+	t.Helper()
+	dir := t.TempDir()
+
+	var tarBuf bytes.Buffer
+	tw := tar.NewWriter(&tarBuf)
+	for name, content := range members {
+		require.NoError(t, tw.WriteHeader(&tar.Header{Name: name, Mode: 0600, Size: int64(len(content)), Typeflag: tar.TypeReg}))
+		_, err := tw.Write([]byte(content))
+		require.NoError(t, err)
+	}
+	require.NoError(t, tw.Close())
+	tarPath := filepath.Join(dir, "test.tar")
+	require.NoError(t, os.WriteFile(tarPath, tarBuf.Bytes(), 0644))
+
+	var zipBuf bytes.Buffer
+	zw := zip.NewWriter(&zipBuf)
+	for name, content := range members {
+		w, err := zw.Create(name)
+		require.NoError(t, err)
+		_, err = w.Write([]byte(content))
+		require.NoError(t, err)
+	}
+	require.NoError(t, zw.Close())
+	zipPath := filepath.Join(dir, "test.zip")
+	require.NoError(t, os.WriteFile(zipPath, zipBuf.Bytes(), 0644))
+
+	return tarPath, zipPath
+}
+
+// TestSQLMembers tests that only top-level .sql/.mysql archive members are
+// listed, mirroring ImportDB's extraction-then-glob behavior, and that the
+// named members can be streamed back in order.
+func TestSQLMembers(t *testing.T) {
+	members := map[string]string{
+		"b.sql":        "SELECT 1;\n",
+		"a.sql":        "SELECT 2;\n",
+		"nested/c.sql": "SELECT 3;\n",
+		"x.sql.gz":     "garbage",
+		"notes.txt":    "not sql",
+	}
+	tarPath, zipPath := makeTestArchive(t, members)
+
+	tests := []struct {
+		name          string
+		source        string
+		extractionDir string
+		want          []string
+		wantErr       bool
+	}{
+		{"tar top level", tarPath, "", []string{"a.sql", "b.sql"}, false},
+		{"zip top level", zipPath, "", []string{"a.sql", "b.sql"}, false},
+		{"tar extraction dir", tarPath, "nested/", []string{"nested/c.sql"}, false},
+		{"zip extraction dir", zipPath, "nested/", []string{"nested/c.sql"}, false},
+		{"tar extraction dir without slash", tarPath, "nested", []string{"nested/c.sql"}, false},
+		{"zip extraction dir without slash", zipPath, "nested", []string{"nested/c.sql"}, false},
+		{"tar single file", tarPath, "b.sql", []string{"b.sql"}, false},
+		{"zip single file", zipPath, "b.sql", []string{"b.sql"}, false},
+		{"tar matching dir without sql", tarPath, "notes.txt", nil, false},
+		{"zip matching dir without sql", zipPath, "notes.txt", nil, false},
+		{"tar missing extraction dir", tarPath, "missing/", nil, true},
+		{"zip missing extraction dir", zipPath, "missing/", nil, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got []string
+			var err error
+			if strings.HasSuffix(tt.source, ".zip") {
+				got, err = archive.SQLMembersInZip(tt.source, tt.extractionDir)
+			} else {
+				got, err = archive.SQLMembersInTar(tt.source, tt.extractionDir)
+			}
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+
+	// Streaming concatenates the named members in the given order.
+	var buf bytes.Buffer
+	require.NoError(t, archive.StreamTarMembers(tarPath, []string{"a.sql", "b.sql"}, &buf))
+	require.Equal(t, "SELECT 2;\nSELECT 1;\n", buf.String())
+	buf.Reset()
+	require.NoError(t, archive.StreamZipMembers(zipPath, []string{"a.sql", "b.sql"}, &buf))
+	require.Equal(t, "SELECT 2;\nSELECT 1;\n", buf.String())
+
+	// A gzipped tarball streams the same way.
+	dir := t.TempDir()
+	gzPath := filepath.Join(dir, "test.tar.gz")
+	f, err := os.Create(gzPath)
+	require.NoError(t, err)
+	gw := gzip.NewWriter(f)
+	raw, err := os.ReadFile(tarPath)
+	require.NoError(t, err)
+	_, err = gw.Write(raw)
+	require.NoError(t, err)
+	require.NoError(t, gw.Close())
+	require.NoError(t, f.Close())
+	buf.Reset()
+	require.NoError(t, archive.StreamTarMembers(gzPath, []string{"a.sql"}, &buf))
+	require.Equal(t, "SELECT 2;\n", buf.String())
+}
+
+// TestSQLDumpReader tests that plain and gzip-compressed SQL files yield
+// their decompressed contents.
+func TestSQLDumpReader(t *testing.T) {
+	content := "SELECT 1;\n"
+	dir := t.TempDir()
+
+	plain := filepath.Join(dir, "db.sql")
+	require.NoError(t, os.WriteFile(plain, []byte(content), 0644))
+	rc, err := archive.SQLDumpReader(plain)
+	require.NoError(t, err)
+	b, err := io.ReadAll(rc)
+	require.NoError(t, err)
+	require.Equal(t, content, string(b))
+	require.NoError(t, rc.Close())
+
+	gz := filepath.Join(dir, "db.sql.gz")
+	f, err := os.Create(gz)
+	require.NoError(t, err)
+	gw := gzip.NewWriter(f)
+	_, err = gw.Write([]byte(content))
+	require.NoError(t, err)
+	require.NoError(t, gw.Close())
+	require.NoError(t, f.Close())
+
+	rc, err = archive.SQLDumpReader(gz)
+	require.NoError(t, err)
+	b, err = io.ReadAll(rc)
+	require.NoError(t, err)
+	require.Equal(t, content, string(b))
+	require.NoError(t, rc.Close())
+
+	// A corrupt gzip stream must be reported, not silently truncated.
+	bad := filepath.Join(dir, "bad.sql.gz")
+	require.NoError(t, os.WriteFile(bad, []byte("not gzip"), 0644))
+	_, err = archive.SQLDumpReader(bad)
+	require.Error(t, err)
 }

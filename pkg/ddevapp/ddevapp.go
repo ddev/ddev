@@ -6,6 +6,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -882,7 +883,10 @@ func (app *DdevApp) GetDBDumpCommand() string {
 	return "mysqldump"
 }
 
-// ImportDB takes a source sql dump and imports it to an active site's database container.
+// ImportDB imports a SQL dump into the active site's database container.
+// The dump can be a plain .sql/.mysql file, one compressed with
+// gzip/bzip2/xz, or a tar/zip archive of SQL files. It is streamed into the
+// container's stdin rather than extracted to disk on the host.
 func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool, noDrop bool, targetDB string) error {
 	_ = app.DockerEnv()
 	if err := dockerutil.CheckAvailableSpace(); err != nil {
@@ -892,21 +896,8 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	if targetDB == "" {
 		targetDB = "db"
 	}
-	var extPathPrompt bool
-	dbPath, err := os.MkdirTemp(filepath.Dir(app.ConfigPath), ".importdb")
-	if err != nil {
-		return err
-	}
-	err = util.Chmod(dbPath, 0777)
-	if err != nil {
-		return err
-	}
 
-	defer func() {
-		_ = os.RemoveAll(dbPath)
-	}()
-
-	err = app.ProcessHooks("pre-import-db")
+	err := app.ProcessHooks("pre-import-db")
 	if err != nil {
 		return err
 	}
@@ -914,109 +905,77 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	// If they don't provide an import path and we're not on a tty (piped in stuff)
 	// then prompt for path to db
 	if dumpFile == "" && isatty.IsTerminal(os.Stdin.Fd()) {
-		// ensure we prompt for extraction path if an archive is provided, while still allowing
-		// non-interactive use of --file flag without providing a --extract-path flag.
-		if extractPath == "" {
-			extPathPrompt = true
-		}
 		output.UserOut.Println("Provide the path to the database you want to import.")
 		fmt.Print("Path to file: ")
 
 		dumpFile = util.GetQuotedInput("")
 	}
 
+	// The dump is streamed into the container: importStream is the db
+	// command's stdin, fed by a producer goroutine, and importErr carries
+	// failures from that goroutine (a truncated archive or corrupt compressed
+	// stream) that the exec cannot see. For archives the members to import
+	// are listed first, so we fail with "no .sql files found" before touching
+	// the database.
+	var importStream io.ReadCloser
+	var importErr <-chan error
+	var dumpContent io.Reader
+	var streamArchive func(w io.Writer) error
+	var archiveMembers []string
 	if dumpFile != "" {
-		importPath, isArchive, err := appimport.ValidateAsset(dumpFile, "db")
+		importPath, _, err := appimport.ValidateAsset(dumpFile, "db")
 		if err != nil {
-			if isArchive && extPathPrompt {
-				output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
-				fmt.Print("Archive extraction path: ")
-
-				extractPath = util.GetQuotedInput("")
-			} else {
-				return fmt.Errorf("unable to validate import asset %s: %s", dumpFile, err)
-			}
+			return fmt.Errorf("unable to validate import asset %s: %s", dumpFile, err)
 		}
 
+		var dumpReader io.ReadCloser
 		switch {
-		case strings.HasSuffix(importPath, "sql.gz") || strings.HasSuffix(importPath, "mysql.gz"):
-			err = archive.Ungzip(importPath, dbPath)
-			if err != nil {
-				return fmt.Errorf("failed to extract provided file: %v", err)
+		case isTar(importPath):
+			archiveMembers, err = archive.SQLMembersInTar(importPath, extractPath)
+			if err == nil {
+				streamArchive = func(w io.Writer) error {
+					return archive.StreamTarMembers(importPath, archiveMembers, w)
+				}
 			}
-
-		case strings.HasSuffix(importPath, "sql.bz2") || strings.HasSuffix(importPath, "mysql.bz2"):
-			err = archive.UnBzip2(importPath, dbPath)
-			if err != nil {
-				return fmt.Errorf("failed to extract file: %v", err)
+		case isZip(importPath):
+			archiveMembers, err = archive.SQLMembersInZip(importPath, extractPath)
+			if err == nil {
+				streamArchive = func(w io.Writer) error {
+					return archive.StreamZipMembers(importPath, archiveMembers, w)
+				}
 			}
-
-		case strings.HasSuffix(importPath, "sql.xz") || strings.HasSuffix(importPath, "mysql.xz"):
-			err = archive.UnXz(importPath, dbPath)
-			if err != nil {
-				return fmt.Errorf("failed to extract file: %v", err)
-			}
-
-		case strings.HasSuffix(importPath, "zip"):
-			err = archive.Unzip(importPath, dbPath, extractPath)
-			if err != nil {
-				return fmt.Errorf("failed to extract provided archive: %v", err)
-			}
-
-		case strings.HasSuffix(importPath, "tar"):
-			fallthrough
-		case strings.HasSuffix(importPath, "tar.gz"):
-			fallthrough
-		case strings.HasSuffix(importPath, "tar.bz2"):
-			fallthrough
-		case strings.HasSuffix(importPath, "tar.xz"):
-			fallthrough
-		case strings.HasSuffix(importPath, "tgz"):
-			err := archive.Untar(importPath, dbPath, extractPath)
-			if err != nil {
-				return fmt.Errorf("failed to extract provided archive: %v", err)
-			}
-
 		default:
-			err = fileutil.CopyFile(importPath, filepath.Join(dbPath, "db.sql"))
-			if err != nil {
-				return err
+			dumpReader, err = archive.SQLDumpReader(importPath)
+			if err == nil {
+				dumpContent = dumpReader
 			}
 		}
-
-		matches, err := filepath.Glob(filepath.Join(dbPath, "*.*sql"))
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to open import asset %s: %v", importPath, err)
 		}
-
-		if len(matches) < 1 {
+		if streamArchive != nil && len(archiveMembers) < 1 {
 			return fmt.Errorf("no .sql or .mysql files found to import")
 		}
-	}
 
-	// Default insideContainerImportPath is the one mounted from .ddev directory
-	insideContainerImportPath := path.Join("/mnt/ddev_config/", filepath.Base(dbPath))
-	// But if we don't have bind mounts, we have to copy dump into the container
-	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		dbContainerName := GetContainerName(app, "db")
-		uid, _, _ := dockerutil.GetContainerUser()
-
-		insideContainerImportPath, _, err = dockerutil.Exec(dbContainerName, "mktemp -d", uid)
-		if err != nil {
-			return err
+		pr, pw := io.Pipe()
+		errCh := make(chan error, 1)
+		go func() {
+			var err error
+			if streamArchive != nil {
+				err = streamArchive(pw)
+			} else {
+				_, err = io.Copy(pw, dumpContent)
+			}
+			_ = pw.CloseWithError(err)
+			errCh <- err
+		}()
+		importStream = pr
+		importErr = errCh
+		if dumpReader != nil {
+			defer dumpReader.Close()
 		}
-		insideContainerImportPath = strings.Trim(insideContainerImportPath, "\n")
-
-		err = dockerutil.CopyIntoContainer(dbPath, dbContainerName, insideContainerImportPath, "")
-		if err != nil {
-			return err
-		}
 	}
 
-	err = app.MutagenSyncFlush()
-	if err != nil {
-		return err
-	}
 	// The Perl manipulation removes statements like CREATE DATABASE and USE, which
 	// throw off imports.
 	// It also removes the new `/*!999999\- enable the sandbox mode */` introduced in
@@ -1041,7 +1000,8 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 			preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 		}
 
-		// Case for reading from file
+		// The dump always arrives on stdin, whether piped by the user or
+		// streamed from a file, so there is a single command form.
 		// The Perl regex does three things:
 		// 1. Strips sandbox mode comments, CREATE DATABASE, and USE statements from the dump
 		// 2. Replaces MariaDB 11.x modern collation (utf8mb4_uca1400_ai_ci) with server's default collation
@@ -1049,19 +1009,7 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		// The collation replacements skip INSERT and VALUES lines to avoid corrupting data that mentions these collations
 		// The PIPESTATUS check ensures we catch and report errors from the mysql command
 		// DDEV_REPLACED_COLLATION is queried from the server and used via $ENV{DDEV_REPLACED_COLLATION} in Perl
-		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; DDEV_REPLACED_COLLATION=$(%[1]s -sN -e "SELECT @@collation_server" </dev/null 2>/dev/null || echo "utf8mb4_unicode_ci"); export DDEV_REPLACED_COLLATION; %[1]s -e "%[2]s"; pv %[3]s/*.*sql | perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %[4]s)[^;]*(;|\*\/)//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE $ENV{DDEV_REPLACED_COLLATION}/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE $ENV{DDEV_REPLACED_COLLATION}/gi; }' | %[1]s %[5]s; status=${PIPESTATUS[2]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, insideContainerImportPath, "`", targetDB)}
-
-		// Alternate case where we are reading from stdin
-		// The Perl regex does three things:
-		// 1. Strips CREATE DATABASE and USE statements from the dump
-		// 2. Replaces MariaDB 11.x modern collation (utf8mb4_uca1400_ai_ci) with server's default collation
-		// 3. Replaces MySQL 8.0+ modern collation (utf8mb4_0900_ai_ci) with server's default collation
-		// The collation replacements skip INSERT and VALUES lines to avoid corrupting data that mentions these collations
-		// The PIPESTATUS check ensures we catch and report errors from the mysql command even when reading from stdin
-		// DDEV_REPLACED_COLLATION is queried from the server and used via $ENV{DDEV_REPLACED_COLLATION} in Perl
-		if dumpFile == "" && extractPath == "" {
-			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; DDEV_REPLACED_COLLATION=$(%[1]s -sN -e "SELECT @@collation_server" </dev/null 2>/dev/null || echo "utf8mb4_unicode_ci"); export DDEV_REPLACED_COLLATION; %[1]s -e "%[2]s"; perl -p -e 's/^(CREATE DATABASE \/\*|USE %[3]s)[^;]*;//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE $ENV{DDEV_REPLACED_COLLATION}/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE $ENV{DDEV_REPLACED_COLLATION}/gi; }' | %[1]s %[4]s; status=${PIPESTATUS[1]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, "`", targetDB)}
-		}
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; DDEV_REPLACED_COLLATION=$(%[1]s -sN -e "SELECT @@collation_server" </dev/null 2>/dev/null || echo "utf8mb4_unicode_ci"); export DDEV_REPLACED_COLLATION; %[1]s -e "%[2]s"; perl -p -e 's/^(\/\*.*999999.*enable the sandbox mode *|CREATE DATABASE \/\*|USE %[3]s)[^;]*(;|\*\/)//; unless (/^\s*(INSERT\s+INTO|VALUES)/i) { s/COLLATE[= ]utf8mb4_uca1400_ai_ci/COLLATE $ENV{DDEV_REPLACED_COLLATION}/gi; s/COLLATE[= ]utf8mb4_0900_ai_ci/COLLATE $ENV{DDEV_REPLACED_COLLATION}/gi; }' | %[1]s %[4]s; status=${PIPESTATUS[1]}; if [ $status -ne 0 ]; then echo "Database import command failed" >&2; exit 1; fi`, dbClientCmd, preImportSQL, "`", targetDB)}
 
 	case nodeps.Postgres:
 		preImportSQL = ""
@@ -1078,18 +1026,33 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		preImportSQL = preImportSQL + fmt.Sprintf(`
 			GRANT ALL PRIVILEGES ON DATABASE %s TO db;`, targetDB)
 
-		// If there is no import path, we're getting it from stdin
-		if dumpFile == "" && extractPath == "" {
-			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo '%s' | psql -d postgres) && psql -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}
-		} else { // otherwise getting it from mounted file
-			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo "%s" | psql -q -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}
-		}
+		// The dump always arrives on stdin, whether piped by the user or
+		// streamed from a file, so there is a single command form.
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo '%s' | psql -d postgres) && psql -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}
+	}
+	stopDots := func() {}
+	if progress && importStream != nil {
+		stopDots = util.ShowDots()
 	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
 		RawCmd:  inContainerCommand,
-		Tty:     progress && isatty.IsTerminal(os.Stdin.Fd()),
+		Stdin:   importStream,
+		// A streamed dump arrives on the command's stdin, so no TTY is
+		// allocated; the user-piped case keeps its previous behavior.
+		Tty: importStream == nil && progress && isatty.IsTerminal(os.Stdin.Fd()),
 	})
+	stopDots()
+
+	if importStream != nil {
+		// Unblock the producer if the exec ended before consuming the dump,
+		// then surface producer failures (truncated archive, corrupt
+		// compressed stream) that the exec cannot report.
+		_ = importStream.Close()
+		if streamErr := <-importErr; streamErr != nil && !errors.Is(streamErr, io.ErrClosedPipe) && err == nil {
+			err = fmt.Errorf("failed to stream dump into container: %v", streamErr)
+		}
+	}
 
 	if err != nil {
 		return fmt.Errorf("failed to import database: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
@@ -1104,11 +1067,6 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 	err = app.PostImportDBAction()
 	if err != nil {
 		return fmt.Errorf("failed to execute PostImportDBAction: %v", err)
-	}
-
-	err = fileutil.PurgeDirectory(dbPath)
-	if err != nil {
-		return fmt.Errorf("failed to clean up %s after import: %v", dbPath, err)
 	}
 
 	err = app.ProcessHooks("post-import-db")
@@ -2536,6 +2494,9 @@ type ExecOpts struct {
 	Stdout *os.File
 	// Stderr can be overridden with a File
 	Stderr *os.File
+	// Stdin is the stream fed to the command's stdin instead of the
+	// process's own stdin. When set, no TTY is allocated.
+	Stdin io.ReadCloser
 	// Detach does docker-compose detach
 	Detach bool
 	// Env is the array of environment variables
@@ -2605,6 +2566,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if opts.Stderr != nil {
 		stderr = opts.Stderr
 	}
+	stdin := opts.Stdin
+	if stdin == nil {
+		stdin = os.Stdin
+	}
 
 	execProject, execLoadErr := dockerutil.LoadComposeProject([]string{app.DockerComposeFullRenderedYAMLPath()}, api.ProjectLoadOptions{
 		ProjectName: app.GetComposeProjectName(),
@@ -2613,8 +2578,9 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		return "", "", execLoadErr
 	}
 
-	// Allocate a TTY only when both stdin and stdout are real terminals.
-	tty := opts.Tty && isatty.IsTerminal(os.Stdin.Fd()) && isatty.IsTerminal(stdout.Fd())
+	// Allocate a TTY only when both stdin and stdout are real terminals, and
+	// never when the caller feeds the command's stdin itself.
+	tty := opts.Tty && opts.Stdin == nil && isatty.IsTerminal(os.Stdin.Fd()) && isatty.IsTerminal(stdout.Fd())
 
 	// A session with a TTY gets the terminal of the host, so programs in the
 	// container know how many colors they can use. Without a TTY there is no
@@ -2637,7 +2603,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	var stdoutResult, stderrResult string
 	if opts.NoCapture || opts.Tty {
-		restore, stdinErr := dockerutil.SetExecStdin(os.Stdin, tty)
+		restore, stdinErr := dockerutil.SetExecStdin(stdin, tty)
 		if stdinErr != nil {
 			return "", "", stdinErr
 		}
@@ -2648,9 +2614,9 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		}
 		err = dockerutil.ExitCodeToError(execSvc.Exec(execCtx, execProject.Name, runOpts))
 	} else {
-		if !isatty.IsTerminal(os.Stdin.Fd()) {
+		if opts.Stdin != nil || !isatty.IsTerminal(os.Stdin.Fd()) {
 			// Forward piped stdin so exec commands can read it even without Tty.
-			restore, _ := dockerutil.SetExecStdin(os.Stdin, false)
+			restore, _ := dockerutil.SetExecStdin(stdin, false)
 			defer restore()
 		}
 		captureCtx, _, captureCtxErr := dockerutil.GetDockerClient()

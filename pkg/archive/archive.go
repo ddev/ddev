@@ -6,12 +6,14 @@ import (
 	"bufio"
 	"compress/bzip2"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -414,6 +416,233 @@ func Unzip(source string, dest string, extractionDir string) error {
 	}
 
 	return nil
+}
+
+// SQLDumpReader returns a reader over the SQL content of source, which may
+// be a plain .sql/.mysql file or one compressed with gzip, bzip2, or xz.
+// The returned reader must be closed when done.
+func SQLDumpReader(source string) (io.ReadCloser, error) {
+	f, err := os.Open(source)
+	if err != nil {
+		return nil, err
+	}
+	switch {
+	case strings.HasSuffix(source, "sql.gz") || strings.HasSuffix(source, "mysql.gz"):
+		gf, err := gzip.NewReader(f)
+		if err != nil {
+			_ = f.Close()
+			return nil, err
+		}
+		return &readCloser{r: gf, closeFn: func() error { return errors.Join(gf.Close(), f.Close()) }}, nil
+	case strings.HasSuffix(source, "sql.bz2") || strings.HasSuffix(source, "mysql.bz2"):
+		return &readCloser{r: bzip2.NewReader(bufio.NewReader(f)), closeFn: f.Close}, nil
+	case strings.HasSuffix(source, "sql.xz") || strings.HasSuffix(source, "mysql.xz"):
+		xr, err := xz.NewReader(bufio.NewReader(f))
+		if err != nil {
+			_ = f.Close()
+			return nil, err
+		}
+		return &readCloser{r: xr, closeFn: f.Close}, nil
+	default:
+		return f, nil
+	}
+}
+
+// readCloser adapts an io.Reader to an io.ReadCloser with a custom close function.
+type readCloser struct {
+	r       io.Reader
+	closeFn func() error
+}
+
+func (rc *readCloser) Read(p []byte) (int, error) { return rc.r.Read(p) }
+func (rc *readCloser) Close() error               { return rc.closeFn() }
+
+// sqlMemberName reports whether an archive member would be imported into a
+// database: a .sql or .mysql file at the top level of the archive, or of
+// extractionDir when given. It mirrors the extraction logic of Untar/Unzip
+// followed by ImportDB's top-level glob: extractionDir names a prefix within
+// the archive (a directory, or a single file when a member matches it
+// exactly), and the rest of the member's name is considered relative to the
+// top level.
+func sqlMemberName(name, extractionDir string, isDir bool) bool {
+	if !strings.HasPrefix(name, extractionDir) {
+		return false
+	}
+	if name == extractionDir && !isDir {
+		name = filepath.Base(name)
+	} else {
+		// TrimPrefix can leave a leading "/" when extractionDir has none;
+		// filepath.Join in Untar/Unzip cleans that away.
+		name = strings.TrimLeft(strings.TrimPrefix(name, extractionDir), "/")
+	}
+	if name == "" || isDir || strings.Contains(name, "/") {
+		return false
+	}
+	return strings.HasSuffix(name, ".sql") || strings.HasSuffix(name, ".mysql")
+}
+
+// SQLMembersInTar returns the names of the members of the (optionally
+// gzip/bzip2/xz-compressed) tar archive source that a database import would
+// use: .sql and .mysql files at the top level of the archive, or of
+// extractionDir when given. Names are returned sorted. An error is returned
+// when no member matches extractionDir.
+func SQLMembersInTar(source, extractionDir string) ([]string, error) {
+	tf, closeFn, err := newTarReader(source)
+	if err != nil {
+		return nil, err
+	}
+	defer closeFn()
+
+	var names []string
+	foundExtractionPath := false
+	for {
+		hdr, err := tf.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("error during read of tar archive %v, err: %v", source, err)
+		}
+		if !strings.HasPrefix(hdr.Name, extractionDir) {
+			continue
+		}
+		foundExtractionPath = true
+		if sqlMemberName(hdr.Name, extractionDir, hdr.Typeflag != tar.TypeReg) {
+			names = append(names, hdr.Name)
+		}
+	}
+	if !foundExtractionPath {
+		return nil, fmt.Errorf("failed to find files in extraction path: %s", extractionDir)
+	}
+	slices.Sort(names)
+	return names, nil
+}
+
+// SQLMembersInZip is the zip analog of SQLMembersInTar.
+func SQLMembersInZip(source, extractionDir string) ([]string, error) {
+	zf, err := zip.OpenReader(source)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open zipfile %s, err:%v", source, err)
+	}
+	defer util.CheckClose(zf)
+
+	var names []string
+	foundExtractionPath := false
+	for _, file := range zf.File {
+		if !strings.HasPrefix(file.Name, extractionDir) {
+			continue
+		}
+		foundExtractionPath = true
+		if sqlMemberName(file.Name, extractionDir, file.FileInfo().IsDir()) {
+			names = append(names, file.Name)
+		}
+	}
+	if !foundExtractionPath {
+		return nil, fmt.Errorf("failed to find files in extraction path: %s", extractionDir)
+	}
+	slices.Sort(names)
+	return names, nil
+}
+
+// StreamTarMembers copies the contents of the named members of the
+// (optionally gzip/bzip2/xz-compressed) tar archive source to w, in the
+// order given. names should come from SQLMembersInTar.
+func StreamTarMembers(source string, names []string, w io.Writer) error {
+	for _, name := range names {
+		tf, closeFn, err := newTarReader(source)
+		if err != nil {
+			return err
+		}
+		found := false
+		for {
+			hdr, err := tf.Next()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				closeFn()
+				return err
+			}
+			if hdr.Name == name {
+				if _, err := io.Copy(w, tf); err != nil {
+					closeFn()
+					return err
+				}
+				found = true
+				break
+			}
+		}
+		closeFn()
+		if !found {
+			return fmt.Errorf("archive member %q not found in %s", name, source)
+		}
+	}
+	return nil
+}
+
+// StreamZipMembers copies the contents of the named members of the zip
+// archive source to w, in the order given. names should come from
+// SQLMembersInZip.
+func StreamZipMembers(source string, names []string, w io.Writer) error {
+	zf, err := zip.OpenReader(source)
+	if err != nil {
+		return fmt.Errorf("failed to open zipfile %s, err:%v", source, err)
+	}
+	defer util.CheckClose(zf)
+
+	byName := make(map[string]*zip.File, len(zf.File))
+	for _, file := range zf.File {
+		byName[file.Name] = file
+	}
+	for _, name := range names {
+		file, ok := byName[name]
+		if !ok {
+			return fmt.Errorf("archive member %q not found in %s", name, source)
+		}
+		rc, err := file.Open()
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(w, rc)
+		_ = rc.Close()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// newTarReader opens source and returns a tar.Reader over its contents along
+// with a function that closes the file and any decompressor.
+func newTarReader(source string) (*tar.Reader, func(), error) {
+	f, err := os.Open(source)
+	if err != nil {
+		return nil, nil, err
+	}
+	closeFn := func() { _ = f.Close() }
+	switch {
+	case strings.HasSuffix(source, "gz"):
+		gf, err := gzip.NewReader(f)
+		if err != nil {
+			_ = f.Close()
+			return nil, nil, err
+		}
+		return tar.NewReader(gf), func() {
+			_ = gf.Close()
+			_ = f.Close()
+		}, nil
+	case strings.HasSuffix(source, "xz"):
+		xr, err := xz.NewReader(bufio.NewReader(f))
+		if err != nil {
+			_ = f.Close()
+			return nil, nil, err
+		}
+		return tar.NewReader(xr), closeFn, nil
+	case strings.HasSuffix(source, "bz2"):
+		return tar.NewReader(bzip2.NewReader(bufio.NewReader(f))), closeFn, nil
+	default:
+		return tar.NewReader(f), closeFn, nil
+	}
 }
 
 // Tar takes a source dir and tarballFilePath and a single exclusion path
