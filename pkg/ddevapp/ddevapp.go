@@ -1506,6 +1506,8 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 func (app *DdevApp) Start() error {
 	var err error
 
+	RunUpgradeCheck()
+
 	if _, err := dockerutil.DownloadDockerBuildxIfNeeded(); err != nil {
 		return err
 	}

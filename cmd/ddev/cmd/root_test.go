@@ -520,6 +520,88 @@ func TestNoPoweroffPromptWhenStopped(t *testing.T) {
 	require.Equal(t, 1, len(apps), "Expected one active project after start")
 }
 
+// TestLastStartedVersionUpdatedByAnyStart checks that last_started_version is recorded
+// by every command that starts containers, not just `ddev start`, and that it is
+// recorded even when confirmation is skipped with `-y`.
+// See https://github.com/ddev/ddev/issues/8520
+func TestLastStartedVersionUpdatedByAnyStart(t *testing.T) {
+	if !nodeps.IsLinux() {
+		t.Skip("No need to test except on Linux")
+	}
+	origDir, _ := os.Getwd()
+
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+
+	testName := t.Name() + "-testproject"
+	_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", testName)
+
+	tmpTestProjectDir := testcommon.CreateTmpDir(testName)
+	err := os.Chdir(tmpTestProjectDir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+
+		t.Logf("attempting to remove project %s", testName)
+		_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", testName)
+
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+
+		// Restart test sites
+		for _, site := range TestSites {
+			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+		}
+
+		_ = os.RemoveAll(tmpTestProjectDir)
+	})
+
+	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name", testName, "--project-type", "php")
+	require.NoError(t, err, "out=%s", out)
+
+	// Power off first so that the version checks below never find containers to
+	// offer a poweroff for; this test is about recording, not about the prompt.
+	out, err = exec.RunHostCommand(DdevBin, "poweroff")
+	require.NoError(t, err, "poweroff failed, out='%s'", out)
+
+	// `ddev start -y` has to record the version, otherwise every later command
+	// asks about the same upgrade again.
+	setLastStartedVersion(t, "v0.1")
+	out, err = exec.RunHostCommand(DdevBin, "start", "-y")
+	require.NoError(t, err, "start failed, out='%s'", out)
+	require.NotEqual(t, "v0.1", readLastStartedVersion(t), "`ddev start -y` should have recorded last_started_version")
+
+	// `ddev exec` starts a stopped project, so it has to record the version too.
+	out, err = exec.RunHostCommand(DdevBin, "poweroff")
+	require.NoError(t, err, "poweroff failed, out='%s'", out)
+
+	setLastStartedVersion(t, "v0.1")
+	out, err = exec.RunHostCommand(DdevBin, "exec", "ls")
+	require.NoError(t, err, "exec failed, out='%s'", out)
+	require.NotEqual(t, "v0.1", readLastStartedVersion(t), "`ddev exec` should have recorded last_started_version")
+
+	// The project is running now, so a stale last_started_version would make this
+	// start prompt for (and, non-interactively, do) a poweroff.
+	out, err = exec.RunHostCommand(DdevBin, "start")
+	require.NoError(t, err, "start failed, out='%s'", out)
+	require.NotContains(t, out, "You seem to have a new DDEV version", "Should not report an upgrade already recorded by `ddev exec`")
+	require.NotContains(t, out, "May I do `ddev poweroff`", "Should not prompt for poweroff after `ddev exec` recorded the version")
+}
+
+// setLastStartedVersion writes last_started_version into the global config
+func setLastStartedVersion(t *testing.T, version string) {
+	t.Helper()
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+	globalconfig.DdevGlobalConfig.LastStartedVersion = version
+	require.NoError(t, globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig))
+}
+
+// readLastStartedVersion re-reads last_started_version from the global config
+func readLastStartedVersion(t *testing.T) string {
+	t.Helper()
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+	return globalconfig.DdevGlobalConfig.LastStartedVersion
+}
+
 // addSites runs `ddev start` on the test apps
 func addSites() error {
 	output.UserOut.Debugln("Removing any existing TestSites")

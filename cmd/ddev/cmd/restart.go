@@ -31,16 +31,10 @@ ddev restart --all`,
 			instrumentationApp = projects[0]
 		}
 
-		skip, err := cmd.Flags().GetBool("skip-confirmation")
-		if err != nil {
-			util.Failed(err.Error())
-		}
-
 		// Look for version change and opt-in to instrumentation if it has changed.
-		err = checkDdevVersionAndOptInInstrumentation(skip)
-		if err != nil {
-			util.Failed(err.Error())
-		}
+		// Do it here rather than waiting for app.Start() so the poweroff prompt
+		// comes before any of the restart output.
+		ddevapp.RunUpgradeCheck()
 
 		noCache, _ := cmd.Flags().GetBool("no-cache")
 
