@@ -337,7 +337,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         ??? "Last resort: a newer Podman from Homebrew"
             [Homebrew](https://brew.sh/) packages a current Podman. DDEV's CI installs it this way so that tests always run against the latest Podman, but it is not the recommended way to get Podman on a workstation: it means running a container stack from a second package manager, and most of the [troubleshooting](#podman-rootless-troubleshooting) entries below exist only because of it. Prefer your distribution's Podman even when it's older.
 
-            If you do use it, remove the distribution's Podman *and what it brought in* first, keeping only the `uidmap` helpers, which are setuid binaries that Homebrew cannot provide:
+            If you do use it, remove the distribution's Podman *and what it brought in* first, keeping only the `uidmap` helpers, which are root-owned privileged binaries that Homebrew cannot provide:
 
             ```bash
             # Ubuntu/Debian
