@@ -29,6 +29,8 @@ env:
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
   FURY_ACCOUNT: ${{ vars.FURY_ACCOUNT }}
+  CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
+  CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
   HOMEBREW_EDGE_REPOSITORY: ${{ vars.HOMEBREW_EDGE_REPOSITORY }}
   HOMEBREW_STABLE_REPOSITORY: ${{ vars.HOMEBREW_STABLE_REPOSITORY }}
   REPOSITORY_OWNER: ${{ github.repository_owner }}
@@ -233,6 +235,7 @@ jobs:
           DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
           DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
           FURY_TOKEN: "op://push-secrets/FURY_TOKEN/credential_${{ github.repository_owner }}"
+          DDEV_CLOUDSMITH_API_TOKEN: "op://push-secrets/DDEV_CLOUDSMITH_API_TOKEN/credential"
           GORELEASER_KEY: "op://push-secrets/GORELEASER_KEY/credential"
 
       - uses: actions/checkout@v7

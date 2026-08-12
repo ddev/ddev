@@ -28,6 +28,8 @@ These are normally configured in the repository environment variables.
 * `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
 * `AUR_PACKAGE_NAME`: The base name of the AUR package. Normally `ddev` for production, but `ddev-test` for testing repository.
 * `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
+* `CLOUDSMITH_ORG`: The organization on [Cloudsmith](https://cloudsmith.com) that receives `apt`/`yum` package pushes.
+* `CLOUDSMITH_REPO`: The repository within `CLOUDSMITH_ORG` that receives package pushes, so `ddev-test/ddev` can push to a separate test repository from `ddev/ddev`.
 * `DDEV_IGNORE_EXPIRING_KEYS`: If the value is `"false"` then daily tests will fail if signing keys are expiring soon, default is `"false"` on `ddev/ddev`
 * `DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION`: Number of days before expiration to warn about expiring signing keys, default is `90` on `ddev/ddev`.
 * `DDEV_WINDOWS_SIGN`: If the value is `"true"` then `make` will attempt to sign the Windows executables, which requires building on our self-hosted Windows runner.
@@ -49,6 +51,7 @@ The following “Repository secret” environment variables must be configured i
 
 * `AUR_SSH_PRIVATE_KEY`: Private SSH key for the `ddev-releaser` user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
 * `CHOCOLATEY_API_KEY`: API key for Chocolatey.
+* `DDEV_CLOUDSMITH_API_TOKEN`: API token for the `CLOUDSMITH_ORG`/`CLOUDSMITH_REPO` above.
 * `DDEV_GITHUB_TOKEN`: GitHub personal token (`repo` scope, classic PAT) that gives access to create releases and push to the Homebrew repositories.
 * `DDEV_MACOS_APP_PASSWORD`: Password used for notarization, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
@@ -231,6 +234,8 @@ The Linux `apt` and `yum`/`rpm` packages are built and pushed by the `nfpms` and
 * The `pkg.ddev.com` domain name is set up as a custom alias for our package repositories; see `https://manage.fury.io/manage/drud/domains`. (Users do not see `drud` anywhere. Although we could have moved to a new organization for this, the existing repositories contain all the historical versions so it made sense to be less disruptive.)
 * The `pkg.ddev.com` `CNAME` is managed in Cloudflare because `ddev.com` is managed there.
 * The fury.io tokens are in DDEV’s shared 1Password account.
+* Packages are also pushed to [Cloudsmith](https://cloudsmith.com) in parallel, via the `cloudsmiths` section of [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml), using the `CLOUDSMITH_ORG`/`CLOUDSMITH_REPO` variables and `DDEV_CLOUDSMITH_API_TOKEN` secret. Packages are uploaded to Cloudsmith's `any-distro/any-version` distribution so one repository serves all Debian/Ubuntu and RPM-based distros, matching today's single `pkg.ddev.com` repository.
+* Cloudsmith generates and hosts its own GPG signing key per repository (there is no way to export Gemfury's private signing key, so this is a new key, not a continuation of the existing one). Cloudsmith also supports per-repository [custom domains](https://help.cloudsmith.io/docs/custom-domains), which is how a future `pkg.ddev.com` cutover would work, but Cloudsmith's own URL paths (`/deb/`, `/rpm/`) differ from Gemfury's (`/apt/`, `/yum/`), so matching today's exact URLs isn't automatic and needs a decision when cutover is planned.
 
 ## Testing Release Creation
 
