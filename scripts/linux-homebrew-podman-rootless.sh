@@ -25,14 +25,6 @@
 # Only the install path assumes Homebrew.
 #
 # Environment variables:
-#   PODMAN_DNS_SERVERS           Comma-separated DNS servers to force for
-#                                containers, e.g. "1.1.1.1,1.0.0.1". Empty
-#                                (default) leaves Podman's DNS handling alone.
-#   PODMAN_USE_FUSE_OVERLAYFS    "true" to force the fuse-overlayfs mount
-#                                program. Default "false", which lets Podman
-#                                use native rootless overlay. Native overlay
-#                                is available on kernel 5.13+ and is faster;
-#                                fuse-overlayfs disables native overlay diff.
 #   PODMAN_SKIP_SMOKE_TEST       "true" to skip the checks that run a real
 #                                container: the smoke test, the image-load
 #                                probe and the healthcheck probe. Those are the
@@ -44,8 +36,6 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-PODMAN_DNS_SERVERS="${PODMAN_DNS_SERVERS:-}"
-PODMAN_USE_FUSE_OVERLAYFS="${PODMAN_USE_FUSE_OVERLAYFS:-false}"
 PODMAN_SKIP_SMOKE_TEST="${PODMAN_SKIP_SMOKE_TEST:-false}"
 
 BREW_PREFIX="${BREW_PREFIX:-/home/linuxbrew/.linuxbrew}"
@@ -222,11 +212,6 @@ do_install() {
   step "Protecting uidmap from a future 'apt-get autoremove' (sudo)"
   sudo apt-mark manual uidmap 2>/dev/null || true
 
-  if [ "${PODMAN_USE_FUSE_OVERLAYFS}" = "true" ]; then
-    step "Installing fuse-overlayfs (sudo)"
-    sudo apt-get install -y fuse-overlayfs
-  fi
-
   brew install podman >/dev/null
   hash -r
 
@@ -349,11 +334,6 @@ EOF
   mkdir -p ~/.config/containers/containers.conf.d
   {
     echo '[containers]'
-    if [ -n "${PODMAN_DNS_SERVERS}" ]; then
-      printf 'dns_servers = ['
-      printf '"%s", ' ${PODMAN_DNS_SERVERS//,/ } | sed 's/, $//'
-      printf ']\n'
-    fi
     echo 'log_driver = "k8s-file"'
     echo
     echo '[engine]'
@@ -390,23 +370,14 @@ EOF
   # distro netavark of the wrong major version (or find no netavark at all).
   # See bundled_helper_path() above.
 
-  # https://github.com/containers/podman/blob/main/docs/tutorials/performance.md#choosing-a-storage-driver
   mkdir -p ~/.config/containers
-  if [ "${PODMAN_USE_FUSE_OVERLAYFS}" = "true" ]; then
-    cat > ~/.config/containers/storage.conf <<'EOF'
-[storage]
-driver = "overlay"
-[storage.options.overlay]
-mount_program = "/usr/bin/fuse-overlayfs"
-EOF
-  else
-    # Native rootless overlay (kernel 5.13+) keeps "Native Overlay Diff" on,
-    # which fuse-overlayfs turns off.
-    cat > ~/.config/containers/storage.conf <<'EOF'
+  # Native rootless overlay (kernel 5.13+) keeps "Native Overlay Diff" on,
+  # which fuse-overlayfs turns off.
+  # https://github.com/containers/podman/blob/main/docs/tutorials/performance.md#choosing-a-storage-driver
+  cat > ~/.config/containers/storage.conf <<'EOF'
 [storage]
 driver = "overlay"
 EOF
-  fi
 
   # Homebrew ships a permissive default policy.json under its own prefix, but
   # nothing links it into any path podman actually searches (~/.config/containers,

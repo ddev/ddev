@@ -503,25 +503,6 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
         `overlay true` means you're already on the fast path — do nothing. If it prints `overlay false`, something has configured the `fuse-overlayfs` mount program, which *disables* native overlay diff; remove `mount_program` from `~/.config/containers/storage.conf` to get the faster native path back.
 
-        Only on older kernels that lack native rootless overlay should you install `fuse-overlayfs` and point Podman at it:
-
-        ```bash
-        # Ubuntu/Debian
-        sudo apt-get update && sudo apt-get install fuse-overlayfs
-        # Fedora
-        sudo dnf install --refresh fuse-overlayfs
-        ```
-
-        ```bash
-        mkdir -p ~/.config/containers
-        cat << 'EOF' > ~/.config/containers/storage.conf
-        [storage]
-        driver = "overlay"
-        [storage.options.overlay]
-        mount_program = "/usr/bin/fuse-overlayfs"
-        EOF
-        ```
-
         !!!warning "Existing containers require a reset"
             If you already have Podman containers, images, or volumes, you'll need to reset Podman for the storage change to take effect: `podman system reset`. This removes all existing containers, images, and volumes (similar to `docker system prune -a`).
 
