@@ -346,6 +346,7 @@ disable
 disallowal
 distribution's
 distro
+distro's
 distros
 dns
 dnsmasq
@@ -684,6 +685,7 @@ svg
 symfony
 symlink
 symlinked
+symlinking
 symlinks
 sys
 sysinternals
