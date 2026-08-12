@@ -913,6 +913,19 @@ func RemoveContainersByLabels(labels map[string]string) error {
 	return nil
 }
 
+// addBoundHostPorts collects the non-empty HostPort values from a
+// network.PortMap into portMap.
+func addBoundHostPorts(portMap map[string]bool, m network.PortMap) {
+	for _, portBindings := range m {
+		for _, binding := range portBindings {
+			// Only include ports with a non-empty HostPort
+			if binding.HostPort != "" {
+				portMap[binding.HostPort] = true
+			}
+		}
+	}
+}
+
 // GetBoundHostPorts takes a container pointer and returns an array
 // of exposed ports (and error)
 func GetBoundHostPorts(containerID string) ([]string, error) {
@@ -928,17 +941,14 @@ func GetBoundHostPorts(containerID string) ([]string, error) {
 
 	portMap := map[string]bool{}
 
-	if inspectInfo.Container.HostConfig != nil && inspectInfo.Container.HostConfig.PortBindings != nil {
-		for _, portBindings := range inspectInfo.Container.HostConfig.PortBindings {
-			if len(portBindings) > 0 {
-				for _, binding := range portBindings {
-					// Only include ports with a non-empty HostPort
-					if binding.HostPort != "" {
-						portMap[binding.HostPort] = true
-					}
-				}
-			}
-		}
+	if inspectInfo.Container.HostConfig != nil {
+		addBoundHostPorts(portMap, inspectInfo.Container.HostConfig.PortBindings)
+	}
+	// HostConfig.PortBindings is the binding that was *requested*; providers that
+	// leave it empty on inspect (seen on socktainer/Apple Container) still report
+	// the ports actually bound in NetworkSettings.Ports, so fall back to that.
+	if len(portMap) == 0 && inspectInfo.Container.NetworkSettings != nil {
+		addBoundHostPorts(portMap, inspectInfo.Container.NetworkSettings.Ports)
 	}
 	var ports []string
 	for k := range portMap {
