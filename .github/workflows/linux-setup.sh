@@ -36,7 +36,7 @@ curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg \
 if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
 
   echo "Setting up podman-rootless"
-  "${DDEV_REPO_ROOT}/scripts/linux-homebrew-podman-rootless.sh"
+  "${DDEV_REPO_ROOT}/scripts/linux-podman-rootless.sh" --install-brew
   # brew put podman at a new path; refresh this shell's command hash table.
   hash -r
   echo "Verifying podman-rootless setup"
