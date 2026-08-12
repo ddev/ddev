@@ -13,31 +13,116 @@
 #   - gh, authenticated with access to ddev/ddev
 #   - jq
 #   - cloudsmith-cli (`pipx install cloudsmith-cli` or `pip install cloudsmith-cli`)
-#   - CLOUDSMITH_API_KEY set to a Cloudsmith API token with push access to ORG/REPO
-#
-# Usage: ./.ci-scripts/cloudsmith_backfill.sh [ORG] [REPO] [START_TAG] [END_TAG]
-#   ORG        Cloudsmith organization (default: ddev)
-#   REPO       Cloudsmith repository   (default: ddev-test)
-#   START_TAG  First ddev/ddev release tag to backfill, inclusive (default: v1.24.0)
-#   END_TAG    Last release tag to backfill, inclusive (default: latest stable release)
-#
-# Set DRY_RUN=true to pass --dry-run through to `cloudsmith push` without
-# actually uploading anything, to sanity-check the tag range and file list first.
+#   - CLOUDSMITH_API_KEY set to a Cloudsmith API token with push access to
+#     the target org/repo. Deliberately an environment variable rather than
+#     a flag, so it never ends up in shell history or process listings.
 #
 # Safe to re-run: without --republish, Cloudsmith flags repeat uploads of an
 # already-present version as duplicates rather than erroring destructively, so
 # failures on a re-run are usually just that - check the log before assuming
 # a real problem.
+#
+# Run with --help for usage.
 
 set -o nounset
 set -o pipefail
 
 GH_REPO="ddev/ddev"
-ORG=${1:-ddev}
-REPO=${2:-ddev-test}
-START_TAG=${3:-v1.24.0}
-END_TAG=${4:-}
-DRY_RUN=${DRY_RUN:-false}
+ORG="ddev"
+REPO="ddev-test"
+START_TAG="v1.24.0"
+END_TAG=""
+DRY_RUN=false
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Backfill historical ${GH_REPO} deb/rpm packages (already published as
+GitHub release assets) into a Cloudsmith repository. This is NOT run by
+CI - the "cloudsmiths" goreleaser publisher in .goreleaser.yml handles
+new releases going forward. This script exists to backfill history that
+predates that publisher.
+
+Packages are pushed to the "any-distro/any-version" distribution, same
+as the "cloudsmiths" goreleaser publisher, so they land in the same
+universal repo new releases will use.
+
+Options:
+  -o, --org ORG        Cloudsmith organization (default: ${ORG})
+  -r, --repo REPO      Cloudsmith repository (default: ${REPO})
+  -s, --start-tag TAG  First ${GH_REPO} release tag to backfill, inclusive
+                        (default: ${START_TAG})
+  -e, --end-tag TAG    Last release tag to backfill, inclusive
+                        (default: latest stable release)
+  -n, --dry-run        Pass --dry-run through to \`cloudsmith push\`
+                        without actually uploading anything
+  -h, --help           Show this help and exit
+
+Environment:
+  CLOUDSMITH_API_KEY   Required. Cloudsmith API token with push access
+                        to the target org/repo.
+
+Examples:
+  $(basename "$0")
+  $(basename "$0") --org ddev --repo ddev-test --start-tag v1.24.0 --end-tag v1.24.5
+  CLOUDSMITH_API_KEY=xxx $(basename "$0") --dry-run
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o | --org)
+      [ $# -ge 2 ] || { echo "ERROR: $1 requires a value" >&2; exit 1; }
+      ORG=$2
+      shift 2
+      ;;
+    --org=*)
+      ORG=${1#*=}
+      shift
+      ;;
+    -r | --repo)
+      [ $# -ge 2 ] || { echo "ERROR: $1 requires a value" >&2; exit 1; }
+      REPO=$2
+      shift 2
+      ;;
+    --repo=*)
+      REPO=${1#*=}
+      shift
+      ;;
+    -s | --start-tag)
+      [ $# -ge 2 ] || { echo "ERROR: $1 requires a value" >&2; exit 1; }
+      START_TAG=$2
+      shift 2
+      ;;
+    --start-tag=*)
+      START_TAG=${1#*=}
+      shift
+      ;;
+    -e | --end-tag)
+      [ $# -ge 2 ] || { echo "ERROR: $1 requires a value" >&2; exit 1; }
+      END_TAG=$2
+      shift 2
+      ;;
+    --end-tag=*)
+      END_TAG=${1#*=}
+      shift
+      ;;
+    -n | --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "ERROR: unknown argument '$1'" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
 
 for cmd in gh jq cloudsmith; do
   command -v "${cmd}" >/dev/null 2>&1 || {
