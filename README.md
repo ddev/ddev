@@ -25,13 +25,13 @@
 
 ## Get started
 
-The quickest path is the **[Get Started guide](https://ddev.com/get-started/)**: pick your operating system and it gives you the install commands and your first project, on one page.
+The quickest path is the [Get Started guide](https://ddev.com/get-started/): pick your operating system and it gives you the install commands and your first project, on one page.
 
 If you'd rather read the full instructions:
 
 1. 💻 **Check that DDEV runs where you work:** macOS, Windows 11, WSL2, Linux, and GitHub Codespaces. See the [system requirements](https://docs.ddev.com/en/stable/#system-requirements).
-2. 📥 **[Install a Docker provider and DDEV](https://docs.ddev.com/en/stable/users/install/).**
-3. 🏁 **Follow a [quickstart guide](https://docs.ddev.com/en/stable/users/quickstart/)** for your CMS or framework, then run `ddev start`.
+2. 📥 **Install a Docker provider and DDEV:** follow the [install instructions](https://docs.ddev.com/en/stable/users/install/).
+3. 🏁 **Start your first project:** pick a [quickstart guide](https://docs.ddev.com/en/stable/users/quickstart/) for your CMS or framework, then run `ddev start`.
 
 Want to try DDEV first? Run it in your browser, nothing to install: <a href="https://github.com/codespaces/new/ddev/ddev"><img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces" style="max-width: 100%; height: 20px;"></a>
 
