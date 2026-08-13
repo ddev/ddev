@@ -78,10 +78,13 @@ func TestGetDBVersionFromVolumeScript(t *testing.T) {
 			root := t.TempDir()
 			tt.setup(t, root)
 
+			// The script runs under bash even on Windows (Git Bash), where an
+			// unquoted backslash is an escape character, so paths fed into it
+			// must use forward slashes rather than the native os.PathSeparator.
 			script := getDBVersionFromVolumeScript(
-				filepath.Join(root, "mysql", "db_mariadb_version.txt"),
-				filepath.Join(root, "postgres", "PG_VERSION"),
-				filepath.Join(root, "postgres", "*", "docker", "PG_VERSION"),
+				filepath.ToSlash(filepath.Join(root, "mysql", "db_mariadb_version.txt")),
+				filepath.ToSlash(filepath.Join(root, "postgres", "PG_VERSION")),
+				filepath.ToSlash(filepath.Join(root, "postgres", "*", "docker", "PG_VERSION")),
 			)
 			out, err := exec.Command("bash", "-c", script).CombinedOutput()
 			require.NoError(t, err, "script output: %s", out)
