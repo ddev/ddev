@@ -27,7 +27,7 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 OPTS=-h,-v:,-d:
-LONGOPTS=archs:,db-type:,db-major-version:,db-pinned-version:,docker-args:,docker-org:,tag:,push,help
+LONGOPTS=archs:,db-type:,db-major-version:,db-pinned-version:,ddev-image-tag:,docker-args:,docker-org:,tag:,push,help
 
 ! PARSED=$(getopt --options=$OPTS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -83,6 +83,10 @@ while true; do
     IMAGE_TAG=$2
     shift 2
     ;;
+  --ddev-image-tag)
+    DDEV_IMAGE_TAG=$2
+    shift 2
+    ;;
   --docker-org)
     DOCKER_ORG=$2
     shift 2
@@ -100,6 +104,10 @@ while true; do
 done
 
 set -o nounset
+
+# Defaults to IMAGE_TAG, and differs only for a multi-arch push, where
+# IMAGE_TAG carries an intermediate -<arch> suffix that must not reach the label.
+DDEV_IMAGE_TAG=${DDEV_IMAGE_TAG:-${IMAGE_TAG}}
 
 if [ -z ${DB_PINNED_VERSION:-} ]; then
   DB_PINNED_VERSION=${DB_MAJOR_VERSION}
@@ -135,7 +143,7 @@ fi
 if [ ! -z ${PUSH:-} ]; then
   echo "building/pushing ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
   set -x
-  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" ${tag_directive}  .
+  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="DDEV_IMAGE_TAG=${DDEV_IMAGE_TAG}" ${tag_directive}  .
   set +x
 fi
 
@@ -143,5 +151,5 @@ fi
 set -x
 if [ -z "${PUSH:-}" ]; then
     echo "Loading to local docker ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
-    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" ${tag_directive} .
+    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DDEV_IMAGE_TAG=${DDEV_IMAGE_TAG}" ${tag_directive} .
 fi

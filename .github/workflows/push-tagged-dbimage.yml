@@ -97,7 +97,7 @@ jobs:
           if [ "${{ steps.meta.outputs.multi_arch }}" = "true" ]; then
             version="${version}-${{ matrix.arch }}"
           fi
-          make $target PUSH=true VERSION="${version}"
+          make $target PUSH=true VERSION="${version}" DDEV_IMAGE_TAG="${TAG}"
       - name: Record image information
         id: image-info
         run: |

@@ -5,6 +5,12 @@ export DOCKER_REPO
 
 VERSION := $(shell git describe --tags --always --dirty)
 
+# Value for the com.ddev.image-tag label. Separate from VERSION because a
+# multi-arch push builds each arch under an intermediate `<tag>-<arch>` tag that
+# is combined into the manifest and then deleted; the label has to record the
+# tag people actually pull.
+DDEV_IMAGE_TAG ?= $(VERSION)
+
 .PHONY: build clean test
 
 CURRENT_ARCH=$(shell ../get_arch.sh)
@@ -70,7 +76,7 @@ $(BUILD_TARGETS) $(SINGLE_ARCH_TARGETS):
 	    ARCHS="linux/$${ARCH}"; \
 	    ;; \
 	esac; \
-	cmd="./build_image.sh --db-type=$${DB_TYPE} --db-major-version=$${DB_MAJOR_VERSION} --archs=$${ARCHS} --tag=$(VERSION) --docker-org=$(DOCKER_ORG) --docker-args=$(DOCKER_ARGS)" && \
+	cmd="./build_image.sh --db-type=$${DB_TYPE} --db-major-version=$${DB_MAJOR_VERSION} --archs=$${ARCHS} --tag=$(VERSION) --ddev-image-tag=$(DDEV_IMAGE_TAG) --docker-org=$(DOCKER_ORG) --docker-args=$(DOCKER_ARGS)" && \
 	if [ ! -z $${PUSH} ]; then cmd="$$cmd --push"; fi && \
 	if [ ! -z $${DB_PINNED_VERSION} ]; then cmd="$$cmd --db-pinned-version=$${DB_PINNED_VERSION}"; fi && \
 	echo $${cmd} && \

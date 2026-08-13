@@ -8,6 +8,25 @@ import (
 	"github.com/moby/moby/client"
 )
 
+// ImageLabel returns the value of a label on a local image. It returns an
+// empty string (and no error) when the image has no such label, and an error
+// only when the image can't be inspected at all, for example because it hasn't
+// been pulled yet.
+func ImageLabel(imageName string, label string) (string, error) {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return "", err
+	}
+	inspect, err := apiClient.ImageInspect(ctx, imageName)
+	if err != nil {
+		return "", err
+	}
+	if inspect.Config == nil {
+		return "", nil
+	}
+	return inspect.Config.Labels[label], nil
+}
+
 // ImageExistsLocally determines if an image is available locally.
 func ImageExistsLocally(imageName string) (bool, error) {
 	ctx, apiClient, err := GetDockerClient()
