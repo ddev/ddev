@@ -147,41 +147,75 @@ of frequency:
   line-ending width. `pkg/ddevapp/snapshot.go`, `pkg/ddevapp/addons.go`, and
   `pkg/nodeps/wsl.go` have the established pattern.
 
-Neither mistake fails on the platform where the change is written and
-tested. Both fail only later, in the Windows CI job or on a Windows user's
-machine, at which point the original diff is old news and the failure looks
-unrelated. When a change builds a path or parses text with positional
-assumptions, check it against both rules before moving on — passing tests
-on macOS/Linux is not evidence it works on Windows.
+Neither shows up on the machine where the change is written, so when a change
+builds a host path or parses text by offset, check it against these rules
+before moving on. Passing tests on macOS/Linux is not evidence either way.
 
 #### Comments
 
-Keep comments short enough that a reviewer skimming the diff does not feel
-compelled to stop and parse them — that feeling is the failure mode, not a
-matter of taste. A comment earns its place only by saying something the code
-does not already say — why a directive is ordered that way, why a workaround
-exists, a non-obvious consequence.
+If a reviewer skimming the diff stops to parse your comment, it is too long.
+A comment earns its place only by saying something the code does not already
+say — why a directive is ordered that way, why a workaround exists, a
+non-obvious consequence.
+
+Budget: **three lines** for a comment inside a function, **eight** for a doc
+comment on an exported identifier. Past that, the comment is carrying
+rationale that belongs in the commit message or PR description.
 
 - Do not restate the code, the function name, or the config directive below it
 - Do not explain standard behavior of the language, webserver, or tooling
-- One short paragraph, one to three lines, full stop — not "usually", always.
-  No blank line inside a comment block: a second paragraph means the comment
-  is doing too much. Cut it to the one sentence that matters, or drop the
-  rest — a commit message or PR description is where extended rationale
-  belongs, not the source file
 - Do not repeat the same explanation at more than one call site, even within
   a single file. If two functions share a reason, put it in one place (a doc
-  comment on the shared helper or constant) and let the other site rely on
-  it instead of restating it
+  comment on the shared helper or constant) and let the other site point to it
 - Never re-describe in comments what a linked issue or commit message already covers
 - Test doc comments: the test name plus its assertions already say what is
   being tested. Comment only what is not obvious from those — a non-obvious
   setup step, or why the test skips under some condition
 
-Before finishing a change, reread every comment you just wrote or edited
-against these rules and cut anything that fails, the same way you'd fix a
-lint error before considering the change done — these have been ignored in
-past PRs even though they were already written down.
+Blank lines inside a doc comment are fine when it documents an API for its
+callers, and are the normal way to keep a long one readable. They are not a
+license to exceed the budget.
+
+Before finishing a change, reread every comment you wrote or edited and cut
+anything that fails these rules.
+
+##### Example
+
+Too long — three paragraphs of background where one sentence and a pointer
+would do:
+
+```go
+// RouterPortSubstitutionsLabel is the name of a Docker label set on the
+// ddev-router container recording which ephemeral host port was substituted
+// for each standard (proposed) router port, in the form "80=33000,443=33001".
+// The router binds ephemeral substitutes as <port>:<port>, so without this
+// label the container carries no trace of which standard port an ephemeral
+// port stands in for. Storing the record on the router container gives it
+// exactly the router's lifetime: it survives across ddev invocations and
+// disappears when the router is recreated or removed.
+//
+// It closes a race: when a standard port (say 80) is busy at router creation
+// time, the router is created bound to an ephemeral substitute. If the
+// original occupant of port 80 then goes away, a later project would see
+// port 80 as free and expect the router to bind it directly - a port the
+// running router does not have - forcing an unnecessary router recreation.
+// See GetAvailableRouterPort().
+```
+
+Right — what it holds, the one fact that isn't obvious, and who to read next:
+
+```go
+// RouterPortSubstitutionsLabel records which ephemeral port stands in for
+// which standard router port, as "80=33000,443=33001".
+//
+// The router binds ephemeral substitutes as <port>:<port>, so nothing else on
+// the container says that 33000 is really port 80. Used by
+// GetAvailableRouterPort() to keep a substitute after the process occupying
+// the standard port goes away.
+```
+
+The race, the reasoning, and the alternatives considered belong in the commit
+message, where they are searchable and don't age into the source file.
 
 ### English Language Usage
 
