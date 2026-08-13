@@ -43,6 +43,14 @@ func TestLocalfilePull(t *testing.T) {
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal11
 	app.Docroot = "web"
+	// localfile.yaml.example uses db_import_command and files_import_command, so this
+	// verifies the import hooks fire for custom import commands, not just for the built-in importers.
+	app.Hooks = map[string][]ddevapp.YAMLTask{
+		"pre-import-db":     {{"exec-host": "touch hello-pre-import-db-" + app.Name}},
+		"post-import-db":    {{"exec-host": "touch hello-post-import-db-" + app.Name}},
+		"pre-import-files":  {{"exec-host": "touch hello-pre-import-files-" + app.Name}},
+		"post-import-files": {{"exec-host": "touch hello-post-import-files-" + app.Name}},
+	}
 	err = app.Stop(true, false)
 	require.NoError(t, err)
 	err = app.WriteConfig()
@@ -82,10 +90,18 @@ func TestLocalfilePull(t *testing.T) {
 
 	err = app.Start()
 	require.NoError(t, err)
+	// localfile.yaml has a db_import_command and no db_pull_command, which must not warn.
+	getWarnings := util.CaptureUserErr()
 	err = app.Pull(provider, false, false, false)
+	warnings := getWarnings()
 	require.NoError(t, err)
+	t.Logf("warnings during pull: %s", warnings)
+	require.NotContains(t, warnings, "No db_pull_command provided")
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "docs/developers/building-contributing.md"))
+	for _, hook := range []string{"pre-import-db", "post-import-db", "pre-import-files", "post-import-files"} {
+		require.FileExists(t, filepath.Join(app.GetAppRoot(), "hello-"+hook+"-"+app.Name), "%s hook did not run", hook)
+	}
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd:     fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s -N`, app.GetDBClientCommand()),
 		Service: "db",
