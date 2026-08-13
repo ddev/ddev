@@ -127,18 +127,61 @@ owns its file and won't be touched.
 - Focus on surgical, minimal changes that maintain compatibility
 - Tests should prefer `require` over `assert`
 
+#### Windows Compatibility
+
+The two most common ways Claude-written Go code breaks on Windows, in order
+of frequency:
+
+- **`path` vs `path/filepath`.** Use `filepath` for anything that touches the
+  host filesystem — file paths, directory listings, anything passed to
+  `os.*`. It uses the host's separator. Use `path` only for things that are
+  always forward-slash regardless of host OS: paths inside a Docker
+  container, URLs, embedded/import paths. Using `path` (or manual `"/"`
+  joins) for a host path works fine on macOS/Linux and silently produces a
+  wrong path on Windows.
+- **Line endings.** Don't assume `\n`-only line endings when parsing command
+  output, file contents, or config values — anything written or edited on
+  Windows, or produced by a Windows tool, can be CRLF. Trim `\r` explicitly
+  (`strings.Trim(s, "\r\n")`, not just `"\n"`), and don't hardcode byte/rune
+  offsets, split counts, or substring lengths that assume a fixed
+  line-ending width. `pkg/ddevapp/snapshot.go`, `pkg/ddevapp/addons.go`, and
+  `pkg/nodeps/wsl.go` have the established pattern.
+
+Neither mistake fails on the platform where the change is written and
+tested. Both fail only later, in the Windows CI job or on a Windows user's
+machine, at which point the original diff is old news and the failure looks
+unrelated. When a change builds a path or parses text with positional
+assumptions, check it against both rules before moving on — passing tests
+on macOS/Linux is not evidence it works on Windows.
+
 #### Comments
 
-Keep comments short. A comment earns its place only by saying something the code
+Keep comments short enough that a reviewer skimming the diff does not feel
+compelled to stop and parse them — that feeling is the failure mode, not a
+matter of taste. A comment earns its place only by saying something the code
 does not already say — why a directive is ordered that way, why a workaround
 exists, a non-obvious consequence.
 
 - Do not restate the code, the function name, or the config directive below it
 - Do not explain standard behavior of the language, webserver, or tooling
-- Do not write multi-paragraph rationale essays; one to three lines is usually enough
-- Do not repeat the same explanation in several files — explain it once and point
-  to that file
+- One short paragraph, one to three lines, full stop — not "usually", always.
+  No blank line inside a comment block: a second paragraph means the comment
+  is doing too much. Cut it to the one sentence that matters, or drop the
+  rest — a commit message or PR description is where extended rationale
+  belongs, not the source file
+- Do not repeat the same explanation at more than one call site, even within
+  a single file. If two functions share a reason, put it in one place (a doc
+  comment on the shared helper or constant) and let the other site rely on
+  it instead of restating it
 - Never re-describe in comments what a linked issue or commit message already covers
+- Test doc comments: the test name plus its assertions already say what is
+  being tested. Comment only what is not obvious from those — a non-obvious
+  setup step, or why the test skips under some condition
+
+Before finishing a change, reread every comment you just wrote or edited
+against these rules and cut anything that fails, the same way you'd fix a
+lint error before considering the change done — these have been ignored in
+past PRs even though they were already written down.
 
 ### English Language Usage
 
