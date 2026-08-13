@@ -43,14 +43,14 @@ func (app *DdevApp) GetExistingDBType() (string, error) {
 func getDBVersionFromVolumeScript(mariadbVersionFile, postgresVersionFile, postgresVersionGlob string) string {
 	return fmt.Sprintf(`
 		# Check MySQL/MariaDB version file
-		if [ -f %[1]s ]; then
-			cat %[1]s
+		if [ -f "%[1]s" ]; then
+			cat "%[1]s"
 			exit 0
 		fi
 
 		# Check PostgreSQL version file (pre-18 location)
-		if [ -f %[2]s ]; then
-			cat %[2]s
+		if [ -f "%[2]s" ]; then
+			cat "%[2]s"
 			exit 0
 		fi
 
