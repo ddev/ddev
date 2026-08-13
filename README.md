@@ -91,7 +91,7 @@ DDEV is free and open source, maintained by the nonprofit [DDEV Foundation](http
 
 ## In-kind sponsors
 
-DDEV depends on products and services provided free of charge by the companies below.
+DDEV depends on products and services provided free of charge by the generous companies below. Thanks!
 
 | Sponsor | Contribution |
 | ------- | ------------ |
