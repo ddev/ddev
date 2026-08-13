@@ -15,7 +15,7 @@
 [![Docs](https://img.shields.io/badge/docs-docs.ddev.com-blue)](https://docs.ddev.com)
 [![Add-on registry](https://img.shields.io/badge/add--ons-addons.ddev.com-blue)](https://addons.ddev.com)
 [![Discord](https://img.shields.io/discord/664580571770388500?logo=discord&logoColor=%23fff&label=Discord&link=https%3A%2F%2Fddev.com%2Fs%2Fdiscord)](https://ddev.com/s/discord)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE) [![Package hosting by Cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.com)
 
 [**Get Started**](https://ddev.com/get-started/) · [**Documentation**](https://docs.ddev.com) · [**Quickstarts**](https://docs.ddev.com/en/stable/users/quickstart/) · [**Add-on Registry**](https://addons.ddev.com) · [**Contributing**](CONTRIBUTING.md) · [**Sponsor**](https://ddev.com/sponsor)
 
