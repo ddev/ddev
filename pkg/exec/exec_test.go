@@ -1,6 +1,8 @@
 package exec_test
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -102,5 +104,70 @@ func TestRunHostCommandWithOptions(t *testing.T) {
 		}, "-c", "cat")
 		require.NoError(t, err)
 		assert.Equal(t, "", output)
+	})
+}
+
+// captureStdErr is CaptureStdOut's os.Stderr counterpart; pkg/util has no
+// public equivalent since nothing else needs one.
+func captureStdErr() func() string {
+	old := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	return func() string {
+		outC := make(chan string)
+		go func() {
+			var buf bytes.Buffer
+			_, err := io.Copy(&buf, r)
+			util.CheckErr(err)
+			outC <- buf.String()
+		}()
+		util.CheckClose(w)
+		os.Stderr = old
+		return <-outC
+	}
+}
+
+// TestRunInteractiveCommandWithCapture verifies that the command's output both
+// reaches the terminal and comes back to the caller, unmodified.
+func TestRunInteractiveCommandWithCapture(t *testing.T) {
+	bashPath := util.FindBashPath()
+
+	t.Run("captures stdout and stderr, keeping them separate on the terminal", func(t *testing.T) {
+		restoreStdout := util.CaptureStdOut()
+		restoreStderr := captureStdErr()
+		captured, err := exec.RunInteractiveCommandWithCapture(bashPath, []string{"-c", `echo to-stdout; echo to-stderr >&2`})
+		printedStdout := restoreStdout()
+		printedStderr := restoreStderr()
+		require.NoError(t, err)
+		require.Contains(t, captured, "to-stdout")
+		require.Contains(t, captured, "to-stderr")
+		// The user still sees it happen, on the same stream as always;
+		// capturing is not a substitute for that, and must not merge streams.
+		require.Contains(t, printedStdout, "to-stdout")
+		require.NotContains(t, printedStdout, "to-stderr")
+		require.Contains(t, printedStderr, "to-stderr")
+	})
+
+	t.Run("returns output along with the error", func(t *testing.T) {
+		restoreStdout := util.CaptureStdOut()
+		restoreStderr := captureStdErr()
+		captured, err := exec.RunInteractiveCommandWithCapture(bashPath, []string{"-c", `echo why-it-failed >&2; exit 3`})
+		_ = restoreStdout()
+		_ = restoreStderr()
+		require.Error(t, err)
+		require.Contains(t, captured, "why-it-failed")
+	})
+
+	t.Run("passes bytes through unchanged", func(t *testing.T) {
+		restoreStdout := util.CaptureStdOut()
+		restoreStderr := captureStdErr()
+		captured, err := exec.RunInteractiveCommandWithCapture(bashPath, []string{"-c", `printf '\033[31mred\033[0m\rprogress'`})
+		_ = restoreStdout()
+		_ = restoreStderr()
+		require.NoError(t, err)
+		// Unlike RunInteractiveCommandWithOutput(), colors and carriage returns survive.
+		// stdout-only command: captured is "<stdout>\n<empty stderr>".
+		require.Equal(t, "\x1b[31mred\x1b[0m\rprogress\n", captured)
 	})
 }
