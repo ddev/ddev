@@ -32,19 +32,19 @@ var BaseDBTag = "20260808_weitzman_ddev_version_label"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "20260716_stasadev_webserver_403_message"
+var TraefikRouterTag = "20260808_weitzman_ddev_version_label"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.25.3"
+var SSHAuthTag = "20260808_weitzman_ddev_version_label"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "v1.25.3"
+var XhguiTag = "20260808_weitzman_ddev_version_label"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"
