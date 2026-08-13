@@ -123,7 +123,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
 
     # Install DDEV
-    sudo dnf install --refresh ddev
+    sudo dnf install -y --refresh ddev
 
     # One-time initialization of mkcert
     mkcert -install
@@ -138,7 +138,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         set -euo pipefail
         sudo true
         printf "[ddev]\nname=ddev\nbaseurl=https://dl.cloudsmith.io/public/ddev/ddev/rpm/any-distro/any-version/\$basearch\ngpgkey=https://dl.cloudsmith.io/public/ddev/ddev/gpg.key\ngpgcheck=1\nrepo_gpgcheck=1\nenabled=1\n" | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
-        sudo dnf install --refresh ddev
+        sudo dnf install -y --refresh ddev
         mkcert -install
         SCRIPT
         ```
@@ -172,7 +172,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         gpgcheck=1
         repo_gpgcheck=1
         enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev-test.repo >/dev/null
-        sudo dnf install --refresh ddev
+        sudo dnf install -y --refresh ddev
         ```
 
     ### Arch Linux
