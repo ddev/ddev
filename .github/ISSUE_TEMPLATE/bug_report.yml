@@ -2,6 +2,13 @@ name: 🐞 Bug report or Support Request
 description: Create a report to help us improve.
 labels: [bug]
 body:
+  - type: textarea
+    attributes:
+      label: Short summary (TL;DR)
+      description: One or two sentences describing the problem, so anyone reading can tell at a glance what this is about. Details go in the sections below.
+      placeholder: "`ddev start` fails with a port conflict after upgrading, on macOS with OrbStack."
+    validations:
+      required: true
   - type: checkboxes
     attributes:
       label: Preliminary checklist

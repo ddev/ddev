@@ -2,6 +2,13 @@ name: 🚀 Feature request
 description: Suggest an idea for this project.
 labels: [enhancement]
 body:
+  - type: textarea
+    attributes:
+      label: Short summary (TL;DR)
+      description: One or two sentences describing what you want, so anyone reading can tell at a glance what this is about. Details go in the sections below.
+      placeholder: "Add a `ddev config --router-http-port` flag so projects can pick their own router port without editing config.yaml."
+    validations:
+      required: true
   - type: checkboxes
     attributes:
       label: Is there an existing issue for this?

@@ -321,11 +321,20 @@ a reviewer who will read the diff anyway:
 
 In the initial commit for a PR, use the format in  `.github/PULL_REQUEST_TEMPLATE.md` with these required sections:
 
+- **Short Summary (TL;DR):** One or two sentences, first, always
 - **The Issue:** Reference issue with `#<number>`
 - **How This PR Solves The Issue:** Technical explanation
 - **Manual Testing Instructions:** Step-by-step testing guide
 - **Automated Testing Overview:** Test coverage explanation
 - **Release/Deployment Notes:** Impact assessment
+
+The TL;DR is what a reviewer reads before deciding how closely to read the
+rest, so write it for someone who has not seen the issue. Say what changes and
+why in plain terms; skip the mechanism, which the next two sections cover. If
+it runs past two sentences, it has stopped being a summary.
+
+The same applies to issues you file: lead with a one-or-two-sentence summary,
+matching the "Short summary (TL;DR)" field in `.github/ISSUE_TEMPLATE/`.
 
 ### Creating Commits with PR Template
 
@@ -334,6 +343,10 @@ When creating the initial commit for a PR, use `git commit -F -` to read from st
 ```bash
 cat <<'EOF' | git commit -F -
 <type>: <description>
+
+## Short Summary (TL;DR)
+
+[One or two sentences: what changes and why]
 
 ## The Issue
 
@@ -369,6 +382,10 @@ When creating or editing PRs with `gh pr create` or `gh pr edit`, use the same t
 
 ```bash
 cat > ~/tmp/pr_body.md <<'EOF'
+## Short Summary (TL;DR)
+
+[One or two sentences: what changes and why]
+
 ## The Issue
 
 - Fixes #<issue_number>
