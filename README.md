@@ -25,11 +25,15 @@
 
 ## Get started
 
-1. 💻 **Check that DDEV runs where you work:** macOS, Windows 11, WSL2, Linux, and [GitHub Codespaces](https://github.com/codespaces). See the [system requirements](https://docs.ddev.com/en/stable/#system-requirements).
+The quickest path is the **[Get Started guide](https://ddev.com/get-started/)**: pick your operating system and it gives you the install commands and your first project, on one page.
+
+If you'd rather read the full instructions:
+
+1. 💻 **Check that DDEV runs where you work:** macOS, Windows 11, WSL2, Linux, and GitHub Codespaces. See the [system requirements](https://docs.ddev.com/en/stable/#system-requirements).
 2. 📥 **[Install a Docker provider and DDEV](https://docs.ddev.com/en/stable/users/install/).**
 3. 🏁 **Follow a [quickstart guide](https://docs.ddev.com/en/stable/users/quickstart/)** for your CMS or framework, then run `ddev start`.
 
-[ddev.com/get-started](https://ddev.com/get-started/) is the up-to-date getting-started guide. Or try DDEV without installing anything: <a href="https://github.com/codespaces/new/ddev/ddev"><img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces" style="max-width: 100%; height: 20px;"></a>
+Want to try DDEV first? Run it in your browser, nothing to install: <a href="https://github.com/codespaces/new/ddev/ddev"><img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces" style="max-width: 100%; height: 20px;"></a>
 
 ## Why DDEV?
 
@@ -84,6 +88,16 @@ DDEV is free and open source, maintained by the nonprofit [DDEV Foundation](http
 [![Sponsor DDEV](https://img.shields.io/badge/Sponsor-DDEV-blue?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://ddev.com/sponsor)
 
 </div>
+
+## In-kind sponsors
+
+DDEV depends on products and services provided free of charge by the companies below.
+
+| Sponsor | Contribution |
+| ------- | ------------ |
+| <a href="https://cloudsmith.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/logos/cloudsmith-dark.svg"><img alt="Cloudsmith" src="https://ddev.com/logos/cloudsmith.svg" height="40"></picture></a> | Linux package repository hosting is graciously provided by [Cloudsmith](https://cloudsmith.com). Cloudsmith is the only fully hosted, cloud-native, universal package management solution, that enables your organization to create, store and share packages in any format, to any place, with total confidence. |
+| <a href="https://www.jetbrains.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/logos/jetbrains-dark.svg"><img alt="JetBrains" src="https://ddev.com/logos/jetbrains.svg" height="40"></picture></a> | [JetBrains](https://www.jetbrains.com) provides DDEV maintainers with licenses for its IDEs. |
+| <a href="https://www.macstadium.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://ddev.com/logos/dark-mac-stadium.svg"><img alt="MacStadium" src="https://ddev.com/logos/mac-stadium.svg" height="40"></picture></a> | [MacStadium](https://www.macstadium.com) provides a cloud-hosted Apple silicon machine that DDEV uses for testing. |
 
 ## License
 
