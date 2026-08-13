@@ -42,19 +42,19 @@ body:
       required: false
   - type: textarea
     attributes:
-      label: Expected Behavior
-      description: What did you expect to happen?
-    validations:
-      required: true
-  - type: textarea
-    attributes:
       label: Actual Behavior
-      description: What actually happened instead?
+      description: What went wrong?
     validations:
       required: true
   - type: textarea
     attributes:
-      label: Steps To Reproduce
+      label: Expected Behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction Steps
       description: Specific steps to reproduce the behavior.
       placeholder: |
         1. In this environment... 
