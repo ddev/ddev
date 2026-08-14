@@ -240,7 +240,7 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test that the database row was added
-	readQuery := fmt.Sprintf(`acli -n ssh %s 'echo "SELECT title FROM %s WHERE title=\"%s\";" | docroot/vendor/bin/drush  sql-cli --extra=-N'`, acquiaPushTestEnvironment, t.Name(), tval)
+	readQuery := fmt.Sprintf(`acli -n ssh %s 'echo "SELECT title FROM %s WHERE title=\"%s\";" | drush sql-cli --extra=-N'`, acquiaPushTestEnvironment, t.Name(), tval)
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: readQuery,
 	})
