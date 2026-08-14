@@ -48,6 +48,8 @@ jobs:
 
           # repo_suffix|hash paths|make dir|make target|arch-suffixed target?|extra repo suffixes
           # Keep in sync with Makefile's autotag-images target.
+          # TODO(#8609): only the default db variant (mariadb_11.8) is listed
+          # here - see the TODO on autotag-images in the top-level Makefile.
           CONFIGS=(
             'ddev-webserver|containers/ddev-webserver containers/containers_shared.mk|ddev-webserver|images|false|ddev-webserver-prod'
             'ddev-traefik-router|containers/ddev-traefik-router containers/containers_shared.mk|ddev-traefik-router|container|false|'
