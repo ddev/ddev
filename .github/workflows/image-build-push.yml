@@ -27,8 +27,9 @@ permissions:
 
 jobs:
   placeholder:
-    name: Placeholder (see #8609)
+    name: "Placeholder (see #8609)"
     runs-on: ubuntu-24.04
     steps:
       - name: Do nothing
-        run: echo "Placeholder for #8609 phase 2 - no-op until the real workflow lands."
+        run: |
+          echo "Placeholder for #8609 phase 2 - no-op until the real workflow lands."
