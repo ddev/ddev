@@ -1,0 +1,34 @@
+name: Image build
+defaults:
+  run:
+    shell: bash
+
+# Placeholder for #8609 phase 2 (fork-safe automatic image build/push). This
+# do-nothing stub exists only so the workflow name/triggers are registered on
+# the default branch before the real detect/approval/build logic lands - see
+# the phase 2 PR, which will replace this file's contents via rebase.
+# image-push.yml's `workflow_run` trigger only fires for a listener that
+# exists on the default branch, so this stub unblocks testing that dependency
+# ahead of the full PR.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "containers/**"
+      - ".github/workflows/image-build-push.yml"
+  push:
+    branches: [main]
+    paths:
+      - "containers/**"
+      - ".github/workflows/image-build-push.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  placeholder:
+    name: Placeholder (see #8609)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Do nothing
+        run: echo "Placeholder for #8609 phase 2 - no-op until the real workflow lands."
