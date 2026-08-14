@@ -98,6 +98,12 @@ jobs:
             ARCHES_BY_KEY["$key"]="${ARCHES_BY_KEY[$key]:-} ${arch}"
           done
 
+          # Docker Hub token for deleting the intermediary per-arch tags below,
+          # same cleanup push-tagged-image.yml/push-tagged-dbimage.yml already do.
+          DOCKERHUB_JWT="$(curl -s -H "Content-Type: application/json" -X POST \
+            -d '{"username":"'"${{ vars.DOCKERHUB_USERNAME }}"'","password":"'"${DOCKERHUB_TOKEN}"'"}' \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)"
+
           PUSHED_SUMMARY=""
           for key in "${!TAG_BY_KEY[@]}"; do
             tag="${TAG_BY_KEY[$key]}"
@@ -109,6 +115,12 @@ jobs:
               done
               docker buildx imagetools create -t "${repo}:${tag}" "${arch_tags[@]}"
               PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${tag}\`"$'\n'
+
+              for arch in ${ARCHES_BY_KEY[$key]}; do
+                echo "Removing intermediary tag ${repo}:${tag}-${arch}"
+                curl -s -X DELETE -H "Authorization: JWT ${DOCKERHUB_JWT}" \
+                  "https://hub.docker.com/v2/repositories/${repo}/tags/${tag}-${arch}/" >/dev/null || true
+              done
             done <<< "${REPOS_BY_KEY[$key]}"
           done
 
