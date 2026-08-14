@@ -73,16 +73,8 @@ ddev delete --all`,
 			// Delete database
 			// Delete any other associated volumes
 
-			// We do the snapshot UNLESS omit-snapshot is set; the project may have to be
-			// started to do the snapshot.
-			status, _ := project.SiteStatus()
-			if status != ddevapp.SiteRunning && !deleteOmitSnapshot {
-				util.Warning("project must be started to do the snapshot")
-				err = project.Start()
-				if err != nil {
-					util.Failed("Failed to start project %s: %v", project.Name, err)
-				}
-			}
+			// Stop() does the snapshot UNLESS omit-snapshot is set, starting the
+			// project first if it has to.
 			if err := project.Stop(true, !deleteOmitSnapshot); err != nil {
 				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
 			}

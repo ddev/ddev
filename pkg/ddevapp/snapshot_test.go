@@ -337,7 +337,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// Sleep to let sync happen if needed (M1 failure)
 	time.Sleep(2 * time.Second)
 
-	err = app.RestoreSnapshot(tester1Snapshot)
+	err = app.RestoreSnapshot(tester1Snapshot, false)
 	assert.NoError(err)
 
 	assert.FileExists("hello-pre-restore-snapshot-" + app.Name)
@@ -354,7 +354,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(stdout, "d7 tester test 1 has 1 node")
 
-	err = app.RestoreSnapshot(tester2Snapshot)
+	err = app.RestoreSnapshot(tester2Snapshot, false)
 	assert.NoError(err)
 
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -371,7 +371,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = archive.Untar(oldSnapshotTarball, app.GetConfigPath("db_snapshots"), "")
 	assert.NoError(err)
 
-	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1")
+	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1", false)
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")
 
@@ -431,7 +431,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		})
 		assert.NoError(err)
 
-		err = app.RestoreSnapshot(dirSnapshot)
+		err = app.RestoreSnapshot(dirSnapshot, false)
 		if err != nil {
 			assert.NoError(err, "Failed to restore dirSnapshot '%s': %v, continuing", dirSnapshot, err)
 			continue

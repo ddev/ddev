@@ -44,7 +44,14 @@ fi
 # otherwise, fail and abort startup
 if [ $# = "2" ] && [ "${1:-}" = "restore_snapshot" ] ; then
   snapshot_basename=${2:-nothingthere}
-  snapshot="/mnt/snapshots/${snapshot_basename}"
+  # An absolute path lets ddev point at a snapshot mounted somewhere other than
+  # /mnt/snapshots, as `ddev start --seed-snapshot` does with a file outside the
+  # project.
+  case "${snapshot_basename}" in
+    /*) snapshot="${snapshot_basename}" ;;
+    *)  snapshot="/mnt/snapshots/${snapshot_basename}" ;;
+  esac
+  snapshot_basename=$(basename "${snapshot_basename}")
   # If a compressed snapshot file is passed in, decompress and extract stream
   if [ -f "$snapshot" ]; then
     echo "Restoring from snapshot file $snapshot"
@@ -144,14 +151,15 @@ fi
 # If mariadb has not been initialized, copy in the base image from a base_db
 # seed or from a provided $snapshot_dir. The base_db seed is looked up in
 # priority order:
-#   1. /mnt/snapshots/initializer-<db_type>_<db_version>.*  - project-supplied,
-#      living alongside regular snapshots in .ddev/db_snapshots
-#   2. /mysqlbase/custom/base_db.*                          - baked into a derived image
-#   3. /mysqlbase/base_db.*                                 - the stock DDEV starter database
+#   1. /mysqlbase/custom/base_db.*  - baked into a derived image
+#   2. /mysqlbase/base_db.*         - the stock DDEV starter database
 # At each location, a .zst seed is preferred over .gz; .gz only exists at all
 # for db versions (e.g. MariaDB 5.5) whose base image lacks zstd. .mbstream/
 # .xbstream are uncompressed raw backup-tool streams, checked last so an
 # existing compressed seed still wins if one happens to also be present.
+
+# A project-level seed snapshot doesn't appear here: ddev hands it over as a
+# restore_snapshot argument, which works the same way on an empty datadir.
 if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
     # If snapshot_dir is not set, this is a normal startup, so
     # tell healthcheck to wait by touching /tmp/initializing
@@ -164,8 +172,6 @@ if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
 
       snapshot=""
       for candidate in \
-        "/mnt/snapshots/initializer-${server_db_version}.zst" \
-        "/mnt/snapshots/initializer-${server_db_version}.gz" \
         "/mnt/snapshots/initializer-${server_db_version}.mbstream" \
         "/mnt/snapshots/initializer-${server_db_version}.xbstream" \
         "/mysqlbase/custom/base_db.zst" \
@@ -183,7 +189,7 @@ if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
         fi
       done
       if [ -z "${snapshot}" ]; then
-        echo "No base_db seed found in /mnt/snapshots, /mysqlbase/custom, or /mysqlbase"
+        echo "No base_db seed found in /mysqlbase/custom or /mysqlbase"
         exit 102
       fi
       case "${snapshot}" in

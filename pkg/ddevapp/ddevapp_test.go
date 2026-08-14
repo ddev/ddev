@@ -1902,7 +1902,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		})
 		assert.NoError(err)
 
-		err = app.RestoreSnapshot(fullSnapshotName)
+		err = app.RestoreSnapshot(fullSnapshotName, false)
 		assert.NoError(err, "could not restore snapshot %s for %s: %v", fullSnapshotName, dbTypeVersion, err)
 		if err != nil {
 			_ = app.Stop(true, false)
@@ -1958,32 +1958,36 @@ func TestDdevAllDatabases(t *testing.T) {
 		out = strings.Trim(out, "\n\r ")
 		assert.Equal("2", out)
 
-		// base_db "initializer" seeding is only wired up for MariaDB/MySQL
-		// (containers/ddev-dbserver); PostgreSQL uses a different image/entrypoint.
-		// Not supported on the very old, EOL 5.5 versions of either.
-		isVeryOldDB := dbVersion == "5.5"
-		if (dbType == nodeps.MariaDB || dbType == nodeps.MySQL) && !isVeryOldDB {
-			// db currently has the 2-row "users" table from the snapshot restore above.
-			// Snapshotting it as "initializer" and then wiping the db volume and
-			// restarting should restore this same data automatically, ahead of the
-			// normal empty starter database.
-			_, err = app.Snapshot("initializer", false)
-			require.NoError(t, err, "could not create initializer snapshot for %s", dbTypeVersion)
+		// Seeding a fresh database volume from a snapshot, both from the reserved
+		// `seed` name and from an explicitly named one. MariaDB/MySQL 5.5 can't
+		// make the zstd snapshots this relies on.
+		if dbVersion != "5.5" {
+			// db currently has the 2-row "users" table from the snapshot restore
+			// above. Snapshotting it and then wiping the db volume and restarting
+			// should bring the same data back, ahead of the empty starter database.
+			for _, seedName := range []string{ddevapp.SeedSnapshotName, "explicit-seed"} {
+				_, err = app.Snapshot(seedName)
+				require.NoError(t, err, "could not create '%s' snapshot for %s", seedName, dbTypeVersion)
+			}
 
-			err = app.Stop(true, false)
-			require.NoError(t, err)
-			err = app.Start()
-			require.NoError(t, err, "failed to start %s after seeding from initializer snapshot", dbTypeVersion)
+			for _, seedFlag := range []string{"", "explicit-seed"} {
+				err = app.Stop(true, false)
+				require.NoError(t, err)
+				app.SeedSnapshot = seedFlag
+				err = app.Start()
+				require.NoError(t, err, "failed to start %s with --seed-snapshot=%s", dbTypeVersion, seedFlag)
 
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     c[dbType],
-			})
-			assert.NoError(err)
-			out = strings.Trim(out, "\n\r ")
-			assert.Equal("2", out, "initializer snapshot did not seed a fresh db volume for %s", dbTypeVersion)
+				out, _, err = app.Exec(&ddevapp.ExecOpts{
+					Service: "db",
+					Cmd:     c[dbType],
+				})
+				assert.NoError(err)
+				out = strings.Trim(out, "\n\r ")
+				assert.Equal("2", out, "--seed-snapshot=%s did not seed a fresh db volume for %s", seedFlag, dbTypeVersion)
+			}
+			app.SeedSnapshot = ""
 
-			// "initializer" is a reserved name; clear it so the next dbTypeVersion
+			// `seed` is a reserved name; clear it so the next dbTypeVersion
 			// iteration can create its own.
 			err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
 			assert.NoError(err)

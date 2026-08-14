@@ -63,27 +63,54 @@ This is an unusual, deliberate tradeoff, not a general recommendation: an uncomp
 
 An `initializer` snapshot honors the same flag, and a `dbimage` built with a baked-in seed (see [Seeding a Custom Starter Database](../extend/customizing-images.md#seeding-a-custom-starter-database-in-dbimage)) can use an uncompressed seed the same way.
 
-### Seeding a Fresh Database with an `initializer` Snapshot
+### Seeding a Fresh Database from a Snapshot
 
-`initializer` is a reserved snapshot name. If a snapshot named `initializer` exists in `.ddev/db_snapshots`, it's used automatically the first time a project's database volume is created — a brand-new project, or after `ddev delete` and [`ddev start`](../usage/commands.md#start) — instead of DDEV's normal empty starter database. This is a fast, direct restore of the database files, much quicker than importing a SQL dump on every fresh start.
+The first time a project's database volume is created — a brand-new project, or after `ddev delete` and [`ddev start`](../usage/commands.md#start) — DDEV can restore a snapshot into it instead of using its normal empty starter database. This is a direct restore of the database files, much quicker than importing a SQL dump on every fresh start.
 
-Create one from a running project's current database with:
+`seed` is a reserved snapshot name used for this. If a snapshot named `seed` exists in `.ddev/db_snapshots`, it's used automatically, with nothing to remember at start time:
 
 ```bash
-ddev snapshot --name=initializer
+ddev snapshot --name=seed
+ddev delete -Oy
+ddev start
 ```
 
-Unlike other snapshots, `initializer` isn't meant to be restored with `ddev snapshot restore` — it's only consulted for an uninitialized database. You can choose to commit the resulting `initializer-*` file in `.ddev/db_snapshots` to your repository if you want teammates and CI to get the same starting dataset on their first `ddev start`, but it may be large and you may want to use another distribution technique.
+To use a different snapshot for one start, name it with `--seed-snapshot`, which takes either a snapshot name from `.ddev/db_snapshots` or the path to a snapshot file elsewhere on disk:
 
-An `initializer` snapshot is listed as [custom configuration](../extend/customization-extendibility.md), so `ddev start` and [`ddev utility check-custom-config`](../usage/commands.md#utility-check-custom-config) both show it. When `ddev start` actually seeds a fresh database volume from it, it says so, naming the snapshot and its size and warning that a large one may take a while:
+```bash
+ddev start --seed-snapshot=large-dataset
+ddev start --seed-snapshot=~/datasets/production-mariadb_11.8.zst
+```
+
+`--seed-snapshot` applies to that command only and is never written to `config.yaml`. It only seeds a brand-new database volume; if the project already has a database, DDEV says so rather than silently ignoring the flag. Use [`ddev start --reset-database`](#starting-over-with-a-new-database) to throw the existing database away first, or [`ddev snapshot restore`](../usage/commands.md#snapshot-restore) to restore over it.
+
+A snapshot can only seed the database type and version it was made from, which is why the standard `-<type>_<version>.{zst,gz}` suffix `ddev snapshot` gives it has to stay on the filename.
+
+Unlike other snapshots, `seed` isn't meant to be restored with `ddev snapshot restore` — it's only consulted for an uninitialized database. You can choose to commit the resulting `seed-*` file in `.ddev/db_snapshots` to your repository if you want teammates and CI to get the same starting dataset on their first `ddev start`, but it may be large and you may want to use another distribution technique.
+
+A `seed` snapshot is listed as [custom configuration](../extend/customization-extendibility.md), so `ddev start` and [`ddev utility check-custom-config`](../usage/commands.md#utility-check-custom-config) both show it. When `ddev start` actually seeds a fresh database volume, it says so, naming the snapshot and its size and warning that a large one may take a while:
 
 ```
-Initializing new database volume from the 'initializer' snapshot /path/to/project/.ddev/db_snapshots/initializer-mariadb_11.8.zst (2.2 GiB)...
+Initializing new database volume from the 'seed' snapshot /path/to/project/.ddev/db_snapshots/seed-mariadb_11.8.zst (2.2 GiB)...
 With a large database this may take a long time.
 ```
 
-!!!note
-    Only supported for `mysql` and `mariadb` database types (excluding the very old, EOL `mysql:5.5` and `mariadb:5.5`). PostgreSQL projects use the stock upstream `postgres` image and its own startup process, which this seeding mechanism doesn't hook into, so an `initializer` snapshot is silently ignored.
+### Starting Over with a New Database
+
+`ddev start --reset-database` removes the project's database and starts over with a new one. It snapshots the existing database first, unless you add `--omit-snapshot`/`-O`, and asks for confirmation unless you add `--skip-confirmation`/`-y`. The same flags work on [`ddev restart`](../usage/commands.md#restart).
+
+Use it when you want a clean database, or when you've changed `database:` in `config.yaml` and `ddev start` refuses because the existing database was created by a different database server. The snapshot it takes is made with the database version that's actually in the volume, so it stays restorable after you put the configuration back.
+
+```bash
+ddev config --database=postgres:17
+ddev start --reset-database
+```
+
+To combine it with a seed, so the new database starts out with a dataset of your choosing rather than empty:
+
+```bash
+ddev start --reset-database --seed-snapshot=large-dataset
+```
 
 ## Database Clients
 

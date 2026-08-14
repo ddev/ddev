@@ -203,9 +203,29 @@ func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
 	return snapshots, nil
 }
 
+// snapshotDBVersionFromFilename returns the db type/version a snapshot file
+// name encodes, like "mariadb_11.8". Snapshot files are always named
+// <name>-<type>_<version>.{gz,zst} by Snapshot().
+func snapshotDBVersionFromFilename(snapshotFile string) (string, error) {
+	matches := regexp.MustCompile(`((mysql|mariadb|postgres)_[0-9.]+)\.(gz|zst)$`).FindStringSubmatch(snapshotFile)
+	if len(matches) < 2 {
+		return "", fmt.Errorf("unable to determine database type/version from snapshot %s", snapshotFile)
+	}
+	return matches[1], nil
+}
+
+// dbTypeFromVersion returns the "mariadb" of a "mariadb_11.8".
+func dbTypeFromVersion(dbVersion string) string {
+	dbType, _, _ := strings.Cut(dbVersion, "_")
+	return dbType
+}
+
 // RestoreSnapshot restores a MariaDB snapshot of the db to be loaded
 // The project must be stopped and Docker volume removed and recreated for this to work.
-func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
+//
+// force allows restoring a snapshot taken on a different version of the same
+// database server, which the underlying restore does not itself check for.
+func (app *DdevApp) RestoreSnapshot(snapshotName string, force bool) error {
 	var err error
 	err = app.ProcessHooks("pre-restore-snapshot")
 	if err != nil {
@@ -259,7 +279,13 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	if snapshotDBVersion != currentDBVersion {
-		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured DDEV DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the DDEV DB version", snapshotName, snapshotDBVersion, currentDBVersion)
+		if !force {
+			return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured DDEV DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the DDEV DB version, or use --force to attempt the restore anyway", snapshotName, snapshotDBVersion, currentDBVersion)
+		}
+		if dbTypeFromVersion(snapshotDBVersion) != app.Database.Type {
+			return fmt.Errorf("snapshot '%s' is a '%s' snapshot, which cannot be restored into a '%s' database even with --force", snapshotName, snapshotDBVersion, currentDBVersion)
+		}
+		util.Warning("Restoring a '%s' snapshot into a '%s' database because --force was used.\nThe database may fail to come up, in which case you can start over with `ddev start --reset-database`.", snapshotDBVersion, currentDBVersion)
 	}
 
 	status, _ := app.SiteStatus()
@@ -298,40 +324,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 	}
 
-	restoreCmd := RestoreSnapshotCommand + " " + snapshotFile
-	// Determine compression type for potential conditional restore handling
-	isGzip := strings.HasSuffix(snapshotFile, ".gz")
-	isZstd := strings.HasSuffix(snapshotFile, ".zst")
-	if isGzip {
-		// MariaDB 5.5 does not support zstd compression
-		isMariaDB55 := app.Database.Type == nodeps.MariaDB && app.Database.Version == nodeps.MariaDB55
-		if !isMariaDB55 {
-			util.Warning("This snapshot uses gzip compression. Creating a new snapshot will automatically use faster zstd compression.")
-		}
+	if strings.HasSuffix(snapshotFile, ".gz") && !(app.Database.Type == nodeps.MariaDB && app.Database.Version == nodeps.MariaDB55) {
+		// MariaDB 5.5 is the only db version that can't make a zstd snapshot
+		util.Warning("This snapshot uses gzip compression. Creating a new snapshot will automatically use faster zstd compression.")
 	}
-	if app.Database.Type == nodeps.Postgres {
-		postgresDataDir := app.GetPostgresDataDir()
-		postgresDataPath := app.GetPostgresDataPath()
-		confdDir := path.Join(nodeps.PostgresConfigDir, "conf.d")
-		v, _ := strconv.Atoi(app.Database.Version)
-		// Choose proper tar flags based on compression
-		tarExtract := "-zxf" // gzip default
-		if isZstd {
-			tarExtract = fmt.Sprintf(`-I "%s" -xf`, app.GetDBCompressionCommand())
-		}
-		// PostgreSQL 18+ requires restore_command parameter, older versions use recovery.conf
-		if v >= 18 {
-			restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s %s /mnt/snapshots/%s && chmod 700 %s && touch %s/recovery.signal && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf -c restore_command=true'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, tarExtract, snapshotFile, postgresDataPath, postgresDataPath, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
-		} else {
-			targetConfName := path.Join(confdDir, "recovery.conf")
-			// Before PostgreSQL v12 the recovery info went into its own file
-			if v < 12 {
-				targetConfName = path.Join(nodeps.PostgresConfigDir, "recovery.conf")
-			}
-			restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 %s && mkdir -p %s && rm -rf %s/* && tar -C %s %s /mnt/snapshots/%s && chmod 700 %s && touch %s/recovery.signal && echo "restore_command = 'true'" >>%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, postgresDataDir, confdDir, postgresDataDir, postgresDataDir, tarExtract, snapshotFile, postgresDataPath, postgresDataPath, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
-		}
-	}
-	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
+
+	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", app.snapshotRestoreContainerCommand(snapshotFile))
 	// nolint: errcheck
 	defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
 	// If the default_container_timeout does not already specify a longer period
@@ -378,6 +376,47 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process post-restore-snapshot hooks: %v", err)
 	}
 	return nil
+}
+
+// snapshotRestoreContainerCommand returns the db container command that restores
+// a snapshot into the data directory, replacing whatever is there. snapshotPath
+// is the snapshot as the db container sees it: either a bare file/directory name
+// found in /mnt/snapshots, or an absolute path such as a seed snapshot mounted at
+// SeedSnapshotMountDir.
+//
+// The command runs before the database server starts, so it works the same on an
+// empty data directory (seeding a brand-new volume) as on a populated one.
+func (app *DdevApp) snapshotRestoreContainerCommand(snapshotPath string) string {
+	if app.Database.Type != nodeps.Postgres {
+		return RestoreSnapshotCommand + " " + snapshotPath
+	}
+
+	if !path.IsAbs(snapshotPath) {
+		snapshotPath = path.Join("/mnt/snapshots", snapshotPath)
+	}
+	tarExtract := "-zxf"
+	if strings.HasSuffix(snapshotPath, ".zst") {
+		tarExtract = fmt.Sprintf(`-I "%s" -xf`, app.GetDBCompressionCommand())
+	}
+	dataDir := app.GetPostgresDataDir()
+	dataPath := app.GetPostgresDataPath()
+	confdDir := path.Join(nodeps.PostgresConfigDir, "conf.d")
+	// mkdir of the data directory matters on a brand-new volume, where PostgreSQL
+	// 18+ mounts the volume a level above a data directory that doesn't exist yet.
+	prepare := fmt.Sprintf(`mkdir -p %s %s && chmod 700 %s && rm -rf %s/* && tar -C %s %s %s && chmod 700 %s && touch %s/recovery.signal`, dataDir, confdDir, dataDir, dataDir, dataDir, tarExtract, snapshotPath, dataPath, dataPath)
+	serve := fmt.Sprintf(`postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf`, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
+
+	v, _ := strconv.Atoi(app.Database.Version)
+	// PostgreSQL 18+ takes restore_command as a server parameter; before that it
+	// goes in recovery.conf, which moved into conf.d in v12.
+	if v >= 18 {
+		return fmt.Sprintf(`bash -c '%s && %s -c restore_command=true'`, prepare, serve)
+	}
+	targetConfName := path.Join(confdDir, "recovery.conf")
+	if v < 12 {
+		targetConfName = path.Join(nodeps.PostgresConfigDir, "recovery.conf")
+	}
+	return fmt.Sprintf(`bash -c '%s && echo "restore_command = 'true'" >>%s && %s'`, prepare, targetConfName, serve)
 }
 
 // GetSnapshotFileFromName returns the filename corresponding to the snapshot name

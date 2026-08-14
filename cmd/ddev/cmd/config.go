@@ -737,10 +737,16 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		return fmt.Errorf("failed to validate config: %v", err)
 	}
 
-	// If the database already exists in volume and is not of this type, then throw an error
+	// Configuring a database the existing volume doesn't hold is allowed, since
+	// writing config.yaml destroys nothing, but `ddev start` will refuse until
+	// it's resolved one way or the other.
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
-			return fmt.Errorf("unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', and you can try a migration with 'ddev utility migrate-database %s' see docs at %s", app.Name, app.Database.Type+":"+app.Database.Version, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://docs.ddev.com/en/stable/users/extend/database-types/")
+		dbType, err := app.GetExistingDBType()
+		if err != nil {
+			return err
+		}
+		if dbType != "" && dbType != app.Database.Type+":"+app.Database.Version {
+			util.Warning("This %s", app.DatabaseMismatchMessage(dbType))
 		}
 	}
 
