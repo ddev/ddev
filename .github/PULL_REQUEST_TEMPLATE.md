@@ -1,7 +1,13 @@
 <!-- 
   PR titles have very precise rules, please read 
   https://docs.ddev.com/en/stable/developers/building-contributing/#pull-request-title-guidelines
+
+  If this is a nontrivial contribution, please create an issue for discussion first, or discuss it first in Discord, https://ddev.com/s/discord. This will save you time and help direct the feature.
 -->
+
+## Short Summary (TL;DR)
+
+<!-- Required. One or two sentences a reviewer can read at a glance: what this changes, and why. Write it last, but put it here first. If it needs a paragraph, the detail belongs in the sections below. -->
 
 ## The Issue
 

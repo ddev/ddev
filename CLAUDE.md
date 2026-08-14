@@ -127,18 +127,95 @@ owns its file and won't be touched.
 - Focus on surgical, minimal changes that maintain compatibility
 - Tests should prefer `require` over `assert`
 
+#### Windows Compatibility
+
+The two most common ways Claude-written Go code breaks on Windows, in order
+of frequency:
+
+- **`path` vs `path/filepath`.** Use `filepath` for anything that touches the
+  host filesystem — file paths, directory listings, anything passed to
+  `os.*`. It uses the host's separator. Use `path` only for things that are
+  always forward-slash regardless of host OS: paths inside a Docker
+  container, URLs, embedded/import paths. Using `path` (or manual `"/"`
+  joins) for a host path works fine on macOS/Linux and silently produces a
+  wrong path on Windows.
+- **Line endings.** Don't assume `\n`-only line endings when parsing command
+  output, file contents, or config values — anything written or edited on
+  Windows, or produced by a Windows tool, can be CRLF. Trim `\r` explicitly
+  (`strings.Trim(s, "\r\n")`, not just `"\n"`), and don't hardcode byte/rune
+  offsets, split counts, or substring lengths that assume a fixed
+  line-ending width. `pkg/ddevapp/snapshot.go`, `pkg/ddevapp/addons.go`, and
+  `pkg/nodeps/wsl.go` have the established pattern.
+
+Neither shows up on the machine where the change is written, so when a change
+builds a host path or parses text by offset, check it against these rules
+before moving on. Passing tests on macOS/Linux is not evidence either way.
+
 #### Comments
 
-Keep comments short. A comment earns its place only by saying something the code
-does not already say — why a directive is ordered that way, why a workaround
-exists, a non-obvious consequence.
+If a reviewer skimming the diff stops to parse your comment, it is too long.
+A comment earns its place only by saying something the code does not already
+say — why a directive is ordered that way, why a workaround exists, a
+non-obvious consequence.
+
+Budget: **three lines** for a comment inside a function, **eight** for a doc
+comment on an exported identifier. Past that, the comment is carrying
+rationale that belongs in the commit message or PR description.
 
 - Do not restate the code, the function name, or the config directive below it
 - Do not explain standard behavior of the language, webserver, or tooling
-- Do not write multi-paragraph rationale essays; one to three lines is usually enough
-- Do not repeat the same explanation in several files — explain it once and point
-  to that file
+- Do not repeat the same explanation at more than one call site, even within
+  a single file. If two functions share a reason, put it in one place (a doc
+  comment on the shared helper or constant) and let the other site point to it
 - Never re-describe in comments what a linked issue or commit message already covers
+- Test doc comments: the test name plus its assertions already say what is
+  being tested. Comment only what is not obvious from those — a non-obvious
+  setup step, or why the test skips under some condition
+
+Blank lines inside a doc comment are fine when it documents an API for its
+callers, and are the normal way to keep a long one readable. They are not a
+license to exceed the budget.
+
+Before finishing a change, reread every comment you wrote or edited and cut
+anything that fails these rules.
+
+##### Example
+
+Too long — three paragraphs of background where one sentence and a pointer
+would do:
+
+```go
+// RouterPortSubstitutionsLabel is the name of a Docker label set on the
+// ddev-router container recording which ephemeral host port was substituted
+// for each standard (proposed) router port, in the form "80=33000,443=33001".
+// The router binds ephemeral substitutes as <port>:<port>, so without this
+// label the container carries no trace of which standard port an ephemeral
+// port stands in for. Storing the record on the router container gives it
+// exactly the router's lifetime: it survives across ddev invocations and
+// disappears when the router is recreated or removed.
+//
+// It closes a race: when a standard port (say 80) is busy at router creation
+// time, the router is created bound to an ephemeral substitute. If the
+// original occupant of port 80 then goes away, a later project would see
+// port 80 as free and expect the router to bind it directly - a port the
+// running router does not have - forcing an unnecessary router recreation.
+// See GetAvailableRouterPort().
+```
+
+Right — what it holds, the one fact that isn't obvious, and who to read next:
+
+```go
+// RouterPortSubstitutionsLabel records which ephemeral port stands in for
+// which standard router port, as "80=33000,443=33001".
+//
+// The router binds ephemeral substitutes as <port>:<port>, so nothing else on
+// the container says that 33000 is really port 80. Used by
+// GetAvailableRouterPort() to keep a substitute after the process occupying
+// the standard port goes away.
+```
+
+The race, the reasoning, and the alternatives considered belong in the commit
+message, where they are searchable and don't age into the source file.
 
 ### English Language Usage
 
@@ -244,11 +321,20 @@ a reviewer who will read the diff anyway:
 
 In the initial commit for a PR, use the format in  `.github/PULL_REQUEST_TEMPLATE.md` with these required sections:
 
+- **Short Summary (TL;DR):** One or two sentences, first, always
 - **The Issue:** Reference issue with `#<number>`
 - **How This PR Solves The Issue:** Technical explanation
 - **Manual Testing Instructions:** Step-by-step testing guide
 - **Automated Testing Overview:** Test coverage explanation
 - **Release/Deployment Notes:** Impact assessment
+
+The TL;DR is what a reviewer reads before deciding how closely to read the
+rest, so write it for someone who has not seen the issue. Say what changes and
+why in plain terms; skip the mechanism, which the next two sections cover. If
+it runs past two sentences, it has stopped being a summary.
+
+The same applies to issues you file: lead with a one-or-two-sentence summary,
+matching the "Short summary (TL;DR)" field in `.github/ISSUE_TEMPLATE/`.
 
 ### Creating Commits with PR Template
 
@@ -257,6 +343,10 @@ When creating the initial commit for a PR, use `git commit -F -` to read from st
 ```bash
 cat <<'EOF' | git commit -F -
 <type>: <description>
+
+## Short Summary (TL;DR)
+
+[One or two sentences: what changes and why]
 
 ## The Issue
 
@@ -292,6 +382,10 @@ When creating or editing PRs with `gh pr create` or `gh pr edit`, use the same t
 
 ```bash
 cat > ~/tmp/pr_body.md <<'EOF'
+## Short Summary (TL;DR)
+
+[One or two sentences: what changes and why]
+
 ## The Issue
 
 - Fixes #<issue_number>
