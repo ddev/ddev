@@ -20,31 +20,31 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20260808_weitzman_ddev_version_label" // Note that this can be overridden by make
+var WebTag = "20260721_rfay_content_addressed_image_tags-36bceca65e" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20260808_weitzman_ddev_version_label"
+var BaseDBTag = "20260721_rfay_content_addressed_image_tags-278125d33a"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "20260808_weitzman_ddev_version_label"
+var TraefikRouterTag = "20260721_rfay_content_addressed_image_tags-c96123b524"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "20260808_weitzman_ddev_version_label"
+var SSHAuthTag = "20260721_rfay_content_addressed_image_tags-8e8bf1217c"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "20260808_weitzman_ddev_version_label"
+var XhguiTag = "20260721_rfay_content_addressed_image_tags-f046b66382"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"
