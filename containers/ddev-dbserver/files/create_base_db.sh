@@ -112,7 +112,12 @@ server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mys
 echo ${server_db_version} >${DATADIR:-/var/lib/mysql}/db_mariadb_version.txt
 # Prefer zstd (parallel decompression, smaller archive); fall back to gzip
 # for base images that lack zstd (e.g. MariaDB 5.5 on Ubuntu 14.04).
-if command -v zstdmt >/dev/null 2>&1 || command -v zstd >/dev/null 2>&1; then
+# BASE_DB_UNCOMPRESSED=true skips compression entirely and writes the raw
+# backup-tool stream instead, trading a larger base_db for zero first-boot
+# decompression cost - see https://github.com/ddev/ddev/issues/8665.
+if [ "${BASE_DB_UNCOMPRESSED:-false}" = "true" ]; then
+  ${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=${MYSQL_UNIX_PORT} >${OUTDIR}/base_db.${streamtool}
+elif command -v zstdmt >/dev/null 2>&1 || command -v zstd >/dev/null 2>&1; then
   ${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=${MYSQL_UNIX_PORT} | "$(command -v zstdmt 2>/dev/null || echo zstd)" --quiet >${OUTDIR}/base_db.zst
 else
   ${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=${MYSQL_UNIX_PORT} | gzip >${OUTDIR}/base_db.gz

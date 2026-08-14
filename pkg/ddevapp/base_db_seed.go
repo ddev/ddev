@@ -27,8 +27,10 @@ const InitializerSnapshotName = "initializer"
 const CustomBaseDBSeedPathPrefix = "/mysqlbase/custom/base_db"
 
 // baseDBSeedExtensions lists the base_db seed compression suffixes in the same
-// preference order that ddev-dbserver's docker-entrypoint.sh uses.
-var baseDBSeedExtensions = []string{"zst", "gz"}
+// preference order that ddev-dbserver's docker-entrypoint.sh uses: the
+// compressed formats first, then the uncompressed raw stream formats
+// (mbstream from mariabackup, xbstream from xtrabackup).
+var baseDBSeedExtensions = []string{"zst", "gz", "mbstream", "xbstream"}
 
 // UsesBaseDBSeed reports whether this project's database volume gets initialized
 // from a base_db seed. Only MariaDB/MySQL do; PostgreSQL uses the upstream

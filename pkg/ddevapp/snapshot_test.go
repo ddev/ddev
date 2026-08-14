@@ -42,11 +42,11 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	assert.NoError(err)
 
 	// Make a snapshot of d7 tester test 1
-	snapshotName, err := app.Snapshot(t.Name() + "_1")
+	snapshotName, err := app.Snapshot(t.Name()+"_1", false)
 	assert.NoError(err)
 
 	// Provide a second snapshot that should not be deleted and whose filename will be lexicographically earlier (See https://github.com/ddev/ddev/issues/6694).
-	_, err = app.Snapshot(t.Name() + "_1-a")
+	_, err = app.Snapshot(t.Name()+"_1-a", false)
 	assert.NoError(err)
 
 	err = app.Init(site.Dir)
@@ -93,11 +93,11 @@ func TestGetLatestSnapshot(t *testing.T) {
 
 	snapshots := []string{t.Name() + "_1", t.Name() + "_2", t.Name() + "_3"}
 	// Make three snapshots and compare the last
-	s1Name, err := app.Snapshot(snapshots[0])
+	s1Name, err := app.Snapshot(snapshots[0], false)
 	assert.NoError(err)
-	s2Name, err := app.Snapshot(snapshots[1])
+	s2Name, err := app.Snapshot(snapshots[1], false)
 	assert.NoError(err)
-	s3Name, err := app.Snapshot(snapshots[2]) // last = latest
+	s3Name, err := app.Snapshot(snapshots[2], false) // last = latest
 	assert.NoError(err)
 
 	// Verify the snapshot files exist and have .zst extension
@@ -149,6 +149,77 @@ func TestGetLatestSnapshot(t *testing.T) {
 	assert.NoError(err)
 	latestSnapshot, _ = app.GetLatestSnapshot()
 	assert.Equal("", latestSnapshot)
+
+	runTime()
+}
+
+// TestSnapshotUncompressedPostgresError verifies that --uncompressed is
+// rejected for PostgreSQL projects: only mariabackup/xtrabackup produce a raw
+// stream that can be stored uncompressed, and Postgres snapshots use
+// pg_basebackup/tar instead.
+func TestSnapshotUncompressedPostgresError(t *testing.T) {
+	app := &ddevapp.DdevApp{}
+	app.Database.Type = nodeps.Postgres
+	app.Database.Version = nodeps.PostgresDefaultVersion
+	_, err := app.Snapshot("irrelevant", true)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "not supported for PostgreSQL")
+}
+
+// TestSnapshotUncompressed tests that app.Snapshot(name, true) writes an
+// uncompressed mariabackup/xtrabackup stream (.mbstream/.xbstream), that
+// ListSnapshots() reports its compression as "none", and that it restores
+// correctly.
+func TestSnapshotUncompressed(t *testing.T) {
+	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
+	if os.Getenv("GOTEST_SHORT") != "" {
+		t.Skip("Skip because GOTEST_SHORT is set")
+	}
+
+	assert := assert2.New(t)
+	app := &ddevapp.DdevApp{}
+	site := TestSites[0]
+	origDir, _ := os.Getwd()
+	err := os.Chdir(site.Dir)
+	assert.NoError(err)
+
+	runTime := util.TimeTrackC(t.Name())
+
+	testcommon.ClearDockerEnv()
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		_ = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	snapshotName, err := app.Snapshot(t.Name(), true)
+	require.NoError(t, err)
+
+	snapshotFile, err := ddevapp.GetSnapshotFileFromName(snapshotName, app)
+	require.NoError(t, err)
+	assert.True(strings.HasSuffix(snapshotFile, ".mbstream") || strings.HasSuffix(snapshotFile, ".xbstream"), "expected an uncompressed snapshot extension, got %s", snapshotFile)
+
+	snapshots, err := app.ListSnapshots()
+	require.NoError(t, err)
+	found := false
+	for _, s := range snapshots {
+		if s.Name == snapshotName {
+			found = true
+			assert.Equal("none", s.Compression)
+		}
+	}
+	assert.True(found, "expected to find snapshot %s in ListSnapshots()", snapshotName)
+
+	err = app.RestoreSnapshot(snapshotName)
+	assert.NoError(err)
 
 	runTime()
 }
@@ -211,7 +282,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.Contains(stdout, "d7 tester test 1 has 1 node")
 
 	// Make a snapshot of d7 tester test 1
-	tester1Snapshot, err := app.Snapshot("d7testerTest1")
+	tester1Snapshot, err := app.Snapshot("d7testerTest1", false)
 	assert.NoError(err)
 
 	assert.Contains(tester1Snapshot, "d7testerTest1")
@@ -227,19 +298,19 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure duplicate snapshot name gives an error
-	_, err = app.Snapshot("d7testerTest1")
+	_, err = app.Snapshot("d7testerTest1", false)
 	assert.Error(err)
 
 	// Name should contain only allowed characters
-	_, err = app.Snapshot(`name with spaces`)
+	_, err = app.Snapshot(`name with spaces`, false)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid snapshot name")
 
-	_, err = app.Snapshot(`single'quotes`)
+	_, err = app.Snapshot(`single'quotes`, false)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid snapshot name")
 
-	_, err = app.Snapshot(`double"quotes`)
+	_, err = app.Snapshot(`double"quotes`, false)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid snapshot name")
 
@@ -253,7 +324,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(stdout, "d7 tester test 2 has 2 nodes")
 
-	tester2Snapshot, err := app.Snapshot("d7testerTest2")
+	tester2Snapshot, err := app.Snapshot("d7testerTest2", false)
 	assert.NoError(err)
 	assert.Contains(tester2Snapshot, "d7testerTest2")
 	latest, err = app.GetLatestSnapshot()

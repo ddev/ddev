@@ -267,6 +267,8 @@ COPY base_db.zst /mysqlbase/custom/base_db.zst
 
 The database container uses this seed the first time its data volume is created (a brand-new project, or after `ddev delete` and `ddev start`), instead of the stock DDEV starter database. It's checked ahead of the stock seed but _after_ any project-level [`initializer` snapshot](../usage/database-management.md#snapshots) — so a teammate can still override your baked-in seed for their own project just by dropping an `initializer` snapshot into `.ddev/db_snapshots`, without rebuilding the image.
 
+A seed can also be baked in uncompressed, as `base_db.mbstream` (MariaDB) or `base_db.xbstream` (MySQL, or MariaDB 5.5/10.0) — the raw `mariabackup`/`xtrabackup` stream with no compression stage. This is an unusual, deliberate tradeoff (see [Uncompressed Snapshots](../usage/database-management.md#uncompressed-snapshots)): it trades a much larger image layer for zero first-boot decompression cost, and only makes sense if you've already decided that tradeoff is worth it.
+
 When `ddev start` seeds a fresh database volume from a baked-in seed, it says so and warns that a large one may take a while:
 
 ```
