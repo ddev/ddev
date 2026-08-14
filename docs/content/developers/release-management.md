@@ -74,9 +74,25 @@ The following “Repository secret” environment variables must be configured i
 2. Make sure you're about to create the right release tag.
 3. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
 
+## Automatic Image Build and Push
+
+Any pull request that changes `containers/` — including from a fork — is built and pushed automatically by the [Image build](https://github.com/ddev/ddev/blob/main/.github/workflows/image-build-push.yml) / [Image push](https://github.com/ddev/ddev/blob/main/.github/workflows/image-push.yml) workflow pair. See [Automatic Image Build and Push](building-contributing.md#automatic-image-build-and-push) in the contributing guide for how the flow works and why it's safe to run on fork-authored Dockerfiles.
+
+The two workflows below (manual `workflow_dispatch`) remain for re-pushing a specific tag and for `ddev-dbserver` variants other than the default `mariadb_11.8` that the automatic flow doesn't build.
+
+### One-time setup: the `image-push` GitHub Environment
+
+The automatic flow needs a GitHub Environment named `image-push` configured once per repository (Settings → Environments):
+
+1. Create the environment `image-push`.
+2. Add required reviewers (the maintainers/dev team) — this is what makes both the pre-build approval gate and the actual push wait for a human click.
+3. Add `PUSH_SERVICE_ACCOUNT_TOKEN` as a secret **on this environment** (Settings → Environments → `image-push` → Secrets), using the same 1Password service-account token value already used elsewhere in this doc. It currently exists only as a repository secret; duplicating (or moving) it onto the `image-push` environment is what scopes `DOCKERHUB_TOKEN` access to only the approved `image-push.yml` job.
+
+When testing this on `ddev-test/ddev`, do the same three steps there first, and confirm `vars.DOCKER_ORG` on that repository points at the DockerHub org used for testing.
+
 ## Pushing Docker Images with the GitHub Actions Workflow
 
-The easiest way to push Docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [ddev/ddev](https://github.com/ddev/ddev) repository.
+The easiest way to push Docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [ddev/ddev](https://github.com/ddev/ddev) repository. For a normal container change on a pull request, you shouldn't need this — see [Automatic Image Build and Push](#automatic-image-build-and-push) above.
 
 ### Actual release creation
 
@@ -88,7 +104,7 @@ You can push all images besides `ddev-dbserver` at <https://github.com/ddev/ddev
 
 You can push `ddev-dbserver` images at <https://github.com/ddev/ddev/actions/workflows/push-tagged-dbimage.yml>
 
-If you need to push from a forked PR, you’ll have to do this from your fork (for example, `https://github.com/rfay/ddev/actions/workflows/push-tagged-image.yml`), and you’ll have to specify the branch on the fork. This requires setting the `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` secrets on the forked PR, for example `https://github.com/rfay/ddev/settings/secrets/actions`. You can do the same with `ddev-dbserver` at `https://github.com/rfay/ddev/actions/workflows/push-tagged-dbimage.yml` for example.
+A forked PR that changes a container image no longer needs any of this — see [Automatic Image Build and Push](#automatic-image-build-and-push) above. The fork-your-own-secrets workaround described in earlier versions of this doc is superseded by that flow.
 
 * Visit `https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml`.
 * Click the “Push tagged image” workflow on the left side of the page.

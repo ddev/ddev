@@ -3,27 +3,149 @@ defaults:
   run:
     shell: bash
 
-# Placeholder for #8609 phase 2 (fork-safe automatic image build/push). This
-# do-nothing stub exists only so `workflow_run` below has a registered
-# listener on the default branch before the real load/validate/push logic
-# lands - see the phase 2 PR, which will replace this file's contents via
-# rebase. `workflow_run` only fires for a listener that already exists on the
-# default branch, so this stub unblocks testing that dependency ahead of the
-# full PR.
+# Trusted side of the fork-safe build/push split for #8609 phase 2.
+# Triggered by completion of the "Image build" workflow, using the
+# image-push.yml that lives on the default branch - never the fork's copy,
+# and this workflow never checks out or executes the triggering PR's code.
+# It only loads the artifact "Image build" produced (an inert tarball plus
+# metadata) and pushes it, after re-validating the tag.
 on:
   workflow_run:
     workflows: ["Image build"]
     types: [completed]
 
+env:
+  DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
+
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
-  placeholder:
-    name: "Placeholder (see #8609)"
+  push:
+    name: Push built image(s)
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
+    environment: image-push
     steps:
-      - name: Do nothing
+      - uses: actions/checkout@v7
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          pattern: image-*
+          path: artifacts
+        continue-on-error: true
+        id: download
+
+      - name: No image artifacts to push
+        if: steps.download.outcome == 'failure'
+        run: echo "No image-*.tar artifacts on the triggering run - nothing changed, nothing to push."
+
+      - name: Load 1password secret(s)
+        if: steps.download.outcome == 'success'
+        uses: 1password/load-secrets-action@v4
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+
+      - name: Set up Docker Buildx
+        if: steps.download.outcome == 'success'
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to DockerHub
+        if: steps.download.outcome == 'success'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Validate, load, and push each built image
+        if: steps.download.outcome == 'success'
+        id: push
         run: |
-          echo "Placeholder for #8609 phase 2 - no-op until the real workflow lands."
+          set -eu -o pipefail
+          declare -A TAG_BY_KEY
+          declare -A REPOS_BY_KEY
+          declare -A ARCHES_BY_KEY
+
+          for dir in artifacts/image-*; do
+            [ -d "$dir" ] || continue
+            arch="$(cat "$dir/arch.txt")"
+            tag="$(cat "$dir/tag.txt")"
+            key="${dir%-"$arch"}"
+
+            if ! containers/validate-image-tag.sh "$tag"; then
+              echo "image-push: refusing to push - invalid tag '$tag' from $dir" >&2
+              exit 1
+            fi
+
+            docker load -i "$dir/image.tar"
+
+            while IFS= read -r repo; do
+              [ -z "$repo" ] && continue
+              docker push "${repo}:${tag}-${arch}"
+            done < "$dir/repos.txt"
+
+            TAG_BY_KEY["$key"]="$tag"
+            if [ -z "${REPOS_BY_KEY[$key]:-}" ]; then
+              REPOS_BY_KEY["$key"]="$(cat "$dir/repos.txt")"
+            fi
+            ARCHES_BY_KEY["$key"]="${ARCHES_BY_KEY[$key]:-} ${arch}"
+          done
+
+          PUSHED_SUMMARY=""
+          for key in "${!TAG_BY_KEY[@]}"; do
+            tag="${TAG_BY_KEY[$key]}"
+            while IFS= read -r repo; do
+              [ -z "$repo" ] && continue
+              arch_tags=()
+              for arch in ${ARCHES_BY_KEY[$key]}; do
+                arch_tags+=("${repo}:${tag}-${arch}")
+              done
+              docker buildx imagetools create -t "${repo}:${tag}" "${arch_tags[@]}"
+              PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${tag}\`"$'\n'
+            done <<< "${REPOS_BY_KEY[$key]}"
+          done
+
+          {
+            echo "summary<<IMAGE_PUSH_EOF"
+            echo "$PUSHED_SUMMARY"
+            echo "IMAGE_PUSH_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Comment on the pull request
+        if: steps.download.outcome == 'success'
+        uses: actions/github-script@v9
+        env:
+          IMAGE_PUSH_SUMMARY: ${{ steps.push.outputs.summary }}
+        with:
+          script: |
+            const headSha = context.payload.workflow_run.head_sha;
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: headSha,
+            });
+            if (prs.length === 0) {
+              console.log(`No pull request associated with ${headSha}, skipping comment.`);
+              return;
+            }
+            // Read from env, not spliced into the script source, since the
+            // summary contains backticks that would break a template literal.
+            const summary = (process.env.IMAGE_PUSH_SUMMARY || "").trim();
+            const body = summary
+              ? `Pushed updated container image(s) for this PR:\n\n${summary}`
+              : `Image build completed for this PR, but nothing needed pushing.`;
+            for (const pr of prs) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body,
+              });
+            }

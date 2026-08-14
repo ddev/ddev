@@ -3,13 +3,11 @@ defaults:
   run:
     shell: bash
 
-# Placeholder for #8609 phase 2 (fork-safe automatic image build/push). This
-# do-nothing stub exists only so the workflow name/triggers are registered on
-# the default branch before the real detect/approval/build logic lands - see
-# the phase 2 PR, which will replace this file's contents via rebase.
-# image-push.yml's `workflow_run` trigger only fires for a listener that
-# exists on the default branch, so this stub unblocks testing that dependency
-# ahead of the full PR.
+# Untrusted side of the fork-safe build/push split for #8609 phase 2. This
+# workflow may run a fork's own Dockerfile/build scripts, so no job here
+# ever references a secret. The trusted side (loading the artifact this
+# workflow produces and actually pushing it) lives in image-push.yml,
+# triggered via workflow_run once this workflow completes.
 on:
   pull_request:
     branches: [main]
@@ -22,14 +20,126 @@ on:
       - "containers/**"
       - ".github/workflows/image-build-push.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
+
 permissions:
   contents: read
 
 jobs:
-  placeholder:
-    name: "Placeholder (see #8609)"
+  detect:
+    name: Detect changed images
     runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+      needs_build: ${{ steps.detect.outputs.needs_build }}
     steps:
-      - name: Do nothing
+      - uses: actions/checkout@v7
+      - name: Compute per-image build status
+        id: detect
         run: |
-          echo "Placeholder for #8609 phase 2 - no-op until the real workflow lands."
+          set -eu -o pipefail
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          SANITIZED_BRANCH="$(echo "$BRANCH" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')"
+
+          # repo_suffix|hash paths|make dir|make target|arch-suffixed target?|extra repo suffixes
+          # Keep in sync with Makefile's autotag-images target.
+          CONFIGS=(
+            'ddev-webserver|containers/ddev-webserver containers/containers_shared.mk|ddev-webserver|images|false|ddev-webserver-prod'
+            'ddev-traefik-router|containers/ddev-traefik-router containers/containers_shared.mk|ddev-traefik-router|container|false|'
+            'ddev-ssh-agent|containers/ddev-ssh-agent containers/containers_shared.mk|ddev-ssh-agent|container|false|'
+            'ddev-xhgui|containers/ddev-xhgui containers/containers_shared.mk|ddev-xhgui|container|false|'
+            'ddev-dbserver-mariadb-11.8|containers/ddev-dbserver containers/get_arch.sh|ddev-dbserver|mariadb_11.8|true|'
+          )
+
+          MATRIX_JSON="[]"
+          for entry in "${CONFIGS[@]}"; do
+            IFS='|' read -r repo_suffix hash_paths make_dir make_target arch_suffixed extra_repo_suffixes <<< "$entry"
+            hash="$(containers/hash-paths.sh $hash_paths)"
+            tag="${SANITIZED_BRANCH}-${hash}"
+            repo="${DOCKER_ORG}/${repo_suffix}"
+            if containers/registry-tag-exists.sh "$repo" "$tag"; then
+              echo "detect: ${repo}:${tag} already exists, nothing to build"
+              continue
+            fi
+            echo "detect: ${repo}:${tag} needs building"
+            MATRIX_JSON="$(echo "$MATRIX_JSON" | jq -c \
+              --arg repo "$repo" \
+              --arg tag "$tag" \
+              --arg make_dir "$make_dir" \
+              --arg make_target "$make_target" \
+              --arg arch_suffixed "$arch_suffixed" \
+              --arg extra_repo_suffixes "$extra_repo_suffixes" \
+              '. + [{"repo": $repo, "tag": $tag, "make_dir": $make_dir, "make_target": $make_target, "arch_suffixed": $arch_suffixed, "extra_repo_suffixes": $extra_repo_suffixes}]')"
+          done
+
+          echo "matrix=${MATRIX_JSON}" >> "$GITHUB_OUTPUT"
+          if [ "$(echo "$MATRIX_JSON" | jq 'length')" -gt 0 ]; then
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  approval:
+    name: Await maintainer approval
+    needs: detect
+    if: needs.detect.outputs.needs_build == 'true'
+    runs-on: ubuntu-24.04
+    environment: image-push
+    steps:
+      - name: Approved
+        run: echo "Approved to build the changed container image(s)."
+
+  build:
+    name: Build ${{ matrix.image.repo }} (${{ matrix.arch }})
+    needs: [detect, approval]
+    if: needs.detect.outputs.needs_build == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJson(needs.detect.outputs.matrix) }}
+        arch: [amd64, arm64]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build ${{ matrix.image.repo }}:${{ matrix.image.tag }}-${{ matrix.arch }}
+        env:
+          DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
+        run: |
+          set -eu -o pipefail
+          VERSION="${{ matrix.image.tag }}-${{ matrix.arch }}"
+          MAKE_TARGET="${{ matrix.image.make_target }}"
+          if [ "${{ matrix.image.arch_suffixed }}" = "true" ]; then
+            MAKE_TARGET="${MAKE_TARGET}_${{ matrix.arch }}"
+          fi
+          make -C "containers/${{ matrix.image.make_dir }}" "$MAKE_TARGET" VERSION="$VERSION"
+
+          REPOS="${{ matrix.image.repo }}"
+          for suffix in ${{ matrix.image.extra_repo_suffixes }}; do
+            REPOS="${REPOS} ${DOCKER_ORG}/${suffix}"
+          done
+
+          REFS=()
+          : > repos.txt
+          for repo in $REPOS; do
+            REFS+=("${repo}:${VERSION}")
+            echo "$repo" >> repos.txt
+          done
+          docker save "${REFS[@]}" -o image.tar
+          echo -n "${{ matrix.image.tag }}" > tag.txt
+          echo -n "${{ matrix.arch }}" > arch.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: image-${{ matrix.image.make_dir }}-${{ matrix.arch }}
+          path: |
+            image.tar
+            repos.txt
+            tag.txt
+            arch.txt
+          retention-days: 1
