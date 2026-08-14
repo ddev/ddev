@@ -99,7 +99,7 @@ With a large database this may take a long time.
 
 `ddev start --reset-database` removes the project's database and starts over with a new one. It snapshots the existing database first, unless you add `--omit-snapshot`/`-O`, and asks for confirmation unless you add `--skip-confirmation`/`-y`. The same flags work on [`ddev restart`](../usage/commands.md#restart).
 
-Use it when you want a clean database, or when you've changed `database:` in `config.yaml` and `ddev start` refuses because the existing database was created by a different database server. The snapshot it takes is made with the database version that's actually in the volume, so it stays restorable after you put the configuration back.
+Use it when you want a clean database, or when you've changed `database:` in `config.yaml` and `ddev start` refuses because the existing database was created by a different database server. The snapshot it takes is made with the database version that's actually in the volume, so you can still restore it after you put the configuration back.
 
 ```bash
 ddev config --database=postgres:17
