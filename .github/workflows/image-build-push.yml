@@ -101,27 +101,14 @@ jobs:
             echo "is_fork=false" >> "$GITHUB_OUTPUT"
           fi
 
-  # --- Fork PRs: build with no secrets, hand off to image-push.yml for the
-  # trusted, approval-gated push. ---
-
-  approval:
-    name: "Approve: build this fork PR's Dockerfile(s)"
-    needs: detect
-    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true'
-    runs-on: ubuntu-24.04
-    # Separate environment from image-push.yml's `push` job on purpose: both
-    # show up as "Review pending deployments" prompts naming only the
-    # environment, so a shared name would make the two approvals (build vs.
-    # push) indistinguishable at a glance. Needs its own GitHub Environment
-    # (required reviewers, no secret needed) - see release-management.md.
-    environment: image-build-approval
-    steps:
-      - name: Approved
-        run: echo "Approved to build the changed container image(s) from this fork PR."
+  # --- Fork PRs: build with no secrets (this job never has registry
+  # credentials, so there's nothing to gain by gating it - see #8609
+  # discussion), then hand off to image-push.yml for the trusted,
+  # approval-gated push. ---
 
   build:
     name: Build ${{ matrix.image.repo }} (${{ matrix.arch }})
-    needs: [detect, approval]
+    needs: detect
     if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true'
     strategy:
       fail-fast: false

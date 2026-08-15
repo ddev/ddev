@@ -318,10 +318,10 @@ Opening a pull request that touches `containers/` triggers the [Image build](htt
 
 What happens next depends on whether the PR is from a fork:
 
-* **Fork PRs** (a real security boundary — the PR could contain an arbitrary Dockerfile/build script): an `approval` job, gated by the `image-build-approval` environment, waits for a maintainer to approve before anything runs the fork's code, since that's the point where CI would otherwise start executing untrusted content. A `build` job then builds the image(s) per architecture with no registry credentials at all, even after approval. Once it finishes, a separate, trusted `image-push.yml` workflow — which never checks out or runs the pull request's code — loads what it produced and pushes it, gated behind its own approval on the `image-push` environment. Two different environment names, so the "Review pending deployments" prompt makes it obvious which one you're approving. A comment is posted on the PR once the push completes.
+* **Fork PRs** (a real security boundary — the PR could contain an arbitrary Dockerfile/build script): a `build` job builds the image(s) per architecture with no registry credentials at all — nothing in that job can reach `docker.io`, so there's nothing to gain by gating it before it runs. Once it finishes, a separate, trusted `image-push.yml` workflow — which never checks out or runs the pull request's code — loads what it produced and pushes it, gated behind a maintainer's approval on the `image-push` environment. A comment is posted on the PR once the push completes.
 * **Everything else** (a push to `main`, or a pull request from a branch in the same repository — no fork content is ever involved): `build-and-push` builds and pushes directly in one step, with no approval gate at all — the same trust level `main-build.yml` already runs at unguarded. A `create-manifests` job then assembles the multi-arch manifest and comments on the PR, if there is one.
 
-So a maintainer only ever needs to click **Approve** for a fork PR that changes a container image (twice, once to allow the build and once to allow the push) — everything else is fully automatic.
+So a maintainer only ever needs to click **Approve** once — for a fork PR's push step — and only when the PR actually changed a container image; everything else is fully automatic.
 
 ## Pull Requests
 

@@ -80,18 +80,19 @@ Any pull request that changes `containers/` — including from a fork — is bui
 
 The two workflows below (manual `workflow_dispatch`) remain for re-pushing a specific tag and for `ddev-dbserver` variants other than the default `mariadb_11.8` that the automatic flow doesn't build.
 
-### One-time setup: the `image-build-approval` and `image-push` GitHub Environments
+### One-time setup: the `image-push` GitHub Environment
 
-Fork PRs go through two separate approvals — build, then push — each gated by its own GitHub Environment (Settings → Environments), so the "Review pending deployments" prompt (which shows only the environment name) doesn't leave the two looking identical:
+Fork PRs build with no registry credentials at all (nothing to gain by gating that step), then go through a single approval before the built image is actually pushed, gated by the `image-push` GitHub Environment (Settings → Environments):
 
-1. Create the environment `image-build-approval`. Add required reviewers (the maintainers/dev team). No secret needed — the `approval` job it gates never touches Docker or the registry.
-2. Create the environment `image-push`. Add the same required reviewers. Add `PUSH_SERVICE_ACCOUNT_TOKEN` as a secret **on this environment** (Settings → Environments → `image-push` → Secrets), using the same 1Password service-account token value already used elsewhere in this doc. It currently exists only as a repository secret; duplicating (or moving) it onto the `image-push` environment is what scopes `DOCKERHUB_TOKEN` access to only the approved `image-push.yml` job.
+1. Create the environment `image-push`.
+2. Add required reviewers (the maintainers/dev team).
+3. Add `PUSH_SERVICE_ACCOUNT_TOKEN` as a secret **on this environment** (Settings → Environments → `image-push` → Secrets), using the same 1Password service-account token value already used elsewhere in this doc. It currently exists only as a repository secret; duplicating (or moving) it onto the `image-push` environment is what scopes `DOCKERHUB_TOKEN` access to only the approved `image-push.yml` job.
 
-Both approvals only apply to fork PRs. A push to `main` or a same-repo PR builds and pushes without any approval at all, using the repository-level `PUSH_SERVICE_ACCOUNT_TOKEN` secret directly (that path never declares `environment:` on its jobs, so neither environment's protection rules apply to it).
+This approval only applies to fork PRs. A push to `main` or a same-repo PR builds and pushes without any approval at all, using the repository-level `PUSH_SERVICE_ACCOUNT_TOKEN` secret directly (that path never declares `environment:` on its jobs, so this environment's protection rules don't apply to it).
 
 When testing this on `ddev-test/ddev`, do the same steps there first, and confirm `vars.DOCKER_ORG` on that repository points at the DockerHub org used for testing.
 
-Since a job referencing an environment that doesn't exist yet gets auto-created with no protection rules (silently *not* gating), verify each environment actually has a `required_reviewers` rule before relying on it, e.g. `gh api repos/<owner>/<repo>/environments/image-build-approval`.
+Since a job referencing an environment that doesn't exist yet gets auto-created with no protection rules (silently *not* gating), verify the environment actually has a `required_reviewers` rule before relying on it, e.g. `gh api repos/<owner>/<repo>/environments/image-push`.
 
 ## Pushing Docker Images with the GitHub Actions Workflow
 
