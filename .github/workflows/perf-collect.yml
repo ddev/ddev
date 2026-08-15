@@ -39,7 +39,7 @@ jobs:
       # Buildkite pipelines, still collecting the GitHub Actions Linux leg.
       - name: Load 1password secret(s)
         continue-on-error: true
-        uses: 1password/load-secrets-action@v4
+        uses: 1password/load-secrets-action@v5
         with:
           export-env: true
         env:
