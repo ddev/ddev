@@ -85,7 +85,7 @@ The two workflows below (manual `workflow_dispatch`) remain for re-pushing a spe
 The automatic flow needs a GitHub Environment named `image-push` configured once per repository (Settings → Environments):
 
 1. Create the environment `image-push`.
-2. Add required reviewers (the maintainers/dev team) — this is what makes both the pre-build approval gate and the actual push wait for a human click.
+2. Add required reviewers (the maintainers/dev team) — this is what makes the pre-build approval gate and the actual push wait for a human click, but only for fork PRs. A push to `main` or a same-repo PR builds and pushes without any approval at all, using the repository-level `PUSH_SERVICE_ACCOUNT_TOKEN` secret directly (that job never declares `environment: image-push`, so this environment's protection rules don't apply to it).
 3. Add `PUSH_SERVICE_ACCOUNT_TOKEN` as a secret **on this environment** (Settings → Environments → `image-push` → Secrets), using the same 1Password service-account token value already used elsewhere in this doc. It currently exists only as a repository secret; duplicating (or moving) it onto the `image-push` environment is what scopes `DOCKERHUB_TOKEN` access to only the approved `image-push.yml` job.
 
 When testing this on `ddev-test/ddev`, do the same three steps there first, and confirm `vars.DOCKER_ORG` on that repository points at the DockerHub org used for testing.

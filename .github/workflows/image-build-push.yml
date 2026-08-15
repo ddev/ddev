@@ -3,11 +3,18 @@ defaults:
   run:
     shell: bash
 
-# Untrusted side of the fork-safe build/push split for #8609 phase 2. This
-# workflow may run a fork's own Dockerfile/build scripts, so no job here
-# ever references a secret. The trusted side (loading the artifact this
-# workflow produces and actually pushing it) lives in image-push.yml,
-# triggered via workflow_run once this workflow completes.
+# For a fork PR, this workflow may run a fork's own Dockerfile/build scripts,
+# so the `build` job never references a secret - the trusted side (loading
+# the artifact `build` produces and actually pushing it) lives in
+# image-push.yml, triggered via workflow_run once this workflow completes,
+# gated behind its own approval.
+#
+# For anything else (a push, or a same-repo PR - `detect`'s `is_fork` output,
+# using the same fork-check idiom as push-tagged-image.yml), there's nothing
+# a maintainer's own branch could smuggle into a job that every other
+# secret-using workflow here doesn't already run unguarded, so
+# `build-and-push` builds and pushes directly, with no environment/approval
+# gate at all - same trust level as `main-build.yml`.
 on:
   pull_request:
     branches: [main]
@@ -37,6 +44,7 @@ jobs:
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
       needs_build: ${{ steps.detect.outputs.needs_build }}
+      is_fork: ${{ steps.detect.outputs.is_fork }}
     steps:
       - uses: actions/checkout@v7
       - name: Compute per-image build status
@@ -86,10 +94,20 @@ jobs:
             echo "needs_build=false" >> "$GITHUB_OUTPUT"
           fi
 
+          if [ "${{ github.event_name }}" = "pull_request" ] && \
+             [ "${{ github.event.pull_request.head.repo.owner.login }}" != "${{ github.repository_owner }}" ]; then
+            echo "is_fork=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_fork=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # --- Fork PRs: build with no secrets, hand off to image-push.yml for the
+  # trusted, approval-gated push. ---
+
   approval:
     name: Await maintainer approval
     needs: detect
-    if: needs.detect.outputs.needs_build == 'true'
+    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true'
     runs-on: ubuntu-24.04
     environment: image-push
     steps:
@@ -99,7 +117,7 @@ jobs:
   build:
     name: Build ${{ matrix.image.repo }} (${{ matrix.arch }})
     needs: [detect, approval]
-    if: needs.detect.outputs.needs_build == 'true'
+    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -145,3 +163,132 @@ jobs:
             tag.txt
             arch.txt
           retention-days: 1
+
+  # --- Pushes and same-repo PRs: no fork content ever runs here, so build
+  # and push directly with no environment/approval gate - same trust level
+  # as main-build.yml, which already uses this same secret unguarded. ---
+
+  build-and-push:
+    name: Build and push ${{ matrix.image.repo }} (${{ matrix.arch }})
+    needs: detect
+    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'false'
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJson(needs.detect.outputs.matrix) }}
+        arch: [amd64, arm64]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v4
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.image.repo }}:${{ matrix.image.tag }}-${{ matrix.arch }}
+        env:
+          DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
+        run: |
+          set -eu -o pipefail
+          VERSION="${{ matrix.image.tag }}-${{ matrix.arch }}"
+          MAKE_TARGET="${{ matrix.image.make_target }}"
+          if [ "${{ matrix.image.arch_suffixed }}" = "true" ]; then
+            MAKE_TARGET="${MAKE_TARGET}_${{ matrix.arch }}"
+          fi
+          make -C "containers/${{ matrix.image.make_dir }}" "$MAKE_TARGET" VERSION="$VERSION"
+
+          REPOS="${{ matrix.image.repo }}"
+          for suffix in ${{ matrix.image.extra_repo_suffixes }}; do
+            REPOS="${REPOS} ${DOCKER_ORG}/${suffix}"
+          done
+          for repo in $REPOS; do
+            docker push "${repo}:${VERSION}"
+          done
+
+  create-manifests:
+    name: Create manifest for ${{ matrix.image.repo }}
+    needs: [detect, build-and-push]
+    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'false'
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJson(needs.detect.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v4
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Create manifest and clean up per-arch tags
+        id: manifest
+        env:
+          DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
+        run: |
+          set -eu -o pipefail
+          TAG="${{ matrix.image.tag }}"
+
+          DOCKERHUB_JWT="$(curl -s -H "Content-Type: application/json" -X POST \
+            -d '{"username":"'"${{ vars.DOCKERHUB_USERNAME }}"'","password":"'"${DOCKERHUB_TOKEN}"'"}' \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)"
+
+          REPOS="${{ matrix.image.repo }}"
+          for suffix in ${{ matrix.image.extra_repo_suffixes }}; do
+            REPOS="${REPOS} ${DOCKER_ORG}/${suffix}"
+          done
+
+          PUSHED_SUMMARY=""
+          for repo in $REPOS; do
+            docker buildx imagetools create -t "${repo}:${TAG}" "${repo}:${TAG}-amd64" "${repo}:${TAG}-arm64"
+            PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${TAG}\`"$'\n'
+            for arch in amd64 arm64; do
+              echo "Removing intermediary tag ${repo}:${TAG}-${arch}"
+              curl -s -X DELETE -H "Authorization: JWT ${DOCKERHUB_JWT}" \
+                "https://hub.docker.com/v2/repositories/${repo}/tags/${TAG}-${arch}/" >/dev/null || true
+            done
+          done
+
+          {
+            echo "summary<<IMAGE_PUSH_EOF"
+            echo "$PUSHED_SUMMARY"
+            echo "IMAGE_PUSH_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Comment on the pull request
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v9
+        env:
+          IMAGE_PUSH_SUMMARY: ${{ steps.manifest.outputs.summary }}
+        with:
+          script: |
+            const summary = (process.env.IMAGE_PUSH_SUMMARY || "").trim();
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Pushed updated container image(s) for this PR:\n\n${summary}`,
+            });
