@@ -16,8 +16,10 @@
 # image, no wait.
 #
 # Env:
-#   WAIT_FOR_IMAGES_ATTEMPTS - poll attempts before giving up (default 20)
-#   WAIT_FOR_IMAGES_SLEEP    - seconds between attempts (default 15)
+#   WAIT_FOR_IMAGES_ATTEMPTS - poll attempts before giving up (default 40)
+#   WAIT_FOR_IMAGES_SLEEP    - seconds between attempts (default 30)
+#
+# Defaults give ~20 minutes - ddev-webserver alone takes ~6-8 minutes to build.
 
 set -eu -o pipefail
 
@@ -27,8 +29,8 @@ REGISTRY_TAG_EXISTS="$REPO_ROOT/containers/registry-tag-exists.sh"
 VERSIONCONSTANTS_FILE="${VERSIONCONSTANTS_FILE:-$REPO_ROOT/pkg/versionconstants/versionconstants.go}"
 DOCKER_ORG="${DOCKER_ORG:-ddev}"
 
-ATTEMPTS="${WAIT_FOR_IMAGES_ATTEMPTS:-20}"
-SLEEP_SECONDS="${WAIT_FOR_IMAGES_SLEEP:-15}"
+ATTEMPTS="${WAIT_FOR_IMAGES_ATTEMPTS:-40}"
+SLEEP_SECONDS="${WAIT_FOR_IMAGES_SLEEP:-30}"
 
 tag_for() {
   grep -E "^var $1 = " "$VERSIONCONSTANTS_FILE" | sed -E "s/^var $1 = \"([^\"]*)\".*/\\1/"
