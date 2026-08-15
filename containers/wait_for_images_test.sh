@@ -2,7 +2,9 @@
 # wait_for_images_test.sh - unit tests for wait-for-images.sh.
 #
 # Exercises the fast-path/retry/give-up logic against a stubbed `docker` and
-# a fabricated versionconstants.go, without a real registry or real sleeps.
+# the real hash-paths.sh (run against this checkout's actual content, so the
+# expected tags are computed the same way wait-for-images.sh computes them -
+# never read from versionconstants.go). No real registry or real sleeps.
 # Run with:
 #   containers/wait_for_images_test.sh
 
@@ -10,6 +12,7 @@ set -eu -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WAIT_FOR_IMAGES="$SCRIPT_DIR/wait-for-images.sh"
+HASH_PATHS="$SCRIPT_DIR/hash-paths.sh"
 
 FAILURES=0
 
@@ -83,31 +86,33 @@ chmod +x "$BINDIR/sleep"
 
 export PATH="$BINDIR:$PATH"
 
-VERSIONCONSTANTS="$WORKDIR/versionconstants.go"
-write_versionconstants() {
-  cat > "$VERSIONCONSTANTS" <<'EOF'
-package versionconstants
-
-var WebTag = "main-1111111111"
-var TraefikRouterTag = "main-2222222222"
-var SSHAuthTag = "main-3333333333"
-var XhguiTag = "main-4444444444"
-var BaseDBTag = "main-5555555555"
-EOF
-}
-write_versionconstants
-
-export VERSIONCONSTANTS_FILE="$VERSIONCONSTANTS"
 export DOCKER_ORG=ddevhq
+BRANCH="test-branch"
+export WAIT_FOR_IMAGES_BRANCH="$BRANCH"
+
+# Same repo_suffix|hash-paths list wait-for-images.sh uses - real hashes of
+# this checkout's actual content, computed the same way the script does.
+CONFIGS=(
+  'ddev-webserver|containers/ddev-webserver containers/containers_shared.mk'
+  'ddev-traefik-router|containers/ddev-traefik-router containers/containers_shared.mk'
+  'ddev-ssh-agent|containers/ddev-ssh-agent containers/containers_shared.mk'
+  'ddev-xhgui|containers/ddev-xhgui containers/containers_shared.mk'
+  'ddev-dbserver-mariadb-11.8|containers/ddev-dbserver containers/get_arch.sh'
+)
+REPOS=()
+TAGS=()
+for entry in "${CONFIGS[@]}"; do
+  IFS='|' read -r repo_suffix hash_paths <<< "$entry"
+  hash="$("$HASH_PATHS" $hash_paths)"
+  REPOS+=("ddevhq/${repo_suffix}")
+  TAGS+=("${BRANCH}-${hash}")
+done
 
 # 1. Fast path: every tag already exists -> one docker call per image, no sleep.
-cat > "$DOCKER_EXISTING_REF_FILE" <<'EOF'
-ddevhq/ddev-webserver:main-1111111111
-ddevhq/ddev-traefik-router:main-2222222222
-ddevhq/ddev-ssh-agent:main-3333333333
-ddevhq/ddev-xhgui:main-4444444444
-ddevhq/ddev-dbserver-mariadb-11.8:main-5555555555
-EOF
+: > "$DOCKER_EXISTING_REF_FILE"
+for i in "${!REPOS[@]}"; do
+  echo "${REPOS[$i]}:${TAGS[$i]}" >> "$DOCKER_EXISTING_REF_FILE"
+done
 : > "$DOCKER_CALL_LOG"
 : > "$SLEEP_CALL_LOG"
 if "$WAIT_FOR_IMAGES" >/dev/null 2>&1; then
@@ -120,13 +125,11 @@ assert_eq "0" "$(wc -l < "$SLEEP_CALL_LOG")" "fast path never sleeps"
 
 # 2. A tag that's initially missing but becomes available on the 3rd check.
 : > "$DOCKER_EXISTING_REF_FILE"
-cat >> "$DOCKER_EXISTING_REF_FILE" <<'EOF'
-ddevhq/ddev-webserver:main-1111111111
-ddevhq/ddev-traefik-router:main-2222222222
-ddevhq/ddev-ssh-agent:main-3333333333
-ddevhq/ddev-xhgui:main-4444444444
-EOF
-echo "ddevhq/ddev-dbserver-mariadb-11.8:main-5555555555" > "$DOCKER_DELAYED_REF_FILE"
+for i in "${!REPOS[@]}"; do
+  [ "$i" -eq 4 ] && continue
+  echo "${REPOS[$i]}:${TAGS[$i]}" >> "$DOCKER_EXISTING_REF_FILE"
+done
+echo "${REPOS[4]}:${TAGS[4]}" > "$DOCKER_DELAYED_REF_FILE"
 rm -f "$DOCKER_DELAYED_COUNTER_DIR/count"
 : > "$SLEEP_CALL_LOG"
 if WAIT_FOR_IMAGES_ATTEMPTS=5 WAIT_FOR_IMAGES_SLEEP=0 "$WAIT_FOR_IMAGES" >/dev/null 2>&1; then
@@ -152,23 +155,17 @@ case "$OUTPUT" in
 esac
 assert_eq "2" "$(wc -l < "$SLEEP_CALL_LOG")" "sleeps exactly (attempts - 1) times before giving up on the first (unavailable) image"
 
-# 4. A tag variable missing from versionconstants.go is a clear, immediate error.
-cat > "$VERSIONCONSTANTS" <<'EOF'
-package versionconstants
-
-var WebTag = "main-1111111111"
-EOF
+# 4. WAIT_FOR_IMAGES_BRANCH is required - a clear, immediate error when unset.
 : > "$DOCKER_EXISTING_REF_FILE"
-echo "ddevhq/ddev-webserver:main-1111111111" >> "$DOCKER_EXISTING_REF_FILE"
-OUTPUT="$(WAIT_FOR_IMAGES_ATTEMPTS=1 "$WAIT_FOR_IMAGES" 2>&1)" && RC=0 || RC=$?
+OUTPUT="$(env -u WAIT_FOR_IMAGES_BRANCH "$WAIT_FOR_IMAGES" 2>&1)" && RC=0 || RC=$?
 if [ "$RC" -ne 0 ]; then
-  pass "errors out when a tag var is missing from versionconstants.go"
+  pass "errors out when WAIT_FOR_IMAGES_BRANCH is unset"
 else
-  fail "should error out when a tag var is missing from versionconstants.go"
+  fail "should error out when WAIT_FOR_IMAGES_BRANCH is unset"
 fi
 case "$OUTPUT" in
-  *"could not find"*"TraefikRouterTag"*) pass "missing-tag-var message names the missing var" ;;
-  *) fail "missing-tag-var message should name the missing var: $OUTPUT" ;;
+  *"WAIT_FOR_IMAGES_BRANCH must be set"*) pass "missing-branch message names the required variable" ;;
+  *) fail "missing-branch message should name WAIT_FOR_IMAGES_BRANCH: $OUTPUT" ;;
 esac
 
 if [ "$FAILURES" -eq 0 ]; then

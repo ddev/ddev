@@ -158,6 +158,8 @@ jobs:
         # fast path trusts the tag already committed in versionconstants.go),
         # so it can race image-push.yml's approval/build/push the same way
         # Buildkite can - see containers/wait-for-images.sh.
+        env:
+          WAIT_FOR_IMAGES_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: containers/wait-for-images.sh
 
       - name: Get Date
