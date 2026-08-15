@@ -24,7 +24,13 @@ permissions:
 jobs:
   push:
     name: "Approve: push the built image(s) to DockerHub"
-    if: github.event.workflow_run.conclusion == 'success'
+    # Only fork completions of "Image build" ever produce artifacts here -
+    # the non-fork path pushes directly in that workflow's build-and-push
+    # job. Gate the job itself (not just its steps) on that, so a non-fork
+    # completion never creates an environment approval request at all.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
     runs-on: ubuntu-24.04
     environment: image-push
     steps:
