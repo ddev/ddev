@@ -67,6 +67,7 @@ for entry in "${CONFIGS[@]}"; do
   attempt=1
   while true; do
     if "$REGISTRY_TAG_EXISTS" "$image_repo" "$tag"; then
+      echo "wait-for-images.sh: found ${image_repo}:${tag}"
       break
     fi
     if [ "$attempt" -ge "$ATTEMPTS" ]; then

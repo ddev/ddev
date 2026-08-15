@@ -115,13 +115,18 @@ for i in "${!REPOS[@]}"; do
 done
 : > "$DOCKER_CALL_LOG"
 : > "$SLEEP_CALL_LOG"
-if "$WAIT_FOR_IMAGES" >/dev/null 2>&1; then
+OUTPUT="$("$WAIT_FOR_IMAGES" 2>&1)" && RC=0 || RC=$?
+if [ "$RC" -eq 0 ]; then
   pass "fast path succeeds when every tag already exists"
 else
   fail "fast path should succeed when every tag already exists"
 fi
 assert_eq "5" "$(wc -l < "$DOCKER_CALL_LOG")" "fast path makes exactly one docker call per image"
 assert_eq "0" "$(wc -l < "$SLEEP_CALL_LOG")" "fast path never sleeps"
+case "$OUTPUT" in
+  *"found ${REPOS[0]}:${TAGS[0]}"*) pass "prints confirmation for each found tag" ;;
+  *) fail "should print confirmation for each found tag: $OUTPUT" ;;
+esac
 
 # 2. A tag that's initially missing but becomes available on the 3rd check.
 : > "$DOCKER_EXISTING_REF_FILE"
