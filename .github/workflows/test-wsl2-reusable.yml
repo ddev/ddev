@@ -67,6 +67,7 @@ jobs:
     name: WSL2 (${{ inputs.networking }}, ${{ inputs.make_target }})
 
     env:
+      DOCKER_ORG: ${{ vars.DOCKER_ORG }}
       GOTEST_SHORT: ${{ inputs.gotest_short }}
       TESTARGS: ${{ inputs.testargs }}
       MAKE_TARGET: ${{ inputs.make_target }}
@@ -193,4 +194,5 @@ jobs:
           $embargo = "${{ env.DDEV_EMBARGO_TESTS }}"
           $embargo_php = "${{ env.DDEV_EMBARGO_PHP_VERSIONS }}"
           $skip_nodejs = "${{ env.DDEV_SKIP_NODEJS_TEST }}"
-          wsl -u testuser -- bash -exc "export GOTEST_SHORT='$gotest_short' TESTARGS='$testargs' MAKE_TARGET='$make_target' MAKEARGS='$makeargs' DDEV_EMBARGO_TESTS='$embargo' DDEV_EMBARGO_PHP_VERSIONS='$embargo_php' DDEV_SKIP_NODEJS_TEST='$skip_nodejs' && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"
+          $docker_org = "${{ env.DOCKER_ORG }}"
+          wsl -u testuser -- bash -exc "export GOTEST_SHORT='$gotest_short' TESTARGS='$testargs' MAKE_TARGET='$make_target' MAKEARGS='$makeargs' DDEV_EMBARGO_TESTS='$embargo' DDEV_EMBARGO_PHP_VERSIONS='$embargo_php' DDEV_SKIP_NODEJS_TEST='$skip_nodejs' DOCKER_ORG='$docker_org' && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"
