@@ -105,14 +105,19 @@ jobs:
   # trusted, approval-gated push. ---
 
   approval:
-    name: Await maintainer approval
+    name: "Approve: build this fork PR's Dockerfile(s)"
     needs: detect
     if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true'
     runs-on: ubuntu-24.04
-    environment: image-push
+    # Separate environment from image-push.yml's `push` job on purpose: both
+    # show up as "Review pending deployments" prompts naming only the
+    # environment, so a shared name would make the two approvals (build vs.
+    # push) indistinguishable at a glance. Needs its own GitHub Environment
+    # (required reviewers, no secret needed) - see release-management.md.
+    environment: image-build-approval
     steps:
       - name: Approved
-        run: echo "Approved to build the changed container image(s)."
+        run: echo "Approved to build the changed container image(s) from this fork PR."
 
   build:
     name: Build ${{ matrix.image.repo }} (${{ matrix.arch }})

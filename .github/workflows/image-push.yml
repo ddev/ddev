@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   push:
-    name: Push built image(s)
+    name: "Approve: push the built image(s) to DockerHub"
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
     environment: image-push
