@@ -28,7 +28,7 @@ git update-ref -d refs/public-variables-tmp
 # Buildkite holds no image-push credentials, so a changed container image
 # might still be waiting on image-push.yml's maintainer approval when this
 # run starts. Wait for the registry to catch up before pulling anything.
-"$(dirname "$0")/wait-for-images.sh"
+"$(dirname "$0")/../containers/wait-for-images.sh"
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 os=$(go env GOOS)

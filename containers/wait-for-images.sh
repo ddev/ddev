@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # wait-for-images.sh
 #
-# Buildkite holds no image-push credentials, so it must not race the
+# Neither Buildkite nor the GitHub-hosted test-reusable.yml/
+# test-wsl2-reusable.yml runners hold image-push credentials, and none of
+# them rebuild a changed image locally (autotag.sh's no-op fast path trusts
+# the tag already committed in versionconstants.go, so a fresh runner with an
+# empty Docker cache won't build it) - so any of them can race the
 # image-push.yml GitHub Actions workflow: if this commit's containers/
 # changed, the image it needs might still be waiting on a maintainer's
 # approval when this test run starts. Before running anything that pulls a
@@ -43,7 +47,7 @@ IMAGES=(
 for entry in "${IMAGES[@]}"; do
   image_repo="${entry%%:*}"
   tag_var="${entry##*:}"
-  tag="$(tag_for "$tag_var")"
+  tag="$(tag_for "$tag_var" || true)"
   if [ -z "$tag" ]; then
     echo "wait-for-images.sh: could not find 'var ${tag_var} = \"...\"' in $VERSIONCONSTANTS_FILE" >&2
     exit 1
