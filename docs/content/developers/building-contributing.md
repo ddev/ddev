@@ -155,7 +155,7 @@ make push VERSION=<tag> DOCKER_REPO=your/dockerrepo
 
 ### Pushes Using GitHub Actions
 
-The [Image build](https://github.com/ddev/ddev/actions/workflows/image-build-push.yml) workflow (see [Automatic Image Build and Push](#automatic-image-build-and-push)) handles pushing a changed image automatically for any pull request, including forks. The workflows below are for manually pushing a specific tag — a re-push, or one of the `ddev-dbserver` variants other than the default `mariadb_11.8` that `make` auto-builds.
+Normally the [Image build](https://github.com/ddev/ddev/actions/workflows/image-build-push.yml) workflow (see [Automatic Image Build and Push](#automatic-image-build-and-push)) handles pushing a changed image automatically for any pull request, including forks. The workflows below are for manually pushing a specific tag — a re-push, or one of the `ddev-dbserver` variants other than the default `mariadb_11.8` that `make` auto-builds.
 
 To manually push using GitHub Actions,
 
@@ -318,7 +318,7 @@ Opening a pull request that touches `containers/` triggers the [Image build](htt
 
 What happens next depends on whether the PR is from a fork:
 
-* **Fork PRs** (a real security boundary — the PR could contain an arbitrary Dockerfile/build script): a `build` job builds the image(s) per architecture with no registry credentials at all — nothing in that job can reach `docker.io`, so there's nothing to gain by gating it before it runs. Once it finishes, a separate, trusted `image-push.yml` workflow — which never checks out or runs the pull request's code — loads what it produced and pushes it, gated behind a maintainer's approval on the `image-push` environment. A comment is posted on the PR once the push completes.
+* **Fork PRs** (security boundary — the PR could contain an arbitrary Dockerfile/build script): a `build` job builds the image(s) per architecture with no registry credentials at all — nothing in that job can reach `docker.io`, so there's nothing to gain by gating it before it runs. Once it finishes, a separate, trusted `image-push.yml` workflow — which never checks out or runs the pull request's code — loads what it produced and pushes it, gated behind a maintainer's approval on the `image-push` environment. A comment is posted on the PR once the push completes.
 * **Everything else** (a push to `main`, or a pull request from a branch in the same repository — no fork content is ever involved): `build-and-push` builds and pushes directly in one step, with no approval gate at all — the same trust level `main-build.yml` already runs at unguarded. A `create-manifests` job then assembles the multi-arch manifest and comments on the PR, if there is one.
 
 So a maintainer only ever needs to click **Approve** once — for a fork PR's push step — and only when the PR actually changed a container image; everything else is fully automatic.

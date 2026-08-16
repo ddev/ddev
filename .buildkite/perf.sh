@@ -19,9 +19,7 @@ if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAG
   exit 0
 fi
 
-# Buildkite holds no image-push credentials, so a changed container image
-# might still be waiting on image-push.yml's maintainer approval when this
-# run starts. Wait for the registry to catch up before pulling anything.
+# A new image tag may have been pushed, find out which
 WAIT_FOR_IMAGES_BRANCH="$BUILDKITE_BRANCH" "$(dirname "$0")/../containers/wait-for-images.sh"
 
 os=$(go env GOOS)

@@ -3,7 +3,7 @@ defaults:
   run:
     shell: bash
 
-# For a fork PR, this workflow may run a fork's own Dockerfile/build scripts,
+# In a forked PR, this workflow may run a fork's own Dockerfile/build scripts,
 # so the `build` job never references a secret - the trusted side (loading
 # the artifact `build` produces and actually pushing it) lives in
 # image-push.yml, triggered via workflow_run once this workflow completes,
