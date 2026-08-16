@@ -230,7 +230,14 @@ setup:
 	@mkdir -p $(TESTTMP)
 
 # Required static analysis targets for pre-push.
-staticrequired: setup golangci-lint markdownlint zensical
+staticrequired: setup golangci-lint markdownlint zensical check-image-tags
+
+# A changed image whose tag never made it into versionconstants.go ships a
+# binary pulling tags nothing builds. Checked rather than fixed here, because
+# fixing means a Docker build - run `make` for that.
+.PHONY: check-image-tags
+check-image-tags:
+	@containers/check-image-tags.sh
 
 # Fail rather than skip when a required tool is absent. These targets used to
 # print a note and exit 0, so `make staticrequired` reported success while

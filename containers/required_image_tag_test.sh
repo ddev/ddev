@@ -118,6 +118,47 @@ else
   pass "refuses an unknown image"
 fi
 
+# --- check-image-tags.sh, the `make staticrequired` gate. Driven with a
+# throwaway versionconstants.go so it can be failed on purpose.
+CHECK_IMAGE_TAGS="$SCRIPT_DIR/check-image-tags.sh"
+
+# shellcheck source=containers/image-configs.sh
+source "$SCRIPT_DIR/image-configs.sh"
+
+CURRENT_FILE="$WORKDIR/current_versionconstants.go"
+: > "$CURRENT_FILE"
+seen=""
+for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
+  IFS='|' read -r _ tag_var hash_paths _ <<< "$entry"
+  case " $seen " in *" $tag_var "*) continue ;; esac
+  seen="$seen $tag_var"
+  # shellcheck disable=SC2086 # hash_paths is a space-separated path list
+  echo "var ${tag_var} = \"$("$HASH_PATHS" $hash_paths)\"" >> "$CURRENT_FILE"
+done
+
+if VERSIONCONSTANTS_FILE="$CURRENT_FILE" "$CHECK_IMAGE_TAGS" >/dev/null 2>&1; then
+  pass "check-image-tags.sh passes when every tag matches the content"
+else
+  fail "check-image-tags.sh should pass when every tag matches the content"
+fi
+
+STALE_FILE="$WORKDIR/stale_versionconstants.go"
+sed 's/= "[0-9a-f]*"/= "0000000000"/' "$CURRENT_FILE" > "$STALE_FILE"
+OUTPUT="$(VERSIONCONSTANTS_FILE="$STALE_FILE" "$CHECK_IMAGE_TAGS" 2>&1)" && RC=0 || RC=$?
+if [ "$RC" -ne 0 ]; then
+  pass "check-image-tags.sh fails when versionconstants.go is stale"
+else
+  fail "check-image-tags.sh should fail when versionconstants.go is stale"
+fi
+case "$OUTPUT" in
+  *"run 'make'"*) pass "the failure says how to fix it" ;;
+  *) fail "the failure should tell the contributor to run make: $OUTPUT" ;;
+esac
+case "$OUTPUT" in
+  *WebTag*BaseDBTag*|*BaseDBTag*WebTag*) pass "the failure names which tags are stale" ;;
+  *) fail "the failure should name the stale tags: $OUTPUT" ;;
+esac
+
 if [ "$FAILURES" -eq 0 ]; then
   echo "All required_image_tag_test.sh checks passed."
   exit 0
