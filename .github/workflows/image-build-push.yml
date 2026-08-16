@@ -273,6 +273,9 @@ jobs:
             echo "Alias '${ALIAS}' rejected; publishing only ${TAG}" >&2
             ALIAS=""
           fi
+          # Descriptive metadata on the index the tag points at - the standard
+          # equivalent of a comment on a tag. See containers/image-metadata.sh.
+          read -r -a ANNOTATIONS <<< "$(containers/image-metadata.sh annotations "$TAG")"
 
           DOCKERHUB_JWT="$(curl -s -H "Content-Type: application/json" -X POST \
             -d '{"username":"'"${{ vars.DOCKERHUB_USERNAME }}"'","password":"'"${DOCKERHUB_TOKEN}"'"}' \
@@ -291,7 +294,13 @@ jobs:
             done
             NAMES=(-t "${repo}:${TAG}")
             [ -n "$ALIAS" ] && NAMES+=(-t "${repo}:${ALIAS}")
-            docker buildx imagetools create "${NAMES[@]}" "${ARCH_TAGS[@]}"
+            docker buildx imagetools create "${ANNOTATIONS[@]}" "${NAMES[@]}" "${ARCH_TAGS[@]}"
+            # imagetools inherits the source media type and a Docker manifest
+            # list has nowhere to put annotations, so say when they were
+            # dropped rather than leaving it to be discovered later.
+            if ! docker buildx imagetools inspect --raw "${repo}:${TAG}" | jq -e '.annotations' >/dev/null 2>&1; then
+              echo "Note: ${repo}:${TAG} is not an OCI index, so index annotations were not stored." >&2
+            fi
             PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${TAG}\`"$'\n'
             for arch in $ARCHES; do
               echo "Removing intermediary tag ${repo}:${TAG}-${arch}"

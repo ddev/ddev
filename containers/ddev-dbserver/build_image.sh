@@ -140,10 +140,15 @@ tag_directive="-t ${DOCKER_ORG}/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${I
 if [[ ${IMAGE_TAG} =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   tag_directive="$tag_directive -t ${DOCKER_ORG}/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:latest"
 fi
+
+# Same OCI metadata every other image carries; this directory deliberately does
+# not include containers_shared.mk, so it calls the generator itself.
+label_directive="$("$(dirname "$0")/../image-metadata.sh" labels "${DDEV_IMAGE_TAG}" "ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}")"
+
 if [ ! -z ${PUSH:-} ]; then
   echo "building/pushing ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
   set -x
-  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="DDEV_IMAGE_TAG=${DDEV_IMAGE_TAG}" ${tag_directive}  .
+  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="DDEV_IMAGE_TAG=${DDEV_IMAGE_TAG}" ${label_directive} ${tag_directive}  .
   set +x
 fi
 
@@ -151,5 +156,5 @@ fi
 set -x
 if [ -z "${PUSH:-}" ]; then
     echo "Loading to local docker ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
-    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DDEV_IMAGE_TAG=${DDEV_IMAGE_TAG}" ${tag_directive} .
+    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_MAJOR_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DDEV_IMAGE_TAG=${DDEV_IMAGE_TAG}" ${label_directive} ${tag_directive} .
 fi

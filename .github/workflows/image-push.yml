@@ -101,6 +101,9 @@ jobs:
         run: |
           set -eu -o pipefail
           SANITIZED_BRANCH="$(echo "$ALIAS_BRANCH" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')"
+          # The revision is this workflow's own checkout (the default branch),
+          # not the fork's, so record the commit the artifact was built from.
+          export DDEV_GIT_REVISION="${{ github.event.workflow_run.head_sha }}"
           declare -A TAG_BY_KEY
           declare -A REPOS_BY_KEY
           declare -A ARCHES_BY_KEY
@@ -163,7 +166,13 @@ jobs:
               else
                 echo "Alias '${alias_tag}' rejected; publishing only ${tag}" >&2
               fi
-              docker buildx imagetools create "${names[@]}" "${arch_tags[@]}"
+              read -r -a annotations <<< "$(containers/image-metadata.sh annotations "$tag")"
+              docker buildx imagetools create "${annotations[@]}" "${names[@]}" "${arch_tags[@]}"
+              # See the same note in image-build-push.yml: a Docker manifest
+              # list has nowhere to store annotations.
+              if ! docker buildx imagetools inspect --raw "${repo}:${tag}" | jq -e '.annotations' >/dev/null 2>&1; then
+                echo "Note: ${repo}:${tag} is not an OCI index, so index annotations were not stored." >&2
+              fi
               PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${tag}\`"$'\n'
 
               for arch in ${ARCHES_BY_KEY[$key]}; do

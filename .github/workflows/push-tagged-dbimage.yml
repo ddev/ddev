@@ -190,6 +190,8 @@ jobs:
       TAG: ${{ needs.variants.outputs.tag }}
       ALIAS: ${{ needs.variants.outputs.alias }}
     steps:
+      # Needed for containers/image-metadata.sh below.
+      - uses: actions/checkout@v7
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5
         with:
@@ -214,7 +216,8 @@ jobs:
             ORG_IMAGE=${DOCKER_ORG}/ddev-dbserver-$(echo "${variant}" | tr '_' '-')
             NAMES=(-t "${ORG_IMAGE}:${TAG}")
             [ -n "${ALIAS}" ] && NAMES+=(-t "${ORG_IMAGE}:${ALIAS}")
-            docker buildx imagetools create "${NAMES[@]}" ${ORG_IMAGE}:${TAG}-amd64 ${ORG_IMAGE}:${TAG}-arm64
+            read -r -a ANNOTATIONS <<< "$(containers/image-metadata.sh annotations "${TAG}" "${ORG_IMAGE##*/}")"
+            docker buildx imagetools create "${ANNOTATIONS[@]}" "${NAMES[@]}" ${ORG_IMAGE}:${TAG}-amd64 ${ORG_IMAGE}:${TAG}-arm64
             if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               docker buildx imagetools create -t ${ORG_IMAGE}:latest ${ORG_IMAGE}:${TAG}
             fi

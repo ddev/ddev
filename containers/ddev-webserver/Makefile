@@ -16,7 +16,7 @@ DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 images: $(DEFAULT_IMAGES)
 
 $(DEFAULT_IMAGES):
-	docker build --label com.ddev.buildhost=${shell hostname} --label com.ddev.image-tag=$(DDEV_IMAGE_TAG) --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+	docker build --label com.ddev.buildhost=${shell hostname} $(shell ../image-metadata.sh labels $(DDEV_IMAGE_TAG) $@) --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 
 test: images
