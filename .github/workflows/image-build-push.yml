@@ -48,6 +48,16 @@ jobs:
       is_fork: ${{ steps.fork.outputs.is_fork }}
     steps:
       - uses: actions/checkout@v7
+      - name: Load DOCKER_ORG from public-variables branch
+        # Fork PRs can't see vars.DOCKER_ORG; fall back only then, so a
+        # same-repo run keeps this repo's own value. See
+        # .github/public-variables/README.md.
+        if: vars.DOCKER_ORG == ''
+        run: |
+          git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
+          value="$(git show refs/public-variables-tmp:.github/public-variables/DOCKER_ORG)"
+          [ -n "$value" ] && echo "DOCKER_ORG=$value" >> "$GITHUB_ENV"
+          git update-ref -d refs/public-variables-tmp
       - name: Compute per-image build status
         id: detect
         # github.head_ref is attacker-controlled (a fork may name its branch
@@ -136,6 +146,15 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v7
+      - name: Load DOCKER_ORG from public-variables branch
+        # This job only runs for fork PRs, where vars.DOCKER_ORG is never
+        # available - see .github/public-variables/README.md.
+        if: vars.DOCKER_ORG == ''
+        run: |
+          git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
+          value="$(git show refs/public-variables-tmp:.github/public-variables/DOCKER_ORG)"
+          [ -n "$value" ] && echo "DOCKER_ORG=$value" >> "$GITHUB_ENV"
+          git update-ref -d refs/public-variables-tmp
       - name: Build ${{ matrix.build.repo }}:${{ matrix.build.tag }}-${{ matrix.build.arch }}
         run: |
           set -eu -o pipefail
