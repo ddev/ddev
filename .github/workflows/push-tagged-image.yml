@@ -18,8 +18,8 @@ on:
           - ddev-xhgui
           - test-ssh-server
       tag:
-        description: Tag for pushed image (v1.25.0 for example)
-        required: true
+        description: 'Tag to push (v1.25.0 for a release). Leave empty to use the tag this branch needs.'
+        required: false
         default: ""
       debug_enabled:
         description: 'Enable debug mode'
@@ -29,14 +29,42 @@ on:
 env:
   REGISTRY: docker.io
   DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
-  TAG: "${{ github.event.inputs.tag }}"
 
 permissions:
   contents: read
 
 jobs:
+  # An empty tag input means "publish what this checkout needs", which is
+  # derivable; retyping the content hash by hand is how it ends up not
+  # matching versionconstants.go.
+  resolve-tag:
+    name: Resolve the tag to push
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: tag
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          IMAGE: ${{ github.event.inputs.image }}
+        run: |
+          set -eu -o pipefail
+          if [ -n "$INPUT_TAG" ]; then
+            TAG="$INPUT_TAG"
+            echo "Using the tag supplied on the workflow input: ${TAG}"
+          else
+            TAG="$(containers/image-tag-for.sh "$IMAGE")"
+            echo "No tag supplied; using the tag this checkout needs: ${TAG}"
+          fi
+          containers/validate-image-tag.sh "$TAG" || [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
   build-and-push:
     name: build ${{ matrix.arch }} ${{ github.event.inputs.image }}
+    needs: resolve-tag
+    env:
+      TAG: ${{ needs.resolve-tag.outputs.tag }}
     strategy:
       matrix:
         arch: [amd64, arm64]
@@ -131,9 +159,11 @@ jobs:
           retention-days: 1
   create-manifests:
     name: create multi-arch manifest
-    needs: build-and-push
+    needs: [resolve-tag, build-and-push]
     runs-on: ubuntu-24.04
     if: ${{ needs.build-and-push.outputs.multi_arch == 'true' }}
+    env:
+      TAG: ${{ needs.resolve-tag.outputs.tag }}
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5

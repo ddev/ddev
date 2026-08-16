@@ -83,6 +83,35 @@ else
   pass "rejects a missing hash path"
 fi
 
+# --- image-tag-for.sh, the lookup the manual push workflows use to default
+# their tag input. Against the real image-configs.sh and this checkout.
+unset VERSIONCONSTANTS_FILE
+IMAGE_TAG_FOR="$SCRIPT_DIR/image-tag-for.sh"
+
+web_tag="$("$IMAGE_TAG_FOR" ddev-webserver)"
+web_hash="$("$HASH_PATHS" containers/ddev-webserver containers/containers_shared.mk)"
+case "$web_tag" in
+  *"$web_hash") pass "image-tag-for.sh resolves ddev-webserver to a tag with the current hash" ;;
+  *) fail "ddev-webserver tag '$web_tag' should end in '$web_hash'" ;;
+esac
+
+# Every db variant shares BaseDBTag, so the lookup has to agree across them.
+assert_eq "$("$IMAGE_TAG_FOR" ddev-dbserver-mariadb-11.8)" "$("$IMAGE_TAG_FOR" ddev-dbserver-mysql-8.0)" \
+  "image-tag-for.sh gives every db variant the same tag"
+
+# An image the automatic flow doesn't cover has no hash to derive, so the
+# caller has to be told rather than handed a wrong tag.
+if "$IMAGE_TAG_FOR" test-ssh-server >/dev/null 2>&1; then
+  fail "should refuse an image that isn't content-addressed"
+else
+  pass "refuses an image that isn't content-addressed"
+fi
+if "$IMAGE_TAG_FOR" no-such-image >/dev/null 2>&1; then
+  fail "should refuse an unknown image"
+else
+  pass "refuses an unknown image"
+fi
+
 if [ "$FAILURES" -eq 0 ]; then
   echo "All required_image_tag_test.sh checks passed."
   exit 0

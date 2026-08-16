@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Base tag for pushed dbimage (v1.25.0 for example)'
-        required: true
+        description: 'Tag to push (v1.25.0 for a release). Leave empty to use the tag this branch needs.'
+        required: false
         default: ""
       debug_enabled:
         description: 'Enable debug mode'
@@ -18,7 +18,6 @@ on:
 env:
   REGISTRY: docker.io
   DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
-  TAG: "${{ github.event.inputs.tag }}"
 
 permissions:
   contents: read
@@ -33,6 +32,7 @@ jobs:
     outputs:
       matrix: ${{ steps.variants.outputs.matrix }}
       multi_arch_images: ${{ steps.variants.outputs.multi_arch_images }}
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v7
       - id: variants
@@ -41,10 +41,29 @@ jobs:
           V=containers/ddev-dbserver/variants.sh
           echo "matrix=$($V json)" >> "$GITHUB_OUTPUT"
           echo "multi_arch_images=$($V multi-arch-variants)" >> "$GITHUB_OUTPUT"
+      # An empty tag input means "publish what this checkout needs", which is
+      # derivable; retyping the content hash by hand is how it ends up not
+      # matching versionconstants.go.
+      - id: tag
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          set -eu -o pipefail
+          if [ -n "$INPUT_TAG" ]; then
+            TAG="$INPUT_TAG"
+            echo "Using the tag supplied on the workflow input: ${TAG}"
+          else
+            TAG="$(containers/image-tag-for.sh ddev-dbserver-mariadb-11.8)"
+            echo "No tag supplied; using the tag this checkout needs: ${TAG}"
+          fi
+          containers/validate-image-tag.sh "$TAG" || [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
   build-db-arch:
     name: build ${{ matrix.build.arch }} ${{ matrix.build.dbtype }}
     needs: variants
+    env:
+      TAG: ${{ needs.variants.outputs.tag }}
     strategy:
       fail-fast: false
       matrix:
@@ -145,6 +164,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       MULTI_ARCH_IMAGES: ${{ needs.variants.outputs.multi_arch_images }}
+      TAG: ${{ needs.variants.outputs.tag }}
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5
