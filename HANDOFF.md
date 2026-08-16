@@ -2,203 +2,232 @@
 
 Temporary file. Delete before merging.
 
-Working tree on branch `20260814_rfay_docker_update_phase_2`, uncommitted.
-Nothing has been pushed.
+Branch `20260814_rfay_docker_update_phase_2`. Nothing has been pushed.
 
-## What changed and why
+## MUST TEST BEFORE MERGE
 
-### 1. `wait-for-images.sh` waited for a tag nothing ever pushes — blocking
+Two things in here have never run in CI and will not be exercised by any test
+harness. Both are cheap to get wrong and expensive to discover after merge.
 
-It computed `<current-branch>-<hash>`, but the tag `ddev` actually pulls is the
-one committed in `versionconstants.go`. `autotag.sh` rewrites that line only
-when the *hash* changes, and when it does it rewrites the whole tag including
-the branch prefix — so the two agree only on a branch that changed the image.
+### 1. A `containers/ddev-dbserver` change must build and push all 20 variants
 
-Every test runner calls this script unconditionally, while
-`image-build-push.yml` only triggers on `containers/**`. So any PR not touching
-`containers/` would poll 20 minutes and fail every Buildkite and GitHub test
-job. Reproduced on this branch before the fix:
+This is the bug that motivated the second round of fixes, and this PR is
+itself the first live test of the fix — adding `variants.txt` under
+`containers/ddev-dbserver/` changed that directory's hash, so `BaseDBTag` is
+now `20260814_rfay_docker_update_phase_2-1dc90407ef` and **CI must build and
+push 36 jobs across 20 repositories before any test using a non-default
+database can pass.**
 
-```text
-versionconstants.go WebTag  = 20260721_rfay_content_addressed_image_tags-36bceca65e   → EXISTS
-wait-for-images.sh computed = 20260814_rfay_docker_update_phase_2-36bceca65e          → MISSING
+Watch for, on this PR's first real CI run:
+
+- `detect` reports 36 build jobs / 20 images, not 1.
+- `create-manifests` (or `image-push`) produces a multi-arch manifest for
+  every one of the 20 `ddev/ddev-dbserver-*` repos at that tag, with the four
+  oldest (`mariadb-5.5`, `mariadb-10.0`, `mysql-5.5`, `mysql-5.6`) amd64-only.
+- `TestDdevAllDatabases` passes, along with the tests in `db_test.go`,
+  `snapshot_test.go`, `config_test.go`, and `debug-migrate-database_test.go`
+  that pin a non-default database.
+
+Verify independently of CI's own reporting:
+
+```bash
+TAG=$(grep -E '^var BaseDBTag' pkg/versionconstants/versionconstants.go | sed -E 's/.*"([^"]*)".*/\1/')
+for r in $(containers/ddev-dbserver/variants.sh repos); do
+  printf '%-34s ' "$r"; containers/registry-tag-exists.sh "ddev/$r" "$TAG" && echo EXISTS || echo MISSING
+done
 ```
 
-Fix: new `containers/required-image-tag.sh` resolves the tag the same way
-`autotag.sh` does and reports which case applies:
+Every line must say EXISTS. Any MISSING means the matrix regressed and
+non-default database tests will fail.
 
-* `committed <tag>` — hash still matches, so that exact tag (stale branch
-  prefix and all) is what gets pulled and what must exist in the registry.
-* `recomputed <tag>` — content changed, so `make` builds it locally on the
-  runner and there is nothing to wait for.
+### 2. `push-tagged-dbimage.yml` still works after the DRY refactor
 
-`wait-for-images.sh` no longer needs a branch name at all, which removed the
-`WAIT_FOR_IMAGES_BRANCH` plumbing from four callers.
+Its matrix, its `MULTI_ARCH_IMAGES` list, and its multi-arch/single-arch
+decision were three separate hardcoded copies of the variant list; all three
+now come from `variants.sh`. This is the release-time push path, so a mistake
+here surfaces during a release.
 
-### 2. `detect` rebuilt and re-pushed unchanged images
+Run it manually on `ddev-test/ddev` with a throwaway tag and confirm:
 
-Same root cause: `detect` checked `<branch>-<hash>`, so any PR touching
-`containers/` re-pushed all five images under a fresh branch-prefixed tag even
-with no image change — and, on a fork, asked a maintainer to approve that
-no-op. It now uses `required-image-tag.sh` too. Verified: `detect` on this PR
-now yields `matrix=[]`.
+- The `variants` job runs first and its matrix expands to **36** `build-db-arch`
+  jobs — the same count as before (20 variants × 2 arches, minus 4 arm64
+  exclusions).
+- The four amd64-only variants get `multi_arch=false` in their `meta` step and
+  push an unsuffixed tag; the other 16 get `multi_arch=true` and push
+  `-amd64`/`-arm64`.
+- `create-manifests` combines exactly the 16 multi-arch variants and deletes
+  the intermediary per-arch tags.
+- All 20 repos carry the throwaway tag at the end.
 
-### 3. Script injection via `github.head_ref` — security
+Locally I confirmed the generated lists are byte-identical to the ones they
+replaced (`build-targets` for both host arches, `single-arch-targets`,
+`test-targets` for both, and the `MULTI_ARCH_IMAGES` set), and that
+`make -n` still resolves a target from each list including the amd64-only
+ones under `CURRENT_ARCH=amd64`. That is static equivalence, not a live run.
 
-`BRANCH="${{ github.head_ref || github.ref_name }}"` spliced attacker-controlled
-text into a `run:` block (git ref names permit `"`, backtick, `$`, `;`).
-`actionlint` flagged it independently. `detect` has no secrets itself, but it
-emits `is_fork`; injected code could set `is_fork=false` and route fork content
-into `build-and-push`, the job that loads `PUSH_SERVICE_ACCOUNT_TOKEN`.
+## Round 1 fixes — review findings
 
-Fixed by passing it through `env:`. `is_fork` also moved into its own step, so
-nothing the per-image loop does can reach the output that decides whether the
-push secret loads. The `WAIT_FOR_IMAGES_BRANCH` removal in (1) also deleted a
-PowerShell/bash splice of the same value in `test-wsl2-reusable.yml`.
+### The tag-resolution bug (blocking)
 
-### 4. `image-push.yml` validated the tag but not the repository — security
+`wait-for-images.sh` computed `<current-branch>-<hash>`, but the tag ddev
+pulls is the one committed in `versionconstants.go`, and `autotag.sh` rewrites
+that line (branch prefix included) only when the hash changes. The two agree
+only on a branch that changed the image, so any PR not touching `containers/`
+would poll 20 minutes and fail every Buildkite and GitHub test job. `detect`
+had the mirror-image bug: it re-pushed all images under a fresh branch prefix
+on any `containers/` change, no-op or not.
 
-`repos.txt` comes straight out of the fork-produced artifact and was pushed to
-verbatim, so an approved fork build could publish to any repo the credential
-can write. New `containers/validate-image-repo.sh` enforces
-`$DOCKER_ORG/<known-suffix>` (with a pattern for `ddev-dbserver-<engine>-<ver>`).
+`containers/required-image-tag.sh` now resolves the tag once, for both
+callers, reporting `committed` (hash matches — wait for that exact tag) or
+`recomputed` (content changed — `make` builds it locally). This also removed
+the `WAIT_FOR_IMAGES_BRANCH` plumbing from four callers, since the branch name
+is no longer needed.
 
-### 5. Silent-failure paths in `image-push.yml`
+### Security
 
-* Added `actions: read` — `download-artifact@v8` needs it to reach another
-  run's artifacts, and `continue-on-error: true` was masking that as
-  "nothing needed pushing".
-* New ungated `check-artifacts` job lists artifacts via the API and gates the
-  environment job, so a fork PR with nothing to push no longer requests an
-  approval. Approving something that turns out to be a no-op trains people to
-  click without looking.
-* Removed `continue-on-error` from the download; an empty push summary now
-  fails the job instead of commenting success.
-* Artifact `retention-days` 1 → 7. The gate is a human approval that may not
-  come the same day.
+- `github.head_ref` reached a `run:` block spliced into the script. Git ref
+  names permit quotes and backticks, and `detect` emits `is_fork`, so injected
+  code could set `is_fork=false` and route fork content into `build-and-push`,
+  the job that loads `PUSH_SERVICE_ACCOUNT_TOKEN`. It now arrives via `env:`,
+  and `is_fork` moved to its own step.
+- `image-push.yml` validated the tag but pushed to whatever repository names
+  the fork-produced artifact listed. `validate-image-repo.sh` constrains them
+  to `$DOCKER_ORG` plus an exact allowlist.
 
-### 6. `DDEV_IMAGE_TAG` not passed to the builds
+### Silent failures
 
-`push-tagged-image.yml` passes it; the new jobs didn't, so
-`com.ddev.image-tag` was baked as `<tag>-amd64` instead of `<tag>`. That label
-is what `imageVersionMismatch()` in `pkg/ddevapp/config_custom.go` compares
-against, so pinned-image users would have seen spurious mismatch notes.
+- `image-push.yml` lacked `actions: read` for a cross-run artifact download,
+  and `continue-on-error` turned that into a "nothing needed pushing" comment.
+  A new ungated `check-artifacts` job gates the environment job instead, so a
+  fork build with nothing to push no longer asks for approval, and a failed
+  download is now fatal.
+- Artifact retention 1 → 7 days; the gate is a human approval.
 
-### 7. Smaller items
+### Smaller
 
-* `DOCKER_ORG` now falls back to `ddev` in both workflows (was empty on a repo
-  without the variable, producing `/ddev-webserver`).
-* `validate-image-tag.sh`: the reserved-literal and `vX.Y.Z` checks were
-  unreachable — nothing that reaches them can match. They now test the part
-  before the hash, so `latest-0123456789` and `v1.2.3-0123456789` are rejected.
-  Also requires a leading character Docker accepts.
-* New `containers/image-configs.sh` is the single source for the image list,
-  sourced by both `wait-for-images.sh` and `detect` (was duplicated, with
-  "keep in sync" comments).
-* BSD `wc -l` padding broke 4 checks in `wait_for_images_test.sh` and 1 in
-  `autotag_test.sh` on macOS. Fixed in both.
+- `DDEV_IMAGE_TAG` was not passed, so `com.ddev.image-tag` recorded
+  `<tag>-<arch>` rather than the tag people pull, which
+  `imageVersionMismatch()` compares against.
+- `DOCKER_ORG` falls back to `ddev` instead of producing `/ddev-webserver`.
+- `validate-image-tag.sh`'s reserved-literal and `vX.Y.Z` checks were
+  unreachable behind the format check; they now test the part before the hash.
+- BSD `wc -l` padding failed 5 checks on macOS.
+
+## Round 2 — the db variant matrix
+
+`GetDBImage()` in `pkg/docker/images.go` builds every variant's reference from
+one shared `BaseDBTag`, so a dbserver change moves the tag for all 20 while
+`make` built only `mariadb_11.8` and CI pushed only `ddev-dbserver-mariadb-11.8`.
+The other 19 were referenced at a tag that existed nowhere. Introduced by
+phase 1 (#8612): before that, `BaseDBTag` was hand-bumped after someone ran
+`push-tagged-dbimage.yml` for all 20.
+
+Fixed by making `detect`'s matrix cover every variant. The build matrix is now
+one entry per (image, arch) rather than a cross product, because the oldest
+variants are amd64-only, and `create-manifests` takes its arch list from
+`detect` instead of assuming both. Artifact names key on `repo_suffix`, not
+`make_dir` — all 20 db variants share a `make_dir` and would have collided.
+
+`wait-for-images.sh` now also fails fast, with the command to run, when a
+non-locally-built image is out of date. There is no local fallback for those
+19 variants, and the tag `make` would invent depends on the runner's branch
+name (detached HEAD on a PR checkout), so it may not match what CI pushed.
+
+### DRY
+
+The variant list was duplicated in four places. It now lives in
+`containers/ddev-dbserver/variants.txt`, read through `variants.sh`, which
+renders each consumer's view:
+
+| Consumer | View |
+| --- | --- |
+| `containers/ddev-dbserver/Makefile` | `build-targets`, `single-arch-targets`, `test-targets` |
+| `containers/image-configs.sh` | `list` |
+| `containers/validate-image-repo.sh` | `repos` |
+| `.github/workflows/push-tagged-dbimage.yml` | `json`, `multi-arch-variants` |
+
+`variants.txt` sits inside the hashed dbserver directory on purpose: adding a
+database version has to change the content hash, or `detect` would decide the
+tag already exists and never build the new variant.
 
 ## Test status
 
-All 73 checks pass locally (macOS) and are wired into `container-tests.yml`:
+114 checks across seven harnesses, all passing locally (macOS), all wired into
+`container-tests.yml`:
 
 | Harness | Checks |
 | --- | --- |
 | `containers/autotag_test.sh` | 17 |
-| `containers/required_image_tag_test.sh` | 7 (new) |
+| `containers/db_variants_test.sh` | 15 (new) |
 | `containers/registry_tag_exists_test.sh` | 4 |
+| `containers/required_image_tag_test.sh` | 7 (new) |
+| `containers/validate_image_repo_test.sh` | 37 (new) |
 | `containers/validate_image_tag_test.sh` | 15 |
-| `containers/validate_image_repo_test.sh` | 16 (new) |
-| `containers/wait_for_images_test.sh` | 14 |
+| `containers/wait_for_images_test.sh` | 19 |
 
-`shellcheck -x` clean on all new/changed scripts. `actionlint` reports no
-untrusted-input findings; the remaining SC2086/SC2046 notes in
-`test-reusable.yml` are pre-existing and untouched.
+`shellcheck -x` clean on all new and changed scripts. `actionlint` clean on
+all changed workflows apart from pre-existing SC2086/SC2046 notes in untouched
+parts of `test-reusable.yml`.
 
-## Verification Claude can do without credentials
+## Verification Claude ran
 
-These run against the real registry (read-only, anonymous) and this checkout.
-None of them push, and none need Docker running —
-`docker buildx imagetools inspect` talks to the registry directly (verified
-with `DOCKER_HOST` pointed at a dead socket).
+Read-only against the real registry, plus this checkout. Nothing pushed.
 
-1. **Unit harnesses** — `for t in containers/*_test.sh; do $t; done`.
-2. **The blocking regression** — `WAIT_FOR_IMAGES_ATTEMPTS=1
-   containers/wait-for-images.sh` must find all five tags and exit 0. Before
-   the fix it failed on the first image.
-3. **`detect` dry run** — source `containers/image-configs.sh`, loop
-   `required-image-tag.sh` + `registry-tag-exists.sh`, confirm `matrix=[]` on a
-   PR that changes no image content.
-4. **Changed-image path** — append a line to `containers/ddev-xhgui/Dockerfile`,
-   re-run (3): only `ddev-xhgui` should say `BUILD ... (recomputed)`, and
-   `wait-for-images.sh` should skip it with "not waiting" while still finding
-   the other four. `git checkout` the file afterwards.
-5. **Injection** — run (4) with `REQUIRED_IMAGE_TAG_BRANCH='evil"; id; #'`.
-   Expect the tag `evil-id--<hash>` and no command execution. (Done: passes.)
-6. **Artifact round-trip against a local registry** — not yet done, and the
-   most valuable thing left that needs no secrets. Run `registry:2` in a
-   container, `docker save` a small image the way the `build` job does, write
-   `repos.txt`/`tag.txt`/`arch.txt`, then run `image-push.yml`'s load/validate/
-   push loop against `localhost:5000`. Feed it a hostile `repos.txt`
-   (`ddev/ddev-webserver`, `attacker/evil`) and confirm
-   `validate-image-repo.sh` stops it before any push. Exercises the multi-arch
-   `imagetools create` grouping logic, which no unit test covers.
-7. **`make` still builds** — `make` at the repo root, confirm `autotag-images`
-   no-ops and `versionconstants.go` is untouched.
+1. All seven harnesses.
+2. `wait-for-images.sh` finds the four non-db images and correctly waits on the
+   db variants at the new `BaseDBTag`.
+3. `detect` dry run: `matrix=[]` when nothing changed; 36 build jobs / 20
+   manifests after a dbserver change; only xhgui after an xhgui change.
+4. Hostile branch name `evil"; id; #` sanitizes to `evil-id-`, no execution.
+5. Generated db lists byte-identical to the four hardcoded copies they replace;
+   `make -n` resolves a target from each list on both host arches.
+6. `make autotag-images` built `mariadb_11.8` locally and rewrote `BaseDBTag`.
+7. `docker buildx imagetools inspect` works with no Docker daemon running,
+   so the early placement of the wait step in the Buildkite scripts is fine.
 
-Items 1–5 have been run and pass. 6 and 7 have not.
+Not run: the artifact round-trip against a local `registry:2` (worth doing —
+it needs no secrets and would exercise the multi-arch `imagetools create`
+grouping that no unit test covers), and a full `make` build.
 
-## Verification only a human can do
+## Other human verification
 
-Everything below needs `ddev-test/ddev` with the `image-push` environment and
-`PUSH_SERVICE_ACCOUNT_TOKEN` configured. Do not run these against `ddev/ddev`.
+On `ddev-test/ddev`, with the `image-push` environment configured. Confirm the
+rule actually took: `gh api repos/<owner>/<repo>/environments/image-push` — an
+environment referenced before it exists is auto-created with no protection.
 
-1. **Go-only PR.** A PR touching no `containers/` file. Every test job should
-   reach "Wait for pushed images", print five `found …` lines within seconds,
-   and continue. This is the fix for the blocking bug and nothing in CI has
-   ever exercised it — every commit on this branch carries `[skip ci]`, so the
-   four green Buildkite checks on #8707 either skipped or predate the change.
-2. **No-op `containers/` PR.** Add a file under `containers/` that isn't in any
-   hash path. `detect` should report five `already exists (committed)` lines
-   and build nothing.
-3. **Real image change, same-repo branch.** Edit
-   `containers/ddev-xhgui/Dockerfile`, run `make`, commit the
-   `versionconstants.go` change. Expect: `detect` lists only xhgui →
-   `build-and-push` runs both arches with no approval → `create-manifests`
-   comments → `imagetools inspect` shows both platforms and the per-arch tags
-   are gone. Then confirm the `com.ddev.image-tag` label reads `<tag>`, not
-   `<tag>-amd64` (item 6 above).
-4. **Real image change, fork branch.** Same edit from a fork. Confirm the
-   `build` job shows no secret-loading step, that `check-artifacts` finds the
-   artifacts, that `image-push` requests approval once, and that the download
-   succeeds — this is the path where the missing `actions: read` would have
-   shown up as a false "nothing needed pushing".
-5. **Fork PR touching `containers/` with no image change.** Confirm *no*
-   approval request appears (previously it always did).
-6. **Adversarial artifact.** On a fork branch, add a step overwriting
-   `repos.txt` with `ddev/ddev-webserver` before upload. Approve, and confirm
-   the push job fails at `validate-image-repo.sh` rather than publishing.
-7. **Hostile branch name.** Push a fork branch literally named
-   ``test`touch /tmp/pwned` `` and read the `detect` job log. The branch should
-   appear only as sanitized data.
-8. **Expired artifact.** Trigger a fork build, wait past `retention-days`, then
-   approve. The run must fail loudly.
+1. **A PR touching no `containers/` file.** Five `found …` lines within seconds,
+   then the tests run. This is the round-1 blocking fix and has never run in CI.
+2. **A `containers/` file that isn't in any hash path.** `detect` reports
+   `already exists (committed)` for everything and builds nothing.
+3. **An `ddev-xhgui` change on a same-repo branch.** Only xhgui builds; no
+   approval; `com.ddev.image-tag` on the result is the final tag, not
+   `<tag>-amd64`.
+4. **The same from a fork.** No secret-loading step in `build`; exactly one
+   approval; the download succeeds rather than silently commenting
+   "nothing needed pushing".
+5. **A fork PR touching `containers/` with no image change.** No approval
+   request at all.
+6. **Adversarial artifact.** Overwrite `repos.txt` with `ddev/ddev-webserver`
+   before upload; the push must fail at `validate-image-repo.sh`.
+7. **Hostile branch name** ``test`touch /tmp/pwned` ``; check the `detect` log.
+8. **Expired artifact.** Approve after `retention-days`; must fail loudly.
 
 ## Still open
 
-* **The PR description is stale.** It still describes "an `approval` job gates
-  on a new `image-push` GitHub Environment before any expensive/untrusted build
-  work runs", which commits a7ec6b5c9 / 2bdced7ef removed. The in-repo docs are
-  correct. Needs a maintainer edit.
-* **`actions: read` on `download-artifact@v8`** is added on the documented
-  requirement; it has not been observed failing or passing on a live run.
-  Item 4 above confirms it.
-* **Registry pollution has no cleanup path.** Each image change adds a
-  multi-arch tag that is never removed. Fine for now; worth a follow-up issue
-  alongside the `TODO(#8609)` about the 18 unbuilt `ddev-dbserver` variants.
-* **`registry-tag-exists.sh` cannot distinguish "missing" from "registry
-  unreachable."** A DockerHub blip costs a redundant rebuild in `detect`, or 20
-  minutes and a red build in `wait-for-images.sh`. Acceptable, but it's the
-  most likely source of a confusing intermittent failure.
-* **Commits.** None made — the fixes are uncommitted in the working tree, and
-  the branch still has one unpushed local commit (`77d90bd97`, empty).
+- **Fork artifact volume.** A fork changing `ddev-dbserver` now produces 36
+  `docker save` tarballs. Local db images are 550–730MB, so that is roughly
+  20GB of artifacts for one PR, compressed by `upload-artifact` but still
+  large, and now retained 7 days. This is the cost of building the full matrix
+  on the untrusted path; if it proves impractical, the fallback is to keep the
+  full matrix on the non-fork path and have forks use
+  `push-tagged-dbimage.yml`. Watch the first fork-side dbserver PR.
+- **`actions: read` on `download-artifact@v8`** is added on the documented
+  requirement; not yet observed on a live run.
+- **Registry pollution has no cleanup path.** Each image change adds tags that
+  are never removed — now 20 at a time for a dbserver change.
+- **`registry-tag-exists.sh` cannot distinguish "missing" from "registry
+  unreachable."** A DockerHub blip costs a redundant rebuild in `detect` or 20
+  minutes and a red build in `wait-for-images.sh`. It now makes 24 registry
+  calls per test run instead of 5, so the odds are higher.
+- **The PR description** was rewritten for round 1 but does not yet mention the
+  db variant matrix.
