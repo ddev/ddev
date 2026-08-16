@@ -6,8 +6,22 @@ Branch `20260814_rfay_docker_update_phase_2`. Nothing has been pushed.
 
 ## MUST TEST BEFORE MERGE
 
-Two things in here have never run in CI and will not be exercised by any test
-harness. Both are cheap to get wrong and expensive to discover after merge.
+### 0. Every image has to be republished at its bare-hash tag
+
+Tags are now bare content hashes (`ddev/ddev-webserver:36bceca65e`), which
+invalidates every previously published content-hash tag. Nothing in either
+organization carries the new tags yet — confirmed missing for webserver,
+ssh-agent, and the db variants. **Integration tests cannot pull until the
+first CI run publishes them**, which is 44 build jobs across 24 images.
+Locally, `go test -run TestCmdVersion ./cmd/ddev/cmd/...` currently fails with
+`manifest for ddev/ddev-ssh-agent:8e8bf1217c not found`, which is this and
+nothing else.
+
+This is a one-time migration cost of the scheme change; after that first push
+the tags stop depending on branch or organization, which is the whole point.
+
+Two further things have never run in CI and no test harness covers. Both are
+cheap to get wrong and expensive to discover after merge.
 
 ### 1. A `containers/ddev-dbserver` change must build and push all 20 variants
 
@@ -40,6 +54,10 @@ done
 Every line must say EXISTS. Any MISSING means the matrix regressed and
 non-default database tests will fail.
 
+Note that item 1 below was written before the tag scheme changed: the tag to
+check is now the bare `BaseDBTag` hash, not a branch-prefixed string, and the
+`variants.sh repos` loop still works unchanged.
+
 ### 2. `push-tagged-dbimage.yml` still works after the DRY refactor
 
 Its matrix, its `MULTI_ARCH_IMAGES` list, and its multi-arch/single-arch
@@ -47,11 +65,18 @@ decision were three separate hardcoded copies of the variant list; all three
 now come from `variants.sh`. This is the release-time push path, so a mistake
 here surfaces during a release.
 
-Run it manually on `ddev-test/ddev` with a throwaway tag and confirm:
+Its `tag` input is now optional — left empty it derives the tag the checkout
+needs, which is the fix for having to transcribe `main-1dc90407ef` by hand.
+Test **both** paths: empty (derives the bare hash) and an explicit `vX.Y.Z`
+(the release path).
+
+Run it manually on `ddev-test/ddev` and confirm:
 
 - The `variants` job runs first and its matrix expands to **36** `build-db-arch`
   jobs — the same count as before (20 variants × 2 arches, minus 4 arm64
   exclusions).
+- With an empty tag input, the resolve step logs the derived tag and it matches
+  `BaseDBTag` in `versionconstants.go`.
 - The four amd64-only variants get `multi_arch=false` in their `meta` step and
   push an unsuffixed tag; the other 16 get `multi_arch=true` and push
   `-amd64`/`-arm64`.
@@ -152,18 +177,18 @@ tag already exists and never build the new variant.
 
 ## Test status
 
-114 checks across seven harnesses, all passing locally (macOS), all wired into
+127 checks across seven harnesses, all passing locally (macOS), all wired into
 `container-tests.yml`:
 
 | Harness | Checks |
 | --- | --- |
-| `containers/autotag_test.sh` | 17 |
+| `containers/autotag_test.sh` | 18 |
 | `containers/db_variants_test.sh` | 15 (new) |
 | `containers/registry_tag_exists_test.sh` | 4 |
-| `containers/required_image_tag_test.sh` | 7 (new) |
+| `containers/required_image_tag_test.sh` | 12 (new) |
 | `containers/validate_image_repo_test.sh` | 37 (new) |
-| `containers/validate_image_tag_test.sh` | 15 |
-| `containers/wait_for_images_test.sh` | 19 |
+| `containers/validate_image_tag_test.sh` | 20 |
+| `containers/wait_for_images_test.sh` | 21 |
 
 `shellcheck -x` clean on all new and changed scripts. `actionlint` clean on
 all changed workflows apart from pre-existing SC2086/SC2046 notes in untouched
@@ -211,6 +236,26 @@ environment referenced before it exists is auto-created with no protection.
    before upload; the push must fail at `validate-image-repo.sh`.
 7. **Hostile branch name** ``test`touch /tmp/pwned` ``; check the `detect` log.
 8. **Expired artifact.** Approve after `retention-days`; must fail loudly.
+
+## Round 3 — hash-only tags
+
+The branch prefix in a tag carried no information but forced every consumer to
+agree on a string. Tags are now the bare content hash; the branch survives as a
+trailing comment in `versionconstants.go`, a `<Name>TagBranch` variable shown by
+`ddev version` (`image-tag-branches`, collapsed when all images share a
+branch), and a `<branch>-<hash>` alias published off the same manifest.
+
+`validate-image-tag.sh` accepts both forms, and the alias goes through it, so a
+fork branch named `v1.25.0` can't publish something that reads as a release —
+which finally makes the reserved/release checks load-bearing rather than dead.
+
+Comparison against `versionconstants.go` is exact now, so a line still in the
+old form counts as stale and `make` migrates it. `wait-for-images.sh` lost its
+fail-fast branch: the tag a non-locally-built image needs is branch-independent,
+so waiting for it is well defined.
+
+The manual push workflows' `tag` input is optional; empty derives the tag via
+`containers/image-tag-for.sh`.
 
 ## Still open
 
