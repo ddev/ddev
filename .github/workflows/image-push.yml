@@ -196,13 +196,24 @@ jobs:
         with:
           script: |
             const headSha = context.payload.workflow_run.head_sha;
-            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+            const headRepo = context.payload.workflow_run.head_repository;
+            if (!headRepo) {
+              console.log(`No head repository on the workflow_run event for ${headSha}, skipping comment.`);
+              return;
+            }
+            // Query the commit's own repository (the fork, for a fork PR) -
+            // listPullRequestsAssociatedWithCommit only finds a commit within
+            // the repo it's queried against, and a fork-authored commit never
+            // lives in the base repo's own history.
+            const { data: candidatePrs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: headRepo.owner.login,
+              repo: headRepo.name,
               commit_sha: headSha,
             });
+            const prs = candidatePrs.filter((pr) =>
+              pr.base.repo.owner.login === context.repo.owner && pr.base.repo.name === context.repo.repo);
             if (prs.length === 0) {
-              console.log(`No pull request associated with ${headSha}, skipping comment.`);
+              console.log(`No pull request into ${context.repo.owner}/${context.repo.repo} associated with ${headSha} (queried ${headRepo.full_name}), skipping comment.`);
               return;
             }
             // Read from env, not spliced into the script source, since the
