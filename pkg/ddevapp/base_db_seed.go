@@ -114,8 +114,9 @@ func (app *DdevApp) ResolveSeedSnapshot() (*SeedSnapshot, error) {
 		if !fileutil.FileExists(hostPath) || fileutil.IsDirectory(hostPath) {
 			return nil, fmt.Errorf("--seed-snapshot=%s is not an existing snapshot file", app.SeedSnapshot)
 		}
-		// A snapshot already in .ddev/db_snapshots needs no mount of its own.
-		if dir := filepath.Dir(hostPath); dir != app.GetConfigPath("db_snapshots") {
+		// A snapshot already in .ddev/db_snapshots needs no mount of its own, and
+		// with no_bind_mounts prepareSeedSnapshot copies it in rather than mounting.
+		if dir := filepath.Dir(hostPath); dir != app.GetConfigPath("db_snapshots") && !globalconfig.DdevGlobalConfig.NoBindMounts {
 			mountDir = dir
 		}
 	} else {
@@ -240,20 +241,18 @@ func (app *DdevApp) getDerivedDBImageSeed() (seedPath string, size int64) {
 
 // prepareSeedSnapshot makes a seed snapshot reachable by the db container.
 // With bind mounts it's already visible, either in .ddev/db_snapshots or
-// through the mount RenderComposeYAML adds for SeedSnapshotMountDir.
+// through the mount RenderComposeYAML adds for SeedSnapshotMountDir. With
+// no_bind_mounts the db container sees /mnt/snapshots as a Docker volume
+// instead, so wherever the snapshot came from it has to be copied in.
+// Must run after the snapshots volume is created, so it gets the usual labels.
 func (app *DdevApp) prepareSeedSnapshot(seed *SeedSnapshot) error {
-	if !globalconfig.DdevGlobalConfig.NoBindMounts || seed.MountDir == "" {
+	if !globalconfig.DdevGlobalConfig.NoBindMounts {
 		return nil
 	}
-	// With no_bind_mounts the db container sees /mnt/snapshots as a Docker volume
-	// rather than .ddev/db_snapshots, and there is no mount to add, so an
-	// out-of-project snapshot has to be copied into that volume instead.
 	uid, _, _ := dockerutil.GetContainerUser()
 	if err := dockerutil.CopyIntoVolume(seed.HostPath, "ddev-"+app.Name+"-snapshots", "", uid, "", false); err != nil {
 		return fmt.Errorf("failed to copy %s into the snapshots volume: %v", seed.HostPath, err)
 	}
-	seed.MountDir = ""
-	app.SeedSnapshotMountDir = ""
 	return nil
 }
 

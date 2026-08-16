@@ -1573,11 +1573,6 @@ func (app *DdevApp) Start() error {
 			seedSnapshot = nil
 		}
 		if seedSnapshot != nil {
-			// prepareSeedSnapshot can move the snapshot, so it settles where the
-			// container will find it before the command naming that path is built.
-			if err = app.prepareSeedSnapshot(seedSnapshot); err != nil {
-				return err
-			}
 			app.SeedSnapshotMountDir = seedSnapshot.MountDir
 			_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", app.snapshotRestoreContainerCommand(seedSnapshot.ContainerPath()))
 			// nolint: errcheck
@@ -1847,6 +1842,12 @@ func (app *DdevApp) Start() error {
 	err = util.Chmod(app.GetConfigPath("db_snapshots"), 0777)
 	if err != nil {
 		return err
+	}
+
+	if seedSnapshot != nil {
+		if err = app.prepareSeedSnapshot(seedSnapshot); err != nil {
+			return err
+		}
 	}
 
 	// Wait for background chown to finish before proceeding.

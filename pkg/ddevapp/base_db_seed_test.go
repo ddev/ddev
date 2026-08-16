@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
@@ -84,6 +85,10 @@ func TestGetSeedSnapshotFile(t *testing.T) {
 func TestResolveSeedSnapshot(t *testing.T) {
 	app := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
 
+	origNoBindMounts := globalconfig.DdevGlobalConfig.NoBindMounts
+	globalconfig.DdevGlobalConfig.NoBindMounts = false
+	t.Cleanup(func() { globalconfig.DdevGlobalConfig.NoBindMounts = origNoBindMounts })
+
 	seed, err := app.ResolveSeedSnapshot()
 	require.NoError(t, err)
 	require.Nil(t, seed, "nothing to seed from without a flag or a reserved snapshot")
@@ -114,6 +119,16 @@ func TestResolveSeedSnapshot(t *testing.T) {
 	require.Equal(t, outside, seed.HostPath)
 	require.Equal(t, outsideDir, seed.MountDir)
 	require.Equal(t, SeedSnapshotMountDir+"/elsewhere-mariadb_10.11.zst", seed.ContainerPath())
+
+	// With no_bind_mounts there is nothing to mount; prepareSeedSnapshot copies
+	// the snapshot into the snapshots volume, so the container path is the usual one.
+	globalconfig.DdevGlobalConfig.NoBindMounts = true
+	seed, err = app.ResolveSeedSnapshot()
+	require.NoError(t, err)
+	require.Equal(t, outside, seed.HostPath)
+	require.Empty(t, seed.MountDir)
+	require.Equal(t, "/mnt/snapshots/elsewhere-mariadb_10.11.zst", seed.ContainerPath())
+	globalconfig.DdevGlobalConfig.NoBindMounts = false
 
 	// A snapshot from another database can't seed this one.
 	wrongVersion := filepath.Join(outsideDir, "elsewhere-mariadb_10.6.zst")
