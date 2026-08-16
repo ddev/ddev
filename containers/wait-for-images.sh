@@ -46,19 +46,13 @@ for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
   read -r state tag <<< "$("$REQUIRED_IMAGE_TAG" "$tag_var" $hash_paths)"
   image_repo="${DOCKER_ORG}/${repo_suffix}"
 
-  if [ "$state" != "committed" ]; then
-    if [ "$built_by_make" = "true" ]; then
-      echo "wait-for-images.sh: ${image_repo} content differs from versionconstants.go; make builds ${tag} locally, not waiting"
-      continue
-    fi
-    # No local build to fall back on, and the tag `make` will invent here
-    # depends on this runner's branch name (detached HEAD on a PR checkout),
-    # so it may not match what image-build-push.yml pushed. Fail now with
-    # something actionable instead of timing out on a tag nobody pushed.
-    echo "wait-for-images.sh: ${image_repo} content differs from the tag committed in versionconstants.go," >&2
-    echo "wait-for-images.sh: and make does not build this image locally." >&2
-    echo "wait-for-images.sh: run 'make' and commit the ${tag_var} change in pkg/versionconstants/versionconstants.go." >&2
-    exit 1
+  # A changed image that `make` builds here needs no registry round trip. One
+  # it doesn't build - every ddev-dbserver variant but the default - still
+  # does, and the tag is the bare content hash, so it is the same string
+  # image-build-push.yml pushed regardless of branch. Wait for it.
+  if [ "$state" != "committed" ] && [ "$built_by_make" = "true" ]; then
+    echo "wait-for-images.sh: ${image_repo} content differs from versionconstants.go; make builds ${tag} locally, not waiting"
+    continue
   fi
 
   attempt=1

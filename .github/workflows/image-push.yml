@@ -93,8 +93,14 @@ jobs:
 
       - name: Validate, load, and push each built image
         id: push
+        env:
+          # From the workflow_run payload, not the artifact - the alias is
+          # published in the DDEV org, so its branch name has to come from a
+          # trusted context. Sanitized and validated below regardless.
+          ALIAS_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           set -eu -o pipefail
+          SANITIZED_BRANCH="$(echo "$ALIAS_BRANCH" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')"
           declare -A TAG_BY_KEY
           declare -A REPOS_BY_KEY
           declare -A ARCHES_BY_KEY
@@ -150,7 +156,14 @@ jobs:
               for arch in ${ARCHES_BY_KEY[$key]}; do
                 arch_tags+=("${repo}:${tag}-${arch}")
               done
-              docker buildx imagetools create -t "${repo}:${tag}" "${arch_tags[@]}"
+              names=(-t "${repo}:${tag}")
+              alias_tag="${SANITIZED_BRANCH}-${tag}"
+              if containers/validate-image-tag.sh "$alias_tag"; then
+                names+=(-t "${repo}:${alias_tag}")
+              else
+                echo "Alias '${alias_tag}' rejected; publishing only ${tag}" >&2
+              fi
+              docker buildx imagetools create "${names[@]}" "${arch_tags[@]}"
               PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${tag}\`"$'\n'
 
               for arch in ${ARCHES_BY_KEY[$key]}; do

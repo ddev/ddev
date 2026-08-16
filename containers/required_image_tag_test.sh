@@ -39,31 +39,37 @@ export VERSIONCONSTANTS_FILE="$WORKDIR/versionconstants.go"
 HASH_PATH_ARGS=(containers/ddev-xhgui containers/containers_shared.mk)
 CURRENT_HASH="$("$HASH_PATHS" "${HASH_PATH_ARGS[@]}")"
 
-# 1. Committed tag still matches the content: returned as-is, keeping the
-#    branch prefix of whatever branch last changed the image. This is the case
-#    that makes wait-for-images.sh wait for a tag that actually exists.
-echo "var XhguiTag = \"an_old_branch-${CURRENT_HASH}\" // trailing comment" > "$VERSIONCONSTANTS_FILE"
-OUTPUT="$(REQUIRED_IMAGE_TAG_BRANCH=current_branch "$REQUIRED_IMAGE_TAG" XhguiTag "${HASH_PATH_ARGS[@]}")"
-assert_eq "committed an_old_branch-${CURRENT_HASH}" "$OUTPUT" "keeps the committed tag when the hash still matches"
+# 1. Committed value already the current hash -> committed, and the tag is
+#    that hash. This is the case that makes wait-for-images.sh wait.
+echo "var XhguiTag = \"${CURRENT_HASH}\" // some_branch-${CURRENT_HASH}" > "$VERSIONCONSTANTS_FILE"
+OUTPUT="$("$REQUIRED_IMAGE_TAG" XhguiTag "${HASH_PATH_ARGS[@]}")"
+assert_eq "committed ${CURRENT_HASH}" "$OUTPUT" "reports committed when versionconstants.go already names this hash"
 
-# 2. Content no longer matches: the tag autotag.sh would rewrite it to,
-#    prefixed with the current branch.
-echo "var XhguiTag = \"an_old_branch-0000000000\"" > "$VERSIONCONSTANTS_FILE"
-OUTPUT="$(REQUIRED_IMAGE_TAG_BRANCH=current_branch "$REQUIRED_IMAGE_TAG" XhguiTag "${HASH_PATH_ARGS[@]}")"
-assert_eq "recomputed current_branch-${CURRENT_HASH}" "$OUTPUT" "recomputes a branch-prefixed tag when the hash changed"
+# 2. Content no longer matches -> recomputed, same tag. The tag never depends
+#    on the branch, which is what lets detect, the runner, and `make` agree.
+echo "var XhguiTag = \"0000000000\"" > "$VERSIONCONSTANTS_FILE"
+OUTPUT="$("$REQUIRED_IMAGE_TAG" XhguiTag "${HASH_PATH_ARGS[@]}")"
+assert_eq "recomputed ${CURRENT_HASH}" "$OUTPUT" "reports recomputed, still with the bare content hash"
 
-# 3. Branch names are sanitized to the tag charset, the same way autotag.sh
-#    does it - a fork may name its branch anything git accepts.
-# shellcheck disable=SC2016 # the un-expanded $(id) is the point
-OUTPUT="$(REQUIRED_IMAGE_TAG_BRANCH='feature/oh no$(id)' "$REQUIRED_IMAGE_TAG" XhguiTag "${HASH_PATH_ARGS[@]}")"
-assert_eq "recomputed feature-oh-no-id--${CURRENT_HASH}" "$OUTPUT" "sanitizes the branch name into the tag charset"
-if "$SCRIPT_DIR/validate-image-tag.sh" "${OUTPUT#recomputed }" >/dev/null 2>&1; then
-  pass "a sanitized hostile branch name still yields a pushable tag"
+# 3. A value still in the old <branch>-<hash> form is what ddev would pull and
+#    it isn't this tag, so it counts as stale and `make` migrates the line.
+echo "var XhguiTag = \"an_old_branch-${CURRENT_HASH}\"" > "$VERSIONCONSTANTS_FILE"
+OUTPUT="$("$REQUIRED_IMAGE_TAG" XhguiTag "${HASH_PATH_ARGS[@]}")"
+assert_eq "recomputed ${CURRENT_HASH}" "$OUTPUT" "treats a legacy branch-prefixed value as stale"
+
+# 4. The branch the caller happens to be on cannot change the answer.
+echo "var XhguiTag = \"${CURRENT_HASH}\"" > "$VERSIONCONSTANTS_FILE"
+assert_eq "$("$REQUIRED_IMAGE_TAG" XhguiTag "${HASH_PATH_ARGS[@]}")" \
+  "$(REQUIRED_IMAGE_TAG_BRANCH='some/other branch' "$REQUIRED_IMAGE_TAG" XhguiTag "${HASH_PATH_ARGS[@]}")" \
+  "the result is independent of the branch"
+
+if "$SCRIPT_DIR/validate-image-tag.sh" "$CURRENT_HASH" >/dev/null 2>&1; then
+  pass "the bare hash tag is one validate-image-tag.sh accepts"
 else
-  fail "sanitized branch name should still yield a tag validate-image-tag.sh accepts: $OUTPUT"
+  fail "validate-image-tag.sh should accept the bare hash '$CURRENT_HASH'"
 fi
 
-# 4. A missing tag variable is a hard error, not an empty tag.
+# 5. A missing tag variable is a hard error, not an empty tag.
 echo "var SomethingElse = \"whatever\"" > "$VERSIONCONSTANTS_FILE"
 OUTPUT="$("$REQUIRED_IMAGE_TAG" XhguiTag "${HASH_PATH_ARGS[@]}" 2>&1)" && RC=0 || RC=$?
 if [ "$RC" -ne 0 ]; then
@@ -76,7 +82,7 @@ case "$OUTPUT" in
   *) fail "missing-variable message should name the variable: $OUTPUT" ;;
 esac
 
-# 5. Usage error on too few arguments.
+# 6. Usage error on too few arguments.
 if "$REQUIRED_IMAGE_TAG" XhguiTag >/dev/null 2>&1; then
   fail "should reject a missing hash path"
 else

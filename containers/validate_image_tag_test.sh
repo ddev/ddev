@@ -51,9 +51,18 @@ assert_rejected_because() {
   fi
 }
 
+# The canonical form: a bare content hash, what versionconstants.go holds.
+assert_valid "0123456789"
+assert_valid "36bceca65e"
+
+# The readable alias published alongside it.
 assert_valid "20260721_rfay_content_addressed_image_tags-36bceca65e"
 assert_valid "main-0123456789"
 assert_valid "v1.2.3-rc1-0123456789"
+
+assert_invalid "0123456789a" "an 11-hex-char bare tag"
+assert_invalid "012345678" "a 9-hex-char bare tag"
+assert_invalid "0123456789A" "a bare tag with an uppercase hex digit"
 
 assert_invalid "latest" "the reserved literal 'latest'"
 assert_invalid "stable" "the reserved literal 'stable'"

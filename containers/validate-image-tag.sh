@@ -6,14 +6,20 @@
 # check on a tag string that arrived via a build artifact from a job that
 # may have run untrusted (fork PR) content - see image-push.yml.
 #
+# Two forms are accepted:
+#   <hash>            the canonical tag, a bare content hash - what
+#                     versionconstants.go holds and what ddev pulls
+#   <name>-<hash>     the human-readable alias published alongside it, whose
+#                     prefix is a sanitized branch name
+#
 # Requires:
 #   - strict charset, matching the same sanitization autotag.sh applies, and
 #     a leading character Docker actually accepts in a tag
 #   - must end in exactly HASH_LEN lowercase hex characters (the part
 #     tooling treats as authoritative)
-#   - neither the whole tag nor the part before the hash may be a reserved
-#     literal ("latest") or a release-tag shape (vX.Y.Z), so a forged tag can
-#     never be mistaken for a real one
+#   - neither the whole tag nor an alias prefix may be a reserved literal
+#     ("latest") or a release-tag shape (vX.Y.Z), so a fork that names its
+#     branch v1.25.0 can't publish something that reads as a release
 #
 # Env:
 #   HASH_LEN - hash length in hex chars (default 10, must match hash-paths.sh)
@@ -47,8 +53,12 @@ reject_reserved() {
 
 reject_reserved "$TAG" "is"
 
+if [[ "$TAG" =~ ^[0-9a-f]{${HASH_LEN}}$ ]]; then
+  exit 0
+fi
+
 if ! [[ "$TAG" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]*-[0-9a-f]{${HASH_LEN}}$ ]]; then
-  echo "validate-image-tag.sh: '${TAG}' does not match <name>-<${HASH_LEN}-hex-char-hash>" >&2
+  echo "validate-image-tag.sh: '${TAG}' is neither a ${HASH_LEN}-hex-char hash nor <name>-<hash>" >&2
   exit 1
 fi
 

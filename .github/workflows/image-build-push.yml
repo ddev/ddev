@@ -257,12 +257,22 @@ jobs:
 
       - name: Create manifest and clean up per-arch tags
         id: manifest
+        env:
+          # Trusted context, not the matrix: this is the readable alias
+          # published next to the hash tag, so it must not be fork-controlled
+          # beyond the branch name itself, which is sanitized below.
+          ALIAS_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           set -eu -o pipefail
           TAG="${{ matrix.manifest.tag }}"
           # The oldest db variants are amd64-only, so the arch list comes from
           # detect rather than being assumed to be both.
           ARCHES="${{ matrix.manifest.arches }}"
+          ALIAS="$(echo "$ALIAS_BRANCH" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')-${TAG}"
+          if ! containers/validate-image-tag.sh "$ALIAS"; then
+            echo "Alias '${ALIAS}' rejected; publishing only ${TAG}" >&2
+            ALIAS=""
+          fi
 
           DOCKERHUB_JWT="$(curl -s -H "Content-Type: application/json" -X POST \
             -d '{"username":"'"${{ vars.DOCKERHUB_USERNAME }}"'","password":"'"${DOCKERHUB_TOKEN}"'"}' \
@@ -279,7 +289,9 @@ jobs:
             for arch in $ARCHES; do
               ARCH_TAGS+=("${repo}:${TAG}-${arch}")
             done
-            docker buildx imagetools create -t "${repo}:${TAG}" "${ARCH_TAGS[@]}"
+            NAMES=(-t "${repo}:${TAG}")
+            [ -n "$ALIAS" ] && NAMES+=(-t "${repo}:${ALIAS}")
+            docker buildx imagetools create "${NAMES[@]}" "${ARCH_TAGS[@]}"
             PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${TAG}\`"$'\n'
             for arch in $ARCHES; do
               echo "Removing intermediary tag ${repo}:${TAG}-${arch}"

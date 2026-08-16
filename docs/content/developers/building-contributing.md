@@ -314,7 +314,9 @@ When you change an image, running `make` from the repository root builds it loca
 
 ### Automatic Image Build and Push
 
-Opening a pull request that touches `containers/` triggers the [Image build](https://github.com/ddev/ddev/actions/workflows/image-build-push.yml) workflow. A `detect` job always runs first: it recomputes each image's content hash and resolves the tag this checkout actually needs, exactly the way `make` does — the tag committed in `versionconstants.go` if its hash still matches the content, otherwise a fresh `<branch>-<hash>` tag. If that tag is already in the registry there's nothing to build, so a pull request that touches `containers/` without changing an image costs one registry lookup per image and no build.
+An image's tag is the bare content hash of the files it's built from — `ddev/ddev-webserver:36bceca65e`, with no branch prefix. The same content therefore resolves to the same tag no matter which branch, fork, or Docker Hub organization published it, which is what lets `make`, the CI detector, and every test runner agree without coordinating. `versionconstants.go` records the branch alongside it, both as a trailing comment and as a `WebTagBranch`-style variable that `ddev version` shows, and each push also publishes a readable `<branch>-<hash>` alias pointing at the same manifest.
+
+Opening a pull request that touches `containers/` triggers the [Image build](https://github.com/ddev/ddev/actions/workflows/image-build-push.yml) workflow. A `detect` job always runs first: it recomputes each image's content hash and checks whether that tag is already in the registry. If it is, there's nothing to build — so a pull request that touches `containers/` without changing an image costs one registry lookup per image and no build.
 
 The same resolution drives `containers/wait-for-images.sh`, which every test runner calls before pulling anything: it waits only for tags this commit will genuinely pull, and doesn't wait at all for an image whose content changed, since `make` builds that one locally on the runner.
 

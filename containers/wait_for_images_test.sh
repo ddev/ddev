@@ -98,7 +98,6 @@ source "$SCRIPT_DIR/image-configs.sh"
 # --- A throwaway versionconstants.go, so the tags waited for are whatever this
 # test says they are rather than whatever the checkout happens to carry.
 export VERSIONCONSTANTS_FILE="$WORKDIR/versionconstants.go"
-COMMITTED_PREFIX="some_older_branch"
 
 REPOS=()
 TAG_VARS=()
@@ -109,7 +108,7 @@ for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
   if [ -z "${HASH_BY_VAR[$tag_var]:-}" ]; then
     # shellcheck disable=SC2086 # hash_paths is a space-separated path list
     HASH_BY_VAR["$tag_var"]="$("$HASH_PATHS" $hash_paths)"
-    TAG_BY_VAR["$tag_var"]="${COMMITTED_PREFIX}-${HASH_BY_VAR[$tag_var]}"
+    TAG_BY_VAR["$tag_var"]="${HASH_BY_VAR[$tag_var]}"
   fi
   REPOS+=("ddevhq/${repo_suffix}")
   TAG_VARS+=("$tag_var")
@@ -153,14 +152,15 @@ case "$OUTPUT" in
   *) fail "should print confirmation for each found tag: $OUTPUT" ;;
 esac
 
-# 2. The regression that made every non-containers pull request hang: the
-#    committed tag's branch prefix belongs to whatever branch last changed the
-#    image, and must be waited for as-is rather than recomputed from the
-#    current branch.
+# 2. The regression that made every non-containers pull request hang was a tag
+#    that depended on the current branch. The tag is now the bare content hash,
+#    so the same checkout resolves to the same tag on any branch, in any fork.
 case "$OUTPUT" in
-  *"${COMMITTED_PREFIX}-${HASH_BY_VAR[WebTag]}"*) pass "waits for the committed tag's own branch prefix" ;;
-  *) fail "should wait for the committed prefix '${COMMITTED_PREFIX}', not the current branch: $OUTPUT" ;;
+  *"found ${REPOS[0]}:${HASH_BY_VAR[WebTag]}"*) pass "waits for the bare content hash, with no branch prefix" ;;
+  *) fail "should wait for the bare hash '${HASH_BY_VAR[WebTag]}': $OUTPUT" ;;
 esac
+OUTPUT_OTHER_BRANCH="$(REQUIRED_IMAGE_TAG_BRANCH='some/other branch' "$WAIT_FOR_IMAGES" 2>&1)"
+assert_eq "$OUTPUT" "$OUTPUT_OTHER_BRANCH" "the tags waited for don't depend on the branch"
 
 # 2b. Every ddev-dbserver variant is waited for, not just the default one that
 #     `make` builds locally - they all share BaseDBTag, so a dbserver change
@@ -174,7 +174,7 @@ done
 
 # 3. Content that no longer matches versionconstants.go is built locally by
 #    make, so there is nothing to wait for and no registry call at all.
-TAG_BY_VAR[WebTag]="${COMMITTED_PREFIX}-0000000000"
+TAG_BY_VAR[WebTag]="0000000000"
 write_versionconstants
 mark_all_existing
 : > "$DOCKER_CALL_LOG"
@@ -191,27 +191,37 @@ case "$OUTPUT" in
   *"not waiting"*) pass "says why it isn't waiting for the changed image" ;;
   *) fail "should explain why it isn't waiting: $OUTPUT" ;;
 esac
-TAG_BY_VAR[WebTag]="${COMMITTED_PREFIX}-${HASH_BY_VAR[WebTag]}"
+TAG_BY_VAR[WebTag]="${HASH_BY_VAR[WebTag]}"
 write_versionconstants
 
-# 3b. A changed dbserver with a stale versionconstants.go is the case that has
-#     no local fallback: `make` builds only the default variant, so the other
-#     19 could only come from a tag this runner can't predict. Fail fast rather
-#     than time out.
-TAG_BY_VAR[BaseDBTag]="${COMMITTED_PREFIX}-0000000000"
+# 3b. A changed dbserver still has to wait for the 19 variants `make` doesn't
+#     build locally. The tag is the bare content hash, so it's the same string
+#     image-build-push.yml pushes and waiting for it is well-defined - only the
+#     default variant is skipped.
+TAG_BY_VAR[BaseDBTag]="0000000000"
 write_versionconstants
-mark_all_existing
+: > "$DOCKER_EXISTING_REF_FILE"
+for i in "${!REPOS[@]}"; do
+  tag="${TAG_BY_VAR[${TAG_VARS[$i]}]}"
+  [ "${TAG_VARS[$i]}" = "BaseDBTag" ] && tag="${HASH_BY_VAR[BaseDBTag]}"
+  echo "${REPOS[$i]}:${tag}" >> "$DOCKER_EXISTING_REF_FILE"
+done
+: > "$DOCKER_CALL_LOG"
 OUTPUT="$("$WAIT_FOR_IMAGES" 2>&1)" && RC=0 || RC=$?
-if [ "$RC" -ne 0 ]; then
-  pass "fails fast when a non-locally-built image is out of date"
+if [ "$RC" -eq 0 ]; then
+  pass "waits for the db variants make doesn't build, rather than failing"
 else
-  fail "should fail when a non-locally-built image is out of date: $OUTPUT"
+  fail "should wait for the non-locally-built db variants: $OUTPUT"
 fi
 case "$OUTPUT" in
-  *"run 'make' and commit the BaseDBTag change"*) pass "names the variable to regenerate" ;;
-  *) fail "should tell the contributor to run make and commit BaseDBTag: $OUTPUT" ;;
+  *"ddevhq/ddev-dbserver-mariadb-11.8 content differs"*) pass "skips only the default variant make builds locally" ;;
+  *) fail "should skip the locally-built default variant: $OUTPUT" ;;
 esac
-TAG_BY_VAR[BaseDBTag]="${COMMITTED_PREFIX}-${HASH_BY_VAR[BaseDBTag]}"
+case "$OUTPUT" in
+  *"found ddevhq/ddev-dbserver-mysql-8.0:${HASH_BY_VAR[BaseDBTag]}"*) pass "waits for a non-default variant at the bare hash tag" ;;
+  *) fail "should wait for the non-default variants at the recomputed hash: $OUTPUT" ;;
+esac
+TAG_BY_VAR[BaseDBTag]="${HASH_BY_VAR[BaseDBTag]}"
 write_versionconstants
 
 # 4. A tag that's initially missing but becomes available on the 3rd check.

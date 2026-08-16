@@ -84,7 +84,10 @@ cat > "$VERSIONCONSTANTS" <<'EOF'
 package versionconstants
 
 // WebTag defines the default web image tag
-var WebTag = "v1.0.0" // Note that this can be overridden by make
+var WebTag = "v1.0.0" // some-old-branch-v1.0.0
+
+// WebTagBranch is the branch WebTag's content was built from.
+var WebTagBranch = "some-old-branch"
 EOF
 
 export VERSIONCONSTANTS_FILE="$VERSIONCONSTANTS"
@@ -136,10 +139,7 @@ candidate="$("$AUTOTAG" --print-only WebTag ddev/dummy-image imgdir)"
 after="$(cat "$VERSIONCONSTANTS")"
 assert_eq "$before" "$after" "--print-only does not modify the versionconstants file"
 current_hash="$("$HASH_PATHS" imgdir)"
-case "$candidate" in
-  *-"$current_hash") pass "--print-only candidate tag ends with the current hash" ;;
-  *) fail "--print-only candidate tag '$candidate' doesn't end with hash '$current_hash'" ;;
-esac
+assert_eq "$current_hash" "$candidate" "--print-only candidate tag is the bare content hash"
 calls="$(count_lines "$DOCKER_CALL_LOG")"
 assert_eq "0" "$calls" "--print-only makes no docker calls"
 
@@ -154,15 +154,12 @@ else
   fail "build command should have run when the tag changed and no local image existed"
 fi
 
+current_branch="$(git rev-parse --abbrev-ref HEAD | sed -E 's/[^A-Za-z0-9_.-]+/-/g')"
 new_tag_line="$(grep '^var WebTag = ' "$VERSIONCONSTANTS")"
-case "$new_tag_line" in
-  *"-${current_hash}\""*) pass "versionconstants file rewritten with the new hash-suffixed tag" ;;
-  *) fail "versionconstants file not rewritten as expected: $new_tag_line" ;;
-esac
-case "$new_tag_line" in
-  *"// Note that this can be overridden by make"*) pass "trailing comment on the tag line is preserved" ;;
-  *) fail "trailing comment on the tag line was lost: $new_tag_line" ;;
-esac
+assert_eq "var WebTag = \"${current_hash}\" // ${current_branch}-${current_hash}" "$new_tag_line" \
+  "the tag becomes the bare hash, with the branch alias as a trailing comment"
+assert_eq "var WebTagBranch = \"${current_branch}\"" "$(grep '^var WebTagBranch = ' "$VERSIONCONSTANTS")" \
+  "the companion Branch variable is updated for ddev version"
 
 # 7. Idempotency: re-run with no further changes -> no-op. No build, no file
 #    rewrite, and (the key design property) no docker call at all.
@@ -184,8 +181,7 @@ assert_eq "$calls_before" "$calls_after" "no docker calls at all on the unchange
 #    tag -> build is skipped, but the file is still rewritten.
 echo "changed again" > imgdir/Dockerfile
 new_hash="$("$HASH_PATHS" imgdir)"
-branch="$(git rev-parse --abbrev-ref HEAD | sed -E 's/[^A-Za-z0-9_.-]+/-/g')"
-echo "ddev/dummy-image:${branch}-${new_hash}" > "$DOCKER_EXISTING_REF_FILE"
+echo "ddev/dummy-image:${new_hash}" > "$DOCKER_EXISTING_REF_FILE"
 rm -f "$BUILD_MARKER"
 "$AUTOTAG" WebTag ddev/dummy-image imgdir -- bash -c "touch '$BUILD_MARKER'"
 if [ -f "$BUILD_MARKER" ]; then
@@ -193,11 +189,27 @@ if [ -f "$BUILD_MARKER" ]; then
 else
   pass "build skipped when a local image already exists at the computed tag"
 fi
-if grep -q "\"${branch}-${new_hash}\"" "$VERSIONCONSTANTS"; then
+if grep -q "^var WebTag = \"${new_hash}\"" "$VERSIONCONSTANTS"; then
   pass "versionconstants file rewritten even when the build was skipped"
 else
   fail "versionconstants file should still be rewritten when the build is skipped"
 fi
+
+# 9. A line still carrying the old <branch>-<hash> form is migrated to the bare
+#    hash on the next run, even though its trailing hash already matches.
+cat > "$VERSIONCONSTANTS" <<EOF
+package versionconstants
+
+// WebTag defines the default web image tag
+var WebTag = "legacy-branch-${new_hash}" // legacy-branch-${new_hash}
+
+// WebTagBranch is the branch WebTag's content was built from.
+var WebTagBranch = "legacy-branch"
+EOF
+"$AUTOTAG" WebTag ddev/dummy-image imgdir -- bash -c "touch '$BUILD_MARKER'"
+assert_eq "var WebTag = \"${new_hash}\" // ${current_branch}-${new_hash}" \
+  "$(grep '^var WebTag = ' "$VERSIONCONSTANTS")" \
+  "an old <branch>-<hash> value is migrated to the bare hash"
 
 if [ "$FAILURES" -eq 0 ]; then
   echo "All autotag_test.sh checks passed."
