@@ -28,16 +28,16 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "36bceca65e" // 20260721_rfay_content_addressed_image_tags-36bceca65e
+var WebTag = "c202e92108" // 20260814_rfay_docker_update_phase_2-c202e92108
 
 // WebTagBranch is the branch WebTag's content was built from.
-var WebTagBranch = "20260721_rfay_content_addressed_image_tags"
+var WebTagBranch = "20260814_rfay_docker_update_phase_2"
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "1dc90407ef" // 20260814_rfay_docker_update_phase_2-1dc90407ef
+var BaseDBTag = "5a7c45ddbf" // 20260814_rfay_docker_update_phase_2-5a7c45ddbf
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
 var BaseDBTagBranch = "20260814_rfay_docker_update_phase_2"
@@ -46,28 +46,28 @@ var BaseDBTagBranch = "20260814_rfay_docker_update_phase_2"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "c96123b524" // 20260721_rfay_content_addressed_image_tags-c96123b524
+var TraefikRouterTag = "bffcda31c5" // 20260814_rfay_docker_update_phase_2-bffcda31c5
 
 // TraefikRouterTagBranch is the branch TraefikRouterTag's content was built from.
-var TraefikRouterTagBranch = "20260721_rfay_content_addressed_image_tags"
+var TraefikRouterTagBranch = "20260814_rfay_docker_update_phase_2"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "8e8bf1217c" // 20260721_rfay_content_addressed_image_tags-8e8bf1217c
+var SSHAuthTag = "bb5e9f0003" // 20260814_rfay_docker_update_phase_2-bb5e9f0003
 
 // SSHAuthTagBranch is the branch SSHAuthTag's content was built from.
-var SSHAuthTagBranch = "20260721_rfay_content_addressed_image_tags"
+var SSHAuthTagBranch = "20260814_rfay_docker_update_phase_2"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "f046b66382" // 20260721_rfay_content_addressed_image_tags-f046b66382
+var XhguiTag = "8757c1e92a" // 20260814_rfay_docker_update_phase_2-8757c1e92a
 
 // XhguiTagBranch is the branch XhguiTag's content was built from.
-var XhguiTagBranch = "20260721_rfay_content_addressed_image_tags"
+var XhguiTagBranch = "20260814_rfay_docker_update_phase_2"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"
