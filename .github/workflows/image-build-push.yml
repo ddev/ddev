@@ -32,7 +32,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
+  DOCKER_ORG: "${{ vars.DOCKER_ORG || 'ddev' }}"
 
 permissions:
   contents: read
@@ -44,39 +44,31 @@ jobs:
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
       needs_build: ${{ steps.detect.outputs.needs_build }}
-      is_fork: ${{ steps.detect.outputs.is_fork }}
+      is_fork: ${{ steps.fork.outputs.is_fork }}
     steps:
       - uses: actions/checkout@v7
       - name: Compute per-image build status
         id: detect
+        # github.head_ref is attacker-controlled (a fork may name its branch
+        # anything git accepts, quotes and backticks included), so it reaches
+        # the script as data rather than as spliced-in source.
+        env:
+          REQUIRED_IMAGE_TAG_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           set -eu -o pipefail
-          BRANCH="${{ github.head_ref || github.ref_name }}"
-          SANITIZED_BRANCH="$(echo "$BRANCH" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')"
-
-          # repo_suffix|hash paths|make dir|make target|arch-suffixed target?|extra repo suffixes
-          # Keep in sync with Makefile's autotag-images target.
-          # TODO(#8609): only the default db variant (mariadb_11.8) is listed
-          # here - see the TODO on autotag-images in the top-level Makefile.
-          CONFIGS=(
-            'ddev-webserver|containers/ddev-webserver containers/containers_shared.mk|ddev-webserver|images|false|ddev-webserver-prod'
-            'ddev-traefik-router|containers/ddev-traefik-router containers/containers_shared.mk|ddev-traefik-router|container|false|'
-            'ddev-ssh-agent|containers/ddev-ssh-agent containers/containers_shared.mk|ddev-ssh-agent|container|false|'
-            'ddev-xhgui|containers/ddev-xhgui containers/containers_shared.mk|ddev-xhgui|container|false|'
-            'ddev-dbserver-mariadb-11.8|containers/ddev-dbserver containers/get_arch.sh|ddev-dbserver|mariadb_11.8|true|'
-          )
+          source containers/image-configs.sh
 
           MATRIX_JSON="[]"
-          for entry in "${CONFIGS[@]}"; do
-            IFS='|' read -r repo_suffix hash_paths make_dir make_target arch_suffixed extra_repo_suffixes <<< "$entry"
-            hash="$(containers/hash-paths.sh $hash_paths)"
-            tag="${SANITIZED_BRANCH}-${hash}"
+          for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
+            IFS='|' read -r repo_suffix tag_var hash_paths make_dir make_target arch_suffixed extra_repo_suffixes <<< "$entry"
+            # shellcheck disable=SC2086 # hash_paths is a space-separated path list
+            read -r state tag <<< "$(containers/required-image-tag.sh "$tag_var" $hash_paths)"
             repo="${DOCKER_ORG}/${repo_suffix}"
             if containers/registry-tag-exists.sh "$repo" "$tag"; then
-              echo "detect: ${repo}:${tag} already exists, nothing to build"
+              echo "detect: ${repo}:${tag} already exists (${state}), nothing to build"
               continue
             fi
-            echo "detect: ${repo}:${tag} needs building"
+            echo "detect: ${repo}:${tag} needs building (${state})"
             MATRIX_JSON="$(echo "$MATRIX_JSON" | jq -c \
               --arg repo "$repo" \
               --arg tag "$tag" \
@@ -94,8 +86,17 @@ jobs:
             echo "needs_build=false" >> "$GITHUB_OUTPUT"
           fi
 
-          if [ "${{ github.event_name }}" = "pull_request" ] && \
-             [ "${{ github.event.pull_request.head.repo.owner.login }}" != "${{ github.repository_owner }}" ]; then
+      # Separate from the step above so nothing the per-image loop does can
+      # reach the output that decides whether the push secret gets loaded.
+      - name: Determine whether this is a fork
+        id: fork
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_OWNER: ${{ github.event.pull_request.head.repo.owner.login }}
+          BASE_OWNER: ${{ github.repository_owner }}
+        run: |
+          set -eu -o pipefail
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$HEAD_OWNER" != "$BASE_OWNER" ]; then
             echo "is_fork=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_fork=false" >> "$GITHUB_OUTPUT"
@@ -121,8 +122,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Build ${{ matrix.image.repo }}:${{ matrix.image.tag }}-${{ matrix.arch }}
-        env:
-          DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
         run: |
           set -eu -o pipefail
           VERSION="${{ matrix.image.tag }}-${{ matrix.arch }}"
@@ -130,7 +129,10 @@ jobs:
           if [ "${{ matrix.image.arch_suffixed }}" = "true" ]; then
             MAKE_TARGET="${MAKE_TARGET}_${{ matrix.arch }}"
           fi
-          make -C "containers/${{ matrix.image.make_dir }}" "$MAKE_TARGET" VERSION="$VERSION"
+          # DDEV_IMAGE_TAG is the tag people actually pull, recorded in the
+          # com.ddev.image-tag label; VERSION is the throwaway per-arch tag.
+          make -C "containers/${{ matrix.image.make_dir }}" "$MAKE_TARGET" \
+            VERSION="$VERSION" DDEV_IMAGE_TAG="${{ matrix.image.tag }}"
 
           REPOS="${{ matrix.image.repo }}"
           for suffix in ${{ matrix.image.extra_repo_suffixes }}; do
@@ -154,7 +156,9 @@ jobs:
             repos.txt
             tag.txt
             arch.txt
-          retention-days: 1
+          # image-push.yml can't download an expired artifact, and the approval
+          # it waits on is a human one that may not come the same day.
+          retention-days: 7
 
   # --- Pushes and same-repo PRs: no fork content ever runs here, so build
   # and push directly with no environment/approval gate - same trust level
@@ -188,8 +192,6 @@ jobs:
           password: ${{ env.DOCKERHUB_TOKEN }}
 
       - name: Build and push ${{ matrix.image.repo }}:${{ matrix.image.tag }}-${{ matrix.arch }}
-        env:
-          DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
         run: |
           set -eu -o pipefail
           VERSION="${{ matrix.image.tag }}-${{ matrix.arch }}"
@@ -197,7 +199,9 @@ jobs:
           if [ "${{ matrix.image.arch_suffixed }}" = "true" ]; then
             MAKE_TARGET="${MAKE_TARGET}_${{ matrix.arch }}"
           fi
-          make -C "containers/${{ matrix.image.make_dir }}" "$MAKE_TARGET" VERSION="$VERSION"
+          # See the DDEV_IMAGE_TAG note in the fork-side `build` job above.
+          make -C "containers/${{ matrix.image.make_dir }}" "$MAKE_TARGET" \
+            VERSION="$VERSION" DDEV_IMAGE_TAG="${{ matrix.image.tag }}"
 
           REPOS="${{ matrix.image.repo }}"
           for suffix in ${{ matrix.image.extra_repo_suffixes }}; do
@@ -238,8 +242,6 @@ jobs:
 
       - name: Create manifest and clean up per-arch tags
         id: manifest
-        env:
-          DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
         run: |
           set -eu -o pipefail
           TAG="${{ matrix.image.tag }}"

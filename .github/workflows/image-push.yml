@@ -15,27 +15,57 @@ on:
     types: [completed]
 
 env:
-  DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
+  DOCKER_ORG: "${{ vars.DOCKER_ORG || 'ddev' }}"
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
-  push:
-    name: "Approve: push the built image(s) to DockerHub"
+  # Ungated on purpose: asking a maintainer to approve a push only to discover
+  # the run built nothing trains people to click Approve without looking.
+  check-artifacts:
+    name: Check for built images
     # Only fork completions of "Image build" ever produce artifacts here -
-    # the non-fork path pushes directly in that workflow's build-and-push
-    # job. Gate the job itself (not just its steps) on that, so a non-fork
-    # completion never creates an environment approval request at all.
+    # the non-fork path pushes directly in that workflow's build-and-push job.
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
     runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+    outputs:
+      has_artifacts: ${{ steps.check.outputs.has_artifacts }}
+    steps:
+      - name: List artifacts on the triggering run
+        id: check
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const artifacts = await github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts,
+              { owner: context.repo.owner, repo: context.repo.repo,
+                run_id: context.payload.workflow_run.id });
+            const images = artifacts.filter((a) => a.name.startsWith("image-"));
+            console.log(`Found ${images.length} image-* artifact(s): ${images.map((a) => a.name).join(", ")}`);
+            core.setOutput("has_artifacts", images.length > 0 ? "true" : "false");
+
+  push:
+    name: "Approve: push the built image(s) to DockerHub"
+    needs: check-artifacts
+    if: needs.check-artifacts.outputs.has_artifacts == 'true'
+    runs-on: ubuntu-24.04
     environment: image-push
+    permissions:
+      # download-artifact needs actions:read to reach another run's artifacts.
+      actions: read
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
 
+      # No continue-on-error: check-artifacts already established that these
+      # exist, so a failure here is a real one (an expired artifact, say) and
+      # must not be reported as "nothing needed pushing".
       - name: Download build artifacts
         uses: actions/download-artifact@v8
         with:
@@ -43,15 +73,8 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           pattern: image-*
           path: artifacts
-        continue-on-error: true
-        id: download
-
-      - name: No image artifacts to push
-        if: steps.download.outcome == 'failure'
-        run: echo "No image-*.tar artifacts on the triggering run - nothing changed, nothing to push."
 
       - name: Load 1password secret(s)
-        if: steps.download.outcome == 'success'
         uses: 1password/load-secrets-action@v4
         with:
           export-env: true
@@ -60,18 +83,15 @@ jobs:
           DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
 
       - name: Set up Docker Buildx
-        if: steps.download.outcome == 'success'
         uses: docker/setup-buildx-action@v4
 
       - name: Login to DockerHub
-        if: steps.download.outcome == 'success'
         uses: docker/login-action@v4
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
       - name: Validate, load, and push each built image
-        if: steps.download.outcome == 'success'
         id: push
         run: |
           set -eu -o pipefail
@@ -79,6 +99,9 @@ jobs:
           declare -A REPOS_BY_KEY
           declare -A ARCHES_BY_KEY
 
+          # Everything read out of artifacts/ was written by a job that may
+          # have run fork-authored content, so the tag and every repository
+          # name is validated before it reaches a `docker push`.
           for dir in artifacts/image-*; do
             [ -d "$dir" ] || continue
             arch="$(cat "$dir/arch.txt")"
@@ -89,6 +112,14 @@ jobs:
               echo "image-push: refusing to push - invalid tag '$tag' from $dir" >&2
               exit 1
             fi
+
+            while IFS= read -r repo; do
+              [ -z "$repo" ] && continue
+              if ! containers/validate-image-repo.sh "$repo"; then
+                echo "image-push: refusing to push - disallowed repository '$repo' from $dir" >&2
+                exit 1
+              fi
+            done < "$dir/repos.txt"
 
             docker load -i "$dir/image.tar"
 
@@ -137,7 +168,6 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Comment on the pull request
-        if: steps.download.outcome == 'success'
         uses: actions/github-script@v9
         env:
           IMAGE_PUSH_SUMMARY: ${{ steps.push.outputs.summary }}
@@ -156,9 +186,11 @@ jobs:
             // Read from env, not spliced into the script source, since the
             // summary contains backticks that would break a template literal.
             const summary = (process.env.IMAGE_PUSH_SUMMARY || "").trim();
-            const body = summary
-              ? `Pushed updated container image(s) for this PR:\n\n${summary}`
-              : `Image build completed for this PR, but nothing needed pushing.`;
+            if (!summary) {
+              core.setFailed("Push step produced no summary - nothing was pushed.");
+              return;
+            }
+            const body = `Pushed updated container image(s) for this PR:\n\n${summary}`;
             for (const pr of prs) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,

@@ -47,10 +47,14 @@ jobs:
       - uses: actions/checkout@v7
       - name: Run containers/autotag_test.sh
         run: containers/autotag_test.sh
+      - name: Run containers/required_image_tag_test.sh
+        run: containers/required_image_tag_test.sh
       - name: Run containers/registry_tag_exists_test.sh
         run: containers/registry_tag_exists_test.sh
       - name: Run containers/validate_image_tag_test.sh
         run: containers/validate_image_tag_test.sh
+      - name: Run containers/validate_image_repo_test.sh
+        run: containers/validate_image_repo_test.sh
       - name: Run containers/wait_for_images_test.sh
         run: containers/wait_for_images_test.sh
 

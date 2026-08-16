@@ -19,8 +19,8 @@ if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAG
   exit 0
 fi
 
-# A new image tag may have been pushed, find out which
-WAIT_FOR_IMAGES_BRANCH="$BUILDKITE_BRANCH" "$(dirname "$0")/../containers/wait-for-images.sh"
+# A changed image may still be waiting on image-push.yml's approval
+"$(dirname "$0")/../containers/wait-for-images.sh"
 
 os=$(go env GOOS)
 

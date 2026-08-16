@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # wait_for_images_test.sh - unit tests for wait-for-images.sh.
 #
-# Exercises the fast-path/retry/give-up logic against a stubbed `docker` and
-# the real hash-paths.sh (run against this checkout's actual content, so the
-# expected tags are computed the same way wait-for-images.sh computes them -
-# never read from versionconstants.go). No real registry or real sleeps.
+# Exercises the fast-path/retry/give-up logic against a stubbed `docker` and a
+# throwaway versionconstants.go, so the committed-vs-recomputed decision can be
+# driven both ways without touching this checkout. No real registry, no real
+# sleeps.
 # Run with:
 #   containers/wait_for_images_test.sh
 
@@ -34,13 +34,17 @@ assert_eq() {
   fi
 }
 
+# BSD wc pads its output with spaces; GNU wc does not.
+count_lines() {
+  wc -l < "$1" | tr -d '[:space:]'
+}
+
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 
-# --- Stub `docker`: exists-by-default, except a ref can be configured to
-# only start "existing" after N calls (via a per-ref counter file), so the
-# eventually-recovers scenario is deterministic - no real sleeps or
-# background processes needed.
+# --- Stub `docker`: a ref can be configured to "exist" outright, or to only
+# start existing after N calls (via a counter file), so the eventually-recovers
+# scenario is deterministic - no real sleeps or background processes needed.
 BINDIR="$WORKDIR/bin"
 mkdir -p "$BINDIR"
 export DOCKER_EXISTING_REF_FILE="$WORKDIR/docker_existing_refs"
@@ -87,48 +91,96 @@ chmod +x "$BINDIR/sleep"
 export PATH="$BINDIR:$PATH"
 
 export DOCKER_ORG=ddevhq
-BRANCH="test-branch"
-export WAIT_FOR_IMAGES_BRANCH="$BRANCH"
 
-# Same repo_suffix|hash-paths list wait-for-images.sh uses - real hashes of
-# this checkout's actual content, computed the same way the script does.
-CONFIGS=(
-  'ddev-webserver|containers/ddev-webserver containers/containers_shared.mk'
-  'ddev-traefik-router|containers/ddev-traefik-router containers/containers_shared.mk'
-  'ddev-ssh-agent|containers/ddev-ssh-agent containers/containers_shared.mk'
-  'ddev-xhgui|containers/ddev-xhgui containers/containers_shared.mk'
-  'ddev-dbserver-mariadb-11.8|containers/ddev-dbserver containers/get_arch.sh'
-)
+# shellcheck source=containers/image-configs.sh
+source "$SCRIPT_DIR/image-configs.sh"
+
+# --- A throwaway versionconstants.go, so the tags waited for are whatever this
+# test says they are rather than whatever the checkout happens to carry.
+export VERSIONCONSTANTS_FILE="$WORKDIR/versionconstants.go"
+COMMITTED_PREFIX="some_older_branch"
+
 REPOS=()
 TAGS=()
-for entry in "${CONFIGS[@]}"; do
-  IFS='|' read -r repo_suffix hash_paths <<< "$entry"
+HASHES=()
+TAG_VARS=()
+: > "$VERSIONCONSTANTS_FILE"
+for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
+  IFS='|' read -r repo_suffix tag_var hash_paths _ <<< "$entry"
+  # shellcheck disable=SC2086 # hash_paths is a space-separated path list
   hash="$("$HASH_PATHS" $hash_paths)"
   REPOS+=("ddevhq/${repo_suffix}")
-  TAGS+=("${BRANCH}-${hash}")
+  TAGS+=("${COMMITTED_PREFIX}-${hash}")
+  HASHES+=("$hash")
+  TAG_VARS+=("$tag_var")
+  echo "var ${tag_var} = \"${COMMITTED_PREFIX}-${hash}\"" >> "$VERSIONCONSTANTS_FILE"
 done
 
-# 1. Fast path: every tag already exists -> one docker call per image, no sleep.
-: > "$DOCKER_EXISTING_REF_FILE"
-for i in "${!REPOS[@]}"; do
-  echo "${REPOS[$i]}:${TAGS[$i]}" >> "$DOCKER_EXISTING_REF_FILE"
-done
+write_versionconstants() {
+  : > "$VERSIONCONSTANTS_FILE"
+  for i in "${!TAG_VARS[@]}"; do
+    echo "var ${TAG_VARS[$i]} = \"${TAGS[$i]}\"" >> "$VERSIONCONSTANTS_FILE"
+  done
+}
+
+mark_all_existing() {
+  : > "$DOCKER_EXISTING_REF_FILE"
+  for i in "${!REPOS[@]}"; do
+    echo "${REPOS[$i]}:${TAGS[$i]}" >> "$DOCKER_EXISTING_REF_FILE"
+  done
+}
+
+# 1. Fast path: every committed tag already exists -> one docker call per
+#    image, no sleep. This is the shape of every pull request that doesn't
+#    change a container image.
+mark_all_existing
 : > "$DOCKER_CALL_LOG"
 : > "$SLEEP_CALL_LOG"
 OUTPUT="$("$WAIT_FOR_IMAGES" 2>&1)" && RC=0 || RC=$?
 if [ "$RC" -eq 0 ]; then
-  pass "fast path succeeds when every tag already exists"
+  pass "fast path succeeds when every committed tag already exists"
 else
-  fail "fast path should succeed when every tag already exists"
+  fail "fast path should succeed when every committed tag already exists: $OUTPUT"
 fi
-assert_eq "5" "$(wc -l < "$DOCKER_CALL_LOG")" "fast path makes exactly one docker call per image"
-assert_eq "0" "$(wc -l < "$SLEEP_CALL_LOG")" "fast path never sleeps"
+assert_eq "5" "$(count_lines "$DOCKER_CALL_LOG")" "fast path makes exactly one docker call per image"
+assert_eq "0" "$(count_lines "$SLEEP_CALL_LOG")" "fast path never sleeps"
 case "$OUTPUT" in
   *"found ${REPOS[0]}:${TAGS[0]}"*) pass "prints confirmation for each found tag" ;;
   *) fail "should print confirmation for each found tag: $OUTPUT" ;;
 esac
 
-# 2. A tag that's initially missing but becomes available on the 3rd check.
+# 2. The regression that made every non-containers pull request hang: the
+#    committed tag's branch prefix belongs to whatever branch last changed the
+#    image, and must be waited for as-is rather than recomputed from the
+#    current branch.
+case "$OUTPUT" in
+  *"${COMMITTED_PREFIX}-${HASHES[0]}"*) pass "waits for the committed tag's own branch prefix" ;;
+  *) fail "should wait for the committed prefix '${COMMITTED_PREFIX}', not the current branch: $OUTPUT" ;;
+esac
+
+# 3. Content that no longer matches versionconstants.go is built locally by
+#    make, so there is nothing to wait for and no registry call at all.
+TAGS[0]="${COMMITTED_PREFIX}-0000000000"
+write_versionconstants
+mark_all_existing
+: > "$DOCKER_CALL_LOG"
+: > "$SLEEP_CALL_LOG"
+OUTPUT="$("$WAIT_FOR_IMAGES" 2>&1)" && RC=0 || RC=$?
+if [ "$RC" -eq 0 ]; then
+  pass "succeeds without waiting when content differs from versionconstants.go"
+else
+  fail "should succeed when content differs from versionconstants.go: $OUTPUT"
+fi
+assert_eq "4" "$(count_lines "$DOCKER_CALL_LOG")" "skips the registry check for the locally-built image"
+assert_eq "0" "$(count_lines "$SLEEP_CALL_LOG")" "never sleeps for a locally-built image"
+case "$OUTPUT" in
+  *"not waiting"*) pass "says why it isn't waiting for the changed image" ;;
+  *) fail "should explain why it isn't waiting: $OUTPUT" ;;
+esac
+TAGS[0]="${COMMITTED_PREFIX}-${HASHES[0]}"
+write_versionconstants
+
+# 4. A tag that's initially missing but becomes available on the 3rd check.
 : > "$DOCKER_EXISTING_REF_FILE"
 for i in "${!REPOS[@]}"; do
   [ "$i" -eq 4 ] && continue
@@ -142,10 +194,10 @@ if WAIT_FOR_IMAGES_ATTEMPTS=5 WAIT_FOR_IMAGES_SLEEP=0 "$WAIT_FOR_IMAGES" >/dev/n
 else
   fail "should recover once a previously-missing tag appears within the attempt budget"
 fi
-assert_eq "2" "$(wc -l < "$SLEEP_CALL_LOG")" "sleeps twice while waiting for the tag to become available on the 3rd check"
+assert_eq "2" "$(count_lines "$SLEEP_CALL_LOG")" "sleeps twice while waiting for the tag to become available on the 3rd check"
 : > "$DOCKER_DELAYED_REF_FILE"
 
-# 3. Gives up cleanly after exhausting the attempt budget, with a clear message.
+# 5. Gives up cleanly after exhausting the attempt budget, with a clear message.
 : > "$DOCKER_EXISTING_REF_FILE"
 : > "$SLEEP_CALL_LOG"
 OUTPUT="$(WAIT_FOR_IMAGES_ATTEMPTS=3 WAIT_FOR_IMAGES_SLEEP=0 "$WAIT_FOR_IMAGES" 2>&1)" && RC=0 || RC=$?
@@ -158,20 +210,7 @@ case "$OUTPUT" in
   *"gave up waiting"*"has the maintainer approved"*) pass "give-up message is actionable" ;;
   *) fail "give-up message should mention giving up and approval: $OUTPUT" ;;
 esac
-assert_eq "2" "$(wc -l < "$SLEEP_CALL_LOG")" "sleeps exactly (attempts - 1) times before giving up on the first (unavailable) image"
-
-# 4. WAIT_FOR_IMAGES_BRANCH is required - a clear, immediate error when unset.
-: > "$DOCKER_EXISTING_REF_FILE"
-OUTPUT="$(env -u WAIT_FOR_IMAGES_BRANCH "$WAIT_FOR_IMAGES" 2>&1)" && RC=0 || RC=$?
-if [ "$RC" -ne 0 ]; then
-  pass "errors out when WAIT_FOR_IMAGES_BRANCH is unset"
-else
-  fail "should error out when WAIT_FOR_IMAGES_BRANCH is unset"
-fi
-case "$OUTPUT" in
-  *"WAIT_FOR_IMAGES_BRANCH must be set"*) pass "missing-branch message names the required variable" ;;
-  *) fail "missing-branch message should name WAIT_FOR_IMAGES_BRANCH: $OUTPUT" ;;
-esac
+assert_eq "2" "$(count_lines "$SLEEP_CALL_LOG")" "sleeps exactly (attempts - 1) times before giving up on the first (unavailable) image"
 
 if [ "$FAILURES" -eq 0 ]; then
   echo "All wait_for_images_test.sh checks passed."

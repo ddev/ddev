@@ -69,7 +69,7 @@ build: autotag-images $(DEFAULT_BUILD)
 # and its tag in versionconstants.go is rewritten automatically - see
 # containers/autotag.sh and docs/content/developers/building-contributing.md.
 # TODO(#8609): only the default db variant (mariadb_11.8) is auto-built/pushed
-# below and in image-build-push.yml. Tests that exercise other db types/versions
+# below and in containers/image-configs.sh. Tests that exercise other db types/versions
 # (TestDdevAllDatabases and similar) still need a manual push. Revisit whether
 # to automate the full variant matrix, likely later in the build flow rather
 # than in the pre-approval detect/build stage, since building all ~19 variants

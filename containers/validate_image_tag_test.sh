@@ -39,8 +39,21 @@ assert_invalid() {
   fi
 }
 
+assert_rejected_because() {
+  local tag="$1" needle="$2" desc="$3"
+  local output
+  if output="$("$VALIDATE" "$tag" 2>&1)"; then
+    fail "should have rejected $desc ('$tag')"
+  elif [[ "$output" == *"$needle"* ]]; then
+    pass "rejects $desc ('$tag') as expected"
+  else
+    fail "rejected $desc ('$tag') for the wrong reason: $output"
+  fi
+}
+
 assert_valid "20260721_rfay_content_addressed_image_tags-36bceca65e"
 assert_valid "main-0123456789"
+assert_valid "v1.2.3-rc1-0123456789"
 
 assert_invalid "latest" "the reserved literal 'latest'"
 assert_invalid "stable" "the reserved literal 'stable'"
@@ -50,6 +63,13 @@ assert_invalid "latest-012345678" "a fake tag with a 9-char hash suffix"
 assert_invalid "no-hash-suffix" "a tag without a hex hash suffix"
 assert_invalid "bad chars!-0123456789" "a tag with disallowed characters"
 assert_invalid "UPPERHASH-0123456789AB" "a tag with an uppercase hash suffix"
+assert_invalid "-leading-dash-0123456789" "a tag Docker would reject for its leading dash"
+assert_invalid ".leading-dot-0123456789" "a tag Docker would reject for its leading dot"
+
+# A well-formed hash suffix must not be a way to smuggle a tag that reads as
+# an official one; these are the checks a format-only validator would miss.
+assert_rejected_because "latest-0123456789" "reserved tag" "'latest' dressed up with a hash suffix"
+assert_rejected_because "v1.2.3-0123456789" "release tag" "a release tag dressed up with a hash suffix"
 
 if [ "$FAILURES" -eq 0 ]; then
   echo "All validate_image_tag_test.sh checks passed."

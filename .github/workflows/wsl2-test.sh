@@ -55,9 +55,8 @@ go version
 docker version
 git --version
 
-# This runner never builds a changed image itself (autotag.sh's no-op fast
-# path trusts the tag already committed in versionconstants.go), so it can
-# race image-push.yml's approval/build/push - see containers/wait-for-images.sh.
+# This runner holds no push credentials, so it can race image-push.yml's
+# approval/build/push - see containers/wait-for-images.sh.
 echo "=== Waiting for pushed images ==="
 containers/wait-for-images.sh
 

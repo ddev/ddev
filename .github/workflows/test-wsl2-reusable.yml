@@ -68,7 +68,6 @@ jobs:
 
     env:
       DOCKER_ORG: ${{ vars.DOCKER_ORG }}
-      WAIT_FOR_IMAGES_BRANCH: ${{ github.head_ref || github.ref_name }}
       GOTEST_SHORT: ${{ inputs.gotest_short }}
       TESTARGS: ${{ inputs.testargs }}
       MAKE_TARGET: ${{ inputs.make_target }}
@@ -196,5 +195,4 @@ jobs:
           $embargo_php = "${{ env.DDEV_EMBARGO_PHP_VERSIONS }}"
           $skip_nodejs = "${{ env.DDEV_SKIP_NODEJS_TEST }}"
           $docker_org = "${{ env.DOCKER_ORG }}"
-          $wait_branch = "${{ env.WAIT_FOR_IMAGES_BRANCH }}"
-          wsl -u testuser -- bash -exc "export GOTEST_SHORT='$gotest_short' TESTARGS='$testargs' MAKE_TARGET='$make_target' MAKEARGS='$makeargs' DDEV_EMBARGO_TESTS='$embargo' DDEV_EMBARGO_PHP_VERSIONS='$embargo_php' DDEV_SKIP_NODEJS_TEST='$skip_nodejs' DOCKER_ORG='$docker_org' WAIT_FOR_IMAGES_BRANCH='$wait_branch' && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"
+          wsl -u testuser -- bash -exc "export GOTEST_SHORT='$gotest_short' TESTARGS='$testargs' MAKE_TARGET='$make_target' MAKEARGS='$makeargs' DDEV_EMBARGO_TESTS='$embargo' DDEV_EMBARGO_PHP_VERSIONS='$embargo_php' DDEV_SKIP_NODEJS_TEST='$skip_nodejs' DOCKER_ORG='$docker_org' && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"

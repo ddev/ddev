@@ -64,7 +64,8 @@ fi
 
 # 3. Exactly one docker call per invocation - no retries/loops in this script
 #    (retry/backoff, if wanted, is the caller's job, e.g. wait-for-images.sh).
-calls="$(wc -l < "$DOCKER_CALL_LOG")"
+# BSD wc pads its output with spaces; GNU wc does not.
+calls="$(wc -l < "$DOCKER_CALL_LOG" | tr -d '[:space:]')"
 if [ "$calls" -eq 2 ]; then
   pass "made exactly one docker call per invocation"
 else

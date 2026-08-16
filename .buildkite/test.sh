@@ -25,8 +25,8 @@ while IFS= read -r varname; do
 done < <(MSYS_NO_PATHCONV=1 git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)
 git update-ref -d refs/public-variables-tmp
 
-# New images may have been pushed, need branch to know when they have appeared
-WAIT_FOR_IMAGES_BRANCH="$BUILDKITE_BRANCH" "$(dirname "$0")/../containers/wait-for-images.sh"
+# A changed image may still be waiting on image-push.yml's approval
+"$(dirname "$0")/../containers/wait-for-images.sh"
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 os=$(go env GOOS)

@@ -32,6 +32,11 @@ assert_eq() {
   fi
 }
 
+# BSD wc pads its output with spaces; GNU wc does not.
+count_lines() {
+  wc -l < "$1" | tr -d '[:space:]'
+}
+
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 
@@ -135,7 +140,7 @@ case "$candidate" in
   *-"$current_hash") pass "--print-only candidate tag ends with the current hash" ;;
   *) fail "--print-only candidate tag '$candidate' doesn't end with hash '$current_hash'" ;;
 esac
-calls="$(wc -l < "$DOCKER_CALL_LOG")"
+calls="$(count_lines "$DOCKER_CALL_LOG")"
 assert_eq "0" "$calls" "--print-only makes no docker calls"
 
 # 6. Change detected (today's fixture tag is "v1.0.0", never a real hash),
@@ -163,10 +168,10 @@ esac
 #    rewrite, and (the key design property) no docker call at all.
 rm -f "$BUILD_MARKER"
 before2="$(cat "$VERSIONCONSTANTS")"
-calls_before="$(wc -l < "$DOCKER_CALL_LOG")"
+calls_before="$(count_lines "$DOCKER_CALL_LOG")"
 "$AUTOTAG" WebTag ddev/dummy-image imgdir -- bash -c "touch '$BUILD_MARKER'"
 after2="$(cat "$VERSIONCONSTANTS")"
-calls_after="$(wc -l < "$DOCKER_CALL_LOG")"
+calls_after="$(count_lines "$DOCKER_CALL_LOG")"
 if [ -f "$BUILD_MARKER" ]; then
   fail "unexpected rebuild on unchanged content"
 else
