@@ -20,6 +20,7 @@ Current variables:
   - **Bats tests:** each pattern is matched as a case-sensitive substring against the bats filename (without `.bats`) or the `@test` description. E.g. `sveltekit` skips all tests in `sveltekit.bats`; `Symfony Composer` skips only the Composer-flavored test in `symfony.bats`. Go and bats patterns can be combined: `TestLagoonPull|sveltekit`.
   - `workflow_dispatch` runs skip loading the `public-variables` branch entirely, so maintainers can verify fixes without removing them from the embargo list first.
 - `DDEV_EMBARGO_PHP_VERSIONS` - comma-separated PHP versions to skip in `TestPHPConfig`, e.g. `7.0,7.1`
+- `DOCKER_ORG` - Default `hub.docker.com` organization to use, nearly always `ddev`.
 
 ## Adding a new variable
 
