@@ -434,12 +434,9 @@ func TestEphemeralPortsReusedOnRestart(t *testing.T) {
 	require.Equal(t, originalRouterID, router.ID, "Router should not be recreated when ephemeral ports are reused")
 }
 
-// TestRouterPortSubstitutionPersistsAcrossProjects tests that when a router port
-// is substituted with an ephemeral port because the standard port was busy when
-// the router was created, a later, different project still adopts the same
-// substitute after the original conflict clears - recovered from the router's
-// RouterPortSubstitutionsLabel - instead of expecting the router to bind the
-// now-free standard port and forcing an unnecessary router recreation.
+// TestRouterPortSubstitutionPersistsAcrossProjects verifies a substituted port
+// survives across ddev processes via the router's RouterPortSubstitutionsLabel,
+// even after the original port conflict clears.
 func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 	if os.Getenv("GOTEST_SHORT") != "" {
 		t.Skip("Skipping because GOTEST_SHORT is set")
@@ -447,12 +444,7 @@ func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
 	}
-	// util.CaptureUserOut() below redirects output to an os.Pipe() that isn't
-	// drained until getOutput() is called, i.e. only after app2.Start()
-	// returns. With DDEV_DEBUG=true a full Start() can emit enough debug
-	// output to fill that pipe before it returns, deadlocking the write on
-	// Windows. Same root cause as the TestDdevLogs and
-	// TestRouterNotRebuiltOnHostnameChange Windows skips.
+	// Same util.CaptureUserOut()/app.Start() deadlock as TestRouterNotRebuiltOnHostnameChange, see #8644
 	if nodeps.IsWindows() {
 		t.Skip("Skipping on Windows because CaptureUserOut() can hang around a full app.Start()")
 	}
