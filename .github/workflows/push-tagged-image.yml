@@ -42,14 +42,17 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
+      alias: ${{ steps.tag.outputs.alias }}
     steps:
       - uses: actions/checkout@v7
       - id: tag
         env:
           INPUT_TAG: ${{ github.event.inputs.tag }}
           IMAGE: ${{ github.event.inputs.image }}
+          ALIAS_BRANCH: ${{ github.ref_name }}
         run: |
           set -eu -o pipefail
+          HASH_LEN="${HASH_LEN:-10}"
           if [ -n "$INPUT_TAG" ]; then
             TAG="$INPUT_TAG"
             echo "Using the tag supplied on the workflow input: ${TAG}"
@@ -59,6 +62,21 @@ jobs:
           fi
           containers/validate-image-tag.sh "$TAG" || [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+          # A readable neighbour for a bare hash, so the registry tag list
+          # still says which branch produced it. A release tag is already
+          # readable and gets none.
+          ALIAS=""
+          if [[ "$TAG" =~ ^[0-9a-f]{${HASH_LEN}}$ ]]; then
+            ALIAS="$(echo "$ALIAS_BRANCH" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')-${TAG}"
+            if containers/validate-image-tag.sh "$ALIAS"; then
+              echo "Publishing the alias ${ALIAS} alongside ${TAG}"
+            else
+              echo "Alias '${ALIAS}' rejected; publishing only ${TAG}" >&2
+              ALIAS=""
+            fi
+          fi
+          echo "alias=${ALIAS}" >> "$GITHUB_OUTPUT"
 
   build-and-push:
     name: build ${{ matrix.arch }} ${{ github.event.inputs.image }}
@@ -164,6 +182,7 @@ jobs:
     if: ${{ needs.build-and-push.outputs.multi_arch == 'true' }}
     env:
       TAG: ${{ needs.resolve-tag.outputs.tag }}
+      ALIAS: ${{ needs.resolve-tag.outputs.alias }}
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5
@@ -189,9 +208,12 @@ jobs:
             MULTI_ARCH_IMAGES="${MULTI_ARCH_IMAGES} ${DOCKER_ORG}/ddev-webserver-prod"
           fi
 
-          # Create and push multi-arch manifests
+          # Create and push multi-arch manifests. ALIAS, when set, is a second
+          # name on the same manifest - see the resolve-tag job.
           for ORG_IMAGE in ${MULTI_ARCH_IMAGES}; do
-            docker buildx imagetools create -t ${ORG_IMAGE}:${TAG} ${ORG_IMAGE}:${TAG}-amd64 ${ORG_IMAGE}:${TAG}-arm64
+            NAMES=(-t "${ORG_IMAGE}:${TAG}")
+            [ -n "${ALIAS}" ] && NAMES+=(-t "${ORG_IMAGE}:${ALIAS}")
+            docker buildx imagetools create "${NAMES[@]}" ${ORG_IMAGE}:${TAG}-amd64 ${ORG_IMAGE}:${TAG}-arm64
             if [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               docker buildx imagetools create -t ${ORG_IMAGE}:latest ${ORG_IMAGE}:${TAG}
             fi

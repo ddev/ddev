@@ -80,6 +80,8 @@ Any pull request that changes `containers/` — including from a fork — is bui
 
 The two workflows below (manual `workflow_dispatch`) remain for re-pushing a specific tag — for instance at release time, when every image is re-pushed under a `vX.Y.Z` tag. Their `tag` input is optional: leave it empty and the workflow uses the tag the checkout actually needs, which is safer than retyping a content hash. Supply it only for a release.
 
+When the tag is a content hash, these workflows also publish the `<branch>-<hash>` alias next to it — the same second name the automatic flow creates — so a manual push doesn't leave a bare hash with nothing readable beside it in the registry. A `vX.Y.Z` tag is already readable and gets no alias.
+
 A `containers/ddev-dbserver` change builds and pushes all 20 database variants (36 jobs), because they all share a single `BaseDBTag`. That variant matrix lives in `containers/ddev-dbserver/variants.txt` and is read by `variants.sh`, which also generates that directory's make targets, the automatic flow's image list, and `push-tagged-dbimage.yml`'s matrix — add a database version there and every consumer picks it up.
 
 ### One-time setup: the `image-push` GitHub Environment

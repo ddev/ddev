@@ -32,23 +32,30 @@ jobs:
     outputs:
       matrix: ${{ steps.variants.outputs.matrix }}
       multi_arch_images: ${{ steps.variants.outputs.multi_arch_images }}
+      all_repos: ${{ steps.variants.outputs.all_repos }}
       tag: ${{ steps.tag.outputs.tag }}
+      alias: ${{ steps.tag.outputs.alias }}
     steps:
       - uses: actions/checkout@v7
       - id: variants
         run: |
           set -eu -o pipefail
           V=containers/ddev-dbserver/variants.sh
-          echo "matrix=$($V json)" >> "$GITHUB_OUTPUT"
-          echo "multi_arch_images=$($V multi-arch-variants)" >> "$GITHUB_OUTPUT"
+          {
+            echo "matrix=$($V json)"
+            echo "multi_arch_images=$($V multi-arch-variants)"
+            echo "all_repos=$($V repos | tr '\n' ' ')"
+          } >> "$GITHUB_OUTPUT"
       # An empty tag input means "publish what this checkout needs", which is
       # derivable; retyping the content hash by hand is how it ends up not
       # matching versionconstants.go.
       - id: tag
         env:
           INPUT_TAG: ${{ github.event.inputs.tag }}
+          ALIAS_BRANCH: ${{ github.ref_name }}
         run: |
           set -eu -o pipefail
+          HASH_LEN="${HASH_LEN:-10}"
           if [ -n "$INPUT_TAG" ]; then
             TAG="$INPUT_TAG"
             echo "Using the tag supplied on the workflow input: ${TAG}"
@@ -58,6 +65,21 @@ jobs:
           fi
           containers/validate-image-tag.sh "$TAG" || [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+          # A readable neighbour for a bare hash, so the registry tag list
+          # still says which branch produced it. A release tag is already
+          # readable and gets none.
+          ALIAS=""
+          if [[ "$TAG" =~ ^[0-9a-f]{${HASH_LEN}}$ ]]; then
+            ALIAS="$(echo "$ALIAS_BRANCH" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')-${TAG}"
+            if containers/validate-image-tag.sh "$ALIAS"; then
+              echo "Publishing the alias ${ALIAS} alongside ${TAG}"
+            else
+              echo "Alias '${ALIAS}' rejected; publishing only ${TAG}" >&2
+              ALIAS=""
+            fi
+          fi
+          echo "alias=${ALIAS}" >> "$GITHUB_OUTPUT"
 
   build-db-arch:
     name: build ${{ matrix.build.arch }} ${{ matrix.build.dbtype }}
@@ -164,7 +186,9 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       MULTI_ARCH_IMAGES: ${{ needs.variants.outputs.multi_arch_images }}
+      ALL_REPOS: ${{ needs.variants.outputs.all_repos }}
       TAG: ${{ needs.variants.outputs.tag }}
+      ALIAS: ${{ needs.variants.outputs.alias }}
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5
@@ -184,14 +208,29 @@ jobs:
           # Get Docker Hub token for cleanup
           TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username":"${{ vars.DOCKERHUB_USERNAME }}","password":"${{ env.DOCKERHUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
 
-          # Create and push multi-arch manifests
+          # Create and push multi-arch manifests. ALIAS, when set, is a second
+          # name on the same manifest - see the variants job.
           for variant in ${MULTI_ARCH_IMAGES}; do
             ORG_IMAGE=${DOCKER_ORG}/ddev-dbserver-$(echo "${variant}" | tr '_' '-')
-            docker buildx imagetools create -t ${ORG_IMAGE}:${TAG} ${ORG_IMAGE}:${TAG}-amd64 ${ORG_IMAGE}:${TAG}-arm64
+            NAMES=(-t "${ORG_IMAGE}:${TAG}")
+            [ -n "${ALIAS}" ] && NAMES+=(-t "${ORG_IMAGE}:${ALIAS}")
+            docker buildx imagetools create "${NAMES[@]}" ${ORG_IMAGE}:${TAG}-amd64 ${ORG_IMAGE}:${TAG}-arm64
             if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               docker buildx imagetools create -t ${ORG_IMAGE}:latest ${ORG_IMAGE}:${TAG}
             fi
           done
+
+          # The amd64-only variants are pushed straight to ${TAG} and never
+          # reach the loop above, so they need the alias adding separately.
+          if [ -n "${ALIAS}" ]; then
+            for repo in ${ALL_REPOS}; do
+              variant="$(echo "${repo#ddev-dbserver-}" | tr '-' '_')"
+              case " ${MULTI_ARCH_IMAGES} " in *" ${variant} "*) continue ;; esac
+              ORG_IMAGE=${DOCKER_ORG}/${repo}
+              echo "Aliasing ${ORG_IMAGE}:${TAG} as ${ALIAS}"
+              docker buildx imagetools create -t "${ORG_IMAGE}:${ALIAS}" "${ORG_IMAGE}:${TAG}"
+            done
+          fi
 
           # Clean up intermediary single-arch tags from remote registry
           for variant in ${MULTI_ARCH_IMAGES}; do
