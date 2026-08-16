@@ -13,6 +13,8 @@
 
 set -eu -o pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 ALLOWED_SUFFIXES=(
   ddev-webserver
   ddev-webserver-prod
@@ -20,6 +22,13 @@ ALLOWED_SUFFIXES=(
   ddev-ssh-agent
   ddev-xhgui
 )
+
+# The db repositories are exactly the variants in
+# containers/ddev-dbserver/variants.txt - no pattern match, so a repository
+# this project doesn't publish can't slip through on shape alone.
+while IFS= read -r _repo; do
+  [ -n "$_repo" ] && ALLOWED_SUFFIXES+=("$_repo")
+done < <("$SCRIPT_DIR/ddev-dbserver/variants.sh" repos)
 
 if [ "$#" -ne 1 ]; then
   echo "Usage: $0 <image-repo>" >&2
@@ -41,10 +50,6 @@ for allowed in "${ALLOWED_SUFFIXES[@]}"; do
     exit 0
   fi
 done
-
-if [[ "$SUFFIX" =~ ^ddev-dbserver-(mariadb|mysql)-[0-9]+\.[0-9]+$ ]]; then
-  exit 0
-fi
 
 echo "validate-image-repo.sh: '${REPO}' is not one of the repositories this flow may push" >&2
 exit 1

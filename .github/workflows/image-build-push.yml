@@ -42,7 +42,8 @@ jobs:
     name: Detect changed images
     runs-on: ubuntu-24.04
     outputs:
-      matrix: ${{ steps.detect.outputs.matrix }}
+      build_matrix: ${{ steps.detect.outputs.build_matrix }}
+      manifest_matrix: ${{ steps.detect.outputs.manifest_matrix }}
       needs_build: ${{ steps.detect.outputs.needs_build }}
       is_fork: ${{ steps.fork.outputs.is_fork }}
     steps:
@@ -58,9 +59,12 @@ jobs:
           set -eu -o pipefail
           source containers/image-configs.sh
 
-          MATRIX_JSON="[]"
+          # build_matrix is one entry per (image, arch) rather than a cross
+          # product, because the older db variants are amd64-only.
+          BUILD_JSON="[]"
+          MANIFEST_JSON="[]"
           for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
-            IFS='|' read -r repo_suffix tag_var hash_paths make_dir make_target arch_suffixed extra_repo_suffixes <<< "$entry"
+            IFS='|' read -r repo_suffix tag_var hash_paths make_dir make_target arch_suffixed arches _ extra_repo_suffixes <<< "$entry"
             # shellcheck disable=SC2086 # hash_paths is a space-separated path list
             read -r state tag <<< "$(containers/required-image-tag.sh "$tag_var" $hash_paths)"
             repo="${DOCKER_ORG}/${repo_suffix}"
@@ -68,19 +72,31 @@ jobs:
               echo "detect: ${repo}:${tag} already exists (${state}), nothing to build"
               continue
             fi
-            echo "detect: ${repo}:${tag} needs building (${state})"
-            MATRIX_JSON="$(echo "$MATRIX_JSON" | jq -c \
+            echo "detect: ${repo}:${tag} needs building (${state}) for arches: ${arches}"
+            for arch in $arches; do
+              BUILD_JSON="$(echo "$BUILD_JSON" | jq -c \
+                --arg repo_suffix "$repo_suffix" \
+                --arg repo "$repo" \
+                --arg tag "$tag" \
+                --arg arch "$arch" \
+                --arg make_dir "$make_dir" \
+                --arg make_target "$make_target" \
+                --arg arch_suffixed "$arch_suffixed" \
+                --arg extra_repo_suffixes "$extra_repo_suffixes" \
+                '. + [{"repo_suffix": $repo_suffix, "repo": $repo, "tag": $tag, "arch": $arch, "make_dir": $make_dir, "make_target": $make_target, "arch_suffixed": $arch_suffixed, "extra_repo_suffixes": $extra_repo_suffixes}]')"
+            done
+            MANIFEST_JSON="$(echo "$MANIFEST_JSON" | jq -c \
               --arg repo "$repo" \
               --arg tag "$tag" \
-              --arg make_dir "$make_dir" \
-              --arg make_target "$make_target" \
-              --arg arch_suffixed "$arch_suffixed" \
+              --arg arches "$arches" \
               --arg extra_repo_suffixes "$extra_repo_suffixes" \
-              '. + [{"repo": $repo, "tag": $tag, "make_dir": $make_dir, "make_target": $make_target, "arch_suffixed": $arch_suffixed, "extra_repo_suffixes": $extra_repo_suffixes}]')"
+              '. + [{"repo": $repo, "tag": $tag, "arches": $arches, "extra_repo_suffixes": $extra_repo_suffixes}]')"
           done
 
-          echo "matrix=${MATRIX_JSON}" >> "$GITHUB_OUTPUT"
-          if [ "$(echo "$MATRIX_JSON" | jq 'length')" -gt 0 ]; then
+          echo "build_matrix=${BUILD_JSON}" >> "$GITHUB_OUTPUT"
+          echo "manifest_matrix=${MANIFEST_JSON}" >> "$GITHUB_OUTPUT"
+          echo "detect: $(echo "$MANIFEST_JSON" | jq 'length') image(s) to build, $(echo "$BUILD_JSON" | jq 'length') build job(s)"
+          if [ "$(echo "$BUILD_JSON" | jq 'length')" -gt 0 ]; then
             echo "needs_build=true" >> "$GITHUB_OUTPUT"
           else
             echo "needs_build=false" >> "$GITHUB_OUTPUT"
@@ -108,34 +124,33 @@ jobs:
   # approval-gated push. ---
 
   build:
-    name: Build ${{ matrix.image.repo }} (${{ matrix.arch }})
+    name: Build ${{ matrix.build.repo }} (${{ matrix.build.arch }})
     needs: detect
     if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true'
     strategy:
       fail-fast: false
       matrix:
-        image: ${{ fromJson(needs.detect.outputs.matrix) }}
-        arch: [amd64, arm64]
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+        build: ${{ fromJson(needs.detect.outputs.build_matrix) }}
+    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v7
-      - name: Build ${{ matrix.image.repo }}:${{ matrix.image.tag }}-${{ matrix.arch }}
+      - name: Build ${{ matrix.build.repo }}:${{ matrix.build.tag }}-${{ matrix.build.arch }}
         run: |
           set -eu -o pipefail
-          VERSION="${{ matrix.image.tag }}-${{ matrix.arch }}"
-          MAKE_TARGET="${{ matrix.image.make_target }}"
-          if [ "${{ matrix.image.arch_suffixed }}" = "true" ]; then
-            MAKE_TARGET="${MAKE_TARGET}_${{ matrix.arch }}"
+          VERSION="${{ matrix.build.tag }}-${{ matrix.build.arch }}"
+          MAKE_TARGET="${{ matrix.build.make_target }}"
+          if [ "${{ matrix.build.arch_suffixed }}" = "true" ]; then
+            MAKE_TARGET="${MAKE_TARGET}_${{ matrix.build.arch }}"
           fi
           # DDEV_IMAGE_TAG is the tag people actually pull, recorded in the
           # com.ddev.image-tag label; VERSION is the throwaway per-arch tag.
-          make -C "containers/${{ matrix.image.make_dir }}" "$MAKE_TARGET" \
-            VERSION="$VERSION" DDEV_IMAGE_TAG="${{ matrix.image.tag }}"
+          make -C "containers/${{ matrix.build.make_dir }}" "$MAKE_TARGET" \
+            VERSION="$VERSION" DDEV_IMAGE_TAG="${{ matrix.build.tag }}"
 
-          REPOS="${{ matrix.image.repo }}"
-          for suffix in ${{ matrix.image.extra_repo_suffixes }}; do
+          REPOS="${{ matrix.build.repo }}"
+          for suffix in ${{ matrix.build.extra_repo_suffixes }}; do
             REPOS="${REPOS} ${DOCKER_ORG}/${suffix}"
           done
 
@@ -146,11 +161,12 @@ jobs:
             echo "$repo" >> repos.txt
           done
           docker save "${REFS[@]}" -o image.tar
-          echo -n "${{ matrix.image.tag }}" > tag.txt
-          echo -n "${{ matrix.arch }}" > arch.txt
+          echo -n "${{ matrix.build.tag }}" > tag.txt
+          echo -n "${{ matrix.build.arch }}" > arch.txt
       - uses: actions/upload-artifact@v7
         with:
-          name: image-${{ matrix.image.make_dir }}-${{ matrix.arch }}
+          # repo_suffix, not make_dir: all 20 db variants share one make_dir.
+          name: image-${{ matrix.build.repo_suffix }}-${{ matrix.build.arch }}
           path: |
             image.tar
             repos.txt
@@ -165,15 +181,14 @@ jobs:
   # as main-build.yml, which already uses this same secret unguarded. ---
 
   build-and-push:
-    name: Build and push ${{ matrix.image.repo }} (${{ matrix.arch }})
+    name: Build and push ${{ matrix.build.repo }} (${{ matrix.build.arch }})
     needs: detect
     if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'false'
     strategy:
       fail-fast: false
       matrix:
-        image: ${{ fromJson(needs.detect.outputs.matrix) }}
-        arch: [amd64, arm64]
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+        build: ${{ fromJson(needs.detect.outputs.build_matrix) }}
+    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -191,20 +206,20 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      - name: Build and push ${{ matrix.image.repo }}:${{ matrix.image.tag }}-${{ matrix.arch }}
+      - name: Build and push ${{ matrix.build.repo }}:${{ matrix.build.tag }}-${{ matrix.build.arch }}
         run: |
           set -eu -o pipefail
-          VERSION="${{ matrix.image.tag }}-${{ matrix.arch }}"
-          MAKE_TARGET="${{ matrix.image.make_target }}"
-          if [ "${{ matrix.image.arch_suffixed }}" = "true" ]; then
-            MAKE_TARGET="${MAKE_TARGET}_${{ matrix.arch }}"
+          VERSION="${{ matrix.build.tag }}-${{ matrix.build.arch }}"
+          MAKE_TARGET="${{ matrix.build.make_target }}"
+          if [ "${{ matrix.build.arch_suffixed }}" = "true" ]; then
+            MAKE_TARGET="${MAKE_TARGET}_${{ matrix.build.arch }}"
           fi
           # See the DDEV_IMAGE_TAG note in the fork-side `build` job above.
-          make -C "containers/${{ matrix.image.make_dir }}" "$MAKE_TARGET" \
-            VERSION="$VERSION" DDEV_IMAGE_TAG="${{ matrix.image.tag }}"
+          make -C "containers/${{ matrix.build.make_dir }}" "$MAKE_TARGET" \
+            VERSION="$VERSION" DDEV_IMAGE_TAG="${{ matrix.build.tag }}"
 
-          REPOS="${{ matrix.image.repo }}"
-          for suffix in ${{ matrix.image.extra_repo_suffixes }}; do
+          REPOS="${{ matrix.build.repo }}"
+          for suffix in ${{ matrix.build.extra_repo_suffixes }}; do
             REPOS="${REPOS} ${DOCKER_ORG}/${suffix}"
           done
           for repo in $REPOS; do
@@ -212,13 +227,13 @@ jobs:
           done
 
   create-manifests:
-    name: Create manifest for ${{ matrix.image.repo }}
+    name: Create manifest for ${{ matrix.manifest.repo }}
     needs: [detect, build-and-push]
     if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'false'
     strategy:
       fail-fast: false
       matrix:
-        image: ${{ fromJson(needs.detect.outputs.matrix) }}
+        manifest: ${{ fromJson(needs.detect.outputs.manifest_matrix) }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -244,22 +259,29 @@ jobs:
         id: manifest
         run: |
           set -eu -o pipefail
-          TAG="${{ matrix.image.tag }}"
+          TAG="${{ matrix.manifest.tag }}"
+          # The oldest db variants are amd64-only, so the arch list comes from
+          # detect rather than being assumed to be both.
+          ARCHES="${{ matrix.manifest.arches }}"
 
           DOCKERHUB_JWT="$(curl -s -H "Content-Type: application/json" -X POST \
             -d '{"username":"'"${{ vars.DOCKERHUB_USERNAME }}"'","password":"'"${DOCKERHUB_TOKEN}"'"}' \
             https://hub.docker.com/v2/users/login/ | jq -r .token)"
 
-          REPOS="${{ matrix.image.repo }}"
-          for suffix in ${{ matrix.image.extra_repo_suffixes }}; do
+          REPOS="${{ matrix.manifest.repo }}"
+          for suffix in ${{ matrix.manifest.extra_repo_suffixes }}; do
             REPOS="${REPOS} ${DOCKER_ORG}/${suffix}"
           done
 
           PUSHED_SUMMARY=""
           for repo in $REPOS; do
-            docker buildx imagetools create -t "${repo}:${TAG}" "${repo}:${TAG}-amd64" "${repo}:${TAG}-arm64"
+            ARCH_TAGS=()
+            for arch in $ARCHES; do
+              ARCH_TAGS+=("${repo}:${TAG}-${arch}")
+            done
+            docker buildx imagetools create -t "${repo}:${TAG}" "${ARCH_TAGS[@]}"
             PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${TAG}\`"$'\n'
-            for arch in amd64 arm64; do
+            for arch in $ARCHES; do
               echo "Removing intermediary tag ${repo}:${TAG}-${arch}"
               curl -s -X DELETE -H "Authorization: JWT ${DOCKERHUB_JWT}" \
                 "https://hub.docker.com/v2/repositories/${repo}/tags/${TAG}-${arch}/" >/dev/null || true

@@ -53,8 +53,15 @@ assert_invalid "someoneelse/ddev-webserver" "another organization"
 assert_invalid "ddev-webserver" "a bare name with no organization"
 assert_invalid "ddev/ddev-webserver-evil" "an unknown repository in the right org"
 assert_invalid "ddev/ddev-dbserver-postgres-16" "a db engine the flow doesn't build"
+assert_invalid "ddev/ddev-dbserver-mariadb-99.9" "a correctly-shaped db variant that isn't in variants.txt"
 assert_invalid "ddev/../../etc/passwd" "a path-traversal attempt"
 assert_invalid "ddevhq/ddev-webserver" "an org that merely starts the same"
+
+# The db repositories are the variants themselves, so the allowlist tracks
+# containers/ddev-dbserver/variants.txt rather than a name pattern.
+while IFS= read -r suffix; do
+  [ -n "$suffix" ] && assert_valid "ddev/${suffix}"
+done < <("$SCRIPT_DIR/ddev-dbserver/variants.sh" repos)
 
 # The org comes from a trusted workflow variable, so a differing DOCKER_ORG
 # must move the whole allowlist rather than widen it.

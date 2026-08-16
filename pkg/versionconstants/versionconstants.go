@@ -26,7 +26,7 @@ var WebTag = "20260721_rfay_content_addressed_image_tags-36bceca65e" // Note tha
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20260721_rfay_content_addressed_image_tags-278125d33a"
+var BaseDBTag = "20260814_rfay_docker_update_phase_2-1dc90407ef"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"

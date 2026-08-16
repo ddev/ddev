@@ -19,38 +19,50 @@ env:
   REGISTRY: docker.io
   DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
   TAG: "${{ github.event.inputs.tag }}"
-  MULTI_ARCH_IMAGES: "mariadb_10.1 mariadb_10.2 mariadb_10.3 mariadb_10.4 mariadb_10.5 mariadb_10.6 mariadb_10.7 mariadb_10.8 mariadb_10.11 mariadb_11.4 mariadb_11.8 mariadb_12.3 mysql_5.7 mysql_8.0 mysql_8.4 mysql_9.7"
 
 permissions:
   contents: read
 
 jobs:
+  # The variant matrix and which of them are multi-arch both come from
+  # containers/ddev-dbserver/variants.txt, shared with that directory's
+  # Makefile and with image-configs.sh.
+  variants:
+    name: Read the db variant matrix
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.variants.outputs.matrix }}
+      multi_arch_images: ${{ steps.variants.outputs.multi_arch_images }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: variants
+        run: |
+          set -eu -o pipefail
+          V=containers/ddev-dbserver/variants.sh
+          echo "matrix=$($V json)" >> "$GITHUB_OUTPUT"
+          echo "multi_arch_images=$($V multi-arch-variants)" >> "$GITHUB_OUTPUT"
+
   build-db-arch:
-    name: build ${{ matrix.arch }} ${{ matrix.dbtype }}
+    name: build ${{ matrix.build.arch }} ${{ matrix.build.dbtype }}
+    needs: variants
     strategy:
       fail-fast: false
       matrix:
-        arch: [amd64, arm64]
-        dbtype: [mariadb_5.5, mariadb_10.0, mariadb_10.1, mariadb_10.2, mariadb_10.3, mariadb_10.4, mariadb_10.5, mariadb_10.6, mariadb_10.7, mariadb_10.8, mariadb_10.11, mariadb_11.4, mariadb_11.8, mariadb_12.3, mysql_5.5, mysql_5.6, mysql_5.7, mysql_8.0, mysql_8.4, mysql_9.7]
-        # update 'meta' step below if you change this:
-        exclude:
-          - arch: arm64
-            dbtype: mariadb_5.5
-          - arch: arm64
-            dbtype: mariadb_10.0
-          - arch: arm64
-            dbtype: mysql_5.5
-          - arch: arm64
-            dbtype: mysql_5.6
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+        build: ${{ fromJson(needs.variants.outputs.matrix) }}
+    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     steps:
       - name: Determine if multi-arch build
         id: meta
+        env:
+          MULTI_ARCH_IMAGES: ${{ needs.variants.outputs.multi_arch_images }}
+          DBTYPE: ${{ matrix.build.dbtype }}
         run: |
-          case "${{ matrix.dbtype }}" in
-            mariadb_5.5|mariadb_10.0|mysql_5.5|mysql_5.6) echo "multi_arch=false" >> $GITHUB_OUTPUT ;;
-            *) echo "multi_arch=true" >> $GITHUB_OUTPUT ;;
-          esac
+          set -eu -o pipefail
+          if [[ " ${MULTI_ARCH_IMAGES} " == *" ${DBTYPE} "* ]]; then
+            echo "multi_arch=true" >> $GITHUB_OUTPUT
+          else
+            echo "multi_arch=false" >> $GITHUB_OUTPUT
+          fi
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5
         if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.repository_owner }}
@@ -78,33 +90,33 @@ jobs:
       - name: Clean up stale arch tag before push
         run: |
           TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d '{"username":"${{ vars.DOCKERHUB_USERNAME }}","password":"${{ env.DOCKERHUB_TOKEN }}"}' https://hub.docker.com/v2/users/login/ | jq -r .token)
-          ORG_IMAGE=${DOCKER_ORG}/ddev-dbserver-$(echo "${{ matrix.dbtype }}" | tr '_' '-')
-          echo "Cleaning up stale tag for ${ORG_IMAGE}:${TAG}-${{ matrix.arch }}"
-          curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-${{ matrix.arch }}/" >/dev/null || true
+          ORG_IMAGE=${DOCKER_ORG}/ddev-dbserver-$(echo "${{ matrix.build.dbtype }}" | tr '_' '-')
+          echo "Cleaning up stale tag for ${ORG_IMAGE}:${TAG}-${{ matrix.build.arch }}"
+          curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-${{ matrix.build.arch }}/" >/dev/null || true
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-      - name: Build and push ${{ env.DOCKER_ORG }}/ddev-dbserver-${{ matrix.dbtype }}:${{ env.TAG }} ${{ matrix.arch }} image
+      - name: Build and push ${{ env.DOCKER_ORG }}/ddev-dbserver-${{ matrix.build.dbtype }}:${{ env.TAG }} ${{ matrix.build.arch }} image
         run: |
           set -eu
           cd containers/ddev-dbserver
-          target="${{ matrix.dbtype }}_${{ matrix.arch }}"
-          echo "Building target $target for arch ${{ matrix.arch }}"
+          target="${{ matrix.build.dbtype }}_${{ matrix.build.arch }}"
+          echo "Building target $target for arch ${{ matrix.build.arch }}"
           version="${TAG}"
           if [ "${{ steps.meta.outputs.multi_arch }}" = "true" ]; then
-            version="${version}-${{ matrix.arch }}"
+            version="${version}-${{ matrix.build.arch }}"
           fi
           make $target PUSH=true VERSION="${version}" DDEV_IMAGE_TAG="${TAG}"
       - name: Record image information
         id: image-info
         run: |
           set -eu
-          INSPECT_IMAGE=${DOCKER_ORG}/ddev-dbserver-$(echo "${{ matrix.dbtype }}" | tr '_' '-'):${TAG}
+          INSPECT_IMAGE=${DOCKER_ORG}/ddev-dbserver-$(echo "${{ matrix.build.dbtype }}" | tr '_' '-'):${TAG}
           if [ "${{ steps.meta.outputs.multi_arch }}" = "true" ]; then
-            INSPECT_IMAGE=${INSPECT_IMAGE}-${{ matrix.arch }}
+            INSPECT_IMAGE=${INSPECT_IMAGE}-${{ matrix.build.arch }}
           fi
           INSPECT_OUTPUT=""
           # Wait for image to be available with retry logic
@@ -124,13 +136,15 @@ jobs:
       - name: Upload image info artifact
         uses: actions/upload-artifact@v7
         with:
-          name: image-info-ddev-dbserver-${{ matrix.dbtype }}-${{ matrix.arch }}
+          name: image-info-ddev-dbserver-${{ matrix.build.dbtype }}-${{ matrix.build.arch }}
           path: image-info.txt
           retention-days: 1
   create-manifests:
     name: create multi-arch db manifests
-    needs: build-db-arch
+    needs: [variants, build-db-arch]
     runs-on: ubuntu-24.04
+    env:
+      MULTI_ARCH_IMAGES: ${{ needs.variants.outputs.multi_arch_images }}
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5

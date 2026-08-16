@@ -68,12 +68,11 @@ build: autotag-images $(DEFAULT_BUILD)
 # (no Docker, no network). A changed image is built locally (host arch only)
 # and its tag in versionconstants.go is rewritten automatically - see
 # containers/autotag.sh and docs/content/developers/building-contributing.md.
-# TODO(#8609): only the default db variant (mariadb_11.8) is auto-built/pushed
-# below and in containers/image-configs.sh. Tests that exercise other db types/versions
-# (TestDdevAllDatabases and similar) still need a manual push. Revisit whether
-# to automate the full variant matrix, likely later in the build flow rather
-# than in the pre-approval detect/build stage, since building all ~19 variants
-# on every containers/ddev-dbserver PR would be expensive.
+# Only the default db variant (mariadb_11.8) is built here, to keep an
+# unrelated rebuild cheap. Every ddev-dbserver variant shares BaseDBTag, so a
+# dbserver change moves the tag for all of them at once; CI builds and pushes
+# the whole matrix (containers/ddev-dbserver/variants.txt), and the rest are
+# pulled from the registry.
 .PHONY: autotag-images
 autotag-images:
 	@containers/autotag.sh WebTag ddev/ddev-webserver containers/ddev-webserver containers/containers_shared.mk -- $(MAKE) -C containers/ddev-webserver images

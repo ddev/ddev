@@ -41,14 +41,24 @@ SLEEP_SECONDS="${WAIT_FOR_IMAGES_SLEEP:-30}"
 source "$SCRIPT_DIR/image-configs.sh"
 
 for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
-  IFS='|' read -r repo_suffix tag_var hash_paths _ <<< "$entry"
+  IFS='|' read -r repo_suffix tag_var hash_paths _ _ _ _ built_by_make _ <<< "$entry"
   # shellcheck disable=SC2086 # hash_paths is a space-separated path list
   read -r state tag <<< "$("$REQUIRED_IMAGE_TAG" "$tag_var" $hash_paths)"
   image_repo="${DOCKER_ORG}/${repo_suffix}"
 
   if [ "$state" != "committed" ]; then
-    echo "wait-for-images.sh: ${image_repo} content differs from versionconstants.go; make builds ${tag} locally, not waiting"
-    continue
+    if [ "$built_by_make" = "true" ]; then
+      echo "wait-for-images.sh: ${image_repo} content differs from versionconstants.go; make builds ${tag} locally, not waiting"
+      continue
+    fi
+    # No local build to fall back on, and the tag `make` will invent here
+    # depends on this runner's branch name (detached HEAD on a PR checkout),
+    # so it may not match what image-build-push.yml pushed. Fail now with
+    # something actionable instead of timing out on a tag nobody pushed.
+    echo "wait-for-images.sh: ${image_repo} content differs from the tag committed in versionconstants.go," >&2
+    echo "wait-for-images.sh: and make does not build this image locally." >&2
+    echo "wait-for-images.sh: run 'make' and commit the ${tag_var} change in pkg/versionconstants/versionconstants.go." >&2
+    exit 1
   fi
 
   attempt=1

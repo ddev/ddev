@@ -78,7 +78,9 @@ The following “Repository secret” environment variables must be configured i
 
 Any pull request that changes `containers/` — including from a fork — is built and pushed automatically by the [Image build](https://github.com/ddev/ddev/blob/main/.github/workflows/image-build-push.yml) / [Image push](https://github.com/ddev/ddev/blob/main/.github/workflows/image-push.yml) workflow pair. See [Automatic Image Build and Push](building-contributing.md#automatic-image-build-and-push) in the contributing guide for how the flow works and why it's safe to run on fork-authored Dockerfiles.
 
-The two workflows below (manual `workflow_dispatch`) remain for re-pushing a specific tag and for `ddev-dbserver` variants other than the default `mariadb_11.8` that the automatic flow doesn't build.
+The two workflows below (manual `workflow_dispatch`) remain for re-pushing a specific tag — for instance at release time, when every image is re-pushed under a `vX.Y.Z` tag.
+
+A `containers/ddev-dbserver` change builds and pushes all 20 database variants (36 jobs), because they all share a single `BaseDBTag`. That variant matrix lives in `containers/ddev-dbserver/variants.txt` and is read by `variants.sh`, which also generates that directory's make targets, the automatic flow's image list, and `push-tagged-dbimage.yml`'s matrix — add a database version there and every consumer picks it up.
 
 ### One-time setup: the `image-push` GitHub Environment
 

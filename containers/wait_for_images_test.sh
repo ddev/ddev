@@ -101,34 +101,38 @@ export VERSIONCONSTANTS_FILE="$WORKDIR/versionconstants.go"
 COMMITTED_PREFIX="some_older_branch"
 
 REPOS=()
-TAGS=()
-HASHES=()
 TAG_VARS=()
-: > "$VERSIONCONSTANTS_FILE"
+declare -A HASH_BY_VAR
+declare -A TAG_BY_VAR
 for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
   IFS='|' read -r repo_suffix tag_var hash_paths _ <<< "$entry"
-  # shellcheck disable=SC2086 # hash_paths is a space-separated path list
-  hash="$("$HASH_PATHS" $hash_paths)"
+  if [ -z "${HASH_BY_VAR[$tag_var]:-}" ]; then
+    # shellcheck disable=SC2086 # hash_paths is a space-separated path list
+    HASH_BY_VAR["$tag_var"]="$("$HASH_PATHS" $hash_paths)"
+    TAG_BY_VAR["$tag_var"]="${COMMITTED_PREFIX}-${HASH_BY_VAR[$tag_var]}"
+  fi
   REPOS+=("ddevhq/${repo_suffix}")
-  TAGS+=("${COMMITTED_PREFIX}-${hash}")
-  HASHES+=("$hash")
   TAG_VARS+=("$tag_var")
-  echo "var ${tag_var} = \"${COMMITTED_PREFIX}-${hash}\"" >> "$VERSIONCONSTANTS_FILE"
 done
+IMAGE_COUNT="${#REPOS[@]}"
 
+# All 20 ddev-dbserver variants share BaseDBTag, so the file has one line per
+# distinct tag variable, not one per image.
 write_versionconstants() {
   : > "$VERSIONCONSTANTS_FILE"
-  for i in "${!TAG_VARS[@]}"; do
-    echo "var ${TAG_VARS[$i]} = \"${TAGS[$i]}\"" >> "$VERSIONCONSTANTS_FILE"
+  for var in "${!TAG_BY_VAR[@]}"; do
+    echo "var ${var} = \"${TAG_BY_VAR[$var]}\"" >> "$VERSIONCONSTANTS_FILE"
   done
 }
 
 mark_all_existing() {
   : > "$DOCKER_EXISTING_REF_FILE"
   for i in "${!REPOS[@]}"; do
-    echo "${REPOS[$i]}:${TAGS[$i]}" >> "$DOCKER_EXISTING_REF_FILE"
+    echo "${REPOS[$i]}:${TAG_BY_VAR[${TAG_VARS[$i]}]}" >> "$DOCKER_EXISTING_REF_FILE"
   done
 }
+
+write_versionconstants
 
 # 1. Fast path: every committed tag already exists -> one docker call per
 #    image, no sleep. This is the shape of every pull request that doesn't
@@ -142,10 +146,10 @@ if [ "$RC" -eq 0 ]; then
 else
   fail "fast path should succeed when every committed tag already exists: $OUTPUT"
 fi
-assert_eq "5" "$(count_lines "$DOCKER_CALL_LOG")" "fast path makes exactly one docker call per image"
+assert_eq "$IMAGE_COUNT" "$(count_lines "$DOCKER_CALL_LOG")" "fast path makes exactly one docker call per image"
 assert_eq "0" "$(count_lines "$SLEEP_CALL_LOG")" "fast path never sleeps"
 case "$OUTPUT" in
-  *"found ${REPOS[0]}:${TAGS[0]}"*) pass "prints confirmation for each found tag" ;;
+  *"found ${REPOS[0]}:${TAG_BY_VAR[WebTag]}"*) pass "prints confirmation for each found tag" ;;
   *) fail "should print confirmation for each found tag: $OUTPUT" ;;
 esac
 
@@ -154,13 +158,23 @@ esac
 #    image, and must be waited for as-is rather than recomputed from the
 #    current branch.
 case "$OUTPUT" in
-  *"${COMMITTED_PREFIX}-${HASHES[0]}"*) pass "waits for the committed tag's own branch prefix" ;;
+  *"${COMMITTED_PREFIX}-${HASH_BY_VAR[WebTag]}"*) pass "waits for the committed tag's own branch prefix" ;;
   *) fail "should wait for the committed prefix '${COMMITTED_PREFIX}', not the current branch: $OUTPUT" ;;
 esac
 
+# 2b. Every ddev-dbserver variant is waited for, not just the default one that
+#     `make` builds locally - they all share BaseDBTag, so a dbserver change
+#     invalidates all of them at once.
+for variant_repo in ddevhq/ddev-dbserver-mysql-8.0 ddevhq/ddev-dbserver-mariadb-10.11 ddevhq/ddev-dbserver-mariadb-5.5; do
+  case "$OUTPUT" in
+    *"found ${variant_repo}:"*) pass "waits for the non-default variant ${variant_repo}" ;;
+    *) fail "should wait for the non-default variant ${variant_repo}: $OUTPUT" ;;
+  esac
+done
+
 # 3. Content that no longer matches versionconstants.go is built locally by
 #    make, so there is nothing to wait for and no registry call at all.
-TAGS[0]="${COMMITTED_PREFIX}-0000000000"
+TAG_BY_VAR[WebTag]="${COMMITTED_PREFIX}-0000000000"
 write_versionconstants
 mark_all_existing
 : > "$DOCKER_CALL_LOG"
@@ -171,22 +185,43 @@ if [ "$RC" -eq 0 ]; then
 else
   fail "should succeed when content differs from versionconstants.go: $OUTPUT"
 fi
-assert_eq "4" "$(count_lines "$DOCKER_CALL_LOG")" "skips the registry check for the locally-built image"
+assert_eq "$(( IMAGE_COUNT - 1 ))" "$(count_lines "$DOCKER_CALL_LOG")" "skips the registry check for the locally-built image"
 assert_eq "0" "$(count_lines "$SLEEP_CALL_LOG")" "never sleeps for a locally-built image"
 case "$OUTPUT" in
   *"not waiting"*) pass "says why it isn't waiting for the changed image" ;;
   *) fail "should explain why it isn't waiting: $OUTPUT" ;;
 esac
-TAGS[0]="${COMMITTED_PREFIX}-${HASHES[0]}"
+TAG_BY_VAR[WebTag]="${COMMITTED_PREFIX}-${HASH_BY_VAR[WebTag]}"
+write_versionconstants
+
+# 3b. A changed dbserver with a stale versionconstants.go is the case that has
+#     no local fallback: `make` builds only the default variant, so the other
+#     19 could only come from a tag this runner can't predict. Fail fast rather
+#     than time out.
+TAG_BY_VAR[BaseDBTag]="${COMMITTED_PREFIX}-0000000000"
+write_versionconstants
+mark_all_existing
+OUTPUT="$("$WAIT_FOR_IMAGES" 2>&1)" && RC=0 || RC=$?
+if [ "$RC" -ne 0 ]; then
+  pass "fails fast when a non-locally-built image is out of date"
+else
+  fail "should fail when a non-locally-built image is out of date: $OUTPUT"
+fi
+case "$OUTPUT" in
+  *"run 'make' and commit the BaseDBTag change"*) pass "names the variable to regenerate" ;;
+  *) fail "should tell the contributor to run make and commit BaseDBTag: $OUTPUT" ;;
+esac
+TAG_BY_VAR[BaseDBTag]="${COMMITTED_PREFIX}-${HASH_BY_VAR[BaseDBTag]}"
 write_versionconstants
 
 # 4. A tag that's initially missing but becomes available on the 3rd check.
+LAST=$(( IMAGE_COUNT - 1 ))
 : > "$DOCKER_EXISTING_REF_FILE"
 for i in "${!REPOS[@]}"; do
-  [ "$i" -eq 4 ] && continue
-  echo "${REPOS[$i]}:${TAGS[$i]}" >> "$DOCKER_EXISTING_REF_FILE"
+  [ "$i" -eq "$LAST" ] && continue
+  echo "${REPOS[$i]}:${TAG_BY_VAR[${TAG_VARS[$i]}]}" >> "$DOCKER_EXISTING_REF_FILE"
 done
-echo "${REPOS[4]}:${TAGS[4]}" > "$DOCKER_DELAYED_REF_FILE"
+echo "${REPOS[$LAST]}:${TAG_BY_VAR[${TAG_VARS[$LAST]}]}" > "$DOCKER_DELAYED_REF_FILE"
 rm -f "$DOCKER_DELAYED_COUNTER_DIR/count"
 : > "$SLEEP_CALL_LOG"
 if WAIT_FOR_IMAGES_ATTEMPTS=5 WAIT_FOR_IMAGES_SLEEP=0 "$WAIT_FOR_IMAGES" >/dev/null 2>&1; then
