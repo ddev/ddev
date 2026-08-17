@@ -127,11 +127,14 @@ jobs:
           ARCHES=""
           REPOS=""
 
+          # Located by their contents: download-artifact only gives an artifact
+          # a directory of its own when more than one matched the pattern, and
+          # the amd64-only db variants have a single artifact.
+          #
           # Everything read out of artifacts/ was written by a job that may
           # have run fork-authored content, so the tag and every repository
           # name is validated before it reaches a `docker push`.
-          for dir in artifacts/image-*; do
-            [ -d "$dir" ] || continue
+          while IFS= read -r dir; do
             arch="$(cat "$dir/arch.txt")"
             tag="$(cat "$dir/tag.txt")"
 
@@ -158,7 +161,7 @@ jobs:
             TAG="$tag"
             ARCHES="${ARCHES} ${arch}"
             [ -n "$REPOS" ] || REPOS="$(cat "$dir/repos.txt")"
-          done
+          done < <(find artifacts -name tag.txt -printf '%h\n' | sort)
 
           if [ -z "$TAG" ]; then
             echo "image-push: the matrix named an image with no artifact" >&2
@@ -232,7 +235,7 @@ jobs:
           set -eu -o pipefail
           {
             echo "summary<<IMAGE_PUSH_EOF"
-            sort summaries/*/summary.md
+            find summaries -name summary.md -exec cat {} + | sort
             echo "IMAGE_PUSH_EOF"
           } >> "$GITHUB_OUTPUT"
 
