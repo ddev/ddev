@@ -74,7 +74,7 @@ if [ "$PRINT_ONLY" = true ]; then
   exit 0
 fi
 
-EXISTING_TAG="$(grep -E "^var ${TAG_VAR} = " "$VERSIONCONSTANTS_FILE" | sed -E "s/^var ${TAG_VAR} = \"([^\"]*)\".*/\\1/")"
+EXISTING_TAG="$(grep -E "^var ${TAG_VAR} = " "$VERSIONCONSTANTS_FILE" 2>/dev/null | sed -E "s/^var ${TAG_VAR} = \"([^\"]*)\".*/\\1/" || true)"
 if [ -z "$EXISTING_TAG" ]; then
   echo "autotag.sh: could not find 'var ${TAG_VAR} = \"...\"' in $VERSIONCONSTANTS_FILE" >&2
   exit 1

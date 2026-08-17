@@ -22,7 +22,10 @@ Current variables:
 - `DDEV_EMBARGO_PHP_VERSIONS` - comma-separated PHP versions to skip in `TestPHPConfig`, e.g. `7.0,7.1`
 - `DOCKER_ORG` - Default `hub.docker.com` organization to use, nearly always `ddev`. `vars.DOCKER_ORG`
   isn't available to a fork PR's untrusted `detect`/`build` jobs in `image-build-push.yml`, so those
-  jobs read it from here instead.
+  jobs read it from here instead. Unlike the other variables below, this one is a fallback, not an
+  override: every loader skips it when the job's own `DOCKER_ORG` is already non-empty, so a
+  same-repo run (or one that sets its own value, e.g. `ddev-test/ddev`'s `ddevhq`) never gets
+  clobbered by the value published here for forks.
 
 ## Adding a new variable
 

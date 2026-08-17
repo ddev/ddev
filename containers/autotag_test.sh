@@ -211,6 +211,26 @@ assert_eq "var WebTag = \"${new_hash}\" // ${current_branch}-${new_hash}" \
   "$(grep '^var WebTag = ' "$VERSIONCONSTANTS")" \
   "an old <branch>-<hash> value is migrated to the bare hash"
 
+# 10. A missing tag variable is a hard error, not an unrelated failure.
+cat > "$VERSIONCONSTANTS" <<'EOF'
+package versionconstants
+
+var XhguiTag = "v1.0.0" // some-old-branch-v1.0.0
+EOF
+set +e
+OUTPUT="$("$AUTOTAG" WebTag ddev/dummy-image imgdir 2>&1)"
+STATUS=$?
+set -e
+if [ "$STATUS" -eq 0 ]; then
+  fail "should reject a versionconstants file missing the requested tag variable"
+else
+  pass "rejects a versionconstants file missing the requested tag variable"
+fi
+case "$OUTPUT" in
+  *"could not find"*WebTag*) pass "missing-variable message names the variable" ;;
+  *) fail "missing-variable message should name the variable: $OUTPUT" ;;
+esac
+
 if [ "$FAILURES" -eq 0 ]; then
   echo "All autotag_test.sh checks passed."
   exit 0

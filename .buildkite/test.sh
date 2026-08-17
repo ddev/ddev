@@ -18,6 +18,8 @@ fi
 git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
 while IFS= read -r varname; do
   [[ "$varname" == "README.md" ]] && continue
+  # DOCKER_ORG is a fallback, not an override - see public-variables/README.md.
+  [[ "$varname" == "DOCKER_ORG" && -n "${DOCKER_ORG:-}" ]] && continue
   # MSYS_NO_PATHCONV prevents Git for Windows bash from mangling the ref:path syntax
   value=$(MSYS_NO_PATHCONV=1 git show "refs/public-variables-tmp:.github/public-variables/$varname")
   echo "$varname=${value}"
