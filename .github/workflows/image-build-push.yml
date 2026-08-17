@@ -123,6 +123,22 @@ jobs:
             echo "is_fork=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # create-manifests never runs for a fork, so the release names would
+      # silently be left off. Fails ahead of the build and the approval.
+      - name: Refuse a release marker on a fork
+        if: steps.fork.outputs.is_fork == 'true'
+        run: |
+          set -eu -o pipefail
+          source containers/image-configs.sh
+          for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
+            IFS='|' read -r _ _ _ make_dir _ <<< "$entry"
+            release_tag="$(containers/release-marker.sh "$make_dir")"
+            [ -n "$release_tag" ] || continue
+            echo "detect: containers/${make_dir} is stamped for release ${release_tag}, and a pull request from a fork cannot publish ${release_tag} or move latest." >&2
+            echo "detect: push the release branch to ${GITHUB_REPOSITORY} and open the pull request from there." >&2
+            exit 1
+          done
+
   # --- Fork PRs: build with no secrets (this job never has registry
   # credentials, so there's nothing to gain by gating it - see #8609
   # discussion), then hand off to image-push.yml for the trusted,

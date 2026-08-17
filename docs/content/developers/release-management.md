@@ -76,6 +76,8 @@ The following “Repository secret” environment variables must be configured i
 
 It builds nothing and commits nothing. Commit the result and open a pull request: the [Image build](https://github.com/ddev/ddev/blob/main/.github/workflows/image-build-push.yml) workflow builds every image, publishes it under its content hash *and* under `v1.25.4` and `latest`, and the test suites then run against those exact images, before the release is cut. Nothing has to be dispatched by hand.
 
+Open that pull request from a branch in this repository, not from a fork. `create-manifests`, the job that adds the release names, doesn't run for fork pull requests, so a release branch pushed to a fork would build every image and quietly leave `vX.Y.Z` and `latest` off. `detect` fails the run when it finds a release marker on a fork pull request, before anything is built.
+
 Because `latest` moves when that pull request builds rather than when the GitHub release is created, don't run `release-prep` for an edge/prerelease unless you want `latest` to follow it.
 
 The trailing `// <branch>-<hash>` comment on each tag keeps naming the branch rather than the release, because that is the alias the push actually publishes; `containers/validate-image-tag.sh` rejects an alias whose prefix is release-shaped, so a `v1.25.4-<hash>` tag never exists.
@@ -104,7 +106,7 @@ Fork PRs build with no registry credentials at all (nothing to gain by gating th
 
 1. Create the environment `image-push`.
 2. Add required reviewers (the maintainers/dev team).
-3. Add `PUSH_SERVICE_ACCOUNT_TOKEN` as a secret **on this environment** (Settings → Environments → `image-push` → Secrets), using the same 1Password service-account token value already used elsewhere in this doc. It currently exists only as a repository secret; duplicating (or moving) it onto the `image-push` environment is what scopes `DOCKERHUB_TOKEN` access to only the approved `image-push.yml` job.
+3. Leave `PUSH_SERVICE_ACCOUNT_TOKEN` as a repository secret. The environment gates the approval, not the secret: one job holds the approval and the per-image push jobs run after it, so a run costs one approval rather than one per image, and those jobs read the repository secret — the same one the non-fork path has always used.
 
 This approval only applies to fork PRs. A push to `main` or a same-repo PR builds and pushes without any approval at all, using the repository-level `PUSH_SERVICE_ACCOUNT_TOKEN` secret directly (that path never declares `environment:` on its jobs, so this environment's protection rules don't apply to it).
 
