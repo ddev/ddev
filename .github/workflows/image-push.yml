@@ -35,6 +35,7 @@ jobs:
       actions: read
     outputs:
       has_artifacts: ${{ steps.check.outputs.has_artifacts }}
+      images: ${{ steps.check.outputs.images }}
     steps:
       - name: List artifacts on the triggering run
         id: check
@@ -46,20 +47,40 @@ jobs:
               { owner: context.repo.owner, repo: context.repo.repo,
                 run_id: context.payload.workflow_run.id });
             const images = artifacts.filter((a) => a.name.startsWith("image-"));
-            console.log(`Found ${images.length} image-* artifact(s): ${images.map((a) => a.name).join(", ")}`);
-            core.setOutput("has_artifacts", images.length > 0 ? "true" : "false");
+            // "Image build" names them image-<repo_suffix>-<arch>; one push job
+            // per image, since a manifest needs both arches already pushed.
+            const keys = [...new Set(images.map(
+              (a) => a.name.replace(/^image-/, "").replace(/-[^-]+$/, "")))].sort();
+            console.log(`Found ${images.length} image-* artifact(s) for ${keys.length} image(s): ${keys.join(", ")}`);
+            core.setOutput("has_artifacts", keys.length > 0 ? "true" : "false");
+            core.setOutput("images", JSON.stringify(keys));
 
-  push:
+  # One gate for the whole run rather than `environment:` on the fan-out below,
+  # where every image would be a pending deployment of its own to approve.
+  approve:
     name: "Approve: push the built image(s) to DockerHub"
     needs: check-artifacts
     if: needs.check-artifacts.outputs.has_artifacts == 'true'
     runs-on: ubuntu-24.04
     environment: image-push
+    steps:
+      - name: Record what was approved
+        env:
+          IMAGES: ${{ needs.check-artifacts.outputs.images }}
+        run: echo "Approved; pushing $(jq -r 'join(", ")' <<< "$IMAGES")"
+
+  push:
+    name: Push ${{ matrix.image }}
+    needs: [check-artifacts, approve]
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJson(needs.check-artifacts.outputs.images) }}
+    runs-on: ubuntu-24.04
     permissions:
       # download-artifact needs actions:read to reach another run's artifacts.
       actions: read
       contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v7
 
@@ -71,7 +92,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
-          pattern: image-*
+          pattern: image-${{ matrix.image }}-*
           path: artifacts
 
       - name: Load 1password secret(s)
@@ -91,8 +112,7 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      - name: Validate, load, and push each built image
-        id: push
+      - name: Validate, load, and push the built image
         env:
           # From the workflow_run payload, not the artifact - see the same
           # variable's comment in image-build-push.yml's create-manifests job.
@@ -103,9 +123,9 @@ jobs:
           # The revision is this workflow's own checkout (the default branch),
           # not the fork's, so record the commit the artifact was built from.
           export DDEV_GIT_REVISION="${{ github.event.workflow_run.head_sha }}"
-          declare -A TAG_BY_KEY
-          declare -A REPOS_BY_KEY
-          declare -A ARCHES_BY_KEY
+          TAG=""
+          ARCHES=""
+          REPOS=""
 
           # Everything read out of artifacts/ was written by a job that may
           # have run fork-authored content, so the tag and every repository
@@ -114,7 +134,6 @@ jobs:
             [ -d "$dir" ] || continue
             arch="$(cat "$dir/arch.txt")"
             tag="$(cat "$dir/tag.txt")"
-            key="${dir%-"$arch"}"
 
             if ! containers/validate-image-tag.sh "$tag"; then
               echo "image-push: refusing to push - invalid tag '$tag' from $dir" >&2
@@ -136,12 +155,15 @@ jobs:
               docker push "${repo}:${tag}-${arch}"
             done < "$dir/repos.txt"
 
-            TAG_BY_KEY["$key"]="$tag"
-            if [ -z "${REPOS_BY_KEY[$key]:-}" ]; then
-              REPOS_BY_KEY["$key"]="$(cat "$dir/repos.txt")"
-            fi
-            ARCHES_BY_KEY["$key"]="${ARCHES_BY_KEY[$key]:-} ${arch}"
+            TAG="$tag"
+            ARCHES="${ARCHES} ${arch}"
+            [ -n "$REPOS" ] || REPOS="$(cat "$dir/repos.txt")"
           done
+
+          if [ -z "$TAG" ]; then
+            echo "image-push: the matrix named an image with no artifact" >&2
+            exit 1
+          fi
 
           # Docker Hub token for deleting the intermediary per-arch tags below,
           # same cleanup push-tagged-image.yml/push-tagged-dbimage.yml already do.
@@ -150,48 +172,74 @@ jobs:
             https://hub.docker.com/v2/users/login/ | jq -r .token)"
 
           PUSHED_SUMMARY=""
-          for key in "${!TAG_BY_KEY[@]}"; do
-            tag="${TAG_BY_KEY[$key]}"
-            while IFS= read -r repo; do
-              [ -z "$repo" ] && continue
-              arch_tags=()
-              for arch in ${ARCHES_BY_KEY[$key]}; do
-                arch_tags+=("${repo}:${tag}-${arch}")
-              done
-              names=(-t "${repo}:${tag}")
-              alias_tag="${SANITIZED_BRANCH}-${tag}"
-              if containers/validate-image-tag.sh "$alias_tag"; then
-                names+=(-t "${repo}:${alias_tag}")
-              else
-                echo "Alias '${alias_tag}' rejected; publishing only ${tag}" >&2
-              fi
-              read -r -a annotations <<< "$(containers/image-metadata.sh annotations "$tag")"
-              docker buildx imagetools create "${annotations[@]}" "${names[@]}" "${arch_tags[@]}"
-              # See the same note in image-build-push.yml: a Docker manifest
-              # list has nowhere to store annotations.
-              if ! docker buildx imagetools inspect --raw "${repo}:${tag}" | jq -e '.annotations' >/dev/null 2>&1; then
-                echo "Note: ${repo}:${tag} is not an OCI index, so index annotations were not stored." >&2
-              fi
-              PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${tag}\`"$'\n'
+          while IFS= read -r repo; do
+            [ -z "$repo" ] && continue
+            arch_tags=()
+            for arch in $ARCHES; do
+              arch_tags+=("${repo}:${TAG}-${arch}")
+            done
+            names=(-t "${repo}:${TAG}")
+            alias_tag="${SANITIZED_BRANCH}-${TAG}"
+            if containers/validate-image-tag.sh "$alias_tag"; then
+              names+=(-t "${repo}:${alias_tag}")
+            else
+              echo "Alias '${alias_tag}' rejected; publishing only ${TAG}" >&2
+            fi
+            read -r -a annotations <<< "$(containers/image-metadata.sh annotations "$TAG")"
+            docker buildx imagetools create "${annotations[@]}" "${names[@]}" "${arch_tags[@]}"
+            # See the same note in image-build-push.yml: a Docker manifest
+            # list has nowhere to store annotations.
+            if ! docker buildx imagetools inspect --raw "${repo}:${TAG}" | jq -e '.annotations' >/dev/null 2>&1; then
+              echo "Note: ${repo}:${TAG} is not an OCI index, so index annotations were not stored." >&2
+            fi
+            PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${TAG}\`"$'\n'
 
-              for arch in ${ARCHES_BY_KEY[$key]}; do
-                echo "Removing intermediary tag ${repo}:${tag}-${arch}"
-                curl -s -X DELETE -H "Authorization: JWT ${DOCKERHUB_JWT}" \
-                  "https://hub.docker.com/v2/repositories/${repo}/tags/${tag}-${arch}/" >/dev/null || true
-              done
-            done <<< "${REPOS_BY_KEY[$key]}"
-          done
+            for arch in $ARCHES; do
+              echo "Removing intermediary tag ${repo}:${TAG}-${arch}"
+              curl -s -X DELETE -H "Authorization: JWT ${DOCKERHUB_JWT}" \
+                "https://hub.docker.com/v2/repositories/${repo}/tags/${TAG}-${arch}/" >/dev/null || true
+            done
+          done <<< "$REPOS"
 
+          printf '%s' "$PUSHED_SUMMARY" > summary.md
+
+      # Collected by the comment job below: a matrix job can't hand its own
+      # output to a later job, since all of them write the same output name.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: push-summary-${{ matrix.image }}
+          path: summary.md
+          retention-days: 1
+
+  comment:
+    name: Comment on the pull request
+    needs: push
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Download the per-image summaries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: push-summary-*
+          path: summaries
+
+      - name: Collect the summaries
+        id: summary
+        run: |
+          set -eu -o pipefail
           {
             echo "summary<<IMAGE_PUSH_EOF"
-            echo "$PUSHED_SUMMARY"
+            sort summaries/*/summary.md
             echo "IMAGE_PUSH_EOF"
           } >> "$GITHUB_OUTPUT"
 
       - name: Comment on the pull request
         uses: actions/github-script@v9
         env:
-          IMAGE_PUSH_SUMMARY: ${{ steps.push.outputs.summary }}
+          IMAGE_PUSH_SUMMARY: ${{ steps.summary.outputs.summary }}
         with:
           script: |
             const headSha = context.payload.workflow_run.head_sha;
