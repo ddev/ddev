@@ -56,14 +56,14 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Add DDEV’s GPG key to your keyring
     sudo apt-get update && sudo apt-get install -y curl
     sudo install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://dl.cloudsmith.io/public/ddev/ddev/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
+    curl -fsSL https://packages.ddev.com/public/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
     sudo chmod a+r /etc/apt/keyrings/ddev.asc
 
     # Remove old repository files if present
     sudo rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list
 
     # Add DDEV releases to your package repository
-    printf "Types: deb\nURIs: https://dl.cloudsmith.io/public/ddev/ddev/deb/ubuntu\nSuites: resolute\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
+    printf "Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: resolute\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
 
     # Update package information and install DDEV
     sudo apt-get update && sudo apt-get install -y ddev
@@ -82,10 +82,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         sudo true
         sudo apt-get update && sudo apt-get install -y curl
         sudo install -m 0755 -d /etc/apt/keyrings
-        curl -fsSL https://dl.cloudsmith.io/public/ddev/ddev/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
+        curl -fsSL https://packages.ddev.com/public/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
         sudo chmod a+r /etc/apt/keyrings/ddev.asc
         sudo rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list
-        printf "Types: deb\nURIs: https://dl.cloudsmith.io/public/ddev/ddev/deb/ubuntu\nSuites: resolute\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
+        printf "Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: resolute\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
         sudo apt-get update && sudo apt-get install -y ddev
         mkcert -install
         SCRIPT
@@ -116,8 +116,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Add DDEV releases to your package repository
     echo '[ddev]
     name=ddev
-    baseurl=https://dl.cloudsmith.io/public/ddev/ddev/rpm/any-distro/any-version/$basearch
-    gpgkey=https://dl.cloudsmith.io/public/ddev/ddev/gpg.key
+    baseurl=https://packages.ddev.com/public/rpm/any-distro/any-version/$basearch
+    gpgkey=https://packages.ddev.com/public/gpg.key
     gpgcheck=1
     repo_gpgcheck=1
     enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
@@ -137,7 +137,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         #!/usr/bin/env bash
         set -euo pipefail
         sudo true
-        printf "[ddev]\nname=ddev\nbaseurl=https://dl.cloudsmith.io/public/ddev/ddev/rpm/any-distro/any-version/\$basearch\ngpgkey=https://dl.cloudsmith.io/public/ddev/ddev/gpg.key\ngpgcheck=1\nrepo_gpgcheck=1\nenabled=1\n" | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
+        printf "[ddev]\nname=ddev\nbaseurl=https://packages.ddev.com/public/rpm/any-distro/any-version/\$basearch\ngpgkey=https://packages.ddev.com/public/gpg.key\ngpgcheck=1\nrepo_gpgcheck=1\nenabled=1\n" | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
         sudo dnf install -y --refresh ddev
         mkcert -install
         SCRIPT
@@ -146,34 +146,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         Review the script, then run it: `bash /tmp/install-ddev.sh`
 
     For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
-
-    <!-- TEMPORARY: testing against ddev/ddev-test on Cloudsmith. Remove before merge. -->
-    ??? danger "TEMPORARY: Testing against ddev/ddev-test on Cloudsmith (remove before merge)"
-        apt:
-
-        ```bash
-        sudo true
-        sudo apt-get update && sudo apt-get install -y curl
-        sudo install -m 0755 -d /etc/apt/keyrings
-        curl -fsSL https://dl.cloudsmith.io/public/ddev/ddev-test/gpg.key | sudo tee /etc/apt/keyrings/ddev-test.asc > /dev/null
-        sudo chmod a+r /etc/apt/keyrings/ddev-test.asc
-        sudo rm -f /etc/apt/sources.list.d/ddev-test.sources
-        printf "Types: deb\nURIs: https://dl.cloudsmith.io/public/ddev/ddev-test/deb/ubuntu\nSuites: resolute\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev-test.asc\n" | sudo tee /etc/apt/sources.list.d/ddev-test.sources >/dev/null
-        sudo apt-get update && sudo apt-get install -y ddev
-        ```
-
-        yum/dnf:
-
-        ```bash
-        echo '[ddev-test]
-        name=ddev-test
-        baseurl=https://dl.cloudsmith.io/public/ddev/ddev-test/rpm/any-distro/any-version/$basearch
-        gpgkey=https://dl.cloudsmith.io/public/ddev/ddev-test/gpg.key
-        gpgcheck=1
-        repo_gpgcheck=1
-        enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev-test.repo >/dev/null
-        sudo dnf install -y --refresh ddev
-        ```
 
     ### Arch Linux
 
