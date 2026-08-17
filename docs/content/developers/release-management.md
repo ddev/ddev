@@ -226,16 +226,17 @@ This is done automatically by the release build on a dedicated Windows test runn
 
 ## APT and YUM/RPM Package Management
 
-The Linux `apt` and `yum`/`rpm` packages are built and pushed by the `nfpms` and `furies` sections of the [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml) file.
-
-* The actual packages are served by [gemfury.com](https://gemfury.com/).
+* The `nfpms` section of [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml) builds the actual `.deb`/`.rpm` packages; `furies` and `cloudsmiths` each push those same built packages to their respective repository.
+* The primary location for APT/YUM packages is [Cloudsmith](https://cloudsmith.com), pushed via the `cloudsmiths` section of [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml), using the `CLOUDSMITH_ORG`/`CLOUDSMITH_REPO` variables and `DDEV_CLOUDSMITH_API_TOKEN` secret.
+* We provided and uploaded a custom GPG signing key to the Cloudsmith repository (backed up as `DDEV_CLOUDSMITH_SIGNING_KEY` in 1Password). This is a one-time repository setting on Cloudsmith's side, not part of the release process — Cloudsmith signs every pushed package with it automatically, and neither `.goreleaser.yml` nor the GitHub Actions workflow references it.
+* Cloudsmith's [custom domain](https://help.cloudsmith.io/docs/custom-domains) `packages.ddev.com` is live and serves the same content as `dl.cloudsmith.io/public/ddev/ddev/...` (drop the `ddev/ddev` org/repo segment, keep `public`, e.g. `packages.ddev.com/public/deb/ubuntu`, `packages.ddev.com/public/rpm/any-distro/any-version`, `packages.ddev.com/public/gpg.key`).
+* Linux `apt` and `yum`/`rpm` packages are also pushed in parallel to the historical Gemfury repository using the `furies` sections of the [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml) file. This will eventually be phased out.
+* The Gemfury packages are served by [gemfury.com](https://gemfury.com/).
 * The name of the organization in GemFury is `drud`, managed at `https://manage.fury.io/dashboard/drud`.
 * [Randy Fay](https://github.com/rfay), [Matt Stein](https://github.com/mattstein), and [Simon Gillis](https://github.com/gilbertsoft) are authorized as owners on this dashboard.
-* The `pkg.ddev.com` domain name is set up as a custom alias for our package repositories; see `https://manage.fury.io/manage/drud/domains`. (Users do not see `drud` anywhere. Although we could have moved to a new organization for this, the existing repositories contain all the historical versions so it made sense to be less disruptive.)
-* The `pkg.ddev.com` `CNAME` is managed in Cloudflare because `ddev.com` is managed there.
+* The `pkg.ddev.com` domain name has been used as a custom alias for the Gemfury package repositories; see `https://manage.fury.io/manage/drud/domains`. (Users do not see `drud` anywhere. Although we could have moved to a new organization for this, the existing repositories contain all the historical versions so it made sense to be less disruptive.)
+* The `packages.ddev.com` and `pkg.ddev.com` `CNAME` records are managed in Cloudflare because `ddev.com` is managed there.
 * The fury.io tokens are in DDEV’s shared 1Password account.
-* Packages are also pushed to [Cloudsmith](https://cloudsmith.com) in parallel, via the `cloudsmiths` section of [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml), using the `CLOUDSMITH_ORG`/`CLOUDSMITH_REPO` variables and `DDEV_CLOUDSMITH_API_TOKEN` secret. Packages are uploaded to Cloudsmith's `any-distro/any-version` distribution so one repository serves all Debian/Ubuntu and RPM-based distros, matching today's single `pkg.ddev.com` repository.
-* Cloudsmith generates and hosts its own GPG signing key per repository (there is no way to export Gemfury's private signing key, so this is a new key, not a continuation of the existing one). Cloudsmith's [custom domain](https://help.cloudsmith.io/docs/custom-domains) `packages.ddev.com` is live and serves the same content as `dl.cloudsmith.io/public/ddev/ddev/...` (drop the `ddev/ddev` org/repo segment, keep `public`, e.g. `packages.ddev.com/public/deb/ubuntu`, `packages.ddev.com/public/rpm/any-distro/any-version`, `packages.ddev.com/public/gpg.key`). Cloudsmith's own URL paths (`/deb/`, `/rpm/`) differ from Gemfury's (`/apt/`, `/yum/`), so `pkg.ddev.com` itself still points at Gemfury until a full cutover is decided.
 
 ## Testing Release Creation
 
