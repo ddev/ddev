@@ -74,7 +74,9 @@ The following “Repository secret” environment variables must be configured i
 * Stamps `# ddev-release-marker: v1.25.4` into every image's `Dockerfile`, replacing any marker left by a previous release. A Dockerfile comment is stripped by the parser, so this moves the image's content hash without changing a single layer of the image it produces, which is what makes CI rebuild all of them.
 * Rewrites each tag in [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/main/pkg/versionconstants/versionconstants.go) to the resulting hash, and each `<TagVar>Branch` to `v1.25.4` so `ddev version` names the release.
 
-It builds nothing and commits nothing. Commit the result and open a pull request: the [Image build](https://github.com/ddev/ddev/blob/main/.github/workflows/image-build-push.yml) workflow builds and pushes every image, and the test suites then run against those exact images, before the release is cut.
+It builds nothing and commits nothing. Commit the result and open a pull request: the [Image build](https://github.com/ddev/ddev/blob/main/.github/workflows/image-build-push.yml) workflow builds every image, publishes it under its content hash *and* under `v1.25.4` and `latest`, and the test suites then run against those exact images, before the release is cut. Nothing has to be dispatched by hand.
+
+Because `latest` moves when that pull request builds rather than when the GitHub release is created, don't run `release-prep` for an edge/prerelease unless you want `latest` to follow it.
 
 The trailing `// <branch>-<hash>` comment on each tag keeps naming the branch rather than the release, because that is the alias the push actually publishes; `containers/validate-image-tag.sh` rejects an alias whose prefix is release-shaped, so a `v1.25.4-<hash>` tag never exists.
 
@@ -88,7 +90,9 @@ The trailing `// <branch>-<hash>` comment on each tag keeps naming the branch ra
 
 Any pull request that changes `containers/` — including from a fork — is built and pushed automatically by the [Image build](https://github.com/ddev/ddev/blob/main/.github/workflows/image-build-push.yml) / [Image push](https://github.com/ddev/ddev/blob/main/.github/workflows/image-push.yml) workflow pair. See [Automatic Image Build and Push](building-contributing.md#automatic-image-build-and-push) in the contributing guide for how the flow works and why it's safe to run on fork-authored Dockerfiles.
 
-The two workflows below (manual `workflow_dispatch`) remain for re-pushing a specific tag — for instance at release time, when every image is re-pushed under a `vX.Y.Z` tag. Their `tag` input is optional: leave it empty and the workflow uses the tag the checkout actually needs, which is safer than retyping a content hash. Supply it only for a release.
+A release no longer needs any of this. When `detect` sees a release marker in an image's `Dockerfile`, `create-manifests` publishes `vX.Y.Z` and `latest` as further names on the manifest it is already creating — the same build the release pull request's tests then run against, rather than a separate rebuild. It skips both if `vX.Y.Z` already exists in the registry, so the marker left behind after the release merges can't move a released tag onto a later build.
+
+The two workflows below (manual `workflow_dispatch`) remain for re-pushing a specific tag by hand. Their `tag` input is optional: leave it empty and the workflow uses the tag the checkout actually needs, which is safer than retyping a content hash.
 
 When the tag is a content hash, these workflows also publish the `<branch>-<hash>` alias next to it — the same second name the automatic flow creates — so a manual push doesn't leave a bare hash with nothing readable beside it in the registry. A `vX.Y.Z` tag is already readable and gets no alias.
 

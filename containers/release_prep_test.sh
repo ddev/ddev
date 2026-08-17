@@ -190,6 +190,42 @@ for i in "${!TAG_VARS[@]}"; do
   fi
 done
 
+# 7. release-marker.sh reads back what release-prep.sh stamped, and refuses
+#    anything a docker push should not see.
+MARKER_SH="$REPO/containers/release-marker.sh"
+"$RELEASE_PREP" v1.26.0 >/dev/null
+for d in "${IMAGE_DIRS[@]}"; do
+  assert_eq "v1.26.0" "$("$MARKER_SH" "$d")" "release-marker.sh reads $d's marker"
+done
+
+marker_status() {
+  set +e
+  MARKER_OUTPUT="$("$MARKER_SH" "$1" 2>&1)"
+  MARKER_STATUS=$?
+  set -e
+}
+
+unstamped="$REPO/containers/test-ssh-server/Dockerfile"
+marker_status test-ssh-server
+assert_eq "0" "$MARKER_STATUS" "an unmarked image is not an error"
+assert_eq "" "$MARKER_OUTPUT" "an unmarked image prints nothing"
+
+printf '%s not-a-release\n' "$MARKER" >> "$unstamped"
+marker_status test-ssh-server
+if [ "$MARKER_STATUS" -eq 0 ]; then
+  fail "a marker that isn't a vX.Y.Z tag should be an error"
+else
+  pass "rejects a marker that isn't a vX.Y.Z tag"
+fi
+
+printf '%s v1.26.0\n' "$MARKER" >> "$unstamped"
+marker_status test-ssh-server
+if [ "$MARKER_STATUS" -eq 0 ]; then
+  fail "two markers in one Dockerfile should be an error"
+else
+  pass "rejects two markers in one Dockerfile"
+fi
+
 if [ "$FAILURES" -eq 0 ]; then
   echo "All release_prep_test.sh checks passed."
   exit 0

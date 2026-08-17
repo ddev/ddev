@@ -68,9 +68,13 @@ jobs:
             # shellcheck disable=SC2086 # hash_paths is a space-separated path list
             read -r state tag <<< "$(containers/required-image-tag.sh "$tag_var" $hash_paths)"
             repo="${DOCKER_ORG}/${repo_suffix}"
+            release_tag="$(containers/release-marker.sh "$make_dir")"
             if containers/registry-tag-exists.sh "$repo" "$tag"; then
-              echo "detect: ${repo}:${tag} already exists (${state}), nothing to build"
-              continue
+              if [ -z "$release_tag" ] || containers/registry-tag-exists.sh "$repo" "$release_tag"; then
+                echo "detect: ${repo}:${tag} already exists (${state}), nothing to build"
+                continue
+              fi
+              echo "detect: ${repo}:${tag} exists but ${release_tag} does not; rebuilding to publish it"
             fi
             echo "detect: ${repo}:${tag} needs building (${state}) for arches: ${arches}"
             for arch in $arches; do
@@ -89,8 +93,9 @@ jobs:
               --arg repo "$repo" \
               --arg tag "$tag" \
               --arg arches "$arches" \
+              --arg release_tag "$release_tag" \
               --arg extra_repo_suffixes "$extra_repo_suffixes" \
-              '. + [{"repo": $repo, "tag": $tag, "arches": $arches, "extra_repo_suffixes": $extra_repo_suffixes}]')"
+              '. + [{"repo": $repo, "tag": $tag, "arches": $arches, "release_tag": $release_tag, "extra_repo_suffixes": $extra_repo_suffixes}]')"
           done
 
           echo "build_matrix=${BUILD_JSON}" >> "$GITHUB_OUTPUT"
@@ -265,6 +270,7 @@ jobs:
         run: |
           set -eu -o pipefail
           TAG="${{ matrix.manifest.tag }}"
+          RELEASE_TAG="${{ matrix.manifest.release_tag }}"
           # The oldest db variants are amd64-only, so the arch list comes from
           # detect rather than being assumed to be both.
           ARCHES="${{ matrix.manifest.arches }}"
@@ -294,6 +300,18 @@ jobs:
             done
             NAMES=(-t "${repo}:${TAG}")
             [ -n "$ALIAS" ] && NAMES+=(-t "${repo}:${ALIAS}")
+            # The marker stays in the Dockerfile after the release merges, so
+            # without this an unrelated later change would move vX.Y.Z and
+            # latest onto a post-release build. First writer wins.
+            RELEASED=false
+            if [ -n "$RELEASE_TAG" ]; then
+              if containers/registry-tag-exists.sh "$repo" "$RELEASE_TAG"; then
+                echo "${repo}:${RELEASE_TAG} already published; leaving it and latest alone"
+              else
+                NAMES+=(-t "${repo}:${RELEASE_TAG}" -t "${repo}:latest")
+                RELEASED=true
+              fi
+            fi
             docker buildx imagetools create "${ANNOTATIONS[@]}" "${NAMES[@]}" "${ARCH_TAGS[@]}"
             # imagetools inherits the source media type and a Docker manifest
             # list has nowhere to put annotations, so say when they were
@@ -301,7 +319,11 @@ jobs:
             if ! docker buildx imagetools inspect --raw "${repo}:${TAG}" | jq -e '.annotations' >/dev/null 2>&1; then
               echo "Note: ${repo}:${TAG} is not an OCI index, so index annotations were not stored." >&2
             fi
-            PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${TAG}\`"$'\n'
+            SUMMARY_NAMES="\`${repo}:${TAG}\`"
+            if [ "$RELEASED" = true ]; then
+              SUMMARY_NAMES="${SUMMARY_NAMES}, also published as \`${RELEASE_TAG}\` and \`latest\`"
+            fi
+            PUSHED_SUMMARY="${PUSHED_SUMMARY}- ${SUMMARY_NAMES}"$'\n'
             for arch in $ARCHES; do
               echo "Removing intermediary tag ${repo}:${TAG}-${arch}"
               curl -s -X DELETE -H "Authorization: JWT ${DOCKERHUB_JWT}" \
