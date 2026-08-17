@@ -94,9 +94,8 @@ jobs:
       - name: Validate, load, and push each built image
         id: push
         env:
-          # From the workflow_run payload, not the artifact - the alias is
-          # published in the DDEV org, so its branch name has to come from a
-          # trusted context. Sanitized and validated below regardless.
+          # From the workflow_run payload, not the artifact - see the same
+          # variable's comment in image-build-push.yml's create-manifests job.
           ALIAS_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           set -eu -o pipefail

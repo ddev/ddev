@@ -147,8 +147,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Load DOCKER_ORG from public-variables branch
-        # This job only runs for fork PRs, where vars.DOCKER_ORG is never
-        # available - see .github/public-variables/README.md.
+        # Same fallback as the detect job's identically-named step above.
         if: vars.DOCKER_ORG == ''
         run: |
           git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
