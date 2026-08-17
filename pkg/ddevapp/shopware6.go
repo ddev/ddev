@@ -13,15 +13,7 @@ import (
 )
 
 // shopwareCLIInstallDockerfile is the Dockerfile fragment that installs the
-// shopware-cli binary into the web image for shopware6 projects. It downloads
-// the official GitHub release rather than pulling the DockerHub image, and uses
-// the version-less "latest" asset so there is no pinned version to keep in sync.
-// TARGETARCH (amd64/arm64) is provided by the DDEV-injected build Dockerfile and
-// mapped to shopware-cli's release naming (x86_64/arm64).
-// tar --no-same-owner is required: the release tarball records the goreleaser
-// build user (uid/gid 1001), and tar-as-root would otherwise preserve it, leaving
-// the binary owned by 1001:1001 (and writable by the container's runtime user)
-// instead of root:root like every other tool in /usr/local/bin.
+// shopware-cli binary into the web image for shopware6 projects.
 const shopwareCLIInstallDockerfile = `
 ### DDEV-injected shopware-cli install for shopware6 projects
 RUN case "${TARGETARCH}" in \
@@ -56,9 +48,8 @@ func setShopware6SiteSettingsPaths(app *DdevApp) {
 // present, so it is safe to re-run and it never clobbers a user's own settings.
 // The watcher environment (PROXY_URL etc.) is intentionally NOT set here: it is
 // set at runtime inside the watcher commands, where ${DDEV_PRIMARY_URL} is a live
-// variable. Putting it in web_environment is fragile (it can be replaced by a
-// later `ddev config`, and ${DDEV_PRIMARY_URL} is not expanded there).
-// Targets Shopware 6.7.4.2+ (Vite admin on 5173); see the bundled commands/web
+// variable.
+// Only works for Shopware 6.7.4.2+ (Vite admin on 5173); see the bundled commands/web
 // watchers.
 func shopware6ConfigOverrideAction(app *DdevApp) error {
 	// The watchers are reached over HTTPS only (the commands advertise
