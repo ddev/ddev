@@ -44,9 +44,16 @@ DOCKEREOF
 chmod +x "$BINDIR/docker"
 export PATH="$BINDIR:$PATH"
 
+MARKER='# ddev-release-marker:'
+
 REPO="$WORKDIR/repo"
 mkdir -p "$REPO"
 cp -R "$SCRIPT_DIR" "$REPO/containers"
+# On a release branch the real containers/ is already stamped, and every test
+# below starts from an unstamped tree.
+find "$REPO/containers" -name Dockerfile -print0 |
+  xargs -0 sed -i.bak "/^${MARKER} /d"
+find "$REPO/containers" -name 'Dockerfile.bak' -delete
 (
   cd "$REPO"
   git init -q
@@ -79,7 +86,6 @@ EOF
 
 RELEASE_PREP="$REPO/containers/release-prep.sh"
 RETAG="$REPO/containers/retag-images.sh"
-MARKER='# ddev-release-marker:'
 
 TAG_VARS=(WebTag BaseDBTag TraefikRouterTag SSHAuthTag XhguiTag)
 IMAGE_DIRS=(ddev-webserver ddev-dbserver ddev-traefik-router ddev-ssh-agent ddev-xhgui)
@@ -109,6 +115,7 @@ cd "$REPO"
 
 # 1. Anything that isn't a vX.Y.Z release tag is refused, and refused before
 #    any Dockerfile is stamped.
+unstamped_digest="$(dockerfile_digest)"
 for bad in "" 1.25.4 v1.25 v1.25.4-rc1 latest 20260817_stasadev_test; do
   set +e
   OUTPUT="$("$RELEASE_PREP" "$bad" </dev/null 2>&1)"
@@ -120,7 +127,7 @@ for bad in "" 1.25.4 v1.25 v1.25.4-rc1 latest 20260817_stasadev_test; do
     pass "rejects the non-release tag '${bad}'"
   fi
 done
-assert_eq "0" "$(marker_lines ddev-webserver)" "a rejected tag stamps no Dockerfile"
+assert_eq "$unstamped_digest" "$(dockerfile_digest)" "a rejected tag stamps no Dockerfile"
 case "$OUTPUT" in
   *"not a vX.Y.Z release tag"*) pass "rejection message says what shape is wanted" ;;
   *) fail "rejection message should say what shape is wanted: $OUTPUT" ;;
