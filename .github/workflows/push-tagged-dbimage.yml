@@ -17,7 +17,7 @@ on:
         default: false
 env:
   REGISTRY: docker.io
-  DOCKER_ORG: "${{ vars.DOCKER_ORG }}"
+  DOCKER_ORG: "${{ vars.DOCKER_ORG || (github.repository_owner == 'ddev-test' && 'ddevhq' || 'ddev') }}"
 
 permissions:
   contents: read

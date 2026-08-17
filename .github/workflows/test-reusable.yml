@@ -116,7 +116,7 @@ jobs:
     runs-on: ${{ inputs.runner }}
 
     env:
-      DOCKER_ORG: ${{ vars.DOCKER_ORG }}
+      DOCKER_ORG: "${{ vars.DOCKER_ORG || (github.repository_owner == 'ddev-test' && 'ddevhq' || 'ddev') }}"
       BUILDKIT_PROGRESS: plain
       DOCKER_CLI_EXPERIMENTAL: enabled
       DDEV_DEBUG: true
@@ -147,8 +147,6 @@ jobs:
           git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
           while IFS= read -r varname; do
             [[ "$varname" == "README.md" ]] && continue
-            # DOCKER_ORG is a fallback, not an override - see public-variables/README.md.
-            [[ "$varname" == "DOCKER_ORG" && -n "${DOCKER_ORG:-}" ]] && continue
             value=$(git show "refs/public-variables-tmp:.github/public-variables/$varname")
             echo "$varname=${value}"
             echo "$varname=$value" >> $GITHUB_ENV

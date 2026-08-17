@@ -15,7 +15,7 @@ on:
     types: [completed]
 
 env:
-  DOCKER_ORG: "${{ vars.DOCKER_ORG || 'ddev' }}"
+  DOCKER_ORG: "${{ vars.DOCKER_ORG || (github.repository_owner == 'ddev-test' && 'ddevhq' || 'ddev') }}"
 
 permissions:
   contents: read

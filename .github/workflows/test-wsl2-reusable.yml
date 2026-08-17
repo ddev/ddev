@@ -67,7 +67,7 @@ jobs:
     name: WSL2 (${{ inputs.networking }}, ${{ inputs.make_target }})
 
     env:
-      DOCKER_ORG: ${{ vars.DOCKER_ORG }}
+      DOCKER_ORG: "${{ vars.DOCKER_ORG || (github.repository_owner == 'ddev-test' && 'ddevhq' || 'ddev') }}"
       GOTEST_SHORT: ${{ inputs.gotest_short }}
       TESTARGS: ${{ inputs.testargs }}
       MAKE_TARGET: ${{ inputs.make_target }}
@@ -137,8 +137,6 @@ jobs:
           $files = git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/
           foreach ($varname in $files) {
             if ($varname -eq "README.md") { continue }
-            # DOCKER_ORG is a fallback, not an override - see public-variables/README.md.
-            if ($varname -eq "DOCKER_ORG" -and $env:DOCKER_ORG) { continue }
             $value = git show "refs/public-variables-tmp:.github/public-variables/$varname"
             Write-Host "$varname=$value"
             "$varname=$value" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append

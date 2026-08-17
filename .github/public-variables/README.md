@@ -20,12 +20,6 @@ Current variables:
   - **Bats tests:** each pattern is matched as a case-sensitive substring against the bats filename (without `.bats`) or the `@test` description. E.g. `sveltekit` skips all tests in `sveltekit.bats`; `Symfony Composer` skips only the Composer-flavored test in `symfony.bats`. Go and bats patterns can be combined: `TestLagoonPull|sveltekit`.
   - `workflow_dispatch` runs skip loading the `public-variables` branch entirely, so maintainers can verify fixes without removing them from the embargo list first.
 - `DDEV_EMBARGO_PHP_VERSIONS` - comma-separated PHP versions to skip in `TestPHPConfig`, e.g. `7.0,7.1`
-- `DOCKER_ORG` - Default `hub.docker.com` organization to use, nearly always `ddev`. `vars.DOCKER_ORG`
-  isn't available to a fork PR's untrusted `detect`/`build` jobs in `image-build-push.yml`, so those
-  jobs read it from here instead. Unlike the other variables below, this one is a fallback, not an
-  override: every loader skips it when the job's own `DOCKER_ORG` is already non-empty, so a
-  same-repo run (or one that sets its own value, e.g. `ddev-test/ddev`'s `ddevhq`) never gets
-  clobbered by the value published here for forks.
 
 ## Adding a new variable
 
@@ -48,8 +42,7 @@ No workflow changes are needed - any file in this directory is picked up automat
 ## How it works
 
 Used in `.buildkite/test.sh`, `.github/workflows/test-reusable.yml`,
-`.github/workflows/test-wsl2-reusable.yml`, `.github/workflows/quickstart.yml`, and
-`.github/workflows/image-build-push.yml`.
+`.github/workflows/test-wsl2-reusable.yml`, and `.github/workflows/quickstart.yml`.
 
 Each CI run does `git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp`,
 reads all files via `git ls-tree` + `git show`, then deletes the temporary ref.
