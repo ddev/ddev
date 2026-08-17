@@ -65,8 +65,18 @@ The following “Repository secret” environment variables must be configured i
 
 * Create and execute a test plan.
 * Make sure [`version-history.md`](https://github.com/ddev/ddev/blob/main/version-history.md) is up to date.
-* Make sure the Docker images are all tagged and pushed.
-* Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/main/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
+* Run `make release-prep TAG=vX.Y.Z` and open a pull request with the result, so every image is rebuilt, pushed and tested under the release. See [Preparing the image tags](#preparing-the-image-tags-make-release-prep) below.
+
+### Preparing the image tags: `make release-prep`
+
+`make release-prep TAG=v1.25.4` — or bare `make release-prep`, which asks for the tag — does the source-file half of a release:
+
+* Stamps `# ddev-release-marker: v1.25.4` into every image's `Dockerfile`, replacing any marker left by a previous release. A Dockerfile comment is stripped by the parser, so this moves the image's content hash without changing a single layer of the image it produces, which is what makes CI rebuild all of them.
+* Rewrites each tag in [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/main/pkg/versionconstants/versionconstants.go) to the resulting hash, and each `<TagVar>Branch` to `v1.25.4` so `ddev version` names the release.
+
+It builds nothing and commits nothing. Commit the result and open a pull request: the [Image build](https://github.com/ddev/ddev/blob/main/.github/workflows/image-build-push.yml) workflow builds and pushes every image, and the test suites then run against those exact images, before the release is cut.
+
+The trailing `// <branch>-<hash>` comment on each tag keeps naming the branch rather than the release, because that is the alias the push actually publishes; `containers/validate-image-tag.sh` rejects an alias whose prefix is release-shaped, so a `v1.25.4-<hash>` tag never exists.
 
 ### Actual Release Creation
 

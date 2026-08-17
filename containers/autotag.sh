@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# autotag.sh [--print-only] <TagVarName> <ImageRepo> <hash-path> [<hash-path> ...] [-- <build-cmd...>]
+# autotag.sh [--print-only|--no-build] <TagVarName> <ImageRepo> <hash-path> [<hash-path> ...] [-- <build-cmd...>]
 #
 # Detects whether an image's content hash (see hash-paths.sh) differs from
 # the tag currently committed in pkg/versionconstants/versionconstants.go. If
@@ -17,6 +17,9 @@
 # --print-only prints the candidate tag and exits, without touching Docker or
 # versionconstants.go.
 #
+# --no-build rewrites versionconstants.go without running Docker, leaving the
+# image for CI to build. The tag it writes exists nowhere yet.
+#
 # Env:
 #   HASH_LEN               - hash length in hex chars (default 10, must match hash-paths.sh)
 #   VERSIONCONSTANTS_FILE   - path to versionconstants.go (default pkg/versionconstants/versionconstants.go)
@@ -29,13 +32,17 @@ HASH_LEN="${HASH_LEN:-10}"
 VERSIONCONSTANTS_FILE="${VERSIONCONSTANTS_FILE:-$REPO_ROOT/pkg/versionconstants/versionconstants.go}"
 
 PRINT_ONLY=false
-if [ "${1:-}" = "--print-only" ]; then
-  PRINT_ONLY=true
-  shift
-fi
+NO_BUILD=false
+while true; do
+  case "${1:-}" in
+    --print-only) PRINT_ONLY=true; shift ;;
+    --no-build) NO_BUILD=true; shift ;;
+    *) break ;;
+  esac
+done
 
 if [ "$#" -lt 3 ]; then
-  echo "Usage: $0 [--print-only] <TagVarName> <ImageRepo> <hash-path> [<hash-path> ...] [-- <build-cmd...>]" >&2
+  echo "Usage: $0 [--print-only|--no-build] <TagVarName> <ImageRepo> <hash-path> [<hash-path> ...] [-- <build-cmd...>]" >&2
   exit 1
 fi
 
@@ -89,7 +96,9 @@ fi
 
 echo "autotag.sh: ${TAG_VAR} content changed (${EXISTING_TAG} -> ${CANDIDATE_TAG})"
 
-if docker image inspect "${IMAGE_REPO}:${CANDIDATE_TAG}" >/dev/null 2>&1; then
+if [ "$NO_BUILD" = true ]; then
+  echo "autotag.sh: --no-build, leaving ${IMAGE_REPO}:${CANDIDATE_TAG} for CI"
+elif docker image inspect "${IMAGE_REPO}:${CANDIDATE_TAG}" >/dev/null 2>&1; then
   echo "autotag.sh: ${IMAGE_REPO}:${CANDIDATE_TAG} already built locally, skipping build"
 else
   if [ "${#BUILD_CMD[@]}" -eq 0 ]; then

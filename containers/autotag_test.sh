@@ -211,7 +211,23 @@ assert_eq "var WebTag = \"${new_hash}\" // ${current_branch}-${new_hash}" \
   "$(grep '^var WebTag = ' "$VERSIONCONSTANTS")" \
   "an old <branch>-<hash> value is migrated to the bare hash"
 
-# 10. A missing tag variable is a hard error, not an unrelated failure.
+# 10. --no-build rewrites the file but runs neither the build command nor docker.
+echo "changed for no-build" > imgdir/Dockerfile
+nobuild_hash="$("$HASH_PATHS" imgdir)"
+rm -f "$BUILD_MARKER"
+calls_before="$(count_lines "$DOCKER_CALL_LOG")"
+"$AUTOTAG" --no-build WebTag ddev/dummy-image imgdir -- bash -c "touch '$BUILD_MARKER'"
+if [ -f "$BUILD_MARKER" ]; then
+  fail "--no-build should not run the build command"
+else
+  pass "--no-build does not run the build command"
+fi
+assert_eq "$calls_before" "$(count_lines "$DOCKER_CALL_LOG")" "--no-build makes no docker calls"
+assert_eq "var WebTag = \"${nobuild_hash}\" // ${current_branch}-${nobuild_hash}" \
+  "$(grep '^var WebTag = ' "$VERSIONCONSTANTS")" \
+  "--no-build still rewrites the tag"
+
+# 11. A missing tag variable is a hard error, not an unrelated failure.
 cat > "$VERSIONCONSTANTS" <<'EOF'
 package versionconstants
 

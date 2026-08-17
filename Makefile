@@ -81,6 +81,20 @@ autotag-images:
 	@containers/autotag.sh XhguiTag ddev/ddev-xhgui containers/ddev-xhgui containers/containers_shared.mk -- $(MAKE) -C containers/ddev-xhgui container
 	@containers/autotag.sh BaseDBTag ddev/ddev-dbserver-mariadb-11.8 containers/ddev-dbserver containers/get_arch.sh -- $(MAKE) -C containers/ddev-dbserver mariadb_11.8_$(shell go env GOHOSTARCH)
 
+# retag-images is autotag-images without the Docker half: it rewrites the
+# changed images' tags in versionconstants.go and leaves the building to CI.
+# The tags it writes name images that exist nowhere until that push completes.
+.PHONY: retag-images
+retag-images:
+	@containers/retag-images.sh
+
+# release-prep stamps a release marker into every image's Dockerfile so all of
+# their hashes move, then retags as above, so the pull request rebuilds and
+# retests every image. `make release-prep TAG=v1.25.4`, or bare to be asked.
+.PHONY: release-prep
+release-prep:
+	@containers/release-prep.sh $(TAG)
+
 # print-image-tags prints the tag each image would use right now (computed,
 # not necessarily built or pushed) - use this to find the value to pass to
 # the push-tagged-image.yml / push-tagged-dbimage.yml tag input.
