@@ -144,3 +144,72 @@ func TestCmdStartSeedSnapshotFile(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, tables, "the out-of-project seed snapshot should have populated the new database volume")
 }
+
+// TestCmdStartResetDatabaseTypeMismatch covers `ddev start --reset-database` after
+// `ddev config --database=...` has changed the configured database type/version
+// away from what the existing volume actually holds: the pre-reset snapshot must
+// run against the database that actually created the data, not the newly
+// configured one, per SnapshotAtExistingDBVersion.
+func TestCmdStartResetDatabaseTypeMismatch(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	require.NoError(t, os.Chdir(site.Dir))
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+	origDatabase := app.Database
+
+	t.Cleanup(func() {
+		app.Database = origDatabase
+		require.NoError(t, app.WriteConfig())
+		require.NoError(t, app.Stop(true, false))
+		_ = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		require.NoError(t, os.Chdir(origDir))
+		require.NoError(t, app.Start())
+	})
+
+	require.NoError(t, app.Restart())
+
+	tableExists := func() bool {
+		out, _, execErr := app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     dbListTablesCommand(app),
+		})
+		require.NoError(t, execErr)
+		return len(out) > 0
+	}
+
+	createMarkerTable(t, app)
+	require.True(t, tableExists())
+
+	existingSnapshots, err := app.ListSnapshotNames()
+	require.NoError(t, err)
+
+	// Reconfigure to a different MariaDB version than the one that actually
+	// created the volume; this only warns, it doesn't touch the existing database.
+	mismatchedVersion := nodeps.MariaDB1011
+	require.NotEqual(t, mismatchedVersion, app.Database.Version, "test fixture needs a version different from the default")
+	out, err := exec.RunHostCommand(DdevBin, "config", "--database=mariadb:"+mismatchedVersion)
+	require.NoError(t, err, "output=%s", out)
+	require.Contains(t, out, "its database volume holds")
+
+	app, err = ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+	require.Equal(t, mismatchedVersion, app.Database.Version)
+
+	// The reset must snapshot the OLD (actual) database, then start fresh as the
+	// newly configured version.
+	out, err = exec.RunHostCommand(DdevBin, "start", "--reset-database", "-y")
+	require.NoError(t, err, "output=%s", out)
+	require.Contains(t, out, "Starting the database as")
+	require.Contains(t, out, "Removed database volume")
+	require.Contains(t, out, "Snapshotted the existing database")
+	require.False(t, tableExists(), "the database should be back to the stock starter database")
+
+	snapshots, err := app.ListSnapshotNames()
+	require.NoError(t, err)
+	require.Greater(t, len(snapshots), len(existingSnapshots), "the removed database should have been snapshotted: %v", snapshots)
+
+	existingType, err := app.GetExistingDBType()
+	require.NoError(t, err)
+	require.Equal(t, "mariadb:"+mismatchedVersion, existingType, "the project should now be running the newly configured database type")
+}
