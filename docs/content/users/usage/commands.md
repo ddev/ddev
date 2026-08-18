@@ -1386,7 +1386,8 @@ ddev snapshot --uncompressed
 
 ### `snapshot restore`
 
-Restores a database snapshot from the `.ddev/db_snapshots` directory.
+Restores a database snapshot, either by name from the `.ddev/db_snapshots` directory or
+by the path to a snapshot file elsewhere on disk.
 
 Flags:
 
@@ -1404,6 +1405,9 @@ ddev snapshot restore my_snapshot_name
 
 # Restore a snapshot taken on an older version of the same database server
 ddev snapshot restore --force my_snapshot_name
+
+# Restore a snapshot file from outside the project
+ddev snapshot restore ~/tmp/mysnapshot-mariadb_11.8.zst
 ```
 
 A snapshot normally has to match the project's configured database type and version exactly. `--force` lifts that for a different version of the same server, which the underlying restore doesn't itself check for; the database may fail to come up, in which case [`ddev start --reset-database`](../usage/database-management.md#starting-over-with-a-new-database) starts over. Restoring across database types (a MySQL snapshot into MariaDB, say) is still refused.

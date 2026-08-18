@@ -159,6 +159,9 @@ type DdevApp struct {
 	// SeedSnapshotMountDir is the host directory holding a seed snapshot from
 	// outside the project, bind-mounted into the db container for that start.
 	SeedSnapshotMountDir string `yaml:"-"`
+	// restoreSnapshotMountDir is set by RestoreSnapshot() when the snapshot being
+	// restored lives outside the project, for the one Start() call it triggers.
+	restoreSnapshotMountDir string
 }
 
 // SkipHooks Global variable that's set from --skip-hooks global flag.
@@ -1577,6 +1580,12 @@ func (app *DdevApp) Start() error {
 			_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", app.snapshotRestoreContainerCommand(seedSnapshot.ContainerPath()))
 			// nolint: errcheck
 			defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
+		} else if app.restoreSnapshotMountDir != "" {
+			// RestoreSnapshot() sets DDEV_DB_CONTAINER_COMMAND to a restore_snapshot
+			// command itself, so dbNeedsInitialization above is false and seedSnapshot
+			// stays nil - but a restore onto an already-populated volume still needs
+			// its external snapshot mounted.
+			app.SeedSnapshotMountDir = app.restoreSnapshotMountDir
 		}
 	}
 

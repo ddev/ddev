@@ -234,17 +234,11 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string, force bool) error {
 
 	currentDBVersion := app.Database.Type + "_" + app.Database.Version
 
-	snapshotFile, err := GetSnapshotFileFromName(snapshotName, app)
+	hostSnapshotFileOrDir, mountDir, err := resolveSnapshotSource(snapshotName, app)
 	if err != nil {
-		return fmt.Errorf("no snapshot found for name %s: %v", snapshotName, err)
+		return fmt.Errorf("unable to resolve snapshot %s: %v", snapshotName, err)
 	}
-	snapshotFileOrDir := filepath.Join("db_snapshots", snapshotFile)
-
-	hostSnapshotFileOrDir := app.GetConfigPath(snapshotFileOrDir)
-
-	if !fileutil.FileExists(hostSnapshotFileOrDir) {
-		return fmt.Errorf("failed to find a snapshot at %s", hostSnapshotFileOrDir)
-	}
+	snapshotFile := filepath.Base(hostSnapshotFileOrDir)
 
 	snapshotDBVersion := ""
 
@@ -318,7 +312,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string, force bool) error {
 			subdir = snapshotName
 		}
 
-		err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotFile), "ddev-"+app.Name+"-snapshots", subdir, uid, "", true)
+		err = dockerutil.CopyIntoVolume(hostSnapshotFileOrDir, "ddev-"+app.Name+"-snapshots", subdir, uid, "", true)
 		if err != nil {
 			return err
 		}
@@ -329,7 +323,14 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string, force bool) error {
 		util.Warning("This snapshot uses gzip compression. Creating a new snapshot will automatically use faster zstd compression.")
 	}
 
-	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", app.snapshotRestoreContainerCommand(snapshotFile))
+	containerPath := snapshotFile
+	if mountDir != "" {
+		containerPath = path.Join(SeedSnapshotMountDir, snapshotFile)
+	}
+	app.restoreSnapshotMountDir = mountDir
+	defer func() { app.restoreSnapshotMountDir = "" }()
+
+	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", app.snapshotRestoreContainerCommand(containerPath))
 	// nolint: errcheck
 	defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
 	// If the default_container_timeout does not already specify a longer period
@@ -417,6 +418,37 @@ func (app *DdevApp) snapshotRestoreContainerCommand(snapshotPath string) string 
 		targetConfName = path.Join(nodeps.PostgresConfigDir, "recovery.conf")
 	}
 	return fmt.Sprintf(`bash -c '%s && echo "restore_command = 'true'" >>%s && %s'`, prepare, targetConfName, serve)
+}
+
+// resolveSnapshotSource resolves a snapshot name or host path to its absolute
+// file on disk and, if it lives outside .ddev/db_snapshots, the directory that
+// needs to be bind-mounted into the db container so the container can reach it.
+//
+// A path (absolute, or containing a slash) must already exist as a file, not a
+// directory. A bare name is resolved inside .ddev/db_snapshots via
+// GetSnapshotFileFromName, which also supports old-style directory snapshots -
+// something an external path does not.
+func resolveSnapshotSource(nameOrPath string, app *DdevApp) (hostPath string, mountDir string, err error) {
+	if filepath.IsAbs(nameOrPath) || strings.ContainsAny(nameOrPath, `/\`) {
+		if hostPath, err = filepath.Abs(nameOrPath); err != nil {
+			return "", "", fmt.Errorf("unable to resolve %s: %v", nameOrPath, err)
+		}
+		if !fileutil.FileExists(hostPath) || fileutil.IsDirectory(hostPath) {
+			return "", "", fmt.Errorf("%s is not an existing snapshot file", nameOrPath)
+		}
+		// A snapshot already in .ddev/db_snapshots needs no mount of its own, and
+		// with no_bind_mounts the caller copies it in rather than mounting.
+		if dir := filepath.Dir(hostPath); dir != app.GetConfigPath("db_snapshots") && !globalconfig.DdevGlobalConfig.NoBindMounts {
+			mountDir = dir
+		}
+		return hostPath, mountDir, nil
+	}
+
+	snapshotFile, err := GetSnapshotFileFromName(nameOrPath, app)
+	if err != nil {
+		return "", "", err
+	}
+	return app.GetConfigPath(filepath.Join("db_snapshots", snapshotFile)), "", nil
 }
 
 // GetSnapshotFileFromName returns the filename corresponding to the snapshot name

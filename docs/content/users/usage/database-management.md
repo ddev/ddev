@@ -47,7 +47,7 @@ Snapshots let you easily save the entire status of all of your databases, which 
 
 Snapshots can be named for easier reference later on. For example, [`ddev snapshot --name=two-dbs`](../usage/commands.md#snapshot) would make a snapshot named `two-dbs` in the `.ddev/db_snapshots` directory. It includes the entire state of the db server, so in the case of our two databases above, both databases and the system level `mysql` or `postgres` database will all be snapshotted. Then if you want to delete everything with `ddev delete -O` (omitting the snapshot since we have one already), and then [`ddev start`](../usage/commands.md#start) again, we can `ddev snapshot restore two-dbs` and we’ll be right back where we were.
 
-Use the [`ddev snapshot restore`](../usage/commands.md#snapshot-restore) command to interactively choose among snapshots, or append `--latest` to restore the most recent snapshot: `ddev snapshot restore --latest`.
+Use the [`ddev snapshot restore`](../usage/commands.md#snapshot-restore) command to interactively choose among snapshots, or append `--latest` to restore the most recent snapshot: `ddev snapshot restore --latest`. It also accepts the path to a snapshot file outside the project: `ddev snapshot restore ~/tmp/mysnapshot-mariadb_11.8.zst`.
 
 Snapshots are stored as compressed (zstd, or gzip on very old database versions) files in the project's `.ddev/db_snapshots` directory, and any or all snapshots can be removed with the `ddev snapshot --cleanup` command or by manually deleting the files when you want to save disk space or have no further use for them.
 

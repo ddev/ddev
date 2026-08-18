@@ -104,27 +104,9 @@ func (app *DdevApp) ResolveSeedSnapshot() (*SeedSnapshot, error) {
 		return nil, nil
 	}
 
-	hostPath := app.SeedSnapshot
-	mountDir := ""
-	if filepath.IsAbs(hostPath) || strings.ContainsAny(hostPath, `/\`) {
-		var err error
-		if hostPath, err = filepath.Abs(hostPath); err != nil {
-			return nil, fmt.Errorf("unable to resolve --seed-snapshot=%s: %v", app.SeedSnapshot, err)
-		}
-		if !fileutil.FileExists(hostPath) || fileutil.IsDirectory(hostPath) {
-			return nil, fmt.Errorf("--seed-snapshot=%s is not an existing snapshot file", app.SeedSnapshot)
-		}
-		// A snapshot already in .ddev/db_snapshots needs no mount of its own, and
-		// with no_bind_mounts prepareSeedSnapshot copies it in rather than mounting.
-		if dir := filepath.Dir(hostPath); dir != app.GetConfigPath("db_snapshots") && !globalconfig.DdevGlobalConfig.NoBindMounts {
-			mountDir = dir
-		}
-	} else {
-		snapshotFile, err := GetSnapshotFileFromName(app.SeedSnapshot, app)
-		if err != nil {
-			return nil, fmt.Errorf("unable to use --seed-snapshot=%s: %v", app.SeedSnapshot, err)
-		}
-		hostPath = app.GetConfigPath(filepath.Join("db_snapshots", snapshotFile))
+	hostPath, mountDir, err := resolveSnapshotSource(app.SeedSnapshot, app)
+	if err != nil {
+		return nil, fmt.Errorf("unable to use --seed-snapshot=%s: %v", app.SeedSnapshot, err)
 	}
 
 	snapshotDBVersion, err := snapshotDBVersionFromFilename(filepath.Base(hostPath))

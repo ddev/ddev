@@ -10,12 +10,13 @@ import (
 
 // DdevSnapshotRestoreCommand handles ddev snapshot restore
 var DdevSnapshotRestoreCommand = &cobra.Command{
-	Use:   "restore [snapshot_name]",
+	Use:   "restore [snapshot_name|path]",
 	Short: "Restore a project's database to the provided snapshot version.",
-	Long:  `Uses mariabackup or xtrabackup command to restore a project database to a particular snapshot from the .ddev/db_snapshots folder.`,
+	Long:  `Uses mariabackup or xtrabackup command to restore a project database to a particular snapshot, either by name from the .ddev/db_snapshots folder or by the path to a snapshot file elsewhere.`,
 	Example: `ddev snapshot restore d8git_20180717203845
 ddev snapshot restore --latest
-ddev snapshot restore --force t3v14-latest`,
+ddev snapshot restore --force t3v14-latest
+ddev snapshot restore $HOME/tmp/mysnapshot-mariadb_11.8.zst`,
 	Run: func(_ *cobra.Command, args []string) {
 		var snapshotName string
 
