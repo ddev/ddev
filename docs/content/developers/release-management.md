@@ -28,6 +28,8 @@ These are normally configured in the repository environment variables.
 * `AUR_EDGE_GIT_URL`: The Git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`.
 * `AUR_PACKAGE_NAME`: The base name of the AUR package. Normally `ddev` for production, but `ddev-test` for testing repository.
 * `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.
+* `CLOUDSMITH_ORG`: The organization on [Cloudsmith](https://cloudsmith.com) that receives `apt`/`yum` package pushes.
+* `CLOUDSMITH_REPO`: The repository within `CLOUDSMITH_ORG` that receives package pushes, so `ddev-test/ddev` can push to a separate test repository from `ddev/ddev`.
 * `DDEV_IGNORE_EXPIRING_KEYS`: If the value is `"false"` then daily tests will fail if signing keys are expiring soon, default is `"false"` on `ddev/ddev`
 * `DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION`: Number of days before expiration to warn about expiring signing keys, default is `90` on `ddev/ddev`.
 * `DDEV_WINDOWS_SIGN`: If the value is `"true"` then `make` will attempt to sign the Windows executables, which requires building on our self-hosted Windows runner.
@@ -49,6 +51,7 @@ The following “Repository secret” environment variables must be configured i
 
 * `AUR_SSH_PRIVATE_KEY`: Private SSH key for the `ddev-releaser` user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
 * `CHOCOLATEY_API_KEY`: API key for Chocolatey.
+* `DDEV_CLOUDSMITH_API_TOKEN`: API token for the `CLOUDSMITH_ORG`/`CLOUDSMITH_REPO` above.
 * `DDEV_GITHUB_TOKEN`: GitHub personal token (`repo` scope, classic PAT) that gives access to create releases and push to the Homebrew repositories.
 * `DDEV_MACOS_APP_PASSWORD`: Password used for notarization, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
@@ -223,13 +226,16 @@ This is done automatically by the release build on a dedicated Windows test runn
 
 ## APT and YUM/RPM Package Management
 
-The Linux `apt` and `yum`/`rpm` packages are built and pushed by the `nfpms` and `furies` sections of the [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml) file.
-
-* The actual packages are served by [gemfury.com](https://gemfury.com/).
+* The `nfpms` section of [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml) builds the actual `.deb`/`.rpm` packages; `furies` and `cloudsmiths` each push those same built packages to their respective repository.
+* The primary location for APT/YUM packages is [Cloudsmith](https://cloudsmith.com), pushed via the `cloudsmiths` section of [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml), using the `CLOUDSMITH_ORG`/`CLOUDSMITH_REPO` variables and `DDEV_CLOUDSMITH_API_TOKEN` secret.
+* We provided and uploaded a custom GPG signing key to the Cloudsmith repository (backed up as `DDEV_CLOUDSMITH_SIGNING_KEY` in 1Password). This is a one-time repository setting on Cloudsmith's side, not part of the release process — Cloudsmith signs every pushed package with it automatically, and neither `.goreleaser.yml` nor the GitHub Actions workflow references it.
+* Cloudsmith's [custom domain](https://help.cloudsmith.io/docs/custom-domains) `packages.ddev.com` is live and serves the same content as `dl.cloudsmith.io/public/ddev/ddev/...` (drop the `ddev/ddev` organization/repository segment, keep `public`, e.g. `packages.ddev.com/public/deb/ubuntu`, `packages.ddev.com/public/rpm/any-distro/any-version`, `packages.ddev.com/public/gpg.key`).
+* Linux `apt` and `yum`/`rpm` packages are also pushed in parallel to the historical Gemfury repository using the `furies` sections of the [.goreleaser.yml](https://github.com/ddev/ddev/blob/main/.goreleaser.yml) file. This will eventually be phased out.
+* The Gemfury packages are served by [gemfury.com](https://gemfury.com/).
 * The name of the organization in GemFury is `drud`, managed at `https://manage.fury.io/dashboard/drud`.
 * [Randy Fay](https://github.com/rfay), [Matt Stein](https://github.com/mattstein), and [Simon Gillis](https://github.com/gilbertsoft) are authorized as owners on this dashboard.
-* The `pkg.ddev.com` domain name is set up as a custom alias for our package repositories; see `https://manage.fury.io/manage/drud/domains`. (Users do not see `drud` anywhere. Although we could have moved to a new organization for this, the existing repositories contain all the historical versions so it made sense to be less disruptive.)
-* The `pkg.ddev.com` `CNAME` is managed in Cloudflare because `ddev.com` is managed there.
+* The `pkg.ddev.com` domain name has been used as a custom alias for the Gemfury package repositories; see `https://manage.fury.io/manage/drud/domains`. (Users do not see `drud` anywhere. Although we could have moved to a new organization for this, the existing repositories contain all the historical versions so it made sense to be less disruptive.)
+* The `packages.ddev.com` and `pkg.ddev.com` `CNAME` records are managed in Cloudflare because `ddev.com` is managed there.
 * The fury.io tokens are in DDEV’s shared 1Password account.
 
 ## Testing Release Creation

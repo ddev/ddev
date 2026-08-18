@@ -348,6 +348,7 @@ distribution's
 distro
 distro's
 distros
+dnf
 dns
 dnsmasq
 docker

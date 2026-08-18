@@ -517,6 +517,19 @@ furies:
   secret_name: "FURY_TOKEN"
   disable: '{{ ne .Prerelease "" }}'
 
+cloudsmiths:
+- organization: "{{ .Env.CLOUDSMITH_ORG }}"
+  repository: "{{ .Env.CLOUDSMITH_REPO }}"
+  secret_name: "DDEV_CLOUDSMITH_API_TOKEN"
+  formats:
+  - deb
+  - rpm
+  distributions:
+    deb:
+    - "any-distro/any-version"
+    rpm: "any-distro/any-version"
+  disable: '{{ ne .Prerelease "" }}'
+
 
 dockerhub:
 

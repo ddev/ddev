@@ -56,14 +56,14 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Add DDEV’s GPG key to your keyring
     sudo apt-get update && sudo apt-get install -y curl
     sudo install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://pkg.ddev.com/apt/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
+    curl -fsSL https://packages.ddev.com/public/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
     sudo chmod a+r /etc/apt/keyrings/ddev.asc
 
     # Remove old repository files if present
     sudo rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list
 
     # Add DDEV releases to your package repository
-    printf "Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
+    printf "Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: stable\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
 
     # Update package information and install DDEV
     sudo apt-get update && sudo apt-get install -y ddev
@@ -82,10 +82,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         sudo true
         sudo apt-get update && sudo apt-get install -y curl
         sudo install -m 0755 -d /etc/apt/keyrings
-        curl -fsSL https://pkg.ddev.com/apt/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
+        curl -fsSL https://packages.ddev.com/public/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
         sudo chmod a+r /etc/apt/keyrings/ddev.asc
         sudo rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list
-        printf "Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
+        printf "Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: stable\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
         sudo apt-get update && sudo apt-get install -y ddev
         mkcert -install
         SCRIPT
@@ -116,12 +116,14 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     # Add DDEV releases to your package repository
     echo '[ddev]
     name=ddev
-    baseurl=https://pkg.ddev.com/yum/
-    gpgcheck=0
+    baseurl=https://packages.ddev.com/public/rpm/any-distro/any-version/$basearch
+    gpgkey=https://packages.ddev.com/public/gpg.key
+    gpgcheck=1
+    repo_gpgcheck=1
     enabled=1' | sed 's/^ \+//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
 
     # Install DDEV
-    sudo dnf install --refresh ddev
+    sudo dnf install -y --refresh ddev
 
     # One-time initialization of mkcert
     mkcert -install
@@ -135,8 +137,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         #!/usr/bin/env bash
         set -euo pipefail
         sudo true
-        printf "[ddev]\nname=ddev\nbaseurl=https://pkg.ddev.com/yum/\ngpgcheck=0\nenabled=1\n" | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
-        sudo dnf install --refresh ddev
+        printf "[ddev]\nname=ddev\nbaseurl=https://packages.ddev.com/public/rpm/any-distro/any-version/\$basearch\ngpgkey=https://packages.ddev.com/public/gpg.key\ngpgcheck=1\nrepo_gpgcheck=1\nenabled=1\n" | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
+        sudo dnf install -y --refresh ddev
         mkcert -install
         SCRIPT
         ```
@@ -144,8 +146,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         Review the script, then run it: `bash /tmp/install-ddev.sh`
 
     For unusual browsers and situations that don't automatically support the `mkcert` certificate authority, [configure your browser](configuring-browsers.md).
-
-    Signed yum repository support will be added in the future.
 
     ### Arch Linux
 

@@ -1395,7 +1395,7 @@ Function InstallWSL2CommonSetup
     ; Add DDEV GPG key
     Push "WSL($SELECTED_DISTRO): Adding DDEV apt repository key..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "curl -fsSL https://pkg.ddev.com/apt/gpg.key -o /etc/apt/keyrings/ddev.asc && chmod a+r /etc/apt/keyrings/ddev.asc"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "curl -fsSL https://packages.ddev.com/public/gpg.key -o /etc/apt/keyrings/ddev.asc && chmod a+r /etc/apt/keyrings/ddev.asc"'
     Pop $1
     Pop $0
     ${If} $1 != 0
@@ -1408,7 +1408,7 @@ Function InstallWSL2CommonSetup
     ; Add DDEV repository in deb822 format
     Push "WSL($SELECTED_DISTRO): Adding DDEV apt repository..."
     Call LogPrint
-    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "printf \"Types: deb\nURIs: https://pkg.ddev.com/apt/\nSuites: *\nComponents: *\nSigned-By: /etc/apt/keyrings/ddev.asc\n\" > /etc/apt/sources.list.d/ddev.sources"'
+    nsExec::ExecToStack 'wsl -d $SELECTED_DISTRO -u root bash -c "printf \"Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: stable\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n\" > /etc/apt/sources.list.d/ddev.sources"'
     Pop $1
     Pop $0
     ${If} $1 != 0
