@@ -9,6 +9,10 @@ defaults:
 # and this workflow never checks out or executes the triggering PR's code.
 # It only loads the artifact "Image build" produced (an inert tarball plus
 # metadata) and pushes it, after re-validating the tag.
+#
+# By the time an artifact exists to push, image-build-push.yml's `approve`
+# job has already required maintainer sign-off (or PR-author authorization)
+# before its `build` job ran.
 on:
   workflow_run:
     workflows: ["Image build"]
@@ -21,8 +25,6 @@ permissions:
   contents: read
 
 jobs:
-  # Ungated on purpose: asking a maintainer to approve a push only to discover
-  # the run built nothing trains people to click Approve without looking.
   check-artifacts:
     name: Check for built images
     # Only fork completions of "Image build" ever produce artifacts here -
@@ -55,23 +57,10 @@ jobs:
             core.setOutput("has_artifacts", keys.length > 0 ? "true" : "false");
             core.setOutput("images", JSON.stringify(keys));
 
-  # One gate for the whole run rather than `environment:` on the fan-out below,
-  # where every image would be a pending deployment of its own to approve.
-  approve:
-    name: "Approve: push the built image(s) to DockerHub"
-    needs: check-artifacts
-    if: needs.check-artifacts.outputs.has_artifacts == 'true'
-    runs-on: ubuntu-24.04
-    environment: image-push
-    steps:
-      - name: Record what was approved
-        env:
-          IMAGES: ${{ needs.check-artifacts.outputs.images }}
-        run: echo "Approved; pushing $(jq -r 'join(", ")' <<< "$IMAGES")"
-
   push:
     name: Push ${{ matrix.image }}
-    needs: [check-artifacts, approve]
+    needs: check-artifacts
+    if: needs.check-artifacts.outputs.has_artifacts == 'true'
     strategy:
       fail-fast: false
       matrix:

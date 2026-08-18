@@ -168,6 +168,9 @@ rationale that belongs in the commit message or PR description.
   a single file. If two functions share a reason, put it in one place (a doc
   comment on the shared helper or constant) and let the other site point to it
 - Never re-describe in comments what a linked issue or commit message already covers
+- Write for a reader who has no memory of this change. Describe what is true
+  now, not what changed — "no gate here" or "moved from X" reads as a diff
+  note and goes stale the moment the history isn't front of mind
 - Test doc comments: the test name plus its assertions already say what is
   being tested. Comment only what is not obvious from those — a non-obvious
   setup step, or why the test skips under some condition

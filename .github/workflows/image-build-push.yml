@@ -6,8 +6,13 @@ defaults:
 # In a forked PR, this workflow may run a fork's own Dockerfile/build scripts,
 # so the `build` job never references a secret - the trusted side (loading
 # the artifact `build` produces and actually pushing it) lives in
-# image-push.yml, triggered via workflow_run once this workflow completes,
-# gated behind its own approval.
+# image-push.yml, triggered via workflow_run once this workflow completes.
+#
+# The approval gate for a fork PR lives in `approve`, right after `detect`
+# knows a build is needed, so a maintainer sees the request before the fork
+# build (often several minutes) even starts. It's skipped when the PR author
+# already has push access to this repo (`detect`'s `is_authorized` output),
+# since there's nothing to approve for a maintainer's own fork.
 #
 # For anything else (a push, or a same-repo PR - `detect`'s `is_fork` output,
 # using the same fork-check idiom as push-tagged-image.yml), there's nothing
@@ -46,6 +51,7 @@ jobs:
       manifest_matrix: ${{ steps.detect.outputs.manifest_matrix }}
       needs_build: ${{ steps.detect.outputs.needs_build }}
       is_fork: ${{ steps.fork.outputs.is_fork }}
+      is_authorized: ${{ steps.authorized.outputs.is_authorized }}
     steps:
       - uses: actions/checkout@v7
       - name: Compute per-image build status
@@ -123,6 +129,24 @@ jobs:
             echo "is_fork=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # A maintainer's own fork PR needs no human approval to build/push -
+      # they already have that access directly. author_association reflects
+      # the PR author's relationship to this repo, not the fork.
+      - name: Determine whether the PR author is already authorized to push
+        id: authorized
+        env:
+          AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+        run: |
+          set -eu -o pipefail
+          case "$AUTHOR_ASSOCIATION" in
+            OWNER | MEMBER | COLLABORATOR)
+              echo "is_authorized=true" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "is_authorized=false" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
       # create-manifests never runs for a fork, so the release names would
       # silently be left off. Fails ahead of the build and the approval.
       - name: Refuse a release marker on a fork
@@ -139,15 +163,31 @@ jobs:
             exit 1
           done
 
+  # One gate for the whole run rather than `environment:` on the build matrix
+  # below, where every (image, arch) would be a pending deployment of its own
+  # to approve. Skipped entirely when the PR author is already authorized -
+  # see "Determine whether the PR author is already authorized to push" above.
+  approve:
+    name: "Approve: build and push image(s) from this fork PR"
+    needs: detect
+    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true' && needs.detect.outputs.is_authorized == 'false'
+    runs-on: ubuntu-24.04
+    environment: image-push
+    steps:
+      - name: Record approval
+        run: echo "Approved; proceeding to build and push from this fork PR"
+
   # --- Fork PRs: build with no secrets (this job never has registry
   # credentials, so there's nothing to gain by gating it - see #8609
-  # discussion), then hand off to image-push.yml for the trusted,
-  # approval-gated push. ---
+  # discussion), then hand off to image-push.yml for the trusted push. ---
 
   build:
     name: Build ${{ matrix.build.repo }} (${{ matrix.build.arch }})
-    needs: detect
-    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true'
+    needs: [detect, approve]
+    # `approve` is skipped (not failed) when the author is already
+    # authorized, so its result is checked explicitly rather than relying on
+    # the implicit success() the default `if` would otherwise add.
+    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true' && (needs.detect.outputs.is_authorized == 'true' || needs.approve.result == 'success')
     strategy:
       fail-fast: false
       matrix:
@@ -193,8 +233,8 @@ jobs:
             repos.txt
             tag.txt
             arch.txt
-          # image-push.yml can't download an expired artifact, and the approval
-          # it waits on is a human one that may not come the same day.
+          # image-push.yml can't download an expired artifact, so this
+          # outlives any delay in its workflow_run trigger firing.
           retention-days: 7
 
   # --- Pushes and same-repo PRs: no fork content ever runs here, so build
