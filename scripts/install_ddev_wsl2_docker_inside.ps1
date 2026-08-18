@@ -82,7 +82,7 @@ wsl -d $Distro -u root install -m 0755 -d /etc/apt/keyrings
 wsl -d $Distro -u root -e bash -c "rm -f /etc/apt/keyrings/docker.gpg /etc/apt/sources.list.d/docker.list; . /etc/os-release; if echo `$ID `$ID_LIKE | grep -qi ubuntu; then FAMILY=ubuntu; else FAMILY=debian; fi; curl -fsSL https://download.docker.com/linux/`$FAMILY/gpg -o /etc/apt/keyrings/docker.asc && chmod a+r /etc/apt/keyrings/docker.asc && printf 'Types: deb\nURIs: https://download.docker.com/linux/%s\nSuites: %s\nComponents: stable\nSigned-By: /etc/apt/keyrings/docker.asc\n' `$FAMILY `${UBUNTU_CODENAME:-`$VERSION_CODENAME} | tee /etc/apt/sources.list.d/docker.sources > /dev/null"
 
 wsl -d $Distro -u root -e bash -c "rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list && curl -fsSL https://packages.ddev.com/public/gpg.key | tee /etc/apt/keyrings/ddev.asc > /dev/null && chmod a+r /etc/apt/keyrings/ddev.asc"
-wsl -d $Distro -u root -e bash -c "printf 'Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: resolute\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n' > /etc/apt/sources.list.d/ddev.sources"
+wsl -d $Distro -u root -e bash -c "printf 'Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: stable\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n' > /etc/apt/sources.list.d/ddev.sources"
 wsl -d $Distro -u root -e bash -c "apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io"
 wsl -d $Distro -u root -e bash -c "apt-get install -y --no-install-recommends ddev ddev-wsl2"
 $wslUser = (wsl -d $Distro whoami).Trim()

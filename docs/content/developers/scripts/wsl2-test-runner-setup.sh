@@ -48,7 +48,7 @@ curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
 # ddev
 sudo rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list
 sudo bash -c "curl -fsSL https://packages.ddev.com/public/gpg.key | tee /etc/apt/keyrings/ddev.asc > /dev/null && chmod a+r /etc/apt/keyrings/ddev.asc"
-sudo bash -c "printf 'Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: resolute\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n' > /etc/apt/sources.list.d/ddev.sources"
+sudo bash -c "printf 'Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: stable\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n' > /etc/apt/sources.list.d/ddev.sources"
 sudo apt-get -qq update >/dev/null && sudo apt-get install -qq -y ddev ddev-wsl2 >/dev/null
 
 # Buildkite-agent

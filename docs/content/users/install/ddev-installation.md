@@ -63,7 +63,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     sudo rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list
 
     # Add DDEV releases to your package repository
-    printf "Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: resolute\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
+    printf "Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: stable\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
 
     # Update package information and install DDEV
     sudo apt-get update && sudo apt-get install -y ddev
@@ -85,7 +85,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         curl -fsSL https://packages.ddev.com/public/gpg.key | sudo tee /etc/apt/keyrings/ddev.asc > /dev/null
         sudo chmod a+r /etc/apt/keyrings/ddev.asc
         sudo rm -f /etc/apt/keyrings/ddev.gpg /etc/apt/sources.list.d/ddev.list
-        printf "Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: resolute\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
+        printf "Types: deb\nURIs: https://packages.ddev.com/public/deb/ubuntu\nSuites: stable\nComponents: main\nSigned-By: /etc/apt/keyrings/ddev.asc\n" | sudo tee /etc/apt/sources.list.d/ddev.sources >/dev/null
         sudo apt-get update && sudo apt-get install -y ddev
         mkcert -install
         SCRIPT
