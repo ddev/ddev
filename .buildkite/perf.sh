@@ -19,6 +19,9 @@ if [[ ${BUILDKITE_MESSAGE:-} == *"[skip buildkite]"* ]] || [[ ${BUILDKITE_MESSAG
   exit 0
 fi
 
+# A changed image may still be waiting on image-push.yml's approval
+"$(dirname "$0")/../containers/wait-for-images.sh"
+
 os=$(go env GOOS)
 
 # shellcheck source=lib-provider.sh

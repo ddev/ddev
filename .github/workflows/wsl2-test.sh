@@ -55,6 +55,11 @@ go version
 docker version
 git --version
 
+# This runner holds no push credentials, so it can race image-push.yml's
+# approval/build/push - see containers/wait-for-images.sh.
+echo "=== Waiting for pushed images ==="
+containers/wait-for-images.sh
+
 echo "=== Building DDEV ==="
 make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}"
 

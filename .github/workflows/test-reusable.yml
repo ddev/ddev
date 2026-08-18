@@ -116,6 +116,7 @@ jobs:
     runs-on: ${{ inputs.runner }}
 
     env:
+      DOCKER_ORG: "${{ vars.DOCKER_ORG || (github.repository_owner == 'ddev-test' && 'ddevhq' || 'ddev') }}"
       BUILDKIT_PROGRESS: plain
       DOCKER_CLI_EXPERIMENTAL: enabled
       DDEV_DEBUG: true
@@ -151,6 +152,11 @@ jobs:
             echo "$varname=$value" >> $GITHUB_ENV
           done < <(git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)
           git update-ref -d refs/public-variables-tmp
+
+      - name: Wait for pushed images
+        # This runner holds no push credentials, so it can race
+        # image-push.yml's approval/build/push - see containers/wait-for-images.sh.
+        run: containers/wait-for-images.sh
 
       - name: Get Date
         id: get-date

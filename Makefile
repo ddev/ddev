@@ -68,6 +68,11 @@ build: autotag-images $(DEFAULT_BUILD)
 # (no Docker, no network). A changed image is built locally (host arch only)
 # and its tag in versionconstants.go is rewritten automatically - see
 # containers/autotag.sh and docs/content/developers/building-contributing.md.
+# Only the default db variant (mariadb_11.8) is built here, to keep an
+# unrelated rebuild cheap. Every ddev-dbserver variant shares BaseDBTag, so a
+# dbserver change moves the tag for all of them at once; CI builds and pushes
+# the whole matrix (containers/ddev-dbserver/variants.txt), and the rest are
+# pulled from the registry.
 .PHONY: autotag-images
 autotag-images:
 	@containers/autotag.sh WebTag ddev/ddev-webserver containers/ddev-webserver containers/containers_shared.mk -- $(MAKE) -C containers/ddev-webserver images
@@ -75,6 +80,20 @@ autotag-images:
 	@containers/autotag.sh SSHAuthTag ddev/ddev-ssh-agent containers/ddev-ssh-agent containers/containers_shared.mk -- $(MAKE) -C containers/ddev-ssh-agent container
 	@containers/autotag.sh XhguiTag ddev/ddev-xhgui containers/ddev-xhgui containers/containers_shared.mk -- $(MAKE) -C containers/ddev-xhgui container
 	@containers/autotag.sh BaseDBTag ddev/ddev-dbserver-mariadb-11.8 containers/ddev-dbserver containers/get_arch.sh -- $(MAKE) -C containers/ddev-dbserver mariadb_11.8_$(shell go env GOHOSTARCH)
+
+# retag-images is autotag-images without the Docker half: it rewrites the
+# changed images' tags in versionconstants.go and leaves the building to CI.
+# The tags it writes name images that exist nowhere until that push completes.
+.PHONY: retag-images
+retag-images:
+	@containers/retag-images.sh
+
+# release-prep stamps a release marker into every image's Dockerfile so all of
+# their hashes move, then retags as above, so the pull request rebuilds and
+# retests every image. `make release-prep TAG=v1.25.4`, or bare to be asked.
+.PHONY: release-prep
+release-prep:
+	@containers/release-prep.sh $(TAG)
 
 # print-image-tags prints the tag each image would use right now (computed,
 # not necessarily built or pushed) - use this to find the value to pass to
@@ -225,7 +244,14 @@ setup:
 	@mkdir -p $(TESTTMP)
 
 # Required static analysis targets for pre-push.
-staticrequired: setup golangci-lint markdownlint zensical
+staticrequired: setup golangci-lint markdownlint zensical check-image-tags
+
+# A changed image whose tag never made it into versionconstants.go ships a
+# binary pulling tags nothing builds. Checked rather than fixed here, because
+# fixing means a Docker build - run `make` for that.
+.PHONY: check-image-tags
+check-image-tags:
+	@containers/check-image-tags.sh
 
 # Fail rather than skip when a required tool is absent. These targets used to
 # print a note and exit 0, so `make staticrequired` reported success while

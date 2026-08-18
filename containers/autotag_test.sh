@@ -32,6 +32,11 @@ assert_eq() {
   fi
 }
 
+# BSD wc pads its output with spaces; GNU wc does not.
+count_lines() {
+  wc -l < "$1" | tr -d '[:space:]'
+}
+
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 
@@ -79,7 +84,10 @@ cat > "$VERSIONCONSTANTS" <<'EOF'
 package versionconstants
 
 // WebTag defines the default web image tag
-var WebTag = "v1.0.0" // Note that this can be overridden by make
+var WebTag = "v1.0.0" // some-old-branch-v1.0.0
+
+// WebTagBranch is the branch WebTag's content was built from.
+var WebTagBranch = "some-old-branch"
 EOF
 
 export VERSIONCONSTANTS_FILE="$VERSIONCONSTANTS"
@@ -131,11 +139,8 @@ candidate="$("$AUTOTAG" --print-only WebTag ddev/dummy-image imgdir)"
 after="$(cat "$VERSIONCONSTANTS")"
 assert_eq "$before" "$after" "--print-only does not modify the versionconstants file"
 current_hash="$("$HASH_PATHS" imgdir)"
-case "$candidate" in
-  *-"$current_hash") pass "--print-only candidate tag ends with the current hash" ;;
-  *) fail "--print-only candidate tag '$candidate' doesn't end with hash '$current_hash'" ;;
-esac
-calls="$(wc -l < "$DOCKER_CALL_LOG")"
+assert_eq "$current_hash" "$candidate" "--print-only candidate tag is the bare content hash"
+calls="$(count_lines "$DOCKER_CALL_LOG")"
 assert_eq "0" "$calls" "--print-only makes no docker calls"
 
 # 6. Change detected (today's fixture tag is "v1.0.0", never a real hash),
@@ -149,24 +154,21 @@ else
   fail "build command should have run when the tag changed and no local image existed"
 fi
 
+current_branch="$(git rev-parse --abbrev-ref HEAD | sed -E 's/[^A-Za-z0-9_.-]+/-/g')"
 new_tag_line="$(grep '^var WebTag = ' "$VERSIONCONSTANTS")"
-case "$new_tag_line" in
-  *"-${current_hash}\""*) pass "versionconstants file rewritten with the new hash-suffixed tag" ;;
-  *) fail "versionconstants file not rewritten as expected: $new_tag_line" ;;
-esac
-case "$new_tag_line" in
-  *"// Note that this can be overridden by make"*) pass "trailing comment on the tag line is preserved" ;;
-  *) fail "trailing comment on the tag line was lost: $new_tag_line" ;;
-esac
+assert_eq "var WebTag = \"${current_hash}\" // ${current_branch}-${current_hash}" "$new_tag_line" \
+  "the tag becomes the bare hash, with the branch alias as a trailing comment"
+assert_eq "var WebTagBranch = \"${current_branch}\"" "$(grep '^var WebTagBranch = ' "$VERSIONCONSTANTS")" \
+  "the companion Branch variable is updated for ddev version"
 
 # 7. Idempotency: re-run with no further changes -> no-op. No build, no file
 #    rewrite, and (the key design property) no docker call at all.
 rm -f "$BUILD_MARKER"
 before2="$(cat "$VERSIONCONSTANTS")"
-calls_before="$(wc -l < "$DOCKER_CALL_LOG")"
+calls_before="$(count_lines "$DOCKER_CALL_LOG")"
 "$AUTOTAG" WebTag ddev/dummy-image imgdir -- bash -c "touch '$BUILD_MARKER'"
 after2="$(cat "$VERSIONCONSTANTS")"
-calls_after="$(wc -l < "$DOCKER_CALL_LOG")"
+calls_after="$(count_lines "$DOCKER_CALL_LOG")"
 if [ -f "$BUILD_MARKER" ]; then
   fail "unexpected rebuild on unchanged content"
 else
@@ -179,8 +181,7 @@ assert_eq "$calls_before" "$calls_after" "no docker calls at all on the unchange
 #    tag -> build is skipped, but the file is still rewritten.
 echo "changed again" > imgdir/Dockerfile
 new_hash="$("$HASH_PATHS" imgdir)"
-branch="$(git rev-parse --abbrev-ref HEAD | sed -E 's/[^A-Za-z0-9_.-]+/-/g')"
-echo "ddev/dummy-image:${branch}-${new_hash}" > "$DOCKER_EXISTING_REF_FILE"
+echo "ddev/dummy-image:${new_hash}" > "$DOCKER_EXISTING_REF_FILE"
 rm -f "$BUILD_MARKER"
 "$AUTOTAG" WebTag ddev/dummy-image imgdir -- bash -c "touch '$BUILD_MARKER'"
 if [ -f "$BUILD_MARKER" ]; then
@@ -188,11 +189,63 @@ if [ -f "$BUILD_MARKER" ]; then
 else
   pass "build skipped when a local image already exists at the computed tag"
 fi
-if grep -q "\"${branch}-${new_hash}\"" "$VERSIONCONSTANTS"; then
+if grep -q "^var WebTag = \"${new_hash}\"" "$VERSIONCONSTANTS"; then
   pass "versionconstants file rewritten even when the build was skipped"
 else
   fail "versionconstants file should still be rewritten when the build is skipped"
 fi
+
+# 9. A line still carrying the old <branch>-<hash> form is migrated to the bare
+#    hash on the next run, even though its trailing hash already matches.
+cat > "$VERSIONCONSTANTS" <<EOF
+package versionconstants
+
+// WebTag defines the default web image tag
+var WebTag = "legacy-branch-${new_hash}" // legacy-branch-${new_hash}
+
+// WebTagBranch is the branch WebTag's content was built from.
+var WebTagBranch = "legacy-branch"
+EOF
+"$AUTOTAG" WebTag ddev/dummy-image imgdir -- bash -c "touch '$BUILD_MARKER'"
+assert_eq "var WebTag = \"${new_hash}\" // ${current_branch}-${new_hash}" \
+  "$(grep '^var WebTag = ' "$VERSIONCONSTANTS")" \
+  "an old <branch>-<hash> value is migrated to the bare hash"
+
+# 10. --no-build rewrites the file but runs neither the build command nor docker.
+echo "changed for no-build" > imgdir/Dockerfile
+nobuild_hash="$("$HASH_PATHS" imgdir)"
+rm -f "$BUILD_MARKER"
+calls_before="$(count_lines "$DOCKER_CALL_LOG")"
+"$AUTOTAG" --no-build WebTag ddev/dummy-image imgdir -- bash -c "touch '$BUILD_MARKER'"
+if [ -f "$BUILD_MARKER" ]; then
+  fail "--no-build should not run the build command"
+else
+  pass "--no-build does not run the build command"
+fi
+assert_eq "$calls_before" "$(count_lines "$DOCKER_CALL_LOG")" "--no-build makes no docker calls"
+assert_eq "var WebTag = \"${nobuild_hash}\" // ${current_branch}-${nobuild_hash}" \
+  "$(grep '^var WebTag = ' "$VERSIONCONSTANTS")" \
+  "--no-build still rewrites the tag"
+
+# 11. A missing tag variable is a hard error, not an unrelated failure.
+cat > "$VERSIONCONSTANTS" <<'EOF'
+package versionconstants
+
+var XhguiTag = "v1.0.0" // some-old-branch-v1.0.0
+EOF
+set +e
+OUTPUT="$("$AUTOTAG" WebTag ddev/dummy-image imgdir 2>&1)"
+STATUS=$?
+set -e
+if [ "$STATUS" -eq 0 ]; then
+  fail "should reject a versionconstants file missing the requested tag variable"
+else
+  pass "rejects a versionconstants file missing the requested tag variable"
+fi
+case "$OUTPUT" in
+  *"could not find"*WebTag*) pass "missing-variable message names the variable" ;;
+  *) fail "missing-variable message should name the variable: $OUTPUT" ;;
+esac
 
 if [ "$FAILURES" -eq 0 ]; then
   echo "All autotag_test.sh checks passed."

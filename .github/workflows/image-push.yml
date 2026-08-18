@@ -3,27 +3,281 @@ defaults:
   run:
     shell: bash
 
-# Placeholder for #8609 phase 2 (fork-safe automatic image build/push). This
-# do-nothing stub exists only so `workflow_run` below has a registered
-# listener on the default branch before the real load/validate/push logic
-# lands - see the phase 2 PR, which will replace this file's contents via
-# rebase. `workflow_run` only fires for a listener that already exists on the
-# default branch, so this stub unblocks testing that dependency ahead of the
-# full PR.
+# Trusted side of the fork-safe build/push split for #8609 phase 2.
+# Triggered by completion of the "Image build" workflow, using the
+# image-push.yml that lives on the default branch - never the fork's copy,
+# and this workflow never checks out or executes the triggering PR's code.
+# It only loads the artifact "Image build" produced (an inert tarball plus
+# metadata) and pushes it, after re-validating the tag.
 on:
   workflow_run:
     workflows: ["Image build"]
     types: [completed]
 
+env:
+  DOCKER_ORG: "${{ vars.DOCKER_ORG || (github.repository_owner == 'ddev-test' && 'ddevhq' || 'ddev') }}"
+
 permissions:
   contents: read
 
 jobs:
-  placeholder:
-    name: "Placeholder (see #8609)"
-    if: github.event.workflow_run.conclusion == 'success'
+  # Ungated on purpose: asking a maintainer to approve a push only to discover
+  # the run built nothing trains people to click Approve without looking.
+  check-artifacts:
+    name: Check for built images
+    # Only fork completions of "Image build" ever produce artifacts here -
+    # the non-fork path pushes directly in that workflow's build-and-push job.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name != github.event.workflow_run.repository.full_name
     runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+    outputs:
+      has_artifacts: ${{ steps.check.outputs.has_artifacts }}
+      images: ${{ steps.check.outputs.images }}
     steps:
-      - name: Do nothing
+      - name: List artifacts on the triggering run
+        id: check
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const artifacts = await github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts,
+              { owner: context.repo.owner, repo: context.repo.repo,
+                run_id: context.payload.workflow_run.id });
+            const images = artifacts.filter((a) => a.name.startsWith("image-"));
+            // "Image build" names them image-<repo_suffix>-<arch>; one push job
+            // per image, since a manifest needs both arches already pushed.
+            const keys = [...new Set(images.map(
+              (a) => a.name.replace(/^image-/, "").replace(/-[^-]+$/, "")))].sort();
+            console.log(`Found ${images.length} image-* artifact(s) for ${keys.length} image(s): ${keys.join(", ")}`);
+            core.setOutput("has_artifacts", keys.length > 0 ? "true" : "false");
+            core.setOutput("images", JSON.stringify(keys));
+
+  # One gate for the whole run rather than `environment:` on the fan-out below,
+  # where every image would be a pending deployment of its own to approve.
+  approve:
+    name: "Approve: push the built image(s) to DockerHub"
+    needs: check-artifacts
+    if: needs.check-artifacts.outputs.has_artifacts == 'true'
+    runs-on: ubuntu-24.04
+    environment: image-push
+    steps:
+      - name: Record what was approved
+        env:
+          IMAGES: ${{ needs.check-artifacts.outputs.images }}
+        run: echo "Approved; pushing $(jq -r 'join(", ")' <<< "$IMAGES")"
+
+  push:
+    name: Push ${{ matrix.image }}
+    needs: [check-artifacts, approve]
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJson(needs.check-artifacts.outputs.images) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      # download-artifact needs actions:read to reach another run's artifacts.
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      # No continue-on-error: check-artifacts already established that these
+      # exist, so a failure here is a real one (an expired artifact, say) and
+      # must not be reported as "nothing needed pushing".
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          pattern: image-${{ matrix.image }}-*
+          path: artifacts
+
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v4
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Validate, load, and push the built image
+        env:
+          # From the workflow_run payload, not the artifact - see the same
+          # variable's comment in image-build-push.yml's create-manifests job.
+          ALIAS_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
-          echo "Placeholder for #8609 phase 2 - no-op until the real workflow lands."
+          set -eu -o pipefail
+          SANITIZED_BRANCH="$(echo "$ALIAS_BRANCH" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')"
+          # The revision is this workflow's own checkout (the default branch),
+          # not the fork's, so record the commit the artifact was built from.
+          export DDEV_GIT_REVISION="${{ github.event.workflow_run.head_sha }}"
+          TAG=""
+          ARCHES=""
+          REPOS=""
+
+          # download-artifact nests output in a subdirectory only when more than
+          # one artifact matched the pattern; the amd64-only db variants land flat.
+
+          # Everything under artifacts/ was written by a job that may have run
+          # fork-authored content, so the tag and every repository name is
+          # validated before it reaches a `docker push`.
+          while IFS= read -r dir; do
+            arch="$(cat "$dir/arch.txt")"
+            tag="$(cat "$dir/tag.txt")"
+
+            if ! containers/validate-image-tag.sh "$tag"; then
+              echo "image-push: refusing to push - invalid tag '$tag' from $dir" >&2
+              exit 1
+            fi
+
+            while IFS= read -r repo; do
+              [ -z "$repo" ] && continue
+              if ! containers/validate-image-repo.sh "$repo"; then
+                echo "image-push: refusing to push - disallowed repository '$repo' from $dir" >&2
+                exit 1
+              fi
+            done < "$dir/repos.txt"
+
+            docker load -i "$dir/image.tar"
+
+            while IFS= read -r repo; do
+              [ -z "$repo" ] && continue
+              docker push "${repo}:${tag}-${arch}"
+            done < "$dir/repos.txt"
+
+            TAG="$tag"
+            ARCHES="${ARCHES} ${arch}"
+            [ -n "$REPOS" ] || REPOS="$(cat "$dir/repos.txt")"
+          done < <(find artifacts -name tag.txt -printf '%h\n' | sort)
+
+          if [ -z "$TAG" ]; then
+            echo "image-push: the matrix named an image with no artifact" >&2
+            exit 1
+          fi
+
+          # Docker Hub token for deleting the intermediary per-arch tags below,
+          # same cleanup push-tagged-image.yml/push-tagged-dbimage.yml already do.
+          DOCKERHUB_JWT="$(curl -s -H "Content-Type: application/json" -X POST \
+            -d '{"username":"'"${{ vars.DOCKERHUB_USERNAME }}"'","password":"'"${DOCKERHUB_TOKEN}"'"}' \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)"
+
+          PUSHED_SUMMARY=""
+          while IFS= read -r repo; do
+            [ -z "$repo" ] && continue
+            arch_tags=()
+            for arch in $ARCHES; do
+              arch_tags+=("${repo}:${TAG}-${arch}")
+            done
+            names=(-t "${repo}:${TAG}")
+            alias_tag="${SANITIZED_BRANCH}-${TAG}"
+            if containers/validate-image-tag.sh "$alias_tag"; then
+              names+=(-t "${repo}:${alias_tag}")
+            else
+              echo "Alias '${alias_tag}' rejected; publishing only ${TAG}" >&2
+            fi
+            read -r -a annotations <<< "$(containers/image-metadata.sh annotations "$TAG")"
+            docker buildx imagetools create "${annotations[@]}" "${names[@]}" "${arch_tags[@]}"
+            # See the same note in image-build-push.yml: a Docker manifest
+            # list has nowhere to store annotations.
+            if ! docker buildx imagetools inspect --raw "${repo}:${TAG}" | jq -e '.annotations' >/dev/null 2>&1; then
+              echo "Note: ${repo}:${TAG} is not an OCI index, so index annotations were not stored." >&2
+            fi
+            PUSHED_SUMMARY="${PUSHED_SUMMARY}- \`${repo}:${TAG}\`"$'\n'
+
+            for arch in $ARCHES; do
+              echo "Removing intermediary tag ${repo}:${TAG}-${arch}"
+              curl -s -X DELETE -H "Authorization: JWT ${DOCKERHUB_JWT}" \
+                "https://hub.docker.com/v2/repositories/${repo}/tags/${TAG}-${arch}/" >/dev/null || true
+            done
+          done <<< "$REPOS"
+
+          printf '%s' "$PUSHED_SUMMARY" > summary.md
+
+      # Collected by the comment job below: a matrix job can't hand its own
+      # output to a later job, since all of them write the same output name.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: push-summary-${{ matrix.image }}
+          path: summary.md
+          retention-days: 1
+
+  comment:
+    name: Comment on the pull request
+    needs: push
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Download the per-image summaries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: push-summary-*
+          path: summaries
+
+      - name: Collect the summaries
+        id: summary
+        run: |
+          set -eu -o pipefail
+          {
+            echo "summary<<IMAGE_PUSH_EOF"
+            find summaries -name summary.md -exec cat {} + | sort
+            echo "IMAGE_PUSH_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Comment on the pull request
+        uses: actions/github-script@v9
+        env:
+          IMAGE_PUSH_SUMMARY: ${{ steps.summary.outputs.summary }}
+        with:
+          script: |
+            const headSha = context.payload.workflow_run.head_sha;
+            const headRepo = context.payload.workflow_run.head_repository;
+            if (!headRepo) {
+              console.log(`No head repository on the workflow_run event for ${headSha}, skipping comment.`);
+              return;
+            }
+            // Query the commit's own repository (the fork, for a fork PR) -
+            // listPullRequestsAssociatedWithCommit only finds a commit within
+            // the repo it's queried against, and a fork-authored commit never
+            // lives in the base repo's own history.
+            const { data: candidatePrs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: headRepo.owner.login,
+              repo: headRepo.name,
+              commit_sha: headSha,
+            });
+            const prs = candidatePrs.filter((pr) =>
+              pr.base.repo.owner.login === context.repo.owner && pr.base.repo.name === context.repo.repo);
+            if (prs.length === 0) {
+              console.log(`No pull request into ${context.repo.owner}/${context.repo.repo} associated with ${headSha} (queried ${headRepo.full_name}), skipping comment.`);
+              return;
+            }
+            // Read from env, not spliced into the script source, since the
+            // summary contains backticks that would break a template literal.
+            const summary = (process.env.IMAGE_PUSH_SUMMARY || "").trim();
+            if (!summary) {
+              core.setFailed("Push step produced no summary - nothing was pushed.");
+              return;
+            }
+            const body = `Pushed updated container image(s) for this PR:\n\n${summary}`;
+            for (const pr of prs) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body,
+              });
+            }

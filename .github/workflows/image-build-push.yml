@@ -3,13 +3,18 @@ defaults:
   run:
     shell: bash
 
-# Placeholder for #8609 phase 2 (fork-safe automatic image build/push). This
-# do-nothing stub exists only so the workflow name/triggers are registered on
-# the default branch before the real detect/approval/build logic lands - see
-# the phase 2 PR, which will replace this file's contents via rebase.
-# image-push.yml's `workflow_run` trigger only fires for a listener that
-# exists on the default branch, so this stub unblocks testing that dependency
-# ahead of the full PR.
+# In a forked PR, this workflow may run a fork's own Dockerfile/build scripts,
+# so the `build` job never references a secret - the trusted side (loading
+# the artifact `build` produces and actually pushing it) lives in
+# image-push.yml, triggered via workflow_run once this workflow completes,
+# gated behind its own approval.
+#
+# For anything else (a push, or a same-repo PR - `detect`'s `is_fork` output,
+# using the same fork-check idiom as push-tagged-image.yml), there's nothing
+# a maintainer's own branch could smuggle into a job that every other
+# secret-using workflow here doesn't already run unguarded, so
+# `build-and-push` builds and pushes directly, with no environment/approval
+# gate at all - same trust level as `main-build.yml`.
 on:
   pull_request:
     branches: [main]
@@ -22,14 +27,351 @@ on:
       - "containers/**"
       - ".github/workflows/image-build-push.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKER_ORG: "${{ vars.DOCKER_ORG || (github.repository_owner == 'ddev-test' && 'ddevhq' || 'ddev') }}"
+
 permissions:
   contents: read
 
 jobs:
-  placeholder:
-    name: "Placeholder (see #8609)"
+  detect:
+    name: Detect changed images
     runs-on: ubuntu-24.04
+    outputs:
+      build_matrix: ${{ steps.detect.outputs.build_matrix }}
+      manifest_matrix: ${{ steps.detect.outputs.manifest_matrix }}
+      needs_build: ${{ steps.detect.outputs.needs_build }}
+      is_fork: ${{ steps.fork.outputs.is_fork }}
     steps:
-      - name: Do nothing
+      - uses: actions/checkout@v7
+      - name: Compute per-image build status
+        id: detect
+        # github.head_ref is attacker-controlled (a fork may name its branch
+        # anything git accepts, quotes and backticks included), so it reaches
+        # the script as data rather than as spliced-in source.
+        env:
+          REQUIRED_IMAGE_TAG_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
-          echo "Placeholder for #8609 phase 2 - no-op until the real workflow lands."
+          set -eu -o pipefail
+          source containers/image-configs.sh
+
+          # build_matrix is one entry per (image, arch) rather than a cross
+          # product, because the older db variants are amd64-only.
+          BUILD_JSON="[]"
+          MANIFEST_JSON="[]"
+          for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
+            IFS='|' read -r repo_suffix tag_var hash_paths make_dir make_target arch_suffixed arches _ extra_repo_suffixes <<< "$entry"
+            # shellcheck disable=SC2086 # hash_paths is a space-separated path list
+            read -r state tag <<< "$(containers/required-image-tag.sh "$tag_var" $hash_paths)"
+            repo="${DOCKER_ORG}/${repo_suffix}"
+            release_tag="$(containers/release-marker.sh "$make_dir")"
+            if containers/registry-tag-exists.sh "$repo" "$tag"; then
+              if [ -z "$release_tag" ] || containers/registry-tag-exists.sh "$repo" "$release_tag"; then
+                echo "detect: ${repo}:${tag} already exists (${state}), nothing to build"
+                continue
+              fi
+              echo "detect: ${repo}:${tag} exists but ${release_tag} does not; rebuilding to publish it"
+            fi
+            echo "detect: ${repo}:${tag} needs building (${state}) for arches: ${arches}"
+            for arch in $arches; do
+              BUILD_JSON="$(echo "$BUILD_JSON" | jq -c \
+                --arg repo_suffix "$repo_suffix" \
+                --arg repo "$repo" \
+                --arg tag "$tag" \
+                --arg arch "$arch" \
+                --arg make_dir "$make_dir" \
+                --arg make_target "$make_target" \
+                --arg arch_suffixed "$arch_suffixed" \
+                --arg extra_repo_suffixes "$extra_repo_suffixes" \
+                '. + [{"repo_suffix": $repo_suffix, "repo": $repo, "tag": $tag, "arch": $arch, "make_dir": $make_dir, "make_target": $make_target, "arch_suffixed": $arch_suffixed, "extra_repo_suffixes": $extra_repo_suffixes}]')"
+            done
+            MANIFEST_JSON="$(echo "$MANIFEST_JSON" | jq -c \
+              --arg repo "$repo" \
+              --arg tag "$tag" \
+              --arg arches "$arches" \
+              --arg release_tag "$release_tag" \
+              --arg extra_repo_suffixes "$extra_repo_suffixes" \
+              '. + [{"repo": $repo, "tag": $tag, "arches": $arches, "release_tag": $release_tag, "extra_repo_suffixes": $extra_repo_suffixes}]')"
+          done
+
+          echo "build_matrix=${BUILD_JSON}" >> "$GITHUB_OUTPUT"
+          echo "manifest_matrix=${MANIFEST_JSON}" >> "$GITHUB_OUTPUT"
+          echo "detect: $(echo "$MANIFEST_JSON" | jq 'length') image(s) to build, $(echo "$BUILD_JSON" | jq 'length') build job(s)"
+          if [ "$(echo "$BUILD_JSON" | jq 'length')" -gt 0 ]; then
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Separate from the step above so nothing the per-image loop does can
+      # reach the output that decides whether the push secret gets loaded.
+      - name: Determine whether this is a fork
+        id: fork
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_OWNER: ${{ github.event.pull_request.head.repo.owner.login }}
+          BASE_OWNER: ${{ github.repository_owner }}
+        run: |
+          set -eu -o pipefail
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$HEAD_OWNER" != "$BASE_OWNER" ]; then
+            echo "is_fork=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_fork=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # create-manifests never runs for a fork, so the release names would
+      # silently be left off. Fails ahead of the build and the approval.
+      - name: Refuse a release marker on a fork
+        if: steps.fork.outputs.is_fork == 'true'
+        run: |
+          set -eu -o pipefail
+          source containers/image-configs.sh
+          for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
+            IFS='|' read -r _ _ _ make_dir _ <<< "$entry"
+            release_tag="$(containers/release-marker.sh "$make_dir")"
+            [ -n "$release_tag" ] || continue
+            echo "detect: containers/${make_dir} is stamped for release ${release_tag}, and a pull request from a fork cannot publish ${release_tag} or move latest." >&2
+            echo "detect: push the release branch to ${GITHUB_REPOSITORY} and open the pull request from there." >&2
+            exit 1
+          done
+
+  # --- Fork PRs: build with no secrets (this job never has registry
+  # credentials, so there's nothing to gain by gating it - see #8609
+  # discussion), then hand off to image-push.yml for the trusted,
+  # approval-gated push. ---
+
+  build:
+    name: Build ${{ matrix.build.repo }} (${{ matrix.build.arch }})
+    needs: detect
+    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        build: ${{ fromJson(needs.detect.outputs.build_matrix) }}
+    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build ${{ matrix.build.repo }}:${{ matrix.build.tag }}-${{ matrix.build.arch }}
+        run: |
+          set -eu -o pipefail
+          VERSION="${{ matrix.build.tag }}-${{ matrix.build.arch }}"
+          MAKE_TARGET="${{ matrix.build.make_target }}"
+          if [ "${{ matrix.build.arch_suffixed }}" = "true" ]; then
+            MAKE_TARGET="${MAKE_TARGET}_${{ matrix.build.arch }}"
+          fi
+          # DDEV_IMAGE_TAG is the tag people actually pull, recorded in the
+          # com.ddev.image-tag label; VERSION is the throwaway per-arch tag.
+          make -C "containers/${{ matrix.build.make_dir }}" "$MAKE_TARGET" \
+            VERSION="$VERSION" DDEV_IMAGE_TAG="${{ matrix.build.tag }}"
+
+          REPOS="${{ matrix.build.repo }}"
+          for suffix in ${{ matrix.build.extra_repo_suffixes }}; do
+            REPOS="${REPOS} ${DOCKER_ORG}/${suffix}"
+          done
+
+          REFS=()
+          : > repos.txt
+          for repo in $REPOS; do
+            REFS+=("${repo}:${VERSION}")
+            echo "$repo" >> repos.txt
+          done
+          docker save "${REFS[@]}" -o image.tar
+          echo -n "${{ matrix.build.tag }}" > tag.txt
+          echo -n "${{ matrix.build.arch }}" > arch.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          # repo_suffix, not make_dir: all 20 db variants share one make_dir.
+          name: image-${{ matrix.build.repo_suffix }}-${{ matrix.build.arch }}
+          path: |
+            image.tar
+            repos.txt
+            tag.txt
+            arch.txt
+          # image-push.yml can't download an expired artifact, and the approval
+          # it waits on is a human one that may not come the same day.
+          retention-days: 7
+
+  # --- Pushes and same-repo PRs: no fork content ever runs here, so build
+  # and push directly with no environment/approval gate - same trust level
+  # as main-build.yml, which already uses this same secret unguarded. ---
+
+  build-and-push:
+    name: Build and push ${{ matrix.build.repo }} (${{ matrix.build.arch }})
+    needs: detect
+    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'false'
+    strategy:
+      fail-fast: false
+      matrix:
+        build: ${{ fromJson(needs.detect.outputs.build_matrix) }}
+    runs-on: ${{ matrix.build.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v4
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.build.repo }}:${{ matrix.build.tag }}-${{ matrix.build.arch }}
+        run: |
+          set -eu -o pipefail
+          VERSION="${{ matrix.build.tag }}-${{ matrix.build.arch }}"
+          MAKE_TARGET="${{ matrix.build.make_target }}"
+          if [ "${{ matrix.build.arch_suffixed }}" = "true" ]; then
+            MAKE_TARGET="${MAKE_TARGET}_${{ matrix.build.arch }}"
+          fi
+          # See the DDEV_IMAGE_TAG note in the fork-side `build` job above.
+          make -C "containers/${{ matrix.build.make_dir }}" "$MAKE_TARGET" \
+            VERSION="$VERSION" DDEV_IMAGE_TAG="${{ matrix.build.tag }}"
+
+          REPOS="${{ matrix.build.repo }}"
+          for suffix in ${{ matrix.build.extra_repo_suffixes }}; do
+            REPOS="${REPOS} ${DOCKER_ORG}/${suffix}"
+          done
+          for repo in $REPOS; do
+            docker push "${repo}:${VERSION}"
+          done
+
+  create-manifests:
+    name: Create manifest for ${{ matrix.manifest.repo }}
+    needs: [detect, build-and-push]
+    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'false'
+    strategy:
+      fail-fast: false
+      matrix:
+        manifest: ${{ fromJson(needs.detect.outputs.manifest_matrix) }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Load 1password secret(s)
+        uses: 1password/load-secrets-action@v4
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Create manifest and clean up per-arch tags
+        id: manifest
+        env:
+          # Trusted context, not the matrix: this is the readable alias
+          # published next to the hash tag, so it must not be fork-controlled
+          # beyond the branch name itself, which is sanitized below.
+          ALIAS_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          set -eu -o pipefail
+          TAG="${{ matrix.manifest.tag }}"
+          RELEASE_TAG="${{ matrix.manifest.release_tag }}"
+          # The oldest db variants are amd64-only, so the arch list comes from
+          # detect rather than being assumed to be both.
+          ARCHES="${{ matrix.manifest.arches }}"
+          ALIAS="$(echo "$ALIAS_BRANCH" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')-${TAG}"
+          if ! containers/validate-image-tag.sh "$ALIAS"; then
+            echo "Alias '${ALIAS}' rejected; publishing only ${TAG}" >&2
+            ALIAS=""
+          fi
+          # Descriptive metadata on the index the tag points at - the standard
+          # equivalent of a comment on a tag. See containers/image-metadata.sh.
+          read -r -a ANNOTATIONS <<< "$(containers/image-metadata.sh annotations "$TAG")"
+
+          DOCKERHUB_JWT="$(curl -s -H "Content-Type: application/json" -X POST \
+            -d '{"username":"'"${{ vars.DOCKERHUB_USERNAME }}"'","password":"'"${DOCKERHUB_TOKEN}"'"}' \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)"
+
+          REPOS="${{ matrix.manifest.repo }}"
+          for suffix in ${{ matrix.manifest.extra_repo_suffixes }}; do
+            REPOS="${REPOS} ${DOCKER_ORG}/${suffix}"
+          done
+
+          PUSHED_SUMMARY=""
+          for repo in $REPOS; do
+            ARCH_TAGS=()
+            for arch in $ARCHES; do
+              ARCH_TAGS+=("${repo}:${TAG}-${arch}")
+            done
+            NAMES=(-t "${repo}:${TAG}")
+            [ -n "$ALIAS" ] && NAMES+=(-t "${repo}:${ALIAS}")
+            # The marker stays in the Dockerfile after the release merges, so
+            # without this an unrelated later change would move vX.Y.Z and
+            # latest onto a post-release build. First writer wins.
+            RELEASED=false
+            if [ -n "$RELEASE_TAG" ]; then
+              if containers/registry-tag-exists.sh "$repo" "$RELEASE_TAG"; then
+                echo "${repo}:${RELEASE_TAG} already published; leaving it and latest alone"
+              else
+                NAMES+=(-t "${repo}:${RELEASE_TAG}" -t "${repo}:latest")
+                RELEASED=true
+              fi
+            fi
+            # A concurrent build of identical content (tags are content
+            # hashes, not branch-scoped) can publish repo:TAG first and
+            # delete the per-arch tags behind it - source from it instead.
+            if containers/registry-tag-exists.sh "$repo" "$TAG"; then
+              echo "${repo}:${TAG} already published by a concurrent build; adding aliases from it"
+              docker buildx imagetools create "${ANNOTATIONS[@]}" "${NAMES[@]}" "${repo}:${TAG}"
+            else
+              docker buildx imagetools create "${ANNOTATIONS[@]}" "${NAMES[@]}" "${ARCH_TAGS[@]}"
+            fi
+            # imagetools inherits the source media type and a Docker manifest
+            # list has nowhere to put annotations, so say when they were
+            # dropped rather than leaving it to be discovered later.
+            if ! docker buildx imagetools inspect --raw "${repo}:${TAG}" | jq -e '.annotations' >/dev/null 2>&1; then
+              echo "Note: ${repo}:${TAG} is not an OCI index, so index annotations were not stored." >&2
+            fi
+            SUMMARY_NAMES="\`${repo}:${TAG}\`"
+            if [ "$RELEASED" = true ]; then
+              SUMMARY_NAMES="${SUMMARY_NAMES}, also published as \`${RELEASE_TAG}\` and \`latest\`"
+            fi
+            PUSHED_SUMMARY="${PUSHED_SUMMARY}- ${SUMMARY_NAMES}"$'\n'
+            for arch in $ARCHES; do
+              echo "Removing intermediary tag ${repo}:${TAG}-${arch}"
+              curl -s -X DELETE -H "Authorization: JWT ${DOCKERHUB_JWT}" \
+                "https://hub.docker.com/v2/repositories/${repo}/tags/${TAG}-${arch}/" >/dev/null || true
+            done
+          done
+
+          {
+            echo "summary<<IMAGE_PUSH_EOF"
+            echo "$PUSHED_SUMMARY"
+            echo "IMAGE_PUSH_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Comment on the pull request
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v9
+        env:
+          IMAGE_PUSH_SUMMARY: ${{ steps.manifest.outputs.summary }}
+        with:
+          script: |
+            const summary = (process.env.IMAGE_PUSH_SUMMARY || "").trim();
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Pushed updated container image(s) for this PR:\n\n${summary}`,
+            });

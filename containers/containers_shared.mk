@@ -13,10 +13,14 @@ DDEV_IMAGE_TAG ?= $(VERSION)
 
 DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
 
+# Standard OCI descriptive metadata (source, revision, created, ...) shared with
+# every other image and with the push workflows - see containers/image-metadata.sh.
+DDEV_IMAGE_LABELS = $(shell ../image-metadata.sh labels $(DDEV_IMAGE_TAG) $(notdir $(DOCKER_REPO)))
+
 .PHONY: container push
 
 container: container-name
-	docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)" --label "com.ddev.image-tag=$(DDEV_IMAGE_TAG)" .
+	docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)" $(DDEV_IMAGE_LABELS) .
 
 container-name:
 	@echo "container: $(DOCKER_REPO):$(VERSION)"
@@ -35,6 +39,6 @@ push:
 			$${tags} \
 			--label "build-info=$(DOCKER_ORG)/$${item}:$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" \
 			--label "maintainer=DDEV <support@ddev.com>" \
-			--label "com.ddev.image-tag=$(DDEV_IMAGE_TAG)" \
+			$$(../image-metadata.sh labels "$(DDEV_IMAGE_TAG)" "$${item}") \
 			$(DOCKER_ARGS) . ; \
 	done

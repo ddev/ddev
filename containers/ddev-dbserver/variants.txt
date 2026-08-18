@@ -1,0 +1,36 @@
+# The ddev-dbserver variant matrix - one line per variant:
+#
+#   <db_type>_<major_version> <arch> [<arch> ...]
+#
+# Single source of truth, read through variants.sh in this directory. Order is
+# significant: it's the order build targets are emitted in.
+#
+# Consumers:
+#   containers/ddev-dbserver/Makefile          BUILD/SINGLE_ARCH/TEST targets
+#   containers/image-configs.sh                automatic build/push flow
+#   containers/validate-image-repo.sh          push allowlist
+#   .github/workflows/push-tagged-dbimage.yml  manual push matrix
+#
+# Adding or removing a line changes this directory's content hash, so every
+# variant is rebuilt and re-pushed under a new tag - which is what has to
+# happen, since they all share BaseDBTag.
+mysql_9.7 amd64 arm64
+mysql_8.4 amd64 arm64
+mysql_8.0 amd64 arm64
+mysql_5.7 amd64 arm64
+mysql_5.6 amd64
+mysql_5.5 amd64
+mariadb_12.3 amd64 arm64
+mariadb_11.8 amd64 arm64
+mariadb_11.4 amd64 arm64
+mariadb_10.11 amd64 arm64
+mariadb_10.8 amd64 arm64
+mariadb_10.7 amd64 arm64
+mariadb_10.6 amd64 arm64
+mariadb_10.5 amd64 arm64
+mariadb_10.4 amd64 arm64
+mariadb_10.3 amd64 arm64
+mariadb_10.2 amd64 arm64
+mariadb_10.1 amd64 arm64
+mariadb_10.0 amd64
+mariadb_5.5 amd64

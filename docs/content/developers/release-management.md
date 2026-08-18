@@ -65,8 +65,22 @@ The following “Repository secret” environment variables must be configured i
 
 * Create and execute a test plan.
 * Make sure [`version-history.md`](https://github.com/ddev/ddev/blob/main/version-history.md) is up to date.
-* Make sure the Docker images are all tagged and pushed.
-* Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/main/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
+* Run `make release-prep TAG=vX.Y.Z` and open a pull request with the result, so every image is rebuilt, pushed and tested under the release. See [Preparing the image tags](#preparing-the-image-tags-make-release-prep) below.
+
+### Preparing the image tags: `make release-prep`
+
+`make release-prep TAG=v1.25.4` — or bare `make release-prep`, which asks for the tag — does the source-file half of a release:
+
+* Stamps `# ddev-release-marker: v1.25.4` into every image's `Dockerfile`, replacing any marker left by a previous release. A Dockerfile comment is stripped by the parser, so this moves the image's content hash without changing a single layer of the image it produces, which is what makes CI rebuild all of them.
+* Rewrites each tag in [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/main/pkg/versionconstants/versionconstants.go) to the resulting hash, and each `<TagVar>Branch` to `v1.25.4` so `ddev version` names the release.
+
+It builds nothing and commits nothing. Commit the result and open a pull request: the [Image build](https://github.com/ddev/ddev/blob/main/.github/workflows/image-build-push.yml) workflow builds every image, publishes it under its content hash *and* under `v1.25.4` and `latest`, and the test suites then run against those exact images, before the release is cut. Nothing has to be dispatched by hand.
+
+Open that pull request from a branch in this repository, not from a fork. `create-manifests`, the job that adds the release names, doesn't run for fork pull requests, so a release branch pushed to a fork would build every image and quietly leave `vX.Y.Z` and `latest` off. `detect` fails the run when it finds a release marker on a fork pull request, before anything is built.
+
+Because `latest` moves when that pull request builds rather than when the GitHub release is created, don't run `release-prep` for an edge/prerelease unless you want `latest` to follow it.
+
+The trailing `// <branch>-<hash>` comment on each tag keeps naming the branch rather than the release, because that is the alias the push actually publishes; `containers/validate-image-tag.sh` rejects an alias whose prefix is release-shaped, so a `v1.25.4-<hash>` tag never exists.
 
 ### Actual Release Creation
 
@@ -74,9 +88,35 @@ The following “Repository secret” environment variables must be configured i
 2. Make sure you're about to create the right release tag.
 3. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
 
+## Automatic Image Build and Push
+
+Any pull request that changes `containers/` — including from a fork — is built and pushed automatically by the [Image build](https://github.com/ddev/ddev/blob/main/.github/workflows/image-build-push.yml) / [Image push](https://github.com/ddev/ddev/blob/main/.github/workflows/image-push.yml) workflow pair. See [Automatic Image Build and Push](building-contributing.md#automatic-image-build-and-push) in the contributing guide for how the flow works and why it's safe to run on fork-authored Dockerfiles.
+
+A release no longer needs any of this. When `detect` sees a release marker in an image's `Dockerfile`, `create-manifests` publishes `vX.Y.Z` and `latest` as further names on the manifest it is already creating — the same build the release pull request's tests then run against, rather than a separate rebuild. It skips both if `vX.Y.Z` already exists in the registry, so the marker left behind after the release merges can't move a released tag onto a later build.
+
+The two workflows below (manual `workflow_dispatch`) remain for re-pushing a specific tag by hand. Their `tag` input is optional: leave it empty and the workflow uses the tag the checkout actually needs, which is safer than retyping a content hash.
+
+When the tag is a content hash, these workflows also publish the `<branch>-<hash>` alias next to it — the same second name the automatic flow creates — so a manual push doesn't leave a bare hash with nothing readable beside it in the registry. A `vX.Y.Z` tag is already readable and gets no alias.
+
+A `containers/ddev-dbserver` change builds and pushes all 20 database variants (36 jobs), because they all share a single `BaseDBTag`. That variant matrix lives in `containers/ddev-dbserver/variants.txt` and is read by `variants.sh`, which also generates that directory's make targets, the automatic flow's image list, and `push-tagged-dbimage.yml`'s matrix — add a database version there and every consumer picks it up.
+
+### One-time setup: the `image-push` GitHub Environment
+
+Fork PRs build with no registry credentials at all (nothing to gain by gating that step), then go through a single approval before the built image is actually pushed, gated by the `image-push` GitHub Environment (Settings → Environments):
+
+1. Create the environment `image-push`.
+2. Add required reviewers (the maintainers/dev team).
+3. Leave `PUSH_SERVICE_ACCOUNT_TOKEN` as a repository secret. The environment gates the approval, not the secret: one job holds the approval and the per-image push jobs run after it, so a run costs one approval rather than one per image, and those jobs read the repository secret — the same one the non-fork path has always used.
+
+This approval only applies to fork PRs. A push to `main` or a same-repo PR builds and pushes without any approval at all, using the repository-level `PUSH_SERVICE_ACCOUNT_TOKEN` secret directly (that path never declares `environment:` on its jobs, so this environment's protection rules don't apply to it).
+
+When testing this on `ddev-test/ddev`, do the same steps there first, and confirm `vars.DOCKER_ORG` on that repository points at the DockerHub org used for testing.
+
+Since a job referencing an environment that doesn't exist yet gets auto-created with no protection rules (silently *not* gating), verify the environment actually has a `required_reviewers` rule before relying on it, e.g. `gh api repos/<owner>/<repo>/environments/image-push`.
+
 ## Pushing Docker Images with the GitHub Actions Workflow
 
-The easiest way to push Docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [ddev/ddev](https://github.com/ddev/ddev) repository.
+The easiest way to push Docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [ddev/ddev](https://github.com/ddev/ddev) repository. For a normal container change on a pull request, you shouldn't need this — see [Automatic Image Build and Push](#automatic-image-build-and-push) above.
 
 ### Actual release creation
 
@@ -88,7 +128,7 @@ You can push all images besides `ddev-dbserver` at <https://github.com/ddev/ddev
 
 You can push `ddev-dbserver` images at <https://github.com/ddev/ddev/actions/workflows/push-tagged-dbimage.yml>
 
-If you need to push from a forked PR, you’ll have to do this from your fork (for example, `https://github.com/rfay/ddev/actions/workflows/push-tagged-image.yml`), and you’ll have to specify the branch on the fork. This requires setting the `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` secrets on the forked PR, for example `https://github.com/rfay/ddev/settings/secrets/actions`. You can do the same with `ddev-dbserver` at `https://github.com/rfay/ddev/actions/workflows/push-tagged-dbimage.yml` for example.
+A forked PR that changes a container image no longer needs any of this — see [Automatic Image Build and Push](#automatic-image-build-and-push) above. The fork-your-own-secrets workaround described in earlier versions of this doc is superseded by that flow.
 
 * Visit `https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml`.
 * Click the “Push tagged image” workflow on the left side of the page.
