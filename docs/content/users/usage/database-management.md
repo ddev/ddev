@@ -86,7 +86,7 @@ ddev start --seed-snapshot=~/datasets/production-mariadb_11.8.zst
 
 A snapshot can only seed the database type and version it was made from, which is why the standard `-<type>_<version>.{zst,gz}` suffix `ddev snapshot` gives it has to stay on the filename.
 
-Unlike other snapshots, `seed` isn't meant to be restored with `ddev snapshot restore` — it's only consulted for an uninitialized database. You can choose to commit the resulting `seed-*` file in `.ddev/db_snapshots` to your repository if you want teammates and CI to get the same starting dataset on their first `ddev start`, but it may be large and you may want to use another distribution technique.
+You can choose to commit the resulting `seed-*` file in `.ddev/db_snapshots` to your repository if you want teammates and CI to get the same starting dataset on their first `ddev start`, but it may be large and you may want to use another distribution technique.
 
 A `seed` snapshot is listed as [custom configuration](../extend/customization-extendibility.md), so `ddev start` and [`ddev utility check-custom-config`](../usage/commands.md#utility-check-custom-config) both show it. When `ddev start` actually seeds a fresh database volume, it says so, naming the snapshot and its size and warning that a large one may take a while:
 

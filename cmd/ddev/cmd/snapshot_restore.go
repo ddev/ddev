@@ -12,10 +12,10 @@ import (
 var DdevSnapshotRestoreCommand = &cobra.Command{
 	Use:   "restore [snapshot_name]",
 	Short: "Restore a project's database to the provided snapshot version.",
-	Long:  `Uses mariabackup command to restore a project database to a particular snapshot from the .ddev/db_snapshots folder.`,
+	Long:  `Uses mariabackup or xtrabackup command to restore a project database to a particular snapshot from the .ddev/db_snapshots folder.`,
 	Example: `ddev snapshot restore d8git_20180717203845
 ddev snapshot restore --latest
-ddev snapshot restore --force d8git_20180717203845`,
+ddev snapshot restore --force t3v14-latest`,
 	Run: func(_ *cobra.Command, args []string) {
 		var snapshotName string
 

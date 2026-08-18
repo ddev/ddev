@@ -1256,6 +1256,9 @@ ddev restart --all
 
 # Throw away the current database and restart with a new, empty one
 ddev restart --reset-database
+
+# Reset and initialize with external snapshot without confirmation
+ddev restart --reset-database --seed-snapshot=/tmp/newsnapshot-mariadb_11.8.zst -y
 ```
 
 ## `sake`
@@ -1387,7 +1390,7 @@ Restores a database snapshot from the `.ddev/db_snapshots` directory.
 
 Flags:
 
-* `--force`, `-f`: Restore a snapshot made by a different version of the same database server, which may not come up.
+* `--force`, `-f`: Restore a snapshot made by a different version of the same database server, which may not succeed.
 * `--latest`: Use the latest snapshot.
 
 Example:

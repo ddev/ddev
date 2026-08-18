@@ -34,7 +34,9 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 ddev start <project1> <project2>
 ddev start --all
 ddev start --seed-snapshot=mysnapshot
-ddev start --reset-database`,
+ddev start --seed-snapshot=$HOME/tmp/mysnapshot-mariadb_11.8.zst --reset-database -y
+ddev start --reset-database
+ddev start --reset-database -y`,
 	PreRun: func(_ *cobra.Command, _ []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
