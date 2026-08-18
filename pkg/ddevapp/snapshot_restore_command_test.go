@@ -1,6 +1,8 @@
 package ddevapp
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -52,4 +54,30 @@ func TestSnapshotRestoreContainerCommand(t *testing.T) {
 		require.Contains(t, command, "/mnt/snapshots/seed-postgres_"+pgVersion+".zst")
 		require.True(t, strings.Index(command, "mkdir -p") < strings.Index(command, "chmod 700"), "the data directory has to exist before it can be chmodded")
 	}
+}
+
+// TestResolveSnapshotSourceTilde verifies that a `~`-prefixed path is expanded
+// against the home directory, since a shell only does that for a bare
+// argument, not for the value of a `--flag=~/...` (used by both --seed-snapshot
+// and `ddev snapshot restore`).
+func TestResolveSnapshotSourceTilde(t *testing.T) {
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+
+	outsideDir, err := os.MkdirTemp(home, "ddev-resolve-snapshot-source-test-")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.RemoveAll(outsideDir) })
+
+	snapshotFile := filepath.Join(outsideDir, "outside-mariadb_11.8.zst")
+	require.NoError(t, os.WriteFile(snapshotFile, []byte("fake snapshot"), 0644))
+
+	rel, err := filepath.Rel(home, snapshotFile)
+	require.NoError(t, err)
+	tildePath := filepath.Join("~", rel)
+
+	app := &DdevApp{Name: "test", AppRoot: t.TempDir()}
+	hostPath, mountDir, err := resolveSnapshotSource(tildePath, app)
+	require.NoError(t, err)
+	require.Equal(t, snapshotFile, hostPath)
+	require.Equal(t, outsideDir, mountDir)
 }

@@ -430,7 +430,12 @@ func (app *DdevApp) snapshotRestoreContainerCommand(snapshotPath string) string 
 // something an external path does not.
 func resolveSnapshotSource(nameOrPath string, app *DdevApp) (hostPath string, mountDir string, err error) {
 	if filepath.IsAbs(nameOrPath) || strings.ContainsAny(nameOrPath, `/\`) {
-		if hostPath, err = filepath.Abs(nameOrPath); err != nil {
+		// Shell doesn't expand ~ inside --flag=value, so it reaches us literally.
+		expanded, err := util.ExpandHomedir(nameOrPath)
+		if err != nil {
+			return "", "", fmt.Errorf("unable to resolve %s: %v", nameOrPath, err)
+		}
+		if hostPath, err = filepath.Abs(expanded); err != nil {
 			return "", "", fmt.Errorf("unable to resolve %s: %v", nameOrPath, err)
 		}
 		if !fileutil.FileExists(hostPath) || fileutil.IsDirectory(hostPath) {
