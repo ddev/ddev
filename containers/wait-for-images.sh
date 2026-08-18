@@ -46,10 +46,9 @@ for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
   read -r state tag <<< "$("$REQUIRED_IMAGE_TAG" "$tag_var" $hash_paths)"
   image_repo="${DOCKER_ORG}/${repo_suffix}"
 
-  # A changed image that `make` builds here needs no registry round trip. One
-  # it doesn't build - every ddev-dbserver variant but the default - still
-  # does, and the tag is the bare content hash, so it is the same string
-  # image-build-push.yml pushed regardless of branch. Wait for it.
+  # `make` builds a changed image locally here, so only images it doesn't
+  # build - every ddev-dbserver variant but the default - need to wait for
+  # image-build-push.yml's push of the same bare-hash tag.
   if [ "$state" != "committed" ] && [ "$built_by_make" = "true" ]; then
     echo "wait-for-images.sh: ${image_repo} content differs from versionconstants.go; make builds ${tag} locally, not waiting"
     continue

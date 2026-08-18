@@ -127,13 +127,12 @@ jobs:
           ARCHES=""
           REPOS=""
 
-          # Located by their contents: download-artifact only gives an artifact
-          # a directory of its own when more than one matched the pattern, and
-          # the amd64-only db variants have a single artifact.
-          #
-          # Everything read out of artifacts/ was written by a job that may
-          # have run fork-authored content, so the tag and every repository
-          # name is validated before it reaches a `docker push`.
+          # download-artifact nests output in a subdirectory only when more than
+          # one artifact matched the pattern; the amd64-only db variants land flat.
+
+          # Everything under artifacts/ was written by a job that may have run
+          # fork-authored content, so the tag and every repository name is
+          # validated before it reaches a `docker push`.
           while IFS= read -r dir; do
             arch="$(cat "$dir/arch.txt")"
             tag="$(cat "$dir/tag.txt")"

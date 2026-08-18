@@ -318,7 +318,7 @@ An image's tag is the bare content hash of the files it's built from — `ddev/d
 
 Opening a pull request that touches `containers/` triggers the [Image build](https://github.com/ddev/ddev/actions/workflows/image-build-push.yml) workflow. A `detect` job always runs first: it recomputes each image's content hash and checks whether that tag is already in the registry. If it is, there's nothing to build — so a pull request that touches `containers/` without changing an image costs one registry lookup per image and no build.
 
-The same resolution drives `containers/wait-for-images.sh`, which every test runner calls before pulling anything: it waits only for tags this commit will genuinely pull, and doesn't wait at all for an image whose content changed, since `make` builds that one locally on the runner.
+The same resolution drives `containers/wait-for-images.sh`, which every test runner calls before pulling anything: it waits only for tags this commit will pull, and doesn't wait at all for an image whose content changed, since `make` builds that one locally on the runner.
 
 Changing `containers/ddev-dbserver` is the one case where `make` alone isn't enough. Every database variant shares a single `BaseDBTag`, so a dbserver change moves the tag for all 20 of them at once, while `make` only builds the default `mariadb_11.8` locally — the other 19 can only come from the registry. CI builds and pushes the whole matrix (36 jobs, from `containers/ddev-dbserver/variants.txt`), so **run `make` and commit the `versionconstants.go` change**; `wait-for-images.sh` stops the test run with that instruction if you don't.
 
