@@ -74,6 +74,9 @@ while IFS= read -r varname; do
 done < <(MSYS_NO_PATHCONV=1 git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)
 git update-ref -d refs/public-variables-tmp
 
+# A changed image may still be waiting on image-push.yml's approval
+"$(dirname "$0")/../containers/wait-for-images.sh"
+
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
 export DDEV_NONINTERACTIVE=true

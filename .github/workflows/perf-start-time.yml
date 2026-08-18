@@ -87,6 +87,11 @@ jobs:
           go-version: '>=1.23'
           check-latest: true
 
+      - name: Wait for pushed images
+        # This runner holds no push credentials, so it can race
+        # image-push.yml's approval/build/push - see containers/wait-for-images.sh.
+        run: containers/wait-for-images.sh
+
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         with:
