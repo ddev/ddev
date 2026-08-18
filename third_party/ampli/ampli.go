@@ -356,6 +356,7 @@ func (e projectEvent) project() {
 
 type ProjectBuilder interface {
 	Build() ProjectEvent
+	AddOnRepositories(addOnRepositories []string) ProjectBuilder
 	AddOns(addOns []string) ProjectBuilder
 	BindAllInterfaces(bindAllInterfaces bool) ProjectBuilder
 	Ci(ci bool) ProjectBuilder
@@ -445,6 +446,12 @@ func (b *projectBuilder) WebserverType(webserverType string) interface {
 
 func (b *projectBuilder) XhProfMode(xhProfMode string) ProjectBuilder {
 	b.properties[`XHProf Mode`] = xhProfMode
+
+	return b
+}
+
+func (b *projectBuilder) AddOnRepositories(addOnRepositories []string) ProjectBuilder {
+	b.properties[`Add-on Repositories`] = addOnRepositories
 
 	return b
 }

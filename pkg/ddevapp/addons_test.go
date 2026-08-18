@@ -815,6 +815,71 @@ project_files:
 	require.Len(t, manifests, 0, "Should have no addons remaining")
 }
 
+// TestGetInstalledAddonRepositories verifies that GetInstalledAddonRepositories
+// stays index-aligned with GetInstalledAddonNames, and reports an empty string
+// for add-ons installed from a non-GitHub source (directory/tarball/URL).
+func TestGetInstalledAddonRepositories(t *testing.T) {
+	site := testcommon.CreateTmpDir(t.Name() + "_site")
+	defer func() {
+		err := os.RemoveAll(site)
+		assert.NoError(t, err)
+	}()
+
+	app, err := ddevapp.NewApp(site, false)
+	require.NoError(t, err)
+
+	addonMetadataDir := app.GetConfigPath("addon-metadata")
+	err = os.RemoveAll(addonMetadataDir)
+	require.NoError(t, err)
+
+	ddevDir := app.GetConfigPath("")
+	err = os.RemoveAll(ddevDir)
+	require.NoError(t, err)
+	err = os.MkdirAll(ddevDir, 0755)
+	require.NoError(t, err)
+
+	githubAddonDir := testcommon.CreateTmpDir(t.Name() + "_github")
+	defer func() {
+		err := os.RemoveAll(githubAddonDir)
+		assert.NoError(t, err)
+	}()
+	err = fileutil.TemplateStringToFile("name: github-addon\nproject_files: [github-config.yaml]\n", nil, filepath.Join(githubAddonDir, "install.yaml"))
+	require.NoError(t, err)
+	err = fileutil.TemplateStringToFile("#ddev-generated\n", nil, filepath.Join(githubAddonDir, "github-config.yaml"))
+	require.NoError(t, err)
+	err = ddevapp.InstallAddonFromDirectory(app, githubAddonDir, "owner/github-addon", "v1.0.0", false)
+	require.NoError(t, err)
+
+	localAddonDir := testcommon.CreateTmpDir(t.Name() + "_local")
+	defer func() {
+		err := os.RemoveAll(localAddonDir)
+		assert.NoError(t, err)
+	}()
+	err = fileutil.TemplateStringToFile("name: local-addon\nproject_files: [local-config.yaml]\n", nil, filepath.Join(localAddonDir, "install.yaml"))
+	require.NoError(t, err)
+	err = fileutil.TemplateStringToFile("#ddev-generated\n", nil, filepath.Join(localAddonDir, "local-config.yaml"))
+	require.NoError(t, err)
+	// A directory-sourced install records the local path as the repository,
+	// which is not a clean "owner/repo" reference.
+	err = ddevapp.InstallAddonFromDirectory(app, localAddonDir, localAddonDir, "unknown", false)
+	require.NoError(t, err)
+
+	names := ddevapp.GetInstalledAddonNames(app)
+	repositories := ddevapp.GetInstalledAddonRepositories(app)
+	require.Len(t, repositories, len(names))
+
+	for i, name := range names {
+		switch name {
+		case "github-addon":
+			require.Equal(t, "owner/github-addon", repositories[i])
+		case "local-addon":
+			require.Equal(t, "", repositories[i])
+		default:
+			t.Fatalf("unexpected addon name %q", name)
+		}
+	}
+}
+
 // TestGetAddonTarballURL tests the GetAddonTarballURL function
 func TestGetAddonTarballURL(t *testing.T) {
 	if !github.HasGitHubToken() {

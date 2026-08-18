@@ -79,6 +79,7 @@ client.Track(&analytics.Track{
     "Webserver Type":              "nginx-fpm",
     "XHProf Mode":                 "xhgui",
     "Add-ons":                     []string{"redis"},
+    "Add-on Repositories":         []string{"ddev/ddev-redis"},
     "Bind All Interfaces":         false,
     "CI":                          false,
     "Containers":                  []string{"db", "redis", "web"},
