@@ -155,10 +155,37 @@ When an add-on declares dependencies in its `install.yaml`, DDEV will automatica
 
 DDEV will detect and prevent circular dependencies with clear error messages.
 
-In general, you can run `ddev add-on get` multiple times without doing any damage. Updating an add-on can be done by running `ddev add-on get <add-on-name>`. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
+In general, you can run `ddev add-on get` multiple times without doing any damage. Updating an add-on can be done by running `ddev add-on get <add-on-name>`, or use `ddev add-on update` to update every installed add-on at once. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
 
 !!!tip "How to install add-ons from private repositories?"
     See [Private Add-ons](../extend/using-add-ons.md#private-add-ons) for details.
+
+### `add-on update`
+
+Check installed add-ons for a newer release and install it. If no add-on names are provided, all installed add-ons are checked. Add-ons installed from a local directory or from a non-GitHub tarball URL can't be checked automatically and are skipped.
+
+Flags:
+
+* `--dry-run`: Show which add-ons would be updated without installing anything (default `false`)
+* `--project <projectName>`: Specify a project to update the add-ons for. Defaults to checking for a project in the current directory.
+* `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
+
+Example:
+
+```shell
+# Check and update all installed add-ons
+ddev add-on update
+
+# Update a single installed add-on
+ddev add-on update redis
+ddev add-on update ddev/ddev-redis
+
+# See what would be updated without installing anything
+ddev add-on update --dry-run
+
+# Update add-ons for a specific project
+ddev add-on update --project my-project
+```
 
 ### `add-on remove`
 
