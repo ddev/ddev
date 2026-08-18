@@ -22,10 +22,14 @@
 # no wait.
 #
 # Env:
-#   WAIT_FOR_IMAGES_ATTEMPTS - poll attempts before giving up (default 40)
+#   WAIT_FOR_IMAGES_ATTEMPTS - poll attempts before giving up (default 80)
 #   WAIT_FOR_IMAGES_SLEEP    - seconds between attempts (default 30)
 #
-# Defaults give ~20 minutes - ddev-webserver alone takes ~6-8 minutes to build.
+# Defaults give ~40 minutes. image-build-push.yml's own build fan-out alone
+# regularly takes ~17 minutes before image-push.yml even starts, and a large
+# image's push (e.g. ddev-dbserver-mysql-9.7) adds a few more on top of a
+# maintainer's approval - a 20-minute budget left ~0 margin and timed out
+# waiting on PR #8705 with an otherwise-prompt approval. See #8609.
 
 set -eu -o pipefail
 
@@ -34,7 +38,7 @@ REGISTRY_TAG_EXISTS="$SCRIPT_DIR/registry-tag-exists.sh"
 REQUIRED_IMAGE_TAG="$SCRIPT_DIR/required-image-tag.sh"
 DOCKER_ORG="${DOCKER_ORG:-ddev}"
 
-ATTEMPTS="${WAIT_FOR_IMAGES_ATTEMPTS:-40}"
+ATTEMPTS="${WAIT_FOR_IMAGES_ATTEMPTS:-80}"
 SLEEP_SECONDS="${WAIT_FOR_IMAGES_SLEEP:-30}"
 
 # shellcheck source=containers/image-configs.sh

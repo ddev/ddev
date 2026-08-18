@@ -34,7 +34,10 @@ jobs:
   build:
     name: Docs Quickstart test
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    # 90 was already tight for the quickstart-test suite alone; the "Wait for
+    # pushed images" step can now add up to ~40 more minutes (see
+    # containers/wait-for-images.sh) before the suite even starts.
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v7
         with:
