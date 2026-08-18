@@ -328,7 +328,15 @@ jobs:
                 RELEASED=true
               fi
             fi
-            docker buildx imagetools create "${ANNOTATIONS[@]}" "${NAMES[@]}" "${ARCH_TAGS[@]}"
+            # A concurrent build of identical content (tags are content
+            # hashes, not branch-scoped) can publish repo:TAG first and
+            # delete the per-arch tags behind it - source from it instead.
+            if containers/registry-tag-exists.sh "$repo" "$TAG"; then
+              echo "${repo}:${TAG} already published by a concurrent build; adding aliases from it"
+              docker buildx imagetools create "${ANNOTATIONS[@]}" "${NAMES[@]}" "${repo}:${TAG}"
+            else
+              docker buildx imagetools create "${ANNOTATIONS[@]}" "${NAMES[@]}" "${ARCH_TAGS[@]}"
+            fi
             # imagetools inherits the source media type and a Docker manifest
             # list has nowhere to put annotations, so say when they were
             # dropped rather than leaving it to be discovered later.
