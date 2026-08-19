@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
@@ -61,6 +62,10 @@ func TestSnapshotRestoreContainerCommand(t *testing.T) {
 // argument, not for the value of a `--flag=~/...` (used by both --seed-snapshot
 // and `ddev snapshot restore`).
 func TestResolveSnapshotSourceTilde(t *testing.T) {
+	origNoBindMounts := globalconfig.DdevGlobalConfig.NoBindMounts
+	globalconfig.DdevGlobalConfig.NoBindMounts = false
+	t.Cleanup(func() { globalconfig.DdevGlobalConfig.NoBindMounts = origNoBindMounts })
+
 	home, err := os.UserHomeDir()
 	require.NoError(t, err)
 
