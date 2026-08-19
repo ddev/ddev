@@ -44,6 +44,11 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Wait for pushed images
+        # This runner holds no push credentials, so it can race
+        # image-push.yml's approval/build/push - see containers/wait-for-images.sh.
+        run: containers/wait-for-images.sh
+
       - name: Build ddev
         run: |
           make build
