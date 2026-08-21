@@ -124,8 +124,10 @@ jobs:
         run: |
           set -eu -o pipefail
           if [ "$EVENT_NAME" = "pull_request" ] && [ "$HEAD_OWNER" != "$BASE_OWNER" ]; then
+            echo "fork: head repo owner '$HEAD_OWNER' != base repo owner '$BASE_OWNER'; treating as a fork PR"
             echo "is_fork=true" >> "$GITHUB_OUTPUT"
           else
+            echo "fork: not a fork PR (head owner '${HEAD_OWNER:-n/a}', base owner '$BASE_OWNER')"
             echo "is_fork=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -140,9 +142,14 @@ jobs:
           set -eu -o pipefail
           case "$AUTHOR_ASSOCIATION" in
             OWNER | MEMBER | COLLABORATOR)
+              echo "authorized: author_association is '$AUTHOR_ASSOCIATION'; skipping the approval gate"
               echo "is_authorized=true" >> "$GITHUB_OUTPUT"
               ;;
             *)
+              # GitHub computes this without visibility into an org membership
+              # that isn't publicized, so a real member/owner with private
+              # membership on this repo's org still lands here as NONE.
+              echo "authorized: author_association is '$AUTHOR_ASSOCIATION'; requiring approval" >&2
               echo "is_authorized=false" >> "$GITHUB_OUTPUT"
               ;;
           esac
