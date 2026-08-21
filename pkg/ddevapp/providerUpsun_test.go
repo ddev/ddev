@@ -125,7 +125,7 @@ func writeUpsunLocalConfig(t *testing.T, app *ddevapp.DdevApp, token string) err
 
 // setupUpsunProject does basic setup, creating project, etc.
 func setupUpsunProject(t *testing.T, environment string) (*ddevapp.DdevApp, *ddevapp.Provider, error) {
-	testName := strings.Split(t.Name(), "/")[0]
+	testName, _, _ := strings.Cut(t.Name(), "/")
 	siteDir := testcommon.CreateTmpDir(testName)
 
 	err := globalconfig.RemoveProjectInfo(testName)
@@ -187,7 +187,7 @@ func startAndCheckUpsunPush(t *testing.T, app *ddevapp.DdevApp, provider *ddevap
 		require.Equal(t, expectedInfo, provider.GetInfo())
 	}
 
-	testName := strings.Split(t.Name(), "/")[0]
+	testName, _, _ := strings.Cut(t.Name(), "/")
 
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)

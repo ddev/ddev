@@ -122,7 +122,7 @@ func writePlatformLocalConfig(t *testing.T, app *ddevapp.DdevApp, token string) 
 
 // setupPlatformProject does basic setup, creating project, etc.
 func setupPlatformProject(t *testing.T, environment string) (*ddevapp.DdevApp, *ddevapp.Provider, error) {
-	testName := strings.Split(t.Name(), "/")[0]
+	testName, _, _ := strings.Cut(t.Name(), "/")
 	siteDir := testcommon.CreateTmpDir(testName)
 
 	err := globalconfig.RemoveProjectInfo(testName)
@@ -184,7 +184,7 @@ func startAndCheckPlatformPush(t *testing.T, app *ddevapp.DdevApp, provider *dde
 		require.Equal(t, expectedInfo, provider.GetInfo())
 	}
 
-	testName := strings.Split(t.Name(), "/")[0]
+	testName, _, _ := strings.Cut(t.Name(), "/")
 
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)

@@ -78,6 +78,6 @@ func externalComputeSha1Sum(filePath string) (string, error) {
 		return "", err
 	}
 
-	hash := strings.Split(out, " ")[0]
+	hash, _, _ := strings.Cut(out, " ")
 	return hash, nil
 }

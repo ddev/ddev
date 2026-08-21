@@ -246,7 +246,7 @@ func deleteDdevImages(deleteAll, dryRun bool) error {
 		} else if len(img.RepoDigests) > 0 {
 			var names []string
 			for _, digest := range img.RepoDigests {
-				name := strings.SplitN(digest, "@", 2)[0]
+				name, _, _ := strings.Cut(digest, "@")
 				names = append(names, name+":<none>")
 			}
 			imageName = strings.Join(names, ", ")

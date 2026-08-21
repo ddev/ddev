@@ -347,8 +347,7 @@ func isPortFree(port string) bool {
 		// EACCES means we can't bind due to permissions (e.g. port < 1024 on
 		// Linux without CAP_NET_BIND_SERVICE). Fall through to the dial check
 		// rather than assuming the port is occupied.
-		var syscallErr *net.OpError
-		if errors.As(err, &syscallErr) {
+		if syscallErr, ok := errors.AsType[*net.OpError](err); ok {
 			if errors.Is(syscallErr.Err, syscall.EACCES) {
 				// Dial to see if anything actually answers.
 				conn, dialErr := net.DialTimeout("tcp", "127.0.0.1:"+port, 250*time.Millisecond)

@@ -53,8 +53,7 @@ ddev ssh -d /var/www/html`,
 			SkipHooks: true,
 		})
 		if err != nil {
-			var statusErr cli.StatusError
-			if errors.As(err, &statusErr) {
+			if statusErr, ok := errors.AsType[cli.StatusError](err); ok {
 				os.Exit(statusErr.StatusCode)
 			}
 			util.Failed("ddev ssh failed: %v", err)
