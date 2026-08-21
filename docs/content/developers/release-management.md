@@ -105,13 +105,13 @@ A `containers/ddev-dbserver` change builds and pushes all 20 database variants (
 
 ### One-time setup: the `image-push` GitHub Environment
 
-Fork PRs build with no registry credentials at all (nothing to gain by gating that step), then go through a single approval before the built image is actually pushed, gated by the `image-push` GitHub Environment (Settings → Environments):
+Fork PRs from a contributor without push access go through a single approval, gated by the `image-push` GitHub Environment (Settings → Environments), *before* anything is built — as soon as `detect` finds an image that needs building:
 
 1. Create the environment `image-push`.
 2. Add required reviewers (the maintainers/dev team).
-3. Leave `PUSH_SERVICE_ACCOUNT_TOKEN` as a repository secret. The environment gates the approval, not the secret: one job holds the approval and the per-image push jobs run after it, so a run costs one approval rather than one per image, and those jobs read the repository secret — the same one the non-fork path has always used.
+3. Leave `PUSH_SERVICE_ACCOUNT_TOKEN` as a repository secret. The environment gates the approval, not the secret: one job holds the approval and the build/push jobs run after it, so a run costs one approval rather than one per image, and those jobs read the repository secret — the same one the non-fork path has always used.
 
-This approval only applies to fork PRs. A push to `main` or a same-repo PR builds and pushes without any approval at all, using the repository-level `PUSH_SERVICE_ACCOUNT_TOKEN` secret directly (that path never declares `environment:` on its jobs, so this environment's protection rules don't apply to it).
+This approval only applies to fork PRs from a contributor without push access — checked via `author_association`. A fork PR from a maintainer's own fork (`OWNER`/`MEMBER`/`COLLABORATOR`), a push to `main`, or a same-repo PR all build and push without any approval at all, using the repository-level `PUSH_SERVICE_ACCOUNT_TOKEN` secret directly (those paths never gate on `environment:`, so this environment's protection rules don't apply to them).
 
 When testing this on `ddev-test/ddev`, do the same steps there first, and confirm `vars.DOCKER_ORG` on that repository points at the DockerHub org used for testing.
 
