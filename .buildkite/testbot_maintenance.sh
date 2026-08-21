@@ -6,6 +6,11 @@ os=$(go env GOOS)
 
 rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/project_list.yaml ~/.ddev/homeadditions ~/.ddev/commands ~/.ddev/bin/docker-buildx* ~/.ddev/bin/docker-compose* ~/.ddev/traefik ~/tmp/ddevtest
 
+# gob-encoded caches: gob has no tolerance for a struct field's Go type
+# changing between ddev versions, so a stale one can fail to decode after
+# an upgrade. Delete them so they're always regenerated fresh.
+rm -f ~/.ddev/.remote-config ~/.ddev/.sponsorship-data ~/.ddev/.addon-data
+
 # Latest git won't let you do much in a non-safe directory
 git config --global --add safe.directory '*' || true
 
