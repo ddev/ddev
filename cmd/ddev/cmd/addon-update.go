@@ -32,11 +32,15 @@ are provided, all installed add-ons are checked.
 Only add-ons installed from a GitHub repository can be checked automatically; add-ons
 installed from a local directory or from a non-GitHub tarball URL are skipped.
 
-Use '--dry-run' to see what would be updated without installing anything.`,
+Use '--dry-run' to see what would be updated without installing anything.
+
+You'll be asked to confirm before any add-on is updated; use '--yes' to skip
+the prompt.`,
 	Example: `ddev add-on update
 ddev add-on update redis
 ddev add-on update ddev/ddev-redis
 ddev add-on update --dry-run
+ddev add-on update --yes
 ddev add-on update --project my-project
 `,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -130,6 +134,16 @@ ddev add-on update --project my-project
 			return
 		}
 
+		yes, _ := cmd.Flags().GetBool("yes")
+		if !yes {
+			for _, r := range toUpdate {
+				util.Warning("'%s' can be updated: %s -> %s", r.Name, r.OldVersion, r.NewVersion)
+			}
+			if !util.Confirm("Update these add-on(s)?") {
+				util.Failed("Update cancelled")
+			}
+		}
+
 		var updatedNames []string
 		var failedNames []string
 		for _, r := range toUpdate {
@@ -152,6 +166,7 @@ ddev add-on update --project my-project
 			r.Status = "updated"
 			updatedNames = append(updatedNames, r.Name)
 			results = append(results, r)
+			util.Warning("If '%s' causes problems, revert with: ddev add-on get %s --version %s", r.Name, r.Repository, r.OldVersion)
 		}
 
 		err = app.CleanupConfigurationFiles()
@@ -175,6 +190,8 @@ func init() {
 	_ = AddonUpdateCmd.RegisterFlagCompletionFunc("verbose", configCompletionFunc([]string{"true", "false"}))
 	AddonUpdateCmd.Flags().String("project", "", "Name of the project to update the add-ons for")
 	_ = AddonUpdateCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))
+	AddonUpdateCmd.Flags().BoolP("yes", "y", false, "Yes - skip confirmation prompt")
+	_ = AddonUpdateCmd.RegisterFlagCompletionFunc("yes", configCompletionFunc([]string{"true", "false"}))
 
 	AddonCmd.AddCommand(AddonUpdateCmd)
 }
