@@ -192,9 +192,10 @@ jobs:
     name: Build ${{ matrix.build.repo }} (${{ matrix.build.arch }})
     needs: [detect, approve]
     # `approve` is skipped (not failed) when the author is already
-    # authorized, so its result is checked explicitly rather than relying on
-    # the implicit success() the default `if` would otherwise add.
-    if: needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true' && (needs.detect.outputs.is_authorized == 'true' || needs.approve.result == 'success')
+    # authorized, so its result is checked explicitly. `always()` is required
+    # for that check to run at all: without it, GitHub prefixes this
+    # condition with an implicit success(), which a skipped `approve` fails.
+    if: always() && needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'true' && (needs.detect.outputs.is_authorized == 'true' || needs.approve.result == 'success')
     strategy:
       fail-fast: false
       matrix:
