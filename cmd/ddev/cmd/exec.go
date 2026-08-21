@@ -90,8 +90,7 @@ ddev exec -s db -u root ls -la /root`,
 
 		if err != nil {
 			exitCode := 1
-			var statusErr cli.StatusError
-			if errors.As(err, &statusErr) {
+			if statusErr, ok := errors.AsType[cli.StatusError](err); ok {
 				exitCode = statusErr.StatusCode
 			}
 			if !quiet {

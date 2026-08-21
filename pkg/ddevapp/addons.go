@@ -248,8 +248,7 @@ func processBashHostAction(action string, installDesc InstallDesc, app *DdevApp,
 	if err != nil {
 		warningCode := GetAddonDdevWarningExitCode(action)
 		if warningCode > 0 {
-			var exitErr *goexec.ExitError
-			if errors.As(err, &exitErr) {
+			if exitErr, ok := errors.AsType[*goexec.ExitError](err); ok {
 				// Get the exit code
 				exitCode := exitErr.ExitCode()
 				if exitCode == warningCode {

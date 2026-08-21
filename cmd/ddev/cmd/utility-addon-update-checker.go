@@ -79,8 +79,7 @@ ddev ut addon-update-checker -d /path/to/my-addons-workspace
 		hostCmd.Dir = rootDir
 
 		if err := hostCmd.Run(); err != nil {
-			var exiterr *osexec.ExitError
-			if errors.As(err, &exiterr) {
+			if exiterr, ok := errors.AsType[*osexec.ExitError](err); ok {
 				output.UserErr.Exit(exiterr.ExitCode())
 			}
 			util.Failed("Unable to run update checker script: %v", err)

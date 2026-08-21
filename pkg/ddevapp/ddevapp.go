@@ -3503,7 +3503,7 @@ func deleteImages(app *DdevApp) {
 		} else if len(image.RepoDigests) > 0 {
 			var names []string
 			for _, digest := range image.RepoDigests {
-				name := strings.SplitN(digest, "@", 2)[0]
+				name, _, _ := strings.Cut(digest, "@")
 				names = append(names, name+":<none> "+dockerutil.TruncateID(image.ID))
 			}
 			imageName = strings.Join(names, ", ")
