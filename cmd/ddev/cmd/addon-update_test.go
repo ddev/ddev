@@ -72,7 +72,8 @@ func TestCmdAddonUpdate(t *testing.T) {
 	out, err = exec.RunHostCommand(DdevBin, "add-on", "update", "--yes")
 	require.NoError(t, err, "output=%s", out)
 	assert.Contains(out, "Updated 1 add-on(s): redis")
-	assert.Contains(out, "revert with: ddev add-on get ddev/ddev-redis --version v0.0.1-fake-old-for-testing")
+	assert.Contains(out, "To downgrade again:")
+	assert.Contains(out, "ddev add-on get ddev/ddev-redis --version v0.0.1-fake-old-for-testing")
 
 	content, err = os.ReadFile(manifestFile)
 	require.NoError(t, err)
