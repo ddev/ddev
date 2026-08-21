@@ -68,9 +68,11 @@ func TestCmdAddonUpdate(t *testing.T) {
 	assert.Contains(string(content), "v0.0.1-fake-old-for-testing")
 
 	// A real update should install the latest release and rewrite the manifest.
-	out, err = exec.RunHostCommand(DdevBin, "add-on", "update")
+	// --yes skips the confirmation prompt.
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "update", "--yes")
 	require.NoError(t, err, "output=%s", out)
 	assert.Contains(out, "Updated 1 add-on(s): redis")
+	assert.Contains(out, "revert with: ddev add-on get ddev/ddev-redis --version v0.0.1-fake-old-for-testing")
 
 	content, err = os.ReadFile(manifestFile)
 	require.NoError(t, err)
