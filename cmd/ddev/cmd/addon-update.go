@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -146,6 +147,7 @@ ddev add-on update --project my-project
 
 		var updatedNames []string
 		var failedNames []string
+		var rollbackHints []string
 		for _, r := range toUpdate {
 			util.Success("\nUpdating '%s': %s -> %s", r.Name, r.OldVersion, r.NewVersion)
 			err := ddevapp.InstallAddonFromGitHub(app, r.Repository, "", verbose)
@@ -166,7 +168,7 @@ ddev add-on update --project my-project
 			r.Status = "updated"
 			updatedNames = append(updatedNames, r.Name)
 			results = append(results, r)
-			util.Warning("If '%s' causes problems, revert with: ddev add-on get %s --version %s", r.Name, r.Repository, r.OldVersion)
+			rollbackHints = append(rollbackHints, fmt.Sprintf("ddev add-on get %s --version %s  # downgrade '%s'", r.Repository, r.OldVersion, r.Name))
 		}
 
 		err = app.CleanupConfigurationFiles()
@@ -176,6 +178,7 @@ ddev add-on update --project my-project
 
 		if len(updatedNames) > 0 {
 			output.UserOut.WithField("raw", results).Printf("\nUpdated %d add-on(s): %s\nUse `ddev restart` to enable updates.", len(updatedNames), strings.Join(updatedNames, ", "))
+			util.Warning("\nTo downgrade again:\n%s", strings.Join(rollbackHints, "\n"))
 		}
 		if len(failedNames) > 0 {
 			util.Failed("Failed to update %d add-on(s): %s", len(failedNames), strings.Join(failedNames, ", "))
