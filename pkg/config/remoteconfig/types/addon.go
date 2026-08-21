@@ -61,7 +61,7 @@ type Addon struct {
 	User                  string         `json:"user"`
 	Repo                  string         `json:"repo"`
 	RepoID                int            `json:"repo_id"`
-	DefaultBranch         string         `json:"default_branch"`
+	DefaultBranch         FlexibleString `json:"default_branch"`
 	TagName               FlexibleString `json:"tag_name"`
 	DdevVersionConstraint string         `json:"ddev_version_constraint"`
 	Dependencies          []string       `json:"dependencies"`

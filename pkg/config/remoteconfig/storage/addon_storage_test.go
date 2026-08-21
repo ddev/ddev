@@ -28,13 +28,13 @@ func TestAddonFileStorageReadWrite(t *testing.T) {
 			{
 				User:          "ddev",
 				Repo:          "ddev-new-addon",
-				DefaultBranch: "main",
+				DefaultBranch: types.FlexibleString{Value: "main", IsSet: true},
 				TagName:       types.FlexibleString{Value: "v1.0.0", IsSet: true},
 			},
 			{
 				User:          "ddev",
 				Repo:          "ddev-extra-addon",
-				DefaultBranch: "master",
+				DefaultBranch: types.FlexibleString{Value: "master", IsSet: true},
 				TagName:       types.FlexibleString{Value: "v2.0.0", IsSet: true},
 			},
 		},
