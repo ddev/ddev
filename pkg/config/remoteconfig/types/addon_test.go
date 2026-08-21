@@ -272,7 +272,7 @@ func TestAddonRoundTrip(t *testing.T) {
 		Title:         "ddev/ddev-redis",
 		User:          "ddev",
 		Repo:          "ddev-redis",
-		DefaultBranch: "main",
+		DefaultBranch: types.FlexibleString{Value: "main", IsSet: true},
 		TagName:       types.FlexibleString{Value: "v1.0.0", IsSet: true},
 		Type:          "official",
 	}

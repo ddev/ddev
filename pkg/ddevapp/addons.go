@@ -857,11 +857,11 @@ func GetAddonTarballURL(ownerRepo, gitRef string, defaultBranch bool, prNumber i
 			return "", "", fmt.Errorf("add-on '%s' not found in registry", ownerRepo)
 		}
 
-		if addon.DefaultBranch == "" {
+		if !addon.DefaultBranch.IsSet || addon.DefaultBranch.Value == "" {
 			return "", "", fmt.Errorf("add-on '%s' has no default_branch specified in registry", ownerRepo)
 		}
-		tarballURL = fmt.Sprintf("%s/%s", baseURL, addon.DefaultBranch)
-		version = addon.DefaultBranch
+		tarballURL = fmt.Sprintf("%s/%s", baseURL, addon.DefaultBranch.Value)
+		version = addon.DefaultBranch.Value
 		return tarballURL, version, nil
 	}
 
