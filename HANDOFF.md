@@ -5,7 +5,10 @@ exploratory session, not a finished feature: the code changes here are experimen
 take effect when the Docker provider is socktainer, and this file is expected to be deleted
 before any of it merges.
 
-Environment: Apple `container` 1.2.0, `socktainer` 1.2.1 (Homebrew bottle), docker CLI 29.4.0,
+Environment: Apple `container` 1.2.2 (signed installer, updated 2026-08-21 from 1.2.0 — see the
+verification-run section below), `socktainer` built from
+[`tmp/combined-verify-2`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-2) (the
+Homebrew bottle is 1.2.1 and lacks the fixes this investigation needs), docker CLI 29.7.2,
 docker context `socktainer`, macOS 27, `ddev` built from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment).
 Mutagen was off throughout (`performance_mode: none`).
@@ -35,14 +38,14 @@ which orders the same branches by submission risk/reviewability instead.
 |---|---|---|
 | `HostConfig.PortBindings` always nil on inspect, so a second DDEV project can never start | [`fix/port-bindings-inspect`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect) | Ready, not yet submitted (found this session; no upstream issue filed yet) |
 | `docker cp` of a directory hangs forever — this is exactly what DDEV's `CopyIntoVolume` does (mkcert CA, global commands, traefik config); currently side-stepped only for the global-cache paths via the bind-mount workaround below, not fixed | [`fix/cp-directory-hang`](https://github.com/rfay/socktainer/tree/fix/cp-directory-hang) | Ready, not yet submitted ([rfay/socktainer#11](https://github.com/rfay/socktainer/issues/11)) |
-| `PUT /containers/<id>/archive` 404s on a created-but-not-started container, blocking buildx's bootstrap — requires the buildkit node to be hand-recreated after every `container system` restart | [`fix/archive-404-prestart`](https://github.com/rfay/socktainer/tree/fix/archive-404-prestart) | Ready, not yet submitted ([rfay/socktainer#10](https://github.com/rfay/socktainer/issues/10)) |
+| `PUT /containers/<id>/archive` 404s on a created-but-not-started container, blocking buildx's bootstrap — requires the buildkit node to be hand-recreated after every `container system` restart | [`fix/archive-404-prestart`](https://github.com/rfay/socktainer/tree/fix/archive-404-prestart) | Ready, not yet submitted ([rfay/socktainer#10](https://github.com/rfay/socktainer/issues/10)) — **superseded in progress**: [socktainer#372](https://github.com/socktainer/socktainer/pull/372) is an independent, more thorough fix for the same bug, open as of 2026-08-21; see the verification-run section below |
 | DNS gives multi-homed hostnames the wrong network's address — plausible impact on `ddev-router`, which is itself multi-homed, but not yet confirmed to actually break a DDEV scenario | [`fix/dns-wrong-network-address`](https://github.com/rfay/socktainer/tree/fix/dns-wrong-network-address) | Ready, not yet submitted ([rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7)) |
 
 ### Real bugs, not currently blocking DDEV
 
 | Fix | Branch | Status |
 |---|---|---|
-| `HostConfig.Privileged` doesn't grant capabilities — DDEV's cold-start recipe already works around this with `--cap-add ALL` | [`fix/privileged-cap-all`](https://github.com/rfay/socktainer/tree/fix/privileged-cap-all) | Ready, not yet submitted ([rfay/socktainer#1](https://github.com/rfay/socktainer/issues/1)) |
+| `HostConfig.Privileged` doesn't grant capabilities — DDEV's cold-start recipe already works around this with `--cap-add ALL` | [`fix/privileged-cap-all`](https://github.com/rfay/socktainer/tree/fix/privileged-cap-all) | **Fixed upstream**, independently, by [socktainer#364](https://github.com/socktainer/socktainer/pull/364) (merged 2026-08-16, unreleased); no need to submit [rfay/socktainer#1](https://github.com/rfay/socktainer/issues/1) — worth closing as fixed. See the verification-run section below |
 | Healthcheck status regression + stalled-probe freeze — not hit by DDEV's own container/timeout configuration | [`fix/healthcheck-timing`](https://github.com/rfay/socktainer/tree/fix/healthcheck-timing) | Ready, not yet submitted ([rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12)) |
 | `--filter name=`/`status=`/`id=` matching semantics wrong — DDEV never hits this, `FindContainerByName` re-checks the exact name itself | [`fix/filter-name-ignored`](https://github.com/rfay/socktainer/tree/fix/filter-name-ignored) | Ready, not yet submitted ([rfay/socktainer#9](https://github.com/rfay/socktainer/issues/9)) — pairs with the parsing fix below |
 | Dict-form filter values dropped for every key but `label` | [`fix/dict-filter-parsing`](https://github.com/rfay/socktainer/tree/fix/dict-filter-parsing) | Ready, not yet submitted — other half of the fix above |
@@ -397,9 +400,9 @@ rm -rf .build
 swift build -c release                           # ~450s from empty .build; confirm exit 0
 
 # 3. bring both systems back up
-container system start
+/usr/local/bin/container system start                # use the signed installer explicitly — see step 4
 cd ~/workspace/socktainer
-nohup ./.build/release/socktainer >> ~/tmp/socktainer.log 2>&1 &
+nohup ./.build/release/socktainer --no-check-compatibility >> ~/tmp/socktainer.log 2>&1 &
 disown
 docker context create socktainer \
   --docker "host=unix:///Users/$(whoami)/.socktainer/container.sock" \
@@ -407,8 +410,25 @@ docker context create socktainer \
 docker context use socktainer
 
 # 4. confirm the signed installer is what's actually running, not the shadowed Homebrew copy
-container system status | grep installRoot        # expect /usr/local/
+/usr/local/bin/container system status | grep installRoot        # expect /usr/local/
 ```
+
+**`--no-check-compatibility` is now required to launch socktainer at all**, not optional
+polish: `Package.swift` pins the `apple/container` Swift package dependency to an exact
+version (`1.2.0` as of this writing), and `AppleContainerVersionCheck.performCompatibilityCheck()`
+`exit(1)`s on startup if that doesn't match the running `container-apiserver`'s version — which
+it won't, once you've updated `container` to 1.2.2 per the verification-run section below.
+Upstream fixed this properly in
+[socktainer#351](https://github.com/socktainer/socktainer/pull/351) (warn instead of exit), but
+that commit postdates `tmp/combined-verify-2`'s base and isn't merged into it; the flag is the
+workaround until someone rebases the combined branch onto newer `main`.
+
+Homebrew's `container` formula tracks upstream and will happily update itself to 1.2.2 out from
+under the signed installer — as it silently did before this session noticed. `/opt/homebrew/bin`
+sits ahead of `/usr/local/bin` on `PATH`, so an unqualified `container` command runs the
+Homebrew copy. Always invoke `/usr/local/bin/container` explicitly for anything that touches
+`system start`/`system status`, or the "expect /usr/local/" check in step 4 will look right by
+coincidence while every actual command runs the wrong binary.
 
 `docker context create` may print `context "socktainer" already exists` even right after
 the `rm` in step 1 — a harmless CLI quirk in this environment; `docker context inspect
@@ -469,13 +489,136 @@ Two more things the 2026-08-03 run needed:
   Recreation is only needed once the node itself has exited (see *"buildx cannot bootstrap
   its buildkit container"* below).
 
-Once started, reach the site at the router's container IP, not the published port:
+Once started, reach the site at the router's container IP, not the published port, **unless**
+`container-runtime-linux` has Local Network permission for the project's network subnet — see
+*"macOS 27's Local Network permission for `container-runtime-linux` doesn't prompt, and is
+scoped per subnet"* in the verification-run section right below, which is usually the real
+reason published ports don't work, not anything socktainer- or DDEV-specific:
 
 ```bash
 RIP=$(docker inspect ddev-router --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
 curl -sS -o /dev/null -w '%{http_code}\n' -H 'Host: appletest.ddev.site' http://$RIP:8080/
 curl -sS -k -o /dev/null -w '%{http_code}\n' --resolve appletest.ddev.site:8443:$RIP https://appletest.ddev.site:8443/
 ```
+
+## Verification run against apple/container 1.2.2 (2026-08-21)
+
+Rebased the DDEV branch onto current `upstream/main` (clean, no conflicts) and re-verified the
+whole stack after updating Apple `container` from 1.2.0 to 1.2.2 — both the signed installer at
+`/usr/local` and, incidentally, Homebrew's copy at `/opt/homebrew`, which turned out to matter
+(see below). `container-apiserver`, `socktainer` (rebuilt from `tmp/combined-verify-2`, no
+source changes needed), and DDEV itself (rebuilt from this branch after the rebase) all came up
+and `ddev restart` reached a fully healthy, fully serving `appletest` project — see "Full
+end-to-end result" below.
+
+### Checked upstream for anything that changes this investigation's conclusions
+
+- **apple/container 1.2.1 and 1.2.2** (released 2026-08-07 and 2026-08-08): changelogs are
+  `k8s`/build/test infrastructure only. `ContainerAPIService/Server/Containers/ContainersService.swift`
+  — the file with the hostname-uniqueness-blocks-recreate bug (*"Hostname uniqueness collides
+  with compose's recreate-by-rename"* above) — has no commits since 2026-08-02, before this
+  investigation started. Confirmed by reproduction below: the bug is unchanged, `ddev restart`
+  is still the workaround.
+- **socktainer upstream `main`** has moved since this fork's branches were cut, though no new
+  *release* has shipped (`v1.2.1`, 2026-08-01, is still latest — everything below is
+  unreleased, main-branch-only):
+    - [PR #364](https://github.com/socktainer/socktainer/pull/364), merged 2026-08-16, is an
+    independent, unrelated-author fix for the same bug as this fork's
+    [`fix/privileged-cap-all`](https://github.com/rfay/socktainer/tree/fix/privileged-cap-all)
+    ([rfay/socktainer#1](https://github.com/rfay/socktainer/issues/1)) — `HostConfig.Privileged`
+    now folds `"ALL"` into the capability-add list on create, same mechanism, same effect. Worth
+    closing rfay/socktainer#1 as fixed upstream rather than submitting it.
+    - [PR #351](https://github.com/socktainer/socktainer/pull/351), merged 2026-08-13, downgrades
+    a *different* version check — socktainer's own compiled-in `apple/container` dependency
+    version vs. the running `container-apiserver`'s version — from a fatal `exit(1)` to a
+    warning. This is not the same bug as `fix/version-engine-version` (which is about the
+    `/version` *API response* tripping DDEV's own check) — both are still needed; see the
+    `--no-check-compatibility` note in the cold-start recipe above for why this one bit this
+    session specifically.
+    - [Issue #370](https://github.com/socktainer/socktainer/issues/370) /
+    [PR #372](https://github.com/socktainer/socktainer/pull/372) (open, not yet merged) is an
+    independent, more thorough fix for the same bug as this fork's
+    [`fix/archive-404-prestart`](https://github.com/rfay/socktainer/tree/fix/archive-404-prestart)
+    ([rfay/socktainer#10](https://github.com/rfay/socktainer/issues/10)) — serves
+    `GET`/`HEAD /containers/{id}/archive` on a never-started container from the image's shared
+    snapshot instead of 404ing. Two follow-on PRs, [#376](https://github.com/socktainer/socktainer/pull/376)
+    and [#377](https://github.com/socktainer/socktainer/pull/377), fix stat-header encoding and
+    HEAD-builds-a-whole-tar bugs found on top of #372. None of the three are merged yet; worth
+    watching rather than submitting `fix/archive-404-prestart` in the meantime.
+    - Nothing found addressing the exec-hijack/upgrade-gating bug (`fix/exec-hijack-close`), the
+    DNS EDNS0/AAAA bug ([socktainer#329](https://github.com/socktainer/socktainer/issues/329),
+    still open), `PortBindings` on inspect, the `docker cp` directory hang, or the
+    `name=`/`status=`/`id=` filter-parsing bugs — all still exactly as documented above, all
+    still fork-local fixes.
+
+### macOS 27's Local Network permission for `container-runtime-linux` doesn't prompt, and is scoped per subnet
+
+**This is a different bug from *"Published ports were accepted but reset"* below**, even though
+the symptom is byte-for-byte identical (`curl: (56) Recv failure: Connection reset by peer` on a
+published port, 200 OK on the container's own IP) — that section's fix (use the signed
+installer, not Homebrew) does not fix this one, and this one can bite even a correctly-installed
+signed `container-runtime-linux`.
+
+**Root cause, filed upstream as [apple/container#2029](https://github.com/apple/container/issues/2029)
+(open, no fix as of this writing):** on macOS 27 (beta at time of filing), the Local Network
+permission prompt for `container-runtime-linux` never surfaces, and the binary never appears in
+System Settings → Privacy & Security → Local Network either — there is no user-facing way to
+grant it the normal way. Without that grant, the port-forwarder accepts the TCP connection (so
+`nc`/telnet-style bare connects succeed) but the backend connect to the container's own address
+fails, and the client sees a reset the moment it actually sends data.
+
+**Why this looked container-specific in this session, and wasn't:** `com.apple.network.local-network`
+is a separate, older pre-authorization mechanism (`sudo defaults write com.apple.network.local-network
+Allowed{Ethernet,WiFi}LocalNetworkAddresses -array "<cidr>"`, from an [apple/container#2029
+comment](https://github.com/apple/container/issues/2029#issuecomment-5163762352)) that can grant
+`container-runtime-linux` access *without* the broken prompt ever needing to fire — but only for
+the CIDR(s) listed. A previous session on this machine had applied it scoped to
+`192.168.64.0/24` — the built-in `default` network's subnet — probably while chasing the
+Homebrew-path bug below. That made every `docker run -p ...` smoke test against a container on
+`default` work perfectly, while `ddev-router` (on `ddev_default`, `192.168.254.0/24`) and every
+project container (on `ddev-<project>_default`, a different `/24` each) reset every single time,
+with 100% reproducibility across fresh container recreates — looking exactly like a
+`ddev-router`-specific or DDEV-specific bug when it was actually just "which subnet did the
+allowlist happen to cover."
+
+**Fix applied this session:** rather than widen the `com.apple.network.local-network` CIDR list
+(fragile — DDEV project subnets aren't fixed in advance), manually enabling
+`container-runtime-linux` under System Settings → Privacy & Security → Local Network fixed
+*every* subnet immediately, no reboot required — confirmed by re-testing `ddev-router`'s
+published ports (8080, 8443, 8025, 8026, 8142, 8143, 11999) immediately afterward, all 200/OK.
+`container-runtime-linux` did appear in that list once actually clicked into by hand, contrary to
+the upstream issue's report that it doesn't — worth a comment on #2029 noting that it's
+reachable by hand even though the automatic prompt/registration is broken.
+
+**If reproducing this on a fresh machine:** check
+`sudo defaults read com.apple.network.local-network` for a stale, narrowly-scoped CIDR list
+before assuming a socktainer or DDEV bug — and check System Settings' Local Network list for
+`container-runtime-linux` directly, since it may be present and just unchecked, independent of
+whatever the `defaults` domain says.
+
+### Full end-to-end result
+
+`ddev start` over the pre-existing `appletest` project hit the documented
+hostname-uniqueness bug (unaffected by 1.2.2, see above); `ddev restart` (which removes
+containers before recreating, sidestepping it) worked cleanly:
+
+```text
+Container ddev-appletest-web Created / Container ddev-appletest-db Created
+Waiting for containers to become ready: [web db]... ready in 5.0s
+Starting ddev-router, pushing config...
+Waiting for ddev-router to become ready... ready in 1.5s
+
+http://appletest.ddev.site:8080/    → 200
+https://appletest.ddev.site:8443/   → 200
+https://appletest.ddev.site:8026/   → 200   (Mailpit)
+ddev mysql -e "select version();"   → 11.8.8-MariaDB-ubu2404-log
+```
+
+One incidental fix along the way: a leftover `ddev-router` from a *different* Docker context
+(OrbStack, still holding host ports 8080/8443/11999 from an earlier session) had to be removed
+before the socktainer-side router could bind those ports — not a bug in anything under test, just
+two Docker providers' routers fighting over the same host ports, which can only happen when
+switching contexts back and forth on one machine the way this investigation does.
 
 ---
 
@@ -745,6 +888,13 @@ the mechanism and the fix
 This was the actual 502, and fixing it is what got the site serving.
 
 ### Published ports were accepted but reset (fixed — use the signed installer)
+
+**This diagnosis is not the only cause of this symptom.** A second, unrelated cause of the
+identical `Recv failure: Connection reset by peer` surfaced 2026-08-21, hits even a correctly
+signed-installer `container-runtime-linux`, and is specific to macOS 27 — see *"macOS 27's Local
+Network permission for `container-runtime-linux` doesn't prompt, and is scoped per subnet"* in
+the verification-run section above. Check that section first if this symptom reappears after
+confirming the signed installer is in use.
 
 `docker run -d -p 127.0.0.1:38080:80 nginx:alpine` → the `container` helper listens on
 127.0.0.1:38080, but connections get `Recv failure: Connection reset by peer`. The same
@@ -1051,3 +1201,14 @@ options there.
 - The global `~/.ddev/router-compose.healthcheck.yaml` override remains **removed** (it sits
   at `~/tmp/router-compose.healthcheck.yaml.bak`; do not restore it) — confirmed absent as
   of today's rebuild too.
+- **2026-08-21:** Apple `container` updated to 1.2.2 (signed installer at `/usr/local`, and
+  Homebrew's copy at `/opt/homebrew` — the latter unintentionally, by an earlier `brew upgrade`;
+  see the `PATH`-ordering warning in the cold-start recipe above). `socktainer` rebuilt from
+  `tmp/combined-verify-2` against this apiserver, launched with `--no-check-compatibility` (now
+  required — see the cold-start recipe). `container-runtime-linux` was granted Local Network
+  permission by hand in System Settings → Privacy & Security → Local Network (see the
+  verification-run section above); this is a per-machine OS grant, not project state, and won't
+  need repeating unless the permission is later revoked. `appletest` ended the session
+  `ddev restart`ed, fully healthy, serving 200 on all published ports. The leftover OrbStack
+  `ddev-router` from a previous session was removed (`docker --context orbstack rm -f
+  ddev-router`) to free host ports 8080/8443/11999; OrbStack itself was left running.
