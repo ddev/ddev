@@ -45,7 +45,7 @@ func TestCmdStartResetDatabase(t *testing.T) {
 	require.True(t, tableExists())
 
 	// A snapshot of the marker table, to seed a new volume with further down.
-	_, err = app.Snapshot("reset-test-seed")
+	_, err = app.Snapshot("reset-test-seed", false)
 	require.NoError(t, err)
 
 	// --omit-snapshot means nothing on its own.
@@ -121,7 +121,7 @@ func TestCmdStartSeedSnapshotFile(t *testing.T) {
 	require.NoError(t, app.Restart())
 	createMarkerTable(t, app)
 
-	snapshotName, err := app.Snapshot("outside-seed")
+	snapshotName, err := app.Snapshot("outside-seed", false)
 	require.NoError(t, err)
 	snapshotFile, err := ddevapp.GetSnapshotFileFromName(snapshotName, app)
 	require.NoError(t, err)

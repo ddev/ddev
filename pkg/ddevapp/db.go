@@ -107,7 +107,7 @@ func (app *DdevApp) SnapshotAtExistingDBVersion(snapshotName string) (string, er
 			return "", err
 		}
 	}
-	return app.Snapshot(snapshotName)
+	return app.Snapshot(snapshotName, false)
 }
 
 // GetExistingDBType returns type/version like mariadb:10.11 or postgres:13 or "" if no existing volume

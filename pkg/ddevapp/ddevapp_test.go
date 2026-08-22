@@ -1966,7 +1966,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			// above. Snapshotting it and then wiping the db volume and restarting
 			// should bring the same data back, ahead of the empty starter database.
 			for _, seedName := range []string{ddevapp.SeedSnapshotName, "explicit-seed"} {
-				_, err = app.Snapshot(seedName)
+				_, err = app.Snapshot(seedName, false)
 				require.NoError(t, err, "could not create '%s' snapshot for %s", seedName, dbTypeVersion)
 			}
 

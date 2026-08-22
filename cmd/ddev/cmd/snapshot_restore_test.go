@@ -81,7 +81,7 @@ func TestCmdSnapshotRestoreFile(t *testing.T) {
 	}
 
 	// Snapshot before the marker table exists, so a successful restore removes it.
-	snapshotName, err := app.Snapshot("outside-restore")
+	snapshotName, err := app.Snapshot("outside-restore", false)
 	require.NoError(t, err)
 	snapshotFile, err := ddevapp.GetSnapshotFileFromName(snapshotName, app)
 	require.NoError(t, err)

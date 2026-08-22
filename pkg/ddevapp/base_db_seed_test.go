@@ -54,13 +54,13 @@ func TestGetSeedSnapshotFile(t *testing.T) {
 
 	// An uncompressed .mbstream seed is recognized, but a compressed seed
 	// still wins if one is also present.
-	writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "initializer-mariadb_10.11.mbstream"), "seed")
-	require.Equal(t, zst, app.GetInitializerSnapshotFile())
+	writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "seed-mariadb_10.11.mbstream"), "seed")
+	require.Equal(t, zst, app.GetSeedSnapshotFile())
 
 	// With no compressed seed, the uncompressed one is used.
 	uncompressed := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
-	mbstream := writeBaseDBSeedTestFile(t, uncompressed, filepath.Join("db_snapshots", "initializer-mariadb_10.11.mbstream"), "seed")
-	require.Equal(t, mbstream, uncompressed.GetInitializerSnapshotFile())
+	mbstream := writeBaseDBSeedTestFile(t, uncompressed, filepath.Join("db_snapshots", "seed-mariadb_10.11.mbstream"), "seed")
+	require.Equal(t, mbstream, uncompressed.GetSeedSnapshotFile())
 
 	// A snapshot for a different db version is not this project's initializer.
 	other := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB106)

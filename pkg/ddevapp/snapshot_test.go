@@ -218,7 +218,7 @@ func TestSnapshotUncompressed(t *testing.T) {
 	}
 	assert.True(found, "expected to find snapshot %s in ListSnapshots()", snapshotName)
 
-	err = app.RestoreSnapshot(snapshotName)
+	err = app.RestoreSnapshot(snapshotName, false)
 	assert.NoError(err)
 
 	runTime()
