@@ -150,6 +150,23 @@ func GetInstalledAddonNames(app *DdevApp) []string {
 	return names
 }
 
+// GetInstalledAddonRepositories returns the GitHub "owner/repo" of each
+// installed add-on, index-aligned with GetInstalledAddonNames. Non-GitHub
+// installs (directory, tarball, or URL sources) report an empty string
+// rather than a raw local path.
+func GetInstalledAddonRepositories(app *DdevApp) []string {
+	manifests := GetInstalledAddons(app)
+	repositories := []string{}
+	for _, manifest := range manifests {
+		if IsGithubRef(manifest.Repository) {
+			repositories = append(repositories, manifest.Repository)
+		} else {
+			repositories = append(repositories, "")
+		}
+	}
+	return repositories
+}
+
 // GetInstalledAddonProjectFiles returns a list of project files installed by add-ons
 func GetInstalledAddonProjectFiles(app *DdevApp) []string {
 	manifests := GetInstalledAddons(app)

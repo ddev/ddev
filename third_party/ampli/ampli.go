@@ -6,7 +6,7 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 13
+// Tracking Plan Version: 14
 // Build: 1.0.0
 // Runtime: go-ampli
 //
@@ -356,6 +356,7 @@ func (e projectEvent) project() {
 
 type ProjectBuilder interface {
 	Build() ProjectEvent
+	AddOnRepositories(addOnRepositories []string) ProjectBuilder
 	AddOns(addOns []string) ProjectBuilder
 	BindAllInterfaces(bindAllInterfaces bool) ProjectBuilder
 	Ci(ci bool) ProjectBuilder
@@ -445,6 +446,12 @@ func (b *projectBuilder) WebserverType(webserverType string) interface {
 
 func (b *projectBuilder) XhProfMode(xhProfMode string) ProjectBuilder {
 	b.properties[`XHProf Mode`] = xhProfMode
+
+	return b
+}
+
+func (b *projectBuilder) AddOnRepositories(addOnRepositories []string) ProjectBuilder {
+	b.properties[`Add-on Repositories`] = addOnRepositories
 
 	return b
 }
@@ -622,8 +629,8 @@ func (a *Ampli) Load(options LoadOptions) {
 		clientConfig.Plan = &amplitude.Plan{
 			Branch:    `main`,
 			Source:    `ddev`,
-			Version:   `13`,
-			VersionID: `a25069bf-252e-427e-b876-690362d20b18`,
+			Version:   `14`,
+			VersionID: `762be529-98a5-4db3-9c6e-5a45276d5278`,
 		}
 	}
 

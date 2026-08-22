@@ -61,6 +61,7 @@ func (app *DdevApp) TrackProject() {
 		WebserverType(app.GetWebserverType()).
 		XhProfMode(app.GetXHProfMode()).
 		AddOns(GetInstalledAddonNames(app)).
+		AddOnRepositories(GetInstalledAddonRepositories(app)).
 		Containers(services).
 		ContainersOmitted(containersOmitted).
 		FailOnHookFail(app.FailOnHookFail || app.FailOnHookFailGlobal).
