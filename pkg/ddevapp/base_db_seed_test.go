@@ -62,7 +62,7 @@ func TestGetSeedSnapshotFile(t *testing.T) {
 	mbstream := writeBaseDBSeedTestFile(t, uncompressed, filepath.Join("db_snapshots", "seed-mariadb_10.11.mbstream"), "seed")
 	require.Equal(t, mbstream, uncompressed.GetSeedSnapshotFile())
 
-	// A snapshot for a different db version is not this project's initializer.
+	// A snapshot for a different db version is not this project's seed.
 	other := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB106)
 	writeBaseDBSeedTestFile(t, other, filepath.Join("db_snapshots", "seed-mariadb_10.11.zst"), "seed")
 	require.Empty(t, other.GetSeedSnapshotFile())

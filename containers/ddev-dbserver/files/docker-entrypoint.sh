@@ -172,8 +172,6 @@ if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
 
       snapshot=""
       for candidate in \
-        "/mnt/snapshots/initializer-${server_db_version}.mbstream" \
-        "/mnt/snapshots/initializer-${server_db_version}.xbstream" \
         "/mysqlbase/custom/base_db.zst" \
         "/mysqlbase/custom/base_db.gz" \
         "/mysqlbase/custom/base_db.mbstream" \

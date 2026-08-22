@@ -53,7 +53,7 @@ Snapshots are stored as compressed (zstd, or gzip on very old database versions)
 
 ### Uncompressed Snapshots
 
-`ddev snapshot`, `ddev snapshot restore`, and the `initializer` seed all compress the database backup by default, which is the right tradeoff for almost everyone. Decompression still costs real time, though — routinely 30-40% of a restore or first `ddev start`, and it competes for the same CPU cores the database restore itself needs right after. `--uncompressed` skips it:
+`ddev snapshot`, `ddev snapshot restore`, and the reserved `seed` snapshot all compress the database backup by default, which is the right tradeoff for almost everyone. Decompression still costs real time, though — routinely 30-40% of a restore or first `ddev start`, and it competes for the same CPU cores the database restore itself needs right after. `--uncompressed` skips it:
 
 ```bash
 ddev snapshot --uncompressed
@@ -61,7 +61,7 @@ ddev snapshot --uncompressed
 
 This is an unusual, deliberate tradeoff, not a general recommendation: an uncompressed snapshot can be roughly as large as the database's uncompressed datadir — many times bigger than the same snapshot compressed with zstd. It's worth it mainly when disk space is cheap relative to CPU time, for example a low-core-count host, or a seed that's read straight off fast local disk and never crosses a network (so compression buys nothing on the transfer side either). `ddev snapshot --list` shows each snapshot's compression (`zstd`, `gzip`, or `none`) so you can tell which kind you're looking at. Restoring an uncompressed snapshot with `ddev snapshot restore` needs no extra flag — the file's extension (`.mbstream`/`.xbstream` instead of `.zst`/`.gz`) already tells DDEV there's nothing to decompress. Not available for PostgreSQL projects.
 
-An `initializer` snapshot honors the same flag, and a `dbimage` built with a baked-in seed (see [Seeding a Custom Starter Database](../extend/customizing-images.md#seeding-a-custom-starter-database-in-dbimage)) can use an uncompressed seed the same way.
+The reserved `seed` snapshot honors the same flag, and a `dbimage` built with a baked-in seed (see [Seeding a Custom Starter Database](../extend/customizing-images.md#seeding-a-custom-starter-database-in-dbimage)) can use an uncompressed seed the same way.
 
 ### Seeding a Fresh Database from a Snapshot
 
