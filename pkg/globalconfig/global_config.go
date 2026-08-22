@@ -871,6 +871,17 @@ func GetProject(projectName string) *ProjectInfo {
 	return project
 }
 
+// ProjectExistsAtRoot reports whether a registered project lives at appRoot.
+func ProjectExistsAtRoot(appRoot string) bool {
+	appRoot = filepath.Clean(appRoot)
+	for _, p := range DdevProjectList {
+		if p != nil && filepath.Clean(p.AppRoot) == appRoot {
+			return true
+		}
+	}
+	return false
+}
+
 // RemoveProjectInfo removes the ProjectInfo line for a project
 func RemoveProjectInfo(projectName string) error {
 	_, ok := DdevProjectList[projectName]
