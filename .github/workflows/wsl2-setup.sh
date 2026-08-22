@@ -55,7 +55,7 @@ ln -sf /usr/local/go/bin/go /usr/local/bin/go
 ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 
 echo "=== Installing gotestsum ==="
-GOBIN=/usr/local/bin go install gotest.tools/gotestsum@v1.12.1
+GOBIN=/usr/local/bin go install gotest.tools/gotestsum@v1.13.0
 
 echo "=== Installing mkcert ==="
 MKCERT_VERSION="v1.4.4"

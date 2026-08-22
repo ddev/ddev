@@ -211,7 +211,7 @@ jobs:
           check-latest: true
 
       - name: Install gotestsum
-        run: go install gotest.tools/gotestsum@v1.12.1
+        run: go install gotest.tools/gotestsum@v1.13.0
 
       - name: Load 1password secret(s) for pull-push-providers
         if: ${{ inputs.pull_push_providers == 'true' && env.OP_SERVICE_ACCOUNT_TOKEN != '' }}
