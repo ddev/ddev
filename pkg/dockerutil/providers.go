@@ -1,9 +1,12 @@
 package dockerutil
 
 import (
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 )
 
@@ -140,4 +143,65 @@ func IsSELinux() bool {
 		return false
 	}
 	return slices.Contains(info.SecurityOptions, "name=selinux")
+}
+
+// IsAppleContainer reports whether containers are being run by apple container
+// (github.com/apple/container). Prefer this over IsSocktainer() wherever the reason
+// is something the runtime does — single-writer volumes, hostname uniqueness, virtiofs
+// bind mounts — rather than something the API shim does.
+//
+// socktainer is currently the only Docker-compatible API in front of apple container,
+// so this is detected through it; the two are separate questions and may not stay 1:1.
+func IsAppleContainer() bool {
+	return IsSocktainer()
+}
+
+// IsSocktainer detects if the Docker provider is socktainer, the
+// Docker-compatible API that fronts apple container. This is a statement about the
+// API being spoken, not about the runtime behind it — see IsAppleContainer().
+func IsSocktainer() bool {
+	serverVersion, err := GetServerVersion()
+	if err != nil {
+		return false
+	}
+	if serverVersion.Platform.Name == "socktainer" {
+		return true
+	}
+	for _, v := range serverVersion.Components {
+		if strings.HasPrefix(v.Name, "socktainer") {
+			return true
+		}
+	}
+	return false
+}
+
+// UseBindGlobalCache is true when /mnt/ddev-global-cache should be a bind mount of a
+// host directory instead of the ddev-global-cache Docker volume. It says nothing about
+// the project bind mounts controlled by the no_bind_mounts global config setting.
+//
+// apple container backs each named volume with an ext4 block image that takes either one
+// read-write attachment or any number of read-only ones, never a mix, so a volume mounted
+// at the same time by web, db and the router cannot work there. Host bind mounts are
+// virtiofs-backed and can be shared read-write. This turns on automatically on apple
+// container; DDEV_BIND_GLOBAL_CACHE forces it on or off for testing against other providers.
+func UseBindGlobalCache() bool {
+	if v := os.Getenv("DDEV_BIND_GLOBAL_CACHE"); v != "" {
+		return v == "true"
+	}
+	return IsAppleContainer()
+}
+
+// GlobalCacheSource returns what to use as the source of the
+// /mnt/ddev-global-cache mount: either the Docker volume name, or a host
+// directory path when UseBindGlobalCache() is true.
+func GlobalCacheSource() string {
+	if UseBindGlobalCache() {
+		return filepath.Join(globalconfig.GetGlobalDdevDir(), "global-cache-bind")
+	}
+	return "ddev-global-cache"
+}
+
+// GlobalCacheMount returns the full mount spec for /mnt/ddev-global-cache.
+func GlobalCacheMount() string {
+	return GlobalCacheSource() + ":/mnt/ddev-global-cache"
 }
