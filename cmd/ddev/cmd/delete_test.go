@@ -83,6 +83,7 @@ func TestDeleteCmd(t *testing.T) {
 // TestOmitSnapshotOnDeleteGlobal tests the omit_snapshot_on_delete global config option
 // and its interaction with the --omit-snapshot flag on 'ddev delete'.
 func TestOmitSnapshotOnDeleteGlobal(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)

@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -460,6 +461,21 @@ func CheckGoroutineOutput(t *testing.T, out string) {
 	num, err := strconv.Atoi(matches[0][1])
 	require.NoError(t, err, "can't convert %s to number: %v", matches[0][1])
 	require.LessOrEqual(t, num, goroutineLimit, "number of goroutines=%v, higher than limit=%d", num, goroutineLimit)
+}
+
+// SkipUnlessDefaultEnvironment skips t unless the test is running with the
+// plain default settings: nginx webserver, Mutagen off, bind mounts on,
+// normal (non-rootless) Docker. Use it for tests that don't actually check
+// webserver type, Mutagen, or rootless Docker - running them again under each
+// of those special setups just repeats the same check with nothing new to
+// show for it. See ddev/ddev#8696.
+func SkipUnlessDefaultEnvironment(t *testing.T) {
+	if nodeps.WebserverDefault != nodeps.WebserverNginxFPM ||
+		nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
+		nodeps.NoBindMountsDefault ||
+		dockerutil.IsPodman() || dockerutil.IsDockerRootless() {
+		t.Skip("skipping: this test doesn't depend on webserver type, Mutagen, or rootless Docker, so it only needs to run once, under the plain default setup; see ddev/ddev#8696")
+	}
 }
 
 // PortPair is for tests to use naming portsets for tests

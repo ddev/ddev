@@ -23,6 +23,7 @@ import (
 
 // TestCustomCommands does basic checks to make sure custom commands work OK.
 func TestCustomCommands(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	assert := asrt.New(t)
 	runTime := util.TimeTrackC(t.Name())
 
