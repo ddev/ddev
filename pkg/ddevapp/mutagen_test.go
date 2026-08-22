@@ -29,6 +29,9 @@ func TestMutagenSimple(t *testing.T) {
 	if nodeps.IsWSL2MirroredMode() {
 		t.Skip("Skipping TestMutagenSimple in WSL2 mirrored mode; It can fail randomly on the 'composer install' step due to network issues, unable to download random dependencies from either dist or source.")
 	}
+	if nodeps.PerformanceModeDefault != types.PerformanceModeMutagen && !nodeps.NoBindMountsDefault {
+		t.Skip("forces Mutagen mode itself; only runs in a Mutagen-flavored workflow to avoid testing the same thing redundantly, see ddev/ddev#8696")
+	}
 	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running, perhaps in wrong directory
@@ -192,6 +195,9 @@ func TestMutagenConfigChange(t *testing.T) {
 	if !nodeps.IsMacOS() {
 		t.Skip("TestMutagenConfigChange runs only on macOS (without Colima), skipping")
 	}
+	if nodeps.PerformanceModeDefault != types.PerformanceModeMutagen && !nodeps.NoBindMountsDefault {
+		t.Skip("forces Mutagen mode itself; only runs in a Mutagen-flavored workflow to avoid testing the same thing redundantly, see ddev/ddev#8696")
+	}
 	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running, perhaps in wrong directory
@@ -276,6 +282,9 @@ func TestMutagenConfigChange(t *testing.T) {
 func TestMutagenDiagnose(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("TestMutagenDiagnose skipped on Windows")
+	}
+	if nodeps.PerformanceModeDefault != types.PerformanceModeMutagen && !nodeps.NoBindMountsDefault {
+		t.Skip("forces Mutagen mode itself; only runs in a Mutagen-flavored workflow to avoid testing the same thing redundantly, see ddev/ddev#8696")
 	}
 	assert := asrt.New(t)
 
