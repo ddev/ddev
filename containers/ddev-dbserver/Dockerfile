@@ -131,7 +131,11 @@ RUN if ! id mysql &>/dev/null ; then useradd -u 112 mysql; fi
 # Install MySQL compatibility wrappers for MariaDB 11.x+ (needed by create_base_db.sh and at runtime)
 RUN /mariadb-compat-install.sh
 
-# Build a starter base db
+# Build a starter base db. BASE_DB_UNCOMPRESSED=true bakes in an uncompressed
+# base_db instead, for a from-source build trading image size for zero
+# first-boot decompression cost - see https://github.com/ddev/ddev/issues/8665.
+ARG BASE_DB_UNCOMPRESSED=false
+ENV BASE_DB_UNCOMPRESSED=${BASE_DB_UNCOMPRESSED}
 RUN /create_base_db.sh
 
 RUN chmod ugo+x /healthcheck.sh

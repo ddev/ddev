@@ -411,6 +411,7 @@ goland
 golang
 gsudo
 gz
+gzip
 gzipped
 h
 harm
@@ -716,6 +717,7 @@ tlsverify
 tmp
 to
 toc
+tradeoff
 trainings
 transactional
 true
@@ -798,4 +800,5 @@ zip
 zscaler
 zsh
 zshrc
+zstd
 zxf

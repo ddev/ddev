@@ -60,6 +60,10 @@ if [ $# = "2" ] && [ "${1:-}" = "restore_snapshot" ] ; then
       gz)
         gunzip -c "${snapshot}" | ${STREAMTOOL} -x
         ;;
+      mbstream|xbstream)
+        # Uncompressed raw backup-tool stream, no decompressor needed.
+        ${STREAMTOOL} -x < "${snapshot}"
+        ;;
       *)
         echo "Unknown snapshot compression: .$ext"
         exit 101
@@ -145,7 +149,9 @@ fi
 #   2. /mysqlbase/custom/base_db.*                          - baked into a derived image
 #   3. /mysqlbase/base_db.*                                 - the stock DDEV starter database
 # At each location, a .zst seed is preferred over .gz; .gz only exists at all
-# for db versions (e.g. MariaDB 5.5) whose base image lacks zstd.
+# for db versions (e.g. MariaDB 5.5) whose base image lacks zstd. .mbstream/
+# .xbstream are uncompressed raw backup-tool streams, checked last so an
+# existing compressed seed still wins if one happens to also be present.
 if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
     # If snapshot_dir is not set, this is a normal startup, so
     # tell healthcheck to wait by touching /tmp/initializing
@@ -160,10 +166,16 @@ if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
       for candidate in \
         "/mnt/snapshots/initializer-${server_db_version}.zst" \
         "/mnt/snapshots/initializer-${server_db_version}.gz" \
+        "/mnt/snapshots/initializer-${server_db_version}.mbstream" \
+        "/mnt/snapshots/initializer-${server_db_version}.xbstream" \
         "/mysqlbase/custom/base_db.zst" \
         "/mysqlbase/custom/base_db.gz" \
+        "/mysqlbase/custom/base_db.mbstream" \
+        "/mysqlbase/custom/base_db.xbstream" \
         "/mysqlbase/base_db.zst" \
         "/mysqlbase/base_db.gz" \
+        "/mysqlbase/base_db.mbstream" \
+        "/mysqlbase/base_db.xbstream" \
       ; do
         if [ -f "${candidate}" ]; then
           snapshot="${candidate}"
@@ -181,6 +193,10 @@ if [ ! -f "${DATADIR}/db_mariadb_version.txt" ]; then
           ;;
         *.gz)
           gunzip -c "${snapshot}" | ${STREAMTOOL} -x
+          ;;
+        *.mbstream|*.xbstream)
+          # Uncompressed raw backup-tool stream, no decompressor needed.
+          ${STREAMTOOL} -x < "${snapshot}"
           ;;
       esac
     fi

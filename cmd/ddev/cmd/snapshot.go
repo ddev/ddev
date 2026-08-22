@@ -20,6 +20,7 @@ var snapshotCleanup bool
 var snapshotList bool
 var snapshotName string
 var snapshotRestoreLatest bool
+var snapshotUncompressed bool
 
 // noConfirm: If true, --yes, we won't stop and prompt before each deletion
 var snapshotCleanupNoConfirm bool
@@ -36,7 +37,8 @@ ddev snapshot --cleanup
 ddev snapshot --cleanup --name my_snapshot_name
 ddev snapshot --cleanup -y
 ddev snapshot --list
-ddev snapshot --all`,
+ddev snapshot --all
+ddev snapshot --uncompressed`,
 	Run: func(_ *cobra.Command, args []string) {
 		apps, err := getRequestedProjects(args, snapshotAll)
 		if err != nil {
@@ -72,7 +74,7 @@ func listSnapshots(apps []*ddevapp.DdevApp) {
 	if len(apps) > 1 {
 		columns = append(columns, "Project")
 	}
-	columns = append(columns, "Snapshot", "Created", "Size", "DB Version")
+	columns = append(columns, "Snapshot", "Created", "Size", "DB Version", "Compression")
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
 		var colConfig []table.ColumnConfig
@@ -94,16 +96,16 @@ func listSnapshots(apps []*ddevapp.DdevApp) {
 			if len(snapshots) > 0 {
 				for _, snapshot := range snapshots {
 					if len(apps) > 1 {
-						t.AppendRow(table.Row{app.GetName(), snapshot.Name, snapshot.Created.Format("2006-01-02"), util.FormatBytes(snapshot.Size), snapshot.DBVersion})
+						t.AppendRow(table.Row{app.GetName(), snapshot.Name, snapshot.Created.Format("2006-01-02"), util.FormatBytes(snapshot.Size), snapshot.DBVersion, snapshot.Compression})
 					} else {
-						t.AppendRow(table.Row{snapshot.Name, snapshot.Created.Format("2006-01-02"), util.FormatBytes(snapshot.Size), snapshot.DBVersion})
+						t.AppendRow(table.Row{snapshot.Name, snapshot.Created.Format("2006-01-02"), util.FormatBytes(snapshot.Size), snapshot.DBVersion, snapshot.Compression})
 					}
 				}
 			} else {
 				if len(apps) > 1 {
-					t.AppendRow(table.Row{app.GetName(), text.Italic.Sprint("No snapshots"), "", "", ""})
+					t.AppendRow(table.Row{app.GetName(), text.Italic.Sprint("No snapshots"), "", "", "", ""})
 				} else {
-					t.AppendRow(table.Row{text.Italic.Sprint("No snapshots"), "", "", ""})
+					t.AppendRow(table.Row{text.Italic.Sprint("No snapshots"), "", "", "", ""})
 				}
 			}
 		}
@@ -131,7 +133,7 @@ func createAppSnapshot(app *ddevapp.DdevApp) {
 	}
 	// If there is an error from Snapshot, show a warning message
 	// allow the command to continue, there may be other snapshots needed
-	if snapshotNameOutput, err := app.Snapshot(snapshotName); err != nil {
+	if snapshotNameOutput, err := app.Snapshot(snapshotName, snapshotUncompressed); err != nil {
 		errorMsg := util.ColorizeText("Failed to snapshot %s: %v", "red")
 		util.Warning(errorMsg, app.GetName(), err)
 	} else {
@@ -189,5 +191,6 @@ func init() {
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotCleanup, "cleanup", "C", false, "Cleanup snapshots")
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotCleanupNoConfirm, "yes", "y", false, "Yes - skip confirmation prompt")
 	DdevSnapshotCommand.Flags().StringVarP(&snapshotName, "name", "n", "", "provide a name for the snapshot")
+	DdevSnapshotCommand.Flags().BoolVar(&snapshotUncompressed, "uncompressed", false, "Write the snapshot as an uncompressed mariabackup/xtrabackup stream instead of compressing it. This skips decompression on restore, but the file can be roughly as large as the database's datadir, many times bigger than a compressed snapshot. Not available for PostgreSQL projects.")
 	RootCmd.AddCommand(DdevSnapshotCommand)
 }

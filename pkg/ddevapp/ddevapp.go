@@ -3182,8 +3182,12 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 
 // Snapshot causes a snapshot of the db to be written into the snapshots volume
 // Returns the name of the snapshot and err
-func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
+func (app *DdevApp) Snapshot(snapshotName string, uncompressed bool) (string, error) {
 	containerSnapshotDirBase := "/var/tmp"
+
+	if uncompressed && app.Database.Type == nodeps.Postgres {
+		return "", fmt.Errorf("uncompressed snapshots are not supported for PostgreSQL projects")
+	}
 
 	err := app.ProcessHooks("pre-snapshot")
 	if err != nil {
@@ -3200,8 +3204,15 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	}
 
 	suffix := ".zst"
+	switch {
+	// An uncompressed snapshot is stored as the raw mariabackup/xtrabackup
+	// stream, named for the stream format that produced it.
+	case uncompressed && app.usesXtrabackup():
+		suffix = ".xbstream"
+	case uncompressed:
+		suffix = ".mbstream"
 	// MariaDB 5.5 is based on Ubuntu 14.04 which lacks zstd support
-	if app.Database.Type == nodeps.MariaDB && app.Database.Version == nodeps.MariaDB55 {
+	case app.Database.Type == nodeps.MariaDB && app.Database.Version == nodeps.MariaDB55:
 		suffix = ".gz"
 	}
 	snapshotFile := snapshotName + "-" + app.Database.Type + "_" + app.Database.Version + suffix
@@ -3226,7 +3237,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	util.Success("Creating database snapshot %s", snapshotName)
 
-	c := getBackupCommand(app, path.Join(containerSnapshotDir, snapshotFile))
+	c := getBackupCommand(app, path.Join(containerSnapshotDir, snapshotFile), uncompressed)
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     fmt.Sprintf(`set -eu -o pipefail; %s `, c),
@@ -3275,20 +3286,32 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	return snapshotName, nil
 }
 
+// oldMariaVersions are MariaDB versions that predate mariabackup, so they use
+// xtrabackup instead, the same as MySQL.
+var oldMariaVersions = []string{"5.5", "10.0"}
+
+// usesXtrabackup reports whether Snapshot()/getBackupCommand() will invoke
+// xtrabackup (MySQL, or ancient MariaDB predating mariabackup) rather than
+// mariabackup.
+func (app *DdevApp) usesXtrabackup() bool {
+	return app.Database.Type == nodeps.MySQL ||
+		(app.Database.Type == nodeps.MariaDB && nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version))
+}
+
 // getBackupCommand returns the command to dump the entire db system for the various databases
-func getBackupCommand(app *DdevApp, targetFile string) string {
+func getBackupCommand(app *DdevApp, targetFile string, uncompressed bool) string {
 	compressionCommand := app.GetDBCompressionCommand()
+	redirect := fmt.Sprintf(`| %[1]s > "%[2]s"`, compressionCommand, targetFile)
+	if uncompressed {
+		redirect = fmt.Sprintf(`> "%s"`, targetFile)
+	}
 
-	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%[1]s.log | %[2]s > "%[3]s"`, path.Base(targetFile), compressionCommand, targetFile)
-
-	oldMariaVersions := []string{"5.5", "10.0"}
+	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%[1]s.log %[2]s`, path.Base(targetFile), redirect)
 
 	switch {
 	// Old MariaDB versions don't have mariabackup, use xtrabackup for them as well as MySQL
-	case app.Database.Type == nodeps.MariaDB && nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version):
-		fallthrough
-	case app.Database.Type == nodeps.MySQL:
-		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%[1]s.log | %[2]s > "%[3]s"`, path.Base(targetFile), compressionCommand, targetFile)
+	case app.usesXtrabackup():
+		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%[1]s.log %[2]s`, path.Base(targetFile), redirect)
 	case app.Database.Type == nodeps.Postgres:
 		postgresDataPath := app.GetPostgresDataPath()
 		postgresDataDir := app.GetPostgresDataDir()
@@ -3364,7 +3387,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			}
 		}
 		t := time.Now()
-		_, err = app.Snapshot(app.Name + "_remove_data_snapshot_" + t.Format("20060102150405"))
+		_, err = app.Snapshot(app.Name+"_remove_data_snapshot_"+t.Format("20060102150405"), false)
 		if err != nil {
 			return err
 		}

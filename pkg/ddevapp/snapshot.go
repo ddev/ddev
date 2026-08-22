@@ -21,10 +21,43 @@ import (
 )
 
 type Snapshot struct {
-	Name      string
-	Created   time.Time
-	Size      int64
-	DBVersion string
+	Name        string
+	Created     time.Time
+	Size        int64
+	DBVersion   string
+	Compression string
+}
+
+// snapshotExtensions lists recognized snapshot file suffixes: the compressed
+// formats (zst, gz) followed by the uncompressed raw stream formats
+// (mbstream from mariabackup, xbstream from xtrabackup).
+var snapshotExtensions = []string{"zst", "gz", "mbstream", "xbstream"}
+
+// snapshotExtensionPattern is the `(zst|gz|mbstream|xbstream)`-style
+// alternation used to recognize a snapshot filename's extension.
+var snapshotExtensionPattern = "(" + strings.Join(snapshotExtensions, "|") + ")"
+
+// hasSnapshotExtension reports whether name ends in one of snapshotExtensions.
+func hasSnapshotExtension(name string) bool {
+	for _, ext := range snapshotExtensions {
+		if strings.HasSuffix(name, "."+ext) {
+			return true
+		}
+	}
+	return false
+}
+
+// snapshotCompressionLabel returns the human-readable compression type for a
+// snapshot file extension, for display in `ddev snapshot --list`.
+func snapshotCompressionLabel(ext string) string {
+	switch ext {
+	case "zst":
+		return "zstd"
+	case "gz":
+		return "gzip"
+	default:
+		return "none"
+	}
 }
 
 // SnapshotRestoreDefaultWaitTime is the max time we'll wait for snapshot restore.
@@ -128,14 +161,16 @@ func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
 		return files[i].ModTime().After(files[j].ModTime())
 	})
 
-	// Match snapshot files created with gzip (.gz) or zstd (.zst)
-	m := regexp.MustCompile(`-(mariadb|mysql|postgres)_([0-9.]*)\.(gz|zst)$`)
+	// Match snapshot files, capturing the DB type/version and the extension
+	// that identifies the compression (or lack of it).
+	m := regexp.MustCompile(`-(mariadb|mysql|postgres)_([0-9.]*)\.` + snapshotExtensionPattern + `$`)
 
 	for _, f := range files {
-		if f.IsDir() || strings.HasSuffix(f.Name(), ".gz") || strings.HasSuffix(f.Name(), ".zst") {
+		if f.IsDir() || hasSnapshotExtension(f.Name()) {
 			n := m.ReplaceAll([]byte(f.Name()), []byte(""))
 			size := f.Size()
 			dbVersion := "unknown"
+			compression := "none"
 			if f.IsDir() {
 				var err error
 				size, err = fileutil.DirSize(filepath.Join(snapshotDir, f.Name()))
@@ -150,14 +185,16 @@ func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
 						}
 					}
 				}
-			} else if matches := m.FindStringSubmatch(f.Name()); len(matches) > 2 {
+			} else if matches := m.FindStringSubmatch(f.Name()); len(matches) > 3 {
 				dbVersion = matches[1] + "_" + matches[2]
+				compression = snapshotCompressionLabel(matches[3])
 			}
 			snapshot := Snapshot{
-				Name:      string(n),
-				Created:   f.ModTime(),
-				Size:      size,
-				DBVersion: dbVersion,
+				Name:        string(n),
+				Created:     f.ModTime(),
+				Size:        size,
+				DBVersion:   dbVersion,
+				Compression: compression,
 			}
 			snapshots = append(snapshots, snapshot)
 		}
@@ -207,8 +244,8 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			snapshotDBVersion = "unknown"
 		}
 	} else {
-		// Extract the DB type/version from the filename, supporting both .gz and .zst
-		m1 := regexp.MustCompile(`((mysql|mariadb|postgres)_[0-9.]+)\.(gz|zst)$`)
+		// Extract the DB type/version from the filename
+		m1 := regexp.MustCompile(`((mysql|mariadb|postgres)_[0-9.]+)\.` + snapshotExtensionPattern + `$`)
 		matches := m1.FindStringSubmatch(snapshotFile)
 		if len(matches) > 2 {
 			snapshotDBVersion = matches[1]
@@ -359,7 +396,7 @@ func GetSnapshotFileFromName(name string, app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	m := regexp.MustCompile("^" + regexp.QuoteMeta(name) + `-(mariadb|mysql|postgres)_[0-9.]*\.(gz|zst)$`)
+	m := regexp.MustCompile("^" + regexp.QuoteMeta(name) + `-(mariadb|mysql|postgres)_[0-9.]*\.` + snapshotExtensionPattern + `$`)
 
 	for _, file := range files {
 		if m.MatchString(file) {

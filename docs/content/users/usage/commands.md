@@ -1342,7 +1342,10 @@ Flags:
 * `--cleanup`, `-C`: Cleanup snapshots.
 * `--list`, `-l`: List snapshots.
 * `--name`, `-n`: Provide a name for the snapshot.
+* `--uncompressed`: Write the snapshot as an uncompressed mariabackup/xtrabackup stream instead of compressing it. This skips decompression on restore, but the file can be roughly as large as the database's datadir, many times bigger than a compressed snapshot. Not available for PostgreSQL projects. See [Snapshots](../usage/database-management.md#snapshots) for when this unusual tradeoff makes sense.
 * `--yes`, `-y`: Skip confirmation prompt.
+
+`ddev snapshot --list` also shows each snapshot's compression: `zstd`, `gzip`, or `none` for an uncompressed snapshot.
 
 Example:
 
@@ -1367,6 +1370,9 @@ ddev snapshot --list
 
 # Take a snapshot for each project
 ddev snapshot --all
+
+# Take an uncompressed snapshot, trading disk space for a faster restore
+ddev snapshot --uncompressed
 ```
 
 ### `snapshot restore`

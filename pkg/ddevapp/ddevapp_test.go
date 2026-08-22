@@ -1875,7 +1875,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		}
 
 		snapshotName := dbType + "_" + dbVersion + "_" + fileutil.RandomFilenameBase()
-		fullSnapshotName, err := app.Snapshot(snapshotName)
+		fullSnapshotName, err := app.Snapshot(snapshotName, false)
 		if err != nil {
 			dumpDir := fmt.Sprintf("~/%s-broken-%s", t.Name(), util.RandString(5))
 			_, _ = exec.RunHostCommand(`bash`, `-c`, fmt.Sprintf("cp -r %s %s", app.AppRoot, dumpDir))
@@ -1967,7 +1967,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			// Snapshotting it as "initializer" and then wiping the db volume and
 			// restarting should restore this same data automatically, ahead of the
 			// normal empty starter database.
-			_, err = app.Snapshot("initializer")
+			_, err = app.Snapshot("initializer", false)
 			require.NoError(t, err, "could not create initializer snapshot for %s", dbTypeVersion)
 
 			err = app.Stop(true, false)

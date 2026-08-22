@@ -10,7 +10,9 @@
 #   2. /mysqlbase/custom/base_db.*                          - baked into a derived image
 #   3. /mysqlbase/base_db.*                                 - the stock DDEV starter database
 # A .zst seed is preferred over .gz at each location; .gz is exercised too,
-# since db versions without zstd (e.g. MariaDB 5.5) still produce it.
+# since db versions without zstd (e.g. MariaDB 5.5) still produce it. An
+# uncompressed .mbstream/.xbstream seed (the raw backup-tool stream, no
+# compression stage) is exercised too.
 
 load functions.sh
 
@@ -41,18 +43,30 @@ function setup_file {
     export SEED_COMPRESS="gzip"
   fi
 
+  # Matches the extension docker-entrypoint.sh's own BACKUPTOOL/STREAMTOOL
+  # detection produces for an uncompressed seed on this image.
+  if docker run --rm --entrypoint bash "${IMAGE}" -c 'command -v xtrabackup' >/dev/null 2>&1; then
+    export STREAM_EXT="xbstream"
+  else
+    export STREAM_EXT="mbstream"
+  fi
+
   # Matches the server_db_version computed by docker-entrypoint.sh, e.g. mariadb_11.8
   export INITIALIZER_NAME="initializer-${DB_TYPE}_${DB_VERSION}.${SEED_EXT}"
+  export UNCOMPRESSED_INITIALIZER_NAME="initializer-${DB_TYPE}_${DB_VERSION}.${STREAM_EXT}"
 
-  make_seed "marker_seed_a" "${SEED_DIR}/seed_a.${SEED_EXT}"
-  make_seed "marker_seed_b" "${SEED_DIR}/seed_b.${SEED_EXT}"
+  make_seed "marker_seed_a" "${SEED_DIR}/seed_a.${SEED_EXT}" "${SEED_COMPRESS}"
+  make_seed "marker_seed_b" "${SEED_DIR}/seed_b.${SEED_EXT}" "${SEED_COMPRESS}"
+  make_seed "marker_seed_c" "${SEED_DIR}/seed_c.${STREAM_EXT}" ""
 }
 
 # Build a base_db seed containing a single marker table, using the same
 # backup tool (mariabackup/xtrabackup via xbstream) the entrypoint expects.
+# An empty compress_cmd writes the raw, uncompressed backup-tool stream.
 function make_seed {
   local marker_table=$1
   local outfile=$2
+  local compress_cmd=$3
   local name="seedbuilder-$$-${RANDOM}"
   local vol="seedbuilder-vol-$$-${RANDOM}"
 
@@ -72,10 +86,14 @@ function make_seed {
   docker exec "${name}" mysql -udb -pdb --database=db -e "CREATE TABLE ${marker_table} (id INT);"
   # mariabackup/mbstream on MariaDB, xtrabackup/xbstream on MySQL (and some
   # older MariaDB) -- same detection docker-entrypoint.sh itself uses.
+  local pipe_to_compressor=""
+  if [ -n "${compress_cmd}" ]; then
+    pipe_to_compressor="| ${compress_cmd}"
+  fi
   docker exec "${name}" bash -c "
     backuptool=mariabackup; streamtool=mbstream
     if command -v xtrabackup >/dev/null 2>&1; then backuptool=xtrabackup; streamtool=xbstream; fi
-    \${backuptool} --backup --stream=\${streamtool} --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/seed.log | ${SEED_COMPRESS}
+    \${backuptool} --backup --stream=\${streamtool} --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/seed.log ${pipe_to_compressor}
   " >"${outfile}"
 
   docker rm -f "${name}" >/dev/null
@@ -103,6 +121,17 @@ function setup {
   [[ "$output" == *"snapshot=/mnt/snapshots/${INITIALIZER_NAME}"* ]]
   run mysql ${SKIP_SSL:-} -udb -pdb --database=db --host=127.0.0.1 --port=$HOSTPORT -e "SHOW TABLES;"
   [[ "$output" == *"marker_seed_a"* ]]
+}
+
+@test "uncompressed initializer seed overrides the stock seed for ${DB_TYPE} ${DB_VERSION}" {
+  docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql:nocopy \
+    -v "${SEED_DIR}/seed_c.${STREAM_EXT}:/mnt/snapshots/${UNCOMPRESSED_INITIALIZER_NAME}:ro" \
+    --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE
+  containercheck
+  run docker logs $CONTAINER_NAME
+  [[ "$output" == *"snapshot=/mnt/snapshots/${UNCOMPRESSED_INITIALIZER_NAME}"* ]]
+  run mysql ${SKIP_SSL:-} -udb -pdb --database=db --host=127.0.0.1 --port=$HOSTPORT -e "SHOW TABLES;"
+  [[ "$output" == *"marker_seed_c"* ]]
 }
 
 @test "derived-image custom base_db seed overrides the stock seed for ${DB_TYPE} ${DB_VERSION}" {
