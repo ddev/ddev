@@ -10,10 +10,13 @@ import (
 
 // DdevSnapshotRestoreCommand handles ddev snapshot restore
 var DdevSnapshotRestoreCommand = &cobra.Command{
-	Use:   "restore [snapshot_name]",
+	Use:   "restore [snapshot_name|path]",
 	Short: "Restore a project's database to the provided snapshot version.",
-	Long: `Uses mariabackup command to restore a project database to a particular snapshot from the .ddev/db_snapshots folder.
-Example: "ddev snapshot restore d8git_20180717203845"`,
+	Long:  `Uses mariabackup or xtrabackup command to restore a project database to a particular snapshot, either by name from the .ddev/db_snapshots folder or by the path to a snapshot file elsewhere.`,
+	Example: `ddev snapshot restore d8git_20180717203845
+ddev snapshot restore --latest
+ddev snapshot restore --force t3v14-latest
+ddev snapshot restore $HOME/tmp/mysnapshot-mariadb_11.8.zst`,
 	Run: func(_ *cobra.Command, args []string) {
 		var snapshotName string
 
@@ -66,7 +69,7 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 
 		// Normalize the snapshot name
 
-		if err := app.RestoreSnapshot(snapshotName); err != nil {
+		if err := app.RestoreSnapshot(snapshotName, snapshotRestoreForce); err != nil {
 			util.Failed("Failed to restore snapshot %s for project %s: %v", snapshotName, app.GetName(), err)
 		}
 	},
@@ -74,5 +77,6 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 
 func init() {
 	DdevSnapshotRestoreCommand.Flags().BoolVarP(&snapshotRestoreLatest, "latest", "", false, "use latest snapshot")
+	DdevSnapshotRestoreCommand.Flags().BoolVarP(&snapshotRestoreForce, "force", "f", false, "Restore a snapshot made by a different version of the same database server, which may not come up")
 	DdevSnapshotCommand.AddCommand(DdevSnapshotRestoreCommand)
 }

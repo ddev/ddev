@@ -875,6 +875,8 @@ type composeYAMLVars struct {
 	HostXHGuiPort             string
 	XhguiImage                string
 	XHProfMode                types.XHProfMode
+	SeedSnapshotMountDir      string
+	SeedSnapshotMountTarget   string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -963,6 +965,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		XhguiImage:              docker.GetXhguiImage(),
 		XHProfMode:              app.GetXHProfMode(),
 		UseHardenedImages:       globalconfig.DdevGlobalConfig.UseHardenedImages,
+		SeedSnapshotMountDir:    app.SeedSnapshotMountDir,
+		SeedSnapshotMountTarget: SeedSnapshotMountDir,
 	}
 	// We don't want to bind-mount Git directory if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {

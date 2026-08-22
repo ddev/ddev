@@ -1235,6 +1235,9 @@ Flags:
 
 * `--all`, `-a`: Restart all projects.
 * `--no-cache`: Rebuild custom Docker image layers without cache.
+* `--omit-snapshot`, `-O`: With `--reset-database`, skip the snapshot of the database being removed.
+* `--reset-database`: Remove the project's existing database and start over with a new one.
+* `--seed-snapshot`: Seed a brand-new database volume from this snapshot name or file, instead of the stock starter database.
 
 Example:
 
@@ -1250,6 +1253,12 @@ ddev restart my-project my-other-project
 
 # Restart all projects
 ddev restart --all
+
+# Throw away the current database and restart with a new, empty one
+ddev restart --reset-database
+
+# Reset and initialize with external snapshot without confirmation
+ddev restart --reset-database --seed-snapshot=/tmp/newsnapshot-mariadb_11.8.zst -y
 ```
 
 ## `sake`
@@ -1377,10 +1386,12 @@ ddev snapshot --uncompressed
 
 ### `snapshot restore`
 
-Restores a database snapshot from the `.ddev/db_snapshots` directory.
+Restores a database snapshot, either by name from the `.ddev/db_snapshots` directory or
+by the path to a snapshot file elsewhere on disk.
 
 Flags:
 
+* `--force`, `-f`: Restore a snapshot made by a different version of the same database server, which may not succeed.
 * `--latest`: Use the latest snapshot.
 
 Example:
@@ -1391,7 +1402,15 @@ ddev snapshot restore --latest
 
 # Restore the previously-taken `my_snapshot_name` snapshot
 ddev snapshot restore my_snapshot_name
+
+# Restore a snapshot taken on an older version of the same database server
+ddev snapshot restore --force my_snapshot_name
+
+# Restore a snapshot file from outside the project
+ddev snapshot restore ~/tmp/mysnapshot-mariadb_11.8.zst
 ```
+
+A snapshot normally has to match the project's configured database type and version exactly. `--force` lifts that for a different version of the same server, which the underlying restore doesn't itself check for; the database may fail to come up, in which case [`ddev start --reset-database`](../usage/database-management.md#starting-over-with-a-new-database) starts over. Restoring across database types (a MySQL snapshot into MariaDB, say) is still refused.
 
 ## `spark`
 
@@ -1441,7 +1460,10 @@ Flags:
 
 * `--all`, `-a`: Start all projects.
 * `--no-cache`: Rebuild custom Docker image layers without cache.
+* `--omit-snapshot`, `-O`: With `--reset-database`, skip the snapshot of the database being removed.
 * `--profiles=<optional-compose-profile-list>`: Start services labeled with the Docker Compose profiles in comma-separated list of profiles.
+* `--reset-database`: Remove the project's existing database and start over with a new one.
+* `--seed-snapshot`: Seed a brand-new database volume from this snapshot name or file, instead of the stock starter database.
 * `--skip-confirmation`, `-y`: Skip any confirmation steps.
 
 Example:
@@ -1458,7 +1480,15 @@ ddev start my-project my-other-project
 
 # Start all projects
 ddev start --all
+
+# Throw away the current database and start over with a new, empty one
+ddev start --reset-database
+
+# Start over with a database seeded from a snapshot instead
+ddev start --reset-database --seed-snapshot=my_snapshot_name
 ```
+
+See [Seeding a Fresh Database from a Snapshot](../usage/database-management.md#seeding-a-fresh-database-from-a-snapshot) and [Starting Over with a New Database](../usage/database-management.md#starting-over-with-a-new-database).
 
 ## `stop`
 

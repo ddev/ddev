@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -326,23 +327,23 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		require.Contains(t, out, "/mysqlbase/custom/base_db.* baked into dbimage (seeds a new database volume)")
 	})
 
-	// An `initializer` snapshot seeds a fresh database volume, so it's reported
-	// even though it isn't an ordinary config file.
-	t.Run("initializer snapshot", func(t *testing.T) {
+	// A `seed` snapshot seeds a fresh database volume, so it's reported even
+	// though it isn't an ordinary config file.
+	t.Run("seed snapshot", func(t *testing.T) {
 		snapshotDir := filepath.Join(tmpdir, ".ddev", "db_snapshots")
 		err := os.MkdirAll(snapshotDir, 0755)
 		require.NoError(t, err)
-		initializer := filepath.Join(snapshotDir, "initializer-"+nodeps.MariaDB+"_"+nodeps.MariaDBDefaultVersion+".zst")
-		err = os.WriteFile(initializer, []byte("not really a snapshot\n"), 0644)
+		seedSnapshot := filepath.Join(snapshotDir, ddevapp.SeedSnapshotName+"-"+nodeps.MariaDB+"_"+nodeps.MariaDBDefaultVersion+".zst")
+		err = os.WriteFile(seedSnapshot, []byte("not really a snapshot\n"), 0644)
 		require.NoError(t, err)
 		t.Cleanup(func() {
-			_ = os.Remove(initializer)
+			_ = os.Remove(seedSnapshot)
 		})
 
 		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
 		require.NoError(t, err)
 		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
-		require.Contains(t, out, "initializer-"+nodeps.MariaDB+"_"+nodeps.MariaDBDefaultVersion+".zst (seeds a new database volume)")
+		require.Contains(t, out, ddevapp.SeedSnapshotName+"-"+nodeps.MariaDB+"_"+nodeps.MariaDBDefaultVersion+".zst (seeds a new database volume)")
 	})
 
 	// Test mutagen (conditional: only when mutagen is enabled)

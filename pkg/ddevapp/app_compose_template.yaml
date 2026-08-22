@@ -30,6 +30,9 @@ services:
       - .:/mnt/ddev_config
       - ./db_snapshots:/mnt/snapshots
       {{ end }} {{/* end if .NoBindMounts */}}
+      {{ if .SeedSnapshotMountDir }}
+      - {{ .SeedSnapshotMountDir }}:{{ .SeedSnapshotMountTarget }}:ro
+      {{ end }}
       - ddev-global-cache:/mnt/ddev-global-cache
     restart: "no"
 

@@ -13,6 +13,103 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
 
+// DatabaseMismatchMessage describes a project configured for one database while
+// its database volume holds another, and spells out the two ways forward: put
+// the configuration back, or throw the existing database away. Both `ddev start`
+// (which refuses) and `ddev config` (which only warns) report it.
+func (app *DdevApp) DatabaseMismatchMessage(existingDBType string) string {
+	configuredDBType := app.Database.Type + ":" + app.Database.Version
+	message := fmt.Sprintf("project %s is configured for database %s, but its database volume holds %s.\nTo keep the existing database, put the configuration back with 'ddev config --database=%s'.", app.Name, configuredDBType, existingDBType, existingDBType)
+
+	// `ddev utility migrate-database` only converts between MariaDB and MySQL.
+	convertible := true
+	for _, dbType := range []string{existingDBType, configuredDBType} {
+		if !slices.Contains([]string{nodeps.MariaDB, nodeps.MySQL}, strings.Split(dbType, ":")[0]) {
+			convertible = false
+		}
+	}
+	if convertible {
+		message += fmt.Sprintf("\nTo convert the existing database to %s, put the configuration back and then run 'ddev utility migrate-database %s'.", configuredDBType, configuredDBType)
+	}
+
+	return message + fmt.Sprintf("\nTo throw the existing database away and start over with %s, use 'ddev start --reset-database', which snapshots it first unless you add --omit-snapshot.\nSee %s", configuredDBType, "https://docs.ddev.com/en/stable/users/extend/database-types/")
+}
+
+// ResetDatabaseVolume removes the project's database volumes so that the next
+// start creates and seeds a new one. Unless omitSnapshot, the existing database
+// is snapshotted first, at the database version that actually created it, which
+// is not necessarily the version the project is now configured for.
+func (app *DdevApp) ResetDatabaseVolume(omitSnapshot bool) error {
+	volumes := []string{}
+	for _, volume := range []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName()} {
+		if dockerutil.VolumeExists(volume) {
+			volumes = append(volumes, volume)
+		}
+	}
+	if len(volumes) == 0 {
+		return nil
+	}
+
+	if !omitSnapshot {
+		snapshotName, err := app.SnapshotAtExistingDBVersion("")
+		if err != nil {
+			return fmt.Errorf("unable to snapshot the existing database before removing it: %v\nUse --omit-snapshot to remove it without a snapshot", err)
+		}
+		if snapshotName != "" {
+			util.Success("Snapshotted the existing database as '%s' before removing it", snapshotName)
+		}
+	}
+
+	// The volume can't be removed while the db container has it mounted.
+	if dbContainer, err := GetContainer(app, "db"); err == nil && dbContainer != nil {
+		if err = dockerutil.RemoveContainer(dbContainer.ID); err != nil {
+			return fmt.Errorf("failed to remove db container: %v", err)
+		}
+	}
+	for _, volume := range volumes {
+		if err := dockerutil.RemoveVolume(volume); err != nil {
+			return fmt.Errorf("failed to remove database volume %s: %v", volume, err)
+		}
+		util.Success("Removed database volume %s", volume)
+	}
+	return nil
+}
+
+// SnapshotAtExistingDBVersion snapshots the database that is in the database
+// volume using the database type/version that created it, which can differ from
+// the project's configured one after a `database:` change in config.yaml. It
+// returns the snapshot name, or an empty string if there is no database to
+// snapshot.
+func (app *DdevApp) SnapshotAtExistingDBVersion(snapshotName string) (string, error) {
+	existingDBType, err := app.GetExistingDBType()
+	if err != nil {
+		return "", err
+	}
+	if existingDBType == "" {
+		return "", nil
+	}
+
+	// Starting the project with the configured version would refuse outright, so
+	// stand the db up as whatever the volume actually holds, just long enough to
+	// snapshot it.
+	if existingDBType != app.Database.Type+":"+app.Database.Version {
+		configuredDatabase := app.Database
+		dbType, dbVersion, _ := strings.Cut(existingDBType, ":")
+		app.Database = DatabaseDesc{Type: dbType, Version: dbVersion}
+		defer func() {
+			app.Database = configuredDatabase
+		}()
+		util.Warning("Starting the database as %s to snapshot it, because that is what its volume holds", existingDBType)
+	}
+
+	if status, _ := app.SiteStatus(); status != SiteRunning {
+		if err = app.Start(); err != nil {
+			return "", err
+		}
+	}
+	return app.Snapshot(snapshotName, false)
+}
+
 // GetExistingDBType returns type/version like mariadb:10.11 or postgres:13 or "" if no existing volume
 // This has to make a Docker container run so is fairly costly.
 func (app *DdevApp) GetExistingDBType() (string, error) {

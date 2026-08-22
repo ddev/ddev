@@ -18,7 +18,8 @@ var RestartCmd = &cobra.Command{
 	Long:              `Stops named projects and then starts them back up again.`,
 	Example: `ddev restart
 ddev restart <project1> <project2>
-ddev restart --all`,
+ddev restart --all
+ddev restart --reset-database`,
 	PreRun: func(_ *cobra.Command, _ []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
@@ -37,9 +38,22 @@ ddev restart --all`,
 		ddevapp.RunUpgradeCheck()
 
 		noCache, _ := cmd.Flags().GetBool("no-cache")
+		seedSnapshot, _ := cmd.Flags().GetString("seed-snapshot")
+		resetDatabase, _ := cmd.Flags().GetBool("reset-database")
+		omitSnapshot, _ := cmd.Flags().GetBool("omit-snapshot")
+		skipConfirmation, _ := cmd.Flags().GetBool("skip-confirmation")
+		checkResetDatabaseFlags(resetDatabase, omitSnapshot, restartAll)
 
 		for _, app := range projects {
 			app.NoCache = noCache
+			app.SeedSnapshot = seedSnapshot
+
+			if resetDatabase {
+				if err := resetProjectDatabase(app, omitSnapshot, skipConfirmation); err != nil {
+					util.Failed("Failed to reset the database of %s: %v", app.GetName(), err)
+				}
+			}
+
 			output.UserOut.Printf("Restarting project %s...", app.GetName())
 			err = app.Restart()
 			if err != nil {
@@ -56,5 +70,6 @@ func init() {
 	RestartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
 	RestartCmd.Flags().BoolP("no-cache", "", false, "Rebuild custom Docker image layers without cache")
 	RestartCmd.Flags().BoolVarP(&restartAll, "all", "a", false, "Restart all projects")
+	addResetDatabaseFlags(RestartCmd)
 	RootCmd.AddCommand(RestartCmd)
 }

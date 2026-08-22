@@ -441,13 +441,13 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 		})
 	}
 
-	// An `initializer` snapshot or a base_db seed baked into a derived dbimage
-	// replaces the stock starter database when a fresh database volume is created,
-	// so report them even though neither is an ordinary config file.
-	if initializer := app.GetInitializerSnapshotFile(); initializer != "" {
+	// A `seed` snapshot or a base_db seed baked into a derived dbimage replaces the
+	// stock starter database when a fresh database volume is created, so report
+	// them even though neither is an ordinary config file.
+	if seed := app.GetSeedSnapshotFile(); seed != "" {
 		findings = append(findings, finding{
 			category: "Database",
-			files:    []fileInfo{{path: fmt.Sprintf("%s (seeds a new database volume)", fileutil.ShortHomeJoin(initializer))}},
+			files:    []fileInfo{{path: fmt.Sprintf("%s (seeds a new database volume)", fileutil.ShortHomeJoin(seed))}},
 		})
 	}
 	// The db-build Dockerfile itself is already listed by the check above, so
