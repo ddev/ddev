@@ -1,0 +1,37 @@
+name: Comment on release
+
+# Comments on PRs that are included in a release, letting contributors know
+# their change has shipped. Parses PR references out of the release notes
+# body sequentially (with a small delay between requests), which avoids the
+# GitHub secondary rate limits that a commit-diffing/GraphQL approach hits on
+# releases with many merged PRs.
+# Only runs on real (non-prerelease) releases; edge/prerelease tags are skipped.
+#
+# A few numbers referenced inline in PR titles (e.g. "fixes #1234") are plain
+# issues rather than PRs, so they 404 and get counted as "failed comments" by
+# the action even though the real PR comments succeed; continue-on-error
+# avoids a spurious red X for that.
+on:
+  release:
+    types: [released]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+env:
+  # nflaig/release-comment-on-pr's action.yml declares node20; force node24
+  # ahead of Node 20's removal from runners, see
+  # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release-commenter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nflaig/release-comment-on-pr@v1
+        continue-on-error: true
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          message: |
+            🎉 This PR is included in the [${releaseTag}](${releaseUrl}) release.
