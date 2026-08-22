@@ -10,6 +10,33 @@ should have finished.
   separate jobs in the same build), plus the latest successful `perf-linux.yml`
   run's artifact, and appends one line per leg to `history.ndjson` on the
   `performance-data` branch.
+- `collect-test-runtime.js` is a separate dataset: total runtime per CI test
+  type (`golang-nginx-fpm`, `macos-lima`, `quickstart`, etc.), not narrow
+  synthetic benchmarks. It pulls completed `main`-branch runs for every
+  GitHub Actions workflow in `test-workflows.json` via `gh api`, plus finished
+  `main`-branch builds for every Buildkite pipeline in `test-pipelines.json`
+  (the actual Go-test-suite pipelines -- `macos-lima`, `wsl2-mirrored`, etc. --
+  not the nightly `ddev-perf-*` benchmarks in `pipelines.json`). No test
+  instrumentation required for this dataset. It appends one row per run/build
+  to `test-runtime-history.ndjson`, with `wall_clock_s` (queue-excluded
+  duration) and `compute_s` (summed job duration, so a run split into more
+  than one job -- podman-rootless's testpkg/testcmd, WSL2 NAT -- reports real
+  CPU-minutes, not just the longest job) plus a `jobs[]` breakdown with each
+  job's runner labels (GitHub Actions labels or Buildkite agent `meta_data`
+  tags, e.g. `os=macos`, `lima=true`). Incremental by default (derives
+  `--since` from the newest timestamp already in the history file, with a
+  1-day overlap); pass `--since=YYYY-MM-DD` to backfill further back. Reruns
+  are recorded as distinct points (keyed on source + workflow + run/build
+  number + attempt), not deduped away, since a flaky-test rerun is itself a
+  real measurement. `BUILDKITE_API_TOKEN` is the same one `collect.js` uses;
+  if unset, the Buildkite side is skipped (not an error), same tolerance.
+  Complements the per-test data gotestsum writes when `GOTESTSUM_JSONFILE_DIR`
+  is set (see `Makefile`) -- that's per-Go-test detail uploaded as a build
+  artifact by the workflows that run `make test`; this script is the
+  per-test-type total that also covers non-Go workflows like Quickstart.
+  `test-pipelines.json`'s comment explains how its 12 slugs were confirmed
+  live (`bk pipeline list --org ddev`) against several retired/legacy
+  pipelines the Buildkite API still returns -- see #8695.
 - `dashboard.html` is a dependency-free static page: it `fetch()`es
   `history.ndjson` client-side, filterable by metric and by leg
   (platform/arch/docker provider). Two views: a per-metric trend line over

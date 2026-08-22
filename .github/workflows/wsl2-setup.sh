@@ -54,6 +54,9 @@ rm /tmp/go.tar.gz
 ln -sf /usr/local/go/bin/go /usr/local/bin/go
 ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 
+echo "=== Installing gotestsum ==="
+GOBIN=/usr/local/bin go install gotest.tools/gotestsum@v1.12.1
+
 echo "=== Installing mkcert ==="
 MKCERT_VERSION="v1.4.4"
 curl -fsSL "https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64" -o /usr/local/bin/mkcert
@@ -99,5 +102,6 @@ go version
 docker version
 mkcert --version || true
 git --version
+gotestsum --version
 
 echo "=== WSL2 setup complete ==="
