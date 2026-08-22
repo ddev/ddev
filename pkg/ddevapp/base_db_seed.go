@@ -87,7 +87,7 @@ func (s *SeedSnapshot) ContainerPath() string {
 //
 // The flag takes either a snapshot name resolved inside .ddev/db_snapshots, or a
 // path to a snapshot file elsewhere. Either way the file has to keep the standard
-// `-<type>_<version>.{zst,gz}` suffix, so a snapshot from a different database
+// `-<type>_<version>.<ext>` suffix, so a snapshot from a different database
 // can't be dropped into a fresh volume it will not work in.
 func (app *DdevApp) ResolveSeedSnapshot() (*SeedSnapshot, error) {
 	if app.IsDBOmitted() {

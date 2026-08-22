@@ -205,9 +205,9 @@ func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
 
 // snapshotDBVersionFromFilename returns the db type/version a snapshot file
 // name encodes, like "mariadb_11.8". Snapshot files are always named
-// <name>-<type>_<version>.{gz,zst} by Snapshot().
+// <name>-<type>_<version>.<ext> by Snapshot(), for any of snapshotExtensions.
 func snapshotDBVersionFromFilename(snapshotFile string) (string, error) {
-	matches := regexp.MustCompile(`((mysql|mariadb|postgres)_[0-9.]+)\.(gz|zst)$`).FindStringSubmatch(snapshotFile)
+	matches := regexp.MustCompile(`((mysql|mariadb|postgres)_[0-9.]+)\.` + snapshotExtensionPattern + `$`).FindStringSubmatch(snapshotFile)
 	if len(matches) < 2 {
 		return "", fmt.Errorf("unable to determine database type/version from snapshot %s", snapshotFile)
 	}

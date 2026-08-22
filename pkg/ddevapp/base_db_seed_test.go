@@ -130,6 +130,14 @@ func TestResolveSeedSnapshot(t *testing.T) {
 	require.Equal(t, "/mnt/snapshots/elsewhere-mariadb_10.11.zst", seed.ContainerPath())
 	globalconfig.DdevGlobalConfig.NoBindMounts = false
 
+	// An uncompressed snapshot outside the project is accepted too.
+	uncompressed := filepath.Join(outsideDir, "elsewhere-mariadb_10.11.mbstream")
+	require.NoError(t, os.WriteFile(uncompressed, []byte("seed"), 0644))
+	app.SeedSnapshot = uncompressed
+	seed, err = app.ResolveSeedSnapshot()
+	require.NoError(t, err)
+	require.Equal(t, uncompressed, seed.HostPath)
+
 	// A snapshot from another database can't seed this one.
 	wrongVersion := filepath.Join(outsideDir, "elsewhere-mariadb_10.6.zst")
 	require.NoError(t, os.WriteFile(wrongVersion, []byte("seed"), 0644))

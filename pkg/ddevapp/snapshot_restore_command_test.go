@@ -20,6 +20,8 @@ func TestSnapshotDBVersionFromFilename(t *testing.T) {
 		"mysnapshot-mysql_8.0.gz":                   "mysql_8.0",
 		"seed-postgres_17.zst":                      "postgres_17",
 		"name-with-mariadb_10.11-mariadb_10.11.zst": "mariadb_10.11",
+		"mysnapshot-mariadb_11.8.mbstream":          "mariadb_11.8",
+		"mysnapshot-mysql_8.0.xbstream":             "mysql_8.0",
 	} {
 		dbVersion, err := snapshotDBVersionFromFilename(filename)
 		require.NoError(t, err, filename)
