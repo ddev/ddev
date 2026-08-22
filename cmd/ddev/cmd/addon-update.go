@@ -178,7 +178,7 @@ ddev add-on update --project my-project
 
 		if len(updatedNames) > 0 {
 			output.UserOut.WithField("raw", results).Printf("\nUpdated %d add-on(s): %s\nUse `ddev restart` to enable updates.", len(updatedNames), strings.Join(updatedNames, ", "))
-			util.Warning("\nTo downgrade again:\n%s", strings.Join(rollbackHints, "\n"))
+			util.Warning("\nIf you want to go back to the original versions:\n%s", strings.Join(rollbackHints, "\n"))
 		}
 		if len(failedNames) > 0 {
 			util.Failed("Failed to update %d add-on(s): %s", len(failedNames), strings.Join(failedNames, ", "))
