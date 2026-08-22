@@ -142,6 +142,14 @@ ddev add-on get <owner>/<repo>
 
 This updates to the latest version while preserving your customizations.
 
+To check and update every installed add-on at once:
+
+```bash
+ddev add-on update
+```
+
+Add `--dry-run` to see what would be updated without installing anything.
+
 ### Remove an Add-on
 
 ```bash
