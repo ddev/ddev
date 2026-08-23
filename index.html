@@ -31,6 +31,17 @@
   select { font-size: 0.95rem; padding: 0.25rem; }
   .legs { display: flex; flex-wrap: wrap; gap: 0.5rem; max-width: 40rem; }
   .legs label { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--fg); }
+  .legs-toolbar { display: flex; gap: 0.4rem; margin: 0.25rem 0 0.4rem; }
+  .legs-toolbar button {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.5rem;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .legs-toolbar button:hover { border-color: var(--accent); }
   .chart-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; }
   canvas { display: block; }
   .legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem; font-size: 0.8rem; }
@@ -63,8 +74,19 @@
       <label for="metric-select">Metric</label>
       <select id="metric-select"></select>
     </div>
+    <div id="exclude-cancelled-wrap">
+      <label style="visibility: hidden; display: block;">.</label>
+      <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;">
+        <input type="checkbox" id="exclude-cancelled-checkbox" checked>
+        Exclude cancelled runs
+      </label>
+    </div>
     <div>
       <label id="legs-label">Legs (platform / arch / docker provider)</label>
+      <div class="legs-toolbar">
+        <button type="button" id="legs-all">All</button>
+        <button type="button" id="legs-none">None</button>
+      </div>
       <div class="legs" id="legs-container"></div>
     </div>
   </div>
@@ -105,6 +127,7 @@
         return [...s].sort();
       },
       metricValue: (row, metric) => (row.metrics ? row.metrics[metric] : null),
+      isCancelled: () => false,
       trendNote: 'Data source: <code>history.ndjson</code>, one line per (commit, leg) benchmark run.',
       compareNote: `Each bar is the median of that environment's last ${COMPARE_TRAILING_N} nightly runs (not just the latest one) for the selected metric, sorted fastest to slowest. Data source: <code>history.ndjson</code>.`,
       csvPrefix: 'ddev-perf',
@@ -116,13 +139,18 @@
       legKey: (row) => row.workflow,
       metrics: () => ['wall_clock_s', 'compute_s'],
       metricValue: (row, metric) => row[metric],
+      // GitHub spells it "cancelled", Buildkite spells it "canceled" -- a
+      // cancelled run's duration is however far it got before a newer commit
+      // superseded it (see #8695/#8696 discussion), not a real completion
+      // time, so it's excluded from duration charts by default.
+      isCancelled: (row) => row.conclusion === 'cancelled' || row.conclusion === 'canceled',
       trendNote: 'Data source: <code>test-runtime-history.ndjson</code>, one line per CI run/build.',
       compareNote: `Each bar is the median of that test type's last ${COMPARE_TRAILING_N} runs (not just the latest one) for the selected metric, sorted fastest to slowest. Data source: <code>test-runtime-history.ndjson</code>.`,
       csvPrefix: 'ddev-test-runtime',
     },
   };
 
-  const state = { dataset: 'perf', rows: [], metric: null, view: 'trend', legs: [], enabledLegs: new Set() };
+  const state = { dataset: 'perf', rows: [], metric: null, view: 'trend', legs: [], enabledLegs: new Set(), excludeCancelled: true };
 
   function ds() {
     return DATASETS[state.dataset];
@@ -189,6 +217,16 @@
       });
     }
 
+    const excludeCancelledCheckbox = document.getElementById('exclude-cancelled-checkbox');
+    excludeCancelledCheckbox.checked = state.excludeCancelled;
+    if (!excludeCancelledCheckbox.dataset.bound) {
+      excludeCancelledCheckbox.dataset.bound = '1';
+      excludeCancelledCheckbox.addEventListener('change', () => {
+        state.excludeCancelled = excludeCancelledCheckbox.checked;
+        render();
+      });
+    }
+
     const legSet = new Set();
     for (const row of state.rows) legSet.add(legKey(row));
     state.legs = [...legSet].sort();
@@ -226,6 +264,23 @@
       label.appendChild(cb);
       label.appendChild(document.createTextNode(leg));
       legsContainer.appendChild(label);
+    }
+
+    // Datasets like CI test runtime can have 20+ legs -- all of them plotted
+    // at once on the trend view is unreadable. These two buttons are the fast
+    // path to "clear everything, then check the ones I actually want."
+    function setAllLegs(enabled) {
+      for (const cb of legsContainer.querySelectorAll('input[type=checkbox]')) cb.checked = enabled;
+      state.enabledLegs = enabled ? new Set(state.legs) : new Set();
+      render();
+    }
+    const allBtn = document.getElementById('legs-all');
+    const noneBtn = document.getElementById('legs-none');
+    if (!allBtn.dataset.bound) {
+      allBtn.dataset.bound = '1';
+      allBtn.addEventListener('click', () => setAllLegs(true));
+      noneBtn.dataset.bound = '1';
+      noneBtn.addEventListener('click', () => setAllLegs(false));
     }
   }
 
@@ -269,7 +324,7 @@
       .filter((leg) => state.enabledLegs.has(leg))
       .map((leg, i) => {
         const points = state.rows
-          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null)
+          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null && !(state.excludeCancelled && ds().isCancelled(r)))
           .map((r) => ({ t: new Date(r.timestamp).getTime(), v: ds().metricValue(r, state.metric) }));
         return { leg, color: COLORS[i % COLORS.length], points };
       })
@@ -358,7 +413,7 @@
       .filter((leg) => state.enabledLegs.has(leg))
       .map((leg, i) => {
         const points = state.rows
-          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null)
+          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null && !(state.excludeCancelled && ds().isCancelled(r)))
           .map((r) => ds().metricValue(r, state.metric));
         const value = median(points.slice(-COMPARE_TRAILING_N));
         return { leg, color: COLORS[i % COLORS.length], value, n: Math.min(points.length, COMPARE_TRAILING_N) };
