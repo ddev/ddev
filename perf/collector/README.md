@@ -37,6 +37,25 @@ should have finished.
   `test-pipelines.json`'s comment explains how its 12 slugs were confirmed
   live (`bk pipeline list --org ddev`) against several retired/legacy
   pipelines the Buildkite API still returns -- see #8695.
+
+  For GitHub Actions runs GitHub itself marked `failure`, the collector also
+  downloads that run's gotestsum artifact and checks which of
+  `testnotddevapp.ndjson`/`testddevapp.ndjson`/`testcmd.ndjson` exist, adding
+  a `stage_analysis` object to the matching job in `jobs[]`. The Makefile's
+  target chain (`test: testpkg testcmd`; `testpkg: testnotddevapp
+  testddevapp`) means a failure in an earlier target aborts the rest --
+  GNU Make's default behavior on a non-zero recipe -- so a target whose
+  jsonfile never got written never ran. `stage_analysis.truncated` is true
+  when that happened (the run's `wall_clock_s`/`compute_s` reflect only part
+  of a full run, not a real completion -- exclude these from duration trends
+  the same way cancelled runs already are); `failed_at_stage` names the
+  target that never ran; `failing_tests` lists the actual failing test names
+  from whichever stage did run last. No artifact match (the common case
+  before this was added, and always true for Buildkite, which has no
+  gotestsum wiring) just means no `stage_analysis` -- not an error.
+  `makeTargetFromArtifactName`/`analyzeStageDir` in the script are pure
+  functions verified against fixture data (no jest/mocha dependency here, so
+  ad hoc rather than a committed test file -- same as `collect.js`).
 - `dashboard.html` is a dependency-free static page: it `fetch()`es
   `history.ndjson` client-side, filterable by metric and by leg
   (platform/arch/docker provider). Two views: a per-metric trend line over

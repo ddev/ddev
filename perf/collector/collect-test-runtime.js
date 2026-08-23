@@ -27,13 +27,13 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
+// Parsed unconditionally (not just under the CLI guard below) so `main()`
+// and `computeSince()` can close over them either way; only actually
+// validated when this file is run directly rather than require()'d, e.g. by
+// collect-test-runtime.test.js's pure-function tests.
 const args = process.argv.slice(2);
 const HISTORY_PATH = args.find((a) => !a.startsWith('--'));
 const sinceArg = args.find((a) => a.startsWith('--since='));
-if (!HISTORY_PATH) {
-  console.error('Usage: collect-test-runtime.js <path-to-history.ndjson> [--since=YYYY-MM-DD]');
-  process.exit(1);
-}
 
 const CONFIG = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-workflows.json'), 'utf8'));
 const BK_CONFIG = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-pipelines.json'), 'utf8'));
@@ -79,6 +79,94 @@ function fetchJobs(runId) {
   const pages = ghApiPages(`/actions/runs/${runId}/jobs`, ['per_page=100']);
   return pages.flatMap((p) => p.jobs || []);
 }
+
+// Order matches the Makefile's dependency chain (test: testpkg testcmd;
+// testpkg: testnotddevapp testddevapp), which is also Make's default
+// execution order. A failure in an earlier target aborts the chain --
+// GNU Make's default behavior on a non-zero recipe -- so later targets'
+// gotestsum jsonfiles never get written. See perf/collector/README.md.
+const MAKE_TARGET_STAGES = {
+  test: ['testnotddevapp', 'testddevapp', 'testcmd'],
+  testpkg: ['testnotddevapp', 'testddevapp'],
+  testcmd: ['testcmd'],
+};
+
+function fetchRunArtifacts(runId) {
+  const pages = ghApiPages(`/actions/runs/${runId}/artifacts`, ['per_page=100']);
+  return pages.flatMap((p) => p.artifacts || []);
+}
+
+// For a failed run, the gotestsum jsonfiles already uploaded (one per
+// Makefile target -- see Makefile's `gotest` macro) tell us, for free,
+// exactly how far the run got before Make aborted the chain: a target
+// whose jsonfile never showed up never ran. Requires no Makefile or
+// workflow change -- it's pulled from an artifact we already upload.
+// Match by suffix, not a prefix capture: test-reusable.yml names artifacts
+// test-results-<run>-<attempt>-<make_target>, but test-wsl2-reusable.yml
+// inserts extra segments first -- test-results-<run>-<attempt>-wsl2-
+// <networking>-<make_target> -- so a naive "everything after the 2nd dash
+// group" capture would grab "wsl2-nat-testcmd" instead of "testcmd". Check
+// testpkg/testcmd before test since neither ends in the bare "-test".
+function makeTargetFromArtifactName(artifactName) {
+  return ['testpkg', 'testcmd', 'test'].find((t) => artifactName.endsWith(`-${t}`)) || null;
+}
+
+// Pure over an already-downloaded directory, so it's testable without a real
+// `gh run download` -- see perf/collector/collect-test-runtime.test.js.
+function analyzeStageDir(makeTarget, dir) {
+  const expectedStages = MAKE_TARGET_STAGES[makeTarget];
+  if (!expectedStages) return null;
+
+  const stagesRun = expectedStages.filter((stage) => fs.existsSync(path.join(dir, `${stage}.ndjson`)));
+  const truncated = stagesRun.length < expectedStages.length;
+  const lastStage = stagesRun[stagesRun.length - 1] || null;
+
+  let failingTests = [];
+  if (lastStage) {
+    const seen = new Set();
+    for (const line of fs.readFileSync(path.join(dir, `${lastStage}.ndjson`), 'utf8').split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const event = JSON.parse(line);
+        if (event.Action === 'fail' && event.Test) seen.add(event.Test);
+      } catch {
+        // gotestsum's jsonfile is one JSON object per line; an unparseable
+        // line here would mean a corrupted upload, not a real event -- skip.
+      }
+    }
+    failingTests = [...seen];
+  }
+
+  return {
+    make_target: makeTarget,
+    stages_run: stagesRun,
+    truncated,
+    // Null when every expected stage ran -- the failure is a real test
+    // failure in lastStage, not a chain abort before it.
+    failed_at_stage: truncated ? expectedStages[stagesRun.length] : null,
+    failing_tests: failingTests,
+  };
+}
+
+function analyzeStageArtifact(repo, runId, artifactName) {
+  const makeTarget = makeTargetFromArtifactName(artifactName);
+  if (!makeTarget) {
+    console.warn(`  Unrecognized make_target from artifact "${artifactName}"; skipping stage analysis`);
+    return null;
+  }
+
+  const tmpDir = fs.mkdtempSync('/tmp/ddev-test-results-');
+  try {
+    execFileSync('gh', ['run', 'download', String(runId), '--repo', repo, '-n', artifactName, '-D', tmpDir]);
+  } catch (err) {
+    console.warn(`  Could not download artifact ${artifactName} for run ${runId}: ${err.message}`);
+    return null;
+  }
+
+  return analyzeStageDir(makeTarget, tmpDir);
+}
+
+module.exports = { makeTargetFromArtifactName, analyzeStageDir, MAKE_TARGET_STAGES };
 
 async function buildkiteApiPaginated(urlPath, params) {
   const token = process.env.BUILDKITE_API_TOKEN;
@@ -231,6 +319,37 @@ function computeSince(historyPath) {
   return d.toISOString().slice(0, 10);
 }
 
+// Only for runs GitHub itself marked "failure" -- success and cancelled runs
+// have nothing to explain here, and this is the one part of collection that
+// costs a real artifact download per call, so it's worth keeping scoped to
+// where it actually answers a question (was this failure's duration
+// truncated by an early Make-chain abort, or a real failure late in the
+// chain -- see the #8695/#8696 "quit on first failure" discussion).
+function enrichFailedGithubRuns(results, repo) {
+  for (const row of results) {
+    if (row.source !== 'github' || row.conclusion !== 'failure') continue;
+    let artifacts;
+    try {
+      artifacts = fetchRunArtifacts(row.run_id);
+    } catch (err) {
+      console.warn(`Could not list artifacts for run ${row.run_id}: ${err.message}`);
+      continue;
+    }
+    const prefix = `test-results-${row.run_id}-${row.run_attempt}-`;
+    const matches = artifacts.filter((a) => a.name.startsWith(prefix));
+    for (const artifact of matches) {
+      const analysis = analyzeStageArtifact(repo, row.run_id, artifact.name);
+      if (!analysis) continue;
+      // Crude but effective: a job's own name (e.g. "podman-rootless-testcmd
+      // / test") contains its make_target ("testcmd") for every workflow in
+      // test-workflows.json, including the single-job ones where make_target
+      // is just "test".
+      const job = row.jobs.find((j) => j.name && j.name.includes(analysis.make_target));
+      if (job) job.stage_analysis = analysis;
+    }
+  }
+}
+
 async function main() {
   const since = computeSince(HISTORY_PATH);
   const results = [];
@@ -252,6 +371,8 @@ async function main() {
       hadErrors = true;
     }
   }
+
+  enrichFailedGithubRuns(results, process.env.GITHUB_REPOSITORY);
 
   // A missing token is the expected, tolerated state before the one-time
   // BUILDKITE_API_TOKEN vault setup (shared with collect.js's perf-* legs) --
@@ -300,22 +421,32 @@ async function main() {
   console.log(`Appended ${lines.length} new run(s) of ${results.length} collected to ${HISTORY_PATH}`);
 }
 
-main()
-  .then(() => {
-    // Exit 0 even when hadErrors, so the caller's later workflow steps
-    // (commit/push, docs-publish trigger) still run and publish whatever
-    // clean results came through -- mirrors collect.js.
-    if (process.env.GITHUB_OUTPUT) {
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, `test_runtime_had_errors=${hadErrors}\n`);
-    }
-    if (hadErrors) {
-      console.error('Completed with errors on one or more workflows (see ERROR lines above). Any clean results were still collected and written.');
-    }
-  })
-  .catch((err) => {
-    console.error(err);
-    if (process.env.GITHUB_OUTPUT) {
-      fs.appendFileSync(process.env.GITHUB_OUTPUT, 'test_runtime_had_errors=true\n');
-    }
+// Guarded so collect-test-runtime.test.js can require() this file for its
+// pure functions (analyzeStageDir, makeTargetFromArtifactName) without
+// triggering a real collection run or the "no HISTORY_PATH" exit below.
+if (require.main === module) {
+  if (!HISTORY_PATH) {
+    console.error('Usage: collect-test-runtime.js <path-to-history.ndjson> [--since=YYYY-MM-DD]');
     process.exit(1);
-  });
+  }
+
+  main()
+    .then(() => {
+      // Exit 0 even when hadErrors, so the caller's later workflow steps
+      // (commit/push, docs-publish trigger) still run and publish whatever
+      // clean results came through -- mirrors collect.js.
+      if (process.env.GITHUB_OUTPUT) {
+        fs.appendFileSync(process.env.GITHUB_OUTPUT, `test_runtime_had_errors=${hadErrors}\n`);
+      }
+      if (hadErrors) {
+        console.error('Completed with errors on one or more workflows (see ERROR lines above). Any clean results were still collected and written.');
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      if (process.env.GITHUB_OUTPUT) {
+        fs.appendFileSync(process.env.GITHUB_OUTPUT, 'test_runtime_had_errors=true\n');
+      }
+      process.exit(1);
+    });
+}
