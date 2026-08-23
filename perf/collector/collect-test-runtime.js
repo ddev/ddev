@@ -268,6 +268,21 @@ function toBuildkiteRow(pipeline, build) {
     conclusion: j.state,
     duration_s: durationSeconds(j.started_at, j.finished_at),
   }));
+  const computeS = jobRows.reduce((sum, j) => sum + (j.duration_s || 0), 0);
+  // build.started_at fires the moment the build is created (confirmed
+  // against real data -- always within a second or two), so
+  // build.started_at..build.finished_at is NOT "post-queue" the way GitHub's
+  // run.run_started_at is. These pipelines' script jobs run sequentially on
+  // one scarce self-hosted agent (not the genuinely-parallel case GitHub's
+  // podman-rootless split is), and a job's own started_at can trail its
+  // runnable_at by hours waiting for that agent -- confirmed on a real build
+  // where the actual test job waited 5.4h for a colima_vz/arm64 agent but
+  // only ran for 65 minutes once it got one. So unlike the GitHub side,
+  // wall_clock_s here means the same thing compute_s does: real execution
+  // time, queue wait excluded. The excluded time isn't discarded, just
+  // labeled honestly as queue_wait_s -- itself a useful signal for the
+  // scarce-self-hosted-capacity story in #8695.
+  const totalElapsedS = durationSeconds(build.started_at, build.finished_at);
   return {
     timestamp: build.started_at || build.created_at,
     source: 'buildkite',
@@ -275,8 +290,9 @@ function toBuildkiteRow(pipeline, build) {
     workflow_file: null,
     conclusion: build.state,
     skip_marker: hasSkipMarker(build.message),
-    wall_clock_s: durationSeconds(build.started_at, build.finished_at),
-    compute_s: jobRows.reduce((sum, j) => sum + (j.duration_s || 0), 0),
+    wall_clock_s: computeS,
+    compute_s: computeS,
+    queue_wait_s: totalElapsedS != null ? Math.max(0, totalElapsedS - computeS) : null,
     commit_sha: build.commit,
     branch: build.branch,
     // Buildkite build numbers are only unique per pipeline (unlike GH's

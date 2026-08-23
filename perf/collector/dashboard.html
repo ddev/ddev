@@ -140,7 +140,11 @@
       subText: 'Total CI runtime per test type, across GitHub Actions workflows and Buildkite pipelines. See <a href="https://github.com/ddev/ddev/blob/main/perf/collector/README.md">perf/collector/README.md</a>. wall_clock_s excludes queue time; compute_s sums every job in the run (workflows split into more than one job, e.g. podman-rootless’s testpkg/testcmd, report real CPU-minutes). Points more than 20% above the trailing 10-run median for their test type are marked red.',
       legsLabel: 'Test type (workflow / pipeline)',
       legKey: (row) => row.workflow,
-      metrics: () => ['wall_clock_s', 'compute_s'],
+      // queue_wait_s only exists on Buildkite rows (time waiting for a
+      // scarce self-hosted agent -- see collect-test-runtime.js); GitHub
+      // Actions rows just have no value for it, which the existing
+      // `!= null` filter in renderTrend/renderCompare already handles.
+      metrics: () => ['wall_clock_s', 'compute_s', 'queue_wait_s'],
       metricValue: (row, metric) => row[metric],
       // Two different ways a row's duration isn't a real measurement:
       // (1) cancelled (GitHub spells it "cancelled", Buildkite "canceled") --
