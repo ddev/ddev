@@ -38,6 +38,15 @@ should have finished.
   live (`bk pipeline list --org ddev`) against several retired/legacy
   pipelines the Buildkite API still returns -- see #8695.
 
+  `perf-collect.yml`'s `workflow_dispatch` has a `fresh` input (wipes
+  test-runtime-history.ndjson before collecting, instead of appending) and a
+  `since` input (overrides the default 7-day backfill window). Since the
+  collector dedupes by run/build identity, adding a field to the row schema
+  only appears on rows collected *after* that change -- `fresh=true` (with
+  `since` set far enough back) re-derives every existing row from GitHub's
+  and Buildkite's own retained history, rather than leaving old rows
+  permanently missing the new field until enough new data dilutes them.
+
   For GitHub Actions runs GitHub itself marked `failure`, the collector also
   downloads that run's gotestsum artifact and checks which of
   `testnotddevapp.ndjson`/`testddevapp.ndjson`/`testcmd.ndjson` exist, adding

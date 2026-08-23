@@ -19,7 +19,18 @@ name: Collect and publish nightly performance results
 on:
   schedule:
     - cron: '0 6 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      fresh:
+        description: 'Wipe test-runtime-history.ndjson and rebuild it from scratch instead of appending (use after a schema change to the row format, so old rows do not miss new fields)'
+        required: false
+        type: boolean
+        default: false
+      since:
+        description: 'Override --since for this run (YYYY-MM-DD). Mainly useful with fresh=true, to pull back further than the default 7-day backfill window.'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -90,8 +101,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if [ "${{ inputs.fresh }}" = "true" ]; then
+            echo "fresh=true: rebuilding test-runtime-history.ndjson from scratch"
+            rm -f ../performance-data/test-runtime-history.ndjson
+          fi
           touch ../performance-data/test-runtime-history.ndjson
-          node perf/collector/collect-test-runtime.js ../performance-data/test-runtime-history.ndjson
+          node perf/collector/collect-test-runtime.js ../performance-data/test-runtime-history.ndjson ${{ inputs.since != '' && format('--since={0}', inputs.since) || '' }}
 
       - name: Commit and push results
         id: commit
