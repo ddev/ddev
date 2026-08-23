@@ -128,6 +128,9 @@
       },
       metricValue: (row, metric) => (row.metrics ? row.metrics[metric] : null),
       isCancelled: () => false,
+      // Nightly perf metrics are all naturally short (rebuild/start times in
+      // the tens of seconds) -- seconds stay readable.
+      formatDuration: (v) => `${v.toFixed(1)} s`,
       trendNote: 'Data source: <code>history.ndjson</code>, one line per (commit, leg) benchmark run.',
       compareNote: `Each bar is the median of that environment's last ${COMPARE_TRAILING_N} nightly runs (not just the latest one) for the selected metric, sorted fastest to slowest. Data source: <code>history.ndjson</code>.`,
       csvPrefix: 'ddev-perf',
@@ -144,6 +147,10 @@
       // superseded it (see #8695/#8696 discussion), not a real completion
       // time, so it's excluded from duration charts by default.
       isCancelled: (row) => row.conclusion === 'cancelled' || row.conclusion === 'canceled',
+      // Whole test runs are thousands of seconds -- minutes read far better.
+      // The underlying values (and the CSV export) stay in raw seconds;
+      // only chart labels go through this.
+      formatDuration: (v) => `${(v / 60).toFixed(1)} min`,
       trendNote: 'Data source: <code>test-runtime-history.ndjson</code>, one line per CI run/build.',
       compareNote: `Each bar is the median of that test type's last ${COMPARE_TRAILING_N} runs (not just the latest one) for the selected metric, sorted fastest to slowest. Data source: <code>test-runtime-history.ndjson</code>.`,
       csvPrefix: 'ddev-test-runtime',
@@ -362,8 +369,8 @@
 
     ctx.fillStyle = muted;
     ctx.font = '11px sans-serif';
-    ctx.fillText(vMax.toFixed(1) + ' s', 4, pad.t + 8);
-    ctx.fillText('0 s', 4, pad.t + h);
+    ctx.fillText(ds().formatDuration(vMax), 4, pad.t + 8);
+    ctx.fillText(ds().formatDuration(0), 4, pad.t + h);
     ctx.fillText(new Date(tMin).toISOString().slice(0, 10), pad.l, pad.t + h + 16);
     const lastLabel = new Date(tMax).toISOString().slice(0, 10);
     ctx.fillText(lastLabel, pad.l + w - ctx.measureText(lastLabel).width, pad.t + h + 16);
@@ -456,7 +463,7 @@
 
       ctx.fillStyle = muted;
       ctx.textAlign = 'left';
-      ctx.fillText(`${b.value.toFixed(1)} s (n=${b.n})`, pad.l + barX(b.value) + 8, rowY + rowH / 2 + 4);
+      ctx.fillText(`${ds().formatDuration(b.value)} (n=${b.n})`, pad.l + barX(b.value) + 8, rowY + rowH / 2 + 4);
     });
     ctx.textAlign = 'left';
 
