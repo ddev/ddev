@@ -78,7 +78,7 @@
       <label style="visibility: hidden; display: block;">.</label>
       <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;">
         <input type="checkbox" id="exclude-cancelled-checkbox" checked>
-        Exclude cancelled runs
+        Exclude cancelled/skipped runs
       </label>
     </div>
     <div>
@@ -127,7 +127,7 @@
         return [...s].sort();
       },
       metricValue: (row, metric) => (row.metrics ? row.metrics[metric] : null),
-      isCancelled: () => false,
+      isNotRealRun: () => false,
       // Nightly perf metrics are all naturally short (rebuild/start times in
       // the tens of seconds) -- seconds stay readable.
       formatDuration: (v) => `${v.toFixed(1)} s`,
@@ -142,11 +142,17 @@
       legKey: (row) => row.workflow,
       metrics: () => ['wall_clock_s', 'compute_s'],
       metricValue: (row, metric) => row[metric],
-      // GitHub spells it "cancelled", Buildkite spells it "canceled" -- a
-      // cancelled run's duration is however far it got before a newer commit
-      // superseded it (see #8695/#8696 discussion), not a real completion
-      // time, so it's excluded from duration charts by default.
-      isCancelled: (row) => row.conclusion === 'cancelled' || row.conclusion === 'canceled',
+      // Two different ways a row's duration isn't a real measurement:
+      // (1) cancelled (GitHub spells it "cancelled", Buildkite "canceled") --
+      //     however far it got before a newer commit superseded it (see
+      //     #8695/#8696 discussion), not a real completion time; and
+      // (2) skip_marker -- a [skip ci]/[skip buildkite]/[skip github] commit
+      //     exits in seconds but Buildkite still records it as "passed" (no
+      //     separate "skipped" state the way a GitHub job has), so without
+      //     this these near-zero points mix into the same bucket as a real
+      //     multi-hour run and produce huge, meaningless swings.
+      // Both excluded from duration charts by default.
+      isNotRealRun: (row) => row.conclusion === 'cancelled' || row.conclusion === 'canceled' || row.skip_marker === true,
       // Whole test runs are thousands of seconds -- minutes read far better.
       // The underlying values (and the CSV export) stay in raw seconds;
       // only chart labels go through this.
@@ -331,7 +337,7 @@
       .filter((leg) => state.enabledLegs.has(leg))
       .map((leg, i) => {
         const points = state.rows
-          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null && !(state.excludeCancelled && ds().isCancelled(r)))
+          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null && !(state.excludeCancelled && ds().isNotRealRun(r)))
           .map((r) => ({ t: new Date(r.timestamp).getTime(), v: ds().metricValue(r, state.metric) }));
         return { leg, color: COLORS[i % COLORS.length], points };
       })
@@ -420,7 +426,7 @@
       .filter((leg) => state.enabledLegs.has(leg))
       .map((leg, i) => {
         const points = state.rows
-          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null && !(state.excludeCancelled && ds().isCancelled(r)))
+          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null && !(state.excludeCancelled && ds().isNotRealRun(r)))
           .map((r) => ds().metricValue(r, state.metric));
         const value = median(points.slice(-COMPARE_TRAILING_N));
         return { leg, color: COLORS[i % COLORS.length], value, n: Math.min(points.length, COMPARE_TRAILING_N) };

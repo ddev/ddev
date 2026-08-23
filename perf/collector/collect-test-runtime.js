@@ -166,7 +166,7 @@ function analyzeStageArtifact(repo, runId, artifactName) {
   return analyzeStageDir(makeTarget, tmpDir);
 }
 
-module.exports = { makeTargetFromArtifactName, analyzeStageDir, MAKE_TARGET_STAGES };
+module.exports = { makeTargetFromArtifactName, analyzeStageDir, MAKE_TARGET_STAGES, hasSkipMarker };
 
 async function buildkiteApiPaginated(urlPath, params) {
   const token = process.env.BUILDKITE_API_TOKEN;
@@ -206,6 +206,23 @@ function durationSeconds(startIso, endIso) {
   return Number.isFinite(ms) ? Math.round(ms / 1000) : null;
 }
 
+// [skip buildkite]/[skip ci] (checked by .buildkite/test.sh, before any real
+// setup) and [skip github] (checked by test-reusable.yml's check-skip job)
+// all make the run/build exit almost instantly while still recording a
+// success conclusion -- Buildkite has no separate "skipped" state the way a
+// GitHub job does, so without this tag these near-zero-duration runs mix
+// into the same success bucket as a real multi-hour run, producing the
+// "vast swings" the dashboard showed before this was added. Checked against
+// all three markers on both sources rather than just the one each side's
+// own script looks for, since what matters here is "was this run real,"
+// not which specific tool would have honored the marker.
+const SKIP_MARKERS = ['[skip ci]', '[skip buildkite]', '[skip github]'];
+function hasSkipMarker(message) {
+  if (!message) return false;
+  const lower = message.toLowerCase();
+  return SKIP_MARKERS.some((marker) => lower.includes(marker));
+}
+
 function toRow(run, jobs) {
   const jobRows = jobs.map((j) => ({
     name: j.name,
@@ -220,6 +237,7 @@ function toRow(run, jobs) {
     workflow: run.name,
     workflow_file: path.basename(run.path || ''),
     conclusion: run.conclusion,
+    skip_marker: hasSkipMarker(run.head_commit && run.head_commit.message),
     // Wall-clock: when the run actually started executing (post-queue) to
     // completion. What "total runtime for golang-nginx-fpm" means day to
     // day -- queue time is infra noise, not the thing #8695/#8696 restructure.
@@ -256,6 +274,7 @@ function toBuildkiteRow(pipeline, build) {
     workflow: pipeline,
     workflow_file: null,
     conclusion: build.state,
+    skip_marker: hasSkipMarker(build.message),
     wall_clock_s: durationSeconds(build.started_at, build.finished_at),
     compute_s: jobRows.reduce((sum, j) => sum + (j.duration_s || 0), 0),
     commit_sha: build.commit,
