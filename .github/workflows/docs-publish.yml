@@ -131,6 +131,9 @@ jobs:
             if [ -f checkout-perf-data/history.ndjson ]; then
               cp -v checkout-perf-data/history.ndjson combined-site/perf/history.ndjson
             fi
+            if [ -f checkout-perf-data/test-runtime-history.ndjson ]; then
+              cp -v checkout-perf-data/test-runtime-history.ndjson combined-site/perf/test-runtime-history.ndjson
+            fi
           fi
 
       - name: Upload pages artifact
