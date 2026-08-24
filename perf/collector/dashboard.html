@@ -259,8 +259,15 @@
   function rowSelected(row) {
     if (!state.enabledWorkflows.has(row.workflow)) return false;
     const runner = ds().runnerOf(row);
-    if (runner !== null && !state.enabledRunners.has(runner)) return false;
-    return true;
+    if (runner !== null) return state.enabledRunners.has(runner);
+    // No runner concept for this row (e.g. every GitHub Actions row --
+    // runnerOf returns null there). Include it only while the runner box
+    // isn't actually narrowing anything (nothing checked/unchecked yet, the
+    // "just browsing everything" default) -- the moment it's narrowed to
+    // specific machines, this becomes a runner-centric question ("what
+    // actually ran on tb-macos-arm64-4-1"), and a row with no relationship
+    // to any machine has no business answering it.
+    return state.enabledRunners.size === state.runners.length;
   }
 
   function median(values) {
