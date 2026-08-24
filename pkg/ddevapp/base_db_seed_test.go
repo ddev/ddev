@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
@@ -38,45 +39,119 @@ func writeBaseDBSeedTestFile(t *testing.T, app *DdevApp, relPath, content string
 	return fullPath
 }
 
-// TestGetInitializerSnapshotFile verifies the host-side lookup of the reserved
-// `initializer` snapshot, which must match ddev-dbserver's docker-entrypoint.sh:
+// TestGetSeedSnapshotFile verifies the lookup of the reserved `seed` snapshot:
 // named for the exact db type/version, preferring .zst over .gz.
-func TestGetInitializerSnapshotFile(t *testing.T) {
+func TestGetSeedSnapshotFile(t *testing.T) {
 	app := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
-	require.Empty(t, app.GetInitializerSnapshotFile())
+	require.Empty(t, app.GetSeedSnapshotFile())
 
-	gz := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "initializer-mariadb_10.11.gz"), "seed")
-	require.Equal(t, gz, app.GetInitializerSnapshotFile())
+	gz := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "seed-mariadb_10.11.gz"), "seed")
+	require.Equal(t, gz, app.GetSeedSnapshotFile())
 
 	// .zst wins over .gz when both are present.
-	zst := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "initializer-mariadb_10.11.zst"), "seed")
-	require.Equal(t, zst, app.GetInitializerSnapshotFile())
+	zst := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "seed-mariadb_10.11.zst"), "seed")
+	require.Equal(t, zst, app.GetSeedSnapshotFile())
 
 	// An uncompressed .mbstream seed is recognized, but a compressed seed
 	// still wins if one is also present.
-	writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "initializer-mariadb_10.11.mbstream"), "seed")
-	require.Equal(t, zst, app.GetInitializerSnapshotFile())
+	writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "seed-mariadb_10.11.mbstream"), "seed")
+	require.Equal(t, zst, app.GetSeedSnapshotFile())
 
 	// With no compressed seed, the uncompressed one is used.
 	uncompressed := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
-	mbstream := writeBaseDBSeedTestFile(t, uncompressed, filepath.Join("db_snapshots", "initializer-mariadb_10.11.mbstream"), "seed")
-	require.Equal(t, mbstream, uncompressed.GetInitializerSnapshotFile())
+	mbstream := writeBaseDBSeedTestFile(t, uncompressed, filepath.Join("db_snapshots", "seed-mariadb_10.11.mbstream"), "seed")
+	require.Equal(t, mbstream, uncompressed.GetSeedSnapshotFile())
 
-	// A snapshot for a different db version is not this project's initializer.
+	// A snapshot for a different db version is not this project's seed.
 	other := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB106)
-	writeBaseDBSeedTestFile(t, other, filepath.Join("db_snapshots", "initializer-mariadb_10.11.zst"), "seed")
-	require.Empty(t, other.GetInitializerSnapshotFile())
+	writeBaseDBSeedTestFile(t, other, filepath.Join("db_snapshots", "seed-mariadb_10.11.zst"), "seed")
+	require.Empty(t, other.GetSeedSnapshotFile())
 
-	// PostgreSQL doesn't use base_db seeding at all.
+	// Unlike a base_db seed baked into the dbimage, this works for PostgreSQL.
 	pg := newBaseDBSeedTestApp(t, nodeps.Postgres, nodeps.Postgres17)
-	writeBaseDBSeedTestFile(t, pg, filepath.Join("db_snapshots", "initializer-postgres_17.zst"), "seed")
-	require.Empty(t, pg.GetInitializerSnapshotFile())
+	pgSeed := writeBaseDBSeedTestFile(t, pg, filepath.Join("db_snapshots", "seed-postgres_17.zst"), "seed")
+	require.Equal(t, pgSeed, pg.GetSeedSnapshotFile())
 
-	// Neither does a project with no db container.
+	// A project with no db container has nothing to seed.
 	omitted := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
 	omitted.OmitContainers = []string{"db"}
-	writeBaseDBSeedTestFile(t, omitted, filepath.Join("db_snapshots", "initializer-mariadb_10.11.zst"), "seed")
-	require.Empty(t, omitted.GetInitializerSnapshotFile())
+	writeBaseDBSeedTestFile(t, omitted, filepath.Join("db_snapshots", "seed-mariadb_10.11.zst"), "seed")
+	require.Empty(t, omitted.GetSeedSnapshotFile())
+}
+
+// TestResolveSeedSnapshot covers what `--seed-snapshot` accepts: nothing (the
+// reserved `seed` snapshot), a snapshot name in .ddev/db_snapshots, and a path
+// to a snapshot elsewhere, which needs a mount of its own.
+func TestResolveSeedSnapshot(t *testing.T) {
+	app := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
+
+	origNoBindMounts := globalconfig.DdevGlobalConfig.NoBindMounts
+	globalconfig.DdevGlobalConfig.NoBindMounts = false
+	t.Cleanup(func() { globalconfig.DdevGlobalConfig.NoBindMounts = origNoBindMounts })
+
+	seed, err := app.ResolveSeedSnapshot()
+	require.NoError(t, err)
+	require.Nil(t, seed, "nothing to seed from without a flag or a reserved snapshot")
+
+	reserved := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "seed-mariadb_10.11.zst"), "seed")
+	seed, err = app.ResolveSeedSnapshot()
+	require.NoError(t, err)
+	require.Equal(t, reserved, seed.HostPath)
+	require.Empty(t, seed.MountDir, "a snapshot in the project needs no mount of its own")
+	require.Equal(t, "/mnt/snapshots/seed-mariadb_10.11.zst", seed.ContainerPath())
+
+	// A bare name resolves inside .ddev/db_snapshots, the same way
+	// `ddev snapshot restore <name>` resolves it.
+	inProject := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "mydata-mariadb_10.11.zst"), "seed")
+	app.SeedSnapshot = "mydata"
+	seed, err = app.ResolveSeedSnapshot()
+	require.NoError(t, err)
+	require.Equal(t, inProject, seed.HostPath)
+	require.Empty(t, seed.MountDir)
+
+	// A path outside the project is mounted into the db container.
+	outsideDir := t.TempDir()
+	outside := filepath.Join(outsideDir, "elsewhere-mariadb_10.11.zst")
+	require.NoError(t, os.WriteFile(outside, []byte("seed"), 0644))
+	app.SeedSnapshot = outside
+	seed, err = app.ResolveSeedSnapshot()
+	require.NoError(t, err)
+	require.Equal(t, outside, seed.HostPath)
+	require.Equal(t, outsideDir, seed.MountDir)
+	require.Equal(t, SeedSnapshotMountDir+"/elsewhere-mariadb_10.11.zst", seed.ContainerPath())
+
+	// With no_bind_mounts there is nothing to mount; prepareSeedSnapshot copies
+	// the snapshot into the snapshots volume, so the container path is the usual one.
+	globalconfig.DdevGlobalConfig.NoBindMounts = true
+	seed, err = app.ResolveSeedSnapshot()
+	require.NoError(t, err)
+	require.Equal(t, outside, seed.HostPath)
+	require.Empty(t, seed.MountDir)
+	require.Equal(t, "/mnt/snapshots/elsewhere-mariadb_10.11.zst", seed.ContainerPath())
+	globalconfig.DdevGlobalConfig.NoBindMounts = false
+
+	// An uncompressed snapshot outside the project is accepted too.
+	uncompressed := filepath.Join(outsideDir, "elsewhere-mariadb_10.11.mbstream")
+	require.NoError(t, os.WriteFile(uncompressed, []byte("seed"), 0644))
+	app.SeedSnapshot = uncompressed
+	seed, err = app.ResolveSeedSnapshot()
+	require.NoError(t, err)
+	require.Equal(t, uncompressed, seed.HostPath)
+
+	// A snapshot from another database can't seed this one.
+	wrongVersion := filepath.Join(outsideDir, "elsewhere-mariadb_10.6.zst")
+	require.NoError(t, os.WriteFile(wrongVersion, []byte("seed"), 0644))
+	app.SeedSnapshot = wrongVersion
+	_, err = app.ResolveSeedSnapshot()
+	require.ErrorContains(t, err, "mariadb_10.6")
+
+	app.SeedSnapshot = filepath.Join(outsideDir, "no-such-snapshot.zst")
+	_, err = app.ResolveSeedSnapshot()
+	require.ErrorContains(t, err, "not an existing snapshot file")
+
+	app.SeedSnapshot = "nonexistent"
+	_, err = app.ResolveSeedSnapshot()
+	require.ErrorContains(t, err, "nonexistent")
 }
 
 // TestGetDBBuildSeedDockerfiles verifies that only db-build Dockerfiles that
@@ -101,25 +176,27 @@ func TestGetDBBuildSeedDockerfiles(t *testing.T) {
 }
 
 // TestAnnounceBaseDBSeed verifies that seeding a fresh database volume from a
-// project `initializer` snapshot is announced with what it's doing, which
-// snapshot, and that it may take a while — and that the stock starter database
-// (no initializer, no derived image) stays quiet.
+// project `seed` snapshot is announced with what it's doing, which snapshot, and
+// that it may take a while — and that the stock starter database (no seed
+// snapshot, no derived image) stays quiet.
 func TestAnnounceBaseDBSeed(t *testing.T) {
 	app := newBaseDBSeedTestApp(t, nodeps.MariaDB, nodeps.MariaDB1011)
 	app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
 
-	require.Empty(t, app.BaseDBSeedDescription(), "stock starter database should not be announced")
+	require.Empty(t, app.SeedDescription(nil), "stock starter database should not be announced")
 
-	initializer := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "initializer-mariadb_10.11.zst"), strings.Repeat("x", 2048))
-	description := app.BaseDBSeedDescription()
+	seedFile := writeBaseDBSeedTestFile(t, app, filepath.Join("db_snapshots", "seed-mariadb_10.11.zst"), strings.Repeat("x", 2048))
+	seed, err := app.ResolveSeedSnapshot()
+	require.NoError(t, err)
+	description := app.SeedDescription(seed)
 	require.NotEmpty(t, description)
 
 	outFunc := util.CaptureUserOut()
 	app.announceBaseDBSeed(description, SnapshotRestoreDefaultWaitTime)
 	out := outFunc()
 
-	require.Contains(t, out, "Initializing new database volume from the 'initializer' snapshot")
-	require.Contains(t, out, fileutil.ShortHomeJoin(filepath.ToSlash(initializer)))
+	require.Contains(t, out, "Initializing new database volume from the 'seed' snapshot")
+	require.Contains(t, out, fileutil.ShortHomeJoin(filepath.ToSlash(seedFile)))
 	require.Contains(t, out, "(2.0KB)")
 	require.Contains(t, out, "this may take a long time")
 	require.Contains(t, out, "default_container_timeout")
@@ -145,7 +222,7 @@ func TestDerivedBuiltImageRef(t *testing.T) {
 }
 
 // TestFileSizeSuffix verifies the human-readable size suffix used when
-// announcing an `initializer` snapshot restore.
+// announcing a seed snapshot restore.
 func TestFileSizeSuffix(t *testing.T) {
 	tmpDir := t.TempDir()
 

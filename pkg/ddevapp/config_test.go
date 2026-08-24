@@ -2082,7 +2082,7 @@ func TestConfigDefaultContainerTimeout(t *testing.T) {
 		require.Equal(t, expectedWaitTime, int(c.Config.Healthcheck.StartPeriod.Seconds()), "db container healthcheck should have been %v with default_container_timeout set to %v", maxWaitTime, app.DefaultContainerTimeout)
 		_, err = app.Snapshot(t.Name()+maxWaitTime, false)
 		require.NoError(t, err)
-		err = app.RestoreSnapshot(t.Name() + maxWaitTime)
+		err = app.RestoreSnapshot(t.Name()+maxWaitTime, false)
 		require.NoError(t, err)
 
 		// Inspect container that results from snapshot restore

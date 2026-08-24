@@ -21,6 +21,7 @@ var snapshotList bool
 var snapshotName string
 var snapshotRestoreLatest bool
 var snapshotUncompressed bool
+var snapshotRestoreForce bool
 
 // noConfirm: If true, --yes, we won't stop and prompt before each deletion
 var snapshotCleanupNoConfirm bool

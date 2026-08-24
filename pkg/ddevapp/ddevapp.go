@@ -152,6 +152,16 @@ type DdevApp struct {
 	XHProfMode                types.XHProfMode      `yaml:"xhprof_mode,omitempty"`
 	ComposeYaml               *composeTypes.Project `yaml:"-"`
 	NoCache                   bool                  `yaml:"-"`
+	// SeedSnapshot is the `ddev start --seed-snapshot` value, a snapshot name or
+	// path used to seed a brand-new database volume. It applies to one start only
+	// and is never written to config.yaml.
+	SeedSnapshot string `yaml:"-"`
+	// SeedSnapshotMountDir is the host directory holding a seed snapshot from
+	// outside the project, bind-mounted into the db container for that start.
+	SeedSnapshotMountDir string `yaml:"-"`
+	// restoreSnapshotMountDir is set by RestoreSnapshot() when the snapshot being
+	// restored lives outside the project, for the one Start() call it triggers.
+	restoreSnapshotMountDir string
 }
 
 // SkipHooks Global variable that's set from --skip-hooks global flag.
@@ -1536,6 +1546,49 @@ func (app *DdevApp) Start() error {
 
 	SyncGenericWebserverPortsWithRouterPorts(app)
 
+	// dbNeedsInitialization means the database volume has no database in it yet,
+	// so the db container will seed it during this start. Seeding contributes a
+	// container command and a mount, so it has to settle before compose renders.
+	dbNeedsInitialization := false
+	var seedSnapshot *SeedSnapshot
+	app.SeedSnapshotMountDir = ""
+	if !app.IsDBOmitted() {
+		dbType, err := app.GetExistingDBType()
+		if err != nil {
+			return err
+		}
+		if dbType != "" && dbType != app.Database.Type+":"+app.Database.Version {
+			return fmt.Errorf("unable to start: %s", app.DatabaseMismatchMessage(dbType))
+		}
+		// A snapshot restore hands the db container its own restore target, so it
+		// never consults a seed even with an empty volume.
+		dbNeedsInitialization = dbType == "" && !strings.HasPrefix(os.Getenv("DDEV_DB_CONTAINER_COMMAND"), RestoreSnapshotCommand)
+
+		if seedSnapshot, err = app.ResolveSeedSnapshot(); err != nil {
+			return err
+		}
+		if seedSnapshot != nil && !dbNeedsInitialization {
+			if app.SeedSnapshot != "" {
+				return fmt.Errorf("--seed-snapshot only applies to a brand-new database volume, and project %s already has a database.\nUse 'ddev start --reset-database --seed-snapshot=%s' to throw the existing database away first, or 'ddev snapshot restore' to restore over it", app.Name, app.SeedSnapshot)
+			}
+			// The reserved seed snapshot is picked up without being asked for, so
+			// leaving it in place once the volume is populated has to stay harmless.
+			seedSnapshot = nil
+		}
+		if seedSnapshot != nil {
+			app.SeedSnapshotMountDir = seedSnapshot.MountDir
+			_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", app.snapshotRestoreContainerCommand(seedSnapshot.ContainerPath()))
+			// nolint: errcheck
+			defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
+		} else if app.restoreSnapshotMountDir != "" {
+			// RestoreSnapshot() sets DDEV_DB_CONTAINER_COMMAND to a restore_snapshot
+			// command itself, so dbNeedsInitialization above is false and seedSnapshot
+			// stays nil - but a restore onto an already-populated volume still needs
+			// its external snapshot mounted.
+			app.SeedSnapshotMountDir = app.restoreSnapshotMountDir
+		}
+	}
+
 	_ = app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
 	// The project network may have duplicates, we can remove them here.
@@ -1565,20 +1618,6 @@ func (app *DdevApp) Start() error {
 
 	if pullErr := PullBaseContainerImages(additionalImages, app.NoCache); pullErr != nil {
 		util.Warning("Unable to pull Docker images: %v", pullErr)
-	}
-
-	// dbNeedsInitialization means the database volume has no database in it yet,
-	// so the db container will seed it from a base_db seed during this start.
-	dbNeedsInitialization := false
-	if !app.IsDBOmitted() {
-		// OK to start if dbType is empty (nonexistent) or if it matches
-		dbType, err := app.GetExistingDBType()
-		if err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
-			return fmt.Errorf("unable to start project %s because the configured database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s' and then you might want to try 'ddev utility migrate-database %s', see docs at %s", app.Name, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://docs.ddev.com/en/stable/users/extend/database-types/")
-		}
-		// A snapshot restore hands the db container its own restore target, so it
-		// never consults a base_db seed even with an empty volume.
-		dbNeedsInitialization = dbType == "" && !strings.HasPrefix(os.Getenv("DDEV_DB_CONTAINER_COMMAND"), RestoreSnapshotCommand)
 	}
 
 	app.CreateUploadDirsIfNecessary()
@@ -1814,15 +1853,9 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	// With no_bind_mounts the db container sees /mnt/snapshots as a Docker volume
-	// instead of .ddev/db_snapshots, so an `initializer` snapshot has to be copied
-	// in for the db container to find it when it seeds a fresh database volume.
-	if globalconfig.DdevGlobalConfig.NoBindMounts && dbNeedsInitialization {
-		if initializer := app.GetInitializerSnapshotFile(); initializer != "" {
-			err = dockerutil.CopyIntoVolume(initializer, "ddev-"+app.Name+"-snapshots", "", uid, "", false)
-			if err != nil {
-				return fmt.Errorf("failed to copy %s into the snapshots volume: %v", initializer, err)
-			}
+	if seedSnapshot != nil {
+		if err = app.prepareSeedSnapshot(seedSnapshot); err != nil {
+			return err
 		}
 	}
 
@@ -1893,7 +1926,7 @@ func (app *DdevApp) Start() error {
 	// seed baked into a derived image can be seen.
 	origDefaultContainerTimeout := app.DefaultContainerTimeout
 	if dbNeedsInitialization {
-		if description := app.BaseDBSeedDescription(); description != "" {
+		if description := app.SeedDescription(seedSnapshot); description != "" {
 			if t, _ := strconv.Atoi(app.DefaultContainerTimeout); t <= SnapshotRestoreDefaultWaitTime {
 				app.DefaultContainerTimeout = strconv.Itoa(SnapshotRestoreDefaultWaitTime)
 			}
@@ -3381,13 +3414,11 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	if createSnapshot {
 		if status != SiteRunning {
 			util.Warning("Must start non-running project to do database snapshot")
-			err = app.Start()
-			if err != nil {
-				return fmt.Errorf("failed to start project to perform database snapshot")
-			}
 		}
 		t := time.Now()
-		_, err = app.Snapshot(app.Name+"_remove_data_snapshot_"+t.Format("20060102150405"), false)
+		// The database version in the volume can differ from the configured one,
+		// in which case starting the project normally would refuse.
+		_, err = app.SnapshotAtExistingDBVersion(app.Name + "_remove_data_snapshot_" + t.Format("20060102150405"))
 		if err != nil {
 			return err
 		}
