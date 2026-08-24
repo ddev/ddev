@@ -53,7 +53,7 @@ Snapshots are stored as compressed (zstd, or gzip on very old database versions)
 
 ### Uncompressed Snapshots
 
-`ddev snapshot`, `ddev snapshot restore`, and the reserved `seed` snapshot all compress the database backup by default, which is the right tradeoff for almost everyone. Decompression still costs real time, though — routinely 30-40% of a restore or first `ddev start`, and it competes for the same CPU cores the database restore itself needs right after. `--uncompressed` skips it:
+`ddev snapshot`, `ddev snapshot restore`, and the reserved `seed` snapshot all compress the database backup by default, which is the right trade-off for almost everyone. Decompression still costs real time, though — routinely 30-40% of a restore or first `ddev start`, and it competes for the same CPU cores the database restore itself needs right after. `--uncompressed` skips it:
 
 ```bash
 ddev snapshot --uncompressed

@@ -1238,6 +1238,7 @@ Flags:
 * `--omit-snapshot`, `-O`: With `--reset-database`, skip the snapshot of the database being removed.
 * `--reset-database`: Remove the project's existing database and start over with a new one.
 * `--seed-snapshot`: Seed a brand-new database volume from this snapshot name or file, instead of the stock starter database.
+* `--skip-confirmation`, `-y`: Skip any confirmation steps.
 
 Example:
 
