@@ -81,13 +81,6 @@
         Only successful full runs
       </label>
     </div>
-    <div id="split-by-runner-wrap">
-      <label style="visibility: hidden; display: block;">.</label>
-      <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;">
-        <input type="checkbox" id="split-by-runner-checkbox">
-        Split by runner machine (Buildkite only)
-      </label>
-    </div>
   </div>
 
   <div class="controls">
@@ -171,28 +164,36 @@
       file: 'test-runtime-history.ndjson',
       subText: 'Total CI runtime per test type, across GitHub Actions workflows and Buildkite pipelines. See <a href="https://github.com/ddev/ddev/blob/main/perf/collector/README.md">perf/collector/README.md</a>. wall_clock_s excludes queue time; compute_s sums every job in the run (workflows split into more than one job, e.g. podman-rootless’s testpkg/testcmd, report real CPU-minutes). Points more than 20% above the trailing 10-run median for their test type are marked red.',
       legsLabel: 'Test type (workflow / pipeline)',
-      // When splitByRunner is on, a Buildkite row's leg becomes
-      // "pipeline · machine" instead of just "pipeline" -- e.g. it's how a
+      // A Buildkite row's leg is "pipeline · machine" instead of just
+      // "pipeline" whenever the runner box is narrowed (see
+      // runnerSelectionNarrowed()) -- not a separate manual toggle. Checking
+      // "all" runners (the default) reproduces this page's original
+      // behavior, one merged line per workflow; narrowing to specific
+      // machines is itself the signal to split them apart, which is how a
       // single physical agent quietly getting slower build over build,
       // while its sibling agents on the same pipeline stay flat, becomes
       // visible on the trend chart instead of requiring a manual API dig
       // (see the ddev-macos-arm64-mutagen investigation this was built
-      // for). GitHub Actions rows fall back to plain `workflow` even with
-      // the toggle on -- runner_name there is a one-shot ephemeral VM id,
-      // not a persistent machine, so splitting by it wouldn't mean anything.
+      // for) -- and also how "what actually ran on tb-macos-arm64-4-1"
+      // renders as one clean line per pipeline rather than needing a
+      // second control. A prior version had both a separate "split by
+      // runner" checkbox and this narrowing behavior at once; selecting
+      // more than one runner with the checkbox off silently merged their
+      // data into one meaningless line (two machines' very different
+      // performance interleaved chronologically) -- one control, not two
+      // that can contradict each other. GitHub Actions rows never split --
+      // runner_name there is a one-shot ephemeral VM id, not a persistent
+      // machine, so splitting by it wouldn't mean anything.
       legKey: (row) => {
-        if (state.splitByRunner && row.source === 'buildkite') {
+        if (row.source === 'buildkite' && runnerSelectionNarrowed()) {
           return `${row.workflow} · ${primaryRunnerName(row) || 'unknown runner'}`;
         }
         return row.workflow;
       },
-      // The runner-machine facet: independent of splitByRunner (which only
-      // controls whether the chart draws separate lines), this is what the
-      // "Runner machine" checkbox box filters on -- e.g. looking at just
-      // wsl2-mirrored's tb-wsl-12-1 data works whether or not the chart is
-      // currently drawing it as its own line. null for GitHub Actions rows,
-      // which the row-selection filter below treats as "always included,
-      // no runner facet to filter by."
+      // The runner-machine facet the "Runner machine" checkbox box filters
+      // on. null for GitHub Actions rows, which the row-selection filter
+      // below treats as "included only while the runner box isn't actually
+      // narrowing anything" (see rowSelected()).
       runnerOf: (row) => (row.source === 'buildkite' ? (primaryRunnerName(row) || 'unknown runner') : null),
       // queue_wait_s only exists on Buildkite rows (time waiting for a
       // scarce self-hosted agent -- see collect-test-runtime.js); GitHub
@@ -240,7 +241,7 @@
     dataset: 'perf', rows: [], metric: null, view: 'trend',
     workflows: [], enabledWorkflows: new Set(),
     runners: [], enabledRunners: new Set(),
-    excludeCancelled: true, splitByRunner: false,
+    excludeCancelled: true,
   };
 
   function ds() {
@@ -251,23 +252,30 @@
     return ds().legKey(row);
   }
 
-  // Whether a row counts at all, independent of splitByRunner (which only
-  // controls how counted rows get grouped into chart lines). A GitHub row
-  // has no runner facet (runnerOf returns null) and is never excluded by
-  // the runner-machine box; a Buildkite row is excluded if its machine is
-  // unchecked, whether or not the chart is currently splitting by runner.
+  // True once the runner box has been narrowed below "every runner" --
+  // the single signal both legKey (split Buildkite rows into per-machine
+  // lines) and rowSelected (drop no-runner-concept rows) key off, instead
+  // of a separate manual toggle. See legKey's comment for why a separate
+  // toggle was worse: it let "split=off, 2 runners checked" silently merge
+  // two machines' very different performance into one meaningless line.
+  function runnerSelectionNarrowed() {
+    return state.runners.length > 0 && state.enabledRunners.size < state.runners.length;
+  }
+
+  // Whether a row counts at all, independent of how a counted row then gets
+  // grouped into a chart line (that's legKey's job). A Buildkite row is
+  // excluded if its machine is unchecked; a GitHub row has no runner facet
+  // (runnerOf returns null) and is included only while the runner box isn't
+  // actually narrowing anything -- see runnerSelectionNarrowed().
   function rowSelected(row) {
     if (!state.enabledWorkflows.has(row.workflow)) return false;
     const runner = ds().runnerOf(row);
     if (runner !== null) return state.enabledRunners.has(runner);
-    // No runner concept for this row (e.g. every GitHub Actions row --
-    // runnerOf returns null there). Include it only while the runner box
-    // isn't actually narrowing anything (nothing checked/unchecked yet, the
-    // "just browsing everything" default) -- the moment it's narrowed to
-    // specific machines, this becomes a runner-centric question ("what
-    // actually ran on tb-macos-arm64-4-1"), and a row with no relationship
-    // to any machine has no business answering it.
-    return state.enabledRunners.size === state.runners.length;
+    // No runner concept for this row (e.g. every GitHub Actions row).
+    // Once the runner box is narrowed, this becomes a runner-centric
+    // question ("what actually ran on tb-macos-arm64-4-1"), and a row with
+    // no relationship to any machine has no business answering it.
+    return !runnerSelectionNarrowed();
   }
 
   function median(values) {
@@ -338,9 +346,8 @@
 
   // resetSelections is true on a genuine dataset switch (an old workflow
   // selection has nothing to do with the new dataset's values) and false on
-  // every other populateControls() call (splitByRunner toggling, most
-  // notably) -- so re-deriving the available workflows/runners doesn't wipe
-  // out which ones the user already checked.
+  // every other populateControls() call -- so re-deriving the available
+  // workflows/runners doesn't wipe out which ones the user already checked.
   function populateControls(resetSelections) {
     document.getElementById('sub-text').innerHTML = ds().subText;
     document.getElementById('workflow-label').textContent = ds().legsLabel;
@@ -386,22 +393,6 @@
       });
     }
 
-    // Unlike excludeCancelled, this changes what a leg *is* (one pipeline
-    // becomes one line per machine that's run it), so the chart's leg/color
-    // assignment has to be rebuilt -- but the workflow/runner *selections*
-    // themselves don't need to change, hence populateControls() (no reset)
-    // rather than just render().
-    const splitByRunnerCheckbox = document.getElementById('split-by-runner-checkbox');
-    splitByRunnerCheckbox.checked = state.splitByRunner;
-    if (!splitByRunnerCheckbox.dataset.bound) {
-      splitByRunnerCheckbox.dataset.bound = '1';
-      splitByRunnerCheckbox.addEventListener('change', () => {
-        state.splitByRunner = splitByRunnerCheckbox.checked;
-        populateControls();
-        render();
-      });
-    }
-
     const metricSelect = document.getElementById('metric-select');
     metricSelect.innerHTML = '';
     for (const m of ds().metrics(state.rows)) {
@@ -419,10 +410,7 @@
       });
     }
 
-    // Two independent facets -- see rowSelected(). Workflow values don't
-    // depend on splitByRunner at all; runner values are gathered the same
-    // way regardless, since the runner box filters data whether or not the
-    // chart is currently splitting lines by it.
+    // Two independent facets -- see rowSelected() and runnerSelectionNarrowed().
     const workflowSet = new Set();
     const runnerSet = new Set();
     for (const row of state.rows) {
