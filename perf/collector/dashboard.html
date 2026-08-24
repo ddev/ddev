@@ -78,7 +78,7 @@
       <label style="visibility: hidden; display: block;">.</label>
       <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;">
         <input type="checkbox" id="exclude-cancelled-checkbox" checked>
-        Exclude cancelled/skipped runs
+        Only successful full runs
       </label>
     </div>
     <div>
@@ -127,7 +127,7 @@
         return [...s].sort();
       },
       metricValue: (row, metric) => (row.metrics ? row.metrics[metric] : null),
-      isNotRealRun: () => false,
+      isFullSuccessfulRun: () => true,
       // Nightly perf metrics are all naturally short (rebuild/start times in
       // the tens of seconds) -- seconds stay readable.
       formatDuration: (v) => `${v.toFixed(1)} s`,
@@ -146,17 +146,23 @@
       // `!= null` filter in renderTrend/renderCompare already handles.
       metrics: () => ['wall_clock_s', 'compute_s', 'queue_wait_s'],
       metricValue: (row, metric) => row[metric],
-      // Two different ways a row's duration isn't a real measurement:
-      // (1) cancelled (GitHub spells it "cancelled", Buildkite "canceled") --
-      //     however far it got before a newer commit superseded it (see
-      //     #8695/#8696 discussion), not a real completion time; and
-      // (2) skip_marker -- a [skip ci]/[skip buildkite]/[skip github] commit
-      //     exits in seconds but Buildkite still records it as "passed" (no
-      //     separate "skipped" state the way a GitHub job has), so without
-      //     this these near-zero points mix into the same bucket as a real
-      //     multi-hour run and produce huge, meaningless swings.
-      // Both excluded from duration charts by default.
-      isNotRealRun: (row) => row.conclusion === 'cancelled' || row.conclusion === 'canceled' || row.skip_marker === true,
+      // The question this dataset exists to answer (see #8695/#8696: sizing
+      // up the Go test suite for trimming) is "how long does a full test run
+      // actually take" -- an allowlist of what counts as one, not a
+      // denylist of known-bad states, since a failure can end early (the
+      // Makefile's target chain aborts on the first non-zero recipe -- see
+      // stage_analysis) and Buildkite's queue-wait fix already showed
+      // "exclude the artifacts we've found so far" misses ones we haven't.
+      // A run only counts if it (a) actually completed -- not cancelled
+      // (GitHub spells it "cancelled", Buildkite "canceled"), not a
+      // [skip ci]/[skip buildkite]/[skip github] commit that Buildkite
+      // still records as "passed" despite never assigning an agent (no
+      // separate "skipped" state the way a GitHub job has); and (b)
+      // actually succeeded -- a failure's duration reflects whatever went
+      // wrong, not the suite's real running time, whether it happened late
+      // (representative) or was truncated early by the Make chain abort.
+      isFullSuccessfulRun: (row) =>
+        (row.conclusion === 'success' || row.conclusion === 'passed') && row.skip_marker !== true,
       // Whole test runs are thousands of seconds -- minutes read far better.
       // The underlying values (and the CSV export) stay in raw seconds;
       // only chart labels go through this.
@@ -167,6 +173,9 @@
     },
   };
 
+  // excludeCancelled's name predates isFullSuccessfulRun (it grew from "drop
+  // cancelled runs" to "only successful full runs" -- see that function's
+  // comment); kept as-is since it's internal, not user-facing.
   const state = { dataset: 'perf', rows: [], metric: null, view: 'trend', legs: [], enabledLegs: new Set(), excludeCancelled: true };
 
   function ds() {
@@ -341,7 +350,7 @@
       .filter((leg) => state.enabledLegs.has(leg))
       .map((leg, i) => {
         const points = state.rows
-          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null && !(state.excludeCancelled && ds().isNotRealRun(r)))
+          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null && (!state.excludeCancelled || ds().isFullSuccessfulRun(r)))
           .map((r) => ({ t: new Date(r.timestamp).getTime(), v: ds().metricValue(r, state.metric) }));
         return { leg, color: COLORS[i % COLORS.length], points };
       })
@@ -430,7 +439,7 @@
       .filter((leg) => state.enabledLegs.has(leg))
       .map((leg, i) => {
         const points = state.rows
-          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null && !(state.excludeCancelled && ds().isNotRealRun(r)))
+          .filter((r) => legKey(r) === leg && ds().metricValue(r, state.metric) != null && (!state.excludeCancelled || ds().isFullSuccessfulRun(r)))
           .map((r) => ds().metricValue(r, state.metric));
         const value = median(points.slice(-COMPARE_TRAILING_N));
         return { leg, color: COLORS[i % COLORS.length], value, n: Math.min(points.length, COMPARE_TRAILING_N) };
