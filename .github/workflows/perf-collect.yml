@@ -141,7 +141,18 @@ jobs:
         if: steps.commit.outputs.changed == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run docs-publish.yml --repo "$GITHUB_REPOSITORY" --ref main
+        # github.ref_name, not a hardcoded 'main': the nightly cron always
+        # runs against the repo's default branch (main), so this is a no-op
+        # behavior change there, but a `workflow_dispatch` run against a
+        # feature branch (testing a change to this workflow, or to the
+        # dashboard files it deploys) needs to redeploy THAT branch's
+        # docs-publish.yml/dashboard files -- a hardcoded 'main' here
+        # silently re-triggers main's unmodified docs-publish.yml right
+        # after, clobbering whatever the feature branch's own manual
+        # docs-publish dispatch just deployed. Caught live: this exact bug
+        # took down the real public /perf/ page (dropped dashboard-common.js
+        # /css and the new /perf/ci/ page) while testing this PR pre-merge.
+        run: gh workflow run docs-publish.yml --repo "$GITHUB_REPOSITORY" --ref "${{ github.ref_name }}"
 
       # Deliberately last: collect.js exits 0 even when a source failed, so
       # the commit/push and docs-publish steps above still run and publish
