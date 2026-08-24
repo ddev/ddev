@@ -32,8 +32,10 @@ should have finished.
   if unset, the Buildkite side is skipped (not an error), same tolerance.
   Complements the per-test data gotestsum writes when `GOTESTSUM_JSONFILE_DIR`
   is set (see `Makefile`) -- that's per-Go-test detail uploaded as a build
-  artifact by the workflows that run `make test`; this script is the
-  per-test-type total that also covers non-Go workflows like Quickstart.
+  artifact (GitHub Actions via `actions/upload-artifact`, Buildkite via
+  `buildkite-agent artifact upload` in `test.sh`) by the workflows that run
+  `make test`; this script is the per-test-type total that also covers
+  non-Go workflows like Quickstart.
   `test-pipelines.json`'s comment explains how its 12 slugs were confirmed
   live (`bk pipeline list --org ddev`) against several retired/legacy
   pipelines the Buildkite API still returns -- see #8695.
@@ -60,8 +62,9 @@ should have finished.
   the same way cancelled runs already are); `failed_at_stage` names the
   target that never ran; `failing_tests` lists the actual failing test names
   from whichever stage did run last. No artifact match (the common case
-  before this was added, and always true for Buildkite, which has no
-  gotestsum wiring) just means no `stage_analysis` -- not an error.
+  before this was added; also still true for Buildkite, since this collector
+  doesn't fetch its gotestsum artifacts yet -- see HANDOFF.md) just means no
+  `stage_analysis` -- not an error.
   `makeTargetFromArtifactName`/`analyzeStageDir` in the script are pure
   functions verified against fixture data (no jest/mocha dependency here, so
   ad hoc rather than a committed test file -- same as `collect.js`).

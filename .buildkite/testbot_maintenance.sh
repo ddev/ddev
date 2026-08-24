@@ -4,6 +4,9 @@ set -eu -o pipefail
 
 os=$(go env GOOS)
 
+# Keep in sync with wsl2-setup.sh's pin for the GitHub Actions WSL2 runner.
+GOTESTSUM_VERSION="1.13.0"
+
 rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/project_list.yaml ~/.ddev/homeadditions ~/.ddev/commands ~/.ddev/bin/docker-buildx* ~/.ddev/bin/docker-compose* ~/.ddev/traefik ~/tmp/ddevtest
 
 # gob-encoded caches: gob has no tolerance for a struct field's Go type
@@ -28,6 +31,22 @@ if ! command -v cloudflared >/dev/null; then
     case $os in
     darwin)
         brew install cloudflared
+        ;;
+    esac
+fi
+
+# Install gotestsum if it's not there. WSL2 bots report GOOS=linux and
+# already have Homebrew (see test.sh's linuxbrew PATH export), so they take
+# the same path as darwin here; native Windows has no package for it.
+if ! command -v gotestsum >/dev/null; then
+    case $os in
+    darwin | linux)
+        brew install gotestsum
+        ;;
+    windows)
+        curl -fsSL "https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_windows_amd64.tar.gz" -o /tmp/gotestsum.tar.gz
+        tar -C /c/ProgramData/chocolatey/bin -xzf /tmp/gotestsum.tar.gz gotestsum.exe
+        rm /tmp/gotestsum.tar.gz
         ;;
     esac
 fi

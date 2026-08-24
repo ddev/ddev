@@ -15,6 +15,7 @@
       BUILDKIT_PROGRESS: plain
       DDEV_TEST_SHARE_CMD: "true"
       DOCKER_TYPE: "docker-desktop"
+      GOTESTSUM_JSONFILE_DIR: "test-results"
       # /opt/homebrew/etc/buildkite-agent/hooks/environment
       # DOCKERHUB_PULL_USERNAME
       # DOCKERHUB_PULL_PASSWORD

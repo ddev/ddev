@@ -33,13 +33,18 @@ one-off snapshot.
   checkbox boxes and a "Only successful full runs" filter (on by default).
   Live at `https://ddev.github.io/ddev/perf/` and
   `https://ddev.github.io/ddev/perf/ci/`.
-- **Makefile / `test-reusable.yml` / `test-wsl2-reusable.yml`** — opt-in
-  `gotestsum` wiring for GitHub Actions Go test runs (`GOTESTSUM_JSONFILE_DIR`,
-  unset by default so local `make test` is unaffected). Installed via
-  Homebrew (Linux) or a release tarball (WSL2), not `go install` — an
-  earlier `go install`-pinned version failed to compile against the
-  runners' current Go toolchain; installing the prebuilt binary sidesteps
-  that whole class of problem.
+- **Makefile / `test-reusable.yml` / `test-wsl2-reusable.yml` /
+  `.buildkite/test.sh` / `testbot_maintenance.sh`** — opt-in `gotestsum`
+  wiring for GitHub Actions and Buildkite Go test runs
+  (`GOTESTSUM_JSONFILE_DIR`, unset by default so local `make test` is
+  unaffected). Installed via Homebrew (GitHub Actions Linux, and the
+  persistent macOS/WSL2 Buildkite bots, which already have Homebrew) or a
+  release tarball (GitHub Actions WSL2, and native Windows Buildkite bots,
+  which have neither), not `go install` — an earlier `go install`-pinned
+  version failed to compile against the runners' current Go toolchain;
+  installing the prebuilt binary sidesteps that whole class of problem. On
+  Buildkite the per-test JSON is uploaded via `buildkite-agent artifact
+  upload` from `test.sh`, mirroring GitHub Actions' `upload-artifact` step.
 - **`perf-collect.yml`** — gained `fresh`/`since` `workflow_dispatch` inputs
   to rebuild `test-runtime-history.ndjson` from scratch, needed whenever the
   row schema gains a field (existing rows never retroactively get a new
@@ -102,14 +107,16 @@ one-off snapshot.
    -- and word its description carefully, since that page is public and
    this data (internal CI build times) isn't meant for the same audience
    as the rest of that table.
-3. **No Buildkite per-test instrumentation.** `.buildkite/test.sh`/`test.cmd`
-   still run plain `go test -v`. Only the GitHub Actions Linux wrappers +
-   WSL2 workflow get gotestsum's per-test JSON. Buildkite only has the
-   total-runtime (per-run) dataset, nothing per-test.
+3. ~~**No Buildkite per-test instrumentation.**~~ Done: the Buildkite
+   Test-\* pipelines now set `GOTESTSUM_JSONFILE_DIR` and run through
+   gotestsum the same as GitHub Actions, with `test.sh` uploading the
+   resulting per-test JSON via `buildkite-agent artifact upload`. Not yet
+   verified against a real Buildkite run (this merges before the next
+   scheduled build) — worth checking the first live run's artifacts tab.
 4. **No permanent per-test time series.** The gotestsum per-test JSON is
-   uploaded as a 90-day build artifact per job (GitHub Actions side only —
-   see #3) but nothing aggregates it into a lasting dataset or dashboard
-   view. Only per-workflow *totals* are tracked long-term today.
+   uploaded as a 90-day build artifact per job (both GitHub Actions and, as
+   of #3, Buildkite) but nothing aggregates it into a lasting dataset or
+   dashboard view. Only per-workflow *totals* are tracked long-term today.
 5. **`stage_analysis` is unverified against a real failure.** The
    truncated-vs-late-failure detection (reads which gotestsum jsonfiles a
    failed GitHub Actions run actually produced) has never fired on live
@@ -129,7 +136,9 @@ one-off snapshot.
    green-run CI log noise since gotestsum only prints a passing test's full
    output when using verbose formats — quieter formats print one line per
    test and the full dump only on failure. Would change what a normal
-   passing-run log looks like; raised for discussion, not acted on.
+   passing-run log looks like; raised for discussion, not acted on. Deferred
+   to its own PR after this one merges, so a format experiment doesn't get
+   tangled with this PR's baseline instrumentation.
 8. **The actual #8695/#8696 trimming work hasn't started.** This PR is the
    measurement infrastructure the trimming work needs as a baseline/backfill
    before-and-after comparison — the trimming itself is a separate,
