@@ -1,0 +1,17 @@
+{
+  "_comment": "GitHub Actions workflow files (under .github/workflows/) whose per-run job timing is tracked for the CI test-runtime trend -- one row per completed run on main, with a jobs[] breakdown for workflows that split into more than one job (e.g. podman-rootless's testpkg/testcmd split). See perf/collector/README.md.",
+  "workflows": [
+    "test-apache-fpm.yml",
+    "test-nginx-fpm.yml",
+    "test-mutagen.yml",
+    "test-podman-rootless.yml",
+    "test-podman-rootless-mutagen.yml",
+    "test-docker-rootless.yml",
+    "test-race-detection.yml",
+    "test-no-bind-mounts.yml",
+    "test-all-project-types.yml",
+    "test-wsl2-nat.yml",
+    "test-pull-push-providers.yml",
+    "quickstart.yml"
+  ]
+}

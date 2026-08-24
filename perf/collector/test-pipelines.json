@@ -1,0 +1,18 @@
+{
+  "_comment": "Buildkite pipeline slugs for the actual Go test suite (not the nightly ddev-perf-* benchmarks in pipelines.json) whose per-build runtime is tracked for the CI test-runtime trend -- one row per finished build on main. Confirmed live via `bk pipeline list --org ddev` on 2026-08-22: filtered to repo=ddev/ddev with a .buildkite/*.yml script that still exists in the repo. Several other pipelines returned by that API call reference scripts no longer in the repo (legacy drud/ddev-org pipelines, retired providers) -- consistent with #8695's '13 of 31 pipelines never built or retired mid-history' finding -- and are deliberately excluded here. See perf/collector/README.md.",
+  "buildkiteOrg": "ddev",
+  "pipelines": [
+    "macos-lima",
+    "macos-colima-vz",
+    "macos-orbstack",
+    "macos-podman-rootless",
+    "macos-rancher-desktop",
+    "ddev-macos-arm64-mutagen",
+    "ddev-windows-mutagen",
+    "ddev-windows-dockerforwindows-nfs",
+    "ddev-windows-installer",
+    "wsl2-docker-desktop",
+    "wsl2-docker-inside",
+    "wsl2-mirrored"
+  ]
+}

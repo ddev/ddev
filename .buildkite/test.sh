@@ -178,9 +178,23 @@ echo "--- Running tests..."
 
 # From here on, cleanup (the EXIT trap) runs testbot_maintenance.sh post-test.
 RAN_TESTS=true
-make ${MAKE_TARGET:-test} TESTARGS="${TESTARGS:-}" TESTPKG="${TESTPKG:-}" TESTFILE="${TESTFILE:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'
-RV=$?
+# set -e would abort here on a test failure before RV is captured, skipping
+# the artifact upload below -- wrapping in `if` suppresses that so a failing
+# run still uploads its results (matches GHA's if: always() upload step).
+if make ${MAKE_TARGET:-test} TESTARGS="${TESTARGS:-}" TESTPKG="${TESTPKG:-}" TESTFILE="${TESTFILE:-}" | sed -u 's/^--- FAIL:/+++ FAIL:/; /\//!s/^=== RUN /--- RUN /'; then
+  RV=0
+else
+  RV=$?
+fi
 echo "test.sh completed with status=$RV"
+
+# Per-test JSON gotestsum wrote under GOTESTSUM_JSONFILE_DIR (Makefile) --
+# uploaded as a build artifact for the CI test-runtime collector (see
+# perf/collector/README.md). No-op if unset/empty.
+if [ -n "${GOTESTSUM_JSONFILE_DIR:-}" ] && [ -d "${GOTESTSUM_JSONFILE_DIR}" ]; then
+  buildkite-agent artifact upload "${GOTESTSUM_JSONFILE_DIR}/*.ndjson"
+fi
+
 ddev poweroff || true
 
 exit $RV

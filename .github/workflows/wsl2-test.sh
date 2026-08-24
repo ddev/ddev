@@ -24,6 +24,11 @@ export TESTARGS="${TESTARGS:-}"
 export MAKEARGS="${MAKEARGS:-}"
 export MAKE_TARGET="${MAKE_TARGET:-test}"
 export PATH="/usr/local/go/bin:$PATH"
+# Picked up by the Makefile's gotest macro (see Makefile) so `make test` runs
+# through gotestsum and writes per-test JSON events here, relative to the repo
+# root this script runs from. The caller workflow copies this dir out of WSL2
+# and uploads it for the CI test-runtime collector (perf/collector/README.md).
+export GOTESTSUM_JSONFILE_DIR=test-results
 
 echo "=== Environment ==="
 echo "GOTEST_SHORT=${GOTEST_SHORT}"

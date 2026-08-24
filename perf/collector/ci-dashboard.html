@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DDEV CI test runtime</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../dashboard-common.css">
+</head>
+<body>
+  <h1>DDEV CI test runtime</h1>
+  <p class="sub" id="sub-text"></p>
+
+  <div class="controls">
+    <div>
+      <label for="view-select">View</label>
+      <select id="view-select">
+        <option value="trend">Trend over time</option>
+        <option value="compare">Compare environments (latest)</option>
+      </select>
+    </div>
+    <div>
+      <label for="metric-select">Metric</label>
+      <select id="metric-select"></select>
+    </div>
+    <div id="exclude-cancelled-wrap">
+      <label style="visibility: hidden; display: block;">.</label>
+      <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;">
+        <input type="checkbox" id="exclude-cancelled-checkbox" checked>
+        Only successful full runs
+      </label>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label id="workflow-label"></label>
+      <div class="legs-toolbar">
+        <button type="button" id="workflow-all">All</button>
+        <button type="button" id="workflow-none">None</button>
+      </div>
+      <div class="legs" id="workflow-container"></div>
+    </div>
+    <div id="runner-box-wrap" hidden>
+      <label>Runner machine</label>
+      <div class="legs-toolbar">
+        <button type="button" id="runner-all">All</button>
+        <button type="button" id="runner-none">None</button>
+      </div>
+      <div class="legs" id="runner-container"></div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas id="chart" width="1000" height="420"></canvas>
+    <div class="empty" id="empty-message" hidden>No data yet — check back after the first nightly run.</div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <p class="note" id="note"></p>
+  <p><a id="csv-link" download="ddev-test-runtime-compare.csv">Download CSV</a> — the same rows behind whichever chart is currently shown.</p>
+
+  <p class="crosslink">See also: <a href="tests/">Per-test timing</a> (individual slow/failing Go tests, not per-workflow totals) and <a href="../">nightly performance benchmarks</a> (a different, unrelated dataset).</p>
+
+<script src="../dashboard-common.js"></script>
+<script>
+  // The job with the largest duration_s is the actual test job, not the
+  // trivial `:pipeline:` upload / check-skip housekeeping step -- its
+  // runner_name is the physical agent that did the real work. Buildkite's
+  // self-hosted agents are persistent, named machines, not one-shot VMs
+  // like GitHub Actions runners -- so "is this specific machine slower
+  // than its siblings, or getting slower over time" is a real, answerable
+  // question here in a way it usually isn't for GitHub.
+  function primaryRunnerName(row) {
+    if (!row.jobs || !row.jobs.length) return null;
+    const real = row.jobs.reduce((best, j) => ((j.duration_s || 0) > (best.duration_s || 0) ? j : best), row.jobs[0]);
+    return real.runner_name || null;
+  }
+
+  initDashboard({
+    file: 'test-runtime-history.ndjson',
+    subText: 'Total CI runtime per test type, across GitHub Actions workflows and Buildkite pipelines. See <a href="https://github.com/ddev/ddev/blob/main/perf/collector/README.md">perf/collector/README.md</a>. wall_clock_s excludes queue time; compute_s sums every job in the run (workflows split into more than one job, e.g. podman-rootless’s testpkg/testcmd, report real CPU-minutes). Points more than 20% above the trailing 10-run median for their test type are marked red.',
+    legsLabel: 'Test type (workflow / pipeline)',
+    // A Buildkite row's leg is always "pipeline · machine", unconditionally
+    // -- there is no merged mode. Different physical agents are different
+    // things, the same way the nightly perf dashboard's os/arch/docker
+    // provider legs are never merged either; a checkbox that sometimes
+    // combines multiple real machines into one line invites exactly the
+    // bug two prior versions of this both had in different ways: with
+    // "all" runners checked meaning "merge them," selecting several
+    // specific machines either silently interleaved their very different
+    // performance into one meaningless line (no split toggle), or looked
+    // identical to "show me the real per-machine data" for every runner
+    // *except* the one place someone actually looked (all-checked still
+    // merged). Always splitting sidesteps the whole class of bug: the
+    // "Runner machine" checkboxes are a pure visibility filter, exactly
+    // like the "Test type" ones, nothing more. GitHub Actions rows never
+    // split -- runner_name there is a one-shot ephemeral VM id, not a
+    // persistent machine, so splitting by it wouldn't mean anything.
+    legKey: (row) => (row.source === 'buildkite' ? `${row.workflow} · ${primaryRunnerName(row) || 'unknown runner'}` : row.workflow),
+    // The runner-machine facet the "Runner machine" checkbox box filters
+    // on. null for GitHub Actions rows, which the row-selection filter
+    // treats as "included only while the runner box isn't actually
+    // narrowing anything" -- see dashboard-common.js's rowSelected().
+    runnerOf: (row) => (row.source === 'buildkite' ? (primaryRunnerName(row) || 'unknown runner') : null),
+    // queue_wait_s only exists on Buildkite rows (time waiting for a
+    // scarce self-hosted agent -- see collect-test-runtime.js); GitHub
+    // Actions rows just have no value for it, which dashboard-common.js's
+    // `!= null` filter already handles.
+    metrics: () => ['wall_clock_s', 'compute_s', 'queue_wait_s'],
+    metricValue: (row, metric) => row[metric],
+    // The question this dataset exists to answer (see #8695/#8696: sizing
+    // up the Go test suite for trimming) is "how long does a full test run
+    // actually take" -- an allowlist of what counts as one, not a
+    // denylist of known-bad states, since a failure can end early (the
+    // Makefile's target chain aborts on the first non-zero recipe -- see
+    // stage_analysis) and Buildkite's queue-wait fix already showed
+    // "exclude the artifacts we've found so far" misses ones we haven't.
+    // A run only counts if it (a) actually completed -- not cancelled
+    // (GitHub spells it "cancelled", Buildkite "canceled"), not a
+    // [skip ci]/[skip buildkite]/[skip github] commit that Buildkite
+    // still records as "passed" despite never assigning an agent (no
+    // separate "skipped" state the way a GitHub job has); and (b)
+    // actually succeeded -- a failure's duration reflects whatever went
+    // wrong, not the suite's real running time, whether it happened late
+    // (representative) or was truncated early by the Make chain abort.
+    isFullSuccessfulRun: (row) =>
+      (row.conclusion === 'success' || row.conclusion === 'passed') && row.skip_marker !== true,
+    // Whole test runs are thousands of seconds -- minutes read far better.
+    // The underlying values (and the CSV export) stay in raw seconds;
+    // only chart labels go through this.
+    formatDuration: (v) => `${(v / 60).toFixed(1)} min`,
+    trendNote: 'Data source: <code>test-runtime-history.ndjson</code>, one line per CI run/build.',
+    compareNote: (n) => `Each bar is the median of that test type's last ${n} runs (not just the latest one) for the selected metric, sorted fastest to slowest. Data source: <code>test-runtime-history.ndjson</code>.`,
+    csvPrefix: 'ddev-test-runtime',
+  });
+</script>
+</body>
+</html>

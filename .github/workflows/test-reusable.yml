@@ -134,6 +134,10 @@ jobs:
       DDEV_TEST_NO_BIND_MOUNTS: ${{ inputs.ddev_test_no_bind_mounts }}
       DDEV_TEST_PODMAN_ROOTLESS: ${{ inputs.ddev_test_podman_rootless }}
       DDEV_TEST_DOCKER_ROOTLESS: ${{ inputs.ddev_test_docker_rootless }}
+      # Picked up by the Makefile's gotest macro (see Makefile) so `make test`
+      # runs through gotestsum and writes per-test JSON events here, for the
+      # CI test-runtime collector (perf/collector/README.md).
+      GOTESTSUM_JSONFILE_DIR: test-results
 
     steps:
       - uses: actions/checkout@v7
@@ -253,6 +257,21 @@ jobs:
             echo "CGO_ENABLED=${CGO_ENABLED} but built cgo=${cgo}" && exit 5
           fi
           make CGO_ENABLED="${CGO_ENABLED}" BUILDARGS="${BUILDARGS}" TESTARGS="${TESTARGS}" ${MAKE_TARGET} ${MAKEARGS}
+
+      # Consumed by perf/collector/'s nightly test-runtime rollup, not by
+      # anyone reading this run directly -- see perf/collector/README.md.
+      # Named per (run, attempt, make_target) because some callers (podman
+      # rootless, podman rootless mutagen, WSL2 NAT) invoke this reusable
+      # workflow twice in the same run, once per make_target, which would
+      # otherwise collide on upload.
+      - name: Upload gotestsum results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.run_id }}-${{ github.run_attempt }}-${{ env.MAKE_TARGET }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 90
 
       - name: Clean up Homebrew
         continue-on-error: true

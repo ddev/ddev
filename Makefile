@@ -187,6 +187,16 @@ DDEV_BINARY_FULLPATH=$(DDEV_PATH)/$(DDEVNAME)
 # tests are skipped at the framework level without requiring per-test code.
 EMBARGO_SKIP_FLAG := $(if $(DDEV_EMBARGO_TESTS),-skip "$(DDEV_EMBARGO_TESTS)",)
 
+# When GOTESTSUM_JSONFILE_DIR is set, tests run through gotestsum instead of
+# `go test` directly, additionally writing structured per-test JSON events to
+# <dir>/<name>.ndjson for the CI test-runtime collector (see
+# perf/collector/README.md). --format=standard-verbose mirrors plain
+# `go test -v` console output, including full failure detail, so CI log
+# review is unaffected. Unset by default, so local `make test` needs no
+# gotestsum install and behaves exactly as before.
+GOTESTSUM_JSONFILE_DIR ?=
+gotest = $(if $(GOTESTSUM_JSONFILE_DIR),gotestsum --format=standard-verbose --jsonfile=$(GOTESTSUM_JSONFILE_DIR)/$(1).ndjson --,go test)
+
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
@@ -195,19 +205,19 @@ testcmd: $(DEFAULT_BUILD) setup
 	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(EMBARGO_SKIP_FLAG) $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); $(call gotest,testcmd) $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 testpkg: testnotddevapp testddevapp
 
 testddevapp: $(DEFAULT_BUILD) setup
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp $(EMBARGO_SKIP_FLAG) $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); $(call gotest,testddevapp) $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 testnotddevapp: $(DEFAULT_BUILD) setup
 	@echo "Running ddev version check..."
 	@$(DDEV_BINARY_FULLPATH) version
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) $(EMBARGO_SKIP_FLAG) $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=$(CGO_ENABLED) DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); $(call gotest,testnotddevapp) $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) $(EMBARGO_SKIP_FLAG) $(TESTARGS)
 
 testfullsitesetup: $(DEFAULT_BUILD) setup
 	@echo "Running ddev version check..."
@@ -242,6 +252,7 @@ testwsl2scripts:
 setup:
 	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,bin/windows_arm64,src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)
+	@if [ -n "$(GOTESTSUM_JSONFILE_DIR)" ]; then mkdir -p "$(GOTESTSUM_JSONFILE_DIR)"; fi
 
 # Required static analysis targets for pre-push.
 staticrequired: setup golangci-lint markdownlint zensical check-image-tags

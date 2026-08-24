@@ -19,7 +19,18 @@ name: Collect and publish nightly performance results
 on:
   schedule:
     - cron: '0 6 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      fresh:
+        description: 'Wipe ci/test-runtime-history.ndjson and ci/tests/per-test-history.ndjson and rebuild both from scratch instead of appending (use after a schema change to either row format, so old rows do not miss new fields)'
+        required: false
+        type: boolean
+        default: false
+      since:
+        description: 'Override --since for this run (YYYY-MM-DD). Mainly useful with fresh=true, to pull back further than the default 7-day backfill window.'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -50,9 +61,13 @@ jobs:
         with:
           fetch-depth: 1
 
-      # performance-data is a data-only orphan branch: it holds history.ndjson and
-      # index.html and nothing else. Branching it off main's HEAD instead would
-      # give it a copy of the whole repo tree plus the two data files, and leave a
+      # performance-data is a data-only orphan branch: it holds the nightly perf
+      # benchmark dashboard (index.html, dashboard-common.js/css, history.ndjson)
+      # at its root, the CI test-runtime dashboard under ci/ (ci/index.html,
+      # ci/test-runtime-history.ndjson), and the per-test trend dashboard under
+      # ci/tests/ (ci/tests/index.html, ci/tests/per-test-history.ndjson) -- see
+      # HANDOFF.md for why these are separate pages. Branching it off main's HEAD instead would
+      # give it a copy of the whole repo tree plus these data files, and leave a
       # branch that diverges from main forever.
       - name: Check out or create performance-data branch
         run: |
@@ -80,7 +95,48 @@ jobs:
         run: |
           touch ../performance-data/history.ndjson
           node perf/collector/collect.js ../performance-data/history.ndjson
-          cp perf/collector/dashboard.html ../performance-data/index.html
+          cp perf/collector/perf-dashboard.html ../performance-data/index.html
+          cp perf/collector/dashboard-common.js ../performance-data/dashboard-common.js
+          cp perf/collector/dashboard-common.css ../performance-data/dashboard-common.css
+
+      # Separate dataset from the nightly perf benchmarks above, and a
+      # separate page (/perf/ci/, not /perf/) -- total runtime per CI test
+      # workflow (golang-nginx-fpm, quickstart, etc.) is an unrelated
+      # question for an unrelated (internal-only) audience. See HANDOFF.md
+      # and perf/collector/README.md.
+      - name: Collect test-runtime results
+        id: collect-test-runtime
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ../performance-data/ci
+          if [ "${{ inputs.fresh }}" = "true" ]; then
+            echo "fresh=true: rebuilding ci/test-runtime-history.ndjson from scratch"
+            rm -f ../performance-data/ci/test-runtime-history.ndjson
+          fi
+          touch ../performance-data/ci/test-runtime-history.ndjson
+          node perf/collector/collect-test-runtime.js ../performance-data/ci/test-runtime-history.ndjson ${{ inputs.since != '' && format('--since={0}', inputs.since) || '' }}
+          cp perf/collector/ci-dashboard.html ../performance-data/ci/index.html
+
+      # Second pass over the file the previous step just wrote: downloads
+      # each new run's gotestsum artifact and appends one row per
+      # slow-or-failing top-level Go test to per-test-history.ndjson --
+      # turns per-test detail that otherwise lives only in a 90-day build
+      # artifact into a lasting, trend-able dataset. See collect-per-test.js
+      # and HANDOFF.md.
+      - name: Collect per-test results
+        id: collect-per-test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ../performance-data/ci/tests
+          if [ "${{ inputs.fresh }}" = "true" ]; then
+            echo "fresh=true: rebuilding per-test-history.ndjson from scratch"
+            rm -f ../performance-data/ci/tests/per-test-history.ndjson ../performance-data/ci/tests/per-test-cursor.json
+          fi
+          touch ../performance-data/ci/tests/per-test-history.ndjson
+          node perf/collector/collect-per-test.js ../performance-data/ci/test-runtime-history.ndjson ../performance-data/ci/tests/per-test-history.ndjson ../performance-data/ci/tests/per-test-cursor.json ${{ inputs.since != '' && format('--since={0}', inputs.since) || '' }}
+          cp perf/collector/per-test-dashboard.html ../performance-data/ci/tests/index.html
 
       - name: Commit and push results
         id: commit
@@ -88,7 +144,7 @@ jobs:
           cd ../performance-data
           git config user.name "ddev-perf-bot"
           git config user.email "actions@github.com"
-          git add history.ndjson index.html
+          git add history.ndjson index.html dashboard-common.js dashboard-common.css ci/index.html ci/test-runtime-history.ndjson ci/tests/index.html ci/tests/per-test-history.ndjson ci/tests/per-test-cursor.json
           if git diff --cached --quiet; then
             echo "No new results to commit"
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -106,7 +162,18 @@ jobs:
         if: steps.commit.outputs.changed == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run docs-publish.yml --repo "$GITHUB_REPOSITORY" --ref main
+        # github.ref_name, not a hardcoded 'main': the nightly cron always
+        # runs against the repo's default branch (main), so this is a no-op
+        # behavior change there, but a `workflow_dispatch` run against a
+        # feature branch (testing a change to this workflow, or to the
+        # dashboard files it deploys) needs to redeploy THAT branch's
+        # docs-publish.yml/dashboard files -- a hardcoded 'main' here
+        # silently re-triggers main's unmodified docs-publish.yml right
+        # after, clobbering whatever the feature branch's own manual
+        # docs-publish dispatch just deployed. Caught live: this exact bug
+        # took down the real public /perf/ page (dropped dashboard-common.js
+        # /css and the new /perf/ci/ page) while testing this PR pre-merge.
+        run: gh workflow run docs-publish.yml --repo "$GITHUB_REPOSITORY" --ref "${{ github.ref_name }}"
 
       # Deliberately last: collect.js exits 0 even when a source failed, so
       # the commit/push and docs-publish steps above still run and publish
@@ -115,7 +182,7 @@ jobs:
       # broken source should be visible, not silently swallowed, but it also
       # shouldn't block the legs that worked.
       - name: Fail if any source had a collection error
-        if: steps.collect.outputs.had_errors == 'true'
+        if: steps.collect.outputs.had_errors == 'true' || steps.collect-test-runtime.outputs.test_runtime_had_errors == 'true' || steps.collect-per-test.outputs.per_test_had_errors == 'true'
         run: |
-          echo "One or more sources failed to collect this run -- see the 'Collect results' step's ERROR lines above."
+          echo "One or more sources failed to collect this run -- see the 'Collect results' / 'Collect test-runtime results' / 'Collect per-test results' step's ERROR lines above."
           exit 1

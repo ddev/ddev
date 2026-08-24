@@ -17,6 +17,7 @@
       DDEV_TEST_SHARE_CMD: "false"
       DOCKER_TYPE: "colima_vz"
       LIMA_SSH_PORT_FORWARDER: "true"
+      GOTESTSUM_JSONFILE_DIR: "test-results"
       # /opt/homebrew/etc/buildkite-agent/hooks/environment
       # DOCKERHUB_PULL_USERNAME
       # DOCKERHUB_PULL_PASSWORD

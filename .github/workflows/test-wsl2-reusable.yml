@@ -196,3 +196,32 @@ jobs:
           $skip_nodejs = "${{ env.DDEV_SKIP_NODEJS_TEST }}"
           $docker_org = "${{ env.DOCKER_ORG }}"
           wsl -u testuser -- bash -exc "export GOTEST_SHORT='$gotest_short' TESTARGS='$testargs' MAKE_TARGET='$make_target' MAKEARGS='$makeargs' DDEV_EMBARGO_TESTS='$embargo' DDEV_EMBARGO_PHP_VERSIONS='$embargo_php' DDEV_SKIP_NODEJS_TEST='$skip_nodejs' DOCKER_ORG='$docker_org' && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"
+
+      # wsl2-test.sh writes gotestsum's per-test JSON inside the WSL2 VM's
+      # filesystem, invisible to actions/upload-artifact on the Windows host
+      # runner -- copy it out via the \\wsl$ UNC path first. Distro name
+      # "DDEV" matches the `wsl --install --name DDEV` step above.
+      - name: Copy gotestsum results out of WSL2
+        if: always()
+        shell: pwsh
+        run: |
+          $src = "\\wsl$\DDEV\home\testuser\workspace\ddev\test-results"
+          if (Test-Path $src) {
+            New-Item -ItemType Directory -Force -Path test-results | Out-Null
+            Copy-Item -Path "$src\*" -Destination test-results -Recurse -Force
+            Write-Host "Copied gotestsum results from WSL2:"
+            Get-ChildItem test-results
+          } else {
+            Write-Host "No gotestsum results found in WSL2 at $src -- nothing to copy"
+          }
+
+      # Consumed by perf/collector/'s nightly test-runtime rollup, not by
+      # anyone reading this run directly -- see perf/collector/README.md.
+      - name: Upload gotestsum results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.run_id }}-${{ github.run_attempt }}-wsl2-${{ inputs.networking }}-${{ inputs.make_target }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 90
