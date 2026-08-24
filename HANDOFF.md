@@ -21,18 +21,24 @@ one-off snapshot.
   branch. Each row has `wall_clock_s`, `compute_s`, `queue_wait_s`
   (Buildkite only — see below), `conclusion`, `skip_marker`, and a per-job
   breakdown.
-- **Two dashboard pages, not one with a dataset switcher.** An earlier
-  version put both datasets behind one `<select>` on one page; that implied
-  a relationship between them that doesn't exist (perf benchmarks are
-  plausibly public-interesting, CI build times never are), so it was split.
-  `perf/collector/dashboard-common.js`/`.css` hold the shared engine
+- **Three dashboard pages, not one with a dataset switcher.** An earlier
+  version put the first two datasets behind one `<select>` on one page; that
+  implied a relationship between them that doesn't exist (perf benchmarks
+  are plausibly public-interesting, CI build times never are), so it was
+  split. `perf/collector/dashboard-common.js`/`.css` hold the shared engine
   (trend/compare charts, checkbox boxes, CSV export); `perf-dashboard.html`
   (deploys as `/perf/`) and `ci-dashboard.html` (deploys as `/perf/ci/`)
   are each a thin page that calls `initDashboard(config)` with just its own
   dataset. The CI page has independent "Test type" and "Runner machine"
   checkbox boxes and a "Only successful full runs" filter (on by default).
-  Live at `https://ddev.github.io/ddev/perf/` and
-  `https://ddev.github.io/ddev/perf/ci/`.
+  `per-test-dashboard.html` (deploys as `/perf/ci/tests/`) is a third page,
+  for individual per-test timing rather than per-run totals — its data
+  shape (search/sort a table of tracked tests, chart one on click) doesn't
+  fit the shared engine's per-leg checkbox model, so it's self-contained
+  aside from reusing `dashboard-common.css` for visual consistency. Live at
+  `https://ddev.github.io/ddev/perf/`,
+  `https://ddev.github.io/ddev/perf/ci/`, and
+  `https://ddev.github.io/ddev/perf/ci/tests/`.
 - **Makefile / `test-reusable.yml` / `test-wsl2-reusable.yml` /
   `.buildkite/test.sh` / `testbot_maintenance.sh`** — opt-in `gotestsum`
   wiring for GitHub Actions and Buildkite Go test runs
@@ -45,6 +51,12 @@ one-off snapshot.
   installing the prebuilt binary sidesteps that whole class of problem. On
   Buildkite the per-test JSON is uploaded via `buildkite-agent artifact
   upload` from `test.sh`, mirroring GitHub Actions' `upload-artifact` step.
+- **`perf/collector/collect-per-test.js`** — second pass over
+  `test-runtime-history.ndjson`: for each new run/build, downloads its
+  gotestsum artifact and appends one row per slow (5s+) or failing top-level
+  Go test to `per-test-history.ndjson`, so individual tests (not just
+  per-workflow totals) can be trend-tracked. Deliberately scoped, not
+  exhaustive — see TODO #4 below.
 - **`perf-collect.yml`** — gained `fresh`/`since` `workflow_dispatch` inputs
   to rebuild `test-runtime-history.ndjson` from scratch, needed whenever the
   row schema gains a field (existing rows never retroactively get a new
@@ -113,10 +125,16 @@ one-off snapshot.
    resulting per-test JSON via `buildkite-agent artifact upload`. Not yet
    verified against a real Buildkite run (this merges before the next
    scheduled build) — worth checking the first live run's artifacts tab.
-4. **No permanent per-test time series.** The gotestsum per-test JSON is
-   uploaded as a 90-day build artifact per job (both GitHub Actions and, as
-   of #3, Buildkite) but nothing aggregates it into a lasting dataset or
-   dashboard view. Only per-workflow *totals* are tracked long-term today.
+4. ~~**No permanent per-test time series.**~~ Done: `collect-per-test.js`
+   downloads each run's gotestsum artifact and appends one row per
+   slow-or-failing top-level test to `per-test-history.ndjson`, with a
+   dashboard at `/perf/ci/tests/` (search, sort, and per-test trend chart).
+   Scoped deliberately, not exhaustive: only tests taking 5s+ or that failed
+   are tracked (recording all ~600 tests/run would dwarf the other two
+   datasets for little benefit), and the dataset is pruned to a trailing
+   180-day window rather than kept forever, to stay practical for a
+   client-side-parsed dashboard. Not yet verified against a real run (same
+   caveat as #3 -- this merges before the next scheduled collection).
 5. **`stage_analysis` is unverified against a real failure.** The
    truncated-vs-late-failure detection (reads which gotestsum jsonfiles a
    failed GitHub Actions run actually produced) has never fired on live
@@ -143,18 +161,21 @@ one-off snapshot.
    measurement infrastructure the trimming work needs as a baseline/backfill
    before-and-after comparison — the trimming itself is a separate,
    not-yet-begun effort.
-9. **No write-up posted back to #8695/#8696 yet.** The dashboard and the
-   findings above (cancellation rate, skip-marker contamination, Buildkite
-   queue wait, the single-agent degradation) haven't been shared back to
-   those issues.
+9. ~~**No write-up posted back to #8695/#8696 yet.**~~ Done: the dashboard
+   and the findings above (cancellation rate, skip-marker contamination,
+   Buildkite queue wait, the single-agent degradation) were posted as
+   comments on both issues.
 
 ## Where to look
 
 - Live CI test-runtime dashboard: `https://ddev.github.io/ddev/perf/ci/`
+- Live per-test timing dashboard: `https://ddev.github.io/ddev/perf/ci/tests/`
 - Live nightly perf-benchmark dashboard: `https://ddev.github.io/ddev/perf/`
 - Raw CI test-runtime data: `https://ddev.github.io/ddev/perf/ci/test-runtime-history.ndjson`
-- Collector: `perf/collector/collect-test-runtime.js`,
-  `perf/collector/README.md` has the fuller technical writeup
+- Raw per-test data: `https://ddev.github.io/ddev/perf/ci/tests/per-test-history.ndjson`
+- Collectors: `perf/collector/collect-test-runtime.js`,
+  `perf/collector/collect-per-test.js` — `perf/collector/README.md` has the
+  fuller technical writeup
 - To backfill after a schema change: `gh workflow run perf-collect.yml
   --ref <branch> -f fresh=true -f since=YYYY-MM-DD`, then `gh workflow run
   docs-publish.yml --ref <branch>` to redeploy (two separate hops — the

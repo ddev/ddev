@@ -68,6 +68,42 @@ should have finished.
   `makeTargetFromArtifactName`/`analyzeStageDir` in the script are pure
   functions verified against fixture data (no jest/mocha dependency here, so
   ad hoc rather than a committed test file -- same as `collect.js`).
+- `collect-per-test.js` is a third dataset: individual Go test durations, not
+  per-workflow totals. It's a second pass over `test-runtime-history.ndjson`
+  (run right after `collect-test-runtime.js` in `perf-collect.yml`, reading
+  that file rather than re-querying GitHub/Buildkite for run lists): for
+  each run/build not yet processed, it downloads that run's gotestsum
+  artifact (the same one `enrichFailedGithubRuns()` above reads, plus the
+  Buildkite equivalent uploaded by `test.sh`) and appends one row per
+  qualifying top-level Go test to `per-test-history.ndjson`. "Qualifying"
+  means the test took at least `MIN_ELAPSED_S` (5s) or failed outright --
+  recording all ~600 top-level tests on every run would grow this dataset
+  orders of magnitude faster than `test-runtime-history.ndjson` for little
+  benefit, since the tests worth trend-tracking are the slow ones (#8696's
+  premise) and any that fail, not the hundreds of sub-second ones. Subtests
+  (a `Test` name containing `/`) are excluded, matching the top-level-only
+  scope #8696's own method notes used.
+
+  Tracks its own cursor (`per-test-cursor.json`, next to the dataset) rather
+  than deriving `--since` from the data file's own timestamps the way the
+  other two collectors do: a run that qualifies for processing but produces
+  zero qualifying test rows (every test fast and passing) would otherwise
+  leave no trace in `per-test-history.ndjson` and get reprocessed forever.
+  The cursor records "attempted," not just "found something." Content is
+  still deduped by identity too (source + workflow + run/build + attempt +
+  package + test), so a `--since` backfill re-processing older runs doesn't
+  double-count.
+
+  Pruned to a trailing `RETENTION_DAYS` window (180 days -- double the
+  90-day retention the raw gotestsum build artifacts already get) on every
+  run, so the file stays bounded for a dashboard that parses it client-side
+  rather than growing forever; this is a deliberate cap for dashboard load
+  time, not a claim of true permanence -- see the constant's comment if that
+  tradeoff needs revisiting.
+
+  `extractTestEvents()` (the test2json parser) is a pure function verified
+  against fixture data, same ad hoc approach as `collect-test-runtime.js`'s
+  pure functions.
 - **Two separate dashboard pages, not one page with a dataset switcher.**
   The nightly perf benchmarks and CI test runtime are unrelated datasets for
   unrelated audiences -- the perf numbers are plausibly public-interesting
@@ -94,22 +130,36 @@ should have finished.
     `/perf/ci/index.html`): same trend/compare views, filterable by test
     type and (for Buildkite pipelines) by runner machine -- see
     `collect-test-runtime.js`'s section above for what the data means.
+  - `per-test-dashboard.html` is the per-test timing page (deploys as
+    `/perf/ci/tests/index.html`): a sortable, searchable table of every
+    tracked test (see `collect-per-test.js` above for what "tracked" means),
+    showing its latest duration, trailing median, and percent change: a row
+    over 20% above its trailing median (same threshold and red as the other
+    two pages' per-point regression flag) is highlighted. Clicking a row
+    draws that one test's duration over time. Unlike the other two pages,
+    this one doesn't use `dashboard-common.js` -- its data shape (one row
+    per test, grouped and summarized client-side) doesn't fit that engine's
+    per-leg checkbox/trend model, and a checkbox per tracked test wouldn't
+    scale the way a search box does. It does reuse `dashboard-common.css`
+    for visual consistency.
   - Both pages have a "Download CSV" link exporting the rows behind whichever
     chart and filters are currently on screen -- for slide decks or
     spreadsheets, so numbers quoted from a presentation match what the
     dashboard shows.
 
-Neither collector step deploys to GitHub Pages directly. A repo has only one
-Pages site, and `.github/workflows/docs-publish.yml` already deploys the docs
-there on every push to `main`/`stable` -- deploying the dashboards separately
-would race it and the two would overwrite each other. Instead,
+None of the three collector steps deploy to GitHub Pages directly. A repo has
+only one Pages site, and `.github/workflows/docs-publish.yml` already deploys
+the docs there on every push to `main`/`stable` -- deploying the dashboards
+separately would race it and the two would overwrite each other. Instead,
 `perf-collect.yml` commits the perf-benchmark files (`history.ndjson`,
 `index.html`, `dashboard-common.js`, `dashboard-common.css`) at the root of
-the `performance-data` branch, and the CI-test-runtime files
+the `performance-data` branch, the CI-test-runtime files
 (`ci/test-runtime-history.ndjson`, `ci/index.html`) under its `ci/`
-subdirectory, then (if anything changed) triggers `docs-publish.yml`, which
-checks out that branch and folds both into the site under `/perf/` and
-`/perf/ci/` respectively.
+subdirectory, and the per-test files (`ci/tests/per-test-history.ndjson`,
+`ci/tests/index.html`, plus the collector's own `ci/tests/per-test-cursor.json`
+bookkeeping file) under `ci/tests/`, then (if anything changed) triggers
+`docs-publish.yml`, which checks out that branch and folds all three into the
+site under `/perf/`, `/perf/ci/`, and `/perf/ci/tests/` respectively.
 
 ## One-time manual setup
 
