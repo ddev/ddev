@@ -380,6 +380,10 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
 
+	// Captured below, before the poweroff, so cleanup can restart exactly the
+	// projects that were running rather than every entry in TestSites.
+	var apps []*ddevapp.DdevApp
+
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
@@ -392,9 +396,12 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
 
 		// Because the start has done a poweroff (new DDEV version),
-		// make sure sites are running again.
-		for _, site := range TestSites {
-			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+		// make sure the projects that were running before are running again.
+		for _, app := range apps {
+			if app.Name == junkName {
+				continue
+			}
+			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", app.Name})
 		}
 
 		t.Logf("attempting to remove project files in %s", tmpJunkProjectDir)
@@ -404,7 +411,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		}
 	})
 
-	apps := ddevapp.GetActiveProjects()
+	apps = ddevapp.GetActiveProjects()
 	activeCount := len(apps)
 	assert.GreaterOrEqual(activeCount, 2)
 

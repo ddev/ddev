@@ -6,11 +6,13 @@ import (
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 )
 
 // TestCmdDebugTest ensures that `ddev utility test` has basic functionality
 func TestCmdDebugTest(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	_ = os.Chdir(site.Dir)

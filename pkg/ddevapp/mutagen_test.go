@@ -16,6 +16,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,6 +30,7 @@ func TestMutagenSimple(t *testing.T) {
 	if nodeps.IsWSL2MirroredMode() {
 		t.Skip("Skipping TestMutagenSimple in WSL2 mirrored mode; It can fail randomly on the 'composer install' step due to network issues, unable to download random dependencies from either dist or source.")
 	}
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running, perhaps in wrong directory
@@ -192,6 +194,7 @@ func TestMutagenConfigChange(t *testing.T) {
 	if !nodeps.IsMacOS() {
 		t.Skip("TestMutagenConfigChange runs only on macOS (without Colima), skipping")
 	}
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running, perhaps in wrong directory
@@ -277,6 +280,7 @@ func TestMutagenDiagnose(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("TestMutagenDiagnose skipped on Windows")
 	}
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running

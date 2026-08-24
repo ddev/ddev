@@ -2347,6 +2347,7 @@ func TestWebserverMariaMySQLDBClient(t *testing.T) {
 // TestWebserverPostgresDBClient tests functionality of Postgres
 // database clients in the ddev-webserver
 func TestWebserverPostgresDBClient(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	assert := asrt.New(t)
 
 	serverVersions := []string{"postgres:18", "postgres:17", "postgres:16"}
@@ -3661,6 +3662,7 @@ func TestHttpsRedirection(t *testing.T) {
 	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because MkcertCARoot is not set, no https")
 	}
+	testcommon.SkipUnlessDefaultEnvironment(t)
 
 	assert := asrt.New(t)
 	testcommon.ClearDockerEnv()
