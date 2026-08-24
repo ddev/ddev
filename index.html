@@ -164,32 +164,23 @@
       file: 'test-runtime-history.ndjson',
       subText: 'Total CI runtime per test type, across GitHub Actions workflows and Buildkite pipelines. See <a href="https://github.com/ddev/ddev/blob/main/perf/collector/README.md">perf/collector/README.md</a>. wall_clock_s excludes queue time; compute_s sums every job in the run (workflows split into more than one job, e.g. podman-rootless’s testpkg/testcmd, report real CPU-minutes). Points more than 20% above the trailing 10-run median for their test type are marked red.',
       legsLabel: 'Test type (workflow / pipeline)',
-      // A Buildkite row's leg is "pipeline · machine" instead of just
-      // "pipeline" whenever the runner box is narrowed (see
-      // runnerSelectionNarrowed()) -- not a separate manual toggle. Checking
-      // "all" runners (the default) reproduces this page's original
-      // behavior, one merged line per workflow; narrowing to specific
-      // machines is itself the signal to split them apart, which is how a
-      // single physical agent quietly getting slower build over build,
-      // while its sibling agents on the same pipeline stay flat, becomes
-      // visible on the trend chart instead of requiring a manual API dig
-      // (see the ddev-macos-arm64-mutagen investigation this was built
-      // for) -- and also how "what actually ran on tb-macos-arm64-4-1"
-      // renders as one clean line per pipeline rather than needing a
-      // second control. A prior version had both a separate "split by
-      // runner" checkbox and this narrowing behavior at once; selecting
-      // more than one runner with the checkbox off silently merged their
-      // data into one meaningless line (two machines' very different
-      // performance interleaved chronologically) -- one control, not two
-      // that can contradict each other. GitHub Actions rows never split --
-      // runner_name there is a one-shot ephemeral VM id, not a persistent
-      // machine, so splitting by it wouldn't mean anything.
-      legKey: (row) => {
-        if (row.source === 'buildkite' && runnerSelectionNarrowed()) {
-          return `${row.workflow} · ${primaryRunnerName(row) || 'unknown runner'}`;
-        }
-        return row.workflow;
-      },
+      // A Buildkite row's leg is always "pipeline · machine", unconditionally
+      // -- there is no merged mode. Different physical agents are different
+      // things, the same way the nightly perf dataset's os/arch/docker
+      // provider legs are never merged either; a checkbox that sometimes
+      // combines multiple real machines into one line invites exactly the
+      // bug two prior versions of this both had in different ways: with
+      // "all" runners checked meaning "merge them," selecting several
+      // specific machines either silently interleaved their very different
+      // performance into one meaningless line (no split toggle), or looked
+      // identical to "show me the real per-machine data" for every runner
+      // *except* the one place someone actually looked (all-checked still
+      // merged). Always splitting sidesteps the whole class of bug: the
+      // "Runner machine" checkboxes are a pure visibility filter, exactly
+      // like the "Test type" ones, nothing more. GitHub Actions rows never
+      // split -- runner_name there is a one-shot ephemeral VM id, not a
+      // persistent machine, so splitting by it wouldn't mean anything.
+      legKey: (row) => (row.source === 'buildkite' ? `${row.workflow} · ${primaryRunnerName(row) || 'unknown runner'}` : row.workflow),
       // The runner-machine facet the "Runner machine" checkbox box filters
       // on. null for GitHub Actions rows, which the row-selection filter
       // below treats as "included only while the runner box isn't actually
