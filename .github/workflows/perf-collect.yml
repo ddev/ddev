@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       fresh:
-        description: 'Wipe test-runtime-history.ndjson and rebuild it from scratch instead of appending (use after a schema change to the row format, so old rows do not miss new fields)'
+        description: 'Wipe ci/test-runtime-history.ndjson and rebuild it from scratch instead of appending (use after a schema change to the row format, so old rows do not miss new fields)'
         required: false
         type: boolean
         default: false
@@ -61,9 +61,12 @@ jobs:
         with:
           fetch-depth: 1
 
-      # performance-data is a data-only orphan branch: it holds history.ndjson and
-      # index.html and nothing else. Branching it off main's HEAD instead would
-      # give it a copy of the whole repo tree plus the two data files, and leave a
+      # performance-data is a data-only orphan branch: it holds the nightly perf
+      # benchmark dashboard (index.html, dashboard-common.js/css, history.ndjson)
+      # at its root, and the separate CI test-runtime dashboard under ci/
+      # (ci/index.html, ci/test-runtime-history.ndjson) -- see HANDOFF.md for why
+      # these are two pages, not one. Branching it off main's HEAD instead would
+      # give it a copy of the whole repo tree plus these data files, and leave a
       # branch that diverges from main forever.
       - name: Check out or create performance-data branch
         run: |
@@ -91,22 +94,28 @@ jobs:
         run: |
           touch ../performance-data/history.ndjson
           node perf/collector/collect.js ../performance-data/history.ndjson
-          cp perf/collector/dashboard.html ../performance-data/index.html
+          cp perf/collector/perf-dashboard.html ../performance-data/index.html
+          cp perf/collector/dashboard-common.js ../performance-data/dashboard-common.js
+          cp perf/collector/dashboard-common.css ../performance-data/dashboard-common.css
 
-      # Separate dataset from the nightly perf benchmarks above: total
-      # runtime per CI test workflow (golang-nginx-fpm, quickstart, etc.),
-      # not narrow synthetic metrics. See perf/collector/README.md.
+      # Separate dataset from the nightly perf benchmarks above, and a
+      # separate page (/perf/ci/, not /perf/) -- total runtime per CI test
+      # workflow (golang-nginx-fpm, quickstart, etc.) is an unrelated
+      # question for an unrelated (internal-only) audience. See HANDOFF.md
+      # and perf/collector/README.md.
       - name: Collect test-runtime results
         id: collect-test-runtime
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          mkdir -p ../performance-data/ci
           if [ "${{ inputs.fresh }}" = "true" ]; then
-            echo "fresh=true: rebuilding test-runtime-history.ndjson from scratch"
-            rm -f ../performance-data/test-runtime-history.ndjson
+            echo "fresh=true: rebuilding ci/test-runtime-history.ndjson from scratch"
+            rm -f ../performance-data/ci/test-runtime-history.ndjson
           fi
-          touch ../performance-data/test-runtime-history.ndjson
-          node perf/collector/collect-test-runtime.js ../performance-data/test-runtime-history.ndjson ${{ inputs.since != '' && format('--since={0}', inputs.since) || '' }}
+          touch ../performance-data/ci/test-runtime-history.ndjson
+          node perf/collector/collect-test-runtime.js ../performance-data/ci/test-runtime-history.ndjson ${{ inputs.since != '' && format('--since={0}', inputs.since) || '' }}
+          cp perf/collector/ci-dashboard.html ../performance-data/ci/index.html
 
       - name: Commit and push results
         id: commit
@@ -114,7 +123,7 @@ jobs:
           cd ../performance-data
           git config user.name "ddev-perf-bot"
           git config user.email "actions@github.com"
-          git add history.ndjson index.html test-runtime-history.ndjson
+          git add history.ndjson index.html dashboard-common.js dashboard-common.css ci/index.html ci/test-runtime-history.ndjson
           if git diff --cached --quiet; then
             echo "No new results to commit"
             echo "changed=false" >> "$GITHUB_OUTPUT"

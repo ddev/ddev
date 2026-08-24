@@ -128,11 +128,26 @@ jobs:
           if [ -f checkout-perf-data/index.html ]; then
             mkdir -p combined-site/perf
             cp -v checkout-perf-data/index.html combined-site/perf/index.html
+            if [ -f checkout-perf-data/dashboard-common.js ]; then
+              cp -v checkout-perf-data/dashboard-common.js combined-site/perf/dashboard-common.js
+            fi
+            if [ -f checkout-perf-data/dashboard-common.css ]; then
+              cp -v checkout-perf-data/dashboard-common.css combined-site/perf/dashboard-common.css
+            fi
             if [ -f checkout-perf-data/history.ndjson ]; then
               cp -v checkout-perf-data/history.ndjson combined-site/perf/history.ndjson
             fi
-            if [ -f checkout-perf-data/test-runtime-history.ndjson ]; then
-              cp -v checkout-perf-data/test-runtime-history.ndjson combined-site/perf/test-runtime-history.ndjson
+          fi
+
+          # CI test-runtime dashboard: a separate page under /perf/ci/, not a
+          # mode of the /perf/ page above -- unrelated dataset, unrelated
+          # (internal-only) audience. See HANDOFF.md. Same per-file guard
+          # reasoning as the block above.
+          if [ -f checkout-perf-data/ci/index.html ]; then
+            mkdir -p combined-site/perf/ci
+            cp -v checkout-perf-data/ci/index.html combined-site/perf/ci/index.html
+            if [ -f checkout-perf-data/ci/test-runtime-history.ndjson ]; then
+              cp -v checkout-perf-data/ci/test-runtime-history.ndjson combined-site/perf/ci/test-runtime-history.ndjson
             fi
           fi
 
@@ -151,4 +166,5 @@ jobs:
             echo "### Deployed"
             echo "- Docs: ${{ steps.deployment.outputs.page_url }}"
             echo "- Perf dashboard: ${{ steps.deployment.outputs.page_url }}perf/"
+            echo "- CI test runtime: ${{ steps.deployment.outputs.page_url }}perf/ci/"
           } | tee -a "$GITHUB_STEP_SUMMARY"

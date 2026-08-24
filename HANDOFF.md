@@ -21,12 +21,18 @@ one-off snapshot.
   branch. Each row has `wall_clock_s`, `compute_s`, `queue_wait_s`
   (Buildkite only — see below), `conclusion`, `skip_marker`, and a per-job
   breakdown.
-- **`perf/collector/dashboard.html`** — extended from a single-purpose
-  nightly-perf-benchmark page into a dataset switcher (nightly perf
-  benchmarks / CI test runtime), with independent "Test type" and "Runner
-  machine" checkbox boxes, a "Only successful full runs" filter (on by
-  default), and per-dataset duration formatting (seconds vs. minutes).
-  Live at `https://ddev.github.io/ddev/perf/`.
+- **Two dashboard pages, not one with a dataset switcher.** An earlier
+  version put both datasets behind one `<select>` on one page; that implied
+  a relationship between them that doesn't exist (perf benchmarks are
+  plausibly public-interesting, CI build times never are), so it was split.
+  `perf/collector/dashboard-common.js`/`.css` hold the shared engine
+  (trend/compare charts, checkbox boxes, CSV export); `perf-dashboard.html`
+  (deploys as `/perf/`) and `ci-dashboard.html` (deploys as `/perf/ci/`)
+  are each a thin page that calls `initDashboard(config)` with just its own
+  dataset. The CI page has independent "Test type" and "Runner machine"
+  checkbox boxes and a "Only successful full runs" filter (on by default).
+  Live at `https://ddev.github.io/ddev/perf/` and
+  `https://ddev.github.io/ddev/perf/ci/`.
 - **Makefile / `test-reusable.yml` / `test-wsl2-reusable.yml`** — opt-in
   `gotestsum` wiring for GitHub Actions Go test runs (`GOTESTSUM_JSONFILE_DIR`,
   unset by default so local `make test` is unaffected). Installed via
@@ -78,15 +84,16 @@ one-off snapshot.
 
 ## TODOs
 
-1. **Split the dataset presentations.** The dashboard currently treats
-   "Nightly perf benchmarks" and "CI test runtime" as two modes of one page
-   (one dataset switcher, shared trend/compare chart code, shared CSS).
-   They are unrelated datasets serving unrelated questions — one is a
-   handful of synthetic timing metrics per environment, the other is
-   CI-wide run/build duration across every workflow and pipeline. Consider
-   splitting them into genuinely separate pages (or at least a much clearer
-   visual/navigational separation) rather than one switcher implying they're
-   two views of the same thing.
+1. ~~**Split the dataset presentations.**~~ Done: the dashboard was one page
+   with a dataset switcher between "Nightly perf benchmarks" and "CI test
+   runtime"; now `/perf/` (perf benchmarks) and `/perf/ci/` (CI test
+   runtime) are two separate pages sharing a common chart engine
+   (`dashboard-common.js`/`.css`), each with a one-line cross-link to the
+   other. Old performance-data-branch files from before the split
+   (`test-runtime-history.ndjson` at branch root, the old combined
+   `dashboard.html`) are left as orphaned data on that branch — harmless,
+   not copied into the deployed site by `docs-publish.yml` anymore, but
+   worth a manual cleanup pass on `performance-data` at some point.
 2. **No Buildkite per-test instrumentation.** `.buildkite/test.sh`/`test.cmd`
    still run plain `go test -v`. Only the GitHub Actions Linux wrappers +
    WSL2 workflow get gotestsum's per-test JSON. Buildkite only has the
@@ -126,9 +133,9 @@ one-off snapshot.
 
 ## Where to look
 
-- Live dashboard: `https://ddev.github.io/ddev/perf/` (dataset switcher →
-  "CI test runtime")
-- Raw data: `https://ddev.github.io/ddev/perf/test-runtime-history.ndjson`
+- Live CI test-runtime dashboard: `https://ddev.github.io/ddev/perf/ci/`
+- Live nightly perf-benchmark dashboard: `https://ddev.github.io/ddev/perf/`
+- Raw CI test-runtime data: `https://ddev.github.io/ddev/perf/ci/test-runtime-history.ndjson`
 - Collector: `perf/collector/collect-test-runtime.js`,
   `perf/collector/README.md` has the fuller technical writeup
 - To backfill after a schema change: `gh workflow run perf-collect.yml

@@ -1,0 +1,45 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #666666;
+  --border: #dddddd;
+  --accent: #cc3333;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1a1a1a; --fg: #eeeeee; --muted: #aaaaaa; --border: #444444; }
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 1.5rem;
+}
+h1 { font-size: 1.25rem; margin: 0 0 0.25rem; }
+p.sub { color: var(--muted); margin: 0 0 1.5rem; font-size: 0.9rem; }
+.controls { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1rem; }
+.controls label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
+select { font-size: 0.95rem; padding: 0.25rem; }
+.legs { display: flex; flex-wrap: wrap; gap: 0.5rem; max-width: 40rem; }
+.legs label { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--fg); }
+.legs-toolbar { display: flex; gap: 0.4rem; margin: 0.25rem 0 0.4rem; }
+.legs-toolbar button {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.legs-toolbar button:hover { border-color: var(--accent); }
+.chart-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; }
+canvas { display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 0.75rem; font-size: 0.8rem; }
+.legend-item { display: flex; align-items: center; gap: 0.35rem; }
+.swatch { width: 0.75rem; height: 0.75rem; border-radius: 2px; display: inline-block; }
+.note { color: var(--muted); font-size: 0.8rem; margin-top: 1rem; }
+.empty { color: var(--muted); padding: 2rem 0; text-align: center; }
+.crosslink { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.85rem; }

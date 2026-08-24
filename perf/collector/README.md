@@ -65,25 +65,48 @@ should have finished.
   `makeTargetFromArtifactName`/`analyzeStageDir` in the script are pure
   functions verified against fixture data (no jest/mocha dependency here, so
   ad hoc rather than a committed test file -- same as `collect.js`).
-- `dashboard.html` is a dependency-free static page: it `fetch()`es
-  `history.ndjson` client-side, filterable by metric and by leg
-  (platform/arch/docker provider). Two views: a per-metric trend line over
-  time (the default), and a "Compare environments" bar chart -- one bar per
-  leg, the median of its last 7 nightly runs for the selected metric, sorted
-  fastest to slowest. The bar chart deliberately doesn't normalize for the
-  fact that legs run on different physical/virtual machines -- it's comparing
-  Docker-provider/platform overhead, which is the point, not controlling for
-  hardware. A "Download CSV" link exports the rows behind whichever chart and
-  filters are currently on screen -- for slide decks or spreadsheets, so
-  numbers quoted from a presentation match what the dashboard shows.
+- **Two separate dashboard pages, not one page with a dataset switcher.**
+  The nightly perf benchmarks and CI test runtime are unrelated datasets for
+  unrelated audiences -- the perf numbers are plausibly public-interesting
+  (DDEV's speed across Docker providers); CI build times never are (see
+  HANDOFF.md). An earlier version of this put both behind one `<select>` on
+  one page; that implied a relationship between them that doesn't exist, so
+  it was split.
+  - `dashboard-common.js` + `dashboard-common.css` are the shared engine and
+    styling both pages use -- everything dataset-agnostic (trend/compare
+    chart drawing, the workflow/runner checkbox boxes, CSV export). A page
+    calls `initDashboard(config)` once with its own small config object
+    (which file to fetch, how to key/filter/format its rows); there's no
+    dataset switching inside the engine itself.
+  - `perf-dashboard.html` is the nightly perf benchmarks page (deploys as
+    `/perf/index.html`): filterable by metric and by leg
+    (platform/arch/docker provider). Two views: a per-metric trend line over
+    time (the default), and a "Compare environments" bar chart -- one bar
+    per leg, the median of its last 7 nightly runs for the selected metric,
+    sorted fastest to slowest. The bar chart deliberately doesn't normalize
+    for the fact that legs run on different physical/virtual machines --
+    it's comparing Docker-provider/platform overhead, which is the point,
+    not controlling for hardware.
+  - `ci-dashboard.html` is the CI test-runtime page (deploys as
+    `/perf/ci/index.html`): same trend/compare views, filterable by test
+    type and (for Buildkite pipelines) by runner machine -- see
+    `collect-test-runtime.js`'s section above for what the data means.
+  - Both pages have a "Download CSV" link exporting the rows behind whichever
+    chart and filters are currently on screen -- for slide decks or
+    spreadsheets, so numbers quoted from a presentation match what the
+    dashboard shows.
 
-Neither step deploys to GitHub Pages directly. A repo has only one Pages site,
-and `.github/workflows/docs-publish.yml` already deploys the docs there on
-every push to `main`/`stable` -- deploying the dashboard separately would race
-it and the two would overwrite each other. Instead, `perf-collect.yml` commits
-`history.ndjson` and a rendered `index.html` to the `performance-data` branch,
-and (if anything changed) triggers `docs-publish.yml`, which checks out that
-branch and folds the dashboard into the site under `/perf/`.
+Neither collector step deploys to GitHub Pages directly. A repo has only one
+Pages site, and `.github/workflows/docs-publish.yml` already deploys the docs
+there on every push to `main`/`stable` -- deploying the dashboards separately
+would race it and the two would overwrite each other. Instead,
+`perf-collect.yml` commits the perf-benchmark files (`history.ndjson`,
+`index.html`, `dashboard-common.js`, `dashboard-common.css`) at the root of
+the `performance-data` branch, and the CI-test-runtime files
+(`ci/test-runtime-history.ndjson`, `ci/index.html`) under its `ci/`
+subdirectory, then (if anything changed) triggers `docs-publish.yml`, which
+checks out that branch and folds both into the site under `/perf/` and
+`/perf/ci/` respectively.
 
 ## One-time manual setup
 
@@ -99,8 +122,9 @@ These can't be done from the repo itself:
 
 ## Regression signal
 
-Kept intentionally simple for now: `dashboard.html` computes, per leg and
-metric, the trailing median of the last 10 points and marks any point more
-than 20% above it in red. This is a visual flag only — nothing fails CI or
-pages anyone on it yet. Revisit once the signal has been observed to be
-trustworthy over a few weeks (see the main plan/README for why).
+Kept intentionally simple for now: `dashboard-common.js` computes, per leg
+and metric, the trailing median of the last 10 points and marks any point
+more than 20% above it in red -- on both pages. This is a visual flag only —
+nothing fails CI or pages anyone on it yet. Revisit once the signal has been
+observed to be trustworthy over a few weeks (see the main plan/README for
+why).

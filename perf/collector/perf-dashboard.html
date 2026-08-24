@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DDEV performance history</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="dashboard-common.css">
+</head>
+<body>
+  <h1>DDEV performance history</h1>
+  <p class="sub" id="sub-text"></p>
+
+  <div class="controls">
+    <div>
+      <label for="view-select">View</label>
+      <select id="view-select">
+        <option value="trend">Trend over time</option>
+        <option value="compare">Compare environments (latest)</option>
+      </select>
+    </div>
+    <div>
+      <label for="metric-select">Metric</label>
+      <select id="metric-select"></select>
+    </div>
+    <div id="exclude-cancelled-wrap">
+      <label style="visibility: hidden; display: block;">.</label>
+      <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;">
+        <input type="checkbox" id="exclude-cancelled-checkbox" checked>
+        Only successful full runs
+      </label>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label id="workflow-label"></label>
+      <div class="legs-toolbar">
+        <button type="button" id="workflow-all">All</button>
+        <button type="button" id="workflow-none">None</button>
+      </div>
+      <div class="legs" id="workflow-container"></div>
+    </div>
+    <div id="runner-box-wrap" hidden>
+      <label>Runner machine</label>
+      <div class="legs-toolbar">
+        <button type="button" id="runner-all">All</button>
+        <button type="button" id="runner-none">None</button>
+      </div>
+      <div class="legs" id="runner-container"></div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas id="chart" width="1000" height="420"></canvas>
+    <div class="empty" id="empty-message" hidden>No data yet — check back after the first nightly run.</div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <p class="note" id="note"></p>
+  <p><a id="csv-link" download="ddev-perf-compare.csv">Download CSV</a> — the same rows behind whichever chart is currently shown.</p>
+
+  <p class="crosslink">See also: <a href="ci/">CI test runtime</a> (internal engineering metrics, not a DDEV performance benchmark).</p>
+
+<script src="dashboard-common.js"></script>
+<script>
+  initDashboard({
+    file: 'history.ndjson',
+    subText: 'Nightly benchmark results across platforms and Docker providers. See <a href="https://github.com/ddev/ddev/tree/main/perf">perf/README.md</a> for what each metric measures. Points more than 20% above the trailing 10-run median for their leg are marked red.',
+    legsLabel: 'Legs (platform / arch / docker provider)',
+    legKey: (row) => `${row.os}/${row.arch}/${row.docker_provider}`,
+    metrics: (rows) => {
+      const s = new Set();
+      for (const r of rows) for (const m of Object.keys(r.metrics || {})) s.add(m);
+      return [...s].sort();
+    },
+    metricValue: (row, metric) => (row.metrics ? row.metrics[metric] : null),
+    isFullSuccessfulRun: () => true,
+    runnerOf: () => null,
+    // Nightly perf metrics are all naturally short (rebuild/start times in
+    // the tens of seconds) -- seconds stay readable.
+    formatDuration: (v) => `${v.toFixed(1)} s`,
+    trendNote: 'Data source: <code>history.ndjson</code>, one line per (commit, leg) benchmark run.',
+    compareNote: (n) => `Each bar is the median of that environment’s last ${n} nightly runs (not just the latest one) for the selected metric, sorted fastest to slowest. Data source: <code>history.ndjson</code>.`,
+    csvPrefix: 'ddev-perf',
+  });
+</script>
+</body>
+</html>
