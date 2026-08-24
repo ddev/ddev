@@ -169,6 +169,7 @@ Flags:
 * `--dry-run`: Show which add-ons would be updated without installing anything (default `false`)
 * `--project <projectName>`: Specify a project to update the add-ons for. Defaults to checking for a project in the current directory.
 * `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
+* `--yes`, `-y`: Skip confirmation prompt.
 
 Example:
 
