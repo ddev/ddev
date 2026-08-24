@@ -6,10 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 DDEV is an open-source tool for running local web development environments for PHP and Node.js. It uses Docker containers to provide consistent, isolated development environments with minimal configuration.
 
-For developer documentation, see:
-
-- [Developer Documentation](https://docs.ddev.com/en/stable/developers/)
-- [Building and Contributing](docs/content/developers/building-contributing.md)
+For developer documentation, see `docs/content/developers/` in this repo
+(rendered at [docs](https://docs.ddev.com/en/stable/developers/)), especially
+[Building and Contributing](docs/content/developers/building-contributing.md).
 
 ## Key Development Commands
 
@@ -225,8 +224,7 @@ message, where they are searchable and don't age into the source file.
 These rules apply everywhere: conversation, commit messages, PR text, code, and comments.
 
 - **Forbidden words. Never use any of these, in any form, anywhere — including
-  ordinary conversation, not just written deliverables:**
-  `comprehensive`, `seamless`, `genuine`, `genuinely`, `honest`, `honestly`,
+  ordinary conversation, not just written deliverables:** `comprehensive`, `seamless`, `genuine`, `genuinely`, `honest`, `honestly`,
   `truly`, `really` (as an intensifier), `perfect`, `perfectly`, `robust`,
   `powerful`, `effortless`, `production-ready`, `delve`, `elevate`, `unleash`,
   `to be honest`, `in all honesty`, `for real`.
@@ -259,8 +257,7 @@ hesitation. Creating branches and amending local commits is fine too.
 
 **What is forbidden is publishing: never run `git push` or `docker push`, under
 any circumstances.** This holds even when a PR is already open and waiting on
-the commits, and even when something downstream (a CI run, a
-`raw.githubusercontent.com` URL someone else needs) depends on the push.
+the commits, and even when something downstream (a CI run, a `raw.githubusercontent.com` URL someone else needs) depends on the push.
 Pushing is always the maintainer's action.
 
 Do not offer to push either. Finish at the commit, report the branch state and
@@ -322,7 +319,7 @@ a reviewer who will read the diff anyway:
 
 ### Pull Request Template
 
-In the initial commit for a PR, use the format in  `.github/PULL_REQUEST_TEMPLATE.md` with these required sections:
+In the initial commit for a PR, use the format in `.github/PULL_REQUEST_TEMPLATE.md` with these required sections:
 
 - **Short Summary (TL;DR):** One or two sentences, first, always
 - **The Issue:** Reference issue with `#<number>`
@@ -338,6 +335,42 @@ it runs past two sentences, it has stopped being a summary.
 
 The same applies to issues you file: lead with a one-or-two-sentence summary,
 matching the "Short summary (TL;DR)" field in `.github/ISSUE_TEMPLATE/`.
+
+### PR Description Register
+
+Write PR descriptions in plain, direct language — but not at the cost of
+losing the relationships between ideas. Aim for one connective per sentence
+(so, which, before, instead of, because) rather than zero connectives
+(choppy, disconnected sentences) or two-plus stacked with parentheticals
+(dense engineering prose).
+
+Test: read the sentence aloud as if explaining it to a teammate. If it
+doesn't flow that way, it has too many or too few clauses.
+
+Too simple:
+
+> This PR adds a tool. The tool records the run time of each CI test.
+> The tool saves data from GitHub Actions and from Buildkite.
+
+Too dense:
+
+> Extends the existing nightly performance-data branch/perf-collect.yml
+> cron (previously scoped to narrow synthetic perf benchmarks) with a
+> new dataset: collect-test-runtime.js pulls completed main-branch runs
+> for the GitHub Actions Test-*/Quickstart workflows...
+
+Right level:
+
+> This PR adds a nightly tool that records CI runtime per test type,
+> pulling data from both GitHub Actions and Buildkite into a dashboard.
+> The goal is to give the team real trend data — instead of one-off
+> manual snapshots — before deciding how to shrink the test suite.
+
+If a sentence needs a parenthetical aside to explain *why* something
+was done, give that aside its own clause instead of parenthesizing it.
+Don't drop the "why" — only the clutter around it. This applies to the
+same sections covered by the Pull Request Template above, not just the
+TL;DR.
 
 ### Creating Commits with PR Template
 
@@ -459,7 +492,7 @@ mkdir ~/tmp/test-project && cd ~/tmp/test-project
 ### Useful Environment Variables
 
 | Variable                       | Purpose                |
-| ------------------------------ | ---------------------- |
+| ------------------------------- | ----------------------- |
 | `DDEV_DEBUG=true`              | Show executed commands |
 | `GOTEST_SHORT=true`            | Limit test matrix      |
 | `DDEV_NO_INSTRUMENTATION=true` | Disable analytics      |
