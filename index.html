@@ -81,6 +81,13 @@
         Only successful full runs
       </label>
     </div>
+    <div id="split-by-runner-wrap">
+      <label style="visibility: hidden; display: block;">.</label>
+      <label style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;">
+        <input type="checkbox" id="split-by-runner-checkbox">
+        Split by runner machine (Buildkite only)
+      </label>
+    </div>
     <div>
       <label id="legs-label">Legs (platform / arch / docker provider)</label>
       <div class="legs-toolbar">
@@ -115,6 +122,19 @@
   // fields, one leg = one workflow/pipeline). Both are "N points over time
   // for a small set of comparable legs", so the trend/compare chart code
   // below is dataset-agnostic; only these four functions differ per dataset.
+  // Buildkite's self-hosted agents are persistent, named machines, not
+  // one-shot VMs like GitHub Actions runners -- so "is this specific
+  // machine slower than its siblings, or getting slower over time" is a
+  // real, answerable question here in a way it usually isn't for GitHub.
+  // The job with the largest duration_s is the actual test job, not the
+  // trivial `:pipeline:` upload / check-skip housekeeping step -- its
+  // runner_name is the physical agent that did the real work.
+  function primaryRunnerName(row) {
+    if (!row.jobs || !row.jobs.length) return null;
+    const real = row.jobs.reduce((best, j) => ((j.duration_s || 0) > (best.duration_s || 0) ? j : best), row.jobs[0]);
+    return real.runner_name || null;
+  }
+
   const DATASETS = {
     perf: {
       file: 'history.ndjson',
@@ -139,7 +159,21 @@
       file: 'test-runtime-history.ndjson',
       subText: 'Total CI runtime per test type, across GitHub Actions workflows and Buildkite pipelines. See <a href="https://github.com/ddev/ddev/blob/main/perf/collector/README.md">perf/collector/README.md</a>. wall_clock_s excludes queue time; compute_s sums every job in the run (workflows split into more than one job, e.g. podman-rootless’s testpkg/testcmd, report real CPU-minutes). Points more than 20% above the trailing 10-run median for their test type are marked red.',
       legsLabel: 'Test type (workflow / pipeline)',
-      legKey: (row) => row.workflow,
+      // When splitByRunner is on, a Buildkite row's leg becomes
+      // "pipeline · machine" instead of just "pipeline" -- e.g. it's how a
+      // single physical agent quietly getting slower build over build,
+      // while its sibling agents on the same pipeline stay flat, becomes
+      // visible on the trend chart instead of requiring a manual API dig
+      // (see the ddev-macos-arm64-mutagen investigation this was built
+      // for). GitHub Actions rows fall back to plain `workflow` even with
+      // the toggle on -- runner_name there is a one-shot ephemeral VM id,
+      // not a persistent machine, so splitting by it wouldn't mean anything.
+      legKey: (row) => {
+        if (state.splitByRunner && row.source === 'buildkite') {
+          return `${row.workflow} · ${primaryRunnerName(row) || 'unknown runner'}`;
+        }
+        return row.workflow;
+      },
       // queue_wait_s only exists on Buildkite rows (time waiting for a
       // scarce self-hosted agent -- see collect-test-runtime.js); GitHub
       // Actions rows just have no value for it, which the existing
@@ -176,7 +210,7 @@
   // excludeCancelled's name predates isFullSuccessfulRun (it grew from "drop
   // cancelled runs" to "only successful full runs" -- see that function's
   // comment); kept as-is since it's internal, not user-facing.
-  const state = { dataset: 'perf', rows: [], metric: null, view: 'trend', legs: [], enabledLegs: new Set(), excludeCancelled: true };
+  const state = { dataset: 'perf', rows: [], metric: null, view: 'trend', legs: [], enabledLegs: new Set(), excludeCancelled: true, splitByRunner: false };
 
   function ds() {
     return DATASETS[state.dataset];
@@ -249,6 +283,21 @@
       excludeCancelledCheckbox.dataset.bound = '1';
       excludeCancelledCheckbox.addEventListener('change', () => {
         state.excludeCancelled = excludeCancelledCheckbox.checked;
+        render();
+      });
+    }
+
+    // Unlike excludeCancelled, this changes what a "leg" even is (one
+    // pipeline becomes one row per machine that's run it), so the leg
+    // list itself has to be rebuilt, not just re-filtered -- hence
+    // populateControls() again here, not just render().
+    const splitByRunnerCheckbox = document.getElementById('split-by-runner-checkbox');
+    splitByRunnerCheckbox.checked = state.splitByRunner;
+    if (!splitByRunnerCheckbox.dataset.bound) {
+      splitByRunnerCheckbox.dataset.bound = '1';
+      splitByRunnerCheckbox.addEventListener('change', () => {
+        state.splitByRunner = splitByRunnerCheckbox.checked;
+        populateControls();
         render();
       });
     }
