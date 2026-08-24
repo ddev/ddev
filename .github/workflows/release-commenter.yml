@@ -1,16 +1,20 @@
 name: Comment on release
 
-# Comments on PRs that are included in a release, letting contributors know
-# their change has shipped. Parses PR references out of the release notes
-# body sequentially (with a small delay between requests), which avoids the
-# GitHub secondary rate limits that a commit-diffing/GraphQL approach hits on
-# releases with many merged PRs.
-# Only runs on real (non-prerelease) releases; edge/prerelease tags are skipped.
+# Lets contributors know their change has shipped, without emailing every
+# repo watcher for every PR in the release. GitHub's release-notes generator
+# emits one unambiguous line per PR in the "## What's Changed" section:
+#   * <title> by @<username> in https://github.com/<owner>/<repo>/pull/<number>
+# We parse only that block, so unlike a generic "#1234" scan we never trip
+# over inline "fixes #1234" issue references in the hand-written sections
+# above it (those aren't PRs and would otherwise 404).
 #
-# A few numbers referenced inline in PR titles (e.g. "fixes #1234") are plain
-# issues rather than PRs, so they 404 and get counted as "failed comments" by
-# the action even though the real PR comments succeed; continue-on-error
-# avoids a spurious red X for that.
+# Team/collaborator-authored PRs get a silent 🚀 reaction instead of a
+# comment -- they already know their PR shipped, since they cut the
+# release, and reactions never trigger email notifications. Only outside
+# contributors, who are unlikely to be watching the repo, get the actual
+# comment. See the PR description for the numbers behind this split.
+#
+# Only runs on real (non-prerelease) releases; edge/prerelease tags are skipped.
 on:
   release:
     types: [released]
@@ -19,19 +23,84 @@ permissions:
   issues: write
   pull-requests: write
 
-env:
-  # nflaig/release-comment-on-pr's action.yml declares node20; force node24
-  # ahead of Node 20's removal from runners, see
-  # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   release-commenter:
     runs-on: ubuntu-latest
     steps:
-      - uses: nflaig/release-comment-on-pr@v1
-        continue-on-error: true
+      - uses: actions/github-script@v9
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          message: |
-            🎉 This PR is included in the [${releaseTag}](${releaseUrl}) release.
+          script: |
+            const INTERNAL_ASSOCIATIONS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
+            const release = context.payload.release;
+            const message = `🎉 This PR is included in the [${release.tag_name}](${release.html_url}) release.`;
+
+            /**
+             * Extract {number -> username} for every PR referenced in the
+             * auto-generated "## What's Changed" block of the release body.
+             */
+            function extractReferencedPRs(body) {
+              const afterHeading = body.split(/^## What's Changed$/m)[1];
+              const section = (afterHeading ?? body).split(/^## /m)[0];
+              const pattern = /^\*.*\bby @(\S+) in https:\/\/github\.com\/\S+\/pull\/(\d+)\s*$/gm;
+              const referenced = new Map();
+              let match;
+              while ((match = pattern.exec(section)) !== null) {
+                referenced.set(Number(match[2]), match[1]);
+              }
+              return referenced;
+            }
+
+            const referenced = extractReferencedPRs(release.body || '');
+            core.info(`Found ${referenced.size} PR(s) referenced in the release notes`);
+
+            let commented = 0;
+            let reacted = 0;
+            let skipped = 0;
+
+            for (const [prNumber, username] of referenced) {
+              // let's be a bit more friendly to the GitHub API
+              await new Promise((resolve) => setTimeout(resolve, 300));
+
+              if (username.endsWith('[bot]')) {
+                skipped++;
+                continue;
+              }
+
+              let pullRequest;
+              try {
+                ({ data: pullRequest } = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber,
+                }));
+              } catch (error) {
+                core.warning(`Skipping #${prNumber}: ${error.message}`);
+                skipped++;
+                continue;
+              }
+
+              try {
+                if (INTERNAL_ASSOCIATIONS.has(pullRequest.author_association)) {
+                  await github.rest.reactions.createForIssue({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: prNumber,
+                    content: 'rocket',
+                  });
+                  reacted++;
+                } else {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: prNumber,
+                    body: message,
+                  });
+                  commented++;
+                }
+              } catch (error) {
+                core.warning(`Failed to notify #${prNumber}: ${error.message}`);
+                skipped++;
+              }
+            }
+
+            core.info(`Commented on ${commented}, reacted to ${reacted}, skipped ${skipped} PR(s).`);
