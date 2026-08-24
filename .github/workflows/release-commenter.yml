@@ -1,15 +1,17 @@
 name: Comment on release
 
 # Lets contributors know their change has shipped, without emailing every
-# repo watcher for every PR in the release. GitHub's release-notes generator
-# emits one unambiguous line per PR in the "## What's Changed" section:
+# repo watcher for every PR (and issue) in the release. GitHub's release-notes
+# generator emits one unambiguous line per PR in the "## What's Changed"
+# section:
 #   * <title> by @<username> in https://github.com/<owner>/<repo>/pull/<number>
 # We parse only that block, so unlike a generic "#1234" scan we never trip
-# over inline "fixes #1234" issue references in the hand-written sections
-# above it (those aren't PRs and would otherwise 404).
+# over inline "fixes #1234" issue references as if they were PRs. Those
+# inline references are exactly what we use to also notify the issues a PR
+# closes, since the PR title text is already right there.
 #
-# Team/collaborator-authored PRs get a silent 🚀 reaction instead of a
-# comment -- they already know their PR shipped, since they cut the
+# Team/collaborator-authored PRs and issues get a silent 🚀 reaction instead
+# of a comment -- they already know their PR shipped, since they cut the
 # release, and reactions never trigger email notifications. Only outside
 # contributors, who are unlikely to be watching the repo, get the actual
 # comment. See the PR description for the numbers behind this split.
@@ -32,59 +34,75 @@ jobs:
           script: |
             const INTERNAL_ASSOCIATIONS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
             const release = context.payload.release;
-            const message = `🎉 This PR is included in the [${release.tag_name}](${release.html_url}) release.`;
+            const prMessage = `🎉 This PR is included in the [${release.tag_name}](${release.html_url}) release.`;
+            const issueMessage = `🎉 This issue was fixed in the [${release.tag_name}](${release.html_url}) release.`;
 
             /**
-             * Extract {number -> username} for every PR referenced in the
-             * auto-generated "## What's Changed" block of the release body.
+             * Extract every PR referenced in the auto-generated "## What's
+             * Changed" block of the release body, plus every issue closed
+             * by one of those PRs (from "fixes #123"-style keywords already
+             * in the PR title text, minus anything that's a PR itself).
              */
-            function extractReferencedPRs(body) {
+            function extractReferenced(body) {
               const afterHeading = body.split(/^## What's Changed$/m)[1];
               const section = (afterHeading ?? body).split(/^## /m)[0];
-              const pattern = /^\*.*\bby @(\S+) in https:\/\/github\.com\/\S+\/pull\/(\d+)\s*$/gm;
-              const referenced = new Map();
+              const linePattern = /^\*(.*)\bby @(\S+) in https:\/\/github\.com\/\S+\/pull\/(\d+)\s*$/gm;
+              const closeKeywords = /\b(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#(\d+)/gi;
+
+              const prs = new Map();
+              const issues = new Set();
               let match;
-              while ((match = pattern.exec(section)) !== null) {
-                referenced.set(Number(match[2]), match[1]);
+              while ((match = linePattern.exec(section)) !== null) {
+                const [, title, username, prNumberStr] = match;
+                prs.set(Number(prNumberStr), username);
+                let issueMatch;
+                while ((issueMatch = closeKeywords.exec(title)) !== null) {
+                  issues.add(Number(issueMatch[1]));
+                }
               }
-              return referenced;
+              for (const prNumber of prs.keys()) {
+                issues.delete(prNumber);
+              }
+              return { prs, issues };
             }
 
-            const referenced = extractReferencedPRs(release.body || '');
-            core.info(`Found ${referenced.size} PR(s) referenced in the release notes`);
+            const { prs, issues } = extractReferenced(release.body || '');
+            core.info(`Found ${prs.size} PR(s) and ${issues.size} issue(s) referenced in the release notes`);
 
             let commented = 0;
             let reacted = 0;
             let skipped = 0;
 
-            for (const [prNumber, username] of referenced) {
+            for (const number of [...prs.keys(), ...issues]) {
               // let's be a bit more friendly to the GitHub API
               await new Promise((resolve) => setTimeout(resolve, 300));
 
-              if (username.endsWith('[bot]')) {
-                skipped++;
-                continue;
-              }
-
-              let pullRequest;
+              let target;
               try {
-                ({ data: pullRequest } = await github.rest.pulls.get({
+                ({ data: target } = await github.rest.issues.get({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  pull_number: prNumber,
+                  issue_number: number,
                 }));
               } catch (error) {
-                core.warning(`Skipping #${prNumber}: ${error.message}`);
+                core.warning(`Skipping #${number}: ${error.message}`);
                 skipped++;
                 continue;
               }
 
+              if (target.user?.login.endsWith('[bot]')) {
+                skipped++;
+                continue;
+              }
+
+              const message = target.pull_request ? prMessage : issueMessage;
+
               try {
-                if (INTERNAL_ASSOCIATIONS.has(pullRequest.author_association)) {
+                if (INTERNAL_ASSOCIATIONS.has(target.author_association)) {
                   await github.rest.reactions.createForIssue({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    issue_number: prNumber,
+                    issue_number: number,
                     content: 'rocket',
                   });
                   reacted++;
@@ -92,15 +110,15 @@ jobs:
                   await github.rest.issues.createComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    issue_number: prNumber,
+                    issue_number: number,
                     body: message,
                   });
                   commented++;
                 }
               } catch (error) {
-                core.warning(`Failed to notify #${prNumber}: ${error.message}`);
+                core.warning(`Failed to notify #${number}: ${error.message}`);
                 skipped++;
               }
             }
 
-            core.info(`Commented on ${commented}, reacted to ${reacted}, skipped ${skipped} PR(s).`);
+            core.info(`Commented on ${commented}, reacted to ${reacted}, skipped ${skipped} item(s).`);
