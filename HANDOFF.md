@@ -94,27 +94,35 @@ one-off snapshot.
    `dashboard.html`) are left as orphaned data on that branch — harmless,
    not copied into the deployed site by `docs-publish.yml` anymore, but
    worth a manual cleanup pass on `performance-data` at some point.
-2. **No Buildkite per-test instrumentation.** `.buildkite/test.sh`/`test.cmd`
+2. **Update the links on `https://ddev.github.io/`.** That page (a separate
+   repo, not this one) has a "Performance History" table with one row
+   linking to `https://ddev.github.io/ddev/perf/` ("Nightly benchmark
+   results across platforms, architectures, and Docker providers"). It has
+   no row for the new `https://ddev.github.io/ddev/perf/ci/` page. Add one
+   -- and word its description carefully, since that page is public and
+   this data (internal CI build times) isn't meant for the same audience
+   as the rest of that table.
+3. **No Buildkite per-test instrumentation.** `.buildkite/test.sh`/`test.cmd`
    still run plain `go test -v`. Only the GitHub Actions Linux wrappers +
    WSL2 workflow get gotestsum's per-test JSON. Buildkite only has the
    total-runtime (per-run) dataset, nothing per-test.
-3. **No permanent per-test time series.** The gotestsum per-test JSON is
+4. **No permanent per-test time series.** The gotestsum per-test JSON is
    uploaded as a 90-day build artifact per job (GitHub Actions side only —
-   see #2) but nothing aggregates it into a lasting dataset or dashboard
+   see #3) but nothing aggregates it into a lasting dataset or dashboard
    view. Only per-workflow *totals* are tracked long-term today.
-4. **`stage_analysis` is unverified against a real failure.** The
+5. **`stage_analysis` is unverified against a real failure.** The
    truncated-vs-late-failure detection (reads which gotestsum jsonfiles a
    failed GitHub Actions run actually produced) has never fired on live
    data — it only activates the next time a real GitHub Actions job fails
    after this merges. Worth checking the first time that happens.
-5. **No GitHub Actions runner-generation tracking.** Investigated and set
+6. **No GitHub Actions runner-generation tracking.** Investigated and set
    aside: the Jobs API doesn't expose runner image/generation, only
    `runner_id`/`runner_name`/`labels` (and GH-hosted runners are one-shot
    VMs anyway, so there's no persistent-machine concept to track the way
    Buildkite has). Detecting a silent GitHub-side fleet change would need
    scraping the "Runner Image" line out of raw job logs — a much heavier
    lift, not started.
-6. **Open discussion, not decided**: whether to switch gotestsum's console
+7. **Open discussion, not decided**: whether to switch gotestsum's console
    format from `--format=standard-verbose` (byte-for-byte like today's
    `go test -v`, chosen deliberately for continuity) to something quieter
    like `--format=pkgname` or `--format=github-actions`, which would shrink
@@ -122,11 +130,11 @@ one-off snapshot.
    output when using verbose formats — quieter formats print one line per
    test and the full dump only on failure. Would change what a normal
    passing-run log looks like; raised for discussion, not acted on.
-7. **The actual #8695/#8696 trimming work hasn't started.** This PR is the
+8. **The actual #8695/#8696 trimming work hasn't started.** This PR is the
    measurement infrastructure the trimming work needs as a baseline/backfill
    before-and-after comparison — the trimming itself is a separate,
    not-yet-begun effort.
-8. **No write-up posted back to #8695/#8696 yet.** The dashboard and the
+9. **No write-up posted back to #8695/#8696 yet.** The dashboard and the
    findings above (cancellation rate, skip-marker contamination, Buildkite
    queue wait, the single-agent degradation) haven't been shared back to
    those issues.
