@@ -5,7 +5,6 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"strings"
 
@@ -18,20 +17,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
-
-// unreleasedVersionPattern matches a DdevVersion that isn't a clean release
-// tag: the `git describe --tags --always --dirty` long form used by `make`
-// builds (v1.2.3-15-gabcdef1), a dirty working tree (-dirty), or the
-// debug.BuildInfo short-hash fallback used when a build has no embedded git
-// tag info (gabcdef1). See versionconstants.go for how DdevVersion is derived.
-var unreleasedVersionPattern = regexp.MustCompile(`-\d+-g[0-9a-f]{6,}|-dirty$|^g[0-9a-f]{6,}$`)
-
-// IsUnreleasedDdevVersion returns true if version looks like it was built
-// from an untagged commit (a PR, local branch, or other dev build) rather
-// than an official release.
-func IsUnreleasedDdevVersion(version string) bool {
-	return unreleasedVersionPattern.MatchString(version)
-}
 
 // customConfigCheck defines a custom configuration check.
 type customConfigCheck struct {
@@ -402,7 +387,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 	// An unreleased DDEV build (a PR, local branch, or other dev build)
 	// behaves like custom configuration: it may not match what's documented
 	// or supported, and it's easy to forget you're running one.
-	if IsUnreleasedDdevVersion(versionconstants.DdevVersion) {
+	if versionconstants.IsUnreleasedDdevVersion(versionconstants.DdevVersion) {
 		findings = append(findings, finding{
 			category: "DDEV version",
 			files:    []fileInfo{{path: fmt.Sprintf("%s (unsupported, not an official release)", versionconstants.DdevVersion)}},

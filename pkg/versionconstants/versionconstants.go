@@ -3,6 +3,7 @@ package versionconstants
 import (
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime/debug"
 	"strings"
 )
@@ -15,6 +16,27 @@ var DdevVersion = "" // Note that this is overridden by make
 // AmplitudeAPIKey is the ddev-specific key for Amplitude service
 // Compiled with link-time variables
 var AmplitudeAPIKey = ""
+
+// BuildSource records where a CI build came from: a GitHub Actions run URL,
+// with the PR number appended when the run was triggered by a pull_request
+// event. Set via -ldflags from the Makefile, which reads it from the
+// GITHUB_* variables GitHub Actions sets in every job. Empty for a local
+// `make` build.
+var BuildSource = ""
+
+// unreleasedVersionPattern matches a DdevVersion that isn't a clean release
+// tag: the `git describe --tags --always --dirty` long form left by commits
+// past a tag (v1.2.3-15-gabcdef1), a dirty working tree (-dirty), or the
+// debug.BuildInfo short-hash fallback used when a build has no embedded git
+// tag info (gabcdef1).
+var unreleasedVersionPattern = regexp.MustCompile(`-\d+-g[0-9a-f]{6,}|-dirty$|^g[0-9a-f]{6,}$`)
+
+// IsUnreleasedDdevVersion returns true if version looks like it was built
+// from an untagged commit (a PR, local branch, or other dev build) rather
+// than an official release.
+func IsUnreleasedDdevVersion(version string) bool {
+	return unreleasedVersionPattern.MatchString(version)
+}
 
 // Image tags are bare content hashes (see containers/hash-paths.sh), so the
 // same image resolves to the same tag no matter which branch or repository
