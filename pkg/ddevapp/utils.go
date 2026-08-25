@@ -220,8 +220,10 @@ type ignoreTemplateContents struct {
 }
 
 // CreateGitIgnore will create a .gitignore file in the target directory if one does not exist.
-// Each value in ignores will be added as a new line to the .gitignore.
-func CreateGitIgnore(targetDir string, ignores ...string) error {
+// Each value in ignores will be added as a new line to the .gitignore, unless the
+// user took over the file it names by removing #ddev-generated.
+// An entry listed in alwaysIgnores as well is added without that check.
+func CreateGitIgnore(targetDir string, alwaysIgnores []string, ignores ...string) error {
 	gitIgnoreFilePath := filepath.Join(targetDir, ".gitignore")
 	existingContent := ""
 
@@ -257,6 +259,10 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 	// Get the content for the .gitignore file.
 	var generatedIgnores []string
 	for _, p := range ignores {
+		if slices.Contains(alwaysIgnores, p) {
+			generatedIgnores = append(generatedIgnores, p)
+			continue
+		}
 		pFullPath := filepath.Join(targetDir, p)
 		sigFound, err := fileutil.FgrepStringInFile(pFullPath, nodeps.DdevFileSignature)
 		if sigFound || err != nil {

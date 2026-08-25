@@ -349,6 +349,8 @@ Use `.ddev/.env.servicename` for service-specific variables:
 ddev dotenv set .ddev/.env.myservice --memory-limit 1024m --debug-mode true
 ```
 
+Variables from every `.ddev/.env*` file are available for interpolation here, but only a file named after an existing service sets variables inside that container. See [Environment Variables](../configuration/environment-variables.md) for the file naming rules, the global `$HOME/.ddev/.env*` equivalents, and where to keep a secret.
+
 ## Testing and Debugging Services
 
 ### Check Service Status

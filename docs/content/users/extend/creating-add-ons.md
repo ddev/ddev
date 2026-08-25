@@ -329,6 +329,27 @@ services:
         RUN apt-get update && apt-get install -y mypackage
 ```
 
+### Environment Variables
+
+Users configure an add-on through the [env files](../configuration/environment-variables.md) named after it, so `.ddev/.env.myaddon` reaches the `myaddon` service and, with DDEV v1.25.4+, the add-on's own install actions as well.
+
+To add variables to a service you don't own, such as `web`, use a labeled file named after your add-on:
+
+```bash
+ddev dotenv set .ddev/.env.web.myaddon --api-url=https://example.com
+```
+
+That reaches the `web` container, and two add-ons doing this leave each other's file alone, which is not the case when both write `.ddev/.env.web`.
+
+Ask for a token or any other secret in a `.local` file, like `.ddev/.env.myaddon.local`, which DDEV keeps out of Git.
+
+!!!warning "Require v1.25.4 for labeled and `.local` files"
+    Older DDEV raises no error on `.ddev/.env.<service>.<label>` or `.local` files, it simply never reads them, so the add-on installs cleanly and misbehaves later. If yours ships or reads one, say so in `install.yaml`:
+
+    ```yaml
+    ddev_version_constraint: '>= v1.25.4'
+    ```
+
 ### Version Constraints
 
 Specify minimum DDEV version requirements:
@@ -634,9 +655,9 @@ post_install_actions:
   - |
     #ddev-description: Configure API credentials
     #ddev-interactive
-    if [ "$(ddev dotenv get .env.myaddon --api-token 2>/dev/null)" = "" ]; then
+    if [ "$(ddev dotenv get .ddev/.env.myaddon.local --api-token 2>/dev/null)" = "" ]; then
       read -p "Enter your API token: " TOKEN
-      ddev dotenv set .env.myaddon --api-token="${TOKEN}"
+      ddev dotenv set .ddev/.env.myaddon.local --api-token="${TOKEN}"
     fi
 ```
 

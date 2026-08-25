@@ -5,6 +5,8 @@
 /**/README.*
 /.addon-data
 /.amplitude.cache
+/.env.*.local
+/.env.local
 /.global-commands-hash
 /.remote-config
 /.router-compose.yaml

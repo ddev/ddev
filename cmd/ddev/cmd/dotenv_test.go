@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	copy2 "github.com/otiai10/copy"
 	asrt "github.com/stretchr/testify/assert"
@@ -129,4 +130,67 @@ func TestCmdDotEnvGetAndSet(t *testing.T) {
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", envFile, "--test-value")
 	require.NoError(t, err, "out=%s", out)
 	require.Equal(t, out, "custom value\n")
+}
+
+// TestCmdDotEnvGlobalGetAndSet tests that `ddev dotenv global get` and `ddev dotenv global set`
+// can read and write to global .env.* files without an active project
+func TestCmdDotEnvGlobalGetAndSet(t *testing.T) {
+	origDir, _ := os.Getwd()
+
+	// A directory with no DDEV project in it
+	testDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(testDir)
+	require.NoError(t, err)
+
+	globalDir := globalconfig.GetGlobalDdevDir()
+	// Not a service name, so this file cannot change the environment of any running project
+	envFileName := ".env.dotenv-global-test"
+	envFile := filepath.Join(globalDir, envFileName)
+
+	t.Cleanup(func() {
+		assert := asrt.New(t)
+		err = os.RemoveAll(envFile)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
+
+	// Success while using path relative to the global DDEV directory
+	out, err := exec.RunHostCommand(DdevBin, "dotenv", "global", "set", envFileName, "--test-value", "custom value")
+	require.NoError(t, err, "out=%s", out)
+	require.FileExists(t, envFile, "unable to find %s file, but it should be here", envFile)
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFileName, "--test-value")
+	require.NoError(t, err, "out=%s", out)
+	require.Equal(t, out, "custom value\n")
+
+	// The 'add' alias works the same way
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "add", envFileName, "--another-value=foobar")
+	require.NoError(t, err, "out=%s", out)
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFileName, "--another-value")
+	require.NoError(t, err, "out=%s", out)
+	require.Equal(t, out, "foobar\n")
+
+	// Success while using full path to the .env file
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFile, "--test-value")
+	require.NoError(t, err, "out=%s", out)
+	require.Equal(t, out, "custom value\n")
+
+	// It's important that these commands don't have access to the filesystem outside the global directory
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", filepath.Join(testDir, ".env"), "--test-value")
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "outside the global DDEV directory")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "set", filepath.Join(testDir, ".env"), "--test-value", "custom value")
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "outside the global DDEV directory")
+
+	// The same naming validation as in the project scope
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "set", ".envfoo", "--test-value", "custom value")
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "The file should have .env prefix")
+	require.NoFileExists(t, filepath.Join(globalDir, ".envfoo"))
+
+	// While the project scope still requires a project
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", filepath.Join(".ddev", ".env"), "--test-value", "custom value")
+	require.Error(t, err, "out=%s", out)
 }

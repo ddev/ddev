@@ -197,6 +197,7 @@ nav:
   - 'Configuration':
       - users/configuration/config.md
       - users/extend/database-types.md
+      - users/configuration/environment-variables.md
       - users/configuration/hooks.md
       - users/extend/additional-hostnames.md
   - 'Extending':

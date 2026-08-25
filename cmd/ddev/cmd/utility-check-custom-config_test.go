@@ -793,8 +793,12 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		customConfig := filepath.Join(ddevDir, "config.custom.yaml")
 		err := os.WriteFile(customConfig, []byte("# Custom config\n"), 0644)
 		require.NoError(t, err)
+		localConfig := filepath.Join(ddevDir, "config.local.yaml")
+		err = os.WriteFile(localConfig, []byte("# Local config\n"), 0644)
+		require.NoError(t, err)
 		t.Cleanup(func() {
 			_ = os.Remove(customConfig)
+			_ = os.Remove(localConfig)
 		})
 
 		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
@@ -802,6 +806,7 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
 		require.Contains(t, out, "Config")
 		require.Contains(t, out, "config.custom.yaml")
+		require.Contains(t, out, "config.local.yaml")
 	})
 
 	// Test docker-compose files
@@ -853,6 +858,28 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
 		require.Contains(t, out, "Environment")
 		require.Contains(t, out, ".env.local")
+	})
+
+	// Test environment files in the global DDEV directory
+	t.Run("environment global .env.*", func(t *testing.T) {
+		globalEnv := filepath.Join(globalconfig.GetGlobalDdevDir(), ".env.global-check")
+		err := os.WriteFile(globalEnv, []byte("GLOBAL_VAR=value\n"), 0644)
+		require.NoError(t, err)
+		projectEnv := filepath.Join(tmpdir, ".ddev", ".env.project-check")
+		err = os.WriteFile(projectEnv, []byte("PROJECT_VAR=value\n"), 0644)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_ = os.Remove(globalEnv)
+			_ = os.Remove(projectEnv)
+		})
+
+		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
+		require.NoError(t, err)
+		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
+		require.Contains(t, out, "Environment")
+		require.Contains(t, out, ".env.global-check")
+		// Global env files are applied before project ones, and are listed in that order
+		require.Less(t, strings.Index(out, ".env.global-check"), strings.Index(out, ".env.project-check"))
 	})
 
 	// SPECIAL CASES

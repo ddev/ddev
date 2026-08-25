@@ -727,7 +727,7 @@ May also be set via `ddev config global --use-letsencrypt` or `ddev config globa
 
 ## `web_environment`
 
-Additional [custom environment variables](../extend/customization-extendibility.md#environment-variables-for-containers-and-services) for a project’s web container. (Or for all projects if used globally.)
+Additional [custom environment variables](environment-variables.md#web_environment) for a project’s web container. (Or for all projects if used globally.)
 
 | Type | Default | Usage
 | -- | -- | --

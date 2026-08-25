@@ -346,15 +346,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 		},
 		{
 			collectFiles: func() ([]string, error) {
-				envDotFiles, err := filepath.Glob(filepath.Join(ddevDir, ".env.*"))
-				if err != nil {
-					return nil, err
-				}
-				envFile := filepath.Join(ddevDir, ".env")
-				if _, err := os.Stat(envFile); err == nil {
-					return append([]string{envFile}, envDotFiles...), nil
-				}
-				return envDotFiles, nil
+				return app.EnvFiles()
 			},
 			displayName: "Environment",
 		},
