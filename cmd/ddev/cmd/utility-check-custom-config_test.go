@@ -51,9 +51,16 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 
 	// Test with no custom config
 	t.Run("no custom config", func(t *testing.T) {
-		// Default mode: no output when nothing to warn about
 		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
 		require.NoError(t, err)
+		if ddevapp.IsUnreleasedDdevVersion(versionconstants.DdevVersion) {
+			// The test binary itself is normally built from an untagged
+			// commit, so it's expected to trip the "DDEV version" finding.
+			require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
+			require.Contains(t, out, "DDEV version")
+			require.Contains(t, out, versionconstants.DdevVersion)
+			return
+		}
 		require.NotContains(t, out, "Custom configuration detected")
 
 		// --all mode: explicit success message
