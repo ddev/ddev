@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"fmt"
 	"os"
+	osexec "os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -151,6 +152,90 @@ func TestGetLatestSnapshot(t *testing.T) {
 	assert.Equal("", latestSnapshot)
 
 	runTime()
+}
+
+// TestListSnapshotRestoreTargetsWorktrees verifies that
+// ListSnapshotRestoreTargets() finds a snapshot belonging to the same project
+// checked out in another git worktree of the same repository, but not one
+// belonging to an unrelated checkout that merely happens to sit at the same
+// relative path.
+func TestListSnapshotRestoreTargetsWorktrees(t *testing.T) {
+	tmpDir := t.TempDir()
+	// git resolves symlinks in the paths it reports (e.g. macOS's /var/folders
+	// into /private/var/folders); resolving here too keeps this test's own
+	// path comparisons on the same footing as what the code under test gets back.
+	resolvedTmpDir, err := filepath.EvalSymlinks(tmpDir)
+	require.NoError(t, err)
+	tmpDir = resolvedTmpDir
+
+	repoRoot := filepath.Join(tmpDir, "repo")
+	worktreeRoot := filepath.Join(tmpDir, "repo-worktree")
+	unrelatedCloneRoot := filepath.Join(tmpDir, "unrelated-clone")
+
+	projectRoot := filepath.Join(repoRoot, "web")
+	projectWorktreeRoot := filepath.Join(worktreeRoot, "web")
+	unrelatedProjectRoot := filepath.Join(unrelatedCloneRoot, "web")
+
+	runGit := func(dir string, args ...string) {
+		out, err := osexec.Command("git", append([]string{"-C", dir}, args...)...).CombinedOutput()
+		require.NoError(t, err, string(out))
+	}
+
+	// .ddev/db_snapshots is ordinarily gitignored, so the worktree is set up
+	// (committing only a placeholder file) before it exists in either
+	// checkout - a real `git worktree add` never brings snapshots along.
+	require.NoError(t, os.MkdirAll(repoRoot, 0o755))
+	runGit(tmpDir, "init", repoRoot)
+	runGit(repoRoot, "config", "user.name", "Test User")
+	runGit(repoRoot, "config", "user.email", "test@example.com")
+	require.NoError(t, os.WriteFile(filepath.Join(repoRoot, "README.md"), []byte("placeholder"), 0o644))
+	runGit(repoRoot, "add", ".")
+	runGit(repoRoot, "commit", "-m", "initial")
+	runGit(repoRoot, "worktree", "add", "--detach", worktreeRoot, "HEAD")
+
+	runGit(tmpDir, "init", unrelatedCloneRoot)
+
+	require.NoError(t, os.MkdirAll(filepath.Join(projectRoot, ".ddev", "db_snapshots"), 0o755))
+	require.NoError(t, os.MkdirAll(filepath.Join(projectWorktreeRoot, ".ddev", "db_snapshots"), 0o755))
+	require.NoError(t, os.MkdirAll(filepath.Join(unrelatedProjectRoot, ".ddev", "db_snapshots"), 0o755))
+
+	currentFile := filepath.Join(projectRoot, ".ddev", "db_snapshots", "current-mariadb_10.11.zst")
+	otherFile := filepath.Join(projectWorktreeRoot, ".ddev", "db_snapshots", "other-mariadb_10.11.zst")
+	unrelatedFile := filepath.Join(unrelatedProjectRoot, ".ddev", "db_snapshots", "unrelated-mariadb_10.11.zst")
+	require.NoError(t, os.WriteFile(currentFile, []byte("current"), 0o644))
+	require.NoError(t, os.WriteFile(otherFile, []byte("other"), 0o644))
+	require.NoError(t, os.WriteFile(unrelatedFile, []byte("unrelated"), 0o644))
+
+	olderTime := time.Now().Add(-2 * time.Hour)
+	newerTime := time.Now().Add(-1 * time.Hour)
+	require.NoError(t, os.Chtimes(currentFile, olderTime, olderTime))
+	require.NoError(t, os.Chtimes(otherFile, newerTime, newerTime))
+
+	app := &ddevapp.DdevApp{AppRoot: projectRoot}
+
+	targets, err := app.ListSnapshotRestoreTargets()
+	require.NoError(t, err)
+	require.Len(t, targets, 2, "expected only the current project's own snapshot and the one from the sibling worktree, not the unrelated clone's")
+
+	byName := map[string]ddevapp.SnapshotRestoreTarget{}
+	for _, target := range targets {
+		byName[target.Name] = target
+	}
+
+	require.Contains(t, byName, "current")
+	require.Equal(t, "current", byName["current"].Path, "the current project's own snapshot should restore by bare name")
+	require.Equal(t, projectRoot, byName["current"].SourceRoot)
+
+	require.Contains(t, byName, "other")
+	require.Equal(t, otherFile, byName["other"].Path, "a snapshot from another worktree should restore by absolute path")
+	require.Equal(t, projectWorktreeRoot, byName["other"].SourceRoot)
+	require.Equal(t, "other (web)", byName["other"].Label)
+
+	require.NotContains(t, byName, "unrelated")
+
+	latest, err := app.GetLatestSnapshotRestoreTarget()
+	require.NoError(t, err)
+	require.Equal(t, "other", latest.Name)
 }
 
 // TestSnapshotUncompressedPostgresError verifies that --uncompressed is

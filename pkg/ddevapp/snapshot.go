@@ -220,10 +220,17 @@ func (app *DdevApp) otherWorktreeProjectRoots() []string {
 		return nil
 	}
 
-	relToRepo, err := filepath.Rel(repoRoot, app.AppRoot)
+	// git's own idea of app.AppRoot's path relative to repoRoot, rather than
+	// filepath.Rel(repoRoot, app.AppRoot): on macOS in particular, app.AppRoot
+	// may reach the project through a symlink (e.g. /var/folders/... into
+	// /private/var/folders/...) that "rev-parse --show-toplevel" already
+	// resolved, so comparing the two paths directly can misjudge how deep the
+	// project sits under the repo root.
+	prefixOutput, err := exec.RunHostCommand("git", "-C", app.AppRoot, "rev-parse", "--show-prefix")
 	if err != nil {
 		return nil
 	}
+	relToRepo := strings.TrimSuffix(strings.TrimSpace(prefixOutput), "/")
 
 	worktreeListOutput, err := exec.RunHostCommand("git", "-C", repoRoot, "worktree", "list", "--porcelain")
 	if err != nil {
