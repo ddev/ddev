@@ -154,12 +154,23 @@ func TestGetLatestSnapshot(t *testing.T) {
 	runTime()
 }
 
-// TestListSnapshotRestoreTargetsWorktrees verifies that
-// ListSnapshotRestoreTargets() finds a snapshot belonging to the same project
-// checked out in another git worktree of the same repository, but not one
-// belonging to an unrelated checkout that merely happens to sit at the same
-// relative path.
-func TestListSnapshotRestoreTargetsWorktrees(t *testing.T) {
+// snapshotWorktreeFixture is the layout built by newSnapshotWorktreeFixture:
+// a project and a same-project checkout in a sibling git worktree, plus an
+// unrelated clone at the same relative path that should never be treated as
+// a sibling.
+type snapshotWorktreeFixture struct {
+	// projectRoot is the current project, with an older "current" snapshot.
+	projectRoot string
+	// projectWorktreeRoot is the same project in a sibling git worktree, with
+	// a newer "other" snapshot.
+	projectWorktreeRoot string
+	// otherFile is the absolute path of "other" inside projectWorktreeRoot.
+	otherFile string
+}
+
+// newSnapshotWorktreeFixture creates the fixture described by
+// snapshotWorktreeFixture under a fresh t.TempDir().
+func newSnapshotWorktreeFixture(t *testing.T) snapshotWorktreeFixture {
 	tmpDir := t.TempDir()
 	// git resolves symlinks in the paths it reports (e.g. macOS's /var/folders
 	// into /private/var/folders); resolving here too keeps this test's own
@@ -211,7 +222,21 @@ func TestListSnapshotRestoreTargetsWorktrees(t *testing.T) {
 	require.NoError(t, os.Chtimes(currentFile, olderTime, olderTime))
 	require.NoError(t, os.Chtimes(otherFile, newerTime, newerTime))
 
-	app := &ddevapp.DdevApp{AppRoot: projectRoot}
+	return snapshotWorktreeFixture{
+		projectRoot:         projectRoot,
+		projectWorktreeRoot: projectWorktreeRoot,
+		otherFile:           otherFile,
+	}
+}
+
+// TestListSnapshotRestoreTargetsWorktrees verifies that
+// ListSnapshotRestoreTargets() finds a snapshot belonging to the same project
+// checked out in another git worktree of the same repository, but not one
+// belonging to an unrelated checkout that merely happens to sit at the same
+// relative path.
+func TestListSnapshotRestoreTargetsWorktrees(t *testing.T) {
+	fixture := newSnapshotWorktreeFixture(t)
+	app := &ddevapp.DdevApp{AppRoot: fixture.projectRoot}
 
 	targets, err := app.ListSnapshotRestoreTargets()
 	require.NoError(t, err)
@@ -224,18 +249,41 @@ func TestListSnapshotRestoreTargetsWorktrees(t *testing.T) {
 
 	require.Contains(t, byName, "current")
 	require.Equal(t, "current", byName["current"].Path, "the current project's own snapshot should restore by bare name")
-	require.Equal(t, projectRoot, byName["current"].SourceRoot)
+	require.Equal(t, fixture.projectRoot, byName["current"].SourceRoot)
+	require.Equal(t, "mariadb_10.11", byName["current"].DBVersion)
 
 	require.Contains(t, byName, "other")
-	require.Equal(t, otherFile, byName["other"].Path, "a snapshot from another worktree should restore by absolute path")
-	require.Equal(t, projectWorktreeRoot, byName["other"].SourceRoot)
+	require.Equal(t, fixture.otherFile, byName["other"].Path, "a snapshot from another worktree should restore by absolute path")
+	require.Equal(t, fixture.projectWorktreeRoot, byName["other"].SourceRoot)
 	require.Equal(t, "other (web)", byName["other"].Label)
+	require.Equal(t, "mariadb_10.11", byName["other"].DBVersion)
 
 	require.NotContains(t, byName, "unrelated")
 
 	latest, err := app.GetLatestSnapshotRestoreTarget()
 	require.NoError(t, err)
 	require.Equal(t, "other", latest.Name)
+}
+
+// TestResolveSnapshotRestoreTargetWorktrees verifies that
+// ResolveSnapshotRestoreTarget(), used for a snapshot name given directly on
+// the `ddev snapshot restore` command line, only falls back to a sibling
+// worktree's snapshot when the project has no snapshot of its own by that
+// name, and leaves paths and genuinely unresolvable names untouched.
+func TestResolveSnapshotRestoreTargetWorktrees(t *testing.T) {
+	fixture := newSnapshotWorktreeFixture(t)
+	app := &ddevapp.DdevApp{AppRoot: fixture.projectRoot}
+
+	require.Equal(t, "current", app.ResolveSnapshotRestoreTarget("current"),
+		"the project's own snapshot should resolve by bare name, not fall back to the worktree")
+	require.Equal(t, fixture.otherFile, app.ResolveSnapshotRestoreTarget("other"),
+		"a snapshot found only in a sibling worktree should resolve to its absolute path")
+	require.Equal(t, "nonexistent", app.ResolveSnapshotRestoreTarget("nonexistent"),
+		"a name found nowhere should be returned unchanged so the usual not-found error is reported")
+
+	somePath := filepath.Join(fixture.projectRoot, "some", "path.zst")
+	require.Equal(t, somePath, app.ResolveSnapshotRestoreTarget(somePath),
+		"a path should never be treated as a bare name to look up in sibling worktrees")
 }
 
 // TestSnapshotUncompressedPostgresError verifies that --uncompressed is

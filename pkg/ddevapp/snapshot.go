@@ -131,8 +131,11 @@ type SnapshotRestoreTarget struct {
 	// project's own snapshot, an absolute file path for one found elsewhere.
 	Path string
 	// SourceRoot is the project root the snapshot was found under.
-	SourceRoot string
-	Created    time.Time
+	SourceRoot  string
+	Created     time.Time
+	Size        int64
+	DBVersion   string
+	Compression string
 }
 
 // ListSnapshotRestoreTargets returns the current project's own snapshots plus
@@ -147,11 +150,14 @@ func (app *DdevApp) ListSnapshotRestoreTargets() ([]SnapshotRestoreTarget, error
 	}
 	for _, s := range own {
 		targets = append(targets, SnapshotRestoreTarget{
-			Name:       s.Name,
-			Label:      s.Name,
-			Path:       s.Name,
-			SourceRoot: app.AppRoot,
-			Created:    s.Created,
+			Name:        s.Name,
+			Label:       s.Name,
+			Path:        s.Name,
+			SourceRoot:  app.AppRoot,
+			Created:     s.Created,
+			Size:        s.Size,
+			DBVersion:   s.DBVersion,
+			Compression: s.Compression,
 		})
 	}
 
@@ -174,11 +180,14 @@ func (app *DdevApp) ListSnapshotRestoreTargets() ([]SnapshotRestoreTarget, error
 				continue
 			}
 			targets = append(targets, SnapshotRestoreTarget{
-				Name:       s.Name,
-				Label:      fmt.Sprintf("%s (%s)", s.Name, label),
-				Path:       fullPath,
-				SourceRoot: projectRoot,
-				Created:    s.Created,
+				Name:        s.Name,
+				Label:       fmt.Sprintf("%s (%s)", s.Name, label),
+				Path:        fullPath,
+				SourceRoot:  projectRoot,
+				Created:     s.Created,
+				Size:        s.Size,
+				DBVersion:   s.DBVersion,
+				Compression: s.Compression,
 			})
 		}
 	}
@@ -202,6 +211,33 @@ func (app *DdevApp) GetLatestSnapshotRestoreTarget() (*SnapshotRestoreTarget, er
 		return nil, fmt.Errorf("no snapshots found")
 	}
 	return &targets[0], nil
+}
+
+// ResolveSnapshotRestoreTarget resolves a bare snapshot name given directly on
+// the `ddev snapshot restore` command line to what should be passed to
+// RestoreSnapshot: the name unchanged if the project has its own snapshot by
+// that name (or nothing matches at all, so the original "not found" error is
+// preserved), otherwise the absolute path of the newest same-named snapshot
+// found in a sibling git worktree of the same project. A path (absolute, or
+// containing a slash) is returned unchanged, since it already names an exact
+// file rather than something worktree lookup could resolve.
+func (app *DdevApp) ResolveSnapshotRestoreTarget(nameOrPath string) string {
+	if filepath.IsAbs(nameOrPath) || strings.ContainsAny(nameOrPath, `/\`) {
+		return nameOrPath
+	}
+	if _, err := GetSnapshotFileFromName(nameOrPath, app); err == nil {
+		return nameOrPath
+	}
+	targets, err := app.ListSnapshotRestoreTargets()
+	if err != nil {
+		return nameOrPath
+	}
+	for _, target := range targets {
+		if target.Name == nameOrPath && target.SourceRoot != app.AppRoot {
+			return target.Path
+		}
+	}
+	return nameOrPath
 }
 
 // otherWorktreeProjectRoots returns the directories where this same project

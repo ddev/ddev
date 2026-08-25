@@ -14,7 +14,7 @@ var DdevSnapshotRestoreCommand = &cobra.Command{
 	Short: "Restore a project's database to the provided snapshot version.",
 	Long: `Uses mariabackup or xtrabackup command to restore a project database to a particular snapshot, either by name from the .ddev/db_snapshots folder or by the path to a snapshot file elsewhere.
 
-If the project is a git worktree, snapshots from the same project checked out in other worktrees of the same repository are also offered.`,
+If the project is a git worktree, snapshots from the same project checked out in other worktrees of the same repository are also available, whether picked interactively, passed by name, or via --latest.`,
 	Example: `ddev snapshot restore d8git_20180717203845
 ddev snapshot restore --latest
 ddev snapshot restore --force t3v14-latest
@@ -72,7 +72,7 @@ ddev snapshot restore $HOME/tmp/mysnapshot-mariadb_11.8.zst`,
 				}
 				snapshotName = targets[selected].Path
 			} else { // Snapshot name was given on command-line, use it.
-				snapshotName = args[0]
+				snapshotName = app.ResolveSnapshotRestoreTarget(args[0])
 			}
 		}
 

@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -66,16 +67,34 @@ ddev snapshot --uncompressed`,
 }
 
 func listSnapshots(apps []*ddevapp.DdevApp) {
-	var columns table.Row
 	var out bytes.Buffer
 	t := table.NewWriter()
 	t.SetOutputMirror(&out)
 	styles.SetGlobalTableStyle(t, false)
 
+	allTargets := make(map[string][]ddevapp.SnapshotRestoreTarget)
+	hasWorktreeSnapshot := false
+	for _, app := range apps {
+		targets, err := app.ListSnapshotRestoreTargets()
+		if err != nil {
+			util.Failed("Failed to list snapshots %s: %v", app.GetName(), err)
+		}
+		allTargets[app.GetName()] = targets
+		for _, target := range targets {
+			if target.SourceRoot != app.AppRoot {
+				hasWorktreeSnapshot = true
+			}
+		}
+	}
+
+	var columns table.Row
 	if len(apps) > 1 {
 		columns = append(columns, "Project")
 	}
 	columns = append(columns, "Snapshot", "Created", "Size", "DB Version", "Compression")
+	if hasWorktreeSnapshot {
+		columns = append(columns, "Worktree")
+	}
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
 		var colConfig []table.ColumnConfig
@@ -88,32 +107,39 @@ func listSnapshots(apps []*ddevapp.DdevApp) {
 	}
 	t.AppendHeader(columns)
 
-	allSnapshots := make(map[string][]ddevapp.Snapshot)
 	for _, app := range apps {
-		if snapshots, err := app.ListSnapshots(); err != nil {
-			util.Failed("Failed to list snapshots %s: %v", app.GetName(), err)
-		} else {
-			allSnapshots[app.GetName()] = snapshots
-			if len(snapshots) > 0 {
-				for _, snapshot := range snapshots {
-					if len(apps) > 1 {
-						t.AppendRow(table.Row{app.GetName(), snapshot.Name, snapshot.Created.Format("2006-01-02"), util.FormatBytes(snapshot.Size), snapshot.DBVersion, snapshot.Compression})
-					} else {
-						t.AppendRow(table.Row{snapshot.Name, snapshot.Created.Format("2006-01-02"), util.FormatBytes(snapshot.Size), snapshot.DBVersion, snapshot.Compression})
-					}
+		targets := allTargets[app.GetName()]
+		if len(targets) > 0 {
+			for _, target := range targets {
+				worktree := ""
+				if target.SourceRoot != app.AppRoot {
+					worktree = filepath.Base(target.SourceRoot)
 				}
-			} else {
+				row := table.Row{}
 				if len(apps) > 1 {
-					t.AppendRow(table.Row{app.GetName(), text.Italic.Sprint("No snapshots"), "", "", "", ""})
-				} else {
-					t.AppendRow(table.Row{text.Italic.Sprint("No snapshots"), "", "", "", ""})
+					row = append(row, app.GetName())
 				}
+				row = append(row, target.Name, target.Created.Format("2006-01-02"), util.FormatBytes(target.Size), target.DBVersion, target.Compression)
+				if hasWorktreeSnapshot {
+					row = append(row, worktree)
+				}
+				t.AppendRow(row)
 			}
+		} else {
+			row := table.Row{}
+			if len(apps) > 1 {
+				row = append(row, app.GetName())
+			}
+			row = append(row, text.Italic.Sprint("No snapshots"), "", "", "", "")
+			if hasWorktreeSnapshot {
+				row = append(row, "")
+			}
+			t.AppendRow(row)
 		}
 	}
 
 	t.Render()
-	output.UserOut.WithField("raw", allSnapshots).Println(out.String())
+	output.UserOut.WithField("raw", allTargets).Println(out.String())
 }
 
 func createAppSnapshot(app *ddevapp.DdevApp) {
