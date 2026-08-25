@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DDEV per-test CI timing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../dashboard-common.css">
+<style>
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--border); }
+  th { cursor: pointer; user-select: none; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  th:hover { color: var(--fg); }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: color-mix(in srgb, var(--fg) 6%, transparent); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .fail { color: var(--accent); font-weight: 600; }
+  .regression { color: #e45756; font-weight: 600; }
+  #search { font-size: 0.95rem; padding: 0.35rem 0.5rem; width: 100%; max-width: 24rem; margin-bottom: 1rem; }
+  #detail { display: none; margin-top: 1rem; }
+  #detail h2 { font-size: 1rem; margin: 0 0 0.5rem; }
+  #csvLink { font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<h1>DDEV per-test CI timing</h1>
+<p class="sub">Trend for individual slow-or-failing Go tests, aggregated from gotestsum's per-test JSON on GitHub Actions and Buildkite Test-* runs. Only tests taking at least 5s or that failed are tracked here -- fast, always-passing tests aren't worth a permanent row. Click a test to see its trend.</p>
+
+<input type="search" id="search" placeholder="Filter by test name…">
+<p><a id="csvLink" href="#">Download CSV of this table</a></p>
+
+<table>
+  <thead>
+    <tr>
+      <th data-key="test">Test</th>
+      <th data-key="workflow">Test type</th>
+      <th data-key="last_elapsed_s" class="num">Latest</th>
+      <th data-key="median_elapsed_s" class="num">Trailing median</th>
+      <th data-key="pct_change" class="num">vs. median</th>
+      <th data-key="runs" class="num">Runs tracked</th>
+      <th data-key="last_outcome">Last outcome</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+<p id="empty" class="empty" style="display:none">No per-test data yet.</p>
+
+<div id="detail" class="chart-wrap">
+  <h2 id="detailTitle"></h2>
+  <canvas id="trendCanvas" width="900" height="240"></canvas>
+</div>
+
+<p class="note">"Trailing median" excludes the latest run itself, so it's always a baseline the latest point is compared against, not something the latest point pulls on. A test in red moved more than 20% slower than that baseline.</p>
+<p class="crosslink">See also: <a href="../">CI test-runtime totals per workflow</a> and <a href="../../">nightly performance benchmarks</a> (unrelated datasets).</p>
+
+<script>
+  const REGRESSION_THRESHOLD = 1.2; // matches dashboard-common.js's per-point regression flag
+  let summaries = [];
+  let sortKey = 'last_elapsed_s';
+  let sortDir = -1;
+  let selected = null;
+
+  function median(values) {
+    if (!values.length) return null;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  function testKey(r) {
+    return `${r.source}:${r.workflow}:${r.package}/${r.test}`;
+  }
+
+  async function load() {
+    const res = await fetch('per-test-history.ndjson');
+    const text = await res.text();
+    const rows = text.split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l));
+    rows.sort((a, b) => (a.timestamp < b.timestamp ? -1 : 1));
+
+    const groups = new Map();
+    for (const r of rows) {
+      const key = testKey(r);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(r);
+    }
+
+    summaries = [...groups.entries()].map(([key, points]) => {
+      const last = points[points.length - 1];
+      const priorElapsed = points.slice(0, -1).slice(-10).map((p) => p.elapsed_s);
+      const baseline = median(priorElapsed);
+      return {
+        key,
+        test: last.test,
+        package: last.package,
+        workflow: last.workflow,
+        source: last.source,
+        last_elapsed_s: last.elapsed_s,
+        median_elapsed_s: median(points.map((p) => p.elapsed_s)),
+        pct_change: baseline ? (last.elapsed_s - baseline) / baseline : null,
+        runs: points.length,
+        last_outcome: last.outcome,
+        points,
+      };
+    });
+
+    render();
+  }
+
+  function render() {
+    const filterText = document.getElementById('search').value.trim().toLowerCase();
+    const filtered = summaries.filter((s) => !filterText || s.test.toLowerCase().includes(filterText));
+    filtered.sort((a, b) => {
+      const av = a[sortKey], bv = b[sortKey];
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return av < bv ? sortDir : av > bv ? -sortDir : 0;
+    });
+
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+    for (const s of filtered) {
+      const tr = document.createElement('tr');
+      const isRegression = s.pct_change != null && s.pct_change > REGRESSION_THRESHOLD - 1;
+      tr.innerHTML = `
+        <td>${s.test}<br><span style="color:var(--muted);font-size:0.75rem">${s.package}</span></td>
+        <td>${s.workflow}</td>
+        <td class="num${isRegression ? ' regression' : ''}">${s.last_elapsed_s.toFixed(1)}s</td>
+        <td class="num">${s.median_elapsed_s.toFixed(1)}s</td>
+        <td class="num${isRegression ? ' regression' : ''}">${s.pct_change == null ? '—' : (s.pct_change >= 0 ? '+' : '') + (s.pct_change * 100).toFixed(0) + '%'}</td>
+        <td class="num">${s.runs}</td>
+        <td class="${s.last_outcome === 'fail' ? 'fail' : ''}">${s.last_outcome}</td>
+      `;
+      tr.addEventListener('click', () => showDetail(s));
+      tbody.appendChild(tr);
+    }
+    document.getElementById('empty').style.display = filtered.length ? 'none' : 'block';
+    updateCsvLink(filtered);
+  }
+
+  function updateCsvLink(filtered) {
+    const header = 'test,package,workflow,last_elapsed_s,median_elapsed_s,pct_change,runs,last_outcome';
+    const lines = filtered.map((s) => [s.test, s.package, s.workflow, s.last_elapsed_s, s.median_elapsed_s, s.pct_change, s.runs, s.last_outcome].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','));
+    const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv' });
+    const link = document.getElementById('csvLink');
+    if (link.dataset.url) URL.revokeObjectURL(link.dataset.url);
+    const url = URL.createObjectURL(blob);
+    link.dataset.url = url;
+    link.href = url;
+    link.download = 'ddev-per-test-timing.csv';
+  }
+
+  function showDetail(s) {
+    selected = s;
+    document.getElementById('detail').style.display = 'block';
+    document.getElementById('detailTitle').textContent = `${s.test} — ${s.workflow}`;
+    const canvas = document.getElementById('trendCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const points = s.points.map((p) => ({ t: new Date(p.timestamp).getTime(), v: p.elapsed_s, outcome: p.outcome }));
+    if (points.length < 2) return;
+
+    const pad = 30;
+    const minT = points[0].t, maxT = points[points.length - 1].t;
+    const maxV = Math.max(...points.map((p) => p.v)) * 1.1;
+    const x = (t) => pad + ((t - minT) / (maxT - minT || 1)) * (canvas.width - pad * 2);
+    const y = (v) => canvas.height - pad - (v / (maxV || 1)) * (canvas.height - pad * 2);
+
+    const fg = getComputedStyle(document.body).getPropertyValue('--fg').trim() || '#1a1a1a';
+    ctx.strokeStyle = fg;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    points.forEach((p, i) => (i === 0 ? ctx.moveTo(x(p.t), y(p.v)) : ctx.lineTo(x(p.t), y(p.v))));
+    ctx.stroke();
+
+    const trailing = [];
+    for (const p of points) {
+      const baseline = median(trailing.slice(-10));
+      const isRegression = baseline != null && p.v > baseline * REGRESSION_THRESHOLD;
+      ctx.beginPath();
+      ctx.fillStyle = p.outcome === 'fail' ? '#e45756' : isRegression ? '#e45756' : fg;
+      ctx.arc(x(p.t), y(p.v), p.outcome === 'fail' ? 5 : isRegression ? 4 : 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      trailing.push(p.v);
+    }
+  }
+
+  document.getElementById('search').addEventListener('input', render);
+  document.querySelectorAll('th[data-key]').forEach((th) => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.key;
+      sortDir = sortKey === key ? -sortDir : -1;
+      sortKey = key;
+      render();
+    });
+  });
+
+  load();
+</script>
+</body>
+</html>
