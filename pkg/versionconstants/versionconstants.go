@@ -17,11 +17,10 @@ var DdevVersion = "" // Note that this is overridden by make
 // Compiled with link-time variables
 var AmplitudeAPIKey = ""
 
-// BuildSource records where a CI build came from: a GitHub Actions run URL,
-// with the PR number appended when the run was triggered by a pull_request
-// event. Set via -ldflags from the Makefile, which reads it from the
-// GITHUB_* variables GitHub Actions sets in every job. Empty for a local
-// `make` build.
+// BuildSource records where a build came from: on GitHub Actions, a run URL
+// with the PR number appended when triggered by a pull_request event;
+// otherwise who ran `make` and from which branch. Set via -ldflags from the
+// Makefile — see scripts/build-source.sh.
 var BuildSource = ""
 
 // unreleasedVersionPattern matches a DdevVersion that isn't a clean release

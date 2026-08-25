@@ -30,8 +30,7 @@ func GetVersionInfo() (map[string]string, error) {
 
 	versionInfo["DDEV version"] = versionconstants.DdevVersion
 	// build-source ties an unreleased build (a PR, branch, or other dev
-	// build) back to the CI run it came from. Omitted for an official
-	// release, and for a local `make` build where it's never set.
+	// build) back to where it came from. Omitted for an official release.
 	if versionconstants.BuildSource != "" && versionconstants.IsUnreleasedDdevVersion(versionconstants.DdevVersion) {
 		versionInfo["build-source"] = versionconstants.BuildSource
 	}

@@ -47,10 +47,10 @@ DdevVersion ?= $(VERSION)
 # VERSION can be overridden on make commandline: make VERSION=0.9.1 push
 VERSION := $(shell git describe --tags --always --dirty)
 
-# BuildSource ties an unreleased `ddev version` build back to the CI run it
-# came from, using the GITHUB_* variables GitHub Actions sets in every job.
-# Empty for a local `make` build, where none of them are set. Written as a
-# standalone script rather than inline shell: $(shell ...) balances every
+# BuildSource ties an unreleased `ddev version` build back to where it came
+# from: a GitHub Actions run when the GITHUB_* variables Actions sets are
+# present, otherwise the builder and branch of a local `make` build. Written
+# as a standalone script rather than inline shell: $(shell ...) balances every
 # parenthesis in its argument, including literal ones meant for the shell, so
 # anything more than a one-liner belongs in its own file.
 BuildSource := $(shell ./scripts/build-source.sh)
