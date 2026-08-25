@@ -1383,7 +1383,7 @@ Flags:
 * `--uncompressed`: Write the snapshot as an uncompressed mariabackup/xtrabackup stream instead of compressing it. This skips decompression on restore, but the file can be roughly as large as the database's datadir, many times bigger than a compressed snapshot. Not available for PostgreSQL projects. See [Snapshots](../usage/database-management.md#snapshots) for when this unusual tradeoff makes sense.
 * `--yes`, `-y`: Skip confirmation prompt.
 
-`ddev snapshot --list` also shows each snapshot's compression: `zstd`, `gzip`, or `none` for an uncompressed snapshot.
+`ddev snapshot --list` also shows each snapshot's compression: `zstd`, `gzip`, or `none` for an uncompressed snapshot. If the project is a git worktree and a sibling worktree of the same project has snapshots of its own, those are listed too, with a `Worktree` column naming which one each came from.
 
 Example:
 
@@ -1418,7 +1418,7 @@ ddev snapshot --uncompressed
 Restores a database snapshot, either by name from the `.ddev/db_snapshots` directory or
 by the path to a snapshot file elsewhere on disk. If the project is a git worktree,
 snapshots from the same project checked out in other worktrees of the same repository
-are offered too, both here and for `--latest`.
+are available too, whether picked interactively, restored by name, or via `--latest`.
 
 Flags:
 

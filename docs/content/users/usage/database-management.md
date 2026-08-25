@@ -53,7 +53,7 @@ Snapshots are stored as compressed (zstd, or gzip on very old database versions)
 
 ### Sharing Snapshots Between Git Worktrees
 
-If a project is a [git worktree](https://git-scm.com/docs/git-worktree), `ddev snapshot restore` also offers snapshots belonging to the same project checked out in the repository's other worktrees, so a snapshot taken in one working copy doesn't have to be manually copied to restore it in another:
+If a project is a [git worktree](https://git-scm.com/docs/git-worktree), `ddev snapshot restore` also offers snapshots belonging to the same project checked out in the repository's other worktrees, so a snapshot taken in one working copy doesn't have to be manually copied to restore it in another. This works whether you pick interactively, restore by name, or use `--latest`, and `ddev snapshot --list` shows the other worktrees' snapshots too, each labeled with the worktree it came from:
 
 ```bash
 # In ~/repo/web
@@ -62,9 +62,12 @@ ddev snapshot --name=before-migration
 # In ~/repo-feature-branch/web, a worktree of the same repository
 ddev snapshot restore
 # 'before-migration' from ~/repo/web is offered alongside this project's own snapshots
+
+ddev snapshot restore before-migration
+# also works directly by name, without the interactive picker
 ```
 
-Only worktrees of the same repository are considered — a separate clone at the same relative path is not, even if it happens to have the same project name. This is a convenience on top of the path-based restore above: `ddev snapshot restore <path>` and `ddev start --seed-snapshot=<path>` already work with a snapshot from anywhere on disk, worktree or not.
+Only worktrees of the same repository are considered — a separate clone at the same relative path is not, even if it happens to have the same project name. If more than one sibling worktree has a snapshot with the same name, the most recently created one is used, without asking which. This is a convenience on top of the path-based restore above: `ddev snapshot restore <path>` and `ddev start --seed-snapshot=<path>` already work with a snapshot from anywhere on disk, worktree or not.
 
 ### Uncompressed Snapshots
 
