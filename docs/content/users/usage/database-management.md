@@ -51,6 +51,21 @@ Use the [`ddev snapshot restore`](../usage/commands.md#snapshot-restore) command
 
 Snapshots are stored as compressed (zstd, or gzip on very old database versions) files in the project's `.ddev/db_snapshots` directory, and any or all snapshots can be removed with the `ddev snapshot --cleanup` command or by manually deleting the files when you want to save disk space or have no further use for them.
 
+### Sharing Snapshots Between Git Worktrees
+
+If a project is a [git worktree](https://git-scm.com/docs/git-worktree), `ddev snapshot restore` also offers snapshots belonging to the same project checked out in the repository's other worktrees, so a snapshot taken in one working copy doesn't have to be manually copied to restore it in another:
+
+```bash
+# In ~/repo/web
+ddev snapshot --name=before-migration
+
+# In ~/repo-feature-branch/web, a worktree of the same repository
+ddev snapshot restore
+# 'before-migration' from ~/repo/web is offered alongside this project's own snapshots
+```
+
+Only worktrees of the same repository are considered — a separate clone at the same relative path is not, even if it happens to have the same project name. This is a convenience on top of the path-based restore above: `ddev snapshot restore <path>` and `ddev start --seed-snapshot=<path>` already work with a snapshot from anywhere on disk, worktree or not.
+
 ### Uncompressed Snapshots
 
 `ddev snapshot`, `ddev snapshot restore`, and the reserved `seed` snapshot all compress the database backup by default, which is the right trade-off for almost everyone. Decompression still costs real time, though — routinely 30-40% of a restore or first `ddev start`, and it competes for the same CPU cores the database restore itself needs right after. `--uncompressed` skips it:

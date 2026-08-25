@@ -1416,7 +1416,9 @@ ddev snapshot --uncompressed
 ### `snapshot restore`
 
 Restores a database snapshot, either by name from the `.ddev/db_snapshots` directory or
-by the path to a snapshot file elsewhere on disk.
+by the path to a snapshot file elsewhere on disk. If the project is a git worktree,
+snapshots from the same project checked out in other worktrees of the same repository
+are offered too, both here and for `--latest`.
 
 Flags:
 
