@@ -334,13 +334,17 @@ why in plain terms; skip the mechanism, which the next two sections cover. If
 it runs past two sentences, it has stopped being a summary.
 
 The same applies to issues you file: lead with a one-or-two-sentence summary,
-matching the "Short summary (TL;DR)" field in `.github/ISSUE_TEMPLATE/`.
+matching the "Short summary (TL;DR)" field in `.github/ISSUE_TEMPLATE/`. The
+body sections after it — `Is your feature request related to a problem?`,
+`Describe your solution`, `Describe alternatives` — get the same few-sentences-
+or-bullets treatment as a PR's `How This PR Solves The Issue`, not a full
+write-up of the investigation behind them.
 
-### PR Description Register
+### Description Register
 
-Write PR descriptions in plain, direct language — but not at the cost of
-losing the relationships between ideas. Aim for one connective per sentence
-(so, which, before, instead of, because) rather than zero connectives
+Write PR and issue descriptions in plain, direct language — but not at the
+cost of losing the relationships between ideas. Aim for one connective per
+sentence (so, which, before, instead of, because) rather than zero connectives
 (choppy, disconnected sentences) or two-plus stacked with parentheticals
 (dense engineering prose).
 
@@ -370,7 +374,18 @@ If a sentence needs a parenthetical aside to explain *why* something
 was done, give that aside its own clause instead of parenthesizing it.
 Don't drop the "why" — only the clutter around it. This applies to the
 same sections covered by the Pull Request Template above, not just the
-TL;DR.
+TL;DR — and to every section of an issue you file, not just its TL;DR.
+
+That fixes how each sentence reads. It doesn't cap how many sentences a
+section gets, which is a separate failure: a section built from several
+individually well-formed sentences can still be longer than a reviewer
+needs. Keep each section to what someone deciding whether to act on this
+needs on first read — typically a few sentences or a short bullet list, not
+a paragraph of supporting evidence per bullet. State a fact or number once,
+in the section it best belongs to, and point back to it (`see above`) rather
+than restating it elsewhere. In an alternatives or solutions list, give each
+item one line — what it is and why it's not the pick — unless asked to go
+deeper on a specific one.
 
 ### Creating Commits with PR Template
 
