@@ -53,7 +53,7 @@ Snapshots are stored as compressed (zstd, or gzip on very old database versions)
 
 ### Sharing Snapshots Between Git Worktrees
 
-If a project is a [git worktree](https://git-scm.com/docs/git-worktree), `ddev snapshot restore` also offers snapshots belonging to the same project checked out in the repository's other worktrees, so a snapshot taken in one working copy doesn't have to be manually copied to restore it in another. This works whether you pick interactively, restore by name, or use `--latest`, and `ddev snapshot --list` shows the other worktrees' snapshots too, each labeled with the worktree it came from:
+If a project is a [Git worktree](https://git-scm.com/docs/git-worktree), `ddev snapshot restore` also offers snapshots belonging to the same project checked out in the repository's other worktrees, so a snapshot taken in one working copy doesn't have to be manually copied to restore it in another. This works whether you pick interactively, restore by name, or use `--latest`, and `ddev snapshot --list` shows the other worktrees' snapshots too, each labeled with the worktree it came from:
 
 ```bash
 # In ~/repo/web
