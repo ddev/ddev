@@ -68,6 +68,7 @@ The following “Repository secret” environment variables must be configured i
 
 * Create and execute a test plan.
 * Run `make release-prep TAG=vX.Y.Z` and open a pull request with the result, so every image is rebuilt, pushed and tested under the release. See [Preparing the image tags](#preparing-the-image-tags-make-release-prep) below.
+* Merge that pull request into `main` before creating the release. `pkg/versionconstants/versionconstants.go`'s image tags are plain source constants, not `-ldflags`, so a release tagged before the merge builds a binary that still names the pre-release image tags, even though the registry already has `vX.Y.Z` images under the new ones.
 
 ### Preparing the image tags: `make release-prep`
 
@@ -86,9 +87,10 @@ The trailing `// <branch>-<hash>` comment on each tag keeps naming the branch ra
 
 ### Actual Release Creation
 
-1. Create a [release](https://github.com/ddev/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
-2. Make sure you're about to create the right release tag.
-3. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
+1. Confirm the `release-prep` pull request above is merged to `main` — the release tag has to be cut from a commit that already has the new tags in `versionconstants.go`, not from a `main` that still points at the previous release's images.
+2. Create a [release](https://github.com/ddev/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
+3. Make sure you're about to create the right release tag.
+4. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
 
 ## Automatic Image Build and Push
 
