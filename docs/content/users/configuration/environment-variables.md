@@ -98,7 +98,7 @@ To see the result:
 
 ## Global Env Files
 
-With DDEV v1.25.4+, the same file names work in the [global configuration directory](../usage/architecture.md#global-files), where they apply to every project on the machine. `$HOME/.ddev/.env` reaches every container of every project, and `$HOME/.ddev/.env.db` reaches the `db` container of every project.
+With DDEV v1.25.4+, the same filenames work in the [global configuration directory](../usage/architecture.md#global-files), where they apply to every project on the machine. `$HOME/.ddev/.env` reaches every container of every project, and `$HOME/.ddev/.env.db` reaches the `db` container of every project.
 
 This is the only way to set a variable globally for something other than the `web` container, which is all [`web_environment`](#web_environment) can do.
 
@@ -124,7 +124,7 @@ ddev dotenv set .ddev/.env.web.local --api-key=secret
 
 To document which keys are expected without committing their values, add a `.ddev/.env.web.example` file listing the keys with empty values. DDEV never reads `.example` files, and `.ddev/.gitignore` ignores them, so commit it with `git add -f .ddev/.env.web.example`.
 
-The global files work the same way, so `$HOME/.ddev/.env.web.local` is a reasonable home for a credential you use in every project.
+The global files work the same way, so `$HOME/.ddev/.env.web.local` is a reasonable home for a credential you use in every project (but note that it is overridden by project-level `.ddev/.env` or `.ddev/.env.web`, etc).
 
 ## `web_environment`
 
