@@ -345,7 +345,7 @@ textlint:
 	@echo "textlint: "
 	$(call require_tool,textlint)
 	@set -eu -o pipefail; \
-	textlint {README.md,version-history.md,docs/**}
+	textlint {README.md,docs/**}
 
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-hostname
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ]; then \

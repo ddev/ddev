@@ -67,7 +67,6 @@ The following “Repository secret” environment variables must be configured i
 ### Prerelease Tasks
 
 * Create and execute a test plan.
-* Make sure [`version-history.md`](https://github.com/ddev/ddev/blob/main/version-history.md) is up to date.
 * Run `make release-prep TAG=vX.Y.Z` and open a pull request with the result, so every image is rebuilt, pushed and tested under the release. See [Preparing the image tags](#preparing-the-image-tags-make-release-prep) below.
 
 ### Preparing the image tags: `make release-prep`
