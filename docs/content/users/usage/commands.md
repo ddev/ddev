@@ -614,7 +614,7 @@ ddev describe my-project
 
 Commands for managing the contents of `.env` files.
 
-See [Environment Variables](../configuration/environment-variables.md) for which file name reaches which service, the order the files override each other in, and where to keep a secret.
+See [Environment Variables](../configuration/environment-variables.md) for which filename reaches which service, the order the files override each other in, and where to keep a secret.
 
 ### `dotenv get`
 

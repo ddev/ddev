@@ -41,7 +41,7 @@ The `.local` convention below applies only inside `.ddev/` and `$HOME/.ddev/`. A
 
 ## Project Env Files
 
-The `.env*` files in the project’s `.ddev` directory set real environment variables in the project’s containers. The file name decides which service gets them:
+The `.env*` files in the project’s `.ddev` directory set real environment variables in the project’s containers. The filename decides which service gets them:
 
 ```text
 .env[.<service>[.<label>...]][.local]
