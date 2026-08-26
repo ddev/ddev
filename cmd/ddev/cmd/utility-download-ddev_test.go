@@ -18,9 +18,29 @@ import (
 )
 
 // TestDownloadDdevDefaultOutputDir verifies the default download destination
-// is a fixed directory under the user's home, not the current directory.
+// is a per-version directory under the user's home, not the current directory.
 func TestDownloadDdevDefaultOutputDir(t *testing.T) {
-	require.Equal(t, filepath.Join(util.GetHomeDir(), "tmp", "ddev-download-ddev"), defaultOutputDir())
+	base := filepath.Join(util.GetHomeDir(), "tmp", "ddev-download-ddev")
+	require.Equal(t, filepath.Join(base, "pr-8611"), defaultOutputDir("pr-8611"))
+	require.Equal(t, filepath.Join(base, "v1.25.3"), defaultOutputDir("v1.25.3"))
+}
+
+// TestDownloadDdevVersionDirName verifies the version subdirectory is a single
+// directory name even for branch names containing slashes or other characters
+// that a path (or Windows) would choke on.
+func TestDownloadDdevVersionDirName(t *testing.T) {
+	require.Equal(t, "v1.25.3", versionDirName("v1.25.3"))
+	require.Equal(t, "branch-20250101_feature", versionDirName("branch-20250101_feature"))
+	require.Equal(t, "branch-feature-foo", versionDirName("branch-feature/foo"))
+	require.Equal(t, "branch-a-b-c-d", versionDirName(`branch-a:b\c d`))
+}
+
+// TestDownloadDdevSpecVersions verifies each source resolves to its own
+// subdirectory, so downloads of different builds don't mix together.
+func TestDownloadDdevSpecVersions(t *testing.T) {
+	linux := buildTarget{goos: "linux", osName: "linux", arch: "amd64"}
+	require.Equal(t, "v1.25.3", resolveReleaseTag("ddev", "ddev", "v1.25.3", linux).version)
+	require.Equal(t, "main", resolveHead("ddev", "ddev", linux).version)
 }
 
 // TestDownloadDdevPSQuote verifies PowerShell single-quote escaping.
@@ -104,12 +124,12 @@ func TestDownloadDdevArtifactName(t *testing.T) {
 // after ddev, the tag embedded verbatim (already includes the "v"), and .zip on
 // Windows.
 func TestDownloadDdevReleaseAssetName(t *testing.T) {
-	require.Equal(t, "ddev_linux-amd64.v1.24.5.tar.gz",
-		buildTarget{goos: "linux", osName: "linux", arch: "amd64"}.releaseAssetName("v1.24.5"))
-	require.Equal(t, "ddev_macos-arm64.v1.24.5.tar.gz",
-		buildTarget{goos: "darwin", osName: "macos", arch: "arm64"}.releaseAssetName("v1.24.5"))
-	require.Equal(t, "ddev_windows-amd64.v1.24.5.zip",
-		buildTarget{goos: "windows", osName: "windows", arch: "amd64"}.releaseAssetName("v1.24.5"))
+	require.Equal(t, "ddev_linux-amd64.v1.25.3.tar.gz",
+		buildTarget{goos: "linux", osName: "linux", arch: "amd64"}.releaseAssetName("v1.25.3"))
+	require.Equal(t, "ddev_macos-arm64.v1.25.3.tar.gz",
+		buildTarget{goos: "darwin", osName: "macos", arch: "arm64"}.releaseAssetName("v1.25.3"))
+	require.Equal(t, "ddev_windows-amd64.v1.25.3.zip",
+		buildTarget{goos: "windows", osName: "windows", arch: "amd64"}.releaseAssetName("v1.25.3"))
 }
 
 // TestDownloadDdevURLs verifies the nightly.link and release URLs that are built
@@ -125,15 +145,15 @@ func TestDownloadDdevURLs(t *testing.T) {
 	require.Equal(t, "https://nightly.link/ddev/ddev/actions/artifacts/12345.zip",
 		github.NightlyLinkArtifactURL("ddev", "ddev", 12345))
 
-	rel := resolveReleaseTag("ddev", "ddev", "v1.24.5", linux)
-	require.Equal(t, "https://github.com/ddev/ddev/releases/download/v1.24.5/ddev_linux-amd64.v1.24.5.tar.gz", rel.url)
-	require.Equal(t, "https://github.com/ddev/ddev/releases/download/v1.24.5/checksums.txt", rel.shaSumURL)
+	rel := resolveReleaseTag("ddev", "ddev", "v1.25.3", linux)
+	require.Equal(t, "https://github.com/ddev/ddev/releases/download/v1.25.3/ddev_linux-amd64.v1.25.3.tar.gz", rel.url)
+	require.Equal(t, "https://github.com/ddev/ddev/releases/download/v1.25.3/checksums.txt", rel.shaSumURL)
 	require.False(t, rel.isZip)
 
 	// Windows release uses a zip archive.
 	win := buildTarget{goos: "windows", osName: "windows", arch: "amd64", exeExt: ".exe"}
-	relWin := resolveReleaseTag("ddev", "ddev", "v1.24.5", win)
-	require.Equal(t, "https://github.com/ddev/ddev/releases/download/v1.24.5/ddev_windows-amd64.v1.24.5.zip", relWin.url)
+	relWin := resolveReleaseTag("ddev", "ddev", "v1.25.3", win)
+	require.Equal(t, "https://github.com/ddev/ddev/releases/download/v1.25.3/ddev_windows-amd64.v1.25.3.zip", relWin.url)
 	require.True(t, relWin.isZip)
 }
 

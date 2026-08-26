@@ -45,19 +45,20 @@ and --commit download unsigned GitHub Actions artifacts and use a GitHub token
 anonymous rate limit; without a token, --pr falls back to the build links
 posted on the pull request.
 
-By default the binaries are written to ~/tmp/ddev-download-ddev rather than
-the current directory, so a download can't accidentally end up on PATH or as
-a stray file in a git checkout.
+By default the binaries are written to ~/tmp/ddev-download-ddev/<version>
+rather than the current directory, so a download can't accidentally end up on
+PATH or as a stray file in a git checkout, and each build stays separate from
+the ones downloaded before it.
 
 This command only downloads the binaries; it does not modify your installed ddev.`,
-	Example: `# Download the current platform's build from PR 1234 into ~/tmp/ddev-download-ddev
-ddev utility download-ddev --pr 1234
+	Example: `# Download the current platform's build from PR 8611 into ~/tmp/ddev-download-ddev/pr-8611
+ddev utility download-ddev --pr 8611
 
 # Download the latest main build into ~/tmp/head
 ddev utility download-ddev --head --output ~/tmp/head
 
 # Download a specific released version
-ddev utility download-ddev --tag v1.24.5
+ddev utility download-ddev --tag v1.25.3
 
 # Download the latest stable release
 ddev utility download-ddev --stable
@@ -85,12 +86,12 @@ func registerDownloadDdevFlags(cmd *cobra.Command) {
 	f.IntVar(&downloadDdevPR, "pr", 0, "Pull request number to download the build from")
 	f.StringVar(&downloadDdevBranch, "branch", "", "Branch name to download the build from")
 	f.StringVar(&downloadDdevCommit, "commit", "", "Commit SHA to download the build from")
-	f.StringVar(&downloadDdevTag, "tag", "", "Release tag to download (e.g. v1.24.5)")
+	f.StringVar(&downloadDdevTag, "tag", "", "Release tag to download (e.g. v1.25.3)")
 	f.BoolVar(&downloadDdevStable, "stable", false, "Download the latest stable release")
 	f.BoolVar(&downloadDdevHead, "head", false, "Download the latest main build")
 	f.StringVar(&downloadDdevOwner, "owner", "ddev", "GitHub owner/org (for PR builds this is the base repo, not a fork)")
 	f.StringVar(&downloadDdevRepo, "repo", "ddev", "GitHub repo")
-	f.StringVarP(&downloadDdevOutput, "output", "o", "", "Output directory (default: ~/tmp/ddev-download-ddev)")
+	f.StringVarP(&downloadDdevOutput, "output", "o", "", "Output directory (default: ~/tmp/ddev-download-ddev/<version>)")
 	f.StringVar(&downloadDdevOS, "os", "", "OS override: macos, linux, or windows (default: current OS)")
 	f.StringVar(&downloadDdevArch, "arch", "", "Architecture override: amd64 or arm64 (default: current architecture)")
 
@@ -118,7 +119,7 @@ func (t buildTarget) artifactName() string {
 }
 
 // releaseAssetName returns the goreleaser release archive name for a tag, e.g.
-// "ddev_linux-amd64.v1.24.5.tar.gz". Release archives use an underscore after
+// "ddev_linux-amd64.v1.25.3.tar.gz". Release archives use an underscore after
 // "ddev", embed the tag verbatim (which already includes the leading "v"), and
 // are zip files on Windows.
 func (t buildTarget) releaseAssetName(tag string) string {
@@ -136,6 +137,7 @@ type downloadSpec struct {
 	isZip      bool   // true = unzip, false = untar
 	signed     bool   // signed/notarized build (releases, main)
 	sourceDesc string
+	version    string // subdirectory name under the default output dir, e.g. "pr-8611"
 }
 
 // runDownloadDdev is the testable entry point for the command.
@@ -185,7 +187,7 @@ func runDownloadDdev(cmd *cobra.Command) error {
 
 	outputDir := downloadDdevOutput
 	if outputDir == "" {
-		outputDir = defaultOutputDir()
+		outputDir = defaultOutputDir(spec.version)
 	}
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return err
@@ -261,12 +263,24 @@ func psQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", "''") + "'"
 }
 
-// defaultOutputDir returns the default download destination used when --output
-// is not given: a fixed, out-of-the-way directory rather than the current
-// directory, so a download can't accidentally end up on PATH or as a stray
-// file in a git checkout.
-func defaultOutputDir() string {
-	return filepath.Join(util.GetHomeDir(), "tmp", "ddev-download-ddev")
+// defaultOutputDir returns the download destination used when --output is not
+// given. Downloads accumulate here and the set of binaries differs between
+// versions (older releases have no ddev-hostname), so each build gets its own
+// subdirectory.
+func defaultOutputDir(version string) string {
+	return filepath.Join(util.GetHomeDir(), "tmp", "ddev-download-ddev", version)
+}
+
+// versionDirName makes s safe to use as a single directory name; branch names
+// in particular can contain slashes and characters Windows forbids.
+func versionDirName(s string) string {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '.', r == '_', r == '-':
+			return r
+		}
+		return '-'
+	}, s)
 }
 
 // resolveTarget maps --os/--arch overrides (or the current machine) to a buildTarget.
@@ -319,7 +333,7 @@ func resolveSource(cmd *cobra.Command, t buildTarget) (downloadSpec, error) {
 	switch {
 	case f.Changed("tag"):
 		if downloadDdevTag == "" {
-			return downloadSpec{}, fmt.Errorf("--tag requires a value, e.g. --tag v1.24.5")
+			return downloadSpec{}, fmt.Errorf("--tag requires a value, e.g. --tag v1.25.3")
 		}
 		return resolveReleaseTag(owner, repo, downloadDdevTag, t), nil
 	case downloadDdevStable:
@@ -352,6 +366,7 @@ func resolveReleaseTag(owner, repo, tag string, t buildTarget) downloadSpec {
 		isZip:      t.goos == "windows",
 		signed:     true,
 		sourceDesc: fmt.Sprintf("release %s", tag),
+		version:    versionDirName(tag),
 	}
 }
 
@@ -373,6 +388,7 @@ func resolveHead(owner, repo string, t buildTarget) downloadSpec {
 		isZip:      true,
 		signed:     true,
 		sourceDesc: "the latest main build",
+		version:    "main",
 	}
 }
 
@@ -385,7 +401,7 @@ func resolvePR(owner, repo string, pr int, t buildTarget) (downloadSpec, error) 
 	if pr <= 0 {
 		return downloadSpec{}, fmt.Errorf("--pr requires a positive PR number")
 	}
-	spec := downloadSpec{isZip: true, sourceDesc: fmt.Sprintf("PR #%d", pr)}
+	spec := downloadSpec{isZip: true, sourceDesc: fmt.Sprintf("PR #%d", pr), version: fmt.Sprintf("pr-%d", pr)}
 
 	url, apiErr := resolvePRViaAPI(owner, repo, pr, t)
 	if apiErr == nil {
@@ -427,7 +443,7 @@ func resolveBranch(owner, repo, branch string, t buildTarget) (downloadSpec, err
 	if err != nil {
 		return downloadSpec{}, fmt.Errorf("branch %q: %w (branch builds exist only for 'main' or branches with an open PR)", branch, err)
 	}
-	return downloadSpec{url: url, isZip: true, signed: signed, sourceDesc: fmt.Sprintf("branch %s", branch)}, nil
+	return downloadSpec{url: url, isZip: true, signed: signed, sourceDesc: fmt.Sprintf("branch %s", branch), version: versionDirName("branch-" + branch)}, nil
 }
 
 // resolveCommit resolves a commit SHA to its CI artifact, trying PR builds first
@@ -443,7 +459,7 @@ func resolveCommit(owner, repo, commit string, t buildTarget) (downloadSpec, err
 		}
 		signed = true
 	}
-	return downloadSpec{url: url, isZip: true, signed: signed, sourceDesc: fmt.Sprintf("commit %s", shortSHA(commit))}, nil
+	return downloadSpec{url: url, isZip: true, signed: signed, sourceDesc: fmt.Sprintf("commit %s", shortSHA(commit)), version: versionDirName("commit-" + shortSHA(commit))}, nil
 }
 
 // copyExecutable copies src to dest and makes it executable.
@@ -457,7 +473,7 @@ func copyExecutable(src, dest string) error {
 	return nil
 }
 
-// printResult reports where the binaries landed and how to use or install them.
+// printResult reports where the binaries landed and how to use them.
 // UserOut appends a newline per call, so blank separator lines use Println("").
 func printResult(ddevDest, hostnameDest string, t buildTarget, signed, autoUnblocked bool) {
 	util.Success("Downloaded ddev to %s", ddevDest)
@@ -500,15 +516,15 @@ func printResult(ddevDest, hostnameDest string, t buildTarget, signed, autoUnblo
 	}
 
 	if !t.isNative {
-		util.Warning("This is a %s/%s build for another machine (%s/%s); skipping the install hints.", t.osName, t.arch, runtime.GOOS, runtime.GOARCH)
+		util.Warning("This is a %s/%s build for another machine (%s/%s); skipping the usage hints.", t.osName, t.arch, runtime.GOOS, runtime.GOARCH)
 		return
 	}
 
 	outputDir := filepath.Dir(ddevDest)
 
-	// Temporary: prepend the download directory so `ddev` in the current shell
-	// resolves to it. `hash -r` clears the shell's cached path to the old ddev,
-	// which bash/zsh would otherwise keep using despite the changed PATH.
+	// Prepend the download directory so `ddev` in the current shell resolves to
+	// it. `hash -r` clears the shell's cached path to the old ddev, which
+	// bash/zsh would otherwise keep using despite the changed PATH.
 	output.UserOut.Println("")
 	output.UserOut.Println("To use this build in the current shell (this window only):")
 	if t.goos == "windows" {
@@ -518,75 +534,6 @@ func printResult(ddevDest, hostnameDest string, t buildTarget, signed, autoUnblo
 		output.UserOut.Println("  hash -r")
 	}
 	output.UserOut.Println("  ddev version")
-
-	// Permanent (Unix): replace the binary that `ddev` currently resolves to on
-	// PATH, following a symlink (e.g. Homebrew) to the real file so we replace
-	// the destination, not the link. Back up each current binary to <path>.bak
-	// first so the change can be reverted.
-	if t.goos == "windows" {
-		return
-	}
-	curDdev, ddevWasLink := currentBinaryPath("ddev")
-	if curDdev == "" {
-		return
-	}
-
-	// Pair each on-PATH binary with its freshly downloaded replacement.
-	type replacement struct{ cur, src string }
-	replacements := []replacement{{cur: curDdev, src: ddevDest}}
-	if hostnameDest != "" {
-		if curHostname, _ := currentBinaryPath("ddev-hostname"); curHostname != "" {
-			replacements = append(replacements, replacement{cur: curHostname, src: hostnameDest})
-		}
-	}
-
-	sudo := ""
-	if !isDirWritable(filepath.Dir(curDdev)) {
-		sudo = "sudo "
-	}
-
-	output.UserOut.Println("")
-	output.UserOut.Println("Prefer the temporary use above. If you still want to replace your installed ddev with this build, back up your current binary first:")
-	for _, r := range replacements {
-		output.UserOut.Printf("  %scp %q %q", sudo, r.cur, r.cur+".bak")
-		output.UserOut.Printf("  %scp %q %q", sudo, r.src, r.cur)
-	}
-	if ddevWasLink {
-		output.UserOut.Println("  (ddev on your PATH is a symlink; the path above is its real target)")
-	}
-
-	output.UserOut.Println("")
-	output.UserOut.Println("To revert to your previous binary:")
-	for _, r := range replacements {
-		output.UserOut.Printf("  %smv %q %q", sudo, r.cur+".bak", r.cur)
-	}
-}
-
-// currentBinaryPath returns the real path of the named binary as found on PATH,
-// resolving any symlink to its target. The bool reports whether a symlink was
-// resolved. Returns ("", false) when the binary is not on PATH.
-func currentBinaryPath(name string) (string, bool) {
-	p, err := exec.LookPath(name)
-	if err != nil {
-		return "", false
-	}
-	resolved, err := filepath.EvalSymlinks(p)
-	if err != nil {
-		return p, false
-	}
-	return resolved, resolved != p
-}
-
-// isDirWritable reports whether a file can be created in dir.
-func isDirWritable(dir string) bool {
-	f, err := os.CreateTemp(dir, ".ddev-write-test-")
-	if err != nil {
-		return false
-	}
-	name := f.Name()
-	_ = f.Close()
-	_ = os.Remove(name)
-	return true
 }
 
 // shortSHA returns the first 7 characters of a commit SHA for display.

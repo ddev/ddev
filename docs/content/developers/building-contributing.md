@@ -9,7 +9,7 @@ search:
 There are several ways to use DDEV’s latest-committed HEAD version:
 
 * **Download** the latest `main` branch artifacts from [nightly.link](https://nightly.link/ddev/ddev/workflows/main-build/main). Each of these is built by the CI system, signed, and notarized. Get the one you need and place it in your `$PATH`.
-* **[`ddev utility download-ddev`](../users/usage/commands.md#utility-download-ddev)**: If you already have DDEV installed, run `ddev utility download-ddev --head` to download the latest `main` build into `~/tmp/ddev-download-ddev`. It prints how to use the new binary in your current shell or install it permanently.
+* **[`ddev utility download-ddev`](../users/usage/commands.md#utility-download-ddev)**: If you already have DDEV installed, run `ddev utility download-ddev --head` to download the latest `main` build into `~/tmp/ddev-download-ddev/main`. It prints how to use the new binary in your current shell.
 * **Homebrew install HEAD**: On macOS and Linux, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD --fetch-HEAD` to get the latest DDEV commit, even if it’s unreleased.
 * **Install via script**: You can download and run the [install_ddev_head.sh](https://raw.githubusercontent.com/ddev/ddev/main/scripts/install_ddev_head.sh)  script, or run it automatically:
 
@@ -28,10 +28,10 @@ Each [PR build](https://github.com/ddev/ddev/actions/workflows/pr-build.yml) cre
 
 ### Downloading a build with `ddev utility download-ddev`
 
-If you already have DDEV installed, [`ddev utility download-ddev`](../users/usage/commands.md#utility-download-ddev) downloads the `ddev` and `ddev-hostname` binaries for a build and prints how to use them in your current shell or install them permanently:
+If you already have DDEV installed, [`ddev utility download-ddev`](../users/usage/commands.md#utility-download-ddev) downloads the `ddev` and `ddev-hostname` binaries for a build and prints how to use them in your current shell:
 
 ```bash
-# Download this PR's build for your current OS and architecture into the current directory
+# Download this PR's build for your current OS and architecture into ~/tmp/ddev-download-ddev/pr-<PR_NUMBER>
 ddev utility download-ddev --pr <PR_NUMBER>
 # See the help for more options:
 ddev utility download-ddev --help
