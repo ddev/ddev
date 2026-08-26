@@ -49,6 +49,8 @@ var versionCmd = &cobra.Command{
 
 		t.AppendHeader(table.Row{"Item", "Value"})
 
+		imageTagBranches := version.ImageTagBranches()
+
 		keys := make([]string, 0, len(v))
 		for k := range v {
 			keys = append(keys, k)
@@ -57,8 +59,12 @@ var versionCmd = &cobra.Command{
 
 		for _, label := range keys {
 			if label != "build info" {
+				value := v[label]
+				if branch, ok := imageTagBranches[label]; ok && branch != "" {
+					value = value + " (" + branch + ")"
+				}
 				t.AppendRow(table.Row{
-					label, v[label],
+					label, value,
 				})
 			}
 		}

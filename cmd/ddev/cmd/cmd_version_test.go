@@ -47,4 +47,10 @@ func TestCmdVersion(t *testing.T) {
 	assert.Contains(versionData["msg"], dockerVersion)
 	assert.Contains(versionData["msg"], dockerAPIVersion)
 	assert.Contains(versionData["msg"], buildxVersion)
+
+	// The table shown to the user has a branch hint appended to each image; the
+	// raw JSON map used by scripting does not.
+	assert.Contains(versionData["msg"], "("+versionconstants.WebTagBranch+")")
+	_, ok = raw["image-tag-branches"]
+	assert.False(ok, "image-tag-branches should not appear in the raw section")
 }
