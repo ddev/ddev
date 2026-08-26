@@ -29,6 +29,11 @@ func GetVersionInfo() (map[string]string, error) {
 	versionInfo := make(map[string]string)
 
 	versionInfo["DDEV version"] = versionconstants.DdevVersion
+	// build-source ties an unreleased build (a PR, branch, or other dev
+	// build) back to where it came from. Omitted for an official release.
+	if versionconstants.BuildSource != "" && versionconstants.IsUnreleasedDdevVersion(versionconstants.DdevVersion) {
+		versionInfo["build-source"] = versionconstants.BuildSource
+	}
 	versionInfo["ddev-environment"] = environment.GetDDEVEnvironment()
 	versionInfo["cgo_enabled"] = strconv.FormatInt(versionconstants.CGOEnabled, 10)
 	versionInfo["global-ddev-dir"] = util.WindowsPathToCygwinPath(globalconfig.GetGlobalDdevDir())

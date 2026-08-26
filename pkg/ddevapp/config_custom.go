@@ -384,6 +384,16 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 	}
 	var findings []finding
 
+	// An unreleased DDEV build (a PR, local branch, or other dev build)
+	// behaves like custom configuration: it may not match what's documented
+	// or supported, and it's easy to forget you're running one.
+	if versionconstants.IsUnreleasedDdevVersion(versionconstants.DdevVersion) {
+		findings = append(findings, finding{
+			category: "DDEV version",
+			files:    []fileInfo{{path: fmt.Sprintf("%s (unsupported, not an official release)", versionconstants.DdevVersion)}},
+		})
+	}
+
 	for _, check := range checks {
 		if check.checkOnlyWhen != nil && !check.checkOnlyWhen() {
 			continue
