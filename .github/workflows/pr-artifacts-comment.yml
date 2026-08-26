@@ -138,13 +138,14 @@ jobs:
             }
 
             // Construct the comment body
-            let body = allArtifacts.reduce((acc, item) => {
+            let body = `Download this PR's build for your OS and architecture with:\n\n\`\`\`bash\nddev utility download-ddev --pr ${prNumber}\n\`\`\``;
+
+            body += allArtifacts.reduce((acc, item) => {
               if (item.name === "assets") return acc;
               acc += `\n* [${item.name}.zip](https://nightly.link/${context.repo.owner}/${context.repo.repo}/actions/artifacts/${item.id}.zip)`;
               return acc;
-            }, 'Download the artifacts for this pull request:\n');
+            }, '\n\nOr download the artifact for your OS and architecture directly:\n');
 
-            body += `\n\nOr, if you already have DDEV installed, download this PR's build for your OS and architecture with:\n\n\`\`\`bash\nddev utility download-ddev --pr ${prNumber}\n\`\`\``;
             body += `\n\nSee [Testing a PR](https://docs.ddev.com/en/stable/developers/building-contributing/#testing-a-pr).`;
             const codespacesLink = prRef && prRepoId
               ? `https://github.com/codespaces/new?ref=${prRef}&repo=${prRepoId}`
