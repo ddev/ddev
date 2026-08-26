@@ -43,6 +43,15 @@ func TestCmdDotEnvGetAndSet(t *testing.T) {
 	require.Error(t, err, "out=%s", out)
 	require.Contains(t, out, "outside the project root")
 
+	// A relative path that traverses outside the project root must be rejected too
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", "../outside.env")
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "outside the project root")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", "../outside.env", "--test-value", "custom value")
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "outside the project root")
+	require.NoFileExists(t, filepath.Join(testDir, "..", "outside.env"))
+
 	// Success while using full path to the .env file
 	envFile := filepath.Join(testDir, ".env")
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", envFile, "--test-value", "custom value")
