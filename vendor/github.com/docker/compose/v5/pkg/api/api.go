@@ -218,7 +218,7 @@ type BuildOptions struct {
 	Print bool
 	// Check let builder validate build configuration
 	Check bool
-	// Attestations allows to enable attestations generation
+	// Attestations enables attestation generation
 	Attestations bool
 	// Provenance generate a provenance attestation
 	Provenance string
@@ -759,4 +759,20 @@ func GetImageNameOrDefault(service types.ServiceConfig, projectName string) stri
 		imageName = projectName + Separator + service.Name
 	}
 	return imageName
+}
+
+// GetDependentImages returns the additional images a service depends on beyond
+// its main image. Currently this is the set of pre_start hook images, which run
+// as ephemeral init containers with their own image. A hook without an explicit
+// image, or one reusing the service image, is skipped as that image is already
+// accounted for as the service image.
+func GetDependentImages(service types.ServiceConfig, projectName string) []string {
+	serviceImage := GetImageNameOrDefault(service, projectName)
+	var images []string
+	for _, hook := range service.PreStart {
+		if hook.Image != "" && hook.Image != serviceImage {
+			images = append(images, hook.Image)
+		}
+	}
+	return images
 }

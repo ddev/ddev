@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/google/go-github/v88/github"
+	"github.com/google/go-github/v90/github"
 )
 
 // WorkflowRunFilter selects a GitHub Actions workflow run by branch and/or head SHA.

@@ -1,0 +1,57 @@
+Changes
+=======
+
+v3.0.6 07 Jun 2026
+  * Back off on HTTP fetch failure (connection refused, DNS failure,
+    timeout) by scheduling the next refresh at now+MinInterval, instead
+    of re-dispatching the resource in a tight ~1s loop (#119, #130)
+  * Document anchoring of RegexpWhitelist patterns
+    (e.g. `^https://example\.com/`) and add a runnable example (#125)
+
+v3.0.5 30 Mar 2026
+  * Fix periodic check deadlock when number of ready resources exceeds
+    outgoing channel buffer, which caused circular wait between controller
+    and worker goroutines (#113, #116)
+  * Fix proxysink self-deadlock caused by missing mutex unlock on context
+    cancellation path
+
+v3.0.4 08 Feb 2026
+  * Fix worker goroutine dying on sync refresh failure, which could cause
+    deadlocks after repeated failures (lestrrat-go/jwx#1551)
+  * Move ErrNotReady example functions out of client_example_test.go into
+    separate files to avoid triggering autodoc workflow
+
+v3.0.3 23 Dec 2025
+  * Add ErrNotReady error state to avoid waiting for unstable URLs
+
+v3.0.2 05 Dev 2025
+* Code changes mainly due to upgraded linter.
+* github.com/lestrrat-go/option upgraded to v2
+
+v3.0.1  18 Aug 2025
+* Refresh() no longer requires the resource to be ready.
+
+v3.0.0 5 Jun 2025
+[Breaking Changes]
+  * The entire API has been re-imagined for Go versions that allow typed parameters
+
+v2.0.0 19 Feb 2024
+[Breaking Changes]
+  * `Fetcher` type is no longer available. You probably want to provide
+    a customg HTTP client instead via httprc.WithHTTPClient()).
+  * 
+
+v1.0.4 19 Jul 2022
+  * Fix sloppy API breakage
+
+v1.0.3 19 Jul 2022
+  * Fix queue insertion in the middle of the queue (#7)
+
+v1.0.2 13 Jun 2022
+  * Properly release a lock when the fetch fails (#5)
+
+v1.0.1 29 Mar 2022
+  * Bump dependency for github.com/lestrrat-go/httpcc to v1.0.1
+
+v1.0.0 29 Mar 2022
+  * Initial release, refactored out of github.com/lestrrat-go/jwx
