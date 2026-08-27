@@ -68,7 +68,7 @@ The following “Repository secret” environment variables must be configured i
 
 * Create and execute a test plan.
 * Run `make release-prep TAG=vX.Y.Z` and open a pull request with the result, so every image is rebuilt, pushed and tested under the release. See [Preparing the image tags](#preparing-the-image-tags-make-release-prep) below.
-* Merge that pull request into `main` before creating the release. `pkg/versionconstants/versionconstants.go`'s image tags are plain source constants, not `-ldflags`, so a release tagged before the merge builds a binary that still names the pre-release image tags, even though the registry already has `vX.Y.Z` images under the new ones.
+* Merge that pull request into `main` before creating the release. `pkg/versionconstants/versionconstants.go`'s image tags are plain source constants, not `-ldflags`, so a release tagged before the merge builds a binary that still names the prerelease image tags, even though the registry already has `vX.Y.Z` images under the new ones.
 
 ### Preparing the image tags: `make release-prep`
 
