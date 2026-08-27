@@ -155,10 +155,11 @@ var DebugRebuildCmd = &cobra.Command{
 			recreateTimeout := time.Duration(app.GetMaxContainerWaitTime()) * time.Second
 			err = composeSvc.Up(composeCtx, recreateProject, api.UpOptions{
 				Create: api.CreateOptions{
-					Services: []string{service},
-					Recreate: api.RecreateForce,
-					Timeout:  &recreateTimeout,
-					Build:    &api.BuildOptions{Progress: progress},
+					Services:      []string{service},
+					Recreate:      api.RecreateForce,
+					Timeout:       &recreateTimeout,
+					Build:         &api.BuildOptions{Progress: progress},
+					RemoveOrphans: true,
 				},
 				Start: api.StartOptions{
 					Project:  recreateProject,

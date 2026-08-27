@@ -159,8 +159,11 @@ func StartDdevRouter() error {
 			progress = display.ModePlain
 		}
 		err = routerSvc.Up(upCtx, routerProject, api.UpOptions{
-			Create: api.CreateOptions{Build: &api.BuildOptions{Progress: progress}},
-			Start:  api.StartOptions{Project: routerProject},
+			Create: api.CreateOptions{
+				Build:         &api.BuildOptions{Progress: progress},
+				RemoveOrphans: true,
+			},
+			Start: api.StartOptions{Project: routerProject},
 		})
 		if err != nil {
 			return fmt.Errorf("failed to start ddev-router: %v", err)

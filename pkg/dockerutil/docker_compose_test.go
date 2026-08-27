@@ -126,7 +126,7 @@ func TestComposeExec(t *testing.T) {
 		if cleanErr == nil {
 			cleanCtx, cleanSvc, svcErr := dockerutil.NewComposeService()
 			if svcErr == nil {
-				_ = cleanSvc.Down(cleanCtx, cleanProject.Name, api.DownOptions{Project: cleanProject})
+				_ = cleanSvc.Down(cleanCtx, cleanProject.Name, api.DownOptions{Project: cleanProject, RemoveOrphans: true})
 			}
 		}
 	})
@@ -136,8 +136,11 @@ func TestComposeExec(t *testing.T) {
 	upCtx, upSvc, err := dockerutil.NewComposeService()
 	require.NoError(t, err)
 	err = upSvc.Up(upCtx, upProject, api.UpOptions{
-		Create: api.CreateOptions{Build: &api.BuildOptions{Progress: display.ModePlain}},
-		Start:  api.StartOptions{Project: upProject},
+		Create: api.CreateOptions{
+			Build:         &api.BuildOptions{Progress: display.ModePlain},
+			RemoveOrphans: true,
+		},
+		Start: api.StartOptions{Project: upProject},
 	})
 	require.NoError(t, err)
 
