@@ -66,7 +66,10 @@
     file: 'history.ndjson',
     subText: 'Nightly benchmark results across platforms and Docker providers. See <a href="https://github.com/ddev/ddev/tree/main/perf">perf/README.md</a> for what each metric measures. Points more than 20% above the trailing 10-run median for their leg are marked red.',
     legsLabel: 'Legs (platform / arch / docker provider)',
+    // No coarser grouping than the leg itself on this page -- the "Legs"
+    // checkbox filter and the chart's line grouping are the same facet.
     legKey: (row) => `${row.os}/${row.arch}/${row.docker_provider}`,
+    workflowKey: (row) => `${row.os}/${row.arch}/${row.docker_provider}`,
     metrics: (rows) => {
       const s = new Set();
       for (const r of rows) for (const m of Object.keys(r.metrics || {})) s.add(m);
