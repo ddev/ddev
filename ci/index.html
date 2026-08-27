@@ -96,6 +96,9 @@
     // split -- runner_name there is a one-shot ephemeral VM id, not a
     // persistent machine, so splitting by it wouldn't mean anything.
     legKey: (row) => (row.source === 'buildkite' ? `${row.workflow} · ${primaryRunnerName(row) || 'unknown runner'}` : row.workflow),
+    // The "Test type" checkbox facet -- coarser than legKey, which further
+    // splits Buildkite rows by runner machine.
+    workflowKey: (row) => row.workflow,
     // The runner-machine facet the "Runner machine" checkbox box filters
     // on. null for GitHub Actions rows, which the row-selection filter
     // treats as "included only while the runner box isn't actually
