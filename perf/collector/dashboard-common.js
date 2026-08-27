@@ -51,7 +51,7 @@ function initDashboard(config) {
   // facet (config.runnerOf returns null) is included only while the runner
   // box isn't actually narrowing anything -- see runnerSelectionNarrowed().
   function rowSelected(row) {
-    if (!state.enabledWorkflows.has(row.workflow)) return false;
+    if (!state.enabledWorkflows.has(config.workflowKey(row))) return false;
     const runner = config.runnerOf(row);
     if (runner !== null) return state.enabledRunners.has(runner);
     return !runnerSelectionNarrowed();
@@ -161,7 +161,7 @@ function initDashboard(config) {
     const workflowSet = new Set();
     const runnerSet = new Set();
     for (const row of state.rows) {
-      workflowSet.add(row.workflow);
+      workflowSet.add(config.workflowKey(row));
       const runner = config.runnerOf(row);
       if (runner !== null) runnerSet.add(runner);
     }
