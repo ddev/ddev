@@ -71,36 +71,23 @@ func GetVersionInfo() (map[string]string, error) {
 	}
 	versionInfo["mutagen"] = versionconstants.RequiredMutagenVersion
 	versionInfo["xhgui-image"] = docker.GetXhguiImage()
-	versionInfo["image-tag-branches"] = imageTagBranches()
 
 	return versionInfo, retErr
 }
 
-// imageTagBranches describes which branch each image tag was built from. The
-// tags themselves are bare content hashes, so without this there is nothing in
-// `ddev version` to say where an image came from. Collapses to a single branch
-// name in the usual case where every image was built from the same one.
-func imageTagBranches() string {
-	branches := []struct{ image, branch string }{
-		{"web", versionconstants.WebTagBranch},
-		{"db", versionconstants.BaseDBTagBranch},
-		{"router", versionconstants.TraefikRouterTagBranch},
-		{"ddev-ssh-agent", versionconstants.SSHAuthTagBranch},
-		{"xhgui", versionconstants.XhguiTagBranch},
+// ImageTagBranches maps each image's `ddev version` key to the branch (or
+// release tag) its content hash was built from. The hashes themselves carry
+// no branch information, so this is display-only context for the CLI table -
+// it is not part of the map returned by GetVersionInfo, and so never appears
+// in `ddev version -j`.
+func ImageTagBranches() map[string]string {
+	return map[string]string{
+		"web":            versionconstants.WebTagBranch,
+		"db":             versionconstants.BaseDBTagBranch,
+		"router":         versionconstants.TraefikRouterTagBranch,
+		"ddev-ssh-agent": versionconstants.SSHAuthTagBranch,
+		"xhgui-image":    versionconstants.XhguiTagBranch,
 	}
-
-	parts := make([]string, 0, len(branches))
-	allSame := true
-	for _, b := range branches {
-		if b.branch != branches[0].branch {
-			allSame = false
-		}
-		parts = append(parts, b.image+"="+b.branch)
-	}
-	if allSame {
-		return branches[0].branch
-	}
-	return strings.Join(parts, " ")
 }
 
 // GetDockerPlatform gets the platform used for Docker engine

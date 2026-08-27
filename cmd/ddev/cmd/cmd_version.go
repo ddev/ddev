@@ -12,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 )
@@ -49,6 +50,14 @@ var versionCmd = &cobra.Command{
 
 		t.AppendHeader(table.Row{"Item", "Value"})
 
+		// On a release, release-prep.sh stamps every image's branch to the
+		// release tag itself, so the hint would just repeat "DDEV version" on
+		// every row. Only show it where it can differ: unreleased builds.
+		imageTagBranches := map[string]string{}
+		if versionconstants.IsUnreleasedDdevVersion(versionconstants.DdevVersion) {
+			imageTagBranches = version.ImageTagBranches()
+		}
+
 		keys := make([]string, 0, len(v))
 		for k := range v {
 			keys = append(keys, k)
@@ -57,8 +66,12 @@ var versionCmd = &cobra.Command{
 
 		for _, label := range keys {
 			if label != "build info" {
+				value := v[label]
+				if branch, ok := imageTagBranches[label]; ok && branch != "" {
+					value = value + " (" + branch + ")"
+				}
 				t.AppendRow(table.Row{
-					label, v[label],
+					label, value,
 				})
 			}
 		}

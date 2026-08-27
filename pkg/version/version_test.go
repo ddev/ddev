@@ -35,4 +35,18 @@ func TestGetVersionInfo(t *testing.T) {
 	assert.NotEmpty(v["docker-api"])
 	assert.NotEmpty(v["docker-buildx"])
 	assert.NotEmpty(v["docker-platform"])
+	_, ok := v["image-tag-branches"]
+	assert.False(ok, "image-tag-branches should not appear in GetVersionInfo(), it's display-only")
+}
+
+func TestImageTagBranches(t *testing.T) {
+	assert := asrt.New(t)
+
+	branches := ImageTagBranches()
+
+	assert.Equal(versionconstants.WebTagBranch, branches["web"])
+	assert.Equal(versionconstants.BaseDBTagBranch, branches["db"])
+	assert.Equal(versionconstants.TraefikRouterTagBranch, branches["router"])
+	assert.Equal(versionconstants.SSHAuthTagBranch, branches["ddev-ssh-agent"])
+	assert.Equal(versionconstants.XhguiTagBranch, branches["xhgui-image"])
 }
