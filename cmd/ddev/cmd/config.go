@@ -306,6 +306,7 @@ func init() {
 	ConfigCommand.Flags().String("database", nodeps.MariaDB+":"+nodeps.MariaDBDefaultVersion, "Specify the database type:version to use")
 	_ = ConfigCommand.RegisterFlagCompletionFunc("database", configCompletionFunc(nodeps.GetValidDatabaseVersions()))
 	ConfigCommand.Flags().String("nodejs-version", nodeps.NodeJSDefault, "Specify the Node.js version to use")
+	ConfigCommand.Flags().String("nodejs-root", "", "The relative path, from the project root, to the directory Node.js version auto-detection reads its version file from (used with nodejs_version=auto or engine)")
 	_ = ConfigCommand.RegisterFlagCompletionFunc("nodejs-version", configCompletionFunc([]string{nodeps.NodeJSDefault, "auto", "engine"}))
 	ConfigCommand.Flags().Int("default-container-timeout", 120, `Default time in seconds that DDEV waits for all containers to become ready on start`)
 	_ = ConfigCommand.RegisterFlagCompletionFunc("default-container-timeout", configCompletionFunc([]string{nodeps.DefaultDefaultContainerTimeout}))
@@ -637,6 +638,13 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.NodeJSVersion, err = cmd.Flags().GetString("nodejs-version")
 		if err != nil {
 			util.Failed("Incorrect nodejs-version: %v", err)
+		}
+	}
+
+	if cmd.Flag("nodejs-root").Changed {
+		app.NodeJSRoot, err = cmd.Flags().GetString("nodejs-root")
+		if err != nil {
+			util.Failed("Incorrect nodejs-root: %v", err)
 		}
 	}
 

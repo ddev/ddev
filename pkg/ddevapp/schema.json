@@ -509,6 +509,10 @@
         }
       ]
     },
+    "nodejs_root": {
+      "description": "The relative path, from the project root, to the directory Node.js version auto-detection reads its version file from. Empty means the project root.",
+      "type": "string"
+    },
     "omit_containers": {
       "description": "A list of container types that should not be started when the project is started.",
       "type": "array",

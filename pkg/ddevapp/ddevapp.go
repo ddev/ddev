@@ -139,6 +139,7 @@ type DdevApp struct {
 	DisableSettingsManagement bool                  `yaml:"disable_settings_management,omitempty"`
 	WebEnvironment            []string              `yaml:"web_environment"`
 	NodeJSVersion             string                `yaml:"nodejs_version"`
+	NodeJSRoot                string                `yaml:"nodejs_root,omitempty"`
 	CorepackEnable            bool                  `yaml:"corepack_enable"`
 	DefaultContainerTimeout   string                `yaml:"default_container_timeout,omitempty"`
 	WebExtraExposedPorts      []WebExposedPort      `yaml:"web_extra_exposed_ports,omitempty"`

@@ -51,6 +51,21 @@ func TestValidateDocroot(t *testing.T) {
 	}
 }
 
+// TestValidateNodeJSRoot verifies that ValidateNodeJSRoot rejects paths that escape the project root.
+func TestValidateNodeJSRoot(t *testing.T) {
+	assert := asrt.New(t)
+
+	valid := []string{"", ".", "frontend", "web/themes/custom/mytheme", "web/../frontend"}
+	for _, nodeJSRoot := range valid {
+		assert.NoError(ddevapp.ValidateNodeJSRoot(nodeJSRoot), "expected nodejs_root %q to be valid", nodeJSRoot)
+	}
+
+	invalid := []string{"..", "../foo", "web/../..", "web/../../etc", string(filepath.Separator) + "etc/passwd"}
+	for _, nodeJSRoot := range invalid {
+		assert.Error(ddevapp.ValidateNodeJSRoot(nodeJSRoot), "expected nodejs_root %q to be rejected", nodeJSRoot)
+	}
+}
+
 // TestLoadConfigYamlFile verifies that LoadConfigYamlFile correctly loads config and overrides.
 func TestLoadConfigYamlFile(t *testing.T) {
 	assert := asrt.New(t)

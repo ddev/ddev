@@ -554,6 +554,11 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("the %s project has an invalid nodejs_version: %q, Node.js versions cannot contain whitespace; leave it empty to use the DDEV default", app.Name, app.NodeJSVersion)
 	}
 
+	// Validate Node.js root
+	if err := ValidateNodeJSRoot(app.NodeJSRoot); err != nil {
+		return fmt.Errorf("the %s project has an invalid nodejs_root: %w", app.Name, err)
+	}
+
 	// Validate webserver type
 	if !nodeps.IsValidWebserverType(app.WebserverType) {
 		return fmt.Errorf("the %s project has an unsupported webserver type: %s, DDEV (%s) only supports the following webserver types: %s", app.Name, app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
@@ -643,6 +648,15 @@ func ValidateDocroot(docroot string) error {
 		return fmt.Errorf("docroot ('%s') cannot be an absolute path, it must be a relative path from the project root", docroot)
 	case docroot != "" && !filepath.IsLocal(docroot):
 		return fmt.Errorf("docroot ('%s') must be a relative path that stays inside the project root", docroot)
+	}
+	return nil
+}
+
+// ValidateNodeJSRoot validates the nodejs_root setting, which must be
+// a relative path that stays inside the project root.
+func ValidateNodeJSRoot(nodeJSRoot string) error {
+	if nodeJSRoot != "" && !filepath.IsLocal(nodeJSRoot) {
+		return fmt.Errorf("nodejs_root ('%s') must be a relative path that stays inside the project root", nodeJSRoot)
 	}
 	return nil
 }
@@ -1027,15 +1041,26 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
-	if app.NodeJSVersion != nodeps.NodeJSDefault && app.NodeJSVersion != "" {
-		if app.NodeJSVersion == "auto" || app.NodeJSVersion == "engine" {
+	nodeJSVersion := app.NodeJSVersion
+	// nodejs_root implies auto-detection when no explicit nodejs_version is set.
+	if app.NodeJSRoot != "" && (nodeJSVersion == "" || nodeJSVersion == nodeps.NodeJSDefault) {
+		nodeJSVersion = "auto"
+	}
+	if nodeJSVersion != nodeps.NodeJSDefault && nodeJSVersion != "" {
+		if nodeJSVersion == "auto" || nodeJSVersion == "engine" {
 			destDir := app.GetConfigPath(filepath.Join(".webimageBuild", "n-version-files"))
 			if err = os.MkdirAll(destDir, 0755); err != nil {
 				return "", err
 			}
+			// The version files are read from nodejs_root, a directory relative
+			// to the project root; it defaults to the project root itself.
+			srcDir := filepath.Join(app.AppRoot, app.NodeJSRoot)
+			if app.NodeJSRoot != "" && !fileutil.IsDirectory(srcDir) {
+				util.Warning("nodejs_root directory '%s' does not exist, Node.js version detection will fall back to the DDEV default", srcDir)
+			}
 			// These are the files `n` consults for `auto` (in order) and `engine`.
 			for _, f := range []string{".n-node-version", ".node-version", ".nvmrc", "package.json"} {
-				src := filepath.Join(app.AppRoot, f)
+				src := filepath.Join(srcDir, f)
 				if fileutil.FileExists(src) {
 					if err = fileutil.CopyFile(src, filepath.Join(destDir, f)); err != nil {
 						return "", err
@@ -1044,7 +1069,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			}
 			// cd so n resolves auto/engine from the version files copied above
 			extraWebContent = extraWebContent + `
-### DDEV-injected Node.js version files from the project root
+### DDEV-injected Node.js version files from nodejs_root (default: project root)
 COPY n-version-files/ /tmp/n-version-files/
 `
 		}
@@ -1075,7 +1100,7 @@ cd /tmp && rm -rf /tmp/n-version-files
 # (default Node.js version) is already handled once in the base image.
 chgrp -R 0 /usr/local/n && chmod -R g+rwX,o-w /usr/local/n
 EOF
-`, app.NodeJSVersion)
+`, nodeJSVersion)
 	}
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN (command -v corepack >/dev/null 2>&1 || log-stderr.sh npm install -g corepack -f || true) && log-stderr.sh corepack enable || true"

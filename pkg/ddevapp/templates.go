@@ -92,6 +92,10 @@ const ConfigInstructions = `
 # See https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version for more information
 # and https://www.npmjs.com/package/n#specifying-nodejs-versions for the full documentation.
 
+# nodejs_root: <relative_path>
+# Directory "nodejs_version: auto" reads its version file from, relative to the
+# project root. Setting it implies "auto". Defaults to the project root.
+
 # corepack_enable: false
 # Change to 'true' to 'corepack enable' and gain access to latest versions of yarn/pnpm
 
