@@ -641,8 +641,8 @@ func ValidateDocroot(docroot string) error {
 	switch {
 	case filepath.IsAbs(docroot):
 		return fmt.Errorf("docroot ('%s') cannot be an absolute path, it must be a relative path from the project root", docroot)
-	case strings.HasPrefix(docroot, ".."):
-		return fmt.Errorf("docroot ('%s') cannot begin with '..', it should be a relative path from project root but must remain inside the project", docroot)
+	case docroot != "" && !filepath.IsLocal(docroot):
+		return fmt.Errorf("docroot ('%s') must be a relative path that stays inside the project root", docroot)
 	}
 	return nil
 }

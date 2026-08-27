@@ -421,7 +421,7 @@ func TestConfigCreateDocroot(t *testing.T) {
 	}{
 		{"empty docroot", "", "", ""},
 		{"dot docroot", ".", ".", ""},
-		{"fail for outside approot", "../somewhere-else", "", "must remain inside the project"},
+		{"fail for outside approot", "../somewhere-else", "", "must be a relative path that stays inside the project root"},
 		{"fail for absolute path", "//test", "", "cannot be an absolute path"},
 		{"dot with slash docroot", "./", "./", ""},
 		{"dot with slash and dir docroot", "./test", "./test", ""},

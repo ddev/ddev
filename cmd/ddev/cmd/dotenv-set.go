@@ -37,15 +37,17 @@ ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm`,
 		if err != nil {
 			util.Failed(err.Error())
 		}
-		// Get the .env file from the approot
-		envFile := filepath.Join(app.GetAbsAppRoot(false), args[0])
-		// If this is an absolute path, make sure it's inside the approot
-		if filepath.IsAbs(args[0]) {
-			envFile = args[0]
-			relPath, err := filepath.Rel(app.GetAbsAppRoot(false), envFile)
-			if err != nil || strings.HasPrefix(relPath, "..") {
-				util.Failed("The provided path %s is outside the project root %s", envFile, app.GetAbsAppRoot(false))
-			}
+		// Get the .env file from the approot, whether args[0] is relative or absolute
+		appRoot := app.GetAbsAppRoot(false)
+		envFile := args[0]
+		if !filepath.IsAbs(envFile) {
+			envFile = filepath.Join(appRoot, envFile)
+		}
+
+		// The file must stay within the project root
+		relPath, err := filepath.Rel(appRoot, envFile)
+		if err != nil || !filepath.IsLocal(relPath) {
+			util.Failed("The provided path %s is outside the project root %s", envFile, appRoot)
 		}
 		baseName := filepath.Base(envFile)
 		if baseName != ".env" && !strings.HasPrefix(baseName, ".env.") {

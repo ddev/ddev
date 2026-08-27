@@ -36,6 +36,21 @@ func isSemver(s string) bool {
 	return err == nil
 }
 
+// TestValidateDocroot verifies that ValidateDocroot rejects paths that escape the project root.
+func TestValidateDocroot(t *testing.T) {
+	assert := asrt.New(t)
+
+	valid := []string{"", ".", "docroot", "web", "public/web", "web/../public"}
+	for _, docroot := range valid {
+		assert.NoError(ddevapp.ValidateDocroot(docroot), "expected docroot %q to be valid", docroot)
+	}
+
+	invalid := []string{"..", "../foo", "web/../..", "web/../../etc", string(filepath.Separator) + "etc/passwd"}
+	for _, docroot := range invalid {
+		assert.Error(ddevapp.ValidateDocroot(docroot), "expected docroot %q to be rejected", docroot)
+	}
+}
+
 // TestLoadConfigYamlFile verifies that LoadConfigYamlFile correctly loads config and overrides.
 func TestLoadConfigYamlFile(t *testing.T) {
 	assert := asrt.New(t)

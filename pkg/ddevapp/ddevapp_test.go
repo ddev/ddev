@@ -3109,6 +3109,32 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 	}
 }
 
+// TestValidateUploadDirs verifies that an upload_dir escaping AppRoot is rejected,
+// while one that climbs out of the docroot but stays within AppRoot remains valid.
+func TestValidateUploadDirs(t *testing.T) {
+	assert := asrt.New(t)
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		_ = os.RemoveAll(testDir)
+	})
+
+	err := os.MkdirAll(filepath.Join(testDir, "web"), 0755)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(testDir, false)
+	require.NoError(t, err)
+	app.Docroot = "web"
+
+	// A sibling of the docroot, still inside AppRoot, must remain valid.
+	app.UploadDirs = []string{"../private"}
+	assert.Equal([]string{"../private"}, app.GetUploadDirs())
+
+	// Anything that resolves outside AppRoot must be rejected.
+	app.UploadDirs = []string{"../../outside"}
+	assert.Empty(app.GetUploadDirs())
+}
+
 // TestUploadDirs tests the functionality of multiple upload directories
 // Requires a project where the docroot is in a subdirectory, as Drupal's 'web' directory.
 // It checks the DDEV_FILES_DIRS and DDEV_FILES_DIR environment variables
