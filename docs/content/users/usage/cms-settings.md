@@ -158,15 +158,15 @@ See also [TYPO3 Documentation](https://docs.typo3.org/m/typo3/reference-coreapi/
 
 #### WP-CLI and changing the docroot in config.yaml
 
-!!!note "DDEV v1.24.5+ automatically adds `--path=$DDEV_DOCROOT` to the `ddev wp` command if needed."
+[`ddev wp`](../usage/commands.md#wp) defaults WP-CLI's `path` to your project's docroot, so WP-CLI still finds WordPress when the docroot is something other than the project root (`''`).
 
-If you use something other than the root directory (`''`) for your docroot, [`ddev wp`](../usage/commands.md#wp) will not work properly. To fix this, create a `wp-cli.yml` file in the project root directory that contains `path: <docroot/path>`.
-
-For example, if your docroot is `public`, your `wp-cli.yml` file should contain:
+If WordPress does not live at the docroot, override that default with a `wp-cli.yml` file in the project root directory. [Bedrock](https://roots.io/bedrock/), for example, serves from `web` but keeps WordPress in `web/wp`, so its `wp-cli.yml` contains:
 
 ```yaml
-path: public
+path: web/wp
 ```
+
+A `--path` flag, an [alias](https://make.wordpress.org/cli/handbook/references/config/#config-files), and `wp-cli.local.yml` all take precedence over the DDEV default in the same way.
 
 #### WordPress Environment Type
 

@@ -56,4 +56,26 @@ teardown() {
   assert_output --partial "Dashboard"
   assert_success
   rm -f "${COOKIE_JAR}"
+
+  # Bedrock serves from web but keeps WordPress in web/wp, so its own wp-cli.yml
+  # has to win over the docroot DDEV hands to WP-CLI
+  assert_file_exist wp-cli.yml
+  assert_file_contains wp-cli.yml "^path: web/wp$"
+
+  run ddev wp eval 'echo ABSPATH;'
+  assert_output "/var/www/html/web/wp/"
+  assert_success
+
+  # an alias makes wp-cli.yml unparseable as strict YAML, which must not knock
+  # WP-CLI back to the docroot
+  cat >> wp-cli.yml <<'END'
+
+@preprod:
+  ssh: user@example.com:/var/www/preprod
+  path: /var/www/preprod/web/wp
+END
+
+  run ddev wp eval 'echo ABSPATH;'
+  assert_output "/var/www/html/web/wp/"
+  assert_success
 }

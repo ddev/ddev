@@ -91,6 +91,20 @@ teardown() {
   assert_output --partial "location: ${PRIMARY_URL}/wp-login.php"
   assert_output --partial "HTTP/2 302"
   assert_success
+
+  # with no wp-cli.yml, WP-CLI gets the docroot, and "./web/wp" is normalized
+  assert_file_not_exist wp-cli.yml
+
+  run ddev wp eval 'echo ABSPATH;'
+  assert_output "/var/www/html/web/wp/"
+  assert_success
+
+  # a wp-cli.yml overrides the docroot, so WP-CLI reports the path it names
+  printf 'path: nonexistent\n' > wp-cli.yml
+  assert_file_exist wp-cli.yml
+
+  run ddev wp eval 'echo ABSPATH;'
+  assert_output --partial "The used path is: /var/www/html/nonexistent/"
 }
 
 @test "WordPress wp-cli based quickstart (subdirectory URL change) with $(ddev --version)" {

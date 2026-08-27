@@ -23,6 +23,7 @@ CIDR
 CIFS
 CiviCRM
 CLI
+CLI's
 Cloudflare
 CMD
 CMS
@@ -654,6 +655,7 @@ showmount
 site
 sitepackage
 snapshot
+snapshot's
 snapshotted
 snapshotting
 socio
