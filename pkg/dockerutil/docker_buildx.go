@@ -152,7 +152,8 @@ func dockerBuildxDownloadLink() (buildxURL string, shasumURL string, err error) 
 	shasumURL = fmt.Sprintf("https://github.com/docker/buildx/releases/download/v%s/checksums.txt", version)
 	// darwin binaries are not included in the buildx checksums file, skip sha verification
 	// see https://github.com/docker/buildx/issues/2727
-	if nodeps.IsMacOS() {
+	// windows binaries are also missing from some releases (e.g. v0.36.1), skip there too
+	if nodeps.IsMacOS() || nodeps.IsWindows() {
 		shasumURL = ""
 	}
 
