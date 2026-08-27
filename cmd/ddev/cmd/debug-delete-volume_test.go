@@ -12,9 +12,10 @@ import (
 )
 
 // TestDebugDeleteVolumeCmd checks that `ddev utility delete-volume`:
-//   - rejects an unknown volume name and a shared/global volume name
+//   - rejects a shared/global volume name regardless of project state
 //   - stops a running project and deletes its volume when given the volume's
 //     short (docker-compose) name
+//   - rejects an unknown volume name, listing only volumes that still exist
 //   - deletes a volume when given its full Docker name
 func TestDebugDeleteVolumeCmd(t *testing.T) {
 	if os.Getenv("GOTEST_SHORT") != "" {
@@ -57,13 +58,8 @@ volumes:
 		_ = os.RemoveAll(tmpdir)
 	})
 
-	// Unknown volume name should fail and list the project's known volumes.
-	out, err := exec.RunHostCommand(DdevBin, "utility", "delete-volume", "bogus-volume", "--yes")
-	require.Error(t, err, "expected failure for unknown volume name, out='%s'", out)
-	require.Contains(t, out, "No volume named")
-
-	// A shared/global volume should be refused, not deleted.
-	out, err = exec.RunHostCommand(DdevBin, "utility", "delete-volume", "ddev-global-cache", "--yes")
+	// A shared/global volume should be refused, not deleted, even before the project exists.
+	out, err := exec.RunHostCommand(DdevBin, "utility", "delete-volume", "ddev-global-cache", "--yes")
 	require.Error(t, err, "expected failure for shared volume name, out='%s'", out)
 	require.Contains(t, out, "shared volume")
 
@@ -74,6 +70,12 @@ volumes:
 	status, _ := app.SiteStatus()
 	require.Equal(t, ddevapp.SiteRunning, status)
 
+	// An unknown volume name should fail and list only volumes that actually exist.
+	out, err = exec.RunHostCommand(DdevBin, "utility", "delete-volume", "bogus-volume", "--yes")
+	require.Error(t, err, "expected failure for unknown volume name, out='%s'", out)
+	require.Contains(t, out, "No volume named")
+	require.Contains(t, out, "myvol")
+
 	// Deleting by short name while the project is running must stop it first.
 	out, err = exec.RunHostCommand(DdevBin, "utility", "delete-volume", "myvol", "--yes")
 	require.NoError(t, err, "delete-volume by short name failed, out='%s'", out)
@@ -82,6 +84,12 @@ volumes:
 
 	status, _ = app.SiteStatus()
 	require.Equal(t, ddevapp.SiteStopped, status)
+
+	// Once deleted, the volume must no longer be offered or matched by name.
+	out, err = exec.RunHostCommand(DdevBin, "utility", "delete-volume", "myvol", "--yes")
+	require.Error(t, err, "expected failure re-deleting an already-deleted volume, out='%s'", out)
+	require.Contains(t, out, "No volume named")
+	require.NotContains(t, out, "myvol (")
 
 	// Deleting by full Docker name, with the project already stopped.
 	_, err = dockerutil.CreateVolume(expectedVolumeName, "local", nil, nil)

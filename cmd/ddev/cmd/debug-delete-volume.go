@@ -28,6 +28,32 @@ type deleteVolumeChoice struct {
 	longName  string
 }
 
+// getDeleteVolumeChoices returns the current project's non-shared volumes
+// that actually exist in Docker, sorted alphabetically with "database" last,
+// since it's normally the most destructive one to lose.
+func getDeleteVolumeChoices(app *ddevapp.DdevApp) []deleteVolumeChoice {
+	var choices []deleteVolumeChoice
+	if app.ComposeYaml == nil {
+		return choices
+	}
+	for shortName, v := range app.ComposeYaml.Volumes {
+		if sharedVolumeNames[shortName] {
+			continue
+		}
+		if !dockerutil.VolumeExists(v.Name) {
+			continue
+		}
+		choices = append(choices, deleteVolumeChoice{shortName: shortName, longName: v.Name})
+	}
+	sort.Slice(choices, func(i, j int) bool {
+		if (choices[i].shortName == "database") != (choices[j].shortName == "database") {
+			return choices[j].shortName == "database"
+		}
+		return choices[i].shortName < choices[j].shortName
+	})
+	return choices
+}
+
 // DebugDeleteVolumeCmd implements the ddev utility delete-volume command
 var DebugDeleteVolumeCmd = &cobra.Command{
 	Use:   "delete-volume [volume-name]",
@@ -42,6 +68,25 @@ ddev utility delete-volume solr
 ddev utility delete-volume ddev-myproject_solr
 ddev utility delete-volume solr --yes`,
 	Args: cobra.MaximumNArgs(1),
+	ValidArgsFunction: func(_ *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
+		if len(args) > 0 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		app, err := ddevapp.GetActiveApp("")
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		_ = app.DockerEnv()
+		if err = app.WriteDockerComposeYAML(); err != nil {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		choices := getDeleteVolumeChoices(app)
+		names := make([]string, len(choices))
+		for i, c := range choices {
+			names[i] = c.shortName
+		}
+		return names, cobra.ShellCompDirectiveNoFileComp
+	},
 	Run: func(_ *cobra.Command, args []string) {
 		requestedName := ""
 		if len(args) == 1 {
@@ -62,21 +107,7 @@ ddev utility delete-volume solr --yes`,
 			util.Failed("Failed to get Docker Compose config: %v", err)
 		}
 
-		var choices []deleteVolumeChoice
-		for shortName, v := range app.ComposeYaml.Volumes {
-			if sharedVolumeNames[shortName] {
-				continue
-			}
-			choices = append(choices, deleteVolumeChoice{shortName: shortName, longName: v.Name})
-		}
-		// The database volume is normally the most destructive one to lose, so list it last.
-		sort.Slice(choices, func(i, j int) bool {
-			if (choices[i].shortName == "database") != (choices[j].shortName == "database") {
-				return choices[j].shortName == "database"
-			}
-			return choices[i].shortName < choices[j].shortName
-		})
-
+		choices := getDeleteVolumeChoices(app)
 		if len(choices) == 0 {
 			util.Failed("No volumes found for project %s", app.Name)
 		}
@@ -110,10 +141,6 @@ ddev utility delete-volume solr --yes`,
 				}
 				util.Failed("No volume named '%s' found for project %s; known volumes are:\n%s", requestedName, app.Name, strings.Join(available, "\n"))
 			}
-		}
-
-		if !dockerutil.VolumeExists(volumeName) {
-			util.Failed("Docker volume '%s' does not exist", volumeName)
 		}
 
 		status, _ := app.SiteStatus()
