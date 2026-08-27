@@ -247,6 +247,9 @@ func (app *DdevApp) ResolveSnapshotRestoreTarget(nameOrPath string) string {
 // git worktree, or the repository has no other worktrees - callers should
 // treat that as "nothing extra to offer", not an error.
 func (app *DdevApp) otherWorktreeProjectRoots() []string {
+	// Not being in a git repo at all is the common case here, so it's not
+	// worth a debug log - only the later checks, reached once we know we're
+	// in a repo, are.
 	repoRootOutput, err := exec.RunHostCommand("git", "-C", app.AppRoot, "rev-parse", "--show-toplevel")
 	if err != nil {
 		return nil
@@ -264,12 +267,14 @@ func (app *DdevApp) otherWorktreeProjectRoots() []string {
 	// project sits under the repo root.
 	prefixOutput, err := exec.RunHostCommand("git", "-C", app.AppRoot, "rev-parse", "--show-prefix")
 	if err != nil {
+		util.Debug("otherWorktreeProjectRoots: git rev-parse --show-prefix: %v", err)
 		return nil
 	}
 	relToRepo := strings.TrimSuffix(strings.TrimSpace(prefixOutput), "/")
 
 	worktreeListOutput, err := exec.RunHostCommand("git", "-C", repoRoot, "worktree", "list", "--porcelain")
 	if err != nil {
+		util.Debug("otherWorktreeProjectRoots: git worktree list: %v", err)
 		return nil
 	}
 
