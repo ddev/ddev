@@ -57,10 +57,10 @@ func GetPullRequestHeadSHA(owner, repo string, number int) (string, error) {
 // nightly.link URL (a third-party redirector that works only for public repos).
 func ResolveWorkflowArtifactURL(owner, repo, workflowFile, artifactName string, filter WorkflowRunFilter) (string, error) {
 	opts := &github.ListWorkflowRunsOptions{
-		Branch:      filter.Branch,
-		HeadSHA:     filter.HeadSHA,
-		Event:       filter.Event,
-		ListOptions: github.ListOptions{PerPage: 30},
+		Branch:  filter.Branch,
+		HeadSHA: filter.HeadSHA,
+		Event:   filter.Event,
+		PerPage: 30,
 	}
 	runs, err := withAuthFallback(func(ctx context.Context, client *Client) (*github.WorkflowRuns, *github.Response, error) {
 		return client.Actions.ListWorkflowRunsByFileName(ctx, owner, repo, workflowFile, opts)
