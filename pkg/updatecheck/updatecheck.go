@@ -42,17 +42,17 @@ func AvailableUpdates(repoOrg string, repoName string, currentVersion string) (a
 			return false, newVersion, "", err
 		}
 		for _, release := range releases {
-			if *release.Prerelease {
+			if release.Prerelease {
 				continue
 			}
-			newReleaseVersion, err := semver.NewVersion(*release.TagName)
+			newReleaseVersion, err := semver.NewVersion(release.TagName)
 			if err != nil {
 				return false, newVersion, "", err
 			}
-			newVersion = *release.TagName
+			newVersion = release.TagName
 
 			if cv.Compare(newReleaseVersion) == -1 {
-				return true, newVersion, *release.HTMLURL, nil
+				return true, newVersion, release.HTMLURL, nil
 			}
 		}
 	}

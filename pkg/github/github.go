@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v88/github"
+	"github.com/google/go-github/v90/github"
 )
 
 // Aliases to avoid direct imports
@@ -143,7 +143,7 @@ func GetGitHubHeaders(requestURL string) map[string]string {
 	}
 	if githubToken, _ := GetGitHubToken(); githubToken != "" {
 		headers["Authorization"] = "Bearer " + githubToken
-		// Use the same header as in vendor/github.com/google/go-github/v88/github/github.go
+		// Use the same header as in vendor/github.com/google/go-github/v90/github/github.go
 		headers["X-Github-Api-Version"] = "2022-11-28"
 	}
 	return headers

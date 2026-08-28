@@ -1,0 +1,101 @@
+package jwt
+
+import (
+	"fmt"
+
+	"github.com/lestrrat-go/jwx/v3/internal/base64"
+	"github.com/lestrrat-go/jwx/v3/internal/json"
+	"github.com/lestrrat-go/jwx/v3/internal/pool"
+	"github.com/lestrrat-go/jwx/v3/jwa"
+	"github.com/lestrrat-go/jwx/v3/jwk"
+	"github.com/lestrrat-go/jwx/v3/jws"
+	"github.com/lestrrat-go/jwx/v3/jws/jwsbb"
+)
+
+// fastPathKidSafe reports whether kid can be concatenated into a
+// hand-built JSON header literal without escaping. Any byte that would
+// require a JSON escape (control bytes, `"`, `\`) or any non-ASCII
+// byte disqualifies the fast path; such kids fall through to the
+// regular jws.Sign path where encoding/json handles escaping.
+func fastPathKidSafe(kid string) bool {
+	for i := range len(kid) {
+		c := kid[i]
+		if c < 0x20 || c >= 0x7f || c == '"' || c == '\\' {
+			return false
+		}
+	}
+	return true
+}
+
+// fastPathAlgSafe reports whether alg can be concatenated into a
+// hand-built JSON header literal without escaping. The byte set
+// mirrors fastPathKidSafe: any control byte, `"`, `\`, or non-ASCII
+// byte disqualifies the value. Unlike kid, an unsafe alg is rejected
+// outright by jwt.Sign rather than silently falling through.
+func fastPathAlgSafe(alg string) bool {
+	for i := range len(alg) {
+		c := alg[i]
+		if c < 0x20 || c >= 0x7f || c == '"' || c == '\\' {
+			return false
+		}
+	}
+	return true
+}
+
+// signFast reinvents the wheel a bit to avoid the overhead of
+// going through the entire jws.Sign() machinery.
+func signFast(t Token, alg jwa.SignatureAlgorithm, key any) ([]byte, error) {
+	algstr := alg.String()
+
+	var kid string
+	if jwkKey, ok := key.(jwk.Key); ok {
+		if v, ok := jwkKey.KeyID(); ok && v != "" {
+			kid = v
+		}
+	}
+
+	// Setup headers
+	// {"alg":"","typ":"JWT"}
+	// 1234567890123456789012
+	want := len(algstr) + 22
+	// also, if kid != "", we need to add "kid":"$kid"
+	if kid != "" {
+		// "kid":""
+		// 12345689
+		want += len(kid) + 9
+	}
+	hdr := pool.ByteSlice().GetCapacity(want)
+	hdr = append(hdr, '{', '"', 'a', 'l', 'g', '"', ':', '"')
+	hdr = append(hdr, algstr...)
+	hdr = append(hdr, '"')
+	if kid != "" {
+		hdr = append(hdr, ',', '"', 'k', 'i', 'd', '"', ':', '"')
+		hdr = append(hdr, kid...)
+		hdr = append(hdr, '"')
+	}
+	hdr = append(hdr, ',', '"', 't', 'y', 'p', '"', ':', '"', 'J', 'W', 'T', '"', '}')
+	defer pool.ByteSlice().Put(hdr)
+
+	// setup the buffer to sign with
+	payload, err := json.Marshal(t)
+	if err != nil {
+		return nil, fmt.Errorf(`jwt.signFast: failed to marshal token payload: %w`, err)
+	}
+
+	combined := jwsbb.SignBuffer(nil, hdr, payload, base64.DefaultEncoder(), true)
+	signer, err := jws.SignerFor(alg)
+	if err != nil {
+		return nil, fmt.Errorf(`jwt.signFast: failed to get signer for %s: %w`, alg, err)
+	}
+
+	signature, err := signer.Sign(key, combined)
+	if err != nil {
+		return nil, fmt.Errorf(`jwt.signFast: failed to sign payload with %s: %w`, alg, err)
+	}
+
+	serialized, err := jwsbb.JoinCompact(nil, hdr, payload, signature, base64.DefaultEncoder(), true)
+	if err != nil {
+		return nil, fmt.Errorf("jwt.signFast: failed to join compact: %w", err)
+	}
+	return serialized, nil
+}

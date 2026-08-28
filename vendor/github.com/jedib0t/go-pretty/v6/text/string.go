@@ -286,13 +286,16 @@ func StringWidthWithoutEscSequences(str string) int {
 	return count
 }
 
-// Trim trims a string to the given length while ignoring escape sequences. For
-// ex.:
+// Trim trims a string to the given display width (maxLen columns) while
+// ignoring escape sequences. Wide East Asian characters count as two columns,
+// so the result never exceeds maxLen columns. For ex.:
 //
 //	Trim("Ghost", 3) == "Gho"
 //	Trim("Ghost", 6) == "Ghost"
 //	Trim("\x1b[33mGhost\x1b[0m", 3) == "\x1b[33mGho\x1b[0m"
 //	Trim("\x1b[33mGhost\x1b[0m", 6) == "\x1b[33mGhost\x1b[0m"
+//	Trim("生命生命", 3) == "生"
+//	Trim("生命生命", 4) == "生命"
 func Trim(str string, maxLen int) string {
 	if maxLen <= 0 {
 		return ""
@@ -301,7 +304,7 @@ func Trim(str string, maxLen int) string {
 	var out strings.Builder
 	out.Grow(maxLen)
 
-	outLen, esp := 0, EscSeqParser{}
+	outLen, full, esp := 0, false, EscSeqParser{}
 	for _, sChr := range str {
 		if esp.InSequence() {
 			esp.Consume(sChr)
@@ -313,10 +316,17 @@ func Trim(str string, maxLen int) string {
 			out.WriteRune(sChr)
 			continue
 		}
-		if outLen < maxLen {
-			outLen++
-			out.WriteRune(sChr)
-			continue
+		// Count the display width of the rune (wide East Asian characters
+		// occupy two columns) instead of counting runes, so the result never
+		// exceeds maxLen columns. Once a rune no longer fits, stop emitting
+		// visible runes but keep copying any trailing escape sequences.
+		if !full {
+			if w := RuneWidth(sChr); outLen+w <= maxLen {
+				outLen += w
+				out.WriteRune(sChr)
+				continue
+			}
+			full = true
 		}
 	}
 	return out.String()

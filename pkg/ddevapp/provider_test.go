@@ -12,11 +12,9 @@ func TestProviderInfoField(t *testing.T) {
 
 	// Test that InfoCommand field is properly defined in ProviderInfo
 	p := Provider{
-		ProviderInfo: ProviderInfo{
-			InfoCommand: ProviderCommand{
-				Command: "echo test",
-				Service: "web",
-			},
+		InfoCommand: ProviderCommand{
+			Command: "echo test",
+			Service: "web",
 		},
 	}
 
