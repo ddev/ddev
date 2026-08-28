@@ -32,6 +32,10 @@ var DotEnvGlobalCmd = &cobra.Command{
 
 // dotEnvFilePath resolves the file argument of a dotenv command against the
 // project root, or against the global DDEV directory when app is nil.
+//
+// A global file is named .ddev/.env* like a project one so that both scopes are
+// typed the same way, but that prefix is stripped rather than resolved: the
+// global directory is not always named .ddev.
 func dotEnvFilePath(app *ddevapp.DdevApp, arg string) string {
 	var baseDir, baseDirName string
 	if app != nil {
@@ -42,6 +46,13 @@ func dotEnvFilePath(app *ddevapp.DdevApp, arg string) string {
 
 	envFile := arg
 	if !filepath.IsAbs(envFile) {
+		if app == nil {
+			rest, ok := strings.CutPrefix(filepath.ToSlash(filepath.Clean(arg)), ".ddev/")
+			if !ok {
+				util.Failed("The provided path %s must begin with .ddev/, for example .ddev/.env or .ddev/.env.web", arg)
+			}
+			envFile = filepath.FromSlash(rest)
+		}
 		envFile = filepath.Join(baseDir, envFile)
 	}
 

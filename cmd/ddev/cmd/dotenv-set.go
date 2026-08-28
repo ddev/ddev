@@ -47,11 +47,11 @@ var DotEnvGlobalSetCmd = &cobra.Command{
 	Short: "Write values from the command line to a global .env file",
 	Long: `Create or update a global .env file, which applies to every project, with values specified via long flags from the command line.
 Flags in the format --env-key=value will be converted to environment variable names like ENV_KEY="value".
-Provide the path relative to the global DDEV directory when specifying the file.
+Name the file as .ddev/<file>, the same way as in a project; it is written to the global DDEV directory.
 See https://docs.ddev.com/en/stable/users/configuration/environment-variables/ for the file naming rules.`,
-	Example: `ddev dotenv global set .env.web --api-url=https://example.com
-ddev dotenv global set .env.db --extra value --another-key "extra value"
-ddev dotenv global set .env.web.local --api-key=secret`,
+	Example: `ddev dotenv global set .ddev/.env.web --api-url=https://example.com
+ddev dotenv global set .ddev/.env.db --extra value --another-key "extra value"
+ddev dotenv global set .ddev/.env.web.local --api-key=secret`,
 	Args:    cobra.ExactArgs(1),
 	Aliases: []string{"add"},
 	FParseErrWhitelist: cobra.FParseErrWhitelist{

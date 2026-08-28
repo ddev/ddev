@@ -638,16 +638,16 @@ ddev dotenv get .ddev/.env.web.local --api-key
 
 ### `dotenv global get`
 
-Get the value of an environment variable from a global `.env` file. Provide the path relative to the [global DDEV directory](architecture.md#global-files) when specifying the file.
+Get the value of an environment variable from a global `.env` file. Name the file as `.ddev/<file>`, the same way as in a project; it is read from the [global DDEV directory](architecture.md#global-files).
 
 Example:
 
 ```shell
 # Get API_URL from the global .env.web
-ddev dotenv global get .env.web --api-url
+ddev dotenv global get .ddev/.env.web --api-url
 
 # Get API_KEY from the gitignored global .env.web.local
-ddev dotenv global get .env.web.local --api-key
+ddev dotenv global get .ddev/.env.web.local --api-key
 ```
 
 ### `dotenv global set`
@@ -656,19 +656,19 @@ ddev dotenv global get .env.web.local --api-key
 
 Create or update a global `.env` file, which applies to every project, with values specified via long flags from the command line.
 Flags in the format `--env-key=value` will be converted to environment variable names like `ENV_KEY="value"`.
-Provide the path relative to the [global DDEV directory](architecture.md#global-files) when specifying the file.
+Name the file as `.ddev/<file>`, the same way as in a project; it is written to the [global DDEV directory](architecture.md#global-files).
 
 Example:
 
 ```shell
 # Set API_URL for the web service of every project
-ddev dotenv global set .env.web --api-url=https://example.com
+ddev dotenv global set .ddev/.env.web --api-url=https://example.com
 
 # Set two variables for the db service of every project
-ddev dotenv global set .env.db --extra value --another-key "extra value"
+ddev dotenv global set .ddev/.env.db --extra value --another-key "extra value"
 
 # Set API_KEY in a gitignored file, for the web service of every project
-ddev dotenv global set .env.web.local --api-key=secret
+ddev dotenv global set .ddev/.env.web.local --api-key=secret
 ```
 
 ### `dotenv set`

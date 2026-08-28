@@ -38,9 +38,9 @@ var DotEnvGlobalGetCmd = &cobra.Command{
 	Use:   "get [file]",
 	Short: "Get the value of an environment variable from a global .env file",
 	Long: `Retrieve the value of an environment variable specified via a long flag from a global .env file.
-Provide the path relative to the global DDEV directory when specifying the file.`,
-	Example: `ddev dotenv global get .env.web --api-url
-ddev dotenv global get .env.web.local --api-key`,
+Name the file as .ddev/<file>, the same way as in a project; it is read from the global DDEV directory.`,
+	Example: `ddev dotenv global get .ddev/.env.web --api-url
+ddev dotenv global get .ddev/.env.web.local --api-key`,
 	Args: cobra.ExactArgs(1),
 	FParseErrWhitelist: cobra.FParseErrWhitelist{
 		UnknownFlags: true,

@@ -145,6 +145,8 @@ func TestCmdDotEnvGlobalGetAndSet(t *testing.T) {
 	globalDir := globalconfig.GetGlobalDdevDir()
 	// Not a service name, so this file cannot change the environment of any running project
 	envFileName := ".env.dotenv-global-test"
+	// Global files are named .ddev/<file> like project files, but land in the global DDEV directory
+	envFileArg := filepath.Join(".ddev", envFileName)
 	envFile := filepath.Join(globalDir, envFileName)
 
 	t.Cleanup(func() {
@@ -156,20 +158,48 @@ func TestCmdDotEnvGlobalGetAndSet(t *testing.T) {
 		_ = os.RemoveAll(testDir)
 	})
 
-	// Success while using path relative to the global DDEV directory
-	out, err := exec.RunHostCommand(DdevBin, "dotenv", "global", "set", envFileName, "--test-value", "custom value")
+	// Success while using the .ddev/<file> form
+	out, err := exec.RunHostCommand(DdevBin, "dotenv", "global", "set", envFileArg, "--test-value", "custom value")
 	require.NoError(t, err, "out=%s", out)
 	require.FileExists(t, envFile, "unable to find %s file, but it should be here", envFile)
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFileName, "--test-value")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFileArg, "--test-value")
 	require.NoError(t, err, "out=%s", out)
 	require.Equal(t, out, "custom value\n")
 
 	// The 'add' alias works the same way
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "add", envFileName, "--another-value=foobar")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "add", envFileArg, "--another-value=foobar")
 	require.NoError(t, err, "out=%s", out)
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFileName, "--another-value")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFileArg, "--another-value")
 	require.NoError(t, err, "out=%s", out)
 	require.Equal(t, out, "foobar\n")
+
+	// A bare filename is rejected, so that both scopes are typed the same way
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFileName, "--test-value")
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "must begin with .ddev/")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "set", ".env.bare", "--test-value", "custom value")
+	require.Error(t, err, "out=%s", out)
+	require.Contains(t, out, "must begin with .ddev/")
+	require.NoFileExists(t, filepath.Join(globalDir, ".env.bare"))
+
+	// A relative path that traverses outside the global DDEV directory must be rejected too.
+	// The second one is deliberately left uncleaned, so it fails only if the prefix is
+	// checked against the resolved path rather than the string as typed.
+	sep := string(filepath.Separator)
+	for _, arg := range []string{
+		".." + sep + "outside.env",
+		".ddev" + sep + ".." + sep + ".." + sep + "outside.env",
+		".." + sep + "outside" + sep + ".ddev" + sep + ".env",
+	} {
+		out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", arg, "--test-value")
+		require.Error(t, err, "out=%s", out)
+		require.Contains(t, out, "must begin with .ddev/")
+		out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "set", arg, "--test-value", "custom value")
+		require.Error(t, err, "out=%s", out)
+		require.Contains(t, out, "must begin with .ddev/")
+	}
+	require.NoFileExists(t, filepath.Join(globalDir, "..", "outside.env"))
+	require.NoFileExists(t, filepath.Join(testDir, "..", "outside.env"))
 
 	// Success while using full path to the .env file
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFile, "--test-value")
@@ -185,7 +215,7 @@ func TestCmdDotEnvGlobalGetAndSet(t *testing.T) {
 	require.Contains(t, out, "outside the global DDEV directory")
 
 	// The same naming validation as in the project scope
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "set", ".envfoo", "--test-value", "custom value")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "set", filepath.Join(".ddev", ".envfoo"), "--test-value", "custom value")
 	require.Error(t, err, "out=%s", out)
 	require.Contains(t, out, "The file should have .env prefix")
 	require.NoFileExists(t, filepath.Join(globalDir, ".envfoo"))

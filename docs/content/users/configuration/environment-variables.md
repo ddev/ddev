@@ -102,10 +102,12 @@ With DDEV v1.25.4+, the same filenames work in the [global configuration directo
 
 This is the only way to set a variable globally for something other than the `web` container, which is all [`web_environment`](#web_environment) can do.
 
-Use [`ddev dotenv global set`](../usage/commands.md#dotenv-global-set) to write them:
+Global files are applied before anything belonging to the project, so a project that sets the same variable in `.ddev/.env` or `.ddev/.env.<service>` wins. Treat a global value as a default that any project can override, and see [Override Order](#override-order) for the full sequence.
+
+Use [`ddev dotenv global set`](../usage/commands.md#dotenv-global-set) to write them. Name the file `.ddev/<file>` exactly as you would in a project, and DDEV resolves it in the global directory:
 
 ```bash
-ddev dotenv global set .env.web --api-url=https://example.com
+ddev dotenv global set .ddev/.env.web --api-url=https://example.com
 ```
 
 ## Secrets
@@ -167,14 +169,19 @@ An application `.env` file in the project root is the exception, since your fram
 
 The [`ddev dotenv`](../usage/commands.md#dotenv) commands create and update these files without an editor, quoting values correctly. Flags become variable names: `--api-url` writes `API_URL`.
 
-| Command | Type | Path is relative to |
+| Command | Type | Where the file lands |
 | -- | -- | -- |
-| [`ddev dotenv set`](../usage/commands.md#dotenv-set), [`ddev dotenv get`](../usage/commands.md#dotenv-get) | :octicons-file-directory-16: project | The project root, so `.env` for an application file and `.ddev/.env.web` for a DDEV one |
-| [`ddev dotenv global set`](../usage/commands.md#dotenv-global-set), [`ddev dotenv global get`](../usage/commands.md#dotenv-global-get) | :octicons-globe-16: global | The [global DDEV directory](../usage/architecture.md#global-files), DDEV v1.25.4+ |
+| [`ddev dotenv set`](../usage/commands.md#dotenv-set), [`ddev dotenv get`](../usage/commands.md#dotenv-get) | :octicons-file-directory-16: project | The path is relative to the project root, so `.env` for an application file and `.ddev/.env.web` for a DDEV one |
+| [`ddev dotenv global set`](../usage/commands.md#dotenv-global-set), [`ddev dotenv global get`](../usage/commands.md#dotenv-global-get) | :octicons-globe-16: global | The same `.ddev/<file>` path, resolved in the [global DDEV directory](../usage/architecture.md#global-files), DDEV v1.25.4+ |
+
+A DDEV env file is named `.ddev/.env*` in both scopes, so the only difference between the two commands is the word `global`:
 
 ```bash
 ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm
 ddev dotenv get .ddev/.env.redis --redis-tag
+
+ddev dotenv global set .ddev/.env.redis --redis-tag 7-bookworm
+ddev dotenv global get .ddev/.env.redis --redis-tag
 ```
 
 ## See Also
