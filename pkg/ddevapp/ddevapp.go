@@ -3469,6 +3469,8 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
+	NotifyRouterOfTraefikConfigChange()
+
 	if status == SiteRunning {
 		err = app.Pause()
 		if err != nil {
@@ -4076,15 +4078,80 @@ func copyIntoGlobalCache(sourcePath string, targetSubdir string, uid string, exc
 		}
 		src := filepath.Join(sourcePath, entry.Name())
 		dst := filepath.Join(target, entry.Name())
-		if err = os.RemoveAll(dst); err != nil {
-			return err
-		}
 		if entry.IsDir() {
-			err = fileutil.CopyDir(src, dst)
+			err = mergeCopyDir(src, dst)
 		} else {
+			if err = os.RemoveAll(dst); err != nil {
+				return err
+			}
 			err = fileutil.CopyFile(src, dst)
 		}
 		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// mergeCopyDir copies the contents of src over dst, replacing files but keeping
+// every directory that is already there.
+//
+// Traefik watches /mnt/ddev-global-cache/traefik/config for changes. Recreating that
+// directory gives it a new inode and leaves Traefik watching one nothing writes to
+// again, so it stops seeing any project added or removed from then on.
+func mergeCopyDir(src string, dst string) error {
+	if err := os.MkdirAll(dst, 0755); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		s := filepath.Join(src, entry.Name())
+		d := filepath.Join(dst, entry.Name())
+		if entry.IsDir() {
+			err = mergeCopyDir(s, d)
+		} else {
+			if err = os.RemoveAll(d); err != nil {
+				return err
+			}
+			err = fileutil.CopyFile(s, d)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// listGlobalCacheFiles returns the filenames directly under targetSubdir of the
+// global cache, reading the host directory when the cache is bind-mounted.
+func listGlobalCacheFiles(targetSubdir string) ([]string, error) {
+	if !dockerutil.UseBindGlobalCache() {
+		return dockerutil.ListFilesInVolume(dockerutil.GlobalCacheSource(), targetSubdir)
+	}
+	entries, err := os.ReadDir(filepath.Join(dockerutil.GlobalCacheSource(), targetSubdir))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var files []string
+	for _, entry := range entries {
+		files = append(files, entry.Name())
+	}
+	return files, nil
+}
+
+// removeGlobalCacheFiles removes named files from targetSubdir of the global cache.
+func removeGlobalCacheFiles(targetSubdir string, files []string) error {
+	if !dockerutil.UseBindGlobalCache() {
+		return dockerutil.RemoveFilesFromVolume(dockerutil.GlobalCacheSource(), targetSubdir, files)
+	}
+	for _, f := range files {
+		if err := os.RemoveAll(filepath.Join(dockerutil.GlobalCacheSource(), targetSubdir, f)); err != nil {
 			return err
 		}
 	}
