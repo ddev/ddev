@@ -344,7 +344,7 @@ That reaches the `web` container, and two add-ons doing this leave each other's 
 Ask for a token or any other secret in a `.local` file, like `.ddev/.env.myaddon.local`, which DDEV keeps out of Git.
 
 !!!warning "Require v1.25.4 for labeled and `.local` files"
-    Older DDEV raises no error on `.ddev/.env.<service>.<label>` or `.local` files, it simply never reads them, so the add-on installs cleanly and misbehaves later. If yours ships or reads one, say so in `install.yaml`:
+    Older DDEV versions don't raise an error on `.ddev/.env.<service>.<label>` or `.local` files, they simply never read them, so the add-on installs cleanly and misbehaves later. If yours ships or reads one, say so in `install.yaml`:
 
     ```yaml
     ddev_version_constraint: '>= v1.25.4'
