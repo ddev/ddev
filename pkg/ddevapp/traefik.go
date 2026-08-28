@@ -419,7 +419,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	}
 
 	// Sync config directory - remove stale project configs from the volume
-	actualConfigs, err := dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/config")
+	actualConfigs, err := listGlobalCacheFiles("traefik/config")
 	if err != nil {
 		return fmt.Errorf("failed to list traefik config files in volume: %v", err)
 	}
@@ -430,7 +430,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		}
 	}
 	if len(staleConfigs) > 0 {
-		err = dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/config", staleConfigs)
+		err = removeGlobalCacheFiles("traefik/config", staleConfigs)
 		if err != nil {
 			return fmt.Errorf("failed to remove stale traefik configs from volume: %v", err)
 		}
@@ -438,7 +438,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 	}
 
 	// Sync certs directory - remove stale project certs from the volume
-	actualCerts, err := dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/certs")
+	actualCerts, err := listGlobalCacheFiles("traefik/certs")
 	if err != nil {
 		return fmt.Errorf("failed to list traefik cert files in volume: %v", err)
 	}
@@ -449,14 +449,40 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		}
 	}
 	if len(staleCerts) > 0 {
-		err = dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/certs", staleCerts)
+		err = removeGlobalCacheFiles("traefik/certs", staleCerts)
 		if err != nil {
 			return fmt.Errorf("failed to remove stale traefik certs from volume: %v", err)
 		}
 		util.Debug("Removed stale traefik certs from volume: %v", staleCerts)
 	}
 
+	NotifyRouterOfTraefikConfigChange()
+
 	return nil
+}
+
+// NotifyRouterOfTraefikConfigChange makes Traefik re-read its dynamic configuration
+// after the files were changed from outside the router container.
+//
+// Traefik watches /mnt/ddev-global-cache/traefik for changes, but with the global
+// cache bind-mounted (apple container) a write from the host or from another
+// container raises no event inside the router, so a project added or removed since
+// the router started stays invisible to it until the router is recreated. Touching
+// the files from inside the router does raise one, and Traefik then re-reads the
+// whole directory. No-op everywhere else, where the writes already happen against
+// a Docker volume the router sees directly.
+func NotifyRouterOfTraefikConfigChange() {
+	if !dockerutil.UseBindGlobalCache() {
+		return
+	}
+	router, err := FindDdevRouter()
+	if err != nil || router == nil || router.State != "running" {
+		return
+	}
+	cmd := "touch /mnt/ddev-global-cache/traefik/config/* /mnt/ddev-global-cache/traefik/certs/* 2>/dev/null || true"
+	if stdout, stderr, err := dockerutil.Exec(router.ID, cmd, "0"); err != nil {
+		util.Debug("Failed to notify router of Traefik config change (stdout=%s, stderr=%s): %v", stdout, stderr, err)
+	}
 }
 
 // CleanupGlobalTraefikStaging removes staging files from ~/.ddev/traefik/{config,certs}
