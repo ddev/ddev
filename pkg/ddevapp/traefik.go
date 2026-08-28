@@ -419,10 +419,8 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		util.Verbose("Copied global Traefik config in %s to ddev-global-cache/traefik volume", globalTraefikDir)
 	}
 
-	// Remove stale project configs and certs. Through the running router this
-	// is an exec; otherwise each list or remove starts a helper container.
-	listFiles := func(subdir string) ([]string, error) {
-		return dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/"+subdir)
+	// Sync config directory - remove stale project configs from the volume
+	actualConfigs, err := listGlobalCacheFiles("traefik/config")
 	}
 	removeFiles := func(subdir string, files []string) error {
 		return dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/"+subdir, files)
@@ -453,29 +451,59 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 			return nil
 		}
 	}
-	for _, s := range []struct {
-		subdir   string
-		expected map[string]bool
-	}{{"config", expectedConfigs}, {"certs", expectedCerts}} {
-		actual, err := listFiles(s.subdir)
+	if len(staleConfigs) > 0 {
+		err = removeGlobalCacheFiles("traefik/config", staleConfigs)
 		if err != nil {
 			return fmt.Errorf("failed to list traefik %s files in volume: %v", s.subdir, err)
 		}
-		var stale []string
-		for _, f := range actual {
-			if !s.expected[f] {
-				stale = append(stale, f)
-			}
+		util.Debug("Removed stale traefik configs from volume: %v", staleConfigs)
+	}
+
+	// Sync certs directory - remove stale project certs from the volume
+	actualCerts, err := listGlobalCacheFiles("traefik/certs")
+	if err != nil {
+		return fmt.Errorf("failed to list traefik cert files in volume: %v", err)
+	}
+	var staleCerts []string
+	for _, f := range actualCerts {
+		if !expectedCerts[f] {
+			staleCerts = append(staleCerts, f)
 		}
-		if len(stale) > 0 {
-			if err = removeFiles(s.subdir, stale); err != nil {
-				return fmt.Errorf("failed to remove stale traefik %s from volume: %v", s.subdir, err)
-			}
-			util.Debug("Removed stale traefik %s from volume: %v", s.subdir, stale)
+	}
+	if len(staleCerts) > 0 {
+		err = removeGlobalCacheFiles("traefik/certs", staleCerts)
+		if err != nil {
+			return fmt.Errorf("failed to remove stale traefik certs from volume: %v", err)
 		}
 	}
 
+	NotifyRouterOfTraefikConfigChange()
+
 	return nil
+}
+
+// NotifyRouterOfTraefikConfigChange makes Traefik re-read its dynamic configuration
+// after the files were changed from outside the router container.
+//
+// Traefik watches /mnt/ddev-global-cache/traefik for changes, but with the global
+// cache bind-mounted (apple container) a write from the host or from another
+// container raises no event inside the router, so a project added or removed since
+// the router started stays invisible to it until the router is recreated. Touching
+// the files from inside the router does raise one, and Traefik then re-reads the
+// whole directory. No-op everywhere else, where the writes already happen against
+// a Docker volume the router sees directly.
+func NotifyRouterOfTraefikConfigChange() {
+	if !dockerutil.UseBindGlobalCache() {
+		return
+	}
+	router, err := FindDdevRouter()
+	if err != nil || router == nil || router.State != "running" {
+		return
+	}
+	cmd := "touch /mnt/ddev-global-cache/traefik/config/* /mnt/ddev-global-cache/traefik/certs/* 2>/dev/null || true"
+	if stdout, stderr, err := dockerutil.Exec(router.ID, cmd, "0"); err != nil {
+		util.Debug("Failed to notify router of Traefik config change (stdout=%s, stderr=%s): %v", stdout, stderr, err)
+	}
 }
 
 // CleanupGlobalTraefikStaging removes staging files from ~/.ddev/traefik/{config,certs}
