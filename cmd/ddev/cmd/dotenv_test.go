@@ -45,13 +45,13 @@ func TestCmdDotEnvGetAndSet(t *testing.T) {
 	require.Contains(t, out, "outside the project root")
 
 	// A relative path that traverses outside the project root must be rejected too
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", "../outside.env")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "get", "../.env.outside")
 	require.Error(t, err, "out=%s", out)
 	require.Contains(t, out, "outside the project root")
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", "../outside.env", "--test-value", "custom value")
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", "../.env.outside", "--test-value", "custom value")
 	require.Error(t, err, "out=%s", out)
 	require.Contains(t, out, "outside the project root")
-	require.NoFileExists(t, filepath.Join(testDir, "..", "outside.env"))
+	require.NoFileExists(t, filepath.Join(testDir, "..", ".env.outside"))
 
 	// Success while using full path to the .env file
 	envFile := filepath.Join(testDir, ".env")
@@ -145,7 +145,6 @@ func TestCmdDotEnvGlobalGetAndSet(t *testing.T) {
 	globalDir := globalconfig.GetGlobalDdevDir()
 	// Not a service name, so this file cannot change the environment of any running project
 	envFileName := ".env.dotenv-global-test"
-	// Global files are named .ddev/<file> like project files, but land in the global DDEV directory
 	envFileArg := filepath.Join(".ddev", envFileName)
 	envFile := filepath.Join(globalDir, envFileName)
 
@@ -173,7 +172,7 @@ func TestCmdDotEnvGlobalGetAndSet(t *testing.T) {
 	require.NoError(t, err, "out=%s", out)
 	require.Equal(t, out, "foobar\n")
 
-	// A bare filename is rejected, so that both scopes are typed the same way
+	// A bare filename is rejected
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFileName, "--test-value")
 	require.Error(t, err, "out=%s", out)
 	require.Contains(t, out, "must begin with .ddev/")
@@ -183,12 +182,11 @@ func TestCmdDotEnvGlobalGetAndSet(t *testing.T) {
 	require.NoFileExists(t, filepath.Join(globalDir, ".env.bare"))
 
 	// A relative path that traverses outside the global DDEV directory must be rejected too.
-	// The second one is deliberately left uncleaned, so it fails only if the prefix is
-	// checked against the resolved path rather than the string as typed.
+	// Built by hand, not filepath.Join, so the second one reaches the check uncleaned.
 	sep := string(filepath.Separator)
 	for _, arg := range []string{
-		".." + sep + "outside.env",
-		".ddev" + sep + ".." + sep + ".." + sep + "outside.env",
+		".." + sep + ".env.outside",
+		".ddev" + sep + ".." + sep + ".." + sep + ".env.outside",
 		".." + sep + "outside" + sep + ".ddev" + sep + ".env",
 	} {
 		out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", arg, "--test-value")
@@ -198,8 +196,8 @@ func TestCmdDotEnvGlobalGetAndSet(t *testing.T) {
 		require.Error(t, err, "out=%s", out)
 		require.Contains(t, out, "must begin with .ddev/")
 	}
-	require.NoFileExists(t, filepath.Join(globalDir, "..", "outside.env"))
-	require.NoFileExists(t, filepath.Join(testDir, "..", "outside.env"))
+	require.NoFileExists(t, filepath.Join(globalDir, "..", ".env.outside"))
+	require.NoFileExists(t, filepath.Join(testDir, "..", ".env.outside"))
 
 	// Success while using full path to the .env file
 	out, err = exec.RunHostCommand(DdevBin, "dotenv", "global", "get", envFile, "--test-value")

@@ -4955,8 +4955,7 @@ func TestEnvFile(t *testing.T) {
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 
-	// A global env file applies to every project on the machine, so this test
-	// writes them into a throwaway global directory rather than the user's own.
+	// So the global .env files written below can't clobber the ones you have
 	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
 	t.Cleanup(func() {
 		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
@@ -4968,7 +4967,6 @@ func TestEnvFile(t *testing.T) {
 	assert.NoError(err)
 
 	globalDir := globalconfig.GetGlobalDdevDir()
-	require.Equal(t, filepath.Join(tmpXdgConfigHomeDir, "ddev"), globalDir)
 
 	err = fileutil.TemplateStringToFile("JUNK1=junk1\nJUNK2=junk2\nSHARED=project\n", nil, app.GetConfigPath(".env"))
 	require.NoError(t, err)

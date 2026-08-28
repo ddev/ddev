@@ -102,7 +102,7 @@ With DDEV v1.25.4+, the same filenames work in the [global configuration directo
 
 This is the only way to set a variable globally for something other than the `web` container, which is all [`web_environment`](#web_environment) can do.
 
-Global files are applied before anything belonging to the project, so a project that sets the same variable in `.ddev/.env` or `.ddev/.env.<service>` wins. Treat a global value as a default that any project can override, and see [Override Order](#override-order) for the full sequence.
+Global files are applied before anything belonging to the project, so a global value is only a default: a project that sets the same variable in `.ddev/.env` or `.ddev/.env.<service>` wins. See [Override Order](#override-order) for the full sequence.
 
 Use [`ddev dotenv global set`](../usage/commands.md#dotenv-global-set) to write them. Name the file `.ddev/<file>` exactly as you would in a project, and DDEV resolves it in the global directory:
 
