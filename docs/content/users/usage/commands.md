@@ -1715,6 +1715,27 @@ ddev utility configyaml --omit-keys=web_environment
 ddev utility configyaml --full-yaml --omit-keys=web_environment
 ```
 
+### `utility delete-volume`
+
+Delete a Docker volume belonging to the current project, identified by either its short docker-compose name (e.g. `solr`) or its full Docker volume name (e.g. `ddev-myproject_solr`). If no name is given, pick one from an interactive list of the project's volumes. If the project is running, you'll be asked to stop it first, since a container-mounted volume can't be removed. Shared volumes used by every project, like `ddev-global-cache`, can't be deleted with this command.
+
+Flags:
+
+* `--yes`, `-y`: Skip confirmation prompts.
+
+Example:
+
+```shell
+# Choose a volume to delete from an interactive list
+ddev utility delete-volume
+
+# Delete the "solr" volume for the current project, prompting for confirmation
+ddev utility delete-volume solr
+
+# Delete by full Docker volume name, skipping confirmation
+ddev utility delete-volume ddev-myproject_solr --yes
+```
+
 ### `utility diagnose`
 
 Run quick diagnostics on your DDEV installation and current project. This command provides concise, actionable output for common troubleshooting scenarios.
