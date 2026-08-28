@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -117,6 +118,182 @@ func (app *DdevApp) GetLatestSnapshot() (string, error) {
 	return snapshots[0], nil
 }
 
+// SnapshotRestoreTarget is a snapshot offered by `ddev snapshot restore`,
+// either the current project's own or one found in the same project checked
+// out in another git worktree of the same repository.
+type SnapshotRestoreTarget struct {
+	// Name is the snapshot name, as shown by `ddev snapshot --list`.
+	Name string
+	// Label is what the interactive picker displays for this target; it
+	// names the source worktree when the snapshot isn't the current project's own.
+	Label string
+	// Path is what to pass to RestoreSnapshot: a bare name for the current
+	// project's own snapshot, an absolute file path for one found elsewhere.
+	Path string
+	// SourceRoot is the project root the snapshot was found under.
+	SourceRoot  string
+	Created     time.Time
+	Size        int64
+	DBVersion   string
+	Compression string
+}
+
+// ListSnapshotRestoreTargets returns the current project's own snapshots plus
+// any snapshots belonging to the same project checked out in other git
+// worktrees of the same repository, newest first.
+func (app *DdevApp) ListSnapshotRestoreTargets() ([]SnapshotRestoreTarget, error) {
+	var targets []SnapshotRestoreTarget
+
+	own, err := app.ListSnapshots()
+	if err != nil {
+		return nil, err
+	}
+	for _, s := range own {
+		targets = append(targets, SnapshotRestoreTarget{
+			Name:        s.Name,
+			Label:       s.Name,
+			Path:        s.Name,
+			SourceRoot:  app.AppRoot,
+			Created:     s.Created,
+			Size:        s.Size,
+			DBVersion:   s.DBVersion,
+			Compression: s.Compression,
+		})
+	}
+
+	for _, projectRoot := range app.otherWorktreeProjectRoots() {
+		snapshotsDir := filepath.Join(projectRoot, ".ddev", "db_snapshots")
+		snapshots, err := listSnapshotsInDir(snapshotsDir)
+		if err != nil || len(snapshots) == 0 {
+			continue
+		}
+		label := filepath.Base(projectRoot)
+		for _, s := range snapshots {
+			file, err := snapshotFileInDir(s.Name, snapshotsDir)
+			if err != nil {
+				continue
+			}
+			fullPath := filepath.Join(snapshotsDir, file)
+			// Path-based restore (see resolveSnapshotSource) only supports
+			// snapshot files, not the legacy directory-based format.
+			if fileutil.IsDirectory(fullPath) {
+				continue
+			}
+			targets = append(targets, SnapshotRestoreTarget{
+				Name:        s.Name,
+				Label:       fmt.Sprintf("%s (%s)", s.Name, label),
+				Path:        fullPath,
+				SourceRoot:  projectRoot,
+				Created:     s.Created,
+				Size:        s.Size,
+				DBVersion:   s.DBVersion,
+				Compression: s.Compression,
+			})
+		}
+	}
+
+	sort.Slice(targets, func(i, j int) bool {
+		return targets[i].Created.After(targets[j].Created)
+	})
+
+	return targets, nil
+}
+
+// GetLatestSnapshotRestoreTarget returns the most recently created snapshot
+// among the current project's own snapshots and any found in sibling git
+// worktrees of the same project.
+func (app *DdevApp) GetLatestSnapshotRestoreTarget() (*SnapshotRestoreTarget, error) {
+	targets, err := app.ListSnapshotRestoreTargets()
+	if err != nil {
+		return nil, err
+	}
+	if len(targets) == 0 {
+		return nil, fmt.Errorf("no snapshots found")
+	}
+	return &targets[0], nil
+}
+
+// ResolveSnapshotRestoreTarget resolves a bare snapshot name given directly on
+// the `ddev snapshot restore` command line to what should be passed to
+// RestoreSnapshot: the name unchanged if the project has its own snapshot by
+// that name (or nothing matches at all, so the original "not found" error is
+// preserved), otherwise the absolute path of the newest same-named snapshot
+// found in a sibling git worktree of the same project. A path (absolute, or
+// containing a slash) is returned unchanged, since it already names an exact
+// file rather than something worktree lookup could resolve.
+func (app *DdevApp) ResolveSnapshotRestoreTarget(nameOrPath string) string {
+	if filepath.IsAbs(nameOrPath) || strings.ContainsAny(nameOrPath, `/\`) {
+		return nameOrPath
+	}
+	if _, err := GetSnapshotFileFromName(nameOrPath, app); err == nil {
+		return nameOrPath
+	}
+	targets, err := app.ListSnapshotRestoreTargets()
+	if err != nil {
+		return nameOrPath
+	}
+	for _, target := range targets {
+		if target.Name == nameOrPath && target.SourceRoot != app.AppRoot {
+			return target.Path
+		}
+	}
+	return nameOrPath
+}
+
+// otherWorktreeProjectRoots returns the directories where this same project
+// would live in every other git worktree of its repository: the project's
+// path relative to its own worktree root, re-joined onto each of the
+// repository's other worktree roots. It returns nil if the project isn't in a
+// git worktree, or the repository has no other worktrees - callers should
+// treat that as "nothing extra to offer", not an error.
+func (app *DdevApp) otherWorktreeProjectRoots() []string {
+	// Not being in a git repo at all is the common case here, so it's not
+	// worth a debug log - only the later checks, reached once we know we're
+	// in a repo, are.
+	repoRootOutput, err := exec.RunHostCommand("git", "-C", app.AppRoot, "rev-parse", "--show-toplevel")
+	if err != nil {
+		return nil
+	}
+	repoRoot := strings.TrimSpace(repoRootOutput)
+	if repoRoot == "" {
+		return nil
+	}
+
+	// git's own idea of app.AppRoot's path relative to repoRoot, rather than
+	// filepath.Rel(repoRoot, app.AppRoot): on macOS in particular, app.AppRoot
+	// may reach the project through a symlink (e.g. /var/folders/... into
+	// /private/var/folders/...) that "rev-parse --show-toplevel" already
+	// resolved, so comparing the two paths directly can misjudge how deep the
+	// project sits under the repo root.
+	prefixOutput, err := exec.RunHostCommand("git", "-C", app.AppRoot, "rev-parse", "--show-prefix")
+	if err != nil {
+		util.Debug("otherWorktreeProjectRoots: git rev-parse --show-prefix: %v", err)
+		return nil
+	}
+	relToRepo := strings.TrimSuffix(strings.TrimSpace(prefixOutput), "/")
+
+	worktreeListOutput, err := exec.RunHostCommand("git", "-C", repoRoot, "worktree", "list", "--porcelain")
+	if err != nil {
+		util.Debug("otherWorktreeProjectRoots: git worktree list: %v", err)
+		return nil
+	}
+
+	var projectRoots []string
+	for line := range strings.SplitSeq(strings.TrimSpace(worktreeListOutput), "\n") {
+		worktreeRoot, ok := strings.CutPrefix(line, "worktree ")
+		if !ok {
+			continue
+		}
+		worktreeRoot = strings.TrimSpace(worktreeRoot)
+		if worktreeRoot == "" || worktreeRoot == repoRoot {
+			continue
+		}
+		projectRoots = append(projectRoots, filepath.Join(worktreeRoot, relToRepo))
+	}
+
+	return projectRoots
+}
+
 // ListSnapshots returns a list of the names of all project snapshots
 func (app *DdevApp) ListSnapshotNames() ([]string, error) {
 	var names []string
@@ -131,10 +308,15 @@ func (app *DdevApp) ListSnapshotNames() ([]string, error) {
 
 // ListSnapshots returns a list of all project snapshots
 func (app *DdevApp) ListSnapshots() ([]Snapshot, error) {
+	return listSnapshotsInDir(app.GetConfigPath("db_snapshots"))
+}
+
+// listSnapshotsInDir returns all snapshots found directly in snapshotDir. It's
+// the directory-parameterized core of ListSnapshots, also used to look for
+// snapshots belonging to the same project checked out in other git worktrees.
+func listSnapshotsInDir(snapshotDir string) ([]Snapshot, error) {
 	var err error
 	var snapshots []Snapshot
-
-	snapshotDir := app.GetConfigPath("db_snapshots")
 
 	if !fileutil.FileExists(snapshotDir) {
 		return snapshots, nil
@@ -458,7 +640,13 @@ func resolveSnapshotSource(nameOrPath string, app *DdevApp) (hostPath string, mo
 
 // GetSnapshotFileFromName returns the filename corresponding to the snapshot name
 func GetSnapshotFileFromName(name string, app *DdevApp) (string, error) {
-	snapshotsDir := app.GetConfigPath("db_snapshots")
+	return snapshotFileInDir(name, app.GetConfigPath("db_snapshots"))
+}
+
+// snapshotFileInDir returns the actual filename of the snapshot called name
+// inside snapshotsDir: the name unchanged for an old-style directory-based
+// snapshot, or the full <name>-<type>_<version>.<ext> filename for a modern one.
+func snapshotFileInDir(name, snapshotsDir string) (string, error) {
 	snapshotFullPath := filepath.Join(snapshotsDir, name)
 
 	// If old-style directory-based snapshot, then use the name, no massaging required
