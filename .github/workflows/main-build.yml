@@ -40,37 +40,52 @@ permissions:
   packages: write
 
 jobs:
-  build-most:
-    name: Build DDEV executables except Windows
+  # Every executable we ship, Windows included, cross-compiles on Linux. One
+  # job per platform because each GOOS/GOARCH pays its own cold-cache compile
+  # of the standard library and vendored deps, so they only get faster by
+  # running on separate machines.
+  build:
+    name: Build ${{ matrix.platform }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: linux_amd64,   target: linux_amd64 completions }
+          - { platform: linux_arm64,   target: linux_arm64 }
+          - { platform: darwin_amd64,  target: darwin_amd64 }
+          - { platform: darwin_arm64,  target: darwin_arm64 }
+          - { platform: windows_amd64, target: windows_amd64_binaries }
+          - { platform: windows_arm64, target: windows_arm64_binaries }
     steps:
-
       - uses: actions/checkout@v7
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
-
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@2026.08.03.2
-        with:
-          brew-gh-api-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install Docker and deps
-        run: ./.github/workflows/linux-setup.sh
-
-      - name: Install build tools
-        run: ./.github/workflows/linux-build-setup.sh
 
       - uses: actions/setup-go@v7
         with:
           go-version: '>=1.23'
           check-latest: true
 
+      # The Windows targets stop at the binaries; NSIS cannot run until they
+      # come back signed. See the build-installers job.
       - name: Build DDEV executables
-        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 completions mkcert
+        run: make ${{ matrix.target }}
+
+      - name: Set up Homebrew
+        if: matrix.platform == 'linux_amd64'
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@2026.08.03.2
+        with:
+          brew-gh-api-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Docker and deps
+        if: matrix.platform == 'linux_amd64'
+        run: ./.github/workflows/linux-setup.sh
 
       - name: "Verify that instrumentation is working (Linux amd64)"
+        if: matrix.platform == 'linux_amd64'
         run: |
           export PATH=".gotmp/bin/linux_amd64:$PATH"
           echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
@@ -80,44 +95,65 @@ jobs:
           ddev version | grep -v "AmplitudeAPIKey is not available."
           ddev config global --instrumentation-opt-in=false
 
-
-      - name: save build results to cache
-        uses: actions/cache@v6
+      - name: Upload ${{ matrix.platform }} build
+        uses: actions/upload-artifact@v7
         with:
-          path: .gotmp/bin
-          key: ${{ github.sha }}-${{ github.ref }}-build-most
+          name: build-${{ matrix.platform }}
+          path: .gotmp/bin/${{ matrix.platform }}
+          retention-days: 1
+          if-no-files-found: error
 
-  # This Windows self-hosted runner has to be set up with gnu tar and zstd.exe, or
-  # this step will fail to properly create the cache.
-  # Make sure gnu tar is the tar used here. System PATH should have C:\program files\gnu\usr\bin near top
-  # Get zstd.exe from https://github.com/facebook/zstd/releases - I put it into C:\program files\gnu\usr\bin
-  # so it would be in PATH
-  # See https://github.com/actions/cache/issues/580
-  # Run the Windows action with debug enabled to be able to see which tar is in use, etc.
-  sign-windows:
-    name: Build and Sign Windows binaries
+      - name: Upload completions
+        if: matrix.platform == 'linux_amd64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-completions
+          path: |
+            .gotmp/bin/completions.tar.gz
+            .gotmp/bin/completions
+          retention-days: 1
+          if-no-files-found: error
+
+  # This self-hosted runner holds the code-signing dongle. It deliberately does
+  # no checkout and runs no repository code: it downloads executables, runs
+  # signtool, and uploads them again. Keep it that way - anything else puts a
+  # certificate we cannot rotate behind whatever a workflow change happens to
+  # run.
+  sign-windows-binaries:
+    name: Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
+    needs: build
     env:
       DDEV_WINDOWS_SIGN: ${{ vars.DDEV_WINDOWS_SIGN }}
     steps:
-
-      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
-          fetch-depth: 0
-      - name: Build and sign windows amd64/arm64 binaries and installers
-        shell: bash
+          pattern: build-windows_*
+          path: incoming
+
+      - name: Lay out binaries
         run: |
-          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN=${DDEV_WINDOWS_SIGN} is not true"; fi
-          make windows_amd64_install windows_arm64_install wsl_amd64 wsl_arm64
-      - name: Show github.ref
-        run: echo ${{ github.ref }}
-      - name: Build chocolatey on release
-        if: startsWith( github.ref, 'refs/tags/v1')
-        run: make chocolatey
+          set -eu -o pipefail
+          mkdir -p bin
+          for arch in amd64 arm64; do
+            mv "incoming/build-windows_${arch}" "bin/windows_${arch}"
+          done
+
+      - name: Sign Windows binaries
+        run: |
+          set -eu -o pipefail
+          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN=${DDEV_WINDOWS_SIGN} is not true"; exit 0; fi
+          for arch in amd64 arm64; do
+            signtool sign -fd SHA256 \
+              "bin/windows_${arch}/ddev.exe" \
+              "bin/windows_${arch}/ddev-hostname.exe" \
+              "bin/windows_${arch}/mkcert.exe" \
+              "bin/windows_${arch}/ddev_gen_autocomplete.exe"
+          done
 
       - name: "Verify that instrumentation is working (Windows)"
         run: |
-          export PATH=".gotmp/bin/windows_amd64:$PATH"
+          export PATH="bin/windows_amd64:$PATH"
           echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
           if [ -z "${AmplitudeAPIKey}" ]; then echo "AmplitudeAPIKey is not set"; exit 1; fi
           ddev config global --instrumentation-opt-in=true
@@ -125,33 +161,113 @@ jobs:
           ddev version | grep -v "AmplitudeAPIKey is not available."
           ddev config global --instrumentation-opt-in=false
 
-      - name: Verify that binaries and installers were signed
+      - name: Verify that binaries were signed
+        if: vars.DDEV_WINDOWS_SIGN == 'true'
         run: |
-          signtool verify -pa .gotmp/bin/windows_amd64/ddev_windows_amd64_installer.exe
-          signtool verify -pa .gotmp/bin/windows_amd64/ddev.exe
-          signtool verify -pa .gotmp/bin/windows_amd64/ddev-hostname.exe
-          signtool verify -pa .gotmp/bin/windows_amd64/mkcert.exe
-          signtool verify -pa .gotmp/bin/windows_arm64/ddev_windows_arm64_installer.exe
-          signtool verify -pa .gotmp/bin/windows_arm64/ddev.exe
-          signtool verify -pa .gotmp/bin/windows_arm64/ddev-hostname.exe
-          signtool verify -pa .gotmp/bin/windows_arm64/mkcert.exe
+          set -eu -o pipefail
+          for arch in amd64 arm64; do
+            for f in ddev.exe ddev-hostname.exe mkcert.exe; do
+              signtool verify -pa "bin/windows_${arch}/${f}"
+            done
+          done
 
-      - name: Cache signed binaries
-        # After 3.0.5 they were using zstdmt which is not available on Windows
-        # See https://github.com/actions/cache/issues/891
-        # But trying again with @v3, 2023-02-18
-        uses: actions/cache@v6
+      - name: Upload signed Windows binaries
+        uses: actions/upload-artifact@v7
         with:
-          path: |
-            .gotmp/bin/windows*
-            .gotmp/bin/wsl*
-          key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
-          enableCrossOsArchive: true
+          name: signed-windows-binaries
+          path: bin
+          retention-days: 1
+          if-no-files-found: error
+
+  # NSIS has to run between the two signing passes: it packs the signed
+  # ddev-hostname.exe and mkcert.exe, and the installer it emits then needs
+  # signing itself.
+  build-installers:
+    name: Build Windows installers
+    runs-on: ubuntu-latest
+    needs: sign-windows-binaries
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install build tools
+        run: ./.github/workflows/linux-build-setup.sh
+
+      - name: Restore signed Windows binaries
+        uses: actions/download-artifact@v8
+        with:
+          name: signed-windows-binaries
+          path: signed
+
+      # The installer bundles the Linux binaries for the WSL2 install path.
+      - name: Restore Linux builds
+        uses: actions/download-artifact@v8
+        with:
+          pattern: build-linux_*
+          path: linux
+
+      - name: Assemble .gotmp/bin
+        run: |
+          set -eu -o pipefail
+          for arch in amd64 arm64; do
+            mkdir -p ".gotmp/bin/windows_${arch}" ".gotmp/bin/linux_${arch}"
+            cp -a "signed/windows_${arch}/." ".gotmp/bin/windows_${arch}/"
+            cp -a "linux/build-linux_${arch}/." ".gotmp/bin/linux_${arch}/"
+            chmod +x ".gotmp/bin/linux_${arch}"/*
+          done
+
+      - name: Build installers
+        run: make windows_amd64_package windows_arm64_package
+
+      - name: Upload unsigned installers
+        uses: actions/upload-artifact@v7
+        with:
+          name: unsigned-installers
+          path: .gotmp/bin/windows_*/ddev_windows_*_installer.exe
+          retention-days: 1
+          if-no-files-found: error
+
+  sign-windows-installers:
+    name: Sign Windows installers
+    runs-on: [ self-hosted, windows-signer ]
+    needs: build-installers
+    env:
+      DDEV_WINDOWS_SIGN: ${{ vars.DDEV_WINDOWS_SIGN }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: unsigned-installers
+          path: bin
+
+      - name: Sign Windows installers
+        run: |
+          set -eu -o pipefail
+          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN=${DDEV_WINDOWS_SIGN} is not true"; exit 0; fi
+          for arch in amd64 arm64; do
+            signtool sign -fd SHA256 "bin/windows_${arch}/ddev_windows_${arch}_installer.exe"
+          done
+
+      - name: Verify that installers were signed
+        if: vars.DDEV_WINDOWS_SIGN == 'true'
+        run: |
+          set -eu -o pipefail
+          for arch in amd64 arm64; do
+            signtool verify -pa "bin/windows_${arch}/ddev_windows_${arch}_installer.exe"
+          done
+
+      - name: Upload signed installers
+        uses: actions/upload-artifact@v7
+        with:
+          name: signed-installers
+          path: bin
+          retention-days: 1
+          if-no-files-found: error
 
   notarize-macos:
     name: Sign and Notarize ddev on macOS
     runs-on: macos-latest
-    needs: build-most
+    needs: build
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5
@@ -172,21 +288,21 @@ jobs:
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
-      - uses: actions/setup-go@v7
-        with:
-          go-version: '>=1.23'
-          check-latest: true
 
-      - name: restore build-most results from cache
-        uses: actions/cache@v6
-        id: buildmost
+      - name: Restore darwin builds
+        uses: actions/download-artifact@v8
         with:
-          path: .gotmp/bin
-          key: ${{ github.sha }}-${{ github.ref }}-build-most
-          fail-on-cache-miss: true
-      - name: test that buildmost cache was loaded
-        if: steps.buildmost.outputs.cache-hit != 'true'
-        run: exit 1
+          pattern: build-darwin_*
+          path: darwin
+
+      - name: Assemble .gotmp/bin
+        run: |
+          set -eu -o pipefail
+          for arch in amd64 arm64; do
+            mkdir -p ".gotmp/bin/darwin_${arch}"
+            cp -a "darwin/build-darwin_${arch}/." ".gotmp/bin/darwin_${arch}/"
+            chmod +x ".gotmp/bin/darwin_${arch}"/*
+          done
 
       - name: Sign and notarize binaries (amd64 and arm64)
         env:
@@ -206,11 +322,14 @@ jobs:
               echo "Notarization disabled via DISABLE_NOTARIZATION=true environment variable"
             fi
           done
-      - name: Save notarized binaries to cache
-        uses: actions/cache@v6
+
+      - name: Upload notarized binaries
+        uses: actions/upload-artifact@v7
         with:
-          path: .gotmp/bin/darwin*
-          key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
+          name: notarized-darwin
+          path: .gotmp/bin/darwin_*
+          retention-days: 1
+          if-no-files-found: error
 
   artifacts:
     env:
@@ -220,7 +339,7 @@ jobs:
       DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
     name: Upload artifacts
     runs-on: ubuntu-latest
-    needs: [build-most, sign-windows, notarize-macos]
+    needs: [build, sign-windows-installers, notarize-macos]
     steps:
       - name: Load 1password secret(s)
         uses: 1password/load-secrets-action@v5
@@ -241,43 +360,40 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Restore build-most builds
-        uses: actions/cache@v6
-        id: buildmost
+      - uses: actions/setup-go@v7
         with:
-          path: .gotmp/bin
-          key: ${{ github.sha }}-${{ github.ref }}-build-most
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: test that build-most was loaded
-        if: steps.buildmost.outputs.cache-hit != 'true'
-        run: exit 1
+          go-version: '>=1.23'
+          check-latest: true
 
-      - name: Restore Signed Windows artifacts
-        uses: actions/cache@v6
-        id: signedwindows
+      - name: Download all build outputs
+        uses: actions/download-artifact@v8
         with:
-          path: |
-            .gotmp/bin/windows*
-            .gotmp/bin/wsl*
-          key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: test that signed-windows was loaded
-        if: steps.signedwindows.outputs.cache-hit != 'true'
-        run: exit 1
+          path: incoming
 
-      - name: Restore Signed Mac artifacts
-        uses: actions/cache@v6
-        id: notarizedmac
-        with:
-          path: .gotmp/bin/darwin*
-          key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
-      - name: test that notarizedmac was loaded
-        if: steps.notarizedmac.outputs.cache-hit != 'true'
-        run: exit 1
+      # Everything arrives as artifacts, which do not carry the executable bit,
+      # and the signed copies have to win over the unsigned ones they replace.
+      - name: Assemble .gotmp/bin
+        run: |
+          set -eu -o pipefail
+          mkdir -p .gotmp/bin
+          for arch in amd64 arm64; do
+            mkdir -p ".gotmp/bin/linux_${arch}" ".gotmp/bin/darwin_${arch}" ".gotmp/bin/windows_${arch}"
+            cp -a "incoming/build-linux_${arch}/." ".gotmp/bin/linux_${arch}/"
+            cp -a "incoming/notarized-darwin/darwin_${arch}/." ".gotmp/bin/darwin_${arch}/"
+            cp -a "incoming/signed-windows-binaries/windows_${arch}/." ".gotmp/bin/windows_${arch}/"
+            cp -a "incoming/signed-installers/windows_${arch}/." ".gotmp/bin/windows_${arch}/"
+          done
+          cp -a incoming/build-completions/. .gotmp/bin/
+          chmod +x .gotmp/bin/{linux,darwin}_{amd64,arm64}/{ddev,ddev-hostname,mkcert}
+
+      # Signing rewrote the installers after they were built, so this is the
+      # first point at which they can be hashed.
+      - name: Generate installer checksums and WSL2 copies
+        run: make windows_amd64_installer_checksum windows_arm64_installer_checksum wsl_amd64_copy wsl_arm64_copy
+
+      - name: Build chocolatey on release
+        if: startsWith( github.ref, 'refs/tags/v1')
+        run: make chocolatey
 
       - name: "Verify that cgo_enabled is 0 in Linux binary"
         run: |
@@ -412,4 +528,3 @@ jobs:
           base-path-to-features: "./containers/devcontainers"
           devcontainer-cli-version: "0.53.0"
           disable-repo-tagging: "true"
-
