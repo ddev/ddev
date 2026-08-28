@@ -95,44 +95,66 @@ func TestNodeJSVersions(t *testing.T) {
 		})
 		assert.NoError(err)
 	}
+}
 
-	// Verify that nodejs_root reads the version file from a subdirectory,
-	// and that setting it implies auto-detection.
-	nodeJSRootDir := filepath.Join(app.AppRoot, "frontend")
-	err = os.MkdirAll(nodeJSRootDir, 0755)
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_ = os.RemoveAll(nodeJSRootDir)
-	})
-	// Use a different version than the project root .nvmrc so a pass can't
-	// come from accidentally reading the root file.
-	subdirVersion := "20.19.0"
-	require.NotEqual(t, nvmrcVersion, subdirVersion)
-	err = os.WriteFile(filepath.Join(nodeJSRootDir, ".nvmrc"), []byte(subdirVersion+"\n"), 0644)
-	require.NoError(t, err)
+// TestNodeJSRoot tests that nodejs_root reads the version file from a
+// subdirectory of the project root
+func TestNodeJSRoot(t *testing.T) {
+	if nodeps.IsEnvTrue("DDEV_SKIP_NODEJS_TEST") {
+		t.Skip("Skipping TestNodeJSRoot because DDEV_SKIP_NODEJS_TEST is true")
+	}
 
+	site := TestSites[0]
+	origDir, _ := os.Getwd()
+	_ = os.Chdir(site.Dir)
+
+	runTime := util.TimeTrackC(t.Name())
+
+	testcommon.ClearDockerEnv()
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+	app.CorepackEnable = false
 	app.NodeJSRoot = "frontend"
+
+	nvmrcFile := filepath.Join(app.AppRoot, ".nvmrc")
+	nodeJSRootDir := filepath.Join(app.AppRoot, app.NodeJSRoot)
+	t.Cleanup(func() {
+		runTime()
+		_ = os.Chdir(origDir)
+		_ = os.Remove(nvmrcFile)
+		_ = os.RemoveAll(nodeJSRootDir)
+		_ = app.Stop(true, false)
+	})
+
+	// The project root gets a .nvmrc of its own, with a different version, so a
+	// pass can't come from reading the wrong directory.
+	testdataDir := filepath.Join(origDir, "testdata", t.Name())
+	require.NoError(t, fileutil.CopyFile(filepath.Join(testdataDir, ".nvmrc"), nvmrcFile))
+	_ = os.RemoveAll(nodeJSRootDir)
+	require.NoError(t, fileutil.CopyDir(filepath.Join(testdataDir, app.NodeJSRoot), nodeJSRootDir))
+	subdirVersion, err := fileutil.ReadFileIntoString(filepath.Join(nodeJSRootDir, ".nvmrc"))
+	require.NoError(t, err)
+	subdirVersion = strings.TrimSpace(subdirVersion)
+
 	// nodejs_root alone must imply auto-detection.
 	app.NodeJSVersion = ""
 	err = app.Restart()
-	assert.NoError(err)
+	require.NoError(t, err)
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: "node --version",
 	})
-	assert.NoError(err)
-	assert.True(strings.HasPrefix(out, "v"+subdirVersion), "Expected node version from nodejs_root to start with '%s', but got %s", subdirVersion, out)
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "v"+subdirVersion), "Expected node version from nodejs_root to start with '%s', but got %s", subdirVersion, out)
 
 	// An explicit nodejs_version must win over nodejs_root.
 	app.NodeJSVersion = "16.0.0"
 	err = app.Restart()
-	assert.NoError(err)
+	require.NoError(t, err)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "node --version",
 	})
-	assert.NoError(err)
-	assert.True(strings.HasPrefix(out, "v16.0.0"), "Expected explicit nodejs_version to win over nodejs_root, but got %s", out)
-
-	app.NodeJSRoot = ""
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "v16.0.0"), "Expected explicit nodejs_version to win over nodejs_root, but got %s", out)
 }
 
 // TestCorepackEnable tests behavior of corepack_enable
