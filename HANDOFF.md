@@ -5,20 +5,23 @@ exploratory session, not a finished feature: the code changes here are experimen
 take effect when the Docker provider is socktainer, and this file is expected to be deleted
 before any of it merges.
 
-Environment: Apple `container` 1.2.2 (signed installer, updated 2026-08-21 from 1.2.0 — see the
+Environment: Apple `container` 1.3.0 (signed installer, updated 2026-08-28 from 1.2.2 — see the
 verification-run section below), `socktainer` built from
-[`tmp/combined-verify-2`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-2) (the
+[`tmp/combined-verify-3`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-3) (the
 Homebrew bottle is 1.2.1 and lacks the fixes this investigation needs), docker CLI 29.7.2,
-docker context `socktainer`, macOS 27, `ddev` built from branch
+docker context `socktainer`, macOS 27 (26A5421a), `ddev` built from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment).
 Mutagen was off throughout (`performance_mode: none`).
 
 ## Fix branches at a glance
 
 Eleven socktainer fixes came out of this investigation, each on its own branch in the
-[`rfay/socktainer`](https://github.com/rfay/socktainer) fork and combined and verified together
-on [`tmp/combined-verify-2`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-2).
-None is merged upstream yet.
+[`rfay/socktainer`](https://github.com/rfay/socktainer) fork. Ten of them are combined and
+verified together on
+[`tmp/combined-verify-3`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-3), cut
+from upstream `main` on 2026-08-28; the eleventh, `fix/privileged-cap-all`, is dropped there
+because upstream has since fixed the same bug itself. None of the ten is merged upstream yet.
+`tmp/combined-verify-2`, the previous combined branch, is superseded.
 
 Ordered below by **actual impact on DDEV**, not diff risk — this is a different axis from the
 fork's [rollout plan](https://github.com/rfay/socktainer/blob/fix/exec-hijack-close/UPSTREAM_ROLLOUT.md),
@@ -50,12 +53,13 @@ which orders the same branches by submission risk/reviewability instead.
 | `--filter name=`/`status=`/`id=` matching semantics wrong — DDEV never hits this, `FindContainerByName` re-checks the exact name itself | [`fix/filter-name-ignored`](https://github.com/rfay/socktainer/tree/fix/filter-name-ignored) | Ready, not yet submitted ([rfay/socktainer#9](https://github.com/rfay/socktainer/issues/9)) — pairs with the parsing fix below |
 | Dict-form filter values dropped for every key but `label` | [`fix/dict-filter-parsing`](https://github.com/rfay/socktainer/tree/fix/dict-filter-parsing) | Ready, not yet submitted — other half of the fix above |
 
-Four DDEV-side hardenings are open as their own draft PRs, independent of any socktainer fix
-landing: [#8657](https://github.com/ddev/ddev/pull/8657) (bound host ports fallback),
-[#8658](https://github.com/ddev/ddev/pull/8658) (`GetExistingDBType` via exec),
-[#8659](https://github.com/ddev/ddev/pull/8659) (non-fatal global-cache chown),
+Four DDEV-side hardenings were split out as their own PRs, independent of any socktainer fix
+landing. Three are merged: [#8657](https://github.com/ddev/ddev/pull/8657) (bound host ports
+fallback), [#8658](https://github.com/ddev/ddev/pull/8658) (`GetExistingDBType` via exec) and
+[#8659](https://github.com/ddev/ddev/pull/8659) (non-fatal global-cache chown).
 [#8660](https://github.com/ddev/ddev/pull/8660) (stop hijacking the exec stream in
-`dockerutil.Exec()`).
+`dockerutil.Exec()`) was closed, so the hang it addressed is covered only by socktainer's
+[`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close).
 
 ## How far it got
 
@@ -384,6 +388,12 @@ recipe" for the DDEV-project-level workarounds that still apply on top. Verified
 the whole stack down and rebuilding it end-to-end on 2026-08-05; a full `ddev start` /
 `restart` / `describe` / `stop` cycle came back up clean afterward.
 
+**Always `ddev poweroff` before switching Docker contexts**, in either direction. DDEV's
+router and its host ports belong to whichever context created them, and a router left running
+under the previous context keeps 8080/8443/11999 bound, so the next context's router cannot
+bind them — the failure this investigation has hit repeatedly when moving between OrbStack and
+socktainer.
+
 ```bash
 # 1. tear everything down
 ddev poweroff
@@ -457,7 +467,8 @@ sudo /opt/homebrew/sbin/dnsmasq --keep-in-foreground \
   --listen-address=192.168.64.1 --bind-interfaces --port=53 \
   --no-resolv --server=127.0.0.1#2054 &
 
-# 3. buildkit node — RECREATE, never restart (see "buildx cannot bootstrap its buildkit container" below)
+# 3. buildkit node — only if buildx cannot bootstrap one itself (it could on 1.3.0, see the
+#    2026-08-28 verification run); when it is needed, RECREATE, never restart
 docker rm -f buildx_buildkit_default
 docker run -d --name buildx_buildkit_default --cap-add ALL \
   moby/buildkit:buildx-stable-1 --allow-insecure-entitlement=network.host
@@ -500,6 +511,86 @@ RIP=$(docker inspect ddev-router --format '{{range .NetworkSettings.Networks}}{{
 curl -sS -o /dev/null -w '%{http_code}\n' -H 'Host: appletest.ddev.site' http://$RIP:8080/
 curl -sS -k -o /dev/null -w '%{http_code}\n' --resolve appletest.ddev.site:8443:$RIP https://appletest.ddev.site:8443/
 ```
+
+## Verification run against apple/container 1.3.0 (2026-08-28)
+
+Updated Apple `container` to 1.3.0 (signed installer), rebuilt socktainer on a new combined
+branch cut from current upstream `main`, and re-ran the whole stack. `ddev start` reached a
+fully healthy, fully serving `appletest` from a cold environment in 96s, including both image
+builds, and a second and third project started alongside it.
+
+### socktainer had to be rebased to build against 1.3.0 at all
+
+1.3.0 removes `RequestScheme.auto` (the release notes' "Removed `--scheme auto` for image
+operations, default is now `https`"), which upstream socktainer `main` still calls in
+`ClientImageService.push()` and `DistributionJsonRoute.registryClient()`. Both now pass
+`.https`, matching apple's new default; `schemeFor()` survives as an identity function that
+still rejects an empty host. Without that, `swift build` fails outright — so **socktainer as it
+stands upstream cannot be built against apple/container 1.3.0**, which is worth reporting.
+
+The combined branch is [`tmp/combined-verify-3`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-3):
+upstream `main` (11 commits ahead of the old base) plus ten of this investigation's eleven fix
+branches, plus the pins bumped to `container` 1.3.0 / `containerization` 0.41.0 and the
+`RequestScheme` change above. Two merge conflicts, both between this investigation's own
+branches and both resolved to keep each side: `SocktainerDNSServer.swift` (EDNS0 truncation vs.
+per-network address lookup) and `ContainerInspectRouteTests.swift` (two independently appended
+test suites).
+
+**`--no-check-compatibility` is no longer needed.** [socktainer#351](https://github.com/socktainer/socktainer/pull/351)
+is in the new base, and the pins match the running apiserver anyway.
+
+### Upstream status, rechecked
+
+- **apple/container 1.3.0** (2026-08-24): mostly docs, k8s and kernel work. The
+  hostname-uniqueness bug is unchanged — `ddev start` over an already-running project still
+  fails with `hostname(s) already exist`, and `ddev restart` is still the workaround.
+- **socktainer `main`** has taken [#364](https://github.com/socktainer/socktainer/pull/364)
+  (`HostConfig.Privileged`), which is why `fix/privileged-cap-all` is dropped from the combined
+  branch. [#372](https://github.com/socktainer/socktainer/pull/372) (archive on a never-started
+  container) is **still open** even though its follow-on
+  [#377](https://github.com/socktainer/socktainer/pull/377) merged, so
+  `fix/archive-404-prestart` is still carried. Nothing new touches the exec-hijack, EDNS0,
+  `PortBindings`, `docker cp` directory-hang or filter-parsing bugs.
+
+### apple/container#2029 is fixed, and buildx now bootstraps itself
+
+[#2029](https://github.com/apple/container/issues/2029) (Local Network permission for
+`container-runtime-linux` never surfacing on macOS 27) is confirmed fixed on this machine:
+`container-runtime-linux` is listed and enabled in System Settings → Privacy & Security →
+Local Network, registered under signing identifier `com.apple.container.container-runtime-linux`
+in `/Library/Preferences/com.apple.networkextension.plist`, and published ports serve 200 on
+project subnets the stale `com.apple.network.local-network` CIDR allowlist
+(`192.168.64.0/24`) does not cover. What cannot be re-tested here is whether the *prompt* now
+fires on its own, since this machine already carries the grant a previous session applied by
+hand.
+
+The manual `buildx_buildkit_default` recreate in the cold-start recipe was **not** needed:
+buildx bootstrapped its own buildkit node during the first `ddev start`, and both project
+images built. That step is now a fallback for when the node is wedged, not a prerequisite.
+
+### Traefik stopped seeing config changes, and why
+
+Starting a second project left it 404ing while the first still served, with DDEV reporting a
+router count mismatch. Two separate causes, both introduced by the global-cache bind mount and
+both now fixed in this branch:
+
+- `copyIntoGlobalCache()` recreated the `traefik/config` directory on every push, so Traefik
+  was left watching an inode nothing wrote to again. Confirmed by watching the host inode
+  change across a push. It now merges into the existing directories.
+- Even with a stable directory, a write from the host or from a throwaway container raises no
+  inotify event inside the router, so Traefik never re-reads. `NotifyRouterOfTraefikConfigChange()`
+  touches the files from inside the router, which does. It is called from
+  `PushGlobalTraefikConfig()` and from the stop path in `ddevapp.go`, which removes a project's
+  merged config through its own container.
+
+The stale-config sync in `PushGlobalTraefikConfig()` was also still listing and deleting from
+the `ddev-global-cache` *volume*, which nothing mounts in bind mode, so a stopped project's
+routes were never cleaned up. `listGlobalCacheFiles()`/`removeGlobalCacheFiles()` now operate
+on whichever backing is in use.
+
+With both fixed, starting and stopping projects adds and removes their routes with the router
+left running: 11 routers with one project, 17 with two, back to 11 on stop, and each project
+serving 200 throughout.
 
 ## Verification run against apple/container 1.2.2 (2026-08-21)
 
@@ -1145,6 +1236,27 @@ are unreliable. Omitting `ddev-ssh-agent` or using the host's own agent are the 
 options there.
 
 ## State this session left behind
+
+**2026-08-28 (apple/container 1.3.0 session).** Newest state; the entries below it are from
+earlier sessions and are kept for the history.
+
+- Apple `container` 1.3.0 installed from the signed installer at `/usr/local`; Homebrew's copy
+  is also 1.3.0, so the two no longer disagree. `container-apiserver` running.
+- socktainer running by hand from `~/workspace/socktainer/.build/release/socktainer`, built
+  from `tmp/combined-verify-3`, **no flags** — `--no-check-compatibility` is no longer needed.
+  The branch's merges are committed; the pin bump and the `RequestScheme.https` change are
+  **uncommitted** in that working tree, along with `Package.resolved`.
+- Docker context is `socktainer`. Switch away only after `ddev poweroff` (see the teardown
+  recipe).
+- Projects: `appletest` and `appletest2` (`~/tmp/appletest2`, created this session) running and
+  serving; `appletest3` (`~/tmp/appletest3`, also created this session) stopped. Both new
+  projects need `omit_containers: [ddev-ssh-agent]` — the ssh-agent's shared socket volume
+  fails the same way it always has.
+- `keepalive` and the root `dnsmasq` on `192.168.64.1:53` are up per the cold-start recipe;
+  `buildx_buildkit_default` was created by buildx itself, not by hand.
+- DDEV branch has three uncommitted files: `HANDOFF.md` plus the Traefik-watch fix in
+  `pkg/ddevapp/traefik.go` and `pkg/ddevapp/ddevapp.go`. `make staticrequired` passes. No
+  Go tests were run under socktainer — the suite assumes a Docker provider.
 
 - **Superseded 2026-08-05.** `tmp/rollout-verify` (branch no longer exists) and its
   uncommitted six-fix working tree are gone. All twelve fixes (the original six plus five
