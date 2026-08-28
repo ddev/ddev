@@ -3745,44 +3745,43 @@ func (app *DdevApp) HostName() string {
 
 // GetActiveAppRoot returns the fully rooted directory of the active app, or an error
 func GetActiveAppRoot(siteName string) (string, error) {
-	var siteDir string
-	var err error
-
 	if siteName == "" {
-		siteDir, err = os.Getwd()
+		siteDir, err := os.Getwd()
 		if err != nil {
 			return "", fmt.Errorf("error determining the current directory: %s", err)
 		}
-		_, err = CheckForConf(siteDir)
+		appRoot, err := CheckForConf(siteDir)
 		if err != nil {
 			return "", fmt.Errorf("could not find a project in %s. Have you run 'ddev config'? Please specify a project name or change directories: %s", siteDir, err)
 		}
-		// Handle the case where it's registered globally but stopped
-	} else if p := globalconfig.GetProject(siteName); p != nil {
-		return p.AppRoot, nil
-		// Or find it by looking at Docker containers
-	} else {
-		var ok bool
-
-		labels := map[string]string{
-			"com.ddev.site-name":         siteName,
-			"com.docker.compose.service": "web",
-			"com.docker.compose.oneoff":  "False",
-		}
-
-		webContainer, err := dockerutil.FindContainerByLabels(labels)
-		if err != nil {
-			return "", err
-		}
-		if webContainer == nil {
-			return "", fmt.Errorf("could not find a project named '%s'. Run 'ddev list' to see currently active projects", siteName)
-		}
-
-		siteDir, ok = webContainer.Labels["com.ddev.approot"]
-		if !ok {
-			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
-		}
+		return skipNestedProject(appRoot), nil
 	}
+
+	// Handle the case where it's registered globally but stopped
+	if p := globalconfig.GetProject(siteName); p != nil {
+		return p.AppRoot, nil
+	}
+
+	// Or find it by looking at Docker containers
+	labels := map[string]string{
+		"com.ddev.site-name":         siteName,
+		"com.docker.compose.service": "web",
+		"com.docker.compose.oneoff":  "False",
+	}
+
+	webContainer, err := dockerutil.FindContainerByLabels(labels)
+	if err != nil {
+		return "", err
+	}
+	if webContainer == nil {
+		return "", fmt.Errorf("could not find a project named '%s'. Run 'ddev list' to see currently active projects", siteName)
+	}
+
+	siteDir, ok := webContainer.Labels["com.ddev.approot"]
+	if !ok {
+		return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
+	}
+
 	appRoot, err := CheckForConf(siteDir)
 	if err != nil {
 		return siteDir, err

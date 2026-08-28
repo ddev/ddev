@@ -38,21 +38,28 @@ func isRegisteredProject(dir string) bool {
 	return false
 }
 
-// nestedAnswer remembers the prompt answer, since a command resolves the project twice.
+// nestedAnswer remembers the prompt answer, since a command can resolve the project
+// more than once.
 var nestedAnswer *bool
 
 // useNestedProject reports whether to use the unregistered project in nested rather than
 // the registered project in outer. Only bare `ddev start` offers that choice, and it runs
 // before flags are parsed, so os.Args is what there is to go on.
 func useNestedProject(nested, outer string) bool {
-	if len(os.Args) == 2 && os.Args[1] == "start" {
+	command := ""
+	if len(os.Args) > 1 {
+		command = os.Args[1]
+	}
+	if len(os.Args) == 2 && command == "start" {
 		if nestedAnswer == nil {
 			answer := util.ConfirmTo(fmt.Sprintf("The DDEV project in %q is nested inside the project in %q.\nUse the nested project?", nested, outer), false)
 			nestedAnswer = &answer
 		}
 		return *nestedAnswer
 	}
-	if !output.JSONOutput {
+	// `ddev config` configures the directory it's in, so the warning would contradict it,
+	// even though the custom commands of the project around it are still loaded.
+	if !output.JSONOutput && command != "config" {
 		util.WarningOnce(util.ColorizeText("Using the DDEV project in %[2]q; the nested project in %[1]q is not registered.\nTo use the nested project instead, run `ddev start` here and confirm.", "magenta"), nested, outer)
 	}
 	return false
