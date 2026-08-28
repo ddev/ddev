@@ -14,6 +14,10 @@ rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/project_list.yaml ~/.dde
 # an upgrade. Delete them so they're always regenerated fresh.
 rm -f ~/.ddev/.remote-config ~/.ddev/.sponsorship-data ~/.ddev/.addon-data
 
+# Global env files reach every container of every project, so one left behind by
+# an interrupted test would quietly change the environment of every test after it.
+rm -f ~/.ddev/.env ~/.ddev/.env.*
+
 # Latest git won't let you do much in a non-safe directory
 git config --global --add safe.directory '*' || true
 

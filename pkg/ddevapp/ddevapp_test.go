@@ -4955,29 +4955,34 @@ func TestEnvFile(t *testing.T) {
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 
+	// A global env file applies to every project on the machine, so this test
+	// writes them into a throwaway global directory rather than the user's own.
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+	t.Cleanup(func() {
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+	})
+
 	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 	err = os.Chdir(site.Dir)
 	assert.NoError(err)
 
 	globalDir := globalconfig.GetGlobalDdevDir()
-	globalEnv := filepath.Join(globalDir, ".env")
-	globalWebEnv := filepath.Join(globalDir, ".env.web")
+	require.Equal(t, filepath.Join(tmpXdgConfigHomeDir, "ddev"), globalDir)
 
 	err = fileutil.TemplateStringToFile("JUNK1=junk1\nJUNK2=junk2\nSHARED=project\n", nil, app.GetConfigPath(".env"))
 	require.NoError(t, err)
 	err = fileutil.TemplateStringToFile("DBONLY=dbonly\n", nil, app.GetConfigPath(".env.db"))
 	require.NoError(t, err)
-	// Global env files apply to every project on this machine while they exist
-	err = fileutil.TemplateStringToFile("SHARED=global\nGLOBALALL=globalall\n", nil, globalEnv)
+	err = fileutil.TemplateStringToFile("SHARED=global\nGLOBALALL=globalall\n", nil, filepath.Join(globalDir, ".env"))
 	require.NoError(t, err)
-	err = fileutil.TemplateStringToFile("GLOBALWEB=globalweb\n", nil, globalWebEnv)
+	err = fileutil.TemplateStringToFile("GLOBALWEB=globalweb\n", nil, filepath.Join(globalDir, ".env.web"))
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		for _, f := range []string{app.GetConfigPath(".env"), app.GetConfigPath(".env.db"), globalEnv, globalWebEnv} {
+		for _, f := range []string{app.GetConfigPath(".env"), app.GetConfigPath(".env.db")} {
 			err = os.RemoveAll(f)
 			assert.NoError(err)
 		}
