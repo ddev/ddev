@@ -113,10 +113,10 @@ dockerfile_digest() {
 write_fixture
 cd "$REPO"
 
-# 1. Anything that isn't a vX.Y.Z release tag is refused, and refused before
-#    any Dockerfile is stamped.
+# 1. Anything that isn't a release tag is refused, and refused before any
+#    Dockerfile is stamped - `git describe` output included.
 unstamped_digest="$(dockerfile_digest)"
-for bad in "" 1.25.4 v1.25 v1.25.4-rc1 latest 20260817_stasadev_test; do
+for bad in "" 1.25.4 v1.25 v1.25.4-15-gabcdef1 v1.25.4-dirty v1.25.4-preview1 latest 20260817_stasadev_test; do
   set +e
   OUTPUT="$("$RELEASE_PREP" "$bad" </dev/null 2>&1)"
   STATUS=$?
@@ -129,11 +129,19 @@ for bad in "" 1.25.4 v1.25 v1.25.4-rc1 latest 20260817_stasadev_test; do
 done
 assert_eq "$unstamped_digest" "$(dockerfile_digest)" "a rejected tag stamps no Dockerfile"
 case "$OUTPUT" in
-  *"not a vX.Y.Z release tag"*) pass "rejection message says what shape is wanted" ;;
+  *"is not a release tag"*) pass "rejection message says what shape is wanted" ;;
   *) fail "rejection message should say what shape is wanted: $OUTPUT" ;;
 esac
 
-# 2. A release stamps every image and rewrites every tag to a content hash.
+# 2. A release stamps every image and rewrites every tag to a content hash. A
+#    prerelease takes the identical path; only `latest` differs, in the workflow.
+"$RELEASE_PREP" v1.26.0-rc1 >/dev/null
+assert_eq "${MARKER} v1.26.0-rc1" "$(marker_line ddev-webserver)" "a prerelease stamps the marker"
+assert_eq "v1.26.0-rc1" "$("$REPO/containers/release-marker.sh" ddev-webserver)" \
+  "release-marker.sh reads a prerelease marker"
+assert_eq "v1.26.0-rc1" "$(branch_value WebTag)" "WebTagBranch records the prerelease"
+
+write_fixture
 "$RELEASE_PREP" v1.25.4 >/dev/null
 for d in "${IMAGE_DIRS[@]}"; do
   assert_eq "1" "$(marker_lines "$d")" "$d carries exactly one release marker"

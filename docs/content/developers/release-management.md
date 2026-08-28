@@ -81,7 +81,9 @@ It builds nothing and commits nothing. Commit the result and open a pull request
 
 Open that pull request from a branch in this repository, not from a fork. `create-manifests`, the job that adds the release names, doesn't run for fork pull requests, so a release branch pushed to a fork would build every image and quietly leave `vX.Y.Z` and `latest` off. `detect` fails the run when it finds a release marker on a fork pull request, before anything is built.
 
-Because `latest` moves when that pull request builds rather than when the GitHub release is created, don't run `release-prep` for an edge/prerelease unless you want `latest` to follow it.
+`release-prep` also takes a prerelease tag (`v1.25.4-alpha1`, `-beta2`, `-rc1`), which follows exactly the same path except that `latest` is left pointing at the last stable release. No other suffix is accepted, so `git describe` output can't be stamped as a release by accident.
+
+For a stable release, `latest` moves when that pull request builds rather than when the GitHub release is created.
 
 The trailing `// <branch>-<hash>` comment on each tag keeps naming the branch rather than the release, because that is the alias the push actually publishes; `containers/validate-image-tag.sh` rejects an alias whose prefix is release-shaped, so a `v1.25.4-<hash>` tag never exists.
 
