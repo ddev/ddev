@@ -1056,7 +1056,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			// to the project root; it defaults to the project root itself.
 			srcDir := filepath.Join(app.AppRoot, app.NodeJSRoot)
 			if app.NodeJSRoot != "" && !fileutil.IsDirectory(srcDir) {
-				util.Warning("nodejs_root directory '%s' does not exist, Node.js version detection will fall back to the DDEV default", srcDir)
+				util.WarningOnce("nodejs_root directory '%s' does not exist, Node.js version detection will fall back to the DDEV default", srcDir)
 			}
 			// These are the files `n` consults for `auto` (in order) and `engine`.
 			for _, f := range []string{".n-node-version", ".node-version", ".nvmrc", "package.json"} {
