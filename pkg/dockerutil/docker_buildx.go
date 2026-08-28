@@ -150,11 +150,13 @@ func dockerBuildxDownloadLink() (buildxURL string, shasumURL string, err error) 
 		binaryURL = binaryURL + ".exe"
 	}
 	shasumURL = fmt.Sprintf("https://github.com/docker/buildx/releases/download/v%s/checksums.txt", version)
-	// Since v0.36.0, buildx moved macOS and Windows checksums out of checksums.txt
-	// and into checksums-signed.txt, since those binaries are code-signed/notarized
-	// after checksums.txt is generated. Older versions still list them in checksums.txt.
-	if (nodeps.IsMacOS() || nodeps.IsWindows()) && !versions.LessThan(version, "0.36.0") {
+	if (nodeps.IsMacOS() || nodeps.IsWindows()) && versions.GreaterThanOrEqualTo(version, "0.36.0") {
+		// Since v0.36.0 the macOS and Windows binaries are code-signed after
+		// checksums.txt is generated, so their checksums live in checksums-signed.txt
 		shasumURL = fmt.Sprintf("https://github.com/docker/buildx/releases/download/v%s/checksums-signed.txt", version)
+	} else if nodeps.IsMacOS() && versions.LessThan(version, "0.36.0") {
+		// Older checksums.txt covers Windows but never macOS, so skip verification
+		shasumURL = ""
 	}
 
 	return binaryURL, shasumURL, nil
