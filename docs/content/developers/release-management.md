@@ -116,6 +116,14 @@ This approval only applies to fork PRs from a contributor without push access â€
 
 When testing this on `ddev-test/ddev`, do the same steps there first, and confirm `vars.DOCKER_ORG` on that repository points at the DockerHub org used for testing.
 
+That org is not the one `versionconstants.go` names, so a binary built from `ddev-test/ddev` asks for `ddev/ddev-webserver:vX.Y.Z` while its images were published to `ddevhq`. Set `DDEV_DOCKER_ORG` to pull them from where they actually landed:
+
+```bash
+DDEV_DOCKER_ORG=ddevhq ddev start
+```
+
+It replaces the org on the web, db, router, ssh-agent, and xhgui images, leaving upstream images like `postgres` alone, and `ddev version` shows what it resolved to. Unset, it changes nothing.
+
 Since a job referencing an environment that doesn't exist yet gets auto-created with no protection rules (silently *not* gating), verify the environment actually has a `required_reviewers` rule before relying on it, e.g. `gh api repos/<owner>/<repo>/environments/image-push`.
 
 ## Pushing Docker Images with the GitHub Actions Workflow
