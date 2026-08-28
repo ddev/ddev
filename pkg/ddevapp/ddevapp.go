@@ -1951,8 +1951,11 @@ func (app *DdevApp) Start() error {
 		progress = display.ModePlain
 	}
 	err = upSvc.Up(upCtx, upProject, api.UpOptions{
-		Create: api.CreateOptions{Build: &api.BuildOptions{Progress: progress}},
-		Start:  api.StartOptions{Project: upProject},
+		Create: api.CreateOptions{
+			Build:         &api.BuildOptions{Progress: progress},
+			RemoveOrphans: true,
+		},
+		Start: api.StartOptions{Project: upProject},
 	})
 	if err != nil {
 		return err
@@ -2264,8 +2267,11 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 		progress = display.ModePlain
 	}
 	err = upSvc.Up(upCtx, upProject, api.UpOptions{
-		Create: api.CreateOptions{Build: &api.BuildOptions{Progress: progress}},
-		Start:  api.StartOptions{Project: upProject},
+		Create: api.CreateOptions{
+			Build:         &api.BuildOptions{Progress: progress},
+			RemoveOrphans: true,
+		},
+		Start: api.StartOptions{Project: upProject},
 	})
 	if err != nil {
 		util.Warning("Failed to start optional compose profiles '%s': %v", profiles, err)
