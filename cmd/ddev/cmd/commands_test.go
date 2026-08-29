@@ -412,6 +412,25 @@ func TestLaunchCommand(t *testing.T) {
 		assert.NoError(err, `couldn't run "%s"", output=%s`, c, out)
 		assert.Equal(expect, out, "output of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
 	}
+
+	// --print-url and DDEV_LAUNCH_PRINT_URL=true print the URL without global
+	// debug logging (DDEV_DEBUG off): the output is exactly one FULLURL line,
+	// no util.Debug timestamps, no browser attempt.
+	t.Setenv("DDEV_DEBUG", "")
+
+	t.Setenv("DDEV_LAUNCH_PRINT_URL", "true")
+	c := DdevBin + ` launch`
+	out, err := exec.RunHostCommand("bash", "-c", c)
+	out = strings.Trim(out, "\r\n")
+	assert.NoError(err, `couldn't run "%s", output=%s`, c, out)
+	assert.Equal("FULLURL "+app.GetPrimaryURL(), out, "DDEV_LAUNCH_PRINT_URL=true should print exactly one FULLURL line without DDEV_DEBUG, got: %s", out)
+
+	t.Setenv("DDEV_LAUNCH_PRINT_URL", "")
+	c = DdevBin + ` launch --print-url`
+	out, err = exec.RunHostCommand("bash", "-c", c)
+	out = strings.Trim(out, "\r\n")
+	assert.NoError(err, `couldn't run "%s", output=%s`, c, out)
+	assert.Equal("FULLURL "+app.GetPrimaryURL(), out, "--print-url should print exactly one FULLURL line without DDEV_DEBUG, got: %s", out)
 }
 
 // TestMysqlCommand tests `ddev mysql`

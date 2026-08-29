@@ -857,6 +857,9 @@ it will be started first.
 Flags:
 
 * `--mailpit`, `-m`: Open Mailpit.
+* `--print-url`: Print the URL instead of opening a browser. Useful where no browser is available (SSH sessions, containers, CI) or to use the URL in scripts.
+
+The environment variable `DDEV_LAUNCH_PRINT_URL=true` behaves like the `--print-url` flag. Unlike the flag it is inherited by nested `ddev launch` invocations (for example from custom commands or add-ons that call `ddev launch` internally), so wrappers and external tools can capture the URL without enabling `DDEV_DEBUG`.
 
 !!!tip "How to disable HTTP redirect to HTTPS?"
     Recommendations for:
@@ -873,6 +876,9 @@ ddev launch
 
 # Open Mailpit in the default browser
 ddev launch --mailpit
+
+# Print your project’s base URL instead of opening a browser
+ddev launch --print-url
 
 # Open your project’s base URL appended with `temp/phpinfo.php`
 ddev launch temp/phpinfo.php
