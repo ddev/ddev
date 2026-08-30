@@ -1365,40 +1365,19 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 	return orderedFiles, nil
 }
 
-// EnvFiles returns a list of env files for a project.
-// It has to put the .ddev/.env first
-// It has to put the .ddev/.env.* second
-// Env files ending with .example are ignored.
+// EnvFiles returns the existing env files that apply to a project, in the order
+// they are applied: the global ones first, then the project's own.
+// See envFileTarget() for the naming rule.
 func (app *DdevApp) EnvFiles() ([]string, error) {
-	origDir, _ := os.Getwd()
-	defer func() {
-		_ = os.Chdir(origDir)
-	}()
-	err := os.Chdir(app.AppConfDir())
+	globalEnvFiles, err := orderedEnvFilesInDir(globalconfig.GetGlobalDdevDir())
 	if err != nil {
 		return nil, err
 	}
-	envFiles, err := filepath.Glob(".env.*")
+	projectEnvFiles, err := orderedEnvFilesInDir(app.AppConfDir())
 	if err != nil {
-		return []string{}, fmt.Errorf(".env.* in %s: err=%v", app.AppConfDir(), err)
+		return nil, err
 	}
-
-	var orderedEnvFiles []string
-
-	webEnvFile := app.GetConfigPath(".env")
-	if fileutil.FileExists(webEnvFile) {
-		orderedEnvFiles = append(orderedEnvFiles, webEnvFile)
-	}
-
-	for _, file := range envFiles {
-		// Skip .example files
-		if strings.HasSuffix(file, ".example") {
-			continue
-		}
-		orderedEnvFiles = append(orderedEnvFiles, app.GetConfigPath(file))
-	}
-
-	return orderedEnvFiles, nil
+	return append(globalEnvFiles, projectEnvFiles...), nil
 }
 
 // ProcessHooks executes Tasks defined in Hooks

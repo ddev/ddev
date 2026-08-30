@@ -111,7 +111,7 @@ By default, DDEV is set up to contact the default port, port 9003 on your IDE. H
 
 Composer disables Xdebug even if it's enabled in DDEV. To debug Composer itself, you need to force Xdebug to stay active.
 
-According to the [Composer docs](https://getcomposer.org/doc/articles/troubleshooting.md#xdebug-impact-on-composer), set the `COMPOSER_ALLOW_XDEBUG=1` [environment variable](../extend/customization-extendibility.md#environment-variables-for-containers-and-services) to allow all Composer commands to run with Xdebug when the extension is enabled.
+According to the [Composer docs](https://getcomposer.org/doc/articles/troubleshooting.md#xdebug-impact-on-composer), set the `COMPOSER_ALLOW_XDEBUG=1` [environment variable](../configuration/environment-variables.md) to allow all Composer commands to run with Xdebug when the extension is enabled.
 
 !!!note "Debugging code in runtime"
     Composer may move some classes (like plugins) to temporary files at runtime, so IDE breakpoints may not always be triggered. Use `xdebug_break()` directly in code when needed.

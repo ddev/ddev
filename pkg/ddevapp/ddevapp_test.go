@@ -4955,37 +4955,71 @@ func TestEnvFile(t *testing.T) {
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 
+	// So the global .env files written below can't clobber the ones you have
+	tmpXdgConfigHomeDir := testcommon.CopyGlobalDdevDir(t)
+	t.Cleanup(func() {
+		testcommon.ResetGlobalDdevDir(t, tmpXdgConfigHomeDir)
+	})
+
 	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 	err = os.Chdir(site.Dir)
 	assert.NoError(err)
 
-	err = fileutil.TemplateStringToFile("JUNK1=junk1\nJUNK2=junk2\n", nil, app.GetConfigPath(".env"))
+	globalDir := globalconfig.GetGlobalDdevDir()
+
+	err = fileutil.TemplateStringToFile("JUNK1=junk1\nJUNK2=junk2\nSHARED=project\n", nil, app.GetConfigPath(".env"))
+	require.NoError(t, err)
+	err = fileutil.TemplateStringToFile("DBONLY=dbonly\n", nil, app.GetConfigPath(".env.db"))
+	require.NoError(t, err)
+	err = fileutil.TemplateStringToFile("SHARED=global\nGLOBALALL=globalall\n", nil, filepath.Join(globalDir, ".env"))
+	require.NoError(t, err)
+	err = fileutil.TemplateStringToFile("GLOBALWEB=globalweb\n", nil, filepath.Join(globalDir, ".env.web"))
 	require.NoError(t, err)
 
-	err = app.Start()
-	require.NoError(t, err)
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(app.GetConfigPath(".env"))
-		assert.NoError(err)
+		for _, f := range []string{app.GetConfigPath(".env"), app.GetConfigPath(".env.db")} {
+			err = os.RemoveAll(f)
+			assert.NoError(err)
+		}
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
 
+	err = app.Start()
+	require.NoError(t, err)
+
 	// This set of webContainerExpectations should be maintained to match the list in the docs
-	expectedCustomEnv := map[string]string{
-		"JUNK1": "junk1",
-		"JUNK2": "junk2",
+	expectedCustomEnv := map[string]map[string]string{
+		"web": {
+			"JUNK1":     "junk1",
+			"JUNK2":     "junk2",
+			"GLOBALALL": "globalall",
+			"GLOBALWEB": "globalweb",
+			// The project .env wins over the global .env
+			"SHARED": "project",
+			// .env.db belongs to another service
+			"DBONLY": "unset",
+		},
+		"db": {
+			"GLOBALALL": "globalall",
+			"GLOBALWEB": "unset",
+			"DBONLY":    "dbonly",
+			"SHARED":    "project",
+		},
 	}
-	for k, v := range expectedCustomEnv {
-		envVal, _, err := app.Exec(&ddevapp.ExecOpts{
-			Cmd: fmt.Sprintf("echo ${%s}", k),
-		})
-		assert.NoError(err)
-		envVal = strings.Trim(envVal, "\r\n")
-		assert.Equal(v, envVal)
+	for service, expectations := range expectedCustomEnv {
+		for k, v := range expectations {
+			envVal, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: service,
+				Cmd:     fmt.Sprintf("echo ${%s:-unset}", k),
+			})
+			assert.NoError(err, "unable to exec in %s container: %s", service, stderr)
+			envVal = strings.Trim(envVal, "\r\n")
+			assert.Equal(v, envVal, "unexpected value for %s in %s container", k, service)
+		}
 	}
 }
 

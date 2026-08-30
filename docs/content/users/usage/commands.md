@@ -614,18 +614,61 @@ ddev describe my-project
 
 Commands for managing the contents of `.env` files.
 
+See [Environment Variables](../configuration/environment-variables.md) for which filename reaches which service, the order the files override each other in, and where to keep a secret.
+
 ### `dotenv get`
 
-Get the value of an environment variable from a .env file. Provide the path relative to the project root when specifying the file.
+Get the value of an environment variable from a `.env` file. Provide the path relative to the project root when specifying the file.
 
 Example:
 
 ```shell
-# Get the value of APP_KEY from the $DDEV_APPROOT/.env file
+# Get APP_KEY from $DDEV_APPROOT/.env
 ddev dotenv get .env --app-key
 
-# Get the value of ENV_KEY from the $DDEV_APPROOT/.ddev/.env file
-ddev dotenv get .ddev/.env --env-key
+# Get ENV_KEY from $DDEV_APPROOT/.ddev/.env.web
+ddev dotenv get .ddev/.env.web --env-key
+
+# Get REDIS_TAG from $DDEV_APPROOT/.ddev/.env.redis
+ddev dotenv get .ddev/.env.redis --redis-tag
+
+# Get API_KEY from the gitignored $DDEV_APPROOT/.ddev/.env.web.local
+ddev dotenv get .ddev/.env.web.local --api-key
+```
+
+### `dotenv global get`
+
+Get the value of an environment variable from a global `.env` file. Name the file as `.ddev/<file>`, the same way as in a project; it is read from the [global DDEV directory](architecture.md#global-files).
+
+Example:
+
+```shell
+# Get API_URL from the global .env.web
+ddev dotenv global get .ddev/.env.web --api-url
+
+# Get API_KEY from the gitignored global .env.web.local
+ddev dotenv global get .ddev/.env.web.local --api-key
+```
+
+### `dotenv global set`
+
+*Alias: `dotenv global add`.*
+
+Create or update a global `.env` file, which applies to every project, with values specified via long flags from the command line.
+Flags in the format `--env-key=value` will be converted to environment variable names like `ENV_KEY="value"`.
+Name the file as `.ddev/<file>`, the same way as in a project; it is written to the [global DDEV directory](architecture.md#global-files).
+
+Example:
+
+```shell
+# Set API_URL for the web service of every project
+ddev dotenv global set .ddev/.env.web --api-url=https://example.com
+
+# Set two variables for the db service of every project
+ddev dotenv global set .ddev/.env.db --extra value --another-key "extra value"
+
+# Set API_KEY in a gitignored file, for the web service of every project
+ddev dotenv global set .ddev/.env.web.local --api-key=secret
 ```
 
 ### `dotenv set`
@@ -633,22 +676,26 @@ ddev dotenv get .ddev/.env --env-key
 *Alias: `dotenv add`.*
 
 Create or update a `.env` file with values specified via long flags from the command line.
-Flags in the format `--env-key=value` will be converted to environment variable names
-like `ENV_KEY="value"`. The .env file should be named `.env` or `.env.<servicename>` or `.env.<something>`
-All environment variables can be used and expanded in `.ddev/docker-compose.*.yaml` files.
+Flags in the format `--env-key=value` will be converted to environment variable names like `ENV_KEY="value"`.
 Provide the path relative to the project root when specifying the file.
 
 Example:
 
 ```shell
-# Create or update $DDEV_APPROOT/.env file with APP_KEY="value"
+# Set APP_KEY in the application's own $DDEV_APPROOT/.env
 ddev dotenv set .env --app-key=value
 
-# Create or update $DDEV_APPROOT/.ddev/.env file with EXTRA="value" and ANOTHER_KEY="extra value"
-ddev dotenv set .ddev/.env --extra value --another-key "extra value"
+# Set two variables for the web service
+ddev dotenv set .ddev/.env.web --extra value --another-key "extra value"
 
-# Create or update $DDEV_APPROOT/.ddev/.env.redis file with REDIS_TAG="7-bookworm"
+# Set REDIS_TAG for the redis service
 ddev dotenv set .ddev/.env.redis --redis-tag 7-bookworm
+
+# Set API_URL for the web service, in a file labeled for one add-on
+ddev dotenv set .ddev/.env.web.myaddon --api-url=https://example.com
+
+# Set API_KEY in a gitignored file, for the web service
+ddev dotenv set .ddev/.env.web.local --api-key=secret
 ```
 
 ## `dr`
@@ -702,7 +749,7 @@ ddev exec --dir /var/www/html/vendor ls
 # Output a long, recursive list of the files in the web container
 ddev exec --raw -- ls -lR
 
-# Suppress detailed error message: 
+# Suppress detailed error message:
 # "Failed to execute command `exit 1`: exit status 1"
 ddev exec -q "exit 1"
 
@@ -747,7 +794,7 @@ Open [HeidiSQL](https://www.heidisql.com/) with the current project's database (
 
 Requirements by platform:
 
-* **Windows**: HeidiSQL installed at `C:\Program Files\HeidiSQL\Heidisql.exe`  
+* **Windows**: HeidiSQL installed at `C:\Program Files\HeidiSQL\Heidisql.exe`
 * **WSL2**: HeidiSQL accessible via `/mnt/c/Program Files/HeidiSQL/heidisql.exe`
 * **Linux**: HeidiSQL available at `/usr/bin/heidisql` or at `/usr/local/bin/heidisql`
 

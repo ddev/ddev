@@ -8,6 +8,8 @@ pre_install_actions:
   - echo "PRE_INSTALL_VARIABLE=${PRE_INSTALL_VARIABLE:-notset}"
   - echo "PRE_INSTALL_VARIABLE2=${PRE_INSTALL_VARIABLE2:-notset}"
   - echo "DOLLAR_SIGN=${DOLLAR_SIGN:-notset}"
+  - echo "DOT_ENV_VARIABLE=${DOT_ENV_VARIABLE:-notset}"
+  - echo "SECRET_VARIABLE=${SECRET_VARIABLE:-notset}"
 
 post_install_actions:
   - echo "POST_INSTALL_VARIABLE=${POST_INSTALL_VARIABLE:-notset}"

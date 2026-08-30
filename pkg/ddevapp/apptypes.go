@@ -373,7 +373,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		// Don't accidentally override the existing .ddev/.gitignore as well
 		// TODO: we may want to append to .ddev/.gitignore if needed.
 		if path.Dir(app.SiteSettingsPath) != app.AppRoot && path.Dir(app.SiteSettingsPath) != app.GetConfigPath("") && app.SiteDdevSettingsFile != "" {
-			if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
+			if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), nil, filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
 				util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
 			}
 		}

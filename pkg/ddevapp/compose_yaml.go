@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"maps"
 	"os"
-	"path/filepath"
 	"slices"
 	"strings"
 
@@ -302,19 +301,14 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 		service.Environment["HOST_DOCKER_INTERNAL_IP"] = &hostDockerInternal.IPAddress
 
 		// Add environment variables from .env files to services
-		for _, envFile := range envFiles {
-			filename := filepath.Base(envFile)
-			// Variables from .ddev/.env should be available in all containers,
-			// and variables from .ddev/.env.* should only be available in a specific container.
-			if filename == ".env" || filename == ".env."+name {
-				envMap, _, err := ReadProjectEnvFile(envFile)
-				if err != nil && !os.IsNotExist(err) {
-					util.Failed("Unable to read %s file: %v", envFile, err)
-				}
-				for envKey, envValue := range envMap {
-					val := envValue
-					service.Environment[envKey] = &val
-				}
+		for _, envFile := range filterEnvFilesForTarget(envFiles, name) {
+			envMap, _, err := ReadProjectEnvFile(envFile)
+			if err != nil && !os.IsNotExist(err) {
+				util.Failed("Unable to read %s file: %v", envFile, err)
+			}
+			for envKey, envValue := range envMap {
+				val := envValue
+				service.Environment[envKey] = &val
 			}
 		}
 		// Pass NO_COLOR to containers

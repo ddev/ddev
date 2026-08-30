@@ -13,6 +13,8 @@ services:
       # REDIS_TAG from .env.redis can be passed here during the 'docker-compose config' step,
       # when all .env.* files are passed to 'docker-compose config'
       - CAN_READ_FROM_ALL_ENV_FILES=${REDIS_TAG:-notset}
+      # GLOBAL_INTERPOLATED_TAG comes from a global env file in the DDEV directory
+      - CAN_READ_FROM_GLOBAL_ENV_FILES=${GLOBAL_INTERPOLATED_TAG:-notset}
 
     volumes:
       - ".:/mnt/ddev_config"

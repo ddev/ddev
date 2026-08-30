@@ -230,8 +230,21 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	err = copy2.Copy(filepath.Join(origDir, "testdata", t.Name(), "project"), app.GetAppRoot())
 	require.NoError(t, err)
 
+	envFilesDir := filepath.Join(origDir, "testdata", t.Name(), "env_files")
+	// Not a service name, so this global file only reaches 'docker-compose config'
+	globalEnvFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".env.global-interpolation-test")
+
 	t.Cleanup(func() {
 		assert := asrt.New(t)
+		// 'add-on remove' does not remove .env files, and a leftover would reach other projects
+		_ = os.RemoveAll(globalEnvFile)
+		envFiles, err := os.ReadDir(envFilesDir)
+		assert.NoError(err)
+		for _, envFile := range envFiles {
+			_ = os.RemoveAll(app.GetConfigPath(envFile.Name()))
+		}
+		_ = os.RemoveAll(app.GetConfigPath(".env.busybox"))
+		_ = os.RemoveAll(app.GetConfigPath(".env.bare-busybox"))
 		out, err := exec.RunHostCommand(DdevBin, "stop", site.Name)
 		assert.NoError(err, "output='%s'", out)
 		out, err = exec.RunHostCommand(DdevBin, "add-on", "remove", "busybox")
@@ -316,13 +329,22 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.Contains(t, out, "BARE_BUSYBOX_FOO=bar")
 
 	// Adding extra .env files here
-	err = copy2.Copy(filepath.Join(origDir, "testdata", t.Name(), "env_files"), app.AppConfDir())
+	err = copy2.Copy(envFilesDir, app.AppConfDir())
+	require.NoError(t, err)
+
+	err = os.WriteFile(globalEnvFile, []byte("GLOBAL_INTERPOLATED_TAG=8\n"), 0644)
 	require.NoError(t, err)
 
 	// Update the busybox image in .ddev/.env.busybox
 	// And update the value for THIS_VARIABLE_CAN_BE_CHANGED_FROM_ENV
-	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag", "1.36.1", "--this-variable-can-be-changed-from-env=changed", "--dollar-sign", `$dollar_variable_override`)
+	out, err = exec.RunHostCommand(DdevBin, "dotenv", "set", ".ddev/.env.busybox", "--busybox-tag", "1.36.1", "--this-variable-can-be-changed-from-env=changed", "--dollar-sign", `$dollar_variable_override`, "--service-override-variable=service_value")
 	require.NoError(t, err, "out=%s", out)
+
+	// Install actions read .ddev/.env and the gitignored .ddev/.env.busybox.local
+	out, err = exec.RunHostCommand(DdevBin, "add-on", "get", filepath.Join(origDir, "testdata", t.Name(), "busybox"))
+	require.NoError(t, err, "out=%s", out)
+	require.Contains(t, out, "DOT_ENV_VARIABLE=dot_env_value")
+	require.Contains(t, out, "SECRET_VARIABLE=secret_value")
 
 	out, err = exec.RunHostCommand(DdevBin, "restart")
 	require.NoError(t, err, "unable to ddev restart: %v, output='%s'", err, out)
@@ -351,6 +373,16 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.NotContains(t, out, "REDIS_TAG")
 	// But this REDIS_TAG variable from .env.redis can be expanded during 'docker-compose config'
 	require.Contains(t, out, "CAN_READ_FROM_ALL_ENV_FILES=7")
+	// The same is true for a global env file
+	require.Contains(t, out, "CAN_READ_FROM_GLOBAL_ENV_FILES=8")
+	// .env.local overrides .env
+	require.Contains(t, out, "LOCAL_OVERRIDE_VARIABLE=local_value")
+	require.NotContains(t, out, "LOCAL_OVERRIDE_VARIABLE=env_value")
+	// .env.busybox.local overrides .env.busybox
+	require.Contains(t, out, "SERVICE_OVERRIDE_VARIABLE=service_local_value")
+	require.NotContains(t, out, "SERVICE_OVERRIDE_VARIABLE=service_value")
+	// A labeled file reaches the service it names
+	require.Contains(t, out, "LABELED_VARIABLE=labeled_value")
 
 	// Check that the environment variable are set correctly inside the bare-busybox container
 	out, err = exec.RunHostCommand(DdevBin, "exec", "-s", "bare-busybox", "env")
@@ -358,6 +390,7 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.Contains(t, out, "BARE_BUSYBOX_FOO=bar")
 	// Variables from .env are passed to all containers
 	require.Contains(t, out, "GLOBAL_TEST_VARIABLE=global_test_variable")
+	require.Contains(t, out, "LOCAL_OVERRIDE_VARIABLE=local_value")
 
 	// Check that the environment variable are set correctly inside the web container
 	out, err = exec.RunHostCommand(DdevBin, "exec", "env")
@@ -378,12 +411,20 @@ func TestCmdAddonGetWithDotEnv(t *testing.T) {
 	require.NotContains(t, out, "REDIS_TAG")
 	// Variable from another service should not be here
 	require.NotContains(t, out, "CAN_READ_FROM_ALL_ENV_FILES")
+	// .env.local overrides .env in every container
+	require.Contains(t, out, "LOCAL_OVERRIDE_VARIABLE=local_value")
+	require.NotContains(t, out, "LOCAL_OVERRIDE_VARIABLE=env_value")
+	// Labeled and .local files belong to the busybox service
+	require.NotContains(t, out, "LABELED_VARIABLE")
+	require.NotContains(t, out, "SERVICE_OVERRIDE_VARIABLE")
+	require.NotContains(t, out, "SECRET_VARIABLE")
 
 	// Check that the environment variable are set correctly inside the db container
 	out, err = exec.RunHostCommand(DdevBin, "exec", "-s", "db", "env")
 	require.NoError(t, err, "unable to ddev exec -s db env: %v, output='%s'", err, out)
 	// Variables from .env are passed to all containers
 	require.Contains(t, out, "GLOBAL_TEST_VARIABLE=global_test_variable")
+	require.Contains(t, out, "LOCAL_OVERRIDE_VARIABLE=local_value")
 }
 
 // TestAddonGetWithDependencies tests static dependency installation

@@ -60,7 +60,7 @@ You need to obtain and configure an API token first. This only needs to be done 
             ddev config --web-environment-add="PLATFORM_PROJECT=abc12def34567,PLATFORM_ENVIRONMENT=main"
             ```
 
-    For more information about how to set environment variables for containers and services see [Environment Variables for Containers and Services](../extend/customization-extendibility.md#environment-variables-for-containers-and-services).
+    For more information about how to set environment variables for containers and services see [Environment Variables](../configuration/environment-variables.md).
 
 3. Run [`ddev restart`](../usage/commands.md#restart).
 4. Run `ddev pull upsun`. After you agree to the prompt, the current upstream databases and files will be downloaded.

@@ -299,10 +299,9 @@ func getInjectedEnvForBash(app *DdevApp, installDesc InstallDesc) (string, error
 	if app == nil {
 		return "", nil
 	}
-	envFile := app.GetConfigPath(".env." + installDesc.Name)
-	envMap, _, err := ReadProjectEnvFile(envFile)
-	if err != nil && !os.IsNotExist(err) {
-		return "", fmt.Errorf("unable to read %s file: %v", envFile, err)
+	envMap, err := app.ReadEnvFilesForTarget(installDesc.Name)
+	if err != nil {
+		return "", err
 	}
 	if len(envMap) == 0 {
 		return "", nil
@@ -468,11 +467,10 @@ func buildPHPActionEnvironment(app *DdevApp, installDesc InstallDesc, verbose bo
 		envMap["DDEV_VERBOSE"] = "true"
 	}
 
-	// Add all environment variables from the .ddev/.env.<addon-name>
-	envFile := app.GetConfigPath(".env." + installDesc.Name)
-	addonEnvMap, _, err := ReadProjectEnvFile(envFile)
-	if err != nil && !os.IsNotExist(err) {
-		return nil, fmt.Errorf("unable to read %s file: %v", envFile, err)
+	// Add all environment variables from the env files targeting the add-on
+	addonEnvMap, err := app.ReadEnvFilesForTarget(installDesc.Name)
+	if err != nil {
+		return nil, err
 	}
 
 	// Merge addon-specific environment variables using mergo

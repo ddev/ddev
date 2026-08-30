@@ -180,6 +180,8 @@ REDIS_TAG="7-bookworm"
 REDIS_FOO="bar"
 ```
 
+In DDEV v1.25.4+, if an add-on needs an API token or anything else you would rather not commit, put that value in a `.local` file instead, named `.ddev/.env.<addon>.local`. DDEV keeps those out of Git and applies them right after `.ddev/.env.<addon>`, so the shared settings can stay in Git while the secret doesn’t. See [Environment Variables](../configuration/environment-variables.md) for the full set of filenames and the order they override each other in.
+
 !!!tip "Check add-on documentation"
     Each add-on documents its available environment variables. Check the add-on's GitHub repository for configuration options.
 
