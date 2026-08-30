@@ -92,9 +92,8 @@ func init() {
 
 // addPullProviderSubcommands adds a `ddev pull <provider>` subcommand for
 // each provider valid in the active project, if any.
-func addPullProviderSubcommands() {
-	appRoot, err := ddevapp.GetActiveAppRoot("")
-	if err != nil {
+func addPullProviderSubcommands(appRoot string, appRootErr error) {
+	if appRootErr != nil {
 		return
 	}
 
