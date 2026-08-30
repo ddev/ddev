@@ -6,8 +6,8 @@
 set -eu -o pipefail
 set -x
 
-# Accept GO_VERSION from the environment, default to a known good version
-GO_VERSION="${GO_VERSION:-1.26.0}"
+# Accept GO_VERSION from the environment, default to the latest stable release
+GO_VERSION="${GO_VERSION:-$(curl -fsSL 'https://go.dev/VERSION?m=text' | head -1 | sed 's/^go//')}"
 
 export DEBIAN_FRONTEND=noninteractive
 
