@@ -131,7 +131,7 @@ func renderSearchResults(addons []types.Addon, searchTerm string, wrapTable bool
 	return out.String() + fmt.Sprintf("%d add-ons found matching '%s'. Those marked with '*' are officially maintained by DDEV.", len(addons), searchTerm)
 }
 
-func init() {
+func registerAddonSearchCmd() {
 	AddonSearchCmd.Flags().BoolP("wrap-table", "W", false, "Display table with wrapped text instead of truncating.")
 	AddonCmd.AddCommand(AddonSearchCmd)
 }

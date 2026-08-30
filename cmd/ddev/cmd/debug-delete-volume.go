@@ -165,7 +165,7 @@ ddev utility delete-volume solr --yes`,
 	},
 }
 
-func init() {
+func registerDebugDeleteVolumeCmd() {
 	DebugDeleteVolumeCmd.Flags().BoolVarP(&deleteVolumeYes, "yes", "y", false, "Yes - skip confirmation prompts")
 	DebugCmd.AddCommand(DebugDeleteVolumeCmd)
 }

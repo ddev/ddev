@@ -28,6 +28,6 @@ var DebugCheckDBMatch = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugCheckDBMatchCmd() {
 	DebugCmd.AddCommand(DebugCheckDBMatch)
 }

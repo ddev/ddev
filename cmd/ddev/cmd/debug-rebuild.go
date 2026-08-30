@@ -188,7 +188,7 @@ var DebugRebuildCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugRebuildCmd() {
 	DebugCmd.AddCommand(DebugRebuildCmd)
 	DebugRebuildCmd.Flags().BoolVarP(&buildAll, "all", "a", false, "Rebuild all services and restart the project")
 	DebugRebuildCmd.Flags().Bool("cache", false, "Keep Docker cache")

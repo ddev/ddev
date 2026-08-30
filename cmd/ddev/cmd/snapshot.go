@@ -212,7 +212,7 @@ func deleteAppSnapshot(app *ddevapp.DdevApp) {
 	}
 }
 
-func init() {
+func registerSnapshotCmd() {
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotAll, "all", "a", false, "Snapshot all projects. Will start the project if it is stopped or paused")
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotList, "list", "l", false, "List snapshots")
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotCleanup, "cleanup", "C", false, "Cleanup snapshots")

@@ -112,7 +112,7 @@ func isZero(v reflect.Value) bool {
 	return v.Interface() == z.Interface()
 }
 
-func init() {
+func registerDebugConfigYamlCmd() {
 	DebugConfigYamlCmd.Flags().BoolVar(&fullYAMLOutput, "full-yaml", false, "Output complete processed YAML configuration instead of individual fields")
 	DebugConfigYamlCmd.Flags().StringVar(&omitKeys, "omit-keys", "", "Comma-separated list of keys to omit from output (e.g., web_environment)")
 	DebugCmd.AddCommand(DebugConfigYamlCmd)

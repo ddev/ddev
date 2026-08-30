@@ -337,7 +337,7 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 	return manifest, nil
 }
 
-func init() {
+func registerAddonGetCmd() {
 	AddonGetCmd.Flags().String("version", "", `Specify a particular version of add-on to install`)
 	AddonGetCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")
 	_ = AddonGetCmd.RegisterFlagCompletionFunc("verbose", configCompletionFunc([]string{"true", "false"}))

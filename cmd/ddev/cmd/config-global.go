@@ -305,7 +305,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func init() {
+func registerConfigGlobalCmd() {
 	configGlobalCommand.Flags().StringVarP(&omitContainers, "omit-containers", "", "", `For example, --omit-containers=ddev-ssh-agent or --omit-containers=""`)
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("omit-containers", configCompletionFuncWithCommas(globalconfig.GetValidOmitContainers()))
 	configGlobalCommand.Flags().StringVarP(&webEnvironmentGlobal, "web-environment", "", "", `Set the environment variables in the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)

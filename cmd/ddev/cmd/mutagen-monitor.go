@@ -33,6 +33,6 @@ var MutagenMonitorCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerMutagenMonitorCmd() {
 	MutagenCmd.AddCommand(MutagenMonitorCmd)
 }

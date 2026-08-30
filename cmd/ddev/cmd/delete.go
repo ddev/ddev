@@ -83,7 +83,7 @@ ddev delete --all`,
 	},
 }
 
-func init() {
+func registerDeleteCmd() {
 	DeleteCmd.Flags().Bool("clean-containers", true, "Clean up all DDEV Docker containers which are not required by this version of DDEV")
 	DeleteCmd.Flags().BoolVarP(&deleteOmitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
 	DeleteCmd.Flags().BoolVarP(&noConfirm, "yes", "y", false, "Yes - skip confirmation prompt")

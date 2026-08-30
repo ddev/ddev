@@ -63,7 +63,7 @@ ddev ut xdebug-diagnose -i`,
 	},
 }
 
-func init() {
+func registerUtilityXdebugDiagnoseCmd() {
 	DebugCmd.AddCommand(XdebugDiagnoseCmd)
 	XdebugDiagnoseCmd.Flags().BoolVarP(&interactiveFlag, "interactive", "i", false,
 		"Run interactive guided diagnostics with step-by-step prompts")

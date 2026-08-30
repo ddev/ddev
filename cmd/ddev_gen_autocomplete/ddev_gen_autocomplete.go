@@ -15,6 +15,12 @@ func main() {
 		err = os.MkdirAll(targetDir, 0755)
 		util.CheckErr(err)
 	}
+	// Build the command tree ourselves - we don't call cmd.Execute(), so
+	// cmd.RootCmd would otherwise have no subcommands registered. This
+	// includes custom/global commands (e.g. the homeadditions-provided
+	// "self-upgrade"), matching what the tree looked like before command
+	// registration was split out of cmd's init() functions.
+	cmd.Setup()
 	err := cmd.RootCmd.GenBashCompletionFileV2(filepath.Join(targetDir, "ddev_bash_completion.sh"), true)
 	if err != nil {
 		util.Failed("could not generate ddev_bash_completion.sh: %v", err)

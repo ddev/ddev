@@ -54,6 +54,6 @@ var MutagenVersionCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerMutagenVersionCmd() {
 	MutagenCmd.AddCommand(MutagenVersionCmd)
 }

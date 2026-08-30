@@ -217,7 +217,7 @@ ddev share myproject`,
 	},
 }
 
-func init() {
+func registerShareCmd() {
 	RootCmd.AddCommand(DdevShareCommand)
 	DdevShareCommand.Flags().String("provider", "", "share provider to use (ngrok, cloudflared, or custom)")
 	_ = DdevShareCommand.RegisterFlagCompletionFunc("provider", configCompletionFunc([]string{"ngrok", "cloudflared"}))

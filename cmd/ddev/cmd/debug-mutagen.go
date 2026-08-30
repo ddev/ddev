@@ -39,6 +39,6 @@ ddev d mutagen sync list
 	},
 }
 
-func init() {
+func registerDebugMutagenCmd() {
 	DebugCmd.AddCommand(DebugMutagenCmd)
 }

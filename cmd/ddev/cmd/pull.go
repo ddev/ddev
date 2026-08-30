@@ -86,7 +86,7 @@ func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 	util.Success("Pull succeeded.")
 }
 
-func init() {
+func registerPullCmd() {
 	RootCmd.AddCommand(PullCmd)
 }
 

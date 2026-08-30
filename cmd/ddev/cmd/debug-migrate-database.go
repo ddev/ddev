@@ -84,6 +84,6 @@ ddev utility migrate-database mariadb:11.8`,
 	},
 }
 
-func init() {
+func registerDebugMigrateDatabaseCmd() {
 	DebugCmd.AddCommand(DebugMigrateDatabase)
 }

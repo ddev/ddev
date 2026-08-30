@@ -216,7 +216,7 @@ func addResetDatabaseFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolP("omit-snapshot", "O", false, "With --reset-database, skip the snapshot of the database being removed")
 }
 
-func init() {
+func registerStartCmd() {
 	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
 	StartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
 	StartCmd.Flags().BoolP("no-cache", "", false, "Rebuild custom Docker image layers without cache")
