@@ -26,6 +26,11 @@ import (
 
 func init() {
 	globalconfig.EnsureGlobalConfig()
+	// Tests in this package run in-process against command vars like
+	// DebugCmd directly (see TestTLSDiagnoseCommandRegistered), so the
+	// command tree needs to exist here too, not just in the real binary's
+	// cmd.Execute().
+	RegisterCommands()
 }
 
 var (
