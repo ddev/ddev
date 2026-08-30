@@ -22,6 +22,6 @@ var DebugMatchConstraintCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugMatchConstraintCmd() {
 	DebugCmd.AddCommand(DebugMatchConstraintCmd)
 }

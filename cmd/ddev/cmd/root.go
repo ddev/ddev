@@ -168,6 +168,7 @@ func Execute() {
 // including before main()'s "refuse to run as root" check. It must run
 // once, explicitly, before RootCmd.Execute() dispatches to a command.
 func Setup() {
+	RegisterCommands()
 	setupGlobalConfig()
 	activeAppRoot, activeAppRootErr := ddevapp.GetActiveAppRoot("")
 	setupRootCmd(activeAppRoot, activeAppRootErr)

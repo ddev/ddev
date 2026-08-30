@@ -17,6 +17,6 @@ var DebugInstrumentationCleanCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugInstrumentationCleanCmd() {
 	DebugInstrumentationCmd.AddCommand(DebugInstrumentationCleanCmd)
 }

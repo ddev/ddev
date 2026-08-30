@@ -94,7 +94,7 @@ func dotEnvGet(cmd *cobra.Command, arg string, app *ddevapp.DdevApp) {
 	}
 }
 
-func init() {
+func registerDotenvGetCmd() {
 	DotEnvCmd.AddCommand(DotEnvGetCmd)
 	DotEnvGlobalCmd.AddCommand(DotEnvGlobalGetCmd)
 }

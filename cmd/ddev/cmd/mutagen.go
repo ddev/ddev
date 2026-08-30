@@ -15,6 +15,6 @@ var MutagenCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerMutagenCmd() {
 	RootCmd.AddCommand(MutagenCmd)
 }

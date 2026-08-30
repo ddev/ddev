@@ -77,7 +77,7 @@ ddev utility download-images --all
 	},
 }
 
-func init() {
+func registerDebugDownloadImagesCmd() {
 	DebugDownloadImagesCmd.Flags().BoolVarP(&downloadAll, "all", "a", false, "Download all images for all projects")
 	DebugCmd.AddCommand(DebugDownloadImagesCmd)
 }

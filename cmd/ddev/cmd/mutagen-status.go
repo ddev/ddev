@@ -57,7 +57,7 @@ var MutagenStatusCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerMutagenStatusCmd() {
 	MutagenCmd.AddCommand(MutagenStatusCmd)
 	MutagenStatusCmd.Flags().BoolP("verbose", "l", false, "Extended verbose output for Mutagen status")
 }

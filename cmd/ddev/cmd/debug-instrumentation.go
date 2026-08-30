@@ -15,6 +15,6 @@ var DebugInstrumentationCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugInstrumentationCmd() {
 	DebugCmd.AddCommand(DebugInstrumentationCmd)
 }

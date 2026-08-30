@@ -163,7 +163,7 @@ func renderRepositoryList(addons []types.Addon, wrapTable bool) string {
 	return out.String() + fmt.Sprintf("%d add-ons found. Those marked with '*' are officially maintained by DDEV.", len(addons))
 }
 
-func init() {
+func registerAddonListCmd() {
 	AddonListCmd.Flags().Bool("all", false, `List unofficial DDEV add-ons for in addition to the official ones`)
 	_ = AddonListCmd.Flags().MarkDeprecated("all", "this flag no longer has any effect. All add-ons are shown by default.")
 	AddonListCmd.Flags().Bool("installed", false, `Show installed DDEV add-ons`)

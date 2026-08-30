@@ -87,7 +87,7 @@ ddev ut addon-update-checker -d /path/to/my-addons-workspace
 	},
 }
 
-func init() {
+func registerUtilityAddonUpdateCheckerCmd() {
 	AddonUpdateCheckerCmd.Flags().StringP("dir", "d", "", "Directory of the add-on to check, or a workspace containing multiple add-on directories (defaults to current directory)")
 	DebugCmd.AddCommand(AddonUpdateCheckerCmd)
 }

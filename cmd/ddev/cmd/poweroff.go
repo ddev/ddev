@@ -18,6 +18,6 @@ var PoweroffCommand = &cobra.Command{
 	},
 }
 
-func init() {
+func registerPoweroffCmd() {
 	RootCmd.AddCommand(PoweroffCommand)
 }

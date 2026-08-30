@@ -303,6 +303,6 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 	return out.String(), nil
 }
 
-func init() {
+func registerDescribeCmd() {
 	RootCmd.AddCommand(DescribeCommand)
 }

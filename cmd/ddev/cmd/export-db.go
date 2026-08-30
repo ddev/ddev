@@ -98,7 +98,7 @@ func NewExportDBCmd() *cobra.Command {
 	return cmd
 }
 
-func init() {
+func registerExportDBCmd() {
 	// TODO: Move to RootCmd
 	RootCmd.AddCommand(NewExportDBCmd())
 }

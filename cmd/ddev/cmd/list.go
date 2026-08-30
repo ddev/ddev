@@ -23,7 +23,7 @@ ddev list -t typo3`,
 	},
 }
 
-func init() {
+func registerListCmd() {
 	ListCmd.Flags().BoolVarP(&listCommandSettings.ActiveOnly, "active-only", "A", false, "If set, only currently active projects will be displayed.")
 	ListCmd.Flags().BoolVarP(&listCommandSettings.Continuous, "continuous", "", false, "If set, project information will be emitted until the command is stopped.")
 	ListCmd.Flags().BoolVarP(&listCommandSettings.WrapTableText, "wrap-table", "W", false, "Display table with wrapped text if required.")

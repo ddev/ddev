@@ -85,7 +85,7 @@ func appPush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 	util.Success("Push succeeded.")
 }
 
-func init() {
+func registerPushCmd() {
 	RootCmd.AddCommand(PushCmd)
 }
 

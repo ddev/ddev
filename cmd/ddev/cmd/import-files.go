@@ -153,6 +153,6 @@ func promptForExtractPath(val *string) {
 	*val = util.GetQuotedInput("")
 }
 
-func init() {
+func registerImportFilesCmd() {
 	RootCmd.AddCommand(NewImportFileCmd())
 }

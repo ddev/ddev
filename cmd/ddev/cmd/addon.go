@@ -18,6 +18,6 @@ ddev add-on search redis
 `,
 }
 
-func init() {
+func registerAddonCmd() {
 	RootCmd.AddCommand(AddonCmd)
 }

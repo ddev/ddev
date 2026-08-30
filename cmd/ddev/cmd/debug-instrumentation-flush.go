@@ -32,6 +32,6 @@ var DebugInstrumentationFlushCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugInstrumentationFlushCmd() {
 	DebugInstrumentationCmd.AddCommand(DebugInstrumentationFlushCmd)
 }

@@ -215,7 +215,7 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	util.Success("Configuration complete. You may now run 'ddev start'.")
 }
 
-func init() {
+func registerConfigCmd() {
 	validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
 	projectTypeUsage := fmt.Sprintf("Provide the project type (one of %s). This is autodetected and this flag is necessary only to override the detection.", validAppTypes)
 	projectNameUsage := "Provide the project name of project to configure (normally the same as the last part of directory name)"

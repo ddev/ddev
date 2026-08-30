@@ -124,7 +124,7 @@ func quoteArgs(args []string) string {
 	return b.String()
 }
 
-func init() {
+func registerExecCmd() {
 	DdevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Define the service to connect to. [e.g. web, db]")
 	_ = DdevExecCmd.RegisterFlagCompletionFunc("service", ddevapp.GetServiceNamesFunc(true))
 	DdevExecCmd.Flags().StringVarP(&execDirArg, "dir", "d", "", "Define the execution directory within the container")

@@ -127,7 +127,7 @@ func dotEnvSet(cmd *cobra.Command, arg string, app *ddevapp.DdevApp) {
 	output.UserOut.WithField("raw", changedEnvMap).Print(friendlyMsg)
 }
 
-func init() {
+func registerDotenvSetCmd() {
 	DotEnvCmd.AddCommand(DotEnvSetCmd)
 	DotEnvGlobalCmd.AddCommand(DotEnvGlobalSetCmd)
 }
