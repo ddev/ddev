@@ -88,7 +88,11 @@ func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 
 func init() {
 	RootCmd.AddCommand(PullCmd)
+}
 
+// addPullProviderSubcommands adds a `ddev pull <provider>` subcommand for
+// each provider valid in the active project, if any.
+func addPullProviderSubcommands() {
 	appRoot, err := ddevapp.GetActiveAppRoot("")
 	if err != nil {
 		return

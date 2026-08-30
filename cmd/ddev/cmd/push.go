@@ -87,7 +87,11 @@ func appPush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 
 func init() {
 	RootCmd.AddCommand(PushCmd)
+}
 
+// addPushProviderSubcommands adds a `ddev push <provider>` subcommand for
+// each provider valid in the active project, if any.
+func addPushProviderSubcommands() {
 	appRoot, err := ddevapp.GetActiveAppRoot("")
 	if err != nil {
 		return
