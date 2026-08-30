@@ -169,9 +169,10 @@ func Execute() {
 // once, explicitly, before RootCmd.Execute() dispatches to a command.
 func Setup() {
 	setupGlobalConfig()
-	setupRootCmd()
-	addPullProviderSubcommands()
-	addPushProviderSubcommands()
+	activeAppRoot, activeAppRootErr := ddevapp.GetActiveAppRoot("")
+	setupRootCmd(activeAppRoot, activeAppRootErr)
+	addPullProviderSubcommands(activeAppRoot, activeAppRootErr)
+	addPushProviderSubcommands(activeAppRoot, activeAppRootErr)
 }
 
 func init() {
@@ -196,9 +197,10 @@ func init() {
 }
 
 // setupRootCmd does the Docker/filesystem-dependent RootCmd setup that
-// cannot run at package init() time, since it needs to run after main()'s
-// root-privilege check.
-func setupRootCmd() {
+// cannot run at package init() time: it needs to run after main()'s
+// root-privilege check, and needs the active project root (if any),
+// computed once by Setup(), rather than discovering it again itself.
+func setupRootCmd(activeAppRoot string, activeAppRootErr error) {
 	// Determine if Docker is running by getting the version.
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
 	_, err := dockerutil.GetDockerVersion()
@@ -215,7 +217,7 @@ func setupRootCmd() {
 			util.Warning("populateExamplesAndCommands() failed: %v", err)
 		}
 
-		err = addCustomCommands(RootCmd)
+		err = addCustomCommands(RootCmd, activeAppRoot, activeAppRootErr)
 		if err != nil {
 			util.Warning("Adding custom/shell commands failed: %v", err)
 		}

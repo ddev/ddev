@@ -91,9 +91,8 @@ func init() {
 
 // addPushProviderSubcommands adds a `ddev push <provider>` subcommand for
 // each provider valid in the active project, if any.
-func addPushProviderSubcommands() {
-	appRoot, err := ddevapp.GetActiveAppRoot("")
-	if err != nil {
+func addPushProviderSubcommands(appRoot string, appRootErr error) {
+	if appRootErr != nil {
 		return
 	}
 
