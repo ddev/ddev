@@ -346,7 +346,13 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 		},
 		{
 			collectFiles: func() ([]string, error) {
-				return app.EnvFiles()
+				return orderedEnvFilesInDir(globalconfig.GetGlobalDdevDir())
+			},
+			displayName: "Environment (global)",
+		},
+		{
+			collectFiles: func() ([]string, error) {
+				return orderedEnvFilesInDir(app.AppConfDir())
 			},
 			displayName: "Environment",
 		},
