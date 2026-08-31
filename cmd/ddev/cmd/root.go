@@ -150,45 +150,6 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	// RootCmd's full command tree and flags exist now (every file's init() in this package
-	// has run), so this can tell a bare `ddev start` (or one of its aliases, with no explicit
-	// target) apart from one with flags or a project name, which raw os.Args can't.
-	ddevapp.IsBareStartInvocation = func() bool {
-		resolved, remaining, err := RootCmd.Find(os.Args[1:])
-		if err != nil || resolved != StartCmd {
-			return false
-		}
-		if err := resolved.Flags().Parse(remaining); err != nil {
-			return false
-		}
-		return len(resolved.Flags().Args()) == 0
-	}
-	ddevapp.BareStartTokens = map[string]bool{StartCmd.Name(): true}
-	for _, alias := range StartCmd.Aliases {
-		ddevapp.BareStartTokens[alias] = true
-	}
-	ddevapp.IsBareStartInvocationKnown = true
-
-	// Populate custom/script commands so they're visible. Done here rather than in init(),
-	// so every subcommand's own init() (Cobra registration and flags) has already run -
-	// addCustomCommands() resolves the active project, which needs RootCmd's full command
-	// tree and flags to identify the invoked (sub)command.
-	// We really don't want ~/.ddev or .ddev/homeadditions to have root ownership, breaks things.
-	if os.Geteuid() != 0 {
-		err := ddevapp.PopulateExamplesCommandsHomeadditions("")
-		if err != nil {
-			util.Warning("populateExamplesAndCommands() failed: %v", err)
-		}
-
-		err = addCustomCommands(RootCmd)
-		if err != nil {
-			util.Warning("Adding custom/shell commands failed: %v", err)
-		}
-
-		// Add fallback nvm command which notifies user that nvm has been removed.
-		addCommandIfNotExists(RootCmd, NvmCmd)
-	}
-
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}
@@ -220,6 +181,23 @@ func init() {
 
 	if err != nil && !dockerutil.CanRunWithoutDocker() {
 		util.Failed("Docker error: %v\nFor help go to: https://docs.ddev.com/en/stable/users/install/docker-installation/#troubleshooting-docker", err)
+	}
+
+	// Populate custom/script commands so they're visible.
+	// We really don't want ~/.ddev or .ddev/homeadditions to have root ownership, breaks things.
+	if os.Geteuid() != 0 {
+		err := ddevapp.PopulateExamplesCommandsHomeadditions("")
+		if err != nil {
+			util.Warning("populateExamplesAndCommands() failed: %v", err)
+		}
+
+		err = addCustomCommands(RootCmd)
+		if err != nil {
+			util.Warning("Adding custom/shell commands failed: %v", err)
+		}
+
+		// Add fallback nvm command which notifies user that nvm has been removed.
+		addCommandIfNotExists(RootCmd, NvmCmd)
 	}
 
 	setHelpFunc(RootCmd)
