@@ -12,6 +12,9 @@ collation-server = utf8mb4_unicode_520_ci
 # which now does nothing, because it's used by all types in create-base-db.sh
 innodb-redo-log-capacity=100663296
 
+# secure_file_priv="" is most permissive, but irrelevant to DDEV
+secure_file_priv=""
+
 # Pin buffer pool instances to 1 so innodb-buffer-pool-size is honored exactly.
 # Otherwise the buffer pool size is rounded up to a multiple of
 # (chunk_size * instances), which can make the effective size machine-dependent.
