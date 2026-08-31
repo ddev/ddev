@@ -684,9 +684,6 @@ func ValidateNodeJSRootAndVersion(appRoot string, nodeJSRoot string, nodeJSVersi
 		return nil
 	}
 	versionFilesDir := filepath.Join(appRoot, nodeJSRoot)
-	if nodeJSRoot != "" && !fileutil.IsDirectory(versionFilesDir) {
-		return fmt.Errorf("nodejs_root directory '%s' does not exist, but nodejs_version ('%s') must read a version file from it", versionFilesDir, nodeJSVersion)
-	}
 	versionFiles := nodeJSVersionFiles(nodeJSVersion)
 	for _, f := range versionFiles {
 		if fileutil.FileExists(filepath.Join(versionFilesDir, f)) {

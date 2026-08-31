@@ -634,17 +634,17 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 	}
 
-	if cmd.Flag("nodejs-version").Changed {
-		app.NodeJSVersion, err = cmd.Flags().GetString("nodejs-version")
-		if err != nil {
-			util.Failed("Incorrect nodejs-version: %v", err)
-		}
-	}
-
 	if cmd.Flag("nodejs-root").Changed {
 		app.NodeJSRoot, err = cmd.Flags().GetString("nodejs-root")
 		if err != nil {
 			util.Failed("Incorrect nodejs-root: %v", err)
+		}
+	}
+
+	if cmd.Flag("nodejs-version").Changed {
+		app.NodeJSVersion, err = cmd.Flags().GetString("nodejs-version")
+		if err != nil {
+			util.Failed("Incorrect nodejs-version: %v", err)
 		}
 	}
 
