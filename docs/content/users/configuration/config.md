@@ -451,6 +451,14 @@ Whether to disable the TUI (terminal user interface) when running the `ddev` com
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
+## `nodejs_root`
+
+The relative path, from the project root, to the directory containing the Node.js version file. (Requires [`nodejs_version`](#nodejs_version) `auto` or `engine`.)
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | &zwnj; | `nodejs_root: web/themes/custom/mytheme`
+
 ## `nodejs_version`
 
 Node.js version for the web container, managed by [`n`](https://www.npmjs.com/package/n).
@@ -481,12 +489,13 @@ What DDEV does depends on the value:
     Example: you set `22`, and `n` installs the newest `22.x` available at build time, for example `22.14.0`. If `22.14.1` is released before the next rebuild, your project stays on `22.14.0` until then.
 
 !!!tip "How to define the Node.js version using a file"
-    Set `nodejs_version: auto` to read the version from a file in your project root ([`DDEV_APPROOT`](../extend/custom-commands.md#environment-variables-provided)). `n` checks these in order: `.n-node-version`, `.node-version`, `.nvmrc`, then the `engines.node` field in `package.json`. Set `nodejs_version: engine` to use only `engines.node`. See [n's documentation](https://www.npmjs.com/package/n#specifying-nodejs-versions) for details.
+    Set `nodejs_version: auto` to read the version from a file in your project root ([`DDEV_APPROOT`](../extend/custom-commands.md#environment-variables-provided)). `n` checks these in order: `.n-node-version`, `.node-version`, `.nvmrc`, then the `engines.node` field in `package.json`. Set `nodejs_version: engine` to use only `engines.node`. Either value fails validation if no such file exists. See [n's documentation](https://www.npmjs.com/package/n#specifying-nodejs-versions) for details.
 
-    If your version file is not in your project root, create a symlink pointing to it. For example, if you have `frontend/.nvmrc`:
+    If your version file is not in your project root, point [`nodejs_root`](#nodejs_root) at its directory. For example, if you have `frontend/.nvmrc`:
 
-    ```bash
-    ln -sf frontend/.nvmrc .nvmrc
+    ```yaml
+    nodejs_root: frontend
+    nodejs_version: auto
     ```
 
 !!!tip "Installing additional Node.js versions"

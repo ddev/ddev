@@ -138,6 +138,7 @@ type DdevApp struct {
 	ComposerVersion           string                `yaml:"composer_version"`
 	DisableSettingsManagement bool                  `yaml:"disable_settings_management,omitempty"`
 	WebEnvironment            []string              `yaml:"web_environment"`
+	NodeJSRoot                string                `yaml:"nodejs_root,omitempty"`
 	NodeJSVersion             string                `yaml:"nodejs_version"`
 	CorepackEnable            bool                  `yaml:"corepack_enable"`
 	DefaultContainerTimeout   string                `yaml:"default_container_timeout,omitempty"`

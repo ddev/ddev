@@ -554,6 +554,11 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("the %s project has an invalid nodejs_version: %q, Node.js versions cannot contain whitespace; leave it empty to use the DDEV default", app.Name, app.NodeJSVersion)
 	}
 
+	// Validate Node.js root and version file
+	if err := ValidateNodeJSRootAndVersion(app.AppRoot, app.NodeJSRoot, app.NodeJSVersion); err != nil {
+		return fmt.Errorf("the %s project has an invalid Node.js configuration: %w", app.Name, err)
+	}
+
 	// Validate webserver type
 	if !nodeps.IsValidWebserverType(app.WebserverType) {
 		return fmt.Errorf("the %s project has an unsupported webserver type: %s, DDEV (%s) only supports the following webserver types: %s", app.Name, app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
@@ -645,6 +650,47 @@ func ValidateDocroot(docroot string) error {
 		return fmt.Errorf("docroot ('%s') must be a relative path that stays inside the project root", docroot)
 	}
 	return nil
+}
+
+// ValidateNodeJSRoot validates the nodejs_root setting, which must be
+// a relative path that stays inside the project root.
+func ValidateNodeJSRoot(nodeJSRoot string) error {
+	if nodeJSRoot != "" && !filepath.IsLocal(nodeJSRoot) {
+		return fmt.Errorf("nodejs_root ('%s') must be a relative path that stays inside the project root", nodeJSRoot)
+	}
+	return nil
+}
+
+// nodeJSVersionFiles returns the files `n` consults, in order, for a given
+// nodejs_version; engine reads only the engines.node field of package.json.
+func nodeJSVersionFiles(nodeJSVersion string) []string {
+	if nodeJSVersion == "engine" {
+		return []string{"package.json"}
+	}
+	return []string{".n-node-version", ".node-version", ".nvmrc", "package.json"}
+}
+
+// ValidateNodeJSRootAndVersion validates nodejs_root together with nodejs_version.
+// Only auto and engine read a version file, and a missing one has to fail here:
+// `n install` failures are tolerated, so the container would silently get the default.
+func ValidateNodeJSRootAndVersion(appRoot string, nodeJSRoot string, nodeJSVersion string) error {
+	if err := ValidateNodeJSRoot(nodeJSRoot); err != nil {
+		return err
+	}
+	if nodeJSVersion != "auto" && nodeJSVersion != "engine" {
+		if nodeJSRoot != "" {
+			return fmt.Errorf("nodejs_root ('%s') requires nodejs_version 'auto' or 'engine', but nodejs_version is '%s'", nodeJSRoot, nodeJSVersion)
+		}
+		return nil
+	}
+	versionFilesDir := filepath.Join(appRoot, nodeJSRoot)
+	versionFiles := nodeJSVersionFiles(nodeJSVersion)
+	for _, f := range versionFiles {
+		if fileutil.FileExists(filepath.Join(versionFilesDir, f)) {
+			return nil
+		}
+	}
+	return fmt.Errorf("nodejs_version ('%s') requires a Node.js version file (%s) in '%s', see https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version", nodeJSVersion, strings.Join(versionFiles, ", "), versionFilesDir)
 }
 
 // DockerComposeYAMLPath returns the absolute path to where the
@@ -1033,9 +1079,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			if err = os.MkdirAll(destDir, 0755); err != nil {
 				return "", err
 			}
-			// These are the files `n` consults for `auto` (in order) and `engine`.
-			for _, f := range []string{".n-node-version", ".node-version", ".nvmrc", "package.json"} {
-				src := filepath.Join(app.AppRoot, f)
+			srcDir := filepath.Join(app.AppRoot, app.NodeJSRoot)
+			for _, f := range nodeJSVersionFiles(app.NodeJSVersion) {
+				src := filepath.Join(srcDir, f)
 				if fileutil.FileExists(src) {
 					if err = fileutil.CopyFile(src, filepath.Join(destDir, f)); err != nil {
 						return "", err
@@ -1044,7 +1090,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			}
 			// cd so n resolves auto/engine from the version files copied above
 			extraWebContent = extraWebContent + `
-### DDEV-injected Node.js version files from the project root
+### DDEV-injected Node.js version files from nodejs_root (default: project root)
 COPY n-version-files/ /tmp/n-version-files/
 `
 		}

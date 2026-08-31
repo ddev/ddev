@@ -97,6 +97,55 @@ func TestNodeJSVersions(t *testing.T) {
 	}
 }
 
+// TestNodeJSRoot tests that nodejs_root reads the version file from a
+// subdirectory of the project root
+func TestNodeJSRoot(t *testing.T) {
+	if nodeps.IsEnvTrue("DDEV_SKIP_NODEJS_TEST") {
+		t.Skip("Skipping TestNodeJSRoot because DDEV_SKIP_NODEJS_TEST is true")
+	}
+
+	site := TestSites[0]
+	origDir, _ := os.Getwd()
+	_ = os.Chdir(site.Dir)
+
+	runTime := util.TimeTrackC(t.Name())
+
+	testcommon.ClearDockerEnv()
+	app, err := ddevapp.NewApp(site.Dir, true)
+	require.NoError(t, err)
+	app.CorepackEnable = false
+	app.NodeJSRoot = "frontend"
+	app.NodeJSVersion = "auto"
+
+	nvmrcFile := filepath.Join(app.AppRoot, ".nvmrc")
+	nodeJSRootDir := filepath.Join(app.AppRoot, app.NodeJSRoot)
+	t.Cleanup(func() {
+		runTime()
+		_ = os.Chdir(origDir)
+		_ = os.Remove(nvmrcFile)
+		_ = os.RemoveAll(nodeJSRootDir)
+		_ = app.Stop(true, false)
+	})
+
+	// The project root gets a .nvmrc of its own, with a different version, so a
+	// pass can't come from reading the wrong directory.
+	testdataDir := filepath.Join(origDir, "testdata", t.Name())
+	require.NoError(t, fileutil.CopyFile(filepath.Join(testdataDir, ".nvmrc"), nvmrcFile))
+	_ = os.RemoveAll(nodeJSRootDir)
+	require.NoError(t, fileutil.CopyDir(filepath.Join(testdataDir, app.NodeJSRoot), nodeJSRootDir))
+	subdirVersion, err := fileutil.ReadFileIntoString(filepath.Join(nodeJSRootDir, ".nvmrc"))
+	require.NoError(t, err)
+	subdirVersion = strings.TrimSpace(subdirVersion)
+
+	err = app.Restart()
+	require.NoError(t, err)
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "node --version",
+	})
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "v"+subdirVersion), "Expected node version from nodejs_root to start with '%s', but got %s", subdirVersion, out)
+}
+
 // TestCorepackEnable tests behavior of corepack_enable
 func TestCorepackEnable(t *testing.T) {
 	assert := asrt.New(t)

@@ -477,6 +477,10 @@
       "description": "Whether to skip mounting project into web container.",
       "type": "boolean"
     },
+    "nodejs_root": {
+      "description": "The relative path, from the project root, to the directory containing the Node.js version file. (Requires nodejs_version auto or engine.)",
+      "type": "string"
+    },
     "nodejs_version": {
       "description": "Node.js version for the web container's \"system\" version.",
       "type": "string",

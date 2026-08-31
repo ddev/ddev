@@ -87,6 +87,10 @@ const ConfigInstructions = `
 # Alternatively, an explicit Composer version may be specified, for example "2.2.18".
 # To reinstall Composer after the image was built, run "ddev utility rebuild".
 
+# nodejs_root: <relative_path>
+# Relative path to the directory containing the Node.js version file from the
+# project root. Only used with "nodejs_version: auto" or "nodejs_version: engine".
+
 # nodejs_version: "24"
 # change from the default system Node.js version to any other version.
 # See https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version for more information
