@@ -67,10 +67,16 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 			}
 		}
 
-		if len(os.Args) < 2 {
-			return
+		// A nested project that DDEV was never told about doesn't take over the registered
+		// project around it. Commands act on the registered project and say so, pointing
+		// at `ddev start`, which asks whether to switch and registers the nested project
+		// when it does. `ddev config` is left out, acting on the closest config.yaml.
+		switch {
+		case cmd == StartCmd && len(args) == 0 && !startAll:
+			ddevapp.PromptToUseNestedProject(skipConfirmation)
+		case cmd != ConfigCommand:
+			ddevapp.ShowNestedProjectWarning()
 		}
-		command := os.Args[1]
 
 		// Anonymize user defined custom commands.
 		cmdCopy := *cmd
@@ -85,12 +91,13 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 		// ddev describe -j over and over again.
 		// And we don't want to send __complete commands,
 		// that are called each time you press <TAB>.
-		if !output.JSONOutput && cmdCopy.Name() != cobra.ShellCompRequestCmd {
+		// Bare `ddev` launches the TUI rather than running a command, so it isn't tracked.
+		if cmd.Parent() != nil && !output.JSONOutput && cmdCopy.Name() != cobra.ShellCompRequestCmd {
 			amplitude.TrackCommand(&cmdCopy, argsCopy)
 		}
 
 		// Skip Docker and other validation for most commands
-		if command != "start" && command != "restart" {
+		if cmd != StartCmd && cmd != RestartCmd {
 			return
 		}
 

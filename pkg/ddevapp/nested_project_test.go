@@ -8,7 +8,6 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,11 +24,13 @@ func TestNestedProject(t *testing.T) {
 	childName := parentName + "-child"
 	origDir, _ := os.Getwd()
 	require.NoError(t, os.Chdir(childDir))
+	ddevapp.ResetNestedProjectState()
 	t.Cleanup(func() {
 		require.NoError(t, os.Chdir(origDir))
 		testcommon.CleanupDir(parentDir)
 		delete(globalconfig.DdevProjectList, parentName)
 		delete(globalconfig.DdevProjectList, childName)
+		ddevapp.ResetNestedProjectState()
 	})
 
 	// With neither of them registered, the nearest one wins as it always has.
@@ -37,14 +38,11 @@ func TestNestedProject(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, childDir, got)
 
-	// A registered project outside the nested one wins, and says so.
+	// A registered project outside the nested one wins.
 	globalconfig.DdevProjectList[parentName] = &globalconfig.ProjectInfo{AppRoot: parentDir}
-	getWarning := util.CaptureUserErr()
 	got, err = ddevapp.GetActiveAppRoot("")
-	warning := getWarning()
 	require.NoError(t, err)
 	require.Equal(t, parentDir, got)
-	require.Contains(t, warning, childDir)
 
 	// `ddev config` still configures the directory it's in, so the nested project can be
 	// registered without the `ddev start` prompt.
@@ -52,12 +50,45 @@ func TestNestedProject(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, childDir, got)
 
-	// Registering the nested project pins it, without a warning.
+	// Registering the nested project pins it.
 	globalconfig.DdevProjectList[childName] = &globalconfig.ProjectInfo{AppRoot: childDir}
-	getWarning = util.CaptureUserErr()
 	got, err = ddevapp.GetActiveAppRoot("")
-	warning = getWarning()
 	require.NoError(t, err)
 	require.Equal(t, childDir, got)
-	require.Empty(t, warning)
+}
+
+// TestNestedProjectPrompt validates that after PromptToUseNestedProject(), which project
+// gets used follows the answer - here the "no" default, since DDEV_NONINTERACTIVE can't ask.
+func TestNestedProjectPrompt(t *testing.T) {
+	t.Setenv("DDEV_NONINTERACTIVE", "true")
+
+	parentDir := testcommon.CreateTmpDir(t.Name())
+	childDir := filepath.Join(parentDir, "child")
+	for _, dir := range []string{parentDir, childDir} {
+		require.NoError(t, os.MkdirAll(filepath.Join(dir, ".ddev"), 0755))
+		require.NoError(t, os.WriteFile(filepath.Join(dir, ".ddev", "config.yaml"), nil, 0644))
+	}
+	parentName := filepath.Base(parentDir)
+	origDir, _ := os.Getwd()
+	require.NoError(t, os.Chdir(childDir))
+	globalconfig.DdevProjectList[parentName] = &globalconfig.ProjectInfo{AppRoot: parentDir}
+	ddevapp.ResetNestedProjectState()
+	t.Cleanup(func() {
+		require.NoError(t, os.Chdir(origDir))
+		testcommon.CleanupDir(parentDir)
+		delete(globalconfig.DdevProjectList, parentName)
+		ddevapp.ResetNestedProjectState()
+	})
+
+	ddevapp.PromptToUseNestedProject(false)
+	got, err := ddevapp.GetActiveAppRoot("")
+	require.NoError(t, err)
+	require.Equal(t, parentDir, got, "declining should leave the outer project in place")
+
+	// `-y` doesn't ask, and doesn't take it as a yes either.
+	ddevapp.ResetNestedProjectState()
+	ddevapp.PromptToUseNestedProject(true)
+	got, err = ddevapp.GetActiveAppRoot("")
+	require.NoError(t, err)
+	require.Equal(t, parentDir, got)
 }
