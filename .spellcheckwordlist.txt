@@ -678,6 +678,7 @@ styleguide
 subdirectory
 subdirectories
 subfield
+submodule
 subnet
 subshell
 sudo

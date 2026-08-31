@@ -7,6 +7,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,6 +55,27 @@ func TestExtractProjectNames(t *testing.T) {
 	expectedNames := []string{"bar", "foo", "zoz"}
 
 	assert.Equal(expectedNames, names)
+}
+
+// TestCheckForConf validates that CheckForConf finds .ddev/config.yaml in the given
+// directory or in the closest parent that has one.
+func TestCheckForConf(t *testing.T) {
+	projectDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() { testcommon.CleanupDir(projectDir) })
+	subDir := filepath.Join(projectDir, "web", "sites")
+	require.NoError(t, os.MkdirAll(subDir, 0755))
+
+	_, err := ddevapp.CheckForConf(subDir)
+	require.Error(t, err)
+
+	require.NoError(t, os.MkdirAll(filepath.Join(projectDir, ".ddev"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(projectDir, ".ddev", "config.yaml"), nil, 0644))
+
+	for _, dir := range []string{projectDir, subDir} {
+		got, err := ddevapp.CheckForConf(dir)
+		require.NoError(t, err)
+		require.Equal(t, projectDir, got)
+	}
 }
 
 // TestGetRelativeWorkingDirectory validates GetRelativeWorkingDirectory
