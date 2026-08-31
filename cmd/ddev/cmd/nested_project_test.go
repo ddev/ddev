@@ -14,6 +14,7 @@ import (
 // the registered project around an unregistered nested one, including the flags and aliases
 // that shouldn't change the answer.
 func TestCmdNestedProjectWarning(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	origDir, _ := os.Getwd()
 	parentDir := testcommon.CreateTmpDir(t.Name())
 	childDir := filepath.Join(parentDir, "child")
@@ -31,11 +32,11 @@ func TestCmdNestedProjectWarning(t *testing.T) {
 
 	// Register the outer project, then give the child an unregistered config of its own.
 	require.NoError(t, os.Chdir(parentDir))
-	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name="+t.Name(), "--docroot=.")
+	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name="+t.Name(), "--omit-containers=db")
 	require.NoError(t, err, "output=%s", out)
 	require.NoError(t, os.MkdirAll(filepath.Join(childDir, ".ddev"), 0755))
 	require.NoError(t, os.WriteFile(filepath.Join(childDir, ".ddev", "config.yaml"),
-		[]byte("name: "+t.Name()+"-child\ntype: php\n"), 0644))
+		[]byte("name: "+t.Name()+"-child\ntype: php\nomit_containers: [db]\n"), 0644))
 	require.NoError(t, os.Chdir(childDir))
 
 	const warning = "is not registered"
