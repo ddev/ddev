@@ -554,9 +554,9 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("the %s project has an invalid nodejs_version: %q, Node.js versions cannot contain whitespace; leave it empty to use the DDEV default", app.Name, app.NodeJSVersion)
 	}
 
-	// Validate Node.js root
-	if err := ValidateNodeJSRoot(app.NodeJSRoot); err != nil {
-		return fmt.Errorf("the %s project has an invalid nodejs_root: %w", app.Name, err)
+	// Validate Node.js root and version file
+	if err := ValidateNodeJSRootAndVersion(app.AppRoot, app.NodeJSRoot, app.NodeJSVersion); err != nil {
+		return fmt.Errorf("the %s project has an invalid Node.js configuration: %w", app.Name, err)
 	}
 
 	// Validate webserver type
@@ -659,6 +659,41 @@ func ValidateNodeJSRoot(nodeJSRoot string) error {
 		return fmt.Errorf("nodejs_root ('%s') must be a relative path that stays inside the project root", nodeJSRoot)
 	}
 	return nil
+}
+
+// nodeJSVersionFiles returns the files `n` consults, in order, for a given
+// nodejs_version; engine reads only the engines.node field of package.json.
+func nodeJSVersionFiles(nodeJSVersion string) []string {
+	if nodeJSVersion == "engine" {
+		return []string{"package.json"}
+	}
+	return []string{".n-node-version", ".node-version", ".nvmrc", "package.json"}
+}
+
+// ValidateNodeJSRootAndVersion validates nodejs_root together with nodejs_version.
+// Only auto and engine read a version file, and a missing one has to fail here:
+// `n install` failures are tolerated, so the container would silently get the default.
+func ValidateNodeJSRootAndVersion(appRoot string, nodeJSRoot string, nodeJSVersion string) error {
+	if err := ValidateNodeJSRoot(nodeJSRoot); err != nil {
+		return err
+	}
+	if nodeJSVersion != "auto" && nodeJSVersion != "engine" {
+		if nodeJSRoot != "" {
+			return fmt.Errorf("nodejs_root ('%s') requires nodejs_version 'auto' or 'engine', but nodejs_version is '%s'", nodeJSRoot, nodeJSVersion)
+		}
+		return nil
+	}
+	versionFilesDir := filepath.Join(appRoot, nodeJSRoot)
+	if nodeJSRoot != "" && !fileutil.IsDirectory(versionFilesDir) {
+		return fmt.Errorf("nodejs_root directory '%s' does not exist, but nodejs_version ('%s') must read a version file from it", versionFilesDir, nodeJSVersion)
+	}
+	versionFiles := nodeJSVersionFiles(nodeJSVersion)
+	for _, f := range versionFiles {
+		if fileutil.FileExists(filepath.Join(versionFilesDir, f)) {
+			return nil
+		}
+	}
+	return fmt.Errorf("nodejs_version ('%s') requires a Node.js version file (%s) in '%s', see https://docs.ddev.com/en/stable/users/configuration/config/#nodejs_version", nodeJSVersion, strings.Join(versionFiles, ", "), versionFilesDir)
 }
 
 // DockerComposeYAMLPath returns the absolute path to where the
@@ -1041,25 +1076,14 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
-	nodeJSVersion := app.NodeJSVersion
-	// nodejs_root implies auto-detection when no explicit nodejs_version is set.
-	if app.NodeJSRoot != "" && (nodeJSVersion == "" || nodeJSVersion == nodeps.NodeJSDefault) {
-		nodeJSVersion = "auto"
-	}
-	if nodeJSVersion != nodeps.NodeJSDefault && nodeJSVersion != "" {
-		if nodeJSVersion == "auto" || nodeJSVersion == "engine" {
+	if app.NodeJSVersion != nodeps.NodeJSDefault && app.NodeJSVersion != "" {
+		if app.NodeJSVersion == "auto" || app.NodeJSVersion == "engine" {
 			destDir := app.GetConfigPath(filepath.Join(".webimageBuild", "n-version-files"))
 			if err = os.MkdirAll(destDir, 0755); err != nil {
 				return "", err
 			}
-			// The version files are read from nodejs_root, a directory relative
-			// to the project root; it defaults to the project root itself.
 			srcDir := filepath.Join(app.AppRoot, app.NodeJSRoot)
-			if app.NodeJSRoot != "" && !fileutil.IsDirectory(srcDir) {
-				util.WarningOnce("nodejs_root directory '%s' does not exist, Node.js version detection will fall back to the DDEV default", srcDir)
-			}
-			// These are the files `n` consults for `auto` (in order) and `engine`.
-			for _, f := range []string{".n-node-version", ".node-version", ".nvmrc", "package.json"} {
+			for _, f := range nodeJSVersionFiles(app.NodeJSVersion) {
 				src := filepath.Join(srcDir, f)
 				if fileutil.FileExists(src) {
 					if err = fileutil.CopyFile(src, filepath.Join(destDir, f)); err != nil {
@@ -1100,7 +1124,7 @@ cd /tmp && rm -rf /tmp/n-version-files
 # (default Node.js version) is already handled once in the base image.
 chgrp -R 0 /usr/local/n && chmod -R g+rwX,o-w /usr/local/n
 EOF
-`, nodeJSVersion)
+`, app.NodeJSVersion)
 	}
 	if app.CorepackEnable {
 		extraWebContent = extraWebContent + "\nRUN (command -v corepack >/dev/null 2>&1 || log-stderr.sh npm install -g corepack -f || true) && log-stderr.sh corepack enable || true"

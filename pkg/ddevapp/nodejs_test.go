@@ -115,6 +115,7 @@ func TestNodeJSRoot(t *testing.T) {
 	require.NoError(t, err)
 	app.CorepackEnable = false
 	app.NodeJSRoot = "frontend"
+	app.NodeJSVersion = "auto"
 
 	nvmrcFile := filepath.Join(app.AppRoot, ".nvmrc")
 	nodeJSRootDir := filepath.Join(app.AppRoot, app.NodeJSRoot)
@@ -136,8 +137,6 @@ func TestNodeJSRoot(t *testing.T) {
 	require.NoError(t, err)
 	subdirVersion = strings.TrimSpace(subdirVersion)
 
-	// nodejs_root alone must imply auto-detection.
-	app.NodeJSVersion = ""
 	err = app.Restart()
 	require.NoError(t, err)
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -145,16 +144,6 @@ func TestNodeJSRoot(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.True(t, strings.HasPrefix(out, "v"+subdirVersion), "Expected node version from nodejs_root to start with '%s', but got %s", subdirVersion, out)
-
-	// An explicit nodejs_version must win over nodejs_root.
-	app.NodeJSVersion = "16.0.0"
-	err = app.Restart()
-	require.NoError(t, err)
-	out, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "node --version",
-	})
-	require.NoError(t, err)
-	require.True(t, strings.HasPrefix(out, "v16.0.0"), "Expected explicit nodejs_version to win over nodejs_root, but got %s", out)
 }
 
 // TestCorepackEnable tests behavior of corepack_enable

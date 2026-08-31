@@ -53,16 +53,45 @@ func TestValidateDocroot(t *testing.T) {
 
 // TestValidateNodeJSRoot verifies that ValidateNodeJSRoot rejects paths that escape the project root.
 func TestValidateNodeJSRoot(t *testing.T) {
-	assert := asrt.New(t)
-
 	valid := []string{"", ".", "frontend", "web/themes/custom/mytheme", "web/../frontend"}
 	for _, nodeJSRoot := range valid {
-		assert.NoError(ddevapp.ValidateNodeJSRoot(nodeJSRoot), "expected nodejs_root %q to be valid", nodeJSRoot)
+		require.NoError(t, ddevapp.ValidateNodeJSRoot(nodeJSRoot), "expected nodejs_root %q to be valid", nodeJSRoot)
 	}
 
 	invalid := []string{"..", "../foo", "web/../..", "web/../../etc", string(filepath.Separator) + "etc/passwd"}
 	for _, nodeJSRoot := range invalid {
-		assert.Error(ddevapp.ValidateNodeJSRoot(nodeJSRoot), "expected nodejs_root %q to be rejected", nodeJSRoot)
+		require.Error(t, ddevapp.ValidateNodeJSRoot(nodeJSRoot), "expected nodejs_root %q to be rejected", nodeJSRoot)
+	}
+}
+
+// TestValidateNodeJSRootAndVersion verifies that nodejs_root requires nodejs_version
+// auto or engine, and that those two require a version file to read.
+func TestValidateNodeJSRootAndVersion(t *testing.T) {
+	appRoot := t.TempDir()
+	nodeJSRootDir := filepath.Join(appRoot, "frontend")
+	require.NoError(t, os.MkdirAll(nodeJSRootDir, 0755))
+
+	require.Error(t, ddevapp.ValidateNodeJSRootAndVersion(appRoot, "frontend", "auto"), "expected an empty nodejs_root directory to be rejected")
+
+	require.NoError(t, os.WriteFile(filepath.Join(nodeJSRootDir, ".nvmrc"), []byte("20\n"), 0644))
+	require.NoError(t, ddevapp.ValidateNodeJSRootAndVersion(appRoot, "frontend", "auto"))
+
+	// engine reads only engines.node, so .nvmrc alone does not satisfy it.
+	require.Error(t, ddevapp.ValidateNodeJSRootAndVersion(appRoot, "frontend", "engine"))
+	require.NoError(t, os.WriteFile(filepath.Join(nodeJSRootDir, "package.json"), []byte(`{"engines":{"node":"20"}}`), 0644))
+	require.NoError(t, ddevapp.ValidateNodeJSRootAndVersion(appRoot, "frontend", "engine"))
+
+	require.Error(t, ddevapp.ValidateNodeJSRootAndVersion(appRoot, "missing", "auto"), "expected a nonexistent nodejs_root directory to be rejected")
+
+	// A project root with no version file cannot satisfy auto or engine either.
+	for _, nodeJSVersion := range []string{"auto", "engine"} {
+		require.Error(t, ddevapp.ValidateNodeJSRootAndVersion(appRoot, "", nodeJSVersion), "expected nodejs_version %q with no version file to be rejected", nodeJSVersion)
+	}
+
+	// Versions that read no version file need none, but they rule out nodejs_root.
+	for _, nodeJSVersion := range []string{"", nodeps.NodeJSDefault, "16.0.0"} {
+		require.NoError(t, ddevapp.ValidateNodeJSRootAndVersion(appRoot, "", nodeJSVersion), "expected nodejs_version %q to need no version file", nodeJSVersion)
+		require.Error(t, ddevapp.ValidateNodeJSRootAndVersion(appRoot, "frontend", nodeJSVersion), "expected nodejs_root with nodejs_version %q to be rejected", nodeJSVersion)
 	}
 }
 

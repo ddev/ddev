@@ -449,7 +449,7 @@ Flags:
 * `--mailpit-https-port`: Router port to be used for Mailpit HTTPS access (see [default](../configuration/config.md#mailpit_https_port)).
 * `--ngrok-args`: Provide extra args to `ngrok` in `ddev share` (deprecated: use [`share_provider_args`](../configuration/config.md#share_provider_args) in `.ddev/config.yaml`).
 * `--no-project-mount`: Whether to skip mounting project code into the `web` container.
-* `--nodejs-root`: The relative path, from the project root, to the directory Node.js version auto-detection reads its version file from (see [`nodejs_root`](../configuration/config.md#nodejs_root)).
+* `--nodejs-root`: The relative path, from the project root, to the directory containing the Node.js version file (see [`nodejs_root`](../configuration/config.md#nodejs_root)).
 * `--nodejs-version`: Specify the Node.js version to use (see [default](../configuration/config.md#nodejs_version)).
 * `--omit-containers`: Comma-delimited list of container types that should not be started when the project is started.
 * `--performance-mode`: Performance optimization mode, possible values are `global`, `none`, `mutagen`.
