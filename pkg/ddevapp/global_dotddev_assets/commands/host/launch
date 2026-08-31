@@ -2,9 +2,9 @@
 
 ## #ddev-generated: If you want to edit and own this file, remove this line.
 ## Description: Launch a browser with the current site
-## Usage: launch [path] [-m|--mailpit]
+## Usage: launch [path] [-m|--mailpit] [--print-url]
 ## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php" or "ddev launch https://your.ddev.site" or "ddev launch :3000", for Mailpit "ddev launch -m"
-## Flags: [{"Name":"mailpit","Shorthand":"m","Usage":"ddev launch -m launches the mailpit UI"}]
+## Flags: [{"Name":"mailpit","Shorthand":"m","Usage":"ddev launch -m launches the mailpit UI"},{"Name":"print-url","Usage":"print the URL instead of opening a browser"}]
 
 if [ "${DDEV_PROJECT_STATUS}" != "running" ] && [ -z "$no_recursion" ]; then
   echo "Project ${DDEV_PROJECT} is not running, starting it"
@@ -66,6 +66,10 @@ while :; do
     fi
     ;;
 
+  --print-url)
+    DDEV_LAUNCH_PRINT_URL=true
+    ;;
+
   --) # End of all options.
     shift
     break
@@ -109,11 +113,23 @@ if [ -n "${1:-}" ]; then
   fi
 fi
 
+# Print the URL instead of opening a browser: explicitly requested via
+# --print-url or DDEV_LAUNCH_PRINT_URL=true (inherited by nested `ddev launch`
+# invocations, e.g. from custom commands that call launch internally).
+# Print only the URL itself, with no prefix, so the output can be used
+# directly without parsing.
+if [ "${DDEV_LAUNCH_PRINT_URL:-}" = "true" ]; then
+    printf "%s\n" "$FULLURL"
+    exit 0
+fi
+
 if [[ "${FULLURL}" =~ ^http:// ]]; then
   echo "HTTP may redirect to HTTPS in your browser"
   echo "See https://docs.ddev.com/en/stable/users/usage/commands/#launch"
 fi
 
+# Long-standing DDEV_DEBUG/DDEV_VERBOSE behavior, kept for compatibility
+# (including ddev's own tests and external tooling that greps FULLURL).
 if [ "${DDEV_DEBUG:-}" = "true" ] || [ "${DDEV_VERBOSE:-}" = "true" ]; then
     printf "FULLURL %s\n" "$FULLURL"
     exit 0
