@@ -44,6 +44,11 @@ $config['symfony_mailer.mailer_transport.sendmail']['configuration']['pass'] = '
 $config['symfony_mailer.mailer_transport.sendmail']['configuration']['host'] = 'localhost';
 $config['symfony_mailer.mailer_transport.sendmail']['configuration']['port'] = '1025';
 
+// Override drupal/symfony_mailer_lite default config to use Mailpit.
+$config['symfony_mailer_lite.settings']['default_transport'] = 'native';
+$config['symfony_mailer_lite.symfony_mailer_lite_transport.native']['plugin'] = 'dsn';
+$config['symfony_mailer_lite.symfony_mailer_lite_transport.native']['configuration']['dsn'] = 'smtp://127.0.0.1:1025';
+
 // Override drupal/swiftmailer default config to use Mailpit.
 $config['swiftmailer.transport']['transport'] = 'smtp';
 $config['swiftmailer.transport']['smtp_host'] = '127.0.0.1';
