@@ -58,10 +58,10 @@ var WebTagBranch = "20260814_rfay_docker_update_phase_2"
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "f57cd53429" // 20260814_rfay_seed_snapshot_reset_database-f57cd53429
+var BaseDBTag = "5ef43fc037" // 20260831_rfay_fix_mysql_97-5ef43fc037
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
-var BaseDBTagBranch = "20260814_rfay_seed_snapshot_reset_database"
+var BaseDBTagBranch = "20260831_rfay_fix_mysql_97"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"
