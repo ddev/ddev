@@ -113,17 +113,24 @@ if [ -n "${1:-}" ]; then
   fi
 fi
 
+# Print the URL instead of opening a browser: explicitly requested via
+# --print-url or DDEV_LAUNCH_PRINT_URL=true (inherited by nested `ddev launch`
+# invocations, e.g. from custom commands that call launch internally).
+# Print only the URL itself, with no prefix, so the output can be used
+# directly without parsing.
+if [ "${DDEV_LAUNCH_PRINT_URL:-}" = "true" ]; then
+    printf "%s\n" "$FULLURL"
+    exit 0
+fi
+
 if [[ "${FULLURL}" =~ ^http:// ]]; then
   echo "HTTP may redirect to HTTPS in your browser"
   echo "See https://docs.ddev.com/en/stable/users/usage/commands/#launch"
 fi
 
-# Print the URL instead of opening a browser: explicitly requested via
-# --print-url or DDEV_LAUNCH_PRINT_URL=true (inherited by nested `ddev launch`
-# invocations, e.g. from custom commands that call launch internally), or as
-# the long-standing DDEV_DEBUG/DDEV_VERBOSE behavior (kept for compatibility,
-# including ddev's own tests and external tooling that greps FULLURL).
-if [ "${DDEV_LAUNCH_PRINT_URL:-}" = "true" ] || [ "${DDEV_DEBUG:-}" = "true" ] || [ "${DDEV_VERBOSE:-}" = "true" ]; then
+# Long-standing DDEV_DEBUG/DDEV_VERBOSE behavior, kept for compatibility
+# (including ddev's own tests and external tooling that greps FULLURL).
+if [ "${DDEV_DEBUG:-}" = "true" ] || [ "${DDEV_VERBOSE:-}" = "true" ]; then
     printf "FULLURL %s\n" "$FULLURL"
     exit 0
 fi
