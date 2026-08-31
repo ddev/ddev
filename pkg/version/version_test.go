@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testsetup"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -25,7 +26,7 @@ func TestGetVersionInfo(t *testing.T) {
 
 	assert.Equal(versionconstants.DdevVersion, v["DDEV version"])
 	assert.Contains(v["web"], versionconstants.WebImg)
-	assert.Contains(v["web"], versionconstants.WebTag)
+	assert.Contains(v["web"], docker.ResolveImageTag(versionconstants.WebTag, versionconstants.WebTagBranch))
 	assert.Contains(v["db"], versionconstants.DBImg)
 	assert.Contains(v["db"], nodeps.MariaDBDefaultVersion)
 	assert.Equal(runtime.Version(), v["go-version"])
