@@ -172,3 +172,4 @@ EXPOSE 3306
 # The following line overrides any cmd entry
 CMD []
 HEALTHCHECK --interval=1s --retries=30 --timeout=120s CMD ["/healthcheck.sh"]
+# ddev-release-marker: v1.25.4
