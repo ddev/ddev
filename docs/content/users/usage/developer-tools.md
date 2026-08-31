@@ -133,7 +133,6 @@ Mailpit will **not** intercept emails if your application is configured to use S
 
 For Drupal 9+, `settings.ddev.php` automatically overrides [Symfony Mailer](https://www.drupal.org/project/symfony_mailer) and [Symfony Mailer Lite](https://www.drupal.org/project/symfony_mailer_lite) transport configurations to use Mailpit; for other SMTP modules (like [SMTP](https://www.drupal.org/project/smtp)), update your application’s SMTP server configuration to use `localhost` and Mailpit’s port `1025`.
 
-
 For Laravel projects, Mailpit will capture Swift messages via SMTP. Update your `.env` to use Mailpit with the following settings:
 
 ```env
