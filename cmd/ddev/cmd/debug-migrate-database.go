@@ -74,13 +74,6 @@ ddev utility migrate-database mariadb:11.8`,
 				util.Failed("Failed to start %s: %v", app.Name, err)
 			}
 			err = app.ImportDB(app.GetConfigPath(".downloads/db.sql.gz"), "", true, false, "")
-			// TEMPORARY: always dump db container logs here, pass or fail, to
-			// see what mysqld was doing around this point.
-			dbLogs, logErr := app.CaptureLogs("db", false, "")
-			if logErr != nil {
-				dbLogs = fmt.Sprintf("(failed to capture db logs: %v)", logErr)
-			}
-			util.Warning("db container logs:\n%s", dbLogs)
 			if err != nil {
 				util.Failed("Failed to import-db %s: %v", app.GetConfigPath(".downloads/db.sql.gz"), err)
 			}

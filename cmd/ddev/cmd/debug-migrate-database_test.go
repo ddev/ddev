@@ -36,13 +36,8 @@ func TestDebugMigrateDatabase(t *testing.T) {
 	var origSnapshotName string
 
 	t.Cleanup(func() {
-		// Restore the pre-test snapshot instead of migrating back: cleanup's
-		// job is to leave the shared TestSites[0] fixture stable for whatever
-		// test runs next, not to exercise migrate-database a second time.
-		//
 		// migrate-database itself snapshots before switching db type, so
-		// GetLatestSnapshot() here would find that (test-modified-data) snapshot
-		// instead of ours - restore the exact name we captured instead.
+		// GetLatestSnapshot() here would find that one instead of ours.
 		err := app.Stop(true, false)
 		require.NoError(t, err)
 

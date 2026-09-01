@@ -9,25 +9,16 @@ SOCKET=/var/tmp/mysql.sock
 DEFAULTS_FILE=/tmp/my.cnf
 rm -f /tmp/healthy
 
-# On GitHub Actions, AppArmor denies mysqld access to /etc/my.cnf, so mysqld
-# finds it "not present" and silently starts with zero config, on compiled-in
-# defaults (wrong socket path among them) instead of erroring. create_base_db.sh
-# hit the same thing at image-build time; work around it the same way here by
-# copying to an unconfined path and pointing mysqld at it explicitly.
-#
-# /tmp rather than /var/tmp: mysqld refuses to read a world-writable config
-# file, and a non-root rootless UID can't overwrite-or-replace a root-owned
-# file under /var/tmp's sticky bit, so this must land somewhere with no
-# pre-existing file to collide with. /tmp is empty at container start, so
-# this just creates a fresh, normally-permissioned file owned by whichever
-# UID is running.
+# GitHub Actions' AppArmor blocks mysqld from reading /etc/my.cnf, so it
+# silently runs with zero config instead of erroring; create_base_db.sh
+# works around the same thing at build time. /tmp not /var/tmp: mysqld
+# refuses a world-writable config, and a rootless UID can't replace the
+# root-owned copy already baked into /var/tmp.
 cp -f /etc/my.cnf $DEFAULTS_FILE
 
-# The Dockerfile bakes /run/mysqld as ugo+rwx so an arbitrary host-mapped UID
-# (rootless Docker/Podman) can still write there if mysqld ever does fall back
-# to it. chmod here is only a fallback for a freshly (re)created directory -
-# it fails harmlessly when /run/mysqld already exists and this process isn't
-# its owner, since only an owner or root can chmod a path.
+# Fallback only - once --defaults-file loads, mysqld shouldn't need
+# /run/mysqld at all. chmod fails harmlessly if the dir already exists
+# and this process isn't its owner (only owner/root can chmod a path).
 mkdir -p /run/mysqld
 chmod ugo+rwx /run/mysqld 2>/dev/null || true
 
