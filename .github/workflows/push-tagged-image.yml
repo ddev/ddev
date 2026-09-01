@@ -119,11 +119,10 @@ jobs:
           ORG_IMAGE=${DOCKER_ORG}/${{ matrix.image }}
           echo "Cleaning up stale tag for ${ORG_IMAGE}:${TAG}-${{ matrix.arch }}"
           curl -s -X DELETE -H "Authorization: JWT $TOKEN" "https://hub.docker.com/v2/repositories/${ORG_IMAGE}/tags/${TAG}-${{ matrix.arch }}/" >/dev/null || true
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      - name: Setup upterm session
+        uses: owenthereal/action-upterm@v1
         with:
           limit-access-to-actor: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
       - name: Build and push ${{ env.DOCKER_ORG }}/${{ matrix.image }}:${{ env.TAG }} ${{ matrix.arch }} image
         run: |

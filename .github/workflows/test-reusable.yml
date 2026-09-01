@@ -79,7 +79,7 @@ on:
         type: string
         default: 'true'
       debug_enabled:
-        description: 'Run the build with tmate set "debug_enabled"'
+        description: 'Run the build with upterm set "debug_enabled"'
         required: false
         type: boolean
         default: false
@@ -249,9 +249,9 @@ jobs:
           echo "DDEV_TEST_DOCKER_ROOTLESS=${DDEV_TEST_DOCKER_ROOTLESS}"
           echo "MAKE_TARGET=${MAKE_TARGET}"
 
-      - name: Setup tmate session
+      - name: Setup upterm session
         if: ${{ inputs.debug_enabled }}
-        uses: mxschmitt/action-tmate@v3
+        uses: owenthereal/action-upterm@v1
         with:
           limit-access-to-actor: true
 
