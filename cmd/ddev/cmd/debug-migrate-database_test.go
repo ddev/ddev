@@ -33,8 +33,6 @@ func TestDebugMigrateDatabase(t *testing.T) {
 	app.Database.Type = origDBType
 	app.Database.Version = origDBVersion
 
-	var origSnapshotName string
-
 	t.Cleanup(func() {
 		err := app.Stop(true, false)
 		if err != nil {
@@ -48,10 +46,8 @@ func TestDebugMigrateDatabase(t *testing.T) {
 		err = app.WriteConfig()
 		require.NoError(t, err)
 
-		// migrate-database itself snapshots before switching db type, so
-		// GetLatestSnapshot() here would find that one instead of ours.
-		err = app.RestoreSnapshot(origSnapshotName, false)
-		require.NoError(t, err, "failed to restore snapshot %s", origSnapshotName)
+		err = app.Start()
+		require.NoError(t, err)
 
 		_ = os.Chdir(origDir)
 	})
@@ -66,9 +62,6 @@ func TestDebugMigrateDatabase(t *testing.T) {
 	require.NoError(t, err)
 	// It should have our default version
 	require.True(t, strings.HasPrefix(out, nodeps.MariaDB118))
-
-	origSnapshotName, err = app.Snapshot(t.Name(), false)
-	require.NoError(t, err)
 
 	// Import a database so we have something to work with
 	err = app.ImportDB(filepath.Join(origDir, "testdata", t.Name(), "users.sql"), "", false, false, "")
