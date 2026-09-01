@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
@@ -15,6 +16,9 @@ import (
 
 // TestDebugMigrateDatabase checks to see if we can migrate database
 func TestDebugMigrateDatabase(t *testing.T) {
+	if dockerutil.IsDockerRootless() {
+		t.Skip("Skipping on rootless Docker, whose kill/stop of a running mysql:8.4 container intermittently fails with 'permission denied'")
+	}
 	origDir, _ := os.Getwd()
 
 	site := TestSites[0]
@@ -35,11 +39,7 @@ func TestDebugMigrateDatabase(t *testing.T) {
 
 	t.Cleanup(func() {
 		err := app.Stop(true, false)
-		if err != nil {
-			t.Logf("cleanup: failed to stop %s: %v", app.Name, err)
-			_ = os.Chdir(origDir)
-			return
-		}
+		require.NoError(t, err)
 
 		app.Database.Type = origDBType
 		app.Database.Version = origDBVersion
