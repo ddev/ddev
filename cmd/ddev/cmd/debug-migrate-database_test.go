@@ -28,20 +28,32 @@ func TestDebugMigrateDatabase(t *testing.T) {
 	require.NoError(t, err)
 
 	// Use notorious mariadb:11.8 as source and notorious mysql:8.4 as target
-	app.Database.Type = nodeps.MariaDB
-	app.Database.Version = nodeps.MariaDB118
+	origDBType := nodeps.MariaDB
+	origDBVersion := nodeps.MariaDB118
+	app.Database.Type = origDBType
+	app.Database.Version = origDBVersion
+
+	var origSnapshotName string
 
 	t.Cleanup(func() {
-		out, err := exec.RunHostCommand(DdevBin, "utility", "migrate-database", fmt.Sprintf("%s:%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
-		require.NoError(t, err, "failed to migrate database; out='%s'", out)
+		// Restore the pre-test snapshot instead of migrating back: cleanup's
+		// job is to leave the shared TestSites[0] fixture stable for whatever
+		// test runs next, not to exercise migrate-database a second time.
+		//
+		// migrate-database itself snapshots before switching db type, so
+		// GetLatestSnapshot() here would find that (test-modified-data) snapshot
+		// instead of ours - restore the exact name we captured instead.
+		err := app.Stop(true, false)
+		require.NoError(t, err)
 
-		require.Contains(t, out, fmt.Sprintf("Database was converted to %s:%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
+		app.Database.Type = origDBType
+		app.Database.Version = origDBVersion
+		err = app.WriteConfig()
+		require.NoError(t, err)
 
-		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     fmt.Sprintf(`%s -e 'DROP TABLE IF EXISTS %s;'`, app.GetDBClientCommand(), t.Name()),
-		})
-		require.NoError(t, err, "DROP table didn't work, out='%s', stderr='%s'", out, stderr)
+		err = app.RestoreSnapshot(origSnapshotName, false)
+		require.NoError(t, err, "failed to restore snapshot %s", origSnapshotName)
+
 		_ = os.Chdir(origDir)
 	})
 
@@ -55,6 +67,9 @@ func TestDebugMigrateDatabase(t *testing.T) {
 	require.NoError(t, err)
 	// It should have our default version
 	require.True(t, strings.HasPrefix(out, nodeps.MariaDB118))
+
+	origSnapshotName, err = app.Snapshot(t.Name(), false)
+	require.NoError(t, err)
 
 	// Import a database so we have something to work with
 	err = app.ImportDB(filepath.Join(origDir, "testdata", t.Name(), "users.sql"), "", false, false, "")
