@@ -6,15 +6,21 @@ set -o pipefail
 export DATADIR=/var/lib/mysql
 
 SOCKET=/var/tmp/mysql.sock
+DEFAULTS_FILE=/var/tmp/my.cnf
 rm -f /tmp/healthy
 
-# mysqld's socket lock file always goes to the compiled-in default
-# /run/mysqld/mysqld.sock.lock, regardless of the `socket` path configured
-# above. The Dockerfile bakes /run/mysqld as ugo+rwx so an arbitrary
-# host-mapped UID (rootless Docker/Podman) can still write there. chmod here
-# is only a fallback for a freshly (re)created directory - it fails harmlessly
-# when /run/mysqld already exists and this process isn't its owner, since only
-# an owner or root can chmod a path.
+# On GitHub Actions, AppArmor denies mysqld access to /etc/my.cnf, so mysqld
+# finds it "not present" and silently starts with zero config, on compiled-in
+# defaults (wrong socket path among them) instead of erroring. create_base_db.sh
+# hit the same thing at image-build time; work around it the same way here by
+# copying to an unconfined path and pointing mysqld at it explicitly.
+cp -f /etc/my.cnf $DEFAULTS_FILE
+
+# The Dockerfile bakes /run/mysqld as ugo+rwx so an arbitrary host-mapped UID
+# (rootless Docker/Podman) can still write there if mysqld ever does fall back
+# to it. chmod here is only a fallback for a freshly (re)created directory -
+# it fails harmlessly when /run/mysqld already exists and this process isn't
+# its owner, since only an owner or root can chmod a path.
 mkdir -p /run/mysqld
 chmod ugo+rwx /run/mysqld 2>/dev/null || true
 
@@ -235,7 +241,7 @@ if [ "${server_db_version}" != "${database_db_version}" ]; then
    echo "Starting with db server version=${server_db_version} but database was created with '${database_db_version}'."
    echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev delete --omit-snapshot', start, and reimport".
 
-    PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
+    PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld --defaults-file=$DEFAULTS_FILE --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
     pid=$!
     set +x
     if ! serverwait ; then
@@ -261,9 +267,5 @@ echo 'MySQL init process done. Ready for start up.'
 echo
 
 echo "Starting mysqld."
-id || true
-ls -la /run /run/mysqld /var/tmp 2>&1 || true
-stat -c '%U:%G %a %n' /run /run/mysqld /var/tmp 2>&1 || true
-mysqld --print-defaults 2>&1 || true
 tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err &
-exec mysqld
+exec mysqld --defaults-file=$DEFAULTS_FILE
