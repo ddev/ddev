@@ -6,7 +6,7 @@ set -o pipefail
 export DATADIR=/var/lib/mysql
 
 SOCKET=/var/tmp/mysql.sock
-DEFAULTS_FILE=/var/tmp/my.cnf
+DEFAULTS_FILE=/tmp/my.cnf
 rm -f /tmp/healthy
 
 # On GitHub Actions, AppArmor denies mysqld access to /etc/my.cnf, so mysqld
@@ -14,6 +14,13 @@ rm -f /tmp/healthy
 # defaults (wrong socket path among them) instead of erroring. create_base_db.sh
 # hit the same thing at image-build time; work around it the same way here by
 # copying to an unconfined path and pointing mysqld at it explicitly.
+#
+# /tmp rather than /var/tmp: mysqld refuses to read a world-writable config
+# file, and a non-root rootless UID can't overwrite-or-replace a root-owned
+# file under /var/tmp's sticky bit, so this must land somewhere with no
+# pre-existing file to collide with. /tmp is empty at container start, so
+# this just creates a fresh, normally-permissioned file owned by whichever
+# UID is running.
 cp -f /etc/my.cnf $DEFAULTS_FILE
 
 # The Dockerfile bakes /run/mysqld as ugo+rwx so an arbitrary host-mapped UID
