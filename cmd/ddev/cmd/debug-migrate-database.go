@@ -75,7 +75,11 @@ ddev utility migrate-database mariadb:11.8`,
 			}
 			err = app.ImportDB(app.GetConfigPath(".downloads/db.sql.gz"), "", true, false, "")
 			if err != nil {
-				util.Failed("Failed to import-db %s: %v", app.GetConfigPath(".downloads/db.sql.gz"), err)
+				dbLogs, logErr := app.CaptureLogs("db", false, "")
+				if logErr != nil {
+					dbLogs = fmt.Sprintf("(failed to capture db logs: %v)", logErr)
+				}
+				util.Failed("Failed to import-db %s: %v\ndb container logs:\n%s", app.GetConfigPath(".downloads/db.sql.gz"), err, dbLogs)
 			}
 			util.Success("Database was converted to %s", newDBVersionType)
 			return
