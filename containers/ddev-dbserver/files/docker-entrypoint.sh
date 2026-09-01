@@ -6,7 +6,21 @@ set -o pipefail
 export DATADIR=/var/lib/mysql
 
 SOCKET=/var/tmp/mysql.sock
+DEFAULTS_FILE=/tmp/my.cnf
 rm -f /tmp/healthy
+
+# GitHub Actions' AppArmor blocks mysqld from reading /etc/my.cnf, so it
+# silently runs with zero config instead of erroring; create_base_db.sh
+# works around the same thing at build time. /tmp not /var/tmp: mysqld
+# refuses a world-writable config, and a rootless UID can't replace the
+# root-owned copy already baked into /var/tmp.
+cp -f /etc/my.cnf $DEFAULTS_FILE
+
+# Fallback only - once --defaults-file loads, mysqld shouldn't need
+# /run/mysqld at all. chmod fails harmlessly if the dir already exists
+# and this process isn't its owner (only owner/root can chmod a path).
+mkdir -p /run/mysqld
+chmod ugo+rwx /run/mysqld 2>/dev/null || true
 
 # We can't just switch on database type here, because early versions
 # of mariadb used xtrabackup
@@ -225,7 +239,7 @@ if [ "${server_db_version}" != "${database_db_version}" ]; then
    echo "Starting with db server version=${server_db_version} but database was created with '${database_db_version}'."
    echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev delete --omit-snapshot', start, and reimport".
 
-    PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
+    PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld --defaults-file=$DEFAULTS_FILE --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
     pid=$!
     set +x
     if ! serverwait ; then
@@ -252,4 +266,4 @@ echo
 
 echo "Starting mysqld."
 tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err &
-exec mysqld
+exec mysqld --defaults-file=$DEFAULTS_FILE

@@ -17,6 +17,7 @@ import (
 // `--seed-snapshot`: throwing the database away and starting over, seeding the
 // new volume from a named snapshot, and the flag combinations that are refused.
 func TestCmdStartResetDatabase(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	require.NoError(t, os.Chdir(site.Dir))
@@ -105,6 +106,7 @@ func createMarkerTable(t *testing.T, app *ddevapp.DdevApp) {
 // file outside the project, which the db container can only reach through a
 // mount added for that start.
 func TestCmdStartSeedSnapshotFile(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	require.NoError(t, os.Chdir(site.Dir))
@@ -151,6 +153,7 @@ func TestCmdStartSeedSnapshotFile(t *testing.T) {
 // run against the database that actually created the data, not the newly
 // configured one, per SnapshotAtExistingDBVersion.
 func TestCmdStartResetDatabaseTypeMismatch(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 	require.NoError(t, os.Chdir(site.Dir))

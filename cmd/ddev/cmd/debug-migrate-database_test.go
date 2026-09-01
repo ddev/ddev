@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
@@ -15,6 +16,9 @@ import (
 
 // TestDebugMigrateDatabase checks to see if we can migrate database
 func TestDebugMigrateDatabase(t *testing.T) {
+	if dockerutil.IsDockerRootless() {
+		t.Skip("Skipping on rootless Docker, whose kill/stop of a running mysql:8.4 container intermittently fails with 'permission denied'")
+	}
 	origDir, _ := os.Getwd()
 
 	site := TestSites[0]
@@ -28,20 +32,23 @@ func TestDebugMigrateDatabase(t *testing.T) {
 	require.NoError(t, err)
 
 	// Use notorious mariadb:11.8 as source and notorious mysql:8.4 as target
-	app.Database.Type = nodeps.MariaDB
-	app.Database.Version = nodeps.MariaDB118
+	origDBType := nodeps.MariaDB
+	origDBVersion := nodeps.MariaDB118
+	app.Database.Type = origDBType
+	app.Database.Version = origDBVersion
 
 	t.Cleanup(func() {
-		out, err := exec.RunHostCommand(DdevBin, "utility", "migrate-database", fmt.Sprintf("%s:%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
-		require.NoError(t, err, "failed to migrate database; out='%s'", out)
+		err := app.Stop(true, false)
+		require.NoError(t, err)
 
-		require.Contains(t, out, fmt.Sprintf("Database was converted to %s:%s", nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
+		app.Database.Type = origDBType
+		app.Database.Version = origDBVersion
+		err = app.WriteConfig()
+		require.NoError(t, err)
 
-		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     fmt.Sprintf(`%s -e 'DROP TABLE IF EXISTS %s;'`, app.GetDBClientCommand(), t.Name()),
-		})
-		require.NoError(t, err, "DROP table didn't work, out='%s', stderr='%s'", out, stderr)
+		err = app.Start()
+		require.NoError(t, err)
+
 		_ = os.Chdir(origDir)
 	})
 
