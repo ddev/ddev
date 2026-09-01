@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       debug_enabled:
-        description: 'Run the build with tmate set "debug_enabled"'
+        description: 'Run the build with upterm set "debug_enabled"'
         type: boolean
         required: false
         default: false

@@ -29,7 +29,7 @@ on:
         type: string
         default: '16'
       debug_enabled:
-        description: 'Run the build with tmate set "debug_enabled"'
+        description: 'Run the build with upterm set "debug_enabled"'
         required: false
         type: boolean
         default: false
@@ -178,9 +178,9 @@ jobs:
           # This ensures we always have upstream tags for correct git describe output
           wsl -u testuser -- bash -exc "mkdir -p ~/workspace && cd ~/workspace && git clone --no-single-branch '$repoUrl' ddev && cd ddev && git fetch origin '$gitRef' && git checkout FETCH_HEAD && echo 'Checked out:' && git log -1 --oneline && git describe --tags --always"
 
-      - name: Setup tmate session
+      - name: Setup upterm session
         if: ${{ inputs.debug_enabled }}
-        uses: mxschmitt/action-tmate@v3
+        uses: owenthereal/action-upterm@v1
         with:
           limit-access-to-actor: true
 

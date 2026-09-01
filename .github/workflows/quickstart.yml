@@ -91,9 +91,9 @@ jobs:
           MAGENTO2_PUBLIC_ACCESS_KEY: "op://test-secrets/MAGENTO2_ACCESS_KEYS/public_access_key"
           MAGENTO2_PRIVATE_ACCESS_KEY: "op://test-secrets/MAGENTO2_ACCESS_KEYS/private_access_key"
 
-      - name: Setup tmate session
+      - name: Setup upterm session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-        uses: mxschmitt/action-tmate@v3
+        uses: owenthereal/action-upterm@v1
         with:
           limit-access-to-actor: true
 

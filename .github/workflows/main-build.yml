@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       debug_enabled:
-        description: 'Run the build with tmate set "debug_enabled"'
+        description: 'Run the build with upterm set "debug_enabled"'
         type: boolean
         required: false
         default: false
@@ -285,8 +285,8 @@ jobs:
           cgo=$(".gotmp/bin/$(go env GOOS)_$(go env GOARCH)/ddev" version 2>/dev/null | awk '/cgo_enabled/ {print $2}')
           if [ "${cgo}" != "0" ]; then echo "CGO_ENABLED=${cgo} but it must be 0 in released binary" && exit 10; fi
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      - name: Setup upterm session
+        uses: owenthereal/action-upterm@v1
         with:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}

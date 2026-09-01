@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       debug_enabled:
-        description: 'Run the build with tmate set "debug_enabled"'
+        description: 'Run the build with upterm set "debug_enabled"'
         type: boolean
         required: false
         default: false
@@ -54,9 +54,9 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
           textlint_flags: "{README.md,docs/**}"
-      - name: Setup tmate session
+      - name: Setup upterm session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-        uses: mxschmitt/action-tmate@v3
+        uses: owenthereal/action-upterm@v1
         with:
           limit-access-to-actor: true
       - name: Run linkspector to check external links
