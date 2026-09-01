@@ -10,9 +10,11 @@ rm -f /tmp/healthy
 
 # mysqld's socket lock file always goes to the compiled-in default
 # /run/mysqld/mysqld.sock.lock, regardless of the `socket` path configured
-# above. /run/mysqld is baked into the image, but some rootless runners mount
-# a fresh, empty tmpfs over /run at container start, so recreate it here.
+# above. The image bakes /run/mysqld as owned by the `mysql` user, but under
+# rootless Docker/Podman this container can run as an arbitrary host-mapped
+# UID instead, which can't write there - make sure it's writable regardless.
 mkdir -p /run/mysqld
+chmod ugo+rwx /run/mysqld
 
 # We can't just switch on database type here, because early versions
 # of mariadb used xtrabackup

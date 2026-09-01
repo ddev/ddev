@@ -148,7 +148,7 @@ RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlba
 # version-conf.d should be writable so we can symlink, but the actual config files should not be
 RUN chmod ugo+w /etc/mysql/version-conf.d && chmod -R ugo-w /etc/mysql/version-conf.d/*
 
-RUN mkdir -p /var/run/mysqld && chmod 755 /var/run/mysqld
+RUN mkdir -p /var/run/mysqld && chmod ugo+rwx /var/run/mysqld
 
 # The DHI base used for mysql 8.0/8.4 does not include the www-data user that
 # mkhomedir_helper expects, so create it if it's missing.
