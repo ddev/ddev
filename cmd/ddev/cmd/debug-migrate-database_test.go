@@ -36,16 +36,20 @@ func TestDebugMigrateDatabase(t *testing.T) {
 	var origSnapshotName string
 
 	t.Cleanup(func() {
-		// migrate-database itself snapshots before switching db type, so
-		// GetLatestSnapshot() here would find that one instead of ours.
 		err := app.Stop(true, false)
-		require.NoError(t, err)
+		if err != nil {
+			t.Logf("cleanup: failed to stop %s: %v", app.Name, err)
+			_ = os.Chdir(origDir)
+			return
+		}
 
 		app.Database.Type = origDBType
 		app.Database.Version = origDBVersion
 		err = app.WriteConfig()
 		require.NoError(t, err)
 
+		// migrate-database itself snapshots before switching db type, so
+		// GetLatestSnapshot() here would find that one instead of ours.
 		err = app.RestoreSnapshot(origSnapshotName, false)
 		require.NoError(t, err, "failed to restore snapshot %s", origSnapshotName)
 
