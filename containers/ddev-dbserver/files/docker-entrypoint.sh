@@ -262,7 +262,8 @@ echo
 
 echo "Starting mysqld."
 id || true
-ls -la /run /run/mysqld 2>&1 || true
-stat -c '%U:%G %a %n' /run /run/mysqld 2>&1 || true
+ls -la /run /run/mysqld /var/tmp 2>&1 || true
+stat -c '%U:%G %a %n' /run /run/mysqld /var/tmp 2>&1 || true
+mysqld --print-defaults 2>&1 || true
 tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err &
 exec mysqld
