@@ -8,6 +8,12 @@ export DATADIR=/var/lib/mysql
 SOCKET=/var/tmp/mysql.sock
 rm -f /tmp/healthy
 
+# mysqld's socket lock file always goes to the compiled-in default
+# /run/mysqld/mysqld.sock.lock, regardless of the `socket` path configured
+# above. /run/mysqld is baked into the image, but some rootless runners mount
+# a fresh, empty tmpfs over /run at container start, so recreate it here.
+mkdir -p /run/mysqld
+
 # We can't just switch on database type here, because early versions
 # of mariadb used xtrabackup
 export BACKUPTOOL=mariabackup
@@ -236,9 +242,6 @@ if [ "${server_db_version}" != "${database_db_version}" ]; then
     echo "Attempting mysql_upgrade because db server version ${server_db_version} is not the same as database db version ${database_db_version}"
     mysql_upgrade --socket=$SOCKET
     kill $pid
-    # Wait for full shutdown so the coming `exec mysqld` doesn't race this
-    # instance for /run/mysqld/mysqld.sock.lock.
-    wait $pid 2>/dev/null || true
 fi
 
 # And update the server db version we have here.
@@ -254,5 +257,8 @@ echo 'MySQL init process done. Ready for start up.'
 echo
 
 echo "Starting mysqld."
+id || true
+ls -la /run /run/mysqld 2>&1 || true
+stat -c '%U:%G %a %n' /run /run/mysqld 2>&1 || true
 tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err &
 exec mysqld

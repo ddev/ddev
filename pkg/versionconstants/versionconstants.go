@@ -58,7 +58,7 @@ var WebTagBranch = "20260814_rfay_docker_update_phase_2"
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "7b1916606d" // 20260831_rfay_mysql_race-7b1916606d
+var BaseDBTag = "fc63d60b5a" // 20260831_rfay_mysql_race-fc63d60b5a
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
 var BaseDBTagBranch = "20260831_rfay_mysql_race"
