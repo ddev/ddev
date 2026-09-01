@@ -306,7 +306,6 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v7
 
@@ -325,7 +324,6 @@ jobs:
           password: ${{ env.DOCKERHUB_TOKEN }}
 
       - name: Create manifest and clean up per-arch tags
-        id: manifest
         env:
           # Trusted context, not the matrix: this is the readable alias
           # published next to the hash tag, so it must not be fork-controlled
@@ -403,17 +401,47 @@ jobs:
             done
           done
 
+          printf '%s' "$PUSHED_SUMMARY" > summary.md
+
+      # Collected by the comment job below: a matrix job can't hand its own
+      # output to a later job, since all of them write the same output name.
+      - uses: actions/upload-artifact@v7
+        if: github.event_name == 'pull_request'
+        with:
+          name: manifest-summary-${{ strategy.job-index }}
+          path: summary.md
+          retention-days: 1
+
+  comment:
+    name: Comment on the pull request
+    needs: [detect, create-manifests]
+    if: github.event_name == 'pull_request' && needs.detect.outputs.needs_build == 'true' && needs.detect.outputs.is_fork == 'false'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Download the per-image summaries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: manifest-summary-*
+          path: summaries
+
+      - name: Collect the summaries
+        id: summary
+        run: |
+          set -eu -o pipefail
           {
             echo "summary<<IMAGE_PUSH_EOF"
-            echo "$PUSHED_SUMMARY"
+            find summaries -name summary.md -exec cat {} + | sort
             echo "IMAGE_PUSH_EOF"
           } >> "$GITHUB_OUTPUT"
 
       - name: Comment on the pull request
-        if: github.event_name == 'pull_request'
         uses: actions/github-script@v9
         env:
-          IMAGE_PUSH_SUMMARY: ${{ steps.manifest.outputs.summary }}
+          IMAGE_PUSH_SUMMARY: ${{ steps.summary.outputs.summary }}
         with:
           script: |
             const summary = (process.env.IMAGE_PUSH_SUMMARY || "").trim();
