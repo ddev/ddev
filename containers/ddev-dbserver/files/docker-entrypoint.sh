@@ -236,6 +236,9 @@ if [ "${server_db_version}" != "${database_db_version}" ]; then
     echo "Attempting mysql_upgrade because db server version ${server_db_version} is not the same as database db version ${database_db_version}"
     mysql_upgrade --socket=$SOCKET
     kill $pid
+    # Wait for full shutdown so the coming `exec mysqld` doesn't race this
+    # instance for /run/mysqld/mysqld.sock.lock.
+    wait $pid 2>/dev/null || true
 fi
 
 # And update the server db version we have here.
