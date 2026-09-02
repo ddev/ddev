@@ -33,6 +33,17 @@ curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg \
   && sudo apt-get update -qq >/dev/null \
   && sudo apt-get install -y -qq cloudflared
 
+if [[ "${DDEV_TEST_PODMAN_ROOTLESS:-}" == "true" || "${DDEV_TEST_DOCKER_ROOTLESS:-}" == "true" ]]; then
+  # The runner image preinstalls mysql-server, whose usr.sbin.mysqld AppArmor
+  # profile attaches to any unconfined process exec'ing /usr/sbin/mysqld -
+  # including inside rootless containers, which run apparmor-unconfined,
+  # regardless of container engine. A confined mysqld can't read its config
+  # and, under rootless Docker, can't be signaled (docker stop/kill fail with
+  # "permission denied", leaving unkillable containers).
+  sudo ln -sf /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/ 2>/dev/null || true
+  sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld 2>/dev/null || true
+fi
+
 if [[ ${DDEV_TEST_PODMAN_ROOTLESS:-} == "true" ]]; then
 
   echo "Setting up podman-rootless"
@@ -69,14 +80,6 @@ userns,
 include if exists <local/${filename}>
 }
 EOF
-  # The runner image preinstalls mysql-server, whose usr.sbin.mysqld AppArmor
-  # profile attaches to any unconfined process exec'ing /usr/sbin/mysqld -
-  # including inside rootless-docker containers, which run apparmor-unconfined.
-  # A confined mysqld can't read /etc/my.cnf and can't be signaled (docker
-  # stop/kill fail with "permission denied", leaving unkillable containers).
-  # Disable that profile; the rootlesskit profile above must stay.
-  sudo ln -sf /etc/apparmor.d/usr.sbin.mysqld /etc/apparmor.d/disable/ 2>/dev/null || true
-  sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld 2>/dev/null || true
   sudo systemctl restart apparmor.service
   # Set the default network driver to "gvisor-tap-vsock" (see https://github.com/moby/moby/releases/tag/docker-v29.5.0)
   # Allow loopback https://github.com/moby/moby/issues/47684#issuecomment-2166149845

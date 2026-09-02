@@ -12,3 +12,4 @@ RUN chmod ugo+rx /usr/local/bin/monitor-traefik-stderr.sh /usr/local/bin/docker-
 RUN mkdir -p /etc/traefik && ln -s /mnt/ddev-global-cache/traefik/.static_config.yaml /etc/traefik/traefik.yaml
 HEALTHCHECK --interval=1s --timeout=120s --retries=1 --start-period=120s CMD /healthcheck.sh
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh", "/usr/local/bin/traefik"]
+# ddev-release-marker: v1.25.4
