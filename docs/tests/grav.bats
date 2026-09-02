@@ -28,7 +28,8 @@ teardown() {
   run ddev composer create-project getgrav/grav
   assert_success
 
-  run ddev exec gpm install admin -y
+  # Grav 2.0 dropped support for the classic admin plugin; admin2 is its replacement.
+  run ddev exec gpm install admin2 -y
   assert_success
 
   DDEV_DEBUG=true run ddev launch
@@ -67,7 +68,7 @@ teardown() {
   run ddev exec grav install
   assert_success
 
-  run ddev exec gpm install admin -y
+  run ddev exec gpm install admin2 -y
   assert_success
 
   DDEV_DEBUG=true run ddev launch
