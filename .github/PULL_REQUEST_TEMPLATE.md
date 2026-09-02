@@ -3,6 +3,8 @@
   https://docs.ddev.com/en/stable/developers/building-contributing/#pull-request-title-guidelines
 
   If this is a nontrivial contribution, please create an issue for discussion first, or discuss it first in Discord, https://ddev.com/s/discord. This will save you time and help direct the feature.
+
+  DDEV is community-funded — if you or your team rely on DDEV, see https://ddev.com/sponsor.
 -->
 
 ## Short Summary (TL;DR)

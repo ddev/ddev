@@ -72,3 +72,9 @@ body:
         💡 Attach images or log files by clicking this area to highlight it and dragging files in.
     validations:
       required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        💙 DDEV is free and maintained by the nonprofit DDEV Foundation. If DDEV
+        saves you or your team time, consider [sponsoring the project](https://ddev.com/sponsor).
