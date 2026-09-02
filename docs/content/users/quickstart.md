@@ -1143,10 +1143,10 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
     ddev composer create-project getgrav/grav
     ```
 
-    Install the admin plugin and launch:
+    Install the [Admin2](https://github.com/getgrav/grav-plugin-admin2) plugin and launch:
 
     ```bash
-    ddev exec gpm install admin -y
+    ddev exec gpm install admin2 -y
     ddev launch
     ```
 
@@ -1161,7 +1161,7 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
         ddev config --php-version=8.3 --omit-containers=db
         ddev start -y
         ddev composer create-project getgrav/grav
-        ddev exec gpm install admin -y
+        ddev exec gpm install admin2 -y
         ddev launch
         EOF
         chmod +x setup-grav.sh
@@ -1196,10 +1196,10 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
     ddev exec grav install
     ```
 
-    Install the admin plugin and launch:
+    Install the [Admin2](https://github.com/getgrav/grav-plugin-admin2) plugin and launch:
 
     ```bash
-    ddev exec gpm install admin -y
+    ddev exec gpm install admin2 -y
     ddev launch
     ```
 
@@ -1216,7 +1216,7 @@ The [`webserver_type: generic`](./configuration/config.md#webserver_type) allows
         ddev start -y
         ddev composer install
         ddev exec grav install
-        ddev exec gpm install admin -y
+        ddev exec gpm install admin2 -y
         ddev launch
         EOF
         chmod +x setup-grav-git.sh
