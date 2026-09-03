@@ -16,5 +16,10 @@ And anywhere, you can download the tarball or zipball, un-tar or un-zip it, and 
 
 *
 
+# Support DDEV
+
+DDEV is free and open source, maintained by the nonprofit DDEV Foundation.
+If this release saves you time, consider [sponsoring DDEV](https://ddev.com/sponsor).
+
 # Commits since _PREVIOUS VERSION_
 

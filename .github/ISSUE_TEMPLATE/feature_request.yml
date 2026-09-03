@@ -40,3 +40,9 @@ body:
       description: Add any other context or screenshots about the feature request.
     validations:
       required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        💙 DDEV is free and maintained by the nonprofit DDEV Foundation. If DDEV
+        saves you or your team time, consider [sponsoring the project](https://ddev.com/sponsor).
