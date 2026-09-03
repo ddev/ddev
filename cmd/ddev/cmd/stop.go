@@ -138,7 +138,7 @@ ddev stop --remove-data`,
 	},
 }
 
-func init() {
+func registerStopCmd() {
 	DdevStopCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored project data (MySQL, logs, etc.)")
 	DdevStopCmd.Flags().BoolVarP(&createSnapshot, "snapshot", "S", false, "Create database snapshot")
 	DdevStopCmd.Flags().BoolVarP(&stopOmitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")

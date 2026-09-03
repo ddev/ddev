@@ -125,7 +125,7 @@ func NewImportDBCmd() *cobra.Command {
 	return cmd
 }
 
-func init() {
+func registerImportDBCmd() {
 	// TODO: Move to RootCmd
 	RootCmd.AddCommand(NewImportDBCmd())
 }

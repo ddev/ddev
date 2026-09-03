@@ -44,6 +44,6 @@ var DebugComposeConfigCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugComposeConfigCmd() {
 	DebugCmd.AddCommand(DebugComposeConfigCmd)
 }

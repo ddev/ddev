@@ -80,7 +80,7 @@ var DebugCdCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugCdCmd() {
 	DebugCdCmd.Flags().BoolP("get-approot", "", false, "Get the full path to the project root directory")
 	_ = DebugCdCmd.Flags().MarkHidden("get-approot")
 	DebugCdCmd.Flags().BoolP("list", "", false, "Get project names")

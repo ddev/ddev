@@ -50,7 +50,7 @@ ddev composer create-project drupal/recommended-project .`,
 	},
 }
 
-func init() {
+func registerComposerCmd() {
 	ComposerCmd.InitDefaultHelpFlag()
 	err := ComposerCmd.Flags().MarkHidden("help")
 	originalHelpFunc := ComposerCmd.HelpFunc()

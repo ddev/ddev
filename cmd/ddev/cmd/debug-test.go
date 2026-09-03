@@ -90,6 +90,6 @@ var DebugTestCmdCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugTestCmd() {
 	DebugCmd.AddCommand(DebugTestCmdCmd)
 }

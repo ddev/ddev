@@ -37,7 +37,7 @@ Use --all to show all custom configuration with annotations:
 	},
 }
 
-func init() {
+func registerUtilityCheckCustomConfigCmd() {
 	UtilityCheckCustomConfig.Flags().Bool("all", false, `Show all custom configuration with annotations for add-on files, #ddev-generated, and #ddev-silent-no-warn`)
 	DebugCmd.AddCommand(UtilityCheckCustomConfig)
 }

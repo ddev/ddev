@@ -47,7 +47,7 @@ ddev add-on remove ddev-someaddonname --project my-project
 	},
 }
 
-func init() {
+func registerAddonRemoveCmd() {
 	AddonRemoveCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")
 	AddonRemoveCmd.Flags().String("project", "", "Name of the project to remove the add-on from")
 	_ = AddonRemoveCmd.RegisterFlagCompletionFunc("project", ddevapp.GetProjectNamesFunc("all", 0))

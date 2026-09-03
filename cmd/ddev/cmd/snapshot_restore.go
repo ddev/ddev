@@ -84,7 +84,7 @@ ddev snapshot restore $HOME/tmp/mysnapshot-mariadb_11.8.zst`,
 	},
 }
 
-func init() {
+func registerSnapshotRestoreCmd() {
 	DdevSnapshotRestoreCommand.Flags().BoolVarP(&snapshotRestoreLatest, "latest", "", false, "use latest snapshot")
 	DdevSnapshotRestoreCommand.Flags().BoolVarP(&snapshotRestoreForce, "force", "f", false, "Restore a snapshot made by a different version of the same database server, which may not come up")
 	DdevSnapshotCommand.AddCommand(DdevSnapshotRestoreCommand)

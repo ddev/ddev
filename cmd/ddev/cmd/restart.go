@@ -66,7 +66,7 @@ ddev restart --reset-database`,
 	},
 }
 
-func init() {
+func registerRestartCmd() {
 	RestartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
 	RestartCmd.Flags().BoolP("no-cache", "", false, "Rebuild custom Docker image layers without cache")
 	RestartCmd.Flags().BoolVarP(&restartAll, "all", "a", false, "Restart all projects")

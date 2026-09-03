@@ -295,7 +295,7 @@ func runSSHAuthContainer(keys []string) (int, error) {
 	return exitCode, err
 }
 
-func init() {
+func registerAuthSSHCmd() {
 	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyFiles, "ssh-key-file", "f", nil, "path to SSH private key file, use the flag multiple times to add more keys")
 	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyDirs, "ssh-key-path", "d", nil, "path to directory with SSH private key(s), use the flag multiple times to add more directories")
 	// While both flags work well with each other, don't allow them to be passed at the same time to make it easier to use.

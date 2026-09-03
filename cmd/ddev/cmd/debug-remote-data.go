@@ -228,7 +228,7 @@ func updateAddonDataStorage(data types.AddonData) error {
 	return addonStorage.Write(&data)
 }
 
-func init() {
+func registerDebugRemoteDataCmd() {
 	DebugRemoteDataCmd.Flags().StringVarP(&dataType, "type", "t", "remote-config", "Type of data to download (remote-config|sponsorship-data|addon-data)")
 	_ = DebugRemoteDataCmd.RegisterFlagCompletionFunc("type", configCompletionFunc([]string{"remote-config", "sponsorship-data", "addon-data"}))
 	DebugRemoteDataCmd.Flags().BoolVar(&updateStorage, "update-storage", true, "Update local cached storage file")

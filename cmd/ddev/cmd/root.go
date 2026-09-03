@@ -157,9 +157,23 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	Setup()
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}
+}
+
+// Setup performs the Docker/filesystem-dependent setup that used to run
+// implicitly via init(), which meant it ran before main() even started -
+// including before main()'s "refuse to run as root" check. It must run
+// once, explicitly, before RootCmd.Execute() dispatches to a command.
+func Setup() {
+	RegisterCommands()
+	setupGlobalConfig()
+	activeAppRoot, activeAppRootErr := ddevapp.GetActiveAppRoot("")
+	setupRootCmd(activeAppRoot, activeAppRootErr)
+	addPullProviderSubcommands(activeAppRoot, activeAppRootErr)
+	addPushProviderSubcommands(activeAppRoot, activeAppRootErr)
 }
 
 func init() {
@@ -181,7 +195,13 @@ func init() {
 		output.UserOut.WithField("raw", map[string]string{"version": RootCmd.Version}).Printf("%s version %s", RootCmd.DisplayName(), RootCmd.Version)
 		RootCmd.SetVersionTemplate(userOutFunc())
 	}
+}
 
+// setupRootCmd does the Docker/filesystem-dependent RootCmd setup that
+// cannot run at package init() time: it needs to run after main()'s
+// root-privilege check, and needs the active project root (if any),
+// computed once by Setup(), rather than discovering it again itself.
+func setupRootCmd(activeAppRoot string, activeAppRootErr error) {
 	// Determine if Docker is running by getting the version.
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
 	_, err := dockerutil.GetDockerVersion()
@@ -198,7 +218,7 @@ func init() {
 			util.Warning("populateExamplesAndCommands() failed: %v", err)
 		}
 
-		err = addCustomCommands(RootCmd)
+		err = addCustomCommands(RootCmd, activeAppRoot, activeAppRootErr)
 		if err != nil {
 			util.Warning("Adding custom/shell commands failed: %v", err)
 		}

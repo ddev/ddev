@@ -54,7 +54,7 @@ ddev ut tls-diagnose`,
 	},
 }
 
-func init() {
+func registerUtilityTLSDiagnoseCmd() {
 	DebugCmd.AddCommand(TLSDiagnoseCmd)
 }
 

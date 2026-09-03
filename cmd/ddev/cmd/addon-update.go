@@ -186,7 +186,7 @@ ddev add-on update --project my-project
 	},
 }
 
-func init() {
+func registerAddonUpdateCmd() {
 	AddonUpdateCmd.Flags().Bool("dry-run", false, "Show which add-ons would be updated without installing anything")
 	_ = AddonUpdateCmd.RegisterFlagCompletionFunc("dry-run", configCompletionFunc([]string{"true", "false"}))
 	AddonUpdateCmd.Flags().BoolP("verbose", "v", false, "Extended/verbose output")

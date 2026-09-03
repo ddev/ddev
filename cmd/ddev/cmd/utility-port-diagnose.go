@@ -61,7 +61,7 @@ ddev ut port-diagnose`,
 	},
 }
 
-func init() {
+func registerUtilityPortDiagnoseCmd() {
 	PortDiagnoseCmd.Flags().BoolVar(&portDiagnoseAllowSudo, "allow-sudo", false, "permit sudo use for elevated port detection without interactive prompt")
 	DebugCmd.AddCommand(PortDiagnoseCmd)
 }

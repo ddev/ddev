@@ -37,7 +37,7 @@ func IsUserDefinedCustomCommand(cmd *cobra.Command) bool {
 // ~/.ddev/commands/<servicename> etc. and
 // .ddev/commands/<servicename> and .ddev/commands/host
 // and if it finds them adds them to Cobra's commands.
-func addCustomCommands(rootCmd *cobra.Command) error {
+func addCustomCommands(rootCmd *cobra.Command, activeAppRoot string, activeAppRootErr error) error {
 	// Custom commands are shell scripts - so we can't use them on Windows without bash.
 	if nodeps.IsWindows() {
 		if windowsBashPath := util.FindBashPath(); windowsBashPath == "" {
@@ -48,9 +48,8 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	// Keep a map so we don't add multiple commands with the same name.
 	commandsAdded := map[string]int{}
 
-	activeAppRoot, err := ddevapp.GetActiveAppRoot("")
 	// If we're not running ddev inside a project directory, we should still add any host commands that can run without one.
-	if err != nil {
+	if activeAppRootErr != nil {
 		globalHostCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands", "host")
 		commandFiles, err := fileutil.ListFilesInDir(globalHostCommandPath)
 		if err != nil {

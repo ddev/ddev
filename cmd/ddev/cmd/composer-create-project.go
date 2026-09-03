@@ -607,7 +607,7 @@ var ComposerCreateCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerComposerCreateProjectCmd() {
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
 }

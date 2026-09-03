@@ -109,6 +109,6 @@ var DdevXHGuiCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerXhguiCmd() {
 	RootCmd.AddCommand(DdevXHGuiCmd)
 }

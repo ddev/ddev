@@ -61,7 +61,7 @@ ddev ssh -d /var/www/html`,
 	},
 }
 
-func init() {
+func registerSSHCmd() {
 	DdevSSHCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
 	_ = DdevSSHCmd.RegisterFlagCompletionFunc("service", ddevapp.GetServiceNamesFunc(true))
 	DdevSSHCmd.Flags().StringVarP(&sshDirArg, "dir", "d", "", "Defines the destination directory within the container")

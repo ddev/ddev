@@ -38,6 +38,6 @@ var DebugTestCleanupCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugTestcleanupCmd() {
 	DebugCmd.AddCommand(DebugTestCleanupCmd)
 }

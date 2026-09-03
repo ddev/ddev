@@ -43,7 +43,7 @@ var MutagenLogsCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerMutagenLogsCmd() {
 	MutagenCmd.AddCommand(MutagenLogsCmd)
 	MutagenLogsCmd.Flags().Bool("verbose", false, "Show full Mutagen logs")
 }

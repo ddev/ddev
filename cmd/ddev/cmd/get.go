@@ -85,7 +85,7 @@ ddev get --remove ddev-someaddonname
 	},
 }
 
-func init() {
+func registerGetCmd() {
 	Get.Flags().Bool("list", true, `List available add-ons for 'ddev get'`)
 	Get.Flags().Bool("all", true, `List unofficial add-ons for 'ddev get' in addition to the official ones`)
 	Get.Flags().Bool("installed", true, `Show installed ddev-get add-ons`)

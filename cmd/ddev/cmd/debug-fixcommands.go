@@ -18,6 +18,6 @@ var DebugFixCommandsCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugFixcommandsCmd() {
 	DebugCmd.AddCommand(DebugFixCommandsCmd)
 }
