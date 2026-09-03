@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -123,7 +124,7 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		require.NoError(t, err)
 		require.Contains(t, out, "dbimage: "+staleImage)
 		require.Contains(t, out, "built for DDEV images some-older-ddev-tag")
-		require.Contains(t, out, "but this DDEV expects "+versionconstants.BaseDBTag)
+		require.Contains(t, out, "but this DDEV expects "+docker.ResolveImageTag(versionconstants.BaseDBTag, versionconstants.BaseDBTagBranch))
 	})
 
 	// GLOBAL CHECKS (matching order in CheckCustomConfig)
