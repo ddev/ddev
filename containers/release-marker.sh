@@ -32,8 +32,8 @@ if [ "$(printf '%s\n' "$MARKERS" | wc -l)" -ne 1 ]; then
 fi
 
 TAG="${MARKERS#"${MARKER}" }"
-if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "release-marker.sh: '${TAG}' in ${DOCKERFILE} is not a vX.Y.Z release tag" >&2
+if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)[0-9.]*)?$ ]]; then
+  echo "release-marker.sh: '${TAG}' in ${DOCKERFILE} is not a release tag (vX.Y.Z, or a prerelease like v1.25.4-rc1)" >&2
   exit 1
 fi
 

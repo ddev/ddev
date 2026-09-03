@@ -368,12 +368,19 @@ jobs:
             # without this an unrelated later change would move vX.Y.Z and
             # latest onto a post-release build. First writer wins.
             RELEASED=false
+            LATEST=""
             if [ -n "$RELEASE_TAG" ]; then
               if containers/registry-tag-exists.sh "$repo" "$RELEASE_TAG"; then
                 echo "${repo}:${RELEASE_TAG} already published; leaving it and latest alone"
               else
-                NAMES+=(-t "${repo}:${RELEASE_TAG}" -t "${repo}:latest")
+                NAMES+=(-t "${repo}:${RELEASE_TAG}")
                 RELEASED=true
+                # The shape is already vetted, so a `-` means prerelease, and a
+                # prerelease is not the newest release latest should name.
+                case "$RELEASE_TAG" in
+                  *-*) echo "${RELEASE_TAG} is a prerelease; leaving latest alone" ;;
+                  *) NAMES+=(-t "${repo}:latest"); LATEST=" and \`latest\`" ;;
+                esac
               fi
             fi
             # A concurrent build of identical content (tags are content
@@ -393,7 +400,7 @@ jobs:
             fi
             SUMMARY_NAMES="\`${repo}:${TAG}\`"
             if [ "$RELEASED" = true ]; then
-              SUMMARY_NAMES="${SUMMARY_NAMES}, also published as \`${RELEASE_TAG}\` and \`latest\`"
+              SUMMARY_NAMES="${SUMMARY_NAMES}, also published as \`${RELEASE_TAG}\`${LATEST}"
             fi
             PUSHED_SUMMARY="${PUSHED_SUMMARY}- ${SUMMARY_NAMES}"$'\n'
             for arch in $ARCHES; do

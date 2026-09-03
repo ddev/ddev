@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/docker"
@@ -41,7 +42,7 @@ func TestCmdVersion(t *testing.T) {
 
 	assert.Contains(versionData["msg"], versionconstants.DdevVersion)
 	assert.Contains(versionData["msg"], versionconstants.WebImg)
-	assert.Contains(versionData["msg"], docker.ResolveImageTag(versionconstants.WebTag, versionconstants.WebTagBranch))
+	assert.Contains(versionData["msg"], docker.GetWebImage())
 	assert.Contains(versionData["msg"], versionconstants.DBImg)
 	assert.Contains(versionData["msg"], docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
 	assert.Contains(versionData["msg"], dockerVersion)
@@ -52,7 +53,7 @@ func TestCmdVersion(t *testing.T) {
 	// wasn't already resolved to that branch; the raw JSON map used by
 	// scripting never has it.
 	branchHint := "(" + versionconstants.WebTagBranch + ")"
-	if docker.ResolveImageTag(versionconstants.WebTag, versionconstants.WebTagBranch) == versionconstants.WebTagBranch {
+	if strings.HasSuffix(docker.GetWebImage(), ":"+versionconstants.WebTagBranch) {
 		assert.NotContains(versionData["msg"], branchHint)
 	} else {
 		assert.Contains(versionData["msg"], branchHint)
