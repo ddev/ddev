@@ -1651,6 +1651,13 @@ func (app *DdevApp) Start() error {
 	}
 
 	volumesNeeded := []string{"ddev-global-cache"}
+	if dockerutil.UseBindGlobalCache() {
+		// The global cache is a host directory instead of a volume, so make sure it exists.
+		volumesNeeded = []string{}
+		if err = os.MkdirAll(dockerutil.GlobalCacheSource(), 0755); err != nil {
+			return fmt.Errorf("unable to create global cache directory %s: %v", dockerutil.GlobalCacheSource(), err)
+		}
+	}
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		volumesNeeded = append(volumesNeeded, app.Name+"-ddev-config")
 	}
@@ -1757,14 +1764,17 @@ func (app *DdevApp) Start() error {
 	}
 
 	// Build list of volume mounts and their target paths for chown
-	volumeMounts := []string{"ddev-global-cache:/mnt/ddev-global-cache"}
+	volumeMounts := []string{dockerutil.GlobalCacheMount()}
 	chownCmd := fmt.Sprintf("chown -R %s:%s /mnt/ddev-global-cache", uid, gid)
 	labels := map[string]string{}
 	if dockerutil.UseKeepID() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
 
-	if !app.IsDBOmitted() {
+	// Skip the database volume if its container is already running: the ownership was
+	// set on an earlier start, and mounting it here as well is a second writer, which
+	// apple container refuses outright.
+	if !app.IsDBOmitted() && app.runningDBContainer() == nil {
 		if app.Database.Type == nodeps.Postgres {
 			postgresDataDir := app.GetPostgresDataDir()
 			volumeMounts = append(volumeMounts, app.GetPostgresVolumeName()+":"+postgresDataDir)
@@ -1954,7 +1964,7 @@ func (app *DdevApp) Start() error {
 			// Copy ca certs into ddev-global-cache/mkcert
 			if caRoot != "" {
 				uid, _, _ := dockerutil.GetContainerUser()
-				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
+				err = copyIntoGlobalCache(caRoot, "mkcert", uid, "", false)
 				if err != nil {
 					util.Warning("Failed to copy root CA into Docker volume ddev-global-cache/mkcert: %v", err)
 				} else {
@@ -3421,7 +3431,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	// for stopped project
 	c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 	util.Debug("Removing merged config for project with command '%s'", c)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "remove-project-merged-config-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{dockerutil.GlobalCacheMount()}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 	if err != nil {
 		util.Warning("Unable to remove project merged traefik yaml: %v, output='%s'", err, out)
 	}
@@ -3433,11 +3443,13 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		// This would not remove extra certs that they had put in certs directory.
 		c := fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%[1]s-{web,db} /mnt/ddev-global-cache/traefik/*/%[1]s.{crt,key} /mnt/ddev-global-cache/traefik/config/%[1]s_merged.yaml", app.Name)
 		util.Debug("Cleaning ddev-global-cache with command '%s'", c)
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
+		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "clean-ddev-global-cache-"+util.RandString(6), []string{"bash", "-c", c}, []string{}, []string{}, []string{dockerutil.GlobalCacheMount()}, "", true, false, map[string]string{`com.ddev.site-name`: ""}, nil, nil)
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache with command '%s': %v; output='%s'", c, err, out)
 		}
 	}
+
+	NotifyRouterOfTraefikConfigChange()
 
 	if status == SiteRunning {
 		err = app.Pause()
@@ -4014,5 +4026,113 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 		return err
 	}
 
+	return nil
+}
+
+// copyIntoGlobalCache copies sourcePath into the global cache under targetSubdir.
+// When the global cache is a host bind mount (UseBindGlobalCache), the copy is
+// done on the host, which avoids CopyIntoVolume entirely. That matters on Apple
+// Container/socktainer, where copying a directory into a container is not
+// supported.
+func copyIntoGlobalCache(sourcePath string, targetSubdir string, uid string, exclusion string, destroyExisting bool) error {
+	if !dockerutil.UseBindGlobalCache() {
+		return dockerutil.CopyIntoVolume(sourcePath, dockerutil.GlobalCacheSource(), targetSubdir, uid, exclusion, destroyExisting)
+	}
+	target := filepath.Join(dockerutil.GlobalCacheSource(), targetSubdir)
+	if destroyExisting {
+		if err := os.RemoveAll(target); err != nil {
+			return err
+		}
+	}
+	if err := os.MkdirAll(target, 0755); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(sourcePath)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if exclusion != "" && entry.Name() == exclusion {
+			continue
+		}
+		src := filepath.Join(sourcePath, entry.Name())
+		dst := filepath.Join(target, entry.Name())
+		if entry.IsDir() {
+			err = mergeCopyDir(src, dst)
+		} else {
+			if err = os.RemoveAll(dst); err != nil {
+				return err
+			}
+			err = fileutil.CopyFile(src, dst)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// mergeCopyDir copies the contents of src over dst, replacing files but keeping
+// every directory that is already there.
+//
+// Traefik watches /mnt/ddev-global-cache/traefik/config for changes. Recreating that
+// directory gives it a new inode and leaves Traefik watching one nothing writes to
+// again, so it stops seeing any project added or removed from then on.
+func mergeCopyDir(src string, dst string) error {
+	if err := os.MkdirAll(dst, 0755); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		s := filepath.Join(src, entry.Name())
+		d := filepath.Join(dst, entry.Name())
+		if entry.IsDir() {
+			err = mergeCopyDir(s, d)
+		} else {
+			if err = os.RemoveAll(d); err != nil {
+				return err
+			}
+			err = fileutil.CopyFile(s, d)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// listGlobalCacheFiles returns the filenames directly under targetSubdir of the
+// global cache, reading the host directory when the cache is bind-mounted.
+func listGlobalCacheFiles(targetSubdir string) ([]string, error) {
+	if !dockerutil.UseBindGlobalCache() {
+		return dockerutil.ListFilesInVolume(dockerutil.GlobalCacheSource(), targetSubdir)
+	}
+	entries, err := os.ReadDir(filepath.Join(dockerutil.GlobalCacheSource(), targetSubdir))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var files []string
+	for _, entry := range entries {
+		files = append(files, entry.Name())
+	}
+	return files, nil
+}
+
+// removeGlobalCacheFiles removes named files from targetSubdir of the global cache.
+func removeGlobalCacheFiles(targetSubdir string, files []string) error {
+	if !dockerutil.UseBindGlobalCache() {
+		return dockerutil.RemoveFilesFromVolume(dockerutil.GlobalCacheSource(), targetSubdir, files)
+	}
+	for _, f := range files {
+		if err := os.RemoveAll(filepath.Join(dockerutil.GlobalCacheSource(), targetSubdir, f)); err != nil {
+			return err
+		}
+	}
 	return nil
 }
