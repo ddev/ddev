@@ -19,7 +19,7 @@ PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -name "*.go" ! -path "*/testdata/*")
 GORACE = "halt_on_error=1"
 CGO_ENABLED = 0
-.PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 windows_install setup
+.PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 windows_amd64_binaries windows_arm64_binaries windows_binaries windows_sign_binaries windows_install setup
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
@@ -145,7 +145,7 @@ $(TARGETS): mkcert $(GOFILES)
 	@echo $(VERSION) >VERSION.txt
 
 
-$(GOTMP)/bin/completions.tar.gz: build
+$(GOTMP)/bin/completions.tar.gz: $(DEFAULT_BUILD)
 	$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev_gen_autocomplete
 	tar -C $(GOTMP)/bin/completions -czf $(GOTMP)/bin/completions.tar.gz .
 
@@ -376,33 +376,67 @@ windows_amd64_install: $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.e
 windows_arm64_install: $(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe
 windows_install: windows_amd64_install windows_arm64_install
 
-windows_amd64_sign_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows amd64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/ddev-hostname.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"; fi
+# A Windows release is assembled in three phases because signtool runs only on
+# the signing host, while everything else cross-builds on Linux: the binaries
+# are built and signed, NSIS packs the signed binaries into an installer, and
+# the installer is then signed itself. The signing and packaging targets take
+# no build prerequisites, so main-build.yml can run one on a machine holding
+# nothing but signtool and the files it downloaded.
+windows_amd64_binaries: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/ddev-hostname.exe $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt
+windows_arm64_binaries: $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.txt
+windows_binaries: windows_amd64_binaries windows_arm64_binaries
 
-windows_arm64_sign_binaries: $(GOTMP)/bin/windows_arm64/ddev.exe $(GOTMP)/bin/windows_arm64/ddev-hostname.exe $(GOTMP)/bin/windows_arm64/mkcert.exe
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows arm64 binaries..." && signtool sign -fd SHA256 ".gotmp/bin/windows_arm64/ddev.exe" ".gotmp/bin/windows_arm64/ddev-hostname.exe" ".gotmp/bin/windows_arm64/mkcert.exe" ".gotmp/bin/windows_arm64/ddev_gen_autocomplete.exe"; fi
+windows_%_sign_binaries:
+	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing $* binaries, DDEV_WINDOWS_SIGN not set"; else \
+		echo "Signing windows $* binaries..." && \
+		signtool sign -fd SHA256 "$(GOTMP)/bin/windows_$*/ddev.exe" "$(GOTMP)/bin/windows_$*/ddev-hostname.exe" "$(GOTMP)/bin/windows_$*/mkcert.exe" "$(GOTMP)/bin/windows_$*/ddev_gen_autocomplete.exe"; \
+	fi
 
 windows_sign_binaries: windows_amd64_sign_binaries windows_arm64_sign_binaries
 
-$(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_amd64_sign_binaries linux_amd64 $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev_windows_installer.nsi
-	@makensis -DTARGET_ARCH=amd64 -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing amd64 $@, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows installer amd64 binary..." && signtool sign -fd SHA256 "$@"; fi
-	$(SHASUM) $@ >$@.sha256.txt
+# Packs whatever is already in $(GOTMP)/bin/windows_$* and $(GOTMP)/bin/linux_$*.
+windows_%_package:
+	@makensis -DTARGET_ARCH=$* -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 
-$(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe: windows_arm64_sign_binaries linux_arm64  $(GOTMP)/bin/windows_arm64/mkcert_license.txt winpkg/ddev_windows_installer.nsi
-	@makensis -DTARGET_ARCH=arm64 -DVERSION=$(VERSION) winpkg/ddev_windows_installer.nsi  # brew install makensis, apt-get install nsis, or install on Windows
-	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing arm64 $@, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows installer arm64 binary..." && signtool sign -fd SHA256 "$@"; fi
-	$(SHASUM) $@ >$@.sha256.txt
+windows_%_sign_installer:
+	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing $* installer, DDEV_WINDOWS_SIGN not set"; else \
+		echo "Signing windows $* installer..." && \
+		signtool sign -fd SHA256 "$(GOTMP)/bin/windows_$*/ddev_windows_$*_installer.exe"; \
+	fi
+	$(MAKE) windows_$*_installer_checksum
+
+# Separate from signing because signing rewrites the installer, so whichever
+# machine signs last has to be the one that hashes it.
+windows_%_installer_checksum:
+	$(SHASUM) $(GOTMP)/bin/windows_$*/ddev_windows_$*_installer.exe >$(GOTMP)/bin/windows_$*/ddev_windows_$*_installer.exe.sha256.txt
+
+# The wsl_amd64/wsl_arm64 targets above rebuild the Windows binaries first,
+# discarding any signature applied elsewhere. This copies what is already there.
+wsl_%_copy:
+	mkdir -p $(GOTMP)/bin/wsl_$*
+	cp $(GOTMP)/bin/windows_$*/ddev-hostname.exe $(GOTMP)/bin/windows_$*/mkcert.exe $(GOTMP)/bin/wsl_$*/
+
+$(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe: windows_amd64_binaries linux_amd64 winpkg/ddev_windows_installer.nsi
+	$(MAKE) windows_amd64_sign_binaries
+	$(MAKE) windows_amd64_package
+	$(MAKE) windows_amd64_sign_installer
+
+$(GOTMP)/bin/windows_arm64/ddev_windows_arm64_installer.exe: windows_arm64_binaries linux_arm64 winpkg/ddev_windows_installer.nsi
+	$(MAKE) windows_arm64_sign_binaries
+	$(MAKE) windows_arm64_package
+	$(MAKE) windows_arm64_sign_installer
 
 no_v_version:
 	@echo $(NO_V_VERSION)
 
-chocolatey: $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe
+# Packages the installer already present, for the same reason as
+# windows_%_installer_checksum.
+chocolatey:
 	rm -rf $(GOTMP)/bin/windows_amd64/chocolatey && cp -r winpkg/chocolatey $(GOTMP)/bin/windows_amd64/chocolatey
 	perl -pi -e 's/REPLACE_DDEV_VERSION/$(NO_V_VERSION)/g' $(GOTMP)/bin/windows_amd64/chocolatey/*.nuspec
 	perl -pi -e 's/REPLACE_DDEV_VERSION/$(VERSION)/g' $(GOTMP)/bin/windows_amd64/chocolatey/tools/*.ps1
 	perl -pi -e 's/REPLACE_GITHUB_ORG/$(REPOSITORY_OWNER)/g' $(GOTMP)/bin/windows_amd64/chocolatey/*.nuspec $(GOTMP)/bin/windows_amd64/chocolatey/tools/*.ps1 #GITHUB_ORG is for testing, for example when the binaries are on rfay acct
-	perl -pi -e "s/REPLACE_INSTALLER_CHECKSUM/$$(cat $(GOTMP)/bin/windows_amd64/ddev_windows_amd64installer.exe.sha256.txt | awk '{ print $$1; }')/g" $(GOTMP)/bin/windows_amd64/chocolatey/tools/*
+	perl -pi -e "s/REPLACE_INSTALLER_CHECKSUM/$$(cat $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe.sha256.txt | awk '{ print $$1; }')/g" $(GOTMP)/bin/windows_amd64/chocolatey/tools/*
 	if [[ "$(NO_V_VERSION)" =~ -g[0-9a-f]+ ]]; then \
 		echo "Skipping chocolatey build on interim version"; \
 	else \
