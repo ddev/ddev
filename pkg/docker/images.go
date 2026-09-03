@@ -58,7 +58,7 @@ func GetWebImage() string {
 	if globalconfig.DdevGlobalConfig.UseHardenedImages {
 		fullWebImg = fullWebImg + "-prod"
 	}
-	return fmt.Sprintf("%s:%s", fullWebImg, ResolveImageTag(versionconstants.WebTag, versionconstants.WebTagBranch))
+	return fmt.Sprintf("%s:%s", fullWebImg, resolveImageTag(versionconstants.WebTag, versionconstants.WebTagBranch))
 }
 
 // GetDBImage returns the correctly formatted db image:tag reference
@@ -78,21 +78,21 @@ func GetDBImage(dbType string, dbVersion string) string {
 	case nodeps.MariaDB:
 		fallthrough
 	default:
-		return fmt.Sprintf("%s-%s-%s:%s", imageRepo(versionconstants.DBImg), dbType, v, ResolveImageTag(versionconstants.BaseDBTag, versionconstants.BaseDBTagBranch))
+		return fmt.Sprintf("%s-%s-%s:%s", imageRepo(versionconstants.DBImg), dbType, v, resolveImageTag(versionconstants.BaseDBTag, versionconstants.BaseDBTagBranch))
 	}
 }
 
 // GetSSHAuthImage returns the correctly formatted sshauth image:tag reference
 func GetSSHAuthImage() string {
-	return fmt.Sprintf("%s:%s", imageRepo(versionconstants.SSHAuthImage), ResolveImageTag(versionconstants.SSHAuthTag, versionconstants.SSHAuthTagBranch))
+	return fmt.Sprintf("%s:%s", imageRepo(versionconstants.SSHAuthImage), resolveImageTag(versionconstants.SSHAuthTag, versionconstants.SSHAuthTagBranch))
 }
 
 // GetRouterImage returns the router image:tag reference
 func GetRouterImage() string {
-	return fmt.Sprintf("%s:%s", imageRepo(versionconstants.TraefikRouterImage), ResolveImageTag(versionconstants.TraefikRouterTag, versionconstants.TraefikRouterTagBranch))
+	return fmt.Sprintf("%s:%s", imageRepo(versionconstants.TraefikRouterImage), resolveImageTag(versionconstants.TraefikRouterTag, versionconstants.TraefikRouterTagBranch))
 }
 
 // GetXhguiImage returns the xhgui image:tag reference
 func GetXhguiImage() string {
-	return fmt.Sprintf("%s:%s", imageRepo(versionconstants.XhguiImage), ResolveImageTag(versionconstants.XhguiTag, versionconstants.XhguiTagBranch))
+	return fmt.Sprintf("%s:%s", imageRepo(versionconstants.XhguiImage), resolveImageTag(versionconstants.XhguiTag, versionconstants.XhguiTagBranch))
 }
