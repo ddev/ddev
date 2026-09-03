@@ -883,15 +883,29 @@ func (app *DdevApp) GetDBCompressionCommand() string {
 }
 
 // GetDBDumpCommand returns the appropriate database dump command (mysqldump or mariadb-dump)
-// based on the database type and version.
+// with flags, based on the database type and version.
 func (app *DdevApp) GetDBDumpCommand() string {
+	cmd := "mysqldump"
 	// Use canonical mariadb-dump for MariaDB 10.5+
 	if app.Database.Type == nodeps.MariaDB {
 		if isNewMariaDB, _ := util.SemverValidate(">= 10.5", app.Database.Version); isNewMariaDB {
-			return "mariadb-dump"
+			cmd = "mariadb-dump"
 		}
 	}
-	return "mysqldump"
+
+	cmd = cmd + " --single-transaction"
+
+	// MySQL 9.5+ defaults gtid_mode to ON, which makes mysqldump emit
+	// GTID_PURGED statements/warnings on a single-database dump. export-db
+	// dumps one project database for later import-db, not for replication,
+	// so GTID metadata and tablespace privileges aren't wanted here.
+	if app.Database.Type == nodeps.MySQL {
+		if isNewMySQL, _ := util.SemverValidate(">= 9.5", app.Database.Version); isNewMySQL {
+			cmd = cmd + " --set-gtid-purged=OFF --no-tablespaces"
+		}
+	}
+
+	return cmd
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
