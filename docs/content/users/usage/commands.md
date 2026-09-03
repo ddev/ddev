@@ -1434,7 +1434,7 @@ Flags:
 * `--cleanup`, `-C`: Cleanup snapshots.
 * `--list`, `-l`: List snapshots.
 * `--name`, `-n`: Provide a name for the snapshot.
-* `--uncompressed`: Write the snapshot as an uncompressed mariabackup/xtrabackup stream instead of compressing it. This skips decompression on restore, but the file can be roughly as large as the database's datadir, many times bigger than a compressed snapshot. Not available for PostgreSQL projects. See [Snapshots](../usage/database-management.md#snapshots) for when this unusual tradeoff makes sense.
+* `--uncompressed`: Write the snapshot as an uncompressed mariabackup/xtrabackup stream instead of compressing it. This skips decompression on restore, but the file can be roughly as large as the database's datadir, many times bigger than a compressed snapshot. Not available for PostgreSQL projects. See [Snapshots](../usage/database-management.md#snapshots) for when this unusual trade-off makes sense.
 * `--yes`, `-y`: Skip confirmation prompt.
 
 `ddev snapshot --list` also shows each snapshot's compression: `zstd`, `gzip`, or `none` for an uncompressed snapshot. If the project is a Git worktree and a sibling worktree of the same project has snapshots of its own, those are listed too, with a `Worktree` column naming which one each came from.
@@ -1833,7 +1833,7 @@ ddev utility dockercheck
 
 ### `utility download-ddev`
 
-Download the `ddev` and `ddev-hostname` binaries built by CI or a release, for testing a specific build without replacing your installed DDEV. It only downloads the binaries into a directory (`~/tmp/ddev-download-ddev/<version>` by default, so a download can't accidentally end up on `$PATH` or as a stray file in a git checkout, and each build stays separate from the ones downloaded before it) and prints how to use them in the current shell; it does not modify your installed DDEV.
+Download the `ddev` and `ddev-hostname` binaries built by CI or a release, for testing a specific build without replacing your installed DDEV. It only downloads the binaries into a directory (`~/tmp/ddev-download-ddev/<version>` by default, so a download can't accidentally end up on `$PATH` or as a stray file in a Git checkout, and each build stays separate from the ones downloaded before it) and prints how to use them in the current shell; it does not modify your installed DDEV.
 
 Flags:
 
