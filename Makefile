@@ -198,12 +198,13 @@ EMBARGO_SKIP_FLAG := $(if $(DDEV_EMBARGO_TESTS),-skip "$(DDEV_EMBARGO_TESTS)",)
 # When GOTESTSUM_JSONFILE_DIR is set, tests run through gotestsum instead of
 # `go test` directly, additionally writing structured per-test JSON events to
 # <dir>/<name>.ndjson for the CI test-runtime collector (see
-# perf/collector/README.md). --format=standard-verbose mirrors plain
-# `go test -v` console output, including full failure detail, so CI log
-# review is unaffected. Unset by default, so local `make test` needs no
-# gotestsum install and behaves exactly as before.
+# perf/collector/README.md). --format=testname prints one line per test and
+# only dumps full -v output (including DDEV_DEBUG logging) for failing tests,
+# so passing tests don't flood CI logs with per-test debug output. Unset by
+# default, so local `make test` needs no gotestsum install and behaves
+# exactly as before.
 GOTESTSUM_JSONFILE_DIR ?=
-gotest = $(if $(GOTESTSUM_JSONFILE_DIR),gotestsum --format=standard-verbose --jsonfile=$(GOTESTSUM_JSONFILE_DIR)/$(1).ndjson --,go test)
+gotest = $(if $(GOTESTSUM_JSONFILE_DIR),gotestsum --format=testname --jsonfile=$(GOTESTSUM_JSONFILE_DIR)/$(1).ndjson --,go test)
 
 # Override test section with tests specific to ddev
 test: testpkg testcmd
