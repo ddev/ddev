@@ -10,7 +10,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 ## Git Mirrors (all platforms)
 
 Set `git-mirrors-path` in `buildkite-agent.cfg` on every agent. Buildkite keeps
-a local bare mirror of the repo there, so a wiped or first-time build
+a local bare mirror of the repository there, so a wiped or first-time build
 directory does an incremental fetch from the mirror instead of a fresh clone
 against GitHub — this avoids the exposure to transient network failures that
 a full clone has. See [Buildkite's Git mirrors docs](https://buildkite.com/docs/agent/self-hosted/configure/git-mirrors).
