@@ -1,63 +1,53 @@
 {
+  "env": {
+    "GOTEST_SHORT": "true",
+    "DDEV_NO_INSTRUMENTATION": "true"
+  },
   "permissions": {
     "allow": [
-      "Bash(curl*github.com*)",
-      "Bash(curl*raw.githubusercontent.com*)",
-      "Bash(curl*buildkite.com*)",
-      "Bash(gh issue list*)",
-      "Bash(gh issue view*)",
-      "Bash(gh issue status*)",
-      "Bash(gh pr list*)",
-      "Bash(gh pr view*)",
-      "Bash(gh pr checks*)",
-      "Bash(gh pr diff*)",
-      "Bash(gh pr status*)",
-      "Bash(gh run list*)",
-      "Bash(gh run view*)",
-      "Bash(make*)",
-      "Bash(go test*)",
-      "Bash(gofmt*)",
-      "Bash(ls*)",
-      "Bash(grep*)",
-      "Bash(sed*)",
-      "Bash(cat*)",
-      "Bash(head*)",
-      "Bash(tail*)",
-      "Bash(wc*)",
-      "Bash(sort*)",
-      "Bash(uniq*)",
-      "Bash(cut*)",
-      "Bash(tr*)",
-      "Bash(diff*)",
-      "Bash(find*)",
-      "Bash(which*)",
-      "Bash(type*)",
-      "Bash(echo*)",
-      "Bash(printf*)",
-      "Bash(jq*)",
-      "Bash(awk*)",
-      "Bash(git log*)",
-      "Bash(git diff*)",
-      "Bash(git status*)",
-      "Bash(git show*)",
-      "Bash(git blame*)",
-      "Bash(git branch*)",
-      "Bash(git remote*)",
-      "Bash(golangci-lint*)",
-      "Bash(markdownlint*)",
-      "WebFetch(domain:*)"
+      "Bash(make *)",
+      "Bash(go test *)",
+      "Bash(gofmt *)",
+      "Bash(golangci-lint *)",
+      "Bash(markdownlint *)",
+      "Bash(command -v *)",
+      "Bash(printf *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(cut *)",
+      "Bash(tr *)",
+      "Bash(jq *)",
+      "Bash(awk *)",
+      "Bash(gh issue list *)",
+      "Bash(gh issue view *)",
+      "Bash(gh issue status *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh pr diff *)",
+      "Bash(gh pr status *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:buildkite.com)",
+      "WebFetch(domain:docs.ddev.com)",
+      "WebFetch(domain:code.claude.com)"
     ],
     "deny": [
-      "Bash(git push*)",
-      "Bash(sed*-i*)",
-      "Bash(find*-delete*)",
-      "Bash(find*-exec rm*)"
+      "Bash(git push *)",
+      "Bash(docker push *)",
+      "Bash(go build *)",
+      "Bash(sed -i *)",
+      "Bash(sed * -i *)",
+      "Bash(find * -delete)",
+      "Bash(find * -delete *)",
+      "Bash(find * -exec rm *)"
     ]
   },
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup",
         "hooks": [
           {
             "type": "command",
@@ -72,8 +62,8 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(git commit*)",
-            "command": "direnv exec \"$CLAUDE_PROJECT_DIR\" make -C \"$CLAUDE_PROJECT_DIR\" staticrequired"
+            "if": "Bash(git commit *)",
+            "command": "make -C \"$CLAUDE_PROJECT_DIR\" staticrequired"
           }
         ]
       }
@@ -84,11 +74,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "for f in $CLAUDE_FILE_PATHS; do case \"$f\" in *.go) gofmt -w \"$f\" 2>/dev/null ;; esac; done"
-          },
-          {
-            "type": "command",
-            "command": "for f in $CLAUDE_FILE_PATHS; do case \"$f\" in *.md) markdownlint --fix \"$f\" 2>/dev/null || true ;; esac; done"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/format-edited-file.sh"
           }
         ]
       }
