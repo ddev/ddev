@@ -98,6 +98,10 @@ rm -rf ${OUTDIR}/*
 
 backuptool="mariabackup --defaults-file=/var/tmp/my.cnf"
 streamtool=xbstream
+# mariabackup was renamed mariadb-backup; older MariaDB (<10.4) only has the old name.
+if command -v mariadb-backup >/dev/null 2>&1; then
+  backuptool="mariadb-backup --defaults-file=/var/tmp/my.cnf"
+fi
 if command -v xtrabackup; then
   backuptool="xtrabackup --defaults-file=/var/tmp/my.cnf --datadir=${DATADIR:-/var/lib/mysql}";
   streamtool=xbstream

@@ -72,7 +72,7 @@ RUN <<EOF
     set -eu -o pipefail
     arch=$(dpkg --print-architecture)
     set -x;
-    if ( ! command -v xtrabackup && ! command -v mariabackup ); then
+    if ( ! command -v xtrabackup && ! command -v mariadb-backup && ! command -v mariabackup ); then
         curl -o /tmp/percona_release_latest.deb --fail -sSL ${PERCONA_SETUP_URL}
         apt-get install -y /tmp/percona_release_latest.deb
         rm /tmp/percona_release_latest.deb
