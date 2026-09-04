@@ -32,7 +32,7 @@ var DdevSnapshotCommand = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 0),
 	Use:               "snapshot [projectname projectname...]",
 	Short:             "Create a database snapshot for one or more projects.",
-	Long:              `Uses mariabackup or xtrabackup command to create a database snapshot in the .ddev/db_snapshots folder. These are compatible with server backups using the same tools and can be restored with "ddev snapshot restore".`,
+	Long:              `Uses mariadb-backup or xtrabackup command to create a database snapshot in the .ddev/db_snapshots folder. These are compatible with server backups using the same tools and can be restored with "ddev snapshot restore".`,
 	Example: `ddev snapshot
 ddev snapshot --name some_descriptive_name
 ddev snapshot --cleanup
@@ -218,6 +218,6 @@ func init() {
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotCleanup, "cleanup", "C", false, "Cleanup snapshots")
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotCleanupNoConfirm, "yes", "y", false, "Yes - skip confirmation prompt")
 	DdevSnapshotCommand.Flags().StringVarP(&snapshotName, "name", "n", "", "provide a name for the snapshot")
-	DdevSnapshotCommand.Flags().BoolVar(&snapshotUncompressed, "uncompressed", false, "Write the snapshot as an uncompressed mariabackup/xtrabackup stream instead of compressing it. This skips decompression on restore, but the file can be roughly as large as the database's datadir, many times bigger than a compressed snapshot. Not available for PostgreSQL projects.")
+	DdevSnapshotCommand.Flags().BoolVar(&snapshotUncompressed, "uncompressed", false, "Write the snapshot as an uncompressed mariadb-backup/xtrabackup stream instead of compressing it. This skips decompression on restore, but the file can be roughly as large as the database's datadir, many times bigger than a compressed snapshot. Not available for PostgreSQL projects.")
 	RootCmd.AddCommand(DdevSnapshotCommand)
 }
