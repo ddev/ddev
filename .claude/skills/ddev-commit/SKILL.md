@@ -68,8 +68,8 @@ Per-section notes, in the same top-to-bottom order as the template above:
   real content, or omit it under the same rule as any other section.
 
 After that last section, append two more trailers, each its own line and
-neither part of Release/Deployment Notes content: `🤖 Generated with [Claude
-Code](https://claude.com/claude-code)`, then a blank line, then
+neither part of Release/Deployment Notes content: `🤖 Developed with assistance
+from [Claude Code](https://claude.ai/code)`, then a blank line, then
 `Co-Authored-By: Claude <model> <noreply@anthropic.com>` naming the model
 actually in use for the session (for example `Claude Opus 5`), not a
 hardcoded name.
