@@ -275,11 +275,14 @@ check-image-tags:
 # Fail rather than skip when a required tool is absent. These targets used to
 # print a note and exit 0, so `make staticrequired` reported success while
 # silently running nothing -- the worst of both worlds, since it looks checked.
+#
+# $(2) replaces the install hint, for a tool install-dev-tools.sh does not
+# carry: that script covers only the Python and Node docs tooling.
 define require_tool
 	@command -v $(1) >/dev/null 2>&1 || { \
 		echo "$(1) is required but was not found on PATH."; \
-		echo "Install the development tools with: scripts/install-dev-tools.sh"; \
-		echo "Expected location: $(DEV_TOOLS_DIR)"; \
+		echo "$(if $(2),$(2),Install the development tools with: scripts/install-dev-tools.sh)"; \
+		$(if $(2),,echo "Expected location: $(DEV_TOOLS_DIR)";) \
 		exit 1; \
 	}
 endef
@@ -291,9 +294,10 @@ endef
 # `pyspelling --config ...` dies with "No such file or directory" even though
 # the `command -v pyspelling` on the line before it just succeeded. The prefix
 # forces the line through $(SHELL), which does have the exported PATH.
-# $(2) must not contain commas; $(call) would split them into further arguments.
+# $(2) must not contain commas; $(call) would split them into further
+# arguments. $(3) is the optional install hint that require_tool documents.
 define run_tool
-	$(call require_tool,$(1))
+	$(call require_tool,$(1),$(3))
 	@PATH="$(PATH)" $(1) $(2)
 endef
 
@@ -301,6 +305,12 @@ endef
 markdownlint:
 	@echo "markdownlint: "
 	$(call run_tool,markdownlint,*.md docs/content 2>&1)
+
+# DDEV_MD_FILES overrides the default *.md docs/content scope
+.PHONY: markdownlint-fix
+markdownlint-fix:
+	@echo "markdownlint --fix: "
+	$(call run_tool,markdownlint,--fix $(if $(DDEV_MD_FILES),$(DDEV_MD_FILES),*.md docs/content) 2>&1)
 
 # Install zensical locally using
 # https://docs.ddev.com/en/stable/developers/testing-docs/
@@ -418,16 +428,20 @@ $(GOTMP)/bin/windows_arm64/mkcert.exe $(GOTMP)/bin/windows_arm64/mkcert_license.
 	$(CURL) --fail -JL -S --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -s -o $(GOTMP)/bin/windows_arm64/mkcert.exe "https://github.com/FiloSottile/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-arm64.exe"
 	$(CURL) --fail -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -o $(GOTMP)/bin/windows_arm64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
 
-# Best to install golangci-lint locally with "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.31.0"
+# golangci-lint is a Go binary, so it comes from neither install-dev-tools.sh
+# nor DEV_TOOLS_DIR. A variable because both targets below need it.
+GOLANGCI_LINT_HINT = Install golangci-lint from https://golangci-lint.run/docs/welcome/install/local/
+
 golangci-lint:
 	@echo "golangci-lint: "
-	@CMD="golangci-lint run $(SRC_AND_UNDER)"; \
-	set -eu -o pipefail; \
-	if command -v golangci-lint >/dev/null 2>&1; then \
-		$$CMD; \
-	else \
-		echo "Skipping golangci-lint as not installed"; \
-	fi
+	$(call run_tool,golangci-lint,run $(SRC_AND_UNDER),$(GOLANGCI_LINT_HINT))
+
+# `run --fix` applies the gofmt formatter too, so there is no gofmt target.
+# DDEV_GO_FILES overrides the default $(SRC_AND_UNDER) scope
+.PHONY: golangci-lint-fix
+golangci-lint-fix:
+	@echo "golangci-lint --fix: "
+	$(call run_tool,golangci-lint,run --fix $(if $(DDEV_GO_FILES),$(DDEV_GO_FILES),$(SRC_AND_UNDER)),$(GOLANGCI_LINT_HINT))
 
 go-mod-update:
 	@echo "bump golang dependencies: "
