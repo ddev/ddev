@@ -262,7 +262,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v4
+        uses: 1password/load-secrets-action@v5
         with:
           export-env: true
         env:
@@ -311,7 +311,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Load 1password secret(s)
-        uses: 1password/load-secrets-action@v4
+        uses: 1password/load-secrets-action@v5
         with:
           export-env: true
         env:
