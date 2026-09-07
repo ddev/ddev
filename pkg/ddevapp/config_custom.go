@@ -435,7 +435,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 	// Non-default webimage/dbimage are custom configuration even though they're
 	// config.yaml values rather than files.
 	if app.WebImage != "" && app.WebImage != docker.GetWebImage() {
-		expectedWebTag := docker.ResolveImageTag(versionconstants.WebTag, versionconstants.WebTagBranch)
+		expectedWebTag := docker.WebImageTag()
 		findings = append(findings, finding{
 			category: "Web server",
 			files: []fileInfo{{path: fmt.Sprintf("webimage: %s (non-default%s)",
@@ -443,7 +443,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 		})
 	}
 	if app.DBImage != "" && app.DBImage != docker.GetDBImage(app.Database.Type, app.Database.Version) {
-		expectedDBTag := docker.ResolveImageTag(versionconstants.BaseDBTag, versionconstants.BaseDBTagBranch)
+		expectedDBTag := docker.DBImageTag()
 		findings = append(findings, finding{
 			category: "Database",
 			files: []fileInfo{{path: fmt.Sprintf("dbimage: %s (non-default%s)",

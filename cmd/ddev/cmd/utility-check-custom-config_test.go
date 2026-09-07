@@ -124,7 +124,7 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		require.NoError(t, err)
 		require.Contains(t, out, "dbimage: "+staleImage)
 		require.Contains(t, out, "built for DDEV images some-older-ddev-tag")
-		require.Contains(t, out, "but this DDEV expects "+docker.ResolveImageTag(versionconstants.BaseDBTag, versionconstants.BaseDBTagBranch))
+		require.Contains(t, out, "but this DDEV expects "+docker.DBImageTag())
 	})
 
 	// GLOBAL CHECKS (matching order in CheckCustomConfig)

@@ -55,7 +55,7 @@ func TestOSGeneratedFilesSkippedInCustomConfig(t *testing.T) {
 // flagged stale just because its com.ddev.image-tag label doesn't match the raw
 // content-hash BaseDBTag constant. On a release build, BaseDBTagBranch is a
 // vX.Y.Z tag, and docker.GetDBImage() (and the official image DDEV publishes)
-// both resolve to that readable tag via docker.ResolveImageTag - so a pinned
+// both resolve to that readable tag via docker.DBImageTag() - so a pinned
 // image built from that same official image must be compared against the
 // resolved tag too, not the raw hash. See ddev/ddev#8705's
 // TestUtilityCheckCustomConfigCmd/"dbimage built for a different DDEV version"
