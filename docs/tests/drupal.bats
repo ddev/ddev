@@ -38,10 +38,17 @@ teardown() {
   assert_line "FULLURL ${PRIMARY_URL}"
   assert_success
 
-  # validate running project
-  run curl -sfIv ${PRIMARY_URL}
+  # validate the return header of the running project
+  run curl -sIv ${PRIMARY_URL}
   assert_output --partial "x-generator: Drupal 12 (https://www.drupal.org)"
-  assert_output --partial "HTTP/2 200"
+  assert_output --partial "HTTP/2 403"
+  assert_output --partial "expires: Sun, 19 Nov 1978 05:00:00 GMT"
+  assert_success
+
+  # validate the DOM of the running project
+  run curl -sv ${PRIMARY_URL}
+  assert_output --partial "<meta name=\"Generator\" content=\"Drupal 12"
+  assert_output --partial "<h1 class=\"page-title\">Access denied</h1>"
   assert_success
 }
 
