@@ -1,86 +1,22 @@
 #!/bin/bash
-# SessionStart hook for DDEV development in Claude Code
-# This hook runs at the start of each session to set up the development environment
-# It adapts to both desktop (with Docker) and web (without Docker) environments
+# SessionStart hook: put the docs tooling and the built ddev binary on PATH for
+# every later tool call and hook, the two locations .envrc adds. See
+# .claude/README.md.
 
-set -e
+set -uo pipefail
 
-echo "🚀 Initializing DDEV development environment for Claude Code..."
-
-# Install markdownlint-cli if not already installed (useful in all environments)
-if ! command -v markdownlint &> /dev/null; then
-    echo "📦 Installing markdownlint-cli..."
-    npm install -g markdownlint-cli --silent 2>&1 | grep -v "npm WARN" || true
-    echo "✅ markdownlint-cli installed"
-else
-    echo "✅ markdownlint-cli already available"
+if [ -z "${CLAUDE_ENV_FILE:-}" ]; then
+  printf '{"systemMessage":"session-start: no CLAUDE_ENV_FILE, so the built ddev binary is not on PATH. make targets still find the docs tools on their own."}\n'
+  exit 0
 fi
 
-# Detect Docker availability
-DOCKER_AVAILABLE=false
-if command -v docker &> /dev/null && docker info &> /dev/null; then
-    DOCKER_AVAILABLE=true
+build=""
+if os=$(go env GOHOSTOS 2>/dev/null) && arch=$(go env GOHOSTARCH 2>/dev/null); then
+  build=":${CLAUDE_PROJECT_DIR:-$PWD}/.gotmp/bin/${os}_${arch}"
 fi
 
-# Check for other required tools
-echo ""
-echo "🔍 Development tools status:"
-echo "  golangci-lint: $(command -v golangci-lint &> /dev/null && echo '✅ installed' || echo '❌ not found')"
-echo "  markdownlint:  $(command -v markdownlint &> /dev/null && echo '✅ installed' || echo '❌ not found')"
-echo "  zensical:      $(command -v zensical &> /dev/null && echo '✅ installed' || echo '⚠️  not installed (optional, will be skipped)')"
-
-if [ "$DOCKER_AVAILABLE" = true ]; then
-    echo "  Docker:        ✅ available"
-else
-    echo "  Docker:        ❌ not available"
-fi
-
-# Set environment variables (persist them if CLAUDE_ENV_FILE is available)
-echo ""
-echo "⚙️  Setting environment variables..."
-
-# Always disable instrumentation during development
-if [ -n "$CLAUDE_ENV_FILE" ]; then
-    echo "export DDEV_NO_INSTRUMENTATION=true" >> "$CLAUDE_ENV_FILE"
-fi
-export DDEV_NO_INSTRUMENTATION=true
-
-# Set Go environment for faster builds
-if [ -n "$CLAUDE_ENV_FILE" ]; then
-    echo "export GOCACHE=\"${HOME}/.cache/go-build\"" >> "$CLAUDE_ENV_FILE"
-    echo "export GOPATH=\"${HOME}/go\"" >> "$CLAUDE_ENV_FILE"
-fi
-export GOCACHE="${HOME}/.cache/go-build"
-export GOPATH="${HOME}/go"
-
-echo "  DDEV_NO_INSTRUMENTATION=true"
-
-# Docker-specific environment configuration
-if [ "$DOCKER_AVAILABLE" = false ]; then
-    # Set GOTEST_SHORT to skip long-running tests that require Docker
-    if [ -n "$CLAUDE_ENV_FILE" ]; then
-        echo "export GOTEST_SHORT=true" >> "$CLAUDE_ENV_FILE"
-    fi
-    export GOTEST_SHORT=true
-    echo "  GOTEST_SHORT=true (skips integration tests - Docker not available)"
-
-    echo ""
-    echo "📋 Environment Notes (No Docker):"
-    echo "  • Docker is NOT available in this environment"
-    echo "  • Integration tests requiring Docker will be skipped"
-    echo "  • Use 'go test -short ./pkg/...' to run unit tests without Docker"
-    echo "  • Use 'make testpkg TESTARGS=\"-run TestName\"' for targeted package tests"
-    echo "  • Full integration tests will run in CI/CD"
-else
-    echo ""
-    echo "📋 Environment Notes (Docker Available):"
-    echo "  • Docker is available - full integration tests can run"
-    echo "  • Use 'make test' to run the full test suite"
-    echo "  • Use 'go test -v ./pkg/[package]' to test specific packages"
-    echo "  • Use 'make testpkg TESTARGS=\"-run TestName\"' for targeted tests"
-fi
-
-echo ""
-echo "💡 Always run 'make staticrequired' before committing (golangci-lint + markdownlint)"
-echo ""
-echo "✨ Environment ready for DDEV development!"
+# Claude Code expands $PATH when it applies the file, so this line is the same
+# on every firing and needs no guard against being written twice.
+printf 'export PATH="%s%s:$PATH"\n' \
+  "$HOME/.ddev-dev-tools/python/bin:$HOME/.ddev-dev-tools/node/bin" "$build" \
+  >"$CLAUDE_ENV_FILE"

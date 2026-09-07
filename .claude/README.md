@@ -1,115 +1,115 @@
-# DDEV Claude Code Configuration
+# Claude Code configuration
 
-This directory contains configuration for Claude Code development with DDEV.
+What is here and why. Guidance for agents lives in `AGENTS.md` at the repo
+root — this file describes only the machinery.
 
-## Directory Structure
-
-```
+```text
 .claude/
-├── settings.json          # Hook configurations
-├── hooks/
-│   └── session-start.sh   # SessionStart hook script
-└── README.md              # This file
+├── settings.json      # Environment, permissions, hooks
+├── rules/             # Guidance that loads only for matching files
+│   ├── go.md              # paths: **/*.go
+│   ├── docs.md            # paths: docs/**, *.md
+│   ├── comments.md        # paths: **/*
+│   └── webserver-config.md
+├── skills/
+│   └── ddev-commit/       # /ddev-commit: commits, PRs, issues
+└── hooks/
+    ├── session-start.sh
+    └── format-edited-file.sh
 ```
 
-## SessionStart Hook
+## How guidance is split
 
-The SessionStart hook automatically configures the development environment when starting a Claude Code session. It adapts to both desktop (with Docker) and web (without Docker) environments.
+Claude Code reads `CLAUDE.md`, not `AGENTS.md`, so `CLAUDE.md` is a stub that
+imports it and adds the few Claude-only notes. The rest follows from how much
+context each mechanism costs:
 
-**Configuration**: Defined in `settings.json` and triggered on session startup.
+| Mechanism | Loaded | Holds |
+| --- | --- | --- |
+| `settings.json` | Enforced by the client | Rules that must not depend on Claude choosing to follow them |
+| `AGENTS.md` | Every session | Facts that apply to every change |
+| `rules/*.md` | When a matching file is read | Guidance for one area of the tree |
+| `skills/*/SKILL.md` | When invoked or judged relevant | Procedures you run occasionally |
 
-**Script**: `.claude/hooks/session-start.sh` runs automatically at the start of each session.
+Adding to `AGENTS.md` costs context in every session, so prefer a rule or a
+skill unless the guidance applies to everything.
 
-### What It Does
+## Hooks
 
-1. **Installs Required Tools**
-   - Installs `markdownlint-cli` via npm (required for `make staticrequired`)
+**`session-start.sh`** writes one `export PATH="..."` line to
+`$CLAUDE_ENV_FILE`, putting the docs tooling from
+`scripts/install-dev-tools.sh` and the built `ddev` binary into every later
+Bash call and hook, so Claude Code need not be launched from a direnv-active
+shell.
 
-2. **Detects Docker Availability**
-   - Checks if Docker is installed and running
-   - Adapts environment configuration based on Docker availability
+It names those two locations itself rather than asking direnv, which would
+require every contributor to have direnv installed and to have run
+`direnv allow` here — and a blocked `.envrc` is invisible, since `direnv exec`
+on one exits 0 and applies nothing.
 
-3. **Sets Environment Variables**
-   - `DDEV_NO_INSTRUMENTATION=true` - Disables analytics (all environments)
-   - `GOTEST_SHORT=true` - Only set when Docker is NOT available (web environment)
-   - Go build cache and GOPATH configuration
-   - Uses `CLAUDE_ENV_FILE` to persist variables across tool calls
+Constraints on this hook, all found the hard way:
 
-4. **Provides Environment Status**
-   - Shows which development tools are available
-   - Displays Docker availability status
-   - Shows context-appropriate usage guidelines based on environment
+- `$CLAUDE_ENV_FILE` is **parsed, not sourced**, and read **once**, right after
+  the hook exits. One `export KEY="VALUE"` per line applies, so a multi-line or
+  semicolon-joined value is read as one malformed entry and silently dropped.
+  Rewriting the file later in the session changes nothing.
+- `$PATH` inside a value **is** expanded when the file is applied, so the hook
+  writes one constant line and never reads the session's own PATH.
+- Values in a `settings.json` `env` block, by contrast, are **literal** —
+  `$HOME` and `$PATH` arrive unexpanded — so PATH cannot be set there.
+- It carries **no matcher**: a `startup` matcher misses the `resume` that an
+  editor restart performs, leaving the line out of the session actually
+  running.
+- `$CLAUDE_ENV_FILE` is undocumented, so treat it as best-effort. Failures
+  report through a JSON `systemMessage`, because a hook that exits 0 has its
+  stderr swallowed outside debug mode and plain stdout would land in Claude's
+  context instead. `make staticrequired` keeps working regardless, because the
+  `Makefile` prepends the dev-tools directories itself.
 
-### Environment Detection
+**Formatting** runs `format-edited-file.sh` on every `Edit`/`Write`. The edited
+path comes from the stdin payload, the only place a hook is given it:
+`$CLAUDE_FILE_PATHS`, which the hooks guide once documented, is never populated
+([anthropics/claude-code#9567](https://github.com/anthropics/claude-code/issues/9567)),
+so the hooks written against it formatted nothing for eight months. The path
+reaches `make golangci-lint-fix DDEV_GO_FILES=...` or
+`make markdownlint-fix DDEV_MD_FILES=...`, so a single edit lints that file,
+not the tree. Going through the Makefile keeps every formatter invocation in
+one place and picks up the dev-tools PATH it prepends, so formatting does not
+depend on the SessionStart export having applied. Neither fix target swallows
+its exit status, and an empty path is reported rather than skipped, so a crash
+or a broken config is visible.
 
-The hook automatically detects your environment and adapts:
+The script drops any path outside `$CLAUDE_PROJECT_DIR` before it reaches
+`DDEV_MD_FILES`: markdownlint-cli crashes outright on a path it cannot express
+relative to its working directory (`make -C` puts that at the project root),
+which a stray edit outside the repo — the scratchpad, say — would otherwise
+trigger. `DDEV_GO_FILES`/`DDEV_MD_FILES` left unset, as `make staticrequired`
+and a bare `make golangci-lint-fix` do, fall back to the whole-tree scope the
+check targets use.
 
-**Web Environment (No Docker):**
-- Sets `GOTEST_SHORT=true` to skip Docker-dependent integration tests
-- Shows Docker-free testing guidance
-- Recommends using CI/CD for full integration tests
+**The commit gate** is the one hook still an inline `make` call in
+`settings.json`, matched by an `if` field rather than a script. It runs
+`make staticrequired` on `Bash(git commit *)`; only exit 2 stops a tool call,
+and any other non-zero code prints to stderr and lets the commit through.
 
-**Desktop Environment (With Docker):**
-- Does NOT set `GOTEST_SHORT=true` (full tests available)
-- Shows full testing capabilities
-- Allows running complete integration test suite locally
+Neither script looks for a tool anywhere but PATH, and neither needs to, since
+`make` prepends the dev-tools directories itself. When the PATH export does
+fail, `session-start.sh` says so, and a second route to the same tools would
+have hidden that.
 
-### Tool Availability
+## Permissions
 
-**All Environments:**
-- ✅ Go 1.24+ toolchain
-- ✅ golangci-lint (pre-installed)
-- ✅ markdownlint (installed by SessionStart hook)
-- ✅ npm/node for tool installation
-- ✅ Full ability to build DDEV binaries
+The allow list holds only what Claude Code does not already treat as
+read-only. `ls`, `cat`, `grep`, `find`, and the read-only `git` forms need no
+rule, apart from a few forms that always prompt, such as `find -delete`.
 
-**Environment-Specific:**
-- ✅ Docker - Available in desktop, not in web
-- ⚠️ zensical - Not in web (gracefully skipped by Makefile)
+Every rule has a space before its `*`, which matters: `Bash(tr *)` matches only
+`tr`, while `Bash(tr*)` would also match `truncate`.
 
-### Recommended Development Workflow
+`curl` is not allowed against specific hosts. Argument-matching rules like
+`Bash(curl*github.com*)` do not survive a reordered flag, an `https` scheme, a
+redirect, or a URL in a variable, so fetching goes through named
+`WebFetch(domain:...)` entries instead.
 
-For development in Claude Code for Web:
-
-```bash
-# 1. Make your code changes
-vim pkg/ddevapp/something.go
-
-# 2. Run unit tests (non-Docker)
-go test -short ./pkg/ddevapp
-
-# 3. Run linting (fully supported)
-make staticrequired
-
-# 4. Build and verify
-make
-.gotmp/bin/linux_amd64/ddev --version
-
-# 5. Commit and push
-git add .
-git commit -m "feat: your change description"
-git push
-```
-
-### What Works Without Docker
-
-- ✅ Code editing and formatting
-- ✅ Static analysis with golangci-lint
-- ✅ Markdown linting
-- ✅ Building DDEV binaries for all platforms
-- ✅ Unit tests that don't require Docker
-- ✅ Reading and analyzing code
-
-### What Requires Docker (Skip in Web Environment)
-
-- ❌ Integration tests in `pkg/ddevapp/*_test.go` that start projects
-- ❌ Container image building and testing
-- ❌ Full `make test` suite
-- ❌ Testing actual DDEV commands that manage projects
-
-### CI/CD Strategy
-
-- **Local (Web)**: Make changes, run unit tests, run linting, commit
-- **CI/CD**: Automated integration tests with Docker run on push
-
-This separation allows productive development in the web environment while ensuring full test coverage through CI/CD.
+Personal overrides belong in `.claude/settings.local.json`, which is
+gitignored. Everything else here is shared team configuration and is committed.

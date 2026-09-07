@@ -1,470 +1,174 @@
 # AGENTS.md
 
-This file provides guidance to AI agents when working with the DDEV core codebase.
+Guidance for AI agents working on the DDEV core codebase. This is the canonical
+file: `CLAUDE.md` imports it and adds only Claude Code specifics, and
+`.github/copilot-instructions.md` is a symlink to it. Edit this file, not
+those.
 
-## DDEV Core Project Overview
+DDEV runs local web development environments for PHP and Node.js in Docker
+containers. For developer documentation see
+[Building and Contributing](docs/content/developers/building-contributing.md),
+rendered at [docs.ddev.com](https://docs.ddev.com/en/stable/developers/).
 
-DDEV is an open-source tool for running local web development environments for PHP and Node.js. It uses Docker containers to provide consistent, isolated development environments with minimal configuration.
+## Where the rest of the guidance lives
 
-For developer documentation, see:
+Read the file that matches what you are touching. Claude Code loads these on
+its own; other agents should open them directly.
 
-- [Developer Documentation](https://docs.ddev.com/en/stable/developers/) - Complete developer guide
-- [Building and Contributing](docs/content/developers/building-contributing.md) - Local build setup and contribution workflow
+| Working on | Read |
+| --- | --- |
+| Go code | `.claude/rules/go.md` |
+| Docs or any Markdown | `.claude/rules/docs.md` |
+| Apache/nginx config or templates | `.claude/rules/webserver-config.md` |
+| A commit, PR, or issue | `.claude/skills/ddev-commit/SKILL.md` |
+| Any comment, in any file | `.claude/rules/comments.md` |
 
-## Key Development Commands
+Fetch files from GitHub through `raw.githubusercontent.com`; a
+`github.com/.../blob/...` page wraps the file in markup that costs tokens and
+can be summarized instead of read. DDEV's
+[organization-wide patterns](https://raw.githubusercontent.com/ddev/.github/main/AGENTS.md)
+mostly restate this file, which **wins where they differ** — it is stricter
+about never pushing.
 
-### Building
+## Building
 
-**IMPORTANT: Always use `make` to build the DDEV binary, never `go build` directly.**
+**Always use `make`, never `go build` directly.**
 
-- `make` - Build for host OS/arch. Output: `.gotmp/bin/<os>_<arch>/ddev`
-- `make clean` - Remove build artifacts
+```bash
+make                 # Host OS/arch. Output: .gotmp/bin/<os>_<arch>/ddev
+make linux_amd64     # Cross-compile for a specific platform
+make windows_amd64   # Cross-compile + Windows installer; use to validate Windows changes
+make clean           # Remove build artifacts
+```
 
-### Testing
+To exercise the binary you just built, put `.gotmp/bin/<os>_<arch>` first on
+PATH, with both `ddev` and `ddev-hostname`. Otherwise a system-installed DDEV
+shadows it and you test the released version without noticing.
 
-- `go test -v ./pkg/[package]` - Test specific package (5-30 seconds)
-- `make testpkg TESTARGS="-run TestName"` - Run subset of package tests matching regex (30-120 seconds)
-- `make testcmd TESTARGS="-run TestName"` - Run command tests
-- `make quickstart-test` - Build then run Bats docs tests in `docs/tests`
+## Testing
 
-**Testing Strategy:**
+```bash
+go test -v ./pkg/[package]                # One package
+make testpkg TESTARGS="-run TestName"     # Subset of package tests
+make testcmd TESTARGS="-run TestName"     # Command tests
+make quickstart-test                      # Builds, then the Bats docs tests
+```
 
-- Use subset testing with regex patterns for faster iteration
-- Test specific packages when making targeted changes
-- Avoid full test suite unless absolutely necessary
+**Run only the tests relevant to your change.** Do not run `go test ./...` or
+`make test` to verify one thing — the suite is slow and broad, and CI covers
+the rest.
 
-### Testing Environment Variables
+Integration tests in `pkg/ddevapp/` and `cmd/` start real projects and need
+Docker; without it they fail rather than skip. `go test -short` does nothing
+here, since no test in this repo calls `testing.Short()`.
 
-- Set `DDEV_DEBUG=true` to see executed commands
-- Set `GOTEST_SHORT=true` to limit test matrix
-- Set `DDEV_NO_INSTRUMENTATION=true` to disable analytics (always use this during development)
+| Variable | Purpose |
+| --- | --- |
+| `DDEV_DEBUG=true` | Raise ddev's log level to Debug, so the commands it issues and Docker status changes are printed |
+| `GOTEST_SHORT=<any value>` | Cut the integration tests to a single test site. An integer picks which one, so `16` is drupal11; anything else uses the first. Leave it unset for the full matrix |
+| `DDEV_NO_INSTRUMENTATION=true` | Disable analytics regardless of the global config setting |
 
-### Linting and Code Quality
+## Linting
 
-- `make staticrequired` - Run all required static analysis (golangci-lint, markdownlint, pyspelling, zensical)
+**Run `make staticrequired` before committing.** It runs golangci-lint,
+markdownlint, zensical, and an image-tag check, and all must pass.
 
-IDE diagnostics (e.g. from gopls) can be stale. If `make` or `go test` is clean, ignore IDE diagnostics.
+`make golangci-lint-fix` and `make markdownlint-fix` auto-fix what those two
+only report. `scripts/install-dev-tools.sh` installs the docs tooling; `make`
+finds it without direnv.
 
-### Whitespace and Formatting
-
-- **Never add trailing whitespace** - Blank lines must be completely empty (no spaces or tabs)
-- Match existing indentation style exactly (spaces vs tabs, indentation depth)
-- Preserve the file's existing line ending style
-- Run linting tools to catch whitespace issues before committing
-
-### Documentation
-
-- `make staticrequired` - after changing docs
+IDE diagnostics from gopls can be stale — trust `make`/`go test` instead.
 
 ## Architecture
 
-### Core Components
+Most of the layout is self-evident from the tree; these are the parts that
+are not:
 
-**Main Binaries:**
+- `pkg/ddevapp/` — core project logic and Docker orchestration. The `DdevApp`
+  struct is a project's configuration.
+- `pkg/versionconstants/` — version info and Docker image tags. **The image
+  tags here are generated; never hand-edit them.** `make` runs
+  `autotag-images`, which rebuilds any image whose content changed and rewrites
+  its tag. `make retag-images` does the rewrite without building, and
+  `make staticrequired` fails when `containers/` changed but the tags did not.
+- `containers/` — the images DDEV builds and ships.
+- Configuration is `.ddev/config.yaml` per project and
+  `~/.ddev/global_config.yaml` globally.
 
-- `cmd/ddev/` - Main DDEV CLI application
-- `cmd/ddev-hostname/` - Hostname management utility
+## Go environment
 
-**Core Packages:**
+Go 1.27 or newer, per `go.mod`. Modules with vendored dependencies checked into
+`vendor/`, CGO disabled by default.
 
-- `pkg/ddevapp/` - Core application logic, project management, Docker container orchestration
-- `pkg/dockerutil/` - Docker container utilities and Docker Compose management
-- `pkg/globalconfig/` - Global DDEV configuration management
-- `pkg/fileutil/` - File system utilities
-- `pkg/netutil/` - Network utilities
-- `pkg/util/` - General utilities
+## Coding style
 
-**Container Definitions:**
+- `.golangci.yml` enables errcheck, govet, ineffassign, modernize, revive,
+  staticcheck, and whitespace, plus `gofmt` as a formatter.
+- **Never leave trailing whitespace.** Blank lines must be completely empty.
+- Match the file's existing indentation and line-ending style.
+- **Prefer `require` over `assert`** in tests.
+- Make surgical, minimal changes that maintain compatibility.
+- Never commit secrets. Amplitude API keys are injected at build time.
 
-- `containers/ddev-webserver/` - Web server container (Apache/Nginx + PHP)
-- `containers/ddev-dbserver/` - Database server container (MySQL/MariaDB/PostgreSQL)
-- `containers/ddev-ssh-agent/` - SSH agent container
+### Comments
 
-### Project Structure
+A comment earns its place only by saying something the code does not — why,
+not what — within a three-line budget inside a function or block (eight for a
+file header or an exported doc comment); longer reasoning belongs in the
+commit message. Applies in every language here. See
+`.claude/rules/comments.md` for the full rule set and a worked example.
 
-The codebase follows standard Go project structure:
+## English language usage
 
-- `cmd/` - CLI entrypoints (`ddev`, `ddev-hostname`)
-- `pkg/` - Go packages (core app logic, Docker integration, config, utilities)
-- `containers/` - Container images and Dockerfiles used by DDEV
-- `docs/` - Zensical documentation source; `docs/tests` holds Bats tests
-- `scripts/` - Helper scripts (installers, tooling)
-- `testing/` - Performance/auxiliary test scripts
-- `vendor/` - Vendored Go dependencies
+These rules apply everywhere: conversation, commit messages, PR text, code, and
+comments.
 
-### Configuration System
+**Never use any of these, in any form:** `comprehensive`, `seamless`,
+`genuine`, `genuinely`, `honest`, `honestly`, `truly`, `really` (as an
+intensifier), `perfect`, `perfectly`, `robust`, `powerful`, `effortless`,
+`production-ready`, `delve`, `elevate`, `unleash`, `to be honest`, `in all
+honesty`, `for real`.
 
-DDEV uses YAML configuration files:
+They assert sincerity or importance instead of demonstrating it: `genuinely
+useful` is not more useful than `useful`. Delete the word, and if that changes
+the meaning, the claim needed evidence rather than an intensifier. The urge is
+strongest when summarizing your own work.
 
-- `.ddev/config.yaml` - Per-project configuration
-- Global config stored in `~/.ddev/global_config.yaml`
-- Container configs in `containers/*/` directories
+- Do not compliment, flatter, or validate the reader (`You're absolutely
+  right`, `Great question`, `Perfect`, `Excellent`), and do not open by praising
+  the request. Lead with the substance.
+- Report results plainly. If something failed, was skipped, or is unverified,
+  say so.
 
-## Development Notes
+## Git workflow
 
-### Go Environment
+**Commit locally, never publish.** Committing whenever asked is expected, as is
+creating branches and amending local commits. **Never run `git push` or
+`docker push`, under any circumstances** — not when a PR is already open and
+waiting on the commits, and not when a CI run or a
+`raw.githubusercontent.com` URL depends on it. Do not offer to, either: finish
+at the commit, report which commits are unpushed, and say plainly when a next
+step needs a push, which is always the maintainer's action.
 
-- Language: Go (modules + vendored deps). Use Go 1.24+
-- Uses Go modules (go.mod)
-- Requires Go 1.24.0+
-- Uses vendored, checked-in dependencies
-- CGO is disabled by default
-
-### Coding Style & Naming Conventions
-
-- Formatting: `gofmt` (enforced via golangci-lint). No trailing whitespace
-- Linters: configured in `.golangci.yml` (errcheck, govet, revive, staticcheck, whitespace)
-- Naming: packages lower-case short names; exported identifiers `CamelCase`; tests `*_test.go` with `TestXxx`
-
-### Testing Philosophy
-
-- Tests are organized by package
-- Integration tests in `pkg/ddevapp/` test full workflows
-- Container tests validate Docker functionality
-- Documentation tests use bats framework
-- **Prefer `require` over `assert`** in tests - Use `require.NoError()` instead of `assert.NoError()` for critical assertions that should stop test execution on failure
-
-### Docker Integration
-
-- Heavy use of docker-compose for orchestration
-- Custom container images built from `containers/` directory
-- Network management for inter-container communication
-- Volume management for persistent data
-
-### Code Quality
-
-- Uses golangci-lint with specific rules in `.golangci.yml`
-- Static analysis is required for CI
-- Markdown linting for documentation
-- Spell checking on documentation
-- **Always run `make staticrequired` before committing changes** to ensure code quality standards
-
-### Security & Configuration Tips
-
-- Do not commit secrets. Amplitude API keys are injected at build; never hardcode them
-- Docker must be installed and able to access your home directory for tests
-- Before committing, run `make staticrequired` to catch style and docs issues
-
-### Code Formatting Rules for Claude Code
-
-- **After editing markdown files**: Run `markdownlint --fix $FILE && make markdownlint` to auto-fix and validate markdown formatting
-- **After editing Go files**: Run `gofmt -w $FILE` to format Go code according to standard conventions
-- **Before committing**: Run `make staticrequired` when user mentions "commit" to ensure all quality checks pass
-
-### Development Environment Setup
-
-- **Temporary files**: Use `~/tmp` for temporary directories and files
-- **Command execution**: For bash commands that don't start with a script or executable, wrap with `bash -c "..."`
-- **Working directories**: Additional common directories include `~/workspace/d11`, `~/workspace/pantheon-*`, `~/workspace/ddev.com`
-
-### Troubleshooting & Environment Notes
-
-**Prerequisites:**
-
-- Go 1.24+ is required
-- Docker must be installed and running
-- PATH management is critical - include both `ddev` and `ddev-hostname` in PATH for testing
-
-**Common Issues:**
-
-- Some tests require network access and may fail in restricted environments
-- Use `DDEV_NO_INSTRUMENTATION=true` to disable analytics during testing
-
-**Important Notes:**
-
-- Vendored dependencies are checked into the repository
-- Always use absolute paths when working with repository files
-- Focus on surgical, minimal changes that maintain compatibility
-
-### Release Process
-
-- Cross-platform builds for macOS, Linux, Windows (x64 and ARM64)
-- Code signing for macOS and Windows binaries
-- Chocolatey packaging for Windows
-- Container image building and publishing
-
-## Working with Claude Code
-
-### Branch Naming
-
-Use descriptive branch names that include:
-
-- Date in YYYYMMDD format
-- Your GitHub username
-- Brief description of the work
-
-Format: `YYYYMMDD_<username>_<short_description>`
-
-Examples:
-
-- `20250719_rfay_vite_docs`
-- `20250719_username_fix_networking`
-- `20250719_contributor_update_tests`
-
-**Branch Creation Strategy:**
-
-The recommended approach for creating branches is:
+Branch names are `YYYYMMDD_<username>_<short_description>`, for example
+`20250108_rfay_fix_networking`. Create one from upstream rather than from a
+possibly-stale local `main`, and compare against the same base:
 
 ```bash
 git fetch upstream && git checkout -b <branch_name> upstream/main --no-track
+git diff upstream/main...HEAD
 ```
 
-This method:
-
-- Fetches latest upstream changes
-- Creates branch directly from upstream/main
-- Doesn't require syncing local main branch
-- Uses --no-track to avoid tracking upstream/main
-
-**Comparing Against Upstream:**
-
-When generating diffs or comparing branches for a PR, prefer `upstream/main` as the base if an `upstream` remote exists. Local `main` may be out of date. If there is no `upstream` remote, fall back to `origin/main`.
-
-```bash
-git fetch upstream 2>/dev/null || git fetch origin
-git diff upstream/main...HEAD 2>/dev/null || git diff origin/main...HEAD
-```
-
-### Pull Request Creation
-
-When creating pull requests for DDEV, follow the PR template structure from `.github/PULL_REQUEST_TEMPLATE.md`:
-
-**Required Sections:**
-
-- **The Issue:** Reference issue number with `#<issue>` and brief description
-- **How This PR Solves The Issue:** Technical explanation of the solution
-- **Manual Testing Instructions:** Step-by-step guide for testing changes
-- **Automated Testing Overview:** Description of tests or explanation why none needed
-- **Release/Deployment Notes:** Impact assessment and deployment considerations
-
-**Commit Message Format:**
-
-Follow Conventional Commits: `<type>[optional scope][optional !]: <description>[, fixes #<issue>]`
-
-Examples:
-
-- `fix: handle container networking timeout, fixes #1234`
-- `docs: clarify zensical setup`
-- `feat: add new container type support`
-
-**For commits that will become PRs:** Include the complete PR template content in commit messages. This ensures GitHub PRs are pre-populated and don't require additional editing.
-
-**Creating PRs with `gh`:**
-
-When creating or editing PRs with `gh pr create` or `gh pr edit`, always use the same template structure from `.github/PULL_REQUEST_TEMPLATE.md` for the `--body` argument. Use a HEREDOC for the body to preserve markdown formatting:
-
-```bash
-gh pr create --title "<type>: <description>" --body "$(cat <<'EOF'
-## The Issue
-
-- Fixes #<issue_number>
-
-[Issue description]
-
-## How This PR Solves The Issue
-
-[Technical explanation]
-
-## Manual Testing Instructions
-
-[Step-by-step testing guide]
-
-## Automated Testing Overview
-
-[Test coverage explanation]
-
-## Release/Deployment Notes
-
-[Impact assessment]
-EOF
-)"
-```
-
-### Pre-Commit Workflow
-
-**MANDATORY: Always run `make staticrequired` before any commit**
-
-**Critical Requirements Before Committing:**
-
-1. **Run appropriate tests:**
-
-   For targeted testing:
-
-   ```bash
-   go test -v -run TestSpecificTestName ./pkg/...
-   ```
-
-   See [Testing Documentation](https://docs.ddev.com/en/stable/developers/building-contributing/#testing) for detailed testing guidance.
-
-2. **Run static analysis (REQUIRED):**
-
-   ```bash
-   make staticrequired
-   ```
-
-   This command runs golangci-lint, markdownlint, and zensical. All must pass before committing.
-
-**Complete Pre-Commit Checklist:**
-
-1. Make your changes
-2. Run appropriate tests (`make test` or targeted tests)
-3. Run `make staticrequired`
-4. Fix any issues reported
-5. Stage changes with `git add`
-6. Commit with proper message format
-7. Push branch and create PR
-
-### Validation Workflow
-
-**Complete validation steps after making changes:**
-
-1. **Build Validation:**
-
-   ```bash
-   make  # Wait for completion
-   .gotmp/bin/<platform>/ddev --version  # Verify binary works
-   ```
-
-2. **Unit Test Validation:**
-
-   ```bash
-   go test -v ./pkg/[changed-package]  # Test your specific changes
-   # Or run subset of tests matching a pattern:
-   make testpkg TESTARGS="-run TestSpecificPattern"
-   ```
-
-3. **CLI Validation:**
-
-   ```bash
-   .gotmp/bin/<platform>/ddev --help  # Test CLI functionality
-   .gotmp/bin/<platform>/ddev config --help  # Test command help
-   ```
-
-4. **Project Creation Validation:**
-
-   ```bash
-   # Create and configure a test project
-   mkdir ~/tmp/validation-project && cd ~/tmp/validation-project
-   PATH=".gotmp/bin/<platform>:$PATH" ddev config --project-type=php --docroot=web
-   # Verify .ddev/config.yaml was created
-   cat .ddev/config.yaml
-   ```
-
-### Claude Code Configuration
-
-For optimal performance with DDEV development, consider these configuration patterns:
-
-**File Exclusions** (in `.claude/settings.json`):
-
-```json
-{
-  "permissions": {
-    "deny": [
-      "Read(./vendor/**)",
-      "Read(./certfiles/**)", 
-      "Read(./testing/**/artifacts/**)",
-      "Read(./.git/**)",
-      "Read(**/*.png)",
-      "Read(**/*.jpg)",
-      "Read(**/*.zip)",
-      "Read(**/*.tgz)"
-    ]
-  }
-}
-```
-
-**Common DDEV Command Allowlist**:
-
-- `Bash(make*)`
-- `Bash(go test*)`
-- `Bash(ddev*)`
-- `Bash(gofmt*)`
-
-**MCP Server Configuration** (in `.mcp.json`):
-
-- Enable `task-master-ai` for project management
-- Enable `ddev` for local development operations
-- Enable `github` for GitHub integration and workflow automation
-
-**Recommended GitHub MCP Setup**:
-
-```json
-{
-  "mcpServers": {
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
-      }
-    }
-  }
-}
-```
-
-### Claude Code for Web Environment
-
-The web-based Claude Code environment has specific limitations compared to desktop environments:
-
-**Environment Limitations:**
-
-- **Docker NOT Available**: Docker is not installed and cannot be used in the web environment
-- **Integration Tests**: Most DDEV integration tests require Docker and will fail in this environment
-- **Container Operations**: No ability to build, run, or test Docker containers
-
-**SessionStart Hook Solution:**
-
-A `.claude/hooks/session-start.sh` hook automatically configures the environment for optimal development. The hook adapts to both desktop (with Docker) and web (without Docker) environments:
-
-**What the hook does:**
-
-- Installs `markdownlint-cli` via npm (required for `make staticrequired`)
-- Detects Docker availability and adapts environment accordingly
-- Sets `GOTEST_SHORT=true` ONLY when Docker is not available (web environment)
-- Sets `DDEV_NO_INSTRUMENTATION=true` in all environments
-- Displays environment status and context-appropriate guidance
-- Uses `CLAUDE_ENV_FILE` to persist environment variables across tool calls
-
-**Testing Strategy for Web Environment:**
-
-- ✅ **Unit tests**: `go test -short ./pkg/...` (works without Docker)
-- ✅ **Targeted tests**: `make testpkg TESTARGS="-run TestName"`
-- ✅ **Linting**: `make staticrequired` (fully supported)
-- ✅ **Building**: `make` and all build targets work normally
-- ❌ **Integration tests**: Skip tests that require Docker
-- ❌ **Container tests**: Cannot run in web environment
-
-**Recommended Workflow:**
-
-1. Make code changes
-2. Run unit tests: `go test -short ./pkg/[package]`
-3. Run linting: `make staticrequired`
-4. Build and verify: `make && .gotmp/bin/linux_amd64/ddev --version`
-5. Commit and push changes
-6. Let CI/CD run full integration tests with Docker
-
-**Tool Availability:**
-
-- ✅ `golangci-lint` - Pre-installed in both environments
-- ✅ `markdownlint` - Installed by SessionStart hook
-- ⚠️ `zensical` - Not available in web (gracefully skipped by Makefile)
-- ❌ `docker` - Not available in web environment
-- ✅ `docker` - Available in desktop environment
-
-**Environment Detection:**
-
-The SessionStart hook automatically detects Docker availability:
-
-- **Web Environment** (no Docker): Sets `GOTEST_SHORT=true`, shows Docker-free testing guidance
-- **Desktop Environment** (with Docker): Skips `GOTEST_SHORT`, shows full testing capabilities
-
-This ensures the hook works correctly in both environments without requiring manual configuration.
-
-## General DDEV Development Patterns
-
-For standard DDEV organization patterns including communication style, branch naming, PR creation, and common development practices, see the [organization-wide AGENTS.md](https://github.com/ddev/.github/blob/main/AGENTS.md).
-
-## Task Master AI Instructions
-
-**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
-@./.taskmaster/CLAUDE.md
+If there is no `upstream` remote, fall back to `origin/main`.
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/):
+`<type>[optional scope][optional !]: <description>[, fixes #<issue>]`, where
+type is one of `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`,
+`refactor`, `style`, or `test`. Message discipline, the PR and issue templates,
+and how to drive `gh` are in `.claude/skills/ddev-commit/SKILL.md`. Read it
+before writing any of them.
+
+## Environment
+
+Use `~/tmp` for temporary directories and test projects. Docker must be
+installed and able to access your home directory for the integration tests.
