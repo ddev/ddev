@@ -26,6 +26,10 @@ chmod ugo+rwx /run/mysqld 2>/dev/null || true
 # of mariadb used xtrabackup
 export BACKUPTOOL=mariabackup
 export STREAMTOOL=mbstream
+# mariabackup was renamed mariadb-backup; older MariaDB (<10.4) only has the old name.
+if command -v mariadb-backup >/dev/null 2>&1 ; then
+  BACKUPTOOL="mariadb-backup"
+fi
 if command -v xtrabackup >/dev/null 2>&1 ; then
   BACKUPTOOL="xtrabackup"
   STREAMTOOL="xbstream"

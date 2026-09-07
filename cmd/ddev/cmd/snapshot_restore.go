@@ -12,7 +12,7 @@ import (
 var DdevSnapshotRestoreCommand = &cobra.Command{
 	Use:   "restore [snapshot_name|path]",
 	Short: "Restore a project's database to the provided snapshot version.",
-	Long: `Uses mariabackup or xtrabackup command to restore a project database to a particular snapshot, either by name from the .ddev/db_snapshots folder or by the path to a snapshot file elsewhere.
+	Long: `Uses mariadb-backup or xtrabackup command to restore a project database to a particular snapshot, either by name from the .ddev/db_snapshots folder or by the path to a snapshot file elsewhere.
 
 If the project is a git worktree, snapshots from the same project checked out in other worktrees of the same repository are also available, whether picked interactively, passed by name, or via --latest.`,
 	Example: `ddev snapshot restore d8git_20180717203845

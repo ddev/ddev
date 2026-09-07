@@ -21,9 +21,9 @@ if [ -f /tmp/initializing ]; then
   exit 1
 fi
 
-# If mariabackup or xtrabackup is running (and not initializing)
-# It means snapshot restore is in progress
-if killall -0 mariabackup 2>/dev/null || killall -0 xtrabackup 2>/dev/null ; then
+# If mariadb-backup (or its old name mariabackup) or xtrabackup is running
+# (and not initializing), it means snapshot restore is in progress
+if killall -0 mariadb-backup 2>/dev/null || killall -0 mariabackup 2>/dev/null || killall -0 xtrabackup 2>/dev/null ; then
   printf "currently restoring snapshot"
   exit 2
 fi

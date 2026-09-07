@@ -58,10 +58,10 @@ var WebTagBranch = "v1.25.4"
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "27b956a558" // 20260831_v1.25.4-27b956a558
+var BaseDBTag = "491fa83f61" // 20260904_maria-backup-491fa83f61
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
-var BaseDBTagBranch = "v1.25.4"
+var BaseDBTagBranch = "20260904_maria-backup"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"

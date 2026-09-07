@@ -3324,7 +3324,8 @@ func getBackupCommand(app *DdevApp, targetFile string, uncompressed bool) string
 		redirect = fmt.Sprintf(`> "%s"`, targetFile)
 	}
 
-	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%[1]s.log %[2]s`, path.Base(targetFile), redirect)
+	// mariabackup was renamed mariadb-backup; older MariaDB (<10.4) only has the old name.
+	c := fmt.Sprintf(`$(command -v mariadb-backup || echo mariabackup) --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock 2>/tmp/snapshot_%[1]s.log %[2]s`, path.Base(targetFile), redirect)
 
 	switch {
 	// Old MariaDB versions don't have mariabackup, use xtrabackup for them as well as MySQL

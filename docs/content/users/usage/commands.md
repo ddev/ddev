@@ -1424,7 +1424,7 @@ ddev share my-project
 
 Create a database snapshot for one or more projects.
 
-This uses `xtrabackup` or `mariabackup` to create a database snapshot in the `.ddev/db_snapshots` directory. These are compatible with server backups using the same tools and can be restored with the [`snapshot restore`](#snapshot-restore) command.
+This uses `xtrabackup` or `mariadb-backup` to create a database snapshot in the `.ddev/db_snapshots` directory. These are compatible with server backups using the same tools and can be restored with the [`snapshot restore`](#snapshot-restore) command.
 
 See [Snapshotting and Restoring a Database](../usage/cli.md#snapshotting-and-restoring-a-database) for more detail, or [Database Management](../usage/database-management.md) for more on working with databases in general.
 
@@ -1434,7 +1434,7 @@ Flags:
 * `--cleanup`, `-C`: Cleanup snapshots.
 * `--list`, `-l`: List snapshots.
 * `--name`, `-n`: Provide a name for the snapshot.
-* `--uncompressed`: Write the snapshot as an uncompressed mariabackup/xtrabackup stream instead of compressing it. This skips decompression on restore, but the file can be roughly as large as the database's datadir, many times bigger than a compressed snapshot. Not available for PostgreSQL projects. See [Snapshots](../usage/database-management.md#snapshots) for when this unusual trade-off makes sense.
+* `--uncompressed`: Write the snapshot as an uncompressed mariadb-backup/xtrabackup stream instead of compressing it. This skips decompression on restore, but the file can be roughly as large as the database's datadir, many times bigger than a compressed snapshot. Not available for PostgreSQL projects. See [Snapshots](../usage/database-management.md#snapshots) for when this unusual trade-off makes sense.
 * `--yes`, `-y`: Skip confirmation prompt.
 
 `ddev snapshot --list` also shows each snapshot's compression: `zstd`, `gzip`, or `none` for an uncompressed snapshot. If the project is a Git worktree and a sibling worktree of the same project has snapshots of its own, those are listed too, with a `Worktree` column naming which one each came from.
