@@ -34,8 +34,8 @@ teardown() {
     --license_agreement_accepted yes \
     --locale en_US --timezone UTC --default_currency USD \
     --db_host db --db_name db --db_user db --db_pass db \
-    --url "${PRIMARY_URL}/" \
-    --use_secure 1 --secure_base_url "${PRIMARY_URL}/" --use_secure_admin 1 \
+    --url "$(ddev exec echo '$DDEV_PRIMARY_URL')" \
+    --use_secure 1 --secure_base_url "$(ddev exec echo '$DDEV_PRIMARY_URL')" --use_secure_admin 1 \
     --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
     --admin_username admin --admin_password veryl0ngpassw0rd \
     --sample_data 1
@@ -53,7 +53,7 @@ teardown() {
   assert_success
 
   # validate running project
-  run curl -sfIv ${PRIMARY_URL}
+  run curl -sfILv ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
   assert_success

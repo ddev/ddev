@@ -1877,8 +1877,8 @@ DDEV automatically creates `app/etc/local.xml` with the database connection deta
       --license_agreement_accepted yes \
       --locale en_US --timezone UTC --default_currency USD \
       --db_host db --db_name db --db_user db --db_pass db \
-      --url "https://my-maho-site.ddev.site/" \
-      --use_secure 1 --secure_base_url "https://my-maho-site.ddev.site/" --use_secure_admin 1 \
+      --url "$(ddev exec echo '$DDEV_PRIMARY_URL')" \
+      --use_secure 1 --secure_base_url "$(ddev exec echo '$DDEV_PRIMARY_URL')" --use_secure_admin 1 \
       --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
       --admin_username admin --admin_password veryl0ngpassw0rd \
       --sample_data 1
@@ -1911,8 +1911,8 @@ DDEV automatically creates `app/etc/local.xml` with the database connection deta
           --license_agreement_accepted yes \
           --locale en_US --timezone UTC --default_currency USD \
           --db_host db --db_name db --db_user db --db_pass db \
-          --url "https://my-maho-site.ddev.site/" \
-          --use_secure 1 --secure_base_url "https://my-maho-site.ddev.site/" --use_secure_admin 1 \
+          --url "$(ddev exec echo '$DDEV_PRIMARY_URL')" \
+          --use_secure 1 --secure_base_url "$(ddev exec echo '$DDEV_PRIMARY_URL')" --use_secure_admin 1 \
           --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
           --admin_username admin --admin_password veryl0ngpassw0rd \
           --sample_data 1
@@ -1955,8 +1955,8 @@ DDEV automatically creates `app/etc/local.xml` with the database connection deta
       --license_agreement_accepted yes \
       --locale en_US --timezone UTC --default_currency USD \
       --db_host db --db_name db --db_user db --db_pass db \
-      --url "https://maho.ddev.site/" \
-      --use_secure 1 --secure_base_url "https://maho.ddev.site/" --use_secure_admin 1 \
+      --url "$(ddev exec echo '$DDEV_PRIMARY_URL')" \
+      --use_secure 1 --secure_base_url "$(ddev exec echo '$DDEV_PRIMARY_URL')" --use_secure_admin 1 \
       --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
       --admin_username admin --admin_password veryl0ngpassw0rd \
       --sample_data 1
@@ -1990,8 +1990,8 @@ DDEV automatically creates `app/etc/local.xml` with the database connection deta
           --license_agreement_accepted yes \
           --locale en_US --timezone UTC --default_currency USD \
           --db_host db --db_name db --db_user db --db_pass db \
-          --url "https://maho.ddev.site/" \
-          --use_secure 1 --secure_base_url "https://maho.ddev.site/" --use_secure_admin 1 \
+          --url "$(ddev exec echo '$DDEV_PRIMARY_URL')" \
+          --use_secure 1 --secure_base_url "$(ddev exec echo '$DDEV_PRIMARY_URL')" --use_secure_admin 1 \
           --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
           --admin_username admin --admin_password veryl0ngpassw0rd \
           --sample_data 1
@@ -3437,8 +3437,7 @@ There are several easy ways to use DDEV with WordPress:
     # You can launch in browser to finish installation:
     # ddev launch
     # OR use the following installation command
-    # (we need to use single quotes to get the primary site URL from `.ddev/config.yaml` as variable)
-    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+    ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
     ```
 
     Launch WordPress admin dashboard:
@@ -3458,7 +3457,7 @@ There are several easy ways to use DDEV with WordPress:
         ddev config --project-type=wordpress
         ddev start -y
         ddev wp core download
-        ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+        ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
         ddev launch wp-admin/
         EOF
         chmod +x setup-wordpress.sh
@@ -3481,7 +3480,7 @@ There are several easy ways to use DDEV with WordPress:
     You can then run:
 
     ```bash
-    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My Bedrock Site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+    ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My Bedrock Site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
     ddev launch /wp/wp-admin/
     ```
 
@@ -3498,7 +3497,7 @@ There are several easy ways to use DDEV with WordPress:
         ddev config --project-type=wp-bedrock
         ddev start -y
         ddev composer create-project roots/bedrock
-        ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My Bedrock Site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+        ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My Bedrock Site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
         ddev launch /wp/wp-admin/
         EOF
         chmod +x setup-wp-bedrock.sh
@@ -3515,7 +3514,7 @@ There are several easy ways to use DDEV with WordPress:
     cd my-wp-git-site
     ddev config --project-type=wordpress
     ddev start
-    ddev wp core install --url='$DDEV_PRIMARY_URL' --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+    ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
     ddev launch wp-admin/
     ```
 
