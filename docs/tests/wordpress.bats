@@ -28,7 +28,7 @@ teardown() {
   run ddev wp core download
   assert_success
 
-  run ddev wp core install --url="${PRIMARY_URL}" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
 
   DDEV_DEBUG=true run ddev launch
@@ -69,7 +69,7 @@ teardown() {
   run ddev wp core download
   assert_success
 
-  run ddev wp core install --url="${PRIMARY_URL}" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
 
   run ddev wp config get WP_SITEURL
@@ -121,7 +121,7 @@ teardown() {
 
   run ddev wp core download
   assert_success
-  run ddev wp core install --url="${PRIMARY_URL}" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
 
   run bash -c "
@@ -178,7 +178,7 @@ teardown() {
 
   _extra_info
 
-  run ddev wp core install --url="${PRIMARY_URL}" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
+  run ddev wp core install --url="$(ddev exec echo '$DDEV_PRIMARY_URL')" --title='My WordPress site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
   assert_success
 
   DDEV_DEBUG=true run ddev launch
