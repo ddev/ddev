@@ -71,23 +71,25 @@ func TestCmdSSH(t *testing.T) {
 
 	t.Setenv("TERM", "xterm-256color")
 	t.Setenv("COLORTERM", "truecolor")
+	t.Setenv("TERM_PROGRAM", "ghostty")
 
 	// Here the output is captured, so there is no terminal and nothing to
 	// forward. The container has to keep the TERM of its image.
-	out, err = exec.RunHostCommand(b, "-c", fmt.Sprintf("echo 'echo MARK TERM=$TERM COLORTERM=$COLORTERM' | %s ssh", DdevBin))
+	out, err = exec.RunHostCommand(b, "-c", fmt.Sprintf("echo 'echo MARK TERM=$TERM COLORTERM=$COLORTERM TERM_PROGRAM=$TERM_PROGRAM' | %s ssh", DdevBin))
 	require.NoError(t, err)
 	require.NotContains(t, out, "TERM=xterm-256color", "without a terminal ddev ssh should not forward TERM, got '%s'", out)
 	require.NotContains(t, out, "COLORTERM=truecolor", "without a terminal ddev ssh should not forward COLORTERM, got '%s'", out)
+	require.NotContains(t, out, "TERM_PROGRAM=ghostty", "without a terminal ddev ssh should not forward TERM_PROGRAM, got '%s'", out)
 
 	// On a terminal the shell in the container has to see the terminal of the
 	// host, otherwise it keeps the TERM of the image and shows only 16 colors.
 	if nodeps.IsWindows() {
 		t.Skip("skipping the terminal part of this test on Windows, it has no script(1)")
 	}
-	shellInput := `printf 'echo MARK TERM=$TERM COLORTERM=$COLORTERM\nexit\n'`
+	shellInput := `printf 'echo MARK TERM=$TERM COLORTERM=$COLORTERM TERM_PROGRAM=$TERM_PROGRAM\nexit\n'`
 	out, err = exec.RunHostCommand(b, "-c", fmt.Sprintf("%s | %s", shellInput, ptyCommand(DdevBin+" ssh")))
 	require.NoError(t, err)
-	require.Contains(t, out, "MARK TERM=xterm-256color COLORTERM=truecolor", "on a terminal ddev ssh should forward TERM and COLORTERM, got '%s'", out)
+	require.Contains(t, out, "MARK TERM=xterm-256color COLORTERM=truecolor TERM_PROGRAM=ghostty", "on a terminal ddev ssh should forward TERM, COLORTERM and TERM_PROGRAM, got '%s'", out)
 }
 
 // ptyCommand wraps a command so that script(1) runs it on a terminal. The

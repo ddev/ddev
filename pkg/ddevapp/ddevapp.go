@@ -2643,8 +2643,9 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	tty := opts.Tty && isatty.IsTerminal(os.Stdin.Fd()) && stdoutIsTerminal
 
 	// A session with a TTY gets the terminal of the host, so programs in the
-	// container know how many colors they can use. Without a TTY there is no
-	// terminal to describe, and programs write plain text anyway.
+	// container know how many colors they can use and whether it renders
+	// hyperlinks. Without a TTY there is no terminal to describe, and programs
+	// write plain text anyway.
 	execEnv := opts.Env
 	if tty {
 		execEnv = util.TerminalExecEnv(opts.Env)
