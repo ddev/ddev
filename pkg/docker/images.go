@@ -52,13 +52,26 @@ func resolveImageTag(tag, branch string) string {
 	return tag
 }
 
+// WebImageTag returns the tag the official web image is published with, which
+// is also the DdevImageTagLabel it carries.
+func WebImageTag() string {
+	return resolveImageTag(versionconstants.WebTag, versionconstants.WebTagBranch)
+}
+
+// DBImageTag returns the tag the ddev-dbserver images are published with, which
+// is also the DdevImageTagLabel they carry. Postgres has no DDEV-built image,
+// so it has neither.
+func DBImageTag() string {
+	return resolveImageTag(versionconstants.BaseDBTag, versionconstants.BaseDBTagBranch)
+}
+
 // GetWebImage returns the correctly formatted web image:tag reference
 func GetWebImage() string {
 	fullWebImg := imageRepo(versionconstants.WebImg)
 	if globalconfig.DdevGlobalConfig.UseHardenedImages {
 		fullWebImg = fullWebImg + "-prod"
 	}
-	return fmt.Sprintf("%s:%s", fullWebImg, resolveImageTag(versionconstants.WebTag, versionconstants.WebTagBranch))
+	return fmt.Sprintf("%s:%s", fullWebImg, WebImageTag())
 }
 
 // GetDBImage returns the correctly formatted db image:tag reference
@@ -78,7 +91,7 @@ func GetDBImage(dbType string, dbVersion string) string {
 	case nodeps.MariaDB:
 		fallthrough
 	default:
-		return fmt.Sprintf("%s-%s-%s:%s", imageRepo(versionconstants.DBImg), dbType, v, resolveImageTag(versionconstants.BaseDBTag, versionconstants.BaseDBTagBranch))
+		return fmt.Sprintf("%s-%s-%s:%s", imageRepo(versionconstants.DBImg), dbType, v, DBImageTag())
 	}
 }
 
