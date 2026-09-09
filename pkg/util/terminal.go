@@ -23,7 +23,17 @@ var ContainerTerminfoEntries = []string{
 // from the host. Terminals set them to say which program they are, and
 // libraries like supports-hyperlinks read them to decide whether to emit OSC 8
 // hyperlinks, as output.HasTermHyperlinks does for DDEV itself.
-var TerminalEnvVars = []string{"COLORTERM", "TERM_PROGRAM", "TERM_PROGRAM_VERSION", "VTE_VERSION", "WT_SESSION", "KONSOLE_VERSION"}
+// See https://github.com/chalk/supports-hyperlinks/blob/main/index.js
+var TerminalEnvVars = []string{
+	"CI",
+	"COLORTERM",
+	"FORCE_HYPERLINK",
+	"KONSOLE_VERSION",
+	"TERM_PROGRAM",
+	"TERM_PROGRAM_VERSION",
+	"VTE_VERSION",
+	"WT_SESSION",
+}
 
 // TerminalExecEnv adds the terminal environment variables of the host to
 // existingEnv, for an interactive container session. Variables already in
