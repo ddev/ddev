@@ -64,7 +64,7 @@ jobs:
 
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@2026.08.03.2
+        uses: Homebrew/actions/setup-homebrew@main
         with:
           brew-gh-api-token: ${{ secrets.GITHUB_TOKEN }}
 
