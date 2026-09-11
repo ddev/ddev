@@ -10,6 +10,7 @@
 /.cache
 /.ddev
 /artifacts
+/incoming
 *.DS_Store
 nbproject/
 .idea
