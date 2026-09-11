@@ -18,6 +18,6 @@ var TUICmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerTuiCmd() {
 	RootCmd.AddCommand(TUICmd)
 }

@@ -73,7 +73,7 @@ ddev utility download-ddev --branch 20250101_feature --os macos --arch arm64 --o
 	},
 }
 
-func init() {
+func registerUtilityDownloadDdevCmd() {
 	registerDownloadDdevFlags(DownloadDdevCmd)
 	DebugCmd.AddCommand(DownloadDdevCmd)
 }

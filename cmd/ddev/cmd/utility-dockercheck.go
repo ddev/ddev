@@ -225,6 +225,6 @@ ddev ut dockercheck`,
 	},
 }
 
-func init() {
+func registerUtilityDockercheckCmd() {
 	DebugCmd.AddCommand(DebugDockercheckCmd)
 }

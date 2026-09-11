@@ -45,7 +45,7 @@ ddev utility mutagen-diagnose --all  # Show all Mutagen volumes`,
 	},
 }
 
-func init() {
+func registerUtilityMutagenDiagnoseCmd() {
 	MutagenDiagnoseCmd.Flags().BoolP("all", "a", false, "Show all Mutagen volumes system-wide")
 	DebugCmd.AddCommand(MutagenDiagnoseCmd)
 }

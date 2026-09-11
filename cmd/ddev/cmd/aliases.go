@@ -78,6 +78,6 @@ func trimProgramName(commandPath string) string {
 	return ""
 }
 
-func init() {
+func registerAliasesCmd() {
 	RootCmd.AddCommand(AliasesCmd)
 }

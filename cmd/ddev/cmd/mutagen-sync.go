@@ -49,7 +49,7 @@ var MutagenSyncCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerMutagenSyncCmd() {
 	MutagenCmd.AddCommand(MutagenSyncCmd)
 	MutagenSyncCmd.Flags().Bool("verbose", false, "Extended verbose output for Mutagen status")
 }

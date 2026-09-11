@@ -71,7 +71,7 @@ var DeleteImagesCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDeleteImagesCmd() {
 	DeleteImagesCmd.Flags().BoolP("yes", "y", false, "Yes - skip confirmation prompt")
 	DeleteImagesCmd.Flags().BoolP("all", "a", false, "If set, deletes all Docker images created by DDEV.")
 	DeleteCmd.AddCommand(DeleteImagesCmd)

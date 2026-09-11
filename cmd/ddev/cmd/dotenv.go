@@ -68,7 +68,7 @@ func dotEnvFilePath(app *ddevapp.DdevApp, arg string) string {
 	return envFile
 }
 
-func init() {
+func registerDotenvCmd() {
 	DotEnvCmd.AddCommand(DotEnvGlobalCmd)
 	RootCmd.AddCommand(DotEnvCmd)
 }

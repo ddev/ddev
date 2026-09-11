@@ -50,6 +50,6 @@ var MutagenResetCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func registerMutagenResetCmd() {
 	MutagenCmd.AddCommand(MutagenResetCmd)
 }

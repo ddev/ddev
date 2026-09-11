@@ -33,6 +33,6 @@ var DebugMessageConditionsCmd = &cobra.Command{
 	Hidden: true,
 }
 
-func init() {
+func registerDebugMessageConditionsCmd() {
 	DebugCmd.AddCommand(DebugMessageConditionsCmd)
 }

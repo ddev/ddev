@@ -253,6 +253,6 @@ func tryDecodeAmplitudeCache(filename string) error {
 	return nil
 }
 
-func init() {
+func registerDebugGobDecodeCmd() {
 	DebugCmd.AddCommand(DebugGobDecodeCmd)
 }

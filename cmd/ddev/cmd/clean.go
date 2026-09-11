@@ -148,7 +148,7 @@ Additional commands that can help clean up resources:
 	},
 }
 
-func init() {
+func registerCleanCmd() {
 	CleanCmd.Flags().BoolP("all", "a", false, "Clean all DDEV projects")
 	CleanCmd.Flags().Bool("dry-run", false, "Run the clean command without deleting")
 	CleanCmd.Flags().BoolP("yes", "y", false, "Yes - skip confirmation prompt")

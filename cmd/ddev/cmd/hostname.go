@@ -109,7 +109,7 @@ func removeInactiveHostnames() {
 	util.Success("Removed hosts entries for all inactive projects")
 }
 
-func init() {
+func registerHostnameCmd() {
 	HostNameCmd.Flags().BoolVarP(&removeHostnameFlag, "remove", "r", false, "Remove the provided host name - ip correlation")
 	HostNameCmd.Flags().BoolVarP(&checkHostnameFlag, "check", "c", false, "Check to see if provided hostname is already in hosts file")
 	HostNameCmd.Flags().BoolVarP(&removeInactiveFlag, "remove-inactive", "R", false, "Remove host names of inactive projects")

@@ -74,6 +74,6 @@ DDEV_DIAGNOSE_FULL=true ddev utility diagnose  # Include test project creation`,
 	},
 }
 
-func init() {
+func registerUtilityDiagnoseCmd() {
 	DebugCmd.AddCommand(DiagnoseCmd)
 }

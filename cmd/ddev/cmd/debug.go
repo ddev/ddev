@@ -29,7 +29,7 @@ ddev utility --show-hidden`,
 	},
 }
 
-func init() {
+func registerDebugCmd() {
 	DebugCmd.Flags().BoolVar(&showHidden, "show-hidden", false, "Show hidden developer/debugging commands")
 	_ = DebugCmd.RegisterFlagCompletionFunc("show-hidden", configCompletionFunc([]string{"true", "false"}))
 	RootCmd.AddCommand(DebugCmd)

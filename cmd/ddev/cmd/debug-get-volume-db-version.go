@@ -24,6 +24,6 @@ var DebugGetVolumeDBVersion = &cobra.Command{
 	},
 }
 
-func init() {
+func registerDebugGetVolumeDBVersionCmd() {
 	DebugCmd.AddCommand(DebugGetVolumeDBVersion)
 }
