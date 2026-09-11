@@ -126,6 +126,11 @@ jobs:
     env:
       DDEV_WINDOWS_SIGN: ${{ vars.DDEV_WINDOWS_SIGN }}
     steps:
+      # This runner is self-hosted and persistent, so incoming/ and bin/ can
+      # hold leftovers from a previous run; clear them before downloading.
+      - name: Clear stale workspace
+        run: rm -rf incoming bin
+
       - uses: actions/download-artifact@v8
         with:
           pattern: build-windows_*
@@ -235,6 +240,11 @@ jobs:
     env:
       DDEV_WINDOWS_SIGN: ${{ vars.DDEV_WINDOWS_SIGN }}
     steps:
+      # This runner is self-hosted and persistent, so bin/ can hold
+      # leftovers from a previous run; clear it before downloading.
+      - name: Clear stale workspace
+        run: rm -rf bin
+
       - uses: actions/download-artifact@v8
         with:
           name: unsigned-installers
