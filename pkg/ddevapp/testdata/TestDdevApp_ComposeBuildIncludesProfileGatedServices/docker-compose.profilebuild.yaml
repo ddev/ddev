@@ -1,0 +1,10 @@
+services:
+  profilebuild:
+    image: ddev-profilebuild-test:latest
+    profiles:
+      - profilebuild
+    build:
+      context: .
+      dockerfile: Dockerfile.profilebuild-test
+    command: tail -f /dev/null
+    container_name: ddev-${DDEV_SITENAME}-profilebuild
