@@ -713,7 +713,7 @@
         },
         "pull_policy": {
           "type": "string",
-          "pattern": "always|never|build|if_not_present|missing|refresh|daily|weekly|every_([0-9]+[wdhms])+",
+          "pattern": "^(always|never|build|if_not_present|missing|refresh|daily|weekly|every_([0-9]+[wdhms])+)$",
           "description": "Policy for pulling images. Options include: 'always', 'never', 'if_not_present', 'missing', 'build', or time-based refresh policies."
         },
         "pull_refresh_after": {
