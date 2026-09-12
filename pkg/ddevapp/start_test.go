@@ -60,6 +60,47 @@ func TestDdevApp_StartOptionalProfiles(t *testing.T) {
 	}
 }
 
+// TestDdevApp_ComposeBuildIncludesProfileGatedServices makes sure that a custom
+// service gated behind a Compose profile still gets its image built, even
+// though the profile is never activated.
+// See https://github.com/ddev/ddev/issues/8817.
+func TestDdevApp_ComposeBuildIncludesProfileGatedServices(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	const profileImage = "ddev-profilebuild-test:latest"
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(app.GetConfigPath("docker-compose.profilebuild.yaml"))
+		_ = os.RemoveAll(app.GetConfigPath("Dockerfile.profilebuild-test"))
+		_ = dockerutil.RemoveImage(profileImage)
+	})
+
+	fixtureDir := filepath.Join(origDir, "testdata", t.Name())
+	err = fileutil.CopyFile(filepath.Join(fixtureDir, "docker-compose.profilebuild.yaml"), app.GetConfigPath("docker-compose.profilebuild.yaml"))
+	require.NoError(t, err)
+	err = fileutil.CopyFile(filepath.Join(fixtureDir, "Dockerfile.profilebuild-test"), app.GetConfigPath("Dockerfile.profilebuild-test"))
+	require.NoError(t, err)
+
+	// The "profilebuild" profile is never activated, so the service never starts.
+	err = app.Start()
+	require.NoError(t, err)
+
+	container, err := ddevapp.GetContainer(app, "profilebuild")
+	require.Error(t, err)
+	require.Nil(t, container)
+
+	// The image must still have been built during app.Start(), matching what
+	// `ddev restart` and `ddev restart --no-cache` do.
+	exists, err := dockerutil.ImageExistsLocally(profileImage)
+	require.NoError(t, err)
+	require.True(t, exists, "expected image %s to be built for profile-gated service even though its profile was never started", profileImage)
+}
+
 // TestPlatformOverride makes sure that a project which overrides the web
 // service platform (e.g. `platform: linux/amd64` on an arm64 host) actually
 // builds and runs the web image for the requested architecture.
