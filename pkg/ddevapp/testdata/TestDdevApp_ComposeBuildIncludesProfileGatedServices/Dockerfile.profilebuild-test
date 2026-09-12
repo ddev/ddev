@@ -1,0 +1,2 @@
+FROM busybox:stable
+CMD ["tail", "-f", "/dev/null"]
