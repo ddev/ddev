@@ -1999,6 +1999,31 @@ func TestDdevAllDatabases(t *testing.T) {
 	runTime()
 }
 
+// TestGetDBDumpCommand checks the mysqldump/mariadb-dump flags chosen for each
+// database type/version, in particular the MySQL 9.5+ gating for
+// --set-gtid-purged and --no-tablespaces.
+func TestGetDBDumpCommand(t *testing.T) {
+	app := &ddevapp.DdevApp{}
+
+	for _, tt := range []struct {
+		dbType   string
+		dbVer    string
+		expected string
+	}{
+		{nodeps.MySQL, nodeps.MySQL80, "mysqldump --single-transaction"},
+		{nodeps.MySQL, nodeps.MySQL84, "mysqldump --single-transaction"},
+		{nodeps.MySQL, "9.4", "mysqldump --single-transaction"},
+		{nodeps.MySQL, "9.5", "mysqldump --single-transaction --set-gtid-purged=OFF --no-tablespaces"},
+		{nodeps.MySQL, nodeps.MySQL97, "mysqldump --single-transaction --set-gtid-purged=OFF --no-tablespaces"},
+		{nodeps.MariaDB, nodeps.MariaDB104, "mysqldump --single-transaction"},
+		{nodeps.MariaDB, nodeps.MariaDB105, "mariadb-dump --single-transaction"},
+		{nodeps.MariaDB, nodeps.MariaDB1011, "mariadb-dump --single-transaction"},
+	} {
+		app.Database = ddevapp.DatabaseDesc{Type: tt.dbType, Version: tt.dbVer}
+		require.Equal(t, tt.expected, app.GetDBDumpCommand(), "dbType=%s dbVer=%s", tt.dbType, tt.dbVer)
+	}
+}
+
 // TestDdevExportDB tests the functionality that is called when "ddev export-db" is executed.
 //
 // Each database type gets one plain-text export, which exercises that type's
