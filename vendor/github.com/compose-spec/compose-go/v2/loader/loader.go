@@ -26,9 +26,9 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/compose-spec/compose-go/v2/consts"
 	"github.com/compose-spec/compose-go/v2/errdefs"
@@ -40,6 +40,7 @@ import (
 	"github.com/compose-spec/compose-go/v2/transform"
 	"github.com/compose-spec/compose-go/v2/tree"
 	"github.com/compose-spec/compose-go/v2/types"
+	"github.com/compose-spec/compose-go/v2/utils"
 	"github.com/compose-spec/compose-go/v2/validation"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/sirupsen/logrus"
@@ -101,13 +102,19 @@ type Options struct {
 	MaxNodeVisits int
 }
 
-var versionWarning []string
+var (
+	versionWarning   = utils.NewSet[string]()
+	versionWarningMu sync.Mutex
+)
 
+// warnObsoleteVersion warns once per file for the process lifetime (kept global so repeated LoadProject calls, e.g. compose watch, don't re-warn).
 func (o *Options) warnObsoleteVersion(file string) {
-	if !slices.Contains(versionWarning, file) {
+	versionWarningMu.Lock()
+	defer versionWarningMu.Unlock()
+	if !versionWarning.Has(file) {
 		logrus.Warning(fmt.Sprintf("%s: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion", file))
+		versionWarning.Add(file)
 	}
-	versionWarning = append(versionWarning, file)
 }
 
 type Listener = func(event string, metadata map[string]any)

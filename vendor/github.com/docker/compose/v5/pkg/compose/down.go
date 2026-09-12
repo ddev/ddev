@@ -25,6 +25,7 @@ import (
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/containerd/errdefs"
 	containerType "github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/image"
 	"github.com/moby/moby/client"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
@@ -41,11 +42,19 @@ func (s *composeService) Down(ctx context.Context, projectName string, options a
 	}, "down", s.events)
 }
 
-func (s *composeService) down(ctx context.Context, projectName string, options api.DownOptions) error { //nolint:gocyclo
+func (s *composeService) down(ctx context.Context, projectName string, options api.DownOptions) error {
 	resourceToRemove := false
 
 	include := oneOffExclude
 	if options.RemoveOrphans {
+		// down stops the application: one-off containers — RUNNING ones
+		// included — are part of what goes down. Those attached to a declared
+		// service are stopped/removed by the per-service loop below (they
+		// match isService); the orphan branch at the end catches the
+		// remainder (finished one-offs and model-absent services — see
+		// isOrphaned). This is deliberately broader than `up
+		// --remove-orphans`, which only cleans up FINISHED one-offs and never
+		// kills a live `compose run` session.
 		include = oneOffInclude
 	}
 	containers, err := s.getContainers(ctx, projectName, include, true)
@@ -105,6 +114,10 @@ func (s *composeService) down(ctx context.Context, projectName string, options a
 		if err != nil {
 			return err
 		}
+	}
+
+	if err := s.removePreStartHookContainers(ctx, projectName, options.Services); err != nil {
+		return err
 	}
 
 	ops := s.ensureNetworksDown(ctx, project)
@@ -168,6 +181,25 @@ func (s *composeService) ensureImagesDown(ctx context.Context, project *types.Pr
 			})
 		})
 	}
+
+	if pruneOpts.Mode != ImagePruneNone {
+		// mirrors ImagesToPrune's own orphan check: a dangling image from a
+		// service no longer in the project must be spared unless
+		// RemoveOrphans is set, same as that service's tagged image is.
+		keep := func(img image.Summary) bool {
+			if options.RemoveOrphans {
+				return false
+			}
+			_, err := project.GetService(img.Labels[api.ServiceLabel])
+			return err != nil
+		}
+		ops = append(ops, func() error {
+			return s.removeResource("Dangling images", func() error {
+				_, err := s.removeDanglingImages(ctx, project.Name, keep)
+				return err
+			})
+		})
+	}
 	return ops, nil
 }
 
@@ -216,8 +248,8 @@ func (s *composeService) removeNetwork(ctx context.Context, composeNetworkName s
 		if err != nil {
 			return err
 		}
-		nw := nwInspect.Network
-		if len(nw.Containers) > 0 {
+		inspectedNetwork := nwInspect.Network
+		if len(inspectedNetwork.Containers) > 0 {
 			s.events.On(newEvent(eventName, api.Warning, "Resource is still in use"))
 			found++
 			continue
@@ -384,4 +416,44 @@ func (s *composeService) getProjectWithResources(ctx context.Context, containers
 	project.Networks = networks
 
 	return project, nil
+}
+
+// removePreStartHookContainers force-removes any pre_start hook containers that
+// were retained after a failed hook run. These containers are created without a
+// ConfigHashLabel, so getContainers and the normal teardown path never see them;
+// without this step they would survive compose down. When services is non-empty
+// the cleanup is scoped to those services; otherwise the whole project is swept.
+// Individual removal failures are logged at warn level and do not abort teardown.
+func (s *composeService) removePreStartHookContainers(ctx context.Context, projectName string, services []string) error {
+	var filters []client.Filters
+	if len(services) == 0 {
+		f := projectFilter(projectName)
+		f.Add("label", hookFilter(preStartHookType))
+		filters = []client.Filters{f}
+	} else {
+		for _, service := range services {
+			f := projectFilter(projectName)
+			f.Add("label", serviceFilter(service))
+			f.Add("label", hookFilter(preStartHookType))
+			filters = append(filters, f)
+		}
+	}
+	for _, f := range filters {
+		res, err := s.apiClient().ContainerList(ctx, client.ContainerListOptions{
+			All:     true,
+			Filters: f,
+		})
+		if err != nil {
+			return err
+		}
+		for _, ctr := range res.Items {
+			if _, removeErr := s.apiClient().ContainerRemove(ctx, ctr.ID, client.ContainerRemoveOptions{
+				Force:         true,
+				RemoveVolumes: true,
+			}); removeErr != nil {
+				logrus.Warnf("failed to remove retained pre_start hook container %s: %v", ctr.ID, removeErr)
+			}
+		}
+	}
+	return nil
 }

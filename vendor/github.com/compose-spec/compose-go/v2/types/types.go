@@ -284,7 +284,9 @@ func (s ServiceConfig) GetDependents(p *Project) []string {
 
 func (s ServiceConfig) GetPullPolicy() (string, time.Duration, error) {
 	switch s.PullPolicy {
-	case PullPolicyAlways, PullPolicyNever, PullPolicyIfNotPresent, PullPolicyMissing, PullPolicyBuild:
+	case "":
+		return PullPolicyMissing, 0, nil
+	case PullPolicyAlways, PullPolicyNever, PullPolicyIfNotPresent, PullPolicyMissing, PullPolicyBuild, PullPolicyRefresh:
 		return s.PullPolicy, 0, nil
 	case "daily":
 		return PullPolicyRefresh, 24 * time.Hour, nil
@@ -299,7 +301,7 @@ func (s ServiceConfig) GetPullPolicy() (string, time.Duration, error) {
 			}
 			return PullPolicyRefresh, duration, nil
 		}
-		return PullPolicyMissing, 0, nil
+		return "", 0, fmt.Errorf("invalid pull_policy %q", s.PullPolicy)
 	}
 }
 
