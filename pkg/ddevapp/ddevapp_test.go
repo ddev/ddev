@@ -4191,16 +4191,12 @@ func TestPHPWebserverType(t *testing.T) {
 
 // TestWebserverMissingIndexExplanation checks that a docroot with no
 // index.php/index.html gets ddev-webserver's own explanations on both
-// nginx-fpm and apache-fpm (see the 404.conf and 403.conf files under
+// nginx-fpm and apache-fpm (see 403.conf and 404.conf under
 // containers/ddev-webserver): an explanatory 404 with the X-Ddev-404-Source
-// header for a nonexistent file, and an explanatory 403 with the
-// X-Ddev-403-Source header for the docroot directory itself.
-//
-// An empty docroot is used rather than a TestSite, whose front controller would
-// route the request to the app and return the app's own 404. A nonexistent .php
-// file is checked too: both webservers reject it before php-fpm (nginx
-// `try_files $uri =404`, apache `-f %{REQUEST_FILENAME}`), so ddev-webserver's
-// explanation is shown instead of php-fpm's "No input file specified".
+// header for a nonexistent file or .php file, an explanatory 403 with the
+// X-Ddev-403-Source header for the docroot itself, and a directory listing
+// wherever the project asked for one. An empty docroot is used rather than a
+// TestSite, whose front controller would answer with the app's own 404.
 func TestWebserverMissingIndexExplanation(t *testing.T) {
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
 		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
@@ -4226,6 +4222,21 @@ func TestWebserverMissingIndexExplanation(t *testing.T) {
 		assert.NoError(err)
 		_ = os.RemoveAll(testDir)
 	})
+
+	// A second directory with no index file, which the project turns listing on
+	// for in the way each webserver expects.
+	listingDir := filepath.Join(appDir, "listing")
+	err = os.MkdirAll(listingDir, 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(listingDir, "listed-file.txt"), []byte("listed"), 0644)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(listingDir, ".htaccess"), []byte("Options +Indexes\n"), 0644)
+	require.NoError(t, err)
+	nginxConfigDir := filepath.Join(appDir, ".ddev", "nginx")
+	err = os.MkdirAll(nginxConfigDir, 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(nginxConfigDir, "listing.conf"), []byte("location /listing/ {\n    autoindex on;\n}\n"), 0644)
+	require.NoError(t, err)
 
 	for _, webserverType := range []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM} {
 		app.WebserverType = webserverType
@@ -4255,6 +4266,10 @@ func TestWebserverMissingIndexExplanation(t *testing.T) {
 		require.NoError(t, err)
 		require.Contains(t, out403, "ddev-webserver", "for WebserverType=%s expected ddev-webserver's own 403 explanation for a docroot with no index file", webserverType)
 		require.NotEmpty(t, resp403.Header.Get("X-Ddev-403-Source"), "for WebserverType=%s expected X-Ddev-403-Source header on a webserver-generated 403", webserverType)
+
+		// The explanation must not stand in for the missing index file, or the
+		// listing the project asked for could never happen.
+		testcommon.RequireLocalHTTPContent(t, app.GetWebContainerDirectHTTPURL()+"/listing/", "listed-file.txt")
 
 		err = app.Stop(true, false)
 		require.NoError(t, err)
