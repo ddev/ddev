@@ -78,14 +78,16 @@
     <h1>403: Forbidden</h1>
     <div class="callout">
       This page comes directly from <code>ddev-webserver</code> (nginx or Apache). The request
-      reached the webserver, but the requested directory has no index file
-      (<code>index.php</code>, <code>index.html</code>, …) and directory listing is disabled.
+      reached the webserver, but the webserver refused it. That usually means a directory with
+      no index file (<code>index.php</code>, <code>index.html</code>, …) and no directory
+      listing, or a rule denying access to the path.
       <strong>This is not your project's 403 page.</strong>
     </div>
     <ol>
+      <li>Run <code>ddev logs</code> to see the exact reason the webserver gave for this 403.</li>
       <li>Confirm <code>docroot</code> in <code>.ddev/config.yaml</code> matches where your project's <code>index.php</code> actually lives.</li>
-      <li>Confirm an <code>index.php</code> or <code>index.html</code> exists there — the project may not be installed yet.</li>
-      <li>Run <code>ddev logs</code> to check for webserver errors.</li>
+      <li>Confirm an <code>index.php</code> or <code>index.html</code> exists there, since the project may not be installed yet.</li>
+      <li>To browse a directory that has no index file, turn listing on: <code>Options +Indexes</code> in <code>.htaccess</code> (Apache) or <code>autoindex on;</code> in <code>.ddev/nginx/*.conf</code> (nginx).</li>
     </ol>
     <p class="footer">
       Still stuck? See the

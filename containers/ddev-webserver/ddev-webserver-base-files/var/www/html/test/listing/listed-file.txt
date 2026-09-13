@@ -1,0 +1,2 @@
+A file in a directory with no index file, listed when the project turns
+directory listing on.
