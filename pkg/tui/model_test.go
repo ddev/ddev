@@ -1771,3 +1771,207 @@ func TestOperationAutoReturnIgnoredIfAlreadyLeft(t *testing.T) {
 
 	require.Equal(t, viewDashboard, model.viewMode, "should stay on dashboard")
 }
+
+// --- Delete project tests ---
+
+func TestDeleteConfirmationFromDashboard(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{
+		{Name: "alpha", Status: ddevapp.SiteRunning},
+		{Name: "beta", Status: ddevapp.SiteStopped},
+	}
+	m.cursor = 0
+
+	// Press Delete key
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyDelete})
+	model := updated.(AppModel)
+
+	require.True(t, model.confirming, "should enter confirmation mode")
+	require.Equal(t, "delete", model.confirmAction)
+	require.Equal(t, "alpha", model.confirmTarget)
+	require.Contains(t, model.statusMsg, "Delete project 'alpha'?")
+	require.Contains(t, model.statusMsg, "keep a snapshot")
+	require.Contains(t, model.statusMsg, "omit snapshot")
+	require.Nil(t, cmd)
+}
+
+func TestConfirmDeleteFromDashboard(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{{Name: "alpha"}}
+	m.confirming = true
+	m.confirmAction = "delete"
+	m.confirmTarget = "alpha"
+
+	// Press y to confirm (with snapshot)
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming, "should exit confirmation mode")
+	require.Empty(t, model.confirmAction)
+	require.Empty(t, model.confirmTarget)
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Equal(t, viewDashboard, model.operationReturnView)
+	require.Contains(t, model.operationName, "Deleting alpha")
+	require.NotNil(t, cmd, "should return operation stream command")
+}
+
+func TestConfirmDeleteOmitSnapshotFromDashboard(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{{Name: "alpha"}}
+	m.confirming = true
+	m.confirmAction = "delete"
+	m.confirmTarget = "alpha"
+
+	// Press o to confirm (omit snapshot)
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'o', Text: "o"})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming, "should exit confirmation mode")
+	require.Empty(t, model.confirmAction)
+	require.Empty(t, model.confirmTarget)
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Equal(t, viewDashboard, model.operationReturnView)
+	require.Contains(t, model.operationName, "Deleting alpha (omit snapshot)")
+	require.NotNil(t, cmd, "should return operation stream command")
+}
+
+func TestCancelDeleteFromDashboard(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.projects = []ProjectInfo{{Name: "alpha"}}
+	m.confirming = true
+	m.confirmAction = "delete"
+	m.confirmTarget = "alpha"
+	m.statusMsg = "Delete project 'alpha'?"
+
+	// Press n (or any non-y/o key) to cancel
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'n', Text: "n"})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming, "should cancel confirmation")
+	require.Empty(t, model.confirmAction)
+	require.Empty(t, model.confirmTarget)
+	require.Empty(t, model.statusMsg)
+	require.Nil(t, cmd)
+}
+
+func TestDeleteFromDashboardNoProjectNoop(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	// No projects
+
+	updated, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyDelete})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming, "should not confirm with no projects")
+}
+
+func TestDeleteConfirmationFromDetail(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	detail.Name = "alpha"
+	m.detail = &detail
+
+	// Press Delete key
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyDelete})
+	model := updated.(AppModel)
+
+	require.True(t, model.confirming, "should enter confirmation mode in detail view")
+	require.Equal(t, "delete", model.confirmAction)
+	require.Equal(t, "alpha", model.confirmTarget)
+	require.Contains(t, model.statusMsg, "Delete project 'alpha'?")
+	require.Contains(t, model.statusMsg, "keep a snapshot")
+	require.Contains(t, model.statusMsg, "omit snapshot")
+	require.Nil(t, cmd)
+}
+
+func TestConfirmDeleteFromDetail(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	detail.Name = "alpha"
+	m.detail = &detail
+	m.confirming = true
+	m.confirmAction = "delete"
+	m.confirmTarget = "alpha"
+
+	// Press y to confirm (with snapshot)
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming)
+	require.Empty(t, model.confirmAction)
+	require.Empty(t, model.confirmTarget)
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Equal(t, viewDashboard, model.operationReturnView, "should redirect back to dashboard after delete")
+	require.Contains(t, model.operationName, "Deleting alpha")
+	require.NotNil(t, cmd)
+}
+
+func TestConfirmDeleteOmitSnapshotFromDetail(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	detail.Name = "alpha"
+	m.detail = &detail
+	m.confirming = true
+	m.confirmAction = "delete"
+	m.confirmTarget = "alpha"
+
+	// Press o to confirm (omit snapshot)
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'o', Text: "o"})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming)
+	require.Empty(t, model.confirmAction)
+	require.Empty(t, model.confirmTarget)
+	require.Equal(t, viewOperation, model.viewMode)
+	require.Equal(t, viewDashboard, model.operationReturnView, "should redirect back to dashboard after delete")
+	require.Contains(t, model.operationName, "Deleting alpha (omit snapshot)")
+	require.NotNil(t, cmd)
+}
+
+func TestCancelDeleteFromDetail(t *testing.T) {
+	m := NewAppModel()
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+	m.confirming = true
+	m.confirmAction = "delete"
+	m.confirmTarget = detail.Name
+	m.statusMsg = "Delete project?"
+
+	// Press n to cancel
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'n', Text: "n"})
+	model := updated.(AppModel)
+
+	require.False(t, model.confirming)
+	require.Empty(t, model.confirmAction)
+	require.Empty(t, model.confirmTarget)
+	require.Empty(t, model.statusMsg)
+	require.Nil(t, cmd)
+}
+
+func TestDeleteHintsInDashboardAndDetail(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	m.width = 120
+	m.projects = []ProjectInfo{{Name: "a"}}
+
+	dashboardView := m.View().Content
+	require.Contains(t, dashboardView, "delete", "dashboard should show delete key hint")
+
+	m.viewMode = viewDetail
+	detail := sampleDetail()
+	m.detail = &detail
+	detailView := m.View().Content
+	require.Contains(t, detailView, "delete", "detail view should show delete key hint")
+
+	m.showHelp = true
+	helpView := m.View().Content
+	require.Contains(t, helpView, "Delete selected project", "help overlay should explain delete key")
+}

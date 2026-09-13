@@ -26,6 +26,7 @@ type KeyMap struct {
 	Confirm  key.Binding
 	Xdebug   key.Binding
 	Poweroff key.Binding
+	Delete   key.Binding
 	CopyURL  key.Binding
 	Config   key.Binding
 	PageUp   key.Binding
@@ -122,6 +123,10 @@ func DefaultKeyMap() KeyMap {
 		Poweroff: key.NewBinding(
 			key.WithKeys("P"),
 			key.WithHelp("P", "poweroff"),
+		),
+		Delete: key.NewBinding(
+			key.WithKeys("delete"),
+			key.WithHelp("delete", "delete"),
 		),
 		CopyURL: key.NewBinding(
 			key.WithKeys("c"),
