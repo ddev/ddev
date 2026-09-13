@@ -23,6 +23,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -260,6 +261,12 @@ func importResource(source map[string]any, target map[string]any, key string, pr
 			conflict, ok := to[name]
 			if !ok {
 				to[name] = a
+				continue
+			}
+			if reflect.DeepEqual(a, conflict) {
+				// Same resource reached through multiple include paths (a
+				// diamond); re-merging identical definitions would append
+				// duplicate entries to list-valued fields.
 				continue
 			}
 			err := processor.Apply(map[string]any{
