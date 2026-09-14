@@ -16,10 +16,15 @@ if [ "${BUILDKITE_AGENT_TOKEN:-}" = "" ]; then
   echo "BUILDKITE_AGENT_TOKEN must be set, export BUILDKITE_AGENT_TOKEN=token" && exit 1
 fi
 
-# BUILDKITE_DOCKER_TYPE must be set
-if [ "${BUILDKITE_DOCKER_TYPE:-}" = "" ]; then
-  echo "BUILDKITE_DOCKER_TYPE must be set to dockerforwindows or wsl2, export BUILDKITE_DOCKER_TYPE=dockerforwindows" && exit 2
-fi
+# BUILDKITE_DOCKER_TYPE must be set to a known value; it selects both whether
+# docker-ce is installed below and the os=/dockertype= agent tags, since
+# docker-ce-inside-WSL2 runners use Mirrored networking (os=wsl2-mirrored) and
+# Docker Desktop runners use the default NAT networking (os=wsl2).
+case "${BUILDKITE_DOCKER_TYPE:-}" in
+  wsl2) buildkite_os=wsl2-mirrored ;;
+  dockerforwindows) buildkite_os=wsl2 ;;
+  *) echo "BUILDKITE_DOCKER_TYPE must be set to dockerforwindows or wsl2, export BUILDKITE_DOCKER_TYPE=dockerforwindows" && exit 2 ;;
+esac
 
 set -x
 sudo apt-get update -qq >/dev/null && sudo apt-get upgrade -qq -y >/dev/null
@@ -58,7 +63,7 @@ sudo apt-get update >/dev/null && sudo apt-get install -y buildkite-agent >/dev/
 
 # Edit the config file. Does not need sudo because buildkite-agent owns the file
 sed -i "s/^token=.*/token=\"$BUILDKITE_AGENT_TOKEN\"/" /etc/buildkite-agent/buildkite-agent.cfg
-echo "tags=\"os=wsl2,architecture=amd64,dockertype=${BUILDKITE_DOCKER_TYPE:-}\"" >> /etc/buildkite-agent/buildkite-agent.cfg
+echo "tags=\"os=${buildkite_os},architecture=amd64,dockertype=${BUILDKITE_DOCKER_TYPE}\"" >> /etc/buildkite-agent/buildkite-agent.cfg
 
 sudo systemctl enable buildkite-agent
 

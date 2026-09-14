@@ -47,7 +47,10 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 3. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
 4. Windows Terminal should be installed. Set "Ubuntu" (or this distro) as the default and have it start on Windows startup. Enable "copy on select" in behaviors.
 5. `nc.exe -L -p 9003` on Windows to trigger and allow Windows Defender.
-6. For Mirrored Mode (normal for these) edit the `~/.wslconfig` on Windows to add appropriate WSL2 settings:
+6. For a docker-ce/WSL2 runner (`BUILDKITE_DOCKER_TYPE=wsl2` below), Mirrored Mode
+   is normal: edit `~/.wslconfig` on Windows to add the WSL2 settings below. A
+   Docker Desktop runner (`BUILDKITE_DOCKER_TYPE=dockerforwindows`) keeps the
+   default NAT networking instead, so skip this step for it.
 
     ```
     [wsl2]
@@ -68,7 +71,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 8. In the Ubuntu distro:
     1. `export BUILDKITE_AGENT_TOKEN=<token>` with the token from 1Password `BUILDKITE_AGENT_TOKEN`.
-    2. `export BUILDKITE_DOCKER_TYPE=dockerforwindows` or `export BUILDKITE_DOCKER_TYPE=wsl2`
+    2. `export BUILDKITE_DOCKER_TYPE=dockerforwindows` or `export BUILDKITE_DOCKER_TYPE=wsl2` — this also picks the `os=` agent tag the setup script writes: `wsl2-mirrored` for `wsl2` (docker-ce), plain `wsl2` for `dockerforwindows`, matching step 6 above.
     3. Optionally `export NGROK_TOKEN=<token>` with the `NGROK_TOKEN` from 1Password ngrok.com `nopaid` account.
     4. Run the script [wsl2-test-runner-setup.sh](scripts/wsl2-test-runner-setup.sh) in the Ubuntu distro. This script reads `CAROOT` from the Windows registry via `powershell.exe`, exports it before calling `mkcert -install`, and then creates `/etc/buildkite-agent/hooks/environment` to repeat this for every buildkite-agent job (since systemd does not propagate `WSLENV`).
 9. Restart the distro with `wsl.exe -t Ubuntu` and then restart it by opening the Ubuntu window.
@@ -391,7 +394,7 @@ from the NSSM-installed `buildkite-agent` service context.
 To test a branch against only selected pipelines (e.g. WSL2 only) or to run a subset of tests without waiting for the full matrix:
 
 1. Push your branch to upstream.
-2. In the [Buildkite dashboard](https://buildkite.com/ddev), open the pipeline you want (e.g. "wsl2-docker-inside").
+2. In the [Buildkite dashboard](https://buildkite.com/ddev), open the pipeline you want (e.g. "wsl2-mirrored").
 3. Click **New Build** and set the branch to your branch name.
 4. Expand **Environment Variables** and add:
 
