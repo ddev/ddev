@@ -80,6 +80,8 @@ teardown() {
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  # TODO: PHP8.6: Enable for php8.6 when xdebug is available
+  if [ "${PHP_VERSION}" = "8.6" ]; then skip "xdebug not yet available on PHP8.6"; fi
   run docker exec -t $CONTAINER_NAME enable_xdebug
   assert_success
   if [[ ${PHP_VERSION} != 8.? ]] ; then
@@ -105,6 +107,8 @@ teardown() {
 }
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  # TODO: PHP8.6: Enable for php8.6 when xhprof is available
+  if [ "${PHP_VERSION}" = "8.6" ]; then skip "xhprof not yet available on PHP8.6"; fi
   run docker exec -t $CONTAINER_NAME enable_xhprof
   assert_success
   run docker exec -t $CONTAINER_NAME php --re xhprof
@@ -295,6 +299,8 @@ teardown() {
 
 @test "verify key php extensions are loaded on PHP${PHP_VERSION}" {
   if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then skip "Skipping on apache-fpm because we don't have to do this twice"; fi
+  # TODO: PHP8.6: Enable for php8.6 when xhprof/xdebug/apcu/imagick/etc. are available
+  if [ "${PHP_VERSION}" = "8.6" ]; then skip "Extensions not yet available on PHP8.6"; fi
 
   # Conditional extension list based on Debian Trixie Sury repository availability
   # Base extensions that should always be available
