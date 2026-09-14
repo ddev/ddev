@@ -163,6 +163,26 @@ services:
 
 To change the shell for a custom service, add the `x-ddev.ssh-shell` field to that service's configuration and ensure the desired shell is [installed in the image](./customizing-images.md).
 
+## Changing `ddev ssh` User
+
+Some third-party images expect work to happen as a specific non-root user, so
+logging in with the image's default user isn't right for that service. Set
+`x-ddev.ssh-user` on that service so `ddev ssh -s <service>` logs in as that
+user without requiring an explicit `-u`. An explicit `-u` still wins, and this
+only affects `ddev ssh`, not `ddev exec`.
+
+```yaml
+# .ddev/docker-compose.devilbox.yaml
+services:
+  php:
+    x-ddev:
+      ssh-shell: bash
+      ssh-user: devilbox
+```
+
+With this in place, `ddev ssh -s php` logs in as `devilbox`, and the configured
+user also appears in [`ddev describe`](../usage/commands.md#describe) output.
+
 !!!tip
     See the [`x-ddev` Extension](../extend/custom-docker-services.md#x-ddev-extension) for all supported keys, including `describe-*` and `omit-ddev-labels`.
 
