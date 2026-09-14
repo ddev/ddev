@@ -41,13 +41,20 @@ ddev ssh -d /var/www/html`,
 
 		// Use Bash for our containers, sh for 3rd-party containers
 		// that may not have Bash.
-		shell := app.GetXDdevExtension(serviceType).SSHShell
+		xDdev := app.GetXDdevExtension(serviceType)
+		shell := xDdev.SSHShell
+
+		// An explicit -u wins over the service's configured ssh-user.
+		user := serviceUser
+		if user == "" {
+			user = xDdev.SSHUser
+		}
 
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service:   serviceType,
 			RawCmd:    []string{shell, "-l"},
 			Dir:       sshDirArg,
-			User:      serviceUser,
+			User:      user,
 			Tty:       true,
 			NoCapture: true,
 			SkipHooks: true,

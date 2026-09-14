@@ -41,6 +41,10 @@ services:
     image: ddev/ddev-utilities
     x-ddev:
       ssh-shell: fish
+  devilbox:
+    image: ddev/ddev-utilities
+    x-ddev:
+      ssh-user: "  devilbox  "
   no-shell:
     image: ddev/ddev-utilities
     x-ddev:
@@ -85,6 +89,13 @@ services:
 		assert.Equal("fish", xDdev.SSHShell)
 	})
 
+	// Test service with a configured ssh-user
+	t.Run("service with custom ssh user", func(t *testing.T) {
+		xDdev := app.GetXDdevExtension("devilbox")
+		assert.Equal("User: devilbox", xDdev.DescribeInfo)
+		assert.Equal("devilbox", xDdev.SSHUser)
+	})
+
 	// Test service with no shell - should default to sh
 	t.Run("service without shell defaults to sh", func(t *testing.T) {
 		xDdev := app.GetXDdevExtension("no-shell")
@@ -99,6 +110,7 @@ services:
 		assert.Equal("", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
 		assert.Equal("sh", xDdev.SSHShell)
+		assert.Equal("", xDdev.SSHUser)
 		assert.False(xDdev.OmitDdevLabels)
 	})
 
