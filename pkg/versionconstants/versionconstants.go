@@ -76,10 +76,10 @@ var TraefikRouterTagBranch = "v1.25.4"
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "544e096521" // 20260831_v1.25.4-544e096521
+var SSHAuthTag = "f2dd0df729" // 20260914_rfay_fix_fork_release_marker-f2dd0df729
 
 // SSHAuthTagBranch is the branch SSHAuthTag's content was built from.
-var SSHAuthTagBranch = "v1.25.4"
+var SSHAuthTagBranch = "20260914_rfay_fix_fork_release_marker"
 
 // XhguiImage is image for xhgui
 var XhguiImage = "ddev/ddev-xhgui"

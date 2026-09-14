@@ -76,3 +76,4 @@ echo -e "Adding your ssh keys to the ssh-agent container..."
 docker run --rm --volumes-from=ssh-agent -v ~/.ssh:/.ssh -it docker-ssh-agent:latest ssh-add /root/.ssh/id_rsa
 
 echo -e "${green}ssh-agent is now ready to use.${nc}"
+# test commit for ddev/ddev#8804 fork release-marker fix; safe to drop
