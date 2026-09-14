@@ -27,6 +27,7 @@ perl -pi.bak -e 's/# tags="key1=val2,key2=val2"/tags="os=windows,architecture=am
 perl -pi.bak -e 's/^build-path=.*$/build-path=C:\\Users\\testbot\\tmp\\buildkite/' /c/buildkite-agent/buildkite-agent.cfg
 perl -pi.bak -e 's/^build-path=.*$/build-path=C:\\Users\\testbot\\tmp\\buildkite/' /c/buildkite-agent/buildkite-agent.cfg
 perl -pi.bak -e "s/^token=.*\$/token=${BUILDKITE_AGENT_TOKEN}/" /c/buildkite-agent/buildkite-agent.cfg
+echo 'git-mirrors-path="C:\Users\testbot\tmp\buildkite-git-mirrors"' >> /c/buildkite-agent/buildkite-agent.cfg
 
 mv /c/buildkite-agent/buildkite-agent /c/buildkite-agent/bin
 

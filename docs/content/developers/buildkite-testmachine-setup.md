@@ -17,14 +17,35 @@ a full clone has. See [Buildkite's Git mirrors docs](https://buildkite.com/docs/
 
 `buildkite-agent.cfg` doesn't expand `$HOME`-style variables, only a leading
 `~`. Point `git-mirrors-path` at a sibling of that agent's own `build-path`,
-matching whichever form (`~` or absolute) `build-path` already uses:
+matching whichever form (`~` or absolute) `build-path` already uses. To check
+or fix an existing agent, run the matching one-liner below (idempotent — safe
+to run again) and restart the agent afterward:
 
-* `build-path="~/tmp/buildkite-agent/builds"` (macOS, Pi) →
-  `git-mirrors-path="~/tmp/buildkite-agent/git-mirrors"`
-* `build-path="/var/lib/buildkite-agent/builds"` (Linux/WSL2 package default) →
-  `git-mirrors-path="/var/lib/buildkite-agent/git-mirrors"`
-* `build-path=C:\Users\testbot\tmp\buildkite` (Windows) →
-  `git-mirrors-path=C:\Users\testbot\tmp\buildkite-git-mirrors`
+* macOS/Pi, `build-path="~/tmp/buildkite-agent/builds"`:
+
+    ```bash
+    CFG=/usr/local/etc/buildkite-agent/buildkite-agent.cfg; [ -f "$CFG" ] || CFG=/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg
+    grep -q '^git-mirrors-path=' "$CFG" || echo 'git-mirrors-path="~/tmp/buildkite-agent/git-mirrors"' | sudo tee -a "$CFG"
+    brew services restart buildkite-agent
+    ```
+
+* Linux/WSL2 package default, `build-path="/var/lib/buildkite-agent/builds"`:
+
+    ```bash
+    grep -q '^git-mirrors-path=' /etc/buildkite-agent/buildkite-agent.cfg || echo 'git-mirrors-path="/var/lib/buildkite-agent/git-mirrors"' | sudo tee -a /etc/buildkite-agent/buildkite-agent.cfg
+    sudo systemctl restart buildkite-agent
+    ```
+
+* Windows, `build-path=C:\Users\testbot\tmp\buildkite` (Git Bash):
+
+    ```bash
+    grep -q '^git-mirrors-path=' /c/buildkite-agent/buildkite-agent.cfg || echo 'git-mirrors-path="C:\Users\testbot\tmp\buildkite-git-mirrors"' >> /c/buildkite-agent/buildkite-agent.cfg
+    nssm.exe restart buildkite-agent
+    ```
+
+  Windows agents provisioned with the package default `build-path=C:\buildkite-agent\builds`
+  instead use `git-mirrors-path="C:\buildkite-agent\git-mirrors"` — check
+  `build-path` in the file first.
 
 ## Windows Test Agent Setup
 
@@ -36,7 +57,7 @@ matching whichever form (`~` or absolute) `build-path` already uses:
 6. Install items as needed; `git`, `jq`, `mysql-cli`, `golang`, `make`, `nodejs-lts` are only required for a traditional Windows test machine. `choco install -y git jq mysql-cli golang make mkcert netcat zip nodejs-lts`.
 7. After restart, in **administrative** Git Bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`.
 8. (Traditional Windows test runner only): Download and run [windows_buildkite_setup.sh](scripts/windows_buildkite_setup.sh).
-9. If using Rancher Desktop, adjust the /c/buildkite-agent/buildkite-agent.cfg file to set `rancher-desktop=true` in the tags instead of `docker-desktop`. If using Docker Desktop, set `docker-desktop=true`. While editing that file, also set `git-mirrors-path` per [Git Mirrors](#git-mirrors-all-platforms).
+9. If using Rancher Desktop, adjust the /c/buildkite-agent/buildkite-agent.cfg file to set `rancher-desktop=true` in the tags instead of `docker-desktop`. If using Docker Desktop, set `docker-desktop=true`. While editing that file, also add `git-mirrors-path` (see [Git Mirrors](#git-mirrors-all-platforms)): `echo 'git-mirrors-path="C:\buildkite-agent\git-mirrors"' >> /c/buildkite-agent/buildkite-agent.cfg`.
 10. (Traditional Windows test runner only): Download and run [windows_postinstall.sh](scripts/windows_postinstall.sh).
 11. (Traditional Windows or Docker Desktop WSL2 Only) Launch Docker. It may require you to take further actions.
     * Check "Start Docker Desktop when you sign in" or the equivalent with Rancher Desktop.
@@ -92,12 +113,11 @@ matching whichever form (`~` or absolute) `build-path` already uses:
     1. `export BUILDKITE_AGENT_TOKEN=<token>` with the token from 1Password `BUILDKITE_AGENT_TOKEN`.
     2. `export BUILDKITE_DOCKER_TYPE=dockerforwindows` or `export BUILDKITE_DOCKER_TYPE=wsl2` — this also picks the `os=` agent tag the setup script writes: `wsl2-mirrored` for `wsl2` (docker-ce), plain `wsl2` for `dockerforwindows`, matching step 6 above.
     3. Optionally `export NGROK_TOKEN=<token>` with the `NGROK_TOKEN` from 1Password ngrok.com `nopaid` account.
-    4. Run the script [wsl2-test-runner-setup.sh](scripts/wsl2-test-runner-setup.sh) in the Ubuntu distro. This script reads `CAROOT` from the Windows registry via `powershell.exe`, exports it before calling `mkcert -install`, and then creates `/etc/buildkite-agent/hooks/environment` to repeat this for every buildkite-agent job (since systemd does not propagate `WSLENV`).
-9. Add `git-mirrors-path="/var/lib/buildkite-agent/git-mirrors"` to `/etc/buildkite-agent/buildkite-agent.cfg` (see [Git Mirrors](#git-mirrors-all-platforms); `wsl2-test-runner-setup.sh` does not set this).
-10. Restart the distro with `wsl.exe -t Ubuntu` and then restart it by opening the Ubuntu window.
-11. If using Docker Desktop, start Docker Desktop.
-12. In `~/workspace/ddev/.buildkite`, run `./testbot_maintenance.sh`.
-13. In `~/workspace/ddev/.buildkite`, run `./sanetestbot.sh` to check your work.
+    4. Run the script [wsl2-test-runner-setup.sh](scripts/wsl2-test-runner-setup.sh) in the Ubuntu distro. This script reads `CAROOT` from the Windows registry via `powershell.exe`, exports it before calling `mkcert -install`, and then creates `/etc/buildkite-agent/hooks/environment` to repeat this for every buildkite-agent job (since systemd does not propagate `WSLENV`). It also sets `git-mirrors-path="/var/lib/buildkite-agent/git-mirrors"` in `/etc/buildkite-agent/buildkite-agent.cfg` (see [Git Mirrors](#git-mirrors-all-platforms)).
+9. Restart the distro with `wsl.exe -t Ubuntu` and then restart it by opening the Ubuntu window.
+10. If using Docker Desktop, start Docker Desktop.
+11. In `~/workspace/ddev/.buildkite`, run `./testbot_maintenance.sh`.
+12. In `~/workspace/ddev/.buildkite`, run `./sanetestbot.sh` to check your work.
 
 ## Windows Installer Test Distros
 
