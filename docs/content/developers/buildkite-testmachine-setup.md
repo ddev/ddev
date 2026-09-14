@@ -391,7 +391,7 @@ from the NSSM-installed `buildkite-agent` service context.
 To test a branch against only selected pipelines (e.g. WSL2 only) or to run a subset of tests without waiting for the full matrix:
 
 1. Push your branch to upstream.
-2. In the [Buildkite dashboard](https://buildkite.com/ddev), open the pipeline you want (e.g. "wsl2-docker-inside").
+2. In the [Buildkite dashboard](https://buildkite.com/ddev), open the pipeline you want (e.g. "wsl2-mirrored").
 3. Click **New Build** and set the branch to your branch name.
 4. Expand **Environment Variables** and add:
 
