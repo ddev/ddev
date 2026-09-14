@@ -1208,6 +1208,9 @@ func TestPHPConfig(t *testing.T) {
 		phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	}
 
+	// TODO: php8.6: Remove this exclusion when php86 has solr
+	phpKeys = util.SubtractSlices(phpKeys, []string{nodeps.PHP86})
+
 	// Skip any PHP versions embargoed via DDEV_EMBARGO_PHP_VERSIONS (comma-separated, e.g. "8.4,8.3")
 	var embargoedVersions []string
 	for _, v := range phpKeys {
