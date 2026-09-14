@@ -155,16 +155,24 @@ jobs:
           esac
 
       # create-manifests never runs for a fork, so the release names would
-      # silently be left off. Fails ahead of the build and the approval.
+      # silently be left off. Fails ahead of the build and the approval, but
+      # only when the marker's release hasn't shipped - once its tag is in
+      # the registry the marker is just leftover from the last release, the
+      # same distinction `detect` above makes before deciding to rebuild.
       - name: Refuse a release marker on a fork
         if: steps.fork.outputs.is_fork == 'true'
         run: |
           set -eu -o pipefail
           source containers/image-configs.sh
           for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
-            IFS='|' read -r _ _ _ make_dir _ <<< "$entry"
+            IFS='|' read -r repo_suffix _ _ make_dir _ <<< "$entry"
             release_tag="$(containers/release-marker.sh "$make_dir")"
             [ -n "$release_tag" ] || continue
+            repo="${DOCKER_ORG}/${repo_suffix}"
+            if containers/registry-tag-exists.sh "$repo" "$release_tag"; then
+              echo "detect: ${repo}:${release_tag} is already published; the marker in containers/${make_dir} is stale"
+              continue
+            fi
             echo "detect: containers/${make_dir} is stamped for release ${release_tag}, and a pull request from a fork cannot publish ${release_tag} or move latest." >&2
             echo "detect: push the release branch to ${GITHUB_REPOSITORY} and open the pull request from there." >&2
             exit 1
