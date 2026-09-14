@@ -45,3 +45,20 @@ php84:
 php85:
   amd64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
   arm64: ["apcu", "bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "imagick", "intl", "ldap", "mbstring", "memcached", "mysql", "pgsql", "readline", "redis", "soap", "sqlite3", "uploadprogress", "xdebug", "xhprof", "xml", "xmlrpc", "yaml", "zip"]
+
+# TODO: php8.6: These extensions that DDEV uses are currently missing in php8.6 on deb.sury.org
+# https://github.com/ddev/ddev/issues/8779
+#apcu
+#imagick
+#memcached
+#redis
+#uploadprogress
+#xdebug
+#xhprof
+#xmlrpc
+#yaml
+
+# TODO: php8.6 temp workaround until php8.6 packages are available
+php86:
+  amd64: ["bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]
+  arm64: ["bcmath", "bz2", "cli", "common", "curl", "fpm", "gd", "intl", "ldap", "mbstring", "mysql", "pgsql", "readline", "soap", "sqlite3", "xml", "zip"]

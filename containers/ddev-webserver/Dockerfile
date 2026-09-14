@@ -82,7 +82,7 @@ SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 ARG PHP_DEFAULT_VERSION="8.4"
 ARG XDEBUG_MODE=off
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
-ARG PHP_VERSIONS="php8.2 php8.3 php8.4 php8.5"
+ARG PHP_VERSIONS="php8.2 php8.3 php8.4 php8.5 php8.6"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ARG NODE_VERSION=24
 ENV PATH=$PATH:/usr/local/n/bin
