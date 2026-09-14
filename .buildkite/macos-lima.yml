@@ -14,7 +14,6 @@
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
-      DDEV_TEST_SHARE_CMD: "false"
       DOCKER_TYPE: "lima"
       LIMA_SSH_PORT_FORWARDER: "true"
       GOTESTSUM_JSONFILE_DIR: "test-results"
