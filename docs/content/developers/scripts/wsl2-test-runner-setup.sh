@@ -64,6 +64,7 @@ sudo apt-get update >/dev/null && sudo apt-get install -y buildkite-agent >/dev/
 # Edit the config file. Does not need sudo because buildkite-agent owns the file
 sed -i "s/^token=.*/token=\"$BUILDKITE_AGENT_TOKEN\"/" /etc/buildkite-agent/buildkite-agent.cfg
 echo "tags=\"os=${buildkite_os},architecture=amd64,dockertype=${BUILDKITE_DOCKER_TYPE}\"" >> /etc/buildkite-agent/buildkite-agent.cfg
+echo 'git-mirrors-path="/var/lib/buildkite-agent/git-mirrors"' >> /etc/buildkite-agent/buildkite-agent.cfg
 
 sudo systemctl enable buildkite-agent
 
