@@ -63,7 +63,23 @@ Per-section notes, in the same top-to-bottom order as the template above:
   `Describe your solution`/`Describe alternatives` fields, and an alternatives
   list gets one line each — what it is, why it lost.
 - **Manual Testing Instructions:** the commands and what to look for, not the
-  obvious steps around them.
+  obvious steps around them. Point the reviewer at
+  `ddev utility download-ddev --pr <number>` to get the binary this PR built,
+  instead of telling them to clone the branch and `make` it — that needs no Go
+  toolchain or dev environment. Write the steps as an explicit, reproducible
+  transcript with real values (an actual project type, actual commands, the
+  actual output or behavior that confirms the fix), not a description of the
+  general area to poke at. For example:
+
+  ```bash
+  ddev utility download-ddev --pr 8820
+  export PATH="$HOME/tmp/ddev-download-ddev/pr-8820:$PATH"
+  ddev config --project-type=drupal11 --docroot=web
+  ddev start
+  ddev snapshot --list
+  # Expect the size and DB version columns added by this PR
+  ```
+
 - **Release/Deployment Notes:** the last section in the template — give it
   real content, or omit it under the same rule as any other section.
 
