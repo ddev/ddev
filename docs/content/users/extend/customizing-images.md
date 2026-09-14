@@ -186,6 +186,32 @@ And then a `Dockerfile`:
 COPY --from=build-stage-go /usr/local/go /usr/local
 ```
 
+### Project-Specific Utilities
+
+DDEV installs these utilities when building the web image for the configured project type:
+
+| Project type | Utilities |
+| --- | --- |
+| `wordpress`, `wp-bedrock` | WP-CLI (`wp`, `wp-cli`) |
+| `magento` | `magerun` and Bash completion |
+| `magento2` | `magerun2` and Bash completion |
+| `drupal6`, `drupal7` | Drush 8 |
+| `backdrop` | Drush 8 and the Backdrop Drush extension |
+| `symfony` | Symfony CLI |
+| `shopware6` | Shopware CLI and Symfony CLI |
+
+Building without a cached image downloads the required utilities. Subsequent starts reuse the built image. After changing the project type, run `ddev restart` to rebuild with the corresponding utilities. Modern Drupal projects should install Drush through their project's Composer dependencies.
+
+To use a utility with another project type, install it in a custom Dockerfile. For example, add `.ddev/web-build/Dockerfile.wp-cli` to make WP-CLI available in a `php` project:
+
+```dockerfile
+RUN curl --fail -sSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp-cli && \
+    chmod +x /usr/local/bin/wp-cli && \
+    ln -sf /usr/local/bin/wp-cli /usr/local/bin/wp
+```
+
+Run `ddev restart`, then use `ddev exec wp --info`. The `ddev wp` command is available for the WordPress and Bedrock project types.
+
 ### Global Dockerfiles
 
 The same files work in `$HOME/.ddev/web-build/` and `$HOME/.ddev/db-build/`, where they apply to every project on the machine, which is handy for things like corporate certificates or private package registries. Global files are inserted _before_ the project’s own files, and the global directory is a Docker “context” too, where a project file of the same name wins.

@@ -84,7 +84,6 @@ ARG XDEBUG_MODE=off
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
 ARG PHP_VERSIONS="php8.2 php8.3 php8.4 php8.5"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
-ARG DRUSH_VERSION=8.5.0
 ARG NODE_VERSION=24
 ENV PATH=$PATH:/usr/local/n/bin
 # composer normally screams about running as root, we don't need that.
@@ -169,17 +168,6 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/ru
 RUN phpdismod xhprof xdebug
 RUN apt-get -qq autoremove -y
 RUN curl -L --fail -o /usr/local/bin/composer -sSL https://getcomposer.org/composer-stable.phar && chmod ugo+wx /usr/local/bin/composer
-RUN <<ENDDRUSH
-    set -eu -o pipefail
-    mkdir -p /usr/local/src/drush
-    curl -sSfL -o /tmp/drush.tgz https://github.com/drush-ops/drush/archive/refs/tags/${DRUSH_VERSION}.tar.gz
-    tar -C /usr/local/src/drush --strip-components=1 -zxf /tmp/drush.tgz
-    pushd /usr/local/src/drush >/dev/null
-    composer install
-    ln -s /usr/local/src/drush/drush /usr/local/bin/drush8
-    popd >/dev/null
-ENDDRUSH
-RUN curl --fail -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli && ln -sf /usr/local/bin/wp-cli /usr/local/bin/wp
 ADD ddev-php-files /
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/*
 RUN ln -sf /usr/sbin/php-fpm${DDEV_PHP_VERSION} /usr/sbin/php-fpm
@@ -207,11 +195,6 @@ ARG TARGETARCH
 
 COPY ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
-
-# symfony cli
-RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash && \
-    apt modernize-sources --assume-yes && \
-    rm -f /etc/apt/sources.list.d/*.list.bak
 
 # Set up MariaDB apt repository
 # The key is from https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/installing-mariadb/binary-packages/gpg#mariadb-community-server-debian-ubuntu-key
@@ -271,7 +254,6 @@ RUN apt-get -qq update && \
     rsync \
     sqlite3 \
     supervisor \
-    symfony-cli \
     unzip \
     vim-tiny \
     xz-utils \
@@ -385,20 +367,6 @@ RUN <<EOF
     curl --fail -sSL "https://github.com/FiloSottile/mkcert/releases/download/${tag}/mkcert-${tag}-linux-${TARGETARCH}" --output /usr/local/bin/mkcert
     chmod +x /usr/local/bin/mkcert
 
-    # Install magerun and magerun2 for Magento
-    curl --fail -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun
-    chmod 755 /usr/local/bin/magerun
-    curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun/master/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/n98-magerun.phar
-    curl --fail -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2
-    chmod 755 /usr/local/bin/magerun2
-    curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/master/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar
-
-    # Install backdrop drush extension
-    tag=$(gh_tag backdrop-contrib/drush)
-    curl --fail -sSL "https://github.com/backdrop-contrib/drush/releases/download/${tag}/backdrop-drush-extension.zip" -o /tmp/backdrop-drush-extension.zip
-    unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
-    chmod -R ugo+w /var/tmp/backdrop_drush_commands
-    rm -f /tmp/backdrop-drush-extension.zip
 EOF
 
 # Set up Blackfire apt repository
