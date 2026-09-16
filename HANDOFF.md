@@ -145,6 +145,15 @@ checked and is safe — it removes the db container before touching the volume. 
 `RunSimpleContainer` call site mounting the db volume was swept; `db.go` and `start-chown`
 were the only two, and both are fixed.
 
+**Worth checking:** [lunguini/gocker](https://github.com/lunguini/gocker), a separate Go
+implementation of the same idea as socktainer (Docker-compatible CLI/API daemon over Apple
+Container), has an `isolation` setting — `full` / `hybrid` / `shared` — controlling whether
+every container gets its own microVM or several share one. `shared`/`hybrid` would sidestep
+this entire structural blocker outright, since a volume mounted RW by two containers in the
+same VM is a non-issue. Found by general search, not a link from socktainer's own issues/PRs —
+unconfirmed whether it's actively developed or how complete its Docker API coverage is; worth a
+look before assuming socktainer is the only path here.
+
 ### Hostname uniqueness collides with compose's recreate
 
 ```text
