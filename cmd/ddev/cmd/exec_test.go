@@ -14,6 +14,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -237,4 +238,60 @@ func TestCmdExec(t *testing.T) {
 	out, err = fileutil.ReadFileIntoString(f.Name())
 	assert.NoError(err)
 	assert.Contains(out, "/usr/local/bin/composer")
+}
+
+// TestCmdExecSSHUser verifies that `ddev exec -s <service>` defaults to the
+// service's configured x-ddev.ssh-user, matching `ddev ssh -s <service>`,
+// and that an explicit -u still overrides it.
+// See https://github.com/ddev/ddev/issues/8806.
+func TestCmdExecSSHUser(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
+	assert := asrt.New(t)
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+	err = os.Chdir(testDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(testDir, true)
+	require.NoError(t, err)
+	app.Name = strings.ToLower(t.Name())
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	composeContent := fmt.Sprintf(`
+services:
+  sshuser-svc:
+    container_name: ddev-${DDEV_SITENAME}-sshuser-svc
+    image: %s:%s
+    x-ddev:
+      ssh-user: www-data
+    command: ["sleep", "infinity"]
+    labels:
+      com.ddev.approot: ${DDEV_APPROOT}
+      com.ddev.site-name: ${DDEV_SITENAME}
+    restart: "no"
+    healthcheck:
+      test: "true"
+`, versionconstants.WebImg, versionconstants.WebTag)
+	err = os.WriteFile(app.GetConfigPath("docker-compose.sshuser-svc.yaml"), []byte(composeContent), 0644)
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(testDir)
+	})
+
+	out, err := exec.RunHostCommand(DdevBin, "exec", "-s", "sshuser-svc", "id", "-un")
+	require.NoError(t, err, "output: %s", out)
+	assert.Equal("www-data", strings.TrimSpace(out))
+
+	out, err = exec.RunHostCommand(DdevBin, "exec", "-s", "sshuser-svc", "-u", "root", "id", "-un")
+	require.NoError(t, err, "output: %s", out)
+	assert.Equal("root", strings.TrimSpace(out))
 }
