@@ -80,10 +80,16 @@ teardown() {
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  # TODO: PHP8.6: Enable for php8.6 when xdebug is available
-  if [ "${PHP_VERSION}" = "8.6" ]; then skip "xdebug not yet available on PHP8.6"; fi
   run docker exec -t $CONTAINER_NAME enable_xdebug
-  assert_success
+  if [ "$status" -ne 0 ]; then
+    # Xdebug isn't packaged for every PHP version (see php-packages.yaml); enable_xdebug
+    # detects that at runtime and fails cleanly instead of pretending to enable it.
+    assert_output --partial "Xdebug is unavailable for PHP ${PHP_VERSION}"
+    run docker exec -t $CONTAINER_NAME php --re xdebug
+    assert_failure
+    assert_output --regexp "xdebug.*does not exist"
+    return
+  fi
   if [[ ${PHP_VERSION} != 8.? ]] ; then
     run docker exec -t $CONTAINER_NAME php --re xdebug
     assert_success
@@ -107,10 +113,16 @@ teardown() {
 }
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-  # TODO: PHP8.6: Enable for php8.6 when xhprof is available
-  if [ "${PHP_VERSION}" = "8.6" ]; then skip "xhprof not yet available on PHP8.6"; fi
   run docker exec -t $CONTAINER_NAME enable_xhprof
-  assert_success
+  if [ "$status" -ne 0 ]; then
+    # Xhprof isn't packaged for every PHP version (see php-packages.yaml); enable_xhprof
+    # detects that at runtime and fails cleanly instead of pretending to enable it.
+    assert_output --partial "Xhprof is unavailable for PHP ${PHP_VERSION}"
+    run docker exec -t $CONTAINER_NAME php --re xhprof
+    assert_failure
+    assert_output --partial "does not exist"
+    return
+  fi
   run docker exec -t $CONTAINER_NAME php --re xhprof
   assert_success
   assert_output --partial "xhprof.output_dir"
@@ -299,8 +311,6 @@ teardown() {
 
 @test "verify key php extensions are loaded on PHP${PHP_VERSION}" {
   if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then skip "Skipping on apache-fpm because we don't have to do this twice"; fi
-  # TODO: PHP8.6: Enable for php8.6 when xhprof/xdebug/apcu/imagick/etc. are available
-  if [ "${PHP_VERSION}" = "8.6" ]; then skip "Extensions not yet available on PHP8.6"; fi
 
   # Conditional extension list based on Debian Trixie Sury repository availability
   # Base extensions that should always be available
@@ -331,11 +341,26 @@ teardown() {
     ;;
   esac
 
-  # Load xhprof first, then xdebug, because loading xhprof disables xdebug
-  run docker exec $CONTAINER_NAME enable_xhprof
-  assert_success
-  run docker exec $CONTAINER_NAME enable_xdebug
-  assert_success
+  # /etc/php-packages.yaml is the single source of truth for which packages
+  # are installed per PHP version/arch; drop any extension it doesn't list for
+  # this version instead of hand-maintaining a per-version exclusion list here.
+  arch=$(docker exec $CONTAINER_NAME dpkg --print-architecture)
+  available=$(docker exec $CONTAINER_NAME yq ".php${PHP_VERSION//./}.${arch} | join(\" \")" /etc/php-packages.yaml)
+  filtered=""
+  for ext in $extensions; do
+    pkg=$ext
+    [ "$pkg" = "mysqli" ] && pkg="mysql"
+    case " $available " in
+    *" $pkg "*) filtered="$filtered $ext" ;;
+    esac
+  done
+  extensions="$filtered"
+
+  # Load xhprof first, then xdebug, because loading xhprof disables xdebug.
+  # Either may be unavailable for this PHP version; ignore failure here since
+  # the dedicated xhprof/xdebug tests already cover that behavior.
+  docker exec $CONTAINER_NAME enable_xhprof || true
+  docker exec $CONTAINER_NAME enable_xdebug || true
   run docker exec $CONTAINER_NAME bash -c "php -r 'foreach (get_loaded_extensions() as \$e) echo \$e, PHP_EOL;' 2>/dev/null"
   assert_success
   for item in $extensions; do

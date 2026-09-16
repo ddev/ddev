@@ -106,10 +106,13 @@ func (app *DdevApp) GetXHGuiPort() string {
 
 // XHProfEnable enables xhprof extension and starts gathering info
 func XHProfEnable(app *DdevApp) error {
-	_, _, err := app.Exec(&ExecOpts{
+	stdout, stderr, err := app.Exec(&ExecOpts{
 		Cmd: `enable_xhprof`,
 	})
-	return err
+	if err != nil {
+		return fmt.Errorf("%s%s", stdout, stderr)
+	}
+	return nil
 }
 
 // XHProfDisable disables xhprof extension and stops gathering info
