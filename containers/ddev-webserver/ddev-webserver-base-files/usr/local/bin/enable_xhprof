@@ -3,6 +3,11 @@ export PATH=$PATH:/usr/sbin:/sbin
 phpdismod blackfire xdebug
 mkdir -p ${XHPROF_OUTPUT_DIR}
 phpenmod xhprof
+if ! php -m 2>/dev/null | grep -qx xhprof; then
+  phpdismod xhprof || true
+  echo "Xhprof is unavailable for PHP ${DDEV_PHP_VERSION:-current} in this web image." >&2
+  exit 1
+fi
 if [ "${DDEV_WEBSERVER_TYPE:-}" = "generic" ]; then
   # we don't know what process is running php, restart all web_extra_daemons
   supervisorctl restart 'webextradaemons:*' || true
