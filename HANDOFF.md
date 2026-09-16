@@ -145,14 +145,16 @@ checked and is safe — it removes the db container before touching the volume. 
 `RunSimpleContainer` call site mounting the db volume was swept; `db.go` and `start-chown`
 were the only two, and both are fixed.
 
-**Worth checking:** [lunguini/gocker](https://github.com/lunguini/gocker), a separate Go
-implementation of the same idea as socktainer (Docker-compatible CLI/API daemon over Apple
-Container), has an `isolation` setting — `full` / `hybrid` / `shared` — controlling whether
-every container gets its own microVM or several share one. `shared`/`hybrid` would sidestep
-this entire structural blocker outright, since a volume mounted RW by two containers in the
-same VM is a non-issue. Found by general search, not a link from socktainer's own issues/PRs —
-unconfirmed whether it's actively developed or how complete its Docker API coverage is; worth a
-look before assuming socktainer is the only path here.
+[lunguini/gocker](https://github.com/lunguini/gocker) (a separate, solo, Go reimplementation of
+the same Docker-API-over-Apple-Container idea, quiet since 2026-07-12) has an `isolation` setting
+— `full` / `hybrid` / `shared` — where `shared` runs every container as an `nerdctl`/`containerd`
+process inside one Apple Container VM instead of one VM each. It does dodge this blocker, but not
+usefully: that's Docker Desktop/OrbStack/Lima's architecture — one Linux VM, containers as
+processes inside it — reimplemented from scratch by a single maintainer on top of `container`
+used only to host that one VM. It gives up the entire reason to reach for Apple's native tooling
+(hardware-isolated, lightweight per-container VMs) to land back on something strictly less mature
+than what already ships. Confirms this volume constraint is the cost of the thing actually worth
+having here, not a problem some clever architecture sidesteps for free.
 
 ### Hostname uniqueness collides with compose's recreate
 
