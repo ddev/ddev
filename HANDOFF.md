@@ -96,6 +96,14 @@ PRs are being filed" is still accurate three weeks on.
 GET aborts on a dangling symlink (`/etc/mtab → /proc/mounts`), and PathStat reports the raw
 ext4 mode where the Docker CLI expects a Go `os.FileMode`. buildx works without it.
 
+Upstream keeps a Docker Engine API endpoint-coverage table at
+[socktainer#14](https://github.com/socktainer/socktainer/issues/14) — useful for a first
+orientation on what's implemented at all (e.g. it independently confirms the
+`/networks/{id}/connect` hot-attach gap noted below), but **it isn't a live source**: the body
+says "Last updated April 4th, 2026" and hasn't moved since, the last comment on it is from
+2025-09-22, and the highest PR it cites (#191) is far behind everything this investigation
+tracks (#348, #372, #374, #379, #389, #391). Treat it as a one-time map, not current status.
+
 `tmp/combined-verify-4` rebases cleanly onto current upstream `main` for eight of the nine fixes;
 `fix/dns-edns0-truncation` and `fix/dns-wrong-network-address` both touch
 `SocktainerDNSServer.swift` and needed a hand-merge (git `rerere` replayed the same resolution
