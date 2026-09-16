@@ -1,30 +1,36 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-08-28. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-09-16. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
-Environment as last verified: Apple `container` 1.3.0 (signed installer, **not** Homebrew),
-`socktainer` built from
-[`tmp/combined-verify-3`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-3),
-docker CLI 29.7.2, docker context `socktainer`, macOS 27 (26A5421a), `ddev` from branch
+Environment as last verified: Apple `container` 1.4.1 (signed installer, **not** Homebrew — see
+below), `socktainer` built from
+[`tmp/combined-verify-4`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-4), cut
+2026-09-16 from current upstream `main` (replaces `tmp/combined-verify-3`), docker CLI 29.7.2,
+docker context `socktainer`, macOS 27 (26A5421a), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment).
 
 ## Where this stands
 
 **It works end to end, and it cannot ship.** Two DDEV projects run side by side on Apple
 Container — image builds, database, router, published ports, `ddev ssh`/`exec`/`mysql` — but
-only against a socktainer built from the fork with ten unmerged fixes. Nothing changes for
-DDEV until upstream socktainer carries them.
+only against a socktainer built from the fork with unmerged fixes. Nothing changes for DDEV
+until upstream socktainer carries them.
 
-The gate is socktainer's maturity, not DDEV-side work. In the three weeks to 2026-08-28
-upstream took one of the eleven fixes (independently, not from us), and its `main` does not
-currently build against `container` 1.3.0 at all. **No PRs are being filed**: the eleven fixes
-span DNS, exec hijacking, archive internals and healthcheck timing, and each would need
-sustained review defense. The issues at [rfay/socktainer](https://github.com/rfay/socktainer/issues)
-carry the reproductions instead, with the branches as reference implementations. The natural
-time to revisit is a socktainer release that closes several of them at once.
+The gate is socktainer's maturity, not DDEV-side work. In the three weeks to 2026-09-16, one of
+the ten fixes tracked here was fully subsumed by upstream's own (better) design —
+[`fix/archive-404-prestart`](https://github.com/rfay/socktainer/tree/fix/archive-404-prestart)
+is dropped from the fork; see "Resolved" below — leaving nine. **Still no PRs are being filed**
+from the fork: searching `socktainer/socktainer` for any PR referencing `rfay` returns nothing.
+The nine remaining fixes span DNS, exec hijacking, archive internals and healthcheck timing, and
+each would need sustained review defense; the issues at
+[rfay/socktainer](https://github.com/rfay/socktainer/issues) carry the reproductions instead,
+with the branches as reference implementations. The natural time to revisit is a socktainer
+release that closes several of them at once — the tagged release is still v1.2.1 (2026-08-01)
+despite ~20 PRs merged to `main` since, so nothing has actually shipped in three weeks even where
+upstream has fixed things.
 
 Three DDEV-side hardenings split out of this work are merged and are worth having on their
 own: [#8657](https://github.com/ddev/ddev/pull/8657) (bound host ports fallback),
@@ -41,6 +47,8 @@ so that hang is covered only by socktainer's `fix/exec-hijack-close`.
 - A `traefik_monitor_port` that does not collide with another provider's router.
 - The cold-start recipe below, after any `container system` restart.
 - `ddev restart` rather than `ddev start` over an already-running project.
+- Pre-create `buildx_buildkit_default` by hand before the first `ddev start` — see "buildx's
+  buildkit node" below. Without it, `ddev start` fails outright on `tmp/combined-verify-4`.
 
 Mutagen needs no per-project setting: it is forced off automatically on this provider.
 Healthcheck overrides are no longer needed and now actively cause harm — see the resolved
@@ -49,21 +57,24 @@ list.
 ## socktainer fixes carried in the fork
 
 Eleven fixes came out of this investigation, each on its own branch in
-[`rfay/socktainer`](https://github.com/rfay/socktainer). Ten are combined and verified
+[`rfay/socktainer`](https://github.com/rfay/socktainer). Nine are combined and verified
 together on
-[`tmp/combined-verify-3`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-3), cut
-from upstream `main` on 2026-08-28. The eleventh, `fix/privileged-cap-all`, is dropped because
-upstream fixed the same bug itself in
-[socktainer#364](https://github.com/socktainer/socktainer/pull/364). None of the ten is merged
-upstream.
+[`tmp/combined-verify-4`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-4), cut
+from upstream `main` on 2026-09-16 (replaces `tmp/combined-verify-3`, cut 2026-08-28). Two of
+the original eleven are dropped, both because upstream fixed the same bug independently, not
+from this fork: `fix/privileged-cap-all`
+([socktainer#364](https://github.com/socktainer/socktainer/pull/364)) and, new this round,
+`fix/archive-404-prestart` — see "Resolved" below. None of the remaining nine is merged
+upstream; searching `socktainer/socktainer` for a PR referencing `rfay` returns nothing, so "no
+PRs are being filed" is still accurate three weeks on.
 
 ### Blocks `ddev start` from working at all
 
 | Fix | Branch | Issue |
 |---|---|---|
-| Exec was upgraded only when stdin was attached, so `dockerutil.Exec` (stdout/stderr only) never got a reply that closed — `ddev start` hung forever at "Getting traefik error output". Also closes the channel on output EOF | [`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close) | [#8](https://github.com/rfay/socktainer/issues/8) |
-| `/version` reported the Docker API version instead of socktainer's own, tripping DDEV's minimum-version check | [`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version) | [#13](https://github.com/rfay/socktainer/issues/13) |
-| Malformed EDNS0 responses break Go/musl resolvers — the actual cause of the router's 502s | [`fix/dns-edns0-truncation`](https://github.com/rfay/socktainer/tree/fix/dns-edns0-truncation) | [#15](https://github.com/rfay/socktainer/issues/15), upstream [#329](https://github.com/socktainer/socktainer/issues/329) |
+| Exec was upgraded only when stdin was attached, so `dockerutil.Exec` (stdout/stderr only) never got a reply that closed — `ddev start` hung forever at "Getting traefik error output". Also closes the channel on output EOF | [`fix/exec-hijack-close`](https://github.com/rfay/socktainer/tree/fix/exec-hijack-close) | [#8](https://github.com/rfay/socktainer/issues/8) — upstream tried [socktainer#347](https://github.com/socktainer/socktainer/pull/347) for the same underlying [socktainer#346](https://github.com/socktainer/socktainer/issues/346), closed unmerged (breaks buildx's `buildctl dial-stdio`, which legitimately outlives a fixed bound) |
+| `/version` reported the Docker API version instead of socktainer's own, tripping DDEV's minimum-version check | [`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version) | [#13](https://github.com/rfay/socktainer/issues/13) — verified still current: `Package.swift` hardcodes `DOCKER_ENGINE_API_MAX_VERSION` to `"v1.51"` on upstream `main` today, "v" prefix and all |
+| Malformed EDNS0 responses break Go/musl resolvers — the actual cause of the router's 502s | [`fix/dns-edns0-truncation`](https://github.com/rfay/socktainer/tree/fix/dns-edns0-truncation) | [#15](https://github.com/rfay/socktainer/issues/15), upstream [#329](https://github.com/socktainer/socktainer/issues/329) — upstream's own fix, [socktainer#348](https://github.com/socktainer/socktainer/pull/348), is open and unmerged (`REVIEW_REQUIRED`) as of 2026-09-16 |
 
 ### Blocks specific DDEV scenarios
 
@@ -71,7 +82,6 @@ upstream.
 |---|---|---|
 | `HostConfig.PortBindings` always nil on inspect, so a second project could never start | [`fix/port-bindings-inspect`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect) | none filed |
 | `docker cp` of a directory hangs forever — what DDEV's `CopyIntoVolume` does. Side-stepped for the global cache by the bind mount, not fixed | [`fix/cp-directory-hang`](https://github.com/rfay/socktainer/tree/fix/cp-directory-hang) | [#11](https://github.com/rfay/socktainer/issues/11) |
-| `PUT /containers/<id>/archive` 404s on a created-but-not-started container, blocking buildx's bootstrap | [`fix/archive-404-prestart`](https://github.com/rfay/socktainer/tree/fix/archive-404-prestart) | [#10](https://github.com/rfay/socktainer/issues/10) |
 | DNS gives multi-homed hostnames the wrong network's address | [`fix/dns-wrong-network-address`](https://github.com/rfay/socktainer/tree/fix/dns-wrong-network-address) | [#7](https://github.com/rfay/socktainer/issues/7) |
 
 ### Real bugs, not currently blocking DDEV
@@ -86,11 +96,11 @@ upstream.
 GET aborts on a dangling symlink (`/etc/mtab → /proc/mounts`), and PathStat reports the raw
 ext4 mode where the Docker CLI expects a Go `os.FileMode`. buildx works without it.
 
-`fix/archive-404-prestart` has a known gap: `HEAD /containers/{id}/archive` still 404s on a
-never-started container, because `ensureRootfsMaterialized()` is called from `getArchive` and
-`putArchive` but not from the stat path upstream
-[#377](https://github.com/socktainer/socktainer/pull/377) added. `docker cp` survives it —
-it HEADs, gets the 404, and PUTs anyway.
+`tmp/combined-verify-4` rebases cleanly onto current upstream `main` for eight of the nine fixes;
+`fix/dns-edns0-truncation` and `fix/dns-wrong-network-address` both touch
+`SocktainerDNSServer.swift` and needed a hand-merge (git `rerere` replayed the same resolution
+used building `combined-verify-3`) — verified coherent, both fixes' logic present, by reading
+the merged diff directly.
 
 ## Open blockers
 
@@ -168,6 +178,12 @@ and the docs already tell users to configure unprivileged ports. The macOS-speci
 that Linux offers `net.ipv4.ip_unprivileged_port_start=0` and macOS has no equivalent, so here
 it is mandatory rather than recommended.
 
+Refined by [apple/container#1985](https://github.com/apple/container/issues/1985) (opened
+2026-09-12): it's specifically an *explicit* low bind address that fails —
+`-p 127.0.0.1:80:80` still needs root — while `-p 80:80` or `-p 0.0.0.0:80:80` now succeeds
+unprivileged. DDEV always publishes without a bind address, so this doesn't change anything
+here; noted in case a future DDEV change starts binding to a specific host IP.
+
 ### No DNS on the built-in `default` network
 
 Containers get `nameserver 192.168.64.1` (the vmnet gateway) but nothing listens there, so
@@ -188,10 +204,29 @@ then dies with `Can't assign requested address` and cannot restart.
 buildkit node all need restarting afterwards, in that order, and dnsmasq only binds once a
 container is running on `default`.
 
+Now tracked upstream, none fixed: [apple/container#1884](https://github.com/apple/container/issues/1884)
+(open since 2026-07-02) matches the hours-of-churn degradation directly — a hung container can
+drop a custom network's gateway until it's killed. [apple/container#2135](https://github.com/apple/container/issues/2135)
+(opened 2026-08-30) is a narrower DNS symptom on `default`: some external hostnames SERVFAIL from
+inside a container while the host resolves them fine. [apple/container#2275](https://github.com/apple/container/issues/2275)
+(opened 2026-09-15, macOS 27.0) is a new one worth watching: the apiserver can hang forever on
+startup when `com.apple.pfd` is unresponsive, so every `container` command hangs with it.
+
 ### buildx's buildkit node
 
 On 1.3.0 with `fix/archive-404-prestart`, buildx bootstrapped its own node and both project
-images built — the manual pre-create is now a fallback, not a prerequisite. When it is needed:
+images built — the manual pre-create was a fallback, not a prerequisite, on that build. **On
+`tmp/combined-verify-4` it's a prerequisite again**, for a different reason: buildx's own
+bootstrap now fails outright. It creates the node, then PUTs files into `/etc` on the
+created-but-not-started container, which hits upstream's *new* pre-start-injection path
+(`stagePreStartInjection()`, replacing the fork's dropped `fix/archive-404-prestart` — see
+"Resolved") and throws `ArchiveUtilityError.archiveReadFailed(... ArchiveError error 9
+[unableToCloseArchive] ...)`. `docker-compose build` then fails with a bare "Something went
+wrong." Filed as [rfay/socktainer#17](https://github.com/rfay/socktainer/issues/17). Pre-creating
+the node first sidesteps it entirely — the container is already running by the time buildx PUTs
+into it, so the PUT goes through the ordinary running-container path instead of the new
+never-started one. Confirmed: `ddev start` fails without the pre-create, succeeds with it, on
+both `appletest` and `appletest2`. Always pre-create it:
 
 ```bash
 docker run -d --name buildx_buildkit_default --cap-add ALL \
@@ -239,7 +274,7 @@ rm -f ~/.socktainer/container.sock               # stale socket from the killed 
 
 # 2. clean-room build of the branch under test
 cd ~/workspace/socktainer
-git checkout tmp/combined-verify-3
+git checkout tmp/combined-verify-4
 rm -rf .build
 swift build -c release                           # ~450s from empty .build
 
@@ -261,7 +296,23 @@ Homebrew's `container` formula tracks upstream and will update itself out from u
 signed installer, and `/opt/homebrew/bin` sits ahead of `/usr/local/bin` on `PATH` — so always
 invoke `/usr/local/bin/container` explicitly for anything touching `system start`/`system
 status`, or the check in step 4 will look right by coincidence while every command runs the
-wrong binary.
+wrong binary. As of 2026-09-16 this is Homebrew's stated position, not a transient drift risk:
+[socktainer/socktainer#392](https://github.com/socktainer/socktainer/issues/392) asked
+homebrew-core to make its `socktainer` formula's `depends_on "container"` conditional so it
+wouldn't shadow the signed installer, and the maintainer refused outright — "if a user wants to
+use socktainer on Homebrew Core, they MUST NOT use Apple's pkg," since a self-contained prefix is
+one of Homebrew's own rules. **Do not `brew install socktainer` from homebrew-core at all on
+this machine.** It's sharper than passive drift, too: socktainer's `main` (not yet in the tagged
+v1.2.1 release) gained an auto-start bootstrap in
+[socktainer#374](https://github.com/socktainer/socktainer/pull/374) — on launch it runs
+`container system start` against whatever `container` binary `discoverContainerCLIPath()` finds
+on `PATH`, *before* its own version-compatibility check — so a machine with both installs
+present could have socktainer boot the wrong one ahead of the check that exists to catch exactly
+that. It's a no-op here only because step 3 above always starts `/usr/local/bin/container`
+before socktainer ever runs, so `ensureRunning()` sees it already reachable and does nothing;
+this order still matters even building from source, since the bootstrap is code in `main`, not a
+Homebrew packaging artifact. #392 is open with an agreed fix (stop auto-starting; fail fast with
+an explicit error instead) but no PR yet.
 
 `docker context create` may print `context "socktainer" already exists` right after the `rm`;
 harmless, `docker context inspect` confirms the fresh socket either way.
@@ -371,6 +422,41 @@ Options 5 and 6 compose: seed-then-`:ro` for read-only content, a proxy for down
 small per-project volumes for writable state. The ssh-agent socket directory is the one case
 not to bind-mount — unix sockets over virtiofs are unreliable.
 
+## Appendix: per-project cache volumes, considered and shelved (2026-09-16)
+
+Raised as "give each project its own `ddev-<project>-cache` volume instead of one shared
+`ddev-global-cache`, which would fix the Apple Container problem outright." Traced through the
+actual mount graph before writing this off, since it's a reasonable-sounding shortcut past the
+whole design-options table above.
+
+**It doesn't fix the blocker it targets.** The Apple Container constraint is per-volume — one
+RW attacher, any number of RO attachers, ever — not "shared across projects." `db`, `web`, and
+the single global `ddev-router` all mount `ddev-global-cache` `:rw` simultaneously
+(`app_compose_template.yaml:36,162`, `router_compose_template.yaml:46`), so the conflicting-RW
+problem already exists **inside one project**, before a second project is in the picture.
+Renaming the volume per-project doesn't change how many containers attach it RW at once; `web`
+and `db` in the same project still fight over it, and the one router serving every project still
+needs a way into each one.
+
+Closing it for real would mean splitting per **writer**, not per project — a
+`ddev-<project>-web-cache` (web's own npm/yarn/composer/corepack/bashhistory, sole writer) and a
+`ddev-<project>-db-cache` (db's own mysqlhistory, sole writer), plus solving the router's RW need
+separately (options 3/5 above: the router's own traefik-config path, host-bind-mounted or
+seed-then-`:ro`, so the router itself never needs `:rw`). That's real design and template work
+across every provider, not just this one, since compose templates aren't provider-conditional
+today. It also gives up the thing the current single volume is *for*: a fresh project reusing
+every other project's already-downloaded npm/yarn/composer cache instead of cold-starting its
+own. That's a cost paid on Docker Desktop, Podman, and OrbStack too, for a benefit that only
+matters on Apple Container.
+
+**Not worth it for what this is.** This whole file documents an exploration gated on socktainer's
+maturity, not a DDEV feature in flight — see "Where this stands" above. Restructuring how every
+project caches dependencies, on every provider, to accommodate one experimental provider that
+isn't close to shippable is the wrong trade. The bind-mount workaround already in place
+(`UseBindGlobalCache()`) costs one conditional and stays out of the way of every other provider;
+a cache-volume redesign would not. Left here rather than in the design-options table above
+because it was proposed and rejected as a shortcut, not folded into the options being weighed.
+
 ## Resolved
 
 Each of these was a blocker at some point; none needs re-investigating.
@@ -424,29 +510,67 @@ Each of these was a blocker at some point; none needs re-investigating.
 - **Container names with underscores skipped for DNS registration** — investigated against a
   live daemon and could not reproduce ([rfay/socktainer#14](https://github.com/rfay/socktainer/issues/14),
   closed).
+- **`PUT`/`GET`/`HEAD /containers/{id}/archive` 404'd on a created-but-not-started
+  container**, blocking buildx's bootstrap and `docker cp` into a fresh container. Was carried
+  as `fix/archive-404-prestart` (clone the rootfs bundle early via a local reproduction of the
+  runtime's own bundle-materialization step). Upstream fixed it independently, with a different
+  and better design merged 2026-08-30/31: GET/HEAD resolve the path straight out of
+  `runtime-configuration.json`'s `containerRootFilesystem.source` (the shared image snapshot)
+  when `rootfs.ext4` doesn't exist yet
+  ([socktainer#372](https://github.com/socktainer/socktainer/pull/372), fixing
+  [socktainer#370](https://github.com/socktainer/socktainer/issues/370)); PUT stages the archive
+  and injects it as a bind mount at container start when `startedDate == nil`
+  ([socktainer#379](https://github.com/socktainer/socktainer/pull/379), fixing
+  [socktainer#363](https://github.com/socktainer/socktainer/issues/363)). Verified by reading
+  current `upstream/main` directly — no bundle-clone step remains, no gap on HEAD. Dropped from
+  the fork; [rfay/socktainer#10](https://github.com/rfay/socktainer/issues/10) closed
+  2026-09-16 with this explanation. Not yet in a tagged release (still v1.2.1).
 
-## Current machine state (2026-08-28)
+## Current machine state (2026-09-16)
 
-- Apple `container` 1.3.0 from the signed installer at `/usr/local`; Homebrew's copy is also
-  1.3.0, so the two no longer disagree. `container-apiserver` running.
+- Apple `container` **1.4.1** from the signed installer at `/usr/local`, upgraded this session
+  (was 1.3.0) via the notarized `container-1.4.1-installer-signed.pkg` from the
+  [apple/container 1.4.1 release](https://github.com/apple/container/releases/tag/1.4.1).
+  Homebrew's `container` is also 1.4.1, coincidentally matching right now — that's luck, not a
+  guarantee, and the two can still drift apart; see the Homebrew guidance under "Teardown and
+  clean rebuild." `container-apiserver` running.
 - socktainer running by hand from `~/workspace/socktainer/.build/release/socktainer`, built
-  from `tmp/combined-verify-3`, with no flags — `--no-check-compatibility` is no longer needed
-  now that [socktainer#351](https://github.com/socktainer/socktainer/pull/351) is in the base
-  and the pins match the running apiserver. The branch is committed but **not pushed**.
+  from `tmp/combined-verify-4` (replaces `tmp/combined-verify-3`), no flags. Its own
+  compatibility check warns `detected 1.4.1 but this socktainer binary requires 1.2.2` — the
+  pin in `AppleContainerVersionCheck` hasn't moved to track 1.4.1, but it's a printed warning,
+  not fatal, and everything tested worked regardless. socktainer now auto-creates the
+  `socktainer` docker context itself on startup (`docker context create` is no longer a manual
+  step; harmless if run anyway — it'll just report the context already exists). The branch is
+  committed but **not pushed** — see the push checklist below.
 - `brew services start socktainer` is not a usable substitute: the service runs with
   `HOME=/opt/homebrew/var/run/socktainer`, so it binds a different socket and leaves the
-  `socktainer` docker context talking to a dead one. Run it by hand.
+  `socktainer` docker context talking to a dead one. Run it by hand. Homebrew's own
+  `socktainer` formula (not the `socktainer/homebrew-tap`) is now a much stronger reason to
+  avoid Homebrew here at all — see the `depends_on "container"` discussion above.
 - Docker context is `socktainer`. Switch away only after `ddev poweroff`.
-- Projects: `appletest` (`~/tmp/appletest`) and `appletest2` (`~/tmp/appletest2`) running and
-  serving; `appletest3` (`~/tmp/appletest3`) stopped. All need
+- Verified end to end this session: `ddev start` on `appletest` (fresh images, cold buildkit —
+  1m30s) and `appletest2` (warm buildkit — 31s) both succeeded, both served HTTP 200
+  simultaneously through the shared router, `ddev exec` and `ddev mysql` both worked.
+  `appletest3` (`~/tmp/appletest3`) left stopped, not re-tested. All three need
   `omit_containers: [ddev-ssh-agent]`.
-- `keepalive` and the root `dnsmasq` on `192.168.64.1:53` are up per the cold-start recipe;
-  `buildx_buildkit_default` was created by buildx itself. Stop dnsmasq with
-  `sudo pkill -f "listen-address=192.168.64.1"`.
+- **`buildx_buildkit_default` had to be pre-created by hand this time** — letting buildx
+  bootstrap it itself now fails (see "buildx's buildkit node" and
+  [rfay/socktainer#17](https://github.com/rfay/socktainer/issues/17)), a regression from
+  dropping `fix/archive-404-prestart` in favor of upstream's own, buggier replacement.
+- `keepalive` and the root `dnsmasq` on `192.168.64.1:53` are up per the cold-start recipe. Stop
+  dnsmasq with `sudo pkill -f "listen-address=192.168.64.1"`.
 - `traefik_monitor_port` is **11999** in `~/.ddev/global_config.yaml` (10999 is OrbStack's).
   Revert when done here if that matters elsewhere.
 - The global `~/.ddev/router-compose.healthcheck.yaml` override remains **removed** (backup at
   `~/tmp/router-compose.healthcheck.yaml.bak`); do not restore it.
-- `make staticrequired` passes on the DDEV branch. No Go tests have been run under socktainer —
-  the suite assumes a Docker provider. socktainer's own `swift test` cannot run in this
-  environment: the tests compile, but loading `Testing.framework` needs full Xcode.
+- `make staticrequired` passes on the DDEV branch (only `HANDOFF.md` changed this session; no Go
+  code touched). No Go tests have been run under socktainer — the suite assumes a Docker
+  provider. socktainer's own `swift test` cannot run in this environment: the tests compile, but
+  loading `Testing.framework` needs full Xcode.
+
+### Push checklist (not run automatically — see the repo's own push policy)
+
+- `rfay/socktainer`: `git push rfay tmp/combined-verify-4` — the new integration branch replacing
+  `tmp/combined-verify-3` (still on the remote, safe to leave or delete later).
+- `rfay/ddev` (or wherever this branch's remote points): this session's `HANDOFF.md` commit(s) on
+  `20260802_rfay_apple_container_experiment`.
