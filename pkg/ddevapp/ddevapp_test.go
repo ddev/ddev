@@ -4261,6 +4261,84 @@ func TestWebserverMissingIndexExplanation(t *testing.T) {
 	}
 }
 
+// TestWebserverAppLevel404PassesThrough checks that a 404 the application
+// itself returns, with a body, reaches the client unchanged on nginx-fpm.
+//
+// nginx only intercepts a FastCGI error when an error_page exists for that
+// status, so the `error_page 404` in common.d/404.conf (see
+// TestWebserverMissingIndexExplanation) turned the `fastcgi_intercept_errors
+// on` that the magento, magento2 and maho templates carried from a no-op into
+// a rule that replaced every app-level 404 by ddev-webserver's own
+// explanation. Those three types are checked, with php as the control whose
+// template has always said off. The directive is nginx-only, so apache-fpm is
+// not exercised here.
+func TestWebserverAppLevel404PassesThrough(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
+	assert := asrt.New(t)
+	packageDir, _ := os.Getwd()
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+	appDir := filepath.Join(testDir, t.Name())
+	err := os.MkdirAll(appDir, 0755)
+	require.NoError(t, err)
+	err = os.Chdir(appDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(appDir, true)
+	require.NoError(t, err)
+	app.WebserverType = nodeps.WebserverNginxFPM
+	app.DisableSettingsManagement = true
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(packageDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
+
+	const marker = "app-level 404 with a body"
+	for _, tc := range []struct {
+		appType string
+		docroot string
+	}{
+		{nodeps.AppTypePHP, ""},
+		{nodeps.AppTypeMagento, ""},
+		{nodeps.AppTypeMagento2, "pub"},
+		{nodeps.AppTypeMaho, ""},
+	} {
+		docrootDir := filepath.Join(appDir, tc.docroot)
+		err = os.MkdirAll(docrootDir, 0755)
+		require.NoError(t, err)
+		err = os.WriteFile(filepath.Join(docrootDir, "index.php"), []byte("<?php\nhttp_response_code(404);\necho '"+marker+"';\n"), 0644)
+		require.NoError(t, err)
+
+		app.Type = tc.appType
+		app.Docroot = tc.docroot
+		err = app.WriteConfig()
+		require.NoError(t, err)
+
+		testcommon.ClearDockerEnv()
+		startErr := app.Start()
+		if startErr != nil {
+			appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+			assert.NoError(getLogsErr)
+			t.Fatalf("app.Start() failure for Type=%s: err=%v, health:\n%s\n\nlogs:\n=====\n%s\n=====\n", tc.appType, startErr, health, appLogs)
+		}
+
+		// The route does not exist on disk, so the front controller answers it.
+		out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/route-handled-by-the-app", testcommon.WithExpectStatus(http.StatusNotFound))
+		require.NoError(t, err)
+		require.Contains(t, out, marker, "for Type=%s expected the app's own 404 body to pass through, got: %s", tc.appType, out)
+		require.Empty(t, resp.Header.Get("X-Ddev-404-Source"), "for Type=%s expected no X-Ddev-404-Source header on an app-generated 404", tc.appType)
+
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+	}
+}
+
 // TestWebserverPhpstatusUnderMutagen checks /phpstatus (aliased to
 // /var/www/phpstatus.php, outside the docroot) on both webservers under Mutagen,
 // whose nocopy volume at /var/www shadows that file. On apache the
