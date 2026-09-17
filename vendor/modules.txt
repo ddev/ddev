@@ -69,6 +69,9 @@ github.com/VividCortex/ewma
 # github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 ## explicit
 github.com/acarl005/stripansi
+# github.com/agext/levenshtein v1.2.3
+## explicit
+github.com/agext/levenshtein
 # github.com/amplitude/analytics-go v1.3.1
 ## explicit; go 1.17
 github.com/amplitude/analytics-go/amplitude
@@ -457,7 +460,12 @@ github.com/moby/buildkit/client/ociindex
 github.com/moby/buildkit/errdefs
 github.com/moby/buildkit/exporter/containerimage/exptypes
 github.com/moby/buildkit/exporter/exptypes
+github.com/moby/buildkit/frontend/dockerfile/command
 github.com/moby/buildkit/frontend/dockerfile/dfgitutil
+github.com/moby/buildkit/frontend/dockerfile/instructions
+github.com/moby/buildkit/frontend/dockerfile/linter
+github.com/moby/buildkit/frontend/dockerfile/parser
+github.com/moby/buildkit/frontend/dockerfile/shell
 github.com/moby/buildkit/frontend/gateway/client
 github.com/moby/buildkit/frontend/gateway/grpcclient
 github.com/moby/buildkit/frontend/gateway/pb
@@ -489,6 +497,7 @@ github.com/moby/buildkit/util/resolver/limited
 github.com/moby/buildkit/util/resolver/retryhandler
 github.com/moby/buildkit/util/sshutil
 github.com/moby/buildkit/util/stack
+github.com/moby/buildkit/util/suggest
 github.com/moby/buildkit/util/system
 github.com/moby/buildkit/util/tracing
 github.com/moby/buildkit/util/tracing/childprocess
