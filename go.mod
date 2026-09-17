@@ -27,6 +27,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/maruel/natural v1.3.0
 	github.com/mattn/go-isatty v0.0.24
+	github.com/moby/buildkit v0.33.0
 	github.com/moby/moby/api v1.56.0
 	github.com/moby/moby/client v0.6.0
 	github.com/moby/term v0.5.2
@@ -115,7 +116,6 @@ require (
 	github.com/mattn/go-shellwords v1.0.14 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/moby/buildkit v0.33.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/go-archive v0.3.3 // indirect
 	github.com/moby/locker v1.0.1 // indirect
