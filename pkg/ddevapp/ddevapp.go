@@ -344,7 +344,11 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 		services[shortName] = map[string]any{}
 		services[shortName]["status"] = string(c.State.Status)
 		services[shortName]["full_name"] = fullName
-		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
+		var composeService composeTypes.ServiceConfig
+		if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
+			composeService = app.ComposeYaml.Services[shortName]
+		}
+		services[shortName]["image"] = describeImageForService(composeService, c.Config.Image, app.Name)
 		services[shortName]["short_name"] = shortName
 
 		var exposedPrivatePorts []int
@@ -481,8 +485,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 			services[serviceName]["status"] = SiteStopped
 			services[serviceName]["short_name"] = serviceName
 			services[serviceName]["full_name"] = fmt.Sprintf("ddev-%s-%s", app.Name, serviceName)
-			// Strip the -built suffix from image names, just like for running containers
-			services[serviceName]["image"] = strings.TrimSuffix(composeService.Image, fmt.Sprintf("-%s-built", app.Name))
+			services[serviceName]["image"] = describeImageForService(composeService, composeService.Image, app.Name)
 
 			// Extract port information from docker-compose configuration
 			portSet := make(map[int]bool)
@@ -2349,6 +2352,10 @@ func (app *DdevApp) FindServiceImages(serviceNames []string) ([]string, error) {
 	}
 	for name, service := range app.ComposeYaml.Services {
 		if len(serviceNames) > 0 && !slices.Contains(serviceNames, name) {
+			continue
+		}
+		if baseImages := resolveBuildBaseImages(service); baseImages != nil {
+			images = append(images, baseImages...)
 			continue
 		}
 		image := service.Image
