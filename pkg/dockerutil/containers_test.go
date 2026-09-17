@@ -598,8 +598,8 @@ hi this is a test file
 // local directory
 func TestCopyFromContainer(t *testing.T) {
 	assert := asrt.New(t)
-	containerSourceDir := "/var/tmp/backdrop_drush_commands/backdrop-drush-extension"
-	containerExpectedFile := "backdrop.drush.inc"
+	containerSourceDir := "/etc/skel"
+	containerExpectedFile := ".bashrc"
 	cid, err := dockerutil.FindContainerByName(testContainerName)
 	require.NoError(t, err)
 	require.NotNil(t, cid)
