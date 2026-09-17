@@ -12,7 +12,6 @@
     "ddev-windows-dockerforwindows-nfs",
     "ddev-windows-installer",
     "wsl2-docker-desktop",
-    "wsl2-docker-inside",
     "wsl2-mirrored"
   ]
 }

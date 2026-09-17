@@ -14,6 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 
 const HISTORY_PATH = process.argv[2];
@@ -30,6 +31,18 @@ const CONFIG = JSON.parse(fs.readFileSync(path.join(__dirname, 'pipelines.json')
 // failure at the end (see main()) so a broken leg doesn't go unnoticed the
 // way a fully-silent skip would.
 let hadErrors = false;
+// Mirrors the ERROR lines logged below, so the workflow's final failing step
+// can print what actually went wrong instead of pointing back at these logs.
+const errors = [];
+
+// Multiline GITHUB_OUTPUT values use a `name<<delimiter` ... `delimiter`
+// block; a random delimiter avoids a collision with an error message that
+// happens to contain the literal word used as a delimiter.
+function writeMultilineOutput(name, lines) {
+  if (!process.env.GITHUB_OUTPUT || !lines.length) return;
+  const delimiter = `ghadelim_${crypto.randomUUID()}`;
+  fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}<<${delimiter}\n${lines.join('\n')}\n${delimiter}\n`);
+}
 
 async function buildkiteApi(url) {
   const token = process.env.BUILDKITE_API_TOKEN;
@@ -91,8 +104,10 @@ async function latestBuildkiteResults(pipeline) {
         );
       }
     } catch (err) {
-      console.error(`ERROR collecting ${pipeline}'s ${artifact.filename}: ${err.message}`);
+      const message = `ERROR collecting ${pipeline}'s ${artifact.filename}: ${err.message}`;
+      console.error(message);
       hadErrors = true;
+      errors.push(message);
     }
   }
   return results;
@@ -174,8 +189,10 @@ async function main() {
       try {
         results.push(...(await latestBuildkiteResults(pipeline)));
       } catch (err) {
-        console.error(`ERROR collecting ${pipeline}: ${err.message}`);
+        const message = `ERROR collecting ${pipeline}: ${err.message}`;
+        console.error(message);
         hadErrors = true;
+        errors.push(message);
       }
     }
   }
@@ -184,8 +201,10 @@ async function main() {
     const linuxResult = latestLinuxResult();
     if (linuxResult) results.push(linuxResult);
   } catch (err) {
-    console.error(`ERROR collecting Linux: ${err.message}`);
+    const message = `ERROR collecting Linux: ${err.message}`;
+    console.error(message);
     hadErrors = true;
+    errors.push(message);
   }
 
   if (!results.length) {
@@ -226,6 +245,7 @@ main()
     if (process.env.GITHUB_OUTPUT) {
       fs.appendFileSync(process.env.GITHUB_OUTPUT, `had_errors=${hadErrors}\n`);
     }
+    writeMultilineOutput('errors', errors);
     if (hadErrors) {
       console.error('Completed with errors on one or more sources (see ERROR lines above). Any clean results were still collected and written; the workflow will report failure after publishing them.');
     }
@@ -239,5 +259,6 @@ main()
     if (process.env.GITHUB_OUTPUT) {
       fs.appendFileSync(process.env.GITHUB_OUTPUT, 'had_errors=true\n');
     }
+    writeMultilineOutput('errors', [err.message]);
     process.exit(1);
   });
