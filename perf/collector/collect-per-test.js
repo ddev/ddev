@@ -22,6 +22,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 
 const args = process.argv.slice(2);
@@ -30,6 +31,18 @@ const [RUNTIME_HISTORY_PATH, PER_TEST_HISTORY_PATH, CURSOR_PATH] = positional;
 const sinceArg = args.find((a) => a.startsWith('--since='));
 
 let hadErrors = false;
+// Mirrors the ERROR lines logged below, so the workflow's final failing step
+// can print what actually went wrong instead of pointing back at these logs.
+const errors = [];
+
+// Multiline GITHUB_OUTPUT values use a `name<<delimiter` ... `delimiter`
+// block; a random delimiter avoids a collision with an error message that
+// happens to contain the literal word used as a delimiter.
+function writeMultilineOutput(name, lines) {
+  if (!process.env.GITHUB_OUTPUT || !lines.length) return;
+  const delimiter = `ghadelim_${crypto.randomUUID()}`;
+  fs.appendFileSync(process.env.GITHUB_OUTPUT, `${name}<<${delimiter}\n${lines.join('\n')}\n${delimiter}\n`);
+}
 
 const DEFAULT_BACKFILL_DAYS = 7;
 
@@ -224,8 +237,10 @@ async function main() {
     try {
       events = runtimeRow.source === 'github' ? githubTestEvents(runtimeRow) : await buildkiteTestEvents(runtimeRow);
     } catch (err) {
-      console.error(`ERROR extracting per-test events for ${runtimeRow.source} ${runtimeRow.workflow} ${runtimeRow.run_id}: ${err.message}`);
+      const message = `ERROR extracting per-test events for ${runtimeRow.source} ${runtimeRow.workflow} ${runtimeRow.run_id}: ${err.message}`;
+      console.error(message);
       hadErrors = true;
+      errors.push(message);
       continue; // don't advance latestProcessed past a run we failed to read -- retry it next time
     }
 
@@ -279,6 +294,7 @@ if (require.main === module) {
       if (process.env.GITHUB_OUTPUT) {
         fs.appendFileSync(process.env.GITHUB_OUTPUT, `per_test_had_errors=${hadErrors}\n`);
       }
+      writeMultilineOutput('errors', errors);
       if (hadErrors) {
         console.error('Completed with errors on one or more runs (see ERROR lines above). Any clean results were still collected and written.');
       }
@@ -288,6 +304,7 @@ if (require.main === module) {
       if (process.env.GITHUB_OUTPUT) {
         fs.appendFileSync(process.env.GITHUB_OUTPUT, 'per_test_had_errors=true\n');
       }
+      writeMultilineOutput('errors', [err.message]);
       process.exit(1);
     });
 }

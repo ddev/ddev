@@ -183,6 +183,18 @@ jobs:
       # shouldn't block the legs that worked.
       - name: Fail if any source had a collection error
         if: steps.collect.outputs.had_errors == 'true' || steps.collect-test-runtime.outputs.test_runtime_had_errors == 'true' || steps.collect-per-test.outputs.per_test_had_errors == 'true'
+        # Each collect script's own ERROR lines are the same text passed through
+        # here via GITHUB_OUTPUT -- an intermediate env var, not direct ${{ }}
+        # interpolation into the script, since that text ultimately comes from
+        # Buildkite/GitHub API error bodies this workflow doesn't control.
+        env:
+          COLLECT_ERRORS: ${{ steps.collect.outputs.errors }}
+          TEST_RUNTIME_ERRORS: ${{ steps.collect-test-runtime.outputs.errors }}
+          PER_TEST_ERRORS: ${{ steps.collect-per-test.outputs.errors }}
         run: |
-          echo "One or more sources failed to collect this run -- see the 'Collect results' / 'Collect test-runtime results' / 'Collect per-test results' step's ERROR lines above."
+          echo "One or more sources failed to collect this run:"
+          echo ""
+          [ -n "$COLLECT_ERRORS" ] && printf '%s\n' "$COLLECT_ERRORS"
+          [ -n "$TEST_RUNTIME_ERRORS" ] && printf '%s\n' "$TEST_RUNTIME_ERRORS"
+          [ -n "$PER_TEST_ERRORS" ] && printf '%s\n' "$PER_TEST_ERRORS"
           exit 1
