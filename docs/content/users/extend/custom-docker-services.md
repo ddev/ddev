@@ -5,10 +5,10 @@ search:
 
 # Custom Docker Compose Services
 
-When you need services that aren't available as DDEV add-ons, or require deep customization beyond what add-ons provide, you can create custom Docker Compose services using `docker-compose.*.yaml` files.
+When you need services that aren't available as DDEV add-ons, or require deep customization beyond what add-ons provide, you can create custom Docker Compose services using `docker-compose.*.yaml` files. For how DDEV merges these files and the conventions your service should follow (labels, container naming, the `build:`/`-built` tag pattern, port exposure), see [Defining Additional Services with Docker Compose](custom-compose-files.md).
 
 !!!tip "From Custom Services to Add-ons"
-    Many successful custom services eventually become DDEV add-ons so they can be shared with teams, between projects, or with the broader community. If you find your custom service useful and stable, consider converting it to an add-on using the [DDEV Add-on Template](https://github.com/ddev/ddev-addon-template).
+    Many successful custom services eventually become DDEV add-ons so they can be shared with teams, between projects, or with the broader community. If you find your custom service useful and stable, convert it to an add-on using the [DDEV Add-on Template](https://github.com/ddev/ddev-addon-template) and see [Creating Add-ons](creating-add-ons.md).
 
 ## When to Use Custom Services
 
@@ -27,9 +27,11 @@ When you need services that aren't available as DDEV add-ons, or require deep cu
 
 See [Using Add-ons](using-add-ons.md) for pre-built add-ons.
 
+Whichever you choose, the same conventions apply once you have a compose file — see [Defining Additional Services with Docker Compose](custom-compose-files.md#conventions-for-defining-additional-services).
+
 ## Creating Custom Services
 
-Create `docker-compose.*.yaml` files in your project's `.ddev` directory. DDEV automatically processes any files matching this pattern and merges them into the full docker-compose configuration.
+A custom service typically runs a container based on a Docker image and provides a specific "service". It's defined in a `.ddev/docker-compose.*.yaml`. DDEV automatically processes any files matching this pattern and merges them into the full Compose configuration.
 
 ### Basic Service Example
 
@@ -45,7 +47,7 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
     restart: "no"
-    ports:
+    expose:
       - "8080"
     environment:
       - VIRTUAL_HOST=${DDEV_HOSTNAME}
@@ -57,56 +59,11 @@ services:
 
 ### Service Configuration Best Practices
 
-#### Required Labels
-
-Always include these labels for proper DDEV integration:
-
-```yaml
-# These two labels are added automatically since DDEV v1.25.2+
-labels:
-  com.ddev.site-name: ${DDEV_SITENAME}
-  com.ddev.approot: ${DDEV_APPROOT}
-```
-
-#### Container Naming
-
-Use consistent naming with the DDEV project:
-
-```yaml
-container_name: "ddev-${DDEV_SITENAME}-servicename"
-```
-
-#### Restart Policy
-
-Set restart policy to prevent issues:
-
-```yaml
-restart: "no"
-```
-
-#### Port Exposure
-
-For HTTP services that should be accessible via ddev-router:
-
-```yaml
-ports:
-  - "8080"  # Expose port to Docker network
-environment:
-  - VIRTUAL_HOST=${DDEV_HOSTNAME}
-  - HTTP_EXPOSE=8080:8080    # HTTP access
-  - HTTPS_EXPOSE=8081:8080   # HTTPS access
-```
-
-For direct port binding (can cause conflicts between projects):
-
-```yaml
-ports:
-  - "9999:9999"  # Bind to host port 9999
-```
+Required labels, container naming, restart policy, and HTTP vs. direct port binding are covered in [Conventions for Defining Additional Services](custom-compose-files.md#conventions-for-defining-additional-services) — follow those for every custom service.
 
 #### Volume Mounts
 
-Mount your `.ddev` directory for configuration access:
+Provide a bind-mount of your `.ddev` directory for configuration access:
 
 ```yaml
 volumes:
@@ -130,6 +87,7 @@ The `x-ddev` extension field lets you customize DDEV behavior per service in you
 | [`describe-info`](#customizing-ddev-describe-output) | Text shown in the `INFO` column of `ddev describe` |
 | [`ssh-shell`](../extend/in-container-configuration.md#changing-ddev-ssh-shell) | Shell used by `ddev ssh -s <service>` for this service |
 | [`omit-ddev-labels`](#omitting-comddev-labels-from-a-service) | Skip injecting `com.ddev.*` labels onto this service |
+<!-- TODO: support the ssh-user key when https://github.com/ddev/ddev/pull/8829 lands -->
 
 ### Customizing `ddev describe` Output
 
@@ -207,9 +165,37 @@ volumes:
 
 ## Advanced Service Examples
 
+### Service with a Custom Build
+
+If the stock image needs an extra tool or package, add a `build:` section instead of a plain `image:`. Follow the `-${DDEV_SITENAME}-built` tag convention from [Conventions for Defining Additional Services](custom-compose-files.md#conventions-for-defining-additional-services), and give the tag a unique segment per service, as shown here, so two build services sharing the same base image don't overwrite each other's built image.
+
+Create `.ddev/docker-compose.myservice.yaml`:
+
+```yaml
+services:
+  myservice:
+    container_name: "ddev-${DDEV_SITENAME}-myservice"
+    image: ${BASE_IMAGE:-nginx:alpine}-${DDEV_SITENAME}-myservice-built
+    build:
+      dockerfile_inline: |
+        ARG BASE_IMAGE="debian"
+        FROM $${BASE_IMAGE}
+        RUN apt-get update && apt-get install -y curl
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-debian}
+    # These two labels are added automatically since DDEV v1.25.2+
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    restart: "no"
+```
+
 ### SQL Server Database Service
 
 This example shows a custom SQL Server database service, useful when you need a database not natively supported by DDEV.
+
+!!!tip "A maintained add-on already exists"
+    This example grew into the [`ddev-sqlsrv`](https://github.com/ddev/ddev-sqlsrv) add-on. Its `sqlsrv` service skips host `ports:` entirely and is reached only from the `web` container over the Docker network, so it avoids the port conflict noted below — use that pattern instead of the one here unless you specifically need to connect from the host.
 
 Create `.ddev/docker-compose.sqlsrv.yaml`:
 
@@ -246,6 +232,9 @@ volumes:
 
 ### Service with Custom Configuration
 
+!!!tip "A maintained add-on already exists"
+    This example grew into the [ddev-elasticsearch](https://github.com/ddev/ddev-elasticsearch) add-on, which also adds a `healthcheck:` and supports switching Elasticsearch major versions.
+
 Create `.ddev/docker-compose.elasticsearch.yaml`:
 
 ```yaml
@@ -258,7 +247,7 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
     restart: "no"
-    ports:
+    expose:
       - "9200"
     environment:
       - VIRTUAL_HOST=${DDEV_HOSTNAME}
@@ -278,6 +267,11 @@ volumes:
 
 ### Multi-Service Setup
 
+It's usually easier and clearer to have a separate `docker-compose.*.yaml` file for each service, but it's possible to define more than one in a single file.
+
+!!!tip "Maintained add-ons already exist"
+    These two grew into the [ddev-redis](https://github.com/ddev/ddev-redis) and [ddev-memcached](https://github.com/ddev/ddev-memcached) add-ons. Neither binds a host port at all, since both are reached only from the `web` container — that's why `expose:`, not `ports:`, is used below.
+
 Create `.ddev/docker-compose.cache.yaml`:
 
 ```yaml
@@ -290,7 +284,7 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
     restart: "no"
-    ports:
+    expose:
       - "6379"
 
   memcached:
@@ -301,26 +295,13 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
     restart: "no"
-    ports:
+    expose:
       - "11211"
 ```
 
 ## Environment Variables and Configuration
 
-### Available DDEV Variables
-
-Here is a compressed list of commonly used variables in your service definitions:
-
-- `${DDEV_SITENAME}` - Project name
-- `${DDEV_HOSTNAME}` - Comma-separated list of FQDN hostnames
-- `${DDEV_TLD}` - Default top-level domain (`ddev.site`)
-- `${DDEV_APPROOT}` - Full path to project root
-- `${DDEV_DOCROOT}` - Document root (relative to project root)
-- `${DDEV_PHP_VERSION}` - PHP version
-- `${DDEV_WEBSERVER_TYPE}` - Web server type
-- `${DDEV_DATABASE_FAMILY}` - Database family (`mysql`, `postgres`)
-
-For a full list, please see [Environment Variables Provided](custom-commands.md#environment-variables-provided).
+DDEV variables such as `${DDEV_SITENAME}` and `${DDEV_APPROOT}` are available for interpolation in your service definitions; see [Environment Variables Provided](custom-commands.md#environment-variables-provided) for the full list.
 
 ### Custom Environment Variables
 
@@ -351,148 +332,8 @@ ddev dotenv set .ddev/.env.myservice --memory-limit 1024m --debug-mode true
 
 Variables from every `.ddev/.env*` file are available for interpolation here, but only a file named after an existing service sets variables inside that container. See [Environment Variables](../configuration/environment-variables.md) for the file naming rules, the global `$HOME/.ddev/.env*` equivalents, and where to keep a secret.
 
-## Testing and Debugging Services
+## Debugging a Custom Service
 
-### Check Service Status
+`ddev logs --service myservice` and `ddev exec --service myservice bash` cover most cases; see [Interacting with Additional Services](custom-compose-files.md#interacting-with-additional-services). To see how DDEV merged your compose files, run `ddev utility compose-config`.
 
-```bash
-ddev logs myservice
-```
-
-### Verify Configuration
-
-```bash
-ddev utility compose-config
-```
-
-This shows the complete merged docker-compose configuration.
-
-### Connect to Service
-
-```bash
-ddev exec --service=myservice bash
-```
-
-### Network Connectivity
-
-Test connectivity from the web container:
-
-```bash
-ddev exec "curl -s http://myservice:8080/health"
-```
-
-## Service Integration Patterns
-
-### Database Integration
-
-Add database connection info to web container in `.ddev/docker-compose.web-env.yaml`:
-
-```yaml
-services:
-  web:
-    environment:
-      - MYDB_HOST=mydb
-      - MYDB_PORT=5432
-      - MYDB_DATABASE=myproject
-      - MYDB_USER=db
-      - MYDB_PASSWORD=db
-```
-
-### Configuration File Mounting
-
-Mount configuration from your project in `.ddev/docker-compose.config.yaml`:
-
-```yaml
-services:
-  myservice:
-    volumes:
-      - "./config/myservice.conf:/etc/myservice/myservice.conf:ro"
-```
-
-### Initialization Scripts
-
-Run initialization scripts in `.ddev/docker-compose.init.yaml`:
-
-```yaml
-services:
-  myservice:
-    volumes:
-      - "./scripts/init.sh:/docker-entrypoint-initdb.d/init.sh:ro"
-```
-
-## Troubleshooting
-
-### Common Issues
-
-**Port conflicts**: Multiple projects using the same service may conflict. Use project-specific ports or let DDEV handle routing.
-
-**Service won't start**: Check `ddev logs servicename` for error messages.
-
-**Network connectivity**: Ensure services are on the same Docker network (automatic with DDEV).
-
-**File permissions**: Use appropriate volume mount options (`:cached`, `:ro`).
-
-### Debugging Steps
-
-1. Verify syntax: `ddev utility compose-config`
-2. Check logs: `ddev logs servicename`
-3. Test connectivity: `ddev exec "ping servicename"`
-4. Inspect container: `ddev exec --service=servicename bash`
-
-## Migration from ddev-contrib
-
-Many services previously documented in [ddev-contrib](https://github.com/ddev/ddev-contrib) have been converted to official add-ons. Check [DDEV Add-on Registry](https://addons.ddev.com/) first before creating custom services.
-
-### Still Available in ddev-contrib
-
-- **Old PHP Versions**: [Old PHP Versions](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/old_php)
-- **Specialized configurations**: Various experimental and niche services
-
-## Best Practices
-
-### Performance
-
-- Use specific image tags instead of `latest`
-- Set appropriate resource limits
-- Use volume caching options (`:cached`)
-- Minimize container layers and size
-
-### Security
-
-- Don't expose unnecessary ports to the host
-- Use non-root users when possible
-
-### Maintainability
-
-- Document your service configuration
-- Use meaningful container names
-- Group related services in single files
-- Comment complex configurations
-
-### Team Sharing
-
-- Include service documentation in your project readme
-- Use environment variables for customizable values
-- Provide setup and testing instructions
-- Consider creating an add-on for reusable services
-
-## Converting to Add-ons
-
-If your custom service becomes stable and useful for multiple projects, consider converting it to a DDEV add-on. This allows you to:
-
-- Share the service with your team across projects
-- Contribute to the DDEV community
-- Benefit from automatic installation and configuration
-- Add version management and updates
-
-**Steps to convert:**
-
-1. Create an add-on repository from [DDEV Add-on Template](https://github.com/ddev/ddev-addon-template)
-2. Move your service configuration to the add-on
-3. Add installation actions and configuration options
-4. Create tests and documentation
-5. Publish and share with the community
-
-See [Creating Add-ons](creating-add-ons.md) for detailed instructions.
-
-Custom Docker Compose services provide the ultimate flexibility for customizing your DDEV environment. While add-ons are recommended for common services, custom services let you integrate exactly what your project needs, with the potential to evolve into shareable add-ons.
+Custom services let you integrate exactly what your project needs, with the potential to evolve into a shareable add-on — see the tip at the top of this page.
