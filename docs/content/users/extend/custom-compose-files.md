@@ -113,6 +113,8 @@ When defining additional services for your project, we recommend following these
 
     This enables DDEV to operate in [offline mode](../usage/offline.md) once the base image has been pulled.
 
+    If more than one service builds from the same base image, give each one's tag a unique segment, for example `${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-dummy-service-built`, so their built images don't overwrite each other. DDEV resolves the real base image to pre-pull from the Dockerfile itself, not from this tag, so any unique tag works.
+
 * Exposing ports for service: you can expose the port for a service to be accessible as `projectname.ddev.site:portNum` while your project is running. This is achieved by the following configurations for the container(s) being added:
 
     * Define only the internal port in the `expose` section for docker-compose; use `ports:` only if the port will be bound directly to `localhost`, as may be required for non-HTTP services.
