@@ -1,0 +1,3 @@
+# Apache directory listing, which conf-enabled/403.conf must not take over.
+# nginx ignores .htaccess; its equivalent is tested from testdata/nginx.
+Options +Indexes
