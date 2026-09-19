@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -10,6 +11,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/require"
 )
 
@@ -58,6 +60,53 @@ func TestDdevApp_StartOptionalProfiles(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, container)
 	}
+}
+
+// TestStartWithExitedProfileContainer makes sure that a container left behind by a
+// profile which is not active does not fail `ddev start`.
+// See https://github.com/ddev/ddev/issues/8830
+func TestStartWithExitedProfileContainer(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(app.GetConfigPath("docker-compose.busybox.yaml"))
+	})
+
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.busybox.yaml"), app.GetConfigPath("docker-compose.busybox.yaml"))
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	err = app.StartOptionalProfiles([]string{"busybox-first"})
+	require.NoError(t, err)
+
+	// Leave every project container "exited", as a restart of the Docker provider
+	// does. The whole project must be down: Compose prunes the profile's leftover
+	// container itself while the rest of the project is still up.
+	ctx, apiClient, err := dockerutil.GetDockerClient()
+	require.NoError(t, err)
+	projectContainers, err := dockerutil.FindContainersByLabels(map[string]string{"com.ddev.site-name": app.Name})
+	require.NoError(t, err)
+	require.NotEmpty(t, projectContainers)
+	timeout := 30
+	for _, c := range projectContainers {
+		_, err = apiClient.ContainerStop(ctx, c.ID, client.ContainerStopOptions{Timeout: &timeout})
+		require.NoError(t, err)
+	}
+	busyboxContainer, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-busybox1", app.Name))
+	require.NoError(t, err)
+	require.NotNil(t, busyboxContainer)
+	require.Equal(t, "exited", string(busyboxContainer.State))
+
+	// A start without the profile must not wait on, or fail because of, that container.
+	err = app.Start()
+	require.NoError(t, err)
 }
 
 // TestPlatformOverride makes sure that a project which overrides the web

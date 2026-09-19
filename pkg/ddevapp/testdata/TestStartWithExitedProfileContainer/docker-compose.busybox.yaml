@@ -1,0 +1,7 @@
+services:
+  busybox1:
+    image: busybox:stable
+    command: tail -f /dev/null
+    profiles:
+      - busybox-first
+    container_name: ddev-${DDEV_SITENAME}-busybox1
