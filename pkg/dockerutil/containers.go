@@ -1210,27 +1210,6 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 	return nil
 }
 
-// GetContainerNames takes an array of Container
-// and returns an array of strings with container names.
-// Use removePrefix to get short container names.
-func GetContainerNames(containers []container.Summary, excludeContainerNames []string, removePrefix string) []string {
-	var names []string
-	for _, c := range containers {
-		if len(c.Names) == 0 {
-			continue
-		}
-		name := c.Names[0][1:] // Trimming the leading '/' from the container name
-		if slices.Contains(excludeContainerNames, name) {
-			continue
-		}
-		if removePrefix != "" {
-			name = strings.TrimPrefix(name, removePrefix)
-		}
-		names = append(names, name)
-	}
-	return names
-}
-
 // ValidatePort checks that the given port is valid (in range 1-65535)
 func ValidatePort(port any) error {
 	var dockerPort int
