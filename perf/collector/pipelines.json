@@ -6,7 +6,6 @@
     "ddev-perf-macos-shared-providers",
     "ddev-perf-windows10-docker-desktop",
     "ddev-perf-wsl2-docker-desktop",
-    "ddev-perf-wsl2-docker-inside",
     "ddev-perf-wsl2-mirrored"
   ]
 }
