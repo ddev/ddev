@@ -523,7 +523,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 
 ## `console`
 
-Run the `console` command; available only in projects of type `symfony`, and only available if `bin/console` exists.
+Run the `console` command; available only in projects of type `symfony` and `shopware6`, and only available if `bin/console` exists.
 
 ```shell
 # Show all Symfony console subcommands
