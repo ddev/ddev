@@ -59,10 +59,10 @@ ddev exec -s db -u root ls -la /root`,
 
 		_ = app.DockerEnv()
 
-		// An explicit -u wins over the service's configured ssh-user.
+		// An explicit -u wins over the service's configured container-user.
 		user := serviceUser
 		if user == "" {
-			user = app.GetXDdevExtension(serviceType).SSHUser
+			user = app.GetXDdevExtension(serviceType).ContainerUser
 		}
 
 		opts := &ddevapp.ExecOpts{

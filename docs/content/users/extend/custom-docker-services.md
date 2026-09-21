@@ -129,7 +129,7 @@ The `x-ddev` extension field lets you customize DDEV behavior per service in you
 | [`describe-url-port`](#customizing-ddev-describe-output) | Text shown in the `URL/PORT` column of `ddev describe` |
 | [`describe-info`](#customizing-ddev-describe-output) | Text shown in the `INFO` column of `ddev describe` |
 | [`ssh-shell`](../extend/in-container-configuration.md#changing-ddev-ssh-shell) | Shell used by `ddev ssh -s <service>` for this service |
-| [`ssh-user`](../extend/in-container-configuration.md#changing-ddev-ssh-user) | User `ddev ssh -s <service>` logs in as for this service |
+| [`container-user`](../extend/in-container-configuration.md#changing-the-container-user) | User that `ddev ssh`, `ddev exec`, and custom commands run as for this service |
 | [`omit-ddev-labels`](#omitting-comddev-labels-from-a-service) | Skip injecting `com.ddev.*` labels onto this service |
 
 ### Customizing `ddev describe` Output
@@ -169,9 +169,9 @@ services:
 - `x-ddev.describe-info`: Appears in the `INFO` column, making it easy for team members to view relevant service details without checking config files.
 
 !!!tip
-    See related `x-ddev.ssh-shell` and `x-ddev.ssh-user` configuration for
+    See related `x-ddev.ssh-shell` and `x-ddev.container-user` configuration for
     [Changing `ddev ssh` Shell](../extend/in-container-configuration.md#changing-ddev-ssh-shell)
-    and [Changing `ddev ssh` User](../extend/in-container-configuration.md#changing-ddev-ssh-user).
+    and [Changing the Container User](../extend/in-container-configuration.md#changing-the-container-user).
 
 ### Omitting `com.ddev.*` Labels from a Service
 

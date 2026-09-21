@@ -44,10 +44,10 @@ ddev ssh -d /var/www/html`,
 		xDdev := app.GetXDdevExtension(serviceType)
 		shell := xDdev.SSHShell
 
-		// An explicit -u wins over the service's configured ssh-user.
+		// An explicit -u wins over the service's configured container-user.
 		user := serviceUser
 		if user == "" {
-			user = xDdev.SSHUser
+			user = xDdev.ContainerUser
 		}
 
 		_, _, err = app.Exec(&ddevapp.ExecOpts{

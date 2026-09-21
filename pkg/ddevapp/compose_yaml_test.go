@@ -44,7 +44,7 @@ services:
   devilbox:
     image: ddev/ddev-utilities
     x-ddev:
-      ssh-user: "  devilbox  "
+      container-user: "  devilbox  "
   no-shell:
     image: ddev/ddev-utilities
     x-ddev:
@@ -89,11 +89,11 @@ services:
 		assert.Equal("fish", xDdev.SSHShell)
 	})
 
-	// Test service with a configured ssh-user
-	t.Run("service with custom ssh user", func(t *testing.T) {
+	// Test service with a configured container-user
+	t.Run("service with custom container user", func(t *testing.T) {
 		xDdev := app.GetXDdevExtension("devilbox")
 		assert.Equal("User: devilbox", xDdev.DescribeInfo)
-		assert.Equal("devilbox", xDdev.SSHUser)
+		assert.Equal("devilbox", xDdev.ContainerUser)
 	})
 
 	// Test service with no shell - should default to sh
@@ -110,7 +110,7 @@ services:
 		assert.Equal("", xDdev.DescribeInfo)
 		assert.Equal("", xDdev.DescribeURLPort)
 		assert.Equal("sh", xDdev.SSHShell)
-		assert.Equal("", xDdev.SSHUser)
+		assert.Equal("", xDdev.ContainerUser)
 		assert.False(xDdev.OmitDdevLabels)
 	})
 

@@ -240,11 +240,11 @@ func TestCmdExec(t *testing.T) {
 	assert.Contains(out, "/usr/local/bin/composer")
 }
 
-// TestCmdExecSSHUser verifies that `ddev exec -s <service>` defaults to the
-// service's configured x-ddev.ssh-user, matching `ddev ssh -s <service>`,
-// and that an explicit -u still overrides it.
+// TestCmdExecContainerUser verifies that `ddev exec -s <service>` defaults to
+// the service's configured x-ddev.container-user, matching
+// `ddev ssh -s <service>`, and that an explicit -u still overrides it.
 // See https://github.com/ddev/ddev/issues/8806.
-func TestCmdExecSSHUser(t *testing.T) {
+func TestCmdExecContainerUser(t *testing.T) {
 	testcommon.SkipUnlessDefaultEnvironment(t)
 	assert := asrt.New(t)
 	origDir, err := os.Getwd()
@@ -262,11 +262,11 @@ func TestCmdExecSSHUser(t *testing.T) {
 
 	composeContent := fmt.Sprintf(`
 services:
-  sshuser-svc:
-    container_name: ddev-${DDEV_SITENAME}-sshuser-svc
+  container-user-svc:
+    container_name: ddev-${DDEV_SITENAME}-container-user-svc
     image: %s:%s
     x-ddev:
-      ssh-user: www-data
+      container-user: www-data
     command: ["sleep", "infinity"]
     labels:
       com.ddev.approot: ${DDEV_APPROOT}
@@ -275,7 +275,7 @@ services:
     healthcheck:
       test: "true"
 `, versionconstants.WebImg, versionconstants.WebTag)
-	err = os.WriteFile(app.GetConfigPath("docker-compose.sshuser-svc.yaml"), []byte(composeContent), 0644)
+	err = os.WriteFile(app.GetConfigPath("docker-compose.container-user-svc.yaml"), []byte(composeContent), 0644)
 	require.NoError(t, err)
 
 	err = app.Start()
@@ -287,11 +287,11 @@ services:
 		_ = os.RemoveAll(testDir)
 	})
 
-	out, err := exec.RunHostCommand(DdevBin, "exec", "-s", "sshuser-svc", "id", "-un")
+	out, err := exec.RunHostCommand(DdevBin, "exec", "-s", "container-user-svc", "id", "-un")
 	require.NoError(t, err, "output: %s", out)
 	assert.Equal("www-data", strings.TrimSpace(out))
 
-	out, err = exec.RunHostCommand(DdevBin, "exec", "-s", "sshuser-svc", "-u", "root", "id", "-un")
+	out, err = exec.RunHostCommand(DdevBin, "exec", "-s", "container-user-svc", "-u", "root", "id", "-un")
 	require.NoError(t, err, "output: %s", out)
 	assert.Equal("root", strings.TrimSpace(out))
 }
