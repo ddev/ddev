@@ -4,7 +4,7 @@
 ## Description: Run symfony console inside the web container
 ## Usage: console [flags] [args]
 ## Example: "ddev console about" or "ddev console doctrine:schema:update --dump-sql"
-## ProjectTypes: symfony
+## ProjectTypes: symfony,shopware6
 ## ExecRaw: true
 ## MutagenSync: true
 

@@ -35,7 +35,7 @@ teardown() {
   assert_file_not_exist compose.yaml
   assert_file_not_exist compose.override.yaml
 
-  run ddev exec console system:install --basic-setup
+  run ddev console system:install --basic-setup
   assert_success
 
   # --- shopware-cli watcher tooling bundled with the shopware6 project type ---

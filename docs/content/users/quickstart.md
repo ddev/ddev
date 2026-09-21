@@ -2754,7 +2754,7 @@ ddev config --upload-dirs=sites/assets/files && ddev restart
     Run Shopware installation and launch:
 
     ```bash
-    ddev exec console system:install --basic-setup
+    ddev console system:install --basic-setup
     ddev launch /admin
     # Default username and password are `admin` and `shopware`
     ```
@@ -2774,7 +2774,7 @@ ddev config --upload-dirs=sites/assets/files && ddev restart
         # Answer `x` to "Do you want to include Docker configuration from recipes?"
         # so Shopware's Docker recipe is not added (DDEV provides the environment).
         printf "x\n" | ddev composer create-project shopware/production
-        ddev exec console system:install --basic-setup
+        ddev console system:install --basic-setup
         ddev launch /admin
         EOF
         chmod +x setup-shopware.sh

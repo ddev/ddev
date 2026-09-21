@@ -260,6 +260,28 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 	}
 
+	// Symfony commands should only be available for type symfony
+	app.Type = nodeps.AppTypeSymfony
+	_ = app.WriteConfig()
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+	for _, c := range []string{"console"} {
+		_, err = exec.RunHostCommand(DdevBin, "help", c)
+		assert.NoError(err)
+	}
+
+	// Shopware 6 commands should only be available for type shopware6
+	app.Type = nodeps.AppTypeShopware6
+	_ = app.WriteConfig()
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+	for _, c := range []string{"console"} {
+		_, err = exec.RunHostCommand(DdevBin, "help", c)
+		assert.NoError(err)
+	}
+
 	// WordPress commands should only be available for type wordpress
 	app.Type = nodeps.AppTypeWordPress
 	_ = app.WriteConfig()
