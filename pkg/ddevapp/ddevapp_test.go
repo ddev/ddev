@@ -4197,6 +4197,9 @@ func TestPHPWebserverType(t *testing.T) {
 // X-Ddev-403-Source header for the docroot itself, and a directory listing
 // wherever the project asked for one. An empty docroot is used rather than a
 // TestSite, whose front controller would answer with the app's own 404.
+// A nonexistent .php file is checked too: both webservers test the resolved
+// script with `-f` and reject it before php-fpm, so ddev-webserver's
+// explanation is shown instead of php-fpm's "No input file specified".
 func TestWebserverMissingIndexExplanation(t *testing.T) {
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
 		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
@@ -4352,6 +4355,120 @@ func TestWebserverAppLevel404PassesThrough(t *testing.T) {
 		err = app.Stop(true, false)
 		require.NoError(t, err)
 	}
+}
+
+// TestWebserverPathInfo checks that PATH_INFO reaches PHP for a URL carrying a
+// path after the script name, such as /pathinfo.php/one/two. nginx only sends it
+// when the PHP location regex admits the URL and fastcgi_param PATH_INFO is set;
+// apache derives it on its own. SimpleSAMLphp and WordPress PATHINFO permalinks
+// are the usual consumers. See ddev/ddev#3854 and ddev/ddev#4001.
+func TestWebserverPathInfo(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
+	assert := asrt.New(t)
+	packageDir, _ := os.Getwd()
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+	appDir := filepath.Join(testDir, t.Name())
+	err := os.MkdirAll(appDir, 0755)
+	require.NoError(t, err)
+	err = os.Chdir(appDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(appDir, true)
+	require.NoError(t, err)
+	app.Type = nodeps.AppTypePHP
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(packageDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
+
+	err = os.WriteFile(filepath.Join(appDir, "pathinfo.php"),
+		[]byte(`<?php echo "PATH_INFO=[" . ($_SERVER["PATH_INFO"] ?? "") . "]";`), 0644)
+	require.NoError(t, err)
+
+	for _, webserverType := range []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM} {
+		app.WebserverType = webserverType
+		err = app.WriteConfig()
+		require.NoError(t, err)
+
+		testcommon.ClearDockerEnv()
+		startErr := app.Start()
+		if startErr != nil {
+			appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+			assert.NoError(getLogsErr)
+			t.Fatalf("app.Start() failure for WebserverType=%s: err=%v, health:\n%s\n\nlogs:\n=====\n%s\n=====\n", webserverType, startErr, health, appLogs)
+		}
+
+		out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/pathinfo.php/one/two")
+		require.NoError(t, err)
+		require.Contains(t, out, "PATH_INFO=[/one/two]", "for WebserverType=%s PATH_INFO must carry the path following the script name", webserverType)
+
+		plain, _, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/pathinfo.php")
+		require.NoError(t, err)
+		require.Contains(t, plain, "PATH_INFO=[]", "for WebserverType=%s a request with no path info must not invent one", webserverType)
+
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+	}
+}
+
+// TestWebserverNoPharWalkback checks that a file sitting on the path of a .php
+// request is not executed. cgi.fix_pathinfo=1 makes PHP walk back up the path when
+// SCRIPT_FILENAME does not exist, so /uploads/x.phar/y.php would run x.phar, and
+// php-fpm's security.limit_extensions does not stop it because its default
+// allowlist is ".php .phar". The `-f` guard in the nginx PHP block rejects the
+// request before php-fpm sees it.
+//
+// Only nginx is checked: Debian's php-fpm Apache conf hands any .phar to php-fpm
+// by filename, so Apache runs one directly whatever the path info does. A Drupal
+// type is used because its PHP block also serves /update.php path-info URLs, so a
+// `try_files $uri` check is not available there and the guard is the only defense.
+func TestWebserverNoPharWalkback(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
+	assert := asrt.New(t)
+	packageDir, _ := os.Getwd()
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+	appDir := filepath.Join(testDir, t.Name())
+	err := os.MkdirAll(filepath.Join(appDir, "uploads"), 0755)
+	require.NoError(t, err)
+	err = os.Chdir(appDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(appDir, true)
+	require.NoError(t, err)
+	app.Type = nodeps.AppTypeDrupal11
+	app.WebserverType = nodeps.WebserverNginxFPM
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(packageDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
+
+	err = os.WriteFile(filepath.Join(appDir, "uploads", "uploaded.phar"),
+		[]byte(`<?php echo "phar-was-executed";`), 0644)
+	require.NoError(t, err)
+
+	err = app.WriteConfig()
+	require.NoError(t, err)
+	testcommon.ClearDockerEnv()
+	startErr := app.Start()
+	if startErr != nil {
+		appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+		assert.NoError(getLogsErr)
+		t.Fatalf("app.Start() failure: err=%v, health:\n%s\n\nlogs:\n=====\n%s\n=====\n", startErr, health, appLogs)
+	}
+
+	walkback, _, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/uploads/uploaded.phar/nonexistent.php", testcommon.WithExpectStatus(http.StatusNotFound))
+	require.NoError(t, err)
+	require.NotContains(t, walkback, "phar-was-executed", "a file on the path of a .php request must not be executed")
 }
 
 // TestWebserverPhpstatusUnderMutagen checks /phpstatus (aliased to
