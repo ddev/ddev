@@ -1,3 +1,4 @@
 # Apache directory listing, which conf-enabled/403.conf must not take over.
-# nginx ignores .htaccess; its equivalent is tested from testdata/nginx.
+# nginx ignores .htaccess; its equivalent is the project nginx config test
+# in php_webserver.bats.
 Options +Indexes

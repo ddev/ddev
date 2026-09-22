@@ -7,6 +7,31 @@ setup() {
   load setup.sh
 }
 
+teardown() {
+  # Backstop only: several tests below mutate container state and clean up
+  # at their own end, which an aborted assert_* skips. Each check here is a
+  # no-op for the tests that never dirtied that state, so this stays cheap.
+  docker exec -u root ${CONTAINER_NAME} bash -c '
+    reload_nginx=0
+    if [ -f /mnt/ddev_config/nginx/error-pages.conf ]; then
+      rm -f /mnt/ddev_config/nginx/error-pages.conf
+      reload_nginx=1
+    fi
+    if [ -f /etc/nginx/common.d/auth.conf ]; then
+      rm -f /etc/nginx/common.d/auth.conf
+      reload_nginx=1
+    fi
+    [ "$reload_nginx" = "1" ] && pgrep -x nginx >/dev/null 2>&1 && nginx -s reload
+    if [ -f /etc/apache2/conf-enabled/auth.conf ]; then
+      rm -f /etc/apache2/conf-enabled/auth.conf
+      pgrep -x apache2 >/dev/null 2>&1 && apache2ctl -k graceful
+    fi
+    php -m 2>/dev/null | grep -qix xdebug && disable_xdebug >/dev/null
+    php -m 2>/dev/null | grep -qix xhprof && disable_xhprof >/dev/null
+    true
+  ' || true
+}
+
 @test "HTTP_HOST passed to PHP preserves nonstandard port for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # Debian's nginx-common overrides HTTP_HOST with port-stripped $host in
   # /etc/nginx/fastcgi_params (Debian bug #1126960 security workaround),
