@@ -61,7 +61,7 @@ ddev exec -s db -u root ls -la /root`,
 
 		// An explicit -u wins over the service's configured container-user.
 		user := serviceUser
-		if user == "" {
+		if !cmd.Flag("user").Changed {
 			user = app.GetXDdevExtension(serviceType).ContainerUser
 		}
 

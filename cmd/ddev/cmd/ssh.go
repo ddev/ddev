@@ -25,7 +25,7 @@ ddev ssh -s db -u root
 ddev ssh <projectname>
 ddev ssh -d /var/www/html`,
 	Args: cobra.MaximumNArgs(1),
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 		projects, err := getRequestedProjects(args, false)
 		if err != nil || len(projects) == 0 {
 			util.Failed("Failed to ddev ssh: %v", err)
@@ -46,7 +46,7 @@ ddev ssh -d /var/www/html`,
 
 		// An explicit -u wins over the service's configured container-user.
 		user := serviceUser
-		if user == "" {
+		if !cmd.Flag("user").Changed {
 			user = xDdev.ContainerUser
 		}
 
