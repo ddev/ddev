@@ -20,9 +20,9 @@ root — this file describes only the machinery.
 
 ## How guidance is split
 
-Claude Code reads `CLAUDE.md`, not `AGENTS.md`, so `CLAUDE.md` is a stub that
-imports it and adds the few Claude-only notes. The rest follows from how much
-context each mechanism costs:
+Claude Code reads `AGENTS.md` directly, including its "Claude Code automation"
+section, so there is no separate `CLAUDE.md` stub. The rest follows from how
+much context each mechanism costs:
 
 | Mechanism | Loaded | Holds |
 | --- | --- | --- |
