@@ -348,7 +348,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 		if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
 			composeService = app.ComposeYaml.Services[shortName]
 		}
-		services[shortName]["image"] = describeImageForService(composeService, c.Config.Image, app.Name)
+		services[shortName]["image"] = describeImageForServiceWithEnvironment(composeService, c.Config.Image, app.Name, getComposeEnvironment(app.ComposeYaml))
 		services[shortName]["short_name"] = shortName
 
 		var exposedPrivatePorts []int
@@ -485,7 +485,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 			services[serviceName]["status"] = SiteStopped
 			services[serviceName]["short_name"] = serviceName
 			services[serviceName]["full_name"] = fmt.Sprintf("ddev-%s-%s", app.Name, serviceName)
-			services[serviceName]["image"] = describeImageForService(composeService, composeService.Image, app.Name)
+			services[serviceName]["image"] = describeImageForServiceWithEnvironment(composeService, composeService.Image, app.Name, getComposeEnvironment(app.ComposeYaml))
 
 			// Extract port information from docker-compose configuration
 			portSet := make(map[int]bool)
@@ -2364,7 +2364,7 @@ func (app *DdevApp) FindServiceImages(serviceNames []string) ([]string, error) {
 		if len(serviceNames) > 0 && !slices.Contains(serviceNames, name) {
 			continue
 		}
-		if baseImages := resolveBuildBaseImages(service); baseImages != nil {
+		if baseImages := resolveBuildBaseImagesWithEnvironment(service, getComposeEnvironment(app.ComposeYaml)); baseImages != nil {
 			images = append(images, baseImages...)
 			continue
 		}
@@ -2381,6 +2381,13 @@ func (app *DdevApp) FindServiceImages(serviceNames []string) ([]string, error) {
 		images = append(images, image)
 	}
 	return images, nil
+}
+
+func getComposeEnvironment(project *composeTypes.Project) composeTypes.Mapping {
+	if project == nil {
+		return nil
+	}
+	return project.Environment
 }
 
 // FindNotOmittedImages returns an array of image names not omitted by global or project configuration

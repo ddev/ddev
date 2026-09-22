@@ -16,7 +16,11 @@ import (
 // for a service, preferring its Dockerfile-derived base image(s) over the
 // legacy "-<project>-built" tag-suffix guess.
 func describeImageForService(service composeTypes.ServiceConfig, fallbackImage, appName string) string {
-	if baseImages := resolveBuildBaseImages(service); len(baseImages) > 0 {
+	return describeImageForServiceWithEnvironment(service, fallbackImage, appName, nil)
+}
+
+func describeImageForServiceWithEnvironment(service composeTypes.ServiceConfig, fallbackImage, appName string, environment composeTypes.Mapping) string {
+	if baseImages := resolveBuildBaseImagesWithEnvironment(service, environment); len(baseImages) > 0 {
 		return strings.Join(baseImages, ", ")
 	}
 	return strings.TrimSuffix(fallbackImage, fmt.Sprintf("-%s-built", appName))
@@ -33,6 +37,10 @@ func describeImageForService(service composeTypes.ServiceConfig, fallbackImage, 
 // Dockerfile can't be read or parsed, so callers can fall back to their
 // existing image-name-derived behavior.
 func resolveBuildBaseImages(service composeTypes.ServiceConfig) []string {
+	return resolveBuildBaseImagesWithEnvironment(service, nil)
+}
+
+func resolveBuildBaseImagesWithEnvironment(service composeTypes.ServiceConfig, environment composeTypes.Mapping) []string {
 	if service.Build == nil {
 		return nil
 	}
@@ -92,6 +100,8 @@ func resolveBuildBaseImages(service composeTypes.ServiceConfig) []string {
 	for k, v := range service.Build.Args {
 		if v != nil {
 			setArg(k, *v)
+		} else if value, ok := environment[k]; ok {
+			setArg(k, value)
 		}
 	}
 	var envSlice []string
@@ -100,12 +110,6 @@ func resolveBuildBaseImages(service composeTypes.ServiceConfig) []string {
 	}
 
 	stageNames := map[string]bool{}
-	for _, s := range stages {
-		if s.Name != "" {
-			stageNames[s.Name] = true
-		}
-	}
-
 	seen := map[string]bool{}
 	var images []string
 	for _, s := range stages {
@@ -115,12 +119,12 @@ func resolveBuildBaseImages(service composeTypes.ServiceConfig) []string {
 		}
 		// A stage can be based on an earlier named stage instead of an
 		// upstream image; that's not something to pull.
-		if stageNames[base] {
-			continue
-		}
-		if !seen[base] {
+		if !stageNames[base] && !seen[base] {
 			seen[base] = true
 			images = append(images, base)
+		}
+		if s.Name != "" {
+			stageNames[s.Name] = true
 		}
 	}
 	return images
