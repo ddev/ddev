@@ -15,13 +15,13 @@ teardown() {
   # mkdir -p ${PROJNAME} && cd ${PROJNAME}
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  run ddev config --project-type=php --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
+  run ddev config --project-type=symfony --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
   assert_success
   run ddev start -y
   assert_success
   run ddev composer create-project ibexa/oss-skeleton
   assert_success
-  run ddev exec console ibexa:install --no-interaction
+  run ddev console ibexa:install --no-interaction
   assert_success
 
   _extra_info

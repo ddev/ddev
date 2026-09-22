@@ -35,7 +35,7 @@ func TestProjectToolsDockerfile(t *testing.T) {
 		{"drupal7", []int{3}},
 		{"backdrop", []int{3, 4}},
 		{"symfony", []int{5}},
-		{"shopware6", []int{5, 6}},
+		{"shopware6", []int{6}},
 		{"drupal", nil},
 		{"drupal8", nil},
 		{"drupal9", nil},
