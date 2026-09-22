@@ -1,6 +1,7 @@
 services:
   busybox1:
     image: busybox:stable
+    init: true
     command: tail -f /dev/null
     profiles:
       - busybox-first
