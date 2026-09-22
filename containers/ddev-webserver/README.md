@@ -19,7 +19,7 @@ This container image is part of DDEV, and is not typically used stand-alone.
 * yarn
 
 DDEV installs project-specific utilities in the project image; see
-[`project_tools.go`](../../pkg/ddevapp/project_tools.go) for which project
+[`project_tools.go`](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/project_tools.go) for which project
 types get which utilities. These are not included when running the shared
 image directly.
 
