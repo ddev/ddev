@@ -267,6 +267,7 @@ services:
     image: %s:%s
     x-ddev:
       container-user: www-data
+    init: true
     command: ["sleep", "infinity"]
     labels:
       com.ddev.approot: ${DDEV_APPROOT}
