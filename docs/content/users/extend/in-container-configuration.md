@@ -173,15 +173,17 @@ all run as that user without requiring an explicit `-u`. An explicit `-u` still
 wins.
 
 ```yaml
-# .ddev/docker-compose.devilbox.yaml
+# .ddev/docker-compose.devilbox-php.yaml
 services:
-  php:
+  devilbox-php:
+    container_name: ddev-${DDEV_SITENAME}-devilbox-php
+    image: devilbox/php-fpm-5.3
     x-ddev:
       ssh-shell: bash
-      container-user: devilbox
+      container-user: www-data
 ```
 
-With this in place, `ddev ssh -s php` logs in as `devilbox`, and the configured
+With this in place, `ddev ssh -s devilbox-php` logs in as `www-data`, and the configured
 user also appears in [`ddev describe`](../usage/commands.md#describe) output.
 
 !!!tip
