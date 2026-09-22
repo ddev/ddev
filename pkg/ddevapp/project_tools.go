@@ -17,7 +17,7 @@ func projectToolsInstallDockerfile(projectType string) string {
 	case nodeps.AppTypeSymfony:
 		return symfonyCLIInstallDockerfile
 	case nodeps.AppTypeShopware6:
-		return shopwareCLIInstallDockerfile + symfonyCLIInstallDockerfile
+		return shopwareCLIInstallDockerfile
 	default:
 		return ""
 	}
