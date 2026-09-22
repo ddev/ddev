@@ -23,6 +23,8 @@ teardown() {
   assert_success
   run ddev console ibexa:install --no-interaction
   assert_success
+  run ddev console ibexa:graphql:generate-schema
+  assert_success
 
   _extra_info
 
