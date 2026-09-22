@@ -198,7 +198,7 @@ DDEV installs these utilities when building the web image for the configured pro
 | `drupal6`, `drupal7` | Drush 8 |
 | `backdrop` | Drush 8 and the Backdrop Drush extension |
 | `symfony` | Symfony CLI |
-| `shopware6` | Shopware CLI and Symfony CLI |
+| `shopware6` | Shopware CLI |
 
 Building without a cached image downloads the required utilities. Subsequent starts reuse the built image. After changing the project type, run `ddev restart` to rebuild with the corresponding utilities. Modern Drupal projects should install Drush through their project's Composer dependencies.
 

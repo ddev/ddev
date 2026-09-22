@@ -15,7 +15,7 @@ teardown() {
   # mkdir -p ${PROJNAME} && cd ${PROJNAME}
   run mkdir -p ${PROJNAME} && cd ${PROJNAME}
   assert_success
-  run ddev config --project-type=symfony --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
+  run ddev config --project-type=symfony --docroot=public
   assert_success
   run ddev start -y
   assert_success

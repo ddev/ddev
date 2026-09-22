@@ -18,12 +18,10 @@ This container image is part of DDEV, and is not typically used stand-alone.
 * npm
 * yarn
 
-DDEV installs project-specific utilities in the project image: WP-CLI for
-WordPress and Bedrock, magerun for Magento, magerun2 for Magento 2, Drush 8 for
-legacy Drupal and Backdrop, the Backdrop Drush extension for Backdrop, Symfony
-CLI for Symfony, and Shopware CLI plus Symfony CLI for Shopware 6 (Shopware 6
-is built on the Symfony framework). These are not included when running the
-shared image directly.
+DDEV installs project-specific utilities in the project image; see
+[`project_tools.go`](../../pkg/ddevapp/project_tools.go) for which project
+types get which utilities. These are not included when running the shared
+image directly.
 
 ## Instructions
 

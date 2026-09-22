@@ -1246,7 +1246,7 @@ Create the project directory and configure DDEV:
 
 ```bash
 mkdir -p my-ibexa-site && cd my-ibexa-site
-ddev config --project-type=symfony --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
+ddev config --project-type=symfony --docroot=public
 ```
 
 Start DDEV (this may take a minute):
@@ -1285,10 +1285,10 @@ Visit [Ibexa documentation](https://doc.ibexa.co/en/latest/getting_started/insta
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p my-ibexa-site && cd my-ibexa-site
-    ddev config --project-type=symfony --docroot=public --web-environment-add DATABASE_URL=mysql://db:db@db:3306/db
+    ddev config --project-type=symfony --docroot=public
     ddev start -y
     ddev composer create-project ibexa/oss-skeleton
-    ddev console ibexa:install
+    ddev console ibexa:install --no-interaction
     ddev console ibexa:graphql:generate-schema
     ddev launch /admin/login
     EOF
