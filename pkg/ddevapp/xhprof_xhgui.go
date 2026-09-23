@@ -8,6 +8,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/moby/moby/api/types/container"
 )
 
 // XHGuiSetup does prerequisite work to make XHGui work
@@ -66,12 +67,10 @@ func XHGuiStatus(app *DdevApp) (status bool) {
 }
 
 func IsXHGuiContainerRunning(app *DdevApp) bool {
-	containerName := GetContainerName(app, "xhgui")
-	container, err := dockerutil.FindContainerByName(containerName)
-	if err == nil && container != nil {
-		return true
-	}
-	return false
+	// An exited container still exists, so the state has to be checked;
+	// otherwise `ddev xhgui on` reports success without starting anything.
+	c, err := dockerutil.FindContainerByName(GetContainerName(app, "xhgui"))
+	return err == nil && c != nil && c.State == container.StateRunning
 }
 
 // GetXHGuiURL returns the URL for xhgui

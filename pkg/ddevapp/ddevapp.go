@@ -2168,20 +2168,30 @@ func (app *DdevApp) Start() error {
 		"com.ddev.site-name":        app.GetName(),
 		"com.docker.compose.oneoff": "False",
 	}
-	containersAwaited, findErr := dockerutil.FindContainersByLabels(waitLabels)
-	if findErr != nil {
-		return findErr
+	// Wait only on the services this start brought up: a container left over from
+	// an inactive profile can sit "exited" forever, and a service that opted out
+	// of DDEV labels can never be found by label.
+	var waitServices, additionalServices []string
+	for name, service := range upProject.Services {
+		if service.Labels["com.ddev.site-name"] != app.GetName() {
+			continue
+		}
+		waitServices = append(waitServices, name)
+		if name != "web" && name != "db" {
+			additionalServices = append(additionalServices, name)
+		}
 	}
-	containerNames := dockerutil.GetContainerNames(containersAwaited, []string{GetContainerName(app, "web"), GetContainerName(app, "db")}, "ddev-"+app.Name+"-")
-	if len(containerNames) > 0 {
-		wait := output.StartWait(fmt.Sprintf("Waiting for additional project containers %v to become ready", containerNames))
-		err = app.WaitByLabels(waitLabels)
+	slices.Sort(waitServices)
+	slices.Sort(additionalServices)
+	if len(additionalServices) > 0 {
+		wait := output.StartWait(fmt.Sprintf("Waiting for additional project containers %v to become ready", additionalServices))
+		err = app.WaitByLabels(waitLabels, waitServices...)
 		wait.Complete(err)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = app.WaitByLabels(waitLabels)
+		err = app.WaitByLabels(waitLabels, waitServices...)
 		if err != nil {
 			return err
 		}
@@ -3164,10 +3174,11 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 }
 
 // WaitByLabels waits for containers found by list of labels to be
-// ready
-func (app *DdevApp) WaitByLabels(labels map[string]string) error {
+// ready. filterServices limits the wait to those Compose services;
+// when empty, every container matching the labels is awaited.
+func (app *DdevApp) WaitByLabels(labels map[string]string, filterServices ...string) error {
 	waitTime := app.GetMaxContainerWaitTime()
-	err := dockerutil.ContainersWait(waitTime, labels)
+	err := dockerutil.ContainersWait(waitTime, labels, filterServices...)
 	if err != nil {
 		return fmt.Errorf("container(s) failed to become healthy before their configured timeout or in %d seconds.\nThis might be a problem with the healthcheck and not a functional problem.\nThe error was '%v'", waitTime, err.Error())
 	}
