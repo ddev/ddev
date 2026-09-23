@@ -346,6 +346,28 @@ What happens next depends on whether the PR is from a fork:
 
 So a maintainer only ever needs to click **Approve** once — as soon as a fork PR without push access changes a container image — and only that once; everything else is fully automatic.
 
+### Cleaning Up Unused Image Tags
+
+Every image change pushes new tags, and most are only useful until the release that follows. The [Image tag cleanup](https://github.com/ddev/ddev/actions/workflows/image-tag-cleanup.yml) workflow finds the ones that can go, and deletes them only when a maintainer asks.
+
+Each week it runs a report, `containers/image-tag-cleanup-candidates.sh`. A tag is listed as a candidate only when all of these hold:
+
+* It has a shape that CI or a branch build produces: a bare hash, a `<branch>-<hash>` alias, a date-prefixed branch tag like `20250612_stasadev_rebuild_images`, or a leftover `-amd64`/`-arm64` tag. Release tags, `latest`, and anything unrecognized are never listed.
+* No version file names it (`pkg/versionconstants/versionconstants.go`, or `pkg/version/version.go` for older releases). `containers/image-tag-keep-set.sh` checks every `v*` release tag, every open pull request head, and every state of `main` in the last 90 days.
+* It was pushed more than 90 days ago and hasn't been pulled in the last 30.
+* No kept tag points at the same manifest.
+
+The run summary shows the counts and the candidate list. The `image-tag-cleanup-report` artifact has every tag's decision and reason in `decisions.tsv`.
+
+To delete, run the workflow from `main` and set either `report_run_id` to the ID of a report run, or `tags` to a list of `<org>/<repo>:<tag>` entries. Leave `execute` unchecked for a dry run. The `image-tag-cleanup` environment must approve the run. `containers/delete-image-tags.sh` recomputes the candidates first, and if any requested tag is no longer a candidate, it deletes nothing.
+
+To try it by hand without deleting anything:
+
+```bash
+containers/image-tag-keep-set.sh > ~/tmp/keep-set.txt
+DOCKER_ORG=ddevhq containers/image-tag-cleanup-candidates.sh --explain ~/tmp/decisions.tsv ~/tmp/keep-set.txt
+```
+
 ## Pull Requests
 
 To contribute your fixes or improvements to DDEV, make a pull request on GitHub. If you're undertaking a large change, create an issue first so it can be discussed before you invest a lot of time. When you're ready, create a pull request, and a discussion will start around your proposed changes. Other contributors and users may chime in, but ultimately the decision is made by the maintainer(s). You may be asked to make some changes to your pull request. If so, add more commits to your branch and push them. They’ll automatically go into the existing pull request.
