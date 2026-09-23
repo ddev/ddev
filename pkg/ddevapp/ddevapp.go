@@ -344,11 +344,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 		services[shortName] = map[string]any{}
 		services[shortName]["status"] = string(c.State.Status)
 		services[shortName]["full_name"] = fullName
-		var composeService composeTypes.ServiceConfig
-		if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
-			composeService = app.ComposeYaml.Services[shortName]
-		}
-		services[shortName]["image"] = describeImageForServiceWithEnvironment(composeService, c.Config.Image, app.Name, getComposeEnvironment(app.ComposeYaml))
+		services[shortName]["image"] = app.describeServiceImage(shortName, c.Config.Image)
 		services[shortName]["short_name"] = shortName
 
 		var exposedPrivatePorts []int
@@ -485,7 +481,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 			services[serviceName]["status"] = SiteStopped
 			services[serviceName]["short_name"] = serviceName
 			services[serviceName]["full_name"] = fmt.Sprintf("ddev-%s-%s", app.Name, serviceName)
-			services[serviceName]["image"] = describeImageForServiceWithEnvironment(composeService, composeService.Image, app.Name, getComposeEnvironment(app.ComposeYaml))
+			services[serviceName]["image"] = app.describeServiceImage(serviceName, composeService.Image)
 
 			// Extract port information from docker-compose configuration
 			portSet := make(map[int]bool)
@@ -2360,19 +2356,30 @@ func (app *DdevApp) FindServiceImages(serviceNames []string) ([]string, error) {
 	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
 		return images, nil
 	}
+	localImages := builtImages(app.ComposeYaml)
 	for name, service := range app.ComposeYaml.Services {
 		if len(serviceNames) > 0 && !slices.Contains(serviceNames, name) {
 			continue
 		}
-		if baseImages := resolveBuildBaseImagesWithEnvironment(service, getComposeEnvironment(app.ComposeYaml)); baseImages != nil {
-			images = append(images, baseImages...)
+		if baseImages := app.buildBaseImages(name); baseImages != nil {
+			for _, image := range baseImages {
+				if !localImages[image] {
+					images = append(images, image)
+				}
+			}
 			continue
 		}
 		image := service.Image
 		if image == "" {
 			continue
 		}
-		if before, ok := strings.CutSuffix(image, "-built"); ok {
+		before, built := strings.CutSuffix(image, "-built")
+		// An unresolvable build, such as one with a remote context, has a
+		// local tag no registry has unless it follows the "-built" convention.
+		if service.Build != nil && !built {
+			continue
+		}
+		if built {
 			image = before
 			if before, ok := strings.CutSuffix(image, "-"+app.Name); ok {
 				image = before
@@ -2381,13 +2388,6 @@ func (app *DdevApp) FindServiceImages(serviceNames []string) ([]string, error) {
 		images = append(images, image)
 	}
 	return images, nil
-}
-
-func getComposeEnvironment(project *composeTypes.Project) composeTypes.Mapping {
-	if project == nil {
-		return nil
-	}
-	return project.Environment
 }
 
 // FindNotOmittedImages returns an array of image names not omitted by global or project configuration
