@@ -35,10 +35,23 @@ fi
 
 cd "$(git rev-parse --show-toplevel)"
 
+# A test suite or README never ends up in a built image, so it shouldn't
+# force a rebuild; excluded only as a direct child of a hashed path, so the
+# same name inside a directory the Dockerfile actually COPYs still counts.
+EXCLUDE_NAMES=(test tests README.md LICENSE)
+PATHSPECS=("$@")
+for p in "$@"; do
+  if [ -d "$p" ]; then
+    for name in "${EXCLUDE_NAMES[@]}"; do
+      PATHSPECS+=(":(exclude)$p/$name")
+    done
+  fi
+done
+
 files=$(
   {
-    git ls-files -- "$@"
-    git ls-files --others --exclude-standard -- "$@"
+    git ls-files -- "${PATHSPECS[@]}"
+    git ls-files --others --exclude-standard -- "${PATHSPECS[@]}"
   } | LC_ALL=C sort -u
 )
 
