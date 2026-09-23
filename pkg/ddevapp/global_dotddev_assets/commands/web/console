@@ -16,4 +16,4 @@ if [ ! -f bin/console ]; then
   exit 1
 fi
 
-symfony console "$@"
+php ./bin/console "$@"

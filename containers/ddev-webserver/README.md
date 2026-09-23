@@ -12,13 +12,16 @@ This container image is part of DDEV, and is not typically used stand-alone.
 * Apache
 * Many PHP versions (non-EOL versions are bundled by default)
 * [Composer](https://getcomposer.org/) (from the production container)
-* [Drush](http://www.drush.org) (from the production container)
 * [PHIVE](https://github.com/phar-io/phive) (from the production container)
-* [WP-CLI](http://www.wp-cli.org) (from the production container)
 * [Blackfire CLI](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-cli)
 * [mailpit](https://github.com/axllent/mailpit)
 * npm
 * yarn
+
+DDEV installs project-specific utilities in the project image; see
+[`project_tools.go`](https://github.com/ddev/ddev/blob/main/pkg/ddevapp/project_tools.go) for which project
+types get which utilities. These are not included when running the shared
+image directly.
 
 ## Instructions
 
@@ -36,26 +39,26 @@ To run the container by itself:
 docker run -it --rm ddev/ddev-webserver:<tag> bash
 ```
 
-## Source:
+## Source
 
 [ddev-webserver](https://github.com/ddev/ddev/tree/main/containers/ddev-webserver)
 
-## Maintained by:
+## Maintained by
 
 The [DDEV Maintainers](https://github.com/ddev)
 
-## Where to get help:
+## Where to get help
 
 * [DDEV Community Discord](https://ddev.com/s/discord)
 
-## Where to file issues:
+## Where to file issues
 
-https://github.com/ddev/ddev/issues
+<https://github.com/ddev/ddev/issues>
 
-## Documentation:
+## Documentation
 
-* https://docs.ddev.com/
-* https://ddev.com/
+* <https://docs.ddev.com/>
+* <https://ddev.com/>
 
 ## What is DDEV?
 

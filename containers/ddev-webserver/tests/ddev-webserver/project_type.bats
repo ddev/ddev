@@ -7,25 +7,15 @@ setup() {
   load setup.sh
 }
 
-@test "verify that backdrop drush commands were added on backdrop and only backdrop ($project_type)" {
-  if [ "$project_type" = "backdrop" ]; then
-    # The .drush/commands/backdrop directory should only exist for backdrop apptype
-    run docker exec -t $CONTAINER_NAME bash -c 'test -d ~/.drush/commands/backdrop'
-    assert_success
-  else
-    run docker exec -t $CONTAINER_NAME bash -c 'test -d ~/.drush/commands/backdrop'
-    assert_failure
-  fi
+@test "verify that backdrop drush commands are not baked into the shared image ($project_type)" {
+  # Drush 8 and the Backdrop Drush extension are now installed only in the
+  # per-project derived image (pkg/ddevapp/project_tools.go), never in the
+  # shared image this test runs against, regardless of DDEV_PROJECT_TYPE.
+  run docker exec -t $CONTAINER_NAME bash -c 'test -d ~/.drush/commands/backdrop'
+  assert_failure
 }
 
-@test "verify legacy drush command resolves from user-owned bin directory ($project_type)" {
-  if [ "$project_type" = "drupal6" ] || [ "$project_type" = "drupal7" ] || [ "$project_type" = "backdrop" ]; then
-    run docker exec -t "$CONTAINER_NAME" bash -c 'test "$(command -v drush)" = "$HOME/.local/bin/drush"'
-    assert_success
-    run docker exec -t "$CONTAINER_NAME" bash -c 'test -L "$HOME/.local/bin/drush"'
-    assert_success
-  else
-    run docker exec -t "$CONTAINER_NAME" bash -c 'test -e "$HOME/.local/bin/drush"'
-    assert_failure
-  fi
+@test "verify legacy drush command does not resolve in the shared image ($project_type)" {
+  run docker exec -t "$CONTAINER_NAME" bash -c 'test -e "$HOME/.local/bin/drush"'
+  assert_failure
 }

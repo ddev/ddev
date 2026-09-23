@@ -6,11 +6,20 @@ setup() {
 
 @test "Verify required binaries are installed in normal image" {
   if [ "${IS_HARDENED}" == "true" ]; then skip "Skipping because IS_HARDENED==true"; fi
-  COMMANDS="composer ddev drush8 git magerun magerun2 mkcert mysql mysqladmin mysqldump node npm patch platform ssh sudo symfony terminus wp xdebugctl"
+  COMMANDS="composer ddev git mkcert mysql mysqladmin mysqldump node npm patch platform ssh sudo terminus xdebugctl"
   for item in $COMMANDS; do
     run docker exec "$CONTAINER_NAME" bash -c "command -v $item"
     assert_success
   done
+}
+
+@test "Project-specific tools are not installed in the shared image" {
+  for item in wp wp-cli magerun magerun2 drush8 symfony shopware-cli; do
+    run docker exec "$CONTAINER_NAME" bash -c "command -v $item"
+    assert_failure
+  done
+  run docker exec "$CONTAINER_NAME" test -e /var/tmp/backdrop_drush_commands
+  assert_failure
 }
 
 @test "Verify some binaries (sudo) are NOT installed in hardened image" {
