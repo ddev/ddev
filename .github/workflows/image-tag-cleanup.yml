@@ -1,0 +1,166 @@
+name: Image tag cleanup
+defaults:
+  run:
+    shell: bash
+
+# A scheduled or input-less run only reports candidates. Deleting needs a
+# manual run naming the tags, directly or as an earlier report's run ID, and
+# passes the image-tag-cleanup environment's approval. See
+# containers/image-tag-cleanup-candidates.sh for what makes a candidate.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Tags to delete, <org>/<repo>:<tag> separated by spaces or commas. Empty for a report only.'
+        required: false
+        default: ""
+      report_run_id:
+        description: 'Or: delete the candidates listed by this earlier report run'
+        required: false
+        default: ""
+      execute:
+        description: 'Delete for real (unchecked is a dry run)'
+        type: boolean
+        required: false
+        default: false
+
+env:
+  DOCKER_ORG: "${{ vars.DOCKER_ORG || (github.repository_owner == 'ddev-test' && 'ddevhq' || 'ddev') }}"
+  CLEANUP_MIN_AGE_DAYS: ${{ vars.CLEANUP_MIN_AGE_DAYS }}
+  CLEANUP_PULL_GRACE_DAYS: ${{ vars.CLEANUP_PULL_GRACE_DAYS }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  keep-set:
+    name: Collect the tags still in use
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Fetch open pull request heads
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu -o pipefail
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 1000 --json number --jq '.[].number' > pr-numbers.txt
+          if [ -s pr-numbers.txt ]; then
+            sed -E 's|.*|+refs/pull/&/head:refs/keep/pr-&|' pr-numbers.txt | xargs git fetch -q --no-tags origin
+          fi
+      - name: Build the keep-set
+        run: |
+          set -eu -o pipefail
+          mapfile -t PR_REFS < <(git for-each-ref --format='%(refname)' refs/keep/)
+          KEEP_MAIN_REF=origin/main containers/image-tag-keep-set.sh "${PR_REFS[@]}" > keep-set.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: image-tag-keep-set
+          path: keep-set.txt
+          retention-days: 7
+
+  report:
+    name: Report cleanup candidates
+    needs: keep-set
+    if: ${{ github.event_name == 'schedule' || (inputs.tags == '' && inputs.report_run_id == '') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          name: image-tag-keep-set
+      - name: List candidates
+        run: |
+          set -eu -o pipefail
+          containers/image-tag-cleanup-candidates.sh --explain decisions.tsv keep-set.txt > candidates.txt
+          {
+            echo "## Image tag cleanup candidates for ${DOCKER_ORG}"
+            echo
+            echo "$(wc -l < candidates.txt | tr -d ' ') candidates. To delete them, run this workflow with report_run_id \`${GITHUB_RUN_ID}\`."
+            echo
+            echo '| Decision | Class | Tags |'
+            echo '| --- | --- | --- |'
+            cut -f1,2 decisions.tsv | sort | uniq -c | awk '{ printf "| %s | %s | %s |\n", $2, $3, $1 }'
+            echo
+            echo '<details><summary>Candidates</summary>'
+            echo
+            echo '```text'
+            cat candidates.txt
+            echo '```'
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: image-tag-cleanup-report
+          path: |
+            keep-set.txt
+            candidates.txt
+            decisions.tsv
+          retention-days: 90
+
+  delete:
+    name: Delete tags${{ !inputs.execute && ' (dry run)' || '' }}
+    needs: keep-set
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && (inputs.tags != '' || inputs.report_run_id != '') }}
+    runs-on: ubuntu-24.04
+    environment: image-tag-cleanup
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          name: image-tag-keep-set
+      - name: Collect the requested tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAGS: ${{ inputs.tags }}
+          REPORT_RUN_ID: ${{ inputs.report_run_id }}
+        run: |
+          set -eu -o pipefail
+          if [ -n "$INPUT_TAGS" ] && [ -n "$REPORT_RUN_ID" ]; then
+            echo "Give tags or report_run_id, not both" >&2
+            exit 1
+          fi
+          if [ -n "$REPORT_RUN_ID" ]; then
+            [[ "$REPORT_RUN_ID" =~ ^[0-9]+$ ]] || { echo "report_run_id must be a number" >&2; exit 1; }
+            gh run download "$REPORT_RUN_ID" --repo "$GITHUB_REPOSITORY" -n image-tag-cleanup-report -D report
+            cp report/candidates.txt requested.txt
+          else
+            printf '%s\n' "$INPUT_TAGS" > requested.txt
+          fi
+      - name: Load 1password secret(s)
+        if: ${{ inputs.execute }}
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+      - name: Delete
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          EXECUTE: ${{ inputs.execute }}
+        run: |
+          set -eu -o pipefail
+          ARGS=()
+          [ "$EXECUTE" = true ] && ARGS+=(--execute)
+          containers/delete-image-tags.sh "${ARGS[@]}" keep-set.txt < requested.txt | tee deleted.txt
+          {
+            echo "## Image tag cleanup ($([ "$EXECUTE" = true ] && echo deleted || echo dry run))"
+            echo
+            echo '```text'
+            cat deleted.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
