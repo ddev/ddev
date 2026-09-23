@@ -29,9 +29,14 @@ For specialized needs or deep customization, you can create custom services usin
 
 **See [Custom Docker Compose Services](custom-docker-services.md) for:**
 
-- Manual service configuration
-- Advanced service patterns
+- Deciding when a custom service makes more sense than an add-on
+- The `x-ddev` extension field and a gallery of worked examples
 - Converting services to add-ons
+
+**See [Defining Additional Services with Docker Compose](custom-compose-files.md) for:**
+
+- How DDEV merges `docker-compose.*.yaml` files
+- Required conventions: labels, container naming, the `build:`/`-built` tag pattern, port exposure
 
 ## Resources
 
