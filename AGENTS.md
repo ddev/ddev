@@ -1,9 +1,9 @@
 # AGENTS.md
 
-Guidance for AI agents working on the DDEV core codebase. This is the canonical
-file: `CLAUDE.md` imports it and adds only Claude Code specifics, and
+Guidance for AI agents working on the DDEV core codebase. This is the
+canonical file: Claude Code reads it directly, and
 `.github/copilot-instructions.md` is a symlink to it. Edit this file, not
-those.
+that one.
 
 DDEV runs local web development environments for PHP and Node.js in Docker
 containers. For developer documentation see
@@ -29,6 +29,30 @@ can be summarized instead of read. DDEV's
 [organization-wide patterns](https://raw.githubusercontent.com/ddev/.github/main/AGENTS.md)
 mostly restate this file, which **wins where they differ** — it is stricter
 about never pushing.
+
+## Claude Code automation
+
+<!--
+Maintainer note, free because block-level HTML comments are stripped before
+this file reaches Claude's context: anything the harness can enforce belongs in
+.claude/settings.json, not in prose here. See .claude/README.md.
+-->
+
+The harness already enforces several of the rules elsewhere in this file, so
+Claude Code should treat them as facts about the environment rather than
+reminders to restate or re-verify by hand:
+
+- `make staticrequired` runs automatically before every `git commit`.
+- `git push`, `docker push`, and `go build` are denied outright.
+- `GOTEST_SHORT=true` and `DDEV_NO_INSTRUMENTATION=true` are preset for every
+  command. Prefix a command with `GOTEST_SHORT=` to run the full matrix.
+- Editing a `.go` or `.md` file formats it automatically.
+- `.gotmp/bin/<os>_<arch>` is already first on PATH, so the binary you just
+  built is what runs — no need to adjust PATH yourself.
+
+`.claude/rules/` files load themselves when you read a file they cover, so
+there is no need to open them by hand. Run `/ddev-commit` before writing a
+commit message, PR, or issue.
 
 ## Building
 
