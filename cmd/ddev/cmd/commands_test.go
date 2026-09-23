@@ -17,6 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -355,6 +356,68 @@ func TestCustomCommands(t *testing.T) {
 		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
 		assert.False(fileutil.FileExists(cmdPath), "file %s exists but it should not", cmdPath)
 	}
+}
+
+// TestCustomCommandContainerUser verifies that a custom command targeting a
+// service with x-ddev.container-user configured runs as that user by default,
+// matching `ddev ssh` and `ddev exec`.
+// See https://github.com/ddev/ddev/issues/8806.
+func TestCustomCommandContainerUser(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
+	assert := asrt.New(t)
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+	err = os.Chdir(testDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(testDir, true)
+	require.NoError(t, err)
+	app.Name = strings.ToLower(t.Name())
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	composeContent := fmt.Sprintf(`
+services:
+  container-user-svc:
+    container_name: ddev-${DDEV_SITENAME}-container-user-svc
+    image: %s:%s
+    x-ddev:
+      container-user: www-data
+    init: true
+    command: ["sleep", "infinity"]
+    labels:
+      com.ddev.approot: ${DDEV_APPROOT}
+      com.ddev.site-name: ${DDEV_SITENAME}
+    restart: "no"
+    healthcheck:
+      test: "true"
+    volumes:
+      - .:/mnt/ddev_config:ro
+`, versionconstants.WebImg, versionconstants.WebTag)
+	err = os.WriteFile(app.GetConfigPath("docker-compose.container-user-svc.yaml"), []byte(composeContent), 0644)
+	require.NoError(t, err)
+
+	commandDir := app.GetConfigPath(filepath.Join("commands", "container-user-svc"))
+	err = os.MkdirAll(commandDir, 0755)
+	require.NoError(t, err)
+	script := "#!/usr/bin/env bash\n\n## Description: containeruserwhoami test\n## Usage: containeruserwhoami\n## Example: \"ddev containeruserwhoami\"\n\nid -un\n"
+	err = os.WriteFile(filepath.Join(commandDir, "containeruserwhoami"), []byte(script), 0755)
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(testDir)
+	})
+
+	out, err := exec.RunHostCommand(DdevBin, "containeruserwhoami")
+	require.NoError(t, err, "output: %s", out)
+	assert.Equal("www-data", strings.TrimSpace(out))
 }
 
 // TestLaunchCommand tests that the launch command behaves all the ways it should behave

@@ -140,6 +140,7 @@ type XDdevExtension struct {
 	DescribeURLPort string `mapstructure:"describe-url-port"`
 	DescribeInfo    string `mapstructure:"describe-info"`
 	SSHShell        string `mapstructure:"ssh-shell"`
+	ContainerUser   string `mapstructure:"container-user"`
 	OmitDdevLabels  bool   `mapstructure:"omit-ddev-labels"`
 }
 
@@ -158,6 +159,7 @@ func (app *DdevApp) GetXDdevExtension(serviceName string) XDdevExtension {
 				xDdev.DescribeInfo = strings.TrimSpace(xDdev.DescribeInfo)
 				xDdev.DescribeURLPort = strings.TrimSpace(xDdev.DescribeURLPort)
 				xDdev.SSHShell = strings.TrimSpace(xDdev.SSHShell)
+				xDdev.ContainerUser = strings.TrimSpace(xDdev.ContainerUser)
 			}
 		}
 	}
@@ -174,6 +176,9 @@ func (app *DdevApp) GetXDdevExtension(serviceName string) XDdevExtension {
 	}
 	if hasCustomShell {
 		xDdev.DescribeInfo = strings.TrimSpace(fmt.Sprintf("%s\nShell: %s", xDdev.DescribeInfo, xDdev.SSHShell))
+	}
+	if xDdev.ContainerUser != "" {
+		xDdev.DescribeInfo = strings.TrimSpace(fmt.Sprintf("%s\nUser: %s", xDdev.DescribeInfo, xDdev.ContainerUser))
 	}
 	return xDdev
 }

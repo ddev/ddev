@@ -59,12 +59,18 @@ ddev exec -s db -u root ls -la /root`,
 
 		_ = app.DockerEnv()
 
+		// An explicit -u wins over the service's configured container-user.
+		user := serviceUser
+		if !cmd.Flag("user").Changed {
+			user = app.GetXDdevExtension(serviceType).ContainerUser
+		}
+
 		opts := &ddevapp.ExecOpts{
 			Service: serviceType,
 			Dir:     execDirArg,
 			Cmd:     quoteArgs(args),
 			Tty:     true,
-			User:    serviceUser,
+			User:    user,
 		}
 
 		// If they've chosen raw, use the actual passed values.
@@ -74,7 +80,7 @@ ddev exec -s db -u root ls -la /root`,
 			path, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: serviceType,
 				Cmd:     "echo $PATH",
-				User:    serviceUser,
+				User:    user,
 			})
 			path = strings.Trim(path, "\n")
 			if err == nil && path != "" {

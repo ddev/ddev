@@ -25,7 +25,7 @@ ddev ssh -s db -u root
 ddev ssh <projectname>
 ddev ssh -d /var/www/html`,
 	Args: cobra.MaximumNArgs(1),
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 		projects, err := getRequestedProjects(args, false)
 		if err != nil || len(projects) == 0 {
 			util.Failed("Failed to ddev ssh: %v", err)
@@ -41,13 +41,20 @@ ddev ssh -d /var/www/html`,
 
 		// Use Bash for our containers, sh for 3rd-party containers
 		// that may not have Bash.
-		shell := app.GetXDdevExtension(serviceType).SSHShell
+		xDdev := app.GetXDdevExtension(serviceType)
+		shell := xDdev.SSHShell
+
+		// An explicit -u wins over the service's configured container-user.
+		user := serviceUser
+		if !cmd.Flag("user").Changed {
+			user = xDdev.ContainerUser
+		}
 
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service:   serviceType,
 			RawCmd:    []string{shell, "-l"},
 			Dir:       sshDirArg,
-			User:      serviceUser,
+			User:      user,
 			Tty:       true,
 			NoCapture: true,
 			SkipHooks: true,

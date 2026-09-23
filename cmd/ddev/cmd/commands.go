@@ -428,6 +428,7 @@ func makeContainerCompletionFunc(autocompletePathInContainer string, service str
 			Dir:       app.GetWorkingDir(service, ""),
 			Tty:       false,
 			NoCapture: false,
+			User:      app.GetXDdevExtension(service).ContainerUser,
 		}
 
 		// Execute completion in docker container
@@ -517,6 +518,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 			Dir:       app.GetWorkingDir(s, ""),
 			Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 			NoCapture: true,
+			User:      app.GetXDdevExtension(s).ContainerUser,
 		}
 		if relative {
 			opts.Dir = path.Join(app.GetAbsAppRoot(true), app.GetRelativeWorkingDirectory())
