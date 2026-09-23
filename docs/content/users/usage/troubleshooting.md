@@ -185,6 +185,8 @@ If you get a 404 with “No input file specified” (nginx) or a 403 with “For
 * Misconfigured docroot: If the docroot isn’t where the web server thinks it is, then the web server won’t find `index.php`. Look at your `.ddev/config.yaml` to verify it has a docroot containing `index.php`. It should be a relative path.
 * Missing `index.php`: There may not be an `index.php` or `index.html` in your project.
 
+`ddev logs` shows the exact reason the web server gave for a 403. To browse a directory that has no index file at all, turn directory listing on yourself, with `Options +Indexes` in an `.htaccess` file (Apache) or `autoindex on;` in a `.ddev/nginx/*.conf` file (nginx).
+
 ## `ddev start` Fails and Logs Contain "failed (28: No space left on device)" - Docker File Space
 
 If `ddev start` fails, it’s most often because the `web` or `db` container fails to start. In this case, the error message from `ddev start` says something like “Failed to start <project>: db container failed: log=, err=container exited, please use 'ddev logs -s db' to find out why it failed”. You can`ddev logs -s db` to find out what happened.

@@ -77,14 +77,14 @@
   <main>
     <h1>404: Not Found</h1>
     <div class="callout">
-      This page comes directly from <code>ddev-webserver</code> (nginx or Apache). The request
-      reached the webserver, but the requested file does not exist under the project's
-      <code>docroot</code>. <strong>This is not your project's 404 page.</strong>
+      This page comes from the <code>ddev-webserver</code> container and is <strong>not</strong>
+      your project's 404 page. The request reached the webserver, but the requested file could
+      not be found under the project's <code>docroot</code>.
     </div>
     <ol>
-      <li>Confirm <code>docroot</code> in <code>.ddev/config.yaml</code> matches where your project's <code>index.php</code> actually lives.</li>
-      <li>Confirm the requested file exists at that path.</li>
-      <li>Run <code>ddev logs</code> to check for php-fpm errors.</li>
+      <li>Check that <code>docroot</code> in <code>.ddev/config.yaml</code> points to the directory where your project's <code>index.php</code> actually lives.</li>
+      <li>Make sure the requested file exists at that path.</li>
+      <li>Run <code>ddev logs</code> to see the exact 404 the webserver logged for this request.</li>
     </ol>
     <p class="footer">
       Still stuck? See the

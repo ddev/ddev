@@ -7,6 +7,31 @@ setup() {
   load setup.sh
 }
 
+teardown() {
+  # Backstop only: several tests below mutate container state and clean up
+  # at their own end, which an aborted assert_* skips. Each check here is a
+  # no-op for the tests that never dirtied that state, so this stays cheap.
+  docker exec -u root ${CONTAINER_NAME} bash -c '
+    reload_nginx=0
+    if [ -f /mnt/ddev_config/nginx/error-pages.conf ]; then
+      rm -f /mnt/ddev_config/nginx/error-pages.conf
+      reload_nginx=1
+    fi
+    if [ -f /etc/nginx/common.d/auth.conf ]; then
+      rm -f /etc/nginx/common.d/auth.conf
+      reload_nginx=1
+    fi
+    [ "$reload_nginx" = "1" ] && pgrep -x nginx >/dev/null 2>&1 && nginx -s reload
+    if [ -f /etc/apache2/conf-enabled/auth.conf ]; then
+      rm -f /etc/apache2/conf-enabled/auth.conf
+      pgrep -x apache2 >/dev/null 2>&1 && apache2ctl -k graceful
+    fi
+    php -m 2>/dev/null | grep -qix xdebug && disable_xdebug >/dev/null
+    php -m 2>/dev/null | grep -qix xhprof && disable_xhprof >/dev/null
+    true
+  ' || true
+}
+
 @test "HTTP_HOST passed to PHP preserves nonstandard port for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # Debian's nginx-common overrides HTTP_HOST with port-stripped $host in
   # /etc/nginx/fastcgi_params (Debian bug #1126960 security workaround),
@@ -201,6 +226,66 @@ setup() {
   run curl -sI 127.0.0.1:$HOST_HTTP_PORT/test/app-403.php
   assert_success
   refute_output --partial "X-Ddev-403-Source"
+}
+
+@test "verify webserver 403 explanation for a denied path for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  # Both webservers deny dot-files, and deny before looking the file up, so the
+  # path need not exist. These 403s reach the explanation too, which is why the
+  # page names more than the missing-index case.
+  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/.htpasswd
+  assert_success
+  assert_output --partial "403"
+  assert_output --partial "ddev-webserver"
+  run curl -sI 127.0.0.1:$HOST_HTTP_PORT/test/.htpasswd
+  assert_success
+  assert_output --partial "X-Ddev-403-Source"
+}
+
+@test "verify directory listing is left to the project for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  # The explanation must not take over mod_dir/mod_autoindex: a project that
+  # turns listing on still gets a listing. nginx has no .htaccess, so its
+  # autoindex is covered by the next test instead.
+  if [ "${WEBSERVER_TYPE}" != "apache-fpm" ]; then
+    skip "test/listing/.htaccess only applies to apache-fpm"
+  fi
+  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/listing/
+  assert_success
+  assert_output --partial "200"
+  assert_output --partial "listed-file.txt"
+  refute_output --partial "ddev-webserver"
+}
+
+@test "verify a project nginx config outranks the explanations for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  # Site configs include /mnt/ddev_config/nginx/*.conf before common.d, so a
+  # project's own error_page wins; nginx serves the first matching one. Its
+  # autoindex has to win as well, the way .htaccess does for apache above.
+  if [ "${WEBSERVER_TYPE}" != "nginx-fpm" ]; then
+    skip "project nginx config does not apply to ${WEBSERVER_TYPE}"
+  fi
+  run docker exec -u root ${CONTAINER_NAME} bash -c 'mkdir -p /mnt/ddev_config/nginx && printf "location /test/listing/ {\n    autoindex on;\n}\nerror_page 403 /test/app-403.php;\n" >/mnt/ddev_config/nginx/error-pages.conf && nginx -s reload'
+  assert_success
+  sleep 2
+  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/listing/
+  assert_success
+  assert_output --partial "200"
+  assert_output --partial "listed-file.txt"
+  run curl -s -w "\n%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/test/
+  assert_success
+  assert_output --partial "403"
+  assert_output --partial "App-level forbidden page"
+  refute_output --partial "ddev-webserver"
+  run docker exec -u root ${CONTAINER_NAME} bash -c 'rm -f /mnt/ddev_config/nginx/error-pages.conf && nginx -s reload'
+  assert_success
+  sleep 2
+}
+
+@test "verify the explanation pages are not URLs of their own for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  # They answer as error documents only, so a project keeps these paths.
+  for page in 403 404; do
+    run curl -s -o /dev/null -w "%{http_code}" 127.0.0.1:$HOST_HTTP_PORT/ddev-webserver-${page}-error
+    assert_success
+    refute_output "200"
+  done
 }
 
 @test "verify that test/phptest.php is interpreted for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
