@@ -119,6 +119,15 @@ func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloa
 		release, err = withAuthFallback(func(ctx context.Context, client *Client) (*github.RepositoryRelease, *github.Response, error) {
 			return client.Repositories.GetLatestRelease(ctx, owner, repo)
 		})
+		// No latest release, e.g. only prereleases, so use the first listed one
+		if err != nil {
+			releases, listErr := withAuthFallback(func(ctx context.Context, client *Client) ([]*github.RepositoryRelease, *github.Response, error) {
+				return client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 1})
+			})
+			if listErr == nil && len(releases) > 0 {
+				release, err = releases[0], nil
+			}
+		}
 	}
 	if err != nil {
 		return "", "", fmt.Errorf("unable to get releases for %v: %w", repo, err)
