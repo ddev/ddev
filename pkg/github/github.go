@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -102,36 +103,28 @@ func rateLimitDetail(resp *github.Response) string {
 	return detail
 }
 
-// GetGitHubRelease gets the tarball URL and version for a GitHub repository release
+// GetGitHubRelease gets the tarball URL and version for a GitHub repository release.
+// With an empty requestedVersion it returns the release GitHub marks as latest.
 func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloadedRelease string, err error) {
-	releases, err := withAuthFallback(func(ctx context.Context, client *Client) ([]*github.RepositoryRelease, *github.Response, error) {
-		return client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
-	})
+	var release *github.RepositoryRelease
+	if requestedVersion != "" {
+		release, err = withAuthFallback(func(ctx context.Context, client *Client) (*github.RepositoryRelease, *github.Response, error) {
+			return client.Repositories.GetReleaseByTag(ctx, owner, repo, requestedVersion)
+		})
+		var errResp *github.ErrorResponse
+		if errors.As(err, &errResp) && errResp.Response != nil && errResp.Response.StatusCode == http.StatusNotFound {
+			return "", "", fmt.Errorf("no release found for %v with tag %v", repo, requestedVersion)
+		}
+	} else {
+		release, err = withAuthFallback(func(ctx context.Context, client *Client) (*github.RepositoryRelease, *github.Response, error) {
+			return client.Repositories.GetLatestRelease(ctx, owner, repo)
+		})
+	}
 	if err != nil {
 		return "", "", fmt.Errorf("unable to get releases for %v: %w", repo, err)
 	}
-	if len(releases) == 0 {
-		return "", "", fmt.Errorf("no releases found for %v", repo)
-	}
 
-	releaseItem := 0
-	releaseFound := false
-	if requestedVersion != "" {
-		for i, release := range releases {
-			if release.GetTagName() == requestedVersion {
-				releaseItem = i
-				releaseFound = true
-				break
-			}
-		}
-		if !releaseFound {
-			return "", "", fmt.Errorf("no release found for %v with tag %v", repo, requestedVersion)
-		}
-	}
-
-	tarballURL = releases[releaseItem].GetTarballURL()
-	downloadedRelease = releases[releaseItem].GetTagName()
-	return tarballURL, downloadedRelease, nil
+	return release.GetTarballURL(), release.GetTagName(), nil
 }
 
 // GetGitHubHeaders returns headers to be used in GitHub REST API requests if the URL is for GitHub.
