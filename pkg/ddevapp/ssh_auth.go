@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"text/template"
 
@@ -20,6 +21,45 @@ import (
 
 // SSHAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
 const SSHAuthName = "ddev-ssh-agent"
+
+// sshAgentUpstreamLabel records the upstream socket a ddev-ssh-agent container
+// relays to, so a changed ssh_agent_upstream recreates the container.
+const sshAgentUpstreamLabel = "com.ddev.ssh-agent-upstream"
+
+// hostServicesSSHAuthSock is where Docker Desktop, OrbStack, and Colima
+// (started with --ssh-agent) expose the macOS host's SSH agent to containers.
+const hostServicesSSHAuthSock = "/run/host-services/ssh-auth.sock"
+
+// SSHAgentUpstreamSocket returns the socket, as seen by the Docker host, that
+// ddev-ssh-agent relays to when ssh_agent_upstream is set, or "" when
+// ddev-ssh-agent runs its own agent.
+func SSHAgentUpstreamSocket() (string, error) {
+	upstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
+	switch upstream {
+	case "":
+		return "", nil
+	case "host":
+		if dockerutil.IsDockerDesktop() || dockerutil.IsOrbStack() || dockerutil.IsColima() {
+			return hostServicesSSHAuthSock, nil
+		}
+		// Other macOS and Windows providers run Docker in a VM that cannot
+		// reach a host socket.
+		if runtime.GOOS != "linux" {
+			return "", fmt.Errorf("ssh_agent_upstream=host is supported on this OS only with Docker Desktop, OrbStack, or Colima")
+		}
+		sock := os.Getenv("SSH_AUTH_SOCK")
+		if sock == "" {
+			return "", fmt.Errorf("ssh_agent_upstream=host but SSH_AUTH_SOCK is not set; start or forward an SSH agent first")
+		}
+		return sock, nil
+	default:
+		sock, _ := util.ExpandHomedir(upstream)
+		if !filepath.IsAbs(sock) {
+			return "", fmt.Errorf("ssh_agent_upstream must be empty, 'host', or an absolute socket path, not '%s'", upstream)
+		}
+		return sock, nil
+	}
+}
 
 // SSHAuthComposeYAMLPath returns the filepath to the base .ssh-auth-compose yaml file.
 func SSHAuthComposeYAMLPath() string {
@@ -41,14 +81,19 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	RunUpgradeCheck()
 
 	util.Debug("Ensuring ddev-ssh-agent container is running with the current image")
+	upstream, err := SSHAgentUpstreamSocket()
+	if err != nil {
+		return err
+	}
 	sshContainer, err := findDdevSSHAuth()
 	if err != nil {
 		return err
 	}
-	// Nothing to do if the ssh container is running with the current image.
+	// Nothing to do if the ssh container is running with the current image and upstream.
 	// Use HasSuffix to handle registry prefixes (e.g. docker.io/) that Podman includes in image names.
 	if sshContainer != nil &&
 		strings.HasSuffix(sshContainer.Image, ddevImages.GetSSHAuthImage()) &&
+		sshContainer.Labels[sshAgentUpstreamLabel] == upstream &&
 		(sshContainer.State == "running" || sshContainer.State == "starting") {
 		return nil
 	}
@@ -119,7 +164,11 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 		return fmt.Errorf("ddev-ssh-agent failed to become ready; log=%s, err=%v", logOutput, err)
 	}
 
-	util.Warning("ssh-agent container is running: If you want to add authentication to the ssh-agent container, run 'ddev auth ssh' to enable your keys.")
+	if upstream != "" {
+		util.Success("ssh-agent container is relaying to the SSH agent at %s", upstream)
+	} else {
+		util.Warning("ssh-agent container is running: If you want to add authentication to the ssh-agent container, run 'ddev auth ssh' to enable your keys.")
+	}
 	return nil
 }
 
@@ -150,12 +199,24 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 
 	_ = app.DockerEnv()
 
+	upstream, err := SSHAgentUpstreamSocket()
+	if err != nil {
+		return "", err
+	}
 	templateVars := map[string]any{
-		"SSHAuthImage": ddevImages.GetSSHAuthImage(),
-		"UID":          uid,
-		"GID":          gid,
-		"Timezone":     timezone,
-		"UseKeepID":    dockerutil.UseKeepID(),
+		"SSHAuthImage":   ddevImages.GetSSHAuthImage(),
+		"UID":            uid,
+		"GID":            gid,
+		"Timezone":       timezone,
+		"UseKeepID":      dockerutil.UseKeepID(),
+		"UpstreamLabel":  sshAgentUpstreamLabel,
+		"UpstreamSocket": upstream,
+	}
+	if upstream != "" {
+		// Mount the directory rather than the socket: a file bind mount pins the
+		// inode and goes stale when the upstream agent recreates its socket.
+		templateVars["UpstreamDir"] = filepath.Dir(upstream)
+		templateVars["UpstreamName"] = filepath.Base(upstream)
 	}
 	t, err := template.New("ssh_auth_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
 	if err != nil {

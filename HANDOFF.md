@@ -4,7 +4,7 @@ Context for whoever picks up
 [#3878](https://github.com/ddev/ddev/issues/3878): users whose keys live in an
 agent rather than in `~/.ssh` (1Password, YubiKey, forwarded agents, Coder
 workspaces) cannot use `ddev auth ssh`. This file records what was learned and
-tested on 2026-09-23. No DDEV code has changed yet.
+tested on 2026-09-23.
 
 ## Constraints
 
@@ -166,11 +166,38 @@ Gotchas found:
 Not covered: native Windows (named-pipe agents such as Pageant or the Windows
 OpenSSH agent) without WSL. Key-file mode remains the answer there.
 
+## Tested: macOS + OrbStack + 1Password
+
+- OrbStack's `/run/host-services/ssh-auth.sock` serves the 1Password keys
+  (OrbStack follows `IdentityAgent` in `~/.ssh/config`, not the launchd
+  `$SSH_AUTH_SOCK`, which was empty), and it is mode 0666, so no chmod.
+- Bind-mounting 1Password's macOS socket directory directly does not work:
+  the listing fails with "Operation not permitted" and connecting is refused.
+  On macOS only the provider's host-services socket works.
+- The override above, pointed at `/run/host-services`, worked: `ssh-add -l`
+  and `ssh -T git@github.com` succeeded in `web`.
+
+## Implemented: proposal 1 (uncommitted on this branch)
+
+- Global `ssh_agent_upstream` (`ddev config global --ssh-agent-upstream`):
+  empty, `host`, or an absolute socket path, resolved by
+  `SSHAgentUpstreamSocket` in [ssh_auth.go](pkg/ddevapp/ssh_auth.go).
+- The compose template runs socat as `0:0` with the socket's directory
+  mounted at `/upstream` and a `killall -0 socat` healthcheck. The container
+  carries a `com.ddev.ssh-agent-upstream` label, and a mismatch recreates it,
+  so changing the setting or `$SSH_AUTH_SOCK` takes effect on the next start.
+- `ddev auth ssh` without flags lists the upstream agent's keys; with `-f` or
+  `-d` it still tries `ssh-add`, which 1Password refuses.
+- Verified on OrbStack: relay mode, GitHub auth from `web`, and switching back
+  to the default agent while a project kept running.
+  `TestSSHAgentUpstream` covers rendering everywhere and a live relay through
+  a host `ssh-agent` on Linux only.
+
 ## Next steps
 
-- Try the override on macOS with Docker Desktop (add `user: "0:0"`),
-  OrbStack, and Colima with `--ssh-agent`, and on Linux with a forwarded
-  agent (`ssh -A`).
+- Test `host` on Docker Desktop (root-owned socket) and Colima with
+  `--ssh-agent`, and on Linux with a forwarded agent (`ssh -A`).
+- Consider showing the mode in `ddev describe`.
 - Confirm how `coder gitssh` gets the key and whether a workspace shell can
   fetch it.
-- Then implement proposal 1, with proposal 2 as a separate small change.
+- Proposal 2 as a separate small change.

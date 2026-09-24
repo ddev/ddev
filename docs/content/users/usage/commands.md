@@ -300,6 +300,8 @@ Add [SSH key authentication](../usage/cli.md#ssh-into-containers) to the `ddev-s
 
 The command can be executed multiple times to add more keys, or you can use the `-f` flag for several individual keys for example `ddev auth ssh -f /path/to/first_id_rsa -f /path/to/second_id_rsa`.
 
+If [`ssh_agent_upstream`](../configuration/config.md#ssh_agent_upstream) is set, `ddev auth ssh` without flags lists the keys in that agent instead of adding keys.
+
 Example:
 
 ```shell
@@ -510,6 +512,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--router-http-port`: The default router HTTP port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#router_http_port)).
 * `--router-https-port`: The default router HTTPS port for all projects, can be overridden by project configuration (see [default](../configuration/config.md#router_https_port)).
 * `--simple-formatting`: If `true`, use simple formatting for tables and implicitly set `NO_COLOR=1`.
+* `--ssh-agent-upstream`: Make `ddev-ssh-agent` relay to an existing SSH agent: `host` for the host's agent, or the path to an agent socket; empty uses DDEV's own agent (see [default](../configuration/config.md#ssh_agent_upstream)).
 * `--table-style`: Table style for `ddev list` and `ddev describe`, possible values are `default`, `bold`, `bright` (see [default](../configuration/config.md#table_style)).
 * `--traefik-monitor-port`: Can be used to change the Traefik monitor port in case of port conflicts, for example `ddev config global --traefik-monitor-port=11999` (see [default](../configuration/config.md#traefik_monitor_port)).
 * `--use-hardened-images`: If `true`, use more secure 'hardened' images for an actual internet deployment.

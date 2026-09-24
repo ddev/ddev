@@ -17,15 +17,26 @@ services:
     networks:
       - ddev_default
     restart: "no"
+    labels:
+      {{ .UpstreamLabel }}: '{{ .UpstreamSocket }}'
+    {{- if .UpstreamSocket }}
+    # Root, because Docker Desktop's host-services socket is root:root 0660
+    user: '0:0'
+    command: ["socat", "UNIX-LISTEN:/tmp/.ssh-agent/socket,perm=0666,fork,unlink-early", "UNIX-CONNECT:/upstream/{{ .UpstreamName }}"]
+    {{- else }}
     user: '{{ .UID }}:{{ .GID }}'
+    {{- end }}
     volumes:
       - "dot_ssh:/tmp/.ssh"
       - "socket_dir:/tmp/.ssh-agent"
+      {{- if .UpstreamSocket }}
+      - '{{ .UpstreamDir }}:/upstream'
+      {{- end }}
     environment:
       - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
       - TZ={{ .Timezone }}
     healthcheck:
-      test: "/healthcheck.sh"
+      test: {{ if .UpstreamSocket }}"killall -0 socat"{{ else }}"/healthcheck.sh"{{ end }}
       interval: 1s
       retries: 2
       start_period: 10s
