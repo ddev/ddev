@@ -69,6 +69,7 @@ type GlobalConfig struct {
 	RouterXHGuiHTTPSPort             string                      `yaml:"xhgui_https_port,omitempty"`
 	ShareDefaultProvider             string                      `yaml:"share_default_provider,omitempty"`
 	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
+	SSHAgentUpstream                 string                      `yaml:"ssh_agent_upstream,omitempty"`
 	TableStyle                       string                      `yaml:"table_style"`
 	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
 	UseHardenedImages                bool                        `yaml:"use_hardened_images"`

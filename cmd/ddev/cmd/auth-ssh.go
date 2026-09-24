@@ -40,6 +40,13 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("This command takes no arguments.")
 		}
 
+		// With an upstream agent, the keys already live there, so only list them.
+		if globalconfig.DdevGlobalConfig.SSHAgentUpstream != "" && sshKeyFiles == nil && sshKeyDirs == nil {
+			ensureSSHAgent()
+			listUpstreamSSHKeys()
+			return
+		}
+
 		// Use ~/.ssh if nothing is provided
 		if sshKeyFiles == nil && sshKeyDirs == nil {
 			homeDir, err := os.UserHomeDir()
@@ -70,21 +77,7 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("No SSH private keys found in %s", strings.Join(append(sshKeyDirs, sshKeyFiles...), ", "))
 		}
 
-		app, err := ddevapp.GetActiveApp("")
-		if err != nil || app == nil {
-			// We don't actually have to start ssh-agent in a project directory, so use a dummy app.
-			app = &ddevapp.DdevApp{OmitContainersGlobal: globalconfig.DdevGlobalConfig.OmitContainersGlobal}
-		}
-		omitted := app.GetOmittedContainers()
-		if nodeps.ArrayContainsString(omitted, nodeps.DdevSSHAgentContainer) {
-			util.Failed("ddev-ssh-agent is omitted in your configuration so ssh auth cannot be used")
-		}
-
-		err = app.EnsureSSHAgentContainer()
-		if err != nil {
-			util.Failed("Failed to start %s container: %v", nodeps.DdevSSHAgentContainer, err)
-		}
-		util.Debug("%s is running", nodeps.DdevSSHAgentContainer)
+		ensureSSHAgent()
 
 		output.UserOut.Printf("Adding %d SSH private key(s)...", len(keys))
 
@@ -102,6 +95,36 @@ var AuthSSHCommand = &cobra.Command{
 		}
 		util.Success("Successfully added %d SSH private key(s).", len(keys))
 	},
+}
+
+// ensureSSHAgent starts ddev-ssh-agent, failing if it is omitted or cannot start.
+func ensureSSHAgent() {
+	app, err := ddevapp.GetActiveApp("")
+	if err != nil || app == nil {
+		// We don't actually have to start ssh-agent in a project directory, so use a dummy app.
+		app = &ddevapp.DdevApp{OmitContainersGlobal: globalconfig.DdevGlobalConfig.OmitContainersGlobal}
+	}
+	omitted := app.GetOmittedContainers()
+	if nodeps.ArrayContainsString(omitted, nodeps.DdevSSHAgentContainer) {
+		util.Failed("ddev-ssh-agent is omitted in your configuration so ssh auth cannot be used")
+	}
+
+	err = app.EnsureSSHAgentContainer()
+	if err != nil {
+		util.Failed("Failed to start %s container: %v", nodeps.DdevSSHAgentContainer, err)
+	}
+	util.Debug("%s is running", nodeps.DdevSSHAgentContainer)
+}
+
+// listUpstreamSSHKeys prints the keys that containers can use through the
+// upstream agent ddev-ssh-agent relays to.
+func listUpstreamSSHKeys() {
+	upstream, _ := ddevapp.SSHAgentUpstreamSocket()
+	stdout, stderr, err := dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
+	if err != nil {
+		util.Failed("Unable to list keys from the SSH agent at %s (ssh_agent_upstream=%s): %v\n%s%s", upstream, globalconfig.DdevGlobalConfig.SSHAgentUpstream, err, stdout, stderr)
+	}
+	output.UserOut.Printf("Containers use the SSH agent at %s, which holds these keys:\n%s", upstream, strings.TrimSpace(stdout))
 }
 
 // getSSHKeyPaths returns an array of full paths to SSH private keys

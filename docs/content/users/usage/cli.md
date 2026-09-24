@@ -195,6 +195,8 @@ The [`ddev ssh`](../usage/commands.md#ssh) command opens an interactive Bash or 
 
 You can also use your personal SSH keys within the web container. Run `ddev auth ssh` to add the keys from your `~/.ssh` directory and provide a passphrase, and those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot. This is a very popular approach for accessing private Composer repositories, or for using `drush` aliases against remote servers.
 
+If your keys live in an SSH agent rather than in `~/.ssh`, as with 1Password or a hardware key, run `ddev config global --ssh-agent-upstream=host` and every project's containers use that agent. See [`ssh_agent_upstream`](../configuration/config.md#ssh_agent_upstream).
+
 ### `ddev logs`
 
 The [`ddev logs`](../usage/commands.md#logs) command allows you to easily view error logs from the web container (both nginx/Apache and php-fpm logs are concatenated). To follow the logs in real time, run `ddev logs -f`. When you’re done, press <kbd>CTRL</kbd> + <kbd>C</kbd> to exit the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped database container.
