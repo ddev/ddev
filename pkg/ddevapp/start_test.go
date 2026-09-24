@@ -146,3 +146,48 @@ func TestPlatformOverride(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "x86_64", strings.TrimSpace(out))
 }
+
+// TestStartOfflineWithBuiltImages checks that a failed build stops the start
+// while a registry is reachable, and falls back to the last built images when not.
+func TestStartOfflineWithBuiltImages(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	origSearchTerm := dockerutil.RegistrySearchTerm
+	t.Cleanup(func() {
+		dockerutil.RegistrySearchTerm = origSearchTerm
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(app.GetConfigPath("docker-compose.offline-build.yaml"))
+		_ = os.RemoveAll(app.GetConfigPath("offline-build"))
+		_ = dockerutil.RemoveImage(app.GetComposeProjectName() + "-offline-build")
+	})
+
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.offline-build.yaml"), app.GetConfigPath("docker-compose.offline-build.yaml"))
+	require.NoError(t, err)
+	err = fileutil.CopyDir(filepath.Join(origDir, "testdata", t.Name(), "offline-build"), app.GetConfigPath("offline-build"))
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	// offline.invalid never resolves, so the rebuild fails the way it does offline.
+	err = os.WriteFile(app.GetConfigPath("offline-build/Dockerfile"), []byte("FROM offline.invalid/busybox:stable\n"), 0644)
+	require.NoError(t, err)
+
+	err = app.Restart()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "offline.invalid")
+
+	dockerutil.RegistrySearchTerm = "offline.invalid/ddev-utilities"
+	err = app.Restart()
+	require.NoError(t, err)
+
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "offline-build",
+		Cmd:     "ls /tmp/added-by-offline-build.txt",
+	})
+	require.NoError(t, err)
+}

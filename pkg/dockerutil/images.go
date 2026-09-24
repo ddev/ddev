@@ -1,7 +1,9 @@
 package dockerutil
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/moby/moby/api/types/image"
@@ -40,6 +42,30 @@ func ImageExistsLocally(imageName string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// RegistrySearchTerm is the repository IsRegistryReachable searches for, a
+// variable so tests can point it at a registry that can't be reached.
+var RegistrySearchTerm = "docker.io/ddev/ddev-utilities"
+
+// IsRegistryReachable reports whether the Docker daemon can reach Docker Hub.
+// The daemon runs the search itself, so it takes the same network path, proxy
+// included, as a pull or build. Search works on Podman, unlike
+// DistributionInspect, and the term is fully qualified because Podman reads a
+// bare org as a registry host.
+func IsRegistryReachable() bool {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return false
+	}
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	_, err = apiClient.ImageSearch(ctx, RegistrySearchTerm, client.ImageSearchOptions{Limit: 1})
+	if err != nil {
+		util.Debug("Unable to reach a registry searching for %s: %v", RegistrySearchTerm, err)
+		return false
+	}
+	return true
 }
 
 // FindImagesByLabels takes a map of label names and values and returns any Docker images which match all labels.
