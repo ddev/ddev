@@ -311,6 +311,7 @@ OpenSSH agent) without WSL. Key-file mode remains the answer there.
 | Docker Desktop | Apple's agent | Works; the root relay is required |
 | Docker Desktop | 1Password via `IdentityAgent` | Containers get Apple's agent instead |
 | Colima `--ssh-agent` | Apple's agent | Works once the socket file, not its directory, is mounted |
+| OrbStack | gpg-agent (`enable-ssh-support`) via `IdentityAgent` | Works: keys listed and `ssh-keygen -Y sign` succeeds from `web` |
 | Lima (rootless Docker) with `forwardAgent` | Apple's agent | Works; DDEV reads the socket path with `limactl shell <instance> printenv SSH_AUTH_SOCK`, and a VM restart's new path is picked up on the next start |
 | Rancher Desktop, Lima without `forwardAgent` | any | `host` rejected; `ddev start` warns and falls back to DDEV's own agent, `ddev auth ssh` fails with the fix |
 
@@ -342,7 +343,8 @@ macOS providers, each with Apple's agent and with an `IdentityAgent` agent:
 macOS agents, with at least one provider:
 
 - Apple's agent (done), 1Password (done)
-- gpg-agent with `enable-ssh-support` (the usual YubiKey route)
+- gpg-agent with `enable-ssh-support` (done on OrbStack with a software key;
+  a YubiKey still untested)
 - Secretive, Bitwarden, or Strongbox: another socket-path agent, to confirm
   nothing is 1Password-specific
 
