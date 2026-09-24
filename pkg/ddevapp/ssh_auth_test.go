@@ -220,6 +220,11 @@ func TestSSHAgentUpstream(t *testing.T) {
 	globalconfig.DdevGlobalConfig.SSHAgentUpstream = "relative/agent.sock"
 	_, err := ddevapp.SSHAgentUpstreamSocket()
 	require.Error(t, err)
+	_ = dockerutil.RemoveContainer(ddevapp.SSHAuthName)
+	err = app.EnsureSSHAgentContainer()
+	require.NoError(t, err)
+	stdout, _, err := dockerutil.Exec(ddevapp.SSHAuthName, "killall -0 ssh-agent", "")
+	require.NoError(t, err, stdout)
 
 	upstreamDir := testcommon.CreateTmpDir(t.Name())
 	t.Cleanup(func() {

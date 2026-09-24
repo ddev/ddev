@@ -12,6 +12,7 @@ import (
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/compose/v5/cmd/display"
@@ -42,10 +43,13 @@ func SSHAgentUpstreamSocket() (string, error) {
 		if dockerutil.IsDockerDesktop() || dockerutil.IsOrbStack() || dockerutil.IsColima() {
 			return hostServicesSSHAuthSock, nil
 		}
+		if dockerutil.IsLima() {
+			return limaForwardedAgentSocket()
+		}
 		// Other macOS and Windows providers run Docker in a VM that cannot
 		// reach a host socket.
 		if runtime.GOOS != "linux" {
-			return "", fmt.Errorf("ssh_agent_upstream=host is supported on this OS only with Docker Desktop, OrbStack, or Colima")
+			return "", fmt.Errorf("ssh_agent_upstream=host works on this OS only with Docker Desktop, OrbStack, Colima, or Lima, which forward the host's SSH agent; use one of them or run 'ddev config global --ssh-agent-upstream=\"\"'")
 		}
 		sock := os.Getenv("SSH_AUTH_SOCK")
 		if sock == "" {
@@ -59,6 +63,23 @@ func SSHAgentUpstreamSocket() (string, error) {
 		}
 		return sock, nil
 	}
+}
+
+// limaForwardedAgentSocket returns the socket that Lima's persistent SSH
+// connection forwards the host agent to when ssh.forwardAgent is enabled.
+// Its path is random and changes when the VM restarts.
+func limaForwardedAgentSocket() (string, error) {
+	info, err := dockerutil.GetDockerClientInfo()
+	if err != nil {
+		return "", err
+	}
+	instance := strings.TrimPrefix(info.Name, "lima-")
+	out, err := exec.RunHostCommand("limactl", "shell", instance, "printenv", "SSH_AUTH_SOCK")
+	sock := strings.TrimSpace(out)
+	if err != nil || sock == "" {
+		return "", fmt.Errorf("the Lima instance '%s' does not forward an SSH agent; enable it with 'limactl edit %s --set .ssh.forwardAgent=true', or run 'ddev config global --ssh-agent-upstream=\"\"'", instance, instance)
+	}
+	return sock, nil
 }
 
 // SSHAuthComposeYAMLPath returns the filepath to the base .ssh-auth-compose yaml file.
@@ -81,9 +102,10 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	RunUpgradeCheck()
 
 	util.Debug("Ensuring ddev-ssh-agent container is running with the current image")
+	// An unusable upstream must not block projects from starting.
 	upstream, err := SSHAgentUpstreamSocket()
 	if err != nil {
-		return err
+		util.Warning("%v; using DDEV's own SSH agent instead", err)
 	}
 	sshContainer, err := findDdevSSHAuth()
 	if err != nil {
@@ -201,10 +223,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 
 	_ = app.DockerEnv()
 
-	upstream, err := SSHAgentUpstreamSocket()
-	if err != nil {
-		return "", err
-	}
+	upstream, _ := SSHAgentUpstreamSocket()
 	templateVars := map[string]any{
 		"SSHAuthImage":   ddevImages.GetSSHAuthImage(),
 		"UID":            uid,

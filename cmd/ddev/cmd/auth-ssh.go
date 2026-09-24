@@ -42,6 +42,9 @@ var AuthSSHCommand = &cobra.Command{
 
 		// With an upstream agent, the keys already live there, so only list them.
 		if globalconfig.DdevGlobalConfig.SSHAgentUpstream != "" && sshKeyFiles == nil && sshKeyDirs == nil {
+			if _, err := ddevapp.SSHAgentUpstreamSocket(); err != nil {
+				util.Failed("%v", err)
+			}
 			ensureSSHAgent()
 			listUpstreamSSHKeys()
 			return
