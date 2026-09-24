@@ -114,7 +114,7 @@ Which agent is behind it differs, and was tested here:
 | Colima (`colima start --ssh-agent`) | launchd `$SSH_AUTH_SOCK` only, through Lima's ssh forwarding | symlink to `/tmp/ssh-*/agent.*` |
 | Rancher Desktop | none: no `/run/host-services`, no `SSH_AUTH_SOCK` in `rdctl shell` | — |
 | Lima with [`ssh.forwardAgent: true`](https://lima-vm.io/docs/config/) | launchd `$SSH_AUTH_SOCK`, through the hostagent's persistent SSH connection | `/tmp/ssh-*/agent.*`, random per VM boot |
-| Podman | none known; not tested | — |
+| Podman (rootless, SELinux enforcing) | only per `podman machine ssh` session, which uses `~/.ssh/config` and so reaches 1Password; each session gets a new `~/.ssh/agent/s.*` socket that disappears when it ends | — |
 
 Consequences:
 
@@ -313,6 +313,7 @@ OpenSSH agent) without WSL. Key-file mode remains the answer there.
 | Colima `--ssh-agent` | Apple's agent | Works once the socket file, not its directory, is mounted |
 | OrbStack | gpg-agent (`enable-ssh-support`) via `IdentityAgent` | Works: keys listed and `ssh-keygen -Y sign` succeeds from `web` |
 | Lima (rootless Docker) with `forwardAgent` | Apple's agent | Works; DDEV reads the socket path with `limactl shell <instance> printenv SSH_AUTH_SOCK`, and a VM restart's new path is picked up on the next start |
+| Podman (rootless) | 1Password, via a user-held `podman machine ssh` session and an explicit socket path | Relay works, including GitHub auth from `web`, once `label=disable` is set; not practical as a supported setup |
 | Rancher Desktop, Lima without `forwardAgent` | any | `host` rejected; `ddev start` warns and falls back to DDEV's own agent, `ddev auth ssh` fails with the fix |
 
 Findings:
@@ -324,6 +325,9 @@ Findings:
   running, because web containers mount the socket volume, not the socket.
 - An unusable upstream, such as `host` after switching to Rancher Desktop,
   must not block projects, so `ddev start` warns and runs DDEV's own agent.
+- SELinux blocks the relay from the upstream socket (`Permission denied` on
+  Podman's enforcing VM), so relay mode sets `security_opt: label=disable`.
+  Docker ignores it where SELinux is off. Fedora hosts will need this too.
 - The ddev-ssh-agent healthcheck only checks socat, so the container stays
   healthy while the upstream agent is down.
 
@@ -335,9 +339,8 @@ Each environment should cover `ddev auth ssh`, `ddev exec ssh-add -l`, and
 macOS providers, each with Apple's agent and with an `IdentityAgent` agent:
 
 - OrbStack, Docker Desktop, and Colima with `--ssh-agent` (done)
-- Rancher Desktop (done: no forwarding) and Lima (done with `forwardAgent`);
-  Podman: currently rejected
-  by `host`; confirm whether it forwards an agent. socktainer (Apple
+- Rancher Desktop (done: no forwarding), Lima (done with `forwardAgent`),
+  and Podman (done: no persistent forwarding). socktainer (Apple
   container) is out of scope.
 
 macOS agents, with at least one provider:

@@ -23,6 +23,9 @@ services:
     # Root, because Docker Desktop's host-services socket is root:root 0660
     user: '0:0'
     command: ["socat", "UNIX-LISTEN:/tmp/.ssh-agent/socket,perm=0666,fork,unlink-early", "UNIX-CONNECT:/upstream/{{ .UpstreamName }}"]
+    # SELinux labels the upstream socket as host content, which containers cannot use
+    security_opt:
+      - label=disable
     {{- else }}
     user: '{{ .UID }}:{{ .GID }}'
     {{- end }}
