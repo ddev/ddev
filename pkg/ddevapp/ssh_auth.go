@@ -181,7 +181,9 @@ func RemoveSSHAgentContainer() error {
 			return err
 		}
 	}
-	util.Warning("The ddev-ssh-agent container has been removed. When you start it again you will have to use 'ddev auth ssh' to provide key authentication again.")
+	if globalconfig.DdevGlobalConfig.SSHAgentUpstream == "" {
+		util.Warning("The ddev-ssh-agent container has been removed. When you start it again you will have to use 'ddev auth ssh' to provide key authentication again.")
+	}
 	return nil
 }
 

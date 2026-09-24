@@ -177,7 +177,7 @@ OpenSSH agent) without WSL. Key-file mode remains the answer there.
 - The override above, pointed at `/run/host-services`, worked: `ssh-add -l`
   and `ssh -T git@github.com` succeeded in `web`.
 
-## Implemented: proposal 1 (uncommitted on this branch)
+## Implemented: proposal 1
 
 - Global `ssh_agent_upstream` (`ddev config global --ssh-agent-upstream`):
   empty, `host`, or an absolute socket path, resolved by
@@ -187,17 +187,79 @@ OpenSSH agent) without WSL. Key-file mode remains the answer there.
   carries a `com.ddev.ssh-agent-upstream` label, and a mismatch recreates it,
   so changing the setting or `$SSH_AUTH_SOCK` takes effect on the next start.
 - `ddev auth ssh` without flags lists the upstream agent's keys; with `-f` or
-  `-d` it still tries `ssh-add`, which 1Password refuses.
-- Verified on OrbStack: relay mode, GitHub auth from `web`, and switching back
-  to the default agent while a project kept running.
-  `TestSSHAgentUpstream` covers rendering everywhere and a live relay through
+  `-d` it still tries `ssh-add`, which 1Password refuses. When the upstream
+  agent is down it fails with "Make sure that agent is running and holds your
+  keys."
+- `TestSSHAgentUpstream` covers rendering everywhere and a live relay through
   a host `ssh-agent` on Linux only.
+
+## macOS results so far
+
+| Provider | Agent | Result |
+| --- | --- | --- |
+| OrbStack | 1Password via `IdentityAgent` | Works, including GitHub auth from `web` |
+| OrbStack | Apple's agent (no `IdentityAgent`) | Works after restarting OrbStack |
+| OrbStack | `SSH_AUTH_SOCK` exported in the shell only | Ignored; containers get Apple's agent |
+| OrbStack | 1Password quit, then restarted | Clear error while down; recovers with no DDEV restart |
+| Docker Desktop | Apple's agent | Works; socket is `root:root 0660`, so the root relay is required |
+| Docker Desktop | 1Password via `IdentityAgent` | Not yet tested (Docker Desktop hung on restart) |
+
+Findings:
+
+- On macOS the provider, not DDEV, picks the agent. OrbStack uses
+  `IdentityAgent` from `~/.ssh/config` if set, otherwise the launchd
+  `$SSH_AUTH_SOCK`, and reads it only at startup. A shell `export
+  SSH_AUTH_SOCK=...` never reaches a GUI provider, which will surprise users
+  who followed agent setup instructions that way.
+- Switching from the relay back to DDEV's own agent works while projects keep
+  running, because web containers mount the socket volume, not the socket.
+- The ddev-ssh-agent healthcheck only checks socat, so the container stays
+  healthy while the upstream agent is down.
+
+## Environments to test
+
+Each environment should cover `ddev auth ssh`, `ddev exec ssh-add -l`, and
+`ddev exec ssh -T git@github.com`, plus the agent being stopped and restarted.
+
+macOS providers, each with Apple's agent and with an `IdentityAgent` agent:
+
+- OrbStack (done), Docker Desktop (Apple's agent done)
+- Colima started with `--ssh-agent`
+- Rancher Desktop, Lima, Podman, and socktainer (Apple container): currently
+  rejected by `host`; confirm whether any forwards an agent
+
+macOS agents, with at least one provider:
+
+- Apple's agent (done), 1Password (done)
+- gpg-agent with `enable-ssh-support` (the usual YubiKey route)
+- Secretive, Bitwarden, or Strongbox: another socket-path agent, to confirm
+  nothing is 1Password-specific
+
+Linux, with native Docker and `ssh_agent_upstream=host`:
+
+- Ubuntu desktop, where GNOME Keyring or gcr provides `$SSH_AUTH_SOCK`
+- One or two other distros, such as Fedora (SELinux may block the socket
+  mount) and Arch or Debian
+- A forwarded agent over `ssh -A`, whose socket path changes every session
+- 1Password's Linux agent via an explicit socket path
+- Docker Desktop for Linux, which may offer `/run/host-services`
+- Rootless Docker and Podman
+
+WSL2: the relay setup above (done), repeated with the core setting instead of
+the override.
+
+Traditional Windows: the Windows OpenSSH agent and 1Password use a named pipe
+that the Docker Desktop VM cannot mount. See whether Docker Desktop for Windows
+forwards an agent at all before deciding whether it is in scope.
 
 ## Next steps
 
-- Test `host` on Docker Desktop (root-owned socket) and Colima with
-  `--ssh-agent`, and on Linux with a forwarded agent (`ssh -A`).
-- Consider showing the mode in `ddev describe`.
+- Finish the matrix above, starting with Docker Desktop plus 1Password and
+  Colima.
+- Document the macOS provider behavior (partly done in `config.md`) and the
+  shell-export pitfall.
+- Consider showing the mode in `ddev describe`, and a healthcheck that notices
+  a dead upstream.
 - Confirm how `coder gitssh` gets the key and whether a workspace shell can
   fetch it.
 - Proposal 2 as a separate small change.

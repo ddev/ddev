@@ -660,6 +660,7 @@ Make the `ddev-ssh-agent` container relay to an SSH agent you already run, such 
 
 * Empty: `ddev-ssh-agent` runs its own agent, and [`ddev auth ssh`](../usage/commands.md#auth-ssh) adds key files to it.
 * `host`: relay to the host's agent. With Docker Desktop, OrbStack, or Colima started with `--ssh-agent`, this is the agent the provider forwards to `/run/host-services/ssh-auth.sock`. On Linux and WSL2 it is the socket in `$SSH_AUTH_SOCK` when a project starts.
+* On macOS the provider chooses which agent to forward. OrbStack uses the `IdentityAgent` in `~/.ssh/config` if one is set, otherwise macOS's own agent in `$SSH_AUTH_SOCK`, and reads that only when it starts, so restart OrbStack after changing it.
 * A socket path: relay to that socket. The Docker host must be able to reach it, so on macOS use `host` instead.
 
 With an upstream agent, `ddev auth ssh` lists the agent's keys rather than adding keys, and every container on the DDEV network can ask the agent to sign. Agents that confirm each use, like 1Password, limit that exposure.

@@ -122,7 +122,7 @@ func listUpstreamSSHKeys() {
 	upstream, _ := ddevapp.SSHAgentUpstreamSocket()
 	stdout, stderr, err := dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
 	if err != nil {
-		util.Failed("Unable to list keys from the SSH agent at %s (ssh_agent_upstream=%s): %v\n%s%s", upstream, globalconfig.DdevGlobalConfig.SSHAgentUpstream, err, stdout, stderr)
+		util.Failed("Unable to list keys from the SSH agent at %s (ssh_agent_upstream=%s): %s\nMake sure that agent is running and holds your keys.", upstream, globalconfig.DdevGlobalConfig.SSHAgentUpstream, strings.TrimSpace(stdout+stderr))
 	}
 	output.UserOut.Printf("Containers use the SSH agent at %s, which holds these keys:\n%s", upstream, strings.TrimSpace(stdout))
 }
