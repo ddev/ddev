@@ -251,7 +251,7 @@ jobs:
 
       - name: Setup upterm session
         if: ${{ inputs.debug_enabled }}
-        uses: owenthereal/action-upterm@v1
+        uses: owenthereal/action-upterm@42902ffb5244d6d63501c1daf4f4ec82884025f6 # https://github.com/owenthereal/action-upterm/commits/v1.16.0/
         with:
           limit-access-to-actor: true
 
