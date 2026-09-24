@@ -1882,28 +1882,36 @@ func (app *DdevApp) Start() error {
 
 	_, err = app.composeBuild()
 	if err != nil {
-		return err
-	}
-
-	_, logStderrOutput, logStderrErr := dockerutil.RunSimpleContainer(app.WebImage+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, nil, nil, nil)
-	// If the web image is dirty, try to rebuild it immediately
-	if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && globalconfig.IsInternetActive() {
-		if output.JSONOutput {
-			output.UserOut.Printf("Rebuilding web image without cache...")
-		} else {
-			fmt.Print("Rebuilding web image without cache...")
-			if globalconfig.DdevDebug {
-				output.UserOut.Debugln()
-			}
-		}
-		_, err = app.composeBuild("web", "--no-cache")
-		if err != nil {
+		// Offline, BuildKit can fail to resolve a FROM image that an earlier build
+		// used, so fall back to the images from the last successful build.
+		if dockerutil.IsRegistryReachable() || !app.builtImagesExist() {
 			return err
 		}
-	}
+		util.Debug("Unable to build project images: %v", err)
+		util.Warning(`Unable to build project images while offline, using the ones from the last successful build.
+Dockerfile changes take effect on the next online 'ddev start'.
+See https://docs.ddev.com/en/stable/users/usage/offline/ for info.`)
+	} else {
+		_, logStderrOutput, logStderrErr := dockerutil.RunSimpleContainer(app.WebImage+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, nil, nil, nil)
+		// If the web image is dirty, try to rebuild it immediately
+		if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && dockerutil.IsRegistryReachable() {
+			if output.JSONOutput {
+				output.UserOut.Printf("Rebuilding web image without cache...")
+			} else {
+				fmt.Print("Rebuilding web image without cache...")
+				if globalconfig.DdevDebug {
+					output.UserOut.Debugln()
+				}
+			}
+			_, err = app.composeBuild("web", "--no-cache")
+			if err != nil {
+				return err
+			}
+		}
 
-	buildDuration := util.FormatDuration(buildDurationStart())
-	util.Success("Project images built in %s.", buildDuration)
+		buildDuration := util.FormatDuration(buildDurationStart())
+		util.Success("Project images built in %s.", buildDuration)
+	}
 
 	util.Debug("Removing dangling images for the project %s", app.GetComposeProjectName())
 	danglingImages, dErr := dockerutil.FindImagesByLabels(map[string]string{"com.ddev.buildhost": "", "com.docker.compose.project": app.GetComposeProjectName()}, true)
@@ -2348,6 +2356,25 @@ func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
 // FindAllImages returns an array of image tags for all containers in the compose file
 func (app *DdevApp) FindAllImages() ([]string, error) {
 	return app.FindServiceImages(nil)
+}
+
+// builtImagesExist reports whether every service with a build section already
+// has its image locally, so the project can start without building.
+func (app *DdevApp) builtImagesExist() bool {
+	if app.ComposeYaml == nil {
+		return false
+	}
+	for name, service := range app.ComposeYaml.Services {
+		if service.Build == nil {
+			continue
+		}
+		service.Name = name
+		exists, err := dockerutil.ImageExistsLocally(api.GetImageNameOrDefault(service, app.GetComposeProjectName()))
+		if err != nil || !exists {
+			return false
+		}
+	}
+	return true
 }
 
 // FindServiceImages returns an array of image tags for the named services in the

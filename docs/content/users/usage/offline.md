@@ -20,6 +20,8 @@ DDEV attempts to work smoothly offline, and you shouldn’t have to do anything 
 
 However, it cannot pull needed Docker images when offline if a new Docker image is required, so you’ll want to make sure that you try a [`ddev start`](../usage/commands.md#start) before going offline to make sure everything has been pulled.
 
+`ddev start` builds project images every time. If that build fails and Docker Hub can't be reached, DDEV warns and starts with the images from the last successful build, so changes to a Dockerfile made while offline take effect on the next online `ddev start`. When Docker Hub can be reached, a failed build stops `ddev start` as usual.
+
 If you have a project running when you’re online (using DNS for name resolution) and you then go offline, do a [`ddev restart`](../usage/commands.md#restart) to get the hostname added into `/etc/hosts` for name resolution.
 
 You have some general options as well:
