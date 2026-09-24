@@ -215,10 +215,16 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		"UpstreamSocket": upstream,
 	}
 	if upstream != "" {
-		// Mount the directory rather than the socket: a file bind mount pins the
-		// inode and goes stale when the upstream agent recreates its socket.
-		templateVars["UpstreamDir"] = filepath.Dir(upstream)
-		templateVars["UpstreamName"] = filepath.Base(upstream)
+		// A host agent can recreate its socket, which a file bind mount would
+		// miss, so mount the directory. Provider sockets live as long as the VM,
+		// and Colima's is a symlink that only a file mount resolves.
+		if upstream == hostServicesSSHAuthSock {
+			templateVars["UpstreamMount"] = upstream + ":/upstream/agent.sock"
+			templateVars["UpstreamName"] = "agent.sock"
+		} else {
+			templateVars["UpstreamMount"] = filepath.Dir(upstream) + ":/upstream"
+			templateVars["UpstreamName"] = filepath.Base(upstream)
+		}
 	}
 	t, err := template.New("ssh_auth_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
 	if err != nil {
