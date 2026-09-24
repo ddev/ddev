@@ -2328,7 +2328,7 @@ func (app *DdevApp) Restart() error {
 
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
 // We always need web image, and ddev-utilities for housekeeping.
-func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
+func PullBaseContainerImages(additionalImages []composeTypes.ServiceConfig, pullAlways bool) error {
 	base := []string{
 		versionconstants.UtilitiesImage,
 	}
@@ -2341,19 +2341,22 @@ func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
 		base = append(base, ddevImages.GetXhguiImage())
 	}
 	base = append(base, FindNotOmittedImages(nil)...)
-	base = append(base, additionalImages...)
-	return dockerutil.PullImages(base, pullAlways)
+	for _, image := range base {
+		additionalImages = append(additionalImages, composeTypes.ServiceConfig{Image: image})
+	}
+	return dockerutil.PullImages(additionalImages, pullAlways)
 }
 
-// FindAllImages returns an array of image tags for all containers in the compose file
-func (app *DdevApp) FindAllImages() ([]string, error) {
+// FindAllImages returns the image and platform for all containers in the compose file
+func (app *DdevApp) FindAllImages() ([]composeTypes.ServiceConfig, error) {
 	return app.FindServiceImages(nil)
 }
 
-// FindServiceImages returns an array of image tags for the named services in the
-// compose file. A nil/empty serviceNames returns images for all services.
-func (app *DdevApp) FindServiceImages(serviceNames []string) ([]string, error) {
-	var images []string
+// FindServiceImages returns the image and platform to pull for the named services
+// in the compose file, with only Image and Platform set. A nil/empty serviceNames
+// returns images for all services.
+func (app *DdevApp) FindServiceImages(serviceNames []string) ([]composeTypes.ServiceConfig, error) {
+	var images []composeTypes.ServiceConfig
 	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
 		return images, nil
 	}
@@ -2371,7 +2374,13 @@ func (app *DdevApp) FindServiceImages(serviceNames []string) ([]string, error) {
 				image = before
 			}
 		}
-		images = append(images, image)
+		platform := service.Platform
+		// DDEV runs only on amd64 and arm64, so several build platforms always
+		// include the daemon's own, which is what the pull defaults to.
+		if platform == "" && service.Build != nil && len(service.Build.Platforms) == 1 {
+			platform = service.Build.Platforms[0]
+		}
+		images = append(images, composeTypes.ServiceConfig{Image: image, Platform: platform})
 	}
 	return images, nil
 }

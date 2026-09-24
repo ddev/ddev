@@ -3,6 +3,7 @@ package cmd
 import (
 	"strings"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -35,7 +36,7 @@ ddev utility download-images --all
 			}
 		}
 
-		var additionalImages []string
+		var additionalImages []types.ServiceConfig
 
 		// Skip project validation
 		originalRunValidateConfig := ddevapp.RunValidateConfig
@@ -45,10 +46,10 @@ ddev utility download-images --all
 
 		if err != nil {
 			util.Success("Downloading basic images")
-			additionalImages = []string{
+			additionalImages = []types.ServiceConfig{
 				// Pull the default web and db images
-				docker.GetWebImage(),
-				docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion),
+				{Image: docker.GetWebImage()},
+				{Image: docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion)},
 			}
 		} else {
 			var projectNames []string

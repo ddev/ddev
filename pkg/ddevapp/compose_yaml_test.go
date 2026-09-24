@@ -416,3 +416,46 @@ func TestGetDdevLabels(t *testing.T) {
 	require.Contains(t, labels, "com.ddev.webtag")
 	require.Equal(t, versionconstants.WebTag, labels["com.ddev.webtag"])
 }
+
+// TestFindServiceImagesPlatform checks that FindServiceImages returns the
+// platform each image has to be pulled for.
+func TestFindServiceImagesPlatform(t *testing.T) {
+	app := &ddevapp.DdevApp{Name: "proj"}
+	project, err := dockerutil.CreateComposeProject(`
+name: test-project
+services:
+  plain:
+    image: example/plain:1
+  pinned:
+    image: example/pinned:1
+    platform: linux/amd64
+  built:
+    image: example/built:1-proj-built
+    build:
+      context: .
+      platforms:
+        - linux/arm64
+  multi:
+    image: example/multi:1-proj-built
+    build:
+      context: .
+      platforms:
+        - linux/amd64
+        - linux/arm64
+`)
+	require.NoError(t, err)
+	app.ComposeYaml = project
+
+	images, err := app.FindAllImages()
+	require.NoError(t, err)
+	platforms := map[string]string{}
+	for _, image := range images {
+		platforms[image.Image] = image.Platform
+	}
+	require.Equal(t, map[string]string{
+		"example/plain:1":  "",
+		"example/pinned:1": "linux/amd64",
+		"example/built:1":  "linux/arm64",
+		"example/multi:1":  "",
+	}, platforms)
+}
