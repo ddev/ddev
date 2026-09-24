@@ -331,6 +331,30 @@ Findings:
 - The ddev-ssh-agent healthcheck only checks socat, so the container stays
   healthy while the upstream agent is down.
 
+## Linux results so far
+
+Ubuntu 24.04.5 desktop (arm64, Parallels), docker-ce 29.8.1, UID 1001:
+
+| Agent | Setting | Result |
+| --- | --- | --- |
+| Forwarded from macOS with `ssh -A` (1Password there) | `host` | Works, including GitHub auth from `web` |
+| Same, from a later SSH login | `host` | Relay fails once the first login ends; `ddev auth ssh` or `ddev start` from the new login recreates it |
+| gcr-ssh-agent, Ubuntu's desktop agent at `/run/user/<uid>/gcr/ssh` | `host` with the desktop `SSH_AUTH_SOCK` | Works |
+| gcr-ssh-agent | explicit `/run/user/<uid>/gcr/ssh` | Works, and the path is stable across logins |
+| Forwarded, through a fixed symlink such as `~/.ssh/rc` maintains | explicit symlink path | Fails: the directory mount does not contain the link's absolute target |
+
+Findings:
+
+- A forwarded socket lives only as long as the SSH login that created it.
+  `host` follows `$SSH_AUTH_SOCK`, so each new login needs `ddev auth ssh`,
+  and a start from one login repoints the relay away from another login.
+- The common tmux pattern of a fixed symlink to the current forwarded socket
+  does not work. Supporting it would mean mounting the link and its target
+  at their real paths, which for `/tmp/ssh-*` means the host's whole `/tmp`.
+- Ubuntu 24.04 runs gcr-ssh-agent; the older gnome-keyring socket at
+  `/run/user/<uid>/keyring/ssh` also exists. For desktop users an explicit
+  `/run/user/<uid>/gcr/ssh` is the most robust setting.
+
 ## Environments to test
 
 Each environment should cover `ddev auth ssh`, `ddev exec ssh-add -l`, and
@@ -353,10 +377,10 @@ macOS agents, with at least one provider:
 
 Linux, with native Docker and `ssh_agent_upstream=host`:
 
-- Ubuntu desktop, where GNOME Keyring or gcr provides `$SSH_AUTH_SOCK`
+- Ubuntu desktop with gcr-ssh-agent and a forwarded agent (done; see above)
 - One or two other distros, such as Fedora (SELinux may block the socket
   mount) and Arch or Debian
-- A forwarded agent over `ssh -A`, whose socket path changes every session
+- A forwarded agent over `ssh -A` (done on Ubuntu)
 - 1Password's Linux agent via an explicit socket path
 - Docker Desktop for Linux, which may offer `/run/host-services`
 - Rootless Docker and Podman
