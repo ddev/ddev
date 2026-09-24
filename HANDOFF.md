@@ -112,7 +112,9 @@ Which agent is behind it differs, and was tested here:
 | OrbStack | `IdentityAgent` from `~/.ssh/config` if set, else launchd `$SSH_AUTH_SOCK`; read at OrbStack startup | 0666 |
 | Docker Desktop | launchd `$SSH_AUTH_SOCK` only; `IdentityAgent` ignored | `root:root` 0660 |
 | Colima (`colima start --ssh-agent`) | launchd `$SSH_AUTH_SOCK` only, through Lima's ssh forwarding | symlink to `/tmp/ssh-*/agent.*` |
-| Rancher Desktop, Lima, Podman, socktainer | none known; not tested | — |
+| Rancher Desktop | none: no `/run/host-services`, no `SSH_AUTH_SOCK` in `rdctl shell` | — |
+| Lima with [`ssh.forwardAgent: true`](https://lima-vm.io/docs/config/) | launchd `$SSH_AUTH_SOCK`, through the hostagent's persistent SSH connection | `/tmp/ssh-*/agent.*`, random per VM boot |
+| Podman | none known; not tested | — |
 
 Consequences:
 
@@ -130,7 +132,7 @@ Consequences:
 OrbStack does the most: it finds the agent the user's `ssh` would use and
 forwards it with open permissions. That still leaves gaps DDEV has to cover:
 
-- Only OrbStack behaves this way. Docker Desktop and Colima ignore
+- Only OrbStack behaves this way. Docker Desktop, Colima, and Lima ignore
   `IdentityAgent`, Linux has no host-services socket at all, and a container
   never gets any of them unless something mounts the socket and sets
   `SSH_AUTH_SOCK`.
@@ -309,6 +311,8 @@ OpenSSH agent) without WSL. Key-file mode remains the answer there.
 | Docker Desktop | Apple's agent | Works; the root relay is required |
 | Docker Desktop | 1Password via `IdentityAgent` | Containers get Apple's agent instead |
 | Colima `--ssh-agent` | Apple's agent | Works once the socket file, not its directory, is mounted |
+| Lima (rootless Docker) with `forwardAgent` | Apple's agent | Works; DDEV reads the socket path with `limactl shell <instance> printenv SSH_AUTH_SOCK`, and a VM restart's new path is picked up on the next start |
+| Rancher Desktop, Lima without `forwardAgent` | any | `host` rejected; `ddev start` warns and falls back to DDEV's own agent, `ddev auth ssh` fails with the fix |
 
 Findings:
 
@@ -317,6 +321,8 @@ Findings:
   mounted by directory, so an agent that recreates its socket keeps working.
 - Switching from the relay back to DDEV's own agent works while projects keep
   running, because web containers mount the socket volume, not the socket.
+- An unusable upstream, such as `host` after switching to Rancher Desktop,
+  must not block projects, so `ddev start` warns and runs DDEV's own agent.
 - The ddev-ssh-agent healthcheck only checks socat, so the container stays
   healthy while the upstream agent is down.
 
@@ -328,8 +334,10 @@ Each environment should cover `ddev auth ssh`, `ddev exec ssh-add -l`, and
 macOS providers, each with Apple's agent and with an `IdentityAgent` agent:
 
 - OrbStack, Docker Desktop, and Colima with `--ssh-agent` (done)
-- Rancher Desktop, Lima, Podman, and socktainer (Apple container): currently
-  rejected by `host`; confirm whether any forwards an agent
+- Rancher Desktop (done: no forwarding) and Lima (done with `forwardAgent`);
+  Podman: currently rejected
+  by `host`; confirm whether it forwards an agent. socktainer (Apple
+  container) is out of scope.
 
 macOS agents, with at least one provider:
 
