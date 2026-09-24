@@ -251,9 +251,10 @@ func CreateComposeProject(yamlStr string) (*types.Project, error) {
 	return project, nil
 }
 
-// PullImages pulls images in parallel if they don't exist locally.
+// PullImages pulls each service's Image in parallel if it doesn't exist locally,
+// for the service's Platform when it sets one. Other fields are ignored.
 // If pullAlways is true, it will always pull.
-func PullImages(images []string, pullAlways bool) error {
+func PullImages(images []types.ServiceConfig, pullAlways bool) error {
 	if len(images) == 0 {
 		return nil
 	}
@@ -265,22 +266,23 @@ func PullImages(images []string, pullAlways bool) error {
 	}
 
 	for _, image := range images {
-		if image == "" {
+		if image.Image == "" {
 			continue
 		}
 		if !pullAlways {
-			if imageExists, _ := ImageExistsLocally(image); imageExists {
+			if imageExists, _ := ImageExistsLocally(image.Image); imageExists {
 				continue
 			}
 		}
-		service := sanitizeServiceName(image)
+		service := sanitizeServiceName(image.Image + " " + image.Platform)
 		if _, exists := project.Services[service]; exists {
 			continue
 		}
 		project.Services[service] = types.ServiceConfig{
-			Image: image,
+			Image:    image.Image,
+			Platform: image.Platform,
 		}
-		util.Debug(`Pulling image for %s ("%s" service)`, image, service)
+		util.Debug(`Pulling image for %s %s ("%s" service)`, image.Image, image.Platform, service)
 	}
 
 	if len(project.Services) == 0 {
@@ -297,7 +299,7 @@ func PullImages(images []string, pullAlways bool) error {
 
 // Pull pulls image if it doesn't exist locally.
 func Pull(image string) error {
-	return PullImages([]string{image}, false)
+	return PullImages([]types.ServiceConfig{{Image: image}}, false)
 }
 
 // sanitizeServiceName sanitizes a string to be a valid Docker Compose service name

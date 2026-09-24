@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -341,9 +342,9 @@ func TestLoadComposeProjectDoesNotMutateOpts(t *testing.T) {
 // TestPullImagesEmpty verifies that PullImages with empty/nil input is a no-op.
 func TestPullImagesEmpty(t *testing.T) {
 	require.NoError(t, dockerutil.PullImages(nil, false))
-	require.NoError(t, dockerutil.PullImages([]string{}, false))
-	// A slice of only empty strings should also be a no-op (all skipped).
-	require.NoError(t, dockerutil.PullImages([]string{""}, false))
+	require.NoError(t, dockerutil.PullImages([]types.ServiceConfig{}, false))
+	// A slice of only empty images should also be a no-op (all skipped).
+	require.NoError(t, dockerutil.PullImages([]types.ServiceConfig{{}}, false))
 }
 
 // TestSetExecStdinRestoreOnPanic verifies that SetExecStdin's restore closure
