@@ -37,6 +37,111 @@ tested on 2026-09-23.
   changes ([ssh_auth.go:52](pkg/ddevapp/ssh_auth.go#L52)), so an edited
   override needs `docker rm -f ddev-ssh-agent` or `ddev poweroff`.
 
+## SSH agent basics
+
+An SSH agent is a long-running process that holds private keys and signs
+authentication challenges on request. Clients never see the keys; they talk to
+the agent over a Unix socket (a named pipe on Windows) using the
+[agent protocol](https://datatracker.ietf.org/doc/draft-ietf-sshm-ssh-agent/).
+Because the protocol has no "export key" operation, an agent-only key can be
+used from a container only by giving the container a path to the socket.
+
+How clients find an agent:
+
+- `$SSH_AUTH_SOCK` names the socket. `ssh`, `ssh-add`, `git`, and most
+  libraries read it.
+- `IdentityAgent` in `~/.ssh/config` overrides `$SSH_AUTH_SOCK`, but only for
+  `ssh` itself ([ssh_config(5)](https://man.openbsd.org/ssh_config#IdentityAgent)).
+  `ssh-add` ignores it, so `ssh-add -l` can report an empty agent while `ssh`
+  authenticates through 1Password.
+- `ssh -A` (or `ForwardAgent yes`) forwards the local agent to a remote host,
+  where sshd creates a new socket under `/tmp/ssh-*` and sets
+  `$SSH_AUTH_SOCK` for that session only.
+
+Agents users are likely to have:
+
+- **macOS built-in agent.** launchd starts `ssh-agent` on demand and sets
+  `$SSH_AUTH_SOCK` to `/var/run/com.apple.launchd.*/Listeners` for every GUI
+  and terminal process. Keys are forgotten at logout.
+  `ssh-add --apple-use-keychain <key>` stores the passphrase in the Keychain,
+  and `ssh-add --apple-load-keychain` reloads those keys, or `UseKeychain yes`
+  plus `AddKeysToAgent yes` in `~/.ssh/config` loads them on first use
+  (`man ssh-add` on macOS). KeePassXC also loads keys into this agent.
+- **Agents with their own socket**, selected with `IdentityAgent` or by
+  exporting `SSH_AUTH_SOCK`:
+  [1Password](https://developer.1password.com/docs/ssh/agent/)
+  (`~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock` on macOS,
+  `~/.1password/agent.sock` on Linux),
+  [Secretive](https://github.com/maxgoedjen/secretive) (Secure Enclave keys),
+  Bitwarden, Strongbox, and
+  [gpg-agent](https://www.gnupg.org/documentation/manuals/gnupg/Agent-Options.html)
+  with `enable-ssh-support`, the usual YubiKey route. These generally refuse
+  `ssh-add` of new keys.
+- **Linux desktop agents.** GNOME Keyring or gcr-ssh-agent on Ubuntu and
+  Fedora, KWallet with `ssh-agent` on KDE, or a user-started `ssh-agent`
+  ([Arch wiki](https://wiki.archlinux.org/title/SSH_keys#SSH_agents)).
+- **Windows.** The OpenSSH agent service and 1Password use the named pipe
+  `\\.\pipe\openssh-ssh-agent`; Pageant has its own protocol.
+
+Everyday commands
+([ssh-agent(1)](https://man.openbsd.org/ssh-agent),
+[ssh-add(1)](https://man.openbsd.org/ssh-add)):
+
+```bash
+ssh-add -l                       # list keys in the agent $SSH_AUTH_SOCK names
+ssh-add                          # add ~/.ssh/id_rsa, id_ecdsa, id_ed25519, ...
+ssh-add ~/.ssh/other_key         # add one key
+ssh-add -d ~/.ssh/other_key      # remove one key; -D removes all
+eval "$(ssh-agent -s)"           # start a private agent for this shell
+ssh-agent -a /path/agent.sock    # start one on a fixed socket
+SSH_AUTH_SOCK=~/.1password/agent.sock ssh-add -l   # query a specific agent
+ssh -T git@github.com            # test authentication
+```
+
+## What Docker providers forward on macOS
+
+Docker Desktop, OrbStack, and Colima each expose a host agent inside their VM
+at `/run/host-services/ssh-auth.sock`, following Docker Desktop's convention
+([Docker docs](https://docs.docker.com/desktop/features/networking/networking-how-tos/),
+[OrbStack docs](https://docs.orbstack.dev/docker/#ssh-agent-forwarding),
+[Colima FAQ](https://github.com/abiosoft/colima/blob/main/docs/FAQ.md)).
+Which agent is behind it differs, and was tested here:
+
+| Provider | Agent forwarded | Socket in the VM |
+| --- | --- | --- |
+| OrbStack | `IdentityAgent` from `~/.ssh/config` if set, else launchd `$SSH_AUTH_SOCK`; read at OrbStack startup | 0666 |
+| Docker Desktop | launchd `$SSH_AUTH_SOCK` only; `IdentityAgent` ignored | `root:root` 0660 |
+| Colima (`colima start --ssh-agent`) | launchd `$SSH_AUTH_SOCK` only, through Lima's ssh forwarding | symlink to `/tmp/ssh-*/agent.*` |
+| Rancher Desktop, Lima, Podman, socktainer | none known; not tested | — |
+
+Consequences:
+
+- A shell `export SSH_AUTH_SOCK=...` never reaches these GUI or background
+  providers. On Docker Desktop and Colima, 1Password users must repoint the
+  launchd socket itself, which is what 1Password's
+  ["Configure SSH_AUTH_SOCK globally for every client"](https://www.1password.dev/ssh/agent/compatibility/)
+  LaunchAgent does (and what the `ddev 1password` add-on command installs).
+  DDEV cannot do this, per the constraints above.
+- OrbStack's docs say 1Password's agent will not work, but here it did,
+  because OrbStack now follows `IdentityAgent`.
+
+### Why not rely on OrbStack alone
+
+OrbStack does the most: it finds the agent the user's `ssh` would use and
+forwards it with open permissions. That still leaves gaps DDEV has to cover:
+
+- Only OrbStack behaves this way. Docker Desktop and Colima ignore
+  `IdentityAgent`, Linux has no host-services socket at all, and a container
+  never gets any of them unless something mounts the socket and sets
+  `SSH_AUTH_SOCK`.
+- DDEV's containers use the `ddev-ssh-agent` socket volume, not
+  `/run/host-services`, so without the relay OrbStack's forwarding is unused.
+  The ddev-1password add-on mounts it per project and only into `web`.
+- OrbStack reads `~/.ssh/config` only at startup, so switching agents needs an
+  OrbStack restart, which users will not expect.
+- `ddev auth ssh` with key files, the default, must keep working for users
+  with no agent.
+
 ## Existing per-project workaround
 
 [anotherjames/ddev-1password](https://github.com/anotherjames/ddev-1password)
@@ -200,17 +305,16 @@ OpenSSH agent) without WSL. Key-file mode remains the answer there.
 | OrbStack | 1Password via `IdentityAgent` | Works, including GitHub auth from `web` |
 | OrbStack | Apple's agent (no `IdentityAgent`) | Works after restarting OrbStack |
 | OrbStack | `SSH_AUTH_SOCK` exported in the shell only | Ignored; containers get Apple's agent |
-| OrbStack | 1Password quit, then restarted | Clear error while down; recovers with no DDEV restart |
-| Docker Desktop | Apple's agent | Works; socket is `root:root 0660`, so the root relay is required |
-| Docker Desktop | 1Password via `IdentityAgent` | Not yet tested (Docker Desktop hung on restart) |
+| OrbStack | 1Password quit, then restarted | Clear error while down; recovers with no DDEV restart (directory mount; retest with the file mount) |
+| Docker Desktop | Apple's agent | Works; the root relay is required |
+| Docker Desktop | 1Password via `IdentityAgent` | Containers get Apple's agent instead |
+| Colima `--ssh-agent` | Apple's agent | Works once the socket file, not its directory, is mounted |
 
 Findings:
 
-- On macOS the provider, not DDEV, picks the agent. OrbStack uses
-  `IdentityAgent` from `~/.ssh/config` if set, otherwise the launchd
-  `$SSH_AUTH_SOCK`, and reads it only at startup. A shell `export
-  SSH_AUTH_SOCK=...` never reaches a GUI provider, which will surprise users
-  who followed agent setup instructions that way.
+- `/run/host-services/ssh-auth.sock` is mounted as a file, because Colima's is
+  a symlink that a directory mount does not resolve. Other socket paths are
+  mounted by directory, so an agent that recreates its socket keeps working.
 - Switching from the relay back to DDEV's own agent works while projects keep
   running, because web containers mount the socket volume, not the socket.
 - The ddev-ssh-agent healthcheck only checks socat, so the container stays
@@ -223,8 +327,7 @@ Each environment should cover `ddev auth ssh`, `ddev exec ssh-add -l`, and
 
 macOS providers, each with Apple's agent and with an `IdentityAgent` agent:
 
-- OrbStack (done), Docker Desktop (Apple's agent done)
-- Colima started with `--ssh-agent`
+- OrbStack, Docker Desktop, and Colima with `--ssh-agent` (done)
 - Rancher Desktop, Lima, Podman, and socktainer (Apple container): currently
   rejected by `host`; confirm whether any forwards an agent
 
@@ -254,8 +357,8 @@ forwards an agent at all before deciding whether it is in scope.
 
 ## Next steps
 
-- Finish the matrix above, starting with Docker Desktop plus 1Password and
-  Colima.
+- Finish the matrix above, starting with gpg-agent on macOS and Ubuntu
+  desktop.
 - Document the macOS provider behavior (partly done in `config.md`) and the
   shell-export pitfall.
 - Consider showing the mode in `ddev describe`, and a healthcheck that notices
