@@ -15,7 +15,7 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
-# php_version: "8.4"  # PHP version to use, "5.6" through "8.6"
+# php_version: "8.4"  # PHP version to use; see https://docs.ddev.com/en/stable/users/configuration/config/#php_version.
 
 # You can explicitly specify the webimage but this
 # is not recommended, as the images are often closely tied to DDEV's behavior,

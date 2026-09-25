@@ -3,6 +3,8 @@
 FROM debian:trixie-slim AS base
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
+# Bump to rebuild against updated external package repositories.
+ARG EXTERNAL_DEPENDENCIES_REFRESH=2026-09-25
 SHELL ["/bin/bash", "-eu","-o", "pipefail",  "-c"]
 
 RUN ls -l $(which dpkg-split) && ls -l $(which dpkg-deb)
@@ -20,7 +22,7 @@ done
 RUN ls -l /usr/sbin/dpkg-split /usr/sbin/dpkg-deb /usr/sbin/tar /usr/sbin/rm
 
 # tzdata-legacy - to avoid issues with deprecated timezones
-RUN apt-get -qq update && apt-get -qq install --no-install-recommends --no-install-suggests -y \
+RUN echo "External dependency refresh: ${EXTERNAL_DEPENDENCIES_REFRESH}" && apt-get -qq update && apt-get -qq install --no-install-recommends --no-install-suggests -y \
     apt-transport-https \
     ca-certificates \
     bzip2 \
