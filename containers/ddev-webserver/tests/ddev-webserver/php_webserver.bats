@@ -83,7 +83,7 @@ extension_is_packaged() {
   local extension=$1
   local arch
   arch=$(docker exec "$CONTAINER_NAME" dpkg --print-architecture)
-  docker exec "$CONTAINER_NAME" yq -e ".php${PHP_VERSION//./}.${arch} | index(\"${extension}\") != null" /etc/php-packages.yaml >/dev/null
+  docker exec "$CONTAINER_NAME" yq -e ".php${PHP_VERSION//./}.${arch} | contains([\"${extension}\"])" /etc/php-packages.yaml >/dev/null
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
