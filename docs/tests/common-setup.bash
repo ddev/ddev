@@ -10,10 +10,12 @@ _common_setup() {
     # Each pipe-separated pattern is matched as a substring against:
     #   1. The bats file basename (no .bats extension), e.g. "sveltekit"
     #   2. $BATS_TEST_DESCRIPTION (the @test description string)
+    # CR and LF also separate patterns, since read stops at the first newline.
     if [ -n "${DDEV_EMBARGO_TESTS:-}" ]; then
-        local _bats_basename _embargo_id
+        local _bats_basename _embargo_id _embargo_list
         _bats_basename=$(basename "${BATS_TEST_FILENAME:-}" .bats)
-        IFS='|' read -ra _embargo_ids <<< "${DDEV_EMBARGO_TESTS}"
+        _embargo_list=${DDEV_EMBARGO_TESTS//[$'\r\n']/|}
+        IFS='|' read -ra _embargo_ids <<< "${_embargo_list}"
         for _embargo_id in "${_embargo_ids[@]}"; do
             _embargo_id=$(echo "$_embargo_id" | xargs)
             [ -z "$_embargo_id" ] && continue

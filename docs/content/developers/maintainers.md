@@ -213,5 +213,6 @@ DDEV_EMBARGO_PHP_VERSIONS="7.0,7.1" make testddevapp
 
 * Manually triggered (`workflow_dispatch`) runs **skip loading the `public-variables` branch entirely** so you can verify a fix without first removing it from the embargo list. Scheduled and PR-triggered runs always load it.
 * Include `[skip ci]` in the commit message when updating the embargo to avoid triggering test workflows.
+* Line endings count as `|`, and empty patterns and spaces around `|` are ignored, so `TestA | TestB|` with a CRLF ending works the same as `TestA|TestB`.
 * To clear an embargo, empty the file on the `public-variables` branch.
 * See [`.github/public-variables/README.md`](https://github.com/ddev/ddev/blob/main/.github/public-variables/README.md) for full details.
