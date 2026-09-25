@@ -199,7 +199,7 @@ If your keys live in an SSH agent rather than in `~/.ssh`, as with 1Password or 
 
 ### Using an Existing SSH Agent
 
-If you already use an SSH agent, such as macOS's own agent, 1Password, Secretive, gpg-agent with a YubiKey, or one forwarded with `ssh -A`, DDEV's containers can use it directly. Set this once:
+If you already use an SSH agent, such as the macOS agent, 1Password, Secretive, `gpg-agent` with a YubiKey, or one forwarded with `ssh -A`, DDEV's containers can use it directly. Set this once:
 
 ```bash
 ddev config global --ssh-agent-upstream=host
@@ -212,19 +212,19 @@ On macOS, which agent the containers get depends on your Docker provider:
 
 | Provider | What to do | Agent containers get |
 | -- | -- | -- |
-| OrbStack | Nothing extra | The agent named by `IdentityAgent` in `~/.ssh/config`, such as 1Password, otherwise macOS's own agent. Restart OrbStack after changing `~/.ssh/config`. |
-| Docker Desktop | Nothing extra | Always macOS's own agent |
-| Colima | Start it with `colima start --ssh-agent` | Always macOS's own agent |
-| Lima | Run `limactl edit <instance> --set .ssh.forwardAgent=true` once | Always macOS's own agent |
+| OrbStack | Nothing extra | The agent named by `IdentityAgent` in `~/.ssh/config`, such as 1Password, otherwise the macOS agent. Restart OrbStack after changing `~/.ssh/config`. |
+| Docker Desktop | Nothing extra | Always the macOS agent |
+| Colima | Start it with `colima start --ssh-agent` | Always the macOS agent |
+| Lima | Run `limactl edit <instance> --set .ssh.forwardAgent=true` once | Always the macOS agent |
 | Rancher Desktop, Podman | Not supported | DDEV warns and uses its own agent; add key files with `ddev auth ssh` as usual |
 
-To use 1Password, Secretive, or gpg-agent:
+To use 1Password, Secretive, or `gpg-agent`:
 
 * With OrbStack, set `IdentityAgent` in `~/.ssh/config` as your agent's setup instructions describe, then restart OrbStack.
 * Docker Desktop, Colima, and Lima ignore `IdentityAgent`. Point the system-wide `SSH_AUTH_SOCK` at your agent as its documentation describes; for 1Password, see [Configure SSH_AUTH_SOCK globally for every client](https://developer.1password.com/docs/ssh/agent/compatibility/).
 * Exporting `SSH_AUTH_SOCK` in your shell profile doesn't reach any of these providers.
 
-To use macOS's own agent, load your keys into it, saving the passphrase in the Keychain:
+To use the macOS agent, load your keys into it, saving the passphrase in the Keychain:
 
 ```bash
 ssh-add --apple-use-keychain ~/.ssh/id_ed25519
@@ -235,7 +235,7 @@ On Linux, `host` uses the agent in `$SSH_AUTH_SOCK` when a project starts. A for
 
 If `ddev auth ssh` says "Make sure that agent is running and holds your keys", your agent is stopped or locked. Open 1Password or load your keys; DDEV picks the agent up again without a restart. To go back to adding key files, run `ddev config global --ssh-agent-upstream=""` and then `ddev auth ssh`.
 
-Every container in the DDEV docker network can ask your agent to sign while this is on. Agents that confirm each use, like 1Password, limit that exposure.
+Every container in the DDEV Docker network can ask your agent to sign while this is on. Agents that confirm each use, like 1Password, limit that exposure.
 
 ### `ddev logs`
 
