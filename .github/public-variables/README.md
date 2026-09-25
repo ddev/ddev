@@ -13,14 +13,24 @@ See also: <https://github.com/orgs/community/discussions/44322#discussioncomment
 
 Each file in this directory (except `README.md`) is exported as a CI environment variable named after the file.
 
+In every file, put one value per line, or separate values with `|`. You can use both in one file. Empty values, spaces around `|`, and line endings (LF or CRLF) are ignored. These two files mean the same thing:
+
+```text
+TestLagoonPull|TestAcquiaPull
+```
+
+```text
+TestLagoonPull
+TestAcquiaPull
+```
+
 Current variables:
 
-- `DDEV_EMBARGO_TESTS` - pipe-separated patterns to skip tests.
-    - **Go tests:** pass the full test function name(s); passed to `go test -skip`, so it's a regex alternation. E.g. `TestLagoonPull|TestAcquiaPull`.
-    - Line endings count as `|`, and empty patterns and spaces around `|` are ignored, so a stray `|` or a CRLF file cannot skip every test.
-    - **Bats tests:** each pattern is matched as a case-sensitive substring against the bats filename (without `.bats`) or the `@test` description. E.g. `sveltekit` skips all tests in `sveltekit.bats`; `Symfony Composer` skips only the Composer-flavored test in `symfony.bats`. Go and bats patterns can be combined: `TestLagoonPull|sveltekit`.
-    - `workflow_dispatch` runs skip loading the `public-variables` branch entirely, so maintainers can verify fixes without removing them from the embargo list first.
-- `DDEV_EMBARGO_PHP_VERSIONS` - comma-separated PHP versions to skip in `TestPHPConfig`, e.g. `7.0,7.1`
+- `DDEV_EMBARGO_TESTS` - tests to skip.
+    - **Go tests:** the full test function name, passed to `go test -skip`, e.g. `TestLagoonPull`.
+    - **Bats tests:** a case-sensitive substring of the bats filename (without `.bats`) or the `@test` description. E.g. `sveltekit` skips all tests in `sveltekit.bats`; `Symfony Composer` skips only the Composer test in `symfony.bats`.
+    - Go and bats values can be mixed in one file.
+- `DDEV_EMBARGO_PHP_VERSIONS` - PHP versions to skip in `TestPHPConfig`, e.g. `7.0`.
 
 ## Adding a new variable
 
@@ -33,6 +43,9 @@ Current variables:
    (see **How to update** below)
 
 No workflow changes are needed - any file in this directory is picked up automatically.
+CI joins the lines of each file with `|`, so the code that reads a new variable must split
+the value on `|` and ignore empty values and spaces. See `IsPHPVersionEmbargoed` in
+`pkg/util/utils.go` for an example.
 
 ## How to update
 
@@ -42,11 +55,11 @@ No workflow changes are needed - any file in this directory is picked up automat
 
 ## How it works
 
-Used in `.buildkite/test.sh`, `.github/workflows/test-reusable.yml`,
+Used in `.buildkite/test.sh`, `.buildkite/installer-test.sh`, `.github/workflows/test-reusable.yml`,
 `.github/workflows/test-wsl2-reusable.yml`, and `.github/workflows/quickstart.yml`.
 
 Each CI run does `git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp`,
-reads all files via `git ls-tree` + `git show`, then deletes the temporary ref.
+reads all files via `git ls-tree` + `git show`, joins the lines of each file with `|`, then deletes the temporary ref.
 
 The load step is skipped for `workflow_dispatch` (manually triggered) runs so maintainers can verify
 a previously-embargoed test is fixed without first removing it from the embargo list.

@@ -161,6 +161,7 @@ Include these keywords in your commit message or pull request title to skip CI r
 
 To skip specific tests globally (including for fork PRs), edit the files directly on the
 [`public-variables` branch](https://github.com/ddev/ddev/tree/public-variables/.github/public-variables) - no PR required.
+Each file holds one value per line, or values separated by `|`.
 
 #### Go tests
 
@@ -206,13 +207,12 @@ DDEV_EMBARGO_TESTS="TestLagoonPull|sveltekit|Symfony Composer" bats docs/tests/s
 
 ```bash
 # Skip specific PHP versions in TestPHPConfig
-DDEV_EMBARGO_PHP_VERSIONS="7.0,7.1" make testddevapp
+DDEV_EMBARGO_PHP_VERSIONS="7.0|7.1" make testddevapp
 ```
 
 #### Notes
 
 * Manually triggered (`workflow_dispatch`) runs **skip loading the `public-variables` branch entirely** so you can verify a fix without first removing it from the embargo list. Scheduled and PR-triggered runs always load it.
 * Include `[skip ci]` in the commit message when updating the embargo to avoid triggering test workflows.
-* Line endings count as `|`, and empty patterns and spaces around `|` are ignored, so `TestA | TestB|` with a CRLF ending works the same as `TestA|TestB`.
 * To clear an embargo, empty the file on the `public-variables` branch.
 * See [`.github/public-variables/README.md`](https://github.com/ddev/ddev/blob/main/.github/public-variables/README.md) for full details.

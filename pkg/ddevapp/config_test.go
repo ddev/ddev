@@ -1208,7 +1208,7 @@ func TestPHPConfig(t *testing.T) {
 		phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	}
 
-	// Skip any PHP versions embargoed via DDEV_EMBARGO_PHP_VERSIONS (comma-separated, e.g. "8.4,8.3")
+	// Skip the PHP versions listed in DDEV_EMBARGO_PHP_VERSIONS, e.g. "8.4|8.3"
 	var embargoedVersions []string
 	for _, v := range phpKeys {
 		if util.IsPHPVersionEmbargoed(v) {

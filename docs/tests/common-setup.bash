@@ -6,18 +6,19 @@ _common_setup() {
     bats_load_library bats-support
     bats_load_library bats-assert
     bats_load_library bats-file
-    # Auto-skip if the test matches DDEV_EMBARGO_TESTS.
-    # Each pipe-separated pattern is matched as a substring against:
-    #   1. The bats file basename (no .bats extension), e.g. "sveltekit"
-    #   2. $BATS_TEST_DESCRIPTION (the @test description string)
-    # CR and LF also separate patterns, since read stops at the first newline.
+    # Skip this test if it matches DDEV_EMBARGO_TESTS.
+    # Values are separated by "|" or by line endings. Each value is matched
+    # as a substring against:
+    #   1. The bats file name without ".bats", e.g. "sveltekit"
+    #   2. The @test description ($BATS_TEST_DESCRIPTION)
     if [ -n "${DDEV_EMBARGO_TESTS:-}" ]; then
         local _bats_basename _embargo_id _embargo_list
         _bats_basename=$(basename "${BATS_TEST_FILENAME:-}" .bats)
         _embargo_list=${DDEV_EMBARGO_TESTS//[$'\r\n']/|}
         IFS='|' read -ra _embargo_ids <<< "${_embargo_list}"
         for _embargo_id in "${_embargo_ids[@]}"; do
-            _embargo_id=$(echo "$_embargo_id" | xargs)
+            # Remove spaces at both ends of the value
+            read -r _embargo_id <<< "$_embargo_id"
             [ -z "$_embargo_id" ] && continue
             if [[ "$_bats_basename" == *"$_embargo_id"* ]] \
               || [[ "${BATS_TEST_DESCRIPTION:-}" == *"$_embargo_id"* ]]; then
