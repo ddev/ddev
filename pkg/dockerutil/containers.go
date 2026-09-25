@@ -1040,6 +1040,12 @@ func UpdateContainerNetworkAliases(containerID, networkName string, aliases []st
 // with the specified uid (or defaults to root=0 if empty uid)
 // Returns stdout, stderr, error
 func Exec(containerID string, command string, uid string) (string, string, error) {
+	return ExecWithStdin(containerID, command, uid, nil)
+}
+
+// ExecWithStdin is Exec with stdin supplied to the command, which sees
+// end of input once stdin is exhausted. A nil stdin attaches none.
+func ExecWithStdin(containerID string, command string, uid string, stdin io.Reader) (string, string, error) {
 	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return "", "", err
@@ -1050,6 +1056,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 	}
 	execCreate, err := apiClient.ExecCreate(ctx, containerID, client.ExecCreateOptions{
 		Cmd:          []string{"sh", "-c", command},
+		AttachStdin:  stdin != nil,
 		AttachStdout: true,
 		AttachStderr: true,
 		User:         uid,
@@ -1062,6 +1069,12 @@ func Exec(containerID string, command string, uid string) (string, string, error
 	execAttach, err := apiClient.ExecAttach(ctx, execCreate.ID, client.ExecAttachOptions{})
 	if err != nil {
 		return "", "", err
+	}
+	if stdin != nil {
+		go func() {
+			_, _ = io.Copy(execAttach.Conn, stdin)
+			_ = execAttach.CloseWrite()
+		}()
 	}
 	defer execAttach.Close()
 

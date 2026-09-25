@@ -2,9 +2,12 @@ package ddevapp_test
 
 import (
 	"os"
+	osexec "os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -203,4 +206,169 @@ func TestSshAuthConfigOverride(t *testing.T) {
 
 	stdout, _, err := dockerutil.Exec("ddev-ssh-agent", "bash -c 'echo $ANSWER'", "")
 	assert.Equal(answer+"\n", stdout)
+}
+
+// TestSSHAgentUpstream checks that ssh_agent_upstream turns ddev-ssh-agent
+// into a relay to an existing agent, and that clearing it restores the default.
+func TestSSHAgentUpstream(t *testing.T) {
+	origUpstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
+	// Code under test can write the global config, so restore the file too.
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.SSHAgentUpstream = origUpstream
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		_ = dockerutil.RemoveContainer(ddevapp.SSHAuthName)
+	})
+	app := &ddevapp.DdevApp{}
+
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = "relative/agent.sock"
+	_, err := ddevapp.SSHAgentUpstreamSocket()
+	require.Error(t, err)
+	_ = dockerutil.RemoveContainer(ddevapp.SSHAuthName)
+	err = app.EnsureSSHAgentContainer()
+	require.NoError(t, err)
+	stdout, _, err := dockerutil.Exec(ddevapp.SSHAuthName, "killall -0 ssh-agent", "")
+	require.NoError(t, err, stdout)
+
+	upstreamDir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		_ = os.RemoveAll(upstreamDir)
+	})
+	upstreamSock := filepath.Join(upstreamDir, "agent.sock")
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = upstreamSock
+	sock, err := ddevapp.SSHAgentUpstreamSocket()
+	require.NoError(t, err)
+	require.Equal(t, upstreamSock, sock)
+
+	_, err = app.CreateSSHAuthComposeFile()
+	require.NoError(t, err)
+	rendered, err := fileutil.ReadFileIntoString(ddevapp.SSHAuthComposeYAMLPath())
+	require.NoError(t, err)
+	require.Contains(t, rendered, upstreamDir+":/upstream")
+	require.Contains(t, rendered, "UNIX-CONNECT:/upstream/agent.sock")
+	require.Contains(t, rendered, "killall -0 socat")
+
+	// A socket in a host directory reaches containers only when Docker runs
+	// on the host itself, not through a VM file share.
+	sshAgentPath, lookErr := osexec.LookPath("ssh-agent")
+	if runtime.GOOS != "linux" || dockerutil.IsDockerDesktop() || lookErr != nil {
+		t.Log("Skipping live relay check: needs Linux with native Docker and ssh-agent")
+		return
+	}
+	keyFile := filepath.Join(upstreamDir, "id_ed25519")
+	out, err := exec.RunHostCommand("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "ddev-upstream-test", "-f", keyFile)
+	require.NoError(t, err, out)
+	startAgent := func() {
+		_ = os.Remove(upstreamSock)
+		out, err := exec.RunHostCommand(sshAgentPath, "-a", upstreamSock)
+		require.NoError(t, err, out)
+		out, err = exec.RunHostCommand("bash", "-c", "SSH_AUTH_SOCK="+upstreamSock+" ssh-add "+keyFile)
+		require.NoError(t, err, out)
+	}
+	stopAgent := func() {
+		_, _ = exec.RunHostCommand("pkill", "-f", "ssh-agent -a "+upstreamSock)
+	}
+	t.Cleanup(stopAgent)
+	startAgent()
+
+	err = app.EnsureSSHAgentContainer()
+	require.NoError(t, err)
+	stdout, stderr, err := dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
+	require.NoError(t, err, stderr)
+	require.Contains(t, stdout, "ddev-upstream-test")
+	relay, err := dockerutil.FindContainerByName(ddevapp.SSHAuthName)
+	require.NoError(t, err)
+	require.NotNil(t, relay)
+
+	// The relay mounts the socket's directory, so a restarted agent is picked
+	// up without recreating ddev-ssh-agent.
+	stopAgent()
+	require.Eventually(t, func() bool {
+		_, _, err := dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
+		return err != nil
+	}, 10*time.Second, 500*time.Millisecond)
+	startAgent()
+	stdout, stderr, err = dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
+	require.NoError(t, err, stderr)
+	require.Contains(t, stdout, "ddev-upstream-test")
+	restarted, err := dockerutil.FindContainerByName(ddevapp.SSHAuthName)
+	require.NoError(t, err)
+	require.Equal(t, relay.ID, restarted.ID)
+
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = "host"
+	t.Setenv("SSH_AUTH_SOCK", upstreamSock)
+	sock, err = ddevapp.SSHAgentUpstreamSocket()
+	require.NoError(t, err)
+	require.Equal(t, upstreamSock, sock)
+	err = app.EnsureSSHAgentContainer()
+	require.NoError(t, err)
+	stdout, stderr, err = dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
+	require.NoError(t, err, stderr)
+	require.Contains(t, stdout, "ddev-upstream-test")
+
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = ""
+	err = app.EnsureSSHAgentContainer()
+	require.NoError(t, err)
+	stdout, _, _ = dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
+	require.NotContains(t, stdout, "ddev-upstream-test")
+}
+
+// TestSSHAgentUpstreamHost checks ssh_agent_upstream=host against the macOS
+// agent that Docker providers forward, and the fallback where none is forwarded.
+func TestSSHAgentUpstreamHost(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("Skipping: macOS Docker providers only")
+	}
+	hostSock := os.Getenv("SSH_AUTH_SOCK")
+	if out, err := exec.RunHostCommand("ssh-add", "-l"); hostSock == "" || (err != nil && !strings.Contains(out, "no identities")) {
+		t.Skipf("Skipping: no usable macOS SSH agent (SSH_AUTH_SOCK=%q): %s", hostSock, out)
+	}
+	// OrbStack forwards the agent named by IdentityAgent, which may not be this one.
+	if dockerutil.IsOrbStack() {
+		out, _ := exec.RunHostCommand("ssh", "-G", "example.com")
+		for line := range strings.SplitSeq(out, "\n") {
+			agent, found := strings.CutPrefix(strings.TrimSpace(line), "identityagent ")
+			if found && agent != "SSH_AUTH_SOCK" && agent != "none" && agent != hostSock {
+				t.Skipf("Skipping: OrbStack forwards IdentityAgent %s, not the macOS agent", agent)
+			}
+		}
+	}
+
+	origUpstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
+	// Code under test can write the global config, so restore the file too.
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.SSHAgentUpstream = origUpstream
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		_ = dockerutil.RemoveContainer(ddevapp.SSHAuthName)
+	})
+	keyDir := testcommon.CreateTmpDir(t.Name())
+	keyFile := filepath.Join(keyDir, "id_ed25519")
+	out, err := exec.RunHostCommand("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "ddev-upstream-host-test", "-f", keyFile)
+	require.NoError(t, err, out)
+	out, err = exec.RunHostCommand("ssh-add", keyFile)
+	require.NoError(t, err, out)
+	t.Cleanup(func() {
+		_, _ = exec.RunHostCommand("ssh-add", "-d", keyFile)
+		_ = os.RemoveAll(keyDir)
+	})
+
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = "host"
+	_ = dockerutil.RemoveContainer(ddevapp.SSHAuthName)
+	_, sockErr := ddevapp.SSHAgentUpstreamSocket()
+	app := &ddevapp.DdevApp{}
+	err = app.EnsureSSHAgentContainer()
+	require.NoError(t, err)
+
+	// Rancher Desktop, Podman, and Lima without ssh.forwardAgent fall back to DDEV's own agent.
+	if sockErr != nil {
+		t.Logf("No forwarded agent, expecting fallback: %v", sockErr)
+		out, _, err := dockerutil.Exec(ddevapp.SSHAuthName, "killall -0 ssh-agent", "")
+		require.NoError(t, err, out)
+		return
+	}
+	stdout, stderr, err := dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
+	if dockerutil.IsColima() && !strings.Contains(stdout, "ddev-upstream-host-test") {
+		t.Skipf("Skipping: Colima was not started with --ssh-agent: %s%s", stdout, stderr)
+	}
+	require.NoError(t, err, stderr)
+	require.Contains(t, stdout, "ddev-upstream-host-test")
 }

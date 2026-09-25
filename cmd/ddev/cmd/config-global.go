@@ -232,6 +232,12 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("ssh-agent-upstream").Changed {
+		val, _ := cmd.Flags().GetString("ssh-agent-upstream")
+		globalconfig.DdevGlobalConfig.SSHAgentUpstream = val
+		dirty = true
+	}
+
 	if cmd.Flag("traefik-monitor-port").Changed {
 		val, _ := cmd.Flags().GetString("traefik-monitor-port")
 		globalconfig.DdevGlobalConfig.TraefikMonitorPort = val
@@ -354,6 +360,8 @@ func registerConfigGlobalCmd() {
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("mailpit-https-port", configCompletionFunc([]string{nodeps.DdevDefaultMailpitHTTPSPort}))
 	configGlobalCommand.Flags().String("traefik-monitor-port", nodeps.TraefikMonitorPortDefault, `Can be used to change the Traefik monitor port in case of port conflicts, for example "ddev config global --traefik-monitor-port=11999"`)
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("traefik-monitor-port", configCompletionFunc([]string{nodeps.TraefikMonitorPortDefault}))
+	configGlobalCommand.Flags().String("ssh-agent-upstream", "", `Make ddev-ssh-agent relay to an existing SSH agent: "host" for the host's agent, or the path to an agent socket; empty uses DDEV's own agent`)
+	_ = configGlobalCommand.RegisterFlagCompletionFunc("ssh-agent-upstream", configCompletionFunc([]string{"host", `""`}))
 	configGlobalCommand.Flags().String("share-default-provider", "", `The default share provider for all projects (ngrok, cloudflared, or custom), can be overridden by project configuration`)
 	_ = configGlobalCommand.RegisterFlagCompletionFunc("share-default-provider", configCompletionFunc([]string{"ngrok", "cloudflared"}))
 	configGlobalCommand.Flags().Bool("no-tui", false, "If true, disable the interactive TUI dashboard when running bare 'ddev'")

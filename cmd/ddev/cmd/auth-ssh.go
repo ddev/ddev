@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -17,6 +19,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/mattn/go-isatty"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/mount"
 	"github.com/spf13/cobra"
@@ -33,11 +36,33 @@ var AuthSSHCommand = &cobra.Command{
 		ddev auth ssh
 		ddev auth ssh -d ~/custom/path/to/ssh
 		ddev auth ssh -f ~/.ssh/id_ed25519 -f ~/.ssh/id_rsa
+		op read "op://Private/deploy key/private key" | ddev auth ssh -f -
 	`),
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 		if len(args) > 0 {
 			util.Failed("This command takes no arguments.")
+		}
+
+		if slices.Contains(sshKeyFiles, "-") {
+			if len(sshKeyFiles) > 1 {
+				util.Failed("'-f -' reads one key from stdin and can't be combined with other key files.")
+			}
+			// Read the key before starting ddev-ssh-agent, which can consume stdin.
+			key := readSSHKeyFromStdin()
+			ensureSSHAgent()
+			addSSHKey(key)
+			return
+		}
+
+		// With an upstream agent, the keys already live there, so only list them.
+		if globalconfig.DdevGlobalConfig.SSHAgentUpstream != "" && sshKeyFiles == nil && sshKeyDirs == nil {
+			if _, err := ddevapp.SSHAgentUpstreamSocket(); err != nil {
+				util.Failed("%v", err)
+			}
+			ensureSSHAgent()
+			listUpstreamSSHKeys()
+			return
 		}
 
 		// Use ~/.ssh if nothing is provided
@@ -70,21 +95,7 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("No SSH private keys found in %s", strings.Join(append(sshKeyDirs, sshKeyFiles...), ", "))
 		}
 
-		app, err := ddevapp.GetActiveApp("")
-		if err != nil || app == nil {
-			// We don't actually have to start ssh-agent in a project directory, so use a dummy app.
-			app = &ddevapp.DdevApp{OmitContainersGlobal: globalconfig.DdevGlobalConfig.OmitContainersGlobal}
-		}
-		omitted := app.GetOmittedContainers()
-		if nodeps.ArrayContainsString(omitted, nodeps.DdevSSHAgentContainer) {
-			util.Failed("ddev-ssh-agent is omitted in your configuration so ssh auth cannot be used")
-		}
-
-		err = app.EnsureSSHAgentContainer()
-		if err != nil {
-			util.Failed("Failed to start %s container: %v", nodeps.DdevSSHAgentContainer, err)
-		}
-		util.Debug("%s is running", nodeps.DdevSSHAgentContainer)
+		ensureSSHAgent()
 
 		output.UserOut.Printf("Adding %d SSH private key(s)...", len(keys))
 
@@ -102,6 +113,70 @@ var AuthSSHCommand = &cobra.Command{
 		}
 		util.Success("Successfully added %d SSH private key(s).", len(keys))
 	},
+}
+
+// ensureSSHAgent starts ddev-ssh-agent, failing if it is omitted or cannot start.
+func ensureSSHAgent() {
+	app, err := ddevapp.GetActiveApp("")
+	if err != nil || app == nil {
+		// We don't actually have to start ssh-agent in a project directory, so use a dummy app.
+		app = &ddevapp.DdevApp{OmitContainersGlobal: globalconfig.DdevGlobalConfig.OmitContainersGlobal}
+	}
+	omitted := app.GetOmittedContainers()
+	if nodeps.ArrayContainsString(omitted, nodeps.DdevSSHAgentContainer) {
+		util.Failed("ddev-ssh-agent is omitted in your configuration so ssh auth cannot be used")
+	}
+
+	err = app.EnsureSSHAgentContainer()
+	if err != nil {
+		util.Failed("Failed to start %s container: %v", nodeps.DdevSSHAgentContainer, err)
+	}
+	util.Debug("%s is running", nodeps.DdevSSHAgentContainer)
+}
+
+// listUpstreamSSHKeys prints the keys that containers can use through the
+// upstream agent ddev-ssh-agent relays to.
+func listUpstreamSSHKeys() {
+	upstream, _ := ddevapp.SSHAgentUpstreamSocket()
+	stdout, stderr, err := dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
+	if err != nil {
+		util.Failed("Unable to list keys from the SSH agent at %s (ssh_agent_upstream=%s): %s\nMake sure that agent is running and holds your keys.", upstream, globalconfig.DdevGlobalConfig.SSHAgentUpstream, strings.TrimSpace(stdout+stderr))
+	}
+	output.UserOut.Printf("Containers use the SSH agent at %s, which holds these keys:\n%s", upstream, strings.TrimSpace(stdout))
+}
+
+// readSSHKeyFromStdin reads a private key piped to stdin, such as one from a
+// secret manager or CI variable, so it never has to be written to disk.
+func readSSHKeyFromStdin() []byte {
+	if isatty.IsTerminal(os.Stdin.Fd()) {
+		util.Failed("'ddev auth ssh -f -' reads a private key from stdin; pipe one in, for example 'op read ... | ddev auth ssh -f -'")
+	}
+	key, err := io.ReadAll(io.LimitReader(os.Stdin, 1<<20))
+	if err != nil {
+		util.Failed("Unable to read the SSH private key from stdin: %v", err)
+	}
+	trimmed := bytes.TrimSpace(key)
+	if !bytes.HasPrefix(trimmed, []byte("-----BEGIN")) || !bytes.Contains(trimmed, []byte("PRIVATE KEY-----")) {
+		util.Failed("stdin does not contain an SSH private key")
+	}
+	return append(trimmed, '\n')
+}
+
+// addSSHKey adds a private key to ddev-ssh-agent. The key can't have a
+// passphrase, because there is no terminal to ask for one.
+func addSSHKey(key []byte) {
+	_, stderr, err := dockerutil.ExecWithStdin(ddevapp.SSHAuthName, "ssh-add -", "", bytes.NewReader(key))
+	if err != nil {
+		hint := ""
+		switch {
+		case strings.Contains(stderr, "passphrase"):
+			hint = "\nA key read from stdin can't have a passphrase."
+		case globalconfig.DdevGlobalConfig.SSHAgentUpstream != "":
+			hint = fmt.Sprintf("\nThe key went to the upstream agent (ssh_agent_upstream=%s), and agents such as 1Password don't accept added keys.", globalconfig.DdevGlobalConfig.SSHAgentUpstream)
+		}
+		util.Failed("Unable to add the SSH private key from stdin: %s%s", strings.TrimSpace(stderr), hint)
+	}
+	util.Success("Successfully added the SSH private key from stdin.")
 }
 
 // getSSHKeyPaths returns an array of full paths to SSH private keys
@@ -296,7 +371,7 @@ func runSSHAuthContainer(keys []string) (int, error) {
 }
 
 func registerAuthSSHCmd() {
-	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyFiles, "ssh-key-file", "f", nil, "path to SSH private key file, use the flag multiple times to add more keys")
+	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyFiles, "ssh-key-file", "f", nil, "path to SSH private key file, use the flag multiple times to add more keys, or - to read one key without a passphrase from stdin")
 	AuthSSHCommand.Flags().StringArrayVarP(&sshKeyDirs, "ssh-key-path", "d", nil, "path to directory with SSH private key(s), use the flag multiple times to add more directories")
 	// While both flags work well with each other, don't allow them to be passed at the same time to make it easier to use.
 	AuthSSHCommand.MarkFlagsMutuallyExclusive("ssh-key-file", "ssh-key-path")

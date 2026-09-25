@@ -650,6 +650,20 @@ Whether to disable most [`ddev list`](../usage/commands.md#list) and [`ddev desc
 
 When `true`, turns off most table formatting in [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe) and suppresses colorized text everywhere.
 
+## `ssh_agent_upstream`
+
+Make the `ddev-ssh-agent` container relay to an SSH agent you already run, such as the macOS agent, 1Password, or one forwarded with `ssh -A`, instead of running its own agent. See [Using an Existing SSH Agent](../usage/cli.md#using-an-existing-ssh-agent) for how this works with each Docker provider.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | (empty) | Can be empty, `host`, or the absolute path of an agent socket.
+
+* Empty: `ddev-ssh-agent` runs its own agent, and [`ddev auth ssh`](../usage/commands.md#auth-ssh) adds key files to it.
+* `host`: relay to the agent your Docker provider forwards (Docker Desktop, OrbStack, Colima with `--ssh-agent`, or Lima with `ssh.forwardAgent`), or on Linux and WSL2 to the socket in `$SSH_AUTH_SOCK` when a project starts.
+* A socket path: relay to that socket. The Docker host must be able to reach it, so on macOS use `host` instead.
+
+If DDEV can't use the setting, for example `host` with a provider that doesn't forward an agent, projects still start with DDEV's own agent and a warning. With an upstream agent, `ddev auth ssh` lists the agent's keys rather than adding keys.
+
 ## `table_style`
 
 Style for [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe).

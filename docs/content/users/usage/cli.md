@@ -195,6 +195,48 @@ The [`ddev ssh`](../usage/commands.md#ssh) command opens an interactive Bash or 
 
 You can also use your personal SSH keys within the web container. Run `ddev auth ssh` to add the keys from your `~/.ssh` directory and provide a passphrase, and those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot. This is a very popular approach for accessing private Composer repositories, or for using `drush` aliases against remote servers.
 
+If your keys live in an SSH agent rather than in `~/.ssh`, as with 1Password or a hardware key, see [Using an Existing SSH Agent](#using-an-existing-ssh-agent).
+
+### Using an Existing SSH Agent
+
+If you already use an SSH agent, such as the macOS agent, 1Password, Secretive, `gpg-agent` with a YubiKey, or one forwarded with `ssh -A`, DDEV's containers can use it directly. Set this once:
+
+```bash
+ddev config global --ssh-agent-upstream=host
+ddev auth ssh      # lists the keys your containers can use
+```
+
+After that, every project's containers use your agent when they start, with nothing to add per project. `ddev auth ssh` only shows which keys are available, and `ddev exec ssh -T git@github.com` tests them.
+
+On macOS, which agent the containers get depends on your Docker provider:
+
+| Provider | What to do | Agent containers get |
+| -- | -- | -- |
+| OrbStack | Nothing extra | The agent named by `IdentityAgent` in `~/.ssh/config`, such as 1Password, otherwise the macOS agent. Restart OrbStack after changing `~/.ssh/config`. |
+| Docker Desktop | Nothing extra | Always the macOS agent |
+| Colima | Start it with `colima start --ssh-agent` | Always the macOS agent |
+| Lima | Run `limactl edit <instance> --set .ssh.forwardAgent=true` once | Always the macOS agent |
+| Rancher Desktop, Podman | Not supported | DDEV warns and uses its own agent; add key files with `ddev auth ssh` as usual |
+
+To use 1Password, Secretive, or `gpg-agent`:
+
+* With OrbStack, set `IdentityAgent` in `~/.ssh/config` as your agent's setup instructions describe, then restart OrbStack.
+* Docker Desktop, Colima, and Lima ignore `IdentityAgent`. Point the system-wide `SSH_AUTH_SOCK` at your agent as its documentation describes; for 1Password, see [Configure SSH_AUTH_SOCK globally for every client](https://developer.1password.com/docs/ssh/agent/compatibility/).
+* Exporting `SSH_AUTH_SOCK` in your shell profile doesn't reach any of these providers.
+
+To use the macOS agent, load your keys into it, saving the passphrase in the Keychain:
+
+```bash
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+ssh-add -l
+```
+
+On Linux, `host` uses the agent in `$SSH_AUTH_SOCK` when a project starts. A forwarded agent (`ssh -A`) gets a new socket for each login, so run `ddev auth ssh` again after logging in again. A desktop agent's socket doesn't change, so you can set it directly, for example on Ubuntu with `ddev config global --ssh-agent-upstream=/run/user/$(id -u)/gcr/ssh`. An agent you start yourself with `eval $(ssh-agent -s)` works when you run `ddev` from that shell; to use it from any shell, start it on a fixed socket with `eval $(ssh-agent -a ~/.ssh/agent.sock -s)` and set `ddev config global --ssh-agent-upstream=$HOME/.ssh/agent.sock`.
+
+If `ddev auth ssh` says "Make sure that agent is running and holds your keys", your agent is stopped or locked. Open 1Password or load your keys; DDEV picks the agent up again without a restart. To go back to adding key files, run `ddev config global --ssh-agent-upstream=""` and then `ddev auth ssh`.
+
+Every container in the DDEV Docker network can ask your agent to sign while this is on. Agents that confirm each use, like 1Password, limit that exposure.
+
 ### `ddev logs`
 
 The [`ddev logs`](../usage/commands.md#logs) command allows you to easily view error logs from the web container (both nginx/Apache and php-fpm logs are concatenated). To follow the logs in real time, run `ddev logs -f`. When you’re done, press <kbd>CTRL</kbd> + <kbd>C</kbd> to exit the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped database container.
