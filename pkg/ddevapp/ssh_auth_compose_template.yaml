@@ -20,8 +20,9 @@ services:
     labels:
       {{ .UpstreamLabel }}: '{{ .UpstreamSocket }}'
     {{- if .UpstreamSocket }}
-    # Root, because Docker Desktop's host-services socket is root:root 0660
-    user: '0:0'
+    # Root, because Docker Desktop's host-services socket is root:root 0660;
+    # with keep-id, root is not the host user, so use the user's UID instead
+    user: '{{ if .UseKeepID }}{{ .UID }}:{{ .GID }}{{ else }}0:0{{ end }}'
     command: ["socat", "UNIX-LISTEN:/tmp/.ssh-agent/socket,perm=0666,fork,unlink-early", "UNIX-CONNECT:/upstream/{{ .UpstreamName }}"]
     # SELinux labels the upstream socket as host content, which containers cannot use
     security_opt:
