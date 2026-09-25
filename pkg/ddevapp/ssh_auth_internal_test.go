@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
@@ -22,6 +23,33 @@ func TestSSHAgentUpstreamMount(t *testing.T) {
 	mount, name = sshAgentUpstreamMount("/tmp/ssh-abc123/agent.4567")
 	require.Equal(t, "/tmp/ssh-abc123:/upstream", mount)
 	require.Equal(t, "agent.4567", name)
+}
+
+// TestCheckSSHAgentUpstreamListening checks the warning for a missing or dead agent socket.
+func TestCheckSSHAgentUpstreamListening(t *testing.T) {
+	origUpstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.SSHAgentUpstream = origUpstream
+	})
+	// macOS limits socket paths to 104 bytes, which t.TempDir() can exceed.
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	require.NoError(t, os.MkdirAll(filepath.Join(home, "tmp"), 0755))
+	dir, err := os.MkdirTemp(filepath.Join(home, "tmp"), "sock")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = os.RemoveAll(dir)
+	})
+	sock := filepath.Join(dir, "agent.sock")
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = sock
+
+	require.Error(t, checkSSHAgentUpstreamListening(sock))
+
+	listener, err := net.Listen("unix", sock)
+	require.NoError(t, err)
+	require.NoError(t, checkSSHAgentUpstreamListening(sock))
+	require.NoError(t, listener.Close())
+	require.Error(t, checkSSHAgentUpstreamListening(sock))
 }
 
 // TestSSHAgentUpstreamSocketPaths checks the values that need no Docker provider.

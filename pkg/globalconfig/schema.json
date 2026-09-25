@@ -209,6 +209,23 @@
       "description": "Whether to disable most \"ddev list\" and \"ddev describe\" table formatting.",
       "type": "boolean"
     },
+    "ssh_agent_upstream": {
+      "description": "Existing SSH agent for ddev-ssh-agent to relay to: empty for DDEV's own agent, \"host\" for the agent the Docker provider forwards, or an absolute socket path.",
+      "type": "string",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "",
+            "host"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^/"
+        }
+      ]
+    },
     "table_style": {
       "description": "Style for \"ddev list\" and \"ddev describe\".",
       "type": "string",
