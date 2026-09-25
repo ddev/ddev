@@ -231,11 +231,11 @@ ssh-add --apple-use-keychain ~/.ssh/id_ed25519
 ssh-add -l
 ```
 
-On Linux, `host` uses the agent in `$SSH_AUTH_SOCK` when a project starts. A forwarded agent (`ssh -A`) gets a new socket for each login, so run `ddev auth ssh` again after logging in again. A desktop agent's socket doesn't change, so you can set it directly, for example on Ubuntu with `ddev config global --ssh-agent-upstream=/run/user/$(id -u)/gcr/ssh`.
+On Linux, `host` uses the agent in `$SSH_AUTH_SOCK` when a project starts. A forwarded agent (`ssh -A`) gets a new socket for each login, so run `ddev auth ssh` again after logging in again. A desktop agent's socket doesn't change, so you can set it directly, for example on Ubuntu with `ddev config global --ssh-agent-upstream=/run/user/$(id -u)/gcr/ssh`. An agent you start yourself with `eval $(ssh-agent -s)` works when you run `ddev` from that shell; to use it from any shell, start it on a fixed socket with `eval $(ssh-agent -a ~/.ssh/agent.sock -s)` and set `ddev config global --ssh-agent-upstream=$HOME/.ssh/agent.sock`.
 
 If `ddev auth ssh` says "Make sure that agent is running and holds your keys", your agent is stopped or locked. Open 1Password or load your keys; DDEV picks the agent up again without a restart. To go back to adding key files, run `ddev config global --ssh-agent-upstream=""` and then `ddev auth ssh`.
 
-Every container on the DDEV network can ask your agent to sign while this is on. Agents that confirm each use, like 1Password, limit that exposure.
+Every container in the DDEV docker network can ask your agent to sign while this is on. Agents that confirm each use, like 1Password, limit that exposure.
 
 ### `ddev logs`
 
