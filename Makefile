@@ -191,9 +191,11 @@ endif
 DDEV_PATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)
 DDEV_BINARY_FULLPATH=$(DDEV_PATH)/$(DDEVNAME)
 
-# When DDEV_EMBARGO_TESTS is set, pass a -skip flag to go test so embargoed
-# tests are skipped at the framework level without requiring per-test code.
-EMBARGO_SKIP_FLAG := $(if $(DDEV_EMBARGO_TESTS),-skip "$(DDEV_EMBARGO_TESTS)",)
+# If DDEV_EMBARGO_TESTS is set, pass it to go test as -skip. First turn CR and
+# LF into "|", then remove empty values and spaces around "|", because an empty
+# value like the end of "A|" would make -skip skip every test.
+EMBARGO_TESTS := $(shell printf '%s' "$$DDEV_EMBARGO_TESTS" | tr '\r\n' '||' | sed 's/[ |]*|[ |]*/|/g;s/^[ |]*//;s/[ |]*$$//')
+EMBARGO_SKIP_FLAG := $(if $(EMBARGO_TESTS),-skip "$(EMBARGO_TESTS)",)
 
 # When GOTESTSUM_JSONFILE_DIR is set, tests run through gotestsum instead of
 # `go test` directly, additionally writing structured per-test JSON events to

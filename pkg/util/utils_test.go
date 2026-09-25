@@ -32,6 +32,17 @@ func TestRandString(t *testing.T) {
 	assert.Equal(testString, lb)
 }
 
+func TestIsPHPVersionEmbargoed(t *testing.T) {
+	for _, value := range []string{"8.4", "8.3|8.4", "|8.4|", "8.3 | 8.4", "8.3\r\n8.4\r\n"} {
+		t.Setenv("DDEV_EMBARGO_PHP_VERSIONS", value)
+		require.True(t, util.IsPHPVersionEmbargoed("8.4"), "value %q", value)
+		require.False(t, util.IsPHPVersionEmbargoed("8.2"), "value %q", value)
+		require.False(t, util.IsPHPVersionEmbargoed(""), "value %q", value)
+	}
+	t.Setenv("DDEV_EMBARGO_PHP_VERSIONS", "")
+	require.False(t, util.IsPHPVersionEmbargoed("8.4"))
+}
+
 // TestGetInput tests GetInput and Prompt()
 func TestGetInput(t *testing.T) {
 	assert := asrt.New(t)
