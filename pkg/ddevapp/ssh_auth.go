@@ -2,13 +2,16 @@ package ddevapp
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"text/template"
+	"time"
 
 	ddevImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -82,6 +85,23 @@ func limaForwardedAgentSocket() (string, error) {
 	return sock, nil
 }
 
+// checkSSHAgentUpstreamListening returns an error when no agent accepts
+// connections on the upstream socket. With "host" outside Linux the socket is
+// inside the provider's VM, so it can't be checked from here.
+func checkSSHAgentUpstreamListening(upstream string) error {
+	if globalconfig.DdevGlobalConfig.SSHAgentUpstream == "host" && runtime.GOOS != "linux" {
+		return nil
+	}
+	conn, err := net.DialTimeout("unix", upstream, 2*time.Second)
+	if opErr, ok := errors.AsType[*net.OpError](err); ok {
+		return opErr.Err
+	}
+	if err != nil {
+		return err
+	}
+	return conn.Close()
+}
+
 // sshAgentUpstreamMount returns the bind mount that exposes the upstream socket
 // under /upstream, and the socket's name there.
 func sshAgentUpstreamMount(upstream string) (mount string, name string) {
@@ -118,6 +138,14 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	upstream, err := SSHAgentUpstreamSocket()
 	if err != nil {
 		util.Warning("%v; using DDEV's own SSH agent instead", err)
+	}
+	// Keep relaying to a socket that isn't there yet, because the directory
+	// mount lets the relay reach the agent once it starts.
+	var listenErr error
+	if upstream != "" {
+		if listenErr = checkSSHAgentUpstreamListening(upstream); listenErr != nil {
+			util.Warning("No SSH agent is listening at %s (%v); containers can't use its keys until that agent is running", upstream, listenErr)
+		}
 	}
 	sshContainer, err := findDdevSSHAuth()
 	if err != nil {
@@ -199,7 +227,9 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	}
 
 	if upstream != "" {
-		util.Success("ssh-agent container is relaying to the SSH agent at %s", upstream)
+		if listenErr == nil {
+			util.Success("ssh-agent container is relaying to the SSH agent at %s", upstream)
+		}
 	} else {
 		util.Warning("ssh-agent container is running: If you want to add authentication to the ssh-agent container, run 'ddev auth ssh' to enable your keys.")
 	}
