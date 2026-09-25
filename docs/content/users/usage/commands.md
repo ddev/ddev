@@ -302,6 +302,8 @@ The command can be executed multiple times to add more keys, or you can use the 
 
 If [`ssh_agent_upstream`](../configuration/config.md#ssh_agent_upstream) is set, `ddev auth ssh` without flags lists the keys in that agent instead of adding keys.
 
+To add a key held in a secret manager or CI variable without writing it to a file, pipe it in with `-f -`. The key must not have a passphrase.
+
 Example:
 
 ```shell
@@ -311,11 +313,13 @@ ddev auth ssh
 ddev auth ssh -d ~/custom/path/to/ssh
 # Add your SSH keys from ~/.ssh/id_ed25519 and ~/.ssh/id_rsa files
 ddev auth ssh -f ~/.ssh/id_ed25519 -f ~/.ssh/id_rsa
+# Add a key from 1Password's CLI, or any command that prints a private key
+op read "op://Private/deploy key/private key" | ddev auth ssh -f -
 ```
 
 Flags:
 
-* `--ssh-key-file`, `-f`: Path to SSH private key file, use the flag multiple times to add more keys.
+* `--ssh-key-file`, `-f`: Path to SSH private key file, use the flag multiple times to add more keys, or `-` to read one key without a passphrase from stdin.
 * `--ssh-key-path`, `-d`: Path to directory with SSH private key(s), use the flag multiple times to add more directories.
 
 ## `blackfire`

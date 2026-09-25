@@ -141,3 +141,31 @@ func TestCmdAuthSSHUpstream(t *testing.T) {
 	require.Error(t, err, out)
 	require.Contains(t, out, "Make sure that agent is running")
 }
+
+// TestCmdAuthSSHStdin checks that `ddev auth ssh -f -` adds a key piped to stdin.
+func TestCmdAuthSSHStdin(t *testing.T) {
+	origUpstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
+	keyDir := testcommon.CreateTmpDir(t.Name())
+	keyFile := filepath.Join(keyDir, "id_ed25519")
+	t.Cleanup(func() {
+		_, _ = exec.RunHostCommand(cmd.DdevBin, "config", "global", "--ssh-agent-upstream="+origUpstream)
+		globalconfig.DdevGlobalConfig.SSHAgentUpstream = origUpstream
+		_ = dockerutil.RemoveContainer(ddevapp.SSHAuthName)
+		_ = os.RemoveAll(keyDir)
+	})
+	out, err := exec.RunHostCommand(cmd.DdevBin, "config", "global", "--ssh-agent-upstream=")
+	require.NoError(t, err, out)
+	out, err = exec.RunHostCommand("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "ddev-stdin-test", "-f", keyFile)
+	require.NoError(t, err, out)
+
+	out, err = exec.RunHostCommand("bash", "-c", `"$0" auth ssh -f - < "$1"`, cmd.DdevBin, keyFile)
+	require.NoError(t, err, out)
+	require.Contains(t, out, "Successfully added the SSH private key from stdin")
+	stdout, stderr, err := dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
+	require.NoError(t, err, stderr)
+	require.Contains(t, stdout, "ddev-stdin-test")
+
+	out, err = exec.RunHostCommand("bash", "-c", `echo "not a key" | "$0" auth ssh -f -`, cmd.DdevBin)
+	require.Error(t, err, out)
+	require.Contains(t, out, "stdin does not contain an SSH private key")
+}
