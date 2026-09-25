@@ -79,9 +79,25 @@ teardown() {
   assert_success
 }
 
+extension_is_packaged() {
+  local extension=$1
+  local arch
+  arch=$(docker exec "$CONTAINER_NAME" dpkg --print-architecture)
+  docker exec "$CONTAINER_NAME" yq -e ".php${PHP_VERSION//./}.${arch} | contains([\"${extension}\"])" /etc/php-packages.yaml >/dev/null
+}
+
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   run docker exec -t $CONTAINER_NAME enable_xdebug
-  assert_success
+  if extension_is_packaged xdebug; then
+    assert_success
+  else
+    assert_failure
+    assert_output --partial "Xdebug is unavailable for PHP ${PHP_VERSION}"
+    run docker exec -t $CONTAINER_NAME php --re xdebug
+    assert_failure
+    assert_output --regexp "xdebug.*does not exist"
+    return
+  fi
   if [[ ${PHP_VERSION} != 8.? ]] ; then
     run docker exec -t $CONTAINER_NAME php --re xdebug
     assert_success
@@ -106,7 +122,16 @@ teardown() {
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   run docker exec -t $CONTAINER_NAME enable_xhprof
-  assert_success
+  if extension_is_packaged xhprof; then
+    assert_success
+  else
+    assert_failure
+    assert_output --partial "Xhprof is unavailable for PHP ${PHP_VERSION}"
+    run docker exec -t $CONTAINER_NAME php --re xhprof
+    assert_failure
+    assert_output --partial "does not exist"
+    return
+  fi
   run docker exec -t $CONTAINER_NAME php --re xhprof
   assert_success
   assert_output --partial "xhprof.output_dir"
@@ -319,17 +344,24 @@ teardown() {
   8.0|8.1|8.2|8.3|8.4|8.5)
     extensions="$extensions memcached redis xdebug"
     ;;
+  8.6)
+    extensions="bcmath bz2 curl gd intl ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
+    ;;
   *)
     # Default fallback for future PHP versions - assume redis available
     extensions="$extensions redis"
     ;;
   esac
 
-  # Load xhprof first, then xdebug, because loading xhprof disables xdebug
-  run docker exec $CONTAINER_NAME enable_xhprof
-  assert_success
-  run docker exec $CONTAINER_NAME enable_xdebug
-  assert_success
+  # Load xhprof first, then xdebug, because loading xhprof disables xdebug.
+  if extension_is_packaged xhprof; then
+    run docker exec $CONTAINER_NAME enable_xhprof
+    assert_success
+  fi
+  if extension_is_packaged xdebug; then
+    run docker exec $CONTAINER_NAME enable_xdebug
+    assert_success
+  fi
   run docker exec $CONTAINER_NAME bash -c "php -r 'foreach (get_loaded_extensions() as \$e) echo \$e, PHP_EOL;' 2>/dev/null"
   assert_success
   for item in $extensions; do

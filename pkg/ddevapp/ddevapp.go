@@ -2088,6 +2088,12 @@ func (app *DdevApp) Start() error {
 	wait.Complete(waitErr)
 	app.DefaultContainerTimeout = origDefaultContainerTimeout
 
+	if waitErr == nil && app.XdebugEnabled {
+		if _, _, err := app.Exec(&ExecOpts{Cmd: `php -m | grep -qx xdebug`}); err != nil {
+			util.Warning("xdebug_enabled is set, but Xdebug could not be enabled for PHP %s in this ddev-webserver image; it will have no effect. Run 'ddev logs -s web' for details.", app.PHPVersion)
+		}
+	}
+
 	if !slices.Contains(app.OmitContainers, "db") && app.Database.Type == nodeps.MySQL && (app.Database.Version == nodeps.MySQL80 || app.Database.Version == nodeps.MySQL84) && slices.Contains([]string{nodeps.PHP73, nodeps.PHP72, nodeps.PHP71, nodeps.PHP70, nodeps.PHP56}, app.PHPVersion) {
 		alterString := `ALTER USER 'db'@'%' IDENTIFIED WITH mysql_native_password BY 'db';
 			ALTER USER 'db'@'localhost' IDENTIFIED WITH mysql_native_password BY 'db';
