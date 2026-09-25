@@ -224,16 +224,27 @@ Gotchas found:
 - An agent exists only in a session opened with forwarding, such as
   `coder ssh -A`, and only for that session. VS Code for Web and the web
   terminal have none.
-- To check in a workspace:
+- Checked in two workspaces (`freeform` and `drupal-contrib` templates):
+  `GIT_SSH_COMMAND=/tmp/coder.*/coder gitssh --` is set, `SSH_AUTH_SOCK` is
+  unset, and Docker runs inside the workspace, so workspace paths are Docker
+  host paths as on native Linux. A workspace shell has `CODER_AGENT_URL` and
+  `CODER_AGENT_TOKEN`, which fetch the Coder-managed key directly:
 
   ```bash
-  echo "$GIT_SSH_COMMAND"; git config --global core.sshCommand
-  env | grep '^CODER_'
-  echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+  curl -fsS -H "Coder-Session-Token: $CODER_AGENT_TOKEN" \
+    "${CODER_AGENT_URL%/}/api/v2/workspaceagents/me/gitsshkey" \
+    | jq -r .private_key | ssh-add -
   ```
 
-  Still unknown: whether a workspace shell has the agent token and URL needed
-  to fetch the key directly.
+- Tested proposal 3 by hand in both workspaces, with released DDEV (v1.25.3
+  and v1.25.4) and the global override above in place of the core setting:
+  start `ssh-agent -a ~/tmp/agent/agent.sock`, load the Coder key as shown,
+  and relay to that socket. `ddev exec ssh -T git@github.com` authenticated
+  with the Coder key. With this branch, the equivalent is
+  `ddev config global --ssh-agent-upstream=$HOME/tmp/agent/agent.sock`.
+- Scripting gotchas: `coder ssh ws -- bash -lc '...'` word-splits the
+  command, and feeding a script through `bash -s` lets `ddev exec` swallow the
+  rest of stdin unless it reads from `/dev/null`.
 
 ## Proposals
 
@@ -341,6 +352,8 @@ Ubuntu 24.04.5 desktop (arm64, Parallels), docker-ce 29.8.1, UID 1001:
 | Same, from a later SSH login | `host` | Relay fails once the first login ends; `ddev auth ssh` or `ddev start` from the new login recreates it |
 | gcr-ssh-agent, Ubuntu's desktop agent at `/run/user/<uid>/gcr/ssh` | `host` with the desktop `SSH_AUTH_SOCK` | Works |
 | gcr-ssh-agent | explicit `/run/user/<uid>/gcr/ssh` | Works, and the path is stable across logins |
+| Private agent from `eval $(ssh-agent -s)`, no forwarding | `host`, from that shell | Works; only that shell and its children know the socket |
+| Private agent on a fixed socket, `ssh-agent -a ~/.ssh/agent.sock` | explicit path | Works, and the path is stable across logins |
 | Forwarded, through a fixed symlink such as `~/.ssh/rc` maintains | explicit symlink path | Fails: the directory mount does not contain the link's absolute target |
 
 Findings:
@@ -351,6 +364,9 @@ Findings:
 - The common tmux pattern of a fixed symlink to the current forwarded socket
   does not work. Supporting it would mean mounting the link and its target
   at their real paths, which for `/tmp/ssh-*` means the host's whole `/tmp`.
+- A private `ssh-agent` outlives the shell that started it, unlike a forwarded
+  socket, but other shells cannot find it. Starting it with `-a` on a fixed
+  path is the robust form, and is what proposal 3 suggests for Coder.
 - Ubuntu 24.04 runs gcr-ssh-agent; the older gnome-keyring socket at
   `/run/user/<uid>/keyring/ssh` also exists. For desktop users an explicit
   `/run/user/<uid>/gcr/ssh` is the most robust setting.
@@ -400,6 +416,6 @@ forwards an agent at all before deciding whether it is in scope.
   shell-export pitfall.
 - Consider showing the mode in `ddev describe`, and a healthcheck that notices
   a dead upstream.
-- Confirm how `coder gitssh` gets the key and whether a workspace shell can
-  fetch it.
+- Put proposal 3 into the coder-ddev template's startup script, using the
+  tested commands above.
 - Proposal 2 as a separate small change.
