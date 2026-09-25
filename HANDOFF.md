@@ -4,7 +4,9 @@ Context for whoever picks up
 [#3878](https://github.com/ddev/ddev/issues/3878): users whose keys live in an
 agent rather than in `~/.ssh` (1Password, YubiKey, forwarded agents, Coder
 workspaces) cannot use `ddev auth ssh`. This file records what was learned and
-tested on 2026-09-23.
+tested on 2026-09-23 and 2026-09-24. The work is on branch
+`20260923_rfay_ssh_agent_upstream`; the user guide is "Using an Existing SSH
+Agent" in `docs/content/users/usage/cli.md`.
 
 ## Constraints
 
@@ -16,7 +18,7 @@ tested on 2026-09-23.
   command in the add-on below writes a macOS LaunchAgent, so that approach
   cannot move into core.
 
-## How it works today
+## How ddev-ssh-agent works by default
 
 - `ddev-ssh-agent` runs `ssh-agent` in the container, listening on
   `/tmp/.ssh-agent/socket` inside the `ddev-ssh-agent_socket_dir` volume.
@@ -29,13 +31,12 @@ tested on 2026-09-23.
   ([auth-ssh.go](cmd/ddev/cmd/auth-ssh.go)). A key that exists only in an agent
   cannot be added this way, and the agent protocol does not allow exporting
   private keys, so the only general fix is to proxy the agent socket.
-- `CreateSSHAuthComposeFile` already merges user overrides from
-  `~/.ddev/ssh-auth-compose.*.yaml`
-  ([ssh_auth.go:174](pkg/ddevapp/ssh_auth.go#L174)). This makes a global,
-  no-code prototype possible.
-- `EnsureSSHAgentContainer` recreates the container only when the image
-  changes ([ssh_auth.go:52](pkg/ddevapp/ssh_auth.go#L52)), so an edited
-  override needs `docker rm -f ddev-ssh-agent` or `ddev poweroff`.
+- `CreateSSHAuthComposeFile` in [ssh_auth.go](pkg/ddevapp/ssh_auth.go)
+  merges user overrides from `~/.ddev/ssh-auth-compose.*.yaml`, which made
+  the global, no-code prototype below possible.
+- `EnsureSSHAgentContainer` recreates the container only when the image or
+  the upstream label changes, so an edited override needs
+  `docker rm -f ddev-ssh-agent` or `ddev poweroff`.
 
 ## SSH agent basics
 
@@ -55,8 +56,9 @@ How clients find an agent:
   `ssh-add` ignores it, so `ssh-add -l` can report an empty agent while `ssh`
   authenticates through 1Password.
 - `ssh -A` (or `ForwardAgent yes`) forwards the local agent to a remote host,
-  where sshd creates a new socket under `/tmp/ssh-*` and sets
-  `$SSH_AUTH_SOCK` for that session only.
+  where sshd creates a new socket and sets `$SSH_AUTH_SOCK` for that login
+  only. OpenSSH 9 and earlier use `/tmp/ssh-*/agent.*`; OpenSSH 10 (Ubuntu
+  26.04) uses `~/.ssh/agent/s.*.sshd.*`.
 
 Agents users are likely to have:
 
@@ -205,8 +207,8 @@ Gotchas found:
   so relay mode needs its own.
 - Mount the parent directory, not the socket file: a file bind mount pins the
   old inode and goes stale when the upstream socket is recreated.
-- On Docker Desktop, the socket is root:root 660, so the relay would need
-  `user: "0:0"`. Not tested here.
+- On Docker Desktop, the socket is root:root 660, so the relay needs
+  `user: "0:0"`. Confirmed later on macOS; see the results below.
 
 ## Coder workspaces (coder.ddev.com)
 
@@ -216,8 +218,7 @@ Gotchas found:
   `GIT_SSH_COMMAND="<coder binary> gitssh"` and `core.sshCommand`.
   `coder gitssh` fetches the user's Coder-managed key from the Coder server
   using the workspace agent's credentials and runs `ssh -i` with a temporary
-  file. That is Coder's general design; the details were not checked inside a
-  workspace.
+  file.
 - Consequences: only git uses the key, plain `ssh` does not, and DDEV
   containers have neither the `coder` binary nor the credentials, so git
   inside `web` (for example Composer with private repositories) fails.
@@ -248,7 +249,8 @@ Gotchas found:
 
 ## Proposals
 
-1. **Upstream-agent mode for ddev-ssh-agent (core, opt-in).** Add a global
+1. **Upstream-agent mode for ddev-ssh-agent (core, opt-in).** Implemented;
+   see "Implemented: proposal 1" below. Add a global
    setting such as `ssh_agent_upstream`:
    - empty (default): today's behavior
    - a socket path: mount its parent directory and run socat as in the test
@@ -298,18 +300,51 @@ OpenSSH agent) without WSL. Key-file mode remains the answer there.
 ## Implemented: proposal 1
 
 - Global `ssh_agent_upstream` (`ddev config global --ssh-agent-upstream`):
-  empty, `host`, or an absolute socket path, resolved by
-  `SSHAgentUpstreamSocket` in [ssh_auth.go](pkg/ddevapp/ssh_auth.go).
-- The compose template runs socat as `0:0` with the socket's directory
-  mounted at `/upstream` and a `killall -0 socat` healthcheck. The container
-  carries a `com.ddev.ssh-agent-upstream` label, and a mismatch recreates it,
-  so changing the setting or `$SSH_AUTH_SOCK` takes effect on the next start.
+  empty, `host`, or an absolute socket path (`~` expands), resolved by
+  `SSHAgentUpstreamSocket` in [ssh_auth.go](pkg/ddevapp/ssh_auth.go). `host`
+  means `/run/host-services/ssh-auth.sock` on Docker Desktop, OrbStack, and
+  Colima; the Lima instance's forwarded socket, read with
+  `limactl shell <instance> printenv SSH_AUTH_SOCK`; and `$SSH_AUTH_SOCK` on
+  Linux and WSL2. Other macOS providers are rejected.
+- In relay mode the compose template runs socat with a `killall -0 socat`
+  healthcheck and `security_opt: label=disable`. The relay runs as `0:0`,
+  or as the user's UID when DDEV uses `keep-id` (rootless Podman on Linux).
+  `sshAgentUpstreamMount` mounts `/run/host-services/ssh-auth.sock` as a file
+  and any other socket by its directory.
+- The container carries a `com.ddev.ssh-agent-upstream` label, and a mismatch
+  recreates it, so changing the setting or `$SSH_AUTH_SOCK` takes effect on
+  the next start.
+- When the setting cannot be used, `ddev start` warns and runs DDEV's own
+  agent; `ddev auth ssh` fails with the reason and the fix.
 - `ddev auth ssh` without flags lists the upstream agent's keys; with `-f` or
   `-d` it still tries `ssh-add`, which 1Password refuses. When the upstream
   agent is down it fails with "Make sure that agent is running and holds your
   keys."
-- `TestSSHAgentUpstream` covers rendering everywhere and a live relay through
-  a host `ssh-agent` on Linux only.
+- Docs: the "Using an Existing SSH Agent" section in `cli.md`, and the
+  `ssh_agent_upstream` entry in `config.md`.
+
+## Automated tests
+
+| Test | Where it does real work | Covers |
+| --- | --- | --- |
+| `TestSSHAgentUpstreamMount`, `TestSSHAgentUpstreamSocketPaths` (`ssh_auth_internal_test.go`) | Everywhere, no Docker | File mount for the provider socket, directory mount otherwise, `~` expansion, relative paths rejected |
+| `TestSSHAgentUpstream` | Rendering and fallback everywhere; live relay on Linux with native Docker | Invalid setting falls back; relay to a host `ssh-agent -a`; agent stop fails, restart recovers with the same container; `host` via `$SSH_AUTH_SOCK`; clearing the setting restores DDEV's agent |
+| `TestSSHAgentUpstreamHost` | macOS | Throwaway key in the macOS agent is visible on OrbStack, Docker Desktop, and Colima with `--ssh-agent`; fallback where nothing is forwarded; skips when OrbStack's `IdentityAgent` points elsewhere or Colima lacks `--ssh-agent` |
+| `TestCmdAuthSSHUpstream` | Linux with native Docker | `ddev auth ssh` lists upstream keys, and explains a stopped agent |
+
+Run so far: Ubuntu 24.04 docker-ce, Ubuntu 26.04 rootless Podman and rootless
+Docker (all pass); macOS Docker Desktop and Colima (pass), OrbStack (skips
+here because `IdentityAgent` points at 1Password). Both upstream tests write
+the global config back in cleanup, because code they call saves it.
+
+For CI on macOS: the test needs a macOS agent session (`SSH_AUTH_SOCK`), Colima
+must be started with `--ssh-agent`, and Lima needs `ssh.forwardAgent: true`,
+or those cases only exercise the fallback.
+
+Manual only: 1Password (a GUI app with unlock and approval prompts), OrbStack
+following `IdentityAgent` (needs a `~/.ssh/config` edit and an OrbStack
+restart), Docker Desktop, Colima, and Lima ignoring `IdentityAgent`, forwarded
+`ssh -A` logins, Coder workspaces, and Windows.
 
 ## macOS results so far
 
@@ -371,6 +406,38 @@ Findings:
   `/run/user/<uid>/keyring/ssh` also exists. For desktop users an explicit
   `/run/user/<uid>/gcr/ssh` is the most robust setting.
 
+Ubuntu 26.04.1 (arm64, Parallels), rootless Podman 6.1.2 through the Docker
+CLI, no SELinux. DDEV applies `userns_mode: keep-id` here:
+
+| Agent | Setting | Result |
+| --- | --- | --- |
+| 1Password over a socat bridge to the Mac (`~/.1password-agent.sock`) | `host` | Works, including GitHub auth from `web`; stopping the bridge gives the clear error, restarting it recovers with the same container |
+| OpenSSH `ssh-agent.service` (`/run/user/<uid>/openssh_agent`, 0600) | explicit path | Failed while the relay ran as root ("Connection reset by peer"); works now that it runs as the user's UID under keep-id |
+| gcr-ssh-agent | explicit path | Works |
+| Forwarded with `ssh -A` | `host` | Works; OpenSSH 10 puts the socket at `~/.ssh/agent/s.*.sshd.*` instead of `/tmp/ssh-*` |
+| None (`SSH_AUTH_SOCK` unset) | `host` | `ddev auth ssh` says `SSH_AUTH_SOCK` is not set |
+
+Findings:
+
+- Under keep-id, container root is a subordinate UID on the host. Root in
+  that namespace can still open the user's files, but OpenSSH's `ssh-agent`
+  checks the peer's UID and drops anyone other than its owner or root. So
+  with keep-id the relay runs as the user's UID; elsewhere it stays root,
+  which Docker Desktop's `root:root` 0660 socket needs.
+- A socket directly in `$HOME`, like this bridge's, makes the directory
+  mount expose all of `$HOME` to the relay container. It works; a socket in
+  its own directory is tidier.
+- `TestSSHAgentUpstream` (including its live section) and
+  `TestCmdAuthSSHUpstream` pass here.
+
+Same VM with rootless Docker 29.8.1 (`linux-docker-rootless`, no keep-id, so
+the relay runs as container root, which rootless Docker maps to the user):
+the 1Password bridge with `host` (including GitHub auth from `web`), OpenSSH's
+0600 agent, gcr, a forwarded `ssh -A` agent, the bridge stop and restart, and
+the no-agent error all behave as on Podman, and both automated tests pass.
+Note that `make testcmd` runs `ddev poweroff` in its `TestMain`, which stops
+every project on the machine.
+
 ## Environments to test
 
 Each environment should cover `ddev auth ssh`, `ddev exec ssh-add -l`, and
@@ -399,7 +466,7 @@ Linux, with native Docker and `ssh_agent_upstream=host`:
 - A forwarded agent over `ssh -A` (done on Ubuntu)
 - 1Password's Linux agent via an explicit socket path
 - Docker Desktop for Linux, which may offer `/run/host-services`
-- Rootless Docker and Podman
+- Rootless Podman and rootless Docker (done on Ubuntu 26.04)
 
 WSL2: the relay setup above (done), repeated with the core setting instead of
 the override.
@@ -410,10 +477,14 @@ forwards an agent at all before deciding whether it is in scope.
 
 ## Next steps
 
-- Finish the matrix above, starting with gpg-agent on macOS and Ubuntu
-  desktop.
-- Document the macOS provider behavior (partly done in `config.md`) and the
-  shell-export pitfall.
+- Remaining matrix: Fedora with SELinux on native Docker, Docker Desktop for
+  Linux (does it offer `/run/host-services`, and is `/tmp` shared into its
+  VM?), WSL2 with the core setting, Secretive or Bitwarden, a YubiKey through
+  gpg-agent, and retesting 1Password quit-and-restart on OrbStack now that the
+  provider socket is a file mount.
+- Decide whether traditional Windows is in scope.
+- Decide whether to support a fixed symlink to a forwarded socket (the tmux
+  pattern); it would need the link's target directory mounted as well.
 - Consider showing the mode in `ddev describe`, and a healthcheck that notices
   a dead upstream.
 - Put proposal 3 into the coder-ddev template's startup script, using the

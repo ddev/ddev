@@ -2,7 +2,9 @@ package cmd_test
 
 import (
 	"os"
+	osexec "os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -10,7 +12,9 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -94,4 +98,46 @@ func TestCmdAuthSSH(t *testing.T) {
 	require.NoError(t, err, `expected no error for 'printf "foobar\ntestkey\n" | ddev auth ssh -d %s'`, sshDir)
 	require.Contains(t, out, "Bad passphrase")
 	require.Contains(t, out, "Identity added:")
+}
+
+// TestCmdAuthSSHUpstream checks that `ddev auth ssh` lists the keys of an
+// upstream agent instead of adding key files, and explains a stopped agent.
+func TestCmdAuthSSHUpstream(t *testing.T) {
+	sshAgentPath, lookErr := osexec.LookPath("ssh-agent")
+	// A socket in a host directory reaches containers only when Docker runs
+	// on the host itself, not through a VM file share.
+	if runtime.GOOS != "linux" || dockerutil.IsDockerDesktop() || lookErr != nil {
+		t.Skip("Skipping: needs Linux with native Docker and ssh-agent")
+	}
+
+	origUpstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
+	upstreamDir := testcommon.CreateTmpDir(t.Name())
+	upstreamSock := filepath.Join(upstreamDir, "agent.sock")
+	keyFile := filepath.Join(upstreamDir, "id_ed25519")
+	t.Cleanup(func() {
+		_, _ = exec.RunHostCommand("pkill", "-f", "ssh-agent -a "+upstreamSock)
+		_, _ = exec.RunHostCommand(cmd.DdevBin, "config", "global", "--ssh-agent-upstream="+origUpstream)
+		globalconfig.DdevGlobalConfig.SSHAgentUpstream = origUpstream
+		_ = dockerutil.RemoveContainer(ddevapp.SSHAuthName)
+		_ = os.RemoveAll(upstreamDir)
+	})
+
+	out, err := exec.RunHostCommand("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "ddev-cmd-upstream-test", "-f", keyFile)
+	require.NoError(t, err, out)
+	out, err = exec.RunHostCommand(sshAgentPath, "-a", upstreamSock)
+	require.NoError(t, err, out)
+	out, err = exec.RunHostCommand("bash", "-c", "SSH_AUTH_SOCK="+upstreamSock+" ssh-add "+keyFile)
+	require.NoError(t, err, out)
+
+	out, err = exec.RunHostCommand(cmd.DdevBin, "config", "global", "--ssh-agent-upstream="+upstreamSock)
+	require.NoError(t, err, out)
+	out, err = exec.RunHostCommand(cmd.DdevBin, "auth", "ssh")
+	require.NoError(t, err, out)
+	require.Contains(t, out, "Containers use the SSH agent at "+upstreamSock)
+	require.Contains(t, out, "ddev-cmd-upstream-test")
+
+	_, _ = exec.RunHostCommand("pkill", "-f", "ssh-agent -a "+upstreamSock)
+	out, err = exec.RunHostCommand(cmd.DdevBin, "auth", "ssh")
+	require.Error(t, err, out)
+	require.Contains(t, out, "Make sure that agent is running")
 }

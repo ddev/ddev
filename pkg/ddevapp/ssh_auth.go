@@ -82,6 +82,18 @@ func limaForwardedAgentSocket() (string, error) {
 	return sock, nil
 }
 
+// sshAgentUpstreamMount returns the bind mount that exposes the upstream socket
+// under /upstream, and the socket's name there.
+func sshAgentUpstreamMount(upstream string) (mount string, name string) {
+	// A host agent can recreate its socket, which a file bind mount would
+	// miss, so mount the directory. Provider sockets live as long as the VM,
+	// and Colima's is a symlink that only a file mount resolves.
+	if upstream == hostServicesSSHAuthSock {
+		return upstream + ":/upstream/agent.sock", "agent.sock"
+	}
+	return path.Dir(upstream) + ":/upstream", path.Base(upstream)
+}
+
 // SSHAuthComposeYAMLPath returns the filepath to the base .ssh-auth-compose yaml file.
 func SSHAuthComposeYAMLPath() string {
 	globalDir := globalconfig.GetGlobalDdevDir()
@@ -234,16 +246,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		"UpstreamSocket": upstream,
 	}
 	if upstream != "" {
-		// A host agent can recreate its socket, which a file bind mount would
-		// miss, so mount the directory. Provider sockets live as long as the VM,
-		// and Colima's is a symlink that only a file mount resolves.
-		if upstream == hostServicesSSHAuthSock {
-			templateVars["UpstreamMount"] = upstream + ":/upstream/agent.sock"
-			templateVars["UpstreamName"] = "agent.sock"
-		} else {
-			templateVars["UpstreamMount"] = filepath.Dir(upstream) + ":/upstream"
-			templateVars["UpstreamName"] = filepath.Base(upstream)
-		}
+		templateVars["UpstreamMount"], templateVars["UpstreamName"] = sshAgentUpstreamMount(upstream)
 	}
 	t, err := template.New("ssh_auth_compose_template.yaml").Funcs(getTemplateFuncMap()).ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
 	if err != nil {
