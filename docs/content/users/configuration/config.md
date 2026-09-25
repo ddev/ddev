@@ -652,7 +652,7 @@ When `true`, turns off most table formatting in [`ddev list`](../usage/commands.
 
 ## `ssh_agent_upstream`
 
-Make the `ddev-ssh-agent` container relay to an SSH agent you already run, such as macOS's own agent, 1Password, or one forwarded with `ssh -A`, instead of running its own agent. See [Using an Existing SSH Agent](../usage/cli.md#using-an-existing-ssh-agent) for how this works with each Docker provider.
+Make the `ddev-ssh-agent` container relay to an SSH agent you already run, such as the macOS agent, 1Password, or one forwarded with `ssh -A`, instead of running its own agent. See [Using an Existing SSH Agent](../usage/cli.md#using-an-existing-ssh-agent) for how this works with each Docker provider.
 
 | Type | Default | Usage
 | -- | -- | --
