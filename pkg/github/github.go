@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -102,36 +103,58 @@ func rateLimitDetail(resp *github.Response) string {
 	return detail
 }
 
-// GetGitHubRelease gets the tarball URL and version for a GitHub repository release
+// isNotFound reports whether err is a GitHub 404 response.
+func isNotFound(err error) bool {
+	var errResp *github.ErrorResponse
+	return errors.As(err, &errResp) && errResp.Response != nil && errResp.Response.StatusCode == http.StatusNotFound
+}
+
+// newestRelease returns the non-draft release with the latest created_at,
+// or nil if there is none.
+func newestRelease(releases []*github.RepositoryRelease) *github.RepositoryRelease {
+	var newest *github.RepositoryRelease
+	for _, r := range releases {
+		if !r.GetDraft() && (newest == nil || r.GetCreatedAt().After(newest.GetCreatedAt().Time)) {
+			newest = r
+		}
+	}
+	return newest
+}
+
+// GetGitHubRelease gets the tarball URL and version for a GitHub repository release.
+// With an empty requestedVersion it returns the release GitHub marks as latest,
+// or the newest non-draft release when every release is a prerelease.
 func GetGitHubRelease(owner, repo, requestedVersion string) (tarballURL, downloadedRelease string, err error) {
-	releases, err := withAuthFallback(func(ctx context.Context, client *Client) ([]*github.RepositoryRelease, *github.Response, error) {
-		return client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
-	})
+	var release *github.RepositoryRelease
+	if requestedVersion != "" {
+		release, err = withAuthFallback(func(ctx context.Context, client *Client) (*github.RepositoryRelease, *github.Response, error) {
+			return client.Repositories.GetReleaseByTag(ctx, owner, repo, requestedVersion)
+		})
+		if isNotFound(err) {
+			return "", "", fmt.Errorf("no release found for %v with tag %v", repo, requestedVersion)
+		}
+	} else {
+		release, err = withAuthFallback(func(ctx context.Context, client *Client) (*github.RepositoryRelease, *github.Response, error) {
+			return client.Repositories.GetLatestRelease(ctx, owner, repo)
+		})
+		// A 404 means there is no latest release, e.g. only prereleases. GitHub's
+		// list order is unreliable, so pick the newest by created_at, as it does.
+		if isNotFound(err) {
+			var releases []*github.RepositoryRelease
+			releases, err = withAuthFallback(func(ctx context.Context, client *Client) ([]*github.RepositoryRelease, *github.Response, error) {
+				return client.Repositories.ListReleases(ctx, owner, repo, &ListOptions{PerPage: 100})
+			})
+			release = newestRelease(releases)
+			if err == nil && release == nil {
+				return "", "", fmt.Errorf("no releases found for %v", repo)
+			}
+		}
+	}
 	if err != nil {
 		return "", "", fmt.Errorf("unable to get releases for %v: %w", repo, err)
 	}
-	if len(releases) == 0 {
-		return "", "", fmt.Errorf("no releases found for %v", repo)
-	}
 
-	releaseItem := 0
-	releaseFound := false
-	if requestedVersion != "" {
-		for i, release := range releases {
-			if release.GetTagName() == requestedVersion {
-				releaseItem = i
-				releaseFound = true
-				break
-			}
-		}
-		if !releaseFound {
-			return "", "", fmt.Errorf("no release found for %v with tag %v", repo, requestedVersion)
-		}
-	}
-
-	tarballURL = releases[releaseItem].GetTarballURL()
-	downloadedRelease = releases[releaseItem].GetTagName()
-	return tarballURL, downloadedRelease, nil
+	return release.GetTarballURL(), release.GetTagName(), nil
 }
 
 // GetGitHubHeaders returns headers to be used in GitHub REST API requests if the URL is for GitHub.
