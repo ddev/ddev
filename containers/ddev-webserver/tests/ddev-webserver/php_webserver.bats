@@ -79,11 +79,19 @@ teardown() {
   assert_success
 }
 
+extension_is_packaged() {
+  local extension=$1
+  local arch
+  arch=$(docker exec "$CONTAINER_NAME" dpkg --print-architecture)
+  docker exec "$CONTAINER_NAME" yq -e ".php${PHP_VERSION//./}.${arch} | index(\"${extension}\") != null" /etc/php-packages.yaml >/dev/null
+}
+
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   run docker exec -t $CONTAINER_NAME enable_xdebug
-  if [ "$status" -ne 0 ]; then
-    # Xdebug isn't packaged for every PHP version (see php-packages.yaml); enable_xdebug
-    # detects that at runtime and fails cleanly instead of pretending to enable it.
+  if extension_is_packaged xdebug; then
+    assert_success
+  else
+    assert_failure
     assert_output --partial "Xdebug is unavailable for PHP ${PHP_VERSION}"
     run docker exec -t $CONTAINER_NAME php --re xdebug
     assert_failure
@@ -114,9 +122,10 @@ teardown() {
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   run docker exec -t $CONTAINER_NAME enable_xhprof
-  if [ "$status" -ne 0 ]; then
-    # Xhprof isn't packaged for every PHP version (see php-packages.yaml); enable_xhprof
-    # detects that at runtime and fails cleanly instead of pretending to enable it.
+  if extension_is_packaged xhprof; then
+    assert_success
+  else
+    assert_failure
     assert_output --partial "Xhprof is unavailable for PHP ${PHP_VERSION}"
     run docker exec -t $CONTAINER_NAME php --re xhprof
     assert_failure
@@ -335,32 +344,24 @@ teardown() {
   8.0|8.1|8.2|8.3|8.4|8.5)
     extensions="$extensions memcached redis xdebug"
     ;;
+  8.6)
+    extensions="bcmath bz2 curl gd intl ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
+    ;;
   *)
     # Default fallback for future PHP versions - assume redis available
     extensions="$extensions redis"
     ;;
   esac
 
-  # /etc/php-packages.yaml is the single source of truth for which packages
-  # are installed per PHP version/arch; drop any extension it doesn't list for
-  # this version instead of hand-maintaining a per-version exclusion list here.
-  arch=$(docker exec $CONTAINER_NAME dpkg --print-architecture)
-  available=$(docker exec $CONTAINER_NAME yq ".php${PHP_VERSION//./}.${arch} | join(\" \")" /etc/php-packages.yaml)
-  filtered=""
-  for ext in $extensions; do
-    pkg=$ext
-    [ "$pkg" = "mysqli" ] && pkg="mysql"
-    case " $available " in
-    *" $pkg "*) filtered="$filtered $ext" ;;
-    esac
-  done
-  extensions="$filtered"
-
   # Load xhprof first, then xdebug, because loading xhprof disables xdebug.
-  # Either may be unavailable for this PHP version; ignore failure here since
-  # the dedicated xhprof/xdebug tests already cover that behavior.
-  docker exec $CONTAINER_NAME enable_xhprof || true
-  docker exec $CONTAINER_NAME enable_xdebug || true
+  if extension_is_packaged xhprof; then
+    run docker exec $CONTAINER_NAME enable_xhprof
+    assert_success
+  fi
+  if extension_is_packaged xdebug; then
+    run docker exec $CONTAINER_NAME enable_xdebug
+    assert_success
+  fi
   run docker exec $CONTAINER_NAME bash -c "php -r 'foreach (get_loaded_extensions() as \$e) echo \$e, PHP_EOL;' 2>/dev/null"
   assert_success
   for item in $extensions; do

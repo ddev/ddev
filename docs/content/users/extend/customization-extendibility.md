@@ -53,7 +53,7 @@ See [Environment Variables](../configuration/environment-variables.md) for the `
 
 ## Changing PHP Version
 
-The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php_version`](../configuration/config.md#php_version) can be `5.6` through `8.5`, and new versions are added when they are released by the PHP Foundation.
+The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php_version`](../configuration/config.md#php_version) can be any PHP version supported by DDEV.
 
 ### Older Versions of PHP
 
