@@ -271,12 +271,16 @@ Gotchas found:
    combines ddev's own keyring with the upstream agent, so keys added with
    `ddev auth ssh -f` keep working next to the host agent.
 
-2. **`ddev auth ssh -f -` (key from stdin).** Pipe the key into `ssh-add -` in
-   the auth container instead of bind-mounting a file. This covers keys held
-   in secret managers, CI variables, and the Coder GitSSH key. It still has to
-   pass the PEM check in `fileIsPrivateKey`.
+2. **`ddev auth ssh -f -` (key from stdin).** Implemented. The key is read
+   and checked for a PEM header before `ddev-ssh-agent` starts (starting it
+   can consume stdin), then piped to `ssh-add -` through
+   `dockerutil.ExecWithStdin`, which closes stdin so `ssh-add` sees the end of
+   the key. Keys with a passphrase can't work, since there is no terminal to
+   ask for it. In relay mode the key goes to the upstream agent, which a plain
+   `ssh-agent` accepts and 1Password refuses. `TestCmdAuthSSHStdin` covers it.
 
-3. **coder-ddev template change (outside this repo).** The template's startup
+3. **coder-ddev template change (outside this repo).** Filed as
+   [ddev/coder-ddev#210](https://github.com/ddev/coder-ddev/issues/210). The template's startup
    script belongs to the workspace owner, so the host-config constraint does
    not apply. The recommended approach: start a regular `ssh-agent` on a fixed
    socket, load the Coder key, and export `SSH_AUTH_SOCK`. That makes plain
@@ -373,7 +377,7 @@ Findings:
   must not block projects, so `ddev start` warns and runs DDEV's own agent.
 - SELinux blocks the relay from the upstream socket (`Permission denied` on
   Podman's enforcing VM), so relay mode sets `security_opt: label=disable`.
-  Docker ignores it where SELinux is off. Fedora hosts will need this too.
+  Docker ignores it where SELinux is off. It is also enough on Fedora 44.
 - The ddev-ssh-agent healthcheck only checks socat, so the container stays
   healthy while the upstream agent is down.
 
@@ -438,6 +442,28 @@ the no-agent error all behave as on Podman, and both automated tests pass.
 Note that `make testcmd` runs `ddev poweroff` in its `TestMain`, which stops
 every project on the machine.
 
+Fedora 44 Workstation (arm64, Parallels), SELinux enforcing, with both rootful
+docker-ce 29.8.1 (`linux-docker`) and rootless Podman 5.8.7 with crun 1.28
+(`podman-rootless-selinux`, keep-id). Each engine gave the same results:
+
+| Agent | Setting | Result |
+| --- | --- | --- |
+| Forwarded with `ssh -A` (`~/.ssh/agent/s.*.sshd.*`) | `host` | Works, including GitHub auth from `web` |
+| gcr-ssh-agent, Fedora's GNOME agent | explicit `/run/user/<uid>/gcr/ssh` | Works |
+| Private agent, `ssh-agent -a ~/tmp/privagent/agent.sock` | explicit path | Works; killing and restarting the agent recovers with the same relay container |
+| DDEV's own agent | unset | `ddev auth ssh -f -` adds a key from stdin |
+| Private agent | explicit path | `ddev auth ssh -f -` adds the key to the upstream agent, and `web` sees it |
+
+`TestSSHAgentUpstream` (including its live section), `TestCmdAuthSSHUpstream`,
+and `TestCmdAuthSSHStdin` pass on both engines. `label=disable` is enough for
+SELinux on both.
+
+On rootless Podman, about one project start in five fails with `crun: write
+to /proc/sys/net/ipv4/ping_group_range (are all the IDs mapped in the user
+namespace?)`, always on the db container. Released v1.25.4 fails the same
+way with no upstream set, so it isn't caused by this change; retrying the
+start works.
+
 ## Environments to test
 
 Each environment should cover `ddev auth ssh`, `ddev exec ssh-add -l`, and
@@ -461,8 +487,8 @@ macOS agents, with at least one provider:
 Linux, with native Docker and `ssh_agent_upstream=host`:
 
 - Ubuntu desktop with gcr-ssh-agent and a forwarded agent (done; see above)
-- One or two other distros, such as Fedora (SELinux may block the socket
-  mount) and Arch or Debian
+- Fedora 44 with SELinux enforcing, docker-ce and rootless Podman (done)
+- Arch or Debian
 - A forwarded agent over `ssh -A` (done on Ubuntu)
 - 1Password's Linux agent via an explicit socket path
 - Docker Desktop for Linux, which may offer `/run/host-services`
@@ -477,7 +503,7 @@ forwards an agent at all before deciding whether it is in scope.
 
 ## Next steps
 
-- Remaining matrix: Fedora with SELinux on native Docker, Docker Desktop for
+- Remaining matrix: Docker Desktop for
   Linux (does it offer `/run/host-services`, and is `/tmp` shared into its
   VM?), WSL2 with the core setting, Secretive or Bitwarden, a YubiKey through
   gpg-agent, and retesting 1Password quit-and-restart on OrbStack now that the
@@ -487,6 +513,5 @@ forwards an agent at all before deciding whether it is in scope.
   pattern); it would need the link's target directory mounted as well.
 - Consider showing the mode in `ddev describe`, and a healthcheck that notices
   a dead upstream.
-- Put proposal 3 into the coder-ddev template's startup script, using the
-  tested commands above.
-- Proposal 2 as a separate small change.
+- Put proposal 3 into the coder-ddev template's startup script
+  ([ddev/coder-ddev#210](https://github.com/ddev/coder-ddev/issues/210)).
