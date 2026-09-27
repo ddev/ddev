@@ -110,7 +110,7 @@ func XHProfEnable(app *DdevApp) error {
 		Cmd: `enable_xhprof`,
 	})
 	if err != nil {
-		return fmt.Errorf("%s%s", stdout, stderr)
+		return fmt.Errorf("%v: %s%s", err, stdout, stderr)
 	}
 	return nil
 }
