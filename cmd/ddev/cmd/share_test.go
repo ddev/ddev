@@ -249,6 +249,8 @@ func TestShareCmdProviderSystem(t *testing.T) {
 
 	expectedQRCode, err := os.ReadFile(filepath.Join("testdata", t.Name(), "qrcode.txt"))
 	require.NoError(t, err)
+	expectedNoColorQRCode, err := os.ReadFile(filepath.Join("testdata", t.Name(), "qrcode_no_color.txt"))
+	require.NoError(t, err)
 
 	site := TestSites[0]
 	defer site.Chdir()()
@@ -273,36 +275,40 @@ sleep 2
 			_ = os.Remove(mockPath)
 		})
 
-		cmd := exec.Command(DdevBin, "share", "--provider=mock-test")
-		var stdoutBuf, stderrBuf strings.Builder
-		cmd.Stdout = &stdoutBuf
-		cmd.Stderr = &stderrBuf
+		runShare := func(noColor string) string {
+			t.Setenv("NO_COLOR", noColor)
+			cmd := exec.Command(DdevBin, "share", "--provider=mock-test")
+			var stdoutBuf, stderrBuf strings.Builder
+			cmd.Stdout = &stdoutBuf
+			cmd.Stderr = &stderrBuf
 
-		err = cmd.Start()
-		require.NoError(t, err)
+			err := cmd.Start()
+			require.NoError(t, err)
 
-		t.Cleanup(func() {
-			_ = pKill(cmd)
+			t.Cleanup(func() {
+				_ = pKill(cmd)
+				_ = cmd.Wait()
+			})
+
+			// Wait for provider to output URL and ddev share to capture/display it
+			time.Sleep(3 * time.Second)
+
+			// Kill the share command to end the test
+			err = pKill(cmd)
+			require.NoError(t, err)
 			_ = cmd.Wait()
-		})
 
-		// Wait for provider to output URL and ddev share to capture/display it
-		time.Sleep(3 * time.Second)
+			t.Logf("Stdout output with NO_COLOR=%s:\n%s", noColor, stdoutBuf.String())
+			t.Logf("Stderr output with NO_COLOR=%s:\n%s", noColor, stderrBuf.String())
+			return strings.ReplaceAll(stdoutBuf.String(), "\r\n", "\n")
+		}
 
-		// Kill the share command to end the test
-		err = pKill(cmd)
-		require.NoError(t, err)
-		_ = cmd.Wait()
-
-		// Check captured output
-		stdoutOutput := stdoutBuf.String()
-		stderrOutput := stderrBuf.String()
-		t.Logf("Stdout output:\n%s", stdoutOutput)
-		t.Logf("Stderr output:\n%s", stderrOutput)
+		stdoutOutput := runShare("")
 		// util.Success() writes to stdout, not stderr
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 		require.Contains(t, stdoutOutput, "mock-test-tunnel")
-		require.Contains(t, strings.ReplaceAll(stdoutOutput, "\r\n", "\n"), strings.ReplaceAll(string(expectedQRCode), "\r\n", "\n"))
+		require.Contains(t, stdoutOutput, strings.ReplaceAll(string(expectedQRCode), "\r\n", "\n"))
+		require.Contains(t, runShare("1"), strings.ReplaceAll(string(expectedNoColorQRCode), "\r\n", "\n"))
 	})
 
 	// Test 2: Verify hooks have access to DDEV_SHARE_URL
