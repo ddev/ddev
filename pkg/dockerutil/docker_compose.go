@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 
@@ -252,40 +254,40 @@ func CreateComposeProject(yamlStr string) (*types.Project, error) {
 }
 
 // PullImages pulls each service's Image in parallel if it doesn't exist locally,
-// for the service's Platform when it sets one. Other fields are ignored.
+// for the service's Platform when it sets one, which also replaces a local image
+// built for another platform. Other fields are ignored.
 // If pullAlways is true, it will always pull.
 func PullImages(images []types.ServiceConfig, pullAlways bool) error {
 	if len(images) == 0 {
 		return nil
 	}
 
-	// Build a minimal project directly without a YAML round-trip.
-	project := &types.Project{
-		Name:     "compose-yaml-pull",
-		Services: types.Services{},
-	}
-
-	for _, image := range images {
+	// Compose pulls each image once whatever its platform, so each platform
+	// gets its own pull, unpinned first, so a store that keeps one platform
+	// per tag ends up with the pinned one.
+	pulls := map[string]types.Services{}
+	for i, image := range images {
 		if image.Image == "" {
 			continue
 		}
 		if !pullAlways {
-			if imageExists, _ := ImageExistsLocally(image.Image); imageExists {
+			if imageExists, _ := ImageExistsLocallyForPlatform(image.Image, image.Platform); imageExists {
 				continue
 			}
 		}
-		service := sanitizeServiceName(image.Image + " " + image.Platform)
-		if _, exists := project.Services[service]; exists {
-			continue
+		if pulls[image.Platform] == nil {
+			pulls[image.Platform] = types.Services{}
 		}
-		project.Services[service] = types.ServiceConfig{
+		// The index keeps names unique where sanitizing maps two images to one.
+		service := fmt.Sprintf("%s-%d", sanitizeServiceName(image.Image), i)
+		pulls[image.Platform][service] = types.ServiceConfig{
 			Image:    image.Image,
 			Platform: image.Platform,
 		}
 		util.Debug(`Pulling image for %s %s ("%s" service)`, image.Image, image.Platform, service)
 	}
 
-	if len(project.Services) == 0 {
+	if len(pulls) == 0 {
 		util.Debug("All images already exist locally, no pull needed")
 		return nil
 	}
@@ -294,7 +296,14 @@ func PullImages(images []types.ServiceConfig, pullAlways bool) error {
 	if pullErr != nil {
 		return pullErr
 	}
-	return pullSvc.Pull(pullCtx, project, api.PullOptions{})
+	for _, platform := range slices.Sorted(maps.Keys(pulls)) {
+		// Build a minimal project directly without a YAML round-trip.
+		project := &types.Project{Name: "compose-yaml-pull", Services: pulls[platform]}
+		if err := pullSvc.Pull(pullCtx, project, api.PullOptions{}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Pull pulls image if it doesn't exist locally.

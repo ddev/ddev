@@ -434,7 +434,7 @@ services:
     build:
       context: .
       platforms:
-        - linux/arm64
+        - linux/s390x
   multi:
     image: example/multi:1-proj-built
     build:
@@ -442,6 +442,13 @@ services:
       platforms:
         - linux/amd64
         - linux/arm64
+  foreign:
+    image: example/foreign:1-proj-built
+    build:
+      context: .
+      platforms:
+        - linux/s390x
+        - linux/ppc64le
 `)
 	require.NoError(t, err)
 	app.ComposeYaml = project
@@ -453,9 +460,10 @@ services:
 		platforms[image.Image] = image.Platform
 	}
 	require.Equal(t, map[string]string{
-		"example/plain:1":  "",
-		"example/pinned:1": "linux/amd64",
-		"example/built:1":  "linux/arm64",
-		"example/multi:1":  "",
+		"example/plain:1":   "",
+		"example/pinned:1":  "linux/amd64",
+		"example/built:1":   "linux/s390x",
+		"example/multi:1":   "",
+		"example/foreign:1": "linux/s390x",
 	}, platforms)
 }

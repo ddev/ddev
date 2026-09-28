@@ -2356,22 +2356,22 @@ func (app *DdevApp) Restart() error {
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
 // We always need web image, and ddev-utilities for housekeeping.
 func PullBaseContainerImages(additionalImages []composeTypes.ServiceConfig, pullAlways bool) error {
-	base := []string{
-		versionconstants.UtilitiesImage,
+	images := []composeTypes.ServiceConfig{
+		{Image: versionconstants.UtilitiesImage},
 	}
 	// Only pull the default web image when no project-specific images are provided,
 	// otherwise the project's actual web image is already in additionalImages.
 	if len(additionalImages) == 0 {
-		base = append(base, ddevImages.GetWebImage())
+		images = append(images, composeTypes.ServiceConfig{Image: ddevImages.GetWebImage()})
 	}
 	if globalconfig.DdevGlobalConfig.XHProfMode == types.XHProfModeXHGui {
-		base = append(base, ddevImages.GetXhguiImage())
+		images = append(images, composeTypes.ServiceConfig{Image: ddevImages.GetXhguiImage()})
 	}
-	base = append(base, FindNotOmittedImages(nil)...)
-	for _, image := range base {
-		additionalImages = append(additionalImages, composeTypes.ServiceConfig{Image: image})
+	for _, image := range FindNotOmittedImages(nil) {
+		images = append(images, composeTypes.ServiceConfig{Image: image})
 	}
-	return dockerutil.PullImages(additionalImages, pullAlways)
+	images = append(images, additionalImages...)
+	return dockerutil.PullImages(images, pullAlways)
 }
 
 // FindAllImages returns the image and platform for all containers in the compose file
@@ -2421,10 +2421,8 @@ func (app *DdevApp) FindServiceImages(serviceNames []string) ([]composeTypes.Ser
 			}
 		}
 		platform := service.Platform
-		// DDEV runs only on amd64 and arm64, so several build platforms always
-		// include the daemon's own, which is what the pull defaults to.
-		if platform == "" && service.Build != nil && len(service.Build.Platforms) == 1 {
-			platform = service.Build.Platforms[0]
+		if platform == "" && service.Build != nil {
+			platform = dockerutil.BuildPlatformToPull(service.Build.Platforms)
 		}
 		images = append(images, composeTypes.ServiceConfig{Image: image, Platform: platform})
 	}
