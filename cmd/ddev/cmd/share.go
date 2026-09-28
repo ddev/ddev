@@ -226,10 +226,15 @@ ddev share myproject`,
 // qrencode from the web container. Failure only loses the convenience,
 // so it is logged at debug level rather than reported.
 func printQRCode(app *ddevapp.DdevApp, target string) {
+	// Without color, the QR code's contrast depends on the terminal theme
+	format := "ansi256utf8"
+	if !output.ColorsEnabled() {
+		format = "utf8"
+	}
 	var stderr bytes.Buffer
 	// NoCapture, because captured output has its color codes stripped
 	_, _, err := app.Exec(&ddevapp.ExecOpts{
-		RawCmd:    []string{"qrencode", "-m", "2", "-t", "ansi256utf8", target},
+		RawCmd:    []string{"qrencode", "-m", "2", "-t", format, target},
 		NoCapture: true,
 		Stderr:    &stderr,
 		SkipHooks: true,

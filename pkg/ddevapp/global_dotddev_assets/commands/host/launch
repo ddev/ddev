@@ -129,8 +129,12 @@ fi
 
 if [ "${show_qr:-}" = "true" ]; then
     printf "%s\n" "$FULLURL"
+    qr_format=ansi256utf8
+    if [ -n "${NO_COLOR:-}" ]; then
+        qr_format=utf8
+    fi
     # --raw keeps "&" in the URL from being interpreted by bash in the container
-    ddev exec --raw --skip-hooks qrencode -m 2 -t ansi256utf8 "${FULLURL}"
+    ddev exec --raw --skip-hooks qrencode -m 2 -t "${qr_format}" "${FULLURL}"
     exit $?
 fi
 
