@@ -137,7 +137,7 @@ jobs:
           $files = git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/
           foreach ($varname in $files) {
             if ($varname -eq "README.md") { continue }
-            $value = git show "refs/public-variables-tmp:.github/public-variables/$varname"
+            $value = (git show "refs/public-variables-tmp:.github/public-variables/$varname") -join '|'
             Write-Host "$varname=$value"
             "$varname=$value" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           }
@@ -187,15 +187,12 @@ jobs:
       - name: Run DDEV tests
         shell: pwsh
         run: |
-          $gotest_short = "${{ env.GOTEST_SHORT }}"
-          $testargs = "${{ env.TESTARGS }}"
-          $make_target = "${{ env.MAKE_TARGET }}"
-          $makeargs = "${{ env.MAKEARGS }}"
-          $embargo = "${{ env.DDEV_EMBARGO_TESTS }}"
-          $embargo_php = "${{ env.DDEV_EMBARGO_PHP_VERSIONS }}"
-          $skip_nodejs = "${{ env.DDEV_SKIP_NODEJS_TEST }}"
-          $docker_org = "${{ env.DOCKER_ORG }}"
-          wsl -u testuser -- bash -exc "export GOTEST_SHORT='$gotest_short' TESTARGS='$testargs' MAKE_TARGET='$make_target' MAKEARGS='$makeargs' DDEV_EMBARGO_TESTS='$embargo' DDEV_EMBARGO_PHP_VERSIONS='$embargo_php' DDEV_SKIP_NODEJS_TEST='$skip_nodejs' DOCKER_ORG='$docker_org' && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"
+          # Put each value in single quotes for bash. A ' inside a value is
+          # written as '\'' so it does not end the quotes early.
+          $exports = @('GOTEST_SHORT', 'TESTARGS', 'MAKE_TARGET', 'MAKEARGS', 'DDEV_EMBARGO_TESTS', 'DDEV_EMBARGO_PHP_VERSIONS', 'DDEV_SKIP_NODEJS_TEST', 'DOCKER_ORG') | ForEach-Object {
+            "$_='" + ([string][Environment]::GetEnvironmentVariable($_) -replace "'", "'\''") + "'"
+          }
+          wsl -u testuser -- bash -exc "export $($exports -join ' ') && cd ~/workspace/ddev && bash -e .github/workflows/wsl2-test.sh"
 
       # wsl2-test.sh writes gotestsum's per-test JSON inside the WSL2 VM's
       # filesystem, invisible to actions/upload-artifact on the Windows host

@@ -161,6 +161,7 @@ Include these keywords in your commit message or pull request title to skip CI r
 
 To skip specific tests globally (including for fork PRs), edit the files directly on the
 [`public-variables` branch](https://github.com/ddev/ddev/tree/public-variables/.github/public-variables) - no PR required.
+Each file holds one value per line, or values separated by `|`.
 
 #### Go tests
 
@@ -206,7 +207,7 @@ DDEV_EMBARGO_TESTS="TestLagoonPull|sveltekit|Symfony Composer" bats docs/tests/s
 
 ```bash
 # Skip specific PHP versions in TestPHPConfig
-DDEV_EMBARGO_PHP_VERSIONS="7.0,7.1" make testddevapp
+DDEV_EMBARGO_PHP_VERSIONS="7.0|7.1" make testddevapp
 ```
 
 #### Notes

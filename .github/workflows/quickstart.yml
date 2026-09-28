@@ -49,7 +49,7 @@ jobs:
           git fetch --depth=1 --no-tags https://github.com/ddev/ddev public-variables:refs/public-variables-tmp
           while IFS= read -r varname; do
             [[ "$varname" == "README.md" ]] && continue
-            value=$(git show "refs/public-variables-tmp:.github/public-variables/$varname")
+            value=$(git show "refs/public-variables-tmp:.github/public-variables/$varname" | tr -d '\r' | paste -s -d '|' -)
             echo "$varname=${value}"
             echo "$varname=$value" >> $GITHUB_ENV
           done < <(git ls-tree --name-only refs/public-variables-tmp:.github/public-variables/)

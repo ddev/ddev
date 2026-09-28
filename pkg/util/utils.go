@@ -12,9 +12,11 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -609,33 +611,14 @@ func FormatBytes(bytes int64) string {
 	return fmt.Sprintf("%.1f%s", float64(bytes)/float64(div), units[exp])
 }
 
-// IsPHPVersionEmbargoed checks if a PHP version is in the DDEV_EMBARGO_PHP_VERSIONS environment variable.
-// DDEV_EMBARGO_PHP_VERSIONS should contain a comma-separated list of PHP versions to skip in TestPHPConfig.
-// Whitespace around version strings is automatically trimmed.
-// Returns true if the PHP version should be skipped, false otherwise.
-//
-// This is used in TestPHPConfig to skip specific PHP versions affected by upstream bugs without
-// disabling the entire test. Set the DDEV_EMBARGO_PHP_VERSIONS GitHub Actions repo variable to
-// activate for all CI runs, or pass via workflow_dispatch input ddev_embargo_php_versions.
-//
-// Usage:
-//
-//	# Skip a single PHP version
-//	DDEV_EMBARGO_PHP_VERSIONS="8.4" go test -run TestPHPConfig ./pkg/ddevapp
-//
-//	# Skip multiple PHP versions
-//	DDEV_EMBARGO_PHP_VERSIONS="8.4,8.3" go test -run TestPHPConfig ./pkg/ddevapp
+// IsPHPVersionEmbargoed returns true if phpVersion is listed in
+// DDEV_EMBARGO_PHP_VERSIONS, for example "8.4|8.3". Versions are separated
+// by "|" or by any whitespace, including line endings.
 func IsPHPVersionEmbargoed(phpVersion string) bool {
-	embargoList := os.Getenv("DDEV_EMBARGO_PHP_VERSIONS")
-	if embargoList == "" {
-		return false
-	}
-	for v := range strings.SplitSeq(embargoList, ",") {
-		if strings.TrimSpace(v) == phpVersion {
-			return true
-		}
-	}
-	return false
+	versions := strings.FieldsFunc(os.Getenv("DDEV_EMBARGO_PHP_VERSIONS"), func(r rune) bool {
+		return r == '|' || unicode.IsSpace(r)
+	})
+	return slices.Contains(versions, phpVersion)
 }
 
 // WarnAboutMultipleGlobalDdevDirs warns if a global DDEV config exists in a
