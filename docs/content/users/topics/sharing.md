@@ -25,7 +25,7 @@ There are at least three different ways to share a running DDEV project outside 
 * **cloudflared** - Free, no account required. Requires [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation) to be installed
 * **Custom providers** - You can add your own providers in `.ddev/share-providers/`
 
-Run `ddev share` to use the default provider, or `ddev share --provider=cloudflared` to use a specific provider. The URL will be displayed and can be shared with collaborators or used on mobile devices.
+Run `ddev share` to use the default provider, or `ddev share --provider=cloudflared` to use a specific provider. The URL will be displayed, along with a QR code you can scan with a mobile device, and can be shared with collaborators.
 
 CMSes like WordPress and Magento 2 make this a little harder by only responding to a single base URL that’s coded into the database. ngrok allows you to use one static domain for free so you won’t have to frequently change the base URL. Cloudflared stable custom domains require a free Cloudflare account and a domain with DNS hosted on Cloudflare.
 

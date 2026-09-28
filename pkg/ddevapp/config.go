@@ -844,19 +844,28 @@ func (app *DdevApp) FixObsolete() {
 		}
 	}
 
-	addOns := GetInstalledAddonNames(app)
-	if slices.Contains(addOns, "xhgui") {
-		util.Warning("The xhgui add-on is no longer necessary with this version of DDEV, removing it.")
-		err := RemoveAddon(app, "xhgui", false, true)
-		if err != nil {
-			util.Warning("Error removing xhgui add-on: %v", err)
+	// Match the repository rather than the name, so an unrelated add-on that
+	// happens to be called "qr" or "xhgui" is left alone
+	for _, manifest := range GetInstalledAddons(app) {
+		if !slices.ContainsFunc([]string{"ddev/ddev-xhgui", "ddev/ddev-qr"}, func(repo string) bool {
+			return strings.EqualFold(manifest.Repository, repo)
+		}) {
+			continue
 		}
-		// Reload the hooks because we don't want to run the deleted hooks
+		addOn := manifest.Name
+		util.Warning("The %s add-on is no longer necessary with this version of DDEV, removing it.", addOn)
+		err := RemoveAddon(app, addOn, false, true)
+		if err != nil {
+			util.Warning("Error removing %s add-on: %v", addOn, err)
+		}
+		// The removed config.*.yaml is still merged into app: drop its hooks so
+		// they don't run, and its packages so this start's Dockerfile is final
 		appCopy, err := NewApp(app.AppRoot, true)
 		if err != nil {
-			util.Warning("Error reloading app hooks after removing xhgui add-on: %v", err)
+			util.Warning("Error reloading app config after removing %s add-on: %v", addOn, err)
 		} else {
 			app.Hooks = appCopy.Hooks
+			app.WebImageExtraPackages = appCopy.WebImageExtraPackages
 		}
 	}
 }

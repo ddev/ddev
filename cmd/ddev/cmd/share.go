@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"net/url"
@@ -170,6 +171,7 @@ ddev share myproject`,
 		}
 
 		util.Success("Tunnel URL: %s", shareURL)
+		printQRCode(app, shareURL)
 
 		// Set DDEV_SHARE_URL environment variable for hooks
 		_ = os.Setenv("DDEV_SHARE_URL", shareURL)
@@ -215,6 +217,23 @@ ddev share myproject`,
 
 		os.Exit(0)
 	},
+}
+
+// printQRCode prints target as a QR code for scanning with a phone, using
+// qrencode from the web container. Failure only loses the convenience,
+// so it is logged at debug level rather than reported.
+func printQRCode(app *ddevapp.DdevApp, target string) {
+	var stderr bytes.Buffer
+	// NoCapture, because captured output has its color codes stripped
+	_, _, err := app.Exec(&ddevapp.ExecOpts{
+		RawCmd:    []string{"qrencode", "-m", "2", "-t", "ansi256utf8", target},
+		NoCapture: true,
+		Stderr:    &stderr,
+		SkipHooks: true,
+	})
+	if err != nil {
+		util.Debug("Unable to generate QR code for %s: %v, stderr=%s", target, err, stderr.String())
+	}
 }
 
 func registerShareCmd() {

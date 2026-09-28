@@ -906,6 +906,7 @@ Flags:
 
 * `--mailpit`, `-m`: Open Mailpit.
 * `--print-url`: Print the URL instead of opening a browser. The output is the resolved URL itself, with no prefix, so it can be used directly in scripts. Useful where no browser is available (SSH sessions, containers, CI).
+* `--qr`: Print the URL and its QR code instead of opening a browser. Only useful for a URL a phone can reach, which `*.ddev.site` is not.
 
 The environment variable `DDEV_LAUNCH_PRINT_URL=true` behaves like the `--print-url` flag. Unlike the flag it is inherited by nested `ddev launch` invocations (for example from custom commands or add-ons that call `ddev launch` internally), so wrappers and external tools can capture the URL. Unlike `DDEV_DEBUG=true` or `DDEV_VERBOSE=true`, which print the URL with a `FULLURL` prefix and enable global debug logging, it prints only the URL.
 
@@ -927,6 +928,9 @@ ddev launch --mailpit
 
 # Print your project’s base URL instead of opening a browser
 ddev launch --print-url
+
+# Print a QR code for a URL, to scan with a phone
+ddev launch --qr https://your.example.com
 
 # Open your project’s base URL appended with `temp/phpinfo.php`
 ddev launch temp/phpinfo.php
@@ -1381,6 +1385,8 @@ ddev sequelace
 ## `share`
 
 [Share the current project](../topics/sharing.md) on the internet via a tunnel provider like ngrok or cloudflared.
+
+The tunnel URL is also printed as a QR code, which you can scan to open it on a phone or tablet.
 
 DDEV supports multiple share providers:
 

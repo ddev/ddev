@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -246,12 +247,15 @@ func TestShareCmdProviderSystem(t *testing.T) {
 	}
 	t.Setenv("DDEV_GOROUTINES", "")
 
+	expectedQRCode, err := os.ReadFile(filepath.Join("testdata", t.Name(), "qrcode.txt"))
+	require.NoError(t, err)
+
 	site := TestSites[0]
 	defer site.Chdir()()
 
 	// Ensure project is started
 	cmd := exec.Command(DdevBin, "start")
-	err := cmd.Run()
+	err = cmd.Run()
 	require.NoError(t, err)
 
 	// Test 1: Create a mock provider and verify URL capture
@@ -298,6 +302,7 @@ sleep 2
 		// util.Success() writes to stdout, not stderr
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 		require.Contains(t, stdoutOutput, "mock-test-tunnel")
+		require.Contains(t, strings.ReplaceAll(stdoutOutput, "\r\n", "\n"), strings.ReplaceAll(string(expectedQRCode), "\r\n", "\n"))
 	})
 
 	// Test 2: Verify hooks have access to DDEV_SHARE_URL
