@@ -54,3 +54,7 @@ CLAUDE.local.md
 
 /.mcp.json
 /.env.example
+
+# Developer ID P12 exports contain private keys. CI retrieves the signing
+# identity from 1Password at job runtime.
+/certfiles/*.p12

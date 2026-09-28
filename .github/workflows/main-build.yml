@@ -286,7 +286,17 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
           DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
-          DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@v4
+
+      - name: Load signing-certificate password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.DDEV_SIGNING_SERVICE_ACCOUNT_TOKEN }}"
+          DDEV_MACOS_SIGNING_PASSWORD: "op://ddev-signing/2prggopnzml4kqotzzs3dgcsr4/certificate_password"
 
       - name: "setup macOS"
         run: |
@@ -316,18 +326,27 @@ jobs:
 
       - name: Sign and notarize binaries (amd64 and arm64)
         env:
-          TEAM_ID: "9HQ298V2BW"
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.DDEV_SIGNING_SERVICE_ACCOUNT_TOKEN }}"
           DISABLE_NOTARIZATION: ${{ vars.DISABLE_NOTARIZATION }}
         run: |
           set -o errexit -o pipefail
           if [ -z "${DDEV_MACOS_SIGNING_PASSWORD}" ] ; then echo "DDEV_MACOS_SIGNING_PASSWORD is empty"; exit 1; fi
           if [ -z "${DDEV_MACOS_APP_PASSWORD}" ] ; then echo "DDEV_MACOS_APP_PASSWORD is empty"; exit 1; fi
+          cert_dir=$(mktemp -d "${TMPDIR:-/tmp}/ddev-signing-cert.XXXXXXXX")
+          trap 'rm -rf "${cert_dir}"' EXIT
+          export DDEV_MACOS_CERT_FILE="${cert_dir}/ddev-developer-id-2026.p12"
+          op read --out-file "${DDEV_MACOS_CERT_FILE}" "op://ddev-signing/2prggopnzml4kqotzzs3dgcsr4/ddev-developer-id-2026.p12"
+          chmod 600 "${DDEV_MACOS_CERT_FILE}"
+          # The binaries came from build jobs, so signing them directly avoids
+          # Makefile prerequisites that would require Go on this runner.
+          signing_tools_url="https://raw.githubusercontent.com/ddev/signing_tools/main"
+          cert_name="Developer ID Application: DDEV Foundation (9HQ298V2BW)"
           for item in .gotmp/bin/darwin*/ddev .gotmp/bin/darwin*/ddev-hostname; do
             echo "Signing and notarizing ${item} ..."
             codesign --remove-signature "${item}" || true
-            curl -s https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="${DDEV_MACOS_SIGNING_PASSWORD}" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="${item}"
+            curl -sSL -f "${signing_tools_url}/macos_sign.sh" | bash -s - --signing-password="${DDEV_MACOS_SIGNING_PASSWORD}" --cert-file="${DDEV_MACOS_CERT_FILE}" --cert-name="${cert_name}" --target-binary="${item}"
             if [ "${DISABLE_NOTARIZATION:-}" != "true" ]; then
-              curl -sSL -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="${item}"
+              curl -sSL -f "${signing_tools_url}/macos_notarize.sh" | bash -s - --app-specific-password="${DDEV_MACOS_APP_PASSWORD}" --apple-id=notarizer@ddev.com --team-id=9HQ298V2BW --primary-bundle-id=com.ddev.ddev --target-binary="${item}"
             else
               echo "Notarization disabled via DISABLE_NOTARIZATION=true environment variable"
             fi
@@ -360,8 +379,6 @@ jobs:
           AUR_SSH_PRIVATE_KEY: "op://push-secrets/AUR_SSH_PRIVATE_KEY/private key?ssh-format=openssh"
           CHOCOLATEY_API_KEY: "op://push-secrets/CHOCOLATEY_API_KEY/credential"
           GITHUB_TOKEN: "op://push-secrets/DDEV_GITHUB_TOKEN/credential"
-          DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
-          DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
           DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
           FURY_TOKEN: "op://push-secrets/FURY_TOKEN/credential_${{ github.repository_owner }}"
           DDEV_CLOUDSMITH_API_TOKEN: "op://push-secrets/DDEV_CLOUDSMITH_API_TOKEN/credential"

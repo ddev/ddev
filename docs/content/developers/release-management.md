@@ -54,11 +54,17 @@ The following “Repository secret” environment variables must be configured i
 * `DDEV_CLOUDSMITH_API_TOKEN`: API token for the `CLOUDSMITH_ORG`/`CLOUDSMITH_REPO` above.
 * `DDEV_GITHUB_TOKEN`: GitHub personal token (`repo` scope, classic PAT) that gives access to create releases and push to the Homebrew repositories.
 * `DDEV_MACOS_APP_PASSWORD`: Password used for notarization, see [signing_tools](https://github.com/ddev/signing_tools).
-* `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: Windows signing password.
 * `DOCKERHUB_TOKEN`: Token for pushing to `hub.docker.com`. or updating image descriptions.
 * `FURY_TOKEN`: Push token assigned to the above Gemfury account.
 * `GORELEASER_KEY`: License key for GoReleaser Pro.
+
+The macOS Developer ID certificate and its password are stored in the
+`ddev-signing` vault, not `push-secrets`. Configure the
+`DDEV_SIGNING_SERVICE_ACCOUNT_TOKEN` GitHub Actions secret with a dedicated,
+read-only service account that has access only to that vault. The macOS release
+job downloads the certificate to a temporary file and deletes it when the job
+exits.
 
 ## Creating a Release
 
