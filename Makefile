@@ -19,9 +19,7 @@ PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -name "*.go" ! -path "*/testdata/*")
 GORACE = "halt_on_error=1"
 CGO_ENABLED = 0
-# Pin reviewed signing behavior used by release builds; do not follow a mutable
-# branch in the release-signing path.
-SIGNING_TOOLS_REVISION ?= 97a0b4c3dcd1bd164d8840d88535cd045f548715
+SIGNING_TOOLS_REVISION ?= main
 SIGNING_TOOLS_RAW_URL = https://raw.githubusercontent.com/ddev/signing_tools/$(SIGNING_TOOLS_REVISION)
 DDEV_MACOS_CERT_FILE ?=
 DDEV_MACOS_CERT_NAME ?= Developer ID Application: DDEV Foundation (9HQ298V2BW)
