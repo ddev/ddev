@@ -15,6 +15,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -171,7 +172,9 @@ ddev share myproject`,
 		}
 
 		util.Success("Tunnel URL: %s", shareURL)
-		printQRCode(app, shareURL)
+		if !output.JSONOutput {
+			printQRCode(app, shareURL)
+		}
 
 		// Set DDEV_SHARE_URL environment variable for hooks
 		_ = os.Setenv("DDEV_SHARE_URL", shareURL)
