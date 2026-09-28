@@ -38,8 +38,6 @@
       "Bash(git push *)",
       "Bash(docker push *)",
       "Bash(go build *)",
-      "Bash(sed -i *)",
-      "Bash(sed * -i *)",
       "Bash(find * -delete)",
       "Bash(find * -delete *)",
       "Bash(find * -exec rm *)"
