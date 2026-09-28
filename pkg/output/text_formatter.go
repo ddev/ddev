@@ -12,11 +12,6 @@ import (
 	"golang.org/x/term"
 )
 
-// This file is minor adaptations from sirupsen/Logrus at f006c2a (v1.0.3)
-// text_formatter.go: https://github.com/sirupsen/logrus/blob/f006c2ac4710855cf0f916dd6b77acf6b048dc6e/text_formatter.go
-// The original text_formatter.go is in sirupsen_org/text_formatter.go.sirupsen
-// for direct comparison.
-
 const defaultTimestampFormat = time.RFC3339
 
 const (
@@ -28,9 +23,8 @@ const (
 	gray    = 37
 )
 
-// TextFormatter formats logs into text.
-// This is a specialization of https://github.com/sirupsen/logrus/blob/master/text_formatter.go
-// It's intended to be used for all user-oriented output from DDEV
+// TextFormatter formats logs into text, adapted from logrus's own text
+// formatter. It's intended to be used for all user-oriented output from DDEV.
 type TextFormatter struct {
 	// Set to true to bypass checking for a TTY before outputting colors.
 	ForceColors bool
