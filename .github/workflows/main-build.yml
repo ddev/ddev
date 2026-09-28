@@ -286,7 +286,14 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
           DDEV_MACOS_APP_PASSWORD: "op://push-secrets/DDEV_MACOS_APP_PASSWORD/credential"
-          DDEV_MACOS_SIGNING_PASSWORD: "op://push-secrets/DDEV_MACOS_SIGNING_PASSWORD/credential"
+
+      - name: Load signing-certificate password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.DDEV_SIGNING_SERVICE_ACCOUNT_TOKEN }}"
+          DDEV_MACOS_SIGNING_PASSWORD: "op://ddev-signing/2prggopnzml4kqotzzs3dgcsr4/certificate_password"
 
       - name: "setup macOS"
         run: |
@@ -316,22 +323,23 @@ jobs:
 
       - name: Sign and notarize binaries (amd64 and arm64)
         env:
-          TEAM_ID: "9HQ298V2BW"
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.DDEV_SIGNING_SERVICE_ACCOUNT_TOKEN }}"
           DISABLE_NOTARIZATION: ${{ vars.DISABLE_NOTARIZATION }}
         run: |
           set -o errexit -o pipefail
           if [ -z "${DDEV_MACOS_SIGNING_PASSWORD}" ] ; then echo "DDEV_MACOS_SIGNING_PASSWORD is empty"; exit 1; fi
           if [ -z "${DDEV_MACOS_APP_PASSWORD}" ] ; then echo "DDEV_MACOS_APP_PASSWORD is empty"; exit 1; fi
-          for item in .gotmp/bin/darwin*/ddev .gotmp/bin/darwin*/ddev-hostname; do
-            echo "Signing and notarizing ${item} ..."
-            codesign --remove-signature "${item}" || true
-            curl -s https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="${DDEV_MACOS_SIGNING_PASSWORD}" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="${item}"
-            if [ "${DISABLE_NOTARIZATION:-}" != "true" ]; then
-              curl -sSL -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="${item}"
-            else
-              echo "Notarization disabled via DISABLE_NOTARIZATION=true environment variable"
-            fi
-          done
+          cert_dir=$(mktemp -d "${TMPDIR:-/tmp}/ddev-signing-cert.XXXXXXXX")
+          trap 'rm -rf "${cert_dir}"' EXIT
+          export DDEV_MACOS_CERT_FILE="${cert_dir}/ddev-developer-id-2026.p12"
+          op read --out-file "${DDEV_MACOS_CERT_FILE}" "op://ddev-signing/2prggopnzml4kqotzzs3dgcsr4/ddev-developer-id-2026.p12"
+          chmod 600 "${DDEV_MACOS_CERT_FILE}"
+          if [ "${DISABLE_NOTARIZATION:-}" = "true" ]; then
+            echo "Notarization disabled via DISABLE_NOTARIZATION=true environment variable"
+            make darwin_amd64_signed darwin_arm64_signed
+          else
+            make darwin_amd64_notarized darwin_arm64_notarized
+          fi
 
       - name: Upload notarized binaries
         uses: actions/upload-artifact@v7

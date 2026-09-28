@@ -19,6 +19,14 @@ PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -name "*.go" ! -path "*/testdata/*")
 GORACE = "halt_on_error=1"
 CGO_ENABLED = 0
+# Pin reviewed signing behavior used by release builds; do not follow a mutable
+# branch in the release-signing path.
+SIGNING_TOOLS_REVISION ?= 97a0b4c3dcd1bd164d8840d88535cd045f548715
+SIGNING_TOOLS_RAW_URL = https://raw.githubusercontent.com/ddev/signing_tools/$(SIGNING_TOOLS_REVISION)
+DDEV_MACOS_CERT_FILE ?=
+DDEV_MACOS_CERT_NAME ?= Developer ID Application: DDEV Foundation (9HQ298V2BW)
+DDEV_MACOS_APPLE_ID ?= notarizer@ddev.com
+DDEV_MACOS_TEAM_ID ?= 9HQ298V2BW
 .PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 windows_amd64_binaries windows_arm64_binaries windows_binaries windows_sign_binaries windows_install setup
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
@@ -348,40 +356,40 @@ textlint:
 	textlint {README.md,docs/**}
 
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-hostname
-	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ]; then \
-		echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; \
+	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] || [ -z "$(DDEV_MACOS_CERT_FILE)" ]; then \
+		echo "Skipping signing ddev for macOS; DDEV_MACOS_SIGNING_PASSWORD and DDEV_MACOS_CERT_FILE are required"; \
 	else \
 		for bin in $^; do \
 			set -o errexit -o pipefail; \
 			codesign --remove-signature "$$bin" || true; \
-			$(CURL) -s --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | \
-				bash -s - --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$$bin"; \
+			$(CURL) -s --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors $(SIGNING_TOOLS_RAW_URL)/macos_sign.sh | \
+				bash -s - --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file="$(DDEV_MACOS_CERT_FILE)" --cert-name="$(DDEV_MACOS_CERT_NAME)" --target-binary="$$bin"; \
 		done; \
 	fi
 darwin_arm64_signed: $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/darwin_arm64/ddev-hostname
-	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ]; then \
-		echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; \
+	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] || [ -z "$(DDEV_MACOS_CERT_FILE)" ]; then \
+		echo "Skipping signing ddev for macOS; DDEV_MACOS_SIGNING_PASSWORD and DDEV_MACOS_CERT_FILE are required"; \
 	else \
 		for bin in $^; do \
 			set -o errexit -o pipefail; \
 			codesign --remove-signature "$$bin" || true; \
-			$(CURL) -s --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | \
-				bash -s - --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$$bin"; \
+			$(CURL) -s --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors $(SIGNING_TOOLS_RAW_URL)/macos_sign.sh | \
+				bash -s - --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file="$(DDEV_MACOS_CERT_FILE)" --cert-name="$(DDEV_MACOS_CERT_NAME)" --target-binary="$$bin"; \
 		done; \
 	fi
 darwin_amd64_notarized: darwin_amd64_signed
-	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
+	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ] || [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] || [ -z "$(DDEV_MACOS_CERT_FILE)" ]; then echo "Skipping notarizing ddev for macOS; DDEV_MACOS_APP_PASSWORD, DDEV_MACOS_SIGNING_PASSWORD, and DDEV_MACOS_CERT_FILE are required"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing $(GOTMP)/bin/darwin_amd64/ddev and ddev-hostname ..." ; \
-		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
-		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev-hostname" ; \
+		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f $(SIGNING_TOOLS_RAW_URL)/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=$(DDEV_MACOS_APPLE_ID) --team-id=$(DDEV_MACOS_TEAM_ID) --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
+		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f $(SIGNING_TOOLS_RAW_URL)/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=$(DDEV_MACOS_APPLE_ID) --team-id=$(DDEV_MACOS_TEAM_ID) --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev-hostname" ; \
 	fi
 darwin_arm64_notarized: darwin_arm64_signed
-	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
+	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ] || [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] || [ -z "$(DDEV_MACOS_CERT_FILE)" ]; then echo "Skipping notarizing ddev for macOS; DDEV_MACOS_APP_PASSWORD, DDEV_MACOS_SIGNING_PASSWORD, and DDEV_MACOS_CERT_FILE are required"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing $(GOTMP)/bin/darwin_arm64/ddev and ddev-hostname ..." ; \
-		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
-		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev-hostname" ; \
+		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f $(SIGNING_TOOLS_RAW_URL)/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=$(DDEV_MACOS_APPLE_ID) --team-id=$(DDEV_MACOS_TEAM_ID) --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
+		$(CURL) -sSL --retry 5 --retry-delay 5 --retry-connrefused --retry-all-errors -f $(SIGNING_TOOLS_RAW_URL)/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=$(DDEV_MACOS_APPLE_ID) --team-id=$(DDEV_MACOS_TEAM_ID) --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev-hostname" ; \
 	fi
 
 windows_amd64_install: $(GOTMP)/bin/windows_amd64/ddev_windows_amd64_installer.exe
