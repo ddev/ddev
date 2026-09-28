@@ -520,20 +520,40 @@ func printResult(ddevDest, hostnameDest string, t buildTarget, signed, autoUnblo
 		return
 	}
 
-	outputDir := filepath.Dir(ddevDest)
-
-	// Prepend the download directory so `ddev` in the current shell resolves to
-	// it. `hash -r` clears the shell's cached path to the old ddev, which
-	// bash/zsh would otherwise keep using despite the changed PATH.
 	output.UserOut.Println("")
-	output.UserOut.Println("To use this build in the current shell (this window only):")
-	if t.goos == "windows" {
-		output.UserOut.Printf("  $env:PATH = \"%s;$env:PATH\"", outputDir)
-	} else {
-		output.UserOut.Printf("  export PATH=\"%s:$PATH\"", outputDir)
-		output.UserOut.Println("  hash -r")
+	for _, line := range pathHint(filepath.Dir(ddevDest), t.goos, os.Getenv("MSYSTEM")) {
+		output.UserOut.Println(line)
 	}
-	output.UserOut.Println("  ddev version")
+}
+
+// pathHint returns the lines telling the user how to put outputDir first on
+// PATH in the current shell. `hash -r` clears bash/zsh's cached path to the
+// old ddev, which they would otherwise keep using despite the changed PATH.
+// On Windows, Git Bash is the shell most DDEV users have, so it comes first,
+// and alone when MSYSTEM (set by Git Bash/MSYS2) shows we are running in it.
+func pathHint(outputDir, goos, msystem string) []string {
+	bash := func(dir, indent string) []string {
+		return []string{
+			indent + fmt.Sprintf("export PATH=\"%s:$PATH\"", dir),
+			indent + "hash -r",
+			indent + "ddev version",
+		}
+	}
+	header := "To use this build in the current shell (this window only):"
+	if goos != "windows" {
+		return append([]string{header}, bash(outputDir, "  ")...)
+	}
+	gitBashDir := util.WindowsPathToCygwinPath(outputDir)
+	if msystem != "" {
+		return append([]string{header}, bash(gitBashDir, "  ")...)
+	}
+	lines := []string{header, "  In Git Bash:"}
+	lines = append(lines, bash(gitBashDir, "    ")...)
+	return append(lines,
+		"  In PowerShell:",
+		fmt.Sprintf("    $env:PATH = \"%s;$env:PATH\"", outputDir),
+		"    ddev version",
+	)
 }
 
 // shortSHA returns the first 7 characters of a commit SHA for display.

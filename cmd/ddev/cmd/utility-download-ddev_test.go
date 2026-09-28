@@ -49,6 +49,45 @@ func TestDownloadDdevPSQuote(t *testing.T) {
 	require.Equal(t, `'it''s a test'`, psQuote("it's a test"))
 }
 
+// TestDownloadDdevPathHint verifies Windows users get Git Bash syntax, with
+// PowerShell added only when MSYSTEM says the shell isn't Git Bash.
+func TestDownloadDdevPathHint(t *testing.T) {
+	header := "To use this build in the current shell (this window only):"
+
+	require.Equal(t, []string{
+		header,
+		`  export PATH="/home/u/tmp/dl:$PATH"`,
+		"  hash -r",
+		"  ddev version",
+	}, pathHint("/home/u/tmp/dl", "linux", ""))
+
+	// Forward slashes keep the drive-letter conversion independent of the test host.
+	winDir := "C:/Users/u/tmp/dl"
+	require.Equal(t, []string{
+		header,
+		`  export PATH="/c/Users/u/tmp/dl:$PATH"`,
+		"  hash -r",
+		"  ddev version",
+	}, pathHint(winDir, "windows", "MINGW64"))
+
+	require.Equal(t, []string{
+		header,
+		"  In Git Bash:",
+		`    export PATH="/c/Users/u/tmp/dl:$PATH"`,
+		"    hash -r",
+		"    ddev version",
+		"  In PowerShell:",
+		`    $env:PATH = "C:/Users/u/tmp/dl;$env:PATH"`,
+		"    ddev version",
+	}, pathHint(winDir, "windows", ""))
+
+	// Real Windows paths use backslashes, which only a Windows host converts.
+	if runtime.GOOS == "windows" {
+		require.Equal(t, `  export PATH="/c/Users/u/tmp/dl:$PATH"`,
+			pathHint(`C:\Users\u\tmp\dl`, "windows", "MINGW64")[1])
+	}
+}
+
 // TestDownloadDdevClearMacQuarantine verifies the auto-unblock is attempted
 // only when the xattr tool is available (i.e. on macOS), and never panics.
 func TestDownloadDdevClearMacQuarantine(t *testing.T) {
