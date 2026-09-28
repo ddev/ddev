@@ -8,7 +8,6 @@ import (
 	"github.com/ddev/ddev/pkg/amplitude/loggers"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -28,8 +27,8 @@ func (t *DdevLoggerSuite) TestLogger() {
 	output.UserErr.SetOutput(&writer)
 
 	// Enable debug logging
-	output.UserOut.Level = logrus.DebugLevel
-	output.UserErr.Level = logrus.DebugLevel
+	output.UserOut.Level = output.DebugLevel
+	output.UserErr.Level = output.DebugLevel
 	globalconfig.DdevDebug = true
 
 	require := t.Require()

@@ -1869,8 +1869,7 @@ func (app *DdevApp) Start() error {
 	if output.JSONOutput {
 		output.UserOut.Printf("Building project images...")
 	} else {
-		// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
-		// See https://github.com/sirupsen/logrus/issues/167
+		// Using fmt.Print to avoid a newline, as output.UserOut.Printf always adds one.
 		// We want the progress dots to appear on the same line.
 		fmt.Print("Building project images...")
 		// Print a newline before util.Debug below
@@ -2001,8 +2000,7 @@ func (app *DdevApp) Start() error {
 		if output.JSONOutput {
 			output.UserOut.Printf("Starting Mutagen sync process...")
 		} else {
-			// Using fmt.Print to avoid a newline, as output.UserOut.Printf adds one by default.
-			// See https://github.com/sirupsen/logrus/issues/167
+			// Using fmt.Print to avoid a newline, as output.UserOut.Printf always adds one.
 			// We want the progress dots to appear on the same line.
 			fmt.Print("Starting Mutagen sync process...")
 			// Print a newline before util.Debug below

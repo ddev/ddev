@@ -15,7 +15,6 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -120,7 +119,7 @@ func TestDownloadFileRetryLogic(t *testing.T) {
 		t.Cleanup(func() { globalconfig.DdevDebug = origDebug })
 		// Also set log level since UserOut is initialized at package load time
 		origLevel := output.UserOut.GetLevel()
-		output.UserOut.SetLevel(log.DebugLevel)
+		output.UserOut.SetLevel(output.DebugLevel)
 		t.Cleanup(func() { output.UserOut.SetLevel(origLevel) })
 
 		restoreOutput := util.CaptureUserOut()
@@ -234,7 +233,7 @@ func TestDownloadFileRetryLogic(t *testing.T) {
 		t.Cleanup(func() { globalconfig.DdevDebug = origDebug })
 		// Also set log level since UserOut is initialized at package load time
 		origLevel := output.UserOut.GetLevel()
-		output.UserOut.SetLevel(log.DebugLevel)
+		output.UserOut.SetLevel(output.DebugLevel)
 		t.Cleanup(func() { output.UserOut.SetLevel(origLevel) })
 
 		restoreOutput := util.CaptureUserOut()

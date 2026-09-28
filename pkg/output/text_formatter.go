@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/term"
 )
 
@@ -64,7 +63,7 @@ type TextFormatter struct {
 	sync.Once
 }
 
-func (f *TextFormatter) init(entry *log.Entry) {
+func (f *TextFormatter) init(entry *Entry) {
 	if entry.Logger != nil {
 		f.isTerminal = f.checkIfTerminal(entry.Logger.Out)
 	}
@@ -80,8 +79,8 @@ func (f *TextFormatter) checkIfTerminal(w io.Writer) bool {
 }
 
 // Format renders a single log entry. A key named "raw" is discarded here as it's for json consumption.
-func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
-	var b *bytes.Buffer
+func (f *TextFormatter) Format(entry *Entry) ([]byte, error) {
+	b := &bytes.Buffer{}
 	keys := make([]string, 0, len(entry.Data))
 	for k := range entry.Data {
 		// Discard key named "raw" as it's for json consumption only.
@@ -92,11 +91,6 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 
 	if !f.DisableSorting {
 		sort.Strings(keys)
-	}
-	if entry.Buffer != nil {
-		b = entry.Buffer
-	} else {
-		b = &bytes.Buffer{}
 	}
 
 	prefixFieldClashes(entry.Data)
@@ -126,16 +120,16 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *TextFormatter) printColored(b *bytes.Buffer, entry *log.Entry, keys []string, _ string) {
+func (f *TextFormatter) printColored(b *bytes.Buffer, entry *Entry, keys []string, _ string) {
 	var levelColor int
 	switch entry.Level {
-	//case log.InfoLevel:
+	//case InfoLevel:
 	//	levelColor = blue
-	case log.DebugLevel:
+	case DebugLevel:
 		levelColor = gray
-	case log.WarnLevel:
+	case WarnLevel:
 		levelColor = yellow
-	case log.ErrorLevel, log.FatalLevel, log.PanicLevel:
+	case ErrorLevel, FatalLevel, PanicLevel:
 		levelColor = red
 	default:
 		levelColor = nocolor
@@ -187,7 +181,7 @@ func (f *TextFormatter) appendValue(b *bytes.Buffer, value any) {
 // This is to not silently overwrite `time`, `msg` and `level` fields when
 // dumping it. If this code wasn't there doing:
 //
-//	logrus.WithField("level", 1).Info("hello")
+//	WithField("level", 1).Info("hello")
 //
 // Would silently drop the user provided level. Instead with this code
 // it'll logged as:
@@ -196,7 +190,7 @@ func (f *TextFormatter) appendValue(b *bytes.Buffer, value any) {
 //
 // It's not exported because it's still using Data in an opinionated way. It's to
 // avoid code duplication between the two default formatters.
-func prefixFieldClashes(data log.Fields) {
+func prefixFieldClashes(data Fields) {
 	if t, ok := data["time"]; ok {
 		data["fields.time"] = t
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/compose-spec/compose-go/v2/loader"
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/cli/cli"
@@ -365,6 +366,24 @@ func setupLogrusSuppression(logger *logrus.Logger) {
 	})
 }
 
+// init keeps compose's own hardwired logrus.StandardLogger consistent with
+// ddev's output mode: the vendored docker/compose logs through it directly,
+// so its rare unsuppressed messages should still respect --json-output and
+// DDEV_DEBUG/DDEV_VERBOSE rather than always printing plain text at info
+// level. DDEV's own output (pkg/output) no longer depends on logrus at all.
 func init() {
+	logLevel := logrus.InfoLevel
+	if nodeps.IsEnvTrue("DDEV_DEBUG") || nodeps.IsEnvTrue("DDEV_VERBOSE") {
+		logLevel = logrus.DebugLevel
+	}
+	logrus.SetLevel(logLevel)
+	if output.JSONOutput {
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+	} else {
+		logrus.SetFormatter(&logrus.TextFormatter{
+			DisableTimestamp: true,
+			DisableColors:    !output.ColorsEnabled(),
+		})
+	}
 	setupLogrusSuppression(logrus.StandardLogger())
 }

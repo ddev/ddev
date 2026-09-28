@@ -10,34 +10,28 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/nodeps"
-	log "github.com/sirupsen/logrus"
 )
 
-type Fields = log.Fields
-
 var (
-	// UserOut is the customized logrus log used for direct user output
-	UserOut = func() *log.Logger {
-		l := log.New()
+	// UserOut is the customized log used for direct user output
+	UserOut = func() *Logger {
+		l := New()
 		l.SetOutput(os.Stdout)
-		logLevel := log.InfoLevel
+		logLevel := InfoLevel
 		if nodeps.IsEnvTrue("DDEV_DEBUG") || nodeps.IsEnvTrue("DDEV_VERBOSE") {
-			logLevel = log.DebugLevel
+			logLevel = DebugLevel
 		}
 		l.SetLevel(logLevel)
-		log.SetLevel(logLevel)
 		if JSONOutput {
 			l.SetFormatter(DdevOutputJSONFormatter)
-			log.SetFormatter(DdevOutputJSONFormatter)
 		} else {
 			l.SetFormatter(DdevOutputFormatter)
-			log.SetFormatter(DdevOutputFormatter)
 		}
 		return l
 	}()
-	// UserErr is the customized logrus log used for direct user stderr
-	UserErr = func() *log.Logger {
-		l := log.New()
+	// UserErr is the customized log used for direct user stderr
+	UserErr = func() *Logger {
+		l := New()
 		l.SetOutput(&ErrorWriter{})
 		if JSONOutput {
 			l.SetFormatter(DdevOutputJSONFormatter)
@@ -52,7 +46,7 @@ var (
 		DisableTimestamp: true,
 	}
 	// DdevOutputJSONFormatter is the specialized JSON formatter for UserOut
-	DdevOutputJSONFormatter = &log.JSONFormatter{}
+	DdevOutputJSONFormatter = &JSONFormatter{}
 	// JSONOutput indicates if JSON output mode is enabled, determined by command-line flags.
 	// Parsed early, prior to Cobra flag initialization, to configure logging correctly from start.
 	// Manual parsing is necessary because Cobra registers flags too late for this early use.
@@ -109,7 +103,7 @@ func ParseBoolFlag(long string, short string) bool {
 }
 
 // JSONProgressWriter is an io.Writer that routes each write through UserErr.Info
-// so compose progress lines are formatted by the active logrus formatter (e.g. JSON)
+// so compose progress lines are formatted by the active Formatter (e.g. JSON)
 // instead of being written as raw text.
 type JSONProgressWriter struct{}
 
