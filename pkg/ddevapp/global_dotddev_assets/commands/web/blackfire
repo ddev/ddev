@@ -15,8 +15,14 @@ function enable {
     echo "For example, ddev config global --web-environment-add=BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>"
     exit 1
   fi
-  phpdismod xhprof xdebug
   phpenmod blackfire
+  if ! php -m 2>/dev/null | grep -qx blackfire; then
+    phpdismod blackfire || true
+    echo "Blackfire is unavailable for PHP ${DDEV_PHP_VERSION:-current} in this web image." >&2
+    exit 1
+  fi
+  # After the check, so a failed enable changes nothing
+  phpdismod xhprof xdebug
   if [ "${DDEV_WEBSERVER_TYPE:-}" = "generic" ]; then
     # we don't know what process is running php, restart all web_extra_daemons
     supervisorctl restart 'webextradaemons:*' || true
@@ -55,7 +61,6 @@ fi
 
 case $1 in
   on|true|enable|start)
-    disable_xdebug
     enable
     ;;
   off|false|disable|stop)

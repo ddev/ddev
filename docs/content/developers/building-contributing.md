@@ -124,6 +124,12 @@ make
 
 This also applies after a rebase or merge — if a base image or shared file changed upstream, `make` detects the mismatch and rebuilds the affected image the same way, even if you didn't edit anything yourself.
 
+External package repositories are not part of an image's content hash. To
+rebuild `ddev-webserver` against updated external dependencies, bump
+`EXTERNAL_DEPENDENCIES_REFRESH` in its `Dockerfile`, then run `make`. This
+invalidates the base package-install layer and gives the rebuilt image a new
+tag.
+
 `ddev version` should show you that you are using the freshly built tag, and [`ddev start`](../users/usage/commands.md#start) will use the local image without pulling.
 
 Run `make print-image-tags` at any time to see the tag each image would currently use, whether or not it's actually been built yet — this is the value to use with the GitHub Actions push workflows described below if you need the image pushed to the registry.

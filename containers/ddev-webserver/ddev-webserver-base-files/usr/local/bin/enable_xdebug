@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 export PATH=$PATH:/usr/sbin:/sbin
 phpenmod xdebug
+if ! php -m 2>/dev/null | grep -qx xdebug; then
+  phpdismod xdebug || true
+  echo "Xdebug is unavailable for PHP ${DDEV_PHP_VERSION:-current} in this web image." >&2
+  exit 1
+fi
 if [ "${DDEV_WEBSERVER_TYPE:-}" = "generic" ]; then
   # we don't know what process is running php, restart all web_extra_daemons
   supervisorctl restart 'webextradaemons:*' || true

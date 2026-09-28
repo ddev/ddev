@@ -1230,6 +1230,10 @@ func TestPHPConfig(t *testing.T) {
 	for _, v := range phpKeys {
 		app.PHPVersion = v
 		app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-solr"}
+		// TODO: php8.6: Remove when php8.6-solr is available
+		if v == nodeps.PHP86 {
+			app.WebImageExtraPackages = nil
+		}
 		err = app.Restart()
 		require.NoError(t, err)
 
@@ -1263,6 +1267,10 @@ func TestPHPConfig(t *testing.T) {
 
 		// This list does not contain all expected, as php5.6 is missing some, etc.
 		expectedExtensions := []string{"apcu", "bcmath", "bz2", "curl", "gd", "imagick", "intl", "ldap", "mbstring", "pgsql", "readline", "soap", "sqlite3", "uploadprogress", "xml", "xmlrpc", "zip"}
+		// TODO: php8.6: Remove when these extensions are packaged for php8.6
+		if v == nodeps.PHP86 {
+			expectedExtensions = util.SubtractSlices(expectedExtensions, []string{"apcu", "imagick", "uploadprogress", "xmlrpc"})
+		}
 		for _, e := range expectedExtensions {
 			assert.Contains(out, fmt.Sprintf(`,%s,`, e))
 		}

@@ -87,7 +87,7 @@ fi
 
 # Disable xdebug by default. Users can enable with /usr/local/bin/enable_xdebug
 if [ "$DDEV_XDEBUG_ENABLED" = "true" ]; then
-  enable_xdebug
+  enable_xdebug || true
 else
   disable_xdebug
 fi
