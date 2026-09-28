@@ -49,7 +49,7 @@ func IsUnreleasedDdevVersion(version string) bool {
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "5ef503a51c" // 20260914_php_8.6-5ef503a51c
+var WebTag = "4738b7fa91" // 20260914_php_8.6-4738b7fa91
 
 // WebTagBranch is the branch WebTag's content was built from.
 var WebTagBranch = "20260914_php_8.6"
