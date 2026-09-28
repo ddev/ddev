@@ -11,6 +11,8 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/require"
 )
@@ -156,9 +158,13 @@ func TestStartOfflineWithBuiltImages(t *testing.T) {
 	app, err := ddevapp.NewApp(site.Dir, false)
 	require.NoError(t, err)
 
-	origSearchTerm := dockerutil.RegistrySearchTerm
+	origUtilitiesImage := versionconstants.UtilitiesImage
+	origInternetChecked := globalconfig.IsInternetActiveAlreadyChecked
+	origInternetResult := globalconfig.IsInternetActiveResult
 	t.Cleanup(func() {
-		dockerutil.RegistrySearchTerm = origSearchTerm
+		versionconstants.UtilitiesImage = origUtilitiesImage
+		globalconfig.IsInternetActiveAlreadyChecked = origInternetChecked
+		globalconfig.IsInternetActiveResult = origInternetResult
 		_ = app.Stop(true, false)
 		_ = os.RemoveAll(app.GetConfigPath("docker-compose.offline-build.yaml"))
 		_ = os.RemoveAll(app.GetConfigPath("offline-build"))
@@ -181,7 +187,11 @@ func TestStartOfflineWithBuiltImages(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "offline.invalid")
 
-	dockerutil.RegistrySearchTerm = "offline.invalid/ddev-utilities"
+	// A locally built image has no registry digest, so the registry check falls
+	// back to the DNS check, which is faked here as offline.
+	versionconstants.UtilitiesImage = app.GetComposeProjectName() + "-offline-build:latest"
+	globalconfig.IsInternetActiveAlreadyChecked = true
+	globalconfig.IsInternetActiveResult = false
 	err = app.Restart()
 	require.NoError(t, err)
 
