@@ -56,8 +56,13 @@ permissions:
   contents: read
 
 jobs:
+  determine-test-eligibility:
+    name: Determine test eligibility
+    uses: ./.github/workflows/test-skip-check.yml
+
   podman-rootless-testpkg:
-    if: github.event_name != 'workflow_dispatch'
+    needs: determine-test-eligibility
+    if: github.event_name != 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
@@ -66,7 +71,8 @@ jobs:
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   podman-rootless-testcmd:
-    if: github.event_name != 'workflow_dispatch'
+    needs: determine-test-eligibility
+    if: github.event_name != 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
@@ -75,7 +81,8 @@ jobs:
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   podman-rootless-custom:
-    if: github.event_name == 'workflow_dispatch'
+    needs: determine-test-eligibility
+    if: github.event_name == 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:

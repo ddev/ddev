@@ -59,8 +59,13 @@ permissions:
   contents: read
 
 jobs:
+  determine-test-eligibility:
+    name: Determine test eligibility
+    uses: ./.github/workflows/test-skip-check.yml
+
   wsl2-nat-testpkg:
-    if: github.event_name != 'workflow_dispatch'
+    needs: determine-test-eligibility
+    if: github.event_name != 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
     uses: ./.github/workflows/test-wsl2-reusable.yml
     with:
       make_target: "testpkg"
@@ -68,7 +73,8 @@ jobs:
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   wsl2-nat-testcmd:
-    if: github.event_name != 'workflow_dispatch'
+    needs: determine-test-eligibility
+    if: github.event_name != 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
     uses: ./.github/workflows/test-wsl2-reusable.yml
     with:
       make_target: "testcmd"
@@ -76,7 +82,8 @@ jobs:
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   wsl2-nat-custom:
-    if: github.event_name == 'workflow_dispatch'
+    needs: determine-test-eligibility
+    if: github.event_name == 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
     uses: ./.github/workflows/test-wsl2-reusable.yml
     with:
       make_target: ${{ inputs.make_target }}

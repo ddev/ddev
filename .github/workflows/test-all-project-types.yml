@@ -56,8 +56,13 @@ permissions:
   contents: read
 
 jobs:
+  determine-test-eligibility:
+    name: Determine test eligibility
+    uses: ./.github/workflows/test-skip-check.yml
+
   prepare-testargs:
-    if: github.event_name != 'workflow_dispatch'
+    needs: determine-test-eligibility
+    if: github.event_name != 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     outputs:
       testargs: ${{ steps.compute-testargs.outputs.testargs }}
@@ -94,8 +99,8 @@ jobs:
           echo "testargs=${TESTARGS}" >> $GITHUB_OUTPUT
 
   all-project-types:
-    if: github.event_name != 'workflow_dispatch'
-    needs: prepare-testargs
+    if: github.event_name != 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
+    needs: [determine-test-eligibility, prepare-testargs]
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
@@ -104,7 +109,8 @@ jobs:
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   all-project-types-custom:
-    if: github.event_name == 'workflow_dispatch'
+    needs: determine-test-eligibility
+    if: github.event_name == 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
