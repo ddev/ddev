@@ -53,6 +53,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
+  # TestDownloadDdevHeadDownload downloads the main build through the Actions API
+  actions: read
   contents: read
 
 jobs:

@@ -1,8 +1,11 @@
 package github
 
 import (
+	"errors"
 	"testing"
+	"time"
 
+	"github.com/google/go-github/v90/github"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,4 +36,71 @@ func TestParseArtifactURLFromHTML(t *testing.T) {
 	dup := anchorHTML + `<a href="https://nightly.link/ddev/ddev/actions/artifacts/222.zip" rel="nofollow">ddev-linux-amd64.zip</a>`
 	require.Equal(t, "https://nightly.link/ddev/ddev/actions/artifacts/222.zip",
 		parseArtifactURLFromHTML(dup, "ddev-linux-amd64"))
+}
+
+func testRun(id int64, conclusion, branch string, age time.Duration) *github.WorkflowRun {
+	return &github.WorkflowRun{
+		ID:         new(id),
+		Conclusion: new(conclusion),
+		HeadBranch: new(branch),
+		CreatedAt:  &github.Timestamp{Time: time.Now().Add(-age)},
+	}
+}
+
+func TestNewestSuccessfulRun(t *testing.T) {
+	runs := []*github.WorkflowRun{
+		testRun(1, "success", "main", 3*time.Hour),
+		testRun(2, "failure", "main", time.Hour),
+		testRun(3, "success", "v1.25.3", 2*time.Hour),
+		testRun(4, "success", "main", 2*time.Hour),
+		testRun(5, "success", "feature", 0),
+	}
+	require.Equal(t, int64(4), newestSuccessfulRun(runs, "main").GetID())
+	require.Equal(t, int64(5), newestSuccessfulRun(runs, "").GetID())
+	require.Nil(t, newestSuccessfulRun(runs, "no-such-branch"))
+	require.Nil(t, newestSuccessfulRun(nil, ""))
+}
+
+// TestFindSuccessfulRun's filtered lists are stale, as GitHub's branch filter
+// can be, so findSuccessfulRun must use them only for a branch missing from the
+// unfiltered list.
+func TestFindSuccessfulRun(t *testing.T) {
+	unfiltered := []*github.WorkflowRun{testRun(1, "success", "main", 0), testRun(2, "success", "feature", time.Hour)}
+	filtered := map[string][]*github.WorkflowRun{
+		"main":  {testRun(3, "success", "main", 30*24*time.Hour)},
+		"quiet": {testRun(4, "success", "quiet", 30*24*time.Hour)},
+	}
+	var calls []string
+	listRuns := func(branch string) ([]*github.WorkflowRun, error) {
+		calls = append(calls, branch)
+		if branch == "" {
+			return unfiltered, nil
+		}
+		return filtered[branch], nil
+	}
+	find := func(branch string) (int64, []string) {
+		calls = nil
+		run, err := findSuccessfulRun(branch, listRuns)
+		require.NoError(t, err)
+		return run.GetID(), calls
+	}
+
+	id, got := find("main")
+	require.Equal(t, int64(1), id)
+	require.Equal(t, []string{""}, got)
+
+	id, got = find("quiet")
+	require.Equal(t, int64(4), id)
+	require.Equal(t, []string{"", "quiet"}, got)
+
+	id, got = find("")
+	require.Equal(t, int64(1), id)
+	require.Equal(t, []string{""}, got)
+
+	id, got = find("no-such-branch")
+	require.Zero(t, id)
+	require.Equal(t, []string{"", "no-such-branch"}, got)
+
+	_, err := findSuccessfulRun("main", func(string) ([]*github.WorkflowRun, error) { return nil, errors.New("rate limited") })
+	require.ErrorContains(t, err, "rate limited")
 }

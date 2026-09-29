@@ -40,7 +40,6 @@ func TestDownloadDdevVersionDirName(t *testing.T) {
 func TestDownloadDdevSpecVersions(t *testing.T) {
 	linux := buildTarget{goos: "linux", osName: "linux", arch: "amd64"}
 	require.Equal(t, "v1.25.3", resolveReleaseTag("ddev", "ddev", "v1.25.3", linux).version)
-	require.Equal(t, "main", resolveHead("ddev", "ddev", linux).version)
 }
 
 // TestDownloadDdevPSQuote verifies PowerShell single-quote escaping.
@@ -137,10 +136,8 @@ func TestDownloadDdevReleaseAssetName(t *testing.T) {
 func TestDownloadDdevURLs(t *testing.T) {
 	linux := buildTarget{goos: "linux", osName: "linux", arch: "amd64"}
 
-	head := resolveHead("ddev", "ddev", linux)
-	require.Equal(t, "https://nightly.link/ddev/ddev/workflows/main-build/main/ddev-linux-amd64.zip", head.url)
-	require.True(t, head.isZip)
-	require.Empty(t, head.shaSumURL)
+	require.Equal(t, "https://nightly.link/ddev/ddev/workflows/main-build/main/ddev-linux-amd64.zip",
+		nightlyLinkHeadURL("ddev", "ddev", linux))
 
 	require.Equal(t, "https://nightly.link/ddev/ddev/actions/artifacts/12345.zip",
 		github.NightlyLinkArtifactURL("ddev", "ddev", 12345))
@@ -234,10 +231,8 @@ func TestDownloadDdevFlagGroups(t *testing.T) {
 // real `ddev utility download-ddev --head` and then runs the downloaded binary.
 //
 // It exercises only --head: it always resolves (main is built continuously),
-// needs no token or API budget (plain nightly.link), and covers the shared
-// download → extract → verify → copy pipeline that every source funnels into.
-// PR/branch/commit artifacts expire after ~90 days, so hardcoding one would rot;
-// their URL logic is already covered offline by TestDownloadDdevURLs above.
+// goes through the same artifact lookup as --pr, --branch, and --commit, and
+// covers the download → extract → verify → copy pipeline every source shares.
 func TestDownloadDdevHeadDownload(t *testing.T) {
 	if nodeps.IsEnvFalse("DDEV_RUN_DOWNLOAD_DDEV_TEST") {
 		t.Skip("Skip live download test unless DDEV_RUN_DOWNLOAD_DDEV_TEST=true")
@@ -248,6 +243,7 @@ func TestDownloadDdevHeadDownload(t *testing.T) {
 
 	out, err := exec.RunHostCommand(DdevBin, "utility", "download-ddev", "--head", "--output", outDir)
 	require.NoError(t, err, "download-ddev --head failed, out='%s'", out)
+	require.NotContains(t, out, "falling back", "the API lookup or GitHub download failed, out='%s'", out)
 
 	exe := ""
 	if runtime.GOOS == "windows" {
