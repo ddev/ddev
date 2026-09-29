@@ -18,5 +18,5 @@ fi
 # Claude Code expands $PATH when it applies the file, so this line is the same
 # on every firing and needs no guard against being written twice.
 printf 'export PATH="%s%s:$PATH"\n' \
-  "$HOME/.ddev-dev-tools/python/bin:$HOME/.ddev-dev-tools/node/bin" "$build" \
+  "$HOME/.ddev-dev-tools/python/bin:$HOME/.ddev-dev-tools/python/Scripts:$HOME/.ddev-dev-tools/node/bin:$HOME/.ddev-dev-tools/node" "$build" \
   >"$CLAUDE_ENV_FILE"
