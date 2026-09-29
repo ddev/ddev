@@ -114,17 +114,22 @@ keep_set() {
 
 EXPECTED_KEEP="$(printf '%s\n' 1111111111 20190101_legacy_web 2222222222 2222222223 3333333333 3333333334 v0.9.0 v1.0.0 | sort)"
 assert_eq "$EXPECTED_KEEP" "$(keep_set 2>/dev/null)" "keep-set holds release tags, both version-file layouts, and main's window"
-assert_eq "$(printf '%s\n' "$EXPECTED_KEEP" 4444444444 | sort)" "$(keep_set pr 2>/dev/null)" "keep-set adds the tags of each ref given"
+assert_eq "$(printf '%s\n' "$EXPECTED_KEEP" 4444444444 | sort)" "$(keep_set --ref pr 2>/dev/null)" "keep-set adds the tags of each ref given"
 if (cd "$REPO" && KEEP_MAIN_REF=main KEEP_MAIN_DAYS=350 "$KEEP_SET_SH" 2>/dev/null) | grep -qx 0000000001; then
   pass "KEEP_MAIN_DAYS widens main's window"
 else
   fail "KEEP_MAIN_DAYS=350 should keep a tag committed 300 days ago"
 fi
+if (cd "$REPO" && "$KEEP_SET_SH" --main-ref main --main-days 350 2>/dev/null) | grep -qx 0000000001; then
+  pass "--main-ref and --main-days do what their environment variables do"
+else
+  fail "--main-days 350 should keep a tag committed 300 days ago"
+fi
 
 assert_fails_with "not found" "keep-set fails on a missing main ref" \
   bash -c "cd '$REPO' && KEEP_MAIN_REF=nosuch '$KEEP_SET_SH'"
 assert_fails_with "not found" "keep-set fails on a missing extra ref" \
-  bash -c "cd '$REPO' && KEEP_MAIN_REF=main '$KEEP_SET_SH' nosuch"
+  bash -c "cd '$REPO' && KEEP_MAIN_REF=main '$KEEP_SET_SH' --ref nosuch"
 
 NOTAGS="$WORKDIR/notags"
 git clone -q --no-tags "$REPO" "$NOTAGS"
@@ -253,7 +258,7 @@ export CLEANUP_REPOS=ddev-webserver
 
 serve_standard_fixture
 EXPECTED_CANDIDATES="$(printf 'ddev/ddev-webserver:%s\n' 20240101_old_branch 20240101_old_branch-amd64 3333333333 bbbbbbbbbb eeeeeeeeee feature-bbbbbbbbbb | sort)"
-assert_eq "$EXPECTED_CANDIDATES" "$("$CANDIDATES_SH" --explain "$WORKDIR/explain.tsv" "$KEEP" 2>/dev/null | sort)" \
+assert_eq "$EXPECTED_CANDIDATES" "$("$CANDIDATES_SH" --keep-set "$KEEP" --explain "$WORKDIR/explain.tsv" 2>/dev/null | sort)" \
   "candidates are exactly the old, unpulled, unreferenced CI and branch tags, across pages"
 
 reason() {
@@ -271,14 +276,14 @@ assert_eq "keep: not a CI or branch tag" "$(reason 5)" "an unrecognized tag shap
 assert_eq "delete: pushed 400d ago, pulled 100d ago" "$(reason eeeeeeeeee)" "a candidate's reason gives its push and pull age"
 
 assert_eq "$(printf 'ddev/ddev-webserver:%s\n' 20240101_old_branch 20240101_old_branch-amd64 3333333333 bbbbbbbbbb cccccccccc feature-bbbbbbbbbb | sort)" \
-  "$(CLEANUP_PULL_GRACE_DAYS=200 CLEANUP_MIN_AGE_DAYS=5 "$CANDIDATES_SH" "$KEEP" 2>/dev/null | sort)" \
+  "$(CLEANUP_PULL_GRACE_DAYS=200 CLEANUP_MIN_AGE_DAYS=5 "$CANDIDATES_SH" --keep-set "$KEEP" 2>/dev/null | sort)" \
   "the push and pull thresholds are configurable"
 
 serve_standard_fixture
 page_url ddev-webserver 2 > "$CURL_FAIL_URLS"
 assert_fails_with "listing ddev-webserver failed" "a failed page aborts instead of listing a partial result" \
-  "$CANDIDATES_SH" "$KEEP"
-if [ -n "$("$CANDIDATES_SH" "$KEEP" 2>/dev/null)" ]; then
+  "$CANDIDATES_SH" --keep-set "$KEEP"
+if [ -n "$("$CANDIDATES_SH" --keep-set "$KEEP" 2>/dev/null)" ]; then
   fail "a failed page printed candidates"
 else
   pass "a failed page prints no candidates"
@@ -286,19 +291,19 @@ fi
 
 reset_stub
 : | serve ddev-webserver 1 -
-assert_fails_with "lists no tags" "an empty listing aborts" "$CANDIDATES_SH" "$KEEP"
+assert_fails_with "lists no tags" "an empty listing aborts" "$CANDIDATES_SH" --keep-set "$KEEP"
 
 reset_stub
 tag bbbbbbbbbb 400 - d2 | serve ddev-webserver 1 "https://evil.example.com/tags?page=2"
-assert_fails_with "refusing to follow pagination" "pagination off Docker Hub aborts" "$CANDIDATES_SH" "$KEEP"
+assert_fails_with "refusing to follow pagination" "pagination off Docker Hub aborts" "$CANDIDATES_SH" --keep-set "$KEEP"
 
 serve_standard_fixture
 echo 9999999999 > "$WORKDIR/unrelated-keep.txt"
 assert_fails_with "no listed tag is in the keep-set" "a keep-set matching nothing listed aborts" \
-  "$CANDIDATES_SH" "$WORKDIR/unrelated-keep.txt"
+  "$CANDIDATES_SH" --keep-set "$WORKDIR/unrelated-keep.txt"
 
 : > "$WORKDIR/empty-keep.txt"
-assert_fails_with "missing or empty" "an empty keep-set aborts" "$CANDIDATES_SH" "$WORKDIR/empty-keep.txt"
+assert_fails_with "missing or empty" "an empty keep-set aborts" "$CANDIDATES_SH" --keep-set "$WORKDIR/empty-keep.txt"
 
 unset CLEANUP_REPOS
 
@@ -311,42 +316,41 @@ log_count() {
 }
 
 serve_standard_fixture
-output="$("$DELETE_SH" --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb,ddev/ddev-webserver:eeeeeeeeee 2>/dev/null)"
+output="$("$DELETE_SH" --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb,ddev/ddev-webserver:eeeeeeeeee 2>/dev/null)"
 assert_eq "$(printf 'would delete ddev/ddev-webserver:%s\n' bbbbbbbbbb eeeeeeeeee)" "$output" "a dry run lists what it would delete"
 assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "a dry run neither logs in nor deletes"
 
 serve_standard_fixture
 assert_fails_with "ddev/ddev-webserver:aaaaaaaaaa" "a kept tag in the list is refused by name" \
-  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb ddev/ddev-webserver:aaaaaaaaaa
+  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb --tag ddev/ddev-webserver:aaaaaaaaaa
 assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "one refused tag means nothing is deleted"
 
 serve_standard_fixture
 assert_fails_with "ddev/ddev-webserver:0123456789" "a tag that isn't listed at all is refused" \
-  "$DELETE_SH" --keep-set "$KEEP" ddev/ddev-webserver:0123456789
+  "$DELETE_SH" --keep-set "$KEEP" --tag ddev/ddev-webserver:0123456789
 
 reset_stub
 assert_fails_with "not in a repository this project publishes" "another organization is refused" \
-  "$DELETE_SH" --keep-set "$KEEP" someone/ddev-webserver:bbbbbbbbbb
+  "$DELETE_SH" --keep-set "$KEEP" --tag someone/ddev-webserver:bbbbbbbbbb
 assert_fails_with "not in a repository this project publishes" "an unknown repository is refused" \
-  "$DELETE_SH" --keep-set "$KEEP" ddev/not-ours:bbbbbbbbbb
+  "$DELETE_SH" --keep-set "$KEEP" --tag ddev/not-ours:bbbbbbbbbb
 assert_fails_with "is not <org>/<repo>:<tag>" "a malformed entry is refused" \
-  "$DELETE_SH" --keep-set "$KEEP" ddev/ddev-webserver
+  "$DELETE_SH" --keep-set "$KEEP" --tag ddev/ddev-webserver
 assert_eq "0" "$(wc -l < "$CURL_LOG" | tr -d ' ')" "validation failures happen before any request"
-assert_fails_with "--keep-set needs a file" "--keep-set without a file is refused" "$DELETE_SH" --keep-set
-assert_fails_with "usage:" "an unknown option is refused" "$DELETE_SH" --bogus --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb
-
+assert_fails_with "needs a value" "a flag without its value is refused" "$DELETE_SH" --keep-set
+assert_fails_with "unknown argument" "an unknown flag is refused" "$DELETE_SH" --bogus --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb
 
 assert_fails_with "exceeds CLEANUP_MAX_DELETE" "a list over the limit is refused" \
-  env CLEANUP_MAX_DELETE=1 "$DELETE_SH" --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb ddev/ddev-webserver:eeeeeeeeee
+  env CLEANUP_MAX_DELETE=1 "$DELETE_SH" --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb --tag ddev/ddev-webserver:eeeeeeeeee
 
 serve_standard_fixture
 assert_fails_with "DOCKERHUB_USERNAME must be set" "--execute needs credentials" \
-  env -u DOCKERHUB_USERNAME -u DOCKERHUB_TOKEN "$DELETE_SH" --execute --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb
+  env -u DOCKERHUB_USERNAME -u DOCKERHUB_TOKEN "$DELETE_SH" --execute --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb
 assert_eq "0" "$(log_count DELETE)" "no deletion without credentials"
 
 serve_standard_fixture
 printf 'ddev/ddev-webserver:bbbbbbbbbb\nddev/ddev-webserver:eeeeeeeeee, ddev/ddev-webserver:bbbbbbbbbb\n' |
-  DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" >/dev/null 2>&1
+  DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" --tags-from - >/dev/null 2>&1
 assert_eq "$(printf '%s\n' \
   "DELETE https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/bbbbbbbbbb/ Authorization: JWT stub-token" \
   "DELETE https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/eeeeeeeeee/ Authorization: JWT stub-token")" \
@@ -355,9 +359,40 @@ assert_eq "$(printf '%s\n' \
 serve_standard_fixture
 echo "https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/bbbbbbbbbb/" > "$CURL_FAIL_URLS"
 assert_fails_with "1 of 2 deletions failed" "a failed deletion fails the run" \
-  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb ddev/ddev-webserver:eeeeeeeeee
+  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb --tag ddev/ddev-webserver:eeeeeeeeee
 assert_eq "2" "$(log_count DELETE)" "a failed deletion doesn't stop the rest"
 
+# ---------------------------------------------------------------------------
+# image-tag-cleanup.sh
+# ---------------------------------------------------------------------------
+
+CLEANUP_SH="$SCRIPT_DIR/image-tag-cleanup.sh"
+export CLEANUP_REPOS=ddev-webserver
+
+serve_standard_fixture
+output="$("$CLEANUP_SH" --keep-set "$KEEP" 2>/dev/null)"
+assert_eq "$(printf 'would delete %s\n' $EXPECTED_CANDIDATES)" "$output" "the default run is a dry run naming every candidate"
+assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "the default run neither logs in nor deletes"
+
+serve_standard_fixture
+assert_fails_with "needs --yes" "--delete of every candidate without a terminal needs --yes" \
+  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --keep-set "$KEEP" --delete </dev/null
+assert_eq "0" "$(log_count DELETE)" "a refused --delete deletes nothing"
+
+serve_standard_fixture
+"$CLEANUP_SH" --keep-set "$KEEP" --save-keep-set "$WORKDIR/saved-keep.txt" --save-candidates "$WORKDIR/saved-candidates.txt" >/dev/null 2>&1
+assert_eq "$(sort "$KEEP")" "$(sort "$WORKDIR/saved-keep.txt")" "--save-keep-set writes the keep-set used"
+assert_eq "$(printf 'ddev/ddev-webserver:%s\n' $(echo "$EXPECTED_CANDIDATES" | sed 's/.*://') | sort)" "$(sort "$WORKDIR/saved-candidates.txt")" "--save-candidates writes the candidates found"
+
+serve_standard_fixture
+DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --keep-set "$KEEP" --delete --yes >/dev/null 2>&1 </dev/null
+assert_eq "$(echo "$EXPECTED_CANDIDATES" | wc -w | tr -d ' ')" "$(log_count DELETE)" "--delete --yes deletes every candidate"
+
+serve_standard_fixture
+output="$("$CLEANUP_SH" --keep-set "$KEEP" --min-age-days 10000 2>/dev/null)"
+assert_eq "image-tag-cleanup.sh: no tags to delete" "$output" "a flag sets the age rule the way its environment variable does"
+
+unset CLEANUP_REPOS
 if [ "$FAILURES" -gt 0 ]; then
   echo "${FAILURES} test(s) failed" >&2
   exit 1

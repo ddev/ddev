@@ -1,31 +1,34 @@
 #!/usr/bin/env bash
-# image-tag-cleanup-candidates.sh [--explain <file>] <keep-set-file>
+# image-tag-cleanup-candidates.sh --keep-set <file> [--explain <file>]
+#                                 [--org <org>] [--repo <name>]...
+#                                 [--min-age-days <n>] [--pull-grace-days <n>]
 #
 # Example:
-#   containers/image-tag-cleanup-candidates.sh --explain decisions.tsv keep-set.txt > candidates.txt
+#   containers/image-tag-cleanup-candidates.sh --keep-set keep-set.txt --explain decisions.tsv > candidates.txt
 #
-# Prints the Docker Hub tags under $DOCKER_ORG that look safe to delete, one
-# <org>/<repo>:<tag> per line. A candidate has a shape CI or a branch build
-# produces, is absent from the keep-set (image-tag-keep-set.sh), was pushed
-# long ago and not pulled lately, and shares no manifest with a kept tag.
-# Release tags, latest, and unrecognized shapes are always kept. --explain
-# writes every tag's decision and reason to <file> as TSV.
+# Prints the Docker Hub tags that look safe to delete, one <org>/<repo>:<tag>
+# per line. A candidate has a shape CI or a branch build produces, is absent
+# from the keep-set (image-tag-keep-set.sh), was pushed long ago and not
+# pulled lately, and shares no manifest with a kept tag. Release tags, latest,
+# and unrecognized shapes are always kept.
 #
-# Arguments:
-#   <keep-set-file>  the tags to keep, one per line, as written by
-#                    image-tag-keep-set.sh (releases, open PRs, recent main).
-#                    Listed tags are never candidates.
-#   --explain <file> also write a keep/delete decision and reason for every tag
-#
-# Env:
-#   DOCKER_ORG               - Docker Hub organization (default ddev)
-#   CLEANUP_REPOS            - repositories to check (default: image-configs.sh)
-#   CLEANUP_MIN_AGE_DAYS     - keep anything pushed more recently (default 90)
-#   CLEANUP_PULL_GRACE_DAYS  - keep anything pulled more recently (default 30)
-#   NOW                      - current time in epoch seconds, for tests
-#   HASH_LEN                 - hash length in hex chars (default 10)
+# Flags (each also settable by the environment variable in brackets):
+#   --keep-set <file>       required: the tags to keep, one per line, as
+#                           written by image-tag-keep-set.sh. Never candidates.
+#   --explain <file>        also write every tag's keep/delete decision and
+#                           reason to <file> as TSV
+#   --org <org>             Docker Hub organization [DOCKER_ORG, ddev]
+#   --repo <name>           repository to check; repeatable
+#                           [CLEANUP_REPOS, else those in image-configs.sh]
+#   --min-age-days <n>      keep anything pushed more recently
+#                           [CLEANUP_MIN_AGE_DAYS, 90]
+#   --pull-grace-days <n>   keep anything pulled more recently
+#                           [CLEANUP_PULL_GRACE_DAYS, 30]
+# Test hooks, environment only: NOW (epoch seconds), HASH_LEN (default 10).
 
 set -eu -o pipefail
+
+case "${1:-}" in -h | --help) sed -n '2,/^$/s/^# \{0,1\}//p' "$0"; exit 0 ;; esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HUB_API="https://hub.docker.com"
@@ -41,12 +44,23 @@ die() {
 }
 
 EXPLAIN=""
-if [ "${1:-}" = "--explain" ]; then
-  EXPLAIN="$2"
+KEEP_SET=""
+FLAG_REPOS=""
+while [ "$#" -gt 0 ]; do
+  [ "$#" -ge 2 ] || die "unknown argument '$1', or it needs a value; see the header of $0"
+  case "$1" in
+    --keep-set) KEEP_SET="$2" ;;
+    --explain) EXPLAIN="$2" ;;
+    --org) DOCKER_ORG="$2" ;;
+    --repo) FLAG_REPOS="${FLAG_REPOS} $2" ;;
+    --min-age-days) CLEANUP_MIN_AGE_DAYS="$2" ;;
+    --pull-grace-days) CLEANUP_PULL_GRACE_DAYS="$2" ;;
+    *) die "unknown argument '$1'; see the header of $0" ;;
+  esac
   shift 2
-fi
-[ "$#" -eq 1 ] || die "usage: $0 [--explain <file>] <keep-set-file>"
-KEEP_SET="$1"
+done
+[ -z "$FLAG_REPOS" ] || CLEANUP_REPOS="$FLAG_REPOS"
+[ -n "$KEEP_SET" ] || die "--keep-set <file> is required"
 [ -s "$KEEP_SET" ] || die "keep-set file '${KEEP_SET}' is missing or empty"
 
 if [ -z "${CLEANUP_REPOS:-}" ]; then

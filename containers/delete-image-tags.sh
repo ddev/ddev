@@ -1,31 +1,35 @@
 #!/usr/bin/env bash
-# delete-image-tags.sh [--execute] [--keep-set <file>] [<org>/<repo>:<tag> ...]
+# delete-image-tags.sh --keep-set <file> (--tag <org/repo:tag>... | --tags-from <file|->)
+#                      [--execute] [--org <org>] [--max-delete <n>]
+#                      [--min-age-days <n>] [--pull-grace-days <n>]
 #
-# Example, a dry run listing every tag that would be deleted:
-#   containers/delete-image-tags.sh
+# Example, a dry run of a report's candidates:
+#   containers/delete-image-tags.sh --keep-set keep-set.txt --tags-from candidates.txt
 #
-# Deletes the named Docker Hub tags, read from the arguments or else from
-# stdin (separated by whitespace or commas). Every one must still be listed by
-# a fresh run of image-tag-cleanup-candidates.sh, or nothing is deleted, so a
-# stale or hand-edited list can't remove a tag that has since become needed.
-# Without --execute it only prints what it would delete. With no tags given
-# and stdin a terminal, it names every current candidate; --execute is
-# refused in that mode.
+# Deletes the named Docker Hub tags. Every one must still be listed by a fresh
+# run of image-tag-cleanup-candidates.sh, or nothing is deleted, so a stale or
+# hand-edited list can't remove a tag that has since become needed. Without
+# --execute it only prints what it would delete. Most people want
+# image-tag-cleanup.sh, which finds the candidates and calls this.
 #
-# Arguments:
-#   --execute            actually delete; without it, only print
-#   --keep-set <file>    the tags to keep, one per line, as written by
-#                        image-tag-keep-set.sh (releases, open PRs, recent
-#                        main). None of them can be deleted here. Omitted, it
-#                        is built by running image-tag-keep-set.sh.
-#   <org>/<repo>:<tag>   what to delete, e.g. ddev/ddev-webserver:20250612_foo
-#
-# Env:
-#   DOCKER_ORG                        - the only organization allowed (default ddev)
-#   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN - credentials, needed with --execute
-#   CLEANUP_MAX_DELETE                - refuse longer lists (default 1000)
+# Flags (each also settable by the environment variable in brackets):
+#   --keep-set <file>       required: the tags to keep, as written by
+#                           image-tag-keep-set.sh; none of them can be deleted
+#   --tag <org/repo:tag>    a tag to delete, e.g. ddev/ddev-webserver:20250612_foo;
+#                           repeatable
+#   --tags-from <file>      tags to delete, separated by whitespace or commas;
+#                           "-" reads stdin
+#   --execute               delete for real; without it, only print
+#   --org <org>             the only organization allowed [DOCKER_ORG, ddev]
+#   --max-delete <n>        refuse longer lists [CLEANUP_MAX_DELETE, 1000]
+#   --min-age-days <n>, --pull-grace-days <n>
+#                           the candidate rules, as in image-tag-cleanup-candidates.sh
+# Credentials, environment only so they stay out of process listings:
+#   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN - needed with --execute
 
 set -eu -o pipefail
+
+case "${1:-}" in -h | --help) sed -n '2,/^$/s/^# \{0,1\}//p' "$0"; exit 0 ;; esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HUB_API="https://hub.docker.com"
@@ -37,36 +41,36 @@ die() {
   exit 1
 }
 
-EXECUTE=false
-KEEP_SET=""
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --execute) EXECUTE=true; shift ;;
-    --keep-set) [ "$#" -ge 2 ] || die "--keep-set needs a file"; KEEP_SET="$2"; shift 2 ;;
-    -*) die "usage: $0 [--execute] [--keep-set <file>] [<org>/<repo>:<tag> ...]" ;;
-    *) break ;;
-  esac
-done
-
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 
-if [ -z "$KEEP_SET" ]; then
-  KEEP_SET="$WORKDIR/keep-set"
-  "$SCRIPT_DIR/image-tag-keep-set.sh" > "$KEEP_SET"
-fi
-
-if [ "$#" -gt 0 ]; then
-  printf '%s\n' "$@"
-elif [ -t 0 ]; then
-  [ "$EXECUTE" != true ] || die "--execute needs the tags to delete, as arguments or on stdin"
-  "$SCRIPT_DIR/image-tag-cleanup-candidates.sh" "$KEEP_SET"
-else
-  cat
-fi | tr -s ', \t' '\n' | sed '/^$/d' | sort -u > "$WORKDIR/requested"
+EXECUTE=false
+KEEP_SET=""
+: > "$WORKDIR/given"
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = "--execute" ]; then
+    EXECUTE=true
+    shift
+    continue
+  fi
+  [ "$#" -ge 2 ] || die "unknown argument '$1', or it needs a value; see the header of $0"
+  case "$1" in
+    --keep-set) KEEP_SET="$2" ;;
+    --tag) echo "$2" >> "$WORKDIR/given" ;;
+    --tags-from) if [ "$2" = "-" ]; then cat; else cat "$2"; fi >> "$WORKDIR/given" ;;
+    --org) export DOCKER_ORG="$2" ;;
+    --max-delete) CLEANUP_MAX_DELETE="$2" ;;
+    --min-age-days) export CLEANUP_MIN_AGE_DAYS="$2" ;;
+    --pull-grace-days) export CLEANUP_PULL_GRACE_DAYS="$2" ;;
+    *) die "unknown argument '$1'; see the header of $0" ;;
+  esac
+  shift 2
+done
+[ -n "$KEEP_SET" ] || die "--keep-set <file> is required"
+tr -s ', \t' '\n' < "$WORKDIR/given" | sed '/^$/d' | sort -u > "$WORKDIR/requested"
 
 count="$(wc -l < "$WORKDIR/requested" | tr -d ' ')"
-[ "$count" -gt 0 ] || die "no tags to delete"
+[ "$count" -gt 0 ] || die "no tags given"
 [ "$count" -le "$CLEANUP_MAX_DELETE" ] || die "${count} tags exceeds CLEANUP_MAX_DELETE=${CLEANUP_MAX_DELETE}"
 
 while IFS= read -r ref; do
@@ -75,7 +79,7 @@ while IFS= read -r ref; do
 done < "$WORKDIR/requested"
 
 CLEANUP_REPOS="$(sed -E 's|^[^/]+/([^:]+):.*|\1|' "$WORKDIR/requested" | sort -u | tr '\n' ' ')" \
-  "$SCRIPT_DIR/image-tag-cleanup-candidates.sh" "$KEEP_SET" | sort -u > "$WORKDIR/candidates"
+  "$SCRIPT_DIR/image-tag-cleanup-candidates.sh" --keep-set "$KEEP_SET" | sort -u > "$WORKDIR/candidates"
 
 comm -23 "$WORKDIR/requested" "$WORKDIR/candidates" > "$WORKDIR/refused"
 if [ -s "$WORKDIR/refused" ]; then

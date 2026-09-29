@@ -356,7 +356,7 @@ So a maintainer only ever needs to click **Approve** once — as soon as a fork 
 
 Every image change pushes new tags, and most are only useful until the release that follows. The [Image tag cleanup](https://github.com/ddev/ddev/actions/workflows/image-tag-cleanup.yml) workflow finds the ones that can go, and deletes them only when a maintainer asks.
 
-Each week it runs a report, `containers/image-tag-cleanup-candidates.sh`. A tag is listed as a candidate only when all of these hold:
+Each week it runs a report using `containers/image-tag-cleanup.sh`. A tag is listed as a candidate only when all of these hold:
 
 * It has a shape that CI or a branch build produces: a bare hash, a `<branch>-<hash>` alias, a date-prefixed branch tag like `20250612_stasadev_rebuild_images`, or a leftover `-amd64`/`-arm64` tag. Release tags, `latest`, and anything unrecognized are never listed.
 * It isn't named in a version file (`pkg/versionconstants/versionconstants.go`, or `pkg/version/version.go` for older releases). `containers/image-tag-keep-set.sh` checks every `v*` release tag, every open pull request head, and every state of `main` in the last 90 days.
@@ -365,20 +365,21 @@ Each week it runs a report, `containers/image-tag-cleanup-candidates.sh`. A tag 
 
 The run summary shows the counts and the candidate list. The `image-tag-cleanup-report` artifact has every tag's decision and reason in `decisions.tsv`.
 
-To delete, run the workflow from `main` and set either `report_run_id` to the ID of a report run, or `tags` to a list of `<org>/<repo>:<tag>` entries. Leave `execute` unchecked for a dry run. The `image-tag-cleanup` environment must approve the run. `containers/delete-image-tags.sh` recomputes the candidates first, and if any requested tag is no longer a candidate, it deletes nothing.
+To delete, run the workflow from `main` and set either `report_run_id` to the ID of a report run, or `tags` to a list of `<org>/<repo>:<tag>` entries. Leave `execute` unchecked for a dry run. The `image-tag-cleanup` environment must approve the run. The script recomputes the candidates first, and if any requested tag is no longer a candidate, it deletes nothing.
 
-To see what would be deleted, without deleting anything, run this in a terminal from a checkout with tags fetched:
-
-```bash
-containers/delete-image-tags.sh
-```
-
-To look at each step by hand:
+To see what would be deleted, run this from a checkout with tags fetched, with `gh` installed and logged in. It deletes nothing:
 
 ```bash
-containers/image-tag-keep-set.sh > ~/tmp/keep-set.txt
-DOCKER_ORG=ddevhq containers/image-tag-cleanup-candidates.sh --explain ~/tmp/decisions.tsv ~/tmp/keep-set.txt
+containers/image-tag-cleanup.sh
 ```
+
+Every setting has a flag, for example to list tags pushed more than 10 days ago whatever their recent pulls:
+
+```bash
+containers/image-tag-cleanup.sh --min-age-days 10 --pull-grace-days 0
+```
+
+`--delete` removes what it listed, after asking, and needs `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` in the environment. `--help` lists every flag. The steps also run separately: `image-tag-keep-set.sh`, `image-tag-cleanup-candidates.sh` and `delete-image-tags.sh`.
 
 ## Pull Requests
 
