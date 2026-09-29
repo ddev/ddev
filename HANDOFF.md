@@ -5,8 +5,11 @@ will be deleted before merge; only the open items remain.
 
 ## TODO: validation and tests
 
-- [ ] Add platform-specific automated coverage once the supported Windows and
-  WSL2 behavior is decided, including fallback when no provider agent exists.
+- [x] Platform-specific automated coverage: the live relay tests in
+  `TestSSHAgentUpstream` and `TestCmdAuthSSHUpstream`, including fallback when
+  `SSH_AUTH_SOCK` is unset, pass on WSL2 arm64 with Docker CE and with Docker
+  Desktop, so both the `wsl2-mirrored` and `wsl2-docker-desktop` pipelines run
+  them. Native Windows is covered by `TestSSHAgentUpstreamSocketPaths`.
 - [x] `TestCmdGlobalConfigSSHAgentUpstream` covers `~/...` and, on native
   Windows, drive-letter and UNC paths through the actual `ddev config global
   --ssh-agent-upstream` CLI path rather than just the internal resolver.

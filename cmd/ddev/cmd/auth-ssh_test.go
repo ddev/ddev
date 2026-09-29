@@ -105,8 +105,9 @@ func TestCmdAuthSSH(t *testing.T) {
 func TestCmdAuthSSHUpstream(t *testing.T) {
 	sshAgentPath, lookErr := osexec.LookPath("ssh-agent")
 	// A socket in a host directory reaches containers only when Docker runs
-	// on the host itself, not through a VM file share.
-	if runtime.GOOS != "linux" || dockerutil.IsDockerDesktop() || lookErr != nil {
+	// on the host itself, or is Docker Desktop mounting from a WSL2 distro,
+	// not through a macOS VM file share.
+	if runtime.GOOS != "linux" || (dockerutil.IsDockerDesktop() && !nodeps.IsWSL2()) || lookErr != nil {
 		t.Skip("Skipping: needs Linux with native Docker and ssh-agent")
 	}
 

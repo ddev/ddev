@@ -16,6 +16,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -248,20 +249,23 @@ func TestSSHAgentUpstream(t *testing.T) {
 	require.Contains(t, rendered, "killall -0 socat")
 
 	// A socket in a host directory reaches containers only when Docker runs
-	// on the host itself, not through a VM file share.
+	// on the host itself, or is Docker Desktop mounting from a WSL2 distro,
+	// not through a macOS VM file share.
 	sshAgentPath, lookErr := osexec.LookPath("ssh-agent")
-	if runtime.GOOS != "linux" || dockerutil.IsDockerDesktop() || lookErr != nil {
+	if runtime.GOOS != "linux" || (dockerutil.IsDockerDesktop() && !nodeps.IsWSL2()) || lookErr != nil {
 		t.Log("Skipping live relay check: needs Linux with native Docker and ssh-agent")
 		return
 	}
 	keyFile := filepath.Join(upstreamDir, "id_ed25519")
 	out, err := exec.RunHostCommand("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "ddev-upstream-test", "-f", keyFile)
 	require.NoError(t, err, out)
+	// Beside ssh-agent, because WSL2 users may put Windows ssh-add.exe first on PATH.
+	sshAddPath := filepath.Join(filepath.Dir(sshAgentPath), "ssh-add")
 	startAgent := func() {
 		_ = os.Remove(upstreamSock)
 		out, err := exec.RunHostCommand(sshAgentPath, "-a", upstreamSock)
 		require.NoError(t, err, out)
-		out, err = exec.RunHostCommand("bash", "-c", "SSH_AUTH_SOCK="+upstreamSock+" ssh-add "+keyFile)
+		out, err = exec.RunHostCommand("bash", "-c", "SSH_AUTH_SOCK="+upstreamSock+" "+sshAddPath+" "+keyFile)
 		require.NoError(t, err, out)
 	}
 	stopAgent := func() {
