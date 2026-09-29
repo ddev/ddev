@@ -8,6 +8,7 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/volume"
 	"github.com/moby/moby/client"
 )
@@ -134,7 +135,18 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	if UseKeepID() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
-	containerID, _, err := RunSimpleContainer(versionconstants.UtilitiesImage, containerName, []string{"bash", "-c", c}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, labels, nil, nil)
+	config := &container.Config{
+		Image:  versionconstants.UtilitiesImage,
+		Cmd:    []string{"bash", "-c", c},
+		User:   "0",
+		Labels: labels,
+	}
+	hostConfig := &container.HostConfig{
+		Binds: []string{volumeName + ":" + volPath},
+		// To avoid 10-second delay on container stop
+		Init: new(true),
+	}
+	containerID, _, err := RunSimpleContainerExtended(containerName, config, hostConfig, false, 0)
 	if err != nil {
 		return err
 	}
