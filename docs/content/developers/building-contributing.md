@@ -359,7 +359,7 @@ Every image change pushes new tags, and most are only useful until the release t
 Each week it runs a report, `containers/image-tag-cleanup-candidates.sh`. A tag is listed as a candidate only when all of these hold:
 
 * It has a shape that CI or a branch build produces: a bare hash, a `<branch>-<hash>` alias, a date-prefixed branch tag like `20250612_stasadev_rebuild_images`, or a leftover `-amd64`/`-arm64` tag. Release tags, `latest`, and anything unrecognized are never listed.
-* No version file names it (`pkg/versionconstants/versionconstants.go`, or `pkg/version/version.go` for older releases). `containers/image-tag-keep-set.sh` checks every `v*` release tag, every open pull request head, and every state of `main` in the last 90 days.
+* It isn't named in a version file (`pkg/versionconstants/versionconstants.go`, or `pkg/version/version.go` for older releases). `containers/image-tag-keep-set.sh` checks every `v*` release tag, every open pull request head, and every state of `main` in the last 90 days.
 * It was pushed more than 90 days ago and hasn't been pulled in the last 30.
 * No kept tag points at the same manifest.
 
