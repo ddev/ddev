@@ -47,7 +47,9 @@ The user guide is [Using an Existing SSH Agent](docs/content/users/usage/cli.md)
   `ddev start` and `ddev auth ssh` warn once and fall back with
   `ssh_agent_upstream: host`; `op read ... | ddev auth ssh -f -` works from Git
   Bash and PowerShell 5.1, and `ddev exec ssh -T git@github.com`
-  authenticates. `ddev restart` keeps the agent and its keys.
+  authenticates. `ddev restart` keeps the agent and its keys. A
+  passphrase-protected key file prompts and adds from both shells. Windows
+  OpenSSH and Pageant take the same fallback, since any upstream is refused.
 - [x] WSL2 with Docker Desktop integration (Windows 11 arm64, 1Password):
   Docker Desktop on Windows has no provider agent socket, so `host` uses
   `$SSH_AUTH_SOCK` under WSL2. It binds sockets from the user's distro, so the
