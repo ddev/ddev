@@ -656,7 +656,7 @@ Make the `ddev-ssh-agent` container relay to an SSH agent you already run, such 
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | (empty) | Can be empty, `host`, or the absolute path of an agent socket.
+| :octicons-globe-16: global | (empty) | Can be empty, `host`, or an absolute or `~/`-relative path of an agent socket.
 
 * Empty: `ddev-ssh-agent` runs its own agent, and [`ddev auth ssh`](../usage/commands.md#auth-ssh) adds key files to it.
 * `host`: relay to the agent your Docker provider forwards (Docker Desktop on macOS or Linux, OrbStack, Colima with `--ssh-agent`, or Lima with `ssh.forwardAgent`), or on Linux and WSL2 to the socket in `$SSH_AUTH_SOCK` when a project starts.
