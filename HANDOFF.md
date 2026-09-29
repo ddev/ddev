@@ -48,9 +48,21 @@ The user guide is [Using an Existing SSH Agent](docs/content/users/usage/cli.md)
   `op read ... | ddev auth ssh -f -` works.
 - [ ] WSL2 with Docker Desktop integration: run the same checks and determine
   whether its provider socket reaches a Windows-host agent.
-- [ ] WSL2 with Docker CE: use a Windows named-pipe-to-Unix-socket bridge;
-  verify `host` and an explicit socket path, then stop and restart the bridge
-  without recreating `ddev-ssh-agent`.
+- [x] WSL2 with Docker CE (Windows 11 arm64, 1Password): a `socat` and
+  `npiperelay` bridge on `~/.1password/agent.sock` works with `host` and with
+  the explicit and `~/` path. Stopping the bridge warns; restarting it
+  restores signing without recreating `ddev-ssh-agent`. The x64
+  `npiperelay` runs under emulation. The bridge works both as a systemd user
+  service (Windows interop works there given the full `npiperelay.exe`
+  path) and from a `~/.bashrc` snippet. Still to check: that the service
+  comes back after `wsl --shutdown` without opening a shell.
+- [ ] coder.ddev.com workspace: with this branch's binary, load the
+  Coder-managed git key (from `$CODER_AGENT_URL/api/v2/workspaceagents/me/gitsshkey`)
+  into an `ssh-agent -a` on a fixed socket outside `~/.ssh`, set
+  `ssh_agent_upstream` to that socket, and check `ddev exec ssh -T
+  git@github.com`. Also try piping the key to `ddev auth ssh -f -` with no
+  upstream. Earlier tests used an older binary with a compose override, not
+  this setting. Workspace setup belongs in ddev/coder-ddev#210.
 - [ ] Add platform-specific automated coverage once the supported Windows and
   WSL2 behavior is decided, including fallback when no provider agent exists.
 - [ ] Add a CLI configuration test for `~/...` and native Windows drive paths,
