@@ -318,18 +318,11 @@ func TestSSHAgentUpstreamHost(t *testing.T) {
 	if runtime.GOOS != "darwin" {
 		t.Skip("Skipping: macOS Docker providers only")
 	}
-	hostSock := os.Getenv("SSH_AUTH_SOCK")
-	if out, err := exec.RunHostCommand("ssh-add", "-l"); hostSock == "" || (err != nil && !strings.Contains(out, "no identities")) {
-		t.Skipf("Skipping: no usable macOS SSH agent (SSH_AUTH_SOCK=%q): %s", hostSock, out)
-	}
-	// OrbStack forwards the agent named by IdentityAgent, which may not be this one.
-	if dockerutil.IsOrbStack() {
-		out, _ := exec.RunHostCommand("ssh", "-G", "example.com")
-		for line := range strings.SplitSeq(out, "\n") {
-			agent, found := strings.CutPrefix(strings.TrimSpace(line), "identityagent ")
-			if found && agent != "SSH_AUTH_SOCK" && agent != "none" && agent != hostSock {
-				t.Skipf("Skipping: OrbStack forwards IdentityAgent %s, not the macOS agent", agent)
-			}
+	var err error
+	if !dockerutil.IsOrbStack() {
+		hostSock := os.Getenv("SSH_AUTH_SOCK")
+		if out, err := exec.RunHostCommand("ssh-add", "-l"); hostSock == "" || (err != nil && !strings.Contains(out, "no identities")) {
+			t.Skipf("Skipping: no usable macOS SSH agent (SSH_AUTH_SOCK=%q): %s", hostSock, out)
 		}
 	}
 
@@ -340,16 +333,18 @@ func TestSSHAgentUpstreamHost(t *testing.T) {
 		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		_ = dockerutil.RemoveContainer(ddevapp.SSHAuthName)
 	})
-	keyDir := testcommon.CreateTmpDir(t.Name())
-	keyFile := filepath.Join(keyDir, "id_ed25519")
-	out, err := exec.RunHostCommand("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "ddev-upstream-host-test", "-f", keyFile)
-	require.NoError(t, err, out)
-	out, err = exec.RunHostCommand("ssh-add", keyFile)
-	require.NoError(t, err, out)
-	t.Cleanup(func() {
-		_, _ = exec.RunHostCommand("ssh-add", "-d", keyFile)
-		_ = os.RemoveAll(keyDir)
-	})
+	if !dockerutil.IsOrbStack() {
+		keyDir := testcommon.CreateTmpDir(t.Name())
+		keyFile := filepath.Join(keyDir, "id_ed25519")
+		out, err := exec.RunHostCommand("ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "ddev-upstream-host-test", "-f", keyFile)
+		require.NoError(t, err, out)
+		out, err = exec.RunHostCommand("ssh-add", keyFile)
+		require.NoError(t, err, out)
+		t.Cleanup(func() {
+			_, _ = exec.RunHostCommand("ssh-add", "-d", keyFile)
+			_ = os.RemoveAll(keyDir)
+		})
+	}
 
 	globalconfig.DdevGlobalConfig.SSHAgentUpstream = "host"
 	_ = dockerutil.RemoveContainer(ddevapp.SSHAuthName)
@@ -363,6 +358,12 @@ func TestSSHAgentUpstreamHost(t *testing.T) {
 		t.Logf("No forwarded agent, expecting fallback: %v", sockErr)
 		out, _, err := dockerutil.Exec(ddevapp.SSHAuthName, "killall -0 ssh-agent", "")
 		require.NoError(t, err, out)
+		return
+	}
+	// OrbStack's host-services socket cannot receive a temporary shell-agent key.
+	if dockerutil.IsOrbStack() {
+		_, stderr, err := dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l; status=$?; test $status -le 1", "")
+		require.NoError(t, err, stderr)
 		return
 	}
 	stdout, stderr, err := dockerutil.Exec(ddevapp.SSHAuthName, "ssh-add -l", "")
