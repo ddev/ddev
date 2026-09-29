@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -85,10 +86,7 @@ func renderSearchResults(addons []types.Addon, searchTerm string, wrapTable bool
 	t.SetOutputMirror(&out)
 	styles.SetGlobalTableStyle(t, false)
 
-	termWidth, _ := nodeps.GetTerminalWidthHeight()
-	if termWidth == 0 {
-		termWidth = 80
-	}
+	termWidth, _ := nodeps.GetTerminalWidthHeight(os.Stdout)
 	// Table overhead for 2 columns: | col | col |
 	const tableOverhead = 7
 	usableWidth := termWidth - tableOverhead

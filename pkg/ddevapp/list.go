@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"bytes"
+	"os"
 	"time"
 
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -103,10 +104,7 @@ func List(settings ListCommandSettings) {
 func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 	t := table.NewWriter()
 	t.AppendHeader(table.Row{"Name", "Status", "Location", "URL", "Type"})
-	termWidth, _ := nodeps.GetTerminalWidthHeight()
-	if termWidth == 0 {
-		termWidth = 80
-	}
+	termWidth, _ := nodeps.GetTerminalWidthHeight(os.Stdout)
 
 	// Table border/padding overhead for 5 columns (borders + 1-space padding each side)
 	const tableOverhead = 17
