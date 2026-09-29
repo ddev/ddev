@@ -56,14 +56,17 @@ var AuthSSHCommand = &cobra.Command{
 		}
 
 		// With an upstream agent, the keys already live there, so only list them.
-		// An unusable upstream falls through to adding key files, and
-		// ensureSSHAgent warns about it.
+		// An unusable upstream falls through to adding key files; start the
+		// agent first so its warning explains why, even if no key file exists.
+		agentStarted := false
 		if globalconfig.DdevGlobalConfig.SSHAgentUpstream != "" && sshKeyFiles == nil && sshKeyDirs == nil {
-			if _, err := ddevapp.SSHAgentUpstreamSocket(); err == nil {
-				ensureSSHAgent()
+			_, upstreamErr := ddevapp.SSHAgentUpstreamSocket()
+			ensureSSHAgent()
+			if upstreamErr == nil {
 				listUpstreamSSHKeys()
 				return
 			}
+			agentStarted = true
 		}
 
 		// Use ~/.ssh if nothing is provided
@@ -96,7 +99,9 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("No SSH private keys found in %s", strings.Join(append(sshKeyDirs, sshKeyFiles...), ", "))
 		}
 
-		ensureSSHAgent()
+		if !agentStarted {
+			ensureSSHAgent()
+		}
 
 		output.UserOut.Printf("Adding %d SSH private key(s)...", len(keys))
 

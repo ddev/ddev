@@ -126,7 +126,9 @@ func TestCmdAuthSSHUpstream(t *testing.T) {
 	require.NoError(t, err, out)
 	out, err = exec.RunHostCommand(sshAgentPath, "-a", upstreamSock)
 	require.NoError(t, err, out)
-	out, err = exec.RunHostCommand("bash", "-c", "SSH_AUTH_SOCK="+upstreamSock+" ssh-add "+keyFile)
+	// Beside ssh-agent, because WSL2 users may put Windows ssh-add.exe first on PATH.
+	sshAddPath := filepath.Join(filepath.Dir(sshAgentPath), "ssh-add")
+	out, err = exec.RunHostCommand("bash", "-c", "SSH_AUTH_SOCK="+upstreamSock+" "+sshAddPath+" "+keyFile)
 	require.NoError(t, err, out)
 
 	out, err = exec.RunHostCommand(cmd.DdevBin, "config", "global", "--ssh-agent-upstream="+upstreamSock)
@@ -140,6 +142,13 @@ func TestCmdAuthSSHUpstream(t *testing.T) {
 	out, err = exec.RunHostCommand(cmd.DdevBin, "auth", "ssh")
 	require.Error(t, err, out)
 	require.Contains(t, out, "Make sure that agent is running")
+
+	// The fallback warning must appear even when ~/.ssh holds no key files.
+	out, err = exec.RunHostCommand(cmd.DdevBin, "config", "global", "--ssh-agent-upstream=host")
+	require.NoError(t, err, out)
+	out, _ = exec.RunHostCommand("env", "-u", "SSH_AUTH_SOCK", cmd.DdevBin, "auth", "ssh")
+	require.Contains(t, out, "SSH_AUTH_SOCK is not set")
+	require.Contains(t, out, "using DDEV's own SSH agent instead")
 }
 
 // TestCmdAuthSSHStdin checks that `ddev auth ssh -f -` adds a key piped to stdin.
