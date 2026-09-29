@@ -112,3 +112,22 @@ func TestDdevList(_ *testing.T) {
 		TypeFilter:          "",
 	})
 }
+
+func TestFitTableCell(t *testing.T) {
+	link := "\x1b]8;;file:///home/user/.ddev\x1b\\~/.ddev/some/long/path/here\x1b]8;;\x1b\\"
+	tests := []struct {
+		name string
+		col  string
+		want string
+	}{
+		{"short line unchanged", "~/.ddev", "~/.ddev"},
+		{"long line wraps", "port 80 is already in use", "port 80 is\nalready in\nuse"},
+		{"line breaks kept", "Run 'ddev auth ssh'\nagent gone", "Run 'ddev \nauth ssh'\nagent gone"},
+		{"hyperlink snipped", link + "\nok", "\x1b]8;;file:///home/user/.ddev\x1b\\~/.ddev/s\x1b]8;;\x1b\\…\nok"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.want, ddevapp.FitTableCell(tc.col, 10))
+		})
+	}
+}
