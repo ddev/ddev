@@ -233,7 +233,7 @@ ssh-add -l
 
 On Linux, `host` uses the agent in `$SSH_AUTH_SOCK` when a project starts. A forwarded agent (`ssh -A`) gets a new socket for each login, so run `ddev auth ssh` again after logging in again. A desktop agent's socket doesn't change, so you can set it directly, for example on Ubuntu with `ddev config global --ssh-agent-upstream=/run/user/$(id -u)/gcr/ssh`. An agent you start yourself with `eval $(ssh-agent -s)` works when you run `ddev` from that shell; to use it from any shell, start it on a fixed socket with `mkdir -p -m 700 ~/.ssh-agent && eval $(ssh-agent -a ~/.ssh-agent/agent.sock -s)` and set `ddev config global --ssh-agent-upstream=$HOME/.ssh-agent/agent.sock`. Keep the socket in its own directory rather than `~/.ssh`, because DDEV mounts the socket's whole directory into the `ddev-ssh-agent` container.
 
-On WSL2, DDEV can't reach Windows agents such as 1Password and the Windows OpenSSH agent directly, because they listen only on a Windows named pipe. Bridge that pipe to a Unix socket with `socat` in WSL2 and [`npiperelay`](https://github.com/albertony/npiperelay) on Windows, then point DDEV at the socket. DDEV doesn't start the bridge for you.
+On WSL2, DDEV can't reach Windows agents such as 1Password and the Windows OpenSSH agent directly, because they listen only on a Windows named pipe. Bridge that pipe to a Unix socket with `socat` in WSL2 and [`npiperelay`](https://github.com/albertony/npiperelay) on Windows, then point DDEV at the socket. DDEV doesn't start the bridge for you. This works with Docker Desktop's WSL integration as well as Docker installed inside WSL2, although Docker Desktop on Windows doesn't forward an agent of its own.
 
 1. Install `socat` in WSL2 with `sudo apt install socat`, and `npiperelay` in PowerShell with `winget install albertony.npiperelay`. `npiperelay` is x64-only; Windows on Arm runs it under emulation.
 2. With [systemd enabled in WSL2](https://learn.microsoft.com/en-us/windows/wsl/systemd), run the bridge as a user service, which starts with WSL2 whether or not you open a shell. Run this in a WSL2 shell, where `npiperelay.exe` is on `PATH`; the service itself doesn't get the Windows `PATH`, so the unit records the full path:
@@ -260,7 +260,8 @@ On WSL2, DDEV can't reach Windows agents such as 1Password and the Windows OpenS
 
     ```bash
     export SSH_AUTH_SOCK=$HOME/.1password/agent.sock
-    if ! ss -xl | grep -q "$SSH_AUTH_SOCK"; then
+    ssh-add -l >/dev/null 2>&1
+    if [ $? -eq 2 ]; then
       rm -f "$SSH_AUTH_SOCK"
       mkdir -p -m 700 "$(dirname "$SSH_AUTH_SOCK")"
       (setsid socat UNIX-LISTEN:"$SSH_AUTH_SOCK",fork EXEC:"npiperelay.exe -ei -s //./pipe/openssh-ssh-agent",nofork &) >/dev/null 2>&1

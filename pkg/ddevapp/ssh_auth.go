@@ -17,6 +17,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/docker/compose/v5/cmd/display"
 	"github.com/docker/compose/v5/pkg/api"
@@ -48,7 +49,9 @@ func SSHAgentUpstreamSocket() (string, error) {
 	case "":
 		return "", nil
 	case "host":
-		if dockerutil.IsDockerDesktop() || dockerutil.IsOrbStack() || dockerutil.IsColima() {
+		// Docker Desktop on Windows forwards no agent, and from WSL2 it binds
+		// sockets from the user's distro, so $SSH_AUTH_SOCK works there.
+		if (dockerutil.IsDockerDesktop() && !nodeps.IsWSL2()) || dockerutil.IsOrbStack() || dockerutil.IsColima() {
 			return hostServicesSSHAuthSock, nil
 		}
 		if dockerutil.IsLima() {
@@ -63,14 +66,24 @@ func SSHAgentUpstreamSocket() (string, error) {
 		if sock == "" {
 			return "", fmt.Errorf("ssh_agent_upstream=host but SSH_AUTH_SOCK is not set; start or forward an SSH agent first")
 		}
-		return sock, nil
+		return requireSSHAgentSocketDir(sock)
 	default:
 		sock, _ := util.ExpandHomedir(upstream)
 		if !filepath.IsAbs(sock) {
 			return "", fmt.Errorf("ssh_agent_upstream must be empty, 'host', or an absolute socket path, not '%s'", upstream)
 		}
-		return sock, nil
+		return requireSSHAgentSocketDir(sock)
 	}
+}
+
+// requireSSHAgentSocketDir returns an error when the socket's directory is
+// missing, because Docker would create it as a root-owned bind-mount source,
+// and the agent could then no longer create its socket there.
+func requireSSHAgentSocketDir(sock string) (string, error) {
+	if _, err := os.Stat(filepath.Dir(sock)); err != nil {
+		return "", fmt.Errorf("the SSH agent socket directory %s doesn't exist; start the agent first, or run 'ddev config global --ssh-agent-upstream=\"\"'", filepath.Dir(sock))
+	}
+	return sock, nil
 }
 
 // limaForwardedAgentSocket returns the socket that Lima's persistent SSH

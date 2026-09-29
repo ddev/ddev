@@ -71,17 +71,26 @@ func TestSSHAgentUpstreamSocketPaths(t *testing.T) {
 		return
 	}
 
+	require.NoError(t, os.MkdirAll(filepath.Join(home, "tmp"), 0755))
+	dir, err := os.MkdirTemp(filepath.Join(home, "tmp"), "sock")
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = os.RemoveAll(dir)
+	})
 	for value, expected := range map[string]string{
-		"":                     "",
-		"/path/to/agent.sock":  "/path/to/agent.sock",
-		"~/.ssh/agent.sock":    filepath.Join(home, ".ssh", "agent.sock"),
-		"~/tmp/agent/ssh.sock": filepath.Join(home, "tmp", "agent", "ssh.sock"),
+		"":                                         "",
+		filepath.Join(dir, "agent.sock"):           filepath.Join(dir, "agent.sock"),
+		"~/tmp/" + filepath.Base(dir) + "/ssh.sock": filepath.Join(dir, "ssh.sock"),
 	} {
 		globalconfig.DdevGlobalConfig.SSHAgentUpstream = value
 		sock, err := SSHAgentUpstreamSocket()
 		require.NoError(t, err, value)
 		require.Equal(t, expected, sock, value)
 	}
+
+	globalconfig.DdevGlobalConfig.SSHAgentUpstream = filepath.Join(dir, "missing", "agent.sock")
+	_, err = SSHAgentUpstreamSocket()
+	require.ErrorContains(t, err, "doesn't exist")
 
 	for _, value := range []string{"relative/agent.sock", "agent.sock", "./agent.sock"} {
 		globalconfig.DdevGlobalConfig.SSHAgentUpstream = value

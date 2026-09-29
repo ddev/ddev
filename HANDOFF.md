@@ -43,11 +43,17 @@ The user guide is [Using an Existing SSH Agent](docs/content/users/usage/cli.md)
 
 ## TODO: validation and tests
 
-- [ ] Traditional Windows with Docker Desktop: verify that `ddev start` and
-  `ddev auth ssh` warn and fall back with `ssh_agent_upstream: host`, and that
-  `op read ... | ddev auth ssh -f -` works.
-- [ ] WSL2 with Docker Desktop integration: run the same checks and determine
-  whether its provider socket reaches a Windows-host agent.
+- [x] Traditional Windows with Docker Desktop (Windows 11 arm64, 1Password):
+  `ddev start` and `ddev auth ssh` warn once and fall back with
+  `ssh_agent_upstream: host`; `op read ... | ddev auth ssh -f -` works from Git
+  Bash and PowerShell 5.1, and `ddev exec ssh -T git@github.com`
+  authenticates. `ddev restart` keeps the agent and its keys.
+- [x] WSL2 with Docker Desktop integration (Windows 11 arm64, 1Password):
+  Docker Desktop on Windows has no provider agent socket, so `host` uses
+  `$SSH_AUTH_SOCK` under WSL2. It binds sockets from the user's distro, so the
+  `socat` and `npiperelay` bridge works with `host` and with the `~/` path,
+  including stop and restart of the bridge. A missing socket directory now
+  warns and falls back, since Docker would create it root-owned.
 - [x] WSL2 with Docker CE (Windows 11 arm64, 1Password): a `socat` and
   `npiperelay` bridge on `~/.1password/agent.sock` works with `host` and with
   the explicit and `~/` path. Stopping the bridge warns; restarting it

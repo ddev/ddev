@@ -659,7 +659,7 @@ Make the `ddev-ssh-agent` container relay to an SSH agent you already run, such 
 | :octicons-globe-16: global | (empty) | Can be empty, `host`, or the absolute path of an agent socket.
 
 * Empty: `ddev-ssh-agent` runs its own agent, and [`ddev auth ssh`](../usage/commands.md#auth-ssh) adds key files to it.
-* `host`: relay to the agent your Docker provider forwards (Docker Desktop, OrbStack, Colima with `--ssh-agent`, or Lima with `ssh.forwardAgent`), or on Linux and WSL2 to the socket in `$SSH_AUTH_SOCK` when a project starts.
+* `host`: relay to the agent your Docker provider forwards (Docker Desktop on macOS or Linux, OrbStack, Colima with `--ssh-agent`, or Lima with `ssh.forwardAgent`), or on Linux and WSL2 to the socket in `$SSH_AUTH_SOCK` when a project starts.
 * A socket path: relay to that socket. The Docker host must be able to reach it, so on macOS use `host` instead.
 
 Traditional Windows doesn't support this setting, because Windows SSH agents such as 1Password listen on a named pipe that Docker can't reach. On WSL2, bridge that pipe to a socket path first, as [Using an Existing SSH Agent](../usage/cli.md#using-an-existing-ssh-agent) describes.
