@@ -1,11 +1,24 @@
 #!/usr/bin/env bash
-# delete-image-tags.sh [--execute] <keep-set-file> [<org>/<repo>:<tag> ...]
+# delete-image-tags.sh [--execute] [--keep-set <file>] [<org>/<repo>:<tag> ...]
+#
+# Example, a dry run listing every tag that would be deleted:
+#   containers/delete-image-tags.sh
 #
 # Deletes the named Docker Hub tags, read from the arguments or else from
 # stdin (separated by whitespace or commas). Every one must still be listed by
 # a fresh run of image-tag-cleanup-candidates.sh, or nothing is deleted, so a
 # stale or hand-edited list can't remove a tag that has since become needed.
-# Without --execute it only prints what it would delete.
+# Without --execute it only prints what it would delete. With no tags given
+# and stdin a terminal, it names every current candidate; --execute is
+# refused in that mode.
+#
+# Arguments:
+#   --execute            actually delete; without it, only print
+#   --keep-set <file>    the tags to keep, one per line, as written by
+#                        image-tag-keep-set.sh (releases, open PRs, recent
+#                        main). None of them can be deleted here. Omitted, it
+#                        is built by running image-tag-keep-set.sh.
+#   <org>/<repo>:<tag>   what to delete, e.g. ddev/ddev-webserver:20250612_foo
 #
 # Env:
 #   DOCKER_ORG                        - the only organization allowed (default ddev)
@@ -25,25 +38,35 @@ die() {
 }
 
 EXECUTE=false
-if [ "${1:-}" = "--execute" ]; then
-  EXECUTE=true
-  shift
-fi
-[ "$#" -ge 1 ] || die "usage: $0 [--execute] <keep-set-file> [<org>/<repo>:<tag> ...]"
-KEEP_SET="$1"
-shift
+KEEP_SET=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --execute) EXECUTE=true; shift ;;
+    --keep-set) [ "$#" -ge 2 ] || die "--keep-set needs a file"; KEEP_SET="$2"; shift 2 ;;
+    -*) die "usage: $0 [--execute] [--keep-set <file>] [<org>/<repo>:<tag> ...]" ;;
+    *) break ;;
+  esac
+done
 
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 
+if [ -z "$KEEP_SET" ]; then
+  KEEP_SET="$WORKDIR/keep-set"
+  "$SCRIPT_DIR/image-tag-keep-set.sh" > "$KEEP_SET"
+fi
+
 if [ "$#" -gt 0 ]; then
   printf '%s\n' "$@"
+elif [ -t 0 ]; then
+  [ "$EXECUTE" != true ] || die "--execute needs the tags to delete, as arguments or on stdin"
+  "$SCRIPT_DIR/image-tag-cleanup-candidates.sh" "$KEEP_SET"
 else
   cat
 fi | tr -s ', \t' '\n' | sed '/^$/d' | sort -u > "$WORKDIR/requested"
 
 count="$(wc -l < "$WORKDIR/requested" | tr -d ' ')"
-[ "$count" -gt 0 ] || die "no tags given"
+[ "$count" -gt 0 ] || die "no tags to delete"
 [ "$count" -le "$CLEANUP_MAX_DELETE" ] || die "${count} tags exceeds CLEANUP_MAX_DELETE=${CLEANUP_MAX_DELETE}"
 
 while IFS= read -r ref; do

@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
 # image-tag-cleanup-candidates.sh [--explain <file>] <keep-set-file>
 #
+# Example:
+#   containers/image-tag-cleanup-candidates.sh --explain decisions.tsv keep-set.txt > candidates.txt
+#
 # Prints the Docker Hub tags under $DOCKER_ORG that look safe to delete, one
 # <org>/<repo>:<tag> per line. A candidate has a shape CI or a branch build
 # produces, is absent from the keep-set (image-tag-keep-set.sh), was pushed
 # long ago and not pulled lately, and shares no manifest with a kept tag.
 # Release tags, latest, and unrecognized shapes are always kept. --explain
 # writes every tag's decision and reason to <file> as TSV.
+#
+# Arguments:
+#   <keep-set-file>  the tags to keep, one per line, as written by
+#                    image-tag-keep-set.sh (releases, open PRs, recent main).
+#                    Listed tags are never candidates.
+#   --explain <file> also write a keep/delete decision and reason for every tag
 #
 # Env:
 #   DOCKER_ORG               - Docker Hub organization (default ddev)

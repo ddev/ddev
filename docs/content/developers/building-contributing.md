@@ -367,7 +367,13 @@ The run summary shows the counts and the candidate list. The `image-tag-cleanup-
 
 To delete, run the workflow from `main` and set either `report_run_id` to the ID of a report run, or `tags` to a list of `<org>/<repo>:<tag>` entries. Leave `execute` unchecked for a dry run. The `image-tag-cleanup` environment must approve the run. `containers/delete-image-tags.sh` recomputes the candidates first, and if any requested tag is no longer a candidate, it deletes nothing.
 
-To try it by hand without deleting anything:
+To see what would be deleted, without deleting anything, run this in a terminal from a checkout with tags fetched:
+
+```bash
+containers/delete-image-tags.sh
+```
+
+To look at each step by hand:
 
 ```bash
 containers/image-tag-keep-set.sh > ~/tmp/keep-set.txt

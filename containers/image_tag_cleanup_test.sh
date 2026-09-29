@@ -311,39 +311,42 @@ log_count() {
 }
 
 serve_standard_fixture
-output="$("$DELETE_SH" "$KEEP" ddev/ddev-webserver:bbbbbbbbbb,ddev/ddev-webserver:eeeeeeeeee 2>/dev/null)"
+output="$("$DELETE_SH" --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb,ddev/ddev-webserver:eeeeeeeeee 2>/dev/null)"
 assert_eq "$(printf 'would delete ddev/ddev-webserver:%s\n' bbbbbbbbbb eeeeeeeeee)" "$output" "a dry run lists what it would delete"
 assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "a dry run neither logs in nor deletes"
 
 serve_standard_fixture
 assert_fails_with "ddev/ddev-webserver:aaaaaaaaaa" "a kept tag in the list is refused by name" \
-  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute "$KEEP" ddev/ddev-webserver:bbbbbbbbbb ddev/ddev-webserver:aaaaaaaaaa
+  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb ddev/ddev-webserver:aaaaaaaaaa
 assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "one refused tag means nothing is deleted"
 
 serve_standard_fixture
 assert_fails_with "ddev/ddev-webserver:0123456789" "a tag that isn't listed at all is refused" \
-  "$DELETE_SH" "$KEEP" ddev/ddev-webserver:0123456789
+  "$DELETE_SH" --keep-set "$KEEP" ddev/ddev-webserver:0123456789
 
 reset_stub
 assert_fails_with "not in a repository this project publishes" "another organization is refused" \
-  "$DELETE_SH" "$KEEP" someone/ddev-webserver:bbbbbbbbbb
+  "$DELETE_SH" --keep-set "$KEEP" someone/ddev-webserver:bbbbbbbbbb
 assert_fails_with "not in a repository this project publishes" "an unknown repository is refused" \
-  "$DELETE_SH" "$KEEP" ddev/not-ours:bbbbbbbbbb
+  "$DELETE_SH" --keep-set "$KEEP" ddev/not-ours:bbbbbbbbbb
 assert_fails_with "is not <org>/<repo>:<tag>" "a malformed entry is refused" \
-  "$DELETE_SH" "$KEEP" ddev/ddev-webserver
+  "$DELETE_SH" --keep-set "$KEEP" ddev/ddev-webserver
 assert_eq "0" "$(wc -l < "$CURL_LOG" | tr -d ' ')" "validation failures happen before any request"
+assert_fails_with "--keep-set needs a file" "--keep-set without a file is refused" "$DELETE_SH" --keep-set
+assert_fails_with "usage:" "an unknown option is refused" "$DELETE_SH" --bogus --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb
+
 
 assert_fails_with "exceeds CLEANUP_MAX_DELETE" "a list over the limit is refused" \
-  env CLEANUP_MAX_DELETE=1 "$DELETE_SH" "$KEEP" ddev/ddev-webserver:bbbbbbbbbb ddev/ddev-webserver:eeeeeeeeee
+  env CLEANUP_MAX_DELETE=1 "$DELETE_SH" --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb ddev/ddev-webserver:eeeeeeeeee
 
 serve_standard_fixture
 assert_fails_with "DOCKERHUB_USERNAME must be set" "--execute needs credentials" \
-  env -u DOCKERHUB_USERNAME -u DOCKERHUB_TOKEN "$DELETE_SH" --execute "$KEEP" ddev/ddev-webserver:bbbbbbbbbb
+  env -u DOCKERHUB_USERNAME -u DOCKERHUB_TOKEN "$DELETE_SH" --execute --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb
 assert_eq "0" "$(log_count DELETE)" "no deletion without credentials"
 
 serve_standard_fixture
 printf 'ddev/ddev-webserver:bbbbbbbbbb\nddev/ddev-webserver:eeeeeeeeee, ddev/ddev-webserver:bbbbbbbbbb\n' |
-  DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute "$KEEP" >/dev/null 2>&1
+  DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" >/dev/null 2>&1
 assert_eq "$(printf '%s\n' \
   "DELETE https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/bbbbbbbbbb/ Authorization: JWT stub-token" \
   "DELETE https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/eeeeeeeeee/ Authorization: JWT stub-token")" \
@@ -352,7 +355,7 @@ assert_eq "$(printf '%s\n' \
 serve_standard_fixture
 echo "https://hub.docker.com/v2/repositories/ddev/ddev-webserver/tags/bbbbbbbbbb/" > "$CURL_FAIL_URLS"
 assert_fails_with "1 of 2 deletions failed" "a failed deletion fails the run" \
-  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute "$KEEP" ddev/ddev-webserver:bbbbbbbbbb ddev/ddev-webserver:eeeeeeeeee
+  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$DELETE_SH" --execute --keep-set "$KEEP" ddev/ddev-webserver:bbbbbbbbbb ddev/ddev-webserver:eeeeeeeeee
 assert_eq "2" "$(log_count DELETE)" "a failed deletion doesn't stop the rest"
 
 if [ "$FAILURES" -gt 0 ]; then

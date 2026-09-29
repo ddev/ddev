@@ -156,7 +156,7 @@ jobs:
           set -eu -o pipefail
           ARGS=()
           [ "$EXECUTE" = true ] && ARGS+=(--execute)
-          containers/delete-image-tags.sh "${ARGS[@]}" keep-set.txt < requested.txt | tee deleted.txt
+          containers/delete-image-tags.sh "${ARGS[@]}" --keep-set keep-set.txt < requested.txt | tee deleted.txt
           {
             echo "## Image tag cleanup ($([ "$EXECUTE" = true ] && echo deleted || echo dry run))"
             echo

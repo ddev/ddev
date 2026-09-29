@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
 # image-tag-keep-set.sh [<ref> ...]
 #
+# Example, from a checkout with tags fetched:
+#   containers/image-tag-keep-set.sh > keep-set.txt
+#
 # Prints every image tag a ddev build may still pull, one per line: the *Tag
 # values in the version file at every v* release tag, at each <ref> given
 # (open pull request heads), and on the main branch at any point in the last
 # KEEP_MAIN_DAYS days. image-tag-cleanup-candidates.sh never lists these.
 # Fails rather than printing a short list, since a missing tag here is a tag
 # that can be deleted.
+#
+# Arguments:
+#   <ref>  a git ref whose version file to add, normally an open pull request
+#          head such as refs/keep/pr-8857. None is needed to check releases
+#          and main alone. Output goes to stdout; save it as the
+#          <keep-set-file> the other two scripts take.
 #
 # Env:
 #   KEEP_MAIN_REF   - main branch ref (default upstream/main, else origin/main)
