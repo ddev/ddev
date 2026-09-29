@@ -139,6 +139,7 @@ NTFS
 OSs
 OpenMage
 OpenSearch
+OpenSSH
 OrbStack
 PECL
 PEM
