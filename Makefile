@@ -12,9 +12,10 @@ DEV_TOOLS_PATH = $(DEV_TOOLS_DIR)/python/bin:$(DEV_TOOLS_DIR)/node/bin
 ifeq ($(OS),Windows_NT)
 # Native Windows make sees PATH as C:\...;C:\..., so joining with colons yields
 # garbage. Venvs use Scripts and npm has no bin there; the shell adds them in
-# require_tool, where $$PATH is already in its own format.
+# require_tool, where $$PATH is already in its own format. EXTRA_PATH
+# rides along in DEV_TOOLS_PATH because the export below is skipped.
 DEV_TOOLS_DIR := $(shell cygpath -u '$(DEV_TOOLS_DIR)')
-DEV_TOOLS_PATH = $(DEV_TOOLS_DIR)/python/Scripts:$(DEV_TOOLS_DIR)/node
+DEV_TOOLS_PATH = $(DEV_TOOLS_DIR)/python/Scripts:$(DEV_TOOLS_DIR)/node$(if $(EXTRA_PATH),:$(EXTRA_PATH))
 else
 export PATH := $(DEV_TOOLS_PATH):$(EXTRA_PATH):$(PATH)
 endif
