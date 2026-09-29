@@ -302,7 +302,7 @@ The command can be executed multiple times to add more keys, or you can use the 
 
 If [`ssh_agent_upstream`](../configuration/config.md#ssh_agent_upstream) is set, `ddev auth ssh` without flags lists the keys in that agent instead of adding keys.
 
-To add a key held in a secret manager or CI variable without writing it to a file, pipe it in with `-f -`. The key must not have a passphrase.
+To add a key held in a secret manager or CI variable without writing it to a file, pipe it in with `-f -`. The key must not have a passphrase. On traditional Windows, where `ssh_agent_upstream` isn't available, this is how to use a key stored in 1Password; see [Using an Existing SSH Agent](../usage/cli.md#using-an-existing-ssh-agent).
 
 Example:
 
@@ -314,7 +314,7 @@ ddev auth ssh -d ~/custom/path/to/ssh
 # Add your SSH keys from ~/.ssh/id_ed25519 and ~/.ssh/id_rsa files
 ddev auth ssh -f ~/.ssh/id_ed25519 -f ~/.ssh/id_rsa
 # Add a key from 1Password's CLI, or any command that prints a private key
-op read "op://Private/deploy key/private key" | ddev auth ssh -f -
+op read "op://Private/deploy key/private key?ssh-format=openssh" | ddev auth ssh -f -
 ```
 
 Flags:

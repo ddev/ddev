@@ -29,8 +29,11 @@ The user guide is [Using an Existing SSH Agent](docs/content/users/usage/cli.md)
 
 ## Known limitations
 
-- Native Windows uses named-pipe agents. Do not promise `host` support until
-  Docker Desktop for Windows is tested end to end.
+- Native Windows agents (1Password, Windows OpenSSH) listen only on
+  `\\.\pipe\openssh-ssh-agent`, and Docker Desktop for Windows forwards no
+  agent. Any non-empty `ssh_agent_upstream` on native Windows warns and falls
+  back to DDEV's agent. A `ddev.exe` pipe-to-TCP relay was considered and
+  rejected as an extra, fragile host process.
 - WSL2 needs a Linux-visible Unix socket for a Windows agent. A bridge such as
   `mame/wsl2-ssh-agent` can provide one; DDEV must not create it.
 - A fixed symlink to a forwarded SSH socket does not work when its target is
@@ -40,11 +43,9 @@ The user guide is [Using an Existing SSH Agent](docs/content/users/usage/cli.md)
 
 ## TODO: validation and tests
 
-- [ ] Traditional Windows with Docker Desktop: test the Windows OpenSSH agent
-  and 1Password with `ssh_agent_upstream: host`. Verify `ddev start`,
-  `ddev auth ssh`, `ddev exec ssh-add -l`, and GitHub SSH authentication. If
-  Docker Desktop does not forward either agent, make `host` fall back with a
-  clear warning and document key-file mode as the supported path.
+- [ ] Traditional Windows with Docker Desktop: verify that `ddev start` and
+  `ddev auth ssh` warn and fall back with `ssh_agent_upstream: host`, and that
+  `op read ... | ddev auth ssh -f -` works.
 - [ ] WSL2 with Docker Desktop integration: run the same checks and determine
   whether its provider socket reaches a Windows-host agent.
 - [ ] WSL2 with Docker CE: use a Windows named-pipe-to-Unix-socket bridge;

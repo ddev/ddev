@@ -662,6 +662,8 @@ Make the `ddev-ssh-agent` container relay to an SSH agent you already run, such 
 * `host`: relay to the agent your Docker provider forwards (Docker Desktop, OrbStack, Colima with `--ssh-agent`, or Lima with `ssh.forwardAgent`), or on Linux and WSL2 to the socket in `$SSH_AUTH_SOCK` when a project starts.
 * A socket path: relay to that socket. The Docker host must be able to reach it, so on macOS use `host` instead.
 
+Traditional Windows doesn't support this setting, because Windows SSH agents such as 1Password listen on a named pipe that Docker can't reach.
+
 If DDEV can't use the setting, for example `host` with a provider that doesn't forward an agent, projects still start with DDEV's own agent and a warning. With an upstream agent, `ddev auth ssh` lists the agent's keys rather than adding keys.
 
 ## `table_style`

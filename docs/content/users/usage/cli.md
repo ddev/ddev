@@ -233,6 +233,14 @@ ssh-add -l
 
 On Linux, `host` uses the agent in `$SSH_AUTH_SOCK` when a project starts. A forwarded agent (`ssh -A`) gets a new socket for each login, so run `ddev auth ssh` again after logging in again. A desktop agent's socket doesn't change, so you can set it directly, for example on Ubuntu with `ddev config global --ssh-agent-upstream=/run/user/$(id -u)/gcr/ssh`. An agent you start yourself with `eval $(ssh-agent -s)` works when you run `ddev` from that shell; to use it from any shell, start it on a fixed socket with `eval $(ssh-agent -a ~/.ssh/agent.sock -s)` and set `ddev config global --ssh-agent-upstream=$HOME/.ssh/agent.sock`.
 
+On traditional Windows, `ssh_agent_upstream` doesn't work. Windows agents, including 1Password and the Windows OpenSSH agent, listen on a named pipe that Docker Desktop and other Windows providers can't pass to containers. DDEV warns and uses its own agent, so add your key files from `%USERPROFILE%\.ssh` with `ddev auth ssh`. To use a key stored in 1Password without saving it to a file, pipe it from the [1Password CLI](https://developer.1password.com/docs/cli/get-started/), in PowerShell or Git Bash:
+
+```bash
+op read "op://<vault>/<item>/private key?ssh-format=openssh" | ddev auth ssh -f -
+```
+
+Turn on **Settings** > **Developer** > **Integrate with 1Password CLI** in the 1Password app first, and add `--account <account>.1password.com` to `op read` if you're signed in to more than one account. Run the command again after `ddev poweroff` or a reboot, because DDEV's agent forgets keys when it stops.
+
 If `ddev auth ssh` says "Make sure that agent is running and holds your keys", your agent is stopped or locked. Open 1Password or load your keys; DDEV picks the agent up again without a restart. To go back to adding key files, run `ddev config global --ssh-agent-upstream=""` and then `ddev auth ssh`.
 
 Every container in the DDEV Docker network can ask your agent to sign while this is on. Agents that confirm each use, like 1Password, limit that exposure.

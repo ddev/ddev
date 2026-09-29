@@ -56,13 +56,14 @@ var AuthSSHCommand = &cobra.Command{
 		}
 
 		// With an upstream agent, the keys already live there, so only list them.
+		// An unusable upstream falls through to adding key files, and
+		// ensureSSHAgent warns about it.
 		if globalconfig.DdevGlobalConfig.SSHAgentUpstream != "" && sshKeyFiles == nil && sshKeyDirs == nil {
-			if _, err := ddevapp.SSHAgentUpstreamSocket(); err != nil {
-				util.Failed("%v", err)
+			if _, err := ddevapp.SSHAgentUpstreamSocket(); err == nil {
+				ensureSSHAgent()
+				listUpstreamSSHKeys()
+				return
 			}
-			ensureSSHAgent()
-			listUpstreamSSHKeys()
-			return
 		}
 
 		// Use ~/.ssh if nothing is provided
@@ -155,6 +156,9 @@ func readSSHKeyFromStdin() []byte {
 	if err != nil {
 		util.Failed("Unable to read the SSH private key from stdin: %v", err)
 	}
+	// PowerShell pipes text to native commands with CRLF and sometimes a BOM,
+	// which ssh-add rejects.
+	key = bytes.ReplaceAll(bytes.TrimPrefix(key, []byte("\xef\xbb\xbf")), []byte("\r\n"), []byte("\n"))
 	trimmed := bytes.TrimSpace(key)
 	if !bytes.HasPrefix(trimmed, []byte("-----BEGIN")) || !bytes.Contains(trimmed, []byte("PRIVATE KEY-----")) {
 		util.Failed("stdin does not contain an SSH private key")
@@ -168,10 +172,11 @@ func addSSHKey(key []byte) {
 	_, stderr, err := dockerutil.ExecWithStdin(ddevapp.SSHAuthName, "ssh-add -", "", bytes.NewReader(key))
 	if err != nil {
 		hint := ""
+		upstream, _ := ddevapp.SSHAgentUpstreamSocket()
 		switch {
 		case strings.Contains(stderr, "passphrase"):
 			hint = "\nA key read from stdin can't have a passphrase."
-		case globalconfig.DdevGlobalConfig.SSHAgentUpstream != "":
+		case upstream != "":
 			hint = fmt.Sprintf("\nThe key went to the upstream agent (ssh_agent_upstream=%s), and agents such as 1Password don't accept added keys.", globalconfig.DdevGlobalConfig.SSHAgentUpstream)
 		}
 		util.Failed("Unable to add the SSH private key from stdin: %s%s", strings.TrimSpace(stderr), hint)

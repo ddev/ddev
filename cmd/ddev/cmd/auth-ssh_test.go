@@ -165,6 +165,11 @@ func TestCmdAuthSSHStdin(t *testing.T) {
 	require.NoError(t, err, stderr)
 	require.Contains(t, stdout, "ddev-stdin-test")
 
+	// PowerShell pipes CRLF line endings.
+	out, err = exec.RunHostCommand("bash", "-c", `sed 's/$/\r/' "$1" | "$0" auth ssh -f -`, cmd.DdevBin, keyFile)
+	require.NoError(t, err, out)
+	require.Contains(t, out, "Successfully added the SSH private key from stdin")
+
 	out, err = exec.RunHostCommand("bash", "-c", `echo "not a key" | "$0" auth ssh -f -`, cmd.DdevBin)
 	require.Error(t, err, out)
 	require.Contains(t, out, "stdin does not contain an SSH private key")
