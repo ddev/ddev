@@ -18,8 +18,9 @@ import (
 
 // DebugDockercheckCmd implements the ddev utility dockercheck command
 var DebugDockercheckCmd = &cobra.Command{
-	Use:   "dockercheck",
-	Short: "Diagnose DDEV Docker provider setup",
+	Use:         "dockercheck",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Diagnose DDEV Docker provider setup",
 	Example: `ddev utility dockercheck
 ddev ut dockercheck`,
 	Run: func(_ *cobra.Command, args []string) {
@@ -28,12 +29,21 @@ ddev ut dockercheck`,
 		}
 
 		hasWarnings := false
+		dockerVersion, dockerErr := dockerutil.GetDockerVersion()
 
-		_, buildxErr := dockerutil.DownloadDockerBuildxIfNeeded()
+		var buildxErr error
+		if dockerErr == nil {
+			_, buildxErr = dockerutil.DownloadDockerBuildxIfNeeded()
+		}
 
 		versionInfo, _ := version.GetVersionInfo()
 		bashPath := util.FindBashPath()
-		util.Success("Docker platform: %v", versionInfo["docker-platform"])
+		if dockerErr != nil {
+			util.Warning("Docker platform: unknown, Docker is not reachable")
+			hasWarnings = true
+		} else {
+			util.Success("Docker platform: %v", versionInfo["docker-platform"])
+		}
 		switch versionInfo["docker-platform"] {
 		case "colima":
 			p, err := exec.LookPath("colima")
@@ -96,118 +106,18 @@ ddev ut dockercheck`,
 			}
 		}
 
-		dockerContextName, dockerHost, err := dockerutil.GetDockerContextNameAndHost()
-		if err != nil {
-			util.Warning("Could not get Docker context and host: %v", err)
-			hasWarnings = true
-		} else {
-			util.Success("Using Docker context: %s", dockerContextName)
-			dockerContextName = os.Getenv("DOCKER_CONTEXT")
-			if dockerContextName != "" {
-				util.Success("From DOCKER_CONTEXT=%s", dockerContextName)
-			}
+		printDockerEndpoint()
 
-			util.Success("Using Docker host: %s", dockerHost)
-			dockerHost = os.Getenv("DOCKER_HOST")
-			if dockerHost != "" {
-				util.Success("From DOCKER_HOST=%s", dockerHost)
-			}
-		}
-
-		// Show TLS configuration
-		dockerTLSVerify := os.Getenv("DOCKER_TLS_VERIFY")
-		dockerTLS := os.Getenv("DOCKER_TLS")
-		dockerCertPath := os.Getenv("DOCKER_CERT_PATH")
-		if dockerTLSVerify != "" {
-			util.Success("DOCKER_TLS_VERIFY=%s (TLS enabled with verification)", dockerTLSVerify)
-		} else if dockerTLS != "" {
-			util.Success("DOCKER_TLS=%s (TLS enabled without verification)", dockerTLS)
-		} else {
-			util.Success("TLS not configured (no DOCKER_TLS_VERIFY or DOCKER_TLS)")
-		}
-		if dockerCertPath != "" {
-			util.Success("DOCKER_CERT_PATH=%s", dockerCertPath)
-		}
-
-		dockerVersion, err := dockerutil.GetDockerVersion()
-		if err != nil {
-			util.Warning("Unable to get Docker version: %v", err)
+		if dockerErr != nil {
+			util.Warning("Unable to connect to Docker: %v", dockerErr)
+			util.Warning("Skipping container, disk space, and buildx build checks because Docker is not reachable")
 			hasWarnings = true
-		} else {
-			util.Success("Docker version: %s", dockerVersion)
-		}
-		err = dockerutil.CheckDockerVersion(dockerutil.DockerRequirements)
-		if err != nil {
-			if err.Error() == "no docker" {
-				util.Warning("Docker is not installed or the Docker client is not available in the $PATH")
-			} else {
-				util.WarningOnce("Problem with your Docker provider: %v.", err)
-			}
-			hasWarnings = true
-		}
-		dockerAPIVersion, err := dockerutil.GetDockerAPIVersion()
-		if err != nil {
-			util.Warning("Unable to get Docker API version: %v", err)
-			hasWarnings = true
-		} else {
-			util.Success("Docker API version: %s", dockerAPIVersion)
-		}
-
-		uid, _, _ := dockerutil.GetContainerUser()
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "dockercheck-runcontainer--"+util.RandString(6), []string{"ls", "/mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, uid, true, false, nil, nil, nil)
-		if err != nil {
-			util.Warning("Unable to run simple container: %v; output=%s", err, out)
-			hasWarnings = true
-		} else {
-			util.Success("Able to run simple container that mounts a volume.")
-		}
-
-		_, _, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "dockercheck-curl--"+util.RandString(6), []string{"curl", "-sfLI", "https://google.com"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache/bashhistory"}, uid, true, false, nil, nil, nil)
-		if err != nil {
-			util.Warning("Unable to run use internet inside container, many things will fail: %v", err)
-			hasWarnings = true
-		} else {
-			util.Success("Able to use internet inside container.")
-		}
-
-		if err := dockerutil.CheckAvailableSpace(); err != nil {
-			util.Warning("Warning: %v", err)
-			hasWarnings = true
-		}
-
-		// Test buildx with a trivial build on the host, and --load the result.
-		//
-		// --load is essential, not incidental. Under the docker-container
-		// driver the build result otherwise stays in the build cache and is
-		// never handed to the engine ("WARNING: No output specified with
-		// docker-container driver"), so without it this check passes on a
-		// machine where every real project build fails at its final step. That
-		// happens, for example, when an image signature policy in policy.json
-		// rejects the docker-archive transport: the build succeeds in full and
-		// only the load is rejected. Loading is also what makes the cleanup
-		// below meaningful; before --load there was never an image to remove.
-		if buildxErr == nil {
-			// Use RunCLIPluginCommand to execute buildx build via Docker CLI plugin infrastructure
-			stdin := strings.NewReader(fmt.Sprintf("FROM %s", versionconstants.UtilitiesImage))
-			out, err = dockerutil.RunCLIPluginCommand("buildx", stdin, "build", "--no-cache", "--load", "-f-", "-t", "ddev-buildx-test:latest", ".")
-			if err != nil {
-				util.Warning("Unable to perform trivial build and load with buildx: %v; output=%s", err, out)
-				hasWarnings = true
-			} else {
-				// Clean up the test image using Docker API
-				cleanupErr := dockerutil.RemoveImage("ddev-buildx-test:latest")
-				if cleanupErr != nil {
-					util.Debug("Failed to clean up test image: %v", cleanupErr)
-				}
-				util.Success("docker buildx is working correctly (trivial build and load succeeded)")
-			}
-		} else {
-			util.Warning("Skipping buildx test due to earlier buildx version check error.")
+		} else if checkDockerDaemon(dockerVersion, buildxErr) {
 			hasWarnings = true
 		}
 
 		// Check docker auth configuration
-		err = dockerutil.CheckDockerAuth()
+		err := dockerutil.CheckDockerAuth()
 		if err != nil {
 			util.Warning("Docker authentication may have issues: %v", err)
 			hasWarnings = true
@@ -220,9 +130,120 @@ ddev ut dockercheck`,
 			if buildxErr != nil {
 				util.Error("Docker buildx error: %v", buildxErr)
 			}
+			if dockerErr != nil {
+				util.Error("For help go to: https://docs.ddev.com/en/stable/users/install/docker-installation/#troubleshooting-docker")
+			}
 			output.UserErr.Exit(1)
 		}
 	},
+}
+
+// checkDockerDaemon runs the checks that need a reachable Docker daemon
+// and reports whether any of them produced a warning.
+func checkDockerDaemon(dockerVersion string, buildxErr error) bool {
+	hasWarnings := false
+	util.Success("Docker version: %s", dockerVersion)
+	err := dockerutil.CheckDockerVersion(dockerutil.DockerRequirements)
+	if err != nil {
+		util.WarningOnce("Problem with your Docker provider: %v.", err)
+		hasWarnings = true
+	}
+	dockerAPIVersion, err := dockerutil.GetDockerAPIVersion()
+	if err != nil {
+		util.Warning("Unable to get Docker API version: %v", err)
+		hasWarnings = true
+	} else {
+		util.Success("Docker API version: %s", dockerAPIVersion)
+	}
+
+	uid, _, _ := dockerutil.GetContainerUser()
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "dockercheck-runcontainer--"+util.RandString(6), []string{"ls", "/mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, uid, true, false, nil, nil, nil)
+	if err != nil {
+		util.Warning("Unable to run simple container: %v; output=%s", err, out)
+		hasWarnings = true
+	} else {
+		util.Success("Able to run simple container that mounts a volume.")
+	}
+
+	_, _, err = dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, "dockercheck-curl--"+util.RandString(6), []string{"curl", "-sfLI", "https://google.com"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache/bashhistory"}, uid, true, false, nil, nil, nil)
+	if err != nil {
+		util.Warning("Unable to run use internet inside container, many things will fail: %v", err)
+		hasWarnings = true
+	} else {
+		util.Success("Able to use internet inside container.")
+	}
+
+	if err := dockerutil.CheckAvailableSpace(); err != nil {
+		util.Warning("Warning: %v", err)
+		hasWarnings = true
+	}
+
+	// Test buildx with a trivial build on the host, and --load the result.
+	//
+	// --load is essential, not incidental. Under the docker-container
+	// driver the build result otherwise stays in the build cache and is
+	// never handed to the engine ("WARNING: No output specified with
+	// docker-container driver"), so without it this check passes on a
+	// machine where every real project build fails at its final step. That
+	// happens, for example, when an image signature policy in policy.json
+	// rejects the docker-archive transport: the build succeeds in full and
+	// only the load is rejected. Loading is also what makes the cleanup
+	// below meaningful; before --load there was never an image to remove.
+	if buildxErr == nil {
+		// Use RunCLIPluginCommand to execute buildx build via Docker CLI plugin infrastructure
+		stdin := strings.NewReader(fmt.Sprintf("FROM %s", versionconstants.UtilitiesImage))
+		out, err = dockerutil.RunCLIPluginCommand("buildx", stdin, "build", "--no-cache", "--load", "-f-", "-t", "ddev-buildx-test:latest", ".")
+		if err != nil {
+			util.Warning("Unable to perform trivial build and load with buildx: %v; output=%s", err, out)
+			hasWarnings = true
+		} else {
+			// Clean up the test image using Docker API
+			cleanupErr := dockerutil.RemoveImage("ddev-buildx-test:latest")
+			if cleanupErr != nil {
+				util.Debug("Failed to clean up test image: %v", cleanupErr)
+			}
+			util.Success("docker buildx is working correctly (trivial build and load succeeded)")
+		}
+	} else {
+		util.Warning("Skipping buildx test due to earlier buildx version check error.")
+		hasWarnings = true
+	}
+
+	return hasWarnings
+}
+
+// printDockerEndpoint prints the Docker context, host, and TLS settings DDEV uses.
+// An unresolvable context leaves the host empty; the caller reports that error.
+func printDockerEndpoint() {
+	dockerContextName, dockerHost, _ := dockerutil.GetDockerContextNameAndHost()
+	if dockerHost != "" {
+		util.Success("Using Docker context: %s", dockerContextName)
+		dockerContextName = os.Getenv("DOCKER_CONTEXT")
+		if dockerContextName != "" {
+			util.Success("From DOCKER_CONTEXT=%s", dockerContextName)
+		}
+
+		util.Success("Using Docker host: %s", dockerHost)
+		dockerHost = os.Getenv("DOCKER_HOST")
+		if dockerHost != "" {
+			util.Success("From DOCKER_HOST=%s", dockerHost)
+		}
+	}
+
+	// Show TLS configuration
+	dockerTLSVerify := os.Getenv("DOCKER_TLS_VERIFY")
+	dockerTLS := os.Getenv("DOCKER_TLS")
+	dockerCertPath := os.Getenv("DOCKER_CERT_PATH")
+	if dockerTLSVerify != "" {
+		util.Success("DOCKER_TLS_VERIFY=%s (TLS enabled with verification)", dockerTLSVerify)
+	} else if dockerTLS != "" {
+		util.Success("DOCKER_TLS=%s (TLS enabled without verification)", dockerTLS)
+	} else {
+		util.Success("TLS not configured (no DOCKER_TLS_VERIFY or DOCKER_TLS)")
+	}
+	if dockerCertPath != "" {
+		util.Success("DOCKER_CERT_PATH=%s", dockerCertPath)
+	}
 }
 
 func registerUtilityDockercheckCmd() {

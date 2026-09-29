@@ -17,6 +17,7 @@ var omitKeys string
 var DebugConfigYamlCmd = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "configyaml [project]",
+	Annotations:       map[string]string{NoDockerCommand: "true"},
 	Short:             "Prints the project config.*.yaml usage",
 	Example:           "ddev utility configyaml, ddev utility configyaml <projectname>, ddev utility configyaml --full-yaml, ddev utility configyaml --omit-keys=web_environment",
 	Run: func(_ *cobra.Command, args []string) {

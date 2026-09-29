@@ -10,8 +10,9 @@ import (
 
 // DebugMessageConditionsCmd implements the ddev utility message-conditions command
 var DebugMessageConditionsCmd = &cobra.Command{
-	Use:   "message-conditions",
-	Short: "Show message conditions of this version of ddev",
+	Use:         "message-conditions",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Show message conditions of this version of ddev",
 	Run: func(_ *cobra.Command, _ []string) {
 		conditions := remoteconfig.ListConditions()
 

@@ -22,9 +22,10 @@ var addonUpdateCheckerURLs = []string{
 
 // AddonUpdateCheckerCmd implements the "ddev utility addon-update-checker" command
 var AddonUpdateCheckerCmd = &cobra.Command{
-	Use:   "addon-update-checker",
-	Args:  cobra.NoArgs,
-	Short: "Run the DDEV add-on update checker script (for add-on developers)",
+	Use:         "addon-update-checker",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Args:        cobra.NoArgs,
+	Short:       "Run the DDEV add-on update checker script (for add-on developers)",
 	Long: `Fetch and run the DDEV add-on update checker script from https://ddev.com/s/addon-update-checker.sh
 This is a tool for add-on developers to verify their add-on's scripts and tooling are up to date.
 

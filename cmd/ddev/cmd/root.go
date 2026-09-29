@@ -56,6 +56,12 @@ Support: https://docs.ddev.com/en/stable/users/support/`,
 		_ = cmd.Help()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if !canRunWithoutDocker(cmd) {
+			if _, err := dockerutil.GetDockerVersion(); err != nil {
+				util.Failed("Docker error: %v\nFor help go to: https://docs.ddev.com/en/stable/users/install/docker-installation/#troubleshooting-docker", err)
+			}
+		}
+
 		// Most commands that can start containers offer `-y`, spelled either
 		// `--skip-confirmation` or `--yes`; honor it for the upgrade prompt
 		// regardless of which command we ended up in.
@@ -163,7 +169,7 @@ func Execute() {
 	}
 }
 
-// Setup performs the Docker/filesystem-dependent setup that used to run
+// Setup performs the filesystem-dependent setup that used to run
 // implicitly via init(), which meant it ran before main() even started -
 // including before main()'s "refuse to run as root" check. It must run
 // once, explicitly, before RootCmd.Execute() dispatches to a command.
@@ -197,19 +203,33 @@ func init() {
 	}
 }
 
-// setupRootCmd does the Docker/filesystem-dependent RootCmd setup that
+// NoDockerCommand is the annotation for a command that works without Docker.
+// Subcommands don't inherit it, so a parent that only prints help can carry it.
+const NoDockerCommand = "noDocker"
+
+// canRunWithoutDocker reports whether cmd can run without Docker: bare ddev,
+// a NoDockerCommand-annotated command, or help and completion.
+func canRunWithoutDocker(cmd *cobra.Command) bool {
+	if _, ok := cmd.Annotations[NoDockerCommand]; ok || !cmd.HasParent() {
+		return true
+	}
+	top := cmd
+	for top.Parent().HasParent() {
+		top = top.Parent()
+	}
+	// Cobra adds these itself, so they can't carry the annotation
+	switch top.Name() {
+	case "help", "completion", cobra.ShellCompRequestCmd, cobra.ShellCompNoDescRequestCmd:
+		return true
+	}
+	return false
+}
+
+// setupRootCmd does the filesystem-dependent RootCmd setup that
 // cannot run at package init() time: it needs to run after main()'s
 // root-privilege check, and needs the active project root (if any),
 // computed once by Setup(), rather than discovering it again itself.
 func setupRootCmd(activeAppRoot string, activeAppRootErr error) {
-	// Determine if Docker is running by getting the version.
-	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
-	_, err := dockerutil.GetDockerVersion()
-
-	if err != nil && !dockerutil.CanRunWithoutDocker() {
-		util.Failed("Docker error: %v\nFor help go to: https://docs.ddev.com/en/stable/users/install/docker-installation/#troubleshooting-docker", err)
-	}
-
 	// Populate custom/script commands so they're visible.
 	// We really don't want ~/.ddev or .ddev/homeadditions to have root ownership, breaks things.
 	if os.Geteuid() != 0 {

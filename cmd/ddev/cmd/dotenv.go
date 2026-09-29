@@ -12,8 +12,9 @@ import (
 
 // DotEnvCmd is the top-level "ddev dotenv" command
 var DotEnvCmd = &cobra.Command{
-	Use:   "dotenv [command]",
-	Short: "Commands for managing the contents of .env files",
+	Use:         "dotenv [command]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Commands for managing the contents of .env files",
 	Run: func(cmd *cobra.Command, _ []string) {
 		err := cmd.Usage()
 		util.CheckErr(err)
@@ -22,8 +23,9 @@ var DotEnvCmd = &cobra.Command{
 
 // DotEnvGlobalCmd is the "ddev dotenv global" command
 var DotEnvGlobalCmd = &cobra.Command{
-	Use:   "global [command]",
-	Short: "Commands for managing the contents of global .env files",
+	Use:         "global [command]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Commands for managing the contents of global .env files",
 	Run: func(cmd *cobra.Command, _ []string) {
 		err := cmd.Usage()
 		util.CheckErr(err)

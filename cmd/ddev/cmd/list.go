@@ -9,10 +9,11 @@ var listCommandSettings = ddevapp.ListCommandSettings{}
 
 // ListCmd represents the list command
 var ListCmd = &cobra.Command{
-	Use:     "list",
-	Short:   "List projects",
-	Long:    `List projects. Shows all projects by default, shows active projects only with --active-only`,
-	Aliases: []string{"l", "ls"},
+	Use:         "list",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "List projects",
+	Long:        `List projects. Shows all projects by default, shows active projects only with --active-only`,
+	Aliases:     []string{"l", "ls"},
 	Example: `ddev list
 ddev list --active-only
 ddev list -A

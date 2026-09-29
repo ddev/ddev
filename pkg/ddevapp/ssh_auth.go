@@ -229,20 +229,15 @@ func RenderSSHAuthStatus() string {
 	return fmt.Sprintf("\nssh-auth status: %v", renderedStatus)
 }
 
-// GetSSHAuthStatus outputs sshAuth status and warning if not
-// running or healthy, as applicable.
+// GetSSHAuthStatus returns the ssh-agent container health, or stopped
+// if the container isn't found, like GetRouterStatus().
 func GetSSHAuthStatus() string {
 	label := map[string]string{
 		"com.docker.compose.project": SSHAuthName,
 		"com.docker.compose.oneoff":  "False",
 	}
 	c, err := dockerutil.FindContainerByLabels(label)
-
-	if err != nil {
-		util.Error("Failed to execute FindContainerByLabels(%v): %v", label, err)
-		return SiteStopped
-	}
-	if c == nil {
+	if err != nil || c == nil {
 		return SiteStopped
 	}
 	health, _ := dockerutil.GetContainerHealth(c)

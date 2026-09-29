@@ -45,9 +45,10 @@ type eventCache struct {
 
 // DebugGobDecodeCmd implements the ddev utility gob-decode command
 var DebugGobDecodeCmd = &cobra.Command{
-	Use:    "gob-decode [file]",
-	Short:  "Decode and display contents of a gob-encoded file",
-	Hidden: true,
+	Use:         "gob-decode [file]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Decode and display contents of a gob-encoded file",
+	Hidden:      true,
 	Long: `Decode and display the contents of Go gob-encoded binary files.
 
 This command can decode various gob files used by DDEV, including:

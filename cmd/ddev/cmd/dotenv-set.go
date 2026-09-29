@@ -16,8 +16,9 @@ import (
 
 // DotEnvSetCmd implements the "ddev dotenv set" command
 var DotEnvSetCmd = &cobra.Command{
-	Use:   "set [file]",
-	Short: "Write values from the command line to a .env file",
+	Use:         "set [file]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Write values from the command line to a .env file",
 	Long: `Create or update a .env file with values specified via long flags from the command line.
 Flags in the format --env-key=value will be converted to environment variable names like ENV_KEY="value".
 Provide the path relative to the project root when specifying the file.
@@ -43,8 +44,9 @@ ddev dotenv set .ddev/.env.web.local --api-key=secret`,
 
 // DotEnvGlobalSetCmd implements the "ddev dotenv global set" command
 var DotEnvGlobalSetCmd = &cobra.Command{
-	Use:   "set [file]",
-	Short: "Write values from the command line to a global .env file",
+	Use:         "set [file]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Write values from the command line to a global .env file",
 	Long: `Create or update a global .env file, which applies to every project, with values specified via long flags from the command line.
 Flags in the format --env-key=value will be converted to environment variable names like ENV_KEY="value".
 Name the file as .ddev/<file>, the same way as in a project; it is written to the global DDEV directory.

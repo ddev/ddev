@@ -8,9 +8,10 @@ import (
 
 // NvmCmd implements the ddev nvm command
 var NvmCmd = &cobra.Command{
-	Use:    "nvm [args]",
-	Hidden: true,
-	Short:  "nvm has been removed from DDEV",
+	Use:         "nvm [args]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Hidden:      true,
+	Short:       "nvm has been removed from DDEV",
 	Long: `The 'ddev nvm' command has been removed in DDEV v1.25.0.
 
 Use the 'nodejs_version' configuration in .ddev/config.yaml instead:

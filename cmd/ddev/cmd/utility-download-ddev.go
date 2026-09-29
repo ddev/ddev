@@ -33,8 +33,9 @@ var (
 
 // DownloadDdevCmd implements the "ddev utility download-ddev" command
 var DownloadDdevCmd = &cobra.Command{
-	Use:   "download-ddev",
-	Short: "Download ddev and ddev-hostname binaries built by CI or a release",
+	Use:         "download-ddev",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Download ddev and ddev-hostname binaries built by CI or a release",
 	Long: `Download the ddev and ddev-hostname binaries built by DDEV CI for a given
 source (PR, branch, commit, release tag, latest stable release, or main HEAD)
 and write them into a directory. Exactly one source flag is required.

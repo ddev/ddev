@@ -498,6 +498,10 @@ func (app *DdevApp) MutagenSyncFlush() error {
 	if !app.IsMutagenEnabled() {
 		return nil
 	}
+	// Without Docker no container is running to sync with
+	if _, err := dockerutil.GetDockerVersion(); err != nil {
+		return nil
+	}
 	if stat, _ := app.SiteStatus(); stat == SiteStopped {
 		return nil
 	}

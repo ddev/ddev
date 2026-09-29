@@ -29,6 +29,7 @@ import (
 var DescribeCommand = &cobra.Command{
 	ValidArgsFunction: ddevapp.GetProjectNamesFunc("all", 1),
 	Use:               "describe [projectname]",
+	Annotations:       map[string]string{NoDockerCommand: "true"},
 	Aliases:           []string{"status", "st", "desc"},
 	Short:             "Get a detailed description of a running DDEV project.",
 	Long: `Get a detailed description of a running DDEV project. Describe provides basic
@@ -54,7 +55,9 @@ running 'ddev describe <projectname>'.`,
 		}
 
 		// Ensure we have all services to describe for never-started projects.
-		if !fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
+		// Rendering needs Docker, so without it such a project shows only web and db.
+		_, dockerErr := dockerutil.GetDockerVersion()
+		if dockerErr == nil && !fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
 			_ = app.DockerEnv()
 			err = app.WriteDockerComposeYAML()
 			if err != nil {
@@ -123,7 +126,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 	}
 	dockerPlatform, err := version.GetDockerPlatform()
 	if err != nil {
-		util.Warning("Unable to determine Docker platform: %v", err)
+		dockerPlatform = util.ColorizeText(err.Error(), "red")
 	}
 
 	router := globalconfig.DdevGlobalConfig.Router

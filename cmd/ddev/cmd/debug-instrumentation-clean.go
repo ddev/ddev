@@ -8,8 +8,9 @@ import (
 
 // DebugInstrumentationCleanCmd implements the ddev utility instrumentation clean command
 var DebugInstrumentationCleanCmd = &cobra.Command{
-	Use:   "clean",
-	Short: "Removes usage statistics from the local cache",
+	Use:         "clean",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Removes usage statistics from the local cache",
 	Run: func(_ *cobra.Command, _ []string) {
 		amplitude.Clean()
 

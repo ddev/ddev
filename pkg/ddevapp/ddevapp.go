@@ -193,6 +193,10 @@ func (app *DdevApp) Init(basePath string) error {
 	}
 
 	*app = *newApp
+	// Without Docker there is no web container that could conflict
+	if _, err := dockerutil.GetDockerVersion(); err != nil {
+		return nil
+	}
 	web, err := app.FindContainerByType("web")
 
 	if err != nil {
@@ -323,9 +327,13 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 	appDesc["dbimg"] = app.GetDBImage()
 	appDesc["services"] = map[string]map[string]any{}
 
-	containers, err := dockerutil.GetAppContainers(app.Name)
-	if err != nil {
-		return nil, err
+	var containers []container.Summary
+	// Without Docker, services come only from the compose file below
+	if _, dockerErr := dockerutil.GetDockerVersion(); dockerErr == nil {
+		containers, err = dockerutil.GetAppContainers(app.Name)
+		if err != nil {
+			return nil, err
+		}
 	}
 	services := appDesc["services"].(map[string]map[string]any)
 	for _, k := range containers {
@@ -1224,6 +1232,11 @@ func (app *DdevApp) SiteStatus() (string, string) {
 	_, err := CheckForConf(app.GetAppRoot())
 	if err != nil {
 		return SiteConfigMissing, SiteConfigMissing
+	}
+
+	// Report stopped, like the router and ssh-agent do, instead of no status
+	if _, err := dockerutil.GetDockerVersion(); err != nil {
+		return SiteStopped, SiteStopped
 	}
 
 	statuses := map[string]string{"web": ""}

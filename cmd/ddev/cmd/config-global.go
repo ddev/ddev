@@ -27,10 +27,11 @@ var (
 
 // configGlobalCommand is the the `ddev config global` command
 var configGlobalCommand = &cobra.Command{
-	Use:     "global [flags]",
-	Short:   "Change global configuration",
-	Example: "ddev config global --instrumentation-opt-in=false\nddev config global --omit-containers=ddev-ssh-agent",
-	Run:     handleGlobalConfig,
+	Use:         "global [flags]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Change global configuration",
+	Example:     "ddev config global --instrumentation-opt-in=false\nddev config global --omit-containers=ddev-ssh-agent",
+	Run:         handleGlobalConfig,
 }
 
 // handleGlobalConfig handles all the flag processing for global config

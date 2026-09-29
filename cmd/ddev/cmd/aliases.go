@@ -13,10 +13,11 @@ import (
 
 // AliasesCmd implements the command to list all command aliases
 var AliasesCmd = &cobra.Command{
-	Use:     "aliases",
-	Short:   "Shows all aliases for each command in the current context (global or project).",
-	Example: `ddev aliases`,
-	Args:    cobra.NoArgs,
+	Use:         "aliases",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Shows all aliases for each command in the current context (global or project).",
+	Example:     `ddev aliases`,
+	Args:        cobra.NoArgs,
 	Run: func(_ *cobra.Command, _ []string) {
 		var out bytes.Buffer
 		t := table.NewWriter()

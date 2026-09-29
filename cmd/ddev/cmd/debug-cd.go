@@ -22,8 +22,9 @@ var (
 
 // DebugCdCmd implements the ddev utility cd command
 var DebugCdCmd = &cobra.Command{
-	Use:   "cd",
-	Short: "Use the 'ddevcd' function to quickly change to your project directory",
+	Use:         "cd",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Use the 'ddevcd' function to quickly change to your project directory",
 	Long: heredoc.Doc(fmt.Sprintf(`
 		To enable the 'ddevcd' function, source the ddev.sh script from your rc-script.
 
@@ -64,16 +65,12 @@ var DebugCdCmd = &cobra.Command{
 			if len(args) != 1 {
 				util.Failed("This command only takes one argument: project-name")
 			}
-			projectName := args[0]
-			originalRunValidateConfig := ddevapp.RunValidateConfig
-			ddevapp.RunValidateConfig = false
-			app, err := ddevapp.GetActiveApp(projectName)
+			appRoot, err := ddevapp.GetActiveAppRoot(args[0])
 			if err != nil {
 				projects, _ := cmd.ValidArgsFunction(cmd, nil, "")
 				util.Failed("Usage: 'ddevcd project-name' where project name matches one of: %s", strings.Join(projects, ", "))
 			}
-			ddevapp.RunValidateConfig = originalRunValidateConfig
-			output.UserOut.Println(app.AppRoot)
+			output.UserOut.Println(appRoot)
 			return
 		}
 		output.UserOut.Println(cmd.Long)

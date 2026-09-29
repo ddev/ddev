@@ -12,8 +12,9 @@ import (
 
 // DotEnvGetCmd implements the "ddev dotenv get" command
 var DotEnvGetCmd = &cobra.Command{
-	Use:   "get [file]",
-	Short: "Get the value of an environment variable from a .env file",
+	Use:         "get [file]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Get the value of an environment variable from a .env file",
 	Long: `Retrieve the value of an environment variable specified via a long flag from a .env file.
 Provide the path relative to the project root when specifying the file.`,
 	Example: `ddev dotenv get .env --app-key
@@ -35,8 +36,9 @@ ddev dotenv get .ddev/.env.web.local --api-key`,
 
 // DotEnvGlobalGetCmd implements the "ddev dotenv global get" command
 var DotEnvGlobalGetCmd = &cobra.Command{
-	Use:   "get [file]",
-	Short: "Get the value of an environment variable from a global .env file",
+	Use:         "get [file]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Get the value of an environment variable from a global .env file",
 	Long: `Retrieve the value of an environment variable specified via a long flag from a global .env file.
 Name the file as .ddev/<file>, the same way as in a project; it is read from the global DDEV directory.`,
 	Example: `ddev dotenv global get .ddev/.env.web --api-url
