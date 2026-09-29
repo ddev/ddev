@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # delete-image-tags.sh --keep-set <file> (--tag <org/repo:tag>... | --tags-from <file|->)
-#                      [--execute] [--org <org>] [--max-delete <n>]
-#                      [--min-age-days <n>] [--pull-grace-days <n>]
+#                      [--execute] [--docker-org <org>] [--max-delete <n>]
+#                      [--older-than-days <n>] [--not-pulled-for-days <n>]
 #
 # Example, a dry run of a report's candidates:
 #   containers/delete-image-tags.sh --keep-set keep-set.txt --tags-from candidates.txt
@@ -20,9 +20,9 @@
 #   --tags-from <file>      tags to delete, separated by whitespace or commas;
 #                           "-" reads stdin
 #   --execute               delete for real; without it, only print
-#   --org <org>             the only organization allowed [DOCKER_ORG, ddev]
+#   --docker-org <org>      the only organization allowed [DOCKER_ORG, ddev]
 #   --max-delete <n>        refuse longer lists [CLEANUP_MAX_DELETE, 1000]
-#   --min-age-days <n>, --pull-grace-days <n>
+#   --older-than-days <n>, --not-pulled-for-days <n>
 #                           the candidate rules, as in image-tag-cleanup-candidates.sh
 # Credentials, environment only so they stay out of process listings:
 #   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN - needed with --execute
@@ -64,10 +64,10 @@ while [ "$#" -gt 0 ]; do
     --keep-set) KEEP_SET="$2" ;;
     --tag) echo "$2" >> "$WORKDIR/given" ;;
     --tags-from) if [ "$2" = "-" ]; then cat; else cat "$2"; fi >> "$WORKDIR/given" ;;
-    --org) export DOCKER_ORG="$2" ;;
+    --docker-org) export DOCKER_ORG="$2" ;;
     --max-delete) CLEANUP_MAX_DELETE="$2" ;;
-    --min-age-days) export CLEANUP_MIN_AGE_DAYS="$2" ;;
-    --pull-grace-days) export CLEANUP_PULL_GRACE_DAYS="$2" ;;
+    --older-than-days) export CLEANUP_OLDER_THAN_DAYS="$2" ;;
+    --not-pulled-for-days) export CLEANUP_NOT_PULLED_FOR_DAYS="$2" ;;
     *) die "unknown argument '$1'; see the header of $0" ;;
   esac
   shift 2
@@ -84,7 +84,7 @@ while IFS= read -r ref; do
   "$SCRIPT_DIR/validate-image-repo.sh" "${ref%%:*}" || die "'${ref}' is not in a repository this project publishes"
 done < "$WORKDIR/requested"
 
-CLEANUP_REPOS="$(sed -E 's|^[^/]+/([^:]+):.*|\1|' "$WORKDIR/requested" | sort -u | tr '\n' ' ')" \
+CLEANUP_IMAGE_REPOS="$(sed -E 's|^[^/]+/([^:]+):.*|\1|' "$WORKDIR/requested" | sort -u | tr '\n' ' ')" \
   "$SCRIPT_DIR/image-tag-cleanup-candidates.sh" --keep-set "$KEEP_SET" | sort -u > "$WORKDIR/candidates"
 
 comm -23 "$WORKDIR/requested" "$WORKDIR/candidates" > "$WORKDIR/refused"

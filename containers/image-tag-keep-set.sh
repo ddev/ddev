@@ -1,25 +1,28 @@
 #!/usr/bin/env bash
 # image-tag-keep-set.sh [--open-prs] [--github-repo <owner/name>] [--ref <ref>]...
-#                       [--main-ref <ref>] [--main-days <n>]
+#                       [--main-branch-ref <ref>] [--keep-main-branch-days <n>]
 #
 # Example, from a checkout with tags fetched:
 #   containers/image-tag-keep-set.sh --open-prs > keep-set.txt
 #
 # Prints every image tag a ddev build may still pull, one per line: the *Tag
 # values in the version file at every v* release tag, at each --ref, and on
-# the main branch at any point in the last --main-days days. The cleanup
-# scripts never delete these. Fails rather than printing a short list, since a
+# the main branch at any point in the last --keep-main-branch-days days. The
+# cleanup scripts never delete these. Fails rather than printing a short list, since a
 # missing tag here is a tag that can be deleted.
 #
 # Flags (each also settable by the environment variable in brackets):
-#   --open-prs         also keep the tags of every open pull request's head,
-#                      fetched with gh into refs/keep/. Needs gh and network.
-#   --github-repo <o/n>  repository whose pull requests --open-prs reads
-#                      [GITHUB_REPOSITORY, else ddev/ddev]
-#   --ref <ref>        also keep the tags at this git ref; repeatable
-#   --main-ref <ref>   main branch ref [KEEP_MAIN_REF, else upstream/main,
-#                      else origin/main]
-#   --main-days <n>    how far back main's tags are kept [KEEP_MAIN_DAYS, 90]
+#   --open-prs                    also keep the tags of every open pull
+#                                 request's head, fetched with gh into
+#                                 refs/keep/. Needs gh and network.
+#   --github-repo <owner/name>    repository whose pull requests --open-prs
+#                                 reads [GITHUB_REPOSITORY, ddev/ddev]
+#   --ref <ref>                   also keep the tags at this git ref; repeatable
+#   --main-branch-ref <ref>       the main branch [KEEP_MAIN_BRANCH_REF, else
+#                                 upstream/main, else origin/main]
+#   --keep-main-branch-days <n>   keep every tag the main branch's version file
+#                                 has named in the last n days
+#                                 [KEEP_MAIN_BRANCH_DAYS, 90]
 
 set -eu -o pipefail
 
@@ -32,8 +35,8 @@ source "$SCRIPT_DIR/image-tag-args.sh"
 expand_equals_args "$@"
 set -- ${EXPANDED_ARGS[@]+"${EXPANDED_ARGS[@]}"}
 
-KEEP_MAIN_DAYS="${KEEP_MAIN_DAYS:-90}"
-KEEP_MAIN_REF="${KEEP_MAIN_REF:-}"
+KEEP_MAIN_BRANCH_DAYS="${KEEP_MAIN_BRANCH_DAYS:-90}"
+KEEP_MAIN_BRANCH_REF="${KEEP_MAIN_BRANCH_REF:-}"
 REPO="${GITHUB_REPOSITORY:-ddev/ddev}"
 OPEN_PRS=false
 REFS=()
@@ -46,22 +49,22 @@ die() {
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --open-prs) OPEN_PRS=true; shift ;;
-    --github-repo | --ref | --main-ref | --main-days)
+    --github-repo | --ref | --main-branch-ref | --keep-main-branch-days)
       [ "$#" -ge 2 ] || die "$1 needs a value"
       case "$1" in
         --github-repo) REPO="$2" ;;
         --ref) REFS+=("$2") ;;
-        --main-ref) KEEP_MAIN_REF="$2" ;;
-        --main-days) KEEP_MAIN_DAYS="$2" ;;
+        --main-branch-ref) KEEP_MAIN_BRANCH_REF="$2" ;;
+        --keep-main-branch-days) KEEP_MAIN_BRANCH_DAYS="$2" ;;
       esac
       shift 2 ;;
     *) die "unknown argument '$1'; see the header of $0" ;;
   esac
 done
 
-if [ -z "$KEEP_MAIN_REF" ]; then
-  KEEP_MAIN_REF=origin/main
-  git rev-parse -q --verify upstream/main >/dev/null && KEEP_MAIN_REF=upstream/main
+if [ -z "$KEEP_MAIN_BRANCH_REF" ]; then
+  KEEP_MAIN_BRANCH_REF=origin/main
+  git rev-parse -q --verify upstream/main >/dev/null && KEEP_MAIN_BRANCH_REF=upstream/main
 fi
 
 # Releases before v1.21 kept their tags in pkg/version.
@@ -111,16 +114,16 @@ while IFS= read -r tag; do
 done < <(git tag -l 'v*')
 [ "$releases" -gt 0 ] || die "no v* release tag has a version file; were tags fetched?"
 
-git rev-parse -q --verify "${KEEP_MAIN_REF}^{commit}" >/dev/null || die "main ref '${KEEP_MAIN_REF}' not found"
+git rev-parse -q --verify "${KEEP_MAIN_BRANCH_REF}^{commit}" >/dev/null || die "main ref '${KEEP_MAIN_BRANCH_REF}' not found"
 # The commit in effect when the window opened, plus every later change.
 MAIN_COMMITS="$(
-  git rev-list -1 --before="${KEEP_MAIN_DAYS} days ago" "$KEEP_MAIN_REF"
-  git rev-list --since="${KEEP_MAIN_DAYS} days ago" "$KEEP_MAIN_REF" -- "${VERSION_FILES[@]}"
-  git rev-parse "${KEEP_MAIN_REF}^{commit}"
+  git rev-list -1 --before="${KEEP_MAIN_BRANCH_DAYS} days ago" "$KEEP_MAIN_BRANCH_REF"
+  git rev-list --since="${KEEP_MAIN_BRANCH_DAYS} days ago" "$KEEP_MAIN_BRANCH_REF" -- "${VERSION_FILES[@]}"
+  git rev-parse "${KEEP_MAIN_BRANCH_REF}^{commit}"
 )"
 main_commits=0
 for commit in $MAIN_COMMITS; do
-  tags_at "$commit" || die "${KEEP_MAIN_REF} commit ${commit} has no version file"
+  tags_at "$commit" || die "${KEEP_MAIN_BRANCH_REF} commit ${commit} has no version file"
   main_commits=$((main_commits + 1))
 done
 
@@ -130,4 +133,4 @@ for ref in ${REFS[@]+"${REFS[@]}"}; do
 done
 
 sort -u "$OUT"
-echo "image-tag-keep-set.sh: $(sort -u "$OUT" | wc -l | tr -d ' ') tags from ${releases} releases (${skipped} without a version file), ${main_commits} ${KEEP_MAIN_REF} commits, ${#REFS[@]} other refs" >&2
+echo "image-tag-keep-set.sh: $(sort -u "$OUT" | wc -l | tr -d ' ') tags from ${releases} releases (${skipped} without a version file), ${main_commits} ${KEEP_MAIN_BRANCH_REF} commits, ${#REFS[@]} other refs" >&2

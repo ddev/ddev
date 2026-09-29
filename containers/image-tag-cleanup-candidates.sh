@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# image-tag-cleanup-candidates.sh --keep-set <file> [--explain <file>]
-#                                 [--org <org>] [--repo <name>]...
-#                                 [--min-age-days <n>] [--pull-grace-days <n>]
+# image-tag-cleanup-candidates.sh --keep-set <file> [--decisions <file>]
+#                                 [--docker-org <org>] [--image-repo <name>]...
+#                                 [--older-than-days <n>] [--not-pulled-for-days <n>]
 #
 # Example:
-#   containers/image-tag-cleanup-candidates.sh --keep-set keep-set.txt --explain decisions.tsv > candidates.txt
+#   containers/image-tag-cleanup-candidates.sh --keep-set keep-set.txt --decisions decisions.tsv > candidates.txt
 #
 # Prints the Docker Hub tags that look safe to delete, one <org>/<repo>:<tag>
 # per line. A candidate has a shape CI or a branch build produces, is absent
@@ -13,17 +13,17 @@
 # and unrecognized shapes are always kept.
 #
 # Flags (each also settable by the environment variable in brackets):
-#   --keep-set <file>       required: the tags to keep, one per line, as
-#                           written by image-tag-keep-set.sh. Never candidates.
-#   --explain <file>        also write every tag's keep/delete decision and
-#                           reason to <file> as TSV
-#   --org <org>             Docker Hub organization [DOCKER_ORG, ddev]
-#   --repo <name>           repository to check; repeatable
-#                           [CLEANUP_REPOS, else those in image-configs.sh]
-#   --min-age-days <n>      keep anything pushed more recently
-#                           [CLEANUP_MIN_AGE_DAYS, 90]
-#   --pull-grace-days <n>   keep anything pulled more recently
-#                           [CLEANUP_PULL_GRACE_DAYS, 30]
+#   --keep-set <file>            required: the tags to keep, one per line, as
+#                                written by image-tag-keep-set.sh
+#   --decisions <file>           also write every tag's keep/delete decision
+#                                and reason to <file> as TSV
+#   --docker-org <org>           Docker Hub organization [DOCKER_ORG, ddev]
+#   --image-repo <name>          Docker Hub repository to check; repeatable
+#                                [CLEANUP_IMAGE_REPOS, else image-configs.sh]
+#   --older-than-days <n>        only list tags pushed more than n days ago
+#                                [CLEANUP_OLDER_THAN_DAYS, 90]
+#   --not-pulled-for-days <n>    only list tags not pulled in the last n days;
+#                                0 ignores pulls [CLEANUP_NOT_PULLED_FOR_DAYS, 30]
 # Test hooks, environment only: NOW (epoch seconds), HASH_LEN (default 10).
 
 set -eu -o pipefail
@@ -39,8 +39,8 @@ set -- ${EXPANDED_ARGS[@]+"${EXPANDED_ARGS[@]}"}
 
 HUB_API="https://hub.docker.com"
 DOCKER_ORG="${DOCKER_ORG:-ddev}"
-CLEANUP_MIN_AGE_DAYS="${CLEANUP_MIN_AGE_DAYS:-90}"
-CLEANUP_PULL_GRACE_DAYS="${CLEANUP_PULL_GRACE_DAYS:-30}"
+CLEANUP_OLDER_THAN_DAYS="${CLEANUP_OLDER_THAN_DAYS:-90}"
+CLEANUP_NOT_PULLED_FOR_DAYS="${CLEANUP_NOT_PULLED_FOR_DAYS:-30}"
 NOW="${NOW:-$(date +%s)}"
 HASH_LEN="${HASH_LEN:-10}"
 
@@ -56,25 +56,25 @@ while [ "$#" -gt 0 ]; do
   [ "$#" -ge 2 ] || die "unknown argument '$1', or it needs a value; see the header of $0"
   case "$1" in
     --keep-set) KEEP_SET="$2" ;;
-    --explain) EXPLAIN="$2" ;;
-    --org) DOCKER_ORG="$2" ;;
-    --repo) FLAG_REPOS="${FLAG_REPOS} $2" ;;
-    --min-age-days) CLEANUP_MIN_AGE_DAYS="$2" ;;
-    --pull-grace-days) CLEANUP_PULL_GRACE_DAYS="$2" ;;
+    --decisions) EXPLAIN="$2" ;;
+    --docker-org) DOCKER_ORG="$2" ;;
+    --image-repo) FLAG_REPOS="${FLAG_REPOS} $2" ;;
+    --older-than-days) CLEANUP_OLDER_THAN_DAYS="$2" ;;
+    --not-pulled-for-days) CLEANUP_NOT_PULLED_FOR_DAYS="$2" ;;
     *) die "unknown argument '$1'; see the header of $0" ;;
   esac
   shift 2
 done
-[ -z "$FLAG_REPOS" ] || CLEANUP_REPOS="$FLAG_REPOS"
+[ -z "$FLAG_REPOS" ] || CLEANUP_IMAGE_REPOS="$FLAG_REPOS"
 [ -n "$KEEP_SET" ] || die "--keep-set <file> is required"
 [ -s "$KEEP_SET" ] || die "keep-set file '${KEEP_SET}' is missing or empty"
 
-if [ -z "${CLEANUP_REPOS:-}" ]; then
+if [ -z "${CLEANUP_IMAGE_REPOS:-}" ]; then
   # shellcheck source=containers/image-configs.sh
   source "$SCRIPT_DIR/image-configs.sh"
   for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
     IFS='|' read -r repo _ _ _ _ _ _ _ extra <<< "$entry"
-    CLEANUP_REPOS="${CLEANUP_REPOS:-} ${repo} ${extra}"
+    CLEANUP_IMAGE_REPOS="${CLEANUP_IMAGE_REPOS:-} ${repo} ${extra}"
   done
 fi
 
@@ -129,11 +129,11 @@ DECIDE='
 '
 
 : > "$WORKDIR/decisions.tsv"
-for repo in $CLEANUP_REPOS; do
+for repo in $CLEANUP_IMAGE_REPOS; do
   fetch_tags "$repo" > "$WORKDIR/tags.jsonl"
   [ -s "$WORKDIR/tags.jsonl" ] || die "${DOCKER_ORG}/${repo} lists no tags; refusing to trust the listing"
   jq -rs --rawfile keep "$KEEP_SET" --argjson now "$NOW" --argjson hl "$HASH_LEN" \
-    --argjson minage "$CLEANUP_MIN_AGE_DAYS" --argjson grace "$CLEANUP_PULL_GRACE_DAYS" \
+    --argjson minage "$CLEANUP_OLDER_THAN_DAYS" --argjson grace "$CLEANUP_NOT_PULLED_FOR_DAYS" \
     --arg org "$DOCKER_ORG" --arg repo "$repo" "$DECIDE" "$WORKDIR/tags.jsonl" >> "$WORKDIR/decisions.tsv"
 done
 

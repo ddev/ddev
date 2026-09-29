@@ -376,10 +376,10 @@ containers/image-tag-cleanup.sh
 Every setting has a flag, for example to list tags pushed more than 10 days ago whatever their recent pulls:
 
 ```bash
-containers/image-tag-cleanup.sh --min-age-days 10 --pull-grace-days 0
+containers/image-tag-cleanup.sh --older-than-days 10 --not-pulled-for-days 0
 ```
 
-`--delete` removes what it listed, after asking, and needs `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` in the environment. `--help` lists every flag. The steps also run separately: `image-tag-keep-set.sh`, `image-tag-cleanup-candidates.sh` and `delete-image-tags.sh`.
+`--execute` removes what it listed, after asking, and needs `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` in the environment. `--help` lists every flag. The steps also run separately: `image-tag-keep-set.sh`, `image-tag-cleanup-candidates.sh` and `delete-image-tags.sh`.
 
 ## Pull Requests
 

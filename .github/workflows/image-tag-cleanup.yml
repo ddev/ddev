@@ -33,8 +33,8 @@ on:
 # The scripts read these when set. Repository variables, all optional.
 env:
   DOCKER_ORG: "${{ vars.DOCKER_ORG || (github.repository_owner == 'ddev-test' && 'ddevhq' || 'ddev') }}"
-  CLEANUP_MIN_AGE_DAYS: ${{ vars.CLEANUP_MIN_AGE_DAYS }}
-  CLEANUP_PULL_GRACE_DAYS: ${{ vars.CLEANUP_PULL_GRACE_DAYS }}
+  CLEANUP_OLDER_THAN_DAYS: ${{ vars.CLEANUP_OLDER_THAN_DAYS }}
+  CLEANUP_NOT_PULLED_FOR_DAYS: ${{ vars.CLEANUP_NOT_PULLED_FOR_DAYS }}
   GH_TOKEN: ${{ github.token }}
 
 permissions:
@@ -58,7 +58,7 @@ jobs:
       - name: List candidates
         run: |
           set -eu -o pipefail
-          containers/image-tag-cleanup.sh --save-keep-set keep-set.txt --save-candidates candidates.txt --explain decisions.tsv
+          containers/image-tag-cleanup.sh --save-keep-set keep-set.txt --save-candidates candidates.txt --decisions decisions.tsv
           {
             echo "## Image tag cleanup candidates for ${DOCKER_ORG}"
             echo
@@ -129,7 +129,7 @@ jobs:
         run: |
           set -eu -o pipefail
           ARGS=()
-          [ "$EXECUTE" = true ] && ARGS+=(--delete)
+          [ "$EXECUTE" = true ] && ARGS+=(--execute)
           containers/image-tag-cleanup.sh --tags-from requested.txt "${ARGS[@]}" | tee deleted.txt
           {
             echo "## Image tag cleanup ($([ "$EXECUTE" = true ] && echo deleted || echo dry run))"

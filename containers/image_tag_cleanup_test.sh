@@ -109,43 +109,43 @@ commit_at 1 "open pull request"
 git -C "$REPO" checkout -q main
 
 keep_set() {
-  (cd "$REPO" && KEEP_MAIN_REF=main "$KEEP_SET_SH" "$@")
+  (cd "$REPO" && KEEP_MAIN_BRANCH_REF=main "$KEEP_SET_SH" "$@")
 }
 
 EXPECTED_KEEP="$(printf '%s\n' 1111111111 20190101_legacy_web 2222222222 2222222223 3333333333 3333333334 v0.9.0 v1.0.0 | sort)"
 assert_eq "$EXPECTED_KEEP" "$(keep_set 2>/dev/null)" "keep-set holds release tags, both version-file layouts, and main's window"
 assert_eq "$(printf '%s\n' "$EXPECTED_KEEP" 4444444444 | sort)" "$(keep_set --ref pr 2>/dev/null)" "keep-set adds the tags of each ref given"
-if (cd "$REPO" && KEEP_MAIN_REF=main KEEP_MAIN_DAYS=350 "$KEEP_SET_SH" 2>/dev/null) | grep -qx 0000000001; then
-  pass "KEEP_MAIN_DAYS widens main's window"
+if (cd "$REPO" && KEEP_MAIN_BRANCH_REF=main KEEP_MAIN_BRANCH_DAYS=350 "$KEEP_SET_SH" 2>/dev/null) | grep -qx 0000000001; then
+  pass "KEEP_MAIN_BRANCH_DAYS widens main's window"
 else
-  fail "KEEP_MAIN_DAYS=350 should keep a tag committed 300 days ago"
+  fail "KEEP_MAIN_BRANCH_DAYS=350 should keep a tag committed 300 days ago"
 fi
-if (cd "$REPO" && "$KEEP_SET_SH" --main-ref main --main-days 350 2>/dev/null) | grep -qx 0000000001; then
-  pass "--main-ref and --main-days do what their environment variables do"
+if (cd "$REPO" && "$KEEP_SET_SH" --main-branch-ref main --keep-main-branch-days 350 2>/dev/null) | grep -qx 0000000001; then
+  pass "--main-branch-ref and --keep-main-branch-days do what their environment variables do"
 else
-  fail "--main-days 350 should keep a tag committed 300 days ago"
+  fail "--keep-main-branch-days 350 should keep a tag committed 300 days ago"
 fi
-if (cd "$REPO" && "$KEEP_SET_SH" --main-ref=main --main-days=350 2>/dev/null) | grep -qx 0000000001; then
-  pass "--main-days=350 works like --main-days 350"
+if (cd "$REPO" && "$KEEP_SET_SH" --main-branch-ref=main --keep-main-branch-days=350 2>/dev/null) | grep -qx 0000000001; then
+  pass "--keep-main-branch-days=350 works like --keep-main-branch-days 350"
 else
-  fail "--main-days=350 should keep a tag committed 300 days ago"
+  fail "--keep-main-branch-days=350 should keep a tag committed 300 days ago"
 fi
 
 assert_fails_with "not found" "keep-set fails on a missing main ref" \
-  bash -c "cd '$REPO' && KEEP_MAIN_REF=nosuch '$KEEP_SET_SH'"
+  bash -c "cd '$REPO' && KEEP_MAIN_BRANCH_REF=nosuch '$KEEP_SET_SH'"
 assert_fails_with "not found" "keep-set fails on a missing extra ref" \
-  bash -c "cd '$REPO' && KEEP_MAIN_REF=main '$KEEP_SET_SH' --ref nosuch"
+  bash -c "cd '$REPO' && KEEP_MAIN_BRANCH_REF=main '$KEEP_SET_SH' --ref nosuch"
 
 NOTAGS="$WORKDIR/notags"
 git clone -q --no-tags "$REPO" "$NOTAGS"
 assert_fails_with "were tags fetched" "keep-set fails when no release tags are present" \
-  bash -c "cd '$NOTAGS' && KEEP_MAIN_REF=origin/main '$KEEP_SET_SH'"
+  bash -c "cd '$NOTAGS' && KEEP_MAIN_BRANCH_REF=origin/main '$KEEP_SET_SH'"
 
 printf 'package x\n' > "$REPO/pkg/versionconstants/versionconstants.go"
 git -C "$REPO" add -A
 commit_at 0 "version file without tags"
 assert_fails_with "names no image tags" "keep-set fails on a version file naming no tags" \
-  bash -c "cd '$REPO' && KEEP_MAIN_REF=main '$KEEP_SET_SH'"
+  bash -c "cd '$REPO' && KEEP_MAIN_BRANCH_REF=main '$KEEP_SET_SH'"
 
 # ---------------------------------------------------------------------------
 # curl stub, shared by the candidates and delete tests
@@ -259,11 +259,11 @@ serve_standard_fixture() {
 # image-tag-cleanup-candidates.sh
 # ---------------------------------------------------------------------------
 
-export CLEANUP_REPOS=ddev-webserver
+export CLEANUP_IMAGE_REPOS=ddev-webserver
 
 serve_standard_fixture
 EXPECTED_CANDIDATES="$(printf 'ddev/ddev-webserver:%s\n' 20240101_old_branch 20240101_old_branch-amd64 3333333333 bbbbbbbbbb eeeeeeeeee feature-bbbbbbbbbb | sort)"
-assert_eq "$EXPECTED_CANDIDATES" "$("$CANDIDATES_SH" --keep-set "$KEEP" --explain "$WORKDIR/explain.tsv" 2>/dev/null | sort)" \
+assert_eq "$EXPECTED_CANDIDATES" "$("$CANDIDATES_SH" --keep-set "$KEEP" --decisions "$WORKDIR/explain.tsv" 2>/dev/null | sort)" \
   "candidates are exactly the old, unpulled, unreferenced CI and branch tags, across pages"
 
 reason() {
@@ -281,7 +281,7 @@ assert_eq "keep: not a CI or branch tag" "$(reason 5)" "an unrecognized tag shap
 assert_eq "delete: pushed 400d ago, pulled 100d ago" "$(reason eeeeeeeeee)" "a candidate's reason gives its push and pull age"
 
 assert_eq "$(printf 'ddev/ddev-webserver:%s\n' 20240101_old_branch 20240101_old_branch-amd64 3333333333 bbbbbbbbbb cccccccccc feature-bbbbbbbbbb | sort)" \
-  "$(CLEANUP_PULL_GRACE_DAYS=200 CLEANUP_MIN_AGE_DAYS=5 "$CANDIDATES_SH" --keep-set "$KEEP" 2>/dev/null | sort)" \
+  "$(CLEANUP_NOT_PULLED_FOR_DAYS=200 CLEANUP_OLDER_THAN_DAYS=5 "$CANDIDATES_SH" --keep-set "$KEEP" 2>/dev/null | sort)" \
   "the push and pull thresholds are configurable"
 
 serve_standard_fixture
@@ -310,7 +310,7 @@ assert_fails_with "no listed tag is in the keep-set" "a keep-set matching nothin
 : > "$WORKDIR/empty-keep.txt"
 assert_fails_with "missing or empty" "an empty keep-set aborts" "$CANDIDATES_SH" --keep-set "$WORKDIR/empty-keep.txt"
 
-unset CLEANUP_REPOS
+unset CLEANUP_IMAGE_REPOS
 
 # ---------------------------------------------------------------------------
 # delete-image-tags.sh
@@ -372,7 +372,7 @@ assert_eq "2" "$(log_count DELETE)" "a failed deletion doesn't stop the rest"
 # ---------------------------------------------------------------------------
 
 CLEANUP_SH="$SCRIPT_DIR/image-tag-cleanup.sh"
-export CLEANUP_REPOS=ddev-webserver
+export CLEANUP_IMAGE_REPOS=ddev-webserver
 
 serve_standard_fixture
 output="$("$CLEANUP_SH" --keep-set "$KEEP" 2>/dev/null)"
@@ -380,9 +380,9 @@ assert_eq "$(printf 'would delete %s\n' $EXPECTED_CANDIDATES)" "$output" "the de
 assert_eq "0 0" "$(log_count POST) $(log_count DELETE)" "the default run neither logs in nor deletes"
 
 serve_standard_fixture
-assert_fails_with "needs --yes" "--delete of every candidate without a terminal needs --yes" \
-  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --keep-set "$KEEP" --delete </dev/null
-assert_eq "0" "$(log_count DELETE)" "a refused --delete deletes nothing"
+assert_fails_with "needs --yes" "--execute of every candidate without a terminal needs --yes" \
+  env DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --keep-set "$KEEP" --execute </dev/null
+assert_eq "0" "$(log_count DELETE)" "a refused --execute deletes nothing"
 
 serve_standard_fixture
 "$CLEANUP_SH" --keep-set "$KEEP" --save-keep-set "$WORKDIR/saved-keep.txt" --save-candidates "$WORKDIR/saved-candidates.txt" >/dev/null 2>&1
@@ -390,18 +390,22 @@ assert_eq "$(sort "$KEEP")" "$(sort "$WORKDIR/saved-keep.txt")" "--save-keep-set
 assert_eq "$(printf 'ddev/ddev-webserver:%s\n' $(echo "$EXPECTED_CANDIDATES" | sed 's/.*://') | sort)" "$(sort "$WORKDIR/saved-candidates.txt")" "--save-candidates writes the candidates found"
 
 serve_standard_fixture
-DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --keep-set "$KEEP" --delete --yes >/dev/null 2>&1 </dev/null
-assert_eq "$(echo "$EXPECTED_CANDIDATES" | wc -w | tr -d ' ')" "$(log_count DELETE)" "--delete --yes deletes every candidate"
+DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --keep-set "$KEEP" --execute --yes >/dev/null 2>&1 </dev/null
+assert_eq "$(echo "$EXPECTED_CANDIDATES" | wc -w | tr -d ' ')" "$(log_count DELETE)" "--execute --yes deletes every candidate"
 
 serve_standard_fixture
-output="$("$CLEANUP_SH" --keep-set "$KEEP" --min-age-days 10000 2>/dev/null)"
+output="$("$CLEANUP_SH" --keep-set "$KEEP" --older-than-days 10000 2>/dev/null)"
 assert_eq "image-tag-cleanup.sh: no tags to delete" "$output" "a flag sets the age rule the way its environment variable does"
 
 serve_standard_fixture
-output="$("$CLEANUP_SH" --keep-set="$KEEP" --min-age-days=10000 2>/dev/null)"
+output="$("$CLEANUP_SH" --keep-set="$KEEP" --older-than-days=10000 2>/dev/null)"
 assert_eq "image-tag-cleanup.sh: no tags to delete" "$output" "--flag=value works like --flag value"
 
-unset CLEANUP_REPOS
+serve_standard_fixture
+output="$(env -u CLEANUP_IMAGE_REPOS "$CLEANUP_SH" --keep-set "$KEEP" --docker-org ddev --image-repo ddev-webserver 2>/dev/null)"
+assert_eq "$(printf 'would delete %s\n' $EXPECTED_CANDIDATES)" "$output" "--docker-org and --image-repo select what is checked"
+
+unset CLEANUP_IMAGE_REPOS
 if [ "$FAILURES" -gt 0 ]; then
   echo "${FAILURES} test(s) failed" >&2
   exit 1

@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# image-tag-cleanup.sh [--delete [--yes]] [--tag <org/repo:tag>... | --tags-from <file|->]
-#                      [--keep-set <file>] [--no-open-prs] [--explain <file>]
-#                      [--org <org>] [--repo <name>]... [--min-age-days <n>]
-#                      [--pull-grace-days <n>] [--main-days <n>] [--main-ref <ref>]
+# image-tag-cleanup.sh [--execute [--yes]] [--tag <org/repo:tag>... | --tags-from <file|->]
+#                      [--keep-set <file>] [--no-open-prs] [--decisions <file>]
+#                      [--docker-org <org>] [--image-repo <name>]...
+#                      [--older-than-days <n>] [--not-pulled-for-days <n>]
+#                      [--keep-main-branch-days <n>] [--main-branch-ref <ref>]
 #                      [--github-repo <owner/name>] [--max-delete <n>]
 #                      [--save-keep-set <file>] [--save-candidates <file>]
 #
-# Finds unused Docker Hub image tags and, only with --delete, removes them.
+# Finds unused Docker Hub image tags and, only with --execute, removes them.
 # Run it from a checkout with tags fetched, with gh installed and logged in.
 # Flags take their value as "--flag value" or "--flag=value". Each step is a
 # script of its own, and each takes the flags shown here:
@@ -14,25 +15,33 @@
 #
 # Examples:
 #   containers/image-tag-cleanup.sh                     # what would be deleted
-#   containers/image-tag-cleanup.sh --min-age-days 10 --pull-grace-days 0
-#   containers/image-tag-cleanup.sh --delete            # asks first; needs DOCKERHUB_*
+#   containers/image-tag-cleanup.sh --older-than-days 10 --not-pulled-for-days 0
+#   containers/image-tag-cleanup.sh --execute                    # asks first; needs DOCKERHUB_*
 #
-# Flags not described in the scripts' own headers:
-#   --delete            delete for real; without it, only print. Deleting
-#                       every candidate asks first, or needs --yes without a terminal.
-#   --yes               don't ask before deleting
-#   --save-keep-set, --save-candidates <file>
-#                       also write the keep-set, or the candidate list, to <file>
-#   --tag, --tags-from  delete only these tags, not every candidate; each must
-#                       still be a candidate
-#   --keep-set <file>   use this keep-set instead of building one
-#   --no-open-prs       leave open pull requests' tags out of the keep-set
-#                       (unsafe: an open pull request may still need them)
-#   --github-repo <o/n> repository whose pull requests and version files matter
-#                       [GITHUB_REPOSITORY, ddev/ddev]
-# The rest are described in image-tag-cleanup-candidates.sh, image-tag-keep-set.sh
-# and delete-image-tags.sh. Credentials stay in the environment:
-#   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN - needed with --delete
+# Flags:
+#   --execute                   delete for real; without it, only print.
+#                               Deleting every candidate asks first, or needs
+#                               --yes without a terminal.
+#   --older-than-days <n>       only list tags pushed more than n days ago [90]
+#   --not-pulled-for-days <n>   only list tags not pulled in the last n days;
+#                               0 ignores pulls [30]
+#   --keep-main-branch-days <n> keep every tag the main branch's version file
+#                               has named in the last n days [90]
+#   --tag, --tags-from <file|->  delete only these tags, not every candidate;
+#                               each must still be a candidate
+#   --no-open-prs               leave open pull requests' tags out of the
+#                               keep-set (unsafe: they may still need them)
+#   --yes                       don't ask before deleting
+#   --keep-set <file>           use this keep-set instead of building one
+#   --save-keep-set <file>, --save-candidates <file>
+#                               also write the keep-set or the candidates
+#   --decisions <file>          also write every tag's keep/delete reason (TSV)
+#   --docker-org <org>, --image-repo <name>, --github-repo <owner/name>,
+#   --main-branch-ref <ref>, --max-delete <n>
+#                               see the other scripts' --help
+# Environment variables named in their --help set the same things. Credentials
+# are environment only:
+#   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN - needed with --execute
 
 set -eu -o pipefail
 
@@ -62,7 +71,7 @@ TAG_ARGS=()
 FLAG_REPOS=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --delete) DELETE=true; shift; continue ;;
+    --execute) DELETE=true; shift; continue ;;
     --yes) YES=true; shift; continue ;;
     --no-open-prs) OPEN_PRS=false; shift; continue ;;
   esac
@@ -71,20 +80,20 @@ while [ "$#" -gt 0 ]; do
     --keep-set) KEEP_SET="$2" ;;
     --save-keep-set) SAVE_KEEP="$2" ;;
     --save-candidates) SAVE_CANDIDATES="$2" ;;
-    --explain) EXPLAIN=(--explain "$2") ;;
+    --decisions) EXPLAIN=(--decisions "$2") ;;
     --tag | --tags-from) TAG_ARGS+=("$1" "$2") ;;
-    --org) export DOCKER_ORG="$2" ;;
-    --repo) FLAG_REPOS="${FLAG_REPOS} $2" ;;
-    --min-age-days) export CLEANUP_MIN_AGE_DAYS="$2" ;;
-    --pull-grace-days) export CLEANUP_PULL_GRACE_DAYS="$2" ;;
+    --docker-org) export DOCKER_ORG="$2" ;;
+    --image-repo) FLAG_REPOS="${FLAG_REPOS} $2" ;;
+    --older-than-days) export CLEANUP_OLDER_THAN_DAYS="$2" ;;
+    --not-pulled-for-days) export CLEANUP_NOT_PULLED_FOR_DAYS="$2" ;;
     --max-delete) export CLEANUP_MAX_DELETE="$2" ;;
-    --main-days | --main-ref) KEEP_ARGS+=("$1" "$2") ;;
+    --keep-main-branch-days | --main-branch-ref) KEEP_ARGS+=("$1" "$2") ;;
     --github-repo) KEEP_ARGS+=(--github-repo "$2") ;;
     *) die "unknown argument '$1'; see the header of $0" ;;
   esac
   shift 2
 done
-[ -z "$FLAG_REPOS" ] || export CLEANUP_REPOS="$FLAG_REPOS"
+[ -z "$FLAG_REPOS" ] || export CLEANUP_IMAGE_REPOS="$FLAG_REPOS"
 
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
@@ -107,7 +116,7 @@ if [ "${#TAG_ARGS[@]}" -eq 0 ]; then
   fi
   if [ "$DELETE" != true ]; then
     sort "$WORKDIR/candidates" | sed 's/^/would delete /'
-    echo "image-tag-cleanup.sh: dry run; ${count} tags would be deleted with --delete" >&2
+    echo "image-tag-cleanup.sh: dry run; ${count} tags would be deleted with --execute" >&2
     exit 0
   fi
   TAG_ARGS=(--tags-from "$WORKDIR/candidates")
