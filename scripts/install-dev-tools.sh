@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Install DDEV development tools in isolated environment
-# Works on macOS (brew) and Linux (apt)
+# Works on macOS (brew), Linux (apt), and Windows (Git Bash). On Windows it
+# installs only what `make staticrequired` needs: no aspell, so no
+# pyspelling checks, and no linkspector.
 
 set -euo pipefail
 
@@ -9,6 +11,21 @@ PYTHON_ENV="$INSTALL_DIR/python"
 NODE_ENV="$INSTALL_DIR/node"
 PUPPETEER_CACHE="$INSTALL_DIR/puppeteer"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+IS_WINDOWS=false
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*) IS_WINDOWS=true ;;
+esac
+
+# A Windows venv keeps its executables in Scripts, and npm's global prefix has
+# no bin directory there.
+if [[ "${IS_WINDOWS}" == true ]]; then
+  PYTHON_BIN="$PYTHON_ENV/Scripts"
+  NODE_BIN="$NODE_ENV"
+else
+  PYTHON_BIN="$PYTHON_ENV/bin"
+  NODE_BIN="$NODE_ENV/bin"
+fi
 
 DIRENV_RELOAD_NEEDED=false
 
@@ -24,7 +41,18 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 check_prerequisites() {
   log_info "Checking prerequisites..."
 
-  if ! command -v python3 >/dev/null 2>&1; then
+  # On Windows python3 is usually the Microsoft Store stub, which exists but
+  # does not run; only a command that answers --version counts.
+  SYSTEM_PYTHON=""
+  local candidate
+  for candidate in python3 python; do
+    if "${candidate}" --version >/dev/null 2>&1; then
+      SYSTEM_PYTHON="${candidate}"
+      break
+    fi
+  done
+
+  if [[ -z "${SYSTEM_PYTHON}" ]]; then
     log_error "Python 3 is required but not found. Please install Python 3.8+."
     exit 1
   fi
@@ -34,11 +62,16 @@ check_prerequisites() {
     exit 1
   fi
 
-  log_info "✓ Python: $(python3 --version)"
+  log_info "✓ Python: $("${SYSTEM_PYTHON}" --version)"
   log_info "✓ Node.js: $(node --version)"
 }
 
 install_system_deps() {
+  if [[ "${IS_WINDOWS}" == true ]]; then
+    log_info "Skipping aspell on Windows; pyspelling checks run in CI"
+    return
+  fi
+
   log_info "Installing system dependencies..."
 
   if command -v aspell >/dev/null 2>&1; then
@@ -65,21 +98,21 @@ setup_python_env() {
 
   # A venv is bound to the interpreter that created it, so a system Python
   # upgrade leaves it dead. Rebuild rather than fail halfway through pip.
-  if [[ -f "$PYTHON_ENV/bin/activate" ]] && ! "$PYTHON_ENV/bin/python3" -c '' 2>/dev/null; then
+  if [[ -f "$PYTHON_BIN/activate" ]] && ! "$PYTHON_BIN/python" -c '' 2>/dev/null; then
     log_warn "Python virtual environment is broken (system Python changed); recreating"
     rm -rf "$PYTHON_ENV"
   fi
 
-  if [[ ! -f "$PYTHON_ENV/bin/activate" ]]; then
+  if [[ ! -f "$PYTHON_BIN/activate" ]]; then
     log_info "Creating Python virtual environment..."
-    python3 -m venv "$PYTHON_ENV"
+    "${SYSTEM_PYTHON}" -m venv "$PYTHON_ENV"
   else
     log_info "✓ Python virtual environment already exists"
   fi
 
-  # Not `source bin/activate`: that would put $PYTHON_ENV/bin on PATH for the
-  # rest of this script, so verify_installation would not see the user's PATH.
-  "$PYTHON_ENV/bin/python3" -m pip install --upgrade pip setuptools wheel >/dev/null 2>&1
+  # Not `source activate`: that would put $PYTHON_BIN on PATH for the rest of
+  # this script, so verify_installation would not see the user's PATH.
+  "$PYTHON_BIN/python" -m pip install --upgrade pip setuptools wheel >/dev/null 2>&1
 }
 
 install_python_tools() {
@@ -94,20 +127,36 @@ EOF
 
   log_info "Installing Python packages (this may take a moment)..."
   # --upgrade so re-running updates; without it pip stops at "already satisfied".
-  "$PYTHON_ENV/bin/python3" -m pip install --upgrade -r "$INSTALL_DIR/python-requirements.txt" >/dev/null
+  "$PYTHON_BIN/python" -m pip install --upgrade -r "$INSTALL_DIR/python-requirements.txt" >/dev/null
 }
 
 setup_node_env() {
   log_info "Setting up Node.js environment..."
 
   mkdir -p "$NODE_ENV"
-  export NPM_CONFIG_PREFIX="$NODE_ENV"
+  # node.exe does not understand /c/... paths, so hand npm a C:/... one.
+  if [[ "${IS_WINDOWS}" == true ]]; then
+    export NPM_CONFIG_PREFIX="$(cygpath -m "$NODE_ENV")"
+  else
+    export NPM_CONFIG_PREFIX="$NODE_ENV"
+  fi
   export npm_config_update_notifier=false
   export npm_config_fund=false
 }
 
 install_node_tools() {
   log_info "Installing Node.js tools (this may take a moment)..."
+
+  if [[ "${IS_WINDOWS}" == true ]]; then
+    npm install -g \
+      markdownlint-cli \
+      textlint \
+      textlint-filter-rule-comments \
+      textlint-rule-no-todo \
+      textlint-rule-stop-words \
+      textlint-rule-terminology >/dev/null
+    return
+  fi
 
   # puppeteer's postinstall downloads linkspector's browser, which npm 12 blocks
   # unless allowlisted. PUPPETEER_CACHE_DIR keeps it out of ~/.cache/puppeteer.
@@ -261,18 +310,22 @@ matrix:
   - '${probe}/probe.md'
 EOF
 
-  check_tool pyspelling   "$PYTHON_ENV/bin" pyspelling --config "${probe}/probe.yml"
-  check_tool zensical     "$PYTHON_ENV/bin" zensical --version
-  check_tool markdownlint "$NODE_ENV/bin"   markdownlint --version
-  check_tool textlint     "$NODE_ENV/bin"   textlint --version
-  check_tool linkspector  "$NODE_ENV/bin"   linkspector --version
-  check_tool aspell       system            aspell --version
+  check_tool zensical     "$PYTHON_BIN" zensical --version
+  check_tool markdownlint "$NODE_BIN"   markdownlint --version
+  check_tool textlint     "$NODE_BIN"   textlint --version
+  if [[ "${IS_WINDOWS}" != true ]]; then
+    check_tool pyspelling   "$PYTHON_BIN" pyspelling --config "${probe}/probe.yml"
+    check_tool linkspector  "$NODE_BIN"   linkspector --version
+    check_tool aspell       system        aspell --version
+  fi
   rm -rf "${probe}"
 
   # linkspector launches a browser only for links its HTTP pass cannot settle,
   # so --version passes with no Chrome and a real run dies partway through.
   local pd; pd="$(puppeteer_dir)"
-  if [[ -z "${pd}" ]]; then
+  if [[ "${IS_WINDOWS}" == true ]]; then
+    :
+  elif [[ -z "${pd}" ]]; then
     log_error "puppeteer is missing; linkspector cannot check links that need a browser"
     failures=$((failures + 1))
   elif ! grep -q PUPPETEER_CACHE_DIR "$NODE_ENV/bin/linkspector" 2>/dev/null; then
@@ -320,7 +373,7 @@ main() {
   echo "• To make: always, the Makefile puts these directories on PATH itself"
   echo "• In DDEV projects: added to PATH via .envrc, if you use direnv"
   echo "• In your shell: add to your profile (.bashrc/.bash_profile/.zshrc):"
-  echo "  export PATH=\"$PYTHON_ENV/bin:$NODE_ENV/bin:\$PATH\""
+  echo "  export PATH=\"$PYTHON_BIN:$NODE_BIN:\$PATH\""
 
   if [[ "${DIRENV_RELOAD_NEEDED}" == true ]]; then
     echo

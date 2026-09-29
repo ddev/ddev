@@ -17,7 +17,7 @@ var (
 )
 
 const (
-	SEE_MASK_NOCLOSEPROCESS = 0x00000040
+	SEE_MASK_NOCLOSEPROCESS = 0x00000040 //nolint:revive,staticcheck // Win32 API name
 )
 
 type shellExecuteInfo struct {

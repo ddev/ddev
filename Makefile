@@ -9,7 +9,16 @@
 # gets the ones we installed. Missing directories on PATH are harmless.
 DEV_TOOLS_DIR ?= $(HOME)/.ddev-dev-tools
 DEV_TOOLS_PATH = $(DEV_TOOLS_DIR)/python/bin:$(DEV_TOOLS_DIR)/node/bin
+ifeq ($(OS),Windows_NT)
+# Native Windows make sees PATH as C:\...;C:\..., so joining with colons yields
+# garbage. Venvs use Scripts and npm has no bin there; the shell adds them in
+# require_tool, where $$PATH is already in its own format. EXTRA_PATH
+# rides along in DEV_TOOLS_PATH because the export below is skipped.
+DEV_TOOLS_DIR := $(shell cygpath -u '$(DEV_TOOLS_DIR)')
+DEV_TOOLS_PATH = $(DEV_TOOLS_DIR)/python/Scripts:$(DEV_TOOLS_DIR)/node$(if $(EXTRA_PATH),:$(EXTRA_PATH))
+else
 export PATH := $(DEV_TOOLS_PATH):$(EXTRA_PATH):$(PATH)
+endif
 
 BUILD_BASE_DIR ?= $(PWD)
 
@@ -287,7 +296,7 @@ check-image-tags:
 # $(2) replaces the install hint, for a tool install-dev-tools.sh does not
 # carry: that script covers only the Python and Node docs tooling.
 define require_tool
-	@command -v $(1) >/dev/null 2>&1 || { \
+	@PATH="$(DEV_TOOLS_PATH):$$PATH"; command -v $(1) >/dev/null 2>&1 || { \
 		echo "$(1) is required but was not found on PATH."; \
 		echo "$(if $(2),$(2),Install the development tools with: scripts/install-dev-tools.sh)"; \
 		$(if $(2),,echo "Expected location: $(DEV_TOOLS_DIR)";) \
@@ -306,7 +315,7 @@ endef
 # arguments. $(3) is the optional install hint that require_tool documents.
 define run_tool
 	$(call require_tool,$(1),$(3))
-	@PATH="$(PATH)" $(1) $(2)
+	@PATH="$(DEV_TOOLS_PATH):$$PATH" $(1) $(2)
 endef
 
 # Best to install markdownlint-cli locally with "npm install -g markdownlint-cli"
@@ -349,9 +358,7 @@ pyspelling:
 # Install textlint locally with `npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology`
 textlint:
 	@echo "textlint: "
-	$(call require_tool,textlint)
-	@set -eu -o pipefail; \
-	textlint {README.md,docs/**}
+	$(call run_tool,textlint,README.md docs/**)
 
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_amd64/ddev-hostname
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] || [ -z "$(DDEV_MACOS_CERT_FILE)" ]; then \
