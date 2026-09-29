@@ -210,6 +210,8 @@ After that, every project's containers use your agent when they start, with noth
 
 If `ddev auth ssh` says "Make sure that agent is running and holds your keys", your agent is stopped or locked; open it or load your keys, and DDEV picks it up again without a restart. To go back to adding key files, run `ddev config global --ssh-agent-upstream=""` and then `ddev auth ssh`.
 
+If a connection instead fails with "Too many authentication failures", the server capped how many keys it will try, and relaying a whole agent offers more than the few keys you'd add by hand; see [Too Many Authentication Failures](../extend/in-container-configuration.md#too-many-authentication-failures) to limit which key gets offered per host.
+
 ??? tip "macOS: which agent do my containers get?"
     That depends on your Docker provider:
 
