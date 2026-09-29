@@ -78,8 +78,8 @@ func TestSSHAgentUpstreamSocketPaths(t *testing.T) {
 		_ = os.RemoveAll(dir)
 	})
 	for value, expected := range map[string]string{
-		"":                                         "",
-		filepath.Join(dir, "agent.sock"):           filepath.Join(dir, "agent.sock"),
+		"":                               "",
+		filepath.Join(dir, "agent.sock"): filepath.Join(dir, "agent.sock"),
 		"~/tmp/" + filepath.Base(dir) + "/ssh.sock": filepath.Join(dir, "ssh.sock"),
 	} {
 		globalconfig.DdevGlobalConfig.SSHAgentUpstream = value
