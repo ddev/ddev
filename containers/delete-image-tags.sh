@@ -100,8 +100,7 @@ if [ "$EXECUTE" != true ]; then
   exit 0
 fi
 
-: "${DOCKERHUB_USERNAME:?delete-image-tags.sh: DOCKERHUB_USERNAME must be set with --execute}"
-: "${DOCKERHUB_TOKEN:?delete-image-tags.sh: DOCKERHUB_TOKEN must be set with --execute}"
+require_dockerhub_credentials
 TOKEN="$(jq -n --arg u "$DOCKERHUB_USERNAME" --arg p "$DOCKERHUB_TOKEN" '{username: $u, password: $p}' |
   curl -fsS -H "Content-Type: application/json" -X POST --data @- "${HUB_API}/v2/users/login/" | jq -r '.token // empty')" ||
   die "Docker Hub login failed"

@@ -349,9 +349,11 @@ assert_fails_with "exceeds CLEANUP_MAX_DELETE" "a list over the limit is refused
   env CLEANUP_MAX_DELETE=1 "$DELETE_SH" --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb --tag ddev/ddev-webserver:eeeeeeeeee
 
 serve_standard_fixture
-assert_fails_with "DOCKERHUB_USERNAME must be set" "--execute needs credentials" \
+assert_fails_with "needs DOCKERHUB_USERNAME DOCKERHUB_TOKEN" "--execute names every missing credential" \
   env -u DOCKERHUB_USERNAME -u DOCKERHUB_TOKEN "$DELETE_SH" --execute --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb
 assert_eq "0" "$(log_count DELETE)" "no deletion without credentials"
+assert_fails_with "needs DOCKERHUB_TOKEN set" "--execute names only the missing credential" \
+  env -u DOCKERHUB_TOKEN DOCKERHUB_USERNAME=u "$DELETE_SH" --execute --keep-set "$KEEP" --tag ddev/ddev-webserver:bbbbbbbbbb
 
 serve_standard_fixture
 printf 'ddev/ddev-webserver:bbbbbbbbbb\nddev/ddev-webserver:eeeeeeeeee, ddev/ddev-webserver:bbbbbbbbbb\n' |
@@ -373,6 +375,8 @@ assert_eq "2" "$(log_count DELETE)" "a failed deletion doesn't stop the rest"
 
 CLEANUP_SH="$SCRIPT_DIR/image-tag-cleanup.sh"
 export CLEANUP_IMAGE_REPOS=ddev-webserver
+assert_fails_with "needs DOCKERHUB_USERNAME DOCKERHUB_TOKEN" "the front door checks credentials before doing any work" \
+  env -u DOCKERHUB_USERNAME -u DOCKERHUB_TOKEN "$CLEANUP_SH" --execute --keep-set "$KEEP"
 
 serve_standard_fixture
 output="$("$CLEANUP_SH" --keep-set "$KEEP" 2>/dev/null)"
@@ -404,6 +408,15 @@ assert_eq "image-tag-cleanup.sh: no tags to delete" "$output" "--flag=value work
 serve_standard_fixture
 output="$(env -u CLEANUP_IMAGE_REPOS "$CLEANUP_SH" --keep-set "$KEEP" --docker-org ddev --image-repo ddev-webserver 2>/dev/null)"
 assert_eq "$(printf 'would delete %s\n' $EXPECTED_CANDIDATES)" "$output" "--docker-org and --image-repo select what is checked"
+
+serve_standard_fixture
+output="$("$CLEANUP_SH" --keep-set "$KEEP" --limit 2 2>/dev/null)"
+assert_eq "$(printf 'would delete %s\n' $EXPECTED_CANDIDATES | head -2)" "$output" "--limit keeps the first n candidates, sorted"
+serve_standard_fixture
+DOCKERHUB_USERNAME=u DOCKERHUB_TOKEN=t "$CLEANUP_SH" --keep-set "$KEEP" --limit 2 --execute --yes >/dev/null 2>&1 </dev/null
+assert_eq "2" "$(log_count DELETE)" "--limit 2 --execute deletes two"
+assert_fails_with "--limit must be a number" "--limit needs a number" "$CLEANUP_SH" --keep-set "$KEEP" --limit many
+assert_fails_with "not to --tag" "--limit with explicit tags is refused" "$CLEANUP_SH" --keep-set "$KEEP" --limit 2 --tag ddev/ddev-webserver:bbbbbbbbbb
 
 unset CLEANUP_IMAGE_REPOS
 if [ "$FAILURES" -gt 0 ]; then

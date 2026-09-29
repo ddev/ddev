@@ -4,7 +4,7 @@
 #                      [--docker-org <org>] [--image-repo <name>]...
 #                      [--older-than-days <n>] [--not-pulled-for-days <n>]
 #                      [--keep-main-branch-days <n>] [--main-branch-ref <ref>]
-#                      [--github-repo <owner/name>] [--max-delete <n>]
+#                      [--github-repo <owner/name>] [--max-delete <n>] [--limit <n>]
 #                      [--save-keep-set <file>] [--save-candidates <file>]
 #
 # Finds unused Docker Hub image tags and, only with --execute, removes them.
@@ -36,11 +36,18 @@
 #   --save-keep-set <file>, --save-candidates <file>
 #                               also write the keep-set or the candidates
 #   --decisions <file>          also write every tag's keep/delete reason (TSV)
-#   --docker-org <org>, --image-repo <name>, --github-repo <owner/name>,
-#   --main-branch-ref <ref>, --max-delete <n>
-#                               see the other scripts' --help
-# Environment variables named in their --help set the same things. Credentials
-# are environment only:
+#   --max-delete <n>            refuse to delete more than n tags, and delete
+#                               none rather than the first n [1000]
+#   --limit <n>                 act on only the first n candidates, sorted; the
+#                               rest stay candidates for a later run
+#   --docker-org <org>          Docker Hub organization [ddev]
+#   --image-repo <name>         Docker Hub repository to check; repeatable
+#                               [those in image-configs.sh]
+#   --github-repo <owner/name>  repository whose pull requests are kept
+#                               [ddev/ddev]
+#   --main-branch-ref <ref>     the main branch [upstream/main, else origin/main]
+# The environment variables listed in the other scripts' --help set the same
+# things. Credentials are environment only:
 #   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN - needed with --execute
 
 set -eu -o pipefail
@@ -66,6 +73,7 @@ KEEP_SET=""
 EXPLAIN=()
 SAVE_KEEP=""
 SAVE_CANDIDATES=""
+LIMIT="${CLEANUP_LIMIT:-}"
 KEEP_ARGS=()
 TAG_ARGS=()
 FLAG_REPOS=""
@@ -87,6 +95,7 @@ while [ "$#" -gt 0 ]; do
     --older-than-days) export CLEANUP_OLDER_THAN_DAYS="$2" ;;
     --not-pulled-for-days) export CLEANUP_NOT_PULLED_FOR_DAYS="$2" ;;
     --max-delete) export CLEANUP_MAX_DELETE="$2" ;;
+    --limit) LIMIT="$2" ;;
     --keep-main-branch-days | --main-branch-ref) KEEP_ARGS+=("$1" "$2") ;;
     --github-repo) KEEP_ARGS+=(--github-repo "$2") ;;
     *) die "unknown argument '$1'; see the header of $0" ;;
@@ -94,6 +103,9 @@ while [ "$#" -gt 0 ]; do
   shift 2
 done
 [ -z "$FLAG_REPOS" ] || export CLEANUP_IMAGE_REPOS="$FLAG_REPOS"
+[ "$DELETE" != true ] || require_dockerhub_credentials
+[ -z "$LIMIT" ] || [[ "$LIMIT" =~ ^[0-9]+$ ]] || die "--limit must be a number"
+[ -z "$LIMIT" ] || [ "${#TAG_ARGS[@]}" -eq 0 ] || die "--limit applies to the candidates found, not to --tag or --tags-from"
 
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
@@ -109,6 +121,10 @@ fi
 if [ "${#TAG_ARGS[@]}" -eq 0 ]; then
   "$SCRIPT_DIR/image-tag-cleanup-candidates.sh" --keep-set "$KEEP_SET" ${EXPLAIN[@]+"${EXPLAIN[@]}"} > "$WORKDIR/candidates"
   [ -z "$SAVE_CANDIDATES" ] || cp "$WORKDIR/candidates" "$SAVE_CANDIDATES"
+  if [ -n "$LIMIT" ]; then
+    sort "$WORKDIR/candidates" | head -n "$LIMIT" > "$WORKDIR/limited"
+    mv "$WORKDIR/limited" "$WORKDIR/candidates"
+  fi
   count="$(wc -l < "$WORKDIR/candidates" | tr -d ' ')"
   if [ "$count" -eq 0 ]; then
     echo "image-tag-cleanup.sh: no tags to delete"

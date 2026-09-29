@@ -15,3 +15,13 @@ expand_equals_args() {
     esac
   done
 }
+
+# Dies, naming every credential that is unset, so one run reports them all.
+# The Docker Hub login API takes a username with the token, so both are needed.
+require_dockerhub_credentials() {
+  local missing=() name
+  for name in DOCKERHUB_USERNAME DOCKERHUB_TOKEN; do
+    [ -n "${!name:-}" ] || missing+=("$name")
+  done
+  [ "${#missing[@]}" -eq 0 ] || die "--execute needs ${missing[*]} set in the environment"
+}
