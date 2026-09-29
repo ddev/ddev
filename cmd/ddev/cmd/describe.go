@@ -85,14 +85,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 	t := table.NewWriter()
 	t.SetOutputMirror(&out)
 	styles.SetGlobalTableStyle(t, false)
-	tWidth, _ := nodeps.GetTerminalWidthHeight()
-	urlPortWidth := float64(35)
-	infoWidth := 30
-	urlPortWidthFactor := float64(2.5)
-	if tWidth != 0 {
-		urlPortWidth = float64(tWidth) / urlPortWidthFactor
-		infoWidth = tWidth / 4
-	}
+	tWidth, _ := nodeps.GetTerminalWidthHeight(os.Stdout)
+	urlPortWidth := float64(tWidth) / 2.5
+	infoWidth := tWidth / 4
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting && isatty.IsTerminal(os.Stdout.Fd()) {
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{

@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -70,10 +71,7 @@ func ListInstalledAddons(app *ddevapp.DdevApp) {
 	styles.SetGlobalTableStyle(t, false)
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
-		termWidth, _ := nodeps.GetTerminalWidthHeight()
-		if termWidth == 0 {
-			termWidth = 80
-		}
+		termWidth, _ := nodeps.GetTerminalWidthHeight(os.Stdout)
 		// Table overhead for 4 columns: | col | col | col | col |
 		const tableOverhead = 14
 		usableWidth := termWidth - tableOverhead
@@ -117,10 +115,7 @@ func renderRepositoryList(addons []types.Addon, wrapTable bool) string {
 	t.SetOutputMirror(&out)
 	styles.SetGlobalTableStyle(t, false)
 
-	termWidth, _ := nodeps.GetTerminalWidthHeight()
-	if termWidth == 0 {
-		termWidth = 80
-	}
+	termWidth, _ := nodeps.GetTerminalWidthHeight(os.Stdout)
 	// Table overhead for 2 columns: | col | col |
 	const tableOverhead = 7
 	usableWidth := termWidth - tableOverhead

@@ -123,12 +123,13 @@ func IsInteger(s string) bool {
 	return err == nil
 }
 
-// GetTerminalWidthHeight returns width, height if on terminal
-// or 80, 0 if not. If we can't get terminal info, we'll assume 80x24
-func GetTerminalWidthHeight() (int, int) {
-	if term.IsTerminal(int(os.Stdout.Fd())) {
-		width, height, err := term.GetSize(int(os.Stdout.Fd()))
-		if err == nil {
+// GetTerminalWidthHeight returns the width and height of the terminal f writes
+// to, or 80x24 when f isn't a terminal or reports a zero size, as a pty with
+// no size set does.
+func GetTerminalWidthHeight(f *os.File) (int, int) {
+	if term.IsTerminal(int(f.Fd())) {
+		width, height, err := term.GetSize(int(f.Fd()))
+		if err == nil && width > 0 && height > 0 {
 			return width, height
 		}
 	}

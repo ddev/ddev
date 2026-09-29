@@ -3059,7 +3059,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 	}
 
 	// Find out terminal dimensions
-	columns, lines := nodeps.GetTerminalWidthHeight()
+	columns, lines := nodeps.GetTerminalWidthHeight(os.Stdout)
 
 	envVars["COLUMNS"] = strconv.Itoa(columns)
 	envVars["LINES"] = strconv.Itoa(lines)

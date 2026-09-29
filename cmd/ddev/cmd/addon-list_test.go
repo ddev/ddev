@@ -61,8 +61,8 @@ func TestRenderRepositoryListSorted(t *testing.T) {
 
 // TestRenderRepositoryListSnipsLongTitle verifies that a title exceeding the
 // calculated column width is truncated with "…" rather than overflowing.
-// In the test process GetTerminalWidthHeight returns 0, so the code falls back
-// to 80 columns → addonWidth = max(30, (80-7)*3/10) = 30.
+// The test process has no terminal, so GetTerminalWidthHeight returns 80
+// columns → addonWidth = max(30, (80-7)*3/10) = 30.
 func TestRenderRepositoryListSnipsLongTitle(t *testing.T) {
 	longTitle := strings.Repeat("x", 50)
 	addons := []types.Addon{

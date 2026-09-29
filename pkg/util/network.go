@@ -15,6 +15,7 @@ import (
 
 	"github.com/cheggaaa/pb/v3"
 	"github.com/ddev/ddev/pkg/github"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/hashicorp/go-retryablehttp"
 	"golang.org/x/term"
@@ -178,7 +179,11 @@ func DownloadFileExtended(destPath string, fileURL string, progressBar bool, sha
 		reader := io.Reader(resp.Body)
 		var bar *pb.ProgressBar
 		if progressBar {
-			bar = pb.Full.Start64(resp.ContentLength)
+			// pb looks up the width with `tput cols` when MINGW_PREFIX is set, and in Git Bash
+			// under Windows Terminal that makes bash stop waiting for ddev. Setting the width
+			// avoids the lookup; the -1 keeps the bar out of the last column so it can't wrap.
+			width, _ := nodeps.GetTerminalWidthHeight(os.Stderr)
+			bar = pb.New64(resp.ContentLength).SetTemplate(pb.Full).SetWidth(width - 1).Start()
 			reader = bar.NewProxyReader(resp.Body)
 		}
 
