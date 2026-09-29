@@ -516,6 +516,18 @@ func TestLaunchCommand(t *testing.T) {
 	out = strings.Trim(out, "\r\n")
 	assert.NoError(err, `couldn't run "%s", output=%s`, c, out)
 	assert.Equal(app.GetPrimaryURL(), out, "--print-url should print exactly the URL without DDEV_DEBUG, got: %s", out)
+
+	// The "&" checks that the URL reaches qrencode as a single argument
+	qrURL := "https://example.com/?a=1&b=2"
+	for noColor, fixture := range map[string]string{"": "qrcode.txt", "1": "qrcode_no_color.txt"} {
+		t.Setenv("NO_COLOR", noColor)
+		expectedQRCode, err := os.ReadFile(filepath.Join(origDir, "testdata", t.Name(), fixture))
+		require.NoError(t, err)
+		c = DdevBin + ` launch --qr "` + qrURL + `"`
+		out, err = exec.RunHostCommand("bash", "-c", c)
+		require.NoError(t, err, `couldn't run "%s" with NO_COLOR=%s, output=%s`, c, noColor, out)
+		require.Equal(t, qrURL+"\n"+strings.ReplaceAll(string(expectedQRCode), "\r\n", "\n"), strings.ReplaceAll(out, "\r\n", "\n"), "NO_COLOR=%s", noColor)
+	}
 }
 
 // TestMysqlCommand tests `ddev mysql`

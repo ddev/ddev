@@ -1007,3 +1007,44 @@ func TestGetAddonTarballURL(t *testing.T) {
 		})
 	}
 }
+
+func TestFixObsoleteAddons(t *testing.T) {
+	addonDir := testcommon.CreateTmpDir(t.Name() + "_addon")
+	site := testcommon.CreateTmpDir(t.Name() + "_site")
+	t.Cleanup(func() {
+		_ = os.RemoveAll(addonDir)
+		_ = os.RemoveAll(site)
+	})
+	err := os.WriteFile(filepath.Join(addonDir, "install.yaml"), []byte("name: qr\nproject_files:\n  - config.qr.yaml\n"), 0644)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(addonDir, "config.qr.yaml"), []byte("#ddev-generated\nwebimage_extra_packages:\n  - qrencode\n"), 0644)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(site, false)
+	require.NoError(t, err)
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	for repository, removed := range map[string]bool{"ddev/ddev-qr": true, "DDEV/ddev-qr": true, "someone/ddev-qr": false} {
+		t.Run(repository, func(t *testing.T) {
+			err := ddevapp.InstallAddonFromDirectory(app, addonDir, repository, "v1.0.0", false)
+			require.NoError(t, err)
+			app, err := ddevapp.NewApp(site, true)
+			require.NoError(t, err)
+			require.Contains(t, app.WebImageExtraPackages, "qrencode")
+
+			app.FixObsolete()
+
+			if removed {
+				require.NoFileExists(t, app.GetConfigPath("config.qr.yaml"))
+				require.Empty(t, ddevapp.GetInstalledAddonNames(app))
+				require.NotContains(t, app.WebImageExtraPackages, "qrencode")
+			} else {
+				require.FileExists(t, app.GetConfigPath("config.qr.yaml"))
+				require.Equal(t, []string{"qr"}, ddevapp.GetInstalledAddonNames(app))
+				err = ddevapp.RemoveAddon(app, "qr", false, true)
+				require.NoError(t, err)
+			}
+		})
+	}
+}
