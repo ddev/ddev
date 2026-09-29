@@ -8,7 +8,8 @@
 #
 # Finds unused Docker Hub image tags and, only with --delete, removes them.
 # Run it from a checkout with tags fetched, with gh installed and logged in.
-# Each step is a script of its own, and each takes the flags shown here:
+# Flags take their value as "--flag value" or "--flag=value". Each step is a
+# script of its own, and each takes the flags shown here:
 # image-tag-keep-set.sh, image-tag-cleanup-candidates.sh, delete-image-tags.sh.
 #
 # Examples:
@@ -35,9 +36,14 @@
 
 set -eu -o pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 case "${1:-}" in -h | --help) sed -n '2,/^$/s/^# \{0,1\}//p' "$0"; exit 0 ;; esac
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=containers/image-tag-args.sh
+source "$SCRIPT_DIR/image-tag-args.sh"
+expand_equals_args "$@"
+set -- ${EXPANDED_ARGS[@]+"${EXPANDED_ARGS[@]}"}
 
 die() {
   echo "image-tag-cleanup.sh: $*" >&2

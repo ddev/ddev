@@ -125,6 +125,11 @@ if (cd "$REPO" && "$KEEP_SET_SH" --main-ref main --main-days 350 2>/dev/null) | 
 else
   fail "--main-days 350 should keep a tag committed 300 days ago"
 fi
+if (cd "$REPO" && "$KEEP_SET_SH" --main-ref=main --main-days=350 2>/dev/null) | grep -qx 0000000001; then
+  pass "--main-days=350 works like --main-days 350"
+else
+  fail "--main-days=350 should keep a tag committed 300 days ago"
+fi
 
 assert_fails_with "not found" "keep-set fails on a missing main ref" \
   bash -c "cd '$REPO' && KEEP_MAIN_REF=nosuch '$KEEP_SET_SH'"
@@ -391,6 +396,10 @@ assert_eq "$(echo "$EXPECTED_CANDIDATES" | wc -w | tr -d ' ')" "$(log_count DELE
 serve_standard_fixture
 output="$("$CLEANUP_SH" --keep-set "$KEEP" --min-age-days 10000 2>/dev/null)"
 assert_eq "image-tag-cleanup.sh: no tags to delete" "$output" "a flag sets the age rule the way its environment variable does"
+
+serve_standard_fixture
+output="$("$CLEANUP_SH" --keep-set="$KEEP" --min-age-days=10000 2>/dev/null)"
+assert_eq "image-tag-cleanup.sh: no tags to delete" "$output" "--flag=value works like --flag value"
 
 unset CLEANUP_REPOS
 if [ "$FAILURES" -gt 0 ]; then

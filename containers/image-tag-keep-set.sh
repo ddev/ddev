@@ -23,7 +23,14 @@
 
 set -eu -o pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 case "${1:-}" in -h | --help) sed -n '2,/^$/s/^# \{0,1\}//p' "$0"; exit 0 ;; esac
+
+# shellcheck source=containers/image-tag-args.sh
+source "$SCRIPT_DIR/image-tag-args.sh"
+expand_equals_args "$@"
+set -- ${EXPANDED_ARGS[@]+"${EXPANDED_ARGS[@]}"}
 
 KEEP_MAIN_DAYS="${KEEP_MAIN_DAYS:-90}"
 KEEP_MAIN_REF="${KEEP_MAIN_REF:-}"

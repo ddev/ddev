@@ -28,9 +28,15 @@
 
 set -eu -o pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 case "${1:-}" in -h | --help) sed -n '2,/^$/s/^# \{0,1\}//p' "$0"; exit 0 ;; esac
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=containers/image-tag-args.sh
+source "$SCRIPT_DIR/image-tag-args.sh"
+expand_equals_args "$@"
+set -- ${EXPANDED_ARGS[@]+"${EXPANDED_ARGS[@]}"}
+
 HUB_API="https://hub.docker.com"
 DOCKER_ORG="${DOCKER_ORG:-ddev}"
 CLEANUP_MIN_AGE_DAYS="${CLEANUP_MIN_AGE_DAYS:-90}"
