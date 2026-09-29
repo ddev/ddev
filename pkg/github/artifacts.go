@@ -2,10 +2,10 @@ package github
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"regexp"
 	"time"
 
@@ -16,8 +16,11 @@ import (
 type WorkflowRunFilter struct {
 	Branch  string
 	HeadSHA string
-	Event   string
 }
+
+// ErrNoSuccessfulRun is returned by FindWorkflowArtifact when no successful run
+// matches the filter.
+var ErrNoSuccessfulRun = errors.New("no successful run found")
 
 // GetLatestReleaseTag returns the tag name of the latest release for owner/repo.
 // It uses GitHub's "latest release" endpoint, which excludes drafts and prereleases.
@@ -46,31 +49,39 @@ func GetPullRequestHeadSHA(owner, repo string, number int) (string, error) {
 	return sha, nil
 }
 
-// ResolveWorkflowArtifactURL finds the newest successful run of workflowFile
-// matching filter and returns a URL from which the artifact named artifactName
-// can be downloaded as a .zip.
-//
-// Listing runs and artifacts works anonymously for public repositories (subject
-// to GitHub's unauthenticated rate limit). The artifact zip itself cannot be
-// downloaded anonymously from the GitHub API, so when a token is available this
-// returns the authenticated Actions download URL; otherwise it returns a
-// nightly.link URL (a third-party redirector that works only for public repos).
-func ResolveWorkflowArtifactURL(owner, repo, workflowFile, artifactName string, filter WorkflowRunFilter) (string, error) {
-	opts := &github.ListWorkflowRunsOptions{
-		Branch:  filter.Branch,
-		HeadSHA: filter.HeadSHA,
-		Event:   filter.Event,
-		PerPage: 30,
-	}
-	runs, err := withAuthFallback(func(ctx context.Context, client *Client) (*github.WorkflowRuns, *github.Response, error) {
-		return client.Actions.ListWorkflowRunsByFileName(ctx, owner, repo, workflowFile, opts)
+// GetCommitSHA returns the full SHA that ref, such as an abbreviated SHA,
+// points to.
+func GetCommitSHA(owner, repo, ref string) (string, error) {
+	sha, err := withAuthFallback(func(ctx context.Context, client *Client) (string, *github.Response, error) {
+		return client.Repositories.GetCommitSHA1(ctx, owner, repo, ref, "")
 	})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("unable to look up commit %s in %s/%s: %w", ref, owner, repo, err)
 	}
-	run := newestSuccessfulRun(runs.WorkflowRuns)
+	return sha, nil
+}
+
+// FindWorkflowArtifact finds the newest successful run of workflowFile matching
+// filter and returns the ID of its artifact named artifactName. Listing runs and
+// artifacts works anonymously for public repositories, subject to GitHub's
+// unauthenticated rate limit.
+func FindWorkflowArtifact(owner, repo, workflowFile, artifactName string, filter WorkflowRunFilter) (int64, error) {
+	run, err := findSuccessfulRun(filter.Branch, func(branch string) ([]*github.WorkflowRun, error) {
+		opts := &github.ListWorkflowRunsOptions{
+			Branch:  branch,
+			HeadSHA: filter.HeadSHA,
+			PerPage: 30,
+		}
+		runs, err := withAuthFallback(func(ctx context.Context, client *Client) (*github.WorkflowRuns, *github.Response, error) {
+			return client.Actions.ListWorkflowRunsByFileName(ctx, owner, repo, workflowFile, opts)
+		})
+		return runs.GetWorkflowRuns(), err
+	})
+	if err != nil {
+		return 0, err
+	}
 	if run == nil {
-		return "", fmt.Errorf("no successful %s run found", workflowFile)
+		return 0, fmt.Errorf("%w for %s", ErrNoSuccessfulRun, workflowFile)
 	}
 	runID := run.GetID()
 
@@ -78,7 +89,7 @@ func ResolveWorkflowArtifactURL(owner, repo, workflowFile, artifactName string, 
 		return client.Actions.ListWorkflowRunArtifacts(ctx, owner, repo, runID, &github.ListOptions{PerPage: 100})
 	})
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	var found *github.Artifact
@@ -89,26 +100,33 @@ func ResolveWorkflowArtifactURL(owner, repo, workflowFile, artifactName string, 
 		}
 	}
 	if found == nil {
-		return "", fmt.Errorf("workflow run %d has no artifact named %q", runID, artifactName)
+		return 0, fmt.Errorf("workflow run %d has no artifact named %q", runID, artifactName)
 	}
 	if found.GetExpired() {
-		return "", fmt.Errorf("artifact %q (run %d) has expired; GitHub keeps run artifacts for ~90 days, so choose a newer run", artifactName, runID)
+		return 0, fmt.Errorf("artifact %q (run %d) has expired; GitHub keeps run artifacts for ~90 days, so choose a newer run", artifactName, runID)
 	}
-	artifactID := found.GetID()
+	return found.GetID(), nil
+}
 
-	// With a token, use the authenticated Actions API, which works for private
-	// repos too and returns a short-lived (~1 minute) presigned URL.
-	if HasGitHubToken() {
-		u, downloadErr := withAuthFallback(func(ctx context.Context, client *Client) (*url.URL, *github.Response, error) {
-			return client.Actions.DownloadArtifact(ctx, owner, repo, artifactID, 5)
-		})
-		if downloadErr == nil && u != nil {
-			return u.String(), nil
+// ArtifactDownloadURL returns the short-lived (~1 minute) presigned URL for an
+// artifact's .zip. GitHub requires a token for this even on public repositories,
+// so unlike the lookups it never retries anonymously.
+func ArtifactDownloadURL(owner, repo string, artifactID int64) (string, error) {
+	ctx, client, err := GetGitHubClient(true)
+	if err != nil {
+		return "", err
+	}
+	u, resp, err := client.Actions.DownloadArtifact(ctx, owner, repo, artifactID, 5)
+	if err != nil {
+		if tokenErr := HasInvalidGitHubToken(resp); tokenErr != nil {
+			return "", tokenErr
 		}
+		return "", err
 	}
-
-	// No token (or the API download failed): fall back to nightly.link.
-	return NightlyLinkArtifactURL(owner, repo, artifactID), nil
+	if u == nil {
+		return "", fmt.Errorf("GitHub returned no download URL for artifact %d", artifactID)
+	}
+	return u.String(), nil
 }
 
 // NightlyLinkArtifactURL returns the nightly.link URL for a specific artifact ID.
@@ -173,12 +191,34 @@ func parseArtifactURLFromHTML(html, artifactName string) string {
 	return ""
 }
 
+// findSuccessfulRun returns the newest successful run on branch, or on any
+// branch if branch is empty. GitHub's branch filter sometimes returns an
+// out-of-date run list, so it checks the latest unfiltered runs first and uses
+// the filter only for a branch not among them.
+func findSuccessfulRun(branch string, listRuns func(branch string) ([]*github.WorkflowRun, error)) (*github.WorkflowRun, error) {
+	if branch != "" {
+		runs, err := listRuns("")
+		if err != nil {
+			return nil, err
+		}
+		if run := newestSuccessfulRun(runs, branch); run != nil {
+			return run, nil
+		}
+	}
+	runs, err := listRuns(branch)
+	if err != nil {
+		return nil, err
+	}
+	return newestSuccessfulRun(runs, branch), nil
+}
+
 // newestSuccessfulRun returns the most recently created run whose conclusion is
-// "success", or nil if there is none.
-func newestSuccessfulRun(runs []*github.WorkflowRun) *github.WorkflowRun {
+// "success" and, if branch is not empty, whose head branch is branch, or nil if
+// there is none.
+func newestSuccessfulRun(runs []*github.WorkflowRun, branch string) *github.WorkflowRun {
 	var best *github.WorkflowRun
 	for _, r := range runs {
-		if r.GetConclusion() != "success" {
+		if r.GetConclusion() != "success" || (branch != "" && r.GetHeadBranch() != branch) {
 			continue
 		}
 		if best == nil || r.GetCreatedAt().After(best.GetCreatedAt().Time) {

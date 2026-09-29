@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -38,12 +39,12 @@ var DownloadDdevCmd = &cobra.Command{
 source (PR, branch, commit, release tag, latest stable release, or main HEAD)
 and write them into a directory. Exactly one source flag is required.
 
---tag, --stable, and --head download signed binaries and need no GitHub token
-(releases from github.com, the main build from nightly.link). --pr, --branch,
-and --commit download unsigned GitHub Actions artifacts and use a GitHub token
-(DDEV_GITHUB_TOKEN, GH_TOKEN, or GITHUB_TOKEN) if one is set to avoid the low
-anonymous rate limit; without a token, --pr falls back to the build links
-posted on the pull request.
+Releases and main builds are signed; PR and other branch builds are not. No
+source needs a GitHub token, but one (DDEV_GITHUB_TOKEN, GH_TOKEN, or
+GITHUB_TOKEN) avoids the low anonymous rate limit and downloads CI builds from
+GitHub directly rather than through nightly.link. If the GitHub API lookup
+fails, --pr falls back to the build links posted on the pull request, and
+--head to nightly.link's latest main build, which is sometimes out of date.
 
 By default the binaries are written to ~/tmp/ddev-download-ddev/<version>
 rather than the current directory, so a download can't accidentally end up on
@@ -85,7 +86,7 @@ func registerDownloadDdevFlags(cmd *cobra.Command) {
 	f := cmd.Flags()
 	f.IntVar(&downloadDdevPR, "pr", 0, "Pull request number to download the build from")
 	f.StringVar(&downloadDdevBranch, "branch", "", "Branch name to download the build from")
-	f.StringVar(&downloadDdevCommit, "commit", "", "Commit SHA to download the build from")
+	f.StringVar(&downloadDdevCommit, "commit", "", "Commit SHA, full or abbreviated, to download the build from")
 	f.StringVar(&downloadDdevTag, "tag", "", "Release tag to download (e.g. v1.25.3)")
 	f.BoolVar(&downloadDdevStable, "stable", false, "Download the latest stable release")
 	f.BoolVar(&downloadDdevHead, "head", false, "Download the latest main build")
@@ -380,16 +381,40 @@ func resolveLatestRelease(owner, repo string, t buildTarget) (downloadSpec, erro
 	return resolveReleaseTag(owner, repo, tag, t), nil
 }
 
-// resolveHead builds the nightly.link URL for the latest main build. nightly.link
-// serves the most recent main-build artifact without a GitHub token.
+// resolveHead looks up the latest main build through the API, because
+// nightly.link's latest-build URL sometimes serves an out-of-date build. That
+// URL is only the fallback, such as when the anonymous rate limit is used up.
 func resolveHead(owner, repo string, t buildTarget) downloadSpec {
-	return downloadSpec{
-		url:        fmt.Sprintf("https://nightly.link/%s/%s/workflows/main-build/main/%s.zip", owner, repo, t.artifactName()),
-		isZip:      true,
-		signed:     true,
-		sourceDesc: "the latest main build",
-		version:    "main",
+	url, err := resolveArtifactURL(owner, repo, "main-build.yml", t, github.WorkflowRunFilter{Branch: "main"})
+	if err != nil {
+		util.Warning("Could not find the build through the GitHub API, falling back to nightly.link, whose main build is sometimes out of date: %v", err)
+		url = nightlyLinkHeadURL(owner, repo, t)
 	}
+	return downloadSpec{url: url, isZip: true, signed: true, sourceDesc: "the latest main build", version: "main"}
+}
+
+// nightlyLinkHeadURL returns nightly.link's URL for the latest main build,
+// which needs no API calls.
+func nightlyLinkHeadURL(owner, repo string, t buildTarget) string {
+	return fmt.Sprintf("https://nightly.link/%s/%s/workflows/main-build/main/%s.zip", owner, repo, t.artifactName())
+}
+
+// resolveArtifactURL looks up a CI artifact and returns its download URL: from
+// GitHub when a token is set, and from nightly.link by artifact ID otherwise or
+// when that download fails.
+func resolveArtifactURL(owner, repo, workflowFile string, t buildTarget, filter github.WorkflowRunFilter) (string, error) {
+	id, err := github.FindWorkflowArtifact(owner, repo, workflowFile, t.artifactName(), filter)
+	if err != nil {
+		return "", err
+	}
+	if github.HasGitHubToken() {
+		url, err := github.ArtifactDownloadURL(owner, repo, id)
+		if err == nil {
+			return url, nil
+		}
+		util.Warning("GitHub download of %q failed, falling back to nightly.link: %v", t.artifactName(), err)
+	}
+	return github.NightlyLinkArtifactURL(owner, repo, id), nil
 }
 
 // resolvePR resolves a PR number to its CI artifact. It tries the GitHub API
@@ -409,11 +434,10 @@ func resolvePR(owner, repo string, pr int, t buildTarget) (downloadSpec, error) 
 		return spec, nil
 	}
 
-	// API failed; fall back to the token-free PR page.
-	output.UserOut.Println("GitHub API lookup failed; falling back to the PR page.")
+	util.Warning("Could not find the build through the GitHub API, falling back to the PR page: %v", apiErr)
 	url, pageErr := github.PullRequestArtifactURL(owner, repo, pr, t.artifactName())
 	if pageErr != nil {
-		return downloadSpec{}, fmt.Errorf("PR #%d: %w\nPR-page fallback also failed: %v", pr, apiErr, pageErr)
+		return downloadSpec{}, fmt.Errorf("PR #%d: PR-page fallback also failed: %w", pr, pageErr)
 	}
 	spec.url = url
 	return spec, nil
@@ -425,7 +449,7 @@ func resolvePRViaAPI(owner, repo string, pr int, t buildTarget) (string, error) 
 	if err != nil {
 		return "", err
 	}
-	url, err := github.ResolveWorkflowArtifactURL(owner, repo, "pr-build.yml", t.artifactName(), github.WorkflowRunFilter{HeadSHA: sha, Event: "pull_request"})
+	url, err := resolveArtifactURL(owner, repo, "pr-build.yml", t, github.WorkflowRunFilter{HeadSHA: sha})
 	if err != nil {
 		return "", fmt.Errorf("commit %s: %w", shortSHA(sha), err)
 	}
@@ -439,9 +463,12 @@ func resolveBranch(owner, repo, branch string, t buildTarget) (downloadSpec, err
 	if branch == "main" {
 		workflow, signed = "main-build.yml", true
 	}
-	url, err := github.ResolveWorkflowArtifactURL(owner, repo, workflow, t.artifactName(), github.WorkflowRunFilter{Branch: branch})
+	url, err := resolveArtifactURL(owner, repo, workflow, t, github.WorkflowRunFilter{Branch: branch})
+	if errors.Is(err, github.ErrNoSuccessfulRun) {
+		err = fmt.Errorf("%w (branch builds exist only for 'main' or branches with an open PR)", err)
+	}
 	if err != nil {
-		return downloadSpec{}, fmt.Errorf("branch %q: %w (branch builds exist only for 'main' or branches with an open PR)", branch, err)
+		return downloadSpec{}, fmt.Errorf("branch %q: %w", branch, err)
 	}
 	return downloadSpec{url: url, isZip: true, signed: signed, sourceDesc: fmt.Sprintf("branch %s", branch), version: versionDirName("branch-" + branch)}, nil
 }
@@ -449,15 +476,25 @@ func resolveBranch(owner, repo, branch string, t buildTarget) (downloadSpec, err
 // resolveCommit resolves a commit SHA to its CI artifact, trying PR builds first
 // and then the main-branch build.
 func resolveCommit(owner, repo, commit string, t buildTarget) (downloadSpec, error) {
-	signed := false
-	url, err := github.ResolveWorkflowArtifactURL(owner, repo, "pr-build.yml", t.artifactName(), github.WorkflowRunFilter{HeadSHA: commit})
-	if err != nil {
-		var mainErr error
-		url, mainErr = github.ResolveWorkflowArtifactURL(owner, repo, "main-build.yml", t.artifactName(), github.WorkflowRunFilter{HeadSHA: commit})
-		if mainErr != nil {
-			return downloadSpec{}, fmt.Errorf("commit %s: %w", shortSHA(commit), err)
+	// GitHub's head_sha filter matches only a full SHA.
+	if len(commit) < 40 {
+		full, err := github.GetCommitSHA(owner, repo, commit)
+		if err != nil {
+			return downloadSpec{}, err
 		}
+		commit = full
+	}
+	signed := false
+	url, err := resolveArtifactURL(owner, repo, "pr-build.yml", t, github.WorkflowRunFilter{HeadSHA: commit})
+	if errors.Is(err, github.ErrNoSuccessfulRun) {
 		signed = true
+		url, err = resolveArtifactURL(owner, repo, "main-build.yml", t, github.WorkflowRunFilter{HeadSHA: commit})
+		if errors.Is(err, github.ErrNoSuccessfulRun) {
+			err = fmt.Errorf("%w for pr-build.yml or main-build.yml", github.ErrNoSuccessfulRun)
+		}
+	}
+	if err != nil {
+		return downloadSpec{}, fmt.Errorf("commit %s: %w", shortSHA(commit), err)
 	}
 	return downloadSpec{url: url, isZip: true, signed: signed, sourceDesc: fmt.Sprintf("commit %s", shortSHA(commit)), version: versionDirName("commit-" + shortSHA(commit))}, nil
 }
@@ -482,9 +519,9 @@ func printResult(ddevDest, hostnameDest string, t buildTarget, signed, autoUnblo
 	}
 
 	// macOS Gatekeeper and Windows SmartScreen can refuse to run downloaded
-	// binaries they consider quarantined/unsigned. main-branch and released
-	// builds are signed, but PR/branch/commit builds are not. runDownloadDdev
-	// already tried to clear the quarantine/block automatically; fall back to
+	// binaries they consider quarantined/unsigned. main and release builds are
+	// signed, but PR and other branch builds are not. runDownloadDdev already
+	// tried to clear the quarantine/block automatically; fall back to
 	// printing the manual command only if that tool wasn't available.
 	if !signed {
 		switch t.goos {

@@ -1845,7 +1845,7 @@ Flags:
 
 * `--pr <number>`: Download the build from a pull request number
 * `--branch <name>`: Download the build from a branch name
-* `--commit <sha>`: Download the build from a commit SHA
+* `--commit <sha>`: Download the build from a commit SHA, full or abbreviated
 * `--tag <tag>`: Download a release tag, for example `v1.25.3`
 * `--stable`: Download the latest stable release (default `false`)
 * `--head`: Download the latest main build (default `false`)
@@ -1857,7 +1857,7 @@ Flags:
 
 Note: Exactly one source flag (`--pr`, `--branch`, `--commit`, `--tag`, `--stable`, or `--head`) is required, and they are mutually exclusive.
 
-`--tag`, `--stable`, and `--head` download signed binaries and need no GitHub token. `--pr`, `--branch`, and `--commit` download unsigned GitHub Actions artifacts and use a [GitHub token](#add-on) if one is set, which avoids the low anonymous rate limit; without a token, `--pr` still works by falling back to the build links posted on the pull request.
+Releases and `main` builds are signed; PR and other branch builds are not. No source needs a GitHub token, but a [GitHub token](#add-on) avoids the low anonymous rate limit and downloads CI builds from GitHub directly rather than through nightly.link. If the GitHub API lookup fails, `--pr` falls back to the build links posted on the pull request, and `--head` to nightly.link's latest `main` build, which is sometimes out of date.
 
 Examples:
 
