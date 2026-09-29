@@ -183,4 +183,15 @@ func TestCmdAuthSSHStdin(t *testing.T) {
 	out, err = exec.RunHostCommand("bash", "-c", `echo "not a key" | "$0" auth ssh -f -`, cmd.DdevBin)
 	require.Error(t, err, out)
 	require.Contains(t, out, "stdin does not contain an SSH private key")
+
+	// Windows refuses any upstream, and adding keys must still work.
+	if runtime.GOOS == "windows" {
+		out, err = exec.RunHostCommand(cmd.DdevBin, "config", "global", "--ssh-agent-upstream=host")
+		require.NoError(t, err, out)
+		out, err = exec.RunHostCommand("bash", "-c", `"$0" auth ssh -f - < "$1"`, cmd.DdevBin, keyFile)
+		require.NoError(t, err, out)
+		require.Contains(t, out, "doesn't work on Windows")
+		require.Contains(t, out, "using DDEV's own SSH agent instead")
+		require.Contains(t, out, "Successfully added the SSH private key from stdin")
+	}
 }

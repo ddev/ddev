@@ -230,6 +230,20 @@ func TestSSHAgentUpstream(t *testing.T) {
 	stdout, _, err := dockerutil.Exec(ddevapp.SSHAuthName, "killall -0 ssh-agent", "")
 	require.NoError(t, err, stdout)
 
+	// Windows refuses every upstream, so the project must still start with
+	// DDEV's own agent rather than a relay.
+	if runtime.GOOS == "windows" {
+		for _, value := range []string{"host", `C:\Users\me\agent.sock`} {
+			globalconfig.DdevGlobalConfig.SSHAgentUpstream = value
+			_, err = ddevapp.SSHAgentUpstreamSocket()
+			require.ErrorContains(t, err, "doesn't work on Windows", value)
+			require.NoError(t, app.EnsureSSHAgentContainer(), value)
+			stdout, _, err = dockerutil.Exec(ddevapp.SSHAuthName, "killall -0 ssh-agent", "")
+			require.NoError(t, err, stdout)
+		}
+		return
+	}
+
 	upstreamDir := testcommon.CreateTmpDir(t.Name())
 	t.Cleanup(func() {
 		_ = os.RemoveAll(upstreamDir)
