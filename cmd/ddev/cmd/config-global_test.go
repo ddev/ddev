@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"testing"
 
 	configTypes "github.com/ddev/ddev/pkg/config/types"
@@ -149,4 +150,39 @@ func TestCmdGlobalConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, globalconfig.DdevGlobalConfig.WebEnvironment)
 	require.Empty(t, globalconfig.DdevGlobalConfig.OmitContainersGlobal)
+}
+
+// TestCmdGlobalConfigSSHAgentUpstream checks that `ddev config global
+// --ssh-agent-upstream` accepts and persists the path forms schema.json
+// allows alongside "host" and a Unix absolute path: a "~/..." path on every
+// OS, and a drive-letter or UNC path on native Windows.
+func TestCmdGlobalConfigSSHAgentUpstream(t *testing.T) {
+	assert := asrt.New(t)
+	backupConfig := globalconfig.DdevGlobalConfig
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig = backupConfig
+		if err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig); err != nil {
+			t.Logf("Unable to WriteGlobalConfig: %v", err)
+		}
+	})
+
+	values := []string{"host", "/absolute/path/agent.sock", "~/agent.sock", ""}
+	if runtime.GOOS == "windows" {
+		values = append(values, `C:\Users\me\agent.sock`, `\\.\pipe\openssh-ssh-agent`)
+	}
+
+	for _, value := range values {
+		args := []string{"config", "global", "--ssh-agent-upstream=" + value}
+		out, err := exec.RunCommand(DdevBin, args)
+		require.NoError(t, err, "value=%q output=%s", value, out)
+		assert.Contains(out, "ssh-agent-upstream="+value, "value=%q", value)
+
+		// Viper's Unmarshal only sets fields present in the file, so reset
+		// first: omitempty drops an empty value, and a stale in-memory field
+		// would otherwise survive the read.
+		globalconfig.DdevGlobalConfig = globalconfig.GlobalConfig{}
+		err = globalconfig.ReadGlobalConfig()
+		require.NoError(t, err, "value=%q", value)
+		assert.Equal(value, globalconfig.DdevGlobalConfig.SSHAgentUpstream, "value=%q", value)
+	}
 }
