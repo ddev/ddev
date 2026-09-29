@@ -64,13 +64,18 @@ The user guide is [Using an Existing SSH Agent](docs/content/users/usage/cli.md)
   service (Windows interop works there given the full `npiperelay.exe`
   path) and from a `~/.bashrc` snippet. Still to check: that the service
   comes back after `wsl --shutdown` without opening a shell.
-- [ ] coder.ddev.com workspace: with this branch's binary, load the
-  Coder-managed git key (from `$CODER_AGENT_URL/api/v2/workspaceagents/me/gitsshkey`)
-  into an `ssh-agent -a` on a fixed socket outside `~/.ssh`, set
-  `ssh_agent_upstream` to that socket, and check `ddev exec ssh -T
-  git@github.com`. Also try piping the key to `ddev auth ssh -f -` with no
-  upstream. Earlier tests used an older binary with a compose override, not
-  this setting. Workspace setup belongs in ddev/coder-ddev#210.
+- [x] coder.ddev.com workspace (linux/amd64, plain Docker CE, no Docker
+  Desktop): the Coder-managed git key, fetched from
+  `$CODER_AGENT_URL/api/v2/workspaceagents/me/gitsshkey` and loaded into
+  `ssh-agent -a` on a fixed socket outside `~/.ssh`, works with plain `ssh
+  git@github.com` first, then with `ssh_agent_upstream` set to that socket:
+  `ddev auth ssh` lists the key and `ddev exec ssh -T git@github.com`
+  authenticates. `ddev auth ssh -f -` with no upstream also works, tested
+  with a throwaway key. `go test` for `TestSSHAgentUpstream`,
+  `TestCmdAuthSSHUpstream`, and `TestCmdAuthSSHStdin` pass live on this
+  platform; `TestCmdAuthSSH` skips because `expect` isn't installed in this
+  workspace image, unrelated to this branch. Workspace setup belongs in
+  ddev/coder-ddev#210.
 - [ ] Add platform-specific automated coverage once the supported Windows and
   WSL2 behavior is decided, including fallback when no provider agent exists.
 - [ ] Add a CLI configuration test for `~/...` and native Windows drive paths,
