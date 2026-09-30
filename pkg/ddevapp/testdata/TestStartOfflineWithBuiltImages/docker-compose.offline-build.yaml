@@ -1,0 +1,7 @@
+services:
+  offline-build:
+    container_name: ddev-${DDEV_SITENAME}-offline-build
+    build:
+      context: ./offline-build
+    init: true
+    command: tail -f /dev/null

@@ -1,9 +1,13 @@
 package dockerutil
 
 import (
+	"context"
 	"fmt"
+	"time"
 
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/moby/moby/api/types/image"
 	"github.com/moby/moby/client"
 )
@@ -40,6 +44,36 @@ func ImageExistsLocally(imageName string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// IsRegistryReachable reports whether the Docker daemon can reach a registry,
+// by pulling the local utilities image by digest, which downloads nothing.
+// The daemon runs the pull itself, so it takes the path a build takes, proxy
+// and registry mirrors included. Any error means unreachable, because the
+// containerd image store reports an unreachable registry as not found.
+// An image with no digest, such as one from docker load, falls back to the
+// DNS check in globalconfig.IsInternetActive.
+func IsRegistryReachable() bool {
+	ctx, apiClient, err := GetDockerClient()
+	if err != nil {
+		return false
+	}
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	inspect, err := apiClient.ImageInspect(ctx, versionconstants.UtilitiesImage)
+	if err != nil || len(inspect.RepoDigests) == 0 {
+		util.Debug("Unable to find a digest for %s, checking DNS instead: %v", versionconstants.UtilitiesImage, err)
+		return globalconfig.IsInternetActive()
+	}
+	resp, err := apiClient.ImagePull(ctx, inspect.RepoDigests[0], client.ImagePullOptions{})
+	if err == nil {
+		err = resp.Wait(ctx)
+	}
+	if err != nil {
+		util.Debug("Unable to pull %s: %v", inspect.RepoDigests[0], err)
+		return false
+	}
+	return true
 }
 
 // FindImagesByLabels takes a map of label names and values and returns any Docker images which match all labels.
