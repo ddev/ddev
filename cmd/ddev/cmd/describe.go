@@ -101,22 +101,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]any) (string, error
 				Name:     "URL/Port",
 				WidthMax: int(urlPortWidth),
 				// Wrap each embedded line individually to preserve intentional line breaks
-				WidthMaxEnforcer: func(col string, maxLen int) string {
-					wrapped := make([]string, 0, strings.Count(col, "\n")+1)
-					for line := range strings.SplitSeq(col, "\n") {
-						switch {
-						case text.RuneWidthWithoutEscSequences(line) <= maxLen:
-							wrapped = append(wrapped, line)
-						case strings.Contains(line, "\x1b]8;"):
-							// WrapSoft corrupts OSC 8 hyperlinks when splitting, so
-							// truncate those lines; the full link target stays clickable
-							wrapped = append(wrapped, text.Snip(line, maxLen, "…"))
-						default:
-							wrapped = append(wrapped, strings.Split(text.WrapSoft(line, maxLen), "\n")...)
-						}
-					}
-					return strings.Join(wrapped, "\n")
-				},
+				WidthMaxEnforcer: ddevapp.FitTableCell,
 			},
 			{
 				Name:     "Info",
