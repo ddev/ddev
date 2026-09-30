@@ -3,13 +3,13 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"testing"
 
 	configTypes "github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -167,7 +167,7 @@ func TestCmdGlobalConfigSSHAgentUpstream(t *testing.T) {
 	})
 
 	values := []string{"host", "/absolute/path/agent.sock", "~/agent.sock", ""}
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		values = append(values, `C:\Users\me\agent.sock`, `\\.\pipe\openssh-ssh-agent`)
 	}
 

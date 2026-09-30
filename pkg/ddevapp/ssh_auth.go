@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"text/template"
 	"time"
@@ -42,7 +41,7 @@ func SSHAgentUpstreamSocket() (string, error) {
 	upstream := globalconfig.DdevGlobalConfig.SSHAgentUpstream
 	// Windows agents such as 1Password and OpenSSH listen on a named pipe,
 	// which Windows Docker providers can't pass to a Linux container.
-	if upstream != "" && runtime.GOOS == "windows" {
+	if upstream != "" && nodeps.IsWindows() {
 		return "", fmt.Errorf("ssh_agent_upstream=%s doesn't work on Windows, where Docker can't reach agents such as 1Password or the OpenSSH agent; run 'ddev config global --ssh-agent-upstream=\"\"' and add key files with 'ddev auth ssh'", upstream)
 	}
 	switch upstream {
@@ -59,7 +58,7 @@ func SSHAgentUpstreamSocket() (string, error) {
 		}
 		// Other macOS providers run Docker in a VM that cannot reach a host
 		// socket.
-		if runtime.GOOS != "linux" {
+		if !nodeps.IsLinux() {
 			return "", fmt.Errorf("ssh_agent_upstream=host works on this OS only with Docker Desktop, OrbStack, Colima, or Lima, which forward the host's SSH agent; use one of them or run 'ddev config global --ssh-agent-upstream=\"\"'")
 		}
 		sock := os.Getenv("SSH_AUTH_SOCK")
@@ -107,7 +106,7 @@ func limaForwardedAgentSocket() (string, error) {
 // connections on the upstream socket. With "host" outside Linux the socket is
 // inside the provider's VM, so it can't be checked from here.
 func checkSSHAgentUpstreamListening(upstream string) error {
-	if globalconfig.DdevGlobalConfig.SSHAgentUpstream == "host" && runtime.GOOS != "linux" {
+	if globalconfig.DdevGlobalConfig.SSHAgentUpstream == "host" && !nodeps.IsLinux() {
 		return nil
 	}
 	conn, err := net.DialTimeout("unix", upstream, 2*time.Second)

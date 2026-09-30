@@ -4,10 +4,10 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
 
@@ -62,7 +62,7 @@ func TestSSHAgentUpstreamSocketPaths(t *testing.T) {
 	home, err := os.UserHomeDir()
 	require.NoError(t, err)
 
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		for _, value := range []string{"host", "/path/to/agent.sock", "~/.ssh/agent.sock", `C:\Users\me\agent.sock`} {
 			globalconfig.DdevGlobalConfig.SSHAgentUpstream = value
 			_, err := SSHAgentUpstreamSocket()

@@ -4,7 +4,6 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -107,7 +106,7 @@ func TestCmdAuthSSHUpstream(t *testing.T) {
 	// A socket in a host directory reaches containers only when Docker runs
 	// on the host itself, or is Docker Desktop mounting from a WSL2 distro,
 	// not through a macOS VM file share.
-	if runtime.GOOS != "linux" || (dockerutil.IsDockerDesktop() && !nodeps.IsWSL2()) || lookErr != nil {
+	if !nodeps.IsLinux() || (dockerutil.IsDockerDesktop() && !nodeps.IsWSL2()) || lookErr != nil {
 		t.Skip("Skipping: needs Linux with native Docker and ssh-agent")
 	}
 
@@ -185,7 +184,7 @@ func TestCmdAuthSSHStdin(t *testing.T) {
 	require.Contains(t, out, "stdin does not contain an SSH private key")
 
 	// Windows refuses any upstream, and adding keys must still work.
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		out, err = exec.RunHostCommand(cmd.DdevBin, "config", "global", "--ssh-agent-upstream=host")
 		require.NoError(t, err, out)
 		out, err = exec.RunHostCommand("bash", "-c", `"$0" auth ssh -f - < "$1"`, cmd.DdevBin, keyFile)

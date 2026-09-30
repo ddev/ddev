@@ -4,7 +4,6 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -232,7 +231,7 @@ func TestSSHAgentUpstream(t *testing.T) {
 
 	// Windows refuses every upstream, so the project must still start with
 	// DDEV's own agent rather than a relay.
-	if runtime.GOOS == "windows" {
+	if nodeps.IsWindows() {
 		for _, value := range []string{"host", `C:\Users\me\agent.sock`} {
 			globalconfig.DdevGlobalConfig.SSHAgentUpstream = value
 			_, err = ddevapp.SSHAgentUpstreamSocket()
@@ -266,7 +265,7 @@ func TestSSHAgentUpstream(t *testing.T) {
 	// on the host itself, or is Docker Desktop mounting from a WSL2 distro,
 	// not through a macOS VM file share.
 	sshAgentPath, lookErr := osexec.LookPath("ssh-agent")
-	if runtime.GOOS != "linux" || (dockerutil.IsDockerDesktop() && !nodeps.IsWSL2()) || lookErr != nil {
+	if !nodeps.IsLinux() || (dockerutil.IsDockerDesktop() && !nodeps.IsWSL2()) || lookErr != nil {
 		t.Log("Skipping live relay check: needs Linux with native Docker and ssh-agent")
 		return
 	}
@@ -333,7 +332,7 @@ func TestSSHAgentUpstream(t *testing.T) {
 // TestSSHAgentUpstreamHost checks ssh_agent_upstream=host against the macOS
 // agent that Docker providers forward, and the fallback where none is forwarded.
 func TestSSHAgentUpstreamHost(t *testing.T) {
-	if runtime.GOOS != "darwin" {
+	if !nodeps.IsMacOS() {
 		t.Skip("Skipping: macOS Docker providers only")
 	}
 	var err error
