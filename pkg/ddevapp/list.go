@@ -132,7 +132,7 @@ type appTable struct {
 	wrapTableText bool
 }
 
-// CreateAppTable will create a new app table for describe and list output
+// CreateAppTable will create a new app table for list output
 func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 	header := table.Row{"Name", "Status", "Location", "URL", "Type"}
 	t := &appTable{Writer: table.NewWriter(), natural: make([]int, len(header)), wrapTableText: wrapTableText}
@@ -148,6 +148,14 @@ func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 func (t *appTable) AppendRow(row table.Row, configs ...table.RowConfig) {
 	t.measure(row)
 	t.Writer.AppendRow(row, configs...)
+}
+
+// AppendRows adds rows and measures them
+func (t *appTable) AppendRows(rows []table.Row, configs ...table.RowConfig) {
+	for _, row := range rows {
+		t.measure(row)
+	}
+	t.Writer.AppendRows(rows, configs...)
 }
 
 // AppendFooter adds a footer row and measures it
