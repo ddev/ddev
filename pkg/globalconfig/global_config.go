@@ -69,6 +69,7 @@ type GlobalConfig struct {
 	RouterXHGuiHTTPSPort             string                      `yaml:"xhgui_https_port,omitempty"`
 	ShareDefaultProvider             string                      `yaml:"share_default_provider,omitempty"`
 	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
+	SSHAgentUpstream                 string                      `yaml:"ssh_agent_upstream,omitempty"`
 	TableStyle                       string                      `yaml:"table_style"`
 	TraefikMonitorPort               string                      `yaml:"traefik_monitor_port,omitempty"`
 	UseHardenedImages                bool                        `yaml:"use_hardened_images"`
@@ -426,6 +427,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # Whether to disable most 'ddev list' and 'ddev describe' table formatting and implicitly set NO_COLOR=1.
 # simple_formatting: false
+
+# ssh_agent_upstream: ""
+# Make ddev-ssh-agent relay to an SSH agent you already run instead of its own.
+# "host" uses the agent your Docker provider forwards ($SSH_AUTH_SOCK on Linux),
+# or give an absolute socket path, such as /home/<you>/.1password/agent.sock.
+# See https://docs.ddev.com/en/stable/users/usage/cli/#using-an-existing-ssh-agent
 
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that DDEV will declare internet

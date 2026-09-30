@@ -226,3 +226,24 @@ ddev exec ssh-keygen -f '/home/.ssh-agent/known_hosts' -R '<hostname>'
 ```
 
 Use the hostname that gave you trouble.
+
+## Too Many Authentication Failures
+
+If `ssh` or `rsync` inside the container fails with:
+
+```text
+Received disconnect from <host> port 22:2: Too many authentication failures
+```
+
+the *server* you're connecting to has a `MaxAuthTries` limit and gave up after your agent offered more keys than it allows, not because any key was wrong. This is more likely with [`ssh_agent_upstream`](../usage/cli.md#using-an-existing-ssh-agent), which relays every key your agent holds, or with a large `~/.ssh` full of key files.
+
+Limit which key gets offered for that host instead of pruning keys everywhere:
+
+- With key files, use `ddev auth ssh -d <dir>` with a directory that has only the keys you need.
+- With an agent, including `ssh_agent_upstream`, add a `Host` block to your [homeadditions `~/.ssh/config`](#ssh-configuration) with `IdentitiesOnly yes` and `IdentityFile` pointing at the key's `.pub` file — safe to keep in the container, since it's public. The agent then offers only the matching private key for that host:
+
+```text
+Host github.com
+    IdentitiesOnly yes
+    IdentityFile ~/.ssh/id_ed25519.pub
+```

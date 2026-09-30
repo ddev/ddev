@@ -139,6 +139,7 @@ NTFS
 OSs
 OpenMage
 OpenSearch
+OpenSSH
 OrbStack
 PECL
 PEM
@@ -218,6 +219,7 @@ Xcode
 XDebug
 XDG
 Xhprof
+YubiKey
 Zoho
 XSym
 Zsh

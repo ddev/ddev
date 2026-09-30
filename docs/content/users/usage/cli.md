@@ -195,6 +195,104 @@ The [`ddev ssh`](../usage/commands.md#ssh) command opens an interactive Bash or 
 
 You can also use your personal SSH keys within the web container. Run `ddev auth ssh` to add the keys from your `~/.ssh` directory and provide a passphrase, and those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot. This is a very popular approach for accessing private Composer repositories, or for using `drush` aliases against remote servers.
 
+If your keys live in an SSH agent rather than in `~/.ssh`, as with 1Password or a hardware key, see [Using an Existing SSH Agent](#using-an-existing-ssh-agent).
+
+### Using an Existing SSH Agent
+
+If you already use an SSH agent, such as the macOS agent, 1Password, Secretive, `gpg-agent` with a YubiKey, or one forwarded with `ssh -A`, DDEV's containers can use it directly. Set this once:
+
+```bash
+ddev config global --ssh-agent-upstream=host
+ddev auth ssh      # lists the keys your containers can use
+```
+
+After that, every project's containers use your agent when they start, with nothing to add per project. `ddev auth ssh` only shows which keys are available, and `ddev exec ssh -T git@github.com` tests them. Every container on the DDEV network can ask your agent to sign while this is on; agents that confirm each use, like 1Password, limit that exposure.
+
+If `ddev auth ssh` says "Make sure that agent is running and holds your keys", your agent is stopped or locked; open it or load your keys, and DDEV picks it up again without a restart. To go back to adding key files, run `ddev config global --ssh-agent-upstream=""` and then `ddev auth ssh`.
+
+If a connection instead fails with "Too many authentication failures", the server capped how many keys it will try, and relaying a whole agent offers more than the few keys you'd add by hand; see [Too Many Authentication Failures](../extend/in-container-configuration.md#too-many-authentication-failures) to limit which key gets offered per host.
+
+??? tip "macOS: which agent do my containers get?"
+    That depends on your Docker provider:
+
+    | Provider | What to do | Agent containers get |
+    | -- | -- | -- |
+    | OrbStack | Nothing extra | The agent named by `IdentityAgent` in `~/.ssh/config`, such as 1Password, otherwise the macOS agent. Restart OrbStack after changing `~/.ssh/config`. |
+    | Docker Desktop | Nothing extra | Always the macOS agent |
+    | Colima | Start it with `colima start --ssh-agent` | Always the macOS agent |
+    | Lima | Run `limactl edit <instance> --set .ssh.forwardAgent=true` once | Always the macOS agent |
+    | Rancher Desktop, Podman | Not supported | DDEV warns and uses its own agent; add key files with `ddev auth ssh` as usual |
+
+    To use 1Password, Secretive, or `gpg-agent`:
+
+    * With OrbStack, set `IdentityAgent` in `~/.ssh/config` as your agent's setup instructions describe, then restart OrbStack.
+    * Docker Desktop, Colima, and Lima ignore `IdentityAgent`. Point the system-wide `SSH_AUTH_SOCK` at your agent as its documentation describes; for 1Password, see [Configure SSH_AUTH_SOCK globally for every client](https://developer.1password.com/docs/ssh/agent/compatibility/).
+    * Exporting `SSH_AUTH_SOCK` in your shell profile doesn't reach any of these providers.
+
+    To use the macOS agent, load your keys into it, saving the passphrase in the Keychain:
+
+    ```bash
+    ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+    ssh-add -l
+    ```
+
+??? tip "Linux: pointing at your own agent"
+    `host` uses the agent in `$SSH_AUTH_SOCK` when a project starts. A forwarded agent (`ssh -A`) gets a new socket for each login, so run `ddev auth ssh` again after logging in again. A desktop agent's socket doesn't change, so you can set it directly, for example on Ubuntu with `ddev config global --ssh-agent-upstream=/run/user/$(id -u)/gcr/ssh`. An agent you start yourself with `eval $(ssh-agent -s)` works when you run `ddev` from that shell; to use it from any shell, start it on a fixed socket with `mkdir -p -m 700 ~/.ssh-agent && eval $(ssh-agent -a ~/.ssh-agent/agent.sock -s)` and set `ddev config global --ssh-agent-upstream=$HOME/.ssh-agent/agent.sock`. Keep the socket in its own directory rather than `~/.ssh`, because DDEV mounts the socket's whole directory into the `ddev-ssh-agent` container.
+
+??? tip "WSL2: bridging a Windows agent"
+    DDEV can't reach Windows agents such as 1Password and the Windows OpenSSH agent directly, because they listen only on a Windows named pipe. Bridge that pipe to a Unix socket with `socat` in WSL2 and [`npiperelay`](https://github.com/albertony/npiperelay) on Windows, then point DDEV at the socket. DDEV doesn't start the bridge for you. This works with Docker Desktop's WSL integration as well as Docker installed inside WSL2, although Docker Desktop on Windows doesn't forward an agent of its own.
+
+    1. Install `socat` in WSL2 with `sudo apt install socat`, and `npiperelay` in PowerShell with `winget install albertony.npiperelay`. `npiperelay` is x64-only; Windows on Arm runs it under emulation.
+    2. With [systemd enabled in WSL2](https://learn.microsoft.com/en-us/windows/wsl/systemd), run the bridge as a user service, which starts with WSL2 whether or not you open a shell. Run this in a WSL2 shell, where `npiperelay.exe` is on `PATH`; the service itself doesn't get the Windows `PATH`, so the unit records the full path:
+
+        ```bash
+        mkdir -p ~/.config/systemd/user
+        cat > ~/.config/systemd/user/ssh-agent-bridge.service <<EOF
+        [Unit]
+        Description=Bridge the Windows SSH agent to ~/.1password/agent.sock
+
+        [Service]
+        ExecStartPre=/usr/bin/mkdir -p -m 700 %h/.1password
+        ExecStart=/usr/bin/socat UNIX-LISTEN:%h/.1password/agent.sock,fork,unlink-early EXEC:"$(command -v npiperelay.exe) -ei -s //./pipe/openssh-ssh-agent",nofork
+        Restart=on-failure
+        SuccessExitStatus=143
+
+        [Install]
+        WantedBy=default.target
+        EOF
+        systemctl --user enable --now ssh-agent-bridge
+        ```
+
+        Without systemd, add this to `~/.bashrc` instead, so that each new shell starts the bridge if it isn't already running:
+
+        ```bash
+        export SSH_AUTH_SOCK=$HOME/.1password/agent.sock
+        ssh-add -l >/dev/null 2>&1
+        if [ $? -eq 2 ]; then
+          rm -f "$SSH_AUTH_SOCK"
+          mkdir -p -m 700 "$(dirname "$SSH_AUTH_SOCK")"
+          (setsid socat UNIX-LISTEN:"$SSH_AUTH_SOCK",fork EXEC:"npiperelay.exe -ei -s //./pipe/openssh-ssh-agent",nofork &) >/dev/null 2>&1
+        fi
+        ```
+
+    3. Check that `SSH_AUTH_SOCK=~/.1password/agent.sock ssh-add -l` lists your keys, then run:
+
+        ```bash
+        ddev config global --ssh-agent-upstream=$HOME/.1password/agent.sock
+        ddev auth ssh
+        ```
+
+    To use the same agent for `ssh` and `git` in WSL2, add `export SSH_AUTH_SOCK=$HOME/.1password/agent.sock` to `~/.bashrc`. If the bridge stops, containers can't use your keys until it runs again, and nothing in DDEV needs a restart.
+
+??? tip "Traditional Windows: key files, or piping from 1Password"
+    `ssh_agent_upstream` doesn't work here. Windows agents, including 1Password and the Windows OpenSSH agent, listen on a named pipe that Docker Desktop and other Windows providers can't pass to containers. DDEV warns and uses its own agent, so add your key files from `%USERPROFILE%\.ssh` with `ddev auth ssh`. To use a key stored in 1Password without saving it to a file, pipe it from the [1Password CLI](https://developer.1password.com/docs/cli/get-started/), in PowerShell or Git Bash:
+
+    ```bash
+    op read "op://<vault>/<item>/private key?ssh-format=openssh" | ddev auth ssh -f -
+    ```
+
+    Turn on **Settings** > **Developer** > **Integrate with 1Password CLI** in the 1Password app first, and add `--account <account>.1password.com` to `op read` if you're signed in to more than one account. Run the command again after `ddev poweroff` or a reboot, because DDEV's agent forgets keys when it stops.
+
 ### `ddev logs`
 
 The [`ddev logs`](../usage/commands.md#logs) command allows you to easily view error logs from the web container (both nginx/Apache and php-fpm logs are concatenated). To follow the logs in real time, run `ddev logs -f`. When you’re done, press <kbd>CTRL</kbd> + <kbd>C</kbd> to exit the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped database container.

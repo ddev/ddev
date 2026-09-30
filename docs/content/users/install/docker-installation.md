@@ -67,10 +67,10 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
         1. Install Colima with `brew install colima`, which also installs Lima and other dependencies.
         2. If you don't have the `docker` client (if `docker help` fails) then install it with `brew install docker`.
-        3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:
+        3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, Cloudflare DNS, and SSH-agent forwarding, adjusting as needed:
 
             ```bash
-            colima start --cpu 4 --memory 6 --disk 100 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1
+            colima start --cpu 4 --memory 6 --disk 100 --vm-type=vz --mount-type=virtiofs --dns=1.1.1.1 --ssh-agent
             ```
 
         After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
