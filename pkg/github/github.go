@@ -57,10 +57,10 @@ func GetGitHubClient(withAuth bool) (context.Context, *Client, error) {
 	return githubContext, githubClientNoAuth, githubClientNoAuthErr
 }
 
-// withAuthFallback runs fn with the authenticated GitHub client and, if that
-// call fails because the configured token is invalid, retries once with the
-// no-auth client. Errors are annotated with GitHub rate-limit details, plus the
-// invalid-token hint when a bad token triggered the fallback.
+// withAuthFallback runs fn with the authenticated GitHub client and, if GitHub
+// rejects the configured token with 401, retries once with the no-auth client.
+// Errors are annotated with GitHub rate-limit details, plus the invalid-token
+// hint after a 401 or 404 with a token set.
 func withAuthFallback[T any](fn func(ctx context.Context, client *Client) (T, *github.Response, error)) (T, error) {
 	var zero T
 	ctx, client, clientErr := GetGitHubClient(true)
@@ -70,7 +70,9 @@ func withAuthFallback[T any](fn func(ctx context.Context, client *Client) (T, *g
 	result, resp, err := fn(ctx, client)
 	var tokenErr error
 	if err != nil {
-		if tokenErr = HasInvalidGitHubToken(resp); tokenErr != nil {
+		// The API rejects a bad token with 401. A 404 means the resource is
+		// missing or private, which an anonymous retry cannot change.
+		if tokenErr = HasInvalidGitHubToken(resp); tokenErr != nil && resp.StatusCode == http.StatusUnauthorized {
 			if ctx, client, clientErr = GetGitHubClient(false); clientErr != nil {
 				return zero, clientErr
 			}

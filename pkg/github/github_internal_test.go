@@ -1,6 +1,8 @@
 package github
 
 import (
+	"context"
+	"net/http"
 	"testing"
 	"time"
 
@@ -50,4 +52,35 @@ func TestNewestRelease(t *testing.T) {
 	t.Run("Empty", func(t *testing.T) {
 		require.Nil(t, newestRelease(nil))
 	})
+}
+
+// TestWithAuthFallbackRetry: a 404 for a missing tag must not spend the
+// anonymous rate limit, which shared CI runner IPs often exhaust.
+func TestWithAuthFallbackRetry(t *testing.T) {
+	// Initialize the client singleton from the real environment first, so the
+	// fake token below cannot leak into the other tests in this package.
+	_, _, err := GetGitHubClient(true)
+	require.NoError(t, err)
+	t.Setenv("DDEV_GITHUB_TOKEN", "fake-token")
+
+	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/repos/ddev/ddev-redis/releases/tags/v999.999.999", nil)
+	require.NoError(t, err)
+	callsFor := func(status int) (int, error) {
+		calls := 0
+		_, err := withAuthFallback(func(_ context.Context, _ *Client) (string, *github.Response, error) {
+			calls++
+			resp := &github.Response{Response: &http.Response{StatusCode: status, Request: req}}
+			return "", resp, &github.ErrorResponse{Response: resp.Response}
+		})
+		return calls, err
+	}
+
+	calls, err := callsFor(http.StatusNotFound)
+	require.Equal(t, 1, calls, "a 404 should not retry anonymously")
+	require.True(t, isNotFound(err), "should keep the 404, got %v", err)
+	require.ErrorContains(t, err, "may be invalid or lack permissions")
+
+	calls, err = callsFor(http.StatusUnauthorized)
+	require.Equal(t, 2, calls, "a 401 should retry anonymously")
+	require.ErrorContains(t, err, "is invalid or lacks required permissions")
 }
