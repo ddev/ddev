@@ -12,8 +12,9 @@ import (
 
 // DebugMutagenCmd implements the ddev utility mutagen command
 var DebugMutagenCmd = &cobra.Command{
-	Use:   "mutagen",
-	Short: "Allows access to any Mutagen command",
+	Use:         "mutagen",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Allows access to any Mutagen command",
 	FParseErrWhitelist: cobra.FParseErrWhitelist{
 		UnknownFlags: true,
 	},

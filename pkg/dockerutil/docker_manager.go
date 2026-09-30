@@ -2,6 +2,7 @@ package dockerutil
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"fmt"
 	"io"
@@ -84,6 +85,7 @@ func getDockerManagerInstance() (*dockerManager, error) {
 		sDockerManager.cliPluginsExtraDirsDefault = sDockerManager.cli.ConfigFile().CLIPluginsExtraDirs
 		// Must be done after Initialize(), which reloads configFile from disk.
 		sDockerManager.updateCLIPluginsExtraDirs()
+		sDockerManager.cliPlugins, sDockerManager.cliPluginsErr = manager.ListPlugins(sDockerManager.cli, &cobra.Command{})
 		sDockerManager.dockerContextName = sDockerManager.cli.CurrentContext()
 		sDockerManager.host = sDockerManager.cli.DockerEndpoint().Host
 		util.Verbose("getDockerManagerInstance(): dockerContextName=%s, host=%s", sDockerManager.dockerContextName, sDockerManager.host)
@@ -126,7 +128,6 @@ func getDockerManagerInstance() (*dockerManager, error) {
 			return
 		}
 		sDockerManager.info = info.Info
-		sDockerManager.cliPlugins, sDockerManager.cliPluginsErr = manager.ListPlugins(sDockerManager.cli, &cobra.Command{})
 	})
 	return sDockerManager, sDockerManagerErr
 }
@@ -149,13 +150,12 @@ func GetDockerClientInfo() (system.Info, error) {
 	return dm.info, nil
 }
 
-// GetDockerContextNameAndHost returns the Docker context name and host
+// GetDockerContextNameAndHost returns the Docker context name and host.
+// They are resolved before connecting, so they are returned along with
+// any error from reaching the Docker daemon.
 func GetDockerContextNameAndHost() (string, string, error) {
 	dm, err := getDockerManagerInstance()
-	if err != nil {
-		return "", "", err
-	}
-	return dm.dockerContextName, dm.host, nil
+	return dm.dockerContextName, dm.host, err
 }
 
 // GetDockerIP returns either the default Docker IP address (127.0.0.1)
@@ -291,11 +291,12 @@ func GetDockerAPIVersion() (string, error) {
 }
 
 // GetCLIPlugins returns the list of Docker CLI plugins installed on the system.
-// Results are cached after the first call.
+// Results are cached after the first call. They are listed before connecting,
+// so they are returned even when the Docker daemon can't be reached.
 func GetCLIPlugins() ([]manager.Plugin, error) {
 	dm, err := getDockerManagerInstance()
-	if err != nil {
-		return nil, err
+	if dm.cliPlugins == nil {
+		return nil, cmp.Or(dm.cliPluginsErr, err)
 	}
 	return dm.cliPlugins, dm.cliPluginsErr
 }

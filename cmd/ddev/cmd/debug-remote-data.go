@@ -20,9 +20,10 @@ var dataType string
 
 // DebugRemoteDataCmd implements the ddev utility remote-data command
 var DebugRemoteDataCmd = &cobra.Command{
-	Use:    "remote-data",
-	Short:  "Download and display remote configuration and sponsorship data",
-	Hidden: true,
+	Use:         "remote-data",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Download and display remote configuration and sponsorship data",
+	Hidden:      true,
 	Long: `Download and display remote data used by DDEV from GitHub repositories.
 
 This command can download various data types:

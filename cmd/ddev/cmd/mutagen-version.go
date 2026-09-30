@@ -15,9 +15,10 @@ import (
 
 // MutagenVersionCmd implements the ddev mutagen version command
 var MutagenVersionCmd = &cobra.Command{
-	Use:     "version",
-	Short:   "Display the version of the Mutagen binary and the location of its components.",
-	Example: `"ddev mutagen version"`,
+	Use:         "version",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Display the version of the Mutagen binary and the location of its components.",
+	Example:     `"ddev mutagen version"`,
 	Run: func(_ *cobra.Command, _ []string) {
 
 		v := make(map[string]string)

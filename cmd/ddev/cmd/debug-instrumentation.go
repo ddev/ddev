@@ -7,8 +7,9 @@ import (
 
 // DebugInstrumentationCmd implements the ddev utility instrumentation command
 var DebugInstrumentationCmd = &cobra.Command{
-	Use:   "instrumentation [command]",
-	Short: "A collection of debugging commands for instrumentation",
+	Use:         "instrumentation [command]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "A collection of debugging commands for instrumentation",
 	Run: func(cmd *cobra.Command, _ []string) {
 		err := cmd.Usage()
 		util.CheckErr(err)

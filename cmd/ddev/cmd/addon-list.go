@@ -21,10 +21,11 @@ import (
 
 // AddonListCmd is the "ddev add-on list" command
 var AddonListCmd = &cobra.Command{
-	Use:   "list",
-	Args:  cobra.NoArgs,
-	Short: "List available or installed DDEV add-ons",
-	Long:  `List available or installed DDEV add-ons. To list installed add-ons, use '--installed'`,
+	Use:         "list",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Args:        cobra.NoArgs,
+	Short:       "List available or installed DDEV add-ons",
+	Long:        `List available or installed DDEV add-ons. To list installed add-ons, use '--installed'`,
 	Example: `ddev add-on list
 ddev add-on list --installed
 ddev add-on list --installed --project my-project

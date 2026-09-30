@@ -29,8 +29,9 @@ import (
 
 // TLSDiagnoseCmd implements the ddev utility tls-diagnose command
 var TLSDiagnoseCmd = &cobra.Command{
-	Use:   "tls-diagnose",
-	Short: "Diagnose TLS/HTTPS certificate trust issues",
+	Use:         "tls-diagnose",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Diagnose TLS/HTTPS certificate trust issues",
 	Long: `Check mkcert installation, CA trust stores, certificates, and live HTTPS connectivity.
 
 This command checks:

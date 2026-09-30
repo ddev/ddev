@@ -6,11 +6,9 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/moby/moby/client/pkg/versions"
@@ -60,28 +58,6 @@ func CheckDockerVersion(dockerVersionMatrix DockerVersionMatrix) error {
 		return fmt.Errorf("installed Docker version %s is not supported, please update to version %s or newer", currentVersion, dockerVersionMatrix.Version)
 	}
 	return nil
-}
-
-// CanRunWithoutDocker returns true if the command or flag can run without Docker.
-func CanRunWithoutDocker() bool {
-	if len(os.Args) < 2 {
-		return true
-	}
-	// Some commands don't support Cobra help, because they are wrappers
-	if slices.Contains([]string{"composer"}, os.Args[1]) {
-		return false
-	}
-	if output.ParseBoolFlag("version", "v") || output.ParseBoolFlag("help", "h") {
-		return true
-	}
-	if len(os.Args) == 2 && output.ParseBoolFlag("json-output", "j") {
-		return true
-	}
-	// Some commands don't require docker
-	if slices.Contains([]string{"config", "help", "hostname", "version"}, os.Args[1]) {
-		return true
-	}
-	return false
 }
 
 // CheckAvailableSpace returns an error if Docker space is low

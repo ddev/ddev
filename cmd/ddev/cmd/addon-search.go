@@ -20,10 +20,11 @@ import (
 
 // AddonSearchCmd is the "ddev add-on search" command
 var AddonSearchCmd = &cobra.Command{
-	Use:   "search <search-term> [additional-terms...]",
-	Args:  cobra.MinimumNArgs(1),
-	Short: "Search available DDEV add-ons",
-	Long:  `Search available DDEV add-ons by name or description.`,
+	Use:         "search <search-term> [additional-terms...]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Args:        cobra.MinimumNArgs(1),
+	Short:       "Search available DDEV add-ons",
+	Long:        `Search available DDEV add-ons by name or description.`,
 	Example: `ddev add-on search redis
 ddev add-on search database
 ddev add-on search redis insight

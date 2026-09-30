@@ -8,8 +8,9 @@ import (
 
 // UtilityCheckCustomConfig displays custom configuration in the current project
 var UtilityCheckCustomConfig = &cobra.Command{
-	Use:   "check-custom-config",
-	Short: "Display custom configuration files in the current project",
+	Use:         "check-custom-config",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Display custom configuration files in the current project",
 	Long: `Display custom configuration files in the current project.
 
 By default, shows only files that would warn on startup: user-created files

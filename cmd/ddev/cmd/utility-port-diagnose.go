@@ -36,8 +36,9 @@ var portDiagnoseAllowSudo bool
 
 // PortDiagnoseCmd implements the ddev utility port-diagnose command.
 var PortDiagnoseCmd = &cobra.Command{
-	Use:   "port-diagnose",
-	Short: "Identify processes occupying ports needed by DDEV",
+	Use:         "port-diagnose",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Identify processes occupying ports needed by DDEV",
 	Long: `Check which ports the current DDEV project needs and identify any
 processes that are already occupying those ports.
 

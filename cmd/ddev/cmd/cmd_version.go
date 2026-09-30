@@ -19,9 +19,10 @@ import (
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print DDEV version and component versions",
-	Long:  `Display the version of this DDEV binary and its components.`,
+	Use:         "version",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Print DDEV version and component versions",
+	Long:        `Display the version of this DDEV binary and its components.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()

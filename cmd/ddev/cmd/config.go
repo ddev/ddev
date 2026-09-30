@@ -132,11 +132,12 @@ var (
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
-	Use:     "config [global]",
-	Short:   "Create or modify a DDEV project configuration in the current directory",
-	Example: `"ddev config" or "ddev config --docroot=web --project-type=drupal11"`,
-	Args:    cobra.ExactArgs(0),
-	Run:     handleConfigRun,
+	Use:         "config [global]",
+	Annotations: map[string]string{NoDockerCommand: "true"},
+	Short:       "Create or modify a DDEV project configuration in the current directory",
+	Example:     `"ddev config" or "ddev config --docroot=web --project-type=drupal11"`,
+	Args:        cobra.ExactArgs(0),
+	Run:         handleConfigRun,
 }
 
 // handleConfigRun handles all the flag processing for any provider
