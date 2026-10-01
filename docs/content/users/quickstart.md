@@ -2183,13 +2183,11 @@ ddev launch /manager/
           directory: /var/www/html
     EOF
 
+    # When it prompts "Directory not empty. Continue?", choose Yes
     ddev exec "npx sv create --template=demo --types=ts --no-add-ons --no-install ."
-    # When it prompts "Directory not empty. Continue?", choose Yes.
 
-    # Install an example svelte.config.js that uses adapter-node
-    ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/main/svelte.config.js
-    # Install an example vite.config.ts that sets the port and allows all hostnames
-    ddev exec curl -s -OL https://raw.githubusercontent.com/ddev/test-sveltekit/main/vite.config.ts
+    # Use adapter-node, and set the port and allowed hosts in vite.config.ts
+    ddev exec "sed -i -e 's#adapter-auto#adapter-node#' -e 's#^export default defineConfig({#&\n\tserver: { port: 3000, allowedHosts: true },#' vite.config.ts"
     ddev npm install @sveltejs/adapter-node
     ddev npm install
     ddev npm run build
@@ -2197,10 +2195,10 @@ ddev launch /manager/
     ddev launch
     ```
 
-    SvelteKit requires just a bit of configuration to make it run. There are many ways to make any Node.js site work, these are just examples. The `svelte.config.js` and `vite.config.js` used above can be adapted in many ways. For more comprehensive Vite configuration options, see the [Vite Integration](usage/vite.md) documentation.
+    SvelteKit requires just a bit of configuration to make it run. There are many ways to make any Node.js site work, these are just examples. SvelteKit 3 no longer uses `svelte.config.js`; its configuration is passed to the `sveltekit()` plugin in `vite.config.ts`, which can be adapted in many ways. For more Vite configuration options, see the [Vite Integration](usage/vite.md) documentation.
 
-    * `svelte.config.js` example uses `adapter-node`.
-    * `vite.config.js` uses port 3000 and `allowedHosts: true`
+    * The `sed` command switches the adapter from `adapter-auto` to `adapter-node`.
+    * It also sets `server.port` to 3000 and `server.allowedHosts` to `true` in `vite.config.ts`.
 
 === "Node.js Web Server"
 
