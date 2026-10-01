@@ -236,6 +236,14 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case openedMsg:
+		if msg.err != nil {
+			m.statusMsg = fmt.Sprintf("Open %s failed: %v", msg.what, msg.err)
+		} else {
+			m.statusMsg = fmt.Sprintf("Opened %s", msg.what)
+		}
+		return m, nil
+
 	case clipboardMsg:
 		if msg.err != nil {
 			m.statusMsg = fmt.Sprintf("Copy failed: %v", msg.err)
@@ -526,6 +534,11 @@ func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, ddevExecCommandInDir(p.AppRoot, "xhgui")
 		}
 
+	case key.Matches(msg, m.keys.OpenDir, m.keys.OpenVSC, m.keys.OpenPhpS):
+		if p := m.selectedProject(); p != nil {
+			return m, m.openProjectCmd(msg, p.AppRoot)
+		}
+
 	case key.Matches(msg, m.keys.Poweroff):
 		m.confirming = true
 		m.confirmAction = "poweroff"
@@ -657,11 +670,28 @@ func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), m.spinner.Tick)
 		}
 
+	case key.Matches(msg, m.keys.OpenDir, m.keys.OpenVSC, m.keys.OpenPhpS):
+		if m.detail != nil {
+			return m, m.openProjectCmd(msg, m.detail.AppRoot)
+		}
+
 	case key.Matches(msg, m.keys.Quit):
 		return m, tea.Quit
 	}
 
 	return m, nil
+}
+
+// openProjectCmd opens appRoot in the file manager or an editor, depending
+// on which open key was pressed.
+func (m AppModel) openProjectCmd(msg tea.KeyPressMsg, appRoot string) tea.Cmd {
+	switch {
+	case key.Matches(msg, m.keys.OpenVSC):
+		return openTarget("VS Code", editorURL("vscode", appRoot))
+	case key.Matches(msg, m.keys.OpenPhpS):
+		return openTarget("PhpStorm", editorURL("phpstorm", appRoot))
+	}
+	return openTarget("directory", appRoot)
 }
 
 func (m AppModel) handleLogKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
@@ -1359,6 +1389,7 @@ func (m AppModel) dashboardKeyHints() string {
 		{"l", "launch"},
 		{"m", "mailpit"},
 		{"x", "xhgui"},
+		{"o", "open dir"},
 		{"C", "config"},
 		{"enter", "detail"},
 		{"/", "filter"},
@@ -1381,6 +1412,9 @@ func (m AppModel) detailKeyHints() string {
 		{"x", "xhgui"},
 		{"X", "xdebug"},
 		{"c", "copy url"},
+		{"o", "open dir"},
+		{"v", "vscode"},
+		{"p", "phpstorm"},
 		{"e", "ssh"},
 		{"L", "logs"},
 		{"R", "refresh"},
@@ -1447,6 +1481,9 @@ Actions:
   c               Copy primary URL to clipboard (from detail view)
   e               SSH into web container (from detail view)
   L               Follow logs (from detail view)
+  o               Open project directory in the file manager
+  v               Open project in VS Code
+  p               Open project in PhpStorm
   R               Refresh
 
 Other:

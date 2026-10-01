@@ -341,6 +341,32 @@ func xdebugToggleCmd(appRoot string) tea.Cmd {
 	}
 }
 
+// openTarget hands a directory path or URL to the OS opener without taking
+// over the terminal. Editors are reached through their URL schemes so no
+// editor command has to be on PATH.
+func openTarget(what, target string) tea.Cmd {
+	return func() tea.Msg {
+		var cmd *exec.Cmd
+		switch runtime.GOOS {
+		case "darwin":
+			cmd = exec.Command("open", target)
+		case "windows":
+			cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", target)
+		default:
+			if _, err := exec.LookPath("xdg-open"); err == nil {
+				cmd = exec.Command("xdg-open", target)
+			} else if _, err := exec.LookPath("explorer.exe"); err == nil {
+				// WSL; explorer.exe exits non-zero even on success
+				_ = exec.Command("explorer.exe", target).Run()
+				return openedMsg{what: what}
+			} else {
+				return openedMsg{what: what, err: fmt.Errorf("no opener found (install xdg-utils)")}
+			}
+		}
+		return openedMsg{what: what, err: cmd.Run()}
+	}
+}
+
 // copyToClipboard copies text to the system clipboard using platform-specific tools.
 func copyToClipboard(text string) tea.Cmd {
 	return func() tea.Msg {

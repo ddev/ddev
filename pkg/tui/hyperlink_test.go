@@ -1,10 +1,12 @@
 package tui
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
 
+	tea "charm.land/bubbletea/v2"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/stretchr/testify/require"
 )
@@ -89,4 +91,30 @@ func TestDetailEditorLinks(t *testing.T) {
 	out := m.buildDetailContent()
 	require.Contains(t, out, "\x1b]8;;vscode://file/home/user/site-a\x1b\\")
 	require.Contains(t, out, "\x1b]8;;phpstorm://open?file=/home/user/site-a\x1b\\")
+}
+
+func TestOpenKeys(t *testing.T) {
+	for _, k := range []rune{'o', 'v', 'p'} {
+		d := NewAppModel()
+		d.loading = false
+		d.projects = []ProjectInfo{{Name: "mysite", Status: ddevapp.SiteRunning, AppRoot: "/tmp/mysite"}}
+		_, cmd := d.Update(tea.KeyPressMsg{Code: k, Text: string(k)})
+		require.NotNil(t, cmd, "%c on the dashboard should return an open command", k)
+
+		m := NewAppModel()
+		m.viewMode = viewDetail
+		detail := sampleDetail()
+		m.detail = &detail
+		_, cmd = m.Update(tea.KeyPressMsg{Code: k, Text: string(k)})
+		require.NotNil(t, cmd, "%c in the detail view should return an open command", k)
+	}
+}
+
+func TestOpenedMsgStatus(t *testing.T) {
+	m := NewAppModel()
+	updated, _ := m.Update(openedMsg{what: "VS Code"})
+	require.Equal(t, "Opened VS Code", updated.(AppModel).statusMsg)
+
+	updated, _ = m.Update(openedMsg{what: "directory", err: fmt.Errorf("boom")})
+	require.Contains(t, updated.(AppModel).statusMsg, "failed: boom")
 }
