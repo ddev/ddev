@@ -91,6 +91,16 @@ If you encounter the error: "Can't find a source position. Server with name 'SIT
 !!!tip "If you’re using VS Code on Windows with WSL2"
     VS Code should suggest two extensions if you have WSL2 enabled along with a PHP project: “[PHP Debug](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug)” and “[WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl)”. You’ll need to enable both of these extensions in your distro (e.g. Ubuntu).
 
+## Path Mapping and Skipping Files
+
+Xdebug 3.5 and newer can translate container paths to host paths itself. While Xdebug is enabled, DDEV writes `.xdebug/ddev-generated.map` in the project, mapping `/var/www/html/` to the project's directory on the host. It removes the file when Xdebug is disabled, and the file is excluded from Git by a `.xdebug/.gitignore` that DDEV also generates. DDEV skips this when `xdebug_ide_location` is set, on Windows and WSL2, in Codespaces and devcontainers, and with a remote Docker host, because the IDE may not see the project at that path.
+
+To have Xdebug skip files such as dependencies, add your own map file, for example `.xdebug/skip-vendor.map`:
+
+```text
+/var/www/html/vendor/ = SKIP
+```
+
 ## Using Xdebug on a Port Other than the Default 9003
 
 By default, DDEV is set up to contact the default port, port 9003 on your IDE. However, if you have something else listening on that port or your IDE does not yet default to 9003, you’ll need to change the port. (PhpStorm and VS Code have switch to supporting 9003 instead of 9000 for some time now.)
