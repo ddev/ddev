@@ -2,10 +2,12 @@ package netutil
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"net"
 	"net/url"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -156,4 +158,40 @@ func NormalizeURL(rawURL string) string {
 	}
 
 	return parsedURL.String()
+}
+
+// IsHostPortFree reports whether a TCP listener can bind ip:port right now.
+// It binds instead of dialing, so it also catches a port held by a socket that
+// isn't listening, such as the local end of an outgoing connection.
+func IsHostPortFree(ip string, port int) bool {
+	l, err := net.Listen("tcp", net.JoinHostPort(ip, strconv.Itoa(port)))
+	if err != nil {
+		return false
+	}
+	_ = l.Close()
+	return true
+}
+
+// AllocateHostPort returns a port in [minPort, maxPort] that is free on ip and
+// not rejected by skip, scanning from a random offset so concurrent callers are
+// unlikely to try the same port first. It returns "" when ip can't be bound
+// locally (for example a remote Docker host), or when no port qualifies.
+func AllocateHostPort(ip string, minPort, maxPort int, skip func(port string) bool) string {
+	if !IsHostPortFree(ip, 0) {
+		util.Debug("AllocateHostPort: unable to bind %s locally, not choosing a host port", ip)
+		return ""
+	}
+	size := maxPort - minPort + 1
+	start := rand.IntN(size)
+	for i := range size {
+		port := minPort + (start+i)%size
+		portStr := strconv.Itoa(port)
+		if skip != nil && skip(portStr) {
+			continue
+		}
+		if IsHostPortFree(ip, port) {
+			return portStr
+		}
+	}
+	return ""
 }

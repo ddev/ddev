@@ -25,11 +25,13 @@ import (
 	"github.com/moby/moby/api/types/container"
 )
 
-// RouterComposeProjectName is the docker-compose project name of ~/.ddev/.router-compose.yaml
+// RouterComposeProjectName is the docker-compose project name of ~/.ddev/.router-compose.yaml.
+// MinEphemeralPort and MaxEphemeralPort bound the router's substitute ports, kept
+// below the kernel's ephemeral range for the same reason as MinHostPort.
 const (
 	RouterComposeProjectName = "ddev-router"
-	MinEphemeralPort         = 33000
-	MaxEphemeralPort         = 35000
+	MinEphemeralPort         = 30000
+	MaxEphemeralPort         = 32000
 )
 
 // EphemeralRouterPortsAssigned is used when we have assigned an ephemeral port

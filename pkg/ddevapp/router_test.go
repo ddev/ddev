@@ -323,9 +323,9 @@ func TestUseEphemeralPort(t *testing.T) {
 			portNum, err := strconv.Atoi(p.port)
 			require.NoError(t, err)
 			require.GreaterOrEqual(t, portNum, ddevapp.MinEphemeralPort,
-				"app %d (%s) %s port %d is below the ephemeral range", i, app.Name, p.scheme, portNum)
+				"app %d (%s) %s port %d is below the router substitute port range", i, app.Name, p.scheme, portNum)
 			require.LessOrEqual(t, portNum, ddevapp.MaxEphemeralPort,
-				"app %d (%s) %s port %d is above the ephemeral range", i, app.Name, p.scheme, portNum)
+				"app %d (%s) %s port %d is above the router substitute port range", i, app.Name, p.scheme, portNum)
 			claimant := fmt.Sprintf("app %d (%s) %s", i, app.Name, p.scheme)
 			require.NotContains(t, assignedPorts, portNum,
 				"%s got port %d, which was already assigned to %s", claimant, portNum, assignedPorts[portNum])
