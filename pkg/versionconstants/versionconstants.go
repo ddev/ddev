@@ -58,7 +58,7 @@ var WebTagBranch = "20260914_php_8.6"
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "de5a3e3a5c" // 20261001_mysql_97_complaints-de5a3e3a5c
+var BaseDBTag = "9d4baa2aca" // 20261001_mysql_97_complaints-9d4baa2aca
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
 var BaseDBTagBranch = "20261001_mysql_97_complaints"
