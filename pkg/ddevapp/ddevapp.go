@@ -114,6 +114,8 @@ type DdevApp struct {
 	SiteDdevSettingsFile      string                `yaml:"-"`
 	ProviderInstance          *Provider             `yaml:"-"`
 	Hooks                     map[string][]YAMLTask `yaml:"hooks,omitempty"`
+	GlobalHooks               map[string][]YAMLTask `yaml:"-"`
+	SkipGlobalHooks           bool                  `yaml:"skip_global_hooks,omitempty"`
 	UploadDirDeprecated       string                `yaml:"upload_dir,omitempty"`
 	UploadDirs                []string              `yaml:"upload_dirs,omitempty"`
 	WorkingDir                map[string]string     `yaml:"working_dir,omitempty"`
@@ -1414,25 +1416,39 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 		output.UserOut.Debugf("Skipping the execution of %s hook...", hookName)
 		return nil
 	}
-	if cmds := app.Hooks[hookName]; len(cmds) > 0 {
+	tasks := app.tasksForHook(hookName)
+	if len(tasks) > 0 {
 		output.UserOut.Debugf("Executing %s hook...", hookName)
 	}
 
-	for _, c := range app.Hooks[hookName] {
+	for _, ht := range tasks {
+		c := ht.task
 		a := NewTask(app, c)
 		if a == nil {
 			return fmt.Errorf("unable to create task from %v", c)
 		}
 
+		source := ""
+		if ht.global {
+			source = " (global)"
+		}
+
 		if hookName == "pre-start" {
 			for k := range c {
 				if k == "exec" || k == "composer" {
-					return fmt.Errorf("pre-start hooks cannot contain %v", k)
+					return fmt.Errorf("pre-start hooks cannot contain %v%s", k, source)
 				}
 			}
 		}
 
-		output.UserOut.Debugf("=== Running task: %s, output below", a.GetDescription())
+		if ht.global {
+			if service, missing := app.globalExecServiceMissing(a); missing {
+				output.UserOut.Infof("Skipping global %s hook, service '%s' is not available in this project: %s", hookName, service, a.GetDescription())
+				continue
+			}
+		}
+
+		output.UserOut.Debugf("=== Running task%s: %s, output below", source, a.GetDescription())
 
 		err := a.Execute()
 
