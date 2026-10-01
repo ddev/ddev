@@ -12,8 +12,10 @@ import (
 	"charm.land/bubbles/v2/spinner"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
 
@@ -829,16 +831,17 @@ func (m AppModel) buildDashboardContent() string {
 		name := m.styles.ProjectName.Render(fmt.Sprintf("%-*s", nameWidth, displayName))
 		status := m.renderStatus(p.Status)
 		pType := m.styles.ProjectType.Render(fmt.Sprintf("%-*s", typeWidth, p.Type))
-		path := m.styles.URL.Render(fmt.Sprintf("%-*s", pathWidth, truncate(pathDisplay[i], pathWidth)))
+		pathText := truncate(pathDisplay[i], pathWidth)
+		path := linkPadded(m.styles.URL, output.FileURL(p.AppRoot), pathText, pathWidth)
 
 		url := ""
 		if !narrow && p.URL != "" && p.Status == ddevapp.SiteRunning {
 			// Truncate URL if it would overflow
 			maxURL := m.width - nameWidth - 10 - typeWidth - pathWidth - 10
 			if m.width > 0 && maxURL > 10 {
-				url = m.styles.URL.Render(truncate(p.URL, maxURL))
+				url = m.styles.URL.Render(output.Hyperlink(p.URL, truncate(p.URL, maxURL)))
 			} else if m.width <= 0 {
-				url = m.styles.URL.Render(p.URL)
+				url = m.styles.URL.Render(output.Hyperlink(p.URL, p.URL))
 			}
 		}
 
@@ -963,6 +966,9 @@ func (m AppModel) buildDetailContent() string {
 	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Webserver:"), val(fmt.Sprintf("%-14s", d.WebserverType)), label("Node.js:"), val(d.NodeJSVersion))
 	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Docroot:"), val(fmt.Sprintf("%-14s", d.Docroot)), label("Perf:"), val(perfStr))
 	fmt.Fprintf(&content, " %s %s\n", label("Database:"), val(dbStr))
+	if d.AppRoot != "" {
+		fmt.Fprintf(&content, " %s %s\n", label("Approot:"), val(output.Hyperlink(output.FileURL(d.AppRoot), formatProjectPath(d.AppRoot))))
+	}
 	content.WriteString("\n")
 
 	// URLs
@@ -975,7 +981,7 @@ func (m AppModel) buildDetailContent() string {
 		}
 		for _, u := range d.URLs {
 			displayURL := truncate(u, maxURLWidth)
-			content.WriteString("   " + m.styles.URL.Render(displayURL) + "\n")
+			content.WriteString("   " + m.styles.URL.Render(output.Hyperlink(u, displayURL)) + "\n")
 		}
 		content.WriteString("\n")
 	}
@@ -987,7 +993,7 @@ func (m AppModel) buildDetailContent() string {
 			maxURLWidth = 60
 		}
 		displayMailpit := truncate(d.MailpitURL, maxURLWidth)
-		fmt.Fprintf(&content, " %s %s\n", label("Mailpit:"), m.styles.URL.Render(displayMailpit))
+		fmt.Fprintf(&content, " %s %s\n", label("Mailpit:"), m.styles.URL.Render(output.Hyperlink(d.MailpitURL, displayMailpit)))
 	}
 	if d.DBPublishedPort != "" {
 		fmt.Fprintf(&content, " %s %s\n", label("DB Port:"), val(d.DBPublishedPort))
@@ -1274,6 +1280,13 @@ func truncate(s string, maxLen int) string {
 		return s[:maxLen]
 	}
 	return s[:maxLen-3] + "..."
+}
+
+// linkPadded renders text in style as a hyperlink to target, then pads to width.
+// Padding goes outside the link so only the visible text is clickable.
+func linkPadded(style lipgloss.Style, target, text string, width int) string {
+	pad := strings.Repeat(" ", max(0, width-ansi.StringWidth(text)))
+	return style.Render(output.Hyperlink(target, text)) + pad
 }
 
 func formatProjectPath(path string) string {
