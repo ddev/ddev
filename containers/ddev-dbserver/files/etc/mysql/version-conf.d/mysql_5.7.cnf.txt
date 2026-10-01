@@ -1,0 +1,16 @@
+[mysqld]
+
+# skip-host-cache is no longer valid in mysql 8.x, but still works in mysql 5
+skip-host-cache
+symbolic-links=0
+query-cache-type               = 0
+query-cache-size               = 0
+
+# innodb_large_prefix and innodb_file_format (Barracuda) are the defaults in
+# 5.7 and deprecated there, so unlike mysql_5.cnf.txt (5.6) they're not set.
+secure_file_priv=""
+
+# The 5.7 default still enables the deprecated TLSv1 and TLSv1.1
+tls-version=TLSv1.2,TLSv1.3
+
+innodb-log-file-size=50331648

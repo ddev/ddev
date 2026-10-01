@@ -58,10 +58,10 @@ var WebTagBranch = "20260914_php_8.6"
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "ac27cd869a" // 20260922_rfay_dont_build_image-ac27cd869a
+var BaseDBTag = "8187b063b3" // 20261001_mysql_97_complaints-8187b063b3
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
-var BaseDBTagBranch = "20260922_rfay_dont_build_image"
+var BaseDBTagBranch = "20261001_mysql_97_complaints"
 
 // TraefikRouterImage is image for router
 var TraefikRouterImage = "ddev/ddev-traefik-router"

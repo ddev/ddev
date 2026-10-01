@@ -8,3 +8,7 @@ query-cache-size               = 0
 
 innodb_large_prefix=true
 innodb_file_format=barracuda
+
+innodb-log-file-size=50331648
+# Default is OFF in these versions; deprecated (always on) in newer MariaDB
+innodb-file-per-table=1
