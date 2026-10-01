@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +21,7 @@ var UtilityHyperlinkCmd = &cobra.Command{
 	Short:       "Print a URL, or link the URLs in stdin, as terminal hyperlinks when supported",
 	Hidden:      true,
 	Args:        cobra.MaximumNArgs(2),
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			linkText := args[0]
 			if len(args) > 1 {
@@ -28,9 +30,21 @@ var UtilityHyperlinkCmd = &cobra.Command{
 			fmt.Println(output.Hyperlink(args[0], linkText))
 			return
 		}
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			fmt.Println(output.LinkifyURLs(scanner.Text()))
+		if isatty.IsTerminal(os.Stdin.Fd()) {
+			_ = cmd.Help()
+			return
+		}
+		// bufio.Reader rather than Scanner, which stops at lines over 64 KB
+		// after it has already consumed input a fallback could have printed
+		reader := bufio.NewReader(os.Stdin)
+		for {
+			line, err := reader.ReadString('\n')
+			if line != "" {
+				fmt.Println(output.LinkifyURLs(strings.TrimSuffix(line, "\n")))
+			}
+			if err != nil {
+				return
+			}
 		}
 	},
 }

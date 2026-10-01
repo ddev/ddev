@@ -77,19 +77,26 @@ func TestDetailHyperlinks(t *testing.T) {
 }
 
 func TestEditorURL(t *testing.T) {
-	require.Equal(t, "vscode://file/home/user/my%20site", editorURL("vscode", "/home/user/my site"))
+	t.Setenv("WSL_DISTRO_NAME", "")
+	require.Equal(t, "vscode://file/home/user/my%20site?windowId=_blank", editorURL("vscode", "/home/user/my site"))
 	require.Equal(t, "phpstorm://open?file=/home/user/my%20site", editorURL("phpstorm", "/home/user/my site"))
-	require.Equal(t, "vscode://file/C:/Users/me/site", editorURL("vscode", "C:/Users/me/site"))
+	require.Equal(t, "phpstorm://open?file=/home/user/a%26b%2Bc", editorURL("phpstorm", "/home/user/a&b+c"))
+	require.Equal(t, "vscode://file/C:/Users/me/site?windowId=_blank", editorURL("vscode", "C:/Users/me/site"))
 	require.Empty(t, editorURL("unknown", "/home/user"))
+
+	t.Setenv("WSL_DISTRO_NAME", "Ubuntu-26.04")
+	require.Equal(t, "vscode://vscode-remote/wsl+Ubuntu-26.04/home/user/my%20site?windowId=_blank", editorURL("vscode", "/home/user/my site"))
+	require.Equal(t, "phpstorm://open?file=//wsl.localhost/Ubuntu-26.04/home/user/my%20site", editorURL("phpstorm", "/home/user/my site"))
 }
 
 func TestDetailEditorLinks(t *testing.T) {
+	t.Setenv("WSL_DISTRO_NAME", "")
 	m := NewAppModel()
 	m.width = 100
 	m.detail = &ProjectDetail{AppRoot: "/home/user/site-a"}
 
 	out := m.buildDetailContent()
-	require.Contains(t, out, "\x1b]8;;vscode://file/home/user/site-a\x1b\\")
+	require.Contains(t, out, "\x1b]8;;vscode://file/home/user/site-a?windowId=_blank\x1b\\")
 	require.Contains(t, out, "\x1b]8;;phpstorm://open?file=/home/user/site-a\x1b\\")
 }
 

@@ -11,7 +11,7 @@
 IFS=$'\n'
 
 # Print stdin with URLs as terminal hyperlinks when supported, plain otherwise
-linkify() { ddev utility hyperlink 2>/dev/null || cat; }
+linkify() { "${DDEV_EXECUTABLE:-ddev}" utility hyperlink 2>/dev/null || cat; }
 
 for ddev_path in $(which -a ddev | uniq); do
   case $ddev_path in

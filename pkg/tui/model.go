@@ -689,7 +689,7 @@ func (m AppModel) openProjectCmd(msg tea.KeyPressMsg, appRoot string) tea.Cmd {
 	case key.Matches(msg, m.keys.OpenVSC):
 		return openTarget("VS Code", editorURL("vscode", appRoot))
 	case key.Matches(msg, m.keys.OpenPhpS):
-		return openTarget("PhpStorm", editorURL("phpstorm", appRoot))
+		return openInPhpStorm(appRoot)
 	}
 	return openTarget("directory", appRoot)
 }
@@ -1317,17 +1317,28 @@ func truncate(s string, maxLen int) string {
 }
 
 // editorURL returns a URL that opens dir through an editor's registered URL
-// scheme, or "" for an unknown editor.
+// scheme, or "" for an unknown editor. Under WSL the editors run on Windows,
+// so they get a WSL remote URI or a \\wsl.localhost path instead of a Linux path.
 func editorURL(editor, dir string) string {
 	p := filepath.ToSlash(dir)
 	if !strings.HasPrefix(p, "/") {
 		p = "/" + p
 	}
+	distro := os.Getenv("WSL_DISTRO_NAME")
 	switch editor {
 	case "vscode":
-		return (&url.URL{Scheme: "vscode", Host: "file", Path: p}).String()
+		u := &url.URL{Scheme: "vscode", Host: "file", Path: p, RawQuery: "windowId=_blank"}
+		if distro != "" {
+			u.Host = "vscode-remote"
+			u.Path = "/wsl+" + distro + p
+		}
+		return u.String()
 	case "phpstorm":
-		return "phpstorm://open?file=" + (&url.URL{Path: p}).EscapedPath()
+		if distro != "" {
+			p = "//wsl.localhost/" + distro + p
+		}
+		// EscapedPath leaves & and + alone, but they would end the file= value
+		return "phpstorm://open?file=" + strings.NewReplacer("&", "%26", "+", "%2B").Replace((&url.URL{Path: p}).EscapedPath())
 	}
 	return ""
 }

@@ -25,7 +25,7 @@ Running `ddev` with no arguments launches an interactive terminal dashboard. The
 | <kbd>?</kbd> | Show full help |
 | <kbd>q</kbd> | Quit |
 
-In terminals that support [OSC 8 hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda), project paths and URLs in the dashboard and detail view are clickable, as are the VS Code and PhpStorm links in the detail view. The editor links use the `vscode://` and `phpstorm://` URL schemes, so they work only when that editor is installed, and some terminals block those schemes.
+In terminals that support [OSC 8 hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda), project paths and URLs in the dashboard and detail view are clickable, as are the VS Code and PhpStorm links in the detail view. The editor links use the `vscode://` and `phpstorm://` URL schemes, so they work only when that editor is installed, and some terminals block those schemes. PhpStorm does not register `phpstorm://` on Windows, so there the PhpStorm link needs a separately installed handler. The <kbd>p</kbd> key avoids this by using PhpStorm's command-line launcher when it is on your `PATH`, which [JetBrains Toolbox](https://www.jetbrains.com/toolbox-app/) can install.
 
 To disable the dashboard and show the classic help text instead, set [`no_tui: true`](../configuration/config.md#no_tui) in your global configuration (`$HOME/.ddev/global_config.yaml`), or set the environment variable `DDEV_NO_TUI=true`.
 

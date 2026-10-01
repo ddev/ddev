@@ -15,6 +15,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 // operationAutoReturnDelay is the time to wait before auto-returning from a
@@ -353,18 +354,64 @@ func openTarget(what, target string) tea.Cmd {
 		case "windows":
 			cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", target)
 		default:
-			if _, err := exec.LookPath("xdg-open"); err == nil {
-				cmd = exec.Command("xdg-open", target)
-			} else if _, err := exec.LookPath("explorer.exe"); err == nil {
-				// WSL; explorer.exe exits non-zero even on success
-				_ = exec.Command("explorer.exe", target).Run()
-				return openedMsg{what: what}
-			} else {
+			if nodeps.IsWSL2() {
+				return openedMsg{what: what, err: openOnWSL(target)}
+			}
+			if _, err := exec.LookPath("xdg-open"); err != nil {
 				return openedMsg{what: what, err: fmt.Errorf("no opener found (install xdg-utils)")}
 			}
+			cmd = exec.Command("xdg-open", target)
 		}
 		return openedMsg{what: what, err: cmd.Run()}
 	}
+}
+
+// openInPhpStorm opens dir with a PhpStorm command-line launcher when one is
+// on PATH, since PhpStorm does not register phpstorm:// on Windows.
+func openInPhpStorm(dir string) tea.Cmd {
+	var launcher string
+	// Toolbox names it phpstorm on Linux and macOS, PhpStorm on Windows
+	for _, name := range []string{"phpstorm", "PhpStorm", "phpstorm64.exe"} {
+		if p, err := exec.LookPath(name); err == nil {
+			launcher = p
+			break
+		}
+	}
+	if launcher == "" {
+		return openTarget("PhpStorm", editorURL("phpstorm", dir))
+	}
+	return func() tea.Msg {
+		if nodeps.IsWSL2() {
+			winPath, err := exec.Command("wslpath", "-w", dir).Output()
+			if err != nil {
+				return openedMsg{what: "PhpStorm", err: fmt.Errorf("wslpath -w %s: %w", dir, err)}
+			}
+			dir = strings.TrimSpace(string(winPath))
+		}
+		// The launcher may run as the IDE process itself, so don't wait for it
+		c := exec.Command(launcher, dir)
+		if err := c.Start(); err != nil {
+			return openedMsg{what: "PhpStorm", err: err}
+		}
+		go func() { _ = c.Wait() }()
+		return openedMsg{what: "PhpStorm"}
+	}
+}
+
+// openOnWSL opens target with Windows tools directly, since xdg-open's WSL
+// support is missing before xdg-utils 1.2 and reports failure whenever it
+// opens a directory.
+func openOnWSL(target string) error {
+	if strings.Contains(target, "://") {
+		return exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", target).Run()
+	}
+	winPath, err := exec.Command("wslpath", "-w", target).Output()
+	if err != nil {
+		return fmt.Errorf("wslpath -w %s: %w", target, err)
+	}
+	// explorer.exe exits non-zero even on success
+	_ = exec.Command("explorer.exe", strings.TrimSpace(string(winPath))).Run()
+	return nil
 }
 
 // copyToClipboard copies text to the system clipboard using platform-specific tools.
