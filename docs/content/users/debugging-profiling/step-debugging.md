@@ -93,7 +93,7 @@ If you encounter the error: "Can't find a source position. Server with name 'SIT
 
 ## Path Mapping and Skipping Files
 
-Xdebug 3.5 and newer can translate container paths to host paths itself. While Xdebug is enabled, DDEV writes `.xdebug/ddev-generated.map` in the project, mapping `/var/www/html/` to the project's directory on the host. It removes the file when Xdebug is disabled, and the file is excluded from Git by a `.xdebug/.gitignore` that DDEV also generates. DDEV skips this when `xdebug_ide_location` is set, on Windows and WSL2, in Codespaces and devcontainers, and with a remote Docker host, because the IDE may not see the project at that path.
+Xdebug 3.5 and newer can translate container paths to host paths itself. While Xdebug is enabled, DDEV writes `.xdebug/ddev-generated.map` in the project, mapping `/var/www/html/` to the project's directory on the host. It removes the file when Xdebug is disabled, and the file is excluded from Git by a `.xdebug/.gitignore` that DDEV also generates. DDEV skips this when `xdebug_ide_location` is set, on Windows and WSL2, in Codespaces and dev containers, and with a remote Docker host, because the IDE may not see the project at that path.
 
 To have Xdebug skip files such as dependencies, add your own map file, for example `.xdebug/skip-vendor.map`:
 
