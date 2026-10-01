@@ -2183,8 +2183,8 @@ ddev launch /manager/
           directory: /var/www/html
     EOF
 
-# When it prompts "Directory not empty. Continue?", choose Yes.
-ddev exec "npx sv create --template=demo --types=ts --no-add-ons --no-install ."
+    # When it prompts "Directory not empty. Continue?", choose Yes
+    ddev exec "npx sv create --template=demo --types=ts --no-add-ons --no-install ."
 
     # Use adapter-node, and set the port and allowed hosts in vite.config.ts
     ddev exec "sed -i -e 's#adapter-auto#adapter-node#' -e 's#^export default defineConfig({#&\n\tserver: { port: 3000, allowedHosts: true },#' vite.config.ts"
