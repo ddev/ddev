@@ -15,6 +15,9 @@ const NetName = "ddev_default"
 
 // EnsureNetwork will ensure the Docker network for DDEV is created.
 func EnsureNetwork(name string, netOptions client.NetworkCreateOptions) error {
+	// Docker allows duplicate network names, so check-then-create must not interleave.
+	defer AcquireGlobalLock("Docker network setup")()
+
 	// Pre-check for network duplicates
 	RemoveNetworkDuplicates(name)
 
