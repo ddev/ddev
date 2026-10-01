@@ -1567,9 +1567,12 @@ ddev ssh -d /var/www/html
 
 Start a DDEV project.
 
+If you run `ddev start` in a directory that has no DDEV project but looks like a web project, DDEV shows the configuration `ddev config --auto` would create (name, URL, project type, docroot, PHP version, database, web server, and any CMS settings files it would write) and asks whether to use it, customize it with the `ddev config` questions, or cancel. DDEV recognizes a directory as a web project when it detects a supported project type, or finds a `composer.json`, a `package.json`, or an `index.php` or `index.html` at the root or in a common docroot such as `web` or `public`. Without a terminal to ask in, as in CI or a script, or with `--skip-confirmation` (`-y`), `ddev start` doesn't configure anything unless you add `--auto-config`.
+
 Flags:
 
 * `--all`, `-a`: Start all projects.
+* `--auto-config`: If the current directory has no DDEV project but looks like a web project, configure it as `ddev config --auto` would, without asking, then start it.
 * `--no-cache`: Rebuild custom Docker image layers without cache.
 * `--omit-snapshot`, `-O`: With `--reset-database`, skip the snapshot of the database being removed.
 * `--profiles`: Start optional comma-separated Docker Compose profiles.
@@ -1591,6 +1594,9 @@ ddev start my-project my-other-project
 
 # Start all projects
 ddev start --all
+
+# Configure the current directory with DDEV's defaults if it has no project yet, then start it
+ddev start --auto-config
 
 # Throw away the current database and start over with a new, empty one
 ddev start --reset-database

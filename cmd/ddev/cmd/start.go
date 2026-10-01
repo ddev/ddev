@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -33,6 +34,7 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 	Example: `ddev start
 ddev start <project1> <project2>
 ddev start --all
+ddev start --auto-config
 ddev start --seed-snapshot=mysnapshot
 ddev start --seed-snapshot=$HOME/tmp/mysnapshot-mariadb_11.8.zst --reset-database -y
 ddev start --reset-database
@@ -88,6 +90,12 @@ ddev start --reset-database -y`,
 			util.Failed(err.Error())
 		}
 
+		autoConfig, _ := cmd.Flags().GetBool("auto-config")
+		skipConfirmation, _ := cmd.Flags().GetBool("skip-confirmation")
+		if autoConfig && (len(args) > 0 || startAll || selectFlag) {
+			util.Failed("--auto-config only applies to the project in the current directory, so it can't be combined with project names, --all, or --select")
+		}
+
 		if selectFlag {
 			inactiveProjects, err := ddevapp.GetInactiveProjects()
 
@@ -124,6 +132,10 @@ ddev start --reset-database -y`,
 		}
 
 		projects, err := getRequestedProjects(args, startAll)
+		if len(args) == 0 && !startAll && errors.Is(err, ddevapp.ErrNoProjectConfig) {
+			configureProjectHere(autoConfig, skipConfirmation)
+			projects, err = getRequestedProjects(args, startAll)
+		}
 		if err != nil {
 			util.Failed("Failed to start project(s): %v", err)
 		}
@@ -137,7 +149,6 @@ ddev start --reset-database -y`,
 		seedSnapshot, _ := cmd.Flags().GetString("seed-snapshot")
 		resetDatabase, _ := cmd.Flags().GetBool("reset-database")
 		omitSnapshot, _ := cmd.Flags().GetBool("omit-snapshot")
-		skipConfirmation, _ := cmd.Flags().GetBool("skip-confirmation")
 		checkResetDatabaseFlags(resetDatabase, omitSnapshot, startAll)
 
 		for _, project := range projects {
@@ -225,6 +236,7 @@ func registerStartCmd() {
 	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
 	StartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
 	StartCmd.Flags().BoolP("no-cache", "", false, "Rebuild custom Docker image layers without cache")
+	StartCmd.Flags().Bool("auto-config", false, "If the current directory has no DDEV project but looks like a web project, configure it as 'ddev config --auto' would, without asking")
 	addResetDatabaseFlags(StartCmd)
 	StartCmd.Flags().String("profiles", "", "Start optional comma-separated docker compose profiles")
 	StartCmd.Flags().BoolP("select", "s", false, "Interactively select a project to start")

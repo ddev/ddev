@@ -27,6 +27,17 @@ func skipNestedProject(appRoot string) string {
 	return appRoot
 }
 
+// RegisteredProjectAbove returns the root of a project in `ddev list` that
+// contains dir, or "" if there is none.
+func RegisteredProjectAbove(dir string) string {
+	for d := filepath.Dir(dir); filepath.Dir(d) != d; d = filepath.Dir(d) {
+		if isRegisteredProject(d) {
+			return d
+		}
+	}
+	return ""
+}
+
 // isRegisteredProject reports whether dir is the root of a project in `ddev list`.
 func isRegisteredProject(dir string) bool {
 	for _, p := range globalconfig.DdevProjectList {

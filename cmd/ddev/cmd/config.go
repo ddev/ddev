@@ -142,8 +142,13 @@ var ConfigCommand = &cobra.Command{
 
 // handleConfigRun handles all the flag processing for any provider
 func handleConfigRun(cmd *cobra.Command, args []string) {
-	app := getConfigApp()
+	runConfig(cmd, args, getConfigApp(), cmd.Flags().NFlag() == 0)
+	util.Success("Configuration complete. You may now run 'ddev start'.")
+}
 
+// runConfig configures app and writes its config.yaml, asking the user for
+// the main settings if prompt is true and taking them from cmd's flags otherwise.
+func runConfig(cmd *cobra.Command, args []string, app *ddevapp.DdevApp, prompt bool) {
 	err := ddevapp.HasAllowedLocation(app)
 	if err != nil {
 		util.Failed("Unable to run `ddev config`: %v", err)
@@ -173,8 +178,7 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed("Failed to process hook 'pre-config'")
 	}
 
-	// If no flags are provided, prompt for configuration
-	if cmd.Flags().NFlag() == 0 {
+	if prompt {
 		err = app.PromptForConfig()
 		if err != nil {
 			util.Failed("There was a problem configuring your project: %v", err)
@@ -212,8 +216,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		util.Failed("Failed to process hook 'post-config'")
 	}
-
-	util.Success("Configuration complete. You may now run 'ddev start'.")
 }
 
 func registerConfigCmd() {
