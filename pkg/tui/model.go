@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -834,18 +835,18 @@ func (m AppModel) buildDashboardContent() string {
 		pathText := truncate(pathDisplay[i], pathWidth)
 		path := linkPadded(m.styles.URL, output.FileURL(p.AppRoot), pathText, pathWidth)
 
-		url := ""
+		siteURL := ""
 		if !narrow && p.URL != "" && p.Status == ddevapp.SiteRunning {
 			// Truncate URL if it would overflow
 			maxURL := m.width - nameWidth - 10 - typeWidth - pathWidth - 10
 			if m.width > 0 && maxURL > 10 {
-				url = m.styles.URL.Render(output.Hyperlink(p.URL, truncate(p.URL, maxURL)))
+				siteURL = m.styles.URL.Render(output.Hyperlink(p.URL, truncate(p.URL, maxURL)))
 			} else if m.width <= 0 {
-				url = m.styles.URL.Render(output.Hyperlink(p.URL, p.URL))
+				siteURL = m.styles.URL.Render(output.Hyperlink(p.URL, p.URL))
 			}
 		}
 
-		fmt.Fprintf(&b, "%s%s %s  %s  %s  %s\n", cursor, name, status, pType, path, url)
+		fmt.Fprintf(&b, "%s%s %s  %s  %s  %s\n", cursor, name, status, pType, path, siteURL)
 	}
 
 	return b.String()
@@ -968,6 +969,9 @@ func (m AppModel) buildDetailContent() string {
 	fmt.Fprintf(&content, " %s %s\n", label("Database:"), val(dbStr))
 	if d.AppRoot != "" {
 		fmt.Fprintf(&content, " %s %s\n", label("Approot:"), val(output.Hyperlink(output.FileURL(d.AppRoot), formatProjectPath(d.AppRoot))))
+		fmt.Fprintf(&content, " %s %s  %s\n", label("Open in:"),
+			val(output.Hyperlink(editorURL("vscode", d.AppRoot), "VS Code")),
+			val(output.Hyperlink(editorURL("phpstorm", d.AppRoot), "PhpStorm")))
 	}
 	content.WriteString("\n")
 
@@ -1280,6 +1284,22 @@ func truncate(s string, maxLen int) string {
 		return s[:maxLen]
 	}
 	return s[:maxLen-3] + "..."
+}
+
+// editorURL returns a URL that opens dir through an editor's registered URL
+// scheme, or "" for an unknown editor.
+func editorURL(editor, dir string) string {
+	p := filepath.ToSlash(dir)
+	if !strings.HasPrefix(p, "/") {
+		p = "/" + p
+	}
+	switch editor {
+	case "vscode":
+		return (&url.URL{Scheme: "vscode", Host: "file", Path: p}).String()
+	case "phpstorm":
+		return "phpstorm://open?file=" + (&url.URL{Path: p}).EscapedPath()
+	}
+	return ""
 }
 
 // linkPadded renders text in style as a hyperlink to target, then pads to width.

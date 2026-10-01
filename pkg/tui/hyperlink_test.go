@@ -73,3 +73,20 @@ func TestDetailHyperlinks(t *testing.T) {
 	require.Contains(t, out, "\x1b]8;;https://site-a.ddev.site:8026\x1b\\")
 	requireBalancedLinks(t, out)
 }
+
+func TestEditorURL(t *testing.T) {
+	require.Equal(t, "vscode://file/home/user/my%20site", editorURL("vscode", "/home/user/my site"))
+	require.Equal(t, "phpstorm://open?file=/home/user/my%20site", editorURL("phpstorm", "/home/user/my site"))
+	require.Equal(t, "vscode://file/C:/Users/me/site", editorURL("vscode", "C:/Users/me/site"))
+	require.Empty(t, editorURL("unknown", "/home/user"))
+}
+
+func TestDetailEditorLinks(t *testing.T) {
+	m := NewAppModel()
+	m.width = 100
+	m.detail = &ProjectDetail{AppRoot: "/home/user/site-a"}
+
+	out := m.buildDetailContent()
+	require.Contains(t, out, "\x1b]8;;vscode://file/home/user/site-a\x1b\\")
+	require.Contains(t, out, "\x1b]8;;phpstorm://open?file=/home/user/site-a\x1b\\")
+}
