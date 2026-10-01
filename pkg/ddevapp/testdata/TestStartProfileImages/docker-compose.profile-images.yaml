@@ -1,0 +1,35 @@
+services:
+  x1:
+    build:
+      context: ./profile-x1
+    container_name: ddev-${DDEV_SITENAME}-x1
+    init: true
+    command: tail -f /dev/null
+    profiles:
+      - x
+  x2:
+    build:
+      context: ./profile-x1
+      dockerfile_inline: |
+        FROM busybox:stable
+        RUN echo inline-1 > /inline.txt
+    container_name: ddev-${DDEV_SITENAME}-x2
+    init: true
+    command: tail -f /dev/null
+    profiles:
+      - x
+  y1:
+    build:
+      context: ./profile-y1
+    container_name: ddev-${DDEV_SITENAME}-y1
+    init: true
+    command: tail -f /dev/null
+    profiles:
+      - y
+  z1:
+    image: busybox:1.36.1-musl
+    container_name: ddev-${DDEV_SITENAME}-z1
+    init: true
+    command: tail -f /dev/null
+    profiles:
+      - z

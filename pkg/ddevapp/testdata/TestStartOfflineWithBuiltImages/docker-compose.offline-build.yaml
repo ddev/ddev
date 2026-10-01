@@ -5,3 +5,11 @@ services:
       context: ./offline-build
     init: true
     command: tail -f /dev/null
+  offline-profile:
+    container_name: ddev-${DDEV_SITENAME}-offline-profile
+    build:
+      context: ./offline-build
+    init: true
+    command: tail -f /dev/null
+    profiles:
+      - offline-profile

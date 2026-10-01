@@ -12,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/require"
@@ -111,6 +112,110 @@ func TestStartWithExitedProfileContainer(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestStartProfileImages checks when start and restart build, pull, and
+// rebuild the images of profile-gated services.
+// See https://github.com/ddev/ddev/issues/8817
+func TestStartProfileImages(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+	require.NoFileExists(t, app.GetConfigPath(".env"))
+
+	xImage := app.GetComposeProjectName() + "-x1:latest"
+	x2Image := app.GetComposeProjectName() + "-x2:latest"
+	yImage := app.GetComposeProjectName() + "-y1:latest"
+	zImage := "busybox:1.36.1-musl"
+	xDockerfile := app.GetConfigPath("profile-x1/Dockerfile")
+	removeImages := func() {
+		for _, image := range []string{xImage, x2Image, yImage, zImage} {
+			_ = dockerutil.RemoveImage(image)
+		}
+	}
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(app.GetConfigPath("docker-compose.profile-images.yaml"))
+		_ = os.RemoveAll(app.GetConfigPath("profile-x1"))
+		_ = os.RemoveAll(app.GetConfigPath("profile-y1"))
+		_ = os.RemoveAll(app.GetConfigPath(".env"))
+		removeImages()
+	})
+	removeImages()
+
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "docker-compose.profile-images.yaml"), app.GetConfigPath("docker-compose.profile-images.yaml"))
+	require.NoError(t, err)
+	for _, dir := range []string{"profile-x1", "profile-y1"} {
+		err = fileutil.CopyDir(filepath.Join(origDir, "testdata", t.Name(), dir), app.GetConfigPath(dir))
+		require.NoError(t, err)
+	}
+
+	readRandom := func(image string) string {
+		_, out, err := dockerutil.RunSimpleContainer(image, "read-random-"+util.RandString(6), []string{"cat", "/random.txt"}, nil, nil, nil, "", true, false, nil, nil, nil)
+		require.NoError(t, err)
+		return strings.TrimSpace(out)
+	}
+	containerID := func(service string) string {
+		c, err := ddevapp.GetContainer(app, service)
+		require.NoError(t, err)
+		return c.ID
+	}
+	requireNoImage := func(image string) {
+		exists, err := dockerutil.ImageExistsLocally(image)
+		require.NoError(t, err)
+		require.False(t, exists, "image %s should not exist", image)
+	}
+
+	err = app.Start()
+	require.NoError(t, err)
+	requireNoImage(xImage)
+	requireNoImage(x2Image)
+	requireNoImage(yImage)
+	requireNoImage(zImage)
+
+	err = app.Stop(false, false)
+	require.NoError(t, err)
+	err = app.StartWith(ddevapp.StartOptions{Profiles: []string{"x"}})
+	require.NoError(t, err)
+	firstRandom := readRandom(xImage)
+	x1ID := containerID("x1")
+
+	err = fileutil.AppendStringToFile(xDockerfile, "RUN touch /changed.txt\n")
+	require.NoError(t, err)
+	err = fileutil.ReplaceStringInFile("inline-1", "inline-2", app.GetConfigPath("docker-compose.profile-images.yaml"), app.GetConfigPath("docker-compose.profile-images.yaml"))
+	require.NoError(t, err)
+	err = app.StartWith(ddevapp.StartOptions{Profiles: []string{"x"}})
+	require.NoError(t, err)
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "x1", Cmd: "ls /changed.txt"})
+	require.NoError(t, err)
+	out, _, err := app.Exec(&ddevapp.ExecOpts{Service: "x2", Cmd: "cat /inline.txt"})
+	require.NoError(t, err)
+	require.Equal(t, "inline-2", strings.TrimSpace(out))
+	require.NotEqual(t, x1ID, containerID("x1"))
+	require.Equal(t, firstRandom, readRandom(xImage))
+
+	webID := containerID("web")
+	err = app.StartWith(ddevapp.StartOptions{Profiles: []string{"z"}})
+	require.NoError(t, err)
+	_, err = ddevapp.GetContainer(app, "z1")
+	require.NoError(t, err)
+	require.Equal(t, webID, containerID("web"))
+
+	err = app.RestartWith(ddevapp.StartOptions{NoCache: true})
+	require.NoError(t, err)
+	_, err = ddevapp.GetContainer(app, "x1")
+	require.Error(t, err)
+	require.NotEqual(t, firstRandom, readRandom(xImage))
+	requireNoImage(yImage)
+
+	err = os.WriteFile(app.GetConfigPath(".env"), []byte("COMPOSE_PROFILES=y\n"), 0644)
+	require.NoError(t, err)
+	err = app.Restart()
+	require.NoError(t, err)
+	_, err = ddevapp.GetContainer(app, "y1")
+	require.NoError(t, err)
+}
+
 // TestPlatformOverride makes sure that a project which overrides the web
 // service platform (e.g. `platform: linux/amd64` on an arm64 host) actually
 // builds and runs the web image for the requested architecture.
@@ -188,7 +293,8 @@ func TestStartOfflineWithBuiltImages(t *testing.T) {
 	require.Contains(t, err.Error(), "offline.invalid")
 
 	// A locally built image has no registry digest, so the registry check falls
-	// back to the DNS check, which is faked here as offline.
+	// back to the DNS check, which is faked here as offline. The never-built
+	// offline-profile service must not block the fallback.
 	versionconstants.UtilitiesImage = app.GetComposeProjectName() + "-offline-build:latest"
 	globalconfig.IsInternetActiveAlreadyChecked = true
 	globalconfig.IsInternetActiveResult = false

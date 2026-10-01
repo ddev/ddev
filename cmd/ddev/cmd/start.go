@@ -132,6 +132,8 @@ ddev start --reset-database -y`,
 		}
 
 		noCache, _ := cmd.Flags().GetBool("no-cache")
+		profilesFlag, _ := cmd.Flags().GetString("profiles")
+		startOptions := ddevapp.StartOptions{Profiles: splitProfiles(profilesFlag), NoCache: noCache}
 		seedSnapshot, _ := cmd.Flags().GetString("seed-snapshot")
 		resetDatabase, _ := cmd.Flags().GetBool("reset-database")
 		omitSnapshot, _ := cmd.Flags().GetBool("omit-snapshot")
@@ -142,7 +144,6 @@ ddev start --reset-database -y`,
 			if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {
 				util.Failed("Failed to start %s: %v", project.GetName(), err)
 			}
-			project.NoCache = noCache
 			project.SeedSnapshot = seedSnapshot
 
 			if resetDatabase {
@@ -153,16 +154,8 @@ ddev start --reset-database -y`,
 
 			output.UserOut.Printf("Starting %s...", project.GetName())
 
-			// If --profiles, start the optional services, which also starts project
-			if optionalProfiles, err := cmd.Flags().GetString("profiles"); err == nil && optionalProfiles != "" {
-				if err := project.StartOptionalProfiles(strings.Split(optionalProfiles, ",")); err != nil {
-					util.Failed("Failed to start optional profiles '%s': %v", optionalProfiles, err)
-				}
-			} else {
-				// otherwise just start the project
-				if err := project.Start(); err != nil {
-					util.Failed("Failed to start %s: %v", project.GetName(), err)
-				}
+			if err := project.StartWith(startOptions); err != nil {
+				util.Failed("Failed to start %s: %v", project.GetName(), err)
 			}
 
 			util.Success("Successfully started %s", project.GetName())
@@ -171,6 +164,18 @@ ddev start --reset-database -y`,
 		util.WarnAboutMultipleGlobalDdevDirs()
 		amplitude.CheckSetUp()
 	},
+}
+
+// splitProfiles turns a --profiles value into a profile list, or nil when it
+// names none, so that COMPOSE_PROFILES applies.
+func splitProfiles(flag string) []string {
+	var profiles []string
+	for profile := range strings.SplitSeq(flag, ",") {
+		if profile = strings.TrimSpace(profile); profile != "" {
+			profiles = append(profiles, profile)
+		}
+	}
+	return profiles
 }
 
 func emitReachProjectMessage(project *ddevapp.DdevApp) {

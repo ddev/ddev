@@ -2,9 +2,7 @@ package ddevapp
 
 import (
 	"bytes"
-	"context"
 	"embed"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -33,7 +31,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/docker/compose/v5/cmd/display"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/mattn/go-isatty"
 	"github.com/moby/moby/api/pkg/stdcopy"
@@ -152,7 +149,6 @@ type DdevApp struct {
 	HostXHGuiPort             string                `yaml:"host_xhgui_port,omitempty"`
 	XHProfMode                types.XHProfMode      `yaml:"xhprof_mode,omitempty"`
 	ComposeYaml               *composeTypes.Project `yaml:"-"`
-	NoCache                   bool                  `yaml:"-"`
 	// SeedSnapshot is the `ddev start --seed-snapshot` value, a snapshot name or
 	// path used to seed a brand-new database volume. It applies to one start only
 	// and is never written to config.yaml.
@@ -1458,70 +1454,39 @@ func (app *DdevApp) GetDBImage() string {
 	return ddevImages.GetDBImage(app.Database.Type, app.Database.Version)
 }
 
-// composeBuild executes docker-compose build.
-//
-// args are optional: service names or "--no-cache"
-// Returns the stdout output on success, or an error on failure.
-func (app *DdevApp) composeBuild(args ...string) (string, error) {
-	noCache := app.NoCache
-	var services []string
-	for _, arg := range args {
-		if arg == "--no-cache" {
-			noCache = true
-		} else if !strings.HasPrefix(arg, "-") {
-			services = append(services, arg)
-		}
-	}
-
-	project, err := dockerutil.LoadComposeProject([]string{app.DockerComposeFullRenderedYAMLPath()}, api.ProjectLoadOptions{
-		ProjectName: app.GetComposeProjectName(),
-	})
-	if err != nil {
-		return "", fmt.Errorf("docker-compose build failed: %v", err)
-	}
-
-	goCtx, _, err := dockerutil.GetDockerClient()
-	if err != nil {
-		return "", fmt.Errorf("docker-compose build failed: %v", err)
-	}
-
-	util.Debug("Executing docker-compose build -f %s", app.DockerComposeFullRenderedYAMLPath())
-
-	ctx, cancel := context.WithTimeout(goCtx, time.Hour)
-	defer cancel()
-
-	stopDots := util.ShowDots()
-
-	out, stderr, err := dockerutil.CaptureOutput(func(svc api.Compose) error {
-		return svc.Build(ctx, project, api.BuildOptions{
-			Progress: display.ModePlain,
-			NoCache:  noCache,
-			Services: services,
-		})
-	})
-
-	stopDots()
-
-	timedOut := errors.Is(ctx.Err(), context.DeadlineExceeded)
-	cancel()
-
-	if timedOut {
-		return out, fmt.Errorf("docker-compose build timed out after 1 hour: %v", err)
-	}
-
-	if err != nil {
-		return out, fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
-	}
-
-	if globalconfig.DdevVerbose && out != "" {
-		util.Debug("docker-compose build output:\n%s\n\n", out)
-	}
-
-	return out, nil
+// StartOptions holds what a start or restart asked for.
+type StartOptions struct {
+	// Profiles are the compose profiles to start. nil starts the default
+	// services plus COMPOSE_PROFILES; a list replaces COMPOSE_PROFILES.
+	Profiles []string
+	// NoCache builds the started services' images without the build cache,
+	// and also the profile images that were built before.
+	NoCache bool
 }
 
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
+	return app.StartWith(StartOptions{})
+}
+
+// StartWith starts the project as o asks.
+func (app *DdevApp) StartWith(o StartOptions) error {
+	var err error
+	if project := app.imageOnlyProfiles(o); project != nil {
+		err = app.startProfileServices(project)
+	} else {
+		err = app.start(o)
+	}
+	if err != nil {
+		return err
+	}
+	if len(o.Profiles) > 0 {
+		util.Success("Started optional compose profiles '%s'", strings.Join(o.Profiles, ","))
+	}
+	return nil
+}
+
+func (app *DdevApp) start(o StartOptions) error {
 	var err error
 
 	RunUpgradeCheck()
@@ -1617,13 +1582,16 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
-	// This needs to be done after WriteDockerComposeYAML() to get the right images
-	additionalImages, err := app.FindAllImages()
+	project, err := app.loadRenderedProject(o.Profiles)
+	if err != nil {
+		return err
+	}
+	additionalImages, err := app.FindServiceImages(project.ServiceNames())
 	if err != nil {
 		return err
 	}
 
-	if pullErr := PullBaseContainerImages(additionalImages, app.NoCache); pullErr != nil {
+	if pullErr := PullBaseContainerImages(additionalImages, o.NoCache); pullErr != nil {
 		util.Warning("Unable to pull Docker images: %v", pullErr)
 	}
 
@@ -1840,6 +1808,10 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
+	project, err = app.loadRenderedProject(o.Profiles)
+	if err != nil {
+		return err
+	}
 
 	err = app.AddHostsEntriesIfNeeded()
 	if err != nil {
@@ -1893,18 +1865,19 @@ func (app *DdevApp) Start() error {
 	}
 	buildDurationStart := util.ElapsedDuration(time.Now())
 
-	_, err = app.composeBuild()
-	if err != nil {
-		// Offline, BuildKit can fail to resolve a FROM image that an earlier build
-		// used, so fall back to the images from the last successful build.
-		if dockerutil.IsRegistryReachable() || !app.builtImagesExist() {
+	buildProject, buildOptions := project, api.BuildOptions{NoCache: o.NoCache}
+	if o.NoCache {
+		// Build applies NoCache only to enabled services, so enable every profile.
+		if buildProject, err = app.loadRenderedProject([]string{"*"}); err != nil {
 			return err
 		}
-		util.Debug("Unable to build project images: %v", err)
-		util.Warning(`Unable to build project images while offline, using the ones from the last successful build.
-Dockerfile changes take effect on the next online 'ddev start'.
-See https://docs.ddev.com/en/stable/users/usage/offline/ for info.`)
-	} else {
+		buildOptions.Services = append(project.ServiceNames(), builtProfileServices(project)...)
+	}
+	built, err := app.buildProjectImages(buildProject, buildOptions)
+	if err != nil {
+		return err
+	}
+	if built {
 		_, logStderrOutput, logStderrErr := dockerutil.RunSimpleContainer(app.WebImage+"-"+app.Name+"-built", "log-stderr-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "log-stderr.sh --show 2>/dev/null || true"}, []string{}, []string{}, nil, uid, true, false, nil, nil, nil)
 		// If the web image is dirty, try to rebuild it immediately
 		if logStderrErr == nil && strings.TrimSpace(logStderrOutput) != "" && dockerutil.IsRegistryReachable() {
@@ -1916,7 +1889,7 @@ See https://docs.ddev.com/en/stable/users/usage/offline/ for info.`)
 					output.UserOut.Debugln()
 				}
 			}
-			_, err = app.composeBuild("web", "--no-cache")
+			err = app.composeBuild(project, api.BuildOptions{Services: []string{"web"}, NoCache: true})
 			if err != nil {
 				return err
 			}
@@ -1951,27 +1924,7 @@ See https://docs.ddev.com/en/stable/users/usage/offline/ for info.`)
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
 
-	upProject, upErr := dockerutil.LoadComposeProject([]string{app.DockerComposeFullRenderedYAMLPath()}, api.ProjectLoadOptions{
-		ProjectName: app.GetComposeProjectName(),
-	})
-	if upErr != nil {
-		return upErr
-	}
-	upCtx, upSvc, upErr := dockerutil.NewComposeService()
-	if upErr != nil {
-		return upErr
-	}
-	progress := display.ModeQuiet
-	if globalconfig.DdevVerbose {
-		progress = display.ModePlain
-	}
-	err = upSvc.Up(upCtx, upProject, api.UpOptions{
-		Create: api.CreateOptions{
-			Build:         &api.BuildOptions{Progress: progress},
-			RemoveOrphans: true,
-		},
-		Start: api.StartOptions{Project: upProject},
-	})
+	err = composeUp(project)
 	if err != nil {
 		return err
 	}
@@ -2199,7 +2152,7 @@ See https://docs.ddev.com/en/stable/users/usage/offline/ for info.`)
 	// an inactive profile can sit "exited" forever, and a service that opted out
 	// of DDEV labels can never be found by label.
 	var waitServices, additionalServices []string
-	for name, service := range upProject.Services {
+	for name, service := range project.Services {
 		if service.Labels["com.ddev.site-name"] != app.GetName() {
 			continue
 		}
@@ -2269,88 +2222,80 @@ func warnWSL2WindowsFilesystem(app *DdevApp) {
 	}
 }
 
-// StartOptionalProfiles starts services in the named compose profile(s)
-// The profiles can be a comma-separated list
+// StartOptionalProfiles starts services in the named compose profile(s),
+// starting the project first if it isn't running.
 func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
-	var err error
-	if status, _ := app.SiteStatus(); status != SiteRunning {
-		err = app.Start()
-		if err != nil {
-			return err
-		}
-	}
+	return app.StartWith(StartOptions{Profiles: profiles})
+}
 
-	upProject, err := dockerutil.LoadComposeProject([]string{app.DockerComposeFullRenderedYAMLPath()}, api.ProjectLoadOptions{
-		ProjectName: app.GetComposeProjectName(),
-		Profiles:    profiles,
-	})
-	if err != nil {
-		util.Warning("Failed to start optional compose profiles '%s': %v", profiles, err)
-		return err
+// imageOnlyProfiles returns the services o.Profiles adds to a running project
+// when none of them has build:, so they can start without a full start, as
+// `ddev xhgui on` does. It returns nil when a full start is needed, including
+// for profiles missing from the last render, as after an add-on install.
+func (app *DdevApp) imageOnlyProfiles(o StartOptions) *composeTypes.Project {
+	if len(o.Profiles) == 0 || o.NoCache {
+		return nil
 	}
-	upCtx, upSvc, err := dockerutil.NewComposeService()
-	if err != nil {
-		util.Warning("Failed to start optional compose profiles '%s': %v", profiles, err)
-		return err
+	if status, _ := app.SiteStatus(); status != SiteRunning {
+		return nil
 	}
-	progress := display.ModeQuiet
-	if globalconfig.DdevVerbose {
-		progress = display.ModePlain
-	}
-	err = upSvc.Up(upCtx, upProject, api.UpOptions{
-		Create: api.CreateOptions{
-			Build:         &api.BuildOptions{Progress: progress},
-			RemoveOrphans: true,
-		},
-		Start: api.StartOptions{Project: upProject},
-	})
+	project, err := app.loadRenderedProject(o.Profiles)
 	if err != nil {
-		util.Warning("Failed to start optional compose profiles '%s': %v", profiles, err)
+		return nil
+	}
+	var services []string
+	for name, service := range project.Services {
+		if len(service.Profiles) == 0 {
+			continue
+		}
+		if service.Build != nil {
+			return nil
+		}
+		services = append(services, name)
+	}
+	if len(services) == 0 {
+		return nil
+	}
+	project, err = project.WithSelectedServices(services, composeTypes.IgnoreDependencies)
+	if err != nil {
+		return nil
+	}
+	return project
+}
+
+// startProfileServices starts the project's services on a running project,
+// leaving the services already running alone.
+func (app *DdevApp) startProfileServices(project *composeTypes.Project) error {
+	if err := composeUp(project); err != nil {
 		return err
 	}
 
 	if !IsRouterDisabled(app) {
 		util.Debug("Starting %s if necessary...", nodeps.RouterContainer)
-		err = StartDdevRouter()
-		if err != nil {
+		if err := StartDdevRouter(); err != nil {
 			return err
 		}
 	}
 
-	// Get the actual service names from the profiles
-	var serviceNames []string
-	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
-		for serviceName, service := range app.ComposeYaml.Services {
-			for _, profile := range profiles {
-				if slices.Contains(service.Profiles, profile) {
-					serviceNames = append(serviceNames, serviceName)
-					break
-				}
-			}
-		}
-	}
-
-	if len(serviceNames) > 0 {
-		wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", serviceNames))
-		err = app.Wait(serviceNames)
-		wait.Complete(err)
-		if err != nil {
-			return err
-		}
-	}
-	util.Success("Started optional compose profiles '%s'", strings.Join(profiles, ","))
-
-	return nil
+	services := project.ServiceNames()
+	wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", services))
+	err := app.Wait(services)
+	wait.Complete(err)
+	return err
 }
 
 // Restart does a Stop() and a Start
 func (app *DdevApp) Restart() error {
+	return app.RestartWith(StartOptions{})
+}
+
+// RestartWith does a Stop() and a StartWith(o)
+func (app *DdevApp) RestartWith(o StartOptions) error {
 	err := app.Stop(false, false)
 	if err != nil {
 		return err
 	}
-	err = app.Start()
-	return err
+	return app.StartWith(o)
 }
 
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
@@ -2377,25 +2322,6 @@ func PullBaseContainerImages(additionalImages []composeTypes.ServiceConfig, pull
 // FindAllImages returns the image and platform for all containers in the compose file
 func (app *DdevApp) FindAllImages() ([]composeTypes.ServiceConfig, error) {
 	return app.FindServiceImages(nil)
-}
-
-// builtImagesExist reports whether every service with a build section already
-// has its image locally, so the project can start without building.
-func (app *DdevApp) builtImagesExist() bool {
-	if app.ComposeYaml == nil {
-		return false
-	}
-	for name, service := range app.ComposeYaml.Services {
-		if service.Build == nil {
-			continue
-		}
-		service.Name = name
-		exists, err := dockerutil.ImageExistsLocally(api.GetImageNameOrDefault(service, app.GetComposeProjectName()))
-		if err != nil || !exists {
-			return false
-		}
-	}
-	return true
 }
 
 // FindServiceImages returns the image and platform to pull for the named services
