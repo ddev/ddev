@@ -371,3 +371,47 @@ func TestGlobalConfigHooksRoundTrip(t *testing.T) {
 	require.NoError(t, globalconfig.ReadGlobalConfig())
 	require.Equal(t, expected, globalconfig.DdevGlobalConfig.Hooks)
 }
+
+// TestGlobalConfigOverrides tests that global_config.*.yaml files are merged over
+// global_config.yaml in lexical order, and that saving the global config does not
+// copy their values into global_config.yaml.
+func TestGlobalConfigOverrides(t *testing.T) {
+	origConfig := globalconfig.DdevGlobalConfig
+	tmpHome := testcommon.CreateTmpDir("TestGlobalConfigOverrides")
+	testcommon.SetTestHome(t, tmpHome)
+	t.Setenv("DDEV_XDG_CONFIG_HOME", "")
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig = origConfig
+		_ = os.RemoveAll(tmpHome)
+	})
+
+	globalDir := filepath.Join(tmpHome, ".ddev")
+	require.NoError(t, os.MkdirAll(globalDir, 0755))
+	mainFile := filepath.Join(globalDir, "global_config.yaml")
+	require.NoError(t, os.WriteFile(mainFile, []byte("project_tld: main.test\nomit_containers: [ddev-ssh-agent]\nweb_environment: [A=main]\n"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(globalDir, "global_config.a.yaml"), []byte("project_tld: a.test\nomit_containers: [ddev-router]\n"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(globalDir, "global_config.b.yaml"), []byte("project_tld: b.test\n"), 0644))
+
+	globalconfig.DdevGlobalConfig = globalconfig.New()
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+	require.Equal(t, "b.test", globalconfig.DdevGlobalConfig.ProjectTldGlobal)
+	require.ElementsMatch(t, []string{"ddev-ssh-agent", "ddev-router"}, globalconfig.DdevGlobalConfig.OmitContainersGlobal)
+	require.Equal(t, []string{"A=main"}, globalconfig.DdevGlobalConfig.WebEnvironment)
+
+	// A change to a field no override sets is saved; the overridden values are not.
+	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"A=changed"}
+	require.NoError(t, globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig))
+	written, err := os.ReadFile(mainFile)
+	require.NoError(t, err)
+	require.Contains(t, string(written), "project_tld: main.test")
+	require.NotContains(t, string(written), "b.test")
+	require.Contains(t, string(written), "omit_containers: [ddev-ssh-agent]")
+	require.Contains(t, string(written), "A=changed")
+
+	// With override_config: true, a list in the override replaces the one from global_config.yaml.
+	require.NoError(t, os.WriteFile(filepath.Join(globalDir, "global_config.b.yaml"), []byte("override_config: true\nomit_containers: [ddev-router]\n"), 0644))
+	require.NoError(t, os.Remove(filepath.Join(globalDir, "global_config.a.yaml")))
+	globalconfig.DdevGlobalConfig = globalconfig.New()
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+	require.Equal(t, []string{"ddev-router"}, globalconfig.DdevGlobalConfig.OmitContainersGlobal)
+}

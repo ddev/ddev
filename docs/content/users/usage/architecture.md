@@ -133,6 +133,9 @@ ddev version | grep global-ddev-dir
 `global_config.yaml`
 : This YAML file defines your global configuration, which consists of various [config settings](../configuration/config.md).
 
+`global_config.*.yaml`
+: Files like `global_config.local.yaml` are merged over `global_config.yaml` in alphabetical order, with the same rules as [`config.*.yaml` files](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files): simple values are replaced and lists are merged, unless the file sets `override_config: true`. DDEV never writes their values into `global_config.yaml`.
+
 `project_list.yaml`
 : This YAML file defines your project list that lets DDEV keep track of the projects you’ve added.
 
