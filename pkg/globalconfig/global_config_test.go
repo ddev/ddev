@@ -389,3 +389,29 @@ func TestCheckForMultipleGlobalDdevDirs(t *testing.T) {
 		require.Contains(t, err.Error(), "DDEV_XDG_CONFIG_HOME="+strconv.Quote(tmpXdg))
 	})
 }
+
+// TestGlobalConfigHooksRoundTrip tests that hooks in global_config.yaml survive being read and rewritten.
+func TestGlobalConfigHooksRoundTrip(t *testing.T) {
+	origConfig := globalconfig.DdevGlobalConfig
+	tmpHome := testcommon.CreateTmpDir("TestGlobalConfigHooksRoundTrip")
+	testcommon.SetTestHome(t, tmpHome)
+	t.Setenv("DDEV_XDG_CONFIG_HOME", "")
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig = origConfig
+		_ = os.RemoveAll(tmpHome)
+	})
+
+	globalDir := filepath.Join(tmpHome, ".ddev")
+	require.NoError(t, os.MkdirAll(globalDir, 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(globalDir, "global_config.yaml"), []byte("hooks:\n  post-start:\n    - exec: echo hi\n      service: db\n    - exec-host: echo host\n"), 0644))
+
+	globalconfig.DdevGlobalConfig = globalconfig.New()
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+	expected := map[string][]map[string]any{"post-start": {{"exec": "echo hi", "service": "db"}, {"exec-host": "echo host"}}}
+	require.Equal(t, expected, globalconfig.DdevGlobalConfig.Hooks)
+
+	require.NoError(t, globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig))
+	globalconfig.DdevGlobalConfig = globalconfig.New()
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+	require.Equal(t, expected, globalconfig.DdevGlobalConfig.Hooks)
+}

@@ -92,6 +92,9 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
+	if err := app.loadGlobalHooks(); err != nil {
+		return app, err
+	}
 
 	// Provide a default app name based on directory name
 	app.Name = NormalizeProjectName(filepath.Base(app.AppRoot))
@@ -1954,7 +1957,7 @@ func validateHookYAML(source []byte) error {
 			}
 		}
 		if !match {
-			return fmt.Errorf("invalid hook %s defined in config.yaml", foundHook)
+			return fmt.Errorf("invalid hook %s", foundHook)
 		}
 
 		for _, foundTask := range tasks {
@@ -1965,7 +1968,7 @@ func validateHookYAML(source []byte) error {
 				}
 			}
 			if !match {
-				return fmt.Errorf("invalid task '%s' defined for hook %s in config.yaml", foundTask, foundHook)
+				return fmt.Errorf("invalid task '%s' defined for hook %s", foundTask, foundHook)
 			}
 		}
 	}
