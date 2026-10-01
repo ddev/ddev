@@ -80,6 +80,7 @@ func RegisterCommands() {
 	registerUtilityCheckCustomConfigCmd()
 	registerUtilityDiagnoseCmd()
 	registerUtilityDockercheckCmd()
+	registerUtilityHyperlinkCmd()
 	registerUtilityDownloadDdevCmd()
 	registerUtilityMutagenDiagnoseCmd()
 	registerUtilityPortDiagnoseCmd()

@@ -128,7 +128,7 @@ if [ "${DDEV_LAUNCH_PRINT_URL:-}" = "true" ]; then
 fi
 
 if [ "${show_qr:-}" = "true" ]; then
-    printf "%s\n" "$FULLURL"
+    ddev utility hyperlink "$FULLURL"
     qr_format=ansi256utf8
     if [ -n "${NO_COLOR:-}" ]; then
         qr_format=utf8
@@ -140,7 +140,7 @@ fi
 
 if [[ "${FULLURL}" =~ ^http:// ]]; then
   echo "HTTP may redirect to HTTPS in your browser"
-  echo "See https://docs.ddev.com/en/stable/users/usage/commands/#launch"
+  echo "See https://docs.ddev.com/en/stable/users/usage/commands/#launch" | { ddev utility hyperlink 2>/dev/null || cat; }
 fi
 
 # Long-standing DDEV_DEBUG/DDEV_VERBOSE behavior, kept for compatibility

@@ -110,3 +110,19 @@ func TestHyperlinkOSC8Format(t *testing.T) {
 	inner := strings.TrimPrefix(strings.TrimSuffix(want, closeLink), openLink)
 	require.Equal(t, label, inner, "visible text should be exactly the label")
 }
+
+func TestLinkifyURLs(t *testing.T) {
+	const open = "\x1b]8;;"
+	const closeSeq = "\x1b]8;;\x1b\\"
+
+	got := linkifyURLs("See https://docs.ddev.com/en/stable/. Done")
+	require.Equal(t, "See "+open+"https://docs.ddev.com/en/stable/\x1b\\https://docs.ddev.com/en/stable/"+closeSeq+". Done", got)
+
+	got = linkifyURLs("quoted 'https://a.example/x' and (https://b.example)")
+	require.Contains(t, got, open+"https://a.example/x\x1b\\")
+	require.Contains(t, got, open+"https://b.example\x1b\\")
+
+	already := "x " + open + "https://a.example\x1b\\a" + closeSeq
+	require.Equal(t, already, linkifyURLs(already), "existing hyperlinks are left alone")
+	require.Equal(t, "no links here", linkifyURLs("no links here"))
+}
