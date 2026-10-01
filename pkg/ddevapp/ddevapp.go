@@ -1475,7 +1475,6 @@ func (app *DdevApp) composeBuild(args ...string) (string, error) {
 
 	project, err := dockerutil.LoadComposeProject([]string{app.DockerComposeFullRenderedYAMLPath()}, api.ProjectLoadOptions{
 		ProjectName: app.GetComposeProjectName(),
-		Profiles:    []string{`*`},
 	})
 	if err != nil {
 		return "", fmt.Errorf("docker-compose build failed: %v", err)
@@ -2300,7 +2299,7 @@ func (app *DdevApp) StartOptionalProfiles(profiles []string) error {
 	}
 	err = upSvc.Up(upCtx, upProject, api.UpOptions{
 		Create: api.CreateOptions{
-			Build:         &api.BuildOptions{Progress: progress, NoCache: app.NoCache},
+			Build:         &api.BuildOptions{Progress: progress},
 			RemoveOrphans: true,
 		},
 		Start: api.StartOptions{Project: upProject},
