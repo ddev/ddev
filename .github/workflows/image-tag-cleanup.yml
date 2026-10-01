@@ -1,0 +1,140 @@
+name: Image tag cleanup
+defaults:
+  run:
+    shell: bash
+
+# Two jobs, both running containers/image-tag-cleanup.sh:
+#   report - runs weekly, or manually with no inputs. Lists the Docker Hub
+#            tags nothing uses any more. Needs no credentials.
+#   delete - runs manually from main, with tags or a report's run ID. Waits
+#            for the image-tag-cleanup environment's approval, and deletes
+#            only when "execute" is checked.
+# Which tags count as unused is described in the script's header and in
+# docs/content/developers/building-contributing.md.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Tags to delete, <org>/<repo>:<tag> separated by spaces or commas. Empty for a report only.'
+        required: false
+        default: ""
+      report_run_id:
+        description: 'Or: delete the candidates listed by this earlier report run'
+        required: false
+        default: ""
+      execute:
+        description: 'Delete for real (unchecked is a dry run)'
+        type: boolean
+        required: false
+        default: false
+
+# The scripts read these when set. Repository variables, all optional.
+env:
+  DOCKER_ORG: "${{ vars.DOCKER_ORG || (github.repository_owner == 'ddev-test' && 'ddevhq' || 'ddev') }}"
+  CLEANUP_OLDER_THAN_DAYS: ${{ vars.CLEANUP_OLDER_THAN_DAYS }}
+  CLEANUP_NOT_PULLED_FOR_DAYS: ${{ vars.CLEANUP_NOT_PULLED_FOR_DAYS }}
+  GH_TOKEN: ${{ github.token }}
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  report:
+    name: Report cleanup candidates
+    if: ${{ github.event_name == 'schedule' || (inputs.tags == '' && inputs.report_run_id == '') }}
+    runs-on: ubuntu-24.04
+    steps:
+      # Full history and tags: the script reads every release's version file.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: List candidates
+        run: |
+          set -eu -o pipefail
+          containers/image-tag-cleanup.sh --save-keep-set keep-set.txt --save-candidates candidates.txt --decisions decisions.tsv
+          {
+            echo "## Image tag cleanup candidates for ${DOCKER_ORG}"
+            echo
+            echo "$(wc -l < candidates.txt | tr -d ' ') candidates. To delete them, run this workflow with report_run_id \`${GITHUB_RUN_ID}\`."
+            echo
+            echo '| Decision | Class | Tags |'
+            echo '| --- | --- | --- |'
+            cut -f1,2 decisions.tsv | sort | uniq -c | awk '{ printf "| %s | %s | %s |\n", $2, $3, $1 }'
+            echo
+            echo '<details><summary>Candidates</summary>'
+            echo
+            echo '```text'
+            cat candidates.txt
+            echo '```'
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: image-tag-cleanup-report
+          path: |
+            keep-set.txt
+            candidates.txt
+            decisions.tsv
+          retention-days: 90
+
+  delete:
+    name: Delete tags${{ !inputs.execute && ' (dry run)' || '' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && (inputs.tags != '' || inputs.report_run_id != '') }}
+    runs-on: ubuntu-24.04
+    environment: image-tag-cleanup
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Collect the requested tags
+        env:
+          INPUT_TAGS: ${{ inputs.tags }}
+          REPORT_RUN_ID: ${{ inputs.report_run_id }}
+        run: |
+          set -eu -o pipefail
+          if [ -n "$INPUT_TAGS" ] && [ -n "$REPORT_RUN_ID" ]; then
+            echo "Give tags or report_run_id, not both" >&2
+            exit 1
+          fi
+          if [ -n "$REPORT_RUN_ID" ]; then
+            [[ "$REPORT_RUN_ID" =~ ^[0-9]+$ ]] || { echo "report_run_id must be a number" >&2; exit 1; }
+            gh run download "$REPORT_RUN_ID" --repo "$GITHUB_REPOSITORY" -n image-tag-cleanup-report -D report
+            cp report/candidates.txt requested.txt
+          else
+            printf '%s\n' "$INPUT_TAGS" > requested.txt
+          fi
+      - name: Load 1password secret(s)
+        if: ${{ inputs.execute }}
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.PUSH_SERVICE_ACCOUNT_TOKEN }}"
+          DOCKERHUB_TOKEN: "op://push-secrets/DOCKERHUB_TOKEN/credential"
+      - name: Delete
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          EXECUTE: ${{ inputs.execute }}
+        run: |
+          set -eu -o pipefail
+          ARGS=()
+          [ "$EXECUTE" = true ] && ARGS+=(--execute)
+          containers/image-tag-cleanup.sh --tags-from requested.txt "${ARGS[@]}" | tee deleted.txt
+          {
+            echo "## Image tag cleanup ($([ "$EXECUTE" = true ] && echo deleted || echo dry run))"
+            echo
+            echo '```text'
+            cat deleted.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
