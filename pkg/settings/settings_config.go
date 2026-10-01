@@ -40,6 +40,12 @@ func LoadGlobalConfig(path string, target any) error {
 	return cfg.Unmarshal(target)
 }
 
+// LoadGlobalConfigWithOverrides loads the main global config contents and merges
+// the overrides into the target struct, with the same rules as project config.
+func LoadGlobalConfigWithOverrides(mainContent []byte, overrides []OverrideConfig, target any) error {
+	return getDefaultFactory().LoadProjectConfigFromContents(mainContent, overrides, target)
+}
+
 // LoadProjectConfig loads a main project config and merges optional overrides into the target struct.
 func LoadProjectConfig(mainPath string, overridePaths []string, target any) error {
 	factory := getDefaultFactory()

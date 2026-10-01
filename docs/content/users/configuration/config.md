@@ -37,6 +37,8 @@ You can override the per-project `config.yaml` with files named `config.*.yaml`,
 
 Many teams use `config.local.yaml` for configuration that is specific to one environment, and not checked into the team’s default `config.yaml`. For example, you might enable `performance_mode: mutagen` only on your machine. Or you could use a different database type. The file `config.local.yaml` is gitignored by default.
 
+The global `$HOME/.ddev/global_config.yaml` can be extended the same way with `global_config.*.yaml` files in `$HOME/.ddev`, which is useful for keeping machine-specific or team-distributed settings out of the file DDEV rewrites.
+
 For examples, see the [Extending and Customizing Environments](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files) page.
 
 ---
