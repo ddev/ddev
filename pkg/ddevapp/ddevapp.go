@@ -2355,25 +2355,27 @@ func (app *DdevApp) Restart() error {
 
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.
 // We always need web image, and ddev-utilities for housekeeping.
-func PullBaseContainerImages(additionalImages []string, pullAlways bool) error {
-	base := []string{
-		versionconstants.UtilitiesImage,
+func PullBaseContainerImages(additionalImages []composeTypes.ServiceConfig, pullAlways bool) error {
+	images := []composeTypes.ServiceConfig{
+		{Image: versionconstants.UtilitiesImage},
 	}
 	// Only pull the default web image when no project-specific images are provided,
 	// otherwise the project's actual web image is already in additionalImages.
 	if len(additionalImages) == 0 {
-		base = append(base, ddevImages.GetWebImage())
+		images = append(images, composeTypes.ServiceConfig{Image: ddevImages.GetWebImage()})
 	}
 	if globalconfig.DdevGlobalConfig.XHProfMode == types.XHProfModeXHGui {
-		base = append(base, ddevImages.GetXhguiImage())
+		images = append(images, composeTypes.ServiceConfig{Image: ddevImages.GetXhguiImage()})
 	}
-	base = append(base, FindNotOmittedImages(nil)...)
-	base = append(base, additionalImages...)
-	return dockerutil.PullImages(base, pullAlways)
+	for _, image := range FindNotOmittedImages(nil) {
+		images = append(images, composeTypes.ServiceConfig{Image: image})
+	}
+	images = append(images, additionalImages...)
+	return dockerutil.PullImages(images, pullAlways)
 }
 
-// FindAllImages returns an array of image tags for all containers in the compose file
-func (app *DdevApp) FindAllImages() ([]string, error) {
+// FindAllImages returns the image and platform for all containers in the compose file
+func (app *DdevApp) FindAllImages() ([]composeTypes.ServiceConfig, error) {
 	return app.FindServiceImages(nil)
 }
 
@@ -2396,10 +2398,11 @@ func (app *DdevApp) builtImagesExist() bool {
 	return true
 }
 
-// FindServiceImages returns an array of image tags for the named services in the
-// compose file. A nil/empty serviceNames returns images for all services.
-func (app *DdevApp) FindServiceImages(serviceNames []string) ([]string, error) {
-	var images []string
+// FindServiceImages returns the image and platform to pull for the named services
+// in the compose file, with only Image and Platform set. A nil/empty serviceNames
+// returns images for all services.
+func (app *DdevApp) FindServiceImages(serviceNames []string) ([]composeTypes.ServiceConfig, error) {
+	var images []composeTypes.ServiceConfig
 	if app.ComposeYaml == nil || app.ComposeYaml.Services == nil {
 		return images, nil
 	}
@@ -2417,7 +2420,11 @@ func (app *DdevApp) FindServiceImages(serviceNames []string) ([]string, error) {
 				image = before
 			}
 		}
-		images = append(images, image)
+		platform := service.Platform
+		if platform == "" && service.Build != nil {
+			platform = dockerutil.BuildPlatformToPull(service.Build.Platforms)
+		}
+		images = append(images, composeTypes.ServiceConfig{Image: image, Platform: platform})
 	}
 	return images, nil
 }
