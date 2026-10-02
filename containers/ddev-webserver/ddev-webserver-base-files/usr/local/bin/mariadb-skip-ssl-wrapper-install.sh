@@ -57,7 +57,11 @@ add_or_remove_ssl_wrapper() {
   fi
 
   # Check if the command supports --skip-ssl-verify-server-cert flag
-  if ! "$real_binary_path" --help 2>&1 | grep -qw -- "--skip-ssl-verify-server-cert"; then
+  # Capture the help text first: under pipefail, grep -q can close the pipe
+  # early and the SIGPIPE on --help then reads as "flag not supported".
+  local help_text
+  help_text=$("$real_binary_path" --help 2>&1 || true)
+  if ! grep -qw -- "--skip-ssl-verify-server-cert" <<<"${help_text}"; then
     # Flag not supported, remove wrapper if it exists
     if [ -x "$script_path" ] && head -n 3 "$script_path" 2>/dev/null | grep -q "#ddev-generated"; then
       rm -f "$script_path"

@@ -19,7 +19,7 @@ if [ -f /tmp/healthy ]; then
     sleep ${sleeptime}
 fi
 
-if curl --fail -s 127.0.0.1 >/dev/null; then
+if curl -q --fail -s 127.0.0.1 >/dev/null; then
   phpstatus="true"
   printf "phpstatus:OK "
 else
