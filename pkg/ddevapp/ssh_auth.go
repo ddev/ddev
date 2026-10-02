@@ -164,6 +164,13 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 			util.Warning("No SSH agent is listening at %s (%v); containers can't use its keys until that agent is running", upstream, listenErr)
 		}
 	}
+	// The lock is not reentrant, so the network has to exist before it is taken.
+	dockerutil.EnsureDdevNetwork()
+
+	// Released before the wait for the container to become ready.
+	unlock := dockerutil.AcquireGlobalLock("ddev-ssh-agent setup")
+	defer unlock()
+
 	sshContainer, err := findDdevSSHAuth()
 	if err != nil {
 		return err
@@ -176,8 +183,6 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 		(sshContainer.State == "running" || sshContainer.State == "starting") {
 		return nil
 	}
-
-	dockerutil.EnsureDdevNetwork()
 
 	composeFile, err := app.CreateSSHAuthComposeFile()
 	if err != nil {
@@ -231,6 +236,8 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
 	}
 
+	unlock()
+
 	// ensure we have a happy sshAuth
 	label := map[string]string{
 		"com.docker.compose.project": SSHAuthName,
@@ -255,6 +262,8 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 // RemoveSSHAgentContainer brings down the ddev-ssh-agent if it's running.
 func RemoveSSHAgentContainer() error {
+	defer dockerutil.AcquireGlobalLock("ddev-ssh-agent setup")()
+
 	// Stop the container if it exists
 	err := dockerutil.RemoveContainer(globalconfig.DdevSSHAgentContainer)
 	if err != nil {
