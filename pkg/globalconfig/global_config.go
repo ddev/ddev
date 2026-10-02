@@ -42,6 +42,7 @@ type GlobalConfig struct {
 	DeveloperMode                    bool                        `yaml:"developer_mode,omitempty"`
 	DockerBuildxVersion              string                      `yaml:"docker_buildx_version,omitempty"`
 	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
+	Hooks                            map[string][]map[string]any `yaml:"hooks,omitempty"`
 	InstrumentationOptIn             bool                        `yaml:"instrumentation_opt_in"`
 	InstrumentationQueueSize         int                         `yaml:"instrumentation_queue_size,omitempty"`
 	InstrumentationReportingInterval time.Duration               `yaml:"instrumentation_reporting_interval,omitempty"`
@@ -504,6 +505,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
+
+# hooks:
+#   post-start:
+#     - exec: "echo hello from a global hook"
+# Hooks that run for every project, in addition to the project's own hooks.
+# See https://docs.ddev.com/en/stable/users/configuration/hooks/#global-hooks
 
 # traefik_monitor_port: "10999"
 # Change this only if you're having conflicts with some

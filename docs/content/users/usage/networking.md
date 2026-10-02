@@ -108,6 +108,9 @@ The standard approach:
         - exec: "cat /mnt/ddev-global-cache/mkcert/rootCA.pem /usr/local/share/ca-certificates/mycorp-ca.crt > /usr/local/share/ca-certificates/node_ca_certs.pem"
     ```
 
+    !!!tip "Apply to all projects"
+        The same `web_environment` and `hooks` can go in `$HOME/.ddev/global_config.yaml` to apply to every project, see [Global Hooks](../configuration/hooks.md#global-hooks). On machines that are not behind the proxy the certificate is missing and the `cat` would report a failed hook, so guard it with `test -f /usr/local/share/ca-certificates/mycorp-ca.crt && cat ...`.
+
 5. Run:
 
     ```bash

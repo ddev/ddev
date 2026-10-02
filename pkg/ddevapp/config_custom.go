@@ -451,6 +451,14 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 		})
 	}
 
+	// Global hooks live inside global_config.yaml rather than in a file of their own.
+	if summary := app.globalHooksSummary(); summary != "" {
+		findings = append(findings, finding{
+			category: "Hooks (global)",
+			files:    []fileInfo{{path: fmt.Sprintf("%s: hooks (%s)", fileutil.ShortHomeJoin(globalconfig.GetGlobalConfigPath()), summary)}},
+		})
+	}
+
 	// A `seed` snapshot or a base_db seed baked into a derived dbimage replaces the
 	// stock starter database when a fresh database volume is created, so report
 	// them even though neither is an ordinary config file.

@@ -81,6 +81,9 @@ var DebugConfigYamlCmd = &cobra.Command{
 					output.UserOut.Printf("%s: %v", key[0], v)
 				}
 			}
+			if len(app.GlobalHooks) > 0 && !omitKeyMap["hooks"] {
+				output.UserOut.Printf("global hooks (from global_config.yaml): %v", app.GlobalHooks)
+			}
 		}
 
 	},
