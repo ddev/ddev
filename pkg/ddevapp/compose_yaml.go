@@ -334,7 +334,7 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 			if port.HostIP == "" {
 				port.HostIP = bindIP
 			}
-			if port.Published == "" {
+			if hasUnspecifiedHostPort(port.Published) {
 				port.Published = hostPorts.assignHostPort(name, port)
 			}
 			service.Ports[i] = port
@@ -423,4 +423,9 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 	}
 
 	return project, nil
+}
+
+func hasUnspecifiedHostPort(published string) bool {
+	// Compose renders an omitted published port as "0" after the first start.
+	return published == "" || published == "0"
 }
