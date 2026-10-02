@@ -25,11 +25,11 @@ func TestCmdXdebugDiagnose(t *testing.T) {
 	})
 
 	// Start the project if not already running
-	_, err = exec.RunHostCommand(DdevBin, "start")
-	require.NoError(t, err)
+	out, err := exec.RunHostCommand(DdevBin, "start")
+	require.NoError(t, err, "ddev start failed\n==== ddev start output ====\n%s\n==== end ddev start output ====", out)
 
 	// Run xdebug-diagnose command
-	out, _ := exec.RunHostCommand(DdevBin, "utility", "xdebug-diagnose")
+	out, _ = exec.RunHostCommand(DdevBin, "utility", "xdebug-diagnose")
 	// Command may exit with 0 or 1 depending on diagnostic results
 	// We just check that it runs and produces expected output
 	t.Logf("xdebug-diagnose output: %s", out)
