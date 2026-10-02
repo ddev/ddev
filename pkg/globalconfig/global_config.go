@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -249,10 +250,9 @@ func ReadGlobalConfig() error {
 		}
 	}
 
-	// Load global config using unified settings loader.
-	err = settings.LoadGlobalConfig(globalConfigFile, &DdevGlobalConfig)
+	err = loadGlobalConfigFiles(globalConfigFile)
 	if err != nil {
-		return fmt.Errorf("unable to load DDEV global config file %s: %v", globalConfigFile, err)
+		return err
 	}
 
 	caRootEnv := os.Getenv("CAROOT")
@@ -314,7 +314,85 @@ func ReadGlobalConfig() error {
 		return err
 	}
 
+	loadedGlobalConfig = DdevGlobalConfig
+
 	return nil
+}
+
+// overriddenGlobalConfig remembers what global_config.*.yaml files changed,
+// so WriteGlobalConfig can keep their values out of global_config.yaml.
+var (
+	overriddenKeys     map[string]bool
+	mainOnlyConfig     GlobalConfig
+	loadedGlobalConfig GlobalConfig
+)
+
+// loadGlobalConfigFiles loads global_config.yaml into DdevGlobalConfig, then merges
+// global_config.*.yaml files in lexical order.
+func loadGlobalConfigFiles(globalConfigFile string) error {
+	overriddenKeys = nil
+	overrideFiles, err := filepath.Glob(filepath.Join(filepath.Dir(globalConfigFile), "global_config.*.y*ml"))
+	if err != nil {
+		return err
+	}
+	if len(overrideFiles) == 0 {
+		err = settings.LoadGlobalConfig(globalConfigFile, &DdevGlobalConfig)
+		if err != nil {
+			return fmt.Errorf("unable to load DDEV global config file %s: %v", globalConfigFile, err)
+		}
+		return nil
+	}
+
+	mainContent, err := os.ReadFile(globalConfigFile)
+	if err != nil {
+		return fmt.Errorf("unable to read DDEV global config file %s: %v", globalConfigFile, err)
+	}
+	mainOnlyConfig = DdevGlobalConfig
+	if err = settings.LoadGlobalConfigWithOverrides(mainContent, nil, &mainOnlyConfig); err != nil {
+		return fmt.Errorf("unable to load DDEV global config file %s: %v", globalConfigFile, err)
+	}
+
+	overriddenKeys = map[string]bool{}
+	var overrides []settings.OverrideConfig
+	for _, f := range overrideFiles {
+		content, err := os.ReadFile(f)
+		if err != nil {
+			return fmt.Errorf("unable to read DDEV global config file %s: %v", f, err)
+		}
+		var keys map[string]any
+		if err = yaml.Unmarshal(content, &keys); err != nil {
+			return fmt.Errorf("unable to load DDEV global config file %s: %v", f, err)
+		}
+		for k := range keys {
+			overriddenKeys[strings.ToLower(k)] = true
+		}
+		overrides = append(overrides, settings.OverrideConfig{Path: f, Content: content})
+	}
+	if err = settings.LoadGlobalConfigWithOverrides(mainContent, overrides, &DdevGlobalConfig); err != nil {
+		return fmt.Errorf("unable to load DDEV global config with overrides %v: %v", overrideFiles, err)
+	}
+	return nil
+}
+
+// restoreOverriddenFields puts the global_config.yaml value back into every field
+// that a global_config.*.yaml file set and that has not changed since loading.
+func restoreOverriddenFields(config GlobalConfig) GlobalConfig {
+	if len(overriddenKeys) == 0 {
+		return config
+	}
+	cfg := reflect.ValueOf(&config).Elem()
+	loaded := reflect.ValueOf(loadedGlobalConfig)
+	mainOnly := reflect.ValueOf(mainOnlyConfig)
+	for i := 0; i < cfg.NumField(); i++ {
+		name, _, _ := strings.Cut(cfg.Type().Field(i).Tag.Get("yaml"), ",")
+		if !overriddenKeys[strings.ToLower(name)] {
+			continue
+		}
+		if reflect.DeepEqual(cfg.Field(i).Interface(), loaded.Field(i).Interface()) {
+			cfg.Field(i).Set(mainOnly.Field(i))
+		}
+	}
+	return config
 }
 
 // WriteGlobalConfig writes the global config into ~/.ddev.
@@ -324,7 +402,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 		return err
 	}
 
-	cfgCopy := config
+	cfgCopy := restoreOverriddenFields(config)
 
 	// Remove some items that are defaults
 	if cfgCopy.DockerBuildxVersion == "system" {
