@@ -450,3 +450,58 @@ func TestUnitSplitProfiles(t *testing.T) {
 	require.Nil(t, splitProfiles(" , "))
 	require.Equal(t, []string{"a", "b"}, splitProfiles("a, b,"))
 }
+
+// TestCmdStartAutoConfig checks `ddev start` in a directory with no project,
+// with and without --auto-config.
+func TestCmdStartAutoConfig(t *testing.T) {
+	tmpdir := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() { testcommon.CleanupDir(tmpdir) })
+	t.Cleanup(testcommon.Chdir(tmpdir))
+
+	out, err := exec.RunCommand(DdevBin, []string{"start"})
+	require.Error(t, err)
+	require.Contains(t, out, "the directory is empty")
+
+	require.NoError(t, os.WriteFile(filepath.Join(tmpdir, "notes.txt"), []byte("notes"), 0644))
+	out, err = exec.RunCommand(DdevBin, []string{"start", "--auto-config"})
+	require.Error(t, err)
+	require.Contains(t, out, "doesn't look like a web project")
+
+	require.NoError(t, os.MkdirAll(filepath.Join(tmpdir, "web"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpdir, "web", "index.php"), []byte("<?php\n"), 0644))
+	out, err = exec.RunCommand(DdevBin, []string{"start"})
+	require.Error(t, err, "a non-interactive start must not configure a project: %s", out)
+	require.Contains(t, out, "ddev start --auto-config")
+	require.NoDirExists(t, filepath.Join(tmpdir, ".ddev"))
+
+	out, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
+	require.Error(t, err, "-y must never configure a project: %s", out)
+	require.Contains(t, out, "ddev start --auto-config")
+	require.NoDirExists(t, filepath.Join(tmpdir, ".ddev"))
+
+	out, err = exec.RunCommand(DdevBin, []string{"start", "--auto-config", "somename"})
+	require.Error(t, err)
+	require.Contains(t, out, "can't be combined with project names")
+
+	out, err = exec.RunCommand(DdevBin, []string{"start", "--auto-config"})
+	t.Cleanup(func() {
+		_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy", filepath.Base(tmpdir)})
+	})
+	require.NoError(t, err, "out=%s", out)
+
+	// The summary shown before configuring must match what was written.
+	app, err := ddevapp.NewApp(tmpdir, true)
+	require.NoError(t, err)
+	require.Equal(t, "web", app.Docroot)
+	for _, want := range []string{
+		"Name:      " + app.Name,
+		"Type:      " + app.Type,
+		"Docroot:   " + app.Docroot,
+		"PHP:       " + app.PHPVersion,
+		"Database:  " + app.Database.Type + ":" + app.Database.Version,
+		"Webserver: " + app.WebserverType,
+		"Successfully started " + app.Name,
+	} {
+		require.Contains(t, out, want)
+	}
+}

@@ -461,6 +461,14 @@ func (app *DdevApp) DetectAppType() string {
 	if app.Type == nodeps.AppTypeGeneric {
 		return app.Type
 	}
+	if appType := app.detectSpecificAppType(); appType != "" {
+		return appType
+	}
+	return nodeps.AppTypePHP
+}
+
+// detectSpecificAppType returns the first apptype whose detector matches, or "" if none does.
+func (app *DdevApp) detectSpecificAppType() string {
 	var keys []string
 	for k := range appTypeMatrix {
 		keys = append(keys, k)
@@ -474,8 +482,7 @@ func (app *DdevApp) DetectAppType() string {
 			return appTypeName
 		}
 	}
-
-	return nodeps.AppTypePHP
+	return ""
 }
 
 // PostImportDBAction calls each apptype's detector until it finds a match,

@@ -3759,7 +3759,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		}
 		appRoot, err := CheckForConf(siteDir)
 		if err != nil {
-			return "", fmt.Errorf("could not find a project in %s. Have you run 'ddev config'? Please specify a project name or change directories: %s", siteDir, err)
+			return "", fmt.Errorf("could not find a project in %s. Have you run 'ddev config'? Please specify a project name or change directories: %w", siteDir, err)
 		}
 		return skipNestedProject(appRoot), nil
 	}

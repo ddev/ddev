@@ -171,8 +171,11 @@ func CheckForConf(confPath string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("no %s file was found in this directory or any parent", filepath.Join(".ddev", "config.yaml"))
+	return "", ErrNoProjectConfig
 }
+
+// ErrNoProjectConfig is returned when no .ddev/config.yaml exists in a directory or any parent.
+var ErrNoProjectConfig = fmt.Errorf("no %s file was found in this directory or any parent", filepath.Join(".ddev", "config.yaml"))
 
 // getTemplateFuncMap will return a map of useful template functions.
 func getTemplateFuncMap() map[string]any {
