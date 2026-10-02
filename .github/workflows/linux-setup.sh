@@ -118,8 +118,12 @@ source ~/.bashrc
 
 brew trust bats-core/bats-core
 
+# Homebrew warns, as a GitHub Actions annotation, whenever the kernel lacks
+# Landlock ABI 10, as hosted runners do. Nothing here can act on it.
+brew_quiet() { brew "$@" 2> >(grep -vF 'or later is required to deny all network access' >&2); }
+
 for item in bats-core bats-core/bats-core/bats-assert bats-core/bats-core/bats-file bats-core/bats-core/bats-support ddev/ddev/ddev golangci-lint gotestsum; do
-  brew install $item >/dev/null || brew upgrade -y $item >/dev/null
+  brew_quiet install $item >/dev/null || brew_quiet upgrade -y $item >/dev/null
 done
 
 mkcert -install
