@@ -117,6 +117,18 @@ Within each group, files are inserted in alphabetical order, so `Dockerfile` com
 
 To see the result, read the generated Dockerfile, or force a rebuild with [`ddev restart --no-cache`](../usage/commands.md#restart) or [`ddev utility rebuild`](../usage/commands.md#utility-rebuild), which shows the whole build output for debugging.
 
+### Rebuilding Only What Changed
+
+Docker caches each step of the image build. When a step changes, Docker rebuilds it and every step after it, and reuses the rest. `ddev restart --no-cache` and `ddev utility rebuild` skip the cache and rebuild everything, including `webimage_extra_packages`, which can take minutes.
+
+A step that installs the latest version of a tool doesn't change when a new version comes out, so the cache keeps the old one. Pin the version instead. When you change it, `ddev restart` rebuilds only from that step on:
+
+```dockerfile
+# .ddev/web-build/Dockerfile.gatsby
+ARG GATSBY_CLI_VERSION=5.14.0
+RUN npm install -g gatsby-cli@${GATSBY_CLI_VERSION}
+```
+
 ### Copying Files into the Image
 
 The `.ddev/*-build` directory is the Docker "context", so if a file named `file.txt` exists in `.ddev/web-build`, you can use `COPY file.txt /` in the Dockerfile.
@@ -319,7 +331,7 @@ After restarting the project, you can use PHP 7.4 with the command `ddev exec ph
 
 ## Installing into the home directory
 
-The in-container home directory is rebuilt when you run `ddev restart`, so if you have something that installs into the home directory (like `~/.cache`) you'll want to switch users in the Dockerfile. In this example, `npx playwright install` installs a number of things into `~/.cache`, so we'll switch to the proper user before executing it, and switch back to the `root` user after installation to avoid surprises with any other Dockerfile that may follow.
+The in-container home directory is rebuilt when you run `ddev restart`, so if you have something that installs into the home directory (like `~/.cache`) you'll want to switch users in the Dockerfile. In this example, `npx playwright install` installs a number of things into `~/.cache`, so we'll switch to the proper user before executing it, and switch back to the `root` user after installation to avoid surprises with any other Dockerfile that may follow. For files that change while the container runs, see [Persisting Changes Across Restarts](in-container-configuration.md#persisting-changes-across-restarts).
 
 ```Dockerfile
 USER $username

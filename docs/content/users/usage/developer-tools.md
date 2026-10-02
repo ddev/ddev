@@ -61,17 +61,17 @@ To execute a fully-featured `composer create-project` command, you can execute t
 ### Composer Limitations
 
 !!!warning "Container changes do not persist"
-    Changes made to non-bind-mounted directories inside the container do not persist across container restarts. This affects Composer commands that modify files outside your project directory, see below for details.
+    Changes made outside your project directory are lost when the container restarts. Some Composer commands make such changes, see below. For other cases, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
 
 #### Composer Global Packages Do Not Persist
 
 If you run `ddev composer global require` (or `composer global require` inside the web container), global packages will be installed at the home directory within the container (`$HOME/.composer`) and will disappear when the container restarts.
 
-You may want to synchronize created Composer configuration and installed packages with DDEV's [`homeadditions` directory](../extend/in-container-configuration.md#using-homeadditions-to-customize-in-container-home-directory) on your host machine.
+To keep them, [store `~/.composer` in `ddev-global-cache`](../extend/in-container-configuration.md#persisting-home-subdirectories-in-ddev-global-cache), or install the tools with a [custom Dockerfile](../extend/customizing-images.md#examples).
 
 #### Composer Self-Update Changes Do Not Persist
 
-Running `ddev composer self-update` (or `composer self-update` inside the web container) will update Composer within the container, but the change will be lost when the container restarts.
+Running `ddev composer self-update` (or `composer self-update` inside the web container) will update Composer within the container, but the change will be lost when the container restarts. Don't try to keep `/usr/local/bin/composer` across restarts, because then `composer_version` and DDEV upgrades can't update it.
 
 The Composer version is cached after the first image build and automatically updates only when DDEV is upgraded.
 
@@ -84,7 +84,13 @@ If you need to update Composer:
     * `composer_version: "2.2"` (v2.2 LTS) - equivalent to `composer self-update --2.2`
     * `composer_version: "2.9.3"` (specific) - equivalent to `composer self-update 2.9.3`. This is the most consistent option for teams, as it ensures all members use the exact same version regardless of when they first build the image, avoiding inconsistencies in dependency resolution.
 
-2. [Restart](../usage/commands.md#restart) with `--no-cache` or [rebuild](../usage/commands.md#utility-rebuild) to install the configured version:
+2. [Restart](../usage/commands.md#restart) to install it:
+
+    ```bash
+    ddev restart
+    ```
+
+    To get a newer release without changing the value, for example with `""` or `"2"`, restart with `--no-cache` or [rebuild](../usage/commands.md#utility-rebuild). This rebuilds the whole image and takes longer:
 
     ```bash
     ddev restart --no-cache

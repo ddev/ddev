@@ -44,7 +44,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Where Docker-friendly users can provide their own [custom compose files](../extend/custom-compose-files.md) that add or override services. Read more in [Additional Service Configurations & Add-ons](../extend/additional-services.md).
 
 `homeadditions` directory
-: Files to be copied into the web container on startup. You could use this, for example, to override the default home directory contents (`.profile`, `.bashrc`, `.composer`, `.ssh`), or include scripts that you’d like to be available inside the container. (You can do the same thing globally in `$HOME/.ddev/homeadditions`.) Check out the [homeadditions docs](../extend/in-container-configuration.md) for more.
+: Files to be copied into the web container on startup. You could use this, for example, to override the default home directory contents (`.profile`, `.bashrc`, `.composer`, `.ssh`), or include scripts that you’d like to be available inside the container. (You can do the same thing globally in `$HOME/.ddev/homeadditions`.) Check out the [homeadditions docs](../extend/in-container-configuration.md) for more. Changes made in the container aren't copied back, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
 
 `mutagen` directory
 : Contains `mutagen.yml`, where you can [override the default Mutagen configuration](../install/performance.md#advanced-mutagen-configuration-options).
@@ -202,3 +202,31 @@ Now for the two oddball global containers (there’s only one of each):
 Here’s a basic diagram of how it works inside the Docker network:
 
 ![DDEV Docker Network Architecture](../../images/container-diagram.png)
+
+## The `ddev-global-cache` Volume
+
+`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web`, `db`, and `ddev-router` containers use it, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
+
+| Directory | Scope | Contents |
+| --- | --- | --- |
+| `bashhistory/<project>-db`, `bashhistory/<project>-web` | Per project | Bash history |
+| `composer` | Shared | Composer cache |
+| `corepack` | Shared | Package managers installed by `corepack` |
+| `global-commands` | Shared | [Global commands](../extend/custom-commands.md#global-commands), copied from the host |
+| `mkcert` | Shared | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
+| `mysqlhistory/<project>-db`, `mysqlhistory/<project>-web` | Per project | MySQL client history |
+| `n_prefix/<project>-web` | Per project | Node.js versions downloaded by `n` |
+| `npm` | Shared | npm cache |
+| `pip` | Shared | pip cache, created only if you install pip, for example with [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages) |
+| `terminus/cache` | Shared | Terminus cache |
+| `traefik` | Shared | Router configuration and certificates, with files for each project |
+| `yarn/berry`, `yarn/classic` | Shared | Yarn caches |
+
+[`ddev delete`](commands.md#delete) removes the project's own directories and router files. To keep your own files in this volume, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
+
+To clear the volume, for example to free Docker provider disk space, remove it. (Any stored global cache for all projects will be lost, but will be rebuilt as needed.) This also removes the Bash and MySQL history of every project. DDEV creates the volume again on the next [`ddev start`](commands.md#start):
+
+```bash
+ddev poweroff
+docker volume rm ddev-global-cache
+```
