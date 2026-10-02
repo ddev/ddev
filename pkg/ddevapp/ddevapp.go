@@ -2996,6 +2996,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		"DDEV_XHGUI_HTTPS_PORT":          app.GetXHGuiHTTPSPort(),
 		"DDEV_DOCROOT":                   app.GetDocroot(),
 		"DDEV_HOSTNAME":                  app.HostName(),
+		"DDEV_HOST_APPROOT":              app.AppRoot,
 		"DDEV_UID":                       uidStr,
 		"DDEV_GID":                       gidStr,
 		"DDEV_USER":                      username,
@@ -3006,6 +3007,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		"DDEV_ROUTER_HTTP_PORT":          app.GetPrimaryRouterHTTPPort(),
 		"DDEV_ROUTER_HTTPS_PORT":         app.GetPrimaryRouterHTTPSPort(),
 		"DDEV_XDEBUG_ENABLED":            strconv.FormatBool(app.XdebugEnabled),
+		"DDEV_XDEBUG_PATH_MAPPING":       strconv.FormatBool(app.xdebugPathMappingSafe()),
 		"DDEV_XHPROF_MODE":               app.GetXHProfMode(),
 		"DDEV_PRIMARY_URL":               primaryURL,
 		"DDEV_PRIMARY_URL_PORT":          primaryURLPort,
@@ -4021,4 +4023,13 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 	}
 
 	return nil
+}
+
+// xdebugPathMappingSafe returns true when the IDE can be expected to see the
+// project at app.AppRoot, so Xdebug may translate container paths to it.
+func (app *DdevApp) xdebugPathMappingSafe() bool {
+	root := app.AppRoot
+	return globalconfig.DdevGlobalConfig.XdebugIDELocation == "" && runtime.GOOS != "windows" && !nodeps.IsWSL2() &&
+		!nodeps.IsCodespaces() && !nodeps.IsDevcontainer() && !dockerutil.IsRemoteDockerHost() &&
+		strings.HasPrefix(root, "/") && !strings.ContainsAny(root, "=\r\n")
 }
