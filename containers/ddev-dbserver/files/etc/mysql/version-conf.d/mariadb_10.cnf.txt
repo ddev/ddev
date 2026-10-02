@@ -4,3 +4,7 @@ skip-host-cache
 symbolic-links=0
 query-cache-type               = 0
 query-cache-size               = 0
+
+innodb-log-file-size=50331648
+# Older versions default to OFF; deprecated since MariaDB 11.0, where it is always ON
+innodb-file-per-table=1

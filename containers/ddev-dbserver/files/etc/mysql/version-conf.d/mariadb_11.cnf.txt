@@ -22,3 +22,5 @@ innodb-use-native-aio=0
 #  memlock:
 #    soft: "-1"
 #    hard: "-1"
+
+innodb-log-file-size=50331648

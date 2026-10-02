@@ -44,7 +44,13 @@ rm -f ${MYSQL_UNIX_PORT}
 ERRLOG=/var/tmp/mysqld-init.err
 : >${ERRLOG} && chmod ugo+rw ${ERRLOG}
 echo "Starting mysqld --skip-networking --socket=${MYSQL_UNIX_PORT}"
-mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} --loose-innodb_log_file_size=48M --log-error=${ERRLOG} --skip-networking --datadir=${DATADIR:-/var/lib/mysql} --server-id=0 --skip-log-bin &
+# version-conf.d is linked only at container start, so set the log size here
+# to match it; MySQL 9 has no innodb_log_file_size, and 8.x uses the redo capacity.
+case "${mysqld_version}" in
+  8.0|8.4|9.*) logsize_flag="--innodb-redo-log-capacity=100663296" ;;
+  *) logsize_flag="--innodb-log-file-size=48M" ;;
+esac
+mysqld --defaults-file=/var/tmp/my.cnf --user=root --socket=${MYSQL_UNIX_PORT} ${logsize_flag} --log-error=${ERRLOG} --skip-networking --datadir=${DATADIR:-/var/lib/mysql} --server-id=0 --skip-log-bin &
 pid="$!"
 
 dump_errlog() {

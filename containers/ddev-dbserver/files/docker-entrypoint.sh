@@ -158,8 +158,11 @@ fi
 
 # Link the best match configuration
 if [ -n "${BEST_MATCH}" ]; then
-    ln -sf "${BEST_MATCH}" "${BEST_MATCH%%.txt}"
-    echo "Linked ${BEST_MATCH} -> ${BEST_MATCH%%.txt}"
+    # MySQL 5.5 !includedir skips names with more than one dot, like mysql_5.5.cnf
+    LINK_NAME="$(basename "${BEST_MATCH}" .cnf.txt)"
+    LINK_NAME="${CONFIG_DIR}/${LINK_NAME//./_}.cnf"
+    ln -sf "${BEST_MATCH}" "${LINK_NAME}"
+    echo "Linked ${BEST_MATCH} -> ${LINK_NAME}"
 else
     echo "No matching special configuration found for $server_db_version. Skipping."
 fi

@@ -9,3 +9,5 @@ query-cache-size               = 0
 innodb_large_prefix=true
 innodb_file_format=barracuda
 secure_file_priv=""
+
+innodb-log-file-size=50331648
