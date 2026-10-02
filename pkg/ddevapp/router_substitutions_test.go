@@ -11,17 +11,17 @@ import (
 // malformed-input behavior of the RouterPortSubstitutionsLabel serialization.
 func TestParseFormatRouterPortSubstitutions(t *testing.T) {
 	require.Equal(t, map[string]string{}, parseRouterPortSubstitutions(""))
-	require.Equal(t, map[string]string{"80": "33000"}, parseRouterPortSubstitutions("80=33000"))
-	require.Equal(t, map[string]string{"80": "33000", "443": "33001"}, parseRouterPortSubstitutions("80=33000,443=33001"))
+	require.Equal(t, map[string]string{"80": "30000"}, parseRouterPortSubstitutions("80=30000"))
+	require.Equal(t, map[string]string{"80": "30000", "443": "30001"}, parseRouterPortSubstitutions("80=30000,443=30001"))
 	// Malformed pairs are skipped rather than breaking the whole label
-	require.Equal(t, map[string]string{"80": "33000"}, parseRouterPortSubstitutions("80=33000,junk,=1,2="))
+	require.Equal(t, map[string]string{"80": "30000"}, parseRouterPortSubstitutions("80=30000,junk,=1,2="))
 
 	require.Equal(t, "", formatRouterPortSubstitutions(map[string]string{}))
 	// Output is sorted for determinism
-	require.Equal(t, "443=33001,80=33000", formatRouterPortSubstitutions(map[string]string{"80": "33000", "443": "33001"}))
+	require.Equal(t, "443=30001,80=30000", formatRouterPortSubstitutions(map[string]string{"80": "30000", "443": "30001"}))
 
-	roundTrip := parseRouterPortSubstitutions(formatRouterPortSubstitutions(map[string]string{"80": "33000", "443": "33001", "8025": "33002"}))
-	require.Equal(t, map[string]string{"80": "33000", "443": "33001", "8025": "33002"}, roundTrip)
+	roundTrip := parseRouterPortSubstitutions(formatRouterPortSubstitutions(map[string]string{"80": "30000", "443": "30001", "8025": "30002"}))
+	require.Equal(t, map[string]string{"80": "30000", "443": "30001", "8025": "30002"}, roundTrip)
 }
 
 // TestKnownRouterPortSubstitutions checks that the router label and the
@@ -34,20 +34,20 @@ func TestKnownRouterPortSubstitutions(t *testing.T) {
 
 	router := &container.Summary{
 		Labels: map[string]string{
-			RouterPortSubstitutionsLabel: "80=33000,443=33001",
+			RouterPortSubstitutionsLabel: "80=30000,443=30001",
 		},
 	}
 
 	RouterPortEphemeralSubstitutions = map[string]string{}
-	require.Equal(t, map[string]string{"80": "33000", "443": "33001"}, knownRouterPortSubstitutions(router))
+	require.Equal(t, map[string]string{"80": "30000", "443": "30001"}, knownRouterPortSubstitutions(router))
 
 	// nil router yields only the in-process entries
-	RouterPortEphemeralSubstitutions = map[string]string{"8025": "33002"}
-	require.Equal(t, map[string]string{"8025": "33002"}, knownRouterPortSubstitutions(nil))
+	RouterPortEphemeralSubstitutions = map[string]string{"8025": "30002"}
+	require.Equal(t, map[string]string{"8025": "30002"}, knownRouterPortSubstitutions(nil))
 
 	// In-process entries overlay the label and win on conflict
-	RouterPortEphemeralSubstitutions = map[string]string{"80": "33005", "8025": "33002"}
-	require.Equal(t, map[string]string{"80": "33005", "443": "33001", "8025": "33002"}, knownRouterPortSubstitutions(router))
+	RouterPortEphemeralSubstitutions = map[string]string{"80": "30005", "8025": "30002"}
+	require.Equal(t, map[string]string{"80": "30005", "443": "30001", "8025": "30002"}, knownRouterPortSubstitutions(router))
 
 	// Router without the label contributes nothing
 	RouterPortEphemeralSubstitutions = map[string]string{}
