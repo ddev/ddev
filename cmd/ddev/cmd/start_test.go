@@ -442,3 +442,11 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	require.NoError(t, err)
 	require.NotEqual(t, noCacheRandomDB, startNoCacheRandomDB, "start --no-cache should bypass cache for db")
 }
+
+// TestUnitSplitProfiles checks that an empty --profiles value gives nil, so
+// COMPOSE_PROFILES still applies.
+func TestUnitSplitProfiles(t *testing.T) {
+	require.Nil(t, splitProfiles(""))
+	require.Nil(t, splitProfiles(" , "))
+	require.Equal(t, []string{"a", "b"}, splitProfiles("a, b,"))
+}

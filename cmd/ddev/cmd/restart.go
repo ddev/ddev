@@ -45,7 +45,6 @@ ddev restart --reset-database`,
 		checkResetDatabaseFlags(resetDatabase, omitSnapshot, restartAll)
 
 		for _, app := range projects {
-			app.NoCache = noCache
 			app.SeedSnapshot = seedSnapshot
 
 			if resetDatabase {
@@ -55,7 +54,7 @@ ddev restart --reset-database`,
 			}
 
 			output.UserOut.Printf("Restarting project %s...", app.GetName())
-			err = app.Restart()
+			err = app.RestartWith(ddevapp.StartOptions{NoCache: noCache})
 			if err != nil {
 				util.Failed("Failed to restart %s: %v", app.GetName(), err)
 			}
