@@ -281,6 +281,7 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 	userGroup := uid + ":" + gid
 
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
+	hostPorts := &hostPortAllocator{app: app}
 
 	// Ensure all services have required networks and environment variables
 	for name, service := range project.Services {
@@ -332,6 +333,9 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 		for i, port := range service.Ports {
 			if port.HostIP == "" {
 				port.HostIP = bindIP
+			}
+			if hasUnspecifiedHostPort(port.Published) {
+				port.Published = hostPorts.assignHostPort(name, port)
 			}
 			service.Ports[i] = port
 		}
@@ -419,4 +423,11 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 	}
 
 	return project, nil
+}
+
+// hasUnspecifiedHostPort reports whether a published port leaves the host side to
+// the engine. Compose renders an omitted published port as "0" after the first
+// start, so a project's second render carries "0" instead of "".
+func hasUnspecifiedHostPort(published string) bool {
+	return published == "" || published == "0"
 }
