@@ -425,7 +425,9 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 	return project, nil
 }
 
+// hasUnspecifiedHostPort reports whether a published port leaves the host side to
+// the engine. Compose renders an omitted published port as "0" after the first
+// start, so a project's second render carries "0" instead of "".
 func hasUnspecifiedHostPort(published string) bool {
-	// Compose renders an omitted published port as "0" after the first start.
 	return published == "" || published == "0"
 }
