@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -85,4 +86,30 @@ func FileURL(path string) string {
 	}
 	u := url.URL{Scheme: "file", Path: p}
 	return u.String()
+}
+
+// urlPattern stops at whitespace, quotes, angle brackets, and the escape
+// character that begins a color sequence.
+var urlPattern = regexp.MustCompile("https?://[^\\s\"'<>`\\x1b]+")
+
+// LinkifyURLs wraps each bare http(s) URL in s in an OSC 8 hyperlink when
+// the terminal supports it. Text that already holds a hyperlink is returned
+// unchanged, so output built with Hyperlink() is not wrapped twice.
+func LinkifyURLs(s string) string {
+	if !HasTermHyperlinks() {
+		return s
+	}
+	return linkifyURLs(s)
+}
+
+// linkifyURLs is LinkifyURLs without the terminal check, so tests can run it.
+func linkifyURLs(s string) string {
+	if !strings.Contains(s, "://") || strings.Contains(s, "\x1b]8;") {
+		return s
+	}
+	return urlPattern.ReplaceAllStringFunc(s, func(m string) string {
+		// Trailing punctuation belongs to the sentence, not the URL.
+		u := strings.TrimRight(m, ".,;:!?)]}")
+		return text.Hyperlink(u, u) + m[len(u):]
+	})
 }
