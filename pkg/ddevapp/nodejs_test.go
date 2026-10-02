@@ -231,6 +231,8 @@ func TestNpmGlobalInstall(t *testing.T) {
 
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: `npm install -g npm@latest`,
+		// Retry registry fetches that fail on transient network errors.
+		Env: []string{"npm_config_fetch_retries=5", "npm_config_fetch_retry_mintimeout=2000", "npm_config_fetch_retry_maxtimeout=20000"},
 	})
 	require.NoError(t, err, "npm install -g failed, output: %s", out)
 	require.NotContains(t, out, "EACCES")

@@ -45,6 +45,9 @@ RUN ARCH="${TARGETPLATFORM#linux/}"; \
 
 ADD generic-files /
 
+# Retry curl on transient network errors
+RUN printf 'retry = 5\nretry-delay = 2\nretry-connrefused\nretry-all-errors\n' > /root/.curlrc
+
 # This curl -I is debugging for intermittent failures on https://github.com/oerdnj/deb.sury.org/issues/2046
 RUN curl -s -I https://packages.sury.org/php/
 

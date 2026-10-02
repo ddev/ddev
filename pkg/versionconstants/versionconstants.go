@@ -49,10 +49,10 @@ func IsUnreleasedDdevVersion(version string) bool {
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "4738b7fa91" // 20260914_php_8.6-4738b7fa91
+var WebTag = "5c1a5565e2" // 20261002_rfay_curl_retry_in_tests-5c1a5565e2
 
 // WebTagBranch is the branch WebTag's content was built from.
-var WebTagBranch = "20260914_php_8.6"
+var WebTagBranch = "20261002_rfay_curl_retry_in_tests"
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
@@ -85,10 +85,10 @@ var SSHAuthTagBranch = "20260922_rfay_dont_build_image"
 var XhguiImage = "ddev/ddev-xhgui"
 
 // XhguiTag is xhgui tag
-var XhguiTag = "a9ddfc8c93" // 20260922_rfay_dont_build_image-a9ddfc8c93
+var XhguiTag = "5a5df1ad89" // 20261002_rfay_curl_retry_in_tests-5a5df1ad89
 
 // XhguiTagBranch is the branch XhguiTag's content was built from.
-var XhguiTagBranch = "20260922_rfay_dont_build_image"
+var XhguiTagBranch = "20261002_rfay_curl_retry_in_tests"
 
 // UtilitiesImage is used in bash scripts
 var UtilitiesImage = "ddev/ddev-utilities:latest"

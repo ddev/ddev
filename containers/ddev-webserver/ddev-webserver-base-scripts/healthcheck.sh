@@ -39,7 +39,7 @@ else
     printf "/var/www/html:FAILED "
 fi
 
-if curl --fail -s 127.0.0.1:8025 >/dev/null; then
+if curl -q --fail -s 127.0.0.1:8025 >/dev/null; then
     mailpit="true"
     printf "mailpit:OK "
 else
@@ -59,7 +59,7 @@ if [ "${DDEV_WEBSERVER_TYPE}" = "generic" ] ; then
 fi
 
 if [ "${DDEV_WEBSERVER_TYPE#*-}" = "fpm" ]; then
-  if curl --fail -s 127.0.0.1/phpstatus >/dev/null; then
+  if curl -q --fail -s 127.0.0.1/phpstatus >/dev/null; then
     phpstatus="true"
     printf "phpstatus:OK "
   else
