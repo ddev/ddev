@@ -329,6 +329,57 @@ services:
         RUN apt-get update && apt-get install -y mypackage
 ```
 
+### Tools That Update Themselves
+
+If your add-on installs a tool in the web image and the tool updates itself, the update is lost at the next `ddev restart`, and users fall back to the slow `ddev restart --no-cache`. Use one of these approaches instead. Either way, keep the tool's configuration and credentials apart from the program, as described in [Persisting Changes Across Restarts](in-container-configuration.md#persisting-changes-across-restarts).
+
+#### Keep the Tool in `ddev-global-cache`
+
+Install the tool at build time as the web container's user, not as `root`. The script below moves the tool out of the home directory, and if `root` owns the files, it can't remove them and the `web` container doesn't start. Switch users around the install, as in [Installing into the home directory](customizing-images.md#installing-into-the-home-directory):
+
+```dockerfile
+# .ddev/web-build/Dockerfile.mytool
+#ddev-generated
+USER $username
+RUN curl -fsSL https://example.com/mytool/install.sh | bash
+USER root
+```
+
+Then add a `web-entrypoint.d/mytool.sh` script to `project_files`. It's the script from [Keeping Home Directories in `ddev-global-cache`](in-container-configuration.md#keeping-home-directories-in-ddev-global-cache) with one change: `cp -a --update=none` adds files from a newer image but never replaces the stored ones, so the tool's own updates are kept. This example is for a tool installed in `~/.mytool`:
+
+```bash
+# .ddev/web-entrypoint.d/mytool.sh
+#ddev-generated
+# Keep mytool in ddev-global-cache so its own updates survive restarts.
+# --update=none adds files from a newer image but keeps the stored ones.
+(
+  for dir in .mytool; do
+    target="/mnt/ddev-global-cache/mytool/${HOSTNAME}/${dir}"
+    mkdir -p "${target}" "$(dirname ~/"${dir}")"
+    if [ -d ~/"${dir}" ] && [ ! -L ~/"${dir}" ]; then
+      cp -a --update=none ~/"${dir}"/. "${target}"/
+      rm -rf ~/"${dir}"
+    fi
+    ln -sfn "${target}" ~/"${dir}"
+  done
+)
+```
+
+`cp --update=none` needs DDEV v1.25.0 or later. Older versions have an older `cp` that rejects it, so the `web` container doesn't start. Set `ddev_version_constraint: '>= v1.25.0'` in `install.yaml`, see [Version Constraints](#version-constraints).
+
+The first start copies the tool from the image, and after that the tool's updater writes to the volume. Starting needs no network, and `ddev delete` removes the copy. Keep `${HOSTNAME}` directly under your add-on's directory, because `ddev delete` doesn't look deeper. Only keep directories that belong to your tool: if two add-ons link a shared directory like `~/.local/bin`, the last one wins. [ddev-nvm](https://github.com/ddev/ddev-nvm) also keeps `~/.nvm` in `ddev-global-cache/nvm_dir/${HOSTNAME}`, but it copies from the image only on the first start, so a newer image doesn't add anything.
+
+To go back to the version in the image, users can run:
+
+```bash
+ddev exec 'rm -rf /mnt/ddev-global-cache/mytool/${HOSTNAME}'
+ddev restart
+```
+
+#### Pin the Version
+
+Set the version in an `ARG` and release a new add-on version for each tool update. After `ddev add-on get`, a plain `ddev restart` [rebuilds only from that step on](customizing-images.md#rebuilding-only-what-changed). Turn off the tool's own updater, because its updates would be lost.
+
 ### Environment Variables
 
 Users configure an add-on through the [env files](../configuration/environment-variables.md) named after it, so `.ddev/.env.myaddon` reaches the `myaddon` service and, with DDEV v1.25.4+, the add-on's own install actions as well.
@@ -770,6 +821,7 @@ ddev utility addon-update-checker
 - **Respond to user issues promptly**
 - **Keep documentation up to date**
 - **Use namespaced directories** (e.g., `myservice/scripts/` not just `scripts/`)
+- **Expect changes inside the container to be lost on restart**, see [Tools That Update Themselves](#tools-that-update-themselves)
 
 ## Examples and References
 
