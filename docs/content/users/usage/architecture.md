@@ -224,7 +224,7 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 [`ddev delete`](commands.md#delete) removes the project's own directories and router files. To keep your own files in this volume, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
 
-To clear the volume, for example to free disk space, remove it. This also removes the Bash and MySQL history of every project. DDEV creates the volume again on the next [`ddev start`](commands.md#start):
+To clear the volume, for example to free Docker provider disk space, remove it. (Any stored global cache for all projects will be lost, but will be rebuilt as needed.) This also removes the Bash and MySQL history of every project. DDEV creates the volume again on the next [`ddev start`](commands.md#start):
 
 ```bash
 ddev poweroff

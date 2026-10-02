@@ -152,13 +152,13 @@ By default, only the [`ddev-global-cache` volume](../usage/architecture.md#the-d
 | Edited dotfiles, like `~/.bashrc` | [`homeadditions`](#using-homeadditions-to-customize-in-container-home-directory) |
 | Files a tool writes, like `~/.config/gh` | [Keep the directory in `ddev-global-cache`](#keeping-home-directories-in-ddev-global-cache) |
 
-### Keeping Home Directories in `ddev-global-cache`
+### Persisting Subdirectories of home directory in `ddev-global-cache`
 
-To keep a home directory, move it to `ddev-global-cache` and leave a symlink in its place. This script does that each time the `web` container starts:
+To persist a subdirectory from your `ddev-webserver` home directory, move it to `ddev-global-cache` and leave a symlink in its place. This script does that each time the `web` container starts:
 
 ```bash
 # .ddev/web-entrypoint.d/persist.sh
-# Keep these home directories in ddev-global-cache so they survive restarts.
+# Keep these home subdirectories in ddev-global-cache so they survive restarts.
 # Files from the image and homeadditions replace the stored copies at each start.
 (
   for dir in .composer; do
