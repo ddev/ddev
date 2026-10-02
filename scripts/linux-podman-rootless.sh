@@ -80,6 +80,9 @@ hint()    { printf '        %s\n' "$*"; }
 heading() { printf '\n== %s ==\n' "$*"; }
 # Announce a step before running it, so a sudo prompt never comes out of nowhere.
 step()    { printf '  -> %s\n' "$*"; }
+# Homebrew warns, as a GitHub Actions annotation in CI, whenever the kernel lacks
+# Landlock ABI 10, as hosted runners do. Nothing here can act on it.
+brew_quiet() { brew "$@" 2> >(grep -vF 'or later is required to deny all network access' >&2); }
 
 # Print the header comment block, so --help never drifts from the file.
 usage() {
@@ -266,7 +269,7 @@ install_podman_from_brew() {
   prune_distro_podman_for_brew
 
   step "brew install podman"
-  brew install podman >/dev/null
+  brew_quiet install podman >/dev/null
   hash -r
 
   # GitHub Actions' runner image unpacks a static podman 5.x into /usr/local/bin,
@@ -284,7 +287,7 @@ install_podman_from_brew() {
   netavark_bin="$(bundled_helper_path netavark || true)"
   if [ -n "${netavark_bin}" ] && [ -x "${netavark_bin}" ] && ! "${netavark_bin}" --version >/dev/null 2>&1; then
     step "brew install gcc, for the libgcc_s.so.1 netavark needs"
-    brew install gcc >/dev/null
+    brew_quiet install gcc >/dev/null
     hash -r
   fi
 }
