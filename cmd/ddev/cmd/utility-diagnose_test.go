@@ -46,7 +46,7 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 		})
 
 		out, err := exec.RunHostCommand(DdevBin, "utility", "diagnose")
-		require.NoError(t, err)
+		require.NoError(t, err, "ddev utility diagnose failed\n==== ddev utility diagnose output ====\n%s\n==== end ddev utility diagnose output ====", out)
 		require.Contains(t, out, "DDEV Diagnostic Report")
 		require.Contains(t, out, "Current Project")
 		require.Contains(t, out, "Name: test-diagnose-basic")
@@ -65,7 +65,7 @@ func TestUtilityDiagnoseCmd(t *testing.T) {
 		})
 
 		out, err := exec.RunHostCommand(DdevBin, "utility", "diagnose")
-		require.NoError(t, err)
+		require.NoError(t, err, "ddev utility diagnose failed\n==== ddev utility diagnose output ====\n%s\n==== end ddev utility diagnose output ====", out)
 		require.Contains(t, out, "Custom configuration detected")
 		require.Contains(t, out, ".ddev/.env")
 	})
