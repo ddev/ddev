@@ -54,7 +54,7 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    brew pin buildkite-agent
+    brew pin buildkite-agent@4
     brew upgrade -y
     brew uninstall -f mysql-client || true
     for item in coreutils curl ddev/ddev/ddev golang golangci-lint libpq mkcert mysql-client@8.0; do
