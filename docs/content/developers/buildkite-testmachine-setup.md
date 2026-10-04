@@ -26,7 +26,7 @@ to run again) and restart the agent afterward:
     ```bash
     CFG=/usr/local/etc/buildkite-agent/buildkite-agent.cfg; [ -f "$CFG" ] || CFG=/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg
     grep -q '^git-mirrors-path=' "$CFG" || echo 'git-mirrors-path="~/tmp/buildkite-agent/git-mirrors"' | sudo tee -a "$CFG"
-    brew services restart buildkite-agent
+    brew services restart buildkite-agent@4
     ```
 
 * Linux/WSL2 package default, `build-path="/var/lib/buildkite-agent/builds"`:
@@ -311,7 +311,7 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
 10. `sudo mkdir -p /usr/local/bin && sudo chown -R testbot /usr/local/bin`
 11. Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 12. After installing Homebrew follow the instructions it gives you at the end to add brew to your PATH.
-13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent bats-core composer ddev/ddev/ddev git golang jq mysql-client@8.0 mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok && brew link --force mysql-client`.
+13. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent@4 bats-core composer ddev/ddev/ddev git golang jq mysql-client@8.0 mkcert netcat p7zip  && brew install --cask docker iterm2 ngrok && brew link --force mysql-client`.
 14. Run `ngrok authtoken <token>` with token for free account from 1Password.
 15. Run `mkcert -install`.
 16. If Docker Desktop will be deployed, run Docker manually and go through its configuration routine.
@@ -332,7 +332,7 @@ make testwsl2scripts TESTARGS="-run TestWSL2InstallScripts/docker-inside"
     * `tags`, like `"os=macos,architecture=arm64,osvariant=sonoma,dockertype=dockerformac,rancher-desktop=true,orbstack=true,docker-desktop=true"`
     * `build-path="~/tmp/buildkite-agent/builds"`
     * `git-mirrors-path="~/tmp/buildkite-agent/git-mirrors"` (see [Git Mirrors](#git-mirrors-all-platforms))
-23. Run `brew services start buildkite-agent`.
+23. Run `brew services start buildkite-agent@4`.
 24. Run `bash ~/workspace/ddev/.buildkite/testbot_maintenance.sh`.
 25. Run `bash ~/workspace/ddev/.buildkite/sanetestbot.sh` to check your work.
 26. The `testbot` user's SSH account is used for monitoring, so `ssh-keygen` and then add the public key `id_testbot` from 1Password to `~/.ssh/authorized_keys` and `chmod 600 ~/.ssh/authorized_keys`.
