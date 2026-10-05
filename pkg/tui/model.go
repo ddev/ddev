@@ -390,14 +390,14 @@ func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 				m.confirmAction = ""
 				m.confirmTarget = ""
 				m = m.enterOperationView(fmt.Sprintf("Deleting %s", target), viewDashboard)
-				return m, startOperationStreamCmd("", "delete", "-y", target)
+				return m, deleteStreamCmd("", "delete", "-y", target)
 			}
 			if key.Matches(msg, key.NewBinding(key.WithKeys("o", "O"))) {
 				m.confirming = false
 				m.confirmAction = ""
 				m.confirmTarget = ""
 				m = m.enterOperationView(fmt.Sprintf("Deleting %s (omit snapshot)", target), viewDashboard)
-				return m, startOperationStreamCmd("", "delete", "-y", "-O", target)
+				return m, deleteStreamCmd("", "delete", "-y", "-O", target)
 			}
 		} else if key.Matches(msg, m.keys.Confirm) {
 			m.confirming = false
@@ -624,14 +624,14 @@ func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 				m.confirmAction = ""
 				m.confirmTarget = ""
 				m = m.enterOperationView(fmt.Sprintf("Deleting %s", target), viewDashboard)
-				return m, startOperationStreamCmd("", "delete", "-y", target)
+				return m, deleteStreamCmd("", "delete", "-y", target)
 			}
 			if key.Matches(msg, key.NewBinding(key.WithKeys("o", "O"))) {
 				m.confirming = false
 				m.confirmAction = ""
 				m.confirmTarget = ""
 				m = m.enterOperationView(fmt.Sprintf("Deleting %s (omit snapshot)", target), viewDashboard)
-				return m, startOperationStreamCmd("", "delete", "-y", "-O", target)
+				return m, deleteStreamCmd("", "delete", "-y", "-O", target)
 			}
 		}
 		// Any other key cancels
@@ -747,16 +747,24 @@ func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// Indirections so tests can observe what the open and delete keys request
+// without launching anything.
+var (
+	deleteStreamCmd   = startOperationStreamCmd
+	openTargetCmd     = openTarget
+	openInPhpStormCmd = openInPhpStorm
+)
+
 // openProjectCmd opens appRoot in the file manager or an editor, depending
 // on which open key was pressed.
 func (m AppModel) openProjectCmd(msg tea.KeyPressMsg, appRoot string) tea.Cmd {
 	switch {
 	case key.Matches(msg, m.keys.OpenVSC):
-		return openTarget("VS Code", editorURL("vscode", appRoot))
+		return openTargetCmd("VS Code", editorURL("vscode", appRoot))
 	case key.Matches(msg, m.keys.OpenPhpS):
-		return openInPhpStorm(appRoot)
+		return openInPhpStormCmd(appRoot)
 	}
-	return openTarget("directory", appRoot)
+	return openTargetCmd("directory", appRoot)
 }
 
 func (m AppModel) handleLogKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
