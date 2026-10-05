@@ -1949,6 +1949,22 @@ ddev utility gob-decode $HOME/.ddev/.amplitude.cache
 ddev utility gob-decode ~/path/to/file.gob
 ```
 
+### `utility hyperlink`
+
+Print a URL, or the URLs in piped text, as terminal hyperlinks when supported. Useful in [custom host commands](../extend/custom-commands.md).
+
+*(Hidden - show hidden utility commands with `ddev utility --show-hidden`)*
+
+Example:
+
+```shell
+# Print a URL as a link
+ddev utility hyperlink https://docs.ddev.com
+
+# Link the URLs in piped text
+echo "See https://docs.ddev.com" | ddev utility hyperlink
+```
+
 ### `utility match-constraint`
 
 Check if the currently installed ddev matches the specified [version constraint](https://github.com/Masterminds/semver#checking-version-constraints).
