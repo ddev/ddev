@@ -1975,3 +1975,29 @@ func TestDeleteHintsInDashboardAndDetail(t *testing.T) {
 	helpView := m.View().Content
 	require.Contains(t, helpView, "Delete selected project", "help overlay should explain delete key")
 }
+
+func TestDeleteStreamArgs(t *testing.T) {
+	var got []string
+	t.Cleanup(func() { deleteStreamCmd = startOperationStreamCmd })
+	deleteStreamCmd = func(dir string, args ...string) tea.Cmd {
+		got = append([]string{dir}, args...)
+		return nil
+	}
+
+	for _, view := range []int{viewDashboard, viewDetail} {
+		for key, want := range map[rune][]string{
+			'y': {"", "delete", "-y", "alpha"},
+			'o': {"", "delete", "-y", "-O", "alpha"},
+		} {
+			got = nil
+			m := NewAppModel()
+			m.loading = false
+			m.viewMode = view
+			m.confirming = true
+			m.confirmAction = "delete"
+			m.confirmTarget = "alpha"
+			m.Update(tea.KeyPressMsg{Code: key, Text: string(key)})
+			require.Equal(t, want, got, "key %c in view %v", key, view)
+		}
+	}
+}
