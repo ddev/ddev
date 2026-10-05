@@ -28,6 +28,9 @@ type KeyMap struct {
 	Poweroff key.Binding
 	CopyURL  key.Binding
 	Config   key.Binding
+	OpenDir  key.Binding
+	OpenVSC  key.Binding
+	OpenPhpS key.Binding
 	PageUp   key.Binding
 	PageDown key.Binding
 }
@@ -130,6 +133,18 @@ func DefaultKeyMap() KeyMap {
 		Config: key.NewBinding(
 			key.WithKeys("C"),
 			key.WithHelp("C", "config"),
+		),
+		OpenDir: key.NewBinding(
+			key.WithKeys("o"),
+			key.WithHelp("o", "open directory"),
+		),
+		OpenVSC: key.NewBinding(
+			key.WithKeys("v"),
+			key.WithHelp("v", "open in VS Code"),
+		),
+		OpenPhpS: key.NewBinding(
+			key.WithKeys("p"),
+			key.WithHelp("p", "open in PhpStorm"),
 		),
 		PageUp: key.NewBinding(
 			key.WithKeys("pgup"),

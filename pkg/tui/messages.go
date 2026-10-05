@@ -108,6 +108,12 @@ type clipboardMsg struct {
 	err error
 }
 
+// openedMsg is sent after trying to open a directory or editor.
+type openedMsg struct {
+	what string
+	err  error
+}
+
 // extractProjectInfo converts a DdevApp to our lightweight ProjectInfo.
 func extractProjectInfo(app *ddevapp.DdevApp) ProjectInfo {
 	status, _ := app.SiteStatus()

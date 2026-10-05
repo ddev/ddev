@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -12,8 +13,10 @@ import (
 	"charm.land/bubbles/v2/spinner"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
 
@@ -230,6 +233,14 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.detail != nil {
 			m.detailLoading = true
 			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), m.spinner.Tick)
+		}
+		return m, nil
+
+	case openedMsg:
+		if msg.err != nil {
+			m.statusMsg = fmt.Sprintf("Open %s failed: %v", msg.what, msg.err)
+		} else {
+			m.statusMsg = fmt.Sprintf("Opened %s", msg.what)
 		}
 		return m, nil
 
@@ -523,6 +534,11 @@ func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, ddevExecCommandInDir(p.AppRoot, "xhgui")
 		}
 
+	case key.Matches(msg, m.keys.OpenDir, m.keys.OpenVSC, m.keys.OpenPhpS):
+		if p := m.selectedProject(); p != nil {
+			return m, m.openProjectCmd(msg, p.AppRoot)
+		}
+
 	case key.Matches(msg, m.keys.Poweroff):
 		m.confirming = true
 		m.confirmAction = "poweroff"
@@ -654,11 +670,28 @@ func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), m.spinner.Tick)
 		}
 
+	case key.Matches(msg, m.keys.OpenDir, m.keys.OpenVSC, m.keys.OpenPhpS):
+		if m.detail != nil {
+			return m, m.openProjectCmd(msg, m.detail.AppRoot)
+		}
+
 	case key.Matches(msg, m.keys.Quit):
 		return m, tea.Quit
 	}
 
 	return m, nil
+}
+
+// openProjectCmd opens appRoot in the file manager or an editor, depending
+// on which open key was pressed.
+func (m AppModel) openProjectCmd(msg tea.KeyPressMsg, appRoot string) tea.Cmd {
+	switch {
+	case key.Matches(msg, m.keys.OpenVSC):
+		return openTarget("VS Code", editorURL("vscode", appRoot))
+	case key.Matches(msg, m.keys.OpenPhpS):
+		return openInPhpStorm(appRoot)
+	}
+	return openTarget("directory", appRoot)
 }
 
 func (m AppModel) handleLogKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
@@ -829,20 +862,21 @@ func (m AppModel) buildDashboardContent() string {
 		name := m.styles.ProjectName.Render(fmt.Sprintf("%-*s", nameWidth, displayName))
 		status := m.renderStatus(p.Status)
 		pType := m.styles.ProjectType.Render(fmt.Sprintf("%-*s", typeWidth, p.Type))
-		path := m.styles.URL.Render(fmt.Sprintf("%-*s", pathWidth, truncate(pathDisplay[i], pathWidth)))
+		pathText := truncate(pathDisplay[i], pathWidth)
+		path := linkPadded(m.styles.URL, output.FileURL(p.AppRoot), pathText, pathWidth)
 
-		url := ""
+		siteURL := ""
 		if !narrow && p.URL != "" && p.Status == ddevapp.SiteRunning {
 			// Truncate URL if it would overflow
 			maxURL := m.width - nameWidth - 10 - typeWidth - pathWidth - 10
 			if m.width > 0 && maxURL > 10 {
-				url = m.styles.URL.Render(truncate(p.URL, maxURL))
+				siteURL = m.styles.URL.Render(output.Hyperlink(p.URL, truncate(p.URL, maxURL)))
 			} else if m.width <= 0 {
-				url = m.styles.URL.Render(p.URL)
+				siteURL = m.styles.URL.Render(output.Hyperlink(p.URL, p.URL))
 			}
 		}
 
-		fmt.Fprintf(&b, "%s%s %s  %s  %s  %s\n", cursor, name, status, pType, path, url)
+		fmt.Fprintf(&b, "%s%s %s  %s  %s  %s\n", cursor, name, status, pType, path, siteURL)
 	}
 
 	return b.String()
@@ -963,6 +997,12 @@ func (m AppModel) buildDetailContent() string {
 	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Webserver:"), val(fmt.Sprintf("%-14s", d.WebserverType)), label("Node.js:"), val(d.NodeJSVersion))
 	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Docroot:"), val(fmt.Sprintf("%-14s", d.Docroot)), label("Perf:"), val(perfStr))
 	fmt.Fprintf(&content, " %s %s\n", label("Database:"), val(dbStr))
+	if d.AppRoot != "" {
+		fmt.Fprintf(&content, " %s %s\n", label("Approot:"), val(output.Hyperlink(output.FileURL(d.AppRoot), formatProjectPath(d.AppRoot))))
+		fmt.Fprintf(&content, " %s %s  %s\n", label("Open in:"),
+			val(output.Hyperlink(editorURL("vscode", d.AppRoot), "VS Code")),
+			val(output.Hyperlink(editorURL("phpstorm", d.AppRoot), "PhpStorm")))
+	}
 	content.WriteString("\n")
 
 	// URLs
@@ -975,7 +1015,7 @@ func (m AppModel) buildDetailContent() string {
 		}
 		for _, u := range d.URLs {
 			displayURL := truncate(u, maxURLWidth)
-			content.WriteString("   " + m.styles.URL.Render(displayURL) + "\n")
+			content.WriteString("   " + m.styles.URL.Render(output.Hyperlink(u, displayURL)) + "\n")
 		}
 		content.WriteString("\n")
 	}
@@ -987,7 +1027,7 @@ func (m AppModel) buildDetailContent() string {
 			maxURLWidth = 60
 		}
 		displayMailpit := truncate(d.MailpitURL, maxURLWidth)
-		fmt.Fprintf(&content, " %s %s\n", label("Mailpit:"), m.styles.URL.Render(displayMailpit))
+		fmt.Fprintf(&content, " %s %s\n", label("Mailpit:"), m.styles.URL.Render(output.Hyperlink(d.MailpitURL, displayMailpit)))
 	}
 	if d.DBPublishedPort != "" {
 		fmt.Fprintf(&content, " %s %s\n", label("DB Port:"), val(d.DBPublishedPort))
@@ -1276,6 +1316,40 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
+// editorURL returns a URL that opens dir through an editor's registered URL
+// scheme, or "" for an unknown editor. Under WSL the editors run on Windows,
+// so they get a WSL remote URI or a \\wsl.localhost path instead of a Linux path.
+func editorURL(editor, dir string) string {
+	p := filepath.ToSlash(dir)
+	if !strings.HasPrefix(p, "/") {
+		p = "/" + p
+	}
+	distro := os.Getenv("WSL_DISTRO_NAME")
+	switch editor {
+	case "vscode":
+		u := &url.URL{Scheme: "vscode", Host: "file", Path: p, RawQuery: "windowId=_blank"}
+		if distro != "" {
+			u.Host = "vscode-remote"
+			u.Path = "/wsl+" + distro + p
+		}
+		return u.String()
+	case "phpstorm":
+		if distro != "" {
+			p = "//wsl.localhost/" + distro + p
+		}
+		// EscapedPath leaves & and + alone, but they would end the file= value
+		return "phpstorm://open?file=" + strings.NewReplacer("&", "%26", "+", "%2B").Replace((&url.URL{Path: p}).EscapedPath())
+	}
+	return ""
+}
+
+// linkPadded renders text in style as a hyperlink to target, then pads to width.
+// Padding goes outside the link so only the visible text is clickable.
+func linkPadded(style lipgloss.Style, target, text string, width int) string {
+	pad := strings.Repeat(" ", max(0, width-ansi.StringWidth(text)))
+	return style.Render(output.Hyperlink(target, text)) + pad
+}
+
 func formatProjectPath(path string) string {
 	if path == "" {
 		return ""
@@ -1326,6 +1400,7 @@ func (m AppModel) dashboardKeyHints() string {
 		{"l", "launch"},
 		{"m", "mailpit"},
 		{"x", "xhgui"},
+		{"o", "open dir"},
 		{"C", "config"},
 		{"enter", "detail"},
 		{"/", "filter"},
@@ -1348,6 +1423,9 @@ func (m AppModel) detailKeyHints() string {
 		{"x", "xhgui"},
 		{"X", "xdebug"},
 		{"c", "copy url"},
+		{"o", "open dir"},
+		{"v", "vscode"},
+		{"p", "phpstorm"},
 		{"e", "ssh"},
 		{"L", "logs"},
 		{"R", "refresh"},
@@ -1414,6 +1492,9 @@ Actions:
   c               Copy primary URL to clipboard (from detail view)
   e               SSH into web container (from detail view)
   L               Follow logs (from detail view)
+  o               Open project directory in the file manager
+  v               Open project in VS Code
+  p               Open project in PhpStorm
   R               Refresh
 
 Other:

@@ -70,6 +70,14 @@ func (f *TextFormatter) init(entry *log.Entry) {
 	}
 }
 
+// isErrorTerminal reports whether w is the stderr writer and stderr is a terminal.
+func isErrorTerminal(w io.Writer) bool {
+	if _, ok := w.(*ErrorWriter); !ok {
+		return false
+	}
+	return term.IsTerminal(int(os.Stderr.Fd()))
+}
+
 func (f *TextFormatter) checkIfTerminal(w io.Writer) bool {
 	switch v := w.(type) {
 	case *os.File:
@@ -102,6 +110,11 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 	prefixFieldClashes(entry.Data)
 
 	f.Do(func() { f.init(entry) })
+
+	// The formatter is shared by stdout and stderr loggers, so decide per entry.
+	if entry.Logger != nil && (f.checkIfTerminal(entry.Logger.Out) || isErrorTerminal(entry.Logger.Out)) {
+		entry.Message = LinkifyURLs(entry.Message)
+	}
 
 	isColored := (f.ForceColors || f.isTerminal) && !f.DisableColors
 
