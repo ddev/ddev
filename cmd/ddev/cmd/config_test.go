@@ -597,7 +597,7 @@ func TestConfigDatabaseVersion(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 	versionsToTest := nodeps.GetValidDatabaseVersions()
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if testcommon.IsGotestShort(t) {
 		versionsToTest = []string{"mariadb:10.11", "mysql:8.0", "postgres:18"}
 	}
 

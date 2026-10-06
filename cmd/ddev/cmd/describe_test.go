@@ -52,6 +52,7 @@ func TestDescribeBadArgs(t *testing.T) {
 
 // TestCmdDescribe tests that the describe command works properly when using the binary.
 func TestCmdDescribe(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	origDir, _ := os.Getwd()
 
 	t.Setenv("DDEV_DEBUG", "")
@@ -376,6 +377,7 @@ func TestCmdDescribe(t *testing.T) {
 
 // TestCmdDescribeAppFunction performs unit tests on the describeApp function from the working directory.
 func TestCmdDescribeAppFunction(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	origDir, _ := os.Getwd()
 	for i, v := range TestSites {
 		err := os.Chdir(v.Dir)
@@ -415,6 +417,7 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 
 // TestCmdDescribeAppUsingSitename performs unit tests on the describeApp function using the sitename as an argument.
 func TestCmdDescribeAppUsingSitename(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.

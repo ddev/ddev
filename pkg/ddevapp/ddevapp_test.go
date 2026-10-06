@@ -753,6 +753,7 @@ func TestDdevStartCustomEntrypoint(t *testing.T) {
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
 		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
 	}
@@ -1034,7 +1035,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	sort.Strings(phpKeys)
 
 	// Test only the default version if GOTEST_SHORT is set
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if testcommon.IsGotestShort(t) {
 		phpKeys = []string{nodeps.PHPDefault}
 	}
 
@@ -1254,6 +1255,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 
 // TestGetApps tests the GetActiveProjects function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	// Start the apps.
@@ -1322,10 +1324,7 @@ func TestGetApps(t *testing.T) {
 
 // TestDdevImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestDdevImportDB(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
@@ -1720,19 +1719,10 @@ func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
 
 // TestDdevAllDatabases tests db import/export/snapshot/restore/start with supported database versions
 func TestDdevAllDatabases(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skipping when GOTEST_SHORT unset")
-	}
+	testcommon.SkipIfGotestShort(t)
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
-
-	//Use a smaller list if GOTEST_SHORT
-	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:12.3", "mariadb:11.8", "mariadb:11.4", "mariadb:10.11", "mariadb:10.6", "mysql:9.7", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
-		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
-	}
 
 	if dockerutil.IsPodman() || dockerutil.IsDockerRootless() {
 		// Works locally but fails in CI.
@@ -2038,10 +2028,7 @@ func TestGetDBDumpCommand(t *testing.T) {
 // export/import chain are engine-agnostic, so they're only exercised once
 // (on MariaDB) rather than once per database type.
 func TestDdevExportDB(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	testDir, _ := os.Getwd()
@@ -2207,10 +2194,7 @@ func TestDdevExportDB(t *testing.T) {
 // TestWebserverMariaMySQLDBClient tests functionality of mysql/mariadb
 // database clients in the ddev-webserver
 func TestWebserverMariaMySQLDBClient(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 
 	assert := asrt.New(t)
 
@@ -2509,6 +2493,7 @@ func readFileTail(fileName string, maxBytes int64) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
 	}
@@ -2780,6 +2765,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 // TestDdevImportFilesDir tests that "ddev import-files" can successfully import non-archive directories
 func TestDdevImportFilesDir(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
@@ -2856,6 +2842,7 @@ func TestDdevImportFilesDir(t *testing.T) {
 
 // TestDdevImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestDdevImportFiles(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	origDir, _ := os.Getwd()
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -2957,6 +2944,7 @@ func TestDdevImportFiles(t *testing.T) {
 
 // TestDdevUploadDirNoPackage tests if the getUploadDir(s) returns what's expected for each app type.
 func TestDdevUploadDirNoPackage(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -3006,6 +2994,7 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 
 // TestDdevImportFilesCustomUploadDir ensures that files are imported to a custom upload directory when requested
 func TestDdevImportFilesCustomUploadDir(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -3619,6 +3608,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 
 // TestGetAppsEmpty ensures that GetActiveProjects returns an empty list when no applications are running.
 func TestGetAppsEmpty(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	// Ensure test sites are removed
@@ -3762,9 +3752,8 @@ func TestHttpsRedirection(t *testing.T) {
 
 	projectTypes := ddevapp.GetValidAppTypes()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if testcommon.IsGotestShort(t) {
 		projectTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
-		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}
 	for _, projectType := range projectTypes {
 		// TODO: Fix the Laravel config so it can do the redir_abs.php successfully on nginx-fpm
@@ -4102,6 +4091,7 @@ func TestGetWebContainerDirectURLsWithDockerIPError(t *testing.T) {
 // - nginx_full/nginx-site.conf version installed
 // - Actual headers from site when nginx/apache installed per TestSite
 func TestPHPWebserverType(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
 		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
 	}

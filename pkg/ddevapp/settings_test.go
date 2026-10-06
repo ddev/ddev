@@ -94,6 +94,7 @@ func TestWriteSettings(t *testing.T) {
 
 // TestWriteDrushConfig test the Drush config we write
 func TestWriteDrushConfig(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
 

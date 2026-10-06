@@ -15,10 +15,7 @@ import (
 
 // TestProcessHooks tests execution of commands defined in config.yaml
 func TestProcessHooks(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 
 	if nodeps.IsWindows() {
 		t.Skip("Skipping on traditional Windows, as it always hangs")

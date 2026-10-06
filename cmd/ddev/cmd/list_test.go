@@ -20,6 +20,7 @@ import (
 
 // TestCmdList runs the binary with "ddev list" and checks the results
 func TestCmdList(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	origDir, _ := os.Getwd()
 	t.Setenv("DDEV_DEBUG", "")
 

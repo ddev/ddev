@@ -17,10 +17,7 @@ import (
 )
 
 func TestComposerCreateProjectCmd(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 	if nodeps.IsWindows() {
 		t.Skip("Skipping on traditional windows where it hangs")
 	}
@@ -31,9 +28,6 @@ func TestComposerCreateProjectCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	validAppTypes := ddevapp.GetValidAppTypes()
-	if os.Getenv("GOTEST_SHORT") != "" {
-		validAppTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
-	}
 
 	for _, docRoot := range []string{"", "doc-root"} {
 		for _, projectType := range validAppTypes {

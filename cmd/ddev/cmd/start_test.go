@@ -23,6 +23,7 @@ import (
 
 // TestCmdStart runs `ddev start` on the test apps
 func TestCmdStart(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	// Gather reporting about goroutines at exit

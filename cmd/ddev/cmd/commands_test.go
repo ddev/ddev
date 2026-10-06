@@ -562,7 +562,7 @@ func TestMysqlCommand(t *testing.T) {
 	dbVersionsToTest := []ddevapp.DatabaseDesc{
 		{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion},
 	}
-	if os.Getenv("GOTEST_SHORT") == "" {
+	if !testcommon.IsGotestShort(t) {
 		dbVersionsToTest = append(dbVersionsToTest,
 			ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL80},
 			ddevapp.DatabaseDesc{Type: nodeps.MySQL, Version: nodeps.MySQL84},

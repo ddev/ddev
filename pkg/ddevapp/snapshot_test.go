@@ -304,10 +304,7 @@ func TestSnapshotUncompressedPostgresError(t *testing.T) {
 // ListSnapshots() reports its compression as "none", and that it restores
 // correctly.
 func TestSnapshotUncompressed(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 
 	assert := assert2.New(t)
 	app := &ddevapp.DdevApp{}
@@ -359,10 +356,7 @@ func TestSnapshotUncompressed(t *testing.T) {
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
 func TestDdevRestoreSnapshot(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 
 	assert := assert2.New(t)
 

@@ -1204,7 +1204,7 @@ func TestPHPConfig(t *testing.T) {
 	// so we can subtract those if GOTEST_SHORT==""
 	phpKeys := nodeps.GetValidPHPVersions()
 	exclusions := []string{nodeps.PHP56, nodeps.PHP70, nodeps.PHP71, nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if testcommon.IsGotestShort(t) {
 		phpKeys = util.SubtractSlices(phpKeys, exclusions)
 	}
 
@@ -1575,10 +1575,7 @@ func TestTimezoneConfig(t *testing.T) {
 
 // TestComposerVersionConfig tests to make sure setting Composer version takes effect in the container.
 func TestComposerVersionConfig(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}

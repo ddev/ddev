@@ -59,7 +59,7 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 	sort.Strings(phpKeys)
 
 	// If GOTESt_SHORT is set, we'll just use the default version instead
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if testcommon.IsGotestShort(t) {
 		phpKeys = []string{nodeps.PHPDefault}
 	}
 
@@ -81,7 +81,7 @@ func TestDdevXhprofPrependEnabled(t *testing.T) {
 
 	webserverKeys := nodeps.GetPHPWebserverTypes()
 	// Most of the time we can just test with the default webserver_type
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if testcommon.IsGotestShort(t) {
 		webserverKeys = []string{nodeps.WebserverDefault}
 	}
 
@@ -187,7 +187,7 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 	sort.Strings(phpKeys)
 
 	// If GOTESt_SHORT is set, we'll just use the default version instead
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if testcommon.IsGotestShort(t) {
 		phpKeys = []string{nodeps.PHPDefault}
 	}
 
@@ -204,7 +204,7 @@ func TestDdevXhprofXhguiEnabled(t *testing.T) {
 
 	webserverKeys := nodeps.GetPHPWebserverTypes()
 	// Most of the time we can just test with the default webserver_type
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if testcommon.IsGotestShort(t) {
 		webserverKeys = []string{nodeps.WebserverDefault}
 	}
 
