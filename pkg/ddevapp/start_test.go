@@ -14,6 +14,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/distribution/reference"
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/require"
 )
@@ -365,6 +366,14 @@ func TestBuildServiceImageTags(t *testing.T) {
 		out, _, err := app.Exec(&ddevapp.ExecOpts{Service: service, Cmd: "cat /marker.txt"})
 		require.NoError(t, err)
 		require.Equal(t, service, strings.TrimSpace(out))
-		require.Equal(t, image, services[service]["image"])
+		require.Equal(t, familiarImage(t, image), familiarImage(t, services[service]["image"].(string)))
 	}
+}
+
+// familiarImage normalizes an image reference, because podman reports
+// docker.io/library/busybox:1.36 where Docker reports busybox:1.36.
+func familiarImage(t *testing.T, image string) string {
+	named, err := reference.ParseNormalizedNamed(image)
+	require.NoError(t, err)
+	return reference.FamiliarString(reference.TagNameOnly(named))
 }
