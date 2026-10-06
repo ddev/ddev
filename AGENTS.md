@@ -43,9 +43,10 @@ Claude Code should treat them as facts about the environment rather than
 reminders to restate or re-verify by hand:
 
 - `make staticrequired` runs automatically before every `git commit`.
-- `git push`, `docker push`, and `go build` are denied outright.
+- `git push`, `docker push`, `go build`, and unsetting `GOTEST_SHORT` are
+  denied outright.
 - `GOTEST_SHORT=true` and `DDEV_NO_INSTRUMENTATION=true` are preset for every
-  command. Prefix a command with `GOTEST_SHORT=` to run the full matrix.
+  command. Never run the full matrix locally, it is too slow.
 - Editing a `.go` or `.md` file formats it automatically.
 - `.gotmp/bin/<os>_<arch>` is already first on PATH, so the binary you just
   built is what runs — no need to adjust PATH yourself.
@@ -89,7 +90,7 @@ here, since no test in this repo calls `testing.Short()`.
 | Variable | Purpose |
 | --- | --- |
 | `DDEV_DEBUG=true` | Raise ddev's log level to Debug, so the commands it issues and Docker status changes are printed |
-| `GOTEST_SHORT=<any value>` | Cut the integration tests to a single test site. An integer picks which one, so `16` is drupal11; anything else uses the first. Leave it unset for the full matrix |
+| `GOTEST_SHORT=<any value>` | Cut the integration tests to a single test site. An integer picks which one, so `16` is drupal11; anything else uses the first. CI uses `16`, and leaves it unset only for the fixed test list in `test-all-project-types.yml` |
 | `DDEV_NO_INSTRUMENTATION=true` | Disable analytics regardless of the global config setting |
 
 ## Linting

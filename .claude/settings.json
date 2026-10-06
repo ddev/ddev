@@ -38,6 +38,8 @@
       "Bash(git push *)",
       "Bash(docker push *)",
       "Bash(go build *)",
+      "Bash(GOTEST_SHORT= *)",
+      "Bash(unset GOTEST_SHORT*)",
       "Bash(find * -delete)",
       "Bash(find * -delete *)",
       "Bash(find * -exec rm *)"
