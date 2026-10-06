@@ -43,6 +43,8 @@ func PopulateGlobalCustomCommandFiles() error {
 		return nil
 	}
 
+	util.Debug("PopulateGlobalCustomCommandFiles: copying, key=%q saved=%q", cacheKey, savedKeyForLog(hashFilePath))
+
 	commandDirInVolume := "/mnt/ddev-global-cache/global-commands/"
 
 	// Use CopyIntoVolume with destroyExisting=true to combine the rm + copy
@@ -54,10 +56,13 @@ func PopulateGlobalCustomCommandFiles() error {
 	}
 
 	// Make sure all commands can be executed
-	_, stderr, err := performTaskInContainer([]string{"sh", "-c", "chmod -R u+rwx " + commandDirInVolume})
+	stdout, stderr, err := performTaskInContainer([]string{"sh", "-c", "chmod -R u+rwx " + commandDirInVolume + " && find " + commandDirInVolume + " -type f"})
 	if err != nil {
 		return fmt.Errorf("unable to chmod %s: %v (stderr=%s)", commandDirInVolume, err, stderr)
 	}
+
+	// Lists what landed in the volume, to diagnose commands missing after a copy.
+	util.Debug("PopulateGlobalCustomCommandFiles: volume files:\n%s", stdout)
 
 	// Save the cache key so we can skip next time if unchanged
 	_ = os.WriteFile(hashFilePath, []byte(cacheKey), 0644)
@@ -86,4 +91,10 @@ func performTaskInContainer(command []string) (string, string, error) {
 	containerName := "performTaskInContainer" + nodeps.RandomString(12)
 	uid, _, _ := dockerutil.GetContainerUser()
 	return dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, containerName, command, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false, nil, nil, nil)
+}
+
+// savedKeyForLog returns the stored global commands cache key, or "" if unreadable.
+func savedKeyForLog(hashFilePath string) string {
+	b, _ := os.ReadFile(hashFilePath)
+	return string(b)
 }
