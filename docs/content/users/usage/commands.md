@@ -1324,13 +1324,17 @@ ddev querious
 
 Restart one or several projects.
 
+With `--service`, only the named services get new containers, with their images built as `ddev start` builds them, and the rest of the project keeps running. This also brings back a service that is unhealthy or has crashed. A service in an [optional profile](../extend/custom-compose-files.md#optional-services) has to be started first, with `ddev start --profiles` or `ddev restart --profiles`. Restarting `web` restarts the whole project, with the optional services that were started.
+
 Flags:
 
 * `--all`, `-a`: Restart all projects.
 * `--no-cache`: Rebuild custom Docker image layers without cache.
 * `--omit-snapshot`, `-O`: With `--reset-database`, skip the snapshot of the database being removed.
+* `--profiles`: Start optional comma-separated Docker Compose profiles.
 * `--reset-database`: Remove the project's existing database and start over with a new one.
 * `--seed-snapshot`: Seed a brand-new database volume from this snapshot name or file, instead of the stock starter database.
+* `--service`, `-s`: Restart only these comma-separated services.
 * `--skip-confirmation`, `-y`: Skip any confirmation steps.
 
 Example:
@@ -1347,6 +1351,15 @@ ddev restart my-project my-other-project
 
 # Restart all projects
 ddev restart --all
+
+# Restart the current project with the busybox profile, without Docker cache
+ddev restart --profiles=busybox --no-cache
+
+# Restart only the db service
+ddev restart --service=db
+
+# Restart only the solr and redis services, without Docker cache
+ddev restart -s solr,redis --no-cache
 
 # Throw away the current database and restart with a new, empty one
 ddev restart --reset-database
@@ -1559,7 +1572,7 @@ Flags:
 * `--all`, `-a`: Start all projects.
 * `--no-cache`: Rebuild custom Docker image layers without cache.
 * `--omit-snapshot`, `-O`: With `--reset-database`, skip the snapshot of the database being removed.
-* `--profiles=<optional-compose-profile-list>`: Start services labeled with the Docker Compose profiles in comma-separated list of profiles.
+* `--profiles`: Start optional comma-separated Docker Compose profiles.
 * `--reset-database`: Remove the project's existing database and start over with a new one.
 * `--seed-snapshot`: Seed a brand-new database volume from this snapshot name or file, instead of the stock starter database.
 * `--skip-confirmation`, `-y`: Skip any confirmation steps.
@@ -2072,13 +2085,15 @@ See also: [Troubleshooting port conflicts](troubleshooting.md#web-server-ports-a
 
 *Alias: `utility refresh`.*
 
-Rebuilds the project's Docker cache with verbose output and restarts the project or the specified service.
+Rebuilds the project's Docker cache with verbose output and restarts the project or the specified services.
+
+Services that have a container get a new one with the rebuilt image. Rebuilding `web` restarts the whole project, with the optional services that were started.
 
 Flags:
 
 * `--all`, `-a`: Rebuild all services and restart the project.
 * `--cache`: Keep Docker cache.
-* `--service`, `-s`: Rebuild the specified service and restart it. (default `web`)
+* `--service`, `-s`: Rebuild these comma-separated services and restart them. (default `web`)
 
 Example:
 
@@ -2091,6 +2106,9 @@ ddev utility rebuild --cache
 
 # Rebuild the current project's db service without cache
 ddev utility rebuild --service db
+
+# Rebuild the current project's solr and redis services without cache
+ddev utility rebuild -s solr,redis
 
 # Rebuild the current project's all services without cache
 ddev utility rebuild --all
