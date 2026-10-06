@@ -423,7 +423,13 @@ func TestAutocompletionForCustomCmds(t *testing.T) {
 	assert.NoError(err)
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	require.NoError(t, err)
-	_, _ = exec.RunHostCommand(DdevBin, "restart")
+	// The restart repopulates the global-commands volume; keep its output so a
+	// missing global web command can be traced to what the restart did.
+	restartOut, restartErr := exec.RunHostCommand(DdevBin, "restart")
+	t.Logf("ddev restart: err=%v output=%s", restartErr, restartOut)
+	volListing, _ := exec.RunHostCommand(DdevBin, "exec", "ls -laR /mnt/ddev-global-cache/global-commands")
+	hashFile, _ := os.ReadFile(filepath.Join(globalconfig.GetGlobalDdevDir(), ".global-commands-hash"))
+	t.Logf("global-commands volume:\n%s\n.global-commands-hash=%s", volListing, hashFile)
 
 	// Check completion results are as expected for each command
 	for _, cmd := range []string{"global-host-cmd", "global-web-cmd", "project-host-cmd", "project-web-cmd"} {
