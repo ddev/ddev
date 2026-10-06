@@ -13,7 +13,7 @@ import (
 )
 
 // TestContainerTerminfo checks that the containers you can ssh into resolve
-// every TERM in util.ContainerTerminfoEntries. util.TerminalExecEnv forwards those
+// every TERM in util.ContainerTerminfoEntries. util.TerminalEnv forwards those
 // unchanged, so an entry missing from an image would give the shell an unusable
 // TERM.
 func TestContainerTerminfo(t *testing.T) {

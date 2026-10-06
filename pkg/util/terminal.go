@@ -19,7 +19,7 @@ var ContainerTerminfoEntries = []string{
 	"xterm-r5", "xterm-r6", "xterm-vt220", "xterm-xfree86",
 }
 
-// TerminalEnvVars are the variables besides TERM that TerminalExecEnv forwards
+// TerminalEnvVars are the variables besides TERM that TerminalEnv forwards
 // from the host. Terminals set them to say which program they are, and
 // libraries like supports-hyperlinks read them to decide whether to emit OSC 8
 // hyperlinks, as output.HasTermHyperlinks does for DDEV itself.
@@ -35,25 +35,17 @@ var TerminalEnvVars = []string{
 	"WT_SESSION",
 }
 
-// TerminalExecEnv adds the terminal environment variables of the host to
-// existingEnv, for an interactive container session. Variables already in
-// existingEnv win. A TERM the container has no terminfo entry for is replaced,
-// because forwarding it would leave the shell with a TERM it cannot resolve.
-func TerminalExecEnv(existingEnv []string) []string {
+// TerminalEnv returns the terminal environment variables of the host, for an
+// interactive container session. A TERM the container has no terminfo entry
+// for is replaced, because forwarding it would leave the shell with a TERM it
+// cannot resolve.
+func TerminalEnv() []string {
 	hostTerm := os.Getenv("TERM")
 	if hostTerm == "" {
-		return existingEnv
+		return nil
 	}
 	if !slices.Contains(ContainerTerminfoEntries, hostTerm) {
 		hostTerm = "xterm-256color"
 	}
-	execEnv := []string{"TERM=" + hostTerm}
-	for _, varName := range TerminalEnvVars {
-		if value := os.Getenv(varName); value != "" {
-			execEnv = append(execEnv, varName+"="+value)
-		}
-	}
-	// existingEnv comes last, so that EnvToUniqueEnv keeps it over the host.
-	execEnv = append(execEnv, existingEnv...)
-	return EnvToUniqueEnv(&execEnv)
+	return append([]string{"TERM=" + hostTerm}, HostEnv(TerminalEnvVars...)...)
 }

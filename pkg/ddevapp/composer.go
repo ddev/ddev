@@ -6,6 +6,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
 )
 
@@ -43,25 +44,17 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	return stdout, stderr, nil
 }
 
+// composerEnvVars are the Composer variables passed through from the host.
+// COMPOSER_NO_SECURITY_BLOCKING is deprecated in favor of COMPOSER_NO_BLOCKING,
+// but still forwarded for anyone who already sets it.
+// See https://getcomposer.org/doc/03-cli.md#environment-variables
+var composerEnvVars = []string{
+	"COMPOSER_NO_BLOCKING",
+	"COMPOSER_NO_SECURITY_BLOCKING",
+}
+
 // getComposerEnv returns environment variables to use when running composer
 func getComposerEnv() []string {
-	env := []string{
-		// Prevent Composer from debugging when Xdebug is enabled
-		"XDEBUG_MODE=off",
-	}
-
-	// List of Composer environment variables to pass through from host
-	// https://getcomposer.org/doc/03-cli.md#environment-variables
-	composerEnvVars := []string{
-		"COMPOSER_NO_BLOCKING",
-		"COMPOSER_NO_SECURITY_BLOCKING",
-	}
-
-	for _, varName := range composerEnvVars {
-		if value, exists := os.LookupEnv(varName); exists {
-			env = append(env, fmt.Sprintf(`%s=%s`, varName, value))
-		}
-	}
-
-	return env
+	// Prevent Composer from debugging when Xdebug is enabled
+	return append([]string{"XDEBUG_MODE=off"}, util.HostEnv(composerEnvVars...)...)
 }
