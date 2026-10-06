@@ -307,3 +307,64 @@ func TestStartOfflineWithBuiltImages(t *testing.T) {
 	})
 	require.NoError(t, err)
 }
+
+// TestBuildServiceImageTags checks that two services building from one base
+// image keep their own images.
+func TestBuildServiceImageTags(t *testing.T) {
+	site := TestSites[0]
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	composeFile := app.GetConfigPath("docker-compose.build-tags.yaml")
+	taggedImage := "busybox:1.36-" + app.Name + "-tagged-built"
+	t.Cleanup(func() {
+		_ = os.Remove(composeFile)
+		_ = app.Stop(true, false)
+		_ = dockerutil.RemoveImage(taggedImage)
+		_ = dockerutil.RemoveImage(app.GetComposeProjectName() + "-no-image")
+	})
+
+	compose := `services:
+  tagged:
+    container_name: ddev-${DDEV_SITENAME}-tagged
+    image: ${BUILD_TAGS_BASE:-busybox:1.36}-${DDEV_SITENAME}-tagged-built
+    build:
+      dockerfile_inline: |
+        ARG BASE_IMAGE=scratch
+        FROM $${BASE_IMAGE}
+        RUN echo tagged > /marker.txt
+      args:
+        BASE_IMAGE: ${BUILD_TAGS_BASE:-busybox:1.36}
+    command: sleep infinity
+    init: true
+  no-image:
+    container_name: ddev-${DDEV_SITENAME}-no-image
+    build:
+      dockerfile_inline: |
+        FROM busybox:1.36
+        RUN echo no-image > /marker.txt
+    command: sleep infinity
+    init: true
+    x-ddev:
+      pull-images:
+        - busybox:1.36
+`
+	err = os.WriteFile(composeFile, []byte(compose), 0644)
+	require.NoError(t, err)
+
+	restoreErr := util.CaptureUserErr()
+	err = app.Start()
+	stderr := restoreErr()
+	require.NoError(t, err)
+	require.NotContains(t, stderr, "Unable to pull")
+
+	desc, err := app.Describe(false)
+	require.NoError(t, err)
+	services := desc["services"].(map[string]map[string]any)
+	for service, image := range map[string]string{"tagged": "busybox:1.36", "no-image": app.GetComposeProjectName() + "-no-image"} {
+		out, _, err := app.Exec(&ddevapp.ExecOpts{Service: service, Cmd: "cat /marker.txt"})
+		require.NoError(t, err)
+		require.Equal(t, service, strings.TrimSpace(out))
+		require.Equal(t, image, services[service]["image"])
+	}
+}

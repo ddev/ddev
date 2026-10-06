@@ -95,3 +95,18 @@ func TestExistingContainerHostPortStopped(t *testing.T) {
 	})
 	require.Empty(t, a.existingContainerHostPort("web", p))
 }
+
+func TestInjectDdevLabelsInvalidXDdev(t *testing.T) {
+	project, err := dockerutil.CreateComposeProject(`
+name: ddev-acme
+services:
+  omitted:
+    image: busybox:1.36
+    x-ddev:
+      omit-ddev-labels: true
+      pull-images: busybox:1.36
+`)
+	require.NoError(t, err)
+	injectDdevLabels(project, &DdevApp{Name: "acme"})
+	require.NotContains(t, project.Services["omitted"].Labels, "com.ddev.site-name")
+}

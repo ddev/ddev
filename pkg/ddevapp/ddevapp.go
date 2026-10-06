@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -31,6 +32,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/distribution/reference"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/mattn/go-isatty"
 	"github.com/moby/moby/api/pkg/stdcopy"
@@ -350,7 +352,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 		services[shortName] = map[string]any{}
 		services[shortName]["status"] = string(c.State.Status)
 		services[shortName]["full_name"] = fullName
-		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
+		services[shortName]["image"] = app.describeServiceImage(shortName, c.Config.Image)
 		services[shortName]["short_name"] = shortName
 
 		var exposedPrivatePorts []int
@@ -487,8 +489,7 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 			services[serviceName]["status"] = SiteStopped
 			services[serviceName]["short_name"] = serviceName
 			services[serviceName]["full_name"] = fmt.Sprintf("ddev-%s-%s", app.Name, serviceName)
-			// Strip the -built suffix from image names, just like for running containers
-			services[serviceName]["image"] = strings.TrimSuffix(composeService.Image, fmt.Sprintf("-%s-built", app.Name))
+			services[serviceName]["image"] = app.describeServiceImage(serviceName, composeService.Image)
 
 			// Extract port information from docker-compose configuration
 			portSet := make(map[int]bool)
@@ -610,6 +611,20 @@ func (app *DdevApp) Describe(short bool) (map[string]any, error) {
 	}
 
 	return appDesc, nil
+}
+
+// describeServiceImage returns the base image a built tag names, so a build
+// service shows its base image rather than its local tag, or else the image.
+func (app *DdevApp) describeServiceImage(name, image string) string {
+	if image == "" && app.ComposeYaml != nil {
+		if service, ok := app.ComposeYaml.Services[name]; ok {
+			image = builtImageName(app.ComposeYaml, name, service)
+		}
+	}
+	if base := baseImageFromBuiltTag(image, app.Name, name); base != "" {
+		return base
+	}
+	return image
 }
 
 // GetPublishedPort returns the host-exposed public port of a container.
@@ -1598,6 +1613,10 @@ func (app *DdevApp) start(o StartOptions) error {
 	if err != nil {
 		return err
 	}
+	collisions := buildTagCollisions(app.ComposeYaml)
+	for _, image := range slices.Sorted(maps.Keys(collisions)) {
+		util.Warning("Services %s build their images with the same tag %q, so they all run whichever is built last.\nAdd the service name to each tag, see https://docs.ddev.com/en/stable/users/extend/custom-compose-files/#conventions-for-defining-additional-services", strings.Join(collisions[image], ", "), image)
+	}
 	project, err := app.loadRenderedProject(o.Profiles)
 	if err != nil {
 		return err
@@ -2491,23 +2510,58 @@ func (app *DdevApp) FindServiceImages(serviceNames []string) ([]composeTypes.Ser
 		if len(serviceNames) > 0 && !slices.Contains(serviceNames, name) {
 			continue
 		}
-		image := service.Image
-		if image == "" {
-			continue
-		}
-		if before, ok := strings.CutSuffix(image, "-built"); ok {
-			image = before
-			if before, ok := strings.CutSuffix(image, "-"+app.Name); ok {
-				image = before
-			}
-		}
 		platform := service.Platform
 		if platform == "" && service.Build != nil {
 			platform = dockerutil.BuildPlatformToPull(service.Build.Platforms)
 		}
-		images = append(images, composeTypes.ServiceConfig{Image: image, Platform: platform})
+		for _, image := range app.serviceImagesToPull(name, service) {
+			images = append(images, composeTypes.ServiceConfig{Image: image, Platform: platform})
+		}
 	}
 	return images, nil
+}
+
+// serviceImagesToPull returns the images a compose service needs from a
+// registry: its image, or for a build service the base image its tag names,
+// plus any listed in x-ddev.pull-images. Built tags are local, so they are
+// never pulled, even by a service that reuses another one's image.
+func (app *DdevApp) serviceImagesToPull(name string, service composeTypes.ServiceConfig) []string {
+	var images []string
+	switch {
+	case service.Build != nil:
+		images = []string{baseImageFromBuiltTag(service.Image, app.Name, name)}
+	case !isBuiltImage(app.ComposeYaml, service.Image):
+		images = []string{service.Image}
+	}
+	images = append(images, app.GetXDdevExtension(name).PullImages...)
+	var result []string
+	for _, image := range images {
+		if image != "" && !slices.Contains(result, image) {
+			result = append(result, image)
+		}
+	}
+	return result
+}
+
+// baseImageFromBuiltTag returns the base image named by a build service's
+// "<base>-<project>-<service>-built" or "<base>-<project>-built" tag, or ""
+// for any other tag. Outside DDEV's own web and db, the base must also have a
+// tag, which rules out local names such as "ddev-<project>-<service>-built".
+func baseImageFromBuiltTag(image, appName, serviceName string) string {
+	base, ok := strings.CutSuffix(image, "-"+appName+"-"+serviceName+"-built")
+	if !ok {
+		base, ok = strings.CutSuffix(image, "-"+appName+"-built")
+	}
+	if !ok || base == "" {
+		return ""
+	}
+	if serviceName == "web" || serviceName == "db" {
+		return base
+	}
+	if named, err := reference.ParseNormalizedNamed(base); err != nil || reference.IsNameOnly(named) {
+		return ""
+	}
+	return base
 }
 
 // FindNotOmittedImages returns an array of image names not omitted by global or project configuration

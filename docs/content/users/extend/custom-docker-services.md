@@ -83,12 +83,12 @@ The `x-ddev` extension field lets you customize DDEV behavior per service in you
 
 | Key | Description |
 |-----|-------------|
-| [`describe-url-port`](#customizing-ddev-describe-output) | Text shown in the `URL/PORT` column of `ddev describe` |
-| [`describe-info`](#customizing-ddev-describe-output) | Text shown in the `INFO` column of `ddev describe` |
-| [`ssh-shell`](../extend/in-container-configuration.md#changing-ddev-ssh-shell) | Shell used by `ddev ssh -s <service>` for this service |
 | [`container-user`](../extend/in-container-configuration.md#changing-the-container-user) | User that `ddev ssh`, `ddev exec`, and custom commands run as for this service |
+| [`describe-info`](#customizing-ddev-describe-output) | Text shown in the `INFO` column of `ddev describe` |
+| [`describe-url-port`](#customizing-ddev-describe-output) | Text shown in the `URL/PORT` column of `ddev describe` |
 | [`omit-ddev-labels`](#omitting-comddev-labels-from-a-service) | Skip injecting `com.ddev.*` labels onto this service |
-<!-- TODO: support the ssh-user key when https://github.com/ddev/ddev/pull/8829 lands -->
+| [`pull-images`](#service-with-a-custom-build) | Images DDEV pulls before building this service |
+| [`ssh-shell`](../extend/in-container-configuration.md#changing-ddev-ssh-shell) | Shell used by `ddev ssh -s <service>` for this service |
 
 ### Customizing `ddev describe` Output
 
@@ -170,7 +170,7 @@ volumes:
 
 ### Service with a Custom Build
 
-If the stock image needs an extra tool or package, add a `build:` section instead of a plain `image:`. Follow the `-${DDEV_SITENAME}-built` tag convention from [Conventions for Defining Additional Services](custom-compose-files.md#conventions-for-defining-additional-services), and give the tag a unique segment per service, as shown here, so two build services sharing the same base image don't overwrite each other's built image.
+If the stock image needs an extra tool or package, add a `build:` section instead of a plain `image:`. Follow the `-${DDEV_SITENAME}-<servicename>-built` tag convention from [Conventions for Defining Additional Services](custom-compose-files.md#conventions-for-defining-additional-services).
 
 Create `.ddev/docker-compose.myservice.yaml`:
 
@@ -178,19 +178,29 @@ Create `.ddev/docker-compose.myservice.yaml`:
 services:
   myservice:
     container_name: "ddev-${DDEV_SITENAME}-myservice"
-    image: ${BASE_IMAGE:-nginx:alpine}-${DDEV_SITENAME}-myservice-built
+    image: ${BASE_IMAGE:-nginx:stable}-${DDEV_SITENAME}-myservice-built
     build:
       dockerfile_inline: |
-        ARG BASE_IMAGE="debian"
+        ARG BASE_IMAGE="scratch"
         FROM $${BASE_IMAGE}
         RUN apt-get update && apt-get install -y curl
       args:
-        BASE_IMAGE: ${BASE_IMAGE:-debian}
+        BASE_IMAGE: ${BASE_IMAGE:-nginx:stable}
     # These two labels are added automatically since DDEV v1.25.2+
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: ${DDEV_APPROOT}
     restart: "no"
+```
+
+To pull other images before the build, such as a `FROM` written in the Dockerfile, list them in `x-ddev.pull-images`:
+
+```yaml
+services:
+  myservice:
+    x-ddev:
+      pull-images:
+        - busybox:stable
 ```
 
 ### SQL Server Database Service

@@ -103,12 +103,12 @@ When defining additional services for your project, we recommend following these
           com.ddev.approot: ${DDEV_APPROOT}
     ```
 
-* When using a custom `build` configuration with `dockerfile_inline` or `Dockerfile`, define the `image` with the `-${DDEV_SITENAME}-built` suffix:
+* When using a custom `build` configuration with `dockerfile_inline` or `Dockerfile`, define the `image` with the `-${DDEV_SITENAME}-<servicename>-built` suffix:
 
     ```yaml
     services:
       dummy-service:
-        image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-built
+        image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-dummy-service-built
         build:
           dockerfile_inline: |
             ARG YOUR_DOCKER_IMAGE="scratch"
@@ -118,7 +118,7 @@ When defining additional services for your project, we recommend following these
             YOUR_DOCKER_IMAGE: ${YOUR_DOCKER_IMAGE:-example/example:latest}
     ```
 
-    This enables DDEV to operate in [offline mode](../usage/offline.md) once the base image has been pulled.
+    DDEV pulls the base image, `example/example:latest`, before the build, so the project can start in [offline mode](../usage/offline.md). The base needs a tag, such as `debian:stable` rather than `debian`. The service name keeps two services built from the same base image from overwriting each other's image. To pull other images, such as a `FROM` written in the Dockerfile, use [`x-ddev.pull-images`](custom-docker-services.md#service-with-a-custom-build).
 
 * Exposing ports for service: you can expose the port for a service to be accessible as `projectname.ddev.site:portNum` while your project is running. This is achieved by the following configurations for the container(s) being added:
 
@@ -179,7 +179,7 @@ services:
       - command: mkcert -install
     # Add an image and a build stage so we can add `mkcert`, etc.
     # The Dockerfile for the build stage goes in the `.ddev/example/` directory
-    image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-built
+    image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-example-built
     build:
       context: example
       args:
@@ -269,7 +269,7 @@ If you need a more sophisticated user setup, similar to what `ddev-webserver` us
 services:
   example:
     container_name: ddev-${DDEV_SITENAME}-example
-    image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-built
+    image: ${YOUR_DOCKER_IMAGE:-example/example:latest}-${DDEV_SITENAME}-example-built
     build:
       context: example
       args:

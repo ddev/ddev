@@ -10,6 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -59,6 +60,16 @@ services:
     image: ddev/ddev-utilities
     x-ddev:
       describe-info: "has other fields"
+  pull-images:
+    image: ddev/ddev-utilities
+    x-ddev:
+      pull-images:
+        - "  busybox:1.36  "
+        - alpine:3.20
+  pull-images-scalar:
+    image: ddev/ddev-utilities
+    x-ddev:
+      pull-images: busybox:1.36
 `
 
 	project, err := dockerutil.CreateComposeProject(composeYAML)
@@ -124,6 +135,15 @@ services:
 	t.Run("service without omit-ddev-labels defaults to false", func(t *testing.T) {
 		xDdev := app.GetXDdevExtension("with-others")
 		assert.False(xDdev.OmitDdevLabels)
+	})
+
+	t.Run("service with pull-images", func(t *testing.T) {
+		require.Equal(t, []string{"busybox:1.36", "alpine:3.20"}, app.GetXDdevExtension("pull-images").PullImages)
+		require.Empty(t, app.GetXDdevExtension("with-others").PullImages)
+
+		restoreErr := util.CaptureUserErr()
+		require.Empty(t, app.GetXDdevExtension("pull-images-scalar").PullImages)
+		require.Contains(t, restoreErr(), "Invalid x-ddev in service pull-images-scalar")
 	})
 
 	// Test non-existent service
@@ -417,15 +437,21 @@ func TestGetDdevLabels(t *testing.T) {
 	require.Equal(t, versionconstants.WebTag, labels["com.ddev.webtag"])
 }
 
-// TestFindServiceImagesPlatform checks that FindServiceImages returns the
-// platform each image has to be pulled for.
-func TestFindServiceImagesPlatform(t *testing.T) {
+// TestFindServiceImages checks which images FindServiceImages returns for each
+// kind of service, and the platform each has to be pulled for.
+func TestFindServiceImages(t *testing.T) {
 	app := &ddevapp.DdevApp{Name: "proj"}
 	project, err := dockerutil.CreateComposeProject(`
 name: test-project
 services:
+  web:
+    image: example/web:1-proj-built
+    build:
+      context: .
   plain:
     image: example/plain:1
+  web-worker:
+    image: example/web:1-proj-built
   pinned:
     image: example/pinned:1
     platform: linux/amd64
@@ -449,6 +475,43 @@ services:
       platforms:
         - linux/s390x
         - linux/ppc64le
+  qualified:
+    image: example/qualified:1-proj-qualified-built
+    build:
+      context: .
+  other-qualifier:
+    image: example/other:1-proj-qualified-built
+    build:
+      context: .
+  untagged-base:
+    image: ddev-proj-untagged-base-built
+    build:
+      context: .
+  local-tag:
+    image: example/local:1
+    build:
+      context: .
+  no-image:
+    build:
+      context: .
+    x-ddev:
+      pull-images:
+        - ${FIND_SERVICE_IMAGES_BASE:-example/pull:1}
+        - " example/pull-extra:1 "
+  pull-pinned:
+    image: example/pull-pinned:1-proj-built
+    platform: linux/arm64
+    build:
+      context: .
+    x-ddev:
+      pull-images:
+        - example/pull-pinned:1
+        - example/pull-pinned-extra:1
+  image-and-pull:
+    image: example/image:1
+    x-ddev:
+      pull-images:
+        - example/image-extra:1
 `)
 	require.NoError(t, err)
 	app.ComposeYaml = project
@@ -459,11 +522,28 @@ services:
 	for _, image := range images {
 		platforms[image.Image] = image.Platform
 	}
+	require.Len(t, images, len(platforms), "an image is listed twice: %v", images)
 	require.Equal(t, map[string]string{
-		"example/plain:1":   "",
-		"example/pinned:1":  "linux/amd64",
-		"example/built:1":   "linux/s390x",
-		"example/multi:1":   "",
-		"example/foreign:1": "linux/s390x",
+		"example/web:1":               "",
+		"example/plain:1":             "",
+		"example/pinned:1":            "linux/amd64",
+		"example/built:1":             "linux/s390x",
+		"example/multi:1":             "",
+		"example/foreign:1":           "linux/s390x",
+		"example/qualified:1":         "",
+		"example/pull:1":              "",
+		"example/pull-extra:1":        "",
+		"example/pull-pinned:1":       "linux/arm64",
+		"example/pull-pinned-extra:1": "linux/arm64",
+		"example/image:1":             "",
+		"example/image-extra:1":       "",
 	}, platforms)
+
+	images, err = app.FindServiceImages([]string{"no-image", "local-tag"})
+	require.NoError(t, err)
+	var names []string
+	for _, image := range images {
+		names = append(names, image.Image)
+	}
+	require.ElementsMatch(t, []string{"example/pull:1", "example/pull-extra:1"}, names)
 }
