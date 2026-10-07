@@ -281,7 +281,7 @@ func fixupComposeYaml(project *composeTypes.Project, app *DdevApp) (*composeType
 	userGroup := uid + ":" + gid
 
 	hostDockerInternal := dockerutil.GetHostDockerInternal()
-	hostPorts := &hostPortAllocator{app: app}
+	hostPorts := newHostPortAllocator(app)
 
 	// Ensure all services have required networks and environment variables
 	for name, service := range project.Services {

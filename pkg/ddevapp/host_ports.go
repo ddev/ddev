@@ -10,7 +10,9 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/network"
 )
 
@@ -38,15 +40,26 @@ var (
 // hostPortAllocator fills in host ports for one project's compose render.
 type hostPortAllocator struct {
 	app *DdevApp
+	// localPorts is false when a local bind test can't see the ports the engine
+	// publishes: a remote Docker host, or Docker Desktop on WSL2, which publishes
+	// on the Windows side. The engine then picks the host port.
+	localPorts bool
 	// inUse holds host ports bound by existing DDEV containers, stopped ones
 	// included, since a stopped container binds its port again when started.
 	inUse map[string]bool
 }
 
+func newHostPortAllocator(app *DdevApp) *hostPortAllocator {
+	return &hostPortAllocator{
+		app:        app,
+		localPorts: !dockerutil.IsRemoteDockerHost() && !(nodeps.IsWSL2() && dockerutil.IsDockerDesktop()),
+	}
+}
+
 // assignHostPort returns the host port for a service port with an empty
 // published port, or "" to leave the choice to the engine.
 func (a *hostPortAllocator) assignHostPort(service string, p composeTypes.ServicePortConfig) string {
-	if (p.Protocol != "" && p.Protocol != "tcp") || dockerutil.IsRemoteDockerHost() {
+	if !a.localPorts || (p.Protocol != "" && p.Protocol != "tcp") {
 		return ""
 	}
 	key := fmt.Sprintf("%s/%s/%s/%d", a.app.GetName(), service, p.HostIP, p.Target)
@@ -92,7 +105,9 @@ func (a *hostPortAllocator) assignHostPort(service string, p composeTypes.Servic
 }
 
 // existingContainerHostPort returns the host port that this project's existing
-// container for service binds for p, or "".
+// container for service binds for p, or "". A container that isn't running
+// doesn't hold its port, so its port is returned only if still free; otherwise
+// it would fail to bind on every start.
 func (a *hostPortAllocator) existingContainerHostPort(service string, p composeTypes.ServicePortConfig) string {
 	c, err := a.app.FindContainerByType(service)
 	if err != nil || c == nil {
@@ -108,9 +123,16 @@ func (a *hostPortAllocator) existingContainerHostPort(service string, p composeT
 	}
 	wantIP, _ := netip.ParseAddr(p.HostIP)
 	for _, b := range bindings[target] {
-		if b.HostPort != "" && (!b.HostIP.IsValid() || b.HostIP == wantIP) {
-			return b.HostPort
+		if b.HostPort == "" || (b.HostIP.IsValid() && b.HostIP != wantIP) {
+			continue
 		}
+		if c.State != container.StateRunning {
+			if portNum, _ := strconv.Atoi(b.HostPort); !netutil.IsHostPortFree(p.HostIP, portNum) {
+				util.Debug("Host port %s of stopped %s container is taken, choosing another", b.HostPort, service)
+				return ""
+			}
+		}
+		return b.HostPort
 	}
 	return ""
 }
