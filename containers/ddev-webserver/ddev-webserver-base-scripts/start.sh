@@ -62,10 +62,15 @@ if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
   mkdir -p ~/.drush/commands && ln -sf /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
 fi
 
+mkdir -p "$HOME/.local/bin"
+
 if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] || [ "${DDEV_PROJECT_TYPE}" = "backdrop" ]; then
-  mkdir -p "$HOME/.local/bin"
   ln -sf /usr/local/bin/drush8 "$HOME/.local/bin/drush"
 fi
+
+# ~/.local/bin precedes vendor/bin in $PATH, so `composer` is the system install
+# in every shell, not just bash. Homeadditions are copied later and can override it.
+ln -sf /usr/local/bin/composer "$HOME/.local/bin/composer"
 
 # Apache refuses to run as root, but Docker rootless runs the container as root
 # to reach root-owned bind mounts. When the ddev-keep-root shim is present (DDEV
