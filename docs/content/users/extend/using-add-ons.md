@@ -278,6 +278,12 @@ ddev restart
 
 This restarts all services and applies any configuration changes.
 
+```bash
+ddev restart -s <service>
+```
+
+This restarts only the add-on's service and applies changes to its configuration and Dockerfile. Add `--no-cache` to rebuild its image without Docker cache.
+
 ### Review Add-on Configuration
 
 ```bash

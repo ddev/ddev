@@ -335,6 +335,8 @@ services:
       com.ddev.approot: ${DDEV_APPROOT}
 ```
 
+`ddev restart --profiles=busybox` restarts the project with the profile started. Once it's running, `ddev restart --service=busybox` restarts only that service.
+
 An optional service's image is pulled or built only when its profile starts, so profiles you don't use don't slow down `ddev start`. On a running project, a profile whose services only use `image:` starts without touching the other services. A profile with a `build:` service starts with a full `ddev start`, which builds its image using the build cache, so Dockerfile and `.ddev/docker-compose.*.yaml` changes are picked up.
 
 `ddev start --no-cache` and `ddev restart --no-cache` rebuild without the cache the images of the services they start and of any profile whose image was built before, so a profile started later doesn't run a stale image.

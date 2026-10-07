@@ -82,8 +82,9 @@ See https://docs.ddev.com/en/stable/users/usage/offline/ for info.`)
 	return false, nil
 }
 
-// composeUp runs docker-compose up for the project's enabled services.
-func composeUp(project *composeTypes.Project) error {
+// composeUp runs docker-compose up for create.Services, or for all the
+// project's enabled services when that's empty.
+func composeUp(project *composeTypes.Project, create api.CreateOptions) error {
 	upCtx, upSvc, err := dockerutil.NewComposeService()
 	if err != nil {
 		return err
@@ -92,12 +93,11 @@ func composeUp(project *composeTypes.Project) error {
 	if globalconfig.DdevVerbose {
 		progress = display.ModePlain
 	}
+	create.Build = &api.BuildOptions{Progress: progress}
+	create.RemoveOrphans = true
 	return upSvc.Up(upCtx, project, api.UpOptions{
-		Create: api.CreateOptions{
-			Build:         &api.BuildOptions{Progress: progress},
-			RemoveOrphans: true,
-		},
-		Start: api.StartOptions{Project: project},
+		Create: create,
+		Start:  api.StartOptions{Project: project, Services: create.Services},
 	})
 }
 

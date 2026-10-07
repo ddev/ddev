@@ -1924,7 +1924,7 @@ func (app *DdevApp) start(o StartOptions) error {
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
 
-	err = composeUp(project)
+	err = composeUp(project, api.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -2266,7 +2266,7 @@ func (app *DdevApp) imageOnlyProfiles(o StartOptions) *composeTypes.Project {
 // startProfileServices starts the project's services on a running project,
 // leaving the services already running alone.
 func (app *DdevApp) startProfileServices(project *composeTypes.Project) error {
-	if err := composeUp(project); err != nil {
+	if err := composeUp(project, api.CreateOptions{}); err != nil {
 		return err
 	}
 
@@ -2296,6 +2296,145 @@ func (app *DdevApp) RestartWith(o StartOptions) error {
 		return err
 	}
 	return app.StartWith(o)
+}
+
+// RestartKeepingProfiles does RestartWith(o), also starting the profiles of
+// the services that have a container, so restarting the project for web keeps
+// them. With none, o.Profiles stays nil and COMPOSE_PROFILES still applies.
+func (app *DdevApp) RestartKeepingProfiles(o StartOptions) error {
+	project, err := app.loadRenderedProject([]string{"*"})
+	if err != nil {
+		return err
+	}
+	for name, service := range project.Services {
+		if c, _ := app.FindContainerByType(name); c == nil {
+			continue
+		}
+		for _, profile := range service.Profiles {
+			if !slices.Contains(o.Profiles, profile) {
+				o.Profiles = append(o.Profiles, profile)
+			}
+		}
+	}
+	return app.RestartWith(o)
+}
+
+// RestartServices gives the named started services new containers with the
+// current configuration, building their images first as start does, without
+// the cache for o.NoCache. Naming web restarts the whole project, since start
+// sets web up beyond its container.
+func (app *DdevApp) RestartServices(services []string, o StartOptions) error {
+	_ = app.DockerEnv()
+	if err := app.WriteDockerComposeYAML(); err != nil {
+		return err
+	}
+	project, err := app.loadRenderedProject([]string{"*"})
+	if err != nil {
+		return err
+	}
+	if _, err = project.WithSelectedServices(services); err != nil {
+		return err
+	}
+	// Starting a service is left to `ddev start` and `ddev xhgui on`, which
+	// also run setup some services need beyond their container. A container
+	// that exited, as after a crash, was set up and can be replaced.
+	for _, name := range services {
+		if c, _ := app.FindContainerByType(name); c != nil {
+			continue
+		}
+		hint := "ddev start"
+		if name == "xhgui" {
+			hint = "ddev xhgui on"
+		} else if profiles := project.Services[name].Profiles; len(profiles) > 0 {
+			hint = "ddev start --profiles=" + strings.Join(profiles, ",")
+		}
+		return fmt.Errorf("service %s is not running, use '%s' to start it", name, hint)
+	}
+	if slices.Contains(services, "web") {
+		output.UserOut.Printf("web can't restart on its own, restarting the whole project...")
+		return app.RestartKeepingProfiles(o)
+	}
+	return app.recreateServices(services, &api.BuildOptions{NoCache: o.NoCache})
+}
+
+// RecreateServices replaces the named services' containers with new ones from
+// the rendered compose file and waits for them. Their dependencies keep their
+// containers, and start only if they aren't running.
+func (app *DdevApp) RecreateServices(services []string) error {
+	return app.recreateServices(services, nil)
+}
+
+// recreateServices does RecreateServices, building the services' images first
+// when build is set.
+func (app *DdevApp) recreateServices(services []string, build *api.BuildOptions) error {
+	project, err := app.loadRenderedProject([]string{"*"})
+	if err != nil {
+		return err
+	}
+	project, err = project.WithSelectedServices(services)
+	if err != nil {
+		return err
+	}
+	// As in start(), a new db container must not run against a volume that
+	// holds another database type or version.
+	if slices.Contains(services, "db") && !app.IsDBOmitted() {
+		dbType, err := app.GetExistingDBType()
+		if err != nil {
+			return err
+		}
+		if dbType != "" && dbType != app.Database.Type+":"+app.Database.Version {
+			return fmt.Errorf("unable to recreate db: %s", app.DatabaseMismatchMessage(dbType))
+		}
+	}
+	if build != nil {
+		if build.NoCache {
+			images, err := app.FindServiceImages(services)
+			if err != nil {
+				return err
+			}
+			if err = dockerutil.PullImages(images, true); err != nil {
+				util.Warning("Unable to pull Docker images: %v", err)
+			}
+		}
+		build.Services = services
+		if _, err = app.buildProjectImages(project, *build); err != nil {
+			return err
+		}
+	}
+	// Unlike a restart, a new container picks up a rebuilt image and config
+	// changes, and skips the delay some healthchecks add after a restart.
+	timeout := time.Duration(app.GetMaxContainerWaitTime()) * time.Second
+	err = composeUp(project, api.CreateOptions{
+		Services:             services,
+		Recreate:             api.RecreateForce,
+		RecreateDependencies: api.RecreateNever,
+		Timeout:              &timeout,
+	})
+	if err != nil {
+		return err
+	}
+
+	// A service without DDEV labels can't be found to wait on, as in start().
+	var waitServices []string
+	for _, name := range services {
+		if project.Services[name].Labels["com.ddev.site-name"] == app.GetName() {
+			waitServices = append(waitServices, name)
+		}
+	}
+	if len(waitServices) > 0 {
+		wait := output.StartWait(fmt.Sprintf("Waiting for containers to become ready: %v", waitServices))
+		err = app.Wait(waitServices)
+		wait.Complete(err)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !IsRouterDisabled(app) {
+		util.Debug("Starting %s if necessary...", nodeps.RouterContainer)
+		return StartDdevRouter()
+	}
+	return nil
 }
 
 // PullBaseContainerImages pulls only the fundamentally needed images so they can be available early.

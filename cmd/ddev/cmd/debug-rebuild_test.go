@@ -158,7 +158,13 @@ RUN shuf -i 0-99999 -n1 > /random-db.txt
 	// fails with "no such service: xhgui".
 	out, err := exec.RunHostCommand(DdevBin, "xhgui", "on")
 	require.NoError(t, err, "xhgui on failed: %s", out)
-	out, err = exec.RunHostCommand(DdevBin, "utility", "rebuild", "--service", "xhgui")
-	require.NoError(t, err, "rebuild --service xhgui failed: %s", out)
-	require.Contains(t, out, "Recreated xhgui service")
+	out, err = exec.RunHostCommand(DdevBin, "utility", "rebuild", "--service=db,xhgui")
+	require.NoError(t, err, "rebuild --service=db,xhgui failed: %s", out)
+	require.Contains(t, out, "Recreated db, xhgui for")
+	rebuiltRandomDB, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd:     "cat /random-db.txt",
+		Service: "db",
+	})
+	require.NoError(t, err)
+	assert.NotEqual(cachedRandomDB, rebuiltRandomDB)
 }
