@@ -809,8 +809,9 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
-		// Some sites, such as TYPO3, keep their static test content in the files tarball
-		if site.FilesTarballURL != "" {
+		// Some sites, such as TYPO3, keep their static test content in the files tarball.
+		// TestPkgPHP has a tarball but, as type php, no upload_dirs to import it into.
+		if site.FilesTarballURL != "" && len(app.GetUploadDirs()) > 0 {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
 			err = app.ImportFiles("", tarballPath, "")
