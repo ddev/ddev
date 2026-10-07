@@ -4,6 +4,11 @@ setup() {
   load setup.sh
 }
 
+teardown() {
+  # Only the composer test creates vendor/; this runs even when its asserts abort.
+  docker exec "$CONTAINER_NAME" rm -rf /var/www/html/vendor
+}
+
 @test "Verify required binaries are installed in normal image" {
   if [ "${IS_HARDENED}" == "true" ]; then skip "Skipping because IS_HARDENED==true"; fi
   COMMANDS="composer ddev git mkcert mysql mysqladmin mysqldump node npm patch platform ssh sudo terminus xdebugctl"
@@ -61,6 +66,25 @@ setup() {
 
   run docker exec "$CONTAINER_NAME" bash -lc "$check"
   assert_success
+}
+
+@test "Verify composer resolves to the system install over vendor/bin/composer in bash and sh" {
+  local vendor_bin="/var/www/html/vendor/bin"
+  run docker exec "$CONTAINER_NAME" bash -c "mkdir -p $vendor_bin && printf '#!/bin/sh\necho vendor-composer\n' > $vendor_bin/composer && chmod +x $vendor_bin/composer"
+  assert_success
+
+  # sh is dash: PHP exec() and Symfony Process run commands through it, so bash-only lookup rules don't apply
+  run docker exec "$CONTAINER_NAME" bash -c 'composer --version'
+  assert_success
+  assert_output --partial "Composer version"
+
+  run docker exec "$CONTAINER_NAME" bash -lc 'composer --version'
+  assert_success
+  assert_output --partial "Composer version"
+
+  run docker exec "$CONTAINER_NAME" bash -c 'sh -c "composer --version"'
+  assert_success
+  assert_output --partial "Composer version"
 }
 
 @test "Verify PATH is identical across non-interactive, interactive, and login shells" {

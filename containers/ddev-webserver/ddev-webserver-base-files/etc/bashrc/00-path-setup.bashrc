@@ -1,10 +1,4 @@
 # Helper functions for safely adding directories to $PATH without duplicates.
-path_prepend() {
-  case ":$PATH:" in
-    *":$1:"*) ;;
-    *) PATH="$1:$PATH" ;;
-  esac
-}
 path_append() {
   case ":$PATH:" in
     *":$1:"*) ;;
@@ -17,6 +11,12 @@ path_remove() {
     [ "$p" = "$1" ] || result="${result:+$result:}$p"
   done
   PATH="$result"
+}
+# path_prepend moves an existing entry to the front: ~/.profile in login shells
+# may have added ~/.local/bin already, and it must still precede vendor/bin.
+path_prepend() {
+  path_remove "$1"
+  PATH="$1${PATH:+:$PATH}"
 }
 
 # Add vendor/bin, then user-owned dirs in front of it (prepend order is last-wins)
