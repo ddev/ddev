@@ -66,7 +66,9 @@ Per-section notes, in the same top-to-bottom order as the template above:
   obvious steps around them. Point the reviewer at
   `ddev utility download-ddev --pr <number>` to get the binary this PR built,
   instead of telling them to clone the branch and `make` it — that needs no Go
-  toolchain or dev environment. Write the steps as an explicit, reproducible
+  toolchain or dev environment. Use the number the PR will get:
+  `gh api 'repos/ddev/ddev/issues?state=all&per_page=1' --jq '.[0].number + 1'`.
+  Write the steps as an explicit, reproducible
   transcript with real values (an actual project type, actual commands, the
   actual output or behavior that confirms the fix), not a description of the
   general area to poke at. For example:
