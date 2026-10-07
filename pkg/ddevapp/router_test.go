@@ -172,7 +172,7 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 	localIP, _ := dockerutil.GetDockerIP()
 
 	// Get a random port number in the dynamic port range
-	startPort := ddevapp.MinEphemeralPort + rand.Intn(500)
+	startPort := ddevapp.MinRouterSubstitutePort + rand.Intn(500)
 	goodEndPort := startPort + 3
 	badEndPort := startPort + 2
 
@@ -322,9 +322,9 @@ func TestUseEphemeralPort(t *testing.T) {
 		} {
 			portNum, err := strconv.Atoi(p.port)
 			require.NoError(t, err)
-			require.GreaterOrEqual(t, portNum, ddevapp.MinEphemeralPort,
+			require.GreaterOrEqual(t, portNum, ddevapp.MinRouterSubstitutePort,
 				"app %d (%s) %s port %d is below the router substitute port range", i, app.Name, p.scheme, portNum)
-			require.LessOrEqual(t, portNum, ddevapp.MaxEphemeralPort,
+			require.LessOrEqual(t, portNum, ddevapp.MaxRouterSubstitutePort,
 				"app %d (%s) %s port %d is above the router substitute port range", i, app.Name, p.scheme, portNum)
 			claimant := fmt.Sprintf("app %d (%s) %s", i, app.Name, p.scheme)
 			require.NotContains(t, assignedPorts, portNum,
