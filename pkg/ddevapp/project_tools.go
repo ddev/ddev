@@ -65,12 +65,13 @@ RUN <<ENDDRUSH
 ENDDRUSH
 `
 
+// Pinned: upstream deprecated the extension in 1.4.1 and recommends
+// https://github.com/backdrop-contrib/bee instead; Drush 8 reached EOL in Jan 2025
 const backdropDrushInstallDockerfile = `
 ### DDEV-injected Backdrop Drush extension install for backdrop projects
 RUN <<EOF
     set -eu -o pipefail
-    tag=$(curl --fail -sSL https://api.github.com/repos/backdrop-contrib/drush/releases/latest | jq -er .tag_name)
-    curl --fail -sSL "https://github.com/backdrop-contrib/drush/releases/download/${tag}/backdrop-drush-extension.zip" -o /tmp/backdrop-drush-extension.zip
+    curl --fail -sSL "https://github.com/backdrop-contrib/backdrop-drush-extension/releases/download/1.4.1/backdrop-drush-extension.zip" -o /tmp/backdrop-drush-extension.zip
     unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
     chmod -R ugo+w /var/tmp/backdrop_drush_commands
     rm -f /tmp/backdrop-drush-extension.zip
