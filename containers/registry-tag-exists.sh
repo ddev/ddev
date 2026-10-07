@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # registry-tag-exists.sh <image-repo> <tag>
 #
-# Checks whether <image-repo>:<tag> already exists in the registry, without
-# pulling it. Exit 0 if it exists, exit 1 if it doesn't (or the registry
-# can't be reached). No local Docker daemon build/pull is triggered either
-# way - this only talks to the registry.
+# Checks whether <image-repo>:<tag> exists in the registry, without pulling
+# it. Exit 0 if it exists, 1 if the registry says it doesn't, 3 if the
+# registry still couldn't answer (rate limit, network, 5xx) after 5 tries
+# spread over about 75 seconds.
 
 set -eu -o pipefail
 
@@ -15,5 +15,25 @@ fi
 
 IMAGE_REPO="$1"
 TAG="$2"
+ATTEMPTS=5
+wait_seconds=5
 
-docker buildx imagetools inspect "${IMAGE_REPO}:${TAG}" >/dev/null 2>&1
+attempt=1
+while true; do
+  if output="$(docker buildx imagetools inspect "${IMAGE_REPO}:${TAG}" 2>&1)"; then
+    exit 0
+  fi
+  # Docker Hub answers an anonymous request for a repo that doesn't exist yet
+  # (a brand-new image) with an auth error rather than "not found".
+  case "$output" in
+    *": not found"* | *"repository does not exist"*) exit 1 ;;
+  esac
+  if [ "$attempt" -ge "$ATTEMPTS" ]; then
+    echo "registry-tag-exists.sh: could not check ${IMAGE_REPO}:${TAG} after ${ATTEMPTS} attempts: ${output}" >&2
+    exit 3
+  fi
+  echo "registry-tag-exists.sh: checking ${IMAGE_REPO}:${TAG} failed, retrying (attempt ${attempt}/${ATTEMPTS}): ${output}" >&2
+  sleep "$wait_seconds"
+  wait_seconds=$((wait_seconds * 2))
+  attempt=$((attempt + 1))
+done

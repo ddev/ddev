@@ -64,6 +64,13 @@ jobs:
         run: |
           set -eu -o pipefail
           source containers/image-configs.sh
+          # A bare `if` would read exit 3 (the registry didn't answer) as
+          # "missing", rebuilding an unchanged image or moving a release tag.
+          tag_exists() {
+            containers/registry-tag-exists.sh "$1" "$2" && return 0
+            [ $? -eq 1 ] || exit 1
+            return 1
+          }
 
           # build_matrix is one entry per (image, arch) rather than a cross
           # product, because the older db variants are amd64-only.
@@ -75,8 +82,8 @@ jobs:
             read -r state tag <<< "$(containers/required-image-tag.sh "$tag_var" $hash_paths)"
             repo="${DOCKER_ORG}/${repo_suffix}"
             release_tag="$(containers/release-marker.sh "$make_dir")"
-            if containers/registry-tag-exists.sh "$repo" "$tag"; then
-              if [ -z "$release_tag" ] || containers/registry-tag-exists.sh "$repo" "$release_tag"; then
+            if tag_exists "$repo" "$tag"; then
+              if [ -z "$release_tag" ] || tag_exists "$repo" "$release_tag"; then
                 echo "detect: ${repo}:${tag} already exists (${state}), nothing to build"
                 continue
               fi
@@ -164,12 +171,17 @@ jobs:
         run: |
           set -eu -o pipefail
           source containers/image-configs.sh
+          tag_exists() {
+            containers/registry-tag-exists.sh "$1" "$2" && return 0
+            [ $? -eq 1 ] || exit 1
+            return 1
+          }
           for entry in "${DDEV_IMAGE_CONFIGS[@]}"; do
             IFS='|' read -r repo_suffix _ _ make_dir _ <<< "$entry"
             release_tag="$(containers/release-marker.sh "$make_dir")"
             [ -n "$release_tag" ] || continue
             repo="${DOCKER_ORG}/${repo_suffix}"
-            if containers/registry-tag-exists.sh "$repo" "$release_tag"; then
+            if tag_exists "$repo" "$release_tag"; then
               echo "detect: ${repo}:${release_tag} is already published; the marker in containers/${make_dir} is stale"
               continue
             fi
@@ -339,6 +351,11 @@ jobs:
           ALIAS_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           set -eu -o pipefail
+          tag_exists() {
+            containers/registry-tag-exists.sh "$1" "$2" && return 0
+            [ $? -eq 1 ] || exit 1
+            return 1
+          }
           TAG="${{ matrix.manifest.tag }}"
           RELEASE_TAG="${{ matrix.manifest.release_tag }}"
           # The oldest db variants are amd64-only, so the arch list comes from
@@ -376,7 +393,7 @@ jobs:
             RELEASED=false
             LATEST=""
             if [ -n "$RELEASE_TAG" ]; then
-              if containers/registry-tag-exists.sh "$repo" "$RELEASE_TAG"; then
+              if tag_exists "$repo" "$RELEASE_TAG"; then
                 echo "${repo}:${RELEASE_TAG} already published; leaving it and latest alone"
               else
                 NAMES+=(-t "${repo}:${RELEASE_TAG}")
@@ -392,7 +409,7 @@ jobs:
             # A concurrent build of identical content (tags are content
             # hashes, not branch-scoped) can publish repo:TAG first and
             # delete the per-arch tags behind it - source from it instead.
-            if containers/registry-tag-exists.sh "$repo" "$TAG"; then
+            if tag_exists "$repo" "$TAG"; then
               echo "${repo}:${TAG} already published by a concurrent build; adding aliases from it"
               docker buildx imagetools create "${ANNOTATIONS[@]}" "${NAMES[@]}" "${repo}:${TAG}"
             else

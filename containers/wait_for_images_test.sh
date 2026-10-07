@@ -70,8 +70,9 @@ if [ "$1" = "buildx" ] && [ "$2" = "imagetools" ] && [ "$3" = "inspect" ]; then
     count="$(cat "$counter_file" 2>/dev/null || echo 0)"
     count=$((count + 1))
     echo "$count" > "$counter_file"
-    [ "$count" -ge 3 ] && exit 0 || exit 1
+    [ "$count" -ge 3 ] && exit 0
   fi
+  echo "ERROR: docker.io/${ref}: not found" >&2
   exit 1
 fi
 echo "docker stub: unexpected invocation: $*" >&2
