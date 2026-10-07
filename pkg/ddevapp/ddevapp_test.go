@@ -281,6 +281,7 @@ var (
 			FilesTarballURL:               "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeSilverstripe,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/_resources/themes/startup-theme/css/breadcrumbs.css", Expect: "Breadcrumb styles"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "<meta name=\"generator\" content=\"Silverstripe CMS 6.2\">"},
 		},
 		// 15: CakePHP
@@ -806,6 +807,14 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			check, err := testcommon.ContainerCheck(containerName, "running")
 			assert.NoError(err)
 			assert.True(check, "Container check on %s failed", containerType)
+		}
+
+		// Some sites, such as TYPO3, keep their static test content in the files tarball
+		if site.FilesTarballURL != "" {
+			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			require.NoError(t, err)
+			err = app.ImportFiles("", tarballPath, "")
+			require.NoError(t, err)
 		}
 
 		httpURLs, _, urls := app.GetAllURLs()
@@ -3954,79 +3963,58 @@ func TestGetWebContainerDirectURLsErrorHandling(t *testing.T) {
 	assert.Empty(httpsURL, "GetWebContainerDirectHTTPSURL should return an empty string when container doesn't exist")
 }
 
-// TestGetWebContainerDirectURLsWithGenericWebserver tests the behavior of GetWebContainerDirectHTTPURL and GetWebContainerDirectHTTPSURL
-// with a generic webserver type and web_extra_exposed_ports
+// TestGetWebContainerDirectURLsWithGenericWebserver checks that every URL DDEV reports for a
+// generic webserver project with web_extra_exposed_ports serves the project
 func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
 	if dockerutil.IsPodmanRootlessmacOS() {
 		t.Skip("Skipping: podman rootless on macOS cannot bind privileged ports 80/443")
 	}
 	assert := asrt.New(t)
 
-	// Create a temporary directory for a new app
 	testDir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	// Create a new app with generic webserver type
 	app, err := ddevapp.NewApp(testDir, true)
 	require.NoError(t, err)
+	// The name from t.Name() would make ddev-<name>-web too long a DNS label for the router
+	app.Name = "generic-direct-urls"
 	app.WebserverType = nodeps.WebserverGeneric
-	// Configure a web_extra_exposed_port that maps container port 3000 to HTTP port 80 and HTTPS port 443
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "svelte", WebContainerPort: 3000, HTTPPort: 80, HTTPSPort: 443},
 	}
+	app.WebExtraDaemons = []ddevapp.WebExtraDaemon{
+		{Name: "php-server", Command: "php -S 0.0.0.0:3000", Directory: "/var/www/html"},
+	}
+	err = os.WriteFile(filepath.Join(testDir, "testfile.html"), []byte("generic webserver test content"), 0644)
+	require.NoError(t, err)
 	err = app.WriteConfig()
-	require.NoError(t, err)
-
-	// Start the app
-	err = app.Start()
-	require.NoError(t, err)
-
-	// Add a simple web server on port 3000 in the container
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Cmd:     "cd /var/www/html && php -S 0.0.0.0:3000 &",
-	})
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 	})
+	err = app.Start()
+	require.NoError(t, err)
 
-	// Verify that GetWebContainerDirectHTTPURL returns a valid URL using the WebContainerPort
 	httpURL := app.GetWebContainerDirectHTTPURL()
-	assert.NotEmpty(httpURL, "GetWebContainerDirectHTTPURL should return a non-empty URL")
-	assert.Contains(httpURL, "http://", "HTTP URL should start with http://")
-
-	// Verify that GetWebContainerDirectHTTPSURL returns a valid URL using the WebContainerPort
-	httpsURL := app.GetWebContainerDirectHTTPSURL()
-	assert.NotEmpty(httpsURL, "GetWebContainerDirectHTTPSURL should return a non-empty URL")
-	assert.Contains(httpsURL, "https://", "HTTPS URL should start with https://")
-
-	// Verify that the URLs contain the Docker IP
+	require.NotEmpty(t, httpURL, "a generic webserver should have a direct HTTP URL through its web_extra_exposed_ports")
 	dockerIP, err := dockerutil.GetDockerIP()
-	assert.NoError(err, "GetDockerIP should not return an error")
-	assert.Contains(httpURL, dockerIP, "HTTP URL should contain the Docker IP")
-	assert.Contains(httpsURL, dockerIP, "HTTPS URL should contain the Docker IP")
+	require.NoError(t, err)
+	require.Contains(t, httpURL, dockerIP)
 
-	// Debug information
-	t.Logf("HTTP URL: %s", httpURL)
-	t.Logf("HTTPS URL: %s", httpsURL)
-
-	// Check if port 3000 is published
-	port3000, err := app.GetPublishedPortForPrivatePort("web", 3000)
-	t.Logf("Port 3000 published as: %d, err: %v", port3000, err)
-
-	// For generic webserver with web_extra_exposed_ports, we just need to verify that we get valid URLs
-	// The exact port mapping can vary, so we just check that the URLs are not empty and have the correct format
-	assert.NotEmpty(httpURL, "HTTP URL should not be empty")
-	assert.Contains(httpURL, "http://", "HTTP URL should start with http://")
-	assert.NotContains(httpURL, ":0", "HTTP URL should not contain port 0")
-
-	assert.NotEmpty(httpsURL, "HTTPS URL should not be empty")
-	assert.Contains(httpsURL, "https://", "HTTPS URL should start with https://")
-	assert.NotContains(httpsURL, ":0", "HTTPS URL should not contain port 0")
+	httpURLs, _, urls := app.GetAllURLs()
+	if globalconfig.GetCAROOT() == "" {
+		urls = httpURLs
+	}
+	require.Contains(t, urls, httpURL)
+	t.Logf("Testing these URLs: %v", urls)
+	for _, u := range urls {
+		testcommon.AssertLocalHTTPContent(t, u+"/testfile.html", "generic webserver test content",
+			testcommon.WithMessagef("every reported URL should serve the project"),
+		)
+	}
 }
 
 // TestGetWebContainerDirectURLsWithDockerIPError tests behavior when GetDockerIP returns an error

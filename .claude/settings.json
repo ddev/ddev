@@ -1,7 +1,11 @@
 {
   "env": {
     "GOTEST_SHORT": "true",
-    "DDEV_NO_INSTRUMENTATION": "true"
+    "DDEV_NO_INSTRUMENTATION": "true",
+    "DDEV_RUN_TEST_ANYWAY": "true",
+    "DDEV_RUN_DOWNLOAD_DDEV_TEST": "true",
+    "DDEV_TEST_SHARE_CMD": "true",
+    "DDEV_TEST_OUTSIDE_HOME": "true"
   },
   "permissions": {
     "allow": [
