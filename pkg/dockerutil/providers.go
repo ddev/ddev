@@ -22,6 +22,13 @@ func IsDockerDesktop() bool {
 	return false
 }
 
+// CanCheckHostPortsLocally reports whether a bind test in DDEV's own network
+// namespace sees the host ports the engine publishes. A remote Docker host
+// publishes elsewhere, and Docker Desktop on WSL2 publishes on the Windows side.
+func CanCheckHostPortsLocally() bool {
+	return !IsRemoteDockerHost() && !(nodeps.IsWSL2() && IsDockerDesktop())
+}
+
 // IsColima detects if running on Colima
 func IsColima() bool {
 	info, err := GetDockerClientInfo()

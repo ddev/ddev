@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -799,42 +798,6 @@ func CheckHostPortsAvailable(projectName string, ports []string) error {
 		}
 	}
 	return nil
-}
-
-// GetFreePort gets an ephemeral port currently available, but also not
-// listed in DdevGlobalConfig.UsedHostPorts
-func GetFreePort(localIPAddr string) (string, error) {
-	// Limit tries arbitrarily. It will normally succeed on first try.
-	for i := 1; i < 1000; i++ {
-		// From https://github.com/phayes/freeport/blob/master/freeport.go#L8
-		// Ignores that the actual listener may be on a Docker toolbox interface,
-		// so this is a heuristic.
-		addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:0")
-		if err != nil {
-			return "", err
-		}
-
-		l, err := net.ListenTCP("tcp", addr)
-		if err != nil {
-			return "", err
-		}
-		port := strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
-		// nolint: errcheck
-		l.Close()
-
-		// In the case of Docker Toolbox, the actual listening IP may be something else
-		// like 192.168.99.100, so check that to make sure it's not currently occupied.
-		conn, _ := net.Dial("tcp", localIPAddr+":"+port)
-		if conn != nil {
-			continue
-		}
-
-		if HostPostIsAllocated(port) != "" {
-			continue
-		}
-		return port, nil
-	}
-	return "-1", fmt.Errorf("getFreePort() failed to find a free port")
 }
 
 // ReservePorts adds the ProjectInfo if necessary and assigns the reserved ports

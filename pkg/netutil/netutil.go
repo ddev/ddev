@@ -161,8 +161,8 @@ func NormalizeURL(rawURL string) string {
 }
 
 // IsHostPortFree reports whether a TCP listener can bind ip:port right now.
-// It binds instead of dialing, so it also catches a port held by a socket that
-// isn't listening, such as the local end of an outgoing connection.
+// It binds instead of dialing, so on Linux it also catches a port held by a
+// socket that isn't listening, such as the local end of an outgoing connection.
 func IsHostPortFree(ip string, port int) bool {
 	l, err := net.Listen("tcp", net.JoinHostPort(ip, strconv.Itoa(port)))
 	if err != nil {

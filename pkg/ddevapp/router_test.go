@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -196,6 +197,24 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 	port, ok := ddevapp.AllocateAvailablePortForRouter(startPort, goodEndPort)
 	require.True(t, ok)
 	require.Equal(t, startPort+3, port)
+
+	// On Linux the local end of an outgoing connection blocks a bind to its port
+	// but doesn't answer a dial, so only a bind test catches it. macOS allows
+	// that bind, for the engine too, so the port is usable there.
+	if runtime.GOOS != "linux" {
+		return
+	}
+	connectedPort := startPort + 4
+	dialer := net.Dialer{LocalAddr: &net.TCPAddr{IP: net.ParseIP(localIP), Port: connectedPort}}
+	conn, err := dialer.Dial("tcp", l0.Addr().String())
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = conn.Close()
+	})
+	require.False(t, netutil.IsPortActive(strconv.Itoa(connectedPort)))
+	port, ok = ddevapp.AllocateAvailablePortForRouter(connectedPort, connectedPort+1)
+	require.True(t, ok)
+	require.Equal(t, connectedPort+1, port)
 }
 
 // isDockerHostPortRaceError detects a Docker-level host port bind collision.

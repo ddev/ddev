@@ -10,7 +10,6 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/network"
@@ -40,9 +39,8 @@ var (
 // hostPortAllocator fills in host ports for one project's compose render.
 type hostPortAllocator struct {
 	app *DdevApp
-	// localPorts is false when a local bind test can't see the ports the engine
-	// publishes: a remote Docker host, or Docker Desktop on WSL2, which publishes
-	// on the Windows side. The engine then picks the host port.
+	// localPorts is false when the engine publishes where a local bind test
+	// can't see; the engine then picks the host port.
 	localPorts bool
 	// inUse holds host ports bound by existing DDEV containers, stopped ones
 	// included, since a stopped container binds its port again when started.
@@ -52,7 +50,7 @@ type hostPortAllocator struct {
 func newHostPortAllocator(app *DdevApp) *hostPortAllocator {
 	return &hostPortAllocator{
 		app:        app,
-		localPorts: !dockerutil.IsRemoteDockerHost() && !(nodeps.IsWSL2() && dockerutil.IsDockerDesktop()),
+		localPorts: dockerutil.CanCheckHostPortsLocally(),
 	}
 }
 

@@ -707,14 +707,27 @@ func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
 			EphemeralRouterPortsAssigned[p] = true
 			return p, true
 		}
-		// If the port is not active (available), use it
-		if !netutil.IsPortActive(portStr) {
+		if isRouterSubstitutePortFree(p) {
 			EphemeralRouterPortsAssigned[p] = true
 			return p, true
 		}
 	}
 
 	return 0, false
+}
+
+// isRouterSubstitutePortFree binds p on the router's host address where that
+// shows what the engine will see, which also catches a port held by a socket
+// that isn't listening. Otherwise it falls back to dialing.
+func isRouterSubstitutePortFree(p int) bool {
+	if !dockerutil.CanCheckHostPortsLocally() {
+		return !netutil.IsPortActive(strconv.Itoa(p))
+	}
+	hostIP, _ := dockerutil.GetDockerIP()
+	if globalconfig.DdevGlobalConfig.RouterBindAllInterfaces {
+		hostIP = "0.0.0.0"
+	}
+	return netutil.IsHostPortFree(hostIP, p)
 }
 
 // parseRouterPortSubstitutions parses a RouterPortSubstitutionsLabel value of
