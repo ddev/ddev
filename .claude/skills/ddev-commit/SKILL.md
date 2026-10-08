@@ -4,6 +4,7 @@ description: Write a DDEV commit message, pull request, or issue. Covers the Con
 when_to_use: >
   Triggered by "commit this", "commit my changes", "write a commit message",
   "open a PR", "create a pull request", "update the PR description",
+  "address review comments",
   "file an issue", "write up this bug", or any request to prepare work for
   review in the DDEV repo.
 ---
@@ -135,6 +136,9 @@ tables, and committed files are unaffected.
    claim already in its body against the current diff and code — a claim
    that was true when written can go stale by the time it's amended — and
    correct or remove anything that no longer holds
+4. If the branch has an open PR, re-read its body against the whole branch
+   diff, and update it with `gh pr edit --body-file` when this commit changes
+   behavior or makes a claim in it untrue
 
 A Claude Code hook runs `make staticrequired` before every `git commit`; other
 agents should run it themselves.
