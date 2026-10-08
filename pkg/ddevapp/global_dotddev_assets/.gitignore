@@ -9,6 +9,7 @@
 /.env.local
 /.global-commands-hash
 /.global.lock
+/.global.lock.info
 /.remote-config
 /.router-compose.yaml
 /.router-compose-full.yaml

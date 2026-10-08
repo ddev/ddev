@@ -240,6 +240,24 @@ docker rmi -f $(docker images -q)
 
 You should then be able to start your DDEV machine.
 
+## Waiting for Another DDEV Process
+
+DDEV commands take turns while they set up what all projects share: the `ddev-router`, the `ddev-ssh-agent`, and the `ddev_default` network. If another `ddev` command is in the middle of that, you’ll see something like:
+
+```
+Waiting for 'ddev start' in ~/workspace/d11 (pid 41233, running 3s), which is doing ddev-router setup. Press Ctrl-C to cancel.
+```
+
+This usually clears within seconds. The other command may be running in another terminal, an IDE integration, a script, or a hook.
+
+If it doesn’t clear:
+
+* Look at the process with `ps -p 41233` (on Windows, `tasklist /fi "PID eq 41233"`), and stop it if it’s stuck.
+* Press Ctrl-C to cancel the waiting command; that is safe.
+* After two minutes DDEV gives up waiting and continues anyway, warning that the two commands may conflict. If something then fails, run `ddev poweroff` and try again.
+
+The lock is the file `~/.ddev/.global.lock`, which the operating system releases when the process holding it exits, so you never need to delete it.
+
 ## `ddev --version` shows an old version
 
 If you have installed or upgraded DDEV to the latest version, but when you check the actual version with `ddev --version`, it shows an older version, please refer to [Why do I have an old DDEV?](./faq.md#why-do-i-have-an-old-ddev)

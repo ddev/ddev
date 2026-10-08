@@ -159,7 +159,10 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 : Prevents files from getting checked in when they shouldn’t be.
 
 `.global.lock`
-: A lock file that makes concurrent `ddev` commands take turns while they set up the shared router, SSH agent, and `ddev_default` network. It’s safe to delete when no `ddev` command is running.
+: A lockfile that makes concurrent `ddev` commands take turns while they set up the shared router, SSH agent, and `ddev_default` network. It’s safe to delete when no `ddev` command is running.
+
+`.global.lock.info`
+: Which `ddev` command holds `.global.lock`, so another command waiting for it can say what it’s waiting for. See [Waiting for Another DDEV Process](troubleshooting.md#waiting-for-another-ddev-process).
 
 `.router-compose-full.yaml`
 : The complete, generated docker-compose directive used for DDEV’s router.

@@ -106,7 +106,7 @@ for wave in $(seq 1 "$WAVES"); do
     url=$(cd "$BASE/proj$i" && ddev describe -j 2>/dev/null | jq -r .raw.primary_url)
     curl -sk --max-time 15 "$url" | grep -q ok || fail "wave $wave: ddevconc$i not reachable through the router"
   done
-  echo "Waits for the lock this wave: $(cat "$LOGS"/wave"$wave"-*.log | grep -c 'Waiting for another ddev process')"
+  echo "Waits for the lock this wave: $(cat "$LOGS"/wave"$wave"-*.log | grep -c 'Waiting for .*Press Ctrl-C to cancel')"
 done
 
 if [ "$failures" -eq 0 ]; then
