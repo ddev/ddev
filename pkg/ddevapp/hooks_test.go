@@ -135,6 +135,16 @@ func TestProcessHooks(t *testing.T) {
 		require.Equal(t, "pre-exec-ran\n", string(got))
 	})
 
+	t.Run("composer task in pre-composer and pre-exec hooks does not recurse", func(t *testing.T) {
+		app.Hooks = map[string][]ddevapp.YAMLTask{
+			"pre-composer": {{"composer": "--version"}},
+			"pre-exec":     {{"composer": "--version"}},
+		}
+		t.Cleanup(func() { app.Hooks = nil })
+		_, _, err = app.Composer([]string{"--version"})
+		require.NoError(t, err)
+	})
+
 	t.Run("hook failure handling", func(t *testing.T) {
 		app.Hooks = map[string][]ddevapp.YAMLTask{
 			"hook-test": {

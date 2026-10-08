@@ -45,7 +45,7 @@ For each hook, global tasks run first, then the project's tasks. If a project ha
 * `pre-import-files` and `post-import-files`: Execute tasks before or after files are imported.
 * `pre-composer` and `post-composer`: Execute tasks before or after the `composer` command.
 * `pre-share` and `post-share`: Execute tasks before or after the `share` command.
-* `pre-stop`, `pre-config`, `post-config`, `pre-exec`, `post-exec`, `pre-pull`, `post-pull`, `pre-push`, `post-push`, `pre-snapshot`, `post-snapshot`, `pre-delete-snapshot`, `post-delete-snapshot`, `pre-restore-snapshot`, `post-restore-snapshot`: Execute as the name suggests.
+* `pre-stop`, `pre-config`, `post-config`, `pre-describe`, `post-describe`, `pre-exec`, `post-exec`, `pre-pull`, `post-pull`, `pre-push`, `post-push`, `pre-snapshot`, `post-snapshot`, `pre-delete-snapshot`, `post-delete-snapshot`, `pre-restore-snapshot`, `post-restore-snapshot`: Execute as the name suggests.
 * `post-stop`: Hooks into [`ddev stop`](../usage/commands.md#stop). Execute tasks after the project environment stopped.
 
     !!!tip

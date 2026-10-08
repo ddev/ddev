@@ -95,7 +95,7 @@ func (c ExecHostTask) Execute() error {
 // Execute (ComposerTask) runs a Composer command in the web container
 // and returns stdout, stderr, err
 func (c ComposerTask) Execute() error {
-	_, _, err := c.app.Composer(c.execRaw)
+	_, _, err := c.app.composer(c.execRaw, true)
 
 	return err
 }

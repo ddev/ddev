@@ -66,6 +66,12 @@
         "post-config": {
           "$ref": "#/definitions/DdevTask"
         },
+        "pre-describe": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-describe": {
+          "$ref": "#/definitions/DdevTask"
+        },
         "pre-exec": {
           "$ref": "#/definitions/DdevTask"
         },

@@ -33,6 +33,8 @@ var ValidHookNames = []string{
 	"post-share",
 	"pre-snapshot",
 	"post-snapshot",
+	"pre-delete-snapshot",
+	"post-delete-snapshot",
 	"pre-restore-snapshot",
 	"post-restore-snapshot",
 }
