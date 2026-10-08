@@ -158,7 +158,7 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
 		require.NoError(t, err)
 		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
-		require.Contains(t, out, "Global config (global)")
+		require.Contains(t, out, "Config (global)")
 		require.Contains(t, out, "global_config.custom.yaml")
 	})
 
