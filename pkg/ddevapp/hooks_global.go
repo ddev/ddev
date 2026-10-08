@@ -7,8 +7,9 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"go.yaml.in/yaml/v4"
+	"github.com/moby/moby/api/types/container"
 )
 
 // hookTask is a task from either the project's hooks or the global hooks.
@@ -17,21 +18,14 @@ type hookTask struct {
 	global bool
 }
 
-// loadGlobalHooks validates the hooks in global_config.yaml and stores them
-// in app.GlobalHooks, separate from app.Hooks so WriteConfig never copies
-// them into a project's config.yaml.
-func (app *DdevApp) loadGlobalHooks() error {
+// loadGlobalHooks copies the hooks in global_config.yaml, already validated
+// by ReadGlobalConfig, into app.GlobalHooks, separate from app.Hooks so
+// WriteConfig never copies them into a project's config.yaml.
+func (app *DdevApp) loadGlobalHooks() {
 	app.GlobalHooks = nil
 	hooks := globalconfig.DdevGlobalConfig.Hooks
 	if len(hooks) == 0 {
-		return nil
-	}
-	source, err := yaml.Marshal(map[string]any{"hooks": hooks})
-	if err != nil {
-		return err
-	}
-	if err = validateHookYAML(source); err != nil {
-		return fmt.Errorf("invalid configuration in %s: %v", globalconfig.GetGlobalConfigPath(), err)
+		return
 	}
 	app.GlobalHooks = make(map[string][]YAMLTask, len(hooks))
 	for name, tasks := range hooks {
@@ -39,7 +33,6 @@ func (app *DdevApp) loadGlobalHooks() error {
 			app.GlobalHooks[name] = append(app.GlobalHooks[name], YAMLTask(t))
 		}
 	}
-	return nil
 }
 
 // tasksForHook returns the tasks to run for hookName: global tasks first,
@@ -61,8 +54,8 @@ func (app *DdevApp) tasksForHook(hookName string) []hookTask {
 }
 
 // globalExecServiceMissing returns true if t is an exec task whose service
-// is omitted or has no container, so a global hook can be skipped in
-// projects that don't have that service.
+// is omitted or not running, so a global hook can be skipped in projects
+// that don't have that service.
 func (app *DdevApp) globalExecServiceMissing(t Task) (string, bool) {
 	e, ok := t.(ExecTask)
 	if !ok {
@@ -71,7 +64,7 @@ func (app *DdevApp) globalExecServiceMissing(t Task) (string, bool) {
 	if slices.Contains(app.GetOmittedContainers(), e.service) {
 		return e.service, true
 	}
-	if _, err := GetContainer(app, e.service); err != nil {
+	if state, _ := dockerutil.GetContainerStateByName(GetContainerName(app, e.service)); state != container.StateRunning {
 		return e.service, true
 	}
 	return "", false

@@ -214,6 +214,10 @@ func ValidateGlobalConfig() error {
 		DdevGlobalConfig.Router = types.RouterTypeTraefik
 	}
 
+	if err := ValidateHooks(DdevGlobalConfig.Hooks); err != nil {
+		return fmt.Errorf("invalid hooks in %s: %v", GetGlobalConfigPath(), err)
+	}
+
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
 		DdevGlobalConfig.TableStyle = "default"
 	}

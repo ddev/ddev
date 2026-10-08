@@ -33,7 +33,7 @@ func TestTasksForHookMerge(t *testing.T) {
 			{"exec": "same"},
 		},
 	}}
-	require.NoError(t, app.loadGlobalHooks())
+	app.loadGlobalHooks()
 
 	tasks := app.tasksForHook("post-start")
 	var got []string
@@ -55,22 +55,13 @@ func TestTasksForHookMerge(t *testing.T) {
 	require.Empty(t, app.globalHooksSummary())
 }
 
-func TestLoadGlobalHooksValidation(t *testing.T) {
-	setGlobalHooks(t, map[string][]map[string]any{"post-nonsense": {{"exec": "x"}}})
-	app := &DdevApp{}
-	require.ErrorContains(t, app.loadGlobalHooks(), "invalid hook post-nonsense")
-
-	setGlobalHooks(t, map[string][]map[string]any{"post-start": {{"bogus": "x"}}})
-	require.ErrorContains(t, app.loadGlobalHooks(), "invalid task")
-}
-
 func TestGlobalHooksSummary(t *testing.T) {
 	setGlobalHooks(t, map[string][]map[string]any{
 		"pre-start":  {{"exec-host": "a"}},
 		"post-start": {{"exec": "b"}, {"exec": "c"}},
 	})
 	app := &DdevApp{}
-	require.NoError(t, app.loadGlobalHooks())
+	app.loadGlobalHooks()
 	require.Equal(t, "2 post-start, 1 pre-start", app.globalHooksSummary())
 }
 

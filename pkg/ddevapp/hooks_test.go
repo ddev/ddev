@@ -123,6 +123,18 @@ func TestProcessHooks(t *testing.T) {
 		require.NoFileExists(t, filepath.Join(app.AppRoot, "TestProcessHooksSkipHooks-php-version-"+app.PHPVersion+".txt"))
 	})
 
+	t.Run("exec task in pre-exec hook does not recurse", func(t *testing.T) {
+		app.Hooks = map[string][]ddevapp.YAMLTask{
+			"pre-exec": {{"exec": "echo pre-exec-ran >> /var/www/html/pre-exec-count.txt"}},
+		}
+		t.Cleanup(func() { _ = os.Remove(filepath.Join(app.AppRoot, "pre-exec-count.txt")) })
+		_, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "true"})
+		require.NoError(t, err)
+		got, err := os.ReadFile(filepath.Join(app.AppRoot, "pre-exec-count.txt"))
+		require.NoError(t, err)
+		require.Equal(t, "pre-exec-ran\n", string(got))
+	})
+
 	t.Run("hook failure handling", func(t *testing.T) {
 		app.Hooks = map[string][]ddevapp.YAMLTask{
 			"hook-test": {

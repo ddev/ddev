@@ -109,7 +109,13 @@ The standard approach:
     ```
 
     !!!tip "Apply to all projects"
-        The same `web_environment` and `hooks` can go in `$HOME/.ddev/global_config.yaml` to apply to every project, see [Global Hooks](../configuration/hooks.md#global-hooks). On machines that are not behind the proxy the certificate is missing and the `cat` would report a failed hook, so guard it with `test -f /usr/local/share/ca-certificates/mycorp-ca.crt && cat ...`.
+        The same `web_environment` and `hooks` can go in `$HOME/.ddev/global_config.yaml` to apply to every project, see [Global Hooks](../configuration/hooks.md#global-hooks). On machines that are not behind the proxy the certificate is missing and the `cat` would report a failed hook, so guard it:
+
+        ```yaml
+        hooks:
+          post-start:
+            - exec: "if test -f /usr/local/share/ca-certificates/mycorp-ca.crt; then cat /mnt/ddev-global-cache/mkcert/rootCA.pem /usr/local/share/ca-certificates/mycorp-ca.crt > /usr/local/share/ca-certificates/node_ca_certs.pem; fi"
+        ```
 
 5. Run:
 

@@ -92,9 +92,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
-	if err := app.loadGlobalHooks(); err != nil {
-		return app, err
-	}
+	app.loadGlobalHooks()
 
 	// Provide a default app name based on directory name
 	app.Name = NormalizeProjectName(filepath.Base(app.AppRoot))
@@ -1902,78 +1900,13 @@ func PrepDdevDirectory(app *DdevApp) error {
 
 // validateHookYAML validates command hooks and tasks defined in hooks for config.yaml
 func validateHookYAML(source []byte) error {
-	validHooks := []string{
-		"pre-start",
-		"post-start",
-		"pre-import-db",
-		"post-import-db",
-		"pre-import-files",
-		"post-import-files",
-		"pre-composer",
-		"post-composer",
-		"pre-stop",
-		"post-stop",
-		"pre-config",
-		"post-config",
-		"pre-describe",
-		"post-describe",
-		"pre-exec",
-		"post-exec",
-		"pre-pause",
-		"post-pause",
-		"pre-pull",
-		"post-pull",
-		"pre-push",
-		"post-push",
-		"pre-share",
-		"post-share",
-		"pre-snapshot",
-		"post-snapshot",
-		"pre-restore-snapshot",
-		"post-restore-snapshot",
-	}
-
-	validTasks := []string{
-		"exec",
-		"exec-host",
-		"composer",
-	}
-
-	type Validate struct {
-		Commands map[string][]map[string]any `yaml:"hooks,omitempty"`
-	}
-	val := &Validate{}
-
-	err := yaml.Unmarshal(source, val)
-	if err != nil {
+	val := struct {
+		Hooks map[string][]map[string]any `yaml:"hooks,omitempty"`
+	}{}
+	if err := yaml.Unmarshal(source, &val); err != nil {
 		return err
 	}
-
-	for foundHook, tasks := range val.Commands {
-		var match bool
-		for _, h := range validHooks {
-			if foundHook == h {
-				match = true
-			}
-		}
-		if !match {
-			return fmt.Errorf("invalid hook %s", foundHook)
-		}
-
-		for _, foundTask := range tasks {
-			var match bool
-			for _, validTaskName := range validTasks {
-				if _, ok := foundTask[validTaskName]; ok {
-					match = true
-				}
-			}
-			if !match {
-				return fmt.Errorf("invalid task '%s' defined for hook %s", foundTask, foundHook)
-			}
-		}
-	}
-
-	return nil
+	return globalconfig.ValidateHooks(val.Hooks)
 }
 
 // isNotDockerfileContextFile returns true if the given file is NOT a Dockerfile context file

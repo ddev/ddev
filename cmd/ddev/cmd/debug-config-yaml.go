@@ -8,6 +8,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
+	"go.yaml.in/yaml/v4"
 )
 
 var fullYAMLOutput bool
@@ -57,6 +58,8 @@ var DebugConfigYamlCmd = &cobra.Command{
 			}
 		}
 
+		showGlobalHooks := len(app.GlobalHooks) > 0 && !app.SkipGlobalHooks && !omitKeyMap["hooks"]
+
 		if fullYAMLOutput {
 			// Output complete processed YAML configuration
 			configYAML, err := app.GetProcessedProjectConfigYAML(omitKeyList...)
@@ -64,6 +67,14 @@ var DebugConfigYamlCmd = &cobra.Command{
 				util.Failed("Failed to get processed project configuration YAML: %v", err)
 			}
 			output.UserOut.Printf("# Complete processed project configuration:\n%s", string(configYAML))
+			// Commented out so the output stays loadable as a project config.
+			if showGlobalHooks {
+				globalYAML, err := yaml.Marshal(map[string]any{"hooks": app.GlobalHooks})
+				if err != nil {
+					util.Failed("Failed to marshal global hooks: %v", err)
+				}
+				output.UserOut.Printf("# Global hooks (from global_config.yaml):\n# %s", strings.ReplaceAll(strings.TrimSpace(string(globalYAML)), "\n", "\n# "))
+			}
 		} else {
 			// strategy from https://stackoverflow.com/a/47457022/215713
 			fields := reflect.TypeFor[ddevapp.DdevApp]()
@@ -81,7 +92,7 @@ var DebugConfigYamlCmd = &cobra.Command{
 					output.UserOut.Printf("%s: %v", key[0], v)
 				}
 			}
-			if len(app.GlobalHooks) > 0 && !omitKeyMap["hooks"] {
+			if showGlobalHooks {
 				output.UserOut.Printf("global hooks (from global_config.yaml): %v", app.GlobalHooks)
 			}
 		}

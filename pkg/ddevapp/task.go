@@ -59,6 +59,8 @@ func (c ExecTask) Execute() error {
 		NoCapture: true,
 		Stdout:    io.MultiWriter(os.Stdout, &captured),
 		Stderr:    io.MultiWriter(os.Stderr, &captured),
+		// An exec task in a pre-exec or post-exec hook would otherwise run itself.
+		SkipHooks: true,
 	}
 	_, _, err := c.app.Exec(opts)
 	if err != nil {
