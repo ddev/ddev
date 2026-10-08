@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -200,8 +199,9 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 
 	// On Linux the local end of an outgoing connection blocks a bind to its port
 	// but doesn't answer a dial, so only a bind test catches it. macOS allows
-	// that bind, for the engine too, so the port is usable there.
-	if runtime.GOOS != "linux" {
+	// that bind, for the engine too, so the port is usable there. Where DDEV
+	// can't bind-test host ports locally it dials instead, which misses this.
+	if !nodeps.IsLinux() || !dockerutil.CanCheckHostPortsLocally() {
 		return
 	}
 	connectedPort := startPort + 4

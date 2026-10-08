@@ -23,8 +23,8 @@ func TestHasUnspecifiedHostPort(t *testing.T) {
 // TestFixupComposeYamlAssignsUnspecifiedHostPorts checks that both ways of
 // leaving the host port empty end up with a port from DDEV's range.
 func TestFixupComposeYamlAssignsUnspecifiedHostPorts(t *testing.T) {
-	if dockerutil.IsRemoteDockerHost() {
-		t.Skip("DDEV leaves host port choice to the engine on a remote Docker host")
+	if !dockerutil.CanCheckHostPortsLocally() {
+		t.Skip("DDEV leaves host port choice to the engine here")
 	}
 	app, err := NewApp(t.TempDir(), true)
 	require.NoError(t, err)
