@@ -175,7 +175,7 @@ To forward another variable to `web`, add its bare name to [`web_environment`](#
 
 ## Applying Changes
 
-A running container never picks up a new value on its own. After adding or editing any `.ddev/.env*` file, its global equivalent, or a `web_environment` value, run:
+A running container never picks up a new value on its own, though `ddev exec` reads each [bare `web_environment` name](#web_environment) from the host again. After adding or editing any `.ddev/.env*` file, its global equivalent, or a `web_environment` value, run:
 
 ```bash
 ddev restart

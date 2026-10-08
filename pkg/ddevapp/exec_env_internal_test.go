@@ -14,6 +14,8 @@ import (
 // for web keeps its value over a bare name, and that the env of the caller
 // wins over all of them.
 func TestExecEnv(t *testing.T) {
+	// The env files in the real global DDEV directory must not reach the cases.
+	t.Setenv("DDEV_XDG_CONFIG_HOME", t.TempDir())
 	// The agent and terminal running the tests must not leak into the cases.
 	// t.Setenv registers the restore, and an empty value would be forwarded.
 	for _, name := range append(aiAgentEnvVars, util.TerminalEnvVars...) {

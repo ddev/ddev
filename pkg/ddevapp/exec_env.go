@@ -11,7 +11,8 @@ import (
 // themselves, which tools like PHPStan read to adjust their output. Forwarding
 // them lets a tool in the container see the agent that ran `ddev exec`.
 // COPILOT_GITHUB_TOKEN is left out because it is a credential.
-// See https://github.com/laravel/agent-detector#supported-agents
+// See https://github.com/laravel/agent-detector#supported-agents, which this
+// list matches as of commit 943c080.
 var aiAgentEnvVars = []string{
 	"AI_AGENT",
 	"AMP_CURRENT_THREAD_ID",
