@@ -122,4 +122,11 @@ services:
 		"ubuntu:24.04-acme-built": {"first", "second"},
 		"ddev-acme-no-image":      {"named-like-no-image", "no-image"},
 	}, buildTagCollisions(project))
+
+	// Without the second profile, first is the only service building its tag
+	project, err = project.WithProfiles(nil)
+	require.NoError(t, err)
+	require.Equal(t, map[string][]string{
+		"ddev-acme-no-image": {"named-like-no-image", "no-image"},
+	}, buildTagCollisions(project))
 }

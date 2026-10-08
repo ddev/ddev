@@ -1613,13 +1613,13 @@ func (app *DdevApp) start(o StartOptions) error {
 	if err != nil {
 		return err
 	}
-	collisions := buildTagCollisions(app.ComposeYaml)
-	for _, image := range slices.Sorted(maps.Keys(collisions)) {
-		util.Warning("Services %s build their images with the same tag %q, so they all run whichever is built last.\nAdd the service name to each tag, see https://docs.ddev.com/en/stable/users/extend/custom-compose-files/#conventions-for-defining-additional-services", strings.Join(collisions[image], ", "), image)
-	}
 	project, err := app.loadRenderedProject(o.Profiles)
 	if err != nil {
 		return err
+	}
+	collisions := buildTagCollisions(project)
+	for _, image := range slices.Sorted(maps.Keys(collisions)) {
+		util.Warning("Services %s build their images with the same tag %q, so they all run whichever is built last.\nAdd the service name to each tag, see https://docs.ddev.com/en/stable/users/extend/custom-compose-files/#conventions-for-defining-additional-services", strings.Join(collisions[image], ", "), image)
 	}
 	additionalImages, err := app.FindServiceImages(project.ServiceNames())
 	if err != nil {
