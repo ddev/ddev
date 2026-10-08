@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -324,8 +325,8 @@ func ReadGlobalConfig() error {
 	return nil
 }
 
-// overriddenGlobalConfig remembers what global_config.*.yaml files changed,
-// so WriteGlobalConfig can keep their values out of global_config.yaml.
+// These hold the keys global_config.*.yaml files set, global_config.yaml alone,
+// and the merged result, so WriteGlobalConfig can keep override values out of global_config.yaml.
 var (
 	overriddenKeys     map[string]bool
 	mainOnlyConfig     GlobalConfig
@@ -381,6 +382,7 @@ func loadGlobalConfigFiles(globalConfigFile string) error {
 
 // restoreOverriddenFields puts the global_config.yaml value back into every field
 // that a global_config.*.yaml file set and that has not changed since loading.
+// A changed list keeps only the items added or removed since loading.
 func restoreOverriddenFields(config GlobalConfig) GlobalConfig {
 	if len(overriddenKeys) == 0 {
 		return config
@@ -395,9 +397,30 @@ func restoreOverriddenFields(config GlobalConfig) GlobalConfig {
 		}
 		if reflect.DeepEqual(cfg.Field(i).Interface(), loaded.Field(i).Interface()) {
 			cfg.Field(i).Set(mainOnly.Field(i))
+			continue
+		}
+		if now, ok := reflect.TypeAssert[[]string](cfg.Field(i)); ok {
+			cfg.Field(i).Set(reflect.ValueOf(applyListChanges(mainOnly.Field(i).Interface().([]string), loaded.Field(i).Interface().([]string), now)))
 		}
 	}
 	return config
+}
+
+// applyListChanges applies to base the items added to and removed from loaded to get now.
+func applyListChanges(base, loaded, now []string) []string {
+	result := []string{}
+	for _, item := range base {
+		if slices.Contains(loaded, item) && !slices.Contains(now, item) {
+			continue
+		}
+		result = append(result, item)
+	}
+	for _, item := range now {
+		if !slices.Contains(loaded, item) && !slices.Contains(result, item) {
+			result = append(result, item)
+		}
+	}
+	return result
 }
 
 // WriteGlobalConfig writes the global config into ~/.ddev.

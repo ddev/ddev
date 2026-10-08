@@ -21,4 +21,5 @@
 /bin
 /testcache
 /global_config.yaml
+/global_config.local.y*ml
 /project_list.yaml
