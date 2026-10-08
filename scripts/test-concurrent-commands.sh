@@ -67,7 +67,8 @@ run_op() {
     start) ddev start -y ;;
     stop) ddev stop ;;
     restart) ddev restart -y ;;
-    hostname) ddev config --additional-hostnames="extra$RANDOM" && ddev start -y ;;
+    # Unique per project, since two projects claiming one hostname would conflict in the router.
+    hostname) ddev config --additional-hostnames="extra-w$1-p$2" && ddev start -y ;;
     list) ddev list && ddev describe ;;
   esac >"$log" 2>&1
 }
@@ -93,6 +94,10 @@ for wave in $(seq 1 "$WAVES"); do
 
   if grep -lE "$pattern" "$LOGS"/wave"$wave"-*.log >/dev/null 2>&1; then
     fail "wave $wave: race signature in $(grep -lE "$pattern" "$LOGS"/wave"$wave"-*.log | tr '\n' ' ')"
+  fi
+  # No locked section here should take two minutes, so a give-up means a holder hung.
+  if grep -l 'Gave up after' "$LOGS"/wave"$wave"-*.log >/dev/null 2>&1; then
+    fail "wave $wave: gave up waiting for the lock in $(grep -l 'Gave up after' "$LOGS"/wave"$wave"-*.log | tr '\n' ' ')"
   fi
 
   # Converge one at a time, then check the shared state.
