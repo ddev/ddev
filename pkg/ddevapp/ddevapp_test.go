@@ -4374,6 +4374,62 @@ func TestWebserverAppLevel404PassesThrough(t *testing.T) {
 	}
 }
 
+// TestModxFriendlyURLs checks that the modx nginx template passes the request
+// path to index.php as ?q=, as MODX's .htaccess does on Apache
+// (RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]). MODX resolves the resource from
+// q, so without it every friendly URL renders the site start page. The test
+// site's DynamicURI only requests /, which cannot catch that.
+func TestModxFriendlyURLs(t *testing.T) {
+	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
+	}
+	assert := asrt.New(t)
+	packageDir, _ := os.Getwd()
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+	appDir := filepath.Join(testDir, t.Name())
+	err := os.MkdirAll(appDir, 0755)
+	require.NoError(t, err)
+	err = os.Chdir(appDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(appDir, true)
+	require.NoError(t, err)
+	app.Type = nodeps.AppTypeMODX
+	app.WebserverType = nodeps.WebserverNginxFPM
+	app.DisableSettingsManagement = true
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(packageDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
+
+	err = os.WriteFile(filepath.Join(appDir, "index.php"), []byte("<?php\necho 'q=' . ($_GET['q'] ?? '') . ' page=' . ($_GET['page'] ?? '');\n"), 0644)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(appDir, "existing.txt"), []byte("served from disk"), 0644)
+	require.NoError(t, err)
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	testcommon.ClearDockerEnv()
+	startErr := app.Start()
+	if startErr != nil {
+		appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+		assert.NoError(getLogsErr)
+		t.Fatalf("app.Start() failure: err=%v, health:\n%s\n\nlogs:\n=====\n%s\n=====\n", startErr, health, appLogs)
+	}
+
+	baseURL := app.GetWebContainerDirectHTTPURL()
+	// The path goes to MODX as q, and the original query string is kept (QSA).
+	testcommon.RequireLocalHTTPContent(t, baseURL+"/news/first-article.html", "q=news/first-article.html page=")
+	testcommon.RequireLocalHTTPContent(t, baseURL+"/news/?page=2", "q=news/ page=2")
+	// Real files are still served directly.
+	testcommon.RequireLocalHTTPContent(t, baseURL+"/existing.txt", "served from disk")
+}
+
 // TestWebserverPathInfo checks that PATH_INFO reaches PHP for a URL carrying a
 // path after the script name, such as /pathinfo.php/one/two. nginx only sends it
 // when the PHP location regex admits the URL and fastcgi_param PATH_INFO is set;
