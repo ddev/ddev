@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -3263,16 +3264,29 @@ func TestDdevExec(t *testing.T) {
 	err = app.Init(site.Dir)
 	assert.NoError(err)
 
+	origWebEnvironment := app.WebEnvironment
+	origGlobalWebEnvironment := globalconfig.DdevGlobalConfig.WebEnvironment
 	t.Cleanup(func() {
 		app.Hooks = nil
+		app.WebEnvironment = origWebEnvironment
+		globalconfig.DdevGlobalConfig.WebEnvironment = origGlobalWebEnvironment
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		err = app.WriteConfig()
 		assert.NoError(err)
 		_ = os.RemoveAll(filepath.Join(site.Dir, ".ddev", "docker-compose.busybox.yaml"))
+		_ = os.RemoveAll(filepath.Join(site.Dir, ".ddev", ".env.web.ddevexectest"))
 	})
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-exec": {{"exec-host": "touch hello-post-exec-" + app.Name}}, "pre-exec": {{"exec-host": "touch hello-pre-exec-" + app.Name}}}
+	app.WebEnvironment = append(app.WebEnvironment, "DDEV_TEST_EXEC_BARE", "DDEV_TEST_EXEC_OVERRIDE=project", "DDEV_TEST_EXEC_IN_ENV_FILE")
+	globalconfig.DdevGlobalConfig.WebEnvironment = append(slices.Clone(origGlobalWebEnvironment), "DDEV_TEST_EXEC_GLOBAL_BARE", "DDEV_TEST_EXEC_OVERRIDE=global")
+	err = os.WriteFile(filepath.Join(site.Dir, ".ddev", ".env.web.ddevexectest"), []byte("DDEV_TEST_EXEC_IN_ENV_FILE=file\n"), 0644)
+	require.NoError(t, err)
+	for _, name := range []string{"DDEV_TEST_EXEC_BARE", "DDEV_TEST_EXEC_GLOBAL_BARE", "DDEV_TEST_EXEC_IN_ENV_FILE", "AI_AGENT"} {
+		t.Setenv(name, "")
+		require.NoError(t, os.Unsetenv(name))
+	}
 
 	startErr := app.Start()
 	if startErr != nil {
@@ -3305,6 +3319,25 @@ func TestDdevExec(t *testing.T) {
 	})
 	assert.NoError(err)
 	assert.Contains(out, "/usr/local")
+
+	// Variables set on the host after start, as an agent does, reach the
+	// container on exec; a bare web_environment name reaches only web, and
+	// loses to an env file there, as it did at start.
+	t.Setenv("AI_AGENT", "ddev-test-agent")
+	t.Setenv("DDEV_TEST_EXEC_BARE", "project-value")
+	t.Setenv("DDEV_TEST_EXEC_GLOBAL_BARE", "global-value")
+	t.Setenv("DDEV_TEST_EXEC_IN_ENV_FILE", "host-value")
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: `echo "${AI_AGENT}:${DDEV_TEST_EXEC_BARE}:${DDEV_TEST_EXEC_GLOBAL_BARE}:${DDEV_TEST_EXEC_OVERRIDE}:${DDEV_TEST_EXEC_IN_ENV_FILE}"`,
+	})
+	require.NoError(t, err)
+	require.Equal(t, "ddev-test-agent:project-value:global-value:project:file\n", out)
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "busybox",
+		Cmd:     `echo "${AI_AGENT}:${DDEV_TEST_EXEC_BARE:-}:${DDEV_TEST_EXEC_GLOBAL_BARE:-}"`,
+	})
+	require.NoError(t, err)
+	require.Equal(t, "ddev-test-agent::\n", out)
 
 	// Try out a execRaw example
 	out, _, err = app.Exec(&ddevapp.ExecOpts{

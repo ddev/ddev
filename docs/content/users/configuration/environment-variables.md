@@ -90,11 +90,13 @@ The table below is a project that has every kind of file at once, with `db` and 
 
 Only the files you actually have are applied, and the rest of the order is unchanged. A second label, `.ddev/.env.web.otheraddon`, would come after row 18, because `myaddon` sorts before `otheraddon` and a `.local` file never leaves the file it overrides.
 
+A command run with `ddev exec`, `ddev ssh`, or a custom command also gets the [host variables forwarded on exec](#host-variables-forwarded-on-exec), which come after every row above and apply to that command only. A bare `web_environment` name is different: DDEV reads it from the host again on exec, but it keeps its place in row 1 or 2, so an env file that sets the same name still wins.
+
 To see the result:
 
 * [`ddev utility check-custom-config`](../usage/commands.md#utility-check-custom-config) lists the env files DDEV found under `Environment`, in the order they are applied.
 * [`ddev utility compose-config`](../usage/commands.md#utility-compose-config) shows the rendered `.ddev/.ddev-docker-compose-full.yaml`, including the `environment` section of each service.
-* `ddev exec env` and `ddev exec -s <service> env` show what actually reached a running container.
+* `ddev exec env` and `ddev exec -s <service> env` show what a command run in a container gets, which includes the [host variables forwarded on exec](#host-variables-forwarded-on-exec).
 
 ## Global Env Files
 
@@ -145,6 +147,12 @@ web_environment:
     - MY_HOST_VAR
 ```
 
+DDEV also reads each bare name from the host again on every [`ddev exec`](../usage/commands.md#exec), [`ddev ssh`](../usage/commands.md#ssh), or custom command run in `web`, so a value set after `ddev start`, for example by an AI agent, reaches that command without a restart:
+
+* Only that command sees the new value. PHP-FPM and anything else started with the container keep the value from `ddev start` until you run `ddev restart`.
+* If the name is not set on the host when you run the command, the command keeps the value from `ddev start`.
+* A name that a `.ddev/.env*` file also sets for `web` keeps the value from that file, as it does at start, because env files come later in the [override order](#override-order).
+
 To set these from the command line, use [`ddev config`](../usage/commands.md#config). Use `--web-environment` instead of `--web-environment-add` to replace the existing list rather than add to it:
 
 ```bash
@@ -155,9 +163,19 @@ ddev config --web-environment-add="MY_ENV_VAR=someval"
 ddev config global --web-environment-add="MY_ENV_VAR=someval"
 ```
 
+## Host Variables Forwarded on Exec
+
+Some variables describe the session that runs a command rather than the project, so DDEV copies them from the host into every [`ddev exec`](../usage/commands.md#exec), [`ddev ssh`](../usage/commands.md#ssh), and custom command, in any service. They reach only that command, so none of them needs a restart. A variable is forwarded when it is set on the host, even to an empty value, because some tools only check that it exists:
+
+* The variables AI coding agents use to identify themselves, such as `AI_AGENT`, `CLAUDECODE`, `CURSOR_AGENT`, or `GEMINI_CLI`, so tools like PHPStan in the container know an agent called them. The list follows [laravel/agent-detector](https://github.com/laravel/agent-detector#supported-agents), minus `COPILOT_GITHUB_TOKEN`, which is a credential.
+* In an interactive session, `TERM` and the variables a terminal identifies itself with, such as `COLORTERM` and `TERM_PROGRAM`, so programs know how many colors and which hyperlinks they can use.
+* For [`ddev composer`](../usage/commands.md#composer), [`COMPOSER_NO_BLOCKING`](https://getcomposer.org/doc/03-cli.md#composer-no-blocking).
+
+To forward another variable to `web`, add its bare name to [`web_environment`](#web_environment).
+
 ## Applying Changes
 
-A running container never picks up a new value on its own. After adding or editing any `.ddev/.env*` file, its global equivalent, or a `web_environment` value, run:
+A running container never picks up a new value on its own, though `ddev exec` reads each [bare `web_environment` name](#web_environment) from the host again. After adding or editing any `.ddev/.env*` file, its global equivalent, or a `web_environment` value, run:
 
 ```bash
 ddev restart

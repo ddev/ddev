@@ -449,8 +449,13 @@ func (app *DdevApp) ConfigPostLoadCleanup() {
 		}
 	}
 
-	// WebEnvironment needs special handling via EnvToUniqueEnv
-	app.WebEnvironment = util.EnvToUniqueEnv(&app.WebEnvironment)
+	app.WebEnvironment = util.MergeEnv(app.WebEnvironment)
+}
+
+// webEnvironment returns the global web_environment followed by the project
+// one, where a project entry overrides a global entry with the same name.
+func (app *DdevApp) webEnvironment() []string {
+	return util.MergeEnv(globalconfig.DdevGlobalConfig.WebEnvironment, app.WebEnvironment)
 }
 
 // WarnIfConfigReplace messages user about whether config is being replaced or created
@@ -945,15 +950,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	// The fallthrough default for hostDockerInternalIdentifier is the
 	// hostDockerInternalHostname == host.docker.internal
 
-	webEnvironment := globalconfig.DdevGlobalConfig.WebEnvironment
-	localWebEnvironment := app.WebEnvironment
-	for _, v := range localWebEnvironment {
-		// docker-compose won't accept a duplicate environment value
-		if !nodeps.ArrayContainsString(webEnvironment, v) {
-			webEnvironment = append(webEnvironment, v)
-		}
-	}
-
 	uid, gid, username := dockerutil.GetContainerUser()
 	_, err = app.GetProvider("")
 	if err != nil {
@@ -1002,7 +998,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		FailOnHookFail:     app.FailOnHookFail || app.FailOnHookFailGlobal,
 		WebWorkingDir:      app.GetWorkingDir("web", ""),
 		DBWorkingDir:       app.GetWorkingDir("db", ""),
-		WebEnvironment:     webEnvironment,
+		WebEnvironment:     app.webEnvironment(),
 		MariaDBVolumeName:  app.GetMariaDBVolumeName(),
 		PostgresVolumeName: app.GetPostgresVolumeName(),
 		NoBindMounts:       globalconfig.DdevGlobalConfig.NoBindMounts,

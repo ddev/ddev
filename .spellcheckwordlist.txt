@@ -147,6 +147,7 @@ PEM
 PHAR
 PHIVE
 PHP
+PHPStan
 PHPUnit
 PID
 Pimcore
@@ -471,6 +472,7 @@ lhA
 lifecycle
 like
 lima
+link's
 linux
 list
 live

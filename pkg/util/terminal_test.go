@@ -1,54 +1,53 @@
 package util_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 )
 
-// TestTerminalExecEnv tests that a TERM the container can resolve is forwarded
+// TestTerminalEnv tests that a TERM the container can resolve is forwarded
 // unchanged, that one it cannot is replaced, that an unset TERM leaves the
-// container with its own default, that the variables a terminal identifies
-// itself with come along, and that the env of the caller wins.
-func TestTerminalExecEnv(t *testing.T) {
+// container with its own default, and that the variables a terminal
+// identifies itself with come along.
+func TestTerminalEnv(t *testing.T) {
 	testCases := []struct {
 		hostTerm        string
 		hostColorterm   string
 		hostTermProgram string
-		existingEnv     []string
 		expected        []string
 	}{
-		{"xterm-256color", "", "", nil, []string{"TERM=xterm-256color"}},
-		{"xterm-256color", "truecolor", "", nil, []string{"TERM=xterm-256color", "COLORTERM=truecolor"}},
-		{"xterm-256color", "truecolor", "ghostty", nil, []string{"TERM=xterm-256color", "COLORTERM=truecolor", "TERM_PROGRAM=ghostty"}},
-		{"screen", "", "", nil, []string{"TERM=screen"}},
-		{"xterm-kitty", "", "", nil, []string{"TERM=xterm-256color"}},
-		{"alacritty", "", "", nil, []string{"TERM=xterm-256color"}},
-		{"wezterm", "", "", nil, []string{"TERM=xterm-256color"}},
+		{"xterm-256color", "", "", []string{"TERM=xterm-256color"}},
+		{"xterm-256color", "truecolor", "", []string{"TERM=xterm-256color", "COLORTERM=truecolor"}},
+		{"xterm-256color", "truecolor", "ghostty", []string{"TERM=xterm-256color", "COLORTERM=truecolor", "TERM_PROGRAM=ghostty"}},
+		{"screen", "", "", []string{"TERM=screen"}},
+		{"xterm-kitty", "", "", []string{"TERM=xterm-256color"}},
+		{"alacritty", "", "", []string{"TERM=xterm-256color"}},
+		{"wezterm", "", "", []string{"TERM=xterm-256color"}},
 		// tmux is in the database but tmux-direct is not, so a prefix match
 		// would be wrong here.
-		{"tmux-direct", "", "", nil, []string{"TERM=xterm-256color"}},
-		{"xterm-ghostty", "truecolor", "ghostty", nil, []string{"TERM=xterm-256color", "COLORTERM=truecolor", "TERM_PROGRAM=ghostty"}},
+		{"tmux-direct", "", "", []string{"TERM=xterm-256color"}},
+		{"xterm-ghostty", "truecolor", "ghostty", []string{"TERM=xterm-256color", "COLORTERM=truecolor", "TERM_PROGRAM=ghostty"}},
 		// Without a TERM on the host there is nothing to forward.
-		{"", "truecolor", "ghostty", nil, nil},
-		{"", "truecolor", "", []string{"XDEBUG_MODE=off"}, []string{"XDEBUG_MODE=off"}},
-		// The env of the caller survives the merge, as ddev composer relies on
-		// for XDEBUG_MODE, and wins over the host.
-		{"xterm-256color", "truecolor", "", []string{"XDEBUG_MODE=off"}, []string{"TERM=xterm-256color", "COLORTERM=truecolor", "XDEBUG_MODE=off"}},
-		{"xterm-256color", "truecolor", "", []string{"TERM=vt100"}, []string{"TERM=vt100", "COLORTERM=truecolor"}},
-		{"xterm-256color", "truecolor", "", []string{"COLORTERM="}, []string{"TERM=xterm-256color", "COLORTERM="}},
+		{"", "truecolor", "ghostty", nil},
 	}
 
-	// The terminal running the tests must not leak into the cases.
-	for _, varName := range util.TerminalEnvVars {
+	// The terminal running the tests must not leak into the cases. t.Setenv
+	// registers the restore that the os.Unsetenv calls below rely on.
+	for _, varName := range append([]string{"TERM"}, util.TerminalEnvVars...) {
 		t.Setenv(varName, "")
+		require.NoError(t, os.Unsetenv(varName))
 	}
 	for _, tc := range testCases {
-		t.Setenv("TERM", tc.hostTerm)
-		t.Setenv("COLORTERM", tc.hostColorterm)
-		t.Setenv("TERM_PROGRAM", tc.hostTermProgram)
-		// EnvToUniqueEnv does not keep the order, so compare the elements.
-		require.ElementsMatch(t, tc.expected, util.TerminalExecEnv(tc.existingEnv), "hostTerm=%s existingEnv=%v", tc.hostTerm, tc.existingEnv)
+		for name, value := range map[string]string{"TERM": tc.hostTerm, "COLORTERM": tc.hostColorterm, "TERM_PROGRAM": tc.hostTermProgram} {
+			if value == "" {
+				require.NoError(t, os.Unsetenv(name))
+			} else {
+				t.Setenv(name, value)
+			}
+		}
+		require.Equal(t, tc.expected, util.TerminalEnv(), "hostTerm=%s", tc.hostTerm)
 	}
 }
