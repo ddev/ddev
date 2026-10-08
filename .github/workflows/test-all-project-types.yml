@@ -65,24 +65,40 @@ jobs:
     if: github.event_name != 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     outputs:
-      testargs: ${{ steps.compute-testargs.outputs.testargs }}
+      testargs_pkg: ${{ steps.compute-testargs.outputs.testargs_pkg }}
+      testargs_cmd: ${{ steps.compute-testargs.outputs.testargs_cmd }}
     steps:
       - uses: actions/checkout@v7
       - name: Compute TESTARGS
         id: compute-testargs
         run: |
-          TESTARGS="-run '$(.github/workflows/all-project-types-tests.sh)'"
-          echo "testargs=${TESTARGS}"
-          echo "testargs=${TESTARGS}" >> $GITHUB_OUTPUT
+          for half in pkg cmd; do
+            TESTARGS="-run '$(.github/workflows/all-project-types-tests.sh ${half})'"
+            echo "testargs_${half}=${TESTARGS}"
+            echo "testargs_${half}=${TESTARGS}" >> $GITHUB_OUTPUT
+          done
 
-  all-project-types:
+  all-project-types-pkg:
     if: github.event_name != 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
     needs: [determine-test-eligibility, prepare-testargs]
     uses: ./.github/workflows/test-reusable.yml
     secrets: inherit
     with:
+      make_target: "testpkg"
       gotest_short: "" # run tests for all project types
-      testargs: ${{ needs.prepare-testargs.outputs.testargs }}
+      testargs: ${{ needs.prepare-testargs.outputs.testargs_pkg }}
+      debug_enabled: ${{ inputs.debug_enabled || false }}
+
+  # `test` rather than `testcmd`, since this half also runs pkg/ddevapp tests.
+  all-project-types-cmd:
+    if: github.event_name != 'workflow_dispatch' && needs.determine-test-eligibility.outputs.should_skip != 'true'
+    needs: [determine-test-eligibility, prepare-testargs]
+    uses: ./.github/workflows/test-reusable.yml
+    secrets: inherit
+    with:
+      make_target: "test"
+      gotest_short: "" # run tests for all project types
+      testargs: ${{ needs.prepare-testargs.outputs.testargs_cmd }}
       debug_enabled: ${{ inputs.debug_enabled || false }}
 
   all-project-types-custom:
