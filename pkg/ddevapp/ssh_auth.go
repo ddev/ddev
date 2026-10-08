@@ -263,7 +263,11 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 // RemoveSSHAgentContainer brings down the ddev-ssh-agent if it's running.
 func RemoveSSHAgentContainer() error {
 	defer dockerutil.AcquireGlobalLock("ddev-ssh-agent setup")()
+	return removeSSHAgentContainer()
+}
 
+// removeSSHAgentContainer is RemoveSSHAgentContainer for callers that already hold the global lock.
+func removeSSHAgentContainer() error {
 	// Stop the container if it exists
 	err := dockerutil.RemoveContainer(globalconfig.DdevSSHAgentContainer)
 	if err != nil {

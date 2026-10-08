@@ -27,7 +27,7 @@ func AcquireGlobalLock(reason string) (unlock func()) {
 	fl := flock.New(filepath.Join(globalconfig.GetGlobalDdevDir(), ".global.lock"))
 	locked, err := fl.TryLock()
 	if err == nil && !locked {
-		output.UserOut.Printf("Waiting for another ddev process to finish %s...", reason)
+		output.UserOut.Printf("Waiting for another ddev process before %s...", reason)
 		ctx, cancel := context.WithTimeout(context.Background(), globalLockTimeout)
 		defer cancel()
 		locked, err = fl.TryLockContext(ctx, 200*time.Millisecond)
