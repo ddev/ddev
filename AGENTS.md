@@ -47,6 +47,10 @@ reminders to restate or re-verify by hand:
   denied outright.
 - `GOTEST_SHORT=true` and `DDEV_NO_INSTRUMENTATION=true` are preset for every
   command. Never run the full matrix locally, it is too slow.
+- `DDEV_RUN_TEST_ANYWAY=true` and the opt-in test switches CI sets
+  (`DDEV_RUN_DOWNLOAD_DDEV_TEST`, `DDEV_TEST_SHARE_CMD`,
+  `DDEV_TEST_OUTSIDE_HOME`) are preset too, so any test you name with `-run`
+  runs, against a single test site, instead of skipping.
 - Editing a `.go` or `.md` file formats it automatically.
 - `.gotmp/bin/<os>_<arch>` is already first on PATH, so the binary you just
   built is what runs — no need to adjust PATH yourself.
@@ -90,7 +94,8 @@ here, since no test in this repo calls `testing.Short()`.
 | Variable | Purpose |
 | --- | --- |
 | `DDEV_DEBUG=true` | Raise ddev's log level to Debug, so the commands it issues and Docker status changes are printed |
-| `GOTEST_SHORT=<any value>` | Cut the integration tests to a single test site. An integer picks which one, so `16` is drupal11; anything else uses the first. CI uses `16`, and leaves it unset only for the fixed test list in `test-all-project-types.yml` |
+| `GOTEST_SHORT=<any value>` | Cut the integration tests to a single test site. An integer picks which one, so `16` is drupal11; anything else uses the first. CI uses `16`, and leaves it unset only for the tests `.github/workflows/all-project-types-tests.sh` finds |
+| `DDEV_RUN_TEST_ANYWAY=true` | Run tests that would skip under `GOTEST_SHORT` (`testcommon.SkipIfGotestShort`) or on a platform where they are unreliable |
 | `DDEV_NO_INSTRUMENTATION=true` | Disable analytics regardless of the global config setting |
 
 ## Linting

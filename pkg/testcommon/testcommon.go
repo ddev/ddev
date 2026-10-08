@@ -478,6 +478,30 @@ func SkipUnlessDefaultEnvironment(t *testing.T) {
 	}
 }
 
+// SkipIfGotestShort skips t when GOTEST_SHORT is set, unless
+// DDEV_RUN_TEST_ANYWAY=true. The all-project-types CI job runs every test that
+// calls it, IsGotestShort, or UsesAllTestSites with GOTEST_SHORT unset, so
+// tests must not read GOTEST_SHORT themselves.
+func SkipIfGotestShort(t *testing.T) {
+	t.Helper()
+	if os.Getenv("GOTEST_SHORT") != "" && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
+		t.Skip("Skip because GOTEST_SHORT is set; set DDEV_RUN_TEST_ANYWAY=true to run it anyway")
+	}
+}
+
+// IsGotestShort reports whether GOTEST_SHORT is set, for a test that covers
+// less when it is.
+func IsGotestShort(t *testing.T) bool {
+	t.Helper()
+	return os.Getenv("GOTEST_SHORT") != ""
+}
+
+// UsesAllTestSites marks t as covering every test site, which GOTEST_SHORT
+// cuts down to one.
+func UsesAllTestSites(t *testing.T) {
+	t.Helper()
+}
+
 // PortPair is for tests to use naming portsets for tests
 type PortPair struct {
 	HTTPPort  string

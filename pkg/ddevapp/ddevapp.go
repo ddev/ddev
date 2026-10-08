@@ -3861,24 +3861,10 @@ func (app *DdevApp) GetWebContainerDirectHTTPSPort() (int, error) {
 		return -1, fmt.Errorf("unable to find web container for app: %s, err %v", app.Name, err)
 	}
 
-	// Try getting the published port for the standard HTTP port first
+	// Try getting the published port for the standard HTTPS port
 	port, err := app.GetPublishedPortForPrivatePort("web", 443)
 	if err == nil && port != 0 {
 		return port, nil
-	}
-
-	// If standard method fails and it's a generic webserver with extra exposed ports
-	if app.WebserverType == nodeps.WebserverGeneric && len(app.WebExtraExposedPorts) > 0 {
-		for _, extraPort := range app.WebExtraExposedPorts {
-			// Check only ports mapped to HTTPS (port 443)
-			if extraPort.HTTPSPort == 443 {
-				containerPort := uint16(extraPort.WebContainerPort)
-				publishedPort, err := app.GetPublishedPortForPrivatePort("web", containerPort)
-				if err == nil && containerPort != 0 {
-					return publishedPort, nil
-				}
-			}
-		}
 	}
 
 	return -1, fmt.Errorf("no public https port found for private port 443")

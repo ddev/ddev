@@ -23,6 +23,7 @@ import (
 
 // TestAutocompletionForStopCmd checks autocompletion of project names for ddev stop
 func TestAutocompletionForStopCmd(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	// Skip if we don't have enough tests.
@@ -99,6 +100,7 @@ func TestAutocompletionForStopCmd(t *testing.T) {
 
 // TestAutocompletionForStartCmd checks autocompletion of project names for ddev start
 func TestAutocompletionForStartCmd(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	// Skip if we don't have enough tests.
@@ -175,6 +177,7 @@ func TestAutocompletionForStartCmd(t *testing.T) {
 
 // TestAutocompletionForDescribeCmd checks autocompletion of project names for ddev describe
 func TestAutocompletionForDescribeCmd(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	// Skip if we don't have enough tests.
@@ -529,6 +532,7 @@ func TestAutocompleteServiceForServiceFlag(t *testing.T) {
 
 // TestProjectAutocompletionForExecCmd checks autocompletion of project names for ddev exec
 func TestProjectAutocompletionForExecCmd(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	// Skip if we don't have enough tests.

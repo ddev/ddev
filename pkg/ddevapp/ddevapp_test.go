@@ -281,6 +281,7 @@ var (
 			FilesTarballURL:               "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeSilverstripe,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/_resources/themes/startup-theme/css/breadcrumbs.css", Expect: "Breadcrumb styles"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "<meta name=\"generator\" content=\"Silverstripe CMS 6.2\">"},
 		},
 		// 15: CakePHP
@@ -753,6 +754,7 @@ func TestDdevStartCustomEntrypoint(t *testing.T) {
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
 		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
 	}
@@ -805,6 +807,15 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			check, err := testcommon.ContainerCheck(containerName, "running")
 			assert.NoError(err)
 			assert.True(check, "Container check on %s failed", containerType)
+		}
+
+		// Some sites, such as TYPO3, keep their static test content in the files tarball.
+		// TestPkgPHP has a tarball but, as type php, no upload_dirs to import it into.
+		if site.FilesTarballURL != "" && len(app.GetUploadDirs()) > 0 {
+			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			require.NoError(t, err)
+			err = app.ImportFiles("", tarballPath, "")
+			require.NoError(t, err)
 		}
 
 		httpURLs, _, urls := app.GetAllURLs()
@@ -1034,7 +1045,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	sort.Strings(phpKeys)
 
 	// Test only the default version if GOTEST_SHORT is set
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if testcommon.IsGotestShort(t) {
 		phpKeys = []string{nodeps.PHPDefault}
 	}
 
@@ -1254,6 +1265,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 
 // TestGetApps tests the GetActiveProjects function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	// Start the apps.
@@ -1322,10 +1334,7 @@ func TestGetApps(t *testing.T) {
 
 // TestDdevImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestDdevImportDB(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
@@ -1720,19 +1729,10 @@ func checkImportDBImports(t *testing.T, app *ddevapp.DdevApp) {
 
 // TestDdevAllDatabases tests db import/export/snapshot/restore/start with supported database versions
 func TestDdevAllDatabases(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skipping when GOTEST_SHORT unset")
-	}
+	testcommon.SkipIfGotestShort(t)
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
-
-	//Use a smaller list if GOTEST_SHORT
-	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:18", "postgres:17", "mariadb:12.3", "mariadb:11.8", "mariadb:11.4", "mariadb:10.11", "mariadb:10.6", "mysql:9.7", "mysql:8.0", "mysql:8.4", "mysql:5.7"}
-		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
-	}
 
 	if dockerutil.IsPodman() || dockerutil.IsDockerRootless() {
 		// Works locally but fails in CI.
@@ -2038,10 +2038,7 @@ func TestGetDBDumpCommand(t *testing.T) {
 // export/import chain are engine-agnostic, so they're only exercised once
 // (on MariaDB) rather than once per database type.
 func TestDdevExportDB(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	testDir, _ := os.Getwd()
@@ -2207,10 +2204,7 @@ func TestDdevExportDB(t *testing.T) {
 // TestWebserverMariaMySQLDBClient tests functionality of mysql/mariadb
 // database clients in the ddev-webserver
 func TestWebserverMariaMySQLDBClient(t *testing.T) {
-	// Don't run this unless GOTEST_SHORT is unset; it doesn't need to be run everywhere.
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 
 	assert := asrt.New(t)
 
@@ -2509,6 +2503,7 @@ func readFileTail(fileName string, maxBytes int64) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (nodeps.IsWindows() || dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Windows/Lima/Colima/Rancher as this is tested adequately elsewhere")
 	}
@@ -2780,6 +2775,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 // TestDdevImportFilesDir tests that "ddev import-files" can successfully import non-archive directories
 func TestDdevImportFilesDir(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
@@ -2856,6 +2852,7 @@ func TestDdevImportFilesDir(t *testing.T) {
 
 // TestDdevImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestDdevImportFiles(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	origDir, _ := os.Getwd()
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -2957,6 +2954,7 @@ func TestDdevImportFiles(t *testing.T) {
 
 // TestDdevUploadDirNoPackage tests if the getUploadDir(s) returns what's expected for each app type.
 func TestDdevUploadDirNoPackage(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -3006,6 +3004,7 @@ func TestDdevUploadDirNoPackage(t *testing.T) {
 
 // TestDdevImportFilesCustomUploadDir ensures that files are imported to a custom upload directory when requested
 func TestDdevImportFilesCustomUploadDir(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -3619,6 +3618,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 
 // TestGetAppsEmpty ensures that GetActiveProjects returns an empty list when no applications are running.
 func TestGetAppsEmpty(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	// Ensure test sites are removed
@@ -3762,9 +3762,8 @@ func TestHttpsRedirection(t *testing.T) {
 
 	projectTypes := ddevapp.GetValidAppTypes()
 	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if testcommon.IsGotestShort(t) {
 		projectTypes = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal11}
-		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	}
 	for _, projectType := range projectTypes {
 		// TODO: Fix the Laravel config so it can do the redir_abs.php successfully on nginx-fpm
@@ -3965,79 +3964,58 @@ func TestGetWebContainerDirectURLsErrorHandling(t *testing.T) {
 	assert.Empty(httpsURL, "GetWebContainerDirectHTTPSURL should return an empty string when container doesn't exist")
 }
 
-// TestGetWebContainerDirectURLsWithGenericWebserver tests the behavior of GetWebContainerDirectHTTPURL and GetWebContainerDirectHTTPSURL
-// with a generic webserver type and web_extra_exposed_ports
+// TestGetWebContainerDirectURLsWithGenericWebserver checks that every URL DDEV reports for a
+// generic webserver project with web_extra_exposed_ports serves the project
 func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
 	if dockerutil.IsPodmanRootlessmacOS() {
 		t.Skip("Skipping: podman rootless on macOS cannot bind privileged ports 80/443")
 	}
 	assert := asrt.New(t)
 
-	// Create a temporary directory for a new app
 	testDir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	// Create a new app with generic webserver type
 	app, err := ddevapp.NewApp(testDir, true)
 	require.NoError(t, err)
+	// The name from t.Name() would make ddev-<name>-web too long a DNS label for the router
+	app.Name = "generic-direct-urls"
 	app.WebserverType = nodeps.WebserverGeneric
-	// Configure a web_extra_exposed_port that maps container port 3000 to HTTP port 80 and HTTPS port 443
 	app.WebExtraExposedPorts = []ddevapp.WebExposedPort{
 		{Name: "svelte", WebContainerPort: 3000, HTTPPort: 80, HTTPSPort: 443},
 	}
+	app.WebExtraDaemons = []ddevapp.WebExtraDaemon{
+		{Name: "php-server", Command: "php -S 0.0.0.0:3000", Directory: "/var/www/html"},
+	}
+	err = os.WriteFile(filepath.Join(testDir, "testfile.html"), []byte("generic webserver test content"), 0644)
+	require.NoError(t, err)
 	err = app.WriteConfig()
-	require.NoError(t, err)
-
-	// Start the app
-	err = app.Start()
-	require.NoError(t, err)
-
-	// Add a simple web server on port 3000 in the container
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Cmd:     "cd /var/www/html && php -S 0.0.0.0:3000 &",
-	})
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 	})
+	err = app.Start()
+	require.NoError(t, err)
 
-	// Verify that GetWebContainerDirectHTTPURL returns a valid URL using the WebContainerPort
 	httpURL := app.GetWebContainerDirectHTTPURL()
-	assert.NotEmpty(httpURL, "GetWebContainerDirectHTTPURL should return a non-empty URL")
-	assert.Contains(httpURL, "http://", "HTTP URL should start with http://")
-
-	// Verify that GetWebContainerDirectHTTPSURL returns a valid URL using the WebContainerPort
-	httpsURL := app.GetWebContainerDirectHTTPSURL()
-	assert.NotEmpty(httpsURL, "GetWebContainerDirectHTTPSURL should return a non-empty URL")
-	assert.Contains(httpsURL, "https://", "HTTPS URL should start with https://")
-
-	// Verify that the URLs contain the Docker IP
+	require.NotEmpty(t, httpURL, "a generic webserver should have a direct HTTP URL through its web_extra_exposed_ports")
 	dockerIP, err := dockerutil.GetDockerIP()
-	assert.NoError(err, "GetDockerIP should not return an error")
-	assert.Contains(httpURL, dockerIP, "HTTP URL should contain the Docker IP")
-	assert.Contains(httpsURL, dockerIP, "HTTPS URL should contain the Docker IP")
+	require.NoError(t, err)
+	require.Contains(t, httpURL, dockerIP)
 
-	// Debug information
-	t.Logf("HTTP URL: %s", httpURL)
-	t.Logf("HTTPS URL: %s", httpsURL)
-
-	// Check if port 3000 is published
-	port3000, err := app.GetPublishedPortForPrivatePort("web", 3000)
-	t.Logf("Port 3000 published as: %d, err: %v", port3000, err)
-
-	// For generic webserver with web_extra_exposed_ports, we just need to verify that we get valid URLs
-	// The exact port mapping can vary, so we just check that the URLs are not empty and have the correct format
-	assert.NotEmpty(httpURL, "HTTP URL should not be empty")
-	assert.Contains(httpURL, "http://", "HTTP URL should start with http://")
-	assert.NotContains(httpURL, ":0", "HTTP URL should not contain port 0")
-
-	assert.NotEmpty(httpsURL, "HTTPS URL should not be empty")
-	assert.Contains(httpsURL, "https://", "HTTPS URL should start with https://")
-	assert.NotContains(httpsURL, ":0", "HTTPS URL should not contain port 0")
+	httpURLs, _, urls := app.GetAllURLs()
+	if globalconfig.GetCAROOT() == "" {
+		urls = httpURLs
+	}
+	require.Contains(t, urls, httpURL)
+	t.Logf("Testing these URLs: %v", urls)
+	for _, u := range urls {
+		testcommon.AssertLocalHTTPContent(t, u+"/testfile.html", "generic webserver test content",
+			testcommon.WithMessagef("every reported URL should serve the project"),
+		)
+	}
 }
 
 // TestGetWebContainerDirectURLsWithDockerIPError tests behavior when GetDockerIP returns an error
@@ -4102,6 +4080,7 @@ func TestGetWebContainerDirectURLsWithDockerIPError(t *testing.T) {
 // - nginx_full/nginx-site.conf version installed
 // - Actual headers from site when nginx/apache installed per TestSite
 func TestPHPWebserverType(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	if nodeps.IsAppleSilicon() && dockerutil.IsDockerDesktop() && nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") {
 		t.Skip("Skipping on Docker Desktop/Apple Silicon to ignore problems with 'connection reset by peer'")
 	}

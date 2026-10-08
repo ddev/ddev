@@ -18,9 +18,7 @@ import (
 //   - rejects an unknown volume name, listing only volumes that still exist
 //   - deletes a volume when given its full Docker name
 func TestDebugDeleteVolumeCmd(t *testing.T) {
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skip because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 
 	origDir, _ := os.Getwd()
 	tmpdir := testcommon.CreateTmpDir(t.Name())

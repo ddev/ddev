@@ -351,9 +351,7 @@ func TestUseEphemeralPort(t *testing.T) {
 // TestEphemeralPortsReusedOnRestart tests that ephemeral ports assigned to a project
 // are reused when the project restarts, preventing unnecessary router recreation.
 func TestEphemeralPortsReusedOnRestart(t *testing.T) {
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skipping because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
 	}
@@ -438,9 +436,7 @@ func TestEphemeralPortsReusedOnRestart(t *testing.T) {
 // survives across ddev processes via the router's RouterPortSubstitutionsLabel,
 // even after the original port conflict clears.
 func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skipping because GOTEST_SHORT is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
 	}

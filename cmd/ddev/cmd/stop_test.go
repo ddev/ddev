@@ -6,12 +6,14 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestCmdStop runs `ddev stop` on the test apps
 func TestCmdStop(t *testing.T) {
+	testcommon.UsesAllTestSites(t)
 	assert := asrt.New(t)
 
 	t.Cleanup(func() {

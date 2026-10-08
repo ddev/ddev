@@ -2,7 +2,6 @@ package updatecheck
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -67,9 +66,7 @@ func TestIsReleaseVersion(t *testing.T) {
 // TestAvailableUpdates tests isReleaseVersion to ensure it correctly picks up on release builds vs dev builds
 func TestAvailableUpdates(t *testing.T) {
 	assert := asrt.New(t)
-	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Skip("Skipping TestAvailableUpdates because GOTEST_SHORT env var is set")
-	}
+	testcommon.SkipIfGotestShort(t)
 	var versionTests = []struct {
 		in  string
 		out bool
