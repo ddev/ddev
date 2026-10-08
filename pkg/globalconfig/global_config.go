@@ -352,7 +352,7 @@ func loadGlobalConfigFiles(globalConfigFile string) error {
 	if err != nil {
 		return fmt.Errorf("unable to read DDEV global config file %s: %v", globalConfigFile, err)
 	}
-	mainOnlyConfig = DdevGlobalConfig
+	mainOnlyConfig = New()
 	if err = settings.LoadGlobalConfigWithOverrides(mainContent, nil, &mainOnlyConfig); err != nil {
 		return fmt.Errorf("unable to load DDEV global config file %s: %v", globalConfigFile, err)
 	}
