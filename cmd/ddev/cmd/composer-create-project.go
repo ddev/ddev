@@ -462,25 +462,23 @@ func isValidComposerOption(app *ddevapp.DdevApp, command string, option string) 
 	validateCmd := []string{"composer", command}
 	validateCmd = append(validateCmd, strings.Split(option, " ")...)
 	validateCmd = append(validateCmd, "--dry-run")
-	userOutFunc := util.CaptureUserOut()
-	_, _, err := app.Exec(&ddevapp.ExecOpts{
+	_, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     getComposerRootInContainer(app),
 		RawCmd:  validateCmd,
 		Env:     []string{"XDEBUG_MODE=off"},
 	})
-	out := userOutFunc()
 	if err == nil {
 		return true
 	}
 	// If it's an error for the "--dry-run" we use in validateCmd, then the option is valid.
-	if option != "--dry-run" && strings.Contains(out, `"--dry-run" option does not exist`) {
+	if option != "--dry-run" && strings.Contains(stderr, `"--dry-run" option does not exist`) {
 		return true
 	}
 	// We only care about the "option does not exist" error for "create-project",
 	// and if there are other errors, the user should see them.
 	if command == "create-project" {
-		return !strings.Contains(out, fmt.Sprintf(`"%s" option does not exist`, option))
+		return !strings.Contains(stderr, fmt.Sprintf(`"%s" option does not exist`, option))
 	}
 	// The option is not valid for other commands on any error.
 	return false
