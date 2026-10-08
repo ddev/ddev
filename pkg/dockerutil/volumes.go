@@ -125,19 +125,15 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 
 	track := util.TimeTrackC("CopyIntoVolume " + sourcePath + " " + volumeName)
 
-	var c = ""
-	if destroyExisting {
-		c = c + `rm -rf "` + targetSubdirFullPath + `"/{*,.*} && `
-	}
-	c = c + "mkdir -p " + targetSubdirFullPath + " && sleep infinity "
-
 	labels := map[string]string{}
 	if UseKeepID() {
 		labels["com.ddev.userns"] = "keep-id"
 	}
+	// The container is started detached, so its command may not have run yet
+	// when we exec into it. Any setup the copy depends on goes in Exec instead.
 	config := &container.Config{
 		Image:  versionconstants.UtilitiesImage,
-		Cmd:    []string{"bash", "-c", c},
+		Cmd:    []string{"sleep", "infinity"},
 		User:   "0",
 		Labels: labels,
 	}
@@ -153,6 +149,17 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	// nolint: errcheck
 	defer RemoveContainer(containerID)
 
+	// targetSubdir may be empty, making the target the volume mount point,
+	// which can't be removed, so delete only its contents.
+	prepCmd := `mkdir -p "` + targetSubdirFullPath + `"`
+	if destroyExisting {
+		prepCmd += ` && find "` + targetSubdirFullPath + `" -mindepth 1 -delete`
+	}
+	stdout, stderr, err := Exec(containerID, prepCmd, "0")
+	if err != nil {
+		return fmt.Errorf("unable to prepare %s in volume %s: %v (stdout=%s, stderr=%s)", targetSubdirFullPath, volumeName, err, stdout, stderr)
+	}
+
 	err = CopyIntoContainer(sourcePath, containerName, targetSubdirFullPath, exclusion)
 
 	if err != nil {
@@ -161,7 +168,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 
 	// chown/chmod the uploaded content
 	command := fmt.Sprintf("chown -R %s %s", uid, targetSubdirFullPath)
-	stdout, stderr, err := Exec(containerID, command, "0")
+	stdout, stderr, err = Exec(containerID, command, "0")
 	util.Debug("Exec %s stdout=%s, stderr=%s, err=%v", command, stdout, stderr, err)
 
 	if err != nil {
