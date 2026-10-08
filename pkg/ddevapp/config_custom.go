@@ -110,7 +110,7 @@ func (app *DdevApp) CheckCustomConfig(showAll bool) (message string, hasWarnings
 			collectFiles: func() ([]string, error) {
 				return filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "global_config.*.y*ml"))
 			},
-			displayName: "Global config (global)",
+			displayName: "Config (global)",
 		},
 		{
 			collectFiles: func() ([]string, error) {

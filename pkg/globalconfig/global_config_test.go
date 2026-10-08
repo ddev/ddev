@@ -408,6 +408,32 @@ func TestGlobalConfigOverrides(t *testing.T) {
 	require.Contains(t, string(written), "omit_containers: [ddev-ssh-agent]")
 	require.Contains(t, string(written), "A=changed")
 
+	// `ddev config global` reads twice before writing; override keys missing
+	// from global_config.yaml must still stay out of it.
+	require.NoError(t, os.WriteFile(filepath.Join(globalDir, "global_config.b.yaml"), []byte("project_tld: b.test\ndeveloper_mode: true\n"), 0644))
+	globalconfig.DdevGlobalConfig = globalconfig.New()
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+	require.True(t, globalconfig.DdevGlobalConfig.DeveloperMode)
+	globalconfig.DdevGlobalConfig.TableStyle = "bold"
+	require.NoError(t, globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig))
+	written, err = os.ReadFile(mainFile)
+	require.NoError(t, err)
+	require.NotRegexp(t, `(?m)^developer_mode:`, string(written))
+	require.NotContains(t, string(written), "b.test")
+
+	// Changing a list an override extends saves only the change, not the override's items.
+	require.NoError(t, os.WriteFile(filepath.Join(globalDir, "global_config.b.yaml"), []byte("web_environment: [FROM_OVERRIDE=1]\n"), 0644))
+	globalconfig.DdevGlobalConfig = globalconfig.New()
+	require.NoError(t, globalconfig.ReadGlobalConfig())
+	require.Equal(t, []string{"A=changed", "FROM_OVERRIDE=1"}, globalconfig.DdevGlobalConfig.WebEnvironment)
+	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"FROM_OVERRIDE=1", "MINE=1"}
+	require.NoError(t, globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig))
+	written, err = os.ReadFile(mainFile)
+	require.NoError(t, err)
+	require.Contains(t, string(written), "web_environment:\n    - MINE=1\n")
+	require.NotContains(t, string(written), "FROM_OVERRIDE")
+
 	// With override_config: true, a list in the override replaces the one from global_config.yaml.
 	require.NoError(t, os.WriteFile(filepath.Join(globalDir, "global_config.b.yaml"), []byte("override_config: true\nomit_containers: [ddev-router]\n"), 0644))
 	require.NoError(t, os.Remove(filepath.Join(globalDir, "global_config.a.yaml")))
