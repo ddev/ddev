@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 	"testing"
 
@@ -27,15 +26,10 @@ func TestComposerCreateProjectCmd(t *testing.T) {
 	origDir, err := os.Getwd()
 	require.NoError(t, err)
 
-	validAppTypes := ddevapp.GetValidAppTypes()
-
+	// The commands tested below differ only by docroot and by php versus any
+	// other type. The quickstart tests run create-project for each project type.
 	for _, docRoot := range []string{"", "doc-root"} {
-		for _, projectType := range validAppTypes {
-			if projectType == nodeps.AppTypeDrupal6 {
-				t.Logf("== SKIP TestComposerCreateProjectCmd for project of type '%s' with docroot '%s'\n", projectType, docRoot)
-				t.Logf("== SKIP drupal6 projects uses a very old php version and composer create-project is very unlikely to be used")
-				continue
-			}
+		for _, projectType := range []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal} {
 			t.Logf("== BEGIN TestComposerCreateProjectCmd for project of type '%s' with docroot '%s'\n", projectType, docRoot)
 			tmpDir := testcommon.CreateTmpDir(t.Name() + projectType)
 			err = os.Chdir(tmpDir)
@@ -51,7 +45,7 @@ func TestComposerCreateProjectCmd(t *testing.T) {
 				// Normally for Drupal the docroot would be web, and the composer root would be the
 				// project root (default). But here we're making sure we can use the docroot
 				// as the composer_root. Acquia sites often do this...
-				if slices.Contains([]string{nodeps.AppTypeDrupal12, nodeps.AppTypeDrupal11, nodeps.AppTypeDrupal10, nodeps.AppTypeDrupal9, nodeps.AppTypeDrupal8}, projectType) {
+				if projectType == nodeps.AppTypeDrupal {
 					arguments = append(arguments, "--composer-root", docRoot)
 					composerDirOnHost = filepath.Join(tmpDir, docRoot)
 				}
