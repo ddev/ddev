@@ -31,6 +31,8 @@ BASE="$HOME/tmp/ddev-concurrent-test"
 LOGS="$BASE/logs"
 # Output that shows two ddev processes stepped on each other.
 RACE_PATTERN='is already in use by container|Conflict\.|already exists|network .* not found|No such container'
+# poweroff removes every project container, so commands overlapping it can lose theirs.
+POWEROFF_RACE_PATTERN='is already in use by container|Conflict\.|already exists|network .* not found'
 failures=0
 
 fail() {
@@ -74,6 +76,7 @@ ops=(start start stop restart hostname list)
 for wave in $(seq 1 "$WAVES"); do
   echo "=== Wave $wave ==="
   pids=()
+  pattern=$RACE_PATTERN
   for i in $(seq 1 "$PROJECTS"); do
     op=${ops[$((RANDOM % ${#ops[@]}))]}
     echo "proj$i: $op"
@@ -84,11 +87,12 @@ for wave in $(seq 1 "$WAVES"); do
     echo "global: poweroff"
     ddev poweroff >"$LOGS/wave$wave-poweroff.log" 2>&1 &
     pids+=($!)
+    pattern=$POWEROFF_RACE_PATTERN
   fi
   for p in "${pids[@]}"; do wait "$p"; done
 
-  if grep -lE "$RACE_PATTERN" "$LOGS"/wave"$wave"-*.log >/dev/null 2>&1; then
-    fail "wave $wave: race signature in $(grep -lE "$RACE_PATTERN" "$LOGS"/wave"$wave"-*.log | tr '\n' ' ')"
+  if grep -lE "$pattern" "$LOGS"/wave"$wave"-*.log >/dev/null 2>&1; then
+    fail "wave $wave: race signature in $(grep -lE "$pattern" "$LOGS"/wave"$wave"-*.log | tr '\n' ' ')"
   fi
 
   # Converge one at a time, then check the shared state.
@@ -99,7 +103,8 @@ for wave in $(seq 1 "$WAVES"); do
   [ "$(docker ps --format '{{.Names}}' | grep -cx ddev-router)" -eq 1 ] || fail "wave $wave: ddev-router is not running"
   [ "$(docker ps --format '{{.Names}}' | grep -cx ddev-ssh-agent)" -eq 1 ] || fail "wave $wave: ddev-ssh-agent is not running"
   for i in $(seq 1 "$PROJECTS"); do
-    curl -sk --max-time 15 "https://ddevconc$i.ddev.site" | grep -q ok || fail "wave $wave: ddevconc$i not reachable through the router"
+    url=$(cd "$BASE/proj$i" && ddev describe -j 2>/dev/null | jq -r .raw.primary_url)
+    curl -sk --max-time 15 "$url" | grep -q ok || fail "wave $wave: ddevconc$i not reachable through the router"
   done
   echo "Waits for the lock this wave: $(cat "$LOGS"/wave"$wave"-*.log | grep -c 'Waiting for another ddev process')"
 done
