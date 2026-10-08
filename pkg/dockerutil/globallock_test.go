@@ -25,9 +25,16 @@ func TestAcquireGlobalLock(t *testing.T) {
 	require.NotNil(t, holder)
 	require.Equal(t, os.Getpid(), holder.PID)
 	require.Contains(t, holder.String(), "which is doing test holder")
+	t.Cleanup(func() { setGaveUpOn(0) })
 	start := time.Now()
 	AcquireGlobalLock("test")()
 	require.GreaterOrEqual(t, time.Since(start), 400*time.Millisecond)
+
+	// Having given up on that holder, later acquires don't wait for it again.
+	start = time.Now()
+	AcquireGlobalLock("test")()
+	require.Less(t, time.Since(start), 200*time.Millisecond)
+	setGaveUpOn(0)
 
 	// A child of the holder doesn't wait for it.
 	origParent := parentPID

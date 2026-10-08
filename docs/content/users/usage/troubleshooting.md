@@ -254,7 +254,7 @@ If it doesn’t clear:
 
 * Look at the process with `ps -p 41233` (on Windows, `tasklist /fi "PID eq 41233"`), and stop it if it’s stuck.
 * Press Ctrl-C to cancel the waiting command; that is safe.
-* After two minutes DDEV gives up waiting and continues anyway, warning that the two commands may conflict. If something then fails, run `ddev poweroff` and try again.
+* After two minutes DDEV gives up waiting and continues anyway, warning that the two commands may conflict, and doesn't wait on that process again for the rest of the command. If something then fails, run `ddev poweroff` and try again.
 
 The lock is the file `~/.ddev/.global.lock`, which the operating system releases when the process holding it exits, so you never need to delete it.
 

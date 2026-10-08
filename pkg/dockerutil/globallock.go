@@ -25,6 +25,14 @@ var (
 	parentPID                = os.Getppid
 )
 
+// gaveUpOnPID is the holder this process stopped waiting for. One ddev
+// command takes the lock several times, and a stuck holder should cost it
+// one timeout, not one per acquire.
+var (
+	gaveUpMu    sync.Mutex
+	gaveUpOnPID int
+)
+
 const globalLockDocsURL = "https://docs.ddev.com/en/stable/users/usage/troubleshooting/#waiting-for-another-ddev-process"
 
 // globalLockHolder describes the process holding the global lock. It lives
@@ -74,7 +82,8 @@ func (h *globalLockHolder) String() string {
 //
 // While waiting it names the holding process and reports progress, so a
 // wait isn't mistaken for a hang. After globalLockTimeout it warns and
-// proceeds unlocked, which is the behavior from before the lock existed.
+// proceeds unlocked, which is the behavior from before the lock existed,
+// and doesn't wait on that holder again for the rest of this process.
 func AcquireGlobalLock(reason string) (unlock func()) {
 	noop := func() {}
 	fl := flock.New(globalLockPath())
@@ -120,6 +129,10 @@ func waitForGlobalLock(fl *flock.Flock, reason string) (bool, error) {
 		util.Debug("Global ddev lock for %s is held by parent process %d, continuing without it", reason, holder.PID)
 		return false, nil
 	}
+	if holder != nil && holder.PID == gaveUpOn() {
+		util.Debug("Global ddev lock for %s is still held by pid %d, which this process already gave up on, continuing without it", reason, holder.PID)
+		return false, nil
+	}
 	output.UserOut.Printf("Waiting for %s. Press Ctrl-C to cancel.", holder)
 
 	start := time.Now()
@@ -140,7 +153,13 @@ func waitForGlobalLock(fl *flock.Flock, reason string) (bool, error) {
 		case err != nil && !errors.Is(err, context.DeadlineExceeded):
 			return false, err
 		case !time.Now().Before(deadline):
-			util.Warning("Gave up after %s waiting for %s. Continuing without the lock, so the two commands may conflict over the shared router or network. See %s", waited, readGlobalLockHolder(), globalLockDocsURL)
+			if h := readGlobalLockHolder(); h != nil {
+				holder = h
+			}
+			if holder != nil {
+				setGaveUpOn(holder.PID)
+			}
+			util.Warning("Gave up after %s waiting for %s. Continuing without the lock, so the two commands may conflict over the shared router or network. See %s", waited, holder, globalLockDocsURL)
 			return false, nil
 		}
 		if h := readGlobalLockHolder(); h != nil && (holder == nil || h.PID != holder.PID) {
@@ -150,6 +169,18 @@ func waitForGlobalLock(fl *flock.Flock, reason string) (bool, error) {
 			output.UserOut.Printf("Still waiting (%s)...", waited)
 		}
 	}
+}
+
+func gaveUpOn() int {
+	gaveUpMu.Lock()
+	defer gaveUpMu.Unlock()
+	return gaveUpOnPID
+}
+
+func setGaveUpOn(pid int) {
+	gaveUpMu.Lock()
+	defer gaveUpMu.Unlock()
+	gaveUpOnPID = pid
 }
 
 func writeGlobalLockHolder(reason string) {

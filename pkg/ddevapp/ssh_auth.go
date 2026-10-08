@@ -167,6 +167,11 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	// The lock is not reentrant, so the network has to exist before it is taken.
 	dockerutil.EnsureDdevNetwork()
 
+	// A download can be slow, so it happens before the lock is taken.
+	if err := dockerutil.Pull(ddevImages.GetSSHAuthImage()); err != nil {
+		return err
+	}
+
 	// Released before the wait for the container to become ready.
 	unlock := dockerutil.AcquireGlobalLock("ddev-ssh-agent setup")
 	defer unlock()
@@ -203,11 +208,6 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 		} else if downErr := downSvc.Down(downCtx, downProject.Name, api.DownOptions{Project: downProject, RemoveOrphans: true}); downErr != nil {
 			util.Warning("failed to docker-compose down on %s: %v", composeFile, downErr)
 		}
-	}
-
-	err = dockerutil.Pull(ddevImages.GetSSHAuthImage())
-	if err != nil {
-		return err
 	}
 
 	// Now restart ddev-ssh-agent
