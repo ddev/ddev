@@ -25,11 +25,14 @@ import (
 	"github.com/moby/moby/api/types/container"
 )
 
-// RouterComposeProjectName is the docker-compose project name of ~/.ddev/.router-compose.yaml
+// RouterComposeProjectName is the docker-compose project name of ~/.ddev/.router-compose.yaml.
+// MinRouterSubstitutePort and MaxRouterSubstitutePort bound the router's
+// substitute ports, kept below the kernel's ephemeral range for the same reason
+// as MinHostPort.
 const (
 	RouterComposeProjectName = "ddev-router"
-	MinEphemeralPort         = 33000
-	MaxEphemeralPort         = 35000
+	MinRouterSubstitutePort  = 30000
+	MaxRouterSubstitutePort  = 32000
 )
 
 // EphemeralRouterPortsAssigned is used when we have assigned an ephemeral port
@@ -38,10 +41,10 @@ const (
 var EphemeralRouterPortsAssigned = make(map[int]bool)
 
 // RouterPortSubstitutionsLabel records which ephemeral port stands in for
-// which standard router port, as "80=33000,443=33001".
+// which standard router port, as "80=30000,443=30001".
 //
 // The router binds ephemeral substitutes as <port>:<port>, so nothing else on
-// the container says that 33000 is the specified alternate for port 80. Used by
+// the container says that 30000 is the specified alternate for port 80. Used by
 // GetAvailableRouterPort() to keep a substitute after the process occupying
 // the standard port goes away.
 const RouterPortSubstitutionsLabel = "com.ddev.router-port-substitutions"
@@ -662,7 +665,7 @@ func CheckRouterPorts(activeApps []*DdevApp) error {
 		// Let Docker report any real conflicts.
 		// See https://github.com/ddev/ddev/issues/7921
 		freePortsAvailable := false
-		for p := MinEphemeralPort; p <= MaxEphemeralPort; p++ {
+		for p := MinRouterSubstitutePort; p <= MaxRouterSubstitutePort; p++ {
 			if !netutil.IsPortActive(fmt.Sprint(p)) {
 				freePortsAvailable = true
 				break
@@ -704,8 +707,7 @@ func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
 			EphemeralRouterPortsAssigned[p] = true
 			return p, true
 		}
-		// If the port is not active (available), use it
-		if !netutil.IsPortActive(portStr) {
+		if isRouterSubstitutePortFree(p) {
 			EphemeralRouterPortsAssigned[p] = true
 			return p, true
 		}
@@ -714,8 +716,22 @@ func AllocateAvailablePortForRouter(start, upTo int) (int, bool) {
 	return 0, false
 }
 
+// isRouterSubstitutePortFree binds p on the router's host address where that
+// shows what the engine will see, which also catches a port held by a socket
+// that isn't listening. Otherwise it falls back to dialing.
+func isRouterSubstitutePortFree(p int) bool {
+	if !dockerutil.CanCheckHostPortsLocally() {
+		return !netutil.IsPortActive(strconv.Itoa(p))
+	}
+	hostIP, _ := dockerutil.GetDockerIP()
+	if globalconfig.DdevGlobalConfig.RouterBindAllInterfaces {
+		hostIP = "0.0.0.0"
+	}
+	return netutil.IsHostPortFree(hostIP, p)
+}
+
 // parseRouterPortSubstitutions parses a RouterPortSubstitutionsLabel value of
-// the form "80=33000,443=33001" into a proposedPort → ephemeralPort map.
+// the form "80=30000,443=30001" into a proposedPort → ephemeralPort map.
 func parseRouterPortSubstitutions(labelValue string) map[string]string {
 	subs := make(map[string]string)
 	for pair := range strings.SplitSeq(labelValue, ",") {
@@ -818,7 +834,7 @@ func GetAvailableRouterPort(proposedPort string, minPort, maxPort int) (string, 
 // GetEphemeralPortsIfNeeded replaces the provided ports with an ephemeral version if they need it.
 func GetEphemeralPortsIfNeeded(ports []*string, verbose bool) {
 	for _, port := range ports {
-		proposedPort, replacementPort, portChangeRequired := GetAvailableRouterPort(*port, MinEphemeralPort, MaxEphemeralPort)
+		proposedPort, replacementPort, portChangeRequired := GetAvailableRouterPort(*port, MinRouterSubstitutePort, MaxRouterSubstitutePort)
 		if portChangeRequired {
 			*port = replacementPort
 			if verbose {

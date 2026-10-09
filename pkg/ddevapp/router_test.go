@@ -172,7 +172,7 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 	localIP, _ := dockerutil.GetDockerIP()
 
 	// Get a random port number in the dynamic port range
-	startPort := ddevapp.MinEphemeralPort + rand.Intn(500)
+	startPort := ddevapp.MinRouterSubstitutePort + rand.Intn(500)
 	goodEndPort := startPort + 3
 	badEndPort := startPort + 2
 
@@ -196,6 +196,25 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 	port, ok := ddevapp.AllocateAvailablePortForRouter(startPort, goodEndPort)
 	require.True(t, ok)
 	require.Equal(t, startPort+3, port)
+
+	// On Linux the local end of an outgoing connection blocks a bind to its port
+	// but doesn't answer a dial, so only a bind test catches it. macOS allows
+	// that bind, for the engine too, so the port is usable there. Where DDEV
+	// can't bind-test host ports locally it dials instead, which misses this.
+	if !nodeps.IsLinux() || !dockerutil.CanCheckHostPortsLocally() {
+		return
+	}
+	connectedPort := startPort + 4
+	dialer := net.Dialer{LocalAddr: &net.TCPAddr{IP: net.ParseIP(localIP), Port: connectedPort}}
+	conn, err := dialer.Dial("tcp", l0.Addr().String())
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		_ = conn.Close()
+	})
+	require.False(t, netutil.IsPortActive(strconv.Itoa(connectedPort)))
+	port, ok = ddevapp.AllocateAvailablePortForRouter(connectedPort, connectedPort+1)
+	require.True(t, ok)
+	require.Equal(t, connectedPort+1, port)
 }
 
 // isDockerHostPortRaceError detects a Docker-level host port bind collision.
@@ -322,10 +341,10 @@ func TestUseEphemeralPort(t *testing.T) {
 		} {
 			portNum, err := strconv.Atoi(p.port)
 			require.NoError(t, err)
-			require.GreaterOrEqual(t, portNum, ddevapp.MinEphemeralPort,
-				"app %d (%s) %s port %d is below the ephemeral range", i, app.Name, p.scheme, portNum)
-			require.LessOrEqual(t, portNum, ddevapp.MaxEphemeralPort,
-				"app %d (%s) %s port %d is above the ephemeral range", i, app.Name, p.scheme, portNum)
+			require.GreaterOrEqual(t, portNum, ddevapp.MinRouterSubstitutePort,
+				"app %d (%s) %s port %d is below the router substitute port range", i, app.Name, p.scheme, portNum)
+			require.LessOrEqual(t, portNum, ddevapp.MaxRouterSubstitutePort,
+				"app %d (%s) %s port %d is above the router substitute port range", i, app.Name, p.scheme, portNum)
 			claimant := fmt.Sprintf("app %d (%s) %s", i, app.Name, p.scheme)
 			require.NotContains(t, assignedPorts, portNum,
 				"%s got port %d, which was already assigned to %s", claimant, portNum, assignedPorts[portNum])

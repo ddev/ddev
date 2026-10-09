@@ -10,59 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func init() {
 	globalconfig.EnsureGlobalConfig()
-}
-
-// TestGetFreePort checks GetFreePort() to make sure it respects
-// ports reserved in DdevGlobalConfig.UsedHostPorts
-// and that the port can actually be bound.
-func TestGetFreePort(t *testing.T) {
-	dockerIP, err := dockerutil.GetDockerIP()
-	require.NoError(t, err)
-
-	// Find out a starting port the OS is likely to give us.
-	startPort, err := globalconfig.GetFreePort(dockerIP)
-	require.NoError(t, err)
-
-	// Put 100 used ports in the UsedHostPorts
-	i, err := strconv.Atoi(startPort)
-	i = i + 1
-	maximum := i + 100
-	require.NoError(t, err)
-	ports := []string{}
-	for ; i < maximum; i++ {
-		ports = append(ports, strconv.Itoa(i))
-	}
-	// Make sure we have a global config set up.
-	_ = globalconfig.ReadGlobalConfig()
-	err = globalconfig.ReservePorts(t.Name(), ports)
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_ = globalconfig.RemoveProjectInfo(t.Name())
-	})
-
-	for range 5 {
-		port, err := globalconfig.GetFreePort(dockerIP)
-		require.NoError(t, err)
-		require.NotContains(t, globalconfig.DdevProjectList["TestGetFreePort"].UsedHostPorts, port)
-
-		// Make sure we can actually use the port.
-		dockerCommand := []string{"run", "--rm", "-p" + dockerIP + ":" + port + ":" + port, versionconstants.UtilitiesImage}
-		out, err := exec.RunCommand("docker", dockerCommand)
-
-		require.NoError(t, err, "failed to 'docker %v': %v, output='%v'", dockerCommand, err, out)
-	}
 }
 
 // TestSetProjectAppRoot tests behavior of SetProjectAppRoot

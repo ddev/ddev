@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -926,30 +927,52 @@ func addBoundHostPorts(portMap map[string]bool, m network.PortMap) {
 	}
 }
 
-// GetBoundHostPorts takes a container pointer and returns an array
-// of exposed ports (and error)
-func GetBoundHostPorts(containerID string) ([]string, error) {
+// GetContainerPortBindings returns the host port bindings of a container,
+// whether or not it is running.
+func GetContainerPortBindings(containerID string) (network.PortMap, error) {
 	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
 	}
 	inspectInfo, err := apiClient.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
+	if err != nil {
+		return nil, err
+	}
 
+	var configured, actual network.PortMap
+	if inspectInfo.Container.HostConfig != nil {
+		configured = inspectInfo.Container.HostConfig.PortBindings
+	}
+	if inspectInfo.Container.NetworkSettings != nil {
+		actual = inspectInfo.Container.NetworkSettings.Ports
+	}
+	return mergePortBindings(configured, actual), nil
+}
+
+// mergePortBindings returns the configured bindings, taking a port's actual
+// binding when its configured host port is empty: the engine chose it, or the
+// provider (socktainer/Apple Container) leaves PortBindings empty on inspect.
+func mergePortBindings(configured, actual network.PortMap) network.PortMap {
+	merged := network.PortMap{}
+	maps.Copy(merged, configured)
+	for port, bindings := range actual {
+		if !slices.ContainsFunc(merged[port], func(b network.PortBinding) bool { return b.HostPort != "" }) {
+			merged[port] = bindings
+		}
+	}
+	return merged
+}
+
+// GetBoundHostPorts takes a container pointer and returns an array
+// of exposed ports (and error)
+func GetBoundHostPorts(containerID string) ([]string, error) {
+	bindings, err := GetContainerPortBindings(containerID)
 	if err != nil {
 		return nil, err
 	}
 
 	portMap := map[string]bool{}
-
-	if inspectInfo.Container.HostConfig != nil {
-		addBoundHostPorts(portMap, inspectInfo.Container.HostConfig.PortBindings)
-	}
-	// HostConfig.PortBindings is the binding that was *requested*; providers that
-	// leave it empty on inspect (seen on socktainer/Apple Container) still report
-	// the ports actually bound in NetworkSettings.Ports, so fall back to that.
-	if len(portMap) == 0 && inspectInfo.Container.NetworkSettings != nil {
-		addBoundHostPorts(portMap, inspectInfo.Container.NetworkSettings.Ports)
-	}
+	addBoundHostPorts(portMap, bindings)
 	var ports []string
 	for k := range portMap {
 		ports = append(ports, k)

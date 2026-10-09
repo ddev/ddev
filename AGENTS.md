@@ -137,6 +137,9 @@ Go 1.27 or newer, per `go.mod`. Modules with vendored dependencies checked into
 - **Never leave trailing whitespace.** Blank lines must be completely empty.
 - Match the file's existing indentation and line-ending style.
 - **Prefer `require` over `assert`** in tests.
+- Test the host OS with `nodeps.IsLinux()`, `nodeps.IsMacOS()`,
+  `nodeps.IsWindows()`, and `nodeps.IsWSL2()` rather than comparing
+  `runtime.GOOS` directly. `IsLinux()` is also true inside WSL2.
 - Make surgical, minimal changes that maintain compatibility.
 - Never commit secrets. Amplitude API keys are injected at build time.
 
