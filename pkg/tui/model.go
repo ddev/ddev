@@ -70,7 +70,8 @@ type AppModel struct {
 
 	// Confirmation overlay
 	confirming    bool
-	confirmAction string // "start-all", "stop-all", or "poweroff"
+	confirmAction string // "start-all", "stop-all", "poweroff", or "delete"
+	confirmTarget string
 
 	// Viewports for scrolling
 	dashboardViewport viewport.Model
@@ -381,10 +382,27 @@ func (m AppModel) isLoading() bool {
 func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// Confirmation overlay takes priority
 	if m.confirming {
-		if key.Matches(msg, m.keys.Confirm) {
-			action := m.confirmAction
+		action := m.confirmAction
+		target := m.confirmTarget
+		if action == "delete" {
+			if key.Matches(msg, m.keys.Confirm) {
+				m.confirming = false
+				m.confirmAction = ""
+				m.confirmTarget = ""
+				m = m.enterOperationView(fmt.Sprintf("Deleting %s", target), viewDashboard)
+				return m, deleteStreamCmd("", "delete", "-y", target)
+			}
+			if key.Matches(msg, key.NewBinding(key.WithKeys("o", "O"))) {
+				m.confirming = false
+				m.confirmAction = ""
+				m.confirmTarget = ""
+				m = m.enterOperationView(fmt.Sprintf("Deleting %s (omit snapshot)", target), viewDashboard)
+				return m, deleteStreamCmd("", "delete", "-y", "-O", target)
+			}
+		} else if key.Matches(msg, m.keys.Confirm) {
 			m.confirming = false
 			m.confirmAction = ""
+			m.confirmTarget = ""
 			switch action {
 			case "start-all":
 				m = m.enterOperationView("Starting all projects", viewDashboard)
@@ -400,6 +418,7 @@ func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		// Any other key cancels
 		m.confirming = false
 		m.confirmAction = ""
+		m.confirmTarget = ""
 		m.statusMsg = ""
 		return m, nil
 	}
@@ -545,6 +564,15 @@ func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.statusMsg = "Poweroff all DDEV projects and containers? (y to confirm, any key to cancel)"
 		return m, nil
 
+	case key.Matches(msg, m.keys.Delete):
+		if p := m.selectedProject(); p != nil {
+			m.confirming = true
+			m.confirmAction = "delete"
+			m.confirmTarget = p.Name
+			m.statusMsg = fmt.Sprintf("Delete project '%s'? (y = delete project, keep a snapshot, o = delete project & omit snapshot, n/esc = cancel)", p.Name)
+			return m, nil
+		}
+
 	case key.Matches(msg, m.keys.StartAll):
 		if len(m.projects) > 0 {
 			m.confirming = true
@@ -586,6 +614,34 @@ func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	// Confirmation overlay takes priority
+	if m.confirming {
+		action := m.confirmAction
+		target := m.confirmTarget
+		if action == "delete" {
+			if key.Matches(msg, m.keys.Confirm) {
+				m.confirming = false
+				m.confirmAction = ""
+				m.confirmTarget = ""
+				m = m.enterOperationView(fmt.Sprintf("Deleting %s", target), viewDashboard)
+				return m, deleteStreamCmd("", "delete", "-y", target)
+			}
+			if key.Matches(msg, key.NewBinding(key.WithKeys("o", "O"))) {
+				m.confirming = false
+				m.confirmAction = ""
+				m.confirmTarget = ""
+				m = m.enterOperationView(fmt.Sprintf("Deleting %s (omit snapshot)", target), viewDashboard)
+				return m, deleteStreamCmd("", "delete", "-y", "-O", target)
+			}
+		}
+		// Any other key cancels
+		m.confirming = false
+		m.confirmAction = ""
+		m.confirmTarget = ""
+		m.statusMsg = ""
+		return m, nil
+	}
+
 	var cmd tea.Cmd
 
 	switch {
@@ -675,6 +731,15 @@ func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, m.openProjectCmd(msg, m.detail.AppRoot)
 		}
 
+	case key.Matches(msg, m.keys.Delete):
+		if m.detail != nil {
+			m.confirming = true
+			m.confirmAction = "delete"
+			m.confirmTarget = m.detail.Name
+			m.statusMsg = fmt.Sprintf("Delete project '%s'? (y = delete project, keep a snapshot, o = delete project & omit snapshot, n/esc = cancel)", m.detail.Name)
+			return m, nil
+		}
+
 	case key.Matches(msg, m.keys.Quit):
 		return m, tea.Quit
 	}
@@ -682,16 +747,24 @@ func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// Indirections so tests can observe what the open and delete keys request
+// without launching anything.
+var (
+	deleteStreamCmd   = startOperationStreamCmd
+	openTargetCmd     = openTarget
+	openInPhpStormCmd = openInPhpStorm
+)
+
 // openProjectCmd opens appRoot in the file manager or an editor, depending
 // on which open key was pressed.
 func (m AppModel) openProjectCmd(msg tea.KeyPressMsg, appRoot string) tea.Cmd {
 	switch {
 	case key.Matches(msg, m.keys.OpenVSC):
-		return openTarget("VS Code", editorURL("vscode", appRoot))
+		return openTargetCmd("VS Code", editorURL("vscode", appRoot))
 	case key.Matches(msg, m.keys.OpenPhpS):
-		return openInPhpStorm(appRoot)
+		return openInPhpStormCmd(appRoot)
 	}
-	return openTarget("directory", appRoot)
+	return openTargetCmd("directory", appRoot)
 }
 
 func (m AppModel) handleLogKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
@@ -1394,6 +1467,7 @@ func (m AppModel) dashboardKeyHints() string {
 		{"s", "start"},
 		{"S", "stop"},
 		{"r", "restart"},
+		{"delete", "delete"},
 		{"a", "start all"},
 		{"A", "stop all"},
 		{"P", "poweroff"},
@@ -1418,6 +1492,7 @@ func (m AppModel) detailKeyHints() string {
 		{"s", "start"},
 		{"S", "stop"},
 		{"r", "restart"},
+		{"delete", "delete"},
 		{"l", "launch"},
 		{"m", "mailpit"},
 		{"x", "xhgui"},
@@ -1481,6 +1556,7 @@ Actions:
   s               Start selected project
   S               Stop selected project
   r               Restart selected project
+  delete          Delete selected project
   a               Start all projects
   A               Stop all projects
   P               Poweroff all DDEV projects and containers
