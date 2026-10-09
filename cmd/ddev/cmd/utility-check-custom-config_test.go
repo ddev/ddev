@@ -146,6 +146,22 @@ func TestUtilityCheckCustomConfigCmd(t *testing.T) {
 		require.Contains(t, out, "router-compose.custom.yaml")
 	})
 
+	// Test global_config.*.yaml
+	t.Run("global_config override", func(t *testing.T) {
+		customGlobalConfig := filepath.Join(globalconfig.GetGlobalDdevDir(), "global_config.custom.yaml")
+		err := os.WriteFile(customGlobalConfig, []byte("# Custom global config\n"), 0644)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_ = os.Remove(customGlobalConfig)
+		})
+
+		out, err := exec.RunCommand(DdevBin, []string{"utility", "check-custom-config"})
+		require.NoError(t, err)
+		require.Contains(t, out, "Custom configuration detected in project '"+projectName+"':")
+		require.Contains(t, out, "Config (global)")
+		require.Contains(t, out, "global_config.custom.yaml")
+	})
+
 	// Test global ssh-auth-compose
 	t.Run("global ssh-auth-compose", func(t *testing.T) {
 		globalDdevDir := globalconfig.GetGlobalDdevDir()
