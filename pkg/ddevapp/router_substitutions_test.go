@@ -27,9 +27,9 @@ func TestParseFormatRouterPortSubstitutions(t *testing.T) {
 // TestKnownRouterPortSubstitutions checks that the router label and the
 // in-process map are merged, with the in-process map winning on conflict.
 func TestKnownRouterPortSubstitutions(t *testing.T) {
-	origSubstitutions := RouterPortEphemeralSubstitutions
+	origSubstitutions := RouterPortSubstitutions
 	t.Cleanup(func() {
-		RouterPortEphemeralSubstitutions = origSubstitutions
+		RouterPortSubstitutions = origSubstitutions
 	})
 
 	router := &container.Summary{
@@ -38,18 +38,18 @@ func TestKnownRouterPortSubstitutions(t *testing.T) {
 		},
 	}
 
-	RouterPortEphemeralSubstitutions = map[string]string{}
+	RouterPortSubstitutions = map[string]string{}
 	require.Equal(t, map[string]string{"80": "30000", "443": "30001"}, knownRouterPortSubstitutions(router))
 
 	// nil router yields only the in-process entries
-	RouterPortEphemeralSubstitutions = map[string]string{"8025": "30002"}
+	RouterPortSubstitutions = map[string]string{"8025": "30002"}
 	require.Equal(t, map[string]string{"8025": "30002"}, knownRouterPortSubstitutions(nil))
 
 	// In-process entries overlay the label and win on conflict
-	RouterPortEphemeralSubstitutions = map[string]string{"80": "30005", "8025": "30002"}
+	RouterPortSubstitutions = map[string]string{"80": "30005", "8025": "30002"}
 	require.Equal(t, map[string]string{"80": "30005", "443": "30001", "8025": "30002"}, knownRouterPortSubstitutions(router))
 
 	// Router without the label contributes nothing
-	RouterPortEphemeralSubstitutions = map[string]string{}
+	RouterPortSubstitutions = map[string]string{}
 	require.Equal(t, map[string]string{}, knownRouterPortSubstitutions(&container.Summary{Labels: map[string]string{}}))
 }
