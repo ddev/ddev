@@ -351,6 +351,33 @@ func TestContainerWait(t *testing.T) {
 	require.NoError(t, err, "output=%s", out)
 }
 
+func TestContainerWaitShowsLogsInCI(t *testing.T) {
+	origDebug := globalconfig.DdevDebug
+	globalconfig.DdevDebug = false
+	t.Cleanup(func() { globalconfig.DdevDebug = origDebug })
+
+	labels := map[string]string{"test": "failedlogsinci"}
+	_ = dockerutil.RemoveContainersByLabels(labels)
+	cID, _, err := dockerutil.RunSimpleContainer(versionconstants.UtilitiesImage, t.Name()+"-"+util.RandString(5), []string{"sh", "-c", "echo FAILED_CONTAINER_MARKER; exit 1"}, nil, nil, nil, "0", false, true, labels, nil, nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = dockerutil.RemoveContainer(cID) })
+
+	for _, ci := range []string{"true", "false"} {
+		t.Setenv("CI", ci)
+		capture := util.CaptureUserErr()
+		_, err = dockerutil.ContainerWait(5, labels)
+		out := capture()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "container exited")
+		if ci == "true" {
+			require.Contains(t, out, "Logs from failed")
+			require.Contains(t, out, "FAILED_CONTAINER_MARKER")
+		} else {
+			require.NotContains(t, out, "FAILED_CONTAINER_MARKER")
+		}
+	}
+}
+
 // TestGetAppContainers looks for container with sitename dockerutils-test
 func TestGetAppContainers(t *testing.T) {
 	assert := asrt.New(t)

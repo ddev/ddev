@@ -42,6 +42,8 @@ Two environment variables meant for DDEV development may also be useful for broa
 
 You can set either one in your current session by running `export DDEV_DEBUG=true` and `export DDEV_VERBOSE=true`.
 
+Logs from a container that fails to start are printed with `DDEV_DEBUG=true` or `CI=true`.
+
 ## Front-End Development Tools
 
 ### Vite Issues
