@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -44,10 +45,14 @@ func TestShareCmdNgrok(t *testing.T) {
 	site := TestSites[0]
 	defer site.Chdir()()
 
+	// Start the project first, so the tunnel wait below does not include image builds
+	err = exec.Command(DdevBin, "start").Run()
+	require.NoError(t, err)
+
 	cmd := exec.Command(DdevBin, "share", "--provider=ngrok")
 	// Enable debug output to get verbose ngrok.sh logging
 	cmd.Env = append(os.Environ(), "DDEV_DEBUG=true")
-	var stdoutBuf, stderrBuf strings.Builder
+	var stdoutBuf, stderrBuf syncBuffer
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
 
@@ -172,8 +177,11 @@ func TestShareCmdCloudflared(t *testing.T) {
 	site := TestSites[0]
 	defer site.Chdir()()
 
+	err = exec.Command(DdevBin, "start").Run()
+	require.NoError(t, err)
+
 	cmd := exec.Command(DdevBin, "share", "--provider=cloudflared")
-	var stdoutBuf, stderrBuf strings.Builder
+	var stdoutBuf, stderrBuf syncBuffer
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
 
@@ -275,10 +283,13 @@ sleep 2
 			_ = os.Remove(mockPath)
 		})
 
-		runShare := func(noColor string) string {
+		expectedQR := strings.ReplaceAll(string(expectedQRCode), "\r\n", "\n")
+		expectedNoColorQR := strings.ReplaceAll(string(expectedNoColorQRCode), "\r\n", "\n")
+
+		runShare := func(noColor string, wantContent string) string {
 			t.Setenv("NO_COLOR", noColor)
 			cmd := exec.Command(DdevBin, "share", "--provider=mock-test")
-			var stdoutBuf, stderrBuf strings.Builder
+			var stdoutBuf, stderrBuf syncBuffer
 			cmd.Stdout = &stdoutBuf
 			cmd.Stderr = &stderrBuf
 
@@ -290,8 +301,8 @@ sleep 2
 				_ = cmd.Wait()
 			})
 
-			// Wait for provider to output URL and ddev share to capture/display it
-			time.Sleep(3 * time.Second)
+			// ddev share can take several seconds to launch the provider on slow hosts
+			waitErr := waitForContent(&stdoutBuf, wantContent, 30*time.Second)
 
 			// Kill the share command to end the test
 			err = pKill(cmd)
@@ -300,15 +311,16 @@ sleep 2
 
 			t.Logf("Stdout output with NO_COLOR=%s:\n%s", noColor, stdoutBuf.String())
 			t.Logf("Stderr output with NO_COLOR=%s:\n%s", noColor, stderrBuf.String())
+			require.NoError(t, waitErr)
 			return strings.ReplaceAll(stdoutBuf.String(), "\r\n", "\n")
 		}
 
-		stdoutOutput := runShare("")
+		stdoutOutput := runShare("", expectedQR)
 		// util.Success() writes to stdout, not stderr
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 		require.Contains(t, stdoutOutput, "mock-test-tunnel")
-		require.Contains(t, stdoutOutput, strings.ReplaceAll(string(expectedQRCode), "\r\n", "\n"))
-		require.Contains(t, runShare("1"), strings.ReplaceAll(string(expectedNoColorQRCode), "\r\n", "\n"))
+		require.Contains(t, stdoutOutput, expectedQR)
+		require.Contains(t, runShare("1", expectedNoColorQR), expectedNoColorQR)
 	})
 
 	// Test 2: Verify hooks have access to DDEV_SHARE_URL
@@ -402,7 +414,7 @@ sleep 2
 
 		// Test flag overrides config
 		cmd = exec.Command(DdevBin, "share", "--provider=flag-provider")
-		var stdoutBuf, stderrBuf strings.Builder
+		var stdoutBuf, stderrBuf syncBuffer
 		cmd.Stdout = &stdoutBuf
 		cmd.Stderr = &stderrBuf
 
@@ -458,7 +470,7 @@ sleep 2
 		})
 
 		cmd := exec.Command(DdevBin, "share", "--provider=args-test", "--provider-args=--custom-flag value123")
-		var stdoutBuf, stderrBuf strings.Builder
+		var stdoutBuf, stderrBuf syncBuffer
 		cmd.Stdout = &stdoutBuf
 		cmd.Stderr = &stderrBuf
 
@@ -490,6 +502,39 @@ sleep 2
 
 // pKill kills a started cmd; If windows, it shells out to the
 // taskkill command.
+// syncBuffer is a strings.Builder that is safe to read while a running
+// command is still writing to it.
+type syncBuffer struct {
+	mu sync.Mutex
+	b  strings.Builder
+}
+
+func (s *syncBuffer) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Write(p)
+}
+
+func (s *syncBuffer) String() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.String()
+}
+
+// waitForContent polls buf until it contains want, ignoring CRLF differences.
+func waitForContent(buf *syncBuffer, want string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	for {
+		if strings.Contains(strings.ReplaceAll(buf.String(), "\r\n", "\n"), want) {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("output did not contain expected content after %v", timeout)
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+}
+
 func pKill(cmd *exec.Cmd) error {
 	var err error
 	if cmd == nil {
