@@ -468,10 +468,13 @@ func CheckGoroutineOutput(t *testing.T, out string) {
 // normal (non-rootless) Docker. Use it for tests that don't actually check
 // webserver type, Mutagen, or rootless Docker - running them again under each
 // of those special setups just repeats the same check with nothing new to
-// show for it. See ddev/ddev#8696.
+// show for it. Mutagen is checked both ways because DDEV_TEST_USE_MUTAGEN sets
+// only each project's performance_mode, while the global config carries the
+// macOS/Windows default. See ddev/ddev#8696 and ddev/ddev#8919.
 func SkipUnlessDefaultEnvironment(t *testing.T) {
 	if nodeps.WebserverDefault != nodeps.WebserverNginxFPM ||
 		nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
+		globalconfig.DdevGlobalConfig.IsMutagenEnabled() ||
 		nodeps.NoBindMountsDefault ||
 		dockerutil.IsPodman() || dockerutil.IsDockerRootless() {
 		t.Skip("skipping: this test doesn't depend on webserver type, Mutagen, or rootless Docker, so it only needs to run once, under the plain default setup; see ddev/ddev#8696")
