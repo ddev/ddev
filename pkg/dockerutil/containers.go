@@ -455,7 +455,12 @@ func getSuggestedCommandForContainerLog(c *container.Summary, timeout int) (stri
 		timeoutCommand, _ := util.ArrayToReadableOutput([]string{fmt.Sprintf("ddev config --default-container-timeout=%d && ddev restart", timeout*2)})
 		suggestedCommand = suggestedCommand + timeoutNote + timeoutCommand
 	}
-	if globalconfig.DdevDebug {
+	// In CI the containers are usually removed before anyone can run the commands above
+	if (globalconfig.DdevDebug || os.Getenv("CI") == "true") && !output.JSONOutput {
+		// output.StartWait() leaves its line open unless DDEV_DEBUG is set
+		if !globalconfig.DdevDebug {
+			_, _ = fmt.Fprintln(os.Stdout)
+		}
 		ctx, apiClient, err := GetDockerClient()
 		if err == nil {
 			var stdout bytes.Buffer
@@ -474,10 +479,12 @@ func getSuggestedCommandForContainerLog(c *container.Summary, timeout int) (stri
 				if err != nil {
 					util.Warning("Unable to copy logs from %s container: %v", name, err)
 				}
-				util.Debug("Logs from failed %s container:\n%s\n", name, strings.TrimSpace(stdout.String()))
+				output.UserErr.Warnf("Logs from failed %s container:\n%s", name, strings.TrimSpace(stdout.String()))
 			}
 			_, logOutput := GetContainerHealth(c)
-			util.Debug("Health log from failed %s container:\n%s\n", name, strings.TrimSpace(logOutput))
+			if logOutput = strings.TrimSpace(logOutput); logOutput != "" {
+				output.UserErr.Warnf("Health log from failed %s container:\n%s", name, logOutput)
+			}
 		}
 	}
 	return name, suggestedCommand
