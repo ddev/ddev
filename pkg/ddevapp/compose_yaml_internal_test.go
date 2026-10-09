@@ -5,6 +5,7 @@ import (
 	"net/netip"
 	"strconv"
 	"testing"
+	"time"
 
 	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -84,6 +85,13 @@ func TestExistingContainerHostPortStopped(t *testing.T) {
 		_ = dockerutil.RemoveContainer(containerID)
 	})
 	require.NoError(t, err)
+	// Some providers, such as OrbStack, release the host port a few hundred
+	// milliseconds after the container exits.
+	portNum, err := strconv.Atoi(port)
+	require.NoError(t, err)
+	require.Eventually(t, func() bool {
+		return netutil.IsHostPortFree(hostIP, portNum)
+	}, 5*time.Second, 100*time.Millisecond, "host port %s still bound after the container exited", port)
 
 	p := composeTypes.ServicePortConfig{Target: 80, Protocol: "tcp", HostIP: hostIP}
 	require.Equal(t, port, a.existingContainerHostPort("web", p))
