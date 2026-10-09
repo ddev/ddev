@@ -16,7 +16,6 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -196,7 +195,6 @@ func TestMutagenConfigChange(t *testing.T) {
 	if !nodeps.IsMacOS() {
 		t.Skip("TestMutagenConfigChange runs only on macOS (without Colima), skipping")
 	}
-	testcommon.SkipUnlessDefaultEnvironment(t)
 	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running, perhaps in wrong directory
@@ -282,7 +280,6 @@ func TestMutagenDiagnose(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("TestMutagenDiagnose skipped on Windows")
 	}
-	testcommon.SkipUnlessDefaultEnvironment(t)
 	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running
