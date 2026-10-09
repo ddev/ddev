@@ -2061,10 +2061,10 @@ func (app *DdevApp) start(o StartOptions) error {
 	// At this point we should have all files synced inside the container
 	util.Debug("Running /start.sh in ddev-webserver")
 	stdout, stderr, err := app.Exec(&ExecOpts{
-		// Send output to /var/tmp/logpipe to get it to docker logs
+		// Write to PID 1's stdout so the output reaches docker logs.
 		// If start.sh dies, we want to make sure the container gets killed off
 		// so send SIGTERM to process ID 1
-		Cmd:    `/start.sh > /var/tmp/logpipe 2>&1 || kill -- -1`,
+		Cmd:    `/start.sh >/proc/1/fd/1 2>&1 || kill -- -1`,
 		Detach: true,
 	})
 	if err != nil {
