@@ -404,10 +404,11 @@ func TestStartFailsFastOnFatalWebserver(t *testing.T) {
 	err = os.WriteFile(dockerfile, []byte(`RUN for d in /etc/php/*/fpm/pool.d; do printf "[broken\nthis is not valid\n" > $d/zz-broken.conf; done`+"\n"), 0644)
 	require.NoError(t, err)
 
+	// Starting by name needs the project in the global project list, which earlier tests may have removed
+	t.Chdir(site.Dir)
 	// A failed start exits the process, so it has to run in a separate one
-	out, err := exec.RunHostCommand(DdevBin, "start", app.Name)
+	out, err := exec.RunHostCommand(DdevBin, "start")
 	require.Error(t, err, "output=%s", out)
 	// Without the fast failure, start waits out the healthcheck and reports a timeout instead
 	require.Contains(t, out, "web container exited")
 }
-
