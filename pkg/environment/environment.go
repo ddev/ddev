@@ -3,6 +3,7 @@ package environment
 import (
 	"runtime"
 
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 )
 
@@ -17,6 +18,7 @@ const (
 	DDEVEnvironmentWSL2Bridged     = "wsl2-bridged"
 	DDEVEnvironmentCodespaces      = "codespaces"
 	DDEVEnvironmentDevcontainer    = "devcontainer"
+	DDEVEnvironmentAppleContainer  = "apple-container"
 )
 
 // GetDDEVEnvironment returns the type of environment DDEV is being used in
@@ -29,6 +31,13 @@ func GetDDEVEnvironment() string {
 		e = DDEVEnvironmentDevcontainer
 	case nodeps.IsWSL2():
 		e = wsl2Environment()
+	// Last, so the cases above keep describing where DDEV runs rather than what runs
+	// its containers. "darwin" says nothing useful when the runtime is apple container,
+	// whose constraints differ from every Docker-based provider on the same OS. Reads
+	// a value the Docker manager already cached, and falls back to the OS if the
+	// provider cannot be reached.
+	case dockerutil.IsAppleContainer():
+		e = DDEVEnvironmentAppleContainer
 	}
 
 	return e
