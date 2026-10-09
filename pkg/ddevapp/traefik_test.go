@@ -650,14 +650,14 @@ func TestCustomProjectTraefikConfig(t *testing.T) {
 	})
 
 	// We need a clean set of ports for this test because we're doing a specific alteration
-	// of the traefik config that won't work if the port changes, so avoid ephemeral port use
+	// of the traefik config that won't work if the port changes, so avoid substitute port use
 	ddevapp.PowerOff()
 
 	// Start the project to generate initial Traefik config
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Skip if ephemeral ports are in use due to port conflicts
+	// Skip if substitute ports are in use due to port conflicts
 	// This happens on Lima-based providers when ports 80/443 are already in use
 	httpPort := app.GetPrimaryRouterHTTPPort()
 	httpsPort := app.GetPrimaryRouterHTTPSPort()
