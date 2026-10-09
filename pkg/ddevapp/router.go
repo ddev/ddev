@@ -80,6 +80,12 @@ func IsRouterDisabled(app *DdevApp) bool {
 
 // RemoveRouterContainer stops and removes the ddev-router container.
 func RemoveRouterContainer() error {
+	defer dockerutil.AcquireGlobalLock("ddev-router setup")()
+	return removeRouterContainer()
+}
+
+// removeRouterContainer is RemoveRouterContainer for callers that already hold the global lock.
+func removeRouterContainer() error {
 	_, err := FindDdevRouter()
 	if err != nil {
 		// Router not found, nothing to remove
@@ -97,6 +103,11 @@ func RemoveRouterContainer() error {
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
 	RunUpgradeCheck()
+
+	// The check-then-act below must not interleave with another project's start.
+	// Released before the waits for router health.
+	unlock := dockerutil.AcquireGlobalLock("ddev-router setup")
+	defer unlock()
 
 	// Kill the router if not running or if its image is outdated, so it restarts fresh.
 	// Use HasSuffix to handle registry prefixes (e.g. docker.io/) that Podman includes in image names.
@@ -190,12 +201,14 @@ func StartDdevRouter() error {
 		if err != nil {
 			return fmt.Errorf("failed to push global Traefik config: %v", err)
 		}
+	}
+	unlock()
 
-		// Force the healthcheck to run and wait for Traefik to load the new config.
-		// If this succeeds, the router is already verified healthy with the new
-		// config, so we can skip the ContainerWait polling below.
-		err = ClearRouterHealthcheck()
-		if err != nil {
+	// Force the healthcheck to run and wait for Traefik to load the new config.
+	// If this succeeds, the router is already verified healthy with the new
+	// config, so we can skip the ContainerWait polling below.
+	if !needsRecreation {
+		if err = ClearRouterHealthcheck(); err != nil {
 			return err
 		}
 	}
