@@ -41,6 +41,7 @@ type GlobalConfig struct {
 	DeveloperMode                    bool                        `yaml:"developer_mode,omitempty"`
 	DockerBuildxVersion              string                      `yaml:"docker_buildx_version,omitempty"`
 	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
+	Hooks                            map[string][]map[string]any `yaml:"hooks,omitempty"`
 	InstrumentationOptIn             bool                        `yaml:"instrumentation_opt_in"`
 	InstrumentationQueueSize         int                         `yaml:"instrumentation_queue_size,omitempty"`
 	InstrumentationReportingInterval time.Duration               `yaml:"instrumentation_reporting_interval,omitempty"`
@@ -210,6 +211,10 @@ func ValidateGlobalConfig() error {
 	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
 		output.UserOut.Warnf("\nThe only valid router type is %s, but you have router: %s in your global configuration, using %s instead.\n", types.RouterTypeTraefik, DdevGlobalConfig.Router, types.RouterTypeTraefik)
 		DdevGlobalConfig.Router = types.RouterTypeTraefik
+	}
+
+	if err := ValidateHooks(DdevGlobalConfig.Hooks); err != nil {
+		return fmt.Errorf("invalid hooks in %s: %v", GetGlobalConfigPath(), err)
 	}
 
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
@@ -503,6 +508,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
+
+# hooks:
+#   post-start:
+#     - exec: "echo hello from a global hook"
+# Hooks that run for every project, in addition to the project's own hooks.
+# See https://docs.ddev.com/en/stable/users/configuration/hooks/#global-hooks
 
 # traefik_monitor_port: "10999"
 # Change this only if you're having conflicts with some

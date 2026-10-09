@@ -264,7 +264,7 @@ DDEV-specific lifecycle [hooks](hooks.md) to be executed.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `` | &zwnj;
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Global hooks in `global_config.yaml` run for every project, see [Global Hooks](hooks.md#global-hooks).
 
 ## `host_db_port`
 
@@ -649,6 +649,14 @@ Whether to disable most [`ddev list`](../usage/commands.md#list) and [`ddev desc
 | :octicons-globe-16: global | `false` | Can be `true` or `false`. If you don't like the table lines in `ddev list` or `ddev describe`, you can completely turn them off with `ddev config global --simple-formatting=true`.
 
 When `true`, turns off most table formatting in [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe) and suppresses colorized text everywhere.
+
+## `skip_global_hooks`
+
+Whether to skip the [global hooks](hooks.md#global-hooks) in this project.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | `false` | Can be `true` or `false`. Project hooks still run.
 
 ## `ssh_agent_upstream`
 

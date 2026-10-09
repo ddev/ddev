@@ -14,6 +14,25 @@ hooks:
     - exec: "drush uli"
 ```
 
+## Global Hooks
+
+Hooks that should run for every project on your machine go in the `hooks` section of `$HOME/.ddev/global_config.yaml` (see [global configuration directory](../usage/architecture.md#global-files)), with the same syntax as above:
+
+```yaml
+hooks:
+  post-start:
+    - exec-host: "echo a global hook ran"
+```
+
+For each hook, global tasks run first, then the project's tasks. If a project has a task identical to a global one, the global copy is dropped and the project's task runs in its place, so a hook you already copied into your projects does not run twice.
+
+* A global `exec` task whose `service` is [omitted](config.md#omit_containers) or not running in a project is skipped with a notice, and does not count as a failure even with [`fail_on_hook_fail`](config.md#fail_on_hook_fail).
+* Set [`skip_global_hooks: true`](config.md#skip_global_hooks) in a project's configuration to skip all global hooks there, and use `ddev --skip-hooks` to skip all hooks, global and project.
+* `exec-host` tasks run in the project directory, so use absolute paths or `$HOME` when running a script from your home directory.
+* Global `pre-exec` and `post-exec` hooks run on every [`ddev exec`](../usage/commands.md#exec) and on the commands DDEV runs in containers itself, for example during `ddev start` and `ddev import-db`, so keep them fast. They do not run around `exec` tasks in other hooks.
+* An invalid hook name or task in `global_config.yaml` stops every `ddev` command with an error naming the file, until it is fixed.
+* [`ddev utility check-custom-config`](../usage/commands.md#utility-check-custom-config) and the warning at `ddev start` list global hooks.
+
 ## Supported Command Hooks
 
 * `pre-start`: Hooks into [`ddev start`](../usage/commands.md#start). Execute tasks before the project environment starts.
@@ -26,7 +45,7 @@ hooks:
 * `pre-import-files` and `post-import-files`: Execute tasks before or after files are imported.
 * `pre-composer` and `post-composer`: Execute tasks before or after the `composer` command.
 * `pre-share` and `post-share`: Execute tasks before or after the `share` command.
-* `pre-stop`, `pre-config`, `post-config`, `pre-exec`, `post-exec`, `pre-pull`, `post-pull`, `pre-push`, `post-push`, `pre-snapshot`, `post-snapshot`, `pre-delete-snapshot`, `post-delete-snapshot`, `pre-restore-snapshot`, `post-restore-snapshot`: Execute as the name suggests.
+* `pre-stop`, `pre-config`, `post-config`, `pre-describe`, `post-describe`, `pre-exec`, `post-exec`, `pre-pull`, `post-pull`, `pre-push`, `post-push`, `pre-snapshot`, `post-snapshot`, `pre-delete-snapshot`, `post-delete-snapshot`, `pre-restore-snapshot`, `post-restore-snapshot`: Execute as the name suggests.
 * `post-stop`: Hooks into [`ddev stop`](../usage/commands.md#stop). Execute tasks after the project environment stopped.
 
     !!!tip

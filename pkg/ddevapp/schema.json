@@ -362,6 +362,12 @@
         "post-config": {
           "$ref": "#/definitions/DdevTask"
         },
+        "pre-describe": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-describe": {
+          "$ref": "#/definitions/DdevTask"
+        },
         "pre-exec": {
           "$ref": "#/definitions/DdevTask"
         },
@@ -621,6 +627,10 @@
     "share_provider_args": {
       "description": "Arguments to pass to the share provider when starting a share session.",
       "type": "string"
+    },
+    "skip_global_hooks": {
+      "description": "Whether to skip the hooks defined in the global config for this project.",
+      "type": "boolean"
     },
     "timezone": {
       "description": "Specify timezone for containers and PHP. If unset, DDEV will attempt to derive it from the host system timezone.",
