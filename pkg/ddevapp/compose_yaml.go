@@ -137,11 +137,12 @@ func (app *DdevApp) ReadDockerComposeYAML() error {
 
 // XDdevExtension represents the x-ddev extension data in docker-compose files
 type XDdevExtension struct {
-	DescribeURLPort string `mapstructure:"describe-url-port"`
-	DescribeInfo    string `mapstructure:"describe-info"`
-	SSHShell        string `mapstructure:"ssh-shell"`
-	ContainerUser   string `mapstructure:"container-user"`
-	OmitDdevLabels  bool   `mapstructure:"omit-ddev-labels"`
+	ContainerUser   string   `mapstructure:"container-user"`
+	DescribeInfo    string   `mapstructure:"describe-info"`
+	DescribeURLPort string   `mapstructure:"describe-url-port"`
+	OmitDdevLabels  bool     `mapstructure:"omit-ddev-labels"`
+	PullImages      []string `mapstructure:"pull-images"`
+	SSHShell        string   `mapstructure:"ssh-shell"`
 }
 
 // GetXDdevExtension retrieves the x-ddev extension for a given service from the ComposeYaml
@@ -154,12 +155,19 @@ func (app *DdevApp) GetXDdevExtension(serviceName string) XDdevExtension {
 	// And check for user overrides
 	if app.ComposeYaml != nil && app.ComposeYaml.Services != nil {
 		if composeService, ok := app.ComposeYaml.Services[serviceName]; ok {
-			if found, err := composeService.Extensions.Get("x-ddev", &xDdev); err == nil && found {
+			found, err := composeService.Extensions.Get("x-ddev", &xDdev)
+			if err != nil {
+				util.WarningOnce("Invalid x-ddev in service %s: %v", serviceName, err)
+			}
+			if found {
 				// Trim whitespace from all string fields
+				xDdev.ContainerUser = strings.TrimSpace(xDdev.ContainerUser)
 				xDdev.DescribeInfo = strings.TrimSpace(xDdev.DescribeInfo)
 				xDdev.DescribeURLPort = strings.TrimSpace(xDdev.DescribeURLPort)
+				for i, image := range xDdev.PullImages {
+					xDdev.PullImages[i] = strings.TrimSpace(image)
+				}
 				xDdev.SSHShell = strings.TrimSpace(xDdev.SSHShell)
-				xDdev.ContainerUser = strings.TrimSpace(xDdev.ContainerUser)
 			}
 		}
 	}
@@ -206,7 +214,8 @@ func injectDdevLabels(project *composeTypes.Project, app *DdevApp) {
 	labels := GetDdevLabels(app)
 	for name, service := range project.Services {
 		var x XDdevExtension
-		if found, err := service.Extensions.Get("x-ddev", &x); err == nil && found && x.OmitDdevLabels {
+		// The error is ignored because omit-ddev-labels still decodes when another field doesn't
+		if found, _ := service.Extensions.Get("x-ddev", &x); found && x.OmitDdevLabels {
 			continue // user opted this service out of DDEV labels
 		}
 		if service.Labels == nil {

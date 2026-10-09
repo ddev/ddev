@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
+	"reflect"
 	"slices"
 	"time"
 
@@ -131,7 +133,45 @@ func builtImagesExist(project *composeTypes.Project, services []string) bool {
 }
 
 func imageExists(project *composeTypes.Project, name string, service composeTypes.ServiceConfig) bool {
-	service.Name = name
-	exists, err := dockerutil.ImageExistsLocally(api.GetImageNameOrDefault(service, project.Name))
+	exists, err := dockerutil.ImageExistsLocally(builtImageName(project, name, service))
 	return err == nil && exists
+}
+
+// builtImageName returns the tag of the image compose builds for a service.
+func builtImageName(project *composeTypes.Project, name string, service composeTypes.ServiceConfig) string {
+	service.Name = name
+	return api.GetImageNameOrDefault(service, project.Name)
+}
+
+// isBuiltImage reports whether a service in the project builds image.
+func isBuiltImage(project *composeTypes.Project, image string) bool {
+	if project == nil || image == "" {
+		return false
+	}
+	for name, service := range project.Services {
+		if service.Build != nil && builtImageName(project, name, service) == image {
+			return true
+		}
+	}
+	return false
+}
+
+// buildTagCollisions returns, by tag, the services that build different images
+// under the same tag, so they all run whichever was built last. Services with
+// the same build config share an image on purpose.
+func buildTagCollisions(project *composeTypes.Project) map[string][]string {
+	builders := map[string][]string{}
+	for _, name := range slices.Sorted(maps.Keys(project.Services)) {
+		if service := project.Services[name]; service.Build != nil {
+			image := builtImageName(project, name, service)
+			builders[image] = append(builders[image], name)
+		}
+	}
+	maps.DeleteFunc(builders, func(_ string, names []string) bool {
+		first := project.Services[names[0]].Build
+		return !slices.ContainsFunc(names[1:], func(name string) bool {
+			return !reflect.DeepEqual(project.Services[name].Build, first)
+		})
+	})
+	return builders
 }
