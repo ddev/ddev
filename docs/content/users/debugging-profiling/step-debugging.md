@@ -93,7 +93,9 @@ If you encounter the error: "Can't find a source position. Server with name 'SIT
 
 ## Path Mapping and Skipping Files
 
-Xdebug 3.5 and newer can translate container paths to host paths itself. While Xdebug is enabled, DDEV writes `.xdebug/ddev-generated.map` in the project, mapping `/var/www/html/` to the project's directory on the host. It removes the file when Xdebug is disabled, and the file is excluded from Git by a `.xdebug/.gitignore` that DDEV also generates. DDEV skips this when `xdebug_ide_location` is set, on Windows and WSL2, in Codespaces and dev containers, and with a remote Docker host, because the IDE may not see the project at that path.
+With PHP 8.0 and newer, Xdebug translates container paths to host paths itself, so your IDE sees the files at their real location. While Xdebug is enabled, DDEV writes `.xdebug/ddev-generated.map` in the project, mapping `/var/www/html/` to the project's directory on the host, along with a `.xdebug/.gitignore` that keeps both files out of Git. DDEV removes them when Xdebug is disabled or the project is stopped. It skips this when `xdebug_ide_location` is set, on Windows and WSL2, in Codespaces and dev containers, and with a remote Docker host, because the IDE may not see the project at that path.
+
+Keep any path mapping your IDE already has. Xdebug only finds the map for scripts within two directories of the project root, which covers `web/index.php` and `vendor/bin/drush` but not a deeper docroot, and paths it doesn't map reach the IDE unchanged.
 
 To have Xdebug skip files such as dependencies, add your own map file, for example `.xdebug/skip-vendor.map`:
 

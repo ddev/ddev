@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 export PATH=$PATH:/usr/sbin:/sbin
 phpdismod xdebug
-rm -f /var/www/html/.xdebug/ddev-generated.map /var/www/html/.xdebug/.gitignore 2>/dev/null
+for f in /var/www/html/.xdebug/ddev-generated.map /var/www/html/.xdebug/.gitignore; do
+  grep -qs '#ddev-generated' "${f}" && rm -f "${f}"
+done
 rmdir /var/www/html/.xdebug 2>/dev/null || true
 if [ "${DDEV_WEBSERVER_TYPE:-}" = "generic" ]; then
   # we don't know what process is running php, restart all web_extra_daemons

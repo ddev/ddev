@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 export PATH=$PATH:/usr/sbin:/sbin
 phpenmod xdebug
-# Let Xdebug translate container paths to host paths, so IDEs need no pathMappings.
-# Best-effort: a failure here must never prevent enabling Xdebug.
-if [ "${DDEV_XDEBUG_PATH_MAPPING:-}" = "true" ] && [ -n "${DDEV_HOST_APPROOT:-}" ]; then
-  mkdir -p /var/www/html/.xdebug 2>/dev/null &&
-    printf "/var/www/html/ = %s/\n" "${DDEV_HOST_APPROOT}" >/var/www/html/.xdebug/ddev-generated.map 2>/dev/null &&
-    printf "# #ddev-generated\n/ddev-generated.map\n/.gitignore\n" >/var/www/html/.xdebug/.gitignore 2>/dev/null || true
-fi
 if ! php -m 2>/dev/null | grep -qx xdebug; then
   phpdismod xdebug || true
   echo "Xdebug is unavailable for PHP ${DDEV_PHP_VERSION:-current} in this web image." >&2
   exit 1
+fi
+# Let Xdebug translate container paths to host paths, so IDEs need no pathMappings.
+# Best-effort: a failure here must never prevent enabling Xdebug.
+# A file without the #ddev-generated signature belongs to the user and is left alone.
+if [ "${DDEV_XDEBUG_PATH_MAPPING:-}" = "true" ] && [ -n "${DDEV_HOST_APPROOT:-}" ]; then
+  map_dir=/var/www/html/.xdebug
+  mkdir -p "${map_dir}" 2>/dev/null || true
+  if [ ! -e "${map_dir}/ddev-generated.map" ] || grep -qs '#ddev-generated' "${map_dir}/ddev-generated.map"; then
+    printf "# #ddev-generated\n/var/www/html/ = %s/\n" "${DDEV_HOST_APPROOT}" >"${map_dir}/ddev-generated.map" 2>/dev/null || true
+  fi
+  if [ ! -e "${map_dir}/.gitignore" ] || grep -qs '#ddev-generated' "${map_dir}/.gitignore"; then
+    printf "# #ddev-generated\n/ddev-generated.map\n/.gitignore\n" >"${map_dir}/.gitignore" 2>/dev/null || true
+  fi
 fi
 if [ "${DDEV_WEBSERVER_TYPE:-}" = "generic" ]; then
   # we don't know what process is running php, restart all web_extra_daemons

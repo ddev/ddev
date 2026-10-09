@@ -98,7 +98,7 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_GOARCH`: Architecture (`arm64`, `amd64`)
 * `DDEV_GOOS`: Operating system (`windows`, `darwin`, `linux`)
 * `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
-* `DDEV_HOST_APPROOT`: Absolute path to the project on the host, as the host sees it (`DDEV_APPROOT` is the path inside the container)
+* `DDEV_HOST_APPROOT`: Absolute path to the project on the host, with symlinks resolved (`DDEV_APPROOT` is the path inside the container)
 * `DDEV_HOST_DB_PORT`: Localhost port of the database server
 * `DDEV_HOST_HTTP_PORT`: Localhost port for HTTP on web server
 * `DDEV_HOST_HTTPS_PORT`: Localhost port for HTTPS on web server
@@ -135,7 +135,7 @@ Useful variables for container scripts are:
 * `DDEV_FILES_DIRS`: Comma-separated list of directories of user-uploaded files
 * `DDEV_GID`: Group ID the `web` container runs as
 * `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
-* `DDEV_HOST_APPROOT`: Absolute path to the project on the host, as the host sees it (`DDEV_APPROOT` is the path inside the container)
+* `DDEV_HOST_APPROOT`: Absolute path to the project on the host, with symlinks resolved (`DDEV_APPROOT` is the path inside the container)
 * `DDEV_MUTAGEN_ENABLED`: `true` if Mutagen is enabled
 * `DDEV_PHP_VERSION`: Current PHP version
 * `DDEV_PRIMARY_URL`: Primary URL for the project

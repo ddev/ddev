@@ -3077,6 +3077,12 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 func (app *DdevApp) DockerEnv() map[string]string {
 	uidStr, gidStr, username := dockerutil.GetContainerUser()
 
+	// Resolved so the Xdebug path map doesn't depend on which path `ddev start` ran from
+	hostAppRoot, err := filepath.EvalSymlinks(app.AppRoot)
+	if err != nil {
+		hostAppRoot = app.AppRoot
+	}
+
 	// Warn about running as root if we're not on Windows.
 	if uidStr == "0" || gidStr == "0" {
 		util.WarningOnce("Warning: containers will run as root. This could be a security risk on Linux.")
@@ -3196,7 +3202,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		"DDEV_XHGUI_HTTPS_PORT":          app.GetXHGuiHTTPSPort(),
 		"DDEV_DOCROOT":                   app.GetDocroot(),
 		"DDEV_HOSTNAME":                  app.HostName(),
-		"DDEV_HOST_APPROOT":              app.AppRoot,
+		"DDEV_HOST_APPROOT":              hostAppRoot,
 		"DDEV_UID":                       uidStr,
 		"DDEV_GID":                       gidStr,
 		"DDEV_USER":                      username,
@@ -3207,7 +3213,7 @@ func (app *DdevApp) DockerEnv() map[string]string {
 		"DDEV_ROUTER_HTTP_PORT":          app.GetPrimaryRouterHTTPPort(),
 		"DDEV_ROUTER_HTTPS_PORT":         app.GetPrimaryRouterHTTPSPort(),
 		"DDEV_XDEBUG_ENABLED":            strconv.FormatBool(app.XdebugEnabled),
-		"DDEV_XDEBUG_PATH_MAPPING":       strconv.FormatBool(app.xdebugPathMappingSafe()),
+		"DDEV_XDEBUG_PATH_MAPPING":       strconv.FormatBool(app.xdebugPathMappingSafe(hostAppRoot)),
 		"DDEV_XHPROF_MODE":               app.GetXHProfMode(),
 		"DDEV_PRIMARY_URL":               primaryURL,
 		"DDEV_PRIMARY_URL_PORT":          primaryURLPort,
@@ -3623,6 +3629,8 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("Unable to SyncAndPauseMutagenSession: %v", err)
 		}
 	}
+
+	app.removeXdebugPathMap()
 
 	// Remove the merged traefik config yaml files on stop, but don't delete certs
 	// Certs may want to remain for Let's Encrypt, for example, and should do no harm
@@ -4212,10 +4220,25 @@ func genericImportFilesAction(app *DdevApp, uploadDir, importPath, extPath strin
 }
 
 // xdebugPathMappingSafe returns true when the IDE can be expected to see the
-// project at app.AppRoot, so Xdebug may translate container paths to it.
-func (app *DdevApp) xdebugPathMappingSafe() bool {
-	root := app.AppRoot
-	return globalconfig.DdevGlobalConfig.XdebugIDELocation == "" && runtime.GOOS != "windows" && !nodeps.IsWSL2() &&
+// project at root, so Xdebug may translate container paths to it.
+// PHP 7.x ships Xdebug 3.1, which has no path mapping.
+func (app *DdevApp) xdebugPathMappingSafe(root string) bool {
+	return globalconfig.DdevGlobalConfig.XdebugIDELocation == "" && !nodeps.IsWindows() && !nodeps.IsWSL2() &&
 		!nodeps.IsCodespaces() && !nodeps.IsDevcontainer() && !dockerutil.IsRemoteDockerHost() &&
+		!strings.HasPrefix(app.PHPVersion, "7.") &&
 		strings.HasPrefix(root, "/") && !strings.ContainsAny(root, "=\r\n")
+}
+
+// removeXdebugPathMap removes the generated Xdebug path map, which would go
+// stale if the project moved while stopped.
+func (app *DdevApp) removeXdebugPathMap() {
+	mapDir := filepath.Join(app.AppRoot, ".xdebug")
+	for _, f := range []string{"ddev-generated.map", ".gitignore"} {
+		p := filepath.Join(mapDir, f)
+		if found, _ := fileutil.FgrepStringInFile(p, nodeps.DdevFileSignature); found {
+			_ = os.Remove(p)
+		}
+	}
+	// Fails, as intended, while the user's own map files remain
+	_ = os.Remove(mapDir)
 }
