@@ -293,21 +293,19 @@ sleep 2
 			cmd.Stdout = &stdoutBuf
 			cmd.Stderr = &stderrBuf
 
-			err := cmd.Start()
-			require.NoError(t, err)
+			exited := startCmd(t, cmd)
 
 			t.Cleanup(func() {
 				_ = pKill(cmd)
-				_ = cmd.Wait()
+				<-exited
 			})
 
 			// ddev share can take several seconds to launch the provider on slow hosts
-			waitErr := waitForContent(&stdoutBuf, wantContent, 30*time.Second)
+			waitErr := waitForContent(&stdoutBuf, wantContent, exited, 30*time.Second)
 
-			// Kill the share command to end the test
-			err = pKill(cmd)
-			require.NoError(t, err)
-			_ = cmd.Wait()
+			// ddev share exits on its own once the mock provider does, so the kill may find it gone
+			_ = pKill(cmd)
+			<-exited
 
 			t.Logf("Stdout output with NO_COLOR=%s:\n%s", noColor, stdoutBuf.String())
 			t.Logf("Stderr output with NO_COLOR=%s:\n%s", noColor, stderrBuf.String())
@@ -379,10 +377,7 @@ sleep 30
 			}
 		}()
 
-		// Wait for hook execution
-		time.Sleep(3 * time.Second)
-
-		require.True(t, hookSuccess.Load(), "Pre-share hook should have access to DDEV_SHARE_URL")
+		require.Eventually(t, hookSuccess.Load, 30*time.Second, 250*time.Millisecond, "Pre-share hook should have access to DDEV_SHARE_URL")
 	})
 
 	// Test 3: Provider priority (flag > config > default)
@@ -418,29 +413,26 @@ sleep 2
 		cmd.Stdout = &stdoutBuf
 		cmd.Stderr = &stderrBuf
 
-		err = cmd.Start()
-		require.NoError(t, err)
+		exited := startCmd(t, cmd)
 
 		t.Cleanup(func() {
 			_ = pKill(cmd)
-			_ = cmd.Wait()
+			<-exited
 			// Reset config
 			_ = exec.Command(DdevBin, "config", "--share-default-provider=").Run()
 		})
 
-		// Wait for provider to output URL and ddev share to capture/display it
-		time.Sleep(3 * time.Second)
+		waitErr := waitForContent(&stdoutBuf, "Tunnel URL:", exited, 30*time.Second)
 
-		// Kill the share command to end the test
-		err = pKill(cmd)
-		require.NoError(t, err)
-		_ = cmd.Wait()
+		_ = pKill(cmd)
+		<-exited
 
 		// Check captured output
 		stdoutOutput := stdoutBuf.String()
 		stderrOutput := stderrBuf.String()
 		t.Logf("Stdout output:\n%s", stdoutOutput)
 		t.Logf("Stderr output:\n%s", stderrOutput)
+		require.NoError(t, waitErr)
 		// util.Success() writes to stdout, not stderr
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 		require.Contains(t, stdoutOutput, "flag-provider-tunnel")
@@ -474,24 +466,23 @@ sleep 2
 		cmd.Stdout = &stdoutBuf
 		cmd.Stderr = &stderrBuf
 
-		err = cmd.Start()
-		require.NoError(t, err)
+		exited := startCmd(t, cmd)
 
 		t.Cleanup(func() {
 			_ = pKill(cmd)
-			_ = cmd.Wait()
+			<-exited
 		})
 
-		// Wait for provider to execute
-		time.Sleep(3 * time.Second)
+		waitErr := waitForContent(&stdoutBuf, "Tunnel URL:", exited, 30*time.Second)
 
 		_ = pKill(cmd)
-		_ = cmd.Wait()
+		<-exited
 
 		stderrOutput := stderrBuf.String()
 		stdoutOutput := stdoutBuf.String()
 		t.Logf("Stdout: %s", stdoutOutput)
 		t.Logf("Stderr: %s", stderrOutput)
+		require.NoError(t, waitErr)
 
 		// Verify DDEV_SHARE_ARGS was passed to the provider (shown in ddev's output message)
 		require.Contains(t, stdoutOutput, "with args: --custom-flag value123",
@@ -500,8 +491,6 @@ sleep 2
 	})
 }
 
-// pKill kills a started cmd; If windows, it shells out to the
-// taskkill command.
 // syncBuffer is a strings.Builder that is safe to read while a running
 // command is still writing to it.
 type syncBuffer struct {
@@ -521,20 +510,45 @@ func (s *syncBuffer) String() string {
 	return s.b.String()
 }
 
-// waitForContent polls buf until it contains want, ignoring CRLF differences.
-func waitForContent(buf *syncBuffer, want string, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-	for {
-		if strings.Contains(strings.ReplaceAll(buf.String(), "\r\n", "\n"), want) {
-			return nil
-		}
-		if time.Now().After(deadline) {
-			return fmt.Errorf("output did not contain expected content after %v", timeout)
-		}
-		time.Sleep(250 * time.Millisecond)
-	}
+// startCmd starts cmd and returns a channel that closes once it has exited.
+// Waiting on the channel instead of calling cmd.Wait() again keeps Wait to a
+// single caller.
+func startCmd(t *testing.T, cmd *exec.Cmd) <-chan struct{} {
+	t.Helper()
+	require.NoError(t, cmd.Start())
+	exited := make(chan struct{})
+	go func() {
+		_ = cmd.Wait()
+		close(exited)
+	}()
+	return exited
 }
 
+// waitForContent polls buf until it contains want, ignoring CRLF differences.
+// It gives up early if the command writing to buf exits first.
+func waitForContent(buf *syncBuffer, want string, exited <-chan struct{}, timeout time.Duration) error {
+	contains := func() bool {
+		return strings.Contains(strings.ReplaceAll(buf.String(), "\r\n", "\n"), want)
+	}
+	deadline := time.After(timeout)
+	for !contains() {
+		select {
+		case <-exited:
+			// Wait has finished copying output, so this check sees all of it
+			if contains() {
+				return nil
+			}
+			return fmt.Errorf("command exited before its output contained the expected content")
+		case <-deadline:
+			return fmt.Errorf("output did not contain expected content after %v", timeout)
+		case <-time.After(250 * time.Millisecond):
+		}
+	}
+	return nil
+}
+
+// pKill kills a started cmd; If windows, it shells out to the
+// taskkill command.
 func pKill(cmd *exec.Cmd) error {
 	var err error
 	if cmd == nil {

@@ -4066,7 +4066,7 @@ func logRouterDiagnostics(t *testing.T, projectName string, rawURL string) {
 	routes, stderr, err := dockerutil.Exec(router.ID, fmt.Sprintf(`curl -s "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers?search=%s"`, projectName), "0")
 	t.Logf("router diagnostics: Traefik routers matching %s (err=%v, stderr=%s):\n%s", projectName, err, stderr, routes)
 	t.Logf("router diagnostics: router config errors:\n%s", ddevapp.GetRouterConfigErrors())
-	logs, err := exec.RunHostCommand("docker", "logs", "--tail", "40", "ddev-router")
+	logs, err := exec.RunHostCommand("docker", "logs", "--tail", "40", router.ID)
 	t.Logf("router diagnostics: last router log lines (err=%v):\n%s", err, logs)
 
 	time.Sleep(5 * time.Second)
