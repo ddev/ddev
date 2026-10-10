@@ -476,6 +476,22 @@ sleep 2
 			"Provider should receive DDEV_SHARE_ARGS from --provider-args flag")
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 	})
+
+	t.Run("ProviderExitReported", func(t *testing.T) {
+		mockScript := `#!/usr/bin/env bash
+echo "https://exit-test.example.com"
+`
+		mockPath := site.Dir + "/.ddev/share-providers/exit-test.sh"
+		err := os.WriteFile(mockPath, []byte(mockScript), 0755)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_ = os.Remove(mockPath)
+		})
+
+		out, err := exec.Command(DdevBin, "share", "--provider=exit-test").CombinedOutput()
+		require.NoError(t, err, "output: %s", out)
+		require.Contains(t, string(out), "Share provider 'exit-test' exited, so the tunnel is closed")
+	})
 }
 
 // syncBuffer is a strings.Builder that is safe to read while a running

@@ -194,7 +194,11 @@ ddev share myproject`,
 
 		select {
 		case err = <-done:
-			// Provider exited on its own
+			// ngrok and cloudflared exit 0 when killed, so a clean exit still means the
+			// tunnel is gone; a non-zero exit is reported with its code below
+			if exitErr, ok := err.(*exec.ExitError); !ok || exitErr.ExitCode() == -1 {
+				util.Warning("Share provider '%s' exited, so the tunnel is closed", providerName)
+			}
 		case <-sigChan:
 			util.Success("Stopping tunnel (provider '%s')...", providerName)
 			killProcessTree(providerCmd)
