@@ -12,10 +12,10 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 
-	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
@@ -56,19 +56,12 @@ func TestShareCmdNgrok(t *testing.T) {
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
 
+	t.Log("Starting ngrok share command...")
+	exited := startCmd(t, cmd)
 	t.Cleanup(func() {
 		_ = pKill(cmd)
-		_ = cmd.Wait()
-		_, err := exec.LookPath("killall")
-		// Try to kill ngrok any way we can, avoid having two run at same time.
-		if err == nil {
-			_, _ = exec2.RunHostCommand("killall", "-9", "ngrok")
-		}
+		<-exited
 	})
-
-	t.Log("Starting ngrok share command...")
-	err = cmd.Start()
-	require.NoError(t, err)
 
 	// Poll for output with intermediate logging (ngrok can take several seconds)
 	t.Log("Waiting for ngrok tunnel to establish...")
@@ -77,6 +70,7 @@ func TestShareCmdNgrok(t *testing.T) {
 	elapsed := time.Duration(0)
 	lastStderrLen := 0
 
+poll:
 	for elapsed < maxWait {
 		time.Sleep(pollInterval)
 		elapsed += pollInterval
@@ -118,24 +112,18 @@ func TestShareCmdNgrok(t *testing.T) {
 			}
 		}
 
-		t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
+		select {
+		case <-exited:
+			t.Logf("ddev share exited after %v without a tunnel URL", elapsed)
+			break poll
+		default:
+			t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
+		}
 	}
 
-	// Kill the share command (might already be dead if account limit hit)
+	// ddev share might already have exited if the account limit was hit
 	_ = pKill(cmd)
-
-	// Wait for command with timeout (pipes might take time to close)
-	waitDone := make(chan bool)
-	go func() {
-		_ = cmd.Wait()
-		waitDone <- true
-	}()
-	select {
-	case <-waitDone:
-		// Command exited cleanly
-	case <-time.After(5 * time.Second):
-		t.Log("Wait timed out after kill, continuing...")
-	}
+	<-exited
 
 	// Check captured output
 	stdoutOutput := stdoutBuf.String()
@@ -152,6 +140,9 @@ func TestShareCmdNgrok(t *testing.T) {
 	// If we got a URL, verify it looks like ngrok
 	if hasURL {
 		require.Contains(t, stdoutOutput, "ngrok")
+	}
+	if !nodeps.IsWindows() {
+		require.Contains(t, stdoutOutput, "Stopping tunnel", "ddev share should handle SIGTERM by stopping the tunnel")
 	}
 }
 
@@ -185,14 +176,12 @@ func TestShareCmdCloudflared(t *testing.T) {
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
 
+	t.Log("Starting cloudflared share command...")
+	exited := startCmd(t, cmd)
 	t.Cleanup(func() {
 		_ = pKill(cmd)
-		_ = cmd.Wait()
+		<-exited
 	})
-
-	t.Log("Starting cloudflared share command...")
-	err = cmd.Start()
-	require.NoError(t, err)
 
 	// Poll for output with intermediate logging (cloudflared can take 10+ seconds)
 	t.Log("Waiting for cloudflared tunnel to establish...")
@@ -200,6 +189,7 @@ func TestShareCmdCloudflared(t *testing.T) {
 	pollInterval := 2 * time.Second
 	elapsed := time.Duration(0)
 
+poll:
 	for elapsed < maxWait {
 		time.Sleep(pollInterval)
 		elapsed += pollInterval
@@ -216,24 +206,18 @@ func TestShareCmdCloudflared(t *testing.T) {
 			t.Logf("Stdout so far:\n%s", stdoutOutput)
 			t.Fatalf("cloudflare quick-tunnel API returned an unmarshal error (possible transient 500):\n%s", stderrOutput)
 		}
-		t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
+		select {
+		case <-exited:
+			t.Logf("ddev share exited after %v without a tunnel URL", elapsed)
+			break poll
+		default:
+			t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
+		}
 	}
 
-	// Kill the share command
+	// Stop the share command
 	_ = pKill(cmd)
-
-	// Wait for command with timeout (pipes might take time to close)
-	waitDone := make(chan bool)
-	go func() {
-		_ = cmd.Wait()
-		waitDone <- true
-	}()
-	select {
-	case <-waitDone:
-		// Command exited cleanly
-	case <-time.After(5 * time.Second):
-		t.Log("Wait timed out after kill, continuing...")
-	}
+	<-exited
 
 	// Check captured output
 	stdoutOutput := stdoutBuf.String()
@@ -246,6 +230,9 @@ func TestShareCmdCloudflared(t *testing.T) {
 		"cloudflared did not output a tunnel URL; stderr output:\n%s", stderrOutput)
 	require.Contains(t, stdoutOutput, "trycloudflare.com",
 		"tunnel URL does not contain trycloudflare.com; stderr output:\n%s", stderrOutput)
+	if !nodeps.IsWindows() {
+		require.Contains(t, stdoutOutput, "Stopping tunnel", "ddev share should handle SIGTERM by stopping the tunnel")
+	}
 }
 
 // TestShareCmdProviderSystem tests the script-based provider system
@@ -512,9 +499,11 @@ func (s *syncBuffer) String() string {
 
 // startCmd starts cmd and returns a channel that closes once it has exited.
 // Waiting on the channel instead of calling cmd.Wait() again keeps Wait to a
-// single caller.
+// single caller. WaitDelay bounds Wait if a leftover child keeps the output
+// pipes open after cmd exits.
 func startCmd(t *testing.T, cmd *exec.Cmd) <-chan struct{} {
 	t.Helper()
+	cmd.WaitDelay = 5 * time.Second
 	require.NoError(t, cmd.Start())
 	exited := make(chan struct{})
 	go func() {
@@ -547,8 +536,9 @@ func waitForContent(buf *syncBuffer, want string, exited <-chan struct{}, timeou
 	return nil
 }
 
-// pKill kills a started cmd; If windows, it shells out to the
-// taskkill command.
+// pKill stops a started cmd. Elsewhere than Windows it sends SIGTERM, so
+// ddev share can kill its provider's process group the way Ctrl-C does;
+// SIGKILL would orphan the tunnel, which keeps cmd's output pipes open.
 func pKill(cmd *exec.Cmd) error {
 	var err error
 	if cmd == nil {
@@ -563,7 +553,7 @@ func pKill(cmd *exec.Cmd) error {
 		kill.Stdout = os.Stdout
 		err = kill.Run()
 	} else {
-		err = cmd.Process.Kill()
+		err = cmd.Process.Signal(syscall.SIGTERM)
 	}
 	return err
 }

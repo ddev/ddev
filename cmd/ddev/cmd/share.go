@@ -196,7 +196,7 @@ ddev share myproject`,
 		case err = <-done:
 			// Provider exited on its own
 		case <-sigChan:
-			// Signal received, kill provider process group
+			util.Success("Stopping tunnel (provider '%s')...", providerName)
 			killProcessTree(providerCmd)
 			err = <-done
 		}
