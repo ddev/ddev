@@ -4045,10 +4045,37 @@ func TestGetWebContainerDirectURLsWithGenericWebserver(t *testing.T) {
 	require.Contains(t, urls, httpURL)
 	t.Logf("Testing these URLs: %v", urls)
 	for _, u := range urls {
-		testcommon.AssertLocalHTTPContent(t, u+"/testfile.html", "generic webserver test content",
+		if !testcommon.AssertLocalHTTPContent(t, u+"/testfile.html", "generic webserver test content",
 			testcommon.WithMessagef("every reported URL should serve the project"),
-		)
+		) {
+			logRouterDiagnostics(t, app.Name, u+"/testfile.html")
+		}
 	}
+}
+
+// logRouterDiagnostics records what the router had loaded when a URL check
+// failed, and whether a later request succeeds, to tell a route Traefik has not
+// loaded yet from a connection dropped by the Docker provider's port proxy.
+func logRouterDiagnostics(t *testing.T, projectName string, rawURL string) {
+	t.Helper()
+	router, err := ddevapp.FindDdevRouter()
+	if err != nil || router == nil {
+		t.Logf("router diagnostics: no router found: %v", err)
+		return
+	}
+	routes, stderr, err := dockerutil.Exec(router.ID, fmt.Sprintf(`curl -s "http://127.0.0.1:${TRAEFIK_MONITOR_PORT}/api/http/routers?search=%s"`, projectName), "0")
+	t.Logf("router diagnostics: Traefik routers matching %s (err=%v, stderr=%s):\n%s", projectName, err, stderr, routes)
+	t.Logf("router diagnostics: router config errors:\n%s", ddevapp.GetRouterConfigErrors())
+	logs, err := exec.RunHostCommand("docker", "logs", "--tail", "40", router.ID)
+	t.Logf("router diagnostics: last router log lines (err=%v):\n%s", err, logs)
+
+	time.Sleep(5 * time.Second)
+	body, resp, err := testcommon.GetLocalHTTPResponse(t, rawURL)
+	status := 0
+	if resp != nil {
+		status = resp.StatusCode
+	}
+	t.Logf("router diagnostics: %s 5s later: status=%d err=%v body=%.200s", rawURL, status, err, body)
 }
 
 // TestGetWebContainerDirectURLsWithDockerIPError tests behavior when GetDockerIP returns an error
