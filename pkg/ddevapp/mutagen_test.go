@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 )
@@ -48,9 +49,7 @@ func TestMutagenSimple(t *testing.T) {
 	if nodeps.IsWSL2MirroredMode() {
 		t.Skip("Skipping TestMutagenSimple in WSL2 mirrored mode; It can fail randomly on the 'composer install' step due to network issues, unable to download random dependencies from either dist or source.")
 	}
-	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
-		t.Skip("Skipping if mutagen enabled, waste of time")
-	}
+	testcommon.SkipUnlessDefaultEnvironment(t)
 
 	// Make sure there's not an existing Mutagen running, perhaps in wrong directory
 	_, _ = exec.RunHostCommand("pkill", "mutagen")
