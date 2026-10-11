@@ -78,7 +78,8 @@ with no dnsmasq, no keepalive container and no hand-made buildkit node.
 both sides, neither merged yet: upstream by [socktainer#439](https://github.com/socktainer/socktainer/pull/439),
 and in DDEV by [#8928](https://github.com/ddev/ddev/pull/8928), which half-closes the exec
 stream as the Docker CLI does. With only #8928, stock socktainer starts a first project, but the
-router can still 504 (DNS) and a second project or `ddev restart` fails (healthcheck as root).
+router can still 504 (DNS, socktainer#445) and a second project or `ddev restart` fails
+(healthcheck as root, socktainer#447).
 
 **What still fails with all fixes applied:** anything that makes Compose recreate a container
 while the old one exists — `ddev snapshot restore`, and `ddev start` over a running project
@@ -424,16 +425,14 @@ socktainer, main checkout `~/workspace/socktainer` (remotes `upstream`, `rfay`):
 
 | Worktree | Branch | State |
 |---|---|---|
-| `~/tmp/socktainer-cv5` | `tmp/combined-verify-5` @ 2a599ee | the running stack; **needs force-push** |
-| `~/workspace/socktainer-worktrees/port-bindings-inspect` | `fix/port-bindings-inspect` @ 42b6e46 | amended for sign-off + fmt; **needs force-push** |
+| `~/tmp/socktainer-cv5` | `tmp/combined-verify-5` @ 2a599ee | the running stack; pushed |
+| `~/workspace/socktainer-worktrees/port-bindings-inspect` | `fix/port-bindings-inspect` @ 42b6e46 | pushed |
 | `~/tmp/socktainer-dnsfix` | `fix/dns-multihomed-network-scoped` @ 6ed8ec6 | pushed; upstream PR #445 |
 | `~/tmp/socktainer-hcfix` | `fix/healthcheck-probe-user-and-timeout` | pushed |
 | `~/tmp/socktainer-hcuser` | `fix/healthcheck-probe-user` @ c054611 | pushed; upstream PR #447 |
 | `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-timeout` | pushed |
 | `~/workspace/socktainer-worktrees/version-engine-version` | `fix/version-engine-version` | pushed |
 | `~/tmp/socktainer-pr439` | `pr-439` (upstream PR #439) | local only, test build |
-| `~/tmp/socktainer-execfix` | `fix/exec-hijack-stdout-only` | pushed; PR #443 closed, **can delete** |
-| `~/workspace/socktainer-worktrees/exec-hijack-close` | `fix/exec-hijack-close` | superseded by #439, **can delete** |
 | `~/workspace/socktainer` | `tmp/upstream-main-test` | stock upstream build |
 
 Local-only backups:
@@ -444,10 +443,8 @@ DDEV worktrees: this branch is in
 `~/workspace/ddev-worktrees/20260802_rfay_apple_container_experiment`, and the branch for PR
 8928 is in `~/workspace/ddev-worktrees/20261011_rfay_exec_closewrite`.
 
-### Push checklist (not run automatically — see the repo's push policy)
+### Push state
 
-```bash
-cd ~/workspace/socktainer
-git push --force-with-lease rfay tmp/combined-verify-5 fix/port-bindings-inspect
-git -C ~/workspace/ddev-worktrees/20260802_rfay_apple_container_experiment push rfay 20260802_rfay_apple_container_experiment
-```
+Everything above was pushed as of 2026-10-11, and the dead exec worktrees are removed (their
+branches remain on `rfay`). `handoff/wt-status.sh` shows each socktainer worktree against `rfay`
+and `upstream/main`. The user pushes; an agent never does.
