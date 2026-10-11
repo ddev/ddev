@@ -3,6 +3,8 @@
 # Use more widely accepted collations by default
 character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_520_ci
+# Keep the connection collation in step with the server collation
+init_connect='SET collation_connection = utf8mb4_unicode_520_ci'
 
 # caching_sha2_password is the default for mysql 9.7
 # This config is removed in MySQL 8.4
@@ -12,7 +14,7 @@ collation-server = utf8mb4_unicode_520_ci
 # could be loaded (but not made default) for php 7.3 and below compatibility.
 
 # In mysql 8+ this replaces innodb-log-file-size etc
-innodb-redo-log-capacity=100663296
+innodb-redo-log-capacity=268435456
 
 # secure_file_priv="" is most permissive, but irrelevant to DDEV
 secure_file_priv=""

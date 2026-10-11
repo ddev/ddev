@@ -18,4 +18,4 @@ innodb-use-native-aio=0
 #    soft: "-1"
 #    hard: "-1"
 
-innodb-log-file-size=50331648
+innodb-log-file-size=268435456
