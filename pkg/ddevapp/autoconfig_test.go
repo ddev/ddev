@@ -32,10 +32,11 @@ func TestLooksLikeWebProject(t *testing.T) {
 				require.NoError(t, os.MkdirAll(filepath.Join(dir, filepath.Dir(f)), 0755))
 				require.NoError(t, os.WriteFile(filepath.Join(dir, f), []byte("x"), 0644))
 			}
-			app, err := ddevapp.NewAutoConfigApp(dir)
+			app, err := ddevapp.NewApp(dir, false)
 			require.NoError(t, err)
+			app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
 			require.Equal(t, tc.want, app.LooksLikeWebProject())
-			require.NoDirExists(t, filepath.Join(dir, ".ddev"), "previewing a configuration must not write one")
+			require.NoDirExists(t, filepath.Join(dir, ".ddev"))
 		})
 	}
 }
@@ -46,7 +47,7 @@ func TestAutoConfigProblem(t *testing.T) {
 	t.Cleanup(func() { testcommon.CleanupDir(filepath.Dir(dir)) })
 	require.NoError(t, os.MkdirAll(dir, 0755))
 
-	app, err := ddevapp.NewAutoConfigApp(dir)
+	app, err := ddevapp.NewApp(dir, false)
 	require.NoError(t, err)
 	require.Contains(t, app.AutoConfigProblem(), "is not a valid project name")
 }

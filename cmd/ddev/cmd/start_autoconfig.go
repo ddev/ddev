@@ -14,9 +14,9 @@ import (
 
 // configureProjectHere handles `ddev start` in a directory with no project:
 // it writes a config if the directory looks like a web project and the user
-// agrees, or autoConfig is set, and otherwise exits explaining what to do.
+// agrees, and otherwise exits explaining what to do.
 // skipConfirmation means don't ask, which never configures a project.
-func configureProjectHere(autoConfig bool, skipConfirmation bool) {
+func configureProjectHere(skipConfirmation bool) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		util.Failed("Could not determine the current directory: %v", err)
@@ -26,11 +26,12 @@ func configureProjectHere(autoConfig bool, skipConfirmation bool) {
 	if outer := ddevapp.RegisteredProjectAbove(cwd); outer != "" {
 		util.Failed("%s, but it is inside the DDEV project in %s, which has no .ddev/config.yaml.\nRestore that project's .ddev directory, or remove it from 'ddev list' with 'ddev stop --unlist'.", noProject, outer)
 	}
-	// NewApp, under NewAutoConfigApp, refuses disallowed locations like the home directory.
-	app, err := ddevapp.NewAutoConfigApp(cwd)
-	if err != nil {
+	app := getConfigApp()
+	if err := ddevapp.HasAllowedLocation(app); err != nil {
 		util.Failed("%s, and one can't be configured here: %v", noProject, err)
 	}
+	// Some apptype detectors look in the docroot; runConfig discovers it the same way.
+	app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
 	if !app.LooksLikeWebProject() {
 		if entries, err := os.ReadDir(cwd); err == nil && len(entries) == 0 {
 			util.Failed("%s, and the directory is empty.\nTo start a new project, see https://docs.ddev.com/en/stable/users/quickstart/ or run 'ddev config'.", noProject)
@@ -38,22 +39,22 @@ func configureProjectHere(autoConfig bool, skipConfirmation bool) {
 		util.Failed("%s, and it doesn't look like a web project.\nIf it is one, run 'ddev config' to configure it.", noProject)
 	}
 
-	problem := app.AutoConfigProblem()
 	canAsk := globalconfig.IsInteractive() && isatty.IsTerminal(os.Stdin.Fd()) && !output.JSONOutput && !skipConfirmation
-	if !autoConfig && !canAsk {
-		util.Failed("%s.\nIt looks like a '%s' project. Run 'ddev start --auto-config' to configure it with DDEV's defaults and start it, or 'ddev config' to choose the settings.", noProject, app.Type)
+	if !canAsk {
+		util.Failed("%s.\nIt looks like a web project. Run 'ddev config --auto && ddev start' to configure it with DDEV's defaults and start it, or 'ddev config' to choose the settings.", noProject)
 	}
 
-	output.UserOut.Printf("%s.\nIt looks like a '%s' project. DDEV can configure it as:\n\n%s\n", noProject, app.Type, app.AutoConfigSummary())
-	if problem != "" {
-		util.Warning("%s", problem)
-		if autoConfig {
-			util.Failed("Not configuring the project automatically. Run 'ddev config' to choose the settings.")
+	runConfig(ConfigCommand, nil, app, false, func(app *ddevapp.DdevApp) error {
+		output.UserOut.Printf("%s.\nIt looks like a '%s' project. DDEV can configure it as:\n\n%s\n", noProject, app.Type, app.AutoConfigSummary())
+		problem := app.AutoConfigProblem()
+		if problem != "" {
+			util.Warning("%s", problem)
 		}
-	}
-
-	prompt := !autoConfig && chooseCustomConfig(problem != "")
-	runConfig(ConfigCommand, nil, getConfigApp(), prompt)
+		if chooseCustomConfig(problem != "") {
+			return errCustomizeConfig
+		}
+		return nil
+	})
 }
 
 // chooseCustomConfig asks how to configure the project, returning true for

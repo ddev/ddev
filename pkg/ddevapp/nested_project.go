@@ -16,13 +16,8 @@ func skipNestedProject(appRoot string) string {
 	if isRegisteredProject(appRoot) {
 		return appRoot
 	}
-	for dir := filepath.Dir(appRoot); filepath.Dir(dir) != dir; dir = filepath.Dir(dir) {
-		if isRegisteredProject(dir) {
-			if useNestedProject(appRoot, dir) {
-				break
-			}
-			return dir
-		}
+	if outer := RegisteredProjectAbove(appRoot); outer != "" && !useNestedProject(appRoot, outer) {
+		return outer
 	}
 	return appRoot
 }

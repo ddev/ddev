@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -32,27 +31,8 @@ func (app *DdevApp) LooksLikeWebProject() bool {
 	return false
 }
 
-// NewAutoConfigApp returns the project `ddev config --auto` would configure
-// in appRoot, without writing anything.
-func NewAutoConfigApp(appRoot string) (*DdevApp, error) {
-	app, err := NewApp(appRoot, false)
-	if err != nil {
-		return nil, err
-	}
-	if app.Name == "" {
-		app.Name = NormalizeProjectName(filepath.Base(appRoot))
-	}
-	app.Docroot = DiscoverDefaultDocroot(app)
-	app.Type = app.DetectAppType()
-	if err := app.ConfigFileOverrideAction(false); err != nil {
-		return nil, err
-	}
-	app.SetApptypeSettingsPaths()
-	return app, nil
-}
-
-// AutoConfigProblem returns why the configuration from NewAutoConfigApp
-// can't be used as is, or "" when it can.
+// AutoConfigProblem returns why the configuration `ddev config --auto` would
+// write can't be used as is, or "" when it can.
 func (app *DdevApp) AutoConfigProblem() string {
 	if err := ValidateProjectName(app.Name); err != nil {
 		return fmt.Sprintf("'%s' is not a valid project name.", app.Name)
@@ -63,7 +43,7 @@ func (app *DdevApp) AutoConfigProblem() string {
 	return ""
 }
 
-// AutoConfigSummary describes the configuration from NewAutoConfigApp.
+// AutoConfigSummary describes the configuration `ddev config --auto` would write.
 func (app *DdevApp) AutoConfigSummary() string {
 	docroot := app.Docroot
 	if docroot == "" {
@@ -82,35 +62,10 @@ func (app *DdevApp) AutoConfigSummary() string {
 		fmt.Sprintf("  Database:  %s:%s", app.Database.Type, app.Database.Version),
 		fmt.Sprintf("  Webserver: %s", app.WebserverType),
 		"",
-		"This creates .ddev/config.yaml" + app.settingsFilesSummary() + ".",
+		"This creates .ddev/config.yaml.",
 	}
 	if globalconfig.DdevGlobalConfig.OmitProjectNameByDefault {
 		lines = append(lines, "The name is not written to config.yaml because omit_project_name_by_default is set.")
 	}
 	return strings.Join(lines, "\n")
-}
-
-// settingsFilesSummary names the CMS settings files that configuring the
-// project creates or changes.
-func (app *DdevApp) settingsFilesSummary() string {
-	appFuncs, ok := appTypeMatrix[app.Type]
-	if !ok || appFuncs.settingsCreator == nil || app.DisableSettingsManagement {
-		return ""
-	}
-	var files []string
-	for _, f := range []string{app.SiteDdevSettingsFile, app.SiteSettingsPath} {
-		if f == "" {
-			continue
-		}
-		if rel, err := filepath.Rel(app.AppRoot, f); err == nil {
-			f = rel
-		}
-		if !slices.Contains(files, f) {
-			files = append(files, f)
-		}
-	}
-	if len(files) == 0 {
-		return ""
-	}
-	return ", and DDEV may create or edit " + strings.Join(files, " and ")
 }
