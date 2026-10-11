@@ -39,14 +39,20 @@ Order of remaining upstream work:
    `~/tmp/dnsrepro/` (`repro.sh`); it fails on stock 9dd88f7 every run, passes on cv5 and on
    Docker Engine. Fork issue [rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7)
    points at both. Drafts as filed: `~/tmp/sk-upstream/dns-issue.md`, `dns-pr.md`.
-3. **Health probes run as root** — next to file. `fix/healthcheck-probe-user` (c054611). Same
-   steps as the DNS item: search upstream by topic; confirm a test fails without the fix (if the
-   new tests need new API, add one that uses only existing API, as #445 did); write a
-   DDEV-independent repro (e.g. an image with `USER 1000` and a healthcheck that writes a file,
-   then `ls -l` it); live-test on stock and on cv5; issue with a step-by-step description of what
-   happens, then PR. Fork issue [rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12).
-4. **A stalled health probe freezes the loop** — `fix/healthcheck-probe-timeout` (2892512),
-   independent of 3.
+3. **Watch [socktainer#446](https://github.com/socktainer/socktainer/issues/446) /
+   [#447](https://github.com/socktainer/socktainer/pull/447)** (health probes run as root; ours,
+   filed 2026-10-11). Branch `fix/healthcheck-probe-user` @ c054611, pushed. Upstream ran probes
+   as root on purpose since #214 (63d5f6f); the issue answers its stated reason. Repro:
+   `~/tmp/hcrepro/repro.sh` (uid 0 on stock, 1000 on cv5 and Docker Engine). Fork issue
+   [rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12) points at both. Drafts as
+   filed: `~/tmp/sk-upstream/hcuser-issue.md`, `hcuser-pr.md`.
+4. **A stalled health probe freezes the loop** — next to file. `fix/healthcheck-probe-timeout`
+   (2892512), independent of 3. Per-item steps: search upstream by topic; confirm a test fails
+   without the fix (if the new test needs new API, show it fails with the bug put back, or add
+   one using only existing API, as #445 and #447 did); write a DDEV-independent repro; live-test
+   on stock and on cv5 and compare with Docker Engine (`DOCKER_CONTEXT=orbstack`); issue with a
+   step-by-step description of what happens, linking the PR/commit that introduced the behavior;
+   then PR.
 5. **`HostConfig.PortBindings` nil on inspect** — `fix/port-bindings-inspect` (42b6e46). No fork
    issue exists; DDEV no longer depends on it (#8657).
 6. **`Server.Version` reports the API version** — `fix/version-engine-version` (395d2f0). Hold:
@@ -108,7 +114,7 @@ Each is one commit on upstream `main` @ 9dd88f7, signed and DCO signed-off.
 |---|---|---|---|
 | Exec without stdin never ends unless the client half-closes | upstream PR [#439](https://github.com/socktainer/socktainer/pull/439) (c338b88, fetched as local `pr-439`) | upstream [#438](https://github.com/socktainer/socktainer/issues/438); fork [#8](https://github.com/rfay/socktainer/issues/8) | `ddev start` at all, unless DDEV has #8928 |
 | DNS answers a multi-homed host with another network's address | upstream PR [#445](https://github.com/socktainer/socktainer/pull/445), [`fix/dns-multihomed-network-scoped`](https://github.com/rfay/socktainer/tree/fix/dns-multihomed-network-scoped) @ 6ed8ec6 (cv5 has b355bf9, same code, one test fewer) | upstream [#444](https://github.com/socktainer/socktainer/issues/444); fork [#7](https://github.com/rfay/socktainer/issues/7) | a second project, and sometimes the first (504) |
-| Health probes run as root, so `/tmp/healthy` is root-owned | [`fix/healthcheck-probe-user`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-user) | fork [#12](https://github.com/rfay/socktainer/issues/12) | a second project, `ddev restart` |
+| Health probes run as root, so `/tmp/healthy` is root-owned | upstream PR [#447](https://github.com/socktainer/socktainer/pull/447), [`fix/healthcheck-probe-user`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-user) @ c054611 | upstream [#446](https://github.com/socktainer/socktainer/issues/446); fork [#12](https://github.com/rfay/socktainer/issues/12) | a second project, `ddev restart` |
 | A stalled probe freezes the health loop | [`fix/healthcheck-probe-timeout`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-timeout) | fork [#12](https://github.com/rfay/socktainer/issues/12) | latent |
 | `HostConfig.PortBindings` always nil on inspect | [`fix/port-bindings-inspect`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect) | none | no; DDEV's #8657 covers it |
 | `Server.Version` reports the API version | [`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version) | fork [#13](https://github.com/rfay/socktainer/issues/13) | cosmetic |
@@ -415,6 +421,7 @@ socktainer, main checkout `~/workspace/socktainer` (remotes `upstream`, `rfay`):
 | `~/workspace/socktainer-worktrees/port-bindings-inspect` | `fix/port-bindings-inspect` @ 42b6e46 | amended for sign-off + fmt; **needs force-push** |
 | `~/tmp/socktainer-dnsfix` | `fix/dns-multihomed-network-scoped` @ 6ed8ec6 | pushed; upstream PR #445 |
 | `~/tmp/socktainer-hcfix` | `fix/healthcheck-probe-user-and-timeout` | pushed |
+| `~/tmp/socktainer-hcuser` | `fix/healthcheck-probe-user` @ c054611 | pushed; upstream PR #447 |
 | `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-timeout` | pushed |
 | `~/workspace/socktainer-worktrees/version-engine-version` | `fix/version-engine-version` | pushed |
 | `~/tmp/socktainer-pr439` | `pr-439` (upstream PR #439) | local only, test build |
@@ -422,7 +429,7 @@ socktainer, main checkout `~/workspace/socktainer` (remotes `upstream`, `rfay`):
 | `~/workspace/socktainer-worktrees/exec-hijack-close` | `fix/exec-hijack-close` | superseded by #439, **can delete** |
 | `~/workspace/socktainer` | `tmp/upstream-main-test` | stock upstream build |
 
-`fix/healthcheck-probe-user` has no worktree. Local-only backups:
+Local-only backups:
 `backup/combined-verify-5-fork-exec` (the previous cv5, with the fork's exec fix) and
 `backup/version-v-prefix-strip`.
 
