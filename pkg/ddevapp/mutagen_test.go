@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"testing"
 	"time"
 
@@ -57,8 +58,8 @@ func TestMutagenSimple(t *testing.T) {
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
 
-	// Use Drupal11 as it is a good target for Composer failures
-	site := FullTestSites[16]
+	// CodeIgniter has a small Composer tree, so network trouble is unlikely to fail the install
+	site := FullTestSites[slices.IndexFunc(FullTestSites, func(s testcommon.TestSite) bool { return s.Name == "TestPkgCodeigniter4" })]
 	// We will create directory from scratch, as we'll be removing files and changing it.
 	app := &ddevapp.DdevApp{Name: site.Name}
 	_ = app.Stop(true, false)
@@ -91,6 +92,7 @@ func TestMutagenSimple(t *testing.T) {
 
 	start := time.Now()
 	step := func(name string) {
+		t.Helper()
 		t.Logf("STEP (+%s): %s", time.Since(start).Round(time.Second), name)
 	}
 
@@ -138,13 +140,13 @@ func TestMutagenSimple(t *testing.T) {
 	stdout, stderr, err := app.Composer([]string{"install", "--no-progress", "--no-interaction"})
 	require.NoError(t, err, "stdout=%s, stderr=%s, err=%v", stdout, stderr, err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "test -f vendor/bin/var-dump-server >/dev/null",
+		Cmd: "test -f vendor/bin/phpunit >/dev/null",
 	})
 	require.NoError(t, err)
 
 	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
-	require.FileExists(t, filepath.Join(app.AppRoot, "vendor/bin/var-dump-server"))
+	require.FileExists(t, filepath.Join(app.AppRoot, "vendor/bin/phpunit"))
 
 	// Stop app, should result in paused sync
 	step("Stop() should pause sync")
