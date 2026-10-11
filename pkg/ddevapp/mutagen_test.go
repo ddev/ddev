@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -17,9 +16,29 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// requireMutagenStatus fails the test unless the project's Mutagen sync has the wanted status.
+func requireMutagenStatus(t *testing.T, app *ddevapp.DdevApp, want string) {
+	t.Helper()
+	status, short, long, err := app.MutagenStatus()
+	require.NoError(t, err, "could not run Mutagen sync list: status=%s short=%s long=%v", status, short, long)
+	require.Equal(t, want, status, "wrong Mutagen status: status=%s short=%s long=%v", status, short, long)
+}
+
+// logMutagenDiagnostics logs Mutagen's own view of the world, for use when a test has failed.
+func logMutagenDiagnostics(t *testing.T) {
+	t.Helper()
+	for _, c := range [][]string{
+		{globalconfig.GetMutagenPath(), "sync", "list", "-l"},
+		{DdevBin, "utility", "mutagen-diagnose", "--all"},
+		{"bash", "-c", "ps -ef | grep [m]utagen"},
+	} {
+		out, err := exec.RunHostCommand(c[0], c[1:]...)
+		t.Logf("MUTAGEN DIAGNOSTIC %v (MUTAGEN_DATA_DIRECTORY=%s) err=%v:\n%s", c, globalconfig.GetMutagenDataDirectory(), err, out)
+	}
+}
 
 // TestMutagenSimple tests basic Mutagen functionality
 func TestMutagenSimple(t *testing.T) {
@@ -32,7 +51,6 @@ func TestMutagenSimple(t *testing.T) {
 	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		t.Skip("Skipping if mutagen enabled, waste of time")
 	}
-	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running, perhaps in wrong directory
 	_, _ = exec.RunHostCommand("pkill", "mutagen")
@@ -52,7 +70,7 @@ func TestMutagenSimple(t *testing.T) {
 	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	err = app.Init(site.Dir)
-	assert.NoError(err)
+	require.NoError(t, err)
 	app.SetPerformanceMode(types.PerformanceModeMutagen)
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -60,15 +78,28 @@ func TestMutagenSimple(t *testing.T) {
 	t.Cleanup(func() {
 		runTime()
 		err = os.Chdir(origDir)
-		assert.NoError(err)
+		require.NoError(t, err)
 		err = app.Stop(true, false)
-		assert.NoError(err)
-		assert.False(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
+		require.NoError(t, err)
+		require.False(t, dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 	})
-	err = app.Start()
-	require.NoError(t, err)
+	// Registered after the Stop cleanup, so it runs first while the project still exists
+	t.Cleanup(func() {
+		if t.Failed() {
+			logMutagenDiagnostics(t)
+		}
+	})
 
-	assert.True(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
+	start := time.Now()
+	step := func(name string) {
+		t.Logf("STEP (+%s): %s", time.Since(start).Round(time.Second), name)
+	}
+
+	step("first Start()")
+	err = app.Start()
+	require.NoError(t, err, "first Start()")
+
+	require.True(t, dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 
 	// Make sure that we've added the proper config into the mutagen.yml file
 	// These should *not* be added if NoBindMounts is true
@@ -83,45 +114,47 @@ func TestMutagenSimple(t *testing.T) {
 	}
 
 	desc, err := app.Describe(false)
-	assert.True(desc["mutagen_enabled"].(bool))
+	require.True(t, desc["mutagen_enabled"].(bool))
 
 	// Make sure the sync is there
-	status, short, long, err := app.MutagenStatus()
-	assert.NoError(err, "could not run Mutagen sync list: status=%s short=%s, long=%s, err=%v", status, short, long, err)
-	assert.Equal("ok", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
+	step("check sync is ok")
+	requireMutagenStatus(t, app, "ok")
 
 	// Remove the vendor directory and sync
+	step("remove vendor and flush")
 	err = os.RemoveAll(filepath.Join(app.AppRoot, "vendor"))
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = app.MutagenSyncFlush()
-	assert.NoError(err)
+	require.NoError(t, err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "test -d /var/www/html/vendor",
 	})
-	assert.Error(err, "/var/www/html/vendor exists and it should not")
+	require.Error(t, err, "/var/www/html/vendor exists and it should not")
 
 	_, _, err = app.Composer([]string{"config", "--no-plugins", "allow-plugins", "true"})
 	require.NoError(t, err)
 
 	// Now composer install again and make sure all the stuff comes back
+	step("composer install")
 	stdout, stderr, err := app.Composer([]string{"install", "--no-progress", "--no-interaction"})
 	require.NoError(t, err, "stdout=%s, stderr=%s, err=%v", stdout, stderr, err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "test -f vendor/bin/var-dump-server >/dev/null",
 	})
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-	assert.FileExists(filepath.Join(app.AppRoot, "vendor/bin/var-dump-server"))
+	require.NoError(t, err)
+	require.FileExists(t, filepath.Join(app.AppRoot, "vendor/bin/var-dump-server"))
 
 	// Stop app, should result in paused sync
+	step("Stop() should pause sync")
 	err = app.Stop(false, false)
-	status, short, long, err = app.MutagenStatus()
-	assert.NoError(err, "could not run Mutagen sync list: status=%s short=%s, long=%s, err=%v", status, short, long, err)
-	assert.Equal("paused", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
+	require.NoError(t, err, "Stop() before daemon stop")
+	requireMutagenStatus(t, app, "paused")
 
 	// Make sure we can stop the daemon
+	step("StopMutagenDaemon")
 	ddevapp.StopMutagenDaemon("")
 	if nodeps.IsMacOS() || nodeps.IsLinux() {
 		// Verify that the Mutagen daemon stopped/died
@@ -131,54 +164,53 @@ func TestMutagenSimple(t *testing.T) {
 		}
 		time.Sleep(sleepWait)
 		_, err := exec.RunHostCommand("pkill", "-HUP", "mutagen")
-		assert.Error(err)
+		require.Error(t, err)
 	}
 
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
-	assert.NoError(err, "Mutagen sync list failed with MUTAGEN_DATA_DIRECTORY=%s: out=%s: %v", globalconfig.GetMutagenDataDirectory(), out, err)
-	assert.Contains(out, "Started Mutagen daemon in background")
-	if !strings.Contains(out, "Started Mutagen daemon in background") && (nodeps.IsMacOS() || nodeps.IsLinux()) {
-		out, err := exec.RunHostCommand("bash", "-c", "ps -ef | grep mutagen")
-		assert.NoError(err)
-		t.Logf("Current Mutagen processes: \n=====\n%s====\n", out)
-	}
+	require.NoError(t, err, "Mutagen sync list failed with MUTAGEN_DATA_DIRECTORY=%s: out=%s: %v", globalconfig.GetMutagenDataDirectory(), out, err)
+	require.Contains(t, out, "Started Mutagen daemon in background")
 
+	step("second Start() after daemon stop")
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err, "second Start() after StopMutagenDaemon")
 
 	// Make sure sync is down on pause also
+	step("Pause() should pause sync")
 	err = app.Pause()
-	status, short, long, err = app.MutagenStatus()
-	assert.NoError(err, "Could not run Mutagen sync list: status=%s short=%s, long=%s, err=%v", status, short, long, err)
-	assert.Equal("paused", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
+	require.NoError(t, err, "Pause()")
+	requireMutagenStatus(t, app, "paused")
 
 	// And that it's re-established when we start again
+	step("third Start() after Pause()")
 	err = app.Start()
-	status, short, long, err = app.MutagenStatus()
-	assert.NoError(err, "Could not run Mutagen sync list: status=%s short=%s, long=%s, err=%v", status, short, long, err)
-	assert.Equal("ok", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
+	require.NoError(t, err, "third Start() after Pause()")
+	requireMutagenStatus(t, app, "ok")
 
 	err = app.Stop(false, false)
-	require.NoError(t, err)
+	require.NoError(t, err, "Stop() before mutagen-agents.tar.gz removal")
 
 	// Remove the mutagen-agents.tar.gz file if it exists and start the app
 	if fileutil.FileExists(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz")) {
 		err = os.Remove(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
 		require.NoError(t, err)
 	}
+	step("Start() without mutagen-agents.tar.gz")
 	err = app.Start()
-	require.NoError(t, err)
+	require.NoError(t, err, "Start() without mutagen-agents.tar.gz")
 	// Verify that the mutagen-agents.tar.gz file was downloaded
-	assert.FileExists(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
+	require.FileExists(t, filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
 	// Remove the mutagen-agents.tar.gz file again and restart the app
 	err = os.Remove(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
 	require.NoError(t, err)
+	step("Restart() without mutagen-agents.tar.gz")
 	err = app.Restart()
-	require.NoError(t, err)
+	require.NoError(t, err, "Restart() without mutagen-agents.tar.gz")
 	// Verify again that the mutagen-agents.tar.gz file was downloaded
-	assert.FileExists(filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
+	require.FileExists(t, filepath.Join(globalconfig.GetDDEVBinDir(), "mutagen-agents.tar.gz"))
 
 	// Make sure Mutagen daemon gets stopped on poweroff
+	step("PowerOff")
 	ddevapp.PowerOff()
 	if nodeps.IsMacOS() || nodeps.IsLinux() {
 		// Verify that the Mutagen daemon stopped/died
@@ -186,7 +218,7 @@ func TestMutagenSimple(t *testing.T) {
 		time.Sleep(sleepWait)
 		// pkill -HUP checks for process existence.
 		_, err := exec.RunHostCommand("pkill", "-HUP", "mutagen")
-		assert.Error(err)
+		require.Error(t, err)
 	}
 }
 
@@ -195,7 +227,6 @@ func TestMutagenConfigChange(t *testing.T) {
 	if !nodeps.IsMacOS() {
 		t.Skip("TestMutagenConfigChange runs only on macOS (without Colima), skipping")
 	}
-	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running, perhaps in wrong directory
 	_, _ = exec.RunHostCommand("pkill", "mutagen")
@@ -215,7 +246,7 @@ func TestMutagenConfigChange(t *testing.T) {
 	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	err = app.Init(site.Dir)
-	assert.NoError(err)
+	require.NoError(t, err)
 	app.SetPerformanceMode(types.PerformanceModeMutagen)
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -223,12 +254,12 @@ func TestMutagenConfigChange(t *testing.T) {
 	t.Cleanup(func() {
 		runTime()
 		err = os.Chdir(origDir)
-		assert.NoError(err)
+		require.NoError(t, err)
 		err = app.Stop(true, false)
-		assert.NoError(err)
+		require.NoError(t, err)
 		// We can remove mutagen.yml and it will be recreated.
 		_ = os.RemoveAll(app.GetConfigPath("mutagen/mutagen.yml"))
-		assert.False(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
+		require.False(t, dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 	})
 	err = app.Start()
 	require.NoError(t, err)
@@ -280,7 +311,6 @@ func TestMutagenDiagnose(t *testing.T) {
 	if nodeps.IsWindows() {
 		t.Skip("TestMutagenDiagnose skipped on Windows")
 	}
-	assert := asrt.New(t)
 
 	// Make sure there's not an existing Mutagen running
 	_, _ = exec.RunHostCommand("pkill", "mutagen")
@@ -302,7 +332,7 @@ func TestMutagenDiagnose(t *testing.T) {
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
-		assert.NoError(err)
+		require.NoError(t, err)
 	})
 
 	err = app.Start()
