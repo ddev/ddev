@@ -32,14 +32,19 @@ Order of remaining upstream work:
 1. **Watch [socktainer#439](https://github.com/socktainer/socktainer/pull/439)** (exec fix,
    someone else's; our test report is posted on it) and DDEV's
    [#8928](https://github.com/ddev/ddev/pull/8928). Nothing to do unless review asks.
-2. **DNS answers a multi-homed host with another network's address** — next to file. Branch
-   `fix/dns-multihomed-network-scoped` (b355bf9) is ready: one commit on upstream `main`, signed,
-   DCO sign-off, tests. Still to do: search upstream for an existing report; confirm its tests
-   fail without the fix; write a DDEV-independent repro (two networks, a container on both, a
-   peer on one resolving it); live-test; then issue + PR. Fork issue
-   [rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7) has the DDEV repro.
-3. **Health probes run as root** — `fix/healthcheck-probe-user` (c054611), same steps. Fork
-   issue [rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12).
+2. **Watch [socktainer#444](https://github.com/socktainer/socktainer/issues/444) /
+   [#445](https://github.com/socktainer/socktainer/pull/445)** (DNS answers a multi-homed host
+   with another network's address; ours, filed 2026-10-11). Branch
+   `fix/dns-multihomed-network-scoped` @ 6ed8ec6, pushed. The issue's Compose repro is in
+   `~/tmp/dnsrepro/` (`repro.sh`); it fails on stock 9dd88f7 every run, passes on cv5 and on
+   Docker Engine. Fork issue [rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7)
+   points at both. Drafts as filed: `~/tmp/sk-upstream/dns-issue.md`, `dns-pr.md`.
+3. **Health probes run as root** — next to file. `fix/healthcheck-probe-user` (c054611). Same
+   steps as the DNS item: search upstream by topic; confirm a test fails without the fix (if the
+   new tests need new API, add one that uses only existing API, as #445 did); write a
+   DDEV-independent repro (e.g. an image with `USER 1000` and a healthcheck that writes a file,
+   then `ls -l` it); live-test on stock and on cv5; issue with a step-by-step description of what
+   happens, then PR. Fork issue [rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12).
 4. **A stalled health probe freezes the loop** — `fix/healthcheck-probe-timeout` (2892512),
    independent of 3.
 5. **`HostConfig.PortBindings` nil on inspect** — `fix/port-bindings-inspect` (42b6e46). No fork
@@ -102,7 +107,7 @@ Each is one commit on upstream `main` @ 9dd88f7, signed and DCO signed-off.
 | Fix | Branch / source | Issues | Needed for DDEV |
 |---|---|---|---|
 | Exec without stdin never ends unless the client half-closes | upstream PR [#439](https://github.com/socktainer/socktainer/pull/439) (c338b88, fetched as local `pr-439`) | upstream [#438](https://github.com/socktainer/socktainer/issues/438); fork [#8](https://github.com/rfay/socktainer/issues/8) | `ddev start` at all, unless DDEV has #8928 |
-| DNS answers a multi-homed host with another network's address | [`fix/dns-multihomed-network-scoped`](https://github.com/rfay/socktainer/tree/fix/dns-multihomed-network-scoped) | fork [#7](https://github.com/rfay/socktainer/issues/7) | a second project, and sometimes the first (504) |
+| DNS answers a multi-homed host with another network's address | upstream PR [#445](https://github.com/socktainer/socktainer/pull/445), [`fix/dns-multihomed-network-scoped`](https://github.com/rfay/socktainer/tree/fix/dns-multihomed-network-scoped) @ 6ed8ec6 (cv5 has b355bf9, same code, one test fewer) | upstream [#444](https://github.com/socktainer/socktainer/issues/444); fork [#7](https://github.com/rfay/socktainer/issues/7) | a second project, and sometimes the first (504) |
 | Health probes run as root, so `/tmp/healthy` is root-owned | [`fix/healthcheck-probe-user`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-user) | fork [#12](https://github.com/rfay/socktainer/issues/12) | a second project, `ddev restart` |
 | A stalled probe freezes the health loop | [`fix/healthcheck-probe-timeout`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-timeout) | fork [#12](https://github.com/rfay/socktainer/issues/12) | latent |
 | `HostConfig.PortBindings` always nil on inspect | [`fix/port-bindings-inspect`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect) | none | no; DDEV's #8657 covers it |
@@ -408,7 +413,7 @@ socktainer, main checkout `~/workspace/socktainer` (remotes `upstream`, `rfay`):
 |---|---|---|
 | `~/tmp/socktainer-cv5` | `tmp/combined-verify-5` @ 2a599ee | the running stack; **needs force-push** |
 | `~/workspace/socktainer-worktrees/port-bindings-inspect` | `fix/port-bindings-inspect` @ 42b6e46 | amended for sign-off + fmt; **needs force-push** |
-| `~/tmp/socktainer-dnsfix` | `fix/dns-multihomed-network-scoped` | pushed; next to file |
+| `~/tmp/socktainer-dnsfix` | `fix/dns-multihomed-network-scoped` @ 6ed8ec6 | pushed; upstream PR #445 |
 | `~/tmp/socktainer-hcfix` | `fix/healthcheck-probe-user-and-timeout` | pushed |
 | `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-timeout` | pushed |
 | `~/workspace/socktainer-worktrees/version-engine-version` | `fix/version-engine-version` | pushed |
