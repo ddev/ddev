@@ -211,16 +211,6 @@ func (app *DdevApp) getDBVersionFromVolume() (string, error) {
 		return "", nil
 	}
 
-	// If the project's own db container already has the volume mounted, read it from
-	// there instead of mounting it a second time. Cheaper than starting a container,
-	// and required on providers that allow a volume only one writer at a time: on
-	// apple container the second attachment aborts the probe container's boot with
-	// VZErrorDomain Code=2 "The storage device attachment is invalid.", which
-	// util.Failed() below turns into a fatal error for the whole command.
-	if v, ok := app.dbVersionFromRunningContainer(); ok {
-		return v, nil
-	}
-
 	_, out, err := dockerutil.RunSimpleContainer(
 		versionconstants.UtilitiesImage,
 		"GetExistingDBType-"+app.Name+"-"+util.RandString(6),
@@ -253,36 +243,6 @@ func (app *DdevApp) runningDBContainer() *container.Summary {
 		return nil
 	}
 	return c
-}
-
-// dbVersionFromRunningContainer reads the version file out of the project's running
-// db container, which already has the database volume mounted. Returns ok=false if
-// there is no running db container or the file could not be read, so the caller can
-// fall back to the throwaway probe container.
-func (app *DdevApp) dbVersionFromRunningContainer() (string, bool) {
-	c := app.runningDBContainer()
-	if c == nil {
-		return "", false
-	}
-
-	// Same files the probe container looks for, at the paths the db container itself
-	// mounts them on. The mysql path is fixed; the postgres one is version-dependent.
-	paths := []string{"/var/lib/mysql/db_mariadb_version.txt"}
-	if dataDir := app.GetPostgresDataDir(); dataDir != "" {
-		paths = append(paths, dataDir+"/PG_VERSION", app.GetPostgresDataPath()+"/PG_VERSION")
-	}
-
-	for _, p := range paths {
-		stdout, _, err := dockerutil.Exec(c.ID, "cat "+p, "")
-		if err != nil {
-			continue
-		}
-		if v := strings.TrimSpace(stdout); v != "" {
-			return v, true
-		}
-	}
-
-	return "", false
 }
 
 // GetDBTypeVersionFromString takes an input string and derives the info from the uses

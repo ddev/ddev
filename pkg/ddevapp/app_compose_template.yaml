@@ -34,9 +34,6 @@ services:
       - {{ .SeedSnapshotMountDir }}:{{ .SeedSnapshotMountTarget }}:ro
       {{ end }}
       - {{ .GlobalCacheMount }}
-    {{ if .BindGlobalCache }}
-    networks: ["ddev_default"]
-    {{ end }}{{/* end if .BindGlobalCache */}}
     restart: "no"
 
     user: '$DDEV_UID:$DDEV_GID'
@@ -110,7 +107,7 @@ services:
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     command: /pre-start.sh
 
-    networks: [{{ if .BindGlobalCache }}"ddev_default"{{ else }}"default", "ddev_default"{{ end }}]
+    networks: ["default", "ddev_default"]
     cap_add:
       - SYS_PTRACE
     working_dir: "{{ .WebWorkingDir }}"
