@@ -35,17 +35,16 @@ Order of remaining upstream work:
 2. **Watch [socktainer#444](https://github.com/socktainer/socktainer/issues/444) /
    [#445](https://github.com/socktainer/socktainer/pull/445)** (DNS answers a multi-homed host
    with another network's address; ours, filed 2026-10-11). Branch
-   `fix/dns-multihomed-network-scoped` @ 6ed8ec6, pushed. The issue's Compose repro is in
-   `~/tmp/dnsrepro/` (`repro.sh`); it fails on stock 9dd88f7 every run, passes on cv5 and on
+   `fix/dns-multihomed-network-scoped` @ 6ed8ec6, pushed. The issue's Compose repro is
+   `handoff/dnsrepro/repro.sh`; it fails on stock 9dd88f7 every run, passes on cv5 and on
    Docker Engine. Fork issue [rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7)
-   points at both. Drafts as filed: `~/tmp/sk-upstream/dns-issue.md`, `dns-pr.md`.
+   points at both.
 3. **Watch [socktainer#446](https://github.com/socktainer/socktainer/issues/446) /
    [#447](https://github.com/socktainer/socktainer/pull/447)** (health probes run as root; ours,
    filed 2026-10-11). Branch `fix/healthcheck-probe-user` @ c054611, pushed. Upstream ran probes
    as root on purpose since #214 (63d5f6f); the issue answers its stated reason. Repro:
-   `~/tmp/hcrepro/repro.sh` (uid 0 on stock, 1000 on cv5 and Docker Engine). Fork issue
-   [rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12) points at both. Drafts as
-   filed: `~/tmp/sk-upstream/hcuser-issue.md`, `hcuser-pr.md`.
+   `handoff/hcrepro/repro.sh` (uid 0 on stock, 1000 on cv5 and Docker Engine). Fork issue
+   [rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12) points at both.
 4. **A stalled health probe freezes the loop** — next to file. `fix/healthcheck-probe-timeout`
    (2892512), independent of 3. Per-item steps: search upstream by topic; confirm a test fails
    without the fix (if the new test needs new API, show it fails with the bug put back, or add
@@ -310,18 +309,26 @@ To upgrade `container`: `gh release download <ver> -R apple/container -p
 
 ### Test tools
 
-Kept in `~/tmp/socktainer-tools/`:
+Kept in [`handoff/`](handoff/) on this branch; run them from the repo root:
 
-- `execrepro-main.go` — non-interactive exec through the moby Go client, as DDEV does it.
-  Prints byte counts, exit code and timing; `CLOSEWRITE=1` half-closes like the CLI. It builds
-  against DDEV's vendored client, so copy it to `.gotmp/execrepro/main.go` in a DDEV checkout
-  and `go run ./.gotmp/execrepro <container> '<cmd>'` with
-  `DOCKER_HOST=unix://$HOME/.socktainer/container.sock`.
-- `exec-suite.sh <label>` — the exec suite run against #439 and #443: small and 15 MB outputs,
-  exit codes, piped stdin, a 20s exec, `-d`. Needs the repro in place as above.
-- `bxtest.Dockerfile` — a trivial build for `docker buildx build --no-cache`; remove
+- `handoff/testdata/execrepro/` — non-interactive exec through the moby Go client, as DDEV does
+  it. Prints byte counts, exit code and timing; `CLOSEWRITE=1` half-closes like the CLI. It
+  builds against DDEV's vendored client: `go run ./handoff/testdata/execrepro <container>
+  '<cmd>'` with `DOCKER_HOST=unix://$HOME/.socktainer/container.sock`. It sits under
+  `testdata` so `./...`, and so `go vet` and golangci-lint, skip it.
+- `handoff/exec-suite.sh <label>` — the exec suite run against #439 and #443: small and 15 MB
+  outputs, exit codes, piped stdin, a 20s exec, `-d`.
+- `handoff/dnsrepro/repro.sh` — the Compose repro from socktainer#444: `web` on two networks,
+  a peer on each, each resolving and fetching `web`.
+- `handoff/hcrepro/repro.sh` — the repro from socktainer#446: a `--user 1000:1000` container
+  whose probe records its uid and creates `/tmp/healthy`, which the container's user then
+  removes.
+- `handoff/bxtest.Dockerfile` — a trivial build for `docker buildx build --no-cache`; remove
   `buildx_buildkit_*` containers and their `_state` volumes first to test a cold bootstrap.
-- `wt-status.sh` — every socktainer worktree's branch against `rfay` and `upstream/main`.
+- `handoff/wt-status.sh` — every socktainer worktree's branch against `rfay` and
+  `upstream/main`.
+
+All the repros take `DOCKER_CONTEXT=orbstack` to compare with Docker Engine.
 
 To capture raw API traffic, put a logging proxy in front of the socket:
 `socat -v UNIX-LISTEN:$HOME/tmp/proxy.sock,fork UNIX-CONNECT:$HOME/.socktainer/container.sock 2> ~/tmp/socat.log`,
