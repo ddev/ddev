@@ -1,25 +1,81 @@
-# Contributing
+# Contributing to DDEV
 
-The general workflow for contributing to this project is outlined in this document.
+Thank you for helping. Start with the
+[organization-wide contributing guide](https://github.com/ddev/.github/blob/main/CONTRIBUTING.md),
+which covers reporting issues, pull request expectations, and **the rules for
+contributions written with AI tools**. This file adds what is specific to
+`ddev/ddev`.
 
-## Create an Issue
+## Ways to Help
 
-If you find a bug in this project, have trouble following the documentation, or have a question about the project, create an issue! There’s nothing to it and whatever issue you’re having, you’re likely not the only one, so others will find your issue helpful, too. For more information on how issues work, check out GitHub's [Issues guide](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues). Or there are lots of [other places for immediate support](https://docs.ddev.com/en/stable/users/support/).
+Code is only one way to contribute:
 
-### Issues Pro Tips
+- **Answer questions** in the [DDEV Discord](https://ddev.com/s/discord).
+- **Test pull requests and unreleased builds** and report what you find; see
+  [below](#testing-pull-requests-and-head).
+- **Improve the documentation.** Every page on
+  [docs.ddev.com](https://docs.ddev.com) has an edit link, and the
+  [writing style guide](https://docs.ddev.com/en/stable/developers/writing-style-guide/)
+  explains the conventions.
+- **Write or maintain an add-on.** See
+  [Creating Add-ons](https://docs.ddev.com/en/stable/users/extend/creating-add-ons/)
+  and the [add-on registry](https://addons.ddev.com).
+- **Fix a bug or add a feature**, as described below.
+- **[Sponsor DDEV](https://ddev.com/sponsor).** DDEV is funded by its
+  community, and sponsorship pays for maintenance.
 
-- **Check existing issues** for your issue. Duplicating an issue is slower for both parties, so search through open and closed issues to see if what you’re running into has been addressed already.
-- **Be clear** about what your problem is: What was the expected outcome? What happened instead? Detail how someone else can recreate the problem.
-- **Link to examples** recreate or display the problem with screenshots, screencasts, or code examples using [The Go Playground](https://play.golang.org). The better you can demonstrate the problem, the more attention your issue is likely to get.
-- **Include system details** like what the browser, library or operating system you’re using and its version.
-- **Paste error output** or logs in your issue or in a [Gist](http://gist.github.com/). If pasting them in the issue, wrap it in three backticks: ` ``` ` so that it renders nicely.
+## Testing Pull Requests and HEAD
 
-## Stack Overflow Questions and Documentation
+Every pull request and every commit to `main` produces downloadable builds.
+Trying them before release is one of the most useful things you can do:
 
-There are a number of situations where a particular approach to a DDEV solution can be stated more easily in [Stack Overflow](https://stackoverflow.com/tags/ddev) (use the "ddev" tag). We respond there quickly, but if you know the answer already, create the question there and then click the checkbox at the bottom "Answer your own question". Stack Overflow is often the best place to incubate documentation that affects only a few people or that needs time to get responses. And it's highly searchable on the web.
+```bash
+ddev utility download-ddev --pr <PR_NUMBER>   # A pull request's build
+ddev utility download-ddev --head             # The latest commit on main
+```
 
-## Pull Request
+The command prints how to use the downloaded binary in your current shell. See
+[Testing a PR](https://docs.ddev.com/en/stable/developers/building-contributing/#testing-a-pr)
+and
+[Testing Latest Commits on HEAD](https://docs.ddev.com/en/stable/developers/building-contributing/#testing-latest-commits-on-head)
+for other ways to install them, including Homebrew.
 
-If you’re able to patch the bug or add the feature yourself – fantastic, make a pull request with the code! Once you’ve submitted a pull request the maintainer(s) can compare your branch to the existing one and decide whether or not to incorporate (pull in) your changes.
+## Making a Code Change
 
-Refer to [Building, Testing, and Contributing](docs/content/developers/building-contributing.md) for help with how to build and test the project and how to submit a pull request.
+[Building, Testing, and Contributing](https://docs.ddev.com/en/stable/developers/building-contributing/)
+has the details. In short:
+
+1. **Discuss larger changes first**, in an issue or on Discord.
+2. **Fork and branch.** Name the branch
+   `YYYYMMDD_<your_username>_<short_description>`, for example
+   `20261012_rfay_fix_networking`.
+3. **Build with `make`**, which puts the binary in
+   `.gotmp/bin/<os>_<arch>/ddev`. Put that directory first in your `PATH`
+   while testing, or an installed DDEV runs instead.
+4. **Run the tests that cover your change**, for example
+   `make testpkg TESTARGS="-run TestName"`. The full suite is slow, and CI
+   runs it on every pull request. Integration tests need Docker.
+5. **Run `make staticrequired`** before you push. It runs the linters that CI
+   requires.
+6. **Open the pull request** using the template, with a
+   [Conventional Commits title](https://docs.ddev.com/en/stable/developers/building-contributing/#pull-request-title-guidelines)
+   such as `fix: handle spaces in project paths, fixes #1234`.
+
+Changes to the documentation follow the same process; see
+[Testing Documentation](https://docs.ddev.com/en/stable/developers/testing-docs/)
+to preview them locally.
+
+If you use an AI coding agent, point it at [AGENTS.md](AGENTS.md), which
+describes this repository's conventions for agents. The
+[AI rules](https://github.com/ddev/.github/blob/main/CONTRIBUTING.md#using-ai-tools)
+still apply to you: you are responsible for what the agent produces.
+
+## Learning More
+
+- [Contributor Training](https://ddev.com/blog/contributor-training/):
+  recordings of live sessions for contributors, and dates of upcoming ones.
+- [Developer documentation](https://docs.ddev.com/en/stable/developers/):
+  building, release management, and maintainer guides.
+- [DDEV Blog](https://ddev.com/blog/): release notes and in-depth articles.
+- [DDEV Discord](https://ddev.com/s/discord): the place to ask contributors and
+  maintainers for help with a change.
