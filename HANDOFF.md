@@ -1,14 +1,14 @@
 # DDEV on Apple Container + socktainer — investigation notes
 
 Working notes for [#7372](https://github.com/ddev/ddev/issues/7372), started 2026-08-02 and
-last verified 2026-10-11. This documents an exploration, not a feature: the DDEV changes here
+last verified 2026-10-12. This documents an exploration, not a feature: the DDEV changes here
 only take effect when the Docker provider is socktainer, and this file is expected to be
 deleted before any of it merges.
 
 Environment as last verified: Apple `container` 1.5.0 (signed installer, **not** Homebrew — see
 below), `socktainer` built from
-[`tmp/combined-verify-5`](https://github.com/rfay/socktainer/tree/tmp/combined-verify-5) @
-2a599ee (upstream `main` @ 9dd88f7 plus five fixes, listed below), docker CLI 29.9.0, docker
+upstream `main` @ 46abb58 with no fork fixes (the daemon currently running is that plus the
+probe-timeout fix, `~/tmp/socktainer-hcfix-timeout`), docker CLI 29.9.0, docker
 context `socktainer`, macOS 27.0.1 (26A434), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment).
 
@@ -29,36 +29,43 @@ covered the same bug; ours were closed as duplicates. For example:
 
 Order of remaining upstream work:
 
-1. **Watch [socktainer#439](https://github.com/socktainer/socktainer/pull/439)** (exec fix,
-   someone else's; our test report is posted on it) and DDEV's
-   [#8928](https://github.com/ddev/ddev/pull/8928). Nothing to do unless review asks.
-2. **Watch [socktainer#444](https://github.com/socktainer/socktainer/issues/444) /
-   [#445](https://github.com/socktainer/socktainer/pull/445)** (DNS answers a multi-homed host
-   with another network's address; ours, filed 2026-10-11). Branch
-   `fix/dns-multihomed-network-scoped` @ 6ed8ec6, pushed. The issue's Compose repro is
-   `handoff/dnsrepro/repro.sh`; it fails on stock 9dd88f7 every run, passes on cv5 and on
-   Docker Engine. Fork issue [rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7)
-   points at both.
-3. **Watch [socktainer#446](https://github.com/socktainer/socktainer/issues/446) /
-   [#447](https://github.com/socktainer/socktainer/pull/447)** (health probes run as root; ours,
-   filed 2026-10-11). Branch `fix/healthcheck-probe-user` @ c054611, pushed. Upstream ran probes
-   as root on purpose since #214 (63d5f6f); the issue answers its stated reason. Repro:
-   `handoff/hcrepro/repro.sh` (uid 0 on stock, 1000 on cv5 and Docker Engine). Fork issue
-   [rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12) points at both.
-4. **A stalled health probe freezes the loop** — next to file. `fix/healthcheck-probe-timeout`
-   (2892512), independent of 3. Per-item steps: search upstream by topic; confirm a test fails
-   without the fix (if the new test needs new API, show it fails with the bug put back, or add
-   one using only existing API, as #445 and #447 did); write a DDEV-independent repro; live-test
-   on stock and on cv5 and compare with Docker Engine (`DOCKER_CONTEXT=orbstack`); issue with a
-   step-by-step description of what happens, linking the PR/commit that introduced the behavior;
-   then PR.
-5. **`HostConfig.PortBindings` nil on inspect** — `fix/port-bindings-inspect` (42b6e46). No fork
-   issue exists; DDEV no longer depends on it (#8657).
-6. **`Server.Version` reports the API version** — `fix/version-engine-version` (395d2f0). Hold:
-   it overrides a deliberate testcontainers-java workaround in upstream's `VersionRoute.swift`,
-   so ask upstream first, as a question, not a PR.
-7. **Hostname uniqueness** — no fix exists; file as an issue with the proposal in "Open
+1. **A probe that outlives its timeout holds the health loop** — in progress, nothing filed yet.
+   The task-group race in `execProbe` can't cancel the XPC `wait()`, and a task group awaits
+   every child, so the timeout never fires before the probe exits. Repro:
+   `handoff/hctimeout/repro.sh` (stock: `starting`, empty log at 12s, one 30s entry at 40s;
+   fixed and Docker Engine: `unhealthy` by 12s, a ~2s failure every 4s). Fix: branch
+   `fix/healthcheck-probe-kill-on-timeout` from upstream `main` @ 46abb58, worktree
+   `~/tmp/socktainer-hcfix-timeout`, **uncommitted**; the new test fails after 5.3s with the
+   old race put back; 1154 tests and `make fmt` pass. Drafts: `~/tmp/sk-upstream/hctimeout-issue.md`,
+   `hctimeout-pr.md`, `hctimeout-commit.txt`. Next: user commits (signed, `--signoff`) and
+   pushes, open the issue, then the PR. It replaces the fork's `fix/healthcheck-probe-timeout`
+   (2892512), which abandoned the whole probe and conflicts with upstream's #327 follow-up.
+   The kill at the deadline can't land on Apple Container 1.5.0: `ClientProcess.kill` sends the
+   signal as an integer and the server reads a string
+   ([apple/container#1941](https://github.com/apple/container/issues/1941), fixes open as
+   [#1997](https://github.com/apple/container/pull/1997) and
+   [#1778](https://github.com/apple/container/pull/1778)), so timed-out probes keep running.
+2. **`HostConfig.PortBindings` nil on inspect** — `fix/port-bindings-inspect` (42b6e46), applies
+   cleanly to 46abb58. No fork issue exists; DDEV no longer depends on it (#8657).
+3. **`Server.Version` reports the API version** — `fix/version-engine-version` (395d2f0), applies
+   cleanly. Hold: it overrides a deliberate testcontainers-java workaround in upstream's
+   `VersionRoute.swift`, so ask upstream first, as a question, not a PR.
+4. **Hostname uniqueness** — no fix exists; file as an issue with the proposal in "Open
    blockers" below. Upstream's closed #385 (Compose recreate and rename) is related background.
+5. **The exec-path crash seen once** (see "Smaller gaps") — file only if it recurs.
+
+Done: [socktainer#439](https://github.com/socktainer/socktainer/pull/439) (exec, someone
+else's), [#445](https://github.com/socktainer/socktainer/pull/445) (DNS, ours, issue #444) and
+[#447](https://github.com/socktainer/socktainer/pull/447) (probe user, ours, issue #446) merged
+2026-10-12, as did DDEV's [#8928](https://github.com/ddev/ddev/pull/8928). Fork issues
+[rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7) and
+[#12](https://github.com/rfay/socktainer/issues/12) can be closed once item 1 is filed.
+
+Per-item steps: search upstream by topic; confirm a test fails without the fix (if the new
+test needs new API, show it fails with the bug put back, or add one using only existing API);
+write a DDEV-independent repro in `handoff/`; live-test on stock and on the fix and compare
+with Docker Engine (`DOCKER_CONTEXT=orbstack`); issue with a step-by-step description of what
+happens, linking the PR/commit that introduced the behavior; then PR.
 
 Per-item checklist, from socktainer's own `AGENTS.md`: Conventional Commits title; DCO
 `Signed-off-by` on every commit (`git commit --signoff`); `make fmt` leaves no diff; tests pass;
@@ -69,19 +76,16 @@ with "1Password: failed to fill whole buffer" otherwise. Never bypass signing.
 
 ## Where this stands
 
-**It works end to end on upstream socktainer plus five fixes, down from nine.** Two DDEV projects
+**It works end to end on stock upstream socktainer `main` @ 46abb58, with no fork fixes.** Two DDEV projects
 run side by side through one router — image builds, database, published ports, `ddev
 exec`/`mysql`/`snapshot`, `ddev restart`, a second project's `ddev start`, `ddev poweroff` —
 with no dnsmasq, no keepalive container and no hand-made buildkit node.
 
-**On stock upstream socktainer, `ddev start` no longer has to hang.** The exec hang is fixed on
-both sides, neither merged yet: upstream by [socktainer#439](https://github.com/socktainer/socktainer/pull/439),
-and in DDEV by [#8928](https://github.com/ddev/ddev/pull/8928), which half-closes the exec
-stream as the Docker CLI does. With only #8928, stock socktainer starts a first project, but the
-router can still 504 (DNS, socktainer#445) and a second project or `ddev restart` fails
-(healthcheck as root, socktainer#447).
+Verified 2026-10-12: two projects start, both sites answer through the router, `ddev
+exec`/`mysql`/`snapshot`/`restart` work, `handoff/exec-suite.sh` and both DNS and
+probe-user repros pass, and six `ddev poweroff`/`ddev start` cycles ran clean.
 
-**What still fails with all fixes applied:** anything that makes Compose recreate a container
+**What still fails:** anything that makes Compose recreate a container
 while the old one exists — `ddev snapshot restore`, and `ddev start` over a running project
 whose config changed. See "Hostname uniqueness" below. `ddev restart` is the workaround for
 the second; there is none for the first.
@@ -89,9 +93,7 @@ the second; there is none for the first.
 Merged DDEV-side hardenings from this work: [#8657](https://github.com/ddev/ddev/pull/8657)
 (bound host ports fallback), [#8658](https://github.com/ddev/ddev/pull/8658)
 (`GetExistingDBType` via exec), [#8659](https://github.com/ddev/ddev/pull/8659) (non-fatal
-global-cache chown). Open: [#8928](https://github.com/ddev/ddev/pull/8928) (exec half-close,
-branch `20261011_rfay_exec_closewrite`, worktree
-`~/workspace/ddev-worktrees/20261011_rfay_exec_closewrite`). Draft:
+global-cache chown). [#8928](https://github.com/ddev/ddev/pull/8928) (exec half-close). Draft:
 [#8656](https://github.com/ddev/ddev/pull/8656), this branch.
 
 ### What still has to be done by hand
@@ -104,28 +106,16 @@ branch `20261011_rfay_exec_closewrite`, worktree
 
 Mutagen needs no per-project setting: it is forced off automatically on this provider.
 
-## socktainer fixes in `tmp/combined-verify-5`
+## socktainer fixes not yet upstream
 
-Each is one commit on upstream `main` @ 9dd88f7, signed and DCO signed-off.
-`tmp/combined-verify-5` @ 2a599ee merges all of them; it passes socktainer's full test suite
-(1120 tests) and `make fmt`.
+None is needed for DDEV any more. `tmp/combined-verify-5` (2a599ee, on 9dd88f7) is obsolete:
+upstream `main` now carries its exec, DNS and probe-user fixes.
 
-| Fix | Branch / source | Issues | Needed for DDEV |
+| Fix | Branch | Issues | Needed for DDEV |
 |---|---|---|---|
-| Exec without stdin never ends unless the client half-closes | upstream PR [#439](https://github.com/socktainer/socktainer/pull/439) (c338b88, fetched as local `pr-439`) | upstream [#438](https://github.com/socktainer/socktainer/issues/438); fork [#8](https://github.com/rfay/socktainer/issues/8) | `ddev start` at all, unless DDEV has #8928 |
-| DNS answers a multi-homed host with another network's address | upstream PR [#445](https://github.com/socktainer/socktainer/pull/445), [`fix/dns-multihomed-network-scoped`](https://github.com/rfay/socktainer/tree/fix/dns-multihomed-network-scoped) @ 6ed8ec6 (cv5 has b355bf9, same code, one test fewer) | upstream [#444](https://github.com/socktainer/socktainer/issues/444); fork [#7](https://github.com/rfay/socktainer/issues/7) | a second project, and sometimes the first (504) |
-| Health probes run as root, so `/tmp/healthy` is root-owned | upstream PR [#447](https://github.com/socktainer/socktainer/pull/447), [`fix/healthcheck-probe-user`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-user) @ c054611 | upstream [#446](https://github.com/socktainer/socktainer/issues/446); fork [#12](https://github.com/rfay/socktainer/issues/12) | a second project, `ddev restart` |
-| A stalled probe freezes the health loop | [`fix/healthcheck-probe-timeout`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-timeout) | fork [#12](https://github.com/rfay/socktainer/issues/12) | latent |
+| A probe past its timeout holds the health loop | `fix/healthcheck-probe-kill-on-timeout` (uncommitted, see "Resume here") | fork [#12](https://github.com/rfay/socktainer/issues/12) | latent |
 | `HostConfig.PortBindings` always nil on inspect | [`fix/port-bindings-inspect`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect) | none | no; DDEV's #8657 covers it |
 | `Server.Version` reports the API version | [`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version) | fork [#13](https://github.com/rfay/socktainer/issues/13) | cosmetic |
-
-`tmp/combined-verify-5` merges `fix/healthcheck-probe-user-and-timeout`, which holds both
-healthcheck commits.
-
-The DNS and healthcheck branches were re-ported from scratch rather than rebased, because
-upstream had rewritten the code they touch. The DNS port also fixes a bug in the original fork
-commit, which left stale entries on a multi-homed container's other networks after stop or
-delete.
 
 ### The exec fix, for the record
 
@@ -240,6 +230,13 @@ low bind addresses (`-p 127.0.0.1:80:80`); DDEV publishes without one.
   the configured user. Harmless to DDEV, since the owner is right.
 - **A buildkit node that has exited must be recreated, never restarted** — a restarted one
   fails every build with `rbind … operation not permitted`. Not re-checked on 1.5.0.
+- **One daemon crash, not reproduced.** Stock 46abb58, started over containers the previous
+  daemon had left running for 17 hours, died on the first `ddev poweroff`: a SwiftNIO
+  precondition in `Posix.close` (an unacceptable errno, so most likely `EBADF`, a socket fd
+  already closed elsewhere), from `channel.close` in `DockerTCPProtocolUpgrader.upgrade`'s
+  error path (`DockerConnectionUtility.swift:287`), right after two exec starts. Report:
+  `~/Library/Logs/DiagnosticReports/socktainer-2026-10-12-101205.ips`. Six poweroff/start
+  cycles afterwards ran clean.
 - **Upstream's DNS forwards non-container names to the vmnet gateway** (#426), which depends
   on macOS's own resolver answering on `192.168.64.1` — see the next section.
 
@@ -273,7 +270,7 @@ pkill -f "\.build/release/socktainer$"
 rm -f ~/.socktainer/container.sock
 
 # 2. build the branch under test, in its worktree
-cd ~/tmp/socktainer-cv5          # worktree of tmp/combined-verify-5
+cd ~/workspace/socktainer        # tmp/upstream-main-test, reset to upstream/main
 swift build -c release           # ~380s from empty .build, ~150-330s incremental
 
 # 3. bring both systems back up
@@ -288,8 +285,9 @@ docker context use socktainer                    # socktainer creates the contex
 To test a different socktainer build, swap only the daemon: `ddev poweroff`, `pkill` as above,
 start the other build's `.build/release/socktainer` with `nohup`, test, then swap back and
 `ddev start` the projects again. One daemon at a time: they share the socket and DNS port.
-Builds on disk: `~/tmp/socktainer-cv5` (the working stack), `~/workspace/socktainer` on
-`tmp/upstream-main-test` (stock upstream 9dd88f7), `~/tmp/socktainer-pr439` (#439 alone).
+Builds on disk: `~/workspace/socktainer` on `tmp/upstream-main-test` (stock upstream
+46abb58), `~/tmp/socktainer-hcfix-timeout` (that plus the probe-timeout fix). The
+`~/tmp/socktainer-cv5`, `-dnsfix`, `-hcuser`, `-hcfix` and `-pr439` worktrees are obsolete.
 
 socktainer's tests run here with
 `swift test -Xswiftc -plugin-path -Xswiftc /Library/Developer/CommandLineTools/usr/lib/swift/host/plugins/testing`;
@@ -324,6 +322,8 @@ Kept in [`handoff/`](handoff/) on this branch; run them from the repo root:
 - `handoff/hcrepro/repro.sh` — the repro from socktainer#446: a `--user 1000:1000` container
   whose probe records its uid and creates `/tmp/healthy`, which the container's user then
   removes.
+- `handoff/hctimeout/repro.sh` — a probe that sleeps 30s against a 2s timeout; prints health
+  status, log entries and the probe's own start/finish log at 12s and 40s.
 - `handoff/bxtest.Dockerfile` — a trivial build for `docker buildx build --no-cache`; remove
   `buildx_buildkit_*` containers and their `_state` volumes first to test a cold bootstrap.
 - `handoff/wt-status.sh` — every socktainer worktree's branch against `rfay` and
@@ -365,7 +365,7 @@ whenever the provider cannot be reached, detection returns false and behavior is
 - `environment.go`, `version.go`, `utility-port-diagnose.go`, `addons.go` — report the
   provider as `apple-container`, and give add-on installs the virtiofs propagation delay.
 
-The exec half-close is deliberately **not** on this branch; it is #8928 on its own branch.
+The exec half-close (#8928) is in `main`, so this branch has it.
 Removed 2026-10-11 as dead code: an exec-based db-version read that upstream #8658 had made
 unreachable, and a `networks: ["ddev_default"]` restriction on db and web that
 `fixupComposeYaml` always undid.
@@ -401,14 +401,14 @@ the constraint is per volume, and web, db and the router all attach the cache re
 within one project, so per-project naming doesn't help. Splitting per writer would, at a
 cost paid on every provider.
 
-## Current machine state (2026-10-11)
+## Current machine state (2026-10-12)
 
 - Apple `container` **1.5.0** from the signed installer at `/usr/local`
   (`container-apiserver` running). Homebrew's `container` is also 1.5.0.
-- socktainer running by hand from `~/tmp/socktainer-cv5/.build/release/socktainer`
-  (`tmp/combined-verify-5` @ 2a599ee), built without `make`, so `docker version` shows
-  `unspecified`. Log: `~/tmp/socktainer.log`.
-- `appletest` and `appletest2` (`~/tmp/`) running, both serving 200 over HTTP and HTTPS;
+- socktainer running by hand from `~/tmp/socktainer-hcfix-timeout/.build/release/socktainer`
+  (upstream `main` @ 46abb58 plus the uncommitted probe-timeout fix), built without `make`, so
+  `docker version` shows `unspecified`. Log: `~/tmp/socktainer.log`.
+- `appletest` and `appletest2` (`~/tmp/`) running, both serving 200 over HTTPS;
   `appletest3` untested. All need `omit_containers: [ddev-ssh-agent]`.
 - **The root Homebrew dnsmasq service is stopped** (`sudo brew services stop dnsmasq`); no
   dnsmasq is running. Restart it only if `*.example.site` resolution matters; vmnet DNS then
@@ -416,8 +416,9 @@ cost paid on every provider.
 - No `keepalive` container. buildx bootstraps its own nodes.
 - `traefik_monitor_port` is **11999** in `~/.ddev/global_config.yaml` (10999 is OrbStack's).
 - The global `~/.ddev/router-compose.healthcheck.yaml` override stays removed.
-- The built `ddev` in this worktree has no exec half-close, so it exercises socktainer's exec
-  fix directly.
+- The built `ddev` in this worktree includes #8928's exec half-close, since the branch is
+  rebased on `main`.
+- **Check `docker context show` first**: it was `orbstack` at the start of 2026-10-12.
 
 ### Repositories and worktrees
 
@@ -425,26 +426,18 @@ socktainer, main checkout `~/workspace/socktainer` (remotes `upstream`, `rfay`):
 
 | Worktree | Branch | State |
 |---|---|---|
-| `~/tmp/socktainer-cv5` | `tmp/combined-verify-5` @ 2a599ee | the running stack; pushed |
+| `~/workspace/socktainer` | `tmp/upstream-main-test` @ 46abb58 | stock upstream build, local only |
+| `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-kill-on-timeout` | **uncommitted fix**, the running build; not pushed |
 | `~/workspace/socktainer-worktrees/port-bindings-inspect` | `fix/port-bindings-inspect` @ 42b6e46 | pushed |
-| `~/tmp/socktainer-dnsfix` | `fix/dns-multihomed-network-scoped` @ 6ed8ec6 | pushed; upstream PR #445 |
-| `~/tmp/socktainer-hcfix` | `fix/healthcheck-probe-user-and-timeout` | pushed |
-| `~/tmp/socktainer-hcuser` | `fix/healthcheck-probe-user` @ c054611 | pushed; upstream PR #447 |
-| `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-timeout` | pushed |
 | `~/workspace/socktainer-worktrees/version-engine-version` | `fix/version-engine-version` | pushed |
-| `~/tmp/socktainer-pr439` | `pr-439` (upstream PR #439) | local only, test build |
-| `~/workspace/socktainer` | `tmp/upstream-main-test` | stock upstream build |
+| `~/tmp/socktainer-cv5`, `-dnsfix`, `-hcuser`, `-hcfix`, `-pr439` | merged or superseded | removable |
+
+The `~/tmp/socktainer-hcfix-timeout` worktree used to hold `fix/healthcheck-probe-timeout`
+(2892512, pushed), which the new branch supersedes.
 
 Local-only backups:
 `backup/combined-verify-5-fork-exec` (the previous cv5, with the fork's exec fix) and
 `backup/version-v-prefix-strip`.
 
-DDEV worktrees: this branch is in
-`~/workspace/ddev-worktrees/20260802_rfay_apple_container_experiment`, and the branch for PR
-8928 is in `~/workspace/ddev-worktrees/20261011_rfay_exec_closewrite`.
-
-### Push state
-
-Everything above was pushed as of 2026-10-11, and the dead exec worktrees are removed (their
-branches remain on `rfay`). `handoff/wt-status.sh` shows each socktainer worktree against `rfay`
-and `upstream/main`. The user pushes; an agent never does.
+DDEV worktree: this branch is in
+`~/workspace/ddev-worktrees/20260802_rfay_apple_container_experiment`.
