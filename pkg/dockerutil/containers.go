@@ -1105,6 +1105,10 @@ func ExecWithStdin(containerID string, command string, uid string, stdin io.Read
 			_, _ = io.Copy(execAttach.Conn, stdin)
 			_ = execAttach.CloseWrite()
 		}()
+	} else {
+		// Half-close even with nothing to send, as the docker CLI does, so a daemon
+		// that waits for the client's end of input before closing the stream ends it.
+		_ = execAttach.CloseWrite()
 	}
 	defer execAttach.Close()
 
