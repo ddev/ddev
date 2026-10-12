@@ -7,7 +7,7 @@ deleted before any of it merges.
 
 Environment as last verified: Apple `container` 1.5.0 (signed installer, **not** Homebrew — see
 below), `socktainer` built from
-upstream `main` @ 46abb58 with no fork fixes (the daemon left running is that plus the
+upstream `main` as of 2026-10-12 with no fork fixes (the daemon left running is that plus the
 probe-timeout fix, `~/tmp/socktainer-hcfix-timeout`), docker CLI 29.9.0, docker
 context `socktainer`, macOS 27.0.1 (26A434), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment).
@@ -29,34 +29,53 @@ covered the same bug; ours were closed as duplicates. For example:
 `gh search issues --repo socktainer/socktainer "<topic words>"` and
 `gh pr list -R socktainer/socktainer --state all --search "<topic words>"`.
 
-Waiting on upstream review (nothing to do unless review asks, or upstream moves on):
+Waiting on upstream (as of 2026-10-12 evening):
 
 1. **[socktainer#455](https://github.com/socktainer/socktainer/issues/455) /
    [#456](https://github.com/socktainer/socktainer/pull/456)** — a probe that outlives its
-   timeout holds the health loop. Branch `fix/healthcheck-probe-kill-on-timeout` @ daea602 (a second commit
-   bounds the kill at the deadline too, per CodeRabbit's review);
-   repro `handoff/hctimeout/repro.sh`. The kill at the deadline can't land on Apple Container
-   1.5.0: `ClientProcess.kill` sends the signal as an integer and the server reads a string
+   timeout holds the health loop. Branch `fix/healthcheck-probe-kill-on-timeout`; repro
+   `handoff/hctimeout/repro.sh`. All checks green, mergeable, waiting on maintainer review.
+   CodeRabbit review rounds added, in order: the kill at the deadline is bounded too (1 s,
+   `probeKillTimeout`); the stalled-call tests check "returned before release" instead of wall
+   time, after CI's loaded runner failed the timing versions; the tests confirm the stalled
+   call was entered; and each container has at most one probe running, so a probe that never
+   exits can't leave one more process per interval (while it runs, each interval records an
+   immediate failure). Declined, with a reply: counting a probe that finishes microseconds
+   before the deadline as a timeout (Docker has the same race).
+   **One CodeRabbit comment is unanswered**: keep the container marked in flight when
+   `wait()` throws. Plan: decline. No other path ever confirms the exit, so the container
+   would never be probed again after one XPC error (an API server restart, say), freezing its
+   health, the bug #456 fixes; today's worst case is one extra probe per `wait()` failure.
+   Background: the kill can't land on Apple Container 1.5.0 at all — `ClientProcess.kill`
+   sends the signal as an integer and the server reads a string
    ([apple/container#1941](https://github.com/apple/container/issues/1941), fixes open as
    [#1997](https://github.com/apple/container/pull/1997) and
-   [#1778](https://github.com/apple/container/pull/1778)), so timed-out probes keep running.
+   [#1778](https://github.com/apple/container/pull/1778)), so timed-out probes run to
+   completion.
 2. **[socktainer#457](https://github.com/socktainer/socktainer/issues/457) /
    [#458](https://github.com/socktainer/socktainer/pull/458)** — `HostConfig.PortBindings`
-   always null on inspect. Branch `fix/port-bindings-inspect-request` @ e386105; repro
-   `handoff/pbrepro/repro.sh`. Docker reports the *request* there (`""` for an unset
+   always null on inspect. Branch `fix/port-bindings-inspect-request`; repro
+   `handoff/pbrepro/repro.sh`. All checks green, no CodeRabbit comments, waiting on
+   maintainer review. Docker reports the *request* there (`""` for an unset
    HostIp/HostPort, `{}` for no `-p` or only `-P`), so the fix stores it in a
    `socktainer.port-bindings` label, like `socktainer.healthcheck`, rather than copying the
-   bound ports as the fork's older `fix/port-bindings-inspect` (42b6e46) did. DDEV no longer
-   depends on it (#8657).
+   bound ports as the fork's older `fix/port-bindings-inspect` did. DDEV no longer depends on
+   it (#8657).
 3. **[socktainer#459](https://github.com/socktainer/socktainer/issues/459)** — question:
-   `Server.Version` reports the API version `1.51`, on purpose, because testcontainers-java
-   requires a server version of at least 1.6.0 and socktainer is at 1.5.3. The question
-   proposes the Docker Engine release matching the maximum API version (API 1.51 is Engine
-   28.3–28.5, so `28.3.0`), kept in the `Makefile` next to `DOCKER_ENGINE_API_MAX_VERSION`. If
-   upstream agrees, write that PR fresh from upstream `main`; the fork's
-   `fix/version-engine-version` (395d2f0) reports socktainer's own version instead and would
-   break testcontainers. Fork issue [rfay/socktainer#13](https://github.com/rfay/socktainer/issues/13)
-   points at it. For DDEV the value is display only: `ddev version`, `ddev utility
+   should `Server.Version` report a Docker Engine version (`28.3.0`, the Engine release for
+   API 1.51) instead of the API version `1.51`? Upstream uses `1.51` on purpose, because
+   testcontainers-java requires a server version of at least 1.6.0. benoitf answered: possible,
+   but "clients can call different API based on engine's version", so first **list the impact
+   on classic clients**, and bump in intermediate steps rather than straight to the latest.
+   He also noted socktainer's own version tracks Apple Container's (socktainer 1.4.x supports
+   container 1.4.x), so reporting it stays below testcontainers' 1.6.0 floor until container
+   1.6. **Next: research** which common clients branch on `Server.Version` — Docker CLI,
+   Compose, buildx, the Go SDK (moby client), docker-java/testcontainers-java,
+   testcontainers-go, docker-py, Docker.DotNet — and what each would do differently at
+   `28.3.0`, then reply on #459 with that list. Write any PR fresh from upstream `main`; the
+   fork's `fix/version-engine-version` reports socktainer's own version and would break
+   testcontainers. Fork issue [rfay/socktainer#13](https://github.com/rfay/socktainer/issues/13)
+   points at #459. For DDEV the value is display only: `ddev version`, `ddev utility
    dockercheck` and analytics show "Docker version: 1.51"; its requirement check uses
    `ApiVersion` (1.51 ≥ 1.44).
 
@@ -94,7 +113,7 @@ with "1Password: failed to fill whole buffer" otherwise. Never bypass signing.
 
 ## Where this stands
 
-**It works end to end on stock upstream socktainer `main` @ 46abb58, with no fork fixes.** Two DDEV projects
+**It works end to end on stock upstream socktainer `main` (as of 2026-10-12), with no fork fixes.** Two DDEV projects
 run side by side through one router — image builds, database, published ports, `ddev
 exec`/`mysql`/`snapshot`, `ddev restart`, a second project's `ddev start`, `ddev poweroff` —
 with no dnsmasq, no keepalive container and no hand-made buildkit node.
@@ -126,14 +145,14 @@ Mutagen needs no per-project setting: it is forced off automatically on this pro
 
 ## socktainer fixes not yet upstream
 
-None is needed for DDEV any more. `tmp/combined-verify-5` (2a599ee, on 9dd88f7) is obsolete:
+None is needed for DDEV any more. The old combined branch `tmp/combined-verify-5` is obsolete:
 upstream `main` now carries its exec, DNS and probe-user fixes.
 
 | Fix | Branch | Issues | Needed for DDEV |
 |---|---|---|---|
-| A probe past its timeout holds the health loop | upstream PR [#456](https://github.com/socktainer/socktainer/pull/456), [`fix/healthcheck-probe-kill-on-timeout`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-kill-on-timeout) @ daea602 | upstream [#455](https://github.com/socktainer/socktainer/issues/455) | latent |
-| `HostConfig.PortBindings` always nil on inspect | upstream PR [#458](https://github.com/socktainer/socktainer/pull/458), [`fix/port-bindings-inspect-request`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect-request) @ e386105 | upstream [#457](https://github.com/socktainer/socktainer/issues/457) | no; DDEV's #8657 covers it |
-| `Server.Version` reports the API version | none yet; question [#459](https://github.com/socktainer/socktainer/issues/459) (fork's `fix/version-engine-version` is the wrong approach) | fork [#13](https://github.com/rfay/socktainer/issues/13) | display only |
+| A probe past its timeout holds the health loop | upstream PR [#456](https://github.com/socktainer/socktainer/pull/456), [`fix/healthcheck-probe-kill-on-timeout`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-kill-on-timeout) | upstream [#455](https://github.com/socktainer/socktainer/issues/455) | latent |
+| `HostConfig.PortBindings` always nil on inspect | upstream PR [#458](https://github.com/socktainer/socktainer/pull/458), [`fix/port-bindings-inspect-request`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect-request) | upstream [#457](https://github.com/socktainer/socktainer/issues/457) | no; DDEV's #8657 covers it |
+| `Server.Version` reports the API version | none yet; question [#459](https://github.com/socktainer/socktainer/issues/459) needs a client-impact list first (fork's `fix/version-engine-version` is the wrong approach) | fork [#13](https://github.com/rfay/socktainer/issues/13) | display only |
 
 ### The exec fix, for the record
 
@@ -145,7 +164,7 @@ until it half-closes. The Docker CLI always half-closes after attaching
 so `docker exec` worked; Go clients such as DDEV's `dockerutil.Exec` hung. A `socat` capture
 showed the CLI's and DDEV's requests and responses byte-identical apart from that half-close.
 
-Our own fix, PR #443 (branch `fix/exec-hijack-stdout-only`, 087134f), was closed as a duplicate
+Our own fix, PR #443 (branch `fix/exec-hijack-stdout-only`), was closed as a duplicate
 of #439. Both builds passed the same suite, including 15 MB of output arriving intact; #439 is
 about twice as fast and has fuller tests. The older fork branch `fix/exec-hijack-close` is
 superseded.
@@ -248,7 +267,7 @@ low bind addresses (`-p 127.0.0.1:80:80`); DDEV publishes without one.
   the configured user. Harmless to DDEV, since the owner is right.
 - **A buildkit node that has exited must be recreated, never restarted** — a restarted one
   fails every build with `rbind … operation not permitted`. Not re-checked on 1.5.0.
-- **One daemon crash, not reproduced.** Stock 46abb58, started over containers the previous
+- **One daemon crash, not reproduced.** Stock upstream `main` (2026-10-12), started over containers the previous
   daemon had left running for 17 hours, died on the first `ddev poweroff`: a SwiftNIO
   precondition in `Posix.close` (an unacceptable errno, so most likely `EBADF`, a socket fd
   already closed elsewhere), from `channel.close` in `DockerTCPProtocolUpgrader.upgrade`'s
@@ -304,8 +323,8 @@ To test a different socktainer build, swap only the daemon: `ddev poweroff`, `pk
 start the other build's `.build/release/socktainer` with `nohup`, test, then swap back and
 `ddev start` the projects again. One daemon at a time: they share the socket and DNS port.
 Builds on disk: `~/workspace/socktainer` on `tmp/upstream-main-test` (stock upstream
-46abb58), `~/tmp/socktainer-hcfix-timeout` (that plus #456),
-`~/tmp/socktainer-portbindings` (46abb58 plus #458). Once upstream moves, reset
+`main` as of 2026-10-12), `~/tmp/socktainer-hcfix-timeout` (that plus #456),
+`~/tmp/socktainer-portbindings` (that plus #458). Once upstream moves, reset
 `tmp/upstream-main-test` to `upstream/main` and rebuild there.
 
 socktainer's tests run here with
@@ -427,7 +446,7 @@ cost paid on every provider.
 - Apple `container` **1.5.0** from the signed installer at `/usr/local`
   (`container-apiserver` running). Homebrew's `container` is also 1.5.0.
 - socktainer running by hand from `~/tmp/socktainer-hcfix-timeout/.build/release/socktainer`
-  (upstream `main` @ 46abb58 plus #456 @ daea602, without #458), built without `make`, so
+  (upstream `main` as of 2026-10-12 plus #456, without #458), built without `make`, so
   `docker version` shows `unspecified`. Log: `~/tmp/socktainer.log`.
 - `appletest` and `appletest2` (`~/tmp/`) running, both serving 200 over HTTPS;
   `appletest3` untested. All need `omit_containers: [ddev-ssh-agent]`.
@@ -447,15 +466,15 @@ socktainer, main checkout `~/workspace/socktainer` (remotes `upstream`, `rfay`):
 
 | Worktree | Branch | State |
 |---|---|---|
-| `~/workspace/socktainer` | `tmp/upstream-main-test` @ 46abb58 | stock upstream build, local only |
-| `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-kill-on-timeout` @ daea602 | pushed; upstream PR #456; the running build |
-| `~/tmp/socktainer-portbindings` | `fix/port-bindings-inspect-request` @ e386105 | pushed; upstream PR #458 |
-| `~/workspace/socktainer-worktrees/version-engine-version` | `fix/version-engine-version` @ 395d2f0 | pushed; superseded by the approach in #459 |
+| `~/workspace/socktainer` | `tmp/upstream-main-test` | stock upstream build, local only |
+| `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-kill-on-timeout` | pushed; upstream PR #456; the running build |
+| `~/tmp/socktainer-portbindings` | `fix/port-bindings-inspect-request` | pushed; upstream PR #458 |
+| `~/workspace/socktainer-worktrees/version-engine-version` | `fix/version-engine-version` | pushed; superseded by the approach in #459 |
 
 All clean and pushed as of 2026-10-12. The cv5, dnsfix, hcfix, hcuser and pr439 worktrees
 were removed; their branches remain locally and on `rfay` (`pr-439` is local only, and
-merged upstream). Superseded fork branches still on `rfay`: `fix/healthcheck-probe-timeout`
-(2892512), `fix/port-bindings-inspect` (42b6e46), `tmp/combined-verify-5` (2a599ee).
+merged upstream). Superseded fork branches still on `rfay`: `fix/healthcheck-probe-timeout`,
+`fix/port-bindings-inspect`, `tmp/combined-verify-5`.
 
 Local-only backups:
 `backup/combined-verify-5-fork-exec` (the previous cv5, with the fork's exec fix) and
