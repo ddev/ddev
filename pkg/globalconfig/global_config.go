@@ -711,12 +711,22 @@ func ReadProjectList() error {
 		return fmt.Errorf("could not read global projects file %s: %v", globalProjectsFile, err)
 	}
 
-	// Unmarshal into a fresh map, since unmarshaling into the existing one
-	// would keep projects that were removed from the file since the last read.
+	// A fresh map drops projects removed from the file since the last read.
+	// An unparseable list is set aside rather than blocking every command,
+	// since projects re-register on `ddev start`.
 	projects := map[string]*ProjectInfo{}
 	err = yaml.Unmarshal(source, &projects)
 	if err != nil {
-		return fmt.Errorf("unable to load DDEV global projects file %s: %v", globalProjectsFile, err)
+		badFile := globalProjectsFile + ".bad"
+		output.UserErr.Warningf("Unable to parse global projects file %s, moving it to %s and starting with an empty project list: %v", globalProjectsFile, badFile, err)
+		DdevProjectList = make(map[string]*ProjectInfo)
+		if err = os.Rename(globalProjectsFile, badFile); err != nil {
+			return fmt.Errorf("unable to move unparseable global projects file %s to %s: %v", globalProjectsFile, badFile, err)
+		}
+		return WriteProjectList(DdevProjectList)
+	}
+	if projects == nil {
+		projects = make(map[string]*ProjectInfo)
 	}
 	DdevProjectList = projects
 

@@ -458,3 +458,27 @@ func TestGlobalConfigOverrides(t *testing.T) {
 	require.NoError(t, globalconfig.ReadGlobalConfig())
 	require.Equal(t, []string{"ddev-router"}, globalconfig.DdevGlobalConfig.OmitContainersGlobal)
 }
+
+// TestReadProjectListUnparseable checks that an unparseable project list is
+// set aside instead of blocking every command.
+func TestReadProjectListUnparseable(t *testing.T) {
+	origProjectList := globalconfig.DdevProjectList
+	t.Cleanup(func() {
+		globalconfig.DdevProjectList = origProjectList
+	})
+	t.Setenv("DDEV_XDG_CONFIG_HOME", t.TempDir())
+
+	projectListPath := globalconfig.GetProjectListPath()
+	garbage := []byte("{{{ not: [yaml\n")
+	require.NoError(t, os.WriteFile(projectListPath, garbage, 0644))
+
+	require.NoError(t, globalconfig.ReadProjectList())
+	require.Empty(t, globalconfig.DdevProjectList)
+
+	saved, err := os.ReadFile(projectListPath + ".bad")
+	require.NoError(t, err)
+	require.Equal(t, garbage, saved)
+
+	require.NoError(t, globalconfig.ReadProjectList())
+	require.NotNil(t, globalconfig.DdevProjectList)
+}

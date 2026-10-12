@@ -6,6 +6,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/state"
 	"github.com/ddev/ddev/pkg/config/state/types"
+	"github.com/ddev/ddev/pkg/util"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -37,9 +38,17 @@ func (s *yamlStorage) Read() (raw types.RawState, err error) {
 		return
 	}
 
-	err = yaml.Unmarshal(content, &raw)
+	// The state is a disposable cache, so an empty file (left by a crash
+	// mid-write) or an unparseable one is reset rather than blocking DDEV.
+	if err = yaml.Unmarshal(content, &raw); err != nil {
+		util.Debug("Ignoring unreadable state file %s: %v", s.filePath, err)
+		return make(types.RawState), nil
+	}
+	if raw == nil {
+		raw = make(types.RawState)
+	}
 
-	return
+	return raw, nil
 }
 
 // Write see interface description.
@@ -58,9 +67,23 @@ func (s *yamlStorage) Write(raw types.RawState) (err error) {
 	finalContent := []byte("---\n")
 	finalContent = append(finalContent, content...)
 
-	err = os.WriteFile(s.filePath, finalContent, 0600)
+	// Write to a temp file and rename it into place so a crash mid-write
+	// cannot leave a truncated state file behind.
+	tmp, err := os.CreateTemp(filepath.Dir(s.filePath), filepath.Base(s.filePath)+".*.tmp")
+	if err != nil {
+		return
+	}
+	defer func() { _ = os.Remove(tmp.Name()) }()
 
-	return
+	if _, err = tmp.Write(finalContent); err != nil {
+		_ = tmp.Close()
+		return
+	}
+	if err = tmp.Close(); err != nil {
+		return
+	}
+
+	return os.Rename(tmp.Name(), s.filePath)
 }
 
 func (s *yamlStorage) TagName() string {
