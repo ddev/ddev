@@ -277,6 +277,8 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 
 COPY ddev-webserver-base-files /
 COPY ddev-webserver-base-scripts /
+# Compatibility for user and add-on supervisor configs that still log to the old FIFO
+RUN ln -sf /proc/1/fd/1 /var/tmp/logpipe
 RUN sed -i 's#listen = /run/php-fpm.sock#listen = /run/php/php-fpm.sock#' /etc/php/*/fpm/pool.d/www.conf
 # Debian's nginx (since 1.26.3-3+deb13u4, a workaround for Debian bug #1126960)
 # passes the host to backends as the port-stripped $host nginx variable instead of

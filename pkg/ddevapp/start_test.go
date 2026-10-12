@@ -10,8 +10,10 @@ import (
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/distribution/reference"
@@ -376,4 +378,37 @@ func familiarImage(t *testing.T, image string) string {
 	named, err := reference.ParseNormalizedNamed(image)
 	require.NoError(t, err)
 	return reference.FamiliarString(reference.TagNameOnly(named))
+}
+
+// TestStartFailsFastOnFatalWebserver makes sure `ddev start` fails quickly
+// when php-fpm can't start, rather than waiting out the healthcheck timeout.
+// See https://github.com/ddev/ddev/pull/6033
+func TestStartFailsFastOnFatalWebserver(t *testing.T) {
+	testcommon.SkipUnlessDefaultEnvironment(t)
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	webBuildDir := app.GetConfigPath("web-build")
+	dockerfile := filepath.Join(webBuildDir, "Dockerfile.breakfpm")
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		_ = os.RemoveAll(dockerfile)
+	})
+
+	err = os.MkdirAll(webBuildDir, 0755)
+	require.NoError(t, err)
+	// An invalid pool config sends php-fpm to FATAL in supervisord
+	err = os.WriteFile(dockerfile, []byte(`RUN for d in /etc/php/*/fpm/pool.d; do printf "[broken\nthis is not valid\n" > $d/zz-broken.conf; done`+"\n"), 0644)
+	require.NoError(t, err)
+
+	// Starting by name needs the project in the global project list, which earlier tests may have removed
+	t.Chdir(site.Dir)
+	// A failed start exits the process, so it has to run in a separate one
+	out, err := exec.RunHostCommand(DdevBin, "start")
+	require.Error(t, err, "output=%s", out)
+	// Without the fast failure, start waits out the healthcheck and reports a timeout instead
+	require.Contains(t, out, "web container exited")
 }
