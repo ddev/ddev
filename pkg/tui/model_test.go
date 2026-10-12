@@ -8,7 +8,9 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1772,211 +1774,43 @@ func TestOperationAutoReturnIgnoredIfAlreadyLeft(t *testing.T) {
 	require.Equal(t, viewDashboard, model.viewMode, "should stay on dashboard")
 }
 
-// --- Delete project tests ---
-
-func TestDeleteConfirmationFromDashboard(t *testing.T) {
+// deleteTestModel returns a model in the given view with "alpha" selected.
+func deleteTestModel(view int) AppModel {
 	m := NewAppModel()
 	m.loading = false
-	m.projects = []ProjectInfo{
-		{Name: "alpha", Status: ddevapp.SiteRunning},
-		{Name: "beta", Status: ddevapp.SiteStopped},
+	m.viewMode = view
+	m.projects = []ProjectInfo{{Name: "alpha", Status: ddevapp.SiteRunning}}
+	detail := sampleDetail()
+	detail.Name = "alpha"
+	m.detail = &detail
+	return m
+}
+
+func TestDeletePrompt(t *testing.T) {
+	origOmit := globalconfig.DdevGlobalConfig.OmitSnapshotOnDelete
+	t.Cleanup(func() { globalconfig.DdevGlobalConfig.OmitSnapshotOnDelete = origOmit })
+
+	for _, view := range []int{viewDashboard, viewDetail} {
+		for omit, want := range map[bool]string{
+			false: "A database snapshot will be made first.",
+			true:  "No snapshot will be made (omit_snapshot_on_delete).",
+		} {
+			globalconfig.DdevGlobalConfig.OmitSnapshotOnDelete = omit
+			updated, cmd := deleteTestModel(view).Update(tea.KeyPressMsg{Code: 'D', Text: "D"})
+			model := updated.(AppModel)
+
+			require.Nil(t, cmd)
+			require.True(t, model.confirming, "view %d", view)
+			require.Equal(t, "delete", model.confirmAction)
+			require.Equal(t, "alpha", model.confirmTarget)
+			require.Contains(t, model.statusMsg, "Delete project 'alpha' and its database?")
+			require.Contains(t, model.statusMsg, want, "view %d, omit %v", view, omit)
+			require.Equal(t, !omit, strings.Contains(model.statusMsg, "O to skip the snapshot"), "view %d, omit %v", view, omit)
+		}
 	}
-	m.cursor = 0
-
-	// Press Delete key
-	updated, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyDelete})
-	model := updated.(AppModel)
-
-	require.True(t, model.confirming, "should enter confirmation mode")
-	require.Equal(t, "delete", model.confirmAction)
-	require.Equal(t, "alpha", model.confirmTarget)
-	require.Contains(t, model.statusMsg, "Delete project 'alpha'?")
-	require.Contains(t, model.statusMsg, "keep a snapshot")
-	require.Contains(t, model.statusMsg, "omit snapshot")
-	require.Nil(t, cmd)
 }
 
-func TestConfirmDeleteFromDashboard(t *testing.T) {
-	m := NewAppModel()
-	m.loading = false
-	m.projects = []ProjectInfo{{Name: "alpha"}}
-	m.confirming = true
-	m.confirmAction = "delete"
-	m.confirmTarget = "alpha"
-
-	// Press y to confirm (with snapshot)
-	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
-	model := updated.(AppModel)
-
-	require.False(t, model.confirming, "should exit confirmation mode")
-	require.Empty(t, model.confirmAction)
-	require.Empty(t, model.confirmTarget)
-	require.Equal(t, viewOperation, model.viewMode)
-	require.Equal(t, viewDashboard, model.operationReturnView)
-	require.Contains(t, model.operationName, "Deleting alpha")
-	require.NotNil(t, cmd, "should return operation stream command")
-}
-
-func TestConfirmDeleteOmitSnapshotFromDashboard(t *testing.T) {
-	m := NewAppModel()
-	m.loading = false
-	m.projects = []ProjectInfo{{Name: "alpha"}}
-	m.confirming = true
-	m.confirmAction = "delete"
-	m.confirmTarget = "alpha"
-
-	// Press o to confirm (omit snapshot)
-	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'o', Text: "o"})
-	model := updated.(AppModel)
-
-	require.False(t, model.confirming, "should exit confirmation mode")
-	require.Empty(t, model.confirmAction)
-	require.Empty(t, model.confirmTarget)
-	require.Equal(t, viewOperation, model.viewMode)
-	require.Equal(t, viewDashboard, model.operationReturnView)
-	require.Contains(t, model.operationName, "Deleting alpha (omit snapshot)")
-	require.NotNil(t, cmd, "should return operation stream command")
-}
-
-func TestCancelDeleteFromDashboard(t *testing.T) {
-	m := NewAppModel()
-	m.loading = false
-	m.projects = []ProjectInfo{{Name: "alpha"}}
-	m.confirming = true
-	m.confirmAction = "delete"
-	m.confirmTarget = "alpha"
-	m.statusMsg = "Delete project 'alpha'?"
-
-	// Press n (or any non-y/o key) to cancel
-	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'n', Text: "n"})
-	model := updated.(AppModel)
-
-	require.False(t, model.confirming, "should cancel confirmation")
-	require.Empty(t, model.confirmAction)
-	require.Empty(t, model.confirmTarget)
-	require.Empty(t, model.statusMsg)
-	require.Nil(t, cmd)
-}
-
-func TestDeleteFromDashboardNoProjectNoop(t *testing.T) {
-	m := NewAppModel()
-	m.loading = false
-	// No projects
-
-	updated, _ := m.Update(tea.KeyPressMsg{Code: tea.KeyDelete})
-	model := updated.(AppModel)
-
-	require.False(t, model.confirming, "should not confirm with no projects")
-}
-
-func TestDeleteConfirmationFromDetail(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewDetail
-	detail := sampleDetail()
-	detail.Name = "alpha"
-	m.detail = &detail
-
-	// Press Delete key
-	updated, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyDelete})
-	model := updated.(AppModel)
-
-	require.True(t, model.confirming, "should enter confirmation mode in detail view")
-	require.Equal(t, "delete", model.confirmAction)
-	require.Equal(t, "alpha", model.confirmTarget)
-	require.Contains(t, model.statusMsg, "Delete project 'alpha'?")
-	require.Contains(t, model.statusMsg, "keep a snapshot")
-	require.Contains(t, model.statusMsg, "omit snapshot")
-	require.Nil(t, cmd)
-}
-
-func TestConfirmDeleteFromDetail(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewDetail
-	detail := sampleDetail()
-	detail.Name = "alpha"
-	m.detail = &detail
-	m.confirming = true
-	m.confirmAction = "delete"
-	m.confirmTarget = "alpha"
-
-	// Press y to confirm (with snapshot)
-	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'y', Text: "y"})
-	model := updated.(AppModel)
-
-	require.False(t, model.confirming)
-	require.Empty(t, model.confirmAction)
-	require.Empty(t, model.confirmTarget)
-	require.Equal(t, viewOperation, model.viewMode)
-	require.Equal(t, viewDashboard, model.operationReturnView, "should redirect back to dashboard after delete")
-	require.Contains(t, model.operationName, "Deleting alpha")
-	require.NotNil(t, cmd)
-}
-
-func TestConfirmDeleteOmitSnapshotFromDetail(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewDetail
-	detail := sampleDetail()
-	detail.Name = "alpha"
-	m.detail = &detail
-	m.confirming = true
-	m.confirmAction = "delete"
-	m.confirmTarget = "alpha"
-
-	// Press o to confirm (omit snapshot)
-	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'o', Text: "o"})
-	model := updated.(AppModel)
-
-	require.False(t, model.confirming)
-	require.Empty(t, model.confirmAction)
-	require.Empty(t, model.confirmTarget)
-	require.Equal(t, viewOperation, model.viewMode)
-	require.Equal(t, viewDashboard, model.operationReturnView, "should redirect back to dashboard after delete")
-	require.Contains(t, model.operationName, "Deleting alpha (omit snapshot)")
-	require.NotNil(t, cmd)
-}
-
-func TestCancelDeleteFromDetail(t *testing.T) {
-	m := NewAppModel()
-	m.viewMode = viewDetail
-	detail := sampleDetail()
-	m.detail = &detail
-	m.confirming = true
-	m.confirmAction = "delete"
-	m.confirmTarget = detail.Name
-	m.statusMsg = "Delete project?"
-
-	// Press n to cancel
-	updated, cmd := m.Update(tea.KeyPressMsg{Code: 'n', Text: "n"})
-	model := updated.(AppModel)
-
-	require.False(t, model.confirming)
-	require.Empty(t, model.confirmAction)
-	require.Empty(t, model.confirmTarget)
-	require.Empty(t, model.statusMsg)
-	require.Nil(t, cmd)
-}
-
-func TestDeleteHintsInDashboardAndDetail(t *testing.T) {
-	m := NewAppModel()
-	m.loading = false
-	m.width = 120
-	m.projects = []ProjectInfo{{Name: "a"}}
-
-	dashboardView := m.View().Content
-	require.Contains(t, dashboardView, "delete", "dashboard should show delete key hint")
-
-	m.viewMode = viewDetail
-	detail := sampleDetail()
-	m.detail = &detail
-	detailView := m.View().Content
-	require.Contains(t, detailView, "delete", "detail view should show delete key hint")
-
-	m.showHelp = true
-	helpView := m.View().Content
-	require.Contains(t, helpView, "Delete selected project", "help overlay should explain delete key")
-}
-
-func TestDeleteStreamArgs(t *testing.T) {
+func TestDeleteConfirmKeys(t *testing.T) {
 	var got []string
 	t.Cleanup(func() { deleteStreamCmd = startOperationStreamCmd })
 	deleteStreamCmd = func(dir string, args ...string) tea.Cmd {
@@ -1985,19 +1819,86 @@ func TestDeleteStreamArgs(t *testing.T) {
 	}
 
 	for _, view := range []int{viewDashboard, viewDetail} {
-		for key, want := range map[rune][]string{
+		for k, want := range map[rune][]string{
 			'y': {"", "delete", "-y", "alpha"},
-			'o': {"", "delete", "-y", "-O", "alpha"},
+			'O': {"", "delete", "-y", "--omit-snapshot", "alpha"},
 		} {
 			got = nil
-			m := NewAppModel()
-			m.loading = false
-			m.viewMode = view
-			m.confirming = true
-			m.confirmAction = "delete"
-			m.confirmTarget = "alpha"
-			m.Update(tea.KeyPressMsg{Code: key, Text: string(key)})
-			require.Equal(t, want, got, "key %c in view %v", key, view)
+			updated, _ := deleteTestModel(view).Update(tea.KeyPressMsg{Code: 'D', Text: "D"})
+			updated, _ = updated.(AppModel).Update(tea.KeyPressMsg{Code: k, Text: string(k)})
+			model := updated.(AppModel)
+			require.Equal(t, want, got, "%c in view %d", k, view)
+			require.False(t, model.confirming)
+			require.Empty(t, model.confirmTarget)
+			require.Equal(t, viewOperation, model.viewMode)
+			require.Equal(t, viewDashboard, model.operationReturnView, "a deleted project has no detail view to return to")
+		}
+
+		// o opens the project directory elsewhere, so a habitual press must cancel.
+		for _, k := range []rune{'n', 'o'} {
+			got = nil
+			updated, _ := deleteTestModel(view).Update(tea.KeyPressMsg{Code: 'D', Text: "D"})
+			updated, cmd := updated.(AppModel).Update(tea.KeyPressMsg{Code: k, Text: string(k)})
+			model := updated.(AppModel)
+			require.Nil(t, got, "%c should not delete in view %d", k, view)
+			require.Nil(t, cmd)
+			require.False(t, model.confirming)
+			require.Empty(t, model.confirmTarget)
+			require.Empty(t, model.statusMsg)
+			require.Equal(t, view, model.viewMode)
 		}
 	}
+}
+
+func TestOmitSnapshotKeyCancelsOtherConfirmations(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	updated, _ := m.Update(tea.KeyPressMsg{Code: 'P', Text: "P"})
+	updated, cmd := updated.(AppModel).Update(tea.KeyPressMsg{Code: 'O', Text: "O"})
+	model := updated.(AppModel)
+	require.Nil(t, cmd)
+	require.False(t, model.confirming)
+	require.Equal(t, viewDashboard, model.viewMode)
+}
+
+func TestDeleteWithNoProjectIsNoop(t *testing.T) {
+	m := NewAppModel()
+	m.loading = false
+	updated, _ := m.Update(tea.KeyPressMsg{Code: 'D', Text: "D"})
+	require.False(t, updated.(AppModel).confirming)
+}
+
+func TestDetailStatusShownAndWrapped(t *testing.T) {
+	updated, _ := deleteTestModel(viewDetail).Update(tea.WindowSizeMsg{Width: 60, Height: 40})
+	updated, _ = updated.(AppModel).Update(projectDetailLoadedMsg{detail: *updated.(AppModel).detail})
+	updated, _ = updated.(AppModel).Update(tea.KeyPressMsg{Code: 'D', Text: "D"})
+	view := ansi.Strip(updated.(AppModel).View().Content)
+	require.Contains(t, view, "Delete project 'alpha'", "the prompt should show without waiting for a detail reload")
+	require.Contains(t, view, "cancel)", "the prompt should wrap, not be cut off")
+
+	updated, _ = updated.(AppModel).Update(tea.KeyPressMsg{Code: 'n', Text: "n"})
+	require.NotContains(t, ansi.Strip(updated.(AppModel).View().Content), "Delete project 'alpha'", "cancel should clear the prompt")
+}
+
+func TestDashboardRefreshedOnAutoReturn(t *testing.T) {
+	updated, _ := deleteTestModel(viewDashboard).Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	m := updated.(AppModel)
+	m.projects = []ProjectInfo{{Name: "alpha"}, {Name: "beta"}}
+	m.updateDashboardViewport()
+	m = m.enterOperationView("Deleting alpha", viewDashboard)
+
+	// The reload after the operation lands while the operation view is still showing.
+	for _, msg := range []tea.Msg{
+		operationStreamEndedMsg{},
+		projectsLoadedMsg{projects: []ProjectInfo{{Name: "beta"}}},
+		operationAutoReturnMsg{},
+	} {
+		updated, _ = m.Update(msg)
+		m = updated.(AppModel)
+	}
+
+	require.Equal(t, viewDashboard, m.viewMode)
+	view := ansi.Strip(m.View().Content)
+	require.Contains(t, view, "beta")
+	require.NotContains(t, view, "alpha", "the dashboard should not show a project removed while the operation view was up")
 }

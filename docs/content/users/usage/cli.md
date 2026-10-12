@@ -12,6 +12,7 @@ Running `ddev` with no arguments launches an interactive terminal dashboard. The
 | <kbd>r</kbd> | Restart selected project |
 | <kbd>a</kbd> / <kbd>A</kbd> | Start all / Stop all projects |
 | <kbd>P</kbd> | Poweroff all DDEV projects and containers |
+| <kbd>D</kbd> | Delete selected project and its database, like [`ddev delete`](../usage/commands.md#delete); confirm with <kbd>y</kbd>, or <kbd>O</kbd> to skip the snapshot |
 | <kbd>l</kbd> | Launch project URL in browser |
 | <kbd>m</kbd> | Launch Mailpit in browser |
 | <kbd>o</kbd> | Open project directory in the file manager |
