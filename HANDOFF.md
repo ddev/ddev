@@ -51,9 +51,9 @@ Order of remaining upstream work:
 Done: [socktainer#439](https://github.com/socktainer/socktainer/pull/439) (exec, someone
 else's), [#445](https://github.com/socktainer/socktainer/pull/445) (DNS, ours, issue #444) and
 [#447](https://github.com/socktainer/socktainer/pull/447) (probe user, ours, issue #446) merged
-2026-10-12, as did DDEV's [#8928](https://github.com/ddev/ddev/pull/8928). Fork issue
-[rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12) is closed;
-[#7](https://github.com/rfay/socktainer/issues/7) (DNS) can be closed too.
+2026-10-12, as did DDEV's [#8928](https://github.com/ddev/ddev/pull/8928). Fork issues
+[rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7) (DNS) and
+[#12](https://github.com/rfay/socktainer/issues/12) (healthcheck) are closed.
 
 Per-item steps: search upstream by topic; confirm a test fails without the fix (if the new
 test needs new API, show it fails with the bug put back, or add one using only existing API);
