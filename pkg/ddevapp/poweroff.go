@@ -36,16 +36,19 @@ func PowerOff() {
 
 	StopMutagenDaemon("")
 
+	// A concurrent start could otherwise lose its router config or network mid-setup.
+	defer dockerutil.AcquireGlobalLock("poweroff cleanup")()
+
 	// Clean up Traefik staging directories after all projects are stopped
 	// This prevents issues when downgrading DDEV versions
 	if err := CleanupGlobalTraefikStaging(); err != nil {
 		util.Warning("Failed to clean up Traefik staging directories: %v", err)
 	}
 
-	if err := RemoveSSHAgentContainer(); err != nil {
+	if err := removeSSHAgentContainer(); err != nil {
 		util.Warning("Failed to remove ddev-ssh-agent: %v", err)
 	}
-	if err := RemoveRouterContainer(); err != nil {
+	if err := removeRouterContainer(); err != nil {
 		util.Warning("Failed to remove ddev-router: %v", err)
 	}
 

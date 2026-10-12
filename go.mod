@@ -20,6 +20,7 @@ require (
 	github.com/docker/cli v29.8.0+incompatible
 	github.com/docker/compose/v5 v5.5.1
 	github.com/go-viper/mapstructure/v2 v2.5.0
+	github.com/gofrs/flock v0.13.1
 	github.com/goodhosts/hostsfile v0.1.7
 	github.com/google/go-github/v90 v90.0.0
 	github.com/google/uuid v1.6.0
@@ -91,7 +92,6 @@ require (
 	github.com/fvbommel/sortorder v1.2.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/gofrs/flock v0.13.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect

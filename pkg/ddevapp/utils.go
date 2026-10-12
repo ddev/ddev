@@ -143,7 +143,8 @@ func Cleanup(app *DdevApp) error {
 			Force:         true,
 		}
 		output.UserOut.Printf("Removing container: %s", containerName)
-		if _, err = apiClient.ContainerRemove(ctx, containers[i].ID, removeOpts); err != nil {
+		// A concurrent stop or poweroff may have removed it since the lookup.
+		if _, err = apiClient.ContainerRemove(ctx, containers[i].ID, removeOpts); err != nil && !dockerutil.IsErrNotFound(err) {
 			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}
 	}
