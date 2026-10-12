@@ -29,23 +29,17 @@ covered the same bug; ours were closed as duplicates. For example:
 
 Order of remaining upstream work:
 
-1. **A probe that outlives its timeout holds the health loop** — in progress, nothing filed yet.
-   The task-group race in `execProbe` can't cancel the XPC `wait()`, and a task group awaits
-   every child, so the timeout never fires before the probe exits. Repro:
-   `handoff/hctimeout/repro.sh` (stock: `starting`, empty log at 12s, one 30s entry at 40s;
-   fixed and Docker Engine: `unhealthy` by 12s, a ~2s failure every 4s). Fix: branch
-   `fix/healthcheck-probe-kill-on-timeout` from upstream `main` @ 46abb58, worktree
-   `~/tmp/socktainer-hcfix-timeout`, **uncommitted**; the new test fails after 5.3s with the
-   old race put back; 1154 tests and `make fmt` pass. Drafts: `~/tmp/sk-upstream/hctimeout-issue.md`,
-   `hctimeout-pr.md`, `hctimeout-commit.txt`. Next: user commits (signed, `--signoff`) and
-   pushes, open the issue, then the PR. It replaces the fork's `fix/healthcheck-probe-timeout`
-   (2892512), which abandoned the whole probe and conflicts with upstream's #327 follow-up.
-   The kill at the deadline can't land on Apple Container 1.5.0: `ClientProcess.kill` sends the
-   signal as an integer and the server reads a string
+1. **Watch [socktainer#455](https://github.com/socktainer/socktainer/issues/455) /
+   [#456](https://github.com/socktainer/socktainer/pull/456)** (a probe that outlives its
+   timeout holds the health loop; ours, filed 2026-10-12). Branch
+   `fix/healthcheck-probe-kill-on-timeout` @ fbe1de8, pushed; repro
+   `handoff/hctimeout/repro.sh`. Nothing to do unless review asks. The kill at the deadline
+   can't land on Apple Container 1.5.0: `ClientProcess.kill` sends the signal as an integer
+   and the server reads a string
    ([apple/container#1941](https://github.com/apple/container/issues/1941), fixes open as
    [#1997](https://github.com/apple/container/pull/1997) and
    [#1778](https://github.com/apple/container/pull/1778)), so timed-out probes keep running.
-2. **`HostConfig.PortBindings` nil on inspect** — `fix/port-bindings-inspect` (42b6e46), applies
+2. **`HostConfig.PortBindings` nil on inspect** — next to file. `fix/port-bindings-inspect` (42b6e46), applies
    cleanly to 46abb58. No fork issue exists; DDEV no longer depends on it (#8657).
 3. **`Server.Version` reports the API version** — `fix/version-engine-version` (395d2f0), applies
    cleanly. Hold: it overrides a deliberate testcontainers-java workaround in upstream's
@@ -57,9 +51,9 @@ Order of remaining upstream work:
 Done: [socktainer#439](https://github.com/socktainer/socktainer/pull/439) (exec, someone
 else's), [#445](https://github.com/socktainer/socktainer/pull/445) (DNS, ours, issue #444) and
 [#447](https://github.com/socktainer/socktainer/pull/447) (probe user, ours, issue #446) merged
-2026-10-12, as did DDEV's [#8928](https://github.com/ddev/ddev/pull/8928). Fork issues
-[rfay/socktainer#7](https://github.com/rfay/socktainer/issues/7) and
-[#12](https://github.com/rfay/socktainer/issues/12) can be closed once item 1 is filed.
+2026-10-12, as did DDEV's [#8928](https://github.com/ddev/ddev/pull/8928). Fork issue
+[rfay/socktainer#12](https://github.com/rfay/socktainer/issues/12) is closed;
+[#7](https://github.com/rfay/socktainer/issues/7) (DNS) can be closed too.
 
 Per-item steps: search upstream by topic; confirm a test fails without the fix (if the new
 test needs new API, show it fails with the bug put back, or add one using only existing API);
@@ -113,7 +107,7 @@ upstream `main` now carries its exec, DNS and probe-user fixes.
 
 | Fix | Branch | Issues | Needed for DDEV |
 |---|---|---|---|
-| A probe past its timeout holds the health loop | `fix/healthcheck-probe-kill-on-timeout` (uncommitted, see "Resume here") | fork [#12](https://github.com/rfay/socktainer/issues/12) | latent |
+| A probe past its timeout holds the health loop | upstream PR [#456](https://github.com/socktainer/socktainer/pull/456), [`fix/healthcheck-probe-kill-on-timeout`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-kill-on-timeout) @ fbe1de8 | upstream [#455](https://github.com/socktainer/socktainer/issues/455) | latent |
 | `HostConfig.PortBindings` always nil on inspect | [`fix/port-bindings-inspect`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect) | none | no; DDEV's #8657 covers it |
 | `Server.Version` reports the API version | [`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version) | fork [#13](https://github.com/rfay/socktainer/issues/13) | cosmetic |
 
@@ -406,7 +400,7 @@ cost paid on every provider.
 - Apple `container` **1.5.0** from the signed installer at `/usr/local`
   (`container-apiserver` running). Homebrew's `container` is also 1.5.0.
 - socktainer running by hand from `~/tmp/socktainer-hcfix-timeout/.build/release/socktainer`
-  (upstream `main` @ 46abb58 plus the uncommitted probe-timeout fix), built without `make`, so
+  (upstream `main` @ 46abb58 plus the probe-timeout fix, fbe1de8), built without `make`, so
   `docker version` shows `unspecified`. Log: `~/tmp/socktainer.log`.
 - `appletest` and `appletest2` (`~/tmp/`) running, both serving 200 over HTTPS;
   `appletest3` untested. All need `omit_containers: [ddev-ssh-agent]`.
@@ -427,7 +421,7 @@ socktainer, main checkout `~/workspace/socktainer` (remotes `upstream`, `rfay`):
 | Worktree | Branch | State |
 |---|---|---|
 | `~/workspace/socktainer` | `tmp/upstream-main-test` @ 46abb58 | stock upstream build, local only |
-| `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-kill-on-timeout` | **uncommitted fix**, the running build; not pushed |
+| `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-kill-on-timeout` | @ fbe1de8, the running build; pushed; upstream PR #456 |
 | `~/workspace/socktainer-worktrees/port-bindings-inspect` | `fix/port-bindings-inspect` @ 42b6e46 | pushed |
 | `~/workspace/socktainer-worktrees/version-engine-version` | `fix/version-engine-version` | pushed |
 | `~/tmp/socktainer-cv5`, `-dnsfix`, `-hcuser`, `-hcfix`, `-pr439` | merged or superseded | removable |
