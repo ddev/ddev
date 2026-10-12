@@ -179,6 +179,11 @@ teardown() {
   assert_success
   assert_output --partial "No recipes to unpack."
 
+  # drush si makes the installer composer-require drupal_cms_helper mid-run, and
+  # its davereid/drupal-environment dependency is not autoloadable in that process.
+  run ddev composer require drupal/drupal_cms_helper
+  assert_success
+
   # Run Drush site install to set up the site
   run ddev drush si --account-name=admin --account-pass=admin -y
   assert_success
