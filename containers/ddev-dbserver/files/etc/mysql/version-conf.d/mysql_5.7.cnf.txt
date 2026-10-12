@@ -13,4 +13,5 @@ secure_file_priv=""
 # The 5.7 default still enables the deprecated TLSv1 and TLSv1.1
 tls-version=TLSv1.2,TLSv1.3
 
-innodb-log-file-size=268435456
+# Two log files in 5.7, so 2 x 128M matches the 256M redo used elsewhere
+innodb-log-file-size=134217728
