@@ -264,13 +264,14 @@ echo ${server_db_version} >${DATADIR:-/var/lib/mysql}/db_mariadb_version.txt
 
 mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME} || true
 
-# Zero out the error log at start
+# Zero out the error and slow query logs at start
 printf "" > ${DATADIR:-/var/lib/mysql}/mysqld.err
+printf "" > ${DATADIR:-/var/lib/mysql}/slow.log
 
 echo
 echo 'MySQL init process done. Ready for start up.'
 echo
 
 echo "Starting mysqld."
-tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err &
+tail -f /var/log/mysqld.log ${DATADIR:-/var/lib/mysql}/mysqld.err ${DATADIR:-/var/lib/mysql}/slow.log &
 exec mysqld --defaults-file=$DEFAULTS_FILE
