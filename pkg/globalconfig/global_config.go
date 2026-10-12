@@ -505,6 +505,14 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # If true, 'ddev delete' will omit the database snapshot by default.
 # This can still be overridden per-command with --omit-snapshot=false.
 
+# override_config: false
+# global_config.*.yaml files in this directory, like global_config.local.yaml,
+# are merged over this file in alphabetical order, and DDEV never writes
+# their values here. Lists are merged, so a merge can't empty one, but with
+# "override_config: true" in a global_config.*.yaml file,
+# 'web_environment: []' or 'omit_containers: []' takes effect.
+# 'override_config' affects only the global_config.*.yaml file it exists in.
+
 # performance_mode: "<default for the OS>"
 # DDEV offers performance optimization strategies to improve the filesystem
 # performance depending on your host system. Can be overridden with the project
