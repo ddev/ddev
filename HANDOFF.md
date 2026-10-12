@@ -39,9 +39,17 @@ Order of remaining upstream work:
    ([apple/container#1941](https://github.com/apple/container/issues/1941), fixes open as
    [#1997](https://github.com/apple/container/pull/1997) and
    [#1778](https://github.com/apple/container/pull/1778)), so timed-out probes keep running.
-2. **`HostConfig.PortBindings` nil on inspect** — next to file. `fix/port-bindings-inspect` (42b6e46), applies
-   cleanly to 46abb58. No fork issue exists; DDEV no longer depends on it (#8657).
-3. **`Server.Version` reports the API version** — `fix/version-engine-version` (395d2f0), applies
+2. **`HostConfig.PortBindings` always null on inspect** — issue
+   [socktainer#457](https://github.com/socktainer/socktainer/issues/457) filed 2026-10-12; PR
+   not yet open. Branch `fix/port-bindings-inspect-request` @ e386105 from upstream `main` @
+   46abb58, worktree `~/tmp/socktainer-portbindings`; drafts `~/tmp/sk-upstream/pb-pr.md` (says
+   `Fixes #457`) and `pb-commit.txt`. Next: user pushes the branch, then open the PR. Docker
+   reports the *request* there (`""` for an unset HostIp/HostPort, `{}` for no `-p` or only
+   `-P`), so the fix stores the request in a `socktainer.port-bindings` label, like
+   `socktainer.healthcheck`, rather than copying the bound ports as the fork's
+   `fix/port-bindings-inspect` (42b6e46) did. Repro: `handoff/pbrepro/repro.sh`. DDEV no longer
+   depends on it (#8657).
+3. **`Server.Version` reports the API version** — next. `fix/version-engine-version` (395d2f0), applies
    cleanly. Hold: it overrides a deliberate testcontainers-java workaround in upstream's
    `VersionRoute.swift`, so ask upstream first, as a question, not a PR.
 4. **Hostname uniqueness** — no fix exists; file as an issue with the proposal in "Open
@@ -108,7 +116,7 @@ upstream `main` now carries its exec, DNS and probe-user fixes.
 | Fix | Branch | Issues | Needed for DDEV |
 |---|---|---|---|
 | A probe past its timeout holds the health loop | upstream PR [#456](https://github.com/socktainer/socktainer/pull/456), [`fix/healthcheck-probe-kill-on-timeout`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-kill-on-timeout) @ fbe1de8 | upstream [#455](https://github.com/socktainer/socktainer/issues/455) | latent |
-| `HostConfig.PortBindings` always nil on inspect | [`fix/port-bindings-inspect`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect) | none | no; DDEV's #8657 covers it |
+| `HostConfig.PortBindings` always nil on inspect | `fix/port-bindings-inspect-request` @ e386105 | upstream [#457](https://github.com/socktainer/socktainer/issues/457) | no; DDEV's #8657 covers it |
 | `Server.Version` reports the API version | [`fix/version-engine-version`](https://github.com/rfay/socktainer/tree/fix/version-engine-version) | fork [#13](https://github.com/rfay/socktainer/issues/13) | cosmetic |
 
 ### The exec fix, for the record
@@ -318,6 +326,8 @@ Kept in [`handoff/`](handoff/) on this branch; run them from the repo root:
   removes.
 - `handoff/hctimeout/repro.sh` — a probe that sleeps 30s against a 2s timeout; prints health
   status, log entries and the probe's own start/finish log at 12s and 40s.
+- `handoff/pbrepro/repro.sh` — publishes `-p 18080:80 -p 127.0.0.1:18081:81 -p 82` and prints
+  `HostConfig.PortBindings`, `NetworkSettings.Ports` and `docker port`.
 - `handoff/bxtest.Dockerfile` — a trivial build for `docker buildx build --no-cache`; remove
   `buildx_buildkit_*` containers and their `_state` volumes first to test a cold bootstrap.
 - `handoff/wt-status.sh` — every socktainer worktree's branch against `rfay` and
@@ -399,8 +409,8 @@ cost paid on every provider.
 
 - Apple `container` **1.5.0** from the signed installer at `/usr/local`
   (`container-apiserver` running). Homebrew's `container` is also 1.5.0.
-- socktainer running by hand from `~/tmp/socktainer-hcfix-timeout/.build/release/socktainer`
-  (upstream `main` @ 46abb58 plus the probe-timeout fix, fbe1de8), built without `make`, so
+- socktainer running by hand from `~/tmp/socktainer-portbindings/.build/release/socktainer`
+  (upstream `main` @ 46abb58 plus the PortBindings fix, e386105, without #456), built without `make`, so
   `docker version` shows `unspecified`. Log: `~/tmp/socktainer.log`.
 - `appletest` and `appletest2` (`~/tmp/`) running, both serving 200 over HTTPS;
   `appletest3` untested. All need `omit_containers: [ddev-ssh-agent]`.
@@ -421,8 +431,8 @@ socktainer, main checkout `~/workspace/socktainer` (remotes `upstream`, `rfay`):
 | Worktree | Branch | State |
 |---|---|---|
 | `~/workspace/socktainer` | `tmp/upstream-main-test` @ 46abb58 | stock upstream build, local only |
-| `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-kill-on-timeout` | @ fbe1de8, the running build; pushed; upstream PR #456 |
-| `~/workspace/socktainer-worktrees/port-bindings-inspect` | `fix/port-bindings-inspect` @ 42b6e46 | pushed |
+| `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-kill-on-timeout` | @ fbe1de8, pushed; upstream PR #456 |
+| `~/tmp/socktainer-portbindings` | `fix/port-bindings-inspect-request` @ e386105 | the running build; not pushed yet; issue #457 |
 | `~/workspace/socktainer-worktrees/version-engine-version` | `fix/version-engine-version` | pushed |
 | `~/tmp/socktainer-cv5`, `-dnsfix`, `-hcuser`, `-hcfix`, `-pr439` | merged or superseded | removable |
 
