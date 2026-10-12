@@ -58,7 +58,7 @@ var WebTagBranch = "20261008_remove_gitpod_workaround"
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "910311aeb5" // 20261011_rfay_dbserver_innodb_defaults-910311aeb5
+var BaseDBTag = "a30cbaeb7c" // 20261011_rfay_dbserver_innodb_defaults-a30cbaeb7c
 
 // BaseDBTagBranch is the branch BaseDBTag's content was built from.
 var BaseDBTagBranch = "20261011_rfay_dbserver_innodb_defaults"
