@@ -8,7 +8,7 @@ deleted before any of it merges.
 Environment as last verified: Apple `container` 1.5.0 (signed installer, **not** Homebrew — see
 below), `socktainer` built from
 upstream `main` @ 46abb58 with no fork fixes (the daemon left running is that plus the
-PortBindings fix, `~/tmp/socktainer-portbindings`), docker CLI 29.9.0, docker
+probe-timeout fix, `~/tmp/socktainer-hcfix-timeout`), docker CLI 29.9.0, docker
 context `socktainer`, macOS 27.0.1 (26A434), `ddev` from branch
 [`20260802_rfay_apple_container_experiment`](https://github.com/rfay/ddev/tree/20260802_rfay_apple_container_experiment).
 
@@ -33,7 +33,8 @@ Waiting on upstream review (nothing to do unless review asks, or upstream moves 
 
 1. **[socktainer#455](https://github.com/socktainer/socktainer/issues/455) /
    [#456](https://github.com/socktainer/socktainer/pull/456)** — a probe that outlives its
-   timeout holds the health loop. Branch `fix/healthcheck-probe-kill-on-timeout` @ fbe1de8;
+   timeout holds the health loop. Branch `fix/healthcheck-probe-kill-on-timeout` @ daea602 (a second commit
+   bounds the kill at the deadline too, per CodeRabbit's review);
    repro `handoff/hctimeout/repro.sh`. The kill at the deadline can't land on Apple Container
    1.5.0: `ClientProcess.kill` sends the signal as an integer and the server reads a string
    ([apple/container#1941](https://github.com/apple/container/issues/1941), fixes open as
@@ -130,7 +131,7 @@ upstream `main` now carries its exec, DNS and probe-user fixes.
 
 | Fix | Branch | Issues | Needed for DDEV |
 |---|---|---|---|
-| A probe past its timeout holds the health loop | upstream PR [#456](https://github.com/socktainer/socktainer/pull/456), [`fix/healthcheck-probe-kill-on-timeout`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-kill-on-timeout) @ fbe1de8 | upstream [#455](https://github.com/socktainer/socktainer/issues/455) | latent |
+| A probe past its timeout holds the health loop | upstream PR [#456](https://github.com/socktainer/socktainer/pull/456), [`fix/healthcheck-probe-kill-on-timeout`](https://github.com/rfay/socktainer/tree/fix/healthcheck-probe-kill-on-timeout) @ daea602 | upstream [#455](https://github.com/socktainer/socktainer/issues/455) | latent |
 | `HostConfig.PortBindings` always nil on inspect | upstream PR [#458](https://github.com/socktainer/socktainer/pull/458), [`fix/port-bindings-inspect-request`](https://github.com/rfay/socktainer/tree/fix/port-bindings-inspect-request) @ e386105 | upstream [#457](https://github.com/socktainer/socktainer/issues/457) | no; DDEV's #8657 covers it |
 | `Server.Version` reports the API version | none yet; question [#459](https://github.com/socktainer/socktainer/issues/459) (fork's `fix/version-engine-version` is the wrong approach) | fork [#13](https://github.com/rfay/socktainer/issues/13) | display only |
 
@@ -425,8 +426,8 @@ cost paid on every provider.
 
 - Apple `container` **1.5.0** from the signed installer at `/usr/local`
   (`container-apiserver` running). Homebrew's `container` is also 1.5.0.
-- socktainer running by hand from `~/tmp/socktainer-portbindings/.build/release/socktainer`
-  (upstream `main` @ 46abb58 plus the PortBindings fix, e386105, without #456), built without `make`, so
+- socktainer running by hand from `~/tmp/socktainer-hcfix-timeout/.build/release/socktainer`
+  (upstream `main` @ 46abb58 plus #456 @ daea602, without #458), built without `make`, so
   `docker version` shows `unspecified`. Log: `~/tmp/socktainer.log`.
 - `appletest` and `appletest2` (`~/tmp/`) running, both serving 200 over HTTPS;
   `appletest3` untested. All need `omit_containers: [ddev-ssh-agent]`.
@@ -447,8 +448,8 @@ socktainer, main checkout `~/workspace/socktainer` (remotes `upstream`, `rfay`):
 | Worktree | Branch | State |
 |---|---|---|
 | `~/workspace/socktainer` | `tmp/upstream-main-test` @ 46abb58 | stock upstream build, local only |
-| `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-kill-on-timeout` @ fbe1de8 | pushed; upstream PR #456 |
-| `~/tmp/socktainer-portbindings` | `fix/port-bindings-inspect-request` @ e386105 | pushed; upstream PR #458; the running build |
+| `~/tmp/socktainer-hcfix-timeout` | `fix/healthcheck-probe-kill-on-timeout` @ daea602 | pushed; upstream PR #456; the running build |
+| `~/tmp/socktainer-portbindings` | `fix/port-bindings-inspect-request` @ e386105 | pushed; upstream PR #458 |
 | `~/workspace/socktainer-worktrees/version-engine-version` | `fix/version-engine-version` @ 395d2f0 | pushed; superseded by the approach in #459 |
 
 All clean and pushed as of 2026-10-12. The cv5, dnsfix, hcfix, hcuser and pr439 worktrees
