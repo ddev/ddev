@@ -10,11 +10,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 
-	exec2 "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 )
@@ -44,26 +45,23 @@ func TestShareCmdNgrok(t *testing.T) {
 	site := TestSites[0]
 	defer site.Chdir()()
 
+	// Start the project first, so the tunnel wait below does not include image builds
+	err = exec.Command(DdevBin, "start").Run()
+	require.NoError(t, err)
+
 	cmd := exec.Command(DdevBin, "share", "--provider=ngrok")
 	// Enable debug output to get verbose ngrok.sh logging
 	cmd.Env = append(os.Environ(), "DDEV_DEBUG=true")
-	var stdoutBuf, stderrBuf strings.Builder
+	var stdoutBuf, stderrBuf syncBuffer
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
 
+	t.Log("Starting ngrok share command...")
+	exited := startCmd(t, cmd)
 	t.Cleanup(func() {
 		_ = pKill(cmd)
-		_ = cmd.Wait()
-		_, err := exec.LookPath("killall")
-		// Try to kill ngrok any way we can, avoid having two run at same time.
-		if err == nil {
-			_, _ = exec2.RunHostCommand("killall", "-9", "ngrok")
-		}
+		<-exited
 	})
-
-	t.Log("Starting ngrok share command...")
-	err = cmd.Start()
-	require.NoError(t, err)
 
 	// Poll for output with intermediate logging (ngrok can take several seconds)
 	t.Log("Waiting for ngrok tunnel to establish...")
@@ -72,6 +70,7 @@ func TestShareCmdNgrok(t *testing.T) {
 	elapsed := time.Duration(0)
 	lastStderrLen := 0
 
+poll:
 	for elapsed < maxWait {
 		time.Sleep(pollInterval)
 		elapsed += pollInterval
@@ -113,24 +112,18 @@ func TestShareCmdNgrok(t *testing.T) {
 			}
 		}
 
-		t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
+		select {
+		case <-exited:
+			t.Logf("ddev share exited after %v without a tunnel URL", elapsed)
+			break poll
+		default:
+			t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
+		}
 	}
 
-	// Kill the share command (might already be dead if account limit hit)
+	// ddev share might already have exited if the account limit was hit
 	_ = pKill(cmd)
-
-	// Wait for command with timeout (pipes might take time to close)
-	waitDone := make(chan bool)
-	go func() {
-		_ = cmd.Wait()
-		waitDone <- true
-	}()
-	select {
-	case <-waitDone:
-		// Command exited cleanly
-	case <-time.After(5 * time.Second):
-		t.Log("Wait timed out after kill, continuing...")
-	}
+	<-exited
 
 	// Check captured output
 	stdoutOutput := stdoutBuf.String()
@@ -147,6 +140,9 @@ func TestShareCmdNgrok(t *testing.T) {
 	// If we got a URL, verify it looks like ngrok
 	if hasURL {
 		require.Contains(t, stdoutOutput, "ngrok")
+	}
+	if !nodeps.IsWindows() {
+		require.Contains(t, stdoutOutput, "Stopping tunnel", "ddev share should handle SIGTERM by stopping the tunnel")
 	}
 }
 
@@ -172,19 +168,20 @@ func TestShareCmdCloudflared(t *testing.T) {
 	site := TestSites[0]
 	defer site.Chdir()()
 
+	err = exec.Command(DdevBin, "start").Run()
+	require.NoError(t, err)
+
 	cmd := exec.Command(DdevBin, "share", "--provider=cloudflared")
-	var stdoutBuf, stderrBuf strings.Builder
+	var stdoutBuf, stderrBuf syncBuffer
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
 
+	t.Log("Starting cloudflared share command...")
+	exited := startCmd(t, cmd)
 	t.Cleanup(func() {
 		_ = pKill(cmd)
-		_ = cmd.Wait()
+		<-exited
 	})
-
-	t.Log("Starting cloudflared share command...")
-	err = cmd.Start()
-	require.NoError(t, err)
 
 	// Poll for output with intermediate logging (cloudflared can take 10+ seconds)
 	t.Log("Waiting for cloudflared tunnel to establish...")
@@ -192,6 +189,7 @@ func TestShareCmdCloudflared(t *testing.T) {
 	pollInterval := 2 * time.Second
 	elapsed := time.Duration(0)
 
+poll:
 	for elapsed < maxWait {
 		time.Sleep(pollInterval)
 		elapsed += pollInterval
@@ -208,24 +206,18 @@ func TestShareCmdCloudflared(t *testing.T) {
 			t.Logf("Stdout so far:\n%s", stdoutOutput)
 			t.Fatalf("cloudflare quick-tunnel API returned an unmarshal error (possible transient 500):\n%s", stderrOutput)
 		}
-		t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
+		select {
+		case <-exited:
+			t.Logf("ddev share exited after %v without a tunnel URL", elapsed)
+			break poll
+		default:
+			t.Logf("Still waiting for tunnel... (%v/%v)", elapsed, maxWait)
+		}
 	}
 
-	// Kill the share command
+	// Stop the share command
 	_ = pKill(cmd)
-
-	// Wait for command with timeout (pipes might take time to close)
-	waitDone := make(chan bool)
-	go func() {
-		_ = cmd.Wait()
-		waitDone <- true
-	}()
-	select {
-	case <-waitDone:
-		// Command exited cleanly
-	case <-time.After(5 * time.Second):
-		t.Log("Wait timed out after kill, continuing...")
-	}
+	<-exited
 
 	// Check captured output
 	stdoutOutput := stdoutBuf.String()
@@ -238,6 +230,9 @@ func TestShareCmdCloudflared(t *testing.T) {
 		"cloudflared did not output a tunnel URL; stderr output:\n%s", stderrOutput)
 	require.Contains(t, stdoutOutput, "trycloudflare.com",
 		"tunnel URL does not contain trycloudflare.com; stderr output:\n%s", stderrOutput)
+	if !nodeps.IsWindows() {
+		require.Contains(t, stdoutOutput, "Stopping tunnel", "ddev share should handle SIGTERM by stopping the tunnel")
+	}
 }
 
 // TestShareCmdProviderSystem tests the script-based provider system
@@ -275,40 +270,42 @@ sleep 2
 			_ = os.Remove(mockPath)
 		})
 
-		runShare := func(noColor string) string {
+		expectedQR := strings.ReplaceAll(string(expectedQRCode), "\r\n", "\n")
+		expectedNoColorQR := strings.ReplaceAll(string(expectedNoColorQRCode), "\r\n", "\n")
+
+		runShare := func(noColor string, wantContent string) string {
 			t.Setenv("NO_COLOR", noColor)
 			cmd := exec.Command(DdevBin, "share", "--provider=mock-test")
-			var stdoutBuf, stderrBuf strings.Builder
+			var stdoutBuf, stderrBuf syncBuffer
 			cmd.Stdout = &stdoutBuf
 			cmd.Stderr = &stderrBuf
 
-			err := cmd.Start()
-			require.NoError(t, err)
+			exited := startCmd(t, cmd)
 
 			t.Cleanup(func() {
 				_ = pKill(cmd)
-				_ = cmd.Wait()
+				<-exited
 			})
 
-			// Wait for provider to output URL and ddev share to capture/display it
-			time.Sleep(3 * time.Second)
+			// ddev share can take several seconds to launch the provider on slow hosts
+			waitErr := waitForContent(&stdoutBuf, wantContent, exited, 30*time.Second)
 
-			// Kill the share command to end the test
-			err = pKill(cmd)
-			require.NoError(t, err)
-			_ = cmd.Wait()
+			// ddev share exits on its own once the mock provider does, so the kill may find it gone
+			_ = pKill(cmd)
+			<-exited
 
 			t.Logf("Stdout output with NO_COLOR=%s:\n%s", noColor, stdoutBuf.String())
 			t.Logf("Stderr output with NO_COLOR=%s:\n%s", noColor, stderrBuf.String())
+			require.NoError(t, waitErr)
 			return strings.ReplaceAll(stdoutBuf.String(), "\r\n", "\n")
 		}
 
-		stdoutOutput := runShare("")
+		stdoutOutput := runShare("", expectedQR)
 		// util.Success() writes to stdout, not stderr
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 		require.Contains(t, stdoutOutput, "mock-test-tunnel")
-		require.Contains(t, stdoutOutput, strings.ReplaceAll(string(expectedQRCode), "\r\n", "\n"))
-		require.Contains(t, runShare("1"), strings.ReplaceAll(string(expectedNoColorQRCode), "\r\n", "\n"))
+		require.Contains(t, stdoutOutput, expectedQR)
+		require.Contains(t, runShare("1", expectedNoColorQR), expectedNoColorQR)
 	})
 
 	// Test 2: Verify hooks have access to DDEV_SHARE_URL
@@ -367,10 +364,7 @@ sleep 30
 			}
 		}()
 
-		// Wait for hook execution
-		time.Sleep(3 * time.Second)
-
-		require.True(t, hookSuccess.Load(), "Pre-share hook should have access to DDEV_SHARE_URL")
+		require.Eventually(t, hookSuccess.Load, 30*time.Second, 250*time.Millisecond, "Pre-share hook should have access to DDEV_SHARE_URL")
 	})
 
 	// Test 3: Provider priority (flag > config > default)
@@ -402,33 +396,30 @@ sleep 2
 
 		// Test flag overrides config
 		cmd = exec.Command(DdevBin, "share", "--provider=flag-provider")
-		var stdoutBuf, stderrBuf strings.Builder
+		var stdoutBuf, stderrBuf syncBuffer
 		cmd.Stdout = &stdoutBuf
 		cmd.Stderr = &stderrBuf
 
-		err = cmd.Start()
-		require.NoError(t, err)
+		exited := startCmd(t, cmd)
 
 		t.Cleanup(func() {
 			_ = pKill(cmd)
-			_ = cmd.Wait()
+			<-exited
 			// Reset config
 			_ = exec.Command(DdevBin, "config", "--share-default-provider=").Run()
 		})
 
-		// Wait for provider to output URL and ddev share to capture/display it
-		time.Sleep(3 * time.Second)
+		waitErr := waitForContent(&stdoutBuf, "Tunnel URL:", exited, 30*time.Second)
 
-		// Kill the share command to end the test
-		err = pKill(cmd)
-		require.NoError(t, err)
-		_ = cmd.Wait()
+		_ = pKill(cmd)
+		<-exited
 
 		// Check captured output
 		stdoutOutput := stdoutBuf.String()
 		stderrOutput := stderrBuf.String()
 		t.Logf("Stdout output:\n%s", stdoutOutput)
 		t.Logf("Stderr output:\n%s", stderrOutput)
+		require.NoError(t, waitErr)
 		// util.Success() writes to stdout, not stderr
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 		require.Contains(t, stdoutOutput, "flag-provider-tunnel")
@@ -458,38 +449,112 @@ sleep 2
 		})
 
 		cmd := exec.Command(DdevBin, "share", "--provider=args-test", "--provider-args=--custom-flag value123")
-		var stdoutBuf, stderrBuf strings.Builder
+		var stdoutBuf, stderrBuf syncBuffer
 		cmd.Stdout = &stdoutBuf
 		cmd.Stderr = &stderrBuf
 
-		err = cmd.Start()
-		require.NoError(t, err)
+		exited := startCmd(t, cmd)
 
 		t.Cleanup(func() {
 			_ = pKill(cmd)
-			_ = cmd.Wait()
+			<-exited
 		})
 
-		// Wait for provider to execute
-		time.Sleep(3 * time.Second)
+		waitErr := waitForContent(&stdoutBuf, "Tunnel URL:", exited, 30*time.Second)
 
 		_ = pKill(cmd)
-		_ = cmd.Wait()
+		<-exited
 
 		stderrOutput := stderrBuf.String()
 		stdoutOutput := stdoutBuf.String()
 		t.Logf("Stdout: %s", stdoutOutput)
 		t.Logf("Stderr: %s", stderrOutput)
+		require.NoError(t, waitErr)
 
 		// Verify DDEV_SHARE_ARGS was passed to the provider (shown in ddev's output message)
 		require.Contains(t, stdoutOutput, "with args: --custom-flag value123",
 			"Provider should receive DDEV_SHARE_ARGS from --provider-args flag")
 		require.Contains(t, stdoutOutput, "Tunnel URL:")
 	})
+
+	t.Run("ProviderExitReported", func(t *testing.T) {
+		mockScript := `#!/usr/bin/env bash
+echo "https://exit-test.example.com"
+`
+		mockPath := site.Dir + "/.ddev/share-providers/exit-test.sh"
+		err := os.WriteFile(mockPath, []byte(mockScript), 0755)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_ = os.Remove(mockPath)
+		})
+
+		out, err := exec.Command(DdevBin, "share", "--provider=exit-test").CombinedOutput()
+		require.NoError(t, err, "output: %s", out)
+		require.Contains(t, string(out), "Share provider 'exit-test' exited, so the tunnel is closed")
+	})
 }
 
-// pKill kills a started cmd; If windows, it shells out to the
-// taskkill command.
+// syncBuffer is a strings.Builder that is safe to read while a running
+// command is still writing to it.
+type syncBuffer struct {
+	mu sync.Mutex
+	b  strings.Builder
+}
+
+func (s *syncBuffer) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.Write(p)
+}
+
+func (s *syncBuffer) String() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.b.String()
+}
+
+// startCmd starts cmd and returns a channel that closes once it has exited.
+// Waiting on the channel instead of calling cmd.Wait() again keeps Wait to a
+// single caller. WaitDelay bounds Wait if a leftover child keeps the output
+// pipes open after cmd exits.
+func startCmd(t *testing.T, cmd *exec.Cmd) <-chan struct{} {
+	t.Helper()
+	cmd.WaitDelay = 5 * time.Second
+	require.NoError(t, cmd.Start())
+	exited := make(chan struct{})
+	go func() {
+		_ = cmd.Wait()
+		close(exited)
+	}()
+	return exited
+}
+
+// waitForContent polls buf until it contains want, ignoring CRLF differences.
+// It gives up early if the command writing to buf exits first.
+func waitForContent(buf *syncBuffer, want string, exited <-chan struct{}, timeout time.Duration) error {
+	contains := func() bool {
+		return strings.Contains(strings.ReplaceAll(buf.String(), "\r\n", "\n"), want)
+	}
+	deadline := time.After(timeout)
+	for !contains() {
+		select {
+		case <-exited:
+			// Wait has finished copying output, so this check sees all of it
+			if contains() {
+				return nil
+			}
+			return fmt.Errorf("command exited before its output contained the expected content")
+		case <-deadline:
+			return fmt.Errorf("output did not contain expected content after %v", timeout)
+		case <-time.After(250 * time.Millisecond):
+		}
+	}
+	return nil
+}
+
+// pKill stops a started cmd. Elsewhere than Windows it sends SIGTERM, so
+// ddev share can kill its provider's process group the way Ctrl-C does;
+// SIGKILL would orphan the tunnel, which keeps cmd's output pipes open.
 func pKill(cmd *exec.Cmd) error {
 	var err error
 	if cmd == nil {
@@ -504,7 +569,7 @@ func pKill(cmd *exec.Cmd) error {
 		kill.Stdout = os.Stdout
 		err = kill.Run()
 	} else {
-		err = cmd.Process.Kill()
+		err = cmd.Process.Signal(syscall.SIGTERM)
 	}
 	return err
 }
