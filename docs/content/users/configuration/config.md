@@ -37,6 +37,8 @@ You can override the per-project `config.yaml` with files named `config.*.yaml`,
 
 Many teams use `config.local.yaml` for configuration that is specific to one environment, and not checked into the team’s default `config.yaml`. For example, you might enable `performance_mode: mutagen` only on your machine. Or you could use a different database type. The file `config.local.yaml` is gitignored by default.
 
+The global `$HOME/.ddev/global_config.yaml` can be extended the same way with `global_config.*.yaml` files in `$HOME/.ddev`, which is useful for keeping machine-specific or team-distributed settings out of the file DDEV rewrites.
+
 For examples, see the [Extending and Customizing Environments](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files) page.
 
 ---
@@ -548,9 +550,9 @@ Whether to override config values instead of merging.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `false` | Can be `true` or `false`.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `false` | Can be `true` or `false`.
 
-When `true`, the `config.*.yaml` file with the option will have its settings *override* rather than *merge with* others. Allows statements like `use_dns_when_possible: false` or `additional_hostnames: []` to work.
+When `true`, the `config.*.yaml` or `global_config.*.yaml` file with the option will have its settings *override* rather than *merge with* others. Allows statements like `use_dns_when_possible: false` or `additional_hostnames: []` to work.
 
 See [Extending `config.yaml` with Custom `config.*.yaml` Files](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files).
 
@@ -620,7 +622,7 @@ The default share provider to use with the [`ddev share`](../usage/commands.md#s
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global<br>:octicons-file-directory-16: project | `ngrok` | Built-in providers: `ngrok`, `cloudflared`. Custom providers can be added to `.ddev/share-providers/`. Project config overrides global config.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `ngrok` | Built-in providers: `ngrok`, `cloudflared`. Custom providers can be added to `.ddev/share-providers/`. Project config overrides global config.
 
 Set globally with `ddev config global --share-default-provider=cloudflared` or per-project with `ddev config --share-default-provider=cloudflared`. Can also be overridden with the `--provider` flag when running `ddev share`.
 

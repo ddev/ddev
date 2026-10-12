@@ -345,6 +345,8 @@ can have their intended affect.
 
 [`override_config`](../configuration/config.md#override_config) affects only behavior of the `config.*.yaml` file it exists in.
 
+The global `global_config.yaml` can be extended the same way with `global_config.*.yaml` files in the [global configuration directory](../usage/architecture.md#global-files), with the same rules and the same `override_config` behavior.
+
 To experiment with the behavior of a set of `config.*.yaml` files, use the [`ddev utility configyaml`](../usage/commands.md#utility-configyaml) file; it's especially valuable with the `yq` command, for example `ddev utility configyaml | yq`.
 
 ## Explicit `supervisord` Configuration for Additional Daemons
