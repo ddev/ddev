@@ -12,7 +12,7 @@ services:
 
     {{ if .PortSubstitutions }}
     labels:
-      # Which ephemeral host port stands in for each standard router port,
+      # Which substitute host port stands in for each standard router port,
       # see RouterPortSubstitutionsLabel in pkg/ddevapp/router.go
       {{ .PortSubstitutionsLabel }}: "{{ .PortSubstitutions }}"
     {{ end }}

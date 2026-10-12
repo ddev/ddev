@@ -4888,7 +4888,7 @@ func TestPortSpecifications(t *testing.T) {
 	err = nospecApp.Start()
 	assert.NoError(err)
 
-	// Now that we have a working nospecApp with unspecified ephemeral ports, test that we
+	// Now that we have a working nospecApp with engine-assigned host ports, test that we
 	// can't use those ports while nospecApp is running
 
 	_ = os.Chdir(testDir)

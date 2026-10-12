@@ -1534,7 +1534,7 @@ func (app *DdevApp) start(o StartOptions) error {
 	// not set.
 	app.ComposeYaml = nil
 
-	// Set up ports to be replaced with ephemeral ports if needed
+	// Set up ports to be replaced with substitute ports if needed
 	app.RouterHTTPPort = app.GetPrimaryRouterHTTPPort()
 	app.RouterHTTPSPort = app.GetPrimaryRouterHTTPSPort()
 	app.MailpitHTTPPort = app.GetMailpitHTTPPort()
@@ -1545,7 +1545,7 @@ func (app *DdevApp) start(o StartOptions) error {
 	AssignRouterPortsToGenericWebserverPorts(app)
 
 	portsToCheck := []*string{&app.RouterHTTPPort, &app.RouterHTTPSPort, &app.MailpitHTTPPort, &app.MailpitHTTPSPort, &app.XHGuiHTTPPort, &app.XHGuiHTTPSPort}
-	GetEphemeralPortsIfNeeded(portsToCheck, true)
+	GetSubstitutePortsIfNeeded(portsToCheck, true)
 
 	SyncGenericWebserverPortsWithRouterPorts(app)
 
@@ -3589,7 +3589,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	_ = app.DockerEnv()
 	var err error
 
-	clear(EphemeralRouterPortsAssigned)
+	clear(RouterSubstitutePortsAssigned)
 	if app.Name == "" {
 		return fmt.Errorf("invalid app.Name provided to app.Stop(), app=%v", app)
 	}

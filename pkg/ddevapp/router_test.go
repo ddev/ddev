@@ -226,7 +226,7 @@ func TestAllocateAvailablePortForRouter(t *testing.T) {
 // manager. So the chosen port can be taken by an unrelated socket, or not yet
 // released by a container that was just removed, by the time the bind runs.
 //
-// This is unrelated to DDEV's own ephemeral router port allocation; it is a
+// This is unrelated to DDEV's own router substitute port allocation; it is a
 // property of the environment, so retrying is the appropriate response.
 func isDockerHostPortRaceError(err error) bool {
 	if err == nil {
@@ -243,8 +243,8 @@ func isDockerHostPortRaceError(err error) bool {
 // second or two and the next attempt draws a different random host port.
 //
 // It deliberately does not call app.Stop() between attempts: Stop() clears
-// ddevapp.EphemeralRouterPortsAssigned, which would let a later project be handed
-// an ephemeral router port already bound by the router for an earlier project.
+// ddevapp.RouterSubstitutePortsAssigned, which would let a later project be handed
+// a router substitute port already bound by the router for an earlier project.
 func startRetryingHostPortRace(t *testing.T, app *ddevapp.DdevApp) error {
 	const attempts = 3
 	var err error
@@ -261,8 +261,8 @@ func startRetryingHostPortRace(t *testing.T, app *ddevapp.DdevApp) error {
 	return err
 }
 
-// Test that the app assigns an ephemeral port if the default one is not available.
-func TestUseEphemeralPort(t *testing.T) {
+// Test that the app assigns a substitute port if the default one is not available.
+func TestUseRouterSubstitutePort(t *testing.T) {
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		// Intermittent failures in CI due apparently to https://github.com/lima-vm/lima/issues/2536
 		// Expected port is not available, so it allocates another one.
@@ -277,7 +277,7 @@ func TestUseEphemeralPort(t *testing.T) {
 	ddevapp.PowerOff()
 
 	targetHTTPPort, targetHTTPSPort := "28080", "28443"
-	const testString = "Hello from TestUseEphemeralPort"
+	const testString = "Hello from TestUseRouterSubstitutePort"
 
 	apps := []*ddevapp.DdevApp{}
 	for _, s := range []string{"site1", "site2"} {
@@ -295,7 +295,7 @@ func TestUseEphemeralPort(t *testing.T) {
 	}
 
 	// Occupy target router ports so that app1 will be forced
-	// to use the ephemeral ports
+	// to use the substitute ports
 	for _, p := range []string{apps[0].GetPrimaryRouterHTTPPort(), apps[0].GetPrimaryRouterHTTPSPort(), apps[0].GetMailpitHTTPPort(), apps[0].GetMailpitHTTPSPort()} {
 		listener, err := net.Listen("tcp", "127.0.0.1:"+p)
 		require.NoError(t, err)
@@ -314,7 +314,7 @@ func TestUseEphemeralPort(t *testing.T) {
 		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
 	})
 
-	// Tracks ephemeral ports already handed out, so we can verify each project gets
+	// Tracks substitute ports already handed out, so we can verify each project gets
 	// its own. Maps port number to a description of what claimed it.
 	assignedPorts := map[int]string{}
 
@@ -330,9 +330,9 @@ func TestUseEphemeralPort(t *testing.T) {
 		require.NotEqual(t, targetHTTPPort, app.GetPrimaryRouterHTTPPort())
 		require.NotEqual(t, targetHTTPSPort, app.GetPrimaryRouterHTTPSPort())
 
-		// Don't predict the exact port numbers. Which ephemeral port a project lands on
+		// Don't predict the exact port numbers. Which substitute port a project lands on
 		// depends on what else on the machine happens to hold ports in the range at that
-		// moment, so all that matters is that each replacement port is in the ephemeral
+		// moment, so all that matters is that each replacement port is in the substitute
 		// range and is not one already given to another project. That the port actually
 		// works is proven by the content checks below.
 		for _, p := range []struct{ scheme, port string }{
@@ -353,13 +353,13 @@ func TestUseEphemeralPort(t *testing.T) {
 
 		// Make sure that both http and https URLs have proper content
 		testcommon.AssertLocalHTTPContent(t, app.GetHTTPURL(), testString,
-			testcommon.WithMessagef("project should serve expected content over HTTP on its ephemeral port"),
+			testcommon.WithMessagef("project should serve expected content over HTTP on its substitute port"),
 			testcommon.WithTimeout(0),
 		)
 		require.Contains(t, app.GetHTTPURL(), app.GetHostname())
 		if globalconfig.GetCAROOT() != "" {
 			testcommon.AssertLocalHTTPContent(t, app.GetHTTPSURL(), testString,
-				testcommon.WithMessagef("project should serve expected content over HTTPS on its ephemeral port"),
+				testcommon.WithMessagef("project should serve expected content over HTTPS on its substitute port"),
 				testcommon.WithTimeout(0),
 			)
 			require.Contains(t, app.GetHTTPSURL(), app.GetHostname())
@@ -367,9 +367,9 @@ func TestUseEphemeralPort(t *testing.T) {
 	}
 }
 
-// TestEphemeralPortsReusedOnRestart tests that ephemeral ports assigned to a project
+// TestRouterSubstitutePortsReusedOnRestart tests that substitute ports assigned to a project
 // are reused when the project restarts, preventing unnecessary router recreation.
-func TestEphemeralPortsReusedOnRestart(t *testing.T) {
+func TestRouterSubstitutePortsReusedOnRestart(t *testing.T) {
 	testcommon.SkipIfGotestShort(t)
 	if nodeps.IsEnvFalse("DDEV_RUN_TEST_ANYWAY") && (dockerutil.IsColima() || dockerutil.IsLima() || dockerutil.IsRancherDesktop()) {
 		t.Skip("Skipping on Lima/Colima/Rancher as ports don't seem to be released properly in a timely fashion")
@@ -377,14 +377,14 @@ func TestEphemeralPortsReusedOnRestart(t *testing.T) {
 
 	// Stop all projects and the router first so we can occupy the ports they would normally use
 	ddevapp.PowerOff()
-	// Clear ephemeral port assignments from previous tests
-	ddevapp.EphemeralRouterPortsAssigned = make(map[int]bool)
+	// Clear substitute port assignments from previous tests
+	ddevapp.RouterSubstitutePortsAssigned = make(map[int]bool)
 
 	targetHTTPPort, targetHTTPSPort := "29080", "29443"
 
 	site := filepath.Join(testcommon.CreateTmpDir(t.Name()))
 	_ = os.MkdirAll(site, 0755)
-	err := fileutil.TemplateStringToFile("Hello from TestEphemeralPortsReusedOnRestart", nil, filepath.Join(site, "index.html"))
+	err := fileutil.TemplateStringToFile("Hello from TestRouterSubstitutePortsReusedOnRestart", nil, filepath.Join(site, "index.html"))
 	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp(site, false)
@@ -393,7 +393,7 @@ func TestEphemeralPortsReusedOnRestart(t *testing.T) {
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	// Occupy target router ports so that app will be forced to use ephemeral ports
+	// Occupy target router ports so that app will be forced to use substitute ports
 	var listeners []net.Listener
 	for _, p := range []string{targetHTTPPort, targetHTTPSPort} {
 		listener, err := net.Listen("tcp", "127.0.0.1:"+p)
@@ -409,29 +409,29 @@ func TestEphemeralPortsReusedOnRestart(t *testing.T) {
 		_ = dockerutil.RemoveContainer(nodeps.RouterContainer)
 	})
 
-	// Start the app - it should use ephemeral ports
+	// Start the app - it should use substitute ports
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Get the ephemeral ports that were assigned
+	// Get the substitute ports that were assigned
 	app, err = ddevapp.NewApp(app.GetAppRoot(), true)
 	require.NoError(t, err)
 	firstHTTPPort := app.GetPrimaryRouterHTTPPort()
 	firstHTTPSPort := app.GetPrimaryRouterHTTPSPort()
 
-	// Make sure they're ephemeral ports (not the target ports)
-	require.NotEqual(t, targetHTTPPort, firstHTTPPort, "HTTP port should be ephemeral")
-	require.NotEqual(t, targetHTTPSPort, firstHTTPSPort, "HTTPS port should be ephemeral")
+	// Make sure they're substitute ports (not the target ports)
+	require.NotEqual(t, targetHTTPPort, firstHTTPPort, "HTTP port should be a substitute")
+	require.NotEqual(t, targetHTTPSPort, firstHTTPSPort, "HTTPS port should be a substitute")
 
 	// Get router container ID before restart
 	router, err := ddevapp.FindDdevRouter()
 	require.NoError(t, err)
 	originalRouterID := router.ID
 
-	// Clear ephemeral port assignments to simulate new process
-	ddevapp.EphemeralRouterPortsAssigned = make(map[int]bool)
+	// Clear substitute port assignments to simulate new process
+	ddevapp.RouterSubstitutePortsAssigned = make(map[int]bool)
 
-	// Restart the app - the ephemeral ports should be reused
+	// Restart the app - the substitute ports should be reused
 	err = app.Restart()
 	require.NoError(t, err)
 
@@ -441,14 +441,14 @@ func TestEphemeralPortsReusedOnRestart(t *testing.T) {
 	secondHTTPPort := app.GetPrimaryRouterHTTPPort()
 	secondHTTPSPort := app.GetPrimaryRouterHTTPSPort()
 
-	// Verify the same ephemeral ports are used
-	require.Equal(t, firstHTTPPort, secondHTTPPort, "HTTP ephemeral port should be reused on restart")
-	require.Equal(t, firstHTTPSPort, secondHTTPSPort, "HTTPS ephemeral port should be reused on restart")
+	// Verify the same substitute ports are used
+	require.Equal(t, firstHTTPPort, secondHTTPPort, "HTTP substitute port should be reused on restart")
+	require.Equal(t, firstHTTPSPort, secondHTTPSPort, "HTTPS substitute port should be reused on restart")
 
 	// Verify the router was not recreated (same container ID)
 	router, err = ddevapp.FindDdevRouter()
 	require.NoError(t, err)
-	require.Equal(t, originalRouterID, router.ID, "Router should not be recreated when ephemeral ports are reused")
+	require.Equal(t, originalRouterID, router.ID, "Router should not be recreated when substitute ports are reused")
 }
 
 // TestRouterPortSubstitutionPersistsAcrossProjects verifies a substituted port
@@ -466,8 +466,8 @@ func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 
 	// Stop all projects and the router first so we can occupy the ports they would normally use
 	ddevapp.PowerOff()
-	ddevapp.EphemeralRouterPortsAssigned = make(map[int]bool)
-	ddevapp.RouterPortEphemeralSubstitutions = make(map[string]string)
+	ddevapp.RouterSubstitutePortsAssigned = make(map[int]bool)
+	ddevapp.RouterPortSubstitutions = make(map[string]string)
 
 	targetHTTPPort, targetHTTPSPort := "39080", "39443"
 
@@ -491,7 +491,7 @@ func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 	app2.RouterHTTPPort, app2.RouterHTTPSPort = targetHTTPPort, targetHTTPSPort
 	require.NoError(t, app2.WriteConfig())
 
-	// Occupy the target ports so project1 is forced onto ephemeral substitutes
+	// Occupy the target ports so project1 is forced onto substitute ports
 	var listeners []net.Listener
 	for _, p := range []string{targetHTTPPort, targetHTTPSPort} {
 		listener, err := net.Listen("tcp", "127.0.0.1:"+p)
@@ -519,15 +519,15 @@ func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 	})
 
 	// Start project1 while the target ports are busy - it should be forced onto
-	// ephemeral substitutes, and the router should record the substitution.
+	// substitute ports, and the router should record the substitution.
 	require.NoError(t, app1.Start())
 
 	app1, err = ddevapp.NewApp(app1.GetAppRoot(), true)
 	require.NoError(t, err)
 	substituteHTTPPort := app1.GetPrimaryRouterHTTPPort()
 	substituteHTTPSPort := app1.GetPrimaryRouterHTTPSPort()
-	require.NotEqual(t, targetHTTPPort, substituteHTTPPort, "HTTP port should be ephemeral")
-	require.NotEqual(t, targetHTTPSPort, substituteHTTPSPort, "HTTPS port should be ephemeral")
+	require.NotEqual(t, targetHTTPPort, substituteHTTPPort, "HTTP port should be a substitute")
+	require.NotEqual(t, targetHTTPSPort, substituteHTTPSPort, "HTTPS port should be a substitute")
 
 	router, err := ddevapp.FindDdevRouter()
 	require.NoError(t, err)
@@ -546,7 +546,7 @@ func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 	// Simulate project2 starting from a brand-new ddev process: clear the
 	// in-process substitution cache so the router's label is the only place
 	// left the substitution could be recovered from.
-	ddevapp.RouterPortEphemeralSubstitutions = make(map[string]string)
+	ddevapp.RouterPortSubstitutions = make(map[string]string)
 
 	reuseMessage := nodeps.RouterContainer + " already running, pushing new config"
 	recreateMessage := "Starting " + nodeps.RouterContainer + ", pushing config"
@@ -564,7 +564,7 @@ func TestRouterPortSubstitutionPersistsAcrossProjects(t *testing.T) {
 	app2, err = ddevapp.NewApp(app2.GetAppRoot(), true)
 	require.NoError(t, err)
 	require.Equal(t, substituteHTTPPort, app2.GetPrimaryRouterHTTPPort(),
-		"project2 should adopt the same ephemeral substitute recorded on the router, not the now-free standard port")
+		"project2 should adopt the same substitute port recorded on the router, not the now-free standard port")
 	require.Equal(t, substituteHTTPSPort, app2.GetPrimaryRouterHTTPSPort())
 
 	router, err = ddevapp.FindDdevRouter()
@@ -1061,7 +1061,7 @@ func TestHostnamesMatch(t *testing.T) {
 // extra ports from other projects.
 func TestRouterNotRebuiltWithExtraPorts(t *testing.T) {
 	if dockerutil.IsRancherDesktop() {
-		t.Skip("Rancher Desktop starts extra project with ephemeral ports, not default ones, causing test instability")
+		t.Skip("Rancher Desktop starts extra project with substitute ports, not default ones, causing test instability")
 	}
 	// Start clean
 	ddevapp.PowerOff()
