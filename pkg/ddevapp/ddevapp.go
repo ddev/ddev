@@ -1004,6 +1004,12 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 				return fmt.Errorf("failed to extract file: %v", err)
 			}
 
+		case strings.HasSuffix(importPath, "sql.zst") || strings.HasSuffix(importPath, "mysql.zst"):
+			err = archive.UnZstd(importPath, dbPath)
+			if err != nil {
+				return fmt.Errorf("failed to extract file: %v", err)
+			}
+
 		case strings.HasSuffix(importPath, "zip"):
 			err = archive.Unzip(importPath, dbPath, extractPath)
 			if err != nil {
@@ -1017,6 +1023,8 @@ func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool,
 		case strings.HasSuffix(importPath, "tar.bz2"):
 			fallthrough
 		case strings.HasSuffix(importPath, "tar.xz"):
+			fallthrough
+		case strings.HasSuffix(importPath, "tar.zst"):
 			fallthrough
 		case strings.HasSuffix(importPath, "tgz"):
 			err := archive.Untar(importPath, dbPath, extractPath)
@@ -1189,10 +1197,21 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 		exportCmd = exportCmd + " | tail --lines=+2 "
 	}
 
-	if compressionType == "" {
+	if compressionType == "" || compressionType == "none" {
 		compressionType = "cat"
 	}
-	exportCmd = exportCmd + " | " + compressionType
+	compressionCmd := compressionType
+	switch compressionType {
+	case "cat", "gzip", "xz", "bzip2":
+	case "zstd":
+		if app.Database.Type == nodeps.MariaDB && app.Database.Version == nodeps.MariaDB55 {
+			return fmt.Errorf("zstd compression is not available for %s:%s, use gzip, xz, or bzip2", app.Database.Type, app.Database.Version)
+		}
+		compressionCmd = app.GetDBCompressionCommand()
+	default:
+		return fmt.Errorf("unsupported compression type '%s'", compressionType)
+	}
+	exportCmd = exportCmd + " | " + compressionCmd
 
 	opts := &ExecOpts{
 		Service:   "db",

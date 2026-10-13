@@ -809,4 +809,5 @@ zscaler
 zsh
 zshrc
 zstd
+Zstandard
 zxf

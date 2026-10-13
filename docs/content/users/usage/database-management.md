@@ -14,7 +14,7 @@ If your project does _not_ require a database, you can exclude it with the the [
 ## Database Imports
 
 Import a database with one command, from one of the following file formats:  
-**`.sql`, `.sql.gz`, `.mysql`, `.mysql.gz`, `.tar`, `.tar.gz`, and `.zip`**.
+**`.sql`, `.sql.gz`, `.sql.bz2`, `.sql.xz`, `.sql.zst`, `.mysql`, `.mysql.gz`, `.tar`, `.tar.gz`, `.tar.zst`, and `.zip`**.
 
 Here’s an example of a database import using DDEV:
 
@@ -39,7 +39,7 @@ DDEV creates a default database named `db` and default permissions for the `db` 
 
 You can easily create and populate additional databases. For example, `ddev import-db --database=backend --file=backend.sql.gz` will create the database named `backend` with permissions for that same `db` user and import from the `backend.sql.gz` dumpfile.
 
-You can export in the same way: `ddev export-db -f mysite.sql.gz` will export your default database (`db`). `ddev export-db --database=backend -f backend-export.sql.gz` will dump the database named `backend`.
+You can export in the same way: `ddev export-db -f mysite.sql.gz` will export your default database (`db`). The compression type comes from the file extension (`.gz`, `.zst`, `.xz`, `.bz2`, or `.sql` for none), or set it with `--compression`. `ddev export-db --database=backend -f backend-export.sql.gz` will dump the database named `backend`.
 
 ## Snapshots
 
