@@ -16,6 +16,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/versionconstants"
 )
@@ -70,7 +71,8 @@ type AppModel struct {
 
 	// Confirmation overlay
 	confirming    bool
-	confirmAction string // "start-all", "stop-all", or "poweroff"
+	confirmAction string // "start-all", "stop-all", "poweroff", or "delete"
+	confirmTarget string
 
 	// Viewports for scrolling
 	dashboardViewport viewport.Model
@@ -305,6 +307,11 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.operationName = ""
 			m.statusMsg = "Operation completed"
 			m.viewMode = returnView
+			if returnView == viewDashboard {
+				// The reload that followed the operation skipped the viewport
+				// because the operation view was showing.
+				m.updateDashboardViewport()
+			}
 		}
 		return m, nil
 
@@ -381,27 +388,7 @@ func (m AppModel) isLoading() bool {
 func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	// Confirmation overlay takes priority
 	if m.confirming {
-		if key.Matches(msg, m.keys.Confirm) {
-			action := m.confirmAction
-			m.confirming = false
-			m.confirmAction = ""
-			switch action {
-			case "start-all":
-				m = m.enterOperationView("Starting all projects", viewDashboard)
-				return m, startOperationStreamCmd("", "start", "--all")
-			case "stop-all":
-				m = m.enterOperationView("Stopping all projects", viewDashboard)
-				return m, startOperationStreamCmd("", "stop", "--all")
-			case "poweroff":
-				m = m.enterOperationView("Powering off DDEV", viewDashboard)
-				return m, startOperationStreamCmd("", "poweroff")
-			}
-		}
-		// Any other key cancels
-		m.confirming = false
-		m.confirmAction = ""
-		m.statusMsg = ""
-		return m, nil
+		return m.handleConfirmKey(msg)
 	}
 
 	// If filtering, handle text input
@@ -545,6 +532,11 @@ func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.statusMsg = "Poweroff all DDEV projects and containers? (y to confirm, any key to cancel)"
 		return m, nil
 
+	case key.Matches(msg, m.keys.Delete):
+		if p := m.selectedProject(); p != nil {
+			return m.confirmDelete(p.Name), nil
+		}
+
 	case key.Matches(msg, m.keys.StartAll):
 		if len(m.projects) > 0 {
 			m.confirming = true
@@ -586,6 +578,10 @@ func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	if m.confirming {
+		return m.handleConfirmKey(msg)
+	}
+
 	var cmd tea.Cmd
 
 	switch {
@@ -675,6 +671,11 @@ func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			return m, m.openProjectCmd(msg, m.detail.AppRoot)
 		}
 
+	case key.Matches(msg, m.keys.Delete):
+		if m.detail != nil {
+			return m.confirmDelete(m.detail.Name), nil
+		}
+
 	case key.Matches(msg, m.keys.Quit):
 		return m, tea.Quit
 	}
@@ -682,16 +683,73 @@ func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// confirmDelete asks before deleting a project. O skips the snapshot, which
+// otherwise starts a stopped project and fails if it can't start; the prompt
+// leaves O out when omit_snapshot_on_delete already skips it.
+func (m AppModel) confirmDelete(name string) AppModel {
+	m.confirming = true
+	m.confirmAction = "delete"
+	m.confirmTarget = name
+	if globalconfig.DdevGlobalConfig.OmitSnapshotOnDelete {
+		m.statusMsg = fmt.Sprintf("Delete project '%s' and its database? No snapshot will be made (omit_snapshot_on_delete). (y to confirm, any key to cancel)", name)
+	} else {
+		m.statusMsg = fmt.Sprintf("Delete project '%s' and its database? A database snapshot will be made first. (y to confirm, O to skip the snapshot, any key to cancel)", name)
+	}
+	return m
+}
+
+// handleConfirmKey runs the pending confirmAction on y, or a delete without a
+// snapshot on O, and cancels it on any other key.
+func (m AppModel) handleConfirmKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	action, target := m.confirmAction, m.confirmTarget
+	m.confirming = false
+	m.confirmAction = ""
+	m.confirmTarget = ""
+	omitSnapshot := action == "delete" && key.Matches(msg, m.keys.OmitSnap)
+	if !omitSnapshot && !key.Matches(msg, m.keys.Confirm) {
+		m.statusMsg = ""
+		return m, nil
+	}
+	switch action {
+	case "start-all":
+		m = m.enterOperationView("Starting all projects", viewDashboard)
+		return m, startOperationStreamCmd("", "start", "--all")
+	case "stop-all":
+		m = m.enterOperationView("Stopping all projects", viewDashboard)
+		return m, startOperationStreamCmd("", "stop", "--all")
+	case "poweroff":
+		m = m.enterOperationView("Powering off DDEV", viewDashboard)
+		return m, startOperationStreamCmd("", "poweroff")
+	case "delete":
+		if omitSnapshot {
+			m = m.enterOperationView(fmt.Sprintf("Deleting %s without a snapshot", target), viewDashboard)
+			return m, deleteStreamCmd("", "delete", "-y", "--omit-snapshot", target)
+		}
+		m = m.enterOperationView(fmt.Sprintf("Deleting %s", target), viewDashboard)
+		return m, deleteStreamCmd("", "delete", "-y", target)
+	}
+	m.statusMsg = ""
+	return m, nil
+}
+
+// Indirections so tests can observe what the open and delete keys request
+// without launching anything.
+var (
+	deleteStreamCmd   = startOperationStreamCmd
+	openTargetCmd     = openTarget
+	openInPhpStormCmd = openInPhpStorm
+)
+
 // openProjectCmd opens appRoot in the file manager or an editor, depending
 // on which open key was pressed.
 func (m AppModel) openProjectCmd(msg tea.KeyPressMsg, appRoot string) tea.Cmd {
 	switch {
 	case key.Matches(msg, m.keys.OpenVSC):
-		return openTarget("VS Code", editorURL("vscode", appRoot))
+		return openTargetCmd("VS Code", editorURL("vscode", appRoot))
 	case key.Matches(msg, m.keys.OpenPhpS):
-		return openInPhpStorm(appRoot)
+		return openInPhpStormCmd(appRoot)
 	}
-	return openTarget("directory", appRoot)
+	return openTargetCmd("directory", appRoot)
 }
 
 func (m AppModel) handleLogKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
@@ -1116,11 +1174,6 @@ func (m AppModel) buildDetailContent() string {
 		}
 	}
 
-	// Status message
-	if m.statusMsg != "" {
-		content.WriteString("\n" + m.statusMsg)
-	}
-
 	return content.String()
 }
 
@@ -1156,8 +1209,20 @@ func (m AppModel) detailView() string {
 	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
 	b.WriteString("\n")
 
-	// Use viewport for scrollable content
-	b.WriteString(m.detailViewport.View())
+	// The status message stays outside the viewport, whose content is only
+	// rebuilt when the detail reloads, and takes its rows from the viewport.
+	vp := m.detailViewport
+	msg := m.statusMsg
+	if msg != "" && m.width > 0 {
+		msg = ansi.Wrap(msg, m.width, "")
+	}
+	if msg != "" && m.viewportReady {
+		vp.SetHeight(max(1, vp.Height()-strings.Count(msg, "\n")-2))
+	}
+	b.WriteString(vp.View())
+	if msg != "" {
+		b.WriteString("\n\n" + msg)
+	}
 
 	// Bottom divider
 	b.WriteString("\n" + m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
@@ -1397,6 +1462,7 @@ func (m AppModel) dashboardKeyHints() string {
 		{"a", "start all"},
 		{"A", "stop all"},
 		{"P", "poweroff"},
+		{"D", "delete"},
 		{"l", "launch"},
 		{"m", "mailpit"},
 		{"x", "xhgui"},
@@ -1429,6 +1495,7 @@ func (m AppModel) detailKeyHints() string {
 		{"e", "ssh"},
 		{"L", "logs"},
 		{"R", "refresh"},
+		{"D", "delete"},
 		{"esc", "back"},
 	}
 	return m.renderHints(hints)
@@ -1484,6 +1551,7 @@ Actions:
   a               Start all projects
   A               Stop all projects
   P               Poweroff all DDEV projects and containers
+  D               Delete selected project and its database
   C               Run ddev config interactively
   l               Launch project URL in browser
   m               Launch Mailpit in browser

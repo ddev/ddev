@@ -84,6 +84,23 @@ func TestSetProjectAppRoot(t *testing.T) {
 	assert.Equal(tmpDir, project.AppRoot)
 }
 
+// TestReadProjectListDropsRemovedProjects checks that rereading the project
+// list forgets projects another process removed from the file.
+func TestReadProjectListDropsRemovedProjects(t *testing.T) {
+	origList := globalconfig.DdevProjectList
+	t.Setenv("DDEV_XDG_CONFIG_HOME", t.TempDir())
+	t.Cleanup(func() { globalconfig.DdevProjectList = origList })
+
+	globalconfig.DdevProjectList = map[string]*globalconfig.ProjectInfo{
+		"kept":    {AppRoot: "/kept"},
+		"removed": {AppRoot: "/removed"},
+	}
+	require.NoError(t, os.WriteFile(globalconfig.GetProjectListPath(), []byte("kept:\n  approot: /kept\n"), 0644))
+
+	require.NoError(t, globalconfig.ReadProjectList())
+	require.Equal(t, map[string]*globalconfig.ProjectInfo{"kept": {AppRoot: "/kept"}}, globalconfig.DdevProjectList)
+}
+
 type internetActiveNetResolverStub struct {
 	sleepTime time.Duration
 	err       error

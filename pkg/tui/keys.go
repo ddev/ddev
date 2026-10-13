@@ -24,8 +24,10 @@ type KeyMap struct {
 	StartAll key.Binding
 	StopAll  key.Binding
 	Confirm  key.Binding
+	OmitSnap key.Binding
 	Xdebug   key.Binding
 	Poweroff key.Binding
+	Delete   key.Binding
 	CopyURL  key.Binding
 	Config   key.Binding
 	OpenDir  key.Binding
@@ -118,6 +120,10 @@ func DefaultKeyMap() KeyMap {
 			key.WithKeys("y"),
 			key.WithHelp("y", "confirm"),
 		),
+		OmitSnap: key.NewBinding(
+			key.WithKeys("O"),
+			key.WithHelp("O", "delete without snapshot"),
+		),
 		Xdebug: key.NewBinding(
 			key.WithKeys("X"),
 			key.WithHelp("X", "xdebug toggle"),
@@ -125,6 +131,10 @@ func DefaultKeyMap() KeyMap {
 		Poweroff: key.NewBinding(
 			key.WithKeys("P"),
 			key.WithHelp("P", "poweroff"),
+		),
+		Delete: key.NewBinding(
+			key.WithKeys("D"),
+			key.WithHelp("D", "delete"),
 		),
 		CopyURL: key.NewBinding(
 			key.WithKeys("c"),

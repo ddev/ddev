@@ -101,19 +101,41 @@ func TestDetailEditorLinks(t *testing.T) {
 }
 
 func TestOpenKeys(t *testing.T) {
-	for _, k := range []rune{'o', 'v', 'p'} {
+	var got string
+	t.Cleanup(func() {
+		openTargetCmd = openTarget
+		openInPhpStormCmd = openInPhpStorm
+	})
+	openTargetCmd = func(what, target string) tea.Cmd {
+		got = what + "|" + target
+		return nil
+	}
+	openInPhpStormCmd = func(dir string) tea.Cmd {
+		got = "PhpStorm|" + dir
+		return nil
+	}
+
+	want := map[rune]string{
+		'o': "directory|/tmp/mysite",
+		'v': "VS Code|" + editorURL("vscode", "/tmp/mysite"),
+		'p': "PhpStorm|/tmp/mysite",
+	}
+	for k, w := range want {
+		got = ""
 		d := NewAppModel()
 		d.loading = false
 		d.projects = []ProjectInfo{{Name: "mysite", Status: ddevapp.SiteRunning, AppRoot: "/tmp/mysite"}}
-		_, cmd := d.Update(tea.KeyPressMsg{Code: k, Text: string(k)})
-		require.NotNil(t, cmd, "%c on the dashboard should return an open command", k)
+		d.Update(tea.KeyPressMsg{Code: k, Text: string(k)})
+		require.Equal(t, w, got, "%c on the dashboard", k)
 
+		got = ""
 		m := NewAppModel()
 		m.viewMode = viewDetail
 		detail := sampleDetail()
+		detail.AppRoot = "/tmp/mysite"
 		m.detail = &detail
-		_, cmd = m.Update(tea.KeyPressMsg{Code: k, Text: string(k)})
-		require.NotNil(t, cmd, "%c in the detail view should return an open command", k)
+		m.Update(tea.KeyPressMsg{Code: k, Text: string(k)})
+		require.Equal(t, w, got, "%c in the detail view", k)
 	}
 }
 

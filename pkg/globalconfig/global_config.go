@@ -711,11 +711,14 @@ func ReadProjectList() error {
 		return fmt.Errorf("could not read global projects file %s: %v", globalProjectsFile, err)
 	}
 
-	// Read config file
-	err = yaml.Unmarshal(source, &DdevProjectList)
+	// Unmarshal into a fresh map, since unmarshaling into the existing one
+	// would keep projects that were removed from the file since the last read.
+	projects := map[string]*ProjectInfo{}
+	err = yaml.Unmarshal(source, &projects)
 	if err != nil {
 		return fmt.Errorf("unable to load DDEV global projects file %s: %v", globalProjectsFile, err)
 	}
+	DdevProjectList = projects
 
 	// Sanitize the project list
 	for name, project := range DdevProjectList {
