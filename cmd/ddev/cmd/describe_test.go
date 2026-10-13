@@ -404,6 +404,7 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 		require.Equal(t, app.GetHTTPURL(), desc["httpurl"])
 		require.Equal(t, app.GetName(), desc["name"])
 		require.Equal(t, "healthy", desc["router_status"], "project #%d %s desc does not have healthy router status", i, app.Name)
+		require.Contains(t, desc, "ssh_agent_status_log")
 		require.Equal(t, v.Dir, desc["approot"])
 
 		// Stop the router using Docker and then check the describe

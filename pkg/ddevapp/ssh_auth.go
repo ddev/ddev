@@ -366,7 +366,7 @@ func findDdevSSHAuth() (*container.Summary, error) {
 
 // RenderSSHAuthStatus returns a user-friendly string showing sshAuth-status
 func RenderSSHAuthStatus() string {
-	status := GetSSHAuthStatus()
+	status, _ := GetSSHAuthStatus()
 	var renderedStatus string
 
 	switch status {
@@ -380,17 +380,17 @@ func RenderSSHAuthStatus() string {
 	return fmt.Sprintf("\nssh-auth status: %v", renderedStatus)
 }
 
-// GetSSHAuthStatus returns the ssh-agent container health, or stopped
-// if the container isn't found, like GetRouterStatus().
-func GetSSHAuthStatus() string {
+// GetSSHAuthStatus returns the ssh-agent container health and its latest
+// healthcheck log, or stopped if the container isn't found, like
+// GetRouterStatus().
+func GetSSHAuthStatus() (string, string) {
 	label := map[string]string{
 		"com.docker.compose.project": SSHAuthName,
 		"com.docker.compose.oneoff":  "False",
 	}
 	c, err := dockerutil.FindContainerByLabels(label)
 	if err != nil || c == nil {
-		return SiteStopped
+		return SiteStopped, ""
 	}
-	health, _ := dockerutil.GetContainerHealth(c)
-	return health
+	return dockerutil.GetContainerHealth(c)
 }

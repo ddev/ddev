@@ -1,1575 +1,382 @@
 package tui
 
 import (
+	"cmp"
 	"fmt"
-	"net/url"
+	"image/color"
 	"os"
-	"path/filepath"
-	"sort"
-	"strings"
-	"time"
 
+	"charm.land/bubbles/v2/help"
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
-	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/x/ansi"
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/output"
-	"github.com/ddev/ddev/pkg/versionconstants"
 )
 
-const refreshInterval = 5 * time.Second
+type viewMode int
 
-// View mode constants.
 const (
-	viewDashboard = iota
+	viewDashboard viewMode = iota
 	viewDetail
-	viewLogs
-	viewOperation
+	viewStream
 )
 
-// AppModel is the root Bubble Tea model.
+// AppModel is the root Bubble Tea model. It owns what spans the views: the
+// window, the header and footer, the status line, confirmations, the shared
+// containers' health and the refresh ticker. Each view owns its own state and
+// replies to keys with an action that AppModel applies.
 type AppModel struct {
-	projects     []ProjectInfo
-	cursor       int
-	filterText   string
-	filtering    bool
-	showHelp     bool
-	loading      bool
-	err          error
-	width        int
-	height       int
-	keys         KeyMap
-	styles       Styles
-	routerStatus string
-	statusMsg    string
-
-	// View navigation
-	viewMode int
-
-	// Detail view
-	detail        *ProjectDetail
-	detailLoading bool
-
-	// Log streaming
-	logLines   []string
-	logProcess *os.Process
-	logSub     <-chan string
-
-	// Operation streaming
-	operationName       string
-	operationDone       bool
-	operationErr        error
-	operationReturnView int
-	operationErrCh      <-chan error
-
-	// Spinner
+	keys   KeyMap
+	styles Styles
+	// fg and bg are the terminal's text and background colors, once known.
+	fg, bg  color.Color
+	help    help.Model
 	spinner spinner.Model
+	width   int
+	height  int
+	view    viewMode
 
-	// Confirmation overlay
-	confirming    bool
-	confirmAction string // "start-all", "stop-all", "poweroff", or "delete"
-	confirmTarget string
+	dashboard dashboardView
+	detail    detailView
+	stream    streamView
+	streamID  int
 
-	// Viewports for scrolling
-	dashboardViewport viewport.Model
-	detailViewport    viewport.Model
-	viewportReady     bool
+	// refreshing is set while a reload the user asked for runs.
+	refreshing bool
+	router     health
+	sshAgent   health
+
+	confirm     *pendingConfirm
+	status      string
+	statusIsErr bool
+	statusID    int
+	// lastWarning is what the latest load logged.
+	lastWarning string
 }
 
 // NewAppModel creates a new TUI model.
 func NewAppModel() AppModel {
-	s := spinner.New(spinner.WithSpinner(spinner.Dot))
+	styles := NewStyles(nil, nil)
+	h := help.New()
+	h.Styles = styles.help()
+	cwd, _ := os.Getwd()
 	return AppModel{
-		keys:    DefaultKeyMap(),
-		styles:  NewStyles(),
-		loading: true,
-		spinner: s,
+		keys:      DefaultKeyMap(),
+		styles:    styles,
+		help:      h,
+		spinner:   spinner.New(spinner.WithSpinner(spinner.Dot)),
+		dashboard: newDashboardView(styles, cwd),
+		router:    health{status: statusLoading},
+		sshAgent:  health{status: statusLoading},
 	}
 }
 
-// Init starts the initial data load and refresh ticker.
+// Init starts the first load and the refresh ticker. The configuration of
+// the projects is read first, since it shows without waiting for Docker.
 func (m AppModel) Init() tea.Cmd {
-	return tea.Batch(
-		loadProjects,
-		loadRouterStatus,
-		tickCmd(),
-		m.spinner.Tick,
-	)
+	return tea.Batch(tea.Sequence(readProjects, loadProjects), tickCmd(), m.spinner.Tick, tea.RequestForegroundColor, tea.RequestBackgroundColor)
 }
 
-func tickCmd() tea.Cmd {
-	return tea.Tick(refreshInterval, func(_ time.Time) tea.Msg {
-		return tickMsg{}
-	})
-}
-
-type tickMsg struct{}
-
-// filteredProjects returns the projects matching the current filter.
-func (m AppModel) filteredProjects() []ProjectInfo {
-	if m.filterText == "" {
-		return m.projects
-	}
-	filter := strings.ToLower(m.filterText)
-	var result []ProjectInfo
-	for _, p := range m.projects {
-		if strings.Contains(strings.ToLower(p.Name), filter) ||
-			strings.Contains(strings.ToLower(p.Type), filter) ||
-			strings.Contains(strings.ToLower(p.Status), filter) ||
-			strings.Contains(strings.ToLower(p.AppRoot), filter) {
-			result = append(result, p)
-		}
-	}
-	return result
-}
-
-// allStopped returns true if all projects are stopped.
-func (m AppModel) allStopped() bool {
-	for _, p := range m.projects {
-		if p.Status != ddevapp.SiteStopped {
-			return false
-		}
-	}
-	return true
-}
-
-// selectedProject returns the currently selected project, or nil.
-func (m AppModel) selectedProject() *ProjectInfo {
-	filtered := m.filteredProjects()
-	if len(filtered) == 0 || m.cursor >= len(filtered) {
-		return nil
-	}
-	return &filtered[m.cursor]
-}
-
-// enterOperationView sets up the model for the operation streaming view.
-func (m AppModel) enterOperationView(name string, returnView int) AppModel {
-	m.viewMode = viewOperation
-	m.logLines = nil
-	m.logProcess = nil
-	m.logSub = nil
-	m.operationName = name
-	m.operationDone = false
-	m.operationErr = nil
-	m.operationReturnView = returnView
-	m.operationErrCh = nil
-	m.statusMsg = ""
-	return m
-}
-
-// Update handles messages and key presses.
+// Update handles a message, then lays out the views for the result, so a
+// change in the size of the header or footer resizes the body at once.
 func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	wasBusy := m.busy()
+	m, cmd := m.update(msg)
+	m.layout()
+	if !wasBusy && m.busy() {
+		cmd = tea.Batch(cmd, m.spinner.Tick)
+	}
+	return m, cmd
+}
+
+func (m AppModel) update(msg tea.Msg) (AppModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
-		if !m.viewportReady {
-			m.dashboardViewport = viewport.New(viewport.WithWidth(msg.Width), viewport.WithHeight(msg.Height-10))
-			m.detailViewport = viewport.New(viewport.WithWidth(msg.Width), viewport.WithHeight(msg.Height-6))
-			m.viewportReady = true
-		} else {
-			m.dashboardViewport.SetWidth(msg.Width)
-			m.dashboardViewport.SetHeight(msg.Height - 10)
-			m.detailViewport.SetWidth(msg.Width)
-			m.detailViewport.SetHeight(msg.Height - 6)
+		m.width, m.height = msg.Width, msg.Height
+		return m, nil
+
+	case tea.ForegroundColorMsg:
+		m.fg = msg.Color
+		return m.restyle(), nil
+
+	case tea.BackgroundColorMsg:
+		m.bg = msg.Color
+		return m.restyle(), nil
+
+	case tea.KeyPressMsg:
+		return m.updateKey(msg)
+
+	case spinner.TickMsg:
+		if !m.busy() {
+			return m, nil
 		}
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
+
+	case tickMsg:
+		if m.view == viewStream || m.dashboard.loading {
+			return m, tickCmd()
+		}
+		m.dashboard.loading = true
+		return m, tea.Batch(loadProjects, tickCmd())
+
+	case projectsListedMsg:
+		m.dashboard.setProjects(msg.projects)
 		return m, nil
 
 	case projectsLoadedMsg:
-		m.loading = false
-		if msg.err != nil {
-			m.err = msg.err
-			m.statusMsg = fmt.Sprintf("Error loading projects: %v", msg.err)
-			return m, nil
-		}
-		m.err = nil
-		if m.statusMsg == "Refreshing..." {
-			m.statusMsg = ""
-		}
-		m.projects = msg.projects
-		// Keep cursor in bounds
-		filtered := m.filteredProjects()
-		if m.cursor >= len(filtered) {
-			m.cursor = max(0, len(filtered)-1)
-		}
-		// Update viewport with dashboard content only if we're in dashboard view and viewport is ready
-		if m.viewMode == viewDashboard && m.viewportReady {
-			m.updateDashboardViewport()
-		}
-		return m, nil
+		m, logged := m.logged(msg.warning)
+		m, cmd := m.projectsLoaded(msg)
+		return m, tea.Batch(logged, cmd)
 
 	case projectDetailLoadedMsg:
-		m.detailLoading = false
-		if msg.err != nil {
-			m.statusMsg = fmt.Sprintf("Error loading detail: %v", msg.err)
-			m.viewMode = viewDashboard
-			return m, nil
-		}
-		if m.statusMsg == "Refreshing..." {
-			m.statusMsg = ""
-		}
-		m.detail = &msg.detail
-		// Update viewport with detail content
-		if m.viewportReady {
-			m.detailViewport.SetContent(m.buildDetailContent())
+		m, logged := m.logged(msg.warning)
+		m, cmd := m.detailLoaded(msg)
+		return m, tea.Batch(logged, cmd)
+
+	case xdebugStatusMsg:
+		var act action
+		m.detail, act = m.detail.xdebugLoaded(msg)
+		return m.apply(act)
+
+	case latestAddonsMsg:
+		if msg.appRoot == m.detail.root {
+			m.detail.latest = msg.versions
 		}
 		return m, nil
 
-	case routerStatusMsg:
-		m.routerStatus = msg.status
+	case statusExpiredMsg:
+		if msg.id == m.statusID {
+			m.status = ""
+		}
 		return m, nil
 
-	case xdebugToggledMsg:
+	case execFinishedMsg:
 		if msg.err != nil {
-			m.statusMsg = fmt.Sprintf("Xdebug toggle failed: %v", msg.err)
-		} else if msg.enabled {
-			m.statusMsg = "Xdebug enabled"
-		} else {
-			m.statusMsg = "Xdebug disabled"
+			m = m.setError(fmt.Sprintf("%s failed: %v", msg.title, msg.err))
+			return m.reload()
 		}
-		// Reload detail to reflect new xdebug state
-		if m.detail != nil {
-			m.detailLoading = true
-			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), m.spinner.Tick)
+		if msg.selectCurrent {
+			m.dashboard.selectCurrent = true
 		}
-		return m, nil
+		m, cmd := m.setStatus(cmp.Or(msg.done, msg.title+": done"))
+		m, reload := m.reload()
+		return m, tea.Batch(cmd, reload)
 
 	case openedMsg:
 		if msg.err != nil {
-			m.statusMsg = fmt.Sprintf("Open %s failed: %v", msg.what, msg.err)
-		} else {
-			m.statusMsg = fmt.Sprintf("Opened %s", msg.what)
+			return m.setError(fmt.Sprintf("Open %s failed: %v", msg.what, msg.err)), nil
 		}
-		return m, nil
+		return m.setStatus("Opened " + msg.what)
 
 	case clipboardMsg:
-		if msg.err != nil {
-			m.statusMsg = fmt.Sprintf("Copy failed: %v", msg.err)
-		} else {
-			m.statusMsg = "URL copied to clipboard"
+		if msg.fallback != "" {
+			m, cmd := m.setStatus("Copied the URL using the terminal's clipboard")
+			return m, tea.Batch(cmd, tea.SetClipboard(msg.fallback))
 		}
-		return m, nil
+		return m.setStatus("Copied the URL to the clipboard")
 
-	case logStreamStartedMsg:
-		m.logProcess = msg.process
-		m.logSub = msg.lines
-		return m, waitForLogLineCmd(m.logSub)
-
-	case operationStreamStartedMsg:
-		m.logProcess = msg.process
-		m.logSub = msg.lines
-		m.operationErrCh = msg.errCh
-		return m, waitForOperationLineCmd(m.logSub, m.operationErrCh)
-
-	case logLineMsg:
-		m.logLines = append(m.logLines, msg.line)
-		// Cap at 1000 lines to prevent unbounded growth
-		if len(m.logLines) > 1000 {
-			m.logLines = m.logLines[len(m.logLines)-500:]
-		}
-		if m.viewMode == viewOperation {
-			return m, waitForOperationLineCmd(m.logSub, m.operationErrCh)
-		}
-		return m, waitForLogLineCmd(m.logSub)
-
-	case logStreamEndedMsg:
-		m.logProcess = nil
-		m.logSub = nil
-		return m, nil
-
-	case operationStreamEndedMsg:
-		m.operationDone = true
-		m.operationErr = msg.err
-		m.logProcess = nil
-		m.logSub = nil
-		m.operationErrCh = nil
-		// Reload projects after operation
-		cmds := []tea.Cmd{loadProjects, loadRouterStatus, m.spinner.Tick}
-		if m.operationReturnView == viewDetail && m.detail != nil {
-			cmds = append(cmds, loadDetailCmd(m.detail.AppRoot))
-		}
-		// Auto-return on success after a short delay; stay on error so user can read output
-		if msg.err == nil {
-			cmds = append(cmds, scheduleOperationAutoReturn())
-		}
-		return m, tea.Batch(cmds...)
-
-	case operationAutoReturnMsg:
-		// Only act if still on the operation view and the operation succeeded
-		if m.viewMode == viewOperation && m.operationDone && m.operationErr == nil {
-			returnView := m.operationReturnView
-			m.logLines = nil
-			m.operationDone = false
-			m.operationName = ""
-			m.statusMsg = "Operation completed"
-			m.viewMode = returnView
-			if returnView == viewDashboard {
-				// The reload that followed the operation skipped the viewport
-				// because the operation view was showing.
-				m.updateDashboardViewport()
-			}
-		}
-		return m, nil
-
-	case operationFinishedMsg:
-		if msg.err != nil {
-			m.statusMsg = fmt.Sprintf("Error: %v", msg.err)
-		} else {
-			m.statusMsg = "Operation completed"
-		}
-		// Reload projects after an operation
-		m.loading = true
-		return m, tea.Batch(loadProjects, loadRouterStatus, m.spinner.Tick)
-
-	case operationDetailFinishedMsg:
-		if msg.err != nil {
-			m.statusMsg = fmt.Sprintf("Error: %v", msg.err)
-		} else {
-			m.statusMsg = "Operation completed"
-		}
-		// Reload both detail and project list after an operation
-		m.loading = true
-		if m.detail != nil {
-			m.detailLoading = true
-			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), loadProjects, m.spinner.Tick)
-		}
-		return m, tea.Batch(loadProjects, m.spinner.Tick)
-
-	case tickMsg:
-		// Auto-refresh based on current view
-		switch m.viewMode {
-		case viewDetail:
-			if m.detail != nil {
-				return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), loadRouterStatus, tickCmd())
-			}
-			return m, tea.Batch(loadRouterStatus, tickCmd())
-		case viewLogs, viewOperation:
-			// No auto-refresh while streaming logs or operations
-			return m, tickCmd()
-		case viewDashboard:
-			return m, tea.Batch(loadProjects, loadRouterStatus, tickCmd())
-		default:
-			return m, tickCmd()
-		}
-
-	case spinner.TickMsg:
-		if m.isLoading() {
-			var cmd tea.Cmd
-			m.spinner, cmd = m.spinner.Update(msg)
-			return m, cmd
-		}
-		return m, nil
-
-	case tea.KeyPressMsg:
-		switch m.viewMode {
-		case viewDetail:
-			return m.handleDetailKey(msg)
-		case viewLogs:
-			return m.handleLogKey(msg)
-		case viewOperation:
-			return m.handleOperationKey(msg)
-		default:
-			return m.handleDashboardKey(msg)
-		}
-	}
-
-	return m, nil
-}
-
-// isLoading returns true if any loading state is active.
-func (m AppModel) isLoading() bool {
-	return m.loading || m.detailLoading || (m.viewMode == viewOperation && !m.operationDone)
-}
-
-func (m AppModel) handleDashboardKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	// Confirmation overlay takes priority
-	if m.confirming {
-		return m.handleConfirmKey(msg)
-	}
-
-	// If filtering, handle text input
-	if m.filtering {
-		switch {
-		case key.Matches(msg, key.NewBinding(key.WithKeys("esc"))):
-			m.filtering = false
-			m.filterText = ""
-			m.cursor = 0
-			m.updateDashboardViewport()
-			m.dashboardViewport.GotoTop()
-			return m, nil
-		case key.Matches(msg, key.NewBinding(key.WithKeys("enter"))):
-			m.filtering = false
-			m.updateDashboardViewport()
-			return m, nil
-		case key.Matches(msg, key.NewBinding(key.WithKeys("backspace"))):
-			if len(m.filterText) > 0 {
-				m.filterText = m.filterText[:len(m.filterText)-1]
-				m.cursor = 0
-				m.updateDashboardViewport()
-				m.dashboardViewport.GotoTop()
-			}
-			return m, nil
-		default:
-			if len(msg.String()) == 1 {
-				m.filterText += msg.String()
-				m.cursor = 0
-				m.updateDashboardViewport()
-				m.dashboardViewport.GotoTop()
-			}
-			return m, nil
-		}
-	}
-
-	// Help overlay takes priority
-	if m.showHelp {
-		m.showHelp = false
-		return m, nil
-	}
-
-	switch {
-	case key.Matches(msg, key.NewBinding(key.WithKeys("esc"))):
-		if m.filterText != "" {
-			m.filterText = ""
-			m.cursor = 0
-			m.updateDashboardViewport()
-			m.dashboardViewport.GotoTop()
-			return m, nil
-		}
-
-	case key.Matches(msg, m.keys.Quit):
-		return m, tea.Quit
-
-	case key.Matches(msg, m.keys.Up):
-		if m.cursor > 0 {
-			m.cursor--
-			m.updateDashboardViewport()
-		}
-		return m, nil
-
-	case key.Matches(msg, m.keys.Down):
-		filtered := m.filteredProjects()
-		if m.cursor < len(filtered)-1 {
-			m.cursor++
-			m.updateDashboardViewport()
-		}
-		return m, nil
-
-	case key.Matches(msg, m.keys.PageUp):
-		pageSize := m.dashboardViewport.Height()
-		if pageSize < 1 {
-			pageSize = 10
-		}
-		m.cursor = max(0, m.cursor-pageSize)
-		m.updateDashboardViewport()
-		return m, nil
-
-	case key.Matches(msg, m.keys.PageDown):
-		filtered := m.filteredProjects()
-		pageSize := m.dashboardViewport.Height()
-		if pageSize < 1 {
-			pageSize = 10
-		}
-		m.cursor = min(m.cursor+pageSize, len(filtered)-1)
-		m.updateDashboardViewport()
-		return m, nil
-
-	case key.Matches(msg, m.keys.Detail):
-		if p := m.selectedProject(); p != nil {
-			m.viewMode = viewDetail
-			m.detail = nil
-			m.detailLoading = true
-			m.detailViewport.GotoTop()
-			m.statusMsg = ""
-			return m, tea.Batch(loadDetailCmd(p.AppRoot), m.spinner.Tick)
-		}
-		return m, nil
-
-	case key.Matches(msg, m.keys.Start):
-		if p := m.selectedProject(); p != nil {
-			m = m.enterOperationView(fmt.Sprintf("Starting %s", p.Name), viewDashboard)
-			return m, startOperationStreamCmd("", "start", p.Name)
-		}
-
-	case key.Matches(msg, m.keys.Stop):
-		if p := m.selectedProject(); p != nil {
-			m = m.enterOperationView(fmt.Sprintf("Stopping %s", p.Name), viewDashboard)
-			return m, startOperationStreamCmd("", "stop", p.Name)
-		}
-
-	case key.Matches(msg, m.keys.Restart):
-		if p := m.selectedProject(); p != nil {
-			m = m.enterOperationView(fmt.Sprintf("Restarting %s", p.Name), viewDashboard)
-			return m, startOperationStreamCmd("", "restart", p.Name)
-		}
-
-	case key.Matches(msg, m.keys.Launch):
-		if p := m.selectedProject(); p != nil && p.URL != "" {
-			return m, ddevExecCommandInDir(p.AppRoot, "launch")
-		}
-
-	case key.Matches(msg, m.keys.Mailpit):
-		if p := m.selectedProject(); p != nil && p.URL != "" {
-			return m, ddevExecCommandInDir(p.AppRoot, "launch", "-m")
-		}
-
-	case key.Matches(msg, m.keys.XHGui):
-		if p := m.selectedProject(); p != nil {
-			return m, ddevExecCommandInDir(p.AppRoot, "xhgui")
-		}
-
-	case key.Matches(msg, m.keys.OpenDir, m.keys.OpenVSC, m.keys.OpenPhpS):
-		if p := m.selectedProject(); p != nil {
-			return m, m.openProjectCmd(msg, p.AppRoot)
-		}
-
-	case key.Matches(msg, m.keys.Poweroff):
-		m.confirming = true
-		m.confirmAction = "poweroff"
-		m.statusMsg = "Poweroff all DDEV projects and containers? (y to confirm, any key to cancel)"
-		return m, nil
-
-	case key.Matches(msg, m.keys.Delete):
-		if p := m.selectedProject(); p != nil {
-			return m.confirmDelete(p.Name), nil
-		}
-
-	case key.Matches(msg, m.keys.StartAll):
-		if len(m.projects) > 0 {
-			m.confirming = true
-			m.confirmAction = "start-all"
-			m.statusMsg = fmt.Sprintf("Start all %d projects? (y to confirm, any key to cancel)", len(m.projects))
-			return m, nil
-		}
-
-	case key.Matches(msg, m.keys.StopAll):
-		if len(m.projects) > 0 {
-			m.confirming = true
-			m.confirmAction = "stop-all"
-			m.statusMsg = fmt.Sprintf("Stop all %d projects? (y to confirm, any key to cancel)", len(m.projects))
-			return m, nil
-		}
-
-	case key.Matches(msg, m.keys.Config):
-		return m, ddevConfigCommand()
-
-	case key.Matches(msg, m.keys.Refresh):
-		m.loading = true
-		m.statusMsg = "Refreshing..."
-		return m, tea.Batch(loadProjects, loadRouterStatus, m.spinner.Tick)
-
-	case key.Matches(msg, m.keys.Filter):
-		m.filtering = true
-		m.filterText = ""
-		m.cursor = 0
-		m.updateDashboardViewport()
-		m.dashboardViewport.GotoTop()
-		return m, nil
-
-	case key.Matches(msg, m.keys.Help):
-		m.showHelp = true
-		return m, nil
-	}
-
-	return m, nil
-}
-
-func (m AppModel) handleDetailKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	if m.confirming {
-		return m.handleConfirmKey(msg)
-	}
-
-	var cmd tea.Cmd
-
-	switch {
-	case key.Matches(msg, m.keys.PageUp), key.Matches(msg, m.keys.Up):
-		m.detailViewport, cmd = m.detailViewport.Update(msg)
+	case streamStartedMsg, streamLinesMsg, streamEndedMsg:
+		var cmd tea.Cmd
+		m.stream, cmd = m.stream.update(msg)
 		return m, cmd
-
-	case key.Matches(msg, m.keys.PageDown), key.Matches(msg, m.keys.Down):
-		m.detailViewport, cmd = m.detailViewport.Update(msg)
-		return m, cmd
-
-	case key.Matches(msg, m.keys.Back):
-		m.viewMode = viewDashboard
-		m.detail = nil
-		m.statusMsg = ""
-		// Update dashboard viewport when returning
-		m.updateDashboardViewport()
-		return m, nil
-
-	case key.Matches(msg, m.keys.Logs):
-		if m.detail != nil {
-			m.viewMode = viewLogs
-			m.logLines = nil
-			return m, startLogStreamCmd(m.detail.AppRoot)
-		}
-		return m, nil
-
-	case key.Matches(msg, m.keys.Start):
-		if m.detail != nil {
-			m = m.enterOperationView(fmt.Sprintf("Starting %s", m.detail.Name), viewDetail)
-			return m, startOperationStreamCmd(m.detail.AppRoot, "start")
-		}
-
-	case key.Matches(msg, m.keys.Stop):
-		if m.detail != nil {
-			m = m.enterOperationView(fmt.Sprintf("Stopping %s", m.detail.Name), viewDetail)
-			return m, startOperationStreamCmd(m.detail.AppRoot, "stop")
-		}
-
-	case key.Matches(msg, m.keys.Restart):
-		if m.detail != nil {
-			m = m.enterOperationView(fmt.Sprintf("Restarting %s", m.detail.Name), viewDetail)
-			return m, startOperationStreamCmd(m.detail.AppRoot, "restart")
-		}
-
-	case key.Matches(msg, m.keys.Launch):
-		if m.detail != nil && len(m.detail.URLs) > 0 {
-			return m, ddevExecCommandDetail(m.detail.AppRoot, "launch")
-		}
-
-	case key.Matches(msg, m.keys.Mailpit):
-		if m.detail != nil && m.detail.MailpitURL != "" {
-			return m, ddevExecCommandDetail(m.detail.AppRoot, "launch", "-m")
-		}
-
-	case key.Matches(msg, m.keys.XHGui):
-		if m.detail != nil {
-			return m, ddevExecCommandDetail(m.detail.AppRoot, "xhgui")
-		}
-
-	case key.Matches(msg, m.keys.SSH):
-		if m.detail != nil {
-			return m, ddevExecCommandDetail(m.detail.AppRoot, "ssh")
-		}
-
-	case key.Matches(msg, m.keys.Xdebug):
-		if m.detail != nil && m.detail.Status == ddevapp.SiteRunning {
-			m.statusMsg = "Toggling xdebug..."
-			return m, xdebugToggleCmd(m.detail.AppRoot)
-		}
-
-	case key.Matches(msg, m.keys.CopyURL):
-		if m.detail != nil && len(m.detail.URLs) > 0 {
-			m.statusMsg = "Copying URL..."
-			return m, copyToClipboard(m.detail.URLs[0])
-		}
-
-	case key.Matches(msg, m.keys.Refresh):
-		if m.detail != nil {
-			m.detailLoading = true
-			m.statusMsg = "Refreshing..."
-			return m, tea.Batch(loadDetailCmd(m.detail.AppRoot), m.spinner.Tick)
-		}
-
-	case key.Matches(msg, m.keys.OpenDir, m.keys.OpenVSC, m.keys.OpenPhpS):
-		if m.detail != nil {
-			return m, m.openProjectCmd(msg, m.detail.AppRoot)
-		}
-
-	case key.Matches(msg, m.keys.Delete):
-		if m.detail != nil {
-			return m.confirmDelete(m.detail.Name), nil
-		}
-
-	case key.Matches(msg, m.keys.Quit):
-		return m, tea.Quit
 	}
 
+	if m.view == viewDashboard {
+		var cmd tea.Cmd
+		m.dashboard, cmd = m.dashboard.updateFilter(msg)
+		return m, cmd
+	}
 	return m, nil
 }
 
-// confirmDelete asks before deleting a project. O skips the snapshot, which
-// otherwise starts a stopped project and fails if it can't start; the prompt
-// leaves O out when omit_snapshot_on_delete already skips it.
-func (m AppModel) confirmDelete(name string) AppModel {
-	m.confirming = true
-	m.confirmAction = "delete"
-	m.confirmTarget = name
-	if globalconfig.DdevGlobalConfig.OmitSnapshotOnDelete {
-		m.statusMsg = fmt.Sprintf("Delete project '%s' and its database? No snapshot will be made (omit_snapshot_on_delete). (y to confirm, any key to cancel)", name)
-	} else {
-		m.statusMsg = fmt.Sprintf("Delete project '%s' and its database? A database snapshot will be made first. (y to confirm, O to skip the snapshot, any key to cancel)", name)
-	}
+func (m AppModel) restyle() AppModel {
+	m.styles = NewStyles(m.fg, m.bg)
+	m.help.Styles = m.styles.help()
+	m.dashboard.setStyles(m.styles)
 	return m
 }
 
-// handleConfirmKey runs the pending confirmAction on y, or a delete without a
-// snapshot on O, and cancels it on any other key.
-func (m AppModel) handleConfirmKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	action, target := m.confirmAction, m.confirmTarget
-	m.confirming = false
-	m.confirmAction = ""
-	m.confirmTarget = ""
-	omitSnapshot := action == "delete" && key.Matches(msg, m.keys.OmitSnap)
-	if !omitSnapshot && !key.Matches(msg, m.keys.Confirm) {
-		m.statusMsg = ""
+func (m AppModel) updateKey(msg tea.KeyPressMsg) (AppModel, tea.Cmd) {
+	if msg.String() == "ctrl+c" {
+		return m.quit()
+	}
+	if m.confirm != nil {
+		return m.handleConfirm(msg)
+	}
+	if m.view != viewDashboard || !m.dashboard.filtering() {
+		switch {
+		case key.Matches(msg, m.keys.Help):
+			m.help.ShowAll = !m.help.ShowAll
+			return m, nil
+		case m.help.ShowAll && msg.String() == "esc":
+			m.help.ShowAll = false
+			return m, nil
+		case key.Matches(msg, m.keys.Quit):
+			return m.quit()
+		}
+	}
+	var cmd tea.Cmd
+	var act action
+	switch m.view {
+	case viewDetail:
+		m.detail, cmd, act = m.detail.update(msg, m.keys)
+	case viewStream:
+		m.stream, act = m.stream.updateKey(msg, m.keys)
+	default:
+		m.dashboard, cmd, act = m.dashboard.update(msg, m.keys)
+	}
+	m, actCmd := m.apply(act)
+	return m, tea.Batch(cmd, actCmd)
+}
+
+func (m AppModel) quit() (AppModel, tea.Cmd) {
+	m, _ = m.stopStream()
+	return m, tea.Quit
+}
+
+// busy reports whether anything shows the spinner.
+func (m AppModel) busy() bool {
+	return m.dashboard.waiting() || m.refreshing || m.detail.loading || m.streaming()
+}
+
+// streaming reports whether the logs are still followed.
+func (m AppModel) streaming() bool {
+	return m.view == viewStream && !m.stream.done
+}
+
+// reload refreshes the project list, and the detail when it is showing or
+// the stream returns to it.
+func (m AppModel) reload() (AppModel, tea.Cmd) {
+	cmds := []tea.Cmd{}
+	if m.dashboard.loading {
+		// The running load may have read the projects before what asked for
+		// this reload, such as an operation, changed them.
+		m.dashboard.queued = true
+	} else {
+		m.dashboard.loading = true
+		cmds = append(cmds, loadProjects)
+	}
+	if m.view == viewDetail {
+		// What ran, such as a restart or ssh, may have switched Xdebug.
+		m.detail.loading, m.detail.xdebug = true, nil
+		cmds = append(cmds, loadDetailCmd(m.detail.root))
+	}
+	return m, tea.Batch(cmds...)
+}
+
+// refresh is a reload the user asked for, so it shows the spinner.
+func (m AppModel) refresh() (AppModel, tea.Cmd) {
+	m.refreshing = true
+	return m.reload()
+}
+
+func (m AppModel) projectsLoaded(msg projectsLoadedMsg) (AppModel, tea.Cmd) {
+	m, cmd := m.showProjects(msg)
+	if m.dashboard.queued {
+		m.dashboard.queued, m.dashboard.loading = false, true
+		return m, tea.Batch(cmd, loadProjects)
+	}
+	m.refreshing = false
+	return m, cmd
+}
+
+func (m AppModel) showProjects(msg projectsLoadedMsg) (AppModel, tea.Cmd) {
+	m.dashboard.loading = false
+	if msg.err != nil {
+		// Until a load succeeds, the error also stands in for the spinner.
+		if !m.dashboard.loaded || len(m.dashboard.items) == 0 {
+			m.dashboard.err = msg.err
+		}
+		if len(m.dashboard.items) > 0 {
+			return m.setError(fmt.Sprintf("Error loading projects: %v", msg.err)), nil
+		}
 		return m, nil
 	}
-	switch action {
-	case "start-all":
-		m = m.enterOperationView("Starting all projects", viewDashboard)
-		return m, startOperationStreamCmd("", "start", "--all")
-	case "stop-all":
-		m = m.enterOperationView("Stopping all projects", viewDashboard)
-		return m, startOperationStreamCmd("", "stop", "--all")
-	case "poweroff":
-		m = m.enterOperationView("Powering off DDEV", viewDashboard)
-		return m, startOperationStreamCmd("", "poweroff")
-	case "delete":
-		if omitSnapshot {
-			m = m.enterOperationView(fmt.Sprintf("Deleting %s without a snapshot", target), viewDashboard)
-			return m, deleteStreamCmd("", "delete", "-y", "--omit-snapshot", target)
-		}
-		m = m.enterOperationView(fmt.Sprintf("Deleting %s", target), viewDashboard)
-		return m, deleteStreamCmd("", "delete", "-y", target)
+	m.dashboard.err = nil
+	m.dashboard.loaded = true
+	m.router, m.sshAgent = msg.router, msg.sshAgent
+	m.dashboard.setProjects(msg.projects)
+
+	// The 5-second refresh only reloads the detail when its project changed
+	// state, because Describe inspects every container.
+	if m.view == viewDetail && m.detail.project != nil && !m.detail.loading && m.detail.statusChanged(msg.projects) {
+		m.detail.loading = true
+		return m, loadDetailCmd(m.detail.root)
 	}
-	m.statusMsg = ""
 	return m, nil
 }
 
-// Indirections so tests can observe what the open and delete keys request
-// without launching anything.
-var (
-	deleteStreamCmd   = startOperationStreamCmd
-	openTargetCmd     = openTarget
-	openInPhpStormCmd = openInPhpStorm
-)
-
-// openProjectCmd opens appRoot in the file manager or an editor, depending
-// on which open key was pressed.
-func (m AppModel) openProjectCmd(msg tea.KeyPressMsg, appRoot string) tea.Cmd {
-	switch {
-	case key.Matches(msg, m.keys.OpenVSC):
-		return openTargetCmd("VS Code", editorURL("vscode", appRoot))
-	case key.Matches(msg, m.keys.OpenPhpS):
-		return openInPhpStormCmd(appRoot)
-	}
-	return openTargetCmd("directory", appRoot)
+// openDetail shows the detail of project p and starts loading it.
+func (m AppModel) openDetail(p ProjectInfo) (AppModel, tea.Cmd) {
+	m.view = viewDetail
+	m.detail = newDetailView(p)
+	m.help.ShowAll = false
+	return m, loadDetailCmd(p.AppRoot)
 }
 
-func (m AppModel) handleLogKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	switch {
-	case key.Matches(msg, m.keys.Back):
-		if m.logProcess != nil {
-			_ = m.logProcess.Kill()
-		}
-		m.logProcess = nil
-		m.logSub = nil
-		m.logLines = nil
-		m.viewMode = viewDetail
+func (m AppModel) detailLoaded(msg projectDetailLoadedMsg) (AppModel, tea.Cmd) {
+	if msg.appRoot != m.detail.root {
 		return m, nil
-
-	case key.Matches(msg, m.keys.Quit):
-		if m.logProcess != nil {
-			_ = m.logProcess.Kill()
-		}
-		return m, tea.Quit
 	}
-
-	return m, nil
+	if msg.err != nil {
+		m.detail.loading = false
+		if (m.detail.project == nil || m.detail.project.FromConfig) && m.view == viewDetail {
+			m.view = viewDashboard
+		}
+		return m.setError(fmt.Sprintf("Error loading %s: %v", m.detail.name, msg.err)), nil
+	}
+	var cmd tea.Cmd
+	m.detail, cmd = m.detail.loaded(msg.detail)
+	return m, cmd
 }
 
-func (m AppModel) handleOperationKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	switch {
-	case key.Matches(msg, m.keys.Back):
-		if m.logProcess != nil {
-			_ = m.logProcess.Kill()
-		}
-		m.logProcess = nil
-		m.logSub = nil
-		m.logLines = nil
-		m.operationErrCh = nil
-		m.operationDone = false
-		m.operationErr = nil
-		m.operationName = ""
-		returnView := m.operationReturnView
-		m.viewMode = returnView
-		// Reload projects on return
-		cmds := []tea.Cmd{loadProjects, loadRouterStatus, m.spinner.Tick}
-		if returnView == viewDetail && m.detail != nil {
-			m.detailLoading = true
-			cmds = append(cmds, loadDetailCmd(m.detail.AppRoot))
-		}
-		return m, tea.Batch(cmds...)
-
-	case key.Matches(msg, m.keys.Quit):
-		if m.logProcess != nil {
-			_ = m.logProcess.Kill()
-		}
-		return m, tea.Quit
-	}
-
-	return m, nil
+// newStream shows a new stream, which returns to the current view when left.
+func (m AppModel) newStream(title string) AppModel {
+	m.streamID++
+	m.stream = newStreamView(m.streamID, title, m.view)
+	m.view = viewStream
+	m.help.ShowAll = false
+	m.status = ""
+	return m
 }
 
-// View renders the TUI. AltScreen is set declaratively so the TUI doesn't
-// pollute scroll-back.
-func (m AppModel) View() tea.View {
-	var content string
-	switch {
-	case m.showHelp:
-		content = m.helpView()
-	case m.viewMode == viewDetail:
-		content = m.detailView()
-	case m.viewMode == viewLogs:
-		content = m.logView()
-	case m.viewMode == viewOperation:
-		content = m.operationView()
-	default:
-		content = m.dashboardView()
+// stopStream kills the stream's subprocess and leaves the stream view. The
+// returned command drains what the subprocess already wrote, so its reader
+// goroutines can finish.
+func (m AppModel) stopStream() (AppModel, tea.Cmd) {
+	s := m.stream
+	s.kill()
+	if m.view == viewStream {
+		m.view = s.returnView
 	}
-	v := tea.NewView(content)
-	v.AltScreen = true
-	return v
+	m.stream = streamView{}
+	return m, drainCmd(s.lineCh)
 }
 
-// updateDashboardViewport rebuilds dashboard content and adjusts scroll to keep cursor visible.
-func (m *AppModel) updateDashboardViewport() {
-	if !m.viewportReady {
-		return
-	}
-
-	// Save current scroll position
-	oldOffset := m.dashboardViewport.YOffset()
-
-	// Rebuild content with current cursor position
-	m.dashboardViewport.SetContent(m.buildDashboardContent())
-
-	// Adjust scroll to keep cursor visible
-	viewportHeight := m.dashboardViewport.Height()
-	if viewportHeight < 1 {
-		viewportHeight = 10
-	}
-
-	// If cursor is below visible area, scroll down
-	if m.cursor >= oldOffset+viewportHeight {
-		m.dashboardViewport.SetYOffset(m.cursor - viewportHeight + 1)
-	} else if m.cursor < oldOffset {
-		// If cursor is above visible area, scroll up
-		m.dashboardViewport.SetYOffset(m.cursor)
-	} else {
-		// Cursor is visible, keep current scroll position
-		m.dashboardViewport.SetYOffset(oldOffset)
-	}
+// setStatus shows an informational message that clears itself.
+func (m AppModel) setStatus(text string) (AppModel, tea.Cmd) {
+	m.statusID++
+	m.status, m.statusIsErr = text, false
+	return m, expireStatusCmd(m.statusID)
 }
 
-// buildDashboardContent builds the scrollable project list for dashboard view.
-func (m AppModel) buildDashboardContent() string {
-	var b strings.Builder
-
-	filtered := m.filteredProjects()
-	if len(filtered) == 0 {
-		if len(m.projects) == 0 {
-			b.WriteString("  No DDEV projects found.\n")
-			b.WriteString("  Press 'C' to run ddev config, or run it manually in a project directory.\n")
-		} else {
-			b.WriteString("  No projects match the filter.\n")
-		}
-		return b.String()
+// logged shows what ddevapp logged while loading, such as a project removed
+// from the registry. It asks nothing of the user, so it clears itself and
+// leaves an error in place. Some warnings recur on every refresh, so one
+// shows again only after a load without it.
+func (m AppModel) logged(text string) (AppModel, tea.Cmd) {
+	last := m.lastWarning
+	m.lastWarning = text
+	if text == "" || text == last || (m.statusIsErr && m.status != "") {
+		return m, nil
 	}
-
-	// Calculate name width: fit the longest project name, with limits
-	nameWidth := 16
-	pathWidth := 24
-	pathDisplay := make([]string, len(filtered))
-	for _, fp := range filtered {
-		if len(fp.Name) > nameWidth {
-			nameWidth = len(fp.Name)
-		}
-	}
-	for i, fp := range filtered {
-		pathDisplay[i] = formatProjectPath(fp.AppRoot)
-		if len(pathDisplay[i]) > pathWidth {
-			pathWidth = len(pathDisplay[i])
-		}
-	}
-	// Cap: leave room for cursor(2) + status(12) + type(12) + spacing(7) + URL
-	maxNameWidth := 30
-	if m.width > 0 {
-		maxNameWidth = max(16, m.width/3)
-	}
-	if nameWidth > maxNameWidth {
-		nameWidth = maxNameWidth
-	}
-	typeWidth := 12
-	narrow := m.width > 0 && m.width < 60
-	maxPathWidth := 40
-	if m.width > 0 {
-		maxPathWidth = max(18, m.width/2)
-	}
-	if pathWidth > maxPathWidth {
-		pathWidth = maxPathWidth
-	}
-	if narrow {
-		nameWidth = min(nameWidth, max(8, m.width/4))
-		pathWidth = min(pathWidth, max(10, m.width/2))
-	}
-
-	for i, p := range filtered {
-		cursor := "  "
-		if i == m.cursor {
-			cursor = m.styles.Cursor.Render("> ")
-		}
-
-		displayName := truncate(p.Name, nameWidth)
-		name := m.styles.ProjectName.Render(fmt.Sprintf("%-*s", nameWidth, displayName))
-		status := m.renderStatus(p.Status)
-		pType := m.styles.ProjectType.Render(fmt.Sprintf("%-*s", typeWidth, p.Type))
-		pathText := truncate(pathDisplay[i], pathWidth)
-		path := linkPadded(m.styles.URL, output.FileURL(p.AppRoot), pathText, pathWidth)
-
-		siteURL := ""
-		if !narrow && p.URL != "" && p.Status == ddevapp.SiteRunning {
-			// Truncate URL if it would overflow
-			maxURL := m.width - nameWidth - 10 - typeWidth - pathWidth - 10
-			if m.width > 0 && maxURL > 10 {
-				siteURL = m.styles.URL.Render(output.Hyperlink(p.URL, truncate(p.URL, maxURL)))
-			} else if m.width <= 0 {
-				siteURL = m.styles.URL.Render(output.Hyperlink(p.URL, p.URL))
-			}
-		}
-
-		fmt.Fprintf(&b, "%s%s %s  %s  %s  %s\n", cursor, name, status, pType, path, siteURL)
-	}
-
-	return b.String()
+	return m.setStatus(text)
 }
 
-func (m AppModel) dashboardView() string {
-	var b strings.Builder
-
-	// Title bar
-	title := m.styles.Title.Render("DDEV Projects")
-	version := m.styles.StatusBar.Render(versionconstants.DdevVersion)
-	gap := ""
-	if m.width > 0 {
-		titleLen := len("DDEV Projects")
-		versionLen := len(versionconstants.DdevVersion)
-		spaces := m.width - titleLen - versionLen
-		if spaces > 0 {
-			gap = strings.Repeat(" ", spaces)
-		}
-	}
-	b.WriteString(title + gap + version + "\n")
-
-	// Divider
-	dividerWidth := m.width
-	if dividerWidth <= 0 {
-		dividerWidth = 60
-	}
-	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-
-	// Filter indicator
-	if m.filtering {
-		fmt.Fprintf(&b, "Filter: %s█\n\n", m.filterText)
-	} else if m.filterText != "" {
-		fmt.Fprintf(&b, "Filter: %s (press / to edit, esc to clear)\n\n", m.filterText)
-	}
-
-	// Loading/error indicator
-	if m.loading && len(m.projects) == 0 {
-		fmt.Fprintf(&b, "  %s Loading projects...\n", m.spinner.View())
-	} else if m.err != nil && len(m.projects) == 0 {
-		fmt.Fprintf(&b, "  Error: %v\n", m.err)
-		b.WriteString("  Is Docker running? Press R to retry.\n")
-	} else {
-		// Use viewport for scrollable project list
-		b.WriteString(m.dashboardViewport.View())
-	}
-
-	b.WriteString("\n\n")
-
-	// Status message (confirmations, errors) OR hint when all stopped
-	// These appear in the same place - status messages take priority
-	if m.statusMsg != "" {
-		msg := m.statusMsg
-		if m.width > 0 {
-			msg = ansi.Wrap(msg, m.width, "")
-		}
-		b.WriteString(msg + "\n")
-	} else if len(m.projects) > 0 && m.allStopped() {
-		msg := fmt.Sprintf("All projects stopped. Press '%s' to start selected, '%s' to start all.",
-			m.keys.Start.Help().Key, m.keys.StartAll.Help().Key)
-		if m.width > 0 {
-			msg = ansi.Wrap(msg, m.width, "")
-		}
-		b.WriteString(m.styles.StatusBar.Render(msg) + "\n")
-	}
-
-	// Divider
-	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-
-	// Router status
-	if m.routerStatus != "" {
-		routerLabel := "Router: "
-		var rendered string
-		switch m.routerStatus {
-		case ddevapp.SiteRunning, "healthy":
-			rendered = routerLabel + m.styles.Running.Render(m.routerStatus)
-		case ddevapp.SiteStopped:
-			rendered = routerLabel + m.styles.Stopped.Render(m.routerStatus)
-		default:
-			rendered = routerLabel + m.styles.Paused.Render(m.routerStatus)
-		}
-		b.WriteString(rendered + "\n")
-	}
-
-	// Divider
-	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-
-	// Key hints (always at bottom)
-	b.WriteString(m.dashboardKeyHints())
-
-	return b.String()
-}
-
-// buildDetailContent builds the scrollable content for detail view.
-func (m AppModel) buildDetailContent() string {
-	if m.detail == nil {
-		return ""
-	}
-
-	d := m.detail
-	var content strings.Builder
-
-	// Info grid
-	label := func(l string) string { return m.styles.DetailLabel.Render(l) }
-	val := func(v string) string { return m.styles.DetailValue.Render(v) }
-
-	dbStr := d.DatabaseType
-	if d.DatabaseVersion != "" {
-		dbStr += ":" + d.DatabaseVersion
-	}
-
-	perfStr := d.PerformanceMode
-	if perfStr == "" {
-		perfStr = "none"
-	}
-
-	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Type:"), val(fmt.Sprintf("%-14s", d.Type)), label("PHP:"), val(d.PHPVersion))
-	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Webserver:"), val(fmt.Sprintf("%-14s", d.WebserverType)), label("Node.js:"), val(d.NodeJSVersion))
-	fmt.Fprintf(&content, " %s %s    %s %s\n", label("Docroot:"), val(fmt.Sprintf("%-14s", d.Docroot)), label("Perf:"), val(perfStr))
-	fmt.Fprintf(&content, " %s %s\n", label("Database:"), val(dbStr))
-	if d.AppRoot != "" {
-		fmt.Fprintf(&content, " %s %s\n", label("Approot:"), val(output.Hyperlink(output.FileURL(d.AppRoot), formatProjectPath(d.AppRoot))))
-		fmt.Fprintf(&content, " %s %s  %s\n", label("Open in:"),
-			val(output.Hyperlink(editorURL("vscode", d.AppRoot), "VS Code")),
-			val(output.Hyperlink(editorURL("phpstorm", d.AppRoot), "PhpStorm")))
-	}
-	content.WriteString("\n")
-
-	// URLs
-	if len(d.URLs) > 0 {
-		content.WriteString(" " + label("URLs:") + "\n")
-		// Calculate max URL width (leave room for indent and ellipsis)
-		maxURLWidth := m.width - 5 // 3 spaces indent + margin
-		if maxURLWidth < 20 {
-			maxURLWidth = 60 // Default for unknown width
-		}
-		for _, u := range d.URLs {
-			displayURL := truncate(u, maxURLWidth)
-			content.WriteString("   " + m.styles.URL.Render(output.Hyperlink(u, displayURL)) + "\n")
-		}
-		content.WriteString("\n")
-	}
-
-	// Mailpit + DB port
-	if d.MailpitURL != "" {
-		maxURLWidth := m.width - 12 // "Mailpit: " length
-		if maxURLWidth < 20 {
-			maxURLWidth = 60
-		}
-		displayMailpit := truncate(d.MailpitURL, maxURLWidth)
-		fmt.Fprintf(&content, " %s %s\n", label("Mailpit:"), m.styles.URL.Render(output.Hyperlink(d.MailpitURL, displayMailpit)))
-	}
-	if d.DBPublishedPort != "" {
-		fmt.Fprintf(&content, " %s %s\n", label("DB Port:"), val(d.DBPublishedPort))
-	}
-
-	// Add-ons
-	if len(d.Addons) > 0 {
-		addonsStr := strings.Join(d.Addons, ", ")
-		// Wrap add-ons if too long
-		maxAddonsWidth := m.width - 12 // "Add-ons: " length
-		if maxAddonsWidth < 20 {
-			maxAddonsWidth = 60
-		}
-		addonsStr = ansi.Wrap(addonsStr, maxAddonsWidth, "")
-		// Add proper indentation for wrapped lines
-		lines := strings.Split(addonsStr, "\n")
-		fmt.Fprintf(&content, " %s %s\n", label("Add-ons:"), val(lines[0]))
-		for i := 1; i < len(lines); i++ {
-			fmt.Fprintf(&content, "           %s\n", val(lines[i]))
-		}
-	}
-
-	content.WriteString("\n")
-
-	// Services (sorted: web first, db second, rest alphabetical)
-	if len(d.Services) > 0 {
-		sorted := sortServices(d.Services)
-		content.WriteString(" " + label("Services:") + "\n")
-
-		// Build list of services with compact status (no padding)
-		maxLineWidth := m.width - 3 // indent
-		if maxLineWidth < 20 {
-			maxLineWidth = 60
-		}
-
-		var currentLine strings.Builder
-		currentLine.WriteString("   ")
-		lineLen := 0
-
-		for i, svc := range sorted {
-			// Render service without padded status
-			var statusRendered string
-			switch svc.Status {
-			case ddevapp.SiteRunning:
-				statusRendered = m.styles.Running.Render(svc.Status)
-			case ddevapp.SiteStopped:
-				statusRendered = m.styles.Stopped.Render(svc.Status)
-			case ddevapp.SitePaused:
-				statusRendered = m.styles.Paused.Render(svc.Status)
-			default:
-				statusRendered = m.styles.Stopped.Render(svc.Status)
-			}
-
-			svcText := fmt.Sprintf("%s %s", m.styles.ProjectName.Render(svc.Name), statusRendered)
-			svcLen := len(svc.Name) + 1 + len(svc.Status)
-
-			// Add comma and space for all but first item on a line
-			if lineLen > 0 {
-				svcText = ", " + svcText
-				svcLen += 2
-			}
-
-			// Check if adding this service would exceed line width
-			if lineLen > 0 && lineLen+svcLen > maxLineWidth {
-				// Add comma before line break if not last service
-				if i < len(sorted)-1 {
-					currentLine.WriteString(",")
-				}
-				// Start new line
-				content.WriteString(currentLine.String() + "\n")
-				currentLine.Reset()
-				currentLine.WriteString("   ")
-				// Don't add comma at start of new line
-				svcText = fmt.Sprintf("%s %s", m.styles.ProjectName.Render(svc.Name), statusRendered)
-				lineLen = len(svc.Name) + 1 + len(svc.Status)
-			} else {
-				lineLen += svcLen
-			}
-
-			currentLine.WriteString(svcText)
-		}
-
-		// Write final line
-		if currentLine.Len() > 3 {
-			content.WriteString(currentLine.String() + "\n")
-		}
-	}
-
-	return content.String()
-}
-
-func (m AppModel) detailView() string {
-	var b strings.Builder
-
-	dividerWidth := m.width
-	if dividerWidth <= 0 {
-		dividerWidth = 60
-	}
-
-	if m.detailLoading || m.detail == nil {
-		b.WriteString(m.styles.Title.Render("DDEV Project") + "\n")
-		b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-		fmt.Fprintf(&b, "\n  %s Loading project detail...\n", m.spinner.View())
-		return b.String()
-	}
-
-	d := m.detail
-
-	// Title bar: project name + status
-	titleText := fmt.Sprintf("DDEV Project: %s", d.Name)
-	title := m.styles.Title.Render(titleText)
-	status := m.renderStatus(d.Status)
-	gap := ""
-	if m.width > 0 {
-		spaces := m.width - len(titleText) - len(d.Status)
-		if spaces > 0 {
-			gap = strings.Repeat(" ", spaces)
-		}
-	}
-	b.WriteString(title + gap + status + "\n")
-	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-	b.WriteString("\n")
-
-	// The status message stays outside the viewport, whose content is only
-	// rebuilt when the detail reloads, and takes its rows from the viewport.
-	vp := m.detailViewport
-	msg := m.statusMsg
-	if msg != "" && m.width > 0 {
-		msg = ansi.Wrap(msg, m.width, "")
-	}
-	if msg != "" && m.viewportReady {
-		vp.SetHeight(max(1, vp.Height()-strings.Count(msg, "\n")-2))
-	}
-	b.WriteString(vp.View())
-	if msg != "" {
-		b.WriteString("\n\n" + msg)
-	}
-
-	// Bottom divider
-	b.WriteString("\n" + m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-
-	// Key hints
-	b.WriteString(m.detailKeyHints())
-
-	return b.String()
-}
-
-func (m AppModel) logView() string {
-	var b strings.Builder
-
-	dividerWidth := m.width
-	if dividerWidth <= 0 {
-		dividerWidth = 60
-	}
-
-	name := ""
-	if m.detail != nil {
-		name = m.detail.Name
-	}
-
-	// Title
-	titleText := fmt.Sprintf("DDEV Logs: %s", name)
-	title := m.styles.Title.Render(titleText)
-	b.WriteString(title + "\n")
-	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-
-	if len(m.logLines) == 0 {
-		fmt.Fprintf(&b, "\n  %s Waiting for log output...\n", m.spinner.View())
-	} else {
-		// Show the last N lines that fit the terminal (auto-scroll to bottom)
-		viewHeight := m.height - 4 // title, divider, bottom divider, hints
-		if viewHeight < 5 {
-			viewHeight = 20
-		}
-		start := 0
-		if len(m.logLines) > viewHeight {
-			start = len(m.logLines) - viewHeight
-		}
-		for _, line := range m.logLines[start:] {
-			b.WriteString(line + "\n")
-		}
-	}
-
-	// Bottom divider
-	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-	b.WriteString(m.logKeyHints())
-
-	return b.String()
-}
-
-func (m AppModel) logKeyHints() string {
-	hints := []struct {
-		key  string
-		desc string
-	}{
-		{"esc", "back"},
-		{"q", "quit"},
-	}
-	return m.renderHints(hints)
-}
-
-func (m AppModel) operationView() string {
-	var b strings.Builder
-
-	dividerWidth := m.width
-	if dividerWidth <= 0 {
-		dividerWidth = 60
-	}
-
-	// Title
-	titleText := m.operationName
-	if titleText == "" {
-		titleText = "Operation"
-	}
-	title := m.styles.Title.Render(titleText)
-	b.WriteString(title + "\n")
-	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-
-	if len(m.logLines) == 0 && !m.operationDone {
-		fmt.Fprintf(&b, "\n  %s Running...\n", m.spinner.View())
-	} else {
-		// Show the last N lines that fit the terminal (auto-scroll to bottom)
-		viewHeight := m.height - 6 // title, divider, status line, bottom divider, hints, margin
-		if viewHeight < 5 {
-			viewHeight = 20
-		}
-		start := 0
-		if len(m.logLines) > viewHeight {
-			start = len(m.logLines) - viewHeight
-		}
-		for _, line := range m.logLines[start:] {
-			b.WriteString(line + "\n")
-		}
-	}
-
-	// Status line
-	if m.operationDone {
-		if m.operationErr != nil {
-			b.WriteString(m.styles.Stopped.Render(fmt.Sprintf("Failed: %v", m.operationErr)) + "\n")
-		} else {
-			b.WriteString(m.styles.Running.Render("Completed — returning shortly...") + "\n")
-		}
-	}
-
-	// Bottom divider
-	b.WriteString(m.styles.Divider.Render(strings.Repeat("─", dividerWidth)) + "\n")
-	b.WriteString(m.operationKeyHints())
-
-	return b.String()
-}
-
-func (m AppModel) operationKeyHints() string {
-	hints := []struct {
-		key  string
-		desc string
-	}{
-		{"esc", "back"},
-		{"q", "quit"},
-	}
-	return m.renderHints(hints)
-}
-
-// sortServices returns services sorted: web first, db second, rest alphabetical.
-func sortServices(services []ServiceInfo) []ServiceInfo {
-	sorted := make([]ServiceInfo, len(services))
-	copy(sorted, services)
-	sort.Slice(sorted, func(i, j int) bool {
-		return serviceOrder(sorted[i].Name) < serviceOrder(sorted[j].Name)
-	})
-	return sorted
-}
-
-// serviceOrder returns a sort key: web=0, db=1, everything else=2+name.
-func serviceOrder(name string) string {
-	switch name {
-	case "web":
-		return "0"
-	case "db":
-		return "1"
-	default:
-		return "2" + name
-	}
-}
-
-// truncate shortens a string to maxLen, adding ellipsis if needed.
-func truncate(s string, maxLen int) string {
-	if maxLen <= 0 || len(s) <= maxLen {
-		return s
-	}
-	if maxLen <= 3 {
-		return s[:maxLen]
-	}
-	return s[:maxLen-3] + "..."
-}
-
-// editorURL returns a URL that opens dir through an editor's registered URL
-// scheme, or "" for an unknown editor. Under WSL the editors run on Windows,
-// so they get a WSL remote URI or a \\wsl.localhost path instead of a Linux path.
-func editorURL(editor, dir string) string {
-	p := filepath.ToSlash(dir)
-	if !strings.HasPrefix(p, "/") {
-		p = "/" + p
-	}
-	distro := os.Getenv("WSL_DISTRO_NAME")
-	switch editor {
-	case "vscode":
-		u := &url.URL{Scheme: "vscode", Host: "file", Path: p, RawQuery: "windowId=_blank"}
-		if distro != "" {
-			u.Host = "vscode-remote"
-			u.Path = "/wsl+" + distro + p
-		}
-		return u.String()
-	case "phpstorm":
-		if distro != "" {
-			p = "//wsl.localhost/" + distro + p
-		}
-		// EscapedPath leaves & and + alone, but they would end the file= value
-		return "phpstorm://open?file=" + strings.NewReplacer("&", "%26", "+", "%2B").Replace((&url.URL{Path: p}).EscapedPath())
-	}
-	return ""
-}
-
-// linkPadded renders text in style as a hyperlink to target, then pads to width.
-// Padding goes outside the link so only the visible text is clickable.
-func linkPadded(style lipgloss.Style, target, text string, width int) string {
-	pad := strings.Repeat(" ", max(0, width-ansi.StringWidth(text)))
-	return style.Render(output.Hyperlink(target, text)) + pad
-}
-
-func formatProjectPath(path string) string {
-	if path == "" {
-		return ""
-	}
-
-	formatted := filepath.ToSlash(path)
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return formatted
-	}
-
-	home = filepath.ToSlash(home)
-	if formatted == home {
-		return "~"
-	}
-	if strings.HasPrefix(formatted, home+"/") {
-		return "~" + strings.TrimPrefix(formatted, home)
-	}
-
-	return formatted
-}
-
-func (m AppModel) renderStatus(status string) string {
-	padded := fmt.Sprintf("%-10s", status)
-	switch status {
-	case ddevapp.SiteRunning:
-		return m.styles.Running.Render(padded)
-	case ddevapp.SiteStopped:
-		return m.styles.Stopped.Render(padded)
-	case ddevapp.SitePaused:
-		return m.styles.Paused.Render(padded)
-	default:
-		return m.styles.Stopped.Render(padded)
-	}
-}
-
-func (m AppModel) dashboardKeyHints() string {
-	hints := []struct {
-		key  string
-		desc string
-	}{
-		{"s", "start"},
-		{"S", "stop"},
-		{"r", "restart"},
-		{"a", "start all"},
-		{"A", "stop all"},
-		{"P", "poweroff"},
-		{"D", "delete"},
-		{"l", "launch"},
-		{"m", "mailpit"},
-		{"x", "xhgui"},
-		{"o", "open dir"},
-		{"C", "config"},
-		{"enter", "detail"},
-		{"/", "filter"},
-		{"?", "help"},
-		{"q", "quit"},
-	}
-	return m.renderHints(hints)
-}
-
-func (m AppModel) detailKeyHints() string {
-	hints := []struct {
-		key  string
-		desc string
-	}{
-		{"s", "start"},
-		{"S", "stop"},
-		{"r", "restart"},
-		{"l", "launch"},
-		{"m", "mailpit"},
-		{"x", "xhgui"},
-		{"X", "xdebug"},
-		{"c", "copy url"},
-		{"o", "open dir"},
-		{"v", "vscode"},
-		{"p", "phpstorm"},
-		{"e", "ssh"},
-		{"L", "logs"},
-		{"R", "refresh"},
-		{"D", "delete"},
-		{"esc", "back"},
-	}
-	return m.renderHints(hints)
-}
-
-func (m AppModel) renderHints(hints []struct {
-	key  string
-	desc string
-}) string {
-	const sep = "  "
-	const sepLen = 2
-
-	var lines []string
-	var currentParts []string
-	currentLen := 0
-
-	for _, h := range hints {
-		rendered := m.styles.HelpKey.Render(h.key) + " " + m.styles.HelpDesc.Render(h.desc)
-		hintLen := len(h.key) + 1 + len(h.desc)
-
-		if len(currentParts) == 0 {
-			currentParts = append(currentParts, rendered)
-			currentLen = hintLen
-		} else if m.width > 0 && currentLen+sepLen+hintLen > m.width {
-			lines = append(lines, strings.Join(currentParts, sep))
-			currentParts = []string{rendered}
-			currentLen = hintLen
-		} else {
-			currentParts = append(currentParts, rendered)
-			currentLen += sepLen + hintLen
-		}
-	}
-	if len(currentParts) > 0 {
-		lines = append(lines, strings.Join(currentParts, sep))
-	}
-	return strings.Join(lines, "\n")
-}
-
-func (m AppModel) helpView() string {
-	help := `
-DDEV TUI Dashboard - Help
-
-Navigation:
-  up/k, down/j   Move selection
-  enter/d         Open project detail
-  /               Filter projects
-  esc             Back / clear filter
-
-Actions:
-  s               Start selected project
-  S               Stop selected project
-  r               Restart selected project
-  a               Start all projects
-  A               Stop all projects
-  P               Poweroff all DDEV projects and containers
-  D               Delete selected project and its database
-  C               Run ddev config interactively
-  l               Launch project URL in browser
-  m               Launch Mailpit in browser
-  x               Launch XHGui (enable xhprof + open UI)
-  X               Toggle Xdebug on/off (from detail view)
-  c               Copy primary URL to clipboard (from detail view)
-  e               SSH into web container (from detail view)
-  L               Follow logs (from detail view)
-  o               Open project directory in the file manager
-  v               Open project in VS Code
-  p               Open project in PhpStorm
-  R               Refresh
-
-Other:
-  ?               Toggle this help
-  q, ctrl+c       Quit
-
-Press any key to close this help.
-`
-	return m.styles.HelpOverlay.Render(help)
+// setError shows an error, which stays until another message replaces it.
+func (m AppModel) setError(text string) AppModel {
+	m.statusID++
+	m.status, m.statusIsErr = text, true
+	return m
 }

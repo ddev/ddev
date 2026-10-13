@@ -1,7 +1,11 @@
 # charm.land/bubbles/v2 v2.2.1
 ## explicit; go 1.25.0
+charm.land/bubbles/v2/cursor
+charm.land/bubbles/v2/help
+charm.land/bubbles/v2/internal/runeutil
 charm.land/bubbles/v2/key
 charm.land/bubbles/v2/spinner
+charm.land/bubbles/v2/textinput
 charm.land/bubbles/v2/viewport
 # charm.land/bubbletea/v2 v2.0.9
 ## explicit; go 1.25.0
@@ -86,9 +90,9 @@ github.com/asaskevich/govalidator
 # github.com/asaskevich/govalidator/v12 v12.0.0
 ## explicit; go 1.13
 github.com/asaskevich/govalidator/v12
-# github.com/aymanbagabas/go-osc52/v2 v2.0.1
-## explicit; go 1.16
-github.com/aymanbagabas/go-osc52/v2
+# github.com/atotto/clipboard v0.1.4
+## explicit
+github.com/atotto/clipboard
 # github.com/buger/goterm v1.0.4
 ## explicit; go 1.15
 github.com/buger/goterm
@@ -576,9 +580,6 @@ github.com/morikuni/aec
 # github.com/muesli/cancelreader v0.2.2
 ## explicit; go 1.17
 github.com/muesli/cancelreader
-# github.com/muesli/termenv v0.16.0
-## explicit; go 1.17
-github.com/muesli/termenv
 # github.com/opencontainers/go-digest v1.0.0
 ## explicit; go 1.13
 github.com/opencontainers/go-digest
@@ -618,6 +619,9 @@ github.com/rivo/uniseg
 ## explicit; go 1.23.0
 github.com/sagikazarmark/locafero
 github.com/sagikazarmark/locafero/internal/queue
+# github.com/sahilm/fuzzy v0.1.3
+## explicit; go 1.24.5
+github.com/sahilm/fuzzy
 # github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 ## explicit; go 1.21
 github.com/santhosh-tekuri/jsonschema/v6

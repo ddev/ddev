@@ -741,7 +741,6 @@ func ListAvailableAddonsFromRegistry() ([]types.Addon, error) {
 // getAddonRegistryWithFallback retrieves addon data from cache or downloads if stale
 // It respects the UpdateInterval setting from global config
 func getAddonRegistryWithFallback() (*types.AddonData, error) {
-	globalconfig.EnsureGlobalConfig()
 	globalDir := globalconfig.GetGlobalDdevDir()
 	cacheFile := filepath.Join(globalDir, ".addon-data")
 	addonStorage := storage.NewAddonFileStorage(cacheFile)
@@ -788,8 +787,6 @@ func getAddonRegistryWithFallback() (*types.AddonData, error) {
 // downloadAddonRegistry downloads the add-on registry from the configured URL
 // and caches it in the global config directory
 func downloadAddonRegistry() (*types.AddonData, error) {
-	globalconfig.EnsureGlobalConfig()
-
 	// Get the addon data URL from global config, or use default
 	addonDataURL := globalconfig.DdevGlobalConfig.RemoteConfig.AddonDataURL
 	if addonDataURL == "" {

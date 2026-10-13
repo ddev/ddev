@@ -1,127 +1,92 @@
 package tui
 
-import (
-	"os"
+import "os"
 
-	"github.com/ddev/ddev/pkg/ddevapp"
-)
-
-// ProjectInfo holds the display-relevant fields for a DDEV project.
-type ProjectInfo struct {
-	Name    string
-	Status  string
-	Type    string
-	URL     string
-	AppRoot string
+// projectsListedMsg carries the project list as read from configuration,
+// before the status of the projects is known.
+type projectsListedMsg struct {
+	projects []ProjectInfo
 }
 
-// projectsLoadedMsg is sent when the project list has been fetched.
+// projectsLoadedMsg carries the project list.
 type projectsLoadedMsg struct {
 	projects []ProjectInfo
+	router   health
+	sshAgent health
 	err      error
+	// warning is the last line ddevapp logged while loading.
+	warning string
 }
 
-// operationFinishedMsg is sent when a subprocess operation completes.
-type operationFinishedMsg struct {
-	err error
-}
-
-// operationDetailFinishedMsg is sent when an operation finishes in detail view.
-type operationDetailFinishedMsg struct {
-	err error
-}
-
-// ServiceInfo holds the name and status of a container service.
-type ServiceInfo struct {
-	Name   string
-	Status string
-}
-
-// ProjectDetail holds the full detail for a DDEV project (equivalent to `ddev describe`).
-type ProjectDetail struct {
-	Name            string
-	Status          string
-	Type            string
-	PHPVersion      string
-	WebserverType   string
-	NodeJSVersion   string
-	Docroot         string
-	DatabaseType    string
-	DatabaseVersion string
-	PerformanceMode string
-	URLs            []string
-	MailpitURL      string
-	DBPublishedPort string
-	Addons          []string
-	Services        []ServiceInfo
-	AppRoot         string
-}
-
-// projectDetailLoadedMsg is sent when project detail has been fetched.
+// projectDetailLoadedMsg carries the detail of the project at appRoot.
 type projectDetailLoadedMsg struct {
-	detail ProjectDetail
-	err    error
+	appRoot string
+	detail  ProjectDetail
+	err     error
+	warning string
 }
 
-// logStreamStartedMsg is sent when the log streaming subprocess has started.
-type logStreamStartedMsg struct {
-	lines   <-chan string
-	process *os.Process
+// xdebugStatusMsg carries whether Xdebug is enabled in the project at appRoot.
+type xdebugStatusMsg struct {
+	appRoot string
+	enabled bool
+	err     error
+	toggled bool
 }
 
-// logLineMsg is sent for each new line of log output.
-type logLineMsg struct {
-	line string
+// latestAddonsMsg carries the latest release of each add-on, by repository.
+type latestAddonsMsg struct {
+	appRoot  string
+	versions map[string]string
 }
 
-// logStreamEndedMsg is sent when the log stream closes.
-type logStreamEndedMsg struct{}
+// execFinishedMsg is sent when a command that took over the terminal exits.
+type execFinishedMsg struct {
+	title string
+	// done replaces "<title>: done" in the status line.
+	done string
+	err  error
+	// selectCurrent selects the working directory's project once it is listed.
+	selectCurrent bool
+}
 
-// operationStreamStartedMsg is sent when an operation stream subprocess has started.
-type operationStreamStartedMsg struct {
+// streamStartedMsg is sent when the subprocess of stream id has started.
+type streamStartedMsg struct {
+	id      int
 	lines   <-chan string
 	errCh   <-chan error
 	process *os.Process
 }
 
-// operationStreamEndedMsg is sent when the operation stream finishes.
-type operationStreamEndedMsg struct {
+// streamLinesMsg carries the lines of output stream id wrote since the
+// last one.
+type streamLinesMsg struct {
+	id    int
+	lines []string
+}
+
+// streamEndedMsg is sent when the subprocess of stream id exits.
+type streamEndedMsg struct {
+	id  int
 	err error
 }
 
-// operationAutoReturnMsg is sent after a delay to auto-return from a completed operation.
-type operationAutoReturnMsg struct{}
-
-// routerStatusMsg carries the router health status.
-type routerStatusMsg struct {
-	status string
+// statusExpiredMsg clears status message id, unless a newer one replaced it.
+type statusExpiredMsg struct {
+	id int
 }
 
-// xdebugToggledMsg is sent after xdebug toggle completes.
-type xdebugToggledMsg struct {
-	err     error
-	enabled bool
-}
+// tickMsg triggers the periodic refresh.
+type tickMsg struct{}
 
-// clipboardMsg is sent after a clipboard copy attempt.
+// clipboardMsg is sent after a clipboard copy attempt. fallback holds the
+// text when no clipboard tool could take it.
 type clipboardMsg struct {
-	err error
+	fallback string
 }
 
 // openedMsg is sent after trying to open a directory or editor.
 type openedMsg struct {
 	what string
 	err  error
-}
-
-// extractProjectInfo converts a DdevApp to our lightweight ProjectInfo.
-func extractProjectInfo(app *ddevapp.DdevApp) ProjectInfo {
-	status, _ := app.SiteStatus()
-	return ProjectInfo{
-		Name:    app.Name,
-		Status:  status,
-		Type:    app.Type,
-		URL:     app.GetPrimaryURL(),
-		AppRoot: app.GetAppRoot(),
-	}
 }
