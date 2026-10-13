@@ -28,6 +28,11 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		return nil
 	}
 
+	// Each ddev-hostname run rewrites the whole hosts file, so concurrent runs can drop entries.
+	// Locked only before the first edit, so starts that resolve through DNS don't queue for it.
+	lock, unlock := lazyHostsFileLock()
+	defer unlock()
+
 	for _, name := range app.GetHostnames() {
 		// If we're able to resolve the hostname via DNS or otherwise we
 		// don't have to worry about this. This will allow resolution
@@ -59,6 +64,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 			continue
 		}
 		util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
+		lock()
 		out, err := hostname.ElevateToAddHostEntry(name, dockerIP)
 		if err != nil {
 			return fmt.Errorf("%s: %v", out, err)
@@ -85,6 +91,9 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
+	lock, unlock := lazyHostsFileLock()
+	defer unlock()
+
 	for _, name := range app.GetHostnames() {
 		exists, err := hostname.IsHostnameInHostsFile(name)
 		if !exists {
@@ -94,6 +103,7 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 			util.Warning("Unable to open hosts file: %v", err)
 			continue
 		}
+		lock()
 		out, err := hostname.ElevateToRemoveHostEntry(name, dockerIP)
 		if err != nil {
 			util.Warning("%s: %v", out, err)
@@ -103,4 +113,21 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 	}
 
 	return nil
+}
+
+// lazyHostsFileLock returns a lock function that takes the global lock on its
+// first call, and an unlock function that releases it only if it was taken.
+func lazyHostsFileLock() (lock func(), unlock func()) {
+	var release func()
+	lock = func() {
+		if release == nil {
+			release = dockerutil.AcquireGlobalLock("hosts file update")
+		}
+	}
+	unlock = func() {
+		if release != nil {
+			release()
+		}
+	}
+	return lock, unlock
 }

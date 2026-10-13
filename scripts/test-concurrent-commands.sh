@@ -20,12 +20,20 @@
 #   PROJECTS=4  number of projects
 #   WAVES=5     number of waves
 #   SEED=n      seed for the random command choice (default: random, printed)
+#   HOSTS_FILE=true  turn off use_dns_when_possible so every start edits the
+#               hosts file, and check that no entries were lost. Run `sudo -v`
+#               first so the elevated edits do not stop at a password prompt.
 #
 # NOTE: this runs `ddev poweroff`, which stops all your running DDEV projects.
 
 set -u
 PROJECTS=${PROJECTS:-4}
 WAVES=${WAVES:-5}
+HOSTS_FILE=${HOSTS_FILE:-false}
+USE_DNS=true
+[ "$HOSTS_FILE" = true ] && USE_DNS=false
+HOSTS_PATH=/etc/hosts
+[ -f /c/Windows/System32/drivers/etc/hosts ] && HOSTS_PATH=/c/Windows/System32/drivers/etc/hosts
 SEED=${SEED:-$((RANDOM * 32768 + RANDOM))}
 BASE="$HOME/tmp/ddev-concurrent-test"
 LOGS="$BASE/logs"
@@ -45,6 +53,12 @@ cleanup() {
   for i in $(seq 1 "$PROJECTS"); do
     (cd "$BASE/proj$i" 2>/dev/null && ddev delete -Oy "ddevconc$i" >/dev/null 2>&1)
   done
+  # delete removes only the current hostnames, not those from earlier waves.
+  if [ "$HOSTS_FILE" = true ]; then
+    for h in $(grep -oE "extra-w[0-9]+-p[0-9]+\.ddev\.site" "$HOSTS_PATH" | sort -u); do
+      ddev hostname -r "$h" 127.0.0.1 >/dev/null 2>&1
+    done
+  fi
   rm -rf "$BASE"
 }
 trap cleanup EXIT
@@ -56,7 +70,7 @@ mkdir -p "$LOGS"
 for i in $(seq 1 "$PROJECTS"); do
   mkdir -p "$BASE/proj$i/web"
   echo "<?php echo 'ok';" >"$BASE/proj$i/web/index.php"
-  (cd "$BASE/proj$i" && ddev config --project-type=php --docroot=web --project-name="ddevconc$i" >/dev/null 2>&1) || fail "config proj$i"
+  (cd "$BASE/proj$i" && ddev config --project-type=php --docroot=web --project-name="ddevconc$i" --use-dns-when-possible="$USE_DNS" >/dev/null 2>&1) || fail "config proj$i"
 done
 
 # run_op <wave> <project number> <op>: runs in the background, logging to $LOGS.
@@ -77,10 +91,12 @@ ops=(start start stop restart hostname list)
 for wave in $(seq 1 "$WAVES"); do
   echo "=== Wave $wave ==="
   pids=()
+  waveops=()
   pattern=$RACE_PATTERN
   for i in $(seq 1 "$PROJECTS"); do
     op=${ops[$((RANDOM % ${#ops[@]}))]}
     echo "proj$i: $op"
+    waveops+=("$op")
     run_op "$wave" "$i" "$op" &
     pids+=($!)
   done
@@ -90,7 +106,11 @@ for wave in $(seq 1 "$WAVES"); do
     pids+=($!)
     pattern=$POWEROFF_RACE_PATTERN
   fi
-  for p in "${pids[@]}"; do wait "$p"; done
+  statuses=()
+  for p in "${pids[@]}"; do
+    wait "$p"
+    statuses+=($?)
+  done
 
   if grep -lE "$pattern" "$LOGS"/wave"$wave"-*.log >/dev/null 2>&1; then
     fail "wave $wave: race signature in $(grep -lE "$pattern" "$LOGS"/wave"$wave"-*.log | tr '\n' ' ')"
@@ -98,6 +118,17 @@ for wave in $(seq 1 "$WAVES"); do
   # No locked section here should take two minutes, so a give-up means a holder hung.
   if grep -l 'Gave up after' "$LOGS"/wave"$wave"-*.log >/dev/null 2>&1; then
     fail "wave $wave: gave up waiting for the lock in $(grep -l 'Gave up after' "$LOGS"/wave"$wave"-*.log | tr '\n' ' ')"
+  fi
+
+  # Checked before converging, which would put back any lost entries.
+  if [ "$HOSTS_FILE" = true ]; then
+    for i in $(seq 1 "$PROJECTS"); do
+      case "${waveops[$((i - 1))]}" in start | restart | hostname) ;; *) continue ;; esac
+      [ "${statuses[$((i - 1))]}" -eq 0 ] || continue
+      for h in $(cd "$BASE/proj$i" && ddev describe -j 2>/dev/null | jq -r ".raw.hostnames[]"); do
+        ddev hostname --check "$h" 127.0.0.1 >/dev/null 2>&1 || fail "wave $wave: $h missing from the hosts file after proj$i ${waveops[$((i - 1))]}"
+      done
+    done
   fi
 
   # Converge one at a time, then check the shared state.
