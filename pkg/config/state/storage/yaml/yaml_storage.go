@@ -6,6 +6,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/state"
 	"github.com/ddev/ddev/pkg/config/state/types"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"go.yaml.in/yaml/v4"
 )
@@ -67,23 +68,7 @@ func (s *yamlStorage) Write(raw types.RawState) (err error) {
 	finalContent := []byte("---\n")
 	finalContent = append(finalContent, content...)
 
-	// Write to a temp file and rename it into place so a crash mid-write
-	// cannot leave a truncated state file behind.
-	tmp, err := os.CreateTemp(filepath.Dir(s.filePath), filepath.Base(s.filePath)+".*.tmp")
-	if err != nil {
-		return
-	}
-	defer func() { _ = os.Remove(tmp.Name()) }()
-
-	if _, err = tmp.Write(finalContent); err != nil {
-		_ = tmp.Close()
-		return
-	}
-	if err = tmp.Close(); err != nil {
-		return
-	}
-
-	return os.Rename(tmp.Name(), s.filePath)
+	return nodeps.WriteFileAtomic(s.filePath, finalContent, 0600)
 }
 
 func (s *yamlStorage) TagName() string {

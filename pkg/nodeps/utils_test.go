@@ -2,6 +2,7 @@ package nodeps_test
 
 import (
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -490,5 +491,40 @@ func TestIsEnvTrue(t *testing.T) {
 			require.Equal(t, tc.expected, nodeps.IsEnvTrue(testEnv))
 			require.Equal(t, !tc.expected, nodeps.IsEnvFalse(testEnv))
 		})
+	}
+}
+
+func TestWriteFileAtomic(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "list.yaml")
+	require.NoError(t, os.WriteFile(target, []byte("old content that is longer\n"), 0600))
+
+	require.NoError(t, nodeps.WriteFileAtomic(target, []byte("new\n"), 0644))
+	content, err := os.ReadFile(target)
+	require.NoError(t, err)
+	require.Equal(t, "new\n", string(content))
+	if !nodeps.IsWindows() {
+		fi, err := os.Stat(target)
+		require.NoError(t, err)
+		require.Equal(t, os.FileMode(0644), fi.Mode().Perm())
+	}
+
+	// Writing through a symlink replaces the target and keeps the link.
+	if !nodeps.IsWindows() {
+		link := filepath.Join(dir, "link.yaml")
+		require.NoError(t, os.Symlink(target, link))
+		require.NoError(t, nodeps.WriteFileAtomic(link, []byte("via link\n"), 0644))
+		fi, err := os.Lstat(link)
+		require.NoError(t, err)
+		require.NotZero(t, fi.Mode()&os.ModeSymlink)
+		content, err = os.ReadFile(target)
+		require.NoError(t, err)
+		require.Equal(t, "via link\n", string(content))
+	}
+
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+	for _, e := range entries {
+		require.NotContains(t, e.Name(), ".tmp")
 	}
 }

@@ -758,13 +758,9 @@ func WriteProjectList(projects map[string]*ProjectInfo) error {
 		return err
 	}
 
-	// Write to projects file
-	err = os.WriteFile(GetProjectListPath(), projectsBytes, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	// Other ddev processes, such as the TUI, may read the list mid-write, and
+	// ReadProjectList sets aside a list it cannot parse.
+	return nodeps.WriteFileAtomic(GetProjectListPath(), projectsBytes, 0644)
 }
 
 // GetGlobalDdevDir returns the DDEV global config directory, and creates it as needed.
