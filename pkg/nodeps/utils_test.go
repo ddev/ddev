@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
@@ -503,18 +504,30 @@ func TestWriteFileAtomic(t *testing.T) {
 	content, err := os.ReadFile(target)
 	require.NoError(t, err)
 	require.Equal(t, "new\n", string(content))
+
+	// Windows refuses the rename while a reader has the target open, so the
+	// write has to outlast this reader.
+	reader, err := os.Open(target)
+	require.NoError(t, err)
+	go func() {
+		time.Sleep(200 * time.Millisecond)
+		_ = reader.Close()
+	}()
+	require.NoError(t, nodeps.WriteFileAtomic(target, []byte("while open\n"), 0644))
+	content, err = os.ReadFile(target)
+	require.NoError(t, err)
+	require.Equal(t, "while open\n", string(content))
+
 	if !nodeps.IsWindows() {
 		fi, err := os.Stat(target)
 		require.NoError(t, err)
 		require.Equal(t, os.FileMode(0644), fi.Mode().Perm())
-	}
 
-	// Writing through a symlink replaces the target and keeps the link.
-	if !nodeps.IsWindows() {
+		// Writing through a symlink replaces the target and keeps the link.
 		link := filepath.Join(dir, "link.yaml")
 		require.NoError(t, os.Symlink(target, link))
 		require.NoError(t, nodeps.WriteFileAtomic(link, []byte("via link\n"), 0644))
-		fi, err := os.Lstat(link)
+		fi, err = os.Lstat(link)
 		require.NoError(t, err)
 		require.NotZero(t, fi.Mode()&os.ModeSymlink)
 		content, err = os.ReadFile(target)

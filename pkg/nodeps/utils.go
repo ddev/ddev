@@ -1,6 +1,7 @@
 package nodeps
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -11,6 +12,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 	"unicode"
 
 	"golang.org/x/term"
@@ -240,5 +243,17 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 	if err = os.Chmod(tmp.Name(), perm); err != nil {
 		return err
 	}
-	return os.Rename(tmp.Name(), path)
+	err = os.Rename(tmp.Name(), path)
+	if IsWindows() {
+		// Windows fails with ERROR_ACCESS_DENIED (5) or ERROR_SHARING_VIOLATION (32)
+		// while another process, such as a concurrent ddev or an antivirus scanner,
+		// has either file open, so retry briefly.
+		var errno syscall.Errno
+		deadline := time.Now().Add(time.Second)
+		for errors.As(err, &errno) && (errno == 5 || errno == 32) && time.Now().Before(deadline) {
+			time.Sleep(20 * time.Millisecond)
+			err = os.Rename(tmp.Name(), path)
+		}
+	}
+	return err
 }
