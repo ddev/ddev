@@ -12,31 +12,24 @@ teardown() {
 }
 
 @test "Kirby new project quickstart with $(ddev --version)" {
-  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  assert_success
+  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
 
-  run ddev config --omit-containers=db --webserver-type=apache-fpm
-  assert_success
+  run -0 ddev config --omit-containers=db --webserver-type=apache-fpm
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
   _extra_info
 
-  run ddev composer create-project getkirby/starterkit
-  assert_success
+  run -0 ddev composer create-project getkirby/starterkit
 
   # validate ddev launch
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output "FULLURL ${PRIMARY_URL}"
-  assert_success
 
-  run curl -sfIv ${PRIMARY_URL}
+  run -0 curl -sSfI ${PRIMARY_URL}
   assert_output --partial "server: Apache"
   assert_output --partial "HTTP/2 200"
-  assert_success
-  run curl -sfv ${PRIMARY_URL}
-  assert_output --partial "<h2><a href=\"https://getkirby.com\">Made with Kirby</a></h2>"
-  assert_output --partial "the file-based CMS that adapts to any project"
-  assert_success
+  _assert_page_contains ${PRIMARY_URL} \
+    "<h2><a href=\"https://getkirby.com\">Made with Kirby</a></h2>" \
+    "the file-based CMS that adapts to any project"
 }

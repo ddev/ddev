@@ -12,49 +12,36 @@ teardown() {
 }
 
 @test "Joomla quickstart with $(ddev --version)" {
-  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  assert_success
+  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
 
   # Download the latest version of Joomla
-  run curl -o joomla.zip -L "https://www.joomla.org/latest"
-  assert_success
+  run -0 curl -o joomla.zip -L "https://www.joomla.org/latest"
 
-  run unzip joomla.zip && rm -f joomla.zip
-  assert_success
+  run -0 unzip joomla.zip && rm -f joomla.zip
 
-  run ddev config --project-type=joomla
-  assert_success
+  run -0 ddev config --project-type=joomla
 
-  run echo "display_errors = off" > .ddev/php/joomla.ini
-  assert_success
+  run -0 echo "display_errors = off" > .ddev/php/joomla.ini
 
-  run echo "output_buffering = off" >> .ddev/php/joomla.ini
-  assert_success
+  run -0 echo "output_buffering = off" >> .ddev/php/joomla.ini
   assert_file_exist .ddev/php/joomla.ini
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
   _extra_info
 
-  run ddev php installation/joomla.php install --site-name="My Joomla Site" --admin-user="Administrator" --admin-username=admin --admin-password=AdminAdmin1! --admin-email=admin@example.com --db-type=mysql --db-encryption=0 --db-host=db --db-user=db --db-pass="db" --db-name=db --db-prefix=ddev_ --public-folder=""
-  assert_success
+  run -0 ddev php installation/joomla.php install --site-name="My Joomla Site" --admin-user="Administrator" --admin-username=admin --admin-password=AdminAdmin1! --admin-email=admin@example.com --db-type=mysql --db-encryption=0 --db-host=db --db-user=db --db-pass="db" --db-name=db --db-prefix=ddev_ --public-folder=""
 
-  DDEV_DEBUG=true run ddev launch /administrator/
+  DDEV_DEBUG=true run -0 ddev launch /administrator/
   assert_output "FULLURL ${PRIMARY_URL}/administrator/"
-  assert_success
 
   # validate running project
-  run curl -sfv ${PRIMARY_URL}
-  assert_output --partial "<meta name=\"generator\" content=\"Joomla! - Open Source Content Management\">"
-  assert_output --partial "alt=\"My Joomla Site\""
-  assert_success
+  _assert_page_contains ${PRIMARY_URL} \
+    "<meta name=\"generator\" content=\"Joomla! - Open Source Content Management\">" \
+    "alt=\"My Joomla Site\""
 
-  run curl -sfIv ${PRIMARY_URL}/administrator/
+  run -0 curl -sSfI ${PRIMARY_URL}/administrator/
   assert_output --partial "HTTP/2 200"
-  assert_success
 
-  run curl -sfv ${PRIMARY_URL}/administrator/
-  assert_output --partial "<meta name=\"generator\" content=\"Joomla! - Open Source Content Management\">"
-  assert_success
+  _assert_page_contains ${PRIMARY_URL}/administrator/ "<meta name=\"generator\" content=\"Joomla! - Open Source Content Management\">"
 }

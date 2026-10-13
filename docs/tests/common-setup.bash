@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 _common_setup() {
+    # Allows `run -0`, which reports the command and its exit code on failure
+    bats_require_minimum_version 1.5.0
     TEST_BREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
     export BATS_LIB_PATH="${BATS_LIB_PATH}:${TEST_BREW_PREFIX}/lib:/usr/lib/bats"
     bats_load_library bats-support
@@ -31,7 +33,7 @@ _common_setup() {
     export DDEV_NO_INSTRUMENTATION=true
     export DDEV_NONINTERACTIVE=true
     mkdir -p ${tmpdir} && cd ${tmpdir} || exit 1
-    ddev delete -Oy ${PROJNAME:-notset} >/dev/null
+    ddev delete -Oy ${PROJNAME:-notset} >/dev/null 2>&1
 #    echo "# Starting test at $(date)" >&3
 }
 
@@ -51,22 +53,48 @@ _extra_info() {
 
 _common_teardown() {
 #  echo "# Ending test at $(date)" >&3
-  ddev delete -Oy ${PROJNAME} >/dev/null
+  ddev delete -Oy ${PROJNAME} >/dev/null 2>&1
   rm -rf ${tmpdir}
 }
 
-# Curl wrapper that adds GITHUB_TOKEN auth if available
+# Print the first GitHub token set, in the order ddev itself checks them
+_github_token() {
+  echo "${DDEV_GITHUB_TOKEN:-${GH_TOKEN:-${GITHUB_TOKEN:-}}}"
+}
+
+# Curl wrapper that adds GitHub token auth if available
 # Usage: _curl_github [curl options] <url>
 _curl_github() {
-  local auth_args=()
-  [ -n "${GITHUB_TOKEN:-}" ] && auth_args=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+  local auth_args=() token
+  token=$(_github_token)
+  [ -n "${token}" ] && auth_args=(-H "Authorization: Bearer ${token}")
   curl --retry 5 --retry-delay 2 "${auth_args[@]}" "$@"
+}
+
+# Fetch a page and require each string in its body. A failure reports curl's
+# error, or the missing string and the page title, rather than the whole page.
+# Usage: _assert_page_contains [curl options] <url> <string>...
+_assert_page_contains() {
+  local curl_args=() url body s
+  while [[ "${1:-}" == -* ]]; do curl_args+=("$1"); shift; done
+  url=$1; shift
+  if ! body=$(curl -sSf "${curl_args[@]}" "${url}" 2>&1); then
+    echo "Fetching ${url} failed: ${body}" >&2
+    return 1
+  fi
+  for s in "$@"; do
+    if [[ "${body}" != *"${s}"* ]]; then
+      echo "Page ${url} does not contain: ${s}" >&2
+      echo "Page title: $(grep -o '<title>[^<]*</title>' <<<"${body}" | head -1)" >&2
+      return 1
+    fi
+  done
 }
 
 # Download the latest release asset from a GitHub repo
 # Usage: _github_release_download <owner/repo> <asset_regex> <output_file>
 # Example: _github_release_download "ExpressionEngine/ExpressionEngine" "^ExpressionEngine.*\\.zip$" "ee.zip"
-# Uses GITHUB_TOKEN env var if available for authenticated requests
+# Authenticates with _github_token if one is available
 _github_release_download() {
   local repo="$1"
   local asset_pattern="$2"

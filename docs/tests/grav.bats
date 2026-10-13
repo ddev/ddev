@@ -14,71 +14,55 @@ teardown() {
 @test "Grav Composer quickstart with $(ddev --version)" {
   PROJNAME=my-grav-composer-site
 
-  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  assert_success
+  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
 
-  run ddev config --php-version=8.3 --omit-containers=db
-  assert_success
+  run -0 ddev config --php-version=8.3 --omit-containers=db
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
   _extra_info
 
-  run ddev composer create-project getgrav/grav
-  assert_success
+  run -0 ddev composer create-project getgrav/grav
 
   # Grav 2.0 dropped support for the classic admin plugin; admin2 is its replacement.
-  run ddev exec gpm install admin2 -y
-  assert_success
+  run -0 ddev exec gpm install admin2 -y
 
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output "FULLURL ${PRIMARY_URL}"
-  assert_success
 
   # validate running project
-  run curl -sfIv ${PRIMARY_URL}
+  run -0 curl -sSfI ${PRIMARY_URL}
   assert_output --partial "set-cookie: grav-site-"
   assert_output --partial "location: /admin"
   assert_output --partial "HTTP/2 302"
-  assert_success
 }
 
 
 @test "Grav Git Clone quickstart with $(ddev --version)" {
   PROJNAME=my-grav-git-site
 
-  run mkdir -p my-grav-git-site && cd my-grav-git-site
-  assert_success
+  run -0 mkdir -p my-grav-git-site && cd my-grav-git-site
 
-  run git clone -b master https://github.com/getgrav/grav.git .
-  assert_success
+  run -0 git clone -b master https://github.com/getgrav/grav.git .
 
-  run ddev config --php-version=8.3 --omit-containers=db
-  assert_success
+  run -0 ddev config --php-version=8.3 --omit-containers=db
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
   _extra_info
 
-  run ddev composer install
-  assert_success
+  run -0 ddev composer install
 
-  run ddev exec grav install
-  assert_success
+  run -0 ddev exec grav install
 
-  run ddev exec gpm install admin2 -y
-  assert_success
+  run -0 ddev exec gpm install admin2 -y
 
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output "FULLURL ${PRIMARY_URL}"
-  assert_success
 
   # validate running project
-  run curl -sfIv ${PRIMARY_URL}
+  run -0 curl -sSfI ${PRIMARY_URL}
   assert_output --partial "set-cookie: grav-site-"
   assert_output --partial "location: /admin"
   assert_output --partial "HTTP/2 302"
-  assert_success
 }

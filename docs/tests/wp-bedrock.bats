@@ -14,47 +14,38 @@ teardown() {
 @test "WordPress Bedrock quickstart with $(ddev --version)" {
   PROJNAME=my-wp-bedrock-site
 
-  run mkdir -p my-wp-bedrock-site && cd my-wp-bedrock-site
-  assert_success
+  run -0 mkdir -p my-wp-bedrock-site && cd my-wp-bedrock-site
 
-  run ddev config --project-type=wp-bedrock
-  assert_success
+  run -0 ddev config --project-type=wp-bedrock
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
   _extra_info
 
-  run ddev composer create-project roots/bedrock
-  assert_success
+  run -0 ddev composer create-project roots/bedrock
 
-  run ddev wp core install --url="${PRIMARY_URL}" --title='My Bedrock Site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
-  assert_success
+  run -0 ddev wp core install --url="${PRIMARY_URL}" --title='My Bedrock Site' --admin_user=admin --admin_password=admin --admin_email=admin@example.com
 
-  DDEV_DEBUG=true run ddev launch /wp/wp-admin/
+  DDEV_DEBUG=true run -0 ddev launch /wp/wp-admin/
   assert_output "FULLURL ${PRIMARY_URL}/wp/wp-admin/"
-  assert_success
 
   # validate running project
-  run curl -sfI ${PRIMARY_URL}
+  run -0 curl -sfI ${PRIMARY_URL}
   assert_line --regexp "link:.*${DDEV_HOSTNAME}.*rel=\"https://api\.w\.org/\""
   assert_output --partial "HTTP/2 200"
-  assert_success
 
   # validate /wp/wp-admin/ redirects to login when unauthenticated
-  run curl -sfI ${PRIMARY_URL}/wp/wp-admin/
+  run -0 curl -sfI ${PRIMARY_URL}/wp/wp-admin/
   assert_output --partial "location: ${PRIMARY_URL}/wp/wp-login.php"
   assert_output --partial "HTTP/2 302"
-  assert_success
 
   # validate actual login: POST credentials, follow redirect to wp-admin, check for Dashboard
   COOKIE_JAR=$(mktemp)
   curl -sf -c "${COOKIE_JAR}" ${PRIMARY_URL}/wp/wp-login.php > /dev/null
-  run curl -sf -c "${COOKIE_JAR}" -b "${COOKIE_JAR}" \
+  run -0 curl -sf -c "${COOKIE_JAR}" -b "${COOKIE_JAR}" \
     --data "log=admin&pwd=admin&wp-submit=Log+In&redirect_to=%2Fwp%2Fwp-admin%2F&testcookie=1" \
     --location ${PRIMARY_URL}/wp/wp-login.php
   assert_output --partial "Dashboard"
-  assert_success
   rm -f "${COOKIE_JAR}"
 
   # Bedrock serves from web but keeps WordPress in web/wp, so its own wp-cli.yml
@@ -62,9 +53,8 @@ teardown() {
   assert_file_exist wp-cli.yml
   assert_file_contains wp-cli.yml "^path: web/wp$"
 
-  run ddev wp eval 'echo ABSPATH;'
+  run -0 ddev wp eval 'echo ABSPATH;'
   assert_output "/var/www/html/web/wp/"
-  assert_success
 
   # an alias makes wp-cli.yml unparseable as strict YAML, which must not knock
   # WP-CLI back to the docroot
@@ -75,7 +65,6 @@ teardown() {
   path: /var/www/preprod/web/wp
 END
 
-  run ddev wp eval 'echo ABSPATH;'
+  run -0 ddev wp eval 'echo ABSPATH;'
   assert_output "/var/www/html/web/wp/"
-  assert_success
 }

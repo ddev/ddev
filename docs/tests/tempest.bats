@@ -12,36 +12,28 @@ teardown() {
 }
 
 @test "Tempest composer based quickstart with $(ddev --version)" {
-  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  assert_success
+  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
 
-  run ddev config --project-type=php --docroot=public --php-version=8.5 --omit-containers=db
-  assert_success
+  run -0 ddev config --project-type=php --docroot=public --php-version=8.5 --omit-containers=db
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
   _extra_info
 
-  run ddev composer create-project tempest/app
-  assert_success
+  run -0 ddev composer create-project tempest/app
 
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output --partial "FULLURL ${PRIMARY_URL}"
-  assert_success
 
   # validate running project
-  run curl -sfIv ${PRIMARY_URL}
+  run -0 curl -sSfI ${PRIMARY_URL}
   assert_output --partial "HTTP/2 200"
-  assert_success
 
-  run curl -sfv ${PRIMARY_URL}
-  assert_output --partial "Tempest"
-  assert_output --partial "The PHP framework that gets out of your way."
-  assert_success
+  _assert_page_contains ${PRIMARY_URL} \
+    "Tempest" \
+    "The PHP framework that gets out of your way."
 
   # check used database
-  run ddev exec tempest about
-  assert_success
+  run -0 ddev exec tempest about
   assert_output --partial "SQLite"
 }

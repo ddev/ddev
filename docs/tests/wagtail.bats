@@ -13,48 +13,37 @@ teardown() {
 
 @test "Wagtail quickstart with $(ddev --version)" {
   WAGTAIL_SITENAME=${PROJNAME}
-  run mkdir -p ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
-  assert_success
+  run -0 mkdir -p ${WAGTAIL_SITENAME} && cd ${WAGTAIL_SITENAME}
 
-  run ddev config --project-type=generic --webserver-type=generic \
+  run -0 ddev config --project-type=generic --webserver-type=generic \
     --webimage-extra-packages=python3-pip,python3-venv \
     --web-environment-add=DJANGO_SETTINGS_MODULE=mysite.settings.dev \
     --omit-containers=db
-  assert_success
 
   cat <<'DOCKERFILEEND' >.ddev/web-build/Dockerfile.python-venv
 RUN for file in /etc/bash.bashrc /etc/bash.nointeractive.bashrc; do \
         echo '[ -s "$DDEV_APPROOT/env/bin/activate" ] && source "$DDEV_APPROOT/env/bin/activate"' >> "$file"; \
     done
 DOCKERFILEEND
-  run ddev mutagen sync
-  assert_success
+  run -0 ddev mutagen sync
   assert_file_exist .ddev/web-build/Dockerfile.python-venv
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
-  run ddev exec python -m venv env
-  assert_success
+  run -0 ddev exec python -m venv env
 
-  run ddev exec pip install wagtail
-  assert_success
+  run -0 ddev exec pip install wagtail
 
-  run ddev exec wagtail start mysite .
-  assert_success
+  run -0 ddev exec wagtail start mysite .
 
-  run ddev exec pip install -r requirements.txt
-  assert_success
+  run -0 ddev exec pip install -r requirements.txt
 
-  run ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
-  assert_success
+  run -0 ddev exec "echo \"SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')\" >> mysite/settings/dev.py"
 
-  run ddev exec python manage.py migrate --noinput
-  assert_success
+  run -0 ddev exec python manage.py migrate --noinput
 
   # Create superuser non-interactively
-  run ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
-  assert_success
+  run -0 ddev exec "DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.com --noinput"
 
   cat <<'EOF' > .ddev/config.wagtail.yaml
 web_extra_daemons:
@@ -67,12 +56,10 @@ web_extra_exposed_ports:
       http_port: 80
       https_port: 443
 EOF
-  run ddev mutagen sync
-  assert_success
+  run -0 ddev mutagen sync
   assert_file_exist .ddev/config.wagtail.yaml
 
-  run ddev restart
-  assert_success
+  run -0 ddev restart
 
   # web_extra_exposed_ports only takes effect after this restart, so the
   # generic webserver has no primary URL to report until now (see
@@ -80,22 +67,18 @@ EOF
   _extra_info
 
   # ddev launch /admin
-  DDEV_DEBUG=true run ddev launch /admin
+  DDEV_DEBUG=true run -0 ddev launch /admin
   assert_output --partial "FULLURL ${PRIMARY_URL}/admin"
-  assert_success
 
   # validate running project - check if Wagtail is responding
-  run curl -sfI ${PRIMARY_URL}
+  run -0 curl -sfI ${PRIMARY_URL}
   assert_line --regexp 'server:.*WSGIServer.*CPython.*'
-  assert_success
 
   # Verify main site is running
-  run curl -sf ${PRIMARY_URL}
+  run -0 curl -sf ${PRIMARY_URL}
   assert_output --partial "Welcome to your new Wagtail site"
-  assert_success
 
   # Check if we can access the admin page (should redirect to login)
-  run curl -sfL ${PRIMARY_URL}/admin
+  run -0 curl -sfL ${PRIMARY_URL}/admin
   assert_output --partial "Sign in - Wagtail"
-  assert_success
 }

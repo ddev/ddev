@@ -12,31 +12,24 @@ teardown() {
 }
 
 @test "Asterios composer based quickstart with $(ddev --version)" {
-  run mkdir -p my-asterios-site && cd my-asterios-site
-  assert_success
+  run -0 mkdir -p my-asterios-site && cd my-asterios-site
 
-  run ddev config --project-type=asterios --docroot=public
-  assert_success
+  run -0 ddev config --project-type=asterios --docroot=public
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
   _extra_info
 
-  run ddev composer create-project asterios/app
-  assert_success
+  run -0 ddev composer create-project asterios/app
 
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output --partial "FULLURL ${PRIMARY_URL}"
-  assert_success
 
   # validate running project - check status code
-  run curl -sf -o /dev/null -w "%{http_code}" ${PRIMARY_URL}
-  assert_success
+  run -0 curl -sf -o /dev/null -w "%{http_code}" ${PRIMARY_URL}
   assert_output "200"
 
   # validate running project - check content
-  run curl -sf ${PRIMARY_URL}
-  assert_success
+  run -0 curl -sf ${PRIMARY_URL}
   assert_output --partial "Build your next project with de.asteriosphp.app"
 }
