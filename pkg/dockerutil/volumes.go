@@ -22,15 +22,13 @@ func RemoveVolume(volumeName string) error {
 	if _, err := apiClient.VolumeInspect(ctx, volumeName, client.VolumeInspectOptions{}); err == nil {
 		_, err := apiClient.VolumeRemove(ctx, volumeName, client.VolumeRemoveOptions{Force: true})
 		if err != nil {
-			if err.Error() == "volume in use and cannot be removed" {
-				containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{
-					All:     true,
-					Filters: client.Filters{}.Add("volume", volumeName),
-				})
+			// Docker says "volume is in use", Podman "volume is being used".
+			if strings.Contains(err.Error(), "in use") || strings.Contains(err.Error(), "being used") {
+				containers, err := FindContainersByVolume(volumeName)
 				// Get names of containers which are still using the volume.
 				var containerNames []string
 				if err == nil {
-					for _, c := range containers.Items {
+					for _, c := range containers {
 						containerNames = append(containerNames, ContainerName(&c))
 					}
 					var containerNamesString = strings.Join(containerNames, " ")

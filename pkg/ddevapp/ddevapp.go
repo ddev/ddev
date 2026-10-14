@@ -3676,15 +3676,16 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		if err = app.RemoveHostsEntriesIfNeeded(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
-		app.RemoveGlobalProjectInfo()
-
 		vols := []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName(), GetMutagenVolumeName(app)}
 		// app.Name-ddev-config has already been deleted by Cleanup()
+		var heldVolumes []string
 		for _, volName := range vols {
 			if dockerutil.VolumeExists(volName) {
+				removeDdevContainersUsingVolume(volName)
 				err = dockerutil.RemoveVolume(volName)
 				if err != nil {
 					util.Warning("Could not remove volume %s: %v", volName, err)
+					heldVolumes = append(heldVolumes, volName)
 				} else {
 					util.Success("Volume %s for project %s was deleted", volName, app.Name)
 				}
@@ -3692,6 +3693,11 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 		deleteServiceVolumes(app)
 		deleteImages(app)
+		// Unregistering now would leave the volume unreachable for a retry.
+		if len(heldVolumes) > 0 {
+			return fmt.Errorf("project %s was not deleted because volume %s could not be removed; it stays listed so you can run 'ddev delete %s' again", app.Name, strings.Join(heldVolumes, ", "), app.Name)
+		}
+		app.RemoveGlobalProjectInfo()
 
 		util.Success("Project %s was deleted. Your code and configuration are unchanged.", app.Name)
 	}
@@ -3704,6 +3710,27 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	}
 
 	return nil
+}
+
+// removeDdevContainersUsingVolume catches utility containers an interrupted start
+// left behind; Cleanup() misses them because their com.ddev.site-name is empty.
+func removeDdevContainersUsingVolume(volName string) {
+	containers, err := dockerutil.FindContainersByVolume(volName)
+	if err != nil {
+		util.Warning("Could not list containers using volume %s: %v", volName, err)
+		return
+	}
+	for i := range containers {
+		if containers[i].Labels["com.ddev.platform"] != "ddev" {
+			continue
+		}
+		containerName := dockerutil.ContainerName(&containers[i])
+		if err = dockerutil.RemoveContainer(containers[i].ID); err != nil {
+			util.Warning("Could not remove container %s using volume %s: %v", containerName, volName, err)
+			continue
+		}
+		output.UserOut.Printf("Removing stale container %s using volume %s", containerName, volName)
+	}
 }
 
 // deleteServiceVolumes finds all the volumes created by services and removes them.
