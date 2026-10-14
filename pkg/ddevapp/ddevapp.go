@@ -26,6 +26,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -3257,6 +3258,9 @@ func (app *DdevApp) DockerEnv() map[string]string {
 
 	envVars["COLUMNS"] = strconv.Itoa(columns)
 	envVars["LINES"] = strconv.Itoa(lines)
+
+	// For the github_token build secret
+	envVars["DDEV_BUILD_GITHUB_TOKEN"], _ = github.GetGitHubToken()
 
 	if len(app.AdditionalHostnames) > 0 || len(app.AdditionalFQDNs) > 0 {
 		envVars["DDEV_HOSTNAME"] = strings.Join(app.GetHostnames(), ",")

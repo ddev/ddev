@@ -22,59 +22,98 @@ Then the additional packages will be built into the containers during [`ddev sta
 
 If a PHP extension is supported by the upstream package management from `deb.sury.org`, you'll be able to add it with minimal effort. Test to see if it's available using `ddev exec '(sudo apt-get update || true) && sudo apt-get install php${DDEV_PHP_VERSION}-<extension>'`, for example, `ddev exec '(sudo apt-get update || true) && sudo apt-get install php${DDEV_PHP_VERSION}-imap'`. If that works, then the extension is supported, and you can add `webimage_extra_packages: ["php${DDEV_PHP_VERSION}-<extension>"]` to your `.ddev/config.yaml` file.
 
-### PECL PHP Extensions not supported by `deb.sury.org`
+### PIE PHP Extensions not supported by `deb.sury.org`
 
-!!!tip "Few people need pecl extensions"
+!!!tip "Few people need PIE or PECL extensions"
     Most people don't need to install PHP extensions that aren't supported by `deb.sury.org`, so you only need to go down this path if you have very particular needs.
 
-If a PHP extension is not supported by the upstream package management from `deb.sury.org`, you'll install it via pecl using a `.ddev/web-build/Dockerfile`. You can search for the extension on [pecl.php.net](https://pecl.php.net/) to find the package name. (This technique can also be used to get newer versions of PHP extensions than are available in the `deb.sury.org` distribution.)
+If a PHP extension is not supported by `deb.sury.org`, you can install it with [PIE](https://github.com/php/pie) (PHP Installer for Extensions) in a `.ddev/web-build/Dockerfile`. Find the extension's package name on [packagist.org/extensions](https://packagist.org/extensions). (This technique can also be used to get newer versions of PHP extensions than are available in the `deb.sury.org` distribution.)
 
-For example, a `.ddev/web-build/Dockerfile.mcrypt` might look like this:
+PIE requires PHP 8.1 or later. For older PHP versions, or an extension that isn't on Packagist, use [PECL](#pecl-php-extensions-not-supported-by-debsuryorg) instead.
+
+For example, this `.ddev/web-build/Dockerfile.php-extension` installs [brotli](https://packagist.org/packages/kjdev/brotli). To install another extension, change `package`, and list any Debian packages it needs to build in `build_packages`:
 
 ```dockerfile
-ENV extension=mcrypt
-SHELL ["/bin/bash", "-c"]
-# Install the needed development packages
-RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
-# mcrypt happens to require libmcrypt-dev
-RUN apt-get install -y libmcrypt-dev
-RUN pecl install ${extension}
-RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini && chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini
-RUN phpenmod ${extension}
+RUN --mount=type=secret,id=github_token <<EOF
+    set -eu -o pipefail
+    # Package name, optionally with a version constraint, like kjdev/brotli:^0.21
+    package=kjdev/brotli
+    # Debian packages the extension needs to build, like "libmemcached-dev zlib1g-dev"
+    build_packages=""
+    (apt-get update || true)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests build-essential pkg-config "php${DDEV_PHP_VERSION}-dev" ${build_packages}
+    curl -fsSL -o /usr/local/bin/pie https://github.com/php/pie/releases/latest/download/pie.phar
+    chmod +x /usr/local/bin/pie
+    if [ -s /run/secrets/github_token ]; then
+        export COMPOSER_AUTH="{\"github-oauth\":{\"github.com\":\"$(cat /run/secrets/github_token)\"}}"
+    fi
+    pie install --with-php-config="/usr/bin/php-config${DDEV_PHP_VERSION}" "${package}"
+EOF
 ```
 
-A `.ddev/web-build/Dockerfile.xlswriter` to add `xlswriter` might be:
+* `--with-php-config` builds the extension for your project's PHP version rather than the image's default one. PIE enables the extension itself.
+* For `build_packages`, check the extension's installation instructions and add the `-dev` packages of the libraries it needs. If the build still fails, the `configure` error names what's missing, like `memcached support requires ZLIB` for `zlib1g-dev`, and [packages.debian.org](https://packages.debian.org/) finds the package that provides a missing file.
+* DDEV passes your GitHub token, from `DDEV_GITHUB_TOKEN`, `GH_TOKEN`, or `GITHUB_TOKEN`, as the `github_token` [build secret](https://docs.docker.com/build/building/secrets/). PIE reads it from `COMPOSER_AUTH` to avoid GitHub API rate limits. The secret is empty when no token is set. Keep the token in an environment variable of the `RUN` step, as above: writing it to a file would store it in the image.
+* `--force-confold` keeps DDEV's PHP configuration files if installing `php${DDEV_PHP_VERSION}-dev` upgrades the PHP packages.
+
+A `.ddev/web-build/Dockerfile.xdebug` that replaces the `deb.sury.org` Xdebug with one built by PIE might look like this:
 
 ```dockerfile
-ENV extension=xlswriter
-SHELL ["/bin/bash", "-c"]
-# Install the needed development packages
-RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
-# xlswriter requires libz-dev
-RUN sudo apt-get install -y libz-dev
-RUN echo | pecl install ${extension}
-RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini && chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini
-RUN phpenmod ${extension}
-
+RUN --mount=type=secret,id=github_token <<EOF
+    set -eu -o pipefail
+    (apt-get update || true)
+    apt-get remove -y "php${DDEV_PHP_VERSION}-xdebug" || true
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests build-essential pkg-config "php${DDEV_PHP_VERSION}-dev"
+    curl -fsSL -o /usr/local/bin/pie https://github.com/php/pie/releases/latest/download/pie.phar
+    chmod +x /usr/local/bin/pie
+    if [ -s /run/secrets/github_token ]; then
+        export COMPOSER_AUTH="{\"github-oauth\":{\"github.com\":\"$(cat /run/secrets/github_token)\"}}"
+    fi
+    # ddev xdebug enables it with DDEV's own xdebug.ini, so there is no phpenmod
+    pie install --with-php-config="/usr/bin/php-config${DDEV_PHP_VERSION}" --skip-enable-extension xdebug/xdebug
+EOF
 ```
 
-A `.ddev/web-build/Dockerfile.xdebug` (overriding the `deb.sury.org` version) might look like this:
+### PECL PHP Extensions not supported by `deb.sury.org`
+
+Use PECL for PHP versions older than 8.1, which PIE can't run on, or for an extension release that isn't published on Packagist. Find the extension's package name on [pecl.php.net](https://pecl.php.net/).
+
+For example, this `.ddev/web-build/Dockerfile.php-extension` installs [brotli](https://pecl.php.net/package/brotli). To install another extension, change `extension`, and list any Debian packages it needs to build in `build_packages`:
 
 ```dockerfile
-# This example installs xdebug from pecl instead of the standard deb.sury.org package
-ENV extension=xdebug
-SHELL ["/bin/bash", "-c"]
-RUN phpdismod xdebug
-# Install the needed development packages
-RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests build-essential php-pear php${DDEV_PHP_VERSION}-dev
-# Remove the standard Xdebug provided by deb.sury.org
-RUN apt-get remove php${DDEV_PHP_VERSION}-xdebug || true
-RUN pecl install ${extension}
-# Use the standard xdebug.ini from source
-ADD https://raw.githubusercontent.com/ddev/ddev/main/containers/ddev-webserver/ddev-php-files/etc/php/8.2/mods-available/xdebug.ini /etc/php/${DDEV_PHP_VERSION}/mods-available
-RUN chmod 666 /etc/php/${DDEV_PHP_VERSION}/mods-available/xdebug.ini
-# ddev xdebug handles enabling module so we don't enable here
-#RUN phpenmod ${extension}
+RUN <<EOF
+    set -eu -o pipefail
+    # Package name, optionally with a version, like brotli-0.21.0
+    extension=brotli
+    # Debian packages the extension needs to build, like "libmemcached-dev zlib1g-dev"
+    build_packages=""
+    (apt-get update || true)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests build-essential php-pear "php${DDEV_PHP_VERSION}-dev" ${build_packages}
+    # yes '' accepts the default answer to every question pecl asks
+    pecl -d php_suffix="${DDEV_PHP_VERSION}" install "${extension}" < <(yes '') | tee /tmp/pecl.log
+    # pecl prints the line that enables the extension, like extension=brotli.so
+    ini=$(grep -o '[a-z_]*extension=[^"]*\.so' /tmp/pecl.log | tail -1)
+    name=$(basename "${ini#*=}" .so)
+    echo "${ini}" > "/etc/php/${DDEV_PHP_VERSION}/mods-available/${name}.ini"
+    phpenmod -v "${DDEV_PHP_VERSION}" "${name}"
+EOF
+```
+
+`-d php_suffix` builds the extension for your project's PHP version rather than the image's default one. Find what goes in `build_packages` [the same way as for PIE](#pie-php-extensions-not-supported-by-debsuryorg). To answer questions from `pecl` with something other than the defaults, pass them with `--configureoptions`, like `pecl install --configureoptions 'enable-redis-igbinary="yes"' redis`.
+
+To replace an extension that DDEV enables itself, Xdebug with [`ddev xdebug`](../usage/commands.md#xdebug) or XHProf with [`ddev xhprof`](../usage/commands.md#xhprof), remove the `deb.sury.org` package first. For example, this `.ddev/web-build/Dockerfile.xdebug` pins Xdebug 3.1.6, the last release supporting PHP 7.2 to 7.4:
+
+```dockerfile
+RUN <<EOF
+    set -eu -o pipefail
+    # xdebug or xhprof, optionally with a version
+    extension=xdebug-3.1.6
+    (apt-get update || true)
+    apt-get remove -y "php${DDEV_PHP_VERSION}-${extension%%-*}" || true
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests build-essential php-pear "php${DDEV_PHP_VERSION}-dev"
+    pecl -d php_suffix="${DDEV_PHP_VERSION}" install "${extension}" < <(yes '')
+    # ddev xdebug and ddev xhprof enable it with DDEV's own ini file, so there is no phpenmod
+EOF
 ```
 
 ## Adding Locales
@@ -268,7 +307,7 @@ ENV extension=xhprof
 ENV extension_repo=https://github.com/longxinH/xhprof
 ENV extension_version=v2.3.8
 
-RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests autoconf build-essential libc-dev php-pear php${DDEV_PHP_VERSION}-dev pkg-config zlib1g-dev
+RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests autoconf build-essential libc-dev php-pear php${DDEV_PHP_VERSION}-dev pkg-config zlib1g-dev
 RUN mkdir -p /tmp/php-${extension} && cd /tmp/php-${extension} && git clone ${extension_repo} .
 WORKDIR /tmp/php-${extension}/extension
 RUN git checkout ${extension_version}
