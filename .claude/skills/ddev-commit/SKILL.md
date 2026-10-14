@@ -83,6 +83,13 @@ Per-section notes, in the same top-to-bottom order as the template above:
   # Expect the size and DB version columns added by this PR
   ```
 
+  When the PR changes docs, link the changed page in the Read the Docs preview
+  of the PR, `https://ddev--<number>.org.readthedocs.build/en/<number>/`
+  followed by the page path and anchor, for example
+  `https://ddev--8820.org.readthedocs.build/en/8820/users/usage/commands/#snapshot`.
+  When the steps to test are in that page, tell the reviewer to follow them
+  there instead of repeating them in the PR.
+
 - **Release/Deployment Notes:** the last section in the template — give it
   real content, or omit it under the same rule as any other section.
 
