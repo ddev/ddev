@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -110,18 +111,22 @@ func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, exte
 	return routingTable, nil
 }
 
-// PushGlobalTraefikConfig pushes the config into ddev-global-cache
+// PushGlobalTraefikConfig pushes the config into RouterTraefikVolume
 func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
+	err := ensureRouterTraefikVolume()
+	if err != nil {
+		return err
+	}
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	uid, _, _ := dockerutil.GetContainerUser()
-	err := os.MkdirAll(globalTraefikDir, 0755)
+	err = os.MkdirAll(globalTraefikDir, 0755)
 	if err != nil {
 		return fmt.Errorf("failed to create global .ddev/traefik directory: %v", err)
 	}
 	globalSourceCertsPath := filepath.Join(globalTraefikDir, "certs")
 	// SourceConfigDir for dynamic config
 	globalSourceConfigDir := filepath.Join(globalTraefikDir, "config")
-	inContainerTargetCertsPath := "/mnt/ddev-global-cache/traefik/certs"
+	inContainerTargetCertsPath := path.Join(RouterTraefikDir, "certs")
 
 	// Set up directories in ~/.ddev/traefik
 	err = os.MkdirAll(globalSourceCertsPath, 0755)
@@ -384,20 +389,19 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 
 	// Copy to router container if running, otherwise copy to volume
 	// Copying directly to the router ensures Traefik's fsnotify detects changes reliably
-	const inContainerTraefikDir = "/mnt/ddev-global-cache/traefik"
 	router, err := FindDdevRouter()
 	routerRunning := err == nil && router != nil && router.State == "running"
 	if routerRunning {
 		// Router is running - copy directly to it using container name without leading slash
 		// This triggers fsnotify reliably because changes happen inside the container that's watching
 		containerName := strings.TrimPrefix(router.Names[0], "/")
-		err = dockerutil.CopyIntoContainer(globalTraefikDir, containerName, inContainerTraefikDir, "custom-global-config")
+		err = dockerutil.CopyIntoContainer(globalTraefikDir, containerName, RouterTraefikDir, "custom-global-config")
 		if err != nil {
 			return fmt.Errorf("failed to copy global Traefik config to router container: %v", err)
 		}
 
 		// Fix ownership of copied files to match what CopyIntoVolume does
-		chownCmd := fmt.Sprintf("chown -R %s /mnt/ddev-global-cache/traefik", uid)
+		chownCmd := fmt.Sprintf("chown -R %s %s", uid, RouterTraefikDir)
 		stdout, stderr, err := dockerutil.Exec(router.ID, chownCmd, "0")
 		if err != nil {
 			util.Debug("Failed to chown traefik files (stdout=%s, stderr=%s): %v", stdout, stderr, err)
@@ -407,24 +411,24 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		util.Verbose("Copied global Traefik config in %s directly to router container %s", globalTraefikDir, containerName)
 	} else {
 		// Router not running yet - copy to volume as fallback
-		err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "custom-global-config", false)
+		err = dockerutil.CopyIntoVolume(globalTraefikDir, RouterTraefikVolume, "", uid, "custom-global-config", false)
 		if err != nil {
-			return fmt.Errorf("failed to copy global Traefik config into Docker volume ddev-global-cache/traefik: %v", err)
+			return fmt.Errorf("failed to copy global Traefik config into Docker volume %s: %v", RouterTraefikVolume, err)
 		}
-		util.Verbose("Copied global Traefik config in %s to ddev-global-cache/traefik volume", globalTraefikDir)
+		util.Verbose("Copied global Traefik config in %s to %s volume", globalTraefikDir, RouterTraefikVolume)
 	}
 
 	// Remove stale project configs and certs. Through the running router this
 	// is an exec; otherwise each list or remove starts a helper container.
 	listFiles := func(subdir string) ([]string, error) {
-		return dockerutil.ListFilesInVolume("ddev-global-cache", "traefik/"+subdir)
+		return dockerutil.ListFilesInVolume(RouterTraefikVolume, subdir)
 	}
 	removeFiles := func(subdir string, files []string) error {
-		return dockerutil.RemoveFilesFromVolume("ddev-global-cache", "traefik/"+subdir, files)
+		return dockerutil.RemoveFilesFromVolume(RouterTraefikVolume, subdir, files)
 	}
 	if routerRunning {
 		listFiles = func(subdir string) ([]string, error) {
-			stdout, stderr, err := dockerutil.Exec(router.ID, fmt.Sprintf(`ls -1 "%s/%s" 2>/dev/null || true`, inContainerTraefikDir, subdir), "0")
+			stdout, stderr, err := dockerutil.Exec(router.ID, fmt.Sprintf(`ls -1 "%s/%s" 2>/dev/null || true`, RouterTraefikDir, subdir), "0")
 			if err != nil {
 				return nil, fmt.Errorf("%v, stderr=%s", err, stderr)
 			}
@@ -439,7 +443,7 @@ func PushGlobalTraefikConfig(activeApps []*DdevApp) error {
 		removeFiles = func(subdir string, files []string) error {
 			var rmPaths []string
 			for _, f := range files {
-				rmPaths = append(rmPaths, fmt.Sprintf(`"%s/%s/%s"`, inContainerTraefikDir, subdir, f))
+				rmPaths = append(rmPaths, fmt.Sprintf(`"%s/%s/%s"`, RouterTraefikDir, subdir, f))
 			}
 			_, stderr, err := dockerutil.Exec(router.ID, "rm -f "+strings.Join(rmPaths, " "), "0")
 			if err != nil {
@@ -508,7 +512,7 @@ func configureTraefikForApp(app *DdevApp) error {
 	}
 	projectSourceCertsPath := filepath.Join(projectTraefikDir, "certs")
 	projectSourceConfigDir := filepath.Join(projectTraefikDir, "config")
-	inContainerTargetCertsPath := "/mnt/ddev-global-cache/traefik/certs"
+	inContainerTargetCertsPath := path.Join(RouterTraefikDir, "certs")
 
 	err = os.MkdirAll(projectSourceCertsPath, 0755)
 	if err != nil {

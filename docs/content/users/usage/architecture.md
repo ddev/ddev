@@ -214,7 +214,7 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 ## The `ddev-global-cache` Volume
 
-`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web`, `db`, and `ddev-router` containers use it, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
+`ddev-global-cache` is a Docker volume shared by all projects and mounted at `/mnt/ddev-global-cache`. The `web` and `db` containers use it, and so do custom services that run [custom commands](../extend/custom-commands.md#container-commands). Unlike the containers, it survives [`ddev restart`](commands.md#restart) and [`ddev poweroff`](commands.md#poweroff).
 
 | Directory | Scope | Contents |
 | --- | --- | --- |
@@ -228,10 +228,9 @@ Here’s a basic diagram of how it works inside the Docker network:
 | `npm` | Shared | npm cache |
 | `pip` | Shared | pip cache, created only if you install pip, for example with [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages) |
 | `terminus/cache` | Shared | Terminus cache |
-| `traefik` | Shared | Router configuration and certificates, with files for each project |
 | `yarn/berry`, `yarn/classic` | Shared | Yarn caches |
 
-[`ddev delete`](commands.md#delete) removes the project's own directories and router files. To keep your own files in this volume, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
+[`ddev delete`](commands.md#delete) removes the project's own directories here and its files in [`ddev-router-traefik`](#the-ddev-router-traefik-volume). To keep your own files in this volume, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
 
 To clear the volume, for example to free Docker provider disk space, remove it. (Any stored global cache for all projects will be lost, but will be rebuilt as needed.) This also removes the Bash and MySQL history of every project. DDEV creates the volume again on the next [`ddev start`](commands.md#start):
 
@@ -239,3 +238,7 @@ To clear the volume, for example to free Docker provider disk space, remove it. 
 ddev poweroff
 docker volume rm ddev-global-cache
 ```
+
+## The `ddev-router-traefik` Volume
+
+`ddev-router-traefik` holds the router's Traefik configuration and certificates, with files for each project, and `acme.json` when you use [Let's Encrypt](../topics/hosting.md). Only `ddev-router` mounts it, at `/mnt/ddev-global-cache/traefik`, the path Traefik configuration refers to. DDEV fills it from the host on each [`ddev start`](commands.md#start), so removing it loses only `acme.json`, and Let's Encrypt then issues new certificates.
