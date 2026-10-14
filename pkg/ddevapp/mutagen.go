@@ -38,7 +38,7 @@ const mutagenConfigFileHashLabelName = `com.ddev.config-hash`
 // because on native Linux they often share the volume's device.
 const mutagenChownScript = `prune=()
 while read -r mp; do
-  prune+=(-path "$(printf '%b' "$mp")" -prune -o)
+  prune+=(-path "$(printf '%b' "$mp" | sed 's/[][*?\\]/\\&/g')" -prune -o)
 done < <(awk '$5 ~ "^/var/www/" {print $5}' /proc/self/mountinfo)
 find /var/www "${prune[@]}" -exec chown -hf "$OWNER" {} + 2>/dev/null || true`
 
