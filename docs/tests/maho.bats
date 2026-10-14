@@ -14,23 +14,19 @@ teardown() {
 @test "Maho Composer quickstart with $(ddev --version)" {
   PROJNAME=my-maho-site
 
-  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  assert_success
+  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
 
-  run ddev config --project-type=maho --docroot=public
-  assert_success
+  run -0 ddev config --project-type=maho --docroot=public
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
   _extra_info
 
-  run ddev composer create-project mahocommerce/maho-starter
-  assert_success
+  run -0 ddev composer create-project mahocommerce/maho-starter
 
   # Silent Maho install with sample data; --force is needed because
   # ddev pre-creates app/etc/local.xml
-  run ddev maho install --force \
+  run -0 ddev maho install --force \
     --license_agreement_accepted yes \
     --locale en_US --timezone UTC --default_currency USD \
     --db_host db --db_name db --db_user db --db_pass db \
@@ -39,27 +35,20 @@ teardown() {
     --admin_firstname Store --admin_lastname Admin --admin_email admin@example.com \
     --admin_username admin --admin_password veryl0ngpassw0rd \
     --sample_data 1
-  assert_success
 
-  run ddev maho index:reindex:all
-  assert_success
+  run -0 ddev maho index:reindex:all
 
-  run ddev maho cache:flush
-  assert_success
+  run -0 ddev maho cache:flush
 
   # validate ddev launch
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output "FULLURL ${PRIMARY_URL}"
-  assert_success
 
   # validate running project
-  run curl -sfILv ${PRIMARY_URL}
+  run -0 curl -sSfIL ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
-  assert_success
 
   # Check if the admin is working
-  run curl -sfvL ${PRIMARY_URL}/admin
-  assert_output --partial "Log in to Admin Panel"
-  assert_success
+  _assert_page_contains -L ${PRIMARY_URL}/admin "Log in to Admin Panel"
 }

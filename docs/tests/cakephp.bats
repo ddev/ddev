@@ -14,31 +14,24 @@ teardown() {
 @test "CakePHP Composer quickstart with $(ddev --version)" {
   PROJNAME=my-cakephp-composer-site
 
-  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  assert_success
+  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
 
-  run ddev config --project-type=cakephp --docroot=webroot
-  assert_success
+  run -0 ddev config --project-type=cakephp --docroot=webroot
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
-  run ddev composer create-project --prefer-dist --no-interaction cakephp/app:~5.0
-  assert_success
+  run -0 ddev composer create-project --prefer-dist --no-interaction cakephp/app:~5.0
 
   _extra_info
 
   # validate ddev launch
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output "FULLURL ${PRIMARY_URL}"
-  assert_success
   # validate running project
-  run curl -sfIv ${PRIMARY_URL}
+  run -0 curl -sSfI ${PRIMARY_URL}
   assert_output --partial "server: nginx"
   assert_output --partial "HTTP/2 200"
-  assert_success
-  run curl -sfv ${PRIMARY_URL}
-  assert_output --partial "CakePHP: the rapid development PHP framework:"
-  assert_output --partial "Welcome to CakePHP"
-  assert_success
+  _assert_page_contains ${PRIMARY_URL} \
+    "CakePHP: the rapid development PHP framework:" \
+    "Welcome to CakePHP"
 }

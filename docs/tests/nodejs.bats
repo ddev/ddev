@@ -13,16 +13,12 @@ teardown() {
 
 @test "Node.js quickstart with $(ddev --version)" {
   NODEJS_SITENAME=${PROJNAME}
-  run mkdir -p ${NODEJS_SITENAME} && cd ${NODEJS_SITENAME}
-  assert_success
+  run -0 mkdir -p ${NODEJS_SITENAME} && cd ${NODEJS_SITENAME}
 
-  run ddev config --project-type=generic --webserver-type=generic
-  assert_success
-  DDEV_DEBUG=true run ddev start -y
-  assert_success
+  run -0 ddev config --project-type=generic --webserver-type=generic
+  DDEV_DEBUG=true run -0 ddev start -y
 
-  run ddev npm install express
-  assert_success
+  run -0 ddev npm install express
 
   cat <<EOF > .ddev/config.nodejs.yaml
 web_extra_exposed_ports:
@@ -36,15 +32,12 @@ web_extra_daemons:
       command: "node server.js"
       directory: /var/www/html
 EOF
-  run ddev mutagen sync
-  assert_success
+  run -0 ddev mutagen sync
   assert_file_exist .ddev/config.nodejs.yaml
 
-  run ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
-  assert_success
+  run -0 ddev exec curl -s -O https://raw.githubusercontent.com/ddev/test-nodejs/main/server.js
 
-  DDEV_DEBUG=true run ddev restart -y
-  assert_success
+  DDEV_DEBUG=true run -0 ddev restart -y
 
   # web_extra_exposed_ports only takes effect after this restart, so the
   # generic webserver has no primary URL to report until now (see
@@ -58,8 +51,7 @@ EOF
 #  run docker exec ddev-router curl -s http://127.0.0.1:10999/api/http/routers
 #  echo "# Traefik routers: $output"
 
-  DDEV_DEBUG=true run ddev launch
-  assert_success
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output "FULLURL ${PRIMARY_URL}"
 
   # Diagnostic: show traefik config files in volume
@@ -70,7 +62,5 @@ EOF
 #  echo "# Traefik routers: $output"
 
   # validate running project
-  run curl -sfv ${PRIMARY_URL}
-  assert_output --partial "DDEV experimental Node.js"
-  assert_success
+  _assert_page_contains ${PRIMARY_URL} "DDEV experimental Node.js"
 }

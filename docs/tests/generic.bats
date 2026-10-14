@@ -13,15 +13,12 @@ teardown() {
 
 @test "Generic PHP built-in server quickstart with $(ddev --version)" {
   GENERIC_SITENAME=${PROJNAME}
-  run mkdir -p ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
-  assert_success
+  run -0 mkdir -p ${GENERIC_SITENAME} && cd ${GENERIC_SITENAME}
 
-  run ddev config --project-type=php
-  assert_success
+  run -0 ddev config --project-type=php
 
   echo "<?php phpinfo(); ?>" > index.php
-  run ddev mutagen sync
-  assert_success
+  run -0 ddev mutagen sync
   assert_file_exist index.php
 
   cat <<'EOF' > .ddev/config.php-server.yaml
@@ -36,19 +33,16 @@ web_extra_exposed_ports:
       http_port: 80
       https_port: 443
 EOF
-  run ddev mutagen sync
-  assert_success
+  run -0 ddev mutagen sync
   assert_file_exist .ddev/config.php-server.yaml
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
   _extra_info
 
   # ddev launch
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output "FULLURL ${PRIMARY_URL}"
-  assert_success
 
   #echo "#" >&3
   # run docker exec ddev-router curl -sI http://ddev-my-generic-site-web:8000
@@ -68,11 +62,9 @@ EOF
   # printf '%s\n' "$(echo "$output" | jq -r)" | sed 's/^/# /' >&3
 
   # validate running project
-  run curl -sfI ${PRIMARY_URL}
+  run -0 curl -sfI ${PRIMARY_URL}
   assert_line --partial "x-powered-by: PHP"
-  assert_success
 
-  run curl -sf ${PRIMARY_URL}
+  run -0 curl -sf ${PRIMARY_URL}
   assert_line --partial "Built-in HTTP server"
-  assert_success
 }

@@ -13,13 +13,10 @@ teardown() {
 
 @test "sveltekit quickstart with $(ddev --version)" {
   SVELTEKIT_SITENAME=${PROJNAME}
-  run mkdir -p ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}
-  assert_success
+  run -0 mkdir -p ${SVELTEKIT_SITENAME} && cd ${SVELTEKIT_SITENAME}
 
-  run ddev config --project-type=generic --webserver-type=generic
-  assert_success
-  DDEV_DEBUG=true run ddev start -y
-  assert_success
+  run -0 ddev config --project-type=generic --webserver-type=generic
+  DDEV_DEBUG=true run -0 ddev start -y
 
   cat <<EOF > .ddev/config.sveltekit.yaml
 web_extra_exposed_ports:
@@ -32,24 +29,17 @@ web_extra_daemons:
       command: "node build"
       directory: /var/www/html
 EOF
-  run ddev mutagen sync
-  assert_success
+  run -0 ddev mutagen sync
   assert_file_exist .ddev/config.sveltekit.yaml
 
-  run ddev exec "yes | npx sv create --template=demo --types=ts --no-add-ons --no-install ."
-  assert_success
+  run -0 ddev exec "yes | npx sv create --template=demo --types=ts --no-add-ons --no-install ."
 
-  run ddev exec "sed -i -e 's#adapter-auto#adapter-node#' -e 's#^export default defineConfig({#&\n\tserver: { port: 3000, allowedHosts: true },#' vite.config.ts"
-  assert_success
+  run -0 ddev exec "sed -i -e 's#adapter-auto#adapter-node#' -e 's#^export default defineConfig({#&\n\tserver: { port: 3000, allowedHosts: true },#' vite.config.ts"
 
-  run ddev npm install @sveltejs/adapter-node
-  assert_success
-  run ddev npm install
-  assert_success
-  run ddev npm run build
-  assert_success
-  DDEV_DEBUG=true run ddev restart -y
-  assert_success
+  run -0 ddev npm install @sveltejs/adapter-node
+  run -0 ddev npm install
+  run -0 ddev npm run build
+  DDEV_DEBUG=true run -0 ddev restart -y
 
   # web_extra_exposed_ports only takes effect after this restart, so the
   # generic webserver has no primary URL to report until now (see
@@ -57,11 +47,8 @@ EOF
   _extra_info
 
   # ddev launch
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output "FULLURL ${PRIMARY_URL}"
-  assert_success
   # validate running project
-  run curl -sfv ${PRIMARY_URL}
-  assert_output --partial "to your new"
-  assert_success
+  _assert_page_contains ${PRIMARY_URL} "to your new"
 }

@@ -12,31 +12,24 @@ teardown() {
 }
 
 @test "CodeIgniter composer based quickstart with $(ddev --version)" {
-  run mkdir -p my-codeigniter-site && cd my-codeigniter-site
-  assert_success
+  run -0 mkdir -p my-codeigniter-site && cd my-codeigniter-site
 
-  run ddev config --project-type=codeigniter --docroot=public
-  assert_success
+  run -0 ddev config --project-type=codeigniter --docroot=public
 
-  run ddev start -y
-  assert_success
+  run -0 ddev start -y
 
   _extra_info
 
-  run ddev composer create-project codeigniter4/appstarter
-  assert_success
+  run -0 ddev composer create-project codeigniter4/appstarter
 
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output --partial "FULLURL ${PRIMARY_URL}"
-  assert_success
 
   # validate running project - check status code
-  run curl -sf -o /dev/null -w "%{http_code}" ${PRIMARY_URL}
-  assert_success
+  run -0 curl -sf -o /dev/null -w "%{http_code}" ${PRIMARY_URL}
   assert_output "200"
 
   # validate running project - check content
-  run curl -sf ${PRIMARY_URL}
-  assert_success
+  run -0 curl -sf ${PRIMARY_URL}
   assert_output --partial "Welcome to CodeIgniter 4"
 }

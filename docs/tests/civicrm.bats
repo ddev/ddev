@@ -12,11 +12,9 @@ teardown() {
 }
 
 @test "CiviCRM quickstart with $(ddev --version)" {
-  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  assert_success
+  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
 
-  run ddev config --project-type=php --composer-root=core --upload-dirs=public/media
-  assert_success
+  run -0 ddev config --project-type=php --composer-root=core --upload-dirs=public/media
 
   # GitHub Actions always fail on "ddev composer require civicrm/cli-tools --no-scripts"
   # We can use newer curl from backports for testing to avoid this problem.
@@ -25,40 +23,32 @@ teardown() {
 RUN printf "Types: deb\nURIs: http://deb.debian.org/debian\nSuites: trixie-backports\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.pgp\n" > /etc/apt/sources.list.d/debian-backports.sources
 EOF
   assert_file_exist .ddev/web-build/pre.Dockerfile.backports
-  run ddev config --webimage-extra-packages="curl/trixie-backports"
-  assert_success
+  run -0 ddev config --webimage-extra-packages="curl/trixie-backports"
 
-  run ddev start
-  assert_success
+  run -0 ddev start
 
   _extra_info
 
-  run ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
-  assert_success
+  run -0 ddev exec "curl -LsS https://download.civicrm.org/latest/civicrm-STABLE-standalone.tar.gz -o /tmp/civicrm-standalone.tar.gz"
 
-  run ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
-  assert_success
+  run -0 ddev exec "tar --strip-components=1 -xzf /tmp/civicrm-standalone.tar.gz"
 
-  run ddev composer require civicrm/cli-tools --no-scripts
-  assert_success
+  run -0 ddev composer require civicrm/cli-tools --no-scripts
 
-  run ddev exec cv core:install \
+  run -0 ddev exec cv core:install \
       --cms-base-url='$DDEV_PRIMARY_URL' \
       --db=mysql://db:db@db/db \
       -m loadGenerated=1 \
       -m extras.adminUser=admin \
       -m extras.adminPass=admin \
       -m extras.adminEmail=admin@example.com
-  assert_success
 
   # ddev launch
-  DDEV_DEBUG=true run ddev launch
+  DDEV_DEBUG=true run -0 ddev launch
   assert_output "FULLURL ${PRIMARY_URL}"
-  assert_success
 
   # validate running project
-  run curl -sfIv ${PRIMARY_URL}
+  run -0 curl -sSfI ${PRIMARY_URL}
   assert_output --partial "location: /civicrm/home"
   assert_output --partial "HTTP/2 302"
-  assert_success
 }

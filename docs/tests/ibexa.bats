@@ -13,37 +13,27 @@ teardown() {
 
 @test "Ibexa DXP quickstart with $(ddev --version)" {
   # mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  run mkdir -p ${PROJNAME} && cd ${PROJNAME}
-  assert_success
-  run ddev config --project-type=symfony --docroot=public
-  assert_success
-  run ddev start -y
-  assert_success
-  run ddev composer create-project ibexa/oss-skeleton
-  assert_success
-  run ddev console ibexa:install --no-interaction
-  assert_success
-  run ddev console ibexa:graphql:generate-schema
-  assert_success
+  run -0 mkdir -p ${PROJNAME} && cd ${PROJNAME}
+  run -0 ddev config --project-type=symfony --docroot=public
+  run -0 ddev start -y
+  run -0 ddev composer create-project ibexa/oss-skeleton
+  run -0 ddev console ibexa:install --no-interaction
+  run -0 ddev console ibexa:graphql:generate-schema
 
   _extra_info
 
-  DDEV_DEBUG=true run ddev launch /admin/login
+  DDEV_DEBUG=true run -0 ddev launch /admin/login
   assert_output "FULLURL ${PRIMARY_URL}/admin/login"
-  assert_success
   # validate running project
-  run curl -sfIv ${PRIMARY_URL}
+  run -0 curl -sSfI ${PRIMARY_URL}
   assert_output --partial "x-powered-by: Ibexa Open Source v5"
   assert_output --partial "HTTP/2 200"
-  assert_success
 
-  run curl -sfv ${PRIMARY_URL}
-  assert_output --partial "Open-source solution for building custom, scalable websites."
-  assert_output --partial "Powered by Ibexa DXP"
-  assert_success
+  _assert_page_contains ${PRIMARY_URL} \
+    "Open-source solution for building custom, scalable websites." \
+    "Powered by Ibexa DXP"
 
-  run curl -sfv ${PRIMARY_URL}/admin/login
-  assert_output --partial "Welcome to<br/> Ibexa DXP"
-  assert_output --partial "<h3 class=\"ibexa-login__support-headline\">Get to know Ibexa DXP</h3>"
-  assert_success
+  _assert_page_contains ${PRIMARY_URL}/admin/login \
+    "Welcome to<br/> Ibexa DXP" \
+    "<h3 class=\"ibexa-login__support-headline\">Get to know Ibexa DXP</h3>"
 }
