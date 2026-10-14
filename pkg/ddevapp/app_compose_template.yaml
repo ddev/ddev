@@ -34,6 +34,7 @@ services:
       - {{ .SeedSnapshotMountDir }}:{{ .SeedSnapshotMountTarget }}:ro
       {{ end }}
       - ddev-global-cache:/mnt/ddev-global-cache
+      - db-history:/mnt/ddev-history
     restart: "no"
 
     user: '$DDEV_UID:$DDEV_GID'
@@ -63,9 +64,10 @@ services:
       - DDEV_USER
       - DDEV_VERSION
       - DOCKER_IP={{ .DockerIP }}
+      - HISTFILE=/mnt/ddev-history/bash_history
       - IS_DDEV_PROJECT=true
       - LINES
-      - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-db/mysql_history
+      - MYSQL_HISTFILE=/mnt/ddev-history/mysql_history
       - PGDATABASE=db
       - PGHOST=127.0.0.1
       - PGPASSWORD=db
@@ -73,6 +75,7 @@ services:
       - POSTGRES_PASSWORD=db
       - POSTGRES_USER=db
       - POSTGRES_DB=db
+      - PSQL_HISTORY=/mnt/ddev-history/psql_history
       {{- if ne (env "DDEV_PAGER") "" }}
       - PAGER=${DDEV_PAGER}
       {{- end }}
@@ -153,6 +156,7 @@ services:
         {{- end }} {{- /* end if .MutagenEnabled */}}
       {{- end }} {{- /* end else of if .NoBindMounts */}}
       - ddev-global-cache:/mnt/ddev-global-cache
+      - web-history:/mnt/ddev-history
       {{- if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{- end }}
@@ -236,7 +240,7 @@ services:
     {{ end }}
     - IS_DDEV_PROJECT=true
     - LINES
-    - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
+    - MYSQL_HISTFILE=/mnt/ddev-history/mysql_history
     - N_PREFIX=/usr/local/n
     - N_CACHE_PREFIX=/mnt/ddev-global-cache/n_prefix/${DDEV_SITENAME}-web
     - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
@@ -248,6 +252,7 @@ services:
     - PGHOST=db
     - PGPASSWORD=db
     - PGUSER=db
+    - PSQL_HISTORY=/mnt/ddev-history/psql_history
     - PHP_IDE_CONFIG=serverName={{ .Name | lower }}.${DDEV_TLD}
     - SSH_AUTH_SOCK=/home/.ssh-agent/socket
     - TZ={{ .Timezone }}
@@ -321,6 +326,14 @@ volumes:
   ddev-global-cache:
     name: ddev-global-cache
     external: true
+  web-history:
+    name: ddev-${DDEV_SITENAME}-web-history
+    external: true
+  {{ if not .OmitDB }}
+  db-history:
+    name: ddev-${DDEV_SITENAME}-db-history
+    external: true
+  {{ end }}{{/* end if not .OmitDB */}}
   {{ if .NoBindMounts }}
   ddev-config:
     name: ${DDEV_SITENAME}-ddev-config

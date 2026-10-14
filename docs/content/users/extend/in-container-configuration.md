@@ -140,7 +140,7 @@ export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 
 The `web` container is created again from its image after every [`ddev restart`](../usage/commands.md#restart), [`ddev stop`](../usage/commands.md#stop), or [`ddev poweroff`](../usage/commands.md#poweroff). Project files and databases are kept, but other changes in the container are lost, including everything in the home directory. `homeadditions` only copies files into the container, never back out.
 
-By default, only the [`ddev-global-cache` volume](../usage/architecture.md#the-ddev-global-cache-volume) survives outside the project. This is where DDEV keeps caches and shell history.
+By default, only the [`ddev-global-cache` volume](../usage/architecture.md#the-ddev-global-cache-volume), where DDEV keeps caches, and the [history volumes](../usage/architecture.md#history-volumes), where it keeps shell and database client history, survive outside the project.
 
 | Change made in the container | How to keep it |
 | --- | --- |

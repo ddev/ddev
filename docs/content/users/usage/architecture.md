@@ -218,12 +218,10 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 | Directory | Scope | Contents |
 | --- | --- | --- |
-| `bashhistory/<project>-db`, `bashhistory/<project>-web` | Per project | Bash history |
 | `composer` | Shared | Composer cache |
 | `corepack` | Shared | Package managers installed by `corepack` |
 | `global-commands` | Shared | [Global commands](../extend/custom-commands.md#global-commands), copied from the host |
 | `mkcert` | Shared | The mkcert certificate authority, copied from the host and used for HTTPS certificates |
-| `mysqlhistory/<project>-db`, `mysqlhistory/<project>-web` | Per project | MySQL client history |
 | `n_prefix/<project>-web` | Per project | Node.js versions downloaded by `n` |
 | `npm` | Shared | npm cache |
 | `pip` | Shared | pip cache, created only if you install pip, for example with [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages) |
@@ -233,9 +231,13 @@ Here’s a basic diagram of how it works inside the Docker network:
 
 [`ddev delete`](commands.md#delete) removes the project's own directories and router files. To keep your own files in this volume, see [Persisting Changes Across Restarts](../extend/in-container-configuration.md#persisting-changes-across-restarts).
 
-To clear the volume, for example to free Docker provider disk space, remove it. (Any stored global cache for all projects will be lost, but will be rebuilt as needed.) This also removes the Bash and MySQL history of every project. DDEV creates the volume again on the next [`ddev start`](commands.md#start):
+To clear the volume, for example to free Docker provider disk space, remove it. (Any stored global cache for all projects will be lost, but will be rebuilt as needed.) DDEV creates the volume again on the next [`ddev start`](commands.md#start):
 
 ```bash
 ddev poweroff
 docker volume rm ddev-global-cache
 ```
+
+## History Volumes
+
+Each project's `web` and `db` containers keep their history in their own volume, `ddev-<project>-web-history` and `ddev-<project>-db-history`, mounted at `/mnt/ddev-history`. It holds Bash history in `bash_history`, MySQL and MariaDB client history in `mysql_history`, and `psql` history in `psql_history`. [`ddev delete`](commands.md#delete) removes both volumes.
