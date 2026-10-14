@@ -110,6 +110,15 @@ func (v *dashboardView) setProjects(projects []ProjectInfo) {
 	v.selectProject(selected)
 }
 
+// markUnknown shows the projects still loading as unknown.
+func (v *dashboardView) markUnknown() {
+	for i := range v.items {
+		if v.items[i].Status == statusLoading {
+			v.items[i].Status = statusUnknown
+		}
+	}
+}
+
 // refilter matches the items against the filter.
 func (v *dashboardView) refilter() {
 	v.visible = nil
@@ -202,9 +211,6 @@ func (v dashboardView) keys(k KeyMap) KeyMap {
 		b.SetEnabled(p != nil)
 	}
 	k.XHGui.SetEnabled(p != nil && p.Detail != nil && usesXHGui(p.Detail.XHProfMode))
-	scrolls := len(v.visible) > v.vp.Height()
-	k.PageUp.SetEnabled(scrolls)
-	k.PageDown.SetEnabled(scrolls)
 	hasProjects := len(v.items) > 0
 	k.StartAll.SetEnabled(hasProjects)
 	k.StopAll.SetEnabled(hasProjects)

@@ -171,7 +171,7 @@ func (m AppModel) update(msg tea.Msg) (AppModel, tea.Cmd) {
 
 	case clipboardMsg:
 		if msg.fallback != "" {
-			m, cmd := m.setStatus("Copied the URL using the terminal's clipboard")
+			m, cmd := m.setStatus("Sent the URL to the terminal's clipboard")
 			return m, tea.Batch(cmd, tea.SetClipboard(msg.fallback))
 		}
 		return m.setStatus("Copied the URL to the clipboard")
@@ -198,6 +198,10 @@ func (m AppModel) restyle() AppModel {
 }
 
 func (m AppModel) updateKey(msg tea.KeyPressMsg) (AppModel, tea.Cmd) {
+	// A key means the error was seen.
+	if m.statusIsErr {
+		m.status, m.statusIsErr = "", false
+	}
 	if msg.String() == "ctrl+c" {
 		return m.quit()
 	}
@@ -287,6 +291,8 @@ func (m AppModel) showProjects(msg projectsLoadedMsg) (AppModel, tea.Cmd) {
 		// Until a load succeeds, the error also stands in for the spinner.
 		if !m.dashboard.loaded || len(m.dashboard.items) == 0 {
 			m.dashboard.err = msg.err
+			m.dashboard.markUnknown()
+			m.router, m.sshAgent = health{status: statusUnknown}, health{status: statusUnknown}
 		}
 		if len(m.dashboard.items) > 0 {
 			return m.setError(fmt.Sprintf("Error loading projects: %v", msg.err)), nil

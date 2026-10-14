@@ -92,7 +92,7 @@ func execDdevCmd(op operationAction) tea.Cmd {
 	if err != nil {
 		return func() tea.Msg { return op.finished(err) }
 	}
-	return tea.Exec(terminalCommand{Cmd: c, pause: execPause}, op.finished)
+	return tea.Exec(terminalCommand{Cmd: c, pause: execPause, shell: op.shell}, op.finished)
 }
 
 // finished reports how the command of op exited.
@@ -106,10 +106,13 @@ func (op operationAction) finished(err error) tea.Msg {
 
 // terminalCommand runs a ddev subcommand in the terminal. It prints the
 // command first, so the terminal's scrollback shows what ran even when it
-// prints nothing, and leaves the output up for pause after it exits.
+// prints nothing, and leaves the output up for pause after it exits, or
+// until Enter after a failure.
 type terminalCommand struct {
 	*exec.Cmd
 	pause time.Duration
+	// shell is set for ssh, whose exit status is not a failure.
+	shell bool
 }
 
 func (c terminalCommand) Run() error {
@@ -117,12 +120,17 @@ func (c terminalCommand) Run() error {
 		_, _ = fmt.Fprintln(c.Stdout, shellLine(c.Dir, c.Args[1:]))
 	}
 	err := c.Cmd.Run()
+	if err != nil && !c.shell && c.Stdin != nil && c.Stdout != nil {
+		_, _ = fmt.Fprint(c.Stdout, "\nPress Enter to return to the dashboard")
+		_, _ = bufio.NewReader(c.Stdin).ReadString('\n')
+		return err
+	}
 	time.Sleep(c.pause)
 	return err
 }
 
-// shellLine is a shell command that runs ddev with args in dir, or in the
-// current directory when dir is empty.
+// shellLine is the commands that run ddev with args in dir, or in the
+// current directory when dir is empty. A separate cd works in any shell.
 func shellLine(dir string, args []string) string {
 	line := "$ ddev " + strings.Join(args, " ")
 	if dir == "" {
@@ -135,7 +143,7 @@ func shellLine(dir string, args []string) string {
 		// Quoted, ~ would not expand, so the full path is used.
 		path = "'" + strings.ReplaceAll(filepath.ToSlash(dir), "'", `'\''`) + "'"
 	}
-	return "$ cd " + path + " && ddev " + strings.Join(args, " ")
+	return "$ cd " + path + "\n" + line
 }
 
 // The setters hand the command the terminal's own files. A writer that is

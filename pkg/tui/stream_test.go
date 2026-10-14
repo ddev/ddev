@@ -151,6 +151,17 @@ func TestTerminalCommand(t *testing.T) {
 	require.Error(t, cmd.Run(), "a failure is reported")
 	require.GreaterOrEqual(t, time.Since(begin), cmd.pause, "the output stays up before the TUI returns")
 	require.Equal(t, shellLine(dir, []string{"start", "alpha"})+"\nstarted\n", out.String(), "the command shows above its output")
+
+	for _, shell := range []bool{false, true} {
+		c, err = ddevCommand(dir, "start", "alpha")
+		require.NoError(t, err)
+		out.Reset()
+		cmd = terminalCommand{Cmd: c, shell: shell}
+		cmd.SetStdin(strings.NewReader("\n"))
+		cmd.SetStdout(&out)
+		require.Error(t, cmd.Run())
+		require.Equal(t, !shell, strings.Contains(out.String(), "Press Enter"), "a shell's exit status is not a failure")
+	}
 }
 
 func TestShellExitStatus(t *testing.T) {
@@ -174,8 +185,8 @@ func TestShellLine(t *testing.T) {
 	home, err := os.UserHomeDir()
 	require.NoError(t, err)
 	require.Equal(t, "$ ddev start --all", shellLine("", []string{"start", "--all"}))
-	require.Equal(t, "$ cd ~/apps/my-site_2 && ddev launch", shellLine(filepath.Join(home, "apps", "my-site_2"), []string{"launch"}))
-	require.Equal(t, `$ cd '/srv/it'\''s here' && ddev launch`, shellLine("/srv/it's here", []string{"launch"}), "quoted, without ~, which would not expand")
+	require.Equal(t, "$ cd ~/apps/my-site_2\n$ ddev launch", shellLine(filepath.Join(home, "apps", "my-site_2"), []string{"launch"}))
+	require.Equal(t, "$ cd '/srv/it'\\''s here'\n$ ddev launch", shellLine("/srv/it's here", []string{"launch"}), "quoted, without ~, which would not expand")
 }
 
 // collectStream runs the stream's commands until it ends.

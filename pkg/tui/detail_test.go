@@ -184,6 +184,13 @@ func TestDetailServicesWhenNarrow(t *testing.T) {
 	// Wide enough for the table, but not for its info column.
 	view = screen(detailModel(t, 112, 60, sampleDetail()))
 	require.Regexp(t, `\n redis +● running +6379 \(containers only\) *│?\n {10}Redis 7 `, view)
+
+	noPorts := sampleDetail()
+	for i := range noPorts.Services {
+		noPorts.Services[i].Ports = nil
+	}
+	require.NotContains(t, screen(detailModel(t, 50, 60, noPorts)), "Ports", "no legend without a port to explain")
+	require.NotContains(t, screen(detailModel(t, 120, 60, noPorts)), "Ports")
 }
 
 func TestDetailSharedContainerHealth(t *testing.T) {
@@ -396,6 +403,9 @@ func TestXdebug(t *testing.T) {
 	require.Contains(t, screen(m), "Toggling Xdebug...")
 	settle(t, m, cmd)
 	require.Equal(t, []string{"/home/user/apps/alpha on"}, c.xdebug, "the known state says which way to switch")
+	_, cmd = sendCmd(t, m, press("X"))
+	settle(t, m, cmd)
+	require.Len(t, c.xdebug, 1, "a second press waits for the reply")
 
 	on := send(t, m, xdebugStatusMsg{appRoot: "/home/user/apps/alpha", enabled: true, toggled: true})
 	require.Contains(t, screen(on), "Xdebug enabled")
@@ -448,7 +458,7 @@ func TestCopyURL(t *testing.T) {
 	require.Equal(t, clipboardMsg{fallback: "https://alpha.ddev.site"}, msg)
 	m, cmd = sendCmd(t, m, msg)
 	require.NotNil(t, cmd, "the terminal's clipboard is asked instead")
-	require.Contains(t, screen(m), "using the terminal's clipboard")
+	require.Contains(t, screen(m), "Sent the URL to the terminal's clipboard")
 
 	noURL := sampleDetail()
 	noURL.PrimaryURL = ""

@@ -79,6 +79,10 @@ func TestDetailFromDescribeVariants(t *testing.T) {
 		raw["dbinfo"] = map[string]any{"published_port": -1}
 	})
 	require.Empty(t, stopped.DBHostPort, "a stopped project has no published port")
+	stoppedRedis := parseDescribe(t, func(raw map[string]any) {
+		raw["services"].(map[string]any)["redis"].(map[string]any)["status"] = ddevapp.SiteStopped
+	})
+	require.Empty(t, stoppedRedis.Services[2].Ports, "nothing listens on a stopped service's ports")
 
 	require.False(t, parseDescribe(t, nil).DBOmitted)
 	noDB := parseDescribe(t, func(raw map[string]any) { delete(raw, "dbinfo") })

@@ -193,6 +193,8 @@ func (v detailView) update(msg tea.KeyPressMsg, k KeyMap) (detailView, tea.Cmd, 
 		if *v.xdebug {
 			arg = "off"
 		}
+		// A second press waits for the reply.
+		v.xdebug = nil
 		return v, nil, statusAction{text: "Toggling Xdebug...", cmd: xdebugStatus(d.AppRoot, arg)}
 	case key.Matches(msg, k.CopyURL):
 		return v, copyToClipboard(d.PrimaryURL), nil
@@ -445,7 +447,7 @@ func servicesTable(s Styles, d *ProjectDetail, w int) []string {
 		info                     string
 	}
 	var rows []service
-	nameW, statusW, urlW, portsW, infoW := len("Service"), len("Status"), 0, len(legend), 0
+	nameW, statusW, urlW, portsW, infoW := len("Service"), len("Status"), 0, 0, 0
 	for _, svc := range d.Services {
 		var ports []string
 		for _, p := range svc.Ports {
@@ -468,6 +470,11 @@ func servicesTable(s Styles, d *ProjectDetail, w int) []string {
 	}
 	if urlW > 0 {
 		urlW = max(urlW, len("URL"))
+	}
+	if portsW > 0 {
+		portsW = max(portsW, len(legend))
+	} else {
+		legend = ""
 	}
 	indent := " " + strings.Repeat(" ", nameW+2)
 	var lines []string
@@ -499,7 +506,9 @@ func servicesTable(s Styles, d *ProjectDetail, w int) []string {
 		}
 		return lines
 	}
-	add(s.Muted.Render(" " + legend))
+	if legend != "" {
+		add(s.Muted.Render(" " + legend))
+	}
 	for _, r := range rows {
 		add(" " + fit(r.name, nameW) + "  " + r.status)
 		for _, v := range append(append([]string{r.url}, r.portList...), s.Muted.Render(r.info)) {

@@ -264,6 +264,7 @@ func TestListScrolls(t *testing.T) {
 	require.Regexp(t, `^│+┃+$`, strings.TrimSpace(listScrollbar(m)))
 	// A mouse wheel sends several arrows a notch, which overshoot the end.
 	require.Equal(t, 29, keys(t, m, "j", "j", "j").dashboard.cursor, "the selection stops at the last project")
+	require.Equal(t, 2, keys(t, newModel(t, 80, 16, sampleProjects()...), "pgdown").dashboard.cursor, "pgdown reaches the last project when all fit")
 	require.Contains(t, screen(keys(t, m, "g")), "> p00 ", "the view follows the selection back up")
 	m = keys(t, m, "pgup", "pgup", "pgup", "pgup")
 	require.Equal(t, 0, m.dashboard.cursor)
@@ -546,7 +547,8 @@ func TestProjectsListedBeforeStatus(t *testing.T) {
 	// A failure to load the status leaves the listed projects up, without
 	// the spinner, loading again with the next refresh.
 	failed := send(t, newModel(t, 120, 24), projectsListedMsg{projects: listedProjects()}, projectsLoadedMsg{err: errors.New("Docker error")})
-	require.Contains(t, screen(failed), "gamma  ◌ loading")
+	require.Contains(t, screen(failed), "gamma  ? unknown")
+	require.Contains(t, screen(failed), "Router ? unknown")
 	require.Contains(t, screen(failed), "Error loading projects: Docker error")
 	require.False(t, failed.busy())
 
@@ -736,6 +738,7 @@ func TestStatusMessages(t *testing.T) {
 	m = m.setError("broken")
 	m = send(t, m, statusExpiredMsg{id: first}, statusExpiredMsg{id: m.statusID - 1})
 	require.Contains(t, screen(m), "broken", "errors stay until replaced")
+	require.NotContains(t, screen(keys(t, m, "j")), "broken", "or until a key is pressed")
 
 	warned := send(t, m, projectsLoadedMsg{projects: sampleProjects(), warning: "Something went wrong with /x"})
 	require.Equal(t, "broken", warned.status, "what a load logged does not replace an error")

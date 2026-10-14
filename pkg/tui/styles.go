@@ -92,6 +92,8 @@ func (s Styles) statusLook(status string) (string, lipgloss.Style) {
 	switch status {
 	case statusLoading:
 		return "◌", s.Muted
+	case statusUnknown:
+		return "?", s.Muted
 	case ddevapp.SiteRunning, "healthy":
 		return "●", s.Running
 	case ddevapp.SitePaused, ddevapp.SiteStarting:

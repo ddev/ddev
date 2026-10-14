@@ -149,6 +149,9 @@ type describeJSON struct {
 // Docker is asked.
 const statusLoading = "loading"
 
+// statusUnknown replaces statusLoading when Docker is unreachable.
+const statusUnknown = "unknown"
+
 // containerDisabled is the status of a shared container that every project
 // leaves out with omit_containers, or that the environment cannot run.
 const containerDisabled = "disabled"
@@ -284,6 +287,10 @@ func loadDetailCmd(appRoot string) tea.Cmd {
 func loadDetail(appRoot string) (ProjectDetail, error) {
 	if _, err := os.Stat(appRoot); errors.Is(err, os.ErrNotExist) {
 		return ProjectDetail{}, fmt.Errorf("project directory no longer exists: %s", appRoot)
+	}
+	// Without Docker, Describe would report the project as stopped.
+	if _, err := dockerutil.GetDockerVersion(); err != nil {
+		return ProjectDetail{}, err
 	}
 	app, err := ddevapp.NewApp(appRoot, true)
 	if err != nil {
@@ -456,6 +463,10 @@ func detailFromDescribe(d describeJSON) ProjectDetail {
 		published := map[string]string{}
 		for _, p := range s.HostPorts {
 			published[p.Exposed] = p.Host
+		}
+		// Nothing listens on a stopped service's ports.
+		if s.Status == ddevapp.SiteStopped {
+			s.ExposedPorts = ""
 		}
 		for port := range strings.SplitSeq(s.ExposedPorts, ",") {
 			if port = strings.TrimSpace(port); port != "" {
