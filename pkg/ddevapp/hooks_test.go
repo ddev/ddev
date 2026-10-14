@@ -66,7 +66,7 @@ func TestProcessHooks(t *testing.T) {
 		//"composer with exec_raw":               {"composer:\n    exec_raw: [licenses, --format=json]", "no-version-set", "Running task: Composer command '[licenses --format=json]' in web container"},
 		"exec ls in web":                       {"exec: ls /usr/local/bin", "acli\nbuild_php_extension.sh\ncomposer", "Running task: Exec command 'ls /usr/local/bin'"},
 		"exec-host echo":                       {"exec-host: \"echo something\"", "something\n", "Running task: Exec command 'echo something' on the host"},
-		"exec with service db":                 {"exec: echo MYSQL_HISTFILE=${MYSQL_HISTFILE:-}\n    service: db", "MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory", "Running task: Exec command 'echo MYSQL_HISTFILE=${MYSQL_HISTFILE:-}' in container/service 'db'"},
+		"exec with service db":                 {"exec: echo MYSQL_HISTFILE=${MYSQL_HISTFILE:-}\n    service: db", "MYSQL_HISTFILE=/mnt/ddev-history/mysql_history", "Running task: Exec command 'echo MYSQL_HISTFILE=${MYSQL_HISTFILE:-}' in container/service 'db'"},
 		"exec with user root string":           {"exec: ls -la /root\n    service: db\n    user: root", "total ", "Running task: Exec command 'ls -la /root' in container/service 'db'"},
 		"exec with user 0 integer":             {"exec: ls -la /root\n    service: db\n    user: 0", "total ", "Running task: Exec command 'ls -la /root' in container/service 'db'"},
 		"exec with environment variable":       {"exec: \"echo TestProcessHooks > /var/www/html/TestProcessHooks-php-version-${DDEV_PHP_VERSION}.txt\"", "", "Running task: Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks-php-version-${DDEV_PHP_VERSION}.txt'"},
