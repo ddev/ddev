@@ -718,11 +718,15 @@ func ReadProjectList() error {
 	err = yaml.Unmarshal(source, &projects)
 	if err != nil {
 		badFile := globalProjectsFile + ".bad"
-		output.UserErr.Warningf("Unable to parse global projects file %s, moving it to %s and starting with an empty project list: %v", globalProjectsFile, badFile, err)
 		DdevProjectList = make(map[string]*ProjectInfo)
-		if err = os.Rename(globalProjectsFile, badFile); err != nil {
-			return fmt.Errorf("unable to move unparseable global projects file %s to %s: %v", globalProjectsFile, badFile, err)
+		if renameErr := os.Rename(globalProjectsFile, badFile); renameErr != nil {
+			// Another ddev process, such as the TUI, may have set it aside first.
+			if os.IsNotExist(renameErr) {
+				return nil
+			}
+			return fmt.Errorf("unable to move unparseable global projects file %s to %s: %v", globalProjectsFile, badFile, renameErr)
 		}
+		output.UserErr.Warningf("Unable to parse global projects file %s, moved it to %s and started with an empty project list: %v", globalProjectsFile, badFile, err)
 		return WriteProjectList(DdevProjectList)
 	}
 	if projects == nil {
