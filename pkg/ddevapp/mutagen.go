@@ -32,10 +32,19 @@ import (
 const mutagenSignatureLabelName = `com.ddev.volume-signature`
 const mutagenConfigFileHashLabelName = `com.ddev.config-hash`
 
+// mutagenChownScript chowns the Mutagen volume at /var/www to $OWNER,
+// pruning every mount point beneath it. upload_dirs, .git and custom compose
+// mounts are bind mounts of host files there, and find -xdev cannot skip them
+// because on native Linux they often share the volume's device.
+const mutagenChownScript = `prune=()
+while read -r mp; do
+  prune+=(-path "$(printf '%b' "$mp")" -prune -o)
+done < <(awk '$5 ~ "^/var/www/" {print $5}' /proc/self/mountinfo)
+find /var/www "${prune[@]}" -exec chown -hf "$OWNER" {} + 2>/dev/null || true`
+
 // SetMutagenVolumeOwnership chowns the volume in use to the current user.
-// The Mutagen volume is mounted both in /var/www (where it gets used) and
-// also on /tmp/project_mutagen (where it can be chowned without accidentally hitting
-// lots of bind-mounted files).
+// It runs in the web container after it starts, because Docker creates any
+// missing working_dir and bind-mount parent directories in the volume as root.
 func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// Make sure that if we have a volume mount it's got proper ownership
 	uidStr, gidStr, _ := dockerutil.GetContainerUser()
@@ -45,14 +54,13 @@ func SetMutagenVolumeOwnership(app *DdevApp) error {
 		uidStr, gidStr = "0", "0"
 	}
 	util.Verbose("Chowning Mutagen Docker volume for user %s", uidStr)
-	// Use -f to suppress errors from transient .mutagen-temporary-staging-* files
-	// that may appear/disappear during an active or resuming sync session.
-	// Use || true because the Exec wrapper adds set -eu which would exit on
-	// chown's non-zero exit code even with -f.
+	// The script discards errors and exits 0 because transient
+	// .mutagen-temporary-staging-* files can vanish mid-walk during an active sync,
+	// and the Exec wrapper adds set -eu.
 	_, _, err := app.Exec(
 		&ExecOpts{
 			Dir:  "/tmp",
-			Cmd:  fmt.Sprintf("chown -Rf %s:%s /tmp/project_mutagen || true", uidStr, gidStr),
+			Cmd:  fmt.Sprintf("OWNER=%s:%s; %s", uidStr, gidStr, mutagenChownScript),
 			User: "root",
 		})
 	if err != nil {
