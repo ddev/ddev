@@ -26,6 +26,12 @@ set -eu -o pipefail
 # detection of readiness right when it matters most.
 rm -f /tmp/healthy
 
+# Traefik skips the Let's Encrypt resolver when acme.json is not mode 600.
+acme_json=/mnt/ddev-global-cache/traefik/acme.json
+if [ -f "${acme_json}" ] && ! chmod 600 "${acme_json}"; then
+  echo "Unable to chmod 600 ${acme_json}; Let's Encrypt certificates may not be used" >&2
+fi
+
 DDEV_ROUTER_FALLBACK_PORT="${DDEV_ROUTER_FALLBACK_PORT:-8999}"
 
 socat -T 5 TCP-LISTEN:"${DDEV_ROUTER_FALLBACK_PORT}",bind=127.0.0.1,reuseaddr,fork \

@@ -67,10 +67,10 @@ var BaseDBTagBranch = "20261001_mysql_97_complaints"
 var TraefikRouterImage = "ddev/ddev-traefik-router"
 
 // TraefikRouterTag is traefik router tag
-var TraefikRouterTag = "9e412134f0" // 20260922_rfay_dont_build_image-9e412134f0
+var TraefikRouterTag = "2cd661f210" // 20261014_rfay_router_volume-2cd661f210
 
 // TraefikRouterTagBranch is the branch TraefikRouterTag's content was built from.
-var TraefikRouterTagBranch = "20260922_rfay_dont_build_image"
+var TraefikRouterTagBranch = "20261014_rfay_router_volume"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
