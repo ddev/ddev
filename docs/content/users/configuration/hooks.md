@@ -51,6 +51,11 @@ For each hook, global tasks run first, then the project's tasks. If a project ha
     !!!tip
         Only `exec-host` tasks can run during `post-stop`. See [Supported Tasks](#supported-tasks) below.
 
+* `pre-delete` and `post-delete`: Hooks into [`ddev delete`](../usage/commands.md#delete). Execute tasks before or after the project and its database are deleted, for example to remove generated files that `ddev delete` leaves in the codebase.
+
+    !!!tip
+        Only `exec-host` tasks can run during `post-delete`, and during `pre-delete` when the project is not running. See [Supported Tasks](#supported-tasks) below.
+
 ## Supported Tasks
 
 DDEV currently supports these tasks:

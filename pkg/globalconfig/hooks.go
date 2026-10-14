@@ -17,6 +17,8 @@ var ValidHookNames = []string{
 	"post-composer",
 	"pre-stop",
 	"post-stop",
+	"pre-delete",
+	"post-delete",
 	"pre-config",
 	"post-config",
 	"pre-describe",
