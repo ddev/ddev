@@ -203,7 +203,7 @@ func (v detailView) update(msg tea.KeyPressMsg, k KeyMap) (detailView, tea.Cmd, 
 	case key.Matches(msg, k.Restore):
 		latest := d.Snapshots[0]
 		prompt := fmt.Sprintf("Replace the database of '%s' with snapshot %s from %s?", d.Name, latest.Label, latest.Created.Format("2006-01-02"))
-		return v, nil, confirmAction{kind: confirmRestore, target: d.Name, dir: d.AppRoot, prompt: prompt}
+		return v, nil, confirmAction{kind: confirmRestore, target: d.Name, dir: d.AppRoot, args: []string{latest.Path}, prompt: prompt}
 	case key.Matches(msg, k.Update):
 		var updates, repos []string
 		for _, a := range v.outdated() {

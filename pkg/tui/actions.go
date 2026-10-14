@@ -135,7 +135,7 @@ func (m AppModel) handleConfirm(msg tea.KeyPressMsg) (AppModel, tea.Cmd) {
 	case confirmPoweroff:
 		return m.apply(operation("Powering off DDEV", "", "poweroff"))
 	case confirmRestore:
-		return m.apply(operation("Restoring the latest snapshot of "+c.target, c.dir, "snapshot", "restore", "--latest"))
+		return m.apply(operation("Restoring the latest snapshot of "+c.target, c.dir, "snapshot", "restore", c.args[0]))
 	case confirmUpdate:
 		op := operation("Updating the add-ons of "+c.target, c.dir, append([]string{"add-on", "update", "--yes"}, c.args...)...)
 		op.done = "Updated the add-ons of " + c.target + ", restart with " + m.keys.Restart.Help().Key + " to use them"

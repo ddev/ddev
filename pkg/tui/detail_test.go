@@ -523,7 +523,7 @@ func TestDetailSnapshotKeys(t *testing.T) {
 	require.Nil(t, keys(t, restore, "n").confirm, "any other key cancels")
 	require.Len(t, c.execs, 1)
 	require.Equal(t, viewDetail, keys(t, restore, "y").view)
-	require.Equal(t, "/home/user/apps/alpha snapshot restore --latest", c.execs[1])
+	require.Equal(t, "/home/user/apps/alpha snapshot restore alpha_20261001", c.execs[1])
 
 	// A snapshot would start a stopped project, which a restore asks first.
 	c.execs = nil

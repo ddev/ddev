@@ -245,7 +245,7 @@ func sampleDetail() ProjectDetail {
 		},
 		Addons: []AddonInfo{{Name: "redis", Version: "v2.0.0", Repository: "ddev/ddev-redis"}},
 		Snapshots: []ddevapp.SnapshotRestoreTarget{
-			{Name: "alpha_20261001", Label: "alpha_20261001", Created: time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)},
+			{Name: "alpha_20261001", Label: "alpha_20261001", Path: "alpha_20261001", Created: time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)},
 			{Name: "alpha_20260901", Label: "alpha_20260901", Created: time.Date(2026, 9, 1, 12, 0, 0, 0, time.UTC)},
 		},
 	}

@@ -12,8 +12,8 @@ Running `ddev` with no arguments launches an interactive terminal dashboard. The
 |-----|--------|
 | <kbd>Enter</kbd> | Open project detail view |
 | <kbd>↑</kbd> / <kbd>↓</kbd> or <kbd>k</kbd> / <kbd>j</kbd> | Move the selection, or scroll the detail and log views |
-| <kbd>PgUp</kbd> / <kbd>PgDn</kbd>, <kbd>Home</kbd> / <kbd>End</kbd> | Scroll the list a screen at a time, or jump to its start and end |
-| <kbd>Esc</kbd> | Go back |
+| <kbd>PgUp</kbd>/<kbd>b</kbd> / <kbd>PgDn</kbd>/<kbd>f</kbd>, <kbd>Home</kbd>/<kbd>g</kbd> / <kbd>End</kbd>/<kbd>G</kbd> | Scroll the list, detail or logs a screen at a time, or jump to the start or end |
+| <kbd>Esc</kbd> / <kbd>Backspace</kbd> | Go back |
 | <kbd>/</kbd> | Filter projects by name, type, status, or directory name; <kbd>Esc</kbd> clears the filter |
 | <kbd>r</kbd> | Refresh |
 | <kbd>?</kbd> | Show or hide the full list of keys |
