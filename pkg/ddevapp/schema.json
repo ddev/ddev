@@ -418,6 +418,12 @@
         },
         "post-stop": {
           "$ref": "#/definitions/DdevTask"
+        },
+        "pre-delete": {
+          "$ref": "#/definitions/DdevTask"
+        },
+        "post-delete": {
+          "$ref": "#/definitions/DdevTask"
         }
       }
     },
