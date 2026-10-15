@@ -16,15 +16,21 @@ func skipNestedProject(appRoot string) string {
 	if isRegisteredProject(appRoot) {
 		return appRoot
 	}
-	for dir := filepath.Dir(appRoot); filepath.Dir(dir) != dir; dir = filepath.Dir(dir) {
-		if isRegisteredProject(dir) {
-			if useNestedProject(appRoot, dir) {
-				break
-			}
-			return dir
-		}
+	if outer := RegisteredProjectAbove(appRoot); outer != "" && !useNestedProject(appRoot, outer) {
+		return outer
 	}
 	return appRoot
+}
+
+// RegisteredProjectAbove returns the root of a project in `ddev list` that
+// is dir or contains it, or "" if there is none.
+func RegisteredProjectAbove(dir string) string {
+	for d := dir; filepath.Dir(d) != d; d = filepath.Dir(d) {
+		if isRegisteredProject(d) {
+			return d
+		}
+	}
+	return ""
 }
 
 // isRegisteredProject reports whether dir is the root of a project in `ddev list`.

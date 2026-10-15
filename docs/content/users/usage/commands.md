@@ -1575,6 +1575,8 @@ ddev ssh -d /var/www/html
 
 Start a DDEV project.
 
+If you run `ddev start` in a directory that has no DDEV project but looks like a web project, DDEV shows the configuration `ddev config --auto` would create (name, URL, project type, docroot, PHP version, database, and web server) and asks whether to use it, customize it with the `ddev config` questions, or cancel. DDEV recognizes a directory as a web project when it detects a supported project type, or finds a `composer.json`, a `package.json`, or an `index.php` or `index.html` at the root or in a common docroot such as `web` or `public`. Without a terminal to ask in, as in CI or a script, or with `--skip-confirmation` (`-y`), `ddev start` doesn't configure anything; use `ddev config --auto && ddev start` there instead.
+
 Flags:
 
 * `--all`, `-a`: Start all projects.

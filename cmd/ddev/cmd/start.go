@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -123,7 +124,12 @@ ddev start --reset-database -y`,
 			args = append(args, projectName)
 		}
 
+		skipConfirmation, _ := cmd.Flags().GetBool("skip-confirmation")
 		projects, err := getRequestedProjects(args, startAll)
+		if len(args) == 0 && !startAll && errors.Is(err, ddevapp.ErrNoProjectConfig) {
+			configureProjectHere(skipConfirmation)
+			projects, err = getRequestedProjects(args, startAll)
+		}
 		if err != nil {
 			util.Failed("Failed to start project(s): %v", err)
 		}
@@ -137,7 +143,6 @@ ddev start --reset-database -y`,
 		seedSnapshot, _ := cmd.Flags().GetString("seed-snapshot")
 		resetDatabase, _ := cmd.Flags().GetBool("reset-database")
 		omitSnapshot, _ := cmd.Flags().GetBool("omit-snapshot")
-		skipConfirmation, _ := cmd.Flags().GetBool("skip-confirmation")
 		checkResetDatabaseFlags(resetDatabase, omitSnapshot, startAll)
 
 		for _, project := range projects {

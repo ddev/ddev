@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -142,8 +143,15 @@ var ConfigCommand = &cobra.Command{
 
 // handleConfigRun handles all the flag processing for any provider
 func handleConfigRun(cmd *cobra.Command, args []string) {
-	app := getConfigApp()
+	runConfig(cmd, args, getConfigApp(), cmd.Flags().NFlag() == 0, nil)
+	util.Success("Configuration complete. You may now run 'ddev start'.")
+}
 
+// runConfig configures app and writes its config.yaml, asking the user for
+// the main settings if prompt is true and taking them from cmd's flags otherwise.
+// confirm, if not nil, sees the flag-based configuration before it is written,
+// and can return errCustomizeConfig to ask the questions instead.
+func runConfig(cmd *cobra.Command, args []string, app *ddevapp.DdevApp, prompt bool, confirm func(*ddevapp.DdevApp) error) {
 	err := ddevapp.HasAllowedLocation(app)
 	if err != nil {
 		util.Failed("Unable to run `ddev config`: %v", err)
@@ -173,8 +181,17 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed("Failed to process hook 'pre-config'")
 	}
 
-	// If no flags are provided, prompt for configuration
-	if cmd.Flags().NFlag() == 0 {
+	if !prompt {
+		err = handleMainConfigArgs(cmd, args, app, confirm)
+		if errors.Is(err, errCustomizeConfig) {
+			// Start the questions from a fresh app, not the one confirm was shown.
+			app, prompt = getConfigApp(), true
+		} else if err != nil {
+			util.Failed(err.Error())
+		}
+	}
+
+	if prompt {
 		err = app.PromptForConfig()
 		if err != nil {
 			util.Failed("There was a problem configuring your project: %v", err)
@@ -196,11 +213,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		if err != nil {
 			util.Failed("Failed to write config: %v", err)
 		}
-	} else {
-		err = handleMainConfigArgs(cmd, args, app)
-		if err != nil {
-			util.Failed(err.Error())
-		}
 	}
 
 	_, err = app.CreateSettingsFile()
@@ -212,8 +224,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		util.Failed("Failed to process hook 'post-config'")
 	}
-
-	util.Success("Configuration complete. You may now run 'ddev start'.")
 }
 
 func registerConfigCmd() {
@@ -359,8 +369,11 @@ func getConfigApp() *ddevapp.DdevApp {
 	return app
 }
 
+// errCustomizeConfig is returned by a runConfig confirm func to ask the 'ddev config' questions.
+var errCustomizeConfig = errors.New("customize the configuration")
+
 // handleMainConfigArgs() validates and processes the main config args (docroot, etc.)
-func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) error {
+func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp, confirm func(*ddevapp.DdevApp) error) error {
 	var err error
 
 	// Support the show-config-location flag.
@@ -386,7 +399,9 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	// Let them know if we're replacing the config.yaml
-	app.WarnIfConfigReplace()
+	if confirm == nil {
+		app.WarnIfConfigReplace()
+	}
 
 	// app.Name gets set to basename if not provided, or set to siteNameArg if provided
 	// nolint:revive
@@ -456,7 +471,9 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		}
 
 		app.Type = projectTypeArg
-		util.Success("Configuring a '%s' project named '%s' with docroot '%s' at '%s'.\nFor full details use 'ddev describe'.", app.Type, app.Name, app.Docroot, output.Hyperlink(output.FileURL(fullPath), fullPath))
+		if confirm == nil {
+			util.Success("Configuring a '%s' project named '%s' with docroot '%s' at '%s'.\nFor full details use 'ddev describe'.", app.Type, app.Name, app.Docroot, output.Hyperlink(output.FileURL(fullPath), fullPath))
+		}
 	}
 
 	// App overrides are done after app type is detected, but
@@ -739,6 +756,13 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if cmd.Flag("ddev-version-constraint").Changed {
 		app.DdevVersionConstraint = ddevVersionConstraint
+	}
+
+	// Before validation, so a name that fails it can still be fixed by customizing.
+	if confirm != nil {
+		if err := confirm(app); err != nil {
+			return err
+		}
 	}
 
 	// Ensure the configuration passes validation before writing config file.
