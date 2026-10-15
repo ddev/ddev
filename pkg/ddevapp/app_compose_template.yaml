@@ -131,13 +131,6 @@ services:
         target: /var/www
         volume:
           nocopy: true
-      # This second mutagen mount is only to make just the volume available so it can be chowned
-      # without accidentally also hitting docker mounts
-      - type: volume
-        source: project_mutagen
-        target: /tmp/project_mutagen
-        volume:
-          nocopy: true
       {{- end }}
 
       {{- if .NoBindMounts }}
