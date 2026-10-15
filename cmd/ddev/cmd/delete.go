@@ -73,10 +73,16 @@ ddev delete --all`,
 			// Delete database
 			// Delete any other associated volumes
 
+			if err := project.ProcessHooks("pre-delete"); err != nil {
+				util.Failed("Failed to process hook 'pre-delete': %v", err)
+			}
 			// Stop() does the snapshot UNLESS omit-snapshot is set, starting the
 			// project first if it has to.
 			if err := project.Stop(true, !deleteOmitSnapshot); err != nil {
 				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
+			}
+			if err := project.ProcessHooks("post-delete"); err != nil {
+				util.Failed("Failed to process hook 'post-delete': %v", err)
 			}
 		}
 		util.Success("Optionally, run `docker builder prune` to clean unused builder cache.")

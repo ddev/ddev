@@ -190,3 +190,31 @@ func TestOmitSnapshotOnDeleteGlobal(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteCmdRunsDeleteHooks(t *testing.T) {
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+	t.Setenv("NO_COLOR", "1")
+
+	hooksFile := app.GetConfigPath("config.hooks.yaml")
+	err = os.WriteFile(hooksFile, []byte("hooks:\n  pre-delete:\n  - exec-host: echo pre-delete-ran\n  post-delete:\n  - exec-host: echo post-delete-ran\n"), 0644)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.Remove(hooksFile)
+		out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
+		require.NoError(t, err, "output='%s'", out)
+		_ = os.Chdir(origDir)
+	})
+
+	out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", app.Name)
+	require.NoError(t, err, "failed to delete, out=%s, err=%v", out, err)
+	require.Contains(t, out, "pre-delete-ran")
+	require.Contains(t, out, "post-delete-ran")
+	require.Less(t, strings.Index(out, "pre-delete-ran"), strings.Index(out, "post-delete-ran"))
+	require.NotContains(t, out, "Task failed")
+}
