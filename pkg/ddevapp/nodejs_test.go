@@ -229,13 +229,19 @@ func TestNpmGlobalInstall(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	out, _, err := app.Exec(&ddevapp.ExecOpts{
+	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: `npm install -g npm@latest`,
 		// Retry registry fetches that fail on transient network errors.
 		Env: []string{"npm_config_fetch_retries=5", "npm_config_fetch_retry_mintimeout=2000", "npm_config_fetch_retry_maxtimeout=20000"},
 	})
-	require.NoError(t, err, "npm install -g failed, output: %s", out)
-	require.NotContains(t, out, "EACCES")
+	if err != nil {
+		// npm's stderr only points at its debug log, which has the real cause.
+		debugLog, _, _ := app.Exec(&ddevapp.ExecOpts{
+			Cmd: `node --version; npm --version; f=$(ls -t "$(npm config get cache)"/_logs/*-debug-*.log 2>/dev/null | head -1); [ -n "$f" ] && tail -n 100 "$f"`,
+		})
+		require.NoError(t, err, "npm install -g failed\nstdout: %s\nstderr: %s\nnpm debug log:\n%s", out, stderr, debugLog)
+	}
+	require.NotContains(t, out+stderr, "EACCES")
 
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: `npm --version`,
