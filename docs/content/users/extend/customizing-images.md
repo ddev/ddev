@@ -31,9 +31,10 @@ If a PHP extension is not supported by `deb.sury.org`, you can install it with [
 
 PIE requires PHP 8.1 or later. For older PHP versions, or an extension that isn't on Packagist, use [PECL](#pecl-php-extensions-not-supported-by-debsuryorg) instead.
 
-For example, this `.ddev/web-build/Dockerfile.php-extension` installs [brotli](https://packagist.org/packages/kjdev/brotli). To install another extension, change `package`, and list any Debian packages it needs to build in `build_packages`:
+For example, this `.ddev/web-build/Dockerfile.brotli` installs [brotli](https://packagist.org/packages/kjdev/brotli). To install another extension, change `package`, and list any Debian packages it needs to build in `build_packages`:
 
 ```dockerfile
+# .ddev/web-build/Dockerfile.brotli
 RUN --mount=type=secret,id=github_token <<EOF
     set -eu -o pipefail
     # Package name, optionally with a version constraint, like kjdev/brotli:^0.21
@@ -59,6 +60,7 @@ EOF
 A `.ddev/web-build/Dockerfile.xdebug` that replaces the `deb.sury.org` Xdebug with one built by PIE might look like this:
 
 ```dockerfile
+# .ddev/web-build/Dockerfile.xdebug
 RUN --mount=type=secret,id=github_token <<EOF
     set -eu -o pipefail
     (apt-get update || true)
@@ -76,7 +78,7 @@ EOF
 
 ### PECL PHP Extensions not supported by `deb.sury.org`
 
-Use PECL for PHP versions older than 8.1, which PIE can't run on, or for an extension release that isn't published on Packagist. Find the extension's package name on [pecl.php.net](https://pecl.php.net/).
+Use PECL for PHP versions older than 8.1, which aren't supported by PIE, or for an extension release that isn't published on Packagist. Find the extension's package name on [pecl.php.net](https://pecl.php.net/).
 
 For example, this `.ddev/web-build/Dockerfile.php-extension` installs [brotli](https://pecl.php.net/package/brotli). To install another extension, change `extension`, and list any Debian packages it needs to build in `build_packages`:
 
