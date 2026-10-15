@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 
@@ -148,9 +149,50 @@ func InspectContainer(name string) (container.InspectResponse, error) {
 	return x.Container, err
 }
 
+var (
+	// cachedContainers, when set, answers container lookups without asking Docker
+	cachedContainers atomic.Pointer[[]container.Summary]
+	// cacheUsers counts CacheContainers calls not yet released
+	cacheUsers   int
+	cacheUsersMu sync.Mutex
+)
+
+// CacheContainers lists all containers once, and until the returned function
+// is called, FindContainerByName and FindContainersByLabels answer from that
+// list instead of asking Docker each time. Use it only around code that reads
+// many containers and creates, starts, or stops none of them.
+//
+// Calls may nest or overlap: lookups use the newest list, and go back to
+// asking Docker once every caller has released it.
+func CacheContainers() func() {
+	containers, err := GetDockerContainers(true)
+	if err != nil {
+		return func() {}
+	}
+	cacheUsersMu.Lock()
+	defer cacheUsersMu.Unlock()
+	cacheUsers++
+	cachedContainers.Store(&containers)
+	return func() {
+		cacheUsersMu.Lock()
+		defer cacheUsersMu.Unlock()
+		if cacheUsers--; cacheUsers == 0 {
+			cachedContainers.Store(nil)
+		}
+	}
+}
+
 // FindContainerByName takes a container name and returns the container
 // If container is not found, returns nil with no error
 func FindContainerByName(name string) (*container.Summary, error) {
+	if cached := cachedContainers.Load(); cached != nil {
+		for _, c := range *cached {
+			if len(c.Names) > 0 && c.Names[0] == "/"+name {
+				return &c, nil
+			}
+		}
+		return nil, nil
+	}
 	ctx, apiClient, err := GetDockerClient()
 	if err != nil {
 		return nil, err
@@ -222,6 +264,15 @@ func FindContainersByLabels(labels map[string]string) ([]container.Summary, erro
 	if len(labels) < 1 {
 		return nil, fmt.Errorf("the provided list of labels was empty")
 	}
+	if cached := cachedContainers.Load(); cached != nil {
+		var matches []container.Summary
+		for _, c := range *cached {
+			if hasLabels(c, labels) {
+				matches = append(matches, c)
+			}
+		}
+		return matches, nil
+	}
 	filterList := client.Filters{}
 	for k, v := range labels {
 		label := fmt.Sprintf("%s=%s", k, v)
@@ -244,6 +295,17 @@ func FindContainersByLabels(labels map[string]string) ([]container.Summary, erro
 		return nil, err
 	}
 	return containers.Items, nil
+}
+
+// hasLabels matches labels the way a Docker label filter does: an empty value
+// matches any value of that label
+func hasLabels(c container.Summary, labels map[string]string) bool {
+	for k, v := range labels {
+		if got, ok := c.Labels[k]; !ok || (v != "" && got != v) {
+			return false
+		}
+	}
+	return true
 }
 
 // FindContainersWithLabel returns all containers with the given label
