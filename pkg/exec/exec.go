@@ -12,6 +12,7 @@ import (
 	"syscall"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/interrupt"
 	"github.com/ddev/ddev/pkg/output"
 )
 
@@ -136,20 +137,24 @@ func RunInteractiveCommandWithOutput(command string, args []string, out io.Write
 		_ = pr.Close()
 	}()
 
+	release := interrupt.Delegate(syscall.SIGINT, syscall.SIGTERM)
+	defer release()
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	defer signal.Stop(sigs)
+	waitDone := make(chan struct{})
+	defer close(waitDone)
 
-	// Goroutine to handle signals so the script can do the right thing
+	// Forward signals so the script can do the right thing
 	go func() {
-		sig := <-sigs
-		// Send the received signal to the child process
-		if err := cmd.Process.Signal(sig); err != nil {
-			panic(err)
+		select {
+		case sig := <-sigs:
+			_ = cmd.Process.Signal(sig)
+		case <-waitDone:
 		}
 	}()
 
-	err = cmd.Wait()
-	return err
+	return cmd.Wait()
 }
 
 // RunHostCommand executes a command on the host and returns the
